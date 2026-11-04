@@ -12,12 +12,15 @@ describe('useDelayedOpen', () => {
     delayed.scheduleOpen();
     vi.advanceTimersByTime(299);
     expect(open.value).toBe(false);
+
     vi.advanceTimersByTime(1);
     expect(open.value).toBe(true);
+
     delayed.scheduleClose();
     delayed.scheduleOpen();
     vi.advanceTimersByTime(300);
     expect(open.value).toBe(true);
+
     delayed.scheduleClose();
     vi.advanceTimersByTime(100);
     expect(open.value).toBe(false);
@@ -28,8 +31,10 @@ describe('useDelayedOpen', () => {
     const delayed = useDelayedOpen(open, { openDelay: 200 });
     delayed.openNow();
     expect(open.value).toBe(true);
+
     delayed.closeNow();
     expect(open.value).toBe(false);
+
     delayed.scheduleOpen();
     delayed.cancel();
     vi.advanceTimersByTime(200);

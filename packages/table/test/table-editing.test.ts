@@ -45,6 +45,7 @@ describe('NuiTable edits', () => {
     await grid.nextPaint();
 
     expect(grid.cellText(20, 3)).toBe('21 900');
+
     await grid.dragRange({ row: 1, col: 1 }, { row: 2, col: 3 });
     await grid.press('Delete');
 
@@ -64,6 +65,7 @@ describe('NuiTable edits', () => {
     expect(grid.cellText(1, 2)).toBe('');
     expect(grid.cellText(20, 3)).toBe('19 870');
     expect(grid.announcement).toBe('Очищены 4 ячейки');
+
     await grid.press('z', { ctrl: true });
     expect(grid.edits[1]?.kind).toBe('undo');
 
@@ -77,10 +79,12 @@ describe('NuiTable edits', () => {
     expect(grid.cellText(1, 2)).toBe('Казань');
     expect(grid.cellText(20, 3)).toBe('21 900');
     expect(grid.announcement).toBe('Отменены 4 изменения');
+
     await grid.press('z', { ctrl: true, shift: true });
     expect(grid.edits[2]?.kind).toBe('redo');
     expect(grid.cellText(1, 2)).toBe('');
     expect(grid.announcement).toBe('Повторены 4 изменения');
+
     await grid.press('y', { ctrl: true });
     expect(grid.edits).toHaveLength(3);
   });
@@ -97,9 +101,11 @@ describe('NuiTable edits', () => {
     expect(grid.edits.map((event) => event.kind)).toEqual(['cut']);
     expect(grid.cellText(3, 2)).toBe('');
     expect(grid.announcement).toBe('Вырезаны 2 ячейки');
+
     await grid.dragRange({ row: 5, col: 1 }, { row: 6, col: 1 });
     await grid.press('Delete');
     expect(grid.announcement).toBe('Эти ячейки нельзя изменить');
+
     await grid.press('a', { ctrl: true });
     await grid.press('Delete');
     expect(grid.announcement).toBe('Слишком много ячеек: 100, за раз можно изменить до 6');
@@ -127,16 +133,20 @@ describe('NuiTable edits', () => {
     expect(grid.ranges).toEqual([range(1, 2, 2, 3)]);
     expect(grid.cellText(1, 3)).toBe('1\u00a0500');
     expect(grid.announcement).toBe('Вставлены 3 ячейки, пропущено: 1');
+
     await grid.dragRange({ row: 3, col: 2 }, { row: 5, col: 2 });
     await grid.paste('Сочи');
     expect([3, 4, 5].map((row) => grid.cellText(row, 2))).toEqual(['Сочи', 'Сочи', 'Сочи']);
+
     await grid.dragRange({ row: 2, col: 4 }, { row: 5, col: 4 });
     await grid.paste('нет\nда');
     expect([2, 3, 4, 5].map((row) => rows[row]?.remote)).toEqual([false, true, false, true]);
+
     await grid.dragRange({ row: 4, col: 1 }, { row: 4, col: 1 });
     await grid.paste('Кто-то');
     expect(grid.announcement).toBe('Вставлено 0 ячеек, пропущено: 1');
     expect(grid.edits).toHaveLength(3);
+
     await grid.press('z', { ctrl: true });
     expect([2, 3, 4, 5].map((row) => rows[row]?.remote)).toEqual([true, false, true, false]);
   });
@@ -191,6 +201,7 @@ describe('NuiTable edits', () => {
     await grid.openCellMenu(1, 1);
     expect(grid.cellMenuDisabled('Вырезать')).toBe(true);
     expect(grid.cellMenuDisabled('Очистить')).toBe(true);
+
     await grid.closeCellMenu();
 
     const copies = rows.map((row) => ({ ...row }));

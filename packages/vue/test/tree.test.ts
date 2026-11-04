@@ -47,9 +47,11 @@ describe('NuiTree', () => {
     expect(await tree.iconOf('src')).toBe('folder-open');
     expect(await tree.iconOf('components')).toBe('folder');
     expect(await tree.iconOf('README.md')).toBe('file');
+
     tree.unmount();
     const bare = TreeDriver.mount({ props: { icons: false } });
     expect(bare.hasPart('src', 'icon')).toBe(false);
+
     bare.unmount();
   });
 
@@ -57,27 +59,37 @@ describe('NuiTree', () => {
     const tree = TreeDriver.mount({ modelValue: 'readme' });
     await tree.focus();
     expect(tree.activeLabel).toBe('README.md');
+
     await tree.press('Home');
     expect(tree.activeLabel).toBe('src');
+
     await tree.press('ArrowDown');
     expect(tree.activeLabel).toBe('docs');
+
     await tree.press('ArrowDown');
     await tree.press('ArrowDown');
     expect(tree.activeLabel).toBe('empty');
+
     await tree.press('End');
     expect(tree.activeLabel).toBe('Дизайн');
+
     await tree.press('ArrowDown');
     expect(tree.activeLabel).toBe('Дизайн');
+
     await tree.press('PageUp');
     expect(tree.activeLabel).toBe('src');
+
     await tree.press('ArrowUp');
     expect(tree.activeLabel).toBe('src');
+
     tree.unmount();
     const looping = TreeDriver.mount({ props: { loop: true } });
     await looping.focus();
     expect(looping.activeLabel).toBe('src');
+
     await looping.press('ArrowUp');
     expect(looping.activeLabel).toBe('Дизайн');
+
     looping.unmount();
   });
 
@@ -87,24 +99,31 @@ describe('NuiTree', () => {
     await tree.press('ArrowRight');
     expect(tree.expandedValues).toEqual(['src']);
     expect(tree.events).toEqual(['expand:src']);
+
     await tree.press('ArrowRight');
     expect(tree.activeLabel).toBe('components');
+
     await tree.press('ArrowLeft');
     expect(tree.activeLabel).toBe('src');
+
     await tree.press('ArrowLeft');
     expect(tree.expandedValues).toEqual([]);
     expect(tree.events).toEqual(['expand:src', 'collapse:src']);
+
     await tree.press('*');
     expect(tree.expandedValues).toEqual(['src', 'docs', 'design']);
     expect(tree.loads).toEqual(['docs']);
     expect(tree.labels).toContain('logo.svg');
+
     tree.unmount();
     const rtl = TreeDriver.mount({ dir: 'rtl' });
     await rtl.focus();
     await rtl.press('ArrowLeft');
     expect(rtl.expandedValues).toEqual(['src']);
+
     await rtl.press('ArrowRight');
     expect(rtl.expandedValues).toEqual([]);
+
     rtl.unmount();
   });
 
@@ -113,30 +132,38 @@ describe('NuiTree', () => {
     await tree.focus();
     await tree.press('d');
     expect(tree.activeLabel).toBe('docs');
+
     await tree.advance(600);
     await tree.press('д');
     expect(tree.activeLabel).toBe('Дизайн');
+
     await tree.press('Enter');
     expect(tree.value).toBe('design');
     expect(tree.attr('Дизайн', 'aria-selected')).toBe('true');
     expect(tree.modifierOf('Дизайн', 'selected')).toBe(true);
     expect(tree.attr('src', 'aria-selected')).toBe('false');
     expect(tree.events).toEqual(['select:Дизайн']);
+
     tree.unmount();
     const multiple = TreeDriver.mount({ props: { selectable: 'multiple' }, modelValue: ['src'] });
     expect(multiple.tree.attributes('aria-multiselectable')).toBe('true');
+
     await multiple.focus();
     await multiple.press('End');
     await multiple.press('Enter');
     expect(multiple.value).toEqual(['src', 'design']);
+
     await multiple.press(' ');
     expect(multiple.value).toEqual(['src']);
+
     multiple.unmount();
     const passive = TreeDriver.mount({ props: { selectable: false } });
     expect(passive.attr('src', 'aria-selected')).toBeUndefined();
+
     await passive.focus();
     await passive.press('Enter');
     expect(passive.value).toBeNull();
+
     passive.unmount();
   });
 
@@ -145,10 +172,12 @@ describe('NuiTree', () => {
     await tree.focus();
     await tree.press('r');
     expect(tree.activeLabel).toBe('README.md');
+
     await tree.blur();
     await tree.focus();
     await tree.press('d');
     expect(tree.activeLabel).toBe('docs');
+
     tree.unmount();
   });
 
@@ -157,10 +186,12 @@ describe('NuiTree', () => {
     await tree.focus();
     await tree.press('r');
     expect(tree.activeLabel).toBe('README.md');
+
     await tree.advance(600);
     await tree.rename('docs', 'Заметки');
     await tree.press('з');
     expect(tree.activeLabel).toBe('Заметки');
+
     tree.unmount();
   });
 
@@ -174,12 +205,14 @@ describe('NuiTree', () => {
     expect(tree.hasModifier('multiple')).toBe(true);
     expect(tree.tree.attributes('aria-multiselectable')).toBe('true');
     expect(tree.attr('src', 'aria-checked')).toBe('false');
+
     await tree.clickCheckbox('src');
     expect(tree.value).toEqual(['src', 'components', 'button', 'index']);
     expect(tree.attr('src', 'aria-checked')).toBe('true');
     expect(tree.attr('src', 'aria-selected')).toBe('true');
     expect(tree.modifierOf('src', 'selected')).toBe(true);
     expect(tree.events).toEqual(['select:src']);
+
     await tree.clickCheckbox('Button.vue');
     expect(tree.value).toEqual(['index']);
     expect(tree.attr('src', 'aria-checked')).toBe('mixed');
@@ -187,21 +220,27 @@ describe('NuiTree', () => {
     expect(tree.hasPart('src', 'checkbox--indeterminate')).toBe(true);
     expect(tree.attr('components', 'aria-checked')).toBe('false');
     expect(tree.attr('index.ts', 'aria-checked')).toBe('true');
+
     await tree.click('Button.vue');
     expect(tree.value).toEqual(['src', 'components', 'button', 'index']);
+
     await tree.clickCheckbox('legacy');
     expect(tree.value).toEqual(['src', 'components', 'button', 'index']);
+
     await tree.focus();
     await tree.press('End');
     await tree.press(' ');
     expect(tree.value).toEqual(['src', 'components', 'button', 'index', 'design', 'logo']);
+
     await tree.press('Enter');
     expect(tree.value).toEqual(['src', 'components', 'button', 'index']);
+
     tree.unmount();
     const only = TreeDriver.mount({ props: { checkable: true, selectable: false } });
     await only.focus();
     await only.press('Enter');
     expect(only.value).toEqual(['src', 'components', 'button', 'index']);
+
     only.unmount();
   });
 
@@ -209,6 +248,7 @@ describe('NuiTree', () => {
     const tree = TreeDriver.mount({ props: { checkable: true } });
     await tree.clickCheckbox('docs');
     expect(tree.value).toEqual(['docs']);
+
     await tree.clickToggle('docs');
     expect(tree.attr('docs', 'aria-busy')).toBe('true');
 
@@ -222,17 +262,21 @@ describe('NuiTree', () => {
     expect(tree.value).toEqual(['docs', 'guide', 'api']);
     expect(tree.attr('guide.md', 'aria-checked')).toBe('true');
     expect(tree.attr('docs', 'aria-busy')).toBeUndefined();
+
     tree.unmount();
     const failing = TreeDriver.mount();
     await failing.clickToggle('docs');
     expect(failing.loads).toEqual(['docs']);
     expect(failing.hasPart('docs', 'spinner')).toBe(true);
+
     await failing.setExpanded([]);
     expect(failing.hasPart('docs', 'spinner')).toBe(false);
     expect(failing.attr('docs', 'aria-busy')).toBeUndefined();
+
     await failing.clickToggle('docs');
     expect(failing.loads).toEqual(['docs', 'docs']);
     expect(failing.hasPart('docs', 'spinner')).toBe(true);
+
     failing.unmount();
   });
 
@@ -240,15 +284,18 @@ describe('NuiTree', () => {
     const loading = TreeDriver.mount({ props: { loading: true }, config: { locale: 'ru-RU' } });
     expect(loading.tree.attributes('aria-busy')).toBe('true');
     expect(loading.statusText).toBe('Загрузка');
+
     loading.unmount();
     const empty = TreeDriver.mount({ items: [], config: { locale: 'ru-RU' } });
     expect(empty.emptyText).toBe('Список пуст');
     expect(empty.tree.attributes('role')).toBeUndefined();
     expect(empty.tree.attributes('tabindex')).toBeUndefined();
     expect(loading.tree.attributes('role')).toBe('tree');
+
     empty.unmount();
     const labelled = TreeDriver.mount({ items: [], props: { emptyLabel: 'Нет файлов' } });
     expect(labelled.emptyText).toBe('Нет файлов');
+
     labelled.unmount();
   });
 
@@ -260,13 +307,16 @@ describe('NuiTree', () => {
     expect(tree.attr('docs', 'aria-expanded')).toBe('true');
     expect(tree.hasPart('docs', 'spinner')).toBe(true);
     expect(tree.value).toBeNull();
+
     await tree.receiveItems(withDocs([{ value: 'guide', label: 'guide.md' }]));
     expect(tree.labels).toContain('guide.md');
     expect(tree.attr('docs', 'aria-busy')).toBeUndefined();
     expect(tree.hasPart('docs', 'spinner')).toBe(false);
+
     await tree.receiveItems(withDocs([]));
     expect(tree.attr('docs', 'aria-expanded')).toBeUndefined();
     expect(tree.labels).not.toContain('guide.md');
+
     tree.unmount();
   });
 
@@ -276,17 +326,22 @@ describe('NuiTree', () => {
     });
 
     expect(tree.labels[0]).toBe('src@1');
+
     await tree.clickToggle('src@1');
     expect(tree.expandedValues).toEqual(['src']);
     expect(tree.value).toBeNull();
     expect(tree.labels[1]).toBe('components@2');
+
     await tree.click('README.md@1');
     expect(tree.value).toBe('readme');
     expect(tree.activeLabel).toBe('README.md@1');
+
     await tree.dblclick('src@1');
     expect(tree.expandedValues).toEqual([]);
+
     await tree.click('legacy@1');
     expect(tree.value).toBe('readme');
+
     tree.unmount();
   });
 
@@ -303,6 +358,7 @@ describe('NuiTree', () => {
     expect(tree.attr('README.md', 'aria-current')).toBe('true');
     expect(tree.modifierOf('README.md', 'current')).toBe(true);
     expect(tree.attr('src', 'aria-current')).toBeUndefined();
+
     tree.unmount();
   });
 
@@ -310,16 +366,21 @@ describe('NuiTree', () => {
     const tree = TreeDriver.mount({ modelValue: 'readme' });
     expect(tree.activeLabel).toBeUndefined();
     expect(tree.activeLabels).toEqual([]);
+
     await tree.focus();
     expect(tree.activeLabel).toBe('README.md');
     expect(tree.activeLabels).toEqual(['README.md']);
+
     await tree.press('ArrowDown');
     expect(tree.activeLabel).toBe('empty');
+
     await tree.blur();
     expect(tree.activeLabel).toBeUndefined();
     expect(tree.activeLabels).toEqual([]);
+
     await tree.focus();
     expect(tree.activeLabel).toBe('README.md');
+
     tree.unmount();
   });
 
@@ -328,14 +389,18 @@ describe('NuiTree', () => {
     await tree.pointerDown('docs');
     expect(tree.activeLabel).toBe('docs');
     expect(tree.activeLabels).toEqual([]);
+
     await tree.click('docs');
     expect(tree.value).toBe('docs');
     expect(tree.activeLabels).toEqual([]);
+
     await tree.press('ArrowDown');
     expect(tree.activeLabels).toEqual(['README.md']);
+
     await tree.pointerDown('src');
     expect(tree.activeLabel).toBe('src');
     expect(tree.activeLabels).toEqual([]);
+
     tree.unmount();
   });
 
@@ -347,20 +412,26 @@ describe('NuiTree', () => {
 
     expect(tree.hasModifier('virtual')).toBe(true);
     expect(tree.itemsTag).toBe('ul');
+
     await tree.setHeight(160);
     expect(tree.renderedCount).toBe(10);
+
     await tree.focus();
     await tree.press('End');
     expect(tree.activeLabel).toBe('Узел 1999');
     expect(tree.renderedCount).toBeLessThan(20);
+
     await tree.press('ArrowUp');
     expect(tree.activeLabel).toBe('Узел 1998');
+
     await tree.scrollTo(0);
     expect(tree.labels).toContain('Узел 1998');
     expect(tree.labels).toContain('Узел 0');
+
     await tree.press('Home');
     await tree.press('PageDown');
     expect(tree.activeLabel).toBe('Узел 5');
+
     tree.unmount();
   });
 
@@ -395,12 +466,14 @@ describe('NuiTree', () => {
     await tree.scrollTo(3200 + 5 * 32);
     expect(tree.labels).toContain('Узел 105');
     expect(tree.rowElements.every((element) => before.includes(element))).toBe(true);
+
     await tree.focus();
     await tree.press('End');
 
     const active = tree.activeElement;
 
     expect(active?.textContent).toContain('Узел 1999');
+
     await tree.scrollTo(0);
     expect(tree.activeElement).toBe(active);
 
@@ -414,6 +487,7 @@ describe('NuiTree', () => {
     await tree.scrollTo(40_000);
     expect(tree.activeElement).toBe(active);
     expect(warn).not.toHaveBeenCalled();
+
     warn.mockRestore();
     tree.unmount();
   });
@@ -428,11 +502,14 @@ describe('NuiTree', () => {
     await tree.scrollTo(3200);
     expect(tree.labels).toContain('Узел 100');
     expect(tree.labels.some((label) => tree.isRevealing(label))).toBe(false);
+
     await tree.clickToggle('Узел 100');
     expect(tree.isRevealing('Лист 100')).toBe(true);
     expect(tree.isRevealing('Узел 100')).toBe(false);
+
     await tree.advance(50);
     expect(tree.isRevealing('Лист 100')).toBe(false);
+
     tree.unmount();
   });
 });
@@ -440,12 +517,15 @@ describe('NuiTree', () => {
 describe('tree cascade', () => {
   it('normalises ancestors bottom-up and ignores disabled subtrees', () => {
     const src = FILES[0];
+
     if (!src?.children?.[0]) {
       throw new Error('fixture changed');
     }
+
     const components = src.children[0];
     const checked = applyCheck(FILES, new Set(), components, defaultOptionKey);
     expect([...checked]).toEqual(['components', 'button']);
+
     const states = checkStates(FILES, checked, defaultOptionKey);
 
     expect([states.get('src'), states.get('components'), states.get('index')]).toEqual([
@@ -456,6 +536,7 @@ describe('tree cascade', () => {
 
     const all = applyCheck(FILES, checked, src, defaultOptionKey);
     expect([...all].toSorted()).toEqual(['button', 'components', 'index', 'src']);
+
     const none = applyCheck(FILES, all, src, defaultOptionKey);
     expect(none.size).toBe(0);
   });

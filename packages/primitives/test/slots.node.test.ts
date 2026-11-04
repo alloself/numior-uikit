@@ -17,6 +17,7 @@ describe('assignSlots', () => {
     expect(moved.get(13)).toBe(3);
     expect(moved.get(14)).toBe(0);
     expect(moved.get(15)).toBe(1);
+
     const grown = assignSlots(moved, [11, 12, 13, 14, 15, 16]);
     expect([...grown.values()].toSorted((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5]);
     expect(grown.get(14)).toBe(0);
@@ -32,6 +33,7 @@ describe('assignSlots', () => {
       expect(slots.has(start - 1)).toBe(false);
       expect(Math.max(...slots.values())).toBeLessThan(4);
     }
+
     expect(slots.get(500)).toBe(3);
   });
 });

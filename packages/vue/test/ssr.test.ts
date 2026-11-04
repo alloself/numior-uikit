@@ -569,6 +569,7 @@ describe('server rendering', () => {
     expect(html).toContain(`id="${id}"`);
     expect(html).toContain('popover="auto"');
     expect(html).toContain('aria-expanded="true"');
+
     const tooltip = await renderToString(TooltipScene);
     expect(tooltip).toContain('aria-describedby="hint"');
     expect(tooltip).toContain('role="tooltip"');
@@ -843,10 +844,13 @@ describe('server rendering', () => {
   it('renders feedback components with their native semantics on the server', async () => {
     const alert = await renderToString(NuiAlert, { props: { tone: 'error', title: 'Failed' } });
     expect(alert).toContain('role="alert"');
+
     const determinate = await renderToString(NuiProgress, { props: { value: 40 } });
     expect(determinate).toContain('value="40"');
+
     const indeterminate = await renderToString(NuiProgress);
     expect(indeterminate).not.toContain('value=');
+
     const skeleton = await renderToString(NuiSkeleton);
     expect(skeleton).toContain('aria-hidden="true"');
   });
@@ -854,6 +858,7 @@ describe('server rendering', () => {
   it('renders badge counts and dot labels on the server', async () => {
     const count = await renderToString(NuiBadge, { props: { count: 120, tone: 'error' } });
     expect(count).toContain('99+');
+
     const dot = await renderToString(NuiBadge, { props: { dot: true, label: 'Online' } });
     expect(dot).toContain('role="img"');
     expect(dot).toContain('aria-label="Online"');
@@ -875,6 +880,7 @@ describe('server rendering', () => {
     });
 
     expect(items).toContain('+2');
+
     const slotted = await renderToString(AvatarGroupScene);
     expect(slotted).toContain('+2');
     expect(slotted.match(/nui-avatar--size-lg/g)).toHaveLength(2);
@@ -905,6 +911,7 @@ describe('server rendering', () => {
     expect(linked).toContain('href="/plans"');
     expect(linked).toContain('<h3');
     expect(linked).toContain('<img');
+
     const plain = await renderToString(NuiCard, { props: { title: 'Plans' } });
     expect(plain).not.toContain('nui-card__action');
     expect(plain).not.toContain('nui-card--interactive');
@@ -931,6 +938,7 @@ describe('server rendering', () => {
 
     expect(links).toContain('href="/docs"');
     expect(links).not.toContain('role="listbox"');
+
     const empty = await renderToString(NuiList, { props: { items: [], emptyLabel: 'Nothing' } });
     expect(empty).toContain('nui-empty');
     expect(empty).toContain('Nothing');

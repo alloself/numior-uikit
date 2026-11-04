@@ -12,6 +12,7 @@ describe('NuiIcon', () => {
     await icon.ready();
     expect(icon.decorative).toBe(true);
     expect(icon.glyphClasses).toContain('lucide-check');
+
     const trash = IconDriver.mount({ icon: 'trash' });
     await trash.ready();
     expect(trash.glyphClasses).toContain('lucide-trash');
@@ -21,9 +22,11 @@ describe('NuiIcon', () => {
     const fromRegistry = IconDriver.mount({ icon: 'check' }, { icons: { check: Custom } });
     await fromRegistry.ready();
     expect(fromRegistry.glyphClasses).toContain('lucide-sun');
+
     const fromDefaults = IconDriver.mount({ icon: 'x' }, { icons: { check: Custom } });
     await fromDefaults.ready();
     expect(fromDefaults.glyphClasses).toContain('lucide-x');
+
     const component = IconDriver.mount({ icon: Custom });
     await component.ready();
     expect(component.glyphClasses).toContain('lucide-sun');

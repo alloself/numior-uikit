@@ -56,6 +56,7 @@ describe('node view host', () => {
     const { entries } = chunkWith(2);
 
     host = createNodeViewHost();
+
     for (const entry of entries) {
       host.sink.add(entry);
     }
@@ -66,6 +67,7 @@ describe('node view host', () => {
 
     intersections.cross(first, false);
     expect(shownKeys(host)).toEqual([]);
+
     intersections.cross(first);
     expect(intersections.watches(first)).toBe(false);
     expect(shownKeys(host)).toEqual([0]);
@@ -75,9 +77,11 @@ describe('node view host', () => {
     const { chunk, entries } = chunkWith(3);
 
     host = createNodeViewHost();
+
     for (const entry of entries) {
       host.sink.add(entry);
     }
+
     host.chunks.added(chunk);
 
     expect(intersections.watches(chunk)).toBe(true);

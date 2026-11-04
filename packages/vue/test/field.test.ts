@@ -91,6 +91,7 @@ describe('NuiField', () => {
     const field = FieldDriver.mount({ props: { label: 'Code', readonly: true } });
     expect(field.hasModifier('readonly')).toBe(true);
     expect(field.control.attributes('readonly')).toBe('');
+
     field.unmount();
 
     const released = FieldDriver.mount({
@@ -99,6 +100,7 @@ describe('NuiField', () => {
     });
 
     expect(released.control.attributes('readonly')).toBeUndefined();
+
     released.unmount();
   });
 });

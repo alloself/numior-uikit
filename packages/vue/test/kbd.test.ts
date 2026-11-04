@@ -16,6 +16,7 @@ describe('NuiKbd', () => {
     expect(kbd.keys).toEqual(['Shift', 'Ctrl', 'K']);
     expect(kbd.hasModifier('size-md')).toBe(true);
     expect(kbd.hasModifier('variant-boxed')).toBe(true);
+
     await kbd.update({ keys: 'mod+shift+k', platform: 'mac' });
     expect(kbd.keys).toEqual(['⇧', '⌘', 'K']);
   });
@@ -28,6 +29,7 @@ describe('NuiKbd', () => {
     });
 
     expect(kbd.keys).toEqual(['Ctrl', '↵', 'Esc', '↑', 'F5', 'Home']);
+
     await kbd.ready();
     expect(kbd.keys).toEqual(['⌃', '↵', 'Esc', '↑', 'F5', 'Home']);
   });

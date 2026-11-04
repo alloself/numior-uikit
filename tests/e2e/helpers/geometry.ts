@@ -21,6 +21,9 @@ export const boxOf = async (target: Locator): Promise<Box> => {
   return box;
 };
 
+export const renderedWidth = async (target: Locator): Promise<number> =>
+  (await target.boundingBox())?.width ?? 0;
+
 export const spanBox = async (first: Locator, last: Locator): Promise<Box> => {
   const [a, b] = await Promise.all([boxOf(first), boxOf(last)]);
   const x = Math.min(a.x, b.x);

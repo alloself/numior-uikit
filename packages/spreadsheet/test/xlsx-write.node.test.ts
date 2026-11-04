@@ -621,6 +621,7 @@ describe('writing xlsx', () => {
     ]);
 
     expect(inserted.ok && stepper.apply(inserted.inverse).ok).toBe(true);
+
     stepper.apply({ kind: 'deleteLines', sheet: 'Data', axis: 'rows', at: 0, count: 1 });
 
     const [moved = '', emptied = '', shapes = ''] = await texts();

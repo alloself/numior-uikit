@@ -8,8 +8,10 @@ describe('NuiCheckbox', () => {
     await checkbox.ready();
     expect(checkbox.checked).toBe(false);
     expect(checkbox.labelText).toBe('Terms');
+
     await checkbox.toggle();
     expect(checkbox.emittedModels).toEqual([true]);
+
     await checkbox.receive({ modelValue: true });
     expect(checkbox.checked).toBe(true);
     expect(checkbox.hasModifier('checked')).toBe(true);
@@ -21,6 +23,7 @@ describe('NuiCheckbox', () => {
     expect(checkbox.indeterminate).toBe(true);
     expect(checkbox.hasModifier('indeterminate')).toBe(true);
     expect(checkbox.markGlyphClasses).toContain('lucide-minus');
+
     await checkbox.receive({ indeterminate: false });
     expect(checkbox.indeterminate).toBe(false);
     expect(checkbox.markGlyphClasses).toContain('lucide-check');
@@ -49,10 +52,13 @@ describe('NuiCheckboxGroup', () => {
     const group = CheckboxGroupDriver.mount({ modelValue: ['b'] });
 
     expect(group.checked).toEqual(['b']);
+
     await group.toggle(0);
     expect(group.emittedModels).toEqual([['b', 'a']]);
+
     await group.receive(['b', 'a']);
     expect(group.checked).toEqual(['a', 'b']);
+
     await group.toggle(1);
     expect(group.emittedModels.at(-1)).toEqual(['a']);
   });
@@ -129,9 +135,11 @@ describe('NuiCheckboxGroup', () => {
     expect(checkbox.control.attributes('aria-readonly')).toBe('true');
     expect(checkbox.control.attributes('readonly')).toBeUndefined();
     expect(checkbox.control.attributes('disabled')).toBeUndefined();
+
     await checkbox.click();
     expect(checkbox.checked).toBe(false);
     expect(checkbox.emittedModels).toEqual([]);
+
     checkbox.unmount();
 
     const group = CheckboxGroupDriver.mount({ props: { readonly: true }, modelValue: ['a'] });

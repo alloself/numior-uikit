@@ -24,8 +24,10 @@ describe('NuiStepper', () => {
 
     await stepper.clickStep('Plan');
     expect(stepper.value).toBe('plan');
+
     await stepper.clickStep('Review');
     expect(stepper.value).toBe('plan');
+
     await stepper.clickStep('Account');
     expect(stepper.value).toBe('account');
     expect(stepper.current).toBe('Account');
@@ -50,8 +52,10 @@ describe('NuiStepper', () => {
     expect(stepper.disabledNames).toEqual(['Review']);
     expect(stepper.names).toEqual(['Account', 'Profile, has errors', 'Plan, completed', 'Review']);
     expect(stepper.marks).toEqual(['1', 'x', 'check', '4']);
+
     await stepper.clickStep('Profile');
     expect(stepper.value).toBe('profile');
+
     await stepper.clickStep('Review');
     expect(stepper.value).toBe('profile');
   });

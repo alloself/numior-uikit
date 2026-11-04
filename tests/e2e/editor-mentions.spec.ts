@@ -1,14 +1,11 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { PlaygroundPage } from './pages/playground';
 
-const openEditor = async (page: Page): Promise<PlaygroundPage> => {
-  const playground = new PlaygroundPage(page);
-
+test.beforeEach(async ({ playground }) => {
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
   await playground.editor.root.scrollIntoViewIfNeeded();
-  return playground;
-};
+});
 
 const newLine = async (playground: PlaygroundPage): Promise<void> => {
   await playground.editor.placeAtEnd();
@@ -18,10 +15,10 @@ const newLine = async (playground: PlaygroundPage): Promise<void> => {
 
 test.describe('editor mentions', () => {
   test('finds people after @ and inserts the chosen one in the editor and the published view', async ({
+    playground,
+    editor,
     page,
   }) => {
-    const playground = await openEditor(page);
-    const { editor } = playground;
     const before = await editor.publishedMentions().count();
 
     await newLine(playground);
@@ -31,6 +28,7 @@ test.describe('editor mentions', () => {
 
     await expect(list.getByRole('option')).toHaveCount(1);
     await expect(list.getByRole('option')).toHaveAccessibleName('Борис Ковалёв Разработка');
+
     await page.keyboard.press('Enter');
     await expect(list).toBeHidden();
     await expect(editor.mentions().last()).toHaveText('@Борис Ковалёв');
@@ -39,11 +37,10 @@ test.describe('editor mentions', () => {
   });
 
   test('chooses with the pointer, closes on Escape and passes axe with the list open', async ({
+    playground,
+    editor,
     page,
   }) => {
-    const playground = await openEditor(page);
-    const { editor } = playground;
-
     await newLine(playground);
     await page.keyboard.type('@');
 
@@ -51,10 +48,13 @@ test.describe('editor mentions', () => {
 
     await expect(list.getByRole('option')).toHaveCount(5);
     expect(await playground.wcagViolations('.nui-editor-mentions')).toEqual([]);
+
     await page.keyboard.type('нет-такого');
     await expect(list).toContainText('Никого не нашли');
+
     await page.keyboard.press('Escape');
     await expect(list).toBeHidden();
+
     await page.keyboard.type(' и @ве');
     await list.getByRole('option', { name: /Вера Соколова/u }).click();
     await expect(editor.mentions().last()).toHaveText('@Вера Соколова');

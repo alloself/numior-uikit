@@ -1,63 +1,65 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { record, summarize, type Operation } from '../../scripts/bench-harness';
-import { SheetBenchPage } from './pages/sheet-bench';
 
 const RESULTS = new URL('../../packages/table/bench/results/', import.meta.url);
 const ROUNDS = 10;
 
 test('a sheet of 1 048 576 rows and 16 384 columns keeps input and frames within budget', async ({
-  page,
+  sheetBench,
   browser,
 }) => {
   test.setTimeout(900_000);
-  const bench = new SheetBenchPage(page);
-  await bench.open(0);
+  await sheetBench.open(0);
   const operations: Operation[] = [];
 
-  operations.push(summarize('build the cell adapter of the sheet', [await bench.dataMs()]));
+  operations.push(summarize('build the cell adapter of the sheet', [await sheetBench.dataMs()]));
 
   operations.push(
-    summarize('cold mount to the first painted row', await bench.coldStarts(browser)),
+    summarize('cold mount to the first painted row', await sheetBench.coldStarts(browser)),
   );
 
   const warm: number[] = [];
 
   for (let round = 0; round < 5; round += 1) {
-    warm.push(await bench.remount());
+    warm.push(await sheetBench.remount());
   }
+
   operations.push(summarize('warm remount to the first painted row', warm));
-  await bench.focusCell(1, 1);
+  await sheetBench.focusCell(1, 1);
 
   operations.push(
-    summarize('arrow down to the next paint', await bench.keyLatencies('ArrowDown', 200)),
+    summarize('arrow down to the next paint', await sheetBench.keyLatencies('ArrowDown', 200)),
   );
 
   operations.push(
-    summarize('arrow across columns to the next paint', await bench.keyLatencies('ArrowRight', 60)),
+    summarize(
+      'arrow across columns to the next paint',
+      await sheetBench.keyLatencies('ArrowRight', 60),
+    ),
   );
 
   operations.push(
-    summarize('page down to the next paint', await bench.keyLatencies('PageDown', 50)),
+    summarize('page down to the next paint', await sheetBench.keyLatencies('PageDown', 50)),
   );
 
   const corners: number[] = [];
 
   for (let round = 0; round < ROUNDS; round += 1) {
-    corners.push(...(await bench.keyLatencies('Control+End', 1)));
-    corners.push(...(await bench.keyLatencies('Control+Home', 1)));
+    corners.push(...(await sheetBench.keyLatencies('Control+End', 1)));
+    corners.push(...(await sheetBench.keyLatencies('Control+Home', 1)));
   }
 
   operations.push(
     summarize('jump between the first and the last cell of the sheet to the next paint', corners),
   );
 
-  await bench.focusCell(1, 1);
-  await bench.keyLatencies('Control+ArrowDown', 1);
+  await sheetBench.focusCell(1, 1);
+  await sheetBench.keyLatencies('Control+ArrowDown', 1);
   const edges: number[] = [];
 
   for (let round = 0; round < ROUNDS; round += 1) {
-    edges.push(...(await bench.keyLatencies('Control+ArrowDown', 1)));
-    edges.push(...(await bench.keyLatencies('Control+ArrowUp', 1)));
+    edges.push(...(await sheetBench.keyLatencies('Control+ArrowDown', 1)));
+    edges.push(...(await sheetBench.keyLatencies('Control+ArrowUp', 1)));
   }
 
   operations.push(
@@ -65,19 +67,22 @@ test('a sheet of 1 048 576 rows and 16 384 columns keeps input and frames within
   );
 
   operations.push(
-    summarize('frame time while wheeling through rows', await bench.wheelFrames(120, 360)),
+    summarize('frame time while wheeling through rows', await sheetBench.wheelFrames(120, 360)),
   );
 
-  await bench.scrollHome();
+  await sheetBench.scrollHome();
 
   operations.push(
-    summarize('frame time while wheeling across columns', await bench.wheelAcrossFrames(120, 360)),
+    summarize(
+      'frame time while wheeling across columns',
+      await sheetBench.wheelAcrossFrames(120, 360),
+    ),
   );
 
   operations.push(
     summarize(
       'move the row window by a viewport, main-thread ms',
-      await bench.windowMoves(browser, 20),
+      await sheetBench.windowMoves(browser, 20),
     ),
   );
 
@@ -88,7 +93,7 @@ test('a sheet of 1 048 576 rows and 16 384 columns keeps input and frames within
     {
       suffix: 'sheet',
       browser: `chromium ${browser.version()}`,
-      heapUsedMb: await bench.heapMb(),
+      heapUsedMb: await sheetBench.heapMb(),
     },
   );
 

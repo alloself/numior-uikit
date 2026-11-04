@@ -75,6 +75,7 @@ describe('time segments', () => {
     expect(types('ko-KR')[0]).toBe('dayPeriod');
     expect(types('en-US', true)).toEqual(['hour', ':', 'minute', ':', 'second', ' ', 'dayPeriod']);
     expect(timeLayout('en-US', { seconds: false }).periods).toEqual(['AM', 'PM']);
+
     const arabic = timeLayout('ar-EG', { seconds: false });
     expect(arabic.digits[0]).toBe('٠');
     expect(arabic.periods).toEqual(['ص', 'م']);
@@ -172,6 +173,7 @@ describe('time segments', () => {
   it('names segments through Intl.DisplayNames with an English fallback', () => {
     expect(segmentLabels('de-DE').hour).toBe('Stunde');
     expect(segmentLabels('en-US').dayPeriod).toBe('AM/PM');
+
     Object.defineProperty(Intl, 'DisplayNames', { value: undefined, configurable: true });
 
     expect(segmentLabels('de-DE')).toEqual({

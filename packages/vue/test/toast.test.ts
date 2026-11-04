@@ -16,6 +16,7 @@ describe('NuiToaster and NuiToast', () => {
     expect(toaster.hasModifier('expanded')).toBe(false);
     expect(toaster.popoverCalls.show).toBe(1);
     expect(toaster.toasts).toHaveLength(0);
+
     toaster.unmount();
   });
 
@@ -34,10 +35,13 @@ describe('NuiToaster and NuiToast', () => {
     expect(saved.closeIsIconOnly).toBe(true);
     expect(failed.role).toBe('alert');
     expect(failed.hasTone('error')).toBe(true);
+
     await toaster.advance(1000);
     expect(toaster.toast(0).leaving).toBe(true);
+
     await toaster.advance(200);
     expect(toaster.toasts).toHaveLength(0);
+
     toaster.unmount();
   });
 
@@ -75,9 +79,11 @@ describe('NuiToaster and NuiToast', () => {
     await toaster.hoverStack();
     await toaster.advance(5000);
     expect(toaster.toasts.map((toast) => toast.leaving)).toEqual([false, false]);
+
     await toaster.leaveStack();
     await toaster.advance(1000);
     expect(toaster.toasts.map((toast) => toast.leaving)).toEqual([true, true]);
+
     toaster.unmount();
   });
 
@@ -90,6 +96,7 @@ describe('NuiToaster and NuiToast', () => {
     await toaster.leaveStack();
     await toaster.advance(1100);
     expect(toaster.toasts.map((toast) => toast.leaving)).toEqual([false]);
+
     toaster.unmount();
   });
 
@@ -103,6 +110,7 @@ describe('NuiToaster and NuiToast', () => {
     await second.pressEscape();
     expect(toaster.toast(0).leaving).toBe(true);
     expect(toaster.toast(1).focused).toBe(true);
+
     toaster.unmount();
   });
 
@@ -115,8 +123,10 @@ describe('NuiToaster and NuiToast', () => {
     await toaster.toast(1).clickAction();
     expect(onClick).toHaveBeenCalledTimes(1);
     expect(toaster.toast(1).leaving).toBe(true);
+
     await toaster.toast(0).clickClose();
     expect(toaster.toast(0).leaving).toBe(true);
+
     toaster.unmount();
   });
 
@@ -126,13 +136,16 @@ describe('NuiToaster and NuiToast', () => {
     await custom.advance(0);
     expect(custom.customToasts).toEqual(['Customx']);
     expect(custom.toasts).toHaveLength(0);
+
     await custom.dismissCustom(0);
     expect(custom.items[0]?.leaving).toBe(true);
+
     custom.unmount();
     const shared = ToasterDriver.mount({ withPlugin: false });
     shared.show({ title: 'Shared' });
     await shared.advance(0);
     expect(shared.toast(0).title).toBe('Shared');
+
     shared.unmount();
   });
 
@@ -142,12 +155,15 @@ describe('NuiToaster and NuiToast', () => {
     toaster.show({ title: 'Above the dialog' });
     await toaster.advance(0);
     expect(toaster.popoverCalls).toEqual({ show: 2, hide: 1 });
+
     await toaster.setTabHidden(true);
     await toaster.advance(5000);
     expect(toaster.toast(0).leaving).toBe(false);
+
     await toaster.setTabHidden(false);
     await toaster.advance(1000);
     expect(toaster.toast(0).leaving).toBe(true);
+
     toaster.unmount();
   });
 
@@ -157,6 +173,7 @@ describe('NuiToaster and NuiToast', () => {
     await english.advance(0);
     expect(english.label).toBe('Notifications');
     expect(english.toast(0).closeLabel).toBe('Close');
+
     english.unmount();
 
     const russian = ToasterDriver.mount({ config: { locale: 'ru-RU' } });
@@ -164,6 +181,7 @@ describe('NuiToaster and NuiToast', () => {
     await russian.advance(0);
     expect(russian.label).toBe('Уведомления');
     expect(russian.toast(0).closeLabel).toBe('Закрыть');
+
     russian.unmount();
   });
 });

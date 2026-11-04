@@ -134,6 +134,7 @@ describe('tableCells', () => {
     );
 
     expect(reads).toEqual(['2:1']);
+
     text = 'new';
     expect(column?.value(2)).toBe('new');
     expect(reads).toEqual(['2:1', '2:1']);

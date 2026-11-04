@@ -1,6 +1,5 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { boxOf } from './helpers/geometry';
-import { PlaygroundPage } from './pages/playground';
 
 const PDF = { name: 'contract.pdf', mimeType: 'application/pdf', size: 2048 };
 const TEXT = { name: 'notes.txt', mimeType: 'text/plain', size: 512 };
@@ -9,13 +8,13 @@ const VIDEO = { name: 'clip.mp4', mimeType: 'video/mp4', size: 64 };
 
 test.describe('upload', () => {
   test('uploads chosen files with progress, keeps existing files and removes them', async ({
-    page,
+    playground,
+    upload,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.open();
-    const { upload } = playground;
     await upload.documents.scrollIntoViewIfNeeded();
     await expect(upload.row(upload.documents, 'brief.pdf')).toContainText(/340 (kB|кБ)/);
+
     await upload.choose(upload.documents, PDF, TEXT);
     await expect(upload.row(upload.documents, 'contract.pdf').locator('progress')).toBeVisible();
 
@@ -26,17 +25,17 @@ test.describe('upload', () => {
     const output = await upload.readOutput();
     expect(output.documents[1]?.result).toBe('https://files.example/contract.pdf');
     await expect(upload.description(upload.documents, 'notes.txt')).toHaveText(/512 (byte|Б)/);
+
     await upload.action(upload.documents, 'brief.pdf', 'Удалить').click();
     await expect(upload.row(upload.documents, 'brief.pdf')).toHaveCount(0);
     await expect.poll(async () => (await upload.readOutput()).documents).toHaveLength(2);
   });
 
   test('lists or drops rejected files, retries a failed upload and cancels a running one', async ({
-    page,
+    playground,
+    upload,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.open();
-    const { upload } = playground;
     await upload.documents.scrollIntoViewIfNeeded();
     await upload.drop(upload.documents, BIG, VIDEO);
     await expect(upload.description(upload.documents, 'scan.pdf')).toHaveText('Файл больше 1 МБ');
@@ -46,6 +45,7 @@ test.describe('upload', () => {
     );
 
     await expect(upload.action(upload.documents, 'scan.pdf', 'Повторить')).toHaveCount(0);
+
     await upload.action(upload.documents, 'scan.pdf', 'Удалить').click();
     await upload.action(upload.documents, 'clip.mp4', 'Удалить').click();
     await upload.dropToggle.check();
@@ -78,16 +78,17 @@ test.describe('upload', () => {
   });
 
   test('shows image thumbnails in the grid and highlights the zone while dragging', async ({
-    page,
+    playground,
+    upload,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.open();
-    const { upload } = playground;
     await upload.images.scrollIntoViewIfNeeded();
     await upload.dragOver(upload.images);
     await expect(upload.images).toHaveClass(/nui-upload--dragging/);
+
     await upload.dragLeave(upload.images);
     await expect(upload.images).not.toHaveClass(/nui-upload--dragging/);
+
     await upload.choose(upload.images, { name: 'photo.png', mimeType: 'image/png', size: 128 });
     await expect(upload.thumbnail(upload.images, 'photo.png')).toHaveAttribute('src', /^blob:/);
 
@@ -97,35 +98,41 @@ test.describe('upload', () => {
   });
 
   test('opens the file dialog from the button with the keyboard and from the zone with a click', async ({
+    playground,
+    upload,
     page,
     isMobile,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.open();
-    const { upload } = playground;
     await upload.documents.scrollIntoViewIfNeeded();
     const fromZone = page.waitForEvent('filechooser');
     await upload.zone(upload.documents).click({ position: { x: 10, y: 10 } });
     expect((await fromZone).isMultiple()).toBe(true);
+
     if (isMobile) {
       return;
     }
+
     await upload.browse(upload.documents).focus();
     const fromKeyboard = page.waitForEvent('filechooser');
     await page.keyboard.press('Enter');
     await fromKeyboard;
   });
 
-  test('the button variant has no drop zone and lists the chosen file', async ({ page }) => {
-    const playground = new PlaygroundPage(page);
+  test('the button variant has no drop zone and lists the chosen file', async ({
+    playground,
+    upload,
+    page,
+  }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { upload } = playground;
     await upload.report.scrollIntoViewIfNeeded();
     await expect(upload.zone(upload.report)).toHaveCount(0);
+
     const chooser = page.waitForEvent('filechooser');
     await upload.browse(upload.report).click();
     expect((await chooser).isMultiple()).toBe(false);
+
     await upload.choose(upload.report, { name: 'sales.csv', mimeType: 'text/csv' });
     await expect(upload.row(upload.report, 'sales.csv')).toBeVisible();
 
@@ -135,15 +142,15 @@ test.describe('upload', () => {
   });
 
   test('the avatar upload previews the chosen image, replaces it and removes it', async ({
-    page,
+    playground,
+    upload,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { upload } = playground;
     await upload.avatar.scrollIntoViewIfNeeded();
     await expect(upload.avatarInitials).toHaveText('АС');
     await expect(upload.avatarTrigger).toHaveAccessibleName('Выбрать изображение');
+
     await upload.choose(upload.avatar, { name: 'me.png', mimeType: 'image/png', image: true });
     await expect(upload.avatarImage).toBeVisible();
     await expect(upload.avatarTrigger).toHaveAccessibleName('Сменить изображение');
@@ -157,16 +164,18 @@ test.describe('upload', () => {
 
     await expect(upload.avatar.getByRole('status')).toContainText('Файл больше');
     expect((await upload.readOutput()).avatar?.name).toBe('me.png');
+
     await upload.avatarRemove.click();
     await expect(upload.avatarInitials).toHaveText('АС');
     expect((await upload.readOutput()).avatar).toBeNull();
   });
 
-  test('the avatar badge sits on the rim of the avatar and mirrors in RTL', async ({ page }) => {
-    const playground = new PlaygroundPage(page);
+  test('the avatar badge sits on the rim of the avatar and mirrors in RTL', async ({
+    playground,
+    upload,
+  }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { upload } = playground;
     await upload.avatar.scrollIntoViewIfNeeded();
     const reach = await upload.badgeReach();
 
@@ -174,6 +183,7 @@ test.describe('upload', () => {
     expect(reach.x).toBeGreaterThan(0);
     expect(reach.y).toBeGreaterThan(0);
     expect((await boxOf(upload.avatarGlyph)).width).toBe(12);
+
     await playground.setDirection('rtl');
     const mirrored = await upload.badgeReach();
 
@@ -181,11 +191,12 @@ test.describe('upload', () => {
     expect(mirrored.y).toBe(reach.y);
   });
 
-  test('upload has no automatically detectable WCAG AA violations', async ({ page }) => {
-    const playground = new PlaygroundPage(page);
+  test('upload has no automatically detectable WCAG AA violations', async ({
+    playground,
+    upload,
+  }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { upload } = playground;
     await upload.documents.scrollIntoViewIfNeeded();
     await upload.failToggle.check();
     await upload.choose(upload.documents, { ...TEXT, name: 'broken.txt' });

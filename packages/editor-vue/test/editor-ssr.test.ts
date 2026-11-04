@@ -69,6 +69,7 @@ describe('NuiEditor on the server', () => {
     for (const marker of MARKERS) {
       expect(html).toContain(marker);
     }
+
     expect(await EditorDriver.ssr({ document })).toBe(html);
     expect(await EditorDriver.hydrate({ document })).toEqual([]);
   });
@@ -80,6 +81,7 @@ describe('NuiEditor on the server', () => {
     for (const marker of MARKERS) {
       expect(html).toContain(marker);
     }
+
     expect(await EditorDriver.hydrate({ modelValue })).toEqual([]);
   });
 });

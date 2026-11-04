@@ -122,9 +122,11 @@ describe('NuiTable', () => {
     expect(grid.cellText(100, 0)).toBe('100');
     expect(grid.cellText(100, 9)).toBe(ruNumber(1002));
     expect(grid.cellText(100, 17)).toBe('Данные');
+
     await grid.scrollToRow(500);
     expect(grid.scrollTop).toBe(20_000);
     expect(grid.renderedRows).toContain(500);
+
     await grid.scrollToColumn('m5');
     expect(grid.scrollLeft).toBe(1260);
   });
@@ -133,28 +135,38 @@ describe('NuiTable', () => {
     const grid = mountPeople();
     await grid.focusCell(0, 1);
     expect(grid.activeCell).toEqual({ row: 0, col: 1 });
+
     await grid.press('ArrowRight');
     expect(grid.focusedCell).toEqual({ row: 0, col: 2 });
+
     await grid.press('ArrowUp');
     expect(grid.focusedCell).toEqual({ row: -1, col: 2 });
+
     await grid.press('ArrowUp');
     expect(grid.focusedCell).toEqual({ row: -1, col: 2 });
+
     await grid.press('ArrowDown');
     await grid.press('End');
     expect(grid.focusedCell).toEqual({ row: 0, col: 17 });
+
     await grid.press('Home');
     expect(grid.focusedCell).toEqual({ row: 0, col: 0 });
+
     await grid.press('PageDown');
     expect(grid.focusedCell).toEqual({ row: 6, col: 0 });
+
     await grid.press('PageUp');
     expect(grid.focusedCell).toEqual({ row: 0, col: 0 });
+
     await grid.press('End', { ctrl: true });
     expect(grid.focusedCell).toEqual({ row: 999, col: 17 });
     expect(grid.scrollTop).toBe(1000 * 40 - 260);
     expect(grid.renderedRows).toContain(999);
+
     await grid.press('Home', { ctrl: true });
     expect(grid.focusedCell).toEqual({ row: 0, col: 0 });
     expect(grid.scrollTop).toBe(0);
+
     await grid.press('ArrowDown', { shift: true });
     expect(grid.focusedCell).toEqual({ row: 0, col: 0 });
   });
@@ -166,8 +178,10 @@ describe('NuiTable', () => {
     for (let step = 0; step < 6; step += 1) {
       await grid.press('ArrowRight');
     }
+
     expect(grid.focusedCell).toEqual({ row: 0, col: 7 });
     expect(grid.scrollLeft).toBe(660);
+
     grid.unmount();
 
     const mirrored = mountPeople({ dir: 'rtl' });
@@ -176,8 +190,10 @@ describe('NuiTable', () => {
     for (let step = 0; step < 6; step += 1) {
       await mirrored.press('ArrowLeft');
     }
+
     expect(mirrored.focusedCell).toEqual({ row: 0, col: 7 });
     expect(mirrored.scrollLeft).toBe(-660);
+
     await mirrored.press('ArrowRight');
     expect(mirrored.focusedCell).toEqual({ row: 0, col: 6 });
   });
@@ -194,6 +210,7 @@ describe('NuiTable', () => {
     expect(grid.activeCellElement).toBe(cell);
     expect(document.activeElement).toBe(cell);
     expect(grid.windowFrame?.lead).toBe('19720px');
+
     await grid.focusCell(505, 0);
     expect(grid.activeCell).toEqual({ row: 505, col: 0 });
     expect(grid.renderedRows).not.toContain(2);
@@ -210,10 +227,12 @@ describe('NuiTable', () => {
     await grid.settle();
     expect(grid.cellHtml(3, 1)).toBe('<strong>СОТРУДНИК 3</strong>');
     expect(grid.headerTexts[3]).toBe('Оклад');
+
     await grid.focusCell(10, 2);
     await grid.setSource(people(3));
     expect(grid.rowCount).toBe(4);
     expect(grid.activeCell).toEqual({ row: 2, col: 2 });
+
     await grid.setSource([]);
     expect(grid.rowCount).toBe(1);
     expect(grid.emptyText).toBe('Нет строк для показа');
@@ -243,6 +262,7 @@ describe('NuiTable', () => {
     expect(grid.cellWraps(0, 6)).toBe(true);
     expect(grid.cellWraps(0, 1)).toBe(false);
     expect(grid.cellWraps(-1, 6)).toBe(false);
+
     await grid.focusCell(0, 0);
     await grid.press('PageDown');
     expect(grid.focusedCell).toEqual({ row: 11, col: 0 });

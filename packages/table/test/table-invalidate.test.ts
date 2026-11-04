@@ -68,6 +68,7 @@ describe('NuiTable invalidate', () => {
 
     expect([...sheet.reads].toSorted((a, b) => a - b)).toEqual([3, 4]);
     expect(grid.cellText(3, 3)).toBe('новое');
+
     sheet.reads.clear();
     await grid.invalidate();
     expect(sheet.reads.size).toBeGreaterThan(2);
@@ -85,6 +86,7 @@ describe('NuiTable invalidate', () => {
 
     expect([...sheet.labels].toSorted((a, b) => a - b)).toEqual([3, 4]);
     expect([...sheet.reads]).toEqual([]);
+
     sheet.labels.clear();
     await grid.press('ArrowRight');
 

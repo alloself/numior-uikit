@@ -42,11 +42,13 @@ describe('NuiCode', () => {
     expect(plain.lineTexts).toEqual(['const answer = 42;', "console.log('hi');"]);
     expect(plain.scopesOf(1)).toEqual([]);
     expect(plain.copyFloats).toBe(true);
+
     const painted = CodeDriver.mount({ props: { code: SAMPLE, tokens: TOKENS, language: 'ts' } });
     expect(painted.lineTexts).toEqual(['const answer = 42;', "console.log('hi');"]);
     expect(painted.scopesOf(1)).toEqual(['keyword', 'number', 'punctuation']);
     expect(painted.language).toBe('ts');
     expect(painted.copyFloats).toBe(false);
+
     const mismatched = CodeDriver.mount({ props: { code: SAMPLE, tokens: [TOKENS[0] ?? []] } });
     expect(mismatched.scopesOf(1)).toEqual([]);
   });
@@ -54,6 +56,7 @@ describe('NuiCode', () => {
   it('centres the floating copy button on a one-line block', () => {
     const single = CodeDriver.mount({ props: { code: 'pnpm add @numior/vue' } });
     expect(single.hasModifier('single')).toBe(true);
+
     const multi = CodeDriver.mount({ props: { code: SAMPLE } });
     expect(multi.hasModifier('single')).toBe(false);
   });
@@ -76,11 +79,13 @@ describe('NuiCode', () => {
     const code = CodeDriver.mount({ props: { code: SAMPLE }, config: { locale: 'ru-RU' } });
     expect(code.copyLabel).toBe('Скопировать код');
     expect(code.status).toBe('');
+
     await code.copy();
     expect(clipboard.copies).toEqual([SAMPLE]);
     expect(code.copyLabel).toBe('Скопировано');
     expect(code.status).toBe('Скопировано');
     expect(code.hasModifier('copied')).toBe(true);
+
     const labelled = CodeDriver.mount({ props: { code: SAMPLE, copyLabel: 'Grab' } });
     expect(labelled.copyLabel).toBe('Grab');
 
@@ -93,11 +98,13 @@ describe('NuiCode', () => {
     const short = CodeDriver.mount({ props: { code: SAMPLE, maxLines: 5 } });
     expect(short.expandLabel).toBeUndefined();
     expect(short.hasModifier('collapsible')).toBe(false);
+
     const long = CodeDriver.mount({ props: { code: SAMPLE, maxLines: 1 } });
     expect(long.hasModifier('collapsible')).toBe(true);
     expect(long.hasModifier('collapsed')).toBe(true);
     expect(long.expandLabel).toBe('Show more');
     expect(long.expanded).toBe(false);
+
     await long.toggleExpand();
     expect(long.expanded).toBe(true);
     expect(long.hasModifier('collapsed')).toBe(false);
@@ -132,6 +139,7 @@ describe('NuiCode', () => {
     const first = CodeDriver.mount({ props: { code: SAMPLE, language: 'typescript' }, config });
 
     expect(first.scopesOf(1)).toEqual([]);
+
     await first.settle();
     expect(first.scopesOf(2)).toEqual(['punctuation', 'function', 'punctuation']);
 

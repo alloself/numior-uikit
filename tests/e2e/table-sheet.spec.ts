@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { boxGaps, boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
@@ -25,8 +25,7 @@ const TITLE_HEIGHT = 44;
 const FROZEN_BOTTOM = HEAD_HEIGHT + TITLE_HEIGHT + ROW;
 const BAND_SCROLLS = [97, 333];
 
-const expectSolidHeader = async (page: Page): Promise<void> => {
-  const playground = new PlaygroundPage(page);
+const expectSolidHeader = async (playground: PlaygroundPage): Promise<void> => {
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
   const { tableSheet: sheet } = playground;
@@ -41,9 +40,8 @@ const expectSolidHeader = async (page: Page): Promise<void> => {
 
 test.describe('table cell styles', () => {
   test('draws grid lines between the columns and keeps the pane edge without them', async ({
-    page,
+    playground,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
@@ -51,15 +49,15 @@ test.describe('table cell styles', () => {
 
     expect(await sheet.lineAfter(SALES, 1)).toBe('1px');
     expect(await sheet.lineAfter(SALES, 0)).toBe('1px');
+
     await sheet.borderedSwitch.click();
     await expect.poll(() => sheet.lineAfter(SALES, 1)).toBe('0px');
     expect(await sheet.lineAfter(SALES, 0)).toBe('1px');
   });
 
   test('draws the borders a cell names over the grid and leaves the rows their height', async ({
-    page,
+    playground,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
@@ -68,20 +66,21 @@ test.describe('table cell styles', () => {
     expect(await sheet.topEdge(INCOME_TOTAL, 2)).toEqual({ width: '1px', style: 'solid' });
     expect(await sheet.topEdge(RESULT, 2)).toEqual({ width: '1px', style: 'solid' });
     expect(await sheet.topEdge(SALES, 2)).toBeNull();
+
     const line = await sheet.lineAbove(INCOME_TOTAL, 1);
 
     expect(line.thickness).toBeLessThan(LINE_THICKNESS);
     expect(line.strong).toBeLessThan(LINE_TOLERANCE);
     expect(await sheet.boxHeights()).toEqual([44, 32]);
+
     await sheet.windowSwitch.click();
     await expect(sheet.cell(INCOME_TOTAL, 2)).toBeVisible();
     expect(await sheet.boxHeights()).toEqual([44, 32]);
   });
 
   test('paints fills and text colours and lays the selection tint over a filled cell', async ({
-    page,
+    playground,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
@@ -92,17 +91,18 @@ test.describe('table cell styles', () => {
     await expect(sheet.cell(1, 1)).toHaveClass(/nui-table__cell--align-center/);
     expect(await sheet.fillLayers(1, 1)).toBe(1);
     expect(await sheet.fillLayers(SALES, 1)).toBe(0);
+
     await sheet.heatSwitch.click();
     await expect.poll(() => sheet.fillLayers(SALES, 1)).toBe(1);
+
     await sheet.cell(SALES, 1).click();
     await expect(sheet.cell(SALES, 1)).toBeFocused();
     await expect.poll(() => sheet.fillLayers(SALES, 1)).toBe(2);
   });
 
   test('closes the last column with a line only while the table has spare room', async ({
-    page,
+    playground,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
@@ -110,8 +110,10 @@ test.describe('table cell styles', () => {
 
     expect(await sheet.hasSpareRoom()).toBe(false);
     expect(await sheet.lineAfter(SALES, LAST_COLUMN)).toBe('0px');
+
     await sheet.quarterSwitch.click();
     await expect(sheet.cell(SALES, LAST_QUARTER_COLUMN + 1)).toHaveCount(0);
+
     const spare = await sheet.hasSpareRoom();
 
     await expect
@@ -119,8 +121,10 @@ test.describe('table cell styles', () => {
       .toBe(spare ? '1px' : '0px');
   });
 
-  test('selects rows, columns and the whole sheet from the headers', async ({ page, isMobile }) => {
-    const playground = new PlaygroundPage(page);
+  test('selects rows, columns and the whole sheet from the headers', async ({
+    playground,
+    isMobile,
+  }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
@@ -128,6 +132,7 @@ test.describe('table cell styles', () => {
 
     await expect(sheet.rowHeader(SALES)).toHaveText('4');
     await expect(sheet.corner).toHaveText('Номера строк');
+
     await (isMobile ? sheet.rowHeader(SALES).tap() : sheet.rowHeader(SALES).click());
 
     await expect
@@ -137,6 +142,7 @@ test.describe('table cell styles', () => {
     await expect(sheet.rowHeader(SALES)).toHaveClass(/nui-table__cell--marked/);
     await expect(sheet.rowHeader(SALES + 1)).not.toHaveClass(/nui-table__cell--marked/);
     await expect(sheet.cell(SALES, 2)).toHaveClass(/nui-table__cell--ranged/);
+
     await (isMobile ? sheet.columnHeader(2).tap() : sheet.columnHeader(2).click());
 
     await expect
@@ -145,6 +151,7 @@ test.describe('table cell styles', () => {
 
     await expect(sheet.columnHeader(2)).toHaveClass(/nui-table__cell--marked/);
     await expect(sheet.columnHeader(3)).not.toHaveClass(/nui-table__cell--marked/);
+
     await (isMobile ? sheet.corner.tap() : sheet.corner.click());
 
     await expect
@@ -153,11 +160,11 @@ test.describe('table cell styles', () => {
   });
 
   test('extends rows from their headers with Shift, a drag and the keyboard', async ({
+    playground,
     page,
     isMobile,
   }) => {
     test.skip(isMobile, 'mouse and keyboard scenario');
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
@@ -170,6 +177,7 @@ test.describe('table cell styles', () => {
       .toEqual([{ from: { row: SALES, col: 0 }, to: { row: SALES + 2, col: LAST_COLUMN } }]);
 
     await expect(sheet.cell(SALES + 2, 0)).toBeFocused();
+
     await page.keyboard.press('Shift+ArrowDown');
 
     await expect
@@ -192,6 +200,7 @@ test.describe('table cell styles', () => {
 
     await page.keyboard.press('Home');
     await expect(sheet.rowHeader(INCOME_TOTAL + 2)).toBeFocused();
+
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Space');
 
@@ -206,11 +215,11 @@ test.describe('table cell styles', () => {
   });
 
   test('resizes a row by the edge of its header and counts the height in the scroll', async ({
+    playground,
     page,
     isMobile,
   }) => {
     test.skip(isMobile, 'mouse and keyboard scenario');
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
@@ -219,6 +228,7 @@ test.describe('table cell styles', () => {
     await expect(sheet.rowHeader(SALES)).toBeVisible();
     expect(await sheet.rowHeights()).toEqual({ 0: 44 });
     expect((await boxOf(sheet.row(0))).height).toBeCloseTo(44, 3);
+
     const before = await sheet.scrollHeight();
     const below = await boxOf(sheet.row(SALES + 1));
     const handle = await boxOf(sheet.rowResizer(SALES));
@@ -233,12 +243,15 @@ test.describe('table cell styles', () => {
     expect((await boxOf(sheet.row(SALES + 1))).y).toBeCloseTo(below.y + 20, 3);
     expect(await sheet.scrollHeight()).toBe(before + 20);
     expect(await sheet.ranges()).toEqual([]);
+
     await sheet.rowHeader(SALES).click();
     await page.keyboard.press('Home');
     await expect(sheet.rowHeader(SALES)).toBeFocused();
+
     await page.keyboard.press('Alt+ArrowDown');
 
     await expect.poll(() => sheet.rowHeights()).toEqual({ 0: 44, [SALES]: 60 });
+
     await sheet.rowResizer(SALES).dblclick();
     await expect.poll(() => sheet.rowHeights()).toEqual({ 0: 44 });
     expect((await boxOf(sheet.row(SALES))).height).toBeCloseTo(32, 3);
@@ -246,13 +259,14 @@ test.describe('table cell styles', () => {
   });
 
   test('keeps scrolled cells from showing over the header at any pixel fraction', async ({
-    page,
+    playground,
   }) => {
-    await expectSolidHeader(page);
+    await expectSolidHeader(playground);
   });
 
-  test('draws a merged range as one cell with its text wrapped in the middle', async ({ page }) => {
-    const playground = new PlaygroundPage(page);
+  test('draws a merged range as one cell with its text wrapped in the middle', async ({
+    playground,
+  }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
@@ -261,6 +275,7 @@ test.describe('table cell styles', () => {
     await expect(sheet.cell(INCOME, 0)).toHaveText('Доходы');
     await expect(sheet.cell(INCOME, 2)).toHaveCount(0);
     expect((await boxOf(sheet.cell(INCOME, 1))).width).toBeCloseTo(CENTRE_WIDTH, 3);
+
     await sheet.scrollTo(0, CENTRE_WIDTH);
     await expect(sheet.cell(SALES, LAST_COLUMN)).toHaveAttribute('rowspan', '3');
     await expect(sheet.cell(SALES + 1, LAST_COLUMN)).toHaveCount(0);
@@ -272,11 +287,11 @@ test.describe('table cell styles', () => {
   });
 
   test('moves the cursor through a merged cell and selects it whole', async ({
+    playground,
     page,
     isMobile,
   }) => {
     test.skip(isMobile, 'mouse and keyboard scenario');
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
@@ -285,10 +300,13 @@ test.describe('table cell styles', () => {
     await sheet.cell(SALES, LAST_COLUMN - 1).click();
     await page.keyboard.press('ArrowRight');
     await expect(sheet.cell(SALES, LAST_COLUMN)).toBeFocused();
+
     await page.keyboard.press('ArrowDown');
     await expect(sheet.cell(INCOME_TOTAL, LAST_COLUMN)).toBeFocused();
+
     await page.keyboard.press('ArrowUp');
     await expect(sheet.cell(SALES, LAST_COLUMN)).toBeFocused();
+
     await page.keyboard.press('Shift+ArrowLeft');
 
     await expect
@@ -301,30 +319,30 @@ test.describe('table cell styles', () => {
   });
 
   test('keeps both pieces of a merge split by the pinned column under one cursor', async ({
-    page,
+    playground,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
     await sheet.show();
 
     expect(await sheet.fillLayers(INCOME, 0)).toBe(1);
+
     await sheet.cell(INCOME, 1).click({ position: { x: 40, y: 10 } });
     await expect(sheet.cell(INCOME, 1)).toBeFocused();
     await expect(sheet.cell(INCOME, 0)).toHaveClass(/nui-table__cell--allied/);
     await expect.poll(() => sheet.fillLayers(INCOME, 0)).toBe(2);
     expect(await sheet.fillLayers(INCOME, 1)).toBe(2);
     expect(await sheet.ranges()).toEqual([]);
+
     await sheet.cell(SALES, 1).click();
     await expect(sheet.cell(INCOME, 0)).not.toHaveClass(/nui-table__cell--allied/);
     await expect.poll(() => sheet.fillLayers(INCOME, 0)).toBe(1);
   });
 
   test('continues a tall merge through the row window without moving its content', async ({
-    page,
+    playground,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
@@ -333,18 +351,22 @@ test.describe('table cell styles', () => {
     await sheet.windowSwitch.click();
     await sheet.scrollTo(8 * ROW, CENTRE_WIDTH);
     await expect(sheet.cell(JOURNAL, LAST_COLUMN)).toBeVisible();
+
     const top = await sheet.canvasTop(sheet.row(JOURNAL));
 
     expect(await sheet.canvasTop(sheet.content(sheet.journalNote))).toBe(top);
+
     await sheet.scrollTo(40 * ROW, CENTRE_WIDTH);
     await expect(sheet.cell(JOURNAL, LAST_COLUMN)).toHaveCount(0);
     await expect(sheet.journalNote).toHaveCount(1);
     await expect(sheet.journalNote).toBeVisible();
+
     const content = await boxOf(sheet.content(sheet.journalNote));
 
     expect(Math.round(content.height)).toBe(JOURNAL_ROWS * ROW);
     expect(await sheet.canvasTop(sheet.content(sheet.journalNote))).toBe(top);
     expect(await sheet.boxHeights()).toEqual([44, ROW]);
+
     await sheet.scrollTo(44 * ROW, CENTRE_WIDTH);
     await expect(sheet.text(JOURNAL, LAST_COLUMN)).toHaveCount(0);
     await expect(sheet.journalNote).toContainText('Операции сверены с банком');
@@ -352,9 +374,8 @@ test.describe('table cell styles', () => {
   });
 
   test('keeps the first rows of the sheet under the header while the rest scroll', async ({
-    page,
+    playground,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
@@ -386,14 +407,15 @@ test.describe('table cell styles', () => {
     expect(await sheet.rowAt(FROZEN_BOTTOM - 4)).toBe(HEAD);
     expect(await sheet.rowAt(FROZEN_BOTTOM + 4)).toBeGreaterThan(SALES);
     await expect(sheet.text(HEAD, 0)).toHaveText('Статья');
+
     await sheet.frozenSwitch.click();
     await expect(sheet.row(HEAD)).toHaveCount(0);
   });
 
   test('reveals the cursor below the frozen rows and leaves them where they are', async ({
+    playground,
     page,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
@@ -403,34 +425,40 @@ test.describe('table cell styles', () => {
     await sheet.frozenSwitch.click();
     await sheet.scrollTo(12 * ROW, 0);
     await expect(sheet.cell(JOURNAL, 0)).toBeVisible();
+
     await sheet.focusNatively(sheet.cell(HEAD, 2));
     await expect(sheet.cell(HEAD, 2)).toBeFocused();
 
     expect(await sheet.scrollTop()).toBe(12 * ROW);
+
     await sheet.focusNatively(sheet.columnHeader(2));
     await expect(sheet.columnHeader(2)).toBeFocused();
     expect(await sheet.scrollTop()).toBe(12 * ROW);
+
     await sheet.focusNatively(sheet.cell(HEAD, 2));
     await page.keyboard.press('ArrowDown');
     await expect(sheet.cell(INCOME, 1)).toBeFocused();
     expect(await sheet.scrollTop()).toBe(0);
+
     await page.keyboard.press('PageDown');
     await page.keyboard.press('PageDown');
     await expect.poll(() => sheet.scrollTop()).toBeGreaterThan(0);
+
     const focused = sheet.grid.locator('.nui-table__cell--active');
 
     expect((await sheet.bandOf(focused)).top).toBeGreaterThanOrEqual(FROZEN_BOTTOM);
+
     await page.keyboard.press('PageUp');
     expect((await sheet.bandOf(focused)).top).toBeGreaterThanOrEqual(FROZEN_BOTTOM);
+
     await page.keyboard.press('Control+Home');
     await expect(sheet.cell(TITLE, 0)).toBeFocused();
     expect(await sheet.scrollTop()).toBeGreaterThan(0);
   });
 
   test('holds the rendered rows under the frozen ones when the scroll runs ahead of the window', async ({
-    page,
+    playground,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
@@ -439,18 +467,19 @@ test.describe('table cell styles', () => {
     await sheet.windowSwitch.click();
     await sheet.frozenSwitch.click();
     await expect(sheet.row(HEAD)).toHaveClass(/nui-table__row--frozen/);
+
     const down = await sheet.runAhead(40 * ROW);
 
     expect(down.frozenBottom).toBe(FROZEN_BOTTOM);
     expect(down.lastBottom).toBe(down.end);
     await expect(sheet.cell(JOURNAL + 30, 0)).toBeVisible();
+
     const up = await sheet.runAhead(0);
 
     expect(up.firstTop).toBe(up.frozenBottom);
   });
 
-  test('jumps to the edges of the sheet with Ctrl and the arrows', async ({ page }) => {
-    const playground = new PlaygroundPage(page);
+  test('jumps to the edges of the sheet with Ctrl and the arrows', async ({ playground, page }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
@@ -459,6 +488,7 @@ test.describe('table cell styles', () => {
     await page.keyboard.press('Control+ArrowDown');
 
     await expect(sheet.cell(LAST_ROW, 1)).toBeFocused();
+
     await page.keyboard.press('Control+Shift+ArrowRight');
 
     await expect
@@ -471,9 +501,8 @@ test.describe('table cell styles', () => {
   });
 
   test('draws references over the cells they name and scrolls them under the header', async ({
-    page,
+    playground,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
@@ -505,9 +534,8 @@ test.describe('table cell styles', () => {
       .toBeLessThanOrEqual(3);
   });
 
-  test('names the cell under the pointer', async ({ page, isMobile }) => {
+  test('names the cell under the pointer', async ({ playground, isMobile }) => {
     test.skip(isMobile, 'a hovering pointer');
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
@@ -515,17 +543,17 @@ test.describe('table cell styles', () => {
     await sheet.cell(SALES + 1, 2).hover();
 
     await expect(sheet.pointer).toHaveText('C5');
+
     await sheet.quarterSwitch.click();
     await sheet.cell(SALES + 1, LAST_QUARTER_COLUMN - 1).hover();
     await expect(sheet.pointer).toHaveText('N5');
   });
 
   test('mirrors the row headers, the references and the pointer name in RTL', async ({
-    page,
+    playground,
     isMobile,
   }) => {
     test.skip(isMobile, 'a hovering pointer');
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await playground.setDirection('rtl');
@@ -546,8 +574,9 @@ test.describe('table cell styles', () => {
     await expect(sheet.pointer).toHaveText('C5');
   });
 
-  test('a painted sheet has no automatically detectable WCAG AA violations', async ({ page }) => {
-    const playground = new PlaygroundPage(page);
+  test('a painted sheet has no automatically detectable WCAG AA violations', async ({
+    playground,
+  }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableSheet: sheet } = playground;
@@ -566,14 +595,16 @@ for (const ratio of PIXEL_RATIOS) {
   test.describe(`table header at a pixel ratio of ${ratio}`, () => {
     test.use({ deviceScaleFactor: ratio });
 
-    test('keeps scrolled cells from showing over the header', async ({ page, isMobile }) => {
+    test('keeps scrolled cells from showing over the header', async ({ playground, isMobile }) => {
       test.skip(isMobile, 'pixel ratios of a desktop display');
-      await expectSolidHeader(page);
+      await expectSolidHeader(playground);
     });
 
-    test('keeps scrolled rows from showing between the frozen rows', async ({ page, isMobile }) => {
+    test('keeps scrolled rows from showing between the frozen rows', async ({
+      playground,
+      isMobile,
+    }) => {
       test.skip(isMobile, 'pixel ratios of a desktop display');
-      const playground = new PlaygroundPage(page);
       await playground.emulate({ reducedMotion: 'reduce' });
       await playground.open();
       const { tableSheet: sheet } = playground;
@@ -582,6 +613,7 @@ for (const ratio of PIXEL_RATIOS) {
       await sheet.windowSwitch.click();
       await sheet.frozenSwitch.click();
       await expect(sheet.row(HEAD)).toHaveClass(/nui-table__row--frozen/);
+
       await sheet.paintScrolledRows();
 
       for (const fraction of PIXEL_FRACTIONS) {

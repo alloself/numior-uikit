@@ -163,6 +163,7 @@ describe('comment anchors', () => {
     ).toBeUndefined();
 
     expect(editor.run(setAnchor('c2', undefined))).toBe(true);
+
     editor.select(textSelection(3));
     expect(editor.run(setAnchor('c3'))).toBe(false);
   });

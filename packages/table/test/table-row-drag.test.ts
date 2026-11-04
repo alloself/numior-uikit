@@ -68,12 +68,15 @@ describe('NuiTable row drag', () => {
     expect(grid.colCount).toBe(18);
     expect(grid.gripColumn(1)).toBe(1);
     expect(grid.gripDisabled(1)).toBe(false);
+
     await grid.grabRow(1);
     expect(grid.rowDragging(1)).toBe(true);
     expect(grid.ghostText).toBe('Сотрудник 1');
     expect(grid.ghostSize).toBe('40px');
+
     await grid.moveRowTo(4, 'after');
     expect(grid.dropMark).toEqual({ kind: 'line', start: '240px', inset: '0px' });
+
     await grid.dropRow();
 
     expect(grid.reorders).toEqual([
@@ -98,8 +101,10 @@ describe('NuiTable row drag', () => {
     await grid.setSource(moved(rows, 1, 0));
     expect(grid.focusedCell).toEqual({ row: 0, col: 2 });
     expect(grid.announcement).toBe('Строка «Сотрудник 1» перемещена на место 1 из 50');
+
     await grid.press('ArrowUp', { alt: true, shift: true });
     expect(grid.reorders).toHaveLength(1);
+
     await grid.press('ArrowDown', { alt: true, shift: true });
 
     expect(grid.reorders[1]).toEqual({
@@ -116,11 +121,14 @@ describe('NuiTable row drag', () => {
     await grid.settle();
 
     expect(grid.gripDisabled(0)).toBe(true);
+
     await grid.grabRow(0);
     expect(grid.rowDragging(0)).toBe(false);
+
     await grid.moveRowTo(3, 'after');
     await grid.dropRow();
     expect(grid.reorders).toEqual([]);
+
     await grid.focusCell(0, 1);
     await grid.press('ArrowDown', { alt: true, shift: true });
     expect(grid.reorders).toEqual([]);
@@ -131,6 +139,7 @@ describe('NuiTable row drag', () => {
     await grid.settle();
 
     expect(grid.cellText(2, 0)).toBe('adr.md');
+
     await grid.grabRow(2);
     await grid.moveRowTo(1, 'before');
 
@@ -180,8 +189,10 @@ describe('NuiTable row drag', () => {
     await grid.grabRow(5);
     await grid.moveRowTo(3, 'inside');
     expect(grid.dropMark?.kind).toBe('line');
+
     await vi.advanceTimersByTimeAsync(600);
     expect(grid.dropMark).toEqual({ kind: 'box', start: '160px', size: '40px' });
+
     await grid.dropRow();
 
     expect(grid.reorders).toEqual([
@@ -199,6 +210,7 @@ describe('NuiTable row drag', () => {
     await grid.moveRowTo(4, 'inside');
     await vi.advanceTimersByTimeAsync(600);
     expect(grid.dropMark?.kind).toBe('line');
+
     await grid.dropRow();
     expect(grid.reorders).toHaveLength(1);
   });
@@ -211,6 +223,7 @@ describe('NuiTable row drag', () => {
     await grid.press('ArrowRight', { alt: true, shift: true });
     expect(grid.reorders).toEqual([{ row: adr, from: 1, to: 0, parent: docs, toParent: plan }]);
     expect(grid.announcement).toBe('Строка «adr.md» перемещена в «plan.md», место 1 из 1');
+
     await grid.press('ArrowLeft', { alt: true, shift: true });
 
     expect(grid.reorders[1]).toEqual({
@@ -222,6 +235,7 @@ describe('NuiTable row drag', () => {
     });
 
     expect(grid.announcement).toBe('Строка «adr.md» перемещена на верхний уровень, место 2 из 4');
+
     await grid.focusCell(0, 1);
     await grid.press('ArrowLeft', { alt: true, shift: true });
     expect(grid.reorders).toHaveLength(2);

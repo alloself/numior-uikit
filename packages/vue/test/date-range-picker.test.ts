@@ -14,10 +14,13 @@ describe('NuiDateRangePicker', () => {
     expect(picker.texts).toEqual(['10.09.2026', '20.09.2026']);
     expect(picker.inputs[0]?.attributes('id')).toBeDefined();
     expect(picker.inputs[1]?.attributes('aria-label')).toBe('Конец');
+
     await picker.type(1, '05.09.2026');
     expect(picker.value).toEqual({ start: '2026-09-05', end: '2026-09-10' });
+
     await picker.type(0, '');
     expect(picker.value).toEqual({ start: null, end: '2026-09-10' });
+
     picker.unmount();
   });
 
@@ -27,9 +30,11 @@ describe('NuiDateRangePicker', () => {
     await picker.clickInput(1);
     expect(picker.isOpen).toBe(true);
     expect(picker.endFocused).toBe(true);
+
     await picker.typeKeys(1, '20092026');
     expect(picker.texts).toEqual(['', '20.09.2026']);
     expect(picker.value).toEqual({ start: null, end: '2026-09-20' });
+
     picker.unmount();
   });
 
@@ -46,29 +51,36 @@ describe('NuiDateRangePicker', () => {
     await picker.clickOpen();
     expect(picker.isOpen).toBe(true);
     expect(picker.months).toBe(2);
+
     await picker.clickDay('2026-08-31');
     expect(picker.isOpen).toBe(true);
     expect(picker.value).toEqual({ start: '2026-08-31', end: null });
+
     await picker.clickClear();
     expect(picker.isOpen).toBe(true);
     expect(picker.value).toEqual({ start: null, end: null });
     expect(picker.presetLabels).toEqual(['Неделя']);
+
     await picker.clickDay('2026-09-10');
     expect(picker.isOpen).toBe(true);
     expect(picker.value).toEqual({ start: '2026-09-10', end: null });
+
     await picker.clickDay('2026-09-03');
     expect(picker.value).toEqual({ start: '2026-09-03', end: '2026-09-10' });
     expect(picker.isOpen).toBe(false);
     expect(picker.startFocused).toBe(true);
     expect(picker.texts).toEqual(['03.09.2026', '10.09.2026']);
     expect(picker.hiddenValues).toEqual(['2026-09-03', '2026-09-10']);
+
     await picker.clickOpen();
     await picker.clickPreset('Неделя');
     expect(picker.value).toEqual({ start: '2026-09-21', end: '2026-09-27' });
     expect(picker.isOpen).toBe(false);
+
     await picker.clickClear();
     expect(picker.value).toEqual({ start: null, end: null });
     expect(picker.hiddenValues).toEqual(['', '']);
+
     picker.unmount();
   });
 
@@ -76,6 +88,7 @@ describe('NuiDateRangePicker', () => {
     const picker = DateRangePickerDriver.mount();
     expect(picker.inputs[1]?.attributes('aria-label')).toBe('Дата окончания');
     expect(picker.openLabel).toBe('Выбрать период');
+
     picker.unmount();
   });
 
@@ -101,8 +114,10 @@ describe('NuiDateRangePicker', () => {
 
     await picker.type(0, '25.08.2026');
     expect(picker.value).toEqual({ start: '2026-09-10', end: '2026-09-20' });
+
     await picker.type(0, '05.09.2026');
     expect(picker.value).toEqual({ start: '2026-09-05', end: '2026-09-20' });
+
     picker.unmount();
   });
 });

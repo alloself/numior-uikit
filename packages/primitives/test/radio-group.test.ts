@@ -29,6 +29,7 @@ describe('radio group context', () => {
 
     expect(group?.name.value).toBe('plan');
     expect(group?.modelValue.value).toBe('a');
+
     group?.select('b');
     expect(model.value).toBe('b');
   });

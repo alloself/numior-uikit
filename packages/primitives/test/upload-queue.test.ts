@@ -10,16 +10,20 @@ describe('useUploadQueue', () => {
     expect(queue.statuses).toEqual(['uploading', 'uploading', 'queued']);
     expect(queue.calls.map((call) => call.file.name)).toEqual(['a.txt', 'b.txt']);
     expect(queue.busy).toBe(true);
+
     await queue.progress(0, 0.5);
     expect(queue.item('a.txt')).toMatchObject({ status: 'uploading', progress: 0.5 });
+
     await queue.progress(0, 7);
     expect(queue.item('a.txt')).toMatchObject({ status: 'uploading', progress: 1 });
+
     queue.calls[0]?.resolve('ok');
     await queue.flush();
     expect(queue.item('a.txt')).toEqual(expect.objectContaining({ status: 'done', result: 'ok' }));
     expect(queue.item('a.txt')).not.toHaveProperty('progress');
     expect(queue.calls.map((call) => call.file.name)).toEqual(['a.txt', 'b.txt', 'c.txt']);
     expect(queue.settled).toEqual(['done:a.txt']);
+
     queue.calls[1]?.reject(new Error('boom'));
     await queue.flush();
 
@@ -29,9 +33,11 @@ describe('useUploadQueue', () => {
     });
 
     expect(queue.settled).toEqual(['done:a.txt', 'error:b.txt']);
+
     queue.calls[2]?.resolve('ok');
     await queue.flush();
     expect(queue.busy).toBe(false);
+
     queue.unmount();
   });
 
@@ -46,6 +52,7 @@ describe('useUploadQueue', () => {
     expect(queue.modelWrites - before).toBe(1);
     expect(queue.item('a.txt')).toMatchObject({ status: 'uploading', progress: 0.3 });
     expect(queue.item('b.txt')).toMatchObject({ status: 'uploading', progress: 0 });
+
     queue.unmount();
   });
 
@@ -61,18 +68,22 @@ describe('useUploadQueue', () => {
     });
 
     expect(queue.item('b.txt').status).toBe('uploading');
+
     queue.queue.retry(queue.item('a.txt').id);
     expect(queue.item('a.txt').status).toBe('queued');
     expect(queue.item('a.txt')).not.toHaveProperty('error');
+
     queue.queue.remove(queue.item('b.txt').id);
     expect(queue.calls[1]?.context.signal.aborted).toBe(true);
     expect(queue.items.map((item) => item.name)).toEqual(['a.txt']);
     expect(queue.item('a.txt').status).toBe('uploading');
     expect(queue.calls).toHaveLength(3);
+
     queue.calls[2]?.resolve('again');
     await queue.flush();
     expect(queue.item('a.txt')).toMatchObject({ status: 'done', result: 'again' });
     expect(queue.settled).toEqual(['error:a.txt', 'done:a.txt']);
+
     queue.unmount();
   });
 
@@ -81,15 +92,19 @@ describe('useUploadQueue', () => {
     queue.add('a.txt', 'b.txt');
     expect(queue.statuses).toEqual(['queued', 'queued']);
     expect(queue.calls).toHaveLength(0);
+
     queue.queue.start();
     expect(queue.statuses).toEqual(['uploading', 'uploading']);
+
     queue.replace([]);
     await queue.flush();
     expect(queue.calls.every((call) => call.context.signal.aborted)).toBe(true);
+
     queue.calls[0]?.resolve('late');
     await queue.flush();
     expect(queue.items).toEqual([]);
     expect(queue.settled).toEqual([]);
+
     queue.unmount();
   });
 
@@ -98,15 +113,18 @@ describe('useUploadQueue', () => {
     queue.add('a.txt', 'b.txt');
     expect(queue.items).toEqual([]);
     expect(queue.calls.map((call) => call.file.name)).toEqual(['a.txt']);
+
     queue.commit();
     await queue.flush();
     expect(queue.statuses).toEqual(['uploading', 'queued']);
+
     queue.calls[0]?.resolve('ok');
     await queue.flush();
     queue.commit();
     await queue.flush();
     expect(queue.statuses).toEqual(['done', 'uploading']);
     expect(queue.calls).toHaveLength(2);
+
     queue.unmount();
   });
 
@@ -125,9 +143,11 @@ describe('useUploadQueue', () => {
 
     expect(queue.item('big.bin')).toMatchObject({ status: 'error', error: { reason: 'size' } });
     expect(queue.calls.map((call) => call.file.name)).toEqual(['ok.txt']);
+
     queue.queue.retry(queue.item('big.bin').id);
     expect(queue.item('big.bin').status).toBe('error');
     expect(queue.calls).toHaveLength(1);
+
     queue.unmount();
   });
 

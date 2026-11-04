@@ -17,6 +17,7 @@ describe('NuiBreadcrumbs', () => {
     expect(crumbs.currentLabel).toBe('Billing');
     expect(crumbs.separatorCount).toBe(4);
     expect(crumbs.moreButton.exists()).toBe(false);
+
     crumbs.unmount();
   });
 
@@ -26,6 +27,7 @@ describe('NuiBreadcrumbs', () => {
     expect(crumbs.separatorCount).toBe(2);
     expect(crumbs.moreLabel).toBe('Show path');
     expect(crumbs.moreButton.attributes('aria-haspopup')).toBe('menu');
+
     await crumbs.openMore();
     expect(crumbs.menuLabels).toEqual(['Projects', 'Numior', 'Settings']);
 
@@ -38,6 +40,7 @@ describe('NuiBreadcrumbs', () => {
     crumbs.unmount();
     const wide = BreadcrumbsDriver.mount({ maxItems: 4 });
     expect(wide.crumbs).toEqual(['Home', 'Settings', 'Billing']);
+
     wide.unmount();
   });
 
@@ -45,12 +48,14 @@ describe('NuiBreadcrumbs', () => {
     const crumbs = BreadcrumbsDriver.mount({ customItems: true, maxItems: 4 });
     expect(crumbs.customCrumbs).toEqual(['0:Home', '3:Settings', '4:Billing*']);
     expect(crumbs.separatorCount).toBe(3);
+
     crumbs.unmount();
   });
 
   it('renders visible and collapsed links through a router component', async () => {
     const crumbs = BreadcrumbsDriver.mount({ viaRouter: true, maxItems: 3 });
     expect(crumbs.hrefs).toEqual(['/router/']);
+
     await crumbs.openMore();
 
     expect(crumbs.menuHrefs).toEqual([
@@ -66,10 +71,12 @@ describe('NuiBreadcrumbs', () => {
     const russian = BreadcrumbsDriver.mount({ maxItems: 3, config: { locale: 'ru-RU' } });
     expect(russian.label).toBe('Навигационная цепочка');
     expect(russian.moreLabel).toBe('Показать путь');
+
     russian.unmount();
 
     const labelled = BreadcrumbsDriver.mount({ label: 'Путь', config: { locale: 'ru-RU' } });
     expect(labelled.label).toBe('Путь');
+
     labelled.unmount();
   });
 });

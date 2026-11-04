@@ -31,12 +31,14 @@ describe('NuiTable column order', () => {
 
     expect(grid.headerTexts.slice(0, 4)).toEqual(['ID', 'Имя', 'Город', 'Оклад']);
     expect(grid.grip(1)).not.toBeNull();
+
     await grid.dragHeader(1, 2, 'after');
     expect(grid.columnOrder.slice(0, 4)).toEqual(['id', 'city', 'name', 'salary']);
     expect(grid.columnOrder).toHaveLength(18);
     expect(grid.headerTexts.slice(0, 4)).toEqual(['ID', 'Город', 'Имя', 'Оклад']);
     expect(grid.cellText(0, 1)).toBe('Москва');
     expect(grid.announcement).toBe('Колонка «Имя» перемещена на место 3 из 18');
+
     grid.layoutHeaders();
     await grid.dragHeader(2, 1, 'before');
     expect(grid.columnOrder.slice(0, 3)).toEqual(['id', 'name', 'city']);
@@ -48,9 +50,11 @@ describe('NuiTable column order', () => {
     await grid.press('ArrowRight', { alt: true, shift: true });
     expect(grid.columnOrder.slice(0, 3)).toEqual(['id', 'city', 'name']);
     expect(grid.focusedCell).toEqual({ row: -1, col: 2 });
+
     await grid.press('ArrowLeft', { alt: true, shift: true });
     expect(grid.columnOrder.slice(0, 3)).toEqual(['id', 'name', 'city']);
     expect(grid.focusedCell).toEqual({ row: -1, col: 1 });
+
     await grid.press('ArrowLeft', { alt: true, shift: true });
     expect(grid.columnOrder.slice(0, 3)).toEqual(['id', 'name', 'city']);
     expect(grid.focusedCell).toEqual({ row: -1, col: 1 });
@@ -66,9 +70,11 @@ describe('NuiTable column order', () => {
     await grid.settle();
     grid.layoutHeaders();
     expect(grid.grip(2)).toBeNull();
+
     await grid.focusCell(-1, 2);
     await grid.press('ArrowRight', { alt: true, shift: true });
     expect(grid.columnOrder).toEqual([]);
+
     await grid.dragHeader(1, 0, 'before');
     expect(grid.columnOrder).toEqual([]);
     expect(grid.headerTexts.slice(0, 3)).toEqual(['ID', 'Имя', 'Город']);

@@ -42,6 +42,7 @@ describe('NuiTable frozen rows', () => {
     expect(grid.rowEdge(0)).toBe(false);
     expect(grid.rowEdge(1)).toBe(true);
     expect(grid.frozenSize).toBe('80px');
+
     await grid.scroll({ top: 2000 });
 
     expect(grid.renderedRows).toEqual([0, 1, ...range(46, 63)]);
@@ -61,14 +62,18 @@ describe('NuiTable frozen rows', () => {
     await grid.focusCell(1, 1);
 
     expect(grid.scrollTop).toBe(2000);
+
     await grid.press('ArrowDown');
     expect(grid.focusedCell).toEqual({ row: 2, col: 1 });
     expect(grid.scrollTop).toBe(0);
+
     await grid.press('PageDown');
     expect(grid.focusedCell).toEqual({ row: 6, col: 1 });
     expect(grid.scrollTop).toBe(60);
+
     await grid.scrollToRow(50);
     expect(grid.scrollTop).toBe(1920);
+
     await grid.press('Home', { ctrl: true });
     expect(grid.focusedCell).toEqual({ row: 0, col: 0 });
     expect(grid.scrollTop).toBe(1920);
@@ -85,6 +90,7 @@ describe('NuiTable frozen rows', () => {
     expect(grid.cellSpan(2, 1)).toEqual([1, 2, 2]);
     expect(grid.mergeMarks(2, 1)).toEqual(['tall', 'cut-top']);
     expect(grid.cellText(2, 1)).toBe('Сотрудник 1');
+
     await grid.receive({ frozenRows: 0 });
     expect(grid.cellSpan(1, 1)).toEqual([2, 2, 2]);
     expect(grid.cell(2, 1)).toBeNull();
@@ -103,10 +109,13 @@ describe('NuiTable frozen rows', () => {
 
     expect(grid.renderedRows).toEqual(range(0, 100));
     expect(grid.rowEdge(99)).toBe(true);
+
     await grid.receive({ frozenRows: 1, loading: true });
     expect(grid.frozenSize).toBe('0px');
+
     await grid.receive({ frozenRows: 1, loading: false });
     expect(grid.rowFrozen(0)).toBe('calc(var(--_head-size) + 0px)');
+
     await grid.setGroupBy(['city']);
     expect(grid.rowFrozen(0)).toBeUndefined();
     expect(grid.frozenSize).toBe('0px');

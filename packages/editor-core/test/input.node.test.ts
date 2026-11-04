@@ -53,6 +53,7 @@ describe('input commands', () => {
     expect(texts(run(emoji, deleteText('backward', 'character')))).toEqual(['a']);
     expect(texts(run(start, deleteText('backward', 'word')))).toEqual(['one two ']);
     expect(texts(run(start, deleteText('backward', 'line')))).toEqual(['']);
+
     const middle = stateOf(doc(node('paragraph', ['one two'])), textSelection(1));
 
     expect(texts(run(middle, deleteText('forward', 'word')))).toEqual([' two']);
@@ -81,6 +82,7 @@ describe('input commands', () => {
 
     expect(texts(run(start, insertParagraph))).toEqual(['ab', 'cd']);
     expect(texts(run(start, insertLineBreak))).toEqual(['ab·cd']);
+
     const code = stateOf(doc(node('code_block', ['let x'])), textSelection(4));
 
     expect(texts(run(code, insertParagraph))).toEqual(['let\n x']);
@@ -92,6 +94,7 @@ describe('input commands', () => {
 
     expect(texts(run(start, insertPlainText('a\r\nb\nc')))).toEqual(['[a', 'b', 'c]']);
     expect(run(start, insertPlainText('a\r\nb\nc')).selection).toEqual(textSelection(9));
+
     const heading = stateOf(doc(node('heading', ['[]'], { level: 2 })), textSelection(2));
     const headings = run(heading, insertPlainText('a\nb')).doc.root.content;
 
@@ -111,6 +114,7 @@ describe('input commands', () => {
     const atEnd = stateOf(root, textSelection(3));
 
     expect(run(atEnd, selectAtom('forward')).selection).toEqual({ kind: 'node', id: mention.id });
+
     const afterMention = stateOf(root, textSelection(4));
     const beforeImage = run(afterMention, selectAtom('forward'));
 

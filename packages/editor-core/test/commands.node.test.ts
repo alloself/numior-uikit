@@ -156,6 +156,7 @@ describe('commands', () => {
     ]);
 
     expect(run(setBlockType('code'), stateAt(textSelection(10)))).toBeUndefined();
+
     const plain = stateAt(textSelection(1));
     const image = plain.doc.root.content[2];
 

@@ -1,8 +1,8 @@
 import { readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { expect, test } from '@playwright/test';
-import { DocsSite, type DocsScheme } from '../pages/docs';
+import { expect, test } from '../fixtures';
+import { type DocsScheme } from '../pages/docs';
 
 const DIST = fileURLToPath(new URL('../../../apps/docs/.vitepress/dist', import.meta.url));
 const BATCH = 8;
@@ -34,14 +34,15 @@ const SCHEMES: readonly DocsScheme[] = ['light', 'dark'];
 for (const scheme of SCHEMES) {
   for (const [index, routes] of batches(pagesOf(DIST).map(routeOf)).entries()) {
     test(`docs pages have no automatically detectable WCAG AA violations (${scheme}, batch ${index + 1})`, async ({
+      docs,
       page,
       isMobile,
     }) => {
       test.skip(isMobile, 'the sweep runs on desktop Chromium');
       test.slow();
-      const docs = new DocsSite(page);
       await docs.emulate({ reducedMotion: 'reduce' });
       await page.addInitScript((value) => localStorage.setItem('nui-theme', value), scheme);
+
       for (const route of routes) {
         await docs.open(route);
         expect.soft(await docs.wcagViolations(), route).toEqual([]);

@@ -42,6 +42,7 @@ describe('useFieldControl', () => {
 
     expect(aria.readonly).toBe(false);
     expect(aria.ariaReadonly).toBe('true');
+
     const released = ControlHarness.inside({ id: 'code', readonly: true }, { readonly: false });
     expect(released.readonly).toBe(false);
   });
@@ -62,6 +63,7 @@ describe('useFieldControl', () => {
     const plain = ControlHarness.inside(group);
     expect(plain.id).not.toBe('plan');
     expect(plain.ariaInvalid).toBeUndefined();
+
     const root = ControlHarness.inside(group, {}, { group: true });
     expect(root.id).toBe('plan');
     expect(root.describedBy).toBe('plan-error');

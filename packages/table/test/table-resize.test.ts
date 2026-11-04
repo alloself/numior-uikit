@@ -29,10 +29,12 @@ describe('NuiTable column widths', () => {
 
     expect(grid.trackWidth(1)).toBe('160px');
     expect(grid.resizer(1)).not.toBeNull();
+
     await grid.dragResizer(1, 60);
     expect(grid.widths).toEqual({ name: 220 });
     expect(grid.trackWidth(1)).toBe('220px');
     expect(grid.announcement).toBe('Ширина колонки «Имя»: 220 px');
+
     await grid.dragResizer(1, -100);
     expect(grid.widths).toEqual({ name: 120 });
   });
@@ -54,9 +56,11 @@ describe('NuiTable column widths', () => {
     await grid.settle();
     await grid.dragResizer(1, 500);
     expect(grid.widths).toEqual({ name: 240 });
+
     await grid.dragResizer(1, -500);
     expect(grid.widths).toEqual({ name: 100 });
     expect(grid.resizer(2)).toBeNull();
+
     await grid.focusCell(-1, 2);
     await grid.press('ArrowRight', { alt: true });
     expect(grid.widths).toEqual({ name: 100 });
@@ -68,13 +72,17 @@ describe('NuiTable column widths', () => {
     await grid.press('ArrowRight', { alt: true });
     expect(grid.widths).toEqual({ name: 170 });
     expect(grid.announcement).toBe('Ширина колонки «Имя»: 170 px');
+
     await grid.press('ArrowLeft', { alt: true });
     expect(grid.widths).toEqual({ name: 160 });
+
     await grid.press('ArrowLeft', { alt: true, shift: true });
     expect(grid.widths).toEqual({ name: 160 });
     expect(grid.focusedCell).toEqual({ row: -1, col: 1 });
+
     await grid.openColumnMenu(1);
     expect(grid.menuLabels).toContain('Сбросить ширину');
+
     await grid.chooseMenu('Сбросить ширину');
     expect(grid.widths).toEqual({});
     expect(grid.trackWidth(1)).toBe('160px');

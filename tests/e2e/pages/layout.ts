@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { boxOf } from '../helpers/geometry';
+import { boxOf, renderedWidth } from '../helpers/geometry';
 import {
   isBoolean,
   isString,
@@ -79,26 +79,22 @@ export class LayoutSection {
     return this.item(key).locator('xpath=..');
   }
 
-  async labelWidth(key: string): Promise<number> {
-    const box = await this.itemLabel(key).boundingBox();
-    return box?.width ?? 0;
+  labelWidth(key: string): Promise<number> {
+    return renderedWidth(this.itemLabel(key));
   }
 
   async iconOffset(target: Locator): Promise<number> {
-    const icon = await target.locator('.nui-row__leading').boundingBox();
-    const bar = await this.sidebar.boundingBox();
-
-    if (!icon || !bar) {
-      return Number.POSITIVE_INFINITY;
-    }
+    const icon = await boxOf(target.locator('.nui-row__leading'));
+    const bar = await boxOf(this.sidebar);
 
     return Math.abs(icon.x + icon.width / 2 - (bar.x + bar.width / 2));
   }
 
   async opensUnderToggle(key: string): Promise<boolean> {
-    const toggle = await this.subToggle.boundingBox();
-    const item = await this.item(key).boundingBox();
-    return toggle !== null && item !== null && item.y >= toggle.y + toggle.height - 1;
+    const toggle = await boxOf(this.subToggle);
+    const item = await boxOf(this.item(key));
+
+    return item.y >= toggle.y + toggle.height - 1;
   }
 
   tooltip(text: string): Locator {
@@ -109,9 +105,8 @@ export class LayoutSection {
     return this.root.locator('.nui-layout__body');
   }
 
-  async sidebarWidth(): Promise<number> {
-    const box = await this.sidebar.boundingBox();
-    return box?.width ?? 0;
+  sidebarWidth(): Promise<number> {
+    return renderedWidth(this.sidebar);
   }
 
   async appBarInset(): Promise<number> {

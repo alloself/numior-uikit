@@ -68,14 +68,17 @@ describe('parseFormConfig', () => {
     if (parsed.kind !== 'ok') {
       throw new Error(JSON.stringify(parsed.issues));
     }
+
     const smart = SmartFormDriver.mount({ initialValues: blank, fields: parsed.fields });
 
     expect(smart.fields).toEqual(expect.arrayContaining(['name', 'seats']));
     expect(smart.fields).not.toContain('company');
     expect(smart.legends).toEqual(['Account']);
     expect(smart.has('.nui-field-array')).toBe(true);
+
     await smart.click('input[value="company"]');
     expect(smart.fields).toContain('company');
+
     await smart.type('name', 'A');
     await smart.submit();
     expect(smart.error('name')).toBe('Too short');

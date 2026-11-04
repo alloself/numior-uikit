@@ -15,16 +15,20 @@ describe('month grid', () => {
     expect(monday).toHaveLength(5);
     expect(monday[0]?.[0]).toBe('2026-08-31');
     expect(monday[4]?.[6]).toBe('2026-10-04');
+
     const sunday = monthGrid({ month: '2026-09', weekStart: 7, fixedWeeks: false });
 
     expect(sunday[0]?.[0]).toBe('2026-08-30');
+
     const saturday = monthGrid({ month: '2026-09', weekStart: 6, fixedWeeks: false });
 
     expect(saturday[0]?.[0]).toBe('2026-08-29');
+
     const february = monthGrid({ month: '2027-02', weekStart: 1, fixedWeeks: false });
 
     expect(february).toHaveLength(4);
     expect(february[0]?.[0]).toBe('2027-02-01');
+
     const fixed = monthGrid({ month: '2027-02', weekStart: 1, fixedWeeks: true });
 
     expect(fixed).toHaveLength(6);
@@ -35,6 +39,7 @@ describe('month grid', () => {
     const rows = monthGrid({ month: '2027-01', weekStart: 1, fixedWeeks: false });
 
     expect(rows.map(weekNumberOfRow)).toEqual([53, 1, 2, 3, 4]);
+
     const sundayRows = monthGrid({ month: '2027-01', weekStart: 7, fixedWeeks: false });
 
     expect(sundayRows.map(weekNumberOfRow)).toEqual([53, 1, 2, 3, 4, 5]);

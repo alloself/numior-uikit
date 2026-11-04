@@ -19,6 +19,7 @@ describe('NuiAvatar', () => {
     expect(avatar.hasModifier('size-md')).toBe(true);
     expect(avatar.hasModifier('shape-circle')).toBe(true);
     expect(avatar.hasModifier('grouped')).toBe(false);
+
     const described = AvatarDriver.mount({ props: { src: '/a.png', name: 'Alice', alt: 'Photo' } });
     expect(described.label).toBe('Photo');
   });
@@ -28,6 +29,7 @@ describe('NuiAvatar', () => {
     expect(AvatarDriver.mount({ props: { name: 'Alice' } }).initials).toBe('A');
     expect(AvatarDriver.mount({ props: { name: '  jean  luc  picard ' } }).initials).toBe('JP');
     expect(AvatarDriver.mount({ props: { name: 'анна смирнова' } }).initials).toBe('АС');
+
     const anonymous = AvatarDriver.mount();
     expect(anonymous.hasIcon).toBe(true);
     expect(anonymous.initials).toBe('');
@@ -40,6 +42,7 @@ describe('NuiAvatar', () => {
     await avatar.failImage();
     expect(avatar.image.exists()).toBe(false);
     expect(avatar.initials).toBe('AB');
+
     await avatar.receive({ src: '/alice.png' });
     expect(avatar.image.exists()).toBe(true);
     expect(avatar.image.attributes('src')).toBe('/alice.png');
@@ -56,6 +59,7 @@ describe('NuiAvatar', () => {
     expect(avatar.hasModifier('shape-square')).toBe(true);
     expect(avatar.hasModifier('size-xl')).toBe(true);
     expect(avatar.hasBadge).toBe(true);
+
     const custom = AvatarDriver.mount({ props: { status: 'busy', statusLabel: 'Занят' } });
     expect(custom.statusLabel).toBe('Занят');
     expect(AvatarDriver.mount().statusLabel).toBeUndefined();
@@ -82,6 +86,7 @@ describe('NuiAvatarGroup', () => {
     expect(group.sizes).toEqual(Array.from({ length: 4 }, () => 'nui-avatar--size-lg'));
     expect(group.shapes).toEqual(Array.from({ length: 4 }, () => 'nui-avatar--shape-square'));
     expect(group.grouped).toBe(true);
+
     const all = AvatarGroupDriver.mount({ props: { items: PEOPLE } });
     expect(all.avatars).toHaveLength(5);
     expect(all.overflowText).toBeUndefined();

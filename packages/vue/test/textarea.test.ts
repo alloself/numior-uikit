@@ -26,9 +26,11 @@ describe('NuiTextarea', () => {
     await eager.type('text');
     expect(eager.value).toBe('text');
     expect(eager.emittedValues).toEqual(['text']);
+
     const lazy = TextareaDriver.mount({ modelValue: '', modifiers: { lazy: true } });
     await lazy.type('text');
     expect(lazy.emittedValues).toEqual([]);
+
     await lazy.commit();
     expect(lazy.emittedValues).toEqual(['text']);
   });

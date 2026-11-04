@@ -11,6 +11,7 @@ describe('toast store on the server', () => {
     const id = store.show({ title: 'Saved' });
     expect(vi.getTimerCount()).toBe(0);
     expect(store.toasts.value).toHaveLength(1);
+
     store.dismiss(id);
     expect(store.toasts.value).toHaveLength(0);
   });

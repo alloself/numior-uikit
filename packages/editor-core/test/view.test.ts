@@ -283,10 +283,13 @@ describe('editor view', () => {
     const view = mounted(doc(empty));
 
     expect(view.markup).toBe('<p><br></p>');
+
     view.change((tr) => tr.insertText('a', 1));
     expect(view.markup).toBe('<p>a</p>');
+
     view.change((tr) => tr.insert(2, [node('hard_break')]));
     expect(view.markup).toBe('<p>a<br><br></p>');
+
     view.change((tr) => tr.delete(1, 3));
     expect(view.markup).toBe('<p><br></p>');
   });

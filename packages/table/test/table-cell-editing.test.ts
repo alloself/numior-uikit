@@ -52,6 +52,7 @@ describe('NuiTable cell editing', () => {
     expect(grid.editorValue).toBe('Казань');
     expect(grid.editorLabel).toBe('Город');
     expect(grid.editorFocused).toBe(true);
+
     await grid.typeInEditor('Самара');
     await grid.press('Enter');
 
@@ -65,11 +66,14 @@ describe('NuiTable cell editing', () => {
     expect(grid.editing).toBeUndefined();
     expect(grid.cellText(1, 2)).toBe('Самара');
     expect(grid.focusedCell).toEqual({ row: 2, col: 2 });
+
     await grid.press('z', { ctrl: true });
     expect(grid.cellText(1, 2)).toBe('Казань');
+
     await grid.press('F2');
     await grid.press('Enter', { shift: true });
     expect(grid.focusedCell).toEqual({ row: 1, col: 2 });
+
     await grid.press('F2');
     await grid.press('Tab', { shift: true });
     expect(grid.focusedCell).toEqual({ row: 1, col: 1 });
@@ -83,12 +87,15 @@ describe('NuiTable cell editing', () => {
 
     await grid.press('Т');
     expect(grid.editorValue).toBe('Т');
+
     await grid.typeInEditor('Тула');
     await grid.press('Tab');
     expect(grid.cellText(3, 2)).toBe('Тула');
     expect(grid.focusedCell).toEqual({ row: 3, col: 3 });
+
     await grid.press('7');
     expect(grid.editorValue).toBe('7');
+
     await grid.press('Enter');
 
     expect(grid.edits.at(-1)).toEqual({
@@ -99,11 +106,13 @@ describe('NuiTable cell editing', () => {
     await grid.focusCell(5, 3);
     await grid.press('x');
     expect(grid.editorValue).toBe('1\u00a0050');
+
     await grid.typeInEditor('2000');
     await grid.press('Escape');
     expect(grid.editing).toBeUndefined();
     expect(grid.cellText(5, 3)).toBe('1\u00a0050');
     expect(grid.focusedCell).toEqual({ row: 5, col: 3 });
+
     await grid.press('F2');
     await grid.setSort([{ key: 'salary', direction: 'desc' }]);
     expect(grid.editing).toBeUndefined();
@@ -121,10 +130,13 @@ describe('NuiTable cell editing', () => {
     expect(grid.editing).toEqual({ row: 1, col: 2 });
     expect(grid.editorError).toBe('Заполните поле');
     expect(grid.announcement).toBe('Заполните поле');
+
     await grid.typeInEditor('Омск');
     expect(grid.editorError).toBeUndefined();
+
     await grid.typeInEditor(' ');
     expect(grid.editorError).toBe('Заполните поле');
+
     await grid.clickCell(6, 1);
     expect(grid.editing).toBeUndefined();
     expect(grid.edits).toEqual([]);
@@ -138,10 +150,12 @@ describe('NuiTable cell editing', () => {
     await grid.doubleClickCell(4, 2);
 
     expect(grid.editing).toEqual({ row: 4, col: 2 });
+
     await grid.clickEditor();
     expect(grid.clicks).toEqual([rows[4]]);
     expect(grid.ranges).toEqual([]);
     expect(grid.editorFocused).toBe(true);
+
     await grid.typeInEditor('Сочи');
     await grid.clickCell(8, 1);
     expect(grid.editing).toBeUndefined();
@@ -161,15 +175,19 @@ describe('NuiTable cell editing', () => {
     ]);
 
     expect(grid.cellText(2, 4)).toBe('Нет');
+
     await grid.doubleClickCell(2, 4);
     expect(grid.cellText(2, 4)).toBe('Да');
+
     await grid.focusCell(2, 1);
     await grid.press('F2');
     expect(grid.announcement).toBe('Эту ячейку нельзя изменить');
     expect(grid.editing).toBeUndefined();
+
     await grid.focusCell(0, 3);
     await grid.press('7');
     expect(grid.editing).toBeUndefined();
+
     await grid.doubleTapCell(6, 3);
     expect(grid.editing).toEqual({ row: 6, col: 3 });
     expect(grid.editorValue).toBe('1\u00a0060');
@@ -187,6 +205,7 @@ describe('NuiTable cell editing', () => {
     await grid.focusCell(2, 5);
     await grid.press('F2');
     expect(grid.editorValue).toBe('03.01.2026');
+
     await grid.typeInEditor('15.03.2026');
     await grid.press('Enter');
 
@@ -205,6 +224,7 @@ describe('NuiTable cell editing', () => {
     await grid.focusCell(4, 2);
     await grid.press('Delete');
     expect(grid.announcement).toBe('Очищено 0 ячеек, пропущено: 1');
+
     await grid.paste('\tабв');
     expect(grid.announcement).toBe('Вставлено 0 ячеек, пропущено: 2');
     expect(grid.edits).toHaveLength(1);

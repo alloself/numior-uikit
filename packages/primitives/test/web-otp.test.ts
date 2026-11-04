@@ -23,6 +23,7 @@ describe('useWebOtp', () => {
     await otp.settle();
     expect(otp.supported).toBe(true);
     expect(stub.requests).toBe(1);
+
     stub.deliver('482913');
     await otp.settle();
     expect(otp.codes).toEqual(['482913']);
@@ -44,11 +45,14 @@ describe('useWebOtp', () => {
     await otp.settle();
     await otp.enable(false);
     expect(stub.aborted).toBe(1);
+
     stub.deliver('482913');
     await otp.settle();
     expect(otp.codes).toEqual([]);
+
     await otp.enable(true);
     expect(stub.requests).toBe(2);
+
     stub.deliver('482913');
     await otp.settle();
     expect(otp.codes).toEqual(['482913']);
@@ -60,12 +64,15 @@ describe('useWebOtp', () => {
     await otp.settle();
     await otp.abort();
     expect(stub.aborted).toBe(1);
+
     stub.deliver('482913');
     await otp.settle();
     expect(otp.codes).toEqual([]);
+
     await otp.enable(false);
     await otp.enable(true);
     expect(stub.requests).toBe(2);
+
     await otp.unmount();
     expect(stub.aborted).toBe(2);
   });

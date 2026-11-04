@@ -164,6 +164,7 @@ describe('workbook steps and history', () => {
     book.commit({ kind: 'insertLines', sheet: 'Sheet1', axis: 'rows', at: 1, count: 2 });
 
     expect(book.first.layout.view).toMatchObject({ frozenRows: 4, frozenCols: 1 });
+
     book.commit({ kind: 'insertLines', sheet: 'Sheet1', axis: 'rows', at: 9, count: 1 });
     book.commit({ kind: 'deleteLines', sheet: 'Sheet1', axis: 'cols', at: 0, count: 1 });
 

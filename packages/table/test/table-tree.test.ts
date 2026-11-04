@@ -55,6 +55,7 @@ describe('NuiTable tree rows', () => {
     expect(grid.rowExpanded(2)).toBeUndefined();
     expect(grid.treeLevel(0)).toBe('0');
     expect(grid.treeLevel(2)).toBeUndefined();
+
     await grid.toggleRow(0);
 
     expect(grid.expanded).toEqual(['docs']);
@@ -64,15 +65,18 @@ describe('NuiTable tree rows', () => {
     expect(grid.rowLevel(1)).toBe('2');
     expect(grid.treeLevel(1)).toBe('1');
     expect(grid.announcement).toBe('Строка «docs» развёрнута');
+
     await grid.focusCell(3, 0);
     await grid.press('Enter');
 
     expect(grid.expanded).toEqual(['docs', 'docs/old']);
     expect(grid.cellText(4, 0)).toBe('notes.txt');
     expect(grid.rowLevel(4)).toBe('3');
+
     await grid.focusCell(3, 1);
     await grid.press('Enter');
     expect(grid.expanded).toEqual(['docs', 'docs/old']);
+
     await grid.focusCell(0, 0);
     await grid.press(' ');
     expect(grid.expanded).toEqual(['docs/old']);
@@ -124,6 +128,7 @@ describe('NuiTable tree rows', () => {
     await grid.settle();
 
     expect(grid.cellText(1, 0)).toBe('inner');
+
     const innerChevron = grid.chevron(1);
     await grid.toggleRow(0);
 

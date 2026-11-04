@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { boxOf } from '../helpers/geometry';
 import {
   isString,
   listOf,
@@ -88,12 +89,8 @@ export class DatesSection {
   }
 
   async dragDays(scope: Locator, from: string, to: string): Promise<void> {
-    const start = await this.day(scope, from).boundingBox();
-    const end = await this.day(scope, to).boundingBox();
-
-    if (!start || !end) {
-      throw new Error('Day cells have no bounding box');
-    }
+    const start = await boxOf(this.day(scope, from));
+    const end = await boxOf(this.day(scope, to));
 
     await this.page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
     await this.page.mouse.down();

@@ -38,14 +38,17 @@ describe('NuiTable with a source', () => {
     expect(grid.skeletonRows).toBe(6);
     expect(grid.cellText(0, 0)).toBe('Итого');
     expect(remote.requests).toEqual([{ offset: 0, limit: 50, sort: [] }]);
+
     remote.answer();
     await flushPromises();
     expect(grid.skeletonRows).toBe(0);
     expect(grid.cellText(0, 1)).toBe('Сотрудник 0');
     expect(grid.rowCount).toBe(1002);
+
     await grid.scroll({ top: 40 * 600 });
     expect(remote.requests.at(-1)?.offset).toBe(550);
     expect(grid.pendingRows).toBeGreaterThan(0);
+
     remote.answer();
     await flushPromises();
     expect(grid.cellText(600, 1)).toBe('Сотрудник 600');
@@ -70,6 +73,7 @@ describe('NuiTable with a source', () => {
 
     expect(grid.pendingRows).toBeGreaterThan(0);
     expect(grid.rowCount).toBe(1002);
+
     remote.answer();
     await flushPromises();
     expect(grid.cellText(0, 3)).toBe('10 990');
@@ -82,11 +86,14 @@ describe('NuiTable with a source', () => {
     await grid.settle();
     expect(grid.paginated).toBe(true);
     expect(remote.requests).toEqual([{ offset: 0, limit: 20, sort: [] }]);
+
     remote.answer();
     await flushPromises();
     expect(grid.rangeText).toBe('1–20 из 45');
+
     await grid.nextPage();
     expect(remote.requests.at(-1)).toEqual({ offset: 20, limit: 20, sort: [] });
+
     remote.answer();
     await flushPromises();
     expect(grid.cellText(0, 1)).toBe('Сотрудник 20');
@@ -102,8 +109,10 @@ describe('NuiTable with a source', () => {
     expect(grid.errors).toEqual([new Error('offline')]);
     expect(grid.announcement).toBe('Не удалось загрузить строки');
     expect(grid.skeletonRows).toBe(6);
+
     await grid.refresh();
     expect(remote.requests).toHaveLength(2);
+
     remote.answer();
     await flushPromises();
     expect(grid.skeletonRows).toBe(0);
@@ -132,6 +141,7 @@ describe('NuiTable with a source', () => {
 
     await flushPromises();
     expect(remote.requests.at(-1)).toEqual({ offset: 0, limit: 1000, sort: [] });
+
     remote.answer();
     expect((await text).split('\r\n')).toHaveLength(30);
   });
@@ -142,6 +152,7 @@ describe('NuiTable with a source', () => {
 
     await grid.settle();
     expect(remote.paths).toEqual([{ groupBy: ['city'], groupPath: [] }]);
+
     remote.answer();
     await flushPromises();
     expect(grid.role).toBe('treegrid');
@@ -151,16 +162,19 @@ describe('NuiTable with a source', () => {
     expect(grid.rowExpanded(1)).toBe('false');
     expect(grid.cellText(0, 3)).toBe('43\u00a0650');
     expect(grid.cellText(3, 0)).toBe('Итого90 строк');
+
     await grid.toggleGroup(1);
     expect(grid.rowExpanded(1)).toBe('true');
     expect(grid.rowCount).toBe(35);
     expect(grid.pendingRows).toBeGreaterThan(0);
     expect(remote.paths.at(-1)).toEqual({ groupBy: ['city'], groupPath: ['Казань'] });
+
     remote.answer();
     await flushPromises();
     expect(grid.pendingRows).toBe(0);
     expect(grid.cellText(2, 1)).toBe('Сотрудник 1');
     expect(grid.rowLevel(2)).toBe('2');
+
     await grid.toggleGroup(1);
     expect(grid.rowCount).toBe(5);
     expect(grid.groupLabel(2)).toBe('Москва (30)');
@@ -176,12 +190,15 @@ describe('NuiTable with a source', () => {
     await grid.openColumnMenu(2);
     await grid.chooseMenu('Группировать по колонке');
     expect(remote.paths.at(-1)).toEqual({ groupBy: ['city'], groupPath: [] });
+
     remote.answer();
     await flushPromises();
     expect(grid.groupLabel(1)).toBe('Казань (30)');
+
     await grid.openColumnMenu(2);
     await grid.chooseMenu('Убрать из группировки');
     expect(remote.paths.at(-1)).toEqual({ groupBy: [], groupPath: [] });
+
     remote.answer();
     await flushPromises();
     expect(grid.role).toBe('grid');
@@ -202,11 +219,13 @@ describe('NuiTable with a source', () => {
     expect(grid.rowLevel(0)).toBe('1');
     expect(grid.rowExpanded(0)).toBe('false');
     expect(grid.rowExpanded(1)).toBeUndefined();
+
     await grid.toggleRow(0);
     expect(grid.expanded).toEqual([0]);
     expect(remote.parents).toEqual([0]);
     expect(grid.rowBusy(0)).toBe(true);
     expect(grid.rowCount).toBe(33);
+
     remote.answerChildren();
     await flushPromises();
     expect(grid.rowBusy(0)).toBe(false);
@@ -214,6 +233,7 @@ describe('NuiTable with a source', () => {
     expect(grid.cellText(1, 1)).toBe('Сотрудник 1001');
     expect(grid.rowLevel(1)).toBe('2');
     expect(grid.loads).toEqual([]);
+
     await grid.toggleRow(0);
     expect(grid.rowCount).toBe(32);
     expect(grid.cellText(1, 1)).toBe('Сотрудник 1');

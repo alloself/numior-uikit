@@ -1,27 +1,27 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { rgbOf } from './helpers/color';
-import { PlaygroundPage } from './pages/playground';
+import { boxOf } from './helpers/geometry';
 
-test('separators carry semantics, stretch across their axis and take a label', async ({ page }) => {
-  const playground = new PlaygroundPage(page);
+test('separators carry semantics, stretch across their axis and take a label', async ({
+  playground,
+  chrome,
+}) => {
   await playground.open();
-  const { chrome } = playground;
   await expect(chrome.horizontalSeparator).toHaveRole('separator');
   await expect(chrome.horizontalSeparator).toHaveCSS('height', '1px');
-  const toolbar = await chrome.toolbar.boundingBox();
-  const vertical = await chrome.verticalSeparator.boundingBox();
-  expect(vertical?.width).toBe(1);
-  expect(vertical?.height).toBe(toolbar?.height);
+
+  const toolbar = await boxOf(chrome.toolbar);
+  const vertical = await boxOf(chrome.verticalSeparator);
+  expect(vertical.width).toBe(1);
+  expect(vertical.height).toBe(toolbar.height);
   await expect(chrome.verticalSeparator).toHaveAttribute('aria-orientation', 'vertical');
   await expect(chrome.decorativeSeparator).toHaveAttribute('role', 'none');
   await expect(chrome.labelledSeparator).toHaveText('или');
   expect(await chrome.labelLineWidth()).toBeGreaterThan(40);
 });
 
-test('kbd renders combos per platform, boxed or plain', async ({ page }) => {
-  const playground = new PlaygroundPage(page);
+test('kbd renders combos per platform, boxed or plain', async ({ playground, chrome }) => {
   await playground.open();
-  const { chrome } = playground;
   const apple = await chrome.isApplePlatform();
   expect(await chrome.keysOf(chrome.comboKbd)).toEqual(apple ? ['⌘', 'K'] : ['Ctrl', 'K']);
 
@@ -34,9 +34,10 @@ test('kbd renders combos per platform, boxed or plain', async ({ page }) => {
   await expect(chrome.firstKeyOf(chrome.plainKbd)).toHaveCSS('border-bottom-width', '0px');
 });
 
-test('code blocks number and highlight lines, copy their source and expand', async ({ page }) => {
-  const playground = new PlaygroundPage(page);
-  const { chrome } = playground;
+test('code blocks number and highlight lines, copy their source and expand', async ({
+  playground,
+  chrome,
+}) => {
   await chrome.stubClipboard();
   await playground.open();
   const code = chrome.titledCode;
@@ -45,185 +46,228 @@ test('code blocks number and highlight lines, copy their source and expand', asy
   expect(await chrome.hasLineNumber(code, 3)).toBe(true);
   expect(await chrome.hasLineNumber(chrome.plainCode, 1)).toBe(false);
   expect(await chrome.linePaddingOf(chrome.plainCode)).toBeGreaterThan(8);
+
   const plainLine = await rgbOf(chrome.lineOf(code, 1), 'background-color');
   const highlighted = await rgbOf(chrome.lineOf(code, 2), 'background-color');
   expect(highlighted).not.toEqual(plainLine);
+
   const collapsed = await chrome.bodyHeightOf(code);
   const expand = chrome.expandButtonOf(code);
   await expect(expand).toHaveAttribute('aria-expanded', 'false');
+
   await expand.click();
   await expect(expand).toHaveAttribute('aria-expanded', 'true');
   await expect.poll(() => chrome.bodyHeightOf(code)).toBeGreaterThan(collapsed);
+
   const copy = chrome.copyButtonOf(code);
   await expect(copy).toHaveAccessibleName('Скопировать код');
+
   await copy.click();
   await expect(copy).toHaveAccessibleName('Скопировано');
   await expect(code).toHaveClass(/nui-code--copied/);
   expect(await chrome.copiedTexts()).toEqual([expect.stringContaining('import { NuiButton }')]);
   await expect(chrome.copyButtonOf(chrome.plainCode)).toHaveCSS('opacity', '0');
+
   await chrome.plainCode.hover();
   await expect(chrome.copyButtonOf(chrome.plainCode)).toHaveCSS('opacity', '1');
 });
 
 test('toggle groups pick one scheme or several panels and rove focus', async ({
+  playground,
+  chrome,
   page,
   isMobile,
 }) => {
-  const playground = new PlaygroundPage(page);
   await playground.open();
-  const { chrome } = playground;
   const dark = chrome.toggleItem(chrome.schemeToggle, 'Тёмная');
   await expect(dark).toHaveRole('radio');
   await expect(dark).toHaveAttribute('aria-checked', 'false');
+
   await dark.click();
   await expect(dark).toHaveAttribute('aria-checked', 'true');
   await expect(chrome.toggleOutput).toHaveText('dark · preview');
+
   await dark.click();
   await expect(dark).toHaveAttribute('aria-checked', 'true');
+
   const code = chrome.toggleItem(chrome.panelsToggle, 'Код');
   await expect(code).toHaveAttribute('aria-pressed', 'false');
+
   await code.click();
   await expect(code).toHaveAttribute('aria-pressed', 'true');
   await expect(chrome.toggleOutput).toHaveText('dark · preview, code');
   await expect(chrome.toggleItem(chrome.panelsToggle, 'Терминал')).toBeDisabled();
+
   if (isMobile) {
     return;
   }
+
   await dark.focus();
   await page.keyboard.press('ArrowRight');
   await expect(chrome.toggleItem(chrome.schemeToggle, 'Системная')).toBeFocused();
   await expect(dark).toHaveAttribute('aria-checked', 'true');
+
   await page.keyboard.press('Space');
   await expect(chrome.toggleOutput).toHaveText('system · preview, code');
 });
 
 test('collapsible and accordion reveal content with motion and hide it until found', async ({
+  playground,
+  chrome,
   page,
   isMobile,
 }) => {
-  const playground = new PlaygroundPage(page);
   await playground.open();
-  const { chrome } = playground;
   const trigger = chrome.triggerOf(chrome.collapsible);
   await expect(trigger).toHaveAttribute('aria-expanded', 'false');
   await expect(chrome.contentOf(chrome.collapsible)).toHaveAttribute('hidden', /.*/);
   expect(await chrome.panelHeightOf(chrome.collapsible)).toBe(0);
+
   await trigger.click();
   await expect(trigger).toHaveAttribute('aria-expanded', 'true');
   await expect(chrome.contentOf(chrome.collapsible)).not.toHaveAttribute('hidden');
   await expect.poll(() => chrome.panelHeightOf(chrome.collapsible)).toBeGreaterThan(20);
+
   await trigger.click();
   await expect.poll(() => chrome.panelHeightOf(chrome.collapsible)).toBe(0);
   await expect(chrome.contentOf(chrome.collapsible)).toHaveAttribute('hidden', /.*/);
+
   const ssr = chrome.triggerOf(chrome.accordion, 'SSR');
   const tailwind = chrome.triggerOf(chrome.accordion, 'Tailwind');
   await expect(ssr).toHaveAttribute('aria-expanded', 'true');
   await expect(chrome.triggerOf(chrome.accordion, 'RTL')).toBeDisabled();
+
   await tailwind.click();
   await expect(tailwind).toHaveAttribute('aria-expanded', 'true');
   await expect(ssr).toHaveAttribute('aria-expanded', 'false');
+
   if (isMobile) {
     return;
   }
+
   await ssr.focus();
   await page.keyboard.press('ArrowDown');
   await expect(tailwind).toBeFocused();
+
   await page.keyboard.press('Home');
   await expect(ssr).toBeFocused();
 });
 
 test('the command palette opens on top, filters as you type and picks with the keyboard', async ({
+  playground,
+  chrome,
   page,
   isMobile,
 }) => {
-  const playground = new PlaygroundPage(page);
   await playground.open();
-  const { chrome } = playground;
   await expect(chrome.commandDialog).toBeHidden();
+
   await chrome.commandOpen.click();
   await expect(chrome.commandDialog).toBeVisible();
   await expect(chrome.commandInput).toBeFocused();
   expect(await chrome.dialogCornerClipped()).toBe(true);
-  const box = await chrome.commandDialog.boundingBox();
-  const viewport = page.viewportSize();
-  expect(box?.y ?? Number.POSITIVE_INFINITY).toBeLessThan((viewport?.height ?? 0) / 4);
+
+  const box = await boxOf(chrome.commandDialog);
+  expect(box.y).toBeLessThan((page.viewportSize()?.height ?? 0) / 4);
   await expect(chrome.commandOptions()).toHaveCount(5);
   await expect(chrome.activeCommand()).toHaveText('Начало работы');
+
   await chrome.commandInput.fill('тем');
   await expect(chrome.commandOptions()).toHaveCount(2);
   await expect(chrome.activeCommand()).toHaveText('Темизация');
+
   await page.keyboard.press('ArrowDown');
   await expect(chrome.activeCommand()).toHaveText('Переключить тему');
+
   await page.keyboard.press('Enter');
   await expect(chrome.commandDialog).toBeHidden();
   await expect(chrome.commandOutput).toHaveText('theme');
+
   if (isMobile) {
     return;
   }
+
   await page.keyboard.press('Control+k');
   await expect(chrome.commandDialog).toBeVisible();
+
   await page.keyboard.press('Escape');
   await expect(chrome.commandDialog).toBeHidden();
 });
 
 test('the table of contents follows the section in view and links to headings', async ({
+  playground,
+  chrome,
   page,
 }) => {
-  const playground = new PlaygroundPage(page);
   await playground.open();
-  const { chrome } = playground;
   await expect(chrome.toc).toHaveRole('navigation');
   await expect(chrome.toc).toHaveAccessibleName('На странице');
   await expect(chrome.tocLinks()).toHaveCount(5);
   await expect(chrome.tocLinks().nth(2)).toHaveAttribute('href', '#toc-basic');
+
   await chrome.tocArticle.scrollIntoViewIfNeeded();
   await expect(chrome.currentTocLink()).toHaveText('Установка');
+
   await chrome.scrollArticleTo('toc-advanced');
   await expect(chrome.currentTocLink()).toHaveText('Расширенный пример');
+
   await chrome.scrollArticleTo('toc-api');
   await expect(chrome.currentTocLink()).toHaveText('API');
+
   await chrome.tocLinks().nth(2).click();
   await expect(chrome.currentTocLink()).toHaveText('Базовый пример');
+
   await page.waitForTimeout(300);
   await expect(chrome.currentTocLink()).toHaveText('Базовый пример');
 });
 
-test('the skip link appears on focus and moves focus to its target', async ({ page, isMobile }) => {
+test('the skip link appears on focus and moves focus to its target', async ({
+  playground,
+  page,
+  isMobile,
+}) => {
   test.skip(isMobile, 'keyboard navigation');
-  const playground = new PlaygroundPage(page);
   await playground.open();
   const skip = page.getByTestId('skip-link');
   await expect(skip).toHaveCSS('opacity', '0');
+
   await page.keyboard.press('Tab');
   await expect(skip).toBeFocused();
   await expect(skip).toHaveCSS('opacity', '1');
+
   await page.keyboard.press('Enter');
   await expect(page.locator('#forms-title')).toBeFocused();
 });
 
 test('the splitter resizes its first pane by pointer and keyboard within its bounds', async ({
+  playground,
+  chrome,
   page,
   isMobile,
 }) => {
-  const playground = new PlaygroundPage(page);
   await playground.open();
-  const { chrome } = playground;
   await chrome.splitter.scrollIntoViewIfNeeded();
   await expect(chrome.splitterDivider).toHaveRole('separator');
   expect(await chrome.splitterValue()).toBe(50);
-  const width = (await chrome.splitter.boundingBox())?.width ?? 0;
-  const before = (await chrome.splitterStart.boundingBox())?.width ?? 0;
+
+  const { width } = await boxOf(chrome.splitter);
+  const before = await boxOf(chrome.splitterStart);
+
   if (!isMobile) {
     await chrome.dragDividerBy(width / 5);
     await expect.poll(() => chrome.splitterValue()).toBeGreaterThan(65);
-    const after = (await chrome.splitterStart.boundingBox())?.width ?? 0;
-    expect(after).toBeGreaterThan(before + width / 8);
+
+    const after = await boxOf(chrome.splitterStart);
+    expect(after.width).toBeGreaterThan(before.width + width / 8);
   }
+
   await chrome.splitterDivider.focus();
   await page.keyboard.press('Home');
   await expect.poll(() => chrome.splitterValue()).toBe(20);
+
   await page.keyboard.press('ArrowRight');
   await expect.poll(() => chrome.splitterValue()).toBe(25);
+
   await page.keyboard.press('End');
   await expect.poll(() => chrome.splitterValue()).toBe(80);
 });

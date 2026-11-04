@@ -83,6 +83,7 @@ describe('createStoreJob', () => {
 
     expect(store.dictionary).toEqual(['вишня', 'абрикос', 'Банан', 'item 10', 'item 2']);
     expect(Array.from(store.nulls)).toEqual([0, 0, 0, 0, 1, 0, 0]);
+
     const rankOf = (index: number): number => store.ranks[index] ?? -1;
     expect(rankOf(1)).toBe(rankOf(3));
     expect(rankOf(1)).toBeLessThan(rankOf(2));
@@ -97,8 +98,10 @@ describe('createStoreJob', () => {
     if (coded.kind !== 'codes') {
       throw new Error('Expected a coded store');
     }
+
     expect(coded.dictionary).toEqual(['вишня', 'абрикос', 'Банан', 'item 10', 'item 2']);
     expect(Array.from(coded.codes)).toEqual([0, 1, 2, 1, 0, 3, 4]);
+
     const ranked = stringStore(finish(createRankJob(coded, collator)));
 
     expect(ranked.codes).toBe(coded.codes);

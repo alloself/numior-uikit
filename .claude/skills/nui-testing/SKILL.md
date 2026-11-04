@@ -9,6 +9,11 @@ Specs read as scenarios: driver calls plus `expect`. No DOM poking, no `as`, no 
 helper lambdas, no `page.getByTestId` inside specs. Arrow constants everywhere (prototype
 stubs that need `this` use method shorthand), every block braced.
 
+A test body reads in phases: a blank line after each run of assertions before the next
+action, and around every `if`/`for`/`try` block (ESLint `numior/test-phases` in
+`scripts/eslint/test-phases.mjs`, autofixable). Section and group fixtures are destructured in the
+test parameters (`async ({ playground, buttons: { primary } }) =>`), never in the body.
+
 ## Unit tests for components (`packages/vue/test`)
 
 Driver per component in `test/drivers/<name>.ts`, extending `ComponentDriver`:
@@ -123,6 +128,13 @@ that the label `for` matches the control id and that values render on the server
 
 - Page objects in `tests/e2e/pages` (`PlaygroundPage`, `FormsSection`): locators, actions,
   typed readers such as `readOutput()`.
+- Specs import `test` and `expect` from `tests/e2e/fixtures.ts` (benchmarks from
+  `tests/bench/fixtures.ts`) and take the root page objects as fixtures
+  (`async ({ playground }) => …`, `docs`, `app`, `tableBench`). A spec never calls
+  `new PlaygroundPage(page)`: the fixture gives one instance per test with the lifetime of its
+  `page`, so console listeners and state do not leak between tests. A helper that opens a
+  section takes the fixture (`openEditor(playground)`), not `page`. A new root page object is
+  added to the fixtures module.
 - Colors through `expectRgb` (`tests/e2e/helpers/color.ts`); axe through
   `playground.wcagViolations()` after `playground.emulate({ reducedMotion: 'reduce' })`.
 - Cover keyboard and tap (`isMobile`), RTL overflow, density steps, then run in Docker.
@@ -142,7 +154,11 @@ that the label `for` matches the control id and that values render on the server
   `parseAs(text, guard, what)` for JSON outputs. A guard claims only what it checks: an output
   type is derived from its guard (`export type TableOutput = Guarded<typeof isTableOutput>`),
   never written beside it, and a check of key presence never stands in for a full type.
-  Shared geometry lives in `tests/e2e/helpers/geometry.ts` (`Box`, `boxOf`).
+  Shared geometry lives in `tests/e2e/helpers/geometry.ts`: `boxOf` throws when the element has
+  no box (so a missing element never passes as `undefined === undefined`), `renderedWidth` reads 0
+  for an element that is not rendered (collapsed labels, a hidden sidebar). `locator.boundingBox()`
+  is banned elsewhere in `tests/` by ESLint; assert coordinates directly
+  (`expect(badge.y).toBeLessThan(host.y)`), not through `expect(a && b && …).toBe(true)`.
 - Drag gestures use `page.mouse` (down, a 4px nudge past the threshold, a stepped move, up)
   from the page object (`SmartFormSection.dragContact`); in jsdom the drivers dispatch
   `PointerEvent`s on the handle and `pointermove`/`pointerup` on `window`, with

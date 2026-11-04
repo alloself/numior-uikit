@@ -42,9 +42,11 @@ describe('configurator code', () => {
     const seeds = text === undefined ? {} : { [text.name]: { ru: 'Имя', en: 'Name' } };
     const state = configuratorState(PROPS, seeds, 'en');
     expect(text === undefined ? 'Name' : state.strings[text.name]).toBe('Name');
+
     if (text !== undefined) {
       state.strings[text.name] = 'typed';
     }
+
     resetState(state, PROPS, seeds, 'ru');
     expect(text === undefined ? 'Имя' : state.strings[text.name]).toBe('Имя');
   });

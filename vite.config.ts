@@ -23,7 +23,11 @@ export default defineConfig({
         test: {
           name: 'node',
           environment: 'node',
-          include: ['apps/docs/test/**/*.node.test.ts', 'packages/**/*.node.test.ts'],
+          include: [
+            'apps/docs/test/**/*.node.test.ts',
+            'packages/**/*.node.test.ts',
+            'scripts/eslint/*.node.test.mjs',
+          ],
         },
       },
     ],
@@ -35,8 +39,9 @@ export default defineConfig({
       include: [
         'packages/{primitives,vue,forms,table,editor-core,content,editor-vue,spreadsheet,charts}/src/**/*.{ts,vue}',
         'apps/docs/.vitepress/{content,examples,markdown,reference,theme}/**/*.{ts,vue}',
+        'scripts/eslint/*.mjs',
       ],
-      exclude: ['**/*.types.ts', '**/*.d.ts'],
+      exclude: ['**/*.types.ts', '**/*.d.ts', '**/*.test.mjs'],
     },
   },
   fmt: {

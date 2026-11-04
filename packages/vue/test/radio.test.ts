@@ -8,6 +8,7 @@ describe('NuiRadioGroup and NuiRadio', () => {
     expect(new Set(group.names).size).toBe(1);
     expect(group.names[0]).toBeTruthy();
     expect(group.checkedValue).toBe('b');
+
     await group.select('c');
     expect(group.emittedValues).toEqual(['c']);
   });
@@ -58,9 +59,11 @@ describe('NuiRadioGroup and NuiRadio', () => {
     expect(group.hasModifier('readonly')).toBe(true);
     expect(group.group.attributes('aria-readonly')).toBe('true');
     expect(group.group.attributes('aria-disabled')).toBeUndefined();
+
     await group.click('b');
     expect(group.checkedValue).toBe('a');
     expect(group.emittedValues).toEqual([]);
+
     group.unmount();
   });
 
@@ -80,8 +83,10 @@ describe('NuiRadioGroup and NuiRadio', () => {
     expect(group.radios.map((radio) => radio.element.value)).toEqual(['x', 'y', 'z']);
     expect(group.disabledValues).toEqual(['z']);
     expect(group.root.text()).toContain('Twenty');
+
     await group.select('y');
     expect(group.emittedValues).toEqual(['y']);
+
     group.unmount();
   });
 });

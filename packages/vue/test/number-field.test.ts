@@ -20,6 +20,7 @@ describe('NuiNumberField', () => {
     expect(field.ariaNow).toBe('1234.5');
     expect(field.ariaText).toBe('1,234.5');
     expect(field.ariaBounds).toEqual(['0', '5000']);
+
     field.unmount();
   });
 
@@ -28,24 +29,30 @@ describe('NuiNumberField', () => {
     await field.type('1,234.567');
     expect(field.value).toBeNull();
     expect(field.text).toBe('1,234.567');
+
     await field.blur();
     expect(field.value).toBe(100);
     expect(field.text).toBe('100');
+
     await field.type('1.23456');
     await field.press('Enter');
     expect(field.value).toBe(1.235);
     expect(field.text).toBe('1.235');
+
     field.unmount();
   });
 
   it('follows the provider locale and lets the prop override it', async () => {
     const field = NumberFieldDriver.mount({ modelValue: 1234.5, locale: 'de-DE' });
     expect(field.text).toBe('1.234,5');
+
     await field.type('2.500,75');
     await field.blur();
     expect(field.value).toBe(2500.75);
+
     await field.setLocale('en-US');
     expect(field.text).toBe('2,500.75');
+
     field.unmount();
 
     const explicit = NumberFieldDriver.mount({
@@ -55,6 +62,7 @@ describe('NuiNumberField', () => {
     });
 
     expect(explicit.text).toBe('1,234.5');
+
     explicit.unmount();
   });
 
@@ -62,6 +70,7 @@ describe('NuiNumberField', () => {
     Object.defineProperty(navigator, 'language', { value: 'de-DE', configurable: true });
     const field = NumberFieldDriver.mount({ modelValue: 1234.5 });
     expect(field.text).toBe('1,234.5');
+
     field.unmount();
   });
 
@@ -73,10 +82,12 @@ describe('NuiNumberField', () => {
     });
 
     expect(price.text).toMatch(/^1\.234,50\s€$/);
+
     await price.type('99,9');
     await price.blur();
     expect(price.value).toBe(99.9);
     expect(price.text).toMatch(/^99,90\s€$/);
+
     price.unmount();
 
     const percent = NumberFieldDriver.mount({
@@ -85,10 +96,12 @@ describe('NuiNumberField', () => {
     });
 
     expect(percent.text).toBe('26%');
+
     await percent.type('30');
     await percent.blur();
     expect(percent.value).toBe(0.3);
     expect(percent.text).toBe('30%');
+
     percent.unmount();
   });
 
@@ -100,18 +113,24 @@ describe('NuiNumberField', () => {
 
     await field.press('ArrowUp');
     expect(field.value).toBe(0.8);
+
     await field.press('ArrowUp', { shiftKey: true });
     expect(field.value).toBe(1.8);
+
     await field.press('PageDown');
     expect(field.value).toBe(0.8);
+
     await field.press('Home');
     expect(field.value).toBe(0);
+
     await field.press('End');
     expect(field.value).toBe(5);
+
     await field.type('2');
     await field.press('ArrowUp');
     expect(field.value).toBe(2.1);
     expect(field.text).toBe('2.1');
+
     field.unmount();
   });
 
@@ -119,14 +138,17 @@ describe('NuiNumberField', () => {
     const field = NumberFieldDriver.mount();
     await field.press('ArrowUp');
     expect(field.value).toBe(1);
+
     field.unmount();
     const bounded = NumberFieldDriver.mount({ props: { min: 3 } });
     await bounded.press('ArrowUp');
     expect(bounded.value).toBe(3);
+
     bounded.unmount();
     const floor = NumberFieldDriver.mount({ props: { min: 0 } });
     await floor.press('ArrowDown');
     expect(floor.value).toBe(0);
+
     floor.unmount();
   });
 
@@ -135,20 +157,26 @@ describe('NuiNumberField', () => {
     expect(field.steppers.attributes('aria-hidden')).toBe('true');
     expect(field.incrementButton.attributes('tabindex')).toBe('-1');
     expect(field.decrementButton.attributes('disabled')).toBeDefined();
+
     await field.clickIncrement();
     expect(field.value).toBe(10);
     expect(field.incrementButton.attributes('disabled')).toBeDefined();
+
     await field.clickDecrement();
     expect(field.value).toBe(9);
+
     field.unmount();
     const bare = NumberFieldDriver.mount({ props: { steppers: false } });
     expect(bare.steppers.exists()).toBe(false);
+
     bare.unmount();
     const readonly = NumberFieldDriver.mount({ modelValue: 2, props: { readonly: true } });
     expect(readonly.hasModifier('readonly')).toBe(true);
     expect(readonly.incrementButton.attributes('disabled')).toBeDefined();
+
     await readonly.press('ArrowUp');
     expect(readonly.value).toBe(2);
+
     readonly.unmount();
   });
 
@@ -166,9 +194,11 @@ describe('NuiNumberField', () => {
     expect(field.hasModifier('invalid')).toBe(true);
     expect(field.hiddenValue).toBe('1234.5');
     expect(field.prefixText).toBe('$');
+
     field.unmount();
     const empty = NumberFieldDriver.mount({ props: { name: 'price' } });
     expect(empty.hiddenValue).toBe('');
+
     empty.unmount();
   });
 
@@ -177,32 +207,40 @@ describe('NuiNumberField', () => {
     expect(await field.insert('a')).toBe(true);
     expect(await field.insert('-')).toBe(false);
     expect(await field.insert(',')).toBe(false);
+
     await field.type('abc');
     await field.blur();
     expect(field.value).toBeNull();
     expect(field.text).toBe('');
+
     await field.receiveModelValue(42);
     expect(field.text).toBe('42');
+
     await field.receiveModelValue(null);
     expect(field.text).toBe('');
+
     field.unmount();
   });
 
   it('accepts and renders Eastern Arabic digits', async () => {
     const field = NumberFieldDriver.mount({ modelValue: 1234.5, locale: 'ar-EG' });
     expect(field.text).toContain('١٬٢٣٤٫٥');
+
     await field.type('٧٫٥');
     await field.blur();
     expect(field.value).toBe(7.5);
+
     field.unmount();
   });
 
   it('names its steppers in the configured language and follows a locale change', async () => {
     const field = NumberFieldDriver.mount({ modelValue: 1, locale: 'en-US' });
     expect(field.incrementButton.attributes('aria-label')).toBe('Increment');
+
     await field.setLocale('ru-RU');
     expect(field.incrementButton.attributes('aria-label')).toBe('Увеличить');
     expect(field.decrementButton.attributes('aria-label')).toBe('Уменьшить');
+
     field.unmount();
   });
 
@@ -230,6 +268,7 @@ describe('NuiNumberField', () => {
     await locked.press('Home');
     await locked.press('ArrowUp');
     expect(locked.value).toBe(5);
+
     locked.unmount();
 
     const off = NumberFieldDriver.mount({
@@ -239,6 +278,7 @@ describe('NuiNumberField', () => {
 
     expect(off.hiddenValue).toBe('5');
     expect(off.hiddenDisabled).toBe(true);
+
     off.unmount();
   });
 });

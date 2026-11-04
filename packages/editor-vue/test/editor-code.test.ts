@@ -84,6 +84,7 @@ describe('NuiEditor code blocks', () => {
 
     await code.settle();
     expect(code.checkedLanguage(0)).toBe('TypeScript');
+
     await code.pickLanguage(0, 'Python');
 
     expect(code.language(0)).toBe('Python');

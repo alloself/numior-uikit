@@ -36,11 +36,13 @@ describe('NuiTable row resize', () => {
     expect(grid.rowBodySize(2)).toEqual(['79px', '']);
     expect(grid.rowHeight(1)).toBe('');
     expect(grid.canvasHeight).toBe(4060);
+
     await grid.setSort([{ key: 'id', direction: 'desc' }]);
 
     expect(grid.cellText(2, 1)).toBe('97');
     expect(grid.rowHeight(2)).toBe('60px');
     expect(grid.canvasHeight).toBe(4060);
+
     await grid.scrollToRow(97);
     expect(grid.cellText(97, 1)).toBe('2');
     expect(grid.rowHeight(97)).toBe('80px');
@@ -50,6 +52,7 @@ describe('NuiTable row resize', () => {
     const grid = mountStaff();
     await grid.settle();
     expect(grid.canvasHeight).toBe(4000);
+
     await grid.dragRowResizer(1, 24);
 
     expect(grid.rowHeights).toEqual({ 1: 64 });
@@ -57,6 +60,7 @@ describe('NuiTable row resize', () => {
     expect(grid.announcement).toBe('Высота строки 2: 64 px');
     expect(grid.ranges).toEqual([]);
     expect(grid.canvasHeight).toBe(4024);
+
     await grid.dragRowResizer(1, -200);
 
     expect(grid.rowHeights).toEqual({ 1: 20 });
@@ -73,11 +77,14 @@ describe('NuiTable row resize', () => {
 
     expect(grid.rowHeights).toEqual({ 3: 56 });
     expect(grid.announcement).toBe('Высота строки 4: 56 px');
+
     await grid.press('ArrowUp', { alt: true });
     expect(grid.rowHeights).toEqual({ 3: 48 });
+
     await grid.focusCell(3, 2);
     await grid.press('ArrowDown', { alt: true });
     expect(grid.rowHeights).toEqual({ 3: 48 });
+
     await grid.resetRowHeight(3);
 
     expect(grid.rowHeights).toEqual({});
@@ -97,6 +104,7 @@ describe('NuiTable row resize', () => {
     const plain = mountStaff({ props: { rowHeaders: true } });
     await plain.settle();
     expect(plain.rowResizer(1)).toBeNull();
+
     const remote = new RemoteStaff(40);
 
     const served = mountStaff({

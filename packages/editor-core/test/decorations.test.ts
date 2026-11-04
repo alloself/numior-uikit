@@ -89,6 +89,7 @@ describe('editor view decorations', () => {
     );
 
     expect(view.keptBlocks).toEqual([true, true]);
+
     view.change((tr) => tr.setMeta(paint, decorationSet([])));
     expect(view.markup).toBe('<p>let value = 1</p><p>plain</p>');
   });
@@ -99,6 +100,7 @@ describe('editor view decorations', () => {
     view.startComposition();
     view.change((tr) => tr.setMeta(paint, decorationSet([])));
     expect(view.markup).toContain('<span class="kw">let</span>');
+
     view.endComposition();
     view.change((tr) => tr);
     expect(view.markup).toBe('<p>let value = 1</p><p>plain</p>');

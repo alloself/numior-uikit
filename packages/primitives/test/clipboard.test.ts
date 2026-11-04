@@ -34,8 +34,10 @@ describe('useClipboard', () => {
     expect(clipboard.copies).toEqual(['hello']);
     expect(clipboard.commands).toBe(1);
     expect(control.copied.value).toBe(true);
+
     vi.advanceTimersByTime(499);
     expect(control.copied.value).toBe(true);
+
     vi.advanceTimersByTime(1);
     expect(control.copied.value).toBe(false);
   });
@@ -56,8 +58,10 @@ describe('useClipboard', () => {
     const control = captureSetup(() => useClipboard({ copiedDuration: duration })).value;
     duration.value = 50;
     expect(await control.copy('hello')).toBe(true);
+
     vi.advanceTimersByTime(49);
     expect(control.copied.value).toBe(true);
+
     vi.advanceTimersByTime(1);
     expect(control.copied.value).toBe(false);
   });
@@ -68,6 +72,7 @@ describe('useClipboard', () => {
     expect(await control.copyRich({ text: 'a\tb', html: '<table></table>' })).toBe(true);
     expect(clipboard.copies).toEqual(['a\tb']);
     expect(clipboard.htmls).toEqual(['<table></table>']);
+
     clipboard.restore();
     clipboard = installClipboard({ api: 'refused' });
     const refused = captureSetup(() => useClipboard()).value;

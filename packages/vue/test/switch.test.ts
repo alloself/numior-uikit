@@ -7,8 +7,10 @@ describe('NuiSwitch', () => {
     const toggle = SwitchDriver.mount({ modelValue: false, label: 'Notifications' });
     expect(toggle.role).toBe('switch');
     expect(toggle.checked).toBe(false);
+
     await toggle.toggle();
     expect(toggle.emittedModels).toEqual([true]);
+
     await toggle.receiveModelValue(true);
     expect(toggle.checked).toBe(true);
     expect(toggle.hasModifier('checked')).toBe(true);
@@ -50,9 +52,11 @@ describe('NuiSwitch', () => {
     expect(toggle.hasModifier('readonly')).toBe(true);
     expect(toggle.control.attributes('aria-readonly')).toBe('true');
     expect(toggle.control.attributes('disabled')).toBeUndefined();
+
     await toggle.click();
     expect(toggle.checked).toBe(false);
     expect(toggle.emittedModels).toEqual([]);
+
     toggle.unmount();
   });
 });

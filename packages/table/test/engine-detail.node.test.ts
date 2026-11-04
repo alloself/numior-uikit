@@ -42,6 +42,7 @@ describe('createTableEngine detail rows', () => {
     });
 
     expect(harness.engine.nodeAt(2)).toMatchObject({ kind: 'row', expandable: false });
+
     harness.engine.setToggled([2, 5]);
     expect(harness.engine.count()).toBe(8);
     expect(harness.engine.rowCount()).toBe(6);
@@ -68,10 +69,13 @@ describe('createTableEngine detail rows', () => {
 
     harness.engine.setToggled([3]);
     expect(harness.engine.count()).toBe(6);
+
     harness.engine.toggle(0);
     expect(harness.engine.details()).toEqual([1]);
+
     harness.engine.toggle(1);
     expect(harness.engine.details()).toEqual([1]);
+
     harness.engine.toggle(0);
     expect(harness.engine.count()).toBe(6);
   });
@@ -94,6 +98,7 @@ describe('createTableEngine detail rows', () => {
 
     await harness.runToEnd({ filters: [{ kind: 'set', key: 'country', values: ['AM'] }] });
     expect(harness.engine.details()).toEqual([]);
+
     await harness.runToEnd({ groupBy: ['country'] });
     harness.engine.setToggled([1, '["RU"]']);
 

@@ -42,6 +42,7 @@ describe('field context', () => {
     expect(field.labelable).toBe(false);
     expect(field.disabled).toBe(true);
     expect(field.readonly).toBe(false);
+
     hasError.value = true;
     await nextTick();
     expect(field.describedBy).toBe('plan-error');

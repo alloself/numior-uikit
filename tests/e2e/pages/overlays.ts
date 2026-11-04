@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { boxOf } from '../helpers/geometry';
 import {
   isBoolean,
   isString,
@@ -122,10 +123,7 @@ export class OverlaysSection {
   }
 
   async edges(surface: Locator): Promise<{ readonly right: number; readonly top: number }> {
-    const box = await surface.boundingBox();
-    if (!box) {
-      throw new Error('Surface has no bounding box');
-    }
+    const box = await boxOf(surface);
     return { right: Math.round(box.x + box.width), top: Math.round(box.y) };
   }
 

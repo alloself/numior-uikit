@@ -25,6 +25,7 @@ afterEach(() => {
   for (const chart of mounted.splice(0)) {
     chart.unmount();
   }
+
   document.documentElement.removeAttribute('dir');
 });
 
@@ -48,6 +49,7 @@ describe('NuiChart', () => {
     expect(chart.strokeSlots).toEqual([1, 2]);
     expect(chart.areaSlots).toEqual([]);
     expect(chart.markerCount).toBe(5);
+
     await chart.show({ ...revenue, kind: 'area', stacking: 'stacked' });
 
     expect(chart.areaSlots).toEqual([1, 2]);
@@ -68,6 +70,7 @@ describe('NuiChart', () => {
     const chart = chartOf({ spec: revenue, config: { locale: 'en-US' } });
 
     expect(chart.tooltip).toBeUndefined();
+
     await chart.hover(chart.categoryTickX('Q2') + 6, MIDDLE);
 
     expect(chart.tooltip).toEqual({
@@ -77,6 +80,7 @@ describe('NuiChart', () => {
     });
 
     expect(chart.mutedMarks).toBe(3);
+
     await chart.leave();
 
     expect(chart.tooltip?.shown).toBe(false);
@@ -99,18 +103,22 @@ describe('NuiChart', () => {
     const chart = chartOf({ spec: revenue, config: { locale: 'en-US' } });
 
     expect(chart.focusable).toBe(true);
+
     await chart.press('ArrowRight');
 
     expect(chart.announcement).toBe('Q1: Online 42, Stores 1,200');
+
     await chart.press('End');
     await chart.press('Enter');
 
     expect(chart.selections).toEqual([{ index: 2, series: undefined }]);
     expect(chart.mutedMarks).toBe(4);
+
     await chart.press('Escape');
 
     expect(chart.announcement).toBe('');
     expect(chart.mutedMarks).toBe(4);
+
     await chart.clickAt(chart.categoryTickX('Q3'), MIDDLE);
 
     expect(chart.selections).toEqual([{ index: 2, series: undefined }, null]);
@@ -154,6 +162,7 @@ describe('NuiChart', () => {
 
     expect(chart.legend).toEqual(['Online', 'Stores']);
     expect(chart.legendLabel).toBe('Legend');
+
     await chart.show({ ...revenue, series: revenue.series.slice(0, 1) });
 
     expect(chart.legend).toEqual([]);
@@ -172,6 +181,7 @@ describe('NuiChart', () => {
     ]);
 
     expect(chart.tableShown).toBe(false);
+
     chart.unmount();
     mounted.splice(0);
 

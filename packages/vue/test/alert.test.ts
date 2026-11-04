@@ -21,8 +21,10 @@ describe('NuiAlert', () => {
     const solid = AlertDriver.mount({ props: { tone: 'error', variant: 'solid' } });
     expect(solid.role).toBe('alert');
     expect(solid.hasModifier('variant-solid')).toBe(true);
+
     const custom = AlertDriver.mount({ props: { tone: 'neutral', icon: 'search' } });
     expect(custom.hasIcon).toBe(true);
+
     const bare = AlertDriver.mount({ props: { tone: 'success', hideIcon: true } });
     expect(bare.hasIcon).toBe(false);
   });
@@ -35,11 +37,14 @@ describe('NuiAlert', () => {
 
     expect(alert.actions.text()).toBe('Undo');
     expect(alert.closeButton.attributes('aria-label')).toBe('Закрыть');
+
     await alert.clickClose();
     expect(alert.emittedDismiss).toBe(1);
     expect(alert.emittedOpen).toEqual([false]);
+
     await alert.receiveOpen(false);
     expect(alert.hasModifier('closed')).toBe(true);
+
     await alert.receiveOpen(true);
     expect(alert.hasModifier('closed')).toBe(false);
   });

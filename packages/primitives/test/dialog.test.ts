@@ -83,13 +83,16 @@ describe('useDialog', () => {
     const secondOpen = ref(true);
     const first = mountDialog({ open: firstOpen });
     expect(rootStyle()).toEqual({ overflow: 'hidden', padding: '15px' });
+
     const second = mountDialog({ open: secondOpen });
     second.value.close();
     await nextTick();
     expect(rootStyle().overflow).toBe('hidden');
+
     first.value.close();
     await nextTick();
     expect(rootStyle()).toEqual({ overflow: 'auto', padding: '' });
+
     second.unmount();
     first.unmount();
   });
@@ -98,6 +101,7 @@ describe('useDialog', () => {
     describeRoot({ scrollHeight: 2000, clientHeight: 800, scrollbar: 0 });
     const capture = mountDialog({ open: ref(true) });
     expect(rootStyle()).toEqual({ overflow: 'hidden', padding: '' });
+
     capture.unmount();
   });
 
@@ -105,6 +109,7 @@ describe('useDialog', () => {
     describeRoot({ scrollHeight: 600, clientHeight: 800, scrollbar: 15 });
     const capture = mountDialog({ open: ref(true) });
     expect(rootStyle()).toEqual({ overflow: '', padding: '' });
+
     capture.unmount();
   });
 
@@ -114,13 +119,16 @@ describe('useDialog', () => {
     const first = mountDialog({ open: firstOpen });
     const second = mountDialog({ open: secondOpen });
     expect(first.value.covered.value).toBe(false);
+
     secondOpen.value = true;
     await nextTick();
     expect(first.value.covered.value).toBe(true);
     expect(second.value.covered.value).toBe(false);
+
     second.value.close();
     await nextTick();
     expect(first.value.covered.value).toBe(false);
+
     second.unmount();
     first.unmount();
   });
@@ -131,14 +139,17 @@ describe('useDialog', () => {
     const capture = mountDialog({ open, onClose });
     expect(topLayer.log.showModal).toBe(1);
     expect(capture.second.hasAttribute('open')).toBe(true);
+
     capture.value.close('confirm');
     expect(open.value).toBe(false);
     expect(capture.value.returnValue.value).toBe('confirm');
     expect(onClose).toHaveBeenCalledWith('confirm');
+
     await nextTick();
     open.value = true;
     await nextTick();
     expect(topLayer.log.showModal).toBe(2);
+
     capture.unmount();
   });
 
@@ -153,8 +164,10 @@ describe('useDialog', () => {
     };
 
     expect(cancel()).toBe(false);
+
     dismissible.value = false;
     expect(cancel()).toBe(true);
+
     capture.unmount();
   });
 
@@ -163,8 +176,10 @@ describe('useDialog', () => {
     const capture = mountDialog({ open });
     press(capture.second, 0);
     expect(open.value).toBe(true);
+
     press(capture.second, 40);
     expect(open.value).toBe(false);
+
     capture.unmount();
   });
 
@@ -173,6 +188,7 @@ describe('useDialog', () => {
     const capture = mountDialog({ open, closeOnBackdrop: false });
     press(capture.second, 40);
     expect(open.value).toBe(true);
+
     capture.unmount();
   });
 });

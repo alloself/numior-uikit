@@ -1,6 +1,7 @@
 import stylistic from '@stylistic/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import vue from 'eslint-plugin-vue';
+import { testPhases } from './scripts/eslint/test-phases.mjs';
 
 const multiline = ['multiline-const', 'multiline-let', 'multiline-expression', 'function', 'class'];
 
@@ -126,6 +127,11 @@ const NAMED_ENUMERATIONS = [
   },
 ];
 
+const BOXES = {
+  selector: "CallExpression[callee.property.name='boundingBox']",
+  message: 'Read element boxes through boxOf or renderedWidth from tests/e2e/helpers/geometry.ts.',
+};
+
 const TIMERS = {
   selector: "NewExpression[callee.name='Promise'] CallExpression[callee.name='setTimeout']",
   message: 'Wait with promiseTimeout, until or useIdle from @vueuse/core.',
@@ -193,6 +199,16 @@ export default [
   {
     files: ['**/*.ts', '**/*.mts', '**/*.js', '**/*.mjs', '**/*.vue'],
     rules: { 'no-restricted-syntax': ['error', ...CODE_SHAPE] },
+  },
+  {
+    files: ['tests/**/*.ts'],
+    ignores: ['tests/e2e/helpers/geometry.ts'],
+    rules: { 'no-restricted-syntax': ['error', ...CODE_SHAPE, BOXES] },
+  },
+  {
+    files: ['tests/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
+    plugins: { numior: { rules: { 'test-phases': testPhases } } },
+    rules: { 'numior/test-phases': 'error' },
   },
   {
     files: ['packages/{primitives,vue,table,editor-vue}/{src,test}/**/*.{ts,vue}'],

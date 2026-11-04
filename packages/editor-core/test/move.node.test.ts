@@ -146,6 +146,7 @@ describe('moving children', () => {
     for (const index of [2, 1, 0]) {
       expect(runs(editor, deleteChild({ parent: root, index }))).toBe(true);
     }
+
     expect(editor.outline).toBe('paragraph()');
     expect(editor.selection).toEqual(textSelection(1));
     expect(deleteChild({ parent: root, index: 4 })(editor.state)).toBe(false);

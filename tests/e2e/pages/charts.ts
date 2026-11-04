@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { boxOf, renderedWidth } from '../helpers/geometry';
 
 export interface ChartTextBox {
   readonly text: string;
@@ -47,9 +48,9 @@ export class ChartsSection {
       .locator('.nui-chart__text--category-tick', { hasText: exactly(label) })
       .getAttribute('x');
 
-    const frame = await chart.locator('.nui-chart__frame').boundingBox();
+    const frame = await boxOf(chart.locator('.nui-chart__frame'));
 
-    return { x: Number(x), y: (frame?.height ?? 0) / 2 };
+    return { x: Number(x), y: frame.height / 2 };
   }
 
   async pointAt(chart: Locator, label: string): Promise<void> {
@@ -101,7 +102,7 @@ export class ChartsSection {
   }
 
   async tableWidth(chart: Locator): Promise<number> {
-    return (await chart.locator('.nui-chart__data').boundingBox())?.width ?? 0;
+    return renderedWidth(chart.locator('.nui-chart__data'));
   }
 
   colours(chart: Locator): Promise<string[]> {

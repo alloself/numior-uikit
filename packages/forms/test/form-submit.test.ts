@@ -246,6 +246,7 @@ describe('submit', () => {
     expect(form.form.focusField('password')).toBe(true);
     expect(form.focusedPath).toBe('password');
     expect(form.form.focusField('missing')).toBe(false);
+
     form.unmount();
   });
 });

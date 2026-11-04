@@ -1,67 +1,70 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { record, summarize, type Operation } from '../../scripts/bench-harness';
-import { EditorBenchPage } from './pages/editor-bench';
 
 const BLOCKS = 10_000;
 const RESULTS = new URL('../../packages/editor-core/bench/results/', import.meta.url);
 const TYPED = 'The quick brown fox jumps over the lazy dog again and again. ';
 
-test('the editor keeps typing within budget on ten thousand blocks', async ({ page, browser }) => {
+test('the editor keeps typing within budget on ten thousand blocks', async ({
+  editorBench,
+  browser,
+}) => {
   test.setTimeout(900_000);
-  const bench = new EditorBenchPage(page);
-
-  await bench.open(BLOCKS);
+  await editorBench.open(BLOCKS);
   const operations: Operation[] = [];
 
   operations.push(
-    summarize('generate the document and its JSON in the page', [await bench.dataMs()]),
+    summarize('generate the document and its JSON in the page', [await editorBench.dataMs()]),
   );
 
   operations.push(
-    summarize('cold mount to the first painted block', await bench.coldStarts(browser)),
+    summarize('cold mount to the first painted block', await editorBench.coldStarts(browser)),
   );
 
   const warm: number[] = [];
 
   for (let round = 0; round < 5; round += 1) {
-    warm.push(await bench.remount());
+    warm.push(await editorBench.remount());
   }
+
   operations.push(summarize('warm remount to the first painted block', warm));
-  await bench.placeAtStart();
+  await editorBench.placeAtStart();
 
   const typed = TYPED.repeat(4)
     .split('')
     .slice(0, 200)
     .map((char) => (char === ' ' ? 'Space' : char));
 
-  operations.push(summarize('type a character to the next paint', await bench.pressEach(typed)));
+  operations.push(
+    summarize('type a character to the next paint', await editorBench.pressEach(typed)),
+  );
 
   operations.push(
     summarize(
       'split a paragraph with Enter to the next paint',
-      await bench.pressEach(Array.from({ length: 50 }, () => 'Enter')),
+      await editorBench.pressEach(Array.from({ length: 50 }, () => 'Enter')),
     ),
   );
 
   operations.push(
     summarize(
       'undo a step to the next paint',
-      await bench.pressEach(Array.from({ length: 50 }, () => 'Control+z')),
+      await editorBench.pressEach(Array.from({ length: 50 }, () => 'Control+z')),
     ),
   );
 
   operations.push(
-    summarize('paste 500 lines as blocks to the next paint', await bench.pasteLines(500, 3)),
+    summarize('paste 500 lines as blocks to the next paint', await editorBench.pasteLines(500, 3)),
   );
 
   operations.push(
     summarize(
       'select everything and toggle bold to the next paint',
-      await bench.selectAllAndBold(4),
+      await editorBench.selectAllAndBold(4),
     ),
   );
 
-  const wheel = await bench.wheelFrames(120, 360);
+  const wheel = await editorBench.wheelFrames(120, 360);
 
   operations.push(summarize('frame time while wheeling through blocks', wheel.frames));
 
@@ -76,7 +79,7 @@ test('the editor keeps typing within budget on ten thousand blocks', async ({ pa
     {
       suffix: 'chromium',
       browser: `chromium ${browser.version()}`,
-      heapUsedMb: await bench.heapMb(),
+      heapUsedMb: await editorBench.heapMb(),
     },
   );
 

@@ -1,14 +1,12 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { boxOf } from './helpers/geometry';
-import { PlaygroundPage } from './pages/playground';
 
 const ITEM_KINDS = 6;
 
 test.describe('table detail rows', () => {
   test('opens a detail with a nested table from the chevron and keeps its clicks to itself', async ({
-    page,
+    playground,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableDetail: detail } = playground;
@@ -17,6 +15,7 @@ test.describe('table detail rows', () => {
     await expect(detail.grid).toHaveRole('treegrid');
     await expect(detail.row(1)).toHaveAttribute('aria-expanded', 'false');
     await expect(detail.toggle(5)).toHaveCount(0);
+
     await detail.toggle(1).click();
 
     await expect(detail.row(1)).toHaveAttribute('aria-expanded', 'true');
@@ -26,18 +25,21 @@ test.describe('table detail rows', () => {
     await expect(detail.nestedCell(2, 0, 0)).toHaveText('Блендер');
     await expect(detail.cell(3, 1)).toHaveText('Зелёный дом');
     expect((await detail.readOutput()).expanded).toEqual([2]);
+
     await detail.nestedCell(2, 1, 0).click();
     await detail.openButton(2).click();
 
     await expect.poll(async () => (await detail.readOutput()).opened).toBe(2);
     expect((await detail.readOutput()).lastClick).toBeNull();
+
     await detail.toggle(1).click();
     await expect(detail.panel(2)).toHaveCount(0);
     await expect(detail.cell(2, 1)).toHaveText('Зелёный дом');
   });
 
-  test('counts the measured detail in the scroll height of the row window', async ({ page }) => {
-    const playground = new PlaygroundPage(page);
+  test('counts the measured detail in the scroll height of the row window', async ({
+    playground,
+  }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableDetail: detail } = playground;
@@ -46,6 +48,7 @@ test.describe('table detail rows', () => {
 
     await detail.toggle(1).click();
     await expect(detail.panel(2)).toBeVisible();
+
     const { height } = await boxOf(detail.row(2));
 
     await expect
@@ -54,15 +57,15 @@ test.describe('table detail rows', () => {
 
     await detail.scrollTo(40_000);
     await expect(detail.panel(2)).toHaveCount(0);
+
     await detail.scrollTo(0);
     await expect(detail.nestedCell(2, 1, 0)).toHaveText('Весы');
     expect(Math.abs((await detail.scrollHeight()) - closed - height)).toBeLessThanOrEqual(1);
   });
 
   test('keeps the row under the header in place while details above it are measured', async ({
-    page,
+    playground,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableDetail: detail } = playground;
@@ -70,6 +73,7 @@ test.describe('table detail rows', () => {
 
     await detail.scrollTo(40_000);
     await expect(detail.cell(1000, 0)).toHaveText('1001');
+
     await detail.openFirst.click();
     await detail.scrollTo(680);
     await expect(detail.panel(3)).toBeAttached();
@@ -78,11 +82,11 @@ test.describe('table detail rows', () => {
   });
 
   test('walks into the detail and its nested table from the keyboard and back', async ({
+    playground,
     page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard scenario');
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableDetail: detail } = playground;
@@ -91,28 +95,32 @@ test.describe('table detail rows', () => {
     await detail.cell(1, 0).focus();
     await page.keyboard.press('Enter');
     await expect(detail.panel(2)).toBeVisible();
+
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('ArrowDown');
     await expect(detail.cell(2, 0)).toBeFocused();
+
     await page.keyboard.press('Tab');
 
     await expect(detail.nestedCell(2, 0, 0)).toBeFocused();
+
     await page.keyboard.press('ArrowDown');
     await expect(detail.nestedCell(2, 1, 0)).toBeFocused();
     await expect(detail.cell(2, 0)).toHaveAttribute('tabindex', '0');
+
     await page.keyboard.press('Shift+Tab');
 
     await expect(detail.cell(2, 0)).toBeFocused();
+
     await page.keyboard.press('ArrowDown');
     await expect(detail.cell(3, 1)).toBeFocused();
   });
 
   test('keeps the detail inside the visible width while the table scrolls sideways', async ({
-    page,
+    playground,
     isMobile,
   }) => {
     test.skip(!isMobile, 'the columns overflow on a phone');
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableDetail: detail } = playground;
@@ -125,17 +133,18 @@ test.describe('table detail rows', () => {
       await playground.setDirection(direction);
       await detail.scrollAcross();
       expect(await detail.scrolledAcross()).toBe(true);
+
       const frame = await boxOf(detail.viewport);
       const panel = await boxOf(detail.panel(2));
 
       expect(panel.x).toBeGreaterThanOrEqual(frame.x);
       expect(panel.x + panel.width).toBeLessThanOrEqual(frame.x + frame.width + 1);
     }
+
     expect(await playground.hasHorizontalOverflow()).toBe(false);
   });
 
-  test('shows details in a paged table without a row window', async ({ page }) => {
-    const playground = new PlaygroundPage(page);
+  test('shows details in a paged table without a row window', async ({ playground }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableDetail: detail } = playground;
@@ -146,15 +155,16 @@ test.describe('table detail rows', () => {
     await expect(detail.panel(1)).toBeVisible();
     await expect(detail.panel(3)).toBeVisible();
     await expect(detail.grid).toHaveAttribute('aria-rowcount', '14');
+
     await detail.closeAll.click();
     await expect(detail.panel(1)).toHaveCount(0);
     await expect(detail.grid).toHaveAttribute('aria-rowcount', '11');
   });
 
   test('sizes the rows of a window by their content and keeps the row under the header in place', async ({
+    playground,
     page,
   }) => {
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableDetail: detail } = playground;
@@ -169,16 +179,19 @@ test.describe('table detail rows', () => {
 
     expect((await boxOf(detail.row(2))).height).toBe(plain.height);
     expect(await detail.largestRowGap()).toBeLessThanOrEqual(0.5);
+
     await detail.scrollTo(30_000);
 
     await expect.poll(async () => Number((await detail.topRow())?.text)).toBeGreaterThan(600);
 
     await expect.poll(async () => (await detail.topRow())?.gap ?? 99).toBeLessThanOrEqual(0.5);
+
     const settled = await detail.topRow();
 
     await page.waitForTimeout(200);
     expect(await detail.topRow()).toEqual(settled);
     expect(await detail.largestRowGap()).toBeLessThanOrEqual(0.5);
+
     await detail.scrollToEnd();
 
     await expect(detail.cell(1999, 0)).toHaveText('2000');
@@ -192,8 +205,7 @@ test.describe('table detail rows', () => {
       .toBeLessThanOrEqual(1);
   });
 
-  test('keeps a row among measured rows in place when its detail opens', async ({ page }) => {
-    const playground = new PlaygroundPage(page);
+  test('keeps a row among measured rows in place when its detail opens', async ({ playground }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableDetail: detail } = playground;
@@ -201,6 +213,7 @@ test.describe('table detail rows', () => {
     await detail.fluidSwitch.click();
     await detail.scrollTo(30_000);
     await expect.poll(async () => (await detail.topRow())?.gap ?? 99).toBeLessThanOrEqual(0.5);
+
     const below = Number((await detail.topRow())?.text) + 1;
     const position = (below + 1) % ITEM_KINDS === 0 ? below + 1 : below;
     const before = await boxOf(detail.row(position));
@@ -214,6 +227,7 @@ test.describe('table detail rows', () => {
       .toBeLessThanOrEqual(1);
 
     expect(await detail.largestRowGap()).toBeLessThanOrEqual(0.5);
+
     await detail.toggle(position).click();
     await expect(detail.panel(position + 1)).toHaveCount(0);
 
@@ -223,11 +237,11 @@ test.describe('table detail rows', () => {
   });
 
   test('keeps the focused cell in view while the arrows walk rows of different heights', async ({
+    playground,
     page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard scenario');
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableDetail: detail } = playground;
@@ -238,6 +252,7 @@ test.describe('table detail rows', () => {
     for (let step = 1; step <= 14; step += 1) {
       await page.keyboard.press('ArrowDown');
       await expect(detail.cell(step, 1)).toBeFocused();
+
       const edges = await detail.bodyEdges();
       const cell = await boxOf(detail.cell(step, 1));
 
@@ -246,9 +261,10 @@ test.describe('table detail rows', () => {
     }
   });
 
-  test('open details have no automatically detectable WCAG AA violations', async ({ page }) => {
+  test('open details have no automatically detectable WCAG AA violations', async ({
+    playground,
+  }) => {
     test.slow();
-    const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableDetail: detail } = playground;

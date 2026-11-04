@@ -9,12 +9,14 @@ describe('NuiDrawer', () => {
     expect(drawer.hasModifier('side-start')).toBe(true);
     expect(drawer.hasModifier('size-sm')).toBe(true);
     expect(drawer.titleText).toBe('Filters');
+
     drawer.unmount();
   });
 
   it('takes a wider xl step of its own for editors beside the page', () => {
     const drawer = DrawerDriver.mount({ props: { title: 'Block', size: 'xl' } });
     expect(drawer.hasModifier('size-xl')).toBe(true);
+
     drawer.unmount();
   });
 
@@ -22,15 +24,18 @@ describe('NuiDrawer', () => {
     const drawer = DrawerDriver.mount({ slots: { footer: () => 'Apply' } });
     expect(drawer.hasModifier('side-end')).toBe(true);
     expect(drawer.footer.text()).toBe('Apply');
+
     await drawer.clickClose();
     expect(drawer.emittedOpen).toEqual([false]);
     expect(drawer.emittedClose).toEqual(['']);
+
     drawer.unmount();
   });
 
   it('leaves the close text to the dialog dictionary', () => {
     const drawer = DrawerDriver.mount({ config: { locale: 'ru-RU' } });
     expect(drawer.closeLabel).toBe('Закрыть');
+
     drawer.unmount();
   });
 });

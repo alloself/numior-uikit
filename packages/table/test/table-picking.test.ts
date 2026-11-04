@@ -60,6 +60,7 @@ describe('NuiTable reference picking', () => {
     expect(grid.editorFocused).toBe(true);
     expect(grid.ranges).toEqual([]);
     expect(grid.edits).toEqual([]);
+
     await grid.typeInEditor('Самара');
     await grid.press('ArrowDown');
     expect(grid.picks).toHaveLength(5);
@@ -77,6 +78,7 @@ describe('NuiTable reference picking', () => {
 
     expect(grid.picks).toEqual([span(6, 3, 6, 3)]);
     expect(grid.editing).toEqual({ row: 1, col: 2 });
+
     await grid.press('Enter');
 
     expect(grid.edits).toEqual([

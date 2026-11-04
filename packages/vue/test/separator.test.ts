@@ -26,6 +26,7 @@ describe('NuiSeparator', () => {
 
   it('shows a label from the prop or the slot between the lines', () => {
     expect(SeparatorDriver.mount({ props: { label: 'or' } }).labelText).toBe('or');
+
     const slotted = SeparatorDriver.mount({ props: { label: 'or' }, slot: 'either' });
     expect(slotted.labelText).toBe('either');
     expect(slotted.hasModifier('labelled')).toBe(true);

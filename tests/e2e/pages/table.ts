@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
-import { boxOf, type Box } from '../helpers/geometry';
+import { boxOf, renderedWidth, type Box } from '../helpers/geometry';
 
 export interface TableCell {
   readonly row: number;
@@ -154,9 +154,7 @@ export class TableSection {
   async dragTreeRow(from: number, to: number, zone: 'before' | 'after' | 'inside'): Promise<void> {
     await this.treeRow(from).hover();
 
-    await expect
-      .poll(async () => (await this.treeGrip(from).boundingBox())?.width ?? 0)
-      .toBeGreaterThan(20);
+    await expect.poll(() => renderedWidth(this.treeGrip(from))).toBeGreaterThan(20);
 
     const grip = await boxOf(this.treeGrip(from));
     const target = await boxOf(this.treeRow(to));
@@ -189,14 +187,12 @@ export class TableSection {
   }
 
   private async clickRevealed(cell: Locator, control: Locator): Promise<void> {
-    const idle = await control.boundingBox();
-
-    if (idle !== null && idle.width > 20) {
+    if ((await renderedWidth(control)) > 20) {
       await control.click();
       return;
     }
     await cell.hover();
-    await expect.poll(async () => (await control.boundingBox())?.width ?? 0).toBeGreaterThan(20);
+    await expect.poll(() => renderedWidth(control)).toBeGreaterThan(20);
     const box = await boxOf(control);
 
     await this.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
@@ -259,9 +255,7 @@ export class TableSection {
   async dragHeader(col: number, target: number): Promise<void> {
     await this.header(col).hover();
 
-    await expect
-      .poll(async () => (await this.grip(col).boundingBox())?.width ?? 0)
-      .toBeGreaterThan(8);
+    await expect.poll(() => renderedWidth(this.grip(col))).toBeGreaterThan(8);
 
     const grip = await boxOf(this.grip(col));
     const destination = await boxOf(this.header(target));

@@ -30,10 +30,12 @@ describe('usePopover', () => {
     await nextTick();
     expect(topLayer.log.showPopover).toBe(1);
     expect(control.invokerAttrs.value['aria-expanded']).toBe('true');
+
     control.hide();
     await nextTick();
     expect(topLayer.log.hidePopover).toBe(1);
     expect(open.value).toBe(false);
+
     capture.unmount();
   });
 
@@ -52,12 +54,15 @@ describe('usePopover', () => {
     expect(topLayer.log.hidePopover).toBe(1);
     expect(topLayer.log.showPopover).toBe(2);
     expect(open.value).toBe(true);
+
     await nextTick();
     expect(topLayer.log.showPopover).toBe(2);
+
     capture.value.hide();
     await nextTick();
     capture.value.raise();
     expect(topLayer.log.showPopover).toBe(2);
+
     capture.unmount();
   });
 
@@ -75,10 +80,13 @@ describe('usePopover', () => {
 
     expect(capture.value.contentAttrs.value.popover).toBe('manual');
     expect(topLayer.log.showPopover).toBe(1);
+
     dismissNatively(capture.second);
     expect(open.value).toBe(false);
+
     await nextTick();
     expect(topLayer.log.hidePopover).toBe(0);
+
     capture.unmount();
   });
 });

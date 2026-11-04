@@ -10,19 +10,24 @@ describe('NuiTooltip', () => {
     expect(tooltip.trigger.attributes('aria-describedby')).toBe('hint');
     expect(tooltip.content.attributes('role')).toBe('tooltip');
     expect(tooltip.content.attributes('popover')).toBe('manual');
+
     await tooltip.hover();
     await tooltip.advance(299);
     expect(tooltip.modelOpen).toBe(false);
+
     await tooltip.advance(1);
     expect(tooltip.modelOpen).toBe(true);
     expect(tooltip.popoverCalls.show).toBe(1);
+
     await tooltip.leave();
     await tooltip.hoverContent();
     await tooltip.advance(200);
     expect(tooltip.modelOpen).toBe(true);
+
     await tooltip.leave();
     await tooltip.advance(100);
     expect(tooltip.modelOpen).toBe(false);
+
     tooltip.unmount();
   });
 
@@ -30,17 +35,22 @@ describe('NuiTooltip', () => {
     const tooltip = TooltipDriver.mount();
     await tooltip.focus();
     expect(tooltip.modelOpen).toBe(true);
+
     await tooltip.pressEscape();
     expect(tooltip.modelOpen).toBe(false);
+
     await tooltip.focus();
     await tooltip.blur();
     expect(tooltip.modelOpen).toBe(false);
+
     await tooltip.tap();
     await tooltip.advance(1000);
     expect(tooltip.modelOpen).toBe(false);
+
     await tooltip.press();
     await tooltip.advance(1000);
     expect(tooltip.modelOpen).toBe(false);
+
     tooltip.unmount();
   });
 
@@ -49,39 +59,50 @@ describe('NuiTooltip', () => {
     await tooltip.focusOutside();
     await tooltip.hover();
     expect(tooltip.modelOpen).toBe(true);
+
     await tooltip.pressEscapeOutside();
     expect(tooltip.modelOpen).toBe(false);
+
     tooltip.unmount();
   });
 
   it('stays silent while disabled and drops the description from its trigger', async () => {
     const tooltip = TooltipDriver.mount({ props: { disabled: true } });
     expect(tooltip.trigger.attributes('aria-describedby')).toBeUndefined();
+
     await tooltip.hover();
     await tooltip.advance(400);
     expect(tooltip.modelOpen).toBe(false);
+
     await tooltip.focus();
     expect(tooltip.modelOpen).toBe(false);
     expect(tooltip.popoverCalls.show).toBe(0);
+
     tooltip.unmount();
   });
 
   it('follows an external anchor element without describing it and stops listening once unmounted', async () => {
     const tooltip = TooltipDriver.mount({ anchored: true, props: { openDelay: 300 } });
     expect(tooltip.trigger.attributes('aria-describedby')).toBeUndefined();
+
     await tooltip.hover();
     await tooltip.advance(300);
     expect(tooltip.modelOpen).toBe(true);
+
     await tooltip.pressEscape();
     expect(tooltip.modelOpen).toBe(false);
+
     await tooltip.focus();
     expect(tooltip.modelOpen).toBe(true);
+
     await tooltip.blur();
     expect(tooltip.modelOpen).toBe(false);
+
     tooltip.unmount();
     const silent = TooltipDriver.mount({ anchored: true, props: { disabled: true } });
     await silent.focus();
     expect(silent.modelOpen).toBe(false);
+
     silent.unmount();
   });
 
@@ -94,20 +115,24 @@ describe('NuiTooltip', () => {
     await hint.hover('Bold', null, true);
     await hint.advance(299);
     expect(hint.open).toBe(false);
+
     await hint.advance(1);
     expect(hint.open).toBe(true);
     expect(hint.text).toBe('Bold');
     expect(hint.describedBy('Bold')).toBe('hint');
+
     await hint.hover('Italic', 'Bold');
 
     expect(hint.open).toBe(true);
     expect(hint.text).toBe('Italic');
     expect(hint.describedBy('Bold')).toBeNull();
     expect(hint.describedBy('Italic')).toBe('hint');
+
     await hint.hoverGap('Italic');
     await hint.advance(100);
 
     expect(hint.open).toBe(false);
+
     hint.unmount();
   });
 
@@ -119,13 +144,16 @@ describe('NuiTooltip', () => {
     await hint.focus('Bold');
     expect(hint.open).toBe(true);
     expect(hint.text).toBe('Bold');
+
     await hint.focus('Italic', 'Bold');
 
     expect(hint.open).toBe(true);
     expect(hint.text).toBe('Italic');
+
     await hint.blur('Italic');
 
     expect(hint.open).toBe(false);
+
     hint.unmount();
   });
 });

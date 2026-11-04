@@ -57,6 +57,7 @@ describe('useFloating', () => {
     );
 
     expect(sideVector(capture.second)).toBe('0 1');
+
     await flushPromises();
 
     expect(capture.second.style.position).toBe('fixed');
@@ -76,6 +77,7 @@ describe('useFloating', () => {
     enabled.value = false;
     await nextTick();
     expect(cleanup).toHaveBeenCalledTimes(1);
+
     capture.unmount();
   });
 
@@ -96,6 +98,7 @@ describe('useFloating', () => {
     await flushPromises();
     expect(capture.second.style.minInlineSize).toBe('240px');
     expect(capture.second.style.maxBlockSize).toBe('320px');
+
     capture.unmount();
 
     const capped = captureWithElements((reference, floating) =>
@@ -104,10 +107,12 @@ describe('useFloating', () => {
 
     await flushPromises();
     expect(capped.second.style.maxBlockSize).toBe('200px');
+
     capped.unmount();
     const plain = captureWithElements((reference, floating) => useFloating(reference, floating));
     await flushPromises();
     expect(plain.second.style.minInlineSize).toBe('');
+
     plain.unmount();
   });
 
@@ -121,6 +126,7 @@ describe('useFloating', () => {
     expect(sideVector(capture.second)).toBe(' ');
     expect(capture.second.style.left).toBe('');
     expect(computePosition).not.toHaveBeenCalled();
+
     capture.unmount();
   });
 });

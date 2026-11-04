@@ -1,7 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { TABLE_COLUMNS } from '../../packages/table/bench/dataset';
 import { record, summarize, type Operation } from '../../scripts/bench-harness';
-import { TableBenchPage } from './pages/table-bench';
 
 const ROWS = 1_000_000;
 const READING_PAUSE = 2000;
@@ -9,64 +8,69 @@ const EMAIL_COLUMN = 2;
 const RESULTS = new URL('../../packages/table/bench/results/', import.meta.url);
 
 test('the data table keeps input and frames within budget on a million rows', async ({
+  tableBench,
   page,
   browser,
 }) => {
   test.setTimeout(900_000);
-  const bench = new TableBenchPage(page);
-  await bench.open(ROWS);
+  await tableBench.open(ROWS);
   const operations: Operation[] = [];
 
-  operations.push(summarize('generate a million rows in the page', [await bench.dataMs()]));
+  operations.push(summarize('generate a million rows in the page', [await tableBench.dataMs()]));
 
   operations.push(
-    summarize('cold mount to the first painted row', await bench.coldStarts(browser)),
+    summarize('cold mount to the first painted row', await tableBench.coldStarts(browser)),
   );
 
   const warm: number[] = [];
 
   for (let round = 0; round < 5; round += 1) {
-    warm.push(await bench.remount());
+    warm.push(await tableBench.remount());
   }
+
   operations.push(summarize('warm remount to the first painted row', warm));
-  await bench.focusCell(0, 1);
+  await tableBench.focusCell(0, 1);
 
   operations.push(
-    summarize('arrow down to the next paint', await bench.keyLatencies('ArrowDown', 200)),
+    summarize('arrow down to the next paint', await tableBench.keyLatencies('ArrowDown', 200)),
   );
 
   operations.push(
-    summarize('arrow across columns to the next paint', await bench.keyLatencies('ArrowRight', 40)),
+    summarize(
+      'arrow across columns to the next paint',
+      await tableBench.keyLatencies('ArrowRight', 40),
+    ),
   );
 
   operations.push(
-    summarize('page down to the next paint', await bench.keyLatencies('PageDown', 50)),
+    summarize('page down to the next paint', await tableBench.keyLatencies('PageDown', 50)),
   );
 
   const jumps = [
-    ...(await bench.keyLatencies('Control+End', 1)),
-    ...(await bench.keyLatencies('Control+Home', 1)),
+    ...(await tableBench.keyLatencies('Control+End', 1)),
+    ...(await tableBench.keyLatencies('Control+Home', 1)),
   ];
 
   for (let round = 0; round < 9; round += 1) {
-    jumps.push(...(await bench.keyLatencies('Control+End', 1)));
-    jumps.push(...(await bench.keyLatencies('Control+Home', 1)));
+    jumps.push(...(await tableBench.keyLatencies('Control+End', 1)));
+    jumps.push(...(await tableBench.keyLatencies('Control+Home', 1)));
   }
+
   operations.push(summarize('jump between the first and the last row to the next paint', jumps));
 
   operations.push(
-    summarize('frame time while wheeling through rows', await bench.wheelFrames(120, 360)),
+    summarize('frame time while wheeling through rows', await tableBench.wheelFrames(120, 360)),
   );
 
   operations.push(
     summarize(
       'move the row window by a viewport, main-thread ms',
-      await bench.windowMoves(browser, 20),
+      await tableBench.windowMoves(browser, 20),
     ),
   );
 
-  await bench.scrollHome();
-  const [coldNumber = Number.NaN, ...warmNumber] = await bench.sortLatencies(5, 6);
+  await tableBench.scrollHome();
+  const [coldNumber = Number.NaN, ...warmNumber] = await tableBench.sortLatencies(5, 6);
 
   operations.push(
     summarize('first sort of a number column from the header to the painted result', [coldNumber]),
@@ -76,7 +80,7 @@ test('the data table keeps input and frames within budget on a million rows', as
     summarize('repeat sort of a number column from the header to the painted result', warmNumber),
   );
 
-  const [coldText = Number.NaN, ...warmText] = await bench.sortLatencies(3, 6);
+  const [coldText = Number.NaN, ...warmText] = await tableBench.sortLatencies(3, 6);
 
   operations.push(
     summarize('first sort of a text column from the header to the painted result', [coldText]),
@@ -89,20 +93,27 @@ test('the data table keeps input and frames within budget on a million rows', as
   operations.push(
     summarize(
       'add a sort key with Shift from the header to the painted result',
-      await bench.sortLatencies(4, 3, true),
+      await tableBench.sortLatencies(4, 3, true),
     ),
   );
 
   operations.push(
     summarize(
       'apply a set filter from the header popover to the painted result',
-      await bench.setFilterLatencies(19, ['active', 'paused', 'active', 'closed', 'paused', 'new']),
+      await tableBench.setFilterLatencies(19, [
+        'active',
+        'paused',
+        'active',
+        'closed',
+        'paused',
+        'new',
+      ]),
     ),
   );
 
-  await bench.resetFilter(19);
+  await tableBench.resetFilter(19);
 
-  const [coldCountry = Number.NaN, ...countries] = await bench.groupLatencies([
+  const [coldCountry = Number.NaN, ...countries] = await tableBench.groupLatencies([
     ['country'],
     [],
     ['country'],
@@ -124,26 +135,26 @@ test('the data table keeps input and frames within budget on a million rows', as
   operations.push(
     summarize(
       'group by two columns from the model to the painted result',
-      (await bench.groupLatencies([['country', 'city'], [], ['country', 'city']])).filter(
+      (await tableBench.groupLatencies([['country', 'city'], [], ['country', 'city']])).filter(
         (_, index) => index % 2 === 0,
       ),
     ),
   );
 
-  await bench.groupLatencies([['country']]);
-  await bench.scrollHome();
-  await bench.focusCell(0, 1);
+  await tableBench.groupLatencies([['country']]);
+  await tableBench.scrollHome();
+  await tableBench.focusCell(0, 1);
 
   operations.push(
     summarize(
       'expand and collapse a group to the next paint',
-      await bench.keyLatencies('Enter', 10),
+      await tableBench.keyLatencies('Enter', 10),
     ),
   );
 
-  await bench.groupLatencies([[]]);
+  await tableBench.groupLatencies([[]]);
   await page.waitForTimeout(READING_PAUSE);
-  const [coldQuick = Number.NaN, ...warmQuick] = await bench.quickLatencies('mosc', 4);
+  const [coldQuick = Number.NaN, ...warmQuick] = await tableBench.quickLatencies('mosc', 4);
 
   operations.push(
     summarize('first quick filter keystroke after a two-second pause to the painted result', [
@@ -160,7 +171,7 @@ test('the data table keeps input and frames within budget on a million rows', as
     {
       suffix: 'chromium',
       browser: `chromium ${browser.version()}`,
-      heapUsedMb: await bench.heapMb(),
+      heapUsedMb: await tableBench.heapMb(),
     },
   );
 
@@ -169,14 +180,13 @@ test('the data table keeps input and frames within budget on a million rows', as
 });
 
 test('the data table sorts a million unique strings without blocking the page', async ({
-  page,
+  tableBench,
   browser,
 }) => {
   test.setTimeout(600_000);
-  const bench = new TableBenchPage(page);
-  await bench.open(ROWS);
+  await tableBench.open(ROWS);
 
-  const { latency, longTasks } = await bench.sortWithLongTasks(EMAIL_COLUMN);
+  const { latency, longTasks } = await tableBench.sortWithLongTasks(EMAIL_COLUMN);
 
   const operations: Operation[] = [
     summarize('first sort of a column of unique strings right after mount to the painted result', [

@@ -10,6 +10,7 @@ describe('NuiSplitter', () => {
     expect(splitter.controls).toBe(splitter.startPaneId);
     expect(splitter.cssRatio).toBe('0.3');
     expect(splitter.hasModifier('orientation-horizontal')).toBe(true);
+
     const vertical = SplitterDriver.mount({ props: { orientation: 'vertical' } });
     expect(vertical.ariaOrientation).toBe('horizontal');
   });
@@ -19,11 +20,14 @@ describe('NuiSplitter', () => {
     await splitter.dragTo(100);
     expect(splitter.ratio.value).toBe(0.25);
     expect(splitter.hasModifier('dragging')).toBe(false);
+
     await splitter.dragTo(390);
     expect(splitter.ratio.value).toBe(0.8);
+
     const rtl = SplitterDriver.mount({ dir: 'rtl' });
     await rtl.dragTo(100);
     expect(rtl.ratio.value).toBe(0.75);
+
     const vertical = SplitterDriver.mount({ props: { orientation: 'vertical' } });
     await vertical.drag(100, 50, 'y');
     expect(vertical.ratio.value).toBe(0.25);
@@ -33,17 +37,23 @@ describe('NuiSplitter', () => {
     const splitter = SplitterDriver.mount({ props: { step: 0.1, min: 0.2, max: 0.7 } });
     await splitter.press('ArrowRight');
     expect(splitter.ratio.value).toBeCloseTo(0.6);
+
     await splitter.press('ArrowLeft');
     expect(splitter.ratio.value).toBeCloseTo(0.5);
+
     await splitter.press('End');
     expect(splitter.ratio.value).toBe(0.7);
+
     await splitter.press('Home');
     expect(splitter.ratio.value).toBe(0.2);
+
     await splitter.press('ArrowUp');
     expect(splitter.ratio.value).toBe(0.2);
+
     const rtl = SplitterDriver.mount({ dir: 'rtl', props: { step: 0.1 } });
     await rtl.press('ArrowLeft');
     expect(rtl.ratio.value).toBeCloseTo(0.6);
+
     const off = SplitterDriver.mount({ props: { disabled: true } });
     await off.press('ArrowRight');
     expect(off.ratio.value).toBe(0.5);

@@ -78,6 +78,7 @@ describe('createTableEngine', () => {
 
     await harness.runToEnd({ sort: [{ key: 'age', direction: 'asc' }] });
     expect(harness.engine.store('age')?.kind).toBe('number');
+
     harness.progress.length = 0;
     await harness.runToEnd({ sort: [{ key: 'age', direction: 'desc' }] });
     expect(harness.phases).toEqual(['sort']);
@@ -113,6 +114,7 @@ describe('createTableEngine', () => {
 
     await harness.step();
     expect(harness.pendingYields).toBe(1);
+
     controller.abort();
     expect(await harness.settle(cancelled)).toEqual({ kind: 'cancelled' });
     expect(harness.engine.store('name')).toBeUndefined();
@@ -123,6 +125,7 @@ describe('createTableEngine', () => {
 
     expect(await harness.settle(first)).toEqual({ kind: 'cancelled' });
     expect(await harness.settle(second)).toEqual({ kind: 'done', count: 20_000, rows: 20_000 });
+
     const ages = harness.visible('age');
     expect(ages[0]).toBe(96);
     expect(ages.at(-1)).toBe(0);

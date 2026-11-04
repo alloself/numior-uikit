@@ -20,6 +20,7 @@ describe('NuiProgress', () => {
     expect(progress.hasModifier('size-lg')).toBe(true);
     expect(progress.hasModifier('tone-success')).toBe(true);
     expect(progress.hasModifier('indeterminate')).toBe(false);
+
     await progress.receive({ value: 120 });
     expect(progress.valueAttribute).toBe('120');
   });

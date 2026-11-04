@@ -16,6 +16,7 @@ describe('NuiSkeleton', () => {
     expect(circle.lines).toBe(0);
     expect(circle.inlineStyle).toContain('--_inline-size: 3rem');
     expect(circle.inlineStyle).toContain('--_block-size: 3rem');
+
     const rect = SkeletonDriver.mount({ shape: 'rect', animated: false });
     expect(rect.hasModifier('static')).toBe(true);
   });

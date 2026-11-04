@@ -36,13 +36,16 @@ describe('NuiTable pinned rows', () => {
     expect(grid.cellText(0, 1)).toBe('Сотрудник 900');
     expect(grid.cellText(1, 1)).toBe('Сотрудник 901');
     expect(grid.cellText(2, 1)).toBe('Сотрудник 0');
+
     await grid.setSort([{ key: 'id', direction: 'desc' }]);
 
     expect(grid.cellText(0, 1)).toBe('Сотрудник 900');
     expect(grid.cellText(2, 1)).toBe('Сотрудник 99');
+
     await grid.setQuick('Сотрудник 4');
     expect(grid.rowCount).toBe(14);
     expect(grid.cellText(1, 1)).toBe('Сотрудник 901');
+
     await grid.setQuick('');
     await grid.nextPage();
 
@@ -58,24 +61,31 @@ describe('NuiTable pinned rows', () => {
     await grid.press('ArrowDown');
 
     expect(grid.focusedCell).toEqual({ row: 0, col: 2 });
+
     await grid.press('ArrowDown');
     await grid.press('ArrowDown');
     expect(grid.focusedCell).toEqual({ row: 2, col: 2 });
     expect(grid.cellText(2, 2)).toBe('Сотрудник 0');
+
     await grid.press('End', { ctrl: true });
     expect(grid.focusedCell).toEqual({ row: 101, col: 18 });
+
     await grid.press('Home', { ctrl: true });
     expect(grid.focusedCell).toEqual({ row: 0, col: 1 });
+
     await grid.focusCell(1, 3);
     await grid.press(' ');
 
     expect(grid.selected.map((row) => row.id)).toEqual([901]);
     expect(grid.rowSelected(1)).toBe(true);
+
     await grid.checkAll();
     expect(grid.selected).toHaveLength(101);
     expect(grid.headerCheckbox?.checked).toBe(true);
+
     await grid.checkRow(0);
     expect(grid.selected).toHaveLength(102);
+
     await grid.clickRow(0, 2);
     expect(grid.clicks.map((row) => row.id)).toEqual([900]);
   });

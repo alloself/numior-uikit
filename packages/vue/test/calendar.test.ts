@@ -24,6 +24,7 @@ describe('NuiCalendar', () => {
     expect(calendar.tabStop).toBe('2026-09-24');
     expect(calendar.selected).toEqual(['2026-09-24']);
     expect(calendar.hasModifier('mode-single')).toBe(true);
+
     calendar.unmount();
 
     const american = CalendarDriver.mount({
@@ -34,6 +35,7 @@ describe('NuiCalendar', () => {
     expect(american.weekdays[0]).toBe('Sun');
     expect(american.rows).toBe(5);
     expect(american.captions).toEqual(['February 2027']);
+
     american.unmount();
 
     const compact = CalendarDriver.mount({
@@ -42,6 +44,7 @@ describe('NuiCalendar', () => {
     });
 
     expect(compact.rows).toBe(4);
+
     compact.unmount();
   });
 
@@ -53,26 +56,35 @@ describe('NuiCalendar', () => {
 
     await calendar.focusGrid();
     expect(calendar.focusedDate).toBe('2026-09-24');
+
     await calendar.press('ArrowRight');
     expect(calendar.focusedDate).toBe('2026-09-25');
+
     await calendar.press('ArrowDown');
     expect(calendar.focusedDate).toBe('2026-10-02');
     expect(calendar.captions).toEqual(['октябрь 2026']);
     expect(calendar.monthValue).toBe('2026-10');
+
     await calendar.press('Home');
     expect(calendar.focusedDate).toBe('2026-09-28');
     expect(calendar.captions).toEqual(['сентябрь 2026']);
+
     await calendar.press('End');
     expect(calendar.focusedDate).toBe('2026-10-04');
+
     await calendar.press('PageDown');
     expect(calendar.focusedDate).toBe('2026-11-04');
+
     await calendar.press('PageDown');
     expect(calendar.focusedDate).toBe('2026-11-15');
+
     await calendar.press('PageUp', true);
     expect(calendar.focusedDate).toBe('2026-09-02');
+
     await calendar.press('ArrowLeft');
     expect(calendar.focusedDate).toBe('2026-09-02');
     expect(calendar.tabStop).toBe('2026-09-02');
+
     calendar.unmount();
   });
 
@@ -86,12 +98,15 @@ describe('NuiCalendar', () => {
     await calendar.focusGrid();
     await calendar.press('ArrowLeft');
     expect(calendar.focusedDate).toBe('2026-09-25');
+
     await calendar.focusDay('2026-09-10');
     await calendar.press('ArrowRight');
     expect(calendar.focusedDate).toBe('2026-09-09');
     expect(calendar.dayAttr('2026-09-25', 'aria-disabled')).toBe('true');
+
     await calendar.clickDay('2026-09-25');
     expect(calendar.value).toBe('2026-09-24');
+
     await calendar.press('ArrowLeft');
     await calendar.press('Enter');
     calendar.unmount();
@@ -104,26 +119,34 @@ describe('NuiCalendar', () => {
     expect(calendar.view).toBe('months');
     expect(calendar.options).toHaveLength(12);
     expect(calendar.focusedOption).toBe('2026-09');
+
     await calendar.press('ArrowRight');
     expect(calendar.focusedOption).toBe('2026-10');
+
     await calendar.press('ArrowDown');
     expect(calendar.focusedOption).toBe('2026-12');
+
     await calendar.press('Escape');
     expect(calendar.view).toBe('days');
+
     await calendar.clickTitle('year');
     expect(calendar.view).toBe('years');
     expect(calendar.options[0]).toBe('2016');
     expect(calendar.focusedOption).toBe('2026');
+
     await calendar.press('PageDown');
     expect(calendar.options[0]).toBe('2028');
+
     await calendar.clickOption('2028');
     expect(calendar.view).toBe('months');
     expect(calendar.captions).toEqual(['сентябрь 2028']);
+
     await calendar.clickOption('февр.');
     expect(calendar.view).toBe('days');
     expect(calendar.captions).toEqual(['февраль 2028']);
     expect(calendar.focusedDate).toBe('2028-02-24');
     expect(calendar.value).toBe('2026-09-24');
+
     calendar.unmount();
   });
 
@@ -131,9 +154,11 @@ describe('NuiCalendar', () => {
     const calendar = CalendarDriver.mount({ month: '2020-01' });
 
     expect(calendar.captions).toEqual(['январь 2020']);
+
     await calendar.clickToday();
     expect(calendar.value).toBe('2026-09-24');
     expect(calendar.captions).toEqual(['сентябрь 2026']);
+
     calendar.unmount();
     const range = CalendarDriver.mount({ props: { mode: 'range' }, month: '2020-01' });
 
@@ -141,11 +166,13 @@ describe('NuiCalendar', () => {
     expect(range.value).toBeNull();
     expect(range.captions).toEqual(['сентябрь 2026']);
     expect(range.tabStop).toBe('2026-09-24');
+
     range.unmount();
     const hidden = CalendarDriver.mount({ props: { showToday: false }, actions: 'Готово' });
 
     expect(hidden.todayButton.exists()).toBe(false);
     expect(hidden.actionsText).toBe('Готово');
+
     hidden.unmount();
   });
 
@@ -156,11 +183,14 @@ describe('NuiCalendar', () => {
     });
 
     expect(calendar.root.find('[role="grid"]').attributes('aria-multiselectable')).toBe('true');
+
     await calendar.clickDay('2026-09-03');
     expect(calendar.value).toEqual(['2026-09-03', '2026-09-10']);
+
     await calendar.clickDay('2026-09-10');
     expect(calendar.value).toEqual(['2026-09-03']);
     expect(calendar.selected).toEqual(['2026-09-03']);
+
     calendar.unmount();
   });
 
@@ -170,6 +200,7 @@ describe('NuiCalendar', () => {
     await calendar.clickDay('2026-09-10');
     expect(calendar.value).toEqual({ start: '2026-09-10', end: null });
     expect(calendar.hasModifier('picking')).toBe(true);
+
     await calendar.hoverDay('2026-09-14');
 
     expect(calendar.cellState('2026-09-12')).toEqual({
@@ -203,10 +234,13 @@ describe('NuiCalendar', () => {
     );
 
     expect(calendar.dayClasses('2026-09-07')).not.toContain('selected');
+
     await calendar.dragDays('2026-09-20', '2026-09-23');
     expect(calendar.value).toEqual({ start: '2026-09-20', end: '2026-09-23' });
+
     await calendar.clickDay('2026-09-01');
     expect(calendar.value).toEqual({ start: '2026-09-01', end: null });
+
     calendar.unmount();
   });
 
@@ -228,15 +262,19 @@ describe('NuiCalendar', () => {
     expect(calendar.navHidden('next', 0)).toBe(true);
     expect(calendar.navHidden('previous', 1)).toBe(true);
     expect(calendar.presetLabels).toEqual(['Сегодня', 'Неделя']);
+
     await calendar.clickPreset('Неделя');
     expect(calendar.value).toEqual({ start: '2026-09-21', end: '2026-09-27' });
     expect(calendar.presetPressed('Неделя')).toBe(true);
     expect(calendar.captions).toEqual(['август 2026', 'сентябрь 2026']);
+
     await calendar.clickPreset('Сегодня');
     expect(calendar.value).toEqual({ start: '2026-09-24', end: '2026-09-24' });
     expect(calendar.presetPressed('Неделя')).toBe(false);
+
     await calendar.clickNav('next', 1);
     expect(calendar.captions).toEqual(['сентябрь 2026', 'октябрь 2026']);
+
     calendar.unmount();
   });
 
@@ -251,6 +289,7 @@ describe('NuiCalendar', () => {
 
     expect(calendar.presetLabels).toEqual(['Сегодня']);
     expect(calendar.presetPressed('Сегодня')).toBe(false);
+
     await calendar.clickPreset('Сегодня');
 
     expect(calendar.value).toEqual(
@@ -258,6 +297,7 @@ describe('NuiCalendar', () => {
     );
 
     expect(calendar.presetPressed('Сегодня')).toBe(true);
+
     calendar.unmount();
   });
 
@@ -269,6 +309,7 @@ describe('NuiCalendar', () => {
     expect(calendar.captions).toEqual(['декабрь 2026']);
     expect(calendar.tabStop).toBe('2026-12-05');
     expect(calendar.focusedDate).toBeUndefined();
+
     calendar.unmount();
   });
 
@@ -290,6 +331,7 @@ describe('NuiCalendar', () => {
     expect(calendar.pickerIds).toHaveLength(2);
     expect(new Set(calendar.pickerIds).size).toBe(2);
     expect(calendar.titleControls).toEqual(calendar.pickerIds);
+
     calendar.unmount();
   });
 });

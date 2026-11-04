@@ -16,6 +16,7 @@ describe('NuiButton', () => {
     expect(button.type).toBe('button');
     expect(button.attribute('aria-label')).toBe('Save document');
     expect(button.text).toBe('Save');
+
     await button.click();
     expect(clicks.count).toBe(1);
   });
@@ -37,6 +38,7 @@ describe('NuiButton', () => {
     expect(button.ariaDisabled).toBe('true');
     expect(button.showsSpinner).toBe(true);
     expect(button.hasModifier('loading')).toBe(true);
+
     await button.update({ loading: false });
     expect(button.clickNatively()).toBe(false);
     expect(clicks.count).toBe(1);
@@ -51,6 +53,7 @@ describe('NuiButton', () => {
     expect(defaults.hasModifier('variant-solid')).toBe(true);
     expect(defaults.hasModifier('tone-primary')).toBe(true);
     expect(defaults.hasModifier('size-md')).toBe(true);
+
     const custom = ButtonDriver.mount({ props: { variant: 'outline', tone: 'error', size: 'sm' } });
     expect(custom.hasModifier('variant-outline')).toBe(true);
     expect(custom.hasModifier('tone-error')).toBe(true);
@@ -63,6 +66,7 @@ describe('NuiButton', () => {
     expect(close.hasModifier('icon-only')).toBe(true);
     expect(ButtonDriver.mount({ content: 'icon-with-text' }).hasModifier('icon-only')).toBe(false);
     expect(ButtonDriver.mount().hasModifier('icon-only')).toBe(false);
+
     const wide = ButtonDriver.mount({ content: 'icon', props: { iconOnly: false } });
     expect(wide.hasModifier('icon-only')).toBe(false);
     expect(ButtonDriver.mount({ props: { iconOnly: true } }).hasModifier('icon-only')).toBe(true);
@@ -109,15 +113,18 @@ describe('NuiButton', () => {
     expect(link.type).toBeUndefined();
     expect(link.hasModifier('variant-outline')).toBe(true);
     expect(link.clickNatively()).toBe(false);
+
     const routed = ButtonDriver.mount({ props: { to: '/guide' }, viaRouter: true });
     expect(routed.tag).toBe('a');
     expect(routed.href).toBe('/router/guide');
+
     const off = ButtonDriver.mount({ props: { href: '/docs', disabled: true } });
     expect(off.href).toBeUndefined();
     expect(off.ariaDisabled).toBe('true');
     expect(off.attribute('tabindex')).toBe('-1');
     expect(off.hasModifier('disabled')).toBe(true);
     expect(off.clickNatively()).toBe(true);
+
     const busy = ButtonDriver.mount({ props: { href: '/docs', loading: true } });
     expect(busy.href).toBe('/docs');
     expect(busy.busy).toBe(true);
@@ -143,10 +150,12 @@ describe('NuiButton', () => {
     });
 
     expect(explicit.href).toBe('/router/guide');
+
     const plain = ButtonDriver.mount({ props: { to: '/guide' } });
     expect(plain.tag).toBe('a');
     expect(plain.href).toBe('/guide');
     expect(plain.attribute('to')).toBeUndefined();
+
     const located = ButtonDriver.mount({ props: { to: { name: 'guide' } } });
     expect(located.tag).toBe('a');
     expect(located.href).toBeUndefined();
@@ -169,10 +178,12 @@ describe('NuiButton', () => {
     expect(button.focused).toBe(true);
     expect(button.clickNatively()).toBe(true);
     expect(clicks.count).toBe(0);
+
     await button.update({ loading: false });
     expect(button.focused).toBe(true);
     expect(button.clickNatively()).toBe(false);
     expect(clicks.count).toBe(1);
+
     button.unmount();
   });
 });

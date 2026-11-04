@@ -56,6 +56,7 @@ describe('tokenizeCode', () => {
     const snippet = '<NuiCard>\n  <NuiButton variant="soft">Сохранить</NuiButton>\n</NuiCard>';
     expect(codeLanguageOf('vue', snippet)).toBe('vue-html');
     expect(codeLanguageOf('vue', '<template>\n  <div />\n</template>')).toBe('vue');
+
     const tags = textsOf(highlighter, snippet, 'vue', 'tag');
     expect(tags.some((text) => text.includes('NuiButton'))).toBe(true);
     expect(tags.some((text) => text.includes('Сохранить'))).toBe(false);

@@ -76,6 +76,7 @@ describe('NuiTable custom editors', () => {
     expect(grid.editing).toEqual({ row: 1, col: 2 });
     expect(grid.editorExpanded).toBe('true');
     expect(grid.editorOptions).toEqual(['Москва', 'Казань', 'Ереван', 'Самара']);
+
     await grid.pickInEditor('Самара');
 
     expect(grid.edits).toEqual([
@@ -140,10 +141,12 @@ describe('NuiTable custom editors', () => {
     await grid.doubleClickCell(2, 2);
     await grid.pickInEditor('Москва');
     expect(grid.cellText(2, 2)).toBe('Москва');
+
     await grid.focusCell(3, 3);
     await grid.press('F2');
     expect(grid.editing).toBeUndefined();
     expect(grid.announcement).toBe('Эту ячейку нельзя изменить');
+
     await grid.focusCell(4, 4);
     await grid.press('Enter');
     await grid.focusCell(4, 5);
@@ -170,6 +173,7 @@ describe('NuiTable custom editors', () => {
     await grid.focusCell(2, 4);
     await grid.press('Enter');
     expect(grid.editing).toEqual({ row: 2, col: 4 });
+
     await grid.clickEditor();
     await grid.press('Enter');
 

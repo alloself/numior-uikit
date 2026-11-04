@@ -18,14 +18,18 @@ describe('NuiCommand', () => {
     const command = CommandDriver.mount({ props: { autofocus: true } });
     await command.ready();
     expect(command.focused).toBe(true);
+
     await command.type('dark');
     expect(command.labels).toEqual(['Toggle theme']);
     expect(command.searches).toEqual(['dark']);
     expect(command.activeLabel).toBe('Toggle theme');
+
     await command.type('guides');
     expect(command.labels).toEqual(['Documentation']);
+
     await command.press('Enter');
     expect(command.selections.map((item) => item.value)).toEqual(['docs']);
+
     await command.type('zzz');
     expect(command.labels).toEqual([]);
     expect(command.emptyText).toBe('No results');
@@ -37,14 +41,19 @@ describe('NuiCommand', () => {
     await command.ready();
     await command.press('ArrowDown');
     expect(command.activeLabel).toBe('Documentation');
+
     await command.press('ArrowDown');
     expect(command.activeLabel).toBe('Toggle theme');
+
     await command.press('ArrowDown');
     expect(command.activeLabel).toBe('Home');
+
     await command.press('End');
     expect(command.activeLabel).toBe('Toggle theme');
+
     await command.hoverOption('Documentation');
     expect(command.activeLabel).toBe('Documentation');
+
     await command.clickOption('Home');
     expect(command.selections.map((item) => item.value)).toEqual(['home']);
   });
@@ -54,11 +63,14 @@ describe('NuiCommand', () => {
     await command.ready();
     expect(command.selectedLabels).toEqual(['Toggle theme']);
     expect(command.activeLabel).toBe('Toggle theme');
+
     await command.type('do');
     expect(command.activeLabel).toBe('Documentation');
+
     await command.clickOption('Documentation');
     expect(command.selections.map((item) => item.value)).toEqual(['docs']);
     expect(command.selectedLabels).toEqual([]);
+
     await command.type('');
     expect(command.selectedLabels).toEqual(['Toggle theme']);
     expect(command.activeLabel).toBe('Toggle theme');
@@ -70,9 +82,11 @@ describe('NuiCommand', () => {
     await remote.type('anything');
     expect(remote.labels).toEqual(['Home', 'Documentation', 'Toggle theme', 'Locked action']);
     expect(remote.hasModifier('loading')).toBe(true);
+
     const russian = CommandDriver.mount({ config: { locale: 'ru-RU' } });
     expect(russian.placeholder).toBe('Команда или поиск…');
     expect(russian.listLabel).toBe('Команды');
+
     const custom = CommandDriver.mount({ props: { placeholder: 'Go to…', label: 'Jump' } });
     expect(custom.placeholder).toBe('Go to…');
     expect(custom.listLabel).toBe('Jump');

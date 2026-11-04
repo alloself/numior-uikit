@@ -91,6 +91,7 @@ describe('number ranks', () => {
 
     expect(numberRanksOf(store)).toBeUndefined();
     expect(hasPendingRanks(store)).toBe(true);
+
     finish(createNumberRankJob(store));
 
     expect(hasPendingRanks(store)).toBe(false);

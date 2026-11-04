@@ -59,6 +59,7 @@ describe('NuiTable sorting', () => {
     const grid = mountPeople();
     await grid.settle();
     expect(grid.sortable(3)).toBe(true);
+
     await grid.sortBy(3);
 
     expect(grid.sort).toEqual([{ key: 'salary', direction: 'asc' }]);
@@ -66,10 +67,12 @@ describe('NuiTable sorting', () => {
     expect(grid.cellText(0, 0)).toBe('0');
     expect(grid.announcement).toBe('Сортировка по колонке «Оклад» по возрастанию');
     expect(grid.progressReports).toBeGreaterThan(0);
+
     await grid.sortBy(3);
     expect(grid.ariaSort(3)).toBe('descending');
     expect(grid.cellText(0, 0)).toBe('998');
     expect(grid.announcement).toBe('Сортировка по колонке «Оклад» по убыванию');
+
     await grid.sortBy(3);
     expect(grid.sort).toEqual([]);
     expect(grid.ariaSort(3)).toBeUndefined();
@@ -93,10 +96,13 @@ describe('NuiTable sorting', () => {
     expect(grid.ariaSort(2)).toBe('ascending');
     expect(grid.ariaSort(3)).toBeUndefined();
     expect(grid.cellText(0, 0)).toBe('3');
+
     await grid.sortBy(3, { shift: true });
     expect(grid.cellText(0, 0)).toBe('995');
+
     await grid.sortBy(2, { shift: true });
     expect(grid.cellText(0, 0)).toBe('996');
+
     await grid.sortBy(1);
     expect(grid.sort).toEqual([{ key: 'name', direction: 'asc' }]);
     expect(grid.sortOrders).toEqual([]);
@@ -107,10 +113,13 @@ describe('NuiTable sorting', () => {
     await grid.focusCell(0, 3);
     await grid.press('ArrowUp');
     expect(grid.focusedCell).toEqual({ row: -1, col: 3 });
+
     await grid.pressAndSettle('Enter');
     expect(grid.sort).toEqual([{ key: 'salary', direction: 'asc' }]);
+
     await grid.pressAndSettle(' ');
     expect(grid.sort).toEqual([{ key: 'salary', direction: 'desc' }]);
+
     await grid.pressAndSettle('Enter', { shift: true });
     expect(grid.sort).toEqual([]);
     expect(grid.focusedCell).toEqual({ row: -1, col: 3 });
@@ -125,10 +134,13 @@ describe('NuiTable sorting', () => {
     await grid.settle();
     expect(grid.cellText(0, 0)).toBe('998');
     expect(grid.sortable(1)).toBe(false);
+
     await grid.clickHeader(1);
     expect(grid.sort).toEqual([{ key: 'salary', direction: 'desc' }]);
+
     await grid.setSort([{ key: 'id', direction: 'desc' }]);
     expect(grid.cellText(0, 0)).toBe('999');
+
     await grid.setSource(people(10));
     expect(grid.cellText(0, 0)).toBe('9');
     expect(grid.rowCount).toBe(11);

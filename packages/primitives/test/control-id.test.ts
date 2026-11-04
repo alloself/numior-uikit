@@ -10,6 +10,7 @@ describe('useControlId', () => {
     const generated = id.value;
     expect(generated).toBeTruthy();
     expect(id.value).toBe(generated);
+
     explicit.value = 'custom';
     await nextTick();
     expect(id.value).toBe('custom');

@@ -59,14 +59,19 @@ describe('NuiTable merged cells', () => {
     await grid.press('ArrowRight');
 
     expect(grid.focusedCell).toEqual({ row: 1, col: 1 });
+
     await grid.press('ArrowRight');
     expect(grid.focusedCell).toEqual({ row: 2, col: 3 });
+
     await grid.press('ArrowLeft');
     expect(grid.focusedCell).toEqual({ row: 1, col: 1 });
+
     await grid.press('ArrowDown');
     expect(grid.focusedCell).toEqual({ row: 3, col: 2 });
+
     await grid.press('ArrowUp');
     expect(grid.focusedCell).toEqual({ row: 1, col: 1 });
+
     await grid.press('ArrowUp');
     expect(grid.focusedCell).toEqual({ row: 0, col: 2 });
   });
@@ -78,14 +83,18 @@ describe('NuiTable merged cells', () => {
 
     expect(grid.ranges).toEqual([range(0, 0, 2, 2)]);
     expect(grid.rangeMarks(1, 1)).toEqual(['selected', 'ranged', 'range-bottom', 'range-end']);
+
     await grid.press('ArrowUp', { shift: true });
     expect(grid.ranges).toEqual([range(0, 0, 0, 2)]);
+
     await grid.press('ArrowDown', { shift: true });
     expect(grid.ranges).toEqual([range(0, 0, 2, 2)]);
+
     await grid.clickCell(1, 1);
 
     expect(grid.ranges).toEqual([]);
     expect(grid.activeCell).toEqual({ row: 1, col: 1 });
+
     await grid.clickCell(3, 3, { shift: true });
     expect(grid.ranges).toEqual([range(1, 1, 3, 3)]);
   });
@@ -145,11 +154,13 @@ describe('NuiTable merged cells', () => {
 
     await grid.settle();
     expect(grid.cellPaint(1, 2).fill).toBe('gold');
+
     await grid.focusCell(2, 1);
     await grid.press('ArrowRight');
     await grid.press('Enter');
 
     expect(grid.editing).toEqual({ row: 1, col: 2 });
+
     await grid.typeInEditor('Тверь');
     await grid.press('Enter');
 
@@ -171,16 +182,19 @@ describe('NuiTable merged cells', () => {
     expect(grid.cellSpread(1, 1)).toEqual(['-80px', '', '240px', '']);
     expect(grid.mergeMarks(1, 0)).toEqual(['tall', 'cut-end']);
     expect(grid.mergeMarks(1, 1)).toEqual(['tall', 'cut-start']);
+
     await grid.clickCell(1, 1);
 
     expect(grid.activeCell).toEqual({ row: 1, col: 1 });
     expect(grid.mergeMarks(1, 0)).toEqual(['tall', 'allied', 'cut-end']);
     expect(grid.mergeMarks(1, 1)).toEqual(['tall', 'cut-start']);
+
     await grid.press('ArrowLeft');
 
     expect(grid.focusedCell).toEqual({ row: 1, col: 0 });
     expect(grid.mergeMarks(1, 0)).toEqual(['tall', 'cut-end']);
     expect(grid.mergeMarks(1, 1)).toEqual(['tall', 'allied', 'cut-start']);
+
     await grid.press('ArrowRight');
     expect(grid.focusedCell).toEqual({ row: 1, col: 2 });
     expect(grid.mergeMarks(1, 1)).toEqual(['tall', 'cut-start']);
@@ -201,6 +215,7 @@ describe('NuiTable merged cells', () => {
 
     expect(grid.editing).toEqual({ row: 1, col: 2 });
     expect(grid.cellText(1, 1)).toBe('Сотрудник 1');
+
     await grid.press('Escape');
 
     expect(grid.editing).toBeUndefined();
@@ -229,6 +244,7 @@ describe('NuiTable merged cells', () => {
     expect(asked.filter((cell) => cell === '1:name')).toHaveLength(1);
     expect(asked).not.toContain('1:city');
     expect(asked).not.toContain('2:name');
+
     await grid.scroll({ top: 80 });
     const kept = grid.renderedRows.filter((position) => first.includes(position));
 

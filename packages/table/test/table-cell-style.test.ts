@@ -85,9 +85,11 @@ describe('NuiTable cell styles', () => {
 
     expect(new Set(asked).size).toBe(painted);
     expect(painted).toBeGreaterThanOrEqual(first.length * STAFF_COLUMNS.length);
+
     await grid.focusCell(0, 1);
     await grid.press('ArrowDown');
     expect(asked).toHaveLength(painted);
+
     await grid.scroll({ top: 400 });
     const fresh = asked.slice(painted);
     const entered = grid.renderedRows.filter((position) => !first.includes(position));
@@ -111,6 +113,7 @@ describe('NuiTable cell styles', () => {
     await grid.settle();
     expect(grid.cellMarks(4, 3)).toEqual([]);
     expect(grid.cellMarks(5, 3)).toEqual(['filled', 'inked']);
+
     limit.value = 1040;
     await grid.settle();
     expect(grid.cellMarks(4, 3)).toEqual(['filled', 'inked']);
@@ -130,6 +133,7 @@ describe('NuiTable cell styles', () => {
 
     await grid.settle();
     expect(grid.cellMarks(1, 2)).toEqual([]);
+
     await grid.focusCell(1, 2);
     await grid.press('Delete');
 
@@ -171,11 +175,13 @@ describe('NuiTable cell styles', () => {
     expect(grid.cellMarks(1, 3)).toEqual([]);
     expect(grid.cellPaint(2, 1).flow).toBe('300px');
     expect(grid.cellMarks(0, 1)).toEqual([]);
+
     await grid.focusCell(1, 2);
     await grid.press('Enter');
 
     expect(grid.editing).toEqual({ row: 1, col: 2 });
     expect(grid.cellMarks(1, 1)).toEqual([]);
+
     await grid.typeInEditor('Тверь');
     await grid.press('Enter');
 
@@ -218,8 +224,10 @@ describe('NuiTable cell styles', () => {
     expect(grid.cellMarks(0, 4)).toEqual(['tail']);
     expect(grid.cellMarks(0, 3)).toEqual([]);
     expect(grid.slack).toBe(false);
+
     await grid.resize(900);
     expect(grid.slack).toBe(true);
+
     await grid.resize(600);
     expect(grid.slack).toBe(false);
   });

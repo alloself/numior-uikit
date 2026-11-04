@@ -88,8 +88,10 @@ describe('message dictionary', () => {
     const harness = MessagesHarness.withPlugin({ locale, messages });
 
     expect(harness.close).toBe('Close');
+
     locale.value = 'ru-RU';
     expect(harness.close).toBe('Закрыть');
+
     messages.value = { ru: { probe: { close: 'Скрыть' } } };
     expect(harness.close).toBe('Скрыть');
   });

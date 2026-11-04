@@ -35,17 +35,23 @@ describe('NuiTable edges', () => {
     await grid.press('ArrowDown', { ctrl: true });
 
     expect(grid.focusedCell).toEqual({ row: LAST_ROW, col: 1 });
+
     await grid.press('ArrowRight', { ctrl: true });
     expect(grid.focusedCell).toEqual({ row: LAST_ROW, col: LAST_COL });
+
     await grid.press('ArrowUp', { ctrl: true });
     expect(grid.focusedCell).toEqual({ row: 0, col: LAST_COL });
+
     await grid.press('ArrowLeft', { ctrl: true });
     expect(grid.focusedCell).toEqual({ row: 0, col: 0 });
+
     await grid.focusCell(-1, 2);
     await grid.press('ArrowUp', { ctrl: true });
     expect(grid.focusedCell).toEqual({ row: -1, col: 2 });
+
     await grid.press('ArrowDown', { ctrl: true });
     expect(grid.focusedCell).toEqual({ row: LAST_ROW, col: 2 });
+
     await grid.scrollToRow(0);
     await grid.focusCell(2, 2);
     await grid.press('ArrowDown', { ctrl: true, shift: true });
@@ -68,14 +74,17 @@ describe('NuiTable edges', () => {
 
     expect(asked).toEqual([[{ row: 3, col: 1 }, 'down']]);
     expect(grid.focusedCell).toEqual({ row: 13, col: 2 });
+
     await grid.press('ArrowDown', { ctrl: true, shift: true });
 
     expect(grid.ranges).toEqual([{ from: { row: 13, col: 1 }, to: { row: 23, col: 1 } }]);
+
     await grid.press('Escape');
     await grid.scrollToRow(995);
     await grid.focusCell(995, 2);
     await grid.press('ArrowDown', { ctrl: true });
     expect(grid.focusedCell).toEqual({ row: LAST_ROW, col: 2 });
+
     await grid.focusCell(LAST_ROW, 0);
     await grid.press('ArrowUp', { ctrl: true });
     expect(grid.focusedCell).toEqual({ row: 0, col: 0 });

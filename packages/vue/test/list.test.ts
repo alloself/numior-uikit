@@ -33,6 +33,7 @@ describe('NuiList', () => {
     expect(list.modifierOf('Beta', 'size-md')).toBe(true);
     expect(list.wrapper.find('.nui-row__trailing').text()).toBe('New');
     expect(list.wrapper.find('.nui-row__leading').text()).toBe('A');
+
     list.unmount();
 
     const ordered = ListDriver.mount({
@@ -43,6 +44,7 @@ describe('NuiList', () => {
     expect(ordered.tag).toBe('ol');
     expect(ordered.hasModifier('variant-bordered')).toBe(true);
     expect(ordered.modifierOf('One', 'size-sm')).toBe(true);
+
     ordered.unmount();
   });
 
@@ -61,15 +63,18 @@ describe('NuiList', () => {
     expect(list.modifierOf('Docs', 'mode-link')).toBe(true);
     expect(list.innerTag('Run')).toBe('button');
     expect(list.inner('Run').attributes('type')).toBe('button');
+
     await list.clickInner('Run');
     expect(list.clicks).toBe(1);
     expect(list.inner('Off').attributes('aria-disabled')).toBe('true');
     expect(list.inner('Off').attributes('href')).toBeUndefined();
     expect(list.inner('Stop').attributes('disabled')).toBeDefined();
     expect(list.modifierOf('Stop', 'disabled')).toBe(true);
+
     list.unmount();
     const routed = ListDriver.mount({ parts: [{ label: 'Guide', to: '/guide' }], viaRouter: true });
     expect(routed.inner('Guide').attributes('href')).toBe('/router/guide');
+
     routed.unmount();
   });
 
@@ -80,6 +85,7 @@ describe('NuiList', () => {
     });
 
     expect(registered.inner('Guide').attributes('href')).toBe('/router/guide');
+
     registered.unmount();
 
     const configured = ListDriver.mount({
@@ -89,10 +95,12 @@ describe('NuiList', () => {
     });
 
     expect(configured.inner('Guide').attributes('href')).toBe('/configured/guide');
+
     configured.unmount();
     const plain = ListDriver.mount({ parts: [{ label: 'Guide', to: '/guide' }] });
     expect(plain.inner('Guide').attributes('href')).toBe('/guide');
     expect(plain.inner('Guide').attributes('to')).toBeUndefined();
+
     plain.unmount();
   });
 
@@ -115,6 +123,7 @@ describe('NuiList', () => {
     expect(list.badgeOf('Drafts')).toBe('new');
     expect(list.badgeOf('Archive')).toBe('');
     expect(list.nestedOf('Inbox')).toBe('Unread');
+
     list.unmount();
 
     const data = ListDriver.mount({
@@ -130,6 +139,7 @@ describe('NuiList', () => {
     expect(data.inner('Home').attributes('aria-current')).toBe('page');
     expect(data.badgeOf('Home')).toBe('99+');
     expect(data.inner('Reports').attributes('aria-current')).toBeUndefined();
+
     data.unmount();
   });
 
@@ -156,16 +166,21 @@ describe('NuiList', () => {
     expect(list.innerTag('Docs!')).toBe('a');
     expect(list.innerTag('Run!')).toBe('button');
     expect(list.innerTag('Plain!')).toBe('div');
+
     await list.clickInner('Run!');
     expect(runs).toBe(1);
+
     await list.receiveItems([]);
     expect(list.hasModifier('empty')).toBe(true);
     expect(list.emptyText).toBe('No items');
+
     await list.receiveItems([{ label: 'Back' }]);
     expect(list.titles).toEqual(['Back!']);
+
     list.unmount();
     const labelled = ListDriver.mount({ props: { items: [], emptyLabel: 'Пусто' } });
     expect(labelled.emptyText).toBe('Пусто');
+
     labelled.unmount();
   });
 
@@ -177,6 +192,7 @@ describe('NuiList', () => {
 
     expect(list.leadings).toEqual(['А', 'Б']);
     expect(list.titles).toEqual(['Анна', 'Борис']);
+
     list.unmount();
   });
 
@@ -194,6 +210,7 @@ describe('NuiList', () => {
     expect(list.groupAttr('Ссылки', 'role')).toBeUndefined();
     expect(list.titles).toEqual(['Документация', 'Выйти']);
     expect(list.innerTag('Документация')).toBe('a');
+
     list.unmount();
 
     const grouped = ListDriver.mount({
@@ -216,12 +233,15 @@ describe('NuiList', () => {
 
     expect(grouped.groupAttr('JVM', 'role')).toBe('group');
     expect(grouped.optionIds).toEqual(['langs-option-0', 'langs-option-1', 'langs-option-2']);
+
     await grouped.focusItem('Kotlin');
     await grouped.press('ArrowUp');
     expect(grouped.focusedTitle).toBe('Go');
+
     await grouped.press('ArrowDown');
     await grouped.press('ArrowDown');
     expect(grouped.focusedTitle).toBe('Scala');
+
     grouped.unmount();
   });
 
@@ -239,26 +259,35 @@ describe('NuiList', () => {
     expect(list.tabIndexes).toEqual([-1, 0, -1, -1]);
     expect(list.modifierOf('Ruby', 'disabled')).toBe(true);
     expect(list.item('Ruby').attributes('aria-disabled')).toBe('true');
+
     await list.focusItem('Rust');
     await list.press('ArrowDown');
     expect(list.focusedTitle).toBe('Котлин');
+
     await list.press('ArrowDown');
     expect(list.focusedTitle).toBe('Go');
+
     await list.press('End');
     expect(list.focusedTitle).toBe('Котлин');
+
     await list.press('Home');
     expect(list.focusedTitle).toBe('Go');
+
     await list.press('к');
     expect(list.focusedTitle).toBe('Котлин');
+
     await list.press('Enter');
     expect(list.value).toBe('kotlin');
     expect(list.selectedTitles).toEqual(['Котлин']);
     expect(list.checkCount).toBe(1);
+
     await list.click('Go');
     expect(list.value).toBe('go');
+
     await list.focusItem('Котлин');
     await list.focusOutside();
     expect(list.tabIndexes).toEqual([0, -1, -1, -1]);
+
     list.unmount();
   });
 
@@ -269,17 +298,22 @@ describe('NuiList', () => {
     });
 
     expect(list.listAttr('aria-multiselectable')).toBe('true');
+
     await list.click('Go');
     expect(list.value).toEqual(['rust', 'go']);
     expect(list.selectedTitles).toEqual(['Go', 'Rust']);
     expect(list.checkCount).toBe(2);
+
     await list.focusItem('Rust');
     await list.press(' ');
     expect(list.value).toEqual(['go']);
+
     await list.click('Ruby');
     expect(list.value).toEqual(['go']);
+
     await list.focusOutside();
     expect(list.tabIndexes).toEqual([0, -1, -1, -1]);
+
     list.unmount();
   });
 
@@ -293,16 +327,19 @@ describe('NuiList', () => {
     expect(list.innerTag('Docs')).toBe('div');
     expect(list.item('Heading').attributes('role')).toBeUndefined();
     expect(list.tabIndexes).toEqual([0, -1]);
+
     list.unmount();
   });
 
   it('speaks the configured language while loading and when empty unless labelled', () => {
     const loading = ListDriver.mount({ props: { loading: true }, config: { locale: 'ru-RU' } });
     expect(loading.loadingText).toBe('Загрузка');
+
     loading.unmount();
 
     const empty = ListDriver.mount({ props: { items: [] }, config: { locale: 'ru-RU' } });
     expect(empty.emptyText).toBe('Список пуст');
+
     empty.unmount();
 
     const labelled = ListDriver.mount({
@@ -311,6 +348,7 @@ describe('NuiList', () => {
     });
 
     expect(labelled.emptyText).toBe('Задач нет');
+
     labelled.unmount();
   });
 });

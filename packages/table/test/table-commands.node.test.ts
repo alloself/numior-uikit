@@ -17,9 +17,11 @@ describe('table edits', () => {
     expect(stack.undo()).toBe('b');
     expect(stack.undo()).toBeUndefined();
     expect(stack.redo()).toBe('b');
+
     stack.push('d');
     expect(stack.redo()).toBeUndefined();
     expect(stack.undo()).toBe('d');
+
     stack.clear();
     expect(stack.undo()).toBeUndefined();
   });
@@ -40,10 +42,12 @@ describe('table edits', () => {
     if (first !== undefined) {
       first.amount = 1000;
     }
+
     harness.engine.patch(QUERY, ['amount']);
     expect(ids()).toEqual(['#5', '#2', '#6', '#1', '#4', '#3']);
     expect(harness.engine.totals()['amount']).toBe(1745);
     expect(harness.engine.totals()['largest']).toBe(1000);
+
     await harness.runToEnd(QUERY);
     expect(ids()).toEqual(['#1', '#5', '#2', '#6', '#4', '#3']);
   });

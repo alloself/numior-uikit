@@ -11,18 +11,22 @@ describe('NuiLayout with NuiSidebar', () => {
 
     expect(layout.skipLink.text()).toBe('Skip to content');
     expect(layout.skipLink.attributes('href')).toBe('#app-content');
+
     await layout.followSkipLink();
     expect(layout.contentFocused).toBe(true);
+
     layout.unmount();
 
     const renamed = LayoutDriver.mount({ skipLabel: 'К заказам' });
 
     expect(renamed.skipLink.text()).toBe('К заказам');
+
     renamed.unmount();
 
     const bare = LayoutDriver.mount({ skipLink: false });
 
     expect(bare.skipLink.exists()).toBe(false);
+
     bare.unmount();
   });
 
@@ -37,8 +41,10 @@ describe('NuiLayout with NuiSidebar', () => {
     expect(layout.action('Inbox').find('.nui-badge').text()).toBe('3');
     expect(layout.action('Docs').element.tagName).toBe('A');
     expect(layout.action('Docs').attributes('href')).toBe('#docs');
+
     await layout.focusItem('Calendar');
     expect(layout.tooltipShows).toBe(0);
+
     await layout.clickTrigger();
     expect(layout.open).toBe(false);
     expect(layout.sidebarModifier('rail')).toBe(true);
@@ -46,14 +52,18 @@ describe('NuiLayout with NuiSidebar', () => {
     expect(layout.sidebar.attributes('inert')).toBeUndefined();
     expect(layout.action('Inbox').text()).toContain('Inbox');
     expect(layout.action('Inbox').attributes('aria-describedby')).toBeUndefined();
+
     await layout.focusItem('Inbox');
     expect(layout.tooltipShows).toBe(1);
     expect(layout.trigger.attributes('aria-expanded')).toBe('false');
+
     await layout.clickItem('Calendar');
     expect(layout.active).toBe('calendar');
     expect(layout.heading).toBe('calendar');
+
     await layout.clickTrigger();
     expect(layout.sidebarModifier('rail')).toBe(false);
+
     layout.unmount();
   });
 
@@ -68,11 +78,13 @@ describe('NuiLayout with NuiSidebar', () => {
     expect(await layout.pressShortcut('meta')).toBe(true);
     expect(layout.open).toBe(true);
     expect(layout.sidebar.attributes('inert')).toBeUndefined();
+
     layout.unmount();
 
     const fixed = LayoutDriver.mount({ collapsible: 'none', shortcut: false });
     expect(await fixed.pressShortcut('ctrl')).toBe(false);
     expect(fixed.open).toBe(true);
+
     fixed.unmount();
   });
 
@@ -81,19 +93,24 @@ describe('NuiLayout with NuiSidebar', () => {
     expect(layout.subToggle.attributes('aria-expanded')).toBe('false');
     expect(layout.subToggle.attributes('aria-controls')).toBe(layout.subItems.attributes('id'));
     expect(layout.subItems.attributes('inert')).toBeDefined();
+
     await layout.clickSub();
     expect(layout.subOpen).toBe(true);
     expect(layout.subToggle.attributes('aria-expanded')).toBe('true');
     expect(layout.subItems.attributes('inert')).toBeUndefined();
+
     await layout.clickItem('Sales');
     expect(layout.active).toBe('sales');
+
     await layout.clickTrigger();
     expect(layout.subToggle.attributes('aria-expanded')).toBe('false');
     expect(layout.subItems.exists()).toBe(false);
     expect(layout.flyout.exists()).toBe(true);
+
     await layout.clickTrigger();
     expect(layout.flyout.exists()).toBe(false);
     expect(layout.subToggle.attributes('aria-expanded')).toBe('true');
+
     layout.unmount();
   });
 
@@ -106,59 +123,75 @@ describe('NuiLayout with NuiSidebar', () => {
     expect(layout.subToggle.attributes('aria-controls')).toBe(layout.flyout.attributes('id'));
     expect(layout.subToggle.attributes('aria-expanded')).toBe('false');
     expect(layout.flyout.text()).toContain('Reports');
+
     await layout.hoverSub();
     await layout.advance(100);
     expect(layout.subToggle.attributes('aria-expanded')).toBe('true');
     expect(layout.tooltipShows).toBe(1);
+
     await layout.leaveSub();
     await layout.advance(300);
     expect(layout.subToggle.attributes('aria-expanded')).toBe('false');
+
     await layout.pressOnSub('ArrowRight');
     expect(layout.subToggle.attributes('aria-expanded')).toBe('true');
     expect(layout.focusedLabel).toBe('Sales');
+
     await layout.pressFocused('ArrowDown');
     expect(layout.focusedLabel).toBe('Team');
+
     await layout.pressFocused('Escape');
     expect(layout.subToggle.attributes('aria-expanded')).toBe('false');
     expect(layout.subFocused).toBe(true);
+
     await layout.clickSub();
     expect(layout.subToggle.attributes('aria-expanded')).toBe('true');
+
     await layout.clickItem('Sales');
     expect(layout.active).toBe('sales');
     expect(layout.subToggle.attributes('aria-expanded')).toBe('false');
     expect(layout.open).toBe(false);
+
     await layout.clickTrigger();
     expect(layout.flyout.exists()).toBe(false);
+
     layout.unmount();
   });
 
   it('moves into a drawer on small screens and closes it after an item is picked', async () => {
     const layout = LayoutDriver.mount({ collapsible: 'offcanvas' });
     expect(layout.drawer.exists()).toBe(false);
+
     await layout.setMobile(true);
     expect(layout.sidebar.exists()).toBe(false);
     expect(layout.drawer.exists()).toBe(true);
     expect(layout.drawer.text()).toContain('Navigation');
     expect(layout.trigger.attributes('aria-expanded')).toBe('false');
     expect(layout.trigger.attributes('aria-controls')).toBe(layout.drawer.attributes('id'));
+
     await layout.clickTrigger();
     expect(layout.mobileOpen).toBe(true);
     expect(layout.showModalCalls).toBe(1);
+
     await layout.clickItem('Calendar');
     expect(layout.active).toBe('calendar');
     expect(layout.mobileOpen).toBe(false);
+
     await layout.clickTrigger();
     expect(layout.mobileOpen).toBe(true);
+
     await layout.setMobile(false);
     expect(layout.mobileOpen).toBe(false);
     expect(layout.sidebar.exists()).toBe(true);
     expect(layout.open).toBe(true);
+
     layout.unmount();
   });
 
   it('places a full header above the sidebar, offers an end column and sticks both columns', async () => {
     const layout = LayoutDriver.mount({ header: 'full', end: true, sticky: true });
     expect(layout.hasModifier('pending')).toBe(true);
+
     await layout.ready();
     expect(layout.hasModifier('pending')).toBe(false);
     expect(layout.hasModifier('header-full')).toBe(true);
@@ -166,11 +199,13 @@ describe('NuiLayout with NuiSidebar', () => {
     expect(layout.hasModifier('with-end')).toBe(true);
     expect(layout.headerBeforeRow).toBe(true);
     expect(layout.endColumn.text()).toBe('Outline');
+
     layout.unmount();
     const inset = LayoutDriver.mount();
     expect(inset.hasModifier('header-inset')).toBe(true);
     expect(inset.headerBeforeRow).toBe(false);
     expect(inset.endColumn.exists()).toBe(false);
+
     inset.unmount();
   });
 
@@ -178,15 +213,19 @@ describe('NuiLayout with NuiSidebar', () => {
     const layout = LayoutDriver.mount({ collapsibleGroup: true });
     expect(layout.groupToggle.attributes('aria-expanded')).toBe('true');
     expect(layout.groupToggle.attributes('aria-controls')).toBe(layout.groupList.attributes('id'));
+
     await layout.clickGroupToggle();
     expect(layout.groupToggle.attributes('aria-expanded')).toBe('false');
     expect(layout.groupList.attributes('inert')).toBeDefined();
+
     await layout.clickGroupToggle();
     expect(layout.groupList.attributes('inert')).toBeUndefined();
     expect(layout.subOpen).toBe(false);
+
     await layout.activate('team');
     expect(layout.subOpen).toBe(true);
     expect(layout.action('Team').attributes('aria-current')).toBe('page');
+
     layout.unmount();
   });
 
@@ -195,11 +234,14 @@ describe('NuiLayout with NuiSidebar', () => {
       const layout = LayoutDriver.mount({ variant });
 
       expect(layout.sidebarModifier(`variant-${variant}`)).toBe(true);
+
       layout.unmount();
     }
+
     const panel = LayoutDriver.mount();
 
     expect(panel.sidebarModifier('variant-panel')).toBe(true);
+
     panel.unmount();
   });
 
@@ -207,16 +249,19 @@ describe('NuiLayout with NuiSidebar', () => {
     const russian = LayoutDriver.mount({ config: { locale: 'ru-RU' } });
     expect(russian.sidebarLabel).toBe('Навигация');
     expect(russian.triggerLabel).toBe('Переключить боковую панель');
+
     russian.unmount();
 
     const labelled = LayoutDriver.mount({ config: { locale: 'ru-RU' }, label: 'Разделы' });
     expect(labelled.sidebarLabel).toBe('Разделы');
+
     labelled.unmount();
 
     const mobile = LayoutDriver.mount({ config: { locale: 'ru-RU' } });
     await mobile.setMobile(true);
     expect(mobile.drawer.text()).toContain('Навигация');
     expect(mobile.drawerCloseLabel).toBe('Закрыть');
+
     mobile.unmount();
   });
 });

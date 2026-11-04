@@ -13,11 +13,14 @@ describe('NuiPopover', () => {
     expect(popover.content.text()).toBe('Content');
     expect(popover.content.classes()).toContain('nui-popover--padding-md');
     expect(popover.popoverCalls.show).toBe(0);
+
     await popover.receiveOpen(true);
     expect(popover.popoverCalls.show).toBe(1);
     expect(popover.trigger.attributes('aria-expanded')).toBe('true');
+
     await popover.receiveOpen(false);
     expect(popover.popoverCalls.hide).toBe(1);
+
     popover.unmount();
   });
 
@@ -33,8 +36,10 @@ describe('NuiPopover', () => {
     expect(popover.popoverCalls.show).toBe(1);
     expect(popover.sideVector).toBe('1 0');
     expect(popover.arrow.exists()).toBe(true);
+
     popover.dismissNatively();
     expect(popover.modelOpen).toBe(false);
+
     popover.unmount();
   });
 
@@ -43,9 +48,11 @@ describe('NuiPopover', () => {
     const id = popover.content.attributes('id');
     expect(id).toBeTruthy();
     expect(popover.trigger.attributes('popovertarget')).toBe(id);
+
     await flushPromises();
     expect(popover.content.attributes('style')).toContain('position: fixed');
     expect(popover.arrow.exists()).toBe(false);
+
     popover.unmount();
   });
 
@@ -60,6 +67,7 @@ describe('NuiPopover', () => {
 
     expect(popover.content.attributes('popover')).toBe('manual');
     expect(popover.content.attributes('style')).toContain('position: fixed');
+
     popover.unmount();
     anchor.remove();
   });
@@ -77,21 +85,27 @@ describe('NuiPopover', () => {
       expect(popover.trigger.attributes('popovertarget')).toBeUndefined();
       expect(popover.trigger.attributes('aria-controls')).toBe('card');
       expect(popover.content.attributes('popover')).toBe('manual');
+
       await popover.hover();
       await popover.advance(399);
       expect(popover.modelOpen).toBe(false);
+
       await popover.advance(1);
       expect(popover.modelOpen).toBe(true);
       expect(popover.trigger.attributes('aria-expanded')).toBe('true');
+
       await popover.leave();
       await popover.hoverContent();
       await popover.advance(500);
       expect(popover.modelOpen).toBe(true);
+
       await popover.leaveContent();
       await popover.advance(199);
       expect(popover.modelOpen).toBe(true);
+
       await popover.advance(1);
       expect(popover.modelOpen).toBe(false);
+
       popover.unmount();
     });
 
@@ -100,16 +114,21 @@ describe('NuiPopover', () => {
 
       await popover.focusTrigger();
       expect(popover.modelOpen).toBe(true);
+
       await popover.focusContent();
       expect(popover.modelOpen).toBe(true);
+
       await popover.pressEscape();
       expect(popover.modelOpen).toBe(false);
       expect(popover.triggerFocused).toBe(true);
+
       await popover.focusOutside();
       await popover.focusTrigger();
       expect(popover.modelOpen).toBe(true);
+
       await popover.focusOutside();
       expect(popover.modelOpen).toBe(false);
+
       popover.unmount();
     });
 
@@ -118,11 +137,14 @@ describe('NuiPopover', () => {
 
       await popover.click();
       expect(popover.modelOpen).toBe(false);
+
       await popover.focusOutside();
       await popover.tap();
       expect(popover.modelOpen).toBe(true);
+
       await popover.tap();
       expect(popover.modelOpen).toBe(false);
+
       popover.unmount();
     });
   });

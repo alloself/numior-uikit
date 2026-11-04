@@ -55,6 +55,7 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.bordered).toBe(false);
     expect(sheet.pinnedColumns).toBe(1);
     expect(sheet.frozenRows).toBe(0);
+
     await sheet.show({ sheet: 1 });
 
     expect(sheet.text(1, 0)).toBe('Rate');

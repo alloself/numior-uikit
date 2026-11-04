@@ -34,6 +34,7 @@ afterEach(() => {
   for (const grid of mounted.splice(0)) {
     grid.unmount();
   }
+
   for (const bar of bars.splice(0)) {
     bar.remove();
   }
@@ -45,10 +46,13 @@ describe('NuiTable external editing', () => {
     await grid.focusCell(2, 1);
 
     expect(grid.activeModel).toEqual({ row: 2, col: 1 });
+
     await grid.press('ArrowRight');
     expect(grid.activeModel).toEqual({ row: 2, col: 2 });
+
     await grid.setActive({ row: 5, col: 3 });
     expect(grid.focusedCell).toEqual({ row: 5, col: 3 });
+
     await grid.setActive({ row: 99, col: 0 });
     expect(grid.activeModel).toEqual({ row: 5, col: 3 });
   });
@@ -65,10 +69,13 @@ describe('NuiTable external editing', () => {
     expect(grid.editorFocused).toBe(false);
     expect(document.activeElement).toBe(bar);
     expect(grid.draftModel).toEqual({ row: 1, col: 2, key: 'city', value: 'Казань' });
+
     await grid.setDraft({ row: 4, col: 2, key: 'city', value: 'Сочи' });
     expect(grid.editorValue).toBe('Казань');
+
     await grid.setDraft({ row: 1, col: 2, key: 'city', value: 'Сочи' });
     expect(grid.editorValue).toBe('Сочи');
+
     await grid.typeInEditor('Тула');
     expect(grid.draftModel).toEqual({ row: 1, col: 2, key: 'city', value: 'Тула' });
     expect(await grid.commitEdit('down')).toBe(true);
@@ -90,12 +97,15 @@ describe('NuiTable external editing', () => {
     expect(grid.editorFocused).toBe(true);
     expect(grid.editorValue).toBe('');
     expect(grid.draftModel).toEqual({ row: 4, col: 2, key: 'city', value: undefined });
+
     await grid.focusOutside(bar);
     expect(grid.editing).toEqual({ row: 4, col: 2 });
+
     await grid.cancelEdit();
     expect(grid.editing).toBeUndefined();
     expect(grid.edits).toEqual([]);
     expect(grid.focusedCell).toEqual({ row: 4, col: 2 });
+
     await grid.focusCell(0, 1);
     expect(await grid.startEdit('append')).toBe(false);
     expect(grid.announcement).toBe('Эту ячейку нельзя изменить');

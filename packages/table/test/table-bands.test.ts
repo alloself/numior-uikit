@@ -69,14 +69,19 @@ describe('NuiTable header groups', () => {
 
     expect(grid.rowCount).toBe(1003);
     expect(grid.cellText(0, 1)).toBe('Сотрудник 0');
+
     await grid.clickBand('Работа');
     expect(grid.sort).toEqual([]);
+
     await grid.sortBy(3);
     expect(grid.sort).toEqual([{ key: 'salary', direction: 'asc' }]);
+
     await grid.focusCell(0, 2);
     expect(grid.focusedCell).toEqual({ row: 0, col: 2 });
+
     await grid.press('ArrowUp');
     expect(grid.focusedCell).toEqual({ row: -1, col: 2 });
+
     await grid.press('ArrowUp');
     expect(grid.focusedCell).toEqual({ row: -1, col: 2 });
   });
@@ -95,6 +100,7 @@ describe('NuiTable header groups', () => {
     expect(grid.bandRules(0)).toEqual([undefined, 'end', 'end', undefined, undefined]);
     expect(grid.bandRules(1)).toEqual([undefined, undefined, 'both', undefined, undefined]);
     expect(grid.bandResizer('Организация')).not.toBeNull();
+
     await grid.dragBandResizer('Сотрудник', 40);
     expect(grid.widths).toEqual({ city: 180 });
     expect(grid.announcement).toBe('Ширина колонки «Город»: 180 px');
@@ -136,6 +142,7 @@ describe('NuiTable header groups', () => {
     expect(grid.bandRules(0)).toEqual([undefined, 'both', undefined]);
     expect(grid.bandTails(0)).toEqual([false, true, false]);
     expect(grid.slack).toBe(false);
+
     await grid.resize(4000);
     expect(grid.slack).toBe(true);
   });

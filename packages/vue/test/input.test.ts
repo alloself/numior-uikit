@@ -14,6 +14,7 @@ describe('NuiInput', () => {
     const input = InputDriver.mount({ modelValue: '', modifiers: { lazy: true } });
     await input.type('abc');
     expect(input.emittedValues).toEqual([]);
+
     await input.commit();
     expect(input.emittedValues).toEqual(['abc']);
   });
@@ -27,17 +28,21 @@ describe('NuiInput', () => {
 
     input.focusNatively();
     expect(input.focused).toBe(true);
+
     await input.type(' a ');
     expect(input.emittedValues).toEqual(['a']);
     expect(input.value).toBe(' a ');
+
     await input.commit();
     expect(input.value).toBe('a');
+
     input.unmount();
   });
 
   it('writes external model changes into the native control', async () => {
     const input = InputDriver.mount({ modelValue: 'first' });
     expect(input.value).toBe('first');
+
     await input.receiveModelValue('second');
     expect(input.value).toBe('second');
   });
@@ -68,6 +73,7 @@ describe('NuiInput', () => {
     expect(input.control.attributes('type')).toBe('email');
     expect(input.control.attributes('readonly')).toBe('');
     expect(input.control.attributes('id')).toBeTruthy();
+
     await input.control.trigger('focus');
     expect(focuses.count).toBe(1);
   });
@@ -79,6 +85,7 @@ describe('NuiInput', () => {
     expect(input.control.attributes('aria-invalid')).toBe('true');
     expect(input.control.attributes('disabled')).toBe('');
     expect(input.control.attributes('required')).toBe('');
+
     const plain = InputDriver.mount();
     expect(plain.hasModifier('invalid')).toBe(false);
     expect(plain.control.attributes('disabled')).toBeUndefined();
@@ -87,6 +94,7 @@ describe('NuiInput', () => {
   it('renders prefix and suffix slots only when provided', () => {
     const bare = InputDriver.mount();
     expect(bare.prefix.exists()).toBe(false);
+
     const input = InputDriver.mount({ slots: { prefix: '@', suffix: InputSuffixMark } });
     expect(input.prefix.text()).toBe('@');
     expect(input.suffix.find('b').text()).toBe('.ru');
@@ -98,10 +106,13 @@ describe('NuiInput', () => {
     expect(phone.value).toBe('+7 (999) 123-45-67');
     expect(phone.emittedValues.at(-1)).toBe('+7 (999) 123-45-67');
     expect(phone.caret).toBe(18);
+
     await phone.type('abc9');
     expect(phone.value).toBe('+7 (9');
+
     await phone.receiveModelValue('9995550000');
     expect(phone.value).toBe('+7 (999) 555-00-00');
+
     phone.unmount();
 
     const raw = InputDriver.mount({
@@ -113,6 +124,7 @@ describe('NuiInput', () => {
     await raw.type('999123');
     expect(raw.value).toBe('+7 (999) 123');
     expect(raw.emittedValues.at(-1)).toBe('999123');
+
     raw.unmount();
   });
 
@@ -120,9 +132,11 @@ describe('NuiInput', () => {
     const phone = InputDriver.mount({ modelValue: '', props: { mask: '+7 (###) ###-##-##' } });
     await phone.type('99912');
     expect(phone.value).toBe('+7 (999) 12');
+
     await phone.deleteBackward('+7 (999)12', 8);
     expect(phone.value).toBe('+7 (991) 2');
     expect(phone.caret).toBe(6);
+
     phone.unmount();
   });
 
@@ -130,6 +144,7 @@ describe('NuiInput', () => {
     const host = mountInputWithFocusHandle();
     host.focus();
     expect(document.activeElement).toBe(host.control.element);
+
     host.unmount();
   });
 

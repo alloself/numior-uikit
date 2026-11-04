@@ -12,6 +12,7 @@ describe('direction context', () => {
 
   it('defaults to ltr and reads the document direction when nothing is configured', () => {
     expect(captureSetup(() => useDirection()).value.dir()).toBe('ltr');
+
     document.documentElement.dir = 'rtl';
     expect(captureSetup(() => useDirection()).value.isRtl()).toBe(true);
   });
@@ -30,6 +31,7 @@ describe('direction context', () => {
     });
 
     expect(fromPlugin.value.isRtl()).toBe(true);
+
     direction.value = 'ltr';
     expect(fromPlugin.value.isRtl()).toBe(false);
 

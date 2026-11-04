@@ -48,14 +48,18 @@ describe('NuiPagination', () => {
     expect(pagination.labelOfPage(6)).toBe('Page 6');
     expect(pagination.rangeText).toBe('101–120 of 240');
     expect(pagination.statusText).toBe('6 / 12');
+
     await pagination.clickNext();
     expect(pagination.page).toBe(7);
+
     await pagination.clickPage(12);
     expect(pagination.page).toBe(12);
     expect(pagination.nextDisabled).toBe(true);
     expect(pagination.rangeText).toBe('221–240 of 240');
+
     await pagination.clickPrevious();
     expect(pagination.page).toBe(11);
+
     pagination.unmount();
   });
 
@@ -85,8 +89,10 @@ describe('NuiPagination', () => {
     await pagination.clickEdge('first');
     expect(pagination.page).toBe(1);
     expect(pagination.previousDisabled).toBe(true);
+
     await pagination.clickEdge('last');
     expect(pagination.page).toBe(50);
+
     pagination.unmount();
   });
 
@@ -98,8 +104,10 @@ describe('NuiPagination', () => {
 
     expect(pagination.hrefs).toEqual(['#page-1', '#page-2', '#page-3']);
     expect(pagination.currentPage).toBe('2');
+
     await pagination.clickPage(3);
     expect(pagination.page).toBe(3);
+
     pagination.unmount();
   });
 
@@ -110,11 +118,13 @@ describe('NuiPagination', () => {
     });
 
     expect(pagination.rangeText).toBe('221–240 of 240');
+
     await pagination.choosePageSize(50);
     expect(pagination.pageSize).toBe(50);
     expect(pagination.page).toBe(5);
     expect(pagination.rangeText).toBe('201–240 of 240');
     expect(pagination.statusText).toBe('5 / 5');
+
     pagination.unmount();
   });
 
@@ -127,6 +137,7 @@ describe('NuiPagination', () => {
     expect(pagination.rangeText).toBe('0–0 из 0');
     expect(pagination.previousDisabled).toBe(true);
     expect(pagination.nextDisabled).toBe(true);
+
     pagination.unmount();
   });
 
@@ -143,6 +154,7 @@ describe('NuiPagination', () => {
     expect(pagination.pageSizeText).toBe('Строк на странице');
     expect(pagination.labelOfPage(6)).toBe('Страница 6');
     expect(pagination.rangeText).toBe('101–120 из 240');
+
     pagination.unmount();
   });
 });

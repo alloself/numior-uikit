@@ -70,12 +70,14 @@ describe('NuiTable groups and totals', () => {
     expect(grid.rowExpanded(1)).toBeUndefined();
     expect(grid.cellText(1, 1)).toBe('Сотрудник 1');
     expect(grid.announcement).toBe('Группа «Данные» развёрнута');
+
     await grid.focusCell(0, 3);
     await grid.press('Enter');
 
     expect(grid.expanded).toEqual([]);
     expect(grid.rowCount).toBe(5);
     expect(grid.announcement).toBe('Группа «Данные» свёрнута');
+
     await grid.press('ArrowDown');
     await grid.press(' ');
     expect(grid.expanded).toEqual(['["Дизайн"]']);
@@ -100,6 +102,7 @@ describe('NuiTable groups and totals', () => {
     expect(grid.rowLevel(3)).toBe('3');
     expect(grid.cellText(3, 0)).toBe('997');
     expect(grid.cellText(4, 0)).toBe('985');
+
     await grid.scrollToRow(80);
     expect(grid.groupLabel(87)).toBe('Москва (83)');
     expect(grid.groupLabel(88)).toBe('(пусто) (83)');
@@ -111,12 +114,14 @@ describe('NuiTable groups and totals', () => {
     await grid.settle();
 
     expect(grid.role).toBe('grid');
+
     await grid.setGroupBy(['remote']);
     expect(grid.role).toBe('treegrid');
     expect(grid.rowCount).toBe(5);
     expect(grid.groupLabel(0)).toBe('Нет (333)');
     expect(grid.groupLabel(1)).toBe('Да (334)');
     expect(grid.groupLabel(2)).toBe('(пусто) (333)');
+
     await grid.setGroupBy([]);
 
     expect(grid.role).toBe('grid');
@@ -135,16 +140,21 @@ describe('NuiTable groups and totals', () => {
     expect(grid.rowCount).toBe(1002);
     expect(grid.cellText(1000, 1)).toBe('Всего1\u00a0000 строк');
     expect(grid.cellHtml(1000, 7)).toContain('<b>4&nbsp;995&nbsp;000</b>');
+
     await grid.focusCell(0, 1);
     await grid.press('End', { ctrl: true });
     expect(grid.focusedCell).toEqual({ row: 1000, col: 17 });
+
     await grid.press('ArrowUp');
     expect(grid.focusedCell).toEqual({ row: 999, col: 17 });
+
     await grid.setQuick('Сотрудник 1');
 
     expect(grid.cellText(111, 0)).toBe('111');
+
     await grid.setSort([{ key: 'id', direction: 'desc' }]);
     expect(grid.cellText(111, 0)).toBe('111');
+
     await grid.scroll({ top: 0 });
     expect(grid.cellText(0, 0)).toBe('199');
   });

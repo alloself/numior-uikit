@@ -26,10 +26,12 @@ describe('useHotkey', () => {
     expect(press(window, 'k')).toBe(false);
     expect(press(window, 'j', { ctrlKey: true })).toBe(false);
     expect(press(window, 'л', { ctrlKey: true, code: 'KeyL' })).toBe(false);
+
     const input = document.createElement('input');
     document.body.append(input);
     expect(press(input, 'k', { ctrlKey: true })).toBe(true);
     expect(handler).toHaveBeenCalledTimes(4);
+
     capture.wrapper.unmount();
     expect(press(window, 'k', { ctrlKey: true })).toBe(false);
   });
@@ -72,9 +74,11 @@ describe('useHotkey', () => {
 
     expect(press(target, 'Escape', { shiftKey: true })).toBe(false);
     expect(handler).not.toHaveBeenCalled();
+
     enabled.value = true;
     expect(press(target, 'Escape', { shiftKey: true })).toBe(false);
     expect(handler).toHaveBeenCalledTimes(1);
+
     press(target, 'Escape');
     press(target, 'Escape', { shiftKey: true, ctrlKey: true });
     press(window, 'Escape', { shiftKey: true });

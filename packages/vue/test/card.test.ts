@@ -12,10 +12,12 @@ describe('NuiCard', () => {
     expect(card.title.text()).toBe('Plan');
     expect(card.descriptionText).toBe('Team seats');
     expect(card.focusable).toBe(0);
+
     const plain = CardDriver.mount({ props: { variant: 'soft', padding: 'lg' } });
     expect(plain.hasModifier('variant-soft')).toBe(true);
     expect(plain.hasModifier('padding-lg')).toBe(true);
     expect(plain.hasHeader).toBe(false);
+
     card.unmount();
     plain.unmount();
   });
@@ -24,6 +26,7 @@ describe('NuiCard', () => {
     const card = CardDriver.mount({ props: { padding: 'xs', title: 'Orders' } });
 
     expect(card.hasModifier('padding-xs')).toBe(true);
+
     card.unmount();
   });
 
@@ -46,11 +49,13 @@ describe('NuiCard', () => {
     expect(card.wrapper.find('.nui-card__content').text()).toBe('Body');
     expect(card.wrapper.find('.nui-card__footer').text()).toBe('Footer');
     expect(card.wrapper.find('.nui-card__actions').exists()).toBe(true);
+
     card.unmount();
     const placeholder = CardDriver.mount({ parts: { media: {} } });
     expect(placeholder.hasImage).toBe(false);
     expect(placeholder.hasPlaceholder).toBe(true);
     expect(placeholder.mediaAspect).toBe('16 / 9');
+
     placeholder.unmount();
   });
 
@@ -64,12 +69,15 @@ describe('NuiCard', () => {
     expect(card.action.attributes('href')).toBe('/plans/team');
     expect(card.action.text()).toBe('Team');
     expect(card.focusable).toBe(1);
+
     card.unmount();
     const routed = CardDriver.mount({ props: { to: '/guide', title: 'Guide' }, viaRouter: true });
     expect(routed.action.attributes('href')).toBe('/router/guide');
+
     routed.unmount();
     const headless = CardDriver.mount({ props: { href: '/x' }, parts: { content: 'Body' } });
     expect(headless.focusable).toBe(0);
+
     headless.unmount();
   });
 
@@ -81,11 +89,14 @@ describe('NuiCard', () => {
 
     expect(card.actionTag).toBe('button');
     expect(card.action.attributes('type')).toBe('button');
+
     await card.clickAction();
     expect(card.clicks).toBe(1);
+
     await card.clickNested();
     expect(card.nestedClicks).toBe(1);
     expect(card.clicks).toBe(1);
+
     card.unmount();
   });
 });

@@ -12,6 +12,7 @@ describe('NuiEmpty', () => {
     expect(empty.titleText).toBe('Nothing here');
     expect(empty.bodyText).toBe('Add your first item');
     expect(empty.actionsText).toBe('');
+
     const bare = EmptyDriver.mount({ props: { title: 'No matches', hideIcon: true, size: 'sm' } });
     expect(bare.hasModifier('size-sm')).toBe(true);
     expect(bare.hasMedia).toBe(false);

@@ -38,6 +38,7 @@ describe('@numior/nuxt', () => {
     expect(imports).not.toContain('required');
     expect(await host.importPriorities()).toEqual([-1]);
     expect(host.pluginSources).toEqual([expect.stringMatching(/\/src\/runtime\/plugin\.ts$/)]);
+
     await host.close();
   });
 
@@ -55,6 +56,7 @@ describe('@numior/nuxt', () => {
     expect(await host.components()).toEqual({});
     expect(await host.imports()).toEqual([]);
     expect(host.pluginSources).toHaveLength(1);
+
     await host.close();
   });
 });

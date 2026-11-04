@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { boxOf } from '../helpers/geometry';
 import {
   isBoolean,
   isNumber,
@@ -141,10 +142,8 @@ export class PickersSection {
   }
 
   async widthOf(target: Locator): Promise<number> {
-    const box = await target.boundingBox();
-    if (!box) {
-      throw new Error('Element has no bounding box');
-    }
+    const box = await boxOf(target);
+
     return box.width;
   }
 

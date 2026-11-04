@@ -62,6 +62,7 @@ describe('NuiLink', () => {
 
     expect(native.tag).toBe('a');
     expect(native.href).toBe('/docs');
+
     const plain = LinkDriver.mount({ props: { to: '/guide' } });
     expect(plain.tag).toBe('a');
     expect(plain.href).toBe('/guide');

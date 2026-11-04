@@ -49,6 +49,7 @@ describe('createSortJob', () => {
   it('finishes a tiny or already sorted input in one call', () => {
     const single = identityIndices(1);
     expect(createSortJob(single, () => 0).work(performance.now() + 5)).toBe(true);
+
     const keys = new Float64Array([1, 2, 3, 4]);
     const indices = identityIndices(4);
 

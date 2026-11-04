@@ -24,10 +24,12 @@ describe('NuiOtpField', () => {
     expect(otp.controlAttribute('pattern')).toBe('\\d*');
     expect(otp.controlAttribute('type')).toBe('text');
     expect(otp.hasModifier('size-md')).toBe(true);
+
     otp.unmount();
     const custom = OtpFieldDriver.mount({ props: { length: 7, groupSize: 3 }, separator: '·' });
     expect(custom.groupSizes).toEqual([3, 3, 1]);
     expect(custom.separators.map((separator) => separator.text())).toEqual(['·', '·']);
+
     custom.unmount();
   });
 
@@ -35,19 +37,24 @@ describe('NuiOtpField', () => {
     const otp = OtpFieldDriver.mount();
     await otp.focus();
     expect(otp.caretSlot).toBe(0);
+
     await otp.type('4');
     expect(otp.value).toBe('4');
     expect(otp.caretSlot).toBe(1);
+
     await otp.type('x');
     expect(otp.value).toBe('4');
     expect(otp.nativeValue).toBe('4');
+
     await otp.type('٨२९१३');
     expect(otp.value).toBe('482913');
     expect(otp.completions).toEqual(['482913']);
     expect(otp.activeSlots).toEqual([5]);
     expect(otp.caretSlot).toBeUndefined();
+
     await otp.type('3');
     expect(otp.completions).toEqual(['482913']);
+
     otp.unmount();
   });
 
@@ -56,10 +63,12 @@ describe('NuiOtpField', () => {
     expect(otp.controlAttribute('inputmode')).toBe('text');
     expect(otp.controlAttribute('autocapitalize')).toBe('characters');
     expect(otp.controlAttribute('pattern')).toBeUndefined();
+
     await otp.focus();
     await otp.type('k7кq');
     expect(otp.value).toBe('K7Q');
     expect(otp.nativeValue).toBe('K7Q');
+
     otp.unmount();
   });
 
@@ -68,12 +77,15 @@ describe('NuiOtpField', () => {
     await otp.clickSlot(2);
     expect(otp.activeSlots).toEqual([2]);
     expect(otp.selection).toEqual({ start: 2, end: 3 });
+
     await otp.type('7');
     expect(otp.value).toBe('487913');
     expect(otp.activeSlots).toEqual([3]);
     expect(otp.completions).toEqual(['487913']);
+
     await otp.clickSlot(0, 2);
     expect(otp.activeSlots).toEqual([3]);
+
     otp.unmount();
   });
 
@@ -81,11 +93,14 @@ describe('NuiOtpField', () => {
     const otp = OtpFieldDriver.mount({ modelValue: '482913' });
     await otp.pressSlot(0);
     expect(otp.activeSlots).toEqual([0]);
+
     await otp.selectNatively(6, 6);
     expect(otp.activeSlots).toEqual([0]);
+
     await otp.pressSlot(3);
     await otp.selectNatively(6, 6);
     expect(otp.activeSlots).toEqual([3]);
+
     otp.unmount();
   });
 
@@ -94,6 +109,7 @@ describe('NuiOtpField', () => {
     await otp.cancelPress(1);
     await otp.focus();
     expect(otp.activeSlots).toEqual([5]);
+
     otp.unmount();
   });
 
@@ -103,8 +119,10 @@ describe('NuiOtpField', () => {
     await otp.selectNatively(6, 6);
     expect(otp.activeSlots).toEqual([2]);
     expect(otp.selection).toEqual({ start: 2, end: 3 });
+
     await otp.selectNatively(4, 4);
     expect(otp.activeSlots).toEqual([4]);
+
     otp.unmount();
   });
 
@@ -113,6 +131,7 @@ describe('NuiOtpField', () => {
     await otp.clickSlot(4);
     expect(otp.caretSlot).toBe(2);
     expect(otp.selection).toEqual({ start: 2, end: 2 });
+
     otp.unmount();
   });
 
@@ -120,16 +139,20 @@ describe('NuiOtpField', () => {
     const otp = OtpFieldDriver.mount({ modelValue: '482913' });
     await otp.focus();
     expect(otp.activeSlots).toEqual([5]);
+
     await otp.deleteBackward();
     expect(otp.value).toBe('48291');
     expect(otp.caretSlot).toBe(5);
+
     await otp.clickSlot(2);
     await otp.deleteBackward();
     expect(otp.value).toBe('4891');
     expect(otp.activeSlots).toEqual([1]);
+
     await otp.deleteForward();
     expect(otp.value).toBe('491');
     expect(otp.activeSlots).toEqual([1]);
+
     otp.unmount();
   });
 
@@ -137,20 +160,28 @@ describe('NuiOtpField', () => {
     const otp = OtpFieldDriver.mount({ modelValue: '4829' });
     await otp.focus();
     expect(otp.caretSlot).toBe(4);
+
     await otp.press('ArrowLeft');
     expect(otp.activeSlots).toEqual([3]);
+
     await otp.press('Home');
     expect(otp.activeSlots).toEqual([0]);
+
     await otp.press('ArrowLeft');
     expect(otp.activeSlots).toEqual([0]);
+
     await otp.press('ArrowRight');
     expect(otp.activeSlots).toEqual([1]);
+
     await otp.press('End');
     expect(otp.caretSlot).toBe(4);
+
     await otp.press('ArrowRight');
     expect(otp.caretSlot).toBe(4);
+
     await otp.press('ArrowLeft', { shiftKey: true });
     expect(otp.caretSlot).toBe(4);
+
     otp.unmount();
   });
 
@@ -159,11 +190,14 @@ describe('NuiOtpField', () => {
     await otp.focus();
     await otp.selectNatively(0, 6);
     expect(otp.activeSlots).toEqual([0, 1, 2, 3, 4, 5]);
+
     await otp.selectNatively(2, 2);
     expect(otp.activeSlots).toEqual([2]);
     expect(otp.selection).toEqual({ start: 2, end: 3 });
+
     await otp.blur();
     expect(otp.activeSlots).toEqual([]);
+
     otp.unmount();
   });
 
@@ -173,11 +207,13 @@ describe('NuiOtpField', () => {
     await otp.paste('Your code: 482-913');
     expect(otp.value).toBe('482913');
     expect(otp.completions).toEqual(['482913']);
+
     await otp.clickSlot(2);
     await otp.paste('7 7');
     expect(otp.value).toBe('487713');
     expect(otp.activeSlots).toEqual([4]);
     expect(otp.completions).toEqual(['482913', '487713']);
+
     otp.unmount();
   });
 
@@ -186,10 +222,12 @@ describe('NuiOtpField', () => {
     await otp.focus();
     await otp.compose('４８');
     expect(otp.value).toBe('48');
+
     await otp.autofill('482 9130');
     expect(otp.value).toBe('482913');
     expect(otp.nativeValue).toBe('482913');
     expect(otp.completions).toEqual(['482913']);
+
     otp.unmount();
   });
 
@@ -200,6 +238,7 @@ describe('NuiOtpField', () => {
     expect(otp.nativeValue).toBe('4829');
     expect(otp.value).toBe('48 2913');
     expect(otp.completions).toEqual([]);
+
     otp.unmount();
   });
 
@@ -209,12 +248,15 @@ describe('NuiOtpField', () => {
     await otp.type('482');
     await otp.clickSlot(1);
     expect(otp.activeSlots).toEqual([1]);
+
     await otp.receiveModelValue('');
     expect(otp.caretSlot).toBe(0);
     expect(otp.selection).toEqual({ start: 0, end: 0 });
+
     await otp.receiveModelValue('482913');
     expect(otp.activeSlots).toEqual([5]);
     expect(otp.selection).toEqual({ start: 5, end: 6 });
+
     otp.unmount();
   });
 
@@ -222,8 +264,10 @@ describe('NuiOtpField', () => {
     const otp = OtpFieldDriver.mount({ props: { length: 4, placeholder: '○' }, modelValue: '4' });
     expect(otp.placeholders).toEqual(['', '○', '○', '○']);
     expect(otp.controlAttribute('placeholder')).toBeUndefined();
+
     await otp.focus();
     expect(otp.placeholders).toEqual(['', '', '○', '○']);
+
     otp.unmount();
   });
 
@@ -233,24 +277,32 @@ describe('NuiOtpField', () => {
     expect(otp.controlAttribute('type')).toBe('password');
     expect(otp.controlAttribute('autocomplete')).toBe('off');
     expect(otp.hasModifier('secret')).toBe(true);
+
     await otp.focus();
     await otp.type('4');
     expect(otp.dotSlots).toEqual([0]);
     expect(otp.revealedSlot).toBe(0);
+
     await otp.type('8');
     expect(otp.revealedSlot).toBe(1);
+
     await otp.advance(999);
     expect(otp.revealedSlot).toBe(1);
+
     await otp.advance(1);
     expect(otp.revealedSlot).toBeUndefined();
+
     await otp.paste('29');
     expect(otp.dotSlots).toEqual([0, 1, 2, 3]);
     expect(otp.revealedSlot).toBeUndefined();
+
     await otp.clickSlot(1);
     await otp.type('5');
     expect(otp.revealedSlot).toBe(1);
+
     await otp.blur();
     expect(otp.revealedSlot).toBeUndefined();
+
     otp.unmount();
   });
 
@@ -259,14 +311,17 @@ describe('NuiOtpField', () => {
     await readonly.focus();
     expect(readonly.caretSlot).toBeUndefined();
     expect(readonly.activeSlots).toEqual([2]);
+
     await readonly.type('2');
     await readonly.paste('482913');
     expect(readonly.value).toBe('48');
     expect(readonly.hasModifier('readonly')).toBe(true);
+
     readonly.unmount();
     const disabled = OtpFieldDriver.mount({ props: { disabled: true } });
     expect(disabled.controlAttribute('disabled')).toBe('');
     expect(disabled.hasModifier('disabled')).toBe(true);
+
     disabled.unmount();
   });
 
@@ -287,14 +342,17 @@ describe('NuiOtpField', () => {
     expect(own.controlAttribute('name')).toBe('code');
     expect(own.controlAttribute('data-testid')).toBe('otp');
     expect(own.hasModifier('size-lg')).toBe(true);
+
     await own.focusThroughHandle();
     expect(own.focused).toBe(true);
+
     own.unmount();
     const field = OtpFieldDriver.mount({ field: { label: 'Код', invalid: true, required: true } });
     expect(field.hasModifier('invalid')).toBe(true);
     expect(field.controlAttribute('aria-invalid')).toBe('true');
     expect(field.controlAttribute('required')).toBe('');
     expect(fieldTextsOf(field.wrapper).linked).toBe(true);
+
     field.unmount();
   });
 
@@ -303,25 +361,31 @@ describe('NuiOtpField', () => {
     const otp = OtpFieldDriver.mount({ props: { webOtp: true } });
     await otp.settle();
     expect(stub.requests).toBe(1);
+
     stub.deliver('482 913');
     await otp.settle();
     expect(otp.value).toBe('482913');
     expect(otp.completions).toEqual(['482913']);
+
     await otp.focus();
     await otp.deleteBackward();
     await otp.settle();
     expect(stub.requests).toBe(2);
+
     stub.deliver('482913');
     await otp.settle();
     expect(otp.activeSlots).toEqual([5]);
     expect(otp.selection).toEqual({ start: 5, end: 6 });
+
     await otp.deleteBackward();
     await otp.settle();
     expect(stub.requests).toBe(3);
+
     await otp.type('3');
     await otp.settle();
     expect(stub.aborted).toBe(1);
     expect(otp.completions).toEqual(['482913', '482913', '482913']);
+
     otp.unmount();
   });
 
@@ -330,6 +394,7 @@ describe('NuiOtpField', () => {
     const otp = OtpFieldDriver.mount();
     await otp.settle();
     expect(stub.requests).toBe(0);
+
     otp.unmount();
   });
 });

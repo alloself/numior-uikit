@@ -50,8 +50,10 @@ describe('useMediaQuery', () => {
     vi.stubGlobal('matchMedia', fakeMatchMedia(['(max-width: 48rem)']));
     const capture = captureSetup(() => useMediaQuery('(max-width: 48rem)'));
     expect(capture.value.value).toBe(true);
+
     lists[0]?.fire(false);
     expect(capture.value.value).toBe(false);
+
     capture.wrapper.unmount();
     expect(lists[0]?.listeners.size).toBe(0);
   });
@@ -61,16 +63,19 @@ describe('useMediaQuery', () => {
     const query = ref('(max-width: 48rem)');
     const capture = captureSetup(() => useMediaQuery(query));
     expect(capture.value.value).toBe(false);
+
     query.value = '(prefers-reduced-motion: reduce)';
     await nextTick();
     expect(capture.value.value).toBe(true);
     expect(lists[0]?.listeners.size).toBe(0);
     expect(lists[1]?.listeners.size).toBe(1);
+
     capture.wrapper.unmount();
 
     vi.stubGlobal('matchMedia', undefined);
     const plain = captureSetup(() => useMediaQuery('(max-width: 48rem)'));
     expect(plain.value.value).toBe(false);
+
     plain.wrapper.unmount();
   });
 });

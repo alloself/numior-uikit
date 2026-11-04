@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { boxOf } from '../helpers/geometry';
 import {
   isBoolean,
   isNumber,
@@ -86,10 +87,7 @@ export class DataSection {
 
   async clickSurface(target: Locator): Promise<void> {
     await target.scrollIntoViewIfNeeded();
-    const box = await target.boundingBox();
-    if (!box) {
-      throw new Error('Card surface is not rendered');
-    }
+    const box = await boxOf(target);
     await this.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   }
 

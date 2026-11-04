@@ -9,18 +9,24 @@ describe('useListNavigation', () => {
     const list = ListHarness.mount({ disabled: [1] });
     expect(list.press('ArrowDown')).toBe(true);
     expect(list.focusedText).toBe('Apple');
+
     list.press('ArrowDown');
     expect(list.focusedText).toBe('Blueberry');
     expect(list.tabIndexes).toEqual([-1, -1, 0, -1, -1]);
+
     list.press('End');
     expect(list.focusedText).toBe('Date');
+
     list.press('ArrowDown');
     expect(list.focusedText).toBe('Date');
+
     list.press('Home');
     expect(list.focusedText).toBe('Apple');
+
     list.press('ArrowUp');
     expect(list.focusedText).toBe('Apple');
     expect(list.press('Enter')).toBe(false);
+
     list.unmount();
   });
 
@@ -28,14 +34,19 @@ describe('useListNavigation', () => {
     const list = ListHarness.mount({ loop: true, pageSize: 3 });
     list.press('ArrowUp');
     expect(list.focusedText).toBe('Date');
+
     list.press('ArrowDown');
     expect(list.focusedText).toBe('Apple');
+
     list.press('PageDown');
     expect(list.focusedText).toBe('Cherry');
+
     list.press('PageDown');
     expect(list.focusedText).toBe('Date');
+
     list.press('PageUp');
     expect(list.focusedText).toBe('Banana');
+
     list.unmount();
   });
 
@@ -44,14 +55,17 @@ describe('useListNavigation', () => {
     rtl.press('ArrowLeft');
     rtl.press('ArrowLeft');
     expect(rtl.focusedText).toBe('Banana');
+
     rtl.press('ArrowRight');
     expect(rtl.focusedText).toBe('Apple');
     expect(rtl.press('ArrowDown')).toBe(false);
+
     rtl.unmount();
     const vertical = ListHarness.mount({ dir: 'rtl' });
     vertical.press('ArrowDown');
     expect(vertical.focusedText).toBe('Apple');
     expect(vertical.press('ArrowLeft')).toBe(false);
+
     vertical.unmount();
   });
 
@@ -59,20 +73,27 @@ describe('useListNavigation', () => {
     const list = ListHarness.mount();
     list.type('b');
     expect(list.focusedText).toBe('Banana');
+
     list.type('l');
     expect(list.query).toBe('bl');
     expect(list.focusedText).toBe('Blueberry');
+
     list.advance(600);
     list.type('b');
     expect(list.focusedText).toBe('Banana');
+
     list.type('b');
     expect(list.focusedText).toBe('Blueberry');
+
     list.type('b');
     expect(list.focusedText).toBe('Banana');
+
     list.advance(600);
     expect(list.press(' ')).toBe(false);
+
     list.type('c');
     expect(list.press(' ')).toBe(true);
+
     list.unmount();
   });
 
@@ -82,14 +103,17 @@ describe('useListNavigation', () => {
     await list.append('Elderberry');
     list.press('ArrowDown');
     expect(list.focusedText).toBe('Elderberry');
+
     list.disableNow(3);
     list.press('ArrowUp');
     list.press('ArrowUp');
     expect(list.focusedText).toBe('Blueberry');
+
     list.relabelNow(0, 'Kiwi');
     list.advance(600);
     list.type('k');
     expect(list.focusedText).toBe('Kiwi');
+
     list.unmount();
   });
 
@@ -105,6 +129,7 @@ describe('useListNavigation', () => {
 
     expect(builds).toBe(1);
     expect(list.focusedText).toBe('Date');
+
     list.unmount();
   });
 
@@ -115,6 +140,7 @@ describe('useListNavigation', () => {
     expect(list.activeDescendant).toBe('item-1');
     expect(list.focusedText).toBeUndefined();
     expect(list.tabIndexes).toEqual([-1, -1, -1, -1, -1]);
+
     list.unmount();
   });
 
@@ -123,13 +149,17 @@ describe('useListNavigation', () => {
     list.focusItem(4);
     expect(list.activeText).toBe('Date');
     expect(list.tabIndexes).toEqual([-1, -1, -1, -1, 0]);
+
     await list.remove(4);
     expect(list.activeText).toBeUndefined();
+
     list.press('ArrowDown');
     expect(list.focusedText).toBe('Apple');
+
     list.navigation.reset();
     expect(list.activeText).toBe('Apple');
     expect(list.query).toBe('');
+
     list.unmount();
   });
 
@@ -138,10 +168,13 @@ describe('useListNavigation', () => {
     list.navigation.setActive('item-7', { focus: false });
     expect(list.activeDescendant).toBe('item-7');
     expect(list.activeText).toBeUndefined();
+
     await list.append('Elderberry', 'Fig', 'Grape');
     expect(list.activeText).toBe('Grape');
+
     list.press('ArrowUp');
     expect(list.activeDescendant).toBe('item-6');
+
     list.unmount();
   });
 });

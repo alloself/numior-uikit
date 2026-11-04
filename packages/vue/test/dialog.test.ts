@@ -14,6 +14,7 @@ describe('NuiDialog', () => {
     expect(dialog.titleText).toBe('Delete project?');
     expect(dialog.descriptionText).toBe('Cannot be undone.');
     expect(dialog.hasModifier('size-md')).toBe(true);
+
     dialog.unmount();
   });
 
@@ -24,6 +25,7 @@ describe('NuiDialog', () => {
     expect(dialog.labelledBy).toBeUndefined();
     expect(dialog.describedBy).toBeUndefined();
     expect(dialog.hasModifier('size-lg')).toBe(true);
+
     dialog.unmount();
   });
 
@@ -33,15 +35,19 @@ describe('NuiDialog', () => {
     expect(dialog.closedWith).toEqual(['']);
     expect(dialog.emittedOpen).toEqual([false]);
     expect(dialog.emittedClose).toEqual(['']);
+
     await dialog.reopen();
     expect(dialog.showModalCalls).toBe(2);
     expect(dialog.pressEscape()).toBe(false);
     expect(dialog.emittedOpen).toEqual([false, false]);
+
     await dialog.reopen();
     dialog.clickInside();
     expect(dialog.emittedOpen).toHaveLength(2);
+
     dialog.clickBackdrop();
     expect(dialog.emittedOpen).toEqual([false, false, false]);
+
     dialog.unmount();
   });
 
@@ -49,9 +55,11 @@ describe('NuiDialog', () => {
     const dialog = DialogDriver.mount({ props: { title: 'Required', closable: false } });
     expect(dialog.closeButton.exists()).toBe(false);
     expect(dialog.pressEscape()).toBe(true);
+
     dialog.clickBackdrop();
     expect(dialog.emittedOpen).toEqual([]);
     expect(dialog.isOpen).toBe(true);
+
     dialog.unmount();
   });
 
@@ -63,6 +71,7 @@ describe('NuiDialog', () => {
     expect(dialog.titleText).toBe('Custom title');
     expect(dialog.labelledBy).toBeTruthy();
     expect(dialog.footer.text()).toBe('Actions');
+
     dialog.unmount();
   });
 
@@ -72,9 +81,11 @@ describe('NuiDialog', () => {
     await base.settle();
     expect(base.hasModifier('covered')).toBe(true);
     expect(upper.hasModifier('covered')).toBe(false);
+
     await upper.receiveOpen(false);
     await base.settle();
     expect(base.hasModifier('covered')).toBe(false);
+
     upper.unmount();
     base.unmount();
   });
@@ -82,10 +93,12 @@ describe('NuiDialog', () => {
   it('names the close button in the configured language unless closeLabel is given', () => {
     const english = DialogDriver.mount();
     expect(english.closeLabel).toBe('Close');
+
     english.unmount();
 
     const russian = DialogDriver.mount({ config: { locale: 'ru-RU' } });
     expect(russian.closeLabel).toBe('Закрыть');
+
     russian.unmount();
 
     const labelled = DialogDriver.mount({
@@ -94,6 +107,7 @@ describe('NuiDialog', () => {
     });
 
     expect(labelled.closeLabel).toBe('Скрыть');
+
     labelled.unmount();
   });
 });

@@ -17,12 +17,15 @@ describe('ExampleFrame', () => {
     expect(frame.previewVisible).toBe(true);
     expect(frame.preview.find('.sample').text()).toBe('Кнопка');
     expect(frame.codeVisible).toBe(false);
+
     await frame.showCode();
     expect(frame.codeVisible).toBe(true);
     expect(frame.previewVisible).toBe(false);
     expect(frame.codeText).toContain('<NuiButton>Сохранить</NuiButton>');
+
     await frame.showPreview();
     expect(frame.previewVisible).toBe(true);
+
     frame.unmount();
   });
 
@@ -30,13 +33,17 @@ describe('ExampleFrame', () => {
     const frame = ExampleFrameDriver.mount(SINGLE);
 
     expect(frame.previewTheme).toBeUndefined();
+
     await frame.toggleTheme();
     expect(frame.previewTheme).toBe('dark');
+
     await frame.toggleDirection();
     expect(frame.previewDirection).toBe('rtl');
+
     await frame.toggleTheme();
     expect(frame.previewTheme).toBeUndefined();
     expect(frame.previewDirection).toBe('rtl');
+
     frame.unmount();
   });
 
@@ -45,10 +52,12 @@ describe('ExampleFrame', () => {
 
     await frame.copy();
     expect(frame.copied).toEqual(['<template>\n  <ul />\n</template>']);
+
     await frame.showCode();
     await frame.selectFile('data.ts');
     await frame.copy();
     expect(frame.copied.at(-1)).toBe('export const rows = [];');
+
     frame.unmount();
   });
 
@@ -58,8 +67,10 @@ describe('ExampleFrame', () => {
     await frame.showCode();
     expect(frame.fileTabs).toEqual(['index.vue', 'data.ts']);
     expect(frame.codeText).toContain('<ul />');
+
     await frame.selectFile('data.ts');
     expect(frame.codeText).toBe('export const rows = [];');
+
     frame.unmount();
   });
 });

@@ -100,13 +100,17 @@ describe('NuiEditor table block', () => {
 
     await table.clickAction('Row');
     expect(table.rowCount).toBe(3);
+
     await table.rowAction(0, 'Insert row above');
     await table.rowAction(1, 'Insert row below');
     expect(table.rowCount).toBe(5);
+
     await table.rowAction(0, 'Delete row');
     expect(table.rowCount).toBe(4);
+
     await table.clickAction('Column');
     expect(table.heads).toEqual(['Item', 'Price', 'State', 'Column 4']);
+
     await table.columnAction(0, 'Insert column before');
     await table.columnAction(4, 'Delete column');
     expect(table.heads).toEqual(['Column 1', 'Item', 'Price', 'State']);
@@ -144,6 +148,7 @@ describe('NuiEditor table block', () => {
     await table.sortBy(1, 'asc');
     expect(table.rows).toEqual(['Plums|3||', 'Pears|12|Open|']);
     expect(JSON.stringify(tableJSON(editor))).toContain('"sort":"asc","sortRank":1');
+
     await table.filterBy(0, 'Pe');
     expect(table.rows).toEqual(['Pears|12|Open|']);
     expect(JSON.stringify(tableJSON(editor))).toContain('"type":"table_filter"');
@@ -190,6 +195,7 @@ describe('NuiEditor table block', () => {
     );
 
     expect(table.checks).toEqual([false]);
+
     await table.check(0);
     expect(table.checks).toEqual([true]);
     expect(await table.undo()).toBe(1);
@@ -217,6 +223,7 @@ describe('NuiEditor table block', () => {
 
       await table.hover();
       expect(editor.handleShown).toBe(true);
+
       await editor.hoverBlock(0);
 
       expect(slides).toEqual([

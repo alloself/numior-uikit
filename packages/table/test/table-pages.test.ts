@@ -36,26 +36,32 @@ describe('NuiTable pages', () => {
     expect(grid.renderedRows).toHaveLength(20);
     expect(grid.cellText(0, 2)).toBe('Сотрудник 0');
     expect(grid.rangeText).toContain('45');
+
     await grid.nextPage();
 
     expect(grid.page).toBe(2);
     expect(grid.cellText(0, 2)).toBe('Сотрудник 20');
+
     await grid.checkAll();
     expect(grid.selected).toHaveLength(20);
     expect(grid.selected.map((row) => row.id)).toContain(20);
+
     await grid.nextPage();
 
     expect(grid.page).toBe(3);
     expect(grid.rowCount).toBe(6);
     expect(grid.headerCheckbox?.checked).toBe(false);
+
     await grid.focusCell(0, 2);
     await grid.press('End', { ctrl: true });
     expect(grid.focusedCell).toEqual({ row: 4, col: 18 });
+
     await grid.choosePageSize(10);
 
     expect(grid.pageSize).toBe(10);
     expect(grid.page).toBe(3);
     expect(grid.cellText(0, 2)).toBe('Сотрудник 20');
+
     await grid.setQuick('Сотрудник 4');
 
     expect(grid.page).toBe(1);
@@ -73,14 +79,17 @@ describe('NuiTable pages', () => {
     await grid.settle();
     expect(grid.rowCount).toBe(21);
     expect(grid.rangeText).toContain('500');
+
     await grid.nextPage();
 
     expect(grid.page).toBe(2);
     expect(grid.cellText(0, 1)).toBe('Сотрудник 0');
+
     await grid.sortBy(3);
 
     expect(grid.sort).toEqual([{ key: 'salary', direction: 'asc' }]);
     expect(grid.cellText(0, 1)).toBe('Сотрудник 0');
+
     await grid.setQuick('нет такого');
     expect(grid.rowCount).toBe(21);
   });
@@ -97,10 +106,12 @@ describe('NuiTable pages', () => {
     expect(grid.role).toBe('treegrid');
     expect(grid.rowCount).toBe(21);
     expect(grid.groupLabel(0)).toBe('Данные (333)');
+
     await grid.nextPage();
 
     expect(grid.groupLabel(0)).toBeUndefined();
     expect(grid.cellText(0, 1)).toMatch(/^Сотрудник \d+$/);
+
     await grid.setGroupBy([]);
 
     expect(grid.role).toBe('grid');

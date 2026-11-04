@@ -322,6 +322,7 @@ describe('reading xlsx', () => {
     if (read.kind === 'rejected') {
       throw new Error('the package was rejected');
     }
+
     expect(read.source.bytes).toBe(bytes);
 
     expect(

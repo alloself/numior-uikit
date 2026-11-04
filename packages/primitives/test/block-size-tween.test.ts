@@ -25,12 +25,14 @@ describe('useBlockSizeTween', () => {
 
     await same.render(1);
     expect(same.tweens).toEqual([]);
+
     same.unmount();
 
     const reduced = TweenHarness.mount({ duration: '0ms' });
 
     await reduced.render(3);
     expect(reduced.tweens).toEqual([]);
+
     reduced.unmount();
   });
 });

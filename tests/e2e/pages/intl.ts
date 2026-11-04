@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { boxOf } from '../helpers/geometry';
 import {
   isNumber,
   isString,
@@ -74,10 +75,10 @@ export class IntlSection {
 
   async turnWheel(group: Locator, label: string, rows: number): Promise<void> {
     const wheel = this.wheelOf(group, label);
-    const row = await wheel.locator('.nui-time-field__wheel-item').first().boundingBox();
+    const row = await boxOf(wheel.locator('.nui-time-field__wheel-item').first());
 
     await wheel.hover();
-    await this.page.mouse.wheel(0, rows * (row?.height ?? 36));
+    await this.page.mouse.wheel(0, rows * row.height);
   }
 
   frameOf(control: Locator): Locator {

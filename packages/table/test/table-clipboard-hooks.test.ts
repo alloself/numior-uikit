@@ -37,6 +37,7 @@ afterEach(() => {
   for (const grid of mounted.splice(0)) {
     grid.unmount();
   }
+
   clipboard?.restore();
   clipboard = undefined;
 });
@@ -60,8 +61,10 @@ describe('NuiTable clipboard hooks', () => {
     expect(clipboard.copies).toEqual(['1:2-1:2 without Сотрудник 1']);
     expect(clipboard.htmls).toEqual(['<p>city</p>']);
     expect(grid.announcement).toBe('Скопирована 1 строка');
+
     await grid.dragRange({ row: 2, col: 1 }, { row: 3, col: 2 });
     expect(await grid.openCellMenu(3, 2)).toBe(true);
+
     await grid.chooseCellMenu('Копировать с заголовками');
     await flushPromises();
     expect(clipboard.copies[1]).toBe('2:1-3:2 with Сотрудник 2');

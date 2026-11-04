@@ -20,6 +20,7 @@ describe('NuiBadge', () => {
     expect(custom.hasModifier('variant-outline')).toBe(true);
     expect(custom.hasModifier('size-sm')).toBe(true);
     expect(custom.hasIcon).toBe(true);
+
     const iconOnly = BadgeDriver.mount({ props: { icon: 'check' } });
     expect(iconOnly.hasLabel).toBe(false);
   });
@@ -47,9 +48,11 @@ describe('NuiBadge', () => {
     expect(dot.attribute('aria-hidden')).toBeUndefined();
     expect(dot.text).toBe('');
     expect(dot.hasLabel).toBe(false);
+
     const decorative = BadgeDriver.mount({ props: { dot: true } });
     expect(decorative.attribute('role')).toBeUndefined();
     expect(decorative.attribute('aria-hidden')).toBe('true');
+
     const floating = BadgeDriver.mount({ props: { floating: true, count: 3 } });
     expect(floating.hasModifier('floating')).toBe(true);
     expect(floating.text).toBe('3');

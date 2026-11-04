@@ -12,8 +12,10 @@ describe('NuiUpload', () => {
     expect(upload.calls.map((call) => call.file.name)).toEqual(['a.txt', 'b.txt']);
     expect(upload.description('a.txt')).toBe('1.5 kB');
     expect(upload.actions('a.txt')).toEqual(['Cancel upload']);
+
     await upload.progress(0, 0.4);
     expect(upload.progressValue('a.txt')).toBe('40');
+
     await upload.resolve(0, 'stored');
     expect(upload.item('a.txt')).toMatchObject({ status: 'done', result: 'stored' });
     expect(upload.progressValue('a.txt')).toBeUndefined();
@@ -21,6 +23,7 @@ describe('NuiUpload', () => {
     expect(upload.statuses).toEqual(['done', 'uploading', 'uploading']);
     expect(upload.liveText).toBe('a.txt: Uploaded');
     expect(upload.events).toEqual(['done:a.txt']);
+
     upload.unmount();
   });
 
@@ -33,15 +36,19 @@ describe('NuiUpload', () => {
     expect(upload.actions('a.txt')).toEqual(['Retry', 'Remove']);
     expect(upload.liveText).toBe('a.txt: Server is down');
     expect(upload.statuses).toEqual(['error', 'uploading']);
+
     await upload.clickCancel('b.txt');
     expect(upload.aborted(1)).toBe(true);
     expect(upload.names).toEqual(['a.txt']);
+
     await upload.clickRetry('a.txt');
     expect(upload.statuses).toEqual(['uploading']);
     expect(upload.calls).toHaveLength(3);
+
     await upload.resolve(2, 'ok');
     expect(upload.statuses).toEqual(['done']);
     expect(upload.events).toEqual(['error:a.txt', 'remove:b.txt', 'done:a.txt']);
+
     upload.unmount();
   });
 
@@ -65,6 +72,7 @@ describe('NuiUpload', () => {
     expect(listed.actions('big.txt')).toEqual(['Remove']);
     expect(listed.calls).toHaveLength(1);
     expect(listed.events).toEqual(['reject:big.txt,clip.mp4,extra.txt']);
+
     listed.unmount();
 
     const dropped = UploadDriver.mount({
@@ -77,6 +85,7 @@ describe('NuiUpload', () => {
     await dropped.addFiles(fileOf('draft.txt'), fileOf('final.txt'));
     expect(dropped.names).toEqual(['final.txt']);
     expect(dropped.events).toEqual(['reject:draft.txt']);
+
     dropped.unmount();
   });
 
@@ -85,21 +94,26 @@ describe('NuiUpload', () => {
     await manual.addFiles(fileOf('a.txt'), fileOf('b.txt'));
     expect(manual.statuses).toEqual(['queued', 'queued']);
     expect(manual.calls).toHaveLength(0);
+
     await manual.start();
     expect(manual.statuses).toEqual(['uploading', 'uploading']);
+
     await manual.resolve(0, 'ok');
     await manual.clickRemove('a.txt');
     expect(manual.names).toEqual(['b.txt']);
     expect(manual.events).toEqual(['done:a.txt', 'remove:a.txt']);
+
     manual.unmount();
 
     const single = UploadDriver.mount({ props: { multiple: false } });
     expect(single.input.attributes('multiple')).toBeUndefined();
+
     await single.addFiles(fileOf('first.txt'));
     await single.addFiles(fileOf('second.txt'), fileOf('third.txt'));
     expect(single.names).toEqual(['second.txt', 'third.txt']);
     expect(single.statuses).toEqual(['uploading', 'error']);
     expect(single.aborted(0)).toBe(true);
+
     single.unmount();
   });
 
@@ -130,13 +144,16 @@ describe('NuiUpload', () => {
     expect(upload.thumb('cover.jpg')).toBe('https://cdn.example/cover.jpg');
     expect(upload.thumb('report.pdf')).toBeUndefined();
     expect(upload.actions('cover.jpg')).toEqual(['Remove']);
+
     await upload.addFiles(fileOf('shot.png', 10, 'image/png'), fileOf('notes.txt'));
     expect(upload.thumb('shot.png')).toBe('blob:mock-1');
     expect(upload.thumb('notes.txt')).toBeUndefined();
     expect(upload.actions('shot.png')).toEqual(['Cancel upload']);
+
     await upload.resolve(0, 'ok');
     await upload.clickRemove('shot.png');
     expect(upload.urls.revoked).toEqual(['blob:mock-1']);
+
     await upload.addFiles(fileOf('again.png', 10, 'image/png'));
     upload.unmount();
     expect(upload.urls.revoked).toEqual(['blob:mock-1', 'blob:mock-2']);
@@ -152,22 +169,29 @@ describe('NuiUpload', () => {
     expect(upload.browse.attributes('aria-describedby')).toBeTruthy();
     expect(upload.browse.attributes('aria-invalid')).toBe('true');
     expect(upload.hasModifier('invalid')).toBe(true);
+
     await upload.clickZone();
     await upload.clickBrowse();
     expect(upload.openCount).toBe(2);
+
     await upload.dragEnter();
     expect(upload.hasModifier('dragging')).toBe(true);
+
     await upload.dragLeave();
     expect(upload.hasModifier('dragging')).toBe(false);
+
     upload.unmount();
 
     const disabled = UploadDriver.mount({ props: { disabled: true } });
     expect(disabled.hasModifier('disabled')).toBe(true);
+
     await disabled.clickZone();
     disabled.open();
     expect(disabled.openCount).toBe(0);
+
     await disabled.dropFiles(fileOf('a.txt'));
     expect(disabled.names).toEqual([]);
+
     disabled.unmount();
   });
 
@@ -192,8 +216,10 @@ describe('NuiUpload', () => {
     expect(upload.description('clip.mp4')).toBe('Неподдерживаемый тип файла');
     expect(upload.description('c.txt')).toBe('Не больше 2 файлов');
     expect(upload.actions('big.txt')).toEqual(['Удалить']);
+
     await upload.resolve(0, 'ok');
     expect(upload.liveText).toBe('a.txt: Загружено');
+
     upload.unmount();
   });
 
@@ -220,8 +246,10 @@ describe('NuiUpload', () => {
     await single.addFiles(fileOf('bad.exe', 3, 'application/octet-stream'));
     expect(single.names).toEqual(['old.txt']);
     expect(single.events).toEqual(['reject:bad.exe']);
+
     await single.addFiles(fileOf('new.txt'));
     expect(single.names).toEqual(['new.txt']);
+
     single.unmount();
 
     const off = UploadDriver.mount({
@@ -230,21 +258,26 @@ describe('NuiUpload', () => {
     });
 
     expect(off.actionsDisabled('old.txt')).toBe(true);
+
     await off.clickRemove('old.txt');
     await off.removeById('one');
     expect(off.names).toEqual(['old.txt']);
     expect(off.events).toEqual([]);
+
     off.unmount();
   });
 
   it('neither picks nor accepts files while readonly', async () => {
     const upload = UploadDriver.mount({ props: { readonly: true } });
     expect(upload.hasModifier('readonly')).toBe(true);
+
     await upload.clickZone();
     upload.open();
     expect(upload.openCount).toBe(0);
+
     await upload.dropFiles(fileOf('a.txt'));
     expect(upload.names).toEqual([]);
+
     upload.unmount();
   });
 
@@ -253,10 +286,13 @@ describe('NuiUpload', () => {
 
     expect(upload.hasModifier('variant-button')).toBe(true);
     expect(upload.zone.exists()).toBe(false);
+
     await upload.browse.trigger('click');
     expect(upload.openCount).toBe(1);
+
     await upload.addFiles(fileOf('a.txt'));
     expect(upload.names).toEqual(['a.txt']);
+
     upload.unmount();
   });
 });

@@ -1,5 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
-import { PlaygroundPage, type Theme } from './pages/playground';
+import { expect, test } from './fixtures';
+import type { Theme } from './pages/playground';
 
 const SECTION = 'section[aria-labelledby="formulas-title"]';
 
@@ -14,19 +14,16 @@ const today = (): string => {
     .join('.');
 };
 
-const openFormulas = async (page: Page) => {
-  const playground = new PlaygroundPage(page);
-
+test.beforeEach(async ({ playground }) => {
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
   await playground.formulas.show();
-  return playground;
-};
+});
 
 test.describe('formulas on the calc core', () => {
-  test('computes the budget and recalculates what depends on an edited cell', async ({ page }) => {
-    const { formulas } = await openFormulas(page);
-
+  test('computes the budget and recalculates what depends on an edited cell', async ({
+    formulas,
+  }) => {
     expect(await formulas.texts(1, 3, 5)).toEqual([
       `340${NBSP}000,00 ₽`,
       `$3${NBSP}679,65`,
@@ -43,6 +40,7 @@ test.describe('formulas on the calc core', () => {
 
     await (await formulas.reveal(1, 3)).click();
     await expect(formulas.formula).toHaveValue('=B2*C2');
+
     await formulas.enter(1, 1, '5');
 
     await expect(await formulas.reveal(1, 3)).toHaveText(`425${NBSP}000,00 ₽`);
@@ -51,11 +49,10 @@ test.describe('formulas on the calc core', () => {
   });
 
   test('spills an array, blocks it with a value and spills again once the value is gone', async ({
-    page,
+    formulas,
   }) => {
-    const { formulas } = await openFormulas(page);
-
     expect(await formulas.texts(13, 1, 5)).toEqual(['1', '4', '9', '16', '25']);
+
     await formulas.enter(13, 3, 'x');
     await expect(await formulas.reveal(13, 1)).toHaveText('#ПЕРЕНОС!');
     await expect(await formulas.reveal(13, 2)).toHaveText('');
@@ -65,11 +62,10 @@ test.describe('formulas on the calc core', () => {
     expect(await formulas.texts(13, 1, 5)).toEqual(['1', '4', '9', '16', '25']);
   });
 
-  test('looks rates up on another sheet and follows their edits', async ({ page }) => {
-    const { formulas } = await openFormulas(page);
-
+  test('looks rates up on another sheet and follows their edits', async ({ formulas }) => {
     await formulas.openSheet('Курсы');
     await expect(formulas.cell(1, 1)).toHaveText('92,4');
+
     await formulas.enter(1, 1, '100');
     await formulas.openSheet('Бюджет');
 
@@ -77,10 +73,8 @@ test.describe('formulas on the calc core', () => {
   });
 
   test('shows dates, percents and money through their formats and reads typed dates', async ({
-    page,
+    formulas,
   }) => {
-    const { formulas } = await openFormulas(page);
-
     await expect(await formulas.reveal(15, 1)).toHaveText(today());
     await expect(await formulas.reveal(17, 1)).toHaveText('43,3%');
     await expect(await formulas.reveal(18, 1)).toHaveText(`-36${NBSP}943,26 ₽`);
@@ -90,13 +84,12 @@ test.describe('formulas on the calc core', () => {
 
     await expect(await formulas.reveal(1, 6)).toHaveText('01.02.2026');
     await expect(await formulas.reveal(2, 6)).toHaveText('12,50%');
+
     await (await formulas.reveal(2, 6)).click();
     await expect(formulas.formula).toHaveValue('12,5%');
   });
 
-  test('formats the selected cells from the format list', async ({ page }) => {
-    const { formulas } = await openFormulas(page);
-
+  test('formats the selected cells from the format list', async ({ formulas }) => {
     await (await formulas.reveal(1, 1)).click();
     await formulas.chooseFormat('Числовой');
 
@@ -108,9 +101,7 @@ test.describe('formulas on the calc core', () => {
     await expect(formulas.formula).toHaveValue('400%');
   });
 
-  test('switches the book locale for numbers and formulas', async ({ page }) => {
-    const { formulas } = await openFormulas(page);
-
+  test('switches the book locale for numbers and formulas', async ({ formulas }) => {
     await (await formulas.reveal(1, 4)).click();
 
     await expect(formulas.formula).toHaveValue('=ОКРУГЛ(D2/ВПР("USD";Курсы!$A$2:$B$4;2;ЛОЖЬ);2)');
@@ -126,28 +117,26 @@ test.describe('formulas on the calc core', () => {
   });
 
   test('inserts and deletes rows from the context menu with references following them', async ({
-    page,
+    formulas,
   }) => {
-    const { formulas } = await openFormulas(page);
-
     await formulas.fromMenu(1, 1, 'Вставить строки выше');
 
     await expect(await formulas.reveal(1, 1)).toHaveText('');
     await expect(await formulas.reveal(2, 1)).toHaveText('4');
     await expect(await formulas.reveal(8, 3)).toHaveText(`784${NBSP}800,00 ₽`);
+
     await (await formulas.reveal(8, 3)).click();
     await expect(formulas.formula).toHaveValue('=СУММ(D3:D7)');
 
     await formulas.fromMenu(2, 1, 'Удалить строки');
 
     await expect(await formulas.reveal(7, 3)).toHaveText(`444${NBSP}800,00 ₽`);
+
     await (await formulas.reveal(7, 3)).click();
     await expect(formulas.formula).toHaveValue('=СУММ(D3:D6)');
   });
 
-  test('undoes and redoes edits and row insertions with the keyboard', async ({ page }) => {
-    const { formulas } = await openFormulas(page);
-
+  test('undoes and redoes edits and row insertions with the keyboard', async ({ formulas }) => {
     await formulas.enter(1, 1, '5');
     await expect(await formulas.reveal(1, 3)).toHaveText(`425${NBSP}000,00 ₽`);
 
@@ -165,18 +154,14 @@ test.describe('formulas on the calc core', () => {
     await expect(await formulas.reveal(0, 0)).toHaveText('Статья');
   });
 
-  test('answers #ИМЯ? for an unknown function and names it in the status', async ({ page }) => {
-    const { formulas } = await openFormulas(page);
-
+  test('answers #ИМЯ? for an unknown function and names it in the status', async ({ formulas }) => {
     await formulas.enter(1, 7, '=FOO(1)');
 
     await expect(await formulas.reveal(1, 7)).toHaveText('#ИМЯ?');
     await expect(formulas.status).toContainText('неизвестные функции: FOO');
   });
 
-  test('recalculates twenty thousand rows of running totals in chunks', async ({ page }) => {
-    const { formulas } = await openFormulas(page);
-
+  test('recalculates twenty thousand rows of running totals in chunks', async ({ formulas }) => {
     await formulas.load.click();
 
     await expect(formulas.sheets.getByRole('radio', { name: 'Нагрузка' })).toBeChecked();
@@ -186,10 +171,8 @@ test.describe('formulas on the calc core', () => {
   });
 
   for (const theme of ['light', 'dark'] satisfies readonly Theme[]) {
-    test(`passes axe with the sheet open in the ${theme} theme`, async ({ page }) => {
+    test(`passes axe with the sheet open in the ${theme} theme`, async ({ playground }) => {
       test.slow();
-      const playground = await openFormulas(page);
-
       await playground.setTheme(theme);
       await (await playground.formulas.reveal(1, 3)).click();
 

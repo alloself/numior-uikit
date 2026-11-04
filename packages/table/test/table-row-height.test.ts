@@ -56,13 +56,16 @@ describe('NuiTable rows sized by content in a window', () => {
     await grid.scroll({ top: 4000 });
 
     expect(grid.renderedRows).toContain(94);
+
     await grid.measureRows({ 96: 60, 97: 80, 101: 100 });
 
     expect(grid.scrollTop).toBe(4060);
     expect(grid.windowFrame?.lead).toBe('3720px');
     expect(grid.windowFrame?.rest).toBe('35520px');
+
     await grid.measureRows({ 96: 60, 98: 0 });
     expect(grid.scrollTop).toBe(4060);
+
     await grid.scrollToRow(999);
     expect(grid.scrollTop).toBe(39_860);
   });
@@ -86,11 +89,14 @@ describe('NuiTable rows sized by content in a window', () => {
     await grid.press('PageDown');
 
     expect(grid.focusedCell).toEqual({ row: 1, col: 1 });
+
     await grid.press('PageDown');
     await grid.press('PageDown');
     expect(grid.focusedCell).toEqual({ row: 3, col: 1 });
+
     await grid.press('PageUp');
     expect(grid.focusedCell).toEqual({ row: 2, col: 1 });
+
     await grid.press('PageDown', { shift: true });
     expect(grid.ranges).toEqual([{ from: { row: 2, col: 1 }, to: { row: 3, col: 1 } }]);
   });

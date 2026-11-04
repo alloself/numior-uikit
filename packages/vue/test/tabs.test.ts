@@ -17,6 +17,7 @@ describe('NuiTabs', () => {
     expect(tabs.panelVisible('general')).toBe(false);
     expect(tabs.hasRootModifier('variant-line')).toBe(true);
     expect(tabs.hasRootModifier('size-md')).toBe(true);
+
     tabs.unmount();
   });
 
@@ -25,8 +26,10 @@ describe('NuiTabs', () => {
 
     expect(tabs.panelCount).toBe(0);
     expect(tabs.tab('General').attributes('aria-controls')).toBeUndefined();
+
     await tabs.clickTab('Team');
     expect(tabs.tab('Team').attributes('aria-selected')).toBe('true');
+
     tabs.unmount();
   });
 
@@ -36,14 +39,18 @@ describe('NuiTabs', () => {
     await tabs.press('ArrowRight');
     expect(tabs.focusedTab).toBe('Team');
     expect(tabs.selected).toBe('team');
+
     await tabs.press('ArrowRight');
     await tabs.press('ArrowRight');
     expect(tabs.selected).toBe('general');
+
     await tabs.press('End');
     expect(tabs.selected).toBe('danger');
     expect(tabs.tabIndexes).toEqual([-1, -1, -1, 0]);
+
     await tabs.clickTab('Billing');
     expect(tabs.selected).toBe('danger');
+
     tabs.unmount();
   });
 
@@ -54,10 +61,13 @@ describe('NuiTabs', () => {
     expect(tabs.focusedTab).toBe('Team');
     expect(tabs.selected).toBe('general');
     expect(tabs.tabIndexes).toEqual([-1, -1, 0, -1]);
+
     await tabs.focusOutside();
     expect(tabs.tabIndexes).toEqual([0, -1, -1, -1]);
+
     await tabs.clickTab('Team');
     expect(tabs.selected).toBe('team');
+
     tabs.unmount();
   });
 
@@ -75,8 +85,10 @@ describe('NuiTabs', () => {
     await rtl.focusTab('General');
     await rtl.press('ArrowLeft');
     expect(rtl.selected).toBe('team');
+
     await rtl.press('ArrowRight');
     expect(rtl.selected).toBe('general');
+
     rtl.unmount();
 
     const vertical = TabsDriver.mount({
@@ -85,11 +97,14 @@ describe('NuiTabs', () => {
     });
 
     expect(vertical.list.attributes('aria-orientation')).toBe('vertical');
+
     await vertical.focusTab('General');
     await vertical.press('ArrowDown');
     expect(vertical.selected).toBe('team');
+
     await vertical.press('ArrowRight');
     expect(vertical.selected).toBe('team');
+
     vertical.unmount();
   });
 
@@ -97,11 +112,14 @@ describe('NuiTabs', () => {
     const tabs = TabsDriver.mount({ modelValue: 'general', lazyPanels: ['danger'] });
     expect(tabs.panelText('team')).toBe('Team panel');
     expect(tabs.panelText('danger')).toBe('');
+
     await tabs.receive('danger');
     expect(tabs.panelText('danger')).toBe('Danger panel');
+
     await tabs.receive('general');
     expect(tabs.panelText('danger')).toBe('Danger panel');
     expect(tabs.panelVisible('danger')).toBe(false);
+
     tabs.unmount();
   });
 
@@ -109,6 +127,7 @@ describe('NuiTabs', () => {
     const tabs = TabsDriver.mount({ modelValue: 'general', unfocusablePanels: ['team'] });
     expect(tabs.panelTabIndex('general')).toBe('0');
     expect(tabs.panelTabIndex('team')).toBeUndefined();
+
     tabs.unmount();
   });
 
@@ -122,11 +141,14 @@ describe('NuiTabs', () => {
     expect(tabs.labels).toEqual(['General', 'Billing', 'Team', 'Danger']);
     expect(tabs.panelText('team')).toBe('Team panel');
     expect(tabs.hasRootModifier('variant-soft')).toBe(true);
+
     await tabs.ready();
     expect(tabs.indicatorVars).toEqual({ start: '0px', size: '0px' });
+
     await tabs.clickTab('Danger');
     expect(tabs.selected).toBe('danger');
     expect(tabs.panelVisible('danger')).toBe(true);
+
     tabs.unmount();
   });
 
@@ -134,10 +156,13 @@ describe('NuiTabs', () => {
     const tabs = TabsDriver.mount({ modelValue: 'team', observed: true });
     await tabs.ready();
     expect(tabs.indicatorVars).toEqual({ start: '0px', size: '0px' });
+
     await tabs.resizeTab('Team', { start: 96, size: 140 });
     expect(tabs.indicatorVars).toEqual({ start: '96px', size: '140px' });
+
     await tabs.resizeTab('General', { start: 0, size: 120 });
     expect(tabs.indicatorVars).toEqual({ start: '96px', size: '140px' });
+
     tabs.unmount();
   });
 
@@ -149,18 +174,23 @@ describe('NuiTabs', () => {
 
     expect(tabs.closableLabels).toEqual(['General', 'Team', 'Danger']);
     expect(tabs.crossHiddenFromAssistiveTechnology('Team')).toBe(true);
+
     await tabs.clickCross('Danger');
     expect(tabs.closed).toEqual(['danger']);
     expect(tabs.selected).toBe('general');
+
     await tabs.middleClickTab('Team');
     expect(tabs.closed).toEqual(['danger', 'team']);
     expect(tabs.labels).toEqual(['General', 'Billing']);
+
     await tabs.middleClickTab('Billing');
     expect(tabs.closed).toEqual(['danger', 'team']);
+
     await tabs.focusTab('General');
     await tabs.press('Delete');
     expect(tabs.closed).toEqual(['danger', 'team', 'general']);
     expect(tabs.labels).toEqual(['Billing']);
+
     tabs.unmount();
   });
 
@@ -171,6 +201,7 @@ describe('NuiTabs', () => {
     expect(tabs.labels).toEqual(['General', 'Billing', 'Danger']);
     expect(tabs.selected).toBe('danger');
     expect(tabs.focusedTab).toBe('Danger');
+
     tabs.unmount();
   });
 
@@ -183,9 +214,11 @@ describe('NuiTabs', () => {
 
     await tabs.clickCross('Billing');
     expect(tabs.closed).toEqual([]);
+
     await tabs.clickCross('Team');
     expect(tabs.closed).toEqual(['team']);
     expect(tabs.labels).toEqual(['General', 'Billing', 'Danger']);
+
     tabs.unmount();
   });
 });

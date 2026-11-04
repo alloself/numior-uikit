@@ -147,6 +147,7 @@ describe('recalculation', () => {
     for (let row = 100; row >= 2; row -= 1) {
       sheet.enter(`A${String(row)}`, `=A${String(row - 1)}+1`);
     }
+
     sheet.enter('A1', 1);
     sheet.recalc();
 
@@ -210,6 +211,7 @@ describe('recalculation', () => {
     let yields = 0;
 
     sheet.enter('A1', 1);
+
     for (let row = 2; row <= 2000; row += 1) {
       sheet.enter(`A${String(row)}`, `=A${String(row - 1)}*1`);
     }
@@ -238,6 +240,7 @@ describe('recalculation', () => {
     const sheet = openSheet();
 
     sheet.enter('A1', 1);
+
     for (let row = 2; row <= 20_000; row += 1) {
       sheet.enter(`A${String(row)}`, `=A${String(row - 1)}+1`);
     }
@@ -261,6 +264,7 @@ describe('recalculation', () => {
     const started = performance.now();
 
     sheet.enter('A1', 1);
+
     for (let row = 2; row <= 2000; row += 1) {
       sheet.enter(`A${String(row)}`, `=A${String(row - 1)}+1`);
     }
@@ -300,9 +304,11 @@ describe('recalculation', () => {
     for (let row = 2; row <= 1000; row += 1) {
       sheet.enter(`A${String(row)}`, `=A${String(row - 1)}+1`);
     }
+
     for (let row = 2; row <= 20; row += 1) {
       sheet.enter(`C${String(row)}`, `=C${String(row - 1)}+1`);
     }
+
     sheet.enter('D1', '=SUM(C1:C20)');
 
     sheet.recalc({
@@ -320,9 +326,11 @@ describe('recalculation', () => {
     const sheet = openSheet();
 
     sheet.enter('A1', 1);
+
     for (let row = 2; row <= 500; row += 1) {
       sheet.enter(`A${String(row)}`, `=A${String(row - 1)}+1`);
     }
+
     const run = sheet.recalc({ budgetMs: 0, yieldTo: () => Promise.resolve() });
 
     sheet.enter('B1', 7);

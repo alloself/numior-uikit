@@ -29,6 +29,7 @@ describe('field arrays', () => {
     });
 
     expect((await list.form.validate()).valid).toBe(true);
+
     await list.push({ name: 'c' });
     expect((await list.form.validate()).valid).toBe(false);
     expect(seen).toEqual([2, 3]);

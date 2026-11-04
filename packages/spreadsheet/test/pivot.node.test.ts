@@ -338,6 +338,7 @@ describe('pivot steps', () => {
 
     book.history.undo();
     expect(book.shown('D7', 'Rates')).toBe('570');
+
     book.history.undo();
     book.history.undo();
     expect([book.footprint(), book.shown('A3', 'Rates')]).toEqual([undefined, '']);
@@ -364,6 +365,7 @@ describe('pivot steps', () => {
 
     expect(book.remove('5', 6, 'Rates').ok).toBe(true);
     expect(book.footprint()).toBeUndefined();
+
     book.history.undo();
     expect(book.footprint()).toBe('A5:E10');
   });
@@ -388,10 +390,12 @@ describe('pivot steps', () => {
     expect(book.shown('B5', 'Rates')).toBe('300.0');
     expect(book.commit({ kind: 'refreshPivot', sheet: 'Rates', name: 'Sales' }).ok).toBe(true);
     expect(book.shown('B5', 'Rates')).toBe('300.0');
+
     book.history.undo();
     book.history.undo();
     book.history.undo();
     expect(book.footprint()).toBeUndefined();
+
     book.type('B5', '1', 'Rates');
     expect(book.shown('B5', 'Rates')).toBe('1');
   });

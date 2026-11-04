@@ -12,6 +12,7 @@ describe('useVirtualList', () => {
     await unmeasured.settle();
     expect(unmeasured.renderedIndices).toEqual(range(0, 5));
     expect(unmeasured.viewport).toBe(0);
+
     unmeasured.unmount();
     const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2 });
     await list.settle();
@@ -21,13 +22,16 @@ describe('useVirtualList', () => {
     expect(list.totalSize).toBe(20_000);
     expect(list.spacers).toEqual({ start: 0, end: 20_000 - 13 * 20 });
     expect(list.rowTransform(3)).toBe('translateY(60px)');
+
     await list.scroll(5000);
     expect(list.scrollTop).toBe(5000);
     expect(list.range).toEqual({ start: 248, end: 263 });
     expect(list.spacers).toEqual({ start: 248 * 20, end: 20_000 - 263 * 20 });
+
     await list.scroll(1_000_000);
     expect(list.range).toEqual({ start: 997, end: 1000 });
     expect(list.spacers.end).toBe(0);
+
     list.unmount();
   });
 
@@ -46,9 +50,11 @@ describe('useVirtualList', () => {
     expect(list.indexAt(89)).toBe(2);
     expect(list.indexAt(90)).toBe(3);
     expect(list.renderedIndices).toEqual(range(0, 4));
+
     await list.scroll(50);
     expect(list.range).toEqual({ start: 2, end: 6 });
     expect(list.rowTransform(4)).toBe('translateY(110px)');
+
     list.unmount();
   });
 
@@ -58,19 +64,26 @@ describe('useVirtualList', () => {
     await list.scrollToIndex(50, 'start');
     expect(list.scrollTop).toBe(1000);
     expect(list.renderedIndices).toContain(50);
+
     await list.scrollToIndex(50, 'end');
     expect(list.scrollTop).toBe(820);
+
     await list.scrollToIndex(50, 'center');
     expect(list.scrollTop).toBe(910);
+
     await list.scrollToIndex(50, 'start');
     await list.scrollToIndex(55, 'auto');
     expect(list.scrollTop).toBe(1000);
+
     await list.scrollToIndex(60, 'auto');
     expect(list.scrollTop).toBe(1020);
+
     await list.scrollToIndex(10, 'auto');
     expect(list.scrollTop).toBe(200);
+
     await list.scrollToIndex(999, 'start');
     expect(list.scrollTop).toBe(19_800);
+
     list.unmount();
   });
 
@@ -80,13 +93,17 @@ describe('useVirtualList', () => {
     await list.pin(500);
     expect(list.renderedIndices).toEqual([...range(0, 13), 500]);
     expect(list.rowTransform(500)).toBe('translateY(10000px)');
+
     await list.scroll(20_000);
     expect(list.renderedIndices).toEqual([500, ...range(997, 1000)]);
+
     await list.pin(5);
     await list.scroll(0);
     expect(list.renderedIndices).toEqual(range(0, 13));
+
     await list.pin(5000);
     expect(list.renderedIndices).toEqual(range(0, 13));
+
     list.unmount();
   });
 
@@ -97,19 +114,24 @@ describe('useVirtualList', () => {
     expect(list.range).toEqual({ start: 2, end: 13 });
     expect(list.renderedIndices).toEqual(range(0, 13));
     expect(list.frame).toEqual({ lead: 0, rest: 19_740, clampStart: -60, clampEnd: -60 });
+
     await list.scroll(5000);
     expect(list.range).toEqual({ start: 250, end: 263 });
     expect(list.renderedIndices).toEqual([0, 1, ...range(250, 263)]);
     expect(list.frame).toEqual({ lead: 4960, rest: 14_740, clampStart: -100, clampEnd: -100 });
+
     await list.pin(1);
     expect(list.renderedIndices).toEqual([0, 1, ...range(250, 263)]);
+
     await list.pin(100);
     expect(list.renderedIndices).toEqual([0, 1, 100, ...range(250, 263)]);
     expect(list.frame).toEqual({ lead: 4940, rest: 14_740, clampStart: -120, clampEnd: -100 });
+
     await list.pin(undefined);
     await list.freeze(0);
     expect(list.range).toEqual({ start: 248, end: 263 });
     expect(list.renderedIndices).toEqual(range(248, 263));
+
     list.unmount();
   });
 
@@ -119,21 +141,29 @@ describe('useVirtualList', () => {
     await list.settle();
     await list.scrollToIndex(50, 'start');
     expect(list.scrollTop).toBe(960);
+
     await list.scrollToIndex(50, 'end');
     expect(list.scrollTop).toBe(820);
+
     await list.scrollToIndex(50, 'center');
     expect(list.scrollTop).toBe(890);
+
     await list.scrollToIndex(50, 'start');
     await list.scrollToIndex(49, 'auto');
     expect(list.scrollTop).toBe(940);
+
     await list.scrollToIndex(56, 'auto');
     expect(list.scrollTop).toBe(940);
+
     await list.scrollToIndex(57, 'auto');
     expect(list.scrollTop).toBe(960);
+
     await list.scrollToIndex(1, 'start');
     expect(list.scrollTop).toBe(960);
+
     await list.scrollToIndex(2, 'auto');
     expect(list.scrollTop).toBe(0);
+
     list.unmount();
   });
 
@@ -143,6 +173,7 @@ describe('useVirtualList', () => {
     await unmeasured.settle();
     expect(unmeasured.renderedIndices).toEqual(range(0, 7));
     expect(unmeasured.range).toEqual({ start: 7, end: 7 });
+
     unmeasured.unmount();
 
     const short = VirtualHarness.mount({ count: 3, height: 200, itemSize: 20, frozen: 10 });
@@ -150,8 +181,10 @@ describe('useVirtualList', () => {
     await short.settle();
     expect(short.renderedIndices).toEqual(range(0, 3));
     expect(short.range).toEqual({ start: 3, end: 3 });
+
     await short.scrollToIndex(2, 'start');
     expect(short.scrollTop).toBe(0);
+
     short.unmount();
 
     const plain = VirtualHarness.mount({
@@ -165,6 +198,7 @@ describe('useVirtualList', () => {
     await plain.settle();
     expect(plain.range).toEqual({ start: 0, end: 30 });
     expect(plain.renderedIndices).toEqual(range(0, 30));
+
     plain.unmount();
   });
 
@@ -183,9 +217,11 @@ describe('useVirtualList', () => {
     expect(list.elementScroll).toBe(5030);
     expect(list.range).toEqual({ start: 250, end: 261 });
     expect(list.frame.lead).toBe(4990);
+
     await list.setItemSize(createSizeIndex(1000, 20));
     expect(list.scrollTop).toBe(5000);
     expect(list.range).toEqual({ start: 250, end: 263 });
+
     list.unmount();
   });
 
@@ -193,17 +229,23 @@ describe('useVirtualList', () => {
     const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2 });
     await list.settle();
     expect([...list.slots.entries()]).toEqual(range(0, 13).map((index) => [index, index]));
+
     await list.scroll(100);
     expect(list.range).toEqual({ start: 3, end: 18 });
+
     for (const index of range(3, 13)) {
       expect(list.slots.get(index)).toBe(index);
     }
+
     expect(range(13, 18).map((index) => list.slots.get(index))).toEqual([0, 1, 2, 13, 14]);
     expect(new Set(list.slots.values()).size).toBe(15);
+
     await list.scroll(20_000);
     expect(Math.max(...list.slots.values())).toBeLessThan(15);
+
     await list.scroll(100);
     expect(new Set(list.slots.values()).size).toBe(15);
+
     list.unmount();
   });
 
@@ -212,12 +254,15 @@ describe('useVirtualList', () => {
     await list.settle();
     await list.pin(500);
     expect(list.slots.get(500)).toBe(13);
+
     await list.scroll(20_000);
     expect(list.renderedIndices).toEqual([500, ...range(997, 1000)]);
     expect(list.slots.get(500)).toBe(13);
     expect(range(997, 1000).map((index) => list.slots.get(index))).toEqual([0, 1, 2]);
+
     await list.scrollToIndex(500, 'start');
     expect(list.slots.get(500)).toBe(13);
+
     list.unmount();
   });
 
@@ -225,10 +270,13 @@ describe('useVirtualList', () => {
     const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2, listen: false });
     await list.settle();
     expect(list.range).toEqual({ start: 0, end: 13 });
+
     await list.scroll(5000);
     expect(list.range).toEqual({ start: 0, end: 13 });
+
     await list.measure();
     expect(list.range).toEqual({ start: 248, end: 263 });
+
     list.unmount();
   });
 
@@ -236,6 +284,7 @@ describe('useVirtualList', () => {
     const list = VirtualHarness.mount({ height: 210, itemSize: 20, overscan: 2 });
     await list.settle();
     expect(list.range).toEqual({ start: 0, end: 14 });
+
     await list.scroll(100);
     expect(list.range).toEqual({ start: 3, end: 19 });
 
@@ -243,10 +292,13 @@ describe('useVirtualList', () => {
 
     await list.scroll(110);
     expect(list.range).toBe(settled);
+
     await list.scroll(119);
     expect(list.range).toBe(settled);
+
     await list.scroll(120);
     expect(list.range).toEqual({ start: 4, end: 20 });
+
     list.unmount();
   });
 
@@ -256,6 +308,7 @@ describe('useVirtualList', () => {
     expect(list.frame).toEqual({ lead: 0, rest: 19_740, clampStart: -60, clampEnd: -60 });
     expect(list.spacerStyles).toEqual({ lead: '0px', rest: '19740px' });
     expect(list.clampStyles).toEqual({ start: '-60px', end: '-60px' });
+
     await list.scroll(5000);
     expect(list.frame).toEqual({ lead: 4960, rest: 14_740, clampStart: -100, clampEnd: -100 });
 
@@ -263,12 +316,15 @@ describe('useVirtualList', () => {
 
     await list.scroll(5005);
     expect(list.frame).toBe(settled);
+
     await list.pin(900);
     expect(list.renderedIndices.at(-1)).toBe(900);
     expect(list.frame).toEqual({ lead: 4960, rest: 14_720, clampStart: -100, clampEnd: -120 });
+
     await list.pin(3);
     expect(list.renderedIndices[0]).toBe(3);
     expect(list.frame).toEqual({ lead: 4940, rest: 14_740, clampStart: -120, clampEnd: -100 });
+
     list.unmount();
   });
 
@@ -278,9 +334,11 @@ describe('useVirtualList', () => {
     await list.scroll(5000);
     expect(list.spacerStylesAtRender).toEqual({ lead: '4960px', rest: '19740px' });
     expect(list.spacerStyles).toEqual({ lead: '4960px', rest: '14740px' });
+
     await list.scroll(1000);
     expect(list.spacerStylesAtRender).toEqual({ lead: '4960px', rest: '18740px' });
     expect(list.spacerStyles).toEqual({ lead: '960px', rest: '18740px' });
+
     list.unmount();
   });
 
@@ -302,9 +360,11 @@ describe('useVirtualList', () => {
     expect(await list.resizeRows([[250, 60]])).toBe(true);
     expect(list.scrollTop).toBe(5030);
     expect(await list.resizeRows([[250, 60]])).toBe(false);
+
     await list.scroll(5050);
     expect(await list.resizeRows([[250, 30]])).toBe(true);
     expect(list.scrollTop).toBe(5050);
+
     list.unmount();
   });
 
@@ -317,9 +377,11 @@ describe('useVirtualList', () => {
     expect(await list.resizeRows([[995, 50]])).toBe(true);
     expect(list.scrollTop).toBe(19_830);
     expect(list.elementScroll).toBe(19_830);
+
     await list.scroll(19_700);
     expect(await list.resizeRows([[996, 50]])).toBe(true);
     expect(list.scrollTop).toBe(19_700);
+
     list.unmount();
   });
 
@@ -330,16 +392,20 @@ describe('useVirtualList', () => {
     await list.settle();
     await list.scroll(1010);
     expect(list.range).toEqual({ start: 44, end: 59 });
+
     await list.setItemSize(createSizeIndex(1000, 20));
 
     expect(list.scrollTop).toBe(930);
     expect(list.elementScroll).toBe(930);
     expect(list.range).toEqual({ start: 44, end: 59 });
+
     await list.setItemSize(20);
     expect(list.scrollTop).toBe(930);
+
     await list.setItemSize(createSizeIndex(1000, 20, [[10, 60]]));
     expect(list.scrollTop).toBe(970);
     expect(list.range).toEqual({ start: 44, end: 59 });
+
     list.unmount();
   });
 
@@ -350,6 +416,7 @@ describe('useVirtualList', () => {
     await list.scroll(5000);
     expect(await list.resizeRows([[100, 50]])).toBe(false);
     expect(list.scrollTop).toBe(5000);
+
     list.unmount();
   });
 
@@ -357,11 +424,14 @@ describe('useVirtualList', () => {
     const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2 });
     await list.settle();
     expect(list.windowOffset).toBe(0);
+
     await list.scroll(5000);
     expect(list.range.start).toBe(248);
     expect(list.windowOffset).toBe(248 * 20 - 5000);
+
     await list.scroll(15);
     expect(list.windowOffset).toBe(-15);
+
     list.unmount();
   });
 
@@ -372,9 +442,11 @@ describe('useVirtualList', () => {
     expect(list.range).toEqual({ start: 0, end: 5 });
     expect(list.totalSize).toBe(100);
     expect(list.spacers).toEqual({ start: 0, end: 0 });
+
     await list.setCount(1000);
     await list.resize(60);
     expect(list.range).toEqual({ start: 0, end: 6 });
+
     list.unmount();
 
     const plain = VirtualHarness.mount({
@@ -386,8 +458,10 @@ describe('useVirtualList', () => {
 
     await plain.settle();
     expect(plain.renderedIndices).toEqual(range(0, 30));
+
     await plain.scroll(500);
     expect(plain.renderedIndices).toEqual(range(0, 30));
+
     plain.unmount();
   });
 });
@@ -400,6 +474,7 @@ describe('virtual offsets', () => {
     expect(indexAt(fixed, 50)).toBe(2);
     expect(indexAt(fixed, 10_000)).toBe(9);
     expect(offsetAt(fixed, 10)).toBe(250);
+
     const variable = buildSizeModel(4, (index) => [10, 20, 30, 40][index] ?? 0);
     expect(indexAt(variable, 9)).toBe(0);
     expect(indexAt(variable, 10)).toBe(1);

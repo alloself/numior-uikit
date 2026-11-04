@@ -111,12 +111,8 @@ export class NavigationSection {
     return this.manualTabs.getByRole('tabpanel');
   }
 
-  async indicatorBox(tabs: Locator): Promise<Box> {
-    const box = await tabs.locator('.nui-tab-list__indicator').boundingBox();
-    if (!box) {
-      throw new Error('Tab indicator has no bounding box');
-    }
-    return box;
+  indicatorBox(tabs: Locator): Promise<Box> {
+    return boxOf(tabs.locator('.nui-tab-list__indicator'));
   }
 
   crumbLinks(crumbs: Locator): Locator {

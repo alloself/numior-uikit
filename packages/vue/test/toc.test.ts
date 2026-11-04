@@ -36,9 +36,11 @@ describe('NuiToc', () => {
     scrolled();
     await toc.wrapper.vm.$nextTick();
     expect(toc.currentLabel).toBe('Basic');
+
     await toc.click('API');
     expect(toc.emittedSelections).toEqual(['api']);
     expect(toc.currentLabel).toBe('API');
+
     scrolled();
     await toc.wrapper.vm.$nextTick();
     expect(toc.currentLabel).toBe('API');
@@ -47,6 +49,7 @@ describe('NuiToc', () => {
   it('speaks the configured language and lets props win', () => {
     const toc = TocDriver.mount({ config: { locale: 'ru-RU' } });
     expect(toc.title).toBe('На странице');
+
     const custom = TocDriver.mount({ props: { title: 'Contents', label: 'Page outline' } });
     expect(custom.title).toBe('Contents');
     expect(custom.label).toBe('Page outline');

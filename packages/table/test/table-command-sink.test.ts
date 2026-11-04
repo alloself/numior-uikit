@@ -58,6 +58,7 @@ describe('NuiTable command sink', () => {
     await grid.press('z', { ctrl: true });
     expect(calls).toEqual(['undo']);
     expect(grid.announcement).toBe('Отменено 1 изменение');
+
     await grid.press('y', { ctrl: true });
     expect(calls).toEqual(['undo', 'redo']);
     expect(grid.announcement).toBe('Отменено 1 изменение');

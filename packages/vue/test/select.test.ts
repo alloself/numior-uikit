@@ -15,16 +15,20 @@ describe('NuiSelect', () => {
     expect(select.valueText).toBe('Banana');
     expect(select.listbox.attributes('popover')).toBe('auto');
     expect(select.groupLabels).toEqual(['Citrus']);
+
     await select.pressTrigger('ArrowDown');
     expect(select.expanded).toBe(true);
     expect(select.focusedOption).toBe('Banana');
+
     await select.press('ArrowDown');
     expect(select.focusedOption).toBe('Lemon');
+
     await select.press('Enter');
     expect(select.value).toBe('lemon');
     expect(select.expanded).toBe(false);
     expect(select.valueText).toBe('Lemon');
     expect(select.triggerFocused).toBe(true);
+
     select.unmount();
   });
 
@@ -34,24 +38,29 @@ describe('NuiSelect', () => {
     expect(select.trigger.attributes('aria-controls')).toBe(select.tree.attributes('id'));
     expect(select.tree.attributes('popover')).toBe('auto');
     expect(select.valueText).toBe('Laptops');
+
     await select.pressTrigger('ArrowDown');
     expect(select.expanded).toBe(true);
     expect(select.treeFocused).toBe(true);
     expect(select.treeAttr('Electronics', 'aria-expanded')).toBe('true');
     expect(select.treeAttr('Laptops', 'aria-selected')).toBe('true');
     expect(select.treeActiveLabel).toBe('Laptops');
+
     await select.press('ArrowUp');
     expect(select.treeActiveLabel).toBe('Phones');
+
     await select.press('Enter');
     expect(select.value).toBe('phones');
     expect(select.expanded).toBe(false);
     expect(select.valueText).toBe('Phones');
     expect(select.triggerFocused).toBe(true);
+
     await select.pressTrigger('ArrowDown');
     await select.clickTreeToggle('Clothes');
     await select.clickTreeItem('Shoes');
     expect(select.value).toBe('shoes');
     expect(select.expanded).toBe(false);
+
     select.unmount();
 
     const multiple = SelectDriver.mount({
@@ -61,13 +70,16 @@ describe('NuiSelect', () => {
 
     await multiple.pressTrigger('ArrowDown');
     expect(multiple.tree.attributes('aria-multiselectable')).toBe('true');
+
     await multiple.clickTreeCheckbox('Electronics');
     expect(multiple.value).toEqual(['electronics', 'phones', 'laptops', 'books']);
     expect(multiple.expanded).toBe(true);
     expect(multiple.valueText).toBe('4 selected');
+
     await multiple.press('Enter');
     expect(multiple.expanded).toBe(false);
     expect(multiple.value).toEqual(['electronics', 'phones', 'laptops', 'books']);
+
     multiple.unmount();
   });
 
@@ -79,17 +91,21 @@ describe('NuiSelect', () => {
     expect(select.toggleButton.attributes('aria-expanded')).toBe('false');
     expect(select.toggleLabel).toBe('Show options');
     expect(select.trigger.find('.nui-select__chevron').exists()).toBe(false);
+
     await select.clickToggle();
     expect(select.triggerFocused).toBe(true);
+
     select.unmount();
   });
 
   it('shows the empty state inside the listbox when there are no options', () => {
     const select = SelectDriver.mount({ props: { options: [] } });
     expect(select.emptyText).toBe('No options');
+
     select.unmount();
     const labelled = SelectDriver.mount({ props: { options: [], emptyLabel: 'Пусто' } });
     expect(labelled.emptyText).toBe('Пусто');
+
     labelled.unmount();
   });
 
@@ -97,14 +113,18 @@ describe('NuiSelect', () => {
     const select = SelectDriver.mount({ props: { placeholder: 'Pick a fruit' } });
     expect(select.valueText).toBe('Pick a fruit');
     expect(select.hasModifier('empty')).toBe(true);
+
     await select.pressTrigger('l');
     expect(select.value).toBe('lemon');
     expect(select.expanded).toBe(false);
+
     await select.pressTrigger('l');
     expect(select.value).toBe('lime');
+
     await select.advance(600);
     await select.pressTrigger('b');
     expect(select.value).toBe('banana');
+
     select.unmount();
   });
 
@@ -116,21 +136,26 @@ describe('NuiSelect', () => {
 
     expect(select.valueText).toBe('Apple');
     expect(select.listbox.attributes('aria-multiselectable')).toBe('true');
+
     await select.pressTrigger('ArrowDown');
     expect(select.focusedOption).toBe('Apple');
+
     await select.press('ArrowDown');
     await select.press(' ');
     expect(select.value).toEqual(['apple', 'banana']);
     expect(select.expanded).toBe(true);
     expect(select.valueText).toBe('2 selected');
     expect(select.selectedLabels).toEqual(['Apple', 'Banana']);
+
     await select.press('Enter');
     expect(select.expanded).toBe(false);
     expect(select.hiddenValues).toEqual(['apple', 'banana']);
+
     await select.pressTrigger('ArrowDown');
     await select.clickOption('Apple');
     expect(select.value).toEqual(['banana']);
     expect(select.expanded).toBe(true);
+
     select.unmount();
   });
 
@@ -142,18 +167,23 @@ describe('NuiSelect', () => {
 
     expect(select.hasModifier('invalid')).toBe(true);
     expect(select.clearButton.exists()).toBe(true);
+
     await select.pressTrigger('ArrowDown');
     await select.clickOption('Blueberry');
     expect(select.value).toBe('lime');
+
     await select.clickClear();
     expect(select.value).toBeNull();
     expect(select.clearButton.exists()).toBe(false);
+
     select.unmount();
     const off = SelectDriver.mount({ props: { disabled: true } });
     expect(off.hasModifier('disabled')).toBe(true);
     expect(off.trigger.element.disabled).toBe(true);
+
     await off.pressTrigger('ArrowDown');
     expect(off.expanded).toBe(false);
+
     off.unmount();
   });
 
@@ -161,13 +191,17 @@ describe('NuiSelect', () => {
     const select = SelectDriver.mount({ modelValue: 'apple' });
     await select.pressTrigger('End');
     expect(select.focusedOption).toBe('Lime');
+
     await select.hoverOption('Lemon');
     expect(select.focusedOption).toBe('Lemon');
     expect(select.activeLabel).toBe('Lemon');
+
     await select.leaveListbox();
     expect(select.activeLabel).toBe('Apple');
+
     await select.focusOutside();
     expect(select.expanded).toBe(false);
+
     select.unmount();
   });
 
@@ -181,10 +215,12 @@ describe('NuiSelect', () => {
     expect(russian.valueText).toBe('Выбрано: 2');
     expect(russian.clearLabel).toBe('Очистить');
     expect(russian.toggleLabel).toBe('Показать варианты');
+
     russian.unmount();
 
     const empty = SelectDriver.mount({ props: { options: [] }, config: { locale: 'ru-RU' } });
     expect(empty.emptyText).toBe('Нет вариантов');
+
     empty.unmount();
 
     const counted = SelectDriver.mount({
@@ -194,6 +230,7 @@ describe('NuiSelect', () => {
     });
 
     expect(counted.valueText).toBe('2 фрукта');
+
     counted.unmount();
   });
 
@@ -219,6 +256,7 @@ describe('NuiSelect', () => {
 
     expect(off.hiddenValues).toEqual(['banana']);
     expect(off.hiddenDisabled).toEqual([true]);
+
     off.unmount();
   });
 
@@ -236,9 +274,11 @@ describe('NuiSelect', () => {
     expect(select.trigger.element.disabled).toBe(false);
     expect(select.clearButton.exists()).toBe(false);
     expect(select.toggleButton.exists()).toBe(false);
+
     await select.pressTrigger('ArrowDown');
     expect(select.expanded).toBe(false);
     expect(select.valueText).toBe('Lime');
+
     select.unmount();
   });
 });

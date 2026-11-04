@@ -9,8 +9,10 @@ describe('useSplitAttrs', () => {
     expect(harness.control.attributes('placeholder')).toBe('Name');
     expect(harness.control.attributes('aria-label')).toBe('Name');
     expect(harness.control.attributes('class')).toBeUndefined();
+
     await harness.focusControl();
     expect(harness.focusCount.value).toBe(1);
+
     await harness.renamePlaceholder('Full name');
     expect(harness.control.attributes('placeholder')).toBe('Full name');
   });

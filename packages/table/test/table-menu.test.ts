@@ -51,6 +51,7 @@ describe('NuiTable column menu', () => {
 
     expect(grid.menuItemState('Снять сортировку')).toBe('true');
     expect(grid.menuItemState('Не закреплять')).toBe('true');
+
     await grid.chooseMenuAndSettle('Сортировать по убыванию');
 
     expect(grid.sort).toEqual([{ key: 'city', direction: 'desc' }]);
@@ -68,6 +69,7 @@ describe('NuiTable column menu', () => {
     expect(grid.pins).toEqual({ city: 'start' });
     expect(grid.focusedCell).toEqual({ row: -1, col: 1 });
     expect(grid.announcement).toBe('Колонка «Город» закреплена в начале');
+
     await grid.openColumnMenu(1);
     await grid.chooseMenu('Скрыть колонку');
 
@@ -75,22 +77,26 @@ describe('NuiTable column menu', () => {
     expect(grid.hidden).toEqual(['city']);
     expect(grid.focusedCell).toEqual({ row: -1, col: 1 });
     expect(grid.announcement).toBe('Колонка «Город» скрыта');
+
     await grid.openColumnMenu(1);
     await grid.chooseMenu('Колонки');
 
     expect(grid.menuItemState('Город')).toBe('false');
     expect(grid.menuItemState('ID')).toBe('true');
+
     await grid.chooseMenu('Город');
     expect(grid.headerTexts.slice(0, 3)).toEqual(['ID', 'Город', 'Имя']);
     expect(grid.announcement).toBe('Колонка «Город» показана');
     expect(grid.menuExpanded(2)).toBe(true);
     expect(grid.focusedCell).toBeUndefined();
+
     await grid.chooseMenu('Имя');
 
     expect(grid.headerTexts.slice(0, 3)).toEqual(['ID', 'Город', 'Оклад']);
     expect(grid.hidden).toEqual(['name']);
     expect(grid.menuExpanded(2)).toBe(false);
     expect(grid.focusedCell).toEqual({ row: -1, col: 2 });
+
     await grid.openColumnMenu(0);
     expect(grid.menuItemState('Скрыть колонку')).toBe('true');
   });
@@ -100,6 +106,7 @@ describe('NuiTable column menu', () => {
     await grid.setQuick('казань');
 
     expect(grid.emptyText).toBe('Нет строк для показа');
+
     await grid.openColumnMenu(1);
     await grid.chooseMenu('Колонки');
     await grid.chooseMenuAndSettle('Город');
@@ -116,6 +123,7 @@ describe('NuiTable column menu', () => {
 
     expect(grid.role).toBe('treegrid');
     expect(grid.groupLabel(0)).toBe('Данные (333)');
+
     await grid.openColumnMenu(17);
     await grid.chooseMenuAndSettle('Убрать из группировки');
     expect(grid.role).toBe('grid');
@@ -151,8 +159,10 @@ describe('NuiTable column menu', () => {
     await grid.settle();
 
     expect(grid.menuLabels).toEqual([]);
+
     await grid.openColumnMenu(2);
     expect(grid.menuExpanded(2)).toBe(false);
+
     await grid.focusCell(-1, 1);
     await grid.press('ArrowDown', { alt: true });
     expect(grid.filterTitle).toBe('Фильтр: Имя');

@@ -55,11 +55,14 @@ describe('useColorScheme', () => {
     expect(inner).toBe(outer.control);
     expect(inner.scheme.value).toBe('system');
     expect(inner.resolved.value).toBe('dark');
+
     inner.cycle();
     expect(inner.scheme.value).toBe('light');
+
     await nextTick();
     expect(document.documentElement.getAttribute('data-nui-theme')).toBe('light');
     expect(localStorage.getItem('nui-theme')).toBe('light');
+
     inner.cycle();
     inner.cycle();
     expect(inner.scheme.value).toBe('system');
@@ -80,6 +83,7 @@ describe('useColorScheme', () => {
     });
 
     expect(media.listeners).toBe(1);
+
     capture.wrapper.unmount();
     expect(media.listeners).toBe(0);
   });
@@ -105,12 +109,15 @@ describe('useColorScheme', () => {
     localStorage.setItem('nui-theme', 'dark');
     runInThisContext(colorSchemeScript('nui-theme'));
     expect(document.documentElement.getAttribute('data-nui-theme')).toBe('dark');
+
     localStorage.setItem('nui-theme', 'bogus');
     document.documentElement.removeAttribute('data-nui-theme');
     runInThisContext(colorSchemeScript('nui-theme'));
     expect(document.documentElement.hasAttribute('data-nui-theme')).toBe(false);
+
     runInThisContext(colorSchemeScript('nui-theme', 'light'));
     expect(document.documentElement.getAttribute('data-nui-theme')).toBe('light');
+
     localStorage.setItem('nui-theme', 'dark');
     runInThisContext(colorSchemeScript('nui-theme', 'light'));
     expect(document.documentElement.getAttribute('data-nui-theme')).toBe('dark');
@@ -123,11 +130,14 @@ describe('useColorScheme', () => {
     const control = captureSetup(() => useColorScheme({ scope })).value;
     expect(control.scheme.value).toBe('system');
     expect(control.resolved.value).toBe('light');
+
     media.change(true);
     expect(control.resolved.value).toBe('dark');
+
     control.set('light');
     await nextTick();
     expect(scope.getAttribute('data-nui-theme')).toBe('light');
+
     control.toggle();
     expect(control.scheme.value).toBe('dark');
   });
@@ -138,6 +148,7 @@ describe('useColorScheme', () => {
     const scope = document.createElement('div');
     const control = captureSetup(() => useColorScheme({ scope, storageKey: 'nui-theme' })).value;
     expect(control.scheme.value).toBe('dark');
+
     control.set('system');
     await nextTick();
     expect(localStorage.getItem('nui-theme')).toBe('system');
@@ -162,6 +173,7 @@ describe('useColorScheme', () => {
     ).value;
 
     expect(control.resolved.value).toBe('dark');
+
     control.set('light');
     await nextTick();
     expect(scope.getAttribute('data-nui-theme')).toBe('light');

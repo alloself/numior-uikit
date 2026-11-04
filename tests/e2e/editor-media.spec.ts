@@ -1,14 +1,11 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
-import { PlaygroundPage } from './pages/playground';
+import { type Locator } from '@playwright/test';
+import { expect, test } from './fixtures';
 
-const openEditor = async (page: Page): Promise<PlaygroundPage> => {
-  const playground = new PlaygroundPage(page);
-
+test.beforeEach(async ({ playground }) => {
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
   await playground.editor.root.scrollIntoViewIfNeeded();
-  return playground;
-};
+});
 
 const SAMPLE = '="/media/sunrise.svg"';
 
@@ -19,10 +16,8 @@ const widthOf = async (figure: Locator): Promise<number> =>
 
 test.describe('editor media', () => {
   test('uploads pasted files beside the text and publishes them once they arrive', async ({
-    page,
+    editor,
   }) => {
-    const { editor } = await openEditor(page);
-
     await editor.placeAtEnd();
 
     await editor.pasteFiles([
@@ -44,8 +39,7 @@ test.describe('editor media', () => {
     await expect(editor.publishedImage(UPLOADED)).toBeVisible();
   });
 
-  test('cancels an upload and retries one the server refused', async ({ page }) => {
-    const { editor } = await openEditor(page);
+  test('cancels an upload and retries one the server refused', async ({ editor, page }) => {
     const failing = page.getByTestId('editor-upload-fail');
 
     await editor.placeAtEnd();
@@ -63,14 +57,14 @@ test.describe('editor media', () => {
     await editor.placeAtEnd();
     await editor.pasteFiles([{ name: 'broken.txt', type: 'text/plain' }]);
     await expect(editor.uploadCards()).toContainText('Сервер не ответил', { timeout: 10_000 });
+
     await failing.click();
     await editor.uploadCards().getByRole('button', { name: 'Повторить' }).click();
     await expect(editor.uploadCards()).toHaveCount(0, { timeout: 10_000 });
     await expect(editor.file('broken.txt')).toBeVisible();
   });
 
-  test('picks an image from the slash menu and inserts files by link', async ({ page }) => {
-    const { editor } = await openEditor(page);
+  test('picks an image from the slash menu and inserts files by link', async ({ editor, page }) => {
     const hint = editor.content.locator('p', { hasText: 'Наберите' });
 
     await editor.caretAtEndOf(hint);
@@ -104,15 +98,16 @@ test.describe('editor media', () => {
     await page.keyboard.type('/fil');
     await page.keyboard.press('Enter');
     await expect(editor.mediaPanel().getByRole('tab')).toHaveCount(0);
+
     await editor.mediaPanel().getByRole('textbox').fill('https://numior.test/Price%20list.pdf');
     await editor.mediaPanel().getByRole('button', { name: 'Вставить' }).click();
     await expect(editor.file('Price list.pdf')).toBeVisible();
   });
 
   test('resizes, aligns and captions an image and opens it full screen when published', async ({
+    editor,
     page,
   }) => {
-    const { editor } = await openEditor(page);
     const image = editor.image(SAMPLE);
 
     await image.scrollIntoViewIfNeeded();
@@ -138,9 +133,11 @@ test.describe('editor media', () => {
     await image.locator('img').click();
     await image.getByRole('radio', { name: 'К концу строки' }).click();
     await expect(image).toHaveClass(/nui-content__image--align-end/u);
+
     await image.getByRole('radio', { name: 'В тексте' }).click();
     await expect(image).toHaveClass(/nui-content__image--wrap-inline/u);
     await expect(image.getByRole('textbox', { name: 'Добавьте подпись' })).toHaveCount(0);
+
     await image.getByRole('radio', { name: 'Отдельной строкой' }).click();
     await expect(image).toHaveClass(/nui-content__image--wrap-break/u);
 
@@ -160,16 +157,17 @@ test.describe('editor media', () => {
 
     await zoom.click();
     await expect(editor.imageViewer()).toBeVisible();
+
     await page.keyboard.press('Escape');
     await expect(editor.imageViewer()).toBeHidden();
     await expect(zoom).toBeFocused();
   });
 
   test('passes axe with the media panel, the image bar and the image viewer open', async ({
+    playground,
+    editor,
     page,
   }) => {
-    const playground = await openEditor(page);
-    const { editor } = playground;
     const section = 'section[aria-labelledby="editor-title"]';
 
     await editor.image(SAMPLE).locator('img').click();
@@ -182,6 +180,7 @@ test.describe('editor media', () => {
     await page.keyboard.press('Enter');
     await expect(editor.mediaPanel()).toBeVisible();
     expect(await playground.wcagViolations('.nui-editor-media')).toEqual([]);
+
     await page.keyboard.press('Escape');
 
     await editor.publishedImage(SAMPLE).getByRole('button').click();

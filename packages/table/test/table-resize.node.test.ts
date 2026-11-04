@@ -76,6 +76,7 @@ describe('useTableResize', () => {
 
     table.drag('name', 40);
     expect(table.widths()).toEqual({ name: 200, city: 100 });
+
     table.drag('name', 200);
     expect(table.widths()).toEqual({ name: 252, city: 48 });
   });
@@ -90,6 +91,7 @@ describe('useTableResize', () => {
 
     mirrored.drag('name', 40);
     expect(mirrored.widths()).toEqual({ name: 120 });
+
     mirrored.drag('team', 40);
     expect(mirrored.widths()).toEqual({ name: 120, team: 160 });
   });
@@ -99,6 +101,7 @@ describe('useTableResize', () => {
     const widths = ref<NuiTableWidths>({});
 
     expect(widths.value).toEqual({});
+
     table.drag('name', 0);
     expect(table.widths()).toEqual({ name: 160 });
   });

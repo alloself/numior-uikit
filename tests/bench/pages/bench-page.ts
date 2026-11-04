@@ -2,6 +2,7 @@ import type { Browser, Locator, Page } from '@playwright/test';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { windowMoveSamples } from '../helpers/trace';
+import { boxOf } from '../../e2e/helpers/geometry';
 
 const OPEN_TIMEOUT = 180_000;
 
@@ -95,11 +96,8 @@ export abstract class BenchPage {
     delta: number,
     across = 0,
   ): Promise<number[]> {
-    const box = await target.boundingBox();
+    const box = await boxOf(target);
 
-    if (box === null) {
-      throw new Error('The bench scroller has no box');
-    }
     await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
 
     await this.page.evaluate(() => {

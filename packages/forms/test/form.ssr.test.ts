@@ -103,6 +103,7 @@ describe('forms on the server', () => {
     expect(first).not.toContain('aria-busy');
     expect(first).not.toContain('nui-form__errors');
     expect(first).not.toContain('undefined');
+
     const readonly = await renderToString(SignupForm, { props: { readonly: true } });
     expect(readonly).toContain('nui-form--readonly');
     expect(readonly).toContain(' readonly');

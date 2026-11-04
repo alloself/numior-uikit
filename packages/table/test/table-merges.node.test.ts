@@ -165,6 +165,7 @@ describe('table merges', () => {
     expect(spans.get(5)?.get('gap')).toEqual({ kind: 'covered' });
     expect(spans.get(5)?.get('trail')).toBeUndefined();
     expect(spans.get(5)?.get('h')).toMatchObject({ kind: 'lead', colspan: 1, x: 700 });
+
     const square = index.at(2, 2);
     const parts = square === undefined ? undefined : pieces.get(square);
 

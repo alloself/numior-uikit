@@ -39,8 +39,10 @@ describe('kit controls', () => {
       expect(entry.accepts(value)).toBe(true);
       expect(entry.props(props)).toBe(true);
       expect(entry.props({ ...props, bogus: 1 })).toBe(false);
+
       const wrapper = mount(entry.component, { props: { ...props, [entry.model]: value } });
       expect(wrapper.find('[class^="nui-"]').exists()).toBe(true);
+
       wrapper.unmount();
     }
   });

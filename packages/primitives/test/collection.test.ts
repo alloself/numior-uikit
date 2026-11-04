@@ -32,6 +32,7 @@ describe('createCollection', () => {
     collection.ref('a')(first);
     collection.ref('b')(second);
     expect(texts(collection.elements())).toEqual(['first', 'second', 'third']);
+
     host.prepend(third);
     expect(texts(collection.elements())).toEqual(['third', 'first', 'second']);
     expect(collection.get('b')).toBe(second);
@@ -44,6 +45,7 @@ describe('createCollection', () => {
     const before = collection.elements();
 
     expect(collection.elements()).toBe(before);
+
     collection.ref('b')(item('b'));
     expect(collection.elements()).not.toBe(before);
   });
@@ -58,8 +60,10 @@ describe('createCollection', () => {
     collection.set('lemon', fresh);
     leaving(null);
     expect(collection.get('lemon')).toBe(fresh);
+
     collection.release('lemon', old);
     expect(collection.get('lemon')).toBe(fresh);
+
     collection.release('lemon', fresh);
     expect(collection.get('lemon')).toBeUndefined();
   });
@@ -75,6 +79,7 @@ describe('createCollection', () => {
     const element = item('a');
 
     expect(collection.ref('a', companion)).toBe(collection.ref('a', companion));
+
     collection.ref('a', companion)(element);
     collection.ref('a', companion)(null);
     expect(seen).toEqual([element, null]);

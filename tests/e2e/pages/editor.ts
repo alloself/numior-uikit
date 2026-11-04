@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { boxOf } from '../helpers/geometry';
 import {
   isNumber,
   isString,
@@ -75,11 +76,7 @@ export class EditorSection {
   async clickBeside(block: Locator, side: 'start' | 'end' = 'end'): Promise<void> {
     await block.click({ trial: true });
 
-    const [own, editor] = await Promise.all([block.boundingBox(), this.content.boundingBox()]);
-
-    if (own === null || editor === null) {
-      throw new Error('The block or the editor has no box');
-    }
+    const [own, editor] = await Promise.all([boxOf(block), boxOf(this.content)]);
 
     await this.page.mouse.click(
       side === 'end' ? editor.x + editor.width - 4 : editor.x + 4,
@@ -94,11 +91,8 @@ export class EditorSection {
       globalThis.scrollBy(0, block.getBoundingClientRect().bottom - globalThis.innerHeight / 2);
     });
 
-    const box = await last.boundingBox();
+    const box = await boxOf(last);
 
-    if (box === null) {
-      throw new Error('The editor has no last block');
-    }
     await this.page.mouse.click(box.x + 24, box.y + box.height + 16);
   }
 
@@ -221,12 +215,9 @@ export class EditorSection {
   }
 
   async hoverStart(block: Locator): Promise<void> {
-    const box = await block.boundingBox();
+    const box = await boxOf(block);
     const rtl = await block.evaluate((element) => getComputedStyle(element).direction === 'rtl');
 
-    if (box === null) {
-      throw new Error('The block has no box');
-    }
     await this.page.mouse.move(rtl ? box.x + box.width - 4 : box.x + 4, box.y + 6);
   }
 
@@ -237,12 +228,9 @@ export class EditorSection {
 
     await this.hoverStart(source);
 
-    const grip = await this.grip().boundingBox();
-    const box = await target.boundingBox();
+    const grip = await boxOf(this.grip());
+    const box = await boxOf(target);
 
-    if (grip === null || box === null) {
-      throw new Error('The block handle or its target has no box');
-    }
     const x = grip.x + grip.width / 2;
 
     await this.page.mouse.move(x, grip.y + grip.height / 2);
@@ -255,12 +243,9 @@ export class EditorSection {
   async dragBeside(source: Locator, target: Locator): Promise<void> {
     await this.hoverStart(source);
 
-    const grip = await this.grip().boundingBox();
-    const box = await target.boundingBox();
+    const grip = await boxOf(this.grip());
+    const box = await boxOf(target);
 
-    if (grip === null || box === null) {
-      throw new Error('The block handle or its target has no box');
-    }
     const x = grip.x + grip.width / 2;
     const y = grip.y + grip.height / 2;
 
@@ -597,18 +582,12 @@ export class EditorSection {
 
   async gripBeside(block: Locator): Promise<boolean> {
     const [grip, target, frame] = await Promise.all([
-      this.grip().boundingBox(),
-      block.boundingBox(),
-      this.frame.boundingBox(),
+      boxOf(this.grip()),
+      boxOf(block),
+      boxOf(this.frame),
     ]);
 
-    return (
-      grip !== null &&
-      target !== null &&
-      frame !== null &&
-      grip.x >= frame.x &&
-      grip.x + grip.width <= target.x
-    );
+    return grip.x >= frame.x && grip.x + grip.width <= target.x;
   }
 
   async dragGrip(
@@ -619,11 +598,7 @@ export class EditorSection {
   ): Promise<void> {
     await image.hover();
 
-    const box = await image.locator(`.nui-editor-image__grip--at-${corner}`).boundingBox();
-
-    if (box === null) {
-      throw new Error('The image grip has no box');
-    }
+    const box = await boxOf(image.locator(`.nui-editor-image__grip--at-${corner}`));
 
     const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 
@@ -634,8 +609,8 @@ export class EditorSection {
   }
 
   async imageAspect(image: Locator): Promise<number> {
-    const box = await image.locator('img').boundingBox();
+    const box = await boxOf(image.locator('img'));
 
-    return box === null ? Number.NaN : box.width / box.height;
+    return box.width / box.height;
   }
 }

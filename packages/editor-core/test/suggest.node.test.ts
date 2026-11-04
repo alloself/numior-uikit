@@ -66,6 +66,7 @@ describe('suggestions', () => {
     expect(keys).toEqual(['ArrowDown:', 'Enter:']);
 
     expect(slash.dismiss(editor.state, (tr) => editor.change(() => tr))).toBe(true);
+
     editor.type('x');
 
     expect(slash.match(editor.state)).toBeUndefined();

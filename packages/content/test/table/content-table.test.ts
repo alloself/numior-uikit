@@ -60,6 +60,7 @@ describe('NuiContentTable', () => {
 
     expect(view.tableRows).toEqual(['c|9|', 'b|3|']);
     expect(view.tableMenus).toBe(0);
+
     await view.clickHeader(0);
     expect(view.tableRows).toEqual(['c|9|', 'b|3|']);
   });

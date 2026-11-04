@@ -95,13 +95,16 @@ describe('createTableEngine trees', () => {
     expect(harness.render(label)).toEqual(['docs +', 'readme.md']);
     expect(harness.engine.rowCount()).toBe(4);
     expect(Array.from(harness.engine.visibleIndices())).toHaveLength(4);
+
     harness.engine.toggle(0);
     expect(harness.engine.count()).toBe(4);
+
     harness.engine.toggle(1);
     expect(harness.engine.count()).toBe(4);
 
     const collapsed = treeHarness(false);
     expect(collapsed.render(label)).toEqual(['docs +', 'src +', 'readme.md']);
+
     collapsed.engine.toggle(0);
 
     expect(collapsed.render(label)).toEqual([
@@ -131,6 +134,7 @@ describe('createTableEngine trees', () => {
     expect(harness.render(label)).toEqual(['docs +', 'src +', 'readme.md +', 'lazy +']);
     expect(harness.engine.nodeAt(3)).toMatchObject({ expandable: true, unloaded: true });
     expect(harness.engine.nodeAt(0)).toMatchObject({ expandable: true, unloaded: false });
+
     harness.engine.setToggled(['lazy']);
     expect(harness.render(label).at(-1)).toBe('lazy -');
 

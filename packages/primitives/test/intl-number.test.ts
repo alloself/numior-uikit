@@ -62,6 +62,7 @@ describe('number formatting and parsing', () => {
   it('exposes the locale symbols used by the input filter', () => {
     const arabic = numberSymbols('ar-EG');
     expect(arabic.digits).toEqual(['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩']);
+
     const german = numberSymbols('de-DE', EUR);
     expect(german.decimal).toBe(',');
     expect(german.group).toBe('.');

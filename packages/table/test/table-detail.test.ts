@@ -29,6 +29,7 @@ afterEach(() => {
   for (const grid of mounted.splice(0)) {
     grid.unmount();
   }
+
   clipboard?.restore();
   clipboard = undefined;
 });
@@ -43,6 +44,7 @@ describe('NuiTable detail rows', () => {
     expect(grid.rowLevel(0)).toBe('1');
     expect(grid.rowExpanded(0)).toBe('false');
     expect(grid.details).toEqual([]);
+
     await grid.toggleRow(1);
 
     expect(grid.expanded).toEqual([1]);
@@ -57,6 +59,7 @@ describe('NuiTable detail rows', () => {
     expect(grid.rowCount).toBe(9);
     expect(grid.cellText(3, 1)).toBe('Сотрудник 2');
     expect(grid.announcement).toBe('Строка «1» развёрнута');
+
     await grid.toggleRow(1);
 
     expect(grid.expanded).toEqual([]);
@@ -70,6 +73,7 @@ describe('NuiTable detail rows', () => {
 
     expect(grid.rowExpanded(1)).toBe('false');
     expect(grid.rowExpanded(2)).toBeUndefined();
+
     await grid.toggleRow(2);
     await grid.focusCell(2, 0);
     await grid.press('Enter');
@@ -83,11 +87,14 @@ describe('NuiTable detail rows', () => {
     await grid.press('Enter');
 
     expect(grid.details).toEqual([2]);
+
     await grid.focusCell(1, 2);
     await grid.press('ArrowDown');
     expect(grid.focusedCell).toEqual({ row: 2, col: 0 });
+
     await grid.press('ArrowDown');
     expect(grid.focusedCell).toEqual({ row: 3, col: 2 });
+
     await grid.press('ArrowUp');
     await grid.press('ArrowUp');
     expect(grid.focusedCell).toEqual({ row: 1, col: 2 });
@@ -101,9 +108,11 @@ describe('NuiTable detail rows', () => {
     expect(grid.clicks).toEqual([]);
     expect(grid.editing).toBeUndefined();
     expect(grid.activeCell).toEqual({ row: 2, col: 0 });
+
     await grid.focusInDetail(2, 'Заметка');
     await grid.press('ArrowDown');
     expect(grid.activeCell).toEqual({ row: 2, col: 0 });
+
     await grid.paste('Казань');
     expect(grid.edits).toEqual([]);
     expect(await grid.openDetailMenu(2, 'Заметка')).toBe(false);
@@ -117,18 +126,22 @@ describe('NuiTable detail rows', () => {
 
     expect(grid.nestedFocusedCell(2)).toEqual({ row: 0, col: 1 });
     expect(grid.activeCell).toEqual({ row: 2, col: 0 });
+
     await grid.press('ArrowDown');
 
     expect(grid.nestedFocusedCell(2)).toEqual({ row: 1, col: 1 });
     expect(grid.activeCell).toEqual({ row: 2, col: 0 });
     expect(grid.focusedCell).toBeUndefined();
+
     await grid.clickNestedCell(2, { row: 2, col: 2 }, { shift: true });
 
     expect(grid.nestedRangedCells(2)).toBe(4);
     expect(grid.ranges).toEqual([]);
     expect(grid.clicks).toEqual([]);
+
     await grid.focusCell(4, 1);
     expect(grid.focusedCell).toEqual({ row: 4, col: 1 });
+
     await grid.press('ArrowDown');
     expect(grid.focusedCell).toEqual({ row: 5, col: 1 });
     expect(grid.nestedActiveCell(2)).toEqual({ row: 2, col: 2 });
@@ -165,6 +178,7 @@ describe('NuiTable detail rows', () => {
     await grid.press('ArrowDown', { shift: true });
 
     expect(grid.ranges).toEqual([{ from: { row: 1, col: 1 }, to: { row: 3, col: 1 } }]);
+
     await grid.press('c', { ctrl: true });
     await grid.settle();
     expect(clipboard.copies).toEqual(['Сотрудник 1\nСотрудник 2']);
@@ -202,8 +216,10 @@ describe('NuiTable detail rows', () => {
     await grid.scroll({ top: 400 });
 
     expect(grid.renderedRows).toContain(2);
+
     await grid.measureRows({ 2: 250 });
     expect(grid.scrollTop).toBe(490);
+
     await grid.measureRows({ 2: 250 });
     expect(grid.scrollTop).toBe(490);
   });
@@ -222,6 +238,7 @@ describe('NuiTable detail rows', () => {
     expect(grid.renderedRows).toEqual([0, 1, 2, 3, 4, 5]);
     expect(grid.details).toEqual([2]);
     expect(grid.cellText(5, 1)).toBe('Сотрудник 4');
+
     await grid.nextPage();
 
     expect(grid.rangeText).toBe('6–10 из 12');
@@ -260,6 +277,7 @@ describe('NuiTable detail rows', () => {
     await grid.settle();
 
     expect(grid.details).toEqual([1]);
+
     await grid.grabRow(3);
     await grid.moveRowTo(2, 'before');
     await grid.dropRow();

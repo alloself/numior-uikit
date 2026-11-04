@@ -45,10 +45,12 @@ describe('NuiTable row headers', () => {
     expect(grid.paneOf(0, 0)).toBe('start');
     expect(grid.cellText(0, 0)).toBe('1');
     expect(grid.cellText(5, 0)).toBe('6');
+
     await grid.setSort([{ key: 'id', direction: 'desc' }]);
 
     expect(grid.cellText(0, 1)).toBe('99');
     expect(grid.cellText(0, 0)).toBe('1');
+
     await grid.nextPage();
     expect(grid.cellText(0, 0)).toBe('21');
     expect(grid.cellText(0, 1)).toBe('79');
@@ -63,6 +65,7 @@ describe('NuiTable row headers', () => {
     await grid.settle();
     expect(grid.cellText(0, 0)).toBe('0:99');
     expect(grid.trackWidth(0)).toBe('72px');
+
     await grid.receive({ rowHeaders: true });
     expect(grid.cellText(0, 0)).toBe('1');
     expect(grid.trackWidth(0)).toBe('44px');
@@ -78,17 +81,21 @@ describe('NuiTable row headers', () => {
     expect(grid.cellMarked(2, 0)).toBe(true);
     expect(grid.cellMarked(3, 0)).toBe(false);
     expect(grid.clicks).toEqual([]);
+
     await grid.clickCell(4, 0, { shift: true });
 
     expect(grid.ranges).toEqual([{ from: { row: 2, col: 0 }, to: { row: 4, col: 4 } }]);
     expect(grid.cellMarked(3, 0)).toBe(true);
+
     await grid.clickCell(7, 0, { ctrl: true });
 
     expect(grid.ranges).toEqual([{ from: { row: 2, col: 0 }, to: { row: 4, col: 4 } }, rowOf(7)]);
     expect(grid.announcement).toBe('Выделено строк: 1, колонок: 5');
+
     await grid.clickCell(3, 0, { ctrl: true });
 
     expect(grid.ranges).toEqual([rowOf(2), rowOf(4), rowOf(7)]);
+
     await grid.clickCell(5, 2);
     expect(grid.ranges).toEqual([]);
   });
@@ -101,6 +108,7 @@ describe('NuiTable row headers', () => {
 
     expect(grid.ranges).toEqual([{ from: { row: 1, col: 0 }, to: { row: 3, col: 4 } }]);
     expect(grid.focusedCell).toEqual({ row: 1, col: 3 });
+
     await grid.press('ArrowDown', { shift: true });
 
     expect(grid.ranges).toEqual([{ from: { row: 1, col: 0 }, to: { row: 4, col: 4 } }]);
@@ -117,14 +125,17 @@ describe('NuiTable row headers', () => {
     expect(grid.focusedCell).toEqual({ row: 5, col: 3 });
     expect(grid.markedHeaders).toEqual([3]);
     expect(grid.scrollTop).toBe(0);
+
     await grid.pressHeader(5, { shift: true });
 
     expect(grid.ranges).toEqual([{ from: { row: 0, col: 2 }, to: { row: 99, col: 4 } }]);
     expect(grid.markedHeaders).toEqual([3, 4, 5]);
+
     await grid.press('ArrowLeft', { shift: true });
 
     expect(grid.ranges).toEqual([{ from: { row: 0, col: 2 }, to: { row: 99, col: 3 } }]);
     expect(grid.scrollTop).toBe(0);
+
     await grid.pressHeader(1);
 
     expect(grid.sort).toEqual([{ key: 'id', direction: 'asc' }]);
@@ -137,6 +148,7 @@ describe('NuiTable row headers', () => {
     await grid.dragHeaders(2, 4);
 
     expect(grid.ranges).toEqual([{ from: { row: 0, col: 1 }, to: { row: 99, col: 3 } }]);
+
     await grid.pressHeader(0);
 
     expect(grid.ranges).toEqual([{ from: { row: 0, col: 0 }, to: { row: 99, col: 4 } }]);
@@ -152,8 +164,10 @@ describe('NuiTable row headers', () => {
 
     expect(grid.ranges).toEqual([rowOf(3)]);
     expect(grid.focusedCell).toEqual({ row: 3, col: 0 });
+
     await grid.tapCell(6, 0);
     expect(grid.ranges).toEqual([rowOf(6)]);
+
     await grid.focusCell(-1, 4);
     await grid.press('Enter');
     expect(grid.ranges).toEqual([{ from: { row: 0, col: 3 }, to: { row: 99, col: 3 } }]);
@@ -168,8 +182,10 @@ describe('NuiTable row headers', () => {
     expect(grid.ranges).toEqual([{ from: { row: 0, col: 2 }, to: { row: 99, col: 3 } }]);
     expect(grid.scrollLeft).toBe(144);
     expect(grid.scrollTop).toBe(0);
+
     await grid.press('ArrowRight', { shift: true });
     expect(grid.scrollLeft).toBe(244);
+
     await grid.press('ArrowLeft', { shift: true });
     await grid.press('ArrowLeft', { shift: true });
 

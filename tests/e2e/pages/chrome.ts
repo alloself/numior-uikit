@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { paintedRgbAt, rgbDelta } from '../helpers/color';
+import { boxOf } from '../helpers/geometry';
 
 export class ChromeSection {
   readonly root: Locator;
@@ -58,11 +59,8 @@ export class ChromeSection {
   }
 
   async dragDividerBy(offset: number): Promise<void> {
-    const box = await this.splitterDivider.boundingBox();
+    const box = await boxOf(this.splitterDivider);
 
-    if (!box) {
-      throw new Error('divider is not visible');
-    }
     const x = box.x + box.width / 2;
     const y = box.y + box.height / 2;
 
