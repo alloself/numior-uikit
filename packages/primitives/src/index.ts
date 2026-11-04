@@ -1,5 +1,6 @@
 export { useControlId } from './id/useControlId';
 export { Key } from './keyboard/key.types';
+export { InputType } from './input/input.types';
 export { PointerType } from './pointer/pointer.types';
 export {
   FIELD_KEY,

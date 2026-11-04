@@ -19,4 +19,5 @@ export const Key = {
   F10: 'F10',
   ContextMenu: 'ContextMenu',
   Process: 'Process',
+  Asterisk: '*',
 } as const;
