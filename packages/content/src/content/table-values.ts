@@ -1,5 +1,5 @@
 import type { AttrValue } from '@numior/editor-core';
-import type { NuiContentCellValue, NuiContentTableType } from './content.types';
+import { NuiContentTableType, type NuiContentCellValue } from './content.types';
 
 export const CONTENT_TABLE_TYPES: readonly NuiContentTableType[] = [
   'text',
@@ -82,14 +82,14 @@ export const parseCellText = (text: string, type: NuiContentTableType): NuiConte
     return null;
   }
   switch (type) {
-    case 'number':
+    case NuiContentTableType.Number:
       return parseCellNumber(trimmed) ?? null;
-    case 'date':
+    case NuiContentTableType.Date:
       return parseCellDate(trimmed) ?? null;
-    case 'boolean':
+    case NuiContentTableType.Boolean:
       return parseCellBoolean(trimmed) ?? null;
-    case 'text':
-    case 'select':
+    case NuiContentTableType.Text:
+    case NuiContentTableType.Select:
       return trimmed;
   }
 };
@@ -108,10 +108,10 @@ export const cellValueOf = (
   if (value === undefined || value === null) {
     return null;
   }
-  if (type === 'boolean') {
+  if (type === NuiContentTableType.Boolean) {
     return typeof value === 'boolean' ? value : parseCellText(cellText(value), type);
   }
-  if (type === 'number') {
+  if (type === NuiContentTableType.Number) {
     return typeof value === 'number' ? value : parseCellText(cellText(value), type);
   }
   return parseCellText(cellText(value), type);

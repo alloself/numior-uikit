@@ -1,5 +1,6 @@
 import {
   contentHole,
+  ContentNodeKind,
   createSchema,
   inlineText,
   renderTag,
@@ -13,40 +14,23 @@ import {
 } from '@numior/editor-core';
 import { LINK_NODES } from './content-links';
 import { TABLE_NODES } from './content-table';
-import type {
+import {
+  ContentAttrValue,
+  ContentTag,
+  NuiContentFileKind,
+  NuiContentWrap,
   NuiContentAlign,
   NuiContentColour,
   NuiContentTone,
-  NuiContentWrap,
 } from './content.types';
 
-export type NuiContentFileKind =
-  | 'file'
-  | 'image'
-  | 'video'
-  | 'audio'
-  | 'pdf'
-  | 'archive'
-  | 'sheet'
-  | 'text';
+export const CONTENT_TONES: readonly NuiContentTone[] = Object.values(NuiContentTone);
 
-export const CONTENT_TONES: readonly NuiContentTone[] = ['info', 'success', 'warning', 'error'];
+export const CONTENT_COLOURS: readonly NuiContentColour[] = Object.values(NuiContentColour);
 
-export const CONTENT_COLOURS: readonly NuiContentColour[] = [
-  'gray',
-  'brown',
-  'orange',
-  'yellow',
-  'green',
-  'blue',
-  'purple',
-  'pink',
-  'red',
-];
+export const CONTENT_ALIGNS: readonly NuiContentAlign[] = Object.values(NuiContentAlign);
 
-export const CONTENT_ALIGNS: readonly NuiContentAlign[] = ['start', 'center', 'end'];
-
-export const CONTENT_WRAPS: readonly NuiContentWrap[] = ['inline', 'wrap', 'break'];
+export const CONTENT_WRAPS: readonly NuiContentWrap[] = Object.values(NuiContentWrap);
 
 export const IMAGE_WIDTH = { min: 0.2, max: 1 } as const;
 
@@ -142,33 +126,34 @@ const classed =
     element.hasClass(name) ? attrs(element) : false;
 
 const firstElement = (element: HtmlElement): HtmlElement | undefined =>
-  element.children.find((child): child is HtmlElement => child.kind === 'element');
+  element.children.find((child): child is HtmlElement => child.kind === ContentNodeKind.Element);
 
 const checkboxOf = (item: HtmlElement): HtmlElement | undefined => {
   const first = firstElement(item);
 
-  return (first?.tag === 'input' && first.attr('type') === 'checkbox') ||
-    first?.attr('role') === 'checkbox'
+  return (first?.tag === ContentTag.Input && first.attr('type') === ContentAttrValue.Checkbox) ||
+    first?.attr('role') === ContentAttrValue.Checkbox
     ? first
     : undefined;
 };
 
 const isTask = (item: HtmlElement): boolean =>
-  checkboxOf(item) !== undefined || item.attr('role') === 'checkbox';
+  checkboxOf(item) !== undefined || item.attr('role') === ContentAttrValue.Checkbox;
 
 const isChecked = (item: HtmlElement): boolean => {
   const box = checkboxOf(item);
 
   return (
     box?.attr('checked') !== undefined ||
-    box?.attr('aria-checked') === 'true' ||
-    item.attr('aria-checked') === 'true'
+    box?.attr('aria-checked') === ContentAttrValue.True ||
+    item.attr('aria-checked') === ContentAttrValue.True
   );
 };
 
 const isTodoList = (list: HtmlElement): boolean => {
   const items = list.children.filter(
-    (child): child is HtmlElement => child.kind === 'element' && child.tag === 'li',
+    (child): child is HtmlElement =>
+      child.kind === ContentNodeKind.Element && child.tag === ContentTag.Li,
   );
 
   return (
@@ -200,7 +185,7 @@ const alignIn = (figure: HtmlElement | undefined): string => {
 const wrapIn = (holder: HtmlElement | undefined): string => {
   const wrap = holder?.classWith('nui-content__image--wrap-');
 
-  if (holder?.tag === 'figure') {
+  if (holder?.tag === ContentTag.Figure) {
     return 'break';
   }
   return wrap !== undefined && CONTENT_WRAPS.some((known) => known === wrap) ? wrap : 'inline';
@@ -211,7 +196,7 @@ const captionIn = (holder: HtmlElement | undefined): string =>
     holder?.find('figcaption') ??
     holder?.children.find(
       (child): child is HtmlElement =>
-        child.kind === 'element' && child.hasClass('nui-content__caption'),
+        child.kind === ContentNodeKind.Element && child.hasClass('nui-content__caption'),
     )
   )
     ?.text()
@@ -237,7 +222,7 @@ const nameIn = (link: HtmlElement): string =>
   (
     link.children.find(
       (child): child is HtmlElement =>
-        child.kind === 'element' && child.hasClass('nui-content__file-name'),
+        child.kind === ContentNodeKind.Element && child.hasClass('nui-content__file-name'),
     ) ?? link
   )
     .text()
@@ -279,7 +264,11 @@ const KIND_BY_EXTENSION: Readonly<Record<string, NuiContentFileKind>> = {
 export const fileKindOf = (type: string, name: string): NuiContentFileKind => {
   const family = type.split('/')[0] ?? '';
 
-  if (family === 'image' || family === 'video' || family === 'audio') {
+  if (
+    family === NuiContentFileKind.Image ||
+    family === NuiContentFileKind.Video ||
+    family === NuiContentFileKind.Audio
+  ) {
     return family;
   }
   return KIND_BY_EXTENSION[name.split('.').at(-1)?.toLowerCase() ?? ''] ?? 'file';
@@ -329,7 +318,9 @@ const part = (name: string, ...modifiers: readonly (string | false)[]): string =
 const firstText = (node: ElementNode): string => {
   const first = node.content[0];
 
-  return first?.kind === 'element' ? inlineText(first).replaceAll('￼', '').trim() : '';
+  return first?.kind === ContentNodeKind.Element
+    ? inlineText(first).replaceAll('￼', '').trim()
+    : '';
 };
 
 export const imageWidthStyle = (width: AttrValue | undefined): string | null =>
@@ -337,7 +328,7 @@ export const imageWidthStyle = (width: AttrValue | undefined): string | null =>
 
 const renderImage = (node: ElementNode) => {
   const wrap = textOf(node.attrs.wrap);
-  const caption = wrap === 'inline' ? '' : textOf(node.attrs.caption);
+  const caption = wrap === NuiContentWrap.Inline ? '' : textOf(node.attrs.caption);
 
   return renderTag(
     'span',
@@ -485,7 +476,7 @@ const CONTENT_SPEC: SchemaSpec = {
       group: 'block',
       content: 'block+',
       slots: 'rest',
-      attrs: { tone: { default: 'info', verify: oneOf(CONTENT_TONES) } },
+      attrs: { tone: { default: NuiContentTone.Info, verify: oneOf(CONTENT_TONES) } },
       render: (node) =>
         renderTag('div', {
           class: part('callout', `tone-${textOf(node.attrs.tone)}`),
@@ -495,7 +486,7 @@ const CONTENT_SPEC: SchemaSpec = {
         {
           tag: 'div',
           attrs: classed('nui-content__callout', (callout) => ({
-            tone: callout.classWith('nui-content__callout--tone-') ?? 'info',
+            tone: callout.classWith('nui-content__callout--tone-') ?? NuiContentTone.Info,
           })),
         },
       ],
@@ -533,7 +524,7 @@ const CONTENT_SPEC: SchemaSpec = {
         alt: { default: '', verify: isText },
         caption: { default: '', verify: isText },
         width: { default: null, verify: isWidth },
-        align: { default: 'center', verify: oneOf(CONTENT_ALIGNS) },
+        align: { default: NuiContentAlign.Center, verify: oneOf(CONTENT_ALIGNS) },
         wrap: { default: 'inline', verify: oneOf(CONTENT_WRAPS) },
       },
       render: renderImage,
@@ -637,7 +628,10 @@ const CONTENT_SPEC: SchemaSpec = {
       parse: [
         { tag: 'em' },
         { tag: 'i' },
-        { style: 'font-style', attrs: styleIs('font-style', (style) => style !== 'normal') },
+        {
+          style: 'font-style',
+          attrs: styleIs('font-style', (style) => style !== ContentAttrValue.Normal),
+        },
       ],
     },
     underline: {

@@ -1,7 +1,7 @@
 import { renderTree, type ElementNode, type Schema } from '@numior/editor-core';
 import { h, type FunctionalComponent, type VNode } from 'vue';
 import NuiContentToggle from './NuiContentToggle.vue';
-import type { NuiContentViews } from './content.types';
+import { NuiContentNodeType, type NuiContentViews } from './content.types';
 
 interface ContentNodesProps {
   readonly root: ElementNode;
@@ -16,7 +16,7 @@ const plain = (
   key: string | undefined,
   node: ElementNode | undefined,
 ): VNode =>
-  node?.type === 'toggle'
+  node?.type === NuiContentNodeType.Toggle
     ? h(NuiContentToggle, {
         key: node.id,
         open: node.attrs.open === true,

@@ -1,16 +1,19 @@
 import {
   contentHole,
+  ContentNodeKind,
   renderTag,
   type AttrValue,
   type ElementNode,
   type NodeSpec,
 } from '@numior/editor-core';
-import type {
-  NuiContentCellValue,
+import {
+  NuiContentNodeType,
   NuiContentSortDirection,
-  NuiContentTableFilter,
-  NuiContentTableSort,
-  NuiContentTextFilterOp,
+  NuiContentTableFilterKind,
+  type NuiContentCellValue,
+  type NuiContentTableFilter,
+  type NuiContentTableSort,
+  type NuiContentTextFilterOp,
 } from './content.types';
 import { cellText } from './table-values';
 
@@ -22,7 +25,7 @@ const isOp = (value: AttrValue | undefined): value is NuiContentTextFilterOp =>
   TEXT_OPS.some((op) => op === value);
 
 const isDirection = (value: AttrValue | undefined): value is NuiContentSortDirection =>
-  value === 'asc' || value === 'desc';
+  value === NuiContentSortDirection.Asc || value === NuiContentSortDirection.Desc;
 
 const orNull =
   (test: (value: AttrValue) => boolean) =>
@@ -40,7 +43,7 @@ const textOf = (value: AttrValue | undefined): string | null =>
   typeof value === 'string' ? value : null;
 
 const elementsOf = (node: ElementNode): readonly ElementNode[] =>
-  node.content.filter((child): child is ElementNode => child.kind === 'element');
+  node.content.filter((child): child is ElementNode => child.kind === ContentNodeKind.Element);
 
 export const SORT_ATTRS = {
   sort: { default: null, verify: orNull(isDirection) },
@@ -78,15 +81,15 @@ const readFilter = (node: ElementNode): NuiContentTableFilter | undefined => {
   const { attrs } = node;
 
   switch (attrs.kind) {
-    case 'text':
+    case NuiContentTableFilterKind.Text:
       return isOp(attrs.op)
         ? { kind: 'text', op: attrs.op, value: textOf(attrs.text) ?? '' }
         : undefined;
-    case 'number':
+    case NuiContentTableFilterKind.Number:
       return { kind: 'number', min: numberOf(attrs.min), max: numberOf(attrs.max) };
-    case 'date':
+    case NuiContentTableFilterKind.Date:
       return { kind: 'date', from: textOf(attrs.from), to: textOf(attrs.to) };
-    case 'set':
+    case NuiContentTableFilterKind.Set:
       return { kind: 'set', values: valuesOf(node) };
     default:
       return undefined;
@@ -94,7 +97,7 @@ const readFilter = (node: ElementNode): NuiContentTableFilter | undefined => {
 };
 
 export const filterOf = (column: ElementNode): NuiContentTableFilter | undefined => {
-  const node = elementsOf(column).find((child) => child.type === 'table_filter');
+  const node = elementsOf(column).find((child) => child.type === NuiContentNodeType.TableFilter);
 
   return node === undefined ? undefined : readFilter(node);
 };
@@ -119,13 +122,13 @@ export const sortOf = (columns: readonly ElementNode[]): readonly NuiContentTabl
 
 export const filterAttrs = (filter: NuiContentTableFilter): Readonly<Record<string, AttrValue>> => {
   switch (filter.kind) {
-    case 'text':
+    case NuiContentTableFilterKind.Text:
       return { kind: 'text', op: filter.op, text: filter.value };
-    case 'number':
+    case NuiContentTableFilterKind.Number:
       return { kind: 'number', min: filter.min, max: filter.max };
-    case 'date':
+    case NuiContentTableFilterKind.Date:
       return { kind: 'date', from: filter.from, to: filter.to };
-    case 'set':
+    case NuiContentTableFilterKind.Set:
       return { kind: 'set' };
   }
 };

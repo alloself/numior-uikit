@@ -1,5 +1,6 @@
 import {
   contentHole,
+  ContentNodeKind,
   renderTag,
   tableGrid,
   type AttrValue,
@@ -10,12 +11,15 @@ import {
   type NodeSpec,
   type ParsedContent,
 } from '@numior/editor-core';
-import type {
-  NuiContentCellValue,
-  NuiContentTableColumn,
-  NuiContentTableData,
-  NuiContentTableRow,
+import {
+  ContentAttrValue,
+  ContentTag,
+  NuiContentNodeType,
   NuiContentTableType,
+  type NuiContentCellValue,
+  type NuiContentTableColumn,
+  type NuiContentTableData,
+  type NuiContentTableRow,
 } from './content.types';
 import { SORT_ATTRS, VIEW_NODES, filterOf, sortOf } from './table-view';
 import {
@@ -52,12 +56,14 @@ const isCell = (value: AttrValue): boolean => typeof value !== 'number' || Numbe
 const textOf = (value: AttrValue | undefined): string => (typeof value === 'string' ? value : '');
 
 const elementsOf = (element: HtmlElement | undefined): readonly HtmlElement[] =>
-  (element?.children ?? []).filter((child): child is HtmlElement => child.kind === 'element');
+  (element?.children ?? []).filter(
+    (child): child is HtmlElement => child.kind === ContentNodeKind.Element,
+  );
 
 const checkboxOf = (cell: HtmlTableCell): HtmlElement | undefined => {
   const input = cell.element?.find('input');
 
-  return input?.attr('type') === 'checkbox' ? input : undefined;
+  return input?.attr('type') === ContentAttrValue.Checkbox ? input : undefined;
 };
 
 const booleanOf = (cell: HtmlTableCell): boolean | undefined => {
@@ -69,7 +75,7 @@ const booleanOf = (cell: HtmlTableCell): boolean | undefined => {
 };
 
 const valueOf = (cell: HtmlTableCell, type: NuiContentTableType): NuiContentCellValue =>
-  type === 'boolean' && checkboxOf(cell) !== undefined
+  type === NuiContentTableType.Boolean && checkboxOf(cell) !== undefined
     ? (booleanOf(cell) ?? null)
     : parseCellText(cell.text, type);
 
@@ -113,7 +119,7 @@ const isOwn = (row: readonly HtmlTableCell[]): boolean =>
 const looksLikeHeader = (row: readonly HtmlTableCell[], rest: number): boolean =>
   rest > 0 &&
   row.some(filled) &&
-  row.every((cell) => !filled(cell) || inferType([cell]) === 'text');
+  row.every((cell) => !filled(cell) || inferType([cell]) === NuiContentTableType.Text);
 
 const headed = (rows: readonly (readonly HtmlTableCell[])[], head: number): boolean => {
   const [first] = rows;
@@ -136,7 +142,7 @@ const nameOf = (cell: HtmlTableCell | undefined, index: number): string => {
 
 const optionsOf = (cell: HtmlTableCell | undefined): readonly string[] =>
   elementsOf(cell?.element?.find('datalist')).reduce<string[]>((found, option) => {
-    if (option.tag !== 'option') {
+    if (option.tag !== ContentTag.Option) {
       return found;
     }
     const label = option.attr('value') ?? '';
@@ -270,7 +276,9 @@ export const TABLE_NODES: Readonly<Record<string, NodeSpec>> = {
 };
 
 const elementChildren = (node: ElementNode | undefined): readonly ElementNode[] =>
-  (node?.content ?? []).filter((child): child is ElementNode => child.kind === 'element');
+  (node?.content ?? []).filter(
+    (child): child is ElementNode => child.kind === ContentNodeKind.Element,
+  );
 
 const columnOf = (node: ElementNode): NuiContentTableColumn => ({
   id: node.id,
@@ -278,7 +286,7 @@ const columnOf = (node: ElementNode): NuiContentTableColumn => ({
   type: typeOf(node.attrs.type),
   width: widthOf(node.attrs.width),
   options: elementChildren(node).reduce<string[]>((found, child) => {
-    if (child.type === 'table_option') {
+    if (child.type === NuiContentNodeType.TableOption) {
       found.push(textOf(child.attrs.label));
     }
     return found;

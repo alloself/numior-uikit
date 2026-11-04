@@ -1,10 +1,11 @@
 import { isString } from '@numior/primitives';
 import { tableEditor, type NuiTableColumn } from '@numior/table';
 import { NuiCombobox } from '@numior/vue';
-import type {
-  NuiContentCellValue,
-  NuiContentTableColumn,
-  NuiContentTableRow,
+import {
+  NuiContentTableType,
+  type NuiContentCellValue,
+  type NuiContentTableColumn,
+  type NuiContentTableRow,
 } from '../content/content.types';
 
 const ISO = /^(\d{4})-(\d{2})-(\d{2})$/u;
@@ -67,13 +68,13 @@ export const contentTableColumns = (
     };
 
     switch (column.type) {
-      case 'number':
+      case NuiContentTableType.Number:
         return { ...base, type: 'number', value: (row) => numberAt(row, index) };
-      case 'date':
+      case NuiContentTableType.Date:
         return { ...base, type: 'date', value: (row) => dayAt(row, index) };
-      case 'boolean':
+      case NuiContentTableType.Boolean:
         return { ...base, type: 'boolean', value: (row) => booleanAt(row, index) };
-      case 'select':
+      case NuiContentTableType.Select:
         return {
           ...base,
           type: 'text',
@@ -81,7 +82,7 @@ export const contentTableColumns = (
           value: (row) => textAt(row, index),
           editor: editable ? selectEditor(column) : undefined,
         };
-      case 'text':
+      case NuiContentTableType.Text:
         return { ...base, type: 'text', wrap: true, value: (row) => textAt(row, index) };
     }
   });

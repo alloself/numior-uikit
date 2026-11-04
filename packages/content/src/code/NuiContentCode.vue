@@ -7,13 +7,14 @@ import { languageOf, useHighlighter } from '@numior/primitives';
 import { NuiCode } from '@numior/vue';
 import { computed } from 'vue';
 import type { NuiContentViewProps } from '../content/content.types';
+import { ContentNodeKind } from '@numior/editor-core';
 
 const { node } = defineProps<NuiContentViewProps>();
 
 const highlighter = useHighlighter();
 
 const text = computed(() =>
-  node.content.map((child) => (child.kind === 'text' ? child.text : '')).join(''),
+  node.content.map((child) => (child.kind === ContentNodeKind.Text ? child.text : '')).join(''),
 );
 
 const language = computed(() =>

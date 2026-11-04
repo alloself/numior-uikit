@@ -1,4 +1,5 @@
 import {
+  ContentNodeKind,
   renderTag,
   type AttrValue,
   type ElementNode,
@@ -26,7 +27,7 @@ const isProvider = (value: AttrValue): boolean => typeof value === 'string' && P
 
 const descendant = (element: HtmlElement, name: string): HtmlElement | undefined => {
   for (const child of element.children) {
-    if (child.kind === 'element') {
+    if (child.kind === ContentNodeKind.Element) {
       const found = child.hasClass(name) ? child : descendant(child, name);
 
       if (found !== undefined) {

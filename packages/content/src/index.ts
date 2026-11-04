@@ -10,7 +10,6 @@ export {
   fileKindOf,
   imageWidthStyle,
 } from './content/content-schema';
-export type { NuiContentFileKind } from './content/content-schema';
 export {
   EMBED_PRESETS,
   embedLabel,
@@ -18,6 +17,20 @@ export {
   resolveEmbed,
   webAddress,
 } from './content/embeds';
+export {
+  NuiContentAlign,
+  NuiContentColour,
+  NuiContentFileKind,
+  NuiContentMarkType,
+  NuiContentNodeType,
+  NuiContentSize,
+  NuiContentSortDirection,
+  NuiContentTableFilterKind,
+  NuiContentTableType,
+  NuiContentTextFilterOp,
+  NuiContentTone,
+  NuiContentWrap,
+} from './content/content.types';
 export type { NuiEmbed, NuiEmbedPresetId, NuiEmbedProvider } from './content/embeds';
 export { contentTableData } from './content/content-table';
 export { filterAttrs } from './content/table-view';
@@ -31,21 +44,13 @@ export {
 export { renderContent } from './content/render-content';
 export type { RenderContentOptions } from './content/render-content';
 export type {
-  NuiContentAlign,
-  NuiContentWrap,
   NuiContentCellValue,
-  NuiContentColour,
   NuiContentProps,
-  NuiContentSize,
-  NuiContentSortDirection,
   NuiContentTableColumn,
   NuiContentTableData,
   NuiContentTableFilter,
   NuiContentTableRow,
   NuiContentTableSort,
-  NuiContentTableType,
-  NuiContentTextFilterOp,
-  NuiContentTone,
   NuiContentViewProps,
   NuiContentViews,
 } from './content/content.types';

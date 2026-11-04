@@ -15,6 +15,7 @@
 
 <script setup lang="ts">
 import { computed, isVNode, ref, watch, type VNode } from 'vue';
+import { ContentAttrValue } from './content.types';
 
 const OPEN = 'nui-content__toggle--open';
 
@@ -38,7 +39,9 @@ const base = computed(() =>
 );
 
 const rest = computed(() =>
-  Object.fromEntries(Object.entries(attributes).filter(([name]) => name !== 'class')),
+  Object.fromEntries(
+    Object.entries(attributes).filter(([name]) => name !== ContentAttrValue.Class),
+  ),
 );
 
 const flip = (): void => {

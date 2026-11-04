@@ -31,7 +31,7 @@ import { useMessages } from '@numior/primitives';
 import { NuiButton, NuiDialog } from '@numior/vue';
 import { computed, ref } from 'vue';
 import { imageWidthStyle } from '../content/content-schema';
-import type { NuiContentViewProps } from '../content/content.types';
+import { NuiContentWrap, type NuiContentViewProps } from '../content/content.types';
 import { contentMessages } from './media.messages';
 
 const { node } = defineProps<NuiContentViewProps>();
@@ -45,7 +45,11 @@ const textOf = (value: unknown): string => (typeof value === 'string' ? value : 
 const src = computed(() => textOf(node.attrs.src));
 const alt = computed(() => textOf(node.attrs.alt));
 const wrap = computed(() => textOf(node.attrs.wrap) || 'inline');
-const caption = computed(() => (wrap.value === 'inline' ? '' : textOf(node.attrs.caption)));
+
+const caption = computed(() =>
+  wrap.value === NuiContentWrap.Inline ? '' : textOf(node.attrs.caption),
+);
+
 const width = computed(() => imageWidthStyle(node.attrs.width) ?? undefined);
 
 const classes = computed(() => [

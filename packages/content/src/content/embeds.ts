@@ -1,3 +1,5 @@
+import { UrlProtocol, YoutubeUrl } from './content.types';
+
 export interface NuiEmbedProvider {
   readonly id: string;
   readonly label: string;
@@ -21,7 +23,7 @@ const YOUTUBE_ID = /^[\w-]{11}$/u;
 const YOUTUBE_HOSTS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com']);
 
 const youtubeId = (url: URL): string | undefined => {
-  if (url.hostname === 'youtu.be') {
+  if (url.hostname === YoutubeUrl.ShortHost) {
     return url.pathname.slice(1);
   }
   if (!YOUTUBE_HOSTS.has(url.hostname)) {
@@ -29,7 +31,9 @@ const youtubeId = (url: URL): string | undefined => {
   }
   const [kind, id] = url.pathname.split('/').filter((part) => part !== '');
 
-  return kind === 'shorts' || kind === 'embed' ? id : (url.searchParams.get('v') ?? undefined);
+  return kind === YoutubeUrl.Shorts || kind === YoutubeUrl.Embed
+    ? id
+    : (url.searchParams.get('v') ?? undefined);
 };
 
 const pathAt = (url: URL, host: string, pattern: RegExp): RegExpExecArray | null =>
@@ -109,7 +113,9 @@ export const webAddress = (value: string): URL | undefined => {
   try {
     const url = new URL(value.trim());
 
-    return url.protocol === 'https:' || url.protocol === 'http:' ? url : undefined;
+    return url.protocol === UrlProtocol.Https || url.protocol === UrlProtocol.Http
+      ? url
+      : undefined;
   } catch {
     return undefined;
   }
