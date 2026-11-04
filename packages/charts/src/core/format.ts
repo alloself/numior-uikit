@@ -1,6 +1,4 @@
-import type { TimeUnit } from './chart.types';
-
-export type NumberStyle = 'plain' | 'compact' | 'percent';
+import { NumberStyle, type TimeUnit } from './chart.types';
 
 const ELLIPSIS = '…';
 
@@ -35,9 +33,9 @@ export const numberStyle = (largest: number, percent: boolean): NumberStyle => {
 
 const numberOptions = (step: number, style: NumberStyle): Intl.NumberFormatOptions => {
   switch (style) {
-    case 'percent':
+    case NumberStyle.Percent:
       return { style: 'percent', maximumFractionDigits: Math.max(fractionDigits(step) - 2, 0) };
-    case 'compact':
+    case NumberStyle.Compact:
       return { notation: 'compact', maximumFractionDigits: 1 };
     default:
       return { maximumFractionDigits: fractionDigits(step) };

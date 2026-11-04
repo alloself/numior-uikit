@@ -1,4 +1,11 @@
-import type { ChartHit, ChartScene, SceneBar, ScenePoint, SceneSlice } from './chart.types';
+import {
+  type ChartAxis,
+  type ChartHit,
+  type ChartScene,
+  type SceneBar,
+  type ScenePoint,
+  type SceneSlice,
+} from './chart.types';
 
 export interface ScenePosition {
   readonly x: number;
@@ -6,7 +13,7 @@ export interface ScenePosition {
 }
 
 export interface SceneAnchor extends ScenePosition {
-  readonly along: 'x' | 'y';
+  readonly along: ChartAxis;
   readonly reach: number;
 }
 

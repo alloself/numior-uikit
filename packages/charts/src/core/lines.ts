@@ -1,11 +1,12 @@
-import type {
-  ChartSeries,
-  ChartSlot,
-  ChartSpec,
+import {
   ChartStacking,
-  ChartValue,
-  ScenePath,
-  ScenePoint,
+  ScenePathRole,
+  type ChartSeries,
+  type ChartSlot,
+  type ChartSpec,
+  type ChartValue,
+  type ScenePath,
+  type ScenePoint,
 } from './chart.types';
 
 export interface LineFrame {
@@ -45,7 +46,7 @@ const stackTops = (
   count: number,
   stacking: ChartStacking,
 ): Tops => {
-  if (stacking === 'none') {
+  if (stacking === ChartStacking.None) {
     return series.map((item) =>
       Array.from({ length: count }, (_unused, index) => finiteOf(item.values[index])),
     );
@@ -58,7 +59,9 @@ const stackTops = (
     running.map((sum, index) => {
       const value = finiteOf(item.values[index]) ?? 0;
       const total = totals[index] ?? 0;
-      const top = sum + (stacking === 'percent' ? (total > 0 ? value / total : 0) : value);
+
+      const top =
+        sum + (stacking === ChartStacking.Percent ? (total > 0 ? value / total : 0) : value);
 
       running[index] = top;
       return top;
@@ -120,13 +123,13 @@ const pathsOf = (
   return {
     areas: frame.area
       ? drawn.map((run) => ({
-          role: 'area',
+          role: ScenePathRole.Area,
           series,
           slot,
           d: `${trace(run)}${floorOf(frame, run, below)}Z`,
         }))
       : [],
-    lines: drawn.map((run) => ({ role: 'line', series, slot, d: trace(run) })),
+    lines: drawn.map((run) => ({ role: ScenePathRole.Line, series, slot, d: trace(run) })),
   };
 };
 
@@ -161,7 +164,7 @@ export const layoutLines = (
 
   series.forEach((item, position) => {
     const runs = runsOf(frame, tops[position] ?? []);
-    const below = stacking === 'none' ? undefined : tops[position - 1];
+    const below = stacking === ChartStacking.None ? undefined : tops[position - 1];
     const drawn = pathsOf(frame, runs, position, below);
 
     areas.push(...drawn.areas);

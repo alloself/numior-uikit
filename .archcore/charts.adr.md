@@ -159,3 +159,13 @@ date: 2026-10-22
 
 - Лист и компоненты кита рисуют одну и ту же сцену; DrawingML читается в `ChartSpec`.
 - Раскладка проверяется в Node без браузера; вид — скриншотами компонентов с C2.
+
+## Именованные наборы значений (2026-11-04)
+
+Наборы строк графиков — константы `as const`: модель и сцена ядра (`ChartKind`, `ChartStacking`,
+`ChartScale`, `ChartCategoriesKind`, `TimeUnit`, `ScenePathRole`, `SceneLineRole`, `SceneTextRole`,
+`ChartAxis`, `BarEnd`, `NumberStyle`) живут в `core/chart.types.ts`, чтобы вход `./core` оставался
+без Vue; компонент держит `NuiChartTooltipSide` и `ChartFocusSource` в `chart/chart.types.ts`,
+клавиши и направление берёт из primitives. Сравнения и производители сцены (`role`, стороны
+подсказки) пишут члены констант; публичные константы модели экспортируются значениями из `.` и
+`./core`. Правило ESLint `NAMED_ENUMERATIONS` включено для `packages/charts/src`.

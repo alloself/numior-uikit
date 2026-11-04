@@ -13,18 +13,26 @@ export {
   type NiceDomain,
 } from './scales';
 export { timeTicks, type TimeTicks } from './time';
+export {
+  ChartCategoriesKind,
+  ChartKind,
+  ChartScale,
+  ChartStacking,
+  SceneLineRole,
+  ScenePathRole,
+  SceneTextRole,
+  TimeUnit,
+} from './chart.types';
 export type {
   Box,
   ChartCategories,
   ChartCategoryAxis,
   ChartHit,
-  ChartKind,
   ChartScene,
   ChartSeries,
   ChartSize,
   ChartSlot,
   ChartSpec,
-  ChartStacking,
   ChartValue,
   ChartValueAxis,
   LayoutOptions,
@@ -35,5 +43,4 @@ export type {
   ScenePoint,
   SceneSlice,
   SceneText,
-  TimeUnit,
 } from './chart.types';

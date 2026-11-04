@@ -221,6 +221,7 @@ export default [
       'packages/table/src/engine/**/*.ts',
       'packages/editor-core/src/**/*.ts',
       'packages/content/src/**/*.{ts,vue}',
+      'packages/charts/src/**/*.{ts,vue}',
     ],
     ignores: ['**/*.messages.ts'],
     rules: { 'no-restricted-syntax': ['error', ...CATALOG, ...CODE_SHAPE, ...NAMED_ENUMERATIONS] },
@@ -237,7 +238,7 @@ export default [
     },
   },
   {
-    files: ['packages/{primitives,vue,forms,table,content,editor-vue}/src/**/*.vue'],
+    files: ['packages/{primitives,vue,forms,table,content,editor-vue,charts}/src/**/*.vue'],
     rules: { 'vue/no-restricted-syntax': ['error', ...NAMED_ENUMERATIONS] },
   },
 ];

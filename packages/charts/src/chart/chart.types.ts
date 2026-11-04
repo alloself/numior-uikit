@@ -1,5 +1,7 @@
 import type { ChartHit, ChartScene, ChartSlot, ChartSpec } from '../core';
 
+export type ChartFocusSource = (typeof ChartFocusSource)[keyof typeof ChartFocusSource];
+
 export interface NuiChartProps {
   spec: ChartSpec;
   label: string;
@@ -41,7 +43,7 @@ export interface NuiChartTooltipSlot {
   readonly content: NuiChartTooltipContent;
 }
 
-export type NuiChartTooltipSide = 'start' | 'end' | 'above' | 'below';
+export type NuiChartTooltipSide = (typeof NuiChartTooltipSide)[keyof typeof NuiChartTooltipSide];
 
 export interface NuiChartTooltipProps {
   readonly content: NuiChartTooltipContent;
@@ -61,3 +63,12 @@ export interface NuiChartTableProps {
 }
 
 export type ChartMeasure = (text: string, fontSize: number) => number;
+
+export const NuiChartTooltipSide = {
+  Start: 'start',
+  End: 'end',
+  Above: 'above',
+  Below: 'below',
+} as const;
+
+export const ChartFocusSource = { Pointer: 'pointer', Keyboard: 'keyboard' } as const;

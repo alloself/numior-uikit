@@ -1,7 +1,12 @@
 import type { BandScale } from './scales';
-import type { Box, ChartSeries, ChartSlot, ChartStacking, SceneBar } from './chart.types';
-
-type BarEnd = 'top' | 'bottom' | 'left' | 'right';
+import {
+  BarEnd,
+  ChartStacking,
+  type Box,
+  type ChartSeries,
+  type ChartSlot,
+  type SceneBar,
+} from './chart.types';
 
 export interface BarFrame {
   readonly horizontal: boolean;
@@ -34,7 +39,7 @@ const fixed = (value: number): string => String(Math.round(value * 100) / 100);
 
 const pathOf = (box: Box, end: BarEnd | undefined): string => {
   const { x, y, width, height } = box;
-  const along = end === 'top' || end === 'bottom';
+  const along = end === BarEnd.Top || end === BarEnd.Bottom;
   const radius = Math.min(RADIUS, along ? width / 2 : height / 2, along ? height : width);
   const r = fixed(radius);
   const arc = `A${r},${r} 0 0 1`;
@@ -43,13 +48,13 @@ const pathOf = (box: Box, end: BarEnd | undefined): string => {
   const [leftIn, topIn] = [x + radius, y + radius].map(fixed);
 
   switch (end) {
-    case 'top':
+    case BarEnd.Top:
       return `M${left},${bottom}V${topIn}${arc} ${leftIn},${top}H${rightIn}${arc} ${right},${topIn}V${bottom}Z`;
-    case 'bottom':
+    case BarEnd.Bottom:
       return `M${left},${top}H${right}V${bottomIn}${arc} ${rightIn},${bottom}H${leftIn}${arc} ${left},${bottomIn}Z`;
-    case 'right':
+    case BarEnd.Right:
       return `M${left},${top}H${rightIn}${arc} ${right},${topIn}V${bottomIn}${arc} ${rightIn},${bottom}H${left}Z`;
-    case 'left':
+    case BarEnd.Left:
       return `M${right},${top}V${bottom}H${leftIn}${arc} ${left},${bottomIn}V${topIn}${arc} ${leftIn},${top}Z`;
     default:
       return `M${left},${top}H${right}V${bottom}H${left}Z`;
@@ -133,7 +138,7 @@ const stacked = (frame: BarFrame, series: readonly ChartSeries[], index: number)
   const total = values.reduce((sum, value) => sum + Math.abs(value), 0);
 
   const share = (value: number): number =>
-    frame.stacking === 'percent' && total > 0 ? value / total : value;
+    frame.stacking === ChartStacking.Percent && total > 0 ? value / total : value;
 
   const thickness = Math.max(Math.min(MAX_THICKNESS, frame.band.width), 1);
   const start = frame.band.start(index) + (frame.band.width - thickness) / 2;
@@ -173,7 +178,9 @@ export const layoutBars = (
   count: number,
 ): SceneBar[] =>
   Array.from({ length: count }, (_unused, index) =>
-    frame.stacking === 'none' ? clustered(frame, series, index) : stacked(frame, series, index),
+    frame.stacking === ChartStacking.None
+      ? clustered(frame, series, index)
+      : stacked(frame, series, index),
   ).reduce<SceneBar[]>((bars, segments) => {
     segments.forEach((segment) => {
       const bar = barOf(frame, segment);

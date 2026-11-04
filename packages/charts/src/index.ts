@@ -13,11 +13,11 @@ export type {
   ChartCategories,
   ChartCategoryAxis,
   ChartHit,
-  ChartKind,
   ChartSeries,
   ChartSlot,
   ChartSpec,
-  ChartStacking,
   ChartValue,
   ChartValueAxis,
 } from './core';
+export { ChartCategoriesKind, ChartKind, ChartScale, ChartStacking } from './core';
+export { NuiChartTooltipSide } from './chart/chart.types';

@@ -1,8 +1,7 @@
-import { listMoveFor, listTargetIndex } from '@numior/primitives';
+import { Key, listMoveFor, listTargetIndex } from '@numior/primitives';
 import { computed, ref, type ComputedRef, type Ref } from 'vue';
 import { hitAt, hitsOf, type ChartHit, type ChartScene } from '../core';
-
-export type ChartFocusSource = 'pointer' | 'keyboard';
+import { ChartFocusSource } from './chart.types';
 
 export interface ChartPointerOptions {
   readonly scene: () => ChartScene;
@@ -31,7 +30,9 @@ export const useChartPointer = (options: ChartPointerOptions): ChartPointer => {
   const keyed = ref<ChartHit>();
   const source = ref<ChartFocusSource>('pointer');
 
-  const hovered = computed(() => (source.value === 'pointer' ? pointed.value : keyed.value));
+  const hovered = computed(() =>
+    source.value === ChartFocusSource.Pointer ? pointed.value : keyed.value,
+  );
 
   const hitOf = (event: MouseEvent): ChartHit | undefined => {
     const box = options.frame.value?.getBoundingClientRect();
@@ -82,12 +83,12 @@ export const useChartPointer = (options: ChartPointerOptions): ChartPointer => {
     }
 
     switch (event.key) {
-      case 'Enter':
-      case ' ':
+      case Key.Enter:
+      case Key.Space:
         event.preventDefault();
         toggle(keyed.value);
         return;
-      case 'Escape':
+      case Key.Escape:
         keyed.value = undefined;
         return;
       default:

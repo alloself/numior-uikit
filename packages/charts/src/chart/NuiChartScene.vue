@@ -90,6 +90,7 @@
 import { computed } from 'vue';
 import type { SceneBar, ScenePoint, SceneSlice, SceneText } from '../core';
 import type { NuiChartSceneProps } from './chart.types';
+import { SceneLineRole, ScenePathRole } from '../core/chart.types';
 
 const { scene, focus } = defineProps<NuiChartSceneProps>();
 
@@ -107,8 +108,8 @@ const labels = computed(() =>
   })),
 );
 
-const areas = computed(() => scene.paths.filter((path) => path.role === 'area'));
-const strokes = computed(() => scene.paths.filter((path) => path.role === 'line'));
+const areas = computed(() => scene.paths.filter((path) => path.role === ScenePathRole.Area));
+const strokes = computed(() => scene.paths.filter((path) => path.role === ScenePathRole.Line));
 const lined = computed(() => scene.axis !== undefined && scene.bars.length === 0);
 
 const active = (point: ScenePoint): boolean =>
@@ -139,6 +140,9 @@ const pointClass = (point: ScenePoint): Record<string, boolean> => ({
     focus?.series !== undefined && scene.axis === undefined && !active(point),
 });
 
-const grid = computed(() => scene.lines.filter((line) => line.role === 'grid'));
-const baselines = computed(() => scene.lines.filter((line) => line.role === 'baseline'));
+const grid = computed(() => scene.lines.filter((line) => line.role === SceneLineRole.Grid));
+
+const baselines = computed(() =>
+  scene.lines.filter((line) => line.role === SceneLineRole.Baseline),
+);
 </script>

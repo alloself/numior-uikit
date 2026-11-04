@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { DIRECTION_KEY, useDirection, useLocale, useMessages } from '@numior/primitives';
+import { Direction, DIRECTION_KEY, useDirection, useLocale, useMessages } from '@numior/primitives';
 import { useMounted, useMutationObserver } from '@vueuse/core';
 import { computed, inject, ref, useTemplateRef, watch } from 'vue';
 import { anchorOf, layoutChart, type ChartHit, type ChartScene, type SceneAnchor } from '../core';
@@ -55,14 +55,16 @@ import NuiChartTooltip from './NuiChartTooltip.vue';
 import { tooltipContent, tooltipText } from './chart-tooltip';
 import { categoryTexts } from './chart-table';
 import { chartMessages } from './chart.messages';
-import type {
-  NuiChartLegendItem,
-  NuiChartProps,
+import {
+  ChartFocusSource,
+  type NuiChartLegendItem,
+  type NuiChartProps,
   NuiChartTooltipSide,
-  NuiChartTooltipSlot,
+  type NuiChartTooltipSlot,
 } from './chart.types';
 import { useChartFrame } from './use-chart-frame';
 import { useChartPointer } from './use-chart-pointer';
+import { ChartAxis, ChartCategoriesKind, ChartKind } from '../core/chart.types';
 
 const { spec, label, height = 300, locale, showTable = false } = defineProps<NuiChartProps>();
 
@@ -85,7 +87,7 @@ const directionRevision = ref(0);
 const empty = computed(
   () =>
     spec.series.length === 0 ||
-    (spec.categories.kind === 'text'
+    (spec.categories.kind === ChartCategoriesKind.Text
       ? spec.categories.labels.length === 0
       : spec.categories.values.length === 0),
 );
@@ -95,7 +97,7 @@ const mounted = useMounted();
 
 const rtl = computed(() => {
   void directionRevision.value;
-  return mounted.value ? direction.isRtl() : configuredDirection?.value === 'rtl';
+  return mounted.value ? direction.isRtl() : configuredDirection?.value === Direction.Rtl;
 });
 
 const scene = computed(() =>
@@ -114,7 +116,7 @@ const scene = computed(() =>
 const legend = computed((): NuiChartLegendItem[] => {
   const { slots } = scene.value;
 
-  if (spec.kind === 'pie' || spec.kind === 'doughnut') {
+  if (spec.kind === ChartKind.Pie || spec.kind === ChartKind.Doughnut) {
     return categoryTexts(spec, resolvedLocale.value).map((name, index) => ({
       id: `category-${String(index)}`,
       name,
@@ -159,10 +161,10 @@ watch(
 const focus = computed(() => pointer.hovered.value ?? selected.value ?? undefined);
 
 const sideOf = (anchor: SceneAnchor, current: ChartScene): NuiChartTooltipSide => {
-  if (anchor.along === 'y') {
-    return anchor.y > current.height / 2 ? 'above' : 'below';
+  if (anchor.along === ChartAxis.Y) {
+    return anchor.y > current.height / 2 ? NuiChartTooltipSide.Above : NuiChartTooltipSide.Below;
   }
-  return anchor.x > current.width / 2 ? 'start' : 'end';
+  return anchor.x > current.width / 2 ? NuiChartTooltipSide.Start : NuiChartTooltipSide.End;
 };
 
 const tooltip = computed(() => {
@@ -185,7 +187,7 @@ const tooltip = computed(() => {
 });
 
 const announcement = computed(() =>
-  pointer.source.value === 'keyboard' &&
+  pointer.source.value === ChartFocusSource.Keyboard &&
   pointer.hovered.value !== undefined &&
   tooltip.value !== undefined
     ? tooltipText(tooltip.value.content)

@@ -1,6 +1,20 @@
-export type ChartKind = 'column' | 'bar' | 'line' | 'area' | 'pie' | 'doughnut' | 'scatter';
+export type ScenePathRole = (typeof ScenePathRole)[keyof typeof ScenePathRole];
 
-export type ChartStacking = 'none' | 'stacked' | 'percent';
+export type SceneLineRole = (typeof SceneLineRole)[keyof typeof SceneLineRole];
+
+export type SceneTextRole = (typeof SceneTextRole)[keyof typeof SceneTextRole];
+
+export type ChartAxis = (typeof ChartAxis)[keyof typeof ChartAxis];
+
+export type ChartScale = (typeof ChartScale)[keyof typeof ChartScale];
+
+export type NumberStyle = (typeof NumberStyle)[keyof typeof NumberStyle];
+
+export type BarEnd = (typeof BarEnd)[keyof typeof BarEnd];
+
+export type ChartKind = (typeof ChartKind)[keyof typeof ChartKind];
+
+export type ChartStacking = (typeof ChartStacking)[keyof typeof ChartStacking];
 
 export type ChartValue = number | null;
 
@@ -14,15 +28,15 @@ export interface ChartSeries {
 }
 
 export type ChartCategories =
-  | { readonly kind: 'text'; readonly labels: readonly string[] }
-  | { readonly kind: 'time'; readonly values: readonly number[] }
-  | { readonly kind: 'number'; readonly values: readonly number[] };
+  | { readonly kind: typeof ChartCategoriesKind.Text; readonly labels: readonly string[] }
+  | { readonly kind: typeof ChartCategoriesKind.Time; readonly values: readonly number[] }
+  | { readonly kind: typeof ChartCategoriesKind.Number; readonly values: readonly number[] };
 
 export interface ChartValueAxis {
   readonly title?: string | undefined;
   readonly min?: number | undefined;
   readonly max?: number | undefined;
-  readonly scale?: 'linear' | 'log' | undefined;
+  readonly scale?: ChartScale | undefined;
   readonly gridlines?: boolean | undefined;
 }
 
@@ -54,7 +68,7 @@ export interface LayoutOptions {
   readonly formatTime?: ((value: number, unit: TimeUnit) => string) | undefined;
 }
 
-export type TimeUnit = 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';
+export type TimeUnit = (typeof TimeUnit)[keyof typeof TimeUnit];
 
 export interface Box {
   readonly x: number;
@@ -72,7 +86,7 @@ export interface SceneBar extends Box {
 }
 
 export interface ScenePath {
-  readonly role: 'line' | 'area';
+  readonly role: ScenePathRole;
   readonly series: number;
   readonly slot: ChartSlot;
   readonly d: string;
@@ -104,7 +118,7 @@ export interface SceneSlice {
 }
 
 export interface SceneLine {
-  readonly role: 'grid' | 'baseline';
+  readonly role: SceneLineRole;
   readonly x1: number;
   readonly y1: number;
   readonly x2: number;
@@ -112,7 +126,7 @@ export interface SceneLine {
 }
 
 export interface SceneText {
-  readonly role: 'value-tick' | 'category-tick' | 'value-title' | 'category-title';
+  readonly role: SceneTextRole;
   readonly text: string;
   readonly x: number;
   readonly y: number;
@@ -144,3 +158,46 @@ export interface ChartScene {
   readonly texts: readonly SceneText[];
   readonly slots: readonly ChartSlot[];
 }
+
+export const ChartKind = {
+  Column: 'column',
+  Bar: 'bar',
+  Line: 'line',
+  Area: 'area',
+  Pie: 'pie',
+  Doughnut: 'doughnut',
+  Scatter: 'scatter',
+} as const;
+
+export const ChartStacking = { None: 'none', Stacked: 'stacked', Percent: 'percent' } as const;
+
+export const TimeUnit = {
+  Second: 'second',
+  Minute: 'minute',
+  Hour: 'hour',
+  Day: 'day',
+  Week: 'week',
+  Month: 'month',
+  Year: 'year',
+} as const;
+
+export const BarEnd = { Top: 'top', Bottom: 'bottom', Left: 'left', Right: 'right' } as const;
+
+export const NumberStyle = { Plain: 'plain', Compact: 'compact', Percent: 'percent' } as const;
+
+export const ChartCategoriesKind = { Text: 'text', Time: 'time', Number: 'number' } as const;
+
+export const ChartScale = { Linear: 'linear', Log: 'log' } as const;
+
+export const ScenePathRole = { Line: 'line', Area: 'area' } as const;
+
+export const SceneLineRole = { Grid: 'grid', Baseline: 'baseline' } as const;
+
+export const SceneTextRole = {
+  ValueTick: 'value-tick',
+  CategoryTick: 'category-tick',
+  ValueTitle: 'value-title',
+  CategoryTitle: 'category-title',
+} as const;
+
+export const ChartAxis = { X: 'x', Y: 'y' } as const;

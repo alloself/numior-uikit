@@ -1,4 +1,4 @@
-import type { TimeUnit } from './chart.types';
+import { TimeUnit } from './chart.types';
 
 export interface TimeTicks {
   readonly unit: TimeUnit;
@@ -40,15 +40,15 @@ const floorTo = (value: number, interval: Interval): number => {
   const date = new Date(value);
 
   switch (interval.unit) {
-    case 'year':
+    case TimeUnit.Year:
       return Date.UTC(Math.floor(date.getUTCFullYear() / interval.step) * interval.step, 0, 1);
-    case 'month':
+    case TimeUnit.Month:
       return Date.UTC(
         date.getUTCFullYear(),
         Math.floor(date.getUTCMonth() / interval.step) * interval.step,
         1,
       );
-    case 'week': {
+    case TimeUnit.Week: {
       const day = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
 
       return day - ((date.getUTCDay() + 6) % 7) * DAY;
@@ -62,9 +62,9 @@ const advance = (value: number, interval: Interval): number => {
   const date = new Date(value);
 
   switch (interval.unit) {
-    case 'year':
+    case TimeUnit.Year:
       return Date.UTC(date.getUTCFullYear() + interval.step, 0, 1);
-    case 'month':
+    case TimeUnit.Month:
       return Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + interval.step, 1);
     default:
       return value + interval.length;

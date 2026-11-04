@@ -1,16 +1,22 @@
 import { layoutBars } from './bars';
 import { layoutLines, stackedLineExtent } from './lines';
 import { layoutSlices } from './pies';
-import type {
-  Box,
-  ChartScene,
-  ChartSeries,
-  ChartSize,
-  ChartSlot,
-  ChartSpec,
-  LayoutOptions,
-  SceneLine,
-  SceneText,
+import {
+  ChartCategoriesKind,
+  ChartKind,
+  ChartScale,
+  ChartStacking,
+  SceneLineRole,
+  SceneTextRole,
+  type Box,
+  type ChartScene,
+  type ChartSeries,
+  type ChartSize,
+  type ChartSlot,
+  type ChartSpec,
+  type LayoutOptions,
+  type SceneLine,
+  type SceneText,
 } from './chart.types';
 import { estimateWidth, numberFormatter, numberStyle, timeFormatter, truncated } from './format';
 import {
@@ -62,15 +68,22 @@ const finite = (value: number | null | undefined): value is number =>
   value !== null && value !== undefined && Number.isFinite(value);
 
 const categoryCount = (spec: ChartSpec): number =>
-  spec.categories.kind === 'text' ? spec.categories.labels.length : spec.categories.values.length;
+  spec.categories.kind === ChartCategoriesKind.Text
+    ? spec.categories.labels.length
+    : spec.categories.values.length;
 
 const extent = (values: readonly number[]): readonly [number, number] =>
   values.length === 0 ? [0, 1] : [Math.min(...values), Math.max(...values)];
 
-const linear = (spec: ChartSpec): boolean => spec.kind === 'line' || spec.kind === 'area';
+const linear = (spec: ChartSpec): boolean =>
+  spec.kind === ChartKind.Line || spec.kind === ChartKind.Area;
 
 const pointAt = (spec: ChartSpec, band: BandScale): ((index: number) => number) => {
-  if (!linear(spec) || spec.categories.kind === 'text' || spec.categories.values.length < 2) {
+  if (
+    !linear(spec) ||
+    spec.categories.kind === ChartCategoriesKind.Text ||
+    spec.categories.values.length < 2
+  ) {
     return band.center;
   }
 
@@ -109,7 +122,7 @@ const stackedOrPlain = (
   count: number,
   lines: boolean,
 ): readonly [number, number] => {
-  if ((spec.stacking ?? 'none') === 'none') {
+  if ((spec.stacking ?? 'none') === ChartStacking.None) {
     return extent(valuesOf(spec));
   }
   return lines ? extent(stackedLineExtent(spec, count)) : stackedExtent(spec, count);
@@ -124,7 +137,7 @@ const domainOf = (
   const stacking = spec.stacking ?? 'none';
   const lines = linear(spec);
 
-  if (stacking === 'percent') {
+  if (stacking === ChartStacking.Percent) {
     const [low] = lines ? extent(stackedLineExtent(spec, count)) : stackedExtent(spec, count);
 
     return {
@@ -135,7 +148,7 @@ const domainOf = (
 
   const positive = valuesOf(spec).filter((value) => value > 0);
 
-  if (axis.scale === 'log' && stacking === 'none' && positive.length > 0) {
+  if (axis.scale === ChartScale.Log && stacking === ChartStacking.None && positive.length > 0) {
     const [low, high] = extent(positive);
 
     return { domain: logDomain(axis.min ?? low, axis.max ?? high), log: true };
@@ -145,7 +158,7 @@ const domainOf = (
 
   return {
     domain: niceDomain(low, high, {
-      zero: spec.kind !== 'line' && spec.kind !== 'scatter',
+      zero: spec.kind !== ChartKind.Line && spec.kind !== ChartKind.Scatter,
       min: axis.min,
       max: axis.max,
       count: ticks,
@@ -155,13 +168,13 @@ const domainOf = (
 };
 
 const categoryTextsOf = (spec: ChartSpec, options: LayoutOptions, locale: string): string[] => {
-  if (spec.categories.kind === 'text') {
+  if (spec.categories.kind === ChartCategoriesKind.Text) {
     return [...spec.categories.labels];
   }
 
   const { values } = spec.categories;
 
-  if (spec.categories.kind === 'number') {
+  if (spec.categories.kind === ChartCategoriesKind.Number) {
     const plain = numberFormatter(locale, 'plain');
 
     return values.map((value) => plain(value, 0));
@@ -175,7 +188,7 @@ const categoryTextsOf = (spec: ChartSpec, options: LayoutOptions, locale: string
 };
 
 const scatterAxis = (spec: ChartSpec, ticks: number): NiceDomain | undefined => {
-  if (spec.kind !== 'scatter' || spec.categories.kind !== 'number') {
+  if (spec.kind !== ChartKind.Scatter || spec.categories.kind !== ChartCategoriesKind.Number) {
     return undefined;
   }
 
@@ -198,7 +211,7 @@ const frameOf = (
 
   const format =
     options.formatNumber ??
-    numberFormatter(locale, numberStyle(largest, spec.stacking === 'percent'));
+    numberFormatter(locale, numberStyle(largest, spec.stacking === ChartStacking.Percent));
 
   const axis = scatterAxis(spec, ticks);
 
@@ -264,14 +277,14 @@ const valueLines = (
     lines.push(
       horizontal
         ? {
-            role: tick === zero ? 'baseline' : 'grid',
+            role: tick === zero ? SceneLineRole.Baseline : SceneLineRole.Grid,
             x1: position,
             y1: plot.y,
             x2: position,
             y2: plot.y + plot.height,
           }
         : {
-            role: tick === zero ? 'baseline' : 'grid',
+            role: tick === zero ? SceneLineRole.Baseline : SceneLineRole.Grid,
             x1: plot.x,
             y1: position,
             x2: plot.x + plot.width,
@@ -306,7 +319,7 @@ const verticalTicks = (frame: Frame, plot: Box, value: (value: number) => number
   const tickX = frame.rtl ? plot.x + plot.width + TICK_GAP : plot.x - TICK_GAP;
 
   return frame.domain.ticks.map((tick, index) => ({
-    role: 'value-tick',
+    role: SceneTextRole.ValueTick,
     text: frame.valueTexts[index] ?? '',
     x: tickX,
     y: value(tick),
@@ -334,7 +347,7 @@ const columnScene = (frame: Frame): ChartScene => {
   frame.categoryTexts.forEach((text, index) => {
     if (index % every === 0) {
       texts.push({
-        role: 'category-tick',
+        role: SceneTextRole.CategoryTick,
         text: truncated(text, band.step * every - TICK_GAP, frame.fontSize, frame.measure),
         x: at(index),
         y: plot.y + plot.height + TICK_GAP,
@@ -356,12 +369,15 @@ const scatterScene = (frame: Frame): ChartScene => {
   const x = linearScale([axis.min, axis.max], frame.rtl ? [right, plot.x] : [plot.x, right]);
   const value = valueMapper(frame, [plot.y + plot.height, plot.y]);
   const texts = verticalTicks(frame, plot, value);
-  const xs = frame.spec.categories.kind === 'text' ? [] : frame.spec.categories.values;
+
+  const xs =
+    frame.spec.categories.kind === ChartCategoriesKind.Text ? [] : frame.spec.categories.values;
+
   const slots = slotsOf(frame.spec.series);
 
   axis.ticks.forEach((tick, index) => {
     texts.push({
-      role: 'category-tick',
+      role: SceneTextRole.CategoryTick,
       text: frame.axisTexts[index] ?? '',
       x: x(tick),
       y: plot.y + plot.height + TICK_GAP,
@@ -401,7 +417,7 @@ const scatterScene = (frame: Frame): ChartScene => {
     lines: [
       ...valueLines(frame, plot, value, false),
       ...axis.ticks.map((tick) => ({
-        role: 'grid' as const,
+        role: SceneLineRole.Grid,
         x1: x(tick),
         y1: plot.y,
         x2: x(tick),
@@ -449,7 +465,7 @@ const barScene = (frame: Frame): ChartScene => {
 
   frame.domain.ticks.forEach((tick, index) => {
     texts.push({
-      role: 'value-tick',
+      role: SceneTextRole.ValueTick,
       text: frame.valueTexts[index] ?? '',
       x: value(tick),
       y: plot.y + plot.height + TICK_GAP,
@@ -460,7 +476,7 @@ const barScene = (frame: Frame): ChartScene => {
 
   frame.categoryTexts.forEach((text, index) => {
     texts.push({
-      role: 'category-tick',
+      role: SceneTextRole.CategoryTick,
       text: truncated(text, categoryWidth - TICK_GAP, frame.fontSize, frame.measure),
       x: labelX,
       y: band.center(index),
@@ -528,7 +544,7 @@ const sceneOf = (
       axis: { horizontal, positions: Array.from({ length: count }, (_unused, index) => at(index)) },
       ...layoutLines(
         {
-          area: frame.spec.kind === 'area',
+          area: frame.spec.kind === ChartKind.Area,
           at,
           value,
           baseline,
@@ -581,7 +597,7 @@ const pieSlots = (spec: ChartSpec): ChartSlot[] =>
 const pieScene = (spec: ChartSpec, size: ChartSize): ChartScene => {
   const radius = Math.max(Math.min(size.width, size.height) / 2 - PADDING, 1);
   const slots = pieSlots(spec);
-  const hole = spec.kind === 'doughnut' ? Math.min(Math.max(spec.hole ?? HOLE, 0), 0.9) : 0;
+  const hole = spec.kind === ChartKind.Doughnut ? Math.min(Math.max(spec.hole ?? HOLE, 0), 0.9) : 0;
 
   return {
     width: size.width,
@@ -598,7 +614,7 @@ const pieScene = (spec: ChartSpec, size: ChartSize): ChartScene => {
     axis: undefined,
     slices: layoutSlices(
       { cx: size.width / 2, cy: size.height / 2, radius, hole: radius * hole, slots },
-      spec.kind === 'pie' ? spec.series.slice(0, 1) : spec.series,
+      spec.kind === ChartKind.Pie ? spec.series.slice(0, 1) : spec.series,
     ),
     lines: [],
     texts: [],
@@ -609,7 +625,7 @@ const pieScene = (spec: ChartSpec, size: ChartSize): ChartScene => {
 const ticksFit = (frame: Frame): boolean => {
   const count = frame.domain.ticks.length;
 
-  if (frame.spec.kind === 'bar') {
+  if (frame.spec.kind === ChartKind.Bar) {
     return (widest(frame, frame.valueTexts) + TICK_GAP * 2) * count <= barPlot(frame).width;
   }
 
@@ -635,16 +651,16 @@ export const layoutChart = (
   size: ChartSize,
   options: LayoutOptions = {},
 ): ChartScene => {
-  if (spec.kind === 'pie' || spec.kind === 'doughnut') {
+  if (spec.kind === ChartKind.Pie || spec.kind === ChartKind.Doughnut) {
     return pieScene(spec, size);
   }
 
   const frame = fittedFrame(spec, size, options);
 
   switch (spec.kind) {
-    case 'bar':
+    case ChartKind.Bar:
       return barScene(frame);
-    case 'scatter':
+    case ChartKind.Scatter:
       return scatterScene(frame);
     default:
       return columnScene(frame);

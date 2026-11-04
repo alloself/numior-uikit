@@ -1,4 +1,5 @@
 import type { ChartSpec, ChartValue } from '../core';
+import { ChartCategoriesKind } from '../core/chart.types';
 
 const numbers = new Map<string, Intl.NumberFormat>();
 
@@ -23,9 +24,9 @@ const dateFormat = (locale: string): Intl.DateTimeFormat => {
 
 export const categoryTexts = (spec: ChartSpec, locale: string): readonly string[] => {
   switch (spec.categories.kind) {
-    case 'text':
+    case ChartCategoriesKind.Text:
       return spec.categories.labels;
-    case 'number':
+    case ChartCategoriesKind.Number:
       return spec.categories.values.map((value) => numberFormat(locale).format(value));
     default:
       return spec.categories.values.map((value) => dateFormat(locale).format(value));
