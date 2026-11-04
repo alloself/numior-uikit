@@ -51,7 +51,7 @@ const isWorkday = (serial: number, mask: WeekendMask): boolean =>
 
 const workdaysFrom = (first: number, last: number, mask: WeekendMask): number => {
   const days = last - first + 1;
-  const perWeek = mask.filter((weekend) => !weekend).length;
+  const perWeek = mask.reduce((count, weekend) => count + Number(!weekend), 0);
   let count = Math.floor(days / 7) * perWeek;
 
   for (let serial = first + Math.floor(days / 7) * 7; serial <= last; serial += 1) {

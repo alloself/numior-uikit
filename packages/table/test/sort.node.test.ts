@@ -73,7 +73,11 @@ describe('createSortJob', () => {
     }
 
     expect(laps.length).toBeGreaterThan(2);
-    expect(laps.filter((lap) => lap > FRAME_MS - BUDGET_MS).length).toBeLessThan(laps.length / 2);
+
+    expect(laps.reduce((count, lap) => count + Number(lap > FRAME_MS - BUDGET_MS), 0)).toBeLessThan(
+      laps.length / 2,
+    );
+
     expect(Array.from(indices)).toEqual(expectedOrder(keys));
   });
 });

@@ -242,12 +242,12 @@ export const startUploads =
 export const dropUploads =
   (ids: readonly string[]): Command =>
   (state, dispatch) => {
-    const known = uploadsOf(state).filter((upload) => ids.includes(upload.id));
+    const known = uploadsOf(state).some((upload) => ids.includes(upload.id));
 
-    if (known.length > 0) {
+    if (known) {
       dispatch?.(state.tr.setMeta(uploadChange, { kind: 'drop', ids }));
     }
-    return known.length > 0;
+    return known;
   };
 
 export const finishUpload =

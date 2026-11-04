@@ -48,7 +48,8 @@ const masks = new Map<string, readonly DateMaskPart[]>();
 
 const isDigit = (char: string): boolean => DIGIT.test(char);
 
-const digitsIn = (text: string): number => graphemesOf(text).filter(isDigit).length;
+const digitsIn = (text: string): number =>
+  graphemesOf(text).reduce((count, char) => count + Number(isDigit(char)), 0);
 
 const opensEarly = (part: DigitsPart, char: string): boolean => {
   const limit = EARLY[part.field];

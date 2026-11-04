@@ -224,14 +224,16 @@ export const consecutiveRuns = (positions: readonly number[], edge = 0): number[
   return runs;
 };
 
-const rowSegments = (merge: RangeBox, runs: readonly (readonly number[])[]): Segment[] =>
-  runs.flatMap((run) => {
-    const inside = run.filter((row) => row >= merge.top && row <= merge.bottom);
-    const first = inside[0];
-    const last = inside.at(-1);
+const rowSegments = (merge: RangeBox, runs: readonly (readonly number[])[]): Segment[] => {
+  const isInside = (row: number): boolean => row >= merge.top && row <= merge.bottom;
+
+  return runs.flatMap((run) => {
+    const first = run.find(isInside);
+    const last = run.findLast(isInside);
 
     return first === undefined || last === undefined ? [] : [{ first, last }];
   });
+};
 
 const slotSegments = (merge: RangeBox, slots: readonly TableMergeSlot[]): Segment[] => {
   const segments = new Map<string, Segment>();

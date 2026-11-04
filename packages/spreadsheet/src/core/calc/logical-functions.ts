@@ -76,7 +76,7 @@ export const LOGICAL_FUNCTIONS: readonly FunctionSpec[] = [
     name: 'XOR',
     min: 1,
     max: MANY,
-    evaluate: (args) => booleanValue(truths(args).filter(Boolean).length % 2 === 1),
+    evaluate: (args) => booleanValue(truths(args).reduce((odd, truth) => odd !== truth, false)),
   }),
   defineFunction({
     name: 'NOT',

@@ -81,8 +81,13 @@ const RENDER_FUNCTIONS = {
 const CODE_SHAPE = [
   {
     selector:
-      "CallExpression[callee.property.name=/^(?:map|flatMap|forEach|reduce|filter|some|every|find)$/][callee.object.callee.property.name='filter']",
+      "CallExpression[callee.property.name=/^(?:map|flatMap|forEach|reduce|filter|some|every|find|findIndex|findLast|findLastIndex|includes|indexOf|at|slice)$/][callee.object.callee.property.name='filter']",
     message: 'Build the result in one reduce instead of chaining filter with another pass.',
+  },
+  {
+    selector:
+      "MemberExpression:matches([property.name='length'], [computed=true])[object.callee.property.name='filter']",
+    message: 'Count or pick in one pass instead of filtering into an array first.',
   },
   {
     selector: 'ForStatement[test=null]',

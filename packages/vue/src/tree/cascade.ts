@@ -3,6 +3,11 @@ import type { NuiTreeItem } from './tree.types';
 
 export type CheckState = 'checked' | 'unchecked' | 'indeterminate';
 
+interface EnabledTally {
+  readonly any: boolean;
+  readonly all: boolean;
+}
+
 const pushEnabledDescendants = <T>(
   item: NuiTreeItem<T>,
   keyOf: NuiOptionKey<T>,
@@ -53,6 +58,26 @@ export const checkStates = <T>(
   return states;
 };
 
+const enabledTally = <T>(
+  children: readonly NuiTreeItem<T>[],
+  set: ReadonlySet<string>,
+  keyOf: NuiOptionKey<T>,
+): EnabledTally => {
+  let any = false;
+
+  for (const child of children) {
+    if (child.disabled) {
+      continue;
+    }
+    if (!set.has(keyOf(child.value))) {
+      return { any: true, all: false };
+    }
+    any = true;
+  }
+
+  return { any, all: any };
+};
+
 const normalize = <T>(
   items: readonly NuiTreeItem<T>[],
   set: Set<string>,
@@ -63,11 +88,11 @@ const normalize = <T>(
       continue;
     }
     normalize(item.children, set, keyOf);
-    const enabled = item.children.filter((child) => !child.disabled);
-    if (enabled.length === 0) {
+    const enabled = enabledTally(item.children, set, keyOf);
+    if (!enabled.any) {
       continue;
     }
-    if (enabled.every((child) => set.has(keyOf(child.value)))) {
+    if (enabled.all) {
       set.add(keyOf(item.value));
     } else {
       set.delete(keyOf(item.value));

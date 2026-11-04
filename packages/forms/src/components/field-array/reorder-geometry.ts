@@ -17,10 +17,10 @@ export const rowsOf = (list: HTMLElement | null | undefined): HTMLElement[] =>
   Array.from(list?.querySelectorAll(ROWS) ?? []).filter(isElement);
 
 export const targetIndex = (rows: readonly HTMLElement[], from: number, client: number): number => {
-  const passed = rows.filter((row, index) => {
+  const passed = rows.reduce((count, row, index) => {
     const rect = row.getBoundingClientRect();
-    return index !== from && rect.top + rect.height / 2 < client;
-  }).length;
+    return count + Number(index !== from && rect.top + rect.height / 2 < client);
+  }, 0);
 
   return Math.min(rows.length - 1, passed);
 };

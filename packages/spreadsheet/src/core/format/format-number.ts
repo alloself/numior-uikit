@@ -89,7 +89,7 @@ const layoutOf = (tokens: readonly FormatToken[]): Layout => {
     exponent: exponentAt < 0 ? [] : indicesOf(tokens, exponentAt + 1, tokens.length),
     group,
     scale,
-    percent: tokens.filter((token) => token.kind === 'percent').length,
+    percent: tokens.reduce((count, token) => count + Number(token.kind === 'percent'), 0),
     exponentAt,
   };
 };
@@ -138,7 +138,7 @@ const groupedWhole = (
   digits: string,
   separator: string,
 ): Map<number, string> => {
-  const zeros = slots.filter((slot) => padChar(tokens[slot]) === '0').length;
+  const zeros = slots.reduce((count, slot) => count + Number(padChar(tokens[slot]) === '0'), 0);
   const text = groupDigits(digits.padStart(zeros, '0'), separator);
 
   return new Map(slots.map((slot, index) => [slot, index === 0 ? text : '']));

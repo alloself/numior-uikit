@@ -21,9 +21,7 @@ const suffixed = (name) =>
   suites.some((suite) => suite !== 'node' && name.endsWith(`-${suite}.json`));
 
 const suiteFile = (suite) =>
-  files
-    .filter((name) => (suite === 'node' ? !suffixed(name) : name.endsWith(`-${suite}.json`)))
-    .at(-1);
+  files.findLast((name) => (suite === 'node' ? !suffixed(name) : name.endsWith(`-${suite}.json`)));
 
 const failures = [];
 let checked = 0;

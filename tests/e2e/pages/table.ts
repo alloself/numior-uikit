@@ -507,14 +507,12 @@ export class TableSection {
       const offset = (first?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY) - box.top;
       const bodyTop = last?.getBoundingClientRect().bottom ?? box.top;
 
-      const rows = [
-        ...element.querySelectorAll(
-          '.nui-table__body > [role="row"] > .nui-table__cell:first-child',
-        ),
-      ].filter((cell) => {
+      const rows = Array.from(
+        element.querySelectorAll('.nui-table__body > [role="row"] > .nui-table__cell:first-child'),
+      ).reduce((count, cell) => {
         const rect = cell.getBoundingClientRect();
-        return rect.bottom > bodyTop && rect.top < box.bottom;
-      }).length;
+        return count + Number(rect.bottom > bodyTop && rect.top < box.bottom);
+      }, 0);
 
       return { rows, headerGap: Math.max(offset, -lap - offset, 0) };
     }, top);

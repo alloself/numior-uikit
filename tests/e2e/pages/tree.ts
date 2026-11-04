@@ -93,10 +93,10 @@ export class TreeSection {
       element.scrollTop = target;
       const box = element.getBoundingClientRect();
 
-      return [...element.querySelectorAll('[role="treeitem"]')].filter((row) => {
+      return Array.from(element.querySelectorAll('[role="treeitem"]')).reduce((count, row) => {
         const rect = row.getBoundingClientRect();
-        return rect.bottom > box.top && rect.top < box.bottom;
-      }).length;
+        return count + Number(rect.bottom > box.top && rect.top < box.bottom);
+      }, 0);
     }, top);
   }
 

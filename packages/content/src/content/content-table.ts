@@ -76,18 +76,35 @@ const valueOf = (cell: HtmlTableCell, type: NuiContentTableType): NuiContentCell
 const filled = (cell: HtmlTableCell): boolean => cell.text !== '' || checkboxOf(cell) !== undefined;
 
 const inferType = (cells: readonly HtmlTableCell[]): NuiContentTableType => {
-  const values = cells.filter(filled);
+  let filledCount = 0;
+  let boolean = true;
+  let number = true;
+  let date = true;
 
-  if (values.length === 0) {
+  for (const cell of cells) {
+    if (!filled(cell)) {
+      continue;
+    }
+    filledCount += 1;
+    boolean &&= booleanOf(cell) !== undefined;
+    number &&= parseCellNumber(cell.text) !== undefined;
+    date &&= parseCellDate(cell.text) !== undefined;
+
+    if (!boolean && !number && !date) {
+      return 'text';
+    }
+  }
+
+  if (filledCount === 0) {
     return 'text';
   }
-  if (values.every((cell) => booleanOf(cell) !== undefined)) {
+  if (boolean) {
     return 'boolean';
   }
-  if (values.every((cell) => parseCellNumber(cell.text) !== undefined)) {
+  if (number) {
     return 'number';
   }
-  return values.every((cell) => parseCellDate(cell.text) !== undefined) ? 'date' : 'text';
+  return date ? 'date' : 'text';
 };
 
 const isOwn = (row: readonly HtmlTableCell[]): boolean =>

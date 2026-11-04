@@ -2,6 +2,8 @@ import type { NuiEditorMention, NuiEditorMentions } from '@numior/editor-vue';
 
 const DELAY_MS = 300;
 
+const MATCH_LIMIT = 5;
+
 const TEAM: readonly NuiEditorMention[] = [
   { id: 'anna', label: 'Анна', description: 'Дизайн' },
   { id: 'boris', label: 'Борис Ковалёв', description: 'Разработка' },
@@ -16,7 +18,15 @@ export const fakeMentions: NuiEditorMentions = (query, { signal }) =>
     const needle = query.trim().toLowerCase();
 
     const timer = setTimeout(() => {
-      resolve(TEAM.filter((person) => person.label.toLowerCase().includes(needle)).slice(0, 5));
+      resolve(
+        TEAM.reduce<NuiEditorMention[]>((found, person) => {
+          if (found.length < MATCH_LIMIT && person.label.toLowerCase().includes(needle)) {
+            found.push(person);
+          }
+
+          return found;
+        }, []),
+      );
     }, DELAY_MS);
 
     signal.addEventListener('abort', () => {

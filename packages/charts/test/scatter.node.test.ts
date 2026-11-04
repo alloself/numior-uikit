@@ -50,7 +50,7 @@ describe('scatter layout', () => {
     expect(textsOf(scene, 'category-tick')[0]).not.toBe('0');
     expect(textsOf(scene, 'category-title')).toEqual(['Height, cm']);
 
-    expect(scene.lines.filter((line) => line.x1 === line.x2).length).toBe(
+    expect(scene.lines.reduce((count, line) => count + Number(line.x1 === line.x2), 0)).toBe(
       textsOf(scene, 'category-tick').length,
     );
   });

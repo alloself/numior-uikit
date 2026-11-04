@@ -48,6 +48,22 @@ interface Grab {
   readonly size: number;
 }
 
+interface PassedCells {
+  readonly passed: number;
+  readonly first: HeadCell | undefined;
+  readonly last: HeadCell | undefined;
+}
+
+interface DropCells {
+  readonly target: HeadCell | undefined;
+  readonly previous: HeadCell | undefined;
+}
+
+interface PaneSpan {
+  readonly start: number;
+  readonly count: number;
+}
+
 const HEAD_CELL = '.nui-table__row--head > [role="columnheader"][aria-colindex]';
 const NO_GRAB: Grab = { offset: 0, size: 0 };
 
@@ -88,8 +104,46 @@ const endEdge = (rect: DOMRect, rtl: boolean): number => (rtl ? rect.left : rect
 
 const centreOf = (rect: DOMRect): number => (rect.left + rect.right) / 2;
 
-const othersOf = (slots: readonly PlacedColumn[], from: number): PlacedColumn[] =>
-  slots.filter((_, slot) => slot !== from);
+const otherSlot = (from: number, index: number): number => (index >= from ? index + 1 : index);
+
+const NO_CELLS: PassedCells = { passed: 0, first: undefined, last: undefined };
+
+const NO_DROP_CELLS: DropCells = { target: undefined, previous: undefined };
+
+const NO_SPAN: PaneSpan = { start: 0, count: 0 };
+
+const hiddenPassed = (
+  slots: readonly PlacedColumn[],
+  from: number,
+  before: number | undefined,
+  after: number | undefined,
+): number =>
+  slots.reduce(
+    (count, column, slot) =>
+      count +
+      Number(
+        slot !== from &&
+          column.pane === 'centre' &&
+          ((before !== undefined && column.visual < before) ||
+            (after !== undefined && column.visual > after)),
+      ),
+    0,
+  );
+
+const paneSpanOf = (
+  slots: readonly PlacedColumn[],
+  from: number,
+  pane: TablePaneName | undefined,
+): PaneSpan =>
+  slots.reduce((span, column, slot) => {
+    if (slot === from || column.pane !== pane) {
+      return span;
+    }
+
+    const index = slot > from ? slot - 1 : slot;
+
+    return { start: span.count === 0 ? index : span.start, count: span.count + 1 };
+  }, NO_SPAN);
 
 export const useTableColumnOrder = <T>(options: TableColumnOrderOptions<T>): TableColumnOrder => {
   const drop = ref<TableDropMark>();
@@ -101,33 +155,35 @@ export const useTableColumnOrder = <T>(options: TableColumnOrderOptions<T>): Tab
   const passedOf = (client: number, from: number): number => {
     const slots = slotsOf(options.layout());
     const rtl = options.isRtl();
-    const cells = headCells(options.viewport(), slots);
     const past = (x: number): boolean => (rtl ? client < x : client > x);
-    const centre = cells.filter((cell) => cell.pane === 'centre');
-    const first = centre[0];
-    const last = centre.at(-1);
-    let passed = cells.filter((cell) => cell.slot !== from && past(centreOf(cell.rect))).length;
 
-    if (first !== undefined && past(startEdge(first.rect, rtl))) {
-      passed += othersOf(slots, from).filter(
-        (column) => column.pane === 'centre' && column.visual < first.visual,
-      ).length;
-    }
-    if (last !== undefined && past(endEdge(last.rect, rtl))) {
-      passed += othersOf(slots, from).filter(
-        (column) => column.pane === 'centre' && column.visual > last.visual,
-      ).length;
-    }
-    return Math.min(slots.length - 1, passed);
+    const { passed, first, last } = headCells(options.viewport(), slots).reduce<PassedCells>(
+      (tally, cell) => {
+        const centre = cell.pane === 'centre';
+
+        return {
+          passed: tally.passed + Number(cell.slot !== from && past(centreOf(cell.rect))),
+          first: tally.first ?? (centre ? cell : undefined),
+          last: centre ? cell : tally.last,
+        };
+      },
+      NO_CELLS,
+    );
+
+    const before =
+      first !== undefined && past(startEdge(first.rect, rtl)) ? first.visual : undefined;
+
+    const after = last !== undefined && past(endEdge(last.rect, rtl)) ? last.visual : undefined;
+
+    const hidden =
+      before === undefined && after === undefined ? 0 : hiddenPassed(slots, from, before, after);
+
+    return Math.min(slots.length - 1, passed + hidden);
   };
 
   const withinPane = (from: number, to: number): boolean => {
     const slots = slotsOf(options.layout());
-    const pane = slots[from]?.pane;
-    const others = othersOf(slots, from);
-    const first = others.findIndex((column) => column.pane === pane);
-    const count = others.filter((column) => column.pane === pane).length;
-    const start = first < 0 ? 0 : first;
+    const { start, count } = paneSpanOf(slots, from, slots[from]?.pane);
 
     return to >= start && to <= start + count;
   };
@@ -139,9 +195,8 @@ export const useTableColumnOrder = <T>(options: TableColumnOrderOptions<T>): Tab
     if (source === undefined) {
       return;
     }
-    const others = othersOf(slots, from);
-    const target = others[to];
-    const previous = others[to - 1];
+    const target = to < 0 ? undefined : slots[otherSlot(from, to)];
+    const previous = to < 1 ? undefined : slots[otherSlot(from, to - 1)];
     const keys = orderLeaves(options.leaves(), options.order.value).map((leaf) => leaf.key);
 
     if (target !== undefined) {
@@ -167,15 +222,17 @@ export const useTableColumnOrder = <T>(options: TableColumnOrderOptions<T>): Tab
   const dropAt = (from: number, to: number): number | undefined => {
     const frame = options.frame();
     const slots = slotsOf(options.layout());
-    const others = othersOf(slots, from);
-    const cells = headCells(options.viewport(), slots);
     const rtl = options.isRtl();
+    const targetSlot = otherSlot(from, to);
+    const previousSlot = to < 1 ? -1 : otherSlot(from, to - 1);
 
-    const cellOf = (column: PlacedColumn | undefined): HeadCell | undefined =>
-      column === undefined ? undefined : cells.find((cell) => slots[cell.slot]?.key === column.key);
-
-    const target = cellOf(others[to]);
-    const previous = cellOf(others[to - 1]);
+    const { target, previous } = headCells(options.viewport(), slots).reduce<DropCells>(
+      (found, cell) => ({
+        target: cell.slot === targetSlot ? cell : found.target,
+        previous: cell.slot === previousSlot ? cell : found.previous,
+      }),
+      NO_DROP_CELLS,
+    );
 
     if (frame === null) {
       return undefined;

@@ -59,8 +59,8 @@ export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
     () => new Map(options.layout().visual.map((column) => [column.key, column])),
   );
 
-  const startData = computed(
-    () => options.layout().start.filter((column) => column.kind === 'data').length,
+  const startData = computed(() =>
+    options.layout().start.reduce((count, column) => count + Number(column.kind === 'data'), 0),
   );
 
   const columnOf = (col: number): PlacedColumn | undefined => {

@@ -32,7 +32,9 @@ describe('fixture documents', () => {
   it('generates ten thousand valid mixed blocks with paragraphs as the majority', () => {
     const doc = generateDoc(fixtureSchema, { blocks: 10_000, seed: 1 });
     const types = doc.root.content.map((child) => (child.kind === 'element' ? child.type : 'text'));
-    const share = (type: string) => types.filter((name) => name === type).length / types.length;
+
+    const share = (type: string) =>
+      types.reduce((count, name) => count + Number(name === type), 0) / types.length;
 
     expect(types).toHaveLength(10_000);
     expect(fixtureSchema.check(doc.root)).toEqual({ ok: true });

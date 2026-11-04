@@ -93,10 +93,19 @@ const navigation = useListNavigation(root, {
 const isSelected = (value: T): boolean => selectedKeys.value.has(keyOf(value));
 
 const restingKey = computed(() => {
-  const enabled = items.filter((item) => !item.disabled);
-  const resting = enabled.find((item) => isSelected(item.value)) ?? enabled[0];
+  let first: NuiToggleItem<T> | undefined;
 
-  return resting === undefined ? undefined : keyOf(resting.value);
+  for (const item of items) {
+    if (item.disabled) {
+      continue;
+    }
+    if (isSelected(item.value)) {
+      return keyOf(item.value);
+    }
+    first ??= item;
+  }
+
+  return first === undefined ? undefined : keyOf(first.value);
 });
 
 const itemAttrs = (item: NuiToggleItem<T>): AttrRecord => {

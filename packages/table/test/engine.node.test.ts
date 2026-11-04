@@ -126,7 +126,11 @@ describe('createTableEngine', () => {
     const ages = harness.visible('age');
     expect(ages[0]).toBe(96);
     expect(ages.at(-1)).toBe(0);
-    expect(harness.progress.filter((entry) => entry.phase === 'sort').length).toBeGreaterThan(5);
+
+    expect(
+      harness.progress.reduce((count, entry) => count + Number(entry.phase === 'sort'), 0),
+    ).toBeGreaterThan(5);
+
     expect(harness.progress.at(-1)).toMatchObject({ phase: 'sort' });
   });
 

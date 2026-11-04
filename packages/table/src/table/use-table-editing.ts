@@ -98,7 +98,7 @@ const isChange = <T>(outcome: CellOutcome<T>): outcome is NuiTableEdit<T> =>
   typeof outcome !== 'string';
 
 const skippedOf = <T>(outcomes: readonly CellOutcome<T>[]): number =>
-  outcomes.filter((outcome) => outcome === 'skip').length;
+  outcomes.reduce((count, outcome) => count + Number(outcome === 'skip'), 0);
 
 const areaOf = (ranges: NuiTableRanges): number =>
   ranges.reduce((sum, range) => {

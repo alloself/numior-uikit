@@ -85,7 +85,7 @@ export const applyMask = (input: string, mask: string): MaskResult => {
   for (let next = stepMask(walk, slots, chars); next; next = stepMask(next, slots, chars)) {
     walk = next;
   }
-  const tokens = slots.filter((slot) => slot.kind === 'token').length;
+  const tokens = slots.reduce((count, slot) => count + Number(slot.kind === 'token'), 0);
   return {
     masked: walk.raw === '' ? '' : walk.masked,
     raw: walk.raw,

@@ -115,10 +115,15 @@ const rank = (args: FunctionArgs): number => {
   const values = numbersOf(args, 1, 2);
   const ascending = args.number(2, 0) !== 0;
 
-  if (!values.includes(value)) {
-    return raise('#N/A');
-  }
-  return 1 + values.filter((other) => (ascending ? other < value : other > value)).length;
+  const { found, ahead } = values.reduce(
+    (tally, other) => ({
+      found: tally.found || other === value,
+      ahead: tally.ahead + Number(ascending ? other < value : other > value),
+    }),
+    { found: false, ahead: 0 },
+  );
+
+  return found ? 1 + ahead : raise('#N/A');
 };
 
 const positive = (values: readonly number[]): readonly number[] =>

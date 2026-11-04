@@ -79,12 +79,23 @@ const nodeResolver =
     if (Object.hasOwn(spec.nodes, name)) {
       return allowed.nodes.has(name) ? [name] : [];
     }
-    const members = Object.entries(spec.nodes).filter(([, node]) => groupsOf(node.group).has(name));
+    let known = false;
+    const members: string[] = [];
 
-    if (members.length === 0) {
+    for (const [member, node] of Object.entries(spec.nodes)) {
+      if (groupsOf(node.group).has(name)) {
+        known = true;
+
+        if (allowed.nodes.has(member)) {
+          members.push(member);
+        }
+      }
+    }
+
+    if (!known) {
       throw new SyntaxError(`Unknown node type or group "${name}" in the schema`);
     }
-    return members.map(([member]) => member).filter((member) => allowed.nodes.has(member));
+    return members;
   };
 
 const markNames = (spec: SchemaSpec, allowed: Allowed, expression: string): Set<string> => {
@@ -92,17 +103,20 @@ const markNames = (spec: SchemaSpec, allowed: Allowed, expression: string): Set<
   const names = new Set<string>();
 
   for (const name of expression.split(/\s+/).filter((part) => part !== '')) {
-    const members = marks.filter(
-      ([mark, markSpec]) => mark === name || groupsOf(markSpec.group).has(name),
-    );
+    let known = false;
 
-    if (members.length === 0) {
-      throw new SyntaxError(`Unknown mark or mark group "${name}" in the schema`);
-    }
-    for (const [member] of members) {
-      if (allowed.marks.has(member)) {
-        names.add(member);
+    for (const [mark, markSpec] of marks) {
+      if (mark === name || groupsOf(markSpec.group).has(name)) {
+        known = true;
+
+        if (allowed.marks.has(mark)) {
+          names.add(mark);
+        }
       }
+    }
+
+    if (!known) {
+      throw new SyntaxError(`Unknown mark or mark group "${name}" in the schema`);
     }
   }
   return names;

@@ -16,7 +16,10 @@ import { NuiButton, NuiUpload, type NuiUploadAdapter, type NuiUploadItem } from 
 
 const uploader = useTemplateRef<{ start: () => void }>('uploader');
 const attachments = ref<NuiUploadItem<string>[]>([]);
-const queued = computed(() => attachments.value.filter((item) => item.status === 'queued').length);
+
+const queued = computed(() =>
+  attachments.value.reduce((count, item) => count + Number(item.status === 'queued'), 0),
+);
 
 const wait = (ms: number, signal: AbortSignal): Promise<void> =>
   new Promise((resolve, reject) => {
