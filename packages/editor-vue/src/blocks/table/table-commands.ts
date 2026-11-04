@@ -2,12 +2,15 @@ import {
   cellValueOf,
   contentTableData,
   filterAttrs,
+  NuiContentNodeType,
+  NuiContentTableFilterKind,
+  NuiContentTableType,
   type NuiContentCellValue,
   type NuiContentTableFilter,
   type NuiContentTableSort,
-  type NuiContentTableType,
 } from '@numior/content';
 import {
+  ContentNodeKind,
   insertBlock,
   nodeSize,
   type AttrValue,
@@ -35,13 +38,15 @@ export interface TableColumnFilter {
 }
 
 const elementsOf = (node: ElementNode | undefined): readonly ElementNode[] =>
-  (node?.content ?? []).filter((child): child is ElementNode => child.kind === 'element');
+  (node?.content ?? []).filter(
+    (child): child is ElementNode => child.kind === ContentNodeKind.Element,
+  );
 
 const partsOf = (tr: Transaction, id: NodeId): TableParts | undefined => {
   const table = tr.doc.byId(id);
   const [head, body] = elementsOf(table);
 
-  return table?.type === 'table' && head !== undefined && body !== undefined
+  return table?.type === NuiContentNodeType.Table && head !== undefined && body !== undefined
     ? { table, head, body }
     : undefined;
 };
@@ -123,13 +128,17 @@ const addOption = (tr: Transaction, id: NodeId, value: NuiContentCellValue): voi
   const column = tr.doc.byId(id);
 
   const options = elementsOf(column).reduce<(AttrValue | undefined)[]>((found, child) => {
-    if (child.type === 'table_option') {
+    if (child.type === NuiContentNodeType.TableOption) {
       found.push(child.attrs.label);
     }
     return found;
   }, []);
 
-  if (column?.attrs.type === 'select' && typeof value === 'string' && !options.includes(value)) {
+  if (
+    column?.attrs.type === NuiContentTableType.Select &&
+    typeof value === 'string' &&
+    !options.includes(value)
+  ) {
     insertAt(tr, id, options.length, [element(tr, 'table_option', { label: value })]);
   }
 };
@@ -271,7 +280,7 @@ export const retypeTableColumn = (id: NodeId, column: NodeId, type: NuiContentTa
     }
     setColumn(tr, column, { type });
 
-    if (type === 'select') {
+    if (type === NuiContentTableType.Select) {
       insertAt(
         tr,
         column,
@@ -333,7 +342,7 @@ const filterNode = (tr: Transaction, filter: NuiContentTableFilter): ElementNode
     id: tr.newId(),
     attrs: filterAttrs(filter),
     content:
-      filter.kind === 'set'
+      filter.kind === NuiContentTableFilterKind.Set
         ? filter.values.map((value) => element(tr, 'table_value', { value }))
         : [],
   });
@@ -344,7 +353,11 @@ export const filterTable = (id: NodeId, filters: readonly TableColumnFilter[]): 
 
     for (const column of elementsOf(parts.head)) {
       const wanted = filters.find((entry) => entry.column === column.id)?.filter;
-      const current = elementsOf(column).find((child) => child.type === 'table_filter');
+
+      const current = elementsOf(column).find(
+        (child) => child.type === NuiContentNodeType.TableFilter,
+      );
+
       const before = known.find((entry) => entry.id === column.id)?.filter;
 
       if (JSON.stringify(before) === JSON.stringify(wanted)) {

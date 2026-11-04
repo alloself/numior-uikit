@@ -9,6 +9,7 @@ import type {
   ToolbarOptions,
 } from './toolbar-items';
 import type { SlashItem } from '../slash/slash-items';
+import { type NuiContentMarkType } from '@numior/content';
 
 export interface NuiEditorToolbarProps {
   state: EditorState;
@@ -34,7 +35,7 @@ export interface NuiEditorColourMenuProps {
   disabled?: boolean | undefined;
 }
 
-export type ColourMark = 'color' | 'highlight';
+export type ColourMark = typeof NuiContentMarkType.Color | typeof NuiContentMarkType.Highlight;
 
 export interface NuiEditorToolbarButtonProps {
   action: ToolbarFace;
@@ -68,3 +69,18 @@ export interface NuiEditorToolbarHintsProps {
 export interface NuiEditorToolbarHintProps {
   face?: ToolbarFace | undefined;
 }
+
+export const ToolbarItemKind = {
+  Action: 'action',
+  Blocks: 'blocks',
+  Link: 'link',
+  Colours: 'colours',
+  Insert: 'insert',
+} as const;
+
+export const ToolbarGroupKey = {
+  History: 'history',
+  Insert: 'insert',
+  Blocks: 'blocks',
+  Marks: 'marks',
+} as const;

@@ -1,7 +1,9 @@
 import {
   childNode,
   containerSlot,
+  ContentNodeKind,
   moveBlock,
+  NodeSlots,
   placeBeside,
   slotAt,
   slotRule,
@@ -14,18 +16,17 @@ import {
 import type { EditorView } from '@numior/editor-core/view';
 import { COLUMN_TYPES, hasColumns } from '../blocks/columns/columns';
 import { BLOCK, deepestSlot, elementOf, indexAtY } from './block-geometry';
-
-export type DropEdge = 'top' | 'bottom';
+import { DropEdge, DropTargetKind } from './handle.types';
 
 export type DropTarget =
   | {
-      readonly kind: 'between';
+      readonly kind: typeof DropTargetKind.Between;
       readonly to: BlockTarget;
       readonly anchor: Element;
       readonly edge: DropEdge;
     }
   | {
-      readonly kind: 'beside';
+      readonly kind: typeof DropTargetKind.Beside;
       readonly id: NodeId;
       readonly anchor: Element;
       readonly side: BesideSide;
@@ -76,7 +77,7 @@ const intoContainer = (view: EditorView, slot: ChildSlot, y: number): DropTarget
   const node = childNode(view.state.doc, slot);
   const element = node === undefined ? undefined : view.nodeDOM(node.id);
   const first = node?.content[0];
-  const head = first?.kind === 'element' ? view.nodeDOM(first.id) : undefined;
+  const head = first?.kind === ContentNodeKind.Element ? view.nodeDOM(first.id) : undefined;
   const box = element?.getBoundingClientRect();
   const line = head?.getBoundingClientRect();
 
@@ -84,7 +85,7 @@ const intoContainer = (view: EditorView, slot: ChildSlot, y: number): DropTarget
     head === undefined ||
     box === undefined ||
     line === undefined ||
-    slotRule(view.state.doc, node) !== 'rest' ||
+    slotRule(view.state.doc, node) !== NodeSlots.Rest ||
     y < line.top + line.height / 2 ||
     y > line.bottom ||
     box.bottom - line.bottom <= ROOM
@@ -103,7 +104,7 @@ const beside = (view: EditorView, slot: ChildSlot, y: number): DropTarget | unde
 
   return {
     kind: 'between',
-    to: { parent: slot.parent, index: slot.index + (edge === 'bottom' ? 1 : 0) },
+    to: { parent: slot.parent, index: slot.index + (edge === DropEdge.Bottom ? 1 : 0) },
     anchor: element,
     edge,
   };
@@ -123,7 +124,8 @@ const betweenAt = (
     slot = containerSlot(state.doc, slot)
   ) {
     const target = [intoContainer(view, slot, y), beside(view, slot, y)].find(
-      (candidate) => candidate?.kind === 'between' && allowed(state, from, candidate.to),
+      (candidate) =>
+        candidate?.kind === DropTargetKind.Between && allowed(state, from, candidate.to),
     );
 
     if (target !== undefined) {

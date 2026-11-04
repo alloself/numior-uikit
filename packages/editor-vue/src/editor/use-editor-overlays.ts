@@ -2,6 +2,7 @@ import {
   insertMarked,
   markAttrs,
   markExtent,
+  SelectionKind,
   selectionRange,
   setMark,
   type Command,
@@ -42,7 +43,7 @@ export interface EditorOverlays {
 }
 
 const isRange = (state: EditorState): boolean =>
-  state.selection.kind === 'text' && state.selection.anchor !== state.selection.head;
+  state.selection.kind === SelectionKind.Text && state.selection.anchor !== state.selection.head;
 
 const hrefOf = (state: EditorState): string | undefined => {
   const href = markAttrs(state, 'link')?.href;

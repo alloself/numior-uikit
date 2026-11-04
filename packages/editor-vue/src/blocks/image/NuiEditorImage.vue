@@ -130,7 +130,7 @@ import {
   TextWrap,
 } from '@lucide/vue';
 import { onlyIf } from '../../editor/only-if';
-import { useMessages, type IconSource } from '@numior/primitives';
+import { Direction, Key, UploadStatus, useMessages, type IconSource } from '@numior/primitives';
 import {
   NuiButton,
   NuiField,
@@ -142,12 +142,12 @@ import {
   type NuiToggleItem,
 } from '@numior/vue';
 import { useResizeObserver } from '@vueuse/core';
-import type { NuiContentAlign, NuiContentWrap } from '@numior/content';
+import { NuiContentAlign, NuiContentWrap } from '@numior/content';
 import { computed, ref, useTemplateRef, watch, type HTMLAttributes } from 'vue';
 import { editorMessages } from '../../editor/editor.messages';
 import NuiEditorCaption from '../caption/NuiEditorCaption.vue';
 import { useEditorUploadContext } from '../../uploads/uploads-context';
-import type { NuiEditorBlockViewProps } from '../block.types';
+import { GripEdge, GripSide, ImageActionKey, type NuiEditorBlockViewProps } from '../block.types';
 import {
   WIDE_STEP,
   WIDTH_STEP,
@@ -160,8 +160,6 @@ import {
   wrapOf,
 } from './image-size';
 
-type GripSide = 'start' | 'end';
-
 interface ImageAction {
   readonly key: string;
   readonly icon: IconSource;
@@ -169,8 +167,6 @@ interface ImageAction {
   readonly href?: string | undefined;
   readonly run?: (() => void) | undefined;
 }
-
-type GripEdge = 'top' | 'bottom';
 
 interface Grip {
   readonly edge: GripEdge;
@@ -215,8 +211,12 @@ const src = computed(() => textOf(node.attrs.src));
 const alt = computed(() => textOf(node.attrs.alt));
 const align = computed(() => alignOf(node.attrs.align));
 const wrap = computed(() => wrapOf(node.attrs.wrap));
-const captioned = computed(() => wrap.value !== 'inline');
-const centred = computed(() => align.value === 'center' && wrap.value === 'break');
+const captioned = computed(() => wrap.value !== NuiContentWrap.Inline);
+
+const centred = computed(
+  () => align.value === NuiContentAlign.Center && wrap.value === NuiContentWrap.Break,
+);
+
 const barOpen = computed(() => selected && focused && !resizing.value);
 
 const barSpot = computed(() =>
@@ -226,7 +226,7 @@ const barSpot = computed(() =>
 );
 
 const gripAttrs = (grip: Grip): HTMLAttributes =>
-  grip.edge === 'bottom' && grip.side === 'end' ? slider.value : HIDDEN_GRIP;
+  grip.edge === GripEdge.Bottom && grip.side === GripSide.End ? slider.value : HIDDEN_GRIP;
 
 const share = computed(() =>
   typeof node.attrs.width === 'number' ? node.attrs.width : measured.value,
@@ -248,12 +248,12 @@ const slider = computed((): HTMLAttributes => ({
 const pending = computed(() => uploads?.replacing.value.get(node.id));
 
 const percent = computed(() =>
-  pending.value?.status === 'uploading' ? Math.round(pending.value.progress * 100) : 0,
+  pending.value?.status === UploadStatus.Uploading ? Math.round(pending.value.progress * 100) : 0,
 );
 
 const alignItems = computed((): NuiToggleItem<NuiContentAlign>[] => [
   { value: 'start', label: texts.value.imageAlignStart, icon: TextAlignStart },
-  ...onlyIf<NuiToggleItem<NuiContentAlign>>(wrap.value === 'break', () => ({
+  ...onlyIf<NuiToggleItem<NuiContentAlign>>(wrap.value === NuiContentWrap.Break, () => ({
     value: 'center',
     label: texts.value.imageAlignCenter,
     icon: TextAlignCenter,
@@ -267,7 +267,7 @@ const wrapItems = computed((): NuiToggleItem<NuiContentWrap>[] => [
   { value: 'break', label: texts.value.imageWrapBreak, icon: BetweenHorizontalStart },
 ]);
 
-const rtl = (): boolean => getComputedStyle(element).direction === 'rtl';
+const rtl = (): boolean => getComputedStyle(element).direction === Direction.Rtl;
 
 const BAR_MARGIN = 64;
 
@@ -292,7 +292,7 @@ const setWidth = (next: number): void => {
 const setWrap = (value: NuiContentWrap | null): void => {
   if (value !== null) {
     editor.setAttrs(
-      value === 'wrap' && align.value === 'center'
+      value === NuiContentWrap.Wrap && align.value === NuiContentAlign.Center
         ? { wrap: value, align: 'start' }
         : { wrap: value },
     );
@@ -318,7 +318,13 @@ const onGripDown = ({ side, lift }: Grip, event: PointerEvent): void => {
   const line = lineWidthOf(element);
   const start = share.value * line;
   const before = element.style.getPropertyValue('inline-size');
-  const pull = { sign: (side === 'end') === rtl() ? -1 : 1, lift, ratio: aspectOf(picture.value) };
+
+  const pull = {
+    sign: (side === GripSide.End) === rtl() ? -1 : 1,
+    lift,
+    ratio: aspectOf(picture.value),
+  };
+
   const symmetric = centred.value;
   let next: number | undefined;
 
@@ -362,18 +368,18 @@ const keyStep = (event: KeyboardEvent): number | undefined => {
 
   switch (event.key) {
     case forward:
-    case 'ArrowUp':
+    case Key.ArrowUp:
       return WIDTH_STEP;
     case backward:
-    case 'ArrowDown':
+    case Key.ArrowDown:
       return -WIDTH_STEP;
-    case 'PageUp':
+    case Key.PageUp:
       return WIDE_STEP;
-    case 'PageDown':
+    case Key.PageDown:
       return -WIDE_STEP;
-    case 'Home':
+    case Key.Home:
       return -1;
-    case 'End':
+    case Key.End:
       return 1;
     default:
       return undefined;
@@ -395,7 +401,7 @@ const choose = (): void => {
 
 const actionAttrs = (action: ImageAction): Record<string, string | undefined> =>
   action.href === undefined
-    ? { 'aria-expanded': action.key === 'alt' ? String(describing.value) : undefined }
+    ? { 'aria-expanded': action.key === ImageActionKey.Alt ? String(describing.value) : undefined }
     : { href: action.href, download: '', target: '_blank', rel: 'noopener' };
 
 const actions = computed((): readonly ImageAction[] => [

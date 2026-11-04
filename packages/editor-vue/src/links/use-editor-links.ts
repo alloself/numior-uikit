@@ -1,11 +1,19 @@
-import { resolveEmbed, webAddress, type NuiEmbed, type NuiEmbedProvider } from '@numior/content';
+import {
+  NuiContentNodeType,
+  resolveEmbed,
+  webAddress,
+  type NuiEmbed,
+  type NuiEmbedProvider,
+} from '@numior/content';
 import {
   addToHistory,
   definePlugin,
   inlineText,
+  InputIntentKind,
   insertMarked,
   nodeSize,
   placeBlock,
+  SelectionKind,
   setMark,
   type Attrs,
   type Command,
@@ -70,12 +78,14 @@ const previewAttrs = (preview: NuiEditorLinkPreview) => ({
 const emptyParagraph = (state: EditorState): ElementNode | undefined => {
   const { selection, doc } = state;
 
-  if (selection.kind !== 'text' || selection.anchor !== selection.head) {
+  if (selection.kind !== SelectionKind.Text || selection.anchor !== selection.head) {
     return undefined;
   }
   const { parent } = doc.resolve(selection.head);
 
-  return parent.type === 'paragraph' && parent.content.length === 0 ? parent : undefined;
+  return parent.type === NuiContentNodeType.Paragraph && parent.content.length === 0
+    ? parent
+    : undefined;
 };
 
 const setLinkAttrs =
@@ -150,9 +160,9 @@ export const useEditorLinks = (options: EditorLinkOptions): EditorLinks => {
     resolveEmbed(url, options.providers(), provider);
 
   const nodeFor = (tr: Transaction, kind: LinkKind, url: string): ElementNode | undefined => {
-    const embed = kind === 'embed' ? embedOf(url) : undefined;
+    const embed = kind === NuiContentNodeType.Embed ? embedOf(url) : undefined;
 
-    if (kind === 'embed') {
+    if (kind === NuiContentNodeType.Embed) {
       return embed === undefined || !schema.nodes.has('embed')
         ? undefined
         : schema.element('embed', { id: tr.newId(), attrs: { url, provider: embed.provider.id } });
@@ -166,16 +176,16 @@ export const useEditorLinks = (options: EditorLinkOptions): EditorLinks => {
   };
 
   const accepts = (kind: LinkKind, url: string): boolean =>
-    kind === 'embed' ? embedOf(url) !== undefined : webAddress(url) !== undefined;
+    kind === NuiContentNodeType.Embed ? embedOf(url) !== undefined : webAddress(url) !== undefined;
 
   const addressAttrs = (type: string, url: string): Attrs | undefined => {
     switch (type) {
-      case 'embed': {
+      case NuiContentNodeType.Embed: {
         const embed = embedOf(url);
 
         return embed === undefined ? undefined : { url, provider: embed.provider.id };
       }
-      case 'bookmark': {
+      case NuiContentNodeType.Bookmark: {
         const address = webAddress(url);
 
         return address === undefined
@@ -231,7 +241,7 @@ export const useEditorLinks = (options: EditorLinkOptions): EditorLinks => {
       return created !== undefined && place(created)(state, dispatch);
     });
 
-    if (done && created !== undefined && kind === 'bookmark') {
+    if (done && created !== undefined && kind === NuiContentNodeType.Bookmark) {
       refresh(created.id);
     }
     return done;
@@ -245,7 +255,7 @@ export const useEditorLinks = (options: EditorLinkOptions): EditorLinks => {
     const { selection } = state;
     const block = emptyParagraph(state);
 
-    if (selection.kind === 'text' && selection.anchor !== selection.head) {
+    if (selection.kind === SelectionKind.Text && selection.anchor !== selection.head) {
       return setMark('link', { href: url })(state, dispatch);
     }
     const done = insertMarked(url, 'link', { href: url })(state, dispatch);
@@ -258,10 +268,10 @@ export const useEditorLinks = (options: EditorLinkOptions): EditorLinks => {
     name: 'editor-links',
     props: {
       handleIntent: (intent, state, dispatch) => {
-        const url = intent.kind === 'paste' ? intent.text.trim() : '';
+        const url = intent.kind === InputIntentKind.Paste ? intent.text.trim() : '';
 
         if (
-          intent.kind !== 'paste' ||
+          intent.kind !== InputIntentKind.Paste ||
           (intent.html ?? '') !== '' ||
           !SINGLE.test(url) ||
           webAddress(url) === undefined ||
@@ -311,7 +321,7 @@ export const useEditorLinks = (options: EditorLinkOptions): EditorLinks => {
 
       const done = options.run(setLinkAttrs(id, { ...address, ...details }, true));
 
-      if (done && moved && node.type === 'bookmark') {
+      if (done && moved && node.type === NuiContentNodeType.Bookmark) {
         refresh(id, Object.keys(details));
       }
       return done;
@@ -328,7 +338,7 @@ export const useEditorLinks = (options: EditorLinkOptions): EditorLinks => {
 
       const inside =
         block !== undefined &&
-        selection.kind === 'text' &&
+        selection.kind === SelectionKind.Text &&
         state.doc.resolve(selection.head).parent.id === block.id;
 
       if (link !== undefined && (!inside || inlineText(block) !== link.url)) {

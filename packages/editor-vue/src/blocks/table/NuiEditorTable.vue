@@ -64,7 +64,7 @@ import {
 } from '@numior/content';
 import { NuiContentTable } from '@numior/content/table';
 import { redo, undo } from '@numior/editor-core';
-import { useMessages, type IconSource } from '@numior/primitives';
+import { PopoverState, useMessages, type IconSource } from '@numior/primitives';
 import type {
   NuiTableCellValue,
   NuiTableColumnMenu,
@@ -152,7 +152,7 @@ const startRename = (column: string, anchor: HTMLElement): void => {
 const onRenameToggle = (event: Event): void => {
   const current = rename.value;
 
-  if ('newState' in event && event.newState === 'open') {
+  if ('newState' in event && event.newState === PopoverState.Open) {
     nameInput.value?.focus();
     return;
   }

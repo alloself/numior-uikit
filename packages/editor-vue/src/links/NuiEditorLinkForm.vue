@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { useMessages } from '@numior/primitives';
+import { Key, useMessages } from '@numior/primitives';
 import { NuiButton, NuiField, NuiInput, NuiTextarea } from '@numior/vue';
 import { ref } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
@@ -60,7 +60,7 @@ const save = (): void => {
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Escape') {
+  if (event.key === Key.Escape) {
     event.preventDefault();
     emit('cancel');
   }

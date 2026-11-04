@@ -4,6 +4,10 @@ import type { Component } from 'vue';
 import type { NuiEditorMessages } from '../editor/editor.messages';
 import type { SlashItem } from '../slash/slash-items';
 
+export type GripSide = (typeof GripSide)[keyof typeof GripSide];
+
+export type GripEdge = (typeof GripEdge)[keyof typeof GripEdge];
+
 export interface NuiEditorBlockContext {
   setAttrs(attrs: Attrs): boolean;
   remove(): boolean;
@@ -23,9 +27,10 @@ export interface NuiEditorBlockViewProps {
   editor: NuiEditorBlockContext;
 }
 
-export type NuiEditorBlockPlace = 'start' | 'end';
+export type NuiEditorBlockPlace = (typeof NuiEditorBlockPlace)[keyof typeof NuiEditorBlockPlace];
 
-export type NuiEditorHandlePlacement = 'push' | 'beside';
+export type NuiEditorHandlePlacement =
+  (typeof NuiEditorHandlePlacement)[keyof typeof NuiEditorHandlePlacement];
 
 export interface NuiEditorBlockEditor {
   element(id: NodeId): HTMLElement | undefined;
@@ -49,3 +54,13 @@ export interface NuiEditorBlock {
       ) => NuiMenuEntry[])
     | undefined;
 }
+
+export const NuiEditorBlockPlace = { Start: 'start', End: 'end' } as const;
+
+export const NuiEditorHandlePlacement = { Push: 'push', Beside: 'beside' } as const;
+
+export const GripSide = { Start: 'start', End: 'end' } as const;
+
+export const GripEdge = { Top: 'top', Bottom: 'bottom' } as const;
+
+export const ImageActionKey = { Replace: 'replace', Download: 'download', Alt: 'alt' } as const;

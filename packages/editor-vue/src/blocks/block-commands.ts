@@ -1,6 +1,7 @@
-import { selectionRange, textSelection, type Command } from '@numior/editor-core';
+import { SelectionKind, selectionRange, textSelection, type Command } from '@numior/editor-core';
 import type { NuiEditorBlockEditor } from './block.types';
 import { OPEN_CLASS } from './toggle/toggle-state';
+import { NuiContentNodeType } from '@numior/content';
 
 export const toggleTodo: Command = (state, dispatch) => {
   const $pos = state.doc.resolve(selectionRange(state.doc, state.selection).from);
@@ -8,7 +9,7 @@ export const toggleTodo: Command = (state, dispatch) => {
   for (let depth = $pos.depth; depth >= 1; depth -= 1) {
     const node = $pos.node(depth);
 
-    if (node.type === 'todo_item') {
+    if (node.type === NuiContentNodeType.TodoItem) {
       dispatch?.(
         state.tr.setNodeAttrs($pos.before(depth), { checked: node.attrs.checked !== true }),
       );
@@ -24,7 +25,7 @@ export const leaveClosedToggle =
   (state, dispatch) => {
     const { selection } = state;
 
-    if (selection.kind !== 'text' || selection.anchor !== selection.head) {
+    if (selection.kind !== SelectionKind.Text || selection.anchor !== selection.head) {
       return false;
     }
     const $pos = state.doc.resolve(selection.head);
@@ -32,7 +33,7 @@ export const leaveClosedToggle =
     const toggle = depth >= 1 ? $pos.node(depth) : undefined;
 
     if (
-      toggle?.type !== 'toggle' ||
+      toggle?.type !== NuiContentNodeType.Toggle ||
       $pos.indexAt(depth) !== 0 ||
       $pos.pos !== $pos.end($pos.depth) ||
       editor.element(toggle.id)?.classList.contains(OPEN_CLASS) !== false

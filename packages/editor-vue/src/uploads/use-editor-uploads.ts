@@ -2,6 +2,7 @@ import {
   definePlugin,
   dropUploads,
   finishUpload,
+  InputIntentKind,
   placeBlock,
   startUploads,
   uploadPlace,
@@ -16,6 +17,8 @@ import {
 } from '@numior/editor-core';
 import {
   formatFileSize,
+  UploadReason,
+  UploadStatus,
   useLocale,
   useMessages,
   useUploadQueue,
@@ -24,13 +27,15 @@ import {
 } from '@numior/primitives';
 import { computed, onScopeDispose, ref, shallowReactive, type ComputedRef, type Ref } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
-import type {
-  UploadKind,
-  NuiEditorUploadAdapter,
-  NuiEditorUploadItem,
-  UploadCard,
-  UploadTarget,
+import {
+  UploadTargetKind,
+  type NuiEditorUploadAdapter,
+  type NuiEditorUploadItem,
+  type UploadCard,
+  type UploadKind,
+  type UploadTarget,
 } from './uploads.types';
+import { NuiContentNodeType } from '@numior/content';
 
 export interface EditorUploadOptions {
   readonly schema: Schema;
@@ -150,7 +155,7 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
     file: LinkedFile,
     alone: boolean,
   ): ElementNode =>
-    kind === 'image'
+    kind === NuiContentNodeType.Image
       ? schema.element('image', {
           id: tr.newId(),
           attrs: alone ? { src: file.url, wrap: 'break' } : { src: file.url },
@@ -161,17 +166,19 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
         });
 
   const accepts = (kind: UploadKind, url: string): boolean =>
-    schema.nodes.get(kind)?.attrs[kind === 'image' ? 'src' : 'url']?.verify?.(url) ?? true;
+    schema.nodes
+      .get(kind)
+      ?.attrs[kind === NuiContentNodeType.Image ? 'src' : 'url']?.verify?.(url) ?? true;
 
   const placed = (item: NuiEditorUploadItem, url: string): boolean => {
     const target = targets.get(item.id);
-    const kind = target?.kind === 'replace' ? 'image' : kindOf(item.type);
+    const kind = target?.kind === UploadTargetKind.Replace ? 'image' : kindOf(item.type);
     const file = { url, name: item.name, size: item.size, type: item.type };
 
     if (kind === undefined || !accepts(kind, url)) {
       return false;
     }
-    return target?.kind === 'replace'
+    return target?.kind === UploadTargetKind.Replace
       ? options.run(replaceSource(target.id, url))
       : options.run(finishUpload(item.id, (tr, alone) => nodeFor(tr, kind, file, alone)));
   };
@@ -195,7 +202,7 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
         : adapter(file, context);
     },
     onDone: (item) => {
-      const url = item.status === 'done' ? item.result?.url : undefined;
+      const url = item.status === UploadStatus.Done ? item.result?.url : undefined;
 
       if (url !== undefined) {
         place(item, url);
@@ -213,9 +220,9 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
     const limit = options.maxSize();
 
     switch (rejection.error.reason) {
-      case 'type':
+      case UploadReason.Type:
         return texts.value.uploadType({ name });
-      case 'size':
+      case UploadReason.Size:
         return texts.value.uploadSize({
           name,
           size: formatFileSize(limit ?? rejection.file.size, locale.value),
@@ -249,7 +256,7 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
     const checked = validateFiles(files, {
       accept: accept ?? options.accept(),
       maxSize: options.maxSize(),
-      maxFiles: target?.kind === 'replace' ? 1 : undefined,
+      maxFiles: target?.kind === UploadTargetKind.Replace ? 1 : undefined,
     });
 
     if (checked.rejected.length > 0) {
@@ -260,7 +267,11 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
 
   const supersede = (spot: UploadTarget): void => {
     for (const [id, existing] of targets) {
-      if (spot.kind === 'replace' && existing.kind === 'replace' && existing.id === spot.id) {
+      if (
+        spot.kind === UploadTargetKind.Replace &&
+        existing.kind === UploadTargetKind.Replace &&
+        existing.id === spot.id
+      ) {
         cancel(id);
       }
     }
@@ -280,7 +291,7 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
     for (const item of created) {
       targets.set(item.id, spot);
     }
-    if (spot.kind === 'place') {
+    if (spot.kind === UploadTargetKind.Place) {
       for (const item of created) {
         preview(item);
         elementFor(item.id);
@@ -323,7 +334,7 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
     name: 'editor-uploads',
     props: {
       handleIntent: (intent, state) => {
-        if (intent.kind !== 'files') {
+        if (intent.kind !== InputIntentKind.Files) {
           return false;
         }
         add(intent.files, { kind: 'place', pos: uploadPlace(state), at: uploadPoint(state) });
@@ -346,7 +357,7 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
         items.value.flatMap((item): [NodeId, NuiEditorUploadItem][] => {
           const target = targets.get(item.id);
 
-          return target?.kind === 'replace' ? [[target.id, item]] : [];
+          return target?.kind === UploadTargetKind.Replace ? [[target.id, item]] : [];
         }),
       ),
   );

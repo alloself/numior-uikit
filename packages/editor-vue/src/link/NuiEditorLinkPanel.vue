@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { useMessages } from '@numior/primitives';
+import { Key, PopoverState, useMessages } from '@numior/primitives';
 import { NuiButton, NuiField, NuiInput, NuiPopover } from '@numior/vue';
 import { ref, useTemplateRef, watch } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
@@ -70,7 +70,7 @@ const apply = (): void => {
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Escape') {
+  if (event.key === Key.Escape) {
     event.preventDefault();
     emit('cancel');
   }
@@ -84,7 +84,7 @@ watch(open, (value) => {
 });
 
 const onToggle = (event: Event): void => {
-  if ('newState' in event && event.newState === 'open') {
+  if ('newState' in event && event.newState === PopoverState.Open) {
     form.value?.querySelector('input')?.focus();
   }
 };

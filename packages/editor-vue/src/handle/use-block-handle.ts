@@ -1,6 +1,8 @@
 import {
   childNode,
   containerSlot,
+  ContentNodeKind,
+  SelectionKind,
   selectionSlot,
   slotAt,
   type ChildSlot,
@@ -21,8 +23,9 @@ import {
   startEdge,
   WIDGET,
 } from './block-geometry';
-import type { NuiEditorHandlePlacement } from '../blocks/block.types';
+import { NuiEditorHandlePlacement } from '../blocks/block.types';
 import { useBlockDrag } from './use-block-drag';
+import { AriaValue, Direction, PointerType } from '@numior/primitives';
 
 export interface BlockHandleOptions {
   readonly frame: Readonly<Ref<HTMLElement | null>>;
@@ -62,13 +65,13 @@ const widgetBlock = (target: Element): Element | undefined => {
   const widget = target.closest(WIDGET);
   const owner = widget?.parentElement ?? undefined;
   const control = target.closest(CONTROL);
-  const atom = owner?.getAttribute('contenteditable') === 'false';
+  const atom = owner?.getAttribute('contenteditable') === AriaValue.False;
 
   return !atom && control !== null && widget?.contains(control) === true ? undefined : owner;
 };
 
 const atomStart = (element: Element | undefined): number | undefined =>
-  element instanceof HTMLElement && element.getAttribute('contenteditable') === 'false'
+  element instanceof HTMLElement && element.getAttribute('contenteditable') === AriaValue.False
     ? element.getBoundingClientRect().left
     : undefined;
 
@@ -107,12 +110,16 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
   let pin: { armed: boolean } | undefined;
 
   const rtl = (): boolean =>
-    options.frame.value !== null && getComputedStyle(options.frame.value).direction === 'rtl';
+    options.frame.value !== null &&
+    getComputedStyle(options.frame.value).direction === Direction.Rtl;
 
   const besideOf = (slot: ChildSlot | undefined): boolean => {
     const node = slot === undefined ? undefined : childNode(options.state().doc, slot);
 
-    return node?.kind === 'element' && options.placement(node) === 'beside';
+    return (
+      node?.kind === ContentNodeKind.Element &&
+      options.placement(node) === NuiEditorHandlePlacement.Beside
+    );
   };
 
   const placeBeside = (target: HTMLElement, element: Element, frame: DOMRect): boolean => {
@@ -198,7 +205,7 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
     const state = options.state();
 
     const caret =
-      coarse.value && options.focused() && state.selection.kind !== 'gap'
+      coarse.value && options.focused() && state.selection.kind !== SelectionKind.Gap
         ? selectionSlot(state)
         : undefined;
 
@@ -303,7 +310,7 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
     const view = options.view();
     const target = event.target;
 
-    if (event.pointerType === 'touch') {
+    if (event.pointerType === PointerType.Touch) {
       return;
     }
     if (target instanceof Element && outside(target)) {

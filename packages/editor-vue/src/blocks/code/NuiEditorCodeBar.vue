@@ -49,7 +49,13 @@
 </template>
 
 <script setup lang="ts">
-import { languageOf, useClipboard, useHighlighter, useMessages } from '@numior/primitives';
+import {
+  languageOf,
+  PopoverState,
+  useClipboard,
+  useHighlighter,
+  useMessages,
+} from '@numior/primitives';
 import { NuiButton, NuiCommand, NuiPopover, type NuiCommandItem } from '@numior/vue';
 import { computed, ref, useTemplateRef } from 'vue';
 import { editorMessages } from '../../editor/editor.messages';
@@ -90,7 +96,7 @@ const onToggle = (event: Event): void => {
   if (!('newState' in event)) {
     return;
   }
-  if (event.newState === 'open') {
+  if (event.newState === PopoverState.Open) {
     languages.value?.focus();
   } else {
     search.value = '';

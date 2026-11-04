@@ -18,6 +18,7 @@ import NuiEditorImage from './image/NuiEditorImage.vue';
 import { insertTable } from './table/table-commands';
 import NuiEditorTodoCheck from './todo/NuiEditorTodoCheck.vue';
 import NuiEditorToggleButton from './toggle/NuiEditorToggleButton.vue';
+import { NuiContentAlign, NuiContentWrap } from '@numior/content';
 
 export const todoBlock = defineBlock({
   name: 'todo_item',
@@ -99,7 +100,9 @@ export const imageBlock = defineBlock({
   name: 'image',
   view: NuiEditorImage,
   handle: (node) =>
-    node.attrs.wrap === 'break' && node.attrs.align !== 'start' ? 'beside' : 'push',
+    node.attrs.wrap === NuiContentWrap.Break && node.attrs.align !== NuiContentAlign.Start
+      ? 'beside'
+      : 'push',
 });
 
 export const fileBlock = defineBlock({

@@ -11,3 +11,5 @@ export interface NuiEditorSuggestMenuProps {
   loadingLabel?: string | undefined;
   emptyLabel?: string | undefined;
 }
+
+export const SlashItemKind = { Command: 'command', Open: 'open' } as const;

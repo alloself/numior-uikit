@@ -17,7 +17,7 @@
 
 <script setup lang="ts">
 import { nodeSize, textSelection, type Command, type ElementNode } from '@numior/editor-core';
-import { useMessages } from '@numior/primitives';
+import { Key, useMessages } from '@numior/primitives';
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { editorMessages } from '../../editor/editor.messages';
 import type { NuiEditorBlockContext } from '../block.types';
@@ -76,12 +76,12 @@ const paragraphAfter: Command = (state, dispatch) => {
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Enter' && !event.isComposing) {
+  if (event.key === Key.Enter && !event.isComposing) {
     event.preventDefault();
     commit();
     editor.run(paragraphAfter);
     editor.focus();
-  } else if (event.key === 'Escape') {
+  } else if (event.key === Key.Escape) {
     event.preventDefault();
     draft.value = caption.value;
     editor.enter();

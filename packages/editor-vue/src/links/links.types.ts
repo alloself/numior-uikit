@@ -1,5 +1,6 @@
 import type { IconSource } from '@numior/primitives';
 import type { NodeId } from '@numior/editor-core';
+import { type NuiContentNodeType } from '@numior/content';
 
 export interface NuiEditorLinkPreview {
   readonly title?: string | undefined;
@@ -19,7 +20,7 @@ export interface PastedLink {
   readonly block: NodeId;
 }
 
-export type LinkKind = 'embed' | 'bookmark';
+export type LinkKind = typeof NuiContentNodeType.Embed | typeof NuiContentNodeType.Bookmark;
 
 export interface LinkDetails {
   readonly title: string;

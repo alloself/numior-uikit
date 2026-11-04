@@ -11,6 +11,8 @@ import {
 } from '@numior/editor-core';
 import { computed, ref, type ComputedRef } from 'vue';
 import { filterSlash, type SlashItem } from './slash-items';
+import { SlashItemKind } from '../suggest/suggest.types';
+import { Key } from '@numior/primitives';
 
 export interface SlashOptions {
   readonly state: () => EditorState;
@@ -60,10 +62,10 @@ export const useSlash = (options: SlashOptions): Slash => {
     const query = deleteRange({ from: found.from, to: found.to });
 
     switch (item.kind) {
-      case 'command':
+      case SlashItemKind.Command:
         options.run(sequence(query, item.command));
         break;
-      case 'open':
+      case SlashItemKind.Open:
         options.run(query);
         item.open();
         break;
@@ -82,11 +84,11 @@ export const useSlash = (options: SlashOptions): Slash => {
       point((active.value + move + list.length) % list.length);
       return true;
     }
-    if ((key.key === 'Enter' || key.key === 'Tab') && chosen !== undefined) {
+    if ((key.key === Key.Enter || key.key === Key.Tab) && chosen !== undefined) {
       apply(chosen, found);
       return true;
     }
-    return key.key === 'Escape' && options.run(suggestion.dismiss);
+    return key.key === Key.Escape && options.run(suggestion.dismiss);
   };
 
   return {

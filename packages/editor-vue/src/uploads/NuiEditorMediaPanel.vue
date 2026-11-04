@@ -10,14 +10,16 @@
   >
     <NuiTabs v-if="uploadable" :key="session" v-model="tab" size="sm" :tabs="tabs" :label="title">
       <template #panel="{ tab: shown }">
-        <div v-if="shown.value === 'upload'" class="nui-editor-media__upload">
+        <div v-if="shown.value === MediaTab.Upload" class="nui-editor-media__upload">
           <NuiButton
             class="nui-editor-media__choose"
             size="sm"
             icon="upload"
             autofocus
             @click="choose"
-            >{{ kind === 'image' ? texts.chooseImage : texts.chooseFile }}</NuiButton
+            >{{
+              kind === NuiContentNodeType.Image ? texts.chooseImage : texts.chooseFile
+            }}</NuiButton
           >
           <p class="nui-editor-media__hint">{{ texts.mediaDropHint }}</p>
         </div>
@@ -46,7 +48,7 @@
       tabindex="-1"
       aria-hidden="true"
       :accept="accept === '' ? undefined : accept"
-      :multiple="kind === 'file'"
+      :multiple="kind === NuiContentNodeType.File"
       @change="onPick"
     />
   </NuiPopover>
@@ -58,7 +60,8 @@ import { NuiButton, NuiPopover, NuiTabs } from '@numior/vue';
 import { computed, ref, useTemplateRef, watch } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
 import NuiEditorMediaLink from './NuiEditorMediaLink.vue';
-import type { MediaKind } from './uploads.types';
+import { MediaTab, type MediaKind } from './uploads.types';
+import { NuiContentNodeType } from '@numior/content';
 
 const { anchor, kind, uploadable, accept, valid, invalidText } = defineProps<{
   anchor: HTMLElement | null;

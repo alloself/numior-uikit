@@ -18,7 +18,7 @@
     :uploadable="uploads.enabled.value && picked !== undefined"
     :accept="picked"
     :valid="valid"
-    :invalid-text="kind === 'embed' ? texts.embedInvalid : texts.mediaInvalid"
+    :invalid-text="kind === NuiContentNodeType.Embed ? texts.embedInvalid : texts.mediaInvalid"
     @files="onFiles"
     @link="onLink"
     @cancel="close"
@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { webAddress } from '@numior/content';
+import { NuiContentNodeType, webAddress } from '@numior/content';
 import type { Schema } from '@numior/editor-core';
 import { useMessages } from '@numior/primitives';
 import { computed } from 'vue';
@@ -56,9 +56,9 @@ const media = ['image', 'file', 'embed', 'bookmark'].some((name) => schema.nodes
 
 const picked = computed(() => {
   switch (kind) {
-    case 'image':
+    case NuiContentNodeType.Image:
       return uploads.images.value;
-    case 'file':
+    case NuiContentNodeType.File:
       return accept ?? '';
     default:
       return undefined;
@@ -67,13 +67,13 @@ const picked = computed(() => {
 
 const valid = (url: string): boolean => {
   switch (kind) {
-    case 'embed':
+    case NuiContentNodeType.Embed:
       return links.embedOf(url) !== undefined;
-    case 'bookmark':
+    case NuiContentNodeType.Bookmark:
       return webAddress(url) !== undefined;
-    case 'image':
+    case NuiContentNodeType.Image:
       return schema.nodes.get('image')?.attrs.src?.verify?.(url) ?? true;
-    case 'file':
+    case NuiContentNodeType.File:
       return schema.nodes.get('file')?.attrs.url?.verify?.(url) ?? true;
   }
 };
@@ -90,7 +90,7 @@ const onFiles = (files: readonly File[]): void => {
 
 const onLink = (url: string): void => {
   close();
-  if (kind === 'embed' || kind === 'bookmark') {
+  if (kind === NuiContentNodeType.Embed || kind === NuiContentNodeType.Bookmark) {
     links.insert(kind, url);
   } else {
     uploads.insertLink(kind, url);

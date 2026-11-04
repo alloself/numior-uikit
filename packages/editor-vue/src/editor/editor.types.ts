@@ -7,7 +7,7 @@ import type { NuiEditorLinkMetadata } from '../links/links.types';
 import type { NuiEditorMentions } from '../mentions/mentions.types';
 import type { NuiEditorUploadAdapter } from '../uploads/uploads.types';
 
-export type NuiEditorFormat = 'html' | 'json';
+export type NuiEditorFormat = (typeof NuiEditorFormat)[keyof typeof NuiEditorFormat];
 
 export type NuiEditorValue = string | DocJSON;
 
@@ -30,7 +30,7 @@ export interface NuiEditorProps extends NuiFieldControlProps {
   maxSize?: number | undefined;
 }
 
-export type NuiEditorToolbarMode = 'fixed' | 'bubble' | 'both' | 'none';
+export type NuiEditorToolbarMode = (typeof NuiEditorToolbarMode)[keyof typeof NuiEditorToolbarMode];
 
 export interface NuiEditorApi {
   state(): EditorState | undefined;
@@ -42,3 +42,18 @@ export interface NuiEditorApi {
 export interface NuiEditorPaste {
   readonly source: PasteSource;
 }
+
+export const NuiEditorFormat = { Html: 'html', Json: 'json' } as const;
+
+export const NuiEditorToolbarMode = {
+  Fixed: 'fixed',
+  Bubble: 'bubble',
+  Both: 'both',
+  None: 'none',
+} as const;
+
+export const KeyCode = { K: 'KeyK' } as const;
+
+export const CssDisplay = { ListItem: 'list-item' } as const;
+
+export const DomAttr = { Class: 'class', ContentEditable: 'contenteditable' } as const;

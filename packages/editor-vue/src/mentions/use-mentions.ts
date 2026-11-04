@@ -12,6 +12,7 @@ import {
 import { useMounted } from '@vueuse/core';
 import { computed, onScopeDispose, ref, shallowRef, watch, type ComputedRef, type Ref } from 'vue';
 import type { NuiEditorMention, NuiEditorMentions } from './mentions.types';
+import { Key } from '@numior/primitives';
 
 export interface MentionOptions {
   readonly state: () => EditorState;
@@ -143,11 +144,11 @@ export const useMentions = (options: MentionOptions): Mentions => {
       point((active.value + move + list.length) % list.length);
       return true;
     }
-    if ((key.key === 'Enter' || key.key === 'Tab') && chosen !== undefined) {
+    if ((key.key === Key.Enter || key.key === Key.Tab) && chosen !== undefined) {
       insert(chosen, found);
       return true;
     }
-    return key.key === 'Escape' && options.run(suggestion.dismiss);
+    return key.key === Key.Escape && options.run(suggestion.dismiss);
   };
 
   watch(

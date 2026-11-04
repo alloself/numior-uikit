@@ -1,5 +1,6 @@
 import {
   childNode,
+  ContentNodeKind,
   holdsSlots,
   isSlot,
   type ChildSlot,
@@ -7,6 +8,7 @@ import {
   type ElementNode,
 } from '@numior/editor-core';
 import type { EditorView } from '@numior/editor-core/view';
+import { CssDisplay } from '../editor/editor.types';
 
 export const BLOCK = '.nui-editor__chunk > *';
 
@@ -47,7 +49,7 @@ export const indexAtY = (view: EditorView, parent: string, clientY: number): num
 export const markerSpace = (element: Element): number => {
   const parent = element.parentElement;
 
-  return parent === null || getComputedStyle(element).display !== 'list-item'
+  return parent === null || getComputedStyle(element).display !== CssDisplay.ListItem
     ? 0
     : Number.parseFloat(getComputedStyle(parent).paddingInlineStart) || 0;
 };
@@ -105,7 +107,7 @@ const innerSlot = (view: EditorView, node: ElementNode, clientY: number): ChildS
       : { parent: node.id, index };
   }
   for (const child of node.content) {
-    if (child.kind === 'element' && spans(view.nodeDOM(child.id), clientY)) {
+    if (child.kind === ContentNodeKind.Element && spans(view.nodeDOM(child.id), clientY)) {
       return innerSlot(view, child, clientY);
     }
   }

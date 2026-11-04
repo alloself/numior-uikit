@@ -10,7 +10,7 @@ import {
   type Schema,
 } from '@numior/editor-core';
 import { onScopeDispose, toRaw, watch, type Ref } from 'vue';
-import type { NuiEditorFormat, NuiEditorValue } from './editor.types';
+import { NuiEditorFormat, type NuiEditorValue } from './editor.types';
 
 export interface EditorValueOptions<V extends NuiEditorValue | undefined> {
   readonly schema: Schema;
@@ -51,7 +51,7 @@ export const useEditorValue = <V extends NuiEditorValue | undefined>(
     const bound = current();
 
     return bound === undefined
-      ? (typeof value === 'string') === (options.format() === 'html')
+      ? (typeof value === 'string') === (options.format() === NuiEditorFormat.Html)
       : typeof bound === typeof value;
   };
 
@@ -76,7 +76,7 @@ export const useEditorValue = <V extends NuiEditorValue | undefined>(
 
     const { doc } = options.state();
 
-    publish(options.format() === 'json' ? toJSON(doc) : write(doc));
+    publish(options.format() === NuiEditorFormat.Json ? toJSON(doc) : write(doc));
   };
 
   watch(options.model, () => {
@@ -96,14 +96,14 @@ export const useEditorValue = <V extends NuiEditorValue | undefined>(
   return {
     initial: docOf(options.schema, written),
     paused: () => {
-      if (options.format() !== 'json') {
+      if (options.format() !== NuiEditorFormat.Json) {
         stop();
         pending = true;
         timer = setTimeout(flush, PAUSE_MS);
       }
     },
     changed: (json) => {
-      if (options.format() === 'json') {
+      if (options.format() === NuiEditorFormat.Json) {
         stop();
         pending = false;
         publish(json);

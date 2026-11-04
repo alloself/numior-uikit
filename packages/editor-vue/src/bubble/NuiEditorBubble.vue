@@ -31,7 +31,7 @@
 
 <script setup lang="ts">
 import type { Command } from '@numior/editor-core';
-import { useListNavigation, useMessages } from '@numior/primitives';
+import { Key, useListNavigation, useMessages } from '@numior/primitives';
 import { NuiPopover } from '@numior/vue';
 import { computed, ref, useTemplateRef, watch } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
@@ -39,7 +39,7 @@ import NuiEditorToolbarGroup from '../toolbar/NuiEditorToolbarGroup.vue';
 import NuiEditorToolbarHints from '../toolbar/NuiEditorToolbarHints.vue';
 import { provideToolbarHints } from '../toolbar/toolbar-hints';
 import { toolbarGroups } from '../toolbar/toolbar-items';
-import type { ColourMark } from '../toolbar/toolbar.types';
+import { ToolbarGroupKey, type ColourMark } from '../toolbar/toolbar.types';
 import type { NuiEditorBubbleProps } from './bubble.types';
 
 const { state, options, anchor, open } = defineProps<NuiEditorBubbleProps>();
@@ -57,7 +57,9 @@ const shown = ref(open);
 const texts = useMessages(editorMessages);
 
 const group = computed(() =>
-  toolbarGroups(state, texts.value, options).find((candidate) => candidate.key === 'marks'),
+  toolbarGroups(state, texts.value, options).find(
+    (candidate) => candidate.key === ToolbarGroupKey.Marks,
+  ),
 );
 
 const navigation = useListNavigation(bar, {
@@ -74,7 +76,7 @@ watch(
 );
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Escape') {
+  if (event.key === Key.Escape) {
     event.preventDefault();
     emit('leave');
     return;

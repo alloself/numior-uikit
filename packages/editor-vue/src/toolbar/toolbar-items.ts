@@ -41,6 +41,8 @@ import type { IconSource } from '@numior/primitives';
 import type { NuiEditorMessages } from '../editor/editor.messages';
 import type { SlashItem } from '../slash/slash-items';
 import { onlyIf } from '../editor/only-if';
+import { type ToolbarItemKind } from './toolbar.types';
+import { NuiContentNodeType } from '@numior/content';
 
 export interface ToolbarFace {
   readonly label: string;
@@ -51,18 +53,18 @@ export interface ToolbarFace {
 }
 
 export interface ToolbarAction extends ToolbarFace {
-  readonly kind: 'action';
+  readonly kind: typeof ToolbarItemKind.Action;
   readonly key: string;
   readonly command: Command;
 }
 
 export interface ToolbarLink extends ToolbarFace {
-  readonly kind: 'link';
+  readonly kind: typeof ToolbarItemKind.Link;
   readonly key: 'link';
 }
 
 export interface ToolbarColours {
-  readonly kind: 'colours';
+  readonly kind: typeof ToolbarItemKind.Colours;
   readonly key: 'colours';
   readonly label: string;
   readonly colour: string | null;
@@ -87,7 +89,7 @@ export interface ToolbarBlock {
 }
 
 export interface ToolbarBlocks {
-  readonly kind: 'blocks';
+  readonly kind: typeof ToolbarItemKind.Blocks;
   readonly key: 'blocks';
   readonly label: string;
   readonly icon: IconSource;
@@ -95,7 +97,7 @@ export interface ToolbarBlocks {
 }
 
 export interface ToolbarInsert {
-  readonly kind: 'insert';
+  readonly kind: typeof ToolbarItemKind.Insert;
   readonly key: 'insert';
   readonly label: string;
   readonly state: EditorState;
@@ -181,7 +183,7 @@ const blockOptions = (facts: Facts): ToolbarBlock[] => {
         key: `heading-${String(level)}`,
         label: facts.texts.heading({ level }),
         icon: HEADING_ICONS[level],
-        active: current?.type === 'heading' && current.attrs.level === level,
+        active: current?.type === NuiContentNodeType.Heading && current.attrs.level === level,
         command: setBlockType('heading', { level }),
       }))
     : [];
@@ -191,7 +193,7 @@ const blockOptions = (facts: Facts): ToolbarBlock[] => {
       key: 'paragraph',
       label: facts.texts.text,
       icon: Pilcrow,
-      active: current?.type === 'paragraph',
+      active: current?.type === NuiContentNodeType.Paragraph,
       command: setBlockType('paragraph'),
     })),
     ...headings,
@@ -199,7 +201,7 @@ const blockOptions = (facts: Facts): ToolbarBlock[] => {
       key: 'code_block',
       label: facts.texts.codeBlock,
       icon: Braces,
-      active: current?.type === 'code_block',
+      active: current?.type === NuiContentNodeType.CodeBlock,
       command: setBlockType('code_block'),
     })),
   ];

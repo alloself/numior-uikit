@@ -172,19 +172,26 @@
 
 <script setup lang="ts" generic="V extends NuiEditorValue | undefined">
 import { Bookmark, SquarePlay } from '@lucide/vue';
-import { CONTENT_COLOURS, contentSchema, embedProviders, NuiContent } from '@numior/content';
+import {
+  CONTENT_COLOURS,
+  contentSchema,
+  embedProviders,
+  NuiContent,
+  NuiContentNodeType,
+} from '@numior/content';
 import {
   baseKeymap,
-  pasteSchema,
+  commentAnchors,
   createState,
   detectPasteSource,
-  commentAnchors,
   history,
   inputRules,
   isEmptyDoc,
   keymap,
   markdownRules,
+  pasteSchema,
   pendingUploads,
+  SelectionKind,
   toJSON,
   type Command,
   type Doc,
@@ -196,6 +203,7 @@ import {
 } from '@numior/editor-core';
 import { createEditorView, type EditorView } from '@numior/editor-core/view';
 import {
+  Key,
   provideHighlighter,
   useFieldControl,
   useHighlighter,
@@ -207,6 +215,7 @@ import { codeHighlightPlugin, createCodeHighlighter } from '../blocks/code/code-
 import {
   NuiAvatar,
   NuiFieldFrame,
+  NuiSize,
   optionElementId,
   type NuiListEntry,
   type NuiMenuEntry,
@@ -254,13 +263,22 @@ import { useEditorUploads } from '../uploads/use-editor-uploads';
 import { editorMessages } from './editor.messages';
 import { useEditorValue, type EditorValue } from './use-editor-value';
 import { useEditorOverlays } from './use-editor-overlays';
-import type { NuiEditorApi, NuiEditorPaste, NuiEditorProps, NuiEditorValue } from './editor.types';
+import {
+  KeyCode,
+  NuiEditorFormat,
+  NuiEditorToolbarMode,
+  type NuiEditorApi,
+  type NuiEditorPaste,
+  type NuiEditorProps,
+  type NuiEditorValue,
+} from './editor.types';
+import { SlashItemKind } from '../suggest/suggest.types';
 
 defineOptions({ inheritAttrs: false });
 
 const {
   id,
-  size = 'md',
+  size = NuiSize.Md,
   disabled = undefined,
   readonly = undefined,
   required = undefined,
@@ -272,7 +290,7 @@ const {
   schema = contentSchema,
   placeholder,
   autofocus = false,
-  toolbar = 'fixed',
+  toolbar = NuiEditorToolbarMode.Fixed,
   colours = CONTENT_COLOURS,
   highlights = CONTENT_COLOURS,
   blockHandles = true,
@@ -284,7 +302,7 @@ const {
   embeds = NO_EMBEDS,
   linkMetadata,
   mentions,
-  format = 'html',
+  format = NuiEditorFormat.Html,
 } = defineProps<NuiEditorProps>();
 
 const model = defineModel<V>({ required: true });
@@ -387,7 +405,7 @@ const MEDIA_SLASH: readonly {
 ];
 
 const offered = (kind: MediaKind): boolean =>
-  schema.nodes.has(kind) && (kind !== 'embed' || providers.value.length > 0);
+  schema.nodes.has(kind) && (kind !== NuiContentNodeType.Embed || providers.value.length > 0);
 
 const mediaSlash = (): readonly SlashItem[] =>
   MEDIA_SLASH.reduce<SlashItem[]>((found, entry) => {
@@ -572,11 +590,13 @@ const empty = ref(isEmptyDoc(initial));
 const editable = computed(() => !isDisabled.value && !isReadonly.value);
 
 const selectedNode = computed(() =>
-  current.value.selection.kind === 'node' ? current.value.selection.id : undefined,
+  current.value.selection.kind === SelectionKind.Node ? current.value.selection.id : undefined,
 );
 
 const fixedToolbar = computed(
-  () => (toolbar === 'fixed' || toolbar === 'both') && !isReadonly.value,
+  () =>
+    (toolbar === NuiEditorToolbarMode.Fixed || toolbar === NuiEditorToolbarMode.Both) &&
+    !isReadonly.value,
 );
 
 const finePointer = useMediaQuery('(hover: hover) and (pointer: fine)');
@@ -585,7 +605,9 @@ const coarsePointer = useMediaQuery('(pointer: coarse)');
 const docked = computed(() => fixedToolbar.value && coarsePointer.value && editable.value);
 
 const bubbleToolbar = computed(
-  () => (toolbar === 'bubble' || toolbar === 'both') && (finePointer.value || toolbar === 'bubble'),
+  () =>
+    (toolbar === NuiEditorToolbarMode.Bubble || toolbar === NuiEditorToolbarMode.Both) &&
+    (finePointer.value || toolbar === NuiEditorToolbarMode.Bubble),
 );
 
 const hasLinks = schema.marks.has('link');
@@ -772,7 +794,7 @@ const onHandleRun = (command: Command): void => {
 };
 
 const onInsertOpen = (item: SlashItem): void => {
-  if (item.kind === 'open') {
+  if (item.kind === SlashItemKind.Open) {
     item.open();
   }
 };
@@ -785,13 +807,13 @@ const onToolbarRun = (command: Command, refocus: boolean): void => {
 };
 
 const isLinkKey = (event: KeyboardEvent): boolean =>
-  (event.ctrlKey || event.metaKey) && !event.altKey && event.code === 'KeyK';
+  (event.ctrlKey || event.metaKey) && !event.altKey && event.code === KeyCode.K;
 
 const onKeydown = (event: KeyboardEvent): void => {
   if (view === undefined || view.inWidget(event.target)) {
     return;
   }
-  if (event.altKey && event.key === 'F10') {
+  if (event.altKey && event.key === Key.F10) {
     event.preventDefault();
     (toolbarElement.value ?? bubbleElement.value)?.focus();
   } else if (isLinkKey(event) && hasLinks && editable.value) {
@@ -816,7 +838,10 @@ watch(
   () => current.value.selection,
   (selection) => {
     const dock: unknown = toolbarElement.value?.$el;
-    const typing = docked.value && view?.hasFocus() === true && selection.kind === 'text';
+
+    const typing =
+      docked.value && view?.hasFocus() === true && selection.kind === SelectionKind.Text;
+
     const caret = typing ? view?.coordsAtPos(selection.head) : undefined;
 
     const overlap =

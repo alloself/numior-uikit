@@ -2,26 +2,26 @@
   <div class="nui-editor-toolbar__group">
     <template v-for="item in group.items" :key="item.key">
       <NuiEditorBlockMenu
-        v-if="item.kind === 'blocks'"
+        v-if="item.kind === ToolbarItemKind.Blocks"
         :blocks="item"
         :disabled="disabled"
         @run="emit('run', $event, true)"
       />
       <NuiEditorInsertMenu
-        v-else-if="item.kind === 'insert'"
+        v-else-if="item.kind === ToolbarItemKind.Insert"
         :insert="item"
         :disabled="disabled"
         @run="emit('run', $event, true)"
         @open="emit('open', $event)"
       />
       <NuiEditorColourMenu
-        v-else-if="item.kind === 'colours'"
+        v-else-if="item.kind === ToolbarItemKind.Colours"
         :colours="item"
         :disabled="disabled"
         @choose="(mark, name) => emit('colour', mark, name)"
       />
       <NuiEditorToolbarButton
-        v-else-if="item.kind === 'link'"
+        v-else-if="item.kind === ToolbarItemKind.Link"
         :action="item"
         :disabled="disabled"
         @press="emit('link')"
@@ -43,7 +43,7 @@ import type { SlashItem } from '../slash/slash-items';
 import NuiEditorColourMenu from './NuiEditorColourMenu.vue';
 import NuiEditorInsertMenu from './NuiEditorInsertMenu.vue';
 import NuiEditorToolbarButton from './NuiEditorToolbarButton.vue';
-import type { ColourMark, NuiEditorToolbarGroupProps } from './toolbar.types';
+import { ToolbarItemKind, type ColourMark, type NuiEditorToolbarGroupProps } from './toolbar.types';
 
 const { group, disabled = false } = defineProps<NuiEditorToolbarGroupProps>();
 

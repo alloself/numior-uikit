@@ -8,7 +8,7 @@
       <span class="nui-editor-upload__name">{{ item.name }}</span>
       <span class="nui-editor-upload__status">{{ status }}</span>
       <NuiProgress
-        v-if="item.status === 'uploading' || item.status === 'queued'"
+        v-if="item.status === UploadStatus.Uploading || item.status === UploadStatus.Queued"
         class="nui-editor-upload__progress"
         size="sm"
         :value="percent"
@@ -16,7 +16,7 @@
       />
     </div>
     <div class="nui-editor-upload__actions">
-      <template v-if="item.status === 'error'">
+      <template v-if="item.status === UploadStatus.Error">
         <NuiButton
           v-if="retryable"
           variant="ghost"
@@ -44,7 +44,13 @@
 </template>
 
 <script setup lang="ts">
-import { formatFileSize, useLocale, useMessages } from '@numior/primitives';
+import {
+  formatFileSize,
+  UploadReason,
+  UploadStatus,
+  useLocale,
+  useMessages,
+} from '@numior/primitives';
 import { NuiButton, NuiIcon, NuiProgress } from '@numior/vue';
 import { computed } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
@@ -61,17 +67,23 @@ const texts = useMessages(editorMessages);
 const locale = useLocale();
 
 const image = computed(() => item.type.startsWith('image/'));
-const percent = computed(() => (item.status === 'uploading' ? Math.round(item.progress * 100) : 0));
+
+const percent = computed(() =>
+  item.status === UploadStatus.Uploading ? Math.round(item.progress * 100) : 0,
+);
 
 const retryable = computed(
-  () => item.status === 'error' && item.error.reason === 'upload' && item.file !== undefined,
+  () =>
+    item.status === UploadStatus.Error &&
+    item.error.reason === UploadReason.Upload &&
+    item.file !== undefined,
 );
 
 const status = computed(() => {
-  if (item.status === 'error') {
+  if (item.status === UploadStatus.Error) {
     return item.error.message ?? texts.value.uploadFailed({ name: item.name });
   }
-  return item.status === 'done'
+  return item.status === UploadStatus.Done
     ? formatFileSize(item.size, locale.value)
     : texts.value.uploading({ percent: percent.value });
 });

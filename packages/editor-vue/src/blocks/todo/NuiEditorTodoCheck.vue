@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { inlineText } from '@numior/editor-core';
+import { ContentNodeKind, inlineText } from '@numior/editor-core';
 import { useMessages } from '@numior/primitives';
 import { NuiCheckbox } from '@numior/vue';
 import { computed } from 'vue';
@@ -24,7 +24,7 @@ const texts = useMessages(editorMessages);
 const summary = computed(() => {
   const first = node.content[0];
 
-  return first?.kind === 'element' ? inlineText(first) : '';
+  return first?.kind === ContentNodeKind.Element ? inlineText(first) : '';
 });
 
 const toggle = (checked: boolean): void => {

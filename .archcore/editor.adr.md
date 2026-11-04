@@ -1290,3 +1290,14 @@ None }`) в схеме. Одинаковые по значениям набор�
 разбора вставки и встраиваний (`ContentTag`, `ContentAttrValue`, `YoutubeUrl`, `UrlProtocol`)
 остаются внутренними. Вход `.` не тянет `@numior/table`, поэтому наборы таблицы документа не
 переиспользуют `TableSortDirection` и `TableTextOp`.
+
+`@numior/editor-vue` (2026-11-04) сравнивает узлы и пометки через `NuiContentNodeType`, выделение и
+ввод через константы ядра (`SelectionKind`, `ContentNodeKind`, `NodeSlots`, `BesideSide`), клавиши,
+состояния поповеров, направление, тип указателя и статусы загрузок через primitives (`Key`,
+`PopoverState`, `Direction`, `PointerType`, `UploadStatus`, `UploadReason`). Подмножества наборов
+не заводят своих констант: `UploadKind`, `MediaKind` и `LinkKind` — члены `NuiContentNodeType`,
+`ColourMark` — члены `NuiContentMarkType`. Свои константы пакета: `NuiEditorFormat`,
+`NuiEditorToolbarMode`, `NuiEditorBlockPlace`, `NuiEditorHandlePlacement` (экспортируются значениями)
+и внутренние `ToolbarItemKind`, `ToolbarGroupKey`, `SlashItemKind`, `DropTargetKind`, `DropEdge`,
+`UploadTargetKind`, `MediaTab`, `GripSide`, `GripEdge`, `ImageActionKey`, `KeyCode`, `DomAttr`,
+`CssDisplay`. Правило ESLint `NAMED_ENUMERATIONS` включено для `packages/editor-vue/src`.

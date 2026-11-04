@@ -31,6 +31,7 @@ import { NuiButton, NuiMenu, type NuiMenuEntry } from '@numior/vue';
 import { computed, ref } from 'vue';
 import type { SlashItem } from '../slash/slash-items';
 import type { NuiEditorInsertMenuProps } from './toolbar.types';
+import { SlashItemKind } from '../suggest/suggest.types';
 
 const { insert, disabled = false } = defineProps<NuiEditorInsertMenuProps>();
 
@@ -43,10 +44,10 @@ const open = ref(false);
 
 const choose = (item: SlashItem): void => {
   switch (item.kind) {
-    case 'command':
+    case SlashItemKind.Command:
       emit('run', item.command);
       break;
-    case 'open':
+    case SlashItemKind.Open:
       emit('open', item);
       break;
   }
@@ -56,7 +57,7 @@ const entries = computed((): NuiMenuEntry[] =>
   insert.items.map((item) => ({
     label: item.label,
     icon: item.icon,
-    disabled: open.value && item.kind === 'command' && !item.command(insert.state),
+    disabled: open.value && item.kind === SlashItemKind.Command && !item.command(insert.state),
     onSelect: () => {
       choose(item);
     },

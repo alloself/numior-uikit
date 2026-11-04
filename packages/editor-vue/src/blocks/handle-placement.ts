@@ -1,11 +1,11 @@
-import type { ContentNode, ElementNode } from '@numior/editor-core';
+import { ContentNodeKind, type ContentNode, type ElementNode } from '@numior/editor-core';
 import type { NuiEditorBlock, NuiEditorHandlePlacement } from './block.types';
 
 const declared = (
   blocks: readonly NuiEditorBlock[],
   node: ContentNode | undefined,
 ): NuiEditorHandlePlacement | undefined => {
-  if (node?.kind !== 'element') {
+  if (node?.kind !== ContentNodeKind.Element) {
     return undefined;
   }
   const handle = blocks.find((block) => block.name === node.type)?.handle;

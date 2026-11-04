@@ -20,6 +20,7 @@ import {
 } from '@numior/editor-core';
 import type { IconSource } from '@numior/primitives';
 import type { NuiEditorMessages } from '../editor/editor.messages';
+import { type SlashItemKind } from '../suggest/suggest.types';
 
 interface SlashLabel {
   readonly key: string;
@@ -28,11 +29,14 @@ interface SlashLabel {
   readonly keywords: readonly string[];
 }
 
-export type SlashCommandItem = SlashLabel & { readonly kind: 'command'; readonly command: Command };
+export type SlashCommandItem = SlashLabel & {
+  readonly kind: typeof SlashItemKind.Command;
+  readonly command: Command;
+};
 
 export type SlashItem =
   | SlashCommandItem
-  | (SlashLabel & { readonly kind: 'open'; readonly open: () => void });
+  | (SlashLabel & { readonly kind: typeof SlashItemKind.Open; readonly open: () => void });
 
 interface SlashEntry {
   readonly key: string;

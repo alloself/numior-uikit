@@ -20,13 +20,14 @@
 </template>
 
 <script setup lang="ts">
-import { useMessages } from '@numior/primitives';
+import { Direction, useMessages } from '@numior/primitives';
 import { useResizeObserver } from '@vueuse/core';
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { editorMessages } from '../../editor/editor.messages';
 import type { NuiEditorBlockViewProps } from '../block.types';
 import { setShares, shareOf, splitShares } from './columns';
 import { columnElements, measureSeparators, ratioAt } from './columns-layout';
+import { ContentNodeKind } from '@numior/editor-core';
 
 const { node, element, editable, editor } = defineProps<NuiEditorBlockViewProps>();
 
@@ -39,7 +40,7 @@ const active = ref<number | undefined>();
 const STEP = 0.05;
 
 const columns = computed(() =>
-  node.content.flatMap((child) => (child.kind === 'element' ? [child] : [])),
+  node.content.flatMap((child) => (child.kind === ContentNodeKind.Element ? [child] : [])),
 );
 
 const gaps = computed(() =>
@@ -50,7 +51,7 @@ const gaps = computed(() =>
   }),
 );
 
-const rtl = (): boolean => getComputedStyle(element).direction === 'rtl';
+const rtl = (): boolean => getComputedStyle(element).direction === Direction.Rtl;
 
 const measure = (): void => {
   measureSeparators(element, separators.value ?? [], rtl());

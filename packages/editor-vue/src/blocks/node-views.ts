@@ -1,7 +1,8 @@
 import { sameAttrs, type ElementNode, type Schema } from '@numior/editor-core';
 import { renderNodeDOM, type NodeView, type NodeViewFactory } from '@numior/editor-core/view';
 import { shallowRef, type ShallowRef } from 'vue';
-import type { NuiEditorBlock } from './block.types';
+import { NuiEditorBlockPlace, type NuiEditorBlock } from './block.types';
+import { DomAttr } from '../editor/editor.types';
 
 export interface NodeViewEntry {
   readonly key: number;
@@ -47,11 +48,11 @@ const syncAttrs = (dom: HTMLElement, before: Element, after: Element): void => {
   for (const name of names) {
     const value = after.getAttribute(name);
 
-    if (name === 'class') {
+    if (name === DomAttr.Class) {
       syncClasses(dom, before, after);
-    } else if (name !== 'contenteditable' && value === null) {
+    } else if (name !== DomAttr.ContentEditable && value === null) {
       dom.removeAttribute(name);
-    } else if (name !== 'contenteditable' && value !== null) {
+    } else if (name !== DomAttr.ContentEditable && value !== null) {
       dom.setAttribute(name, value);
     }
   }
@@ -104,7 +105,7 @@ const viewOf = (source: ViewSource, block: NuiEditorBlock, node: ElementNode): N
 
   const content = bodyOf(source.document, dom, contentDOM);
 
-  if (block.at === 'end') {
+  if (block.at === NuiEditorBlockPlace.End) {
     dom.append(widget);
   } else {
     dom.prepend(widget);

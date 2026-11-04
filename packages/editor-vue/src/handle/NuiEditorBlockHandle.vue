@@ -50,6 +50,7 @@ import { computed } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
 import { slashItems } from '../slash/slash-items';
 import type { NuiEditorBlockHandleProps } from './handle.types';
+import { NuiContentNodeType } from '@numior/content';
 
 const { state, target, dragging, blockMenu } = defineProps<NuiEditorBlockHandleProps>();
 
@@ -65,7 +66,7 @@ const texts = useMessages(editorMessages);
 
 const turnInto = (at: ChildSlot): NuiMenuEntry[] =>
   slashItems(state.doc.schema, texts.value).reduce<NuiMenuEntry[]>((found, item) => {
-    if (item.key !== 'divider') {
+    if (item.key !== NuiContentNodeType.Divider) {
       found.push({
         key: item.key,
         label: item.label,

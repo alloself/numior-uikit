@@ -28,7 +28,7 @@
 
 <script setup lang="ts">
 import type { Command } from '@numior/editor-core';
-import { useListNavigation, useMessages } from '@numior/primitives';
+import { Key, useListNavigation, useMessages } from '@numior/primitives';
 import { computed, onMounted, useTemplateRef } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
 import NuiEditorToolbarGroup from './NuiEditorToolbarGroup.vue';
@@ -70,7 +70,7 @@ const navigation = useListNavigation(root, {
 });
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Escape') {
+  if (event.key === Key.Escape) {
     event.preventDefault();
     emit('leave');
     return;

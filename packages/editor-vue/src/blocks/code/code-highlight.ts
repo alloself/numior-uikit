@@ -1,5 +1,6 @@
 import {
   blockDecoration,
+  ContentNodeKind,
   createMetaKey,
   decorationSet,
   definePlugin,
@@ -133,7 +134,7 @@ const placeAfter = (id: NodeId, place: CodePlace, tr: Transaction): CodePlace | 
   const pos = tr.mapping.map(place.pos, 1);
   const node = tr.doc.nodeAt(pos);
 
-  if (node?.kind === 'element' && node.id === id) {
+  if (node?.kind === ContentNodeKind.Element && node.id === id) {
     return { node, pos };
   }
 
@@ -223,7 +224,9 @@ export const codeHighlightPlugin = (): Plugin<CodeState> => {
 
 const elementsOf = (node: ElementNode | undefined): ReadonlyMap<NodeId, ElementNode> =>
   new Map(
-    (node?.content ?? []).flatMap((child) => (child.kind === 'element' ? [[child.id, child]] : [])),
+    (node?.content ?? []).flatMap((child) =>
+      child.kind === ContentNodeKind.Element ? [[child.id, child]] : [],
+    ),
   );
 
 const inlineOnly = (schema: Schema, node: ElementNode): boolean =>
@@ -246,7 +249,7 @@ const changedCode = (
   let previous: ReadonlyMap<NodeId, ElementNode> | undefined;
 
   for (const [index, child] of after.content.entries()) {
-    if (child.kind === 'element') {
+    if (child.kind === ContentNodeKind.Element) {
       const aligned = before?.content[index];
 
       if (aligned === child || inlineOnly(schema, child)) {
