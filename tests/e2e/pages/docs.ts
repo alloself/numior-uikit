@@ -96,7 +96,7 @@ export class DocsSite {
     this.searchButton = this.header.getByRole('button', { name: /Поиск|Search/ });
     this.themeButton = this.header.getByRole('button', { name: /^(Тема|Theme)$/ });
     this.languageButton = this.header.getByRole('button', { name: /^(Язык|Language)$/ });
-    this.commandDialog = page.locator('.nui-command-dialog');
+    this.commandDialog = page.locator('.nui-command-dialog:not(#docs-content *)');
     this.commandInput = this.commandDialog.locator('.nui-command__input');
   }
 
@@ -175,6 +175,14 @@ export class DocsSite {
     await this.page.locator(`#${id}`).evaluate((element) => {
       element.scrollIntoView({ block: 'start' });
     });
+  }
+
+  scrollLeftOf(target: Locator): Promise<number> {
+    return target.evaluate((element) => element.scrollLeft);
+  }
+
+  get codeScroller(): Locator {
+    return this.article.locator('.nui-code__pre').first();
   }
 
   scheme(): Promise<string | null> {
