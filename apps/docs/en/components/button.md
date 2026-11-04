@@ -1,8 +1,7 @@
 # Button
 
-`NuiButton` is a native button with two styling axes: `variant` sets the shape, `tone` the role.
-Role colours come from the tokens, so an accent change updates every variant at once. A link
-inside a paragraph is a [Link](/en/components/link), not `variant="link"`.
+`NuiButton` is a button for actions: save a form, open a dialog, delete a record. For a link
+inside text use a [Link](/en/components/link).
 
 <Example name="button/Basic" />
 
@@ -15,46 +14,58 @@ import '@numior/vue/styles/button.css';
 
 ## Usage
 
+The `variant` prop sets the look of the button: `solid` (the default), `soft`, `outline`,
+`ghost`, `plain` or `link`. The `tone` prop sets the colour: `primary`, `success`, `error`,
+`neutral` and others.
+
 <Configurator name="NuiButton" />
 
 ## Examples
 
 ### Sizes
 
-`size` picks a step inside the current density; `data-nui-density` shifts the whole scale.
+The `size` prop accepts `xs`, `sm`, `md` and `lg`, with `md` by default. The `inline` size
+follows the surrounding font and suits a button inside a line of text. In the compact density
+every size gets shorter.
 
 <Example name="button/Sizes" />
 
 ### States
 
-`disabled` blocks activation. `loading` swallows presses too but keeps the width and the focus,
-so the form does not jump.
+`disabled` turns the button off. The `loading` prop shows a spinner and blocks presses, while
+the button keeps its width and its focus.
 
 <Example name="button/States" />
 
 ### With an icon
 
-The `icon` prop puts a registry icon before the text with the shared gap. An icon in the slot works too.
+The `icon` prop puts an icon before the text, and `iconEnd` after it. An icon can also go into
+the slot along with the text.
 
 <Example name="button/WithIcon" />
 
 ### Icon only
 
-A button with a lone icon from `icon` or from the slot squares itself; it needs an `aria-label`.
+A button with a single icon and no text becomes square. Label it with `aria-label`, otherwise a
+screen reader has no name to announce.
 
 <Example name="button/IconOnly" />
 
+The `plain` variant suits buttons inside a field: open the list, clear, show the password. It has
+no background, and the muted icon darkens on hover.
+
 ### Link
 
-`href` or `to` turn the button into a link with the same look. `to` renders the app's `RouterLink`
-or `NuxtLink`, and `as` overrides the component.
+Pass `href` or `to` to turn the button into a link with the same look. With `to` the button
+becomes the app's `RouterLink` or `NuxtLink`, and the `as` prop puts another component in its
+place.
 
 <Example name="button/Link" />
 
 ## Accessibility
 
-The component stays a native `<button>` or `<a>`: keyboard, focus and screen readers work without
-extra code. While `loading` the button gets `aria-busy` and stays in the tab order.
+A button stays a native `<button>` and a link an `<a>`, so the keyboard and screen readers handle
+them as usual. While loading, the button gets `aria-busy` and stays in the tab order.
 
 <KeyboardReference name="NuiButton" />
 

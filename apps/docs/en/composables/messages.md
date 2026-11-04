@@ -1,9 +1,11 @@
 # useMessages
 
-`useMessages(catalog, locale)` returns the catalog texts in the current language with the
-configuration layers applied. The layers are the `translate` hook, the `messages` overrides
-and the built-in Russian or English. Every kit component gets its labels this way; `plural` picks a word form
-by count.
+`useMessages(catalog, locale)` returns the labels of your component in the current language.
+Use it when you write a component with its own built-in texts.
+
+Labels are looked up the same way as in Numior UI components. First comes the `translate`
+function, then the `messages` dictionary from the settings, then the built-in Russian or English
+text.
 
 ## Signature
 
@@ -18,6 +20,8 @@ const files = (count: number): string =>
   `${count} ${plural('en', count, { one: 'file', other: 'files' })}`;
 ```
 
-`plural(language, count, forms)` uses `Intl.PluralRules` and falls back to `other`. The
-language is the one the forms are written in, not the app locale. The text resolution order
-and own languages are described in [Localization](/en/guide/localization).
+`plural(language, count, forms)` picks the word form for a number through `Intl.PluralRules`.
+When the needed form is missing, it takes `other`. `language` is the language the forms are
+written in, not the app locale.
+
+The label lookup order and new languages are described in [Localization](/en/guide/localization).

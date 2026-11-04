@@ -21,7 +21,7 @@
         <span v-else class="text-subtle-foreground">—</span>
       </template>
       <template #cell-description="{ row }">
-        <span v-if="row.description">{{ row.description[locale] }}</span>
+        <InlineText v-if="row.description" :text="row.description[locale]" />
         <span v-else class="text-subtle-foreground">—</span>
       </template>
     </NuiTable>
@@ -31,6 +31,7 @@
 <script setup lang="ts" generic="T extends ApiRow">
 import { NuiTable } from '@numior/table';
 import type { ApiRow, ApiTableProps } from '../theme.types';
+import InlineText from './InlineText.vue';
 
 const { title, columns, rows, locale, requiredLabel } = defineProps<ApiTableProps<T>>();
 

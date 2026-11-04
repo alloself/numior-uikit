@@ -4,46 +4,49 @@ const docs: DocsMap = {
   NuiBreadcrumbs: {
     props: {
       items: {
-        ru: 'Элементы пути: подпись, адрес или маршрут, иконка.',
-        en: 'Path items: label, address or route, icon.',
+        ru: 'Шаги пути: подпись (`label`), ссылка (`href` или `to`) и иконка (`icon`).',
+        en: 'Path steps: `label`, link (`href` or `to`) and `icon`.',
       },
       maxItems: {
-        ru: 'Сколько элементов показывать; середина сворачивается в меню.',
-        en: 'How many items to show; the middle collapses into a menu.',
+        ru: 'Сколько шагов показать. Средние шаги прячутся в меню «…».',
+        en: 'How many steps to show. The middle steps go into a "…" menu.',
       },
       separator: {
-        ru: 'Иконка-разделитель; зеркалится в RTL.',
-        en: 'Separator icon; mirrored in RTL.',
+        ru: 'Иконка между шагами. При письме справа налево отражается.',
+        en: 'Icon between the steps. Mirrored in right-to-left layouts.',
       },
       label: {
-        ru: 'Доступное имя навигации; по умолчанию из словаря.',
-        en: 'Accessible name of the navigation; the dictionary supplies the default.',
+        ru: 'Подпись навигации для экранных дикторов. По умолчанию — «Навигационная цепочка» из словаря.',
+        en: 'Navigation label for screen readers. Defaults to "Breadcrumb" from the dictionary.',
       },
       moreLabel: {
-        ru: 'Доступное имя кнопки «…»; по умолчанию из словаря.',
-        en: 'Accessible name of the “…” button; the dictionary supplies the default.',
+        ru: 'Подпись кнопки «…» для экранных дикторов. По умолчанию — «Показать путь» из словаря.',
+        en: 'Label of the "…" button for screen readers. Defaults to "Show path" from the dictionary.',
       },
       as: {
-        ru: 'Переопределяет компонент ссылки для элементов с to.',
-        en: 'Overrides the link component for items with to.',
+        ru: 'Компонент ссылки для шагов с `to`. Без него берётся роутер приложения или ссылка из конфига.',
+        en: 'Link component for steps with `to`. Without it the app router or the configured link is used.',
       },
     },
     slots: {
       item: {
-        ru: 'Своя крошка; получает item, index и current.',
-        en: 'Custom crumb; receives item, index and current.',
+        ru: 'Свой шаг пути. Получает `item`, `index` и `current` — последний ли это шаг.',
+        en: 'Custom path step. Receives `item`, `index` and `current`, whether it is the last step.',
       },
     },
     keyboard: [
       {
         keys: 'Tab',
-        description: { ru: 'Переходит по ссылкам пути.', en: 'Moves through the path links.' },
+        description: {
+          ru: 'Переводит фокус на следующую ссылку пути.',
+          en: 'Moves the focus to the next path link.',
+        },
       },
       {
         keys: 'Enter',
         description: {
-          ru: 'Переходит по ссылке; на кнопке «…» открывает меню.',
-          en: 'Follows the link; on the “…” button opens the menu.',
+          ru: 'Открывает ссылку. На кнопке «…» открывает меню скрытых шагов.',
+          en: 'Follows the link. On the "…" button, opens the menu of hidden steps.',
         },
       },
     ],

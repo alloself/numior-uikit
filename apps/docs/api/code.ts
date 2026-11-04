@@ -1,48 +1,71 @@
 import type { DocsMap } from '../.vitepress/reference/reference.types';
 
-const dictionary = (ru: string, en: string) => ({
-  ru: `${ru}; по умолчанию из словаря.`,
-  en: `${en}; the dictionary supplies the default.`,
+const dictionary = (ru: string, en: string, ruDefault: string, enDefault: string) => ({
+  ru: `${ru}. По умолчанию — «${ruDefault}» из словаря.`,
+  en: `${en}. Defaults to "${enDefault}" from the dictionary.`,
 });
 
 const docs: DocsMap = {
   NuiCode: {
     props: {
       code: {
-        ru: 'Исходный текст; строки делятся по переводу строки.',
-        en: 'The source text; lines split on newlines.',
+        ru: 'Текст кода. Каждый перевод строки начинает новую строку.',
+        en: 'Code text. Every newline starts a new line.',
       },
       tokens: {
-        ru: 'Токены подсветки по строкам; без них код выводится одним цветом.',
-        en: 'Highlight tokens per line; without them the code renders in one colour.',
+        ru: 'Готовая подсветка: токены по строкам. Без них код раскрашивает `highlighter` или подсветка из `createNuiConfig`.',
+        en: 'Ready highlighting as tokens per line. Without them `highlighter` or the `createNuiConfig` highlighter colors the code.',
       },
       language: {
-        ru: 'Язык: подпись в шапке и выбор языка у подсветчика.',
-        en: 'Language: the header caption and the language for the highlighter.',
+        ru: 'Язык кода, например `ts` или `vue`. Показывается в шапке и задаёт подсветку.',
+        en: 'Code language, such as `ts` or `vue`. Shown in the header and used for highlighting.',
       },
       highlighter: {
-        ru: 'Подсветчик вместо настроенного в `createNuiConfig`; `false` выключает подсветку.',
-        en: 'A highlighter instead of the one set in `createNuiConfig`; `false` turns highlighting off.',
+        ru: 'Подсветка вместо заданной в `createNuiConfig`. `false` выводит код одним цветом.',
+        en: 'Highlighter to use instead of the one set in `createNuiConfig`. `false` renders the code in one color.',
       },
-      title: { ru: 'Имя файла в шапке.', en: 'File name in the header.' },
-      lineNumbers: { ru: 'Номера строк.', en: 'Line numbers.' },
+      title: {
+        ru: 'Имя файла в шапке вместо языка.',
+        en: 'File name in the header instead of the language.',
+      },
+      lineNumbers: { ru: 'Показывает номера строк.', en: 'Shows line numbers.' },
       highlight: {
-        ru: 'Номера подсвеченных строк, с единицы.',
-        en: 'Numbers of the highlighted lines, starting at one.',
+        ru: 'Номера строк, которые выделяются фоном. Счёт идёт с единицы.',
+        en: 'Numbers of the lines to highlight with a background, starting at one.',
       },
-      copyable: { ru: 'Кнопка копирования.', en: 'Copy button.' },
+      copyable: { ru: 'Показывает кнопку копирования.', en: 'Shows a copy button.' },
       maxLines: {
-        ru: 'Сворачивает код длиннее этого числа строк.',
-        en: 'Collapses code longer than this many lines.',
+        ru: 'Сворачивает код длиннее этого числа строк и добавляет кнопку «Показать всё».',
+        en: 'Collapses code longer than this many lines and adds a "Show more" button.',
       },
       wrap: {
         ru: 'Переносит длинные строки вместо горизонтальной прокрутки.',
         en: 'Wraps long lines instead of scrolling horizontally.',
       },
-      copyLabel: dictionary('Имя кнопки копирования', 'Name of the copy button'),
-      copiedLabel: dictionary('Текст после копирования', 'Text after copying'),
-      expandLabel: dictionary('Текст кнопки разворота', 'Text of the expand button'),
-      collapseLabel: dictionary('Текст кнопки сворачивания', 'Text of the collapse button'),
+      copyLabel: dictionary(
+        'Подпись кнопки копирования для экранных дикторов',
+        'Copy button label for screen readers',
+        'Скопировать код',
+        'Copy code',
+      ),
+      copiedLabel: dictionary(
+        'Сообщение для дикторов после копирования',
+        'Screen reader message after copying',
+        'Скопировано',
+        'Copied',
+      ),
+      expandLabel: dictionary(
+        'Текст кнопки, которая разворачивает код',
+        'Text of the button that expands the code',
+        'Показать всё',
+        'Show more',
+      ),
+      collapseLabel: dictionary(
+        'Текст кнопки, которая сворачивает код',
+        'Text of the button that collapses the code',
+        'Свернуть',
+        'Show less',
+      ),
     },
   },
 };

@@ -5,7 +5,7 @@ const docs: DocsMap = {
   NuiSwitch: {
     props: fieldControl,
     models: { 'v-model': { ru: 'Включён ли переключатель.', en: 'Whether the switch is on.' } },
-    slots: { default: { ru: 'Подпись рядом с треком.', en: 'Label next to the track.' } },
+    slots: { default: { ru: 'Подпись рядом с переключателем.', en: 'Label next to the switch.' } },
     keyboard: [
       { keys: 'Space', description: { ru: 'Переключает состояние.', en: 'Toggles the state.' } },
     ],

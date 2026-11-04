@@ -1,9 +1,14 @@
 # Select
 
-`NuiSelect` opens a list of options in a native popover at least as wide as the trigger. Values
-come from `options`, the choice is single or multiple.
+`NuiSelect` is a field with a dropdown list for picking one or several values: a country, a
+city, an assignee. When users need to search the list or type their own value, use a
+[Combobox](/en/components/combobox).
 
 <Example name="select/Basic" />
+
+Options go into `options` as `{ value, label }` entries, and the chosen value lives in
+`v-model`. With `clearable` a clear button appears next to the value. The list opens at least as
+wide as the field.
 
 ## Installation
 
@@ -18,45 +23,53 @@ import '@numior/vue/styles/select.css';
 
 ### Groups and disabled options
 
-A group is an entry `{ label, items }`. A disabled option stays listed but the arrows skip it.
+To split options into groups, pass a `{ label, items }` entry. An option with `disabled` stays
+visible in the list, but it cannot be chosen and the arrow keys skip it.
 
 <Example name="select/Groups" />
 
 ### Several values
 
-`multiple` toggles options without closing the list. The trigger shows one option label or the
-dictionary text "N selected".
+With `multiple` a click on an option checks it, and the list stays open. The chosen values live
+in `v-model:values`. The field shows the option label, or "3 selected" when there is more than
+one.
 
 <Example name="select/Multiple" />
 
-### Object values
+### Objects as values
 
-Objects need `getKey`; the `option` slot draws an option its own way.
+When values are objects, pass `getKey`: the function returns the key that tells options apart.
+The `option` slot changes the markup of an option, for example to add a job title next to a
+name.
 
 <Example name="select/Objects" />
 
 ### Tree
 
-Nested `options` (entries with `children` or `lazy`) open a tree instead of a list. The button
-stays the same, and opening expands the ancestors of the selected node. `multiple` gives
-cascading checkboxes, `load` is emitted like in `NuiTree`.
+When options have `children`, a tree opens instead of a list, with the branch of the chosen value
+already expanded. With `multiple` the options get checkboxes, and checking a parent checks all
+its descendants.
+
+A branch with `lazy` instead of `children` loads on expand: `NuiSelect` emits a `load` event,
+like [Tree](/en/components/tree).
 
 <Example name="select/Tree" />
 
 ### Sizes
 
-`size` matches the steps of the other field controls.
+`size` takes `sm`, `md` and `lg`, as in the other inputs, so fields of different types in one
+form line up in height.
 
 <Example name="select/Sizes" />
 
 ## Accessibility
 
-The trigger is a native `<button role="combobox">` with `aria-expanded` and `aria-controls`. The
-list is `role="listbox"`, groups are `role="group"` with a label, options are `role="option"` with
-`aria-selected`. With nested options the trigger carries `aria-haspopup="tree"` and the popover is
-a `role="tree"` with `treeitem` nodes.
+The field is a native button with the `combobox` role, and the list is a `listbox` with `option`
+items. A screen reader announces whether the list is open and reads the chosen option. For a
+tree the roles become `tree` and `treeitem`.
 
-On the closed trigger, typing letters changes the value without opening, like a native `<select>`.
+As with a native `<select>`, typing the first letters of an option on the closed field changes
+the value without opening the list.
 
 <KeyboardReference name="NuiSelect" />
 

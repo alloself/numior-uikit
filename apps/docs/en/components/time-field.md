@@ -1,10 +1,13 @@
 # Time field
 
-`NuiTimeField` edits time as a set of segments: hours, minutes, optionally seconds and AM/PM.
-The segment order, separators and cycle come from the locale, and the model stays an `HH:mm`
-string without a time zone. The clock button opens the wheels.
+`NuiTimeField` is a field for entering time: hours and minutes, and seconds when needed. The
+time can be typed on the keyboard or picked on the wheels that the clock button opens.
 
 <Example name="time-field/Basic" />
+
+The model value is a string like `09:30` without a time zone. The order of the parts, the
+separator and the hour format (24-hour or 12-hour with AM/PM) follow the app locale. The `locale`
+prop sets another one.
 
 ## Installation
 
@@ -16,33 +19,37 @@ import '@numior/vue/styles/time-field.css';
 
 ## Examples
 
-### Locales
+### Time in different languages
 
-One value, three locales: a 24-hour cycle, a 12-hour one with a period, and Arabic digits.
-`hourCycle` forces the cycle.
+The same value is shown in three locales: `ru-RU` with the 24-hour format, `en-US` with AM/PM
+and `ar-EG` with Arabic digits. The `hourCycle` prop sets the hour format regardless of the
+language.
 
 <Example name="time-field/Locales" />
 
 ### Seconds
 
-`seconds` adds a seconds segment and the model becomes `HH:mm:ss`; a `step` of one minute
-gives the wheels every value.
+The `seconds` prop adds seconds, and the value takes the form `09:30:15`. The minute wheel uses
+a 15-minute step by default, and `:step="1"` shows every minute on it.
 
 <Example name="time-field/Seconds" />
 
 ## Behaviour
 
-Digits are typed per segment: a segment fills and moves on as soon as the next digit cannot
-continue the number. The model stays `null` while a segment is empty, and a full value outside
-`min` and `max` is clamped on blur. The wheels show the minutes in `step` increments and dim
-the unavailable values.
+Digits are typed part by part: when the hours or minutes cannot take another digit, the cursor
+moves on by itself. While any part is empty, the model value is `null`.
+
+A time before `min` or after `max` is replaced with the nearest limit when the user leaves the
+field. On the wheels such times are dimmed.
 
 ## Accessibility
 
-The segments are native `<input role="spinbutton">` elements with `aria-valuenow` and
-`aria-valuetext`, labelled through `Intl.DisplayNames`. One segment stays in the tab order, and
-the row of segments runs left to right even in RTL. The wheels are a `role="group"`, every
-column a `role="spinbutton"`.
+Each part of the time is an `<input role="spinbutton">` with `aria-valuenow` and
+`aria-valuetext`, and the part names ("hour", "minute") come from `Intl.DisplayNames`. Tab stops
+on one part only, and the left and right arrows move between the parts.
+
+The parts run left to right even in right-to-left text. The wheels are a `role="group"`, and
+each wheel column is a `role="spinbutton"`.
 
 <KeyboardReference name="NuiTimeField" />
 

@@ -1,10 +1,13 @@
 # Upload
 
-`NuiUpload` takes files by drag and drop or through the dialog, checks them and hands each one
-to the `upload` adapter. The component makes no requests itself: the model holds items with
-statuses.
+`NuiUpload` is a field for uploading files. Files can be dropped onto a zone on the page or
+chosen in a dialog, and the list below shows their upload progress and errors.
 
 <Example name="upload/Basic" />
+
+The component sends no requests itself: each file goes to the `upload` function. It uploads the
+file, reports progress through `onProgress` and returns a result such as the file URL. `v-model`
+holds an array of files with the `queued`, `uploading`, `done` and `error` statuses.
 
 ## Installation
 
@@ -18,49 +21,55 @@ import '@numior/vue/styles/upload.css';
 
 ### Thumbnail grid
 
-`layout="grid"` shows images as thumbnails from object URLs; already uploaded files use their
-`url`.
+With `layout="grid"` images show as thumbnails right after they are chosen, before the upload.
+Files that are already uploaded take the thumbnail from their `url`.
 
 <Example name="upload/Grid" />
 
 ### Upload on a button
 
-`auto="false"` keeps files in the `queued` status until `start()` is called through a component
-ref.
+With `:auto="false"` chosen files wait in the `queued` status. The upload starts when the
+application calls the `start()` method on a component ref.
 
 <Example name="upload/Manual" />
 
 ### Button only
 
-`variant="button"` drops the drop zone: the browse button and the file list remain, dragging is
-not accepted.
+With `variant="button"` the drop zone gives way to a single browse button and the file list.
+Files cannot be dropped onto such a field.
 
 <Example name="upload/Button" />
 
 ### Avatar
 
-`NuiAvatarUpload` keeps one image: a preview inside `NuiAvatar`, replacement by a click or a file
-dropped onto the avatar, removal by a button. A rejected file leaves the current image alone.
+`NuiAvatarUpload` uploads one image and shows it in an [Avatar](/en/components/avatar). To
+replace the photo, click the avatar or drop a new file onto it; a separate button removes the
+photo.
+
+When a new file fails the checks, the current image stays in place.
 
 <Example name="upload/Avatar" />
 
 ## Behaviour
 
-Files pass the `accept`, `maxSize`, `maxFiles` and custom `validate` checks. Rejected ones stay
-listed with the reason under `rejected="list"` and leave the model under `rejected="drop"`.
-Accepted files go to the adapter, at most `concurrency` at a time.
+Every file goes through the checks: the type against `accept`, the size against `maxSize`, the
+count against `maxFiles` and the `validate` function. With the default `rejected="list"` rejected
+files stay in the list with the reason, and with `rejected="drop"` they never reach the model.
 
-Cancelling aborts the request through `signal`. An adapter error keeps the row with a retry
-button. Removing a finished file emits `remove`, and the app deletes it on the server.
+At most `concurrency` files upload at the same time, 3 by default. Cancelling aborts the request
+through `signal`, and on an error the row shows a "Retry" button.
 
-In single mode a rejected replacement leaves the selected file in place. `disabled` blocks both
-receiving files and removing rows.
+Removing an uploaded file emits the `remove` event, and the application deletes the file on the
+server. With `:multiple="false"` a new file replaces the previous one, but a rejected file leaves
+it in place. The `disabled` prop blocks both adding and removing files.
 
 ## Accessibility
 
-The whole zone is clickable; with the keyboard the "Browse files" button picks files and carries
-the field label, description and error. Rows announce progress and status, the cancel, retry
-and remove buttons have accessible names.
+A click anywhere in the zone opens the file dialog. On the keyboard the "Choose files" button
+picks files, and the field label, hint and error are linked to it.
+
+Rows announce the upload progress and status. The cancel, retry and remove buttons have names
+for screen readers.
 
 <KeyboardReference name="NuiUpload" />
 

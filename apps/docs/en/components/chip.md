@@ -1,8 +1,7 @@
 # Chip
 
-`NuiChip` is a value token: a picked tag, a filter or a recipient. The user controls a chip: it
-can be removed, and the same chip shows the selection in `NuiCombobox`. A state that is only
-reported is a [Badge](/en/components/badge).
+`NuiChip` is a label for a value the user has picked: a tag, a filter, an email recipient. A chip
+can be removable. For a status or a counter use a [Badge](/en/components/badge).
 
 <Example name="chip/Basic" />
 
@@ -15,29 +14,35 @@ import '@numior/vue/styles/chip.css';
 
 ## Usage
 
+The `tone` prop sets the colour, and `variant` the fill: `soft`, `outline` or `solid`. `icon`
+puts an icon before the text.
+
 <Configurator name="NuiChip" />
 
 ## Examples
 
 ### Removable filters
 
-`removable` adds a remove button with the `remove` event; `removeLabel` names what gets removed.
+Add `removable` to show a button with a cross in the chip. Pressing it emits the `remove` event,
+and your app removes the chip from the list.
 
 <Example name="chip/Removable" />
 
-### Sizes and disabled chips
+### Sizes and disabled state
 
-`size="sm"` suits tables and lists, `disabled` dims the chip and disables removal.
+The `sm` size suits tables and lists, and `md` is the default. With `disabled` the chip fades and
+its remove button cannot be pressed.
 
 <Example name="chip/Sizes" />
 
 ## Accessibility
 
-A chip is a `<span>` without a role and is not interactive on its own. The remove button is a
-plain `<button>` in the tab order. `removeTabbable="false"` takes it out in lists where removal
-is reachable from the field, as in `NuiCombobox`.
+The remove button is labelled "Remove". When there are several chips, put the chip name into
+`removeLabel`, such as "Remove the Vue filter". Then a screen reader tells the buttons apart.
 
-For a standalone chip pass a `removeLabel` that names the item.
+The remove button can be reached with the Tab key, and `:remove-tabbable="false"` makes Tab skip
+it. The [Combobox](/en/components/combobox) does this, because its chips are removed with the
+keyboard right from the field.
 
 ## API
 

@@ -1,11 +1,13 @@
 # Icon
 
-The kit components request icons by alias through a registry, and `NuiIcon` draws what `icon`
-holds: an alias from the registry or a ready component. By default the aliases point to
-[Lucide](https://lucide.dev) from the `@lucide/vue` package. Every kit icon is a separate small
-module that `NuiIcon` loads on the first use of its alias and keeps.
+`NuiIcon` renders an icon by name, such as `check` or `search`, or your own icon component. By
+default the names map to [Lucide](https://lucide.dev) icons from the `@lucide/vue` package.
 
 <Example name="icon/Basic" />
+
+Each icon loads separately the first time it is needed, so the bundle does not include the whole
+set. Icons inside Numior UI components, such as the select arrow or the dialog close button, render the
+same way.
 
 ## Installation
 
@@ -20,17 +22,20 @@ import '@numior/vue/styles/icon.css';
 
 ## Examples
 
-### Own component
+### Custom component
 
-`icon` also takes any component, such as an own SVG icon in an SFC: it renders as is,
-without the registry.
+`icon` also takes any component, for example an SVG icon in its own `.vue` file. It renders as
+is, with the same size and color.
 
 <Example name="icon/Custom" />
 
-### Own icons instead of kit icons
+App icons need no registration: import the one you need and pass it directly, for example
+`<NuiIcon :icon="Save" />` with `import { Save } from '@lucide/vue'`.
 
-The kit aliases (`check`, `x`, `chevron-down`, `loader` and others) can be overridden. The app
-uses `createNuiConfig`, a subtree uses `provideNuiConfig` in the `setup` of an own component. Nested calls layer and change only the given aliases; the rest stay Lucide icons.
+### Custom icons in components
+
+The icons that Numior UI components use (`check`, `x`, `chevron-down`, `loader` and others) can be
+replaced with your own. For the whole app, pass them to `icons` of the `createNuiConfig` plugin:
 
 ```ts
 import { createApp } from 'vue';
@@ -49,14 +54,16 @@ createApp(App)
   .mount('#app');
 ```
 
-The registry keys are kit aliases only, so a typo becomes a type error. App icons need no
-alias: the component goes into `icon` directly, for example `<NuiIcon :icon="Save" />` with
-`import { Save } from '@lucide/vue'`.
+Only the listed icons change, the rest stay Lucide. `lazyIcon` loads an icon only when it is
+first needed. To replace icons in one part of the page, call `provideNuiConfig` in the `setup` of
+its component.
+
+The keys of `icons` are type-checked, so a typo in a name shows up in the editor right away.
 
 ## Accessibility
 
-The icon is decorative: `aria-hidden="true"`, size `1.25em`, colour inherited from
-`currentColor`. The parent gives the meaningful name, for example `aria-label` on a button.
+Screen readers skip the icon. Give a button that holds only an icon an `aria-label`. The icon is
+1.25 times the font size and takes the color of the text around it.
 
 ## API
 

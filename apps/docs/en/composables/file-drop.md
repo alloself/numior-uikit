@@ -1,8 +1,10 @@
 # useFileDrop
 
-`useFileDrop(options)` turns any element into a file drop zone. `attrs` go on the element,
-`dragging` tells that files hover over the zone, `onFiles` receives the list. Dragged text
-and links are ignored.
+`useFileDrop(options)` accepts files the user drags onto an element. Put `attrs` on the element,
+and the files arrive in `onFiles` as a list.
+
+`dragging` is `true` while files are over the element, so you can highlight the zone. Dragged
+text and links are skipped.
 
 <Example name="composables/FileDrop" />
 
@@ -12,6 +14,6 @@ and links are ignored.
 
 ## Behaviour
 
-`disabled` switches the zone off without removing the handlers. The [Upload](/en/components/upload)
-zone is built on this composable, and the upload queue on
+`disabled: true` turns the zone off, and `attrs` can stay on the element. The
+[Upload](/en/components/upload) zone is built on this composable, and its upload queue on
 [useUploadQueue](/en/composables/upload-queue).

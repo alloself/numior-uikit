@@ -1,11 +1,13 @@
 # Layout
 
-`NuiLayout` assembles the app shell: the sidebar, the `NuiAppBar` top bar and the content area.
-The sidebar state lives in the layout: `v-model:open` on a wide screen, `v-model:mobileOpen`
-for the drawer on a narrow one. The sidebar itself is described by
-[Sidebar](/en/components/sidebar).
+`NuiLayout` lays out an app screen: a side menu on the left, a top bar `NuiAppBar` and the area
+with the page content. Build the menu from [Sidebar](/en/components/sidebar) and put it into the
+`sidebar` slot.
 
 <Example name="layout/Basic" />
+
+`v-model:open` holds whether the menu is expanded on a wide screen, and `v-model:mobileOpen`
+whether it is open on a phone.
 
 ## Installation
 
@@ -17,28 +19,32 @@ import '@numior/vue/styles/skip-link.css';
 
 ## Examples
 
-### A full-width bar and an end column
+### Full-width bar and a right column
 
-`header="full"` puts the top bar above the sidebar, and the `end` slot adds a column for a table
-of contents. `sticky` keeps the columns at the viewport height with their own scrolling.
+With `header="full"` the top bar spans the full width above the side menu. The `end` slot adds a
+column on the right, for example for a table of contents. With `sticky` the menu and the columns
+stay in place while the page scrolls, and each scrolls on its own.
 
 <Example name="layout/Full" />
 
 ## Behaviour
 
-On a narrow screen (`mobileQuery`, `(max-width: 48rem)` by default) the sidebar renders inside
-a `NuiDrawer` and `NuiSidebarTrigger` opens it; picking an item closes the drawer. Before
-mounting the screen counts as wide, so the server markup and the first frame match. Ctrl/Cmd+B
-toggles the sidebar outside input fields.
+On screens up to 48rem wide the menu moves into a sliding [Drawer](/en/components/drawer). The
+`NuiSidebarTrigger` button opens it, and picking an item closes it. `mobileQuery` sets the width
+at which this happens.
+
+Until scripts load, the screen counts as wide, so the server-rendered page looks the same as the
+first frame in the browser. Ctrl+B, or Cmd+B on a Mac, collapses and expands the menu unless the
+focus is in a text field.
 
 ## Accessibility
 
-The content area is a `main` (or `contentAs`) and the top bar a `header`. The trigger button
-holds `aria-expanded` and `aria-controls` of the sidebar or the drawer.
+The content area renders as `<main>` and the top bar as `<header>`. The menu button tells screen
+readers whether the menu is open.
 
-The layout starts with a `NuiSkipLink` «Skip to content» (WCAG 2.4.1). The link shows only
-with keyboard focus and moves it into the content area past the bar and the sidebar. `skipLabel` changes the text, `:skip-link="false"` drops the link when the page already
-has one.
+The first element on the page is a "Skip to content" link. It appears only when reached with Tab
+and moves the focus straight to the content past the menu. `skipLabel` changes its text, and
+`:skip-link="false"` removes it when the page already has its own.
 
 <KeyboardReference name="NuiLayout" />
 

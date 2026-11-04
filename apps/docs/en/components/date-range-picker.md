@@ -1,8 +1,8 @@
 # Date range picker
 
-`NuiDateRangePicker` holds two date fields in one frame and opens
-[Calendar](/en/components/calendar) in the `range` mode with two months and presets. The model is
-`{ start, end }` with `YYYY-MM-DD` strings or `null`.
+`NuiDateRangePicker` is a field for a period: the start and end dates sit side by side in one
+frame. The calendar shows two months at once. The model is a `{ start, end }`
+object where each date is a `YYYY-MM-DD` string or `null`.
 
 <Example name="date-range-picker/Basic" />
 
@@ -17,19 +17,21 @@ import '@numior/vue/styles/date-picker.css';
 
 ## Behaviour
 
-Each field keeps the mask and is parsed like in [Date picker](/en/components/date-picker); an end
-before the start swaps them. `openOnClick` opens the calendar on a click in either field.
+Both dates are typed the same way as in [Date picker](/en/components/date-picker). When the end
+comes before the start, the field swaps them. With `openOnClick`, a click on either date opens the
+calendar.
 
-In the calendar the first click opens the range, the second closes it and the
-dialog, a preset does the same with one press. The clear button resets both ends, `startName`
-and `endName` add hidden form fields.
+In the calendar the first click picks the start, the second picks the end and closes the
+calendar. A ready-made range from `presets`, such as "Last 7 days", takes one click. A date before
+`min` or after `max` does not reach the model.
 
-A typed date outside `min` and `max` never reaches the model.
+The clear button from `clearable` resets both dates. Set `startName` and `endName` to submit the
+start and the end as separate form fields.
 
 ## Accessibility
 
-The field label sits on the start field, the end field is named through `endLabel`. The
-description and the error are linked to both through `aria-describedby`.
+The `label` text names the start date. Screen readers announce the end field as "End date", and
+the `endLabel` prop changes that text. The description and the error are read out for both dates.
 
 <KeyboardReference name="NuiDateRangePicker" />
 

@@ -1,10 +1,13 @@
 # OTP field
 
-`NuiOtpField` takes a one-time code from an SMS, an email or an authenticator app. A single
-native input lies under the slots, so the phone keyboard code suggestion, pasting and password
-managers work.
+`NuiOtpField` is a field for a one-time code from an SMS, an email or an authenticator app. The
+phone suggests the SMS code right above the keyboard, and pasting and password managers work as
+in a regular input.
 
 <Example name="otp-field/Basic" />
+
+By default the code has six digits, and `length` changes the count. `groupSize` splits the
+cells into groups: with `3` the code reads as "123 456".
 
 ## Installation
 
@@ -18,59 +21,62 @@ import '@numior/vue/styles/otp-field.css';
 
 ### Backup code
 
-`charset="alphanumeric"` accepts Latin letters and digits and turns letters upper case.
-`groupSize` splits the slots into groups, and the last group may be shorter.
+`charset="alphanumeric"` accepts Latin letters and digits, and letters turn upper case as they
+are typed. When the length is not a multiple of `groupSize`, the last group is shorter.
 
 <Example name="otp-field/Access" />
 
 ### PIN
 
-`secret` hides characters behind dots: the digit just typed stays visible for a second, then
-collapses into a dot. The browser treats such a field as a password and suggests no SMS codes.
+With `secret` the characters hide behind dots, and the one just typed stays visible for a
+second. The browser treats such a field as a password, so it does not suggest SMS codes.
 
 <Example name="otp-field/Pin" />
 
 ### States
 
-`placeholder` draws a character in empty slots. The code in a read-only field can be selected
-and copied, and a disabled field skips the focus.
+`placeholder` shows a character in empty cells, for example `○`. The code in a `readonly`
+field can be selected and copied, and a `disabled` field is skipped by Tab.
 
 <Example name="otp-field/States" />
 
 ### Validation in a form
 
-Inside `NuiFormField` the field goes through the usual rules: `required()` catches an empty code
-and `min(6)` an incomplete one. The form shows a server error under the slots.
+Inside `NuiFormField` the code goes through the usual form rules: `required()` catches an empty
+code and `min(6)` an incomplete one. The form shows a server error under the cells.
 
 <Example name="otp-field/Form" />
 
 ### SMS confirmation
 
-The `complete` event arrives as soon as the whole code is in and starts the check. The field is
-read-only while the request runs; a wrong code is cleared and the focus stays in the field.
+The `complete` event fires once the last character is typed: send the code for checking in the
+handler. In the example the field turns `readonly` while the request runs, a wrong code is
+cleared, and the focus stays in the field.
 
 <Example name="otp-field/Sms" />
 
-`web-otp` reads the code from an SMS through WebOTP in Chrome on Android. The last line of the
-message must look like `@example.com #123456` with the site domain.
+With `web-otp`, Chrome on Android fills in the code from the SMS by itself. The last line of
+the message must look like `@example.com #123456`, where `example.com` is your site domain.
 
 ## Behaviour
 
-A character lands in the active slot and the next slot becomes active. Clicking a filled slot
-selects it, and a new character replaces the old one. Clicking an empty slot puts the caret after
-the last character.
+A typed character goes into the current cell, and the caret moves to the next one. Clicking a
+filled cell selects it, and a new character replaces the old one. Clicking an empty cell puts
+the caret after the last character.
 
-Pasting a complete code replaces the whole code, and spaces and dashes are dropped. A shorter
-paste is written over the slots from the active one. Digits of other scripts become ASCII.
+Pasting a complete code replaces the old one, with spaces and dashes removed. A shorter paste
+fills the cells starting from the current one. Digits of other scripts, such as Eastern Arabic,
+become plain digits.
 
-The model holds only the typed characters without separators. `complete` does not fire when the
-application changes the value itself.
+The model holds only the typed characters, without spaces between groups. `complete` does not
+fire when the app changes the value itself.
 
 ## Accessibility
 
-A screen reader sees one text field with its label, description and error. The slots are hidden
-from it, the placeholder is not announced, and in `secret` mode the field is announced as a
-password. The slot row runs left to right even in RTL.
+A screen reader sees one text field with its label, description and error, and the cells are
+hidden from it. The `placeholder` character is not announced, and a field with `secret` is
+announced as a password. In right-to-left text the cells still run left to right, like the
+digits of the code.
 
 <KeyboardReference name="NuiOtpField" />
 

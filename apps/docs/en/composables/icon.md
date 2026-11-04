@@ -1,10 +1,14 @@
 # useIcon
 
-`useIcon(icon)` turns an icon source into a component, and `NuiIcon` is built on it. An alias
-gives the icon from the configuration or else the kit's Lucide icon, loaded on first use. A
-component stays as it is.
+`useIcon(icon)` returns an icon component by its name, for example `'x'` or `'check'`. `NuiIcon`
+is built on it.
 
-`lazyIcon(loader)` wraps a dynamic import into a component that loads once on the first render.
+When the `icons` option has an icon with that name, you get it, otherwise the built-in Lucide
+icon. A built-in icon loads the first time it is shown. A component passed instead of a name
+comes back as it is.
+
+`lazyIcon(loader)` turns a dynamic import into an icon component that loads once, the first time
+it is shown.
 
 ## Signature
 
@@ -12,8 +16,8 @@ component stays as it is.
 
 ## Usage
 
-`useIcon` helps where a component other than `NuiIcon` expects an icon: it gets the same
-glyph the app chose for the alias.
+Use `useIcon` when a third-party component, not `NuiIcon`, expects an icon. It gets the same
+icon the app uses for that name:
 
 ```vue
 <template>
@@ -27,5 +31,5 @@ const close = useIcon('x');
 </script>
 ```
 
-`useIcons()` returns only the overrides of the nearest configuration. Overriding kit icons is
+`useIcons()` returns only the icons set in the nearest settings. Replacing the built-in icons is
 described on the [Icon](/en/components/icon) page.

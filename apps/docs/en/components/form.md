@@ -1,10 +1,13 @@
 # Form
 
-`@numior/forms` builds forms from the kit controls. `useForm` holds the values, errors and
-submission, `NuiForm` renders a `<form>` with errors and a button, `NuiFormField` binds a
-control. Validation comes from a Zod, Valibot or ArkType schema, or from the package rules.
+The `@numior/forms` package builds a form from Numior UI inputs: it stores the values, validates them
+and submits them. `useForm` creates the form, `NuiForm` renders it with a submit button, and each
+control connects through `NuiFormField`.
 
 <Example name="form/Schema" />
+
+Validation rules come from a Zod, Valibot or ArkType schema, as in the example, or from the rules
+of the package itself.
 
 ## Installation
 
@@ -17,71 +20,80 @@ import '@numior/forms/styles/form.css';
 
 ### Rules without a schema
 
-The `rules` of a field are a list of package rules: `required`, `min`, `max`, `email`,
-`pattern`, `custom`. A server error is thrown as `NuiFormError` and lives until the field
-value changes.
+Pass `rules` to a field: a list of package rules such as `required`, `min`, `max`, `email`,
+`pattern` or `custom`. Throw a server error, such as "This address is already registered", from
+`onSubmit` as `NuiFormError`. It stays under the field until the user changes the value.
 
 <Example name="form/Rules" />
 
 ### Async validation
 
-`customAsync` runs after the sync rules: after a change through `debounce`, on submit with the
-answer awaited. While the check runs, the field slot receives `pending`.
+The `customAsync` rule checks a value on the server, for example whether a login is free. It runs
+after the regular rules: while typing, 300 ms after the last change; on submit, at once, and the
+form waits for the answer. Until the answer arrives, the field slot receives `pending`.
 
 <Example name="form/Async" />
 
 ### Repeated groups
 
-`NuiFieldArray` renders row cards: `min` hides removal, `max` disables adding, `reorderable`
-adds reordering with the mouse and the keyboard.
+`NuiFieldArray` renders a list of identical cards, such as guests. When only `min` cards are left,
+the remove button disappears, and at `max` the add button is disabled. `reorderable` lets users
+reorder the cards with the mouse and the keyboard.
 
 <Example name="form/Guests" />
 
 ## Validation
 
-`schema` takes any Standard Schema v1 schema. A schema issue lands in the field on its path, an
-issue without a path in the form error block. The schema output without a single issue reaches
-`onSubmit` as `output`.
+The `schema` prop takes any Standard Schema v1 schema. A schema error with a path shows under its
+field, an error without a path shows in the block above the form fields. When there are no
+errors, the schema result reaches `onSubmit` as `output`.
 
-Form rules go into `useForm({ rules })` by path or by a pattern with `*` for the row index,
-field rules into `rules` of `NuiFormField`.
+Set rules for the whole form in `useForm({ rules })` by field path. Write `*` instead of the row
+number of a repeated group to apply a rule to every row. Rules of a single field go into `rules`
+of `NuiFormField`.
 
-By default the form stays silent until the first submit, after which every change re-checks the
-field. `validateOn="blur"` or `"change"` on the form or the field starts validation earlier. A
-rule that needs neighbouring values reads them from the context: `custom((value, { values }) => …)`.
+The form shows no errors until the first submit; after it, a field is validated on every change.
+`validateOn="blur"` or `validateOn="change"` on the form or a field starts validation earlier. A
+rule receives the values of other fields as its second argument: `custom((value, { values }) => …)`.
 
 ## Submission
 
-`NuiForm` renders `<form novalidate>`: Enter in a field and the button submit the form, the
-browser shows no hints of its own. `onSubmit(values, helpers)` receives the values without
-hidden fields plus `output`, `signal`, `setErrors`, `setFormErrors` and `resetForm`. While the
-handler runs the form is `aria-busy`, the button keeps its focus and width, a second submit is
-ignored.
+The form submits with the button or with Enter in a field, and the browser shows no hints of its
+own. `onSubmit(values, helpers)` receives the values without hidden fields, and `helpers` holds
+`output`, `signal`, `setErrors`, `setFormErrors` and `resetForm`.
 
-After a failed submit the focus moves to the first invalid field. `form.submit()` returns
-`{ status, invalid, formErrors }`; a `type="reset"` button and `resetForm()` reset the form.
+While `onSubmit` runs, the button shows a spinner and keeps its width and focus, and a second press
+does nothing. When validation fails, the focus moves to the first field with an error.
+
+`form.submit()` submits the form from code and returns `{ status, invalid, formErrors }`. A
+`type="reset"` button and a `resetForm()` call restore the initial values.
 
 ## Hidden and disabled fields
 
-A field that is not rendered leaves validation and submission but keeps its value;
-`keepValue="false"` clears it when hidden. A disabled field submits but is not validated.
-Control drafts, such as a number, a time or combobox text, are committed by `NuiFormField`
-before the submit.
+A field that is not rendered on the page is neither validated nor submitted, but keeps its value.
+With `:keep-value="false"` the value is cleared as soon as the field is hidden. A disabled field
+is submitted without validation.
 
-A field or form with `readonly` shows its value and keeps it focusable and copyable. Such a
-field submits without validation. The submit button of a form in read mode is disabled.
+Before the submit, `NuiFormField` commits unfinished input such as a number, a time or combobox
+text. The form receives what the user sees.
+
+A field or form with `readonly` shows the value, which can be selected and copied but not changed.
+Such a field is submitted without validation, and the submit button of a read-only form is
+disabled.
 
 ## Storage
 
-The values, field state and row keys live in the package engine. An own store, for example in
-Pinia, plugs in through `useForm({ engine })` with a `FormEngineFactory`. Validation, submission
-and focus stay with `@numior/forms` whatever the engine.
+By default the package stores the values itself. To keep them in your own store, for example in
+Pinia, pass a `FormEngineFactory` to `useForm({ engine })`. Validation, submission and focus
+handling work the same with any store.
 
 ## Accessibility
 
-Errors are linked to the control through `aria-describedby` and `aria-invalid`; the form error
-block is a `role="alert"` recreated on every attempt. In groups adding, removing and reordering
-are announced in a live region, and the focus moves into the new row.
+Screen readers read the error together with the field and report the value as invalid. Form-level
+errors are announced right away on every failed submit.
+
+In a repeated group, adding, removing and reordering cards are announced too, and the focus moves
+into the new card.
 
 ## API
 

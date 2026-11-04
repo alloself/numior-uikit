@@ -4,23 +4,23 @@ const docs: DocsMap = {
   NuiContent: {
     props: {
       document: {
-        ru: 'Документ редактора или его JSON; JSON читается схемой и проверяется.',
-        en: 'An editor document or its JSON; JSON is read and checked through the schema.',
+        ru: 'Документ редактора или его JSON. JSON проверяется по `schema` перед выводом.',
+        en: 'Editor document or its JSON. JSON is checked against `schema` before rendering.',
       },
       schema: {
-        ru: 'Схема для чтения JSON; по умолчанию contentSchema.',
-        en: 'Schema that reads JSON; contentSchema by default.',
+        ru: 'Схема, по которой читается JSON. По умолчанию — `contentSchema`.',
+        en: 'Schema used to read the JSON. Defaults to `contentSchema`.',
       },
-      size: { ru: 'Кегль текста.', en: 'Text size.' },
+      size: { ru: 'Размер текста: `sm`, `md` или `lg`.', en: 'Text size: `sm`, `md` or `lg`.' },
       views: {
-        ru: 'Свои компоненты для типов узлов: компонент получает проп node и рисуется вместо разметки схемы. Таблицы данных как NuiTable с сортировкой и фильтрами — { table: NuiContentTable } из @numior/content/table; без этого таблица остаётся обычной <table>. Блоки кода с подсветкой, языком и копированием — { code_block: NuiContentCode } из @numior/content/code.',
-        en: 'Own components for node types: the component receives the node prop and replaces the schema markup. Data tables as NuiTable with sorting and filters take { table: NuiContentTable } from @numior/content/table; without it a table stays a plain <table>. Code blocks with highlighting, a language and copying take { code_block: NuiContentCode } from @numior/content/code.',
+        ru: 'Свои компоненты для типов блоков, которые получают свойство `node`. Таблицу с сортировкой и фильтрами даёт `{ table: NuiContentTable }` из `@numior/content/table`, подсветку кода — `{ code_block: NuiContentCode }` из `@numior/content/code`.',
+        en: 'Custom components for block types. Each receives the `node` prop. `{ table: NuiContentTable }` from `@numior/content/table` adds sorting and filters, `{ code_block: NuiContentCode }` from `@numior/content/code` highlights code.',
       },
     },
     events: {
       invalid: {
-        ru: 'JSON не прочитан: список проблем с путями узлов.',
-        en: 'The JSON could not be read: the problems with node paths.',
+        ru: 'Срабатывает, если JSON не прошёл проверку. Передаёт список ошибок с путями до блоков.',
+        en: 'Fires when the JSON fails the check, with the list of errors and their block paths.',
       },
     },
   },

@@ -1,8 +1,10 @@
 # usePopover
 
-`usePopover(content, options)` drives the native Popover API. `contentAttrs` go on the
-content, `invokerAttrs` on the button, and `open` stays in sync with the `toggle` events.
-`useDelayedOpen` adds open and close delays for tooltips.
+`usePopover(content, options)` opens and closes a panel through the Popover API from the `open`
+model. Use it for your own floating panel when [Popover](/en/components/popover) does not fit.
+
+Put `contentAttrs` on the panel and `invokerAttrs` on the button that opens it. `useDelayedOpen`
+adds a delay before opening and closing, as on a tooltip.
 
 ## Signature
 
@@ -26,6 +28,8 @@ const popover = usePopover(panel, { open, mode: 'auto' });
 </script>
 ```
 
-The `auto` mode closes the popover on an outside click and Escape, `manual` leaves closing to
-the code. `raise()` lifts an open popover above its siblings. [Popover](/en/components/popover)
-and [Tooltip](/en/components/tooltip) are built on these composables.
+In the `auto` mode the panel closes on an outside click and on Escape. In the `manual` mode it
+closes only when you change `open`. `raise()` brings an open panel above the others.
+
+[Popover](/en/components/popover) and [Tooltip](/en/components/tooltip) are built on these
+composables.

@@ -1,10 +1,13 @@
 # Skeleton
 
-`NuiSkeleton` is a decorative placeholder while data loads: `aria-hidden`, a shimmering gradient
-on the surface tokens. Under `prefers-reduced-motion` the shimmer is off, `animated="false"`
-does the same explicitly.
+`NuiSkeleton` is a grey placeholder in place of text, an image or an avatar while data loads.
+The page gets its shape right away and does not jump when the data arrives.
 
 <Example name="skeleton/Basic" />
+
+`shape` picks the form: `text` for lines of text, `rect` for a rectangle, `circle` for a circle.
+`lines` sets the number of lines, `width` and `height` the size. A shimmer runs across the
+placeholder, and `:animated="false"` turns it off.
 
 ## Installation
 
@@ -21,14 +24,18 @@ import '@numior/vue/styles/skeleton.css';
 
 ### A card while loading
 
-The placeholders take the place of the text, so the layout does not jump when the data arrives.
+Put placeholders where the title and the text will be, and give them a similar width. Then the
+card keeps its size after loading.
 
 <Example name="skeleton/Card" />
 
 ## Accessibility
 
-A skeleton does not announce loading on its own. Mark the container with `aria-busy="true"` or
-show a `NuiProgress` with a label, so a screen reader learns about the process.
+A screen reader does not see the placeholder and learns nothing about loading from it. Mark the
+container with `aria-busy="true"` while loading, or show a [Progress](/en/components/progress)
+with a label next to it.
+
+When reduced motion is on in the system, the shimmer stays still.
 
 ## API
 

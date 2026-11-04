@@ -18,6 +18,7 @@ const MAX_SENTENCES = 3;
 const BANNED: Readonly<Record<ExampleLocale, readonly string[]>> = {
   ru: [
     'позволяет',
+    'позволяют',
     'обратите внимание',
     'важно отметить',
     'мощный',
@@ -26,8 +27,15 @@ const BANNED: Readonly<Record<ExampleLocale, readonly string[]>> = {
     'в будущем',
     'это не заменяет',
     'данный',
+    'данная',
+    'данное',
+    'данного',
     'является',
+    'являются',
     'функционал',
+    'функционала',
+    'kit',
+    'кит',
   ],
   en: [
     'allows you to',
@@ -43,6 +51,16 @@ const BANNED: Readonly<Record<ExampleLocale, readonly string[]>> = {
     'robust',
     'functionality',
   ],
+};
+
+const WORD_CHAR = String.raw`[\p{L}\p{N}]`;
+
+const phrasePattern = (phrase: string): RegExp =>
+  new RegExp(`(?<!${WORD_CHAR})${phrase.replaceAll(' ', String.raw`\s+`)}(?!${WORD_CHAR})`, 'u');
+
+const BANNED_PATTERNS: Readonly<Record<ExampleLocale, readonly (readonly [string, RegExp])[]>> = {
+  ru: BANNED.ru.map((phrase) => [phrase, phrasePattern(phrase)] as const),
+  en: BANNED.en.map((phrase) => [phrase, phrasePattern(phrase)] as const),
 };
 
 const INTERNALS_RE = /nui-[a-z0-9-]+(?:__|--)[a-z0-9_-]+|--_[a-z0-9-]+/;
@@ -125,8 +143,10 @@ const paragraphProblems = (paragraph: Paragraph, locale: ExampleLocale): ProsePr
   for (const sentence of sentences.filter((entry) => wordCount(entry) > MAX_WORDS)) {
     problems.push({ line: paragraph.line, rule: 'sentence', text: sentence });
   }
-  for (const phrase of BANNED[locale].filter((entry) => lower.includes(entry))) {
-    problems.push({ line: paragraph.line, rule: 'phrase', text: phrase });
+  for (const [phrase, pattern] of BANNED_PATTERNS[locale]) {
+    if (pattern.test(lower)) {
+      problems.push({ line: paragraph.line, rule: 'phrase', text: phrase });
+    }
   }
   const internals = paragraph.api ? null : INTERNALS_RE.exec(paragraph.text);
 

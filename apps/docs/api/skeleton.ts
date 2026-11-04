@@ -9,10 +9,10 @@ const docs: DocsMap = {
       },
       width: { ru: 'Ширина в любых единицах CSS.', en: 'Width in any CSS unit.' },
       height: { ru: 'Высота в любых единицах CSS.', en: 'Height in any CSS unit.' },
-      lines: { ru: 'Число строк для формы text.', en: 'Number of lines for the text shape.' },
+      lines: { ru: 'Число строк для формы `text`.', en: 'Number of lines for the `text` shape.' },
       animated: {
-        ru: 'Мерцание; под reduced motion выключено всегда.',
-        en: 'Shimmer; always off under reduced motion.',
+        ru: 'Включает мерцание. При настройке «уменьшить движение» мерцания нет.',
+        en: 'Turns on the shimmer. It stays off when the user prefers reduced motion.',
       },
     },
     configurator: {

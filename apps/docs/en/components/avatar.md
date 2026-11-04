@@ -1,8 +1,7 @@
 # Avatar
 
-`NuiAvatar` shows the image from `src`, the initials from `name` without one or after a load
-error, and an icon without a name. `status` draws a status dot with a label, `NuiAvatarGroup`
-overlaps avatars and collapses the extra ones into "+N".
+`NuiAvatar` shows a user's photo, and without one their initials or an icon. A status can sit
+next to the avatar: online, busy, away.
 
 <Example name="avatar/Basic" />
 
@@ -21,28 +20,32 @@ import '@numior/vue/styles/avatar.css';
 
 ### A group
 
-`items` and `max` show the first members and the number of hidden ones; the group hands the
-shared `size` and `shape` to its children.
+`NuiAvatarGroup` renders the members from `items`, overlapping each other. The `max` prop limits
+how many avatars are shown, and the rest collapse into "+N". Set the size and the shape once on
+the group with `size` and `shape`.
 
 <Example name="avatar/Group" />
 
 ### A badge in the corner
 
-The `badge` slot places a [Badge](/en/components/badge) with a counter or a dot in the corner.
+Put a [Badge](/en/components/badge) into the `badge` slot to show a counter or a dot in the
+corner.
 
 <Example name="avatar/Badge" />
 
 ## Behaviour
 
-The fallback chain is image → initials → icon. The initials come from the first letter of the
-first and the last word of `name`. On the server a given `src` always renders an `<img>`, and a
-load error replaces it in the browser without hydration mismatches.
+The photo comes from `src`. When there is none or it fails to load, the avatar shows the initials
+from `name`, the first letters of its first and last words. Without `name` an icon is shown.
+
+The `status` prop accepts `online`, `offline`, `busy` and `away` and draws a dot of the matching
+colour. `size` accepts `sm`, `md`, `lg` and `xl`, and `shape` accepts `circle` or `square`.
 
 ## Accessibility
 
-The avatar figure is a `role="img"` named from `alt` or `name`; without a name it is decorative.
-The status dot is a separate `role="img"` labelled from `statusLabel` or the dictionary. The
-group is a `role="group"` with `label`.
+A screen reader names the avatar by `alt` or `name` and skips an avatar without a name. The
+status dot has its own label, such as "Online" or "Busy", which `statusLabel` replaces. Label
+the group with `label`.
 
 ## API
 

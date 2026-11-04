@@ -1,11 +1,13 @@
 # Menu
 
-`NuiMenu` is a dropdown on a native `popover="auto"` with `role="menu"`. Items come from parts:
-`NuiMenuItem`, `NuiMenuCheckboxItem`, `NuiMenuRadioGroup` with `NuiMenuRadioItem`,
-`NuiMenuSeparator`, `NuiMenuLabel` and `NuiMenuSub`. The same set can be described as data
-through `items`.
+`NuiMenu` is a dropdown menu of actions that opens from a button: "New document", "Duplicate",
+"Delete". Put the button into the `trigger` slot and the items inside the menu.
 
 <Example name="menu/Basic" />
+
+A regular item is `NuiMenuItem`, an item with a checkbox is `NuiMenuCheckboxItem`, and a choice of
+one option is `NuiMenuRadioGroup` with `NuiMenuRadioItem`. `NuiMenuSub` adds a nested menu,
+`NuiMenuLabel` a group heading and `NuiMenuSeparator` a line between groups.
 
 ## Installation
 
@@ -17,31 +19,33 @@ import '@numior/vue/styles/menu.css';
 
 ## Examples
 
-### An action menu from data
+### Menu from an array
 
-`items` takes entries `{ label, icon, shortcut, tone, onSelect }`, `{ type: 'checkbox' }`,
-`{ type: 'radio-group' }`, `{ type: 'separator' }`, `{ type: 'label' }` and `{ type: 'sub' }`.
-The entries render through the same parts.
+The same menu can be described with the `items` array. A regular item is a
+`{ label, icon, shortcut, tone, onSelect }` entry, the others are entries with a `type` field:
+`checkbox`, `radio-group`, `separator`, `label` or `sub`.
 
 <Example name="menu/Items" />
 
 ## Behaviour
 
-A click opens the menu; a menu opened with the mouse focuses the container, one opened with the
-keyboard the first or the last item. Hover moves the focus to an item. An item closes the menu
-after being picked, `closeOnSelect="false"` keeps it open; a checkbox item does not close by
-default.
+A click on the button opens the menu. When it is opened from the keyboard, the focus goes straight
+to the first item, or to the last one when opened with ArrowUp. Hovering an item with the mouse
+moves the focus to it.
 
-A submenu opens on hover after a delay and on the arrow key on its item. A submenu is a nested
-native popover: a click outside closes the whole chain, a click in the parent only the submenu.
-On close the focus returns to the trigger.
+Choosing an item closes the menu, and `:close-on-select="false"` keeps it open. A checkbox item
+keeps the menu open by default, so several options can be checked.
+
+A nested menu opens on hover after a short delay, or with Enter or ArrowRight from the keyboard.
+A click outside closes all levels at once, and the focus returns to the button.
 
 ## Accessibility
 
-The trigger gets `aria-haspopup="menu"`, `aria-expanded` and `aria-controls`. Items are native
-buttons with `role="menuitem"`, `menuitemcheckbox` and `menuitemradio`; an item with `href` or
-`to` is a `NuiLink` with the same role. Disabled items stay in the tree and take the focus but
-do not fire.
+Screen readers announce that the button opens a menu and whether it is open. Checkbox and radio
+items are announced as checked or not checked.
+
+An item with `href` or `to` works as a link. A disabled item stays in the menu and takes the focus
+so it can be read, but it cannot be chosen.
 
 <KeyboardReference name="NuiMenu" />
 

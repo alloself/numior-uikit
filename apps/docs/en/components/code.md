@@ -1,8 +1,7 @@
 # Code
 
-`NuiCode` is a code block with a header, a copy button, line numbers, highlighted lines and
-collapsing of long output. Syntax colours arrive as tokens from any highlighter; these docs
-use Shiki at build time. Without tokens the code renders in one colour.
+`NuiCode` is a code block with a copy button, like the ones in these docs. The block can number
+lines, highlight single lines and collapse a long listing.
 
 <Example name="code/Basic" />
 
@@ -14,24 +13,27 @@ import '@numior/vue/styles/button.css';
 import '@numior/vue/styles/code.css';
 ```
 
+## Usage
+
+Pass the code in `code` and the language in `language`. The `title` prop shows a header with a
+file name above the code; without it the header shows the language name.
+
+`lineNumbers` numbers the lines, and `highlight` highlights the lines with the given numbers,
+such as `[3]`. With `:copyable="false"` there is no copy button.
+
 ## Examples
 
 ### Long output
 
-`maxLines` collapses the code to the given number of lines and adds an expand button; `wrap`
-wraps long lines instead of scrolling horizontally.
+The `maxLines` prop shows only the first lines of the code and adds a "Show more" button. `wrap`
+wraps long lines, so the code does not scroll horizontally.
 
 <Example name="code/Collapsed" />
 
 ## Highlighter
 
-Without `tokens` the block asks the highlighter from `createNuiConfig({ highlighter })` or the
-`highlighter` prop; `false` turns highlighting off. The highlighter knows its languages with
-aliases and returns tokens at once or as a promise. Until it answers, and on the server, the code
-renders in one colour at the same height; answers are cached by language and text.
-
-A ready Shiki highlighter lives in its own entry: Shiki loads on the first highlight and the
-grammars load one per language.
+Without a highlighter the code renders in one colour. To colour the syntax, add the ready Shiki
+highlighter through the plugin:
 
 ```ts
 import { createNuiConfig } from '@numior/vue';
@@ -40,23 +42,29 @@ import { createShikiHighlighter } from '@numior/vue/shiki';
 app.use(createNuiConfig({ highlighter: createShikiHighlighter() }));
 ```
 
+Shiki loads on the first highlight, and the grammar of each language loads when it first appears
+on the page. Until highlighting is ready, and during server rendering, the code renders in one
+colour and the block keeps its height.
+
+The `highlighter` prop sets a highlighter for one block, and `:highlighter="false"` turns
+highlighting off. You can also write your own highlighter; its signature is `NuiHighlighter`.
+
 <SignatureReference :names="['useHighlighter', 'highlightCode', 'languageOf', 'NuiHighlighter']" />
 
 ## Behaviour
 
-`tokens` describe the lines in parallel with `code`: every line is a list of pieces with a
-scope. The scopes are `keyword`, `string`, `number`, `function`, `type`, `tag`, `attribute`,
-`property`, `comment`, `punctuation` and `variable`. The `--nui-syntax-*` theme tokens
-colour the scopes.
+When the code is already coloured at build time, pass the result in `tokens`, and no highlighter
+is needed. Every line in `tokens` is a list of text pieces with a type: `keyword`, `string`,
+`comment` and others.
 
-Copying goes through the clipboard with a fallback for old browsers; without a header the
-button floats in the corner.
+The colour of each type comes from a `--nui-syntax-*` theme variable, such as
+`--nui-syntax-keyword`. Without a header the copy button sits in the corner of the block.
 
 ## Accessibility
 
-The copy button is labelled by the dictionary and the result is announced through
-`role="status"`. The code sits in a `<pre>`, so a screen reader reads it line by line; the
-line numbers stay out of selection and copying.
+The copy button is labelled "Copy code", and after a press a screen reader announces "Copied".
+The code area takes keyboard focus and scrolls with the arrow keys. Line numbers cannot be
+selected and stay out of the copied text.
 
 ## API
 

@@ -1,8 +1,10 @@
 # useHotkey
 
-`useHotkey(combo, handler, options)` calls the handler on a key combo in the `mod+shift+u`
-notation. `mod` is Ctrl or ⌘; letters and digits are matched by the physical key, so the
-combo works on any layout. The listener lives as long as the component.
+`useHotkey(combo, handler, options)` calls `handler` when the user presses a key combination,
+for example `mod+shift+u`. `mod` matches both Ctrl and ⌘.
+
+Letters and digits are matched by the physical key, so Ctrl+K also works on a Russian layout. The
+shortcut stops working when the component unmounts.
 
 <Example name="composables/Hotkey" />
 
@@ -12,7 +14,12 @@ combo works on any layout. The listener lives as long as the component.
 
 ## Behaviour
 
-`enabled` switches the combo off, `target` attaches the listener elsewhere than the window,
-`preventDefault` cancels the browser action. Combos without Ctrl and Meta stay silent inside
-inputs by default; `inEditable: true` enables them there too. `parseHotkey` parses the
-notation into a `Hotkey` object, the same format [Kbd](/components/kbd) reads.
+`enabled: false` turns the shortcut off, and `target` listens for keys on a given element
+instead of the window. By default the browser action for the combination is cancelled;
+`preventDefault: false` keeps it.
+
+Shortcuts without Ctrl or ⌘ do not fire while the user types in an input. `inEditable: true`
+turns them on there too.
+
+`parseHotkey` parses a combination into a `Hotkey` object. [Kbd](/en/components/kbd) reads the
+same notation.

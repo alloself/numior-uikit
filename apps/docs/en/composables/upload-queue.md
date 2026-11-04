@@ -1,8 +1,14 @@
 # useUploadQueue
 
-`useUploadQueue(options)` runs an upload queue: `add` puts files into `items`, `start` begins
-uploading with `concurrency` parallel jobs, `retry` and `remove` manage the entries. The
-`upload(file, context)` adapter receives `onProgress` and a `signal` for cancellation.
+`useUploadQueue(options)` uploads files in a queue, several at a time. Use it with your own drop
+zone, for example one built on [useFileDrop](/en/composables/file-drop).
+
+`add` puts files into `items`, and uploading starts on its own. `concurrency` sets how many files
+upload at once, 3 by default. `retry` uploads a failed file again, `remove` drops a file and
+cancels its upload.
+
+Your `upload(file, context)` function makes the request. It receives `onProgress` to report
+progress as a fraction from 0 to 1 and a `signal` to cancel the request.
 
 ## Signature
 
@@ -27,5 +33,5 @@ const queue = useUploadQueue({
 });
 ```
 
-`auto: false` delays the start until `start()`, `onDone` and `onError` fire per entry.
-[Upload](/en/components/upload) uses this queue under the hood.
+`auto: false` holds the upload until you call `start()`. `onDone` and `onError` are called for
+each file. [Upload](/en/components/upload) is built on this queue.

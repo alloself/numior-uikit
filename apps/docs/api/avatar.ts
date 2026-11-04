@@ -4,32 +4,38 @@ const docs: DocsMap = {
   NuiAvatar: {
     props: {
       src: {
-        ru: 'Адрес картинки; после ошибки загрузки показываются инициалы.',
-        en: 'Image address; after a load error the initials show.',
+        ru: 'Адрес картинки. Если она не загрузится, покажутся инициалы.',
+        en: 'Image URL. If it fails to load, the initials show instead.',
       },
       alt: {
-        ru: 'Доступное имя картинки; по умолчанию name.',
-        en: 'Accessible name of the image; name by default.',
+        ru: 'Подпись картинки для экранных дикторов. По умолчанию — `name`.',
+        en: 'Image label for screen readers. Defaults to `name`.',
       },
       name: {
-        ru: 'Имя для инициалов и доступного имени.',
-        en: 'Name for the initials and the accessible name.',
+        ru: 'Имя человека. Из него берутся инициалы и подпись для дикторов.',
+        en: 'Name of the person. It gives the initials and the screen reader label.',
       },
-      size: { ru: 'Размер от sm до xl.', en: 'Size from sm to xl.' },
-      shape: { ru: 'Круг или квадрат со скруглением.', en: 'A circle or a rounded square.' },
+      size: { ru: 'Размер: `sm`, `md`, `lg` или `xl`.', en: 'Size: `sm`, `md`, `lg` or `xl`.' },
+      shape: {
+        ru: 'Форма: круг (`circle`) или квадрат со скруглёнными углами (`square`).',
+        en: 'Shape: `circle` or rounded `square`.',
+      },
       status: {
-        ru: 'Точка состояния с подписью из словаря.',
-        en: 'Status dot with a label from the dictionary.',
+        ru: 'Показывает точку статуса: `online`, `offline`, `busy` или `away`. Подпись берётся из словаря.',
+        en: 'Shows a status dot: `online`, `offline`, `busy` or `away`, labelled from the dictionary.',
       },
-      statusLabel: { ru: 'Своя подпись точки состояния.', en: 'Custom label of the status dot.' },
+      statusLabel: {
+        ru: 'Своя подпись точки статуса вместо словарной.',
+        en: 'Custom status dot label instead of the dictionary one.',
+      },
       icon: {
         ru: 'Иконка, когда нет ни картинки, ни имени.',
-        en: 'Icon when there is neither an image nor a name.',
+        en: 'Icon to display when there is neither an image nor a name.',
       },
     },
     slots: {
       default: { ru: 'Содержимое вместо инициалов.', en: 'Content instead of the initials.' },
-      badge: { ru: 'Бейдж в углу.', en: 'Badge in the corner.' },
+      badge: { ru: 'Бейдж в углу аватара.', en: 'Badge in the corner of the avatar.' },
     },
     configurator: {
       props: ['size', 'shape', 'status', 'name'],
@@ -38,17 +44,23 @@ const docs: DocsMap = {
   },
   NuiAvatarGroup: {
     props: {
-      items: { ru: 'Аватары данными: src, alt, name.', en: 'Avatars as data: src, alt, name.' },
-      max: {
-        ru: 'Сколько показывать; остальные сворачиваются в «+N».',
-        en: 'How many to show; the rest collapse into "+N".',
+      items: {
+        ru: 'Аватары списком объектов с полями `src`, `alt` и `name`.',
+        en: 'Avatars as a list of objects with `src`, `alt` and `name`.',
       },
-      size: { ru: 'Общий размер аватаров.', en: 'Shared size of the avatars.' },
-      shape: { ru: 'Общая форма аватаров.', en: 'Shared shape of the avatars.' },
-      label: { ru: 'Доступное имя группы.', en: 'Accessible name of the group.' },
+      max: {
+        ru: 'Сколько аватаров показать. Остальные заменяет счётчик «+N».',
+        en: 'How many avatars to show. A "+N" counter replaces the rest.',
+      },
+      size: { ru: 'Размер всех аватаров группы.', en: 'Size of every avatar in the group.' },
+      shape: { ru: 'Форма всех аватаров группы.', en: 'Shape of every avatar in the group.' },
+      label: {
+        ru: 'Подпись группы для экранных дикторов.',
+        en: 'Group label for screen readers.',
+      },
       overflowLabel: {
-        ru: 'Функция текста переполнения по числу скрытых.',
-        en: 'Function that formats the overflow text from the hidden count.',
+        ru: 'Функция, которая строит текст счётчика по числу скрытых аватаров. По умолчанию — «+N».',
+        en: 'Function that builds the counter text from the number of hidden avatars. Defaults to "+N".',
       },
     },
   },

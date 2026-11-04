@@ -4,12 +4,12 @@ const docs: DocsMap = {
   NuiIcon: {
     props: {
       icon: {
-        ru: 'Алиас иконки кита или готовый компонент. Алиас берёт иконку из конфигурации, а без неё — иконку Lucide, загруженную при первом обращении.',
-        en: 'A kit icon alias or a ready component. An alias takes the icon from the configuration, or else the Lucide icon loaded on first use.',
+        ru: 'Имя иконки, например `search`, или компонент иконки. Имя ищется в `createNuiConfig`, иначе загружается иконка Lucide при первом показе.',
+        en: 'Icon name, such as `search`, or an icon component. The name is looked up in `createNuiConfig`, else a Lucide icon loads on first use.',
       },
       transform: {
-        ru: 'Преобразование глифа: `rotate` в градусах и `scale`; смена анимируется, сам глиф не меняется (шеврон раскрытия).',
-        en: 'Glyph transform: `rotate` in degrees and `scale`; a change animates while the glyph stays (a disclosure chevron).',
+        ru: 'Поворот `rotate` в градусах и масштаб `scale`. Изменение плавное, например стрелка поворачивается при раскрытии.',
+        en: 'Rotation `rotate` in degrees and `scale`. Changes animate, such as an arrow that turns on expand.',
       },
     },
     configurator: { props: ['icon'], values: { icon: 'search' } },

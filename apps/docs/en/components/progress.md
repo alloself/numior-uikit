@@ -1,9 +1,13 @@
 # Progress
 
-`NuiProgress` is a native `<progress>`: the browser provides the `progressbar` role, the value
-and the maximum. The styles draw the track, the tone colour and the indeterminate animation.
+`NuiProgress` is a progress bar: file uploads, imports, how far a task has come. When the result
+cannot be measured in advance, the bar shows that work is going on, without a percentage.
 
 <Example name="progress/Basic" />
+
+`value` is how much is done and `max` how much there is, 100 by default. Without `value` a
+segment runs along the bar. `tone` sets the colour, such as `success` or `info`, and `size` the
+thickness: `sm`, `md` or `lg`.
 
 ## Installation
 
@@ -20,15 +24,18 @@ import '@numior/vue/styles/progress.css';
 
 ### A live value
 
-The value changes through `value`; the caption next to it shows the percentage to sighted users.
+Update `value` as the work goes, and the bar moves smoothly to the new value. Show the
+percentage next to the bar as plain text; the bar does not print it.
 
 <Example name="progress/Live" />
 
 ## Accessibility
 
-Without `value` the bar is indeterminate: it slides along the track, and under
-`prefers-reduced-motion` the animation slows down by half. `label` gives the accessible name,
-`valueText` the value in words for a screen reader.
+The component is a native `<progress>`, so a screen reader announces a progress bar and reads
+its value. `label` names the bar, and `valueText` replaces the percentage with words, such as
+"12 of 40 files".
+
+When reduced motion is on in the system, the segment runs along the bar twice as slowly.
 
 ## API
 

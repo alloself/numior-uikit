@@ -1,7 +1,7 @@
 # Combobox
 
-`NuiCombobox` is a text field with `role="combobox"`: the list filters as you type while the
-focus stays in the field. The options are the same as in `NuiSelect`.
+`NuiCombobox` is a field with a dropdown list that narrows as you type. Use it when there are many
+options and the right one is easier to find by its first letters: cities, employees, tags.
 
 <Example name="combobox/Basic" />
 
@@ -15,34 +15,43 @@ import '@numior/vue/styles/chip.css';
 import '@numior/vue/styles/combobox.css';
 ```
 
+## Usage
+
+Pass the options in `options` in the same shape as for a [Select](/en/components/select): `value`
+and `label`. The list keeps the options whose label contains the typed text. The `clearable` prop
+adds a clear button.
+
 ## Examples
 
 ### Several values
 
-`multiple` shows the selection as chips in selection order; `customValue` turns the typed text
-into a new value on Enter.
+With `multiple` the selected options appear in the field as chips, and `v-model:values` holds
+their array. The `customValue` prop adds the typed text as a new value on Enter when the list has
+no such option.
 
 <Example name="combobox/Multiple" />
 
 ### Server-side search
 
-`:filter="false"` switches the built-in filter off, the `search` event sends the query on every
-input, `loading` shows the loading state. Debouncing and caching stay with the app.
+With `:filter="false"` the component does not filter the list itself. The `search` event arrives
+with the text on every input: load the options and pass them to `options`.
 
 <Example name="combobox/Async" />
 
+While the options are loading, pass `loading` to show a spinner in the list. The delay before a
+request and the response cache are up to your app.
+
 ### Custom option markup
 
-The `option` slot receives the option and its states.
+The `option` slot replaces an option row with your own markup, such as a department next to a
+name. The slot receives `option`, `selected` and `active`.
 
 <Example name="combobox/Option" />
 
 ## Accessibility
 
-The field is a native `<input role="combobox" aria-autocomplete="list">` with `aria-expanded`,
-`aria-controls` and `aria-activedescendant`; the list is a `role="listbox"` with `aria-busy`
-while loading. The clear, toggle and chip remove buttons stay out of the tab order, and their
-actions are reachable from the field with the keyboard.
+Focus stays in the field the whole time, and the arrow keys move through the options. Tab skips
+the clear, open and chip remove buttons: these actions are done with the keyboard from the field.
 
 <KeyboardReference name="NuiCombobox" />
 

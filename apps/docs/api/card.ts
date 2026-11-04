@@ -1,41 +1,55 @@
 import type { DocsMap } from '../.vitepress/reference/reference.types';
 
-const content = { ru: 'Содержимое части.', en: 'Content of the part.' };
+const content = { ru: 'Содержимое блока.', en: 'Content of the block.' };
 
 const docs: DocsMap = {
   NuiCard: {
     props: {
       variant: {
-        ru: 'Вид поверхности: контур, тень или мягкая заливка.',
-        en: 'Surface look: outline, shadow or soft fill.',
+        ru: 'Оформление: рамка (`outline`), тень (`elevated`) или мягкая заливка (`soft`).',
+        en: 'Style: `outline` border, shadow (`elevated`) or `soft` fill.',
       },
-      padding: { ru: 'Внутренний отступ всех частей.', en: 'Inner padding of every part.' },
+      padding: {
+        ru: 'Внутренние отступы карточки: `xs`, `sm`, `md` или `lg`.',
+        en: 'Inner padding of the card: `xs`, `sm`, `md` or `lg`.',
+      },
       href: {
-        ru: 'Адрес; вся карточка становится ссылкой.',
-        en: 'Address; the whole card becomes a link.',
+        ru: 'Адрес ссылки. Вся карточка открывает его по клику.',
+        en: 'Link URL. A click anywhere on the card opens it.',
       },
       to: {
-        ru: 'Маршрут для RouterLink или NuxtLink приложения либо link из конфигурации; без роутера строка становится href. Тип уточняется через NuiRouteRegister.',
-        en: 'Route for the app RouterLink or NuxtLink or the configured link; without a router a string becomes href. NuiRouteRegister narrows the type.',
+        ru: 'Маршрут для `RouterLink`, `NuxtLink` или компонента `link` из `createNuiConfig`. Без роутера строка становится `href`. Тип уточняет `NuiRouteRegister`.',
+        en: 'Route for `RouterLink`, `NuxtLink` or the `link` component from `createNuiConfig`. Without a router a string becomes `href`. `NuiRouteRegister` narrows the type.',
       },
       as: {
-        ru: 'Переопределяет компонент ссылки для to.',
-        en: 'Overrides the link component for to.',
+        ru: 'Компонент ссылки для `to` вместо роутера приложения.',
+        en: 'Link component for `to` instead of the app router.',
       },
       interactive: {
-        ru: 'Карточка-кнопка; клик по поверхности приходит в @click.',
-        en: 'Button card; a click on the surface arrives in @click.',
+        ru: 'Делает всю карточку кнопкой. Нажатие приходит в событие `click`.',
+        en: 'Turns the whole card into a button. Presses arrive as the `click` event.',
       },
-      title: { ru: 'Заголовок без частей.', en: 'Heading without parts.' },
-      description: { ru: 'Описание без частей.', en: 'Description without parts.' },
+      title: {
+        ru: 'Заголовок, если карточка собрана без `NuiCardHeader`.',
+        en: 'Title when the card has no `NuiCardHeader`.',
+      },
+      description: {
+        ru: 'Описание под заголовком без `NuiCardHeader`.',
+        en: 'Description under the title without `NuiCardHeader`.',
+      },
     },
-    slots: { default: { ru: 'Части карточки.', en: 'Parts of the card.' } },
+    slots: {
+      default: {
+        ru: 'Блоки карточки: `NuiCardHeader`, `NuiCardContent`, `NuiCardFooter` и другие.',
+        en: 'Card blocks: `NuiCardHeader`, `NuiCardContent`, `NuiCardFooter` and others.',
+      },
+    },
     keyboard: [
       {
         keys: 'Enter',
         description: {
-          ru: 'Открывает ссылку или нажимает карточку-кнопку.',
-          en: 'Follows the link or presses the button card.',
+          ru: 'Открывает ссылку карточки или нажимает карточку-кнопку.',
+          en: 'Follows the card link or presses the button card.',
         },
       },
       {
@@ -50,19 +64,19 @@ const docs: DocsMap = {
   },
   NuiCardHeader: {
     slots: {
-      default: { ru: 'Заголовок и описание.', en: 'Heading and description.' },
+      default: { ru: 'Заголовок и описание.', en: 'Title and description.' },
       actions: {
-        ru: 'Контролы справа от заголовка; работают независимо от ссылки карточки.',
-        en: 'Controls beside the heading; they work independently of the card link.',
+        ru: 'Кнопки рядом с заголовком. Нажатие на них не открывает ссылку карточки.',
+        en: 'Buttons beside the title. Pressing them does not follow the card link.',
       },
     },
   },
   NuiCardTitle: {
-    props: { as: { ru: 'Тег заголовка.', en: 'Heading tag.' } },
+    props: { as: { ru: 'Тег заголовка: от `h2` до `h6`.', en: 'Heading tag, from `h2` to `h6`.' } },
     slots: {
       default: {
-        ru: 'Текст заголовка; он же имя ссылки карточки.',
-        en: 'Heading text; it also names the card link.',
+        ru: 'Текст заголовка. Он же подпись ссылки или кнопки карточки.',
+        en: 'Title text. It also labels the card link or button.',
       },
     },
   },
@@ -71,24 +85,30 @@ const docs: DocsMap = {
   NuiCardFooter: {
     slots: {
       default: {
-        ru: 'Действия внизу; работают независимо от ссылки карточки.',
-        en: 'Actions at the bottom; they work independently of the card link.',
+        ru: 'Кнопки внизу карточки. Нажатие на них не открывает ссылку карточки.',
+        en: 'Buttons at the bottom of the card. Pressing them does not follow the card link.',
       },
     },
   },
   NuiCardMedia: {
     props: {
-      src: { ru: 'Адрес картинки в обрез до края.', en: 'Image address, cropped to the edge.' },
-      alt: {
-        ru: 'Альтернативный текст; пустой для декоративной картинки.',
-        en: 'Alternative text; empty for a decorative image.',
+      src: {
+        ru: 'Адрес картинки. Она заполняет область до краёв карточки.',
+        en: 'Image URL. The image fills the area up to the card edges.',
       },
-      aspect: { ru: 'Соотношение сторон области.', en: 'Aspect ratio of the area.' },
+      alt: {
+        ru: 'Описание картинки для экранных дикторов. Для декоративной оставьте пустым.',
+        en: 'Image description for screen readers. Leave empty for a decorative image.',
+      },
+      aspect: {
+        ru: 'Соотношение сторон области, например `16 / 9`.',
+        en: 'Aspect ratio of the area, such as `16 / 9`.',
+      },
     },
     slots: {
       default: {
-        ru: 'Замена картинки; без неё показывается иконка.',
-        en: 'Replacement for the image; without it an icon shows.',
+        ru: 'Своё содержимое вместо картинки. Без `src` и слота показывается иконка.',
+        en: 'Custom content instead of the image. Without `src` or this slot an icon shows.',
       },
     },
   },

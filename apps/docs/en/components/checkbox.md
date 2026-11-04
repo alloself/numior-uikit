@@ -1,7 +1,7 @@
 # Checkbox
 
-`NuiCheckbox` is a native `<input type="checkbox">` under its own indicator with a `boolean`
-model. `NuiCheckboxGroup` collects a set of values from options into an array in selection order.
+`NuiCheckbox` is a checkbox for a consent or a setting that turns on and off. To pick several
+options from a list use `NuiCheckboxGroup`.
 
 <Example name="checkbox/Basic" />
 
@@ -15,35 +15,41 @@ import '@numior/vue/styles/checkbox.css';
 
 ## Usage
 
+Pass the checkbox text in the slot or in `label`, and a hint under it in `description`.
+`v-model` holds `true` or `false`.
+
 <Configurator name="NuiCheckbox" />
 
 ## Examples
 
 ### A set of values
 
-`NuiCheckboxGroup` draws a `fieldset` with a label and a description; a disabled option stays in
-the set but cannot be toggled.
+`NuiCheckboxGroup` renders a checkbox for every option in `options`. `v-model` holds an array of
+the selected values in the order they were checked.
 
 <Example name="checkbox/Group" />
 
+An option with `disabled: true` cannot be checked or unchecked, but stays in the array if it is
+already selected.
+
 ### In a row
 
-`orientation="horizontal"` lays the options out in a wrapping row.
+With `orientation="horizontal"` the checkboxes line up in a row and wrap when they do not fit.
 
 <Example name="checkbox/Horizontal" />
 
 ### Partial selection
 
-`indeterminate` is the visual state of a parent checkbox while only some children are selected.
-A click clears it and toggles the value as usual.
+The `indeterminate` prop shows a dash instead of a check mark. This is how an "All regions"
+checkbox tells that only part of the list is selected. A click removes the dash and toggles the
+checkbox as usual.
 
 <Example name="checkbox/Indeterminate" />
 
 ## Accessibility
 
-The control stays native: a screen reader reads the label from the slot, the focus ring is
-drawn on the indicator. A set is a `fieldset` with a `legend`, the checkboxes inside share one
-`name`.
+A native `<input type="checkbox">` sits under the styling, so the keyboard and screen readers
+handle it as usual. The group renders as a `<fieldset>`, and its `label` as a `<legend>`.
 
 <KeyboardReference name="NuiCheckbox" />
 

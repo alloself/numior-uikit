@@ -26,7 +26,7 @@ export const referenceOf = (overrides: Partial<ComponentReference> = {}): Compon
       required: false,
       default: '"md"',
       values: ['sm', 'md', 'lg'],
-      description: { ru: 'Ступень размера.', en: 'Size step.' },
+      description: { ru: 'Размер: `sm`, `md` или `lg`.', en: 'Size: `sm`, `md` or `lg`.' },
     },
     {
       name: 'items',
@@ -102,20 +102,15 @@ export class ApiComponentDriver {
       .map((mark) => mark.attributes('title') ?? '');
   }
 
-  private styleList(label: string): string[] {
-    const list = this.wrapper
-      .findAll('p')
-      .find((candidate) => candidate.find('span').text() === `${label}:`);
-
-    return list === undefined ? [] : list.findAll('code').map((entry) => entry.text());
+  descriptionCode(section: string): string[] {
+    return this.table(section)
+      .findAll('.nui-table__body [role="row"]')
+      .flatMap((row) => row.findAll('[role="gridcell"]').at(-1)?.findAll('code') ?? [])
+      .map((entry) => entry.text());
   }
 
-  get styleClasses(): string[] {
-    return this.styleList(ru.apiClasses);
-  }
-
-  get styleTokens(): string[] {
-    return this.styleList(ru.apiTokens);
+  get text(): string {
+    return this.wrapper.text();
   }
 
   get styleImport(): string {

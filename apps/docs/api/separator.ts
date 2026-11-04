@@ -4,12 +4,12 @@ const docs: DocsMap = {
   NuiSeparator: {
     props: {
       orientation: {
-        ru: 'Горизонтальная линия или вертикальная в ряду.',
-        en: 'A horizontal line or a vertical one inside a row.',
+        ru: 'Горизонтальная линия или вертикальная между элементами ряда.',
+        en: 'A horizontal line, or a vertical one between items in a row.',
       },
       decorative: {
-        ru: 'Убирает роль separator: линия только визуальная.',
-        en: 'Drops the separator role: the line is visual only.',
+        ru: 'Скрывает линию от экранных дикторов, когда она только украшает.',
+        en: 'Hides the line from screen readers when it is purely decorative.',
       },
       label: {
         ru: 'Текст посередине горизонтальной линии.',
@@ -17,7 +17,10 @@ const docs: DocsMap = {
       },
     },
     slots: {
-      default: { ru: 'Разметка вместо текста label.', en: 'Markup in place of the label text.' },
+      default: {
+        ru: 'Разметка вместо текста `label`.',
+        en: 'Markup in place of the `label` text.',
+      },
     },
     configurator: {
       props: ['orientation', 'label', 'decorative'],

@@ -71,6 +71,6 @@ export const codeFence = (md: MarkdownRenderer, highlighter: Highlighter): void 
 
     return token === undefined
       ? ''
-      : `<NuiCode class="mb-5" v-bind='${attributeJson(fenceProps(highlighter, token.info, token.content))}'></NuiCode>\n`;
+      : `<div class="mb-5"><NuiCode v-bind='${attributeJson(fenceProps(highlighter, token.info, token.content))}'></NuiCode></div>\n`;
   };
 };

@@ -1,12 +1,17 @@
 # Table
 
-`NuiTable` is a table on a Vue-free engine: `columns` describes the columns with their value
-type, `rows` brings the rows, `getKey` gives the key. Sorting lives in `v-model:sort`, filters
-in `v-model:filters`, groups in `v-model:groupBy`, row selection in `v-model:selected`. Without
-`height` the table grows with its rows, with `height` it renders only a window of rows and
-columns.
+`NuiTable` is a table for large data sets with sorting, filters, groups, row selection and cell
+editing like in spreadsheets. It stays fast even with a million rows.
 
 <Example name="table/Basic" />
+
+Columns are described in `columns`, rows are passed in `rows`, and `getKey` returns the key of a
+row. The column type (`text`, `number`, `date` or `boolean`) defines sorting, the filter and the
+totals.
+
+Sorting, filters, groups and selected rows are kept in the `v-model:sort`, `v-model:filters`,
+`v-model:groupBy` and `v-model:selected` models. Without `height` the table grows to fit all rows,
+and with `height` it scrolls and renders only the visible rows and columns.
 
 ## Installation
 
@@ -16,383 +21,427 @@ import '@numior/vue/styles.css';
 import '@numior/table/styles.css';
 ```
 
-The table draws its filters, column menu, checkboxes, pagination and skeletons with kit
-components, so it needs the kit styles.
+The filters, column menus, checkboxes and pagination of the table are `@numior/vue` components,
+so their styles are needed too.
 
 ## Examples
 
 ### Custom cells and row selection
 
-The `cell-<key>` and `header-<key>` slots replace a cell and a column label. `selectable` adds
-a checkbox column and, in `multiple` mode, a select-all checkbox in the header for the rows in
-view.
+The `cell-<key>` slot replaces the content of the cells in a column, and `header-<key>` replaces
+its header. The `selectable` prop adds a checkbox column for selecting rows.
+
+With `multiple` the header gets a checkbox that selects all rows on screen.
 
 <Example name="table/Cells" />
 
 ### Cell styles
 
-`bordered` draws lines between the columns, and `cellStyle` paints single cells. The function
-takes the row and the column and returns a `fill`, a text `color`, an `align` and `borders`. `wrap`
-breaks the text of a single cell.
+The `bordered` prop draws lines between the columns, and the `cellStyle` function styles single
+cells. It receives the row and the column and returns a `fill`, a text `color`, an `align`,
+`borders` and text wrapping with `wrap`.
 
-The fill lies over the row background, so a translucent colour keeps the stripes and the hover.
-The `top`, `end`, `bottom` and `start` lines are drawn over the grid and leave the row height
-alone.
+The fill lies over the row background, so a translucent color keeps the stripes and the hover
+highlight visible. The `top`, `end`, `bottom` and `start` borders are drawn over the grid lines
+and do not change the row height.
 
-Every line replaces the grid line under it, so the `top` of a cell and the `bottom` of the cell
-above share one place. A merged cell keeps `top` and `start` inside itself.
+A border takes the place of a grid line, so the `top` of a cell and the `bottom` of the cell
+above share one spot. In a merged cell the `top` and `start` borders are drawn inside it.
 
-The table asks for a style once per shown cell. It asks again when the row changes or when
-reactive state read by the function changes.
+The `cellStyle` function is called once for every visible cell. It is called again when the row
+changes or when reactive data that the function reads changes.
 
 <Example name="table/CellStyle" />
 
-### Row headers
+### Row numbers
 
-`rowHeaders` adds a pinned column of row numbers at the start. A number counts the rows in the
-order on screen, so sorting and filters keep it right. The `{ label, width }` options set a label
-and a width of their own.
+The `rowHeaders` prop adds a pinned column with row numbers before the data. The numbers follow
+the order on screen, so sorting and filters do not break them. The `{ label, width }` options set
+the label and width of the column.
 
-The headers select cells. A click on a number takes the whole row, and a click on the corner takes
-the whole table. The header of a column with `sortable: false` takes its column.
+A click on a number selects the whole row, and a click on the table corner selects the whole
+table. A click on the header of a column with `sortable: false` selects the column.
 
-Shift extends the selection, Ctrl adds a row or a column, and a drag over the headers takes several
-in a row. Space or Enter on a header does the same from the keyboard. The headers of selected
-cells are highlighted.
+Shift extends the selection, Ctrl adds a row or a column to it, and dragging over the numbers
+selects several rows in a row. On the keyboard Space and Enter on a row number do the same.
 
-The `resizable` option adds a handle at the bottom edge of a row header. The heights live in
-`v-model:rowHeights` by the row key, and a double click on the handle brings the default height
-back. `Alt` with the up and down arrows changes the height from the keyboard.
+The `resizable` option adds a handle at the bottom edge of a row number to change the row height.
+Heights are kept in `v-model:rowHeights` by row key, and a double click on the handle restores
+the default height.
 
-In a row window the height is exact and counts in the scroll. When rows grow with their content,
-it is a minimum. Row heights have no effect with `source`.
+On the keyboard `Alt` with the up and down arrows changes the height. With `height` the set
+height is exact, and when rows grow with their content it is a minimum. Row heights have no
+effect with `source`.
 
 <Example name="table/RowHeaders" />
 
 ### Filters and totals
 
-The column type picks the filter: text, number, date or a value set through `filter: 'set'`;
-`v-model:quick` searches every text column. A column with `aggregate` brings a totals row with
-the `totalsLabel` caption and the count of filtered rows.
+The filter in the column menu depends on the column type: text, number or date. With
+`filter: 'set'` the filter offers a list of values to pick from. The `v-model:quick` model
+searches all text columns at once.
+
+A column with `aggregate` adds a totals row at the bottom, such as a sum or an average. The
+totals row shows the `totalsLabel` caption and the number of rows left after filtering.
 
 <Example name="table/Filters" />
 
 ### Groups
 
-`v-model:groupBy` gathers rows into groups by column keys, and aggregates are computed for
-every group. A column group `{ key, label, children }` draws a band above its headers.
+The `v-model:groupBy` model groups rows by column values, and totals are computed for each group.
+Columns can share a common header when you describe a column group as `{ key, label, children }`.
 
 <Example name="table/Groups" />
 
 ### Pages
 
-`pagination` puts a `NuiPagination` under the scroll area; `remote` with `total` leaves the
-table only the rendering and the events.
+The `pagination` prop shows a [Pagination](/en/components/pagination) under the table. With
+`remote` and `total` the application handles sorting, filters and page changes, and the table
+shows the rows and emits events.
 
 <Example name="table/Pages" />
 
-### A row tree
+### Row tree
 
-`getChildren` enables the tree: a row with children gets a toggle and a level indent, the
-expanded keys live in `v-model:expanded`. `hasChildren` marks a row whose children are not
-loaded yet: on expand the table emits `load` and waits for them. A click on the toggle expands the
-row without moving focus or selecting the cell.
+The `getChildren` function turns the table into a tree: a row with children gets an arrow, and
+the children are indented. The keys of expanded rows are kept in `v-model:expanded`.
+
+When the children are not loaded yet, mark the row with `hasChildren`. On expand the table emits
+the `load` event and shows the children once they arrive. A click on the arrow expands the row
+without moving the focus or selecting a cell.
 
 <Example name="table/Tree" />
 
 ### Row details
 
-The `detail` slot turns details on: a row gets a toggle, and an opened one shows the slot under
-itself across the full width. The opened keys live in `v-model:expanded`, and `hasDetail` keeps the
-toggle only for the rows that need it.
+The `detail` slot adds an arrow to the row, and an expanded row shows the slot content beneath it
+across the full table width. The keys of expanded rows are kept in `v-model:expanded`, and
+`hasDetail` keeps the arrow only on rows that have details.
 
-A detail is a grid row of its own: the arrow keys pass through it, and Tab moves focus inside.
-Clicks, keys and pastes inside a detail stay with its content, so a second table fits there.
-Selection, copy and editing skip the details, and a page keeps the same number of rows.
+The arrow keys pass through a details block, and Tab moves the focus inside it. Clicks, keys and
+pastes inside the block go to its content, so a second table can live there.
 
-With `height` the table measures the height of a detail and counts it in the scroll. Details are
-off in a row tree.
+Selection, copying and cell editing skip details blocks, and a page keeps the same number of
+rows. With `height` the table counts the block height in the scroll. Details do not work in a row
+tree.
 
 <Example name="table/Detail" />
 
 ### Merged cells
 
-`merges` joins cells: every `{ from, to }` rectangle is drawn as one cell with the content and the
-style of its first cell. The coordinates are those of `v-model:ranges`: the row position on the
-page and the position among the shown data columns. `wrap` from `cellStyle` breaks a long text.
+The `merges` prop merges cells: each `{ from, to }` rectangle becomes one cell with the content
+and style of its first cell. `wrap` from `cellStyle` wraps long text inside it.
 
-The cursor lands on a merge as a whole and leaves it from its far edge. A selection grows until it
-holds every merge it touches, but whole rows and columns stay as they are. An edit of a merge
-changes its first cell.
+Rows and columns are counted as in `v-model:ranges`: by the row number on the current page and
+the position among visible data columns.
 
-In a row window a tall merge continues from the first shown row, and a pinned column splits it at
-its edge. A merge of several rows stays on the table background: hover, stripes and row selection
-leave it alone. Merges are off with grouping, in a tree and with details.
+The cursor lands on a merged cell as a whole and leaves it from its far edge. A selection extends
+to cover merged cells completely, while selections of whole rows and columns stay as they are.
+An edit changes the value of the first cell.
+
+When a merged cell reaches into a pinned column, it is split at the edge of that column. A cell
+spanning several rows gets no hover or row selection highlight and no stripe color. Merging does
+not work with grouping, in a tree or with row details.
 
 <Example name="table/Merges" />
 
-### Text overflow
+### Text over neighbouring cells
 
-`overflow` in `cellStyle` carries the text of a cell over the empty cells after it, as spreadsheets
-do. The text runs up to the first filled cell, a merge or the edge of a pinned pane, and an end
-aligned text runs backwards.
+With `overflow` in `cellStyle` long text continues over the following empty cells, as in
+spreadsheets. The text runs up to the first filled cell, a merged cell or the edge of the
+pinned columns. Text aligned to the end of the line runs the other way.
 
-The cells under the text stay separate: a click on the text over a neighbour lands in that cell.
-The grid lines between them are hidden while the text runs over them.
+The cells under the text stay separate: a click on the text over a neighbouring cell lands in
+that cell. Grid lines under the text are not drawn.
 
 <Example name="table/Overflow" />
 
 ### Frozen rows
 
-`frozenRows` keeps the first body rows under the header while the rest scroll beneath them. They
-are rows of the data itself: selection, copying and editing treat them like any other row.
+The `frozenRows` prop keeps the first rows in place under the header while the rest scroll under
+them. These are ordinary data rows: they can be selected, copied and edited.
 
-Freezing works in a row window, that is with `height`. Groups, a tree, row details and a server
-source turn it off, and `pinnedRows` stay for rows outside the data.
+Freezing works only with `height`. Groups, a tree, row details and `source` turn it off. Rows
+that are not part of the data are pinned with `pinnedRows`.
 
 <Example name="table/Frozen" />
 
-### Sheet from a cell source
+### Sheet from cells
 
-`tableCells(source)` turns a cell source into table props. Rows become the row numbers of the
-sheet, and columns get letters from A to XFD. The source gives `rows`, `cols` and
-`cellAt(row, col)` with the text and the style of a cell.
+For an Excel-like sheet pass the result of `tableCells(source)` to the table. The source holds
+the row count `rows`, the column count `cols` and the `cellAt(row, col)` function. That function
+returns the text and style of a cell.
 
-The table asks for each cell once per render, and Ctrl with an arrow goes to the edge of the
-data. When the storage knows its empty areas, its `nextEdge` replaces the walk over cells.
+Sheet rows get numbers, and columns get letters from A to XFD. The table asks only for visible
+cells and creates no objects per row or column. A sheet of 1 048 576 rows and 16 384 columns
+therefore opens as fast as a small one.
 
-The source keeps no object per row or column. A sheet of 1 048 576 rows and 16 384 columns
-therefore opens like a small one.
+Ctrl with an arrow moves to the edge of the data. When the storage knows where its empty areas
+are, its `nextEdge` function finds the edge without walking over cells.
 
-The `invalidate(ranges)` method of the table ref redraws the rows of the ranges. Call it when the
-source data changed without an edit in the table, for example after a recalculation. Without an
-argument the table reads every row again.
+When data changes outside the table, for example after formulas are recalculated, call the
+`invalidate(ranges)` method on the table ref. It redraws the rows of those ranges, or every row
+without an argument.
 
 <Example name="table/CellSource" />
 
 ### Layer over the cells
 
-The `overlay` slot draws what scrolls with the cells: reference highlights, images, charts. The
-slot receives `rectOf(range)` with the position of a range and `window` with the rendered rows
-and columns.
+The `overlay` slot draws content over the cells that scrolls with them: reference highlights,
+images, charts. The slot receives the `rectOf(range)` function, which returns the position of a
+range, and `window` with the rendered rows and columns.
 
-The sticky header and pinned columns lie over the layer, and the pointer passes through it to
-the cells. The `rectOf` and `cellFromPoint(x, y)` methods of the table ref give the same
-coordinates and the cell under a screen point.
+The header and pinned columns cover the layer, and clicks pass through it to the cells. The
+table ref has the same `rectOf` and `cellFromPoint(x, y)`, which finds the cell under a point on
+screen.
 
-The layer takes row heights from `rowHeight` and the `rowHeights` model. It does not follow
-rows that grow with their content, such as wrapped text.
+The layer takes row heights from `rowHeight` and the `rowHeights` model. It does not account for
+rows that grew because of wrapped text.
 
 <Example name="table/Overlay" />
 
-### Row drag
+### Dragging rows
 
-`rowDrag` shows a grip in the first column of a row. The top of a target row drops the row
-before it, the bottom after it, and holding over the middle for `nestDelay` nests it inside.
-The `reorder` event carries the indices and both parents; the grips switch off while the table
-is sorted, filtered or grouped.
+The `rowDrag` prop adds a drag handle to the first column. Over the top half of another row the
+dragged row goes before it, over the bottom half after it. Holding it over the middle for longer
+than `nestDelay` makes it a child.
+
+The table emits the `reorder` event with the indices and both parents, and the application moves
+the rows. While the table is sorted, filtered or grouped, the handles are disabled.
 
 <Example name="table/Drag" />
 
-### Ranges and clipboard
+### Selection and clipboard
 
-The `cellSelection` prop turns cell selection on, and without it the table keeps the plain text
-selection.
+The `cellSelection` prop turns on cell selection; without it the table selects text like a
+regular page.
 
-Dragging with the mouse selects a rectangle of cells, Shift+click adds the rectangle from the last
-clicked cell and Ctrl+click adds one cell. Shift or Ctrl on a selected cell takes it out of the
-selection, so no cell lands in the model twice. While the table has focus, the active cell looks
-like a one-cell selection.
+Dragging with the mouse selects a rectangle of cells. Shift+click selects a rectangle from the
+last clicked cell, and Ctrl+click adds a single cell. Shift or Ctrl on a selected cell removes it
+from the selection.
 
-Escape clears the selection together with the look of the active cell, and a press outside the
-table clears the ranges. Elements from `keepEditing`, such as a formula bar, keep the selection.
+Escape clears the selection, and a click outside the table clears it too. Elements listed in
+`keepEditing`, such as a formula bar, keep the selection. Selected ranges are kept in
+`v-model:ranges`.
 
-Ctrl+C copies the selection as tab separated text and an HTML table, so a paste into Excel or
-Google Sheets keeps the grid.
+Ctrl+C copies the selection as tab-separated text and as an HTML table, so pasting into Excel or
+Google Sheets keeps the cells.
 
-The right button, Shift+F10 or a long press open the cell menu. The `contextMenu` function adds its
-items after the copy items, and `v-model:ranges` keeps the selection.
+The right mouse button, Shift+F10 or a long press open the cell menu. The `contextMenu` function
+adds its own items after the copy item.
 
 <Example name="table/Ranges" />
 
 ### Editing cells
 
-A column with `editable` takes edits: Delete and Backspace clear the selected cells, and Ctrl+X cuts
-them to the clipboard. The table never changes rows itself; it sends an `edit` event with the list
-of changes, and the consumer applies them. Ctrl+Z undoes the last edit, Ctrl+Shift+Z and Ctrl+Y redo
-it.
+A column with `editable` can be edited. Delete and Backspace clear the selected cells, and Ctrl+X
+cuts them to the clipboard.
 
-Rows stay in place after an edit even when the column is sorted or filtered. Totals update at once,
-and without `getKey` the edit history resets when `rows` change. The `undo` and `redo` methods of
-the table ref do the same from code.
+The table never changes `rows` itself: it emits an `edit` event with the list of changes, and the
+application applies them. Ctrl+Z undoes the last edit, Ctrl+Shift+Z and Ctrl+Y redo it.
 
-The `commands` prop hands the history to the app, and every edit arrives in its `push`. Ctrl+Z and
-Ctrl+Y call the `undo()` and `redo()` of the app. They return the number of changed cells for the
-announcement.
+After an edit the row stays in place even when the column is sorted or filtered. Totals update
+right away. Without `getKey` the edit history resets when `rows` change.
 
-Ctrl+V pastes a block of tab separated text at the active cell, and the pasted area becomes the
-selection. A single value fills the whole selection, a block repeats over a multiple of its size,
-and cells past the table edge are dropped. Numbers, dates and booleans are read by the column type,
-and `parse` sets a reader of its own.
+The `undo` and `redo` methods on the table ref undo and redo edits from code. To keep the history
+in the application, pass `commands`, and every edit arrives in its `push`. Ctrl+Z and Ctrl+Y then
+call its `undo()` and `redo()`.
 
-Enter, F2 or a double click opens the editor in the active cell, and typing starts the edit with the
-first character. The editor follows the column type: a text input, a number field or a date picker,
-while a boolean cell toggles at once. Enter saves the value and moves down, Tab moves right, and
-Escape cancels the edit.
+Ctrl+V pastes tab-separated text starting at the active cell, and the pasted area becomes the
+selection. A single value fills the whole selection, and whatever does not fit in the table is
+dropped.
 
-The `rules` of [forms](/en/guide/forms-validation) check the value before it is saved. An error stays
-in the editor with a hint, and moving the focus away from a wrong value discards the edit. Paste and
-clear skip the cells that break the rules.
+When the selection is a whole multiple of the pasted block, the block repeats over it. Numbers,
+dates and booleans are parsed by the column type, and `parse` sets custom parsing.
 
-On a phone a double tap opens the editor. Pinned rows and group rows are not edited.
+Enter, F2 or a double click opens the editor in the active cell, and typing starts the edit right
+away. The editor depends on the column type: a text input, a number field or a date picker. A
+boolean value toggles at once, without an editor.
+
+Enter saves the value and moves down, Tab moves right, and Escape cancels the edit. On a phone a
+double tap opens the editor. Pinned rows and group rows cannot be edited.
+
+The `rules` from [forms](/en/guide/forms-validation) check the value before it is saved. The error
+shows in the editor, and moving the focus away from an invalid value cancels the edit. Pasting and
+clearing skip the cells that fail the rules.
 
 <Example name="table/Edits" />
 
 ### Custom clipboard format
 
-The `clipboard` prop replaces the clipboard format. `serialize` receives the ranges, the rows and
-the column keys and returns the text and HTML to copy, and `copyLimit` does not apply to it.
+The `clipboard` prop defines what goes to the clipboard on copy and how a paste is parsed. The
+`serialize` function receives the ranges, the rows and the column keys and returns text and HTML.
+The `copyLimit` limit does not apply to it.
 
-`parse` receives the text and HTML of a paste with the top left target cell and returns a block of
-strings. The block goes through the usual paste: parsing by column type, the rules and one undo
-step. An `undefined` answer leaves the parsing to the table.
+The `parse` function receives the text and HTML from the clipboard and the top left target cell,
+and returns rows of cell values. The paste then goes on as usual: parsing by column type, rule
+checks and a single undo step for the whole paste.
+
+When `parse` returns `undefined`, the table parses the paste itself.
 
 <Example name="table/Clipboard" />
 
 ### Custom editors
 
-A column takes its own editor from `editor`. The `tableEditor(NuiSelect, isString, { props })`
-helper checks the props against the component types. A [control registry](/en/composables/controls)
-key such as `'select'` or `{ control, props }` is checked when the editor opens.
+The `editor` field of a column sets a custom editor. The `tableEditor(NuiSelect, isString,
+{ props })` helper checks the props against the component types, and `isString` checks that the
+cell value suits the editor.
 
-The registry comes from `createNuiConfig({ controls })` or from the `controls` prop of the table. A
-list opens at once, and a picked value is saved without Enter. A date column passes and receives an
-ISO string, like `NuiDatePicker`.
+An editor can also be a key from the [control registry](/en/composables/controls), such as
+`'select'` or `{ control, props }`. Such an editor is checked when it opens. The registry is set in
+`createNuiConfig({ controls })` or in the `controls` prop of the table.
 
-When the props or the value do not fit the control, or the registry lacks it, the cell stays closed.
-The table then sends the `editRefused` event.
+A list opens at once, and a picked value is saved without Enter. A date column passes and
+receives an ISO string, like `NuiDatePicker`.
+
+When the registry lacks the control or its props and value do not fit, the cell stays closed.
+The table then emits the `editRefused` event.
 
 <Example name="table/Editors" />
 
 ### Formula bar
 
-The `active` and `draft` models connect the table to a field outside it. `active` gives the active
-cell, and `draft` gives the cell and the value of the open editor. Writing a new value into `draft`
-changes the text in the cell.
+The `active` and `draft` models connect the table to a field outside it. `active` holds the
+active cell, and `draft` holds the cell and the value of the open editor. Writing a new value to
+`draft` changes the text in the cell too.
 
-The `startEdit('append', { focus: false })` method of the table ref opens the editor and leaves
-focus in the field. `'replace'` starts from an empty value. `commitEdit('down')` saves the edit,
-`cancelEdit()` drops it, and focus returns to the table.
+The `startEdit('append', { focus: false })` method on the table ref opens the editor and leaves
+the focus in the field. `startEdit('replace')` opens it with an empty value.
+`commitEdit('down')` saves the edit, `cancelEdit()` cancels it, and the focus returns to the
+table.
 
-The `keepEditing` prop lists the elements whose focus keeps the edit open. Ctrl+Enter in the
-editor writes the value into every cell of the selection with the same column type.
+List in `keepEditing` the elements that can take the focus without ending the edit. Ctrl+Enter in
+the editor writes the value to every selected cell in columns of the same type.
 
 <Example name="table/FormulaBar" />
 
-### Picking references
+### Cell references
 
-The `picking(draft)` prop turns reference picking on while the draft waits for a reference, for
-example ends with `=`, a bracket or an operator. Pressing and dragging over cells, a tap on a phone
-and the arrows in the cell editor then keep the edit open.
+The `picking(draft)` function tells whether the draft is waiting for a cell reference, for
+example when it ends with `=`, a bracket or an operator. Clicks and drags over cells, taps on a
+phone and arrows in the editor then pick cells instead of ending the edit.
 
-Every pick arrives as the `pick` event with a range, and the app inserts the reference into the
-draft. The `cellName` and `rangeName` helpers give addresses such as `B2` and `B2:C4`. The table
-does not compute formulas, and the `overlay` layer highlights their references.
+Every pick arrives as the `pick` event with a range, and the application inserts the reference
+into the draft. The `cellName` and `rangeName` helpers turn a range into an address such as `B2`
+or `B2:C4`.
+
+The table does not compute formulas. The `overlay` layer can highlight the cells a formula refers
+to.
 
 <Example name="table/Picking" />
 
 ### Export to CSV
 
-The `exportCsv` method of the table ref builds CSV from the rows after filters and sorting, from
-every page and over the shown columns. Cells hold the shown text, `separator` sets the delimiter,
-and `headers: false` drops the header line. A long export runs in chunks under the busy bar and
-stops on `signal`.
+The `exportCsv` method on the table ref exports to CSV the rows of all pages with filters and
+sorting applied, in the visible columns only. Cells get the same text as on screen.
 
-Excel reads the file cleanly when it starts with a byte order mark, and locales with a decimal comma
-expect the semicolon delimiter.
+`separator` sets the delimiter, and `headers: false` removes the header line. A long export runs
+in chunks, shows a progress bar and stops on `signal`.
+
+For Excel to open the file without garbled text, add a byte order mark at the start. Locales
+with a decimal comma also expect the `;` delimiter, as in the example.
 
 <Example name="table/Export" />
 
 ### Ten thousand rows
 
-`height` turns on the row and column windows of `rowHeight` rows. A column with `pin` stays in
-place while scrolling, `pinnedRows` stay under the header, and the column menu pins and hides
-columns.
+With `height` the table scrolls inside itself and renders only the visible rows of `rowHeight`
+height and the visible columns. The table does not go blank on fast scrolling.
 
-The row window is one sticky table that the browser scrolls on its own. When the scrollbar runs
-past it, the table stays at the edge until the next frame, so the body never goes blank. Rows are
-reused element by element.
+A column with `pin` stays in place on horizontal scroll, and rows from `pinnedRows` stay under
+the header. A column can also be pinned or hidden from its menu.
 
 <Example name="table/Windowed" />
 
-`rowHeight="auto"` keeps the row window but takes the height of every row from its content.
-Columns with `wrap` break their text and render at any horizontal scroll. The table measures rows
-as they appear and holds the row under the header in place while the scroll height settles.
+With `rowHeight="auto"` each row is as tall as its content, and the table still renders only the
+visible rows. Columns with `wrap` wrap their text.
+
+The table measures rows as they appear on screen. While the scroll height settles, the row under
+the header does not move.
 
 <Example name="table/RowHeight" />
 
-### Server source
+### Server data
 
-The `source` prop takes rows from a server: `fetch({ offset, limit, sort, filters, signal })`
-returns `{ rows, total }`, or `{ rows, hasMore }` without a total. The table asks for blocks of
-`blockSize` rows under the scroll window and keeps the last fifty blocks in a cache. While a block
-is on its way, its rows show skeletons.
+The `source` prop loads rows from a server. The `fetch({ offset, limit, sort, filters, signal })`
+function returns `{ rows, total }`, or `{ rows, hasMore }` when the total is unknown.
 
-Sorting, filters and the quick search go to the server, and old requests are cancelled through
-`signal`. The `values` and `totals` functions give the set filter values and the totals row.
-Without `height` the table pages through the source, one request per page.
+The table requests rows in blocks of `blockSize` as the user scrolls and keeps the last fifty
+blocks. While a block is loading, placeholders stand in for its rows.
 
-The `refresh()` method of the table ref drops the cache, and a failed request arrives as the
-`error` event. CSV export downloads the whole query result in chunks of a thousand rows.
+Sorting, filters and search run on the server, and outdated requests are cancelled through
+`signal`. The `values` function returns the values for a list filter, and `totals` the totals
+row.
+
+Without `height` the table shows data page by page, one request per page. The `refresh()` method
+on the table ref clears the cache, and a failed request arrives as the `error` event. CSV export
+fetches the whole result a thousand rows per request.
 
 <Example name="table/Source" />
 
 With `v-model:groupBy` the server computes the groups: `fetch` receives the `groupBy` keys and the
-`groupPath` of the opened group. While the path is shorter than the keys, return `{ groups }` with
-the value, the row count and the aggregates of each group. At the last level return the rows of
-the group.
+`groupPath` to the expanded group. While the path is shorter than the list of keys, return
+`{ groups }` with the value, row count and totals of each group. At the last level return the
+rows of the group.
 
-Groups start collapsed, and the opened ones live in `v-model:expanded`. The rows of an opened
-group show skeletons while its block is on the way.
+Groups start collapsed, and the keys of expanded ones are kept in `v-model:expanded`. While the
+rows of an expanded group are loading, placeholders stand in for them.
 
 <Example name="table/SourceGroups" />
 
-A server tree turns on with `source.children`: the function takes a row and returns its children.
-`hasChildren` marks the rows with children, and they are requested when a row opens.
+To load a tree from the server, set `source.children`: the function receives a row and returns
+its children. Mark rows with children with `hasChildren`, and the children load when the row is
+expanded.
 
-While the children are on the way, the row is busy and a skeleton row stands under it. CSV export
-of a tree downloads the top level rows.
+While the children are loading, a placeholder shows under the row. CSV export of a tree takes
+only the top-level rows.
 
 <Example name="table/SourceTree" />
 
 ## Behaviour
 
-`column.value(row)` gives the cell value, and the column type picks the comparison, the filter
-and the aggregates. Numbers and dates compare numerically, strings by locale, `null` goes last.
+`column.value(row)` returns the cell value. Numbers and dates sort by size, strings
+alphabetically in the current language, and empty `null` values go last.
 
-Sorting, filters and groups run in slices with progress, and the `settle` event reports the row
-count. Select-all checks the rows in view after filters, `loading` draws skeletons, empty `rows`
-show [Empty](/en/components/empty) or the `empty` slot.
+On large data sorting, filters and grouping run in parts and show progress. When the work is
+done, the `settle` event arrives with the row count.
 
-The handle at the header edge drags the column width, a group's handle drags its outer column,
-and `v-model:widths` keeps it by key. While the table fits, the width moves to the neighbouring
-column; once it scrolls, only the column itself grows. `Alt` with the arrow keys does the same
-from the keyboard, and the column menu resets the width.
+The select-all checkbox selects the rows visible after filtering. The `loading` prop shows
+placeholders instead of rows, and empty `rows` show [Empty](/en/components/empty) or the `empty`
+slot.
 
-The grip at the start of a header drags the column inside its pane, and `v-model:columnOrder`
-keeps the key order. `Alt+Shift` with the arrows moves a column from the keyboard, and on a row
-moves it among its siblings. The right arrow nests a row into the previous sibling and the left
-one lifts it after its parent.
+### Column widths
+
+Drag the edge of a column header to change its width; widths are kept in `v-model:widths` by
+column key. The edge of a group header changes the width of the last column in the group.
+
+While the table fits its width, a column grows at the expense of its neighbour. Once a horizontal
+scroll appears, only the column itself grows.
+
+On the keyboard `Alt` with the arrows changes the width, and the column menu resets it.
+
+### Column and row order
+
+Drag a column by the handle at the start of its header; the key order is kept in
+`v-model:columnOrder`. Pinned columns move only among pinned ones, the rest among the rest.
+
+On the keyboard `Alt+Shift` with the left and right arrows moves a column. On a row `Alt+Shift`
+with the up and down arrows moves it among its neighbours.
+
+`Alt+Shift` with the right arrow makes the row a child of its previous sibling, and the left arrow
+places it right after its parent.
 
 ## Accessibility
 
-The markup is a `role="grid"` grid, `treegrid` for trees, groups and details, with one tab stop:
-focus moves between cells with the arrow keys. `aria-rowindex` and `aria-colindex` count the rows
-outside the window too, headers carry `aria-sort`, rows `aria-selected`, `aria-expanded` and
-`aria-level`. Checkboxes and menu buttons take their names from the dictionary.
+The table is marked up as `role="grid"`, and a tree, groups and row details as `treegrid`. Tab
+enters the table once, and the arrows move the focus between cells.
 
-Cells inside ranges carry `aria-selected`, and the live region announces the selection size and
-the result of a copy.
+`aria-rowindex` and `aria-colindex` count rows that are not rendered at the moment. Headers report
+the sorting through `aria-sort`, and rows report their state through `aria-selected`,
+`aria-expanded` and `aria-level`.
+
+Selected cells get `aria-selected`, and screen readers announce the selection size and the result
+of a copy. Checkbox and menu button names come from the dictionary.
 
 <KeyboardReference name="NuiTable" />
 

@@ -7,16 +7,16 @@ const docs: DocsMap = {
       ...fieldControl,
       rows: { ru: 'Число видимых строк.', en: 'Number of visible rows.' },
       resize: {
-        ru: 'Разрешённое изменение размера: по вертикали, в обе стороны или никакое.',
-        en: 'Allowed resizing: vertical, both directions or none.',
+        ru: 'Можно ли растягивать поле мышью: по вертикали, в обе стороны или нельзя.',
+        en: 'Whether the user can resize the field: vertically, both ways or not at all.',
       },
       readonly: {
-        ru: 'Запрещает ввод, но оставляет текст доступным для выделения.',
-        en: 'Blocks typing while keeping the text selectable.',
+        ru: 'Запрещает ввод. Текст можно выделить и скопировать.',
+        en: 'Blocks typing. The text can still be selected and copied.',
       },
       modelModifiers: {
-        ru: 'Модификаторы v-model: lazy и trim.',
-        en: 'v-model modifiers: lazy and trim.',
+        ru: 'Модификаторы `v-model`: `lazy` и `trim`.',
+        en: '`v-model` modifiers: `lazy` and `trim`.',
       },
     },
     models: { 'v-model': { ru: 'Текст поля.', en: 'Field text.' } },

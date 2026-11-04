@@ -1,9 +1,13 @@
 # Switch
 
-`NuiSwitch` is a native checkbox with `role="switch"` under an animated track and a `boolean`
-model. The knob is described with logical properties, so in RTL it moves the right way.
+`NuiSwitch` is a toggle for a setting that applies at once, without a "Save" button:
+notifications, public access, dark theme. The model holds `true` or `false`.
 
 <Example name="switch/Basic" />
+
+Pass the label into the default slot or `label`, and the hint under it into `description`. For
+a choice that applies only after the form is submitted, a [Checkbox](/en/components/checkbox)
+fits better.
 
 ## Installation
 
@@ -21,21 +25,21 @@ import '@numior/vue/styles/switch.css';
 
 ### A settings list
 
-The description under the label explains what the switch changes; `disabled` keeps the state
-visible.
+Use `description` to explain what changes after the toggle. A `disabled` switch still shows
+whether the setting is on or off.
 
 <Example name="switch/Settings" />
 
 ### Sizes
 
-`size` changes the height of the track and the label with it.
+`size` takes `sm`, `md` and `lg` and changes the size of the switch along with its label.
 
 <Example name="switch/Sizes" />
 
 ## Accessibility
 
-A screen reader announces "on" and "off", the label is read from the slot, the focus ring is
-drawn on the track.
+The switch is a native checkbox with the `switch` role: a screen reader announces it as "on" or
+"off" and reads the label. In right-to-left text the knob moves the other way.
 
 <KeyboardReference name="NuiSwitch" />
 

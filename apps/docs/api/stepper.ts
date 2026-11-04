@@ -4,32 +4,38 @@ const docs: DocsMap = {
   NuiStepper: {
     props: {
       steps: {
-        ru: 'Шаги: значение, подпись, описание, статус, недоступность.',
-        en: 'Steps: value, label, description, status, disabled.',
+        ru: 'Список шагов с полями `value` и `label`, а также `description`, `status` и `disabled`.',
+        en: 'List of steps with `value` and `label`, plus optional `description`, `status` and `disabled`.',
       },
-      orientation: { ru: 'Ряд или колонка.', en: 'A row or a column.' },
+      orientation: {
+        ru: 'Располагает шаги в ряд или столбцом.',
+        en: 'Lays out the steps in a row or a column.',
+      },
       linear: {
-        ru: 'Кнопками становятся только пройденные шаги; false — все.',
-        en: 'Only completed steps become buttons; false makes every step a button.',
+        ru: 'Пускает только на пройденные шаги. Выключите, чтобы переходить на любой шаг.',
+        en: 'Lets the user go back only to passed steps. Turn it off to allow any step.',
       },
       label: {
-        ru: 'Доступное имя навигации; по умолчанию из словаря.',
-        en: 'Accessible name of the navigation; the dictionary supplies the default.',
+        ru: 'Подпись навигации для экранных дикторов. По умолчанию — «Шаги» из словаря.',
+        en: 'Navigation label for screen readers. Defaults to "Steps" from the dictionary.',
       },
       completeLabel: {
-        ru: 'Текст статуса выполненного шага; по умолчанию из словаря.',
-        en: 'Status text of a completed step; the dictionary supplies the default.',
+        ru: 'Статус выполненного шага для экранных дикторов. По умолчанию — «выполнено».',
+        en: 'Status of a completed step for screen readers. Defaults to "completed".',
       },
       errorLabel: {
-        ru: 'Текст статуса шага с ошибкой; по умолчанию из словаря.',
-        en: 'Status text of a step with errors; the dictionary supplies the default.',
+        ru: 'Статус шага с ошибкой для экранных дикторов. По умолчанию — «есть ошибки».',
+        en: 'Status of a step with errors for screen readers. Defaults to "has errors".',
       },
     },
-    models: { 'v-model': { ru: 'Значение текущего шага.', en: 'Value of the current step.' } },
+    models: { 'v-model': { ru: '`value` текущего шага.', en: '`value` of the current step.' } },
     keyboard: [
       {
         keys: 'Tab',
-        description: { ru: 'Переходит по кнопкам шагов.', en: 'Moves through the step buttons.' },
+        description: {
+          ru: 'Переходит между кнопками шагов.',
+          en: 'Moves between the step buttons.',
+        },
       },
       { keys: 'Enter', description: { ru: 'Делает шаг текущим.', en: 'Makes the step current.' } },
       { keys: 'Space', description: { ru: 'Делает шаг текущим.', en: 'Makes the step current.' } },

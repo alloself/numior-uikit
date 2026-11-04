@@ -4,36 +4,44 @@ const docs: DocsMap = {
   NuiChip: {
     props: {
       tone: {
-        ru: 'Семантическая роль; цвета берутся из токенов роли.',
-        en: 'Semantic role; colours come from the role tokens.',
+        ru: 'Цвет по смыслу: `primary`, `success`, `warning`, `error` и другие.',
+        en: 'Color by meaning: `primary`, `success`, `warning`, `error` and others.',
       },
       variant: {
-        ru: 'Вид чипа: мягкая заливка, контур или сплошной.',
-        en: 'Chip look: soft fill, outline or solid.',
+        ru: 'Оформление: мягкая заливка (`soft`), контур (`outline`) или сплошная заливка (`solid`).',
+        en: 'Style: `soft` fill, `outline` or `solid` fill.',
       },
-      size: { ru: 'Высота чипа: обычная или компактная.', en: 'Chip height: regular or compact.' },
+      size: {
+        ru: 'Размер: `md` — обычный, `sm` — компактный.',
+        en: 'Size: `md` for regular, `sm` for compact.',
+      },
       icon: {
-        ru: 'Иконка перед текстом из реестра алиасов.',
-        en: 'Icon before the text from the alias registry.',
+        ru: 'Иконка перед текстом.',
+        en: 'Icon to display before the text.',
       },
       removable: {
-        ru: 'Кнопка удаления с событием remove.',
-        en: 'Remove button with the remove event.',
+        ru: 'Показывает кнопку удаления. Нажатие вызывает событие `remove`.',
+        en: 'Shows a remove button. Pressing it fires the `remove` event.',
       },
       removeTabbable: {
-        ru: 'Кнопка удаления в порядке табуляции; false для списков, где удаление доступно из поля.',
-        en: 'Remove button in the tab order; false for lists where removal is reachable from the field.',
+        ru: 'Можно ли перейти к кнопке удаления клавишей Tab. Выключите, если чип удаляется из поля ввода.',
+        en: 'Whether Tab reaches the remove button. Turn it off when the chip is removed from an input.',
       },
       removeLabel: {
-        ru: 'Доступное имя кнопки удаления; по умолчанию из словаря.',
-        en: 'Accessible name of the remove button; the dictionary supplies the default.',
+        ru: 'Подпись кнопки удаления для экранных дикторов. По умолчанию — «Убрать» из словаря.',
+        en: 'Remove button label for screen readers. Defaults to "Remove" from the dictionary.',
       },
       disabled: {
-        ru: 'Приглушает чип и выключает удаление.',
-        en: 'Dims the chip and disables removal.',
+        ru: 'Приглушает чип и отключает кнопку удаления.',
+        en: 'Dims the chip and disables the remove button.',
       },
     },
-    events: { remove: { ru: 'Нажата кнопка удаления.', en: 'The remove button was pressed.' } },
+    events: {
+      remove: {
+        ru: 'Срабатывает при нажатии на кнопку удаления.',
+        en: 'Fires when the remove button is pressed.',
+      },
+    },
     slots: { default: { ru: 'Текст чипа.', en: 'Chip text.' } },
     configurator: {
       props: ['tone', 'variant', 'size', 'removable', 'disabled'],

@@ -6,57 +6,57 @@ const docs: DocsMap = {
     props: {
       ...fieldControl,
       min: {
-        ru: 'Нижняя граница; значение зажимается при фиксации.',
-        en: 'Lower bound; the value is clamped on commit.',
+        ru: 'Наименьшее значение. Число меньше него заменяется на `min`, когда поле теряет фокус.',
+        en: 'Smallest value. A lower number becomes `min` when the field loses focus.',
       },
       max: {
-        ru: 'Верхняя граница; значение зажимается при фиксации.',
-        en: 'Upper bound; the value is clamped on commit.',
+        ru: 'Наибольшее значение. Число больше него заменяется на `max`, когда поле теряет фокус.',
+        en: 'Largest value. A higher number becomes `max` when the field loses focus.',
       },
       step: {
-        ru: 'Шаг стрелок и степперов; значения снапятся к сетке от min.',
-        en: 'Step of the arrows and steppers; values snap to the grid from min.',
+        ru: 'На сколько меняют число стрелки и кнопки плюс и минус. Значение округляется до шага от `min`.',
+        en: 'Amount the arrow keys and plus and minus buttons change the number by. The value rounds to steps from `min`.',
       },
       formatOptions: {
-        ru: 'Опции Intl.NumberFormat: валюта, проценты, число знаков.',
-        en: 'Intl.NumberFormat options: currency, percent, digits.',
+        ru: 'Формат числа в опциях `Intl.NumberFormat`: валюта, проценты, число знаков после запятой.',
+        en: 'Number format as `Intl.NumberFormat` options: currency, percent, fraction digits.',
       },
       locale: {
-        ru: 'Локаль формата; по умолчанию из конфигурации.',
-        en: 'Locale of the format; the configuration supplies the default.',
+        ru: 'Язык формата числа, например `ru-RU`. По умолчанию — язык из `createNuiConfig`.',
+        en: 'Locale of the number format, such as `en-US`. Defaults to the locale from `createNuiConfig`.',
       },
       readonly: {
-        ru: 'Запрещает ввод, но оставляет текст доступным для выделения.',
-        en: 'Blocks typing while keeping the text selectable.',
+        ru: 'Запрещает ввод. Число можно выделить и скопировать.',
+        en: 'Blocks typing. The number can still be selected and copied.',
       },
       steppers: { ru: 'Показывает кнопки плюс и минус.', en: 'Shows the plus and minus buttons.' },
       name: {
-        ru: 'Имя скрытого поля формы с числом.',
-        en: 'Name of the hidden form field with the number.',
+        ru: 'Имя, с которым число уходит в форму.',
+        en: 'Name the number is submitted with in a form.',
       },
       incrementLabel: {
-        ru: 'Доступное имя кнопки плюс; по умолчанию из словаря.',
-        en: 'Accessible name of the plus button; the dictionary supplies the default.',
+        ru: 'Подпись кнопки плюс для экранных дикторов. По умолчанию — «Увеличить» из словаря.',
+        en: 'Plus button label for screen readers. Defaults to "Increment" from the dictionary.',
       },
       decrementLabel: {
-        ru: 'Доступное имя кнопки минус; по умолчанию из словаря.',
-        en: 'Accessible name of the minus button; the dictionary supplies the default.',
+        ru: 'Подпись кнопки минус для экранных дикторов. По умолчанию — «Уменьшить» из словаря.',
+        en: 'Minus button label for screen readers. Defaults to "Decrement" from the dictionary.',
       },
     },
     models: {
       'v-model': {
-        ru: 'Число или null, если поле пустое.',
-        en: 'Number or null while the field is empty.',
+        ru: 'Число в поле или `null`, если поле пустое.',
+        en: 'Number in the field, or `null` when the field is empty.',
       },
     },
     slots: {
       prefix: {
-        ru: 'Содержимое перед числом внутри рамки.',
-        en: 'Content before the number inside the frame.',
+        ru: 'Содержимое перед числом внутри поля, например знак валюты.',
+        en: 'Content before the number inside the field, such as a currency sign.',
       },
       suffix: {
-        ru: 'Содержимое после числа внутри рамки.',
-        en: 'Content after the number inside the frame.',
+        ru: 'Содержимое после числа внутри поля, например единица измерения.',
+        en: 'Content after the number inside the field, such as a unit.',
       },
     },
     exposed: focusExposed,
@@ -64,32 +64,44 @@ const docs: DocsMap = {
       {
         keys: 'ArrowUp',
         description: {
-          ru: 'Увеличивает на шаг; с Shift — на десять шагов.',
-          en: 'Adds one step; with Shift ten steps.',
+          ru: 'Увеличивает число на шаг, с Shift — на десять шагов.',
+          en: 'Increases the number by one step, or ten steps with Shift.',
         },
       },
       {
         keys: 'ArrowDown',
         description: {
-          ru: 'Уменьшает на шаг; с Shift — на десять шагов.',
-          en: 'Subtracts one step; with Shift ten steps.',
+          ru: 'Уменьшает число на шаг, с Shift — на десять шагов.',
+          en: 'Decreases the number by one step, or ten steps with Shift.',
         },
       },
       {
         keys: 'PageUp',
-        description: { ru: 'Увеличивает на десять шагов.', en: 'Adds ten steps.' },
+        description: {
+          ru: 'Увеличивает число на десять шагов.',
+          en: 'Increases the number by ten steps.',
+        },
       },
       {
         keys: 'PageDown',
-        description: { ru: 'Уменьшает на десять шагов.', en: 'Subtracts ten steps.' },
+        description: {
+          ru: 'Уменьшает число на десять шагов.',
+          en: 'Decreases the number by ten steps.',
+        },
       },
-      { keys: 'Home', description: { ru: 'Переходит к min.', en: 'Moves to min.' } },
-      { keys: 'End', description: { ru: 'Переходит к max.', en: 'Moves to max.' } },
+      {
+        keys: 'Home',
+        description: { ru: 'Ставит значение `min`.', en: 'Sets the value to `min`.' },
+      },
+      {
+        keys: 'End',
+        description: { ru: 'Ставит значение `max`.', en: 'Sets the value to `max`.' },
+      },
       {
         keys: 'Enter',
         description: {
-          ru: 'Фиксирует значение и не мешает отправке формы.',
-          en: 'Commits the value without blocking the form submit.',
+          ru: 'Применяет введённое число. Форма при этом отправляется как обычно.',
+          en: 'Applies the typed number. The form still submits as usual.',
         },
       },
     ],

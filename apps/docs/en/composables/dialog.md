@@ -1,8 +1,11 @@
 # useDialog
 
-`useDialog(element, options)` drives a native `<dialog>`: `show()` opens it modally,
-`close(returnValue)` closes it, `attrs` handle Escape, the backdrop click and the `close`
-event. `covered` tells that another dialog is open on top.
+`useDialog(element, options)` opens and closes a native `<dialog>` from the `open` model. Use
+it for your own modal window when [Dialog](/en/components/dialog) does not fit.
+
+`show()` opens the window, `close(returnValue)` closes it. Put the handlers from `attrs` on the
+`<dialog>`: they close the window on Escape and on a backdrop click. `covered` is `true` while
+another window is open on top.
 
 ## Signature
 
@@ -27,6 +30,9 @@ const control = useDialog(dialog, { open, closeOnBackdrop: true, onClose: (value
 </script>
 ```
 
-`dismissible: false` blocks closing on Escape and the backdrop; the focus returns to the
-button that opened the dialog. [Dialog](/en/components/dialog) and [Drawer](/en/components/drawer)
-are built on this composable.
+`dismissible: false` stops the window from closing on Escape and on a backdrop click.
+`closeOnBackdrop: false` turns off only the click.
+
+While the window is open, the page under it does not scroll. After closing, focus returns to the
+button that opened the window. [Dialog](/en/components/dialog) and
+[Drawer](/en/components/drawer) are built on this composable.

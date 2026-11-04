@@ -1,10 +1,13 @@
 # Pagination
 
-`NuiPagination` is a `<nav>` with page buttons: the edges, the neighbours of the current page
-and ellipses between them, "previous" and "next". Next to it sits the range line and, with
-`pageSizes`, the page size select.
+`NuiPagination` switches pages of long tables and lists. It shows the first and last pages,
+the neighbours of the current one, ellipses between them, and "previous" and "next" buttons.
 
 <Example name="pagination/Basic" />
+
+`total` is the number of records, and the page and its size live in `v-model:page` and
+`v-model:page-size`. Next to the buttons sits the "21–40 of 240" line, and `pageSizes` adds a
+choice of rows per page.
 
 ## Installation
 
@@ -21,27 +24,31 @@ import '@numior/vue/styles/pagination.css';
 
 ### Links instead of buttons
 
-`href(page)` turns the buttons into links for a router and SEO, `edges` adds "first" and "last".
+Pass an `href(page)` function, and the pages become links: they open in a new tab and search
+engines can follow them. The `as` prop plugs in `RouterLink` or another link component. `edges`
+adds buttons that jump to the first and last pages.
 
 <Example name="pagination/Links" />
 
 ### A narrow container
 
-The compact mode switches on by the width of the component itself: "previous", the "4 / 12"
-status and "next" remain.
+When the component runs out of room, the page numbers hide and "previous", "4 / 12" and "next"
+remain. This depends on the width of the component itself, not of the browser window.
 
 <Example name="pagination/Compact" />
 
 ## Behaviour
 
-`siblings` and `boundaries` set how many pages are visible around the current one and at the
-edges. The page is always clamped to the valid range, and a page size change recomputes it.
+`siblings` sets how many pages are visible on each side of the current one, `boundaries` how
+many at the start and the end. Both default to one. The component corrects a page number
+out of range by itself, for example after the page size grows.
 
 ## Accessibility
 
-A `<nav aria-label>` with a list; the current page carries `aria-current="page"`, every button
-is named through `pageLabel`, the arrows through the dictionary. Unavailable arrows are
-disabled and mirrored in RTL.
+The component is a `<nav>` landmark with a list of pages, and the current page carries
+`aria-current="page"`. A screen reader names the buttons "Page 4" and "Next page"; change these
+labels through `pageLabel` and the dictionary. Unavailable arrows are disabled, and in
+right-to-left text they point the other way.
 
 <KeyboardReference name="NuiPagination" />
 

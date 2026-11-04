@@ -1,18 +1,16 @@
 import type { DocsMap } from '../.vitepress/reference/reference.types';
 
-const dictionary = (ru: string, en: string) => ({
-  ru: `${ru}; по умолчанию из словаря.`,
-  en: `${en}; the dictionary supplies the default.`,
-});
-
 const docs: DocsMap = {
   NuiSkipLink: {
     props: {
       target: {
-        ru: 'id элемента, куда переходит фокус.',
-        en: 'Id of the element that receives the focus.',
+        ru: '`id` элемента, на который перейдёт фокус, например `main`.',
+        en: '`id` of the element that receives focus, such as `main`.',
       },
-      label: dictionary('Текст ссылки', 'Link text'),
+      label: {
+        ru: 'Текст ссылки. По умолчанию — «К содержимому» из словаря.',
+        en: 'Link text. Defaults to “Skip to content” from the dictionary.',
+      },
     },
     slots: { default: { ru: 'Разметка вместо текста.', en: 'Markup in place of the text.' } },
     keyboard: [
@@ -20,12 +18,15 @@ const docs: DocsMap = {
         keys: 'Tab',
         description: {
           ru: 'Первое нажатие на странице показывает ссылку.',
-          en: 'The first press on the page reveals the link.',
+          en: 'The first press on the page shows the link.',
         },
       },
       {
         keys: 'Enter',
-        description: { ru: 'Переносит фокус на цель.', en: 'Moves the focus to the target.' },
+        description: {
+          ru: 'Переносит фокус на элемент `target`.',
+          en: 'Moves focus to the `target` element.',
+        },
       },
     ],
   },

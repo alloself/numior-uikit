@@ -1,7 +1,7 @@
 # Breadcrumbs
 
-`NuiBreadcrumbs` is a `<nav>` with an ordered list of links whose last item carries
-`aria-current="page"`. The separator is an icon from the registry, mirrored in RTL.
+`NuiBreadcrumbs` shows the path from the home page to the current one. Every step of the path is
+a link, and the last step is the name of the current page.
 
 <Example name="breadcrumbs/Basic" />
 
@@ -17,23 +17,32 @@ import '@numior/vue/styles/breadcrumbs.css';
 
 ### A long path
 
-`maxItems` collapses the middle of the path into a “…” button that opens a menu with the hidden
-links.
+The `maxItems` prop limits the number of visible steps. The first and the last steps stay in
+place, and the middle collapses into a “…” button that opens a menu with the hidden links.
 
 <Example name="breadcrumbs/Collapsed" />
 
 ### A custom crumb
 
-The `item` slot receives `item`, `index` and `current` and replaces the default link; the
-separators and the collapsing stay with the component.
+The `item` slot replaces the link of a step with your own markup. The slot receives `item`,
+`index` and `current`, and the component still draws the separators and the collapsing.
 
 <Example name="breadcrumbs/Custom" />
 
+## Behaviour
+
+Steps are passed in `items`: each has a `label`, an address in `href` or `to` and an optional
+`icon`. With `to` a step becomes the app's `RouterLink` or `NuxtLink`, and the `as` prop puts
+another link component in its place. Links in the “…” menu work the same way.
+
+The `separator` prop changes the icon between the steps, an arrow by default. In right-to-left
+text the arrow is mirrored.
+
 ## Accessibility
 
-The `<nav aria-label>` landmark and the `<ol>` list give the path its structure; the current
-page is not a link. Links are taller than 24px, as WCAG 2.5.8 asks for standalone targets. For
-a router pass `as` and `to` in the items; they reach the links inside the “…” menu too.
+The trail is a `<nav>` landmark labelled by `label`, "Breadcrumb" by default. The current page
+is marked with `aria-current="page"` and does not link to itself. Links are at least 24px tall,
+as WCAG 2.5.8 requires.
 
 <KeyboardReference name="NuiBreadcrumbs" />
 

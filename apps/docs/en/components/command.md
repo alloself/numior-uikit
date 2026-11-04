@@ -1,8 +1,8 @@
 # Command
 
-`NuiCommand` is a command palette: an input and a grouped list that filters as you type.
-`NuiCommandDialog` opens the same palette in a modal dialog on a key combo; the search of
-these docs is built on it.
+`NuiCommand` is a command palette: a search field with a list of commands under it that narrows
+as you type. `NuiCommandDialog` opens the palette in a dialog on a key combination; this is how
+the search of these docs works.
 
 <Example name="command/Basic" />
 
@@ -15,28 +15,39 @@ import '@numior/vue/styles/dialog.css';
 import '@numior/vue/styles/command.css';
 ```
 
+## Usage
+
+Pass the commands in `items`: each has a `value`, a `label` and optionally an `icon` and a
+`description`. To split commands into groups, pass `{ label, items }` objects. The chosen command
+arrives in the `select` event.
+
+The `shortcut` field shows a key combination next to a command, such as `mod+1`. Your app decides
+what pressing that combination does.
+
 ## Examples
 
 ### In a dialog
 
-`NuiCommandDialog` opens from a button through `v-model:open` or on the `hotkey` combo. The
-default is `mod+k`; the example takes `mod+j` so it does not fight the docs search.
-Selecting a command closes the dialog.
+`NuiCommandDialog` opens through `v-model:open` or with the key combination from `hotkey`, which
+is Ctrl+K by default and ⌘K on macOS. The example opens with Ctrl+J, because Ctrl+K opens the
+search of these docs.
 
 <Example name="command/Dialog" />
 
+Choosing a command closes the dialog, and `:close-on-select="false"` keeps it open.
+
 ## Behaviour
 
-Commands are `NuiOption` entries with optional `shortcut` and `keywords`; a group is an
-object `{ label, items }`. The built-in filter matches the query against the label and the
-keywords. For server search pass `:filter="false"`, listen to `search` and provide `items`
-as a function of the query; `loading` shows the loading state.
+The palette looks for the typed text in the label, the description and the `keywords` list. This
+way the "Button" command is also found by "btn".
+
+For server-side search pass `:filter="false"` and listen to the `search` event, which arrives with
+the query text. Pass the found commands to `items`, and turn on `loading` while they load.
 
 ## Accessibility
 
-The input is a `role="combobox"` with `aria-activedescendant`, the list a `listbox` with the
-active command and no focus move. The dialog is modal, closes on Escape and returns the
-focus to the button.
+Focus stays in the search field, and the arrow keys move through the commands. The dialog closes
+on Escape and returns focus to the element that opened it.
 
 <KeyboardReference name="NuiCommandDialog" />
 

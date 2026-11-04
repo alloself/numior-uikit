@@ -1,8 +1,10 @@
 # usePopover
 
-`usePopover(content, options)` управляет нативным Popover API: `contentAttrs` вешаются на
-содержимое, `invokerAttrs` — на кнопку, а `open` синхронизируется с событиями `toggle`.
-`useDelayedOpen` добавляет задержки открытия и закрытия для подсказок.
+`usePopover(content, options)` открывает и закрывает панель через Popover API по модели `open`.
+Используйте его для своей всплывающей панели, если [Popover](/components/popover) не подходит.
+
+Повесьте `contentAttrs` на панель, а `invokerAttrs` — на кнопку, которая её открывает.
+`useDelayedOpen` добавляет задержку перед открытием и закрытием, как у подсказки.
 
 ## Сигнатура
 
@@ -26,6 +28,7 @@ const popover = usePopover(panel, { open, mode: 'auto' });
 </script>
 ```
 
-Режим `auto` закрывает поповер кликом снаружи и Escape, `manual` оставляет закрытие коду;
-`raise()` поднимает открытый поповер над соседями. [Popover](/components/popover) и
-[Tooltip](/components/tooltip) построены на этих композаблах.
+В режиме `auto` панель закрывается по клику снаружи и по Escape. В режиме `manual` она
+закрывается, только когда вы меняете `open`. `raise()` поднимает открытую панель над другими.
+
+На этих композаблах работают [Popover](/components/popover) и [Tooltip](/components/tooltip).

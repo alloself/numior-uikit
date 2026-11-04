@@ -1,8 +1,7 @@
 # Badge
 
-`NuiBadge` is a non-interactive label smaller than a chip: a status, a counter or a status dot.
-`tone` sets the colour, `variant` the look, `size` the height. Values the user picks and removes
-are shown by a [Chip](/en/components/chip).
+`NuiBadge` is a small label with a status, a counter or a coloured dot: "Draft", "Paid", "3". A
+label the user can remove is a [Chip](/en/components/chip).
 
 <Example name="badge/Basic" />
 
@@ -15,22 +14,27 @@ import '@numior/vue/styles/badge.css';
 
 ## Usage
 
+The `tone` prop sets the colour, and `variant` the fill: `soft`, `outline` or `solid`. `size`
+accepts `sm` and `md`.
+
 <Configurator name="NuiBadge" />
 
 ## Examples
 
 ### Counter, dot and corner
 
-`count` with `max` shows the number and "99+", and `dot` draws only a dot. `floating` places the
-badge in the corner of a parent with `position: relative`.
+The `count` prop shows a number. When it exceeds `max`, the badge shows `max` with a plus, which
+is "99+" with the default `max`. `dot` reduces the badge to a single dot.
 
 <Example name="badge/Count" />
 
+With `floating` the badge sits in the top corner of its parent, such as a button. It goes on the
+right, or on the left in right-to-left text. The parent needs `position: relative`.
+
 ## Accessibility
 
-A badge is a `<span>` without a role; its text is read with its surroundings. A dot or a
-counter without text gets `role="img"` and a name from `label`. A dot without `label` counts as
-decorative and is hidden from assistive technology.
+A screen reader reads the badge text or number together with the surrounding text. It names a
+dot by its `label` and skips a dot without one.
 
 ## API
 

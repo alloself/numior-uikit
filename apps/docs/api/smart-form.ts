@@ -3,48 +3,62 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 const docs: DocsMap = {
   NuiSmartForm: {
     props: {
-      form: { ru: 'Форма из useForm.', en: 'The form from useForm.' },
+      form: { ru: 'Форма, которую вернул `useForm`.', en: 'Form returned by `useForm`.' },
       fields: {
-        ru: 'Конфигурация полей, секций и групп из formConfig.',
-        en: 'Configuration of fields, sections and arrays from formConfig.',
+        ru: 'Поля, секции и повторяемые группы, собранные через `formConfig`.',
+        en: 'Fields, sections and repeatable groups built with `formConfig`.',
       },
-      steps: { ru: 'Шаги мастера вместо fields.', en: 'Wizard steps instead of fields.' },
+      steps: {
+        ru: 'Шаги пошаговой формы вместо `fields`. Над формой появляется степпер.',
+        en: 'Wizard steps in place of `fields`. A stepper appears above the form.',
+      },
       layout: {
-        ru: 'Сетка в синтаксисе grid-template-areas.',
-        en: 'Grid in the grid-template-areas syntax.',
+        ru: 'Раскладка полей по сетке в синтаксисе `grid-template-areas`, например `"city zip"`.',
+        en: 'Grid of the fields in `grid-template-areas` syntax, such as `"city zip"`.',
       },
       inline: {
-        ru: 'Поля в строку; grow растягивает их на всю ширину.',
-        en: 'Fields in a row; grow stretches them to the full width.',
+        ru: 'Ставит поля и кнопку в одну строку. С `grow` поля растягиваются на всю ширину.',
+        en: 'Puts the fields and the button in one row. With `grow`, the fields stretch to the full width.',
       },
-      disabled: { ru: 'Выключает все поля и кнопки.', en: 'Disables every field and button.' },
+      disabled: {
+        ru: 'Отключает все поля и кнопки формы.',
+        en: 'Disables every field and button of the form.',
+      },
       readonly: {
-        ru: 'Режим чтения для всех полей; отправка отключена.',
-        en: 'Read mode for every field; submitting is disabled.',
+        ru: 'Показывает значения всех полей без возможности их менять. Кнопка отправки отключена.',
+        en: 'Shows every field value without letting the user change it. The submit button is disabled.',
       },
       reserveError: {
-        ru: 'Держит строку под ошибку у всех полей.',
-        en: 'Keeps an error line under every field.',
+        ru: 'Оставляет место под ошибку у каждого поля, чтобы форма не сдвигалась.',
+        en: 'Reserves space for an error under every field so the form does not shift.',
       },
       submitLabel: {
-        ru: 'Текст кнопки отправки; по умолчанию из словаря.',
-        en: 'Submit button text; the dictionary supplies the default.',
+        ru: 'Текст кнопки отправки. По умолчанию — «Отправить» из словаря.',
+        en: 'Submit button text. Defaults to "Submit" from the dictionary.',
       },
       nextLabel: {
-        ru: 'Текст кнопки следующего шага; по умолчанию из словаря.',
-        en: 'Next step button text; the dictionary supplies the default.',
+        ru: 'Текст кнопки перехода к следующему шагу. По умолчанию — «Далее» из словаря.',
+        en: 'Next step button text. Defaults to "Next" from the dictionary.',
       },
       backLabel: {
-        ru: 'Текст кнопки предыдущего шага; по умолчанию из словаря.',
-        en: 'Back button text; the dictionary supplies the default.',
+        ru: 'Текст кнопки возврата на предыдущий шаг. По умолчанию — «Назад» из словаря.',
+        en: 'Back button text. Defaults to "Back" from the dictionary.',
       },
     },
-    models: { 'v-model:step': { ru: 'Текущий шаг мастера.', en: 'Current wizard step.' } },
+    models: {
+      'v-model:step': {
+        ru: '`value` текущего шага пошаговой формы.',
+        en: '`value` of the current wizard step.',
+      },
+    },
     slots: {
-      'form-errors': { ru: 'Блок ошибок без поля.', en: 'Block of errors without a field.' },
+      'form-errors': {
+        ru: 'Своя разметка ошибок всей формы, например от сервера. Получает `errors`.',
+        en: 'Custom markup of form-level errors, such as server errors. Receives `errors`.',
+      },
       actions: {
-        ru: 'Кнопки; получает pending, dirty, submit, reset и шаги.',
-        en: 'Buttons; receives pending, dirty, submit, reset and the steps.',
+        ru: 'Свои кнопки формы. Получает `pending`, `dirty`, `submit`, `reset`, а в пошаговой форме — `step` и `back`.',
+        en: 'Custom form buttons. Receives `pending`, `dirty`, `submit`, `reset`, plus `step` and `back` in a wizard.',
       },
     },
   },

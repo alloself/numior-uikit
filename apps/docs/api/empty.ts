@@ -4,21 +4,21 @@ const docs: DocsMap = {
   NuiEmpty: {
     props: {
       icon: { ru: 'Иконка над текстом.', en: 'Icon above the text.' },
-      hideIcon: { ru: 'Без иконки.', en: 'No icon.' },
+      hideIcon: { ru: 'Скрывает иконку.', en: 'Hides the icon.' },
       title: {
-        ru: 'Заголовок; рендерится абзацем, не heading.',
-        en: 'Title; rendered as a paragraph, not a heading.',
+        ru: 'Заголовок. Выводится абзацем `p`, а не тегом заголовка.',
+        en: 'Title. Rendered as a `p` paragraph, not a heading tag.',
       },
       description: { ru: 'Пояснение под заголовком.', en: 'Explanation under the title.' },
       size: {
-        ru: 'Обычный или компактный для списков и таблиц.',
-        en: 'Regular or compact for lists and tables.',
+        ru: 'Размер: `md` — обычный, `sm` — компактный, для списков и таблиц.',
+        en: 'Size: `md` for regular, `sm` for compact, for lists and tables.',
       },
     },
     slots: {
-      media: { ru: 'Иллюстрация вместо иконки.', en: 'Illustration instead of the icon.' },
-      title: { ru: 'Разметка заголовка.', en: 'Title markup.' },
-      default: { ru: 'Текст вместо description.', en: 'Text instead of description.' },
+      media: { ru: 'Картинка вместо иконки.', en: 'Illustration instead of the icon.' },
+      title: { ru: 'Свой заголовок вместо `title`.', en: 'Custom title instead of `title`.' },
+      default: { ru: 'Текст вместо `description`.', en: 'Text instead of `description`.' },
       actions: { ru: 'Кнопки под текстом.', en: 'Buttons under the text.' },
     },
     configurator: {

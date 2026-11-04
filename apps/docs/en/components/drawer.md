@@ -1,13 +1,13 @@
 # Drawer
 
-`NuiDrawer` is the same modal `<dialog>` as [Dialog](/en/components/dialog), docked to a screen
-edge. The side is logical: `start` and `end` swap in RTL, `top` and `bottom` take the full width.
-
-A drawer is a temporary panel over the page for one task: filters, a cart, record details. The
-app's permanent navigation is a [Sidebar](/en/components/sidebar). It sits in the layout next
-to the content and becomes a drawer on phones.
+`NuiDrawer` is a panel that slides in from a screen edge over the page: list filters, a cart,
+order details. It behaves like [Dialog](/en/components/dialog): it keeps the focus inside, closes
+on Esc and returns the focus to the button.
 
 <Example name="drawer/Filters" />
+
+Build the permanent app menu with [Sidebar](/en/components/sidebar) instead. It stands next to the
+content and moves into the same kind of panel on phones.
 
 ## Installation
 
@@ -21,17 +21,20 @@ import '@numior/vue/styles/drawer.css';
 
 ### Sides
 
-`size` sets the width for `start` and `end` and the maximum height for `top` and `bottom`; the
-drawer slides in from its edge. Besides the dialog's `sm`, `md` and `lg`, a drawer takes `xl`
-(40rem) for an editor that sits beside the page.
+The `side` prop picks the edge: `start`, `end` (the default), `top` or `bottom`. In right-to-left
+pages `start` and `end` swap, while `top` and `bottom` panels span the full screen width.
 
 <Example name="drawer/Sides" />
 
+`size` sets the width of a side panel or the maximum height of a top or bottom one. The sizes are
+`sm` (16rem), `md` (20rem) and `lg` (28rem). The `xl` size (40rem) suits an editor that opens
+next to the page.
+
 ## Accessibility
 
-The drawer takes the props, slots and `close` event of the dialog. The title and description are
-linked through `aria-labelledby` and `aria-describedby`; Esc and the cross close it, and the
-focus returns to the button.
+The drawer has the same props, slots and `close` event as the dialog. Screen readers announce the
+`title` and the `description` on opening, Esc and the close button close the panel, and the focus
+returns to the button.
 
 <KeyboardReference name="NuiDialog" />
 

@@ -77,8 +77,6 @@ export interface DocsTexts {
   readonly apiKeys: string;
   readonly apiAction: string;
   readonly apiRequired: string;
-  readonly apiClasses: string;
-  readonly apiTokens: string;
   readonly apiKey: string;
   readonly apiText: string;
   readonly configuratorProps: string;
@@ -208,10 +206,13 @@ export interface ConfiguratorFrameProps {
   texts: DocsTexts;
 }
 
-export interface ApiCodeListProps {
-  label: string;
-  prefix: string;
-  items: readonly string[];
+export interface InlineSegment {
+  readonly text: string;
+  readonly code: boolean;
+}
+
+export interface InlineTextProps {
+  text: string;
 }
 
 export interface PreviewFrameProps {

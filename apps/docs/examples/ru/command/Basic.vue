@@ -1,15 +1,13 @@
 <template>
   <div class="flex flex-col gap-3 w-full max-w-md">
-    <div class="border rounded-md">
-      <NuiCommand :items="commands" @select="last = $event.label">
-        <template #footer>
-          <span class="text-xs text-muted-foreground">
-            <NuiKbd keys="arrowup" size="sm" /> <NuiKbd keys="arrowdown" size="sm" /> навигация,
-            <NuiKbd keys="enter" size="sm" /> выбрать
-          </span>
-        </template>
-      </NuiCommand>
-    </div>
+    <NuiCommand :items="commands" @select="last = $event.label">
+      <template #footer>
+        <span class="text-xs text-muted-foreground">
+          <NuiKbd keys="arrowup" size="sm" /> <NuiKbd keys="arrowdown" size="sm" /> навигация,
+          <NuiKbd keys="enter" size="sm" /> выбрать
+        </span>
+      </template>
+    </NuiCommand>
     <p class="m-0 text-sm text-muted-foreground">Последняя команда: {{ last || '—' }}</p>
   </div>
 </template>

@@ -3,29 +3,32 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 const docs: DocsMap = {
   NuiBadge: {
     props: {
-      tone: { ru: 'Цвет из токенов роли.', en: 'Colour from the role tokens.' },
+      tone: {
+        ru: 'Цвет по смыслу: `primary`, `success`, `warning`, `error` и другие.',
+        en: 'Color by meaning: `primary`, `success`, `warning`, `error` and others.',
+      },
       variant: {
-        ru: 'Вид: мягкая заливка, контур или сплошной.',
-        en: 'Look: soft fill, outline or solid.',
+        ru: 'Оформление: мягкая заливка (`soft`), контур (`outline`) или сплошная заливка (`solid`).',
+        en: 'Style: `soft` fill, `outline` or `solid` fill.',
       },
       size: {
-        ru: 'Высота бейджа: обычная или компактная.',
-        en: 'Badge height: regular or compact.',
+        ru: 'Размер: `md` — обычный, `sm` — компактный.',
+        en: 'Size: `md` for regular, `sm` for compact.',
       },
       icon: { ru: 'Иконка перед текстом.', en: 'Icon before the text.' },
-      dot: { ru: 'Только точка без текста.', en: 'A dot without text.' },
-      count: { ru: 'Число вместо текста.', en: 'A number instead of the text.' },
+      dot: { ru: 'Показывает только точку, без текста.', en: 'Shows only a dot, without text.' },
+      count: { ru: 'Показывает число вместо текста.', en: 'Shows a number instead of the text.' },
       max: {
-        ru: 'Предел счётчика; выше него показывается «99+».',
-        en: 'Counter limit; above it "99+" is shown.',
+        ru: 'Наибольшее число на счётчике. Большее число показывается с плюсом, например «99+».',
+        en: 'Largest number the counter shows. A larger count shows with a plus, like "99+".',
       },
       label: {
-        ru: 'Доступное имя точки или счётчика.',
-        en: 'Accessible name of a dot or a counter.',
+        ru: 'Подпись точки для экранных дикторов. Без неё дикторы точку пропускают.',
+        en: 'Dot label for screen readers. Without it they skip the dot.',
       },
       floating: {
-        ru: 'Сажает бейдж в угол родителя с position: relative.',
-        en: 'Places the badge in the corner of a relatively positioned parent.',
+        ru: 'Ставит бейдж в верхний угол родителя. Родителю нужен `position: relative`.',
+        en: 'Places the badge in the top corner of the parent. The parent needs `position: relative`.',
       },
     },
     slots: { default: { ru: 'Текст бейджа.', en: 'Badge text.' } },

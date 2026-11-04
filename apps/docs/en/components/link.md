@@ -1,16 +1,18 @@
 # Link
 
-`NuiLink` is a link on the role tokens: an `<a>` by default, the app's `RouterLink` or `NuxtLink`
-with `to`, and `as` overrides the component. `tone` sets the colour, `underline` when to
-underline, `external` opens the address in a new tab with `rel="noopener noreferrer"` and an icon.
+`NuiLink` is a link in text: to another page of the app, to a document or to an external site.
+Pass an address in `href` and an app route in `to`.
 
 <Example name="link/Basic" />
 
+With `to` the link renders through the `RouterLink` or `NuxtLink` of your app, and the `as` prop
+swaps in any other component. `tone` sets the color, `primary` by default.
+
 ## Link or Button
 
-`NuiLink` is a link inside text: it wraps across lines with the paragraph, takes its font size
-and adds no padding. `NuiButton variant="link"` is an action in a row of buttons: control height,
-alignment with the buttons next to it and loading states.
+`NuiLink` fits a link inside a paragraph: it wraps across lines with the text, takes its font size
+and adds no padding. For an action in a row of buttons use `NuiButton` with `variant="link"`: it
+has the button height and a loading state.
 
 <Example name="link/VersusButton" />
 
@@ -29,22 +31,23 @@ import '@numior/vue/styles/link.css';
 
 ### External links
 
-`external` adds an icon and opens the address in a new tab.
+With `external` the link opens in a new tab and shows an external link icon after the text. The
+opened page gets no access to your tab and does not learn where the visit came from.
 
 <Example name="link/External" />
 
-### Underline and disabled links
+### Underline and disabled state
 
-`underline="hover"` underlines only on hover, `disabled` removes the address and marks the link
-`aria-disabled`.
+The `underline` prop picks when the link is underlined: `always` (the default), `hover` only on
+hover, `none` never. `disabled` turns off navigation, and Tab skips such a link.
 
 <Example name="link/States" />
 
 ## Accessibility
 
-The link stays a native `<a>`. With `to` set, `href` is not rendered, so the router owns the
-address; menu items, breadcrumbs and the sidebar use the same contract. `disabled` keeps the
-link readable and only removes the navigation and the focus.
+The link stays a regular `<a>` element. Users open it in a new tab, copy it and follow it from the
+keyboard like any other link. Screen readers still read a disabled link and report it as
+unavailable.
 
 <KeyboardReference name="NuiLink" />
 

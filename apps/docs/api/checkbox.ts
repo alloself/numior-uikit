@@ -3,7 +3,7 @@ import { fieldControl } from './shared/field.ts';
 
 const space = {
   keys: 'Space',
-  description: { ru: 'Переключает чекбокс.', en: 'Toggles the checkbox.' },
+  description: { ru: 'Ставит или снимает отметку.', en: 'Checks or unchecks the box.' },
 };
 
 const docs: DocsMap = {
@@ -11,13 +11,16 @@ const docs: DocsMap = {
     props: {
       ...fieldControl,
       indeterminate: {
-        ru: 'Визуальное состояние «частично выбрано»; клик снимает его.',
-        en: 'Visual "partly selected" state; a click clears it.',
+        ru: 'Показывает черту вместо галочки: выбрана часть вложенных пунктов. Нажатие снимает это состояние.',
+        en: 'Shows a dash instead of a check: some nested items are selected. A click clears it.',
       },
-      value: { ru: 'Значение нативного поля формы.', en: 'Value of the native form field.' },
+      value: {
+        ru: 'Значение, которое уходит с формой, когда чекбокс отмечен.',
+        en: 'Value sent with the form when the box is checked.',
+      },
     },
     models: { 'v-model': { ru: 'Отмечен ли чекбокс.', en: 'Whether the checkbox is checked.' } },
-    slots: { default: { ru: 'Подпись рядом с индикатором.', en: 'Label next to the indicator.' } },
+    slots: { default: { ru: 'Подпись рядом с чекбоксом.', en: 'Label next to the checkbox.' } },
     keyboard: [space],
     configurator: {
       props: ['size', 'disabled', 'required', 'invalid', 'indeterminate', 'description', 'error'],
@@ -27,22 +30,34 @@ const docs: DocsMap = {
   NuiCheckboxGroup: {
     props: {
       ...fieldControl,
-      options: { ru: 'Опции набора.', en: 'Options of the set.' },
-      name: { ru: 'Общее имя нативных полей формы.', en: 'Shared name of the native form fields.' },
-      orientation: { ru: 'Раскладка: столбцом или строкой.', en: 'Layout: a column or a row.' },
+      options: {
+        ru: 'Варианты списком объектов с полями `value`, `label` и `disabled`.',
+        en: 'Choices as objects with `value`, `label` and `disabled`.',
+      },
+      name: {
+        ru: 'Атрибут `name` всех чекбоксов группы для отправки формы.',
+        en: 'The `name` attribute of every checkbox in the group, for form submission.',
+      },
+      orientation: {
+        ru: 'Расположение: столбцом (`vertical`) или в строку (`horizontal`).',
+        en: 'Layout: a column (`vertical`) or a row (`horizontal`).',
+      },
       getKey: {
-        ru: 'Ключ для значений-объектов; без него ключом становится JSON.',
-        en: 'Key for object values; without it the key is the JSON.',
+        ru: 'Функция, которая возвращает ключ значения-объекта. Без неё ключом служит JSON значения.',
+        en: 'Function that returns the key of an object value. Without it the JSON of the value is the key.',
       },
     },
     models: {
       'v-model': {
-        ru: 'Выбранные значения в порядке выбора.',
-        en: 'Selected values in selection order.',
+        ru: 'Массив выбранных значений в том порядке, в каком их отметили.',
+        en: 'Array of selected values in the order they were checked.',
       },
     },
     slots: {
-      option: { ru: 'Подпись опции; получает опцию.', en: 'Option label; receives the option.' },
+      option: {
+        ru: 'Своя подпись варианта. Получает `option`.',
+        en: 'Custom choice label. Receives `option`.',
+      },
     },
     keyboard: [space],
   },

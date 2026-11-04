@@ -1,8 +1,10 @@
 # useToast
 
-`useToast()` returns the toast service: `show` with full options and the short `success`,
-`error`, `warning`, `info`. `NuiToaster`, placed once in the app, renders the toasts;
-`useToastStore` exposes the queue for own markup.
+`useToast()` shows toasts. `success`, `error`, `warning` and `info` show a toast of that kind,
+and `show` takes all the options.
+
+`NuiToaster` renders the toasts: put it in the app once. To render toasts with your own markup,
+take their list from `useToastStore`.
 
 <Example name="composables/Toast" />
 
@@ -12,6 +14,8 @@
 
 ## Behaviour
 
-`show` returns an id for `dismiss`; the default `duration` and `limit` come from
-`createNuiConfig({ toasts })`. A toast timer pauses on hover and while the tab is in the
+`show` returns an id that `dismiss` uses to close the toast. The display time `duration` and the
+number of toasts on screen `limit` default to the values from `createNuiConfig({ toasts })`.
+
+A toast does not close while the pointer or focus is on it and while the tab is in the
 background. The component is described on the [Toast](/en/components/toast) page.

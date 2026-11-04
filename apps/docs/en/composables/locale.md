@@ -1,8 +1,7 @@
 # useLocale
 
-`useLocale(explicit)` returns the locale for formats and texts: the component prop when
-passed, else `locale` from the nearest configuration, else `en-US`. Every component with a
-`locale` prop works this way.
+`useLocale(explicit)` returns the locale for the formats and labels of your component. It is
+the `locale` prop when passed, otherwise `locale` from the nearest settings, otherwise `en-US`.
 
 ## Signature
 
@@ -21,5 +20,6 @@ const price = computed(
 );
 ```
 
-The result is a `ComputedRef<string>`: a locale change in the configuration reformats the
-value. The app locale is set in [Configuration](/en/guide/configuration).
+The result is a `ComputedRef<string>`: when the locale in the settings changes, the price is
+formatted again. Numior UI components with a `locale` prop pick the locale the same way. The app
+locale is set in [Configuration](/en/guide/configuration).

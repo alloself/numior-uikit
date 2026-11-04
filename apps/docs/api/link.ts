@@ -4,26 +4,29 @@ const docs: DocsMap = {
   NuiLink: {
     props: {
       as: {
-        ru: 'Переопределяет тег или компонент ссылки; без него to берёт роутер.',
-        en: 'Overrides the link tag or component; without it to takes the router.',
+        ru: 'Тег или компонент, которым рисуется ссылка. Без него ссылку с `to` рисует роутер.',
+        en: 'Tag or component to render the link with. Without it, a link with `to` uses the router.',
       },
       href: { ru: 'Адрес ссылки.', en: 'Link address.' },
       to: {
-        ru: 'Маршрут для RouterLink или NuxtLink приложения либо link из конфигурации; без роутера строка становится href. Тип уточняется через NuiRouteRegister.',
-        en: 'Route for the app RouterLink or NuxtLink or the configured link; without a router a string becomes href. NuiRouteRegister narrows the type.',
+        ru: 'Маршрут для `RouterLink`, `NuxtLink` или ссылки из конфигурации. Без роутера строка становится `href`. Тип маршрута задаёт `NuiRouteRegister`.',
+        en: 'Route for `RouterLink`, `NuxtLink` or the configured link. Without a router, a string becomes `href`. `NuiRouteRegister` sets the route type.',
       },
-      tone: { ru: 'Цвет из токенов роли.', en: 'Colour from the role tokens.' },
+      tone: {
+        ru: 'Цвет ссылки по смыслу: `primary`, `success`, `error` и другие.',
+        en: 'Colour of the link by meaning: `primary`, `success`, `error` and others.',
+      },
       underline: {
         ru: 'Когда показывать подчёркивание: всегда, при наведении или никогда.',
         en: 'When to underline: always, on hover or never.',
       },
       external: {
-        ru: 'Открывает адрес в новой вкладке с rel и иконкой.',
-        en: 'Opens the address in a new tab with rel and an icon.',
+        ru: 'Открывает адрес в новой вкладке и показывает иконку внешней ссылки.',
+        en: 'Opens the address in a new tab and shows an external link icon.',
       },
       disabled: {
-        ru: 'Убирает адрес и помечает ссылку aria-disabled.',
-        en: 'Removes the address and marks the link aria-disabled.',
+        ru: 'Отключает ссылку: адрес убирается, Tab её пропускает.',
+        en: 'Disables the link: the address is removed and Tab skips it.',
       },
     },
     slots: { default: { ru: 'Текст ссылки.', en: 'Link text.' } },

@@ -1,9 +1,12 @@
 # useControls
 
-`defineControls({ text: control(NuiInput, isString, { props }) })` builds a control registry:
-the component, its model name, a value guard and a props guard. Forms from JSON and cell
-editors find a control by its string key. `createNuiConfig({ controls })` or `provideControls`
-hands the registry to descendants, `kitControls` from `@numior/vue/controls` describes the kit controls.
+`useControls()` returns the set of controls that JSON-described forms and table cell editors
+pick a control from by name, for example `text` or `date`. The ready-made set of Numior UI
+controls is `kitControls` from `@numior/vue/controls`.
+
+Build your own set with `defineControls`. The entry `text: control(NuiInput, isString)` means:
+the name `text` renders `NuiInput`, and its value is a string. Pass the set to
+`createNuiConfig({ controls })` or to `provideControls`.
 
 <Example name="composables/Controls" />
 
@@ -14,6 +17,12 @@ hands the registry to descendants, `kitControls` from `@numior/vue/controls` des
 ## Behaviour
 
 `control(component, accepts, { model, props })` checks at the type level that the component
-model fits the `accepts` guard. `controlProps(shape)` builds a strict guard: an unknown key or a
-value of another type is rejected. Without `props` an entry accepts any object, and
-`useControls()` returns `null` until a registry is provided.
+value fits the `accepts` check. `model` is the name of the component model, `modelValue` by
+default.
+
+`props` checks the props that a form or table passes to the control. `controlProps(shape)` builds
+a strict check: a prop with an unknown name or a value of the wrong type fails. Without `props`
+the control accepts any props.
+
+When no set is passed in the settings or through `provideControls`, `useControls()` returns
+`null`.

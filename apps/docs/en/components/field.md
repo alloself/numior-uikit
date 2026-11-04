@@ -1,10 +1,13 @@
 # Field
 
-`NuiField` links a control with its label, description and error through a shared `id`,
-`aria-describedby` and `aria-invalid`. Controls draw their own texts; the field serves slots,
-several controls in one field and forms.
+`NuiField` shows a label, a hint and an error around a control and connects them to it for screen
+readers. Kit inputs show these texts on their own, so `NuiField` is for a label with markup or a
+field with several controls.
 
 <Example name="field/Basic" />
+
+The `required` prop adds an asterisk to the label, and `error` puts the control into the error
+state and shows the text under it.
 
 ## Installation
 
@@ -15,33 +18,36 @@ import '@numior/vue/styles/field.css';
 
 ## Examples
 
-### Slots
+### Label with markup
 
-The label, description and error take markup through the `label`, `description` and `error`
-slots.
+The `label`, `description` and `error` slots take markup instead of text: a link next to the
+label, a bold word in the hint.
 
 <Example name="field/Slots" />
 
 ### A group of controls
 
-`group` turns the field into a `<fieldset>` with a `<legend>`; the controls inside keep their
-own `id`, and `disabled` applies to the whole `fieldset`.
+With `group`, the field puts several controls under one label, such as first and last name.
+Screen readers name the group by its label, and `disabled` turns off all the controls at once.
 
 <Example name="field/Group" />
 
 ### Room for the error
 
-`reserveError` keeps an empty line under the control, so neighbouring fields and buttons do not
-move when messages appear after a submit. `NuiForm` passes it to every field.
+`reserveError` keeps a line under the control for the error in advance. When a message appears
+after a submit, the fields and buttons nearby stay in place. The `reserveError` prop of `NuiForm`
+turns this on for every field of the form.
 
 <Example name="field/Reserve" />
 
 ## Accessibility
 
-Markup: `<label for>`, the control with the same `id`, the description and the error with ids
-listed in `aria-describedby`. Every link is computed on the server, so SSR and hydration render
-the same markup. The `NuiFieldLabel`, `NuiFieldDescription` and `NuiFieldError` parts build a
-custom field on top of `provideField` from `@numior/primitives`.
+A click on the label focuses the control, and screen readers read the hint and the error together
+with the field. The connections are already in the server-rendered markup, before scripts load.
+
+The `NuiFieldLabel`, `NuiFieldDescription` and `NuiFieldError` parts show the label, the hint and
+the error in your own markup. They take their data from the nearest `NuiField` or from a field
+created with `provideField` from `@numior/primitives`.
 
 ## API
 

@@ -1,8 +1,10 @@
 # useReorder
 
-`useReorder(options)` перетаскивает элементы списка указателем и клавиатурой: порог начала
-драга, автопрокрутка у краёв контейнера, события `grabbed`, `moved`, `dropped`, `cancelled`
-и зеркалирование в RTL. Перестановку делает ваш `onMove(from, to)`.
+`useReorder(options)` даёт переставлять пункты списка мышью, пальцем и с клавиатуры. Сам список
+меняет ваш обработчик `onMove(from, to)`.
+
+Перетаскивание начинается, когда указатель сдвинулся на `threshold` пикселей, по умолчанию на 5.
+У края контейнера список прокручивается сам, а Escape отменяет перетаскивание.
 
 ## Сигнатура
 
@@ -22,14 +24,20 @@ const reorder = useReorder({
 });
 ```
 
-`onPointerdown(index, event)` вешается на ручку строки, `onKeydown(index, event)` — на неё
-же для стрелок с модификатором, `state` описывает фазу: `idle`, `pending`, `dragging`,
-`keyboard`. Так переставляют поля `NuiFieldArray` в формах.
+Повесьте `onPointerdown(index, event)` и `onKeydown(index, event)` на ручку пункта. С
+клавиатуры пункт берут Enter или пробелом, двигают стрелками и ставят на место повторным
+нажатием Enter или пробела.
+
+`state.phase` показывает этап: `idle`, `pending`, `dragging` или `keyboard`. `onEvent` получает
+события `grabbed`, `moved`, `dropped` и `cancelled`, по ним удобно сообщать о перестановке
+скринридеру. Так переставляются группы полей в `NuiFieldArray`.
 
 ## Автопрокрутка у краёв
 
-`useEdgeScroll(options)` — та же автопрокрутка отдельно. `follow({ x, y })` прокручивает
-контейнер, пока точка у его края, и зовёт `onStep` после каждого шага, а `stop()` её гасит.
-На ней же [Table](/components/table) тянет диапазоны ячеек за край.
+`useEdgeScroll(options)` — та же прокрутка у края, но без перетаскивания. `follow({ x, y })`
+прокручивает контейнер, пока точка ближе 24 пикселей к его краю, и вызывает `onStep` после
+каждого шага. `stop()` останавливает прокрутку.
+
+Так [Table](/components/table) прокручивается, когда выделение ячеек тянут за край.
 
 <SignatureReference :names="['useEdgeScroll', 'EdgeScrollOptions', 'EdgeScroll', 'EdgePoint']" />

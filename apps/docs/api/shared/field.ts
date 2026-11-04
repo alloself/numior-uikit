@@ -2,55 +2,55 @@ import type { DescriptionMap } from '../../.vitepress/reference/reference.types'
 
 export const fieldTexts: DescriptionMap = {
   label: {
-    ru: 'Подпись контрола; вне NuiField контрол рисует её сам.',
-    en: 'Label of the control; outside NuiField the control draws it itself.',
+    ru: 'Подпись контрола. Внутри `NuiField` подпись берётся из поля.',
+    en: 'Label of the control. Inside `NuiField` the field provides the label.',
   },
   description: {
-    ru: 'Подсказка под контролом, связанная через aria-describedby.',
-    en: 'Hint under the control, linked through aria-describedby.',
+    ru: 'Подсказка под контролом. Экранные дикторы читают её вместе с контролом.',
+    en: 'Hint below the control. Screen readers announce it with the control.',
   },
   error: {
-    ru: 'Текст ошибки; включает состояние ошибки.',
-    en: 'Error text; it switches the error state on.',
+    ru: 'Текст ошибки под контролом. Переводит контрол в состояние ошибки.',
+    en: 'Error text below the control. Puts the control into the error state.',
   },
   reserveError: {
-    ru: 'Держит строку под ошибку, чтобы форма не прыгала.',
-    en: 'Keeps a line for the error so the form does not jump.',
+    ru: 'Оставляет место под ошибку, чтобы форма не сдвигалась, когда ошибка появится.',
+    en: 'Reserves space for the error so the form does not shift when it appears.',
   },
 };
 
 export const fieldState: DescriptionMap = {
   id: {
-    ru: 'Идентификатор контрола; внутри поля выдаётся автоматически.',
-    en: 'Control id; a field assigns one automatically.',
+    ru: 'Идентификатор контрола. По умолчанию берётся из `NuiField` или создаётся автоматически.',
+    en: 'Id of the control. Defaults to the one from `NuiField` or is generated automatically.',
   },
   disabled: {
-    ru: 'Выключает контрол; наследуется от поля.',
-    en: 'Disables the control; inherited from the field.',
+    ru: 'Отключает контрол. Внутри `NuiField` по умолчанию берётся из поля.',
+    en: 'Disables the control. Inside `NuiField` it defaults to the field value.',
   },
   readonly: {
-    ru: 'Значение видно, читается и копируется, но не меняется; наследуется от поля.',
-    en: 'The value stays visible, readable and copyable, but cannot change; inherited from the field.',
+    ru: 'Запрещает менять значение, но его можно выделить и скопировать. Внутри `NuiField` по умолчанию берётся из поля.',
+    en: 'Prevents changes to the value, which stays selectable and copyable. Inside `NuiField` it defaults to the field value.',
   },
   required: {
-    ru: 'Помечает значение обязательным; наследуется от поля.',
-    en: 'Marks the value as required; inherited from the field.',
+    ru: 'Помечает контрол обязательным. Внутри `NuiField` по умолчанию берётся из поля.',
+    en: 'Marks the control as required. Inside `NuiField` it defaults to the field value.',
   },
   invalid: {
-    ru: 'Помечает контрол невалидным без текста ошибки; error включает состояние сам.',
-    en: 'Marks the control invalid without an error text; error switches the state on itself.',
+    ru: 'Показывает состояние ошибки без текста. С `error` оно включается само.',
+    en: 'Shows the error state without a text. With `error` it turns on by itself.',
   },
 };
 
 export const sizeProp: DescriptionMap = {
   size: {
-    ru: 'Ступень размера внутри текущей плотности.',
-    en: 'Size step inside the current density.',
+    ru: 'Размер контрола: `sm`, `md` или `lg`. Высоту каждого размера сдвигает плотность темы.',
+    en: 'Changes the size of the control: `sm`, `md` or `lg`. The theme density shifts the height of each size.',
   },
 };
 
 export const fieldControl: DescriptionMap = { ...fieldState, ...sizeProp, ...fieldTexts };
 
 export const focusExposed: DescriptionMap = {
-  focus: { ru: 'Ставит фокус в поле.', en: 'Moves the focus into the field.' },
+  focus: { ru: 'Ставит фокус в поле.', en: 'Focuses the field.' },
 };

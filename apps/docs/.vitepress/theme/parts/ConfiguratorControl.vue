@@ -48,6 +48,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { NuiInput, NuiNumberField, NuiSelect, NuiSwitch, NuiToggleGroup } from '@numior/vue';
+import { withoutInlineCode } from '../inline-code';
 import type { ConfiguratorControlEmits, ConfiguratorControlProps } from '../theme.types';
 
 const SHORT_ENUM = 4;
@@ -56,7 +57,13 @@ const { prop, state, locale } = defineProps<ConfiguratorControlProps>();
 const emit = defineEmits<ConfiguratorControlEmits>();
 
 const short = computed(() => (prop.values?.length ?? 0) <= SHORT_ENUM);
-const description = computed(() => prop.description?.[locale]);
+
+const description = computed(() => {
+  const text = prop.description?.[locale];
+
+  return text === undefined ? undefined : withoutInlineCode(text);
+});
+
 const options = computed(() => (prop.values ?? []).map((value) => ({ value, label: value })));
 
 const setEnum = (value: string | null): void => {

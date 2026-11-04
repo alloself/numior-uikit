@@ -1,8 +1,7 @@
 # Calendar
 
-`NuiCalendar` shows one or more months as a `role="grid"`. It works with strings: a
-`YYYY-MM-DD` date, a set of dates or a `{ start, end }` range. `mode` sets the mode, the value
-lives in one `v-model`, the labels and the week start come from the locale.
+`NuiCalendar` is an inline calendar for picking one date, several dates or a range. For a field
+with a calendar in a pop-up use a [Date picker](/en/components/date-picker).
 
 <Example name="calendar/Basic" />
 
@@ -17,29 +16,38 @@ import '@numior/vue/styles/calendar.css';
 
 ### Several dates
 
-`mode="multiple"` toggles days on click; `size="sm"` suits compact panels.
+With `mode="multiple"` every click adds a day to the selection or removes it. `v-model` holds an
+array of dates. The `sm` size suits narrow panels.
 
 <Example name="calendar/Multiple" />
 
 ### A range with presets
 
-In `range` the first click opens the range, the second closes it, and dragging selects both ends
-at once. `presets` show ready-made ranges and highlight the matching one.
+With `mode="range"` the first click sets the start of the range and the second the end. A range
+can also be dragged with the mouse. `v-model` holds a `{ start, end }` object.
 
 <Example name="calendar/Range" />
 
+The `presets` prop adds buttons with ready-made ranges such as "Last 7 days" on the side. The
+button of the currently selected range is highlighted. The `months` prop shows several months
+side by side.
+
 ## Behaviour
 
-Dates outside `min` and `max` and those rejected by `isDateDisabled` stay focusable but cannot
-be selected. The month and year heading opens the month and year grids. Today comes from
-`today`, or from the clock only after mounting, so the server markup does not depend on the
-server time zone.
+Dates are passed as `YYYY-MM-DD` strings, such as `2026-09-27`. Month and weekday names and the
+first day of the week come from the app language; `locale` and `weekStart` override them.
+
+Dates before `min`, after `max` and those for which `isDateDisabled` returns `true` cannot be
+picked. A click on the month name or the year opens a list of months or years.
+
+The calendar takes today's date from the browser clock. With server rendering pass it in
+`today`, otherwise today is highlighted only after the page loads.
 
 ## Accessibility
 
-Every month is a labelled `section`, the grid a `table role="grid"`. The days are buttons
-inside `gridcell` elements with the full date in `aria-label`; the cells carry `aria-selected`
-and today `aria-current="date"`. One tab stop is deterministic on the server already.
+Days of the month are buttons, and a screen reader announces the full date: "Sunday, September
+27, 2026". It also tells which days are selected and which one is today. Arrow keys move between
+days.
 
 <KeyboardReference name="NuiCalendar" />
 

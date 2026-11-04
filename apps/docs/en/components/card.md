@@ -1,7 +1,7 @@
 # Card
 
-`NuiCard` is a surface container assembled from parts: header, title, description, content, footer
-and media. The whole card can be a link or a button.
+`NuiCard` is a card with a title, text and actions: a plan, a project, an article. The whole
+card can lead to a link or act as a button.
 
 <Example name="card/Basic" />
 
@@ -18,56 +18,59 @@ import '@numior/vue/styles/card.css';
 
 ## Anatomy
 
-| Part                 | Role                                                          |
+| Part                 | What it holds                                                 |
 | -------------------- | ------------------------------------------------------------- |
-| `NuiCard`            | Surface, padding and the link or button mode                  |
-| `NuiCardHeader`      | Heading with a description and the `actions` slot on the side |
-| `NuiCardTitle`       | Heading; in an interactive card it holds the single link      |
-| `NuiCardDescription` | Subheading in the muted colour                                |
-| `NuiCardContent`     | Main content                                                  |
-| `NuiCardFooter`      | Actions at the bottom                                         |
-| `NuiCardMedia`       | Image cropped to the edge with a given aspect ratio           |
+| `NuiCard`            | The card frame, inner padding, a link or a button             |
+| `NuiCardHeader`      | The title with a description, the `actions` slot on the right |
+| `NuiCardTitle`       | The card title, an `<h3>` by default                          |
+| `NuiCardDescription` | A line under the title in a muted colour                      |
+| `NuiCardContent`     | The main text of the card                                     |
+| `NuiCardFooter`      | Buttons at the bottom of the card                             |
+| `NuiCardMedia`       | An image from edge to edge with a given aspect ratio          |
 
 ## Examples
 
-### Media
+### Image
 
-`NuiCardMedia` stretches the image to the card edge; `aspect` sets the ratio.
+`NuiCardMedia` shows the image from `src` across the full width of the card. The `aspect` prop
+sets the aspect ratio, such as `3 / 1`, and crops the rest.
 
 <Example name="card/Media" />
 
 ### Link card
 
-`href` makes the whole card a link. The button in `actions` and the footer work apart from it.
+Pass `href` or `to` to make the card clickable anywhere and follow the link. Buttons in the
+`actions` slot and in the footer are pressed separately and do not open the link.
 
 <Example name="card/Link" />
 
 ### Interactive card
 
-`interactive` turns the card into a button; a click anywhere arrives in `@click`.
+With `interactive` the card acts as a button: a click anywhere on it emits the `click` event.
 
 <Example name="card/Interactive" />
 
 ### Variants and padding
 
-`variant` picks an outline, a shadow or a soft fill, `padding` the inset of every part: `xs`, `sm`,
-`md` (the default) or `lg`. The gap between the parts equals the inset; `xs` suits a dense grid of
-cards.
+The `variant` prop sets the look: `outline` with a border, `elevated` with a shadow or `soft`
+with a fill. `padding` sets the space inside the card: `xs`, `sm`, `md` (the default) or `lg`.
 
 <Example name="card/Variants" />
 
-### Header from props
+The `xs` padding suits a dense grid of many cards.
 
-`title` and `description` draw the header without parts.
+### Header without parts
+
+The `title` and `description` props render the card header when you do not need your own header
+markup.
 
 <Example name="card/Props" />
 
 ## Accessibility
 
-An interactive card is not wrapped in an `<a>` as a whole: its name would become the entire text and
-nested buttons would turn invalid. Instead the title holds the single link or button and stretches
-it over the card, so such a card needs a `NuiCardTitle` or a `title`. The focus ring is drawn
-around the whole card.
+A link card and an interactive card need a title: a `NuiCardTitle` or the `title` prop. A screen
+reader names the link or the button by this title rather than by the whole card text. The focus
+ring goes around the entire card.
 
 <KeyboardReference name="NuiCard" />
 

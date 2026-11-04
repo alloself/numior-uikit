@@ -1,9 +1,11 @@
 # Configuration
 
-One plugin, `createNuiConfig`, sets everything the components take from the environment. That
-is the locale, the writing direction, the text dictionary, the icons, the colour scheme and
-the toast options. `provideNuiConfig` in the `setup` of an own component gives the same options
-to a subtree; nested calls layer.
+How to set the language, writing direction, theme, icons and toasts for the whole app or for
+part of a page.
+
+## Plugin
+
+Pass the settings to the `createNuiConfig` plugin when you create the app:
 
 ```ts
 import { createApp } from 'vue';
@@ -22,33 +24,36 @@ createApp(App)
   .mount('#app');
 ```
 
+Components read these settings on their own, so you do not pass them to each component. In the
+example the labels are in English and the chosen theme is saved in `localStorage`. Toasts stay
+for 6 seconds, at most three at a time.
+
 ## Options
 
-| Option        | Type                                   | What it does                                                                                                              |
-| ------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `locale`      | `string`, ref or getter                | Number, date and time formats and the language of built-in texts; `en-US` without it.                                     |
-| `dir`         | `'ltr'` or `'rtl'`, ref or getter      | Writing direction; without it the nearest `dir` attribute is read.                                                        |
-| `messages`    | `NuiLocaleMessages`, ref or getter     | Dictionary overrides and new languages, see [Localization](/en/guide/localization).                                       |
-| `translate`   | `(key, params, locale) => string?`     | Texts from the app's i18n library, asked before the dictionary.                                                           |
-| `icons`       | `Record<string, Component>`            | Icon registry by alias, see [Icon](/en/components/icon).                                                                  |
-| `colorScheme` | `{ storageKey?, initial?, scope? }`    | Shared colour scheme for `useColorScheme`, see [Theming](/en/guide/theming).                                              |
-| `toasts`      | `{ duration?, exitDuration?, limit? }` | Lifetime and number of simultaneous toasts, see [Toast](/en/components/toast).                                            |
-| `link`        | `Component` or a component name        | Link component for `to`; without it the app's `NuxtLink` or `RouterLink` is used.                                         |
-| `controls`    | `NuiControlRegistry`                   | Control registry for forms from JSON and editors, for example `kitControls`, see [useControls](/en/composables/controls). |
-| `highlighter` | `NuiHighlighter`                       | Code highlighter for `NuiCode`, the editor and published content, see [Code](/en/components/code#highlighter).            |
+| Option        | Type                                   | What it does                                                                                                    |
+| ------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `locale`      | `string`, ref or getter                | The language of built-in labels and the number, date and time format. `en-US` by default.                       |
+| `dir`         | `'ltr'` or `'rtl'`, ref or getter      | The writing direction. When not set, it comes from the nearest `dir` attribute.                                 |
+| `messages`    | `NuiLocaleMessages`, ref or getter     | Your own texts in place of the built-in ones and new languages, see [Localization](/en/guide/localization).     |
+| `translate`   | `(key, params, locale) => string?`     | Takes texts from your app's i18n library. It is called before the `messages` dictionary.                        |
+| `icons`       | `Record<string, Component>`            | Your own icons in place of the built-in ones, by icon name, see [Icon](/en/components/icon).                    |
+| `colorScheme` | `{ storageKey?, initial?, scope? }`    | The theme for `useColorScheme`: the `localStorage` key and the default theme, see [Theming](/en/guide/theming). |
+| `toasts`      | `{ duration?, exitDuration?, limit? }` | How long a toast stays and how many toasts are visible at once, see [Toast](/en/components/toast).              |
+| `link`        | `Component` or a component name        | The link component for the `to` prop. Defaults to the app's `NuxtLink` or `RouterLink`.                         |
+| `controls`    | `NuiControlRegistry`                   | Controls for JSON forms and editors, for example `kitControls`, see [useControls](/en/composables/controls).    |
+| `highlighter` | `NuiHighlighter`                       | Code highlighting in `NuiCode`, the editor and published text, see [Code](/en/components/code#highlighter).     |
 
-A custom component reads `link` through `useConfiguredLink()`: without the option it returns
-`null`.
+To make your own component render the same link as Numior UI components, get it through
+`useConfiguredLink()`. When the `link` option is not set, the function returns `null`.
 
 ## Signature
 
 <SignatureReference :names="['createNuiConfig', 'provideNuiConfig', 'useConfiguredLink']" />
 
-## Subtree
+## Settings for part of a page
 
-`provideNuiConfig` is called in the `setup` of a component and applies to its descendants.
-This is how one area of a page gets another locale, its own icon set or writing direction;
-the kit ships no React-style provider components.
+Call `provideNuiConfig` in the `setup` of a component to set other settings for everything
+inside it. This way one part of a page gets its own language, icons or writing direction:
 
 ```vue
 <template><slot /></template>
@@ -62,13 +67,17 @@ provideNuiConfig({ locale: () => locale });
 </script>
 ```
 
-`locale`, `dir` and `messages` take a value, a ref or a getter: a change re-renders the texts
-and formats at once. A component prop always beats the configuration: `locale` on a calendar,
-`dir` on an element, `closeLabel` on a dialog.
+`locale`, `dir` and `messages` take a value, a ref or a getter. When the value changes, labels
+and formats update at once.
 
-## What is read without configuration
+A component prop wins over the settings. For example, `locale` on a calendar, `closeLabel` on a
+dialog and the `dir` attribute on an element override the plugin.
 
-The components work without the plugin. They use English texts, the `en-US` locale, the
-direction from the document's `dir` attribute, the default icon set and the scheme from the
-`data-nui-theme` attribute. The kit does not read `navigator.language`, so the server and
-client markup match.
+## Without the plugin
+
+Components also work without the plugin. Labels are then in English, and numbers and dates use
+the `en-US` format. The theme comes from the `data-nui-theme` attribute, the direction from the
+document's `dir` attribute.
+
+The browser language from `navigator.language` is ignored, so the server markup matches the
+markup in the browser.

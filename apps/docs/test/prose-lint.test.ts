@@ -35,6 +35,14 @@ describe('prose lint', () => {
     expect(lintProse(CLEAN, 'ru')).toEqual([]);
   });
 
+  it('matches banned phrases as whole words only', () => {
+    expect(lintProse('Список появляется над полем, когда данные загружены.', 'ru')).toEqual([]);
+
+    expect(lintProse('Компонент является кнопкой.', 'ru').map((problem) => problem.text)).toEqual([
+      'является',
+    ]);
+  });
+
   it('reports long sentences, long paragraphs, banned phrases and internals in prose', () => {
     const page = `# Кнопка
 

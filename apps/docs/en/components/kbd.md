@@ -1,9 +1,11 @@
 # Kbd
 
-`NuiKbd` shows a key or a combo in the same notation as `useHotkey`: `mod+k` becomes ⌘ K on
-Mac and Ctrl K everywhere else. Arrows, Enter and Backspace render as glyphs.
+`NuiKbd` shows a key or a key combination in a hint, a menu or a button. Combinations use the same
+notation as `useHotkey`: `mod+k` looks like ⌘ K on a Mac and like Ctrl K on Windows and Linux.
 
 <Example name="kbd/Basic" />
+
+`variant="plain"` renders the key as plain text without a frame.
 
 ## Installation
 
@@ -20,22 +22,24 @@ import '@numior/vue/styles/kbd.css';
 
 ### Platform
 
-`platform` pins the modifier glyphs. Without the prop the platform is detected after mounting,
-and the server and the pre-hydration frame show Ctrl, Alt and Shift.
+The `platform` prop, `mac` or `other`, sets how modifiers look: ⌘ ⌥ ⇧ or Ctrl, Alt and Shift.
+Without it, the platform is detected in the browser after the page loads. On the server and
+until then, Ctrl, Alt and Shift are shown.
 
 <Example name="kbd/Platform" />
 
 ## Behaviour
 
-Single letters render in upper case, key names from the hotkey notation are capitalised
-(`escape` → Esc, `enter` → ↵). A list in `keys` draws every combo in a row; the slot suits
-text that the notation lacks.
+Arrows, Enter, Backspace, Delete and Tab render as symbols: ↑, ↵, ⌫, ⌦, ⇥. Letters are shown in
+upper case and key names are capitalized, so `escape` becomes Esc.
+
+Pass an array to `keys` to show several combinations in a row. Put text that is not a key, such as
+"Middle mouse button", into the default slot.
 
 ## Accessibility
 
-The component renders native `<kbd>` elements: an outer one for the combo and nested ones per
-key. A screen reader reads the glyphs by their Unicode names, so spell out the action next to
-a combo in hints.
+Screen readers read the symbols by their Unicode names, such as "upwards arrow". So describe the
+action in words next to the combination: "Press ⌘ K to search".
 
 ## API
 

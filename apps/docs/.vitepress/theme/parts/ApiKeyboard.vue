@@ -11,7 +11,9 @@
       <template #cell-keys="{ row }">
         <NuiKbd :keys="row.keys" size="sm" />
       </template>
-      <template #cell-description="{ row }">{{ row.description[locale] }}</template>
+      <template #cell-description="{ row }">
+        <InlineText :text="row.description[locale]" />
+      </template>
     </NuiTable>
   </div>
 </template>
@@ -21,6 +23,7 @@ import { NuiKbd } from '@numior/vue';
 import { NuiTable, type NuiTableColumn } from '@numior/table';
 import type { ReferenceKey } from '../../reference/reference.types';
 import type { ApiKeyboardProps } from '../theme.types';
+import InlineText from './InlineText.vue';
 
 const { keys, locale, texts } = defineProps<ApiKeyboardProps>();
 

@@ -31,7 +31,7 @@ test('header sections switch the sidebar and mark the current section', async ({
   await docs.navLink('Руководство').click();
   await expect(page).toHaveURL(/\/guide\/getting-started$/);
   await expect(docs.navLink('Руководство')).toHaveAttribute('aria-current', 'page');
-  await expect(docs.sidebarLink('Темизация')).toBeVisible();
+  await expect(docs.sidebarLink('Темы оформления')).toBeVisible();
   await expect(docs.sidebarLink('Button')).toHaveCount(0);
   await docs.open('/');
   await expect(docs.sidebar).toHaveCount(0);

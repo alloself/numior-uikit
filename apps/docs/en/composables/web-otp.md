@@ -1,7 +1,9 @@
 # useWebOtp
 
-`useWebOtp(options)` waits for an SMS with a code through WebOTP and hands the code to
-`onCode`. The request lives while the component is mounted and `enabled` stays on.
+`useWebOtp(options)` gets a verification code from an SMS through WebOTP and passes it to
+`onCode`. The user does not have to type the code by hand.
+
+The composable waits for the SMS while the component is mounted and `enabled` is not `false`.
 
 <Example name="composables/WebOtp" />
 
@@ -11,11 +13,13 @@
 
 ## Behaviour
 
-WebOTP exists in Chrome on Android: the browser asks for consent and hands over the code from
-the SMS. The last line of the message must look like `@example.com #123456` with the site domain.
+WebOTP works in Chrome on Android: the browser asks the user for permission and passes on the
+code from the SMS. The last line of the message must look like `@example.com #123456`, where
+`example.com` is your site's domain.
 
-In other browsers and on the server `supported` is `false` and no request is sent. `abort()`
-cancels the wait, and a new request starts once `enabled` turns on again.
+In other browsers and on the server `supported` is `false`, and the composable does not wait.
+`abort()` stops waiting. The composable waits for an SMS again once `enabled` is turned off and
+back on.
 
-[OTP field](/en/components/otp-field) connects the composable through the `web-otp` prop and
-waits for the code until the field is complete.
+[OTP field](/en/components/otp-field) turns the composable on with the `web-otp` prop and waits
+for the code until the field is filled.

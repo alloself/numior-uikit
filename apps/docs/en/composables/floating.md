@@ -1,9 +1,12 @@
 # useFloating
 
-`useFloating(reference, floating, options)` places a floating element next to an anchor. It
-takes the side and alignment from `placement`, the `offset`, an arrow, flipping when space
-runs out and width matching. The result is written straight into the element styles, without reactive
-state.
+`useFloating(reference, floating, options)` places a floating element next to a reference
+element, for example a list of options under an input. The position updates on scroll and
+resize.
+
+`placement` sets the side and alignment, for example `bottom-start`, and `offset` the distance in
+pixels. When there is not enough room, the element moves to the opposite side. `arrow` is the
+arrow element, which the composable points at the reference element.
 
 ## Signature
 
@@ -22,6 +25,9 @@ useFloating(trigger, panel, {
 });
 ```
 
-`strategy: 'fixed'` is needed inside `overflow: hidden`; native popovers and dialogs in the
-top layer are positioned the same way. CSS reads the open side from private variables, which
-the kit components turn into the animation and the arrow position.
+`size.matchWidth` makes the element at least as wide as the reference, and `size.fitHeight`
+limits its height to the free space in the window. `enabled` turns the positioning on while the
+element is open.
+
+By default the element uses `position: fixed`, so a parent with `overflow: hidden` does not clip
+it. `strategy: 'absolute'` uses `position: absolute` instead.

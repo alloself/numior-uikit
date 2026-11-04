@@ -1,9 +1,12 @@
 # Toc
 
-`NuiToc` is the "On this page" outline of an article: a list of links to headings whose
-current item follows the scroll. The right column of these docs is built on it.
+`NuiToc` is the outline of an article: a list of links to its headings that highlights the
+section being read. The outline on the right of this site is built with `NuiToc`.
 
 <Example name="toc/Basic" />
+
+Items are set in `items`: each has the heading `id` and a `label`. Nested `children` add the
+second and third levels.
 
 ## Installation
 
@@ -14,16 +17,18 @@ import '@numior/vue/styles/toc.css';
 
 ## Behaviour
 
-The current heading is the last one whose top is above the `line`. The line is a share of
-the window or `root` container height, 0.2 by default. A click marks its link at once and
-keeps the mark until the scroll settles, so the item does not jump to a neighbour.
+The highlighted item is the last heading that has scrolled above the `line`. The line is a share
+of the window height, `0.2` by default, which is one fifth from the top. When the article scrolls
+inside its own block, pass that block to `root`.
 
-Items come from `items`, nested `children` give the second and third levels.
+After a click on a link the highlight moves to it at once and does not jump to a neighbour until
+the scroll ends. The `select` event fires with the `id` of the chosen heading.
 
 ## Accessibility
 
-The root is a `nav` named by `label` or the title, the links are plain `<a href="#id">`; the
-current one carries `aria-current="location"`.
+The outline is a `nav` element named for screen readers by `label`, or by the "On this page"
+title without it. The links are plain `<a href="#id">`, and the current one has
+`aria-current="location"`.
 
 ## API
 

@@ -1,12 +1,14 @@
 # Tree
 
-`NuiTree` shows a hierarchy from `items`: expansion in `v-model:expanded`, selection in
-`v-model` or `v-model:values`, cascading checkboxes in the same `v-model:values`. The tree
-stands on the `NuiList` shell: the same `NuiListItem` rows, the `plain`, `divided` and
-`bordered` variants, sizes, badges and shortcuts. Folder and file icons appear on their own,
-`virtual` with `height` virtualises long trees.
+`NuiTree` displays nested data such as folders and files, catalog sections or company
+departments. Nodes expand and collapse, and they can be selected one at a time or checked with
+checkboxes.
 
 <Example name="tree/Basic" />
+
+Nodes are set in `items`, nested nodes in `children`. The selected node comes through `v-model`,
+and the keys of expanded nodes through `v-model:expanded`. Nodes with children get a folder icon
+and the rest a file icon; `:icons="false"` removes the icons.
 
 ## Installation
 
@@ -18,74 +20,82 @@ import '@numior/vue/styles/tree.css';
 
 ## Examples
 
-### Variants and row trailers
+### Styling and row labels
 
-A node is the same list entry: `badge` and `shortcut` sit at the end of the row. `current`
-marks the current node independently of the selection. `variant="bordered"` draws a frame,
-`size` changes the row height.
+Tree rows look like [List](/en/components/list) items and take the same fields: `badge` and
+`shortcut` sit at the end of the row. The `current` field marks the node that is open right now,
+independently of the selection.
+
+The `variant` prop changes the look: `plain`, `divided`, `bordered` or `floating`. The `size`
+prop changes the row height.
 
 <Example name="tree/Variants" />
 
-### Cascading checkboxes
+### Checkboxes
 
-`checkable` is a multiple selection with checkboxes: a checked node is selected, highlighted
-and carries `aria-selected`. Checking a node checks its descendants; ancestors become checked
-when every child is checked and mixed when only some are. The model keeps the values in
-document order.
+The `checkable` prop adds checkboxes to the nodes, and the values of checked nodes come through
+`v-model:values` in the order of the tree. Checking a folder checks everything inside it.
+
+A folder is checked when all its children are checked, and partly checked when only some are.
 
 <Example name="tree/Checkable" />
 
-### Lazy loading
+### Loading on demand
 
-A `lazy` node without `children` emits `load` when expanded and shows a spinner until the
-children arrive. The children of a checked node are checked on their own once they arrive.
+A node with `lazy` and without `children` can be expanded even though it has no children yet. On
+expand the tree emits the `load` event and shows a loading indicator until the application adds
+the children to `items`.
+
+If the folder was checked, the children that arrive are checked too.
 
 <Example name="tree/Lazy" />
 
 ### Load failure
 
-When the children never arrive, the application removes the node from `v-model:expanded`:
-the spinner stops, and the next expansion emits `load` again. The error message belongs to
-the application.
+When the children fail to load, remove the node from `v-model:expanded`: the indicator goes
+away, and the next expand emits `load` again. The application shows the error message, in the
+example with an [Alert](/en/components/alert).
 
 <Example name="tree/LoadError" />
 
-### Virtualisation
+### Large trees
 
-`virtual` with `height` renders only the visible window of rows; the row height comes from
-`size`, `itemHeight` sets it explicitly. The active row always stays in the DOM, and the
-server renders the first 20 rows.
+With `virtual` and `height` the tree renders only the rows visible in the scroll area instead of
+all the thousands of nodes at once. The row height follows `size`, and `itemHeight` sets it in
+pixels.
 
-The window is one sticky list that the browser scrolls on its own. When the scrollbar runs
-past it, the list stays at the edge until the next frame, so the tree never goes blank. Rows
-are reused element by element.
+Server rendering puts the first 20 rows into the HTML. The focused row stays in the DOM even when
+it is scrolled out of view.
 
 <Example name="tree/Virtual" />
 
-### States
+### Loading and empty tree
 
-`loading` draws the loading row and sets `aria-busy`. An empty tree shows `emptyLabel` or the
-`empty` slot and is no widget until nodes appear: no role, no focus and no name.
+The `loading` prop shows a "Loading" row instead of the nodes. A tree without nodes shows
+`emptyLabel` or the `empty` slot.
 
 <Example name="tree/States" />
 
 ## Behaviour
 
-A click on the chevron only expands, a click on the row selects, and a double click toggles
-expansion. In a `checkable` tree a click on the row or the checkbox, Enter and Space toggle
-the check. `children: []` is a leaf, `lazy` without `children` an expandable node that loads
-on `load`.
+A click on the arrow expands the node, a click on the row selects it, and a double click expands
+or collapses it. In a tree with checkboxes a click on the row, Enter and Space toggle the check.
 
-Nodes carry no links: the application navigates on the `select` event.
+A node with `children: []` is a leaf and does not expand. Rows are never links: to open a page,
+listen to the `select` event.
 
 ## Accessibility
 
-The root is the only element in the tab order, and the active node is referenced through
-`aria-activedescendant`. Unmounting rows under virtualisation therefore never loses the focus.
+The whole tree is one Tab stop, and the arrows move between the nodes. The focused node is
+referenced through `aria-activedescendant`, so the focus is not lost when rows leave the DOM
+while scrolling.
 
-The markup is the list's `ul` and `li` with the `tree` and `treeitem` roles. The DOM is flat:
-`aria-level`, `aria-setsize` and `aria-posinset` carry the structure. Nodes carry
-`aria-expanded`, `aria-selected`, `aria-checked` and `aria-current`.
+The tree is built on a `ul` list with the `tree` and `treeitem` roles. `aria-level`,
+`aria-setsize` and `aria-posinset` carry the level and position of a node, and `aria-expanded`,
+`aria-selected`, `aria-checked` and `aria-current` carry its state.
+
+While `loading`, the tree gets `aria-busy`. An empty tree is a plain block without a role or
+focus.
 
 <KeyboardReference name="NuiTree" />
 

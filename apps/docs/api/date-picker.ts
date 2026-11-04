@@ -1,91 +1,158 @@
 import type { DocsMap } from '../.vitepress/reference/reference.types';
 import { fieldControl } from './shared/field.ts';
 
-const dictionary = (ru: string, en: string) => ({
-  ru: `${ru}; по умолчанию из словаря.`,
-  en: `${en}; the dictionary supplies the default.`,
+const dictionary = (ru: string, en: string, ruDefault: string, enDefault: string) => ({
+  ru: `${ru}. По умолчанию — «${ruDefault}» из словаря.`,
+  en: `${en}. Defaults to "${enDefault}" from the dictionary.`,
 });
 
 const calendar = {
   locale: {
-    ru: 'Локаль формата и календаря; по умолчанию из конфигурации.',
-    en: 'Locale of the format and the calendar; the configuration supplies the default.',
+    ru: 'Язык, формат даты и первый день недели. По умолчанию — из `createNuiConfig`.',
+    en: 'Language, date format and first day of the week. Defaults to `createNuiConfig`.',
   },
   weekStart: {
-    ru: 'Первый день недели вместо дня локали.',
-    en: 'First day of the week instead of the locale one.',
+    ru: 'Первый день недели: от 1 (понедельник) до 7 (воскресенье). Без него берётся из локали.',
+    en: 'First day of the week, from 1 (Monday) to 7 (Sunday). Defaults to the locale.',
   },
-  min: { ru: 'Ранняя допустимая дата.', en: 'Earliest allowed date.' },
-  max: { ru: 'Поздняя допустимая дата.', en: 'Latest allowed date.' },
+  min: {
+    ru: 'Самая ранняя дата, которую можно выбрать.',
+    en: 'Earliest date that can be selected.',
+  },
+  max: {
+    ru: 'Самая поздняя дата, которую можно выбрать.',
+    en: 'Latest date that can be selected.',
+  },
   isDateDisabled: {
-    ru: 'Функция, закрывающая отдельные даты.',
-    en: 'Function that disables individual dates.',
+    ru: 'Функция, которая отключает отдельные даты, например выходные.',
+    en: 'Function that disables individual dates, such as weekends.',
   },
   weekNumbers: {
-    ru: 'Колонка номеров недель в календаре.',
-    en: 'Week number column in the calendar.',
+    ru: 'Показывает в календаре колонку с номерами недель.',
+    en: 'Shows a week number column in the calendar.',
   },
   months: {
-    ru: 'Сколько месяцев показывать в календаре.',
-    en: 'How many months the calendar shows.',
+    ru: 'Сколько месяцев календарь показывает рядом.',
+    en: 'How many months the calendar shows side by side.',
   },
   today: {
-    ru: 'Сегодняшняя дата; без неё берётся из часов после монтирования.',
-    en: 'Today; without it taken from the clock after mounting.',
+    ru: 'Сегодняшняя дата в формате `YYYY-MM-DD`. Без неё берётся из часов браузера после монтирования.',
+    en: 'Today as `YYYY-MM-DD`. Without it the browser clock gives the date after mounting.',
   },
-  clearable: { ru: 'Кнопка очистки в поле.', en: 'Clear button inside the field.' },
+  clearable: {
+    ru: 'Показывает в поле кнопку, которая стирает дату.',
+    en: 'Shows a button in the field that clears the date.',
+  },
   openOnClick: {
-    ru: 'Открывает календарь щелчком по полю; фокус остаётся в поле, и дату можно набрать.',
-    en: 'Opens the calendar on a click in the field; the focus stays in the field for typing.',
+    ru: 'Открывает календарь по клику на поле. Фокус остаётся в поле, и дату можно набрать с клавиатуры.',
+    en: 'Opens the calendar on a click in the field. The focus stays there, so the date can still be typed.',
   },
   readonly: {
-    ru: 'Запрещает ввод и открытие календаря.',
-    en: 'Blocks typing and opening the calendar.',
+    ru: 'Показывает дату без возможности её изменить: ввод и календарь недоступны.',
+    en: 'Shows the date without letting it change: typing and the calendar are blocked.',
   },
   placement: {
-    ru: 'Сторона, с которой открывается календарь.',
-    en: 'Side on which the calendar opens.',
+    ru: 'Где открывается календарь, например `bottom-start` или `top`.',
+    en: 'Where the calendar opens, such as `bottom-start` or `top`.',
   },
-  openLabel: dictionary('Имя кнопки календаря', 'Name of the calendar button'),
-  clearLabel: dictionary('Имя кнопки очистки', 'Name of the clear button'),
-  dialogLabel: dictionary('Имя диалога календаря', 'Name of the calendar dialog'),
-  todayLabel: dictionary('Текст кнопки «Сегодня»', 'Text of the "Today" button'),
-  previousLabel: dictionary('Имя кнопки «предыдущий месяц»', 'Name of the "previous month" button'),
-  nextLabel: dictionary('Имя кнопки «следующий месяц»', 'Name of the "next month" button'),
-  monthLabel: dictionary('Имя кнопки выбора месяца', 'Name of the month picker button'),
-  yearLabel: dictionary('Имя кнопки выбора года', 'Name of the year picker button'),
-  weekLabel: dictionary('Заголовок колонки недель', 'Heading of the week column'),
+  openLabel: dictionary(
+    'Подпись кнопки календаря для экранных дикторов',
+    'Calendar button label for screen readers',
+    'Выбрать дату',
+    'Choose date',
+  ),
+  clearLabel: dictionary(
+    'Подпись кнопки очистки для экранных дикторов',
+    'Clear button label for screen readers',
+    'Очистить',
+    'Clear',
+  ),
+  dialogLabel: dictionary(
+    'Подпись окна с календарём для экранных дикторов',
+    'Calendar popup label for screen readers',
+    'Календарь',
+    'Calendar',
+  ),
+  todayLabel: dictionary(
+    'Текст кнопки «Сегодня»',
+    'Text of the "Today" button',
+    'Сегодня',
+    'Today',
+  ),
+  previousLabel: dictionary(
+    'Подпись кнопки предыдущего месяца для экранных дикторов',
+    'Previous month button label for screen readers',
+    'Предыдущий месяц',
+    'Previous month',
+  ),
+  nextLabel: dictionary(
+    'Подпись кнопки следующего месяца для экранных дикторов',
+    'Next month button label for screen readers',
+    'Следующий месяц',
+    'Next month',
+  ),
+  monthLabel: dictionary(
+    'Подпись кнопки выбора месяца для экранных дикторов',
+    'Month picker button label for screen readers',
+    'Выбрать месяц',
+    'Choose month',
+  ),
+  yearLabel: dictionary(
+    'Подпись кнопки выбора года для экранных дикторов',
+    'Year picker button label for screen readers',
+    'Выбрать год',
+    'Choose year',
+  ),
+  weekLabel: dictionary(
+    'Заголовок колонки номеров недель для экранных дикторов',
+    'Week number column heading for screen readers',
+    'Неделя',
+    'Week',
+  ),
 };
 
 const exposed = {
-  focus: { ru: 'Ставит фокус в поле.', en: 'Moves the focus into the field.' },
+  focus: { ru: 'Переводит фокус в поле.', en: 'Moves the focus into the field.' },
   open: { ru: 'Открывает календарь.', en: 'Opens the calendar.' },
   close: { ru: 'Закрывает календарь.', en: 'Closes the calendar.' },
 };
 
-const actions = { actions: { ru: 'Кнопки под календарём.', en: 'Buttons under the calendar.' } };
+const actions = {
+  actions: {
+    ru: 'Кнопки под календарём рядом с «Сегодня».',
+    en: 'Buttons under the calendar next to "Today".',
+  },
+};
 
 const docs: DocsMap = {
   NuiDatePicker: {
     props: {
       ...fieldControl,
       ...calendar,
-      placeholder: { ru: 'Текст пустого поля.', en: 'Text of the empty field.' },
+      placeholder: { ru: 'Текст в пустом поле.', en: 'Text shown in the empty field.' },
       name: {
-        ru: 'Имя скрытого поля формы с ISO-значением.',
-        en: 'Name of the hidden form field with the ISO value.',
+        ru: 'Атрибут `name` скрытого поля, которое отправляет дату с формой в формате ISO.',
+        en: 'The `name` of a hidden input that sends the date with the form in ISO format.',
       },
       time: {
-        ru: 'Поле времени под календарём; модель становится YYYY-MM-DDTHH:mm.',
-        en: 'Time field under the calendar; the model becomes YYYY-MM-DDTHH:mm.',
+        ru: 'Добавляет поле времени под календарём. Значение становится `YYYY-MM-DDTHH:mm`.',
+        en: 'Adds a time field under the calendar. The value becomes `YYYY-MM-DDTHH:mm`.',
       },
-      timeStep: { ru: 'Шаг минут в поле времени.', en: 'Minute step of the time field.' },
-      timeLabel: dictionary('Подпись поля времени', 'Label of the time field'),
+      timeStep: {
+        ru: 'Шаг минут при выборе времени, например 15.',
+        en: 'Minute step when picking the time, such as 15.',
+      },
+      timeLabel: dictionary(
+        'Подпись кнопки выбора времени для экранных дикторов',
+        'Time button label for screen readers',
+        'Выбрать время',
+        'Choose time',
+      ),
     },
     models: {
       'v-model': {
-        ru: 'Дата YYYY-MM-DD (с time — и время) или null.',
-        en: 'Date as YYYY-MM-DD (with time also the time) or null.',
+        ru: 'Дата в формате `YYYY-MM-DD`, с `time` — вместе со временем. `null`, если дата не выбрана.',
+        en: 'Date as `YYYY-MM-DD`, with the time when `time` is on. `null` when no date is set.',
       },
     },
     slots: actions,
@@ -94,8 +161,8 @@ const docs: DocsMap = {
       {
         keys: 'ArrowDown',
         description: {
-          ru: 'В поле открывает календарь на выбранном дне, а в открытый календарь переводит фокус.',
-          en: 'In the field opens the calendar on the selected day, or moves the focus into it.',
+          ru: 'Открывает календарь. Если он уже открыт, переводит фокус на выбранный день.',
+          en: 'Opens the calendar. When it is open, moves the focus to the selected day.',
         },
       },
       { keys: 'Escape', description: { ru: 'Закрывает календарь.', en: 'Closes the calendar.' } },
@@ -103,7 +170,7 @@ const docs: DocsMap = {
         keys: 'Enter',
         description: {
           ru: 'В поле времени закрывает календарь.',
-          en: 'In the time field closes the calendar.',
+          en: 'In the time field, closes the calendar.',
         },
       },
     ],
@@ -112,26 +179,37 @@ const docs: DocsMap = {
     props: {
       ...fieldControl,
       ...calendar,
-      startPlaceholder: { ru: 'Текст пустого поля начала.', en: 'Text of the empty start field.' },
-      endPlaceholder: { ru: 'Текст пустого поля конца.', en: 'Text of the empty end field.' },
+      startPlaceholder: {
+        ru: 'Текст в пустом поле даты начала.',
+        en: 'Text shown in the empty start date field.',
+      },
+      endPlaceholder: {
+        ru: 'Текст в пустом поле даты окончания.',
+        en: 'Text shown in the empty end date field.',
+      },
       startName: {
-        ru: 'Имя скрытого поля формы для начала.',
-        en: 'Name of the hidden form field for the start.',
+        ru: 'Атрибут `name` скрытого поля, которое отправляет дату начала с формой.',
+        en: 'The `name` of a hidden input that sends the start date with the form.',
       },
       endName: {
-        ru: 'Имя скрытого поля формы для конца.',
-        en: 'Name of the hidden form field for the end.',
+        ru: 'Атрибут `name` скрытого поля, которое отправляет дату окончания с формой.',
+        en: 'The `name` of a hidden input that sends the end date with the form.',
       },
-      endLabel: dictionary('Доступное имя поля конца', 'Accessible name of the end field'),
+      endLabel: dictionary(
+        'Подпись поля даты окончания для экранных дикторов',
+        'End date field label for screen readers',
+        'Дата окончания',
+        'End date',
+      ),
       presets: {
-        ru: 'Готовые диапазоны рядом с календарём.',
-        en: 'Ready-made ranges next to the calendar.',
+        ru: 'Готовые периоды рядом с календарём, например «Последние 7 дней».',
+        en: 'Ready-made periods next to the calendar, such as "Last 7 days".',
       },
     },
     models: {
       'v-model': {
-        ru: 'Диапазон { start, end } со строками или null.',
-        en: 'Range { start, end } with strings or null.',
+        ru: 'Период `{ start, end }` с датами `YYYY-MM-DD` или `null`.',
+        en: 'Period `{ start, end }` with `YYYY-MM-DD` dates, or `null`.',
       },
     },
     slots: actions,
@@ -140,8 +218,8 @@ const docs: DocsMap = {
       {
         keys: 'ArrowDown',
         description: {
-          ru: 'В поле открывает календарь, а в открытый календарь переводит фокус.',
-          en: 'In a field opens the calendar, or moves the focus into it.',
+          ru: 'Открывает календарь. Если он уже открыт, переводит в него фокус.',
+          en: 'Opens the calendar. When it is open, moves the focus into it.',
         },
       },
       { keys: 'Escape', description: { ru: 'Закрывает календарь.', en: 'Closes the calendar.' } },

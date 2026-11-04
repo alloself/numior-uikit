@@ -1,8 +1,10 @@
 # useReorder
 
-`useReorder(options)` drags list items with a pointer and the keyboard. It brings a drag
-threshold, auto-scroll at the container edges, the `grabbed`, `moved`, `dropped` and
-`cancelled` events and RTL mirroring. Your `onMove(from, to)` performs the move.
+`useReorder(options)` lets the user reorder list items with a mouse, a finger or the keyboard.
+Your `onMove(from, to)` handler changes the list itself.
+
+Dragging starts once the pointer moves `threshold` pixels, 5 by default. Near the container edge
+the list scrolls on its own, and Escape cancels the drag.
 
 ## Signature
 
@@ -22,14 +24,21 @@ const reorder = useReorder({
 });
 ```
 
-`onPointerdown(index, event)` attaches to the row handle, `onKeydown(index, event)` to the
-same handle for arrows with a modifier. `state` describes the phase: `idle`, `pending`,
-`dragging`, `keyboard`. `NuiFieldArray` reorders form fields this way.
+Put `onPointerdown(index, event)` and `onKeydown(index, event)` on the item handle. With the
+keyboard, Enter or Space picks the item up, the arrow keys move it, and Enter or Space again
+drops it.
+
+`state.phase` shows the stage: `idle`, `pending`, `dragging` or `keyboard`. `onEvent` receives
+the `grabbed`, `moved`, `dropped` and `cancelled` events, which are handy for announcing the move
+to a screen reader. `NuiFieldArray` reorders field groups this way.
 
 ## Edge auto-scroll
 
-`useEdgeScroll(options)` is the same auto-scroll on its own. `follow({ x, y })` scrolls the
-container while the point stays near its edge and calls `onStep` after every step, and `stop()`
-ends it. [Table](/en/components/table) drags cell ranges past the edge with it.
+`useEdgeScroll(options)` is the same edge scrolling without the drag. `follow({ x, y })` scrolls
+the container while the point is within 24 pixels of its edge and calls `onStep` after every
+step. `stop()` stops the scrolling.
+
+This is how [Table](/en/components/table) scrolls when a cell selection is dragged past the
+edge.
 
 <SignatureReference :names="['useEdgeScroll', 'EdgeScrollOptions', 'EdgeScroll', 'EdgePoint']" />

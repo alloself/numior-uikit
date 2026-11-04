@@ -1,14 +1,17 @@
 # Theming
 
-A theme is a set of CSS tokens from `@numior/tokens/theme.css`. The `data-nui-theme`
-attribute on the root or on any area picks `light`, `dark` or `system`. Colours are written
-through `light-dark()`, so the area inherits the right `color-scheme`.
-
-The public contract is the semantic `--nui-*` tokens only.
+How to switch between the light and dark theme and change the accent colour, density and
+component colours.
 
 <Example name="guide/Scheme" />
 
-## Installation
+The colours, radii, spacing and sizes of components come from the `--nui-*` CSS variables,
+called tokens. Every token has a value for the light and for the dark theme. The
+`data-nui-theme` attribute picks which one applies.
+
+## Setup
+
+Import the theme files in the app entry point:
 
 ```ts
 import '@numior/tokens/theme.css';
@@ -16,15 +19,12 @@ import '@numior/tokens/base.css';
 import '@numior/tokens/accents.css';
 ```
 
-`base.css` removes the `body` margin and sets the page background, colour and font from the
-tokens. `accents.css` adds the accent presets and is needed only with `data-nui-accent`.
+What `theme.css` and `base.css` do is covered in [Getting started](/en/guide/getting-started#styles).
+You need `accents.css` only if you change the accent colour with the `data-nui-accent` attribute.
 
-## Switching the scheme
+## Theme switcher
 
-`useColorScheme` drives the `data-nui-theme` attribute: it reads the saved choice, follows
-`prefers-color-scheme` and writes changes back. With the `colorScheme` option of
-`createNuiConfig` the scheme is shared by the whole app, and `useColorScheme()` without
-arguments returns it. With arguments a separate scheme is created for the `scope` area.
+To let the user pick the theme, use `useColorScheme`:
 
 ```vue
 <template>
@@ -42,27 +42,29 @@ const texts = { light: 'Light theme', dark: 'Dark theme', system: 'System theme'
 </script>
 ```
 
-`scheme` holds the choice (`light`, `dark`, `system`), `resolved` the actual scheme, and
-`set`, `toggle` and `cycle` change it. To keep the page from flashing before hydration, put
-the `colorSchemeScript(storageKey)` script into `<head>`: it applies the saved scheme before
-the first paint.
+`scheme` is the theme the user picked: `light`, `dark` or `system`. `resolved` is the theme on
+screen, `light` or `dark`. `cycle()` goes through the themes in turn, `toggle()` switches between
+light and dark, and `set(theme)` sets the one you pass.
 
-## Accent
+To keep the choice between visits, pass `colorScheme: { storageKey: 'theme' }` to
+`createNuiConfig`. Then `useColorScheme()` in any component controls one theme for the whole app.
 
-`data-nui-accent` swaps the `--nui-primary` and `--nui-primary-foreground` pair together with
-the derived values: `indigo`, `blue`, `violet`, `emerald`, `teal`, `rose`, `orange`, `amber`,
+To keep the page from flashing the light theme on load, add the `colorSchemeScript('theme')`
+script to `<head>`. It applies the saved theme before the first paint.
+
+## Accent colour
+
+The `data-nui-accent` attribute changes the main colour of buttons, switches, links and the focus
+ring. The values are `indigo`, `blue`, `violet`, `emerald`, `teal`, `rose`, `orange`, `amber` and
 `slate`.
 
 <Example name="guide/Accent" />
 
-## Own colours
+## Custom colours
 
-Derived states (`soft`, hover, active, focus) are computed with `color-mix()` from the role
-token. Replacing the `--nui-<role>` and `--nui-<role>-foreground` pair is enough.
-
-Override tokens on the element with `data-nui-theme` or on `:root`. `var()` inside a custom
-property resolves where it is declared, so on an ordinary element the inherited
-`--nui-primary-soft` and `--nui-focus` keep the old values.
+To set your own colour, override the `--nui-<role>` and `--nui-<role>-foreground` token pair:
+the background colour and the text colour on it. The shades for hover, press, focus and the soft
+background (`-soft`) are computed from them.
 
 ```css
 [data-nui-theme] {
@@ -72,34 +74,40 @@ property resolves where it is declared, so on an ordinary element the inherited
 }
 ```
 
-The radii derive from `--nui-radius-base`: `sm` is a half, `lg` one and a half, `xl` twice.
+Set the tokens on `:root` or on an element with `data-nui-theme`. On any other element shades
+such as `--nui-primary-soft` and `--nui-focus` are not recomputed and keep the old values.
+
+Radii depend on `--nui-radius-base`: `sm` is half of it, `lg` one and a half times, `xl` twice.
 
 ## Density
 
-`data-nui-density="comfortable|compact"` shifts the scale of control heights, paddings and
-font sizes; the `size` prop picks a step inside the scale. The attribute inherits, so a table
-or a sidebar can be more compact than the page.
+The `data-nui-density="compact"` attribute makes buttons and inputs shorter and reduces padding
+and font size. The default is `comfortable`: an `md` button is 2.5rem tall, and 2rem in `compact`.
+
+The `size` prop works in both modes; in `compact` every size is simply smaller. Put the
+attribute on a table or a sidebar to make only them denser.
 
 <Example name="guide/Density" />
 
 ## Tokens
 
-| Group      | Tokens                                                                                                                                                               |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Surfaces   | `--nui-surface`, `-muted`, `-elevated`, `-overlay`, `--nui-ring`, `--nui-backdrop`, `--nui-surface-code`                                                             |
-| Text       | `--nui-text`, `--nui-text-muted`, `--nui-text-subtle`, `--nui-code-inline`                                                                                           |
-| Borders    | `--nui-border`, `--nui-border-strong`                                                                                                                                |
-| Roles      | `primary`, `secondary`, `success`, `warning`, `error`, `info`, `neutral`: `--nui-<role>`, `-foreground`, `-soft`, `-soft-foreground`                                 |
-| Focus      | `--nui-focus`, `--nui-focus-ring-width`, `--nui-focus-ring-offset`, `--nui-disabled-opacity`                                                                         |
-| Shape      | `--nui-radius-base`, `--nui-radius-sm`, `--nui-radius-md`, `--nui-radius-lg`, `--nui-radius-xl`, `--nui-radius-full`, `--nui-radius`                                 |
-| Spacing    | `--nui-space-1…6`, `--nui-space-8` (0.25rem step)                                                                                                                    |
-| Typography | `--nui-font`, `--nui-font-mono`, `--nui-font-size-xs…4xl`, `--nui-font-weight-*`, `--nui-line-height`, `-tight`, `-relaxed`, `--nui-tracking-tight`, `--nui-measure` |
-| Code       | `--nui-syntax-keyword`, `-string`, `-number`, `-function`, `-type`, `-tag`, `-attribute`, `-property`, `-comment`, `-variable`, `-punctuation`, `-highlight`         |
-| Charts     | `--nui-chart-1…8` (categorical palette checked for colour blindness in both themes), `--nui-chart-other`, `--nui-chart-grid`, `--nui-chart-axis`                     |
-| Shadows    | `--nui-shadow-sm`, `--nui-shadow-md`, `--nui-shadow-lg`                                                                                                              |
-| Motion     | `--nui-duration-fast`, `--nui-duration-normal`, `--nui-duration-slow`, `--nui-easing`; under `prefers-reduced-motion` the durations are 0                            |
-| Layers     | `--nui-z-dropdown`, `--nui-z-overlay`, `--nui-z-toast`                                                                                                               |
-| Controls   | `--nui-control-height-*`, `--nui-control-padding-*`, `--nui-field-padding-*`, `--nui-control-font-size-*` for `sm`, `md`, `lg` and the current step                  |
+| Group      | Tokens                                                                                                                                                                                     |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Surfaces   | `--nui-surface`, `-muted`, `-elevated`, `-overlay`, `--nui-ring`, `--nui-backdrop`, `--nui-surface-code`                                                                                   |
+| Text       | `--nui-text`, `--nui-text-muted`, `--nui-text-subtle`, `--nui-code-inline`                                                                                                                 |
+| Borders    | `--nui-border`, `--nui-border-strong`                                                                                                                                                      |
+| Roles      | `primary`, `secondary`, `success`, `warning`, `error`, `info`, `neutral`: `--nui-<role>`, `-foreground`, `-soft`, `-soft-foreground`                                                       |
+| Focus      | `--nui-focus`, `--nui-focus-ring-width`, `--nui-focus-ring-offset`, `--nui-disabled-opacity`                                                                                               |
+| States     | `--nui-state-hover`, `--nui-state-pressed` — the lightness step on hover and press                                                                                                         |
+| Shape      | `--nui-radius-base`, `--nui-radius-sm`, `--nui-radius-md`, `--nui-radius-lg`, `--nui-radius-xl`, `--nui-radius-full`, `--nui-radius`                                                       |
+| Spacing    | `--nui-space-1…6`, `--nui-space-8` (0.25rem step)                                                                                                                                          |
+| Typography | `--nui-font`, `--nui-font-mono`, `--nui-font-size-xs…4xl`, `--nui-font-weight-*`, `--nui-line-height`, `-tight`, `-relaxed`, `--nui-tracking-tight`, `--nui-measure`                       |
+| Code       | `--nui-syntax-keyword`, `-string`, `-number`, `-function`, `-type`, `-tag`, `-attribute`, `-property`, `-comment`, `-variable`, `-punctuation`, `-highlight`                               |
+| Charts     | `--nui-chart-1…8` (categorical palette checked for colour blindness in both themes), `--nui-chart-other`, `--nui-chart-grid`, `--nui-chart-axis`                                           |
+| Shadows    | `--nui-shadow-sm`, `--nui-shadow-md`, `--nui-shadow-lg`                                                                                                                                    |
+| Motion     | `--nui-duration-instant`, `--nui-duration-fast`, `--nui-duration-normal`, `--nui-duration-slow`, `--nui-easing`, `--nui-easing-gentle`; under `prefers-reduced-motion` the durations are 0 |
+| Layers     | `--nui-z-dropdown`, `--nui-z-overlay`, `--nui-z-toast`                                                                                                                                     |
+| Controls   | `--nui-control-height-*`, `--nui-control-padding-*`, `--nui-field-padding-*`, `--nui-control-font-size-*` for `sm`, `md`, `lg` and the current size                                        |
 
-Layers (`NuiDialog`, `NuiDrawer`, `NuiPopover`, `NuiTooltip`) stay in the DOM of their
-opener and inherit its theme, density and `dir` in the top layer.
+`NuiDialog`, `NuiDrawer`, `NuiPopover` and `NuiTooltip` stay in the DOM next to the button that
+opened them. So they get the same theme, density and writing direction as that button.

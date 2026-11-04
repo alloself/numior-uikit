@@ -8,9 +8,11 @@ describe('ApiComponent', () => {
     expect(api.sectionTitles).toEqual(['Свойства', 'Модели', 'События', 'Слоты', 'Стили']);
 
     expect(api.rows('Свойства')).toEqual([
-      ['size', 'NuiSize | undefined', '"md"', 'Ступень размера.'],
+      ['size', 'NuiSize | undefined', '"md"', 'Размер: sm, md или lg.'],
       ['items*', 'readonly string[]', '—', '—'],
     ]);
+
+    expect(api.descriptionCode('Свойства')).toEqual(['sm', 'md', 'lg']);
 
     expect(api.rows('Модели')).toEqual([
       ['v-model', 'string | null', 'null', 'Выбранное значение.'],
@@ -25,11 +27,11 @@ describe('ApiComponent', () => {
 
     expect(api.heading.text()).toBe('NuiSample');
     expect(api.heading.attributes('id')).toBe('api-nuisample');
-    expect(api.rows('Props')[0]?.[3]).toBe('Size step.');
+    expect(api.rows('Props')[0]?.[3]).toBe('Size: sm, md or lg.');
     expect(api.rows('Slots')).toEqual([['default', '{}', 'Content.']]);
   });
 
-  it('lists the dictionary texts, the style import, the block classes and the tokens', () => {
+  it('lists the dictionary texts and the style import without class or token lists', () => {
     const api = ApiComponentDriver.mount(referenceOf(), 'ru', false, {
       namespace: 'sample',
       texts: { empty: { ru: 'Пусто', en: 'Empty' } },
@@ -39,8 +41,8 @@ describe('ApiComponent', () => {
     expect(api.rows('Тексты')).toEqual([['empty', 'Пусто', 'Empty']]);
     expect(api.styleImport).toBe("import '@numior/vue/styles/sample.css';");
     expect(api.requiredMarks).toEqual(['обязательно']);
-    expect(api.styleClasses).toEqual(['.nui-sample']);
-    expect(api.styleTokens).toEqual(['--nui-primary']);
+    expect(api.text).not.toContain('nui-sample');
+    expect(api.text).not.toContain('--nui-primary');
   });
 
   it('hides sections without members', () => {

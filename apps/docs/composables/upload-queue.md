@@ -1,8 +1,14 @@
 # useUploadQueue
 
-`useUploadQueue(options)` ведёт очередь загрузок: `add` кладёт файлы в `items`, `start`
-запускает загрузку с параллельностью `concurrency`, `retry` и `remove` управляют элементами.
-Адаптер `upload(file, context)` получает `onProgress` и `signal` для отмены.
+`useUploadQueue(options)` загружает файлы по очереди, по несколько сразу. Используйте его со
+своей зоной загрузки, например на [useFileDrop](/composables/file-drop).
+
+`add` добавляет файлы в `items`, и загрузка начинается сама. `concurrency` задаёт, сколько
+файлов грузится одновременно, по умолчанию 3. `retry` повторяет загрузку после ошибки, `remove`
+убирает файл и отменяет его загрузку.
+
+Сам запрос делает ваша функция `upload(file, context)`. Она получает `onProgress`, чтобы
+сообщать прогресс долей от 0 до 1, и `signal`, чтобы отменить запрос.
 
 ## Сигнатура
 
@@ -27,5 +33,5 @@ const queue = useUploadQueue({
 });
 ```
 
-`auto: false` откладывает старт до `start()`, `onDone` и `onError` вызываются на каждый
-элемент. [Upload](/components/upload) использует эту очередь под капотом.
+`auto: false` откладывает загрузку до вызова `start()`. `onDone` и `onError` вызываются для
+каждого файла. На этой очереди работает [Upload](/components/upload).

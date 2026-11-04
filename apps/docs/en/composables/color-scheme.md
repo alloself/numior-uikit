@@ -1,9 +1,11 @@
 # useColorScheme
 
-`useColorScheme` drives the `data-nui-theme` attribute: it stores the `light`, `dark` or
-`system` choice, follows the system scheme and writes changes to `localStorage`. Without
-arguments it returns the shared scheme from `createNuiConfig({ colorScheme })`, with
-arguments it creates its own for the `scope` area.
+`useColorScheme` keeps the theme the user picked and sets it in the `data-nui-theme`
+attribute. Use it for a theme switcher.
+
+Without arguments the composable returns the theme from `createNuiConfig({ colorScheme })`, one
+for the whole app. With arguments it creates a separate theme for the `scope` element. When
+`storageKey` is set, the choice is saved in `localStorage`.
 
 <Example name="guide/Scheme" />
 
@@ -13,9 +15,13 @@ arguments it creates its own for the `scope` area.
 
 ## Behaviour
 
-`scheme` holds the choice, `resolved` the actual scheme, `systemDark` the system state. `set`,
-`toggle` and `cycle` change the choice; `start` runs automatically after mounting.
+`scheme` is the user's choice: `light`, `dark` or `system`. `resolved` is the theme on screen,
+`systemDark` tells whether the system uses the dark theme. `set`, `toggle` and `cycle` change the
+choice.
 
-On the server the attribute is left alone. `colorSchemeScript(storageKey, initial?)` in
-`<head>` applies the saved scheme before the first paint. The second argument sets the scheme
-when the storage is empty, see [Theming](/en/guide/theming).
+The composable starts after the component mounts, so you do not call `start()`. On the server
+the attribute is not changed.
+
+Add `colorSchemeScript(storageKey, initial?)` to `<head>` so the saved theme applies before the
+first paint. `initial` is the theme for a first visit, when nothing is saved yet, see
+[Theming](/en/guide/theming).

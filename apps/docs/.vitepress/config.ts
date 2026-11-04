@@ -39,7 +39,7 @@ const ruGuide: DocsSidebarGroup[] = [
     items: [
       { text: 'Начало работы', link: '/guide/getting-started' },
       { text: 'Конфигурация', link: '/guide/configuration' },
-      { text: 'Темизация', link: '/guide/theming' },
+      { text: 'Темы оформления', link: '/guide/theming' },
       { text: 'Локализация', link: '/guide/localization' },
       { text: 'Направление письма', link: '/guide/direction' },
       { text: 'SSR и Nuxt', link: '/guide/ssr' },
@@ -52,7 +52,7 @@ const ruGuide: DocsSidebarGroup[] = [
 
 const ruComponents: DocsSidebarGroup[] = [
   {
-    text: 'Общие',
+    text: 'Базовые',
     items: [
       { text: 'Button', link: '/components/button' },
       { text: 'Icon', link: '/components/icon' },
@@ -87,7 +87,7 @@ const ruComponents: DocsSidebarGroup[] = [
     ],
   },
   {
-    text: 'Слои',
+    text: 'Всплывающие окна',
     items: [
       { text: 'Dialog', link: '/components/dialog' },
       { text: 'Drawer', link: '/components/drawer' },
@@ -96,7 +96,7 @@ const ruComponents: DocsSidebarGroup[] = [
     ],
   },
   {
-    text: 'Обратная связь',
+    text: 'Уведомления и состояния',
     items: [
       { text: 'Toast', link: '/components/toast' },
       { text: 'Alert', link: '/components/alert' },
@@ -121,7 +121,7 @@ const ruComponents: DocsSidebarGroup[] = [
     ],
   },
   {
-    text: 'Данные',
+    text: 'Содержимое',
     items: [
       { text: 'Badge', link: '/components/badge' },
       { text: 'Avatar', link: '/components/avatar' },
@@ -147,7 +147,7 @@ const ruComponents: DocsSidebarGroup[] = [
 
 const ruComposables: DocsSidebarGroup[] = [
   {
-    text: 'Тема и среда',
+    text: 'Тема и окружение',
     items: [
       { text: 'useColorScheme', link: '/composables/color-scheme' },
       { text: 'useDirection', link: '/composables/direction' },
@@ -174,7 +174,7 @@ const ruComposables: DocsSidebarGroup[] = [
     ],
   },
   {
-    text: 'Слои',
+    text: 'Всплывающие окна',
     items: [
       { text: 'useFloating', link: '/composables/floating' },
       { text: 'usePopover', link: '/composables/popover' },
@@ -267,7 +267,7 @@ const enComponents: DocsSidebarGroup[] = [
     ],
   },
   {
-    text: 'Layers',
+    text: 'Overlays',
     items: [
       { text: 'Dialog', link: '/en/components/dialog' },
       { text: 'Drawer', link: '/en/components/drawer' },
@@ -276,7 +276,7 @@ const enComponents: DocsSidebarGroup[] = [
     ],
   },
   {
-    text: 'Feedback',
+    text: 'Notifications and status',
     items: [
       { text: 'Toast', link: '/en/components/toast' },
       { text: 'Alert', link: '/en/components/alert' },
@@ -301,7 +301,7 @@ const enComponents: DocsSidebarGroup[] = [
     ],
   },
   {
-    text: 'Data',
+    text: 'Content',
     items: [
       { text: 'Badge', link: '/en/components/badge' },
       { text: 'Avatar', link: '/en/components/avatar' },
@@ -354,7 +354,7 @@ const enComposables: DocsSidebarGroup[] = [
     ],
   },
   {
-    text: 'Layers',
+    text: 'Overlays',
     items: [
       { text: 'useFloating', link: '/en/composables/floating' },
       { text: 'usePopover', link: '/en/composables/popover' },

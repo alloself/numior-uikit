@@ -1,26 +1,34 @@
 # Localization
 
-The built-in component texts, close button names, empty states, calendar navigation,
-pagination labels and upload errors, live in a dictionary with Russian and English. The
-configuration `locale` picks the language, and the app overrides any text, adds its own
-language or hands the texts to its i18n library. The "Texts" tab in a component's API lists
-its texts.
+How to pick the language of built-in labels, replace them with your own, add a new language or
+connect vue-i18n.
 
 <Example name="guide/Locale" />
 
-## How a text is chosen
+Components have built-in labels: "Close" on a dialog, "No data" in an empty list, month names
+in the calendar, pagination texts and file upload errors. They exist in Russian and English, and
+the `locale` option in the settings picks the language. The labels of a component are listed on
+the Texts tab of its API.
 
-1. A component prop (`closeLabel`, `emptyLabel`, `pageLabel`) always wins.
-2. The `translate` hook from the configuration, when it returns a string.
-3. The `messages` dictionary from the configuration.
+## Where a label comes from
+
+A component looks for a label in this order:
+
+1. A component prop, for example `closeLabel`, `emptyLabel` or `pageLabel`.
+2. The `translate` function from the settings, when it returns a string.
+3. The `messages` dictionary from the settings.
 4. The built-in Russian or English text.
 5. The English text.
 
-A locale tag unfolds from general to specific: `ru-RU` gives `en` → `ru` → `ru-RU`, and the
-more specific tag wins. The calendar, the date pickers, number field and time field take texts in the language of
-their own `locale` prop. Labels never diverge from the format.
+For `locale: 'ru-RU'` a component starts from the English texts and puts the Russian ones (`ru`)
+on top. The texts for `ru-RU`, if you set them, go on top of those.
 
-## Override texts
+The calendar, date and range pickers, number field and time field take labels in the language
+of their own `locale` prop. So month names and the date format are always in one language.
+
+## Your own texts
+
+Pass to `messages` only the texts you want to replace:
 
 ```ts
 import { createNuiConfig, type NuiLocaleMessages, type NuiVueMessages } from '@numior/vue';
@@ -33,15 +41,16 @@ const messages: NuiLocaleMessages<NuiVueMessages & NuiFormsMessages> = {
 createNuiConfig({ locale: 'en-US', messages });
 ```
 
-Only the given keys change. `messages` takes a value, a ref or a getter; a nested
-`provideNuiConfig({ messages })` adds a layer for a subtree.
+The other labels stay built in. `messages` takes a value, a ref or a getter, and
+`provideNuiConfig({ messages })` replaces texts only inside one component.
 
-The dictionary of every package is a plain exported type: `NuiVueMessages`, `NuiFormsMessages`,
-`NuiTablePackageMessages` and others. The app lists the packages it uses in
-`NuiLocaleMessages<...>`, and a typo in a namespace, a key or a text kind becomes a TypeScript
-error.
+Every package has a dictionary type: `NuiVueMessages`, `NuiFormsMessages`,
+`NuiTablePackageMessages` and others. List the packages you use in `NuiLocaleMessages<...>`, and
+TypeScript flags a typo in a section name or key.
 
-## Own language
+## New language
+
+Add a section with the language code to `messages` and set that language in `locale`:
 
 ```ts
 import { createNuiConfig, plural, type NuiLocaleMessages, type NuiVueMessages } from '@numior/vue';
@@ -59,12 +68,15 @@ const messages: NuiLocaleMessages<NuiVueMessages> = {
 createNuiConfig({ locale: 'de-DE', messages });
 ```
 
-Missing texts of a partial language come from English; the `NuiVueMessages` type describes the
-full kit dictionary, the other packages have their own types. Texts with parameters are functions of
-one object. `plural(language, count, forms)` picks the form through `Intl.PluralRules` by the
-language of the text, not the app locale.
+Labels you have not translated stay in English. The `NuiVueMessages` type describes the full list
+of labels, and other packages have their own types.
+
+A label with a number or other data is a function that receives an object of parameters.
+`plural(language, count, forms)` picks the word form for a number by the rules of `language`.
 
 ## vue-i18n and other libraries
+
+Pass `translate` a function that takes the text from your translation library:
 
 ```ts
 import { createI18n } from 'vue-i18n';
@@ -81,14 +93,18 @@ createNuiConfig({
 });
 ```
 
-`translate(key, params, locale)` receives a key such as `dialog.close`, the parameters of a
-text function and the component language. A string beats the dictionary, `undefined` hands
-the word to the dictionary. In vue-i18n messages the parameters are available by name:
+`translate` receives a key such as `dialog.close`, the label parameters and the component
+language. When the function returns `undefined`, the component takes the label from the
+dictionary.
+
+In vue-i18n messages the parameters are available by name:
 `pagination: { range: '{from}–{to} of {total}' }`.
 
 ## SSR
 
-The catalogs are objects without side effects and `Intl.PluralRules` is deterministic, so the
-server and the client produce the same text. Load a lazy dictionary before `mount` and before
-the server render and pass it through a ref. Unused catalogs are tree-shaken: `NuiButton` does
-not pull the dialog texts.
+The server and the browser render the same labels, with nothing extra to set up. If a dictionary
+loads over the network, wait for it before the server render and before `mount`, and pass it
+through a ref.
+
+Only the labels of components you import end up in the bundle: `NuiButton` does not load the
+dialog texts.

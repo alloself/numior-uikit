@@ -4,16 +4,25 @@ const docs: DocsMap = {
   NuiProgress: {
     props: {
       value: {
-        ru: 'Текущее значение; без него полоса неопределённая.',
-        en: 'Current value; without it the bar is indeterminate.',
+        ru: 'Текущее значение. Без него полоса показывает бегущую анимацию ожидания.',
+        en: 'Current value. Without it, the bar shows an indeterminate animation.',
       },
-      max: { ru: 'Максимум шкалы.', en: 'Maximum of the scale.' },
-      size: { ru: 'Толщина полосы.', en: 'Bar thickness.' },
-      tone: { ru: 'Цвет заполнения из токенов роли.', en: 'Fill colour from the role tokens.' },
-      label: { ru: 'Доступное имя полосы.', en: 'Accessible name of the bar.' },
+      max: {
+        ru: 'Значение, при котором полоса заполнена целиком.',
+        en: 'Value at which the bar is full.',
+      },
+      size: { ru: 'Задаёт толщину полосы.', en: 'Changes the thickness of the bar.' },
+      tone: {
+        ru: 'Цвет заполнения по смыслу: `primary`, `success`, `warning`, `error` и другие.',
+        en: 'Fill colour by meaning: `primary`, `success`, `warning`, `error` and others.',
+      },
+      label: {
+        ru: 'Название полосы для экранных дикторов, например «Загрузка файла».',
+        en: 'Name of the bar for screen readers, such as “Uploading file”.',
+      },
       valueText: {
-        ru: 'Значение словами для экранного диктора.',
-        en: 'Value in words for a screen reader.',
+        ru: 'Значение словами для экранных дикторов, например «3 из 10 файлов».',
+        en: 'Value in words for screen readers, such as “3 of 10 files”.',
       },
       id: { ru: 'Идентификатор элемента.', en: 'Element id.' },
     },

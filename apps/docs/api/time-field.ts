@@ -6,48 +6,54 @@ const docs: DocsMap = {
     props: {
       ...fieldControl,
       seconds: {
-        ru: 'Сегмент секунд; модель становится HH:mm:ss.',
-        en: 'Seconds segment; the model becomes HH:mm:ss.',
+        ru: 'Добавляет секунды. Значение приходит в формате `HH:mm:ss`.',
+        en: 'Adds seconds. The value comes as `HH:mm:ss`.',
       },
       hourCycle: {
-        ru: '12- или 24-часовой цикл вместо цикла локали.',
-        en: '12- or 24-hour cycle instead of the locale one.',
+        ru: '12- или 24-часовой формат вместо формата языка.',
+        en: '12- or 24-hour clock in place of the locale default.',
       },
       locale: {
-        ru: 'Локаль сегментов; по умолчанию из конфигурации.',
-        en: 'Locale of the segments; the configuration supplies the default.',
+        ru: 'Язык подписей и формата времени, например `ru-RU`. По умолчанию — язык из `createNuiConfig`.',
+        en: 'Locale of the labels and time format, such as `en-US`. Defaults to the locale from `createNuiConfig`.',
       },
-      min: { ru: 'Раннее допустимое время HH:mm.', en: 'Earliest allowed time HH:mm.' },
-      max: { ru: 'Позднее допустимое время HH:mm.', en: 'Latest allowed time HH:mm.' },
+      min: {
+        ru: 'Самое раннее допустимое время в формате `HH:mm`.',
+        en: 'Earliest allowed time as `HH:mm`.',
+      },
+      max: {
+        ru: 'Самое позднее допустимое время в формате `HH:mm`.',
+        en: 'Latest allowed time as `HH:mm`.',
+      },
       step: {
-        ru: 'Шаг минут в барабанах и для PageUp/PageDown.',
-        en: 'Minute step in the wheels and for PageUp/PageDown.',
+        ru: 'Шаг минут в списке выбора и для клавиш PageUp и PageDown, например `15`.',
+        en: 'Minute step in the picker and for PageUp and PageDown, such as `15`.',
       },
       readonly: {
-        ru: 'Запрещает ввод, но оставляет значение доступным.',
-        en: 'Blocks typing while keeping the value reachable.',
+        ru: 'Запрещает менять время. Значение можно выделить и скопировать.',
+        en: 'Prevents changes to the time. The value stays selectable and copyable.',
       },
       name: {
-        ru: 'Имя скрытого поля формы со значением.',
-        en: 'Name of the hidden form field with the value.',
+        ru: 'Имя, с которым время уходит в форму.',
+        en: 'Name the time is submitted with in a form.',
       },
       placement: {
-        ru: 'Сторона, с которой открываются барабаны.',
-        en: 'Side on which the wheels open.',
+        ru: 'С какой стороны поля открывается список выбора времени.',
+        en: 'Side of the field the time picker opens on.',
       },
       clockLabel: {
-        ru: 'Доступное имя кнопки барабанов; по умолчанию из словаря.',
-        en: 'Accessible name of the wheels button; the dictionary supplies the default.',
+        ru: 'Подпись кнопки с часами для экранных дикторов. По умолчанию — «Выбрать время» из словаря.',
+        en: 'Clock button label for screen readers. Defaults to "Choose time" from the dictionary.',
       },
       emptyLabel: {
-        ru: 'Текст пустого сегмента; по умолчанию из словаря.',
-        en: 'Text of an empty segment; the dictionary supplies the default.',
+        ru: 'Текст, когда `min` и `max` не оставляют времени для выбора. По умолчанию — «Нет доступного времени».',
+        en: 'Text shown when `min` and `max` leave no time to pick. Defaults to "No times".',
       },
     },
     models: {
       'v-model': {
-        ru: 'Время HH:mm без часового пояса или null.',
-        en: 'Time as HH:mm without a time zone, or null.',
+        ru: 'Время в формате `HH:mm` без часового пояса или `null`.',
+        en: 'Time as `HH:mm` without a time zone, or `null`.',
       },
     },
     exposed: focusExposed,
@@ -55,46 +61,67 @@ const docs: DocsMap = {
       {
         keys: 'ArrowUp',
         description: {
-          ru: 'Увеличивает сегмент с переносом.',
-          en: 'Increments the segment with wraparound.',
+          ru: 'Увеличивает часы или минуты. После максимума начинает с нуля.',
+          en: 'Increases the hours or minutes, wrapping past the maximum.',
         },
       },
       {
         keys: 'ArrowDown',
         description: {
-          ru: 'Уменьшает сегмент с переносом.',
-          en: 'Decrements the segment with wraparound.',
+          ru: 'Уменьшает часы или минуты. После нуля переходит к максимуму.',
+          en: 'Decreases the hours or minutes, wrapping past zero.',
         },
       },
-      { keys: 'ArrowRight', description: { ru: 'Следующий сегмент.', en: 'Next segment.' } },
-      { keys: 'ArrowLeft', description: { ru: 'Предыдущий сегмент.', en: 'Previous segment.' } },
+      {
+        keys: 'ArrowRight',
+        description: {
+          ru: 'Переходит от часов к минутам и дальше.',
+          en: 'Moves from hours to minutes and on.',
+        },
+      },
+      {
+        keys: 'ArrowLeft',
+        description: {
+          ru: 'Переходит обратно от минут к часам.',
+          en: 'Moves back from minutes to hours.',
+        },
+      },
       {
         keys: 'PageUp',
         description: {
-          ru: 'Сдвигает время на step минут вперёд.',
-          en: 'Moves the time step minutes forward.',
+          ru: 'Сдвигает время вперёд на `step` минут.',
+          en: 'Moves the time forward by `step` minutes.',
         },
       },
       {
         keys: 'PageDown',
         description: {
-          ru: 'Сдвигает время на step минут назад.',
-          en: 'Moves the time step minutes back.',
+          ru: 'Сдвигает время назад на `step` минут.',
+          en: 'Moves the time back by `step` minutes.',
         },
       },
-      { keys: 'Backspace', description: { ru: 'Очищает сегмент.', en: 'Clears the segment.' } },
+      {
+        keys: 'Backspace',
+        description: {
+          ru: 'Стирает часы или минуты в фокусе.',
+          en: 'Clears the focused hours or minutes.',
+        },
+      },
       {
         keys: 'Alt+ArrowDown',
-        description: { ru: 'Открывает барабаны.', en: 'Opens the wheels.' },
+        description: { ru: 'Открывает список выбора времени.', en: 'Opens the time picker.' },
       },
       {
         keys: 'Enter',
         description: {
-          ru: 'В барабанах подтверждает и закрывает.',
-          en: 'In the wheels confirms and closes.',
+          ru: 'В списке выбора подтверждает время и закрывает список.',
+          en: 'In the picker, confirms the time and closes.',
         },
       },
-      { keys: 'Escape', description: { ru: 'Закрывает барабаны.', en: 'Closes the wheels.' } },
+      {
+        keys: 'Escape',
+        description: { ru: 'Закрывает список выбора времени.', en: 'Closes the time picker.' },
+      },
     ],
   },
 };

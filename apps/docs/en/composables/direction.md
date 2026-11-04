@@ -1,8 +1,11 @@
 # useDirection
 
-`useDirection(anchor)` tells which way the nearest area writes: from the configuration, from
-the nearest `dir` attribute above `anchor`, from the document, else `ltr`. `provideDirection`
-sets the direction of a subtree without an attribute.
+`useDirection(anchor)` tells which way text runs where the `anchor` element is: `ltr` or `rtl`.
+Use it in your own components that must mirror in RTL.
+
+The direction comes from the settings, then from the nearest `dir` attribute above `anchor`,
+then from the document attribute. When there is none, it is `ltr`. `provideDirection(dir)` sets
+the direction for everything inside a component without a `dir` attribute.
 
 ## Signature
 
@@ -19,6 +22,6 @@ const direction = useDirection(root);
 const arrow = computed(() => (direction.isRtl() ? 'arrow-left' : 'arrow-right'));
 ```
 
-`dir()` and `isRtl()` are functions, not refs: read them inside a `computed` or a handler so
-the value follows the configuration. The [Direction](/en/guide/direction) guide covers the
-mirroring.
+`dir()` and `isRtl()` are functions, not refs. Call them inside `computed` or a handler to get
+the current value. What flips in Numior UI components in RTL is covered in the
+[Direction](/en/guide/direction) guide.

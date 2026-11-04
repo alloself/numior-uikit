@@ -1,24 +1,28 @@
 # SSR and Nuxt
 
-The components render on the server without a DOM and hydrate without mismatches. Ids come
-from `useId` and media queries answer `false` until mounting. The calendar's today arrives as
-a prop, texts and formats come from the request configuration.
+How to render components on the server with Vite SSR and add Numior UI to Nuxt.
 
-## Rules
+## What to pass from the server
 
-- Pass the locale and the direction to `createNuiConfig` explicitly per request; the kit reads
-  neither `navigator.language` nor `Accept-Language`.
-- Colour scheme: the `data-nui-theme` attribute on `<html>` from a cookie or the value
-  `system`. The `colorSchemeScript(storageKey)` script in `<head>` applies the saved scheme
-  before paint.
-- The calendar, the date pickers and Time field take `today`. Without it today comes from the
-  clock only after mounting, so the server markup ignores the server time zone.
-- `useMediaQuery` returns `false` until mounting: `NuiLayout` treats the screen as wide on the
-  server and in the first frame, and the sidebar does not flash.
-- Layers (`NuiDialog`, `NuiDrawer`, `NuiPopover`) render their content closed; opening happens
-  on the client.
+Components render on the server without a DOM and hydrate in the browser without markup
+mismatches. For that, pass from the server what a component cannot find out on its own:
+
+- The language and writing direction. Pass `locale` and `dir` to `createNuiConfig` on every
+  request: components read neither `navigator.language` nor `Accept-Language`.
+- The theme. Set the `data-nui-theme` attribute on `<html>` from a cookie or to `system`. Add
+  the `colorSchemeScript(storageKey)` script to `<head>` so the saved theme applies before the
+  page paints.
+- Today's date. Pass `today` to the calendar, date picker and time field. Without `today` the
+  date comes from the browser clock after mounting, so the server time zone does not affect the
+  markup.
+
+Components handle the rest on their own. `useMediaQuery` returns `false` until mounting, so
+`NuiLayout` treats the screen as wide on the server and the sidebar does not flash.
+`NuiDialog`, `NuiDrawer` and `NuiPopover` render closed and open only in the browser.
 
 ## Vite SSR
+
+Create the app with the `createNuiConfig` plugin and add the theme script to `<head>`:
 
 ```ts
 import { createSSRApp } from 'vue';
@@ -35,14 +39,12 @@ export const render = async (locale: string, dir: 'ltr' | 'rtl') => {
 };
 ```
 
-The client calls `createSSRApp` with the same `createNuiConfig` and mounts the app over the
-server markup.
+In the browser, call `createSSRApp` with the same `createNuiConfig` settings and mount the app
+over the server markup.
 
 ## Nuxt
 
-The `@numior/nuxt` module wires the kit in one line. It registers the plugin with
-`createNuiConfig`, auto-imports the `Nui*` components and `use*` composables and adds the token
-and component CSS. The scheme script lands in `<head>`, and `to` renders `NuxtLink`.
+Add the `@numior/nuxt` module to `nuxt.config.ts`:
 
 ```ts
 export default defineNuxtConfig({
@@ -54,10 +56,17 @@ export default defineNuxtConfig({
 });
 ```
 
-The `numior` options are serialisable: `locale`, `dir`, `colorScheme` (`storageKey`, `initial`
-or `false`), `toasts`, plus the `css`, `components` and `composables` flags (`true` by
-default). The dictionary, `translate`, the icon registry and an own link component live in
-`app.config.ts`, because they are code rather than JSON:
+The module adds the `createNuiConfig` plugin, the styles and auto-imports of the `Nui*`
+components and `use*` composables. It puts the theme script in `<head>` and renders links with
+the `to` prop through `NuxtLink`. When `@numior/forms` or `@numior/table` is installed, their
+components and styles are added the same way.
+
+In `nuxt.config.ts` you can set `locale`, `dir`, `colorScheme` (`storageKey`, `initial` or
+`false`) and `toasts`. The `css`, `components` and `composables` flags turn off the styles and
+auto-imports; they are on by default.
+
+Set the dictionary, `translate`, your own icons and the link component in `app.config.ts`: they
+are code, and `nuxt.config.ts` takes only JSON.
 
 ```ts
 export default defineAppConfig({
@@ -68,10 +77,12 @@ export default defineAppConfig({
 });
 ```
 
-`locale` and `dir` from `app.config` are read reactively and win over `nuxt.config`. When
-`@numior/forms` or `@numior/table` is installed, its components, composables and CSS are registered the same way.
+`locale` and `dir` from `app.config.ts` win over `nuxt.config.ts` and apply as soon as they
+change.
 
-An auto-import name may collide, such as Nuxt's own `useLayout` or `useMediaQuery` from
-`@vueuse/nuxt`. The other composable then wins, and the kit one is imported explicitly from
-`@numior/vue`. Without the module the plugin goes through `defineNuxtPlugin` with
-`createNuiConfig` and the scheme script through `useHead`.
+When a composable name clashes with another one, such as Nuxt's `useLayout` or `useMediaQuery`
+from `@vueuse/nuxt`, auto-import picks the other one. Import the Numior UI composable from
+`@numior/vue` by hand then.
+
+Without the module, add `createNuiConfig` in a plugin with `defineNuxtPlugin` and the theme
+script with `useHead`.

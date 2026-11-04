@@ -4,20 +4,23 @@ const docs: DocsMap = {
   NuiKbd: {
     props: {
       keys: {
-        ru: 'Сочетание в записи хоткея (mod+k) или список сочетаний.',
-        en: 'A combo in hotkey notation (mod+k) or a list of combos.',
+        ru: 'Сочетание клавиш, например `mod+k`, или список сочетаний. `mod` — ⌘ на Mac и Ctrl на других системах.',
+        en: 'Key combo, such as `mod+k`, or a list of combos. `mod` is ⌘ on Mac and Ctrl elsewhere.',
       },
-      size: { ru: 'Размер клавиш.', en: 'Key size.' },
-      variant: { ru: 'Клавиши в рамках или простым текстом.', en: 'Boxed keys or plain text.' },
+      size: { ru: 'Размер клавиш: `sm` или `md`.', en: 'Key size: `sm` or `md`.' },
+      variant: {
+        ru: 'Оформление: клавиши в рамках (`boxed`) или простым текстом (`plain`).',
+        en: 'Style: keys in boxes (`boxed`) or plain text (`plain`).',
+      },
       platform: {
-        ru: 'Платформа для глифов модификаторов; по умолчанию определяется после монтирования.',
-        en: 'Platform for the modifier glyphs; detected after mounting by default.',
+        ru: 'Как показывать модификаторы: `mac` — значками ⌘ и ⌥, `other` — словами. Без него система определяется после монтирования.',
+        en: 'How modifiers show: `mac` as ⌘ and ⌥ glyphs, `other` as words. Detected after mounting by default.',
       },
     },
     slots: {
       default: {
-        ru: 'Произвольный текст клавиши, когда keys не задан.',
-        en: 'Arbitrary key text when keys is not set.',
+        ru: 'Текст клавиши, когда `keys` не задан.',
+        en: 'Key text when `keys` is not set.',
       },
     },
     configurator: {

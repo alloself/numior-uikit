@@ -1,33 +1,37 @@
 # Direction
 
-The components are laid out with logical properties, so RTL needs only a `dir` attribute on
-the document or an area. Fields align to the right, chevrons and pagination arrows flip, and
-ArrowLeft and ArrowRight swap.
+How to render the interface right to left for Arabic, Hebrew and other RTL languages.
 
 <Example name="guide/Direction" />
 
-## Where the direction comes from
+Put the `dir="rtl"` attribute on `<html>` or on the element that needs RTL. Text in inputs
+moves to the right, chevrons and pagination arrows flip, and ArrowLeft and ArrowRight swap.
 
-`useDirection(anchor)` reads `dir` from the configuration, else the nearest `dir` attribute
-above the element, else the document `dir`, else `ltr`. The `dir` option of `createNuiConfig`
-or `provideNuiConfig` matters when the direction changes on the fly or the server has no DOM.
+## Direction in the settings
+
+Pass `dir` to `createNuiConfig` or `provideNuiConfig` when the direction switches at runtime or
+the page renders on the server:
 
 ```ts
 createNuiConfig({ dir: () => (settings.rtl ? 'rtl' : 'ltr') });
 ```
 
+When the settings have no `dir`, a component takes the nearest `dir` attribute above it, then
+the document attribute. When there is no attribute at all, the direction is `ltr`.
+
 ## What flips
 
-- Logical margins and borders: `margin-inline-start`, `inset-inline-end`, `border-inline-start`.
-- Floating layers: the opening side of popovers and menus is computed from the direction.
-- Keyboard: in lists, tabs, the tree and the splitter ArrowLeft and ArrowRight are mirrored.
-- Time and number segments stay left to right, as digits do in RTL texts.
+- Margins, borders and positions set with logical properties: `margin-inline-start`,
+  `inset-inline-end`, `border-inline-start`.
+- Start and end alignment of popovers and menus, for example `bottom-start`.
+- The ArrowLeft and ArrowRight keys in lists, tabs, the tree and the splitter.
 
-## Own code
+Time and number fields stay left to right, as digits are written in RTL texts too.
 
-Read the direction from `useDirection`, not from `getComputedStyle`. Inside a Vue component it
-is an ordinary composable with `dir()` and `isRtl()`; on the server it returns the configured
-value.
+## Your own component
+
+In your own components, get the direction from `useDirection`, not from `getComputedStyle`. On
+the server `useDirection` returns the value from the settings:
 
 ```ts
 import { useDirection } from '@numior/vue';
@@ -35,3 +39,6 @@ import { useDirection } from '@numior/vue';
 const direction = useDirection(root);
 const shift = computed(() => (direction.isRtl() ? -offset.value : offset.value));
 ```
+
+`isRtl()` and `dir()` are functions. Call them inside `computed` so the value updates when the
+settings change.

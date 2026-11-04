@@ -1,8 +1,11 @@
 # useClipboard
 
-`useClipboard(options)` copies text through the Clipboard API with an `execCommand` fallback
-for old browsers. `copy(text)` resolves to `true` on success, `copied` stays on for
-`copiedDuration` milliseconds, `supported` tells whether copying is available.
+`useClipboard(options)` copies text to the clipboard. In browsers without the Clipboard API it
+uses `document.execCommand('copy')`.
+
+`copy(text)` resolves to `true` when the text is copied. After copying, `copied` is `true` for
+`copiedDuration` milliseconds, 2 seconds by default, which is handy for showing "Copied".
+`supported` tells whether copying works in this browser.
 
 <Example name="composables/Clipboard" />
 
@@ -14,9 +17,9 @@ for old browsers. `copy(text)` resolves to `true` on success, `copied` stays on 
 
 ## Behaviour
 
-`copyRich({ text, html })` puts text and HTML on the clipboard together and copies only the text
-when the browser refuses HTML. This is how [Table](/en/components/table) hands selected cells over
-as a table.
+`copyRich({ text, html })` puts both text and HTML on the clipboard. A document or spreadsheet
+editor pastes the markup, a plain input pastes the text. This is how
+[Table](/en/components/table) copies selected cells.
 
-On the server `supported` is `false` and `copy` does nothing. The [Code](/en/components/code)
-buttons and the copy actions of these docs are built on this composable.
+When the browser does not accept HTML, only the text is copied. On the server `supported` is
+`false` and `copy` resolves to `false`.

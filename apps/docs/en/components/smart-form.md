@@ -1,11 +1,14 @@
 # Smart form
 
-`NuiSmartForm` builds a form from a `formConfig<Values>()` configuration: fields with any kit
-control, sections with their own layout, conditional fields, repeated groups and steps. Under
-the hood it is the same `useForm`, `NuiForm`, `NuiFormField` and `NuiFieldArray` as in the
-[plain form](/en/components/form).
+`NuiSmartForm` builds a form from a description of its fields, with no markup for each field.
+Use it for routine forms such as a profile, settings or filters, and for forms that come from
+the server as JSON.
 
 <Example name="smart-form/Profile" />
+
+`formConfig<Values>()` describes the fields: any Numior input, sections, conditional fields,
+repeated groups and steps. Validation and submission run on the same `useForm` as in the
+[plain form](/en/components/form).
 
 ## Installation
 
@@ -20,51 +23,66 @@ import '@numior/forms/styles/smart-form.css';
 
 ### Steps
 
-`steps` instead of `fields` makes a wizard. A step is validated before moving on,
-`v-model:step` holds the current one, and the last step submits the form.
+Pass `steps` instead of `fields`, and the form becomes a wizard. Moving on is possible only when
+the fields of the current step pass validation. The open step lives in `v-model:step`, and the
+button on the last step submits the form.
 
 <Example name="smart-form/Wizard" />
 
 ### Filters in a row
 
-`inline` puts the fields in a row for filters above a table; in a narrow container they wrap.
+With `inline` the fields line up in one row, like filters above a table. When there is not
+enough room, the fields wrap to the next line.
 
 <Example name="smart-form/Inline" />
 
 ## Configuration
 
-`field(Component, (v) => v.email, options)` describes a field: the control, the value selector
-and `label`, `description`, `required`, `rules`, the control `props`, `when` and `area`. The
-value type is inferred from the selector and checked against the control model; `model: 'values'`
-plugs in a control with a named model. `section({ title, layout, fields })` renders a
-`fieldset`, `array((v) => v.contacts, { newRow, fields })` a repeated group whose row fields come
-from `formConfig<Row>()`.
+`field(Component, (v) => v.email, options)` describes a field: the component, a function that
+picks the value from the form model, and the options. The options are `label`, `description`,
+`required`, `rules`, the component `props`, `when` and `area`.
+
+TypeScript infers the value type from the picking function and checks it against the component
+model. When the component keeps its value in a named model instead of `v-model`, name it:
+`model: 'values'`.
+
+`section({ title, layout, fields })` renders a group of fields under one title.
+`array((v) => v.contacts, { newRow, fields })` renders a repeated group, such as a list of
+contacts. A separate `formConfig<Row>()` describes the fields of one row.
 
 ## Conditions and layout
 
-`when(values, row)` shows a field, section or group while it returns `true`; a hidden field
-leaves validation and submission but keeps its value. `layout` uses the `grid-template-areas`
-syntax with field paths or `area` as area names. Narrower than `36rem` the layout folds into one
-column, so the same form works in a dialog and on a phone.
+A field, section or group is visible while its `when(values, row)` returns `true`. A hidden
+field is neither validated nor submitted, but its value is kept and comes back when the field
+reappears.
+
+`layout` is written like the CSS `grid-template-areas` property, with field paths or their `area`
+as area names. When the form is narrower than `36rem`, the fields stack in one column, so one
+form fits both a dialog and a phone.
 
 ## From JSON
 
-`parseFormConfig(json, { controls })` builds a configuration from JSON. A field carries a string
-`type` from the registry, a `name` path, guarded `props`, a `when` condition and rules. An
-unknown type, rejected props or an unreadable entry produce a list of `issues` with a code and a
-path instead of a form.
+`parseFormConfig(json, { controls })` builds a configuration from JSON. A field in JSON has a
+string `type` from the component registry, a `name` path, `props` and a `when` condition. The
+rules are `required`, `min`, `max`, `email` and `pattern`.
 
-`formConfig({ controls }).control('select', (v) => v.country, { props })` picks a control by key
-with the props types of the registry. JSON rules are `required`, `min`, `max`, `email` and
-`pattern`. Values of JSON fields are typed `unknown`: the source of the configuration answers for
-their types, see [useControls](/en/composables/controls).
+The component from the registry checks its own `props`. An unknown type, rejected `props` or an
+unreadable entry give a list of `issues` instead of a form. Each issue has an error code and a
+path.
+
+`formConfig({ controls }).control('select', (v) => v.country, { props })` takes a component from
+the registry by key, and TypeScript knows the types of its `props`. Values of JSON fields are
+typed `unknown`, because the configuration that arrives decides their shape. See
+[useControls](/en/composables/controls) for details.
 
 ## Slots
 
-A slot named after a field path is the control content: the radios of a group, the label of a
-checkbox. It receives `error`, `invalid`, `touched`, `pending` and, inside a group, `row`. The
-`actions` slot replaces the buttons and receives `submit`, `reset`, `pending`, `dirty` and the
-steps.
+A slot named after a field path sets the content of the component: the radios of a group or
+the label of a checkbox. The slot receives `error`, `invalid`, `touched` and `pending`,
+and inside a repeated group also `row`.
+
+The `actions` slot replaces the form buttons. It receives `submit`, `reset`, `pending`, `dirty`
+and the step data.
 
 ## API
 

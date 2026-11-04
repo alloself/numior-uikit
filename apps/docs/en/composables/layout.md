@@ -1,8 +1,11 @@
 # useLayout
 
-`useLayout()` returns the context of the nearest `NuiLayout`: the sidebar state `open` and
-`mobileOpen`, the narrow-screen flag `mobile`, `sidebarId` for `aria-controls` and
-`toggle()`. Own buttons in the header control the sidebar this way.
+`useLayout()` gives access to the sidebar of the nearest `NuiLayout`. Use it so your own button
+in the header opens and closes the sidebar.
+
+`open` tells whether the sidebar is open on a wide screen, `mobileOpen` on a narrow one, and
+`mobile` whether the screen is narrow now. `toggle()` opens or closes the sidebar for the current
+screen width. Pass `sidebarId` to the button's `aria-controls`.
 
 ## Signature
 
@@ -30,5 +33,5 @@ const layout = useLayout();
 </script>
 ```
 
-Outside `NuiLayout` the call throws. The component is described on the
+Outside `NuiLayout` the call throws an error. The component is described on the
 [Layout](/en/components/layout) page.

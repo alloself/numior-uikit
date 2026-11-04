@@ -1,9 +1,12 @@
 # useControls
 
-`defineControls({ text: control(NuiInput, isString, { props }) })` собирает реестр контролов:
-компонент, имя модели, гард значения и гард props. Формы из JSON и редакторы ячеек находят
-контрол по строковому ключу. `createNuiConfig({ controls })` или `provideControls` отдают реестр
-потомкам, `kitControls` из `@numior/vue/controls` описывает контролы кита.
+`useControls()` возвращает набор контролов, из которого формы по JSON-описанию и редакторы
+ячеек таблицы берут контрол по имени, например `text` или `date`. Готовый набор контролов
+Numior UI — `kitControls` из `@numior/vue/controls`.
+
+Свой набор соберите через `defineControls`. Запись `text: control(NuiInput, isString)` означает:
+по имени `text` выводится `NuiInput`, а его значение — строка. Передайте набор в
+`createNuiConfig({ controls })` или в `provideControls`.
 
 <Example name="composables/Controls" />
 
@@ -13,7 +16,13 @@
 
 ## Поведение
 
-`control(component, accepts, { model, props })` сверяет типом модель компонента с гардом
-`accepts`. `controlProps(shape)` строит строгий гард: неизвестный ключ или значение не того
-типа отклоняются. Без `props` запись принимает любой объект, а `useControls()` возвращает
-`null`, пока реестр не предоставлен.
+`control(component, accepts, { model, props })` проверяет на уровне типов, что значение
+компонента подходит под проверку `accepts`. `model` — имя модели компонента, по умолчанию
+`modelValue`.
+
+`props` проверяет свойства, которые форма или таблица передаёт контролу. `controlProps(shape)`
+строит строгую проверку: свойство с неизвестным именем или значением не того типа не пройдёт.
+Без `props` контрол принимает любые свойства.
+
+Если набор не передан ни в настройки, ни через `provideControls`, `useControls()` возвращает
+`null`.

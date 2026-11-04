@@ -1,8 +1,11 @@
 # useDialog
 
-`useDialog(element, options)` управляет нативным `<dialog>`: `show()` открывает его модально,
-`close(returnValue)` закрывает, `attrs` обрабатывают Escape, клик по подложке и событие
-`close`. `covered` говорит, что поверх открыт другой диалог.
+`useDialog(element, options)` открывает и закрывает нативный `<dialog>` по модели `open`.
+Используйте его для своего модального окна, если [Dialog](/components/dialog) не подходит.
+
+`show()` открывает окно, `close(returnValue)` закрывает его. Обработчики из `attrs` повесьте на
+`<dialog>`: они закрывают окно по Escape и клику по подложке. `covered` равен `true`, когда
+поверх открыто другое окно.
 
 ## Сигнатура
 
@@ -27,6 +30,9 @@ const control = useDialog(dialog, { open, closeOnBackdrop: true, onClose: (value
 </script>
 ```
 
-`dismissible: false` запрещает закрытие по Escape и подложке; фокус возвращается на кнопку,
-открывшую диалог. [Dialog](/components/dialog) и [Drawer](/components/drawer) построены на
-этом композабле.
+`dismissible: false` запрещает закрывать окно по Escape и клику по подложке.
+`closeOnBackdrop: false` отключает только закрытие по клику.
+
+Пока окно открыто, страница под ним не прокручивается. После закрытия фокус возвращается на
+кнопку, которая открыла окно. На этом композабле работают [Dialog](/components/dialog) и
+[Drawer](/components/drawer).

@@ -1,48 +1,54 @@
 # Accessibility
 
-Every component passes an axe check in three browsers and on a phone. It is driven from the
-keyboard and announces its state to a screen reader. Below is what the kit does itself and
-what stays with the app.
+What Numior UI components do for accessibility on their own and what is left to your app.
 
 ## Keyboard
 
-- Composite widgets (list, tree, tabs, menu, toggle group, accordion) keep one tab stop and
-  walk with arrows; Home and End go to the edges.
-- The key table is in the "Accessibility" section of every component page.
-- The focus ring is drawn on `:focus-visible` with the `--nui-focus`, `--nui-focus-ring-width`
-  and `--nui-focus-ring-offset` tokens; a loading button keeps its focus.
-- `useHotkey` compares the physical key, so Ctrl+K works on a Russian layout too; combos
-  without Ctrl and Meta stay inactive inside inputs.
+- In a list, tree, tabs, menu, toggle group and accordion, Tab stops once and the arrow keys
+  move focus between items. Home and End move focus to the first and last item.
+- The keys of every component are listed in the Accessibility section of its page.
+- The focus ring appears when the user works with the keyboard (`:focus-visible`). The
+  `--nui-focus`, `--nui-focus-ring-width` and `--nui-focus-ring-offset` tokens set its colour,
+  width and offset.
+- A button in the loading state keeps focus.
+- `useHotkey` compares physical keys, so Ctrl+K also works on a Russian keyboard layout.
+  Shortcuts without Ctrl or ⌘ do not fire while the user types in an input.
 
-## Names and descriptions
+## Labels and hints
 
-- Form controls link `label`, `description` and `error` through `for`, `aria-describedby`
-  and `aria-invalid`; in groups `NuiField` holds a labelled `role="group"`.
-- Icon-only buttons need `aria-label`; icons are decorative (`aria-hidden`).
-- Built-in names of buttons and empty states come from the dictionary in the configured
-  language, see [Localization](/en/guide/localization).
+- Form controls link the label, hint and error to the control through `for`,
+  `aria-describedby` and `aria-invalid`, and a screen reader reads them with the field.
+- `NuiField` with the `group` prop renders as a `<fieldset>` and its label as a `<legend>`. A
+  screen reader announces it as the name of the group.
+- Pass `aria-label` to a button that only has an icon. The icons themselves are hidden from
+  screen readers with `aria-hidden`.
+- Built-in labels such as "Close" and "No data" use the language from your settings, see
+  [Localization](/en/guide/localization).
 
 ## Announcements
 
-Toasts, form errors, added rows, copied code and upload progress are announced through live
-regions: `role="status"` for neutral messages, `role="alert"` for errors.
+Screen readers announce toasts, form errors, added rows, copied code and upload progress on
+their own. Regular messages use `role="status"`, errors use `role="alert"`.
 
-## Layers
+## Dialogs and popovers
 
-The dialog and the drawer are modal through the native `<dialog>`: the focus is trapped
-inside, Escape closes, the focus returns to the button. Popovers and menus use the Popover
-API and stay in the DOM of their opener, so they inherit its theme and `dir`.
+`NuiDialog` and `NuiDrawer` open in a native `<dialog>`. While it is open, focus stays inside,
+Escape closes it, and focus returns to the button that opened it.
 
-## Motion
+Popovers and menus use the Popover API and stay in the DOM next to the button that opened
+them. So they get the same theme and writing direction as that button.
 
-Every transition runs through `--nui-duration-*`; under `prefers-reduced-motion: reduce` the
-durations are zero, and infinite animations (skeleton, indeterminate progress) only slow down.
+## Animation
 
-## What the app does
+All transitions use the `--nui-duration-*` durations. When reduced motion is on in the system
+(`prefers-reduced-motion: reduce`), transitions are turned off. Endless animations of the
+skeleton and indeterminate progress only slow down.
 
-- Without a [Layout](/en/components/layout) places a `NuiSkipLink` as the first element of the
-  page; the layout does it itself.
-- Gives pages an `h1` heading and skips no levels; `headingLevel` on Collapsible and
-  Accordion fits the sections into the outline.
-- Checks the contrast of own colours when replacing a `--nui-<role>` and
-  `--nui-<role>-foreground` pair.
+## What to do in your app
+
+- If a page is built without [Layout](/en/components/layout), put `NuiSkipLink` first on the
+  page. `NuiLayout` adds this link on its own.
+- Give every page an `h1` heading and do not skip heading levels. The `headingLevel` prop sets
+  the heading level of sections in Collapsible and Accordion.
+- If you change the `--nui-<role>` and `--nui-<role>-foreground` colours, check the text
+  contrast on the new background.

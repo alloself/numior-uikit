@@ -1,8 +1,10 @@
 # useForm
 
-`useForm(options)` creates an `@numior/forms` form: the values, a schema or rules, the
-validation moment and the submit handler. `useField` and `useFieldArray` connect controls and
-repeatable groups to it without `NuiFormField`; `useFormContext` reads the form from
+`useForm(options)` creates an `@numior/forms` form: the initial values, a schema or validation
+rules and the submit handler. Use it with `NuiForm` or with your own markup.
+
+`useField` connects a single field to the form, and `useFieldArray` a list of repeated field
+groups, both without `NuiFormField`. `useFormContext` returns the form passed with
 `provideForm`.
 
 <Example name="form/Guests" />
@@ -25,7 +27,9 @@ const form = useForm({
 const email = useField((v) => v.email, { form });
 ```
 
-`email.binding` holds `modelValue`, `onUpdate:modelValue` and `onBlur` for `v-bind`,
-`email.errorMessage` the first error, `email.meta` the `touched` and `dirty` flags. The
-components and the validation are described on the [Form](/en/components/form) and
+`email.binding` holds `modelValue`, `onUpdate:modelValue` and `onBlur`: pass it to the control
+with `v-bind`. `email.errorMessage` is the first error of the field. `email.meta.touched` is
+`true` once the field has lost focus, and `email.meta.dirty` once the value has changed.
+
+Form components and validation are described on the [Form](/en/components/form) and
 [Forms validation](/en/guide/forms-validation) pages.

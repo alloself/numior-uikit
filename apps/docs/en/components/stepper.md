@@ -1,10 +1,13 @@
 # Stepper
 
-`NuiStepper` shows the steps of a process as a `<nav>` with an ordered list. Completed steps
-carry a check mark, a step with errors a cross, the rest a number. Steps validate nothing on
-their own: the app or `NuiSmartForm` drives the transitions.
+`NuiStepper` shows which step of a process the user is on: sign-up, checkout, project setup.
+Completed steps carry a check mark, a step with an error a cross, and the rest a number.
 
 <Example name="stepper/Basic" />
+
+Steps go into `steps`, and the current one lives in `v-model` by its `value`. The stepper
+validates nothing by itself: the app or a [Smart form](/en/components/smart-form) decides when
+to move on.
 
 ## Installation
 
@@ -17,23 +20,27 @@ import '@numior/vue/styles/stepper.css';
 
 ### A column with statuses
 
-The status follows the position: steps before the current one are complete, later ones
-upcoming; an explicit `status` wins. `:linear="false"` turns every step except `disabled` ones
-into a button.
+`orientation="vertical"` lines the steps up in a column. Steps before the current one count as
+complete, and the ones after as upcoming. The `status` of a step sets it by hand, such as
+`error`.
 
 <Example name="stepper/Vertical" />
 
 ## Behaviour
 
-In linear mode the completed steps and the current one become buttons, future steps stay text.
-A narrow horizontal stepper hides the labels and shows the current step name and "Step 2 of 4"
-under the indicators. Numbers follow the locale, in RTL the row is mirrored.
+By default the user can go back only to completed steps: they are buttons, and future steps are
+plain text. With `:linear="false"` any step except `disabled` ones can be opened.
+
+In a narrow container a horizontal stepper hides the labels and shows the current step name and
+"Step 2 of 4" under the circles. Numbers use the digits of the locale, and in right-to-left text
+the steps run from right to left.
 
 ## Accessibility
 
-The `<nav aria-label>` landmark and the list give the structure; the current step carries
-`aria-current="step"`. The status is read from hidden text in the step name ("Profile,
-complete"). Step buttons are reached with Tab, without roving focus.
+The stepper is a `<nav>` landmark with an ordered list, and the current step carries
+`aria-current="step"`. A screen reader reads the status with the name: "Profile, completed".
+
+Step buttons are reached with Tab one after another.
 
 <KeyboardReference name="NuiStepper" />
 

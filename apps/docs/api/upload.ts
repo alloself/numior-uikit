@@ -6,123 +6,129 @@ const docs: DocsMap = {
     props: {
       ...fieldControl,
       upload: {
-        ru: 'Адаптер загрузки: получает File, колбэк прогресса и AbortSignal, возвращает промис с результатом.',
-        en: 'Upload adapter: receives the File, a progress callback and an AbortSignal, returns a promise with the result.',
+        ru: 'Функция, которая отправляет файл на сервер. Получает `File`, `onProgress` и `signal`, возвращает промис с ответом.',
+        en: 'Function that sends the file to the server. Receives the `File`, `onProgress` and `signal`, returns a promise with the response.',
       },
       accept: {
-        ru: 'Допустимые файлы: расширения, точные типы или маски вроде image/*.',
-        en: 'Accepted files: extensions, exact types or masks such as image/*.',
+        ru: 'Какие файлы принимать: расширения, типы или маски, например `.pdf,image/*`.',
+        en: 'Files to accept: extensions, types or masks, such as `.pdf,image/*`.',
       },
       multiple: {
-        ru: 'Несколько файлов; без него новый файл заменяет предыдущий.',
-        en: 'Several files; without it a new file replaces the previous one.',
+        ru: 'Разрешает выбрать несколько файлов. Без него новый файл заменяет прежний.',
+        en: 'Lets the user add several files. Without it, a new file replaces the previous one.',
       },
-      maxSize: { ru: 'Максимальный размер файла в байтах.', en: 'Maximum file size in bytes.' },
+      maxSize: {
+        ru: 'Наибольший размер файла в байтах, например `5_000_000`.',
+        en: 'Largest file size in bytes, such as `5_000_000`.',
+      },
       maxFiles: {
-        ru: 'Максимум файлов с учётом уже лежащих в модели.',
-        en: 'Maximum number of files, counting those already in the model.',
+        ru: 'Сколько всего файлов можно добавить, считая уже добавленные.',
+        en: 'Total number of files allowed, counting those already added.',
       },
       validate: {
-        ru: 'Своя проверка; возвращает текст ошибки или undefined.',
-        en: 'Custom check; returns an error text or undefined.',
+        ru: 'Своя проверка файла. Возвращает текст ошибки или `undefined`, если файл подходит.',
+        en: 'Custom file check. Returns an error text, or `undefined` when the file is fine.',
       },
       rejected: {
-        ru: 'Отклонённые файлы: показать в списке с причиной или отбросить.',
-        en: 'Rejected files: list them with the reason or drop them.',
+        ru: 'Что делать с неподходящими файлами: `list` — показать в списке с причиной, `drop` — отбросить.',
+        en: 'What to do with rejected files: `list` shows them with the reason, `drop` discards them.',
       },
       auto: {
-        ru: 'Запускать загрузку сразу; false держит файлы в очереди до start().',
-        en: 'Start uploading at once; false keeps the files queued until start().',
+        ru: 'Начинает загрузку сразу после выбора. Выключите, чтобы файлы ждали вызова `start`.',
+        en: 'Starts uploading right after the files are chosen. Turn it off to queue them until `start` is called.',
       },
       concurrency: {
-        ru: 'Сколько файлов грузится одновременно.',
-        en: 'How many files upload at the same time.',
+        ru: 'Сколько файлов загружается одновременно.',
+        en: 'Number of files that upload at the same time.',
       },
       layout: {
-        ru: 'Список строк или сетка миниатюр.',
-        en: 'A list of rows or a grid of thumbnails.',
+        ru: 'Показывает файлы списком строк или сеткой миниатюр.',
+        en: 'Shows the files as a list of rows or a grid of thumbnails.',
       },
       variant: {
-        ru: 'Зона сброса с кнопкой или только кнопка без перетаскивания.',
-        en: 'A drop zone with a button or the button alone without dragging.',
+        ru: '`zone` — область, куда можно перетащить файлы, `button` — только кнопка выбора.',
+        en: '`zone` for an area that accepts dragged files, `button` for a browse button only.',
       },
       dropLabel: {
-        ru: 'Текст зоны перетаскивания; по умолчанию из словаря.',
-        en: 'Drop zone text; the dictionary supplies the default.',
+        ru: 'Текст области перетаскивания. По умолчанию — «Перетащите файлы сюда» из словаря.',
+        en: 'Drop zone text. Defaults to "Drop files here" from the dictionary.',
       },
       browseLabel: {
-        ru: 'Текст кнопки выбора файлов; по умолчанию из словаря.',
-        en: 'Browse button text; the dictionary supplies the default.',
+        ru: 'Текст кнопки выбора. По умолчанию — «Выбрать файлы» из словаря.',
+        en: 'Browse button text. Defaults to "Choose files" from the dictionary.',
       },
       cancelLabel: {
-        ru: 'Доступное имя кнопки отмены; по умолчанию из словаря.',
-        en: 'Accessible name of the cancel button; the dictionary supplies the default.',
+        ru: 'Подпись кнопки отмены для экранных дикторов. По умолчанию — «Отменить загрузку».',
+        en: 'Cancel button label for screen readers. Defaults to "Cancel upload".',
       },
       retryLabel: {
-        ru: 'Доступное имя кнопки повтора; по умолчанию из словаря.',
-        en: 'Accessible name of the retry button; the dictionary supplies the default.',
+        ru: 'Подпись кнопки повтора для экранных дикторов. По умолчанию — «Повторить» из словаря.',
+        en: 'Retry button label for screen readers. Defaults to "Retry" from the dictionary.',
       },
       removeLabel: {
-        ru: 'Доступное имя кнопки удаления; по умолчанию из словаря.',
-        en: 'Accessible name of the remove button; the dictionary supplies the default.',
+        ru: 'Подпись кнопки удаления для экранных дикторов. По умолчанию — «Удалить» из словаря.',
+        en: 'Remove button label for screen readers. Defaults to "Remove" from the dictionary.',
       },
       doneLabel: {
-        ru: 'Текст готового файла; по умолчанию из словаря.',
-        en: 'Text of a finished file; the dictionary supplies the default.',
+        ru: 'Статус загруженного файла. По умолчанию — «Загружено» из словаря.',
+        en: 'Status of an uploaded file. Defaults to "Uploaded" from the dictionary.',
       },
       errorLabel: {
-        ru: 'Функция текста ошибки по её причине и элементу.',
-        en: 'Function that builds the error text from the reason and the item.',
+        ru: 'Функция, которая строит текст ошибки из её причины и файла.',
+        en: 'Function that builds the error text from the reason and the file.',
       },
     },
     models: {
       'v-model': {
-        ru: 'Элементы со статусами queued, uploading, done и error.',
-        en: 'Items with the statuses queued, uploading, done and error.',
+        ru: 'Список файлов, у каждого статус: `queued`, `uploading`, `done` или `error`.',
+        en: 'List of files, each with a status: `queued`, `uploading`, `done` or `error`.',
       },
     },
     events: {
       done: {
-        ru: 'Файл загружен; приходит элемент с результатом.',
-        en: 'A file finished; receives the item with the result.',
+        ru: 'Срабатывает, когда файл загружен. Передаёт файл с ответом сервера.',
+        en: 'Fires when a file is uploaded, with the file and the server response.',
       },
       error: {
-        ru: 'Адаптер отклонил файл; приходит элемент с ошибкой.',
-        en: 'The adapter failed; receives the item with the error.',
+        ru: 'Срабатывает, когда загрузка не удалась. Передаёт файл с ошибкой.',
+        en: 'Fires when an upload fails, with the file and the error.',
       },
       reject: {
-        ru: 'Файл не прошёл проверку; приходит файл и причина.',
-        en: 'A file failed validation; receives the file and the reason.',
+        ru: 'Срабатывает, когда файл не прошёл проверку. Передаёт файл и причину.',
+        en: 'Fires when a file fails a check, with the file and the reason.',
       },
-      remove: { ru: 'Элемент удалён из модели.', en: 'An item left the model.' },
+      remove: {
+        ru: 'Срабатывает, когда файл убирают из списка.',
+        en: 'Fires when a file is removed from the list.',
+      },
     },
     slots: {
       default: {
-        ru: 'Содержимое зоны; получает open() и флаг перетаскивания.',
-        en: 'Zone content; receives open() and the dragging flag.',
+        ru: 'Своё содержимое области. Получает `open` и `dragging`.',
+        en: 'Custom zone content. Receives `open` and `dragging`.',
       },
       item: {
-        ru: 'Разметка строки файла; получает элемент, миниатюру и действия.',
-        en: 'File row markup; receives the item, the preview and the actions.',
+        ru: 'Своя разметка строки файла. Получает `item`, `preview` и действия `cancel`, `retry`, `remove`.',
+        en: 'Custom file row markup. Receives `item`, `preview` and the `cancel`, `retry` and `remove` actions.',
       },
       button: {
-        ru: 'Содержимое кнопки в варианте без зоны.',
-        en: 'Button content in the variant without a zone.',
+        ru: 'Содержимое кнопки, когда `variant` равно `button`.',
+        en: 'Button content when `variant` is `button`.',
       },
     },
     keyboard: [
       {
         keys: 'Enter',
         description: {
-          ru: 'На кнопке выбора открывает системный диалог.',
-          en: 'On the browse button opens the system dialog.',
+          ru: 'На кнопке выбора открывает окно выбора файлов.',
+          en: 'On the browse button, opens the file picker.',
         },
       },
       {
         keys: 'Space',
         description: {
-          ru: 'На кнопке выбора открывает системный диалог.',
-          en: 'On the browse button opens the system dialog.',
+          ru: 'На кнопке выбора открывает окно выбора файлов.',
+          en: 'On the browse button, opens the file picker.',
         },
       },
     ],
@@ -131,73 +137,91 @@ const docs: DocsMap = {
     props: {
       ...fieldControl,
       upload: {
-        ru: 'Адаптер загрузки: получает File, колбэк прогресса и AbortSignal, возвращает промис с результатом.',
-        en: 'Upload adapter: receives the File, a progress callback and an AbortSignal, returns a promise with the result.',
+        ru: 'Функция, которая отправляет файл на сервер. Получает `File`, `onProgress` и `signal`, возвращает промис с ответом.',
+        en: 'Function that sends the file to the server. Receives the `File`, `onProgress` and `signal`, returns a promise with the response.',
       },
       accept: {
-        ru: 'Допустимые типы; по умолчанию image/*.',
-        en: 'Accepted types; image/* by default.',
+        ru: 'Какие изображения принимать. По умолчанию `image/*`.',
+        en: 'Image types to accept. Defaults to `image/*`.',
       },
-      maxSize: { ru: 'Максимальный размер файла в байтах.', en: 'Maximum file size in bytes.' },
+      maxSize: {
+        ru: 'Наибольший размер файла в байтах, например `5_000_000`.',
+        en: 'Largest file size in bytes, such as `5_000_000`.',
+      },
       validate: {
-        ru: 'Своя проверка; возвращает текст ошибки или undefined.',
-        en: 'Custom check; returns an error text or undefined.',
+        ru: 'Своя проверка файла. Возвращает текст ошибки или `undefined`, если файл подходит.',
+        en: 'Custom file check. Returns an error text, or `undefined` when the file is fine.',
       },
       name: {
-        ru: 'Имя для инициалов, пока изображения нет.',
-        en: 'Name for the initials while there is no image.',
+        ru: 'Имя человека. Пока изображения нет, на аватаре видны его инициалы.',
+        en: 'Name of the person. Its initials show until an image is set.',
       },
-      shape: { ru: 'Круг или квадрат.', en: 'A circle or a square.' },
-      size: { ru: 'Размер аватара.', en: 'Avatar size.' },
+      shape: {
+        ru: 'Форма аватара: `circle` или `square`.',
+        en: 'Shape of the avatar: `circle` or `square`.',
+      },
+      size: {
+        ru: 'Размер аватара: `sm`, `md`, `lg` или `xl`.',
+        en: 'Size of the avatar: `sm`, `md`, `lg` or `xl`.',
+      },
       chooseLabel: {
-        ru: 'Доступное имя кнопки без изображения; по умолчанию из словаря.',
-        en: 'Accessible name of the button without an image; the dictionary supplies the default.',
+        ru: 'Подпись кнопки, пока изображения нет. По умолчанию — «Выбрать изображение».',
+        en: 'Button label while there is no image. Defaults to "Choose an image".',
       },
       changeLabel: {
-        ru: 'Доступное имя кнопки с изображением; по умолчанию из словаря.',
-        en: 'Accessible name of the button with an image; the dictionary supplies the default.',
+        ru: 'Подпись кнопки, когда изображение есть. По умолчанию — «Сменить изображение».',
+        en: 'Button label when an image is set. Defaults to "Change the image".',
       },
       retryLabel: {
-        ru: 'Доступное имя кнопки повтора; по умолчанию из словаря.',
-        en: 'Accessible name of the retry button; the dictionary supplies the default.',
+        ru: 'Подпись кнопки повтора для экранных дикторов. По умолчанию — «Повторить» из словаря.',
+        en: 'Retry button label for screen readers. Defaults to "Retry" from the dictionary.',
       },
       removeLabel: {
-        ru: 'Доступное имя кнопки удаления; по умолчанию из словаря.',
-        en: 'Accessible name of the remove button; the dictionary supplies the default.',
+        ru: 'Подпись кнопки удаления для экранных дикторов. По умолчанию — «Удалить изображение».',
+        en: 'Remove button label for screen readers. Defaults to "Remove the image".',
       },
       errorLabel: {
-        ru: 'Функция текста ошибки по её причине и элементу.',
-        en: 'Function that builds the error text from the reason and the item.',
+        ru: 'Функция, которая строит текст ошибки из её причины и файла.',
+        en: 'Function that builds the error text from the reason and the file.',
       },
     },
     models: {
       'v-model': {
-        ru: 'Элемент изображения со статусом или null.',
-        en: 'The image item with its status, or null.',
+        ru: 'Изображение со статусом загрузки или `null`.',
+        en: 'The image with its upload status, or `null`.',
       },
     },
     events: {
-      done: { ru: 'Изображение загружено.', en: 'The image finished uploading.' },
-      error: { ru: 'Адаптер отклонил изображение.', en: 'The adapter failed on the image.' },
-      reject: {
-        ru: 'Файл не прошёл проверку; приходит причина.',
-        en: 'The file failed validation; receives the reason.',
+      done: {
+        ru: 'Срабатывает, когда изображение загружено.',
+        en: 'Fires when the image is uploaded.',
       },
-      remove: { ru: 'Изображение удалено.', en: 'The image was removed.' },
+      error: {
+        ru: 'Срабатывает, когда загрузка изображения не удалась.',
+        en: 'Fires when the image upload fails.',
+      },
+      reject: {
+        ru: 'Срабатывает, когда файл не прошёл проверку. Передаёт причину.',
+        en: 'Fires when the file fails a check, with the reason.',
+      },
+      remove: {
+        ru: 'Срабатывает, когда изображение удаляют.',
+        en: 'Fires when the image is removed.',
+      },
     },
     keyboard: [
       {
         keys: 'Enter',
         description: {
-          ru: 'На аватаре открывает системный диалог.',
-          en: 'On the avatar opens the system dialog.',
+          ru: 'На аватаре открывает окно выбора файла.',
+          en: 'On the avatar, opens the file picker.',
         },
       },
       {
         keys: 'Space',
         description: {
-          ru: 'На аватаре открывает системный диалог.',
-          en: 'On the avatar opens the system dialog.',
+          ru: 'На аватаре открывает окно выбора файла.',
+          en: 'On the avatar, opens the file picker.',
         },
       },
     ],
