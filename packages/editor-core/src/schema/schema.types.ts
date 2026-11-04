@@ -9,6 +9,8 @@ import type {
 import type { HtmlElement } from '../html/html.types';
 import type { MarkRender, NodeRender } from '../render/render.types';
 
+export type SlotRule = (typeof SlotRule)[keyof typeof SlotRule];
+
 export interface AttrSpec {
   readonly default?: AttrValue | undefined;
   readonly verify?: ((value: AttrValue) => boolean) | undefined;
@@ -74,7 +76,7 @@ export interface ContentMatch {
   matchContent(content: readonly ContentNode[]): ContentMatch | undefined;
 }
 
-export type NodeSlots = 'all' | 'rest';
+export type NodeSlots = (typeof NodeSlots)[keyof typeof NodeSlots];
 
 export interface NodeType {
   readonly name: string;
@@ -87,7 +89,7 @@ export interface NodeType {
   readonly marks: ReadonlySet<string>;
   readonly attrs: AttrSpecs;
   readonly code: boolean;
-  readonly slots: NodeSlots | 'none';
+  readonly slots: SlotRule;
   readonly render: NodeRender;
   readonly parse: readonly NodeParseRule[];
 }
@@ -116,27 +118,39 @@ export interface SchemaLimits {
 }
 
 export type DocIssue =
-  | { readonly kind: 'type'; readonly path: readonly number[]; readonly type: string }
-  | { readonly kind: 'content'; readonly path: readonly number[]; readonly type: string }
-  | { readonly kind: 'mark'; readonly path: readonly number[]; readonly mark: string }
   | {
-      readonly kind: 'attr';
+      readonly kind: typeof DocIssueKind.Type;
+      readonly path: readonly number[];
+      readonly type: string;
+    }
+  | {
+      readonly kind: typeof DocIssueKind.Content;
+      readonly path: readonly number[];
+      readonly type: string;
+    }
+  | {
+      readonly kind: typeof DocIssueKind.Mark;
+      readonly path: readonly number[];
+      readonly mark: string;
+    }
+  | {
+      readonly kind: typeof DocIssueKind.Attr;
       readonly path: readonly number[];
       readonly attr: string;
       readonly reason: 'missing' | 'unknown' | 'invalid';
     }
   | {
-      readonly kind: 'id';
+      readonly kind: typeof DocIssueKind.Id;
       readonly path: readonly number[];
       readonly id: NodeId;
       readonly reason: 'empty' | 'duplicate';
     }
   | {
-      readonly kind: 'text';
+      readonly kind: typeof DocIssueKind.Text;
       readonly path: readonly number[];
       readonly reason: 'empty' | 'unmerged';
     }
-  | { readonly kind: 'size'; readonly path: readonly number[] };
+  | { readonly kind: typeof DocIssueKind.Size; readonly path: readonly number[] };
 
 export type DocCheck =
   | { readonly ok: true }
@@ -155,3 +169,28 @@ export interface Schema {
   check(root: ElementNode): DocCheck;
   restrict(limits: SchemaLimits): Schema;
 }
+
+export const NodeSlots = { All: 'all', Rest: 'rest' } as const;
+
+export const ContentExprKind = {
+  Name: 'name',
+  Seq: 'seq',
+  Choice: 'choice',
+  Repeat: 'repeat',
+} as const;
+
+export const DocIssueKind = {
+  Type: 'type',
+  Content: 'content',
+  Mark: 'mark',
+  Attr: 'attr',
+  Id: 'id',
+  Text: 'text',
+  Size: 'size',
+} as const;
+
+export const NodeName = { Text: 'text' } as const;
+
+export const ContentToken = { Wildcard: '_', GroupOpen: '(', RepeatClose: '}' } as const;
+
+export const SlotRule = { ...NodeSlots, None: 'none' } as const;

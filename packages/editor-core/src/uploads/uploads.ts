@@ -6,8 +6,19 @@ import { nodeSize } from '../model/node';
 import type { ElementNode } from '../model/node.types';
 import { createMetaKey, definePlugin } from '../state/plugin';
 import { selectionRange, textSelection } from '../state/selection';
-import type { Command, EditorState, Plugin, Transaction } from '../state/state.types';
-import type { PendingUpload, PlaceBuilder, UploadChange } from './uploads.types';
+import {
+  SelectionKind,
+  type Command,
+  type EditorState,
+  type Plugin,
+  type Transaction,
+} from '../state/state.types';
+import {
+  UploadChangeKind,
+  type PendingUpload,
+  type PlaceBuilder,
+  type UploadChange,
+} from './uploads.types';
 
 const uploadChange = createMetaKey<UploadChange>('uploads');
 
@@ -18,9 +29,9 @@ const changed = (
   change: UploadChange | undefined,
 ): readonly PendingUpload[] => {
   switch (change?.kind) {
-    case 'add':
+    case UploadChangeKind.Add:
       return [...uploads, ...change.uploads];
-    case 'drop':
+    case UploadChangeKind.Drop:
       return uploads.filter((upload) => !change.ids.includes(upload.id));
     case undefined:
       return uploads;
@@ -137,7 +148,7 @@ const placeFor = (doc: Doc, pos: number, node: ElementNode): number | undefined 
 export const uploadPoint = (state: EditorState): number | undefined => {
   const { selection, doc } = state;
 
-  return selection.kind === 'text' && lineAt(doc, selection.head) !== undefined
+  return selection.kind === SelectionKind.Text && lineAt(doc, selection.head) !== undefined
     ? selectionRange(doc, selection).to
     : undefined;
 };

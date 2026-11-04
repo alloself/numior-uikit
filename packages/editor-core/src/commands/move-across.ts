@@ -1,12 +1,18 @@
 import type { Doc } from '../doc/doc.types';
 import { emptyTextblock } from '../doc/empty';
 import { contentSize } from '../model/node';
-import type { ContentNode, ElementNode, NodeId } from '../model/node.types';
-import type { Schema } from '../schema/schema.types';
+import {
+  ContentNodeKind,
+  type ContentNode,
+  type ElementNode,
+  type NodeId,
+} from '../model/node.types';
+import { NodeSlots, type Schema } from '../schema/schema.types';
 import { textSelection } from '../state/selection';
 import type { Selection } from '../state/selection.types';
-import type { Command, Transaction } from '../state/state.types';
+import { SelectionKind, type Command, type Transaction } from '../state/state.types';
 import { childNode, isSlot, moveChild, type ChildSlot } from './move';
+import { BesideSide } from './commands.types';
 
 export interface BlockTarget {
   readonly parent: NodeId;
@@ -35,8 +41,6 @@ interface Plan {
   readonly sourcePath: Path;
   readonly targetPath: Path;
 }
-
-export type BesideSide = 'start' | 'end';
 
 export interface ColumnTypes {
   readonly columns: string;
@@ -90,7 +94,7 @@ const pathTo = (doc: Doc, id: NodeId): Path | undefined => {
 };
 
 const childWith = (node: ElementNode, id: NodeId): number =>
-  node.content.findIndex((child) => child.kind === 'element' && child.id === id);
+  node.content.findIndex((child) => child.kind === ContentNodeKind.Element && child.id === id);
 
 const atPath = (tree: ElementNode, path: Path): ElementNode | undefined => {
   let current: ElementNode | undefined = tree;
@@ -99,7 +103,7 @@ const atPath = (tree: ElementNode, path: Path): ElementNode | undefined => {
     const child: ContentNode | undefined =
       current?.content[current === undefined ? -1 : childWith(current, id)];
 
-    current = child?.kind === 'element' ? child : undefined;
+    current = child?.kind === ContentNodeKind.Element ? child : undefined;
   }
   return current;
 };
@@ -118,7 +122,7 @@ const editAt = (
   const index = childWith(tree, next);
   const child = tree.content[index];
 
-  if (child?.kind !== 'element') {
+  if (child?.kind !== ContentNodeKind.Element) {
     return tree;
   }
   const content = [...tree.content];
@@ -165,7 +169,7 @@ const intoList = (move: Move): readonly ContentNode[] | undefined => {
   }
   if (isList(schema, node)) {
     return node.content.flatMap((item) =>
-      item.kind === 'element' ? [retyped(schema, item, itemType)] : [],
+      item.kind === ContentNodeKind.Element ? [retyped(schema, item, itemType)] : [],
     );
   }
   if (isItemOf(schema, node)) {
@@ -193,10 +197,10 @@ const converted = (move: Move): readonly ContentNode[] | undefined => {
 const tidied = (schema: Schema, node: ElementNode, tr: Transaction): readonly ContentNode[] => {
   const [only] = node.content;
 
-  if (schema.nodes.get(node.type)?.slots === 'all' && node.content.length === 0) {
+  if (schema.nodes.get(node.type)?.slots === NodeSlots.All && node.content.length === 0) {
     return [];
   }
-  if (node.content.length === 1 && only?.kind === 'element') {
+  if (node.content.length === 1 && only?.kind === ContentNodeKind.Element) {
     return only.content;
   }
   const filler = emptyTextblock(schema, tr.newId());
@@ -220,7 +224,7 @@ const cleaned = (schema: Schema, tree: ElementNode, path: Path, tr: Transaction)
 
     current = editAt(schema, current, path.slice(0, depth), (parent) =>
       parent.content.flatMap((child) =>
-        child.kind === 'element' && child.id === id ? replacement : [child],
+        child.kind === ContentNodeKind.Element && child.id === id ? replacement : [child],
       ),
     );
   }
@@ -236,8 +240,8 @@ const merged = (
   left: ContentNode | undefined,
   right: ContentNode | undefined,
 ): ElementNode | undefined =>
-  left?.kind === 'element' &&
-  right?.kind === 'element' &&
+  left?.kind === ContentNodeKind.Element &&
+  right?.kind === ContentNodeKind.Element &&
   left.type === right.type &&
   isList(schema, left)
     ? element(schema, left, [...left.content, ...right.content])
@@ -270,7 +274,7 @@ const spliced = (
 const idAt = (node: ElementNode, index: number): NodeId | undefined => {
   const child = node.content[index];
 
-  return child?.kind === 'element' ? child.id : undefined;
+  return child?.kind === ContentNodeKind.Element ? child.id : undefined;
 };
 
 const anchoredIndex = (node: ElementNode, anchor: Anchor): number => {
@@ -346,7 +350,7 @@ const follow = (tr: Transaction, before: Doc, node: ElementNode, selection: Sele
   const moved = tr.doc.positionOf(node.id);
 
   if (
-    selection.kind === 'text' &&
+    selection.kind === SelectionKind.Text &&
     moved !== undefined &&
     selection.head > start &&
     selection.head < start + node.size
@@ -379,7 +383,9 @@ const lifted = (doc: Doc, tr: Transaction, node: ElementNode, sourcePath: Path):
   cleaned(
     doc.schema,
     editAt(doc.schema, doc.root, sourcePath, (parent) =>
-      parent.content.filter((child) => child.kind !== 'element' || child.id !== node.id),
+      parent.content.filter(
+        (child) => child.kind !== ContentNodeKind.Element || child.id !== node.id,
+      ),
     ),
     sourcePath,
     tr,
@@ -463,7 +469,7 @@ const addColumn = (schema: Schema, beside: Beside, parent: ElementNode): Placed 
   }
   const content = [...columns.content];
 
-  content.splice(index + (beside.side === 'end' ? 1 : 0), 0, beside.column);
+  content.splice(index + (beside.side === BesideSide.End ? 1 : 0), 0, beside.column);
   return fits(schema, columns, content)
     ? { tree: editAt(schema, beside.tree, path, () => content), path }
     : undefined;
@@ -485,7 +491,7 @@ const wrapColumns = (
 
   const wrapper = schema.element(beside.types.columns, {
     id: beside.tr.newId(),
-    content: beside.side === 'start' ? [beside.column, own] : [own, beside.column],
+    content: beside.side === BesideSide.Start ? [beside.column, own] : [own, beside.column],
   });
 
   const content = parent.content.map((child, at) => (at === index ? wrapper : child));

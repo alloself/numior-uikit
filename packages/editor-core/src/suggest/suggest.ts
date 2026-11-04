@@ -1,7 +1,7 @@
 import { inlineText } from '../commands/input';
 import { createMetaKey, definePlugin } from '../state/plugin';
 import { isCursor } from '../state/selection';
-import type { EditorState } from '../state/state.types';
+import { SelectionKind, type EditorState } from '../state/state.types';
 import type { Suggestion, SuggestionMatch, SuggestionSpec, SuggestionState } from './suggest.types';
 
 const SPACE = /\s/u;
@@ -11,7 +11,7 @@ const LINE = /\n/u;
 const matchIn = (spec: SuggestionSpec, state: EditorState): SuggestionMatch | undefined => {
   const { selection, doc } = state;
 
-  if (selection.kind !== 'text' || !isCursor(selection)) {
+  if (selection.kind !== SelectionKind.Text || !isCursor(selection)) {
     return undefined;
   }
   const cursor = doc.resolve(selection.head);

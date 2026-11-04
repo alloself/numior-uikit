@@ -1,8 +1,14 @@
 import type { Doc } from '../doc/doc.types';
 import { childIndexAt, childOffsets, nodeSize } from '../model/node';
-import type { ContentNode, ElementNode, NodeId } from '../model/node.types';
+import {
+  ContentNodeKind,
+  type ContentNode,
+  type ElementNode,
+  type NodeId,
+} from '../model/node.types';
 import type { Mappable } from '../transform/mapping.types';
-import type { GapSide, Selection, SelectionRange } from './selection.types';
+import { GapSide, type Selection, type SelectionRange } from './selection.types';
+import { SelectionKind } from './state.types';
 
 export const textSelection = (anchor: number, head = anchor): Selection => ({
   kind: 'text',
@@ -23,7 +29,7 @@ const blockAround = (doc: Doc, id: NodeId): SelectionRange | undefined => {
 };
 
 const isTextblock = (doc: Doc, node: ContentNode): node is ElementNode =>
-  node.kind === 'element' && doc.schema.nodes.get(node.type)?.inlineContent === true;
+  node.kind === ContentNodeKind.Element && doc.schema.nodes.get(node.type)?.inlineContent === true;
 
 const firstTextblockIn = (
   doc: Doc,
@@ -40,7 +46,7 @@ const firstTextblockIn = (
   while (index < content.length && childStart < to) {
     const child = content[index];
 
-    if (child?.kind === 'element') {
+    if (child?.kind === ContentNodeKind.Element) {
       const found = isTextblock(doc, child)
         ? childStart + 1
         : firstTextblockIn(doc, child, childStart + 1, from, to);
@@ -69,7 +75,7 @@ const lastTextblockIn = (
   let childStart = start + (offsets[index] ?? 0);
 
   while (child !== undefined && childStart + nodeSize(child) > from) {
-    if (childStart < to && child.kind === 'element') {
+    if (childStart < to && child.kind === ContentNodeKind.Element) {
       const found = isTextblock(doc, child)
         ? childStart + child.size - 1
         : lastTextblockIn(doc, child, childStart + 1, from, to);
@@ -115,7 +121,7 @@ export const textPosition = (doc: Doc, pos: number, bias: -1 | 1): number | unde
 
 const gapRange = (doc: Doc, id: NodeId, side: GapSide): SelectionRange => {
   const block = blockAround(doc, id);
-  const at = (side === 'start' ? block?.from : block?.to) ?? 0;
+  const at = (side === GapSide.Start ? block?.from : block?.to) ?? 0;
 
   return { from: at, to: at };
 };
@@ -129,44 +135,44 @@ const blocksRange = (doc: Doc, anchorId: NodeId, headId: NodeId): SelectionRange
 
 export const selectionRange = (doc: Doc, selection: Selection): SelectionRange => {
   switch (selection.kind) {
-    case 'text':
+    case SelectionKind.Text:
       return {
         from: Math.min(selection.anchor, selection.head),
         to: Math.max(selection.anchor, selection.head),
       };
-    case 'node':
+    case SelectionKind.Node:
       return blockAround(doc, selection.id) ?? { from: 0, to: 0 };
-    case 'gap':
+    case SelectionKind.Gap:
       return gapRange(doc, selection.id, selection.side);
-    case 'block':
+    case SelectionKind.Block:
       return blocksRange(doc, selection.anchorId, selection.headId);
-    case 'cell':
+    case SelectionKind.Cell:
       return blockAround(doc, selection.tableId) ?? { from: 0, to: 0 };
-    case 'all':
+    case SelectionKind.All:
       return { from: 0, to: doc.size };
   }
 };
 
 export const isCursor = (selection: Selection): boolean =>
-  selection.kind === 'text' && selection.anchor === selection.head;
+  selection.kind === SelectionKind.Text && selection.anchor === selection.head;
 
 const present = (doc: Doc, ...ids: readonly NodeId[]): boolean =>
   ids.every((id) => doc.byId(id) !== undefined);
 
 export const validSelection = (doc: Doc, selection: Selection): Selection => {
   switch (selection.kind) {
-    case 'text':
+    case SelectionKind.Text:
       return inText(doc, selection.head) && inText(doc, selection.anchor)
         ? selection
         : nearestCursor(doc, selection.head);
-    case 'node':
-    case 'gap':
+    case SelectionKind.Node:
+    case SelectionKind.Gap:
       return present(doc, selection.id) ? selection : nearestCursor(doc, 0);
-    case 'block':
+    case SelectionKind.Block:
       return present(doc, selection.anchorId, selection.headId) ? selection : nearestCursor(doc, 0);
-    case 'cell':
+    case SelectionKind.Cell:
       return present(doc, selection.tableId) ? selection : nearestCursor(doc, 0);
-    case 'all':
+    case SelectionKind.All:
       return selection;
   }
 };
@@ -177,13 +183,13 @@ export const mapSelection = (
   before: Doc,
   after: Doc,
 ): Selection => {
-  if (selection.kind === 'text') {
+  if (selection.kind === SelectionKind.Text) {
     return validSelection(
       after,
       textSelection(mapping.map(selection.anchor), mapping.map(selection.head)),
     );
   }
-  if (selection.kind === 'all') {
+  if (selection.kind === SelectionKind.All) {
     return selection;
   }
   const kept = validSelection(after, selection);

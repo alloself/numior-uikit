@@ -1,7 +1,13 @@
 import { createDoc } from '../doc/doc';
 import type { Doc } from '../doc/doc.types';
 import { childIndexAt, childOffsets, sameMarks, spliceContent } from '../model/node';
-import type { ContentNode, ElementNode, Mark, TextNode } from '../model/node.types';
+import {
+  ContentNodeKind,
+  type ContentNode,
+  type ElementNode,
+  type Mark,
+  type TextNode,
+} from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
 import type { StepResult, StepSpan } from './step.types';
 
@@ -90,7 +96,7 @@ const markChild = (
   allowed: boolean,
   task: MarkTask,
 ): ContentNode[] => {
-  if (child.kind === 'text') {
+  if (child.kind === ContentNodeKind.Text) {
     return allowed ? splitAt(child, childStart, task) : [child];
   }
   return [child.leaf ? child : markNode(child, childStart + 1, task)];
@@ -167,7 +173,10 @@ export const heldSpans = (
   let open = false;
 
   doc.nodesBetween(from, to, (node, pos, parent) => {
-    if (node.kind !== 'text' || doc.schema.nodes.get(parent.type)?.marks.has(mark.type) !== true) {
+    if (
+      node.kind !== ContentNodeKind.Text ||
+      doc.schema.nodes.get(parent.type)?.marks.has(mark.type) !== true
+    ) {
       return true;
     }
     const start = Math.max(from, pos);

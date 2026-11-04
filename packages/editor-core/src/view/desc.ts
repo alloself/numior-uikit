@@ -1,13 +1,19 @@
 import { childOffsets, sameAttrs, sameMarks } from '../model/node';
-import type { ContentNode, ElementNode, NodeId, TextNode } from '../model/node.types';
+import {
+  ContentNodeKind,
+  type ContentNode,
+  type ElementNode,
+  type NodeId,
+  type TextNode,
+} from '../model/node.types';
 import type { NodeType, Schema } from '../schema/schema.types';
 import { appendChunk, fillChunks, placeInChunks, tidyChunks, type ChunkSet } from './chunks';
 import { segmentsOf, type BlockDecorations, type LocalDecoration } from './decorate';
 import { renderLeaf, renderParent, type RenderedDom } from './render-dom';
-import type { NodeView, NodeViewFactory } from './view.types';
+import { DescKind, DomName, type NodeView, type NodeViewFactory } from './view.types';
 
 export interface ElementDesc {
-  readonly kind: 'element';
+  readonly kind: typeof DescKind.Element;
   node: ElementNode;
   readonly dom: HTMLElement;
   readonly contentDOM: HTMLElement | null;
@@ -24,7 +30,7 @@ export interface TextPart {
 }
 
 export interface TextDesc {
-  readonly kind: 'text';
+  readonly kind: typeof DescKind.Text;
   node: TextNode;
   readonly parts: readonly TextPart[];
   readonly decorated: boolean;
@@ -76,7 +82,8 @@ interface TextMatch {
   readonly at: number;
 }
 
-export const outerOf = (desc: Desc): ChildNode => (desc.kind === 'text' ? desc.outer : desc.dom);
+export const outerOf = (desc: Desc): ChildNode =>
+  desc.kind === DescKind.Text ? desc.outer : desc.dom;
 
 const typeOf = (schema: Schema, name: string): NodeType => {
   const type = schema.nodes.get(name);
@@ -126,7 +133,7 @@ const isTextblock = (context: ViewContext, desc: ElementDesc): boolean =>
 const endsWithBreak = (desc: ElementDesc): boolean => {
   const last = desc.children.at(-1);
 
-  return last === undefined || outerOf(last).nodeName === 'BR';
+  return last === undefined || outerOf(last).nodeName === DomName.Br;
 };
 
 const syncHack = (context: ViewContext, desc: ElementDesc): void => {
@@ -241,7 +248,7 @@ const heightOf = (size: number): number => Math.max(1, Math.ceil(size / LINE_LEN
 const estimateOf = (context: ViewContext, block: Element): number => {
   const desc = context.descs.get(block);
 
-  return heightOf(desc?.kind === 'element' ? desc.node.size : LINE_LENGTH);
+  return heightOf(desc?.kind === DescKind.Element ? desc.node.size : LINE_LENGTH);
 };
 
 const chunked = (context: ViewContext, desc: ElementDesc): boolean =>
@@ -282,7 +289,7 @@ const createDesc = (
   parent: ElementDesc,
   index: number,
 ): Desc =>
-  node.kind === 'text'
+  node.kind === ContentNodeKind.Text
     ? createText(context, node, parent, index)
     : createElement(context, node, parent, index);
 
@@ -327,7 +334,7 @@ export const textblockAround = (
 ): ElementDesc | undefined => {
   const found = descAround(context, node);
 
-  for (let desc = found?.kind === 'text' ? found.parent : found; desc !== undefined;) {
+  for (let desc = found?.kind === DescKind.Text ? found.parent : found; desc !== undefined;) {
     if (desc.parent === null || isTextblock(context, desc)) {
       return desc;
     }
@@ -345,7 +352,8 @@ const rootFill = (context: ViewContext, desc: ElementDesc, from: number): RootFi
   let height = content
     .slice(from)
     .reduce(
-      (total, child) => total + heightOf(child.kind === 'element' ? child.size : LINE_LENGTH),
+      (total, child) =>
+        total + heightOf(child.kind === ContentNodeKind.Element ? child.size : LINE_LENGTH),
       0,
     );
 
@@ -363,8 +371,10 @@ const rootFill = (context: ViewContext, desc: ElementDesc, from: number): RootFi
       const waiting = content[next];
 
       const at =
-        waiting?.kind === 'element'
-          ? node.content.findIndex((child) => child.kind === 'element' && child.id === waiting.id)
+        waiting?.kind === ContentNodeKind.Element
+          ? node.content.findIndex(
+              (child) => child.kind === ContentNodeKind.Element && child.id === waiting.id,
+            )
           : -1;
 
       if (at < 0 || node.content.length - at !== content.length - next) {
@@ -385,7 +395,7 @@ const rootFill = (context: ViewContext, desc: ElementDesc, from: number): RootFi
 
           desc.children.push(made);
           blocks.push(outerOf(made));
-          height -= heightOf(child.kind === 'element' ? child.size : LINE_LENGTH);
+          height -= heightOf(child.kind === ContentNodeKind.Element ? child.size : LINE_LENGTH);
           next += 1;
         }
         appendChunk(desc.dom, blocks, context.chunks, (block) => estimateOf(context, block), null);
@@ -434,7 +444,7 @@ export const widgetOwner = (
     const desc = context.descs.get(current);
 
     if (desc !== undefined) {
-      return desc.kind === 'element' &&
+      return desc.kind === DescKind.Element &&
         desc.view !== undefined &&
         current === desc.dom &&
         current !== desc.contentDOM
@@ -460,7 +470,7 @@ export const widgetAround = (context: ViewContext, target: EventTarget | null): 
   widgetOwner(context, target) !== undefined || insideWidget(context, target);
 
 const forget = (context: ViewContext, desc: Desc): void => {
-  if (desc.kind === 'text') {
+  if (desc.kind === DescKind.Text) {
     return;
   }
   desc.view?.destroy();
@@ -476,7 +486,7 @@ const elementsById = (children: readonly Desc[]): Map<NodeId, ElementDesc> => {
   const found = new Map<NodeId, ElementDesc>();
 
   for (const child of children) {
-    if (child.kind === 'element') {
+    if (child.kind === DescKind.Element) {
       found.set(child.node.id, child);
     }
   }
@@ -493,7 +503,7 @@ const findText = (matching: Matching, node: TextNode): TextMatch | undefined => 
     const desc = matching.previous[at];
 
     if (
-      desc?.kind === 'text' &&
+      desc?.kind === DescKind.Text &&
       !desc.decorated &&
       !matching.used.has(desc) &&
       sameMarks(desc.node.marks, node.marks)
@@ -603,7 +613,7 @@ const reconcile = (
   };
 
   const next = nodes.map((node, offset) =>
-    node.kind === 'element'
+    node.kind === ContentNodeKind.Element
       ? matchElement(context, parent, matching, node, from + offset)
       : matchText(context, parent, matching, node, from + offset),
   );

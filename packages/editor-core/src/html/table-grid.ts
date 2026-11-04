@@ -1,4 +1,4 @@
-import type { HtmlElement, HtmlNode } from './html.types';
+import { HtmlNodeKind, HtmlTag, type HtmlElement, type HtmlNode } from './html.types';
 
 export interface HtmlTableCell {
   readonly element: HtmlElement | undefined;
@@ -25,7 +25,7 @@ const MAX_SPAN = 1000;
 const EMPTY: HtmlTableCell = { element: undefined, header: false, text: '' };
 
 const elementsOf = (nodes: readonly HtmlNode[]): HtmlElement[] =>
-  nodes.filter((node): node is HtmlElement => node.kind === 'element');
+  nodes.filter((node): node is HtmlElement => node.kind === HtmlNodeKind.Element);
 
 const rowOf = (row: HtmlElement, head: boolean): HtmlTableRow => ({
   cells: elementsOf(row.children).filter((cell) => CELLS.has(cell.tag)),
@@ -34,10 +34,10 @@ const rowOf = (row: HtmlElement, head: boolean): HtmlTableRow => ({
 
 const rowsIn = (element: HtmlElement, head: boolean): HtmlTableRow[] =>
   elementsOf(element.children).flatMap((child) => {
-    if (child.tag === 'tr') {
+    if (child.tag === HtmlTag.Tr) {
       return [rowOf(child, head)];
     }
-    return SECTIONS.has(child.tag) ? rowsIn(child, head || child.tag === 'thead') : [];
+    return SECTIONS.has(child.tag) ? rowsIn(child, head || child.tag === HtmlTag.Thead) : [];
   });
 
 const spanOf = (cell: HtmlElement, name: string): number => {
@@ -48,7 +48,7 @@ const spanOf = (cell: HtmlElement, name: string): number => {
 
 const cellOf = (element: HtmlElement): HtmlTableCell => ({
   element,
-  header: element.tag === 'th',
+  header: element.tag === HtmlTag.Th,
   text: element.text().replaceAll(/\s+/gu, ' ').trim(),
 });
 

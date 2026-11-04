@@ -16,7 +16,15 @@ import {
   openNode,
   type Builder,
 } from './builder';
-import type { FromHTMLOptions, HtmlElement, HtmlNode } from './html.types';
+import {
+  HtmlNodeKind,
+  HtmlTag,
+  HtmlWhitespace,
+  PasteSource,
+  type FromHTMLOptions,
+  type HtmlElement,
+  type HtmlNode,
+} from './html.types';
 import { marksOf, nodeCandidates, type NodeCandidate } from './rules';
 import { detectPasteSource, normalizeSource } from './sources';
 import { parseTree } from './tree';
@@ -110,7 +118,7 @@ const BLOCKS = new Set([
 const PRESERVED = new Set(['pre', 'pre-wrap', 'break-spaces']);
 
 const keepsSpaces = (element: HtmlElement): boolean =>
-  element.tag === 'pre' || PRESERVED.has(element.style('white-space') ?? '');
+  element.tag === HtmlTag.Pre || PRESERVED.has(element.style('white-space') ?? '');
 
 const withMarks = (active: readonly Mark[], added: readonly Mark[]): readonly Mark[] =>
   added.length === 0
@@ -120,7 +128,9 @@ const withMarks = (active: readonly Mark[], added: readonly Mark[]): readonly Ma
 const childrenOf = (element: HtmlElement): readonly HtmlNode[] => {
   const [first, ...rest] = element.children;
 
-  return element.tag === 'pre' && first?.kind === 'text' && first.text.startsWith('\n')
+  return element.tag === HtmlTag.Pre &&
+    first?.kind === HtmlNodeKind.Text &&
+    first.text.startsWith('\n')
     ? [{ kind: 'text', text: first.text.slice(1) }, ...rest]
     : element.children;
 };
@@ -194,7 +204,7 @@ const walkElement = (walk: Walk, element: HtmlElement): void => {
   if (IGNORED.has(element.tag)) {
     return;
   }
-  if (element.tag === 'br' && inCode(walk.builder)) {
+  if (element.tag === HtmlTag.Br && inCode(walk.builder)) {
     addText(walk.builder, '\n', walk.marks, true);
     return;
   }
@@ -208,7 +218,7 @@ const walkElement = (walk: Walk, element: HtmlElement): void => {
 };
 
 const walkNode = (walk: Walk, node: HtmlNode): void => {
-  if (node.kind === 'text') {
+  if (node.kind === HtmlNodeKind.Text) {
     addText(walk.builder, node.text, walk.marks, walk.pre);
   } else {
     walkElement(walk, node);
@@ -239,11 +249,11 @@ const build = (
 
 export const fromHTML = (schema: Schema, html: string, options: FromHTMLOptions = {}): Doc => {
   const source = options.source ?? detectPasteSource(html);
-  const whitespace = options.whitespace ?? (source === 'own' ? 'preserve' : 'collapse');
+  const whitespace = options.whitespace ?? (source === PasteSource.Own ? 'preserve' : 'collapse');
   const tree = normalizeSource(parseTree(html), source);
 
   return (
-    build(schema, tree.children, options, whitespace === 'preserve') ??
+    build(schema, tree.children, options, whitespace === HtmlWhitespace.Preserve) ??
     createEmptyDoc(schema, options.ids)
   );
 };

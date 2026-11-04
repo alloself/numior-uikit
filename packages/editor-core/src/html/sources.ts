@@ -1,4 +1,4 @@
-import type { HtmlElement, PasteSource } from './html.types';
+import { PasteSource, type HtmlElement } from './html.types';
 import { normalizeGoogleDocs } from './normalize-google';
 import { normalizeSheet } from './normalize-sheet';
 import { normalizeWord } from './normalize-word';
@@ -20,12 +20,12 @@ export const detectPasteSource = (html: string): PasteSource =>
 
 const bySource = (root: HtmlElement, source: PasteSource): HtmlElement => {
   switch (source) {
-    case 'word':
+    case PasteSource.Word:
       return normalizeWord(root);
-    case 'google-docs':
+    case PasteSource.GoogleDocs:
       return normalizeGoogleDocs(root);
-    case 'excel':
-    case 'sheets':
+    case PasteSource.Excel:
+    case PasteSource.Sheets:
       return normalizeSheet(root);
     default:
       return root;

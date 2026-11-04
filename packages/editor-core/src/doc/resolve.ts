@@ -1,5 +1,5 @@
 import { childIndexAt, childOffsets } from '../model/node';
-import type { ContentNode, ElementNode } from '../model/node.types';
+import { ContentNodeKind, type ContentNode, type ElementNode } from '../model/node.types';
 import type { ResolvedPos } from './doc.types';
 
 interface Level {
@@ -30,7 +30,7 @@ const neighbours = (
 ): readonly [ContentNode | undefined, ContentNode | undefined] => {
   const child = parent.content[index];
 
-  if (child?.kind === 'text' && textOffset > 0) {
+  if (child?.kind === ContentNodeKind.Text && textOffset > 0) {
     return [
       { ...child, text: child.text.slice(0, textOffset) },
       { ...child, text: child.text.slice(textOffset) },
@@ -53,14 +53,17 @@ const descend = (root: ElementNode, pos: number): { levels: Level[]; textOffset:
   let place = placeIn(root, 0, pos);
   const levels: Level[] = [{ node: root, start: 0, index: place.index }];
 
-  while (place.child?.kind === 'element' && place.childStart !== pos) {
+  while (place.child?.kind === ContentNodeKind.Element && place.childStart !== pos) {
     const node = place.child;
     const start = place.childStart + 1;
 
     place = placeIn(node, start, pos);
     levels.push({ node, start, index: place.index });
   }
-  return { levels, textOffset: place.child?.kind === 'text' ? pos - place.childStart : 0 };
+  return {
+    levels,
+    textOffset: place.child?.kind === ContentNodeKind.Text ? pos - place.childStart : 0,
+  };
 };
 
 export const resolveIn = (root: ElementNode, size: number, pos: number): ResolvedPos => {

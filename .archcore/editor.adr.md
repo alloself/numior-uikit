@@ -1268,3 +1268,17 @@ Enter и отмены; остальное записывается.
 подсветчик обо всех блоках кода подряд и отправлял транзакцию на каждый ответ: тёплое
 перемонтирование 1295 мс и кадр прокрутки 217 мс, пока Shiki разбирал документ; куски по 8 мс
 с одной транзакцией на кусок убрали оба.
+
+## Именованные наборы значений в ядре (2026-11-04)
+
+`@numior/editor-core` не зависит ни от одного пакета, поэтому все его наборы строк — свои константы
+`as const` в `*.types.ts` каталогов: дискриминанты модели и шагов (`ContentNodeKind`, `SelectionKind`,
+`StepKind`, `InputIntentKind`, `TokenKind`, `RenderChildKind`, `DescKind`), причины отказов
+(`StepFailure`, `DocIssueKind`, `DocJSONIssueKind = { …, ...DocIssueKind }`), а также платформенные
+значения, которые вид сравнивает сам: `Key`, `InputType`, `Direction`, `CssKeyword`, `DomName` в
+`view/view.types.ts`, теги и символы разбора `HtmlTag`, `HtmlChar` в `html/html.types.ts`, имя
+текстового узла и токены выражений содержимого (`NodeName`, `ContentToken`, `SlotRule = { ...NodeSlots,
+None }`) в схеме. Одинаковые по значениям наборы разных слоёв (`ContentNodeKind`, `HtmlNodeKind`,
+`DescKind`) остаются разными константами: это разные деревья. Публичные константы модели, шагов,
+выделения и ввода экспортируются значениями из `.`; правило ESLint `NAMED_ENUMERATIONS` включено
+для `packages/editor-core/src`.

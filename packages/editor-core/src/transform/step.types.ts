@@ -13,9 +13,14 @@ export interface MarkupChange {
 }
 
 export type Step =
-  | { readonly kind: 'replace'; readonly from: number; readonly to: number; readonly slice: Slice }
   | {
-      readonly kind: 'replaceAround';
+      readonly kind: typeof StepKind.Replace;
+      readonly from: number;
+      readonly to: number;
+      readonly slice: Slice;
+    }
+  | {
+      readonly kind: typeof StepKind.ReplaceAround;
       readonly from: number;
       readonly to: number;
       readonly gapFrom: number;
@@ -24,18 +29,39 @@ export type Step =
       readonly insert: number;
     }
   | {
-      readonly kind: 'addMark' | 'removeMark';
+      readonly kind: typeof StepKind.AddMark | typeof StepKind.RemoveMark;
       readonly from: number;
       readonly to: number;
       readonly mark: Mark;
       readonly skip?: readonly StepSpan[] | undefined;
     }
-  | { readonly kind: 'attrs'; readonly pos: number; readonly attrs: Attrs }
-  | { readonly kind: 'markup'; readonly changes: readonly MarkupChange[] }
-  | { readonly kind: 'docAttrs'; readonly attrs: Attrs };
+  | { readonly kind: typeof StepKind.Attrs; readonly pos: number; readonly attrs: Attrs }
+  | { readonly kind: typeof StepKind.Markup; readonly changes: readonly MarkupChange[] }
+  | { readonly kind: typeof StepKind.DocAttrs; readonly attrs: Attrs };
 
-export type StepFailure = 'range' | 'depth' | 'content' | 'id' | 'target' | 'attrs';
+export type StepFailure = (typeof StepFailure)[keyof typeof StepFailure];
 
 export type StepResult =
   | { readonly ok: true; readonly doc: Doc }
   | { readonly ok: false; readonly reason: StepFailure };
+
+export const StepFailure = {
+  Range: 'range',
+  Depth: 'depth',
+  Content: 'content',
+  Id: 'id',
+  Target: 'target',
+  Attrs: 'attrs',
+} as const;
+
+export const TokenKind = { Open: 'open', Close: 'close', Text: 'text', Node: 'node' } as const;
+
+export const StepKind = {
+  Replace: 'replace',
+  ReplaceAround: 'replaceAround',
+  AddMark: 'addMark',
+  RemoveMark: 'removeMark',
+  Attrs: 'attrs',
+  Markup: 'markup',
+  DocAttrs: 'docAttrs',
+} as const;

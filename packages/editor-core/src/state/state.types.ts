@@ -115,3 +115,24 @@ export interface EditorState {
 export type Dispatch = (tr: Transaction) => void;
 
 export type Command = (state: EditorState, dispatch?: Dispatch) => boolean;
+
+export const InputIntentKind = {
+  InsertText: 'insertText',
+  InsertParagraph: 'insertParagraph',
+  InsertLineBreak: 'insertLineBreak',
+  Delete: 'delete',
+  Format: 'format',
+  History: 'history',
+  Paste: 'paste',
+  Files: 'files',
+  Compose: 'compose',
+} as const;
+
+export const SelectionKind = {
+  Text: 'text',
+  Node: 'node',
+  Gap: 'gap',
+  Block: 'block',
+  Cell: 'cell',
+  All: 'all',
+} as const;

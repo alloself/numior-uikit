@@ -1,12 +1,17 @@
 import type { ResolvedPos } from '../doc/doc.types';
 import { emptyTextblock } from '../doc/empty';
 import { nodeSize } from '../model/node';
-import type { ContentNode, ElementNode } from '../model/node.types';
-import type { InputIntent, InputSource, TextDirection, TextUnit } from '../state/input.types';
+import { ContentNodeKind, type ContentNode, type ElementNode } from '../model/node.types';
+import { TextDirection, TextUnit, type InputIntent, type InputSource } from '../state/input.types';
 import { createMetaKey } from '../state/plugin';
 import { nearestCursor, selectionRange, textPosition, textSelection } from '../state/selection';
 import type { Selection, SelectionRange } from '../state/selection.types';
-import type { Command, EditorState } from '../state/state.types';
+import {
+  InputIntentKind,
+  SelectionKind,
+  type Command,
+  type EditorState,
+} from '../state/state.types';
 import { ATOM, breakTypeOf, caretNear, isAtom, isInline } from './atoms';
 import { gapDelete, gapEnter, gapSpot, gapText } from './gap';
 import { attempt } from './attempt';
@@ -30,7 +35,7 @@ const SPACE = /^\s+$/u;
 const segmenters = new Map<string, Intl.Segmenter>();
 
 const segmenterOf = (unit: 'character' | 'word'): Intl.Segmenter => {
-  const granularity = unit === 'character' ? 'grapheme' : 'word';
+  const granularity = unit === TextUnit.Character ? 'grapheme' : 'word';
   const known = segmenters.get(granularity);
 
   if (known !== undefined) {
@@ -43,7 +48,7 @@ const segmenterOf = (unit: 'character' | 'word'): Intl.Segmenter => {
 };
 
 export const inlineText = (node: ElementNode): string =>
-  node.content.map((child) => (child.kind === 'text' ? child.text : ATOM)).join('');
+  node.content.map((child) => (child.kind === ContentNodeKind.Text ? child.text : ATOM)).join('');
 
 const pieces = (text: string, unit: 'character' | 'word'): string[] =>
   [...segmenterOf(unit).segment(text)].map((part) => part.segment);
@@ -60,13 +65,13 @@ const wordSpan = (parts: readonly string[]): number => {
 };
 
 const spanOf = (text: string, unit: TextUnit, direction: TextDirection): number => {
-  if (unit === 'line') {
+  if (unit === TextUnit.Line) {
     return text.length;
   }
   const parts = pieces(text, unit);
-  const ordered = direction === 'backward' ? parts : parts.toReversed();
+  const ordered = direction === TextDirection.Backward ? parts : parts.toReversed();
 
-  return unit === 'character' ? (ordered.at(-1)?.length ?? 0) : wordSpan(ordered);
+  return unit === TextUnit.Character ? (ordered.at(-1)?.length ?? 0) : wordSpan(ordered);
 };
 
 const dropEmpty =
@@ -97,7 +102,7 @@ const deleteNode =
   (backward: boolean): Command =>
   (state, dispatch) => {
     const { selection, doc } = state;
-    const node = selection.kind === 'node' ? doc.byId(selection.id) : undefined;
+    const node = selection.kind === SelectionKind.Node ? doc.byId(selection.id) : undefined;
     const at = node === undefined ? undefined : doc.positionOf(node.id);
 
     if (node === undefined || at === undefined || isInline(doc.schema, node)) {
@@ -126,8 +131,8 @@ export const deleteText =
   (direction: TextDirection, unit: TextUnit): Command =>
   (state, dispatch) => {
     if (
-      gapDelete(direction === 'backward')(state, dispatch) ||
-      deleteNode(direction === 'backward')(state, dispatch) ||
+      gapDelete(direction === TextDirection.Backward)(state, dispatch) ||
+      deleteNode(direction === TextDirection.Backward)(state, dispatch) ||
       deleteSelection(state, dispatch)
     ) {
       return true;
@@ -139,7 +144,7 @@ export const deleteText =
     }
     const text = inlineText(cursor.parent);
     const offset = cursor.parentOffset;
-    const backward = direction === 'backward';
+    const backward = direction === TextDirection.Backward;
 
     if (backward ? offset === 0 : offset === text.length) {
       return chainCommands(backward ? joinBackward : joinForward, dropEmpty(backward))(
@@ -185,7 +190,7 @@ const typeOverBlock =
   (text: string): Command =>
   (state, dispatch) => {
     const { selection, doc } = state;
-    const node = selection.kind === 'node' ? doc.byId(selection.id) : undefined;
+    const node = selection.kind === SelectionKind.Node ? doc.byId(selection.id) : undefined;
     const at = node === undefined ? undefined : doc.positionOf(node.id);
     const tr = state.tr;
     const block = node === undefined ? undefined : emptyTextblock(doc.schema, tr.newId());
@@ -232,7 +237,7 @@ const newline: Command = (state, dispatch) => inCode(state) && insertText('\n')(
 
 const paragraphAfterNode: Command = (state, dispatch) => {
   const { selection, doc } = state;
-  const node = selection.kind === 'node' ? doc.byId(selection.id) : undefined;
+  const node = selection.kind === SelectionKind.Node ? doc.byId(selection.id) : undefined;
   const at = node === undefined ? undefined : doc.positionOf(node.id);
 
   if (node === undefined || at === undefined) {
@@ -292,7 +297,7 @@ const atomBeside = (
 
 const leaveNode = (state: EditorState, backward: boolean, vertical: boolean): Selection => {
   const { selection, doc } = state;
-  const node = selection.kind === 'node' ? doc.byId(selection.id) : undefined;
+  const node = selection.kind === SelectionKind.Node ? doc.byId(selection.id) : undefined;
   const range = selectionRange(doc, selection);
 
   if (node !== undefined && !vertical && !isInline(doc.schema, node)) {
@@ -325,9 +330,9 @@ const leaving = (
   vertical: boolean,
 ): Selection | undefined => {
   switch (state.selection.kind) {
-    case 'node':
+    case SelectionKind.Node:
       return leaveNode(state, backward, vertical);
-    case 'gap':
+    case SelectionKind.Gap:
       return leaveGap(state, backward, vertical);
     default:
       return undefined;
@@ -337,7 +342,7 @@ const leaving = (
 export const selectAtom =
   (direction: TextDirection, vertical = false): Command =>
   (state, dispatch) => {
-    const backward = direction === 'backward';
+    const backward = direction === TextDirection.Backward;
     const left = leaving(state, backward, vertical);
 
     if (left !== undefined) {
@@ -369,29 +374,29 @@ const formatCommand =
 
 export const intentCommand = (intent: InputIntent): Command => {
   switch (intent.kind) {
-    case 'insertText':
+    case InputIntentKind.InsertText:
       return intent.range === undefined
         ? chainCommands(gapText(intent.text), typeOverBlock(intent.text), insertText(intent.text))
         : insertText(intent.text, intent.range);
-    case 'compose':
+    case InputIntentKind.Compose:
       return insertText(intent.text, intent.range, intent.caret);
-    case 'insertParagraph':
+    case InputIntentKind.InsertParagraph:
       return chainCommands(gapEnter, splitListItem, insertParagraph);
-    case 'insertLineBreak':
+    case InputIntentKind.InsertLineBreak:
       return chainCommands(gapEnter, insertLineBreak);
-    case 'delete':
+    case InputIntentKind.Delete:
       if (intent.range !== undefined) {
         return deleteRange(intent.range);
       }
-      return intent.direction === 'backward'
+      return intent.direction === TextDirection.Backward
         ? chainCommands(codeToParagraph, liftAtStart, deleteText(intent.direction, intent.unit))
         : deleteText(intent.direction, intent.unit);
-    case 'format':
+    case InputIntentKind.Format:
       return formatCommand(intent.mark);
-    case 'paste':
+    case InputIntentKind.Paste:
       return pasteCommand(intent.text, intent.html);
-    case 'history':
-    case 'files':
+    case InputIntentKind.History:
+    case InputIntentKind.Files:
       return () => false;
   }
 };

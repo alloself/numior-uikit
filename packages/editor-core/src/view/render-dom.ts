@@ -1,4 +1,5 @@
-import type { RenderElement } from '../render/render.types';
+import { RenderChildKind, type RenderElement } from '../render/render.types';
+import { DomName } from './view.types';
 
 export interface RenderedDom {
   readonly dom: HTMLElement;
@@ -13,13 +14,13 @@ const build = (document: Document, spec: RenderElement, holes: HTMLElement[]): H
   }
   for (const child of spec.children) {
     switch (child.kind) {
-      case 'hole':
+      case RenderChildKind.Hole:
         holes.push(element);
         break;
-      case 'text':
+      case RenderChildKind.Text:
         element.append(document.createTextNode(child.text));
         break;
-      case 'element':
+      case RenderChildKind.Element:
         element.append(build(document, child, holes));
         break;
     }
@@ -56,7 +57,7 @@ export const renderLeaf = (document: Document, spec: RenderElement): HTMLElement
   if (holes.length > 0) {
     throw new RangeError(`A leaf cannot render a content hole in <${spec.tag}>`);
   }
-  if (dom.tagName !== 'BR') {
+  if (dom.tagName !== DomName.Br) {
     dom.setAttribute('contenteditable', 'false');
   }
   return dom;

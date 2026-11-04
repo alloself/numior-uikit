@@ -1,10 +1,17 @@
 import { inlineText, intentCommand } from '../commands/input';
 import type { Doc } from '../doc/doc.types';
 import { closeHistory } from '../history/history';
-import type { InputIntent } from '../state/input.types';
+import { TextDirection, type InputIntent } from '../state/input.types';
 import { createMetaKey, definePlugin } from '../state/plugin';
 import { isCursor } from '../state/selection';
-import type { Dispatch, EditorState, Plugin, Transaction } from '../state/state.types';
+import {
+  InputIntentKind,
+  SelectionKind,
+  type Dispatch,
+  type EditorState,
+  type Plugin,
+  type Transaction,
+} from '../state/state.types';
 import { invertStep } from '../transform/step';
 import type { Step } from '../transform/step.types';
 import type { InputRule, InputRuleMatch } from './input-rules.types';
@@ -19,7 +26,7 @@ const fired = createMetaKey<Undoable>('inputRule');
 const SCAN = 500;
 
 const typed = (state: EditorState, intent: InputIntent): Transaction | undefined => {
-  if (intent.kind !== 'insertText' && intent.kind !== 'compose') {
+  if (intent.kind !== InputIntentKind.InsertText && intent.kind !== InputIntentKind.Compose) {
     return undefined;
   }
   let tr: Transaction | undefined;
@@ -34,7 +41,7 @@ const typed = (state: EditorState, intent: InputIntent): Transaction | undefined
 const matchAt = (tr: Transaction): InputRuleMatch | undefined => {
   const selection = tr.selection;
 
-  if (selection.kind !== 'text' || !isCursor(selection)) {
+  if (selection.kind !== SelectionKind.Text || !isCursor(selection)) {
     return undefined;
   }
   const $pos = tr.doc.resolve(selection.head);
@@ -94,8 +101,8 @@ export const inputRules = (rules: readonly InputRule[]): Plugin<Undoable | null>
         const undoable = plugin.getState(state) ?? null;
 
         if (
-          intent.kind === 'delete' &&
-          intent.direction === 'backward' &&
+          intent.kind === InputIntentKind.Delete &&
+          intent.direction === TextDirection.Backward &&
           undoable !== null &&
           undoable.doc === state.doc
         ) {

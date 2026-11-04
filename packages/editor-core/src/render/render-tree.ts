@@ -1,6 +1,12 @@
-import type { ContentNode, ElementNode, TextNode } from '../model/node.types';
+import {
+  ContentNodeKind,
+  type ContentNode,
+  type ElementNode,
+  type TextNode,
+} from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
-import type { RenderChild, RenderElement } from './render.types';
+import { RenderChildKind, type RenderChild, type RenderElement } from './render.types';
+import { HtmlTag } from '../html/html.types';
 
 export interface RenderBuilder<T> {
   readonly element: (
@@ -25,11 +31,11 @@ const fromSpec = <T>(
   node?: ElementNode,
 ): readonly T[] => {
   switch (spec.kind) {
-    case 'text':
+    case RenderChildKind.Text:
       return [walk.builder.text(spec.text)];
-    case 'hole':
+    case RenderChildKind.Hole:
       return hole();
-    case 'element':
+    case RenderChildKind.Element:
       return [
         walk.builder.element(
           spec.tag,
@@ -43,7 +49,8 @@ const fromSpec = <T>(
 };
 
 const holds = (spec: RenderChild): boolean =>
-  spec.kind === 'hole' || (spec.kind === 'element' && spec.children.some(holds));
+  spec.kind === RenderChildKind.Hole ||
+  (spec.kind === RenderChildKind.Element && spec.children.some(holds));
 
 const withHole = (spec: RenderElement, leaf: boolean): RenderElement =>
   leaf || holds(spec) ? spec : { ...spec, children: [{ kind: 'hole' }] };
@@ -62,7 +69,8 @@ const fromText = <T>(walk: Walk<T>, node: TextNode): readonly T[] =>
 
 const rendersBreak = (schema: Schema, node: ContentNode | undefined): boolean =>
   node === undefined ||
-  (node.kind === 'element' && schema.nodes.get(node.type)?.render(node).tag === 'br');
+  (node.kind === ContentNodeKind.Element &&
+    schema.nodes.get(node.type)?.render(node).tag === HtmlTag.Br);
 
 const fromElement = <T>(walk: Walk<T>, node: ElementNode): readonly T[] => {
   const type = walk.schema.nodes.get(node.type);
@@ -86,7 +94,7 @@ const fromElement = <T>(walk: Walk<T>, node: ElementNode): readonly T[] => {
 
 const fromChildren = <T>(walk: Walk<T>, content: readonly ContentNode[]): readonly T[] =>
   content.flatMap((child) =>
-    child.kind === 'text' ? fromText(walk, child) : fromElement(walk, child),
+    child.kind === ContentNodeKind.Text ? fromText(walk, child) : fromElement(walk, child),
   );
 
 export const renderTree = <T>(

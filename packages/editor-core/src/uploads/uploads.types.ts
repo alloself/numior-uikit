@@ -10,5 +10,7 @@ export interface PendingUpload {
 export type PlaceBuilder = (tr: Transaction, alone: boolean) => ElementNode;
 
 export type UploadChange =
-  | { readonly kind: 'add'; readonly uploads: readonly PendingUpload[] }
-  | { readonly kind: 'drop'; readonly ids: readonly string[] };
+  | { readonly kind: typeof UploadChangeKind.Add; readonly uploads: readonly PendingUpload[] }
+  | { readonly kind: typeof UploadChangeKind.Drop; readonly ids: readonly string[] };
+
+export const UploadChangeKind = { Add: 'add', Drop: 'drop' } as const;

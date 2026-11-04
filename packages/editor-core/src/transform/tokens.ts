@@ -1,11 +1,17 @@
 import { nodeSize, normalizeContent, withContent } from '../model/node';
-import type { ContentNode, ElementNode, TextNode } from '../model/node.types';
+import {
+  ContentNodeKind,
+  type ContentNode,
+  type ElementNode,
+  type TextNode,
+} from '../model/node.types';
+import { TokenKind } from './step.types';
 
 export type Token =
-  | { readonly kind: 'open'; readonly node: ElementNode }
-  | { readonly kind: 'close' }
-  | { readonly kind: 'text'; readonly node: TextNode }
-  | { readonly kind: 'node'; readonly node: ElementNode };
+  | { readonly kind: typeof TokenKind.Open; readonly node: ElementNode }
+  | { readonly kind: typeof TokenKind.Close }
+  | { readonly kind: typeof TokenKind.Text; readonly node: TextNode }
+  | { readonly kind: typeof TokenKind.Node; readonly node: ElementNode };
 
 export interface Rebuilt {
   readonly content: readonly ContentNode[];
@@ -22,12 +28,12 @@ const CLOSE: Token = { kind: 'close' };
 
 const tokenSize = (token: Token): number => {
   switch (token.kind) {
-    case 'text':
+    case TokenKind.Text:
       return token.node.text.length;
-    case 'node':
+    case TokenKind.Node:
       return token.node.size;
-    case 'open':
-    case 'close':
+    case TokenKind.Open:
+    case TokenKind.Close:
       return 1;
   }
 };
@@ -54,7 +60,7 @@ export const contentTokens = (
     const end = offset + nodeSize(child);
     const inside = cuts.filter((cut) => cut > offset && cut < end);
 
-    if (child.kind === 'text') {
+    if (child.kind === ContentNodeKind.Text) {
       tokens.push(...splitText(child, offset, inside));
     } else if (inside.length === 0 || child.leaf) {
       tokens.push({ kind: 'node', node: child });
@@ -87,7 +93,7 @@ const frameTokens = (
 
     offset = end;
 
-    if (child.kind === 'text') {
+    if (child.kind === ContentNodeKind.Text) {
       return splitText(child, childStart, inside);
     }
     if (child.leaf || (open === 0 && close === 0 && inside.length === 0)) {
@@ -118,8 +124,8 @@ export const sliceFrame = (
 
   if (
     head.length + tail.length > tokens.length ||
-    head.some((token) => token.kind !== 'open') ||
-    tail.some((token) => token.kind !== 'close')
+    head.some((token) => token.kind !== TokenKind.Open) ||
+    tail.some((token) => token.kind !== TokenKind.Close)
   ) {
     return undefined;
   }
@@ -140,7 +146,7 @@ export const cutTokens = (tokens: readonly Token[], offset: number): [Token[], T
     const size = tokenSize(token);
 
     if (position + size > offset) {
-      if (token.kind === 'text' && offset > position) {
+      if (token.kind === TokenKind.Text && offset > position) {
         const split = offset - position;
 
         left.push({ kind: 'text', node: { ...token.node, text: token.node.text.slice(0, split) } });
@@ -167,9 +173,9 @@ export const rebuild = (tokens: readonly Token[]): Rebuilt | undefined => {
   const rebuilt: ElementNode[] = [];
 
   for (const token of tokens) {
-    if (token.kind === 'open') {
+    if (token.kind === TokenKind.Open) {
       frames.push({ node: token.node, content: [] });
-    } else if (token.kind === 'close') {
+    } else if (token.kind === TokenKind.Close) {
       const frame = frames.pop();
       const parent = frames.at(-1);
 

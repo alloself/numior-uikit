@@ -10,13 +10,13 @@ export interface Mark {
 }
 
 export interface TextNode {
-  readonly kind: 'text';
+  readonly kind: typeof ContentNodeKind.Text;
   readonly text: string;
   readonly marks: readonly Mark[];
 }
 
 export interface ElementNode {
-  readonly kind: 'element';
+  readonly kind: typeof ContentNodeKind.Element;
   readonly id: NodeId;
   readonly type: string;
   readonly attrs: Attrs;
@@ -30,3 +30,5 @@ export type ContentNode = TextNode | ElementNode;
 export interface IdSource {
   next(): NodeId;
 }
+
+export const ContentNodeKind = { Element: 'element', Text: 'text' } as const;

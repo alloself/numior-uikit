@@ -1,11 +1,21 @@
 import type { Doc, ResolvedPos } from '../doc/doc.types';
 import { emptyTextblock } from '../doc/empty';
 import { nodeSize, withContent } from '../model/node';
-import type { AttrValue, ContentNode, ElementNode } from '../model/node.types';
+import {
+  ContentNodeKind,
+  type AttrValue,
+  type ContentNode,
+  type ElementNode,
+} from '../model/node.types';
 import { matchesSplice } from '../schema/content-match';
 import type { Schema } from '../schema/schema.types';
 import { isCursor, textPosition, textSelection } from '../state/selection';
-import type { Command, EditorState, Transaction } from '../state/state.types';
+import {
+  SelectionKind,
+  type Command,
+  type EditorState,
+  type Transaction,
+} from '../state/state.types';
 import { attempt, probe } from './attempt';
 import { ancestorTypes, sequence } from './format';
 import { isBlockAtom } from './atoms';
@@ -21,7 +31,7 @@ interface ItemSpot {
 }
 
 const typeOf = (schema: Schema, node: ContentNode | undefined) =>
-  node?.kind === 'element' ? schema.nodes.get(node.type) : undefined;
+  node?.kind === ContentNodeKind.Element ? schema.nodes.get(node.type) : undefined;
 
 const isList = (schema: Schema, node: ContentNode | undefined): boolean =>
   typeOf(schema, node)?.groups.has('list') === true;
@@ -41,7 +51,7 @@ const fits = (
 };
 
 const headOf = (state: EditorState): number | undefined =>
-  state.selection.kind === 'text' ? state.selection.head : undefined;
+  state.selection.kind === SelectionKind.Text ? state.selection.head : undefined;
 
 const itemSpotAt = (schema: Schema, $pos: ResolvedPos): ItemSpot | undefined => {
   for (let depth = $pos.depth - 1; depth >= 1; depth -= 1) {
@@ -82,7 +92,7 @@ const nestedValid = (
   node: ContentNode | undefined,
   textblock: ElementNode,
 ): boolean =>
-  node?.kind !== 'element' ||
+  node?.kind !== ContentNodeKind.Element ||
   node === textblock ||
   (schema.nodes.get(node.type)?.content.matchContent(node.content)?.validEnd === true &&
     node.content.every((child) => nestedValid(schema, child, textblock)));
@@ -134,13 +144,13 @@ const joinSiblings = (tr: Transaction, pos: number): void => {
   const before = $pos.parent.content[index - 1];
   const after = $pos.parent.content[index + 1];
 
-  if (node?.kind !== 'element') {
+  if (node?.kind !== ContentNodeKind.Element) {
     return;
   }
-  if (after?.kind === 'element' && after.type === node.type) {
+  if (after?.kind === ContentNodeKind.Element && after.type === node.type) {
     tr.join(pos + node.size);
   }
-  if (before?.kind === 'element' && before.type === node.type) {
+  if (before?.kind === ContentNodeKind.Element && before.type === node.type) {
     tr.join(pos);
   }
 };
@@ -212,8 +222,10 @@ export const retypeTextblock = (
     !fits(schema, $pos.node($pos.depth - 1), $pos.indexAt($pos.depth - 1), [target]) ||
     !textblock.content.every(
       (child) =>
-        allowed?.content.matchType(child.kind === 'text' ? 'text' : child.type) !== undefined &&
-        (child.kind !== 'text' || child.marks.every((mark) => allowed.marks.has(mark.type))),
+        allowed?.content.matchType(child.kind === ContentNodeKind.Text ? 'text' : child.type) !==
+          undefined &&
+        (child.kind !== ContentNodeKind.Text ||
+          child.marks.every((mark) => allowed.marks.has(mark.type))),
     )
   ) {
     return false;
@@ -309,11 +321,11 @@ export const sinkListItem: Command = (state, dispatch) => {
   const item = $pos.node(depth);
   const itemStart = $pos.before(depth);
 
-  if (previous?.kind !== 'element') {
+  if (previous?.kind !== ContentNodeKind.Element) {
     return false;
   }
   const last = previous.content.at(-1);
-  const joins = last?.kind === 'element' && last.type === list.type;
+  const joins = last?.kind === ContentNodeKind.Element && last.type === list.type;
 
   return attempt(state, dispatch, (tr) => {
     tr.delete(itemStart, $pos.after(depth));
@@ -332,7 +344,7 @@ const cursorSpot = (state: EditorState): ItemSpot | undefined => {
   const spot = itemSpot(state);
 
   return spot !== undefined &&
-    state.selection.kind === 'text' &&
+    state.selection.kind === SelectionKind.Text &&
     isCursor(state.selection) &&
     spot.$pos.depth === spot.depth + 1 &&
     spot.$pos.indexAt(spot.depth) === 0
@@ -411,7 +423,7 @@ export const exitEmptyLast: Command = (state, dispatch) => {
 
   if (
     $pos === undefined ||
-    state.selection.kind !== 'text' ||
+    state.selection.kind !== SelectionKind.Text ||
     !isCursor(state.selection) ||
     $pos.depth < 2 ||
     $pos.parent.content.length > 0
@@ -443,8 +455,8 @@ export const exitEmptyLast: Command = (state, dispatch) => {
 export const caretAtEnd: Command = (state, dispatch) => {
   const { doc } = state;
   const last = doc.root.content.at(-1);
-  const at = last?.kind === 'element' ? doc.positionOf(last.id) : undefined;
-  const type = last?.kind === 'element' ? doc.schema.nodes.get(last.type) : undefined;
+  const at = last?.kind === ContentNodeKind.Element ? doc.positionOf(last.id) : undefined;
+  const type = last?.kind === ContentNodeKind.Element ? doc.schema.nodes.get(last.type) : undefined;
 
   if (last === undefined || at === undefined) {
     return false;
@@ -475,7 +487,7 @@ export const liftAtStart: Command = (state, dispatch) => {
 
   if (
     head === undefined ||
-    state.selection.kind !== 'text' ||
+    state.selection.kind !== SelectionKind.Text ||
     !isCursor(state.selection) ||
     state.doc.resolve(head).parentOffset !== 0
   ) {
@@ -594,7 +606,7 @@ export const insertBlock =
     const head = headOf(state);
     const $pos = head === undefined ? undefined : state.doc.resolve(head);
 
-    if (state.selection.kind === 'gap') {
+    if (state.selection.kind === SelectionKind.Gap) {
       return attempt(state, dispatch, (tr) => insertAtGap(tr, build));
     }
     if ($pos === undefined || head === undefined || !isTextblock(state.doc.schema, $pos.parent)) {

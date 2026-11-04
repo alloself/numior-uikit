@@ -1,7 +1,7 @@
 import { typeOf } from '../model/node';
 import type { ContentNode, ElementNode } from '../model/node.types';
 import type { ContentExpr } from './content-expression';
-import type { ContentMatch } from './schema.types';
+import { ContentExprKind, type ContentMatch } from './schema.types';
 
 interface Edge {
   readonly type: string | null;
@@ -88,7 +88,7 @@ const repeated = (
 
 const compileExpr = (automaton: Automaton, expr: ContentExpr, resolve: NameResolver): Fragment => {
   switch (expr.kind) {
-    case 'name': {
+    case ContentExprKind.Name: {
       const start = addState(automaton);
       const end = addState(automaton);
 
@@ -97,12 +97,12 @@ const compileExpr = (automaton: Automaton, expr: ContentExpr, resolve: NameResol
       }
       return { start, end };
     }
-    case 'seq':
+    case ContentExprKind.Seq:
       return chain(
         automaton,
         expr.items.map((item) => compileExpr(automaton, item, resolve)),
       );
-    case 'choice': {
+    case ContentExprKind.Choice: {
       const start = addState(automaton);
       const end = addState(automaton);
 
@@ -114,7 +114,7 @@ const compileExpr = (automaton: Automaton, expr: ContentExpr, resolve: NameResol
       }
       return { start, end };
     }
-    case 'repeat':
+    case ContentExprKind.Repeat:
       return repeated(
         automaton,
         () => compileExpr(automaton, expr.expr, resolve),

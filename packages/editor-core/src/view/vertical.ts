@@ -7,6 +7,7 @@ import type { Selection } from '../state/selection.types';
 import { coordsAtPos, posAtCoords } from './coords';
 import { gapX, sideNearest } from './gap';
 import type { ViewHost } from './host.types';
+import { SelectionKind } from '../state/state.types';
 
 const atomFrom = (doc: Doc, edge: number, forward: boolean): string | undefined => {
   const besideOf = (at: ResolvedPos): ContentNode | undefined =>
@@ -39,7 +40,7 @@ const onEdgeLine = (host: ViewHost, head: number, forward: boolean): boolean => 
 };
 
 const edgeOf = (doc: Doc, selection: Selection, forward: boolean): number | undefined => {
-  if (selection.kind === 'node' || selection.kind === 'gap') {
+  if (selection.kind === SelectionKind.Node || selection.kind === SelectionKind.Gap) {
     const node = doc.byId(selection.id);
     const at = doc.positionOf(selection.id);
 
@@ -52,7 +53,7 @@ const edgeOf = (doc: Doc, selection: Selection, forward: boolean): number | unde
     }
     return forward ? at + nodeSize(node) : at;
   }
-  if (selection.kind !== 'text' || selection.anchor !== selection.head) {
+  if (selection.kind !== SelectionKind.Text || selection.anchor !== selection.head) {
     return undefined;
   }
   const cursor = doc.resolve(selection.head);
@@ -61,7 +62,7 @@ const edgeOf = (doc: Doc, selection: Selection, forward: boolean): number | unde
 };
 
 const caretX = (host: ViewHost, selection: Selection): number | undefined => {
-  if (selection.kind === 'text') {
+  if (selection.kind === SelectionKind.Text) {
     return coordsAtPos(host, selection.head)?.left;
   }
   return gapX(host, selection);
@@ -70,7 +71,7 @@ const caretX = (host: ViewHost, selection: Selection): number | undefined => {
 const textAcross = (host: ViewHost, edge: number, forward: boolean, x: number): Selection => {
   const { doc } = host.state();
   const fallback = nearestCursor(doc, edge, forward ? 1 : -1);
-  const head = fallback.kind === 'text' ? fallback.head : undefined;
+  const head = fallback.kind === SelectionKind.Text ? fallback.head : undefined;
 
   const block =
     head === undefined
@@ -93,7 +94,7 @@ export const verticalTarget = (host: ViewHost, forward: boolean): Selection | un
   if (
     edge === undefined ||
     x === undefined ||
-    (selection.kind === 'text' && !onEdgeLine(host, selection.head, forward))
+    (selection.kind === SelectionKind.Text && !onEdgeLine(host, selection.head, forward))
   ) {
     return undefined;
   }
@@ -102,5 +103,5 @@ export const verticalTarget = (host: ViewHost, forward: boolean): Selection | un
   if (id !== undefined) {
     return { kind: 'gap', id, side: sideNearest(host, id, x) };
   }
-  return selection.kind === 'text' ? undefined : textAcross(host, edge, forward, x);
+  return selection.kind === SelectionKind.Text ? undefined : textAcross(host, edge, forward, x);
 };

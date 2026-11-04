@@ -20,7 +20,7 @@ import { attachInput, runIntent } from './input';
 import { domAtPos, posAtDOM } from './positions';
 import { ALL_CLASS, createSelectionSync } from './selection-sync';
 import type { ChunkSet } from './chunks';
-import type { ChunkWatch, EditorView, EditorViewOptions } from './view.types';
+import { DescKind, type ChunkWatch, type EditorView, type EditorViewOptions } from './view.types';
 import { placeWidgets } from './widgets';
 
 interface Sight {
@@ -334,7 +334,7 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     for (const block of chunk.children) {
       const desc = context.descs.get(block);
 
-      if (desc?.kind === 'element' && context.stale.has(desc)) {
+      if (desc?.kind === DescKind.Element && context.stale.has(desc)) {
         freshen(context, desc);
         changed = true;
       }
@@ -388,7 +388,7 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
 
       const child = parent.children[index];
 
-      if (child?.kind === 'element' && context.stale.has(child)) {
+      if (child?.kind === DescKind.Element && context.stale.has(child)) {
         freshen(context, child);
         watch.ignoreOwn();
       }

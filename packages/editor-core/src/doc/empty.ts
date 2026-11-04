@@ -1,5 +1,5 @@
 import { createIdSource } from '../model/node';
-import type { ElementNode, IdSource } from '../model/node.types';
+import { ContentNodeKind, type ElementNode, type IdSource } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
 import { createDoc } from './doc';
 import type { Doc } from './doc.types';
@@ -31,7 +31,7 @@ export const isEmptyDoc = (doc: Doc): boolean => {
 
   return (
     rest.length === 0 &&
-    first?.kind === 'element' &&
+    first?.kind === ContentNodeKind.Element &&
     first.content.length === 0 &&
     doc.schema.nodes.get(first.type)?.inlineContent === true
   );

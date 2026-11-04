@@ -1,9 +1,14 @@
 import type { Doc } from '../doc/doc.types';
 import { nodeSize, sameMarks } from '../model/node';
-import type { Attrs, Mark } from '../model/node.types';
+import { ContentNodeKind, type Attrs, type Mark } from '../model/node.types';
 import { isCursor, selectionRange, textSelection } from '../state/selection';
 import type { SelectionRange } from '../state/selection.types';
-import type { Command, EditorState, Transaction } from '../state/state.types';
+import {
+  SelectionKind,
+  type Command,
+  type EditorState,
+  type Transaction,
+} from '../state/state.types';
 
 export interface ActiveBlock {
   readonly type: string;
@@ -22,7 +27,7 @@ interface MarkSpan {
 
 const cursorMarks = (state: EditorState, head: number): ReadonlySet<string> => {
   const before = state.doc.resolve(head).nodeBefore;
-  const marks = state.storedMarks ?? (before?.kind === 'text' ? before.marks : []);
+  const marks = state.storedMarks ?? (before?.kind === ContentNodeKind.Text ? before.marks : []);
 
   return new Set(marks.map((mark) => mark.type));
 };
@@ -38,14 +43,14 @@ const keptTypes = (types: readonly string[], marks: readonly Mark[]): readonly s
 export const activeMarks = (state: EditorState): ReadonlySet<string> => {
   const { doc, selection } = state;
 
-  if (selection.kind === 'text' && isCursor(selection)) {
+  if (selection.kind === SelectionKind.Text && isCursor(selection)) {
     return cursorMarks(state, selection.head);
   }
   const range = selectionRange(doc, selection);
   let shared: readonly string[] | undefined;
 
   doc.nodesBetween(range.from, range.to, (node) => {
-    if (node.kind === 'text') {
+    if (node.kind === ContentNodeKind.Text) {
       const marks = node.marks;
 
       shared = shared === undefined ? marks.map((mark) => mark.type) : keptTypes(shared, marks);
@@ -124,7 +129,10 @@ const spansOf = (doc: Doc, pos: number, type: string): MarkSpan[] => {
     return {
       from,
       to: offset,
-      mark: child.kind === 'text' ? child.marks.find((mark) => mark.type === type) : undefined,
+      mark:
+        child.kind === ContentNodeKind.Text
+          ? child.marks.find((mark) => mark.type === type)
+          : undefined,
     };
   });
 };
@@ -157,9 +165,12 @@ export const markExtent = (doc: Doc, pos: number, type: string): SelectionRange 
 
 const marksNear = (state: EditorState, pos: number): readonly Mark[] => {
   const $pos = state.doc.resolve(pos);
-  const near = [$pos.nodeBefore, $pos.nodeAfter].find((node) => node?.kind === 'text');
 
-  return near?.kind === 'text' ? near.marks : [];
+  const near = [$pos.nodeBefore, $pos.nodeAfter].find(
+    (node) => node?.kind === ContentNodeKind.Text,
+  );
+
+  return near?.kind === ContentNodeKind.Text ? near.marks : [];
 };
 
 export const markAttrs = (state: EditorState, type: string): Attrs | undefined => {
@@ -205,7 +216,7 @@ export const insertMarked =
   (state, dispatch) => {
     const { schema } = state.doc;
     const tr = state.tr.deleteSelection();
-    const head = tr.selection.kind === 'text' ? tr.selection.head : undefined;
+    const head = tr.selection.kind === SelectionKind.Text ? tr.selection.head : undefined;
 
     if (head === undefined || text === '') {
       return false;

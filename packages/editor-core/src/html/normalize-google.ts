@@ -1,4 +1,4 @@
-import type { HtmlElement, HtmlNode } from './html.types';
+import { HtmlTag, PasteMarker, type HtmlElement, type HtmlNode } from './html.types';
 import { isElement, rewriteTree, withAttr, withChildren, type ChildrenRewrite } from './rewrite';
 
 const BLOCKS = new Set(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'table', 'div', 'hr']);
@@ -9,7 +9,7 @@ const isWrapper = (node: HtmlNode): node is HtmlElement =>
   isElement(node) && (node.attr('id') ?? '').startsWith('docs-internal-guid');
 
 const isCheckbox = (node: HtmlNode): boolean =>
-  isElement(node, 'img') && node.attr('aria-roledescription') === 'checkbox';
+  isElement(node, HtmlTag.Img) && node.attr('aria-roledescription') === PasteMarker.Checkbox;
 
 const isEmptyParagraph = (node: HtmlNode): boolean =>
   isElement(node, 'p') && node.text().trim() === '' && node.find('img') === undefined;

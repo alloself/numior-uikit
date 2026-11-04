@@ -1,8 +1,8 @@
-import type {
-  BlockDecoration,
-  DecorationSet,
+import {
   DecorationTag,
-  InlineDecoration,
+  type BlockDecoration,
+  type DecorationSet,
+  type InlineDecoration,
 } from '../decorations/decorations.types';
 import type { NodeId } from '../model/node.types';
 import type { EditorState } from '../state/state.types';
@@ -154,7 +154,7 @@ export const segmentsOf = (
       from,
       to,
       classes: covering.map((decoration) => decoration.class),
-      tag: covering.some((decoration) => decoration.tag === 'mark') ? 'mark' : 'span',
+      tag: covering.some((decoration) => decoration.tag === DecorationTag.Mark) ? 'mark' : 'span',
     };
   });
 };

@@ -2,11 +2,16 @@ import { createDoc } from '../doc/doc';
 import type { Doc, Slice } from '../doc/doc.types';
 import { sharedDepth } from '../doc/resolve';
 import { childIndexAt, childOffsets, contentSize, spliceContent } from '../model/node';
-import type { ContentNode, ElementNode, NodeId } from '../model/node.types';
+import {
+  ContentNodeKind,
+  type ContentNode,
+  type ElementNode,
+  type NodeId,
+} from '../model/node.types';
 import { checkNodes } from '../schema/check';
 import { matchesSplice } from '../schema/content-match';
 import type { NodeType, Schema } from '../schema/schema.types';
-import type { StepResult } from './step.types';
+import { TokenKind, type StepResult } from './step.types';
 import { contentTokens, cutTokens, rebuild, sliceFrame, sliceTokens, type Token } from './tokens';
 import { liftInto } from './tree';
 
@@ -55,7 +60,8 @@ const regionOf = (node: ElementNode, start: number, from: number, to: number): R
 const allowedText = (type: NodeType | undefined, content: readonly ContentNode[]): boolean =>
   content.every(
     (child) =>
-      child.kind === 'element' || child.marks.every((mark) => type?.marks.has(mark.type) === true),
+      child.kind === ContentNodeKind.Element ||
+      child.marks.every((mark) => type?.marks.has(mark.type) === true),
   );
 
 export const fits = (schema: Schema, node: ElementNode): boolean => {
@@ -92,7 +98,7 @@ const collectIds = (node: ElementNode, into: NodeId[]): void => {
   into.push(node.id);
 
   for (const child of node.content) {
-    if (child.kind === 'element') {
+    if (child.kind === ContentNodeKind.Element) {
       collectIds(child, into);
     }
   }
@@ -102,9 +108,9 @@ const insertedIds = (tokens: readonly Token[]): NodeId[] => {
   const ids: NodeId[] = [];
 
   for (const token of tokens) {
-    if (token.kind === 'open') {
+    if (token.kind === TokenKind.Open) {
       ids.push(token.node.id);
-    } else if (token.kind === 'node') {
+    } else if (token.kind === TokenKind.Node) {
       collectIds(token.node, ids);
     }
   }
@@ -130,7 +136,7 @@ const idsFree = (doc: Doc, plan: ReplacePlan, fresh: ReadonlySet<NodeId>): boole
 };
 
 const middleNodes = (tokens: readonly Token[]): ElementNode[] =>
-  tokens.flatMap((token) => (token.kind === 'node' ? [token.node] : []));
+  tokens.flatMap((token) => (token.kind === TokenKind.Node ? [token.node] : []));
 
 export const applyPlan = (doc: Doc, plan: ReplacePlan, fresh: ReadonlySet<NodeId>): StepResult => {
   const { from, to } = plan;

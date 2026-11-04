@@ -1,5 +1,5 @@
 import { htmlElement } from './element';
-import type { HtmlElement, HtmlNode } from './html.types';
+import { PasteMarker, type HtmlElement, type HtmlNode } from './html.types';
 import { isBlank, isElement, renamed, rewriteTree, type ChildrenRewrite } from './rewrite';
 
 interface WordItem {
@@ -33,7 +33,7 @@ const TITLES: ReadonlyMap<string, string> = new Map([
 ]);
 
 const isMarker = (node: HtmlNode): boolean =>
-  isElement(node) && node.style('mso-list')?.toLowerCase() === 'ignore';
+  isElement(node) && node.style('mso-list')?.toLowerCase() === PasteMarker.Ignore;
 
 const markerIn = (nodes: readonly HtmlNode[]): HtmlElement | undefined => {
   for (const node of nodes) {

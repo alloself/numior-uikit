@@ -10,3 +10,5 @@ export interface InputRule {
   readonly match: RegExp;
   readonly apply: (tr: Transaction, match: RegExpExecArray, from: number, to: number) => boolean;
 }
+
+export const TaskMark = { Done: 'x' } as const;

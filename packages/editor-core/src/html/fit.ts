@@ -1,5 +1,5 @@
 import type { ContentNode, ElementNode, IdSource } from '../model/node.types';
-import type { ContentMatch, NodeType, Schema } from '../schema/schema.types';
+import { NodeName, type ContentMatch, type NodeType, type Schema } from '../schema/schema.types';
 
 interface Route {
   readonly match: ContentMatch;
@@ -13,7 +13,8 @@ const fillings = new WeakMap<ContentMatch, readonly NodeType[] | null>();
 const pending = new WeakSet<ContentMatch>();
 
 const creatable = (type: NodeType): boolean =>
-  type.name !== 'text' && Object.values(type.attrs).every((attr) => attr.default !== undefined);
+  type.name !== NodeName.Text &&
+  Object.values(type.attrs).every((attr) => attr.default !== undefined);
 
 const wrappers = (schema: Schema, match: ContentMatch): NodeType[] =>
   [...match.next.keys()]

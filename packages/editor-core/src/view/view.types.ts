@@ -1,5 +1,8 @@
 import type { ElementNode, NodeId } from '../model/node.types';
 import type { EditorState, Transaction } from '../state/state.types';
+import { GapSide } from '../state/selection.types';
+
+export type GapMove = (typeof GapMove)[keyof typeof GapMove];
 
 export interface DomPoint {
   readonly node: Node;
@@ -53,3 +56,26 @@ export interface EditorView {
   inWidget(target: EventTarget | null): boolean;
   destroy(): void;
 }
+
+export const DescKind = { Element: 'element', Text: 'text' } as const;
+
+export const DomName = { Br: 'BR' } as const;
+
+export const CssKeyword = {
+  None: 'none',
+  Hidden: 'hidden',
+  Fixed: 'fixed',
+  Contents: 'contents',
+} as const;
+
+export const Direction = { Rtl: 'rtl' } as const;
+
+export const Key = { Backspace: 'Backspace', Escape: 'Escape', Process: 'Process' } as const;
+
+export const InputType = { InsertReplacementText: 'insertReplacementText' } as const;
+
+export const DomEventType = { Cut: 'cut' } as const;
+
+export const AttrToken = { True: 'true' } as const;
+
+export const GapMove = { ...GapSide, Select: 'select' } as const;

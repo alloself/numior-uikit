@@ -1,12 +1,24 @@
 import { inputSource } from '../commands/input';
-import type { InputSource } from '../state/input.types';
+import { InputSource } from '../state/input.types';
 import { createMetaKey, definePlugin } from '../state/plugin';
 import type { Selection } from '../state/selection.types';
-import type { Command, EditorState, Plugin, Transaction } from '../state/state.types';
+import {
+  InputIntentKind,
+  SelectionKind,
+  type Command,
+  type EditorState,
+  type Plugin,
+  type Transaction,
+} from '../state/state.types';
 import type { StepMap } from '../transform/mapping.types';
 import { invertStep, mapStep, stepMapOf } from '../transform/step';
-import type { Step } from '../transform/step.types';
-import type { HistoryAction, HistoryEvent, HistoryOptions, HistoryState } from './history.types';
+import { StepKind, type Step } from '../transform/step.types';
+import {
+  HistoryAction,
+  type HistoryEvent,
+  type HistoryOptions,
+  type HistoryState,
+} from './history.types';
 import { mirrored, passedStep, type MirrorMaps } from './rebase';
 
 interface HistorySettings {
@@ -19,7 +31,11 @@ interface Rebased {
   readonly chain: MirrorMaps;
 }
 
-const GROUPED: ReadonlySet<InputSource> = new Set(['type', 'delete', 'compose']);
+const GROUPED: ReadonlySet<InputSource> = new Set([
+  InputSource.Type,
+  InputSource.Delete,
+  InputSource.Compose,
+]);
 
 const historyAction = createMetaKey<HistoryAction>('historyAction');
 
@@ -43,10 +59,10 @@ const eventOf = (tr: Transaction, before: EditorState): HistoryEvent => ({
 
 const idle = (step: Step): boolean => {
   switch (step.kind) {
-    case 'replace':
+    case StepKind.Replace:
       return step.from === step.to && step.slice.content.length === 0;
-    case 'addMark':
-    case 'removeMark':
+    case StepKind.AddMark:
+    case StepKind.RemoveMark:
       return step.from >= step.to;
     default:
       return false;
@@ -78,7 +94,7 @@ const rebaseSteps = (steps: readonly Step[], chain: MirrorMaps): Rebased =>
 const movedSelection = (selection: Selection, chain: MirrorMaps): Selection => {
   const mapping = mirrored(chain);
 
-  return selection.kind === 'text'
+  return selection.kind === SelectionKind.Text
     ? { kind: 'text', anchor: mapping.map(selection.anchor), head: mapping.map(selection.head) }
     : selection;
 };
@@ -109,7 +125,7 @@ const travelled = (
 ): HistoryState => {
   const event = eventOf(tr, before);
 
-  return action === 'undo'
+  return action === HistoryAction.Undo
     ? { ...value, done: value.done.slice(0, -1), undone: [...value.undone, event], open: false }
     : { ...value, undone: value.undone.slice(0, -1), done: [...value.done, event], open: false };
 };
@@ -188,7 +204,7 @@ const travel =
   (action: HistoryAction): Command =>
   (state, dispatch) => {
     const history = historyOf(state);
-    const event = (action === 'undo' ? history?.done : history?.undone)?.at(-1);
+    const event = (action === HistoryAction.Undo ? history?.done : history?.undone)?.at(-1);
 
     if (event === undefined) {
       return false;
@@ -226,7 +242,7 @@ export const history = (options: HistoryOptions = {}): Plugin<HistoryState> => {
     },
     props: {
       handleIntent: (intent, state, dispatch) =>
-        intent.kind === 'history' && travel(intent.action)(state, dispatch),
+        intent.kind === InputIntentKind.History && travel(intent.action)(state, dispatch),
     },
   });
 

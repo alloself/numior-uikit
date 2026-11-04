@@ -1,28 +1,30 @@
 import type { Doc } from '../doc/doc.types';
-import type { ContentNode, ElementNode } from '../model/node.types';
-import type { NodeType, Schema } from '../schema/schema.types';
+import { ContentNodeKind, type ContentNode, type ElementNode } from '../model/node.types';
+import { NodeName, type NodeType, type Schema } from '../schema/schema.types';
 import { nearestCursor } from '../state/selection';
 import type { Selection } from '../state/selection.types';
+import { HtmlTag } from '../html/html.types';
 
 export const ATOM = '￼';
 
 export const isInline = (schema: Schema, node: ContentNode): boolean =>
-  schema.nodes.get(node.kind === 'element' ? node.type : 'text')?.inline !== false;
+  schema.nodes.get(node.kind === ContentNodeKind.Element ? node.type : 'text')?.inline !== false;
 
 const typeOf = (schema: Schema, node: ContentNode): NodeType | undefined =>
-  node.kind === 'element' ? schema.nodes.get(node.type) : undefined;
+  node.kind === ContentNodeKind.Element ? schema.nodes.get(node.type) : undefined;
 
 const breakTypes = new WeakMap<Schema, string | null>();
 
 const probes = (type: NodeType): boolean =>
-  type.name !== 'text' &&
+  type.name !== NodeName.Text &&
   type.inline &&
   type.leaf &&
   Object.values(type.attrs).every((attr) => attr.default !== undefined);
 
 const findBreakType = (schema: Schema): string | null =>
   [...schema.nodes.values()].find(
-    (type) => probes(type) && type.render(schema.element(type.name, { id: ATOM })).tag === 'br',
+    (type) =>
+      probes(type) && type.render(schema.element(type.name, { id: ATOM })).tag === HtmlTag.Br,
   )?.name ?? null;
 
 export const breakTypeOf = (schema: Schema): string | undefined => {
@@ -37,7 +39,10 @@ export const isAtom = (schema: Schema, node: ContentNode | undefined): node is E
   const type = node === undefined ? undefined : typeOf(schema, node);
 
   return (
-    node?.kind === 'element' && type !== undefined && type.atom && type.name !== breakTypeOf(schema)
+    node?.kind === ContentNodeKind.Element &&
+    type !== undefined &&
+    type.atom &&
+    type.name !== breakTypeOf(schema)
   );
 };
 

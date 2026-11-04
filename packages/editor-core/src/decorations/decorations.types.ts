@@ -1,7 +1,7 @@
 import type { NodeId } from '../model/node.types';
 import type { Mappable } from '../transform/mapping.types';
 
-export type DecorationTag = 'span' | 'mark';
+export type DecorationTag = (typeof DecorationTag)[keyof typeof DecorationTag];
 
 export interface InlineDecoration {
   readonly from: number;
@@ -29,3 +29,5 @@ export interface DecorationSet {
   readonly widgets: readonly WidgetDecoration[];
   map(mapping: Mappable): DecorationSet;
 }
+
+export const DecorationTag = { Span: 'span', Mark: 'mark' } as const;

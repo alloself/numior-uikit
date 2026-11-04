@@ -1,7 +1,12 @@
 import type { ResolvedPos } from '../doc/doc.types';
-import type { ElementNode } from '../model/node.types';
+import { ContentNodeKind, type ElementNode } from '../model/node.types';
 import { textSelection } from '../state/selection';
-import type { Command, EditorState, Transaction } from '../state/state.types';
+import {
+  SelectionKind,
+  type Command,
+  type EditorState,
+  type Transaction,
+} from '../state/state.types';
 import { attempt } from './attempt';
 import { caretInto, followingTextblock, retypeTextblock } from './blocks';
 import { textCursor } from './cursor';
@@ -19,15 +24,15 @@ const INDENT = '  ';
 const LEADING = /^[ \t]*/;
 
 const plainText = (node: ElementNode): string | undefined =>
-  node.content.every((child) => child.kind === 'text')
-    ? node.content.map((child) => (child.kind === 'text' ? child.text : '')).join('')
+  node.content.every((child) => child.kind === ContentNodeKind.Text)
+    ? node.content.map((child) => (child.kind === ContentNodeKind.Text ? child.text : '')).join('')
     : undefined;
 
 const isCode = (state: EditorState, node: ElementNode): boolean =>
   state.doc.schema.nodes.get(node.type)?.code === true;
 
 const codeSpot = (state: EditorState): CodeSpot | undefined => {
-  if (state.selection.kind !== 'text') {
+  if (state.selection.kind !== SelectionKind.Text) {
     return undefined;
   }
 

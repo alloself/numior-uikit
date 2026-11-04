@@ -10,6 +10,7 @@ import {
 } from './desc';
 import type { ViewHost } from './host.types';
 import { contentStart } from './positions';
+import { DescKind, DomName } from './view.types';
 
 export interface DomWatch {
   ignoreOwn(): void;
@@ -23,7 +24,7 @@ const ATOM = '￼';
 const isLeafDom = (context: ViewContext, node: Node): boolean => {
   const desc = context.descs.get(node);
 
-  return desc?.kind === 'element' && desc.contentDOM === null && desc.dom === node;
+  return desc?.kind === DescKind.Element && desc.contentDOM === null && desc.dom === node;
 };
 
 const readInline = (context: ViewContext, parent: Node): string => {
@@ -34,7 +35,7 @@ const readInline = (context: ViewContext, parent: Node): string => {
       text += ATOM;
     } else if (child instanceof Text) {
       text += child.data;
-    } else if (child.nodeName !== 'BR') {
+    } else if (child.nodeName !== DomName.Br) {
       text += readInline(context, child);
     }
   }
@@ -160,7 +161,7 @@ export const createDomWatch = (
       const desc =
         textblockAround(host.context, record.target) ?? descAround(host.context, record.target);
 
-      if (desc?.kind === 'element') {
+      if (desc?.kind === DescKind.Element) {
         pending.add(desc);
       }
     }

@@ -1,11 +1,16 @@
 import type { Doc } from '../doc/doc.types';
 import { emptyTextblock } from '../doc/empty';
 import { contentSize, nodeSize } from '../model/node';
-import type { ContentNode, ElementNode, NodeId } from '../model/node.types';
+import {
+  ContentNodeKind,
+  type ContentNode,
+  type ElementNode,
+  type NodeId,
+} from '../model/node.types';
 import { nearestCursor, selectionRange, textSelection } from '../state/selection';
 import type { Selection } from '../state/selection.types';
-import type { NodeSlots } from '../schema/schema.types';
-import type { Command, EditorState } from '../state/state.types';
+import { SlotRule } from '../schema/schema.types';
+import { SelectionKind, type Command, type EditorState } from '../state/state.types';
 
 export interface ChildSlot {
   readonly parent: NodeId;
@@ -30,15 +35,18 @@ const parentOf = (doc: Doc, id: NodeId): Parent | undefined => {
   return node === undefined || pos === undefined ? undefined : { node, start: pos + 1 };
 };
 
-export const slotRule = (doc: Doc, node: ElementNode): NodeSlots | 'none' =>
-  node.id === doc.root.id ? 'all' : (doc.schema.nodes.get(node.type)?.slots ?? 'none');
+export const slotRule = (doc: Doc, node: ElementNode): SlotRule =>
+  node.id === doc.root.id
+    ? SlotRule.All
+    : (doc.schema.nodes.get(node.type)?.slots ?? SlotRule.None);
 
-export const holdsSlots = (doc: Doc, node: ElementNode): boolean => slotRule(doc, node) !== 'none';
+export const holdsSlots = (doc: Doc, node: ElementNode): boolean =>
+  slotRule(doc, node) !== SlotRule.None;
 
 export const isSlot = (doc: Doc, parent: ElementNode, index: number): boolean => {
   const rule = slotRule(doc, parent);
 
-  return rule === 'all' || (rule === 'rest' && index > 0);
+  return rule === SlotRule.All || (rule === SlotRule.Rest && index > 0);
 };
 
 export const slotAt = (doc: Doc, pos: number): ChildSlot | undefined => {
@@ -70,7 +78,7 @@ export const childStart = (doc: Doc, slot: ChildSlot): number | undefined => {
 export const childNode = (doc: Doc, slot: ChildSlot): ElementNode | undefined => {
   const child = parentOf(doc, slot.parent)?.node.content[slot.index];
 
-  return child?.kind === 'element' ? child : undefined;
+  return child?.kind === ContentNodeKind.Element ? child : undefined;
 };
 
 export const containerSlot = (doc: Doc, slot: ChildSlot): ChildSlot | undefined => {
@@ -92,7 +100,7 @@ const followed = (state: EditorState, slot: ChildSlot, delta: number): Selection
   const start = childStart(state.doc, slot) ?? 0;
   const end = start + nodeSize(childNode(state.doc, slot) ?? state.doc.root);
 
-  return selection.kind === 'text' && range.from >= start && range.to <= end
+  return selection.kind === SelectionKind.Text && range.from >= start && range.to <= end
     ? textSelection(selection.anchor + delta, selection.head + delta)
     : undefined;
 };

@@ -8,7 +8,7 @@ import {
   type TextPart,
   type ViewContext,
 } from './desc';
-import type { DomPoint } from './view.types';
+import { DescKind, type DomPoint } from './view.types';
 
 const startOf = (desc: Desc): number => {
   const parent = desc.parent;
@@ -66,7 +66,7 @@ const chunkPosition = (context: ViewContext, chunk: Node, offset: number): numbe
   if (desc !== undefined) {
     return startOf(desc);
   }
-  if (rootDesc?.kind !== 'element' || !(root instanceof HTMLElement)) {
+  if (rootDesc?.kind !== DescKind.Element || !(root instanceof HTMLElement)) {
     throw new RangeError('A chunk lies outside the editor root');
   }
   return positionAtChild(context, rootDesc, root, indexOf(chunk) + 1);
@@ -107,7 +107,7 @@ const textOffsetIn = (desc: TextDesc, node: Node, offset: number): number => {
 };
 
 const positionIn = (context: ViewContext, desc: Desc, node: Node, offset: number): number => {
-  if (desc.kind === 'text') {
+  if (desc.kind === DescKind.Text) {
     return startOf(desc) + textOffsetIn(desc, node, offset);
   }
   const content = desc.contentDOM;
@@ -165,7 +165,7 @@ export const domAtPos = (
 
     const child = desc.children[resolved.indexAt(depth)];
 
-    if (child?.kind !== 'element') {
+    if (child?.kind !== DescKind.Element) {
       throw new RangeError(`The view does not match the document at ${pos}`);
     }
     desc = child;
@@ -173,13 +173,13 @@ export const domAtPos = (
   const child = desc.children[resolved.index];
   const before = desc.children[resolved.index - 1];
 
-  if (resolved.textOffset > 0 && child?.kind === 'text') {
+  if (resolved.textOffset > 0 && child?.kind === DescKind.Text) {
     return pointInText(child, resolved.textOffset);
   }
-  if (before?.kind === 'text') {
+  if (before?.kind === DescKind.Text) {
     return pointInText(before, before.node.text.length);
   }
-  if (child?.kind === 'text') {
+  if (child?.kind === DescKind.Text) {
     return pointInText(child, 0);
   }
   if (desc.contentDOM === null) {

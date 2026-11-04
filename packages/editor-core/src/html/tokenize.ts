@@ -1,14 +1,15 @@
 import { decodeEntities } from './entities';
+import { HtmlChar, type HtmlTokenKind } from './html.types';
 
 export type HtmlToken =
   | {
-      readonly kind: 'open';
+      readonly kind: typeof HtmlTokenKind.Open;
       readonly tag: string;
       readonly attrs: ReadonlyMap<string, string>;
       readonly closed: boolean;
     }
-  | { readonly kind: 'close'; readonly tag: string }
-  | { readonly kind: 'text'; readonly text: string };
+  | { readonly kind: typeof HtmlTokenKind.Close; readonly tag: string }
+  | { readonly kind: typeof HtmlTokenKind.Text; readonly text: string };
 
 interface Cursor {
   readonly html: string;
@@ -73,7 +74,9 @@ const readAttribute = (cursor: Cursor, attrs: Map<string, string>): void => {
 };
 
 const closesTag = (html: string, at: number): boolean =>
-  html[at] === undefined || html[at] === '>' || (html[at] === '/' && html[at + 1] === '>');
+  html[at] === undefined ||
+  html[at] === HtmlChar.TagEnd ||
+  (html[at] === HtmlChar.Slash && html[at + 1] === HtmlChar.TagEnd);
 
 const readAttributes = (cursor: Cursor, attrs: Map<string, string>): boolean => {
   const { html } = cursor;
@@ -81,7 +84,7 @@ const readAttributes = (cursor: Cursor, attrs: Map<string, string>): boolean => 
   skipSpace(cursor);
 
   while (!closesTag(html, cursor.at)) {
-    if (html[cursor.at] === '/') {
+    if (html[cursor.at] === HtmlChar.Slash) {
       cursor.at += 1;
     } else {
       readAttribute(cursor, attrs);
@@ -89,7 +92,7 @@ const readAttributes = (cursor: Cursor, attrs: Map<string, string>): boolean => 
     skipSpace(cursor);
   }
 
-  const selfClosing = html[cursor.at] === '/';
+  const selfClosing = html[cursor.at] === HtmlChar.Slash;
 
   cursor.at = Math.min(html.length, cursor.at + (selfClosing ? 2 : 1));
   return selfClosing;
@@ -134,9 +137,9 @@ const readMarkup = (cursor: Cursor): void => {
 
   if (html.startsWith('<!--', at)) {
     skipTo(cursor, '-->', at + 4);
-  } else if (next === '!' || next === '?') {
+  } else if (next === HtmlChar.Bang || next === HtmlChar.Question) {
     skipTo(cursor, '>', at + 1);
-  } else if (next === '/') {
+  } else if (next === HtmlChar.Slash) {
     readClose(cursor);
   } else {
     const name = nameAt(cursor, at + 1);

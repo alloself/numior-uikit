@@ -7,6 +7,7 @@ import { clearGap, paintGap } from './gap';
 import type { ViewHost } from './host.types';
 import { domAtPos, posAtDOM } from './positions';
 import type { DomPoint } from './view.types';
+import { SelectionKind } from '../state/state.types';
 
 interface Span {
   readonly anchor: number;
@@ -24,13 +25,13 @@ const SELECTED_CLASS = 'nui-editor__selected';
 export const ALL_CLASS = 'nui-editor__all';
 
 const spanOf = (doc: Doc, selection: Selection): Span => {
-  if (selection.kind === 'text') {
+  if (selection.kind === SelectionKind.Text) {
     return { anchor: selection.anchor, head: selection.head };
   }
 
   const range = selectionRange(
     doc,
-    selection.kind === 'gap' ? { kind: 'node', id: selection.id } : selection,
+    selection.kind === SelectionKind.Gap ? { kind: 'node', id: selection.id } : selection,
   );
 
   return { anchor: range.from, head: range.to };
@@ -74,10 +75,10 @@ const pointsOf = (
   host: ViewHost,
   selection: Selection,
 ): readonly [DomPoint, DomPoint] | undefined => {
-  if (selection.kind === 'node' || selection.kind === 'gap') {
+  if (selection.kind === SelectionKind.Node || selection.kind === SelectionKind.Gap) {
     return nodePoints(host, selection.id);
   }
-  if (selection.kind === 'all') {
+  if (selection.kind === SelectionKind.All) {
     const doc = host.state().doc;
     const point = domAtPos(host.rootDesc, doc, textPosition(doc, 0, 1) ?? 0, host.fresh);
 
@@ -173,13 +174,14 @@ export const createSelectionSync = (host: ViewHost): SelectionSync => {
   let gapped: HTMLElement | undefined;
 
   const markGap = (selection: Selection): void => {
-    const next = selection.kind === 'gap' ? host.context.byId.get(selection.id)?.dom : undefined;
+    const next =
+      selection.kind === SelectionKind.Gap ? host.context.byId.get(selection.id)?.dom : undefined;
 
     if (gapped !== undefined && gapped !== next) {
       clearGap(gapped);
     }
     gapped = next;
-    if (next !== undefined && selection.kind === 'gap') {
+    if (next !== undefined && selection.kind === SelectionKind.Gap) {
       paintGap(host, next, selection.id, selection.side);
     }
   };
@@ -187,7 +189,7 @@ export const createSelectionSync = (host: ViewHost): SelectionSync => {
   const matches = (span: Span): boolean => {
     const state = host.state();
 
-    if (state.selection.kind === 'all') {
+    if (state.selection.kind === SelectionKind.All) {
       return (
         coversAll(state.doc, span) ||
         (span.anchor === span.head && span.head === allCaret(state.doc))
@@ -239,9 +241,13 @@ export const createSelectionSync = (host: ViewHost): SelectionSync => {
     },
     mark: () => {
       const selection = host.state().selection;
-      const next = selection.kind === 'node' ? host.context.byId.get(selection.id)?.dom : undefined;
 
-      host.root.classList.toggle(ALL_CLASS, selection.kind === 'all');
+      const next =
+        selection.kind === SelectionKind.Node
+          ? host.context.byId.get(selection.id)?.dom
+          : undefined;
+
+      host.root.classList.toggle(ALL_CLASS, selection.kind === SelectionKind.All);
       markGap(selection);
 
       if (next === marked) {

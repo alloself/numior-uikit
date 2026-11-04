@@ -2,11 +2,18 @@ import type { ResolvedPos, Slice } from '../doc/doc.types';
 import { isEmptyDoc } from '../doc/empty';
 import { fromHTML } from '../html/parse';
 import { contentSize } from '../model/node';
-import type { ContentNode, ElementNode } from '../model/node.types';
+import { ContentNodeKind, type ContentNode, type ElementNode } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
 import { textSelection } from '../state/selection';
 import { definePlugin } from '../state/plugin';
-import type { Command, EditorState, Plugin, Transaction } from '../state/state.types';
+import {
+  InputIntentKind,
+  SelectionKind,
+  type Command,
+  type EditorState,
+  type Plugin,
+  type Transaction,
+} from '../state/state.types';
 import { sliceSize } from '../transform/replace';
 import { caretNear } from './atoms';
 import { openGapLine } from './gap';
@@ -14,7 +21,7 @@ import { openGapLine } from './gap';
 const LINE = /\r\n?|\n/u;
 
 const headOf = (tr: Transaction): number | undefined =>
-  tr.selection.kind === 'text' ? tr.selection.head : undefined;
+  tr.selection.kind === SelectionKind.Text ? tr.selection.head : undefined;
 
 const inCodeAt = (tr: Transaction, head: number | undefined): boolean =>
   head !== undefined && tr.doc.schema.nodes.get(tr.doc.resolve(head).parent.type)?.code === true;
@@ -51,7 +58,7 @@ export const insertPlainText =
     }
     const cursor = tr.doc.resolve(head);
     const before = cursor.nodeBefore;
-    const marks = tr.storedMarks ?? (before?.kind === 'text' ? before.marks : []);
+    const marks = tr.storedMarks ?? (before?.kind === ContentNodeKind.Text ? before.marks : []);
     const { schema } = tr.doc;
 
     const content = lines.map((line) =>
@@ -70,7 +77,7 @@ export const insertPlainText =
   };
 
 const isTextblock = (schema: Schema, node: ContentNode | undefined): node is ElementNode =>
-  node?.kind === 'element' && schema.nodes.get(node.type)?.inlineContent === true;
+  node?.kind === ContentNodeKind.Element && schema.nodes.get(node.type)?.inlineContent === true;
 
 const replaced = (tr: Transaction, from: number, to: number, slice: Slice): boolean =>
   tr.maybeStep({ kind: 'replace', from, to, slice }).ok;
@@ -144,7 +151,7 @@ const insertBlocks = (tr: Transaction, head: number, blocks: readonly ElementNod
 const linesOf = (schema: Schema, block: ElementNode): readonly ContentNode[][] =>
   schema.nodes.get(block.type)?.code === true
     ? block.content
-        .flatMap((node) => (node.kind === 'text' ? [node.text] : []))
+        .flatMap((node) => (node.kind === ContentNodeKind.Text ? [node.text] : []))
         .join('')
         .split('\n')
         .map((line) => (line === '' ? [] : [schema.text(line)]))
@@ -152,7 +159,7 @@ const linesOf = (schema: Schema, block: ElementNode): readonly ContentNode[][] =
 
 const textblocksOf = (schema: Schema, nodes: readonly ContentNode[]): ElementNode[] =>
   nodes.flatMap((node) => {
-    if (node.kind === 'text') {
+    if (node.kind === ContentNodeKind.Text) {
       return [];
     }
     return schema.nodes.get(node.type)?.inlineContent === true
@@ -179,7 +186,7 @@ const parsedBlocks = (tr: Transaction, html: string, schema: Schema): ElementNod
 
   return isEmptyDoc(doc)
     ? []
-    : doc.root.content.filter((node): node is ElementNode => node.kind === 'element');
+    : doc.root.content.filter((node): node is ElementNode => node.kind === ContentNodeKind.Element);
 };
 
 export const insertHTML =
@@ -213,7 +220,7 @@ export const pasteSchema = (schema: Schema): Plugin =>
     name: 'paste-schema',
     props: {
       handleIntent: (intent, state, dispatch) =>
-        intent.kind === 'paste' &&
+        intent.kind === InputIntentKind.Paste &&
         intent.html !== undefined &&
         intent.html !== '' &&
         insertHTML(intent.html, intent.text, schema)(state, dispatch),

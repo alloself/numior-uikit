@@ -1,8 +1,8 @@
 import type { NodeId } from '../model/node.types';
 
 export type AnchorRange =
-  | { readonly kind: 'text'; readonly from: number; readonly to: number }
-  | { readonly kind: 'node'; readonly id: NodeId };
+  | { readonly kind: typeof AnchorRangeKind.Text; readonly from: number; readonly to: number }
+  | { readonly kind: typeof AnchorRangeKind.Node; readonly id: NodeId };
 
 export interface Anchor {
   readonly id: string;
@@ -17,15 +17,19 @@ export interface AnchorsState {
 
 export type AnchorJSON =
   | {
-      readonly kind: 'text';
+      readonly kind: typeof AnchorRangeKind.Text;
       readonly fromId: NodeId;
       readonly fromOffset: number;
       readonly toId: NodeId;
       readonly toOffset: number;
     }
-  | { readonly kind: 'node'; readonly id: NodeId };
+  | { readonly kind: typeof AnchorRangeKind.Node; readonly id: NodeId };
 
 export type AnchorChange =
-  | { readonly kind: 'set'; readonly id: string; readonly range: AnchorRange }
-  | { readonly kind: 'remove'; readonly id: string }
-  | { readonly kind: 'activate'; readonly id: string | undefined };
+  | { readonly kind: typeof AnchorChangeKind.Set; readonly id: string; readonly range: AnchorRange }
+  | { readonly kind: typeof AnchorChangeKind.Remove; readonly id: string }
+  | { readonly kind: typeof AnchorChangeKind.Activate; readonly id: string | undefined };
+
+export const AnchorRangeKind = { Text: 'text', Node: 'node' } as const;
+
+export const AnchorChangeKind = { Set: 'set', Remove: 'remove', Activate: 'activate' } as const;

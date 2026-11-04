@@ -1,6 +1,6 @@
 import { createDoc } from '../doc/doc';
 import type { Doc } from '../doc/doc.types';
-import type { Attrs } from '../model/node.types';
+import { ContentNodeKind, type Attrs } from '../model/node.types';
 import type { AttrSpecs } from '../schema/schema.types';
 import type { StepResult } from './step.types';
 import { liftInto } from './tree';
@@ -21,7 +21,7 @@ export const applyAttrs = (doc: Doc, pos: number, attrs: Attrs): StepResult => {
   const resolved = doc.resolve(pos);
   const target = resolved.nodeAfter;
 
-  if (target?.kind !== 'element' || resolved.textOffset > 0) {
+  if (target?.kind !== ContentNodeKind.Element || resolved.textOffset > 0) {
     return { ok: false, reason: 'target' };
   }
   if (!validAttrs(doc.schema.nodes.get(target.type)?.attrs, attrs)) {

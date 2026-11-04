@@ -6,8 +6,8 @@ import { createStepMap, EMPTY_MAP } from './mapping';
 import type { Mappable, StepMap } from './mapping.types';
 import { applyMark, heldSpans } from './marks';
 import { applyPlan, aroundPlan, replacePlan, sliceSize } from './replace';
-import type { NodeId } from '../model/node.types';
-import type { Step, StepResult } from './step.types';
+import { ContentNodeKind, type NodeId } from '../model/node.types';
+import { StepKind, type Step, type StepResult } from './step.types';
 import { cutTokens, rebuild, sliceFrame } from './tokens';
 
 const NO_IDS: ReadonlySet<NodeId> = new Set();
@@ -34,35 +34,42 @@ export const applyStep = (
   fresh: ReadonlySet<NodeId> = NO_IDS,
 ): StepResult => {
   switch (step.kind) {
-    case 'replace': {
+    case StepKind.Replace: {
       const plan = replacePlan(step.from, step.to, step.slice);
 
       return plan === undefined ? { ok: false, reason: 'depth' } : applyPlan(doc, plan, fresh);
     }
-    case 'replaceAround': {
+    case StepKind.ReplaceAround: {
       const plan = aroundPlan(doc, step);
 
       return plan === undefined ? { ok: false, reason: 'range' } : applyPlan(doc, plan, fresh);
     }
-    case 'addMark':
-    case 'removeMark':
-      return applyMark(doc, step.from, step.to, step.mark, step.kind === 'addMark', step.skip);
-    case 'attrs':
+    case StepKind.AddMark:
+    case StepKind.RemoveMark:
+      return applyMark(
+        doc,
+        step.from,
+        step.to,
+        step.mark,
+        step.kind === StepKind.AddMark,
+        step.skip,
+      );
+    case StepKind.Attrs:
       return applyAttrs(doc, step.pos, step.attrs);
-    case 'markup':
+    case StepKind.Markup:
       return applyMarkup(doc, step.changes);
-    case 'docAttrs':
+    case StepKind.DocAttrs:
       return applyDocAttrs(doc, step.attrs);
   }
 };
 
 export const stepMapOf = (step: Step): StepMap => {
   switch (step.kind) {
-    case 'replace':
+    case StepKind.Replace:
       return createStepMap([
         { start: step.from, oldSize: step.to - step.from, newSize: sliceSize(step.slice) },
       ]);
-    case 'replaceAround':
+    case StepKind.ReplaceAround:
       return createStepMap([
         { start: step.from, oldSize: step.gapFrom - step.from, newSize: step.insert },
         {
@@ -71,11 +78,11 @@ export const stepMapOf = (step: Step): StepMap => {
           newSize: sliceSize(step.slice) - step.insert,
         },
       ]);
-    case 'addMark':
-    case 'removeMark':
-    case 'attrs':
-    case 'markup':
-    case 'docAttrs':
+    case StepKind.AddMark:
+    case StepKind.RemoveMark:
+    case StepKind.Attrs:
+    case StepKind.Markup:
+    case StepKind.DocAttrs:
       return EMPTY_MAP;
   }
 };
@@ -100,7 +107,7 @@ const invertAround = (step: Extract<Step, { kind: 'replaceAround' }>, doc: Doc):
 };
 
 const invertMark = (step: Extract<Step, { kind: 'addMark' | 'removeMark' }>, doc: Doc): Step => {
-  const added = step.kind === 'addMark';
+  const added = step.kind === StepKind.AddMark;
   const skip = heldSpans(doc, step.from, step.to, step.mark, added);
 
   return {
@@ -114,26 +121,29 @@ const invertMark = (step: Extract<Step, { kind: 'addMark' | 'removeMark' }>, doc
 
 export const invertStep = (step: Step, doc: Doc): Step => {
   switch (step.kind) {
-    case 'replace':
+    case StepKind.Replace:
       return {
         kind: 'replace',
         from: step.from,
         to: step.from + sliceSize(step.slice),
         slice: doc.slice(step.from, step.to),
       };
-    case 'replaceAround':
+    case StepKind.ReplaceAround:
       return invertAround(step, doc);
-    case 'addMark':
-    case 'removeMark':
+    case StepKind.AddMark:
+    case StepKind.RemoveMark:
       return invertMark(step, doc);
-    case 'attrs': {
+    case StepKind.Attrs: {
       const target = doc.nodeAt(step.pos);
 
-      return { ...step, attrs: target?.kind === 'element' ? target.attrs : step.attrs };
+      return {
+        ...step,
+        attrs: target?.kind === ContentNodeKind.Element ? target.attrs : step.attrs,
+      };
     }
-    case 'markup':
+    case StepKind.Markup:
       return { kind: 'markup', changes: markupBefore(doc, step.changes) };
-    case 'docAttrs':
+    case StepKind.DocAttrs:
       return { ...step, attrs: doc.root.attrs };
   }
 };
@@ -202,24 +212,24 @@ const mapMarkup = (
 
 export const mapStep = (step: Step, mapping: Mappable): Step | undefined => {
   switch (step.kind) {
-    case 'replace': {
+    case StepKind.Replace: {
       const range = mapRangeStep(step, mapping);
 
       return range === undefined ? undefined : { ...step, ...range };
     }
-    case 'replaceAround':
+    case StepKind.ReplaceAround:
       return mapAround(step, mapping);
-    case 'addMark':
-    case 'removeMark':
+    case StepKind.AddMark:
+    case StepKind.RemoveMark:
       return mapMarkStep(step, mapping);
-    case 'attrs': {
+    case StepKind.Attrs: {
       const result = mapping.mapResult(step.pos, 1);
 
       return result.deletedAfter ? undefined : { ...step, pos: result.pos };
     }
-    case 'markup':
+    case StepKind.Markup:
       return mapMarkup(step, mapping);
-    case 'docAttrs':
+    case StepKind.DocAttrs:
       return step;
   }
 };
@@ -252,11 +262,11 @@ const mergeReplace = (
 };
 
 export const mergeSteps = (first: Step, second: Step): Step | undefined => {
-  if (first.kind === 'replace' && second.kind === 'replace') {
+  if (first.kind === StepKind.Replace && second.kind === StepKind.Replace) {
     return mergeReplace(first, second);
   }
   if (
-    (first.kind === 'addMark' || first.kind === 'removeMark') &&
+    (first.kind === StepKind.AddMark || first.kind === StepKind.RemoveMark) &&
     second.kind === first.kind &&
     sameMarks([first.mark], [second.mark]) &&
     (first.skip ?? []).length === 0 &&

@@ -1,9 +1,11 @@
+import { ContentToken, type ContentExprKind } from './schema.types';
+
 export type ContentExpr =
-  | { readonly kind: 'name'; readonly name: string }
-  | { readonly kind: 'seq'; readonly items: readonly ContentExpr[] }
-  | { readonly kind: 'choice'; readonly options: readonly ContentExpr[] }
+  | { readonly kind: typeof ContentExprKind.Name; readonly name: string }
+  | { readonly kind: typeof ContentExprKind.Seq; readonly items: readonly ContentExpr[] }
+  | { readonly kind: typeof ContentExprKind.Choice; readonly options: readonly ContentExpr[] }
   | {
-      readonly kind: 'repeat';
+      readonly kind: typeof ContentExprKind.Repeat;
       readonly expr: ContentExpr;
       readonly min: number;
       readonly max: number;
@@ -51,7 +53,7 @@ const rangeOf = (cursor: Cursor, expr: ContentExpr): ContentExpr => {
   let max = min;
 
   if (take(cursor, ',')) {
-    max = peek(cursor) === '}' ? Number.POSITIVE_INFINITY : countOf(cursor);
+    max = peek(cursor) === ContentToken.RepeatClose ? Number.POSITIVE_INFINITY : countOf(cursor);
   }
   if (!take(cursor, '}')) {
     return expected(cursor, '"}"');
@@ -107,7 +109,7 @@ const atomOf = (cursor: Cursor): ContentExpr => {
 };
 
 const startsTerm = (token: string | undefined): boolean =>
-  token !== undefined && (token === '(' || NAME.test(token));
+  token !== undefined && (token === ContentToken.GroupOpen || NAME.test(token));
 
 const sequenceOf = (cursor: Cursor): ContentExpr => {
   const items: ContentExpr[] = [];

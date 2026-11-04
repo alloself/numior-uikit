@@ -1,9 +1,20 @@
 import type { ResolvedPos } from '../doc/doc.types';
-import type { AttrValue, ContentNode, ElementNode, Mark } from '../model/node.types';
+import {
+  ContentNodeKind,
+  type AttrValue,
+  type ContentNode,
+  type ElementNode,
+  type Mark,
+} from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
 import { isAtom } from './atoms';
 import { isCursor, selectionRange, textSelection } from '../state/selection';
-import type { Command, EditorState, Transaction } from '../state/state.types';
+import {
+  SelectionKind,
+  type Command,
+  type EditorState,
+  type Transaction,
+} from '../state/state.types';
 
 interface JoinPlan {
   readonly cursor: ResolvedPos;
@@ -12,10 +23,10 @@ interface JoinPlan {
 }
 
 const isTextblock = (schema: Schema, node: ContentNode | undefined): node is ElementNode =>
-  node?.kind === 'element' && schema.nodes.get(node.type)?.inlineContent === true;
+  node?.kind === ContentNodeKind.Element && schema.nodes.get(node.type)?.inlineContent === true;
 
 const cursorOf = (state: EditorState): ResolvedPos | undefined =>
-  state.selection.kind === 'text' && isCursor(state.selection)
+  state.selection.kind === SelectionKind.Text && isCursor(state.selection)
     ? state.doc.resolve(state.selection.head)
     : undefined;
 
@@ -44,7 +55,7 @@ const sibling = (cursor: ResolvedPos, offset: -1 | 1): ElementNode | undefined =
   const parent = depth >= 0 ? cursor.node(depth) : undefined;
   const node = parent?.content[cursor.indexAt(depth) + offset];
 
-  return node?.kind === 'element' ? node : undefined;
+  return node?.kind === ContentNodeKind.Element ? node : undefined;
 };
 
 const atEdge = (cursor: ResolvedPos, offset: -1 | 1): boolean =>
@@ -123,11 +134,11 @@ const textblockAfter = (schema: Schema, cursor: ResolvedPos): string | undefined
 
 export const splitBlock: Command = (state, dispatch) => {
   const first =
-    state.selection.kind === 'text' && !isCursor(state.selection)
+    state.selection.kind === SelectionKind.Text && !isCursor(state.selection)
       ? state.tr.deleteSelection()
       : state.tr;
 
-  const head = first.selection.kind === 'text' ? first.selection.head : undefined;
+  const head = first.selection.kind === SelectionKind.Text ? first.selection.head : undefined;
   const cursor = head === undefined ? undefined : first.doc.resolve(head);
 
   if (cursor === undefined || cursor.depth === 0 || !isTextblock(first.doc.schema, cursor.parent)) {
@@ -153,9 +164,11 @@ const marksAt = (tr: Transaction): readonly Mark[] => {
   }
 
   const before =
-    tr.selection.kind === 'text' ? tr.doc.resolve(tr.selection.head).nodeBefore : undefined;
+    tr.selection.kind === SelectionKind.Text
+      ? tr.doc.resolve(tr.selection.head).nodeBefore
+      : undefined;
 
-  return before?.kind === 'text' ? before.marks : [];
+  return before?.kind === ContentNodeKind.Text ? before.marks : [];
 };
 
 const everyHas = (state: EditorState, from: number, to: number, type: string): boolean => {
@@ -163,7 +176,10 @@ const everyHas = (state: EditorState, from: number, to: number, type: string): b
   let seen = false;
 
   state.doc.nodesBetween(from, to, (node, _pos, parent) => {
-    if (node.kind === 'text' && state.doc.schema.nodes.get(parent.type)?.marks.has(type) === true) {
+    if (
+      node.kind === ContentNodeKind.Text &&
+      state.doc.schema.nodes.get(parent.type)?.marks.has(type) === true
+    ) {
       seen = true;
       all &&= node.marks.some((mark) => mark.type === type);
     }

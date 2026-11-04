@@ -5,6 +5,7 @@ import { posAtCoords } from './coords';
 import type { Desc } from './desc';
 import { sideNearest, sideOutside } from './gap';
 import type { ViewHost } from './host.types';
+import { DescKind } from './view.types';
 
 interface BlockHit {
   readonly block: Element | undefined;
@@ -71,7 +72,7 @@ const gapIn = (host: ViewHost, chunk: Element, x: number, y: number): Selection 
   const { block, row } = blockAt(chunk, context.descs, y);
   const desc = block === undefined ? undefined : context.descs.get(block);
 
-  if (block === undefined || desc?.kind !== 'element') {
+  if (block === undefined || desc?.kind !== DescKind.Element) {
     return undefined;
   }
   const box = block.getBoundingClientRect();

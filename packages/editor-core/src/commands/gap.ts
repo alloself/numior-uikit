@@ -1,10 +1,10 @@
 import type { Doc } from '../doc/doc.types';
 import { emptyTextblock } from '../doc/empty';
 import { nodeSize } from '../model/node';
-import type { ContentNode, ElementNode } from '../model/node.types';
+import { ContentNodeKind, type ContentNode, type ElementNode } from '../model/node.types';
 import { nearestCursor, textSelection } from '../state/selection';
-import type { GapSide, Selection } from '../state/selection.types';
-import type { Command, Transaction } from '../state/state.types';
+import { GapSide, type Selection } from '../state/selection.types';
+import { SelectionKind, type Command, type Transaction } from '../state/state.types';
 import { isBlockAtom } from './atoms';
 import { attempt } from './attempt';
 
@@ -18,10 +18,10 @@ export interface GapSpot {
 }
 
 export const gapSpot = (doc: Doc, selection: Selection): GapSpot | undefined => {
-  const node = selection.kind === 'gap' ? doc.byId(selection.id) : undefined;
+  const node = selection.kind === SelectionKind.Gap ? doc.byId(selection.id) : undefined;
   const at = node === undefined ? undefined : doc.positionOf(node.id);
 
-  if (selection.kind !== 'gap' || node === undefined || at === undefined) {
+  if (selection.kind !== SelectionKind.Gap || node === undefined || at === undefined) {
     return undefined;
   }
   const place = doc.resolve(at);
@@ -30,7 +30,7 @@ export const gapSpot = (doc: Doc, selection: Selection): GapSpot | undefined => 
     node,
     side: selection.side,
     at,
-    pos: selection.side === 'start' ? at : at + nodeSize(node),
+    pos: selection.side === GapSide.Start ? at : at + nodeSize(node),
     parent: place.parent,
     index: place.index,
   };
@@ -60,7 +60,8 @@ export const openGapLine = (tr: Transaction, text = ''): boolean => {
 export const gapText =
   (text: string): Command =>
   (state, dispatch) =>
-    state.selection.kind === 'gap' && attempt(state, dispatch, (tr) => openGapLine(tr, text));
+    state.selection.kind === SelectionKind.Gap &&
+    attempt(state, dispatch, (tr) => openGapLine(tr, text));
 
 export const gapEnter: Command = (state, dispatch) => {
   const spot = gapSpot(state.doc, state.selection);
@@ -69,7 +70,7 @@ export const gapEnter: Command = (state, dispatch) => {
     return false;
   }
   return attempt(state, dispatch, (tr) => {
-    if (spot.side === 'end') {
+    if (spot.side === GapSide.End) {
       return openGapLine(tr);
     }
     const line = lineOf(tr, '');
@@ -84,7 +85,7 @@ export const gapEnter: Command = (state, dispatch) => {
 };
 
 const isEmptyTextblock = (doc: Doc, node: ContentNode): boolean =>
-  node.kind === 'element' &&
+  node.kind === ContentNodeKind.Element &&
   node.content.length === 0 &&
   doc.schema.nodes.get(node.type)?.inlineContent === true;
 
@@ -119,7 +120,7 @@ export const gapDelete =
     if (spot === undefined) {
       return false;
     }
-    if (backward ? spot.side === 'end' : spot.side === 'start') {
+    if (backward ? spot.side === GapSide.End : spot.side === GapSide.Start) {
       dispatch?.(state.tr.setSelection({ kind: 'node', id: spot.node.id }));
       return true;
     }

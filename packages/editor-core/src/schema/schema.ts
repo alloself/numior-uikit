@@ -5,16 +5,18 @@ import type { AttrValue, Attrs, ElementNode, Mark, TextNode } from '../model/nod
 import { checkTree } from './check';
 import { parseContentExpression } from './content-expression';
 import { compileContent, reachesEnd, typesOf, type NameResolver } from './content-match';
-import type {
-  AttrLimits,
-  AttrSpecs,
-  ElementInit,
-  MarkType,
-  NodeSpec,
-  NodeType,
-  Schema,
-  SchemaLimits,
-  SchemaSpec,
+import {
+  ContentToken,
+  NodeName,
+  type AttrLimits,
+  type AttrSpecs,
+  type ElementInit,
+  type MarkType,
+  type NodeSpec,
+  type NodeType,
+  type Schema,
+  type SchemaLimits,
+  type SchemaSpec,
 } from './schema.types';
 
 interface Allowed {
@@ -71,7 +73,7 @@ const groupsOf = (group: string | undefined): Set<string> =>
   new Set((group ?? '').split(/\s+/).filter((name) => name !== ''));
 
 const isInline = (spec: SchemaSpec, name: string): boolean =>
-  name === 'text' || spec.nodes[name]?.inline === true;
+  name === NodeName.Text || spec.nodes[name]?.inline === true;
 
 const nodeResolver =
   (spec: SchemaSpec, allowed: Allowed): NameResolver =>
@@ -128,7 +130,7 @@ const allowedMarks = (
   expression: string | undefined,
   inlineContent: boolean,
 ): Set<string> => {
-  if (expression === '_' || (expression === undefined && inlineContent)) {
+  if (expression === ContentToken.Wildcard || (expression === undefined && inlineContent)) {
     return new Set(allowed.marks);
   }
   return expression === undefined ? new Set() : markNames(spec, allowed, expression);
@@ -278,7 +280,7 @@ const factoriesOf = (
   };
 
   const element = (type: string, init: ElementInit): ElementNode => {
-    const nodeType = type === 'text' ? undefined : nodes.get(type);
+    const nodeType = type === NodeName.Text ? undefined : nodes.get(type);
 
     if (nodeType === undefined) {
       throw new RangeError(`Unknown element type "${type}"`);

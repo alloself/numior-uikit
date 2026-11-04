@@ -4,9 +4,9 @@ import {
   wrapInList,
   wrapTextblock,
 } from '../commands/blocks';
-import type { AttrValue } from '../model/node.types';
+import { ContentNodeKind, type AttrValue } from '../model/node.types';
 import type { Transaction } from '../state/state.types';
-import type { InputRule } from './input-rules.types';
+import { TaskMark, type InputRule } from './input-rules.types';
 
 type Attrs = Readonly<Record<string, AttrValue>>;
 
@@ -75,7 +75,9 @@ const markRule = (match: RegExp, mark: string, size: number): InputRule => ({
     const before = tr.doc.resolve(end).nodeBefore;
 
     tr.setStoredMarks(
-      before?.kind === 'text' ? before.marks.filter((item) => item.type !== mark) : [],
+      before?.kind === ContentNodeKind.Text
+        ? before.marks.filter((item) => item.type !== mark)
+        : [],
     );
 
     return true;
@@ -104,7 +106,9 @@ export const markdownRules: readonly InputRule[] = [
   ),
   blockRule(
     /^\[([ x]?)\]\s$/i,
-    list('todo_list', none, (match) => ({ checked: (match[1] ?? '').toLowerCase() === 'x' })),
+    list('todo_list', none, (match) => ({
+      checked: (match[1] ?? '').toLowerCase() === TaskMark.Done,
+    })),
   ),
   blockRule(/^---$/, (tr, pos) => insertBeforeTextblock(tr, pos, 'divider')),
   markRule(/(?<![*\w])\*\*([^\s*](?:[^*]*[^\s*])?)\*\*$/, 'bold', 2),

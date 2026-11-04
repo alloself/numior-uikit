@@ -3,8 +3,22 @@ import type { DecorationSet } from '../decorations/decorations.types';
 import type { Doc } from '../doc/doc.types';
 import { createMetaKey, definePlugin } from '../state/plugin';
 import { selectionRange } from '../state/selection';
-import type { Command, EditorState, Plugin, Transaction } from '../state/state.types';
-import type { Anchor, AnchorChange, AnchorJSON, AnchorRange, AnchorsState } from './anchors.types';
+import {
+  SelectionKind,
+  type Command,
+  type EditorState,
+  type Plugin,
+  type Transaction,
+} from '../state/state.types';
+import {
+  AnchorChangeKind,
+  AnchorRangeKind,
+  type Anchor,
+  type AnchorChange,
+  type AnchorJSON,
+  type AnchorRange,
+  type AnchorsState,
+} from './anchors.types';
 
 const anchorChange = createMetaKey<AnchorChange>('anchors');
 
@@ -17,7 +31,7 @@ const EMPTY: AnchorsState = { anchors: new Map(), active: undefined };
 const movedAnchor = (anchor: Anchor, tr: Transaction): Anchor => {
   const { range } = anchor;
 
-  if (range.kind === 'node') {
+  if (range.kind === AnchorRangeKind.Node) {
     return tr.doc.byId(range.id) === undefined ? { ...anchor, lost: true } : anchor;
   }
   const from = tr.mapping.map(range.from, 1);
@@ -36,7 +50,7 @@ const moved = (value: AnchorsState, tr: Transaction): AnchorsState =>
 
 const changed = (value: AnchorsState, change: AnchorChange | undefined): AnchorsState => {
   switch (change?.kind) {
-    case 'set':
+    case AnchorChangeKind.Set:
       return {
         ...value,
         anchors: new Map(value.anchors).set(change.id, {
@@ -45,7 +59,7 @@ const changed = (value: AnchorsState, change: AnchorChange | undefined): Anchors
           lost: false,
         }),
       };
-    case 'remove': {
+    case AnchorChangeKind.Remove: {
       const anchors = new Map(value.anchors);
 
       anchors.delete(change.id);
@@ -54,7 +68,7 @@ const changed = (value: AnchorsState, change: AnchorChange | undefined): Anchors
         active: value.active === change.id ? undefined : value.active,
       };
     }
-    case 'activate':
+    case AnchorChangeKind.Activate:
       return { ...value, active: change.id };
     case undefined:
       return value;
@@ -72,7 +86,7 @@ const decorationsOf = (value: AnchorsState): DecorationSet => {
 
   const set = decorationSet(
     [...value.anchors.values()].flatMap(({ id, range, lost }) =>
-      range.kind === 'text' && !lost
+      range.kind === AnchorRangeKind.Text && !lost
         ? [
             inlineDecoration(
               range.from,
@@ -109,12 +123,14 @@ export const activeAnchor = (state: EditorState): string | undefined =>
 const selectedRange = (state: EditorState): AnchorRange | undefined => {
   const { selection, doc } = state;
 
-  if (selection.kind === 'node') {
+  if (selection.kind === SelectionKind.Node) {
     return { kind: 'node', id: selection.id };
   }
   const { from, to } = selectionRange(doc, selection);
 
-  return selection.kind === 'text' && from < to ? { kind: 'text', from, to } : undefined;
+  return selection.kind === SelectionKind.Text && from < to
+    ? { kind: 'text', from, to }
+    : undefined;
 };
 
 const sent =
@@ -144,7 +160,7 @@ export const activateAnchor =
     sent({ kind: 'activate', id })(state, dispatch);
 
 const covers = (doc: Doc, range: AnchorRange, pos: number): boolean => {
-  if (range.kind === 'text') {
+  if (range.kind === AnchorRangeKind.Text) {
     return range.from <= pos && pos <= range.to;
   }
   const node = doc.byId(range.id);
@@ -168,7 +184,7 @@ const pointOf = (doc: Doc, pos: number): { readonly id: string; readonly offset:
 };
 
 export const anchorToJSON = (doc: Doc, range: AnchorRange): AnchorJSON => {
-  if (range.kind === 'node') {
+  if (range.kind === AnchorRangeKind.Node) {
     return range;
   }
   const from = pointOf(doc, range.from);
@@ -193,7 +209,7 @@ const positionIn = (doc: Doc, id: string, offset: number): number | undefined =>
 };
 
 export const anchorFromJSON = (doc: Doc, json: AnchorJSON): AnchorRange | undefined => {
-  if (json.kind === 'node') {
+  if (json.kind === AnchorRangeKind.Node) {
     return doc.byId(json.id) === undefined ? undefined : json;
   }
   const from = positionIn(doc, json.fromId, json.fromOffset);

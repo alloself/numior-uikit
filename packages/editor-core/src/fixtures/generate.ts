@@ -4,19 +4,7 @@ import { createIdSource } from '../model/node';
 import type { AttrValue, ContentNode, ElementNode, IdSource, Mark } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
 import { createRandom, type Random } from './random';
-
-export type FixtureBlock =
-  | 'paragraph'
-  | 'heading'
-  | 'list'
-  | 'table'
-  | 'code'
-  | 'image'
-  | 'callout'
-  | 'toggle'
-  | 'columns'
-  | 'quote'
-  | 'divider';
+import { FixtureColumnType, FixtureList, type FixtureBlock } from './fixtures.types';
 
 export interface GenerateOptions {
   readonly blocks: number;
@@ -30,7 +18,7 @@ interface Generator {
   readonly ids: IdSource;
 }
 
-type ColumnType = (typeof COLUMN_TYPES)[number];
+type ColumnType = FixtureColumnType;
 
 interface FixtureColumn {
   readonly type: ColumnType;
@@ -98,7 +86,7 @@ const WORDS = [
   'доставка',
 ] as const;
 
-const LISTS = ['bullet_list', 'ordered_list', 'todo_list'] as const;
+const LISTS = [FixtureList.Bullet, FixtureList.Ordered, FixtureList.Todo] as const;
 
 const TONES = ['info', 'success', 'warning', 'error'] as const;
 
@@ -145,7 +133,7 @@ const paragraphs = (generator: Generator, min: number, max: number): ElementNode
 
 const listOf = (generator: Generator, depth: number): ElementNode => {
   const kind = generator.random.pick(LISTS);
-  const todo = kind === 'todo_list';
+  const todo = kind === FixtureList.Todo;
 
   const items = Array.from({ length: generator.random.int(2, 5) }, () => {
     const nested = depth < 3 && generator.random.chance(0.2) ? [listOf(generator, depth + 1)] : [];
@@ -162,12 +150,20 @@ const listOf = (generator: Generator, depth: number): ElementNode => {
   return element(generator, kind, items);
 };
 
-const COLUMN_TYPES = ['text', 'number', 'date', 'boolean', 'select'] as const;
+const COLUMN_TYPES = [
+  FixtureColumnType.Text,
+  FixtureColumnType.Number,
+  FixtureColumnType.Date,
+  FixtureColumnType.Boolean,
+  FixtureColumnType.Select,
+] as const;
 
 const twoDigits = (value: number): string => String(value).padStart(2, '0');
 
 const optionsOf = (generator: Generator, type: ColumnType): readonly string[] =>
-  type === 'select' ? [...new Set(Array.from({ length: 3 }, () => word(generator)))] : [];
+  type === FixtureColumnType.Select
+    ? [...new Set(Array.from({ length: 3 }, () => word(generator)))]
+    : [];
 
 const cellValue = (generator: Generator, column: FixtureColumn): AttrValue => {
   const { random } = generator;
@@ -176,15 +172,15 @@ const cellValue = (generator: Generator, column: FixtureColumn): AttrValue => {
     return null;
   }
   switch (column.type) {
-    case 'text':
+    case FixtureColumnType.Text:
       return sentence(generator, 1, 3);
-    case 'number':
+    case FixtureColumnType.Number:
       return random.int(0, 99_999) / 10;
-    case 'date':
+    case FixtureColumnType.Date:
       return `2026-${twoDigits(random.int(1, 12))}-${twoDigits(random.int(1, 28))}`;
-    case 'boolean':
+    case FixtureColumnType.Boolean:
       return random.chance(0.5);
-    case 'select':
+    case FixtureColumnType.Select:
       return column.options[random.int(0, column.options.length - 1)] ?? null;
   }
 };

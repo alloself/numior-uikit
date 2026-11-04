@@ -1,11 +1,12 @@
-import type {
-  Attrs,
-  ContentNode,
-  ElementNode,
-  IdSource,
-  Mark,
-  NodeId,
-  TextNode,
+import {
+  ContentNodeKind,
+  type Attrs,
+  type ContentNode,
+  type ElementNode,
+  type IdSource,
+  type Mark,
+  type NodeId,
+  type TextNode,
 } from './node.types';
 
 interface SeededIds extends IdSource {
@@ -28,12 +29,13 @@ const offsetShifts = new WeakMap<ElementNode, OffsetShift>();
 const WIDE = 64;
 
 export const nodeSize = (node: ContentNode): number =>
-  node.kind === 'text' ? node.text.length : node.size;
+  node.kind === ContentNodeKind.Text ? node.text.length : node.size;
 
 export const contentSize = (content: readonly ContentNode[]): number =>
   content.reduce((sum, node) => sum + nodeSize(node), 0);
 
-export const typeOf = (node: ContentNode): string => (node.kind === 'text' ? 'text' : node.type);
+export const typeOf = (node: ContentNode): string =>
+  node.kind === ContentNodeKind.Text ? 'text' : node.type;
 
 export const sameAttrs = (left: Attrs, right: Attrs): boolean => {
   const keys = Object.keys(left);
@@ -56,13 +58,13 @@ export const sameMarks = (left: readonly Mark[], right: readonly Mark[]): boolea
   });
 
 const mergeable = (last: ContentNode | undefined, node: TextNode): last is TextNode =>
-  last?.kind === 'text' && sameMarks(last.marks, node.marks);
+  last?.kind === ContentNodeKind.Text && sameMarks(last.marks, node.marks);
 
 export const normalizeContent = (content: readonly ContentNode[]): ContentNode[] => {
   const result: ContentNode[] = [];
 
   for (const node of content) {
-    if (node.kind === 'element') {
+    if (node.kind === ContentNodeKind.Element) {
       result.push(node);
     } else if (node.text !== '') {
       const last = result.at(-1);
@@ -246,7 +248,7 @@ const highestCount = (root: ElementNode, prefix: string): number => {
   for (let node = pending.pop(); node !== undefined; node = pending.pop()) {
     highest = Math.max(highest, countOf(node.id, prefix));
     for (const child of node.content) {
-      if (child.kind === 'element') {
+      if (child.kind === ContentNodeKind.Element) {
         pending.push(child);
       }
     }

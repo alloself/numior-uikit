@@ -1,5 +1,10 @@
 import { childIndexAt, childOffsets, nodeSize, withContent } from '../model/node';
-import type { ContentNode, ElementNode, NodeId } from '../model/node.types';
+import {
+  ContentNodeKind,
+  type ContentNode,
+  type ElementNode,
+  type NodeId,
+} from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
 import type { Doc, NodeVisitor, Slice } from './doc.types';
 import { resolveIn, sharedDepth } from './resolve';
@@ -16,7 +21,7 @@ const indexTree = (root: ElementNode): Map<NodeId, Placed> => {
     const offsets = childOffsets(node);
 
     node.content.forEach((child, position) => {
-      if (child.kind === 'element') {
+      if (child.kind === ContentNodeKind.Element) {
         const pos = start + (offsets[position] ?? 0);
 
         index.set(child.id, { node: child, pos });
@@ -46,7 +51,7 @@ const visitRange = (
     if (child === undefined) {
       return;
     }
-    if (visit(child, childStart, node, index) && child.kind === 'element') {
+    if (visit(child, childStart, node, index) && child.kind === ContentNodeKind.Element) {
       visitRange(child, childStart + 1, from, to, visit);
     }
     index += 1;
@@ -65,7 +70,7 @@ const cutChild = (
   if (childEnd <= from || childStart >= to) {
     return [];
   }
-  if (child.kind === 'text') {
+  if (child.kind === ContentNodeKind.Text) {
     const text = child.text.slice(Math.max(from, childStart) - childStart, to - childStart);
 
     return text === '' ? [] : [{ ...child, text }];
@@ -119,7 +124,7 @@ export const createDoc = (schema: Schema, root: ElementNode): Doc => {
       let pending = false;
 
       visitRange(root, 0, from, to, (node, pos) => {
-        if (node.kind === 'element') {
+        if (node.kind === ContentNodeKind.Element) {
           pending ||= text !== '' && schema.nodes.get(node.type)?.inline !== true;
           return true;
         }

@@ -4,14 +4,14 @@ import { intentCommand, selectAtom } from '../commands/input';
 import { clipboardHTML } from '../html/clipboard';
 import { nearestCursor, selectionRange } from '../state/selection';
 import type { Selection, SelectionRange } from '../state/selection.types';
-import type {
-  InputIntent,
+import {
   InputSource,
-  KeyInput,
-  TextDirection,
-  TextUnit,
+  type InputIntent,
+  type KeyInput,
+  type TextDirection,
+  type TextUnit,
 } from '../state/input.types';
-import type { Transaction } from '../state/state.types';
+import { InputIntentKind, SelectionKind, type Transaction } from '../state/state.types';
 import { posAtCoords } from './coords';
 import { descAround, widgetAround, widgetOwner } from './desc';
 import type { DomWatch } from './dom-change';
@@ -21,6 +21,16 @@ import type { SelectionSync } from './selection-sync';
 import { pointBeside } from './beside';
 import { sideOutside } from './gap';
 import { verticalTarget } from './vertical';
+import {
+  AttrToken,
+  DescKind,
+  Direction,
+  DomEventType,
+  GapMove,
+  InputType,
+  Key,
+} from './view.types';
+import { ContentNodeKind } from '../model/node.types';
 
 export interface InputParts {
   readonly sync: SelectionSync;
@@ -102,7 +112,7 @@ const textOf = (event: InputEvent): string =>
 const collapsed = (host: ViewHost): boolean => {
   const selection = host.state().selection;
 
-  return selection.kind === 'text' && selection.anchor === selection.head;
+  return selection.kind === SelectionKind.Text && selection.anchor === selection.head;
 };
 
 const deletion = (event: InputEvent, host: ViewHost): InputIntent | undefined => {
@@ -131,7 +141,9 @@ const transferred = (data: DataTransfer | null): InputIntent | undefined => {
 
 const insertion = (event: InputEvent, host: ViewHost): InputIntent | undefined => {
   const text = textOf(event);
-  const range = event.inputType === 'insertReplacementText' ? targetRange(event, host) : undefined;
+
+  const range =
+    event.inputType === InputType.InsertReplacementText ? targetRange(event, host) : undefined;
 
   if (PASTES.has(event.inputType)) {
     return pasted(text, event.dataTransfer?.getData('text/html'));
@@ -158,17 +170,17 @@ const readIntent = (event: InputEvent, host: ViewHost): InputIntent | undefined 
 
 const sourceOf = (intent: InputIntent): InputSource => {
   switch (intent.kind) {
-    case 'insertText':
-      return 'type';
-    case 'compose':
-      return 'compose';
-    case 'delete':
-      return 'delete';
-    case 'paste':
-    case 'files':
-      return 'paste';
+    case InputIntentKind.InsertText:
+      return InputSource.Type;
+    case InputIntentKind.Compose:
+      return InputSource.Compose;
+    case InputIntentKind.Delete:
+      return InputSource.Delete;
+    case InputIntentKind.Paste:
+    case InputIntentKind.Files:
+      return InputSource.Paste;
     default:
-      return 'key';
+      return InputSource.Key;
   }
 };
 
@@ -199,7 +211,7 @@ const hasModifier = (event: KeyboardEvent): boolean =>
   event.shiftKey || event.ctrlKey || event.metaKey || event.altKey;
 
 const isRtl = (host: ViewHost): boolean =>
-  host.root.ownerDocument.defaultView?.getComputedStyle(host.root).direction === 'rtl';
+  host.root.ownerDocument.defaultView?.getComputedStyle(host.root).direction === Direction.Rtl;
 
 const leaveAll = (host: ViewHost, forward: boolean): boolean => {
   const state = host.state();
@@ -218,7 +230,7 @@ const moveByArrow = (host: ViewHost, event: KeyboardEvent): boolean => {
   const forward = arrow.vertical ? arrow.forward : arrow.forward !== isRtl(host);
   const state = host.state();
 
-  if (state.selection.kind === 'all') {
+  if (state.selection.kind === SelectionKind.All) {
     return leaveAll(host, forward);
   }
 
@@ -237,7 +249,7 @@ const moveByArrow = (host: ViewHost, event: KeyboardEvent): boolean => {
 const DELETE_KEYS = new Set(['Backspace', 'Delete']);
 
 const deleteAll = (host: ViewHost, event: KeyboardEvent): boolean =>
-  host.state().selection.kind === 'all' &&
+  host.state().selection.kind === SelectionKind.All &&
   DELETE_KEYS.has(event.key) &&
   !hasModifier(event) &&
   runIntent(host, { kind: 'delete', direction: 'backward', unit: 'character' });
@@ -261,7 +273,7 @@ const overNode = (event: KeyboardEvent): InputIntent | undefined => {
 const atTextEdge = (host: ViewHost, backward: boolean): boolean => {
   const { selection, doc } = host.state();
 
-  if (selection.kind !== 'text' || selection.anchor !== selection.head) {
+  if (selection.kind !== SelectionKind.Text || selection.anchor !== selection.head) {
     return false;
   }
   const cursor = doc.resolve(selection.head);
@@ -277,18 +289,20 @@ const deleteAtEdge = (host: ViewHost, event: KeyboardEvent): boolean => {
     DELETE_KEYS.has(event.key) && !hasModifier(event) ? NODE_KEYS[event.key] : undefined;
 
   return (
-    intent !== undefined && atTextEdge(host, event.key === 'Backspace') && runIntent(host, intent)
+    intent !== undefined && atTextEdge(host, event.key === Key.Backspace) && runIntent(host, intent)
   );
 };
 
 const editNode = (host: ViewHost, event: KeyboardEvent): boolean => {
   const { kind } = host.state().selection;
-  const intent = kind === 'node' || kind === 'gap' ? overNode(event) : undefined;
+
+  const intent =
+    kind === SelectionKind.Node || kind === SelectionKind.Gap ? overNode(event) : undefined;
 
   return intent !== undefined && runIntent(host, intent);
 };
 
-const GAP_KEYS: Readonly<Record<string, 'start' | 'end' | 'select'>> = {
+const GAP_KEYS: Readonly<Record<string, GapMove>> = {
   Home: 'start',
   End: 'end',
   'Shift+ArrowLeft': 'select',
@@ -301,7 +315,7 @@ const moveInGap = (host: ViewHost, event: KeyboardEvent): boolean => {
   const move = GAP_KEYS[`${event.shiftKey ? 'Shift+' : ''}${event.key}`];
 
   if (
-    selection.kind !== 'gap' ||
+    selection.kind !== SelectionKind.Gap ||
     move === undefined ||
     event.ctrlKey ||
     event.metaKey ||
@@ -312,7 +326,7 @@ const moveInGap = (host: ViewHost, event: KeyboardEvent): boolean => {
 
   host.dispatch(
     state.tr.setSelection(
-      move === 'select'
+      move === GapMove.Select
         ? { kind: 'node', id: selection.id }
         : { kind: 'gap', id: selection.id, side: move },
     ),
@@ -347,7 +361,7 @@ const atomAt = (host: ViewHost, target: EventTarget | null): string | undefined 
   let found: string | undefined;
 
   for (
-    let current = (desc?.kind === 'text' ? desc.parent : desc) ?? null;
+    let current = (desc?.kind === DescKind.Text ? desc.parent : desc) ?? null;
     current !== null;
     current = current.parent
   ) {
@@ -385,7 +399,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   const doc = root.ownerDocument;
 
   const openGap = (): void => {
-    if (host.state().selection.kind === 'gap') {
+    if (host.state().selection.kind === SelectionKind.Gap) {
       runIntent(host, { kind: 'insertText', text: '' });
       parts.sync.write();
     }
@@ -395,7 +409,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     if (IME_KEYS.has(event.key)) {
       openGap();
     }
-    if (host.composing() || event.isComposing || event.key === 'Process') {
+    if (host.composing() || event.isComposing || event.key === Key.Process) {
       return;
     }
     parts.sync.read();
@@ -440,7 +454,10 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     event.preventDefault();
     event.clipboardData.setData('text/plain', state.doc.textBetween(range.from, range.to, '\n'));
     event.clipboardData.setData('text/html', clipboardHTML(state.doc.schema, slice.content));
-    if (event.type === 'cut' && root.getAttribute('contenteditable') === 'true') {
+    if (
+      event.type === DomEventType.Cut &&
+      root.getAttribute('contenteditable') === AttrToken.True
+    ) {
       runIntent(host, { kind: 'delete', direction: 'backward', unit: 'character' });
     }
   };
@@ -493,7 +510,10 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
 
   const belowContent = (event: MouseEvent): boolean => {
     const last = host.state().doc.root.content.at(-1);
-    const dom = last?.kind === 'element' ? host.context.byId.get(last.id)?.dom : undefined;
+
+    const dom =
+      last?.kind === ContentNodeKind.Element ? host.context.byId.get(last.id)?.dom : undefined;
+
     const target = event.target;
 
     return (
@@ -512,7 +532,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     if (id !== undefined) {
       const point = pointAt(event, id);
 
-      parts.setHolding(point.kind === 'gap');
+      parts.setHolding(point.kind === SelectionKind.Gap);
       place(event, point);
     } else if (beside !== undefined) {
       parts.setHolding(true);
@@ -541,7 +561,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     const target = event.target;
 
     if (
-      event.key !== 'Escape' ||
+      event.key !== Key.Escape ||
       event.defaultPrevented ||
       owner?.contentDOM !== null ||
       (target instanceof Element && target.closest('.nui-layer') !== null)
@@ -590,7 +610,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     const owner = widgetOwner(host.context, target);
 
     return (
-      selection.kind === 'node' &&
+      selection.kind === SelectionKind.Node &&
       owner?.node.id === selection.id &&
       !interactive(target, owner.dom)
     );

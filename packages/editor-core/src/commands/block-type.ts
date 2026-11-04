@@ -1,5 +1,5 @@
 import { sameAttrs } from '../model/node';
-import type { AttrValue, ElementNode } from '../model/node.types';
+import { ContentNodeKind, type AttrValue, type ElementNode } from '../model/node.types';
 import { matchesSplice } from '../schema/content-match';
 import type { Schema } from '../schema/schema.types';
 import { selectionRange } from '../state/selection';
@@ -54,7 +54,10 @@ const scanTextblocks = (
     if (stopAtFirst && (settled || candidates.length > 0)) {
       return false;
     }
-    if (node.kind !== 'element' || schema.nodes.get(node.type)?.inlineContent !== true) {
+    if (
+      node.kind !== ContentNodeKind.Element ||
+      schema.nodes.get(node.type)?.inlineContent !== true
+    ) {
       return true;
     }
 

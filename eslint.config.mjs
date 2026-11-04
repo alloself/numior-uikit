@@ -217,7 +217,8 @@ export default [
     },
   },
   {
-    files: ['packages/table/src/engine/**/*.ts'],
+    files: ['packages/table/src/engine/**/*.ts', 'packages/editor-core/src/**/*.ts'],
+    ignores: ['**/*.messages.ts'],
     rules: { 'no-restricted-syntax': ['error', ...CATALOG, ...CODE_SHAPE, ...NAMED_ENUMERATIONS] },
   },
   {

@@ -1,7 +1,15 @@
 import { normalizeContent } from '../model/node';
-import type { Attrs, ContentNode, ElementNode, IdSource, Mark } from '../model/node.types';
+import {
+  ContentNodeKind,
+  type Attrs,
+  type ContentNode,
+  type ElementNode,
+  type IdSource,
+  type Mark,
+} from '../model/node.types';
 import type { ContentMatch, NodeMaker, NodeType, Schema } from '../schema/schema.types';
 import { fillEnd, findWrapping } from './fit';
+import { HtmlChar, HtmlTag } from './html.types';
 
 export interface OpenNode {
   readonly type: NodeType;
@@ -36,10 +44,13 @@ const topOf = (builder: Builder): OpenNode => {
 };
 
 const isBreak = (schema: Schema, node: ContentNode | undefined): boolean => {
-  const type = node?.kind === 'element' ? schema.nodes.get(node.type) : undefined;
+  const type = node?.kind === ContentNodeKind.Element ? schema.nodes.get(node.type) : undefined;
 
   return (
-    node?.kind === 'element' && type?.inline === true && type.leaf && type.render(node).tag === 'br'
+    node?.kind === ContentNodeKind.Element &&
+    type?.inline === true &&
+    type.leaf &&
+    type.render(node).tag === HtmlTag.Br
   );
 };
 
@@ -48,7 +59,12 @@ const withoutTrail = (builder: Builder, open: OpenNode): ContentNode[] => {
   const kept = isBreak(builder.schema, content.at(-1)) ? content.slice(0, -1) : content;
   const last = kept.at(-1);
 
-  if (builder.preserve || open.type.code || last?.kind !== 'text' || !last.text.endsWith(' ')) {
+  if (
+    builder.preserve ||
+    open.type.code ||
+    last?.kind !== ContentNodeKind.Text ||
+    !last.text.endsWith(' ')
+  ) {
     return kept;
   }
   return normalizeContent([...kept.slice(0, -1), { ...last, text: last.text.trimEnd() }]);
@@ -71,15 +87,17 @@ const append = (open: OpenNode, node: ContentNode): void => {
   const last = open.content.at(-1);
 
   if (
-    node.kind === 'text' &&
-    last?.kind === 'text' &&
+    node.kind === ContentNodeKind.Text &&
+    last?.kind === ContentNodeKind.Text &&
     normalizeContent([last, node]).length === 1
   ) {
     open.content.splice(-1, 1, { ...last, text: last.text + node.text });
     return;
   }
   open.content.push(node);
-  open.match = open.match.matchType(node.kind === 'text' ? 'text' : node.type) ?? open.match;
+
+  open.match =
+    open.match.matchType(node.kind === ContentNodeKind.Text ? 'text' : node.type) ?? open.match;
 };
 
 const closeTop = (builder: Builder): void => {
@@ -165,7 +183,7 @@ const atLineStart = (builder: Builder, open: OpenNode): boolean => {
 
   return (
     last === undefined ||
-    (last.kind === 'text' && last.text.endsWith(' ')) ||
+    (last.kind === ContentNodeKind.Text && last.text.endsWith(' ')) ||
     isBreak(builder.schema, last)
   );
 };
@@ -174,7 +192,7 @@ const collapse = (builder: Builder, text: string): string => {
   const collapsed = text.replaceAll(SPACES, ' ');
   const top = topOf(builder);
 
-  if (collapsed !== ' ') {
+  if (collapsed !== HtmlChar.Space) {
     return collapsed;
   }
   return top.type.inlineContent && !atLineStart(builder, top) ? ' ' : '';

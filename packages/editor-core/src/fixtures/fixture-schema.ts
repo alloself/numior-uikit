@@ -1,4 +1,4 @@
-import type { HtmlElement } from '../html/html.types';
+import { HtmlNodeKind, HtmlTag, type HtmlElement } from '../html/html.types';
 import { tableGrid, type HtmlTableCell } from '../html/table-grid';
 import type { AttrValue, ElementNode } from '../model/node.types';
 import { contentHole, renderTag } from '../render/render';
@@ -18,7 +18,7 @@ const cellText = (value: AttrValue | undefined): string =>
 
 const optionsOf = (cell: HtmlTableCell, make: NodeMaker): ElementNode[] =>
   (cell.element?.find('datalist')?.children ?? []).flatMap((option) =>
-    option.kind === 'element' && option.tag === 'option'
+    option.kind === HtmlNodeKind.Element && option.tag === HtmlTag.Option
       ? [make('table_option', { label: option.attr('value') ?? '' })]
       : [],
   );

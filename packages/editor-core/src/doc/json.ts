@@ -1,11 +1,12 @@
 import { contentSize } from '../model/node';
-import type {
-  AttrValue,
-  Attrs,
-  ContentNode,
-  ElementNode,
-  Mark,
-  TextNode,
+import {
+  ContentNodeKind,
+  type Attrs,
+  type AttrValue,
+  type ContentNode,
+  type ElementNode,
+  type Mark,
+  type TextNode,
 } from '../model/node.types';
 import {
   checkIdentity,
@@ -56,7 +57,7 @@ const withAttrs = (attrs: Attrs): { readonly attrs?: Attrs } =>
 const markToJSON = (mark: Mark): MarkJSON => ({ type: mark.type, ...withAttrs(mark.attrs) });
 
 const nodeToJSON = (node: ContentNode): NodeJSON => {
-  if (node.kind === 'text') {
+  if (node.kind === ContentNodeKind.Text) {
     return node.marks.length === 0
       ? { text: node.text }
       : { text: node.text, marks: node.marks.map(markToJSON) };
@@ -188,7 +189,7 @@ const readContent = (
     if (node === undefined) {
       return;
     }
-    if (parent !== undefined && node.kind === 'text') {
+    if (parent !== undefined && node.kind === ContentNodeKind.Text) {
       const previous = content.at(-1);
 
       checkText(
@@ -196,7 +197,7 @@ const readContent = (
         index,
         node,
         parent,
-        previous?.kind === 'text' ? previous : undefined,
+        previous?.kind === ContentNodeKind.Text ? previous : undefined,
       );
     }
     content.push(node);
@@ -299,7 +300,7 @@ export const fromJSON = (schema: Schema, value: unknown): DocJSONResult => {
 
   const root = reader.issues.length === 0 ? readNode(reader, value.root, true) : undefined;
 
-  if (root === undefined || root.kind !== 'element' || reader.issues.length > 0) {
+  if (root === undefined || root.kind !== ContentNodeKind.Element || reader.issues.length > 0) {
     return {
       ok: false,
       issues:

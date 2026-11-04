@@ -2,7 +2,7 @@ import type { Doc, Slice } from '../doc/doc.types';
 import { emptyTextblock } from '../doc/empty';
 import { sharedDepth } from '../doc/resolve';
 import { withContent } from '../model/node';
-import type { ContentNode, IdSource } from '../model/node.types';
+import { ContentNodeKind, type ContentNode, type IdSource } from '../model/node.types';
 import { createMapping } from '../transform/mapping';
 import { sliceSize } from '../transform/replace';
 import { createTransform } from '../transform/transform';
@@ -51,7 +51,9 @@ const deleteRange = (transform: Transform, from: number, to: number): boolean =>
 const clearDoc = (transform: Transform): boolean => {
   const doc = transform.doc;
   const first = doc.root.content[0];
-  const block = first?.kind === 'element' ? emptyTextblock(doc.schema, first.id) : undefined;
+
+  const block =
+    first?.kind === ContentNodeKind.Element ? emptyTextblock(doc.schema, first.id) : undefined;
 
   return (
     block !== undefined &&

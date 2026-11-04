@@ -1,7 +1,14 @@
 import { contentSize, sameMarks } from '../model/node';
-import type { Attrs, ElementNode, TextNode } from '../model/node.types';
+import { ContentNodeKind, type Attrs, type ElementNode, type TextNode } from '../model/node.types';
 import { specEntries } from './spec-entries';
-import type { AttrSpecs, DocCheck, DocIssue, MarkType, NodeType } from './schema.types';
+import {
+  NodeName,
+  type AttrSpecs,
+  type DocCheck,
+  type DocIssue,
+  type MarkType,
+  type NodeType,
+} from './schema.types';
 
 interface SchemaShape {
   readonly top: NodeType;
@@ -81,7 +88,7 @@ export const checkIdentity = (context: CheckContext, id: string): void => {
 };
 
 export const elementTypeOf = (context: CheckContext, type: string): NodeType | undefined =>
-  type === 'text' ? undefined : context.schema.nodes.get(type);
+  type === NodeName.Text ? undefined : context.schema.nodes.get(type);
 
 export const checkOwn = (
   context: CheckContext,
@@ -123,8 +130,14 @@ const checkElement = (context: CheckContext, node: ElementNode): void => {
   node.content.forEach((child, index) => {
     const previous = node.content[index - 1];
 
-    if (child.kind === 'text') {
-      checkText(context, index, child, type, previous?.kind === 'text' ? previous : undefined);
+    if (child.kind === ContentNodeKind.Text) {
+      checkText(
+        context,
+        index,
+        child,
+        type,
+        previous?.kind === ContentNodeKind.Text ? previous : undefined,
+      );
     } else {
       context.path.push(index);
       checkElement(context, child);

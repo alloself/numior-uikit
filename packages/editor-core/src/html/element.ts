@@ -1,4 +1,4 @@
-import type { HtmlElement, HtmlNode } from './html.types';
+import { HtmlNodeKind, type HtmlElement, type HtmlNode } from './html.types';
 
 export interface OpenElement {
   readonly element: HtmlElement;
@@ -23,11 +23,11 @@ const stylesOf = (value: string | undefined): ReadonlyMap<string, string> => {
 };
 
 const textOf = (nodes: readonly HtmlNode[]): string =>
-  nodes.map((node) => (node.kind === 'text' ? node.text : node.text())).join('');
+  nodes.map((node) => (node.kind === HtmlNodeKind.Text ? node.text : node.text())).join('');
 
 const findIn = (nodes: readonly HtmlNode[], tag: string): HtmlElement | undefined => {
   for (const node of nodes) {
-    if (node.kind === 'element') {
+    if (node.kind === HtmlNodeKind.Element) {
       const found = node.tag === tag ? node : node.find(tag);
 
       if (found !== undefined) {

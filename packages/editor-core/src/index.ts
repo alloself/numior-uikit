@@ -5,9 +5,20 @@ export {
   inlineDecoration,
   widgetDecoration,
 } from './decorations/decorations';
+export { AnchorChangeKind, AnchorRangeKind } from './anchors/anchors.types';
+export { DecorationTag } from './decorations/decorations.types';
+export { DocJSONIssueKind } from './doc/json.types';
+export { HistoryAction } from './history/history.types';
+export { HtmlWhitespace, PasteSource } from './html/html.types';
+export { ContentNodeKind } from './model/node.types';
+export { DocIssueKind, NodeSlots } from './schema/schema.types';
+export { InputSource, TextDirection, TextUnit } from './state/input.types';
+export { GapSide } from './state/selection.types';
+export { InputIntentKind, SelectionKind } from './state/state.types';
+export { StepFailure, StepKind } from './transform/step.types';
+export { UploadChangeKind } from './uploads/uploads.types';
 export type {
   BlockDecoration,
-  DecorationTag,
   DecorationSet,
   InlineDecoration,
   WidgetDecoration,
@@ -54,21 +65,15 @@ export {
 } from './commands/move';
 export type { ChildSlot } from './commands/move';
 export { moveBlock, placeBeside } from './commands/move-across';
-export type { BesideSide, BlockTarget, ColumnTypes } from './commands/move-across';
+export type { BlockTarget, ColumnTypes } from './commands/move-across';
+export { BesideSide } from './commands/commands.types';
 export { insertHTML, insertPlainText, pasteSchema } from './commands/paste';
 export { fromHTML } from './html/parse';
 export { detectPasteSource } from './html/sources';
 export { contentToHTML, createHTMLWriter, toHTML } from './html/serialize';
 export { tableGrid } from './html/table-grid';
 export type { HtmlTableCell, HtmlTableGrid } from './html/table-grid';
-export type {
-  FromHTMLOptions,
-  HtmlElement,
-  HtmlNode,
-  HtmlText,
-  HtmlWhitespace,
-  PasteSource,
-} from './html/html.types';
+export type { FromHTMLOptions, HtmlElement, HtmlNode, HtmlText } from './html/html.types';
 export { contentHole, renderTag } from './render/render';
 export { renderTree } from './render/render-tree';
 export type { RenderBuilder } from './render/render-tree';
@@ -97,7 +102,6 @@ export type {
   MarkType,
   NodeMaker,
   NodeParseRule,
-  NodeSlots,
   NodeSpec,
   NodeType,
   ParsedAttrs,
@@ -117,7 +121,7 @@ export type {
 } from './transform/mapping.types';
 export { sliceSize } from './transform/replace';
 export { applyStep, invertStep, mapStep, mergeSteps, stepMapOf } from './transform/step';
-export type { MarkupChange, Step, StepFailure, StepResult } from './transform/step.types';
+export type { MarkupChange, Step, StepResult } from './transform/step.types';
 export { createTransform } from './transform/transform';
 export type {
   NodeMarkup,
@@ -226,14 +230,8 @@ export {
   textSelection,
   validSelection,
 } from './state/selection';
-export type {
-  InputIntent,
-  InputSource,
-  KeyInput,
-  TextDirection,
-  TextUnit,
-} from './state/input.types';
-export type { CellRef, GapSide, Selection, SelectionRange } from './state/selection.types';
+export type { InputIntent, KeyInput } from './state/input.types';
+export type { CellRef, Selection, SelectionRange } from './state/selection.types';
 export { createState } from './state/state';
 export type {
   AppliedTransaction,

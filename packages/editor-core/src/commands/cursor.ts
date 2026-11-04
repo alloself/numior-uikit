@@ -1,11 +1,11 @@
 import type { ResolvedPos } from '../doc/doc.types';
 import { isCursor } from '../state/selection';
-import type { EditorState } from '../state/state.types';
+import { SelectionKind, type EditorState } from '../state/state.types';
 
 export const textCursor = (state: EditorState): ResolvedPos | undefined => {
   const selection = state.selection;
 
-  if (selection.kind !== 'text' || !isCursor(selection)) {
+  if (selection.kind !== SelectionKind.Text || !isCursor(selection)) {
     return undefined;
   }
   const cursor = state.doc.resolve(selection.head);

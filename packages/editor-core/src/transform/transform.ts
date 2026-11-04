@@ -1,10 +1,17 @@
 import type { Doc, Slice } from '../doc/doc.types';
 import { idSourceAfter, sameMark, seededOf, withContent } from '../model/node';
-import type { ContentNode, ElementNode, Mark, NodeId, TextNode } from '../model/node.types';
+import {
+  ContentNodeKind,
+  type ContentNode,
+  type ElementNode,
+  type Mark,
+  type NodeId,
+  type TextNode,
+} from '../model/node.types';
 import { createMapping } from './mapping';
 import type { StepMap } from './mapping.types';
 import { applyStep, stepMapOf } from './step';
-import type { MarkupChange, Step, StepResult } from './step.types';
+import { StepKind, type MarkupChange, type Step, type StepResult } from './step.types';
 import type { NodeMarkup, SplitType, Transform, TransformOptions } from './transform.types';
 
 interface Span {
@@ -30,7 +37,7 @@ const textSpan = (
   let last = from;
 
   doc.nodesBetween(from, to, (node, pos, parent) => {
-    if (node.kind === 'text' && takes(node, parent)) {
+    if (node.kind === ContentNodeKind.Text && takes(node, parent)) {
       first ??= Math.max(from, pos);
       last = Math.min(to, pos + node.text.length);
     }
@@ -49,7 +56,7 @@ const marksWhere = (
   const found: Mark[] = [];
 
   doc.nodesBetween(from, to, (node, _pos, parent) => {
-    if (node.kind === 'text') {
+    if (node.kind === ContentNodeKind.Text) {
       for (const mark of node.marks) {
         if (keep(mark, parent) && !holds(found, mark)) {
           found.push(mark);
@@ -72,7 +79,7 @@ const matches = (mark: Mark, filter: Mark | string | undefined): boolean => {
 const markupOf = (doc: Doc, change: NodeMarkup): MarkupChange => {
   const target = doc.nodeAt(change.pos);
 
-  if (target?.kind !== 'element') {
+  if (target?.kind !== ContentNodeKind.Element) {
     throw new RangeError(`No element starts at position ${change.pos}`);
   }
   if (change.type === undefined || change.type === target.type) {
@@ -113,7 +120,7 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
 
   const place = (nodes: readonly ContentNode[]): void => {
     for (const node of nodes) {
-      if (node.kind === 'element') {
+      if (node.kind === ContentNodeKind.Element) {
         unplaced.delete(node.id);
         seeded?.reserve(node.id);
         place(node.content);
@@ -126,7 +133,7 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
     keeps: (id: NodeId) => boolean,
   ): ContentNode[] =>
     content.map((node): ContentNode => {
-      if (node.kind === 'text') {
+      if (node.kind === ContentNodeKind.Text) {
         return node;
       }
       const id = keeps(node.id) ? node.id : freshId();
@@ -139,7 +146,7 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
     const result = applyStep(doc, step, unplaced);
 
     if (result.ok) {
-      if (step.kind === 'replace' || step.kind === 'replaceAround') {
+      if (step.kind === StepKind.Replace || step.kind === StepKind.ReplaceAround) {
         place(step.slice.content);
       }
       steps.push(step);
@@ -214,7 +221,7 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
     delete: (from, to) => transform.replace(from, to),
     insertText: (text, from, to = from, marks) => {
       const before = doc.resolve(from).nodeBefore;
-      const kept = marks ?? (before?.kind === 'text' ? before.marks : []);
+      const kept = marks ?? (before?.kind === ContentNodeKind.Text ? before.marks : []);
 
       return text === ''
         ? transform.delete(from, to)
@@ -274,7 +281,7 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
     setNodeAttrs: (pos, attrs) => {
       const target = doc.nodeAt(pos);
 
-      if (target?.kind !== 'element') {
+      if (target?.kind !== ContentNodeKind.Element) {
         throw new RangeError(`No element starts at position ${pos}`);
       }
       return transform.step({ kind: 'attrs', pos, attrs: { ...target.attrs, ...attrs } });

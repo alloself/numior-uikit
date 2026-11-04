@@ -1,5 +1,5 @@
 import { htmlElement } from './element';
-import type { HtmlElement, HtmlNode } from './html.types';
+import { HtmlTag, type HtmlElement, type HtmlNode } from './html.types';
 import { isElement, rewriteTree, withAttr, type ChildrenRewrite } from './rewrite';
 
 const CLASS_RULE = /\.([\w-]+)\s*\{([^}]*)\}/gu;
@@ -10,7 +10,7 @@ const styleText = (node: HtmlNode): string => {
   if (!isElement(node)) {
     return '';
   }
-  return node.tag === 'style' ? node.text() : node.children.map(styleText).join('\n');
+  return node.tag === HtmlTag.Style ? node.text() : node.children.map(styleText).join('\n');
 };
 
 const classStyles = (root: HtmlElement): ReadonlyMap<string, string> =>

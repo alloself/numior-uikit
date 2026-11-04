@@ -1,7 +1,7 @@
 import { createDoc } from '../doc/doc';
 import type { Doc } from '../doc/doc.types';
 import { childOffsets, nodeSize } from '../model/node';
-import type { ContentNode, ElementNode } from '../model/node.types';
+import { ContentNodeKind, type ContentNode, type ElementNode } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
 import { validAttrs } from './attrs';
 import { fits } from './replace';
@@ -47,7 +47,7 @@ const retypeChild = (
 ): Retyped => {
   const first = inside[0];
 
-  if (child.kind !== 'element' || first === undefined || first.pos < start) {
+  if (child.kind !== ContentNodeKind.Element || first === undefined || first.pos < start) {
     return failed('target');
   }
 
@@ -130,7 +130,7 @@ export const markupBefore = (doc: Doc, changes: readonly MarkupChange[]): Markup
   changes.flatMap((change) => {
     const target = doc.nodeAt(change.pos);
 
-    return target?.kind === 'element'
+    return target?.kind === ContentNodeKind.Element
       ? [{ pos: change.pos, type: target.type, attrs: target.attrs }]
       : [];
   });

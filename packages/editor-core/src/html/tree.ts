@@ -1,5 +1,5 @@
 import { openElement, type OpenElement } from './element';
-import type { HtmlElement } from './html.types';
+import { HtmlNodeKind, HtmlTag, HtmlTokenKind, type HtmlElement } from './html.types';
 import { tokenize, type HtmlToken } from './tokenize';
 
 interface Implied {
@@ -100,7 +100,7 @@ const appendText = (stack: readonly OpenElement[], text: string): void => {
   const children = top(stack)?.children;
   const last = children?.at(-1);
 
-  if (last?.kind === 'text') {
+  if (last?.kind === HtmlNodeKind.Text) {
     children?.splice(-1, 1, { kind: 'text', text: last.text + text });
   } else {
     children?.push({ kind: 'text', text });
@@ -128,7 +128,7 @@ const open = (stack: OpenElement[], token: Extract<HtmlToken, { kind: 'open' }>)
 };
 
 const close = (stack: OpenElement[], tag: string): void => {
-  if (tag === 'br') {
+  if (tag === HtmlTag.Br) {
     open(stack, { kind: 'open', tag, attrs: new Map(), closed: true });
     return;
   }
@@ -146,13 +146,13 @@ export const parseTree = (html: string): HtmlElement => {
 
   for (const token of tokenize(html)) {
     switch (token.kind) {
-      case 'text':
+      case HtmlTokenKind.Text:
         appendText(stack, token.text);
         break;
-      case 'open':
+      case HtmlTokenKind.Open:
         open(stack, token);
         break;
-      case 'close':
+      case HtmlTokenKind.Close:
         close(stack, token.tag);
         break;
     }

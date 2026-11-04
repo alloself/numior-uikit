@@ -1,5 +1,5 @@
 import type { Attrs, NodeId } from '../model/node.types';
-import type { DocIssue } from '../schema/schema.types';
+import { DocIssueKind, type DocIssue } from '../schema/schema.types';
 import type { Doc } from './doc.types';
 
 export interface MarkJSON {
@@ -33,11 +33,26 @@ export interface DocJSON {
 }
 
 export type DocJSONIssue =
-  | { readonly kind: 'format' }
-  | { readonly kind: 'schema'; readonly expected: SchemaStamp; readonly found: SchemaStamp }
-  | { readonly kind: 'shape'; readonly path: readonly number[]; readonly field: string }
+  | { readonly kind: typeof DocJSONIssueKind.Format }
+  | {
+      readonly kind: typeof DocJSONIssueKind.Schema;
+      readonly expected: SchemaStamp;
+      readonly found: SchemaStamp;
+    }
+  | {
+      readonly kind: typeof DocJSONIssueKind.Shape;
+      readonly path: readonly number[];
+      readonly field: string;
+    }
   | DocIssue;
 
 export type DocJSONResult =
   | { readonly ok: true; readonly doc: Doc }
   | { readonly ok: false; readonly issues: readonly DocJSONIssue[] };
+
+export const DocJSONIssueKind = {
+  Format: 'format',
+  Schema: 'schema',
+  Shape: 'shape',
+  ...DocIssueKind,
+} as const;
