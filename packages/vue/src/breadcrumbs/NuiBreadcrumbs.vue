@@ -2,7 +2,11 @@
   <nav class="nui-breadcrumbs" :aria-label="labelText">
     <ol class="nui-breadcrumbs__list">
       <li v-for="(entry, position) in entries" :key="entry.key" class="nui-breadcrumbs__item">
-        <NuiMenu v-if="entry.kind === 'more'" :items="entry.menu" :label="moreText">
+        <NuiMenu
+          v-if="entry.kind === BreadcrumbEntryKind.More"
+          :items="entry.menu"
+          :label="moreText"
+        >
           <template #trigger="{ attrs }">
             <NuiButton
               v-bind="attrs"
@@ -37,7 +41,11 @@ import NuiMenu from '../menu/NuiMenu.vue';
 import NuiBreadcrumbCrumb from './NuiBreadcrumbCrumb.vue';
 import { layoutBreadcrumbs } from './breadcrumbs-layout';
 import { breadcrumbsMessages } from './breadcrumbs.messages';
-import type { NuiBreadcrumbsItemSlot, NuiBreadcrumbsProps } from './breadcrumbs.types';
+import {
+  BreadcrumbEntryKind,
+  type NuiBreadcrumbsItemSlot,
+  type NuiBreadcrumbsProps,
+} from './breadcrumbs.types';
 
 const {
   items,

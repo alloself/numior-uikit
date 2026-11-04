@@ -2,12 +2,12 @@
   <section class="nui-calendar__month" :aria-labelledby="captionId">
     <NuiCalendarCaption :month="month" :caption-id="captionId" :first="first" :last="last" />
     <table
-      v-if="calendar.view.value === 'days'"
+      v-if="calendar.view.value === NuiCalendarView.Days"
       :key="month"
       role="grid"
       class="nui-calendar__grid"
       :class="slideClass"
-      :aria-multiselectable="calendar.mode() !== 'single' || undefined"
+      :aria-multiselectable="calendar.mode() !== NuiCalendarMode.Single || undefined"
       @keydown="onGridKeydown"
     >
       <thead>
@@ -53,6 +53,7 @@ import NuiCalendarCaption from './NuiCalendarCaption.vue';
 import NuiCalendarDay from './NuiCalendarDay.vue';
 import NuiCalendarPicker from './NuiCalendarPicker.vue';
 import { useCalendar } from './calendar-context';
+import { NuiCalendarMode, NuiCalendarView } from './calendar.types';
 
 const { month, first, last } = defineProps<{ month: string; first: boolean; last: boolean }>();
 

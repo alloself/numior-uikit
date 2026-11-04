@@ -21,13 +21,18 @@
 import { ref, useAttrs, useTemplateRef, watch } from 'vue';
 import { useFieldControl } from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame.vue';
-import type { NuiTextareaModifiers, NuiTextareaProps } from './textarea.types';
+import {
+  NuiTextareaResize,
+  type NuiTextareaModifiers,
+  type NuiTextareaProps,
+} from './textarea.types';
+import { NuiSize } from '../shared/scale.types';
 
 defineOptions({ inheritAttrs: false });
 
 const {
   id,
-  size = 'md',
+  size = NuiSize.Md,
   disabled = undefined,
   required = undefined,
   invalid = undefined,
@@ -36,7 +41,7 @@ const {
   error,
   reserveError = false,
   rows = 3,
-  resize = 'vertical',
+  resize = NuiTextareaResize.Vertical,
   readonly = undefined,
 } = defineProps<NuiTextareaProps>();
 

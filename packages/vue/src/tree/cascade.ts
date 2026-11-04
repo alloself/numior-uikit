@@ -1,7 +1,5 @@
 import type { NuiOptionKey } from '../shared/options';
-import type { NuiTreeItem } from './tree.types';
-
-export type CheckState = 'checked' | 'unchecked' | 'indeterminate';
+import { CheckState, type NuiTreeItem } from './tree.types';
 
 interface EnabledTally {
   readonly any: boolean;
@@ -48,7 +46,11 @@ export const checkStates = <T>(
 
     const own = checked.has(key);
 
-    states.set(key, own ? 'checked' : below ? 'indeterminate' : 'unchecked');
+    states.set(
+      key,
+      own ? CheckState.Checked : below ? CheckState.Indeterminate : CheckState.Unchecked,
+    );
+
     return own || below;
   };
 

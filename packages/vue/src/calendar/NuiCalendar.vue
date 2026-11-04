@@ -77,18 +77,26 @@ import {
 } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiCalendarMonth from './NuiCalendarMonth.vue';
-import { provideCalendar, type FocusRequest, type RequestOptions } from './calendar-context';
+import { provideCalendar, type RequestOptions } from './calendar-context';
 import { calendarMessages } from './calendar.messages';
-import type { NuiCalendarProps, NuiCalendarValue, NuiDatePreset } from './calendar.types';
+import {
+  FocusRequest,
+  NuiCalendarMode,
+  NuiCalendarView,
+  type NuiCalendarProps,
+  type NuiCalendarValue,
+  type NuiDatePreset,
+} from './calendar.types';
 import { dayStateOf, sameCalendarValue, selectedDatesOf } from './day-state';
 import { useCalendarSelection } from './use-calendar-selection';
 import { useCalendarView } from './use-calendar-view';
+import { NuiSize } from '../shared/scale.types';
 
 defineSlots<{ actions(): unknown }>();
 
 const {
   id,
-  mode = 'single',
+  mode = NuiCalendarMode.Single,
   locale: localeProp,
   weekStart: weekStartProp,
   min,
@@ -101,7 +109,7 @@ const {
   showToday = true,
   today,
   presets,
-  size = 'md',
+  size = NuiSize.Md,
   disabled = false,
   previousLabel,
   nextLabel,
@@ -123,7 +131,7 @@ const todayText = computed(() => todayLabel ?? messages.value.today);
 const weekStart = computed(() => weekStartProp ?? weekStartOf(locale.value));
 const mounted = ref(false);
 const todayDate = computed(() => today ?? (mounted.value ? localToday() : undefined));
-const presetList = computed(() => (mode === 'range' ? (presets ?? []) : []));
+const presetList = computed(() => (mode === NuiCalendarMode.Range ? (presets ?? []) : []));
 
 const initialDate = (): string =>
   clampIsoDate(selectedDatesOf(model.value)[0] ?? today ?? localToday(), min, max);
@@ -142,7 +150,7 @@ const selection = useCalendarSelection({
 
 const focused = ref(initialDate());
 const focusRequests = ref(0);
-let focusIntent: Exclude<FocusRequest, 'none'> | undefined;
+let focusIntent: Exclude<FocusRequest, typeof FocusRequest.None> | undefined;
 const picks: { last: NuiCalendarValue } = { last: model.value };
 
 const isDisabled = (date: string): boolean =>
@@ -168,9 +176,9 @@ const request = (date: string, options: RequestOptions = {}): void => {
   reveal(monthKeyOf(target));
   focused.value = target;
 
-  const focus = options.focus ?? 'follow';
+  const focus = options.focus ?? FocusRequest.Follow;
 
-  focusIntent = focus === 'none' ? undefined : focus;
+  focusIntent = focus === FocusRequest.None ? undefined : focus;
 
   if (focusIntent !== undefined) {
     focusRequests.value += 1;
@@ -184,11 +192,11 @@ const holdsFocus = (): boolean => {
 };
 
 const settle = (): void => {
-  if (focusIntent === undefined || calendarView.view.value !== 'days') {
+  if (focusIntent === undefined || calendarView.view.value !== NuiCalendarView.Days) {
     return;
   }
 
-  if (focusIntent === 'follow' && !holdsFocus()) {
+  if (focusIntent === FocusRequest.Follow && !holdsFocus()) {
     focusIntent = undefined;
 
     return;
@@ -223,7 +231,7 @@ const pickMonth = (key: string): void => {
   const year = Number(key.slice(0, 4));
   const monthNumber = Number(key.slice(5, 7));
 
-  calendarView.setView('days');
+  calendarView.setView(NuiCalendarView.Days);
 
   request(
     formatIsoDate({ year, month: monthNumber, day: Math.min(day, daysInMonth(year, monthNumber)) }),
@@ -232,7 +240,7 @@ const pickMonth = (key: string): void => {
 
 const pickYear = (year: number): void => {
   calendarView.setMonth(`${String(year).padStart(4, '0')}-${calendarView.month.value.slice(5, 7)}`);
-  calendarView.setView('months');
+  calendarView.setView(NuiCalendarView.Months);
 };
 
 const goToday = (): void => {
@@ -240,10 +248,10 @@ const goToday = (): void => {
     return;
   }
 
-  if (mode === 'single' && !isDisabled(todayDate.value)) {
+  if (mode === NuiCalendarMode.Single && !isDisabled(todayDate.value)) {
     pick(todayDate.value);
   } else {
-    calendarView.setView('days');
+    calendarView.setView(NuiCalendarView.Days);
     request(todayDate.value);
   }
 };
@@ -265,7 +273,7 @@ const applyPreset = (preset: NuiDatePreset): void => {
   picks.last = range;
 
   if (range.start) {
-    request(range.start, { focus: 'none' });
+    request(range.start, { focus: FocusRequest.None });
   }
 };
 
@@ -320,10 +328,12 @@ onMounted(() => {
     const first = selectedDatesOf(value)[0];
 
     if (first) {
-      request(first, { focus: 'none' });
+      request(first, { focus: FocusRequest.None });
     }
   });
 });
 
-defineExpose({ focus: (date?: string) => request(date ?? focused.value, { focus: 'take' }) });
+defineExpose({
+  focus: (date?: string) => request(date ?? focused.value, { focus: FocusRequest.Take }),
+});
 </script>

@@ -36,14 +36,21 @@ import NuiTab from './NuiTab.vue';
 import NuiTabList from './NuiTabList.vue';
 import NuiTabPanel from './NuiTabPanel.vue';
 import { provideTabs } from './tabs-context';
-import type { NuiTabsPanelSlot, NuiTabsProps } from './tabs.types';
+import {
+  NuiTabsActivation,
+  NuiTabsOrientation,
+  NuiTabsVariant,
+  type NuiTabsPanelSlot,
+  type NuiTabsProps,
+} from './tabs.types';
+import { NuiSize } from '../shared/scale.types';
 
 const {
   id,
-  activation = 'automatic',
-  orientation = 'horizontal',
-  variant = 'line',
-  size = 'md',
+  activation = NuiTabsActivation.Automatic,
+  orientation = NuiTabsOrientation.Horizontal,
+  variant = NuiTabsVariant.Line,
+  size = NuiSize.Md,
   lazy = false,
   tabs,
   label,

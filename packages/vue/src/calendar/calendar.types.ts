@@ -1,9 +1,15 @@
 import type { DateRange, Weekday } from '@numior/primitives';
 import type { NuiSize } from '../shared/scale.types';
 
-export type NuiCalendarMode = 'single' | 'multiple' | 'range';
+export type NuiCalendarMode = (typeof NuiCalendarMode)[keyof typeof NuiCalendarMode];
 
-export type NuiCalendarView = 'days' | 'months' | 'years';
+export type NuiCalendarView = (typeof NuiCalendarView)[keyof typeof NuiCalendarView];
+
+export type CalendarPickerKind = Exclude<NuiCalendarView, typeof NuiCalendarView.Days>;
+
+export type CalendarSlide = (typeof CalendarSlide)[keyof typeof CalendarSlide];
+
+export type FocusRequest = (typeof FocusRequest)[keyof typeof FocusRequest];
 
 export type NuiDateRange = DateRange;
 
@@ -46,3 +52,11 @@ export interface NuiCalendarLabels {
   readonly year: string;
   readonly week: string;
 }
+
+export const NuiCalendarMode = { Single: 'single', Multiple: 'multiple', Range: 'range' } as const;
+
+export const NuiCalendarView = { Days: 'days', Months: 'months', Years: 'years' } as const;
+
+export const CalendarSlide = { Next: 'next', Prev: 'prev' } as const;
+
+export const FocusRequest = { None: 'none', Follow: 'follow', Take: 'take' } as const;

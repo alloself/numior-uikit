@@ -8,8 +8,10 @@ import {
   type ShallowRef,
 } from 'vue';
 import {
+  AriaValue,
   createCollection,
   createIntent,
+  Key,
   useFloating,
   useListNavigation,
   usePopover,
@@ -18,7 +20,8 @@ import {
   type ListNavigation,
   type PopoverControl,
 } from '@numior/primitives';
-import type { MenuContext, MenuFocusRequest } from './menu-context';
+import type { MenuContext } from './menu-context';
+import { MenuFocusRequest, NuiMenuFocus } from './menu.types';
 
 export interface MenuSurfaceOptions {
   readonly open: Ref<boolean>;
@@ -55,7 +58,7 @@ const focusElement = (element: HTMLElement | null | undefined): void => {
 };
 
 const holdsOpenSubmenu = (element: HTMLElement | null): boolean =>
-  element?.getAttribute('aria-expanded') === 'true';
+  element?.getAttribute('aria-expanded') === AriaValue.True;
 
 export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
   const control = usePopover(options.content, { open: options.open, id: options.id, mode: 'auto' });
@@ -75,7 +78,7 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     typeahead: options.typeahead,
   });
 
-  const opening = createIntent<Exclude<MenuFocusRequest, 'none'>>();
+  const opening = createIntent<NuiMenuFocus>();
   let inside = false;
   let pointer = false;
 
@@ -97,7 +100,7 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
       options.parent?.closeAll();
     },
     requestFocus: (target) => {
-      opening.set(target === 'none' ? undefined : target);
+      opening.set(target === MenuFocusRequest.None ? undefined : target);
     },
   };
 
@@ -105,10 +108,10 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     navigation.reset();
 
     switch (opening.peek()) {
-      case 'first':
+      case NuiMenuFocus.First:
         navigation.setActive(0, { focus: false });
         break;
-      case 'last':
+      case NuiMenuFocus.Last:
         navigation.setActive(navigation.items().length - 1, { focus: false });
         break;
       case undefined:
@@ -116,9 +119,9 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     }
   };
 
-  const requestedItem = (request: Exclude<MenuFocusRequest, 'none'>): HTMLElement | null => {
+  const requestedItem = (request: NuiMenuFocus): HTMLElement | null => {
     const items = navigation.items();
-    return (request === 'first' ? items[0] : items.at(-1)) ?? null;
+    return (request === NuiMenuFocus.First ? items[0] : items.at(-1)) ?? null;
   };
 
   const focusOnOpen = (): void => {
@@ -175,7 +178,7 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     attrs: {
       onKeydown: (event) => {
         pointer = false;
-        if (event.key === 'Tab') {
+        if (event.key === Key.Tab) {
           context.closeAll();
           return;
         }

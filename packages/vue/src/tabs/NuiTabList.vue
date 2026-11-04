@@ -18,19 +18,18 @@
 <script setup lang="ts">
 import { computed, onMounted, shallowRef, useTemplateRef, watch } from 'vue';
 import { useMutationObserver, useResizeObserver } from '@vueuse/core';
-import { createCollection, useListNavigation } from '@numior/primitives';
+import { createCollection, useDirection, useListNavigation } from '@numior/primitives';
 import { provideTabList, useTabs } from './tabs-context';
-import type { NuiTabListProps } from './tabs.types';
+import { NuiTabsOrientation, type NuiTabListProps } from './tabs.types';
 
-const inlineStartOf = (list: HTMLElement, tab: HTMLElement): number =>
-  getComputedStyle(list).direction === 'rtl'
-    ? list.clientWidth - tab.offsetLeft - tab.offsetWidth
-    : tab.offsetLeft;
+const inlineStartOf = (list: HTMLElement, tab: HTMLElement, rtl: boolean): number =>
+  rtl ? list.clientWidth - tab.offsetLeft - tab.offsetWidth : tab.offsetLeft;
 
 const { label } = defineProps<NuiTabListProps>();
 const tabs = useTabs();
 const orientation = computed(() => tabs.orientation.value);
 const listElement = useTemplateRef<HTMLElement>('list');
+const direction = useDirection(listElement);
 const tabElements = shallowRef<HTMLElement[]>([]);
 const items = createCollection<string>();
 let seenTabs: readonly HTMLElement[] = [];
@@ -73,11 +72,11 @@ const measure = (): void => {
     return;
   }
 
-  const vertical = orientation.value === 'vertical';
+  const vertical = orientation.value === NuiTabsOrientation.Vertical;
 
   list.style.setProperty(
     '--_indicator-start',
-    `${vertical ? tab.offsetTop : inlineStartOf(list, tab)}px`,
+    `${vertical ? tab.offsetTop : inlineStartOf(list, tab, direction.isRtl())}px`,
   );
 
   list.style.setProperty('--_indicator-size', `${vertical ? tab.offsetHeight : tab.offsetWidth}px`);

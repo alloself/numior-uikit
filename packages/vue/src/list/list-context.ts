@@ -1,7 +1,7 @@
 import { inject, provide, type ComputedRef, type InjectionKey } from 'vue';
 import type { ElementCollection } from '@numior/primitives';
 import type { NuiSize } from '../shared/scale.types';
-import type { NuiListSelectable, NuiListVariant } from './list.types';
+import type { ListContextKind, NuiListSelectable, NuiListVariant } from './list.types';
 
 export interface TreeItemState {
   readonly level: number;
@@ -29,14 +29,14 @@ export interface ListItems {
 }
 
 export interface ListboxContext<T = unknown> extends ListShellContext<T> {
-  readonly kind: 'list';
+  readonly kind: typeof ListContextKind.List;
   readonly items: ListItems;
   readonly tabStopKey: ComputedRef<string | undefined>;
   select(value: T): void;
 }
 
 export interface TreeContext<T = unknown> extends ListShellContext<T> {
-  readonly kind: 'tree';
+  readonly kind: typeof ListContextKind.Tree;
   nodeOf(value: T): TreeItemState | undefined;
 }
 

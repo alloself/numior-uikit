@@ -210,7 +210,7 @@ export default [
     rules: { 'no-restricted-syntax': ['error', ...CATALOG, ...CODE_SHAPE, TIMERS] },
   },
   {
-    files: ['packages/primitives/src/**/*.{ts,vue}'],
+    files: ['packages/{primitives,vue}/src/**/*.{ts,vue}'],
     ignores: ['**/*.messages.ts'],
     rules: {
       'no-restricted-syntax': ['error', ...CATALOG, ...CODE_SHAPE, TIMERS, ...NAMED_ENUMERATIONS],
@@ -221,5 +221,9 @@ export default [
     rules: {
       'vue/no-bare-strings-in-template': ['error', { allowlist: TEMPLATE_GLYPHS }],
     },
+  },
+  {
+    files: ['packages/{primitives,vue}/src/**/*.vue'],
+    rules: { 'vue/no-restricted-syntax': ['error', ...NAMED_ENUMERATIONS] },
   },
 ];

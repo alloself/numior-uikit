@@ -3,9 +3,10 @@ import type { IconSource } from '@numior/primitives';
 import type { Component } from 'vue';
 import type { NuiListEntry } from '../shared/options';
 
-export type NuiSidebarCollapsible = 'icon' | 'offcanvas' | 'none';
-export type NuiSidebarSide = 'start' | 'end';
-export type NuiSidebarVariant = 'panel' | 'plain' | 'inset' | 'floating';
+export type NuiSidebarCollapsible =
+  (typeof NuiSidebarCollapsible)[keyof typeof NuiSidebarCollapsible];
+export type NuiSidebarSide = (typeof NuiSidebarSide)[keyof typeof NuiSidebarSide];
+export type NuiSidebarVariant = (typeof NuiSidebarVariant)[keyof typeof NuiSidebarVariant];
 
 export interface NuiSidebarProps {
   collapsible?: NuiSidebarCollapsible | undefined;
@@ -49,3 +50,18 @@ export interface NuiSidebarSubProps {
 export interface NuiSidebarTriggerProps {
   label?: string | undefined;
 }
+
+export const NuiSidebarCollapsible = {
+  Icon: 'icon',
+  Offcanvas: 'offcanvas',
+  None: 'none',
+} as const;
+
+export const NuiSidebarSide = { Start: 'start', End: 'end' } as const;
+
+export const NuiSidebarVariant = {
+  Panel: 'panel',
+  Plain: 'plain',
+  Inset: 'inset',
+  Floating: 'floating',
+} as const;

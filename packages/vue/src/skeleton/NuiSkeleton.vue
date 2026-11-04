@@ -12,10 +12,10 @@
 
 <script setup lang="ts">
 import { computed, onMounted, useTemplateRef, watch } from 'vue';
-import type { NuiSkeletonProps } from './skeleton.types';
+import { NuiSkeletonShape, type NuiSkeletonProps } from './skeleton.types';
 
 const {
-  shape = 'text',
+  shape = NuiSkeletonShape.Text,
   width,
   height,
   lines = 1,
@@ -24,7 +24,7 @@ const {
 
 const root = useTemplateRef<HTMLElement>('root');
 
-const lineCount = computed(() => (shape === 'text' ? Math.max(1, lines) : 0));
+const lineCount = computed(() => (shape === NuiSkeletonShape.Text ? Math.max(1, lines) : 0));
 
 const sizing = computed(() => ({
   ...(width === undefined ? {} : { '--_inline-size': width }),

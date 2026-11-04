@@ -1,9 +1,9 @@
 import type { IconSource } from '@numior/primitives';
 import type { NuiSize } from '../shared/scale.types';
 
-export type NuiTabsActivation = 'automatic' | 'manual';
-export type NuiTabsOrientation = 'horizontal' | 'vertical';
-export type NuiTabsVariant = 'line' | 'soft';
+export type NuiTabsActivation = (typeof NuiTabsActivation)[keyof typeof NuiTabsActivation];
+export type NuiTabsOrientation = (typeof NuiTabsOrientation)[keyof typeof NuiTabsOrientation];
+export type NuiTabsVariant = (typeof NuiTabsVariant)[keyof typeof NuiTabsVariant];
 
 export interface NuiTabDescriptor {
   readonly value: string;
@@ -44,3 +44,9 @@ export interface NuiTabPanelProps {
   lazy?: boolean | undefined;
   focusable?: boolean | undefined;
 }
+
+export const NuiTabsActivation = { Automatic: 'automatic', Manual: 'manual' } as const;
+
+export const NuiTabsOrientation = { Horizontal: 'horizontal', Vertical: 'vertical' } as const;
+
+export const NuiTabsVariant = { Line: 'line', Soft: 'soft' } as const;

@@ -49,9 +49,7 @@ import NuiLink from '../link/NuiLink.vue';
 import NuiRow from '../row/NuiRow.vue';
 import { useTriggerElement } from '../shared/trigger-ref';
 import { useList, type ListItemKey } from './list-context';
-import type { NuiListItemProps } from './list.types';
-
-type ListItemMode = 'treeitem' | 'option' | 'link' | 'button' | 'plain';
+import { ListContextKind, ListItemMode, NuiListVariant, type NuiListItemProps } from './list.types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -74,7 +72,7 @@ const {
 const attrs = useAttrs();
 const split = useSplitAttrs();
 const list = useList();
-const inTree = list?.kind === 'tree';
+const inTree = list?.kind === ListContextKind.Tree;
 const { trigger: action, setTrigger: setAction } = useTriggerElement();
 
 const size = computed(() => list?.size.value ?? 'md');
@@ -82,32 +80,38 @@ const selected = computed(() => value !== undefined && (list?.isSelected(value) 
 const active = computed(() => id !== undefined && list?.activeId.value === id);
 
 const treeNode = computed(() =>
-  list?.kind === 'tree' && value !== undefined ? list.nodeOf(value) : undefined,
+  list?.kind === ListContextKind.Tree && value !== undefined ? list.nodeOf(value) : undefined,
 );
 
 const nowrap = computed(
-  () => inTree || list?.variant.value === 'floating' || list?.variant.value === 'nav',
+  () =>
+    inTree ||
+    list?.variant.value === NuiListVariant.Floating ||
+    list?.variant.value === NuiListVariant.Nav,
 );
 
 const tabStop = computed(
-  () => list?.kind === 'list' && value !== undefined && list.tabStopKey.value === list.keyOf(value),
+  () =>
+    list?.kind === ListContextKind.List &&
+    value !== undefined &&
+    list.tabStopKey.value === list.keyOf(value),
 );
 
 const mode = (): ListItemMode => {
   if (inTree) {
-    return 'treeitem';
+    return ListItemMode.TreeItem;
   }
   if (list?.selectable.value !== undefined && value !== undefined) {
-    return 'option';
+    return ListItemMode.Option;
   }
   if (href !== undefined || to !== undefined) {
-    return 'link';
+    return ListItemMode.Link;
   }
-  return interactive || attrs.onClick !== undefined ? 'button' : 'plain';
+  return interactive || attrs.onClick !== undefined ? ListItemMode.Button : ListItemMode.Plain;
 };
 
-const isOption = (): boolean => mode() === 'option';
-const hasAction = (): boolean => mode() === 'link' || mode() === 'button';
+const isOption = (): boolean => mode() === ListItemMode.Option;
+const hasAction = (): boolean => mode() === ListItemMode.Link || mode() === ListItemMode.Button;
 
 const row = useTemplateRef<InstanceType<typeof NuiRow>>('row');
 const ownKey = Symbol('list-item');
@@ -119,19 +123,19 @@ const titleText = (): string => row.value?.titleElement?.textContent ?? label ??
 
 const navigable = (): HTMLElement | null => {
   switch (mode()) {
-    case 'option':
+    case ListItemMode.Option:
       return rootElement;
-    case 'link':
-    case 'button':
+    case ListItemMode.Link:
+    case ListItemMode.Button:
       return action.value;
-    case 'treeitem':
-    case 'plain':
+    case ListItemMode.TreeItem:
+    case ListItemMode.Plain:
       return null;
   }
 };
 
 const register = (): void => {
-  if (list?.kind !== 'list') {
+  if (list?.kind !== ListContextKind.List) {
     return;
   }
 
@@ -163,7 +167,9 @@ const bindAction = (element: Element | ComponentPublicInstance | null): void => 
 
 const showsCheck = (): boolean =>
   isOption() ||
-  (inTree && list?.variant.value === 'floating' && treeNode.value?.checked === undefined);
+  (inTree &&
+    list?.variant.value === NuiListVariant.Floating &&
+    treeNode.value?.checked === undefined);
 
 const badgeLook = computed(() =>
   current ? { tone: 'primary' as const, variant: 'solid' as const } : {},
@@ -199,18 +205,18 @@ const treeAttrs = (): AttrRecord => {
 
 const roleAttrs = (): AttrRecord => {
   switch (mode()) {
-    case 'treeitem':
+    case ListItemMode.TreeItem:
       return treeAttrs();
-    case 'option':
+    case ListItemMode.Option:
       return {
         role: 'option',
         tabindex: tabStop.value ? 0 : -1,
         'aria-selected': selected.value,
         'aria-disabled': disabled ? 'true' : undefined,
       };
-    case 'link':
-    case 'button':
-    case 'plain':
+    case ListItemMode.Link:
+    case ListItemMode.Button:
+    case ListItemMode.Plain:
       return {};
   }
 };
@@ -219,13 +225,13 @@ const rootAttrs = (): AttrRecord => (hasAction() ? split.rootAttrs() : attrs);
 
 const innerIs = () => {
   switch (mode()) {
-    case 'link':
+    case ListItemMode.Link:
       return NuiLink;
-    case 'button':
+    case ListItemMode.Button:
       return 'button';
-    case 'treeitem':
-    case 'option':
-    case 'plain':
+    case ListItemMode.TreeItem:
+    case ListItemMode.Option:
+    case ListItemMode.Plain:
       return 'div';
   }
 };
@@ -234,7 +240,7 @@ const innerAttrs = (): AttrRecord => {
   const page = current ? { 'aria-current': 'page' } : {};
 
   switch (mode()) {
-    case 'link':
+    case ListItemMode.Link:
       return {
         as,
         href,
@@ -246,7 +252,7 @@ const innerAttrs = (): AttrRecord => {
         ...page,
         ...split.controlAttrs(),
       };
-    case 'button':
+    case ListItemMode.Button:
       return {
         type: 'button',
         disabled,
@@ -254,15 +260,20 @@ const innerAttrs = (): AttrRecord => {
         ...page,
         ...split.controlAttrs(),
       };
-    case 'treeitem':
-    case 'option':
-    case 'plain':
+    case ListItemMode.TreeItem:
+    case ListItemMode.Option:
+    case ListItemMode.Plain:
       return {};
   }
 };
 
 const onClick = (): void => {
-  if (list?.kind === 'list' && mode() === 'option' && !disabled && value !== undefined) {
+  if (
+    list?.kind === ListContextKind.List &&
+    mode() === ListItemMode.Option &&
+    !disabled &&
+    value !== undefined
+  ) {
     list.select(value);
   }
 };

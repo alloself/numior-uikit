@@ -28,12 +28,13 @@
 import { computed } from 'vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { formatCount } from './badge-count';
-import type { NuiBadgeProps } from './badge.types';
+import { NuiBadgeSize, NuiBadgeVariant, type NuiBadgeProps } from './badge.types';
+import { NuiTone } from '../shared/scale.types';
 
 const {
-  tone = 'neutral',
-  variant = 'soft',
-  size = 'md',
+  tone = NuiTone.Neutral,
+  variant = NuiBadgeVariant.Soft,
+  size = NuiBadgeSize.Md,
   icon,
   dot = false,
   count,

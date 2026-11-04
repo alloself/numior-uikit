@@ -1,4 +1,4 @@
-export type NuiSkeletonShape = 'text' | 'rect' | 'circle';
+export type NuiSkeletonShape = (typeof NuiSkeletonShape)[keyof typeof NuiSkeletonShape];
 
 export interface NuiSkeletonProps {
   shape?: NuiSkeletonShape | undefined;
@@ -7,3 +7,5 @@ export interface NuiSkeletonProps {
   lines?: number | undefined;
   animated?: boolean | undefined;
 }
+
+export const NuiSkeletonShape = { Text: 'text', Rect: 'rect', Circle: 'circle' } as const;

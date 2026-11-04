@@ -1,5 +1,5 @@
 import { parseHotkey, type Hotkey } from '@numior/primitives';
-import type { NuiKbdPlatform } from './kbd.types';
+import { NuiKbdPlatform } from './kbd.types';
 
 const MAC_MODIFIERS = { ctrl: '⌃', alt: '⌥', shift: '⇧', meta: '⌘', mod: '⌘' };
 const OTHER_MODIFIERS = { ctrl: 'Ctrl', alt: 'Alt', shift: 'Shift', meta: 'Win', mod: 'Ctrl' };
@@ -31,7 +31,7 @@ const keyLabel = (key: string, text: string): string => {
 };
 
 const comboLabels = (hotkey: Hotkey, platform: NuiKbdPlatform): string[] => {
-  const modifiers = platform === 'mac' ? MAC_MODIFIERS : OTHER_MODIFIERS;
+  const modifiers = platform === NuiKbdPlatform.Mac ? MAC_MODIFIERS : OTHER_MODIFIERS;
 
   return [
     ...MODIFIER_ORDER.reduce<string[]>((found, name) => {

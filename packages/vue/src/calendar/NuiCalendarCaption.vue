@@ -19,7 +19,7 @@
         :key="part.view"
         type="button"
         class="nui-calendar__title-button"
-        :class="`nui-calendar__title-button--${part.view === 'months' ? 'month' : 'year'}`"
+        :class="`nui-calendar__title-button--${part.view === NuiCalendarView.Months ? 'month' : 'year'}`"
         :aria-label="part.label"
         :aria-expanded="calendar.view.value === part.view"
         :aria-controls="calendar.view.value === part.view ? pickerId : undefined"
@@ -50,10 +50,10 @@ import { formatDateLabel } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { useCalendar } from './calendar-context';
-import type { NuiCalendarView } from './calendar.types';
+import { NuiCalendarView, type CalendarPickerKind } from './calendar.types';
 
 interface TitlePart {
-  readonly view: 'months' | 'years';
+  readonly view: CalendarPickerKind;
   readonly label: string;
   readonly text: string;
 }
@@ -71,18 +71,18 @@ const pickerId = computed(() => `${calendar.id.value}-${month}-picker`);
 
 const parts = computed<TitlePart[]>(() => [
   {
-    view: 'months',
+    view: NuiCalendarView.Months,
     label: labels.value.month,
     text: formatDateLabel(`${month}-01`, calendar.locale.value, { month: 'long' }),
   },
   {
-    view: 'years',
+    view: NuiCalendarView.Years,
     label: labels.value.year,
     text: formatDateLabel(`${month}-01`, calendar.locale.value, { year: 'numeric' }),
   },
 ]);
 
 const toggleView = (view: NuiCalendarView): void => {
-  calendar.setView(calendar.view.value === view ? 'days' : view);
+  calendar.setView(calendar.view.value === view ? NuiCalendarView.Days : view);
 };
 </script>

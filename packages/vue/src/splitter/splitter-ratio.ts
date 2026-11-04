@@ -1,4 +1,6 @@
 import { clamp } from '@vueuse/core';
+import { Key } from '@numior/primitives';
+import { SplitterStep } from './splitter.types';
 
 export interface RatioBounds {
   readonly min: number;
@@ -29,20 +31,20 @@ export const ratioMoveFor = (
   key: string,
   vertical: boolean,
   rtl: boolean,
-): 'grow' | 'shrink' | 'min' | 'max' | undefined => {
+): SplitterStep | undefined => {
   switch (key) {
-    case 'Home':
-      return 'min';
-    case 'End':
-      return 'max';
-    case 'ArrowUp':
-      return vertical ? 'shrink' : undefined;
-    case 'ArrowDown':
-      return vertical ? 'grow' : undefined;
-    case 'ArrowLeft':
-      return vertical ? undefined : rtl ? 'grow' : 'shrink';
-    case 'ArrowRight':
-      return vertical ? undefined : rtl ? 'shrink' : 'grow';
+    case Key.Home:
+      return SplitterStep.Min;
+    case Key.End:
+      return SplitterStep.Max;
+    case Key.ArrowUp:
+      return vertical ? SplitterStep.Shrink : undefined;
+    case Key.ArrowDown:
+      return vertical ? SplitterStep.Grow : undefined;
+    case Key.ArrowLeft:
+      return vertical ? undefined : rtl ? SplitterStep.Grow : SplitterStep.Shrink;
+    case Key.ArrowRight:
+      return vertical ? undefined : rtl ? SplitterStep.Shrink : SplitterStep.Grow;
     default:
       return undefined;
   }

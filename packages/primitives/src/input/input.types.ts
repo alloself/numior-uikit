@@ -1,5 +1,3 @@
-export type InputType = (typeof InputType)[keyof typeof InputType];
-
 export const InputType = {
   InsertText: 'insertText',
   InsertReplacementText: 'insertReplacementText',

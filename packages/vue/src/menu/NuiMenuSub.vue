@@ -41,12 +41,12 @@
 
 <script setup lang="ts">
 import { ref, shallowRef, useTemplateRef } from 'vue';
-import { useControlId, useDelayedOpen, useDirection } from '@numior/primitives';
+import { Key, useControlId, useDelayedOpen, useDirection } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiMenuRow from './NuiMenuRow.vue';
 import { provideMenu, useMenu } from './menu-context';
 import { useMenuSurface } from './use-menu-surface';
-import type { NuiMenuSubProps } from './menu.types';
+import { NuiMenuFocus, type NuiMenuSubProps } from './menu.types';
 
 const {
   id,
@@ -97,8 +97,8 @@ const {
 
 provideMenu(context);
 const contentAttrs = control.contentAttrs;
-const forwardKey = (): string => (direction.isRtl() ? 'ArrowLeft' : 'ArrowRight');
-const backKey = (): string => (direction.isRtl() ? 'ArrowRight' : 'ArrowLeft');
+const forwardKey = (): string => (direction.isRtl() ? Key.ArrowLeft : Key.ArrowRight);
+const backKey = (): string => (direction.isRtl() ? Key.ArrowRight : Key.ArrowLeft);
 
 const onTriggerEnter = (): void => {
   if (!disabled) {
@@ -113,12 +113,12 @@ const openFromPointer = (): void => {
 };
 
 const onTriggerKeydown = (event: KeyboardEvent): void => {
-  const opens = event.key === forwardKey() || event.key === 'Enter' || event.key === ' ';
+  const opens = event.key === forwardKey() || event.key === Key.Enter || event.key === Key.Space;
   if (!opens || disabled) {
     return;
   }
   event.preventDefault();
-  context.requestFocus('first');
+  context.requestFocus(NuiMenuFocus.First);
   delay.openNow();
 };
 

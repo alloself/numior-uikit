@@ -1,4 +1,6 @@
+import { PointerType } from '@numior/primitives';
 import { onScopeDispose } from 'vue';
+import { WheelDragKind } from './time-field.types';
 
 export interface WheelDragOptions {
   readonly element: () => HTMLElement | null;
@@ -12,27 +14,27 @@ export interface WheelDrag {
 }
 
 interface HeldDrag {
-  readonly kind: 'pressed' | 'dragging';
+  readonly kind: typeof WheelDragKind.Pressed | typeof WheelDragKind.Dragging;
   readonly pointer: number;
   readonly y: number;
   readonly top: number;
 }
 
-type DragState = { readonly kind: 'idle' } | HeldDrag;
+type DragState = { readonly kind: typeof WheelDragKind.Idle } | HeldDrag;
 
-const IDLE: DragState = { kind: 'idle' };
+const IDLE: DragState = { kind: WheelDragKind.Idle };
 const DRAG_THRESHOLD = 4;
 
 const advance = (drag: HeldDrag, y: number, element: HTMLElement): HeldDrag => {
   const distance = y - drag.y;
 
-  if (drag.kind === 'pressed' && Math.abs(distance) < DRAG_THRESHOLD) {
+  if (drag.kind === WheelDragKind.Pressed && Math.abs(distance) < DRAG_THRESHOLD) {
     return drag;
   }
   element.style.scrollSnapType = 'none';
   element.style.cursor = 'grabbing';
   element.scrollTop = drag.top - distance;
-  return { ...drag, kind: 'dragging' };
+  return { ...drag, kind: WheelDragKind.Dragging };
 };
 
 export const useWheelDrag = (options: WheelDragOptions): WheelDrag => {
@@ -42,7 +44,7 @@ export const useWheelDrag = (options: WheelDragOptions): WheelDrag => {
     const { drag } = state;
     const element = options.element();
 
-    if (element && drag.kind !== 'idle' && event.pointerId === drag.pointer) {
+    if (element && drag.kind !== WheelDragKind.Idle && event.pointerId === drag.pointer) {
       state.drag = advance(drag, event.clientY, element);
     }
   };
@@ -68,12 +70,12 @@ export const useWheelDrag = (options: WheelDragOptions): WheelDrag => {
   const onUp = (event: PointerEvent): void => {
     const { drag } = state;
 
-    if (drag.kind === 'idle' || event.pointerId !== drag.pointer) {
+    if (drag.kind === WheelDragKind.Idle || event.pointerId !== drag.pointer) {
       return;
     }
     stop();
 
-    if (drag.kind === 'dragging') {
+    if (drag.kind === WheelDragKind.Dragging) {
       finish();
     }
   };
@@ -83,12 +85,12 @@ export const useWheelDrag = (options: WheelDragOptions): WheelDrag => {
 
     state.dragged = false;
 
-    if (!element || event.pointerType !== 'mouse' || event.button !== 0) {
+    if (!element || event.pointerType !== PointerType.Mouse || event.button !== 0) {
       return;
     }
 
     state.drag = {
-      kind: 'pressed',
+      kind: WheelDragKind.Pressed,
       pointer: event.pointerId,
       y: event.clientY,
       top: element.scrollTop,
@@ -102,7 +104,7 @@ export const useWheelDrag = (options: WheelDragOptions): WheelDrag => {
   onScopeDispose(stop);
 
   return {
-    holding: () => state.drag.kind !== 'idle',
+    holding: () => state.drag.kind !== WheelDragKind.Idle,
     swallowClick: () => {
       const dragged = state.dragged;
 

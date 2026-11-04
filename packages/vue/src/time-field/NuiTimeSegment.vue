@@ -7,7 +7,7 @@
     autocomplete="off"
     spellcheck="false"
     role="spinbutton"
-    :inputmode="type === 'dayPeriod' ? 'text' : 'numeric'"
+    :inputmode="type === TimeSegmentType.DayPeriod ? 'text' : 'numeric'"
     :enterkeyhint="last ? 'done' : 'next'"
     placeholder="--"
     :id="id"
@@ -31,17 +31,16 @@
 
 <script setup lang="ts">
 import { useTemplateRef } from 'vue';
-import type { NuiTimeSegmentProps } from './time-field.types';
-
-type SegmentAction = 'step-up' | 'step-down' | 'min' | 'max' | 'clear';
+import { Key, TimeSegmentType } from '@numior/primitives';
+import { SegmentAction, type NuiTimeSegmentProps, type TimeEdge } from './time-field.types';
 
 const SEGMENT_KEYS: Record<string, SegmentAction> = {
-  ArrowUp: 'step-up',
-  ArrowDown: 'step-down',
-  Home: 'min',
-  End: 'max',
-  Backspace: 'clear',
-  Delete: 'clear',
+  [Key.ArrowUp]: SegmentAction.StepUp,
+  [Key.ArrowDown]: SegmentAction.StepDown,
+  [Key.Home]: SegmentAction.Min,
+  [Key.End]: SegmentAction.Max,
+  [Key.Backspace]: SegmentAction.Clear,
+  [Key.Delete]: SegmentAction.Clear,
 };
 
 const {
@@ -64,7 +63,7 @@ const {
 const emit = defineEmits<{
   char: [char: string];
   step: [delta: 1 | -1];
-  edge: [edge: 'min' | 'max'];
+  edge: [edge: TimeEdge];
   clear: [];
 }>();
 
@@ -104,17 +103,17 @@ const onKeydown = (event: KeyboardEvent): void => {
   event.preventDefault();
 
   switch (action) {
-    case 'step-up':
+    case SegmentAction.StepUp:
       emit('step', 1);
       break;
-    case 'step-down':
+    case SegmentAction.StepDown:
       emit('step', -1);
       break;
-    case 'clear':
+    case SegmentAction.Clear:
       emit('clear');
       break;
-    case 'min':
-    case 'max':
+    case SegmentAction.Min:
+    case SegmentAction.Max:
       emit('edge', action);
       break;
   }

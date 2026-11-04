@@ -1,4 +1,4 @@
-export type NuiLayoutHeader = 'inset' | 'full';
+export type NuiLayoutHeader = (typeof NuiLayoutHeader)[keyof typeof NuiLayoutHeader];
 
 export interface NuiLayoutProps {
   id?: string | undefined;
@@ -17,3 +17,5 @@ export interface NuiLayoutProps {
 export interface NuiAppBarProps {
   sticky?: boolean | undefined;
 }
+
+export const NuiLayoutHeader = { Inset: 'inset', Full: 'full' } as const;

@@ -1,11 +1,13 @@
 import {
   clampTime,
   compareTime,
+  DateTimePart,
+  DayPeriod,
   formatSegment,
-  type HourCycle,
+  HourCycle,
+  TimeSegmentType,
   type TimeDraft,
   type TimeLayout,
-  type TimeSegmentType,
   type TimeValue,
 } from '@numior/primitives';
 
@@ -36,8 +38,6 @@ interface MinuteWindow {
   readonly to: number;
 }
 
-type Period = 'am' | 'pm';
-
 type WheelMove = (options: readonly WheelOption[], selected: number) => number | undefined;
 
 const MIDNIGHT: TimeValue = { hour: 0, minute: 0, second: 0 };
@@ -56,13 +56,13 @@ const every = (from: number, to: number, by: number): number[] => {
   return values;
 };
 
-const periodOf = (hour: number): Period => (hour >= 12 ? 'pm' : 'am');
+const periodOf = (hour: number): DayPeriod => (hour >= 12 ? DayPeriod.Pm : DayPeriod.Am);
 
-const toDayHour = (hour: number, period: Period, cycle: HourCycle): number =>
-  cycle === 'h23' ? hour : (hour % 12) + (period === 'pm' ? 12 : 0);
+const toDayHour = (hour: number, period: DayPeriod, cycle: HourCycle): number =>
+  cycle === HourCycle.H23 ? hour : (hour % 12) + (period === DayPeriod.Pm ? 12 : 0);
 
 const toCycleHour = (hour: number, cycle: HourCycle): number =>
-  cycle === 'h23' ? hour : hour % 12 === 0 ? 12 : hour % 12;
+  cycle === HourCycle.H23 ? hour : hour % 12 === 0 ? 12 : hour % 12;
 
 const isWithin = (time: TimeValue, input: WheelInput): boolean =>
   (input.min === null || compareTime(time, input.min) >= 0) &&
@@ -123,7 +123,7 @@ const floorIndex = (options: readonly WheelOption[], value: number): number =>
 const hourOptions = (input: WheelInput, shown: TimeValue): WheelOption[] => {
   const { cycle, digits } = input.layout;
 
-  if (cycle === 'h23') {
+  if (cycle === HourCycle.H23) {
     return every(0, 23, 1).reduce<WheelOption[]>((found, hour) => {
       if (reachable(hour, input)) {
         found.push({ value: hour, text: formatSegment(hour, digits), disabled: false });
@@ -136,8 +136,8 @@ const hourOptions = (input: WheelInput, shown: TimeValue): WheelOption[] => {
 
   return HOURS_12.reduce<WheelOption[]>((found, hour) => {
     if (
-      reachable(toDayHour(hour, 'am', cycle), input) ||
-      reachable(toDayHour(hour, 'pm', cycle), input)
+      reachable(toDayHour(hour, DayPeriod.Am, cycle), input) ||
+      reachable(toDayHour(hour, DayPeriod.Pm, cycle), input)
     ) {
       found.push({
         value: hour,
@@ -170,21 +170,21 @@ const secondOptions = (input: WheelInput, shown: TimeValue): WheelOption[] =>
   }));
 
 const periodOptions = (input: WheelInput): WheelOption[] =>
-  (['am', 'pm'] as const).map((period, index) => ({
-    value: period === 'pm' ? 12 : 0,
+  ([DayPeriod.Am, DayPeriod.Pm] as const).map((period, index) => ({
+    value: period === DayPeriod.Pm ? 12 : 0,
     text: input.layout.periods[index] ?? period,
-    disabled: !HOURS_12.some((hour) => reachable(toDayHour(hour, period, 'h12'), input)),
+    disabled: !HOURS_12.some((hour) => reachable(toDayHour(hour, period, HourCycle.H12), input)),
   }));
 
 const optionsOf = (type: TimeSegmentType, input: WheelInput, shown: TimeValue): WheelOption[] => {
   switch (type) {
-    case 'hour':
+    case TimeSegmentType.Hour:
       return hourOptions(input, shown);
-    case 'minute':
+    case TimeSegmentType.Minute:
       return minuteOptions(input, shown);
-    case 'second':
+    case TimeSegmentType.Second:
       return secondOptions(input, shown);
-    case 'dayPeriod':
+    case TimeSegmentType.DayPeriod:
       return periodOptions(input);
   }
 };
@@ -196,13 +196,13 @@ const selectedIn = (
   cycle: HourCycle,
 ): number => {
   switch (type) {
-    case 'hour':
+    case TimeSegmentType.Hour:
       return nearestIndex(options, toCycleHour(shown.hour, cycle));
-    case 'minute':
+    case TimeSegmentType.Minute:
       return floorIndex(options, shown.minute);
-    case 'second':
+    case TimeSegmentType.Second:
       return floorIndex(options, shown.second);
-    case 'dayPeriod':
+    case TimeSegmentType.DayPeriod:
       return shown.hour >= 12 ? 1 : 0;
   }
 };
@@ -213,9 +213,9 @@ const separatorsOf = (layout: TimeLayout): ReadonlyMap<TimeSegmentType, string> 
   let numeric = false;
 
   for (const segment of layout.segments) {
-    if (segment.type === 'literal') {
+    if (segment.type === DateTimePart.Literal) {
       literal = segment.text.trim();
-    } else if (segment.type === 'dayPeriod') {
+    } else if (segment.type === TimeSegmentType.DayPeriod) {
       numeric = false;
     } else {
       if (numeric && literal) {
@@ -233,7 +233,7 @@ export const wheelColumns = (input: WheelInput): WheelColumn[] => {
   const separators = separatorsOf(input.layout);
 
   return input.layout.segments.flatMap((segment) => {
-    if (segment.type === 'literal') {
+    if (segment.type === DateTimePart.Literal) {
       return [];
     }
 
@@ -257,13 +257,13 @@ const withPart = (
   cycle: HourCycle,
 ): TimeValue => {
   switch (type) {
-    case 'hour':
+    case TimeSegmentType.Hour:
       return { ...time, hour: toDayHour(value, periodOf(time.hour), cycle) };
-    case 'minute':
+    case TimeSegmentType.Minute:
       return { ...time, minute: value };
-    case 'second':
+    case TimeSegmentType.Second:
       return { ...time, second: value };
-    case 'dayPeriod':
+    case TimeSegmentType.DayPeriod:
       return { ...time, hour: (time.hour % 12) + (value >= 12 ? 12 : 0) };
   }
 };

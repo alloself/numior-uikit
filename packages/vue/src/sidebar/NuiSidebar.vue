@@ -42,12 +42,17 @@ import NuiDrawer from '../drawer/NuiDrawer.vue';
 import { useLayout } from '../layout/layout-context';
 import { provideSidebar } from './sidebar-context';
 import { sidebarMessages } from './sidebar.messages';
-import type { NuiSidebarProps } from './sidebar.types';
+import {
+  NuiSidebarCollapsible,
+  NuiSidebarSide,
+  NuiSidebarVariant,
+  type NuiSidebarProps,
+} from './sidebar.types';
 
 const {
-  collapsible = 'offcanvas',
-  side = 'start',
-  variant = 'panel',
+  collapsible = NuiSidebarCollapsible.Offcanvas,
+  side = NuiSidebarSide.Start,
+  variant = NuiSidebarVariant.Panel,
   label,
   title,
   closeLabel,
@@ -61,14 +66,15 @@ const direction = useDirection(root);
 const messages = useMessages(sidebarMessages);
 
 const labelText = computed(() => label ?? messages.value.label);
-const collapsed = computed(() => !layout.open.value && collapsible !== 'none');
-const rail = computed(() => collapsed.value && collapsible === 'icon');
-const hidden = computed(() => collapsed.value && collapsible === 'offcanvas');
+const collapsed = computed(() => !layout.open.value && collapsible !== NuiSidebarCollapsible.None);
+const rail = computed(() => collapsed.value && collapsible === NuiSidebarCollapsible.Icon);
+const hidden = computed(() => collapsed.value && collapsible === NuiSidebarCollapsible.Offcanvas);
 
 provideSidebar({
   rail,
   mobile: layout.mobile,
-  tooltipPlacement: () => ((side === 'start') === !direction.isRtl() ? 'right' : 'left'),
+  tooltipPlacement: () =>
+    (side === NuiSidebarSide.Start) === !direction.isRtl() ? 'right' : 'left',
   expand: () => {
     layout.open.value = true;
   },

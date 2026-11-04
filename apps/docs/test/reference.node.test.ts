@@ -72,6 +72,7 @@ describe('docs reference', () => {
       checker.getComponentMeta(entry.file),
       { import: familyStyleImport(entry) ?? '', blocks: [], tokens: [] },
       undefined,
+      enumerationMembers(`${ROOT}packages/vue/dist/index.d.ts`),
     );
   }, 30_000);
 

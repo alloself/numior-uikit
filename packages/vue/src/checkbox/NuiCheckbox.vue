@@ -41,12 +41,13 @@ import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { useCheckboxGroup } from './checkbox-group-context';
 import type { NuiCheckboxProps } from './checkbox.types';
+import { NuiSize } from '../shared/scale.types';
 
 defineOptions({ inheritAttrs: false });
 
 const {
   id,
-  size = 'md',
+  size = NuiSize.Md,
   disabled = undefined,
   readonly = undefined,
   required = undefined,

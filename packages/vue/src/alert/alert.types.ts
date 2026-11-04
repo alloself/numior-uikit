@@ -1,7 +1,7 @@
 import type { IconSource } from '@numior/primitives';
 import type { NuiTone } from '../shared/scale.types';
 
-export type NuiAlertVariant = 'soft' | 'outline' | 'solid';
+export type NuiAlertVariant = (typeof NuiAlertVariant)[keyof typeof NuiAlertVariant];
 
 export interface NuiAlertProps {
   variant?: NuiAlertVariant | undefined;
@@ -13,3 +13,5 @@ export interface NuiAlertProps {
   dismissible?: boolean | undefined;
   dismissLabel?: string | undefined;
 }
+
+export const NuiAlertVariant = { Soft: 'soft', Outline: 'outline', Solid: 'solid' } as const;

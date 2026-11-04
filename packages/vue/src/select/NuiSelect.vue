@@ -124,7 +124,14 @@
 
 <script setup lang="ts" generic="T">
 import { computed, onMounted, ref, shallowRef, useTemplateRef, watch } from 'vue';
-import { createIntent, useFieldControl, useMessages, useSplitAttrs } from '@numior/primitives';
+import {
+  createIntent,
+  FloatingPlacement,
+  Key,
+  useFieldControl,
+  useMessages,
+  useSplitAttrs,
+} from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
@@ -136,17 +143,16 @@ import { useOptionSelection } from '../shared/use-option-selection';
 import { ancestorValuesOf } from '../tree/flatten';
 import type { NuiTreeItem } from '../tree/tree.types';
 import { selectMessages } from './select.messages';
-import type { NuiSelectProps } from './select.types';
+import { SelectOpenFocus, type NuiSelectProps } from './select.types';
+import { NuiSize } from '../shared/scale.types';
 
 type SelectEntry<T> = NuiOption<T> | NuiListGroup<NuiOption<T>> | NuiTreeItem<T>;
-
-type OpenFocus = 'selected' | 'first' | 'last';
 
 defineOptions({ inheritAttrs: false });
 
 const {
   id,
-  size = 'md',
+  size = NuiSize.Md,
   disabled = undefined,
   readonly = undefined,
   required = undefined,
@@ -162,7 +168,7 @@ const {
   name,
   getKey,
   loop = true,
-  placement = 'bottom-start',
+  placement = FloatingPlacement.BottomStart,
   emptyLabel,
   clearLabel,
   toggleLabel,
@@ -260,20 +266,20 @@ const { listboxElement, setListbox, control, navigation, activateHovered, restAc
     isSelected: (key) => selectedKeys.value.has(key),
   });
 
-const opening = createIntent<OpenFocus>();
+const opening = createIntent<SelectOpenFocus>();
 let inside = false;
 
 const activate = (): void => {
   navigation.reset();
 
-  switch (opening.take() ?? 'selected') {
-    case 'first':
+  switch (opening.take() ?? SelectOpenFocus.Selected) {
+    case SelectOpenFocus.First:
       navigation.setActive(0, { focus: false });
       break;
-    case 'last':
+    case SelectOpenFocus.Last:
       navigation.setActive(navigation.items().length - 1, { focus: false });
       break;
-    case 'selected':
+    case SelectOpenFocus.Selected:
       break;
   }
 };
@@ -341,11 +347,11 @@ onMounted(() => {
 const isPrintable = (event: KeyboardEvent): boolean =>
   event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
 
-const OPENERS: Readonly<Record<string, OpenFocus>> = {
-  ArrowDown: 'selected',
-  ArrowUp: 'last',
-  Home: 'first',
-  End: 'last',
+const OPENERS: Readonly<Record<string, SelectOpenFocus>> = {
+  [Key.ArrowDown]: SelectOpenFocus.Selected,
+  [Key.ArrowUp]: SelectOpenFocus.Last,
+  [Key.Home]: SelectOpenFocus.First,
+  [Key.End]: SelectOpenFocus.Last,
 };
 
 const pickByTypeahead = (event: KeyboardEvent): void => {
@@ -367,24 +373,24 @@ const onTriggerKeydown = (event: KeyboardEvent): void => {
     event.preventDefault();
     opening.set(request);
     control.show();
-  } else if (event.key === 'Enter' || event.key === ' ') {
-    opening.set('selected');
+  } else if (event.key === Key.Enter || event.key === Key.Space) {
+    opening.set(SelectOpenFocus.Selected);
   } else if (!multiple && !isTree.value && isPrintable(event)) {
     pickByTypeahead(event);
   }
 };
 
 const onListboxKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Tab') {
+  if (event.key === Key.Tab) {
     control.hide();
     return;
   }
-  if (event.key !== 'Enter' && event.key !== ' ') {
+  if (event.key !== Key.Enter && event.key !== Key.Space) {
     navigation.onKeydown(event);
     return;
   }
   event.preventDefault();
-  if (event.key === 'Enter' && multiple) {
+  if (event.key === Key.Enter && multiple) {
     control.hide();
   } else {
     navigation.activeElement()?.click();
@@ -392,11 +398,11 @@ const onListboxKeydown = (event: KeyboardEvent): void => {
 };
 
 const onTreeKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Tab') {
+  if (event.key === Key.Tab) {
     control.hide();
     return;
   }
-  if (multiple && event.key === 'Enter') {
+  if (multiple && event.key === Key.Enter) {
     event.preventDefault();
     event.stopImmediatePropagation();
     control.hide();

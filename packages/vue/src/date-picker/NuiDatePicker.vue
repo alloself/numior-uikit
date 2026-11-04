@@ -71,7 +71,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { joinDateTime, splitDateTime } from '@numior/primitives';
+import { FloatingPlacement, joinDateTime, Key, splitDateTime } from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiCalendar from '../calendar/NuiCalendar.vue';
 import type { NuiCalendarValue } from '../calendar/calendar.types';
@@ -80,13 +80,14 @@ import NuiDateField from './NuiDateField.vue';
 import NuiDateInput from './NuiDateInput.vue';
 import type { NuiDatePickerProps } from './date-picker.types';
 import { useDatePickerShell } from './use-date-picker-shell';
+import { NuiSize } from '../shared/scale.types';
 
 defineOptions({ inheritAttrs: false });
 defineSlots<{ actions(): unknown }>();
 
 const {
   id,
-  size = 'md',
+  size = NuiSize.Md,
   disabled = undefined,
   required = undefined,
   invalid = undefined,
@@ -105,7 +106,7 @@ const {
   clearable = false,
   openOnClick = false,
   readonly = undefined,
-  placement = 'bottom-start',
+  placement = FloatingPlacement.BottomStart,
   placeholder,
   name,
   time = false,
@@ -192,7 +193,7 @@ const clear = (): void => {
 };
 
 const onTimeKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Enter' && !event.defaultPrevented) {
+  if (event.key === Key.Enter && !event.defaultPrevented) {
     event.preventDefault();
     popover.hide({ focus: true });
   }

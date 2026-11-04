@@ -60,6 +60,7 @@ import { useTemplateRef } from 'vue';
 import NuiButton from '../button/NuiButton.vue';
 import type { NuiSize } from '../shared/scale.types';
 import type { PickerPopover } from './use-picker-popover';
+import { Key } from '@numior/primitives';
 
 defineSlots<{ default(): unknown; panel(): unknown }>();
 
@@ -94,7 +95,7 @@ const emit = defineEmits<{ clear: [] }>();
 const root = useTemplateRef<HTMLElement>('root');
 
 const onPanelKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Escape' && !event.defaultPrevented) {
+  if (event.key === Key.Escape && !event.defaultPrevented) {
     event.preventDefault();
     popover.hide({ focus: true });
   }

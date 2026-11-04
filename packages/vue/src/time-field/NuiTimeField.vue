@@ -29,7 +29,7 @@
       >
         <template v-for="(segment, index) in layout.segments" :key="index">
           <span
-            v-if="segment.type === 'literal'"
+            v-if="segment.type === DateTimePart.Literal"
             class="nui-time-field__literal"
             aria-hidden="true"
           >
@@ -45,7 +45,7 @@
             :min="segmentBounds(segment.type, layout.cycle).min"
             :max="segmentBounds(segment.type, layout.cycle).max"
             :value-text="segmentText(segment.type) || undefined"
-            :id="segment.type === 'hour' ? controlAttrs.id : undefined"
+            :id="segment.type === TimeSegmentType.Hour ? controlAttrs.id : undefined"
             :tab-stop="index === firstSegment"
             :last="index === lastSegment"
             :disabled="isDisabled"
@@ -113,10 +113,19 @@ import {
   useMessages,
   usePopover,
   useSplitAttrs,
-  type TimeSegmentType,
+  DateTimePart,
+  DayPeriod,
+  FloatingPlacement,
+  HourCycle,
+  Key,
+  ListOrientation,
+  PopoverMode,
+  PopoverState,
+  TimeSegmentType,
   type TimeValue,
 } from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame.vue';
+import { NuiSize } from '../shared/scale.types';
 import NuiButton from '../button/NuiButton.vue';
 import { useTriggerElement } from '../shared/trigger-ref';
 import NuiTimeSegment from './NuiTimeSegment.vue';
@@ -124,13 +133,18 @@ import NuiTimeWheels from './NuiTimeWheels.vue';
 import { timeFieldMessages } from './time-field.messages';
 import type { NuiTimeFieldProps } from './time-field.types';
 import { hasWheelTimes, pickedTime, settledTime, wheelColumns } from './time-wheels';
-import { useTimeDraft, type TimePeriod } from './use-time-draft';
+import { useTimeDraft } from './use-time-draft';
+
+const LATIN_INITIALS: Readonly<Record<DayPeriod, string>> = {
+  [DayPeriod.Am]: 'a',
+  [DayPeriod.Pm]: 'p',
+};
 
 defineOptions({ inheritAttrs: false });
 
 const {
   id,
-  size = 'md',
+  size = NuiSize.Md,
   disabled = undefined,
   required = undefined,
   invalid = undefined,
@@ -146,7 +160,7 @@ const {
   step = 15,
   readonly = undefined,
   name,
-  placement = 'bottom-start',
+  placement = FloatingPlacement.BottomStart,
   clockLabel,
   emptyLabel,
 } = defineProps<NuiTimeFieldProps>();
@@ -177,15 +191,17 @@ const layout = computed(() => timeLayout(locale.value, { seconds, hourCycle }));
 const labels = computed(() => segmentLabels(locale.value));
 
 const firstSegment = computed(() =>
-  layout.value.segments.findIndex((segment) => segment.type !== 'literal'),
+  layout.value.segments.findIndex((segment) => segment.type !== DateTimePart.Literal),
 );
 
 const lastSegment = computed(() =>
-  layout.value.segments.findLastIndex((segment) => segment.type !== 'literal'),
+  layout.value.segments.findLastIndex((segment) => segment.type !== DateTimePart.Literal),
 );
 
 const segmentTypes = computed(() =>
-  layout.value.segments.flatMap((segment) => (segment.type === 'literal' ? [] : [segment.type])),
+  layout.value.segments.flatMap((segment) =>
+    segment.type === DateTimePart.Literal ? [] : [segment.type],
+  ),
 );
 
 const flow: { type: TimeSegmentType | null } = { type: null };
@@ -208,18 +224,18 @@ const clock = useTemplateRef<InstanceType<typeof NuiButton>>('clock');
 
 const navigation = useListNavigation(groupElement, {
   items: segments.elements,
-  orientation: 'horizontal',
+  orientation: ListOrientation.Horizontal,
   loop: false,
   typeahead: false,
   rtl: false,
 });
 
 const segmentText = (type: TimeSegmentType): string => {
-  if (type !== 'dayPeriod') {
+  if (type !== TimeSegmentType.DayPeriod) {
     return formatSegment(times.valueOf(type), layout.value.digits);
   }
   const period = times.draft.value.period;
-  return period === null ? '' : layout.value.periods[period === 'am' ? 0 : 1];
+  return period === null ? '' : layout.value.periods[period === DayPeriod.Am ? 0 : 1];
 };
 
 const digitOf = (char: string): number | null => {
@@ -231,17 +247,17 @@ const digitOf = (char: string): number | null => {
   return local >= 0 ? local : null;
 };
 
-const periodOf = (char: string): TimePeriod | null => {
+const periodOf = (char: string): DayPeriod | null => {
   const lower = char.toLocaleLowerCase(locale.value);
 
   const initials = layout.value.periods.map((period) =>
     period.charAt(0).toLocaleLowerCase(locale.value),
   );
 
-  if (lower === 'a' || lower === initials[0]) {
-    return 'am';
+  if (lower === LATIN_INITIALS[DayPeriod.Am] || lower === initials[0]) {
+    return DayPeriod.Am;
   }
-  return lower === 'p' || lower === initials[1] ? 'pm' : null;
+  return lower === LATIN_INITIALS[DayPeriod.Pm] || lower === initials[1] ? DayPeriod.Pm : null;
 };
 
 const nextType = (type: TimeSegmentType): TimeSegmentType | null => {
@@ -256,14 +272,17 @@ const onChar = (type: TimeSegmentType, char: string): void => {
   const target = flow.type ?? type;
   const digit = digitOf(char);
   if (digit !== null) {
-    if (target !== 'dayPeriod' && times.typeDigit(target, digit)) {
+    if (target !== TimeSegmentType.DayPeriod && times.typeDigit(target, digit)) {
       navigation.focusNext();
       flow.type = nextType(target);
     }
     return;
   }
   const period = periodOf(char);
-  if (period !== null && (target === 'dayPeriod' || layout.value.cycle === 'h12')) {
+  if (
+    period !== null &&
+    (target === TimeSegmentType.DayPeriod || layout.value.cycle === HourCycle.H12)
+  ) {
     times.setPeriod(period);
   }
 };
@@ -291,10 +310,13 @@ const isInteractive = (target: Element): boolean =>
   panelElement.value?.contains(target) === true;
 
 const focusHour = (): void => {
-  focusSegment('hour');
+  focusSegment(TimeSegmentType.Hour);
 };
 
-const state: { inside: boolean; segment: TimeSegmentType } = { inside: false, segment: 'hour' };
+const state: { inside: boolean; segment: TimeSegmentType } = {
+  inside: false,
+  segment: TimeSegmentType.Hour,
+};
 
 const onGroupFocusin = (event: FocusEvent): void => {
   flow.type = null;
@@ -330,12 +352,12 @@ const hasNextSegment = (): boolean => {
 };
 
 const shiftByPage = (event: KeyboardEvent): boolean => {
-  if (event.key !== 'PageUp' && event.key !== 'PageDown') {
+  if (event.key !== Key.PageUp && event.key !== Key.PageDown) {
     return false;
   }
   event.preventDefault();
   if (!isReadonly.value) {
-    times.shift(event.key === 'PageUp' ? step : -step);
+    times.shift(event.key === Key.PageUp ? step : -step);
   }
   return true;
 };
@@ -344,17 +366,17 @@ const onGroupKeydown = (event: KeyboardEvent): void => {
   if (isDisabled.value || shiftByPage(event)) {
     return;
   }
-  if (event.key === 'ArrowDown' && event.altKey) {
+  if (event.key === Key.ArrowDown && event.altKey) {
     event.preventDefault();
     control.show();
     return;
   }
-  if (event.key === 'Enter' && hasNextSegment()) {
+  if (event.key === Key.Enter && hasNextSegment()) {
     event.preventDefault();
     navigation.focusNext();
     return;
   }
-  if (event.key === 'Enter') {
+  if (event.key === Key.Enter) {
     times.settle();
     return;
   }
@@ -373,7 +395,7 @@ const open = ref(false);
 const rendered = ref(false);
 const panelId = computed(() => `${controlAttrs.value.id}-wheels`);
 const { trigger: panelElement, setTrigger: setPanel } = useTriggerElement();
-const control = usePopover(panelElement, { open, id: panelId, mode: 'auto' });
+const control = usePopover(panelElement, { open, id: panelId, mode: PopoverMode.Auto });
 
 useFloating(rootElement, panelElement, {
   placement: () => placement,
@@ -431,7 +453,7 @@ const confirmWheels = (): void => {
 };
 
 const onPanelToggle = (event: Event): void => {
-  if ('newState' in event && event.newState === 'open') {
+  if ('newState' in event && event.newState === PopoverState.Open) {
     rendered.value = true;
     wheels.value?.reveal();
     wheels.value?.focus(state.segment);
@@ -441,10 +463,10 @@ const onPanelToggle = (event: Event): void => {
 };
 
 const onPanelKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Enter') {
+  if (event.key === Key.Enter) {
     event.preventDefault();
     confirmWheels();
-  } else if (event.key === 'Tab') {
+  } else if (event.key === Key.Tab) {
     state.inside = false;
     control.hide();
   }

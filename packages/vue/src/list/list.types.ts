@@ -4,9 +4,15 @@ import type { Component } from 'vue';
 import type { NuiListEntry, NuiListSource, NuiOptionKey } from '../shared/options';
 import type { NuiSize } from '../shared/scale.types';
 
-export type NuiListVariant = 'plain' | 'divided' | 'bordered' | 'floating' | 'nav';
-export type NuiListSelectable = 'single' | 'multiple';
-export type NuiListTag = 'ul' | 'ol';
+export type NuiListVariant = (typeof NuiListVariant)[keyof typeof NuiListVariant];
+
+export type NuiListSelectable = (typeof NuiListSelectable)[keyof typeof NuiListSelectable];
+
+export type NuiListTag = (typeof NuiListTag)[keyof typeof NuiListTag];
+
+export type ListContextKind = (typeof ListContextKind)[keyof typeof ListContextKind];
+
+export type ListItemMode = (typeof ListItemMode)[keyof typeof ListItemMode];
 
 export interface NuiListProps<T, E extends NuiListEntry<T> = NuiListEntry<T>> {
   id?: string | undefined;
@@ -49,3 +55,25 @@ export interface NuiListItemProps {
   badge?: string | number | undefined;
   shortcut?: string | undefined;
 }
+
+export const NuiListVariant = {
+  Plain: 'plain',
+  Divided: 'divided',
+  Bordered: 'bordered',
+  Floating: 'floating',
+  Nav: 'nav',
+} as const;
+
+export const NuiListSelectable = { Single: 'single', Multiple: 'multiple' } as const;
+
+export const NuiListTag = { Ul: 'ul', Ol: 'ol' } as const;
+
+export const ListContextKind = { List: 'list', Tree: 'tree' } as const;
+
+export const ListItemMode = {
+  TreeItem: 'treeitem',
+  Option: 'option',
+  Link: 'link',
+  Button: 'button',
+  Plain: 'plain',
+} as const;

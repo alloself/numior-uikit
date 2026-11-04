@@ -56,11 +56,11 @@ import NuiIcon from '../icon/NuiIcon.vue';
 import NuiRow from '../row/NuiRow.vue';
 import { stepViews, type StepView } from './step-view';
 import { stepperMessages } from './stepper.messages';
-import type { NuiStepperProps } from './stepper.types';
+import { NuiStepperOrientation, NuiStepperStatus, type NuiStepperProps } from './stepper.types';
 
 const {
   steps,
-  orientation = 'horizontal',
+  orientation = NuiStepperOrientation.Horizontal,
   linear = true,
   label,
   completeLabel,
@@ -91,10 +91,10 @@ const summaryText = computed(() =>
 );
 
 const statusText = (view: StepView): string | undefined => {
-  if (view.status === 'complete') {
+  if (view.status === NuiStepperStatus.Complete) {
     return texts.value.complete;
   }
-  return view.status === 'error' ? texts.value.error : undefined;
+  return view.status === NuiStepperStatus.Error ? texts.value.error : undefined;
 };
 
 const select = (view: StepView): void => {

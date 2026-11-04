@@ -1,6 +1,6 @@
 import { computed, ref, type ComputedRef, type Ref } from 'vue';
 import { normalizeRange, type DateRange } from '@numior/primitives';
-import type { NuiCalendarMode, NuiCalendarValue, NuiDatePreset } from './calendar.types';
+import { NuiCalendarMode, type NuiCalendarValue, type NuiDatePreset } from './calendar.types';
 import { isDateRange, selectedDatesOf } from './day-state';
 
 export interface CalendarSelectionOptions {
@@ -33,7 +33,9 @@ export const useCalendarSelection = (options: CalendarSelectionOptions): Calenda
   const selected = computed(() => new Set(selectedDatesOf(options.model.value)));
 
   const range = computed(() =>
-    options.mode() === 'range' && isDateRange(options.model.value) ? options.model.value : null,
+    options.mode() === NuiCalendarMode.Range && isDateRange(options.model.value)
+      ? options.model.value
+      : null,
   );
 
   const picking = computed(() => Boolean(range.value?.start) && range.value?.end === null);
@@ -62,11 +64,11 @@ export const useCalendarSelection = (options: CalendarSelectionOptions): Calenda
 
   const nextValue = (date: string): NuiCalendarValue => {
     switch (options.mode()) {
-      case 'single':
+      case NuiCalendarMode.Single:
         return date;
-      case 'multiple':
+      case NuiCalendarMode.Multiple:
         return toggleMultiple(date);
-      case 'range':
+      case NuiCalendarMode.Range:
         return nextRange(date);
     }
   };
@@ -90,7 +92,7 @@ export const useCalendarSelection = (options: CalendarSelectionOptions): Calenda
   };
 
   const arm = (date: string): NuiCalendarValue | undefined => {
-    if (options.mode() !== 'range' || picking.value) {
+    if (options.mode() !== NuiCalendarMode.Range || picking.value) {
       return undefined;
     }
 

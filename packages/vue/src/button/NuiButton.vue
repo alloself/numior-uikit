@@ -31,14 +31,20 @@
 import { computed, useSlots } from 'vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { destinationAttrs, useLinkTag } from '../shared/destination';
-import type { NuiButtonProps } from './button.types';
-import { slotContent } from './icon-only';
+import { NuiTone } from '../shared/scale.types';
+import {
+  NuiButtonSize,
+  NuiButtonType,
+  NuiButtonVariant,
+  type NuiButtonProps,
+} from './button.types';
+import { SlotContent, slotContent } from './icon-only';
 
 const {
-  variant = 'solid',
-  tone = 'primary',
-  size = 'md',
-  type = 'button',
+  variant = NuiButtonVariant.Solid,
+  tone = NuiTone.Primary,
+  size = NuiButtonSize.Md,
+  type = NuiButtonType.Button,
   disabled = false,
   loading = false,
   iconOnly = undefined,
@@ -59,7 +65,8 @@ const squared = (): boolean => {
 
   return (
     iconOnly ??
-    (iconEnd === undefined && (content === 'icons' || (content === 'empty' && icon !== undefined)))
+    (iconEnd === undefined &&
+      (content === SlotContent.Icons || (content === SlotContent.Empty && icon !== undefined)))
   );
 };
 

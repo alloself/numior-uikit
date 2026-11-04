@@ -1,8 +1,8 @@
 import type { IconSource } from '@numior/primitives';
 import type { NuiTone } from '../shared/scale.types';
 
-export type NuiChipVariant = 'soft' | 'outline' | 'solid';
-export type NuiChipSize = 'sm' | 'md';
+export type NuiChipVariant = (typeof NuiChipVariant)[keyof typeof NuiChipVariant];
+export type NuiChipSize = (typeof NuiChipSize)[keyof typeof NuiChipSize];
 
 export interface NuiChipProps {
   tone?: NuiTone | undefined;
@@ -14,3 +14,7 @@ export interface NuiChipProps {
   removeLabel?: string | undefined;
   disabled?: boolean | undefined;
 }
+
+export const NuiChipVariant = { Soft: 'soft', Outline: 'outline', Solid: 'solid' } as const;
+
+export const NuiChipSize = { Sm: 'sm', Md: 'md' } as const;

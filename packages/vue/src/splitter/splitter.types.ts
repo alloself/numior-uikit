@@ -1,4 +1,7 @@
-export type NuiSplitterOrientation = 'horizontal' | 'vertical';
+export type NuiSplitterOrientation =
+  (typeof NuiSplitterOrientation)[keyof typeof NuiSplitterOrientation];
+
+export type SplitterStep = (typeof SplitterStep)[keyof typeof SplitterStep];
 
 export interface NuiSplitterProps {
   id?: string | undefined;
@@ -9,3 +12,7 @@ export interface NuiSplitterProps {
   disabled?: boolean | undefined;
   label?: string | undefined;
 }
+
+export const NuiSplitterOrientation = { Horizontal: 'horizontal', Vertical: 'vertical' } as const;
+
+export const SplitterStep = { Grow: 'grow', Shrink: 'shrink', Min: 'min', Max: 'max' } as const;

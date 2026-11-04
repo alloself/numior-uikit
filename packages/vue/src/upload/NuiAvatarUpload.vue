@@ -89,7 +89,9 @@
         />
         <span
           class="nui-avatar-upload__status"
-          :class="{ 'nui-avatar-upload__status--failure': notice.kind === 'failure' }"
+          :class="{
+            'nui-avatar-upload__status--failure': notice.kind === AvatarNoticeKind.Failure,
+          }"
           role="status"
           aria-live="polite"
         >
@@ -102,19 +104,28 @@
 
 <script setup lang="ts" generic="R = unknown">
 import { computed, ref, useTemplateRef } from 'vue';
-import { useFileDrop, useUploadQueue, validateFiles, type UploadEntry } from '@numior/primitives';
+import {
+  UploadReason,
+  UploadStatus,
+  useFileDrop,
+  useUploadQueue,
+  validateFiles,
+  type UploadEntry,
+} from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiAvatar from '../avatar/NuiAvatar.vue';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiProgress from '../progress/NuiProgress.vue';
 import { useUploadField, useUploadPicker, useUploadPreviews } from './use-upload-field';
-import type {
-  AvatarNotice,
-  NuiAvatarUploadProps,
-  NuiUploadError,
-  NuiUploadItem,
+import {
+  AvatarNoticeKind,
+  type AvatarNotice,
+  type NuiAvatarUploadProps,
+  type NuiUploadError,
+  type NuiUploadItem,
 } from './upload.types';
+import { NuiAvatarShape, NuiAvatarSize } from '../avatar/avatar.types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -133,8 +144,8 @@ const {
   maxSize,
   validate,
   name,
-  shape = 'circle',
-  size = 'xl',
+  shape = NuiAvatarShape.Circle,
+  size = NuiAvatarSize.Xl,
   chooseLabel,
   changeLabel,
   retryLabel,
@@ -168,8 +179,11 @@ const {
 
 const { remember, forget, previewOf } = useUploadPreviews<R>();
 const inputElement = useTemplateRef<HTMLInputElement>('input');
-const notice = ref<AvatarNotice>({ kind: 'silent' });
-const noticeText = computed(() => (notice.value.kind === 'silent' ? '' : notice.value.text));
+const notice = ref<AvatarNotice>({ kind: AvatarNoticeKind.Silent });
+
+const noticeText = computed(() =>
+  notice.value.kind === AvatarNoticeKind.Silent ? '' : notice.value.text,
+);
 
 const texts = computed(() => ({
   choose: chooseLabel ?? messages.value.chooseImage,
@@ -194,31 +208,31 @@ const queue = useUploadQueue<R>({
   concurrency: () => 1,
   auto: () => true,
   onDone: (item) => {
-    notice.value = { kind: 'done', text: `${item.name}: ${messages.value.done}` };
+    notice.value = { kind: AvatarNoticeKind.Done, text: `${item.name}: ${messages.value.done}` };
     emit('done', item);
   },
   onError: (item) => {
     notice.value =
-      item.status === 'error'
-        ? { kind: 'failure', text: describe(item.error, item) }
-        : { kind: 'silent' };
+      item.status === UploadStatus.Error
+        ? { kind: AvatarNoticeKind.Failure, text: describe(item.error, item) }
+        : { kind: AvatarNoticeKind.Silent };
 
     emit('error', item);
   },
 });
 
-const uploading = computed(() => model.value?.status === 'uploading');
+const uploading = computed(() => model.value?.status === UploadStatus.Uploading);
 
 const percent = computed(() =>
-  model.value?.status === 'uploading' ? Math.round(model.value.progress * 100) : 0,
+  model.value?.status === UploadStatus.Uploading ? Math.round(model.value.progress * 100) : 0,
 );
 
 const canRemove = computed(() => model.value !== null && !uploading.value && !isInert.value);
 
 const canRetry = computed(
   () =>
-    model.value?.status === 'error' &&
-    model.value.error.reason === 'upload' &&
+    model.value?.status === UploadStatus.Error &&
+    model.value.error.reason === UploadReason.Upload &&
     model.value.file !== undefined &&
     !isInert.value,
 );
@@ -237,7 +251,7 @@ const receive = (files: File[]): void => {
   const rejection = outcome.rejected[0];
 
   if (rejection) {
-    notice.value = { kind: 'failure', text: describe(rejection.error, undefined) };
+    notice.value = { kind: AvatarNoticeKind.Failure, text: describe(rejection.error, undefined) };
     emit('reject', rejection.error);
     return;
   }
@@ -250,7 +264,7 @@ const receive = (files: File[]): void => {
   const entry: UploadEntry = { file };
 
   remember(queue.add([entry]));
-  notice.value = { kind: 'silent' };
+  notice.value = { kind: AvatarNoticeKind.Silent };
 };
 
 const drop = useFileDrop({ disabled: isInert, onFiles: receive });
@@ -275,7 +289,7 @@ const remove = (): void => {
   }
   forget(item.id);
   queue.remove(item.id);
-  notice.value = { kind: 'silent' };
+  notice.value = { kind: AvatarNoticeKind.Silent };
   emit('remove', item);
 };
 

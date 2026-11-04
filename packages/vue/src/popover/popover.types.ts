@@ -15,11 +15,11 @@ export interface NuiPopoverProps {
   closeDelay?: number | undefined;
 }
 
-export type NuiPopoverPadding = 'none' | 'sm' | 'md';
+export type NuiPopoverPadding = (typeof NuiPopoverPadding)[keyof typeof NuiPopoverPadding];
 
-export type NuiPopoverSize = 'md' | 'auto';
+export type NuiPopoverSize = (typeof NuiPopoverSize)[keyof typeof NuiPopoverSize];
 
-export type NuiPopoverTrigger = 'click' | 'hover';
+export type NuiPopoverTrigger = (typeof NuiPopoverTrigger)[keyof typeof NuiPopoverTrigger];
 
 export interface NuiPopoverHoverAttrs {
   readonly onPointerenter?: (event: PointerEvent) => void;
@@ -39,3 +39,9 @@ export interface NuiPopoverTriggerSlot {
   readonly attrs: NuiPopoverTriggerAttrs;
   readonly open: boolean;
 }
+
+export const NuiPopoverPadding = { None: 'none', Sm: 'sm', Md: 'md' } as const;
+
+export const NuiPopoverSize = { Md: 'md', Auto: 'auto' } as const;
+
+export const NuiPopoverTrigger = { Click: 'click', Hover: 'hover' } as const;

@@ -13,27 +13,30 @@
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import { useFloating, usePopover } from '@numior/primitives';
+import { FloatingPlacement, PopoverMode, useFloating, usePopover } from '@numior/primitives';
 import { useTriggerElement } from '../shared/trigger-ref';
 import { useHoverTrigger } from './use-hover-trigger';
-import type {
-  NuiPopoverProps,
-  NuiPopoverTriggerAttrs,
-  NuiPopoverTriggerSlot,
+import {
+  NuiPopoverPadding,
+  NuiPopoverSize,
+  NuiPopoverTrigger,
+  type NuiPopoverProps,
+  type NuiPopoverTriggerAttrs,
+  type NuiPopoverTriggerSlot,
 } from './popover.types';
 
 defineOptions({ inheritAttrs: false });
 
 const {
   id,
-  placement = 'bottom',
+  placement = FloatingPlacement.Bottom,
   offset = 8,
   arrow = false,
-  padding = 'md',
-  size = 'md',
+  padding = NuiPopoverPadding.Md,
+  size = NuiPopoverSize.Md,
   anchor,
-  mode = 'auto',
-  trigger: activation = 'click',
+  mode = PopoverMode.Auto,
+  trigger: activation = NuiPopoverTrigger.Click,
   openDelay = 400,
   closeDelay = 200,
 } = defineProps<NuiPopoverProps>();
@@ -45,7 +48,7 @@ const reference = computed(() => (anchor === undefined ? trigger.value : anchor)
 const contentElement = useTemplateRef<HTMLElement>('content');
 const arrowNode = useTemplateRef<HTMLElement>('arrow-node');
 
-const hovering = (): boolean => activation === 'hover';
+const hovering = (): boolean => activation === NuiPopoverTrigger.Hover;
 
 const { contentAttrs, invokerAttrs } = usePopover(contentElement, {
   open,

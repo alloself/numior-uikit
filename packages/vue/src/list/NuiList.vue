@@ -9,7 +9,7 @@
       {
         'nui-list--selectable': selectable !== undefined,
         'nui-list--empty': isEmpty,
-        'nui-layer': variant === 'floating',
+        'nui-layer': variant === NuiListVariant.Floating,
       },
     ]"
     v-bind="rootAria"
@@ -64,7 +64,7 @@
         :role="selectable ? 'presentation' : undefined"
       >
         <slot name="empty">
-          <NuiEmpty size="sm" :hide-icon="variant === 'floating'" :title="emptyText" />
+          <NuiEmpty size="sm" :hide-icon="variant === NuiListVariant.Floating" :title="emptyText" />
         </slot>
       </li>
     </component>
@@ -73,7 +73,7 @@
 
 <script setup lang="ts" generic="T, E extends NuiListEntry<T> = NuiListEntry<T>">
 import { computed, onMounted, useTemplateRef } from 'vue';
-import { useControlId, useListNavigation, useMessages } from '@numior/primitives';
+import { Key, useControlId, useListNavigation, useMessages } from '@numior/primitives';
 import NuiEmpty from '../empty/NuiEmpty.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { flattenEntries, groupEntries, type NuiListEntry } from '../shared/options';
@@ -82,13 +82,20 @@ import NuiListEntries from './NuiListEntries.vue';
 import { provideList, provideListItems, useListItems } from './list-context';
 import { createListItems, titleOf } from './list-items';
 import { listMessages } from './list.messages';
-import type { NuiListProps } from './list.types';
+import {
+  ListContextKind,
+  NuiListSelectable,
+  NuiListTag,
+  NuiListVariant,
+  type NuiListProps,
+} from './list.types';
+import { NuiSize } from '../shared/scale.types';
 
 const {
   id,
-  as = 'ul',
-  variant = 'plain',
-  size = 'md',
+  as = NuiListTag.Ul,
+  variant = NuiListVariant.Plain,
+  size = NuiSize.Md,
   items,
   selectable,
   getKey,
@@ -119,7 +126,7 @@ const rootAria = computed(() =>
   selectable
     ? {
         role: 'listbox',
-        'aria-multiselectable': selectable === 'multiple' || undefined,
+        'aria-multiselectable': selectable === NuiListSelectable.Multiple || undefined,
         'aria-busy': loading || undefined,
         ...naming.value,
       }
@@ -138,7 +145,7 @@ const { keyOf, selectedKeys, selectedValues, choose } = useOptionSelection<T>({
   options: () => [],
   model,
   values,
-  multiple: () => selectable === 'multiple',
+  multiple: () => selectable === NuiListSelectable.Multiple,
   getKey: () => getKey,
 });
 
@@ -167,7 +174,7 @@ const listItems = useListItems() ?? createListItems();
 provideListItems(null);
 
 provideList<T>({
-  kind: 'list',
+  kind: ListContextKind.List,
   items: listItems,
   selectable: computed(() => selectable),
   variant: computed(() => variant),
@@ -201,7 +208,7 @@ const onKeydown = (event: KeyboardEvent): void => {
   if (event.defaultPrevented || !isOption(event.target)) {
     return;
   }
-  if (event.key === 'Enter' || event.key === ' ') {
+  if (event.key === Key.Enter || event.key === Key.Space) {
     event.preventDefault();
     event.target.click();
   }

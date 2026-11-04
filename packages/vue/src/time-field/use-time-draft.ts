@@ -10,15 +10,14 @@ import {
   shiftTime,
   stepSegment,
   timeToDraft,
+  DayPeriod,
+  TimeSegmentType,
   type HourCycle,
   type TimeDraft,
   type TimeLayout,
-  type TimeSegmentType,
   type TimeValue,
 } from '@numior/primitives';
-
-export type TimePeriod = 'am' | 'pm';
-export type TimeEdge = 'min' | 'max';
+import { TimeEdge } from './time-field.types';
 
 export interface TimeDraftOptions {
   readonly model: Ref<string | null>;
@@ -34,7 +33,7 @@ export interface TimeDraftControl {
   typeDigit(type: TimeSegmentType, digit: number): boolean;
   step(type: TimeSegmentType, delta: number): void;
   setEdge(type: TimeSegmentType, edge: TimeEdge): void;
-  setPeriod(period: TimePeriod): void;
+  setPeriod(period: DayPeriod): void;
   clear(type: TimeSegmentType): void;
   shift(minutes: number): void;
   setTime(time: TimeValue): void;
@@ -43,27 +42,30 @@ export interface TimeDraftControl {
 
 const withValue = (current: TimeDraft, type: TimeSegmentType, value: number | null): TimeDraft => {
   switch (type) {
-    case 'hour':
+    case TimeSegmentType.Hour:
       return { ...current, hour: value };
-    case 'minute':
+    case TimeSegmentType.Minute:
       return { ...current, minute: value };
-    case 'second':
+    case TimeSegmentType.Second:
       return { ...current, second: value };
-    case 'dayPeriod':
-      return { ...current, period: value === null ? null : value >= 12 ? 'pm' : 'am' };
+    case TimeSegmentType.DayPeriod:
+      return {
+        ...current,
+        period: value === null ? null : value >= 12 ? DayPeriod.Pm : DayPeriod.Am,
+      };
   }
 };
 
 const segmentValue = (current: TimeDraft, type: TimeSegmentType): number | null => {
   switch (type) {
-    case 'hour':
+    case TimeSegmentType.Hour:
       return current.hour;
-    case 'minute':
+    case TimeSegmentType.Minute:
       return current.minute;
-    case 'second':
+    case TimeSegmentType.Second:
       return current.second;
-    case 'dayPeriod':
-      return current.period === null ? null : current.period === 'pm' ? 12 : 0;
+    case TimeSegmentType.DayPeriod:
+      return current.period === null ? null : current.period === DayPeriod.Pm ? 12 : 0;
   }
 };
 
@@ -100,7 +102,7 @@ export const useTimeDraft = (options: TimeDraftOptions): TimeDraftControl => {
   const complete = (): TimeValue | null => draftToTime(draft.value, cycle(), options.seconds());
 
   const typeDigit = (type: TimeSegmentType, digit: number): boolean => {
-    if (type === 'dayPeriod') {
+    if (type === TimeSegmentType.DayPeriod) {
       return false;
     }
     const typed = typing?.segment === type ? typing.digits : 0;
@@ -117,7 +119,7 @@ export const useTimeDraft = (options: TimeDraftOptions): TimeDraftControl => {
     const current = segmentValue(draft.value, type);
 
     const next =
-      type === 'dayPeriod'
+      type === TimeSegmentType.DayPeriod
         ? togglePeriod(current, delta)
         : stepSegment(current, delta, segmentBounds(type, cycle()));
 
@@ -127,7 +129,7 @@ export const useTimeDraft = (options: TimeDraftOptions): TimeDraftControl => {
   const setEdge = (type: TimeSegmentType, edge: TimeEdge): void => {
     resetTyping();
     const bounds = segmentBounds(type, cycle());
-    publish(withValue(draft.value, type, edge === 'min' ? bounds.min : bounds.max));
+    publish(withValue(draft.value, type, edge === TimeEdge.Min ? bounds.min : bounds.max));
   };
 
   const shift = (minutes: number): void => {

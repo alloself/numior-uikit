@@ -10,7 +10,9 @@
     ]"
     :role="multiple ? 'group' : 'radiogroup'"
     :aria-label="label"
-    :aria-orientation="orientation === 'vertical' && !multiple ? 'vertical' : undefined"
+    :aria-orientation="
+      orientation === NuiToggleGroupOrientation.Vertical && !multiple ? 'vertical' : undefined
+    "
     @keydown="navigation.onKeydown"
     @focusin="navigation.onFocusin"
     @focusout="onFocusout"
@@ -19,7 +21,7 @@
       v-for="item in items"
       :key="keyOf(item.value)"
       :disabled="!iconOnly"
-      :placement="orientation === 'vertical' ? 'right' : 'bottom'"
+      :placement="orientation === NuiToggleGroupOrientation.Vertical ? 'right' : 'bottom'"
     >
       <template #trigger="{ attrs }">
         <button
@@ -46,15 +48,22 @@ import { createCollection, useListNavigation, type AttrRecord } from '@numior/pr
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiTooltip from '../tooltip/NuiTooltip.vue';
 import { useOptionSelection } from '../shared/use-option-selection';
-import type { NuiToggleGroupProps, NuiToggleItem, NuiToggleItemSlot } from './toggle-group.types';
+import {
+  NuiToggleGroupOrientation,
+  NuiToggleGroupVariant,
+  type NuiToggleGroupProps,
+  type NuiToggleItem,
+  type NuiToggleItemSlot,
+} from './toggle-group.types';
+import { NuiSize } from '../shared/scale.types';
 
 const {
   items,
   multiple = false,
   required = false,
-  variant = 'outline',
-  size = 'md',
-  orientation = 'horizontal',
+  variant = NuiToggleGroupVariant.Outline,
+  size = NuiSize.Md,
+  orientation = NuiToggleGroupOrientation.Horizontal,
   disabled = false,
   iconOnly = false,
   label,

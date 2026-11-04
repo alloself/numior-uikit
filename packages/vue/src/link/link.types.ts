@@ -2,7 +2,7 @@ import type { NuiRouteLocation } from '../shared/destination';
 import type { Component } from 'vue';
 import type { NuiTone } from '../shared/scale.types';
 
-export type NuiLinkUnderline = 'always' | 'hover' | 'none';
+export type NuiLinkUnderline = (typeof NuiLinkUnderline)[keyof typeof NuiLinkUnderline];
 
 export interface NuiLinkProps {
   as?: string | Component | undefined;
@@ -13,3 +13,5 @@ export interface NuiLinkProps {
   external?: boolean | undefined;
   disabled?: boolean | undefined;
 }
+
+export const NuiLinkUnderline = { Always: 'always', Hover: 'hover', None: 'none' } as const;

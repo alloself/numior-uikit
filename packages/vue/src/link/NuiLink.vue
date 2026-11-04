@@ -18,14 +18,15 @@
 import { computed } from 'vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { destinationAttrs, useLinkTag } from '../shared/destination';
-import type { NuiLinkProps } from './link.types';
+import { NuiLinkUnderline, type NuiLinkProps } from './link.types';
+import { NuiTone } from '../shared/scale.types';
 
 const {
   as,
   href,
   to,
-  tone = 'primary',
-  underline = 'always',
+  tone = NuiTone.Primary,
+  underline = NuiLinkUnderline.Always,
   external = false,
   disabled = false,
 } = defineProps<NuiLinkProps>();

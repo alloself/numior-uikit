@@ -40,9 +40,9 @@
           ref="input"
           class="nui-otp-field__control"
           :type="secret ? 'password' : 'text'"
-          :inputmode="charset === 'digits' ? 'numeric' : 'text'"
-          :pattern="charset === 'digits' ? '\\d*' : undefined"
-          :autocapitalize="charset === 'digits' ? undefined : 'characters'"
+          :inputmode="charset === OtpCharset.Digits ? 'numeric' : 'text'"
+          :pattern="charset === OtpCharset.Digits ? '\\d*' : undefined"
+          :autocapitalize="charset === OtpCharset.Digits ? undefined : 'characters'"
           :autocomplete="secret ? 'off' : 'one-time-code'"
           spellcheck="false"
           v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
@@ -68,7 +68,11 @@ import { useEventListener, useTimeoutFn } from '@vueuse/core';
 import { computed, onMounted, shallowRef, useTemplateRef, watch } from 'vue';
 import {
   createIntent,
+  InputType,
+  Key,
+  ListMove,
   normalizeOtp,
+  OtpCharset,
   otpGroups,
   otpLength,
   pasteOtp,
@@ -86,23 +90,22 @@ import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiOtpSlot from './NuiOtpSlot.vue';
 import type { NuiOtpFieldProps } from './otp-field.types';
-
-type SlotMove = 'previous' | 'next' | 'first' | 'last';
+import { NuiSize } from '../shared/scale.types';
 
 const REVEAL_DURATION = 1000;
 
 const BACKWARD_INPUTS: ReadonlySet<string> = new Set([
-  'deleteContentBackward',
-  'deleteWordBackward',
-  'deleteSoftLineBackward',
-  'deleteHardLineBackward',
+  InputType.DeleteContentBackward,
+  InputType.DeleteWordBackward,
+  InputType.DeleteSoftLineBackward,
+  InputType.DeleteHardLineBackward,
 ]);
 
-const SLOT_MOVES: ReadonlyMap<string, SlotMove> = new Map([
-  ['ArrowLeft', 'previous'],
-  ['ArrowRight', 'next'],
-  ['Home', 'first'],
-  ['End', 'last'],
+const SLOT_MOVES: ReadonlyMap<string, ListMove> = new Map([
+  [Key.ArrowLeft, ListMove.Prev],
+  [Key.ArrowRight, ListMove.Next],
+  [Key.Home, ListMove.First],
+  [Key.End, ListMove.Last],
 ]);
 
 const sameSelection = (current: OtpSelection | null, next: OtpSelection): boolean =>
@@ -130,7 +133,7 @@ defineOptions({ inheritAttrs: false });
 
 const {
   id,
-  size = 'md',
+  size = NuiSize.Md,
   disabled = undefined,
   required = undefined,
   invalid = undefined,
@@ -141,7 +144,7 @@ const {
   readonly = undefined,
   length = 6,
   groupSize,
-  charset = 'digits',
+  charset = OtpCharset.Digits,
   secret = false,
   placeholder,
   webOtp = false,
@@ -280,7 +283,7 @@ const onInput = (event: Event): void => {
   }
   const type = event instanceof InputEvent ? event.inputType : '';
   const edit = reconcileOtp(element.value, selectionOf(element).start, count.value, charset);
-  const typed = type === 'insertText' && edit.value !== code.value && edit.caret > 0;
+  const typed = type === InputType.InsertText && edit.value !== code.value && edit.caret > 0;
 
   reveal(secret && typed ? edit.caret - 1 : null);
   apply(element, edit, BACKWARD_INPUTS.has(type) ? 'backward' : 'forward');
@@ -310,16 +313,19 @@ const onPaste = (event: ClipboardEvent): void => {
   apply(element, pasteOtp(code.value, count.value, selectionOf(element), text, charset), 'forward');
 };
 
-const targetOf = (move: SlotMove, active: number): number => {
+const targetOf = (move: ListMove, active: number): number => {
   switch (move) {
-    case 'previous':
+    case ListMove.Prev:
       return active - 1;
-    case 'next':
+    case ListMove.Next:
       return active + 1;
-    case 'first':
+    case ListMove.First:
       return 0;
-    case 'last':
+    case ListMove.Last:
       return count.value;
+    case ListMove.PageNext:
+    case ListMove.PagePrev:
+      return active;
   }
 };
 

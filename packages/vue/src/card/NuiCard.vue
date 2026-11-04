@@ -6,7 +6,7 @@
       `nui-card--padding-${padding}`,
       {
         'nui-card--interactive': action !== undefined,
-        'nui-layer nui-layer--elevated': variant === 'elevated',
+        'nui-layer nui-layer--elevated': variant === NuiCardVariant.Elevated,
       },
     ]"
   >
@@ -24,11 +24,11 @@ import NuiCardDescription from './NuiCardDescription.vue';
 import NuiCardHeader from './NuiCardHeader.vue';
 import NuiCardTitle from './NuiCardTitle.vue';
 import { provideCard, type CardAction } from './card-context';
-import type { NuiCardProps } from './card.types';
+import { CardActionKind, NuiCardPadding, NuiCardVariant, type NuiCardProps } from './card.types';
 
 const {
-  variant = 'outline',
-  padding = 'md',
+  variant = NuiCardVariant.Outline,
+  padding = NuiCardPadding.Md,
   href,
   to,
   as,
@@ -39,9 +39,9 @@ const {
 
 const action = computed<CardAction | undefined>(() => {
   if (href !== undefined || to !== undefined) {
-    return { kind: 'link', href, to, as };
+    return { kind: CardActionKind.Link, href, to, as };
   }
-  return interactive ? { kind: 'button' } : undefined;
+  return interactive ? { kind: CardActionKind.Button } : undefined;
 });
 
 provideCard({ action });

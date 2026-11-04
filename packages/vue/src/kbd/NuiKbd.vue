@@ -10,9 +10,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { isApplePlatform, keyLabels } from './key-labels';
-import type { NuiKbdPlatform, NuiKbdProps } from './kbd.types';
+import { NuiKbdSize, NuiKbdVariant, type NuiKbdPlatform, type NuiKbdProps } from './kbd.types';
 
-const { keys, size = 'md', variant = 'boxed', platform } = defineProps<NuiKbdProps>();
+const {
+  keys,
+  size = NuiKbdSize.Md,
+  variant = NuiKbdVariant.Boxed,
+  platform,
+} = defineProps<NuiKbdProps>();
 
 defineSlots<{ default?(): unknown }>();
 

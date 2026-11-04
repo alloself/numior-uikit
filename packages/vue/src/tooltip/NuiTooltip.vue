@@ -16,7 +16,14 @@
 <script setup lang="ts">
 import { useEventListener } from '@vueuse/core';
 import { computed, ref, useTemplateRef, watch } from 'vue';
-import { useDelayedOpen, useFloating, usePopover } from '@numior/primitives';
+import {
+  FloatingPlacement,
+  Key,
+  PointerType,
+  useDelayedOpen,
+  useFloating,
+  usePopover,
+} from '@numior/primitives';
 import { useTriggerElement } from '../shared/trigger-ref';
 import type {
   NuiTooltipContentSlot,
@@ -38,7 +45,7 @@ defineOptions({ inheritAttrs: false });
 
 const {
   id,
-  placement = 'top',
+  placement = FloatingPlacement.Top,
   offset = 6,
   openDelay = 300,
   closeDelay = 100,
@@ -102,7 +109,7 @@ useFloating(reference, contentElement, {
 });
 
 const onPointerenter = (event: PointerEvent): void => {
-  if (event.pointerType !== 'touch' && !disabled) {
+  if (event.pointerType !== PointerType.Touch && !disabled) {
     delay.scheduleOpen();
   }
 };
@@ -123,7 +130,7 @@ const onFocus = (): void => {
 const onBlur = (): void => delay.closeNow();
 
 const onDocumentKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Escape') {
+  if (event.key === Key.Escape) {
     delay.closeNow();
   }
 };

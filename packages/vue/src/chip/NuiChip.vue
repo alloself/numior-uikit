@@ -33,7 +33,8 @@ import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { chipMessages } from './chip.messages';
 import type { NuiButtonVariant } from '../button/button.types';
-import type { NuiChipProps, NuiChipVariant } from './chip.types';
+import { NuiChipSize, NuiChipVariant, type NuiChipProps } from './chip.types';
+import { NuiTone } from '../shared/scale.types';
 
 const REMOVE_VARIANTS: Readonly<Record<NuiChipVariant, NuiButtonVariant>> = {
   soft: 'soft',
@@ -42,9 +43,9 @@ const REMOVE_VARIANTS: Readonly<Record<NuiChipVariant, NuiButtonVariant>> = {
 };
 
 const {
-  tone = 'neutral',
-  variant = 'soft',
-  size = 'md',
+  tone = NuiTone.Neutral,
+  variant = NuiChipVariant.Soft,
+  size = NuiChipSize.Md,
   icon,
   removable = false,
   removeTabbable = true,

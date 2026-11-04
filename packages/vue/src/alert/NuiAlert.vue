@@ -6,7 +6,7 @@
       `nui-alert--tone-${tone}`,
       { 'nui-alert--closed': !open },
     ]"
-    :role="tone === 'error' ? 'alert' : undefined"
+    :role="tone === NuiTone.Error ? 'alert' : undefined"
   >
     <NuiIcon v-if="iconAlias" :icon="iconAlias" class="nui-alert__icon" />
     <div class="nui-alert__body">
@@ -40,11 +40,12 @@ import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { toneIcon } from '../shared/tone-icon';
 import { alertMessages } from './alert.messages';
-import type { NuiAlertProps } from './alert.types';
+import { NuiAlertVariant, type NuiAlertProps } from './alert.types';
+import { NuiTone } from '../shared/scale.types';
 
 const {
-  variant = 'soft',
-  tone = 'info',
+  variant = NuiAlertVariant.Soft,
+  tone = NuiTone.Info,
   title,
   description,
   icon,

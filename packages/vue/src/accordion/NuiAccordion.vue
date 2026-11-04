@@ -16,12 +16,13 @@ import { computed, useTemplateRef } from 'vue';
 import { createCollection, useListNavigation } from '@numior/primitives';
 import { provideAccordion } from './accordion-context';
 import type { NuiAccordionProps } from './accordion.types';
+import { NuiCollapsibleVariant } from '../collapsible/collapsible.types';
 
 const {
   id,
   multiple = false,
   collapsible = true,
-  variant = 'plain',
+  variant = NuiCollapsibleVariant.Plain,
   headingLevel,
   disabled = false,
 } = defineProps<NuiAccordionProps>();

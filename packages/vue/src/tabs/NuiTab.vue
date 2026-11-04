@@ -45,7 +45,8 @@ import { computed, onBeforeUnmount, onUnmounted } from 'vue';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { useTabList, useTabs } from './tabs-context';
-import type { NuiTabProps } from './tabs.types';
+import { NuiTabsActivation, type NuiTabProps } from './tabs.types';
+import { Key } from '@numior/primitives';
 
 const PRIMARY_BUTTON = 0;
 const MIDDLE_BUTTON = 1;
@@ -68,7 +69,7 @@ const activate = (): void => {
 };
 
 const onFocus = (): void => {
-  if (tabs.activation.value === 'automatic') {
+  if (tabs.activation.value === NuiTabsActivation.Automatic) {
     activate();
   }
 };
@@ -80,7 +81,7 @@ const close = (): void => {
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Delete' && closes.value) {
+  if (event.key === Key.Delete && closes.value) {
     event.preventDefault();
     emit('close');
   }

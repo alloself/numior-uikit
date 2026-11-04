@@ -1,6 +1,7 @@
-export type NuiStepperOrientation = 'horizontal' | 'vertical';
+export type NuiStepperOrientation =
+  (typeof NuiStepperOrientation)[keyof typeof NuiStepperOrientation];
 
-export type NuiStepperStatus = 'upcoming' | 'complete' | 'error';
+export type NuiStepperStatus = (typeof NuiStepperStatus)[keyof typeof NuiStepperStatus];
 
 export interface NuiStepperStep {
   readonly value: string;
@@ -18,3 +19,11 @@ export interface NuiStepperProps {
   completeLabel?: string | undefined;
   errorLabel?: string | undefined;
 }
+
+export const NuiStepperOrientation = { Horizontal: 'horizontal', Vertical: 'vertical' } as const;
+
+export const NuiStepperStatus = {
+  Upcoming: 'upcoming',
+  Complete: 'complete',
+  Error: 'error',
+} as const;

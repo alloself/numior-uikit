@@ -56,7 +56,7 @@
 
 <script setup lang="ts" generic="T">
 import { computed, onMounted, shallowRef, useTemplateRef, watch } from 'vue';
-import { useControlId, useListNavigation, useMessages } from '@numior/primitives';
+import { Key, useControlId, useListNavigation, useMessages } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
 import { provideListItems } from '../list/list-context';
@@ -162,7 +162,7 @@ const onKeydown = (event: KeyboardEvent): void => {
   }
   navigation.onKeydown(event);
 
-  if (event.key === 'Enter' && !event.defaultPrevented) {
+  if (event.key === Key.Enter && !event.defaultPrevented) {
     event.preventDefault();
     navigation.activeElement()?.click();
   }

@@ -29,7 +29,7 @@
         @change="onChange"
       />
       <NuiButton
-        v-if="variant === 'button'"
+        v-if="variant === NuiUploadVariant.Button"
         :id="controlAttrs.id"
         variant="outline"
         tone="neutral"
@@ -92,6 +92,7 @@
 import { computed, ref, useTemplateRef } from 'vue';
 import {
   formatFileSize,
+  UploadStatus,
   useFileDrop,
   useUploadQueue,
   validateFiles,
@@ -103,7 +104,15 @@ import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiUploadRow from './NuiUploadRow.vue';
 import { useUploadField, useUploadPicker, useUploadPreviews } from './use-upload-field';
-import type { NuiUploadError, NuiUploadItem, NuiUploadProps } from './upload.types';
+import {
+  NuiUploadLayout,
+  NuiUploadRejected,
+  NuiUploadVariant,
+  type NuiUploadError,
+  type NuiUploadItem,
+  type NuiUploadProps,
+} from './upload.types';
+import { NuiSize } from '../shared/scale.types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -123,12 +132,12 @@ const {
   maxSize,
   maxFiles,
   validate,
-  rejected = 'list',
+  rejected = NuiUploadRejected.List,
   auto = true,
   concurrency = 3,
-  layout = 'list',
-  variant = 'zone',
-  size = 'md',
+  layout = NuiUploadLayout.List,
+  variant = NuiUploadVariant.Zone,
+  size = NuiSize.Md,
   dropLabel,
   browseLabel,
   cancelLabel,
@@ -180,7 +189,7 @@ const describeError = (failure: NuiUploadError, item: NuiUploadItem<R>): string 
   errorLabel ? errorLabel(failure, item) : describeFailure(failure);
 
 const describe = (item: NuiUploadItem<R>): string =>
-  item.status === 'error'
+  item.status === UploadStatus.Error
     ? describeError(item.error, item)
     : formatFileSize(item.size, locale.value);
 
@@ -195,7 +204,7 @@ const queue = useUploadQueue<R>({
   },
   onError: (item) => {
     announcement.value =
-      item.status === 'error' ? `${item.name}: ${describeError(item.error, item)}` : '';
+      item.status === UploadStatus.Error ? `${item.name}: ${describeError(item.error, item)}` : '';
 
     emit('error', item);
   },
@@ -227,7 +236,7 @@ const receive = (files: File[]): void => {
 
   const entries = files
     .map((file): UploadEntry => ({ file, error: reasons.get(file) }))
-    .filter((entry) => rejected === 'list' || entry.error === undefined);
+    .filter((entry) => rejected === NuiUploadRejected.List || entry.error === undefined);
 
   if (!multiple && entries.length > 0) {
     for (const item of model.value) {

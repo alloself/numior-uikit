@@ -19,23 +19,25 @@
 
 <script setup lang="ts">
 import { computed, ref, useTemplateRef, watch } from 'vue';
-import { useControlId } from '@numior/primitives';
+import { FloatingPlacement, Key, useControlId } from '@numior/primitives';
 import { useTriggerElement } from '../shared/trigger-ref';
 import NuiMenuEntries from './NuiMenuEntries.vue';
 import { provideMenu } from './menu-context';
 import { useMenuSurface } from './use-menu-surface';
-import type {
-  NuiMenuExposed,
-  NuiMenuProps,
-  NuiMenuTriggerAttrs,
-  NuiMenuTriggerSlot,
+import {
+  MenuFocusRequest,
+  NuiMenuFocus,
+  type NuiMenuExposed,
+  type NuiMenuProps,
+  type NuiMenuTriggerAttrs,
+  type NuiMenuTriggerSlot,
 } from './menu.types';
 
 defineOptions({ inheritAttrs: false });
 
 const {
   id,
-  placement = 'bottom-start',
+  placement = FloatingPlacement.BottomStart,
   offset = 4,
   items,
   closeOnSelect = true,
@@ -84,12 +86,12 @@ watch(open, (value) => {
 const contentAttrs = control.contentAttrs;
 
 const onTriggerKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+  if (event.key === Key.ArrowDown || event.key === Key.ArrowUp) {
     event.preventDefault();
-    context.requestFocus(event.key === 'ArrowDown' ? 'first' : 'last');
+    context.requestFocus(event.key === Key.ArrowDown ? NuiMenuFocus.First : NuiMenuFocus.Last);
     control.show();
-  } else if (event.key === 'Enter' || event.key === ' ') {
-    context.requestFocus('first');
+  } else if (event.key === Key.Enter || event.key === Key.Space) {
+    context.requestFocus(NuiMenuFocus.First);
   }
 };
 
@@ -106,7 +108,7 @@ defineExpose<NuiMenuExposed>({
     return trigger.value;
   },
   show: (focus) => {
-    context.requestFocus(focus ?? 'none');
+    context.requestFocus(focus ?? MenuFocusRequest.None);
     control.show();
   },
 });

@@ -1,5 +1,3 @@
-export type Key = (typeof Key)[keyof typeof Key];
-
 export const Key = {
   Enter: 'Enter',
   Space: ' ',

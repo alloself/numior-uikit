@@ -1,8 +1,8 @@
 import type { IconSource } from '@numior/primitives';
 import type { NuiTone } from '../shared/scale.types';
 
-export type NuiBadgeVariant = 'soft' | 'outline' | 'solid';
-export type NuiBadgeSize = 'sm' | 'md';
+export type NuiBadgeVariant = (typeof NuiBadgeVariant)[keyof typeof NuiBadgeVariant];
+export type NuiBadgeSize = (typeof NuiBadgeSize)[keyof typeof NuiBadgeSize];
 
 export interface NuiBadgeProps {
   tone?: NuiTone | undefined;
@@ -15,3 +15,7 @@ export interface NuiBadgeProps {
   label?: string | undefined;
   floating?: boolean | undefined;
 }
+
+export const NuiBadgeVariant = { Soft: 'soft', Outline: 'outline', Solid: 'solid' } as const;
+
+export const NuiBadgeSize = { Sm: 'sm', Md: 'md' } as const;

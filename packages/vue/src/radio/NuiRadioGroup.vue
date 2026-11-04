@@ -41,11 +41,12 @@ import { provideRadioGroup, useFieldControl } from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import { defaultOptionKey } from '../shared/options';
 import NuiRadio from './NuiRadio.vue';
-import type { NuiRadioGroupProps } from './radio.types';
+import { NuiRadioGroupOrientation, type NuiRadioGroupProps } from './radio.types';
+import { NuiSize } from '../shared/scale.types';
 
 const {
   id,
-  size = 'md',
+  size = NuiSize.Md,
   disabled = undefined,
   readonly = undefined,
   required = undefined,
@@ -55,7 +56,7 @@ const {
   error,
   reserveError = false,
   name,
-  orientation = 'vertical',
+  orientation = NuiRadioGroupOrientation.Vertical,
   options,
 } = defineProps<NuiRadioGroupProps<T>>();
 

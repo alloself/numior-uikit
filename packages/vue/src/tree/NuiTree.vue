@@ -7,17 +7,17 @@
       `nui-list--variant-${variant}`,
       `nui-tree--size-${size}`,
       {
-        'nui-layer': variant === 'floating',
+        'nui-layer': variant === NuiTreeVariant.Floating,
         'nui-tree--virtual': virtual,
         'nui-tree--checkable': checkable,
-        'nui-tree--multiple': mode === 'multiple',
+        'nui-tree--multiple': mode === NuiTreeSelectable.Multiple,
       },
     ]"
     :role="widget ? 'tree' : undefined"
     :tabindex="widget ? 0 : undefined"
     :aria-label="widget ? label : undefined"
     :aria-labelledby="widget ? labelledBy : undefined"
-    :aria-multiselectable="(widget && mode === 'multiple') || undefined"
+    :aria-multiselectable="(widget && mode === NuiTreeSelectable.Multiple) || undefined"
     :aria-activedescendant="activeDescendant"
     :aria-busy="loading || undefined"
     :style="rootStyle"
@@ -69,6 +69,7 @@ import {
   watch,
 } from 'vue';
 import {
+  AriaValue,
   useControlId,
   useDirection,
   useMessages,
@@ -80,7 +81,7 @@ import NuiEmpty from '../empty/NuiEmpty.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { provideList, type TreeItemState } from '../list/list-context';
 import { listMessages } from '../list/list.messages';
-import type { NuiSize } from '../shared/scale.types';
+import { NuiSize } from '../shared/scale.types';
 import { useOptionSelection } from '../shared/use-option-selection';
 import NuiTreeNode from './NuiTreeNode.vue';
 import {
@@ -89,11 +90,17 @@ import {
   collectCheckedValues,
   completeChecked,
   sameKeys,
-  type CheckState,
 } from './cascade';
 import { findTreeItem, flattenTree, siblingIndicesOf, type TreeNode } from './flatten';
-import type { NuiTreeItem, NuiTreeProps } from './tree.types';
+import {
+  CheckState,
+  NuiTreeSelectable,
+  NuiTreeVariant,
+  type NuiTreeItem,
+  type NuiTreeProps,
+} from './tree.types';
 import { useTreeNavigation } from './use-tree-navigation';
+import { ListContextKind } from '../list/list.types';
 
 interface RenderedNode {
   readonly node: TreeNode<T>;
@@ -114,7 +121,7 @@ const afterPaint = (callback: () => void): void => {
 };
 
 const ariaChecked = (state: CheckState | undefined): boolean | 'mixed' =>
-  state === 'indeterminate' ? 'mixed' : state === 'checked';
+  state === CheckState.Indeterminate ? AriaValue.Mixed : state === CheckState.Checked;
 
 const FOLDING = {
   tag: 'ul',
@@ -130,8 +137,8 @@ const {
   id,
   items,
   getKey,
-  variant = 'plain',
-  size = 'md',
+  variant = NuiTreeVariant.Plain,
+  size = NuiSize.Md,
   selectable = undefined,
   checkable = false,
   icons = true,
@@ -183,7 +190,7 @@ const { keyOf, selectedKeys, choose } = useOptionSelection<T>({
   options: () => [],
   model,
   values,
-  multiple: () => mode.value === 'multiple',
+  multiple: () => mode.value === NuiTreeSelectable.Multiple,
   getKey: () => getKey,
 });
 
@@ -271,7 +278,7 @@ const nodeOf = (value: T): TreeItemState | undefined => {
 };
 
 provideList<T>({
-  kind: 'tree',
+  kind: ListContextKind.Tree,
   selectable: computed(() => (mode.value === false ? undefined : mode.value)),
   variant: computed(() => variant),
   size: computed(() => size),

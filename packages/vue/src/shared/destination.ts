@@ -1,5 +1,6 @@
 import { useConfiguredLink, type NuiLinkComponent } from '@numior/primitives';
 import { computed, getCurrentInstance, type ComputedRef } from 'vue';
+import { HtmlTag } from './tag.types';
 
 export interface NuiRouteRegister {}
 
@@ -46,7 +47,7 @@ export const destinationAttrs = (
   if (to === undefined) {
     return href === undefined ? {} : { href };
   }
-  if (tag !== 'a') {
+  if (tag !== HtmlTag.Anchor) {
     return { to };
   }
   return typeof to === 'string' ? { href: to } : {};

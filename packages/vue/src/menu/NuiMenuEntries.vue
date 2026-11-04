@@ -1,9 +1,9 @@
 <template>
   <template v-for="(entry, index) in items" :key="entry.key ?? index">
-    <NuiMenuSeparator v-if="entry.type === 'separator'" />
-    <NuiMenuLabel v-else-if="entry.type === 'label'">{{ entry.label }}</NuiMenuLabel>
+    <NuiMenuSeparator v-if="entry.type === NuiMenuEntryType.Separator" />
+    <NuiMenuLabel v-else-if="entry.type === NuiMenuEntryType.Label">{{ entry.label }}</NuiMenuLabel>
     <NuiMenuSub
-      v-else-if="entry.type === 'sub'"
+      v-else-if="entry.type === NuiMenuEntryType.Sub"
       :label="entry.label"
       :icon="entry.icon"
       :disabled="entry.disabled"
@@ -11,7 +11,7 @@
       <NuiMenuEntries :items="entry.items" />
     </NuiMenuSub>
     <NuiMenuCheckboxItem
-      v-else-if="entry.type === 'checkbox'"
+      v-else-if="entry.type === NuiMenuEntryType.Checkbox"
       :checked="entry.checked"
       :icon="entry.icon"
       :disabled="entry.disabled"
@@ -20,7 +20,7 @@
     >
       {{ entry.label }}
     </NuiMenuCheckboxItem>
-    <NuiMenuRadioEntries v-else-if="entry.type === 'radio-group'" :entry="entry" />
+    <NuiMenuRadioEntries v-else-if="entry.type === NuiMenuEntryType.RadioGroup" :entry="entry" />
     <NuiMenuItem
       v-else
       :icon="entry.icon"
@@ -45,7 +45,7 @@ import NuiMenuLabel from './NuiMenuLabel.vue';
 import NuiMenuRadioEntries from './NuiMenuRadioEntries.vue';
 import NuiMenuSeparator from './NuiMenuSeparator.vue';
 import NuiMenuSub from './NuiMenuSub.vue';
-import type { NuiMenuEntry } from './menu.types';
+import { NuiMenuEntryType, type NuiMenuEntry } from './menu.types';
 
 const { items } = defineProps<{ items: readonly NuiMenuEntry[] }>();
 </script>

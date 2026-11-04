@@ -27,7 +27,14 @@ interface BandFlags {
   readonly middle: boolean;
 }
 
-type ValueShape = 'none' | 'single' | 'multiple' | 'range';
+type ValueShape = (typeof ValueShape)[keyof typeof ValueShape];
+
+const ValueShape = {
+  None: 'none',
+  Single: 'single',
+  Multiple: 'multiple',
+  Range: 'range',
+} as const;
 
 const NO_BAND: BandFlags = { inBand: false, start: false, end: false, middle: false };
 
@@ -52,14 +59,14 @@ export const selectedDatesOf = (value: NuiCalendarValue): string[] => {
 
 const shapeOf = (value: NuiCalendarValue): ValueShape => {
   if (value === null) {
-    return 'none';
+    return ValueShape.None;
   }
 
   if (typeof value === 'string') {
-    return 'single';
+    return ValueShape.Single;
   }
 
-  return Array.isArray(value) ? 'multiple' : 'range';
+  return Array.isArray(value) ? ValueShape.Multiple : ValueShape.Range;
 };
 
 const partsOf = (value: NuiCalendarValue): readonly (string | null)[] => {

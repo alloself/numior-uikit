@@ -3,7 +3,7 @@
     ref="root"
     class="nui-toast nui-layer"
     :class="[`nui-toast--tone-${toast.tone}`, { 'nui-toast--leaving': toast.leaving }]"
-    :role="toast.tone === 'error' ? 'alert' : undefined"
+    :role="toast.tone === NuiTone.Error ? 'alert' : undefined"
     tabindex="-1"
     @keydown.escape="onEscape"
   >
@@ -44,6 +44,7 @@ import { toneIcon } from '../shared/tone-icon';
 import { focusNeighbour } from './focus-neighbour';
 import { toastMessages } from './toast.messages';
 import type { NuiToastProps } from './toast.types';
+import { NuiTone } from '../shared/scale.types';
 
 const { toast, closeLabel } = defineProps<NuiToastProps>();
 

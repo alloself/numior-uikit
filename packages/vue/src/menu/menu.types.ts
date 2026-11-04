@@ -3,10 +3,10 @@ import type { Component } from 'vue';
 import type { FloatingPlacement, IconSource, PopoverInvokerAttrs } from '@numior/primitives';
 import type { NuiTriggerRef } from '../shared/trigger-ref';
 
-export type NuiMenuItemTone = 'neutral' | 'error';
+export type NuiMenuItemTone = (typeof NuiMenuItemTone)[keyof typeof NuiMenuItemTone];
 
 export interface NuiMenuItemEntry {
-  readonly type?: 'item' | undefined;
+  readonly type?: typeof NuiMenuEntryType.Item | undefined;
   readonly key?: string | undefined;
   readonly label: string;
   readonly icon?: IconSource | undefined;
@@ -21,7 +21,7 @@ export interface NuiMenuItemEntry {
 }
 
 export interface NuiMenuCheckboxEntry {
-  readonly type: 'checkbox';
+  readonly type: typeof NuiMenuEntryType.Checkbox;
   readonly key?: string | undefined;
   readonly label: string;
   readonly icon?: IconSource | undefined;
@@ -39,7 +39,7 @@ export interface NuiMenuRadioOption {
 }
 
 export interface NuiMenuRadioGroupEntry {
-  readonly type: 'radio-group';
+  readonly type: typeof NuiMenuEntryType.RadioGroup;
   readonly key?: string | undefined;
   readonly value: string;
   readonly onChange: (value: string) => void;
@@ -47,18 +47,18 @@ export interface NuiMenuRadioGroupEntry {
 }
 
 export interface NuiMenuSeparatorEntry {
-  readonly type: 'separator';
+  readonly type: typeof NuiMenuEntryType.Separator;
   readonly key?: string | undefined;
 }
 
 export interface NuiMenuLabelEntry {
-  readonly type: 'label';
+  readonly type: typeof NuiMenuEntryType.Label;
   readonly key?: string | undefined;
   readonly label: string;
 }
 
 export interface NuiMenuSubEntry {
-  readonly type: 'sub';
+  readonly type: typeof NuiMenuEntryType.Sub;
   readonly key?: string | undefined;
   readonly label: string;
   readonly icon?: IconSource | undefined;
@@ -88,7 +88,9 @@ export interface NuiMenuProps {
   lazy?: boolean | undefined;
 }
 
-export type NuiMenuFocus = 'first' | 'last';
+export type NuiMenuFocus = (typeof NuiMenuFocus)[keyof typeof NuiMenuFocus];
+
+export type MenuFocusRequest = (typeof MenuFocusRequest)[keyof typeof MenuFocusRequest];
 
 export interface NuiMenuExposed {
   readonly trigger: HTMLElement | null;
@@ -144,3 +146,18 @@ export interface NuiMenuRowProps {
   icon?: IconSource | undefined;
   shortcut?: string | undefined;
 }
+
+export const NuiMenuItemTone = { Neutral: 'neutral', Error: 'error' } as const;
+
+export const NuiMenuFocus = { First: 'first', Last: 'last' } as const;
+
+export const MenuFocusRequest = { ...NuiMenuFocus, None: 'none' } as const;
+
+export const NuiMenuEntryType = {
+  Item: 'item',
+  Checkbox: 'checkbox',
+  RadioGroup: 'radio-group',
+  Separator: 'separator',
+  Label: 'label',
+  Sub: 'sub',
+} as const;

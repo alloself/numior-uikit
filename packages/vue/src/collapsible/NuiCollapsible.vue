@@ -40,12 +40,18 @@ import { computed, ref, watch } from 'vue';
 import { useControlId } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { provideCollapsibleTrigger, useCollapsibleTrigger } from './collapsible-context';
-import type { NuiCollapsibleProps, NuiCollapsibleTriggerSlot } from './collapsible.types';
+import {
+  NuiCollapsibleVariant,
+  type NuiCollapsibleProps,
+  type NuiCollapsibleTriggerSlot,
+} from './collapsible.types';
+
+const ROW_TRACKS = 'grid-template-rows';
 
 const {
   id,
   label,
-  variant = 'plain',
+  variant = NuiCollapsibleVariant.Plain,
   headingLevel,
   disabled = false,
 } = defineProps<NuiCollapsibleProps>();
@@ -66,7 +72,7 @@ const settled = ref(!open.value);
 const hiddenState = computed(() => (!open.value && settled.value ? 'until-found' : undefined));
 
 const settle = (event: TransitionEvent): void => {
-  if (event.propertyName === 'grid-template-rows' && !open.value) {
+  if (event.propertyName === ROW_TRACKS && !open.value) {
     settled.value = true;
   }
 };

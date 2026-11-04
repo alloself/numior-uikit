@@ -24,6 +24,8 @@ import { computed, useTemplateRef } from 'vue';
 import {
   dateMaskOf,
   datePatternOf,
+  DateTimePart,
+  InputType,
   isWithin,
   maskDateText,
   typeIntoDateText,
@@ -35,9 +37,9 @@ import type { NuiDateInputProps } from './date-picker.types';
 import { useDateText } from './use-date-text';
 
 const WHOLE_INPUTS: ReadonlySet<string> = new Set([
-  'insertFromPaste',
-  'insertFromDrop',
-  'insertReplacementText',
+  InputType.InsertFromPaste,
+  InputType.InsertFromDrop,
+  InputType.InsertReplacementText,
 ]);
 
 const {
@@ -75,7 +77,9 @@ const pattern = computed(() => {
   };
 
   const date = datePatternOf(locale)
-    .map((part) => (part.type === 'literal' ? part.text : glyphs[part.type].repeat(part.length)))
+    .map((part) =>
+      part.type === DateTimePart.Literal ? part.text : glyphs[part.type].repeat(part.length),
+    )
     .join('');
 
   return time ? `${date} ${messages.value.timeGlyphs}` : date;
@@ -106,7 +110,7 @@ const onBeforeinput = (event: InputEvent): void => {
   if (
     !element ||
     event.isComposing ||
-    event.inputType !== 'insertText' ||
+    event.inputType !== InputType.InsertText ||
     event.data === null ||
     element.selectionStart !== element.selectionEnd
   ) {

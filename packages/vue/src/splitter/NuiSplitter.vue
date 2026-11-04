@@ -14,7 +14,9 @@
     <div
       class="nui-splitter__divider"
       role="separator"
-      :aria-orientation="orientation === 'horizontal' ? 'vertical' : 'horizontal'"
+      :aria-orientation="
+        orientation === NuiSplitterOrientation.Horizontal ? 'vertical' : 'horizontal'
+      "
       :aria-label="labelText"
       :aria-controls="startId"
       :aria-valuenow="Math.round(ratio * 100)"
@@ -41,11 +43,11 @@ import { computed, ref, useTemplateRef } from 'vue';
 import { useControlId, useDirection, useMessages } from '@numior/primitives';
 import { clampRatio, ratioFromPointer, ratioMoveFor } from './splitter-ratio';
 import { splitterMessages } from './splitter.messages';
-import type { NuiSplitterProps } from './splitter.types';
+import { NuiSplitterOrientation, SplitterStep, type NuiSplitterProps } from './splitter.types';
 
 const {
   id,
-  orientation = 'horizontal',
+  orientation = NuiSplitterOrientation.Horizontal,
   min = 0.1,
   max = 0.9,
   step = 0.05,
@@ -66,7 +68,7 @@ const dragging = ref(false);
 
 const labelText = computed(() => label ?? messages.value.resize);
 const bounds = computed(() => ({ min, max }));
-const vertical = (): boolean => orientation === 'vertical';
+const vertical = (): boolean => orientation === NuiSplitterOrientation.Vertical;
 
 const apply = (next: number): void => {
   ratio.value = clampRatio(next, bounds.value);
@@ -110,16 +112,16 @@ const onKeydown = (event: KeyboardEvent): void => {
   event.preventDefault();
 
   switch (move) {
-    case 'min':
+    case SplitterStep.Min:
       apply(min);
       break;
-    case 'max':
+    case SplitterStep.Max:
       apply(max);
       break;
-    case 'grow':
+    case SplitterStep.Grow:
       apply(ratio.value + step);
       break;
-    case 'shrink':
+    case SplitterStep.Shrink:
       apply(ratio.value - step);
       break;
   }

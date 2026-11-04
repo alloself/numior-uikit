@@ -1,9 +1,13 @@
 import { inject, provide, type ComputedRef, type InjectionKey, type Ref } from 'vue';
 import type { Weekday } from '@numior/primitives';
-import type { NuiCalendarLabels, NuiCalendarMode, NuiCalendarView } from './calendar.types';
+import type {
+  CalendarSlide,
+  FocusRequest,
+  NuiCalendarLabels,
+  NuiCalendarMode,
+  NuiCalendarView,
+} from './calendar.types';
 import type { DayState } from './day-state';
-
-export type FocusRequest = 'none' | 'follow' | 'take';
 
 export interface RequestOptions {
   readonly focus?: FocusRequest | undefined;
@@ -21,7 +25,7 @@ export interface CalendarContext {
   readonly view: ComputedRef<NuiCalendarView>;
   readonly month: ComputedRef<string>;
   readonly yearPage: ComputedRef<number>;
-  readonly slide: Ref<'next' | 'prev' | undefined>;
+  readonly slide: Ref<typeof CalendarSlide.Next | typeof CalendarSlide.Prev | undefined>;
   readonly focused: Ref<string>;
   isRtl(): boolean;
   isDisabled(date: string): boolean;

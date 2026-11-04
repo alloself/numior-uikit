@@ -18,7 +18,7 @@
         <template #trailing>
           <span class="nui-upload-item__actions">
             <NuiButton
-              v-if="item.status === 'uploading'"
+              v-if="item.status === UploadStatus.Uploading"
               variant="ghost"
               tone="neutral"
               size="sm"
@@ -55,7 +55,7 @@
         </template>
       </NuiRow>
       <NuiProgress
-        v-if="item.status === 'uploading'"
+        v-if="item.status === UploadStatus.Uploading"
         class="nui-upload-item__progress"
         size="sm"
         :value="percent"
@@ -72,6 +72,7 @@ import NuiIcon from '../icon/NuiIcon.vue';
 import NuiProgress from '../progress/NuiProgress.vue';
 import NuiRow from '../row/NuiRow.vue';
 import type { NuiUploadRowProps } from './upload.types';
+import { UploadReason, UploadStatus } from '@numior/primitives';
 
 const {
   item,
@@ -86,10 +87,16 @@ const {
 const emit = defineEmits<{ cancel: []; retry: []; remove: [] }>();
 
 const isImage = computed(() => item.type.startsWith('image/'));
-const percent = computed(() => (item.status === 'uploading' ? Math.round(item.progress * 100) : 0));
+
+const percent = computed(() =>
+  item.status === UploadStatus.Uploading ? Math.round(item.progress * 100) : 0,
+);
 
 const canRetry = computed(
-  () => item.status === 'error' && item.error.reason === 'upload' && item.file !== undefined,
+  () =>
+    item.status === UploadStatus.Error &&
+    item.error.reason === UploadReason.Upload &&
+    item.file !== undefined,
 );
 
 const cancel = (): void => emit('cancel');

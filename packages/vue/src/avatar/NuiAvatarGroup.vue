@@ -28,13 +28,13 @@ import { computed, useSlots } from 'vue';
 import NuiAvatar from './NuiAvatar.vue';
 import { provideAvatarGroup } from './avatar-context';
 import { sliceChildren } from './avatar-group-children';
-import type { NuiAvatarGroupProps } from './avatar.types';
+import { NuiAvatarShape, NuiAvatarSize, type NuiAvatarGroupProps } from './avatar.types';
 
 const {
   items,
   max,
-  size = 'md',
-  shape = 'circle',
+  size = NuiAvatarSize.Md,
+  shape = NuiAvatarShape.Circle,
   label,
   overflowLabel = undefined,
 } = defineProps<NuiAvatarGroupProps>();

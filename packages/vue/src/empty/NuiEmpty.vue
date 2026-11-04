@@ -18,14 +18,14 @@
 <script setup lang="ts">
 import { useSlots } from 'vue';
 import NuiIcon from '../icon/NuiIcon.vue';
-import type { NuiEmptyProps } from './empty.types';
+import { NuiEmptySize, type NuiEmptyProps } from './empty.types';
 
 const {
   icon = 'inbox',
   hideIcon = false,
   title,
   description,
-  size = 'md',
+  size = NuiEmptySize.Md,
 } = defineProps<NuiEmptyProps>();
 
 const slots = useSlots();

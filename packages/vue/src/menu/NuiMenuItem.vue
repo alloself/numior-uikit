@@ -43,13 +43,13 @@ import { computed } from 'vue';
 import NuiLink from '../link/NuiLink.vue';
 import NuiMenuRow from './NuiMenuRow.vue';
 import { useMenu } from './menu-context';
-import type { NuiMenuItemProps } from './menu.types';
+import { NuiMenuItemTone, type NuiMenuItemProps } from './menu.types';
 
 const {
   icon,
   shortcut,
   disabled = false,
-  tone = 'neutral',
+  tone = NuiMenuItemTone.Neutral,
   closeOnSelect = undefined,
   href,
   to,

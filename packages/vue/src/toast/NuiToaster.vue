@@ -38,13 +38,13 @@ import { useMessages, usePopover, useToastStore } from '@numior/primitives';
 import NuiToast from './NuiToast.vue';
 import { frontSize, itemStyle, layoutStack } from './toast-stack';
 import { toastMessages } from './toast.messages';
-import type { NuiToasterProps, NuiToasterSlot } from './toast.types';
+import { NuiToasterPlacement, type NuiToasterProps, type NuiToasterSlot } from './toast.types';
 
 defineOptions({ inheritAttrs: false });
 
 const {
   id,
-  placement = 'top-end',
+  placement = NuiToasterPlacement.TopEnd,
   expand = false,
   label,
   closeLabel,

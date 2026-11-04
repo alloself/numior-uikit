@@ -3,6 +3,10 @@ import NuiIcon from '../icon/NuiIcon.vue';
 
 type Child = VNodeArrayChildren[number] | undefined;
 
+export type SlotContent = (typeof SlotContent)[keyof typeof SlotContent];
+
+export const SlotContent = { Empty: 'empty', Icons: 'icons', Other: 'other' } as const;
+
 const isBlank = (value: unknown): boolean => typeof value === 'string' && value.trim() === '';
 
 const isIgnorable = (child: Child): boolean =>
@@ -24,9 +28,9 @@ const childrenOf = (child: Child): VNodeArrayChildren | undefined => {
 
 const isIcon = (child: Child): boolean => isVNode(child) && child.type === NuiIcon;
 
-export const slotContent = (slot: Slot | undefined): 'empty' | 'icons' | 'other' => {
+export const slotContent = (slot: Slot | undefined): SlotContent => {
   if (!slot) {
-    return 'empty';
+    return SlotContent.Empty;
   }
   const queue: VNodeArrayChildren = [...slot()];
   let icons = 0;
@@ -40,8 +44,8 @@ export const slotContent = (slot: Slot | undefined): 'empty' | 'icons' | 'other'
     } else if (isIcon(child)) {
       icons += 1;
     } else if (!isIgnorable(child)) {
-      return 'other';
+      return SlotContent.Other;
     }
   }
-  return icons > 0 ? 'icons' : 'empty';
+  return icons > 0 ? SlotContent.Icons : SlotContent.Empty;
 };

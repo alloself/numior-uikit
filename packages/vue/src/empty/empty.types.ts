@@ -1,6 +1,6 @@
 import type { IconSource } from '@numior/primitives';
 
-export type NuiEmptySize = 'sm' | 'md';
+export type NuiEmptySize = (typeof NuiEmptySize)[keyof typeof NuiEmptySize];
 
 export interface NuiEmptyProps {
   icon?: IconSource | undefined;
@@ -9,3 +9,5 @@ export interface NuiEmptyProps {
   description?: string | undefined;
   size?: NuiEmptySize | undefined;
 }
+
+export const NuiEmptySize = { Sm: 'sm', Md: 'md' } as const;

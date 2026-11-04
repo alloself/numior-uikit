@@ -2,9 +2,11 @@ import type { IconSource } from '@numior/primitives';
 import type { NuiOptionKey } from '../shared/options';
 import type { NuiSize } from '../shared/scale.types';
 
-export type NuiToggleGroupVariant = 'outline' | 'segmented';
+export type NuiToggleGroupVariant =
+  (typeof NuiToggleGroupVariant)[keyof typeof NuiToggleGroupVariant];
 
-export type NuiToggleGroupOrientation = 'horizontal' | 'vertical';
+export type NuiToggleGroupOrientation =
+  (typeof NuiToggleGroupOrientation)[keyof typeof NuiToggleGroupOrientation];
 
 export interface NuiToggleItem<T = string> {
   readonly value: T;
@@ -30,3 +32,10 @@ export interface NuiToggleItemSlot<T = string> {
   readonly item: NuiToggleItem<T>;
   readonly selected: boolean;
 }
+
+export const NuiToggleGroupVariant = { Outline: 'outline', Segmented: 'segmented' } as const;
+
+export const NuiToggleGroupOrientation = {
+  Horizontal: 'horizontal',
+  Vertical: 'vertical',
+} as const;

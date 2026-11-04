@@ -1,5 +1,5 @@
 import { useEventListener } from '@vueuse/core';
-import { useDelayedOpen } from '@numior/primitives';
+import { Key, PointerType, useDelayedOpen } from '@numior/primitives';
 import { computed, type ComputedRef, type MaybeRefOrGetter, type Ref } from 'vue';
 import type { NuiPopoverHoverAttrs } from './popover.types';
 
@@ -35,14 +35,14 @@ export const useHoverTrigger = (options: HoverTriggerOptions): HoverTrigger => {
   let returning = false;
 
   const onPointerenter = (event: PointerEvent): void => {
-    if (event.pointerType === 'touch') {
+    if (event.pointerType === PointerType.Touch) {
       return;
     }
     delay.scheduleOpen();
   };
 
   const onPointerleave = (event: PointerEvent): void => {
-    if (event.pointerType !== 'touch') {
+    if (event.pointerType !== PointerType.Touch) {
       delay.scheduleClose();
     }
   };
@@ -50,7 +50,7 @@ export const useHoverTrigger = (options: HoverTriggerOptions): HoverTrigger => {
   const onPointerdown = (event: PointerEvent): void => {
     pointerPressedAt = Date.now();
 
-    if (event.pointerType === 'touch') {
+    if (event.pointerType === PointerType.Touch) {
       if (options.open.value) {
         delay.closeNow();
       } else {
@@ -74,7 +74,7 @@ export const useHoverTrigger = (options: HoverTriggerOptions): HoverTrigger => {
   };
 
   const onDocumentKeydown = (event: KeyboardEvent): void => {
-    if (event.key !== 'Escape' || !options.open.value) {
+    if (event.key !== Key.Escape || !options.open.value) {
       return;
     }
     delay.closeNow();

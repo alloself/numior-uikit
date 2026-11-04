@@ -14,11 +14,11 @@
     :style="{ '--_sidebar-size': sidebarWidth, '--_rail-size': railWidth, '--_end-size': endWidth }"
   >
     <NuiSkipLink v-if="skipLink" :target="contentId" :label="skipLabel" />
-    <slot v-if="header === 'full'" name="header" />
+    <slot v-if="header === NuiLayoutHeader.Full" name="header" />
     <div class="nui-layout__row">
       <slot name="sidebar" />
       <div class="nui-layout__body">
-        <slot v-if="header === 'inset'" name="header" />
+        <slot v-if="header === NuiLayoutHeader.Inset" name="header" />
         <component :is="contentAs" :id="contentId" class="nui-layout__content">
           <slot />
         </component>
@@ -35,11 +35,11 @@ import { onMounted, ref, watch } from 'vue';
 import { useControlId, useHotkey, useMediaQuery } from '@numior/primitives';
 import NuiSkipLink from '../skip-link/NuiSkipLink.vue';
 import { provideLayout } from './layout-context';
-import type { NuiLayoutProps } from './layout.types';
+import { NuiLayoutHeader, type NuiLayoutProps } from './layout.types';
 
 const {
   id,
-  header = 'inset',
+  header = NuiLayoutHeader.Inset,
   sidebarWidth = '16rem',
   railWidth = '3.5rem',
   endWidth = '14rem',

@@ -33,18 +33,25 @@
 
 <script setup lang="ts">
 import { ref, useTemplateRef, watch } from 'vue';
-import { applyMask, maskCaret, useFieldControl, useSplitAttrs } from '@numior/primitives';
+import {
+  applyMask,
+  InputType,
+  maskCaret,
+  useFieldControl,
+  useSplitAttrs,
+} from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame.vue';
-import type { NuiInputModifiers, NuiInputProps } from './input.types';
+import { NuiInputType, type NuiInputModifiers, type NuiInputProps } from './input.types';
+import { NuiSize } from '../shared/scale.types';
 
 const isBackspace = (event: Event): boolean =>
-  event instanceof InputEvent && event.inputType === 'deleteContentBackward';
+  event instanceof InputEvent && event.inputType === InputType.DeleteContentBackward;
 
 defineOptions({ inheritAttrs: false });
 
 const {
   id,
-  size = 'md',
+  size = NuiSize.Md,
   disabled = undefined,
   required = undefined,
   invalid = undefined,
@@ -52,7 +59,7 @@ const {
   description,
   error,
   reserveError = false,
-  type = 'text',
+  type = NuiInputType.Text,
   readonly = undefined,
   mask,
 } = defineProps<NuiInputProps>();

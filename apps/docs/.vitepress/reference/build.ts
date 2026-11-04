@@ -82,6 +82,17 @@ const collectComponent = async (
   };
 };
 
+const MEMBER_DEFAULT = /^[A-Z]\w*\.[A-Z]\w*$/;
+
+const unresolvedDefaults = (component: ComponentReference): string[] =>
+  component.props.flatMap((prop) =>
+    prop.default !== undefined && MEMBER_DEFAULT.test(prop.default)
+      ? [
+          `${component.name}.${prop.name}: default ${prop.default} is not an exported enumeration member`,
+        ]
+      : [],
+  );
+
 const allEntries = (root: string): ComponentEntry[] =>
   PACKAGES.flatMap((pkg) => componentEntries(join(root, pkg.dir, 'src/index.ts'), pkg.name));
 
@@ -106,7 +117,7 @@ export const buildReference = async (root: string, docs: DocsMap): Promise<Refer
     const collected = await collectComponent(checker, entry, docs, members);
 
     components[entry.name] = collected.component;
-    problems.push(...collected.problems);
+    problems.push(...collected.problems, ...unresolvedDefaults(collected.component));
     if (collected.catalog !== undefined) {
       catalogs[collected.catalog.namespace] = collected.catalog;
     }

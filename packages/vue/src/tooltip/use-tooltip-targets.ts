@@ -1,5 +1,5 @@
 import { shallowRef, toValue, watch, type MaybeRefOrGetter, type Ref, type ShallowRef } from 'vue';
-import type { DelayedOpen } from '@numior/primitives';
+import { PointerType, type DelayedOpen } from '@numior/primitives';
 
 export interface TooltipTargetsOptions {
   readonly selector: () => string | undefined;
@@ -85,7 +85,7 @@ export const useTooltipTargets = (options: TooltipTargetsOptions): TooltipTarget
       const next = targetOf(event.target);
 
       if (
-        event.pointerType === 'touch' ||
+        event.pointerType === PointerType.Touch ||
         options.disabled() ||
         next === null ||
         next === hovered

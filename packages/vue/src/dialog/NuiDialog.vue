@@ -45,15 +45,15 @@ import { useDialog, useMessages } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import { useDialogLabels } from './dialog-labels';
 import { dialogMessages } from './dialog.messages';
-import type { NuiDialogProps } from './dialog.types';
+import { NuiDialogPlacement, NuiDialogSize, type NuiDialogProps } from './dialog.types';
 
 const {
   id,
-  placement = 'center',
+  placement = NuiDialogPlacement.Center,
   bare = false,
   title,
   description,
-  size = 'md',
+  size = NuiDialogSize.Md,
   closable = true,
   closeOnBackdrop = true,
   closeLabel,

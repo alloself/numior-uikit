@@ -1,6 +1,6 @@
 import { computed, ref, shallowRef, type ComputedRef, type Ref } from 'vue';
 import { addMonthKeys } from '@numior/primitives';
-import type { NuiCalendarView } from './calendar.types';
+import { CalendarSlide, NuiCalendarView } from './calendar.types';
 
 export interface CalendarViewOptions {
   readonly month: Ref<string | undefined>;
@@ -9,16 +9,16 @@ export interface CalendarViewOptions {
 }
 
 type ViewState =
-  | { readonly view: 'days' }
-  | { readonly view: 'months' }
-  | { readonly view: 'years'; readonly page: number | undefined };
+  | { readonly view: typeof NuiCalendarView.Days }
+  | { readonly view: typeof NuiCalendarView.Months }
+  | { readonly view: typeof NuiCalendarView.Years; readonly page: number | undefined };
 
 export interface CalendarView {
   readonly view: ComputedRef<NuiCalendarView>;
   readonly month: ComputedRef<string>;
   readonly visibleMonths: ComputedRef<string[]>;
   readonly yearPage: ComputedRef<number>;
-  readonly slide: Ref<'next' | 'prev' | undefined>;
+  readonly slide: Ref<CalendarSlide | undefined>;
   setMonth(key: string): void;
   setView(view: NuiCalendarView): void;
   shift(steps: number): void;
@@ -29,10 +29,10 @@ const YEARS_PER_PAGE = 12;
 export const yearOfKey = (key: string): number => Number(key.slice(0, 4));
 
 export const useCalendarView = (options: CalendarViewOptions): CalendarView => {
-  const state = shallowRef<ViewState>({ view: 'days' });
+  const state = shallowRef<ViewState>({ view: NuiCalendarView.Days });
   const view = computed(() => state.value.view);
   const fallback = ref(options.initial);
-  const slide = ref<'next' | 'prev'>();
+  const slide = ref<CalendarSlide>();
   const month = computed(() => options.month.value ?? fallback.value);
 
   const visibleMonths = computed(() =>
@@ -43,7 +43,7 @@ export const useCalendarView = (options: CalendarViewOptions): CalendarView => {
 
   const yearPage = computed(() => {
     const current = state.value;
-    const page = current.view === 'years' ? current.page : undefined;
+    const page = current.view === NuiCalendarView.Years ? current.page : undefined;
 
     return page ?? Math.floor(yearOfKey(month.value) / YEARS_PER_PAGE) * YEARS_PER_PAGE;
   });
@@ -53,24 +53,31 @@ export const useCalendarView = (options: CalendarViewOptions): CalendarView => {
       return;
     }
 
-    slide.value = key > month.value ? 'next' : 'prev';
+    slide.value = key > month.value ? CalendarSlide.Next : CalendarSlide.Prev;
     fallback.value = key;
     options.month.value = key;
   };
 
   const setView = (next: NuiCalendarView): void => {
-    state.value = next === 'years' ? { view: 'years', page: undefined } : { view: next };
+    state.value =
+      next === NuiCalendarView.Years
+        ? { view: NuiCalendarView.Years, page: undefined }
+        : { view: next };
   };
 
   const shift = (steps: number): void => {
     switch (state.value.view) {
-      case 'years':
-        state.value = { view: 'years', page: yearPage.value + steps * YEARS_PER_PAGE };
+      case NuiCalendarView.Years:
+        state.value = {
+          view: NuiCalendarView.Years,
+          page: yearPage.value + steps * YEARS_PER_PAGE,
+        };
+
         break;
-      case 'months':
+      case NuiCalendarView.Months:
         setMonth(addMonthKeys(month.value, steps * 12));
         break;
-      case 'days':
+      case NuiCalendarView.Days:
         setMonth(addMonthKeys(month.value, steps));
         break;
     }

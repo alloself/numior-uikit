@@ -1,5 +1,3 @@
-export type UploadStatus = (typeof UploadStatus)[keyof typeof UploadStatus];
-
 export type UploadReason = (typeof UploadReason)[keyof typeof UploadReason];
 
 export interface UploadError {

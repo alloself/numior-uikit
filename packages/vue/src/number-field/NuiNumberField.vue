@@ -76,6 +76,7 @@ import {
   clampNumber,
   formatNumber,
   isPartialNumber,
+  Key,
   numberSymbols,
   parseNumber,
   stepNumber,
@@ -89,6 +90,7 @@ import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiButton from '../button/NuiButton.vue';
 import { numberFieldMessages } from './number-field.messages';
 import type { NuiNumberFieldProps } from './number-field.types';
+import { NuiSize } from '../shared/scale.types';
 
 const KEY_STEPS: Record<string, number> = { ArrowUp: 1, ArrowDown: -1, PageUp: 10, PageDown: -10 };
 
@@ -96,7 +98,7 @@ defineOptions({ inheritAttrs: false });
 
 const {
   id,
-  size = 'md',
+  size = NuiSize.Md,
   disabled = undefined,
   required = undefined,
   invalid = undefined,
@@ -208,19 +210,19 @@ const onBeforeinput = (event: InputEvent): void => {
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Enter') {
+  if (event.key === Key.Enter) {
     commit();
     return;
   }
   if (isDisabled.value || isReadonly.value) {
     return;
   }
-  if (event.key === 'Home' && min !== undefined) {
+  if (event.key === Key.Home && min !== undefined) {
     event.preventDefault();
     apply(min);
     return;
   }
-  if (event.key === 'End' && max !== undefined) {
+  if (event.key === Key.End && max !== undefined) {
     event.preventDefault();
     apply(max);
     return;

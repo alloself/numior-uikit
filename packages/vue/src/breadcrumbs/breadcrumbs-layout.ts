@@ -1,9 +1,9 @@
 import type { Component } from 'vue';
 import type { NuiMenuEntry } from '../menu/menu.types';
-import type { NuiBreadcrumbItem } from './breadcrumbs.types';
+import { BreadcrumbEntryKind, type NuiBreadcrumbItem } from './breadcrumbs.types';
 
 export interface CrumbEntry {
-  readonly kind: 'item';
+  readonly kind: typeof BreadcrumbEntryKind.Item;
   readonly key: string;
   readonly item: NuiBreadcrumbItem;
   readonly index: number;
@@ -11,7 +11,7 @@ export interface CrumbEntry {
 }
 
 export interface MoreEntry {
-  readonly kind: 'more';
+  readonly kind: typeof BreadcrumbEntryKind.More;
   readonly key: string;
   readonly menu: readonly NuiMenuEntry[];
 }
@@ -19,7 +19,7 @@ export interface MoreEntry {
 export type BreadcrumbEntry = CrumbEntry | MoreEntry;
 
 const crumb = (item: NuiBreadcrumbItem, index: number, count: number): CrumbEntry => ({
-  kind: 'item',
+  kind: BreadcrumbEntryKind.Item,
   key: `item-${index}`,
   item,
   index,
@@ -51,7 +51,11 @@ export const layoutBreadcrumbs = (
   const first = items[0];
   return [
     ...(first === undefined ? [] : [crumb(first, 0, count)]),
-    { kind: 'more', key: 'more', menu: hidden.map((item) => toMenuEntry(item, as)) },
+    {
+      kind: BreadcrumbEntryKind.More,
+      key: 'more',
+      menu: hidden.map((item) => toMenuEntry(item, as)),
+    },
     ...items.slice(count - tail).map((item, offset) => crumb(item, count - tail + offset, count)),
   ];
 };

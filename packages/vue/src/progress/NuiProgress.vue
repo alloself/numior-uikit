@@ -16,12 +16,13 @@
 
 <script setup lang="ts">
 import type { NuiProgressProps } from './progress.types';
+import { NuiSize, NuiTone } from '../shared/scale.types';
 
 const {
   value,
   max = 100,
-  size = 'md',
-  tone = 'primary',
+  size = NuiSize.Md,
+  tone = NuiTone.Primary,
   label,
   valueText,
   id,

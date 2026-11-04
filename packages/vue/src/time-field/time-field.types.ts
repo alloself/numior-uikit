@@ -2,6 +2,12 @@ import type { FloatingPlacement, HourCycle, TimeSegmentType } from '@numior/prim
 import type { NuiFieldControlProps } from '../shared/field-control.types';
 import type { WheelColumn, WheelOption } from './time-wheels';
 
+export type TimeEdge = (typeof TimeEdge)[keyof typeof TimeEdge];
+
+export type SegmentAction = (typeof SegmentAction)[keyof typeof SegmentAction];
+
+export type WheelDragKind = (typeof WheelDragKind)[keyof typeof WheelDragKind];
+
 export interface NuiTimeFieldProps extends NuiFieldControlProps {
   seconds?: boolean | undefined;
   hourCycle?: HourCycle | undefined;
@@ -44,3 +50,15 @@ export interface NuiTimeWheelsProps {
   labels: Readonly<Record<TimeSegmentType, string>>;
   emptyText: string;
 }
+
+export const TimeEdge = { Min: 'min', Max: 'max' } as const;
+
+export const SegmentAction = {
+  StepUp: 'step-up',
+  StepDown: 'step-down',
+  Min: TimeEdge.Min,
+  Max: TimeEdge.Max,
+  Clear: 'clear',
+} as const;
+
+export const WheelDragKind = { Idle: 'idle', Pressed: 'pressed', Dragging: 'dragging' } as const;

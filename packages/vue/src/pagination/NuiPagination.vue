@@ -86,6 +86,7 @@ import NuiPaginationControl from './NuiPaginationControl.vue';
 import { clampPage, pageCountOf, paginationRange } from './pagination-range';
 import { paginationMessages } from './pagination.messages';
 import type { NuiPaginationProps } from './pagination.types';
+import { NuiSize } from '../shared/scale.types';
 
 const {
   total,
@@ -96,7 +97,7 @@ const {
   as = 'a',
   pageSizes,
   showRange = true,
-  size = 'md',
+  size = NuiSize.Md,
   label,
   previousLabel,
   nextLabel,

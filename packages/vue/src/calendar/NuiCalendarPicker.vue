@@ -4,7 +4,7 @@
     ref="root"
     class="nui-calendar__picker"
     role="group"
-    :aria-label="kind === 'months' ? calendar.labels().month : calendar.labels().year"
+    :aria-label="kind === NuiCalendarView.Months ? calendar.labels().month : calendar.labels().year"
     @keydown="onKeydown"
   >
     <button
@@ -26,7 +26,15 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
-import { cellMoveFor, cellTargetIndex, formatDayNumber, monthLabels } from '@numior/primitives';
+import {
+  CellMove,
+  Key,
+  cellMoveFor,
+  cellTargetIndex,
+  formatDayNumber,
+  monthLabels,
+} from '@numior/primitives';
+import { NuiCalendarView, type CalendarPickerKind } from './calendar.types';
 import { useCalendar } from './calendar-context';
 import { yearOfKey } from './use-calendar-view';
 
@@ -39,14 +47,14 @@ const COLUMNS = 3;
 
 const pad = (value: number): string => String(value).padStart(2, '0');
 
-const { kind, month } = defineProps<{ kind: 'months' | 'years'; month: string }>();
+const { kind, month } = defineProps<{ kind: CalendarPickerKind; month: string }>();
 
 const calendar = useCalendar();
 const root = useTemplateRef<HTMLElement>('root');
 const active = ref<number>();
 
 const options = computed<PickerOption[]>(() => {
-  if (kind === 'months') {
+  if (kind === NuiCalendarView.Months) {
     const year = yearOfKey(calendar.month.value);
 
     return monthLabels(calendar.locale.value, 'short').map((label, index) => ({
@@ -63,7 +71,7 @@ const options = computed<PickerOption[]>(() => {
 });
 
 const current = computed(() =>
-  kind === 'months' ? calendar.month.value : String(yearOfKey(calendar.month.value)),
+  kind === NuiCalendarView.Months ? calendar.month.value : String(yearOfKey(calendar.month.value)),
 );
 
 const activeIndex = computed(() => {
@@ -83,7 +91,7 @@ const focusActive = (): void => {
 };
 
 const choose = (key: string): void => {
-  if (kind === 'months') {
+  if (kind === NuiCalendarView.Months) {
     calendar.pickMonth(key);
   } else {
     calendar.pickYear(Number(key));
@@ -91,9 +99,9 @@ const choose = (key: string): void => {
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Escape') {
+  if (event.key === Key.Escape) {
     event.preventDefault();
-    calendar.setView('days');
+    calendar.setView(NuiCalendarView.Days);
 
     return;
   }
@@ -106,8 +114,8 @@ const onKeydown = (event: KeyboardEvent): void => {
 
   event.preventDefault();
 
-  if (move === 'page-prev' || move === 'page-next') {
-    calendar.shift(move === 'page-prev' ? -1 : 1);
+  if (move === CellMove.PagePrev || move === CellMove.PageNext) {
+    calendar.shift(move === CellMove.PagePrev ? -1 : 1);
     active.value = activeIndex.value;
 
     return;

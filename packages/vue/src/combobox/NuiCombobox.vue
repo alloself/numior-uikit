@@ -110,7 +110,15 @@
 
 <script setup lang="ts" generic="T">
 import { computed, onMounted, ref, shallowRef, useTemplateRef, watch } from 'vue';
-import { createIntent, useFieldControl, useMessages, useSplitAttrs } from '@numior/primitives';
+import {
+  createIntent,
+  FloatingPlacement,
+  Key,
+  ListMove,
+  useFieldControl,
+  useMessages,
+  useSplitAttrs,
+} from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiButton from '../button/NuiButton.vue';
 import NuiChip from '../chip/NuiChip.vue';
@@ -121,15 +129,14 @@ import { filterOptions, flattenEntries, optionElementId, type NuiOption } from '
 import { useListboxSurface } from '../shared/use-listbox-surface';
 import { useOptionSelection } from '../shared/use-option-selection';
 import { comboboxMessages } from './combobox.messages';
-import type { NuiComboboxProps } from './combobox.types';
-
-type Draft = { readonly kind: 'label' } | { readonly kind: 'typed'; readonly text: string };
+import { ComboboxDraftKind, type ComboboxDraft, type NuiComboboxProps } from './combobox.types';
+import { NuiSize } from '../shared/scale.types';
 
 defineOptions({ inheritAttrs: false });
 
 const {
   id,
-  size = 'md',
+  size = NuiSize.Md,
   disabled = undefined,
   readonly = undefined,
   required = undefined,
@@ -147,7 +154,7 @@ const {
   filter = undefined,
   loading = false,
   customValue,
-  placement = 'bottom-start',
+  placement = FloatingPlacement.BottomStart,
   emptyLabel,
   loadingLabel,
   clearLabel,
@@ -208,11 +215,13 @@ const singleLabel = computed(() => {
   return multiple || first === undefined ? '' : labelFor(first);
 });
 
-const LABEL: Draft = { kind: 'label' };
-const draft = shallowRef<Draft>(LABEL);
-const typing = computed(() => draft.value.kind === 'typed');
+const LABEL: ComboboxDraft = { kind: ComboboxDraftKind.Label };
+const draft = shallowRef<ComboboxDraft>(LABEL);
+const typing = computed(() => draft.value.kind === ComboboxDraftKind.Typed);
 
-const query = computed(() => (draft.value.kind === 'typed' ? draft.value.text : singleLabel.value));
+const query = computed(() =>
+  draft.value.kind === ComboboxDraftKind.Typed ? draft.value.text : singleLabel.value,
+);
 
 const lowered = computed(
   () => new Map(flattenEntries(options).map((option) => [option, option.label.toLowerCase()])),
@@ -254,11 +263,11 @@ const { listboxElement, setListbox, control, navigation, activateHovered, restAc
 const opening = createIntent<'first' | 'last'>();
 const filteredFlat = computed(() => flattenEntries(filtered.value));
 
-const activate = (position: 'first' | 'last'): void => {
+const activate = (position: typeof ListMove.First | typeof ListMove.Last): void => {
   const entries = filteredFlat.value;
 
   const index =
-    position === 'first' ? entries.findIndex(isEnabled) : entries.findLastIndex(isEnabled);
+    position === ListMove.First ? entries.findIndex(isEnabled) : entries.findLastIndex(isEnabled);
 
   navigation.setActive(index < 0 ? null : optionElementId(listboxId.value, index), {
     focus: false,
@@ -277,7 +286,7 @@ watch(open, (isOpen) => {
 
 watch(filtered, () => {
   if (open.value) {
-    activate('first');
+    activate(ListMove.First);
   }
 });
 
@@ -339,20 +348,20 @@ onMounted(() => {
 const onInput = (): void => {
   const text = inputElement.value?.value ?? '';
 
-  draft.value = { kind: 'typed', text };
+  draft.value = { kind: ComboboxDraftKind.Typed, text };
   open.value = true;
   emit('search', text);
 };
 
 const openFromKey = (event: KeyboardEvent): boolean => {
-  if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') {
+  if (event.key !== Key.ArrowDown && event.key !== Key.ArrowUp) {
     return false;
   }
   if (open.value) {
     navigation.onKeydown(event);
   } else {
     event.preventDefault();
-    opening.set(event.key === 'ArrowUp' ? 'last' : 'first');
+    opening.set(event.key === Key.ArrowUp ? 'last' : 'first');
     open.value = true;
   }
   return true;

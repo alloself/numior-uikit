@@ -1,7 +1,9 @@
-import type { FloatingPlacement } from '@numior/primitives';
+import { ListMove, type FloatingPlacement } from '@numior/primitives';
 import type { NuiOption, NuiOptionKey, NuiOptionSource } from '../shared/options';
 import type { NuiFieldControlProps } from '../shared/field-control.types';
 import type { NuiTreeItem } from '../tree/tree.types';
+
+export type SelectOpenFocus = (typeof SelectOpenFocus)[keyof typeof SelectOpenFocus];
 
 export interface NuiSelectProps<T> extends NuiFieldControlProps {
   options: NuiOptionSource<T> | readonly NuiTreeItem<T>[];
@@ -21,3 +23,9 @@ export interface NuiSelectProps<T> extends NuiFieldControlProps {
 export interface NuiSelectValueSlot<T> {
   readonly selected: readonly NuiOption<T>[];
 }
+
+export const SelectOpenFocus = {
+  Selected: 'selected',
+  First: ListMove.First,
+  Last: ListMove.Last,
+} as const;

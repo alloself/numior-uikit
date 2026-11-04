@@ -1,7 +1,6 @@
 import type { IconSource } from '@numior/primitives';
 import type { NuiOption, NuiOptionKey } from '../shared/options';
 import type { NuiSize } from '../shared/scale.types';
-import type { CheckState } from './cascade';
 import type { TreeNode } from './flatten';
 
 export interface NuiTreeItem<T = string> extends Omit<
@@ -12,9 +11,11 @@ export interface NuiTreeItem<T = string> extends Omit<
   readonly lazy?: boolean | undefined;
 }
 
-export type NuiTreeSelectable = 'single' | 'multiple';
+export type CheckState = (typeof CheckState)[keyof typeof CheckState];
 
-export type NuiTreeVariant = 'plain' | 'divided' | 'bordered' | 'floating';
+export type NuiTreeSelectable = (typeof NuiTreeSelectable)[keyof typeof NuiTreeSelectable];
+
+export type NuiTreeVariant = (typeof NuiTreeVariant)[keyof typeof NuiTreeVariant];
 
 export interface NuiTreeProps<T> {
   id?: string | undefined;
@@ -54,3 +55,18 @@ export interface NuiTreeNodeProps<T> {
   folder: boolean;
   revealing?: boolean | undefined;
 }
+
+export const NuiTreeSelectable = { Single: 'single', Multiple: 'multiple' } as const;
+
+export const NuiTreeVariant = {
+  Plain: 'plain',
+  Divided: 'divided',
+  Bordered: 'bordered',
+  Floating: 'floating',
+} as const;
+
+export const CheckState = {
+  Checked: 'checked',
+  Unchecked: 'unchecked',
+  Indeterminate: 'indeterminate',
+} as const;

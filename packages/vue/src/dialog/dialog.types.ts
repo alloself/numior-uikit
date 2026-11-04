@@ -1,8 +1,8 @@
-import type { NuiSize } from '../shared/scale.types';
+import { NuiSize } from '../shared/scale.types';
 
-export type NuiDialogPlacement = 'center' | 'top';
+export type NuiDialogPlacement = (typeof NuiDialogPlacement)[keyof typeof NuiDialogPlacement];
 
-export type NuiDialogSize = NuiSize | 'auto';
+export type NuiDialogSize = (typeof NuiDialogSize)[keyof typeof NuiDialogSize];
 
 export interface NuiDialogProps {
   id?: string | undefined;
@@ -15,3 +15,7 @@ export interface NuiDialogProps {
   closeOnBackdrop?: boolean | undefined;
   closeLabel?: string | undefined;
 }
+
+export const NuiDialogPlacement = { Center: 'center', Top: 'top' } as const;
+
+export const NuiDialogSize = { ...NuiSize, Auto: 'auto' } as const;

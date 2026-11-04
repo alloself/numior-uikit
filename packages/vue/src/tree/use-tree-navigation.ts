@@ -3,6 +3,7 @@ import {
   emptyTypeahead,
   extendTypeahead,
   isTypeaheadActive,
+  Key,
   listMoveFor,
   lowerLabels,
   matchTypeahead,
@@ -191,8 +192,8 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
   };
 
   const horizontal = (key: string): boolean => {
-    const forward = options.rtl() ? 'ArrowLeft' : 'ArrowRight';
-    const backward = options.rtl() ? 'ArrowRight' : 'ArrowLeft';
+    const forward = options.rtl() ? Key.ArrowLeft : Key.ArrowRight;
+    const backward = options.rtl() ? Key.ArrowRight : Key.ArrowLeft;
     if (key === forward) {
       stepInto();
       return true;
@@ -208,15 +209,15 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
     if (moveBy(event.key) || horizontal(event.key)) {
       return true;
     }
-    if (event.key === '*') {
+    if (event.key === Key.Asterisk) {
       options.onExpandSiblings(options.activeIndex());
       return true;
     }
-    if (event.key === 'Enter') {
+    if (event.key === Key.Enter) {
       options.onActivate(options.activeIndex());
       return true;
     }
-    if (event.key === ' ' && !isTypeaheadActive(typeahead.value, Date.now())) {
+    if (event.key === Key.Space && !isTypeaheadActive(typeahead.value, Date.now())) {
       options.onActivate(options.activeIndex());
       return true;
     }

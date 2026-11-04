@@ -2,6 +2,8 @@ import type { NuiRouteLocation } from '../shared/destination';
 import type { Component } from 'vue';
 import type { IconSource } from '@numior/primitives';
 
+export type BreadcrumbEntryKind = (typeof BreadcrumbEntryKind)[keyof typeof BreadcrumbEntryKind];
+
 export interface NuiBreadcrumbItem {
   readonly label: string;
   readonly href?: string | undefined;
@@ -23,3 +25,5 @@ export interface NuiBreadcrumbsItemSlot {
   readonly index: number;
   readonly current: boolean;
 }
+
+export const BreadcrumbEntryKind = { Item: 'item', More: 'more' } as const;

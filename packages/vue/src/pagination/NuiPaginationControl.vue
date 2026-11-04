@@ -3,7 +3,7 @@
     v-if="href !== undefined"
     :as="as"
     :href="href"
-    :to="as === 'a' ? undefined : href"
+    :to="as === HtmlTag.Anchor ? undefined : href"
     tone="neutral"
     underline="none"
     class="nui-pagination__control"
@@ -32,6 +32,7 @@
 <script setup lang="ts">
 import NuiLink from '../link/NuiLink.vue';
 import type { NuiPaginationControlProps } from './pagination.types';
+import { HtmlTag } from '../shared/tag.types';
 
 const {
   page,

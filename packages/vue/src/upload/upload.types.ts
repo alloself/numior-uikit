@@ -5,9 +5,9 @@ import type { NuiFieldControlProps } from '../shared/field-control.types';
 export type NuiUploadItem<R = unknown> = UploadItem<R>;
 export type NuiUploadAdapter<R = unknown> = UploadAdapter<R>;
 export type NuiUploadError = UploadError;
-export type NuiUploadLayout = 'list' | 'grid';
-export type NuiUploadRejected = 'list' | 'drop';
-export type NuiUploadVariant = 'zone' | 'button';
+export type NuiUploadLayout = (typeof NuiUploadLayout)[keyof typeof NuiUploadLayout];
+export type NuiUploadRejected = (typeof NuiUploadRejected)[keyof typeof NuiUploadRejected];
+export type NuiUploadVariant = (typeof NuiUploadVariant)[keyof typeof NuiUploadVariant];
 
 export interface NuiUploadProps<R = unknown> extends NuiFieldControlProps {
   upload: NuiUploadAdapter<R>;
@@ -69,6 +69,14 @@ export interface NuiAvatarUploadProps<R = unknown> extends Omit<NuiFieldControlP
 }
 
 export type AvatarNotice =
-  | { readonly kind: 'silent' }
-  | { readonly kind: 'done'; readonly text: string }
-  | { readonly kind: 'failure'; readonly text: string };
+  | { readonly kind: typeof AvatarNoticeKind.Silent }
+  | { readonly kind: typeof AvatarNoticeKind.Done; readonly text: string }
+  | { readonly kind: typeof AvatarNoticeKind.Failure; readonly text: string };
+
+export const NuiUploadLayout = { List: 'list', Grid: 'grid' } as const;
+
+export const NuiUploadRejected = { List: 'list', Drop: 'drop' } as const;
+
+export const NuiUploadVariant = { Zone: 'zone', Button: 'button' } as const;
+
+export const AvatarNoticeKind = { Silent: 'silent', Done: 'done', Failure: 'failure' } as const;

@@ -40,11 +40,12 @@ import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import { defaultOptionKey } from '../shared/options';
 import NuiCheckbox from './NuiCheckbox.vue';
 import { provideCheckboxGroup } from './checkbox-group-context';
-import type { NuiCheckboxGroupProps } from './checkbox.types';
+import { NuiCheckboxGroupOrientation, type NuiCheckboxGroupProps } from './checkbox.types';
+import { NuiSize } from '../shared/scale.types';
 
 const {
   id,
-  size = 'md',
+  size = NuiSize.Md,
   disabled = undefined,
   readonly = undefined,
   required = undefined,
@@ -55,7 +56,7 @@ const {
   reserveError = false,
   options,
   name,
-  orientation = 'vertical',
+  orientation = NuiCheckboxGroupOrientation.Vertical,
   getKey,
 } = defineProps<NuiCheckboxGroupProps<T>>();
 

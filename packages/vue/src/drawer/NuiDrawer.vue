@@ -20,17 +20,17 @@
 <script setup lang="ts">
 import { computed, useSlots } from 'vue';
 import NuiDialog from '../dialog/NuiDialog.vue';
-import type { NuiDrawerProps } from './drawer.types';
+import { NuiDrawerSide, NuiDrawerSize, type NuiDrawerProps } from './drawer.types';
 
 const {
   id,
   title,
   description,
-  size = 'md',
+  size = NuiDrawerSize.Md,
   closable = true,
   closeOnBackdrop = true,
   closeLabel,
-  side = 'end',
+  side = NuiDrawerSide.End,
 } = defineProps<NuiDrawerProps>();
 
 const open = defineModel<boolean>('open', { default: false });

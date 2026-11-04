@@ -1,9 +1,11 @@
 import type { NuiRouteLocation } from '../shared/destination';
 import type { Component } from 'vue';
 
-export type NuiCardVariant = 'outline' | 'elevated' | 'soft';
-export type NuiCardPadding = 'xs' | 'sm' | 'md' | 'lg';
-export type NuiCardTitleTag = 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+export type NuiCardVariant = (typeof NuiCardVariant)[keyof typeof NuiCardVariant];
+
+export type CardActionKind = (typeof CardActionKind)[keyof typeof CardActionKind];
+export type NuiCardPadding = (typeof NuiCardPadding)[keyof typeof NuiCardPadding];
+export type NuiCardTitleTag = (typeof NuiCardTitleTag)[keyof typeof NuiCardTitleTag];
 
 export interface NuiCardProps {
   variant?: NuiCardVariant | undefined;
@@ -25,3 +27,11 @@ export interface NuiCardMediaProps {
   alt?: string | undefined;
   aspect?: string | undefined;
 }
+
+export const NuiCardVariant = { Outline: 'outline', Elevated: 'elevated', Soft: 'soft' } as const;
+
+export const NuiCardPadding = { Xs: 'xs', Sm: 'sm', Md: 'md', Lg: 'lg' } as const;
+
+export const NuiCardTitleTag = { H2: 'h2', H3: 'h3', H4: 'h4', H5: 'h5', H6: 'h6' } as const;
+
+export const CardActionKind = { Link: 'link', Button: 'button' } as const;

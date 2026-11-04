@@ -38,12 +38,13 @@ import { nextTick, useTemplateRef } from 'vue';
 import { useFieldControl, useSplitAttrs } from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import type { NuiSwitchProps } from './switch.types';
+import { NuiSize } from '../shared/scale.types';
 
 defineOptions({ inheritAttrs: false });
 
 const {
   id,
-  size = 'md',
+  size = NuiSize.Md,
   disabled = undefined,
   readonly = undefined,
   required = undefined,

@@ -10,6 +10,9 @@ import {
 } from 'vue';
 import {
   createIntent,
+  Key,
+  ListMove,
+  PointerType,
   useDelayedOpen,
   useDirection,
   useFloating,
@@ -50,8 +53,6 @@ export interface SidebarFlyout {
   dismiss(): void;
 }
 
-type Landing = 'first';
-
 const OPEN_DELAY = 100;
 const CLOSE_DELAY = 300;
 const OFFSET = 4;
@@ -59,7 +60,7 @@ const OFFSET = 4;
 export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout => {
   const open = ref(false);
   const direction = useDirection(options.trigger);
-  const landing = createIntent<Landing>();
+  const landing = createIntent<typeof ListMove.First>();
 
   const popover = usePopover(options.content, { open, id: options.id, mode: 'manual' });
 
@@ -84,8 +85,8 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
     typeahead: () => false,
   });
 
-  const forwardKey = (): string => (direction.isRtl() ? 'ArrowLeft' : 'ArrowRight');
-  const backKey = (): string => (direction.isRtl() ? 'ArrowRight' : 'ArrowLeft');
+  const forwardKey = (): string => (direction.isRtl() ? Key.ArrowLeft : Key.ArrowRight);
+  const backKey = (): string => (direction.isRtl() ? Key.ArrowRight : Key.ArrowLeft);
 
   const holdsFocus = (): boolean => {
     const content = options.content.value;
@@ -98,31 +99,31 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
   };
 
   const onTriggerPointerenter = (event: PointerEvent): void => {
-    if (event.pointerType !== 'touch') {
+    if (event.pointerType !== PointerType.Touch) {
       delay.scheduleOpen();
     }
   };
 
   const onTriggerKeydown = (event: KeyboardEvent): void => {
-    if (event.key === 'Escape' && open.value) {
+    if (event.key === Key.Escape && open.value) {
       event.preventDefault();
       delay.closeNow();
       return;
     }
-    if (event.key === forwardKey() || event.key === 'Enter' || event.key === ' ') {
+    if (event.key === forwardKey() || event.key === Key.Enter || event.key === Key.Space) {
       event.preventDefault();
-      landing.set('first');
+      landing.set(ListMove.First);
       delay.openNow();
     }
   };
 
   const onContentKeydown = (event: KeyboardEvent): void => {
-    if (event.key === 'Escape' || event.key === backKey()) {
+    if (event.key === Key.Escape || event.key === backKey()) {
       event.preventDefault();
       closeAndReturn();
       return;
     }
-    if (event.key === 'Tab') {
+    if (event.key === Key.Tab) {
       delay.closeNow();
       return;
     }
@@ -153,7 +154,7 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
       open,
       (isOpen) => {
         if (isOpen) {
-          if (landing.take() === 'first') {
+          if (landing.take() === ListMove.First) {
             navigation.focusFirst();
           }
         } else if (holdsFocus()) {

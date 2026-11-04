@@ -1,14 +1,15 @@
 import { ref, useTemplateRef, watch, type ComputedRef, type Ref } from 'vue';
 import {
   createIntent,
+  Key,
   useFieldControl,
   useLocale,
   useMessages,
   useSplitAttrs,
   type FieldContext,
-  type FieldFrame,
   type FieldControlAttrs,
   type FieldControlProps,
+  type FieldFrame,
   type FloatingPlacement,
   type SplitAttrs,
 } from '@numior/primitives';
@@ -75,13 +76,13 @@ export const useDatePickerShell = (options: DatePickerShellOptions): DatePickerS
   };
 
   const onInputKeydown = (event: KeyboardEvent): void => {
-    if (event.key === 'ArrowDown' && canOpen()) {
+    if (event.key === Key.ArrowDown && canOpen()) {
       event.preventDefault();
       popover.show();
-    } else if (event.key === 'ArrowDown' && popover.open.value) {
+    } else if (event.key === Key.ArrowDown && popover.open.value) {
       event.preventDefault();
       focusCalendar();
-    } else if (event.key === 'Escape' && popover.open.value) {
+    } else if (event.key === Key.Escape && popover.open.value) {
       event.preventDefault();
       popover.hide({ focus: true });
     }
