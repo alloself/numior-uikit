@@ -23,3 +23,5 @@ export interface WriteReport {
 export type XlsxWrite =
   | { readonly ok: true; readonly bytes: Bytes; readonly report: WriteReport }
   | { readonly ok: false; readonly report: WriteReport };
+
+export const PathSegment = { Parent: '..', Current: '.', Separator: '/' } as const;

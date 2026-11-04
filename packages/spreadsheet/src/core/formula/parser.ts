@@ -1,15 +1,19 @@
 import { columnIndex, MAX_ROWS, parseCell } from '../address';
 import type { CellAddress, CellRef } from '../cell.types';
 import { isCellError } from '../values';
-import type {
-  BinaryOperator,
-  BookIndexOf,
-  FormulaFailure,
-  FormulaLocale,
-  FormulaNode,
-  FormulaParse,
-  LineRef,
-  SheetPlace,
+import {
+  FormulaChar,
+  FunctionName,
+  TokenKind,
+  UnaryOperator,
+  type BinaryOperator,
+  type BookIndexOf,
+  type FormulaFailure,
+  type FormulaLocale,
+  type FormulaNode,
+  type FormulaParse,
+  type LineRef,
+  type SheetPlace,
 } from './formula.types';
 import { tokenize, type Token } from './lexer';
 import { EN_FORMULAS } from './locale';
@@ -47,7 +51,9 @@ const columnLine = (text: string): LineRef | undefined => {
   const match = COLUMN_WORD.exec(text);
   const index = match?.[2] === undefined ? undefined : columnIndex(match[2]);
 
-  return match === null || index === undefined ? undefined : { index, absolute: match[1] === '$' };
+  return match === null || index === undefined
+    ? undefined
+    : { index, absolute: match[1] === FormulaChar.Dollar };
 };
 
 const rowLine = (text: string): LineRef | undefined => {
@@ -56,11 +62,11 @@ const rowLine = (text: string): LineRef | undefined => {
 
   return match === null || row < 1 || row > MAX_ROWS
     ? undefined
-    : { index: row - 1, absolute: match[1] === '$' };
+    : { index: row - 1, absolute: match[1] === FormulaChar.Dollar };
 };
 
 const lineOf = (token: Token): LineRef | undefined =>
-  token.kind === 'number' && /^\d+$/u.test(token.text) ? rowLine(token.text) : undefined;
+  token.kind === TokenKind.Number && /^\d+$/u.test(token.text) ? rowLine(token.text) : undefined;
 
 const createParser = (
   tokens: readonly Token[],
@@ -90,14 +96,14 @@ const createParser = (
   };
 
   const isOp = (text: string, ahead = 0): boolean =>
-    peek(ahead).kind === 'op' && peek(ahead).text === text;
+    peek(ahead).kind === TokenKind.Op && peek(ahead).text === text;
 
   const isPunct = (text: string, ahead = 0): boolean =>
-    peek(ahead).kind === 'punct' && peek(ahead).text === text;
+    peek(ahead).kind === TokenKind.Punct && peek(ahead).text === text;
 
   const expectPunct = (text: string): void => {
     if (!isPunct(text)) {
-      fail(peek(), peek().kind === 'end' ? 'end' : 'token');
+      fail(peek(), peek().kind === TokenKind.End ? 'end' : 'token');
     }
     next();
   };
@@ -106,7 +112,7 @@ const createParser = (
     (operators: readonly BinaryOperator[], operand: () => FormulaNode) => (): FormulaNode => {
       let left = operand();
 
-      for (let op = peek(); op.kind === 'op' && isBinary(op.text, operators); op = peek()) {
+      for (let op = peek(); op.kind === TokenKind.Op && isBinary(op.text, operators); op = peek()) {
         next();
         left = { kind: 'binary', op: op.text, left, right: operand() };
       }
@@ -116,7 +122,7 @@ const createParser = (
   const rangeEnd = (place: SheetPlace): Token => {
     const token = next();
 
-    if (token.kind !== 'sheet') {
+    if (token.kind !== TokenKind.Sheet) {
       return token;
     }
     const end = placeOf(token, books);
@@ -149,7 +155,7 @@ const createParser = (
     if (isOp(':')) {
       return cellRange(place, ref);
     }
-    if (peek().kind === 'hash') {
+    if (peek().kind === TokenKind.Hash) {
       next();
       return { kind: 'spill', ...place, ref };
     }
@@ -157,9 +163,9 @@ const createParser = (
   };
 
   const reference = (place: SheetPlace, token: Token): FormulaNode | undefined => {
-    const cell = token.kind === 'word' ? parseCell(token.text) : undefined;
-    const column = token.kind === 'word' ? columnLine(token.text) : undefined;
-    const row = token.kind === 'word' ? rowLine(token.text) : lineOf(token);
+    const cell = token.kind === TokenKind.Word ? parseCell(token.text) : undefined;
+    const column = token.kind === TokenKind.Word ? columnLine(token.text) : undefined;
+    const row = token.kind === TokenKind.Word ? rowLine(token.text) : lineOf(token);
 
     if (cell !== undefined) {
       return cellReference(place, cell);
@@ -175,16 +181,16 @@ const createParser = (
 
   const constant = (token: Token): FormulaNode => {
     switch (token.kind) {
-      case 'number':
+      case TokenKind.Number:
         return { kind: 'number', value: token.value };
-      case 'string':
+      case TokenKind.String:
         return { kind: 'string', value: token.text };
-      case 'error':
+      case TokenKind.Error:
         return { kind: 'error', code: isCellError(token.text) ? token.text : '#VALUE!' };
-      case 'word':
+      case TokenKind.Word:
         return booleanOf(token, locale) ?? fail(token, 'array');
-      case 'op':
-        return token.text === '-' && peek().kind === 'number'
+      case TokenKind.Op:
+        return token.text === UnaryOperator.Minus && peek().kind === TokenKind.Number
           ? { kind: 'number', value: -next().value }
           : fail(token, 'array');
       default:
@@ -239,7 +245,7 @@ const createParser = (
       const args = argumentsOf();
       const [only] = args;
 
-      return name === 'SINGLE' && args.length === 1 && only !== undefined
+      return name === FunctionName.Single && args.length === 1 && only !== undefined
         ? { kind: 'unary', op: '@', operand: only }
         : { kind: 'call', name, args };
     }
@@ -248,7 +254,7 @@ const createParser = (
 
   const bookTable = (place: SheetPlace, token: Token): FormulaNode | undefined => {
     const found =
-      token.kind === 'structured' && place.book !== undefined && place.sheet === undefined
+      token.kind === TokenKind.Structured && place.book !== undefined && place.sheet === undefined
         ? parseStructured(token.text, locale)
         : undefined;
 
@@ -258,7 +264,7 @@ const createParser = (
   const sheetItem = (place: SheetPlace, token: Token): FormulaNode =>
     reference(place, token) ??
     bookTable(place, token) ??
-    (token.kind === 'word' && !isPunct('(') && booleanOf(token, locale) === undefined
+    (token.kind === TokenKind.Word && !isPunct('(') && booleanOf(token, locale) === undefined
       ? { kind: 'name', ...place, name: token.text }
       : fail(token, 'reference'));
 
@@ -266,32 +272,32 @@ const createParser = (
     const token = next();
 
     switch (token.kind) {
-      case 'number':
+      case TokenKind.Number:
         return reference({}, token) ?? { kind: 'number', value: token.value };
-      case 'string':
-      case 'error':
+      case TokenKind.String:
+      case TokenKind.Error:
         return constant(token);
-      case 'word':
+      case TokenKind.Word:
         return word(token);
-      case 'sheet': {
+      case TokenKind.Sheet: {
         const place = placeOf(token, books);
 
         return place === undefined ? fail(token, 'reference') : sheetItem(place, next());
       }
-      case 'structured':
+      case TokenKind.Structured:
         return parseStructured(token.text, locale) ?? fail(token, 'reference');
-      case 'punct':
+      case TokenKind.Punct:
         return group(token);
       default:
-        return fail(token, token.kind === 'end' ? 'end' : 'token');
+        return fail(token, token.kind === TokenKind.End ? 'end' : 'token');
     }
   };
 
   const group = (token: Token): FormulaNode => {
-    if (token.text === '{') {
+    if (token.text === FormulaChar.OpenBrace) {
       return array();
     }
-    if (token.text !== '(') {
+    if (token.text !== FormulaChar.OpenParen) {
       return fail(token, 'token');
     }
     const inner = expression();
@@ -303,7 +309,12 @@ const createParser = (
   const unary = (): FormulaNode => {
     const token = peek();
 
-    if (token.kind === 'op' && (token.text === '-' || token.text === '+' || token.text === '@')) {
+    if (
+      token.kind === TokenKind.Op &&
+      (token.text === UnaryOperator.Minus ||
+        token.text === UnaryOperator.Plus ||
+        token.text === UnaryOperator.Intersect)
+    ) {
       next();
       return { kind: 'unary', op: token.text, operand: unary() };
     }
@@ -332,7 +343,7 @@ const createParser = (
     formula: () => {
       const ast = expression();
 
-      if (peek().kind !== 'end') {
+      if (peek().kind !== TokenKind.End) {
         fail(peek(), 'token');
       }
       return ast;
@@ -356,7 +367,7 @@ const samePlace = (left: SheetPlace, right: SheetPlace): boolean =>
   left.sheet.toLowerCase() === right.sheet?.toLowerCase();
 
 const booleanOf = (token: Token, locale: FormulaLocale): FormulaNode | undefined => {
-  const value = token.kind === 'word' ? booleanFromWord(token.text, locale) : undefined;
+  const value = token.kind === TokenKind.Word ? booleanFromWord(token.text, locale) : undefined;
 
   return value === undefined ? undefined : { kind: 'boolean', value };
 };

@@ -1,5 +1,5 @@
 import { numberValue } from '../values';
-import type { FunctionArgs, FunctionSpec } from './calc.types';
+import { DatedifUnit, type FunctionArgs, type FunctionSpec } from './calc.types';
 import { raise } from './coerce';
 import { readDateText } from '../format/read-date';
 import { days360, yearFraction } from './day-counts';
@@ -13,11 +13,12 @@ import {
   serialOfDate,
 } from './serials';
 import { networkDays, weekendMask, workday } from './workdays';
+import { CellValueKind } from '../cell.types';
 
 const serialArg = (args: FunctionArgs, index: number): number => {
   const value = args.scalar(index);
 
-  if (value.kind !== 'string') {
+  if (value.kind !== CellValueKind.String) {
     return args.number(index);
   }
 
@@ -37,22 +38,22 @@ const holidaysOf = (args: FunctionArgs, index: number): Set<number> => {
     index,
     (value) => {
       switch (value.kind) {
-        case 'number':
+        case CellValueKind.Number:
           holidays.add(Math.floor(value.value));
           break;
-        case 'string':
+        case CellValueKind.String:
           holidays.add(
             Math.floor(readDateText(value.value, args.locale)?.date ?? raise('#VALUE!')),
           );
 
           break;
-        case 'error':
+        case CellValueKind.Error:
           raise(value.code);
           break;
-        case 'boolean':
+        case CellValueKind.Boolean:
           raise('#VALUE!');
           break;
-        case 'empty':
+        case CellValueKind.Empty:
           break;
       }
     },
@@ -169,17 +170,17 @@ const dateDifference = (first: number, second: number, unit: string): number => 
   }
 
   switch (unit.toUpperCase()) {
-    case 'Y':
+    case DatedifUnit.Y:
       return Math.floor(monthsBetween(from, to) / 12);
-    case 'M':
+    case DatedifUnit.M:
       return monthsBetween(from, to);
-    case 'D':
+    case DatedifUnit.D:
       return to - from;
-    case 'YM':
+    case DatedifUnit.YM:
       return monthsBetween(from, to) % 12;
-    case 'MD':
+    case DatedifUnit.MD:
       return dayDifference(from, to);
-    case 'YD':
+    case DatedifUnit.YD:
       return to - sameDayBefore(from, to);
     default:
       return raise('#NUM!');

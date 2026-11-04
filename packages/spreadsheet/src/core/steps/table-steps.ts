@@ -22,7 +22,14 @@ import {
 import { textValue } from '../values';
 import { validDefinedName, type Sheet, type SheetTable, type Workbook } from '../workbook';
 import type { Rewrite, Rewriter } from './rewrites';
-import type { CellEdit, StepRefusal, StepResult, TableSpec, WorkbookStep } from './step.types';
+import {
+  StepRefusal,
+  type CellEdit,
+  type StepResult,
+  type TableSpec,
+  type WorkbookStep,
+} from './step.types';
+import { CellInputKind, CellValueKind, LineAxis, TableShiftKind } from '../cell.types';
 
 export interface TableMoves {
   readonly removed: readonly SheetTable[];
@@ -68,20 +75,20 @@ const restoreOf = (table: SheetTable): WorkbookStep => ({
 });
 
 const headerText = (content: CellContent): string => {
-  if (content.kind !== 'value') {
+  if (content.kind !== CellInputKind.Value) {
     return '';
   }
 
   const { value } = content;
 
   switch (value.kind) {
-    case 'string':
+    case CellValueKind.String:
       return value.value;
-    case 'number':
+    case CellValueKind.Number:
       return String(value.value);
-    case 'boolean':
+    case CellValueKind.Boolean:
       return value.value ? 'TRUE' : 'FALSE';
-    case 'error':
+    case CellValueKind.Error:
       return value.code;
     default:
       return '';
@@ -234,13 +241,13 @@ export const createTableSteps = (
 
   const refusal = (name: string, sheet: Sheet, spec: TableShape): StepRefusal | undefined => {
     if (!validDefinedName(name)) {
-      return 'invalid-name';
+      return StepRefusal.InvalidName;
     }
     if (book.names.taken(name)) {
-      return 'name-taken';
+      return StepRefusal.NameTaken;
     }
     if (!insideSheet(spec) || !validColumns(spec) || dataRows(spec) < 1) {
-      return 'invalid-table';
+      return StepRefusal.InvalidTable;
     }
 
     const wanted = name.toLowerCase();
@@ -248,7 +255,7 @@ export const createTableSteps = (
     return book.tables
       .on(sheet)
       .some((other) => other.name.toLowerCase() !== wanted && rangesMeet(other.range, spec.range))
-      ? 'table-overlap'
+      ? StepRefusal.TableOverlap
       : undefined;
   };
 
@@ -269,7 +276,7 @@ export const createTableSteps = (
     const sheet = book.sheet(spec.sheet);
 
     if (sheet === undefined) {
-      return { ok: false, reason: 'missing-sheet' };
+      return { ok: false, reason: StepRefusal.MissingSheet };
     }
 
     const reason = refusal(name, sheet, spec);
@@ -291,22 +298,24 @@ export const createTableSteps = (
   };
 
   const add = (name: string, spec: TableSpec): StepResult =>
-    book.tables.get(name) === undefined ? set(name, spec) : { ok: false, reason: 'name-taken' };
+    book.tables.get(name) === undefined
+      ? set(name, spec)
+      : { ok: false, reason: StepRefusal.NameTaken };
 
   const rename = (from: string, to: string): StepResult => {
     const table = book.tables.get(from);
 
     if (table === undefined) {
-      return { ok: false, reason: 'missing-table' };
+      return { ok: false, reason: StepRefusal.MissingTable };
     }
     if (!validDefinedName(to)) {
-      return { ok: false, reason: 'invalid-name' };
+      return { ok: false, reason: StepRefusal.InvalidName };
     }
 
     const other = book.tables.get(to);
 
     if (book.names.taken(to) || (other !== undefined && other !== table)) {
-      return { ok: false, reason: 'name-taken' };
+      return { ok: false, reason: StepRefusal.NameTaken };
     }
     calculator.setTable(table.name, undefined);
     calculator.setTable(to, { ...table, name: to });
@@ -328,8 +337,8 @@ export const createTableSteps = (
         const content = calculator.contentAt(sheet, table.range.top, col);
 
         if (
-          content.kind !== 'value' ||
-          content.value.kind !== 'string' ||
+          content.kind !== CellInputKind.Value ||
+          content.value.kind !== CellValueKind.String ||
           content.value.value !== name
         ) {
           writeHeader(sheet, table.range.top, col, name);
@@ -361,9 +370,9 @@ export const createTableSteps = (
       (moves, table) => {
         const shift = shiftTable(table, change, prefix());
 
-        if (shift.kind === 'removed') {
+        if (shift.kind === TableShiftKind.Removed) {
           moves.removed.push(table);
-        } else if (shift.kind === 'moved') {
+        } else if (shift.kind === TableShiftKind.Moved) {
           moves.moved.push({ table, shape: shift.shape });
         }
         return moves;
@@ -396,7 +405,7 @@ export const createTableSteps = (
   const move = (sheet: Sheet, moves: TableMoves, change: LineChange): void => {
     moves.moved.forEach(({ table, shape }) => {
       calculator.setTable(table.name, { ...table, ...shape });
-      if (!shape.headers || change.axis !== 'cols' || change.count < 0) {
+      if (!shape.headers || change.axis !== LineAxis.Cols || change.count < 0) {
         return;
       }
 

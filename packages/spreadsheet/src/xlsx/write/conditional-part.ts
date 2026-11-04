@@ -1,11 +1,12 @@
 import { formatCell, formatRange } from '../../core/address';
 import type { CellAddress } from '../../core/cell.types';
-import type {
-  ConditionalEntry,
-  ConditionalFormat,
-  ConditionalRule,
-  Threshold,
-  TimePeriod,
+import {
+  ConditionalRuleKind,
+  type ConditionalEntry,
+  type ConditionalFormat,
+  type ConditionalRule,
+  type Threshold,
+  type TimePeriod,
 } from '../../core/conditional/conditional.types';
 import type { FormulaNode } from '../../core/formula/formula.types';
 import { FILE_FORMULAS } from '../../core/formula/locale';
@@ -140,21 +141,21 @@ const visualXml = (rule: ConditionalRule, writing: Writing): RuleXml | undefined
   const { q } = writing;
 
   switch (rule.kind) {
-    case 'colorScale':
+    case ConditionalRuleKind.ColorScale:
       return {
         type: 'colorScale',
         attributes: '',
         style: false,
         body: `<${q}colorScale>${rule.stops.map((stop) => cfvoXml(stop.threshold, writing)).join('')}${rule.stops.map((stop) => colorXml(`${q}color`, stop.color)).join('')}</${q}colorScale>`,
       };
-    case 'dataBar':
+    case ConditionalRuleKind.DataBar:
       return {
         type: 'dataBar',
         attributes: '',
         style: false,
         body: `<${q}dataBar${flagAttribute('showValue', rule.showValue, false)}>${cfvoXml(rule.min, writing)}${cfvoXml(rule.max, writing)}${colorXml(`${q}color`, rule.color)}</${q}dataBar>`,
       };
-    case 'iconSet':
+    case ConditionalRuleKind.IconSet:
       return {
         type: 'iconSet',
         attributes: '',
@@ -170,21 +171,21 @@ const rankXml = (rule: ConditionalRule, writing: Writing): RuleXml | undefined =
   const cell = anchorText(writing.anchor);
 
   switch (rule.kind) {
-    case 'top':
+    case ConditionalRuleKind.Top:
       return {
         type: 'top10',
         attributes: `${flagAttribute('percent', rule.percent, true)}${flagAttribute('bottom', rule.bottom, true)} rank="${String(rule.rank)}"`,
         style: true,
         body: '',
       };
-    case 'aboveAverage':
+    case ConditionalRuleKind.AboveAverage:
       return {
         type: 'aboveAverage',
         attributes: `${flagAttribute('aboveAverage', !rule.below, false)}${flagAttribute('equalAverage', rule.equal, true)}${rule.deviations === 0 ? '' : ` stdDev="${String(rule.deviations)}"`}`,
         style: true,
         body: '',
       };
-    case 'timePeriod':
+    case ConditionalRuleKind.TimePeriod:
       return {
         type: 'timePeriod',
         attributes: ` timePeriod="${rule.period}"`,
@@ -201,21 +202,21 @@ const testXml = (rule: ConditionalRule, writing: Writing): RuleXml | undefined =
   const { q } = writing;
 
   switch (rule.kind) {
-    case 'cellIs':
+    case ConditionalRuleKind.CellIs:
       return {
         type: 'cellIs',
         attributes: ` operator="${rule.operator}"`,
         style: true,
         body: rule.formulas.map((ast) => formulaXml(formulaText(ast, writing.anchor), q)).join(''),
       };
-    case 'expression':
+    case ConditionalRuleKind.Expression:
       return {
         type: 'expression',
         attributes: '',
         style: true,
         body: formulaXml(formulaText(rule.formula, writing.anchor), q),
       };
-    case 'text':
+    case ConditionalRuleKind.Text:
       return {
         type: TEXT_TYPES[rule.operator] ?? 'containsText',
         attributes: ` operator="${TEXT_OPERATORS[rule.operator] ?? 'containsText'}" text="${escapeAttribute(rule.text)}"`,
@@ -245,7 +246,7 @@ const valueXml = (rule: ConditionalRule, writing: Writing): RuleXml | undefined 
 const ruleXml = (entry: ConditionalEntry, writing: Writing, styles: StyleBook): string => {
   const { rule } = entry;
 
-  if (rule.kind === 'foreign') {
+  if (rule.kind === ConditionalRuleKind.Foreign) {
     return rule.xml;
   }
 
@@ -271,7 +272,7 @@ const ruleXml = (entry: ConditionalEntry, writing: Writing, styles: StyleBook): 
 const extensionRuleXml = (entry: ConditionalEntry, anchor: CellAddress): string => {
   const { rule } = entry;
 
-  if (rule.kind !== 'foreign') {
+  if (rule.kind !== ConditionalRuleKind.Foreign) {
     return '';
   }
 

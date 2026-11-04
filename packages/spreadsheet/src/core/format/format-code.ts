@@ -1,13 +1,16 @@
-import type {
+import {
   DateUnit,
-  FormatCondition,
-  FormatSection,
-  FormatToken,
-  NumberFormat,
-  NumberLocale,
+  FormatChar,
+  FormatTokenKind,
   SectionKind,
+  type FormatCondition,
+  type FormatSection,
+  type FormatToken,
+  type NumberFormat,
+  type NumberLocale,
 } from './format.types';
 import { numberLocaleOf } from './number-locale';
+import { BinaryOperator, UnaryOperator } from '../formula/formula.types';
 
 interface Draft {
   readonly tokens: FormatToken[];
@@ -83,15 +86,19 @@ const splitSections = (code: string): string[] => {
   for (let index = 0; index < code.length; index += 1) {
     const char = code.charAt(index);
 
-    if (char === '\\' && !quoted) {
+    if (char === FormatChar.Backslash && !quoted) {
       current += char + code.charAt(index + 1);
       index += 1;
-    } else if (char === ';' && !quoted && !bracket) {
+    } else if (char === FormatChar.Semicolon && !quoted && !bracket) {
       sections.push(current);
       current = '';
     } else {
-      quoted = char === '"' ? !quoted : quoted;
-      bracket = quoted ? bracket : (char === '[' || bracket) && char !== ']';
+      quoted = char === FormatChar.Quote ? !quoted : quoted;
+
+      bracket = quoted
+        ? bracket
+        : (char === FormatChar.OpenBracket || bracket) && char !== FormatChar.CloseBracket;
+
       current += char;
     }
   }
@@ -104,12 +111,12 @@ const readCondition = (content: string): FormatCondition | undefined => {
   const op = found?.[1];
 
   switch (op) {
-    case '<':
-    case '<=':
-    case '>':
-    case '>=':
-    case '=':
-    case '<>':
+    case BinaryOperator.Less:
+    case BinaryOperator.LessOrEqual:
+    case BinaryOperator.Greater:
+    case BinaryOperator.GreaterOrEqual:
+    case BinaryOperator.Equal:
+    case BinaryOperator.NotEqual:
       return { op, value: Number(found?.[2]) };
     default:
       return undefined;
@@ -195,8 +202,11 @@ const letterToken = (section: string, at: number): readonly [FormatToken, number
   const char = section.charAt(at);
   const next = section.charAt(at + 1);
 
-  if ((char === 'E' || char === 'e') && (next === '+' || next === '-')) {
-    return [{ kind: 'exponent', plus: next === '+' }, 2];
+  if (
+    (char === FormatChar.ExponentUpper || char === FormatChar.ExponentLower) &&
+    (next === FormatChar.Plus || next === FormatChar.Minus)
+  ) {
+    return [{ kind: 'exponent', plus: next === UnaryOperator.Plus }, 2];
   }
 
   const unit = DATE_LETTERS[char.toLowerCase()];
@@ -211,7 +221,7 @@ const letterToken = (section: string, at: number): readonly [FormatToken, number
     {
       kind: 'date',
       unit,
-      width: unit === 'year' && char.toLowerCase() === 'e' ? 4 : width,
+      width: unit === DateUnit.Year && char.toLowerCase() === FormatChar.ExponentLower ? 4 : width,
       code: section.slice(at, at + width),
     },
     width,
@@ -229,25 +239,25 @@ const escapeToken = (section: string, at: number, draft: Draft): number | undefi
   const next = section.charAt(at + 1);
 
   switch (char) {
-    case '"': {
+    case FormatChar.Quote: {
       const end = closing(section, at, '"');
 
       draft.tokens.push(literal(section.slice(at + 1, end)));
       return end + 1;
     }
-    case '[': {
+    case FormatChar.OpenBracket: {
       const end = closing(section, at, ']');
 
       readBracket(section.slice(at + 1, end), draft);
       return end + 1;
     }
-    case '\\':
+    case FormatChar.Backslash:
       draft.tokens.push(literal(next));
       return at + 2;
-    case '_':
+    case FormatChar.Underscore:
       draft.tokens.push(literal(' '));
       return at + 2;
-    case '*':
+    case FormatChar.Asterisk:
       draft.tokens.push({ kind: 'fill', char: next });
       return at + 2;
     default:
@@ -284,8 +294,10 @@ const tokenize = (section: string): Draft => {
   return draft;
 };
 
-const isDate = (token: FormatToken | undefined): token is Extract<FormatToken, { kind: 'date' }> =>
-  token?.kind === 'date';
+const isDate = (
+  token: FormatToken | undefined,
+): token is Extract<FormatToken, { kind: typeof FormatTokenKind.Date }> =>
+  token?.kind === FormatTokenKind.Date;
 
 const neighbourUnit = (
   tokens: readonly FormatToken[],
@@ -306,31 +318,36 @@ const asMinute = (tokens: readonly FormatToken[], index: number): boolean => {
   const before = neighbourUnit(tokens, index, -1);
   const after = neighbourUnit(tokens, index, 1);
 
-  return before === 'hour' || before === 'hours' || after === 'second' || after === 'seconds';
+  return (
+    before === DateUnit.Hour ||
+    before === DateUnit.Hours ||
+    after === DateUnit.Second ||
+    after === DateUnit.Seconds
+  );
 };
 
 const resolveMinutes = (tokens: readonly FormatToken[]): FormatToken[] =>
   tokens.map((token, index) =>
-    isDate(token) && token.unit === 'month' && token.width <= 2 && asMinute(tokens, index)
+    isDate(token) && token.unit === DateUnit.Month && token.width <= 2 && asMinute(tokens, index)
       ? { ...token, unit: 'minute' }
       : token,
   );
 
 const plainText = (token: FormatToken): string => {
   switch (token.kind) {
-    case 'literal':
+    case FormatTokenKind.Literal:
       return token.text;
-    case 'digit':
+    case FormatTokenKind.Digit:
       return token.char;
-    case 'point':
+    case FormatTokenKind.Point:
       return '.';
-    case 'comma':
+    case FormatTokenKind.Comma:
       return ',';
-    case 'percent':
+    case FormatTokenKind.Percent:
       return '%';
-    case 'slash':
+    case FormatTokenKind.Slash:
       return '/';
-    case 'exponent':
+    case FormatTokenKind.Exponent:
       return token.plus ? 'E+' : 'E-';
     default:
       return '';
@@ -340,7 +357,7 @@ const plainText = (token: FormatToken): string => {
 const subsecondWidth = (tokens: readonly FormatToken[], from: number): number => {
   let width = 0;
 
-  while (tokens[from + width]?.kind === 'digit') {
+  while (tokens[from + width]?.kind === FormatTokenKind.Digit) {
     width += 1;
   }
   return width;
@@ -351,14 +368,16 @@ const dateTokens = (tokens: readonly FormatToken[]): FormatToken[] => {
 
   for (let index = 0; index < tokens.length; index += 1) {
     const token = tokens[index];
-    const width = token?.kind === 'point' ? subsecondWidth(tokens, index + 1) : 0;
+    const width = token?.kind === FormatTokenKind.Point ? subsecondWidth(tokens, index + 1) : 0;
 
     if (width > 0) {
       result.push({ kind: 'date', unit: 'subsecond', width, code: '.' });
       index += width;
     } else if (token !== undefined) {
       result.push(
-        token.kind === 'date' || token.kind === 'fill' ? token : literal(plainText(token)),
+        token.kind === FormatTokenKind.Date || token.kind === FormatTokenKind.Fill
+          ? token
+          : literal(plainText(token)),
       );
     }
   }
@@ -366,13 +385,17 @@ const dateTokens = (tokens: readonly FormatToken[]): FormatToken[] => {
 };
 
 const kindOf = (tokens: readonly FormatToken[]): SectionKind => {
-  if (tokens.some((token) => token.kind === 'date')) {
+  if (tokens.some((token) => token.kind === FormatTokenKind.Date)) {
     return 'date';
   }
-  if (tokens.some((token) => token.kind === 'digit' || token.kind === 'general')) {
+  if (
+    tokens.some(
+      (token) => token.kind === FormatTokenKind.Digit || token.kind === FormatTokenKind.General,
+    )
+  ) {
     return 'number';
   }
-  return tokens.some((token) => token.kind === 'text') ? 'text' : 'literal';
+  return tokens.some((token) => token.kind === FormatTokenKind.Text) ? 'text' : 'literal';
 };
 
 const compileSection = (section: string): FormatSection => {
@@ -386,7 +409,7 @@ const compileSection = (section: string): FormatSection => {
 
   return {
     kind,
-    tokens: kind === 'date' ? dateTokens(tokens) : tokens,
+    tokens: kind === SectionKind.Date ? dateTokens(tokens) : tokens,
     condition: draft.condition,
     color: draft.color,
     locale: draft.locale,

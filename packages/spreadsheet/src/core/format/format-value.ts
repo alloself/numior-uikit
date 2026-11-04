@@ -1,16 +1,20 @@
-import type { CellValue } from '../cell.types';
+import { CellValueKind, type CellValue } from '../cell.types';
 import { parseNumberFormat } from './format-code';
 import { formatDateSection } from './format-date';
 import { generalNumber } from './format-digits';
 import { formatNumberSection } from './format-number';
-import type {
-  FormatCondition,
-  FormatSection,
-  FormattedValue,
-  NumberFormat,
-  NumberLocale,
+import {
+  FormatTokenKind,
+  SectionKind,
+  SectionSystem,
+  type FormatCondition,
+  type FormatSection,
+  type FormattedValue,
+  type NumberFormat,
+  type NumberLocale,
 } from './format.types';
 import { createOutput, type Output } from './output';
+import { BinaryOperator } from '../formula/formula.types';
 
 interface Choice {
   readonly section: FormatSection;
@@ -23,23 +27,24 @@ const HASHES: FormattedValue = { text: '#', color: undefined, fill: { char: '#',
 
 const passes = (condition: FormatCondition, value: number): boolean => {
   switch (condition.op) {
-    case '<':
+    case BinaryOperator.Less:
       return value < condition.value;
-    case '<=':
+    case BinaryOperator.LessOrEqual:
       return value <= condition.value;
-    case '>':
+    case BinaryOperator.Greater:
       return value > condition.value;
-    case '>=':
+    case BinaryOperator.GreaterOrEqual:
       return value >= condition.value;
-    case '=':
+    case BinaryOperator.Equal:
       return value === condition.value;
-    case '<>':
+    case BinaryOperator.NotEqual:
       return value !== condition.value;
   }
 };
 
 const negativeOnly = (condition: FormatCondition): boolean =>
-  (condition.op === '<' && condition.value <= 0) || (condition.op === '<=' && condition.value < 0);
+  (condition.op === BinaryOperator.Less && condition.value <= 0) ||
+  (condition.op === BinaryOperator.LessOrEqual && condition.value < 0);
 
 const explicitChoice = (sections: readonly FormatSection[], value: number): Choice | undefined => {
   for (const section of sections.slice(0, 3)) {
@@ -79,11 +84,11 @@ const textOutput = (section: FormatSection, text: string): Output => {
   const output = createOutput();
 
   section.tokens.forEach((token) => {
-    if (token.kind === 'text') {
+    if (token.kind === FormatTokenKind.Text) {
       output.push(text);
-    } else if (token.kind === 'literal') {
+    } else if (token.kind === FormatTokenKind.Literal) {
       output.push(token.text);
-    } else if (token.kind === 'fill') {
+    } else if (token.kind === FormatTokenKind.Fill) {
       output.fill(token.char);
     }
   });
@@ -92,7 +97,7 @@ const textOutput = (section: FormatSection, text: string): Output => {
 };
 
 const systemSection = (section: FormatSection, locale: NumberLocale): FormatSection => {
-  const code = section.system === 'date' ? locale.longDate : locale.longTime;
+  const code = section.system === SectionSystem.Date ? locale.longDate : locale.longTime;
 
   return parseNumberFormat(code).sections[0] ?? section;
 };
@@ -102,17 +107,17 @@ const sectionOutput = (choice: Choice, value: number, locale: NumberLocale): Out
   const magnitude = Math.abs(value);
 
   switch (section.kind) {
-    case 'number':
+    case SectionKind.Number:
       return formatNumberSection(section.tokens, magnitude, locale, choice.negative);
-    case 'date':
+    case SectionKind.Date:
       return formatDateSection(
         section.system === undefined ? section.tokens : systemSection(section, locale).tokens,
         value,
         section.locale ?? locale,
       );
-    case 'text':
+    case SectionKind.Text:
       return textOutput(section, generalNumber(value, locale.decimal));
-    case 'literal':
+    case SectionKind.Literal:
       return textOutput(section, '');
   }
 };
@@ -140,7 +145,7 @@ const formatNumber = (
 
 const formatString = (format: NumberFormat, text: string): FormattedValue => {
   const section =
-    format.sections[3] ?? format.sections.find((candidate) => candidate.kind === 'text');
+    format.sections[3] ?? format.sections.find((candidate) => candidate.kind === SectionKind.Text);
 
   return section === undefined ? plain(text) : result(textOutput(section, text), section.color);
 };
@@ -153,15 +158,15 @@ export const renderValue = (
   const format = parseNumberFormat(code === '' ? GENERAL : code);
 
   switch (value.kind) {
-    case 'number':
+    case CellValueKind.Number:
       return formatNumber(format, value.value, locale);
-    case 'string':
+    case CellValueKind.String:
       return formatString(format, value.value);
-    case 'boolean':
+    case CellValueKind.Boolean:
       return plain(value.value ? locale.trueText : locale.falseText);
-    case 'error':
+    case CellValueKind.Error:
       return plain(locale.errors[value.code]);
-    case 'empty':
+    case CellValueKind.Empty:
       return plain('');
   }
 };

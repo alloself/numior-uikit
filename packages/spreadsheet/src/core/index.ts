@@ -15,7 +15,7 @@ export {
 } from './address';
 export { CHUNK_COLS, CHUNK_ROWS, createCellStore } from './cell-store';
 export type { CellStore, CellVisitor, ChunkVisitor } from './cell-store';
-export type { CellAddress, CellError, CellRange, CellRef, CellValue } from './cell.types';
+export type { CellAddress, CellRange, CellRef, CellValue } from './cell.types';
 export { createSharedStrings } from './strings';
 export type { SharedStrings } from './strings';
 export {
@@ -34,7 +34,6 @@ export { lineLayoutsOf } from './layout/line-layouts';
 export { createConditionalPainter, type ConditionalPainter } from './conditional/looks';
 export type {
   BarLook,
-  CellIsOperator,
   ConditionalEntry,
   ConditionalFormat,
   ConditionalLook,
@@ -43,9 +42,7 @@ export type {
   IconLook,
   ScaleLook,
   ScaleStop,
-  TextOperator,
   Threshold,
-  TimePeriod,
 } from './conditional/conditional.types';
 export { EN_LOCALE, RU_LOCALE, type BookLocale } from './locale';
 export { createCellEditor, editText, readInput } from './cell-input';
@@ -68,7 +65,6 @@ export type {
   FontStyle,
   ProtectionStyle,
   StyleColor,
-  UnderlineStyle,
 } from './decorations';
 export type { NumberFormats } from './number-formats';
 export type {
@@ -88,16 +84,12 @@ export { tableData, type TableShape } from './tables';
 export { pivotCaptions, pivotValueName } from './pivot/pivot.messages';
 export { VALUES_FIELD } from './pivot/pivot-engine';
 export type {
-  PivotAggregate,
   PivotBaseItem,
   PivotCaptions,
   PivotDefinition,
   PivotField,
   PivotFilter,
-  PivotLanguage,
-  PivotLayout,
   PivotShowAs,
-  PivotSort,
   PivotSource,
   PivotSpec,
   PivotState,
@@ -112,7 +104,6 @@ export {
   printFormula,
 } from './formula';
 export type {
-  BinaryOperator,
   FormulaFailure,
   FormulaLocale,
   FormulaNode,
@@ -136,7 +127,6 @@ export type {
   EvalValue,
   FormulaResult,
   FormulaCell,
-  FormulaState,
   FunctionArgs,
   FunctionRegistry,
   FunctionSpec,
@@ -173,11 +163,40 @@ export type { HistoryOptions, WorkbookHistory } from './steps/history';
 export { mapCell } from './steps/mapping';
 export type {
   CellEdit,
-  LineAxis,
   StepOutcome,
-  StepRefusal,
   StepResult,
   TableSpec,
   WorkbookStep,
 } from './steps/step.types';
 export type { LineChange } from './formula/rewrite';
+export {
+  CellError,
+  CellInputKind,
+  CellValueKind,
+  LineAxis,
+  StyleColorKind,
+  UnderlineStyle,
+} from './cell.types';
+export {
+  CellIsOperator,
+  ConditionalRuleKind,
+  TextOperator,
+  ThresholdKind,
+  TimePeriod,
+} from './conditional/conditional.types';
+export {
+  PivotAggregate,
+  PivotLanguage,
+  PivotLayout,
+  PivotShowAsKind,
+  PivotSort,
+  PivotSourceKind,
+} from './pivot/pivot.types';
+export { StepKind, StepRefusal } from './steps/step.types';
+export { EvalValueKind, FormulaState } from './calc/calc.types';
+export {
+  BinaryOperator,
+  FormulaNodeKind,
+  FormulaReferenceKind,
+  UnaryOperator,
+} from './formula/formula.types';

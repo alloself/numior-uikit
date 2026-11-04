@@ -1,4 +1,4 @@
-import type { CellValue } from '../cell.types';
+import { CellValueKind, type CellValue } from '../cell.types';
 import { ordered } from '../calc/coerce';
 import { EMPTY, errorValue, numberValue } from '../values';
 import {
@@ -9,13 +9,17 @@ import {
 } from './pivot-aggregate';
 import type { PivotAccumulator } from './pivot-aggregate';
 import { pivotKey } from './pivot-cache';
-import type {
-  PivotCache,
-  PivotDefinition,
-  PivotField,
-  PivotLine,
-  PivotResult,
-  PivotShowAs,
+import {
+  PivotBaseStep,
+  PivotLayout,
+  PivotShowAsKind,
+  PivotSort,
+  type PivotCache,
+  type PivotDefinition,
+  type PivotField,
+  type PivotLine,
+  type PivotResult,
+  type PivotShowAs,
 } from './pivot.types';
 
 interface Tree {
@@ -56,8 +60,8 @@ export const pivotFieldOf = (definition: PivotDefinition, field: number): PivotF
 export const itemOrder = (field: PivotField, items: readonly CellValue[]): number[] => {
   const indices = items.map((_, index) => index);
 
-  if (field.sort !== 'manual') {
-    const compare = ordered(field.sort === 'ascending' ? 1 : -1);
+  if (field.sort !== PivotSort.Manual) {
+    const compare = ordered(field.sort === PivotSort.Ascending ? 1 : -1);
 
     return indices.toSorted((left, right) => compare(items[left] ?? EMPTY, items[right] ?? EMPTY));
   }
@@ -343,8 +347,12 @@ const nodeAt = (axis: Axis, items: readonly number[]): number | undefined =>
   );
 
 const ratio = (value: CellValue, base: CellValue): CellValue => {
-  if (value.kind !== 'number' || base.kind !== 'number') {
-    return value.kind === 'error' ? value : base.kind === 'error' ? base : EMPTY;
+  if (value.kind !== CellValueKind.Number || base.kind !== CellValueKind.Number) {
+    return value.kind === CellValueKind.Error
+      ? value
+      : base.kind === CellValueKind.Error
+        ? base
+        : EMPTY;
   }
   return base.value === 0 ? DIVIDE_BY_ZERO : numberValue(value.value / base.value);
 };
@@ -375,16 +383,16 @@ const compared = (
   value: CellValue,
   base: CellValue,
 ): CellValue => {
-  if (base.kind === 'empty' || value.kind !== 'number') {
-    return base.kind === 'empty' ? EMPTY : value;
+  if (base.kind === CellValueKind.Empty || value.kind !== CellValueKind.Number) {
+    return base.kind === CellValueKind.Empty ? EMPTY : value;
   }
-  if (show.kind === 'difference') {
-    return base.kind === 'number' ? numberValue(value.value - base.value) : base;
+  if (show.kind === PivotShowAsKind.Difference) {
+    return base.kind === CellValueKind.Number ? numberValue(value.value - base.value) : base;
   }
 
   const share = ratio(value, base);
 
-  return show.kind === 'percentDiff' && share.kind === 'number'
+  return show.kind === PivotShowAsKind.PercentDiff && share.kind === CellValueKind.Number
     ? numberValue(share.value - 1)
     : share;
 };
@@ -442,10 +450,10 @@ const createEvaluator = (
     const at = order.indexOf(current);
     const items = cache.group(show.field)?.items ?? [];
 
-    if (show.item === 'previous') {
+    if (show.item === PivotBaseStep.Previous) {
       return order[at - 1];
     }
-    if (show.item === 'next') {
+    if (show.item === PivotBaseStep.Next) {
       return order[at + 1];
     }
 
@@ -468,7 +476,7 @@ const createEvaluator = (
 
         const total = included ? shifted(data, placed, position.other, item) : EMPTY;
 
-        return sum + (total.kind === 'number' ? total.value : 0);
+        return sum + (total.kind === CellValueKind.Number ? total.value : 0);
       }, 0),
     );
 
@@ -492,7 +500,7 @@ const createEvaluator = (
     if (current === undefined) {
       return EMPTY;
     }
-    if (show.kind === 'runTotal') {
+    if (show.kind === PivotShowAsKind.RunTotal) {
       return runningTotal(data, placed, rank, { current, other });
     }
 
@@ -506,22 +514,22 @@ const createEvaluator = (
     const show = definition.values[data]?.showAs.kind ?? 'normal';
 
     switch (show) {
-      case 'normal':
+      case PivotShowAsKind.Normal:
         return value;
-      case 'percentOfTotal':
+      case PivotShowAsKind.PercentOfTotal:
         return ratio(value, raw(data, 0, 0));
-      case 'percentOfRow':
+      case PivotShowAsKind.PercentOfRow:
         return ratio(value, raw(data, row.node, 0));
-      case 'percentOfCol':
+      case PivotShowAsKind.PercentOfCol:
         return ratio(value, raw(data, 0, col.node));
-      case 'index': {
+      case PivotShowAsKind.Index: {
         const share = ratio(value, raw(data, row.node, 0));
         const whole = ratio(raw(data, 0, col.node), raw(data, 0, 0));
 
         return ratio(share, whole);
       }
       default:
-        return value.kind === 'empty' ? value : relative(data, value, row, col);
+        return value.kind === CellValueKind.Empty ? value : relative(data, value, row, col);
     }
   };
 
@@ -568,7 +576,7 @@ export const computePivot = (input: PivotDefinition, cache: PivotCache): PivotRe
   const count = definition.values.length;
 
   const rowLines = [
-    ...linesOf(definition, rows, ranks, definition.layout !== 'tabular'),
+    ...linesOf(definition, rows, ranks, definition.layout !== PivotLayout.Tabular),
     ...grandLines(rows, count, definition.columnTotals),
   ];
 

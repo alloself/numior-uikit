@@ -1,7 +1,9 @@
 import { nextTask } from '../../core/calc/tasks';
 import { parseXmlStream } from '../xml/sax';
-import type { XmlAttribute, XmlFailure, XmlHandlers } from '../xml/xml.types';
+import { XmlBoolean, type XmlAttribute, type XmlFailure, type XmlHandlers } from '../xml/xml.types';
 import type { ZipArchive } from '../zip/zip.types';
+import { PathSegment } from '../write/write.types';
+import { OoxmlElement, TargetMode } from '../ooxml.types';
 
 export interface Relationship {
   readonly id: string;
@@ -56,7 +58,8 @@ export const numberOf = (text: string | undefined, fallback: number): number => 
   return Number.isFinite(value) ? value : fallback;
 };
 
-export const truthy = (text: string | undefined): boolean => text === '1' || text === 'true';
+export const truthy = (text: string | undefined): boolean =>
+  text === XmlBoolean.One || text === XmlBoolean.True;
 
 const relationKind = (type: string): string => type.slice(type.lastIndexOf('/') + 1);
 
@@ -68,9 +71,9 @@ const resolvePart = (from: string, target: string): string => {
   return joined
     .split('/')
     .reduce<string[]>((parts, segment) => {
-      if (segment === '..') {
+      if (segment === PathSegment.Parent) {
         parts.pop();
-      } else if (segment !== '.' && segment !== '') {
+      } else if (segment !== PathSegment.Current && segment !== '') {
         parts.push(segment);
       }
       return parts;
@@ -116,11 +119,11 @@ export const readRelationships = async (
     path,
     {
       open: (name, attributes) => {
-        if (name.uri !== PACKAGE_RELATIONSHIPS || name.local !== 'Relationship') {
+        if (name.uri !== PACKAGE_RELATIONSHIPS || name.local !== OoxmlElement.Relationship) {
           return;
         }
 
-        const external = attributeOf(attributes, 'TargetMode') === 'External';
+        const external = attributeOf(attributes, 'TargetMode') === TargetMode.External;
         const target = attributeOf(attributes, 'Target') ?? '';
         const type = attributeOf(attributes, 'Type') ?? '';
 

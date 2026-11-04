@@ -1,17 +1,5 @@
 import { errorSpellings } from '../error-texts';
-import type { FormulaLocale } from './formula.types';
-
-export type TokenKind =
-  | 'number'
-  | 'string'
-  | 'error'
-  | 'word'
-  | 'sheet'
-  | 'structured'
-  | 'op'
-  | 'punct'
-  | 'hash'
-  | 'end';
+import { FormulaChar, type FormulaLocale, type TokenKind } from './formula.types';
 
 export interface Token {
   readonly kind: TokenKind;
@@ -127,11 +115,11 @@ const bracketEnd = (source: string, at: number): number | undefined => {
   for (let index = at; index < source.length; index += 1) {
     const char = source[index];
 
-    if (char === "'") {
+    if (char === FormulaChar.Apostrophe) {
       index += 1;
-    } else if (char === '[') {
+    } else if (char === FormulaChar.OpenBracket) {
       depth += 1;
-    } else if (char === ']') {
+    } else if (char === FormulaChar.CloseBracket) {
       depth -= 1;
       if (depth === 0) {
         return index;
@@ -166,13 +154,13 @@ const scanQuoted = (source: string, at: number): Scan => {
   }
   const text = unquote(source.slice(at, end + 1), quote);
 
-  if (quote === '"') {
+  if (quote === FormulaChar.Quote) {
     return { token: token('string', text, at), next: end + 1 };
   }
 
   const book = BOOK.exec(text);
 
-  if (source[end + 1] !== '!') {
+  if (source[end + 1] !== FormulaChar.Bang) {
     return { position: end + 1 };
   }
   return book === null
@@ -187,13 +175,13 @@ const scanBook = (source: string, at: number): Scan | undefined => {
   if (book === null) {
     return undefined;
   }
-  if (source[after] === '!') {
+  if (source[after] === FormulaChar.Bang) {
     return { token: bookSheet(book, '', at), next: after + 1 };
   }
 
   const end = WORD_START.test(source[after] ?? '') ? wordEnd(source, after) : after;
 
-  return end > after && source[end] === '!'
+  return end > after && source[end] === FormulaChar.Bang
     ? { token: bookSheet(book, source.slice(after, end), at), next: end + 1 }
     : undefined;
 };
@@ -202,10 +190,10 @@ const scanWord = (source: string, at: number): Scan => {
   const end = wordEnd(source, at);
   const text = source.slice(at, end);
 
-  if (source[end] === '[') {
+  if (source[end] === FormulaChar.OpenBracket) {
     return scanStructured(source, at, end);
   }
-  return source[end] === '!'
+  return source[end] === FormulaChar.Bang
     ? { token: token('sheet', text, at), next: end + 1 }
     : { token: token('word', text, at), next: end };
 };
@@ -214,10 +202,10 @@ const scanSymbol = (source: string, at: number, locale: FormulaLocale): Scan => 
   const char = source[at] ?? '';
   const operator = OPERATORS.find((candidate) => source.startsWith(candidate, at));
 
-  if (char === '[') {
+  if (char === FormulaChar.OpenBracket) {
     return scanBook(source, at) ?? scanStructured(source, at, at);
   }
-  if (char === '#') {
+  if (char === FormulaChar.Hash) {
     return errorAt(source, at, locale) ?? { token: token('hash', '#', at), next: at + 1 };
   }
   if (operator !== undefined) {
@@ -237,7 +225,7 @@ const scanAt = (source: string, at: number, locale: FormulaLocale): Scan => {
   if (number !== undefined) {
     return { token: number, next: at + number.text.length };
   }
-  if (char === '"' || char === "'") {
+  if (char === FormulaChar.Quote || char === FormulaChar.Apostrophe) {
     return scanQuoted(source, at);
   }
   return WORD_START.test(char) ? scanWord(source, at) : scanSymbol(source, at, locale);

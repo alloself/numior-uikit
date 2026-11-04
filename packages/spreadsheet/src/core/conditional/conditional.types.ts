@@ -10,9 +10,19 @@ export interface DifferentialStyle {
 }
 
 export type Threshold =
-  | { readonly kind: 'min' | 'max' | 'autoMin' | 'autoMax' }
   | {
-      readonly kind: 'number' | 'percent' | 'percentile' | 'formula';
+      readonly kind:
+        | typeof ThresholdKind.Min
+        | typeof ThresholdKind.Max
+        | typeof ThresholdKind.AutoMin
+        | typeof ThresholdKind.AutoMax;
+    }
+  | {
+      readonly kind:
+        | typeof ThresholdKind.Number
+        | typeof ThresholdKind.Percent
+        | typeof ThresholdKind.Percentile
+        | typeof ThresholdKind.Formula;
       readonly value: FormulaNode;
     };
 
@@ -21,84 +31,76 @@ export interface ScaleStop {
   readonly color: StyleColor;
 }
 
-export type CellIsOperator =
-  | 'between'
-  | 'notBetween'
-  | 'equal'
-  | 'notEqual'
-  | 'greaterThan'
-  | 'lessThan'
-  | 'greaterThanOrEqual'
-  | 'lessThanOrEqual';
+export type CellIsOperator = (typeof CellIsOperator)[keyof typeof CellIsOperator];
 
-export type TextOperator = 'contains' | 'notContains' | 'beginsWith' | 'endsWith';
+export type TextOperator = (typeof TextOperator)[keyof typeof TextOperator];
 
-export type TimePeriod =
-  | 'today'
-  | 'yesterday'
-  | 'tomorrow'
-  | 'last7Days'
-  | 'thisWeek'
-  | 'lastWeek'
-  | 'nextWeek'
-  | 'thisMonth'
-  | 'lastMonth'
-  | 'nextMonth';
+export type TimePeriod = (typeof TimePeriod)[keyof typeof TimePeriod];
 
 export type ConditionalRule =
   | {
-      readonly kind: 'cellIs';
+      readonly kind: typeof ConditionalRuleKind.CellIs;
       readonly operator: CellIsOperator;
       readonly formulas: readonly FormulaNode[];
       readonly style: DifferentialStyle;
     }
   | {
-      readonly kind: 'expression';
+      readonly kind: typeof ConditionalRuleKind.Expression;
       readonly formula: FormulaNode;
       readonly style: DifferentialStyle;
     }
-  | { readonly kind: 'colorScale'; readonly stops: readonly ScaleStop[] }
+  | { readonly kind: typeof ConditionalRuleKind.ColorScale; readonly stops: readonly ScaleStop[] }
   | {
-      readonly kind: 'dataBar';
+      readonly kind: typeof ConditionalRuleKind.DataBar;
       readonly min: Threshold;
       readonly max: Threshold;
       readonly color: StyleColor;
       readonly showValue: boolean;
     }
   | {
-      readonly kind: 'iconSet';
+      readonly kind: typeof ConditionalRuleKind.IconSet;
       readonly set: string;
       readonly thresholds: readonly Threshold[];
       readonly reverse: boolean;
       readonly showValue: boolean;
     }
   | {
-      readonly kind: 'top';
+      readonly kind: typeof ConditionalRuleKind.Top;
       readonly rank: number;
       readonly percent: boolean;
       readonly bottom: boolean;
       readonly style: DifferentialStyle;
     }
   | {
-      readonly kind: 'aboveAverage';
+      readonly kind: typeof ConditionalRuleKind.AboveAverage;
       readonly below: boolean;
       readonly equal: boolean;
       readonly deviations: number;
       readonly style: DifferentialStyle;
     }
   | {
-      readonly kind: 'text';
+      readonly kind: typeof ConditionalRuleKind.Text;
       readonly operator: TextOperator;
       readonly text: string;
       readonly style: DifferentialStyle;
     }
   | {
-      readonly kind: 'duplicates' | 'uniques' | 'blanks' | 'filled' | 'errors' | 'noErrors';
+      readonly kind:
+        | typeof ConditionalRuleKind.Duplicates
+        | typeof ConditionalRuleKind.Uniques
+        | typeof ConditionalRuleKind.Blanks
+        | typeof ConditionalRuleKind.Filled
+        | typeof ConditionalRuleKind.Errors
+        | typeof ConditionalRuleKind.NoErrors;
       readonly style: DifferentialStyle;
     }
-  | { readonly kind: 'timePeriod'; readonly period: TimePeriod; readonly style: DifferentialStyle }
   | {
-      readonly kind: 'foreign';
+      readonly kind: typeof ConditionalRuleKind.TimePeriod;
+      readonly period: TimePeriod;
+      readonly style: DifferentialStyle;
+    }
+  | {
+      readonly kind: typeof ConditionalRuleKind.Foreign;
       readonly xml: string;
       readonly formulas?: readonly FormulaNode[] | undefined;
     };
@@ -139,3 +141,64 @@ export interface ConditionalLook {
   readonly icon?: IconLook | undefined;
   readonly hideValue?: boolean | undefined;
 }
+
+export const CellIsOperator = {
+  Between: 'between',
+  NotBetween: 'notBetween',
+  Equal: 'equal',
+  NotEqual: 'notEqual',
+  GreaterThan: 'greaterThan',
+  LessThan: 'lessThan',
+  GreaterThanOrEqual: 'greaterThanOrEqual',
+  LessThanOrEqual: 'lessThanOrEqual',
+} as const;
+
+export const TextOperator = {
+  Contains: 'contains',
+  NotContains: 'notContains',
+  BeginsWith: 'beginsWith',
+  EndsWith: 'endsWith',
+} as const;
+
+export const TimePeriod = {
+  Today: 'today',
+  Yesterday: 'yesterday',
+  Tomorrow: 'tomorrow',
+  Last7Days: 'last7Days',
+  ThisWeek: 'thisWeek',
+  LastWeek: 'lastWeek',
+  NextWeek: 'nextWeek',
+  ThisMonth: 'thisMonth',
+  LastMonth: 'lastMonth',
+  NextMonth: 'nextMonth',
+} as const;
+
+export const ThresholdKind = {
+  Min: 'min',
+  Max: 'max',
+  AutoMin: 'autoMin',
+  AutoMax: 'autoMax',
+  Number: 'number',
+  Percent: 'percent',
+  Percentile: 'percentile',
+  Formula: 'formula',
+} as const;
+
+export const ConditionalRuleKind = {
+  CellIs: 'cellIs',
+  Expression: 'expression',
+  ColorScale: 'colorScale',
+  DataBar: 'dataBar',
+  IconSet: 'iconSet',
+  Top: 'top',
+  AboveAverage: 'aboveAverage',
+  Text: 'text',
+  Duplicates: 'duplicates',
+  Uniques: 'uniques',
+  Blanks: 'blanks',
+  Filled: 'filled',
+  Errors: 'errors',
+  NoErrors: 'noErrors',
+  TimePeriod: 'timePeriod',
+  Foreign: 'foreign',
+} as const;

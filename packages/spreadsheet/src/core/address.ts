@@ -1,4 +1,5 @@
 import type { CellAddress, CellRange, CellRef } from './cell.types';
+import { FormulaChar } from './formula/formula.types';
 
 export const MAX_ROWS = 1_048_576;
 
@@ -48,7 +49,12 @@ export const parseCell = (text: string): CellRef | undefined => {
 
   return match === null || col === undefined || row === undefined
     ? undefined
-    : { row, col, colAbsolute: match[1] === '$', rowAbsolute: match[3] === '$' };
+    : {
+        row,
+        col,
+        colAbsolute: match[1] === FormulaChar.Dollar,
+        rowAbsolute: match[3] === FormulaChar.Dollar,
+      };
 };
 
 export const formatCell = (ref: CellAddress & Partial<CellRef>): string =>

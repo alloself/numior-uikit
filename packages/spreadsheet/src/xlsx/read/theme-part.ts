@@ -1,6 +1,7 @@
 import { OFFICE_THEME, THEME_SLOTS, type ThemePalette } from '../../core/theme';
 import type { ZipArchive } from '../zip/zip.types';
 import { attributeOf, readPart, type PartOptions } from './ooxml';
+import { OoxmlElement } from '../ooxml.types';
 
 const DRAWING = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 
@@ -31,7 +32,7 @@ export const readTheme = async (
         if (element.uri !== DRAWING) {
           return;
         }
-        if (element.local === 'clrScheme') {
+        if (element.local === OoxmlElement.ClrScheme) {
           scheme += 1;
           return;
         }

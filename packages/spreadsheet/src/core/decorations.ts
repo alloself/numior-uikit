@@ -1,12 +1,16 @@
 import { OFFICE_THEME, type ThemePalette } from './theme';
+import {
+  FontScheme,
+  type FontScript,
+  type StyleColorKind,
+  type UnderlineStyle,
+} from './cell.types';
 
 export type StyleColor =
-  | { readonly kind: 'rgb'; readonly argb: string }
-  | { readonly kind: 'theme'; readonly theme: number; readonly tint: number }
-  | { readonly kind: 'indexed'; readonly index: number }
-  | { readonly kind: 'auto' };
-
-export type UnderlineStyle = 'single' | 'double' | 'singleAccounting' | 'doubleAccounting';
+  | { readonly kind: typeof StyleColorKind.Rgb; readonly argb: string }
+  | { readonly kind: typeof StyleColorKind.Theme; readonly theme: number; readonly tint: number }
+  | { readonly kind: typeof StyleColorKind.Indexed; readonly index: number }
+  | { readonly kind: typeof StyleColorKind.Auto };
 
 export interface FontStyle {
   readonly name?: string | undefined;
@@ -16,9 +20,9 @@ export interface FontStyle {
   readonly underline?: UnderlineStyle | undefined;
   readonly strike?: boolean | undefined;
   readonly color?: StyleColor | undefined;
-  readonly script?: 'superscript' | 'subscript' | undefined;
+  readonly script?: typeof FontScript.Superscript | typeof FontScript.Subscript | undefined;
   readonly family?: number | undefined;
-  readonly scheme?: 'major' | 'minor' | undefined;
+  readonly scheme?: typeof FontScheme.Major | typeof FontScheme.Minor | undefined;
 }
 
 export interface FillStyle {
@@ -76,7 +80,7 @@ const NONE: CellDecoration = {};
 
 const LIMIT = 65_535;
 
-const DEFAULT_FONT: FontStyle = { name: 'Calibri', size: 11, family: 2, scheme: 'minor' };
+const DEFAULT_FONT: FontStyle = { name: 'Calibri', size: 11, family: 2, scheme: FontScheme.Minor };
 
 const canonical = (value: unknown): string => {
   if (Array.isArray(value)) {

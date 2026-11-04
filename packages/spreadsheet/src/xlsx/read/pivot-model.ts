@@ -1,19 +1,23 @@
-import type { CellRange, CellValue } from '../../core/cell.types';
+import { CellValueKind, type CellRange, type CellValue } from '../../core/cell.types';
 import { pivotCaptions } from '../../core/pivot/pivot.messages';
-import type {
-  PivotBaseItem,
-  PivotCaptions,
-  PivotDefinition,
-  PivotField,
-  PivotLanguage,
-  PivotLayout,
-  PivotShowAs,
-  PivotSource,
-  PivotValue,
+import {
+  PivotShowAsKind,
+  PivotSort,
+  type PivotBaseItem,
+  type PivotCaptions,
+  type PivotDefinition,
+  type PivotField,
+  type PivotLanguage,
+  type PivotLayout,
+  type PivotShowAs,
+  type PivotSource,
+  type PivotValue,
 } from '../../core/pivot/pivot.types';
 import { EMPTY } from '../../core/values';
 import type { Sheet, SheetPivot, Workbook } from '../../core/workbook';
 import type { CacheEntry, DataFieldEntry, PivotFieldEntry, PivotTableEntry } from './pivot-part';
+import { FormulaReferenceKind } from '../../core/formula/formula.types';
+import { FormatCode } from '../../core/format/format.types';
 
 export interface PivotContext {
   readonly book: Workbook;
@@ -86,7 +90,10 @@ const fieldOf = (entry: PivotFieldEntry, items: readonly CellValue[]): PivotFiel
 
   return {
     ...values,
-    sort: entry.sort === 'ascending' || entry.sort === 'descending' ? entry.sort : 'manual',
+    sort:
+      entry.sort === PivotSort.Ascending || entry.sort === PivotSort.Descending
+        ? entry.sort
+        : 'manual',
     subtotal: entry.subtotal,
   };
 };
@@ -128,13 +135,13 @@ const showOf = (
   const plain = PLAIN_SHOWS.get(entry.showAs);
   const based = BASED_SHOWS.get(entry.showAs);
 
-  if (entry.showAs === 'normal') {
+  if (entry.showAs === PivotShowAsKind.Normal) {
     return { kind: 'normal' };
   }
   if (plain !== undefined) {
     return { kind: plain };
   }
-  if (entry.showAs === 'runTotal') {
+  if (entry.showAs === PivotShowAsKind.RunTotal) {
     return { kind: 'runTotal', field: entry.baseField };
   }
 
@@ -148,7 +155,7 @@ const showOf = (
 const sourceOf = (cache: CacheEntry, book: Workbook): PivotSource | undefined => {
   const { source } = cache;
 
-  if (source?.kind === 'range') {
+  if (source?.kind === FormulaReferenceKind.Range) {
     return source;
   }
   return source !== undefined && book.tables.get(source.name) !== undefined
@@ -171,7 +178,7 @@ const languageOf = (sheet: Sheet, footprint: CellRange): PivotLanguage => {
   let russian = false;
 
   sheet.cells.forEachInRange(footprint, (_row, _col, value) => {
-    russian ||= value.kind === 'string' && RUSSIAN.has(value.value);
+    russian ||= value.kind === CellValueKind.String && RUSSIAN.has(value.value);
   });
 
   return russian ? 'ru' : 'en';
@@ -200,7 +207,7 @@ const valuesOf = (
           aggregate: entry.aggregate,
           name: entry.name,
           showAs,
-          format: format === 'General' ? undefined : format,
+          format: format === FormatCode.General ? undefined : format,
         };
   });
 

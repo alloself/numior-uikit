@@ -1,5 +1,5 @@
-import type { CellError, CellRange } from './cell.types';
-import type { StructuredArea, StructuredColumns } from './formula/formula.types';
+import { LineAxis, type CellError, type CellRange, type TableShiftKind } from './cell.types';
+import { StructuredArea, type StructuredColumns } from './formula/formula.types';
 import { shiftSpan, type LineChange } from './formula/rewrite';
 
 export interface TableShape {
@@ -10,9 +10,9 @@ export interface TableShape {
 }
 
 export type TableShift =
-  | { readonly kind: 'same' }
-  | { readonly kind: 'moved'; readonly shape: TableShape }
-  | { readonly kind: 'removed' };
+  | { readonly kind: typeof TableShiftKind.Same }
+  | { readonly kind: typeof TableShiftKind.Moved; readonly shape: TableShape }
+  | { readonly kind: typeof TableShiftKind.Removed };
 
 type Span = readonly [number, number];
 
@@ -52,19 +52,19 @@ const areaRows = (
   const data = tableData(table);
 
   switch (area) {
-    case 'all':
+    case StructuredArea.All:
       return [table.range.top, table.range.bottom];
-    case 'data':
+    case StructuredArea.Data:
       return [data.top, data.bottom];
-    case 'headers':
+    case StructuredArea.Headers:
       return table.headers ? [table.range.top, table.range.top] : '#REF!';
-    case 'totals':
+    case StructuredArea.Totals:
       return table.totals ? [table.range.bottom, table.range.bottom] : '#REF!';
-    case 'headers-data':
+    case StructuredArea.HeadersData:
       return [table.range.top, data.bottom];
-    case 'data-totals':
+    case StructuredArea.DataTotals:
       return [data.top, table.range.bottom];
-    case 'row':
+    case StructuredArea.Row:
       return row >= data.top && row <= data.bottom ? [row, row] : '#VALUE!';
   }
 };
@@ -197,7 +197,7 @@ const shiftedColumns = (
 };
 
 export const shiftTable = (shape: TableShape, change: LineChange, prefix: string): TableShift => {
-  const rows = change.axis === 'rows';
+  const rows = change.axis === LineAxis.Rows;
   const { top, bottom, left, right } = shape.range;
   const before: Span = rows ? [top, bottom] : [left, right];
   const span = shiftSpan(before, change);

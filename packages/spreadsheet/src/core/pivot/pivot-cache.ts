@@ -1,15 +1,21 @@
-import type { CellRange, CellValue } from '../cell.types';
+import { CellValueKind, type CellRange, type CellValue } from '../cell.types';
 import { lookupKey, toText } from '../calc/coerce';
 import { EN_NUMBERS } from '../format';
 import { EMPTY } from '../values';
 import type { Sheet, Workbook } from '../workbook';
-import type { PivotCache, PivotGroup, PivotSource, PivotTable } from './pivot.types';
+import {
+  PivotSourceKind,
+  type PivotCache,
+  type PivotGroup,
+  type PivotSource,
+  type PivotTable,
+} from './pivot.types';
 
 export const pivotKey = (value: CellValue): string => {
   switch (value.kind) {
-    case 'error':
+    case CellValueKind.Error:
       return `e${value.code}`;
-    case 'empty':
+    case CellValueKind.Empty:
       return 'blank';
     default:
       return lookupKey(value) ?? 'blank';
@@ -50,7 +56,10 @@ export const buildPivotCache = (source: PivotTable): PivotCache | undefined => {
   const taken = new Set<string>();
   const groups = new Map<number, PivotGroup>();
 
-  if (source.header.length === 0 || source.header.some((value) => value.kind === 'empty')) {
+  if (
+    source.header.length === 0 ||
+    source.header.some((value) => value.kind === CellValueKind.Empty)
+  ) {
     return undefined;
   }
 
@@ -113,12 +122,12 @@ export const pivotTableOf = (rows: readonly (readonly CellValue[])[]): PivotTabl
 };
 
 export const pivotSource = (book: Workbook, source: PivotSource): PivotTable | undefined => {
-  if (source.kind === 'range') {
+  if (source.kind === PivotSourceKind.Range) {
     const sheet = book.sheet(source.sheet);
 
     return sheet === undefined ? undefined : tableOf(sheet, source.range);
   }
-  if (source.kind === 'lost') {
+  if (source.kind === PivotSourceKind.Lost) {
     return undefined;
   }
 

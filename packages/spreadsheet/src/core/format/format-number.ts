@@ -5,10 +5,16 @@ import {
   roundDigits,
   type Digits,
 } from './format-digits';
-import type { FormatToken, NumberLocale } from './format.types';
+import {
+  CommaRole,
+  FormatChar,
+  FormatTokenKind,
+  type FormatToken,
+  type NumberLocale,
+} from './format.types';
 import { createOutput, type Output } from './output';
 
-type Digit = Extract<FormatToken, { kind: 'digit' }>;
+type Digit = Extract<FormatToken, { kind: typeof FormatTokenKind.Digit }>;
 
 interface Layout {
   readonly integer: readonly number[];
@@ -35,7 +41,8 @@ interface Ratio {
 
 const LEADING = -1;
 
-const isDigit = (token: FormatToken | undefined): token is Digit => token?.kind === 'digit';
+const isDigit = (token: FormatToken | undefined): token is Digit =>
+  token?.kind === FormatTokenKind.Digit;
 
 const indicesOf = (tokens: readonly FormatToken[], from: number, to: number): number[] => {
   const found: number[] = [];
@@ -52,34 +59,38 @@ const commaRole = (
   tokens: readonly FormatToken[],
   at: number,
   layout: { readonly integerEnd: number; readonly end: number },
-): 'group' | 'scale' | 'none' => {
+): CommaRole => {
   const before = indicesOf(tokens, 0, at).length > 0;
 
   if (!before) {
-    return 'none';
+    return CommaRole.None;
   }
   if (indicesOf(tokens, at + 1, layout.end).length === 0) {
-    return 'scale';
+    return CommaRole.Scale;
   }
   return at < layout.integerEnd && indicesOf(tokens, at + 1, layout.integerEnd).length > 0
-    ? 'group'
-    : 'none';
+    ? CommaRole.Group
+    : CommaRole.None;
 };
 
 const layoutOf = (tokens: readonly FormatToken[]): Layout => {
-  const exponentAt = tokens.findIndex((token) => token.kind === 'exponent');
+  const exponentAt = tokens.findIndex((token) => token.kind === FormatTokenKind.Exponent);
   const end = exponentAt < 0 ? tokens.length : exponentAt;
-  const pointAt = tokens.findIndex((token, index) => token.kind === 'point' && index < end);
+
+  const pointAt = tokens.findIndex(
+    (token, index) => token.kind === FormatTokenKind.Point && index < end,
+  );
+
   const integerEnd = pointAt < 0 ? end : pointAt;
   let group = false;
   let scale = 0;
 
   tokens.forEach((token, index) => {
-    if (token.kind === 'comma') {
+    if (token.kind === FormatTokenKind.Comma) {
       const role = commaRole(tokens, index, { integerEnd, end });
 
-      group ||= role === 'group';
-      scale += Number(role === 'scale');
+      group ||= role === CommaRole.Group;
+      scale += Number(role === CommaRole.Scale);
     }
   });
 
@@ -89,7 +100,10 @@ const layoutOf = (tokens: readonly FormatToken[]): Layout => {
     exponent: exponentAt < 0 ? [] : indicesOf(tokens, exponentAt + 1, tokens.length),
     group,
     scale,
-    percent: tokens.reduce((count, token) => count + Number(token.kind === 'percent'), 0),
+    percent: tokens.reduce(
+      (count, token) => count + Number(token.kind === FormatTokenKind.Percent),
+      0,
+    ),
     exponentAt,
   };
 };
@@ -99,9 +113,9 @@ const padChar = (token: FormatToken | undefined): string => {
     return '';
   }
   switch (token.char) {
-    case '0':
+    case FormatChar.Zero:
       return '0';
-    case '?':
+    case FormatChar.Question:
       return ' ';
     default:
       return '';
@@ -138,7 +152,11 @@ const groupedWhole = (
   digits: string,
   separator: string,
 ): Map<number, string> => {
-  const zeros = slots.reduce((count, slot) => count + Number(padChar(tokens[slot]) === '0'), 0);
+  const zeros = slots.reduce(
+    (count, slot) => count + Number(padChar(tokens[slot]) === FormatChar.Zero),
+    0,
+  );
+
   const text = groupDigits(digits.padStart(zeros, '0'), separator);
 
   return new Map(slots.map((slot, index) => [slot, index === 0 ? text : '']));
@@ -157,7 +175,7 @@ const placeFraction = (
     const digit = digits.charAt(index);
     const pad = padChar(tokens[slot]);
 
-    trimming &&= digit === '0' && pad !== '0';
+    trimming &&= digit === FormatChar.Zero && pad !== FormatChar.Zero;
     placed.set(slot, trimming ? pad : digit);
   }
   return placed;
@@ -173,7 +191,10 @@ const exponentParts = (
   }
 
   const count = Math.max(layout.integer.length, 1);
-  const engineering = count > 1 && layout.integer.some((slot) => padChar(tokens[slot]) !== '0');
+
+  const engineering =
+    count > 1 && layout.integer.some((slot) => padChar(tokens[slot]) !== FormatChar.Zero);
+
   const first = decimalExponent(value);
   const exponent = engineering ? Math.floor(first / count) * count : first - (count - 1);
   const digits = roundDigits(value / 10 ** exponent, layout.fraction.length);
@@ -204,22 +225,22 @@ const renderTokens = (
       return;
     }
     switch (token.kind) {
-      case 'point':
+      case FormatTokenKind.Point:
         output.push(locale.decimal);
         break;
-      case 'percent':
+      case FormatTokenKind.Percent:
         output.push('%');
         break;
-      case 'exponent':
+      case FormatTokenKind.Exponent:
         output.push(`E${exponentSign}`);
         break;
-      case 'literal':
+      case FormatTokenKind.Literal:
         output.push(token.text);
         break;
-      case 'slash':
+      case FormatTokenKind.Slash:
         output.push('/');
         break;
-      case 'fill':
+      case FormatTokenKind.Fill:
         output.fill(token.char);
         break;
       default:
@@ -253,7 +274,7 @@ const plainNumber = (
   }
 
   const sign = exponent === undefined || exponent.exponent >= 0 ? '' : '-';
-  const plus = tokens.some((token) => token.kind === 'exponent' && token.plus);
+  const plus = tokens.some((token) => token.kind === FormatTokenKind.Exponent && token.plus);
 
   return { placed, sign: sign === '' && plus ? '+' : sign };
 };
@@ -265,7 +286,7 @@ const denominatorSlots = (tokens: readonly FormatToken[], from: number): number[
 
   for (let index = from; index < tokens.length; index += 1) {
     const token = tokens[index];
-    const fixed = token?.kind === 'literal' && FIXED_DIGIT.test(token.text);
+    const fixed = token?.kind === FormatTokenKind.Literal && FIXED_DIGIT.test(token.text);
 
     if (!isDigit(token) && !fixed) {
       break;
@@ -277,7 +298,7 @@ const denominatorSlots = (tokens: readonly FormatToken[], from: number): number[
 
 const ratioOf = (tokens: readonly FormatToken[]): Ratio | undefined => {
   const slash = tokens.findIndex(
-    (token, index) => token.kind === 'slash' && isDigit(tokens[index - 1]),
+    (token, index) => token.kind === FormatTokenKind.Slash && isDigit(tokens[index - 1]),
   );
 
   if (slash < 0) {
@@ -294,7 +315,7 @@ const ratioOf = (tokens: readonly FormatToken[]): Ratio | undefined => {
   const first = tokens[denominator[0] ?? -1];
 
   const fixed =
-    first?.kind === 'literal'
+    first?.kind === FormatTokenKind.Literal
       ? Number(denominator.map((slot) => plainChar(tokens[slot])).join(''))
       : undefined;
 
@@ -308,7 +329,7 @@ const ratioOf = (tokens: readonly FormatToken[]): Ratio | undefined => {
 };
 
 const plainChar = (token: FormatToken | undefined): string => {
-  if (token?.kind === 'literal') {
+  if (token?.kind === FormatTokenKind.Literal) {
     return token.text;
   }
   return isDigit(token) ? token.char : '';
@@ -371,7 +392,7 @@ const ratioPlaced = (
   const hidden = numerator === 0 && ratio.whole.length > 0;
   const wholeText = whole === 0 && !hidden ? '' : String(whole);
   const slots = [...ratio.numerator, ...ratio.denominator];
-  const anyBlank = slots.some((slot) => padChar(tokens[slot]) === ' ');
+  const anyBlank = slots.some((slot) => padChar(tokens[slot]) === FormatChar.Space);
 
   const tail = hidden
     ? blankSlots(tokens, slots)
@@ -397,11 +418,11 @@ const generalSection = (
   const output = createOutput();
 
   tokens.forEach((token) => {
-    if (token.kind === 'general') {
+    if (token.kind === FormatTokenKind.General) {
       output.push(generalNumber(negative ? -value : value, locale.decimal));
-    } else if (token.kind === 'literal') {
+    } else if (token.kind === FormatTokenKind.Literal) {
       output.push(token.text);
-    } else if (token.kind === 'fill') {
+    } else if (token.kind === FormatTokenKind.Fill) {
       output.fill(token.char);
     }
   });
@@ -419,7 +440,7 @@ export const formatNumberSection = (
   const layout = layoutOf(tokens);
   const shown = scaled(value, layout);
 
-  if (tokens.some((token) => token.kind === 'general')) {
+  if (tokens.some((token) => token.kind === FormatTokenKind.General)) {
     return generalSection(tokens, shown, locale, negative);
   }
 

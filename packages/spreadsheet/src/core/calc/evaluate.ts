@@ -1,6 +1,12 @@
 import { MAX_COLS, MAX_ROWS } from '../address';
-import type { CellRange, CellValue } from '../cell.types';
-import type { FormulaNode, SheetPlace } from '../formula/formula.types';
+import { CellValueKind, type CellRange, type CellValue } from '../cell.types';
+import {
+  BinaryOperator,
+  FormulaNodeKind,
+  UnaryOperator,
+  type FormulaNode,
+  type SheetPlace,
+} from '../formula/formula.types';
 import { colOf, referenceRange, rowOf } from '../formula/origin';
 import { EN_FORMULAS } from '../formula/locale';
 import { parseFormula } from '../formula/parser';
@@ -17,14 +23,15 @@ import {
   matrixOf,
   shapeOf,
 } from './array';
-import type {
-  ArrayValue,
-  EvalValue,
-  FormulaResult,
-  FormulaPlace,
-  FunctionArgs,
-  FunctionRegistry,
-  FunctionSpec,
+import {
+  EvalValueKind,
+  type ArrayValue,
+  type EvalValue,
+  type FormulaPlace,
+  type FormulaResult,
+  type FunctionArgs,
+  type FunctionRegistry,
+  type FunctionSpec,
 } from './calc.types';
 import type { NumberLocale } from '../format/format.types';
 import { CellErrorSignal, compareValues, raise, toLogical, toNumber, toText } from './coerce';
@@ -45,11 +52,11 @@ export interface EvalContext {
   subtotalAt(sheet: Sheet, row: number, col: number): boolean;
 }
 
-type Binary = Extract<FormulaNode, { readonly kind: 'binary' }>;
+type Binary = Extract<FormulaNode, { readonly kind: typeof FormulaNodeKind.Binary }>;
 
-type Call = Extract<FormulaNode, { readonly kind: 'call' }>;
+type Call = Extract<FormulaNode, { readonly kind: typeof FormulaNodeKind.Call }>;
 
-type NameNode = Extract<FormulaNode, { readonly kind: 'name' }>;
+type NameNode = Extract<FormulaNode, { readonly kind: typeof FormulaNodeKind.Name }>;
 
 type Operand = CellValue | ArrayValue;
 
@@ -100,11 +107,11 @@ const single = (range: CellRange): boolean =>
 
 export const scalarOf = (value: EvalValue): CellValue => {
   switch (value.kind) {
-    case 'reference':
+    case EvalValueKind.Reference:
       return single(value.range)
         ? value.sheet.cells.get(value.range.top, value.range.left)
         : VALUE_ERROR;
-    case 'array':
+    case EvalValueKind.Array:
       return value.rows[0]?.[0] ?? VALUE_ERROR;
     default:
       return value;
@@ -113,13 +120,13 @@ export const scalarOf = (value: EvalValue): CellValue => {
 
 const arithmetic = (op: Binary['op'], left: number, right: number): CellValue => {
   switch (op) {
-    case '+':
+    case BinaryOperator.Add:
       return numberValue(left + right);
-    case '-':
+    case BinaryOperator.Subtract:
       return numberValue(left - right);
-    case '*':
+    case BinaryOperator.Multiply:
       return numberValue(left * right);
-    case '/':
+    case BinaryOperator.Divide:
       return right === 0 ? errorValue('#DIV/0!') : numberValue(left / right);
     default:
       return left === 0 && right === 0 ? errorValue('#NUM!') : numberValue(left ** right);
@@ -128,15 +135,15 @@ const arithmetic = (op: Binary['op'], left: number, right: number): CellValue =>
 
 const comparison = (op: Binary['op'], order: number): boolean => {
   switch (op) {
-    case '=':
+    case BinaryOperator.Equal:
       return order === 0;
-    case '<>':
+    case BinaryOperator.NotEqual:
       return order !== 0;
-    case '<':
+    case BinaryOperator.Less:
       return order < 0;
-    case '>':
+    case BinaryOperator.Greater:
       return order > 0;
-    case '<=':
+    case BinaryOperator.LessOrEqual:
       return order <= 0;
     default:
       return order >= 0;
@@ -149,20 +156,20 @@ const operate = (
   right: CellValue,
   locale: NumberLocale,
 ): CellValue => {
-  if (left.kind === 'error') {
+  if (left.kind === CellValueKind.Error) {
     return raise(left.code);
   }
-  if (right.kind === 'error') {
+  if (right.kind === CellValueKind.Error) {
     return raise(right.code);
   }
   switch (op) {
-    case '&':
+    case BinaryOperator.Concat:
       return textValue(toText(left, locale) + toText(right, locale));
-    case '+':
-    case '-':
-    case '*':
-    case '/':
-    case '^':
+    case BinaryOperator.Add:
+    case BinaryOperator.Subtract:
+    case BinaryOperator.Multiply:
+    case BinaryOperator.Divide:
+    case BinaryOperator.Power:
       return arithmetic(op, toNumber(left, locale), toNumber(right, locale));
     default:
       return { kind: 'boolean', value: comparison(op, compareValues(left, right)) };
@@ -171,13 +178,13 @@ const operate = (
 
 const constantOf = (node: FormulaNode): CellValue => {
   switch (node.kind) {
-    case 'number':
+    case FormulaNodeKind.Number:
       return numberValue(node.value);
-    case 'string':
+    case FormulaNodeKind.String:
       return textValue(node.value);
-    case 'boolean':
+    case FormulaNodeKind.Boolean:
       return { kind: 'boolean', value: node.value };
-    case 'error':
+    case FormulaNodeKind.Error:
       return errorValue(node.code);
     default:
       return EMPTY;
@@ -199,7 +206,7 @@ const safely = (node: FormulaNode, context: EvalContext): EvalValue =>
   attempt(() => evaluate(node, context));
 
 const operandOf = (node: FormulaNode, context: EvalContext): Operand => {
-  if (node.kind === 'cell') {
+  if (node.kind === FormulaNodeKind.Cell) {
     const here = context.here();
     const row = rowOf(node.ref, here);
     const col = colOf(node.ref, here);
@@ -223,22 +230,24 @@ const lifted = (operands: readonly Operand[], item: (cells: CellValue[]) => Cell
 };
 
 const applied = (operands: readonly Operand[], item: (cells: CellValue[]) => CellValue) =>
-  operands.some((operand) => operand.kind === 'array')
+  operands.some((operand) => operand.kind === EvalValueKind.Array)
     ? lifted(operands, item)
-    : item(operands.filter((operand): operand is CellValue => operand.kind !== 'array'));
+    : item(
+        operands.filter((operand): operand is CellValue => operand.kind !== EvalValueKind.Array),
+      );
 
 const visitValues = (
   value: EvalValue,
   visit: (value: CellValue, direct: boolean) => void,
 ): void => {
   switch (value.kind) {
-    case 'reference':
+    case EvalValueKind.Reference:
       value.sheet.cells.forEachInRange(value.range, (_row, _col, cell) => {
         visit(cell, false);
       });
 
       return;
-    case 'array':
+    case EvalValueKind.Array:
       value.rows.forEach((row) => {
         row.forEach((item) => {
           visit(item, false);
@@ -256,7 +265,8 @@ const argumentsFrom = (
   value: (index: number) => EvalValue,
   context: EvalContext,
 ): FunctionArgs => {
-  const missing = (index: number): boolean => (nodes[index]?.kind ?? 'missing') === 'missing';
+  const missing = (index: number): boolean =>
+    (nodes[index]?.kind ?? 'missing') === FormulaNodeKind.Missing;
 
   return {
     count: nodes.length,
@@ -279,7 +289,7 @@ const argumentsFrom = (
       }
     },
     lookup: (table, column, wanted) =>
-      table.kind === 'reference'
+      table.kind === EvalValueKind.Reference
         ? context.lookup(
             table.sheet,
             { ...table.range, left: table.range.left + column, right: table.range.left + column },
@@ -311,7 +321,7 @@ const indirect = (text: string, a1: boolean, context: EvalContext): EvalValue =>
   }
   const value = evaluate(parsed.ast, context);
 
-  if (value.kind !== 'reference') {
+  if (value.kind !== EvalValueKind.Reference) {
     return raise('#REF!');
   }
   context.track(value.sheet, value.range);
@@ -383,7 +393,7 @@ const reference = (place: SheetPlace, range: CellRange, context: EvalContext): E
 });
 
 const structured = (
-  node: Extract<FormulaNode, { readonly kind: 'structured' }>,
+  node: Extract<FormulaNode, { readonly kind: typeof FormulaNodeKind.Structured }>,
   context: EvalContext,
 ): EvalValue => {
   const here = context.here();
@@ -405,7 +415,7 @@ const structured = (
 };
 
 const spilled = (
-  node: Extract<FormulaNode, { readonly kind: 'spill' }>,
+  node: Extract<FormulaNode, { readonly kind: typeof FormulaNodeKind.Spill }>,
   context: EvalContext,
 ): EvalValue => {
   const sheet = sheetOf(node, context);
@@ -430,9 +440,9 @@ const intersection = (range: CellRange, here: FormulaPlace): CellRange | undefin
 
 const intersected = (value: EvalValue, context: EvalContext): EvalValue => {
   switch (value.kind) {
-    case 'reference':
+    case EvalValueKind.Reference:
       return { ...value, range: intersection(value.range, context.here()) ?? raise('#VALUE!') };
-    case 'array':
+    case EvalValueKind.Array:
       return value.rows[0]?.[0] ?? VALUE_ERROR;
     default:
       return value;
@@ -441,25 +451,25 @@ const intersected = (value: EvalValue, context: EvalContext): EvalValue => {
 
 const operation = (node: FormulaNode, context: EvalContext): EvalValue => {
   switch (node.kind) {
-    case 'call':
+    case FormulaNodeKind.Call:
       return call(node, context);
-    case 'unary':
-      if (node.op === '@') {
+    case FormulaNodeKind.Unary:
+      if (node.op === UnaryOperator.Intersect) {
         return intersected(evaluate(node.operand, context), context);
       }
       return applied([operandOf(node.operand, context)], ([operand = EMPTY]) =>
-        node.op === '-' ? numberValue(-toNumber(operand, context.locale)) : operand,
+        node.op === UnaryOperator.Minus ? numberValue(-toNumber(operand, context.locale)) : operand,
       );
-    case 'percent':
+    case FormulaNodeKind.Percent:
       return applied([operandOf(node.operand, context)], ([operand = EMPTY]) =>
         numberValue(toNumber(operand, context.locale) / 100),
       );
-    case 'binary':
+    case FormulaNodeKind.Binary:
       return applied(
         [operandOf(node.left, context), operandOf(node.right, context)],
         ([left = EMPTY, right = EMPTY]) => operate(node.op, left, right, context.locale),
       );
-    case 'array':
+    case FormulaNodeKind.Array:
       return { kind: 'array', rows: node.rows.map((row) => row.map(constantOf)) };
     default:
       return constantOf(node);
@@ -468,16 +478,16 @@ const operation = (node: FormulaNode, context: EvalContext): EvalValue => {
 
 const evaluate = (node: FormulaNode, context: EvalContext): EvalValue => {
   switch (node.kind) {
-    case 'cell':
-    case 'range':
-    case 'columns':
-    case 'rows':
+    case FormulaNodeKind.Cell:
+    case FormulaNodeKind.Range:
+    case FormulaNodeKind.Columns:
+    case FormulaNodeKind.Rows:
       return reference(node, referenceRange(node, context.here()) ?? raise('#REF!'), context);
-    case 'spill':
+    case FormulaNodeKind.Spill:
       return spilled(node, context);
-    case 'name':
+    case FormulaNodeKind.Name:
       return named(node, context);
-    case 'structured':
+    case FormulaNodeKind.Structured:
       return structured(node, context);
     default:
       return operation(node, context);

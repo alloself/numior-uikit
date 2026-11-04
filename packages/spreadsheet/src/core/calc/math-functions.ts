@@ -15,6 +15,7 @@ import type { EvalValue, FunctionArgs, FunctionSpec } from './calc.types';
 import { raise } from './coerce';
 import { defineFunction } from './registry';
 import { roundHalfAway, scaled } from './rounding';
+import { CellValueKind } from '../cell.types';
 
 const MAX_FACTORIAL = 170;
 
@@ -133,10 +134,10 @@ const sumProduct = (args: FunctionArgs): EvalValue => {
       total += matrices.reduce((product, matrix) => {
         const item = matrix[row]?.[col];
 
-        if (item?.kind === 'error') {
+        if (item?.kind === CellValueKind.Error) {
           return raise(item.code);
         }
-        return product * (item?.kind === 'number' ? item.value : 0);
+        return product * (item?.kind === CellValueKind.Number ? item.value : 0);
       }, 1);
     }
   }
@@ -149,10 +150,10 @@ const sumIf = (conditions: readonly Condition[], range: Reference): EvalValue =>
   forEachMatch(conditions, range, (row, col) => {
     const value = targetValue(range, row, col);
 
-    if (value.kind === 'error') {
+    if (value.kind === CellValueKind.Error) {
       raise(value.code);
     }
-    total += value.kind === 'number' ? value.value : 0;
+    total += value.kind === CellValueKind.Number ? value.value : 0;
   });
 
   return numberValue(total);

@@ -3,25 +3,29 @@ import type { CellAddress } from '../../core/cell.types';
 import { FILE_FORMULAS } from '../../core/formula/locale';
 import { printFormula } from '../../core/formula/printer';
 import { anchorOf, childCount, isSlot } from '../../core/layout/fragments';
-import type { Fragment, FragmentSlot } from '../../core/layout/fragments.types';
+import {
+  FragmentSlotKind,
+  type Fragment,
+  type FragmentSlot,
+} from '../../core/layout/fragments.types';
 import { escapeAttribute } from '../xml/writer';
 import { withFuturePrefixes } from './future-functions';
 
 const slotText = (slot: FragmentSlot, anchor: CellAddress, children: number): string => {
   switch (slot.kind) {
-    case 'cell':
+    case FragmentSlotKind.Cell:
       return formatCell(slot.cell);
-    case 'ranges':
+    case FragmentSlotKind.Ranges:
       return slot.ranges.map(formatRange).join(' ');
-    case 'line':
+    case FragmentSlotKind.Line:
       return String(slot.line + slot.base);
-    case 'split':
+    case FragmentSlotKind.Split:
       return String(slot.count);
-    case 'offset':
+    case FragmentSlotKind.Offset:
       return String(slot.offset);
-    case 'formula':
+    case FragmentSlotKind.Formula:
       return escapeAttribute(printFormula(withFuturePrefixes(slot.ast), FILE_FORMULAS, anchor));
-    case 'count':
+    case FragmentSlotKind.Count:
       return String(children);
   }
 };

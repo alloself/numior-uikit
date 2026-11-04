@@ -1,8 +1,8 @@
-import type { CellAddress, CellRange } from '../cell.types';
+import { LineAxis, type CellAddress, type CellRange } from '../cell.types';
 import { shiftSpan, type LineChange } from '../formula/rewrite';
 
 const shiftRange = (range: CellRange, change: LineChange): CellRange | undefined => {
-  const rows = change.axis === 'rows';
+  const rows = change.axis === LineAxis.Rows;
   const span = shiftSpan(rows ? [range.top, range.bottom] : [range.left, range.right], change);
 
   if (span === undefined) {
@@ -44,6 +44,6 @@ const previousLine = (line: number, change: LineChange): number => {
 };
 
 export const survivorOf = (anchor: CellAddress, change: LineChange): CellAddress =>
-  change.axis === 'rows'
+  change.axis === LineAxis.Rows
     ? { row: previousLine(anchor.row, change), col: anchor.col }
     : { row: anchor.row, col: previousLine(anchor.col, change) };

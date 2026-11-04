@@ -1,34 +1,40 @@
-import type {
-  FormulaLocale,
-  FormulaNode,
+import {
+  FormulaChar,
   StructuredArea,
-  StructuredColumns,
+  StructuredPartKind,
   StructuredSpecial,
+  type FormulaLocale,
+  type FormulaNode,
+  type FormulaNodeKind,
+  type StructuredColumns,
 } from './formula.types';
 import { EN_FORMULAS } from './locale';
 
-export type StructuredNode = Extract<FormulaNode, { readonly kind: 'structured' }>;
+export type StructuredNode = Extract<
+  FormulaNode,
+  { readonly kind: typeof FormulaNodeKind.Structured }
+>;
 
 type Part =
-  | { readonly kind: 'special'; readonly special: StructuredSpecial }
-  | { readonly kind: 'columns'; readonly columns: StructuredColumns };
+  | { readonly kind: typeof StructuredPartKind.Special; readonly special: StructuredSpecial }
+  | { readonly kind: typeof StructuredPartKind.Columns; readonly columns: StructuredColumns };
 
 interface Body {
   readonly area: StructuredArea;
   readonly columns?: StructuredColumns | undefined;
 }
 
-const SPECIALS: readonly StructuredSpecial[] = ['all', 'data', 'headers', 'totals', 'row'];
+const SPECIALS: readonly StructuredSpecial[] = Object.values(StructuredSpecial);
 
 const AREAS: Readonly<Record<string, StructuredArea>> = {
-  '': 'data',
-  all: 'all',
-  data: 'data',
-  headers: 'headers',
-  totals: 'totals',
-  'data,headers': 'headers-data',
-  'data,totals': 'data-totals',
-  row: 'row',
+  '': StructuredArea.Data,
+  all: StructuredArea.All,
+  data: StructuredArea.Data,
+  headers: StructuredArea.Headers,
+  totals: StructuredArea.Totals,
+  'data,headers': StructuredArea.HeadersData,
+  'data,totals': StructuredArea.DataTotals,
+  row: StructuredArea.Row,
 };
 
 const AREA_SPECIALS: Readonly<Record<StructuredArea, readonly StructuredSpecial[]>> = {
@@ -63,11 +69,11 @@ const closeOf = (text: string, at: number): number | undefined => {
   for (let index = at + 1; index < text.length; index += 1) {
     const char = text[index];
 
-    if (char === "'") {
+    if (char === FormulaChar.Apostrophe) {
       index += 1;
-    } else if (char === ']') {
+    } else if (char === FormulaChar.CloseBracket) {
       return index;
-    } else if (char === '[') {
+    } else if (char === FormulaChar.OpenBracket) {
       return undefined;
     }
   }
@@ -77,7 +83,7 @@ const closeOf = (text: string, at: number): number | undefined => {
 const skipSpaces = (text: string, at: number): number => {
   let index = at;
 
-  while (text[index] === ' ') {
+  while (text[index] === FormulaChar.Space) {
     index += 1;
   }
   return index;
@@ -85,7 +91,7 @@ const skipSpaces = (text: string, at: number): number => {
 
 const bracketAt = (text: string, at: number): { item: string; next: number } | undefined => {
   const start = skipSpaces(text, at);
-  const close = text[start] === '[' ? closeOf(text, start) : undefined;
+  const close = text[start] === FormulaChar.OpenBracket ? closeOf(text, start) : undefined;
 
   return close === undefined
     ? undefined
@@ -111,9 +117,11 @@ const partAt = (
   }
 
   const from = unescaped(first.item);
-  const second = text[first.next] === ':' ? bracketAt(text, first.next + 1) : undefined;
 
-  if (text[first.next] === ':' && second === undefined) {
+  const second =
+    text[first.next] === FormulaChar.Colon ? bracketAt(text, first.next + 1) : undefined;
+
+  if (text[first.next] === FormulaChar.Colon && second === undefined) {
     return undefined;
   }
   return {
@@ -139,7 +147,11 @@ const partsOf = (text: string, locale: FormulaLocale): Part[] | undefined => {
 
     const separator = text[found.next];
 
-    if (found.next < text.length && separator !== locale.argument && separator !== ',') {
+    if (
+      found.next < text.length &&
+      separator !== locale.argument &&
+      separator !== FormulaChar.Comma
+    ) {
       return undefined;
     }
     at = found.next + 1;
@@ -149,14 +161,14 @@ const partsOf = (text: string, locale: FormulaLocale): Part[] | undefined => {
 
 const bodyOf = (parts: readonly Part[]): Body | undefined => {
   const specials = parts.reduce<StructuredSpecial[]>((found, part) => {
-    if (part.kind === 'special') {
+    if (part.kind === StructuredPartKind.Special) {
       found.push(part.special);
     }
     return found;
   }, []);
 
   const columns = parts.reduce<StructuredColumns[]>((found, part) => {
-    if (part.kind === 'columns') {
+    if (part.kind === StructuredPartKind.Columns) {
       found.push(part.columns);
     }
     return found;
@@ -178,7 +190,9 @@ const rowBody = (rest: string, locale: FormulaLocale): Body | undefined => {
   const parts = partsOf(rest, locale);
   const only = parts?.length === 1 ? parts[0] : undefined;
 
-  return only?.kind === 'columns' ? { area: 'row', columns: only.columns } : undefined;
+  return only?.kind === StructuredPartKind.Columns
+    ? { area: 'row', columns: only.columns }
+    : undefined;
 };
 
 const innerBody = (inner: string, locale: FormulaLocale): Body | undefined => {
@@ -235,7 +249,7 @@ const bracketed = (columns: StructuredColumns): string =>
 const innerText = (node: StructuredNode, locale: FormulaLocale): string => {
   const { columns } = node;
 
-  if (node.area === 'row' && locale.rowShorthand) {
+  if (node.area === StructuredArea.Row && locale.rowShorthand) {
     if (columns === undefined) {
       return '@';
     }

@@ -1,6 +1,6 @@
 import { limitOf, shiftIndex, type LineMove } from '../lines';
-import type { CellAddress, CellRange } from '../cell.types';
-import type { FormulaNode } from './formula.types';
+import { LineAxis, type CellAddress, type CellRange } from '../cell.types';
+import { FormulaNodeKind, FormulaReferenceKind, type FormulaNode } from './formula.types';
 import {
   colOf,
   lineOf,
@@ -23,7 +23,10 @@ export interface LineChange extends LineMove {
 
 type Span = readonly [number, number];
 
-export type StructuredReference = Extract<FormulaReference, { readonly kind: 'structured' }>;
+export type StructuredReference = Extract<
+  FormulaReference,
+  { readonly kind: typeof FormulaReferenceKind.Structured }
+>;
 
 export const BROKEN: FormulaNode = { kind: 'error', code: '#REF!' };
 
@@ -61,7 +64,8 @@ const withSpan = (range: CellRange, rows: boolean, [first, last]: Span): CellRan
   rows ? { ...range, top: first, bottom: last } : { ...range, left: first, right: last };
 
 const acrossAxis = (reference: LocatedReference, rows: boolean): boolean =>
-  (reference.kind === 'columns' && rows) || (reference.kind === 'rows' && !rows);
+  (reference.kind === FormulaReferenceKind.Columns && rows) ||
+  (reference.kind === FormulaReferenceKind.Rows && !rows);
 
 const onChangedSheet = (
   reference: LocatedReference,
@@ -103,14 +107,14 @@ const keeps = (
   origin: CellAddress,
   originDelta: number,
 ): boolean => {
-  const rows = change.axis === 'rows';
+  const rows = change.axis === LineAxis.Rows;
 
   if (acrossAxis(reference, rows)) {
     return true;
   }
   switch (reference.kind) {
-    case 'cell':
-    case 'spill':
+    case FormulaReferenceKind.Cell:
+    case FormulaReferenceKind.Spill:
       return rows
         ? keepsEnd(
             reference.ref.rowAbsolute,
@@ -126,7 +130,7 @@ const keeps = (
             changed,
             originDelta,
           );
-    case 'range':
+    case FormulaReferenceKind.Range:
       return rows
         ? keepsEnd(
             reference.from.rowAbsolute,
@@ -179,7 +183,7 @@ const movedTarget = (
   change: LineChange,
   changed: boolean,
 ): CellRange | undefined => {
-  const rows = change.axis === 'rows';
+  const rows = change.axis === LineAxis.Rows;
 
   if (!changed || acrossAxis(reference, rows)) {
     return range;
@@ -191,7 +195,7 @@ const movedTarget = (
 };
 
 const movedOrigin = (origin: CellAddress, change: LineChange): CellAddress | undefined => {
-  const rows = change.axis === 'rows';
+  const rows = change.axis === LineAxis.Rows;
   const line = shiftIndex(rows ? origin.row : origin.col, change);
 
   if (line === undefined) {
@@ -208,23 +212,23 @@ const keepsNode = (
   originDelta: number,
 ): boolean => {
   switch (node.kind) {
-    case 'cell':
-    case 'range':
-    case 'columns':
-    case 'rows':
-    case 'spill':
+    case FormulaNodeKind.Cell:
+    case FormulaNodeKind.Range:
+    case FormulaNodeKind.Columns:
+    case FormulaNodeKind.Rows:
+    case FormulaNodeKind.Spill:
       return keeps(node, change, onChangedSheet(node, change, onSheet), origin, originDelta);
-    case 'call':
+    case FormulaNodeKind.Call:
       for (const arg of node.args) {
         if (!keepsNode(arg, change, onSheet, origin, originDelta)) {
           return false;
         }
       }
       return true;
-    case 'unary':
-    case 'percent':
+    case FormulaNodeKind.Unary:
+    case FormulaNodeKind.Percent:
       return keepsNode(node.operand, change, onSheet, origin, originDelta);
-    case 'binary':
+    case FormulaNodeKind.Binary:
       return (
         keepsNode(node.left, change, onSheet, origin, originDelta) &&
         keepsNode(node.right, change, onSheet, origin, originDelta)
@@ -240,7 +244,7 @@ export const shiftFormula = (
   onSheet: boolean,
   origin: CellAddress,
 ): FormulaNode => {
-  const line = change.axis === 'rows' ? origin.row : origin.col;
+  const line = change.axis === LineAxis.Rows ? origin.row : origin.col;
   const originDelta = onSheet ? (shiftIndex(line, change) ?? line) - line : 0;
 
   if (keepsNode(node, change, onSheet, origin, originDelta)) {
@@ -277,7 +281,7 @@ const meaningOf = (
     return false;
   }
 
-  const rows = change.axis === 'rows';
+  const rows = change.axis === LineAxis.Rows;
   const range = referenceRange(reference, origin);
 
   if (range === undefined || acrossAxis(reference, rows)) {
@@ -307,11 +311,11 @@ export const dropSheetFromFormula = (node: FormulaNode, name: string): FormulaNo
   mapReferences(node, (reference) => (onSheetNamed(reference, name) ? BROKEN : reference));
 
 const ownedBy = (reference: FormulaReference, table: string): boolean =>
-  reference.kind === 'structured'
+  reference.kind === FormulaReferenceKind.Structured
     ? reference.book === undefined &&
       reference.table !== undefined &&
       sameName(reference.table, table)
-    : reference.kind === 'name' &&
+    : reference.kind === FormulaReferenceKind.Name &&
       reference.sheet === undefined &&
       reference.book === undefined &&
       sameName(reference.name, table);
@@ -321,7 +325,9 @@ export const mapStructured = (
   visit: (reference: StructuredReference) => FormulaNode,
 ): FormulaNode =>
   mapReferences(node, (reference) =>
-    reference.kind === 'structured' && reference.book === undefined ? visit(reference) : reference,
+    reference.kind === FormulaReferenceKind.Structured && reference.book === undefined
+      ? visit(reference)
+      : reference,
   );
 
 export const renameTableInFormula = (node: FormulaNode, from: string, to: string): FormulaNode =>
@@ -329,10 +335,10 @@ export const renameTableInFormula = (node: FormulaNode, from: string, to: string
     if (!ownedBy(reference, from)) {
       return reference;
     }
-    if (reference.kind === 'structured') {
+    if (reference.kind === FormulaReferenceKind.Structured) {
       return { ...reference, table: to };
     }
-    return reference.kind === 'name' ? { ...reference, name: to } : reference;
+    return reference.kind === FormulaReferenceKind.Name ? { ...reference, name: to } : reference;
   });
 
 export const dropTableFromFormula = (node: FormulaNode, table: string): FormulaNode =>

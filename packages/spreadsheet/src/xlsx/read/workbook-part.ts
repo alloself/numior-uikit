@@ -10,6 +10,7 @@ import {
   truthy,
   type PartOptions,
 } from './ooxml';
+import { OoxmlElement, SheetState } from '../ooxml.types';
 
 export interface SheetEntry {
   readonly name: string;
@@ -48,7 +49,7 @@ const sheetEntryOf = (attributes: readonly XmlAttribute[], fallbackId: number): 
   name: decodeXstring(attributeOf(attributes, 'name') ?? ''),
   sheetId: numberOf(attributeOf(attributes, 'sheetId'), fallbackId),
   relationship: relationshipOf(attributes),
-  hidden: (attributeOf(attributes, 'state') ?? 'visible') !== 'visible',
+  hidden: (attributeOf(attributes, 'state') ?? 'visible') !== SheetState.Visible,
 });
 
 const nameEntryOf = (
@@ -86,25 +87,25 @@ export const readWorkbookPart = async (
           return;
         }
         switch (element.local) {
-          case 'workbook':
+          case OoxmlElement.Workbook:
             strict = element.uri === STRICT_MAIN;
             break;
-          case 'sheet':
+          case OoxmlElement.Sheet:
             sheets.push(sheetEntryOf(attributes, sheets.length + 1));
             break;
-          case 'workbookPr':
+          case OoxmlElement.WorkbookPr:
             date1904 = truthy(attributeOf(attributes, 'date1904'));
             break;
-          case 'calcPr':
+          case OoxmlElement.CalcPr:
             recalcOnLoad = truthy(attributeOf(attributes, 'fullCalcOnLoad'));
             break;
-          case 'definedName':
+          case OoxmlElement.DefinedName:
             name = nameEntryOf(attributes);
             break;
-          case 'externalReference':
+          case OoxmlElement.ExternalReference:
             externalLinks.push(relationshipOf(attributes));
             break;
-          case 'pivotCache':
+          case OoxmlElement.PivotCache:
             pivotCaches.push({
               cacheId: numberOf(attributeOf(attributes, 'cacheId'), -1),
               relationship: relationshipOf(attributes),
@@ -121,7 +122,7 @@ export const readWorkbookPart = async (
         }
       },
       close: (element) => {
-        if (name !== undefined && element.local === 'definedName') {
+        if (name !== undefined && element.local === OoxmlElement.DefinedName) {
           names.push(name);
           name = undefined;
         }

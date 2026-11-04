@@ -1,6 +1,6 @@
-import type { CellValue } from '../cell.types';
+import { CellValueKind, type CellValue } from '../cell.types';
 import { errorValue, numberValue } from '../values';
-import type { ArrayValue, EvalValue } from './calc.types';
+import { EvalValueKind, type ArrayValue, type EvalValue } from './calc.types';
 
 export type Matrix = readonly (readonly CellValue[])[];
 
@@ -13,12 +13,12 @@ const MISSING_ITEM = errorValue('#N/A');
 
 export const shapeOf = (value: EvalValue): Shape => {
   switch (value.kind) {
-    case 'reference':
+    case EvalValueKind.Reference:
       return {
         rows: value.range.bottom - value.range.top + 1,
         cols: value.range.right - value.range.left + 1,
       };
-    case 'array':
+    case EvalValueKind.Array:
       return { rows: value.rows.length, cols: value.rows[0]?.length ?? 0 };
     default:
       return { rows: 1, cols: 1 };
@@ -33,7 +33,7 @@ export const isMultiCell = (value: EvalValue): boolean => {
 
 export const matrixOf = (value: EvalValue): Matrix => {
   switch (value.kind) {
-    case 'reference': {
+    case EvalValueKind.Reference: {
       const { sheet, range } = value;
       const { rows, cols } = shapeOf(value);
 
@@ -43,7 +43,7 @@ export const matrixOf = (value: EvalValue): Matrix => {
         ),
       );
     }
-    case 'array':
+    case EvalValueKind.Array:
       return value.rows;
     default:
       return [[value]];
@@ -75,4 +75,4 @@ export const buildArray = (
 });
 
 export const blankAsZero = (value: CellValue): CellValue =>
-  value.kind === 'empty' ? numberValue(0) : value;
+  value.kind === CellValueKind.Empty ? numberValue(0) : value;

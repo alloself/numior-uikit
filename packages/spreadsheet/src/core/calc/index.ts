@@ -4,7 +4,6 @@ export type {
   EvalValue,
   FormulaResult,
   FormulaCell,
-  FormulaState,
   FunctionArgs,
   FunctionRegistry,
   FunctionSpec,

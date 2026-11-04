@@ -1,8 +1,8 @@
-import type { CellValue } from '../cell.types';
+import { CellValueKind, type CellValue } from '../cell.types';
 import { EMPTY, numberValue } from '../values';
 import { MANY } from './aggregate';
 import { buildArray } from './array';
-import type { EvalValue, FunctionArgs, FunctionSpec } from './calc.types';
+import { EvalValueKind, type EvalValue, type FunctionArgs, type FunctionSpec } from './calc.types';
 import { compareValues, raise } from './coerce';
 import { wildcardSource } from './criteria';
 import { scalarOf } from './evaluate';
@@ -26,7 +26,7 @@ const WILDCARD = /[*?~]/u;
 
 const gridOf = (value: EvalValue): Grid => {
   switch (value.kind) {
-    case 'reference': {
+    case EvalValueKind.Reference: {
       const { sheet, range } = value;
 
       return {
@@ -35,13 +35,13 @@ const gridOf = (value: EvalValue): Grid => {
         at: (row, col) => sheet.cells.get(range.top + row, range.left + col),
       };
     }
-    case 'array':
+    case EvalValueKind.Array:
       return {
         rows: value.rows.length,
         cols: value.rows[0]?.length ?? 0,
         at: (row, col) => value.rows[row]?.[col] ?? EMPTY,
       };
-    case 'error':
+    case EvalValueKind.Error:
       return raise(value.code);
     default:
       return { rows: 1, cols: 1, at: () => scalarOf(value) };
@@ -64,10 +64,10 @@ const vectorOf = (value: EvalValue): Vector => {
 };
 
 const comparable = (key: CellValue, wanted: CellValue): boolean =>
-  key.kind === wanted.kind && key.kind !== 'error' && key.kind !== 'empty';
+  key.kind === wanted.kind && key.kind !== CellValueKind.Error && key.kind !== CellValueKind.Empty;
 
 const patternOf = (wanted: CellValue): RegExp | undefined =>
-  wanted.kind === 'string' && WILDCARD.test(wanted.value)
+  wanted.kind === CellValueKind.String && WILDCARD.test(wanted.value)
     ? new RegExp(`^${wildcardSource(wanted.value)}$`, 'iu')
     : undefined;
 
@@ -75,7 +75,7 @@ const equal = (key: CellValue, wanted: CellValue, pattern: RegExp | undefined): 
   if (!comparable(key, wanted)) {
     return false;
   }
-  return pattern !== undefined && key.kind === 'string'
+  return pattern !== undefined && key.kind === CellValueKind.String
     ? pattern.test(key.value)
     : compareValues(key, wanted) === 0;
 };
@@ -160,7 +160,7 @@ const search = (
 };
 
 const fastExact = (args: FunctionArgs, table: EvalValue, wanted: CellValue): number | undefined =>
-  table.kind === 'reference' && patternOf(wanted) === undefined
+  table.kind === EvalValueKind.Reference && patternOf(wanted) === undefined
     ? args.lookup(table, 0, wanted)
     : exact(vectorOf(column(table, 0)), wanted, false, true);
 
@@ -176,7 +176,7 @@ const column = (table: EvalValue, index: number): EvalValue => {
 const wantedOf = (args: FunctionArgs): CellValue => {
   const wanted = args.scalar(0);
 
-  return wanted.kind === 'error' ? raise(wanted.code) : wanted;
+  return wanted.kind === CellValueKind.Error ? raise(wanted.code) : wanted;
 };
 
 const vlookup = (args: FunctionArgs): EvalValue => {
@@ -264,7 +264,7 @@ const xmatch = (args: FunctionArgs): EvalValue => {
 };
 
 const slice = (value: EvalValue, index: number, horizontal: boolean): EvalValue => {
-  if (value.kind === 'reference') {
+  if (value.kind === EvalValueKind.Reference) {
     const { range } = value;
 
     return {

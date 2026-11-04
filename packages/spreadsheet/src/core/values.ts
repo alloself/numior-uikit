@@ -1,4 +1,4 @@
-import type { CellError, CellValue } from './cell.types';
+import { CellValueKind, type CellError, type CellValue } from './cell.types';
 
 export const CELL_ERRORS: readonly CellError[] = [
   '#NULL!',
@@ -28,10 +28,10 @@ export const isCellError = (text: string): text is CellError =>
 
 export const sameValue = (left: CellValue, right: CellValue): boolean => {
   switch (left.kind) {
-    case 'empty':
-      return right.kind === 'empty';
-    case 'error':
-      return right.kind === 'error' && right.code === left.code;
+    case CellValueKind.Empty:
+      return right.kind === CellValueKind.Empty;
+    case CellValueKind.Error:
+      return right.kind === CellValueKind.Error && right.code === left.code;
     default:
       return right.kind === left.kind && 'value' in right && right.value === left.value;
   }

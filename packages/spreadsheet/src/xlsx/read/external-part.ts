@@ -11,6 +11,8 @@ import {
   type PartOptions,
 } from './ooxml';
 import { cellOf, valueOf } from './sheet-part';
+import type { ExternalPartKind } from './read.types';
+import { OoxmlElement } from '../ooxml.types';
 
 export interface ExternalCell {
   readonly sheet: number;
@@ -27,13 +29,13 @@ export interface ExternalNameEntry {
 
 export type ExternalPart =
   | {
-      readonly kind: 'book';
+      readonly kind: typeof ExternalPartKind.Book;
       readonly target: string;
       readonly sheets: readonly string[];
       readonly names: readonly ExternalNameEntry[];
       readonly cells: readonly ExternalCell[];
     }
-  | { readonly kind: 'linked' };
+  | { readonly kind: typeof ExternalPartKind.Linked };
 
 interface PendingCell {
   readonly sheet: number;
@@ -124,9 +126,9 @@ const closed = (found: Collected, local: string, strings: readonly string[]): vo
   if (cell === undefined) {
     return;
   }
-  if (local === 'v') {
+  if (local === OoxmlElement.V) {
     cell.reading = false;
-  } else if (local === 'cell') {
+  } else if (local === OoxmlElement.Cell) {
     if (cell.at !== undefined && cell.sheet >= 0) {
       found.cells.push({
         sheet: cell.sheet,

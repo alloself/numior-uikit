@@ -1,13 +1,19 @@
 import { formatRange } from '../../core/address';
-import type { CellRange, CellValue } from '../../core/cell.types';
+import { CellValueKind, type CellRange, type CellValue } from '../../core/cell.types';
 import { pivotKey } from '../../core/pivot/pivot-cache';
 import { itemOrder, normalizedPivot, pivotFieldOf } from '../../core/pivot/pivot-engine';
 import { pivotCaptions } from '../../core/pivot/pivot.messages';
-import type {
-  PivotCache,
-  PivotDefinition,
-  PivotOutput,
-  PivotValue,
+import {
+  PivotAggregate,
+  PivotBaseStep,
+  PivotLayout,
+  PivotShowAsKind,
+  PivotSort,
+  PivotSourceKind,
+  type PivotCache,
+  type PivotDefinition,
+  type PivotOutput,
+  type PivotValue,
 } from '../../core/pivot/pivot.types';
 import type { SheetPivot } from '../../core/workbook';
 import { escapeAttribute } from '../xml/writer';
@@ -50,16 +56,16 @@ const kindsOf = (values: readonly CellValue[]): Kinds =>
   values.reduce<Kinds>(
     (kinds, value) => {
       switch (value.kind) {
-        case 'string':
+        case CellValueKind.String:
           kinds.string = true;
           break;
-        case 'number':
+        case CellValueKind.Number:
           kinds.number = true;
           kinds.integer &&= Number.isInteger(value.value);
           kinds.min = Math.min(kinds.min, value.value);
           kinds.max = Math.max(kinds.max, value.value);
           break;
-        case 'empty':
+        case CellValueKind.Empty:
           kinds.blank = true;
           break;
         default:
@@ -80,13 +86,13 @@ const kindsOf = (values: readonly CellValue[]): Kinds =>
 
 const itemXml = (value: CellValue): string => {
   switch (value.kind) {
-    case 'string':
+    case CellValueKind.String:
       return `<s${attribute('v', value.value)}/>`;
-    case 'number':
+    case CellValueKind.Number:
       return `<n v="${String(value.value)}"/>`;
-    case 'boolean':
+    case CellValueKind.Boolean:
       return `<b v="${value.value ? '1' : '0'}"/>`;
-    case 'error':
+    case CellValueKind.Error:
       return `<e${attribute('v', value.code)}/>`;
     default:
       return '<m/>';
@@ -121,11 +127,11 @@ const grouped = (definition: PivotDefinition): Set<number> =>
 const sourceXml = (pivot: SheetPivot, range: CellRange | undefined): string => {
   const { source } = pivot.definition;
 
-  if (source.kind === 'table') {
+  if (source.kind === PivotSourceKind.Table) {
     return `<worksheetSource${attribute('name', source.name)}/>`;
   }
   return `<worksheetSource${attribute('ref', range === undefined ? '#REF!' : formatRange(range))}${
-    source.kind === 'range' ? attribute('sheet', source.sheet) : ''
+    source.kind === PivotSourceKind.Range ? attribute('sheet', source.sheet) : ''
   }/>`;
 };
 
@@ -133,7 +139,9 @@ const cacheXml = (pivot: SheetPivot, cache: PivotCache): string => {
   const groups = grouped(pivot.definition);
 
   const range =
-    pivot.definition.source.kind === 'range' ? pivot.definition.source.range : undefined;
+    pivot.definition.source.kind === PivotSourceKind.Range
+      ? pivot.definition.source.range
+      : undefined;
 
   return [
     HEADER,
@@ -180,11 +188,11 @@ const axisOf = (definition: PivotDefinition, field: number): string | undefined 
 
 const layoutXml = (definition: PivotDefinition): string => {
   switch (definition.layout) {
-    case 'compact':
+    case PivotLayout.Compact:
       return '';
-    case 'outline':
+    case PivotLayout.Outline:
       return ' compact="0"';
-    case 'tabular':
+    case PivotLayout.Tabular:
       return ' compact="0" outline="0"';
   }
 };
@@ -208,7 +216,7 @@ const pivotFieldXml = (definition: PivotDefinition, cache: PivotCache, field: nu
       `<item${flag('h', hidden.has(pivotKey(items[index] ?? { kind: 'empty' })))} x="${String(index)}"/>`,
   );
 
-  return `${head}${settings.sort === 'manual' ? '' : attribute('sortType', settings.sort)}${
+  return `${head}${settings.sort === PivotSort.Manual ? '' : attribute('sortType', settings.sort)}${
     settings.subtotal ? '' : ' defaultSubtotal="0"'
   }><items${attribute('count', listed.length + (settings.subtotal ? 1 : 0))}>${listed.join('')}${
     settings.subtotal ? '<item t="default"/>' : ''
@@ -225,7 +233,7 @@ const fieldsXml = (name: string, fields: readonly number[]): string =>
 const baseOf = (definition: PivotDefinition, cache: PivotCache, value: PivotValue): string => {
   const show = value.showAs;
 
-  if (show.kind === 'runTotal') {
+  if (show.kind === PivotShowAsKind.RunTotal) {
     return `${attribute('baseField', show.field)} baseItem="0"`;
   }
   if (!('item' in show)) {
@@ -233,9 +241,9 @@ const baseOf = (definition: PivotDefinition, cache: PivotCache, value: PivotValu
   }
 
   const item =
-    show.item === 'previous'
+    show.item === PivotBaseStep.Previous
       ? PREVIOUS
-      : show.item === 'next'
+      : show.item === PivotBaseStep.Next
         ? NEXT
         : Math.max(positionOf(definition, cache, show.field, show.item), 0);
 
@@ -249,8 +257,8 @@ const dataFieldXml = (
   styles: StyleBook,
 ): string =>
   `<dataField${attribute('name', value.name)}${attribute('fld', value.field)}${
-    value.aggregate === 'sum' ? '' : attribute('subtotal', value.aggregate)
-  }${value.showAs.kind === 'normal' ? '' : attribute('showDataAs', value.showAs.kind)}${baseOf(
+    value.aggregate === PivotAggregate.Sum ? '' : attribute('subtotal', value.aggregate)
+  }${value.showAs.kind === PivotShowAsKind.Normal ? '' : attribute('showDataAs', value.showAs.kind)}${baseOf(
     definition,
     cache,
     value,
@@ -299,7 +307,7 @@ const tableXml = (
   return [
     HEADER,
     `<pivotTableDefinition xmlns="${MAIN}"${attribute('name', pivot.name)}${attribute('cacheId', context.cacheId)} applyNumberFormats="0" applyBorderFormats="0" applyFontFormats="0" applyPatternFormats="0" applyAlignmentFormats="0" applyWidthHeightFormats="1"${captionAttributes(definition)} updatedVersion="8" minRefreshableVersion="3" useAutoFormatting="1" itemPrintTitles="1" createdVersion="8" indent="0"${
-      definition.layout === 'compact' ? '' : ' compact="0" compactData="0"'
+      definition.layout === PivotLayout.Compact ? '' : ' compact="0" compactData="0"'
     } outline="1" outlineData="1" multipleFieldFilters="0"${definition.rowTotals ? '' : ' rowGrandTotals="0"'}${
       definition.columnTotals ? '' : ' colGrandTotals="0"'
     }>`,

@@ -2,10 +2,11 @@ import { EN_NUMBERS } from '../format/number-locale';
 import { numberValue, textValue } from '../values';
 import { MANY } from './aggregate';
 import { matrixOf } from './array';
-import type { EvalValue, FunctionArgs, FunctionSpec } from './calc.types';
+import { EvalValueKind, type EvalValue, type FunctionArgs, type FunctionSpec } from './calc.types';
 import { numberFromText, raise, toText } from './coerce';
 import { wildcardSource } from './criteria';
 import { defineFunction } from './registry';
+import { CellValueKind } from '../cell.types';
 
 const MAX_TEXT = 32_767;
 
@@ -132,7 +133,7 @@ const piecesOf = (args: FunctionArgs, from: number, keepEmpty: boolean): string[
   for (let index = from; index < args.count; index += 1) {
     const value = args.value(index);
 
-    if (keepEmpty && value.kind === 'reference') {
+    if (keepEmpty && value.kind === EvalValueKind.Reference) {
       matrixOf(value).forEach((row) => {
         row.forEach((cell) => pieces.push(toText(cell, args.locale)));
       });
@@ -281,7 +282,7 @@ export const TEXT_FUNCTIONS: readonly FunctionSpec[] = [
   textual('VALUE', 1, 1, (args) => {
     const value = args.scalar(0);
 
-    if (value.kind === 'number') {
+    if (value.kind === CellValueKind.Number) {
       return value;
     }
     const text = args.text(0).trim();
@@ -294,9 +295,9 @@ export const TEXT_FUNCTIONS: readonly FunctionSpec[] = [
   textual('T', 1, 1, (args) => {
     const value = args.scalar(0);
 
-    return value.kind === 'error'
+    return value.kind === CellValueKind.Error
       ? raise(value.code)
-      : textValue(value.kind === 'string' ? value.value : '');
+      : textValue(value.kind === CellValueKind.String ? value.value : '');
   }),
   textual('TEXTBEFORE', 2, 6, (args) => around(args, true)),
   textual('TEXTAFTER', 2, 6, (args) => around(args, false)),

@@ -11,6 +11,7 @@ import {
   VML_SPECS,
 } from './fragment-specs';
 import { readPart, readRelationships, type PartOptions, type Relationship } from './ooxml';
+import { RelationshipKind } from '../ooxml.types';
 
 const SHEET_PARTS: ReadonlyMap<string, ElementSpecs> = new Map([
   ['drawing', DRAWING_SPECS],
@@ -79,10 +80,10 @@ const chartsOf = async (
   const charts: PartXml[] = [];
 
   for (const relationship of relationships) {
-    if (relationship.kind === 'chartEx') {
+    if (relationship.kind === RelationshipKind.ChartEx) {
       charts.push({ path: relationship.target, root: UNREADABLE, opaque: ['chartEx'] });
     } else if (
-      relationship.kind === 'chart' &&
+      relationship.kind === RelationshipKind.Chart &&
       !relationship.external &&
       archive.has(relationship.target)
     ) {
@@ -105,7 +106,7 @@ export const readPositionalParts = async (
     if (specs !== undefined && !relationship.external && archive.has(relationship.target)) {
       parts.push(await recordPart(archive, relationship.target, specs, options));
 
-      if (relationship.kind === 'drawing') {
+      if (relationship.kind === RelationshipKind.Drawing) {
         parts.push(...(await chartsOf(archive, relationship.target, options)));
       }
     }

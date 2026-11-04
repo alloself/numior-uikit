@@ -1,4 +1,4 @@
-import type { CellAddress } from '../cell.types';
+import { LineAxis, type CellAddress } from '../cell.types';
 import { sameName, type LineChange } from '../formula/rewrite';
 import { shiftIndex } from '../lines';
 
@@ -12,10 +12,10 @@ export const mapCell = (
       return current;
     }
 
-    const index = shiftIndex(change.axis === 'rows' ? current.row : current.col, change);
+    const index = shiftIndex(change.axis === LineAxis.Rows ? current.row : current.col, change);
 
     if (index === undefined) {
       return undefined;
     }
-    return change.axis === 'rows' ? { ...current, row: index } : { ...current, col: index };
+    return change.axis === LineAxis.Rows ? { ...current, row: index } : { ...current, col: index };
   }, cell);

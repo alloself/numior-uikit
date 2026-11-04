@@ -1,4 +1,9 @@
-import type { ElementSpec, ElementSpecs, SlotSpec } from './fragment.types';
+import {
+  FragmentSpace,
+  type ElementSpec,
+  type ElementSpecs,
+  type SlotSpec,
+} from './fragment.types';
 import { X14 } from './conditional-part';
 import { MAIN } from './ooxml';
 
@@ -148,4 +153,4 @@ const FREE = new Set([
 ]);
 
 export const opaqueInSheet = (name: { readonly uri: string; readonly local: string }): boolean =>
-  spaceOf(name.uri) !== 'main' || !FREE.has(name.local);
+  spaceOf(name.uri) !== FragmentSpace.Main || !FREE.has(name.local);

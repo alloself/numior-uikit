@@ -7,7 +7,6 @@ export type {
   Bytes,
   ZipArchive,
   ZipCodec,
-  ZipFailure,
   ZipOptions,
   ZipRawEntry,
   ZipRead,
@@ -21,7 +20,6 @@ export type {
   XmlAttribute,
   XmlAttributeList,
   XmlFailure,
-  XmlFailureReason,
   XmlHandlers,
   XmlName,
   XmlParser,
@@ -34,10 +32,11 @@ export type {
   OriginalSheet,
   ReadOptions,
   XlsxLimitation,
-  XlsxLimitationCode,
   XlsxProgress,
   XlsxRead,
-  XlsxRejection,
 } from './read/read.types';
 export { writeWorkbook } from './write/write-workbook';
 export type { WriteOptions, WriteReport, XlsxLoss, XlsxWrite } from './write/write.types';
+export { ZipFailure } from './zip/zip.types';
+export { XmlFailureReason } from './xml/xml.types';
+export { XlsxLimitationCode, XlsxReadKind, XlsxRejection } from './read/read.types';

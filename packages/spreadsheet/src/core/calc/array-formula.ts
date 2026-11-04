@@ -1,11 +1,16 @@
 import type { CellRef } from '../cell.types';
-import type { FormulaNode } from '../formula/formula.types';
+import {
+  FormulaNodeKind,
+  StructuredArea,
+  UnaryOperator,
+  type FormulaNode,
+} from '../formula/formula.types';
 import type { Sheet, Workbook } from '../workbook';
-import type { FunctionRegistry, FunctionSpec } from './calc.types';
+import { ArrayScope, type FunctionRegistry, type FunctionSpec } from './calc.types';
 
-type NameNode = Extract<FormulaNode, { readonly kind: 'name' }>;
+type NameNode = Extract<FormulaNode, { readonly kind: typeof FormulaNodeKind.Name }>;
 
-type Call = Extract<FormulaNode, { readonly kind: 'call' }>;
+type Call = Extract<FormulaNode, { readonly kind: typeof FormulaNodeKind.Call }>;
 
 export interface ArrayFormulaContext {
   readonly functions: FunctionRegistry;
@@ -62,16 +67,18 @@ const namedCells = (node: NameNode, walk: Walk): boolean => {
 
 const referenceCells = (node: FormulaNode): boolean | undefined => {
   switch (node.kind) {
-    case 'range':
+    case FormulaNodeKind.Range:
       return !sameCell(node.from, node.to);
-    case 'columns':
-    case 'rows':
-    case 'spill':
-    case 'array':
+    case FormulaNodeKind.Columns:
+    case FormulaNodeKind.Rows:
+    case FormulaNodeKind.Spill:
+    case FormulaNodeKind.Array:
       return true;
-    case 'structured':
+    case FormulaNodeKind.Structured:
       return (
-        node.area !== 'row' || node.columns === undefined || node.columns.from !== node.columns.to
+        node.area !== StructuredArea.Row ||
+        node.columns === undefined ||
+        node.columns.from !== node.columns.to
       );
     default:
       return undefined;
@@ -85,18 +92,18 @@ const manyCells = (node: FormulaNode, walk: Walk): boolean => {
     return reference;
   }
   switch (node.kind) {
-    case 'name':
+    case FormulaNodeKind.Name:
       return node.book === undefined && namedCells(node, walk);
-    case 'call': {
+    case FormulaNodeKind.Call: {
       const spec = walk.functions.get(node.name);
 
       return spec?.array === true || scalarArgs(spec, node).some((arg) => manyCells(arg, walk));
     }
-    case 'unary':
-      return node.op !== '@' && manyCells(node.operand, walk);
-    case 'percent':
+    case FormulaNodeKind.Unary:
+      return node.op !== UnaryOperator.Intersect && manyCells(node.operand, walk);
+    case FormulaNodeKind.Percent:
       return manyCells(node.operand, walk);
-    case 'binary':
+    case FormulaNodeKind.Binary:
       return manyCells(node.left, walk) || manyCells(node.right, walk);
     default:
       return false;
@@ -105,18 +112,21 @@ const manyCells = (node: FormulaNode, walk: Walk): boolean => {
 
 const spreads = (node: FormulaNode, walk: Walk): boolean => {
   switch (node.kind) {
-    case 'unary':
-      return (node.op !== '@' && manyCells(node.operand, walk)) || spreads(node.operand, walk);
-    case 'percent':
+    case FormulaNodeKind.Unary:
+      return (
+        (node.op !== UnaryOperator.Intersect && manyCells(node.operand, walk)) ||
+        spreads(node.operand, walk)
+      );
+    case FormulaNodeKind.Percent:
       return manyCells(node.operand, walk) || spreads(node.operand, walk);
-    case 'binary':
+    case FormulaNodeKind.Binary:
       return (
         manyCells(node.left, walk) ||
         manyCells(node.right, walk) ||
         spreads(node.left, walk) ||
         spreads(node.right, walk)
       );
-    case 'call':
+    case FormulaNodeKind.Call:
       return (
         scalarArgs(walk.functions.get(node.name), node).some((arg) => manyCells(arg, walk)) ||
         node.args.some((arg) => spreads(arg, walk))
@@ -145,7 +155,7 @@ const intersectedCall = (node: Call, walk: Walk): FormulaNode => {
   const arrays = spec?.arrays;
 
   const args = node.args.map((arg, index) => {
-    if (arrays === 'all' || arrays?.includes(index) === true) {
+    if (arrays === ArrayScope.All || arrays?.includes(index) === true) {
       return arg;
     }
     return scalar.has(index)
@@ -158,22 +168,22 @@ const intersectedCall = (node: Call, walk: Walk): FormulaNode => {
 
 const intersectedTree = (node: FormulaNode, walk: Walk): FormulaNode => {
   switch (node.kind) {
-    case 'unary':
-    case 'percent': {
+    case FormulaNodeKind.Unary:
+    case FormulaNodeKind.Percent: {
       const operand =
-        node.kind === 'unary' && node.op === '@'
+        node.kind === FormulaNodeKind.Unary && node.op === UnaryOperator.Intersect
           ? node.operand
           : pinned(intersectedTree(node.operand, walk), walk);
 
       return operand === node.operand ? node : { ...node, operand };
     }
-    case 'binary': {
+    case FormulaNodeKind.Binary: {
       const left = pinned(intersectedTree(node.left, walk), walk);
       const right = pinned(intersectedTree(node.right, walk), walk);
 
       return left === node.left && right === node.right ? node : { ...node, left, right };
     }
-    case 'call':
+    case FormulaNodeKind.Call:
       return intersectedCall(node, walk);
     default:
       return node;
@@ -191,22 +201,22 @@ export const withImplicitIntersections = (
 
 export const withoutIntersections = (node: FormulaNode): FormulaNode => {
   switch (node.kind) {
-    case 'unary':
-    case 'percent': {
+    case FormulaNodeKind.Unary:
+    case FormulaNodeKind.Percent: {
       const operand = withoutIntersections(node.operand);
 
-      if (node.kind === 'unary' && node.op === '@') {
+      if (node.kind === FormulaNodeKind.Unary && node.op === UnaryOperator.Intersect) {
         return operand;
       }
       return operand === node.operand ? node : { ...node, operand };
     }
-    case 'binary': {
+    case FormulaNodeKind.Binary: {
       const left = withoutIntersections(node.left);
       const right = withoutIntersections(node.right);
 
       return left === node.left && right === node.right ? node : { ...node, left, right };
     }
-    case 'call': {
+    case FormulaNodeKind.Call: {
       const args = node.args.map(withoutIntersections);
 
       return sameArgs(args, node.args) ? node : { ...node, args };

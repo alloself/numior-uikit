@@ -1,5 +1,5 @@
 import { MAX_COLS, MAX_ROWS, cellIndex, containsCell } from '../address';
-import type { CellRange } from '../cell.types';
+import { LineAxis, type CellRange } from '../cell.types';
 import type { LineMove } from '../lines';
 
 export interface Precedent {
@@ -106,7 +106,7 @@ const shiftInPlace = (
   range: { top: number; bottom: number; left: number; right: number },
   change: LineMove,
 ): void => {
-  if (change.axis === 'rows') {
+  if (change.axis === LineAxis.Rows) {
     range.top += change.count;
     range.bottom = Math.min(range.bottom + change.count, MAX_ROWS - 1);
   } else {
@@ -116,10 +116,10 @@ const shiftInPlace = (
 };
 
 const firstLine = (range: CellRange, axis: LineMove['axis']): number =>
-  axis === 'rows' ? range.top : range.left;
+  axis === LineAxis.Rows ? range.top : range.left;
 
 const moveRange = (range: CellRange, change: LineMove): CellRange =>
-  change.axis === 'rows'
+  change.axis === LineAxis.Rows
     ? {
         ...range,
         top: range.top + change.count,
@@ -301,7 +301,7 @@ export const createDependencyGraph = (): DependencyGraph => {
 
   const shift = (sheet: number, change: LineMove): void => {
     const start = change.at + Math.max(-change.count, 0);
-    const offset = change.axis === 'rows' ? change.count * MAX_COLS : change.count;
+    const offset = change.axis === LineAxis.Rows ? change.count * MAX_COLS : change.count;
 
     const movesRange = (precedent: Precedent): boolean =>
       precedent.sheet === sheet && firstLine(precedent.range, change.axis) >= start;
@@ -310,7 +310,9 @@ export const createDependencyGraph = (): DependencyGraph => {
     const moved: (readonly [number, Dependents])[] = [];
 
     cells?.forEach((members, cell) => {
-      if ((change.axis === 'rows' ? Math.floor(cell / MAX_COLS) : cell % MAX_COLS) >= start) {
+      if (
+        (change.axis === LineAxis.Rows ? Math.floor(cell / MAX_COLS) : cell % MAX_COLS) >= start
+      ) {
         moved.push([cell, members]);
       }
     });

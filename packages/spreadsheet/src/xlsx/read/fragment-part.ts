@@ -1,19 +1,27 @@
 import { parseCell, parseRange } from '../../core/address';
-import type { CellRange } from '../../core/cell.types';
+import type { CellRange, LineAxis } from '../../core/cell.types';
 import { anchorOf } from '../../core/layout/fragments';
 import type {
   Fragment,
   FragmentPiece,
   FragmentSlot,
   SheetXml,
-  SlotAxis,
 } from '../../core/layout/fragments.types';
 import { EN_FORMULAS } from '../../core/formula/locale';
 import { parseFormula } from '../../core/formula/parser';
-import type { XmlAttribute, XmlName } from '../xml/xml.types';
+import { XmlPrefix, type XmlAttribute, type XmlName } from '../xml/xml.types';
 import { escapeAttribute, escapeText } from '../xml/writer';
-import type { ElementSpec, RecorderOptions, SlotSpec } from './fragment.types';
+import {
+  AnchorMode,
+  FragmentSpecKind,
+  type ElementSpec,
+  FragmentPieceKind,
+  type RecorderOptions,
+  type SlotSpec,
+} from './fragment.types';
 import { spaceOf } from './fragment-specs';
+import { PivotLineKind } from '../../core/pivot/pivot.types';
+import { OoxmlAttribute, OoxmlElement } from '../ooxml.types';
 
 export interface FragmentRecorder {
   open(name: XmlName, attributes: readonly XmlAttribute[]): void;
@@ -24,13 +32,11 @@ export interface FragmentRecorder {
 }
 
 interface Pending {
-  readonly kind: 'pending';
+  readonly kind: typeof FragmentPieceKind.Pending;
   readonly text: string;
 }
 
 type Recorded = FragmentPiece | Pending;
-
-type AnchorMode = 'twoCell' | 'oneCell' | 'absolute' | undefined;
 
 interface Frame {
   readonly pieces: Recorded[];
@@ -41,8 +47,8 @@ interface Open {
   readonly name: XmlName;
   readonly spec: ElementSpec | undefined;
   readonly frame: Frame | undefined;
-  readonly axis: SlotAxis;
-  readonly mode: AnchorMode;
+  readonly axis: LineAxis;
+  readonly mode: AnchorMode | undefined;
   readonly inTo: boolean;
   readonly inherit: string;
   text: string | undefined;
@@ -59,7 +65,7 @@ const PREFIXES = /_xl(?:fn|ws|pm)\./gu;
 
 const FROZEN = new Set(['frozen', 'frozenSplit']);
 
-const ANCHOR_LINES: ReadonlyMap<number, SlotAxis> = new Map([
+const ANCHOR_LINES: ReadonlyMap<number, LineAxis> = new Map([
   [0, 'cols'],
   [2, 'rows'],
   [4, 'cols'],
@@ -88,21 +94,21 @@ const wholeNumber = (text: string): number | undefined => {
   return text.trim() !== '' && Number.isInteger(value) ? value : undefined;
 };
 
-const slotOf = (spec: SlotSpec, value: string, axis: SlotAxis): Recorded | undefined => {
+const slotOf = (spec: SlotSpec, value: string, axis: LineAxis): Recorded | undefined => {
   switch (spec.kind) {
-    case 'cell': {
+    case FragmentSpecKind.Cell: {
       const cell = parseCell(value);
 
       return cell === undefined
         ? undefined
         : { kind: 'cell', cell: { row: cell.row, col: cell.col }, policy: spec.policy };
     }
-    case 'ranges': {
+    case FragmentSpecKind.Ranges: {
       const ranges = rangesOf(value);
 
       return ranges === undefined ? undefined : { kind: 'ranges', ranges, policy: spec.policy };
     }
-    case 'line': {
+    case FragmentSpecKind.Line: {
       const line = wholeNumber(value);
 
       return line === undefined
@@ -115,21 +121,21 @@ const slotOf = (spec: SlotSpec, value: string, axis: SlotAxis): Recorded | undef
             policy: spec.policy,
           };
     }
-    case 'split': {
+    case FragmentSpecKind.Split: {
       const count = wholeNumber(value);
 
       return count === undefined ? undefined : { kind: 'split', axis: spec.axis, count };
     }
-    case 'offset': {
+    case FragmentSpecKind.Offset: {
       const offset = wholeNumber(value);
 
       return offset === undefined ? undefined : { kind: 'offset', offset };
     }
-    case 'formula':
+    case FragmentSpecKind.Formula:
       return { kind: 'pending', text: value };
-    case 'count':
+    case FragmentSpecKind.Count:
       return { kind: 'count' };
-    case 'anchor':
+    case FragmentSpecKind.Anchor:
       return undefined;
   }
 };
@@ -156,35 +162,37 @@ const anchorPieces = (text: string): Recorded[] | undefined => {
 const modeOf = (
   name: XmlName,
   attributes: readonly XmlAttribute[],
-  parent: AnchorMode,
-): AnchorMode => {
-  if (name.local === 'oneCellAnchor') {
+  parent: AnchorMode | undefined,
+): AnchorMode | undefined => {
+  if (name.local === OoxmlElement.OneCellAnchor) {
     return 'oneCell';
   }
-  if (name.local !== 'twoCellAnchor') {
+  if (name.local !== OoxmlElement.TwoCellAnchor) {
     return parent;
   }
 
-  const edit = attributes.find((attribute) => attribute.name.local === 'editAs')?.value;
+  const edit = attributes.find(
+    (attribute) => attribute.name.local === OoxmlAttribute.EditAs,
+  )?.value;
 
-  return edit === 'oneCell' || edit === 'absolute' ? edit : 'twoCell';
+  return edit === AnchorMode.OneCell || edit === AnchorMode.Absolute ? edit : 'twoCell';
 };
 
 const adjusted = (
   spec: SlotSpec | undefined,
   open: Pick<Open, 'mode' | 'inTo'>,
 ): SlotSpec | undefined => {
-  if (spec?.kind !== 'line' || open.mode === undefined) {
+  if (spec?.kind !== FragmentSpecKind.Line || open.mode === undefined) {
     return spec;
   }
-  if (open.mode === 'absolute') {
+  if (open.mode === AnchorMode.Absolute) {
     return undefined;
   }
-  return open.mode === 'oneCell' && open.inTo ? { ...spec, policy: 'follow' } : spec;
+  return open.mode === AnchorMode.OneCell && open.inTo ? { ...spec, policy: 'follow' } : spec;
 };
 
 const isPending = (piece: Recorded): piece is Pending =>
-  typeof piece !== 'string' && 'kind' in piece && piece.kind === 'pending';
+  typeof piece !== 'string' && 'kind' in piece && piece.kind === FragmentPieceKind.Pending;
 
 const settled = (frame: Frame, opaque: string[]): Fragment => {
   const known = frame.pieces.reduce<FragmentPiece[]>((found, piece) => {
@@ -233,7 +241,7 @@ export const createFragmentRecorder = (options: RecorderOptions): FragmentRecord
     const colon = name.qname.indexOf(':');
     const prefix = colon > 0 ? name.qname.slice(0, colon) : '';
 
-    if (top !== undefined && prefix !== '' && prefix !== 'xml') {
+    if (top !== undefined && prefix !== '' && prefix !== XmlPrefix.Xml) {
       top.prefixes.set(prefix, name.uri);
     }
   };
@@ -241,12 +249,12 @@ export const createFragmentRecorder = (options: RecorderOptions): FragmentRecord
   const attributeXml = (
     attribute: XmlAttribute,
     spec: ElementSpec | undefined,
-    context: { readonly axis: SlotAxis; readonly frozen: boolean },
+    context: { readonly axis: LineAxis; readonly frozen: boolean },
   ): void => {
     const slotSpec =
       raw > 0 || attribute.name.uri !== '' ? undefined : spec?.attributes?.[attribute.name.local];
 
-    const usable = slotSpec?.kind !== 'split' || context.frozen;
+    const usable = slotSpec?.kind !== FragmentSpecKind.Split || context.frozen;
 
     const slot =
       slotSpec === undefined || !usable
@@ -271,7 +279,7 @@ export const createFragmentRecorder = (options: RecorderOptions): FragmentRecord
       opaque.push(name.local);
     }
     if (spec?.fragment !== undefined) {
-      frames.push({ pieces: [], group: spec.fragment === 'group' });
+      frames.push({ pieces: [], group: spec.fragment === PivotLineKind.Group });
     }
     if (stack.length === 0) {
       top = {
@@ -287,10 +295,10 @@ export const createFragmentRecorder = (options: RecorderOptions): FragmentRecord
     name: XmlName,
     attributes: readonly XmlAttribute[],
     spec: ElementSpec | undefined,
-    context: { readonly axis: SlotAxis; readonly inherit: string },
+    context: { readonly axis: LineAxis; readonly inherit: string },
   ): void => {
     const frozen = FROZEN.has(
-      attributes.find((attribute) => attribute.name.local === 'state')?.value ?? '',
+      attributes.find((attribute) => attribute.name.local === OoxmlAttribute.State)?.value ?? '',
     );
 
     note(name);
@@ -313,7 +321,7 @@ export const createFragmentRecorder = (options: RecorderOptions): FragmentRecord
     if (spec === undefined) {
       return [escapeText(text)];
     }
-    if (spec.kind === 'anchor') {
+    if (spec.kind === FragmentSpecKind.Anchor) {
       return anchorPieces(text);
     }
 
@@ -334,9 +342,9 @@ export const createFragmentRecorder = (options: RecorderOptions): FragmentRecord
       name,
       spec,
       frame: undefined,
-      axis: parent?.name.local === 'colBreaks' ? 'cols' : 'rows',
+      axis: parent?.name.local === OoxmlElement.ColBreaks ? 'cols' : 'rows',
       mode: modeOf(name, attributes, parent?.mode),
-      inTo: name.local === 'to' || parent?.inTo === true,
+      inTo: name.local === OoxmlElement.To || parent?.inTo === true,
       inherit: name.qname.includes(':') ? inherit : name.uri,
       text: spec?.text === undefined ? undefined : '',
     };

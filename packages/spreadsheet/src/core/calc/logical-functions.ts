@@ -3,15 +3,16 @@ import { MANY } from './aggregate';
 import type { EvalValue, FunctionArgs, FunctionSpec } from './calc.types';
 import { compareValues, raise, toLogical } from './coerce';
 import { defineFunction } from './registry';
+import { CellError, CellValueKind } from '../cell.types';
 
 const truths = (args: FunctionArgs): boolean[] => {
   const found: boolean[] = [];
 
   args.forEachValue(0, (value, direct) => {
-    if (value.kind === 'error') {
+    if (value.kind === CellValueKind.Error) {
       raise(value.code);
     }
-    if (direct || value.kind === 'number' || value.kind === 'boolean') {
+    if (direct || value.kind === CellValueKind.Number || value.kind === CellValueKind.Boolean) {
       found.push(toLogical(value, args.locale));
     }
   });
@@ -32,7 +33,7 @@ const switched = (args: FunctionArgs): EvalValue => {
   const wanted = args.scalar(0);
   const pairs = args.count - 1;
 
-  if (wanted.kind === 'error') {
+  if (wanted.kind === CellValueKind.Error) {
     return raise(wanted.code);
   }
   for (let index = 1; index + 1 < args.count; index += 2) {
@@ -93,7 +94,8 @@ export const LOGICAL_FUNCTIONS: readonly FunctionSpec[] = [
     max: 2,
     lift: [0],
     broadcast: [0, 1],
-    evaluate: (args) => (args.scalar(0).kind === 'error' ? args.value(1) : args.value(0)),
+    evaluate: (args) =>
+      args.scalar(0).kind === CellValueKind.Error ? args.value(1) : args.value(0),
   }),
   defineFunction({
     name: 'IFNA',
@@ -104,7 +106,9 @@ export const LOGICAL_FUNCTIONS: readonly FunctionSpec[] = [
     evaluate: (args) => {
       const value = args.scalar(0);
 
-      return value.kind === 'error' && value.code === '#N/A' ? args.value(1) : args.value(0);
+      return value.kind === CellValueKind.Error && value.code === CellError.Na
+        ? args.value(1)
+        : args.value(0);
     },
   }),
   defineFunction({ name: 'SWITCH', min: 3, max: MANY, lift: [0], evaluate: switched }),

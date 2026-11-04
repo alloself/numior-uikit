@@ -6,15 +6,17 @@ import type {
   FontStyle,
   ProtectionStyle,
   StyleColor,
-  UnderlineStyle,
 } from '../../core/decorations';
 import type { DifferentialStyle } from '../../core/conditional/conditional.types';
 import { builtinFormat } from '../../core/format/builtin-formats';
 import type { NumberLocale } from '../../core/format/format.types';
-import type { XmlAttribute } from '../xml/xml.types';
+import { XmlBoolean, type XmlAttribute } from '../xml/xml.types';
 import { decodeXstring } from '../xml/xstring';
 import type { ZipArchive } from '../zip/zip.types';
 import { MAIN, attributeOf, numberOf, readPart, type PartOptions } from './ooxml';
+import { BorderLineStyle, FontScheme, FontScript, UnderlineStyle } from '../../core/cell.types';
+import { StyleSection } from './read.types';
+import { OoxmlElement } from '../ooxml.types';
 
 export interface CellStyles {
   readonly formats: readonly string[];
@@ -26,8 +28,6 @@ export interface CellStyles {
 }
 
 type Mutable<T> = { -readonly [Key in keyof T]: T[Key] };
-
-type Section = 'fonts' | 'fills' | 'borders' | 'cellXfs' | 'dxfs' | 'other';
 
 interface Differential {
   font?: Mutable<FontStyle> | undefined;
@@ -61,23 +61,18 @@ const EDGES: Readonly<Record<string, BorderEdge>> = {
   diagonal: 'diagonal',
 };
 
-const UNDERLINES: readonly UnderlineStyle[] = [
-  'single',
-  'double',
-  'singleAccounting',
-  'doubleAccounting',
-];
+const UNDERLINES: readonly UnderlineStyle[] = Object.values(UnderlineStyle);
 
 const isUnderline = (value: string): value is UnderlineStyle =>
   UNDERLINES.some((underline) => underline === value);
 
-const sectionOf = (element: string): Section => {
+const sectionOf = (element: string): StyleSection => {
   switch (element) {
-    case 'fonts':
-    case 'fills':
-    case 'borders':
-    case 'cellXfs':
-    case 'dxfs':
+    case OoxmlElement.Fonts:
+    case OoxmlElement.Fills:
+    case OoxmlElement.Borders:
+    case OoxmlElement.CellXfs:
+    case OoxmlElement.Dxfs:
       return element;
     default:
       return 'other';
@@ -87,11 +82,11 @@ const sectionOf = (element: string): Section => {
 const flag = (attributes: readonly XmlAttribute[], fallback = true): boolean => {
   const value = attributeOf(attributes, 'val');
 
-  return value === undefined ? fallback : value === '1' || value === 'true';
+  return value === undefined ? fallback : value === XmlBoolean.One || value === XmlBoolean.True;
 };
 
 const optionalFlag = (text: string | undefined): boolean | undefined =>
-  text === undefined ? undefined : text === '1' || text === 'true';
+  text === undefined ? undefined : text === XmlBoolean.One || text === XmlBoolean.True;
 
 const optionalNumber = (text: string | undefined): number | undefined =>
   text === undefined ? undefined : numberOf(text, 0);
@@ -114,7 +109,7 @@ export const colorOf = (attributes: readonly XmlAttribute[]): StyleColor | undef
   if (indexed !== undefined) {
     return { kind: 'indexed', index: numberOf(indexed, 0) };
   }
-  return attributeOf(attributes, 'auto') === '1' ? { kind: 'auto' } : undefined;
+  return attributeOf(attributes, 'auto') === XmlBoolean.One ? { kind: 'auto' } : undefined;
 };
 
 const fontPart = (
@@ -123,16 +118,16 @@ const fontPart = (
   attributes: readonly XmlAttribute[],
 ): void => {
   switch (element) {
-    case 'b':
+    case OoxmlElement.B:
       font.bold = flag(attributes);
       return;
-    case 'i':
+    case OoxmlElement.I:
       font.italic = flag(attributes);
       return;
-    case 'strike':
+    case OoxmlElement.Strike:
       font.strike = flag(attributes);
       return;
-    case 'u': {
+    case OoxmlElement.U: {
       const value = attributeOf(attributes, 'val') ?? 'single';
 
       font.underline = isUnderline(value) ? value : undefined;
@@ -151,22 +146,24 @@ const fontValue = (
   const value = attributeOf(attributes, 'val');
 
   switch (element) {
-    case 'sz':
+    case OoxmlElement.Sz:
       font.size = optionalNumber(value);
       return;
-    case 'name':
+    case OoxmlElement.Name:
       font.name = value;
       return;
-    case 'family':
+    case OoxmlElement.Family:
       font.family = optionalNumber(value);
       return;
-    case 'scheme':
-      font.scheme = value === 'major' || value === 'minor' ? value : undefined;
+    case OoxmlElement.Scheme:
+      font.scheme = value === FontScheme.Major || value === FontScheme.Minor ? value : undefined;
       return;
-    case 'vertAlign':
-      font.script = value === 'superscript' || value === 'subscript' ? value : undefined;
+    case OoxmlElement.VertAlign:
+      font.script =
+        value === FontScript.Superscript || value === FontScript.Subscript ? value : undefined;
+
       return;
-    case 'color':
+    case OoxmlElement.Color:
       font.color = colorOf(attributes);
       return;
     default:
@@ -224,7 +221,7 @@ export const readStyles = async (
   const borders: Mutable<BorderStyle>[] = [];
   const formats: CellFormat[] = [];
   const differentials: Differential[] = [];
-  let section: Section = 'other';
+  let section: StyleSection = 'other';
   let edge: BorderEdge | undefined;
   let unmodeled = 0;
 
@@ -254,16 +251,16 @@ export const readStyles = async (
       return;
     }
     switch (element) {
-      case 'patternFill':
+      case OoxmlElement.PatternFill:
         fill.pattern = attributeOf(attributes, 'patternType') ?? 'none';
         return;
-      case 'gradientFill':
+      case OoxmlElement.GradientFill:
         unmodeled += 1;
         return;
-      case 'fgColor':
+      case OoxmlElement.FgColor:
         fill.foreground = colorOf(attributes);
         return;
-      case 'bgColor':
+      case OoxmlElement.BgColor:
         fill.background = colorOf(attributes);
         return;
       default:
@@ -274,16 +271,16 @@ export const readStyles = async (
   const cellFormatPart = (element: string, attributes: readonly XmlAttribute[]): void => {
     const format = formats.at(-1);
 
-    if (element === 'xf') {
+    if (element === OoxmlElement.Xf) {
       formats.push({
         numberFormat: numberOf(attributeOf(attributes, 'numFmtId'), 0),
         font: numberOf(attributeOf(attributes, 'fontId'), 0),
         fill: numberOf(attributeOf(attributes, 'fillId'), 0),
         border: numberOf(attributeOf(attributes, 'borderId'), 0),
       });
-    } else if (format !== undefined && element === 'alignment') {
+    } else if (format !== undefined && element === OoxmlElement.Alignment) {
       format.alignment = alignmentOf(attributes);
-    } else if (format !== undefined && element === 'protection') {
+    } else if (format !== undefined && element === OoxmlElement.Protection) {
       format.protection = protectionOf(attributes);
     }
   };
@@ -291,7 +288,7 @@ export const readStyles = async (
   const differentialPart = (element: string, attributes: readonly XmlAttribute[]): void => {
     const differential = differentials.at(-1);
 
-    if (element === 'dxf') {
+    if (element === OoxmlElement.Dxf) {
       differentials.push({});
       edge = undefined;
       return;
@@ -300,17 +297,17 @@ export const readStyles = async (
       return;
     }
     switch (element) {
-      case 'font':
+      case OoxmlElement.Font:
         differential.font = {};
         return;
-      case 'fill':
+      case OoxmlElement.Fill:
         differential.fill = { pattern: 'solid' };
         return;
-      case 'border':
+      case OoxmlElement.Border:
         differential.border = {};
         edge = undefined;
         return;
-      case 'numFmt':
+      case OoxmlElement.NumFmt:
         differential.format = decodeXstring(attributeOf(attributes, 'formatCode') ?? GENERAL);
         return;
       default:
@@ -325,12 +322,15 @@ export const readStyles = async (
   ): void => {
     const { fill, border } = differential;
 
-    if (border !== undefined && (EDGES[element] !== undefined || element === 'color')) {
+    if (border !== undefined && (EDGES[element] !== undefined || element === OoxmlElement.Color)) {
       borderSide(border, element, attributes);
-    } else if (fill !== undefined && element === 'patternFill') {
+    } else if (fill !== undefined && element === OoxmlElement.PatternFill) {
       fill.pattern = attributeOf(attributes, 'patternType') ?? 'solid';
-    } else if (fill !== undefined && (element === 'fgColor' || element === 'bgColor')) {
-      fill[element === 'fgColor' ? 'foreground' : 'background'] = colorOf(attributes);
+    } else if (
+      fill !== undefined &&
+      (element === OoxmlElement.FgColor || element === OoxmlElement.BgColor)
+    ) {
+      fill[element === OoxmlElement.FgColor ? 'foreground' : 'background'] = colorOf(attributes);
     } else if (differential.font !== undefined) {
       fontPart(differential.font, element, attributes);
     }
@@ -347,24 +347,24 @@ export const readStyles = async (
       const style = attributeOf(attributes, 'style');
 
       edge = side;
-      border[side] = style === undefined || style === 'none' ? undefined : { style };
+      border[side] = style === undefined || style === BorderLineStyle.None ? undefined : { style };
       return;
     }
 
     const current = edge === undefined ? undefined : border[edge];
 
-    if (element === 'color' && edge !== undefined && current !== undefined) {
+    if (element === OoxmlElement.Color && edge !== undefined && current !== undefined) {
       border[edge] = { ...current, color: colorOf(attributes) };
     }
   };
 
   const sectionPart = (element: string, attributes: readonly XmlAttribute[]): void => {
     switch (section) {
-      case 'dxfs':
+      case StyleSection.Dxfs:
         differentialPart(element, attributes);
         return;
-      case 'fonts':
-        if (element === 'font') {
+      case StyleSection.Fonts:
+        if (element === OoxmlElement.Font) {
           fonts.push({});
         } else {
           const font = fonts.at(-1);
@@ -374,15 +374,15 @@ export const readStyles = async (
           }
         }
         return;
-      case 'fills':
-        if (element === 'fill') {
+      case StyleSection.Fills:
+        if (element === OoxmlElement.Fill) {
           fills.push({ pattern: 'none' });
         } else {
           fillPart(element, attributes);
         }
         return;
-      case 'borders':
-        if (element === 'border') {
+      case StyleSection.Borders:
+        if (element === OoxmlElement.Border) {
           borders.push({
             diagonalUp: optionalFlag(attributeOf(attributes, 'diagonalUp')),
             diagonalDown: optionalFlag(attributeOf(attributes, 'diagonalDown')),
@@ -393,7 +393,7 @@ export const readStyles = async (
           borderPart(element, attributes);
         }
         return;
-      case 'cellXfs':
+      case StyleSection.CellXfs:
         cellFormatPart(element, attributes);
         return;
       default:
@@ -411,7 +411,7 @@ export const readStyles = async (
         }
         if (SECTIONS.has(element.local)) {
           section = sectionOf(element.local);
-        } else if (element.local === 'numFmt' && section !== 'dxfs') {
+        } else if (element.local === OoxmlElement.NumFmt && section !== StyleSection.Dxfs) {
           custom.set(
             numberOf(attributeOf(attributes, 'numFmtId'), 0),
             decodeXstring(attributeOf(attributes, 'formatCode') ?? GENERAL),

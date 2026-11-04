@@ -1,5 +1,5 @@
 import { MAX_COLS, MAX_ROWS } from './address';
-import type { CellRange, CellValue } from './cell.types';
+import { CellValueKind, LineAxis, type CellRange, type CellValue } from './cell.types';
 import { shiftIndex, type LineMove } from './lines';
 import type { SharedStrings } from './strings';
 import { CELL_ERRORS, EMPTY } from './values';
@@ -25,7 +25,7 @@ export interface CellStore {
   usedRange(): CellRange | undefined;
   lastRow(): number;
   nextEdge(row: number, col: number, rowStep: -1 | 0 | 1, colStep: -1 | 0 | 1): number;
-  shiftLines(axis: 'rows' | 'cols', at: number, count: number): void;
+  shiftLines(axis: LineAxis, at: number, count: number): void;
   readonly size: number;
   readonly revision: number;
   readonly chunks: number;
@@ -95,30 +95,30 @@ const read = (chunk: Chunk, slot: number, strings: SharedStrings): CellValue => 
 
 const write = (chunk: Chunk, slot: number, value: CellValue, strings: SharedStrings): void => {
   switch (value.kind) {
-    case 'number':
+    case CellValueKind.Number:
       chunk.kinds[slot] = Kind.Number;
       numbersOf(chunk)[slot] = value.value;
       break;
-    case 'string':
+    case CellValueKind.String:
       chunk.kinds[slot] = Kind.String;
       refsOf(chunk)[slot] = strings.intern(value.value);
       break;
-    case 'boolean':
+    case CellValueKind.Boolean:
       chunk.kinds[slot] = Kind.Boolean;
       numbersOf(chunk)[slot] = value.value ? 1 : 0;
       break;
-    case 'error':
+    case CellValueKind.Error:
       chunk.kinds[slot] = Kind.Error;
       refsOf(chunk)[slot] = Math.max(0, CELL_ERRORS.indexOf(value.code));
       break;
-    case 'empty':
+    case CellValueKind.Empty:
       chunk.kinds[slot] = Kind.Empty;
       break;
   }
 };
 
-const lineOf = (axis: 'rows' | 'cols', row: number, col: number): number =>
-  axis === 'rows' ? row : col;
+const lineOf = (axis: LineAxis, row: number, col: number): number =>
+  axis === LineAxis.Rows ? row : col;
 
 const clamp = (value: number, max: number): number => Math.min(Math.max(value, 0), max);
 
@@ -227,7 +227,7 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
     return along(point, step);
   };
 
-  const takeLines = (axis: 'rows' | 'cols', from: number): RawCells => {
+  const takeLines = (axis: LineAxis, from: number): RawCells => {
     const taken: RawCells = { rows: [], cols: [], kinds: [], numbers: [], refs: [] };
 
     chunks.forEach((chunk, key) => {
@@ -293,8 +293,8 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
 
         if (line !== undefined) {
           putRaw(
-            axis === 'rows' ? line : row,
-            axis === 'rows' ? col : line,
+            axis === LineAxis.Rows ? line : row,
+            axis === LineAxis.Rows ? col : line,
             taken.kinds[index] ?? Kind.Empty,
             taken.numbers[index] ?? 0,
             taken.refs[index] ?? 0,
@@ -313,7 +313,9 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
 
       revision += 1;
       const slot = slotOf(row, col);
-      const chunk = chunks.get(key) ?? (value.kind === 'empty' ? undefined : newChunk());
+
+      const chunk =
+        chunks.get(key) ?? (value.kind === CellValueKind.Empty ? undefined : newChunk());
 
       if (chunk === undefined) {
         return;
@@ -322,7 +324,7 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
 
       write(chunk, slot, value, strings);
       chunk.stamp = revision;
-      const now = value.kind !== 'empty';
+      const now = value.kind !== CellValueKind.Empty;
 
       chunk.count += Number(now) - Number(was);
       size += Number(now) - Number(was);

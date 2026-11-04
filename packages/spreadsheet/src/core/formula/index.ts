@@ -1,5 +1,4 @@
 export type {
-  BinaryOperator,
   FormulaFailure,
   FormulaLocale,
   FormulaNode,

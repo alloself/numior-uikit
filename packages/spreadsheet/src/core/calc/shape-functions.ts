@@ -1,5 +1,5 @@
 import type { NumberLocale } from '../format/format.types';
-import type { CellValue } from '../cell.types';
+import { CellValueKind, type CellValue } from '../cell.types';
 import { EMPTY, errorValue } from '../values';
 import { MANY } from './aggregate';
 import type { EvalValue, FunctionArgs, FunctionSpec } from './calc.types';
@@ -97,7 +97,7 @@ const unique = (args: FunctionArgs): EvalValue =>
   });
 
 const included = (value: CellValue, locale: NumberLocale): boolean =>
-  value.kind === 'empty' ? false : toLogical(value, locale);
+  value.kind === CellValueKind.Empty ? false : toLogical(value, locale);
 
 const byColumns = (rows: Rows, include: Rows): boolean => {
   if (include.length === rows.length && widthOf(include) === 1) {

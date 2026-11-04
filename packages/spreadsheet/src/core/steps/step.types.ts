@@ -1,5 +1,5 @@
 import type { CellContent } from '../calc/calc.types';
-import type { CellRange } from '../cell.types';
+import type { CellRange, LineAxis } from '../cell.types';
 import type { ConditionalFormat } from '../conditional/conditional.types';
 import type { CellDecoration } from '../decorations';
 import type { FormulaNode } from '../formula/formula.types';
@@ -7,8 +7,6 @@ import type { SheetLayout } from '../layout/layout.types';
 import type { PivotSpec, PivotState } from '../pivot/pivot.types';
 import type { LineChange } from '../formula/rewrite';
 import type { TableShape } from '../tables';
-
-export type LineAxis = LineChange['axis'];
 
 export interface CellEdit {
   readonly row: number;
@@ -23,69 +21,69 @@ export interface TableSpec extends TableShape {
 }
 
 export type WorkbookStep =
-  | { readonly kind: 'setCells'; readonly sheet: string; readonly cells: readonly CellEdit[] }
   | {
-      readonly kind: 'setFormat';
+      readonly kind: typeof StepKind.SetCells;
+      readonly sheet: string;
+      readonly cells: readonly CellEdit[];
+    }
+  | {
+      readonly kind: typeof StepKind.SetFormat;
       readonly sheet: string;
       readonly range: CellRange;
       readonly format: string;
     }
   | {
-      readonly kind: 'insertLines' | 'deleteLines';
+      readonly kind: typeof StepKind.InsertLines | typeof StepKind.DeleteLines;
       readonly sheet: string;
       readonly axis: LineAxis;
       readonly at: number;
       readonly count: number;
     }
-  | { readonly kind: 'addSheet'; readonly name: string; readonly index: number }
-  | { readonly kind: 'removeSheet'; readonly name: string }
-  | { readonly kind: 'renameSheet'; readonly from: string; readonly to: string }
+  | { readonly kind: typeof StepKind.AddSheet; readonly name: string; readonly index: number }
+  | { readonly kind: typeof StepKind.RemoveSheet; readonly name: string }
+  | { readonly kind: typeof StepKind.RenameSheet; readonly from: string; readonly to: string }
   | {
-      readonly kind: 'setName';
+      readonly kind: typeof StepKind.SetName;
       readonly name: string;
       readonly scope?: string | undefined;
       readonly ast: FormulaNode | undefined;
     }
-  | { readonly kind: 'addTable'; readonly name: string; readonly table: TableSpec }
-  | { readonly kind: 'setTable'; readonly name: string; readonly table: TableSpec | undefined }
-  | { readonly kind: 'renameTable'; readonly from: string; readonly to: string }
+  | { readonly kind: typeof StepKind.AddTable; readonly name: string; readonly table: TableSpec }
   | {
-      readonly kind: 'setConditional';
+      readonly kind: typeof StepKind.SetTable;
+      readonly name: string;
+      readonly table: TableSpec | undefined;
+    }
+  | { readonly kind: typeof StepKind.RenameTable; readonly from: string; readonly to: string }
+  | {
+      readonly kind: typeof StepKind.SetConditional;
       readonly sheet: string;
       readonly formats: readonly ConditionalFormat[];
     }
-  | { readonly kind: 'setLayout'; readonly sheet: string; readonly layout: SheetLayout }
   | {
-      readonly kind: 'setPivot';
+      readonly kind: typeof StepKind.SetLayout;
+      readonly sheet: string;
+      readonly layout: SheetLayout;
+    }
+  | {
+      readonly kind: typeof StepKind.SetPivot;
       readonly sheet: string;
       readonly name: string;
       readonly pivot: PivotSpec | undefined;
     }
-  | { readonly kind: 'refreshPivot'; readonly sheet: string; readonly name: string }
+  | { readonly kind: typeof StepKind.RefreshPivot; readonly sheet: string; readonly name: string }
   | {
-      readonly kind: 'putPivot';
+      readonly kind: typeof StepKind.PutPivot;
       readonly sheet: string;
       readonly name: string;
       readonly pivot: PivotState | undefined;
       readonly cells?: readonly CellEdit[] | undefined;
     }
-  | { readonly kind: 'batch'; readonly steps: readonly WorkbookStep[] };
+  | { readonly kind: typeof StepKind.Batch; readonly steps: readonly WorkbookStep[] };
 
 export type SheetStep = Extract<WorkbookStep, { readonly sheet: string }>;
 
-export type StepRefusal =
-  | 'missing-sheet'
-  | 'sheet-full'
-  | 'name-taken'
-  | 'last-sheet'
-  | 'invalid-name'
-  | 'missing-table'
-  | 'invalid-table'
-  | 'table-overlap'
-  | 'invalid-pivot'
-  | 'pivot-overlap'
-  | 'missing-pivot'
-  | 'pivot-output';
+export type StepRefusal = (typeof StepRefusal)[keyof typeof StepRefusal];
 
 export type StepResult =
   | {
@@ -98,3 +96,38 @@ export type StepResult =
 export type StepOutcome =
   | { readonly ok: true; readonly changes: readonly LineChange[] }
   | { readonly ok: false; readonly reason: StepRefusal };
+
+export const StepRefusal = {
+  MissingSheet: 'missing-sheet',
+  SheetFull: 'sheet-full',
+  NameTaken: 'name-taken',
+  LastSheet: 'last-sheet',
+  InvalidName: 'invalid-name',
+  MissingTable: 'missing-table',
+  InvalidTable: 'invalid-table',
+  TableOverlap: 'table-overlap',
+  InvalidPivot: 'invalid-pivot',
+  PivotOverlap: 'pivot-overlap',
+  MissingPivot: 'missing-pivot',
+  PivotOutput: 'pivot-output',
+} as const;
+
+export const StepKind = {
+  SetCells: 'setCells',
+  SetFormat: 'setFormat',
+  InsertLines: 'insertLines',
+  DeleteLines: 'deleteLines',
+  AddSheet: 'addSheet',
+  RemoveSheet: 'removeSheet',
+  RenameSheet: 'renameSheet',
+  SetName: 'setName',
+  AddTable: 'addTable',
+  SetTable: 'setTable',
+  RenameTable: 'renameTable',
+  SetConditional: 'setConditional',
+  SetLayout: 'setLayout',
+  SetPivot: 'setPivot',
+  RefreshPivot: 'refreshPivot',
+  PutPivot: 'putPivot',
+  Batch: 'batch',
+} as const;

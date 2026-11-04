@@ -1,4 +1,4 @@
-import type { CellValue } from '../cell.types';
+import { CellValueKind, type CellValue } from '../cell.types';
 import type { NumberLocale } from '../format/format.types';
 import { numberValue } from '../values';
 import {
@@ -20,12 +20,12 @@ import { defineFunction } from './registry';
 
 const counts = (value: CellValue, direct: boolean, locale: NumberLocale): boolean => {
   switch (value.kind) {
-    case 'number':
+    case CellValueKind.Number:
       return true;
-    case 'boolean':
-    case 'empty':
+    case CellValueKind.Boolean:
+    case CellValueKind.Empty:
       return direct;
-    case 'string':
+    case CellValueKind.String:
       return direct && numberFromText(value.value, locale) !== undefined;
     default:
       return false;
@@ -155,10 +155,10 @@ const matched = (conditions: readonly Condition[], range: Reference): number[] =
   forEachMatch(conditions, range, (row, col) => {
     const value = targetValue(range, row, col);
 
-    if (value.kind === 'error') {
+    if (value.kind === CellValueKind.Error) {
       raise(value.code);
     }
-    if (value.kind === 'number') {
+    if (value.kind === CellValueKind.Number) {
       found.push(value.value);
     }
   });
@@ -186,7 +186,7 @@ const countBlank = (args: FunctionArgs): EvalValue => {
   let filled = 0;
 
   sheet.cells.forEachInRange(range, (_row, _col, value) => {
-    filled += Number(value.kind !== 'string' || value.value !== '');
+    filled += Number(value.kind !== CellValueKind.String || value.value !== '');
   });
 
   return numberValue((range.bottom - range.top + 1) * (range.right - range.left + 1) - filled);
@@ -254,11 +254,11 @@ const subtotal = (args: FunctionArgs): EvalValue => {
       if (args.subtotalAt(sheet, row, col)) {
         return;
       }
-      if (value.kind === 'error') {
+      if (value.kind === CellValueKind.Error) {
         raise(value.code);
       }
       filled += 1;
-      if (value.kind === 'number') {
+      if (value.kind === CellValueKind.Number) {
         values.push(value.value);
       }
     });

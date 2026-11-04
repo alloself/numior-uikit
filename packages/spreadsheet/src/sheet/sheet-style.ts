@@ -1,4 +1,4 @@
-import type { NuiTableAlign, NuiTableCellBorders, NuiTableCellStyle } from '@numior/table';
+import { NuiTableAlign, type NuiTableCellBorders, type NuiTableCellStyle } from '@numior/table';
 import {
   colorHex,
   formatColor,
@@ -8,7 +8,8 @@ import {
   type StyleColor,
   type ThemePalette,
 } from '../core';
-import type { StyleInput, ValueShape } from './sheet.types';
+import { ValueShape, type StyleInput } from './sheet.types';
+import { FillPattern, StyleColorKind } from '../core/cell.types';
 
 const BORDER_WIDTHS: Readonly<Record<string, string>> = {
   thin: '1px solid',
@@ -102,13 +103,13 @@ const BACKGROUND_ONE = 0;
 const LIGHT_FILL = 0.5;
 
 const semantic = (color: StyleColor | undefined, index: number): boolean =>
-  color?.kind === 'theme' && color.theme === index && color.tint === 0;
+  color?.kind === StyleColorKind.Theme && color.theme === index && color.tint === 0;
 
 const fillHex = (decoration: CellDecoration, theme: ThemePalette): string | undefined => {
   const { fill } = decoration;
   const color = fill?.foreground ?? fill?.background;
 
-  return fill === undefined || fill.pattern === 'none' || semantic(color, BACKGROUND_ONE)
+  return fill === undefined || fill.pattern === FillPattern.None || semantic(color, BACKGROUND_ONE)
     ? undefined
     : colorHex(color, theme);
 };
@@ -151,9 +152,9 @@ export const sheetStyle = (input: StyleInput): NuiTableCellStyle | undefined => 
   const looks: NuiTableCellStyle = {
     fill: cssOf(fill),
     color,
-    align: align === 'start' ? undefined : align,
+    align: align === NuiTableAlign.Start ? undefined : align,
     wrap: wrap ? true : undefined,
-    overflow: shape === 'text' && !wrap ? true : undefined,
+    overflow: shape === ValueShape.Text && !wrap ? true : undefined,
     borders: bordersOf(decoration, theme),
     style: Object.keys(style).length === 0 ? undefined : style,
   };

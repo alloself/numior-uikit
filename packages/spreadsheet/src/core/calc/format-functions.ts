@@ -1,4 +1,4 @@
-import type { CellValue } from '../cell.types';
+import { CellValueKind, type CellValue } from '../cell.types';
 import { renderValue } from '../format/format-value';
 import { invariantCode } from '../format/local-code';
 import { currencyFormat } from '../format/number-locale';
@@ -13,13 +13,13 @@ const MAX_DECIMALS = 127;
 const shownValue = (args: FunctionArgs, index: number): CellValue => {
   const value = args.scalar(index);
 
-  if (value.kind === 'error') {
+  if (value.kind === CellValueKind.Error) {
     return raise(value.code);
   }
-  if (value.kind === 'empty') {
+  if (value.kind === CellValueKind.Empty) {
     return { kind: 'number', value: 0 };
   }
-  if (value.kind !== 'string') {
+  if (value.kind !== CellValueKind.String) {
     return value;
   }
 

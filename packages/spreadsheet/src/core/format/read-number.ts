@@ -1,5 +1,6 @@
-import type { NumberLocale } from './format.types';
+import { FormatChar, type NumberLocale } from './format.types';
 import { currencyFormat } from './number-locale';
+import { UnaryOperator } from '../formula/formula.types';
 
 export interface ReadNumber {
   readonly value: number;
@@ -69,7 +70,9 @@ const readBody = (text: string, locale: NumberLocale): Body | undefined => {
 const withoutSign = (text: string): readonly [string, boolean] => {
   const sign = text.charAt(0);
 
-  return sign === '-' || sign === '+' ? [text.slice(1).trim(), sign === '-'] : [text, false];
+  return sign === FormatChar.Minus || sign === FormatChar.Plus
+    ? [text.slice(1).trim(), sign === UnaryOperator.Minus]
+    : [text, false];
 };
 
 const withoutCurrency = (text: string, locale: NumberLocale): readonly [string, boolean] => {

@@ -13,6 +13,7 @@ import {
 import { createLineIndex, type LineIndex } from './line-index';
 import { sheetStyle } from './sheet-style';
 import type { SheetCells, SheetCellsOptions, StyleCache, ValueShape } from './sheet.types';
+import { CellValueKind } from '../core/cell.types';
 
 const MDW = 7;
 
@@ -165,7 +166,7 @@ export const sheetCells = ({ book, sheet, locale = EN_LOCALE }: SheetCellsOption
     const value = sheet.cells.get(row, col);
     const decoration = decorationAt(sheet, row, col);
 
-    if (value.kind === 'empty' && decoration === 0) {
+    if (value.kind === CellValueKind.Empty && decoration === 0) {
       return undefined;
     }
 

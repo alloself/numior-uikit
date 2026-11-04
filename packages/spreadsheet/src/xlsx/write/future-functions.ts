@@ -1,4 +1,4 @@
-import type { FormulaNode } from '../../core/formula/formula.types';
+import { FormulaNodeKind, UnaryOperator, type FormulaNode } from '../../core/formula/formula.types';
 
 const WORKSHEET_FUNCTIONS = new Set(['FILTER', 'SORT']);
 
@@ -169,23 +169,23 @@ const mapped = (nodes: readonly FormulaNode[]): readonly FormulaNode[] => {
 
 export const withFuturePrefixes = (node: FormulaNode): FormulaNode => {
   switch (node.kind) {
-    case 'call': {
+    case FormulaNodeKind.Call: {
       const name = prefixed(node.name);
       const args = mapped(node.args);
 
       return name === node.name && args === node.args ? node : { ...node, name, args };
     }
-    case 'unary':
-    case 'percent': {
+    case FormulaNodeKind.Unary:
+    case FormulaNodeKind.Percent: {
       const operand = withFuturePrefixes(node.operand);
 
-      if (node.kind === 'unary' && node.op === '@') {
+      if (node.kind === FormulaNodeKind.Unary && node.op === UnaryOperator.Intersect) {
         return { kind: 'call', name: '_xlfn.SINGLE', args: [operand] };
       }
 
       return operand === node.operand ? node : { ...node, operand };
     }
-    case 'binary': {
+    case FormulaNodeKind.Binary: {
       const left = withFuturePrefixes(node.left);
       const right = withFuturePrefixes(node.right);
 

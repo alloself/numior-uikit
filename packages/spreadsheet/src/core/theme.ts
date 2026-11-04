@@ -1,4 +1,5 @@
 import type { StyleColor } from './decorations';
+import { StyleColorKind } from './cell.types';
 
 export type ThemePalette = readonly string[];
 
@@ -175,17 +176,17 @@ export const colorHex = (
   theme: ThemePalette,
 ): string | undefined => {
   switch (color?.kind) {
-    case 'rgb': {
+    case StyleColorKind.Rgb: {
       const hex = color.argb.slice(-6);
 
       return HEX.test(hex) ? hex.toUpperCase() : undefined;
     }
-    case 'theme': {
+    case StyleColorKind.Theme: {
       const hex = themeHex(theme, color.theme);
 
       return hex === undefined ? undefined : tinted(hex, color.tint);
     }
-    case 'indexed':
+    case StyleColorKind.Indexed:
       return INDEXED[color.index];
     default:
       return undefined;

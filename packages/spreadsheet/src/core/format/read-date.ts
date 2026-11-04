@@ -1,5 +1,5 @@
 import { daysInMonth, serialOfDate } from '../calc/serials';
-import type { NumberLocale } from './format.types';
+import { DateOrder, type NumberLocale } from './format.types';
 import { EN_NUMBERS } from './number-locale';
 
 export interface DateText {
@@ -79,7 +79,7 @@ const numericDate = (text: string, locale: NumberLocale): number | undefined => 
   const second = Number(found[3]);
   const year = fullYear(found[4] ?? '');
 
-  return locale.dateOrder === 'mdy'
+  return locale.dateOrder === DateOrder.Mdy
     ? validDate(year, first, second)
     : validDate(year, second, first);
 };

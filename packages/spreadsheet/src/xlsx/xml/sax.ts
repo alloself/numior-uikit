@@ -1,10 +1,12 @@
-import type {
-  XmlAttribute,
-  XmlFailure,
-  XmlFailureReason,
-  XmlHandlers,
-  XmlName,
-  XmlParser,
+import {
+  XmlChar,
+  XmlPrefix,
+  type XmlAttribute,
+  type XmlFailure,
+  type XmlFailureReason,
+  type XmlHandlers,
+  type XmlName,
+  type XmlParser,
 } from './xml.types';
 
 interface Scope {
@@ -82,7 +84,9 @@ const entityText = (entity: string): string => {
   }
 
   const code =
-    entity[1] === 'x' ? Number.parseInt(entity.slice(2), 16) : Number.parseInt(entity.slice(1), 10);
+    entity[1] === XmlChar.Hex
+      ? Number.parseInt(entity.slice(2), 16)
+      : Number.parseInt(entity.slice(1), 10);
 
   return code <= 0x10_ff_ff ? String.fromCodePoint(code) : '�';
 };
@@ -111,7 +115,7 @@ const tagEnd = (source: string, from: number): number => {
   TAG_SPECIAL.lastIndex = from;
 
   for (let found = TAG_SPECIAL.exec(source); found !== null; found = TAG_SPECIAL.exec(source)) {
-    if (found[0] === '>') {
+    if (found[0] === XmlChar.TagEnd) {
       return found.index + 1;
     }
 
@@ -166,12 +170,13 @@ const resolved = (scope: Scope, qname: string, attribute: boolean, position: num
   return name;
 };
 
-const declares = (qname: string): boolean => qname === 'xmlns' || qname.startsWith('xmlns:');
+const declares = (qname: string): boolean =>
+  qname === XmlPrefix.Xmlns || qname.startsWith('xmlns:');
 
 const scopeOf = (parent: Scope, raw: readonly (readonly [string, string])[]): Scope => {
   const declared = raw.reduce<[string, string][]>((found, [qname, value]) => {
     if (declares(qname)) {
-      found.push([qname === 'xmlns' ? '' : qname.slice(6), value]);
+      found.push([qname === XmlPrefix.Xmlns ? '' : qname.slice(6), value]);
     }
     return found;
   }, []);

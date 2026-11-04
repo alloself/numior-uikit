@@ -1,13 +1,22 @@
 import { MAX_COLS, MAX_ROWS } from '../address';
 import type { CellAddress, CellRange, CellRef } from '../cell.types';
-import type { FormulaNode, LineRef } from './formula.types';
+import { FormulaReferenceKind, type FormulaNode, type LineRef } from './formula.types';
 import { isSymbolic, mapReferences, type FormulaReference } from './references';
 
-export type LocatedReference = Exclude<FormulaReference, { readonly kind: 'name' | 'structured' }>;
+export type LocatedReference = Exclude<
+  FormulaReference,
+  { readonly kind: typeof FormulaReferenceKind.Name | typeof FormulaReferenceKind.Structured }
+>;
 
-type RangeReference = Extract<LocatedReference, { readonly kind: 'range' }>;
+type RangeReference = Extract<
+  LocatedReference,
+  { readonly kind: typeof FormulaReferenceKind.Range }
+>;
 
-type LinesReference = Extract<LocatedReference, { readonly kind: 'columns' | 'rows' }>;
+type LinesReference = Extract<
+  LocatedReference,
+  { readonly kind: typeof FormulaReferenceKind.Columns | typeof FormulaReferenceKind.Rows }
+>;
 
 export const ORIGIN: CellAddress = { row: 0, col: 0 };
 
@@ -42,13 +51,16 @@ const cellRange = (from: CellRef, to: CellRef, origin: CellAddress): CellRange |
 };
 
 const linesRange = (
-  node: Extract<FormulaReference, { readonly kind: 'columns' | 'rows' }>,
+  node: Extract<
+    FormulaReference,
+    { readonly kind: typeof FormulaReferenceKind.Columns | typeof FormulaReferenceKind.Rows }
+  >,
   origin: CellAddress,
 ): CellRange | undefined => {
-  const base = node.kind === 'columns' ? origin.col : origin.row;
+  const base = node.kind === FormulaReferenceKind.Columns ? origin.col : origin.row;
   const first = lineOf(node.from, base);
   const last = lineOf(node.to, base);
-  const inside = node.kind === 'columns' ? inCols : inRows;
+  const inside = node.kind === FormulaReferenceKind.Columns ? inCols : inRows;
 
   if (!inside(first) || !inside(last)) {
     return undefined;
@@ -57,7 +69,7 @@ const linesRange = (
   const low = Math.min(first, last);
   const high = Math.max(first, last);
 
-  return node.kind === 'columns'
+  return node.kind === FormulaReferenceKind.Columns
     ? { top: 0, bottom: MAX_ROWS - 1, left: low, right: high }
     : { top: low, bottom: high, left: 0, right: MAX_COLS - 1 };
 };
@@ -67,10 +79,10 @@ export const referenceRange = (
   origin: CellAddress,
 ): CellRange | undefined => {
   switch (node.kind) {
-    case 'range':
+    case FormulaReferenceKind.Range:
       return cellRange(node.from, node.to, origin);
-    case 'columns':
-    case 'rows':
+    case FormulaReferenceKind.Columns:
+    case FormulaReferenceKind.Rows:
       return linesRange(node, origin);
     default:
       return cellRange(node.ref, node.ref, origin);
@@ -90,21 +102,21 @@ const storedLine = (line: LineRef, index: number, base: number): LineRef => ({
 
 const moveOrigin = (node: LocatedReference, from: CellAddress, to: CellAddress): FormulaNode => {
   switch (node.kind) {
-    case 'cell':
-    case 'spill':
+    case FormulaReferenceKind.Cell:
+    case FormulaReferenceKind.Spill:
       return {
         ...node,
         ref: storedRef(node.ref, rowOf(node.ref, from), colOf(node.ref, from), to),
       };
-    case 'range':
+    case FormulaReferenceKind.Range:
       return {
         ...node,
         from: storedRef(node.from, rowOf(node.from, from), colOf(node.from, from), to),
         to: storedRef(node.to, rowOf(node.to, from), colOf(node.to, from), to),
       };
     default: {
-      const before = node.kind === 'columns' ? from.col : from.row;
-      const after = node.kind === 'columns' ? to.col : to.row;
+      const before = node.kind === FormulaReferenceKind.Columns ? from.col : from.row;
+      const after = node.kind === FormulaReferenceKind.Columns ? to.col : to.row;
 
       return {
         ...node,
@@ -160,7 +172,7 @@ const storedLines = (
   before: CellAddress,
   after: CellAddress,
 ): FormulaNode => {
-  const columns = node.kind === 'columns';
+  const columns = node.kind === FormulaReferenceKind.Columns;
   const base = columns ? before.col : before.row;
   const next = columns ? after.col : after.row;
   const low = columns ? range.left : range.top;
@@ -181,10 +193,10 @@ export const storedReference = (
   after: CellAddress,
 ): FormulaNode => {
   switch (node.kind) {
-    case 'cell':
-    case 'spill':
+    case FormulaReferenceKind.Cell:
+    case FormulaReferenceKind.Spill:
       return { ...node, ref: storedRef(node.ref, range.top, range.left, after) };
-    case 'range':
+    case FormulaReferenceKind.Range:
       return storedRange(node, range, before, after);
     default:
       return storedLines(node, range, before, after);

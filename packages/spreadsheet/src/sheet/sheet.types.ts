@@ -19,7 +19,7 @@ export interface SheetCells {
   readonly colAt: (position: number) => number;
 }
 
-export type ValueShape = 'number' | 'text' | 'logical' | 'empty';
+export type ValueShape = (typeof ValueShape)[keyof typeof ValueShape];
 
 export type StyleCache = (
   decoration: number,
@@ -42,3 +42,10 @@ export interface StyleInput {
   readonly shape: ValueShape;
   readonly formatColor: number | undefined;
 }
+
+export const ValueShape = {
+  Number: 'number',
+  Text: 'text',
+  Logical: 'logical',
+  Empty: 'empty',
+} as const;

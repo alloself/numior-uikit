@@ -1,6 +1,6 @@
-import type { CellValue } from '../cell.types';
+import { CellValueKind, type CellValue } from '../cell.types';
 import { EMPTY, errorValue, numberValue } from '../values';
-import type { PivotAggregate } from './pivot.types';
+import { PivotAggregate } from './pivot.types';
 
 export interface PivotAccumulator {
   filled: number;
@@ -29,16 +29,16 @@ export const createPivotAccumulator = (): PivotAccumulator => ({
 });
 
 export const accumulatePivot = (target: PivotAccumulator, value: CellValue): void => {
-  if (value.kind === 'empty') {
+  if (value.kind === CellValueKind.Empty) {
     return;
   }
 
   target.filled += 1;
-  if (value.kind === 'error') {
+  if (value.kind === CellValueKind.Error) {
     target.error ??= value;
     return;
   }
-  if (value.kind !== 'number') {
+  if (value.kind !== CellValueKind.Number) {
     return;
   }
 
@@ -104,10 +104,10 @@ export const finishPivot = (aggregate: PivotAggregate, source: PivotAccumulator)
   if (source.filled === 0) {
     return EMPTY;
   }
-  if (aggregate === 'count') {
+  if (aggregate === PivotAggregate.Count) {
     return numberValue(source.filled);
   }
-  if (aggregate === 'countNums') {
+  if (aggregate === PivotAggregate.CountNums) {
     return numberValue(source.numbers);
   }
   return source.error ?? NUMERIC[aggregate](source);

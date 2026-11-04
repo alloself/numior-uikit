@@ -232,13 +232,24 @@ export default [
     rules: { 'no-restricted-syntax': ['error', ...CATALOG, ...CODE_SHAPE, ...NAMED_ENUMERATIONS] },
   },
   {
+    files: ['packages/spreadsheet/src/**/*.{ts,vue}'],
+    ignores: ['**/*.messages.ts', 'packages/spreadsheet/src/xlsx/**'],
+    rules: { 'no-restricted-syntax': ['error', ...CATALOG, ...CODE_SHAPE, ...NAMED_ENUMERATIONS] },
+  },
+  {
+    files: ['packages/spreadsheet/src/xlsx/**/*.ts'],
+    rules: { 'no-restricted-syntax': ['error', ...CODE_SHAPE, ...NAMED_ENUMERATIONS] },
+  },
+  {
     files: ['packages/*/src/**/*.vue'],
     rules: {
       'vue/no-bare-strings-in-template': ['error', { allowlist: TEMPLATE_GLYPHS }],
     },
   },
   {
-    files: ['packages/{primitives,vue,forms,table,content,editor-vue,charts}/src/**/*.vue'],
+    files: [
+      'packages/{primitives,vue,forms,table,content,editor-vue,charts,spreadsheet}/src/**/*.vue',
+    ],
     rules: { 'vue/no-restricted-syntax': ['error', ...NAMED_ENUMERATIONS] },
   },
 ];

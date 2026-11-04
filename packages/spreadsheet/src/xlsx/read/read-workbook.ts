@@ -7,7 +7,7 @@ import { ORIGIN } from '../../core/formula/origin';
 import { EN_FORMULAS } from '../../core/formula/locale';
 import { parseFormula } from '../../core/formula/parser';
 import { mapReferences } from '../../core/formula/references';
-import type { FormulaNode } from '../../core/formula/formula.types';
+import { FormulaReferenceKind, type FormulaNode } from '../../core/formula/formula.types';
 import { EN_LOCALE } from '../../core/locale';
 import { validColumns } from '../../core/tables';
 import {
@@ -21,7 +21,7 @@ import {
 } from '../../core/workbook';
 import { readZip } from '../zip/read-zip';
 import { ZipError } from '../zip/streams';
-import type { Bytes, ZipArchive } from '../zip/zip.types';
+import { ZipFailure, type Bytes, type ZipArchive } from '../zip/zip.types';
 import {
   XlsxPartError,
   readRelationships,
@@ -29,13 +29,18 @@ import {
   type PartOptions,
   type Relationship,
 } from './ooxml';
-import type {
-  LimitationsReport,
-  ReadOptions,
-  XlsxLimitation,
-  XlsxLimitationCode,
-  XlsxRead,
-  XlsxRejection,
+import {
+  ExternalPartKind,
+  LimitationSeverity,
+  ReadPhase,
+  RecalcMode,
+  XlsxPartKind,
+  type LimitationsReport,
+  type ReadOptions,
+  type XlsxLimitation,
+  type XlsxLimitationCode,
+  type XlsxRead,
+  type XlsxRejection,
 } from './read.types';
 import { readExternalPart, type ExternalNameEntry } from './external-part';
 import { readSharedStrings, type SharedStrings } from './shared-strings';
@@ -47,6 +52,7 @@ import { readStyles, type CellStyles } from './styles';
 import { readTheme } from './theme-part';
 import { readTablePart } from './table-part';
 import { readWorkbookPart, type SheetEntry, type WorkbookPart } from './workbook-part';
+import { RelationshipKind } from '../ooxml.types';
 
 interface Found {
   count: number;
@@ -165,7 +171,7 @@ const createReport = (): Report => {
       }));
 
       return {
-        readOnly: items.some((item) => item.severity === 'read-only'),
+        readOnly: items.some((item) => item.severity === LimitationSeverity.ReadOnly),
         staleFormulas,
         items,
       };
@@ -199,13 +205,15 @@ const setTables = async (
 
   for (const relationship of relationships) {
     const table =
-      relationship.kind === 'table' && !relationship.external && archive.has(relationship.target)
+      relationship.kind === RelationshipKind.Table &&
+      !relationship.external &&
+      archive.has(relationship.target)
         ? await readTablePart(archive, relationship.target, options)
         : undefined;
 
     if (table !== undefined && validColumns(table) && validDefinedName(table.name)) {
       calculator.setTable(table.name, { ...table, sheet });
-    } else if (relationship.kind === 'table') {
+    } else if (relationship.kind === RelationshipKind.Table) {
       refused += 1;
     }
   }
@@ -216,7 +224,10 @@ const BROKEN: FormulaNode = { kind: 'error', code: '#REF!' };
 
 const inBook = (ast: FormulaNode, book: number): FormulaNode =>
   mapReferences(ast, (reference) =>
-    reference.kind === 'name' || reference.kind === 'structured' ? BROKEN : { ...reference, book },
+    reference.kind === FormulaReferenceKind.Name ||
+    reference.kind === FormulaReferenceKind.Structured
+      ? BROKEN
+      : { ...reference, book },
   );
 
 const externalNames = (
@@ -251,7 +262,7 @@ const loadExternals = async (
     if (part !== undefined) {
       load.parsed.add(part);
     }
-    if (read.kind === 'book') {
+    if (read.kind === ExternalPartKind.Book) {
       const book = load.book.externals.length + 1;
 
       const external = load.book.addExternal({
@@ -285,7 +296,7 @@ const progressOf = (
     signal: options.signal,
     onBytes: (bytesRead) => {
       done += bytesRead;
-      options.onProgress?.({ phase: 'read', done, total });
+      options.onProgress?.({ phase: ReadPhase.Read, done, total });
     },
   };
 };
@@ -322,7 +333,7 @@ const loadSheet = async (
       decorations: context.decorations,
       differentials: context.styles.differentials,
       known: (name) => load.functions.get(name) !== undefined,
-      recalculate: load.options.recalc === 'chunked',
+      recalculate: load.options.recalc === RecalcMode.Chunked,
     },
     load.parts,
   );
@@ -440,7 +451,7 @@ const loadPivots = async (
 
     for (const relationship of relationships) {
       const failed =
-        relationship.kind === 'pivotTable' && load.archive.has(relationship.target)
+        relationship.kind === RelationshipKind.PivotTable && load.archive.has(relationship.target)
           ? await loadPivot(pivots, sheet, relationship.target)
           : undefined;
 
@@ -453,15 +464,15 @@ const loadPivots = async (
 };
 
 const recalculated = async (load: Load): Promise<void> => {
-  if (load.options.recalc !== 'chunked') {
+  if (load.options.recalc !== RecalcMode.Chunked) {
     return;
   }
 
   const run = load.calculator.recalculate({ budgetMs: 8, yieldTo: nextTask });
 
-  load.options.onProgress?.({ phase: 'recalculate', done: 0, total: run.total });
+  load.options.onProgress?.({ phase: ReadPhase.Recalculate, done: 0, total: run.total });
   await run.settled;
-  load.options.onProgress?.({ phase: 'recalculate', done: run.total, total: run.total });
+  load.options.onProgress?.({ phase: ReadPhase.Recalculate, done: run.total, total: run.total });
 };
 
 const officeOf = async (archive: ZipArchive, options: ReadOptions): Promise<string | XlsxRead> => {
@@ -561,7 +572,7 @@ const readBook = async (
   await recalculated(load);
 
   const summary = load.report.build(
-    load.options.recalc === 'chunked'
+    load.options.recalc === RecalcMode.Chunked
       ? load.totals.kept + load.totals.external
       : load.totals.formulas,
   );
@@ -590,7 +601,7 @@ const readBook = async (
       pivots: pivotsOf(book),
       parts: archive.names.map((name) => ({
         name,
-        kind: load.parsed.has(name) ? 'parsed' : 'opaque',
+        kind: load.parsed.has(name) ? XlsxPartKind.Parsed : XlsxPartKind.Opaque,
       })),
     },
   };
@@ -604,7 +615,7 @@ export const readWorkbook = async (bytes: Bytes, options: ReadOptions = {}): Pro
   const zip = readZip(bytes, options.codec);
 
   if (!zip.ok) {
-    return rejected(zip.reason === 'not-zip' ? 'not-xlsx' : 'damaged', zip.reason);
+    return rejected(zip.reason === ZipFailure.NotZip ? 'not-xlsx' : 'damaged', zip.reason);
   }
   try {
     return await readBook(zip.archive, bytes, options);
@@ -613,7 +624,10 @@ export const readWorkbook = async (bytes: Bytes, options: ReadOptions = {}): Pro
       return rejected('damaged', error.message);
     }
     if (error instanceof ZipError) {
-      return rejected(error.reason === 'encrypted' ? 'encrypted' : 'damaged', error.reason);
+      return rejected(
+        error.reason === ZipFailure.Encrypted ? 'encrypted' : 'damaged',
+        error.reason,
+      );
     }
     throw error;
   }

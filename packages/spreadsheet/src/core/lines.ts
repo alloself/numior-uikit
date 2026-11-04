@@ -1,12 +1,14 @@
 import { MAX_COLS, MAX_ROWS } from './address';
+import { LineAxis } from './cell.types';
 
 export interface LineMove {
-  readonly axis: 'rows' | 'cols';
+  readonly axis: LineAxis;
   readonly at: number;
   readonly count: number;
 }
 
-export const limitOf = (axis: LineMove['axis']): number => (axis === 'rows' ? MAX_ROWS : MAX_COLS);
+export const limitOf = (axis: LineMove['axis']): number =>
+  axis === LineAxis.Rows ? MAX_ROWS : MAX_COLS;
 
 export const shiftIndex = (index: number, change: LineMove): number | undefined => {
   if (index < change.at) {

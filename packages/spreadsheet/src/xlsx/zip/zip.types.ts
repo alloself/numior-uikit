@@ -5,7 +5,7 @@ export interface ZipCodec {
   deflate(): ReadableWritablePair<Bytes, Bytes>;
 }
 
-export type ZipFailure = 'not-zip' | 'damaged' | 'encrypted' | 'unsupported-method' | 'too-large';
+export type ZipFailure = (typeof ZipFailure)[keyof typeof ZipFailure];
 
 export interface ZipRawEntry {
   readonly method: number;
@@ -39,3 +39,11 @@ export interface ZipOptions {
   readonly codec?: ZipCodec | undefined;
   readonly signal?: AbortSignal | undefined;
 }
+
+export const ZipFailure = {
+  NotZip: 'not-zip',
+  Damaged: 'damaged',
+  Encrypted: 'encrypted',
+  UnsupportedMethod: 'unsupported-method',
+  TooLarge: 'too-large',
+} as const;

@@ -7,6 +7,8 @@ import {
 } from '../read/ooxml';
 import { concatBytes } from '../zip/streams';
 import type { Bytes, ZipArchive } from '../zip/zip.types';
+import { OoxmlElement } from '../ooxml.types';
+import { PathSegment } from './write.types';
 
 export interface ContentTypes {
   readonly defaults: ReadonlyMap<string, string>;
@@ -91,9 +93,9 @@ export const readContentTypes = async (archive: ZipArchive): Promise<ContentType
       if (element.uri !== CONTENT_TYPES) {
         return;
       }
-      if (element.local === 'Default') {
+      if (element.local === OoxmlElement.Default) {
         defaults.set((attributeOf(attributes, 'Extension') ?? '').toLowerCase(), type);
-      } else if (element.local === 'Override') {
+      } else if (element.local === OoxmlElement.Override) {
         overrides.set((attributeOf(attributes, 'PartName') ?? '').replace(/^\//u, ''), type);
       }
     },
@@ -112,7 +114,7 @@ const headOf = (text: string): SheetHead | undefined => {
         root: root[0],
         prefix: root[1] ?? '',
         before: text.slice(root.index + root[0].length, data.index),
-        closed: data[2] === '/',
+        closed: data[2] === PathSegment.Separator,
       };
 };
 

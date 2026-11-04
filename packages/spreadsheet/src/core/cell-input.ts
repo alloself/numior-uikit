@@ -1,12 +1,30 @@
-import type { CellAddress, CellRange, CellValue } from './cell.types';
+import {
+  CellInputKind,
+  CellValueKind,
+  type CellAddress,
+  type CellRange,
+  type CellValue,
+} from './cell.types';
 import type { Calculator } from './calc/calculator';
 import { logicalFromText, toText } from './calc/coerce';
 import { parseNumberFormat } from './format/format-code';
 import { formatValue } from './format/format-value';
-import type { FormatToken, FormattedValue, NumberLocale } from './format/format.types';
+import {
+  FormatTokenKind,
+  SectionKind,
+  type FormattedValue,
+  type FormatToken,
+  type NumberLocale,
+} from './format/format.types';
 import { currencyFormat } from './format/number-locale';
 import { readValueText } from './format/read-value';
-import type { FormulaFailure, FormulaNode } from './formula/formula.types';
+import {
+  FormulaNodeKind,
+  FormulaReferenceKind,
+  FunctionName,
+  type FormulaFailure,
+  type FormulaNode,
+} from './formula/formula.types';
 import { ORIGIN, referenceRange } from './formula/origin';
 import { parseFormula } from './formula/parser';
 import { printFormula } from './formula/printer';
@@ -25,9 +43,13 @@ import { uniqueColumns } from './tables';
 import { bookLabels, bookNames, localSheet, type Sheet, type Workbook } from './workbook';
 
 export type CellInput =
-  | { readonly kind: 'empty' }
-  | { readonly kind: 'formula'; readonly text: string }
-  | { readonly kind: 'value'; readonly value: CellValue; readonly format: string | undefined };
+  | { readonly kind: typeof CellInputKind.Empty }
+  | { readonly kind: typeof CellInputKind.Formula; readonly text: string }
+  | {
+      readonly kind: typeof CellInputKind.Value;
+      readonly value: CellValue;
+      readonly format: string | undefined;
+    };
 
 export interface NameOptions {
   readonly scope?: Sheet | undefined;
@@ -64,7 +86,10 @@ export interface CellEditor {
   setFormat(sheet: Sheet, range: CellRange, code: string): void;
 }
 
-type CellOrRange = Extract<FormulaReference, { readonly kind: 'cell' | 'range' }>;
+type CellOrRange = Extract<
+  FormulaReference,
+  { readonly kind: typeof FormulaReferenceKind.Cell | typeof FormulaReferenceKind.Range }
+>;
 
 const CLOCK = new Set([
   'hour',
@@ -147,14 +172,14 @@ const ARITHMETIC = new Set(['+', '-', '*', '/', '^']);
 
 const inherits = (node: FormulaNode): boolean => {
   switch (node.kind) {
-    case 'cell':
-    case 'range':
-    case 'unary':
-    case 'percent':
+    case FormulaNodeKind.Cell:
+    case FormulaNodeKind.Range:
+    case FormulaNodeKind.Unary:
+    case FormulaNodeKind.Percent:
       return true;
-    case 'binary':
+    case FormulaNodeKind.Binary:
       return ARITHMETIC.has(node.op);
-    case 'call':
+    case FormulaNodeKind.Call:
       return INHERITING.has(node.name.toUpperCase());
     default:
       return false;
@@ -202,7 +227,7 @@ export const readInput = (text: string, locale: NumberLocale): CellInput => {
 };
 
 const unitsOf = (tokens: readonly FormatToken[], units: ReadonlySet<string>): boolean =>
-  tokens.some((token) => token.kind === 'date' && units.has(token.unit));
+  tokens.some((token) => token.kind === FormatTokenKind.Date && units.has(token.unit));
 
 const dateEditText = (
   value: number,
@@ -224,10 +249,10 @@ const numberEditText = (value: number, code: string, locale: NumberLocale): stri
   const section = parseNumberFormat(code).sections[0];
   const tokens = section?.tokens ?? [];
 
-  if (section?.kind === 'date' && value >= 0) {
+  if (section?.kind === SectionKind.Date && value >= 0) {
     return dateEditText(value, tokens, locale);
   }
-  if (tokens.some((token) => token.kind === 'percent')) {
+  if (tokens.some((token) => token.kind === FormatTokenKind.Percent)) {
     return `${toText(numberValue(Number((value * 100).toPrecision(15))), locale)}%`;
   }
   return toText(numberValue(value), locale);
@@ -236,31 +261,35 @@ const numberEditText = (value: number, code: string, locale: NumberLocale): stri
 const sameText = (text: string, locale: NumberLocale): boolean => {
   const input = readInput(text, locale);
 
-  return input.kind === 'value' && input.value.kind === 'string' && input.value.value === text;
+  return (
+    input.kind === CellInputKind.Value &&
+    input.value.kind === CellValueKind.String &&
+    input.value.value === text
+  );
 };
 
 export const editText = (value: CellValue, code: string, locale: NumberLocale): string => {
   switch (value.kind) {
-    case 'number':
+    case CellValueKind.Number:
       return numberEditText(value.value, code, locale);
-    case 'string':
+    case CellValueKind.String:
       return code === TEXT_FORMAT || sameText(value.value, locale)
         ? value.value
         : `'${value.value}`;
-    case 'boolean':
+    case CellValueKind.Boolean:
       return value.value ? locale.trueText : locale.falseText;
-    case 'error':
+    case CellValueKind.Error:
       return locale.errors[value.code];
-    case 'empty':
+    case CellValueKind.Empty:
       return '';
   }
 };
 
 const isCellOrRange = (found: FormulaReference): found is CellOrRange =>
-  found.kind === 'cell' || found.kind === 'range';
+  found.kind === FormulaReferenceKind.Cell || found.kind === FormulaReferenceKind.Range;
 
 const resultFormat = (node: FormulaNode, locale: NumberLocale): string | undefined => {
-  if (node.kind !== 'call') {
+  if (node.kind !== FormulaNodeKind.Call) {
     return undefined;
   }
 
@@ -269,7 +298,7 @@ const resultFormat = (node: FormulaNode, locale: NumberLocale): string | undefin
   if (DATE_RESULTS.has(name)) {
     return locale.shortDate;
   }
-  if (name === 'NOW') {
+  if (name === FunctionName.Now) {
     return `${locale.shortDate} ${locale.shortTime}`;
   }
   if (TIME_RESULTS.has(name)) {
@@ -365,11 +394,11 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
         : readInput(text, locale.numbers);
 
     switch (read.kind) {
-      case 'empty':
+      case CellInputKind.Empty:
         return entry(sheet, { row, col, content: { kind: 'empty' } });
-      case 'formula':
+      case CellInputKind.Formula:
         return formulaEdit(sheet, { row, col }, read.text, locale);
-      case 'value':
+      case CellInputKind.Value:
         return entry(sheet, {
           row,
           col,
@@ -433,7 +462,7 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
       const col = range.left + index;
       const value = sheet.cells.get(range.top, col);
 
-      if (headers && (value.kind !== 'string' || value.value !== name)) {
+      if (headers && (value.kind !== CellValueKind.String || value.value !== name)) {
         edits.push({
           row: range.top,
           col,

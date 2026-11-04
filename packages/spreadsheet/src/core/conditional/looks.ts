@@ -2,20 +2,23 @@ import { MAX_COLS } from '../address';
 import type { Calculator } from '../calc/calculator';
 import { compareValues } from '../calc/coerce';
 import { civilOf, mondayIndex } from '../calc/serials';
-import type { CellAddress, CellRange, CellValue } from '../cell.types';
+import { CellValueKind, type CellAddress, type CellRange, type CellValue } from '../cell.types';
 import { lookupKey } from '../calc/coerce';
 import type { FormulaNode } from '../formula/formula.types';
 import type { Sheet } from '../workbook';
-import type {
+import {
   CellIsOperator,
-  ConditionalEntry,
-  ConditionalFormat,
-  ConditionalLook,
-  ConditionalRule,
-  DifferentialStyle,
-  ScaleStop,
-  Threshold,
-  TimePeriod,
+  ConditionalRuleKind,
+  TextOperator,
+  ThresholdKind,
+  type ConditionalEntry,
+  type ConditionalFormat,
+  type ConditionalLook,
+  type ConditionalRule,
+  type DifferentialStyle,
+  type ScaleStop,
+  type Threshold,
+  type TimePeriod,
 } from './conditional.types';
 import { createRangeStats, percentileOf, type RangeStats } from './stats';
 
@@ -41,7 +44,15 @@ type StyledRule = Extract<ConditionalRule, { readonly style: DifferentialStyle }
 
 type ValueTest = Extract<
   StyledRule,
-  { readonly kind: 'duplicates' | 'uniques' | 'blanks' | 'filled' | 'errors' | 'noErrors' }
+  {
+    readonly kind:
+      | typeof ConditionalRuleKind.Duplicates
+      | typeof ConditionalRuleKind.Uniques
+      | typeof ConditionalRuleKind.Blanks
+      | typeof ConditionalRuleKind.Filled
+      | typeof ConditionalRuleKind.Errors
+      | typeof ConditionalRuleKind.NoErrors;
+  }
 >['kind'];
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
@@ -53,13 +64,17 @@ const MAX_BAR = 0.9;
 const TODAY: FormulaNode = { kind: 'call', name: 'TODAY', args: [] };
 
 const numberOf = (value: CellValue): number | undefined =>
-  value.kind === 'number' ? value.value : undefined;
+  value.kind === CellValueKind.Number ? value.value : undefined;
 
 const truthy = (value: CellValue): boolean =>
-  value.kind === 'boolean' ? value.value : value.kind === 'number' && value.value !== 0;
+  value.kind === CellValueKind.Boolean
+    ? value.value
+    : value.kind === CellValueKind.Number && value.value !== 0;
 
 const compared = (value: CellValue, operand: CellValue): number | undefined =>
-  value.kind === 'error' || operand.kind === 'error' ? undefined : compareValues(value, operand);
+  value.kind === CellValueKind.Error || operand.kind === CellValueKind.Error
+    ? undefined
+    : compareValues(value, operand);
 
 const OPERATORS: Readonly<
   Record<Exclude<CellIsOperator, 'between' | 'notBetween'>, (order: number) => boolean>
@@ -83,16 +98,19 @@ const between = (value: CellValue, low: CellValue, high: CellValue): boolean => 
   );
 };
 
-const cellIs = (rule: Extract<ConditionalRule, { readonly kind: 'cellIs' }>, probe: Probe) => {
+const cellIs = (
+  rule: Extract<ConditionalRule, { readonly kind: typeof ConditionalRuleKind.CellIs }>,
+  probe: Probe,
+) => {
   const [first, second] = rule.formulas.map(probe.evaluate);
 
-  if (first === undefined || probe.value.kind === 'error') {
+  if (first === undefined || probe.value.kind === CellValueKind.Error) {
     return false;
   }
-  if (rule.operator === 'between' || rule.operator === 'notBetween') {
+  if (rule.operator === CellIsOperator.Between || rule.operator === CellIsOperator.NotBetween) {
     return (
       (second !== undefined && between(probe.value, first, second)) ===
-      (rule.operator === 'between')
+      (rule.operator === CellIsOperator.Between)
     );
   }
 
@@ -108,7 +126,10 @@ const topCutoff = (stats: RangeStats, rank: number, percent: boolean, bottom: bo
   return stats.kth(bottom ? Math.min(count, total) - 1 : Math.max(total - count, 0));
 };
 
-const ranked = (rule: Extract<ConditionalRule, { readonly kind: 'top' }>, probe: Probe) => {
+const ranked = (
+  rule: Extract<ConditionalRule, { readonly kind: typeof ConditionalRuleKind.Top }>,
+  probe: Probe,
+) => {
   const number = numberOf(probe.value);
 
   const cutoff =
@@ -123,7 +144,7 @@ const ranked = (rule: Extract<ConditionalRule, { readonly kind: 'top' }>, probe:
 };
 
 const averaged = (
-  rule: Extract<ConditionalRule, { readonly kind: 'aboveAverage' }>,
+  rule: Extract<ConditionalRule, { readonly kind: typeof ConditionalRuleKind.AboveAverage }>,
   probe: Probe,
 ) => {
   const number = numberOf(probe.value);
@@ -141,29 +162,32 @@ const averaged = (
 
 const textOf = (value: CellValue): string | undefined => {
   switch (value.kind) {
-    case 'string':
+    case CellValueKind.String:
       return value.value.toLowerCase();
-    case 'number':
+    case CellValueKind.Number:
       return String(value.value);
-    case 'boolean':
+    case CellValueKind.Boolean:
       return value.value ? 'true' : 'false';
     default:
       return undefined;
   }
 };
 
-const texted = (rule: Extract<ConditionalRule, { readonly kind: 'text' }>, probe: Probe) => {
+const texted = (
+  rule: Extract<ConditionalRule, { readonly kind: typeof ConditionalRuleKind.Text }>,
+  probe: Probe,
+) => {
   const text = textOf(probe.value) ?? '';
   const wanted = rule.text.toLowerCase();
 
   switch (rule.operator) {
-    case 'contains':
+    case TextOperator.Contains:
       return text.includes(wanted);
-    case 'notContains':
+    case TextOperator.NotContains:
       return !text.includes(wanted);
-    case 'beginsWith':
+    case TextOperator.BeginsWith:
       return text.startsWith(wanted);
-    case 'endsWith':
+    case TextOperator.EndsWith:
       return text.endsWith(wanted);
   }
 };
@@ -189,14 +213,18 @@ const PERIODS: Readonly<Record<TimePeriod, (day: number, today: number) => boole
   nextMonth: (day, today) => monthOf(day) === monthOf(today) + 1,
 };
 
-const dated = (rule: Extract<ConditionalRule, { readonly kind: 'timePeriod' }>, probe: Probe) => {
+const dated = (
+  rule: Extract<ConditionalRule, { readonly kind: typeof ConditionalRuleKind.TimePeriod }>,
+  probe: Probe,
+) => {
   const number = numberOf(probe.value);
 
   return number !== undefined && PERIODS[rule.period](Math.floor(number), probe.today());
 };
 
 const blank = (value: CellValue): boolean =>
-  value.kind === 'empty' || (value.kind === 'string' && value.value.trim() === '');
+  value.kind === CellValueKind.Empty ||
+  (value.kind === CellValueKind.String && value.value.trim() === '');
 
 const countOf = (probe: Probe): number => {
   const key = lookupKey(probe.value);
@@ -209,23 +237,23 @@ const VALUE_TESTS: Readonly<Record<ValueTest, (probe: Probe) => boolean>> = {
   uniques: (probe) => countOf(probe) === 1,
   blanks: (probe) => blank(probe.value),
   filled: (probe) => !blank(probe.value),
-  errors: (probe) => probe.value.kind === 'error',
-  noErrors: (probe) => probe.value.kind !== 'error',
+  errors: (probe) => probe.value.kind === CellValueKind.Error,
+  noErrors: (probe) => probe.value.kind !== CellValueKind.Error,
 };
 
 const matches = (rule: StyledRule, probe: Probe): boolean => {
   switch (rule.kind) {
-    case 'cellIs':
+    case ConditionalRuleKind.CellIs:
       return cellIs(rule, probe);
-    case 'expression':
+    case ConditionalRuleKind.Expression:
       return truthy(probe.evaluate(rule.formula));
-    case 'top':
+    case ConditionalRuleKind.Top:
       return ranked(rule, probe);
-    case 'aboveAverage':
+    case ConditionalRuleKind.AboveAverage:
       return averaged(rule, probe);
-    case 'text':
+    case ConditionalRuleKind.Text:
       return texted(rule, probe);
-    case 'timePeriod':
+    case ConditionalRuleKind.TimePeriod:
       return dated(rule, probe);
     default:
       return VALUE_TESTS[rule.kind](probe);
@@ -250,7 +278,10 @@ const scaled = (stops: readonly ScaleStop[], probe: Probe): ConditionalLook | un
   return { scale: { from: from.color, to: to.color, amount: fraction(number, low, high) } };
 };
 
-const barred = (rule: Extract<ConditionalRule, { readonly kind: 'dataBar' }>, probe: Probe) => {
+const barred = (
+  rule: Extract<ConditionalRule, { readonly kind: typeof ConditionalRuleKind.DataBar }>,
+  probe: Probe,
+) => {
   const number = numberOf(probe.value);
   const low = probe.threshold(rule.min);
   const high = probe.threshold(rule.max);
@@ -266,7 +297,10 @@ const barred = (rule: Extract<ConditionalRule, { readonly kind: 'dataBar' }>, pr
 
 const ICON_COUNT = /^(\d)/u;
 
-const iconed = (rule: Extract<ConditionalRule, { readonly kind: 'iconSet' }>, probe: Probe) => {
+const iconed = (
+  rule: Extract<ConditionalRule, { readonly kind: typeof ConditionalRuleKind.IconSet }>,
+  probe: Probe,
+) => {
   const number = numberOf(probe.value);
   const count = Number(ICON_COUNT.exec(rule.set)?.[1] ?? '3');
   const points = rule.thresholds.map(probe.threshold);
@@ -288,13 +322,13 @@ const iconed = (rule: Extract<ConditionalRule, { readonly kind: 'iconSet' }>, pr
 
 const outcomeOf = (rule: ConditionalRule, probe: Probe): ConditionalLook | undefined => {
   switch (rule.kind) {
-    case 'colorScale':
+    case ConditionalRuleKind.ColorScale:
       return scaled(rule.stops, probe);
-    case 'dataBar':
+    case ConditionalRuleKind.DataBar:
       return barred(rule, probe);
-    case 'iconSet':
+    case ConditionalRuleKind.IconSet:
       return iconed(rule, probe);
-    case 'foreign':
+    case ConditionalRuleKind.Foreign:
       return undefined;
     default:
       return matches(rule, probe) ? { style: rule.style } : undefined;
@@ -336,22 +370,22 @@ const thresholdOf = (
   const high = stats().high();
 
   switch (threshold.kind) {
-    case 'min':
+    case ThresholdKind.Min:
       return low;
-    case 'max':
+    case ThresholdKind.Max:
       return high;
-    case 'autoMin':
+    case ThresholdKind.AutoMin:
       return Math.min(0, low ?? 0);
-    case 'autoMax':
+    case ThresholdKind.AutoMax:
       return Math.max(0, high ?? 0);
-    case 'percent': {
+    case ThresholdKind.Percent: {
       const share = numberOf(evaluate(threshold.value)) ?? 0;
 
       return low === undefined || high === undefined
         ? undefined
         : low + ((high - low) * share) / 100;
     }
-    case 'percentile':
+    case ThresholdKind.Percentile:
       return percentileOf(stats(), (numberOf(evaluate(threshold.value)) ?? 0) / 100);
     default:
       return numberOf(evaluate(threshold.value));

@@ -1,26 +1,30 @@
 import type { NumberLocale } from '../format/format.types';
-import type { CellRange, CellValue } from '../cell.types';
+import { type CellInputKind, type CellRange, type CellValue, CellValueKind } from '../cell.types';
 import type { FormulaNode } from '../formula/formula.types';
 import type { Sheet } from '../workbook';
 
 export interface ArrayValue {
-  readonly kind: 'array';
+  readonly kind: typeof EvalValueKind.Array;
   readonly rows: readonly (readonly CellValue[])[];
 }
 
 export type EvalValue =
   | CellValue
-  | { readonly kind: 'reference'; readonly sheet: Sheet; readonly range: CellRange }
+  | {
+      readonly kind: typeof EvalValueKind.Reference;
+      readonly sheet: Sheet;
+      readonly range: CellRange;
+    }
   | ArrayValue;
 
 export type FormulaResult = CellValue | ArrayValue;
 
-export type FormulaState = 'fresh' | 'stale' | 'cycle' | 'imported';
+export type FormulaState = (typeof FormulaState)[keyof typeof FormulaState];
 
 export type CellContent =
-  | { readonly kind: 'empty' }
-  | { readonly kind: 'value'; readonly value: CellValue }
-  | { readonly kind: 'formula'; readonly ast: FormulaNode };
+  | { readonly kind: typeof CellInputKind.Empty }
+  | { readonly kind: typeof CellInputKind.Value; readonly value: CellValue }
+  | { readonly kind: typeof CellInputKind.Formula; readonly ast: FormulaNode };
 
 export interface ShiftedFormulaCell {
   readonly sheet: Sheet;
@@ -72,7 +76,7 @@ export interface FunctionSpec {
   readonly max: number;
   readonly volatile?: boolean | undefined;
   readonly array?: boolean | undefined;
-  readonly arrays?: readonly number[] | 'all' | undefined;
+  readonly arrays?: readonly number[] | typeof ArrayScope.All | undefined;
   readonly lift?: readonly number[] | undefined;
   readonly broadcast?: readonly number[] | undefined;
   evaluate(args: FunctionArgs): EvalValue;
@@ -104,3 +108,26 @@ export interface RecalcOptions {
   readonly viewport?: { readonly sheet: Sheet; readonly range: CellRange } | undefined;
   readonly volatile?: boolean | undefined;
 }
+
+export const EvalValueKind = { ...CellValueKind, Reference: 'reference', Array: 'array' } as const;
+
+export const FormulaState = {
+  Fresh: 'fresh',
+  Stale: 'stale',
+  Cycle: 'cycle',
+  Imported: 'imported',
+} as const;
+
+export const ArrayScope = { All: 'all' } as const;
+
+export const CriteriaToken = {
+  AnyText: '*',
+  AnyChar: '?',
+  EscapedTilde: '~~',
+  EscapedStar: '~*',
+  EscapedQuestion: '~?',
+} as const;
+
+export const DatedifUnit = { Y: 'Y', M: 'M', D: 'D', YM: 'YM', MD: 'MD', YD: 'YD' } as const;
+
+export const WeekendMask = { AllDays: '1111111', Weekend: '1' } as const;

@@ -9,7 +9,7 @@ import { sameTree } from '../../core/calc/shared-trees';
 import type { Calculator } from '../../core/calc/calculator';
 import { CHUNK_ROWS } from '../../core/cell-store';
 import { nextTask } from '../../core/calc/tasks';
-import type { CellRange, CellValue } from '../../core/cell.types';
+import { CellValueKind, type CellRange, type CellValue } from '../../core/cell.types';
 import { FILE_FORMULAS } from '../../core/formula/locale';
 import type { FormulaNode } from '../../core/formula/formula.types';
 import { printFormula } from '../../core/formula/printer';
@@ -24,6 +24,7 @@ import { colsXml, mergesXml, rowAttributes } from './layout-part';
 import { placeInTail } from './tail';
 import type { SheetExtras } from './source';
 import type { StyleBook } from './styles-part';
+import { FormulaState } from '../../core/calc/calc.types';
 
 export interface StringTable {
   index(text: string): number;
@@ -194,15 +195,15 @@ const valueParts = (
   const inner = (text: string): string => `<${q}v>${text}</${q}v>`;
 
   switch (value.kind) {
-    case 'number':
+    case CellValueKind.Number:
       return ['', inner(numberText(value.value))];
-    case 'string':
+    case CellValueKind.String:
       return formula
         ? [' t="str"', inner(escapeText(encodeXstring(value.value)))]
         : [' t="s"', inner(String(strings.index(value.value)))];
-    case 'boolean':
+    case CellValueKind.Boolean:
       return [' t="b"', inner(value.value ? '1' : '0')];
-    case 'error':
+    case CellValueKind.Error:
       return [' t="e"', inner(escapeText(value.code))];
     default:
       return ['', ''];
@@ -287,7 +288,7 @@ const formulaCellXml = (
   const written = fileFormula(writing, place, formula.ast);
   const text = escapeText(printFormula(withFuturePrefixes(written.ast), FILE_FORMULAS, place));
   const spill = written.array;
-  const fresh = formula.state === 'fresh' || formula.state === 'imported';
+  const fresh = formula.state === FormulaState.Fresh || formula.state === FormulaState.Imported;
   const known = fresh && !writing.outdated(sheet, place.row, place.col);
   const value = sheet.cells.get(place.row, place.col);
   const [type, inner] = known ? valueParts(value, true, writing.strings, q) : ['', ''];

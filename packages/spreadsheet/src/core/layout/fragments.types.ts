@@ -1,28 +1,34 @@
-import type { CellAddress, CellRange } from '../cell.types';
+import type { CellAddress, CellRange, LineAxis } from '../cell.types';
 import type { FormulaNode } from '../formula/formula.types';
 
-export type SlotPolicy = 'drop' | 'clamp' | 'follow';
-
-export type SlotAxis = 'rows' | 'cols';
+export type SlotPolicy = (typeof SlotPolicy)[keyof typeof SlotPolicy];
 
 export type FragmentSlot =
-  | { readonly kind: 'cell'; readonly cell: CellAddress; readonly policy: SlotPolicy }
   | {
-      readonly kind: 'ranges';
+      readonly kind: typeof FragmentSlotKind.Cell;
+      readonly cell: CellAddress;
+      readonly policy: SlotPolicy;
+    }
+  | {
+      readonly kind: typeof FragmentSlotKind.Ranges;
       readonly ranges: readonly CellRange[];
       readonly policy: SlotPolicy;
     }
   | {
-      readonly kind: 'line';
-      readonly axis: SlotAxis;
+      readonly kind: typeof FragmentSlotKind.Line;
+      readonly axis: LineAxis;
       readonly line: number;
       readonly base: number;
       readonly policy: SlotPolicy;
     }
-  | { readonly kind: 'split'; readonly axis: SlotAxis; readonly count: number }
-  | { readonly kind: 'offset'; readonly offset: number }
-  | { readonly kind: 'formula'; readonly ast: FormulaNode }
-  | { readonly kind: 'count' };
+  | {
+      readonly kind: typeof FragmentSlotKind.Split;
+      readonly axis: LineAxis;
+      readonly count: number;
+    }
+  | { readonly kind: typeof FragmentSlotKind.Offset; readonly offset: number }
+  | { readonly kind: typeof FragmentSlotKind.Formula; readonly ast: FormulaNode }
+  | { readonly kind: typeof FragmentSlotKind.Count };
 
 export type FragmentPiece = string | FragmentSlot | Fragment;
 
@@ -42,3 +48,15 @@ export interface PartXml {
   readonly root: Fragment;
   readonly opaque: readonly string[];
 }
+
+export const FragmentSlotKind = {
+  Cell: 'cell',
+  Ranges: 'ranges',
+  Line: 'line',
+  Split: 'split',
+  Offset: 'offset',
+  Formula: 'formula',
+  Count: 'count',
+} as const;
+
+export const SlotPolicy = { Drop: 'drop', Clamp: 'clamp', Follow: 'follow' } as const;

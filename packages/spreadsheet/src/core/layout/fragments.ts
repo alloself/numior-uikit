@@ -1,14 +1,15 @@
-import type { CellAddress, CellRange } from '../cell.types';
+import { LineAxis, type CellAddress, type CellRange } from '../cell.types';
 import type { FormulaNode } from '../formula/formula.types';
 import { shiftFormula, type LineChange } from '../formula/rewrite';
 import { limitOf, shiftIndex } from '../lines';
-import type {
-  Fragment,
-  FragmentPiece,
-  FragmentSlot,
-  PartXml,
-  SheetXml,
-  SlotAxis,
+import {
+  FragmentSlotKind,
+  SlotPolicy,
+  type Fragment,
+  type FragmentPiece,
+  type FragmentSlot,
+  type PartXml,
+  type SheetXml,
 } from './fragments.types';
 import { shiftRanges, survivorOf } from './shift-ranges';
 
@@ -38,10 +39,10 @@ export const isSlot = (piece: FragmentPiece): piece is FragmentSlot =>
 
 const primaryOf = (fragment: Fragment): CellRange | undefined => {
   for (const piece of fragment.pieces) {
-    if (isSlot(piece) && piece.kind === 'cell') {
+    if (isSlot(piece) && piece.kind === FragmentSlotKind.Cell) {
       return cellRange(piece.cell);
     }
-    if (isSlot(piece) && piece.kind === 'ranges' && piece.ranges[0] !== undefined) {
+    if (isSlot(piece) && piece.kind === FragmentSlotKind.Ranges && piece.ranges[0] !== undefined) {
       return piece.ranges[0];
     }
   }
@@ -57,7 +58,7 @@ export const anchorOf = (fragment: Fragment): CellAddress => {
 const clampOf = (change: LineChange): number => Math.min(change.at, limitOf(change.axis) - 1);
 
 const movedCell = (cell: CellAddress, change: LineChange): CellAddress | undefined => {
-  const rows = change.axis === 'rows';
+  const rows = change.axis === LineAxis.Rows;
   const line = shiftIndex(rows ? cell.row : cell.col, change);
 
   if (line === undefined) {
@@ -67,7 +68,9 @@ const movedCell = (cell: CellAddress, change: LineChange): CellAddress | undefin
 };
 
 const clampedCell = (cell: CellAddress, change: LineChange): CellAddress =>
-  change.axis === 'rows' ? { ...cell, row: clampOf(change) } : { ...cell, col: clampOf(change) };
+  change.axis === LineAxis.Rows
+    ? { ...cell, row: clampOf(change) }
+    : { ...cell, col: clampOf(change) };
 
 const sameRanges = (left: readonly CellRange[], right: readonly CellRange[]): boolean =>
   left.length === right.length &&
@@ -90,13 +93,15 @@ export const splitBoundary = (count: number, change: LineChange): number => {
 };
 
 const shiftCellSlot = (
-  slot: Extract<FragmentSlot, { readonly kind: 'cell' }>,
+  slot: Extract<FragmentSlot, { readonly kind: typeof FragmentSlotKind.Cell }>,
   change: LineChange,
 ): FragmentSlot | undefined => {
   const moved = movedCell(slot.cell, change);
 
   if (moved === undefined) {
-    return slot.policy === 'drop' ? undefined : { ...slot, cell: clampedCell(slot.cell, change) };
+    return slot.policy === SlotPolicy.Drop
+      ? undefined
+      : { ...slot, cell: clampedCell(slot.cell, change) };
   }
   return moved.row === slot.cell.row && moved.col === slot.cell.col
     ? slot
@@ -104,14 +109,14 @@ const shiftCellSlot = (
 };
 
 const shiftRangesSlot = (
-  slot: Extract<FragmentSlot, { readonly kind: 'ranges' }>,
+  slot: Extract<FragmentSlot, { readonly kind: typeof FragmentSlotKind.Ranges }>,
   change: LineChange,
 ): FragmentSlot | undefined => {
   const ranges = shiftRanges(slot.ranges, change);
   const first = slot.ranges[0];
 
   if (ranges.length === 0) {
-    return slot.policy === 'drop' || first === undefined
+    return slot.policy === SlotPolicy.Drop || first === undefined
       ? undefined
       : {
           ...slot,
@@ -122,19 +127,19 @@ const shiftRangesSlot = (
 };
 
 const shiftLineSlot = (
-  slot: Extract<FragmentSlot, { readonly kind: 'line' }>,
+  slot: Extract<FragmentSlot, { readonly kind: typeof FragmentSlotKind.Line }>,
   change: LineChange,
 ): FragmentSlot | undefined => {
   const line = shiftIndex(slot.line, change);
 
   if (line === undefined) {
-    return slot.policy === 'drop' ? undefined : { ...slot, line: clampOf(change) };
+    return slot.policy === SlotPolicy.Drop ? undefined : { ...slot, line: clampOf(change) };
   }
   return line === slot.line ? slot : { ...slot, line };
 };
 
 const shiftOffset = (
-  slot: Extract<FragmentSlot, { readonly kind: 'offset' }>,
+  slot: Extract<FragmentSlot, { readonly kind: typeof FragmentSlotKind.Offset }>,
   change: LineChange,
   parent: Frame,
 ): FragmentSlot | undefined => {
@@ -154,7 +159,7 @@ const shiftOffset = (
 };
 
 const shiftFormulaSlot = (
-  slot: Extract<FragmentSlot, { readonly kind: 'formula' }>,
+  slot: Extract<FragmentSlot, { readonly kind: typeof FragmentSlotKind.Formula }>,
   shift: Shift,
   frame: Frame,
 ): FragmentSlot => {
@@ -171,7 +176,7 @@ const shiftFormulaSlot = (
 };
 
 const followed = (
-  slot: Extract<FragmentSlot, { readonly kind: 'line' }>,
+  slot: Extract<FragmentSlot, { readonly kind: typeof FragmentSlotKind.Line }>,
   change: LineChange,
   delta: number,
 ): FragmentSlot => {
@@ -181,26 +186,26 @@ const followed = (
 };
 
 const shiftLine = (
-  slot: Extract<FragmentSlot, { readonly kind: 'line' }>,
+  slot: Extract<FragmentSlot, { readonly kind: typeof FragmentSlotKind.Line }>,
   change: LineChange,
-  deltas: Map<SlotAxis, number>,
+  deltas: Map<LineAxis, number>,
 ): FragmentSlot | undefined => {
   const delta = deltas.get(slot.axis);
 
-  if (slot.policy === 'follow' && delta !== undefined) {
+  if (slot.policy === SlotPolicy.Follow && delta !== undefined) {
     return followed(slot, change, delta);
   }
 
   const moved = shiftLineSlot(slot, change);
 
-  if (moved?.kind === 'line' && slot.policy !== 'follow') {
+  if (moved?.kind === FragmentSlotKind.Line && slot.policy !== SlotPolicy.Follow) {
     deltas.set(slot.axis, moved.line - slot.line);
   }
   return moved;
 };
 
 const shiftSplit = (
-  slot: Extract<FragmentSlot, { readonly kind: 'split' }>,
+  slot: Extract<FragmentSlot, { readonly kind: typeof FragmentSlotKind.Split }>,
   change: LineChange,
 ): FragmentSlot => {
   const count = slot.axis === change.axis ? splitBoundary(slot.count, change) : slot.count;
@@ -211,28 +216,28 @@ const shiftSplit = (
 const shiftSlot = (
   slot: FragmentSlot,
   shift: Shift,
-  frames: { readonly own: Frame; readonly parent: Frame; readonly deltas: Map<SlotAxis, number> },
+  frames: { readonly own: Frame; readonly parent: Frame; readonly deltas: Map<LineAxis, number> },
 ): FragmentSlot | undefined => {
   const { change } = shift;
 
-  if (slot.kind === 'formula') {
+  if (slot.kind === FragmentSlotKind.Formula) {
     return shiftFormulaSlot(slot, shift, frames.own);
   }
   if (!shift.own) {
     return slot;
   }
   switch (slot.kind) {
-    case 'cell':
+    case FragmentSlotKind.Cell:
       return shiftCellSlot(slot, change);
-    case 'ranges':
+    case FragmentSlotKind.Ranges:
       return shiftRangesSlot(slot, change);
-    case 'line':
+    case FragmentSlotKind.Line:
       return slot.axis === change.axis ? shiftLine(slot, change, frames.deltas) : slot;
-    case 'split':
+    case FragmentSlotKind.Split:
       return shiftSplit(slot, change);
-    case 'offset':
-      return change.axis === 'cols' ? shiftOffset(slot, change, frames.parent) : slot;
-    case 'count':
+    case FragmentSlotKind.Offset:
+      return change.axis === LineAxis.Cols ? shiftOffset(slot, change, frames.parent) : slot;
+    case FragmentSlotKind.Count:
       return slot;
   }
 };
@@ -255,7 +260,7 @@ const shiftPieces = (
   parent: Frame,
 ): FragmentPiece[] | undefined => {
   const own = frameOf(fragment, shift);
-  const deltas = new Map<SlotAxis, number>();
+  const deltas = new Map<LineAxis, number>();
   const pieces: FragmentPiece[] = [];
 
   for (const piece of fragment.pieces) {
@@ -313,7 +318,7 @@ const mapPieces = (fragment: Fragment, map: FormulaMap): Fragment => {
     if (!isSlot(piece)) {
       return mapPieces(piece, map);
     }
-    if (piece.kind !== 'formula') {
+    if (piece.kind !== FragmentSlotKind.Formula) {
       return piece;
     }
 

@@ -1,14 +1,16 @@
-import type { CellValue } from '../cell.types';
+import { CellValueKind, type CellValue } from '../cell.types';
 import { EMPTY, textValue } from '../values';
 import { pivotKey } from './pivot-cache';
 import { VALUES_FIELD, dataIndexOf, normalizedPivot } from './pivot-engine';
-import type {
-  PivotCache,
-  PivotCell,
-  PivotDefinition,
-  PivotLine,
-  PivotOutput,
-  PivotResult,
+import {
+  PivotLayout,
+  PivotLineKind,
+  type PivotCache,
+  type PivotCell,
+  type PivotDefinition,
+  type PivotLine,
+  type PivotOutput,
+  type PivotResult,
 } from './pivot.types';
 
 interface Grid {
@@ -33,7 +35,7 @@ const RATIOS = new Set([
 ]);
 
 const put = (grid: Grid, row: number, col: number, value: CellValue, format?: string): void => {
-  if (value.kind !== 'empty') {
+  if (value.kind !== CellValueKind.Empty) {
     grid.cells.push({ row: grid.top + row, col, value, format });
   }
 };
@@ -58,18 +60,20 @@ const itemLabel = (
 
   const value = labels.cache.group(field)?.items[item] ?? EMPTY;
 
-  return value.kind === 'empty' ? textValue(labels.definition.captions.blank) : value;
+  return value.kind === CellValueKind.Empty ? textValue(labels.definition.captions.blank) : value;
 };
 
 const labelText = (value: CellValue): string =>
-  value.kind === 'string' || value.kind === 'number' ? String(value.value) : '';
+  value.kind === CellValueKind.String || value.kind === CellValueKind.Number
+    ? String(value.value)
+    : '';
 
 const closingLabel = (labels: Labels, levels: readonly number[], line: PivotLine): CellValue => {
   const { captions, values } = labels.definition;
   const expanded = levels.includes(VALUES_FIELD) && values.length > 1;
   const name = values[line.value]?.name ?? '';
 
-  if (line.kind === 'grand') {
+  if (line.kind === PivotLineKind.Grand) {
     return textValue(expanded ? `${captions.total} ${name}` : captions.grandTotal);
   }
 
@@ -123,7 +127,8 @@ const filterArea = (labels: Labels, grid: Grid): void => {
     grid.cells.push({
       row: index,
       col: 1,
-      value: selected.kind === 'empty' ? textValue(definition.captions.blank) : selected,
+      value:
+        selected.kind === CellValueKind.Empty ? textValue(definition.captions.blank) : selected,
       format: undefined,
     });
   });
@@ -136,7 +141,7 @@ const columnHeaders = (labels: Labels, grid: Grid, result: PivotResult, at: numb
   result.columns.forEach((line, index) => {
     const col = at + index;
 
-    if (line.kind === 'item') {
+    if (line.kind === PivotLineKind.Item) {
       levels.forEach((_, level) => {
         if (changedFrom(previous, line, level)) {
           put(grid, 1 + level, col, itemLabel(labels, levels, line, level));
@@ -146,24 +151,30 @@ const columnHeaders = (labels: Labels, grid: Grid, result: PivotResult, at: numb
       previous = line;
       return;
     }
-    put(grid, line.kind === 'grand' ? 1 : 1 + line.depth, col, closingLabel(labels, levels, line));
+
+    put(
+      grid,
+      line.kind === PivotLineKind.Grand ? 1 : 1 + line.depth,
+      col,
+      closingLabel(labels, levels, line),
+    );
   });
 };
 
 const rowLabels = (labels: Labels, grid: Grid, result: PivotResult, header: number): void => {
   const { definition } = labels;
   const levels = definition.rows;
-  const compact = definition.layout === 'compact';
+  const compact = definition.layout === PivotLayout.Compact;
   let previous: PivotLine | undefined;
 
   result.rows.forEach((line, index) => {
     const row = header + index;
 
-    if (line.kind === 'grand' || line.kind === 'subtotal') {
+    if (line.kind === PivotLineKind.Grand || line.kind === PivotLineKind.Subtotal) {
       put(
         grid,
         row,
-        compact || line.kind === 'grand' ? 0 : line.depth,
+        compact || line.kind === PivotLineKind.Grand ? 0 : line.depth,
         closingLabel(labels, levels, line),
       );
 
@@ -172,7 +183,7 @@ const rowLabels = (labels: Labels, grid: Grid, result: PivotResult, header: numb
     if (line.depth < 0) {
       return;
     }
-    if (definition.layout === 'tabular') {
+    if (definition.layout === PivotLayout.Tabular) {
       levels.slice(0, line.depth + 1).forEach((_, level) => {
         if (changedFrom(previous, line, level)) {
           put(grid, row, level, itemLabel(labels, levels, line, level));
@@ -200,7 +211,7 @@ const headerArea = (
     put(grid, 0, 0, single === undefined ? EMPTY : textValue(single));
 
     const caption =
-      definition.layout === 'compact'
+      definition.layout === PivotLayout.Compact
         ? definition.columns.length === 1 && firstColumn === VALUES_FIELD
           ? definition.captions.values
           : definition.captions.columns
@@ -214,7 +225,7 @@ const headerArea = (
   if (definition.rows.length === 0) {
     return;
   }
-  if (definition.layout === 'compact') {
+  if (definition.layout === PivotLayout.Compact) {
     put(grid, header - 1, 0, textValue(definition.captions.rows));
     return;
   }
@@ -237,7 +248,7 @@ export const renderPivot = (
 
   const labelCols =
     rowLevels > 0
-      ? definition.layout === 'compact'
+      ? definition.layout === PivotLayout.Compact
         ? 1
         : rowLevels
       : Number(definition.columns.length > 0);

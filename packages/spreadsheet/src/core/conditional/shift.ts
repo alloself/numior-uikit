@@ -2,11 +2,12 @@ import type { CellAddress, CellRange } from '../cell.types';
 import type { FormulaNode } from '../formula/formula.types';
 import { shiftFormula, type LineChange } from '../formula/rewrite';
 import { shiftRanges, survivorOf } from '../layout/shift-ranges';
-import type {
-  ConditionalEntry,
-  ConditionalFormat,
-  ConditionalRule,
-  Threshold,
+import {
+  ConditionalRuleKind,
+  type ConditionalEntry,
+  type ConditionalFormat,
+  type ConditionalRule,
+  type Threshold,
 } from './conditional.types';
 
 type FormulaMap = (ast: FormulaNode) => FormulaNode;
@@ -16,11 +17,11 @@ const mappedThreshold = (threshold: Threshold, map: FormulaMap): Threshold =>
 
 const mappedRule = (rule: ConditionalRule, map: FormulaMap): ConditionalRule => {
   switch (rule.kind) {
-    case 'cellIs':
+    case ConditionalRuleKind.CellIs:
       return { ...rule, formulas: rule.formulas.map(map) };
-    case 'expression':
+    case ConditionalRuleKind.Expression:
       return { ...rule, formula: map(rule.formula) };
-    case 'colorScale':
+    case ConditionalRuleKind.ColorScale:
       return {
         ...rule,
         stops: rule.stops.map((stop) => ({
@@ -28,11 +29,11 @@ const mappedRule = (rule: ConditionalRule, map: FormulaMap): ConditionalRule => 
           threshold: mappedThreshold(stop.threshold, map),
         })),
       };
-    case 'dataBar':
+    case ConditionalRuleKind.DataBar:
       return { ...rule, min: mappedThreshold(rule.min, map), max: mappedThreshold(rule.max, map) };
-    case 'iconSet':
+    case ConditionalRuleKind.IconSet:
       return { ...rule, thresholds: rule.thresholds.map((item) => mappedThreshold(item, map)) };
-    case 'foreign':
+    case ConditionalRuleKind.Foreign:
       return rule.formulas === undefined ? rule : { ...rule, formulas: rule.formulas.map(map) };
     default:
       return rule;

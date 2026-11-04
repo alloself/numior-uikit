@@ -1,7 +1,7 @@
 import { MAX_COLS, MAX_ROWS, containsCell } from '../address';
 import type { Calculator } from '../calc/calculator';
 import type { CellContent, ShiftedFormulaCell, ShiftedName } from '../calc/calc.types';
-import type { CellRange } from '../cell.types';
+import { CellInputKind, LineAxis, type CellRange } from '../cell.types';
 import type { ConditionalFormat } from '../conditional/conditional.types';
 import type { FormulaNode } from '../formula/formula.types';
 import { formulaReferences, onSheetNamed } from '../formula/references';
@@ -10,13 +10,13 @@ import { mapLayoutFormulas, shiftLayout } from '../layout/line-layouts';
 import { dropSheetFromFormula, renameInFormula, type LineChange } from '../formula/rewrite';
 import { validDefinedName, validSheetName, type Sheet, type Workbook } from '../workbook';
 import { createRewriter, formulaEdits, nameEdits } from './rewrites';
-import type {
-  CellEdit,
-  LineAxis,
-  SheetStep,
+import {
+  StepKind,
   StepRefusal,
-  StepResult,
-  WorkbookStep,
+  type CellEdit,
+  type SheetStep,
+  type StepResult,
+  type WorkbookStep,
 } from './step.types';
 import { createPivotSteps } from './pivot-steps';
 import { createTableSteps, specOf, type TableDrops } from './table-steps';
@@ -38,10 +38,10 @@ const NO_CHANGES: readonly LineChange[] = [];
 
 const keyOf = (row: number, col: number): number => row * MAX_COLS + col;
 
-const limitOf = (axis: LineAxis): number => (axis === 'rows' ? MAX_ROWS : MAX_COLS);
+const limitOf = (axis: LineAxis): number => (axis === LineAxis.Rows ? MAX_ROWS : MAX_COLS);
 
 const linesRange = (axis: LineAxis, from: number, to: number): CellRange =>
-  axis === 'rows'
+  axis === LineAxis.Rows
     ? { top: from, bottom: to, left: 0, right: MAX_COLS - 1 }
     : { top: 0, bottom: MAX_ROWS - 1, left: from, right: to };
 
@@ -87,7 +87,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
       const format = sheet.formats.get(row, col);
       const decoration = sheet.decorations.get(row, col);
 
-      if (content.kind !== 'empty' || format !== 0 || decoration !== 0) {
+      if (content.kind !== CellInputKind.Empty || format !== 0 || decoration !== 0) {
         found.set(keyOf(row, col), {
           row,
           col,
@@ -137,10 +137,10 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     ast: FormulaNode | undefined,
   ): StepResult => {
     if (!validDefinedName(name)) {
-      return refused('invalid-name');
+      return refused(StepRefusal.InvalidName);
     }
     if (ast !== undefined && book.tables.get(name) !== undefined) {
-      return refused('name-taken');
+      return refused(StepRefusal.NameTaken);
     }
 
     const previous = book.names.get(name, scope);
@@ -280,13 +280,13 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     const limit = limitOf(axis);
 
     if (occupied(sheet, linesRange(axis, limit - count, limit - 1))) {
-      return refused('sheet-full');
+      return refused(StepRefusal.SheetFull);
     }
 
     const change: LineChange = { sheet: sheet.name, axis, at, count };
 
     if (pivots.crossed(sheet, change)) {
-      return refused('pivot-overlap');
+      return refused(StepRefusal.PivotOverlap);
     }
 
     const saved = snapshot();
@@ -305,7 +305,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     const change: LineChange = { sheet: sheet.name, axis, at, count: -count };
 
     if (pivots.crossed(sheet, change)) {
-      return refused('pivot-overlap');
+      return refused(StepRefusal.PivotOverlap);
     }
 
     const saved = snapshot();
@@ -331,7 +331,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
 
   const addSheet = (name: string, index: number): StepResult => {
     if (!validSheetName(name) || book.sheet(name) !== undefined) {
-      return refused('name-taken');
+      return refused(StepRefusal.NameTaken);
     }
     book.addSheet(name, index);
 
@@ -352,7 +352,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
 
   const removeSheet = (sheet: Sheet): StepResult => {
     if (book.sheets.length === 1) {
-      return refused('last-sheet');
+      return refused(StepRefusal.LastSheet);
     }
 
     const index = book.sheets.indexOf(sheet);
@@ -407,7 +407,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     const from = sheet.name;
 
     if (!book.renameSheet(sheet, to)) {
-      return refused('name-taken');
+      return refused(StepRefusal.NameTaken);
     }
     rewriter.formulas((_owner, ast) => renameInFormula(ast, from, to));
     rewriter.names((defined) => renameInFormula(defined.ast, from, to));
@@ -444,53 +444,53 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
   const onSheet = (name: string, run: (sheet: Sheet) => StepResult): StepResult => {
     const sheet = book.sheet(name);
 
-    return sheet === undefined ? refused('missing-sheet') : run(sheet);
+    return sheet === undefined ? refused(StepRefusal.MissingSheet) : run(sheet);
   };
 
   const applyToSheet = (sheet: Sheet, step: SheetStep): StepResult => {
     switch (step.kind) {
-      case 'setCells':
+      case StepKind.SetCells:
         return pivots.covers(sheet, step.cells)
-          ? refused('pivot-output')
+          ? refused(StepRefusal.PivotOutput)
           : setCells(sheet, step.cells);
-      case 'setFormat':
+      case StepKind.SetFormat:
         return setFormat(sheet, step.range, step.format);
-      case 'insertLines':
+      case StepKind.InsertLines:
         return insertLines(sheet, step.axis, step.at, step.count);
-      case 'deleteLines':
+      case StepKind.DeleteLines:
         return deleteLines(sheet, step.axis, step.at, step.count);
-      case 'setConditional':
+      case StepKind.SetConditional:
         return setConditional(sheet, step.formats);
-      case 'setLayout':
+      case StepKind.SetLayout:
         return setLayout(sheet, step.layout);
-      case 'setPivot':
+      case StepKind.SetPivot:
         return pivots.set(sheet, step.name, step.pivot);
-      case 'refreshPivot':
+      case StepKind.RefreshPivot:
         return pivots.refresh(sheet, step.name);
-      case 'putPivot':
+      case StepKind.PutPivot:
         return pivots.put(sheet, step.name, step.pivot, step.cells);
     }
   };
 
   const apply = (step: WorkbookStep): StepResult => {
     switch (step.kind) {
-      case 'addSheet':
+      case StepKind.AddSheet:
         return addSheet(step.name, step.index);
-      case 'removeSheet':
+      case StepKind.RemoveSheet:
         return onSheet(step.name, removeSheet);
-      case 'renameSheet':
+      case StepKind.RenameSheet:
         return onSheet(step.from, (sheet) => renameSheet(sheet, step.to));
-      case 'setName':
+      case StepKind.SetName:
         return step.scope === undefined
           ? setName(step.name, undefined, step.ast)
           : onSheet(step.scope, (sheet) => setName(step.name, sheet, step.ast));
-      case 'addTable':
+      case StepKind.AddTable:
         return tables.add(step.name, step.table);
-      case 'setTable':
+      case StepKind.SetTable:
         return tables.set(step.name, step.table);
-      case 'renameTable':
+      case StepKind.RenameTable:
         return tables.rename(step.from, step.to);
-      case 'batch':
+      case StepKind.Batch:
         return applyBatch(step.steps);
       default:
         return onSheet(step.sheet, (sheet) => applyToSheet(sheet, step));

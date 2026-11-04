@@ -42,6 +42,7 @@ import { buildPivotCache, pivotSource } from '../../core/pivot/pivot-cache';
 import { computePivot } from '../../core/pivot/pivot-engine';
 import { renderPivot } from '../../core/pivot/pivot-render';
 import type { WriteOptions, XlsxLoss, XlsxWrite } from './write.types';
+import { RelationshipKind } from '../ooxml.types';
 
 interface Original {
   readonly archive: ZipArchive;
@@ -222,10 +223,10 @@ const planSheet = async (
       extras: loss === undefined ? extras : undefined,
       kept: relationships.filter(
         (relationship) =>
-          relationship.kind !== 'table' &&
-          (context.keepPivots || relationship.kind !== 'pivotTable'),
+          relationship.kind !== RelationshipKind.Table &&
+          (context.keepPivots || relationship.kind !== RelationshipKind.PivotTable),
       ),
-      tables: relationships.filter((relationship) => relationship.kind === 'table'),
+      tables: relationships.filter((relationship) => relationship.kind === RelationshipKind.Table),
     },
   };
 };
@@ -666,7 +667,8 @@ const writeWorkbookPart = async (writing: Writing): Promise<void> => {
 
   const keptBook = (original?.workbookRelationships ?? []).filter(
     (item) =>
-      !REGENERATED.has(item.kind) && (writing.pivots.keep || item.kind !== 'pivotCacheDefinition'),
+      !REGENERATED.has(item.kind) &&
+      (writing.pivots.keep || item.kind !== RelationshipKind.PivotCacheDefinition),
   );
 
   const rootRelationships =
@@ -678,7 +680,7 @@ const writeWorkbookPart = async (writing: Writing): Promise<void> => {
 
   output.roots.push(
     ...keptBook,
-    ...rootRelationships.filter((item) => item.kind !== 'officeDocument'),
+    ...rootRelationships.filter((item) => item.kind !== RelationshipKind.OfficeDocument),
   );
 
   output.entries.push(

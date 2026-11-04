@@ -1,6 +1,7 @@
 import { decodeXstring } from '../xml/xstring';
 import type { ZipArchive } from '../zip/zip.types';
 import { MAIN, readPart, type PartOptions } from './ooxml';
+import { OoxmlElement } from '../ooxml.types';
 
 export interface SharedStrings {
   readonly strings: readonly string[];
@@ -32,17 +33,17 @@ export const readSharedStrings = async (
           return;
         }
         switch (element.local) {
-          case 'si':
+          case OoxmlElement.Si:
             item = [];
             runs = 0;
             break;
-          case 'rPh':
+          case OoxmlElement.RPh:
             phonetic += 1;
             break;
-          case 'r':
+          case OoxmlElement.R:
             runs += 1;
             break;
-          case 't':
+          case OoxmlElement.T:
             inText = phonetic === 0;
             break;
           default:
@@ -56,15 +57,15 @@ export const readSharedStrings = async (
       },
       close: (element) => {
         switch (element.local) {
-          case 'si':
+          case OoxmlElement.Si:
             strings.push(decodeXstring((item ?? []).join('')));
             rich += runs > 0 ? 1 : 0;
             item = undefined;
             break;
-          case 'rPh':
+          case OoxmlElement.RPh:
             phonetic -= 1;
             break;
-          case 't':
+          case OoxmlElement.T:
             inText = false;
             break;
           default:

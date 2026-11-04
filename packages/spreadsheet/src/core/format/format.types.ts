@@ -1,5 +1,7 @@
 import type { ErrorTexts } from '../error-texts';
 
+export type CommaRole = (typeof CommaRole)[keyof typeof CommaRole];
+
 export interface NumberLocale {
   readonly name: string;
   readonly decimal: string;
@@ -14,7 +16,7 @@ export interface NumberLocale {
   readonly trueText: string;
   readonly falseText: string;
   readonly errors: ErrorTexts;
-  readonly dateOrder: 'mdy' | 'dmy';
+  readonly dateOrder: typeof DateOrder.Mdy | typeof DateOrder.Dmy;
   readonly shortDate: string;
   readonly longDate: string;
   readonly shortTime: string;
@@ -30,38 +32,27 @@ export type FormatCondition = {
   readonly value: number;
 };
 
-export type DateUnit =
-  | 'year'
-  | 'month'
-  | 'day'
-  | 'hour'
-  | 'minute'
-  | 'second'
-  | 'subsecond'
-  | 'ampm'
-  | 'hours'
-  | 'minutes'
-  | 'seconds';
+export type DateUnit = (typeof DateUnit)[keyof typeof DateUnit];
 
 export type FormatToken =
-  | { readonly kind: 'literal'; readonly text: string }
-  | { readonly kind: 'digit'; readonly char: '0' | '#' | '?' }
-  | { readonly kind: 'point' }
-  | { readonly kind: 'comma' }
-  | { readonly kind: 'percent' }
-  | { readonly kind: 'exponent'; readonly plus: boolean }
-  | { readonly kind: 'slash' }
-  | { readonly kind: 'text' }
-  | { readonly kind: 'fill'; readonly char: string }
-  | { readonly kind: 'general' }
+  | { readonly kind: typeof FormatTokenKind.Literal; readonly text: string }
+  | { readonly kind: typeof FormatTokenKind.Digit; readonly char: '0' | '#' | '?' }
+  | { readonly kind: typeof FormatTokenKind.Point }
+  | { readonly kind: typeof FormatTokenKind.Comma }
+  | { readonly kind: typeof FormatTokenKind.Percent }
+  | { readonly kind: typeof FormatTokenKind.Exponent; readonly plus: boolean }
+  | { readonly kind: typeof FormatTokenKind.Slash }
+  | { readonly kind: typeof FormatTokenKind.Text }
+  | { readonly kind: typeof FormatTokenKind.Fill; readonly char: string }
+  | { readonly kind: typeof FormatTokenKind.General }
   | {
-      readonly kind: 'date';
+      readonly kind: typeof FormatTokenKind.Date;
       readonly unit: DateUnit;
       readonly width: number;
       readonly code: string;
     };
 
-export type SectionKind = 'number' | 'date' | 'text' | 'literal';
+export type SectionKind = (typeof SectionKind)[keyof typeof SectionKind];
 
 export interface FormatSection {
   readonly kind: SectionKind;
@@ -69,7 +60,7 @@ export interface FormatSection {
   readonly condition: FormatCondition | undefined;
   readonly color: number | undefined;
   readonly locale: NumberLocale | undefined;
-  readonly system: 'date' | 'time' | undefined;
+  readonly system: typeof SectionSystem.Date | typeof SectionSystem.Time | undefined;
 }
 
 export interface NumberFormat {
@@ -87,3 +78,67 @@ export interface FormattedValue {
   readonly color: number | undefined;
   readonly fill: FormatFill | undefined;
 }
+
+export const FormatTokenKind = {
+  Literal: 'literal',
+  Digit: 'digit',
+  Point: 'point',
+  Comma: 'comma',
+  Percent: 'percent',
+  Exponent: 'exponent',
+  Slash: 'slash',
+  Text: 'text',
+  Fill: 'fill',
+  General: 'general',
+  Date: 'date',
+} as const;
+
+export const DateUnit = {
+  Year: 'year',
+  Month: 'month',
+  Day: 'day',
+  Hour: 'hour',
+  Minute: 'minute',
+  Second: 'second',
+  Subsecond: 'subsecond',
+  Ampm: 'ampm',
+  Hours: 'hours',
+  Minutes: 'minutes',
+  Seconds: 'seconds',
+} as const;
+
+export const SectionKind = {
+  Number: 'number',
+  Date: 'date',
+  Text: 'text',
+  Literal: 'literal',
+} as const;
+
+export const DateOrder = { Mdy: 'mdy', Dmy: 'dmy' } as const;
+
+export const SectionSystem = { Date: 'date', Time: 'time' } as const;
+
+export const FormatCode = { General: 'General' } as const;
+
+export const CommaRole = { Group: 'group', Scale: 'scale', None: 'none' } as const;
+
+export const FormatChar = {
+  Backslash: '\\',
+  Semicolon: ';',
+  Quote: '"',
+  OpenBracket: '[',
+  CloseBracket: ']',
+  ExponentUpper: 'E',
+  ExponentLower: 'e',
+  Underscore: '_',
+  Asterisk: '*',
+  Plus: '+',
+  Minus: '-',
+  Comma: ',',
+  Point: '.',
+  Zero: '0',
+  Question: '?',
+  Space: ' ',
+} as const;
+
+export const LanguageCode = { Ru: 'ru' } as const;

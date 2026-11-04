@@ -14,6 +14,7 @@ import type { NumberLocale } from '../../core/format/format.types';
 import type { Workbook } from '../../core/workbook';
 import { escapeAttribute } from '../xml/writer';
 import { encodeXstring } from '../xml/xstring';
+import { FillPattern, StyleColorKind, UnderlineStyle } from '../../core/cell.types';
 
 export interface StyleExtras {
   readonly dxfs?: string | undefined;
@@ -65,13 +66,13 @@ export const colorXml = (element: string, color: StyleColor | undefined): string
     return '';
   }
   switch (color.kind) {
-    case 'rgb':
+    case StyleColorKind.Rgb:
       return `<${element} rgb="${color.argb}"/>`;
-    case 'theme':
+    case StyleColorKind.Theme:
       return `<${element} theme="${String(color.theme)}"${color.tint === 0 ? '' : attribute('tint', color.tint)}/>`;
-    case 'indexed':
+    case StyleColorKind.Indexed:
       return `<${element} indexed="${String(color.index)}"/>`;
-    case 'auto':
+    case StyleColorKind.Auto:
       return `<${element} auto="1"/>`;
   }
 };
@@ -94,7 +95,7 @@ const fontXml = (font: FontStyle): string =>
     flagXml('strike', font.strike),
     font.underline === undefined
       ? ''
-      : font.underline === 'single'
+      : font.underline === UnderlineStyle.Single
         ? '<u/>'
         : valueXml('u', font.underline),
     valueXml('vertAlign', font.script),
@@ -154,7 +155,7 @@ const builtinIds = (locale: NumberLocale): Map<string, number> =>
 const FIRST_DIFFERENTIAL_FORMAT = 400;
 
 const dxfFillXml = (fill: FillStyle): string =>
-  `<fill><patternFill${fill.pattern === 'solid' ? '' : attribute('patternType', fill.pattern)}>${colorXml('fgColor', fill.foreground)}${colorXml('bgColor', fill.background)}</patternFill></fill>`;
+  `<fill><patternFill${fill.pattern === FillPattern.Solid ? '' : attribute('patternType', fill.pattern)}>${colorXml('fgColor', fill.foreground)}${colorXml('bgColor', fill.background)}</patternFill></fill>`;
 
 const dxfXml = (
   style: DifferentialStyle,

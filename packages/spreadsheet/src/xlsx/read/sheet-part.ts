@@ -1,8 +1,12 @@
 import { MAX_COLS, MAX_ROWS, parseRange } from '../../core/address';
 import { bookArrays, withImplicitIntersections } from '../../core/calc/array-formula';
 import type { Calculator } from '../../core/calc/calculator';
-import type { CellRange, CellValue } from '../../core/cell.types';
-import type { FormulaNode } from '../../core/formula/formula.types';
+import { CellValueKind, type CellRange, type CellValue } from '../../core/cell.types';
+import {
+  FormulaNodeKind,
+  FormulaReferenceKind,
+  type FormulaNode,
+} from '../../core/formula/formula.types';
 import { EN_FORMULAS } from '../../core/formula/locale';
 import { parseFormula } from '../../core/formula/parser';
 import { formulaReferences } from '../../core/formula/references';
@@ -16,7 +20,7 @@ import {
 } from '../../core/values';
 import type { Sheet, Workbook } from '../../core/workbook';
 import type { DifferentialStyle } from '../../core/conditional/conditional.types';
-import type { XmlAttribute } from '../xml/xml.types';
+import { XmlBoolean, type XmlAttribute } from '../xml/xml.types';
 import { X14, createConditionalCollector, createExtensionCollector } from './conditional-part';
 import { decodeXstring } from '../xml/xstring';
 import { createFragmentRecorder } from './fragment-part';
@@ -24,6 +28,9 @@ import { SHEET_SPECS, opaqueInSheet } from './fragment-specs';
 import { createLayoutCollector } from './layout-part';
 import type { ZipArchive } from '../zip/zip.types';
 import { MAIN, attributeOf, numberOf, readPart, type PartOptions } from './ooxml';
+import { CellCapture, FormulaKind } from './read.types';
+import { CellTypeCode, OoxmlElement } from '../ooxml.types';
+import { FormatCode } from '../../core/format/format.types';
 
 export interface SheetContext {
   readonly book: Workbook;
@@ -53,8 +60,6 @@ export interface SheetCounts {
   externalTables: number;
   readonly unknown: Set<string>;
 }
-
-type FormulaKind = 'normal' | 'shared' | 'array' | 'dataTable';
 
 interface Cell {
   row: number;
@@ -131,17 +136,17 @@ export const valueOf = (
   strings: readonly string[],
 ): CellValue => {
   switch (cell.type) {
-    case 's':
+    case CellTypeCode.SharedString:
       return textValue(strings[numberOf(cell.value, -1)] ?? '');
-    case 'str':
+    case CellTypeCode.FormulaString:
       return textValue(decodeXstring(cell.value));
-    case 'inlineStr':
+    case CellTypeCode.InlineString:
       return textValue(decodeXstring(cell.inline));
-    case 'b':
-      return booleanValue(cell.value === '1' || cell.value === 'true');
-    case 'e':
+    case CellTypeCode.Boolean:
+      return booleanValue(cell.value === XmlBoolean.One || cell.value === XmlBoolean.True);
+    case CellTypeCode.Error:
       return isCellError(cell.value) ? errorValue(cell.value) : errorValue('#VALUE!');
-    case 'd': {
+    case CellTypeCode.Date: {
       const time = Date.parse(cell.value.endsWith('Z') ? cell.value : `${cell.value}Z`);
 
       return Number.isFinite(time) ? numberValue(time / DAY_MS + EPOCH_SERIAL) : EMPTY;
@@ -153,15 +158,15 @@ export const valueOf = (
 
 const callsIn = (node: FormulaNode, visit: (name: string) => void): void => {
   switch (node.kind) {
-    case 'call':
+    case FormulaNodeKind.Call:
       visit(node.name);
       node.args.forEach((arg) => callsIn(arg, visit));
       return;
-    case 'unary':
-    case 'percent':
+    case FormulaNodeKind.Unary:
+    case FormulaNodeKind.Percent:
       callsIn(node.operand, visit);
       return;
-    case 'binary':
+    case FormulaNodeKind.Binary:
       callsIn(node.left, visit);
       callsIn(node.right, visit);
       return;
@@ -172,9 +177,9 @@ const callsIn = (node: FormulaNode, visit: (name: string) => void): void => {
 
 const formulaKind = (text: string | undefined): FormulaKind => {
   switch (text) {
-    case 'shared':
-    case 'array':
-    case 'dataTable':
+    case FormulaKind.Shared:
+    case FormulaKind.Array:
+    case FormulaKind.DataTable:
       return text;
     default:
       return 'normal';
@@ -182,7 +187,7 @@ const formulaKind = (text: string | undefined): FormulaKind => {
 };
 
 const spillOf = (cell: Cell): CellRange | undefined =>
-  cell.formula?.kind === 'array' && cell.formula.ref !== undefined
+  cell.formula?.kind === FormulaKind.Array && cell.formula.ref !== undefined
     ? parseRange(cell.formula.ref)
     : undefined;
 
@@ -198,7 +203,7 @@ export const readSheetPart = async (
   let row = -1;
   let col = -1;
   let cell: Cell | undefined;
-  let capture: 'value' | 'formula' | 'inline' | undefined;
+  let capture: CellCapture | undefined;
   let phonetic = 0;
   const conditional = createConditionalCollector(context.differentials);
   const extensions = createExtensionCollector();
@@ -230,24 +235,24 @@ export const readSheetPart = async (
     }
 
     const ast =
-      formula.kind === 'array'
+      formula.kind === FormulaKind.Array
         ? parsed.ast
         : withImplicitIntersections(
             parsed.ast,
             bookArrays(context.book, calculator.functions, sheet),
           );
 
-    if (formula.kind === 'shared' && formula.shared !== undefined) {
+    if (formula.kind === FormulaKind.Shared && formula.shared !== undefined) {
       shared.set(formula.shared, ast);
     }
     return ast;
   };
 
   const commitFormula = (current: Cell, value: CellValue): void => {
-    const ast = current.formula?.kind === 'dataTable' ? undefined : astOf(current);
+    const ast = current.formula?.kind === FormulaKind.DataTable ? undefined : astOf(current);
 
     if (ast === undefined) {
-      counts[current.formula?.kind === 'dataTable' ? 'dataTables' : 'unparsed'] += 1;
+      counts[current.formula?.kind === FormulaKind.DataTable ? 'dataTables' : 'unparsed'] += 1;
       calculator.importValue(sheet, current.row, current.col, value);
       return;
     }
@@ -262,7 +267,8 @@ export const readSheetPart = async (
     });
 
     const external = formulaReferences(ast).some(
-      (reference) => reference.kind === 'structured' && reference.book !== undefined,
+      (reference) =>
+        reference.kind === FormulaReferenceKind.Structured && reference.book !== undefined,
     );
 
     counts.formulas += 1;
@@ -283,12 +289,12 @@ export const readSheetPart = async (
 
     if (current.formula !== undefined) {
       commitFormula(current, value);
-    } else if (value.kind !== 'empty') {
+    } else if (value.kind !== CellValueKind.Empty) {
       calculator.importValue(sheet, current.row, current.col, value);
     }
     const decoration = context.decorations[current.style] ?? 0;
 
-    if (format !== undefined && format !== 'General') {
+    if (format !== undefined && format !== FormatCode.General) {
       sheet.formats.set(current.row, current.col, context.book.formats.id(format));
     }
     if (decoration !== 0) {
@@ -320,28 +326,28 @@ export const readSheetPart = async (
 
   const openMain = (local: string, attributes: readonly XmlAttribute[]): void => {
     switch (local) {
-      case 'row':
+      case OoxmlElement.Row:
         row = numberOf(attributeOf(attributes, 'r'), row + 2) - 1;
         col = -1;
-        counts.layout += attributeOf(attributes, 'customHeight') === '1' ? 1 : 0;
+        counts.layout += attributeOf(attributes, 'customHeight') === XmlBoolean.One ? 1 : 0;
         layout.row(row, attributes);
         return;
-      case 'col':
+      case OoxmlElement.Col:
         counts.layout += 1;
         layout.col(attributes);
         return;
-      case 'mergeCell':
+      case OoxmlElement.MergeCell:
         counts.merges += 1;
         layout.merge(attributeOf(attributes, 'ref'));
         return;
 
-      case 'c':
+      case OoxmlElement.C:
         openCell(attributes);
         return;
-      case 'v':
+      case OoxmlElement.V:
         capture = 'value';
         return;
-      case 'f':
+      case OoxmlElement.F:
         capture = 'formula';
         if (cell !== undefined) {
           cell.formula = {
@@ -352,10 +358,10 @@ export const readSheetPart = async (
           };
         }
         return;
-      case 't':
+      case OoxmlElement.T:
         capture = cell !== undefined && phonetic === 0 ? 'inline' : undefined;
         return;
-      case 'rPh':
+      case OoxmlElement.RPh:
         phonetic += 1;
         return;
       default: {
@@ -377,7 +383,7 @@ export const readSheetPart = async (
     part,
     {
       open: (element, attributes) => {
-        if (depth === 1 && element.local === 'sheetData') {
+        if (depth === 1 && element.local === OoxmlElement.SheetData) {
           inData = true;
         } else if (depth >= 1 && !inData) {
           recorder.open(element, attributes);
@@ -385,12 +391,12 @@ export const readSheetPart = async (
         depth += 1;
         if (
           conditional.inside() ||
-          (element.local === 'conditionalFormatting' && MAIN.has(element.uri))
+          (element.local === OoxmlElement.ConditionalFormatting && MAIN.has(element.uri))
         ) {
           conditional.open(element, attributes);
         } else if (
           extensions.inside() ||
-          (element.local === 'conditionalFormatting' && element.uri === X14)
+          (element.local === OoxmlElement.ConditionalFormatting && element.uri === X14)
         ) {
           extensions.open(element, attributes);
         } else if (MAIN.has(element.uri)) {
@@ -413,13 +419,13 @@ export const readSheetPart = async (
           return;
         }
         switch (capture) {
-          case 'value':
+          case CellCapture.Value:
             cell.value += text;
             return;
-          case 'inline':
+          case CellCapture.Inline:
             cell.inline += text;
             return;
-          case 'formula':
+          case CellCapture.Formula:
             if (cell.formula !== undefined) {
               cell.formula.text += text;
             }
@@ -445,18 +451,18 @@ export const readSheetPart = async (
           return;
         }
         switch (element.local) {
-          case 'c':
+          case OoxmlElement.C:
             if (cell !== undefined) {
               commit(cell);
             }
             cell = undefined;
             return;
-          case 'rPh':
+          case OoxmlElement.RPh:
             phonetic -= 1;
             return;
-          case 'v':
-          case 'f':
-          case 't':
+          case OoxmlElement.V:
+          case OoxmlElement.F:
+          case OoxmlElement.T:
             capture = undefined;
             return;
           default:

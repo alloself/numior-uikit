@@ -1,5 +1,5 @@
 import { MAX_COLS, containsCell } from './address';
-import type { CellRange } from './cell.types';
+import { LineAxis, type CellRange } from './cell.types';
 import { CHUNK_COLS, CHUNK_ROWS } from './cell-store';
 import { shiftIndex, type LineMove } from './lines';
 
@@ -13,7 +13,7 @@ export interface CellFormats {
   set(row: number, col: number, id: number): void;
   setRange(range: CellRange, id: number): void;
   forEachInRange(range: CellRange, visit: (row: number, col: number, id: number) => void): void;
-  shiftLines(axis: 'rows' | 'cols', at: number, count: number): void;
+  shiftLines(axis: LineAxis, at: number, count: number): void;
   lastRow(): number;
   readonly size: number;
 }
@@ -52,7 +52,7 @@ export const createCellFormats = (): CellFormats => {
     }
   };
 
-  const takeLines = (axis: 'rows' | 'cols', from: number): number[] => {
+  const takeLines = (axis: LineAxis, from: number): number[] => {
     const taken: number[] = [];
 
     chunks.forEach((chunk, key) => {
@@ -63,7 +63,7 @@ export const createCellFormats = (): CellFormats => {
         const row = top + Math.floor(slot / CHUNK_COLS);
         const col = left + (slot % CHUNK_COLS);
 
-        if (id !== 0 && (axis === 'rows' ? row : col) >= from) {
+        if (id !== 0 && (axis === LineAxis.Rows ? row : col) >= from) {
           taken.push(row, col, id);
           set(row, col, 0);
         }
@@ -81,10 +81,14 @@ export const createCellFormats = (): CellFormats => {
       for (let index = 0; index < taken.length; index += 3) {
         const row = taken[index] ?? 0;
         const col = taken[index + 1] ?? 0;
-        const line = shiftIndex(axis === 'rows' ? row : col, change);
+        const line = shiftIndex(axis === LineAxis.Rows ? row : col, change);
 
         if (line !== undefined) {
-          set(axis === 'rows' ? line : row, axis === 'rows' ? col : line, taken[index + 2] ?? 0);
+          set(
+            axis === LineAxis.Rows ? line : row,
+            axis === LineAxis.Rows ? col : line,
+            taken[index + 2] ?? 0,
+          );
         }
       }
     },

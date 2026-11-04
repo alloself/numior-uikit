@@ -1,6 +1,6 @@
 import { MAX_COLS, MAX_ROWS, formatCell, formatRange } from '../../core/address';
-import type { CellValue } from '../../core/cell.types';
-import type { FormulaNode } from '../../core/formula/formula.types';
+import { CellValueKind, type CellValue } from '../../core/cell.types';
+import { FormulaReferenceKind, type FormulaNode } from '../../core/formula/formula.types';
 import { FILE_FORMULAS } from '../../core/formula/locale';
 import { ORIGIN } from '../../core/formula/origin';
 import { printFormula } from '../../core/formula/printer';
@@ -105,7 +105,9 @@ const WHOLE = { top: 0, left: 0, bottom: MAX_ROWS - 1, right: MAX_COLS - 1 };
 const localFormula = (ast: FormulaNode): string =>
   printFormula(
     mapReferences(ast, (reference) =>
-      reference.kind === 'structured' ? reference : { ...reference, book: undefined },
+      reference.kind === FormulaReferenceKind.Structured
+        ? reference
+        : { ...reference, book: undefined },
     ),
     FILE_FORMULAS,
     ORIGIN,
@@ -115,13 +117,13 @@ const cachedCellXml = (row: number, col: number, value: CellValue): string => {
   const reference = formatCell({ row, col, rowAbsolute: false, colAbsolute: false });
 
   switch (value.kind) {
-    case 'number':
+    case CellValueKind.Number:
       return `<cell r="${reference}"><v>${String(value.value)}</v></cell>`;
-    case 'string':
+    case CellValueKind.String:
       return `<cell r="${reference}" t="str"><v>${escapeText(encodeXstring(value.value))}</v></cell>`;
-    case 'boolean':
+    case CellValueKind.Boolean:
       return `<cell r="${reference}" t="b"><v>${value.value ? '1' : '0'}</v></cell>`;
-    case 'error':
+    case CellValueKind.Error:
       return `<cell r="${reference}" t="e"><v>${escapeText(value.code)}</v></cell>`;
     default:
       return '';

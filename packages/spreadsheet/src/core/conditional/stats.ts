@@ -1,4 +1,4 @@
-import type { CellRange } from '../cell.types';
+import { CellValueKind, type CellRange } from '../cell.types';
 import { lookupKey } from '../calc/coerce';
 import type { Sheet } from '../workbook';
 
@@ -48,7 +48,7 @@ const chunkNumbers = (sheet: Sheet, area: CellRange, stamp: number): ChunkNumber
   const numbers: number[] = [];
 
   sheet.cells.forEachInRange(area, (_row, _col, value) => {
-    if (value.kind === 'number') {
+    if (value.kind === CellValueKind.Number) {
       numbers.push(value.value);
     }
   });

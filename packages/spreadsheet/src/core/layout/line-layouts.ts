@@ -16,6 +16,7 @@ import {
   splitBoundary,
 } from './fragments';
 import type { FormulaNode } from '../formula/formula.types';
+import { LineAxis } from '../cell.types';
 
 const lowerBound = (lines: Int32Array, value: number): number => {
   let low = 0;
@@ -134,10 +135,10 @@ export const lineLayoutsOf = (
 
 const shiftView = (view: SheetView, change: LineChange): SheetView => {
   const frozenRows =
-    change.axis === 'rows' ? splitBoundary(view.frozenRows, change) : view.frozenRows;
+    change.axis === LineAxis.Rows ? splitBoundary(view.frozenRows, change) : view.frozenRows;
 
   const frozenCols =
-    change.axis === 'cols' ? splitBoundary(view.frozenCols, change) : view.frozenCols;
+    change.axis === LineAxis.Cols ? splitBoundary(view.frozenCols, change) : view.frozenCols;
 
   return frozenRows === view.frozenRows && frozenCols === view.frozenCols
     ? view
@@ -152,8 +153,8 @@ export const shiftLayout = (layout: SheetLayout, change: LineChange, own: boolea
     return xml === layout.xml && parts === layout.parts ? layout : { ...layout, xml, parts };
   }
   return {
-    rows: change.axis === 'rows' ? layout.rows.shifted(change) : layout.rows,
-    cols: change.axis === 'cols' ? layout.cols.shifted(change) : layout.cols,
+    rows: change.axis === LineAxis.Rows ? layout.rows.shifted(change) : layout.rows,
+    cols: change.axis === LineAxis.Cols ? layout.cols.shifted(change) : layout.cols,
     merges: shiftMerges(layout.merges, change),
     view: shiftView(layout.view, change),
     defaults: layout.defaults,

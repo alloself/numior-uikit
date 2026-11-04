@@ -1,23 +1,25 @@
 import { parseCell, parseRange } from '../../core/address';
 import type { CellAddress, CellRange } from '../../core/cell.types';
-import type {
-  CellIsOperator,
-  ConditionalEntry,
-  ConditionalFormat,
-  ConditionalRule,
-  DifferentialStyle,
-  TextOperator,
-  Threshold,
-  TimePeriod,
+import {
+  ThresholdKind,
+  type CellIsOperator,
+  type ConditionalEntry,
+  type ConditionalFormat,
+  type ConditionalRule,
+  type DifferentialStyle,
+  type TextOperator,
+  type Threshold,
+  type TimePeriod,
 } from '../../core/conditional/conditional.types';
 import type { StyleColor } from '../../core/decorations';
 import type { FormulaNode } from '../../core/formula/formula.types';
 import { EN_FORMULAS } from '../../core/formula/locale';
 import { parseFormula } from '../../core/formula/parser';
-import type { XmlAttribute, XmlName } from '../xml/xml.types';
+import { XmlBoolean, XmlPrefix, type XmlAttribute, type XmlName } from '../xml/xml.types';
 import { escapeAttribute, escapeText } from '../xml/writer';
 import { MAIN, attributeOf, numberOf } from './ooxml';
 import { colorOf } from './styles';
+import { OoxmlElement } from '../ooxml.types';
 
 export interface ConditionalCollector {
   inside(): boolean;
@@ -144,7 +146,7 @@ const createRecorder = (): Recorder => {
     const colon = name.qname.indexOf(':');
     const prefix = colon > 0 ? name.qname.slice(0, colon) : '';
 
-    if (prefix !== '' && prefix !== 'xml') {
+    if (prefix !== '' && prefix !== XmlPrefix.Xml) {
       prefixes.set(prefix, name.uri);
     }
   };
@@ -216,10 +218,10 @@ const thresholdOf = (cfvo: Cfvo | undefined, anchor: CellAddress): Threshold | u
   switch (kind) {
     case undefined:
       return undefined;
-    case 'min':
-    case 'max':
-    case 'autoMin':
-    case 'autoMax':
+    case ThresholdKind.Min:
+    case ThresholdKind.Max:
+    case ThresholdKind.AutoMin:
+    case ThresholdKind.AutoMax:
       return { kind };
     default:
       return value === undefined ? undefined : { kind, value };
@@ -285,7 +287,13 @@ const dataBar: RuleReader = (draft, { anchor }) => {
 
   return min === undefined || max === undefined || color === undefined
     ? undefined
-    : { kind: 'dataBar', min, max, color, showValue: setting(draft, 'showValue') !== '0' };
+    : {
+        kind: 'dataBar',
+        min,
+        max,
+        color,
+        showValue: setting(draft, 'showValue') !== XmlBoolean.Zero,
+      };
 };
 
 const iconSet: RuleReader = (draft, { anchor }) => {
@@ -297,23 +305,23 @@ const iconSet: RuleReader = (draft, { anchor }) => {
         kind: 'iconSet',
         set: setting(draft, 'iconSet') ?? '3TrafficLights1',
         thresholds,
-        reverse: setting(draft, 'reverse') === '1',
-        showValue: setting(draft, 'showValue') !== '0',
+        reverse: setting(draft, 'reverse') === XmlBoolean.One,
+        showValue: setting(draft, 'showValue') !== XmlBoolean.Zero,
       };
 };
 
 const top: RuleReader = (_draft, { attribute, style }) => ({
   kind: 'top',
   rank: numberOf(attribute('rank'), 10),
-  percent: attribute('percent') === '1',
-  bottom: attribute('bottom') === '1',
+  percent: attribute('percent') === XmlBoolean.One,
+  bottom: attribute('bottom') === XmlBoolean.One,
   style,
 });
 
 const average: RuleReader = (_draft, { attribute, style }) => ({
   kind: 'aboveAverage',
-  below: attribute('aboveAverage') === '0',
-  equal: attribute('equalAverage') === '1',
+  below: attribute('aboveAverage') === XmlBoolean.Zero,
+  equal: attribute('equalAverage') === XmlBoolean.One,
   deviations: numberOf(attribute('stdDev'), 0),
   style,
 });
@@ -370,22 +378,22 @@ const newDraft = (attributes: readonly XmlAttribute[]): RuleDraft => ({
 
 const draftPart = (draft: RuleDraft, name: XmlName, attributes: readonly XmlAttribute[]): void => {
   switch (name.local) {
-    case 'formula':
+    case OoxmlElement.Formula:
       draft.formula = '';
       return;
-    case 'cfvo':
+    case OoxmlElement.Cfvo:
       draft.cfvos.push({
         type: attributeOf(attributes, 'type') ?? '',
         value: attributeOf(attributes, 'val'),
       });
 
       return;
-    case 'color':
+    case OoxmlElement.Color:
       draft.colors.push(colorOf(attributes) ?? { kind: 'auto' });
       return;
-    case 'colorScale':
-    case 'dataBar':
-    case 'iconSet':
+    case OoxmlElement.ColorScale:
+    case OoxmlElement.DataBar:
+    case OoxmlElement.IconSet:
       draft.settings = attributes;
       return;
     default:
@@ -411,7 +419,7 @@ export const createConditionalCollector = (
     rules.push({
       rule: rule ?? { kind: 'foreign', xml: current.raw.result() },
       priority: numberOf(attributeOf(current.attributes, 'priority'), 1),
-      stopIfTrue: attributeOf(current.attributes, 'stopIfTrue') === '1',
+      stopIfTrue: attributeOf(current.attributes, 'stopIfTrue') === XmlBoolean.One,
       extra: rule === undefined ? undefined : current.extra?.result(),
     });
   };
@@ -422,7 +430,7 @@ export const createConditionalCollector = (
     attributes: readonly XmlAttribute[],
   ): void => {
     current.raw.open(name, attributes);
-    if (current.extraDepth > 0 || (name.local === 'extLst' && MAIN.has(name.uri))) {
+    if (current.extraDepth > 0 || (name.local === OoxmlElement.ExtLst && MAIN.has(name.uri))) {
       current.extra ??= createRecorder();
       current.extra.open(name, attributes);
       current.extraDepth += 1;
@@ -436,7 +444,7 @@ export const createConditionalCollector = (
     if (current.extraDepth > 0) {
       current.extra?.close(name);
       current.extraDepth -= 1;
-    } else if (name.local === 'formula' && current.formula !== undefined) {
+    } else if (name.local === OoxmlElement.Formula && current.formula !== undefined) {
       current.formulas.push(current.formula);
       current.formula = undefined;
     }
@@ -448,7 +456,7 @@ export const createConditionalCollector = (
       if (ranges === undefined) {
         ranges = rangesOf(attributeOf(attributes, 'sqref') ?? '');
         rules = [];
-      } else if (draft === undefined && name.local === 'cfRule') {
+      } else if (draft === undefined && name.local === OoxmlElement.CfRule) {
         draft = newDraft(attributes);
         draft.raw.open(name, attributes);
       } else if (draft !== undefined) {
@@ -464,7 +472,7 @@ export const createConditionalCollector = (
       }
     },
     close: (name) => {
-      if (draft !== undefined && name.local === 'cfRule' && draft.extraDepth === 0) {
+      if (draft !== undefined && name.local === OoxmlElement.CfRule && draft.extraDepth === 0) {
         draft.raw.close(name);
         finished(draft);
         draft = undefined;
@@ -506,7 +514,7 @@ export const createExtensionCollector = (): ConditionalCollector => {
   const openRule = (current: ExtensionRule, name: XmlName, attributes: readonly XmlAttribute[]) => {
     current.raw.open(name, attributes);
     current.depth += 1;
-    if (name.local === 'f' && name.uri === XM) {
+    if (name.local === OoxmlElement.F && name.uri === XM) {
       current.formula = '';
     }
   };
@@ -514,7 +522,7 @@ export const createExtensionCollector = (): ConditionalCollector => {
   const closeRule = (current: ExtensionRule, name: XmlName): void => {
     current.raw.close(name);
     current.depth -= 1;
-    if (name.local === 'f' && name.uri === XM && current.formula !== undefined) {
+    if (name.local === OoxmlElement.F && name.uri === XM && current.formula !== undefined) {
       current.formulas.push(current.formula);
       current.formula = undefined;
     }
@@ -541,10 +549,10 @@ export const createExtensionCollector = (): ConditionalCollector => {
         rules = [];
       } else if (rule !== undefined) {
         openRule(rule, name, attributes);
-      } else if (name.local === 'cfRule' && name.uri === X14) {
+      } else if (name.local === OoxmlElement.CfRule && name.uri === X14) {
         rule = { raw: createRecorder(), attributes, formulas: [], formula: undefined, depth: 1 };
         rule.raw.open(name, attributes);
-      } else if (name.local === 'sqref' && name.uri === XM) {
+      } else if (name.local === OoxmlElement.Sqref && name.uri === XM) {
         sqref = '';
       }
     },
@@ -563,7 +571,7 @@ export const createExtensionCollector = (): ConditionalCollector => {
         rule = undefined;
       } else if (rule !== undefined) {
         closeRule(rule, name);
-      } else if (name.local === 'conditionalFormatting' && name.uri === X14) {
+      } else if (name.local === OoxmlElement.ConditionalFormatting && name.uri === X14) {
         finished();
       }
     },

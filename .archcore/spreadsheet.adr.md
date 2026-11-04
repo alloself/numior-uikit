@@ -1034,3 +1034,23 @@ canvas требуют границ и заливок, которых в хран
 пропущенный кадр в p95. Решение по canvas остаётся прежним (DOM), а следующий шаг — удешевить
 отрисовку строки (меньше узлов и свойств на ячейку) или сузить окно строк при мелких строках;
 до него набор `book` в `bench:check` превышает два порога.
+
+## Именованные наборы значений (2026-11-04)
+
+Каждый фиксированный набор строк листа — константа `as const` с одноимённым типом в файле
+`*.types.ts` своего каталога. Ядро держит виды значений (`CellValueKind`, а `EvalValueKind`
+расширяет его ссылкой и массивом), ввода (`CellInputKind`), узлов и ссылок формул
+(`FormulaNodeKind` поверх `FormulaReferenceKind`), токенов лексера (`TokenKind`), операторов
+(`BinaryOperator`, `UnaryOperator`), правил и порогов условного форматирования
+(`ConditionalRuleKind`, `ThresholdKind`), режимов сводных (`PivotShowAsKind`, `PivotBaseStep`),
+шагов (`StepKind`, `StepRefusal`) и символы грамматик (`FormulaChar`, `FormatChar`). Ось строк и
+колонок одна — `LineAxis` в `cell.types.ts` вместо трёх копий `'rows' | 'cols'` и `SlotAxis`.
+Подмножества берут члены широкого набора (`StructuredArea` расширяет `StructuredSpecial`,
+`StyleSection` берёт имена элементов), селекторы `Extract`/`Exclude` пишут `typeof X.Member`.
+
+Часть `xlsx` сравнивает имена OOXML через `OoxmlElement`, `OoxmlAttribute`, `CellTypeCode`,
+`RelationshipKind` из `xlsx/ooxml.types.ts` и значения XML через `XmlBoolean`, `XmlPrefix` из
+`xlsx/xml/xml.types.ts`. Сравнения, `case` и производители, без которых константа не
+использовалась бы, идут через члены констант; объекты вида `{ kind: 'number', value }` остаются
+литералами, как в таблице и ядре редактора. Публичные константы экспортируются значениями из
+`./core` и `./xlsx`. Правило ESLint `NAMED_ENUMERATIONS` включено для `packages/spreadsheet/src`.

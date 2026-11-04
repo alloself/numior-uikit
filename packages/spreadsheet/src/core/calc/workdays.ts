@@ -1,6 +1,7 @@
-import type { CellValue } from '../cell.types';
+import { CellValueKind, type CellValue } from '../cell.types';
 import { raise } from './coerce';
 import { mondayIndex } from './serials';
+import { WeekendMask } from './calc.types';
 
 export type WeekendMask = readonly boolean[];
 
@@ -22,16 +23,19 @@ const maskOf = (days: readonly number[]): WeekendMask =>
   Array.from({ length: 7 }, (_, index) => days.includes(index));
 
 export const weekendMask = (value: CellValue | undefined): WeekendMask => {
-  if (value === undefined || value.kind === 'empty') {
+  if (value === undefined || value.kind === CellValueKind.Empty) {
     return maskOf([5, 6]);
   }
-  if (value.kind === 'string') {
-    if (!MASK.test(value.value) || value.value === '1111111') {
+  if (value.kind === CellValueKind.String) {
+    if (!MASK.test(value.value) || value.value === WeekendMask.AllDays) {
       return raise('#VALUE!');
     }
-    return Array.from({ length: 7 }, (_, index) => value.value.charAt(index) === '1');
+    return Array.from(
+      { length: 7 },
+      (_, index) => value.value.charAt(index) === WeekendMask.Weekend,
+    );
   }
-  if (value.kind !== 'number') {
+  if (value.kind !== CellValueKind.Number) {
     return raise('#VALUE!');
   }
 

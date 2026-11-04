@@ -1,4 +1,5 @@
 import type { FormulaLocale } from './formula.types';
+import { BooleanText } from '../cell.types';
 
 const readers = new WeakMap<FormulaLocale, ReadonlyMap<string, string>>();
 
@@ -31,8 +32,10 @@ export const localFunction = (name: string, locale: FormulaLocale): string =>
 export const booleanFromWord = (word: string, locale: FormulaLocale): boolean | undefined => {
   const upper = word.toUpperCase();
 
-  if (upper === 'TRUE' || upper === locale.trueText.toUpperCase()) {
+  if (upper === BooleanText.True || upper === locale.trueText.toUpperCase()) {
     return true;
   }
-  return upper === 'FALSE' || upper === locale.falseText.toUpperCase() ? false : undefined;
+  return upper === BooleanText.False || upper === locale.falseText.toUpperCase()
+    ? false
+    : undefined;
 };

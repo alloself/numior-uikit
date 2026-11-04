@@ -1,15 +1,21 @@
 import { MAX_COLS, MAX_ROWS, containsCell } from '../address';
-import type { CellRange } from '../cell.types';
+import { LineAxis, type CellRange } from '../cell.types';
 import { sameName, type LineChange } from '../formula/rewrite';
 import { shiftIndex } from '../lines';
 import { shiftRanges } from '../layout/shift-ranges';
 import { buildPivotCache, pivotSource } from '../pivot/pivot-cache';
 import { VALUES_FIELD, computePivot } from '../pivot/pivot-engine';
 import { renderPivot } from '../pivot/pivot-render';
-import type { PivotDefinition, PivotSource, PivotSpec, PivotState } from '../pivot/pivot.types';
+import {
+  PivotSourceKind,
+  type PivotDefinition,
+  type PivotSource,
+  type PivotSpec,
+  type PivotState,
+} from '../pivot/pivot.types';
 import { rangesMeet } from '../tables';
 import type { Sheet, SheetPivot, Workbook } from '../workbook';
-import type { CellEdit, StepResult, WorkbookStep } from './step.types';
+import { StepRefusal, type CellEdit, type StepResult, type WorkbookStep } from './step.types';
 
 export interface CellAccess {
   contentsIn(sheet: Sheet, range: CellRange): Map<number, CellEdit>;
@@ -36,7 +42,13 @@ export interface PivotSteps {
 
 type Rendered =
   | { readonly ok: true; readonly cells: readonly CellEdit[]; readonly footprint: CellRange }
-  | { readonly ok: false; readonly reason: 'invalid-pivot' | 'pivot-overlap' | 'sheet-full' };
+  | {
+      readonly ok: false;
+      readonly reason:
+        | typeof StepRefusal.InvalidPivot
+        | typeof StepRefusal.PivotOverlap
+        | typeof StepRefusal.SheetFull;
+    };
 
 const GENERAL = 'General';
 
@@ -61,7 +73,7 @@ const validFields = (definition: PivotDefinition, count: number): boolean =>
   ].every((field) => field === VALUES_FIELD || (field >= 0 && field < count));
 
 const spanOf = (range: CellRange, axis: LineChange['axis']): readonly [number, number] =>
-  axis === 'rows' ? [range.top, range.bottom] : [range.left, range.right];
+  axis === LineAxis.Rows ? [range.top, range.bottom] : [range.left, range.right];
 
 const crosses = (range: CellRange, change: LineChange): boolean => {
   const [first, last] = spanOf(range, change.axis);
@@ -84,13 +96,13 @@ const movedRange = (range: CellRange, change: LineChange): CellRange | undefined
   if (top === undefined || bottom === undefined) {
     return undefined;
   }
-  return change.axis === 'rows'
+  return change.axis === LineAxis.Rows
     ? { ...range, top, bottom }
     : { ...range, left: top, right: bottom };
 };
 
 const movedSource = (source: PivotSource, change: LineChange): PivotSource => {
-  if (source.kind !== 'range' || !sameName(source.sheet, change.sheet)) {
+  if (source.kind !== PivotSourceKind.Range || !sameName(source.sheet, change.sheet)) {
     return source;
   }
 
@@ -115,7 +127,7 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
     const cache = table === undefined ? undefined : buildPivotCache(table);
 
     if (cache === undefined || !validFields(spec.definition, cache.fields.length)) {
-      return { ok: false, reason: 'invalid-pivot' };
+      return { ok: false, reason: StepRefusal.InvalidPivot };
     }
 
     const output = renderPivot(spec.definition, cache, computePivot(spec.definition, cache));
@@ -128,10 +140,10 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
     };
 
     if (footprint.bottom >= MAX_ROWS || footprint.right >= MAX_COLS) {
-      return { ok: false, reason: 'sheet-full' };
+      return { ok: false, reason: StepRefusal.SheetFull };
     }
     if (overlaps(sheet, name, footprint)) {
-      return { ok: false, reason: 'pivot-overlap' };
+      return { ok: false, reason: StepRefusal.PivotOverlap };
     }
     return {
       ok: true,
@@ -228,7 +240,7 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
       const pivot = book.pivots.get(sheet, name);
 
       return pivot === undefined
-        ? { ok: false, reason: 'missing-pivot' }
+        ? { ok: false, reason: StepRefusal.MissingPivot }
         : placed(sheet, name, { anchor: pivot.anchor, definition: pivot.definition });
     },
     put: (sheet, name, state, restored = []) => {
@@ -318,7 +330,7 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
       book.pivots.forEach((pivot) => {
         const { source } = pivot.definition;
 
-        if (source.kind === 'range' && sameName(source.sheet, from)) {
+        if (source.kind === PivotSourceKind.Range && sameName(source.sheet, from)) {
           book.pivots.set({
             ...pivot,
             definition: { ...pivot.definition, source: { ...source, sheet: to } },

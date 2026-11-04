@@ -1,12 +1,12 @@
 import { MAX_COLS, MAX_ROWS } from '../address';
-import type { CellRange, CellValue } from '../cell.types';
+import { CellValueKind, type CellRange, type CellValue } from '../cell.types';
 import { EMPTY } from '../values';
 import type { NumberLocale } from '../format/format.types';
-import type { EvalValue, FunctionArgs } from './calc.types';
+import { EvalValueKind, type EvalValue, type FunctionArgs } from './calc.types';
 import { raise, toNumber } from './coerce';
 import { parseCriterion, type Criterion } from './criteria';
 
-export type Reference = Extract<EvalValue, { readonly kind: 'reference' }>;
+export type Reference = Extract<EvalValue, { readonly kind: typeof EvalValueKind.Reference }>;
 
 export interface Condition {
   readonly range: Reference;
@@ -24,10 +24,10 @@ export const eachNumber = (
   args.forEachValue(
     from,
     (value, direct) => {
-      if (value.kind === 'error') {
+      if (value.kind === CellValueKind.Error) {
         raise(value.code);
       }
-      if (value.kind === 'number') {
+      if (value.kind === CellValueKind.Number) {
         visit(value.value);
       } else if (direct) {
         visit(toNumber(value, args.locale));
@@ -43,13 +43,13 @@ const numberOfAny = (
   locale: NumberLocale,
 ): number | undefined => {
   switch (value.kind) {
-    case 'number':
+    case CellValueKind.Number:
       return value.value;
-    case 'boolean':
+    case CellValueKind.Boolean:
       return value.value ? 1 : 0;
-    case 'string':
+    case CellValueKind.String:
       return direct ? toNumber(value, locale) : 0;
-    case 'error':
+    case CellValueKind.Error:
       return raise(value.code);
     default:
       return direct ? 0 : undefined;
@@ -82,7 +82,7 @@ export const numbersOf = (args: FunctionArgs, from = 0, to = args.count): number
 };
 
 export const referenceOf = (value: EvalValue): Reference =>
-  value.kind === 'reference' ? value : raise('#VALUE!');
+  value.kind === EvalValueKind.Reference ? value : raise('#VALUE!');
 
 const sameShape = (left: CellRange, right: CellRange): boolean =>
   left.bottom - left.top === right.bottom - right.top &&

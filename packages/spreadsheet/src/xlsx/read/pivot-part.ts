@@ -2,7 +2,7 @@ import { parseRange } from '../../core/address';
 import type { CellRange, CellValue } from '../../core/cell.types';
 import type { PivotAggregate } from '../../core/pivot/pivot.types';
 import { EMPTY } from '../../core/values';
-import type { XmlAttribute } from '../xml/xml.types';
+import { XmlBoolean, type XmlAttribute } from '../xml/xml.types';
 import type { ZipArchive } from '../zip/zip.types';
 import {
   MAIN,
@@ -15,6 +15,7 @@ import {
 } from './ooxml';
 import { X14 } from './conditional-part';
 import { valueOf } from './sheet-part';
+import { CacheSourceType, OoxmlElement } from '../ooxml.types';
 
 export interface CacheEntry {
   readonly source:
@@ -120,19 +121,22 @@ const cacheSourceOf = (attributes: readonly XmlAttribute[]): CacheEntry['source'
 const cacheProblems = (local: string, attributes: readonly XmlAttribute[]): string[] => {
   const found = UNSUPPORTED_CACHE.has(local) ? [local] : [];
 
-  if (local === 'cacheSource' && attributeOf(attributes, 'type') !== 'worksheet') {
+  if (
+    local === OoxmlElement.CacheSource &&
+    attributeOf(attributes, 'type') !== CacheSourceType.Worksheet
+  ) {
     found.push('source');
   }
   if (
-    local === 'worksheetSource' &&
+    local === OoxmlElement.WorksheetSource &&
     attributeOf(attributes, 'id', RELATIONSHIP_ATTRIBUTES) !== undefined
   ) {
     found.push('external');
   }
   if (
-    local === 'cacheField' &&
+    local === OoxmlElement.CacheField &&
     (attributeOf(attributes, 'formula') !== undefined ||
-      attributeOf(attributes, 'databaseField') === '0')
+      attributeOf(attributes, 'databaseField') === XmlBoolean.Zero)
   ) {
     found.push('calculated');
   }
@@ -160,17 +164,17 @@ export const readPivotCache = async (
 
         unsupported.push(...cacheProblems(element.local, attributes));
 
-        if (element.local === 'worksheetSource') {
+        if (element.local === OoxmlElement.WorksheetSource) {
           source = cacheSourceOf(attributes);
-        } else if (element.local === 'cacheField') {
+        } else if (element.local === OoxmlElement.CacheField) {
           shared = [];
           items.push(shared);
-        } else if (element.local === 'm' || ITEM_TYPES[element.local] !== undefined) {
+        } else if (element.local === OoxmlElement.M || ITEM_TYPES[element.local] !== undefined) {
           shared?.push(itemValue(element.local, attributes));
         }
       },
       close: (element) => {
-        if (element.local === 'cacheField') {
+        if (element.local === OoxmlElement.CacheField) {
           shared = undefined;
         }
       },
@@ -204,8 +208,8 @@ const tableHead = (
   ...table,
   name: attributeOf(attributes, 'name') ?? '',
   cacheId: numberOf(attributeOf(attributes, 'cacheId'), -1),
-  rowTotals: attributeOf(attributes, 'rowGrandTotals') !== '0',
-  columnTotals: attributeOf(attributes, 'colGrandTotals') !== '0',
+  rowTotals: attributeOf(attributes, 'rowGrandTotals') !== XmlBoolean.Zero,
+  columnTotals: attributeOf(attributes, 'colGrandTotals') !== XmlBoolean.Zero,
   captions: Object.fromEntries(
     CAPTIONS.reduce<[string, string][]>((found, caption) => {
       const text = attributeOf(attributes, caption);
@@ -221,10 +225,10 @@ const tableHead = (
 const fieldOf = (attributes: Parameters<typeof attributeOf>[0]): PivotFieldEntry => ({
   axis: attributeOf(attributes, 'axis'),
   sort: attributeOf(attributes, 'sortType'),
-  subtotal: attributeOf(attributes, 'defaultSubtotal') !== '0',
-  compact: attributeOf(attributes, 'compact') !== '0',
-  outline: attributeOf(attributes, 'outline') !== '0',
-  subtotalTop: attributeOf(attributes, 'subtotalTop') !== '0',
+  subtotal: attributeOf(attributes, 'defaultSubtotal') !== XmlBoolean.Zero,
+  compact: attributeOf(attributes, 'compact') !== XmlBoolean.Zero,
+  outline: attributeOf(attributes, 'outline') !== XmlBoolean.Zero,
+  subtotalTop: attributeOf(attributes, 'subtotalTop') !== XmlBoolean.Zero,
   items: [],
 });
 
@@ -255,10 +259,10 @@ const headed = (
   local: string,
   attributes: readonly XmlAttribute[],
 ): PivotTableEntry => {
-  if (local === 'pivotTableDefinition') {
+  if (local === OoxmlElement.PivotTableDefinition) {
     return tableHead(table, attributes);
   }
-  return local === 'location'
+  return local === OoxmlElement.Location
     ? {
         ...table,
         location: parseRange(attributeOf(attributes, 'ref') ?? ''),
@@ -274,10 +278,10 @@ const collect = (
   list: 'rows' | 'columns' | undefined,
 ): void => {
   switch (local) {
-    case 'pivotField':
+    case OoxmlElement.PivotField:
       table.fields.push(fieldOf(attributes));
       return;
-    case 'item':
+    case OoxmlElement.Item:
       table.fields.at(-1)?.items.push({
         x: optionalNumber(attributeOf(attributes, 'x')),
         type: attributeOf(attributes, 't'),
@@ -285,19 +289,19 @@ const collect = (
       });
 
       return;
-    case 'field':
+    case OoxmlElement.Field:
       if (list !== undefined) {
         table[list].push(numberOf(attributeOf(attributes, 'x'), 0));
       }
       return;
-    case 'pageField':
+    case OoxmlElement.PageField:
       table.pages.push({
         field: numberOf(attributeOf(attributes, 'fld'), 0),
         item: optionalNumber(attributeOf(attributes, 'item')),
       });
 
       return;
-    case 'dataField':
+    case OoxmlElement.DataField:
       table.values.push(dataFieldOf(attributes));
       return;
     default:

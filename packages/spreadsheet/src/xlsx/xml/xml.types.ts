@@ -15,14 +15,7 @@ export interface XmlHandlers {
   readonly text?: ((text: string) => void) | undefined;
 }
 
-export type XmlFailureReason =
-  | 'syntax'
-  | 'entity'
-  | 'mismatch'
-  | 'unclosed'
-  | 'prefix'
-  | 'doctype'
-  | 'encoding';
+export type XmlFailureReason = (typeof XmlFailureReason)[keyof typeof XmlFailureReason];
 
 export interface XmlFailure {
   readonly reason: XmlFailureReason;
@@ -47,3 +40,19 @@ export interface XmlWriter {
   close(): void;
   end(): void;
 }
+
+export const XmlFailureReason = {
+  Syntax: 'syntax',
+  Entity: 'entity',
+  Mismatch: 'mismatch',
+  Unclosed: 'unclosed',
+  Prefix: 'prefix',
+  Doctype: 'doctype',
+  Encoding: 'encoding',
+} as const;
+
+export const XmlBoolean = { True: 'true', One: '1', Zero: '0' } as const;
+
+export const XmlPrefix = { Xml: 'xml', Xmlns: 'xmlns' } as const;
+
+export const XmlChar = { Hex: 'x', TagEnd: '>' } as const;

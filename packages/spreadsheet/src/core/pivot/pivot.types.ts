@@ -1,31 +1,33 @@
 import type { CellAddress, CellRange, CellValue } from '../cell.types';
 
 export type PivotSource =
-  | { readonly kind: 'range'; readonly sheet: string; readonly range: CellRange }
-  | { readonly kind: 'table'; readonly name: string }
-  | { readonly kind: 'lost' };
+  | {
+      readonly kind: typeof PivotSourceKind.Range;
+      readonly sheet: string;
+      readonly range: CellRange;
+    }
+  | { readonly kind: typeof PivotSourceKind.Table; readonly name: string }
+  | { readonly kind: typeof PivotSourceKind.Lost };
 
-export type PivotAggregate =
-  | 'sum'
-  | 'count'
-  | 'average'
-  | 'max'
-  | 'min'
-  | 'product'
-  | 'countNums'
-  | 'stdDev'
-  | 'stdDevp'
-  | 'var'
-  | 'varp';
+export type PivotAggregate = (typeof PivotAggregate)[keyof typeof PivotAggregate];
 
-export type PivotBaseItem = 'previous' | 'next' | CellValue;
+export type PivotBaseItem = typeof PivotBaseStep.Previous | typeof PivotBaseStep.Next | CellValue;
 
 export type PivotShowAs =
-  | { readonly kind: 'normal' }
-  | { readonly kind: 'percentOfTotal' | 'percentOfRow' | 'percentOfCol' | 'index' }
-  | { readonly kind: 'runTotal'; readonly field: number }
+  | { readonly kind: typeof PivotShowAsKind.Normal }
   | {
-      readonly kind: 'difference' | 'percent' | 'percentDiff';
+      readonly kind:
+        | typeof PivotShowAsKind.PercentOfTotal
+        | typeof PivotShowAsKind.PercentOfRow
+        | typeof PivotShowAsKind.PercentOfCol
+        | typeof PivotShowAsKind.Index;
+    }
+  | { readonly kind: typeof PivotShowAsKind.RunTotal; readonly field: number }
+  | {
+      readonly kind:
+        | typeof PivotShowAsKind.Difference
+        | typeof PivotShowAsKind.Percent
+        | typeof PivotShowAsKind.PercentDiff;
       readonly field: number;
       readonly item: PivotBaseItem;
     };
@@ -38,7 +40,7 @@ export interface PivotValue {
   readonly format: string | undefined;
 }
 
-export type PivotSort = 'manual' | 'ascending' | 'descending';
+export type PivotSort = (typeof PivotSort)[keyof typeof PivotSort];
 
 export interface PivotField {
   readonly order: readonly CellValue[];
@@ -52,9 +54,9 @@ export interface PivotFilter {
   readonly selected: CellValue | undefined;
 }
 
-export type PivotLayout = 'compact' | 'outline' | 'tabular';
+export type PivotLayout = (typeof PivotLayout)[keyof typeof PivotLayout];
 
-export type PivotLanguage = 'en' | 'ru';
+export type PivotLanguage = (typeof PivotLanguage)[keyof typeof PivotLanguage];
 
 export interface PivotCaptions {
   readonly rows: string;
@@ -102,7 +104,7 @@ export interface PivotCache {
   group(field: number): PivotGroup | undefined;
 }
 
-export type PivotLineKind = 'item' | 'group' | 'subtotal' | 'grand';
+export type PivotLineKind = (typeof PivotLineKind)[keyof typeof PivotLineKind];
 
 export interface PivotLine {
   readonly kind: PivotLineKind;
@@ -144,3 +146,50 @@ export interface PivotSpec {
 export interface PivotState extends PivotSpec {
   readonly footprint: CellRange | undefined;
 }
+
+export const PivotSourceKind = { Range: 'range', Table: 'table', Lost: 'lost' } as const;
+
+export const PivotAggregate = {
+  Sum: 'sum',
+  Count: 'count',
+  Average: 'average',
+  Max: 'max',
+  Min: 'min',
+  Product: 'product',
+  CountNums: 'countNums',
+  StdDev: 'stdDev',
+  StdDevp: 'stdDevp',
+  Var: 'var',
+  Varp: 'varp',
+} as const;
+
+export const PivotSort = {
+  Manual: 'manual',
+  Ascending: 'ascending',
+  Descending: 'descending',
+} as const;
+
+export const PivotLayout = { Compact: 'compact', Outline: 'outline', Tabular: 'tabular' } as const;
+
+export const PivotLanguage = { En: 'en', Ru: 'ru' } as const;
+
+export const PivotLineKind = {
+  Item: 'item',
+  Group: 'group',
+  Subtotal: 'subtotal',
+  Grand: 'grand',
+} as const;
+
+export const PivotBaseStep = { Previous: 'previous', Next: 'next' } as const;
+
+export const PivotShowAsKind = {
+  Normal: 'normal',
+  PercentOfTotal: 'percentOfTotal',
+  PercentOfRow: 'percentOfRow',
+  PercentOfCol: 'percentOfCol',
+  Index: 'index',
+  RunTotal: 'runTotal',
+  Difference: 'difference',
+  Percent: 'percent',
+  PercentDiff: 'percentDiff',
+} as const;

@@ -2,14 +2,14 @@ import { MAX_COLS, MAX_ROWS, formatCell } from '../address';
 import type { CellRange } from '../cell.types';
 import { numberValue, textValue } from '../values';
 import { buildArray, shapeOf } from './array';
-import type { EvalValue, FunctionArgs, FunctionSpec } from './calc.types';
+import { EvalValueKind, type EvalValue, type FunctionArgs, type FunctionSpec } from './calc.types';
 import { raise } from './coerce';
 import { defineFunction } from './registry';
 
 const PLAIN_SHEET = /^[\p{L}_][\p{L}\p{N}_.]*$/u;
 
 const rangeOf = (value: EvalValue): CellRange =>
-  value.kind === 'reference' ? value.range : raise('#VALUE!');
+  value.kind === EvalValueKind.Reference ? value.range : raise('#VALUE!');
 
 const position = (args: FunctionArgs, rows: boolean): EvalValue => {
   if (args.missing(0)) {
@@ -62,7 +62,7 @@ const address = (args: FunctionArgs): EvalValue => {
 const offset = (args: FunctionArgs): EvalValue => {
   const base = args.value(0);
 
-  if (base.kind !== 'reference') {
+  if (base.kind !== EvalValueKind.Reference) {
     return raise('#VALUE!');
   }
   const { range } = base;

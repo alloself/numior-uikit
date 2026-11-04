@@ -1,7 +1,7 @@
-import type { CellError, CellValue } from '../cell.types';
+import { CellError, CellValueKind, type CellValue } from '../cell.types';
 import { booleanValue, errorValue, numberValue } from '../values';
 import { isMultiCell } from './array';
-import type { FunctionSpec } from './calc.types';
+import { EvalValueKind, type FunctionSpec } from './calc.types';
 import { raise } from './coerce';
 import { defineFunction } from './registry';
 
@@ -28,11 +28,11 @@ const check = (name: string, test: (value: CellValue) => boolean): FunctionSpec 
 
 const integerOf = (value: CellValue): number => {
   switch (value.kind) {
-    case 'number':
+    case CellValueKind.Number:
       return Math.trunc(value.value);
-    case 'empty':
+    case CellValueKind.Empty:
       return 0;
-    case 'error':
+    case CellValueKind.Error:
       return raise(value.code);
     default:
       return raise('#VALUE!');
@@ -41,11 +41,11 @@ const integerOf = (value: CellValue): number => {
 
 const typeOf = (value: CellValue): number => {
   switch (value.kind) {
-    case 'string':
+    case CellValueKind.String:
       return 2;
-    case 'boolean':
+    case CellValueKind.Boolean:
       return 4;
-    case 'error':
+    case CellValueKind.Error:
       return 16;
     default:
       return 1;
@@ -53,21 +53,21 @@ const typeOf = (value: CellValue): number => {
 };
 
 export const INFORMATION_FUNCTIONS: readonly FunctionSpec[] = [
-  check('ISBLANK', (value) => value.kind === 'empty'),
-  check('ISNUMBER', (value) => value.kind === 'number'),
-  check('ISTEXT', (value) => value.kind === 'string'),
-  check('ISNONTEXT', (value) => value.kind !== 'string'),
-  check('ISLOGICAL', (value) => value.kind === 'boolean'),
-  check('ISERROR', (value) => value.kind === 'error'),
-  check('ISERR', (value) => value.kind === 'error' && value.code !== '#N/A'),
-  check('ISNA', (value) => value.kind === 'error' && value.code === '#N/A'),
+  check('ISBLANK', (value) => value.kind === CellValueKind.Empty),
+  check('ISNUMBER', (value) => value.kind === CellValueKind.Number),
+  check('ISTEXT', (value) => value.kind === CellValueKind.String),
+  check('ISNONTEXT', (value) => value.kind !== CellValueKind.String),
+  check('ISLOGICAL', (value) => value.kind === CellValueKind.Boolean),
+  check('ISERROR', (value) => value.kind === CellValueKind.Error),
+  check('ISERR', (value) => value.kind === CellValueKind.Error && value.code !== CellError.Na),
+  check('ISNA', (value) => value.kind === CellValueKind.Error && value.code === CellError.Na),
   check('ISEVEN', (value) => integerOf(value) % 2 === 0),
   check('ISODD', (value) => Math.abs(integerOf(value) % 2) === 1),
   defineFunction({
     name: 'ISREF',
     min: 1,
     max: 1,
-    evaluate: (args) => booleanValue(args.value(0).kind === 'reference'),
+    evaluate: (args) => booleanValue(args.value(0).kind === EvalValueKind.Reference),
   }),
   defineFunction({
     name: 'N',
@@ -78,11 +78,11 @@ export const INFORMATION_FUNCTIONS: readonly FunctionSpec[] = [
       const value = args.scalar(0);
 
       switch (value.kind) {
-        case 'number':
+        case CellValueKind.Number:
           return value;
-        case 'boolean':
+        case CellValueKind.Boolean:
           return numberValue(Number(value.value));
-        case 'error':
+        case CellValueKind.Error:
           return value;
         default:
           return numberValue(0);
@@ -98,7 +98,7 @@ export const INFORMATION_FUNCTIONS: readonly FunctionSpec[] = [
       const value = args.value(0);
 
       return numberValue(
-        value.kind === 'array' || isMultiCell(value) ? 64 : typeOf(args.scalar(0)),
+        value.kind === EvalValueKind.Array || isMultiCell(value) ? 64 : typeOf(args.scalar(0)),
       );
     },
   }),
@@ -110,7 +110,9 @@ export const INFORMATION_FUNCTIONS: readonly FunctionSpec[] = [
     evaluate: (args) => {
       const value = args.scalar(0);
 
-      return value.kind === 'error' ? numberValue(ERROR_TYPES[value.code]) : raise('#N/A');
+      return value.kind === CellValueKind.Error
+        ? numberValue(ERROR_TYPES[value.code])
+        : raise('#N/A');
     },
   }),
 ];

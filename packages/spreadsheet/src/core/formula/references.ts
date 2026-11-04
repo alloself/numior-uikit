@@ -1,13 +1,28 @@
-import type { FormulaNode } from './formula.types';
+import { FormulaNodeKind, FormulaReferenceKind, type FormulaNode } from './formula.types';
 
 export type FormulaReference = Extract<
   FormulaNode,
-  { readonly kind: 'cell' | 'range' | 'columns' | 'rows' | 'spill' | 'name' | 'structured' }
+  {
+    readonly kind:
+      | typeof FormulaNodeKind.Cell
+      | typeof FormulaNodeKind.Range
+      | typeof FormulaNodeKind.Columns
+      | typeof FormulaNodeKind.Rows
+      | typeof FormulaNodeKind.Spill
+      | typeof FormulaNodeKind.Name
+      | typeof FormulaNodeKind.Structured;
+  }
 >;
 
-export type SymbolicReference = Extract<FormulaReference, { readonly kind: 'name' | 'structured' }>;
+export type SymbolicReference = Extract<
+  FormulaReference,
+  { readonly kind: typeof FormulaReferenceKind.Name | typeof FormulaReferenceKind.Structured }
+>;
 
-export type SheetReference = Exclude<FormulaReference, { readonly kind: 'structured' }>;
+export type SheetReference = Exclude<
+  FormulaReference,
+  { readonly kind: typeof FormulaReferenceKind.Structured }
+>;
 
 type Visitor = (reference: FormulaReference) => FormulaNode;
 
@@ -15,13 +30,14 @@ export const onSheetNamed = (
   reference: FormulaReference,
   name: string,
 ): reference is SheetReference =>
-  reference.kind !== 'structured' &&
+  reference.kind !== FormulaReferenceKind.Structured &&
   reference.book === undefined &&
   reference.sheet !== undefined &&
   reference.sheet.toLowerCase() === name.toLowerCase();
 
 export const isSymbolic = (reference: FormulaReference): reference is SymbolicReference =>
-  reference.kind === 'name' || reference.kind === 'structured';
+  reference.kind === FormulaReferenceKind.Name ||
+  reference.kind === FormulaReferenceKind.Structured;
 
 const REFERENCE_KINDS = new Set<FormulaNode['kind']>([
   'cell',
@@ -41,14 +57,14 @@ const collect = (node: FormulaNode, found: FormulaReference[]): void => {
     return;
   }
   switch (node.kind) {
-    case 'call':
+    case FormulaNodeKind.Call:
       node.args.forEach((arg) => collect(arg, found));
       return;
-    case 'unary':
-    case 'percent':
+    case FormulaNodeKind.Unary:
+    case FormulaNodeKind.Percent:
       collect(node.operand, found);
       return;
-    case 'binary':
+    case FormulaNodeKind.Binary:
       collect(node.left, found);
       collect(node.right, found);
       return;
@@ -78,18 +94,18 @@ const walk = (current: FormulaNode, visit: Visitor): FormulaNode => {
     return visit(current);
   }
   switch (current.kind) {
-    case 'call': {
+    case FormulaNodeKind.Call: {
       const args = mapNodes(current.args, (arg) => walk(arg, visit));
 
       return args === current.args ? current : { ...current, args };
     }
-    case 'unary':
-    case 'percent': {
+    case FormulaNodeKind.Unary:
+    case FormulaNodeKind.Percent: {
       const operand = walk(current.operand, visit);
 
       return operand === current.operand ? current : { ...current, operand };
     }
-    case 'binary': {
+    case FormulaNodeKind.Binary: {
       const left = walk(current.left, visit);
       const right = walk(current.right, visit);
 

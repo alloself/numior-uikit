@@ -1,11 +1,14 @@
-import type { CellValue } from '../cell.types';
+import { BooleanText, CellValueKind, type CellValue } from '../cell.types';
 import type { NumberLocale } from '../format/format.types';
 import { readValueText } from '../format/read-value';
 import { raise } from './signal';
 
 export { CellErrorSignal, raise } from './signal';
 
-type Comparable = Exclude<CellValue, { readonly kind: 'empty' } | { readonly kind: 'error' }>;
+type Comparable = Exclude<
+  CellValue,
+  { readonly kind: typeof CellValueKind.Empty } | { readonly kind: typeof CellValueKind.Error }
+>;
 
 const COLLATOR = new Intl.Collator('en', { sensitivity: 'accent' });
 
@@ -31,30 +34,30 @@ const generalText = (value: number, decimal: string): string => {
 
 export const toNumber = (value: CellValue, locale: NumberLocale): number => {
   switch (value.kind) {
-    case 'number':
+    case CellValueKind.Number:
       return value.value;
-    case 'boolean':
+    case CellValueKind.Boolean:
       return value.value ? 1 : 0;
-    case 'empty':
+    case CellValueKind.Empty:
       return 0;
-    case 'string':
+    case CellValueKind.String:
       return numberFromText(value.value, locale) ?? raise('#VALUE!');
-    case 'error':
+    case CellValueKind.Error:
       return raise(value.code);
   }
 };
 
 export const toText = (value: CellValue, locale: NumberLocale): string => {
   switch (value.kind) {
-    case 'number':
+    case CellValueKind.Number:
       return generalText(value.value, locale.decimal);
-    case 'boolean':
+    case CellValueKind.Boolean:
       return value.value ? locale.trueText : locale.falseText;
-    case 'empty':
+    case CellValueKind.Empty:
       return '';
-    case 'string':
+    case CellValueKind.String:
       return value.value;
-    case 'error':
+    case CellValueKind.Error:
       return raise(value.code);
   }
 };
@@ -62,32 +65,32 @@ export const toText = (value: CellValue, locale: NumberLocale): string => {
 export const logicalFromText = (text: string, locale: NumberLocale): boolean | undefined => {
   const upper = text.toUpperCase();
 
-  if (upper === 'TRUE' || upper === locale.trueText) {
+  if (upper === BooleanText.True || upper === locale.trueText) {
     return true;
   }
-  return upper === 'FALSE' || upper === locale.falseText ? false : undefined;
+  return upper === BooleanText.False || upper === locale.falseText ? false : undefined;
 };
 
 export const toLogical = (value: CellValue, locale: NumberLocale): boolean => {
   switch (value.kind) {
-    case 'number':
+    case CellValueKind.Number:
       return value.value !== 0;
-    case 'boolean':
+    case CellValueKind.Boolean:
       return value.value;
-    case 'empty':
+    case CellValueKind.Empty:
       return false;
-    case 'string':
+    case CellValueKind.String:
       return logicalFromText(value.value, locale) ?? raise('#VALUE!');
-    case 'error':
+    case CellValueKind.Error:
       return raise(value.code);
   }
 };
 
 const blankLike = (other: CellValue): Comparable => {
   switch (other.kind) {
-    case 'string':
+    case CellValueKind.String:
       return { kind: 'string', value: '' };
-    case 'boolean':
+    case CellValueKind.Boolean:
       return { kind: 'boolean', value: false };
     default:
       return { kind: 'number', value: 0 };
@@ -96,9 +99,9 @@ const blankLike = (other: CellValue): Comparable => {
 
 const comparable = (value: CellValue, other: CellValue): Comparable => {
   switch (value.kind) {
-    case 'error':
+    case CellValueKind.Error:
       return raise(value.code);
-    case 'empty':
+    case CellValueKind.Empty:
       return blankLike(other);
     default:
       return value;
@@ -106,11 +109,11 @@ const comparable = (value: CellValue, other: CellValue): Comparable => {
 };
 
 const sameKind = (left: Comparable, right: Comparable): number => {
-  if (left.kind === 'string' && right.kind === 'string') {
+  if (left.kind === CellValueKind.String && right.kind === CellValueKind.String) {
     return Math.sign(COLLATOR.compare(left.value, right.value));
   }
-  const a = left.kind === 'string' ? 0 : Number(left.value);
-  const b = right.kind === 'string' ? 0 : Number(right.value);
+  const a = left.kind === CellValueKind.String ? 0 : Number(left.value);
+  const b = right.kind === CellValueKind.String ? 0 : Number(right.value);
 
   return Math.sign(a - b);
 };
@@ -124,11 +127,11 @@ export const compareValues = (left: CellValue, right: CellValue): number => {
 
 export const lookupKey = (value: CellValue): string | undefined => {
   switch (value.kind) {
-    case 'number':
+    case CellValueKind.Number:
       return `n${String(value.value)}`;
-    case 'string':
+    case CellValueKind.String:
       return `s${value.value.toUpperCase()}`;
-    case 'boolean':
+    case CellValueKind.Boolean:
       return `b${String(value.value)}`;
     default:
       return undefined;
@@ -144,14 +147,15 @@ const SORT_RANK: Readonly<Record<CellValue['kind'], number>> = {
 };
 
 const sortOrder = (left: CellValue, right: CellValue): number =>
-  left.kind === right.kind && left.kind !== 'error' && left.kind !== 'empty'
+  left.kind === right.kind && left.kind !== CellValueKind.Error && left.kind !== CellValueKind.Empty
     ? compareValues(left, right)
     : SORT_RANK[left.kind] - SORT_RANK[right.kind];
 
 export const ordered =
   (direction: number) =>
   (left: CellValue, right: CellValue): number => {
-    const blanks = Number(left.kind === 'empty') - Number(right.kind === 'empty');
+    const blanks =
+      Number(left.kind === CellValueKind.Empty) - Number(right.kind === CellValueKind.Empty);
 
     return blanks === 0 ? direction * sortOrder(left, right) : blanks;
   };

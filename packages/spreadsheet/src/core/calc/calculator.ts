@@ -1,6 +1,18 @@
 import { MAX_COLS, MAX_ROWS, cellIndex, containsCell } from '../address';
-import type { CellRange, CellValue } from '../cell.types';
-import type { FormulaLocale, FormulaNode, FormulaParse } from '../formula/formula.types';
+import {
+  CellInputKind,
+  CellValueKind,
+  LineAxis,
+  type CellRange,
+  type CellValue,
+} from '../cell.types';
+import {
+  FormulaNodeKind,
+  FormulaReferenceKind,
+  type FormulaLocale,
+  type FormulaNode,
+  type FormulaParse,
+} from '../formula/formula.types';
 import { EN_LOCALE, type BookLocale } from '../locale';
 import { shiftIndex } from '../lines';
 import { ORIGIN, referenceRange } from '../formula/origin';
@@ -18,18 +30,19 @@ import {
   type SheetTable,
   type Workbook,
 } from '../workbook';
-import type {
-  ArrayValue,
-  CellContent,
-  FormulaCell,
-  FormulaPlace,
-  FormulaResult,
-  FunctionRegistry,
-  Limitation,
-  RecalcOptions,
-  Recalculation,
-  ShiftedFormulaCell,
-  ShiftedName,
+import {
+  EvalValueKind,
+  type ArrayValue,
+  type CellContent,
+  type FormulaCell,
+  type FormulaPlace,
+  type FormulaResult,
+  type FunctionRegistry,
+  type Limitation,
+  type RecalcOptions,
+  type Recalculation,
+  type ShiftedFormulaCell,
+  type ShiftedName,
 } from './calc.types';
 import { lookupKey } from './coerce';
 import { evaluateFormula, type EvalContext } from './evaluate';
@@ -195,7 +208,7 @@ const oneCell = (range: CellRange): boolean =>
 const definedFor = (
   workbook: Workbook,
   sheet: Sheet,
-  node: Extract<FormulaNode, { readonly kind: 'name' }>,
+  node: Extract<FormulaNode, { readonly kind: typeof FormulaNodeKind.Name }>,
 ): DefinedName | undefined => {
   const home = localSheet(workbook, node, sheet);
 
@@ -203,7 +216,7 @@ const definedFor = (
 };
 
 const structuredLinks = (
-  found: Extract<FormulaNode, { readonly kind: 'structured' }>,
+  found: Extract<FormulaNode, { readonly kind: typeof FormulaNodeKind.Structured }>,
   record: Placed,
   workbook: Workbook,
   links: Links,
@@ -232,11 +245,11 @@ const collectLinks = (
   seen: Set<DefinedName>,
 ): void => {
   formulaReferences(ast).forEach((found) => {
-    if (found.kind === 'structured') {
+    if (found.kind === FormulaReferenceKind.Structured) {
       structuredLinks(found, record, workbook, links);
       return;
     }
-    if (found.kind === 'name') {
+    if (found.kind === FormulaReferenceKind.Name) {
       nameLinks(found, record, workbook, links, seen);
       return;
     }
@@ -251,7 +264,7 @@ const collectLinks = (
 };
 
 const nameLinks = (
-  found: Extract<FormulaNode, { readonly kind: 'name' }>,
+  found: Extract<FormulaNode, { readonly kind: typeof FormulaNodeKind.Name }>,
   record: Placed,
   workbook: Workbook,
   links: Links,
@@ -304,12 +317,12 @@ const subtotals = new WeakMap<FormulaNode, boolean>();
 
 const subtotalIn = (node: FormulaNode): boolean => {
   switch (node.kind) {
-    case 'call':
+    case FormulaNodeKind.Call:
       return SUBTOTALS.has(node.name) || node.args.some(subtotalIn);
-    case 'unary':
-    case 'percent':
+    case FormulaNodeKind.Unary:
+    case FormulaNodeKind.Percent:
       return subtotalIn(node.operand);
-    case 'binary':
+    case FormulaNodeKind.Binary:
       return subtotalIn(node.left) || subtotalIn(node.right);
     default:
       return false;
@@ -331,15 +344,15 @@ const callsSubtotal = (node: FormulaNode): boolean => {
 
 const usesVolatile = (node: FormulaNode, functions: FunctionRegistry): boolean => {
   switch (node.kind) {
-    case 'call':
+    case FormulaNodeKind.Call:
       return (
         functions.get(node.name)?.volatile === true ||
         node.args.some((arg) => usesVolatile(arg, functions))
       );
-    case 'unary':
-    case 'percent':
+    case FormulaNodeKind.Unary:
+    case FormulaNodeKind.Percent:
       return usesVolatile(node.operand, functions);
-    case 'binary':
+    case FormulaNodeKind.Binary:
       return usesVolatile(node.left, functions) || usesVolatile(node.right, functions);
     default:
       return false;
@@ -371,7 +384,7 @@ const spillArea = (record: FormulaRecord, result: ArrayValue): SpillArea => ({
 });
 
 const lastLine = (range: CellRange, axis: LineChange['axis']): number =>
-  axis === 'rows' ? range.bottom : range.right;
+  axis === LineAxis.Rows ? range.bottom : range.right;
 
 const shiftPrecedent = (
   precedent: Precedent,
@@ -379,7 +392,7 @@ const shiftPrecedent = (
   change: LineChange,
 ): Precedent | undefined => {
   const { range } = precedent;
-  const rows = change.axis === 'rows';
+  const rows = change.axis === LineAxis.Rows;
   const first = rows ? range.top : range.left;
   const last = rows ? range.bottom : range.right;
   const whole = first === 0 && last === (rows ? MAX_ROWS : MAX_COLS) - 1;
@@ -418,7 +431,7 @@ const applyShift = (move: ShiftPlan, axis: LineChange['axis']): void => {
   if (ast !== record.cell.ast) {
     record.cell = { ...record.cell, ast };
   }
-  if (axis === 'rows') {
+  if (axis === LineAxis.Rows) {
     record.row = line;
   } else {
     record.col = line;
@@ -625,7 +638,7 @@ export const createCalculator = (
 
   const place = (key: number, record: FormulaRecord, result: FormulaResult): void => {
     release(key);
-    if (result.kind === 'array') {
+    if (result.kind === EvalValueKind.Array) {
       spill(key, record, result);
     } else {
       writeAnchor(record, result);
@@ -1009,7 +1022,7 @@ export const createCalculator = (
   const shiftPositions = (sheet: Sheet, change: LineChange): void => {
     const local = positions.get(sheet.id);
     const start = change.at + Math.max(-change.count, 0);
-    const rows = change.axis === 'rows';
+    const rows = change.axis === LineAxis.Rows;
     const offset = rows ? change.count * MAX_COLS : change.count;
     const moved: number[] = [];
 
@@ -1033,7 +1046,7 @@ export const createCalculator = (
 
     const shifted: ShiftedFormulaCell[] = [];
     const rewritten: ShiftPlan[] = [];
-    const rows = change.axis === 'rows';
+    const rows = change.axis === LineAxis.Rows;
 
     formulas.forEach((record) => {
       const onSheet = record.sheet === sheet;
@@ -1145,13 +1158,13 @@ export const createCalculator = (
     },
     setContent: (sheet, row, col, content) => {
       switch (content.kind) {
-        case 'formula':
+        case CellInputKind.Formula:
           setParsed(sheet, row, col, content.ast);
           break;
-        case 'value':
+        case CellInputKind.Value:
           setValue(sheet, row, col, content.value);
           break;
-        case 'empty':
+        case CellInputKind.Empty:
           setValue(sheet, row, col, EMPTY);
           break;
       }
@@ -1165,7 +1178,7 @@ export const createCalculator = (
 
       const value = sheet.cells.get(row, col);
 
-      return value.kind === 'empty' || spills.owns(formulaKey(sheet.id, row, col))
+      return value.kind === CellValueKind.Empty || spills.owns(formulaKey(sheet.id, row, col))
         ? { kind: 'empty' }
         : { kind: 'value', value };
     },
@@ -1207,7 +1220,7 @@ export const createCalculator = (
 
       evaluating = before;
       dynamic.length = tracked;
-      return result.kind === 'array' ? (result.rows[0]?.[0] ?? EMPTY) : result;
+      return result.kind === EvalValueKind.Array ? (result.rows[0]?.[0] ?? EMPTY) : result;
     },
     setLocale: (next) => {
       interrupt();

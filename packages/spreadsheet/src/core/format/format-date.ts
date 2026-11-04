@@ -1,8 +1,8 @@
 import { civilOf, mondayIndex, type CivilDate } from '../calc/serials';
-import type { DateUnit, FormatToken, NumberLocale } from './format.types';
+import { DateUnit, FormatTokenKind, type FormatToken, type NumberLocale } from './format.types';
 import { createOutput, type Output } from './output';
 
-type DateToken = Extract<FormatToken, { kind: 'date' }>;
+type DateToken = Extract<FormatToken, { kind: typeof FormatTokenKind.Date }>;
 
 interface Moment {
   readonly date: CivilDate;
@@ -22,7 +22,7 @@ const two = (value: number): string => String(value).padStart(2, '0');
 const precisionOf = (tokens: readonly FormatToken[]): number =>
   tokens.reduce(
     (widest, token) =>
-      token.kind === 'date' && token.unit === 'subsecond'
+      token.kind === FormatTokenKind.Date && token.unit === DateUnit.Subsecond
         ? Math.max(widest, Math.min(token.width, 3))
         : widest,
     0,
@@ -52,7 +52,10 @@ const momentOf = (serial: number, precision: number): Moment | undefined => {
 const dayBefore = (tokens: readonly FormatToken[], index: number): boolean =>
   tokens
     .slice(0, index)
-    .some((token) => token.kind === 'date' && token.unit === 'day' && token.width <= 2);
+    .some(
+      (token) =>
+        token.kind === FormatTokenKind.Date && token.unit === DateUnit.Day && token.width <= 2,
+    );
 
 const monthText = (
   width: number,
@@ -113,9 +116,9 @@ const elapsedText = (unit: DateUnit, width: number, moment: Moment): string => {
   const seconds = moment.days * DAY_SECONDS + moment.seconds;
 
   switch (unit) {
-    case 'hours':
+    case DateUnit.Hours:
       return sized(Math.floor(seconds / 3600), width);
-    case 'minutes':
+    case DateUnit.Minutes:
       return sized(Math.floor(seconds / 60), width);
     default:
       return sized(seconds, width);
@@ -129,18 +132,18 @@ const clockText = (
   locale: NumberLocale,
 ): string => {
   switch (token.unit) {
-    case 'hour':
+    case DateUnit.Hour:
       return sized(hourOf(moment, twelve), Math.min(token.width, 2));
-    case 'minute':
+    case DateUnit.Minute:
       return sized(Math.floor((moment.seconds % 3600) / 60), Math.min(token.width, 2));
-    case 'second':
+    case DateUnit.Second:
       return sized(moment.seconds % 60, Math.min(token.width, 2));
-    case 'subsecond':
+    case DateUnit.Subsecond:
       return (
         locale.decimal +
         sized(moment.ticks, moment.precision).slice(0, token.width).padEnd(token.width, '0')
       );
-    case 'ampm':
+    case DateUnit.Ampm:
       return ampmText(token.code, moment, locale);
     default:
       return elapsedText(token.unit, token.width, moment);
@@ -155,16 +158,16 @@ const dateText = (
   locale: NumberLocale,
 ): string | undefined => {
   switch (token.unit) {
-    case 'year':
+    case DateUnit.Year:
       return token.width <= 2 ? two(moment.date.year % 100) : String(moment.date.year);
-    case 'month':
+    case DateUnit.Month:
       return monthText(
         token.width > 5 ? 4 : token.width,
         moment.date.month,
         locale,
         dayBefore(tokens, index),
       );
-    case 'day':
+    case DateUnit.Day:
       return dayText(token.width, moment, locale);
     default:
       return undefined;
@@ -183,16 +186,19 @@ export const formatDateSection = (
   }
 
   const output = createOutput();
-  const twelve = tokens.some((token) => token.kind === 'date' && token.unit === 'ampm');
+
+  const twelve = tokens.some(
+    (token) => token.kind === FormatTokenKind.Date && token.unit === DateUnit.Ampm,
+  );
 
   tokens.forEach((token, index) => {
-    if (token.kind === 'date') {
+    if (token.kind === FormatTokenKind.Date) {
       output.push(
         dateText(tokens, index, token, moment, locale) ?? clockText(token, moment, twelve, locale),
       );
-    } else if (token.kind === 'fill') {
+    } else if (token.kind === FormatTokenKind.Fill) {
       output.fill(token.char);
-    } else if (token.kind === 'literal') {
+    } else if (token.kind === FormatTokenKind.Literal) {
       output.push(token.text);
     }
   });

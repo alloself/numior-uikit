@@ -1,12 +1,13 @@
 import { columnName, formatCell } from '../address';
 import type { CellAddress, CellRef } from '../cell.types';
-import type {
-  BinaryOperator,
-  BookLabelOf,
-  FormulaLocale,
-  FormulaNode,
-  LineRef,
-  SheetPlace,
+import {
+  FormulaNodeKind,
+  type BinaryOperator,
+  type BookLabelOf,
+  type FormulaLocale,
+  type FormulaNode,
+  type LineRef,
+  type SheetPlace,
 } from './formula.types';
 import { EN_FORMULAS } from './locale';
 import { ORIGIN, absoluteFormula } from './origin';
@@ -48,11 +49,11 @@ const LOOKS_LIKE_REFERENCE = /^(?:[A-Za-z]{1,3}\d+|R\d*C\d*|TRUE|FALSE)$/iu;
 
 const precedenceOf = (node: FormulaNode): number => {
   switch (node.kind) {
-    case 'binary':
+    case FormulaNodeKind.Binary:
       return PRECEDENCE[node.op];
-    case 'percent':
+    case FormulaNodeKind.Percent:
       return PERCENT;
-    case 'unary':
+    case FormulaNodeKind.Unary:
       return UNARY;
     default:
       return ATOM;
@@ -100,15 +101,15 @@ const wrapped = (node: FormulaNode, printing: Printing, above: number): string =
 
 const constantText = (node: FormulaNode, locale: FormulaLocale): string | undefined => {
   switch (node.kind) {
-    case 'number':
+    case FormulaNodeKind.Number:
       return numberText(node.value, locale);
-    case 'string':
+    case FormulaNodeKind.String:
       return `"${node.value.replaceAll('"', '""')}"`;
-    case 'boolean':
+    case FormulaNodeKind.Boolean:
       return node.value ? locale.trueText : locale.falseText;
-    case 'error':
+    case FormulaNodeKind.Error:
       return locale.errors[node.code];
-    case 'missing':
+    case FormulaNodeKind.Missing:
       return '';
     default:
       return undefined;
@@ -117,17 +118,17 @@ const constantText = (node: FormulaNode, locale: FormulaLocale): string | undefi
 
 const referenceText = (node: FormulaNode, printing: Printing): string | undefined => {
   switch (node.kind) {
-    case 'cell':
+    case FormulaNodeKind.Cell:
       return `${sheetPrefix(node, printing)}${cellText(node.ref)}`;
-    case 'range':
+    case FormulaNodeKind.Range:
       return `${sheetPrefix(node, printing)}${cellText(node.from)}:${cellText(node.to)}`;
-    case 'columns':
+    case FormulaNodeKind.Columns:
       return `${sheetPrefix(node, printing)}${columnText(node.from)}:${columnText(node.to)}`;
-    case 'rows':
+    case FormulaNodeKind.Rows:
       return `${sheetPrefix(node, printing)}${rowText(node.from)}:${rowText(node.to)}`;
-    case 'spill':
+    case FormulaNodeKind.Spill:
       return `${sheetPrefix(node, printing)}${cellText(node.ref)}#`;
-    case 'name':
+    case FormulaNodeKind.Name:
       return `${sheetPrefix(node, printing)}${node.name}`;
     default:
       return undefined;
@@ -136,18 +137,18 @@ const referenceText = (node: FormulaNode, printing: Printing): string | undefine
 
 const operationText = (node: FormulaNode, printing: Printing): string => {
   switch (node.kind) {
-    case 'call':
+    case FormulaNodeKind.Call:
       return `${localFunction(node.name, printing.locale)}(${node.args.map((arg) => printNode(arg, printing)).join(printing.locale.argument)})`;
-    case 'unary':
+    case FormulaNodeKind.Unary:
       return `${node.op}${wrapped(node.operand, printing, UNARY)}`;
-    case 'percent':
+    case FormulaNodeKind.Percent:
       return `${wrapped(node.operand, printing, PERCENT)}%`;
-    case 'binary': {
+    case FormulaNodeKind.Binary: {
       const level = PRECEDENCE[node.op];
 
       return `${wrapped(node.left, printing, level)}${node.op}${wrapped(node.right, printing, level + 1)}`;
     }
-    case 'array':
+    case FormulaNodeKind.Array:
       return `{${node.rows
         .map((row) =>
           row.map((item) => printNode(item, printing)).join(printing.locale.arrayColumn),
@@ -159,7 +160,7 @@ const operationText = (node: FormulaNode, printing: Printing): string => {
 };
 
 const printNode = (node: FormulaNode, printing: Printing): string =>
-  node.kind === 'structured'
+  node.kind === FormulaNodeKind.Structured
     ? `${sheetPrefix({ book: node.book }, printing)}${printStructured(node, printing.locale)}`
     : (constantText(node, printing.locale) ??
       referenceText(node, printing) ??

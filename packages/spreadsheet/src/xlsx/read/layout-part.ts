@@ -9,8 +9,9 @@ import type {
 } from '../../core/layout/layout.types';
 import { DEFAULT_SIZES, DEFAULT_VIEW, lineLayoutsOf } from '../../core/layout/line-layouts';
 import type { Workbook } from '../../core/workbook';
-import type { XmlAttribute } from '../xml/xml.types';
+import { XmlBoolean, type XmlAttribute } from '../xml/xml.types';
 import { attributeOf, numberOf, truthy } from './ooxml';
+import { FormatCode } from '../../core/format/format.types';
 
 export interface LayoutCollector {
   row(row: number, attributes: readonly XmlAttribute[]): void;
@@ -72,7 +73,7 @@ const styleOf = (styles: LayoutStyles, index: number): LineStyle => {
   const code = styles.formats[index];
 
   return {
-    format: code === undefined || code === 'General' ? 0 : styles.book.formats.id(code),
+    format: code === undefined || code === FormatCode.General ? 0 : styles.book.formats.id(code),
     decoration: styles.decorations[index] ?? 0,
   };
 };
@@ -112,7 +113,7 @@ const splitOf = (text: string | undefined): number => Math.max(0, Math.round(num
 
 const viewOf = (attributes: readonly XmlAttribute[]): SheetView => ({
   ...DEFAULT_VIEW,
-  gridlines: attributeOf(attributes, 'showGridLines') !== '0',
+  gridlines: attributeOf(attributes, 'showGridLines') !== XmlBoolean.Zero,
   rightToLeft: truthy(attributeOf(attributes, 'rightToLeft')),
   zoom: sizeOf(attributeOf(attributes, 'zoomScale')) ?? DEFAULT_VIEW.zoom,
 });
