@@ -139,6 +139,11 @@
   animation: nui-smart-form-step var(--nui-duration-normal) var(--nui-easing);
 }
 
+.nui-smart-form__back,
+.nui-smart-form__next {
+  display: grid;
+}
+
 .nui-smart-form--steps .nui-smart-form__next {
   margin-inline-start: auto;
 }
@@ -178,7 +183,8 @@
     padding-block-start: 0;
   }
 
-  .nui-smart-form--steps .nui-form__actions > * {
+  .nui-smart-form--steps .nui-smart-form__back,
+  .nui-smart-form--steps .nui-smart-form__next {
     flex: 1 1 0;
   }
 }

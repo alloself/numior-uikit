@@ -1,6 +1,6 @@
 <template>
   <span class="nui-table__tree" :style="{ '--_level': level }" aria-hidden="true">
-    <NuiIcon v-if="loading" icon="loader" class="nui-table__spinner" />
+    <span v-if="loading" class="nui-table__spinner"><NuiIcon icon="loader" /></span>
     <span
       v-else-if="expandable"
       :key="node"
@@ -8,7 +8,7 @@
       @mousedown.prevent
       @click="emit('toggle')"
     >
-      <NuiIcon icon="chevron-right" class="nui-table__chevron" />
+      <NuiIcon icon="chevron-right" />
     </span>
     <span v-else class="nui-table__toggle"></span>
   </span>

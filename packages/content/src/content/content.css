@@ -400,6 +400,7 @@
 }
 .nui-content__viewer-close {
   position: absolute;
+  display: flex;
   inset-block-start: var(--nui-space-2);
   inset-inline-end: var(--nui-space-2);
 }

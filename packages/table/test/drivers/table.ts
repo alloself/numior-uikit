@@ -716,7 +716,7 @@ export class TableDriver<T> {
   }
 
   chevron(position: number): Element | null {
-    return this.row(position)?.querySelector('.nui-table__chevron') ?? null;
+    return this.row(position)?.querySelector('.nui-table__toggle--expandable') ?? null;
   }
 
   get labelledBy(): string | undefined {

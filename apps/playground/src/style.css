@@ -183,11 +183,11 @@ label:has(> input[type='checkbox']) {
 .layout-frame .nui-layout {
   block-size: 100%;
 }
-.layout-frame .nui-layout__content {
-  overflow: auto;
-}
 .layout-page {
+  box-sizing: border-box;
+  block-size: 100%;
   padding: var(--nui-space-4);
+  overflow: auto;
 }
 .layout-brand {
   display: flex;

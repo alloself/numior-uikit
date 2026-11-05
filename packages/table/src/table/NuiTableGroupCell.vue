@@ -5,7 +5,7 @@
     @click="emit('toggle')"
   >
     <span :key="cell.node" class="nui-table__toggle" aria-hidden="true">
-      <NuiIcon icon="chevron-right" class="nui-table__chevron" />
+      <NuiIcon icon="chevron-right" />
     </span>
     <span class="nui-table__text">{{ cell.text }}</span>
     <span class="nui-table__count">{{ cell.count }}</span>

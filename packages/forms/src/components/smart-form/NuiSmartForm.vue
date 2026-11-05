@@ -28,23 +28,16 @@
     </template>
     <template v-if="$slots.actions || steps" #actions="props">
       <slot name="actions" v-bind="{ ...props, step: current, first, last, back }">
-        <NuiButton
-          v-if="!first"
-          class="nui-smart-form__back"
-          variant="outline"
-          tone="neutral"
-          @click="back"
-        >
-          {{ texts.back }}
-        </NuiButton>
-        <NuiButton
-          class="nui-smart-form__next"
-          type="submit"
-          :loading="props.pending"
-          :disabled="disabled || readonly"
-        >
-          {{ last ? texts.submit : texts.next }}
-        </NuiButton>
+        <span v-if="!first" class="nui-smart-form__back">
+          <NuiButton variant="outline" tone="neutral" @click="back">
+            {{ texts.back }}
+          </NuiButton>
+        </span>
+        <span class="nui-smart-form__next">
+          <NuiButton type="submit" :loading="props.pending" :disabled="disabled || readonly">
+            {{ last ? texts.submit : texts.next }}
+          </NuiButton>
+        </span>
       </slot>
     </template>
   </NuiForm>

@@ -2,56 +2,57 @@
   <NuiPopover
     v-model:open="open"
     lazy
-    class="nui-editor-media"
     :anchor="anchor"
     placement="bottom-start"
     :offset="8"
     role="dialog"
     :aria-label="title"
   >
-    <NuiTabs v-if="uploadable" :key="session" v-model="tab" size="sm" :tabs="tabs" :label="title">
-      <template #panel="{ tab: shown }">
-        <div v-if="shown.value === MediaTab.Upload" class="nui-editor-media__upload">
-          <NuiButton
-            class="nui-editor-media__choose"
-            size="sm"
-            icon="upload"
-            autofocus
-            @click="choose"
-            >{{
-              kind === NuiContentNodeType.Image ? texts.chooseImage : texts.chooseFile
-            }}</NuiButton
-          >
-          <p class="nui-editor-media__hint">{{ texts.mediaDropHint }}</p>
-        </div>
-        <NuiEditorMediaLink
-          v-else
-          class="nui-editor-media__form--tabbed"
-          :valid="valid"
-          :invalid-text="invalidText"
-          @link="emit('link', $event)"
-          @cancel="emit('cancel')"
-        />
-      </template>
-    </NuiTabs>
-    <NuiEditorMediaLink
-      v-else
-      :key="session"
-      :valid="valid"
-      :invalid-text="invalidText"
-      @link="emit('link', $event)"
-      @cancel="emit('cancel')"
-    />
-    <input
-      ref="picker"
-      class="nui-editor-media__picker"
-      type="file"
-      tabindex="-1"
-      aria-hidden="true"
-      :accept="accept === '' ? undefined : accept"
-      :multiple="kind === NuiContentNodeType.File"
-      @change="onPick"
-    />
+    <div class="nui-editor-media">
+      <NuiTabs v-if="uploadable" :key="session" v-model="tab" size="sm" :tabs="tabs" :label="title">
+        <template #panel="{ tab: shown }">
+          <div v-if="shown.value === MediaTab.Upload" class="nui-editor-media__upload">
+            <NuiButton
+              class="nui-editor-media__choose"
+              size="sm"
+              icon="upload"
+              autofocus
+              @click="choose"
+              >{{
+                kind === NuiContentNodeType.Image ? texts.chooseImage : texts.chooseFile
+              }}</NuiButton
+            >
+            <p class="nui-editor-media__hint">{{ texts.mediaDropHint }}</p>
+          </div>
+          <NuiEditorMediaLink
+            v-else
+            class="nui-editor-media__form--tabbed"
+            :valid="valid"
+            :invalid-text="invalidText"
+            @link="emit('link', $event)"
+            @cancel="emit('cancel')"
+          />
+        </template>
+      </NuiTabs>
+      <NuiEditorMediaLink
+        v-else
+        :key="session"
+        :valid="valid"
+        :invalid-text="invalidText"
+        @link="emit('link', $event)"
+        @cancel="emit('cancel')"
+      />
+      <input
+        ref="picker"
+        class="nui-editor-media__picker"
+        type="file"
+        tabindex="-1"
+        aria-hidden="true"
+        :accept="accept === '' ? undefined : accept"
+        :multiple="kind === NuiContentNodeType.File"
+        @change="onPick"
+      />
+    </div>
   </NuiPopover>
 </template>
 

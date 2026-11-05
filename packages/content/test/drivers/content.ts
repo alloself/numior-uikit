@@ -163,7 +163,7 @@ export class ContentDriver {
   }
 
   async closeViewer(): Promise<void> {
-    const close = document.querySelector('.nui-content__viewer-close');
+    const close = document.querySelector('.nui-content__viewer-close > button');
 
     if (!(close instanceof HTMLElement)) {
       throw new Error('The image viewer is not open');

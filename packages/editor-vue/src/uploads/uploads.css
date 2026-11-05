@@ -79,7 +79,7 @@
   gap: var(--nui-space-1);
 }
 .nui-editor-media {
-  inline-size: min(22rem, calc(100vw - var(--nui-space-8)));
+  inline-size: calc(min(20rem, calc(100vw - var(--nui-space-8))) - 2 * var(--nui-space-3) - 2px);
 }
 .nui-editor-media__upload {
   display: flex;

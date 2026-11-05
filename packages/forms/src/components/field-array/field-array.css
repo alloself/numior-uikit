@@ -103,24 +103,23 @@
 
 .nui-field-array__grip,
 .nui-field-array__remove {
+  display: inline-flex;
   flex: none;
   margin-block-start: var(--_control-offset);
 }
 
 .nui-field-array__grip {
-  cursor: grab;
-  touch-action: none;
   opacity: 0;
   transition: opacity var(--nui-duration-fast) var(--nui-easing);
 }
 
 .nui-field-array__row:hover .nui-field-array__grip,
-.nui-field-array__grip:focus-visible,
+.nui-field-array__grip:has(:focus-visible),
 .nui-field-array__row--dragging .nui-field-array__grip {
   opacity: 1;
 }
 
-.nui-field-array__grip:disabled {
+.nui-field-array__grip--disabled {
   visibility: hidden;
 }
 
@@ -128,10 +127,6 @@
   .nui-field-array__row:not(.nui-field-array__row--dragging)
   .nui-field-array__grip {
   opacity: 0;
-}
-
-.nui-field-array--reordering .nui-field-array__grip {
-  cursor: grabbing;
 }
 
 .nui-field-array__indicator {
@@ -184,6 +179,8 @@
 }
 
 .nui-field-array__ghost-grip {
+  display: inline-flex;
+  flex: none;
   color: var(--nui-text-muted);
 }
 

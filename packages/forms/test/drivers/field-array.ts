@@ -79,7 +79,7 @@ export class FieldArrayDriver {
   }
 
   private grip(index: number): DOMWrapper<HTMLButtonElement> {
-    return this.row(index).find<HTMLButtonElement>('.nui-field-array__grip');
+    return this.row(index).find<HTMLButtonElement>('.nui-field-array__grip > button');
   }
 
   private get addButton(): DOMWrapper<HTMLButtonElement> {
@@ -96,13 +96,13 @@ export class FieldArrayDriver {
 
   get removeLabels(): string[] {
     return this.wrapper
-      .findAll('.nui-field-array__remove')
+      .findAll('.nui-field-array__remove > button')
       .map((button) => button.attributes('aria-label') ?? '');
   }
 
   get gripLabels(): string[] {
     return this.wrapper
-      .findAll('.nui-field-array__grip')
+      .findAll('.nui-field-array__grip > button')
       .map((button) => button.attributes('aria-label') ?? '');
   }
 
@@ -153,7 +153,9 @@ export class FieldArrayDriver {
     }
 
     const index = this.rows.findIndex((row) => row.element.contains(active));
-    const part = active.classList.contains('nui-field-array__grip') ? 'grip' : 'name';
+
+    const part =
+      active.parentElement?.classList.contains('nui-field-array__grip') === true ? 'grip' : 'name';
 
     return index === -1 ? undefined : `${part}:${index}`;
   }
@@ -186,7 +188,7 @@ export class FieldArrayDriver {
   }
 
   async remove(index: number): Promise<void> {
-    this.row(index).find<HTMLButtonElement>('.nui-field-array__remove').element.click();
+    this.row(index).find<HTMLButtonElement>('.nui-field-array__remove > button').element.click();
     await this.settle();
   }
 

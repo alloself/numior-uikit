@@ -8,7 +8,7 @@
     :disabled="disabled"
     @pointerdown="emit('grab', $event)"
   >
-    <NuiIcon icon="grip" class="nui-table__grip-icon" />
+    <NuiIcon icon="grip" />
   </button>
 </template>
 

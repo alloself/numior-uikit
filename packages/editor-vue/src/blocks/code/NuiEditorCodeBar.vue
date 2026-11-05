@@ -8,18 +8,19 @@
       @toggle="onToggle"
     >
       <template #trigger="{ attrs }">
-        <NuiButton
-          v-bind="attrs"
-          class="nui-editor-code__language"
-          variant="ghost"
-          tone="neutral"
-          size="xs"
-          icon-end="chevron-down"
-          :aria-label="`${texts.codeLanguage}: ${label}`"
-          @mousedown.prevent
-        >
-          {{ label }}
-        </NuiButton>
+        <span class="nui-editor-code__language">
+          <NuiButton
+            v-bind="attrs"
+            variant="ghost"
+            tone="neutral"
+            size="xs"
+            icon-end="chevron-down"
+            :aria-label="`${texts.codeLanguage}: ${label}`"
+            @mousedown.prevent
+          >
+            {{ label }}
+          </NuiButton>
+        </span>
       </template>
       <div class="nui-editor-code__languages">
         <NuiCommand

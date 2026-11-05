@@ -7,33 +7,38 @@
       'nui-field-array__row--invalid': error !== undefined,
     }"
   >
-    <NuiButton
+    <span
       v-if="reorderable"
       class="nui-field-array__grip"
-      variant="ghost"
-      tone="neutral"
-      size="md"
-      :aria-label="moveLabel"
-      :disabled="gripDisabled"
-      icon="grip"
-      @pointerdown="emit('grab', $event)"
-      @keydown="emit('grip-keydown', $event)"
-    />
+      :class="{ 'nui-field-array__grip--disabled': gripDisabled }"
+    >
+      <NuiButton
+        variant="ghost"
+        tone="neutral"
+        size="md"
+        grip
+        :aria-label="moveLabel"
+        :disabled="gripDisabled"
+        icon="grip"
+        @pointerdown="emit('grab', $event)"
+        @keydown="emit('grip-keydown', $event)"
+      />
+    </span>
     <div class="nui-field-array__content">
       <slot />
       <p v-if="error" class="nui-field-array__row-error">{{ error }}</p>
     </div>
     <slot name="actions">
-      <NuiButton
-        v-if="removable"
-        class="nui-field-array__remove"
-        variant="ghost"
-        tone="neutral"
-        size="md"
-        :aria-label="removeLabel"
-        icon="trash"
-        @click="emit('remove')"
-      />
+      <span v-if="removable" class="nui-field-array__remove">
+        <NuiButton
+          variant="ghost"
+          tone="neutral"
+          size="md"
+          :aria-label="removeLabel"
+          icon="trash"
+          @click="emit('remove')"
+        />
+      </span>
     </slot>
   </li>
 </template>

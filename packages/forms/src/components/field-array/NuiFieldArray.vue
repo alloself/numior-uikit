@@ -61,7 +61,7 @@
       </TransitionGroup>
       <span class="nui-field-array__indicator" aria-hidden="true" />
       <div v-if="ghostRow !== undefined" class="nui-field-array__ghost" aria-hidden="true">
-        <NuiIcon icon="grip" class="nui-field-array__ghost-grip" />
+        <span class="nui-field-array__ghost-grip"><NuiIcon icon="grip" /></span>
         <span>{{ localized.row({ index: ghostRow + 1 }) }}</span>
       </div>
     </div>

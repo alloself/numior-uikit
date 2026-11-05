@@ -152,7 +152,7 @@ export class EditorSection {
   }
 
   codeLanguage(): Locator {
-    return this.content.locator('.nui-editor-code__language').first();
+    return this.content.locator('.nui-editor-code__language > button').first();
   }
 
   codeLanguageOption(label: string): Locator {

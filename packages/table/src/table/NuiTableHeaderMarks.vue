@@ -5,13 +5,12 @@
     class="nui-table__sort"
     :class="{
       'nui-table__sort--active': state.direction !== undefined,
-      'nui-table__sort--desc': state.direction === TableSortDirection.Desc,
     }"
     aria-hidden="true"
   >
     <NuiIcon
       :icon="state.direction === undefined ? 'arrow-up-down' : 'arrow-up'"
-      class="nui-table__sort-icon"
+      :transform="{ rotate: state.direction === TableSortDirection.Desc ? 180 : 0 }"
     />
     <span v-if="state.order" class="nui-table__sort-order">{{ state.order }}</span>
   </span>

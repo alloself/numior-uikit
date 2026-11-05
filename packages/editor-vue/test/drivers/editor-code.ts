@@ -51,7 +51,7 @@ export class EditorCodeDriver {
   }
 
   async pickLanguage(index: number, label: string): Promise<void> {
-    const trigger = this.block(index).querySelector('.nui-editor-code__language');
+    const trigger = this.block(index).querySelector('.nui-editor-code__language > button');
 
     if (!(trigger instanceof HTMLElement)) {
       throw new Error('The code block has no language button');

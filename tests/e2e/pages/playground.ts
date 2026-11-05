@@ -151,7 +151,7 @@ const CLICKABLE_CONTROLS = [
 
 const ZOOM_CONTROLS = '.nui-content__zoom';
 
-const DRAG_GRIPS = '.nui-table__row-grip, .nui-field-array__grip';
+const DRAG_GRIPS = '.nui-table__row-grip, .nui-button--grip';
 
 export class PlaygroundPage {
   readonly workspace: Locator;

@@ -84,6 +84,7 @@
   white-space: normal;
 }
 .nui-editor-code__language {
+  display: inline-flex;
   margin-inline-start: calc(-1 * var(--nui-space-2));
 }
 .nui-editor-code__languages {
@@ -215,9 +216,6 @@
   padding: var(--nui-space-3);
   border-radius: inherit;
   background: color-mix(in oklab, var(--nui-surface) 45%, transparent);
-}
-.nui-editor-image__progress {
-  inline-size: 100%;
 }
 .nui-editor-image__alt {
   display: grid;

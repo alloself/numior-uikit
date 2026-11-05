@@ -110,7 +110,7 @@ export class EditorUploadDriver {
   }
 
   get panelLabel(): string | null {
-    return this.panel.getAttribute('aria-label');
+    return this.panel.closest('[role="dialog"]')?.getAttribute('aria-label') ?? null;
   }
 
   async insertLink(url: string): Promise<void> {

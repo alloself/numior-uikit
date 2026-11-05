@@ -16,12 +16,7 @@
         @load="measure"
       />
       <div v-if="pending !== undefined" class="nui-editor-image__busy">
-        <NuiProgress
-          class="nui-editor-image__progress"
-          size="sm"
-          :value="percent"
-          :label="texts.uploading({ percent })"
-        />
+        <NuiProgress size="sm" :value="percent" :label="texts.uploading({ percent })" />
       </div>
       <template v-if="editable">
         <span ref="corner" class="nui-editor__corner" />

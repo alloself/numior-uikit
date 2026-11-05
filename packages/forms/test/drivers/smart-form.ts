@@ -211,7 +211,7 @@ export class SmartFormDriver<V extends object> {
   }
 
   async back(): Promise<void> {
-    await this.click('.nui-smart-form__back');
+    await this.click('.nui-smart-form__back > button');
   }
 
   async pickStep(index: number): Promise<void> {

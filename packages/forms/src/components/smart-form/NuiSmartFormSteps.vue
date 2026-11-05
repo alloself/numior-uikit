@@ -1,10 +1,11 @@
 <template>
-  <NuiStepper
-    class="nui-smart-form__stepper"
-    :model-value="steps[current]?.value ?? ''"
-    :steps="stepperSteps"
-    @update:model-value="onSelect"
-  />
+  <div class="nui-smart-form__stepper">
+    <NuiStepper
+      :model-value="steps[current]?.value ?? ''"
+      :steps="stepperSteps"
+      @update:model-value="onSelect"
+    />
+  </div>
   <div
     v-for="(item, index) in steps"
     :hidden="index !== current"

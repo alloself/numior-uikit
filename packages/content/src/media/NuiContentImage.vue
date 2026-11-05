@@ -13,15 +13,16 @@
       :title="alt === '' ? texts.openImage : alt"
     >
       <img class="nui-content__lightbox" :src="src" :alt="alt" />
-      <NuiButton
-        class="nui-content__viewer-close"
-        variant="soft"
-        tone="neutral"
-        size="sm"
-        icon="x"
-        :aria-label="texts.closeImage"
-        @click="open = false"
-      />
+      <span class="nui-content__viewer-close">
+        <NuiButton
+          variant="soft"
+          tone="neutral"
+          size="sm"
+          icon="x"
+          :aria-label="texts.closeImage"
+          @click="open = false"
+        />
+      </span>
     </NuiDialog>
   </span>
 </template>
