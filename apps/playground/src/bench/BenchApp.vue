@@ -15,7 +15,7 @@
       v-if="shown && view === 'editor'"
       v-model="document"
       format="json"
-      class="bench__editor"
+      max-height="calc(100dvh - 8rem)"
       label="Бенчмарк редактора"
       data-testid="bench-editor"
     />

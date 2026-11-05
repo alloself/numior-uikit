@@ -209,6 +209,10 @@ export class EditorDriver {
     return [...this.root.classList];
   }
 
+  get maxHeight(): string {
+    return this.root.style.getPropertyValue('--_max-height');
+  }
+
   get documents(): readonly DocJSON[] {
     this.api.flush();
 

@@ -134,6 +134,19 @@ describe('NuiEditor', () => {
     expect(editor.emitted('blur')).toBe(1);
   });
 
+  it('bounds the text area by maxHeight only when it is given', () => {
+    const free = mounted({ document: note('Text') });
+
+    expect(free.classes).not.toContain('nui-editor--bounded');
+
+    free.destroy();
+
+    const bounded = mounted({ document: note('Text'), maxHeight: '20rem' });
+
+    expect(bounded.classes).toContain('nui-editor--bounded');
+    expect(bounded.maxHeight).toBe('20rem');
+  });
+
   it('mounts its closed overlays on the first focus or pointer move, not with the document', async () => {
     const focused = mounted({ document: note('Text') });
 

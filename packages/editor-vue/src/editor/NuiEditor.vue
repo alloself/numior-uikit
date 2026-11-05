@@ -9,8 +9,10 @@
           'nui-editor--disabled': isDisabled,
           'nui-editor--readonly': isReadonly,
           'nui-editor--empty': empty,
+          'nui-editor--bounded': maxHeight !== undefined,
         },
       ]"
+      :style="bounds"
       ref="frame"
       @focusin="onFrameFocusin"
       @focusout="overlays.onFocusout"
@@ -300,6 +302,7 @@ const {
   upload,
   accept,
   maxSize,
+  maxHeight,
   embeds = NO_EMBEDS,
   linkMetadata,
   mentions,
@@ -590,6 +593,10 @@ const onServer = inject(ssrContextKey, null) !== null;
 const empty = ref(isEmptyDoc(initial));
 
 const editable = computed(() => !isDisabled.value && !isReadonly.value);
+
+const bounds = computed(() =>
+  maxHeight === undefined ? undefined : { '--_max-height': maxHeight },
+);
 
 const selectedNode = computed(() =>
   current.value.selection.kind === SelectionKind.Node ? current.value.selection.id : undefined,

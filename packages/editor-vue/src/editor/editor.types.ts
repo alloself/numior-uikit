@@ -28,6 +28,7 @@ export interface NuiEditorProps extends NuiFieldControlProps {
   mentions?: NuiEditorMentions | undefined;
   accept?: string | undefined;
   maxSize?: number | undefined;
+  maxHeight?: string | undefined;
 }
 
 export type NuiEditorToolbarMode = (typeof NuiEditorToolbarMode)[keyof typeof NuiEditorToolbarMode];

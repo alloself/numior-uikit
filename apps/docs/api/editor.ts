@@ -41,6 +41,10 @@ const docs: DocsMap = {
         ru: 'Наибольший размер загружаемого файла в байтах.',
         en: 'Largest upload size in bytes.',
       },
+      maxHeight: {
+        ru: 'Наибольшая высота области текста (CSS-длина): дальше документ прокручивается внутри редактора, панель остаётся на месте.',
+        en: 'Largest height of the text area (a CSS length): beyond it the document scrolls inside the editor and the toolbar stays put.',
+      },
       format: {
         ru: 'Что хранит `v-model`: `html` — строку разметки, `json` — документ в JSON.',
         en: 'What `v-model` holds: `html` for a markup string, `json` for a JSON document.',

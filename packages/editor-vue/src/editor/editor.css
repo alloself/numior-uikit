@@ -51,6 +51,10 @@
 .nui-editor__server {
   display: contents;
 }
+.nui-editor--bounded .nui-editor__content {
+  max-block-size: var(--_max-height);
+  overflow-y: auto;
+}
 .nui-editor .nui-editor__content {
   --_size: var(--_text);
 
