@@ -455,6 +455,20 @@ export class TableSection {
     );
   }
 
+  async selectCellText(position: number, col: number): Promise<void> {
+    const box = await boxOf(this.cell(position, col));
+    const y = box.y + box.height / 2;
+
+    await this.page.mouse.move(box.x + 4, y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(box.x + box.width - 4, y, { steps: 6 });
+    await this.page.mouse.up();
+  }
+
+  selectedCells(): Locator {
+    return this.root.locator('.nui-table__cell[aria-selected="true"]');
+  }
+
   async dragRange(from: TableCell, to: TableCell, modifier?: 'ControlOrMeta'): Promise<void> {
     const start = await boxOf(this.cell(from.row, from.col));
     const end = await boxOf(this.cell(to.row, to.col));

@@ -220,6 +220,10 @@ Dragging with the mouse selects a rectangle of cells. Shift+click selects a rect
 last clicked cell, and Ctrl+click adds a single cell. Shift or Ctrl on a selected cell removes it
 from the selection.
 
+After a double click on a cell that does not open an editor, a drag that starts in that cell
+selects its text. A click on another cell, the arrow keys or Escape bring cell
+selection back.
+
 Escape clears the selection, and a click outside the table clears it too. Elements listed in
 `keepEditing`, such as a formula bar, keep the selection. Selected ranges are kept in
 `v-model:ranges`.

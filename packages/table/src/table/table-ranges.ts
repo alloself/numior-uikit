@@ -60,7 +60,7 @@ export const boxOf = (range: NuiTableRange): RangeBox => ({
   end: Math.max(range.from.col, range.to.col),
 });
 
-const samePosition = (a: TableCellPosition, b: TableCellPosition): boolean =>
+export const samePosition = (a: TableCellPosition, b: TableCellPosition): boolean =>
   a.row === b.row && a.col === b.col;
 
 export const sameRanges = (a: NuiTableRanges, b: NuiTableRanges): boolean =>

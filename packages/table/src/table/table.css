@@ -365,6 +365,9 @@
 .nui-table--ranging {
   user-select: none;
 }
+.nui-table--reading .nui-table__cell--active {
+  cursor: text;
+}
 .nui-table__anchor {
   position: absolute;
   inline-size: 0;

@@ -548,6 +548,10 @@ export class TableDriver<T> {
     return this.wrapper.find('.nui-table').classes('nui-table--slack');
   }
 
+  get readingText(): boolean {
+    return this.wrapper.find('.nui-table').classes('nui-table--reading');
+  }
+
   async resize(width: number): Promise<void> {
     defineValue(this.element, 'clientWidth', width);
     defineRect(this.element, new DOMRect(0, 0, width, LAYOUT_HEIGHT));

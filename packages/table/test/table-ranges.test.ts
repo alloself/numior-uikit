@@ -50,6 +50,34 @@ describe('NuiTable cell ranges', () => {
     expect(await grid.openCellMenu(2, 1)).toBe(false);
   });
 
+  it('lets a double-clicked cell select its own text until another cell or key takes over', async () => {
+    const grid = mountPeople();
+    await grid.settle();
+    await grid.doubleClickCell(2, 1);
+
+    expect(grid.readingText).toBe(true);
+    expect(grid.editing).toBeUndefined();
+
+    await grid.dragRange({ row: 2, col: 1 }, { row: 3, col: 2 });
+
+    expect(grid.ranges).toEqual([]);
+
+    const removeAllRanges = vi.spyOn(Selection.prototype, 'removeAllRanges');
+
+    await grid.press('ArrowDown');
+
+    expect(grid.readingText).toBe(false);
+    expect(removeAllRanges).toHaveBeenCalled();
+
+    await grid.doubleClickCell(2, 1);
+    await grid.dragRange({ row: 1, col: 1 }, { row: 3, col: 2 });
+
+    expect(grid.readingText).toBe(false);
+    expect(grid.ranges).toEqual([range(1, 1, 3, 2)]);
+
+    removeAllRanges.mockRestore();
+  });
+
   it('drags a range inside an editable page the way it does on its own', async () => {
     document.body.setAttribute('contenteditable', 'true');
 

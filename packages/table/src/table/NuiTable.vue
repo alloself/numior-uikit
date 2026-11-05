@@ -963,6 +963,7 @@ const rootClass = computed(() => [
     'nui-table--dragging':
       order.dragging.value !== undefined || rowDrag.dragging.value !== undefined,
     'nui-table--ranging': rangeSelect.dragging.value,
+    'nui-table--reading': rangeSelect.reading.value !== undefined,
     'nui-table--cell-selection': cellSelection && !loadingNow.value,
     'nui-table--ranged': ranges.value.length > 0,
     'nui-table--deselected': rangeSelect.deselected.value,
@@ -2264,7 +2265,11 @@ const viewportEvents = {
       cellEditor.onClick(event);
     }
   }),
-  dblclick: outsideDetail(cellEditor.onDblclick),
+  dblclick: outsideDetail((event: MouseEvent) => {
+    if (!cellEditor.onDblclick(event)) {
+      rangeSelect.onDblclick(event);
+    }
+  }),
   pointerup: outsideDetail(cellEditor.onPointerup),
 };
 

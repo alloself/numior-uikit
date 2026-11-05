@@ -64,7 +64,7 @@ export interface TableCellEditor<T> {
   onKeydown(event: KeyboardEvent): boolean;
   onFocusin(event: FocusEvent): void;
   onClick(event: MouseEvent): void;
-  onDblclick(event: MouseEvent): void;
+  onDblclick(event: MouseEvent): boolean;
   onPointerup(event: PointerEvent): void;
 }
 
@@ -364,12 +364,10 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
   const locate = (target: EventTarget | null): TableCellPosition | undefined =>
     options.enabled() && session.value === undefined ? options.locate(target) : undefined;
 
-  const onDblclick = (event: MouseEvent): void => {
+  const onDblclick = (event: MouseEvent): boolean => {
     const position = event.timeStamp - tapped < TAP_GRACE ? undefined : locate(event.target);
 
-    if (position !== undefined) {
-      open(position, GESTURE);
-    }
+    return position !== undefined && open(position, GESTURE);
   };
 
   const onClick = (event: MouseEvent): void => {

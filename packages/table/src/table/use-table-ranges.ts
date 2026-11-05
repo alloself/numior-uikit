@@ -1,4 +1,12 @@
-import { onScopeDispose, ref, watch, type ComputedRef, type Ref, type WatchSource } from 'vue';
+import {
+  onScopeDispose,
+  ref,
+  shallowRef,
+  watch,
+  type ComputedRef,
+  type Ref,
+  type WatchSource,
+} from 'vue';
 import { useEventListener } from '@vueuse/core';
 import { Key, PointerType, useEdgeScroll, type EdgePoint } from '@numior/primitives';
 import {
@@ -10,6 +18,7 @@ import {
   inRanges,
   revealAxisOf,
   rowsOf,
+  samePosition,
   sameRanges,
   segmentsOf,
   stepCorner,
@@ -65,6 +74,7 @@ export interface TableRangesOptions {
 export interface TableRanges {
   readonly dragging: Readonly<Ref<boolean>>;
   readonly deselected: Readonly<Ref<boolean>>;
+  readonly reading: Readonly<Ref<TableCellPosition | undefined>>;
   segmentsOf(row: number): TableRowRanges | undefined;
   contains(position: TableCellPosition): boolean;
   cellAt(target: EventTarget | null): TableCellPosition | undefined;
@@ -72,6 +82,7 @@ export interface TableRanges {
   onPointerdown(event: PointerEvent): void;
   onMousedown(event: MouseEvent): void;
   onClick(event: MouseEvent): void;
+  onDblclick(event: MouseEvent): void;
   onKeydown(event: KeyboardEvent): boolean;
   takeClick(): boolean;
   swallowClick(): void;
@@ -196,6 +207,7 @@ const clearTextSelection = (): void => {
 export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   const dragging = ref(false);
   const deselected = ref(false);
+  const reading = shallowRef<TableCellPosition | undefined>();
   let session: RangeSession | undefined;
   let point: EdgePoint = {};
   let swallow = false;
@@ -242,9 +254,23 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     deselected.value = next.length === 0;
   };
 
+  const stopReading = (): void => {
+    if (reading.value !== undefined) {
+      reading.value = undefined;
+      clearTextSelection();
+    }
+  };
+
+  const leaveReadingOn = (event: KeyboardEvent): void => {
+    if (NAVIGATION.has(event.key) || event.key === Key.Escape) {
+      stopReading();
+    }
+  };
+
   const clear = (): void => {
     others = undefined;
     deselected.value = false;
+    stopReading();
     write([]);
   };
 
@@ -538,6 +564,16 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     announceSize(shape(range, []));
   };
 
+  const readsAt = (position: TableCellPosition, event: PointerEvent): boolean => {
+    const current = reading.value;
+
+    return (
+      current !== undefined &&
+      modeOf(event) === SessionMode.Plain &&
+      samePosition(current, position)
+    );
+  };
+
   const selectEverything = (origin: RangeOrigin): void => {
     holdFocus = true;
     clearTextSelection();
@@ -562,6 +598,9 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
       selectEverything(origin);
       return;
     }
+    if (readsAt(origin.position, event)) {
+      return;
+    }
     const begun = sessionFor(modeOf(event), origin.position, options.anchor(), origin.lines);
 
     if (begun.lines !== TableRangeLines.Cells && begun.action.kind === SessionActionKind.Shape) {
@@ -572,6 +611,14 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
     window.addEventListener('pointercancel', finish);
+  };
+
+  const onDblclick = (event: MouseEvent): void => {
+    const cell = options.enabled() && !touched ? startOf(event.target) : undefined;
+
+    if (cell !== undefined) {
+      reading.value = cell;
+    }
   };
 
   const onClick = (event: MouseEvent): void => {
@@ -677,6 +724,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     const anchor = options.anchor();
     const ctrl = event.ctrlKey || event.metaKey;
 
+    leaveReadingOn(event);
     if (!options.enabled() || event.altKey || !isCellTarget(event.target)) {
       return false;
     }
@@ -748,6 +796,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   return {
     dragging,
     deselected,
+    reading,
     segmentsOf: segments,
     contains: (position) => inRanges(latest(), position),
     cellAt: startOf,
@@ -760,6 +809,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
       }
     },
     onClick,
+    onDblclick,
     onKeydown,
     takeClick: () => {
       const value = swallow;

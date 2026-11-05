@@ -164,8 +164,8 @@ const docs: DocsMap = {
         en: 'Returns the row label for the drag preview and screen reader announcements. Defaults to the first text column, or the first column without one.',
       },
       cellSelection: {
-        ru: 'Включает выделение ячеек мышью и клавиатурой и меню ячейки. Без него в таблице выделяется обычный текст. Правка колонок с `editable` работает и без него.',
-        en: 'Enables selecting cells with the mouse and the keyboard, and the cell menu. Without it the table keeps plain text selection. Editing `editable` columns works without it.',
+        ru: 'Включает выделение ячеек мышью и клавиатурой и меню ячейки. Без него в таблице выделяется обычный текст, а с ним текст ячейки выделяется после двойного щелчка по ней. Правка колонок с `editable` работает и без него.',
+        en: 'Enables selecting cells with the mouse and the keyboard, and the cell menu. Without it the table keeps plain text selection; with it the text of a cell can be selected after a double click on it. Editing `editable` columns works without it.',
       },
       contextMenu: {
         ru: 'Добавляет свои пункты в меню ячейки. Функция получает строку, колонку, значение, текст и выделение, её пункты идут после копирования. `false` оставляет меню браузера; без свойства меню есть только с `cellSelection`.',

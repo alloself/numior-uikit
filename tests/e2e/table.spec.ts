@@ -169,6 +169,43 @@ test.describe('table', () => {
     await expect(table.treeRow(3)).toHaveAttribute('aria-level', '1');
   });
 
+  test('a double-clicked cell lets the mouse select its text and a drag from another cell picks cells again', async ({
+    playground,
+    table,
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'pointer ranges on desktop');
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+
+    await table.dragRange({ row: 2, col: 0 }, { row: 3, col: 0 });
+
+    await expect(table.selectedCells()).toHaveCount(2);
+    expect(await table.textSelection()).toBe('');
+
+    await table.cell(2, 0).dblclick();
+    await table.cell(2, 0).click();
+
+    expect(await table.textSelection()).toBe('');
+
+    await table.selectCellText(2, 0);
+
+    await expect(table.selectedCells()).toHaveCount(0);
+
+    expect((await table.textSelection()).trim()).toBe(
+      (await table.cellTexts([{ row: 2, col: 0 }]))[0],
+    );
+
+    await expect(table.cell(2, 0)).toHaveCSS('cursor', 'text');
+
+    await page.keyboard.press('Escape');
+    await table.dragRange({ row: 2, col: 0 }, { row: 4, col: 0 });
+
+    await expect(table.selectedCells()).toHaveCount(3);
+    expect(await table.textSelection()).toBe('');
+  });
+
   test('selects cell ranges with the mouse and the keyboard, copies them and opens the cell menu', async ({
     playground,
     table,
