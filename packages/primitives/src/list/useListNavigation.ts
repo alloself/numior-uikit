@@ -238,6 +238,7 @@ export const useListNavigation = (
   const direction = useDirection(container);
   const held: { node: HTMLElement | null } = { node: null };
   const watch: ItemWatch = { root: null, observer: null, index: null };
+  const pending = { frame: 0 };
 
   const roving = (): boolean =>
     (toValue(options.mode) ?? ListFocusMode.Roving) === ListFocusMode.Roving;
@@ -289,16 +290,33 @@ export const useListNavigation = (
     }
   };
 
+  const revealSoon = (): void => {
+    if (typeof requestAnimationFrame !== 'function' || pending.frame !== 0) {
+      return;
+    }
+
+    pending.frame = requestAnimationFrame(() => {
+      pending.frame = 0;
+      reveal();
+    });
+  };
+
   const setActive = (target: ListActiveTarget, settings: SetActiveOptions = {}): void => {
     const element = resolveTarget(target, itemIndex());
+    const focus = settings.focus ?? true;
 
     if (roving()) {
-      applyTabStop(activeElement(), element, settings.focus ?? true);
+      applyTabStop(activeElement(), element, focus);
     }
 
     held.node = element;
     activeId.value = typeof target === 'string' ? target : idOf(element);
-    reveal();
+
+    if (focus) {
+      reveal();
+    } else {
+      revealSoon();
+    }
   };
 
   const move = (kind: ListMove): void => {

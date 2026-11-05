@@ -200,12 +200,6 @@ watch(
   { flush: 'pre' },
 );
 
-watch(
-  () => navigation.activeId.value,
-  () => navigation.reveal(),
-  { flush: 'post' },
-);
-
 onMounted(() => {
   activateFirst();
 
