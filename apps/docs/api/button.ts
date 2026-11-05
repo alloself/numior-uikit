@@ -19,6 +19,10 @@ const docs: DocsMap = {
         ru: 'Скругляет кнопку полностью: квадратная становится круглой.',
         en: 'Rounds the button fully, so a square one becomes a circle.',
       },
+      grip: {
+        ru: 'Ручка перетаскивания: курсор «рука» и при нажатии «сжатая рука», жесты касания не прокручивают страницу.',
+        en: 'Drag handle: a grab cursor that turns into grabbing while pressed, and touch gestures do not scroll the page.',
+      },
       type: {
         ru: 'Тип кнопки в форме: `button`, `submit` или `reset`.',
         en: 'Button type in a form: `button`, `submit` or `reset`.',

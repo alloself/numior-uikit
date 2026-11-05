@@ -191,6 +191,13 @@
 .nui-button--loading {
   cursor: progress;
 }
+.nui-button--grip:not(:disabled, .nui-button--disabled) {
+  cursor: grab;
+  touch-action: none;
+}
+.nui-button--grip:not(:disabled, .nui-button--disabled):active {
+  cursor: grabbing;
+}
 
 .nui-button__content {
   display: inline-flex;

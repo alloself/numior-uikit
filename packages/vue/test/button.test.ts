@@ -61,6 +61,14 @@ describe('NuiButton', () => {
     expect(custom.hasModifier('variant-solid')).toBe(false);
   });
 
+  it('marks itself as a drag handle only when asked', () => {
+    const plain = ButtonDriver.mount();
+    const grip = ButtonDriver.mount({ props: { grip: true, icon: 'grip' } });
+
+    expect(plain.hasModifier('grip')).toBe(false);
+    expect(grip.hasModifier('grip')).toBe(true);
+  });
+
   it('squares itself when the slot holds only an icon unless told otherwise', () => {
     const close = ButtonDriver.mount({ content: 'icon', attrs: { 'aria-label': 'Close' } });
     expect(close.hasModifier('icon-only')).toBe(true);

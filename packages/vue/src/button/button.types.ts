@@ -18,6 +18,7 @@ export interface NuiButtonProps {
   loading?: boolean | undefined;
   iconOnly?: boolean | undefined;
   round?: boolean | undefined;
+  grip?: boolean | undefined;
   icon?: IconSource | undefined;
   iconEnd?: IconSource | undefined;
   as?: string | Component | undefined;

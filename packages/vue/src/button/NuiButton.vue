@@ -11,6 +11,7 @@
         'nui-button--disabled': disabled,
         'nui-button--icon-only': squared(),
         'nui-button--round': round,
+        'nui-button--grip': grip,
       },
     ]"
     v-bind="controlAttrs"
@@ -49,6 +50,7 @@ const {
   loading = false,
   iconOnly = undefined,
   round = false,
+  grip = false,
   icon,
   iconEnd,
   as,
