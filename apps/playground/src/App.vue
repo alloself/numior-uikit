@@ -114,6 +114,7 @@
     <TableSheetSection />
     <BookSection />
     <TableCellsSection />
+    <TableFlowSection />
     <FormulaSection />
     <EditorSection />
 
@@ -181,6 +182,7 @@ import TableDetailSection from './TableDetailSection.vue';
 import TableSection from './TableSection.vue';
 import TableSheetSection from './TableSheetSection.vue';
 import TableCellsSection from './TableCellsSection.vue';
+import TableFlowSection from './TableFlowSection.vue';
 import FormulaSection from './FormulaSection.vue';
 import EditorSection from './EditorSection.vue';
 

@@ -58,7 +58,7 @@ export class TableCellsSection {
     await this.root.scrollIntoViewIfNeeded();
   }
 
-  private row(position: number): Locator {
+  protected row(position: number): Locator {
     return this.grid.locator(
       `:scope > .nui-table__body > [role="row"][aria-rowindex="${position + HEAD_ROWS + 1}"]`,
     );
