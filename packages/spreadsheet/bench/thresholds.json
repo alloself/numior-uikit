@@ -77,11 +77,11 @@
     "jump between the first and the last cell of the sheet to the next paint": {
       "p95Ms": 100
     },
-    "frame time while wheeling through rows": {
-      "p95Ms": 32
+    "frame time while wheeling through rows by 100 px": {
+      "missedShare": 0.05
     },
-    "frame time while wheeling across columns": {
-      "p95Ms": 32
+    "frame time while wheeling across columns by 100 px": {
+      "missedShare": 0.05
     }
   }
 }

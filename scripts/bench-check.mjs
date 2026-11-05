@@ -48,6 +48,14 @@ for (const [suite, limits] of Object.entries(thresholds)) {
         `${suite} / ${name}: p95 ${operation.p95Ms.toFixed(1)} ms exceeds ${limit.p95Ms} ms`,
       );
     }
+    if (
+      typeof limit.missedShare === 'number' &&
+      (typeof operation.missedShare !== 'number' || operation.missedShare > limit.missedShare)
+    ) {
+      failures.push(
+        `${suite} / ${name}: ${((operation.missedShare ?? 1) * 100).toFixed(1)} % missed frames exceeds ${limit.missedShare * 100} %`,
+      );
+    }
     if (typeof limit.maxMs === 'number' && operation.maxMs > limit.maxMs) {
       failures.push(
         `${suite} / ${name}: max ${operation.maxMs.toFixed(1)} ms exceeds ${limit.maxMs} ms`,

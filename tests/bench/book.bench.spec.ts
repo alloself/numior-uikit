@@ -1,8 +1,11 @@
 import { expect, test } from './fixtures';
-import { record, summarize, type Operation } from '../../scripts/bench-harness';
+import { record, summarize, summarizeFrames, type Operation } from '../../scripts/bench-harness';
 
 const RESULTS = new URL('../../packages/spreadsheet/bench/results/', import.meta.url);
 const ROUNDS = 10;
+const WHEEL_STEPS = 120;
+const WHEEL_STEP = 100;
+const WHEEL_FLING = 360;
 
 test('a styled sheet of 20 000 × 50 cells keeps input and frames within budget', async ({
   bookBench,
@@ -53,20 +56,25 @@ test('a styled sheet of 20 000 × 50 cells keeps input and frames within budget'
     summarize('jump between the first and the last cell of the sheet to the next paint', corners),
   );
 
-  await bookBench.scrollHome();
+  for (const step of [WHEEL_STEP, WHEEL_FLING]) {
+    await bookBench.scrollHome();
 
-  operations.push(
-    summarize('frame time while wheeling through rows', await bookBench.wheelFrames(120, 360)),
-  );
+    operations.push(
+      summarizeFrames(
+        `frame time while wheeling through rows by ${step} px`,
+        await bookBench.wheelFrames(WHEEL_STEPS, step),
+      ),
+    );
 
-  await bookBench.scrollHome();
+    await bookBench.scrollHome();
 
-  operations.push(
-    summarize(
-      'frame time while wheeling across columns',
-      await bookBench.wheelAcrossFrames(120, 360),
-    ),
-  );
+    operations.push(
+      summarizeFrames(
+        `frame time while wheeling across columns by ${step} px`,
+        await bookBench.wheelAcrossFrames(WHEEL_STEPS, step),
+      ),
+    );
+  }
 
   operations.push(
     summarize(

@@ -9,6 +9,7 @@ export interface Operation {
   readonly p50Ms: number;
   readonly p95Ms: number;
   readonly maxMs: number;
+  readonly missedShare?: number | undefined;
 }
 
 export interface MeasureOptions {
@@ -47,6 +48,8 @@ const quantile = (sorted: readonly number[], share: number): number => {
   return sorted[Math.max(0, position)] ?? 0;
 };
 
+const MISSED_FRAME_MS = 20;
+
 const benchHost = (): string => process.env.BENCH_HOST ?? hostname();
 
 export const summarize = (name: string, samples: readonly number[]): Operation => {
@@ -67,6 +70,15 @@ export const summarize = (name: string, samples: readonly number[]): Operation =
   );
 
   return operation;
+};
+
+export const summarizeFrames = (name: string, frames: readonly number[]): Operation => {
+  const missed = frames.reduce((count, frame) => count + (frame > MISSED_FRAME_MS ? 1 : 0), 0);
+  const missedShare = missed / Math.max(1, frames.length);
+
+  console.log(`${name}: ${(missedShare * 100).toFixed(1)} % of frames over ${MISSED_FRAME_MS} ms`);
+
+  return { ...summarize(name, frames), missedShare };
 };
 
 const collectGarbage = (): void => {
