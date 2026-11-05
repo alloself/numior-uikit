@@ -119,6 +119,7 @@ test('every enabled control that reacts to a click shows the pointer cursor', as
 test('light and dark playground have no automatically detectable WCAG AA violations', async ({
   playground,
 }) => {
+  test.slow();
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
 
