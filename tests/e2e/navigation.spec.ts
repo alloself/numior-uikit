@@ -201,6 +201,42 @@ test.describe('navigation', () => {
       .toEqual({ start: 0, size: 0 });
   });
 
+  test('link tabs are links in the Tab order that mark the current page and move the indicator', async ({
+    playground,
+    navigation,
+    page,
+    isMobile,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await expect(navigation.linkTabs).toHaveJSProperty('tagName', 'NAV');
+    await expect(navigation.linkTabs).toHaveAttribute('aria-label', 'Страницы раздела');
+    await expect(navigation.linkTabs.getByRole('tab')).toHaveCount(0);
+    await expect(navigation.currentPage).toHaveText('Сводка');
+
+    await navigation.pageLink('Заказы').click();
+
+    await expect(page).toHaveURL(/#nav-page-orders$/);
+    await expect(navigation.currentPage).toHaveText('Заказы');
+
+    await expect
+      .poll(() => navigation.indicatorDrift(navigation.linkTabs, navigation.pageLink('Заказы')))
+      .toEqual({ start: 0, size: 0 });
+
+    test.skip(isMobile, 'keyboard scenario');
+
+    await navigation.pageLink('Заказы').focus();
+    await page.keyboard.press('Tab');
+
+    await expect(navigation.pageLink('Клиенты')).toBeFocused();
+    await expect(navigation.currentPage).toHaveText('Заказы');
+
+    await page.keyboard.press('Enter');
+
+    await expect(page).toHaveURL(/#nav-page-clients$/);
+    await expect(navigation.currentPage).toHaveText('Клиенты');
+  });
+
   test('a right click on a tab opens no tab and leaves the focus where it was', async ({
     playground,
     navigation,

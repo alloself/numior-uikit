@@ -31,12 +31,29 @@ const docs: DocsMap = {
         ru: 'Вкладки массивом вместо `NuiTabList` и `NuiTab`.',
         en: 'Tabs as an array instead of `NuiTabList` and `NuiTab`.',
       },
+      links: {
+        ru: 'Вкладки-ссылки массивом: `to`, `label`, `icon`, `disabled`. Вместо списка вкладок рендерит `nav` со ссылками.',
+        en: 'Link tabs as an array of `to`, `label`, `icon` and `disabled`. Renders a `nav` of links instead of a tab list.',
+      },
+      getKey: {
+        ru: 'Ключ вкладки-ссылки по её `to`. По умолчанию строковый адрес служит ключом сам.',
+        en: 'Key of a link tab from its `to`. A string address is its own key by default.',
+      },
+      as: {
+        ru: 'Компонент ссылок для `links` вместо общего помощника кита.',
+        en: 'Link component for `links` instead of the shared kit helper.',
+      },
       label: {
-        ru: 'Подпись списка вкладок для экранных дикторов.',
-        en: 'Label of the tab list for screen readers.',
+        ru: 'Подпись списка вкладок или навигации для экранных дикторов.',
+        en: 'Label of the tab list or the navigation for screen readers.',
       },
     },
-    models: { 'v-model': { ru: '`value` выбранной вкладки.', en: '`value` of the selected tab.' } },
+    models: {
+      'v-model': {
+        ru: '`value` выбранной вкладки или ключ текущей вкладки-ссылки.',
+        en: '`value` of the selected tab or the key of the current link tab.',
+      },
+    },
     events: {
       close: {
         ru: 'Срабатывает, когда закрывают вкладку из `tabs`, передаёт её `value`.',

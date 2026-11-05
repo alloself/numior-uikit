@@ -219,6 +219,8 @@ export { default as NuiTab } from './tabs/NuiTab.vue';
 export { default as NuiTabPanel } from './tabs/NuiTabPanel.vue';
 export {
   type NuiTabDescriptor,
+  type NuiTabLinkDescriptor,
+  type NuiTabLinkKey,
   type NuiTabListProps,
   type NuiTabPanelProps,
   type NuiTabProps,

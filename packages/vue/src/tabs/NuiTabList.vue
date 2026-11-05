@@ -1,14 +1,9 @@
 <template>
   <div
     ref="list"
-    role="tablist"
     class="nui-tab-list"
     :class="`nui-tab-list--orientation-${orientation}`"
-    :aria-orientation="orientation"
-    :aria-label="label"
-    @keydown="navigation.onKeydown"
-    @focusin="navigation.onFocusin"
-    @focusout="onFocusout"
+    v-bind="roleAttrs"
   >
     <slot />
     <span class="nui-tab-list__indicator" aria-hidden="true"></span>
@@ -89,6 +84,19 @@ const onFocusout = (event: FocusEvent): void => {
   }
 };
 
+const roleAttrs = computed(() =>
+  tabs.navigation.value
+    ? {}
+    : {
+        role: 'tablist',
+        'aria-orientation': orientation.value,
+        'aria-label': label,
+        onKeydown: navigation.onKeydown,
+        onFocusin: navigation.onFocusin,
+        onFocusout,
+      },
+);
+
 provideTabList({
   tabs: items,
   restoreFocus: () => {
@@ -97,7 +105,9 @@ provideTabList({
 });
 
 onMounted(() => {
-  navigation.reset();
+  if (!tabs.navigation.value) {
+    navigation.reset();
+  }
   collect();
   watch([() => tabs.modelValue.value, orientation], measure, { immediate: true, flush: 'post' });
   useResizeObserver(listElement, measure);

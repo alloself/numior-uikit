@@ -641,6 +641,24 @@ describe('server rendering', () => {
     expect(html.match(/<button/g)).toHaveLength(3);
   });
 
+  it('renders link tabs as a labelled nav of links with the current page marked', async () => {
+    const html = await renderToString(NuiTabs, {
+      props: {
+        label: 'Sections',
+        modelValue: '/orders',
+        links: [
+          { to: '/overview', label: 'Overview' },
+          { to: '/orders', label: 'Orders' },
+        ],
+      },
+    });
+
+    expect(html).toMatch(/^<nav[^>]*aria-label="Sections"/);
+    expect(html).toContain('href="/overview"');
+    expect(html.match(/aria-current="page"/g)).toHaveLength(1);
+    expect(html).not.toContain('role="tab');
+  });
+
   it('renders breadcrumbs as a labelled nav with the current page marked', async () => {
     const html = await renderToString(NuiBreadcrumbs, {
       props: {

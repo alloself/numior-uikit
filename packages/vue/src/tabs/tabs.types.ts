@@ -1,4 +1,6 @@
 import type { IconSource } from '@numior/primitives';
+import type { Component } from 'vue';
+import type { NuiRouteLocation } from '../shared/destination';
 import type { NuiSize } from '../shared/scale.types';
 
 export type NuiTabsActivation = (typeof NuiTabsActivation)[keyof typeof NuiTabsActivation];
@@ -13,6 +15,15 @@ export interface NuiTabDescriptor {
   readonly closable?: boolean | undefined;
 }
 
+export interface NuiTabLinkDescriptor {
+  readonly to: NuiRouteLocation;
+  readonly label: string;
+  readonly icon?: IconSource | undefined;
+  readonly disabled?: boolean | undefined;
+}
+
+export type NuiTabLinkKey = (to: NuiRouteLocation) => string;
+
 export interface NuiTabsProps {
   id?: string | undefined;
   activation?: NuiTabsActivation | undefined;
@@ -21,6 +32,9 @@ export interface NuiTabsProps {
   size?: NuiSize | undefined;
   lazy?: boolean | undefined;
   tabs?: readonly NuiTabDescriptor[] | undefined;
+  links?: readonly NuiTabLinkDescriptor[] | undefined;
+  getKey?: NuiTabLinkKey | undefined;
+  as?: string | Component | undefined;
   label?: string | undefined;
 }
 
@@ -37,6 +51,12 @@ export interface NuiTabProps {
   icon?: IconSource | undefined;
   disabled?: boolean | undefined;
   closable?: boolean | undefined;
+}
+
+export interface NuiTabLinkProps {
+  link: NuiTabLinkDescriptor;
+  linkKey: string;
+  as?: string | Component | undefined;
 }
 
 export interface NuiTabPanelProps {

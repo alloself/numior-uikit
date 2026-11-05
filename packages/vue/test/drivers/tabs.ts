@@ -1,6 +1,6 @@
 import { DOMWrapper, mount, type VueWrapper } from '@vue/test-utils';
-import { nextTick } from 'vue';
-import type { NuiTabDescriptor, NuiTabsProps } from '../../src';
+import { nextTick, type Component } from 'vue';
+import type { NuiTabDescriptor, NuiTabLinkDescriptor, NuiTabsProps } from '../../src';
 import TabsScene from '../fixtures/TabsScene.vue';
 import { ResizeObservers } from '../support/resize-observers';
 import { ComponentDriver } from './component';
@@ -15,6 +15,8 @@ export interface TabsMountOptions {
   readonly closable?: readonly string[];
   readonly unfocusablePanels?: readonly string[];
   readonly observed?: boolean;
+  readonly links?: readonly NuiTabLinkDescriptor[];
+  readonly routerComponent?: Component;
 }
 
 interface TabBox {
@@ -44,6 +46,8 @@ export class TabsDriver extends ComponentDriver {
     closable,
     unfocusablePanels,
     observed = false,
+    links,
+    routerComponent,
   }: TabsMountOptions = {}) {
     const observers = observed ? new ResizeObservers() : undefined;
 
@@ -58,7 +62,9 @@ export class TabsDriver extends ComponentDriver {
         lazyPanels,
         closable,
         unfocusablePanels,
+        links,
       },
+      global: { components: routerComponent ? { RouterLink: routerComponent } : {} },
       attachTo: document.body,
     });
 
@@ -86,6 +92,53 @@ export class TabsDriver extends ComponentDriver {
 
   get tabs(): DOMWrapper<HTMLButtonElement>[] {
     return this.wrapper.findAll<HTMLButtonElement>('[role="tab"]');
+  }
+
+  get nav(): DOMWrapper<HTMLElement> {
+    return this.wrapper.find<HTMLElement>('nav.nui-tabs');
+  }
+
+  get links(): DOMWrapper<HTMLAnchorElement>[] {
+    return this.wrapper.findAll<HTMLAnchorElement>('a.nui-tab');
+  }
+
+  get linkLabels(): string[] {
+    return this.links.map((link) => link.find('.nui-tab__label').text());
+  }
+
+  get hrefs(): (string | undefined)[] {
+    return this.links.map((link) => link.attributes('href'));
+  }
+
+  get currentLinks(): string[] {
+    return this.links.reduce<string[]>((found, link) => {
+      if (link.attributes('aria-current') === 'page') {
+        found.push(link.find('.nui-tab__label').text());
+      }
+      return found;
+    }, []);
+  }
+
+  get roles(): string[] {
+    return this.wrapper.findAll('[role]').map((element) => element.attributes('role') ?? '');
+  }
+
+  link(label: string): DOMWrapper<HTMLAnchorElement> {
+    const found = this.links.find((link) => link.find('.nui-tab__label').text() === label);
+
+    if (!found) {
+      throw new Error(`No link labelled ${label}`);
+    }
+    return found;
+  }
+
+  async clickLink(label: string, init: MouseEventInit = {}): Promise<boolean> {
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true, ...init });
+
+    this.link(label).element.dispatchEvent(event);
+    await nextTick();
+
+    return event.defaultPrevented;
   }
 
   get labels(): string[] {

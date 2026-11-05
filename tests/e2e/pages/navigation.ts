@@ -36,6 +36,7 @@ export class NavigationSection {
   readonly tabs: Locator;
   readonly manualTabs: Locator;
   readonly closableTabs: Locator;
+  readonly linkTabs: Locator;
   readonly crumbs: Locator;
   readonly shortCrumbs: Locator;
   readonly stepper: Locator;
@@ -53,6 +54,7 @@ export class NavigationSection {
     this.tabs = page.getByTestId('nav-tabs');
     this.manualTabs = page.getByTestId('nav-tabs-manual');
     this.closableTabs = page.getByTestId('nav-tabs-closable');
+    this.linkTabs = page.getByTestId('nav-tabs-links');
     this.crumbs = page.getByTestId('nav-crumbs');
     this.shortCrumbs = page.getByTestId('nav-crumbs-short');
     this.stepper = page.getByTestId('nav-stepper');
@@ -78,6 +80,14 @@ export class NavigationSection {
 
   manualTab(label: string): Locator {
     return this.manualTabs.getByRole('tab', { name: label });
+  }
+
+  pageLink(label: string): Locator {
+    return this.linkTabs.getByRole('link', { name: label });
+  }
+
+  get currentPage(): Locator {
+    return this.linkTabs.locator('[aria-current="page"]');
   }
 
   get openDocuments(): Locator {

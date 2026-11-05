@@ -79,6 +79,12 @@
         Документ: {{ file.label }}
       </NuiTabPanel>
     </NuiTabs>
+    <NuiTabs
+      v-model="sectionPage"
+      :links="sectionPages"
+      label="Страницы раздела"
+      data-testid="nav-tabs-links"
+    />
     <NuiBreadcrumbs :items="path" :max-items="3" label="Путь" data-testid="nav-crumbs" />
     <NuiBreadcrumbs
       :items="path.slice(0, 3)"
@@ -143,12 +149,20 @@ import {
   type NuiBreadcrumbItem,
   type NuiStepperStep,
   type NuiTabDescriptor,
+  type NuiTabLinkDescriptor,
 } from '@numior/vue';
 
 const periods: NuiTabDescriptor[] = [
   { value: 'day', label: 'День' },
   { value: 'week', label: 'Неделя' },
   { value: 'month', label: 'Месяц' },
+];
+
+const sectionPages: NuiTabLinkDescriptor[] = [
+  { to: '#nav-page-summary', label: 'Сводка', icon: 'info' },
+  { to: '#nav-page-orders', label: 'Заказы' },
+  { to: '#nav-page-reports', label: 'Отчёты', disabled: true },
+  { to: '#nav-page-clients', label: 'Клиенты' },
 ];
 
 const path: NuiBreadcrumbItem[] = [
@@ -180,6 +194,7 @@ const lastAction = ref('');
 const tab = ref('overview');
 const manualTab = ref('day');
 const openDocument = ref('contract');
+const sectionPage = ref('#nav-page-summary');
 
 const documents = ref<NuiTabDescriptor[]>([
   { value: 'contract', label: 'Договор' },

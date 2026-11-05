@@ -1,7 +1,14 @@
 <template>
   <div :dir="dir">
     <NuiTabs
-      v-if="fromData"
+      v-if="links"
+      v-bind="{ ...props, ...selected }"
+      :links="links"
+      label="Sections"
+      @update:model-value="model = $event"
+    />
+    <NuiTabs
+      v-else-if="fromData"
       v-bind="{ ...props, ...selected }"
       :tabs="shown"
       label="Settings"
@@ -46,12 +53,14 @@ import {
   NuiTabPanel,
   NuiTabs,
   type NuiTabDescriptor,
+  type NuiTabLinkDescriptor,
   type NuiTabsProps,
 } from '../../src';
 
 const {
   props = {},
   descriptors,
+  links,
   initialValue = undefined,
   fromData = false,
   switcher = false,
@@ -62,6 +71,7 @@ const {
 } = defineProps<{
   props?: NuiTabsProps | undefined;
   descriptors: readonly NuiTabDescriptor[];
+  links?: readonly NuiTabLinkDescriptor[] | undefined;
   initialValue?: string | undefined;
   fromData?: boolean | undefined;
   switcher?: boolean | undefined;

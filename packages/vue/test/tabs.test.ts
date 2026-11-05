@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vite-plus/test';
+import type { NuiTabLinkDescriptor } from '../src';
 import { TabsDriver } from './drivers/tabs';
+import { RouteObjectStub, RouterStub } from './support/router-stub';
+
+const pathOf = (to: string | object): string =>
+  typeof to === 'string' ? to : 'path' in to && typeof to.path === 'string' ? to.path : '';
+
+const SECTIONS: readonly NuiTabLinkDescriptor[] = [
+  { to: '#overview', label: 'Overview', icon: 'check' },
+  { to: '#orders', label: 'Orders' },
+  { to: '#archive', label: 'Archive', disabled: true },
+];
 
 describe('NuiTabs', () => {
   it('wires tabs to panels and keeps the selected tab as the only tab stop', () => {
@@ -220,5 +231,67 @@ describe('NuiTabs', () => {
     expect(tabs.labels).toEqual(['General', 'Billing', 'Danger']);
 
     tabs.unmount();
+  });
+
+  it('renders links in a labelled nav and marks the current page instead of tab roles', async () => {
+    const tabs = TabsDriver.mount({ links: SECTIONS, modelValue: '#orders' });
+
+    await tabs.ready();
+
+    expect(tabs.nav.attributes('aria-label')).toBe('Sections');
+    expect(tabs.roles).toEqual([]);
+    expect(tabs.linkLabels).toEqual(['Overview', 'Orders', 'Archive']);
+    expect(tabs.hrefs).toEqual(['#overview', '#orders', undefined]);
+    expect(tabs.currentLinks).toEqual(['Orders']);
+    expect(tabs.link('Orders').classes()).toContain('nui-tab--selected');
+    expect(tabs.link('Overview').element.tabIndex).toBe(0);
+    expect(tabs.link('Archive').attributes('aria-disabled')).toBe('true');
+    expect(tabs.link('Archive').attributes('tabindex')).toBe('-1');
+
+    tabs.unmount();
+  });
+
+  it('follows a plain click on a link but not a modified click or a disabled link', async () => {
+    const tabs = TabsDriver.mount({ links: SECTIONS, modelValue: '#overview' });
+
+    expect(await tabs.clickLink('Orders', { ctrlKey: true })).toBe(false);
+    expect(tabs.selected).toBe('#overview');
+
+    expect(await tabs.clickLink('Archive')).toBe(true);
+    expect(tabs.selected).toBe('#overview');
+
+    await tabs.clickLink('Orders');
+
+    expect(tabs.selected).toBe('#orders');
+    expect(tabs.currentLinks).toEqual(['Orders']);
+
+    tabs.unmount();
+  });
+
+  it('routes links through the registered router link and keys object locations by getKey', async () => {
+    const routed = TabsDriver.mount({
+      links: [{ to: '/orders', label: 'Orders' }],
+      modelValue: '/orders',
+      routerComponent: RouterStub,
+    });
+
+    expect(routed.hrefs).toEqual(['/router/orders']);
+    expect(routed.currentLinks).toEqual(['Orders']);
+
+    routed.unmount();
+
+    const keyed = TabsDriver.mount({
+      links: [
+        { to: { path: '/orders' }, label: 'Orders' },
+        { to: { path: '/clients' }, label: 'Clients' },
+      ],
+      modelValue: '/clients',
+      props: { as: RouteObjectStub, getKey: pathOf },
+    });
+
+    expect(keyed.hrefs).toEqual(['/route/orders', '/route/clients']);
+    expect(keyed.currentLinks).toEqual(['Clients']);
+
+    keyed.unmount();
   });
 });

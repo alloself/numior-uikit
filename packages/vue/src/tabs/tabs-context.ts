@@ -7,6 +7,7 @@ export interface TabsContext {
   readonly activation: ComputedRef<NuiTabsActivation>;
   readonly orientation: ComputedRef<NuiTabsOrientation>;
   readonly lazy: ComputedRef<boolean>;
+  readonly navigation: ComputedRef<boolean>;
   select(value: string): void;
   seen(value: string): boolean;
   tabId(value: string): string;

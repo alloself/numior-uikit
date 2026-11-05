@@ -44,6 +44,17 @@ with the value of the tab.
 
 <Example name="tabs/Closable" />
 
+### Link tabs
+
+For moving between pages pass `links` instead of `tabs`. Each item is a link to its `to`
+address, and the tabs look the same. Links go through the shared kit helper: `RouterLink`,
+`NuxtLink` or the component from `createNuiConfig({ link })`, and a plain `<a>` without a router.
+
+`v-model` holds the key of the current page. A string `to` is its own key, and for an object
+location `getKey` sets the key, as in the select. A click without modifier keys updates the model.
+
+<Example name="tabs/Links" />
+
 ## Behaviour
 
 Arrow keys wrap around and skip disabled tabs. Without an initial `v-model` value no tab is open.
@@ -66,6 +77,10 @@ holds buttons or links, that stop is not needed: remove it with `:focusable="fal
 
 When the tabs come from `tabs` without the `panel` slot, there are no panels, so the tabs get
 no `aria-controls`.
+
+Link tabs are marked up as navigation: a `nav` labelled by `label` and links without the `tab`
+role. The current page gets `aria-current="page"`. Every link is in the tab order, and arrow keys
+do not move between them.
 
 <KeyboardReference name="NuiTabs" />
 
