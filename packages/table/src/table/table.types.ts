@@ -248,9 +248,15 @@ export interface TableCellPaint {
   readonly style: Readonly<Record<string, string>>;
   readonly align: NuiTableAlign | undefined;
   readonly overflow: boolean;
+  readonly spill?: string | undefined;
 }
 
 export type TableRowPaint = ReadonlyMap<string, TableCellPaint>;
+
+export interface TableSpillCover {
+  readonly text: string;
+  readonly style: Readonly<Record<string, string>>;
+}
 
 export type TableRowPainter = (position: number, spans?: TableRowSpan) => TableRowPaint | undefined;
 

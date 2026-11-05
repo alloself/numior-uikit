@@ -1,9 +1,22 @@
 import { nextTick, onMounted, shallowRef, type ShallowRef } from 'vue';
 
 interface TextMetrics {
-  readonly font: string;
+  readonly style: string;
+  readonly weight: string;
+  readonly size: number;
+  readonly family: string;
   readonly padding: number;
 }
+
+type TextStyle = Readonly<Record<string, string>> | undefined;
+
+const sizeOf = (metrics: TextMetrics, size: string | undefined): number =>
+  size?.endsWith('em') === true ? metrics.size * (Number.parseFloat(size) || 1) : metrics.size;
+
+const fontOf = (metrics: TextMetrics, style: TextStyle): string =>
+  `${style?.['font-style'] ?? metrics.style} ${style?.['font-weight'] ?? metrics.weight} ${String(
+    sizeOf(metrics, style?.['font-size']),
+  )}px ${metrics.family}`;
 
 const SAMPLE = '.nui-table__body .nui-table__cell--data > .nui-table__content > .nui-table__text';
 
@@ -20,7 +33,10 @@ const metricsOf = (root: HTMLElement): TextMetrics | undefined => {
   const style = getComputedStyle(text);
 
   return {
-    font: `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
+    style: style.fontStyle,
+    weight: style.fontWeight,
+    size: Number.parseFloat(style.fontSize) || 0,
+    family: style.fontFamily,
     padding: Number.parseFloat(getComputedStyle(content).paddingInlineStart) || 0,
   };
 };
@@ -84,13 +100,13 @@ export const useTextMeasure = (
   });
 
   return {
-    needOf: (text: string): number => {
+    needOf: (text: string, style?: TextStyle): number => {
       const element = root.value;
       const found = ready.value > 0 && element !== null ? metricsFor(element) : undefined;
 
       return found === undefined
         ? Number.POSITIVE_INFINITY
-        : Math.ceil(textWidth(found.font, text) + 2 * found.padding);
+        : Math.ceil(textWidth(fontOf(found, style), text) + 2 * found.padding);
     },
   };
 };

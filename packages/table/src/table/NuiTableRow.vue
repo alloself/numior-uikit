@@ -38,9 +38,12 @@
         :style="styleOf(cell)"
       >
         <div class="nui-table__content">
-          <span v-if="plainOf(cell) !== undefined" class="nui-table__text">{{
-            plainOf(cell)
-          }}</span>
+          <span
+            v-if="pieceOf(cell) !== undefined"
+            :class="pieceClassOf(cell)"
+            :aria-hidden="pieceHiddenOf(cell)"
+            >{{ pieceOf(cell) }}</span
+          >
           <slot
             v-else-if="cell.kind !== TablePlacementKind.Data"
             name="utility"
@@ -349,6 +352,16 @@ const paints = computed(() => {
   void ownRevision.value;
   return position === undefined ? undefined : paint?.(position, spans);
 });
+
+const spillOf = (cell: TableCellLayout): string | undefined => paints.value?.get(cell.key)?.spill;
+
+const pieceOf = (cell: TableCellLayout): string | undefined => spillOf(cell) ?? plainOf(cell);
+
+const pieceClassOf = (cell: TableCellLayout): string =>
+  spillOf(cell) === undefined ? 'nui-table__text' : 'nui-table__spill';
+
+const pieceHiddenOf = (cell: TableCellLayout): 'true' | undefined =>
+  spillOf(cell) === undefined ? undefined : 'true';
 
 const styleOf = (cell: TableDataCell): unknown => {
   const painted = paints.value?.get(cell.key)?.style;

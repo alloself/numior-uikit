@@ -403,9 +403,10 @@ describe('NuiTable on the server', () => {
       },
     });
 
-    expect(html.match(/nui-table__cell--overflow/g)).toHaveLength(1);
+    expect(html.match(/nui-table__cell--spill/g)).toHaveLength(2);
     expect(html.match(/nui-table__cell--seamless/g)).toHaveLength(1);
-    expect(html).toContain('--_over-w:260px');
+    expect(html).toContain('--_spill:-140px');
+    expect(html).toContain('<span class="nui-table__spill" aria-hidden="true">Москва</span>');
   });
 
   it('renders frozen rows with their offsets under the header on the server', async () => {

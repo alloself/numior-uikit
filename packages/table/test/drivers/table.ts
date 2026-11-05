@@ -260,10 +260,11 @@ const PAINT_PROPERTIES = [
   ['end', '--_edge-end'],
   ['bottom', '--_edge-bottom'],
   ['start', '--_edge-start'],
-  ['flow', '--_over-w'],
+  ['spill', '--_spill'],
+  ['line', '--_spill-line'],
 ] as const;
 
-const PAINT_MARKS = ['filled', 'inked', 'edged', 'tail', 'overflow', 'seamless'] as const;
+const PAINT_MARKS = ['filled', 'inked', 'edged', 'tail', 'clip', 'spill', 'seamless'] as const;
 const ALIGN_PREFIX = 'nui-table__cell--align-';
 
 const alignOf = (cell: Element): string =>
@@ -568,6 +569,10 @@ export class TableDriver<T> {
       }),
       ['align', alignOf(cell)],
     ]);
+  }
+
+  spillText(position: number, col: number): string | undefined {
+    return this.cell(position, col)?.querySelector('.nui-table__spill')?.textContent ?? undefined;
   }
 
   cellMarks(position: number, col: number): string[] {

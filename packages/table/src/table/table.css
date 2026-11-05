@@ -279,6 +279,10 @@
   --_range-b: 0px;
   --_range-s: 0px;
   --_range-e: 0px;
+  --_cut-t: var(--_range-t);
+  --_cut-b: var(--_range-b);
+  --_cut-l: var(--_range-s);
+  --_cut-r: var(--_range-e);
 
   background-color: color-mix(in oklab, var(--_row-bg), var(--nui-primary) 12%);
   box-shadow:
@@ -288,6 +292,9 @@
     inset calc(-1 * var(--_range-e)) 0 0 var(--nui-primary);
 }
 .nui-table__cell--ranged:dir(rtl) {
+  --_cut-l: var(--_range-e);
+  --_cut-r: var(--_range-s);
+
   box-shadow:
     inset 0 var(--_range-t) 0 var(--nui-primary),
     inset 0 calc(-1 * var(--_range-b)) 0 var(--nui-primary),
@@ -310,6 +317,11 @@
   )
   > .nui-table__row
   > .nui-table__cell--allied {
+  --_cut-t: var(--_ring-t);
+  --_cut-b: var(--_ring-b);
+  --_cut-l: var(--_ring-l);
+  --_cut-r: var(--_ring-r);
+
   background-color: color-mix(in oklab, var(--_row-bg), var(--nui-primary) 12%);
   box-shadow:
     inset 0 var(--_ring-t) 0 var(--nui-primary),
@@ -535,9 +547,6 @@
   > .nui-table__cell:is(.nui-table__cell--pin-start, .nui-table__cell--pin-end) {
   z-index: 5;
 }
-.nui-table__row--frozen > .nui-table__cell--overflow {
-  --_cell-layer: 4;
-}
 .nui-table--striped .nui-table__body > .nui-table__row--odd {
   --_row-bg: var(--_stripe);
 }
@@ -698,25 +707,40 @@
   text-overflow: ellipsis;
   unicode-bidi: plaintext;
 }
-.nui-table__cell--overflow {
-  --_cell-layer: 1;
-  --_over-align: left;
+.nui-table__cell--clip > .nui-table__content > .nui-table__text,
+.nui-table__cell--spill > .nui-table__content > :is(.nui-table__text, .nui-table__spill) {
+  text-overflow: clip;
 }
-.nui-table__cell--overflow:dir(rtl),
-.nui-table__cell--align-end.nui-table__cell--overflow {
-  --_over-align: right;
-}
-.nui-table__cell--align-end.nui-table__cell--overflow:dir(rtl) {
-  --_over-align: left;
-}
-.nui-table__cell--overflow > .nui-table__content {
-  overflow: visible;
-}
-.nui-table__cell--overflow > .nui-table__content > .nui-table__text {
+.nui-table__cell--spill > .nui-table__content > :is(.nui-table__text, .nui-table__spill) {
   flex: none;
-  inline-size: calc(var(--_over-w) - 2 * var(--_pad-x));
-  text-align: var(--_over-align);
-  pointer-events: none;
+  overflow: visible;
+  margin-inline-start: var(--_spill);
+}
+.nui-table__cell--spill.nui-table__cell--align-end
+  > .nui-table__content
+  > :is(.nui-table__text, .nui-table__spill) {
+  margin-inline: 0 calc(var(--_spill) + var(--_spill-line, 0px) - var(--_grid-x));
+}
+.nui-table__cell--spill.nui-table__cell--align-center
+  > .nui-table__content
+  > :is(.nui-table__text, .nui-table__spill) {
+  margin-inline-start: calc(var(--_spill) - var(--_spill-line, 0px) + var(--_grid-x));
+}
+.nui-table__cell--spill:is(
+    .nui-table__cell--ranged,
+    .nui-table__cell--active,
+    .nui-table__cell--allied
+  )
+  > .nui-table__content {
+  clip-path: inset(
+    calc(var(--_cut-t, 0px) * 2) calc(var(--_cut-r, 0px) * 2) calc(var(--_cut-b, 0px) * 2)
+      calc(var(--_cut-l, 0px) * 2)
+  );
+}
+.nui-table__spill {
+  white-space: nowrap;
+  unicode-bidi: plaintext;
+  user-select: none;
 }
 .nui-table__cell--seamless {
   --_grid-x: 0px;

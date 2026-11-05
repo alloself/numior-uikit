@@ -169,28 +169,34 @@ describe('NuiTable cell styles', () => {
     });
 
     await grid.settle();
-    expect(grid.cellPaint(1, 1)).toEqual({ flow: '420px', align: 'start' });
-    expect(grid.cellMarks(1, 1)).toEqual(['overflow', 'seamless']);
-    expect(grid.cellMarks(1, 2)).toEqual(['seamless']);
-    expect(grid.cellMarks(1, 3)).toEqual([]);
-    expect(grid.cellPaint(2, 1).flow).toBe('300px');
-    expect(grid.cellMarks(0, 1)).toEqual([]);
+    expect(grid.cellPaint(1, 1)).toEqual({ spill: '0px', align: 'start' });
+    expect(grid.cellMarks(1, 1)).toEqual(['clip', 'spill', 'seamless']);
+    expect(grid.cellMarks(1, 2)).toEqual(['spill', 'seamless']);
+    expect(grid.cellPaint(1, 2)).toEqual({ spill: '-160px', align: 'start' });
+    expect(grid.spillText(1, 2)).toBe('Сотрудник 1');
+    expect(grid.cellMarks(1, 3)).toEqual(['spill']);
+    expect(grid.spillText(1, 3)).toBe('Сотрудник 1');
+    expect(grid.cellMarks(1, 4)).toEqual(['tail']);
+    expect(grid.spillText(2, 2)).toBe('Сотрудник 2');
+    expect(grid.cellMarks(2, 3)).toEqual([]);
+    expect(grid.cellMarks(0, 1)).toEqual(['clip']);
 
     await grid.focusCell(1, 2);
     await grid.press('Enter');
 
     expect(grid.editing).toEqual({ row: 1, col: 2 });
-    expect(grid.cellMarks(1, 1)).toEqual([]);
+    expect(grid.cellMarks(1, 1)).toEqual(['clip']);
+    expect(grid.spillText(1, 3)).toBeUndefined();
 
     await grid.typeInEditor('Тверь');
     await grid.press('Enter');
 
     expect(grid.cellText(1, 2)).toBe('Тверь');
-    expect(grid.cellMarks(1, 1)).toEqual([]);
-    expect(grid.cellPaint(1, 1).flow).toBeUndefined();
+    expect(grid.cellMarks(1, 1)).toEqual(['clip']);
+    expect(grid.cellPaint(1, 1).spill).toBeUndefined();
   });
 
-  it('carries an end aligned text back over empty cells and keeps a pinned or centred text in its cell', async () => {
+  it('carries an end aligned text back over empty cells and keeps a pinned or a blocked centred text in its cell', async () => {
     const grid = mountStaff({
       rows: sparseStaff(),
       width: 900,
@@ -208,12 +214,26 @@ describe('NuiTable cell styles', () => {
     });
 
     await grid.settle();
-    expect(grid.cellMarks(1, 1)).toEqual([]);
-    expect(grid.cellPaint(1, 4)).toEqual({ flow: '360px', align: 'end' });
-    expect(grid.cellMarks(1, 4)).toEqual(['tail', 'overflow']);
-    expect(grid.cellMarks(1, 3)).toEqual(['seamless']);
-    expect(grid.cellMarks(1, 2)).toEqual(['seamless']);
-    expect(grid.cellMarks(2, 4)).toEqual(['tail']);
+    expect(grid.cellMarks(1, 1)).toEqual(['clip']);
+
+    expect(grid.cellPaint(1, 4)).toEqual({
+      spill: '0px',
+      line: 'calc(var(--_grid) * var(--_slack))',
+      align: 'end',
+    });
+
+    expect(grid.cellMarks(1, 4)).toEqual(['tail', 'clip', 'spill']);
+
+    expect(grid.cellPaint(1, 3)).toEqual({
+      spill: '-100px',
+      line: 'calc(var(--_grid) * var(--_slack))',
+      align: 'end',
+    });
+
+    expect(grid.cellMarks(1, 3)).toEqual(['spill', 'seamless']);
+    expect(grid.cellMarks(1, 2)).toEqual(['spill', 'seamless']);
+    expect(grid.spillText(1, 2)).toBe('Нет');
+    expect(grid.cellMarks(2, 4)).toEqual(['tail', 'clip']);
   });
 
   it('draws grid lines in a bordered table and closes the last column only while the table has spare room', async () => {

@@ -15,6 +15,7 @@ describe('table cell paint', () => {
           'nui-table__cell--inked': true,
           'nui-table__cell--edged': false,
           'nui-table__cell--wrap': false,
+          'nui-table__cell--clip': false,
         },
       ],
       style: { '--_fill': 'gold', '--_ink': 'black' },
@@ -36,6 +37,15 @@ describe('table cell paint', () => {
       'nui-table__cell--inked': false,
       'nui-table__cell--edged': true,
       'nui-table__cell--wrap': false,
+      'nui-table__cell--clip': false,
+    });
+  });
+
+  it('clips a text that may overflow without an ellipsis unless it wraps', () => {
+    expect(paintOf({ overflow: true })?.class[1]).toMatchObject({ 'nui-table__cell--clip': true });
+
+    expect(paintOf({ overflow: true, wrap: true })?.class[1]).toMatchObject({
+      'nui-table__cell--clip': false,
     });
   });
 

@@ -319,7 +319,7 @@ test.describe('table cell source', () => {
     await page.keyboard.press('Control+ArrowDown');
 
     await expect.poll(() => cells.spot()).toEqual({ row: String(NOTE_ROW + 1), col: 'A' });
-    await expect(cells.cell(NOTE_ROW, 0)).toHaveClass(/nui-table__cell--overflow/);
+    await expect(cells.cell(NOTE_ROW, 0)).toHaveClass(/nui-table__cell--spill/);
 
     const [note, cell] = await Promise.all([
       boxOf(cells.text(NOTE_ROW, 0)),

@@ -290,7 +290,17 @@ import {
   mergeSpans,
   pieceOf,
 } from './table-merges';
-import { alignOfCell, floodRow, paneOfCell, type TableFloodRow } from './table-flood';
+import {
+  alignOfCell,
+  closingLineOf,
+  spillClasses,
+  spillStyleOf,
+  spillsOf,
+  type TableFloodLine,
+  type TableFloodRun,
+  type TableFloodView,
+  type TableSpill,
+} from './table-flood';
 import { useTextMeasure } from './use-text-measure';
 import { paintOf } from './table-paint';
 import { ownCellAt, ownDetailOf } from './table-dom';
@@ -397,6 +407,7 @@ import {
   type TableReveal,
   type TableRowPaint,
   type TableRowPainter,
+  type TableSpillCover,
   type TableRowRanges,
   type TableRowSpan,
   type TableSkeletonRow,
@@ -1667,6 +1678,8 @@ const paintedKeys = computed(() =>
   rowCells.value.cells.flatMap((cell) => (cell.kind === TablePlacementKind.Data ? [cell.key] : [])),
 );
 
+const paintedKeySet = computed(() => new Set(paintedKeys.value));
+
 const paintCell = (
   row: T,
   key: string,
@@ -1687,12 +1700,6 @@ const paintSpan = (span: TableCellSpan): TableCellPaint | undefined => {
     : paintCell(row, key, span.anchor.row, false);
 };
 
-const widthOfCell = (cell: TableCellLayout | undefined): number => {
-  const col = cell?.kind === TablePlacementKind.Data ? cell.colIndex - 1 - dataOffset.value : -1;
-
-  return (dataOffsets.value[col + 1] ?? 0) - (dataOffsets.value[col] ?? 0);
-};
-
 const plainText = (row: T, position: number, key: string): string | undefined => {
   const session = cellEditor.session.value;
   const edited = session?.position.row === position && session.key === key;
@@ -1701,27 +1708,140 @@ const plainText = (row: T, position: number, key: string): string | undefined =>
   return custom || rawSlots[`cell-${key}`] !== undefined ? undefined : textOf(row, key);
 };
 
-const floodRowOf = (row: T, position: number, spans: TableRowSpan | undefined): TableFloodRow => {
+const dataColumns = computed(() =>
+  layout.value.visual.filter((column) => column.kind === TablePlacementKind.Data),
+);
+
+const runsOf = (cells: readonly TableCellLayout[]): TableFloodRun[] => {
+  const runs = new Map<TablePaneName, TableFloodRun>();
+
+  for (const cell of cells) {
+    if (cell.kind === TablePlacementKind.Data) {
+      const col = cell.colIndex - 1 - dataOffset.value;
+      const pane = cell.pin ?? TablePaneName.Centre;
+      const run = runs.get(pane);
+
+      runs.set(pane, {
+        pane,
+        first: Math.min(run?.first ?? col, col),
+        last: Math.max(run?.last ?? col, col),
+      });
+    }
+  }
+  return [...runs.values()];
+};
+
+const floodLineOf = (
+  row: T,
+  position: number,
+  painted: TableRowPaint,
+  pinned: boolean,
+): TableFloodView => {
+  const data = dataColumns.value;
+  const merged = mergeIndex.value;
+  const shown = paintedKeySet.value;
+  const asked = new Map<number, TableCellPaint | undefined>();
+
+  const paintAt = (col: number): TableCellPaint | undefined => {
+    const key = data[col]?.key;
+
+    if (key === undefined || shown.has(key)) {
+      return key === undefined ? undefined : painted.get(key);
+    }
+    if (!asked.has(col)) {
+      asked.set(col, paintCell(row, key, position, pinned));
+    }
+    return asked.get(col);
+  };
+
+  const textAt = (col: number): string | undefined => {
+    const key = data[col]?.key;
+
+    return key === undefined || (merged.size > 0 && merged.at(position, col) !== undefined)
+      ? undefined
+      : plainText(row, position, key);
+  };
+
+  const line: TableFloodLine = {
+    count: data.length,
+    paneAt: (col) => data[col]?.pane,
+    widthAt: (col) => data[col]?.width ?? 0,
+    textAt,
+    alignAt: (col) => {
+      const paint = paintAt(col);
+      const column = data[col];
+
+      return paint?.overflow === true && column !== undefined
+        ? (paint.align ?? alignOfCell(column.cell))
+        : undefined;
+    },
+    needAt: (col) => textMeasure.needOf(textAt(col) ?? '', paintAt(col)?.style),
+  };
+
+  return { line, paintAt };
+};
+
+const spilledPaint = (
+  base: TableCellPaint | undefined,
+  spill: TableSpill,
+  closing: string | undefined,
+  covered: TableSpillCover | undefined,
+): TableCellPaint => ({
+  class: [...(base?.class ?? []), ...spillClasses(spill)],
+  style: {
+    ...base?.style,
+    ...covered?.style,
+    '--_spill': `${spill.shift}px`,
+    ...(closing === undefined ? {} : { '--_spill-line': closing }),
+  },
+  align: spill.align,
+  overflow: base?.overflow ?? false,
+  spill: covered?.text,
+});
+
+const floodPaints = (
+  row: T,
+  position: number,
+  painted: Map<string, TableCellPaint>,
+  pinned: boolean,
+): TableRowPaint => {
   const cells = rowCells.value.cells;
+  const { line, paintAt } = floodLineOf(row, position, painted, pinned);
+  const spills = spillsOf(line, runsOf(cells));
 
-  const textAt = (index: number): string | undefined => {
-    const cell = cells[index];
+  if (spills.size === 0) {
+    return painted;
+  }
+  const lastKey = cells.at(-1)?.key;
 
-    return cell?.kind === TablePlacementKind.Data && spans?.get(cell.key) === undefined
-      ? plainText(row, position, cell.key)
+  const closingOf = (origin: number): string | undefined => {
+    const column = dataColumns.value[origin];
+
+    return spills.get(origin)?.seam === false
+      ? closingLineOf(column?.cell, column?.key === lastKey)
       : undefined;
   };
 
-  return {
-    count: cells.length,
-    keyAt: (index) => cells[index]?.key,
-    paneAt: (index) => paneOfCell(cells[index]),
-    widthAt: (index) => widthOfCell(cells[index]),
-    alignAt: (index) => alignOfCell(cells[index]),
-    freeAt: (index) => textAt(index) === '',
-    flowsAt: (index) => (textAt(index) ?? '') !== '',
-    needAt: (index) => textMeasure.needOf(textAt(index) ?? ''),
-  };
+  for (const cell of cells) {
+    const col = cell.kind === TablePlacementKind.Data ? cell.colIndex - 1 - dataOffset.value : -1;
+    const spill = spills.get(col);
+
+    if (spill !== undefined) {
+      const covered =
+        spill.origin === col
+          ? undefined
+          : {
+              text: line.textAt(spill.origin) ?? '',
+              style: spillStyleOf(paintAt(spill.origin), painted.get(cell.key)),
+            };
+
+      painted.set(
+        cell.key,
+        spilledPaint(painted.get(cell.key), spill, closingOf(spill.origin), covered),
+      );
+    }
+  }
+  return painted;
 };
 
 const paintRow = (
@@ -1731,7 +1851,6 @@ const paintRow = (
   spans?: TableRowSpan,
 ): TableRowPaint => {
   const painted = new Map<string, TableCellPaint>();
-  let flows = false;
 
   if (row === undefined) {
     return painted;
@@ -1742,10 +1861,9 @@ const paintRow = (
 
     if (paint !== undefined) {
       painted.set(key, paint);
-      flows ||= paint.overflow && !pinned;
     }
   }
-  return flows ? floodRow(painted, floodRowOf(row, position, spans)) : painted;
+  return pinned ? painted : floodPaints(row, position, painted, pinned);
 };
 
 const paintBody: TableRowPainter = (position, spans) =>
