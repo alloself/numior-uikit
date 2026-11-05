@@ -6,7 +6,7 @@ import { boxOf } from '../../e2e/helpers/geometry';
 
 const OPEN_TIMEOUT = 180_000;
 
-const COLD_LOADS = 5;
+const COLD_LOADS = 20;
 
 const firstPaintOf = async (page: Page, address: string): Promise<number> => {
   await page.goto(address, { timeout: OPEN_TIMEOUT });

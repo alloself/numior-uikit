@@ -1,8 +1,8 @@
 {
-  "recordedAt": "2026-11-05T02:01:09.173Z",
+  "recordedAt": "2026-11-05T12:40:58.436Z",
   "dataset": "NuiSpreadsheet over a 20 000 × 50 book (70 % numbers, 25 % texts, 5 % dates; 30 % of cells with fills, borders or fonts; frozen header row and first column), viewport 1440×900",
   "device": {
-    "host": "docker",
+    "host": "35215c4a329a",
     "cpu": "13th Gen Intel(R) Core(TM) i9-13900KF",
     "cores": 32,
     "memoryGb": 31,
@@ -15,102 +15,102 @@
     {
       "name": "generate the styled book",
       "samples": 1,
-      "meanMs": 103.80000000447035,
-      "p50Ms": 103.80000000447035,
-      "p95Ms": 103.80000000447035,
-      "maxMs": 103.80000000447035
+      "meanMs": 99.8999999910593,
+      "p50Ms": 99.8999999910593,
+      "p95Ms": 99.8999999910593,
+      "maxMs": 99.8999999910593
     },
     {
       "name": "cold mount to the first painted row",
-      "samples": 5,
-      "meanMs": 175.4199999988079,
-      "p50Ms": 173.60000000149012,
-      "p95Ms": 190.59999999403954,
-      "maxMs": 190.59999999403954
+      "samples": 20,
+      "meanMs": 151.464999999851,
+      "p50Ms": 152.40000000596046,
+      "p95Ms": 158.70000000298023,
+      "maxMs": 159.69999998807907
     },
     {
       "name": "warm remount to the first painted row",
       "samples": 5,
-      "meanMs": 106.59999999850989,
-      "p50Ms": 105.29999999701977,
-      "p95Ms": 117.89999999850988,
-      "maxMs": 117.89999999850988
+      "meanMs": 95.43999999463558,
+      "p50Ms": 93.3999999910593,
+      "p95Ms": 119,
+      "maxMs": 119
     },
     {
       "name": "arrow down to the next paint",
       "samples": 200,
-      "meanMs": 33.95200000006705,
-      "p50Ms": 36.19999999552965,
-      "p95Ms": 43.600000001490116,
-      "maxMs": 46.80000000447035
+      "meanMs": 29.410500000044703,
+      "p50Ms": 31.200000002980232,
+      "p95Ms": 36.1000000089407,
+      "maxMs": 39.099999994039536
     },
     {
       "name": "arrow across columns to the next paint",
       "samples": 40,
-      "meanMs": 29.97249999959022,
-      "p50Ms": 35.5,
-      "p95Ms": 42.19999999552965,
-      "maxMs": 50.099999994039536
+      "meanMs": 29.66249999962747,
+      "p50Ms": 34.70000000298023,
+      "p95Ms": 42.79999999701977,
+      "maxMs": 43.80000001192093
     },
     {
       "name": "page down to the next paint",
       "samples": 50,
-      "meanMs": 80.49800000026822,
-      "p50Ms": 77.80000000447035,
-      "p95Ms": 98.89999999850988,
-      "maxMs": 99.79999999701977
+      "meanMs": 65.88800000041724,
+      "p50Ms": 64.80000001192093,
+      "p95Ms": 73.29999999701977,
+      "maxMs": 84.90000000596046
     },
     {
       "name": "jump between the first and the last cell of the sheet to the next paint",
       "samples": 40,
-      "meanMs": 17.059999999590218,
-      "p50Ms": 15,
-      "p95Ms": 15.699999995529652,
-      "maxMs": 62.69999999552965
+      "meanMs": 17.562499998882412,
+      "p50Ms": 15.299999997019768,
+      "p95Ms": 16.099999994039536,
+      "maxMs": 62.70000000298023
     },
     {
       "name": "frame time while wheeling through rows by 100 px",
-      "samples": 483,
-      "meanMs": 17.011043478260873,
+      "samples": 480,
+      "meanMs": 16.73535,
       "p50Ms": 16.700000000000728,
       "p95Ms": 16.799999999999272,
       "maxMs": 33.400000000001455,
-      "missedShare": 0.020703933747412008
+      "missedShare": 0.004166666666666667
     },
     {
       "name": "frame time while wheeling across columns by 100 px",
-      "samples": 363,
-      "meanMs": 16.757575757575747,
+      "samples": 360,
+      "meanMs": 16.665749999999996,
       "p50Ms": 16.69999999999709,
-      "p95Ms": 16.799999999999272,
-      "maxMs": 33.400000000001455,
-      "missedShare": 0.005509641873278237
+      "p95Ms": 16.700000000004366,
+      "maxMs": 16.80000000000291,
+      "missedShare": 0
     },
     {
       "name": "frame time while wheeling through rows by 360 px",
-      "samples": 497,
-      "meanMs": 20.689738430583507,
+      "samples": 513,
+      "meanMs": 19.524627680311887,
       "p50Ms": 16.69999999999709,
       "p95Ms": 33.400000000001455,
-      "maxMs": 50.099999999998545,
-      "missedShare": 0.23943661971830985
+      "maxMs": 49.900000000001455,
+      "missedShare": 0.1695906432748538
     },
     {
       "name": "frame time while wheeling across columns by 360 px",
       "samples": 362,
-      "meanMs": 16.89622651933702,
+      "meanMs": 16.803867403314918,
       "p50Ms": 16.69999999999709,
       "p95Ms": 16.799999999995634,
-      "maxMs": 33.5,
-      "missedShare": 0.013812154696132596
+      "maxMs": 33.400000000001455,
+      "missedShare": 0.008287292817679558
     },
     {
       "name": "move the row window by a viewport, main-thread ms",
       "samples": 20,
-      "meanMs": 27.571800000000003,
-      "p50Ms": 26.96,
-      "p95Ms": 31.166,
-      "maxMs": 33.055
+      "meanMs": 25.4722,
+      "p50Ms": 25.411,
+      "p95Ms": 30.692,
+      "maxMs": 30.932
     }
   ]
 }

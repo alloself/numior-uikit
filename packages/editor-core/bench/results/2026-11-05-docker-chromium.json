@@ -1,0 +1,96 @@
+{
+  "recordedAt": "2026-11-05T14:11:46.166Z",
+  "dataset": "10000 generated blocks of contentSchema (seed 1) in NuiEditor, viewport 1440×900",
+  "device": {
+    "host": "5d0e00607a9e",
+    "cpu": "13th Gen Intel(R) Core(TM) i9-13900KF",
+    "cores": 32,
+    "memoryGb": 31,
+    "platform": "linux 6.18.54.1-microsoft-standard-WSL2",
+    "node": "v24.20.0"
+  },
+  "browser": "chromium 153.0.8010.12",
+  "heapUsedMb": 93,
+  "operations": [
+    {
+      "name": "generate the document and its JSON in the page",
+      "samples": 1,
+      "meanMs": 72.40000000596046,
+      "p50Ms": 72.40000000596046,
+      "p95Ms": 72.40000000596046,
+      "maxMs": 72.40000000596046
+    },
+    {
+      "name": "cold mount to the first painted block",
+      "samples": 20,
+      "meanMs": 97.27000000029803,
+      "p50Ms": 95.79999999701977,
+      "p95Ms": 106,
+      "maxMs": 111.3999999910593
+    },
+    {
+      "name": "warm remount to the first painted block",
+      "samples": 5,
+      "meanMs": 44.78000000119209,
+      "p50Ms": 43.20000000298023,
+      "p95Ms": 51.70000000298023,
+      "maxMs": 51.70000000298023
+    },
+    {
+      "name": "type a character to the next paint",
+      "samples": 200,
+      "meanMs": 19.089500000327824,
+      "p50Ms": 18.600000008940697,
+      "p95Ms": 20.5,
+      "maxMs": 56.8999999910593
+    },
+    {
+      "name": "split a paragraph with Enter to the next paint",
+      "samples": 50,
+      "meanMs": 20.06600000053644,
+      "p50Ms": 20,
+      "p95Ms": 21.600000008940697,
+      "maxMs": 22.799999997019768
+    },
+    {
+      "name": "undo a step to the next paint",
+      "samples": 100,
+      "meanMs": 19.172000000327827,
+      "p50Ms": 19.100000008940697,
+      "p95Ms": 20.600000008940697,
+      "maxMs": 21.400000005960464
+    },
+    {
+      "name": "paste 500 lines as blocks to the next paint",
+      "samples": 3,
+      "meanMs": 18.833333333333332,
+      "p50Ms": 18,
+      "p95Ms": 20.799999997019768,
+      "maxMs": 20.799999997019768
+    },
+    {
+      "name": "select everything and toggle bold to the next paint",
+      "samples": 8,
+      "meanMs": 72.63750000298023,
+      "p50Ms": 65,
+      "p95Ms": 99,
+      "maxMs": 99
+    },
+    {
+      "name": "frame time while wheeling through blocks",
+      "samples": 361,
+      "meanMs": 16.712005540166203,
+      "p50Ms": 16.700000000000728,
+      "p95Ms": 16.700000000000728,
+      "maxMs": 33.29999999999927
+    },
+    {
+      "name": "long tasks while wheeling",
+      "samples": 1,
+      "meanMs": 0,
+      "p50Ms": 0,
+      "p95Ms": 0,
+      "maxMs": 0
+    }
+  ]
+}

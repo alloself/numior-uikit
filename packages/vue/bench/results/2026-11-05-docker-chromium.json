@@ -1,0 +1,72 @@
+{
+  "recordedAt": "2026-11-05T12:43:08.812Z",
+  "dataset": "100000 generated nodes, viewport 1440×900",
+  "device": {
+    "host": "35215c4a329a",
+    "cpu": "13th Gen Intel(R) Core(TM) i9-13900KF",
+    "cores": 32,
+    "memoryGb": 31,
+    "platform": "linux 6.18.54.1-microsoft-standard-WSL2",
+    "node": "v24.20.0"
+  },
+  "browser": "chromium 153.0.8010.12",
+  "heapUsedMb": 31,
+  "operations": [
+    {
+      "name": "generate a hundred thousand nodes in the page",
+      "samples": 1,
+      "meanMs": 20.400000005960464,
+      "p50Ms": 20.400000005960464,
+      "p95Ms": 20.400000005960464,
+      "maxMs": 20.400000005960464
+    },
+    {
+      "name": "cold mount to the first painted row",
+      "samples": 20,
+      "meanMs": 55.230000000447035,
+      "p50Ms": 52.900000005960464,
+      "p95Ms": 69.80000001192093,
+      "maxMs": 73.5
+    },
+    {
+      "name": "warm remount to the first painted row",
+      "samples": 5,
+      "meanMs": 35.8,
+      "p50Ms": 31.700000002980232,
+      "p95Ms": 52.29999999701977,
+      "maxMs": 52.29999999701977
+    },
+    {
+      "name": "arrow down to the next paint",
+      "samples": 200,
+      "meanMs": 17.202000000551344,
+      "p50Ms": 17.299999997019768,
+      "p95Ms": 17.799999997019768,
+      "maxMs": 18.099999994039536
+    },
+    {
+      "name": "page down to the next paint",
+      "samples": 50,
+      "meanMs": 17.154000000059604,
+      "p50Ms": 17.200000002980232,
+      "p95Ms": 17.5,
+      "maxMs": 17.600000008940697
+    },
+    {
+      "name": "move the row window by a viewport, main-thread ms",
+      "samples": 20,
+      "meanMs": 4.370299999999999,
+      "p50Ms": 4.136,
+      "p95Ms": 5.623,
+      "maxMs": 6.622
+    },
+    {
+      "name": "frame time while wheeling through rows",
+      "samples": 359,
+      "meanMs": 16.66573816155989,
+      "p50Ms": 16.69999999999891,
+      "p95Ms": 16.700000000000728,
+      "maxMs": 16.80000000000109
+    }
+  ]
+}
