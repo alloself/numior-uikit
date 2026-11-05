@@ -21,6 +21,8 @@ export class ChartsSection {
   readonly scatter: Locator;
   readonly tableSwitch: Locator;
   readonly selectedNote: Locator;
+  readonly gapsSwitch: Locator;
+  readonly gapNote: Locator;
 
   constructor(page: Page) {
     this.section = page.locator('section[aria-labelledby="charts-title"]');
@@ -33,6 +35,8 @@ export class ChartsSection {
     this.scatter = page.getByTestId('chart-scatter');
     this.tableSwitch = page.getByRole('switch', { name: 'Показать таблицу данных' });
     this.selectedNote = page.getByTestId('charts-selected');
+    this.gapsSwitch = page.getByRole('switch', { name: 'Соединять пропуски' });
+    this.gapNote = page.getByTestId('charts-gap-note');
   }
 
   tooltip(chart: Locator): Locator {
@@ -70,7 +74,21 @@ export class ChartsSection {
   }
 
   strokes(chart: Locator): Locator {
-    return chart.locator('.nui-chart__stroke');
+    return chart.locator('.nui-chart__stroke:not(.nui-chart__stroke--gap)');
+  }
+
+  bridges(chart: Locator): Locator {
+    return chart.locator('.nui-chart__stroke--gap');
+  }
+
+  async connectGaps(): Promise<void> {
+    await this.gapsSwitch.click();
+  }
+
+  dashes(chart: Locator): Promise<string[]> {
+    return this.bridges(chart).evaluateAll((bridges) =>
+      bridges.map((bridge) => getComputedStyle(bridge).strokeDasharray),
+    );
   }
 
   points(chart: Locator): Locator {

@@ -35,7 +35,7 @@ test.describe('charts', () => {
     await expect(charts.rows(charts.columns).nth(2)).toHaveText(/III кв\.\s*58\s*59\s*—/);
   });
 
-  test('breaks lines at missing days and stacks areas under their lines', async ({
+  test('breaks lines at missing days or bridges them on request and stacks areas under their lines', async ({
     playground,
     charts,
   }) => {
@@ -46,6 +46,18 @@ test.describe('charts', () => {
     await expect(charts.areaFills(charts.lines)).toHaveCount(0);
     await expect(charts.areaFills(charts.areas)).toHaveCount(3);
     await expect(charts.strokes(charts.areas)).toHaveCount(3);
+    await expect(charts.bridges(charts.lines)).toHaveCount(0);
+    await expect(charts.gapNote).toHaveText('Нет данных за 8–9 октября');
+
+    await charts.connectGaps();
+
+    await expect(charts.strokes(charts.lines)).toHaveCount(3);
+    await expect(charts.bridges(charts.lines)).toHaveCount(1);
+    expect(await charts.dashes(charts.lines)).toEqual(['3px, 5px']);
+
+    await charts.connectGaps();
+
+    await expect(charts.bridges(charts.lines)).toHaveCount(0);
 
     await charts.showTable();
     await expect(charts.rows(charts.lines)).toHaveCount(14);

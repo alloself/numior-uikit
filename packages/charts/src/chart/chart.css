@@ -173,6 +173,11 @@
     d var(--nui-duration-normal) var(--nui-easing);
 }
 
+.nui-chart__stroke--gap {
+  stroke-width: 1.5;
+  stroke-dasharray: 3 5;
+}
+
 .nui-chart__point {
   fill: var(--_fill);
   stroke: var(--nui-surface);

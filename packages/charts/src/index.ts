@@ -19,5 +19,5 @@ export type {
   ChartValue,
   ChartValueAxis,
 } from './core';
-export { ChartCategoriesKind, ChartKind, ChartScale, ChartStacking } from './core';
+export { ChartCategoriesKind, ChartGaps, ChartKind, ChartScale, ChartStacking } from './core';
 export { NuiChartTooltipSide } from './chart/chart.types';

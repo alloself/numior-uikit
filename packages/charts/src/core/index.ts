@@ -15,6 +15,7 @@ export {
 export { timeTicks, type TimeTicks } from './time';
 export {
   ChartCategoriesKind,
+  ChartGaps,
   ChartKind,
   ChartScale,
   ChartStacking,

@@ -15,7 +15,7 @@ const visits: ChartSpec = {
 const pointsOf = (scene: ChartScene, series: number): ScenePoint[] =>
   scene.points.filter((point) => point.series === series);
 
-const pathsOf = (scene: ChartScene, role: 'line' | 'area', series: number): string[] =>
+const pathsOf = (scene: ChartScene, role: 'line' | 'area' | 'gap', series: number): string[] =>
   scene.paths.reduce<string[]>((found, path) => {
     if (path.role === role && path.series === series) {
       found.push(path.d);
@@ -55,6 +55,29 @@ describe('line and area layout', () => {
     expect(web.map((point) => point.slot)).toEqual([1, 1, 1, 1]);
     expect(at(web, 0).x).toBeLessThan(at(web, 1).x);
     expect(at(web, 1).y).toBeLessThan(at(web, 0).y);
+  });
+
+  it('bridges gaps with a dashed stroke and one area when gaps connect', () => {
+    const broken = layoutChart(visits, SIZE);
+    const connected = layoutChart({ ...visits, gaps: 'connect' }, SIZE);
+    const web = pointsOf(connected, 0);
+    const [bridge] = pathsOf(connected, 'gap', 0);
+
+    expect(pathsOf(broken, 'gap', 0)).toEqual([]);
+    expect(pathsOf(connected, 'line', 0)).toEqual(pathsOf(broken, 'line', 0));
+    expect(pathsOf(connected, 'gap', 0)).toHaveLength(1);
+
+    expect(startOf(bridge ?? '')).toEqual(
+      [at(web, 1).x, at(web, 1).y].map((value) => Math.round(value * 100) / 100),
+    );
+
+    expect(pathsOf(connected, 'gap', 1)).toHaveLength(2);
+    expect(pathsOf(connected, 'line', 1)).toEqual([]);
+
+    const area = layoutChart({ ...visits, kind: 'area', gaps: 'connect' }, SIZE);
+
+    expect(pathsOf(area, 'area', 0)).toHaveLength(1);
+    expect(pathsOf(area, 'area', 1)).toHaveLength(1);
   });
 
   it('starts a line axis near its data and an area axis at zero', () => {

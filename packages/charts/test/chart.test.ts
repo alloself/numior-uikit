@@ -57,6 +57,25 @@ describe('NuiChart', () => {
     expect(chart.markerCount).toBe(6);
   });
 
+  it('leaves a gap at a missing value or bridges it with a dashed stroke', async () => {
+    const visits: ChartSpec = {
+      kind: 'line',
+      categories: { kind: 'text', labels: ['Mon', 'Tue', 'Wed', 'Thu'] },
+      series: [{ id: 'app', name: 'App', values: [4, 6, null, 5] }],
+    };
+
+    const chart = chartOf({ spec: visits });
+
+    expect(chart.strokeSlots).toEqual([1]);
+    expect(chart.gapSlots).toEqual([]);
+
+    await chart.show({ ...visits, gaps: 'connect' });
+
+    expect(chart.strokeSlots).toEqual([1]);
+    expect(chart.gapSlots).toEqual([1]);
+    expect(chart.markerCount).toBe(3);
+  });
+
   it('cuts pies by category and names the categories in the legend', () => {
     const chart = chartOf({ spec: { ...revenue, kind: 'pie' } });
 

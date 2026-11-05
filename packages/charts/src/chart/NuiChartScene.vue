@@ -53,6 +53,13 @@
       :class="`nui-chart__stroke--slot-${stroke.slot}`"
       :d="stroke.d"
     />
+    <path
+      v-for="(bridge, index) in bridges"
+      :key="`gap-${bridge.series}-${index}`"
+      class="nui-chart__stroke nui-chart__stroke--gap"
+      :class="`nui-chart__stroke--slot-${bridge.slot}`"
+      :d="bridge.d"
+    />
     <line
       v-if="crosshair !== undefined"
       class="nui-chart__crosshair"
@@ -110,6 +117,7 @@ const labels = computed(() =>
 
 const areas = computed(() => scene.paths.filter((path) => path.role === ScenePathRole.Area));
 const strokes = computed(() => scene.paths.filter((path) => path.role === ScenePathRole.Line));
+const bridges = computed(() => scene.paths.filter((path) => path.role === ScenePathRole.Gap));
 const lined = computed(() => scene.axis !== undefined && scene.bars.length === 0);
 
 const active = (point: ScenePoint): boolean =>

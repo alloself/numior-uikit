@@ -23,12 +23,16 @@
         :show-table="showTable"
         data-testid="chart-bars"
       />
-      <NuiChart
-        :spec="visits"
-        label="Посещения за две недели, тыс."
-        :show-table="showTable"
-        data-testid="chart-lines"
-      />
+      <div class="charts-cell">
+        <NuiChart
+          :spec="visitsSpec"
+          label="Посещения за две недели, тыс."
+          :show-table="showTable"
+          data-testid="chart-lines"
+        />
+        <p class="charts-note" data-testid="charts-gap-note">Нет данных за 8–9 октября</p>
+        <NuiSwitch v-model="connectGaps" label="Соединять пропуски" data-testid="charts-gaps" />
+      </div>
       <NuiChart
         :spec="income"
         label="Выручка по каналам за полгода, млн ₽"
@@ -120,6 +124,13 @@ const visits: ChartSpec = {
     },
   ],
 };
+
+const connectGaps = ref(false);
+
+const visitsSpec = computed<ChartSpec>(() => ({
+  ...visits,
+  gaps: connectGaps.value ? 'connect' : 'break',
+}));
 
 const income: ChartSpec = {
   kind: 'area',

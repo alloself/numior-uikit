@@ -157,7 +157,11 @@ export class ChartDriver {
   }
 
   get strokeSlots(): number[] {
-    return this.slotsOf('.nui-chart__stroke', STROKE_SLOT);
+    return this.slotsOf('.nui-chart__stroke:not(.nui-chart__stroke--gap)', STROKE_SLOT);
+  }
+
+  get gapSlots(): number[] {
+    return this.slotsOf('.nui-chart__stroke--gap', STROKE_SLOT);
   }
 
   get areaSlots(): number[] {

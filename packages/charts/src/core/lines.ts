@@ -1,4 +1,5 @@
 import {
+  ChartGaps,
   ChartStacking,
   ScenePathRole,
   type ChartSeries,
@@ -16,6 +17,7 @@ export interface LineFrame {
   readonly baseline: number;
   readonly slots: readonly ChartSlot[];
   readonly markers: boolean;
+  readonly gaps: ChartGaps;
 }
 
 export interface LineMarks {
@@ -111,6 +113,22 @@ const floorOf = (
     })
     .join('');
 
+const bridgesOf = (runs: readonly (readonly Vertex[])[]): Vertex[][] =>
+  runs.reduce<{ last: Vertex | undefined; bridges: Vertex[][] }>(
+    (state, run) => {
+      const first = run[0];
+
+      if (first === undefined) {
+        return state;
+      }
+      if (state.last !== undefined && first.index > state.last.index + 1) {
+        state.bridges.push([state.last, first]);
+      }
+      return { last: run.at(-1), bridges: state.bridges };
+    },
+    { last: undefined, bridges: [] },
+  ).bridges;
+
 const pathsOf = (
   frame: LineFrame,
   runs: readonly (readonly Vertex[])[],
@@ -118,18 +136,27 @@ const pathsOf = (
   below: readonly (number | undefined)[] | undefined,
 ): { areas: ScenePath[]; lines: ScenePath[] } => {
   const slot = frame.slots[series] ?? 0;
+  const connect = frame.gaps === ChartGaps.Connect;
   const drawn = runs.filter((run) => run.length > 1);
+  const filled = connect ? [runs.flat()].filter((run) => run.length > 1) : drawn;
+
+  const bridges = connect
+    ? bridgesOf(runs).map((pair) => ({ role: ScenePathRole.Gap, series, slot, d: trace(pair) }))
+    : [];
 
   return {
     areas: frame.area
-      ? drawn.map((run) => ({
+      ? filled.map((run) => ({
           role: ScenePathRole.Area,
           series,
           slot,
           d: `${trace(run)}${floorOf(frame, run, below)}Z`,
         }))
       : [],
-    lines: drawn.map((run) => ({ role: ScenePathRole.Line, series, slot, d: trace(run) })),
+    lines: [
+      ...drawn.map((run) => ({ role: ScenePathRole.Line, series, slot, d: trace(run) })),
+      ...bridges,
+    ],
   };
 };
 

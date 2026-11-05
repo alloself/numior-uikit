@@ -16,6 +16,8 @@ export type ChartKind = (typeof ChartKind)[keyof typeof ChartKind];
 
 export type ChartStacking = (typeof ChartStacking)[keyof typeof ChartStacking];
 
+export type ChartGaps = (typeof ChartGaps)[keyof typeof ChartGaps];
+
 export type ChartValue = number | null;
 
 export type ChartSlot = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
@@ -49,6 +51,7 @@ export interface ChartSpec {
   readonly categories: ChartCategories;
   readonly series: readonly ChartSeries[];
   readonly stacking?: ChartStacking | undefined;
+  readonly gaps?: ChartGaps | undefined;
   readonly valueAxis?: ChartValueAxis | undefined;
   readonly categoryAxis?: ChartCategoryAxis | undefined;
   readonly hole?: number | undefined;
@@ -171,6 +174,8 @@ export const ChartKind = {
 
 export const ChartStacking = { None: 'none', Stacked: 'stacked', Percent: 'percent' } as const;
 
+export const ChartGaps = { Break: 'break', Connect: 'connect' } as const;
+
 export const TimeUnit = {
   Second: 'second',
   Minute: 'minute',
@@ -189,7 +194,7 @@ export const ChartCategoriesKind = { Text: 'text', Time: 'time', Number: 'number
 
 export const ChartScale = { Linear: 'linear', Log: 'log' } as const;
 
-export const ScenePathRole = { Line: 'line', Area: 'area' } as const;
+export const ScenePathRole = { Line: 'line', Area: 'area', Gap: 'gap' } as const;
 
 export const SceneLineRole = { Grid: 'grid', Baseline: 'baseline' } as const;
 

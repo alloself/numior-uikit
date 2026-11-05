@@ -3,6 +3,7 @@ import { layoutLines, stackedLineExtent } from './lines';
 import { layoutSlices } from './pies';
 import {
   ChartCategoriesKind,
+  ChartGaps,
   ChartKind,
   ChartScale,
   ChartStacking,
@@ -409,6 +410,7 @@ const scatterScene = (frame: Frame): ChartScene => {
         baseline: baselineOf(frame, value),
         slots,
         markers: true,
+        gaps: ChartGaps.Break,
       },
       series,
       xs.length,
@@ -550,6 +552,7 @@ const sceneOf = (
           baseline,
           slots,
           markers: plot.width / Math.max(count, 1) >= MARKER_ROOM,
+          gaps: frame.spec.gaps ?? ChartGaps.Break,
         },
         frame.spec.series,
         count,
