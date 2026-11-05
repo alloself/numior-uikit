@@ -44,6 +44,10 @@ const docs: DocsMap = {
         ru: 'Через сколько миллисекунд после ухода курсора поповер закрывается.',
         en: 'Delay in milliseconds before the popover closes after the pointer leaves.',
       },
+      lazy: {
+        ru: 'Создаёт содержимое при первом открытии и держит его после закрытия. Подходит для панелей, которые открываются редко, но не для содержимого, нужного на сервере.',
+        en: 'Creates the content on the first open and keeps it after closing. Suits rarely opened panels, not content the server must render.',
+      },
     },
     models: { 'v-model:open': { ru: 'Открыт ли поповер.', en: 'Whether the popover is open.' } },
     slots: {

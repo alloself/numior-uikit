@@ -6,13 +6,13 @@
     :class="[`nui-popover--padding-${padding}`, `nui-popover--size-${size}`]"
     v-bind="{ ...contentAttrs, ...hover.contentAttrs.value, ...$attrs }"
   >
-    <slot />
+    <slot v-if="!lazy || opened" />
     <span v-if="arrow" ref="arrow-node" class="nui-popover__arrow"></span>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, useTemplateRef } from 'vue';
+import { computed, ref, useTemplateRef, watch } from 'vue';
 import { FloatingPlacement, PopoverMode, useFloating, usePopover } from '@numior/primitives';
 import { useTriggerElement } from '../shared/trigger-ref';
 import { useHoverTrigger } from './use-hover-trigger';
@@ -39,9 +39,11 @@ const {
   trigger: activation = NuiPopoverTrigger.Click,
   openDelay = 400,
   closeDelay = 200,
+  lazy = false,
 } = defineProps<NuiPopoverProps>();
 
 const open = defineModel<boolean>('open', { default: false });
+const opened = ref(open.value);
 defineSlots<{ trigger?(props: NuiPopoverTriggerSlot): unknown; default(): unknown }>();
 const { trigger, setTrigger } = useTriggerElement();
 const reference = computed(() => (anchor === undefined ? trigger.value : anchor));
@@ -78,5 +80,9 @@ const triggerAttrs = computed<NuiPopoverTriggerAttrs>(() => {
   return hovering()
     ? { ...invoker, ...hover.triggerAttrs.value, ref: setTrigger }
     : { ...invoker, popovertarget, ref: setTrigger };
+});
+
+watch(open, (value) => {
+  opened.value ||= value;
 });
 </script>

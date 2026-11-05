@@ -24,6 +24,22 @@ describe('NuiPopover', () => {
     popover.unmount();
   });
 
+  it('creates lazy content on the first open and keeps it after closing', async () => {
+    const popover = PopoverDriver.mount({ props: { lazy: true } });
+
+    expect(popover.content.text()).toBe('');
+
+    await popover.receiveOpen(true);
+
+    expect(popover.content.text()).toBe('Content');
+
+    await popover.receiveOpen(false);
+
+    expect(popover.content.text()).toBe('Content');
+
+    popover.unmount();
+  });
+
   it('follows native light dismiss and writes the resolved side onto the element', async () => {
     const popover = PopoverDriver.mount({
       open: true,
