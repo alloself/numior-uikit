@@ -10,6 +10,12 @@ export const useKeyboardInset = (
 ): void => {
   const place = (): void => {
     const target = element.value;
+
+    if (!enabled()) {
+      target?.style.removeProperty('--_keyboard');
+      return;
+    }
+
     const view = target?.ownerDocument.defaultView;
     const viewport = viewportOf(target);
 

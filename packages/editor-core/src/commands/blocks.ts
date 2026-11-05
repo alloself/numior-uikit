@@ -19,7 +19,8 @@ import {
 import { attempt, probe } from './attempt';
 import { ancestorTypes, sequence } from './format';
 import { isBlockAtom } from './atoms';
-import { insertAtGap } from './gap';
+import type { BlockMaker } from './commands.types';
+import { gapIndexOf, gapSpot, insertAtGap } from './gap';
 
 type Attrs = Readonly<Record<string, AttrValue>>;
 
@@ -28,6 +29,14 @@ type WrapTypes = readonly { readonly type: string; readonly attrs?: Attrs | unde
 interface ItemSpot {
   readonly $pos: ResolvedPos;
   readonly depth: number;
+}
+
+interface LiftPlan {
+  readonly nested: boolean;
+  readonly list: ElementNode;
+  readonly item: ElementNode;
+  readonly head: readonly ContentNode[];
+  readonly tail: readonly ContentNode[];
 }
 
 const typeOf = (schema: Schema, node: ContentNode | undefined) =>
@@ -39,16 +48,24 @@ const isList = (schema: Schema, node: ContentNode | undefined): boolean =>
 const isTextblock = (schema: Schema, node: ContentNode | undefined): boolean =>
   typeOf(schema, node)?.inlineContent === true;
 
+const splices = (
+  schema: Schema,
+  parent: ElementNode,
+  from: number,
+  to: number,
+  inserted: readonly ContentNode[],
+): boolean => {
+  const type = schema.nodes.get(parent.type);
+
+  return type !== undefined && matchesSplice(type.content, parent, from, to, inserted);
+};
+
 const fits = (
   schema: Schema,
   parent: ElementNode,
   index: number,
   replacement: readonly ContentNode[],
-): boolean => {
-  const type = schema.nodes.get(parent.type);
-
-  return type !== undefined && matchesSplice(type.content, parent, index, index + 1, replacement);
-};
+): boolean => splices(schema, parent, index, index + 1, replacement);
 
 const headOf = (state: EditorState): number | undefined =>
   state.selection.kind === SelectionKind.Text ? state.selection.head : undefined;
@@ -296,14 +313,134 @@ const liftItem = (tr: Transaction, state: EditorState, spot: ItemSpot, head: num
   return true;
 };
 
+const liftPlanOf = (schema: Schema, spot: ItemSpot): LiftPlan => {
+  const { $pos, depth } = spot;
+  const list = $pos.node(depth - 1);
+  const index = $pos.indexAt(depth - 1);
+
+  return {
+    nested: depth >= 3 && isList(schema, $pos.node(depth - 3)),
+    list,
+    item: $pos.node(depth),
+    head: index > 0 ? [list] : [],
+    tail: index + 1 < list.content.length ? [list] : [],
+  };
+};
+
+const liftFits = (schema: Schema, spot: ItemSpot, plan: LiftPlan): boolean => {
+  const { $pos, depth } = spot;
+  const { item } = plan;
+  const end = item.content.length;
+
+  if (plan.nested) {
+    const parentItem = $pos.node(depth - 2);
+    const at = $pos.indexAt(depth - 2);
+
+    return (
+      fits(schema, $pos.node(depth - 3), $pos.indexAt(depth - 3), [parentItem, item]) &&
+      fits(schema, parentItem, at, plan.head) &&
+      splices(schema, item, end, end, plan.tail)
+    );
+  }
+  const parent = $pos.node(depth - 2);
+  const at = $pos.indexAt(depth - 2);
+
+  return (
+    fits(schema, parent, at, [plan.list, ...item.content, ...plan.tail]) &&
+    fits(schema, parent, at, [...plan.head, ...item.content, ...plan.tail])
+  );
+};
+
+const liftedParentFits = (
+  schema: Schema,
+  spot: ItemSpot,
+  plan: LiftPlan,
+  wrapper: readonly ContentNode[],
+): boolean => {
+  const { $pos, depth } = spot;
+  const { item } = plan;
+
+  if ($pos.depth > depth + 1) {
+    return fits(schema, $pos.node($pos.depth - 1), $pos.indexAt($pos.depth - 1), wrapper);
+  }
+  const at = $pos.indexAt(depth);
+  const rest = item.content.slice(at + 1);
+
+  if (plan.nested) {
+    return splices(schema, item, at, item.content.length, [...wrapper, ...rest, ...plan.tail]);
+  }
+  return fits(schema, $pos.node(depth - 2), $pos.indexAt(depth - 2), [
+    ...plan.head,
+    ...item.content.slice(0, at),
+    ...wrapper,
+    ...rest,
+    ...plan.tail,
+  ]);
+};
+
+const relistFits = (schema: Schema, spot: ItemSpot, listType: string, attrs: Attrs): boolean => {
+  const { $pos, depth } = spot;
+  const plan = liftPlanOf(schema, spot);
+  const itemType = firstItemOf(schema, listType);
+  const cut = plan.nested ? depth - 3 : depth - 2;
+  const lifted = $pos.depth - 2;
+  const above = lifted - 2;
+
+  if (
+    itemType === undefined ||
+    lifted < 1 ||
+    (lifted >= 2 && isList(schema, $pos.node(above <= cut ? above : above + 2)))
+  ) {
+    return false;
+  }
+
+  const wrapper = wrapped(
+    schema,
+    [
+      { type: listType, attrs },
+      { type: itemType, attrs: {} },
+    ],
+    [$pos.parent],
+    probeId,
+  );
+
+  return (
+    liftFits(schema, spot, plan) &&
+    nestedValid(schema, wrapper[0], $pos.parent) &&
+    liftedParentFits(schema, spot, plan, wrapper)
+  );
+};
+
 export const liftListItem: Command = (state, dispatch) => {
   const spot = itemSpot(state);
   const head = headOf(state);
 
+  if (spot === undefined || head === undefined) {
+    return false;
+  }
+  return dispatch === undefined
+    ? probe(() => liftFits(state.doc.schema, spot, liftPlanOf(state.doc.schema, spot)))
+    : attempt(state, dispatch, (tr) => liftItem(tr, state, spot, head));
+};
+
+const sinkFits = (
+  schema: Schema,
+  list: ElementNode,
+  index: number,
+  previous: ElementNode,
+  item: ElementNode,
+): boolean => {
+  const last = previous.content.at(-1);
+  const end = previous.content.length;
+  const stays = splices(schema, list, index, index + 1, []);
+
+  if (last?.kind === ContentNodeKind.Element && last.type === list.type) {
+    return stays && splices(schema, last, last.content.length, last.content.length, [item]);
+  }
   return (
-    spot !== undefined &&
-    head !== undefined &&
-    attempt(state, dispatch, (tr) => liftItem(tr, state, spot, head))
+    stays &&
+    splices(schema, previous, end, end, [list]) &&
+    schema.nodes.get(list.type)?.content.matchContent([item])?.validEnd === true
   );
 };
 
@@ -327,6 +464,9 @@ export const sinkListItem: Command = (state, dispatch) => {
   const last = previous.content.at(-1);
   const joins = last?.kind === ContentNodeKind.Element && last.type === list.type;
 
+  if (dispatch === undefined) {
+    return probe(() => sinkFits(state.doc.schema, list, index, previous, item));
+  }
   return attempt(state, dispatch, (tr) => {
     tr.delete(itemStart, $pos.after(depth));
     if (joins) {
@@ -538,9 +678,15 @@ export const toggleList = (listType: string, attrs: Attrs = {}): Command => {
     if (current === listType) {
       return liftListItem(state, dispatch);
     }
-    return current === undefined
-      ? wrap(state, dispatch)
-      : sequence(liftListItem, wrap)(state, dispatch);
+    if (current === undefined) {
+      return wrap(state, dispatch);
+    }
+    if (dispatch !== undefined) {
+      return sequence(liftListItem, wrap)(state, dispatch);
+    }
+    const spot = itemSpot(state);
+
+    return spot !== undefined && probe(() => relistFits(state.doc.schema, spot, listType, attrs));
   };
 };
 
@@ -568,6 +714,16 @@ export const toggleWrapper = (type: string, attrs: Attrs = {}): Command => {
 
     if ($pos === undefined || depth < 1) {
       return wrap(state, dispatch);
+    }
+    if (dispatch === undefined) {
+      return probe(() =>
+        fits(
+          state.doc.schema,
+          $pos.node(depth - 1),
+          $pos.indexAt(depth - 1),
+          $pos.node(depth).content,
+        ),
+      );
     }
     return attempt(state, dispatch, (tr) => unwrap(tr, $pos, depth));
   };
@@ -600,12 +756,50 @@ export const caretInto = (tr: Transaction, start: number): void => {
   }
 };
 
+const insertFits = (state: EditorState, build: (make: BlockMaker) => ElementNode): boolean => {
+  const { doc } = state;
+  const { schema } = doc;
+  const make: BlockMaker = { doc: { schema }, newId: probeId };
+  const head = headOf(state);
+  const $pos = head === undefined ? undefined : doc.resolve(head);
+
+  if (state.selection.kind === SelectionKind.Gap) {
+    const spot = gapSpot(doc, state.selection);
+
+    return (
+      spot !== undefined &&
+      splices(schema, spot.parent, gapIndexOf(spot), gapIndexOf(spot), [build(make)])
+    );
+  }
+  if ($pos === undefined || $pos.depth < 1 || !isTextblock(schema, $pos.parent)) {
+    return false;
+  }
+  const parent = $pos.node($pos.depth - 1);
+  const index = $pos.indexAt($pos.depth - 1);
+
+  if ($pos.parent.content.length === 0) {
+    return fits(schema, parent, index, [build(make), $pos.parent]);
+  }
+  const next = followingTextblock(schema, parent);
+
+  return (
+    next !== undefined &&
+    splices(schema, parent, index + 1, index + 1, [
+      build(make),
+      schema.element(next, { id: PROBE_ID }),
+    ])
+  );
+};
+
 export const insertBlock =
-  (build: (tr: Transaction) => ElementNode): Command =>
+  (build: (make: BlockMaker) => ElementNode): Command =>
   (state, dispatch) => {
     const head = headOf(state);
     const $pos = head === undefined ? undefined : state.doc.resolve(head);
 
+    if (dispatch === undefined) {
+      return probe(() => insertFits(state, build));
+    }
     if (state.selection.kind === SelectionKind.Gap) {
       return attempt(state, dispatch, (tr) => insertAtGap(tr, build));
     }

@@ -66,7 +66,7 @@ export {
 export type { ChildSlot } from './commands/move';
 export { moveBlock, placeBeside } from './commands/move-across';
 export type { BlockTarget, ColumnTypes } from './commands/move-across';
-export { BesideSide } from './commands/commands.types';
+export { BesideSide, type BlockMaker } from './commands/commands.types';
 export { insertHTML, insertPlainText, pasteSchema } from './commands/paste';
 export { fromHTML } from './html/parse';
 export { detectPasteSource } from './html/sources';

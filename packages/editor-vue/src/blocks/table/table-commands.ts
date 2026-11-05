@@ -17,6 +17,7 @@ import {
   type Command,
   type ElementNode,
   type NodeId,
+  type BlockMaker,
   type Transaction,
 } from '@numior/editor-core';
 
@@ -52,13 +53,13 @@ const partsOf = (tr: Transaction, id: NodeId): TableParts | undefined => {
 };
 
 const element = (
-  tr: Transaction,
+  tr: BlockMaker,
   type: string,
   attrs: Readonly<Record<string, NuiContentCellValue>> = {},
   content: readonly ElementNode[] = [],
 ): ElementNode => tr.doc.schema.element(type, { id: tr.newId(), attrs, content });
 
-const cell = (tr: Transaction, value: NuiContentCellValue = null): ElementNode =>
+const cell = (tr: BlockMaker, value: NuiContentCellValue = null): ElementNode =>
   element(tr, 'table_cell', { value });
 
 const startOf = (tr: Transaction, node: ElementNode): number | undefined =>

@@ -79,12 +79,15 @@ export const checkText = (
 };
 
 export const checkIdentity = (context: CheckContext, id: string): void => {
+  const known = context.ids.size;
+
+  context.ids.add(id);
+
   if (id === '') {
     context.issues.push({ kind: 'id', path: [...context.path], id, reason: 'empty' });
-  } else if (context.ids.has(id)) {
+  } else if (context.ids.size === known) {
     context.issues.push({ kind: 'id', path: [...context.path], id, reason: 'duplicate' });
   }
-  context.ids.add(id);
 };
 
 export const elementTypeOf = (context: CheckContext, type: string): NodeType | undefined =>

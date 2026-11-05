@@ -1,7 +1,10 @@
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import {
+  createDoc,
   createState,
   insertDivider,
+  liftListItem,
+  sinkListItem,
   textSelection,
   toggleList,
   toggleWrapper,
@@ -30,6 +33,8 @@ const DRY_COMMANDS: readonly (readonly [string, Command])[] = [
   ['list wrap', turnIntoList('bullet_list')],
   ['callout wrap', wrapInBlock('callout')],
   ['divider', insertDivider()],
+  ['lift item', liftListItem],
+  ['sink item', sinkListItem],
 ];
 
 const textblockStarts = (seed: number): number[] => {
@@ -175,7 +180,7 @@ describe('list and quote commands', () => {
     expect(wrapInBlock('divider')(editor.state)).toBe(false);
   });
 
-  it('answers a dry run of the toolbar commands the way a real run does on every textblock', () => {
+  it('answers a dry run of the toolbar commands without a transaction the way a real run does on every textblock', () => {
     const mismatches = [3, 11, 29].flatMap((seed) => {
       const generated = generateDoc(fixtureSchema, { blocks: 40, seed });
 
@@ -183,14 +188,49 @@ describe('list and quote commands', () => {
         const state = createState({ doc: generated, selection: textSelection(pos) });
 
         return DRY_COMMANDS.flatMap(([name, command]) => {
+          const built = vi.spyOn(state, 'tr', 'get');
           const dry = command(state);
-          const real = command(state, () => undefined);
+          const touched = built.mock.calls.length;
 
-          return dry === real ? [] : [`${name} at ${String(pos)} of seed ${String(seed)}`];
+          built.mockRestore();
+
+          const real = command(state, () => undefined);
+          const where = `${name} at ${String(pos)} of seed ${String(seed)}`;
+
+          return [
+            ...(dry === real ? [] : [`${where}: dry ${String(dry)}, real ${String(real)}`]),
+            ...(touched === 0 ? [] : [`${where}: built a transaction`]),
+          ];
         });
       });
     });
 
     expect(mismatches).toEqual([]);
+  });
+
+  it('answers whether a block can be inserted without building a transaction', () => {
+    const image = node('image', [], { src: 'a.png' });
+    const root = createDoc(fixtureSchema, doc(p('text'), p(), image));
+
+    const states = [
+      createState({ doc: root, selection: textSelection(2) }),
+      createState({ doc: root, selection: textSelection(7) }),
+      createState({ doc: root, selection: { kind: 'gap', id: image.id, side: 'end' } }),
+      createState({ doc: root, selection: { kind: 'gap', id: image.id, side: 'start' } }),
+    ];
+
+    const answers = states.map((state) => {
+      const built = vi.spyOn(state, 'tr', 'get');
+      const dry = insertDivider()(state);
+      const touched = built.mock.calls.length;
+
+      built.mockRestore();
+
+      return { dry, touched, real: insertDivider()(state, () => undefined) };
+    });
+
+    expect(answers.map((answer) => answer.touched)).toEqual([0, 0, 0, 0]);
+    expect(answers.map((answer) => answer.dry)).toEqual(answers.map((answer) => answer.real));
+    expect(answers.map((answer) => answer.dry)).toEqual([true, true, true, true]);
   });
 });

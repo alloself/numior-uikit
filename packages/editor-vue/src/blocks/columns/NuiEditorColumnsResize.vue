@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { Direction, useMessages } from '@numior/primitives';
 import { useResizeObserver } from '@vueuse/core';
-import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
+import { computed, ref, useTemplateRef, watch } from 'vue';
 import { editorMessages } from '../../editor/editor.messages';
 import type { NuiEditorBlockViewProps } from '../block.types';
 import { setShares, shareOf, splitShares } from './columns';
@@ -149,6 +149,4 @@ useResizeObserver(
 );
 
 watch(() => node, measure, { flush: 'post' });
-
-onMounted(measure);
 </script>

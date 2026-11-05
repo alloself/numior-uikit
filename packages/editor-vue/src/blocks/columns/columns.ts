@@ -4,8 +4,8 @@ import {
   type Command,
   type ElementNode,
   type NodeId,
+  type BlockMaker,
   type Schema,
-  type Transaction,
 } from '@numior/editor-core';
 
 export const COLUMN_TYPES: ColumnTypes = { columns: 'columns', column: 'column', most: 4 };
@@ -17,7 +17,7 @@ const MIN_SHARE = 0.15;
 export const hasColumns = (schema: Schema): boolean =>
   schema.nodes.has(COLUMN_TYPES.columns) && schema.nodes.has(COLUMN_TYPES.column);
 
-const columnOf = (tr: Transaction): ElementNode =>
+const columnOf = (tr: BlockMaker): ElementNode =>
   tr.doc.schema.element(COLUMN_TYPES.column, {
     id: tr.newId(),
     content: [tr.doc.schema.element('paragraph', { id: tr.newId() })],

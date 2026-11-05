@@ -7,6 +7,7 @@ import { GapSide, type Selection } from '../state/selection.types';
 import { SelectionKind, type Command, type Transaction } from '../state/state.types';
 import { isBlockAtom } from './atoms';
 import { attempt } from './attempt';
+import type { BlockMaker } from './commands.types';
 
 export interface GapSpot {
   readonly node: ElementNode;
@@ -136,7 +137,10 @@ export const gapDelete =
     return true;
   };
 
-export const insertAtGap = (tr: Transaction, build: (tr: Transaction) => ElementNode): boolean => {
+export const gapIndexOf = (spot: GapSpot): number =>
+  spot.side === GapSide.Start ? spot.index : spot.index + 1;
+
+export const insertAtGap = (tr: Transaction, build: (make: BlockMaker) => ElementNode): boolean => {
   const spot = gapSpot(tr.doc, tr.selection);
 
   if (spot === undefined) {
