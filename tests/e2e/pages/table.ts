@@ -252,7 +252,20 @@ export class TableSection {
   }
 
   async sortBy(col: number, modifiers: Array<'Shift'> = []): Promise<void> {
+    await this.header(col).hover();
+
+    await expect.poll(() => this.headerSettled(col)).toBe(true);
+
     await this.header(col).locator('.nui-table__text').click({ modifiers });
+  }
+
+  private headerSettled(col: number): Promise<boolean> {
+    return this.header(col).evaluate((header) => {
+      const grip = header.querySelector('.nui-table__grip');
+      const opened = grip === null || grip.getBoundingClientRect().width > 8;
+
+      return opened && header.getAnimations({ subtree: true }).length === 0;
+    });
   }
 
   async dragHeader(col: number, target: number): Promise<void> {
