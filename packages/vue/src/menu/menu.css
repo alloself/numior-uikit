@@ -76,11 +76,11 @@
 .nui-menu-item:hover,
 .nui-menu-item:focus,
 .nui-menu-item--open {
-  background: var(--nui-neutral-soft);
+  background: var(--nui-hover);
 }
 .nui-menu-item--tone-error:hover,
 .nui-menu-item--tone-error:focus {
-  background: var(--nui-error-soft);
+  background: color-mix(in oklab, var(--nui-error) var(--nui-state-hover-tint), transparent);
 }
 .nui-menu-item--disabled,
 .nui-menu-item--disabled:hover,

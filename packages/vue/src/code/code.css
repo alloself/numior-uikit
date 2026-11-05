@@ -206,7 +206,7 @@
     color var(--nui-duration-fast) var(--nui-easing);
 }
 .nui-code__expand:hover {
-  background: var(--nui-surface-muted);
+  background: var(--nui-hover);
   color: var(--nui-text);
 }
 .nui-code__expand:focus-visible {

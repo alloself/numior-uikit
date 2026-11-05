@@ -153,7 +153,7 @@
 }
 .nui-list-item {
   --_min-size: var(--nui-control-height-md);
-  --_hover: var(--nui-neutral-soft);
+  --_hover: var(--nui-hover);
   --_row-weight: 500;
   --_row-description-size: var(--nui-font-size-sm);
 
@@ -235,7 +235,10 @@
 .nui-list-item--current {
   --_row-icon: var(--nui-primary-soft-foreground);
   --_row-weight: 500;
-  --_hover: color-mix(in oklab, var(--nui-primary-soft), var(--nui-primary) 8%);
+  --_hover: light-dark(
+    oklch(from var(--nui-primary-soft) calc(l - var(--nui-state-hover-subtle)) c h),
+    oklch(from var(--nui-primary-soft) calc(l + var(--nui-state-hover-subtle)) c h)
+  );
 
   background: var(--nui-primary-soft);
   color: var(--nui-primary-soft-foreground);
@@ -254,7 +257,10 @@
 .nui-list-item--selected:hover,
 .nui-list-item--selected:focus-visible,
 .nui-list-item--selected.nui-list-item--active {
-  background: color-mix(in oklab, var(--nui-primary-soft), var(--nui-primary) 8%);
+  background: light-dark(
+    oklch(from var(--nui-primary-soft) calc(l - var(--nui-state-hover-subtle)) c h),
+    oklch(from var(--nui-primary-soft) calc(l + var(--nui-state-hover-subtle)) c h)
+  );
 }
 .nui-list--variant-floating .nui-list-item--selected {
   --_row-icon: var(--nui-text-muted);

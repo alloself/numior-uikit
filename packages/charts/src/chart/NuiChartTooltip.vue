@@ -2,7 +2,7 @@
   <div
     class="nui-chart__tooltip"
     :class="[`nui-chart__tooltip--side-${side}`, { 'nui-chart__tooltip--shown': shown }]"
-    :style="{ left: `${x}px`, top: `${y}px`, '--_reach': `${reach}px` }"
+    :style="{ '--_x': `${x}px`, '--_y': `${y}px`, '--_reach': `${reach}px` }"
     aria-hidden="true"
   >
     <slot>

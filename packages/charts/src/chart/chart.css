@@ -200,9 +200,13 @@
 
 .nui-chart__tooltip {
   --_shift: calc(var(--_reach) + 0.5rem);
+  --_dx: var(--_shift);
+  --_dy: -50%;
 
   box-sizing: border-box;
   position: absolute;
+  top: 0;
+  left: 0;
   z-index: 1;
   min-inline-size: 8rem;
   max-inline-size: min(16rem, 50%);
@@ -215,27 +219,24 @@
   font-size: var(--nui-font-size-sm);
   pointer-events: none;
   opacity: 0;
+  translate: calc(var(--_x) + var(--_dx)) calc(var(--_y) + var(--_dy));
   transition:
     opacity var(--nui-duration-fast) var(--nui-easing),
-    left var(--nui-duration-normal) var(--nui-easing),
-    top var(--nui-duration-normal) var(--nui-easing),
     translate var(--nui-duration-normal) var(--nui-easing);
 }
 
-.nui-chart__tooltip--side-end {
-  translate: var(--_shift) -50%;
-}
-
 .nui-chart__tooltip--side-start {
-  translate: calc(-100% - var(--_shift)) -50%;
+  --_dx: calc(-100% - var(--_shift));
 }
 
 .nui-chart__tooltip--side-above {
-  translate: -50% calc(-100% - var(--_shift));
+  --_dx: -50%;
+  --_dy: calc(-100% - var(--_shift));
 }
 
 .nui-chart__tooltip--side-below {
-  translate: -50% var(--_shift);
+  --_dx: -50%;
+  --_dy: var(--_shift);
 }
 
 .nui-chart__tooltip--shown {

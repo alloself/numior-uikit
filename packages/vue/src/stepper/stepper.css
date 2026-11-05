@@ -25,7 +25,7 @@
   --_ink: var(--nui-text-muted);
   --_label: var(--nui-text-muted);
   --_halo: transparent;
-  --_connector-fill: 0%;
+  --_connector-fill: 0;
   --_row-weight: 400;
 
   box-sizing: border-box;
@@ -43,7 +43,7 @@
   --_fill: var(--nui-primary-soft);
   --_ink: var(--nui-primary-soft-foreground);
   --_label: var(--nui-text);
-  --_connector-fill: 100%;
+  --_connector-fill: 1;
 }
 .nui-stepper__item--current {
   --_ring: var(--nui-primary);
@@ -87,7 +87,7 @@
   cursor: pointer;
 }
 .nui-stepper__item--clickable .nui-stepper__step:hover {
-  background: var(--nui-neutral-soft);
+  background: var(--nui-hover);
 }
 .nui-stepper__step:focus-visible {
   outline: var(--nui-focus-ring-width) solid var(--nui-focus);
@@ -141,11 +141,14 @@
 .nui-stepper__connector::after {
   content: '';
   position: absolute;
-  inset-block: 0;
-  inset-inline-start: 0;
-  inline-size: var(--_connector-fill);
+  inset: 0;
   background: var(--nui-primary);
-  transition: inline-size var(--nui-duration-slow) var(--nui-easing);
+  transform-origin: left;
+  scale: var(--_connector-fill) 1;
+  transition: scale var(--nui-duration-slow) var(--nui-easing);
+}
+.nui-stepper__connector:dir(rtl)::after {
+  transform-origin: right;
 }
 .nui-stepper__summary {
   display: none;
@@ -192,11 +195,8 @@
   margin: 0;
 }
 .nui-stepper--orientation-vertical .nui-stepper__connector::after {
-  inset-block: 0 auto;
-  inset-inline: 0;
-  inline-size: auto;
-  block-size: var(--_connector-fill);
-  transition: block-size var(--nui-duration-slow) var(--nui-easing);
+  transform-origin: top;
+  scale: 1 var(--_connector-fill);
 }
 @container (max-width: 32rem) {
   .nui-stepper--orientation-horizontal .nui-row__body {

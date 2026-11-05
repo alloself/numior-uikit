@@ -82,7 +82,7 @@
 }
 .nui-calendar__title-button:hover,
 .nui-calendar__title-button[aria-expanded='true'] {
-  background: var(--nui-neutral-soft);
+  background: var(--nui-hover);
 }
 .nui-calendar__title-button:focus-visible,
 .nui-calendar__day:focus-visible,
@@ -174,7 +174,7 @@
     color var(--nui-duration-fast) var(--nui-easing);
 }
 .nui-calendar__day:hover {
-  background: var(--nui-neutral-soft);
+  background: var(--nui-hover);
 }
 .nui-calendar__day--outside {
   color: var(--nui-text-muted);
@@ -186,7 +186,10 @@
   color: var(--_range-fg);
 }
 .nui-calendar__cell--range-middle .nui-calendar__day:hover {
-  background: color-mix(in oklab, var(--_range-bg), var(--nui-primary) 10%);
+  background: light-dark(
+    oklch(from var(--_range-bg) calc(l - var(--nui-state-hover-subtle)) c h),
+    oklch(from var(--_range-bg) calc(l + var(--nui-state-hover-subtle)) c h)
+  );
 }
 .nui-calendar__day--selected,
 .nui-calendar__day--selected:hover {
@@ -224,7 +227,7 @@
 }
 .nui-calendar__option:hover,
 .nui-calendar__option--active {
-  background: var(--nui-neutral-soft);
+  background: var(--nui-hover);
 }
 .nui-calendar__option--selected,
 .nui-calendar__option--selected:hover {

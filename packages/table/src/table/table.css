@@ -8,7 +8,7 @@
   --_font-size: var(--nui-font-size-sm);
   --_row-bg: var(--nui-surface);
   --_head-bg: var(--nui-surface-muted);
-  --_hover: var(--nui-neutral-soft);
+  --_hover: color-mix(in oklab, var(--nui-text) var(--nui-state-hover-overlay), var(--nui-surface));
   --_stripe: color-mix(in oklab, var(--nui-surface), var(--_head-bg) 55%);
   --_line: var(--nui-border);
   --_foot: 0px;
@@ -549,7 +549,7 @@
   > .nui-table__row:where(
     :not(.nui-table__row--detail, :has(> .nui-table__cell--tall:hover))
   ):hover {
-  --_row-bg: color-mix(in oklab, var(--nui-surface), var(--_hover) 70%);
+  --_row-bg: var(--_hover);
 }
 .nui-table .nui-table__body > .nui-table__row--selected,
 .nui-table .nui-table__body > .nui-table__row--selected:hover {
@@ -944,7 +944,7 @@
   opacity: 1;
 }
 .nui-table__row-grip:hover:not(:disabled) {
-  background: var(--nui-neutral-soft);
+  background: var(--nui-hover);
   color: var(--nui-text);
 }
 .nui-table__row-grip:disabled {
@@ -1224,7 +1224,7 @@
   }
 }
 :is(.nui-table__filter, .nui-table__menu):hover {
-  background: var(--nui-neutral-soft);
+  background: var(--nui-hover);
   color: var(--nui-text);
 }
 .nui-table__filter--active {

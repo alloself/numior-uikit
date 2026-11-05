@@ -55,6 +55,9 @@
   transition: background-color var(--nui-duration-normal) var(--nui-easing);
 }
 .nui-switch__thumb {
+  --_travel: calc(var(--_track-inline) - var(--_thumb) - 2 * var(--_inset));
+  --_shift: 0px;
+
   position: absolute;
   inset-block-start: calc((var(--_track-block) - var(--_thumb)) / 2);
   inset-inline-start: var(--_inset);
@@ -63,15 +66,19 @@
   border-radius: var(--nui-radius-full);
   background: var(--nui-surface);
   box-shadow: var(--nui-shadow-sm);
+  translate: var(--_shift) 0;
   transition:
-    inset-inline-start var(--nui-duration-normal) var(--nui-easing),
+    translate var(--nui-duration-normal) var(--nui-easing),
     scale var(--nui-duration-fast) var(--nui-easing);
 }
 .nui-switch__control:checked + .nui-switch__track {
   background: var(--nui-primary);
 }
 .nui-switch__control:checked + .nui-switch__track .nui-switch__thumb {
-  inset-inline-start: calc(var(--_track-inline) - var(--_thumb) - var(--_inset));
+  --_shift: var(--_travel);
+}
+.nui-switch__control:checked + .nui-switch__track .nui-switch__thumb:dir(rtl) {
+  --_shift: calc(-1 * var(--_travel));
 }
 .nui-switch__control:active:not(:disabled) + .nui-switch__track .nui-switch__thumb {
   scale: 1.15 0.9;

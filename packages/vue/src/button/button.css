@@ -6,13 +6,15 @@
   --_hover: oklch(from var(--_tone) calc(l - var(--nui-state-hover)) c h);
   --_pressed: oklch(from var(--_tone) calc(l - var(--nui-state-pressed)) c h);
   --_soft-hover: light-dark(
-    oklch(from var(--_tone-soft) calc(l - var(--nui-state-hover)) c h),
-    oklch(from var(--_tone-soft) calc(l + var(--nui-state-hover)) c h)
+    oklch(from var(--_tone-soft) calc(l - var(--nui-state-hover-subtle)) c h),
+    oklch(from var(--_tone-soft) calc(l + var(--nui-state-hover-subtle)) c h)
   );
   --_soft-pressed: light-dark(
-    oklch(from var(--_tone-soft) calc(l - var(--nui-state-pressed)) c h),
-    oklch(from var(--_tone-soft) calc(l + var(--nui-state-pressed)) c h)
+    oklch(from var(--_tone-soft) calc(l - var(--nui-state-pressed-subtle)) c h),
+    oklch(from var(--_tone-soft) calc(l + var(--nui-state-pressed-subtle)) c h)
   );
+  --_tint-hover: color-mix(in oklab, var(--_tone) var(--nui-state-hover-tint), transparent);
+  --_tint-pressed: color-mix(in oklab, var(--_tone) var(--nui-state-pressed-tint), transparent);
   --_height: var(--nui-control-height-md);
   --_padding: var(--nui-control-padding-md);
   --_font-size: var(--nui-control-font-size-md);
@@ -36,9 +38,9 @@
   text-decoration: none;
   cursor: pointer;
   transition:
-    background-color var(--nui-duration-normal) var(--nui-easing-gentle),
-    border-color var(--nui-duration-normal) var(--nui-easing-gentle),
-    color var(--nui-duration-normal) var(--nui-easing-gentle),
+    background-color var(--nui-duration-fast) var(--nui-easing),
+    border-color var(--nui-duration-fast) var(--nui-easing),
+    color var(--nui-duration-fast) var(--nui-easing),
     opacity var(--nui-duration-fast) var(--nui-easing);
 }
 
@@ -154,11 +156,11 @@
 }
 .nui-button--variant-outline:hover:not(:disabled, .nui-button--disabled, .nui-button--loading),
 .nui-button--variant-ghost:hover:not(:disabled, .nui-button--disabled, .nui-button--loading) {
-  background: var(--_tone-soft);
+  background: var(--_tint-hover);
 }
 .nui-button--variant-outline:active:not(:disabled, .nui-button--disabled, .nui-button--loading),
 .nui-button--variant-ghost:active:not(:disabled, .nui-button--disabled, .nui-button--loading) {
-  background: var(--_soft-hover);
+  background: var(--_tint-pressed);
 }
 .nui-button--variant-plain[aria-expanded='true'],
 .nui-button--variant-plain:hover:not(:disabled, .nui-button--disabled, .nui-button--loading) {

@@ -42,6 +42,14 @@
   --nui-disabled-opacity: 0.5;
   --nui-state-hover: 0.06;
   --nui-state-pressed: 0.12;
+  --nui-state-hover-subtle: 0.035;
+  --nui-state-pressed-subtle: 0.07;
+  --nui-state-hover-overlay: 5%;
+  --nui-state-pressed-overlay: 10%;
+  --nui-state-hover-tint: 6%;
+  --nui-state-pressed-tint: 12%;
+  --nui-hover: color-mix(in oklab, var(--nui-text) var(--nui-state-hover-overlay), transparent);
+  --nui-pressed: color-mix(in oklab, var(--nui-text) var(--nui-state-pressed-overlay), transparent);
 
   --nui-radius-base: 0.5rem;
   --nui-radius-sm: calc(var(--nui-radius-base) / 2);
@@ -115,7 +123,6 @@
   --nui-duration-normal: 200ms;
   --nui-duration-slow: 320ms;
   --nui-easing: cubic-bezier(0.2, 0, 0, 1);
-  --nui-easing-gentle: ease-out;
 
   --nui-z-dropdown: 1000;
   --nui-z-overlay: 1100;

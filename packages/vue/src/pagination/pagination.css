@@ -72,7 +72,7 @@
     color var(--nui-duration-fast) var(--nui-easing);
 }
 .nui-pagination__control:hover:not(:disabled):not(.nui-link--disabled) {
-  background: var(--nui-neutral-soft);
+  background: var(--nui-hover);
   color: var(--_tone);
 }
 .nui-pagination__control--current {

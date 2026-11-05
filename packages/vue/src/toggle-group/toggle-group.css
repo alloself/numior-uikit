@@ -37,12 +37,12 @@
 .nui-toggle-group__item {
   --_rest: var(--nui-surface);
   --_hover: light-dark(
-    oklch(from var(--_rest) calc(l - var(--nui-state-hover)) c h),
-    oklch(from var(--_rest) calc(l + var(--nui-state-hover)) c h)
+    oklch(from var(--_rest) calc(l - var(--nui-state-hover-subtle)) c h),
+    oklch(from var(--_rest) calc(l + var(--nui-state-hover-subtle)) c h)
   );
   --_pressed: light-dark(
-    oklch(from var(--_rest) calc(l - var(--nui-state-pressed)) c h),
-    oklch(from var(--_rest) calc(l + var(--nui-state-pressed)) c h)
+    oklch(from var(--_rest) calc(l - var(--nui-state-pressed-subtle)) c h),
+    oklch(from var(--_rest) calc(l + var(--nui-state-pressed-subtle)) c h)
   );
 
   box-sizing: border-box;
@@ -65,9 +65,9 @@
   white-space: nowrap;
   cursor: pointer;
   transition:
-    background-color var(--nui-duration-normal) var(--nui-easing-gentle),
-    border-color var(--nui-duration-normal) var(--nui-easing-gentle),
-    color var(--nui-duration-normal) var(--nui-easing-gentle),
+    background-color var(--nui-duration-fast) var(--nui-easing),
+    border-color var(--nui-duration-fast) var(--nui-easing),
+    color var(--nui-duration-fast) var(--nui-easing),
     box-shadow var(--nui-duration-fast) var(--nui-easing);
 }
 .nui-toggle-group--orientation-horizontal .nui-toggle-group__item ~ .nui-toggle-group__item {
