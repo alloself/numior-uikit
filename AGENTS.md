@@ -22,6 +22,9 @@ that its features are implemented. Component and test conventions live in the sk
 - No `as` or `!` type assertions anywhere (tests and configs included); `as const` only.
 - CSS is BEM (`nui-block`, `nui-block__part`, `nui-block--key-value`, `nui-block--state`)
   with modifiers setting private custom properties; no `data-*` for variants or states.
+- Never restyle a component of another package from outside: no selector whose subject is its
+  block, part or modifier, no styled own class on its tag; use props, own wrappers or a kit API
+  (`pnpm check:styles`).
 - Every state change moves through the motion tokens; icons resolve through the alias
   registry and load on demand; a loading button keeps its width and focus.
 - No comments in source files; explanations go to docs and Archcore.
