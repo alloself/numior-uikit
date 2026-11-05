@@ -93,11 +93,13 @@ export const checkIdentity = (context: CheckContext, id: string): void => {
 export const elementTypeOf = (context: CheckContext, type: string): NodeType | undefined =>
   type === NodeName.Text ? undefined : context.schema.nodes.get(type);
 
-export const checkOwn = (
-  context: CheckContext,
-  node: ElementNode,
-  type: NodeType | undefined,
-): void => {
+const checkContent = (context: CheckContext, node: ElementNode, type: NodeType): void => {
+  if (type.content.matchContent(node.content)?.validEnd !== true) {
+    context.issues.push({ kind: 'content', path: [...context.path], type: node.type });
+  }
+};
+
+const checkOwn = (context: CheckContext, node: ElementNode, type: NodeType | undefined): void => {
   if (type === undefined) {
     context.issues.push({ kind: 'type', path: [...context.path], type: node.type });
     return;
@@ -109,9 +111,24 @@ export const checkOwn = (
   if (node.leaf !== type.leaf || node.size !== expected || (type.leaf && node.content.length > 0)) {
     context.issues.push({ kind: 'size', path: [...context.path] });
   }
-  if (type.content.matchContent(node.content)?.validEnd !== true) {
-    context.issues.push({ kind: 'content', path: [...context.path], type: node.type });
+  checkContent(context, node, type);
+};
+
+export const checkBuilt = (
+  context: CheckContext,
+  node: ElementNode,
+  type: NodeType | undefined,
+): void => {
+  if (type === undefined) {
+    context.issues.push({ kind: 'type', path: [...context.path], type: node.type });
+    return;
   }
+  checkAttrs(context, context.path, type.attrs, node.attrs);
+
+  if (type.leaf && node.content.length > 0) {
+    context.issues.push({ kind: 'size', path: [...context.path] });
+  }
+  checkContent(context, node, type);
 };
 
 export const checkTop = (context: CheckContext, root: ElementNode): void => {

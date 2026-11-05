@@ -12,11 +12,12 @@
         },
       ]"
       ref="frame"
-      @focusin="overlays.onFocusin"
+      @focusin="onFrameFocusin"
       @focusout="overlays.onFocusout"
       @pointerdown="overlays.onPointerdown"
-      @pointermove="handles.onPointermove"
+      @pointermove="onFramePointermove"
       @pointerleave="handles.onPointerleave"
+      @dragenter="wake"
     >
       <NuiEditorToolbar
         v-if="toolbarShown"
@@ -54,7 +55,7 @@
       />
       <span ref="anchor" class="nui-editor__anchor" aria-hidden="true" />
       <NuiEditorBlockHandle
-        v-if="handlesShown && ready"
+        v-if="handlesShown && overlaid"
         ref="handle"
         v-model:open="handles.menuOpen.value"
         :state="current"
@@ -75,7 +76,7 @@
         :focus="editor.focus"
       />
       <NuiEditorPasteMenu
-        v-if="ready"
+        v-if="overlaid"
         :pasted="links.pasted.value"
         :anchor="anchorElement"
         :provider="pastedProvider"
@@ -84,7 +85,7 @@
         @dismiss="onPasteDismiss"
       />
       <NuiEditorUploads
-        v-if="ready"
+        v-if="overlaid"
         v-model:open="mediaOpen"
         :uploads="uploads"
         :links="links"
@@ -111,7 +112,7 @@
         aria-hidden="true"
       />
       <NuiEditorBubble
-        v-if="bubbleToolbar && ready"
+        v-if="bubbleToolbar && overlaid"
         ref="bubble"
         :state="current"
         :options="toolOptions"
@@ -123,7 +124,7 @@
         @leave="editor.focus()"
       />
       <NuiEditorSuggestMenu
-        v-if="ready"
+        v-if="overlaid"
         :id="slashId"
         class="nui-editor-slash"
         :entries="slashEntries"
@@ -156,7 +157,7 @@
         </template>
       </NuiEditorSuggestMenu>
       <NuiEditorLinkPanel
-        v-if="hasLinks && ready"
+        v-if="hasLinks && overlaid"
         v-model:open="overlays.linkOpen.value"
         :anchor="anchorElement"
         :href="overlays.linkHref.value"
@@ -434,7 +435,7 @@ const inserts = computed((): readonly SlashItem[] => [
 
 const slash = useSlash({
   state: () => current.value,
-  enabled: () => editable.value && ready.value && overlays.focused.value,
+  enabled: () => editable.value && overlaid.value && overlays.focused.value,
   run: (command) => run(command),
   items: () => inserts.value,
 });
@@ -456,7 +457,7 @@ const mentionsId = useId();
 const mention = useMentions({
   state: () => current.value,
   enabled: () =>
-    editable.value && ready.value && overlays.focused.value && schema.nodes.has('mention'),
+    editable.value && overlaid.value && overlays.focused.value && schema.nodes.has('mention'),
   run: (command) => run(command),
   search: () => mentions,
 });
@@ -469,7 +470,7 @@ const mentionEntries = computed((): NuiListEntry<string>[] =>
   })),
 );
 
-const mentionsShown = computed(() => ready.value && mentions !== undefined);
+const mentionsShown = computed(() => overlaid.value && mentions !== undefined);
 
 const mentionsEmpty = computed(() =>
   mention.failed.value ? blockTexts.value.mentionsFailed : blockTexts.value.mentionsEmpty,
@@ -584,6 +585,7 @@ const initial = sync.initial;
 
 const current = shallowRef<EditorState>(createState({ doc: initial, plugins }));
 const ready = ref(false);
+const overlaid = ref(false);
 const onServer = inject(ssrContextKey, null) !== null;
 const empty = ref(isEmptyDoc(initial));
 
@@ -768,11 +770,25 @@ const handles = useBlockHandle({
   ghost: ghostElement,
   view: () => view,
   state: () => current.value,
-  enabled: () => handlesShown.value && ready.value,
+  enabled: () => handlesShown.value && overlaid.value,
   focused: () => overlays.focused.value && writing.value,
   run: (command) => run(command),
   placement: (node) => handlePlacement(blocks, node),
 });
+
+const wake = (): void => {
+  overlaid.value ||= ready.value;
+};
+
+const onFrameFocusin = (): void => {
+  wake();
+  overlays.onFocusin();
+};
+
+const onFramePointermove = (event: PointerEvent): void => {
+  wake();
+  handles.onPointermove(event);
+};
 
 const blockMenu = (node: ElementNode): NuiMenuEntry[] =>
   blocks.reduce<NuiMenuEntry[]>((found, block) => {

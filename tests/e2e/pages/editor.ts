@@ -199,7 +199,7 @@ export class EditorSection {
   }
 
   grip(): Locator {
-    return this.root.locator('.nui-editor-handle__grip');
+    return this.root.locator('.nui-editor-handle--shown .nui-editor-handle__grip');
   }
 
   block(index: number): Locator {
@@ -215,6 +215,8 @@ export class EditorSection {
   }
 
   async hoverStart(block: Locator): Promise<void> {
+    await block.scrollIntoViewIfNeeded();
+
     const box = await boxOf(block);
     const rtl = await block.evaluate((element) => getComputedStyle(element).direction === 'rtl');
 

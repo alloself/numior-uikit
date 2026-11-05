@@ -9,8 +9,8 @@ import {
   type TextNode,
 } from '../model/node.types';
 import {
+  checkBuilt,
   checkIdentity,
-  checkOwn,
   checkResult,
   checkText,
   checkTop,
@@ -91,9 +91,6 @@ export const toJSON = (doc: Doc): DocJSON => ({
   root: elementToJSON(doc.root),
 });
 
-const isAttrFields = (value: unknown): value is Fields =>
-  isFields(value) && Object.values(value).every(isAttrValue);
-
 const shapeIssue = (reader: Reader, field: string): void => {
   reader.issues.push({ kind: 'shape', path: [...reader.check.path], field });
 };
@@ -101,23 +98,26 @@ const shapeIssue = (reader: Reader, field: string): void => {
 const readAttrs = (reader: Reader, value: unknown, specs: AttrSpecs): Attrs => {
   const attrs: Record<string, AttrValue> = {};
 
-  if (value !== undefined && value !== null && !isAttrFields(value)) {
+  if (value !== undefined && value !== null && !isFields(value)) {
     shapeIssue(reader, 'attrs');
-    return attrs;
+    return {};
   }
   for (const [key, spec] of specEntries(specs)) {
     if (spec.default !== undefined) {
       attrs[key] = spec.default;
     }
   }
-  if (isFields(value)) {
-    for (const key of Object.keys(value)) {
-      const entry = value[key];
+  if (!isFields(value)) {
+    return attrs;
+  }
+  for (const key of Object.keys(value)) {
+    const entry = value[key];
 
-      if (isAttrValue(entry)) {
-        attrs[key] = entry;
-      }
+    if (!isAttrValue(entry)) {
+      shapeIssue(reader, 'attrs');
+      return {};
     }
+    attrs[key] = entry;
   }
   return attrs;
 };
@@ -214,7 +214,7 @@ const checkOwnAt = (
 ): void => {
   const before = context.issues.length;
 
-  checkOwn(context, node, type);
+  checkBuilt(context, node, type);
 
   if (context.issues.length > before && before > mark) {
     context.issues.splice(mark, 0, ...context.issues.splice(before));
@@ -224,8 +224,8 @@ const checkOwnAt = (
 const readElement = (reader: Reader, value: Fields, checking: boolean): ElementNode => {
   const type = typeof value.type === 'string' ? value.type : '';
   const id = typeof value.id === 'string' ? value.id : '';
-  const nodeType = reader.schema.nodes.get(type);
-  const checked = checking ? elementTypeOf(reader.check, type) : undefined;
+  const nodeType = elementTypeOf(reader.check, type);
+  const checked = checking ? nodeType : undefined;
 
   if (checking) {
     checkIdentity(reader.check, id);

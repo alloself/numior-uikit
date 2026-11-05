@@ -134,6 +134,24 @@ describe('NuiEditor', () => {
     expect(editor.emitted('blur')).toBe(1);
   });
 
+  it('mounts its closed overlays on the first focus or pointer move, not with the document', async () => {
+    const focused = mounted({ document: note('Text') });
+
+    expect(focused.overlaid).toBe(false);
+
+    await focused.focusIn();
+
+    expect(focused.overlaid).toBe(true);
+
+    focused.destroy();
+
+    const hovered = mounted({ document: note('Text') });
+
+    await hovered.hoverGap();
+
+    expect(hovered.overlaid).toBe(true);
+  });
+
   it('renders the document on the server and hands it to the editor after hydration', async () => {
     const html = await EditorDriver.ssr({ document: note('Server') });
 

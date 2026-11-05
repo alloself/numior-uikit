@@ -253,6 +253,15 @@ export class EditorDriver {
     this.api.focus();
   }
 
+  async focusIn(): Promise<void> {
+    this.api.focus();
+    await nextTick();
+  }
+
+  get overlaid(): boolean {
+    return this.root.querySelector('.nui-editor-slash') !== null;
+  }
+
   run(command: Command): boolean {
     return this.api.run(command);
   }

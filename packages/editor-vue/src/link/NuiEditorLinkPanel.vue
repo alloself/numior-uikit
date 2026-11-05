@@ -1,6 +1,7 @@
 <template>
   <NuiPopover
     v-model:open="open"
+    lazy
     class="nui-editor-link"
     :anchor="anchor"
     placement="bottom-start"
