@@ -1,6 +1,7 @@
 import { expect, test } from './fixtures';
 import { expectRgb, rgbOf, tokenRgbIn } from './helpers/color';
 import { boxOf } from './helpers/geometry';
+import type { Theme } from './pages/playground';
 
 test('standalone button activates by keyboard and loading blocks activation', async ({
   playground,
@@ -123,7 +124,7 @@ test('light and dark playground have no automatically detectable WCAG AA violati
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
 
-  const themes = ['light', 'dark'] as const;
+  const themes: Theme[] = ['light', 'dark'];
 
   for (const theme of themes) {
     await playground.setTheme(theme);
