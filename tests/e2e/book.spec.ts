@@ -110,7 +110,7 @@ test.describe('book', () => {
 
     await expect(book.clipFrame).toBeVisible();
 
-    await book.cell('8', 7).click();
+    await book.goTo('H8');
     await book.paste(await book.lastCopy());
 
     await expect(book.formula).toHaveValue('=СУММ(H3:H7)');
@@ -120,11 +120,11 @@ test.describe('book', () => {
 
     await expect(book.clipFrame).toHaveCount(0);
 
-    await book.cell('10', 0).click();
+    await book.goTo('A10');
     await page.keyboard.press('Control+x');
     await expect.poll(() => book.lastCopy()).toContain('Цифры условные');
 
-    await book.cell('12', 0).click();
+    await book.goTo('A12');
     await book.paste(await book.lastCopy());
 
     await expect(book.cell('12', 0)).toContainText('Цифры условные');
