@@ -225,6 +225,18 @@ label:has(> input[type='checkbox']) {
   justify-content: flex-end;
   gap: var(--nui-space-2);
 }
+.formulas-progress {
+  box-sizing: border-box;
+  flex: 1;
+  min-inline-size: 8rem;
+  max-inline-size: 16rem;
+}
+.formulas-status {
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
 .output {
   margin-block: var(--nui-space-4) 0;
   padding: var(--nui-space-3);

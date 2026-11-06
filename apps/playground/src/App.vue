@@ -115,6 +115,7 @@
     <BookSection />
     <TableCellsSection />
     <TableFlowSection />
+    <FormulaSection />
     <EditorSection />
 
     <section class="panel" aria-labelledby="tokens-title">
@@ -182,6 +183,7 @@ import TableSection from './TableSection.vue';
 import TableSheetSection from './TableSheetSection.vue';
 import TableCellsSection from './TableCellsSection.vue';
 import TableFlowSection from './TableFlowSection.vue';
+import FormulaSection from './FormulaSection.vue';
 import EditorSection from './EditorSection.vue';
 
 const density = ref('comfortable');

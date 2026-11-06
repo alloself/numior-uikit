@@ -196,6 +196,7 @@ export class PlaygroundPage {
   readonly tableDetail: TableDetailSection;
   readonly tableSheet: TableSheetSection;
   readonly tableCells: TableCellsSection;
+  readonly formulas: BookSection;
   readonly tableFlow: TableFlowSection;
   readonly editor: EditorSection;
 
@@ -245,6 +246,7 @@ export class PlaygroundPage {
     this.tableDetail = new TableDetailSection(page);
     this.tableSheet = new TableSheetSection(page);
     this.tableCells = new TableCellsSection(page);
+    this.formulas = new BookSection(page, 'formulas');
     this.tableFlow = new TableFlowSection(page);
     this.editor = new EditorSection(page);
   }

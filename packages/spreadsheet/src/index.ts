@@ -4,6 +4,7 @@ export { spreadsheetMessages, type NuiSpreadsheetMessages } from './sheet/spread
 export type { NuiSpreadsheetPackageMessages } from './messages.types';
 export type {
   NuiSpreadsheetChange,
+  NuiSpreadsheetExposed,
   NuiSpreadsheetProps,
   SheetCells,
   SheetCellsOptions,

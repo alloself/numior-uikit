@@ -14,6 +14,10 @@ export class BookSection {
   readonly sheetSelect: Locator;
   readonly open: Locator;
   readonly changes: Locator;
+  readonly status: Locator;
+  readonly load: Locator;
+  readonly recalc: Locator;
+  readonly locale: Locator;
   readonly editor: Locator;
   readonly nameBox: Locator;
   readonly formula: Locator;
@@ -27,12 +31,19 @@ export class BookSection {
   readonly summary: Locator;
   readonly currentArgument: Locator;
 
-  constructor(readonly page: Page) {
-    this.section = page.locator('section[aria-labelledby="book-title"]');
-    this.sheet = page.getByTestId('book');
-    this.sheetSelect = page.getByTestId('book-sheet');
-    this.open = page.getByTestId('book-open');
-    this.changes = page.getByTestId('book-changes');
+  constructor(
+    readonly page: Page,
+    id = 'book',
+  ) {
+    this.section = page.locator(`section[aria-labelledby="${id}-title"]`);
+    this.sheet = page.getByTestId(id);
+    this.sheetSelect = page.getByTestId(`${id}-sheet`);
+    this.open = page.getByTestId(`${id}-open`);
+    this.changes = page.getByTestId(`${id}-changes`);
+    this.status = page.getByTestId(`${id}-status`);
+    this.load = page.getByTestId(`${id}-load`);
+    this.recalc = page.getByTestId(`${id}-recalc`);
+    this.locale = page.getByTestId(`${id}-locale`);
     this.editor = this.sheet.locator('.nui-table__editor input');
     this.nameBox = this.sheet.getByRole('textbox', { name: 'Поле имени' });
     this.formula = this.sheet.getByRole('textbox', { name: 'Строка формул' });
@@ -134,6 +145,13 @@ export class BookSection {
     await this.page.keyboard.press('Enter');
   }
 
+  async enterAt(address: string, text: string): Promise<void> {
+    await this.goTo(address);
+    await this.page.keyboard.press('F2');
+    await this.editor.fill(text);
+    await this.page.keyboard.press('Enter');
+  }
+
   async enterInFormulaBar(rowLabel: string, column: number, text: string): Promise<void> {
     await this.cell(rowLabel, column).click();
     await this.formula.click();
@@ -149,6 +167,15 @@ export class BookSection {
   async chooseSheet(name: string): Promise<void> {
     await this.sheetSelect.click();
     await this.page.getByRole('option', { name, exact: true }).click();
+  }
+
+  async clear(rowLabel: string, column: number): Promise<void> {
+    await this.cell(rowLabel, column).click();
+    await this.page.keyboard.press('Delete');
+  }
+
+  async switchLocale(name: string): Promise<void> {
+    await this.locale.getByRole('radio', { name, exact: true }).click();
   }
 
   async openFile(file: XlsxFile): Promise<void> {

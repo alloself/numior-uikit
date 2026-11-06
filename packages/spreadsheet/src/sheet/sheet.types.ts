@@ -147,6 +147,10 @@ export interface NuiSpreadsheetProps {
   formulaBar?: boolean | undefined;
 }
 
+export interface NuiSpreadsheetExposed {
+  refresh(): void;
+}
+
 export interface NuiSpreadsheetChange {
   readonly steps: readonly WorkbookStep[];
 }

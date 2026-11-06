@@ -31,6 +31,7 @@ interface PageObjects {
   readonly tableDetail: PlaygroundPage['tableDetail'];
   readonly tableSheet: PlaygroundPage['tableSheet'];
   readonly tableCells: PlaygroundPage['tableCells'];
+  readonly formulas: PlaygroundPage['formulas'];
   readonly tableFlow: PlaygroundPage['tableFlow'];
   readonly editor: PlaygroundPage['editor'];
 }
@@ -116,6 +117,9 @@ export const test = base.extend<PageObjects>({
   },
   tableCells: async ({ playground }, use) => {
     await use(playground.tableCells);
+  },
+  formulas: async ({ playground }, use) => {
+    await use(playground.formulas);
   },
   tableFlow: async ({ playground }, use) => {
     await use(playground.tableFlow);

@@ -150,7 +150,12 @@ import { EN_LOCALE, HelpLanguage, RU_LOCALE, createCalculator, type BookLocale }
 import { defaultRowHeight, sheetCells } from './sheet-cells';
 import NuiSpreadsheetAssist from './NuiSpreadsheetAssist.vue';
 import NuiSpreadsheetReference from './NuiSpreadsheetReference.vue';
-import type { FormulaSegment, NuiSpreadsheetChange, NuiSpreadsheetProps } from './sheet.types';
+import type {
+  FormulaSegment,
+  NuiSpreadsheetChange,
+  NuiSpreadsheetExposed,
+  NuiSpreadsheetProps,
+} from './sheet.types';
 import { spreadsheetMessages } from './spreadsheet.messages';
 import { useFormulaAssist } from './use-formula-assist';
 import { useFormulaBar } from './use-formula-bar';
@@ -297,4 +302,10 @@ const table = computed(() => {
     rowHeight: defaultRowHeight(shown),
   };
 });
+
+const refresh = (): void => {
+  grid.value?.invalidate();
+};
+
+defineExpose<NuiSpreadsheetExposed>({ refresh });
 </script>
