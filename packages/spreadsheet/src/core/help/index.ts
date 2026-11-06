@@ -1,5 +1,6 @@
 export {
   HelpLanguage,
+  SignaturePartKind,
   type FunctionHelp,
   type FunctionHelpCatalog,
   type SignatureInput,

@@ -121,7 +121,7 @@ export const useFormulaAssist = (options: FormulaAssistOptions): FormulaAssist =
 
   const open = computed(() => entries.value.length > 0);
 
-  const hint = computed((): readonly SignaturePart[] => {
+  const called = computed(() => {
     const call =
       formula.value && !open.value
         ? functionCallAt(draftText.value, caret.value, formulas.value)
@@ -132,15 +132,30 @@ export const useFormulaAssist = (options: FormulaAssistOptions): FormulaAssist =
     const entry = canonical === undefined ? undefined : help.value?.[canonical];
 
     return call === undefined || spec === undefined || entry === undefined
-      ? []
-      : signatureOf({
-          name: localFunction(spec.name, formulas.value),
-          min: spec.min,
-          max: spec.max,
-          help: entry,
-          argument: call.argument,
-          separator: formulas.value.argument,
-        });
+      ? undefined
+      : { call, spec, entry };
+  });
+
+  const summary = computed(() => called.value?.entry.summary ?? '');
+
+  const typedLength = computed(() => prefix.value?.text.length ?? 0);
+
+  const hint = computed((): readonly SignaturePart[] => {
+    const found = called.value;
+
+    if (found === undefined) {
+      return [];
+    }
+    const { call, spec, entry } = found;
+
+    return signatureOf({
+      name: localFunction(spec.name, formulas.value),
+      min: spec.min,
+      max: spec.max,
+      help: entry,
+      argument: call.argument,
+      separator: formulas.value.argument,
+    });
   });
 
   const field = (): HTMLInputElement | HTMLTextAreaElement | undefined =>
@@ -275,6 +290,8 @@ export const useFormulaAssist = (options: FormulaAssistOptions): FormulaAssist =
     active,
     open,
     hint,
+    summary,
+    typed: typedLength,
     anchor,
     syncCaret,
     onKeydown,

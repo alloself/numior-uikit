@@ -312,6 +312,31 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.changes).toEqual([]);
   });
 
+  it('frames the ranges of a selected formula cell and gives them grips only while it is edited', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.enter(3, 1, '=C2*2+A1:A2');
+    await sheet.focus(3, 1);
+
+    expect(sheet.referenceFrames).toEqual(['1', '2']);
+    expect(sheet.paintedReferences).toEqual(['C2 1', 'A1:A2 2']);
+    expect(sheet.frameGrips).toBe(0);
+
+    await sheet.press('F2');
+
+    expect(sheet.frameGrips).toBe(16);
+
+    await sheet.press('Escape');
+
+    expect(sheet.referenceFrames).toEqual(['1', '2']);
+    expect(sheet.frameGrips).toBe(0);
+
+    await sheet.focus(1, 0);
+
+    expect(sheet.referenceFrames).toEqual([]);
+    expect(sheet.paintedReferences).toEqual([]);
+  });
+
   it('inserts a picked reference at the caret of the formula bar and keeps plain text unpainted', async () => {
     const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
 
@@ -378,6 +403,7 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.editorText).toBe('=SUM(');
     expect(sheet.functions).toEqual([]);
     expect(sheet.hint).toBe('SUM(<number1>, [number2], …)');
+    expect(sheet.hintSummary).toBe('Adds numbers and ranges.');
     expect(sheet.hinted).toBe(true);
 
     await sheet.type('=SUM(A1,ro');

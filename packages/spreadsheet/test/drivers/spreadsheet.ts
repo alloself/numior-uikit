@@ -196,6 +196,10 @@ export class SpreadsheetDriver {
       .map((frame) => toneOf(frame.classes(), 'nui-spreadsheet__ref--tone-'));
   }
 
+  get frameGrips(): number {
+    return this.wrapper.findAll('.nui-spreadsheet__ref .nui-spreadsheet__grip').length;
+  }
+
   get paintedReferences(): string[] {
     return this.wrapper
       .findAll('.nui-spreadsheet__token')
@@ -271,13 +275,17 @@ export class SpreadsheetDriver {
 
   get hint(): string {
     return this.wrapper
-      .findAll('.nui-spreadsheet__hint span')
+      .findAll('.nui-spreadsheet__signature span')
       .map((part) =>
         part.classes().includes('nui-spreadsheet__hint-part--current')
           ? `<${part.element.textContent ?? ''}>`
           : (part.element.textContent ?? ''),
       )
       .join('');
+  }
+
+  get hintSummary(): string {
+    return this.wrapper.find('.nui-spreadsheet__summary').text();
   }
 
   get hinted(): boolean {

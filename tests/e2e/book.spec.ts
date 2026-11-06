@@ -172,7 +172,8 @@ test.describe('book', () => {
 
     await expect(book.editor).toHaveValue('=СУММ(');
     await expect(book.functions).toBeHidden();
-    await expect(book.hint).toHaveText('СУММ(число1; [число2]; …)');
+    await expect(book.signature).toHaveText('СУММ(число1; [число2]; …)');
+    await expect(book.summary).toHaveText('Суммирует числа и диапазоны.');
     await expect(book.currentArgument).toHaveText('число1');
 
     await page.keyboard.type('B3:B7;');
@@ -187,7 +188,7 @@ test.describe('book', () => {
     await expect(book.cell('9', 1)).toHaveText('85');
   });
 
-  test('opens an existing formula with its frames and uncut text from the cell, a double click and the bar', async ({
+  test('frames the ranges of a selected formula and lets them be moved once it is edited', async ({
     playground,
     book,
     page,
@@ -198,29 +199,41 @@ test.describe('book', () => {
     await book.cell('8', 1).click();
 
     await expect(book.formula).toHaveValue('=СУММ(B3:B7)');
-    await expect(book.referenceFrames).toHaveCount(0);
+    await expect(book.referenceFrames).toHaveCount(1);
+    await expect(book.frameGrips).toHaveCount(0);
+    await expect(book.paintedReferences).toHaveText(['B3:B7']);
 
+    await book.cell('8', 2).click();
+
+    await expect(book.formula).toHaveValue('=СУММ(C3:C7)');
+    await expect(book.referenceFrames).toHaveCount(1);
+
+    await book.cell('8', 1).click();
     await page.keyboard.press('F2');
 
     await expect(book.editor).toHaveValue('=СУММ(B3:B7)');
     await expect(book.referenceFrames).toHaveCount(1);
-    await expect(book.paintedReferences).toHaveText(['B3:B7']);
+    await expect(book.frameGrips).toHaveCount(8);
     expect(await book.editorCutsTextShort()).toBe(false);
 
     await page.keyboard.press('Escape');
+
+    await expect(book.frameGrips).toHaveCount(0);
+
     await book.cell('8', 1).dblclick();
 
     await expect(book.editor).toHaveValue('=СУММ(B3:B7)');
-    await expect(book.referenceFrames).toHaveCount(1);
+    await expect(book.frameGrips).toHaveCount(8);
     expect(await book.editorCutsTextShort()).toBe(false);
 
     await page.keyboard.press('Escape');
     await book.formula.click();
 
-    await expect(book.referenceFrames).toHaveCount(1);
+    await expect(book.frameGrips).toHaveCount(8);
     await expect(book.paintedReferences).toHaveText(['B3:B7']);
 
     await page.keyboard.press('Escape');
+    await book.cell('3', 0).click();
 
     await expect(book.referenceFrames).toHaveCount(0);
     await expect(book.changes).toHaveText('Правок: 0');

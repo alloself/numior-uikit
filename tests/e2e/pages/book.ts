@@ -19,8 +19,11 @@ export class BookSection {
   readonly expand: Locator;
   readonly referenceFrames: Locator;
   readonly paintedReferences: Locator;
+  readonly frameGrips: Locator;
   readonly functions: Locator;
   readonly hint: Locator;
+  readonly signature: Locator;
+  readonly summary: Locator;
   readonly currentArgument: Locator;
 
   constructor(readonly page: Page) {
@@ -35,8 +38,11 @@ export class BookSection {
     this.expand = this.sheet.getByRole('button', { name: 'Развернуть строку формул' });
     this.referenceFrames = this.sheet.locator('.nui-spreadsheet__ref');
     this.paintedReferences = this.sheet.locator('.nui-spreadsheet__token');
+    this.frameGrips = this.referenceFrames.locator('.nui-spreadsheet__grip');
     this.functions = this.sheet.getByRole('listbox', { name: 'Функции' });
     this.hint = this.sheet.getByRole('tooltip');
+    this.signature = this.hint.locator('.nui-spreadsheet__signature');
+    this.summary = this.hint.locator('.nui-spreadsheet__summary');
     this.currentArgument = this.hint.locator('.nui-spreadsheet__hint-part--current');
   }
 

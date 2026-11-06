@@ -174,13 +174,15 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
 
   const draftText = computed(() => textOf(editing.draft.value?.value));
 
+  const shownText = computed(() => options.text());
+
   const spans = computed(() =>
-    draftText.value.startsWith(FORMULA_START)
-      ? referenceSpans(draftText.value, options.locale().formulas)
+    shownText.value.startsWith(FORMULA_START)
+      ? referenceSpans(shownText.value, options.locale().formulas)
       : [],
   );
 
-  const segments = computed(() => segmentsOf(draftText.value, spans.value));
+  const segments = computed(() => segmentsOf(shownText.value, spans.value));
 
   const frames = computed((): ReferenceFrame[] => {
     const cells = options.cells();

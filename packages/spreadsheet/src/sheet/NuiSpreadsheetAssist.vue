@@ -12,14 +12,26 @@
     @select="choose"
     @pointermove="hover"
     @pointerdown.prevent
-  />
+  >
+    <template #item="{ item }">
+      <span class="nui-spreadsheet__match">{{ item.label?.slice(0, typed) }}</span
+      >{{ item.label?.slice(typed) }}
+    </template>
+  </NuiList>
   <div ref="hintPanel" class="nui-spreadsheet__hint" role="tooltip" v-bind="hintAttrs">
-    <span
-      v-for="(part, index) in hint"
-      :key="index"
-      :class="{ 'nui-spreadsheet__hint-part--current': part.current }"
-      >{{ part.text }}</span
-    >
+    <p class="nui-spreadsheet__signature">
+      <span
+        v-for="(part, index) in hint"
+        :key="index"
+        class="nui-spreadsheet__hint-part"
+        :class="[
+          `nui-spreadsheet__hint-part--${part.kind}`,
+          { 'nui-spreadsheet__hint-part--current': part.current },
+        ]"
+        >{{ part.text }}</span
+      >
+    </p>
+    <p v-if="summary !== ''" class="nui-spreadsheet__summary">{{ summary }}</p>
   </div>
 </template>
 
@@ -36,7 +48,7 @@ import {
 } from 'vue';
 import type { SheetAssistProps } from './sheet.types';
 
-const { listId, hintId, entries, active, anchor, open, hint, label } =
+const { listId, hintId, entries, active, anchor, open, hint, summary, typed, label } =
   defineProps<SheetAssistProps>();
 
 const emit = defineEmits<{

@@ -57,6 +57,8 @@ export interface FormulaAssist {
   readonly active: Readonly<Ref<number>>;
   readonly open: ComputedRef<boolean>;
   readonly hint: ComputedRef<readonly SignaturePart[]>;
+  readonly summary: ComputedRef<string>;
+  readonly typed: ComputedRef<number>;
   readonly anchor: Readonly<ShallowRef<HTMLElement | null>>;
   syncCaret(): void;
   onKeydown(event: KeyboardEvent): void;
@@ -72,15 +74,19 @@ export interface SheetAssistProps {
   anchor: HTMLElement | null;
   open: boolean;
   hint: readonly SignaturePart[];
+  summary: string;
+  typed: number;
   label: string;
 }
 
 export interface SheetReferenceProps {
   tone: number;
   rect: NuiTableRect | undefined;
+  passive: boolean;
 }
 
 export interface SheetReferencesOptions {
+  readonly text: () => string;
   readonly cells: () => SheetCells | undefined;
   readonly sheet: () => Sheet | undefined;
   readonly locale: () => BookLocale;

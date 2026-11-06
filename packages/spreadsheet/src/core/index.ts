@@ -213,6 +213,7 @@ export {
 } from './formula/formula.types';
 export {
   HelpLanguage,
+  SignaturePartKind,
   loadFunctionHelp,
   signatureOf,
   type FunctionHelp,

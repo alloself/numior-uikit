@@ -485,13 +485,19 @@
   overflow: visible;
 }
 .nui-table__editor--grow {
+  --nui-control-height-sm: calc(var(--_row) - 1px);
+  --nui-field-padding-sm: calc(var(--_pad-x) - 1px);
+  --nui-radius: 0px;
+  --nui-focus-ring-width: 2px;
+  --nui-focus-ring-offset: -1px;
+
   position: absolute;
-  inset-block-start: 50%;
-  inset-inline-start: var(--nui-space-1);
+  inset-block-start: 0;
+  inset-inline-start: 0;
   z-index: 1;
-  inline-size: var(--_size, calc(100% - var(--nui-space-1) * 2));
+  inline-size: var(--_size, 100%);
   margin: 0;
-  translate: 0 -50%;
+  box-shadow: var(--nui-shadow-sm);
 }
 .nui-table__editor:not(:first-child) {
   margin-inline-start: calc(-1px - var(--nui-field-padding-sm));

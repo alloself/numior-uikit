@@ -1,6 +1,12 @@
-import type { SignatureInput, SignaturePart } from './help.types';
+import { SignaturePartKind, type SignatureInput, type SignaturePart } from './help.types';
 
 const MORE = '…';
+
+const mark = (text: string): SignaturePart => ({
+  kind: SignaturePartKind.Mark,
+  text,
+  current: false,
+});
 
 const currentArgument = (input: SignatureInput): number | undefined => {
   const { args, repeat = 1 } = input.help;
@@ -21,14 +27,19 @@ export const signatureOf = (input: SignatureInput): SignaturePart[] => {
   const variadic = input.max > input.help.args.length;
 
   const args = input.help.args.flatMap((arg, index): SignaturePart[] => [
-    ...(index === 0 ? [] : [{ text: gap, current: false }]),
-    { text: index < input.min ? arg : `[${arg}]`, current: index === current },
+    ...(index === 0 ? [] : [mark(gap)]),
+    {
+      kind: SignaturePartKind.Argument,
+      text: index < input.min ? arg : `[${arg}]`,
+      current: index === current,
+    },
   ]);
 
   return [
-    { text: `${input.name}(`, current: false },
+    { kind: SignaturePartKind.Name, text: input.name, current: false },
+    mark('('),
     ...args,
-    ...(variadic ? [{ text: `${gap}${MORE}`, current: false }] : []),
-    { text: ')', current: false },
+    ...(variadic ? [mark(`${gap}${MORE}`)] : []),
+    mark(')'),
   ];
 };

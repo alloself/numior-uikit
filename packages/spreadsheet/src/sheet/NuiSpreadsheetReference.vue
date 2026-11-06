@@ -1,12 +1,14 @@
 <template>
   <span class="nui-spreadsheet__ref" :class="`nui-spreadsheet__ref--tone-${tone}`" :style="style">
-    <span
-      v-for="grip in grips"
-      :key="grip"
-      class="nui-spreadsheet__grip"
-      :class="`nui-spreadsheet__grip--${grip}`"
-      @pointerdown="emit('grip', $event, grip)"
-    ></span>
+    <template v-if="!passive">
+      <span
+        v-for="grip in grips"
+        :key="grip"
+        class="nui-spreadsheet__grip"
+        :class="`nui-spreadsheet__grip--${grip}`"
+        @pointerdown="emit('grip', $event, grip)"
+      ></span>
+    </template>
   </span>
 </template>
 
@@ -15,7 +17,7 @@ import type { NuiTableRect } from '@numior/table';
 import { computed } from 'vue';
 import { FrameGrip, type SheetReferenceProps } from './sheet.types';
 
-const { tone, rect } = defineProps<SheetReferenceProps>();
+const { tone, rect, passive } = defineProps<SheetReferenceProps>();
 
 const emit = defineEmits<{
   grip: [event: PointerEvent, grip: FrameGrip];

@@ -115,6 +115,7 @@
           :key="frame.key"
           :tone="frame.tone"
           :rect="rectOf(frame.range)"
+          :passive="editing.draft.value === undefined"
           @grip="(event, grip) => references.onGripDown(event, frame, grip)"
         />
       </template>
@@ -130,6 +131,8 @@
       :anchor="assist.anchor.value"
       :open="assist.open.value"
       :hint="assist.hint.value"
+      :summary="assist.summary.value"
+      :typed="assist.typed.value"
       :label="messages.functions"
       @choose="assist.choose"
       @hover="assist.hover"
@@ -146,7 +149,7 @@ import { EN_LOCALE, HelpLanguage, RU_LOCALE, createCalculator, type BookLocale }
 import { defaultRowHeight, sheetCells } from './sheet-cells';
 import NuiSpreadsheetAssist from './NuiSpreadsheetAssist.vue';
 import NuiSpreadsheetReference from './NuiSpreadsheetReference.vue';
-import type { NuiSpreadsheetChange, NuiSpreadsheetProps } from './sheet.types';
+import type { FormulaSegment, NuiSpreadsheetChange, NuiSpreadsheetProps } from './sheet.types';
 import { spreadsheetMessages } from './spreadsheet.messages';
 import { useFormulaAssist } from './use-formula-assist';
 import { useFormulaBar } from './use-formula-bar';
@@ -224,6 +227,7 @@ const formula = useFormulaBar({
 });
 
 const references = useSheetReferences({
+  text: () => formula.formulaText.value,
   cells: () => cells.value,
   sheet: () => shownSheet.value,
   locale: () => bookLocale.value,
@@ -241,6 +245,8 @@ const assist = useFormulaAssist({
   nameField,
 });
 
+const isToned = (segment: FormulaSegment): boolean => segment.tone !== undefined;
+
 const onKeydown = (event: KeyboardEvent): void => {
   assist.onKeydown(event);
 
@@ -254,7 +260,9 @@ const onPointerup = (): void => {
   assist.syncCaret();
 };
 
-const painted = computed(() => editing.draft.value !== undefined);
+const painted = computed(
+  () => editing.draft.value !== undefined || references.segments.value.some(isToned),
+);
 
 const followScroll = (): void => {
   const field = formulaField.value;
