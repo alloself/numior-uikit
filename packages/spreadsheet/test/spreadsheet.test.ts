@@ -346,4 +346,58 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.editorText).toBe('=SUM($D$4)');
     expect(sheet.changes).toEqual([]);
   });
+
+  it('lists functions for a typed name, inserts the chosen one and hints its current argument', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.focus(5, 1);
+    await sheet.press('F2');
+    await sheet.type('=SU');
+    await sheet.settle();
+
+    expect(sheet.functions).toEqual([
+      'SUBSTITUTE',
+      'SUBTOTAL',
+      'SUM',
+      'SUMIF',
+      'SUMIFS',
+      'SUMPRODUCT',
+      'SUMSQ',
+    ]);
+
+    expect(sheet.functionSummaries[2]).toBe('Adds numbers and ranges.');
+    expect(sheet.activeFunction).toBe('SUBSTITUTE');
+
+    await sheet.press('ArrowDown');
+    await sheet.press('ArrowDown');
+
+    expect(sheet.activeFunction).toBe('SUM');
+
+    await sheet.press('Tab');
+
+    expect(sheet.editorText).toBe('=SUM(');
+    expect(sheet.functions).toEqual([]);
+    expect(sheet.hint).toBe('SUM(<number1>, [number2], …)');
+    expect(sheet.hinted).toBe(true);
+
+    await sheet.type('=SUM(A1,ro');
+
+    expect(sheet.functions).toEqual(['ROUND', 'ROUNDDOWN', 'ROUNDUP', 'ROW', 'ROWS']);
+
+    await sheet.press('Escape');
+
+    expect(sheet.functions).toEqual([]);
+    expect(sheet.editing).toBe(true);
+    expect(sheet.hint).toBe('SUM(number1, <[number2]>, …)');
+
+    await sheet.type('=SUM(A1,rou');
+
+    expect(sheet.functions).toEqual(['ROUND', 'ROUNDDOWN', 'ROUNDUP']);
+
+    await sheet.press('Enter');
+
+    expect(sheet.editorText).toBe('=SUM(A1,ROUND(');
+    expect(sheet.hint).toBe('ROUND(<number>, num_digits)');
+    expect(sheet.changes).toEqual([]);
+  });
 });

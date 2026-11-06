@@ -98,8 +98,12 @@ export type {
 export {
   EN_FORMULAS,
   RU_FORMULAS,
+  canonicalFunction,
   formulaReferences,
+  functionCallAt,
+  functionPrefixAt,
   isSymbolic,
+  localFunction,
   parseFormula,
   printFormula,
   referenceSpans,
@@ -108,6 +112,8 @@ export {
 } from './formula';
 export type {
   AnchoredText,
+  FunctionCall,
+  FunctionPrefix,
   FormulaFailure,
   FormulaLocale,
   FormulaNode,
@@ -205,3 +211,12 @@ export {
   FormulaReferenceKind,
   UnaryOperator,
 } from './formula/formula.types';
+export {
+  HelpLanguage,
+  loadFunctionHelp,
+  signatureOf,
+  type FunctionHelp,
+  type FunctionHelpCatalog,
+  type SignatureInput,
+  type SignaturePart,
+} from './help';

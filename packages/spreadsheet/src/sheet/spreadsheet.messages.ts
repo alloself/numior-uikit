@@ -6,6 +6,7 @@ export interface NuiSpreadsheetMessages {
   readonly formulaBar: string;
   readonly expandFormula: string;
   readonly unknownName: (params: { readonly name: string }) => string;
+  readonly functions: string;
 }
 
 export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
@@ -16,6 +17,7 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     formulaBar: 'Formula bar',
     expandFormula: 'Expand the formula bar',
     unknownName: ({ name }) => `There is no cell or name “${name}”`,
+    functions: 'Functions',
   },
   ru: {
     formulaError: ({ position }) => `Ошибка в формуле: символ ${String(position)}`,
@@ -23,5 +25,6 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     formulaBar: 'Строка формул',
     expandFormula: 'Развернуть строку формул',
     unknownName: ({ name }) => `Нет ячейки или имени «${name}»`,
+    functions: 'Функции',
   },
 };

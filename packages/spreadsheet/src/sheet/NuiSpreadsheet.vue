@@ -4,9 +4,12 @@
     ref="root"
     class="nui-spreadsheet"
     :dir="table.cells.rightToLeft ? 'rtl' : 'ltr'"
-    @keydown.capture="references.onKeydown"
+    @keydown.capture="onKeydown"
+    @input="assist.syncCaret"
+    @keyup="assist.syncCaret"
+    @focusin="assist.syncCaret"
     @pointermove="references.onGripMove"
-    @pointerup="references.onGripUp"
+    @pointerup="onPointerup"
     @pointercancel="references.onGripUp"
   >
     <div
@@ -118,6 +121,18 @@
     <div class="nui-spreadsheet__hidden" role="status" aria-live="polite">
       {{ formula.announcement.value }}
     </div>
+    <NuiSpreadsheetAssist
+      :list-id="assist.listId"
+      :hint-id="assist.hintId"
+      :entries="assist.entries.value"
+      :active="assist.active.value"
+      :anchor="assist.anchor.value"
+      :open="assist.open.value"
+      :hint="assist.hint.value"
+      :label="messages.functions"
+      @choose="assist.choose"
+      @hover="assist.hover"
+    />
   </div>
 </template>
 
@@ -126,11 +141,13 @@ import { useLocale, useMessages } from '@numior/primitives';
 import { NuiTable, tableCells, type NuiTableColumn, type NuiTableExposed } from '@numior/table';
 import { NuiButton, NuiIcon } from '@numior/vue';
 import { computed, useId, useTemplateRef } from 'vue';
-import { EN_LOCALE, RU_LOCALE, createCalculator, type BookLocale } from '../core';
+import { EN_LOCALE, HelpLanguage, RU_LOCALE, createCalculator, type BookLocale } from '../core';
 import { defaultRowHeight, sheetCells } from './sheet-cells';
+import NuiSpreadsheetAssist from './NuiSpreadsheetAssist.vue';
 import NuiSpreadsheetReference from './NuiSpreadsheetReference.vue';
 import type { NuiSpreadsheetChange, NuiSpreadsheetProps } from './sheet.types';
 import { spreadsheetMessages } from './spreadsheet.messages';
+import { useFormulaAssist } from './use-formula-assist';
 import { useFormulaBar } from './use-formula-bar';
 import { useSheetEditing } from './use-sheet-editing';
 import { useSheetReferences } from './use-sheet-references';
@@ -214,6 +231,27 @@ const references = useSheetReferences({
   root,
   nameField,
 });
+
+const assist = useFormulaAssist({
+  locale: () => bookLocale.value,
+  language: () => (kitLocale.value.startsWith('ru') ? HelpLanguage.Ru : HelpLanguage.En),
+  editing,
+  root,
+  nameField,
+});
+
+const onKeydown = (event: KeyboardEvent): void => {
+  assist.onKeydown(event);
+
+  if (!event.defaultPrevented) {
+    references.onKeydown(event);
+  }
+};
+
+const onPointerup = (): void => {
+  references.onGripUp();
+  assist.syncCaret();
+};
 
 const painted = computed(() => editing.draft.value !== undefined);
 

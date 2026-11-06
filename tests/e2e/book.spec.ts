@@ -149,6 +149,43 @@ test.describe('book', () => {
     await expect(book.changes).toHaveText('Правок: 0');
   });
 
+  test('suggests functions for a typed name and hints the argument being typed', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.cell('9', 1).click();
+    await page.keyboard.type('=СУ');
+
+    await expect(book.functions).toBeVisible();
+    await expect(book.functions.getByRole('option').first()).toContainText('СУММ');
+
+    await expect(book.functions.getByRole('option').first()).toContainText(
+      'Суммирует числа и диапазоны.',
+    );
+
+    await page.keyboard.press('Tab');
+
+    await expect(book.editor).toHaveValue('=СУММ(');
+    await expect(book.functions).toBeHidden();
+    await expect(book.hint).toHaveText('СУММ(число1; [число2]; …)');
+    await expect(book.currentArgument).toHaveText('число1');
+
+    await page.keyboard.type('B3:B7;');
+
+    await expect(book.currentArgument).toHaveText('[число2]');
+
+    await page.keyboard.press('Backspace');
+    await page.keyboard.type(')');
+    await page.keyboard.press('Enter');
+
+    await expect(book.hint).toBeHidden();
+    await expect(book.cell('9', 1)).toHaveText('85');
+  });
+
   test('book has no automatically detectable WCAG AA violations', async ({ playground }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();

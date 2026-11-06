@@ -1,4 +1,5 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
+import { vi } from 'vite-plus/test';
 import { nextTick } from 'vue';
 import { NuiSpreadsheet, type NuiSpreadsheetChange, type NuiSpreadsheetProps } from '../../src';
 
@@ -243,6 +244,50 @@ export class SpreadsheetDriver {
       restore(document, 'elementsFromPoint', points);
       restore(Element.prototype, 'setPointerCapture', capture);
     }
+    await nextTick();
+  }
+
+  get functions(): string[] {
+    return texts(
+      this.wrapper,
+      '[role="listbox"][aria-label="Functions"] [role="option"] .nui-row__title',
+    );
+  }
+
+  get functionSummaries(): string[] {
+    return texts(
+      this.wrapper,
+      '[role="listbox"][aria-label="Functions"] [role="option"] .nui-row__description',
+    );
+  }
+
+  get activeFunction(): string | undefined {
+    const id = document.activeElement?.getAttribute('aria-activedescendant');
+
+    return id === null || id === undefined
+      ? undefined
+      : document.getElementById(id)?.querySelector('.nui-row__title')?.textContent?.trim();
+  }
+
+  get hint(): string {
+    return this.wrapper
+      .findAll('.nui-spreadsheet__hint span')
+      .map((part) =>
+        part.classes().includes('nui-spreadsheet__hint-part--current')
+          ? `<${part.element.textContent ?? ''}>`
+          : (part.element.textContent ?? ''),
+      )
+      .join('');
+  }
+
+  get hinted(): boolean {
+    const id = document.activeElement?.getAttribute('aria-describedby');
+
+    return id !== null && id !== undefined && document.getElementById(id) !== null;
+  }
+
+  async settle(): Promise<void> {
+    await vi.dynamicImportSettled();
     await nextTick();
   }
 

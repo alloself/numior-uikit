@@ -10,13 +10,16 @@ import type {
   NuiTableRect,
   TableCellPosition,
 } from '@numior/table';
+import type { NuiListEntry } from '@numior/vue';
 import type { ComputedRef, Ref, ShallowRef } from 'vue';
 import type {
   BookLocale,
   Calculator,
   CellDecoration,
   FontStyle,
+  HelpLanguage,
   ReferenceSpan,
+  SignaturePart,
   Sheet,
   ThemePalette,
   Workbook,
@@ -37,6 +40,39 @@ export interface ReferenceFrame {
   readonly span: ReferenceSpan;
   readonly range: NuiTableRange;
   readonly tone: number;
+}
+
+export interface FormulaAssistOptions {
+  readonly locale: () => BookLocale;
+  readonly language: () => HelpLanguage;
+  readonly editing: SheetEditing;
+  readonly root: Readonly<ShallowRef<HTMLElement | null>>;
+  readonly nameField: Readonly<ShallowRef<HTMLInputElement | null>>;
+}
+
+export interface FormulaAssist {
+  readonly listId: string;
+  readonly hintId: string;
+  readonly entries: ComputedRef<readonly NuiListEntry[]>;
+  readonly active: Readonly<Ref<number>>;
+  readonly open: ComputedRef<boolean>;
+  readonly hint: ComputedRef<readonly SignaturePart[]>;
+  readonly anchor: Readonly<ShallowRef<HTMLElement | null>>;
+  syncCaret(): void;
+  onKeydown(event: KeyboardEvent): void;
+  choose(key: string): void;
+  hover(index: number): void;
+}
+
+export interface SheetAssistProps {
+  listId: string;
+  hintId: string;
+  entries: readonly NuiListEntry[];
+  active: number;
+  anchor: HTMLElement | null;
+  open: boolean;
+  hint: readonly SignaturePart[];
+  label: string;
 }
 
 export interface SheetReferenceProps {

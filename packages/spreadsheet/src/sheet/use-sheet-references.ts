@@ -1,6 +1,6 @@
 import { Key } from '@numior/primitives';
 import type { NuiTableDraft, NuiTableRange, TableCellPosition } from '@numior/table';
-import { computed, nextTick } from 'vue';
+import { computed } from 'vue';
 import {
   formatRange,
   referenceSpans,
@@ -18,6 +18,7 @@ import {
   type SheetReferences,
   type SheetReferencesOptions,
 } from './sheet.types';
+import { caretFieldIn, placeCaretIn, type CaretField } from './sheet-caret';
 
 interface LastPick {
   readonly text: string;
@@ -203,15 +204,8 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
     );
   });
 
-  const caretField = (): HTMLInputElement | HTMLTextAreaElement | undefined => {
-    const field = document.activeElement;
-
-    return (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) &&
-      field !== options.nameField.value &&
-      options.root.value?.contains(field) === true
-      ? field
-      : undefined;
-  };
+  const caretField = (): CaretField | undefined =>
+    caretFieldIn(options.root.value, options.nameField.value);
 
   const caretOf = (text: string): number =>
     Math.min(caretField()?.selectionEnd ?? text.length, text.length);
@@ -219,14 +213,9 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
   const continuesPick = (text: string, caret: number): boolean =>
     lastPick !== undefined && lastPick.text === text && lastPick.end === caret;
 
-  const placeCaret = async (at: number): Promise<void> => {
-    await nextTick();
-    caretField()?.setSelectionRange(at, at);
-  };
-
   const write = (draft: NuiTableDraft, text: string, caret: number): void => {
     editing.setDraft({ ...draft, value: text });
-    void placeCaret(caret);
+    void placeCaretIn(options.root.value, options.nameField.value, caret);
   };
 
   const picking = (draft: NuiTableDraft): boolean => {
