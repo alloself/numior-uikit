@@ -35,6 +35,10 @@
 .nui-row--nowrap .nui-row__description {
   white-space: nowrap;
 }
+.nui-row--nowrap .nui-row__description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .nui-row__description {
   color: var(--_row-muted, var(--nui-text-muted));
   font-size: var(--_row-description-size, var(--nui-font-size-xs));
