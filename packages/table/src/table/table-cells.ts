@@ -138,6 +138,15 @@ export const cellEdge = (
     : nextFilled(walk, from);
 };
 
+let numbered: readonly number[] = [];
+
+const lineNumbers = (count: number): readonly number[] => {
+  if (numbered.length !== count) {
+    numbered = Array.from({ length: count }, (_, row) => row);
+  }
+  return numbered;
+};
+
 const oncePerRender = (read: CellRead, cols: number): CellRead => {
   const seen = new Map<number, NuiTableSourceCell | undefined>();
   let queued = false;
@@ -192,7 +201,7 @@ export const tableCells = (source: NuiTableCellSource): NuiTableCells => {
 
   return {
     cellSelection: true,
-    rows: Array.from({ length: source.rows }, (_, row) => row),
+    rows: lineNumbers(source.rows),
     columns,
     getKey: (row) => row,
     cellStyle: ({ row, column }) => {

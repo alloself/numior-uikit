@@ -54,6 +54,18 @@ describe('tableCells', () => {
     expect(cellEdge(inColumn, COLUMN_SIZE, { row: 3, col: 0 }, 'next')).toEqual({ row: 3, col: 0 });
   });
 
+  it('hands sources of the same height one rows array so a sheet switch does not rebuild it', () => {
+    const source = { cols: 2, cellAt: (): undefined => undefined };
+
+    const first = tableCells({ ...source, rows: 1_048_576 });
+    const second = tableCells({ ...source, rows: 1_048_576 });
+    const shorter = tableCells({ ...source, rows: 3 });
+
+    expect(second.rows).toBe(first.rows);
+    expect(shorter.rows).toEqual([0, 1, 2]);
+    expect(tableCells({ ...source, rows: 1_048_576 }).rows[1_048_575]).toBe(1_048_575);
+  });
+
   it('turns a cell source into rows, lettered columns, styles, row labels and edges', async () => {
     const reads: string[] = [];
 

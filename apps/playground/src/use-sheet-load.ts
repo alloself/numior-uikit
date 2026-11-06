@@ -22,6 +22,8 @@ interface Running {
 
 const LOAD_ROWS = 20_000;
 
+const PAINT_EVERY = 250;
+
 const entryRow = (row: number): LoadEntry[] => {
   const at = String(row + 1);
 
@@ -44,13 +46,18 @@ export const useSheetLoad = (book: SampleBook, painted: () => void) => {
 
   const follow = async (running: Running): Promise<void> => {
     let settled = false;
+    let paintedAt = performance.now();
 
-    const tick = (): void => {
-      if (!settled) {
-        progress.value = { done: running.done, total: running.total };
-        painted();
-        requestAnimationFrame(tick);
+    const tick = (now: number): void => {
+      if (settled) {
+        return;
       }
+      progress.value = { done: running.done, total: running.total };
+      if (now - paintedAt >= PAINT_EVERY) {
+        paintedAt = now;
+        painted();
+      }
+      requestAnimationFrame(tick);
     };
 
     requestAnimationFrame(tick);
