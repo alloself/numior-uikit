@@ -2614,13 +2614,14 @@ watch(quick, () => {
   rowsIntent.set(true);
 });
 
+const inBody = (position: TableCellPosition): boolean =>
+  position.row >= 0 &&
+  position.row < visibleRows.value &&
+  position.col >= 0 &&
+  position.col < dataKeys.value.length;
+
 const moveActiveTo = (position: TableCellPosition): boolean => {
-  if (
-    position.row < 0 ||
-    position.row >= visibleRows.value ||
-    position.col < 0 ||
-    position.col >= dataKeys.value.length
-  ) {
+  if (!inBody(position)) {
     return false;
   }
   const target = visualCellOf(anchorOf(mergeIndex.value, position));
@@ -2634,6 +2635,14 @@ const moveActiveTo = (position: TableCellPosition): boolean => {
       focus.reveal(target);
     }
   }
+  return true;
+};
+
+const focusCellAt = (position: TableCellPosition): boolean => {
+  if (!inBody(position)) {
+    return false;
+  }
+  focus.focusCell(visualCellOf(anchorOf(mergeIndex.value, position)));
   return true;
 };
 
@@ -2786,6 +2795,7 @@ defineExpose<NuiTableExposed>({
   cancelEdit: () => {
     cellEditor.cancel();
   },
+  focusCell: focusCellAt,
   invalidate,
 });
 </script>

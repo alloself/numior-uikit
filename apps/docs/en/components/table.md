@@ -314,6 +314,9 @@ the focus in the field. `startEdit('replace')` opens it with an empty value.
 `commitEdit('down')` saves the edit, `cancelEdit()` cancels it, and the focus returns to the
 table.
 
+`focusCell({ row, col })` moves the focus into a cell from outside, for example from a name box.
+It returns `false` for a position outside the table.
+
 List in `keepEditing` the elements that can take the focus without ending the edit. Ctrl+Enter in
 the editor writes the value to every selected cell in columns of the same type.
 

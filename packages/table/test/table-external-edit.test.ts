@@ -57,6 +57,22 @@ describe('NuiTable external editing', () => {
     expect(grid.activeModel).toEqual({ row: 5, col: 3 });
   });
 
+  it('moves the focus into a cell from outside the table', async () => {
+    const grid = mountStaff();
+    const bar = formulaBar();
+    await grid.focusCell(1, 1);
+    await grid.focusOutside(bar);
+
+    expect(await grid.focusCellByRef({ row: 6, col: 2 })).toBe(true);
+    expect(grid.focusedCell).toEqual({ row: 6, col: 2 });
+    expect(grid.activeModel).toEqual({ row: 6, col: 2 });
+
+    await grid.focusOutside(bar);
+
+    expect(await grid.focusCellByRef({ row: 40, col: 0 })).toBe(false);
+    expect(document.activeElement).toBe(bar);
+  });
+
   it('opens the editor without taking focus and shares the draft both ways', async () => {
     const rows = staff(20);
     const grid = mountStaff({ rows });

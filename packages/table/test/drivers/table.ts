@@ -2086,6 +2086,13 @@ export class TableDriver<T> {
     await nextTick();
   }
 
+  async focusCellByRef(position: TableCellPosition): Promise<boolean> {
+    const focused = this.exposed.value?.focusCell(position) ?? false;
+
+    await nextTick();
+    return focused;
+  }
+
   async invalidate(ranges?: NuiTableRanges): Promise<void> {
     this.exposed.value?.invalidate(ranges);
     await nextTick();

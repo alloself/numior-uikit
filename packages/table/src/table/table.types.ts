@@ -681,6 +681,7 @@ export interface NuiTableExposed {
   startEdit(mode: NuiTableEditMode, options?: NuiTableStartEditOptions): boolean;
   commitEdit(move?: NuiTableEditMove): boolean;
   cancelEdit(): void;
+  focusCell(position: TableCellPosition): boolean;
   invalidate(ranges?: NuiTableRanges): void;
 }
 
