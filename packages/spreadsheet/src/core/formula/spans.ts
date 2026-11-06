@@ -236,3 +236,47 @@ export const toggleAnchors = (text: string, span: ReferenceSpan): AnchoredText =
     end: span.address + address.length,
   };
 };
+
+const placed = (endpoint: Endpoint, row: number, col: number): string => {
+  switch (endpoint.kind) {
+    case EndpointKind.Cell: {
+      return formatCell({ ...endpoint.ref, row, col });
+    }
+    case EndpointKind.Column: {
+      return `${endpoint.absolute ? FormulaChar.Dollar : ''}${columnName(col)}`;
+    }
+    default: {
+      return `${endpoint.absolute ? FormulaChar.Dollar : ''}${String(row + 1)}`;
+    }
+  }
+};
+
+const addressOf = (first: Endpoint, last: Endpoint, range: CellRange): string => {
+  const head = placed(first, range.top, range.left);
+
+  const single =
+    first.kind === EndpointKind.Cell && range.top === range.bottom && range.left === range.right;
+
+  return single ? head : `${head}${FormulaChar.Colon}${placed(last, range.bottom, range.right)}`;
+};
+
+export const retarget = (text: string, span: ReferenceSpan, range: CellRange): AnchoredText => {
+  const ends = text
+    .slice(span.address, span.end)
+    .split(FormulaChar.Colon)
+    .map((part) => endpointText(part));
+
+  const [first] = ends;
+  const last = ends.at(-1);
+
+  if (first === undefined || last === undefined || ends.includes(undefined)) {
+    return { text, end: span.end };
+  }
+
+  const address = addressOf(first, last.kind === first.kind ? last : first, range);
+
+  return {
+    text: `${text.slice(0, span.address)}${address}${text.slice(span.end)}`,
+    end: span.address + address.length,
+  };
+};

@@ -5,6 +5,9 @@
     class="nui-spreadsheet"
     :dir="table.cells.rightToLeft ? 'rtl' : 'ltr'"
     @keydown.capture="references.onKeydown"
+    @pointermove="references.onGripMove"
+    @pointerup="references.onGripUp"
+    @pointercancel="references.onGripUp"
   >
     <div
       v-if="formulaBar"
@@ -103,13 +106,13 @@
       @pick="references.onPick"
     >
       <template #overlay="{ rectOf }">
-        <span
+        <NuiSpreadsheetReference
           v-for="frame in references.frames.value"
           :key="frame.key"
-          class="nui-spreadsheet__ref"
-          :class="`nui-spreadsheet__ref--tone-${frame.tone}`"
-          :style="frameStyle(rectOf(frame.range))"
-        ></span>
+          :tone="frame.tone"
+          :rect="rectOf(frame.range)"
+          @grip="(event, grip) => references.onGripDown(event, frame, grip)"
+        />
       </template>
     </NuiTable>
     <div class="nui-spreadsheet__hidden" role="status" aria-live="polite">
@@ -120,17 +123,12 @@
 
 <script setup lang="ts">
 import { useLocale, useMessages } from '@numior/primitives';
-import {
-  NuiTable,
-  tableCells,
-  type NuiTableColumn,
-  type NuiTableExposed,
-  type NuiTableRect,
-} from '@numior/table';
+import { NuiTable, tableCells, type NuiTableColumn, type NuiTableExposed } from '@numior/table';
 import { NuiButton, NuiIcon } from '@numior/vue';
 import { computed, useId, useTemplateRef } from 'vue';
 import { EN_LOCALE, RU_LOCALE, createCalculator, type BookLocale } from '../core';
 import { defaultRowHeight, sheetCells } from './sheet-cells';
+import NuiSpreadsheetReference from './NuiSpreadsheetReference.vue';
 import type { NuiSpreadsheetChange, NuiSpreadsheetProps } from './sheet.types';
 import { spreadsheetMessages } from './spreadsheet.messages';
 import { useFormulaBar } from './use-formula-bar';
@@ -212,21 +210,12 @@ const references = useSheetReferences({
   sheet: () => shownSheet.value,
   locale: () => bookLocale.value,
   editing,
+  table: grid,
   root,
   nameField,
 });
 
 const painted = computed(() => editing.draft.value !== undefined);
-
-const frameStyle = (rect: NuiTableRect | undefined): Record<string, string> =>
-  rect === undefined
-    ? { display: 'none' }
-    : {
-        insetBlockStart: `${String(rect.top)}px`,
-        insetInlineStart: `${String(rect.start)}px`,
-        inlineSize: `${String(rect.width)}px`,
-        blockSize: `${String(rect.height)}px`,
-      };
 
 const followScroll = (): void => {
   const field = formulaField.value;

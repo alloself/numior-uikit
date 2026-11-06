@@ -26,6 +26,17 @@ const keydown = (target: Element, key: string, options: KeyOptions): void => {
   );
 };
 
+const restore = (owner: object, name: string, own: PropertyDescriptor | undefined): void => {
+  if (own === undefined) {
+    Reflect.deleteProperty(owner, name);
+  } else {
+    Object.defineProperty(owner, name, own);
+  }
+};
+
+const pointer = (type: string): PointerEvent =>
+  new PointerEvent(type, { bubbles: true, cancelable: true, button: 0, pointerId: 1 });
+
 const toneOf = (classes: readonly string[], prefix: string): string =>
   classes.find((name) => name.startsWith(prefix))?.slice(prefix.length) ?? '';
 
@@ -202,6 +213,37 @@ export class SpreadsheetDriver {
 
   get rangedCells(): number {
     return this.wrapper.findAll('.nui-table__row--body .nui-table__cell--ranged').length;
+  }
+
+  async dragGrip(grip: string, from: CellSpot, to: CellSpot): Promise<void> {
+    const handle = this.wrapper.find(`.nui-spreadsheet__grip--${grip}`);
+    const root = this.wrapper.find('.nui-spreadsheet').element;
+    const points = Object.getOwnPropertyDescriptor(document, 'elementsFromPoint');
+    const capture = Object.getOwnPropertyDescriptor(Element.prototype, 'setPointerCapture');
+
+    let target = this.cell(from.row, from.col);
+
+    Object.defineProperty(document, 'elementsFromPoint', {
+      configurable: true,
+      value: () => (target === null ? [] : [target]),
+    });
+
+    Object.defineProperty(Element.prototype, 'setPointerCapture', {
+      configurable: true,
+      writable: true,
+      value: () => undefined,
+    });
+
+    try {
+      handle.element.dispatchEvent(pointer('pointerdown'));
+      target = this.cell(to.row, to.col);
+      root.dispatchEvent(pointer('pointermove'));
+      root.dispatchEvent(pointer('pointerup'));
+    } finally {
+      restore(document, 'elementsFromPoint', points);
+      restore(Element.prototype, 'setPointerCapture', capture);
+    }
+    await nextTick();
   }
 
   async focusFormula(): Promise<void> {

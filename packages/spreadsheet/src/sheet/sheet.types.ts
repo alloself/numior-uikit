@@ -7,6 +7,7 @@ import type {
   NuiTableExposed,
   NuiTableRange,
   NuiTableRanges,
+  NuiTableRect,
   TableCellPosition,
 } from '@numior/table';
 import type { ComputedRef, Ref, ShallowRef } from 'vue';
@@ -15,6 +16,7 @@ import type {
   Calculator,
   CellDecoration,
   FontStyle,
+  ReferenceSpan,
   Sheet,
   ThemePalette,
   Workbook,
@@ -28,10 +30,18 @@ export interface FormulaSegment {
   readonly tone: number | undefined;
 }
 
+export type FrameGrip = (typeof FrameGrip)[keyof typeof FrameGrip];
+
 export interface ReferenceFrame {
   readonly key: string;
+  readonly span: ReferenceSpan;
   readonly range: NuiTableRange;
   readonly tone: number;
+}
+
+export interface SheetReferenceProps {
+  tone: number;
+  rect: NuiTableRect | undefined;
 }
 
 export interface SheetReferencesOptions {
@@ -39,6 +49,7 @@ export interface SheetReferencesOptions {
   readonly sheet: () => Sheet | undefined;
   readonly locale: () => BookLocale;
   readonly editing: SheetEditing;
+  readonly table: Readonly<ShallowRef<NuiTableExposed | null>>;
   readonly root: Readonly<ShallowRef<HTMLElement | null>>;
   readonly nameField: Readonly<ShallowRef<HTMLInputElement | null>>;
 }
@@ -49,6 +60,9 @@ export interface SheetReferences {
   picking(draft: NuiTableDraft): boolean;
   onPick(range: NuiTableRange): void;
   onKeydown(event: KeyboardEvent): void;
+  onGripDown(event: PointerEvent, frame: ReferenceFrame, grip: FrameGrip): void;
+  onGripMove(event: PointerEvent): void;
+  onGripUp(): void;
 }
 
 export interface SheetCellsOptions {
@@ -161,4 +175,15 @@ export const ValueShape = {
   Text: 'text',
   Logical: 'logical',
   Empty: 'empty',
+} as const;
+
+export const FrameGrip = {
+  Top: 'top',
+  Bottom: 'bottom',
+  Start: 'start',
+  End: 'end',
+  TopStart: 'top-start',
+  TopEnd: 'top-end',
+  BottomStart: 'bottom-start',
+  BottomEnd: 'bottom-end',
 } as const;

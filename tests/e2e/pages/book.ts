@@ -75,6 +75,22 @@ export class BookSection {
     await this.page.mouse.up();
   }
 
+  async dragGrip(grip: string, to: CellLabel): Promise<void> {
+    const handle = await boxOf(
+      this.referenceFrames.first().locator(`.nui-spreadsheet__grip--${grip}`),
+    );
+
+    const end = await boxOf(this.cell(to.row, to.col));
+
+    const edge =
+      handle.width > handle.height ? handle.y + handle.height - 1 : handle.y + handle.height / 2;
+
+    await this.page.mouse.move(handle.x + handle.width / 2, edge);
+    await this.page.mouse.down();
+    await this.page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, { steps: 6 });
+    await this.page.mouse.up();
+  }
+
   async goTo(name: string): Promise<void> {
     await this.nameBox.click();
     await this.nameBox.fill(name);

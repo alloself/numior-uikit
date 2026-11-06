@@ -103,6 +103,7 @@ export {
   parseFormula,
   printFormula,
   referenceSpans,
+  retarget,
   toggleAnchors,
 } from './formula';
 export type {

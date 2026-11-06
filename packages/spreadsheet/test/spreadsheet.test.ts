@@ -326,4 +326,24 @@ describe('NuiSpreadsheet', () => {
 
     expect(sheet.formula).toBe('=SUM($C$2)');
   });
+
+  it('moves a reference by its frame edge and resizes it by a corner', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.focus(5, 1);
+    await sheet.press('F2');
+    await sheet.type('=SUM($B$2:B3)');
+    await sheet.dragGrip('top', { row: 2, col: 1 }, { row: 3, col: 2 });
+
+    expect(sheet.editorText).toBe('=SUM($C$3:C4)');
+
+    await sheet.dragGrip('bottom-end', { row: 4, col: 2 }, { row: 4, col: 3 });
+
+    expect(sheet.editorText).toBe('=SUM($C$3:D4)');
+
+    await sheet.dragGrip('top-start', { row: 3, col: 2 }, { row: 4, col: 3 });
+
+    expect(sheet.editorText).toBe('=SUM($D$4)');
+    expect(sheet.changes).toEqual([]);
+  });
 });

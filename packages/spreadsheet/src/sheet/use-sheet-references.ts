@@ -1,19 +1,22 @@
 import { Key } from '@numior/primitives';
-import type { NuiTableDraft, NuiTableRange } from '@numior/table';
+import type { NuiTableDraft, NuiTableRange, TableCellPosition } from '@numior/table';
 import { computed, nextTick } from 'vue';
 import {
   formatRange,
   referenceSpans,
+  retarget,
   toggleAnchors,
+  type CellRange,
   type ReferenceSpan,
   type Sheet,
 } from '../core';
-import type {
-  FormulaSegment,
-  ReferenceFrame,
-  SheetCells,
-  SheetReferences,
-  SheetReferencesOptions,
+import {
+  FrameGrip,
+  type FormulaSegment,
+  type ReferenceFrame,
+  type SheetCells,
+  type SheetReferences,
+  type SheetReferencesOptions,
 } from './sheet.types';
 
 interface LastPick {
@@ -22,7 +25,24 @@ interface LastPick {
   readonly end: number;
 }
 
+interface GripSession {
+  readonly grip: FrameGrip;
+  readonly origin: NuiTableRange;
+  readonly grab: TableCellPosition;
+  readonly text: string;
+  readonly span: ReferenceSpan;
+}
+
 const TONES = 8;
+
+const PRIMARY_BUTTON = 0;
+
+const CORNERS = new Set<FrameGrip>([
+  FrameGrip.TopStart,
+  FrameGrip.TopEnd,
+  FrameGrip.BottomStart,
+  FrameGrip.BottomEnd,
+]);
 
 const FORMULA_START = '=';
 
@@ -78,13 +98,67 @@ const tableRange = (cells: SheetCells, span: ReferenceSpan): NuiTableRange => ({
   to: { row: cells.rowNear(span.range.bottom), col: cells.colNear(span.range.right) },
 });
 
+const sheetRange = (cells: SheetCells, range: NuiTableRange): CellRange => ({
+  top: cells.rowAt(Math.min(range.from.row, range.to.row)),
+  left: cells.colAt(Math.min(range.from.col, range.to.col)),
+  bottom: cells.rowAt(Math.max(range.from.row, range.to.row)),
+  right: cells.colAt(Math.max(range.from.col, range.to.col)),
+});
+
 const referenceText = (cells: SheetCells, range: NuiTableRange): string =>
-  formatRange({
-    top: cells.rowAt(Math.min(range.from.row, range.to.row)),
-    left: cells.colAt(Math.min(range.from.col, range.to.col)),
-    bottom: cells.rowAt(Math.max(range.from.row, range.to.row)),
-    right: cells.colAt(Math.max(range.from.col, range.to.col)),
-  });
+  formatRange(sheetRange(cells, range));
+
+const clampShift = (shift: number, low: number, high: number, last: number): number =>
+  Math.min(Math.max(shift, -low), last - high);
+
+const moved = (session: GripSession, cell: TableCellPosition, cells: SheetCells): NuiTableRange => {
+  const { origin, grab } = session;
+
+  const rows = clampShift(
+    cell.row - grab.row,
+    origin.from.row,
+    origin.to.row,
+    cells.source.rows - 1,
+  );
+
+  const cols = clampShift(
+    cell.col - grab.col,
+    origin.from.col,
+    origin.to.col,
+    cells.source.cols - 1,
+  );
+
+  return {
+    from: { row: origin.from.row + rows, col: origin.from.col + cols },
+    to: { row: origin.to.row + rows, col: origin.to.col + cols },
+  };
+};
+
+const fixedCorner = (origin: NuiTableRange, grip: FrameGrip): TableCellPosition => {
+  switch (grip) {
+    case FrameGrip.TopStart: {
+      return origin.to;
+    }
+    case FrameGrip.TopEnd: {
+      return { row: origin.to.row, col: origin.from.col };
+    }
+    case FrameGrip.BottomStart: {
+      return { row: origin.from.row, col: origin.to.col };
+    }
+    default: {
+      return origin.from;
+    }
+  }
+};
+
+const draggedRange = (
+  session: GripSession,
+  cell: TableCellPosition,
+  cells: SheetCells,
+): NuiTableRange =>
+  CORNERS.has(session.grip)
+    ? { from: fixedCorner(session.origin, session.grip), to: cell }
+    : moved(session, cell, cells);
 
 const spanAtCaret = (spans: readonly ReferenceSpan[], caret: number): ReferenceSpan | undefined =>
   spans.find((span) => span.start <= caret && caret <= span.end) ??
@@ -94,6 +168,8 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
   const { editing } = options;
 
   let lastPick: LastPick | undefined;
+
+  let session: GripSession | undefined;
 
   const draftText = computed(() => textOf(editing.draft.value?.value));
 
@@ -115,7 +191,14 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
     }
     return spans.value.flatMap((span, index) =>
       onThisSheet(span, sheet)
-        ? [{ key: String(span.start), range: tableRange(cells, span), tone: tones[index] ?? 1 }]
+        ? [
+            {
+              key: String(span.start),
+              span,
+              range: tableRange(cells, span),
+              tone: tones[index] ?? 1,
+            },
+          ]
         : [],
     );
   });
@@ -200,5 +283,49 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
     write(draft, toggled.text, toggled.end);
   };
 
-  return { segments, frames, picking, onPick, onKeydown };
+  const onGripDown = (event: PointerEvent, frame: ReferenceFrame, grip: FrameGrip): void => {
+    const draft = editing.draft.value;
+    const grab = options.table.value?.cellFromPoint(event.clientX, event.clientY);
+
+    if (event.button !== PRIMARY_BUTTON || draft === undefined || grab === undefined) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    options.root.value?.setPointerCapture(event.pointerId);
+    session = { grip, origin: frame.range, grab, text: textOf(draft.value), span: frame.span };
+  };
+
+  const onGripMove = (event: PointerEvent): void => {
+    const current = session;
+    const cells = options.cells();
+    const draft = editing.draft.value;
+
+    if (current === undefined || cells === undefined || draft === undefined) {
+      return;
+    }
+
+    const cell = options.table.value?.cellFromPoint(event.clientX, event.clientY);
+
+    if (cell === undefined) {
+      return;
+    }
+
+    const result = retarget(
+      current.text,
+      current.span,
+      sheetRange(cells, draggedRange(current, cell, cells)),
+    );
+
+    if (result.text !== textOf(draft.value)) {
+      lastPick = { text: result.text, start: current.span.start, end: result.end };
+      write(draft, result.text, result.end);
+    }
+  };
+
+  const onGripUp = (): void => {
+    session = undefined;
+  };
+
+  return { segments, frames, picking, onPick, onKeydown, onGripDown, onGripMove, onGripUp };
 };

@@ -9,4 +9,10 @@ export { EN_FORMULAS, RU_FORMULAS } from './locale';
 export { parseFormula } from './parser';
 export { printFormula } from './printer';
 export { formulaReferences, isSymbolic, type FormulaReference } from './references';
-export { referenceSpans, toggleAnchors, type AnchoredText, type ReferenceSpan } from './spans';
+export {
+  referenceSpans,
+  retarget,
+  toggleAnchors,
+  type AnchoredText,
+  type ReferenceSpan,
+} from './spans';

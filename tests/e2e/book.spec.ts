@@ -123,6 +123,32 @@ test.describe('book', () => {
     await expect(book.referenceFrames).toHaveCount(0);
   });
 
+  test('moves a reference by the edge of its frame and resizes it by a corner', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.cell('9', 1).click();
+    await page.keyboard.type('=СУММ(B3:B4');
+    await book.dragGrip('top', { row: '4', col: 0 });
+
+    await expect(book.editor).toHaveValue('=СУММ(A4:A5');
+    await expect(book.formula).toHaveValue('=СУММ(A4:A5');
+
+    await book.dragGrip('bottom-end', { row: '6', col: 1 });
+
+    await expect(book.editor).toHaveValue('=СУММ(A4:B6');
+    await expect(book.editor).toBeFocused();
+
+    await page.keyboard.press('Escape');
+
+    await expect(book.referenceFrames).toHaveCount(0);
+    await expect(book.changes).toHaveText('Правок: 0');
+  });
+
   test('book has no automatically detectable WCAG AA violations', async ({ playground }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();

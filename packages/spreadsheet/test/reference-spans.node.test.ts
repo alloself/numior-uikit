@@ -4,12 +4,20 @@ import {
   MAX_ROWS,
   RU_FORMULAS,
   referenceSpans,
+  retarget,
   toggleAnchors,
+  type CellRange,
   type ReferenceSpan,
 } from '../src/core';
 
 const texts = (text: string, spans: readonly ReferenceSpan[]): string[] =>
   spans.map((span) => text.slice(span.start, span.end));
+
+const retargeted = (text: string, index: number, range: CellRange): string => {
+  const span = referenceSpans(text)[index];
+
+  return span === undefined ? text : retarget(text, span, range).text;
+};
 
 const toggledTimes = (text: string, times: number): string[] =>
   Array.from({ length: times }).reduce<string[]>((seen) => {
@@ -60,5 +68,23 @@ describe('reference spans', () => {
       text: '=A1+$B$2',
       end: 8,
     });
+  });
+
+  it('moves and resizes a reference keeping its sheet and its anchors', () => {
+    const block = { top: 2, left: 2, bottom: 3, right: 4 };
+
+    expect(retargeted('=SUM(A1:B2)+1', 0, block)).toBe('=SUM(C3:E4)+1');
+    expect(retargeted('=$A$1*2', 0, { top: 4, left: 1, bottom: 4, right: 1 })).toBe('=$B$5*2');
+    expect(retargeted('=A1', 0, { top: 0, left: 0, bottom: 2, right: 1 })).toBe('=A1:B3');
+    expect(retargeted('=$A1:B$2', 0, { top: 0, left: 0, bottom: 0, right: 0 })).toBe('=$A1');
+    expect(retargeted("='My sheet'!A1+1", 0, block)).toBe("='My sheet'!C3:E4+1");
+
+    expect(retargeted('=SUM($A:A)', 0, { ...block, top: 0, bottom: MAX_ROWS - 1 })).toBe(
+      '=SUM($C:E)',
+    );
+
+    expect(retargeted('=SUM(1:2)', 0, { top: 5, left: 0, bottom: 6, right: MAX_COLS - 1 })).toBe(
+      '=SUM(6:7)',
+    );
   });
 });
