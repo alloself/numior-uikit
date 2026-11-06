@@ -102,6 +102,7 @@
       :column-menu="false"
       :commands="editing.commands"
       :keep-editing="formula.keepEditing"
+      grow-editor
       :picking="references.picking"
       :label="label"
       size="sm"

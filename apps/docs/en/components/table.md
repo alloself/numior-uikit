@@ -320,6 +320,9 @@ It returns `false` for a position outside the table.
 List in `keepEditing` the elements that can take the focus without ending the edit. Ctrl+Enter in
 the editor writes the value to every selected cell in columns of the same type.
 
+With `growEditor` the editor grows with its text over the neighbouring cells, as in Excel, so a
+whole formula stays visible. It stops at the edge of the visible area.
+
 <Example name="table/FormulaBar" />
 
 ### Cell references

@@ -1,4 +1,5 @@
 import { expect, test } from './fixtures';
+import { boxOf } from './helpers/geometry';
 import { ordersXlsx } from './helpers/xlsx';
 
 test.describe('book', () => {
@@ -184,6 +185,75 @@ test.describe('book', () => {
 
     await expect(book.hint).toBeHidden();
     await expect(book.cell('9', 1)).toHaveText('85');
+  });
+
+  test('opens an existing formula with its frames and uncut text from the cell, a double click and the bar', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.cell('8', 1).click();
+
+    await expect(book.formula).toHaveValue('=СУММ(B3:B7)');
+    await expect(book.referenceFrames).toHaveCount(0);
+
+    await page.keyboard.press('F2');
+
+    await expect(book.editor).toHaveValue('=СУММ(B3:B7)');
+    await expect(book.referenceFrames).toHaveCount(1);
+    await expect(book.paintedReferences).toHaveText(['B3:B7']);
+    expect(await book.editorCutsTextShort()).toBe(false);
+
+    await page.keyboard.press('Escape');
+    await book.cell('8', 1).dblclick();
+
+    await expect(book.editor).toHaveValue('=СУММ(B3:B7)');
+    await expect(book.referenceFrames).toHaveCount(1);
+    expect(await book.editorCutsTextShort()).toBe(false);
+
+    await page.keyboard.press('Escape');
+    await book.formula.click();
+
+    await expect(book.referenceFrames).toHaveCount(1);
+    await expect(book.paintedReferences).toHaveText(['B3:B7']);
+
+    await page.keyboard.press('Escape');
+
+    await expect(book.referenceFrames).toHaveCount(0);
+    await expect(book.changes).toHaveText('Правок: 0');
+  });
+
+  test('grows the cell editor with its text up to the edge of the sheet', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.cell('9', 1).click();
+    await page.keyboard.type('=B3+B4');
+
+    const cell = await boxOf(book.cell('9', 1));
+    const short = await book.editorBox();
+
+    expect(short.width).toBeLessThanOrEqual(cell.width);
+
+    await page.keyboard.type('+B5+B6+B7+C3+C4+C5+C6+C7+D3+D4+D5+D6+D7+E3+E4+E5+E6+E7+F3+F4+F5');
+
+    const visible = await book.viewportBox();
+    const long = await book.editorBox();
+
+    expect(long.width).toBeGreaterThan(cell.width);
+    expect(long.x).toBeCloseTo(short.x, 0);
+    expect(long.x + long.width).toBeLessThanOrEqual(visible.x + visible.width);
+
+    await page.keyboard.press('Escape');
+
+    await expect(book.changes).toHaveText('Правок: 0');
   });
 
   test('book has no automatically detectable WCAG AA violations', async ({ playground }) => {

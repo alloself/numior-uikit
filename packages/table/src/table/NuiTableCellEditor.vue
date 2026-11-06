@@ -2,7 +2,7 @@
   <div
     ref="root"
     class="nui-table__editor"
-    :class="{ 'nui-table__editor--invalid': invalid }"
+    :class="{ 'nui-table__editor--invalid': invalid, 'nui-table__editor--grow': grow }"
     @keydown="onKeydown"
     @focusout="onFocusout"
     @mousedown="onMousedown"
@@ -37,11 +37,27 @@ import { NuiTooltip } from '@numior/vue';
 import type { NuiTableCellEditorProps, NuiTableEditMove } from './table.types';
 
 const FOCUSABLE = 'input, textarea, select, button, [tabindex]';
+const SIZE = '--_size';
+const CARET = 4;
+const EDGE = 2;
 const PINNED = '.nui-table__cell--pin-start, .nui-table__cell--pin-end';
 const ERROR = '.nui-table__error';
 
-const { spec, value, label, errorId, error, typed, passive, keep, pick, attach, commit, cancel } =
-  defineProps<NuiTableCellEditorProps>();
+const {
+  spec,
+  value,
+  label,
+  errorId,
+  error,
+  typed,
+  passive,
+  grow,
+  keep,
+  pick,
+  attach,
+  commit,
+  cancel,
+} = defineProps<NuiTableCellEditorProps>();
 
 const emit = defineEmits<{ update: [value: unknown] }>();
 
@@ -193,6 +209,51 @@ const typeInto = (field: HTMLInputElement | HTMLTextAreaElement, text: string): 
 
 const paddingOf = (length: string): number => Number.parseFloat(length) || 0;
 
+const roomOf = (editor: HTMLElement, viewport: HTMLElement): number => {
+  const style = getComputedStyle(viewport);
+  const rtl = style.direction === Direction.Rtl;
+  const box = viewport.getBoundingClientRect();
+  const start = box.left + viewport.clientLeft;
+  const end = box.right - (viewport.offsetWidth - viewport.clientWidth - viewport.clientLeft);
+  const rect = editor.getBoundingClientRect();
+  const padding = paddingOf(style.scrollPaddingInlineEnd);
+
+  return Math.floor(rtl ? rect.right - start - padding : end - padding - rect.left) - EDGE;
+};
+
+const fit = (): void => {
+  const editor = root.value;
+  const field = editor?.querySelector('input');
+  const viewport = editor?.closest('.nui-table__viewport');
+
+  if (
+    !grow ||
+    !(editor instanceof HTMLElement) ||
+    !(field instanceof HTMLInputElement) ||
+    !(viewport instanceof HTMLElement)
+  ) {
+    return;
+  }
+  editor.style.removeProperty(SIZE);
+
+  const natural = editor.getBoundingClientRect().width;
+  const needed = field.scrollWidth + natural - field.clientWidth + CARET;
+
+  if (needed <= natural) {
+    return;
+  }
+  const room = roomOf(editor, viewport);
+  const grown = Math.max(natural, Math.min(needed, room));
+
+  editor.style.setProperty(SIZE, `${String(grown)}px`);
+
+  const short = field.scrollWidth - field.clientWidth;
+
+  if (short > 0 && grown < room) {
+    editor.style.setProperty(SIZE, `${String(Math.min(grown + short + CARET, room))}px`);
+  }
+};
+
 const reveal = (): void => {
   const cell = root.value?.closest('.nui-table__cell');
   const viewport = cell?.closest('.nui-table__viewport');
@@ -222,6 +283,14 @@ const reveal = (): void => {
 };
 
 watch(
+  () => value,
+  () => {
+    fit();
+  },
+  { flush: 'post' },
+);
+
+watch(
   () => error,
   (next) => {
     if (next !== undefined) {
@@ -236,6 +305,7 @@ onMounted(() => {
   });
 
   if (passive) {
+    fit();
     reveal();
     return;
   }
@@ -250,12 +320,14 @@ onMounted(() => {
   const field = fieldOf();
 
   if (field === undefined || field.selectionStart === null) {
+    fit();
     return;
   }
   if (typed !== undefined) {
     typeInto(field, typed);
   }
   field.setSelectionRange(field.value.length, field.value.length);
+  fit();
 });
 
 onBeforeUnmount(() => {

@@ -178,6 +178,7 @@ export interface NuiTableProps<T> {
   frozenRows?: number | undefined;
   nextEdge?: NuiTableNextEdge | undefined;
   keepEditing?: ((target: Element) => boolean) | undefined;
+  growEditor?: boolean | undefined;
   picking?: ((draft: NuiTableDraft) => boolean) | undefined;
   rowDrag?: boolean | undefined;
   nestDelay?: number | undefined;
@@ -426,6 +427,7 @@ export interface NuiTableCellEditorProps {
   error?: string | undefined;
   typed?: string | undefined;
   passive?: boolean | undefined;
+  grow?: boolean | undefined;
   keep?: ((target: Element) => boolean) | undefined;
   pick?: ((event: KeyboardEvent) => boolean) | undefined;
   attach: (flush: () => void) => () => void;

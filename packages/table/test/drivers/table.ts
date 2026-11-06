@@ -1097,6 +1097,10 @@ export class TableDriver<T> {
     return cellPositionOf(this.element, this.editorElement?.closest('.nui-table__cell') ?? null);
   }
 
+  get editorGrows(): boolean {
+    return this.editorElement?.classList.contains('nui-table__editor--grow') === true;
+  }
+
   get editorValue(): string | undefined {
     return this.editorField?.value;
   }

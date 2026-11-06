@@ -470,6 +470,29 @@
   min-inline-size: 0;
   margin-inline: calc(var(--nui-space-1) - var(--_pad-x));
 }
+.nui-table__body
+  > .nui-table__row
+  > .nui-table__cell:has(> .nui-table__content > .nui-table__editor--grow) {
+  --_cell-layer: 1;
+}
+.nui-table__body
+  > .nui-table__row--frozen
+  > .nui-table__cell:has(> .nui-table__content > .nui-table__editor--grow) {
+  --_cell-layer: 4;
+}
+.nui-table__content:has(> .nui-table__editor--grow) {
+  position: relative;
+  overflow: visible;
+}
+.nui-table__editor--grow {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: var(--nui-space-1);
+  z-index: 1;
+  inline-size: var(--_size, calc(100% - var(--nui-space-1) * 2));
+  margin: 0;
+  translate: 0 -50%;
+}
 .nui-table__editor:not(:first-child) {
   margin-inline-start: calc(-1px - var(--nui-field-padding-sm));
 }

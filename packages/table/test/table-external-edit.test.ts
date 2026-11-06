@@ -104,6 +104,21 @@ describe('NuiTable external editing', () => {
     expect(grid.focusedCell).toEqual({ row: 2, col: 2 });
   });
 
+  it('lets the editor grow past its cell only when the table asks for it', async () => {
+    const fixed = mountStaff();
+    await fixed.focusCell(1, 2);
+    await fixed.press('F2');
+
+    expect(fixed.editorGrows).toBe(false);
+
+    const growing = mountStaff({ props: { growEditor: true } });
+    await growing.focusCell(1, 2);
+    await growing.press('F2');
+
+    expect(growing.editorGrows).toBe(true);
+    expect(growing.editorValue).toBe('Казань');
+  });
+
   it('keeps a blank edit while focus visits the companion input and cancels back to the cell', async () => {
     const bar = formulaBar();
     const grid = mountStaff({ props: { keepEditing: (target) => target === bar } });

@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { boxOf } from '../helpers/geometry';
+import { boxOf, type Box } from '../helpers/geometry';
 import type { XlsxFile } from '../helpers/xlsx';
 
 interface CellLabel {
@@ -56,6 +56,30 @@ export class BookSection {
 
   cell(rowLabel: string, column: number): Locator {
     return this.row(rowLabel).locator(`[aria-colindex="${String(column + 2)}"]`);
+  }
+
+  editorCutsTextShort(): Promise<boolean> {
+    return this.editor.evaluate((field) => {
+      const editor = field.closest('.nui-table__editor');
+      const viewport = field.closest('.nui-table__viewport');
+
+      if (!(field instanceof HTMLInputElement) || editor === null || viewport === null) {
+        return true;
+      }
+
+      const atEdge =
+        editor.getBoundingClientRect().right >= viewport.getBoundingClientRect().right - 4;
+
+      return field.scrollWidth > field.clientWidth && !atEdge;
+    });
+  }
+
+  viewportBox(): Promise<Box> {
+    return boxOf(this.sheet.locator('.nui-table__viewport'));
+  }
+
+  editorBox(): Promise<Box> {
+    return boxOf(this.editor);
   }
 
   merged(rowLabel: string, column: number): Promise<boolean> {
