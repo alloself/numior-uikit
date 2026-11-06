@@ -1,5 +1,11 @@
 import type { Locator, Page } from '@playwright/test';
+import { boxOf } from '../helpers/geometry';
 import type { XlsxFile } from '../helpers/xlsx';
+
+interface CellLabel {
+  readonly row: string;
+  readonly col: number;
+}
 
 export class BookSection {
   readonly section: Locator;
@@ -11,6 +17,8 @@ export class BookSection {
   readonly nameBox: Locator;
   readonly formula: Locator;
   readonly expand: Locator;
+  readonly referenceFrames: Locator;
+  readonly paintedReferences: Locator;
 
   constructor(readonly page: Page) {
     this.section = page.locator('section[aria-labelledby="book-title"]');
@@ -22,6 +30,8 @@ export class BookSection {
     this.nameBox = this.sheet.getByRole('textbox', { name: 'Поле имени' });
     this.formula = this.sheet.getByRole('textbox', { name: 'Строка формул' });
     this.expand = this.sheet.getByRole('button', { name: 'Развернуть строку формул' });
+    this.referenceFrames = this.sheet.locator('.nui-spreadsheet__ref');
+    this.paintedReferences = this.sheet.locator('.nui-spreadsheet__token');
   }
 
   get grid(): Locator {
@@ -53,6 +63,16 @@ export class BookSection {
     await this.page.keyboard.press('F2');
     await this.editor.fill(text);
     await this.page.keyboard.press('Enter');
+  }
+
+  async dragAcross(from: CellLabel, to: CellLabel): Promise<void> {
+    const start = await boxOf(this.cell(from.row, from.col));
+    const end = await boxOf(this.cell(to.row, to.col));
+
+    await this.page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+    await this.page.mouse.down();
+    await this.page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, { steps: 6 });
+    await this.page.mouse.up();
   }
 
   async goTo(name: string): Promise<void> {

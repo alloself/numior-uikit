@@ -102,14 +102,18 @@ export {
   isSymbolic,
   parseFormula,
   printFormula,
+  referenceSpans,
+  toggleAnchors,
 } from './formula';
 export type {
+  AnchoredText,
   FormulaFailure,
   FormulaLocale,
   FormulaNode,
   FormulaParse,
   FormulaReference,
   LineRef,
+  ReferenceSpan,
 } from './formula';
 export {
   BASE_FUNCTIONS,

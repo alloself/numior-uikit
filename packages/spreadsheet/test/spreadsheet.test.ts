@@ -279,4 +279,51 @@ describe('NuiSpreadsheet', () => {
 
     expect(sheet.hasFormulaBar).toBe(false);
   });
+
+  it('picks references with the arrows, colours them like their frames and cycles their anchors with F4', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.focus(3, 1);
+    await sheet.press('=');
+    await sheet.press('ArrowUp');
+
+    expect(sheet.editorText).toBe('=B2');
+
+    await sheet.press('ArrowRight');
+    await sheet.press('ArrowDown', { shift: true });
+
+    expect(sheet.editorText).toBe('=C2:C3');
+    expect(sheet.referenceFrames).toEqual(['1']);
+
+    await sheet.press('F4');
+
+    expect(sheet.editorText).toBe('=$C$2:$C$3');
+    expect(sheet.caret).toBe(10);
+
+    await sheet.type('=$C$2:$C$3+A1*C2+c2:c3');
+
+    expect(sheet.formula).toBe('=$C$2:$C$3+A1*C2+c2:c3');
+    expect(sheet.paintedReferences).toEqual(['$C$2:$C$3 1', 'A1 2', 'C2 3', 'c2:c3 1']);
+    expect(sheet.referenceFrames).toEqual(['1', '2', '3', '1']);
+
+    await sheet.press('Escape');
+
+    expect(sheet.referenceFrames).toEqual([]);
+    expect(sheet.changes).toEqual([]);
+  });
+
+  it('inserts a picked reference at the caret of the formula bar and keeps plain text unpainted', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.focus(4, 1);
+    await sheet.focusFormula();
+    await sheet.typeFormula('Pen');
+
+    expect(sheet.paintedReferences).toEqual([]);
+
+    await sheet.typeFormula('=SUM(C2)');
+    await sheet.press('F4');
+
+    expect(sheet.formula).toBe('=SUM($C$2)');
+  });
 });

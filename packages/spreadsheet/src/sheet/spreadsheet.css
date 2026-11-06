@@ -75,18 +75,53 @@
 .nui-spreadsheet__fx::before {
   content: 'fx';
 }
+.nui-spreadsheet__field {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+.nui-spreadsheet__mirror {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  display: none;
+  padding-block: var(--_pad-y);
+  padding-inline: var(--nui-space-1) var(--nui-space-2);
+  overflow: hidden;
+  line-height: var(--_line-height);
+  white-space: pre;
+  clip-path: inset(var(--_pad-y) 0);
+  pointer-events: none;
+}
+.nui-spreadsheet__mirror--shown {
+  display: block;
+}
+.nui-spreadsheet__token {
+  color: color-mix(in oklab, var(--_tone), var(--nui-text) 40%);
+}
+.nui-spreadsheet__formula--painted {
+  color: transparent;
+  caret-color: var(--nui-text);
+}
 .nui-spreadsheet__formula {
+  position: relative;
   flex: 1 1 auto;
   min-inline-size: 0;
   block-size: calc(var(--_lines) * var(--_line-height) + 2 * var(--_pad-y));
   padding-block: var(--_pad-y);
   padding-inline: var(--nui-space-1) var(--nui-space-2);
-  overflow-y: hidden;
+  overflow: hidden;
   resize: none;
+  white-space: pre;
+}
+.nui-spreadsheet__bar--expanded .nui-spreadsheet__formula,
+.nui-spreadsheet__bar--expanded .nui-spreadsheet__mirror {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  scrollbar-gutter: stable;
 }
-.nui-spreadsheet__bar--expanded > .nui-spreadsheet__formula {
+.nui-spreadsheet__bar--expanded .nui-spreadsheet__formula {
   overflow-y: auto;
 }
 .nui-spreadsheet__formula:read-only {
@@ -98,6 +133,50 @@
   align-items: center;
   block-size: calc(var(--nui-control-height-sm) - 2px);
   padding-inline: var(--nui-space-1);
+}
+.nui-spreadsheet__ref {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid var(--_tone);
+  border-radius: 2px;
+  background-color: color-mix(in oklab, var(--_tone) 12%, transparent);
+  pointer-events: none;
+  transition:
+    inset var(--nui-duration-fast) var(--nui-easing),
+    inline-size var(--nui-duration-fast) var(--nui-easing),
+    block-size var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-spreadsheet__ref--tone-1,
+.nui-spreadsheet__token--tone-1 {
+  --_tone: var(--nui-chart-1);
+}
+.nui-spreadsheet__ref--tone-2,
+.nui-spreadsheet__token--tone-2 {
+  --_tone: var(--nui-chart-2);
+}
+.nui-spreadsheet__ref--tone-3,
+.nui-spreadsheet__token--tone-3 {
+  --_tone: var(--nui-chart-3);
+}
+.nui-spreadsheet__ref--tone-4,
+.nui-spreadsheet__token--tone-4 {
+  --_tone: var(--nui-chart-4);
+}
+.nui-spreadsheet__ref--tone-5,
+.nui-spreadsheet__token--tone-5 {
+  --_tone: var(--nui-chart-5);
+}
+.nui-spreadsheet__ref--tone-6,
+.nui-spreadsheet__token--tone-6 {
+  --_tone: var(--nui-chart-6);
+}
+.nui-spreadsheet__ref--tone-7,
+.nui-spreadsheet__token--tone-7 {
+  --_tone: var(--nui-chart-7);
+}
+.nui-spreadsheet__ref--tone-8,
+.nui-spreadsheet__token--tone-8 {
+  --_tone: var(--nui-chart-8);
 }
 .nui-spreadsheet__hidden {
   position: absolute;

@@ -94,6 +94,35 @@ test.describe('book', () => {
     await expect(book.expand).toHaveAttribute('aria-expanded', 'true');
   });
 
+  test('picks references with clicks and drags, paints them like their frames and anchors them with F4', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.cell('9', 1).click();
+    await page.keyboard.type('=СУММ(');
+    await book.cell('3', 1).click();
+
+    await expect(book.editor).toHaveValue('=СУММ(B3');
+    await expect(book.referenceFrames).toHaveCount(1);
+
+    await book.dragAcross({ row: '3', col: 1 }, { row: '5', col: 1 });
+    await page.keyboard.press('F4');
+
+    await expect(book.editor).toHaveValue('=СУММ($B$3:$B$5');
+    await expect(book.formula).toHaveValue('=СУММ($B$3:$B$5');
+    await expect(book.paintedReferences).toHaveText(['$B$3:$B$5']);
+
+    await page.keyboard.type(')');
+    await page.keyboard.press('Enter');
+
+    await expect(book.cell('9', 1)).toHaveText('490');
+    await expect(book.referenceFrames).toHaveCount(0);
+  });
+
   test('book has no automatically detectable WCAG AA violations', async ({ playground }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();

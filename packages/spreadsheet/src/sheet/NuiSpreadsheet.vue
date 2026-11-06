@@ -4,6 +4,7 @@
     ref="root"
     class="nui-spreadsheet"
     :dir="table.cells.rightToLeft ? 'rtl' : 'ltr'"
+    @keydown.capture="references.onKeydown"
   >
     <div
       v-if="formulaBar"
@@ -26,22 +27,44 @@
         @blur="formula.onNameBlur"
       />
       <span class="nui-spreadsheet__fx" aria-hidden="true"></span>
-      <textarea
-        :id="formulaId"
-        ref="formulaField"
-        class="nui-spreadsheet__formula"
-        :value="formula.formulaText.value"
-        :readonly="readonly"
-        :aria-label="messages.formulaBar"
-        rows="1"
-        dir="auto"
-        autocomplete="off"
-        spellcheck="false"
-        @focus="formula.onFormulaFocus"
-        @input="formula.onFormulaInput"
-        @keydown="formula.onFormulaKeydown"
-        @blur="formula.onFormulaBlur"
-      ></textarea>
+      <span class="nui-spreadsheet__field">
+        <span
+          ref="mirror"
+          class="nui-spreadsheet__mirror"
+          :class="{ 'nui-spreadsheet__mirror--shown': painted }"
+          dir="auto"
+          aria-hidden="true"
+        >
+          <span
+            v-for="segment in references.segments.value"
+            :key="segment.key"
+            :class="
+              segment.tone === undefined
+                ? undefined
+                : ['nui-spreadsheet__token', `nui-spreadsheet__token--tone-${segment.tone}`]
+            "
+            >{{ segment.text }}</span
+          >
+        </span>
+        <textarea
+          :id="formulaId"
+          ref="formulaField"
+          class="nui-spreadsheet__formula"
+          :class="{ 'nui-spreadsheet__formula--painted': painted }"
+          :value="formula.formulaText.value"
+          :readonly="readonly"
+          :aria-label="messages.formulaBar"
+          rows="1"
+          dir="auto"
+          autocomplete="off"
+          spellcheck="false"
+          @focus="formula.onFormulaFocus"
+          @input="formula.onFormulaInput"
+          @keydown="formula.onFormulaKeydown"
+          @blur="formula.onFormulaBlur"
+          @scroll="followScroll"
+        ></textarea>
+      </span>
       <span class="nui-spreadsheet__expand">
         <NuiButton
           variant="ghost"
@@ -73,10 +96,22 @@
       :column-menu="false"
       :commands="editing.commands"
       :keep-editing="formula.keepEditing"
+      :picking="references.picking"
       :label="label"
       size="sm"
       @update:draft="editing.setDraft"
-    />
+      @pick="references.onPick"
+    >
+      <template #overlay="{ rectOf }">
+        <span
+          v-for="frame in references.frames.value"
+          :key="frame.key"
+          class="nui-spreadsheet__ref"
+          :class="`nui-spreadsheet__ref--tone-${frame.tone}`"
+          :style="frameStyle(rectOf(frame.range))"
+        ></span>
+      </template>
+    </NuiTable>
     <div class="nui-spreadsheet__hidden" role="status" aria-live="polite">
       {{ formula.announcement.value }}
     </div>
@@ -85,7 +120,13 @@
 
 <script setup lang="ts">
 import { useLocale, useMessages } from '@numior/primitives';
-import { NuiTable, tableCells, type NuiTableColumn, type NuiTableExposed } from '@numior/table';
+import {
+  NuiTable,
+  tableCells,
+  type NuiTableColumn,
+  type NuiTableExposed,
+  type NuiTableRect,
+} from '@numior/table';
 import { NuiButton, NuiIcon } from '@numior/vue';
 import { computed, useId, useTemplateRef } from 'vue';
 import { EN_LOCALE, RU_LOCALE, createCalculator, type BookLocale } from '../core';
@@ -94,6 +135,7 @@ import type { NuiSpreadsheetChange, NuiSpreadsheetProps } from './sheet.types';
 import { spreadsheetMessages } from './spreadsheet.messages';
 import { useFormulaBar } from './use-formula-bar';
 import { useSheetEditing } from './use-sheet-editing';
+import { useSheetReferences } from './use-sheet-references';
 
 const {
   book,
@@ -114,6 +156,7 @@ const root = useTemplateRef<HTMLElement>('root');
 const bar = useTemplateRef<HTMLElement>('bar');
 const nameField = useTemplateRef<HTMLInputElement>('nameField');
 const formulaField = useTemplateRef<HTMLTextAreaElement>('formulaField');
+const mirror = useTemplateRef<HTMLElement>('mirror');
 const grid = useTemplateRef<NuiTableExposed>('grid');
 
 const formulaId = useId();
@@ -163,6 +206,36 @@ const formula = useFormulaBar({
   nameField,
   formulaField,
 });
+
+const references = useSheetReferences({
+  cells: () => cells.value,
+  sheet: () => shownSheet.value,
+  locale: () => bookLocale.value,
+  editing,
+  root,
+  nameField,
+});
+
+const painted = computed(() => editing.draft.value !== undefined);
+
+const frameStyle = (rect: NuiTableRect | undefined): Record<string, string> =>
+  rect === undefined
+    ? { display: 'none' }
+    : {
+        insetBlockStart: `${String(rect.top)}px`,
+        insetInlineStart: `${String(rect.start)}px`,
+        inlineSize: `${String(rect.width)}px`,
+        blockSize: `${String(rect.height)}px`,
+      };
+
+const followScroll = (): void => {
+  const field = formulaField.value;
+
+  if (field !== null && mirror.value !== null) {
+    mirror.value.scrollTop = field.scrollTop;
+    mirror.value.scrollLeft = field.scrollLeft;
+  }
+};
 
 const pinned = (
   columns: readonly NuiTableColumn<number>[],

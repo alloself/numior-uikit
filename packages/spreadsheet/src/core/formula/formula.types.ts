@@ -3,6 +3,8 @@ import type { ErrorTexts } from '../error-texts';
 
 export type TokenKind = (typeof TokenKind)[keyof typeof TokenKind];
 
+export type EndpointKind = (typeof EndpointKind)[keyof typeof EndpointKind];
+
 export type StructuredSpecial = (typeof StructuredSpecial)[keyof typeof StructuredSpecial];
 
 export type StructuredArea = (typeof StructuredArea)[keyof typeof StructuredArea];
@@ -197,6 +199,8 @@ export const TokenKind = {
   Hash: 'hash',
   End: 'end',
 } as const;
+
+export const EndpointKind = { Cell: 'cell', Column: 'column', Row: 'row' } as const;
 
 export const FormulaChar = {
   Quote: '"',

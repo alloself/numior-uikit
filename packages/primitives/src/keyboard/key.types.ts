@@ -14,6 +14,7 @@ export const Key = {
   PageUp: 'PageUp',
   PageDown: 'PageDown',
   F2: 'F2',
+  F4: 'F4',
   F10: 'F10',
   ContextMenu: 'ContextMenu',
   Process: 'Process',

@@ -26,6 +26,9 @@ const keydown = (target: Element, key: string, options: KeyOptions): void => {
   );
 };
 
+const toneOf = (classes: readonly string[], prefix: string): string =>
+  classes.find((name) => name.startsWith(prefix))?.slice(prefix.length) ?? '';
+
 const texts = (wrapper: VueWrapper, selector: string): string[] =>
   wrapper.findAll(selector).map((item) => item.text());
 
@@ -173,6 +176,28 @@ export class SpreadsheetDriver {
     return label === undefined || Number.isNaN(index)
       ? undefined
       : { row: Number(label), col: index - 2 };
+  }
+
+  get referenceFrames(): string[] {
+    return this.wrapper
+      .findAll('.nui-spreadsheet__ref')
+      .map((frame) => toneOf(frame.classes(), 'nui-spreadsheet__ref--tone-'));
+  }
+
+  get paintedReferences(): string[] {
+    return this.wrapper
+      .findAll('.nui-spreadsheet__token')
+      .map(
+        (token) => `${token.text()} ${toneOf(token.classes(), 'nui-spreadsheet__token--tone-')}`,
+      );
+  }
+
+  get caret(): number | undefined {
+    const field = document.activeElement;
+
+    return field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement
+      ? (field.selectionEnd ?? undefined)
+      : undefined;
   }
 
   get rangedCells(): number {

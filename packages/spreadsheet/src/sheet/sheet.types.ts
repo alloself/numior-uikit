@@ -22,6 +22,35 @@ import type {
 } from '../core';
 import type { NuiSpreadsheetMessages } from './spreadsheet.messages';
 
+export interface FormulaSegment {
+  readonly key: string;
+  readonly text: string;
+  readonly tone: number | undefined;
+}
+
+export interface ReferenceFrame {
+  readonly key: string;
+  readonly range: NuiTableRange;
+  readonly tone: number;
+}
+
+export interface SheetReferencesOptions {
+  readonly cells: () => SheetCells | undefined;
+  readonly sheet: () => Sheet | undefined;
+  readonly locale: () => BookLocale;
+  readonly editing: SheetEditing;
+  readonly root: Readonly<ShallowRef<HTMLElement | null>>;
+  readonly nameField: Readonly<ShallowRef<HTMLInputElement | null>>;
+}
+
+export interface SheetReferences {
+  readonly segments: ComputedRef<readonly FormulaSegment[]>;
+  readonly frames: ComputedRef<readonly ReferenceFrame[]>;
+  picking(draft: NuiTableDraft): boolean;
+  onPick(range: NuiTableRange): void;
+  onKeydown(event: KeyboardEvent): void;
+}
+
 export interface SheetCellsOptions {
   readonly book: Workbook;
   readonly sheet: Sheet;
