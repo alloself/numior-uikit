@@ -153,4 +153,130 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.text(2, 0)).toBe('Pen');
     expect(sheet.changes).toEqual([]);
   });
+
+  it('shows the address and the formula of the active cell in the formula bar', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.enter(3, 1, '=C2*2');
+    await sheet.focus(3, 1);
+
+    expect(sheet.nameBox).toBe('B3');
+    expect(sheet.formula).toBe('=C2*2');
+
+    await sheet.focus(2, 2);
+
+    expect(sheet.nameBox).toBe('C2');
+    expect(sheet.formula).toBe('75%');
+  });
+
+  it('edits the active cell from the formula bar and shares the draft with the cell editor', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.focus(3, 1);
+    await sheet.focusFormula();
+
+    expect(sheet.editing).toBe(true);
+    expect(sheet.formulaFocused).toBe(true);
+
+    await sheet.typeFormula('=C2*4');
+
+    expect(sheet.editorText).toBe('=C2*4');
+
+    await sheet.pressInFormula('Enter');
+
+    expect(sheet.text(3, 1)).toBe('300.0%');
+    expect(sheet.changes).toHaveLength(1);
+    expect(sheet.focusedCell).toEqual({ row: 4, col: 1 });
+
+    await sheet.focus(3, 1);
+    await sheet.press('F2');
+    await sheet.type('=C2*5');
+
+    expect(sheet.formula).toBe('=C2*5');
+
+    await sheet.press('Escape');
+
+    expect(sheet.formula).toBe('=C2*4');
+    expect(sheet.text(3, 1)).toBe('300.0%');
+  });
+
+  it('cancels a formula bar edit with Escape and breaks lines with Alt+Enter', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.focus(2, 0);
+    await sheet.focusFormula();
+    await sheet.typeFormula('Pencil');
+    await sheet.pressInFormula('Enter', { alt: true });
+
+    expect(sheet.formula).toBe('Pencil\n');
+
+    await sheet.pressInFormula('Escape');
+
+    expect(sheet.editing).toBe(false);
+    expect(sheet.formula).toBe('Pen');
+    expect(sheet.focusedCell).toEqual({ row: 2, col: 0 });
+    expect(sheet.changes).toEqual([]);
+  });
+
+  it('goes to an address, a range or a defined name typed into the name box', async () => {
+    const book = salesBook();
+    const sales = book.sheets[0];
+
+    if (sales !== undefined) {
+      book.names.set('Total', sales, {
+        kind: 'cell',
+        ref: { row: 6, col: 3, rowAbsolute: true, colAbsolute: true },
+      });
+    }
+
+    const sheet = sheetOf({ book, label: 'Sales book' });
+
+    await sheet.goTo('d5');
+
+    expect(sheet.focusedCell).toEqual({ row: 5, col: 3 });
+    expect(sheet.nameBox).toBe('D5');
+
+    await sheet.goTo('A2:B4');
+
+    expect(sheet.focusedCell).toEqual({ row: 2, col: 0 });
+    expect(sheet.rangedCells).toBe(6);
+
+    await sheet.goTo('total');
+
+    expect(sheet.focusedCell).toEqual({ row: 7, col: 3 });
+    expect(sheet.rangedCells).toBe(0);
+
+    await sheet.goTo('B:C');
+
+    expect(sheet.focusedCell).toEqual({ row: 1, col: 1 });
+
+    await sheet.goTo('Nowhere');
+
+    expect(sheet.nameInvalid).toBe(true);
+    expect(sheet.announcement).toBe('There is no cell or name “Nowhere”');
+    expect(sheet.focusedCell).toBeUndefined();
+
+    await sheet.goTo('zz');
+
+    expect(sheet.announcement).toBe('There is no cell or name “zz”');
+  });
+
+  it('expands the formula bar, keeps it read-only on a read-only sheet and hides it on request', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book', readonly: true });
+
+    await sheet.focus(2, 0);
+    await sheet.focusFormula();
+
+    expect(sheet.formulaReadonly).toBe(true);
+    expect(sheet.editing).toBe(false);
+    expect(sheet.barExpanded).toBe(false);
+
+    await sheet.toggleBar();
+
+    expect(sheet.barExpanded).toBe(true);
+
+    await sheet.show({ formulaBar: false });
+
+    expect(sheet.hasFormulaBar).toBe(false);
+  });
 });

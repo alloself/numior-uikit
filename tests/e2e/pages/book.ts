@@ -8,6 +8,9 @@ export class BookSection {
   readonly open: Locator;
   readonly changes: Locator;
   readonly editor: Locator;
+  readonly nameBox: Locator;
+  readonly formula: Locator;
+  readonly expand: Locator;
 
   constructor(readonly page: Page) {
     this.section = page.locator('section[aria-labelledby="book-title"]');
@@ -16,6 +19,9 @@ export class BookSection {
     this.open = page.getByTestId('book-open');
     this.changes = page.getByTestId('book-changes');
     this.editor = this.sheet.locator('.nui-table__editor input');
+    this.nameBox = this.sheet.getByRole('textbox', { name: 'Поле имени' });
+    this.formula = this.sheet.getByRole('textbox', { name: 'Строка формул' });
+    this.expand = this.sheet.getByRole('button', { name: 'Развернуть строку формул' });
   }
 
   get grid(): Locator {
@@ -46,6 +52,19 @@ export class BookSection {
     await this.cell(rowLabel, column).click();
     await this.page.keyboard.press('F2');
     await this.editor.fill(text);
+    await this.page.keyboard.press('Enter');
+  }
+
+  async goTo(name: string): Promise<void> {
+    await this.nameBox.click();
+    await this.nameBox.fill(name);
+    await this.page.keyboard.press('Enter');
+  }
+
+  async enterInFormulaBar(rowLabel: string, column: number, text: string): Promise<void> {
+    await this.cell(rowLabel, column).click();
+    await this.formula.click();
+    await this.formula.fill(text);
     await this.page.keyboard.press('Enter');
   }
 

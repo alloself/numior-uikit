@@ -6,8 +6,10 @@ import type {
   NuiTableDraft,
   NuiTableExposed,
   NuiTableRange,
+  NuiTableRanges,
+  TableCellPosition,
 } from '@numior/table';
-import type { ComputedRef, ShallowRef } from 'vue';
+import type { ComputedRef, Ref, ShallowRef } from 'vue';
 import type {
   BookLocale,
   Calculator,
@@ -36,6 +38,8 @@ export interface SheetCells {
   readonly rightToLeft: boolean;
   readonly rowAt: (position: number) => number;
   readonly colAt: (position: number) => number;
+  readonly rowNear: (line: number) => number;
+  readonly colNear: (line: number) => number;
 }
 
 export type ValueShape = (typeof ValueShape)[keyof typeof ValueShape];
@@ -54,6 +58,7 @@ export interface NuiSpreadsheetProps {
   locale?: BookLocale | undefined;
   height?: string | undefined;
   readonly?: boolean | undefined;
+  formulaBar?: boolean | undefined;
 }
 
 export interface NuiSpreadsheetChange {
@@ -84,7 +89,42 @@ export interface SheetEditing {
   readonly draft: Readonly<ShallowRef<NuiTableDraft | undefined>>;
   readonly commands: NuiTableCommandSink<number>;
   setDraft(next: NuiTableDraft | undefined): void;
+  inputAt(position: TableCellPosition): string;
   editableColumns(columns: readonly NuiTableColumn<number>[]): NuiTableColumn<number>[];
+}
+
+export interface FormulaBarOptions {
+  readonly book: () => Workbook;
+  readonly sheet: () => Sheet | undefined;
+  readonly cells: () => SheetCells | undefined;
+  readonly readonly: () => boolean;
+  readonly messages: ComputedRef<NuiSpreadsheetMessages>;
+  readonly editing: SheetEditing;
+  readonly table: Readonly<ShallowRef<NuiTableExposed | null>>;
+  readonly root: Readonly<ShallowRef<HTMLElement | null>>;
+  readonly bar: Readonly<ShallowRef<HTMLElement | null>>;
+  readonly nameField: Readonly<ShallowRef<HTMLInputElement | null>>;
+  readonly formulaField: Readonly<ShallowRef<HTMLTextAreaElement | null>>;
+}
+
+export interface FormulaBar {
+  readonly active: Ref<TableCellPosition | undefined>;
+  readonly ranges: Ref<NuiTableRanges>;
+  readonly nameText: ComputedRef<string>;
+  readonly nameInvalid: Readonly<Ref<boolean>>;
+  readonly formulaText: ComputedRef<string>;
+  readonly expanded: Readonly<Ref<boolean>>;
+  readonly announcement: Readonly<Ref<string>>;
+  keepEditing(target: Element): boolean;
+  toggle(): void;
+  onNameFocus(): void;
+  onNameInput(): void;
+  onNameKeydown(event: KeyboardEvent): void;
+  onNameBlur(): void;
+  onFormulaFocus(): void;
+  onFormulaInput(): void;
+  onFormulaKeydown(event: KeyboardEvent): void;
+  onFormulaBlur(event: FocusEvent): void;
 }
 
 export const ValueShape = {

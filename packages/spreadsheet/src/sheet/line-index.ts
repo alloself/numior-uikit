@@ -2,6 +2,7 @@ export interface LineIndex {
   readonly count: number;
   readonly lineAt: (position: number) => number;
   readonly positionOf: (line: number) => number | undefined;
+  readonly positionNear: (line: number) => number;
 }
 
 const lowerBound = (sorted: Int32Array, value: number): number => {
@@ -46,5 +47,7 @@ export const createLineIndex = (total: number, hidden: readonly number[]): LineI
 
       return sorted[at] === line ? undefined : line - at;
     },
+    positionNear: (line) =>
+      Math.max(0, Math.min(line - lowerBound(sorted, line), total - sorted.length - 1)),
   };
 };

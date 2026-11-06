@@ -192,5 +192,7 @@ export const sheetCells = ({ book, sheet, locale = EN_LOCALE }: SheetCellsOption
     rightToLeft: view.rightToLeft,
     rowAt: rows.lineAt,
     colAt: cols.lineAt,
+    rowNear: rows.positionNear,
+    colNear: cols.positionNear,
   };
 };

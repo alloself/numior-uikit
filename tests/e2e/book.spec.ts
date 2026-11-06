@@ -66,6 +66,34 @@ test.describe('book', () => {
     await expect(book.changes).toHaveText('Правок: 2');
   });
 
+  test('shows the formula of the active cell, edits it from the formula bar and goes to a typed address', async ({
+    playground,
+    book,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.cell('8', 1).click();
+
+    await expect(book.nameBox).toHaveValue('B8');
+    await expect(book.formula).toHaveValue('=СУММ(B3:B7)');
+
+    await book.enterInFormulaBar('3', 1, '2000');
+
+    await expect(book.cell('8', 1)).toHaveText('845');
+    await expect(book.cell('4', 1)).toBeFocused();
+    await expect(book.changes).toHaveText('Правок: 1');
+
+    await book.goTo('g7');
+
+    await expect(book.cell('7', 6)).toBeFocused();
+    await expect(book.nameBox).toHaveValue('G7');
+
+    await book.expand.click();
+
+    await expect(book.expand).toHaveAttribute('aria-expanded', 'true');
+  });
+
   test('book has no automatically detectable WCAG AA violations', async ({ playground }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();

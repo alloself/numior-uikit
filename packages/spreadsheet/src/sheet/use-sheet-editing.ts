@@ -5,8 +5,9 @@ import {
   type NuiTableDraft,
   type NuiTableEdit,
   type NuiTableEditEvent,
+  type TableCellPosition,
 } from '@numior/table';
-import { computed, shallowRef } from 'vue';
+import { computed, ref, shallowRef } from 'vue';
 import {
   createCellEditor,
   createStepper,
@@ -53,6 +54,7 @@ const sameCell = (a: NuiTableDraft | undefined, b: NuiTableDraft): boolean =>
 
 export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
   const draft = shallowRef<NuiTableDraft>();
+  const revision = ref(0);
 
   let applied: WorkbookStep[] = [];
 
@@ -101,6 +103,7 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
       return 0;
     }
     options.changed({ steps });
+    revision.value += 1;
     refresh();
     return CHANGED_ONE;
   };
@@ -126,10 +129,20 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
     follow(() => history.value.commit(steps));
   };
 
-  const inputAt = (sheet: Sheet, cells: SheetCells, next: NuiTableDraft): string => {
+  const inputAt = (sheet: Sheet, cells: SheetCells, next: TableCellPosition): string => {
     const line = lineOf(cells, next.row, next.col);
 
     return editor.value.inputText(sheet, line.row, line.col, options.locale());
+  };
+
+  const inputAtPosition = (position: TableCellPosition): string => {
+    const sheet = options.sheet();
+    const cells = options.cells();
+
+    if (revision.value < 0 || sheet === undefined || cells === undefined) {
+      return '';
+    }
+    return inputAt(sheet, cells, position);
   };
 
   const opened = (next: NuiTableDraft): NuiTableDraft => {
@@ -174,6 +187,7 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
   return {
     draft,
     setDraft,
+    inputAt: inputAtPosition,
     editableColumns,
     commands: {
       push,

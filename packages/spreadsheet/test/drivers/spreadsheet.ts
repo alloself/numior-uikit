@@ -5,7 +5,26 @@ import { NuiSpreadsheet, type NuiSpreadsheetChange, type NuiSpreadsheetProps } f
 interface KeyOptions {
   readonly ctrl?: boolean | undefined;
   readonly shift?: boolean | undefined;
+  readonly alt?: boolean | undefined;
 }
+
+interface CellSpot {
+  readonly row: number;
+  readonly col: number;
+}
+
+const keydown = (target: Element, key: string, options: KeyOptions): void => {
+  target.dispatchEvent(
+    new KeyboardEvent('keydown', {
+      key,
+      ctrlKey: options.ctrl ?? false,
+      shiftKey: options.shift ?? false,
+      altKey: options.alt ?? false,
+      bubbles: true,
+      cancelable: true,
+    }),
+  );
+};
 
 const texts = (wrapper: VueWrapper, selector: string): string[] =>
   wrapper.findAll(selector).map((item) => item.text());
@@ -93,16 +112,7 @@ export class SpreadsheetDriver {
   }
 
   async press(key: string, options: KeyOptions = {}): Promise<void> {
-    (document.activeElement ?? document.body).dispatchEvent(
-      new KeyboardEvent('keydown', {
-        key,
-        ctrlKey: options.ctrl ?? false,
-        shiftKey: options.shift ?? false,
-        bubbles: true,
-        cancelable: true,
-      }),
-    );
-
+    keydown(document.activeElement ?? document.body, key, options);
     await nextTick();
   }
 
@@ -121,6 +131,109 @@ export class SpreadsheetDriver {
     await this.press('F2');
     await this.type(text);
     await this.press('Enter');
+  }
+
+  get hasFormulaBar(): boolean {
+    return this.formulaField !== null;
+  }
+
+  get nameBox(): string | undefined {
+    return this.nameField?.value;
+  }
+
+  get nameInvalid(): boolean {
+    return this.nameField?.getAttribute('aria-invalid') === 'true';
+  }
+
+  get formula(): string | undefined {
+    return this.formulaField?.value;
+  }
+
+  get formulaReadonly(): boolean {
+    return this.formulaField?.readOnly ?? false;
+  }
+
+  get formulaFocused(): boolean {
+    return this.formulaField !== null && document.activeElement === this.formulaField;
+  }
+
+  get barExpanded(): boolean {
+    return this.expandButton?.getAttribute('aria-expanded') === 'true';
+  }
+
+  get announcement(): string {
+    return this.wrapper.find('.nui-spreadsheet__hidden').text();
+  }
+
+  get focusedCell(): CellSpot | undefined {
+    const cell = document.activeElement?.closest('[role="gridcell"]');
+    const label = cell?.parentElement?.querySelector('[role="rowheader"]')?.textContent?.trim();
+    const index = Number(cell?.getAttribute('aria-colindex'));
+
+    return label === undefined || Number.isNaN(index)
+      ? undefined
+      : { row: Number(label), col: index - 2 };
+  }
+
+  get rangedCells(): number {
+    return this.wrapper.findAll('.nui-table__row--body .nui-table__cell--ranged').length;
+  }
+
+  async focusFormula(): Promise<void> {
+    this.formulaField?.focus();
+    await nextTick();
+  }
+
+  async typeFormula(text: string): Promise<void> {
+    const field = this.formulaField;
+
+    if (field !== null) {
+      field.value = text;
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    await nextTick();
+  }
+
+  async pressInFormula(key: string, options: KeyOptions = {}): Promise<void> {
+    if (this.formulaField !== null) {
+      keydown(this.formulaField, key, options);
+    }
+    await nextTick();
+  }
+
+  async goTo(name: string): Promise<void> {
+    const field = this.nameField;
+
+    if (field !== null) {
+      field.focus();
+      field.value = name;
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+      keydown(field, 'Enter', {});
+    }
+    await nextTick();
+  }
+
+  async toggleBar(): Promise<void> {
+    this.expandButton?.click();
+    await nextTick();
+  }
+
+  private get nameField(): HTMLInputElement | null {
+    const found = this.wrapper.find('.nui-spreadsheet__name');
+
+    return found.exists() && found.element instanceof HTMLInputElement ? found.element : null;
+  }
+
+  private get formulaField(): HTMLTextAreaElement | null {
+    const found = this.wrapper.find('.nui-spreadsheet__formula');
+
+    return found.exists() && found.element instanceof HTMLTextAreaElement ? found.element : null;
+  }
+
+  private get expandButton(): HTMLElement | null {
+    const found = this.wrapper.find('.nui-spreadsheet__bar button[aria-controls]');
+
+    return found.exists() && found.element instanceof HTMLElement ? found.element : null;
   }
 
   private cell(row: number, col: number): HTMLElement | null {

@@ -34,7 +34,8 @@
   },
   "dependencies": {
     "@numior/primitives": "workspace:*",
-    "@numior/table": "workspace:*"
+    "@numior/table": "workspace:*",
+    "@numior/vue": "workspace:*"
   },
   "devDependencies": {
     "@vue/test-utils": "2.5.1",
