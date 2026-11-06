@@ -169,6 +169,8 @@ export type {
   NumberLocale,
 } from './format';
 export { createStepper, type Stepper } from './steps/apply-step';
+export { createCellClips } from './steps/clip';
+export { FillMode, type CellClip, type CellClips, type ClipPaste } from './steps/clip.types';
 export { createWorkbookHistory } from './steps/history';
 export type { HistoryOptions, WorkbookHistory } from './steps/history';
 export { mapCell } from './steps/mapping';

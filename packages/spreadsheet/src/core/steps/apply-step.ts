@@ -1,7 +1,7 @@
-import { MAX_COLS, MAX_ROWS, containsCell } from '../address';
+import { MAX_COLS, MAX_ROWS } from '../address';
 import type { Calculator } from '../calc/calculator';
 import type { CellContent, ShiftedFormulaCell, ShiftedName } from '../calc/calc.types';
-import { CellInputKind, LineAxis, type CellRange } from '../cell.types';
+import { LineAxis, type CellRange } from '../cell.types';
 import type { ConditionalFormat } from '../conditional/conditional.types';
 import type { FormulaNode } from '../formula/formula.types';
 import { formulaReferences, onSheetNamed } from '../formula/references';
@@ -9,6 +9,7 @@ import type { SheetLayout } from '../layout/layout.types';
 import { mapLayoutFormulas, shiftLayout } from '../layout/line-layouts';
 import { dropSheetFromFormula, renameInFormula, type LineChange } from '../formula/rewrite';
 import { validDefinedName, validSheetName, type Sheet, type Workbook } from '../workbook';
+import { cellContentsIn } from './contents';
 import { createRewriter, formulaEdits, nameEdits } from './rewrites';
 import {
   StepKind,
@@ -35,8 +36,6 @@ const EMPTY_CONTENT: CellContent = { kind: 'empty' };
 const GENERAL = 'General';
 
 const NO_CHANGES: readonly LineChange[] = [];
-
-const keyOf = (row: number, col: number): number => row * MAX_COLS + col;
 
 const limitOf = (axis: LineAxis): number => (axis === LineAxis.Rows ? MAX_ROWS : MAX_COLS);
 
@@ -79,37 +78,8 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
   const formatCode = (sheet: Sheet, row: number, col: number): string =>
     book.formats.code(sheet.formats.get(row, col));
 
-  const contentsIn = (sheet: Sheet, range: CellRange): Map<number, CellEdit> => {
-    const found = new Map<number, CellEdit>();
-
-    const add = (row: number, col: number): void => {
-      const content = calculator.contentAt(sheet, row, col);
-      const format = sheet.formats.get(row, col);
-      const decoration = sheet.decorations.get(row, col);
-
-      if (content.kind !== CellInputKind.Empty || format !== 0 || decoration !== 0) {
-        found.set(keyOf(row, col), {
-          row,
-          col,
-          content,
-          format: book.formats.code(format),
-          decoration: decoration === 0 ? undefined : book.decorations.get(decoration),
-        });
-      }
-    };
-
-    sheet.cells.forEachInRange(range, add);
-    sheet.formats.forEachInRange(range, add);
-    sheet.decorations.forEachInRange(range, add);
-
-    calculator.forEachFormula((owner, row, col) => {
-      if (owner === sheet && containsCell(range, row, col)) {
-        add(row, col);
-      }
-    });
-
-    return found;
-  };
+  const contentsIn = (sheet: Sheet, range: CellRange): Map<number, CellEdit> =>
+    cellContentsIn(book, calculator, sheet, range);
 
   const clear = (sheet: Sheet, cells: Iterable<CellEdit>): void => {
     for (const cell of cells) {
