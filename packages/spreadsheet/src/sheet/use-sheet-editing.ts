@@ -189,6 +189,7 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
 
   return {
     draft,
+    revision,
     setDraft,
     apply,
     inputAt: inputAtPosition,

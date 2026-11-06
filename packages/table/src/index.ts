@@ -1,4 +1,5 @@
 export { default as NuiTable } from './table/NuiTable.vue';
+export { clipboardDataOf } from './table/table-clipboard';
 export { tableEditor } from './table/table-editors';
 export {
   cellEdge,
@@ -77,6 +78,7 @@ export type {
   NuiTableClipboardBlock,
   NuiTableClipboardData,
   NuiTableClipboardScope,
+  NuiTablePasteScope,
   NuiTableCommandSink,
   NuiTableCsvOptions,
   NuiTableEdit,

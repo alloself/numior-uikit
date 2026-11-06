@@ -96,6 +96,72 @@ test.describe('book', () => {
     await expect(book.changes).toHaveText('Правок: 2');
   });
 
+  test('copies a formula with shifted references, moves a cut cell and undoes the move', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await book.stubClipboard();
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.cell('8', 1).click();
+    await page.keyboard.press('Control+c');
+
+    await expect(book.clipFrame).toBeVisible();
+
+    await book.cell('8', 7).click();
+    await book.paste(await book.lastCopy());
+
+    await expect(book.formula).toHaveValue('=СУММ(H3:H7)');
+    await expect(book.cell('8', 7)).toHaveText('0');
+
+    await page.keyboard.press('Escape');
+
+    await expect(book.clipFrame).toHaveCount(0);
+
+    await book.cell('10', 0).click();
+    await page.keyboard.press('Control+x');
+    await expect.poll(() => book.lastCopy()).toContain('Цифры условные');
+
+    await book.cell('12', 0).click();
+    await book.paste(await book.lastCopy());
+
+    await expect(book.cell('12', 0)).toContainText('Цифры условные');
+    await expect(book.cell('10', 0)).toHaveText('');
+
+    await page.keyboard.press('Control+z');
+
+    await expect(book.cell('10', 0)).toContainText('Цифры условные');
+    await expect(book.cell('12', 0)).toHaveText('');
+  });
+
+  test('continues a series with the fill handle, copies with Ctrl+D and undoes the fill', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.enter('12', 0, '1');
+    await book.enter('13', 0, '2');
+    await book.dragAcross({ row: '12', col: 0 }, { row: '13', col: 0 });
+    await book.dragFill({ row: '16', col: 0 });
+
+    await expect(book.cell('14', 0)).toHaveText('3');
+    await expect(book.cell('16', 0)).toHaveText('5');
+
+    await page.keyboard.press('Control+z');
+
+    await expect(book.cell('14', 0)).toHaveText('');
+
+    await book.dragAcross({ row: '12', col: 0 }, { row: '15', col: 0 });
+    await page.keyboard.press('Control+d');
+
+    await expect(book.cell('15', 0)).toHaveText('1');
+  });
+
   test('shows the formula of the active cell, edits it from the formula bar and goes to a typed address', async ({
     playground,
     book,

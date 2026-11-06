@@ -13,8 +13,8 @@
 </template>
 
 <script setup lang="ts">
-import type { NuiTableRect } from '@numior/table';
 import { computed } from 'vue';
+import { rectStyle } from './sheet-rect';
 import { FrameGrip, type SheetReferenceProps } from './sheet.types';
 
 const { tone, rect, passive } = defineProps<SheetReferenceProps>();
@@ -25,15 +25,5 @@ const emit = defineEmits<{
 
 const grips = Object.values(FrameGrip);
 
-const styleOf = (shown: NuiTableRect | undefined): Record<string, string> =>
-  shown === undefined
-    ? { display: 'none' }
-    : {
-        insetBlockStart: `${String(shown.top)}px`,
-        insetInlineStart: `${String(shown.start)}px`,
-        inlineSize: `${String(shown.width)}px`,
-        blockSize: `${String(shown.height)}px`,
-      };
-
-const style = computed(() => styleOf(rect));
+const style = computed(() => rectStyle(rect));
 </script>

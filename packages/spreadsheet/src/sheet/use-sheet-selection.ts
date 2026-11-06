@@ -19,7 +19,7 @@ const keyOf = (selection: NuiSpreadsheetSelection | undefined): string =>
         ...selection.ranges.map(rangeKey),
       ].join('/');
 
-const lineRange = (cells: SheetCells, range: NuiTableRange): CellRange => {
+export const lineRange = (cells: SheetCells, range: NuiTableRange): CellRange => {
   const top = Math.min(range.from.row, range.to.row);
   const bottom = Math.max(range.from.row, range.to.row);
   const left = Math.min(range.from.col, range.to.col);
@@ -43,6 +43,11 @@ const cellRange = (cell: CellAddress): CellRange => ({
 const positionOf = (cells: SheetCells, cell: CellAddress): TableCellPosition => ({
   row: cells.rowNear(cell.row),
   col: cells.colNear(cell.col),
+});
+
+export const tableRangeOf = (cells: SheetCells, area: CellRange): NuiTableRange => ({
+  from: positionOf(cells, { row: area.top, col: area.left }),
+  to: positionOf(cells, { row: area.bottom, col: area.right }),
 });
 
 export const useSheetSelection = (options: SheetSelectionOptions): SheetSelection => {

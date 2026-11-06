@@ -1963,6 +1963,8 @@ const editing = useTableEditing<T>({
   parse: (row, key, text) =>
     parseCell(columnAt(key), text, row, resolvedLocale.value, booleanTexts.value),
   readBlock: (data, target) => clipboardHooks?.parse?.(data, target),
+  pasteHook: (data, scope) => clipboardHooks?.paste?.(data, scope),
+  cutHook: (cutRanges) => clipboardHooks?.cut?.(cutRanges) === true,
   check: checkCell,
   bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
   select: (next) => {

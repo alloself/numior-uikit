@@ -319,6 +319,7 @@ export interface NuiTableCommandSink<T> {
   push(command: NuiTableEditEvent<T>): void;
   undo(): number;
   redo(): number;
+  readonly clear?: ((ranges: NuiTableRanges) => number) | undefined;
 }
 
 export interface NuiTableClipboardData {
@@ -335,8 +336,17 @@ export interface NuiTableClipboardScope<T> {
 
 export type NuiTableClipboardBlock = readonly (readonly string[])[];
 
+export interface NuiTablePasteScope {
+  readonly ranges: NuiTableRanges;
+  readonly target: TableCellPosition;
+}
+
 export interface NuiTableClipboard<T> {
   readonly serialize?: ((scope: NuiTableClipboardScope<T>) => NuiTableClipboardData) | undefined;
+  readonly paste?:
+    | ((data: NuiTableClipboardData, scope: NuiTablePasteScope) => NuiTableRanges | undefined)
+    | undefined;
+  readonly cut?: ((ranges: NuiTableRanges) => boolean) | undefined;
   readonly parse?:
     | ((
         data: NuiTableClipboardData,

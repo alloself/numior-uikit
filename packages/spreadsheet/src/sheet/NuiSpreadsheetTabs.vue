@@ -68,13 +68,11 @@ import {
 } from '@numior/vue';
 import { computed, ref, shallowRef, useTemplateRef } from 'vue';
 import { validSheetName } from '../core';
+import { isKey } from './sheet-keys';
 import type { SheetTabsProps } from './sheet.types';
 
 const isOpening = (event: Event): boolean =>
   'newState' in event && event.newState === PopoverState.Open;
-
-const isKey = (event: KeyboardEvent, code: string, key: string): boolean =>
-  event.code === code || event.key.toLowerCase() === key;
 
 const { shown, tabs, current, readonly, messages } = defineProps<SheetTabsProps>();
 

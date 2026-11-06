@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { paintedRgbAt, rgbDelta } from '../helpers/color';
 import { boxOf, type Box } from '../helpers/geometry';
 import type { XlsxFile } from '../helpers/xlsx';
@@ -121,6 +122,20 @@ export class BookSection {
     await this.page.mouse.up();
   }
 
+  get fillGrip(): Locator {
+    return this.sheet.locator('.nui-spreadsheet__fill-grip');
+  }
+
+  async dragFill(to: CellLabel): Promise<void> {
+    const grip = await boxOf(this.fillGrip);
+    const end = await boxOf(this.cell(to.row, to.col));
+
+    await this.page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+    await this.page.mouse.down();
+    await this.page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, { steps: 6 });
+    await this.page.mouse.up();
+  }
+
   async dragGrip(grip: string, to: CellLabel): Promise<void> {
     const handle = await boxOf(
       this.referenceFrames.first().locator(`.nui-spreadsheet__grip--${grip}`),
@@ -187,6 +202,37 @@ export class BookSection {
   async sheetMenu(name: string, item: string): Promise<void> {
     await this.sheetTab(name).click({ button: 'right' });
     await this.page.getByRole('menuitem', { name: item, exact: true }).click();
+  }
+
+  get clipFrame(): Locator {
+    return this.sheet.locator('.nui-spreadsheet__clip');
+  }
+
+  stubClipboard(): Promise<void> {
+    return stubClipboard(this.page);
+  }
+
+  async lastCopy(): Promise<string> {
+    return (await copiedTexts(this.page)).at(-1) ?? '';
+  }
+
+  async paste(text: string): Promise<void> {
+    await this.page.evaluate((value) => {
+      const data = new DataTransfer();
+
+      data.setData('text/plain', value);
+
+      const event = new ClipboardEvent('paste', {
+        clipboardData: data,
+        bubbles: true,
+        cancelable: true,
+      });
+
+      if (event.clipboardData?.getData('text/plain') !== value) {
+        Object.defineProperty(event, 'clipboardData', { value: data });
+      }
+      document.activeElement?.dispatchEvent(event);
+    }, text);
   }
 
   async cellMenu(rowLabel: string, column: number, item: string): Promise<void> {

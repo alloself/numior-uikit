@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { flushPromises } from '@vue/test-utils';
 import {
   RU_LOCALE,
   createCalculator,
@@ -8,6 +9,7 @@ import {
   type SheetView,
   type Workbook,
 } from '../src/core';
+import { installClipboard, type ClipboardStub } from '../../primitives/test/support/clipboard';
 import { SpreadsheetDriver } from './drivers/spreadsheet';
 
 const mounted: SpreadsheetDriver[] = [];
@@ -34,10 +36,15 @@ const sheetOf = (...args: Parameters<typeof SpreadsheetDriver.mount>): Spreadshe
   return driver;
 };
 
+let clipboard: ClipboardStub | undefined;
+
 afterEach(() => {
   for (const driver of mounted.splice(0)) {
     driver.unmount();
   }
+
+  clipboard?.restore();
+  clipboard = undefined;
 });
 
 describe('NuiSpreadsheet', () => {
@@ -157,6 +164,104 @@ describe('NuiSpreadsheet', () => {
     await sheet.press('z', { ctrl: true });
 
     expect(sheet.text(2, 0)).toBe('Pen');
+  });
+
+  it('pastes a copied formula shifted, moves a cut cell and marks the copied range', async () => {
+    clipboard = installClipboard({ api: 'granted' });
+
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.enter(2, 3, '=C2*2');
+    await sheet.focus(2, 3);
+    await sheet.press('c', { ctrl: true });
+    await flushPromises();
+
+    expect(sheet.clipFrames).toBe(1);
+
+    await sheet.focus(3, 3);
+    await sheet.paste(clipboard.copies.at(-1) ?? '');
+
+    expect(sheet.formula).toBe('=C3*2');
+    expect(sheet.clipFrames).toBe(1);
+
+    await sheet.press('Escape');
+
+    expect(sheet.clipFrames).toBe(0);
+
+    await sheet.focus(2, 0);
+    await sheet.press('x', { ctrl: true });
+    await flushPromises();
+    await sheet.focus(4, 0);
+    await sheet.paste(clipboard.copies.at(-1) ?? '');
+
+    expect(sheet.text(4, 0)).toBe('Pen');
+    expect(sheet.text(2, 0)).toBe('');
+    expect(sheet.clipFrames).toBe(0);
+  });
+
+  it('clears the selected range and keeps its formats', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.focus(2, 0);
+    await sheet.press('ArrowRight', { shift: true });
+    await sheet.press('ArrowRight', { shift: true });
+    await sheet.press('Delete');
+
+    expect(sheet.text(2, 0)).toBe('');
+    expect(sheet.text(2, 2)).toBe('');
+
+    await sheet.enter(2, 2, '1');
+
+    expect(sheet.text(2, 2)).toBe('100.0%');
+  });
+
+  it('fills down and right with Ctrl+D and Ctrl+R and continues a series to the neighbour data', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.enter(2, 1, '5');
+    await sheet.focus(2, 1);
+
+    expect(sheet.fillHandleShown).toBe(true);
+
+    await sheet.press('ArrowDown', { shift: true });
+    await sheet.press('ArrowDown', { shift: true });
+    await sheet.press('d', { ctrl: true });
+
+    expect([sheet.text(3, 1), sheet.text(4, 1)]).toEqual(['5', '5']);
+
+    await sheet.enter(6, 0, 'x');
+
+    await sheet.select({
+      active: { row: 5, col: 0 },
+      ranges: [{ top: 5, left: 0, bottom: 5, right: 1 }],
+    });
+
+    await sheet.press('r', { ctrl: true });
+
+    expect(sheet.text(6, 1)).toBe('x');
+
+    await sheet.enter(3, 2, '7');
+    await sheet.enter(4, 2, '8');
+    await sheet.enter(5, 2, '9');
+    await sheet.enter(3, 3, '1');
+    await sheet.enter(4, 3, '2');
+
+    await sheet.select({
+      active: { row: 2, col: 3 },
+      ranges: [{ top: 2, left: 3, bottom: 3, right: 3 }],
+    });
+
+    await sheet.fillToNeighbour();
+
+    expect(sheet.text(5, 3)).toBe('3');
+  });
+
+  it('hides the fill handle while a cell is edited and in a read-only sheet', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book', readonly: true });
+
+    await sheet.focus(2, 0);
+
+    expect(sheet.fillHandleShown).toBe(false);
   });
 
   it('hides the tabs on request', () => {

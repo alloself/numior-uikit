@@ -322,3 +322,84 @@
   inline-size: 14rem;
   margin: 0;
 }
+.nui-spreadsheet__clip {
+  --_dash: var(--nui-primary);
+  --_step: 8px;
+
+  position: absolute;
+  box-sizing: border-box;
+  background-image:
+    linear-gradient(90deg, var(--_dash) 50%, transparent 0),
+    linear-gradient(90deg, var(--_dash) 50%, transparent 0),
+    linear-gradient(0deg, var(--_dash) 50%, transparent 0),
+    linear-gradient(0deg, var(--_dash) 50%, transparent 0);
+  background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+  background-size:
+    var(--_step) 2px,
+    var(--_step) 2px,
+    2px var(--_step),
+    2px var(--_step);
+  background-position:
+    0 0,
+    0 100%,
+    0 0,
+    100% 0;
+  pointer-events: none;
+  animation: nui-spreadsheet-ants 0.8s linear infinite;
+}
+@keyframes nui-spreadsheet-ants {
+  to {
+    background-position:
+      var(--_step) 0,
+      calc(-1 * var(--_step)) 100%,
+      0 calc(-1 * var(--_step)),
+      100% var(--_step);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nui-spreadsheet__clip {
+    animation-duration: 3.2s;
+  }
+}
+.nui-spreadsheet__fill,
+.nui-spreadsheet__fill-preview {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+.nui-spreadsheet__fill-preview {
+  border: 1px dashed var(--nui-text-muted);
+  transition:
+    inline-size var(--nui-duration-fast) var(--nui-easing),
+    block-size var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-spreadsheet__fill-grip {
+  --_size: 7px;
+  --_hit: 16px;
+
+  position: absolute;
+  inset-block-end: calc(var(--_hit) / -2);
+  inset-inline-end: calc(var(--_hit) / -2);
+  inline-size: var(--_hit);
+  block-size: var(--_hit);
+  cursor: crosshair;
+  pointer-events: auto;
+  touch-action: none;
+}
+.nui-spreadsheet__fill-grip::before {
+  content: '';
+  position: absolute;
+  inset: calc((var(--_hit) - var(--_size)) / 2);
+  background-color: var(--nui-primary);
+  box-shadow: 0 0 0 1px var(--nui-surface);
+  transition: transform var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-spreadsheet__fill-grip:hover::before {
+  transform: scale(1.3);
+}
+@media (pointer: coarse) {
+  .nui-spreadsheet__fill-grip {
+    --_size: 10px;
+    --_hit: 28px;
+  }
+}

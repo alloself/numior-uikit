@@ -1,4 +1,4 @@
-import { TsvChar } from './table.types';
+import { TsvChar, type NuiTableClipboardData } from './table.types';
 
 interface TsvState {
   readonly rows: string[][];
@@ -36,6 +36,14 @@ export const htmlOf = (
 
   return `<table>${head}<tbody>${lines.map((cells) => htmlRow(cells, 'td')).join('')}</tbody></table>`;
 };
+
+export const clipboardDataOf = (
+  lines: readonly (readonly string[])[],
+  header?: readonly string[],
+): NuiTableClipboardData => ({
+  text: tsvOf(header === undefined ? lines : [header, ...lines]),
+  html: htmlOf(header, lines),
+});
 
 const endField = (state: TsvState): void => {
   state.row.push(state.field);

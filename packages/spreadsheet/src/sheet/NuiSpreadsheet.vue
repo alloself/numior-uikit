@@ -8,9 +8,9 @@
     @input="assist.syncCaret"
     @keyup="assist.syncCaret"
     @focusin="assist.syncCaret"
-    @pointermove="references.onGripMove"
+    @pointermove="onPointermove"
     @pointerup="onPointerup"
-    @pointercancel="references.onGripUp"
+    @pointercancel="onPointercancel"
   >
     <div
       v-if="formulaBar"
@@ -105,7 +105,8 @@
       :bordered="table.cells.gridlines"
       :height="height"
       :column-menu="false"
-      :commands="editing.commands"
+      :commands="clipboard.commands"
+      :clipboard="clipboard.hooks"
       :keep-editing="formula.keepEditing"
       grow-editor
       :picking="references.picking"
@@ -116,6 +117,14 @@
       @pick="references.onPick"
     >
       <template #overlay="{ rectOf }">
+        <NuiSpreadsheetMarks
+          :rect-of="rectOf"
+          :handle="fill.handle.value"
+          :preview="fill.preview.value"
+          :clips="clipboard.frames.value"
+          @grip="fill.onDown"
+          @fill="fill.onDblclick"
+        />
         <NuiSpreadsheetReference
           v-for="frame in references.frames.value"
           :key="frame.key"
@@ -161,13 +170,14 @@
 </template>
 
 <script setup lang="ts">
-import { useLocale, useMessages } from '@numior/primitives';
+import { Key, useLocale, useMessages } from '@numior/primitives';
 import { NuiTable, tableCells, type NuiTableColumn, type NuiTableExposed } from '@numior/table';
 import { NuiButton, NuiIcon, type NuiTabDescriptor } from '@numior/vue';
 import { computed, ref, useId, useTemplateRef } from 'vue';
 import { EN_LOCALE, HelpLanguage, RU_LOCALE, createCalculator, type BookLocale } from '../core';
 import { defaultRowHeight, sheetCells } from './sheet-cells';
 import NuiSpreadsheetAssist from './NuiSpreadsheetAssist.vue';
+import NuiSpreadsheetMarks from './NuiSpreadsheetMarks.vue';
 import NuiSpreadsheetReference from './NuiSpreadsheetReference.vue';
 import NuiSpreadsheetTabs from './NuiSpreadsheetTabs.vue';
 import type {
@@ -180,7 +190,9 @@ import type {
 import { spreadsheetMessages } from './spreadsheet.messages';
 import { useFormulaAssist } from './use-formula-assist';
 import { useFormulaBar } from './use-formula-bar';
+import { useSheetClipboard } from './use-sheet-clipboard';
 import { useSheetEditing } from './use-sheet-editing';
+import { useSheetFill } from './use-sheet-fill';
 import { useSheetLines } from './use-sheet-lines';
 import { useSheetReferences } from './use-sheet-references';
 import { useSheetSelection } from './use-sheet-selection';
@@ -276,6 +288,14 @@ const editing = useSheetEditing({
   },
 });
 
+const clipboard = useSheetClipboard({
+  book: () => book,
+  calculator: () => calculator ?? ownCalculator.value,
+  sheet: () => shownSheet.value,
+  cells: () => cells.value,
+  editing,
+});
+
 const formula = useFormulaBar({
   book: () => book,
   sheet: () => shownSheet.value,
@@ -295,6 +315,18 @@ const selection = useSheetSelection({
   formula,
   table: grid,
   model: selectionModel,
+});
+
+const fill = useSheetFill({
+  book: () => book,
+  calculator: () => calculator ?? ownCalculator.value,
+  sheet: () => shownSheet.value,
+  cells: () => cells.value,
+  editing,
+  selection,
+  table: grid,
+  root,
+  readonly: () => readonly,
 });
 
 const lines = useSheetLines({
@@ -331,6 +363,11 @@ const assist = useFormulaAssist({
 const isToned = (segment: FormulaSegment): boolean => segment.tone !== undefined;
 
 const onKeydown = (event: KeyboardEvent): void => {
+  if (event.key === Key.Escape && editing.draft.value === undefined) {
+    clipboard.forget();
+  }
+
+  fill.onKeydown(event);
   assist.onKeydown(event);
 
   if (!event.defaultPrevented) {
@@ -338,9 +375,20 @@ const onKeydown = (event: KeyboardEvent): void => {
   }
 };
 
+const onPointermove = (event: PointerEvent): void => {
+  references.onGripMove(event);
+  fill.onMove(event);
+};
+
 const onPointerup = (): void => {
   references.onGripUp();
+  fill.onUp();
   assist.syncCaret();
+};
+
+const onPointercancel = (): void => {
+  references.onGripUp();
+  fill.onCancel();
 };
 
 const painted = computed(

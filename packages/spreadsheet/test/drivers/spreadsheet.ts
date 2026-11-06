@@ -420,6 +420,31 @@ export class SpreadsheetDriver {
     await nextTick();
   }
 
+  get fillHandleShown(): boolean {
+    const handle = this.wrapper.find('.nui-spreadsheet__fill');
+
+    return handle.exists() && handle.attributes('style')?.includes('display: none') !== true;
+  }
+
+  async fillToNeighbour(): Promise<void> {
+    await this.wrapper.find('.nui-spreadsheet__fill-grip').trigger('dblclick');
+  }
+
+  get clipFrames(): number {
+    return this.wrapper.findAll('.nui-spreadsheet__clip').length;
+  }
+
+  async paste(text: string): Promise<void> {
+    const event = new Event('paste', { bubbles: true, cancelable: true });
+
+    Object.defineProperty(event, 'clipboardData', {
+      value: { getData: (type: string) => (type === 'text/plain' ? text : '') },
+    });
+
+    (document.activeElement ?? document.body).dispatchEvent(event);
+    await nextTick();
+  }
+
   get cellMenuItems(): string[] {
     return [...document.querySelectorAll('.nui-table__cell-menu [role="menuitem"]')].map(
       (item) => item.textContent?.trim() ?? '',

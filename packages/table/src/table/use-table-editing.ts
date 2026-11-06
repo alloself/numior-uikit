@@ -17,6 +17,7 @@ import {
   type NuiTableCommandSink,
   type NuiTableEdit,
   type NuiTableEditEvent,
+  type NuiTablePasteScope,
   type NuiTableRanges,
   type ParsedCell,
   type TableCellPosition,
@@ -43,6 +44,11 @@ export interface TableEditingOptions<T> {
     data: NuiTableClipboardData,
     target: TableCellPosition,
   ) => NuiTableClipboardBlock | undefined;
+  readonly pasteHook: (
+    data: NuiTableClipboardData,
+    scope: NuiTablePasteScope,
+  ) => NuiTableRanges | undefined;
+  readonly cutHook: (ranges: NuiTableRanges) => boolean;
   readonly check: (row: T, key: string, value: NuiTableCellValue) => string | undefined;
   readonly bounds: () => RangeBounds;
   readonly select: (ranges: NuiTableRanges) => void;
@@ -237,11 +243,34 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     return true;
   };
 
+  const announceCleared = (kind: ClearKind, count: number, skipped: number): void => {
+    const texts = options.messages.value;
+    const done = kind === ClearKind.Cut ? texts.cutDone : texts.cleared;
+
+    options.announce(done({ count, skipped }));
+  };
+
+  const clearOutside = (
+    clear: (ranges: NuiTableRanges) => number,
+    ranges: NuiTableRanges,
+    kind: ClearKind,
+  ): boolean => {
+    const count = clear(ranges);
+
+    options.applied(options.keys());
+    announceCleared(kind, count, 0);
+    return true;
+  };
+
   const clearCells = (kind: ClearKind): boolean => {
     const ranges = targets();
+    const clear = options.sink()?.clear;
 
     if (!withinLimit(ranges)) {
       return false;
+    }
+    if (clear !== undefined) {
+      return clearOutside(clear, ranges, kind);
     }
     const cells = cellsIn(ranges);
 
@@ -254,11 +283,7 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     const changes = outcomes.filter(isChange);
 
     record(kind, changes);
-
-    const texts = options.messages.value;
-    const done = kind === ClearKind.Cut ? texts.cutDone : texts.cleared;
-
-    options.announce(done({ count: changes.length, skipped: skippedOf(outcomes) }));
+    announceCleared(kind, changes.length, skippedOf(outcomes));
     return true;
   };
 
@@ -337,7 +362,14 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
       options.announce(options.messages.value.readOnly);
       return false;
     }
-    return (await options.copy()) && clearCells('cut');
+    if (!(await options.copy())) {
+      return false;
+    }
+    if (options.cutHook(ranges)) {
+      announceCleared(ClearKind.Cut, areaOf(ranges), 0);
+      return true;
+    }
+    return clearCells('cut');
   };
 
   const outcomeOf = (cell: PasteCell): CellOutcome<T> => {
@@ -391,8 +423,29 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     return block ?? parseTsv(data.text);
   };
 
+  const pasteOutside = (data: NuiTableClipboardData): boolean => {
+    const target = targetCell();
+
+    const area =
+      target === undefined ? undefined : options.pasteHook(data, { ranges: targets(), target });
+
+    if (area === undefined) {
+      return false;
+    }
+    if (area.length > 0) {
+      options.select(area);
+    }
+    options.applied(options.keys());
+    options.announce(options.messages.value.pasted({ count: areaOf(area), skipped: 0 }));
+    return true;
+  };
+
   const paste = (data: NuiTableClipboardData): boolean => {
     const limit = options.limit();
+
+    if (pasteOutside(data)) {
+      return true;
+    }
 
     const plan = planPaste(
       blockOf(data),

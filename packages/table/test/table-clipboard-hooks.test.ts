@@ -119,4 +119,55 @@ describe('NuiTable clipboard hooks', () => {
       },
     ]);
   });
+
+  it('lets paste, cut and clear hooks take over and selects the pasted area', async () => {
+    clipboard = installClipboard({ api: 'granted' });
+
+    const calls: string[] = [];
+
+    const hooks: NuiTableClipboard<Staff> = {
+      serialize: ({ ranges }) => ({ text: spans(ranges) }),
+      paste: (data, { ranges, target }) => {
+        calls.push(
+          `paste ${data.text} ${spans(ranges)} at ${String(target.row)}:${String(target.col)}`,
+        );
+
+        return data.text === 'own'
+          ? [{ from: target, to: { row: target.row + 1, col: target.col } }]
+          : undefined;
+      },
+      cut: (ranges) => {
+        calls.push(`cut ${spans(ranges)}`);
+        return true;
+      },
+    };
+
+    const grid = mountStaff({
+      props: {
+        clipboard: hooks,
+        commands: {
+          push: () => undefined,
+          undo: () => 0,
+          redo: () => 0,
+          clear: (ranges) => {
+            calls.push(`clear ${spans(ranges)}`);
+            return 2;
+          },
+        },
+      },
+    });
+
+    await grid.focusCell(1, 2);
+    await grid.paste('own');
+
+    expect(grid.ranges).toEqual([{ from: { row: 1, col: 2 }, to: { row: 2, col: 2 } }]);
+    expect(grid.announcement).toBe('Вставлены 2 ячейки');
+
+    await grid.press('x', { ctrl: true });
+    await flushPromises();
+    await grid.press('Delete');
+
+    expect(calls).toEqual(['paste own 1:2-1:2 at 1:2', 'cut 1:2-2:2', 'clear 1:2-2:2']);
+    expect(grid.edits).toEqual([]);
+  });
 });
