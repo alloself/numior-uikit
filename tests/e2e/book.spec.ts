@@ -39,6 +39,35 @@ test.describe('book', () => {
     await expect(book.cell('1', 0)).toHaveText('Order');
   });
 
+  test('adds, renames and deletes sheets from the tabs and undoes it', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.addSheetButton.click();
+    await expect(book.sheetTab('Лист3')).toHaveAttribute('aria-selected', 'true');
+    await expect(book.cell('1', 0)).toHaveText('');
+
+    await book.renameSheet('Лист3', 'Заметки');
+    await expect(book.sheetNameField).toHaveAccessibleDescription('Это имя уже занято');
+
+    await page.keyboard.press('Escape');
+    await book.renameSheet('Лист3', 'План');
+    await expect(book.sheetTab('План')).toBeVisible();
+
+    await book.sheetMenu('Заметки', 'Удалить');
+    await expect(book.sheetTab('Заметки')).toHaveCount(0);
+
+    await book.sheetTab('План').press('Control+z');
+    await expect(book.sheetTab('Заметки')).toBeVisible();
+
+    await book.chooseSheet('Заметки');
+    await expect(book.cell('1', 0)).toHaveText('Второй лист без сетки');
+  });
+
   test('edits a cell, recalculates the formula totals and undoes the edit', async ({
     playground,
     book,

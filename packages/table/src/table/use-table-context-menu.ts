@@ -7,7 +7,7 @@ import type {
   NuiTableRanges,
   TableCellPosition,
 } from './table.types';
-import { Key, PointerType } from '@numior/primitives';
+import { Key, PointerType, afterRelease } from '@numior/primitives';
 
 export interface TableContextMenuOptions<T> {
   readonly enabled: () => boolean;
@@ -52,22 +52,6 @@ const TOUCH_GAP = 16;
 
 const isMenuKey = (event: KeyboardEvent): boolean =>
   event.key === Key.ContextMenu || (event.key === Key.F10 && event.shiftKey);
-
-const afterRelease = (event: MouseEvent, action: () => void): void => {
-  if (event.buttons === 0) {
-    action();
-    return;
-  }
-
-  const released = (): void => {
-    window.removeEventListener('pointerup', released, true);
-    window.removeEventListener('pointercancel', released, true);
-    window.setTimeout(action, 0);
-  };
-
-  window.addEventListener('pointerup', released, true);
-  window.addEventListener('pointercancel', released, true);
-};
 
 export const useTableContextMenu = <T>(options: TableContextMenuOptions<T>): TableContextMenu => {
   const open = ref(false);

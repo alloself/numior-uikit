@@ -184,9 +184,13 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
         : column,
     );
 
+  const apply = (steps: readonly WorkbookStep[]): boolean =>
+    follow(() => history.value.commit(steps)) > 0;
+
   return {
     draft,
     setDraft,
+    apply,
     inputAt: inputAtPosition,
     editableColumns,
     commands: {

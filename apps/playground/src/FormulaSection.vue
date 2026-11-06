@@ -7,12 +7,6 @@
       >
     </div>
     <div class="data-row">
-      <NuiSelect
-        v-model="sheetIndex"
-        :options="SHEETS"
-        aria-label="Лист"
-        data-testid="formulas-sheet"
-      />
       <NuiToggleGroup
         :model-value="localeName"
         :items="LOCALES"
@@ -40,6 +34,15 @@
       >
         20 000 строк
       </NuiButton>
+      <NuiSelect
+        :model-value="formats.current.value"
+        :options="formats.options.value"
+        :disabled="formats.current.value === undefined"
+        aria-label="Формат ячеек"
+        class="formulas-format"
+        data-testid="formulas-format"
+        @update:model-value="formats.choose"
+      />
       <div v-if="loader.progress.value" class="formulas-progress">
         <NuiProgress
           :value="loader.progress.value.done"
@@ -54,7 +57,8 @@
       ref="sheet"
       :book="sample.book"
       :calculator="sample.calculator"
-      :sheet="sheetIndex"
+      v-model:sheet="sheetIndex"
+      v-model:selection="selection"
       :locale="locale"
       label="Лист с формулами"
       data-testid="formulas"
@@ -67,18 +71,16 @@
 </template>
 
 <script setup lang="ts">
-import { NuiSpreadsheet, type NuiSpreadsheetExposed } from '@numior/spreadsheet';
-import { EN_LOCALE, RU_LOCALE } from '@numior/spreadsheet/core';
 import {
-  NuiButton,
-  NuiProgress,
-  NuiSelect,
-  NuiToggleGroup,
-  type NuiOption,
-  type NuiToggleItem,
-} from '@numior/vue';
-import { computed, markRaw, ref, useTemplateRef } from 'vue';
+  NuiSpreadsheet,
+  type NuiSpreadsheetExposed,
+  type NuiSpreadsheetSelection,
+} from '@numior/spreadsheet';
+import { EN_LOCALE, RU_LOCALE } from '@numior/spreadsheet/core';
+import { NuiButton, NuiProgress, NuiSelect, NuiToggleGroup, type NuiToggleItem } from '@numior/vue';
+import { computed, markRaw, ref, shallowRef, useTemplateRef } from 'vue';
 import { LOAD_SHEET, formulaSample } from './formula-sample';
+import { useFormatList } from './use-format-list';
 import { useSheetLoad } from './use-sheet-load';
 
 const LOCALES: readonly NuiToggleItem[] = [
@@ -88,17 +90,20 @@ const LOCALES: readonly NuiToggleItem[] = [
 
 const sample = markRaw(formulaSample());
 
-const SHEETS: readonly NuiOption<number>[] = sample.book.sheets.map((item, index) => ({
-  value: index,
-  label: item.name,
-}));
-
 const sheet = useTemplateRef<NuiSpreadsheetExposed>('sheet');
 const sheetIndex = ref(0);
 const localeName = ref('ru');
 const loaded = ref(false);
+const selection = shallowRef<NuiSpreadsheetSelection>();
 
 const locale = computed(() => (localeName.value === 'en' ? EN_LOCALE : RU_LOCALE));
+
+const formats = useFormatList({
+  sample,
+  sheet: sheetIndex,
+  selection,
+  target: () => sheet.value,
+});
 
 const loader = useSheetLoad(sample, () => {
   sheet.value?.refresh();
@@ -108,6 +113,7 @@ const switchLocale = (value: unknown): void => {
   if (value === 'ru' || value === 'en') {
     localeName.value = value;
     sample.calculator.setLocale(locale.value);
+    formats.touch();
     void loader.recalculate();
   }
 };
@@ -128,6 +134,7 @@ const fillLoad = (): void => {
 };
 
 const onChange = (): void => {
+  formats.touch();
   void loader.recalculate();
 };
 </script>

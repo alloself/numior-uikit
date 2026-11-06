@@ -231,6 +231,9 @@ label:has(> input[type='checkbox']) {
   min-inline-size: 8rem;
   max-inline-size: 16rem;
 }
+.formulas-format {
+  inline-size: 14rem;
+}
 .formulas-status {
   color: var(--nui-text-muted);
   font-size: var(--nui-font-size-sm);

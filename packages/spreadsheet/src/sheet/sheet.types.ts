@@ -10,11 +10,13 @@ import type {
   NuiTableRect,
   TableCellPosition,
 } from '@numior/table';
-import type { NuiListEntry } from '@numior/vue';
+import type { NuiListEntry, NuiMenuEntry, NuiTabDescriptor } from '@numior/vue';
 import type { ComputedRef, Ref, ShallowRef } from 'vue';
 import type {
   BookLocale,
   Calculator,
+  CellAddress,
+  CellRange,
   CellDecoration,
   FontStyle,
   HelpLanguage,
@@ -80,6 +82,14 @@ export interface SheetAssistProps {
   hintLabel: string;
 }
 
+export interface SheetTabsProps {
+  shown: boolean;
+  tabs: readonly NuiTabDescriptor[];
+  current: string;
+  readonly: boolean;
+  messages: NuiSpreadsheetMessages;
+}
+
 export interface SheetReferenceProps {
   tone: number;
   rect: NuiTableRect | undefined;
@@ -140,15 +150,55 @@ export interface NuiSpreadsheetProps {
   book: Workbook;
   calculator?: Calculator | undefined;
   label: string;
-  sheet?: number | undefined;
   locale?: BookLocale | undefined;
   height?: string | undefined;
   readonly?: boolean | undefined;
   formulaBar?: boolean | undefined;
+  sheetTabs?: boolean | undefined;
+  contextMenu?: NuiSpreadsheetContextMenu | undefined;
 }
 
 export interface NuiSpreadsheetExposed {
   refresh(): void;
+  apply(steps: readonly WorkbookStep[]): boolean;
+}
+
+export interface NuiSpreadsheetSelection {
+  readonly active: CellAddress;
+  readonly ranges: readonly CellRange[];
+}
+
+export interface NuiSpreadsheetMenuScope {
+  readonly sheet: Sheet;
+  readonly selection: NuiSpreadsheetSelection;
+}
+
+export type NuiSpreadsheetContextMenu = (scope: NuiSpreadsheetMenuScope) => readonly NuiMenuEntry[];
+
+export interface SheetSelectionOptions {
+  readonly cells: () => SheetCells | undefined;
+  readonly formula: FormulaBar;
+  readonly table: Readonly<ShallowRef<NuiTableExposed | null>>;
+  readonly model: Ref<NuiSpreadsheetSelection | undefined>;
+}
+
+export interface SheetLinesOptions {
+  readonly sheet: () => Sheet | undefined;
+  readonly selection: SheetSelection;
+  readonly editing: SheetEditing;
+  readonly messages: ComputedRef<NuiSpreadsheetMessages>;
+  readonly readonly: () => boolean;
+  readonly extra: () => NuiSpreadsheetContextMenu | undefined;
+  readonly announce: (text: string) => void;
+}
+
+export interface SheetLines {
+  menu(): readonly NuiMenuEntry[];
+}
+
+export interface SheetSelection {
+  readonly current: ComputedRef<NuiSpreadsheetSelection | undefined>;
+  select(next: NuiSpreadsheetSelection): void;
 }
 
 export interface NuiSpreadsheetChange {
@@ -179,6 +229,7 @@ export interface SheetEditing {
   readonly draft: Readonly<ShallowRef<NuiTableDraft | undefined>>;
   readonly commands: NuiTableCommandSink<number>;
   setDraft(next: NuiTableDraft | undefined): void;
+  apply(steps: readonly WorkbookStep[]): boolean;
   inputAt(position: TableCellPosition): string;
   editableColumns(columns: readonly NuiTableColumn<number>[]): NuiTableColumn<number>[];
 }
@@ -204,7 +255,7 @@ export interface FormulaBar {
   readonly nameInvalid: Readonly<Ref<boolean>>;
   readonly formulaText: ComputedRef<string>;
   readonly expanded: Readonly<Ref<boolean>>;
-  readonly announcement: Readonly<Ref<string>>;
+  readonly announcement: Ref<string>;
   keepEditing(target: Element): boolean;
   toggle(): void;
   onNameFocus(): void;

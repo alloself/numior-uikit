@@ -180,6 +180,7 @@ export type { AttrRecord, SplitAttrs } from './attrs/useSplitAttrs';
 export { useFloating } from './floating/useFloating';
 export type { FloatingOptions, FloatingSize } from './floating/useFloating';
 export { FloatingPlacement, FloatingSide, FloatingStrategy } from './floating/floating.types';
+export { afterRelease } from './popover/after-release';
 export { usePopover } from './popover/usePopover';
 export type {
   PopoverContentAttrs,

@@ -70,6 +70,99 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.direction).toBe('ltr');
   });
 
+  it('switches sheets from the tabs and keeps the selected tab in the model', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    expect(sheet.tabs).toEqual(['Sales', 'Rates']);
+
+    await sheet.chooseTab('Rates');
+
+    expect(sheet.selectedTab).toBe('Rates');
+    expect(sheet.text(1, 0)).toBe('Rate');
+  });
+
+  it('adds, renames and undoes sheet changes through the sheet history', async () => {
+    const book = salesBook();
+    const sheet = sheetOf({ book, label: 'Sales book' });
+
+    await sheet.addSheet();
+
+    expect(sheet.tabs).toEqual(['Sales', 'Rates', 'Sheet3']);
+    expect(sheet.selectedTab).toBe('Sheet3');
+
+    await sheet.renameTab('Rates', 'Sales');
+
+    expect(sheet.renameError).toBe('This name is already taken');
+
+    await sheet.renameTab('Rates', 'Курсы');
+
+    expect(sheet.tabs).toEqual(['Sales', 'Курсы', 'Sheet3']);
+
+    expect(sheet.selectedTab).toBe('Курсы');
+
+    await sheet.press('z', { ctrl: true });
+
+    expect(book.sheets.map((each) => each.name)).toEqual(['Sales', 'Rates', 'Sheet3']);
+    expect(sheet.tabs).toEqual(['Sales', 'Rates', 'Sheet3']);
+    expect(sheet.changes).toHaveLength(3);
+  });
+
+  it('reports the selection in sheet addresses and follows a selection set from outside', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.focus(2, 1);
+
+    expect(sheet.selection).toEqual({
+      active: { row: 1, col: 1 },
+      ranges: [{ top: 1, left: 1, bottom: 1, right: 1 }],
+    });
+
+    await sheet.select({
+      active: { row: 2, col: 2 },
+      ranges: [{ top: 2, left: 2, bottom: 3, right: 3 }],
+    });
+
+    expect(sheet.nameBox).toBe('C3');
+  });
+
+  it('inserts and deletes the selected rows and columns from the cell menu', async () => {
+    const book = salesBook();
+
+    const sheet = sheetOf({
+      book,
+      label: 'Sales book',
+      contextMenu: ({ selection }) => [
+        { key: 'own', label: `Own ${String(selection.active.row)}`, onSelect: () => undefined },
+      ],
+    });
+
+    await sheet.focus(2, 0);
+    await sheet.openCellMenu(2, 0);
+
+    expect(sheet.cellMenuItems).toEqual(
+      expect.arrayContaining([
+        'Insert 1 row above',
+        'Insert 1 row below',
+        'Delete 1 row',
+        'Insert 1 column left',
+        'Delete 1 column',
+        'Own 1',
+      ]),
+    );
+
+    await sheet.chooseCellMenuItem('Insert 1 row above');
+
+    expect(sheet.text(3, 0)).toBe('Pen');
+
+    await sheet.press('z', { ctrl: true });
+
+    expect(sheet.text(2, 0)).toBe('Pen');
+  });
+
+  it('hides the tabs on request', () => {
+    expect(sheetOf({ book: salesBook(), label: 'Sales book', sheetTabs: false }).tabs).toEqual([]);
+  });
+
   it('renders nothing for a book without sheets', () => {
     expect(sheetOf({ book: createWorkbook(), label: 'Empty' }).rendered).toBe(false);
   });

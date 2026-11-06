@@ -309,3 +309,16 @@
 .nui-spreadsheet__match {
   font-weight: 700;
 }
+.nui-spreadsheet__tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--nui-space-1);
+  min-inline-size: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.nui-spreadsheet__rename {
+  box-sizing: border-box;
+  inline-size: 14rem;
+  margin: 0;
+}

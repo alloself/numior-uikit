@@ -5,12 +5,6 @@
       <span class="tag">NuiSpreadsheet · @numior/spreadsheet</span>
     </div>
     <div class="data-row">
-      <NuiSelect
-        v-model="sheetIndex"
-        :options="sheetOptions"
-        aria-label="Лист книги"
-        data-testid="book-sheet"
-      />
       <NuiUpload
         v-model="files"
         :upload="openBook"
@@ -24,7 +18,7 @@
     <NuiSpreadsheet
       :book="opened.book"
       :calculator="opened.calculator"
-      :sheet="sheetIndex"
+      v-model:sheet="sheetIndex"
       label="Книга"
       data-testid="book"
       @change="changes += 1"
@@ -36,7 +30,7 @@
 <script setup lang="ts">
 import { NuiSpreadsheet } from '@numior/spreadsheet';
 import { readWorkbook } from '@numior/spreadsheet/xlsx';
-import { NuiSelect, NuiUpload, type NuiUploadAdapter, type NuiUploadItem } from '@numior/vue';
+import { NuiUpload, type NuiUploadAdapter, type NuiUploadItem } from '@numior/vue';
 import { computed, markRaw, ref, watch } from 'vue';
 import { sampleBook, type SampleBook } from './book-sample';
 
@@ -49,10 +43,6 @@ const openedOf = (item: NuiUploadItem<SampleBook> | undefined): SampleBook | und
   item?.status === 'done' ? item.result : undefined;
 
 const opened = computed(() => openedOf(files.value.at(-1)) ?? sample);
-
-const sheetOptions = computed(() =>
-  opened.value.book.sheets.map((sheet, index) => ({ value: index, label: sheet.name })),
-);
 
 const openBook: NuiUploadAdapter<SampleBook> = async (file) => {
   const read = await readWorkbook(new Uint8Array(await file.arrayBuffer()));

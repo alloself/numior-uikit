@@ -11,7 +11,6 @@ interface CellLabel {
 export class BookSection {
   readonly section: Locator;
   readonly sheet: Locator;
-  readonly sheetSelect: Locator;
   readonly open: Locator;
   readonly changes: Locator;
   readonly status: Locator;
@@ -37,7 +36,6 @@ export class BookSection {
   ) {
     this.section = page.locator(`section[aria-labelledby="${id}-title"]`);
     this.sheet = page.getByTestId(id);
-    this.sheetSelect = page.getByTestId(`${id}-sheet`);
     this.open = page.getByTestId(`${id}-open`);
     this.changes = page.getByTestId(`${id}-changes`);
     this.status = page.getByTestId(`${id}-status`);
@@ -165,7 +163,43 @@ export class BookSection {
   }
 
   async chooseSheet(name: string): Promise<void> {
-    await this.sheetSelect.click();
+    await this.sheetTab(name).click();
+  }
+
+  sheetTab(name: string): Locator {
+    return this.sheet.getByRole('tab', { name, exact: true });
+  }
+
+  get addSheetButton(): Locator {
+    return this.sheet.getByRole('button', { name: 'Добавить лист' });
+  }
+
+  get sheetNameField(): Locator {
+    return this.page.getByRole('textbox', { name: 'Имя листа' });
+  }
+
+  async renameSheet(name: string, next: string): Promise<void> {
+    await this.sheetTab(name).dblclick();
+    await this.sheetNameField.fill(next);
+    await this.page.keyboard.press('Enter');
+  }
+
+  async sheetMenu(name: string, item: string): Promise<void> {
+    await this.sheetTab(name).click({ button: 'right' });
+    await this.page.getByRole('menuitem', { name: item, exact: true }).click();
+  }
+
+  async cellMenu(rowLabel: string, column: number, item: string): Promise<void> {
+    await this.cell(rowLabel, column).click({ button: 'right' });
+    await this.page.getByRole('menuitem', { name: item, exact: true }).click();
+  }
+
+  get format(): Locator {
+    return this.page.getByTestId('formulas-format');
+  }
+
+  async chooseFormat(name: string): Promise<void> {
+    await this.format.click();
     await this.page.getByRole('option', { name, exact: true }).click();
   }
 

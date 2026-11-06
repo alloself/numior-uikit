@@ -4,8 +4,11 @@ export { spreadsheetMessages, type NuiSpreadsheetMessages } from './sheet/spread
 export type { NuiSpreadsheetPackageMessages } from './messages.types';
 export type {
   NuiSpreadsheetChange,
+  NuiSpreadsheetContextMenu,
   NuiSpreadsheetExposed,
+  NuiSpreadsheetMenuScope,
   NuiSpreadsheetProps,
+  NuiSpreadsheetSelection,
   SheetCells,
   SheetCellsOptions,
 } from './sheet/sheet.types';

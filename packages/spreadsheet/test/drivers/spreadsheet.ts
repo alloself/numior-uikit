@@ -1,12 +1,26 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
 import { nextTick } from 'vue';
-import { NuiSpreadsheet, type NuiSpreadsheetChange, type NuiSpreadsheetProps } from '../../src';
+import {
+  NuiSpreadsheet,
+  type NuiSpreadsheetChange,
+  type NuiSpreadsheetProps,
+  type NuiSpreadsheetSelection,
+} from '../../src';
 
 interface KeyOptions {
   readonly ctrl?: boolean | undefined;
   readonly shift?: boolean | undefined;
   readonly alt?: boolean | undefined;
+}
+
+interface SpreadsheetMount extends NuiSpreadsheetProps {
+  readonly sheet?: number;
+  readonly selection?: NuiSpreadsheetSelection;
+}
+
+interface Mounted {
+  wrapper: VueWrapper | undefined;
 }
 
 interface CellSpot {
@@ -50,8 +64,9 @@ export class SpreadsheetDriver {
     readonly changes: readonly NuiSpreadsheetChange[],
   ) {}
 
-  static mount(props: NuiSpreadsheetProps): SpreadsheetDriver {
+  static mount(props: SpreadsheetMount): SpreadsheetDriver {
     const changes: NuiSpreadsheetChange[] = [];
+    const mounted: Mounted = { wrapper: undefined };
 
     const wrapper = mount(NuiSpreadsheet, {
       props: {
@@ -59,9 +74,14 @@ export class SpreadsheetDriver {
         onChange: (change: NuiSpreadsheetChange) => {
           changes.push(change);
         },
+        'onUpdate:sheet': (sheet: number): void => {
+          void mounted.wrapper?.setProps({ sheet });
+        },
       },
       attachTo: document.body,
     });
+
+    mounted.wrapper = wrapper;
 
     return new SpreadsheetDriver(wrapper, changes);
   }
@@ -370,7 +390,73 @@ export class SpreadsheetDriver {
     return found.exists() && found.element instanceof HTMLInputElement ? found.element : null;
   }
 
-  async show(props: Partial<NuiSpreadsheetProps>): Promise<void> {
+  get tabs(): string[] {
+    return texts(this.wrapper, '[role="tab"]');
+  }
+
+  get selectedTab(): string {
+    return this.wrapper.find('[role="tab"][aria-selected="true"]').text();
+  }
+
+  get renameError(): string {
+    return this.wrapper.find('.nui-spreadsheet__rename .nui-field__error').text();
+  }
+
+  private tab(name: string): Element | undefined {
+    return this.wrapper.findAll('[role="tab"]').find((tab) => tab.text() === name)?.element;
+  }
+
+  async chooseTab(name: string): Promise<void> {
+    this.tab(name)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await nextTick();
+  }
+
+  get selection(): unknown {
+    return this.wrapper.emitted('update:selection')?.at(-1)?.[0];
+  }
+
+  async select(selection: NuiSpreadsheetSelection): Promise<void> {
+    await this.wrapper.setProps({ selection });
+    await nextTick();
+  }
+
+  get cellMenuItems(): string[] {
+    return [...document.querySelectorAll('.nui-table__cell-menu [role="menuitem"]')].map(
+      (item) => item.textContent?.trim() ?? '',
+    );
+  }
+
+  async openCellMenu(row: number, col: number): Promise<void> {
+    this.cell(row, col)?.dispatchEvent(
+      new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 }),
+    );
+
+    await nextTick();
+  }
+
+  async chooseCellMenuItem(label: string): Promise<void> {
+    [...document.querySelectorAll<HTMLElement>('.nui-table__cell-menu [role="menuitem"]')]
+      .find((item) => item.textContent?.trim() === label)
+      ?.click();
+
+    await nextTick();
+  }
+
+  async addSheet(): Promise<void> {
+    await this.wrapper.find('.nui-spreadsheet__tabs > button').trigger('click');
+  }
+
+  async renameTab(name: string, next: string): Promise<void> {
+    this.tab(name)?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    await nextTick();
+
+    const field = this.wrapper.find('.nui-spreadsheet__rename input');
+
+    await field.setValue(next);
+    await this.wrapper.find('.nui-spreadsheet__rename').trigger('submit');
+  }
+
+  async show(props: Partial<SpreadsheetMount>): Promise<void> {
     await this.wrapper.setProps(props);
     await nextTick();
   }

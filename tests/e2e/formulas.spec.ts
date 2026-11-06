@@ -86,6 +86,29 @@ test.describe('formulas sheet', () => {
     await expect(formulas.cell('19', 1)).toHaveText(`-36${NBSP}943,26 ₽`);
   });
 
+  test('inserts and deletes rows from the cell menu and formats the selection', async ({
+    formulas,
+  }) => {
+    await formulas.cellMenu('3', 0, 'Вставить 1 строку выше');
+
+    await expect(formulas.cell('4', 0)).toHaveText('Мониторы');
+    await expect(formulas.cell('3', 0)).toHaveText('');
+    await expect(formulas.cell('9', 3)).toHaveText(`784${NBSP}800,00 ₽`);
+
+    await formulas.cellMenu('3', 0, 'Удалить 1 строку');
+
+    await expect(formulas.cell('3', 0)).toHaveText('Мониторы');
+    await expect(formulas.cell('8', 3)).toHaveText(`784${NBSP}800,00 ₽`);
+
+    await formulas.cell('2', 1).click();
+
+    await expect(formulas.format).toContainText('Общий');
+
+    await formulas.chooseFormat('Процентный');
+
+    await expect(formulas.cell('2', 1)).toHaveText('400,00%');
+  });
+
   test('switches the book locale for numbers and formulas', async ({ formulas }) => {
     await formulas.cell('2', 4).click();
 
@@ -115,7 +138,7 @@ test.describe('formulas sheet', () => {
 
     await expect(formulas.status).toContainText('Введено ячеек: 60000', { timeout: 30_000 });
     await expect(formulas.status).toContainText('самый длинный кусок');
-    await expect(formulas.sheetSelect).toContainText('Нагрузка');
+    await expect(formulas.sheetTab('Нагрузка')).toHaveAttribute('aria-selected', 'true');
     await expect(formulas.cell('3', 2)).toHaveText('12');
     await expect(formulas.load).toBeDisabled();
   });
