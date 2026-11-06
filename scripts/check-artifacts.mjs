@@ -36,7 +36,12 @@ for (const name of await readdir('packages')) {
   );
 
   assert.equal(await readFile(`${root}/dist/LICENSE`, 'utf8'), await readFile('LICENSE', 'utf8'));
-  for (const entry of Object.values(manifest.exports)) {
+  for (const [key, entry] of Object.entries(manifest.exports)) {
+    assert.ok(
+      typeof entry === 'object' && typeof entry['@numior/source'] === 'string',
+      `${name} export ${key} must resolve to its sources under the @numior/source condition`,
+    );
+
     const targets =
       typeof entry === 'string' ? [entry] : [entry.types, entry.import, entry.default];
 
