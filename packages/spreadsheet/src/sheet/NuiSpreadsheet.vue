@@ -32,58 +32,63 @@
         @keydown="formula.onNameKeydown"
         @blur="formula.onNameBlur"
       />
-      <span class="nui-spreadsheet__fx" aria-hidden="true"></span>
-      <span class="nui-spreadsheet__field">
-        <span
-          ref="mirror"
-          class="nui-spreadsheet__mirror"
-          :class="{ 'nui-spreadsheet__mirror--shown': painted }"
-          dir="auto"
-          aria-hidden="true"
-        >
+      <span class="nui-spreadsheet__entry">
+        <span class="nui-spreadsheet__fx" aria-hidden="true"></span>
+        <span class="nui-spreadsheet__field">
           <span
-            v-for="segment in references.segments.value"
-            :key="segment.key"
-            :class="
-              segment.tone === undefined
-                ? undefined
-                : ['nui-spreadsheet__token', `nui-spreadsheet__token--tone-${segment.tone}`]
-            "
-            >{{ segment.text }}</span
+            ref="mirror"
+            class="nui-spreadsheet__mirror"
+            :class="{ 'nui-spreadsheet__mirror--shown': painted }"
+            dir="auto"
+            aria-hidden="true"
           >
+            <span
+              v-for="segment in references.segments.value"
+              :key="segment.key"
+              :class="
+                segment.tone === undefined
+                  ? undefined
+                  : ['nui-spreadsheet__token', `nui-spreadsheet__token--tone-${segment.tone}`]
+              "
+              >{{ segment.text }}</span
+            >
+          </span>
+          <textarea
+            :id="formulaId"
+            ref="formulaField"
+            class="nui-spreadsheet__formula"
+            :class="{ 'nui-spreadsheet__formula--painted': painted }"
+            :value="formula.formulaText.value"
+            :readonly="readonly"
+            :aria-label="messages.formulaBar"
+            rows="1"
+            dir="auto"
+            autocomplete="off"
+            spellcheck="false"
+            @focus="formula.onFormulaFocus"
+            @input="formula.onFormulaInput"
+            @keydown="formula.onFormulaKeydown"
+            @blur="formula.onFormulaBlur"
+            @scroll="followScroll"
+          ></textarea>
         </span>
-        <textarea
-          :id="formulaId"
-          ref="formulaField"
-          class="nui-spreadsheet__formula"
-          :class="{ 'nui-spreadsheet__formula--painted': painted }"
-          :value="formula.formulaText.value"
-          :readonly="readonly"
-          :aria-label="messages.formulaBar"
-          rows="1"
-          dir="auto"
-          autocomplete="off"
-          spellcheck="false"
-          @focus="formula.onFormulaFocus"
-          @input="formula.onFormulaInput"
-          @keydown="formula.onFormulaKeydown"
-          @blur="formula.onFormulaBlur"
-          @scroll="followScroll"
-        ></textarea>
-      </span>
-      <span class="nui-spreadsheet__expand">
-        <NuiButton
-          variant="ghost"
-          tone="neutral"
-          size="xs"
-          icon-only
-          :aria-label="messages.expandFormula"
-          :aria-expanded="formula.expanded.value"
-          :aria-controls="formulaId"
-          @click="formula.toggle"
-        >
-          <NuiIcon icon="chevron-down" :transform="{ rotate: formula.expanded.value ? 180 : 0 }" />
-        </NuiButton>
+        <span class="nui-spreadsheet__expand">
+          <NuiButton
+            variant="ghost"
+            tone="neutral"
+            size="xs"
+            icon-only
+            :aria-label="messages.expandFormula"
+            :aria-expanded="formula.expanded.value"
+            :aria-controls="formulaId"
+            @click="formula.toggle"
+          >
+            <NuiIcon
+              icon="chevron-down"
+              :transform="{ rotate: formula.expanded.value ? 180 : 0 }"
+            />
+          </NuiButton>
+        </span>
       </span>
     </div>
     <NuiTable

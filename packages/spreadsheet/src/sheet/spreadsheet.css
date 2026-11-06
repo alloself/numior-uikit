@@ -14,10 +14,8 @@
   box-sizing: border-box;
   display: flex;
   align-items: flex-start;
+  gap: var(--nui-space-2);
   min-inline-size: 0;
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius);
-  background-color: var(--nui-surface);
   color: var(--nui-text);
   font-size: var(--nui-font-size-sm);
 }
@@ -25,37 +23,60 @@
   --_lines: 4;
 }
 .nui-spreadsheet__name,
-.nui-spreadsheet__formula {
+.nui-spreadsheet__entry {
   box-sizing: border-box;
-  margin: 0;
-  border: 0;
-  border-radius: calc(var(--nui-radius) - 1px);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  line-height: var(--_line-height);
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius);
+  background-color: var(--nui-surface);
   outline: var(--nui-focus-ring-width) solid transparent;
-  outline-offset: calc(-1 * var(--nui-focus-ring-width));
+  outline-offset: var(--nui-focus-ring-offset);
   transition:
-    outline-color var(--nui-duration-fast) var(--nui-easing),
-    block-size var(--nui-duration-normal) var(--nui-easing);
+    border-color var(--nui-duration-fast) var(--nui-easing),
+    outline-color var(--nui-duration-fast) var(--nui-easing);
 }
-.nui-spreadsheet__name:focus-visible,
-.nui-spreadsheet__formula:focus-visible {
+.nui-spreadsheet__name:hover:not(:focus-within, .nui-spreadsheet__name--invalid),
+.nui-spreadsheet__entry:hover:not(:focus-within) {
+  border-color: var(--nui-border-strong);
+}
+.nui-spreadsheet__name:focus-within,
+.nui-spreadsheet__entry:focus-within {
+  border-color: var(--nui-focus);
   outline-color: var(--nui-focus);
 }
 .nui-spreadsheet__name {
   flex: none;
   inline-size: 7rem;
-  block-size: calc(var(--nui-control-height-sm) - 2px);
+  block-size: var(--nui-control-height-sm);
+  margin: 0;
   padding-inline: var(--nui-space-2);
-  border-start-end-radius: 0;
-  border-end-end-radius: 0;
+  color: inherit;
+  font: inherit;
+  line-height: var(--_line-height);
   font-variant-numeric: tabular-nums;
 }
 .nui-spreadsheet__name--invalid,
-.nui-spreadsheet__name--invalid:focus-visible {
-  outline-color: var(--nui-danger);
+.nui-spreadsheet__name--invalid:focus-within {
+  border-color: var(--nui-error);
+}
+.nui-spreadsheet__name--invalid:focus-within {
+  outline-color: var(--nui-error);
+}
+.nui-spreadsheet__entry {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-start;
+  min-inline-size: 0;
+}
+.nui-spreadsheet__formula {
+  box-sizing: border-box;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: var(--_line-height);
+  outline: none;
+  transition: block-size var(--nui-duration-normal) var(--nui-easing);
 }
 .nui-spreadsheet__fx {
   flex: none;
@@ -64,8 +85,7 @@
   align-items: flex-start;
   box-sizing: border-box;
   padding-block: var(--_pad-y);
-  padding-inline: var(--nui-space-2);
-  border-inline-start: 1px solid var(--nui-border);
+  padding-inline: var(--nui-space-2) var(--nui-space-1);
   line-height: var(--_line-height);
   color: var(--nui-text-muted);
   font-style: italic;
