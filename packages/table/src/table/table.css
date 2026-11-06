@@ -36,12 +36,14 @@
   --_span-w: initial;
   --_span-h: initial;
   --_over-w: initial;
-  --_ring-t: 1px;
-  --_ring-b: 1px;
-  --_ring-s: 1px;
-  --_ring-e: 1px;
-  --_ring-l: 1px;
-  --_ring-r: 1px;
+  --_mark: var(--nui-focus-ring-width);
+  --_mark-radius: var(--nui-radius-sm);
+  --_ring-t: var(--_mark);
+  --_ring-b: var(--_mark);
+  --_ring-s: var(--_mark);
+  --_ring-e: var(--_mark);
+  --_ring-l: var(--_mark);
+  --_ring-r: var(--_mark);
   --_cell-position: relative;
   --_cell-layer: 0;
   --_head-lap: 2px;
@@ -286,20 +288,20 @@
 
   background-color: color-mix(in oklab, var(--_row-bg), var(--nui-primary) 12%);
   box-shadow:
-    inset 0 var(--_range-t) 0 var(--nui-primary),
-    inset 0 calc(-1 * var(--_range-b)) 0 var(--nui-primary),
-    inset var(--_range-s) 0 0 var(--nui-primary),
-    inset calc(-1 * var(--_range-e)) 0 0 var(--nui-primary);
+    inset 0 var(--_range-t) 0 var(--nui-focus),
+    inset 0 calc(-1 * var(--_range-b)) 0 var(--nui-focus),
+    inset var(--_range-s) 0 0 var(--nui-focus),
+    inset calc(-1 * var(--_range-e)) 0 0 var(--nui-focus);
 }
 .nui-table__cell--ranged:dir(rtl) {
   --_cut-l: var(--_range-e);
   --_cut-r: var(--_range-s);
 
   box-shadow:
-    inset 0 var(--_range-t) 0 var(--nui-primary),
-    inset 0 calc(-1 * var(--_range-b)) 0 var(--nui-primary),
-    inset calc(-1 * var(--_range-s)) 0 0 var(--nui-primary),
-    inset var(--_range-e) 0 0 var(--nui-primary);
+    inset 0 var(--_range-t) 0 var(--nui-focus),
+    inset 0 calc(-1 * var(--_range-b)) 0 var(--nui-focus),
+    inset calc(-1 * var(--_range-s)) 0 0 var(--nui-focus),
+    inset var(--_range-e) 0 0 var(--nui-focus);
 }
 .nui-table--cell-selection:not(.nui-table--ranged, .nui-table--deselected)
   > .nui-table__frame
@@ -324,10 +326,10 @@
 
   background-color: color-mix(in oklab, var(--_row-bg), var(--nui-primary) 12%);
   box-shadow:
-    inset 0 var(--_ring-t) 0 var(--nui-primary),
-    inset 0 calc(-1 * var(--_ring-b)) 0 var(--nui-primary),
-    inset var(--_ring-l) 0 0 var(--nui-primary),
-    inset calc(-1 * var(--_ring-r)) 0 0 var(--nui-primary);
+    inset 0 var(--_ring-t) 0 var(--nui-focus),
+    inset 0 calc(-1 * var(--_ring-b)) 0 var(--nui-focus),
+    inset var(--_ring-l) 0 0 var(--nui-focus),
+    inset calc(-1 * var(--_ring-r)) 0 0 var(--nui-focus);
 }
 .nui-table__cell--filled.nui-table__cell--ranged,
 .nui-table--cell-selection:not(.nui-table--ranged, .nui-table--deselected)
@@ -351,16 +353,37 @@
     linear-gradient(var(--_tint), var(--_tint)), linear-gradient(var(--_fill), var(--_fill));
 }
 .nui-table__cell--range-top {
-  --_range-t: 1px;
+  --_range-t: var(--_mark);
 }
 .nui-table__cell--range-bottom {
-  --_range-b: 1px;
+  --_range-b: var(--_mark);
 }
 .nui-table__cell--range-start {
-  --_range-s: 1px;
+  --_range-s: var(--_mark);
 }
 .nui-table__cell--range-end {
-  --_range-e: 1px;
+  --_range-e: var(--_mark);
+}
+.nui-table__cell--range-top.nui-table__cell--range-start {
+  border-start-start-radius: var(--_mark-radius);
+}
+.nui-table__cell--range-top.nui-table__cell--range-end {
+  border-start-end-radius: var(--_mark-radius);
+}
+.nui-table__cell--range-bottom.nui-table__cell--range-start {
+  border-end-start-radius: var(--_mark-radius);
+}
+.nui-table__cell--range-bottom.nui-table__cell--range-end {
+  border-end-end-radius: var(--_mark-radius);
+}
+.nui-table--cell-selection:not(.nui-table--ranged, .nui-table--deselected)
+  > .nui-table__frame
+  > .nui-table__viewport
+  > .nui-table__grid
+  > .nui-table__body
+  > .nui-table__row--body:not(.nui-table__row--group)
+  > .nui-table__cell--data.nui-table__cell--active:is(:focus, .nui-table--cell-menu *) {
+  border-radius: var(--_mark-radius);
 }
 .nui-table--ranging {
   user-select: none;

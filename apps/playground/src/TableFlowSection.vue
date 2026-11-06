@@ -73,8 +73,10 @@ const TITLE: NuiTableCellStyle = {
 
 const FILL: NuiTableCellStyle = { fill: 'var(--nui-warning-soft)' };
 
+const RED_LINE = '2px solid var(--nui-error)';
+
 const EDGE: NuiTableCellStyle = {
-  borders: { start: '2px solid var(--nui-error)', top: '2px solid var(--nui-error)' },
+  borders: { start: RED_LINE, top: RED_LINE, end: RED_LINE, bottom: RED_LINE },
 };
 
 const LONG = 'Перетекает через пустые ячейки до первой заполненной';

@@ -113,7 +113,7 @@ export class TableFlowSection extends TableCellsSection {
     const [cell, root, primary] = await Promise.all([
       boxOf(this.cell(position, col)),
       boxOf(this.root),
-      tokenRgbIn(this.root, '--nui-primary'),
+      tokenRgbIn(this.root, '--nui-focus'),
     ]);
 
     const middle = cell.y - root.y + cell.height / 2;
