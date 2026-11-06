@@ -26,7 +26,8 @@ useFloating(trigger, panel, {
 ```
 
 `size.matchWidth` делает элемент не уже опорного, а `size.fitHeight` ограничивает его высоту
-свободным местом в окне. `enabled` включает расчёт, пока элемент открыт.
+свободным местом в окне. `size.fitWidth` так же ограничивает ширину, а `maxBlockSize` и
+`maxInlineSize` задают потолок в пикселях. `enabled` включает расчёт, пока элемент открыт.
 
 По умолчанию элемент стоит с `position: fixed`, поэтому родитель с `overflow: hidden` его не
 обрезает. `strategy: 'absolute'` ставит `position: absolute`.

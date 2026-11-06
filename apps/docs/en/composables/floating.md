@@ -26,8 +26,9 @@ useFloating(trigger, panel, {
 ```
 
 `size.matchWidth` makes the element at least as wide as the reference, and `size.fitHeight`
-limits its height to the free space in the window. `enabled` turns the positioning on while the
-element is open.
+limits its height to the free space in the window. `size.fitWidth` limits its width the same way,
+and `maxBlockSize` and `maxInlineSize` set a cap in pixels. `enabled` turns the positioning on
+while the element is open.
 
 By default the element uses `position: fixed`, so a parent with `overflow: hidden` does not clip
 it. `strategy: 'absolute'` uses `position: absolute` instead.

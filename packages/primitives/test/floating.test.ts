@@ -6,6 +6,7 @@ import { captureWithElements } from './harness/elements';
 
 interface SizeApplyArgs {
   readonly rects: { readonly reference: { readonly width: number } };
+  readonly availableWidth: number;
   readonly availableHeight: number;
 }
 
@@ -86,7 +87,7 @@ describe('useFloating', () => {
 
     computePosition.mockImplementation(async () => {
       for (const hook of sizeHooks) {
-        hook({ rects: { reference: { width: 240 } }, availableHeight: 320 });
+        hook({ rects: { reference: { width: 240 } }, availableWidth: 500, availableHeight: 320 });
       }
       return { x: 0, y: 0, placement: 'bottom-start', strategy: 'fixed', middlewareData: {} };
     });
@@ -107,8 +108,27 @@ describe('useFloating', () => {
 
     await flushPromises();
     expect(capped.second.style.maxBlockSize).toBe('200px');
+    expect(capped.second.style.maxInlineSize).toBe('');
 
     capped.unmount();
+
+    const narrow = captureWithElements((reference, floating) =>
+      useFloating(reference, floating, { size: { fitWidth: true, maxInlineSize: 384 } }),
+    );
+
+    await flushPromises();
+    expect(narrow.second.style.maxInlineSize).toBe('384px');
+
+    narrow.unmount();
+
+    const roomy = captureWithElements((reference, floating) =>
+      useFloating(reference, floating, { size: { fitWidth: true } }),
+    );
+
+    await flushPromises();
+    expect(roomy.second.style.maxInlineSize).toBe('500px');
+
+    roomy.unmount();
     const plain = captureWithElements((reference, floating) => useFloating(reference, floating));
     await flushPromises();
     expect(plain.second.style.minInlineSize).toBe('');

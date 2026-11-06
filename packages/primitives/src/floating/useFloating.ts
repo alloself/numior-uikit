@@ -16,6 +16,14 @@ export interface FloatingSize {
   readonly matchWidth?: boolean | undefined;
   readonly fitHeight?: boolean | undefined;
   readonly maxBlockSize?: number | undefined;
+  readonly fitWidth?: boolean | undefined;
+  readonly maxInlineSize?: number | undefined;
+}
+
+interface SizeRoom {
+  readonly referenceWidth: number;
+  readonly availableWidth: number;
+  readonly availableHeight: number;
 }
 
 export interface FloatingOptions {
@@ -66,21 +74,20 @@ const roundToPixel = (value: number): number => {
   return Math.round(value * ratio) / ratio;
 };
 
-const cappedHeight = (size: FloatingSize, height: number): number =>
-  size.maxBlockSize === undefined ? height : Math.min(height, size.maxBlockSize);
+const capped = (room: number, limit: number | undefined): number =>
+  limit === undefined ? room : Math.min(room, limit);
 
-const applySize = (
-  floating: HTMLElement,
-  size: FloatingSize,
-  referenceWidth: number,
-  availableHeight: number,
-): void => {
+const applySize = (floating: HTMLElement, size: FloatingSize, room: SizeRoom): void => {
   if (size.matchWidth) {
-    floating.style.minInlineSize = `${referenceWidth}px`;
+    floating.style.minInlineSize = `${room.referenceWidth}px`;
   }
 
   if (size.fitHeight) {
-    floating.style.maxBlockSize = `${cappedHeight(size, availableHeight)}px`;
+    floating.style.maxBlockSize = `${capped(room.availableHeight, size.maxBlockSize)}px`;
+  }
+
+  if (size.fitWidth) {
+    floating.style.maxInlineSize = `${capped(room.availableWidth, size.maxInlineSize)}px`;
   }
 };
 
@@ -93,12 +100,17 @@ const middleware = (options: FloatingOptions, floating: HTMLElement): Middleware
 
   const size = toValue(options.size);
 
-  if (size?.matchWidth || size?.fitHeight) {
+  if (size?.matchWidth || size?.fitHeight || size?.fitWidth) {
     list.push(
       sizeMiddleware({
         padding: 8,
-        apply: ({ rects, availableHeight }) =>
-          applySize(floating, size, rects.reference.width, availableHeight),
+        apply: ({ rects, availableWidth, availableHeight }) => {
+          applySize(floating, size, {
+            referenceWidth: rects.reference.width,
+            availableWidth,
+            availableHeight,
+          });
+        },
       }),
     );
   }
