@@ -3,8 +3,8 @@
     <div class="section-heading">
       <h2 id="table-cells-title">Лист из источника ячеек</h2>
       <span class="tag"
-        >tableCells · nextEdge · active · draft · startEdit · picking · clipboard · commands ·
-        overflow · 1 048 576 × 16 384</span
+        >tableCells · nextEdge · editable · clipboard · commands · invalidate · overflow · 1 048 576
+        × 16 384</span
       >
     </div>
     <div class="data-row">
@@ -17,69 +17,40 @@
       >
         {{ cells ? 'Скрыть лист' : 'Показать лист' }}
       </NuiButton>
+      <NuiButton
+        v-if="cells"
+        size="sm"
+        variant="outline"
+        tone="neutral"
+        data-testid="table-cells-recalc"
+        @click="recalculate"
+      >
+        Пересчитать B2:D4
+      </NuiButton>
     </div>
-    <div v-if="cells" ref="area" class="sheet-area">
-      <div class="sheet-bar">
-        <span class="sheet-name" data-testid="table-cells-name">{{ nameOf(active) }}</span>
-        <div ref="bar" class="sheet-formula">
-          <NuiInput
-            :model-value="barText"
-            size="sm"
-            dir="auto"
-            aria-label="Содержимое ячейки"
-            data-testid="table-cells-formula"
-            @update:model-value="onBarInput"
-            @focus="onBarFocus"
-            @keydown="onBarKeydown"
-            @blur="onBarBlur"
-          />
-        </div>
-        <NuiButton
-          size="sm"
-          variant="outline"
-          tone="neutral"
-          data-testid="table-cells-recalc"
-          @click="recalculate"
-        >
-          Пересчитать B2:D4
-        </NuiButton>
-      </div>
+    <template v-if="cells">
       <NuiTable
         ref="sheet"
         v-model:ranges="ranges"
-        v-model:active="active"
-        v-model:draft="draft"
         v-bind="cells"
-        :keep-editing="inBar"
         :column-menu="false"
         bordered
         size="sm"
         height="20rem"
-        :picking="picking"
         :clipboard="SHEET_CLIPBOARD"
         :commands="SHEET_COMMANDS"
         label="Лист из источника ячеек"
         data-testid="table-cells"
         @edit="onEdit"
-        @pick="onPick"
-      >
-        <template #overlay="{ rectOf }">
-          <div
-            v-for="box in referenceBoxes(rectOf, formulaReferences)"
-            :key="box.key"
-            class="sheet-ref"
-            :style="box.style"
-          ></div>
-        </template>
-      </NuiTable>
+      />
       <pre class="output" data-testid="table-cells-output">{{ output }}</pre>
-    </div>
+    </template>
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, shallowRef, useTemplateRef } from 'vue';
-import { NuiButton, NuiInput } from '@numior/vue';
+import { NuiButton } from '@numior/vue';
 import {
   NuiTable,
   columnIndex,
@@ -96,14 +67,11 @@ import {
   type NuiTableRanges,
   type TableCellPosition,
 } from '@numior/table';
-import { referenceBoxes } from './sheet-references';
 import { bigSheet, SHEET_COLS } from './sheet-source';
-import { useFormulaBar } from './use-formula-bar';
 
 const COPY_ROWS = 5000;
 const RECALC: NuiTableRange = { from: { row: 1, col: 1 }, to: { row: 3, col: 3 } };
 const COPY_COLS = 100;
-const REFERENCE = /([A-Z]{1,3})(\d+)(?::([A-Z]{1,3})(\d+))?/g;
 
 const cells = shallowRef<NuiTableCells>();
 const ranges = ref<NuiTableRanges>([]);
@@ -111,8 +79,6 @@ const entries = shallowRef<ReadonlyMap<number, string>>(new Map());
 const done = shallowRef<readonly NuiTableEditEvent<number>[]>([]);
 const undone = shallowRef<readonly NuiTableEditEvent<number>[]>([]);
 const sheet = useTemplateRef<NuiTableExposed>('sheet');
-const area = useTemplateRef<HTMLElement>('area');
-const bar = useTemplateRef<HTMLElement>('bar');
 
 const recalculated = new Map<number, string>();
 let rounds = 0;
@@ -131,33 +97,6 @@ const editableSheet: NuiTableCellSource = {
 
 const textAt = (position: TableCellPosition): string =>
   editableSheet.cellAt(position.row, position.col)?.text ?? '';
-
-const cellOf = (letters = 'A', digits = '1'): TableCellPosition => ({
-  row: Number(digits) - 1,
-  col: columnIndex(letters),
-});
-
-const referencesOf = (formula: string): NuiTableRange[] =>
-  [...formula.matchAll(REFERENCE)].map((match) => {
-    const from = cellOf(match[1], match[2]);
-
-    return { from, to: match[3] === undefined ? from : cellOf(match[3], match[4]) };
-  });
-
-const {
-  active,
-  draft,
-  barText,
-  formulaReferences,
-  nameOf,
-  picking,
-  inBar,
-  onPick,
-  onBarFocus,
-  onBarInput,
-  onBarKeydown,
-  onBarBlur,
-} = useFormulaBar({ sheet, area, bar, textAt, referencesOf });
 
 const recalculateRow = (row: number): void => {
   for (let col = RECALC.from.col; col <= RECALC.to.col; col += 1) {

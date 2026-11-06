@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { boxGaps, boxOf } from './helpers/geometry';
+import { boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
 const INCOME = 2;
@@ -508,40 +508,6 @@ test.describe('table cell styles', () => {
     await expect(sheet.cell(TITLE, 1)).toBeFocused();
   });
 
-  test('draws references over the cells they name and scrolls them under the header', async ({
-    tableSheet: sheet,
-    playground,
-  }) => {
-    await playground.emulate({ reducedMotion: 'reduce' });
-    await playground.open();
-    await sheet.show();
-    await sheet.windowSwitch.click();
-    await sheet.refsSwitch.click();
-    await expect(sheet.references).toHaveCount(2);
-
-    expect(
-      boxGaps(await boxOf(sheet.references.first()), await sheet.spanOf([3, 1], [5, 3])),
-    ).toEqual([0, 0, 0, 0]);
-
-    await sheet.scrollTo(2 * ROW, 0);
-
-    await expect
-      .poll(async () =>
-        boxGaps(await boxOf(sheet.references.first()), await sheet.spanOf([3, 1], [5, 3])),
-      )
-      .toEqual([0, 0, 0, 0]);
-
-    expect(
-      await sheet.tintOver(sheet.references.first(), sheet.cell(SALES + 2, 0)),
-    ).toBeGreaterThan(5);
-
-    await sheet.scrollTo(4 * ROW + 20, 0);
-
-    await expect
-      .poll(() => sheet.tintOver(sheet.references.first(), sheet.columnHeader(0)))
-      .toBeLessThanOrEqual(3);
-  });
-
   test('names the cell under the pointer', async ({ tableSheet: sheet, playground, isMobile }) => {
     test.skip(isMobile, 'a hovering pointer');
     await playground.emulate({ reducedMotion: 'reduce' });
@@ -556,7 +522,7 @@ test.describe('table cell styles', () => {
     await expect(sheet.pointer).toHaveText('N5');
   });
 
-  test('mirrors the row headers, the references and the pointer name in RTL', async ({
+  test('mirrors the row headers and the pointer name in RTL', async ({
     tableSheet: sheet,
     playground,
     isMobile,
@@ -566,16 +532,10 @@ test.describe('table cell styles', () => {
     await playground.open();
     await playground.setDirection('rtl');
     await sheet.show();
-    await sheet.refsSwitch.click();
-    await expect(sheet.references).toHaveCount(2);
 
     expect((await boxOf(sheet.rowHeader(SALES))).x).toBeGreaterThan(
       (await boxOf(sheet.cell(SALES, 0))).x,
     );
-
-    expect(
-      boxGaps(await boxOf(sheet.references.first()), await sheet.spanOf([3, 1], [5, 3])),
-    ).toEqual([0, 0, 0, 0]);
 
     await sheet.cell(SALES + 1, 2).hover();
     await expect(sheet.pointer).toHaveText('C5');

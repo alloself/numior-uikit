@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures';
 import { copiedTexts, stubClipboard } from './helpers/clipboard';
-import { boxGaps, boxOf } from './helpers/geometry';
+import { boxOf } from './helpers/geometry';
 
 const SHEET_ROWS = 1_048_576;
 const SHEET_COLS = 16_384;
@@ -10,7 +10,6 @@ const PAD = 8;
 const LEDGER_LAST_COLUMN = 29;
 const B2 = '4,8';
 const C3 = '9,6';
-const C6 = '18,9';
 
 const BLOCK: readonly (readonly [row: number, col: number])[] = [
   [3, 1],
@@ -81,7 +80,7 @@ test.describe('table cell source', () => {
       ]);
   });
 
-  test('edits the active cell from the formula bar and shows the draft in the cell', async ({
+  test('edits a cell from the keyboard, cancels with Escape and fills a selection with Ctrl+Enter', async ({
     tableCells: cells,
     playground,
     page,
@@ -90,33 +89,17 @@ test.describe('table cell source', () => {
     await playground.open();
     await cells.show();
     await cells.cell(1, 1).click();
+    await page.keyboard.type('42');
 
-    await expect(cells.nameBox).toHaveText('B2');
-    await expect(cells.formula).toHaveValue(B2);
-
-    await cells.formula.click();
-    await cells.formula.fill('42');
     await expect(cells.editor(1, 1)).toHaveValue('42');
-    await expect(cells.formula).toBeFocused();
 
     await page.keyboard.press('Enter');
 
     await expect(cells.cell(1, 1)).toHaveText('42');
-    await expect(cells.nameBox).toHaveText('B3');
     await expect.poll(() => cells.spot()).toEqual({ row: '3', col: 'B' });
-  });
 
-  test('cancels a formula bar edit with Escape and fills a selection with Ctrl+Enter', async ({
-    tableCells: cells,
-    playground,
-    page,
-  }) => {
-    await playground.emulate({ reducedMotion: 'reduce' });
-    await playground.open();
-    await cells.show();
     await cells.cell(2, 2).click();
-    await cells.formula.click();
-    await cells.formula.fill('черновик');
+    await page.keyboard.type('draft');
     await page.keyboard.press('Escape');
 
     await expect(cells.cell(2, 2)).toHaveText(C3);
@@ -130,87 +113,6 @@ test.describe('table cell source', () => {
     for (const [row, col] of BLOCK) {
       await expect(cells.cell(row, col)).toHaveText('7');
     }
-  });
-
-  test('picks references into a formula with the pointer and draws them over the cells', async ({
-    tableCells: cells,
-    playground,
-    page,
-  }) => {
-    await playground.emulate({ reducedMotion: 'reduce' });
-    await playground.open();
-    await cells.show();
-    await cells.cell(1, 1).click();
-    await cells.formula.click();
-    await cells.formula.fill('=SUM(');
-    await cells.cell(2, 3).click();
-
-    await expect(cells.formula).toHaveValue('=SUM(D3');
-    await expect(cells.formula).toBeFocused();
-
-    await cells.dragAcross(cells.cell(2, 3), cells.cell(4, 4));
-    await expect(cells.formula).toHaveValue('=SUM(D3:E5');
-    await expect(cells.references).toHaveCount(1);
-
-    expect(
-      boxGaps(await boxOf(cells.references.first()), await cells.spanOf([2, 3], [4, 4])),
-    ).toEqual([0, 0, 0, 0]);
-
-    await cells.formula.press('End');
-    await page.keyboard.type(')');
-    await page.keyboard.press('Enter');
-    await expect(cells.cell(1, 1)).toHaveText('=SUM(D3:E5)');
-  });
-
-  test('picks references with the arrows in the cell editor and starts again after an operator', async ({
-    tableCells: cells,
-    playground,
-    page,
-  }) => {
-    await playground.emulate({ reducedMotion: 'reduce' });
-    await playground.open();
-    await cells.show();
-    await cells.cell(5, 2).click();
-    await page.keyboard.type('=');
-    await page.keyboard.press('ArrowUp');
-
-    await expect(cells.editor(5, 2)).toHaveValue('=C5');
-
-    await page.keyboard.press('ArrowRight');
-    await expect(cells.editor(5, 2)).toHaveValue('=D5');
-
-    await page.keyboard.press('Shift+ArrowDown');
-    await expect(cells.editor(5, 2)).toHaveValue('=D5:D6');
-
-    await page.keyboard.type('+');
-    await page.keyboard.press('ArrowLeft');
-    await expect(cells.editor(5, 2)).toHaveValue('=D5:D6+B6');
-    await expect(cells.references).toHaveCount(2);
-
-    await page.keyboard.press('Escape');
-    await expect(cells.cell(5, 2)).toHaveText(C6);
-  });
-
-  test('picks a reference with a tap on a phone', async ({
-    tableCells: cells,
-    playground,
-    page,
-    isMobile,
-  }) => {
-    test.skip(!isMobile, 'touch only');
-    await playground.emulate({ reducedMotion: 'reduce' });
-    await playground.open();
-    await cells.show();
-    await cells.cell(1, 1).tap();
-    await cells.formula.tap();
-    await cells.formula.fill('=');
-    await cells.cell(3, 2).tap();
-
-    await expect(cells.formula).toHaveValue('=C4');
-    await expect(cells.formula).toBeFocused();
-
-    await page.keyboard.press('Escape');
-    await expect(cells.cell(1, 1)).toHaveText(B2);
   });
 
   test('copies and pastes semicolon separated lines through the clipboard hooks', async ({
@@ -273,7 +175,7 @@ test.describe('table cell source', () => {
     await expect(cells.cell(4, 1)).toHaveText('14,1');
   });
 
-  test('mirrors the sheet in RTL: arrows follow the reading direction and boxes cover their cells', async ({
+  test('mirrors the sheet in RTL: the row headers sit at the end and the arrows follow the reading direction', async ({
     tableCells: cells,
     playground,
     page,
@@ -289,22 +191,8 @@ test.describe('table cell source', () => {
 
     await cells.cell(1, 1).click();
     await page.keyboard.press('ArrowLeft');
+
     await expect.poll(() => cells.spot()).toEqual({ row: '2', col: 'C' });
-
-    await page.keyboard.type('=');
-    await page.keyboard.press('ArrowLeft');
-    await expect(cells.editor(1, 2)).toHaveValue('=D2');
-
-    await page.keyboard.press('Shift+ArrowDown');
-    await expect(cells.editor(1, 2)).toHaveValue('=D2:D3');
-    await expect(cells.references).toHaveCount(1);
-
-    expect(
-      boxGaps(await boxOf(cells.references.first()), await cells.spanOf([1, 3], [2, 3])),
-    ).toEqual([0, 0, 0, 0]);
-
-    await page.keyboard.press('Escape');
-    await expect(cells.editor(1, 2)).toHaveCount(0);
   });
 
   test('lets the note under the ledger flow over the empty cells and leaves them to the pointer', async ({

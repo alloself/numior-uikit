@@ -13,7 +13,6 @@ import { SmartFormSection } from './smart-form';
 import { TableSection } from './table';
 import { TableDetailSection } from './table-detail';
 import { TableSheetSection } from './table-sheet';
-import { FormulasSection } from './formulas';
 import { TableCellsSection } from './table-cells';
 import { TableFlowSection } from './table-flow';
 import { TreeSection } from './tree';
@@ -198,7 +197,6 @@ export class PlaygroundPage {
   readonly tableSheet: TableSheetSection;
   readonly tableCells: TableCellsSection;
   readonly tableFlow: TableFlowSection;
-  readonly formulas: FormulasSection;
   readonly editor: EditorSection;
 
   constructor(readonly page: Page) {
@@ -248,7 +246,6 @@ export class PlaygroundPage {
     this.tableSheet = new TableSheetSection(page);
     this.tableCells = new TableCellsSection(page);
     this.tableFlow = new TableFlowSection(page);
-    this.formulas = new FormulasSection(page);
     this.editor = new EditorSection(page);
   }
 

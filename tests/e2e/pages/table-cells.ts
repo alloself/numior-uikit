@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { boxOf, spanBox, type Box } from '../helpers/geometry';
+import { boxOf } from '../helpers/geometry';
 import {
   isNumber,
   listOf,
@@ -31,9 +31,6 @@ export class TableCellsSection {
   readonly viewport: Locator;
   readonly grid: Locator;
   readonly output: Locator;
-  readonly nameBox: Locator;
-  readonly formula: Locator;
-  readonly references: Locator;
   readonly recalc: Locator;
 
   constructor(
@@ -46,9 +43,6 @@ export class TableCellsSection {
     this.viewport = this.root.locator(':scope > .nui-table__frame > .nui-table__viewport');
     this.grid = this.viewport.locator(':scope > .nui-table__grid');
     this.output = page.getByTestId(`${id}-output`);
-    this.nameBox = page.getByTestId(`${id}-name`);
-    this.formula = page.getByTestId(`${id}-formula`);
-    this.references = this.grid.locator(':scope > .nui-table__overlay .sheet-ref');
     this.recalc = page.getByTestId(`${id}-recalc`);
   }
 
@@ -66,10 +60,6 @@ export class TableCellsSection {
 
   cell(position: number, col: number): Locator {
     return this.row(position).locator(`:scope > [aria-colindex="${col + ROW_HEADERS + 1}"]`);
-  }
-
-  spanOf(from: [row: number, col: number], to: [row: number, col: number]): Promise<Box> {
-    return spanBox(this.cell(...from), this.cell(...to));
   }
 
   async dragAcross(from: Locator, to: Locator): Promise<void> {

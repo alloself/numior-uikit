@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { paintedRgbAt, rgbDelta } from '../helpers/color';
 import { boxOf, type Box } from '../helpers/geometry';
 import type { XlsxFile } from '../helpers/xlsx';
 
@@ -158,6 +159,23 @@ export class BookSection {
     return this.sheet
       .locator('.nui-table')
       .evaluate((table) => table.classList.contains('nui-table--bordered'));
+  }
+
+  async tintOver(target: Locator, outside: Locator, inset: number): Promise<number> {
+    const [box, other, root] = await Promise.all([
+      boxOf(target),
+      boxOf(outside),
+      boxOf(this.sheet),
+    ]);
+
+    const y = other.y + other.height / 2 - root.y;
+
+    const [inner, outer] = await paintedRgbAt(this.sheet, [
+      [box.x + inset - root.x, y],
+      [other.x + other.width / 2 - root.x, y],
+    ]);
+
+    return inner === undefined || outer === undefined ? Number.NaN : rgbDelta(inner, outer);
   }
 
   async scrollBody(pixels: number): Promise<void> {

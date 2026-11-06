@@ -3,8 +3,7 @@
     <div class="section-heading">
       <h2 id="table-sheet-title">Лист</h2>
       <span class="tag"
-        >NuiTable · bordered · cellStyle · rowHeaders · rowHeights · merges · frozenRows ·
-        overlay</span
+        >NuiTable · bordered · cellStyle · rowHeaders · rowHeights · merges · frozenRows</span
       >
     </div>
     <div class="data-row">
@@ -26,7 +25,6 @@
         <NuiSwitch v-model="quarter" data-testid="table-sheet-quarter">Первый квартал</NuiSwitch>
         <NuiSwitch v-model="long" data-testid="table-sheet-long">Журнал</NuiSwitch>
         <NuiSwitch v-model="frozen" data-testid="table-sheet-frozen">Закрепить шапку</NuiSwitch>
-        <NuiSwitch v-model="refs" data-testid="table-sheet-refs">Ссылки</NuiSwitch>
       </div>
       <NuiTable
         ref="sheet"
@@ -49,16 +47,7 @@
         data-testid="table-sheet"
         @pointermove="onPointer"
         @pointerleave="pointer = ''"
-      >
-        <template v-if="refs" #overlay="{ rectOf }">
-          <div
-            v-for="box in referenceBoxes(rectOf, REFERENCES)"
-            :key="box.key"
-            class="sheet-ref"
-            :style="box.style"
-          ></div>
-        </template>
-      </NuiTable>
+      />
       <pre class="output" data-testid="table-sheet-output">{{ output }}</pre>
       <p class="output" data-testid="table-sheet-pointer">{{ pointer }}</p>
     </template>
@@ -78,7 +67,6 @@ import {
   type NuiTableRanges,
   type NuiTableRowHeights,
 } from '@numior/table';
-import { referenceBoxes, type SheetReference } from './sheet-references';
 
 type SheetValue = string | number | null;
 type SheetRowKind = 'title' | 'head' | 'section' | 'item' | 'total' | 'result' | 'note' | 'source';
@@ -268,11 +256,6 @@ const QUARTER_COLUMNS = 4;
 const LATER_MONTHS: readonly string[] = [...LETTERS].slice(QUARTER_COLUMNS, MONTHS.length + 1);
 const NO_COLUMNS: readonly string[] = [];
 
-const REFERENCES: readonly SheetReference[] = [
-  { range: { from: { row: 3, col: 1 }, to: { row: 5, col: 3 } }, tone: 'var(--nui-primary)' },
-  { range: { from: { row: 6, col: 1 }, to: { row: 6, col: 3 } }, tone: 'var(--nui-success)' },
-];
-
 const PEAK = Math.max(
   ...SHEET_ROWS.flatMap((row) =>
     row.kind === 'item' ? row.cells.slice(1, MONTHS.length + 1).map((value) => Number(value)) : [],
@@ -286,7 +269,6 @@ const windowed = ref(false);
 const quarter = ref(false);
 const long = ref(false);
 const frozen = ref(false);
-const refs = ref(false);
 const pointer = ref('');
 const sheet = useTemplateRef<NuiTableExposed>('sheet');
 const ranges = ref<NuiTableRanges>([]);

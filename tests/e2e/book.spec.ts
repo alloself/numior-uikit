@@ -269,6 +269,86 @@ test.describe('book', () => {
     await expect(book.changes).toHaveText('Правок: 0');
   });
 
+  test('picks references with the arrows in the cell editor and starts again after an operator', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.cell('9', 2).click();
+    await page.keyboard.type('=');
+    await page.keyboard.press('ArrowUp');
+
+    await expect(book.editor).toHaveValue('=C8');
+
+    await page.keyboard.press('ArrowLeft');
+
+    await expect(book.editor).toHaveValue('=B8');
+
+    await page.keyboard.press('Shift+ArrowUp');
+
+    await expect(book.editor).toHaveValue('=B7:B8');
+
+    await page.keyboard.type('+');
+    await page.keyboard.press('ArrowLeft');
+
+    await expect(book.editor).toHaveValue('=B7:B8+B9');
+    await expect(book.referenceFrames).toHaveCount(2);
+
+    await page.keyboard.press('Escape');
+
+    await expect(book.cell('9', 2)).toHaveText('');
+    await expect(book.referenceFrames).toHaveCount(0);
+  });
+
+  test('picks a reference with a tap on a phone', async ({ playground, book, page, isMobile }) => {
+    test.skip(!isMobile, 'touch only');
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.cell('9', 1).tap();
+    await book.formula.tap();
+    await book.formula.fill('=');
+    await book.cell('3', 1).tap();
+
+    await expect(book.formula).toHaveValue('=B3');
+    await expect(book.formula).toBeFocused();
+    await expect(book.referenceFrames).toHaveCount(1);
+
+    await page.keyboard.press('Escape');
+
+    await expect(book.cell('9', 1)).toHaveText('');
+    await expect(book.changes).toHaveText('Правок: 0');
+  });
+
+  test('keeps the frames of a formula under the frozen rows while the sheet scrolls', async ({
+    playground,
+    book,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'the probe reads cells outside the narrow sheet');
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.enter('9', 1, '=СУММ(D3:D4)');
+    await book.cell('9', 1).click();
+
+    await expect(book.cell('9', 1)).toHaveText('736');
+    await expect(book.referenceFrames).toHaveCount(1);
+
+    expect(await book.tintOver(book.referenceFrames.first(), book.cell('3', 7), 8)).toBeGreaterThan(
+      5,
+    );
+
+    await book.scrollBody(72);
+
+    await expect
+      .poll(() => book.tintOver(book.referenceFrames.first(), book.columnHeader('E'), 40))
+      .toBeLessThanOrEqual(3);
+  });
+
   test('book has no automatically detectable WCAG AA violations', async ({ playground }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
