@@ -1,5 +1,24 @@
-import type { NuiTableCellSource, NuiTableCellStyle, NuiTableRange } from '@numior/table';
-import type { BookLocale, CellDecoration, FontStyle, Sheet, ThemePalette, Workbook } from '../core';
+import type {
+  NuiTableCellSource,
+  NuiTableCellStyle,
+  NuiTableColumn,
+  NuiTableCommandSink,
+  NuiTableDraft,
+  NuiTableExposed,
+  NuiTableRange,
+} from '@numior/table';
+import type { ComputedRef, ShallowRef } from 'vue';
+import type {
+  BookLocale,
+  Calculator,
+  CellDecoration,
+  FontStyle,
+  Sheet,
+  ThemePalette,
+  Workbook,
+  WorkbookStep,
+} from '../core';
+import type { NuiSpreadsheetMessages } from './spreadsheet.messages';
 
 export interface SheetCellsOptions {
   readonly book: Workbook;
@@ -29,10 +48,16 @@ export type StyleCache = (
 
 export interface NuiSpreadsheetProps {
   book: Workbook;
+  calculator?: Calculator | undefined;
   label: string;
   sheet?: number | undefined;
   locale?: BookLocale | undefined;
   height?: string | undefined;
+  readonly?: boolean | undefined;
+}
+
+export interface NuiSpreadsheetChange {
+  readonly steps: readonly WorkbookStep[];
 }
 
 export interface StyleInput {
@@ -41,6 +66,25 @@ export interface StyleInput {
   readonly base: FontStyle;
   readonly shape: ValueShape;
   readonly formatColor: number | undefined;
+}
+
+export interface SheetEditingOptions {
+  readonly book: () => Workbook;
+  readonly calculator: () => Calculator;
+  readonly sheet: () => Sheet | undefined;
+  readonly cells: () => SheetCells | undefined;
+  readonly locale: () => BookLocale;
+  readonly readonly: () => boolean;
+  readonly messages: ComputedRef<NuiSpreadsheetMessages>;
+  readonly table: Readonly<ShallowRef<NuiTableExposed | null>>;
+  readonly changed: (change: NuiSpreadsheetChange) => void;
+}
+
+export interface SheetEditing {
+  readonly draft: Readonly<ShallowRef<NuiTableDraft | undefined>>;
+  readonly commands: NuiTableCommandSink<number>;
+  setDraft(next: NuiTableDraft | undefined): void;
+  editableColumns(columns: readonly NuiTableColumn<number>[]): NuiTableColumn<number>[];
 }
 
 export const ValueShape = {

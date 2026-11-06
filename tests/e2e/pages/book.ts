@@ -6,12 +6,16 @@ export class BookSection {
   readonly sheet: Locator;
   readonly sheetSelect: Locator;
   readonly open: Locator;
+  readonly changes: Locator;
+  readonly editor: Locator;
 
   constructor(readonly page: Page) {
     this.section = page.locator('section[aria-labelledby="book-title"]');
     this.sheet = page.getByTestId('book');
     this.sheetSelect = page.getByTestId('book-sheet');
     this.open = page.getByTestId('book-open');
+    this.changes = page.getByTestId('book-changes');
+    this.editor = this.sheet.locator('.nui-table__editor input');
   }
 
   get grid(): Locator {
@@ -36,6 +40,18 @@ export class BookSection {
     return this.cell(rowLabel, column).evaluate((cell) =>
       cell.classList.contains('nui-table__cell--merged'),
     );
+  }
+
+  async enter(rowLabel: string, column: number, text: string): Promise<void> {
+    await this.cell(rowLabel, column).click();
+    await this.page.keyboard.press('F2');
+    await this.editor.fill(text);
+    await this.page.keyboard.press('Enter');
+  }
+
+  async startEdit(rowLabel: string, column: number): Promise<void> {
+    await this.cell(rowLabel, column).click();
+    await this.page.keyboard.press('F2');
   }
 
   async chooseSheet(name: string): Promise<void> {

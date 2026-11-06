@@ -21,41 +21,50 @@
         data-testid="book-open"
       />
     </div>
-    <NuiSpreadsheet :book="book" :sheet="sheetIndex" label="Книга" data-testid="book" />
+    <NuiSpreadsheet
+      :book="opened.book"
+      :calculator="opened.calculator"
+      :sheet="sheetIndex"
+      label="Книга"
+      data-testid="book"
+      @change="changes += 1"
+    />
+    <p role="status" data-testid="book-changes">Правок: {{ changes }}</p>
   </section>
 </template>
 
 <script setup lang="ts">
 import { NuiSpreadsheet } from '@numior/spreadsheet';
-import type { Workbook } from '@numior/spreadsheet/core';
 import { readWorkbook } from '@numior/spreadsheet/xlsx';
 import { NuiSelect, NuiUpload, type NuiUploadAdapter, type NuiUploadItem } from '@numior/vue';
 import { computed, markRaw, ref, watch } from 'vue';
-import { sampleBook } from './book-sample';
+import { sampleBook, type SampleBook } from './book-sample';
 
 const sample = markRaw(sampleBook());
 const sheetIndex = ref(0);
-const files = ref<NuiUploadItem<Workbook>[]>([]);
+const changes = ref(0);
+const files = ref<NuiUploadItem<SampleBook>[]>([]);
 
-const openedOf = (item: NuiUploadItem<Workbook> | undefined): Workbook | undefined =>
+const openedOf = (item: NuiUploadItem<SampleBook> | undefined): SampleBook | undefined =>
   item?.status === 'done' ? item.result : undefined;
 
-const book = computed(() => openedOf(files.value.at(-1)) ?? sample);
+const opened = computed(() => openedOf(files.value.at(-1)) ?? sample);
 
 const sheetOptions = computed(() =>
-  book.value.sheets.map((sheet, index) => ({ value: index, label: sheet.name })),
+  opened.value.book.sheets.map((sheet, index) => ({ value: index, label: sheet.name })),
 );
 
-const openBook: NuiUploadAdapter<Workbook> = async (file) => {
+const openBook: NuiUploadAdapter<SampleBook> = async (file) => {
   const read = await readWorkbook(new Uint8Array(await file.arrayBuffer()));
 
   if (read.kind === 'rejected') {
     throw new Error(`Книга не открылась: ${read.reason}`);
   }
-  return markRaw(read.book);
+  return markRaw({ book: read.book, calculator: read.calculator });
 };
 
-watch(book, () => {
+watch(opened, () => {
   sheetIndex.value = 0;
+  changes.value = 0;
 });
 </script>

@@ -80,7 +80,7 @@ export interface CellEditor {
   nameStep(name: string, text: string, sheet: Sheet, options?: NameOptions): EntryResult;
   nameText(name: string, scope?: Sheet, anchor?: CellAddress): string | undefined;
   tableStep(sheet: Sheet, range: CellRange, options?: TableOptions): WorkbookStep;
-  inputText(sheet: Sheet, row: number, col: number): string;
+  inputText(sheet: Sheet, row: number, col: number, locale?: BookLocale): string;
   shown(sheet: Sheet, row: number, col: number): FormattedValue;
   formatAt(sheet: Sheet, row: number, col: number): string;
   setFormat(sheet: Sheet, range: CellRange, code: string): void;
@@ -505,9 +505,8 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
       stepper.apply(result.step);
       return undefined;
     },
-    inputText: (sheet, row, col) => {
+    inputText: (sheet, row, col, locale = calculator.locale) => {
       const formula = calculator.formulaAt(sheet, row, col);
-      const { locale } = calculator;
 
       return formula === undefined
         ? editText(sheet.cells.get(row, col), formatAt(sheet, row, col), locale.numbers)

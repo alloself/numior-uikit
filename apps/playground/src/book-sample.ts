@@ -1,13 +1,23 @@
 import {
+  RU_LOCALE,
+  createCalculator,
+  createCellEditor,
+  columnName,
   createWorkbook,
   lineLayoutsOf,
   numberValue,
   textValue,
+  type Calculator,
   type CellDecoration,
   type LineLayout,
   type Sheet,
   type Workbook,
 } from '@numior/spreadsheet/core';
+
+export interface SampleBook {
+  readonly book: Workbook;
+  readonly calculator: Calculator;
+}
 
 const MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь'];
 
@@ -89,9 +99,6 @@ const fillBudget = (book: Workbook, sheet: Sheet): void => {
   decorate(book, sheet, total, 0, TOTAL);
 
   MONTHS.forEach((_month, index) => {
-    const sum = LINES.reduce((acc, line) => acc + line.base + line.step * index, 0);
-
-    sheet.cells.set(total, index + 1, numberValue(sum));
     sheet.formats.set(total, index + 1, money);
     decorate(book, sheet, total, index + 1, TOTAL);
   });
@@ -110,13 +117,27 @@ const fillBudget = (book: Workbook, sheet: Sheet): void => {
   };
 };
 
-export const sampleBook = (): Workbook => {
+const sumTotals = (book: Workbook, calculator: Calculator, sheet: Sheet): void => {
+  const editor = createCellEditor(book, calculator);
+  const total = LINES.length + 2;
+
+  MONTHS.forEach((_month, index) => {
+    const column = columnName(index + 1);
+
+    editor.enter(sheet, total, index + 1, `=СУММ(${column}3:${column}${String(total)})`);
+  });
+};
+
+export const sampleBook = (): SampleBook => {
   const book = createWorkbook();
+  const calculator = createCalculator(book, { locale: RU_LOCALE });
   const budget = book.addSheet('Бюджет');
   const notes = book.addSheet('Заметки');
 
   fillBudget(book, budget);
+  sumTotals(book, calculator, budget);
+  calculator.recalculate();
   notes.cells.set(0, 0, textValue('Второй лист без сетки'));
   notes.layout = { ...notes.layout, view: { ...notes.layout.view, gridlines: false } };
-  return book;
+  return { book, calculator };
 };
