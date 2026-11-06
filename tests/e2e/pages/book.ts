@@ -40,9 +40,9 @@ export class BookSection {
     this.paintedReferences = this.sheet.locator('.nui-spreadsheet__token');
     this.frameGrips = this.referenceFrames.locator('.nui-spreadsheet__grip');
     this.functions = this.sheet.getByRole('listbox', { name: 'Функции' });
-    this.hint = this.sheet.getByRole('tooltip');
-    this.signature = this.hint.locator('.nui-spreadsheet__signature');
-    this.summary = this.hint.locator('.nui-spreadsheet__summary');
+    this.hint = this.sheet.getByRole('list', { name: 'Аргументы функции' });
+    this.signature = this.hint.locator('.nui-row__title');
+    this.summary = this.hint.locator('.nui-row__description');
     this.currentArgument = this.hint.locator('.nui-spreadsheet__hint-part--current');
   }
 

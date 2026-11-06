@@ -134,6 +134,7 @@
       :summary="assist.summary.value"
       :typed="assist.typed.value"
       :label="messages.functions"
+      :hint-label="messages.arguments"
       @choose="assist.choose"
       @hover="assist.hover"
     />

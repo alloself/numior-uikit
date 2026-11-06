@@ -77,6 +77,7 @@ export interface SheetAssistProps {
   summary: string;
   typed: number;
   label: string;
+  hintLabel: string;
 }
 
 export interface SheetReferenceProps {

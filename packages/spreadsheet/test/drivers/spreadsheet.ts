@@ -275,7 +275,7 @@ export class SpreadsheetDriver {
 
   get hint(): string {
     return this.wrapper
-      .findAll('.nui-spreadsheet__signature span')
+      .findAll('[aria-label="Function arguments"] .nui-row__title span')
       .map((part) =>
         part.classes().includes('nui-spreadsheet__hint-part--current')
           ? `<${part.element.textContent ?? ''}>`
@@ -285,7 +285,7 @@ export class SpreadsheetDriver {
   }
 
   get hintSummary(): string {
-    return this.wrapper.find('.nui-spreadsheet__summary').text();
+    return this.wrapper.find('[aria-label="Function arguments"] .nui-row__description').text();
   }
 
   get hinted(): boolean {
