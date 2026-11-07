@@ -3,7 +3,11 @@
   <div
     ref="content"
     class="nui-popover nui-layer"
-    :class="[`nui-popover--padding-${padding}`, `nui-popover--size-${size}`]"
+    :class="[
+      `nui-popover--padding-${padding}`,
+      `nui-popover--size-${size}`,
+      { 'nui-popover--fit': fit },
+    ]"
     v-bind="{ ...contentAttrs, ...hover.contentAttrs.value, ...$attrs }"
   >
     <slot v-if="!lazy || opened" />
@@ -40,6 +44,7 @@ const {
   openDelay = 400,
   closeDelay = 200,
   lazy = false,
+  fit = false,
 } = defineProps<NuiPopoverProps>();
 
 const open = defineModel<boolean>('open', { default: false });
@@ -71,6 +76,7 @@ useFloating(reference, contentElement, {
   placement: () => placement,
   offset: () => offset,
   arrow: arrowNode,
+  size: () => (fit ? { fitHeight: true } : undefined),
   enabled: open,
 });
 

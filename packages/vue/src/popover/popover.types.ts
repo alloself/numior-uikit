@@ -14,6 +14,7 @@ export interface NuiPopoverProps {
   openDelay?: number | undefined;
   closeDelay?: number | undefined;
   lazy?: boolean | undefined;
+  fit?: boolean | undefined;
 }
 
 export type NuiPopoverPadding = (typeof NuiPopoverPadding)[keyof typeof NuiPopoverPadding];

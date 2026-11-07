@@ -48,6 +48,10 @@ const docs: DocsMap = {
         ru: 'Создаёт содержимое при первом открытии и держит его после закрытия. Подходит для панелей, которые открываются редко, но не для содержимого, нужного на сервере.',
         en: 'Creates the content on the first open and keeps it after closing. Suits rarely opened panels, not content the server must render.',
       },
+      fit: {
+        ru: 'Не даёт поповеру выйти за край экрана по высоте: высота ограничивается местом у якоря, содержимое прокручивается. Не сочетается со стрелкой, которую прокрутка обрезает.',
+        en: 'Keeps the popover within the screen height: the height is limited to the room at the anchor and the content scrolls. Does not combine with the arrow, which the scrolling clips.',
+      },
     },
     models: { 'v-model:open': { ru: 'Открыт ли поповер.', en: 'Whether the popover is open.' } },
     slots: {

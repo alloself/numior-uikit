@@ -88,6 +88,17 @@ describe('NuiPopover', () => {
     anchor.remove();
   });
 
+  it('limits its height to the room on the screen and scrolls when asked to fit', async () => {
+    const popover = PopoverDriver.mount({ open: true, props: { fit: true } });
+
+    await flushPromises();
+
+    expect(popover.content.classes()).toContain('nui-popover--fit');
+    expect(popover.content.element.style.maxBlockSize).toMatch(/px$/);
+
+    popover.unmount();
+  });
+
   describe('opened by hover', () => {
     afterEach(() => vi.useRealTimers());
 

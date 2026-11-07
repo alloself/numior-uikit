@@ -35,6 +35,10 @@
   --_min-inline: 0;
   --_max-inline: calc(100vw - var(--nui-space-4));
 }
+.nui-popover--fit {
+  overflow: auto;
+  overscroll-behavior: contain;
+}
 .nui-popover--padding-sm {
   padding: var(--nui-space-1);
 }
