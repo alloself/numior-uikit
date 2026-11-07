@@ -118,6 +118,22 @@ export interface ConditionalFormat {
   readonly extension?: boolean | undefined;
 }
 
+export interface PlacedRule {
+  readonly ranges: readonly CellRange[];
+  readonly entry: ConditionalEntry;
+}
+
+export interface RuleDraft {
+  readonly ranges: readonly CellRange[];
+  readonly rule: ConditionalRule;
+  readonly stopIfTrue: boolean;
+}
+
+export interface ConditionalPreset {
+  readonly key: string;
+  readonly style: DifferentialStyle;
+}
+
 export interface ScaleLook {
   readonly from: StyleColor;
   readonly to: StyleColor;

@@ -32,14 +32,25 @@ export { createWorkbook, validDefinedName, validSheetName } from './workbook';
 export { OFFICE_THEME, colorHex, tinted, type ThemePalette } from './theme';
 export { lineLayoutsOf } from './layout/line-layouts';
 export { createConditionalPainter, type ConditionalPainter } from './conditional/looks';
+export {
+  CONDITIONAL_PRESETS,
+  moveRule,
+  putRule,
+  removeRule,
+  rulesOf,
+  touches,
+} from './conditional/rules';
 export type {
   BarLook,
   ConditionalEntry,
   ConditionalFormat,
   ConditionalLook,
+  ConditionalPreset,
   ConditionalRule,
   DifferentialStyle,
   IconLook,
+  PlacedRule,
+  RuleDraft,
   ScaleLook,
   ScaleStop,
   Threshold,
