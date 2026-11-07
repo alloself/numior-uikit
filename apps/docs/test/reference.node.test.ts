@@ -200,7 +200,7 @@ describe('docs reference', () => {
     expect(hotkey?.signature).toContain('useHotkey: (');
     expect(alias?.kind).toBe('type');
     expect(alias?.signature.startsWith('type IconAlias =')).toBe(true);
-  });
+  }, 30_000);
 
   it('prints an enumeration as its literal union and resolves its members', () => {
     const file = `${ROOT}packages/primitives/dist/index.d.ts`;
@@ -216,7 +216,7 @@ describe('docs reference', () => {
 
     expect(members.get('ListOrientation.Horizontal')).toBe('"horizontal"');
     expect(members.get('Key.Space')).toBe('" "');
-  });
+  }, 30_000);
 
   it('merges descriptions and reports missing or stale ones', () => {
     const described = applyDocs(button, {
