@@ -117,6 +117,7 @@
   block-size: 1.25em;
   background: currentColor;
   animation: nui-otp-field-blink 1.2s var(--nui-easing) infinite;
+  animation-play-state: var(--nui-animation-play-state, running);
 }
 .nui-otp-field__placeholder {
   color: var(--nui-text-muted);

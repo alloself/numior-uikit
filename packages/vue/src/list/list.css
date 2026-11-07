@@ -150,6 +150,7 @@
 }
 .nui-list__spinner {
   animation: nui-list-spin 0.8s linear infinite;
+  animation-play-state: var(--nui-animation-play-state, running);
 }
 .nui-list-item {
   --_min-size: var(--nui-control-height-md);

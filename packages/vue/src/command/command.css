@@ -78,6 +78,7 @@
 }
 .nui-command--loading .nui-command__icon {
   animation: nui-command-pulse 1.2s var(--nui-easing) infinite;
+  animation-play-state: var(--nui-animation-play-state, running);
 }
 @keyframes nui-command-pulse {
   50% {

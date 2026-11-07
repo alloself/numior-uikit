@@ -50,6 +50,9 @@ h2 {
   padding: 1.5rem;
   margin-block-end: 1rem;
 }
+.panel--away {
+  --nui-animation-play-state: paused;
+}
 .settings {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
@@ -148,6 +151,7 @@ label:has(> input[type='checkbox']) {
 .form-demo__spinner {
   color: var(--nui-text-muted);
   animation: form-demo-spin 0.8s linear infinite;
+  animation-play-state: var(--nui-animation-play-state, running);
 }
 @keyframes form-demo-spin {
   to {

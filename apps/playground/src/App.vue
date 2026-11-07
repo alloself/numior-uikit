@@ -185,6 +185,7 @@ import TableCellsSection from './TableCellsSection.vue';
 import TableFlowSection from './TableFlowSection.vue';
 import FormulaSection from './FormulaSection.vue';
 import EditorSection from './EditorSection.vue';
+import { usePausedAway } from './use-paused-away';
 
 const density = ref('comfortable');
 const direction = ref<'ltr' | 'rtl'>('ltr');
@@ -194,6 +195,8 @@ const loading = ref(false);
 const nestedDialogOpen = ref(false);
 const workspace = useTemplateRef<HTMLElement>('workspace');
 const { scheme, resolved } = useColorScheme({ scope: workspace });
+
+usePausedAway(workspace);
 
 const accentLabels = {
   indigo: 'Индиго',

@@ -59,6 +59,7 @@
   background-size: 40% 100%;
   background-position: -67% 0;
   animation: nui-progress-slide 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  animation-play-state: var(--nui-animation-play-state, running);
 }
 .nui-progress:indeterminate::-webkit-progress-bar {
   background: transparent;

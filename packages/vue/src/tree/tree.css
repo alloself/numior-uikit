@@ -123,6 +123,7 @@
   inline-size: 1rem;
   block-size: 1rem;
   animation: nui-tree-spin 0.8s linear infinite;
+  animation-play-state: var(--nui-animation-play-state, running);
 }
 .nui-tree__checkbox {
   display: inline-flex;

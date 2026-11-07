@@ -186,6 +186,7 @@
 .nui-editor__content:focus .nui-editor__gap::after {
   opacity: 1;
   animation: nui-editor-caret 1.06s step-end infinite;
+  animation-play-state: var(--nui-animation-play-state, running);
 }
 @keyframes nui-editor-caret {
   50% {

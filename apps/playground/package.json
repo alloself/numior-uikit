@@ -20,6 +20,7 @@
     "@numior/tailwind": "workspace:*",
     "@numior/tokens": "workspace:*",
     "@numior/vue": "workspace:*",
+    "@vueuse/core": "15.0.0",
     "shiki": "4.4.3",
     "vue": "3.5.43"
   },

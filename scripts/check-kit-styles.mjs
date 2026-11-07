@@ -226,6 +226,25 @@ const findings = sources.flatMap((file) => {
   return [...selectors, ...tags];
 });
 
+const PAUSABLE = /animation-play-state:\s*var\(--nui-animation-play-state\b/u;
+
+const endless = sources.flatMap((file) =>
+  stylesOf(file.path, file.source).flatMap((style) =>
+    [...style.text.matchAll(/animation:[^;{}]*\binfinite\b[^;{}]*;/gu)].flatMap((match) => {
+      const index = match.index ?? 0;
+
+      const rule = style.text.slice(
+        style.text.lastIndexOf('{', index),
+        style.text.indexOf('}', index),
+      );
+
+      return PAUSABLE.test(rule)
+        ? []
+        : [`${relative(ROOT, file.path)}:${lineOf(file.source, style.offset + index)}`];
+    }),
+  ),
+);
+
 if (findings.length > 0) {
   console.error(
     `Kit components are styled from outside their package (use props, own wrappers or a kit API):\n${findings.join('\n')}`,
@@ -234,4 +253,14 @@ if (findings.length > 0) {
   process.exitCode = 1;
 } else {
   console.log('kit styles: no outside overrides');
+}
+
+if (endless.length > 0) {
+  console.error(
+    `Infinite animations must pause through animation-play-state: var(--nui-animation-play-state, running):\n${endless.join('\n')}`,
+  );
+
+  process.exitCode = 1;
+} else {
+  console.log('kit styles: every infinite animation can be paused');
 }

@@ -23,6 +23,7 @@
   background: linear-gradient(90deg, var(--_tint) 40%, var(--_shine) 50%, var(--_tint) 60%) 0 0 /
     var(--_sweep) 100% repeat-x;
   animation: nui-skeleton-shimmer 2s linear infinite;
+  animation-play-state: var(--nui-animation-play-state, running);
 }
 .nui-skeleton__line:last-child:not(:only-child) {
   inline-size: 60%;
