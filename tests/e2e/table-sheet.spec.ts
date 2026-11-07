@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { boxOf } from './helpers/geometry';
+import { boxOf, textBoxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
 const INCOME = 2;
@@ -285,7 +285,7 @@ test.describe('table cell styles', () => {
     expect((await boxOf(sheet.cell(SALES, LAST_COLUMN))).height).toBeCloseTo(3 * ROW, 3);
     expect(await sheet.middleGap(SALES, LAST_COLUMN)).toBeLessThan(1.5);
     expect(await sheet.middleGap(COSTS, LAST_COLUMN)).toBeLessThan(1.5);
-    expect((await boxOf(sheet.text(COSTS, LAST_COLUMN))).height).toBeGreaterThan(ROW);
+    expect((await textBoxOf(sheet.text(COSTS, LAST_COLUMN))).height).toBeGreaterThan(ROW);
     expect(await sheet.boxHeights()).toEqual([44, ROW]);
   });
 

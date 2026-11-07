@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { boxOf } from '../helpers/geometry';
+import { CELL_TEXT, boxOf } from '../helpers/geometry';
 import {
   isNumber,
   listOf,
@@ -83,7 +83,7 @@ export class TableCellsSection {
   }
 
   text(position: number, col: number): Locator {
-    return this.cell(position, col).locator('.nui-table__text');
+    return this.cell(position, col).locator(CELL_TEXT);
   }
 
   lineAfter(position: number, col: number): Promise<string> {

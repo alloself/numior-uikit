@@ -1818,6 +1818,7 @@ const spilledPaint = (
   align: spill.align,
   overflow: base?.overflow ?? false,
   spill: covered?.text,
+  flows: true,
 });
 
 const floodPaints = (

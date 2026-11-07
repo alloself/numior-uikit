@@ -7,7 +7,7 @@ export default defineConfig(({ command }) => ({
   plugins: [vue(), tailwindcss()],
   resolve: command === 'serve' ? { conditions: ['@numior/source'] } : {},
   build: {
-    cssTarget: ['chrome123', 'firefox120', 'safari17.5'],
+    cssTarget: ['chrome123', 'firefox125', 'safari17.5'],
     rolldownOptions: {
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),

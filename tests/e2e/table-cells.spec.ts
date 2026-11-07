@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures';
 import { copiedTexts, stubClipboard } from './helpers/clipboard';
-import { boxOf } from './helpers/geometry';
+import { boxOf, textBoxOf } from './helpers/geometry';
 
 const SHEET_ROWS = 1_048_576;
 const SHEET_COLS = 16_384;
@@ -210,7 +210,7 @@ test.describe('table cell source', () => {
     await expect(cells.cell(NOTE_ROW, 0)).toHaveClass(/nui-table__cell--spill/);
 
     const [note, cell] = await Promise.all([
-      boxOf(cells.text(NOTE_ROW, 0)),
+      textBoxOf(cells.text(NOTE_ROW, 0)),
       boxOf(cells.cell(NOTE_ROW, 0)),
     ]);
 

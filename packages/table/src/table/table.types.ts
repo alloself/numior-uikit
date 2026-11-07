@@ -250,6 +250,7 @@ export interface TableCellPaint {
   readonly align: NuiTableAlign | undefined;
   readonly overflow: boolean;
   readonly spill?: string | undefined;
+  readonly flows?: boolean | undefined;
 }
 
 export type TableRowPaint = ReadonlyMap<string, TableCellPaint>;

@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { paintedColumn, paintedRgbAt, rgbDelta, type Point, type Rgb } from '../helpers/color';
-import { boxOf } from '../helpers/geometry';
+import { CELL_TEXT, boxOf, textBoxOf } from '../helpers/geometry';
 import {
   isNumber,
   listOf,
@@ -135,7 +135,7 @@ export class TableSheetSection {
   }
 
   text(position: number, col: number): Locator {
-    return this.cell(position, col).locator('.nui-table__text');
+    return this.cell(position, col).locator(CELL_TEXT);
   }
 
   content(cell: Locator): Locator {
@@ -155,7 +155,7 @@ export class TableSheetSection {
   async middleGap(position: number, col: number): Promise<number> {
     const [cell, text] = await Promise.all([
       boxOf(this.cell(position, col)),
-      boxOf(this.text(position, col)),
+      textBoxOf(this.text(position, col)),
     ]);
 
     return Math.abs(text.y + text.height / 2 - (cell.y + cell.height / 2));

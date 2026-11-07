@@ -18,14 +18,17 @@ const fontOf = (metrics: TextMetrics, style: TextStyle): string =>
     sizeOf(metrics, style?.['font-size']),
   )}px ${metrics.family}`;
 
-const SAMPLE = '.nui-table__body .nui-table__cell--data > .nui-table__content > .nui-table__text';
+const SAMPLE = [
+  '.nui-table__body .nui-table__cell--data > .nui-table__content--text',
+  '.nui-table__body .nui-table__cell--data > .nui-table__content > .nui-table__text',
+].join(', ');
 
 const contextOf = (): OffscreenCanvasRenderingContext2D | null =>
   typeof OffscreenCanvas === 'undefined' ? null : new OffscreenCanvas(1, 1).getContext('2d');
 
 const metricsOf = (root: HTMLElement): TextMetrics | undefined => {
   const text = root.querySelector(SAMPLE);
-  const content = text?.parentElement;
+  const content = text?.classList.contains('nui-table__content--text') ? text : text?.parentElement;
 
   if (text === null || content === null || content === undefined) {
     return undefined;

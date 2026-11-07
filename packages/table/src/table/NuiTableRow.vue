@@ -3,7 +3,7 @@
     class="nui-table__row"
     :class="rowClass"
     role="row"
-    :aria-rowindex="hiddenRow ? undefined : rowIndex"
+    :aria-rowindex="shownIndex"
     :aria-level="level"
     :aria-expanded="expanded"
     :aria-selected="selected"
@@ -37,21 +37,20 @@
         :tabindex="tabindexOf(cell.colIndex)"
         :style="styleOf(cell)"
       >
-        <div class="nui-table__content">
+        <div
+          class="nui-table__content"
+          :class="{ 'nui-table__content--text': bareOf(cell) !== undefined }"
+        >
+          <template v-if="bareOf(cell) !== undefined">{{ bareOf(cell) }}</template>
           <span
-            v-if="pieceOf(cell) !== undefined"
+            v-else-if="pieceOf(cell) !== undefined"
             :class="pieceClassOf(cell)"
             :aria-hidden="pieceHiddenOf(cell)"
             >{{ pieceOf(cell) }}</span
           >
           <slot
-            v-else-if="cell.kind !== TablePlacementKind.Data"
-            name="utility"
-            :column="cell.key"
-            :position="position"
-          />
-          <slot
             v-else
+            :name="slotOf(cell)"
             :column="cell.key"
             :merge="leadOf(cell)"
             :revision="ownRevision"
@@ -221,6 +220,8 @@ const sticky = computed(
 
 const hiddenRow = computed(() => (part === TableRowPart.Skeleton ? true : undefined));
 
+const shownIndex = computed(() => (hiddenRow.value ? undefined : rowIndex));
+
 const busy = computed(() => loading || undefined);
 
 const wrapsText = computed(
@@ -325,6 +326,12 @@ const cellSelected = (cell: TableDataCell): 'true' | undefined =>
 
 const ownRevision = computed(() => (position === undefined ? 0 : (revisionOf?.(position) ?? 0)));
 
+const paints = computed(() => {
+  void revision;
+  void ownRevision.value;
+  return position === undefined ? undefined : paint?.(position, spans);
+});
+
 const plainTexts = computed((): ReadonlyMap<string, string> | undefined => {
   void revision;
   void ownRevision.value;
@@ -347,15 +354,12 @@ const plainTexts = computed((): ReadonlyMap<string, string> | undefined => {
 
 const plainOf = (cell: TableCellLayout): string | undefined => plainTexts.value?.get(cell.key);
 
-const paints = computed(() => {
-  void revision;
-  void ownRevision.value;
-  return position === undefined ? undefined : paint?.(position, spans);
-});
-
 const spillOf = (cell: TableCellLayout): string | undefined => paints.value?.get(cell.key)?.spill;
 
 const pieceOf = (cell: TableCellLayout): string | undefined => spillOf(cell) ?? plainOf(cell);
+
+const bareOf = (cell: TableCellLayout): string | undefined =>
+  paints.value?.get(cell.key)?.flows === true ? undefined : plainOf(cell);
 
 const pieceClassOf = (cell: TableCellLayout): string =>
   spillOf(cell) === undefined ? 'nui-table__text' : 'nui-table__spill';
@@ -387,6 +391,9 @@ const cellClass = (cell: TableDataCell): unknown[] => [
     'nui-table__cell--dragging': head?.(cell.key)?.dragging === true,
   },
 ];
+
+const slotOf = (cell: TableDataCell): 'default' | 'utility' =>
+  cell.kind === TablePlacementKind.Data ? 'default' : 'utility';
 
 const handleOf = (cell: TableDataCell): string => cell.handle ?? cell.key;
 

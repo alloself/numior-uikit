@@ -21,6 +21,22 @@ export const boxOf = async (target: Locator): Promise<Box> => {
   return box;
 };
 
+export const CELL_TEXT =
+  ':scope > .nui-table__content--text, :scope > .nui-table__content > .nui-table__text';
+
+export const textBoxOf = (target: Locator): Promise<Box> =>
+  target.evaluate((element) => {
+    const range = document.createRange();
+
+    range.selectNodeContents(element);
+
+    const { x, y, width, height } = element.classList.contains('nui-table__content--text')
+      ? range.getBoundingClientRect()
+      : element.getBoundingClientRect();
+
+    return { x, y, width, height };
+  });
+
 export const renderedWidth = async (target: Locator): Promise<number> =>
   (await target.boundingBox())?.width ?? 0;
 

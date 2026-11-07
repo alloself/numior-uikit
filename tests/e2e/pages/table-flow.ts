@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { paintedColumn, rgbDelta, tokenRgbIn } from '../helpers/color';
-import { boxOf, type Box } from '../helpers/geometry';
+import { boxOf, textBoxOf, type Box } from '../helpers/geometry';
 import { TableCellsSection } from './table-cells';
 
 export interface TableFlowPiece {
@@ -29,7 +29,7 @@ export class TableFlowSection extends TableCellsSection {
 
   piece(position: number, col: number): Locator {
     return this.cell(position, col).locator(
-      ':scope > .nui-table__content > :is(.nui-table__spill, .nui-table__text)',
+      ':scope > .nui-table__content--text, :scope > .nui-table__content > :is(.nui-table__spill, .nui-table__text)',
     );
   }
 
@@ -38,7 +38,7 @@ export class TableFlowSection extends TableCellsSection {
 
     const [cell, box, facts] = await Promise.all([
       boxOf(this.cell(position, col)),
-      boxOf(piece),
+      textBoxOf(piece),
       piece.evaluate((element) => ({
         line: getComputedStyle(element.closest('td, th') ?? element).borderInlineEndWidth,
         clip: getComputedStyle(element).textOverflow,

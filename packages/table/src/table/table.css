@@ -456,6 +456,27 @@
   text-align: end;
   font-variant-numeric: tabular-nums;
 }
+.nui-table__cell--align-center {
+  text-align: center;
+}
+.nui-table__cell--align-end {
+  text-align: end;
+}
+.nui-table__cell > .nui-table__content.nui-table__content--text {
+  display: block;
+  align-content: center;
+  text-align: match-parent;
+  text-overflow: ellipsis;
+  unicode-bidi: plaintext;
+}
+.nui-table__cell--clip > .nui-table__content.nui-table__content--text {
+  text-overflow: clip;
+}
+.nui-table__cell--wrap > .nui-table__content.nui-table__content--text {
+  text-overflow: clip;
+  white-space: normal;
+  line-height: var(--nui-line-height);
+}
 .nui-table__cell--select .nui-table__content {
   padding-inline: 0;
 }
