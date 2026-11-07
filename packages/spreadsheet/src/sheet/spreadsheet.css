@@ -166,6 +166,9 @@
     inline-size var(--nui-duration-fast) var(--nui-easing),
     block-size var(--nui-duration-fast) var(--nui-easing);
 }
+.nui-spreadsheet--dragging .nui-spreadsheet__ref {
+  transition: none;
+}
 .nui-spreadsheet__grip {
   --_grip: 8px;
   --_corner: 12px;
@@ -247,10 +250,29 @@
   background-color: var(--_tone);
   box-shadow: 0 0 0 1px var(--nui-surface);
 }
+.nui-spreadsheet__ref--first-row
+  > :is(
+    .nui-spreadsheet__grip--top,
+    .nui-spreadsheet__grip--top-start,
+    .nui-spreadsheet__grip--top-end
+  ) {
+  inset-block-start: 0;
+}
+.nui-spreadsheet__ref--first-col
+  > :is(
+    .nui-spreadsheet__grip--start,
+    .nui-spreadsheet__grip--top-start,
+    .nui-spreadsheet__grip--bottom-start
+  ) {
+  inset-inline-start: 0;
+}
 @media (pointer: coarse) {
   .nui-spreadsheet__grip {
     --_grip: 16px;
     --_corner: 24px;
+  }
+  .nui-spreadsheet__grip:is(.nui-spreadsheet__grip--top-end, .nui-spreadsheet__grip--bottom-start) {
+    display: none;
   }
 }
 .nui-spreadsheet__ref--tone-1,
@@ -369,22 +391,33 @@
 }
 .nui-spreadsheet__fill-preview {
   border: 1px dashed var(--nui-text-muted);
-  transition:
-    inline-size var(--nui-duration-fast) var(--nui-easing),
-    block-size var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-spreadsheet__fill-clear {
+  position: absolute;
+  box-sizing: border-box;
+  background-color: color-mix(in oklab, var(--nui-text) 14%, transparent);
+  pointer-events: none;
 }
 .nui-spreadsheet__fill-grip {
   --_size: 7px;
   --_hit: 16px;
+  --_lap-block: calc(var(--_hit) / -2);
+  --_lap-inline: calc(var(--_hit) / -2);
 
   position: absolute;
-  inset-block-end: calc(var(--_hit) / -2);
-  inset-inline-end: calc(var(--_hit) / -2);
+  inset-block-end: var(--_lap-block);
+  inset-inline-end: var(--_lap-inline);
   inline-size: var(--_hit);
   block-size: var(--_hit);
   cursor: crosshair;
   pointer-events: auto;
   touch-action: none;
+}
+.nui-spreadsheet__fill--frozen-row > .nui-spreadsheet__fill-grip {
+  --_lap-block: calc((var(--_size) - var(--_hit)) / 2);
+}
+.nui-spreadsheet__fill--frozen-col > .nui-spreadsheet__fill-grip {
+  --_lap-inline: calc((var(--_size) - var(--_hit)) / 2);
 }
 .nui-spreadsheet__fill-grip::before {
   content: '';
@@ -402,4 +435,67 @@
     --_size: 10px;
     --_hit: 28px;
   }
+}
+.nui-spreadsheet__editor {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  inline-size: 100%;
+  min-block-size: var(--nui-control-height-sm);
+  padding-inline: var(--nui-field-padding-sm);
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius);
+  background: var(--nui-surface);
+  color: var(--nui-text);
+  font-family: var(--nui-font);
+  font-size: var(--nui-control-font-size-sm);
+  line-height: var(--nui-line-height-tight);
+  text-align: inherit;
+  transition:
+    border-color var(--nui-duration-fast) var(--nui-easing),
+    outline-color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-spreadsheet__editor:focus-within {
+  border-color: var(--nui-focus);
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: var(--nui-focus-ring-offset);
+}
+.nui-spreadsheet__editor--invalid,
+.nui-spreadsheet__editor--invalid:focus-within {
+  border-color: var(--nui-error);
+  outline-color: var(--nui-error);
+}
+.nui-spreadsheet__editor-mirror {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  display: grid;
+  align-content: center;
+  padding-inline: var(--nui-field-padding-sm);
+  overflow: hidden;
+  white-space: pre;
+  text-align: inherit;
+  pointer-events: none;
+}
+.nui-spreadsheet__editor-control {
+  position: relative;
+  flex: 1 1 auto;
+  box-sizing: border-box;
+  min-inline-size: 0;
+  inline-size: 100%;
+  min-block-size: calc(var(--nui-control-height-sm) - 2px);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  appearance: none;
+  outline: none;
+}
+.nui-spreadsheet__editor--painted > .nui-spreadsheet__editor-control {
+  color: transparent;
+  caret-color: var(--nui-text);
 }

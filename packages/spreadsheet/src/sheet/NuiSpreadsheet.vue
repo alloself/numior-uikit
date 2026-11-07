@@ -3,7 +3,7 @@
     v-if="table !== undefined"
     ref="root"
     class="nui-spreadsheet"
-    :dir="table.cells.rightToLeft ? 'rtl' : 'ltr'"
+    :class="rootClasses"
     @keydown.capture="onKeydown"
     @input="assist.syncCaret"
     @keyup="assist.syncCaret"
@@ -93,6 +93,7 @@
     </div>
     <NuiTable
       ref="grid"
+      :dir="sheetDir"
       v-model:active="formula.active.value"
       v-model:ranges="formula.ranges.value"
       v-bind="table.grid"
@@ -121,7 +122,10 @@
           :rect-of="rectOf"
           :handle="fill.handle.value"
           :preview="fill.preview.value"
+          :clearing="fill.clearing.value"
           :clips="clipboard.frames.value"
+          :frozen-rows="table.cells.frozenRows"
+          :frozen-cols="table.cells.frozenCols"
           @grip="fill.onDown"
           @fill="fill.onDblclick"
         />
@@ -131,6 +135,8 @@
           :tone="frame.tone"
           :rect="rectOf(frame.range)"
           :passive="editing.draft.value === undefined"
+          :first-row="frame.firstRow"
+          :first-col="frame.firstCol"
           @grip="(event, grip) => references.onGripDown(event, frame, grip)"
         />
       </template>
@@ -170,10 +176,10 @@
 </template>
 
 <script setup lang="ts">
-import { Key, useLocale, useMessages } from '@numior/primitives';
+import { Direction, Key, useLocale, useMessages } from '@numior/primitives';
 import { NuiTable, tableCells, type NuiTableColumn, type NuiTableExposed } from '@numior/table';
 import { NuiButton, NuiIcon, type NuiTabDescriptor } from '@numior/vue';
-import { computed, ref, useId, useTemplateRef } from 'vue';
+import { computed, provide, ref, useId, useTemplateRef } from 'vue';
 import { EN_LOCALE, HelpLanguage, RU_LOCALE, createCalculator, type BookLocale } from '../core';
 import { defaultRowHeight, sheetCells } from './sheet-cells';
 import NuiSpreadsheetAssist from './NuiSpreadsheetAssist.vue';
@@ -194,6 +200,7 @@ import { useSheetClipboard } from './use-sheet-clipboard';
 import { useSheetEditing } from './use-sheet-editing';
 import { useSheetFill } from './use-sheet-fill';
 import { useSheetLines } from './use-sheet-lines';
+import { SHEET_SEGMENTS } from './sheet-segments';
 import { useSheetReferences } from './use-sheet-references';
 import { useSheetSelection } from './use-sheet-selection';
 
@@ -351,6 +358,16 @@ const references = useSheetReferences({
   root,
   nameField,
 });
+
+provide(SHEET_SEGMENTS, references.segments);
+
+const rootClasses = computed(() => ({
+  'nui-spreadsheet--dragging': references.dragging.value,
+}));
+
+const sheetDir = computed(() =>
+  table.value?.cells.rightToLeft === true ? Direction.Rtl : Direction.Ltr,
+);
 
 const assist = useFormulaAssist({
   locale: () => bookLocale.value,

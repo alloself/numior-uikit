@@ -6,13 +6,16 @@ import {
   type CellAddress,
   type CellRange,
   type Sheet,
+  type WorkbookStep,
 } from '../core';
 import { isKey } from './sheet-keys';
 import {
   FillKey,
+  FillTargetKind,
   type SheetFill,
   type SheetFillOptions,
   type SheetFillSession,
+  type SheetFillTarget,
 } from './sheet.types';
 import { tableRangeOf } from './use-sheet-selection';
 
@@ -46,6 +49,48 @@ const fillExtension = (source: CellRange, line: CellAddress): CellRange | undefi
   return vertical >= horizontal
     ? verticalExtension(source, line)
     : horizontalExtension(source, line);
+};
+
+const inside = (source: CellRange, line: CellAddress): boolean =>
+  line.row >= source.top &&
+  line.row <= source.bottom &&
+  line.col >= source.left &&
+  line.col <= source.right;
+
+const shrinkOf = (source: CellRange, line: CellAddress): SheetFillTarget | undefined => {
+  const rows = source.bottom - line.row;
+  const cols = source.right - line.col;
+
+  if (!inside(source, line) || Math.max(rows, cols) <= 0) {
+    return undefined;
+  }
+
+  return rows >= cols
+    ? {
+        kind: FillTargetKind.Clear,
+        range: { ...source, top: line.row + 1 },
+        kept: { ...source, bottom: line.row },
+      }
+    : {
+        kind: FillTargetKind.Clear,
+        range: { ...source, left: line.col + 1 },
+        kept: { ...source, right: line.col },
+      };
+};
+
+const fillTarget = (source: CellRange, line: CellAddress): SheetFillTarget | undefined => {
+  const range = fillExtension(source, line);
+
+  return range === undefined ? shrinkOf(source, line) : { kind: FillTargetKind.Extend, range };
+};
+
+const shownOf = (source: CellRange, target: SheetFillTarget): CellRange => {
+  switch (target.kind) {
+    case FillTargetKind.Extend:
+      return unionOf(source, target.range);
+    case FillTargetKind.Clear:
+      return target.kept;
+  }
 };
 
 const filled = (sheet: Sheet, row: number, col: number): boolean =>
@@ -97,6 +142,9 @@ const withCtrl = (event: MouseEvent): boolean => event.ctrlKey || event.metaKey;
 const inGrid = (target: EventTarget | null): boolean =>
   target instanceof Element && target.closest('[role="grid"]') !== null;
 
+const activeWithin = (kept: CellRange, active: CellAddress | undefined): CellAddress =>
+  active !== undefined && inside(kept, active) ? active : { row: kept.top, col: kept.left };
+
 export const useSheetFill = (options: SheetFillOptions): SheetFill => {
   const session = shallowRef<SheetFillSession>();
 
@@ -123,7 +171,16 @@ export const useSheetFill = (options: SheetFillOptions): SheetFill => {
 
     return cells === undefined || current?.target === undefined
       ? undefined
-      : tableRangeOf(cells, unionOf(current.source, current.target));
+      : tableRangeOf(cells, shownOf(current.source, current.target));
+  });
+
+  const clearing = computed(() => {
+    const cells = options.cells();
+    const target = session.value?.target;
+
+    return cells === undefined || target?.kind !== FillTargetKind.Clear
+      ? undefined
+      : tableRangeOf(cells, target.range);
   });
 
   const fillWith = (from: CellRange, to: CellRange, mode: FillMode, shown: CellRange): void => {
@@ -154,10 +211,10 @@ export const useSheetFill = (options: SheetFillOptions): SheetFill => {
     session.value = { source: range, target: undefined, copy: withCtrl(event) };
   };
 
-  const onMove = (event: PointerEvent): void => {
+  const dragTo = (x: number, y: number, copy: boolean): void => {
     const current = session.value;
     const cells = options.cells();
-    const cell = options.table.value?.cellFromPoint(event.clientX, event.clientY);
+    const cell = options.table.value?.cellNear(x, y);
 
     if (current === undefined || cells === undefined || cell === undefined) {
       return;
@@ -167,20 +224,75 @@ export const useSheetFill = (options: SheetFillOptions): SheetFill => {
 
     session.value = {
       ...current,
-      target: fillExtension(current.source, line),
-      copy: withCtrl(event),
+      target: fillTarget(current.source, line),
+      copy,
     };
   };
 
-  const onUp = (): void => {
+  const onMove = (event: PointerEvent): void => {
+    const { clientX: x, clientY: y } = event;
+    const copy = withCtrl(event);
+
+    if (session.value === undefined) {
+      return;
+    }
+    dragTo(x, y, copy);
+
+    options.table.value?.followEdge(x, y, () => {
+      dragTo(x, y, copy);
+    });
+  };
+
+  const stop = (): SheetFillSession | undefined => {
     const current = session.value;
 
-    session.value = undefined;
+    if (current !== undefined) {
+      session.value = undefined;
+      options.table.value?.stopEdge();
+    }
+    return current;
+  };
 
-    if (current?.target !== undefined) {
-      const mode = current.copy ? FillMode.Copy : FillMode.Series;
+  const clearStep = (target: CellRange): WorkbookStep | undefined => {
+    const sheet = options.sheet();
 
-      fillWith(current.source, current.target, mode, unionOf(current.source, current.target));
+    return sheet === undefined ? undefined : clips.value.clear(sheet.name, [target]);
+  };
+
+  const clearTo = (target: CellRange, kept: CellRange): void => {
+    const step = clearStep(target);
+
+    if (step !== undefined && !options.editing.apply([step])) {
+      return;
+    }
+
+    options.selection.select({
+      active: activeWithin(kept, options.selection.current.value?.active),
+      ranges: [kept],
+    });
+  };
+
+  const onUp = (): void => {
+    const current = stop();
+    const target = current?.target;
+
+    if (current === undefined || target === undefined) {
+      return;
+    }
+
+    switch (target.kind) {
+      case FillTargetKind.Extend:
+        fillWith(
+          current.source,
+          target.range,
+          current.copy ? FillMode.Copy : FillMode.Series,
+          unionOf(current.source, target.range),
+        );
+
+        break;
+      case FillTargetKind.Clear:
+        clearTo(target.range, target.kept);
+        break;
     }
   };
 
@@ -216,8 +328,8 @@ export const useSheetFill = (options: SheetFillOptions): SheetFill => {
   };
 
   const onCancel = (): void => {
-    session.value = undefined;
+    stop();
   };
 
-  return { handle, preview, onDown, onMove, onUp, onCancel, onDblclick, onKeydown };
+  return { handle, preview, clearing, onDown, onMove, onUp, onCancel, onDblclick, onKeydown };
 };

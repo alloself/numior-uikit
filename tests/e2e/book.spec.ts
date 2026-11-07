@@ -2,6 +2,8 @@ import { expect, test } from './fixtures';
 import { boxOf } from './helpers/geometry';
 import { ordersXlsx } from './helpers/xlsx';
 
+const firstRowOf = (formula: string): number => Number(/[A-Z]+(\d+)/u.exec(formula)?.[1] ?? 0);
+
 test.describe('book', () => {
   test('shows the sheet with letters, numbers, formats, merged title and frozen panes', async ({
     playground,
@@ -136,6 +138,73 @@ test.describe('book', () => {
     await expect(book.cell('12', 0)).toHaveText('');
   });
 
+  test('scrolls the sheet while a reference frame or the fill handle is held at its edge', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.cell('9', 1).click();
+    await page.keyboard.type('=СУММ(B4:B5');
+
+    await expect(book.cellReferences).toHaveText(['B4:B5']);
+
+    await book.holdPastBottom(
+      book.referenceFrames.first().locator('.nui-spreadsheet__grip--top'),
+      async () => firstRowOf(await book.formula.inputValue()) > 40,
+    );
+
+    expect(firstRowOf(await book.formula.inputValue())).toBeGreaterThan(40);
+
+    await page.keyboard.press('Escape');
+    await book.scrollBody(0);
+    await book.enter('12', 0, '1');
+    await book.enter('13', 0, '2');
+    await book.dragAcross({ row: '12', col: 0 }, { row: '13', col: 0 });
+    await book.holdPastBottom(book.fillGrip, async () => (await book.scrollTop()) > 800);
+    await book.goTo('A40');
+
+    await expect(book.cell('40', 0)).toHaveText('29');
+  });
+
+  test('keeps the grips of a frame on the first row and column within reach', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.cell('9', 1).click();
+    await page.keyboard.type('=A1+1');
+
+    await expect(book.referenceFrames).toHaveCount(1);
+    expect(await book.gripReachable('top-start')).toBe(true);
+    expect(await book.gripReachable('top')).toBe(true);
+    expect(await book.gripReachable('bottom-end')).toBe(true);
+
+    await page.keyboard.press('Escape');
+  });
+
+  test('lays the formula bar out by the page direction and the grid by the sheet', async ({
+    playground,
+    book,
+  }) => {
+    await playground.open();
+    await playground.setDirection('rtl');
+    await book.sheet.scrollIntoViewIfNeeded();
+
+    const name = await boxOf(book.nameBox);
+    const formula = await boxOf(book.formula);
+    const first = await boxOf(book.cell('3', 0));
+    const second = await boxOf(book.cell('3', 1));
+
+    expect(name.x).toBeGreaterThan(formula.x);
+    expect(first.x).toBeLessThan(second.x);
+  });
+
   test('continues a series with the fill handle, copies with Ctrl+D and undoes the fill', async ({
     playground,
     book,
@@ -160,6 +229,50 @@ test.describe('book', () => {
     await page.keyboard.press('Control+d');
 
     await expect(book.cell('15', 0)).toHaveText('1');
+  });
+
+  test('clears the cells the fill handle is dragged back over and shrinks the selection', async ({
+    playground,
+    book,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.enter('12', 0, '1');
+    await book.enter('13', 0, '2');
+    await book.dragAcross({ row: '12', col: 0 }, { row: '13', col: 0 });
+    await book.dragFill({ row: '16', col: 0 });
+
+    await expect(book.cell('16', 0)).toHaveText('5');
+
+    await book.holdFill({ row: '13', col: 0 });
+
+    await expect(book.fillClear).toBeVisible();
+
+    await book.releaseFill();
+
+    await expect(book.cell('13', 0)).toHaveText('2');
+    await expect(book.cell('14', 0)).toHaveText('');
+    await expect(book.cell('16', 0)).toHaveText('');
+    await expect(book.fillClear).toHaveCount(0);
+    await expect.poll(() => book.fillGripBelow({ row: '13', col: 0 })).toBe(true);
+
+    await book.dragAcross({ row: '13', col: 0 }, { row: '15', col: 0 });
+    await book.dragFill({ row: '13', col: 0 });
+
+    await expect.poll(() => book.fillGripBelow({ row: '13', col: 0 })).toBe(true);
+  });
+
+  test('keeps the fill handle whole on the edge of the frozen rows', async ({
+    playground,
+    book,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.cell('2', 1).click();
+
+    await expect.poll(() => book.fillGripWhole()).toBe(true);
   });
 
   test('shows the formula of the active cell, edits it from the formula bar and goes to a typed address', async ({

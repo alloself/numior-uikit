@@ -1,4 +1,4 @@
-import { mount, type VueWrapper } from '@vue/test-utils';
+import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
 import { nextTick } from 'vue';
 import {
@@ -55,6 +55,11 @@ const pointer = (type: string): PointerEvent =>
 const toneOf = (classes: readonly string[], prefix: string): string =>
   classes.find((name) => name.startsWith(prefix))?.slice(prefix.length) ?? '';
 
+const tokensIn = (scope: DOMWrapper<Element>): string[] =>
+  scope
+    .findAll('.nui-spreadsheet__token')
+    .map((token) => `${token.text()} ${toneOf(token.classes(), 'nui-spreadsheet__token--tone-')}`);
+
 const texts = (wrapper: VueWrapper, selector: string): string[] =>
   wrapper.findAll(selector).map((item) => item.text());
 
@@ -91,7 +96,7 @@ export class SpreadsheetDriver {
   }
 
   get direction(): string | undefined {
-    return this.wrapper.find('.nui-spreadsheet').attributes('dir');
+    return this.wrapper.find('.nui-table').attributes('dir');
   }
 
   get bordered(): boolean {
@@ -211,9 +216,13 @@ export class SpreadsheetDriver {
   }
 
   get referenceFrames(): string[] {
-    return this.wrapper
-      .findAll('.nui-spreadsheet__ref')
-      .map((frame) => toneOf(frame.classes(), 'nui-spreadsheet__ref--tone-'));
+    return this.wrapper.findAll('.nui-spreadsheet__ref').map((frame) => {
+      const pane = frame.element.closest('.nui-table__pane');
+
+      const name = pane === null ? '' : toneOf([...pane.classList], 'nui-table__pane--');
+
+      return `${name} ${toneOf(frame.classes(), 'nui-spreadsheet__ref--tone-')}`;
+    });
   }
 
   get frameGrips(): number {
@@ -221,11 +230,13 @@ export class SpreadsheetDriver {
   }
 
   get paintedReferences(): string[] {
-    return this.wrapper
-      .findAll('.nui-spreadsheet__token')
-      .map(
-        (token) => `${token.text()} ${toneOf(token.classes(), 'nui-spreadsheet__token--tone-')}`,
-      );
+    return tokensIn(this.wrapper.find('.nui-spreadsheet__mirror'));
+  }
+
+  get cellReferences(): string[] {
+    const editor = this.wrapper.find('.nui-spreadsheet__editor--painted');
+
+    return editor.exists() ? tokensIn(editor) : [];
   }
 
   get caret(): number | undefined {

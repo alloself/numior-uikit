@@ -1,6 +1,6 @@
 import { Key } from '@numior/primitives';
 import type { NuiTableDraft, NuiTableRange, TableCellPosition } from '@numior/table';
-import { computed } from 'vue';
+import { computed, shallowRef } from 'vue';
 import {
   formatRange,
   referenceSpans,
@@ -32,6 +32,7 @@ interface GripSession {
   readonly grab: TableCellPosition;
   readonly text: string;
   readonly span: ReferenceSpan;
+  readonly caret: number | undefined;
 }
 
 const TONES = 8;
@@ -98,6 +99,19 @@ const tableRange = (cells: SheetCells, span: ReferenceSpan): NuiTableRange => ({
   from: { row: cells.rowNear(span.range.top), col: cells.colNear(span.range.left) },
   to: { row: cells.rowNear(span.range.bottom), col: cells.colNear(span.range.right) },
 });
+
+const frameOf = (cells: SheetCells, span: ReferenceSpan, tone: number): ReferenceFrame => {
+  const range = tableRange(cells, span);
+
+  return {
+    key: String(span.start),
+    span,
+    range,
+    tone,
+    firstRow: Math.min(range.from.row, range.to.row) === 0,
+    firstCol: Math.min(range.from.col, range.to.col) === 0,
+  };
+};
 
 const sheetRange = (cells: SheetCells, range: NuiTableRange): CellRange => ({
   top: cells.rowAt(Math.min(range.from.row, range.to.row)),
@@ -172,6 +186,8 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
 
   let session: GripSession | undefined;
 
+  const dragging = shallowRef(false);
+
   const draftText = computed(() => textOf(editing.draft.value?.value));
 
   const shownText = computed(() => options.text());
@@ -193,16 +209,7 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
       return [];
     }
     return spans.value.flatMap((span, index) =>
-      onThisSheet(span, sheet)
-        ? [
-            {
-              key: String(span.start),
-              span,
-              range: tableRange(cells, span),
-              tone: tones[index] ?? 1,
-            },
-          ]
-        : [],
+      onThisSheet(span, sheet) ? [frameOf(cells, span, tones[index] ?? 1)] : [],
     );
   });
 
@@ -284,21 +291,26 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
     event.preventDefault();
     event.stopPropagation();
     options.root.value?.setPointerCapture(event.pointerId);
-    session = { grip, origin: frame.range, grab, text: textOf(draft.value), span: frame.span };
+
+    session = {
+      grip,
+      origin: frame.range,
+      grab,
+      text: textOf(draft.value),
+      span: frame.span,
+      caret: undefined,
+    };
+
+    dragging.value = true;
   };
 
-  const onGripMove = (event: PointerEvent): void => {
+  const dragTo = (x: number, y: number): void => {
     const current = session;
     const cells = options.cells();
     const draft = editing.draft.value;
+    const cell = options.table.value?.cellNear(x, y);
 
-    if (current === undefined || cells === undefined || draft === undefined) {
-      return;
-    }
-
-    const cell = options.table.value?.cellFromPoint(event.clientX, event.clientY);
-
-    if (cell === undefined) {
+    if (current === undefined || cells === undefined || draft === undefined || cell === undefined) {
       return;
     }
 
@@ -310,13 +322,47 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
 
     if (result.text !== textOf(draft.value)) {
       lastPick = { text: result.text, start: current.span.start, end: result.end };
-      write(draft, result.text, result.end);
+      session = { ...current, caret: result.end };
+      editing.setDraft({ ...draft, value: result.text });
     }
   };
 
-  const onGripUp = (): void => {
-    session = undefined;
+  const onGripMove = (event: PointerEvent): void => {
+    const { clientX: x, clientY: y } = event;
+
+    if (session === undefined) {
+      return;
+    }
+    dragTo(x, y);
+
+    options.table.value?.followEdge(x, y, () => {
+      dragTo(x, y);
+    });
   };
 
-  return { segments, frames, picking, onPick, onKeydown, onGripDown, onGripMove, onGripUp };
+  const onGripUp = (): void => {
+    const caret = session?.caret;
+
+    if (session !== undefined) {
+      session = undefined;
+      dragging.value = false;
+      options.table.value?.stopEdge();
+    }
+
+    if (caret !== undefined) {
+      void placeCaretIn(options.root.value, options.nameField.value, caret);
+    }
+  };
+
+  return {
+    segments,
+    frames,
+    dragging,
+    picking,
+    onPick,
+    onKeydown,
+    onGripDown,
+    onGripMove,
+    onGripUp,
+  };
 };

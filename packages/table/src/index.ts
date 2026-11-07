@@ -18,6 +18,7 @@ export {
   NuiTableEditMove,
   NuiTableEditRefusalReason,
   NuiTableFilterKind,
+  NuiTableOverlayPane,
   NuiTablePin,
   NuiTableRowHeight,
   NuiTableSelection,

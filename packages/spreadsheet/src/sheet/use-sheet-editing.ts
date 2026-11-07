@@ -1,6 +1,7 @@
 import {
   NuiTableColumnType,
   columnIndex,
+  tableEditor,
   type NuiTableColumn,
   type NuiTableDraft,
   type NuiTableEdit,
@@ -19,6 +20,7 @@ import {
   type Stepper,
   type WorkbookStep,
 } from '../core';
+import NuiSpreadsheetCellEditor from './NuiSpreadsheetCellEditor.vue';
 import type { SheetCells, SheetEditing, SheetEditingOptions } from './sheet.types';
 
 interface SheetLine {
@@ -27,6 +29,10 @@ interface SheetLine {
 }
 
 const CHANGED_ONE = 1;
+
+const isText = (value: unknown): value is string => typeof value === 'string';
+
+const CELL_EDITOR = tableEditor(NuiSpreadsheetCellEditor, isText);
 
 const textOf = (value: unknown): string => {
   if (typeof value === 'string') {
@@ -180,7 +186,7 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
   const editableColumns = (columns: readonly NuiTableColumn<number>[]): NuiTableColumn<number>[] =>
     columns.map((column, col) =>
       column.type === NuiTableColumnType.Text && !options.readonly()
-        ? { ...column, editable: true, rules: [formulaRule(col)] }
+        ? { ...column, editable: true, editor: CELL_EDITOR, rules: [formulaRule(col)] }
         : column,
     );
 

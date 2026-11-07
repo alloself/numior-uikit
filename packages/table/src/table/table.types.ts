@@ -281,9 +281,12 @@ export interface NuiTableWindow {
   readonly cols: NuiTableSpan;
 }
 
+export type NuiTableOverlayPane = (typeof NuiTableOverlayPane)[keyof typeof NuiTableOverlayPane];
+
 export interface NuiTableOverlaySlot {
   readonly rectOf: (range: NuiTableRange) => NuiTableRect | undefined;
   readonly window: NuiTableWindow;
+  readonly pane: NuiTableOverlayPane;
 }
 
 export type NuiTableNextEdge = (
@@ -690,6 +693,9 @@ export interface NuiTableExposed {
   refresh(): void;
   rectOf(range: NuiTableRange): NuiTableRect | undefined;
   cellFromPoint(x: number, y: number): TableCellPosition | undefined;
+  cellNear(x: number, y: number): TableCellPosition | undefined;
+  followEdge(x: number, y: number, onStep: () => void): void;
+  stopEdge(): void;
   startEdit(mode: NuiTableEditMode, options?: NuiTableStartEditOptions): boolean;
   commitEdit(move?: NuiTableEditMove): boolean;
   cancelEdit(): void;
@@ -902,6 +908,12 @@ export interface NuiTableTracksProps {
   tracks: readonly TableTrack[];
 }
 
+export interface TableScrollMark {
+  readonly element: Element;
+  readonly top: number;
+  readonly left: number;
+}
+
 export const NuiTableSize = { Sm: 'sm', Md: 'md', Lg: 'lg' } as const;
 
 export const NuiTableAlign = { Start: 'start', Center: 'center', End: 'end' } as const;
@@ -911,6 +923,15 @@ export const NuiTablePin = { Start: 'start', End: 'end' } as const;
 export const NuiTableSelection = { Single: 'single', Multiple: 'multiple' } as const;
 
 export const TableColumnKind = { Data: 'data', Select: 'select', Rowhead: 'rowhead' } as const;
+
+export const NuiTableOverlayPane = {
+  Body: 'body',
+  Start: 'start',
+  End: 'end',
+  Top: 'top',
+  TopStart: 'top-start',
+  TopEnd: 'top-end',
+} as const;
 
 export const NuiTableFilterKind = {
   Text: 'text',

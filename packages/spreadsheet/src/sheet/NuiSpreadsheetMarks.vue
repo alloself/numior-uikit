@@ -1,12 +1,29 @@
 <template>
   <span
-    v-for="frame in clips"
+    v-for="frame in shownClips"
     :key="frame.key"
     class="nui-spreadsheet__clip"
-    :style="rectStyle(rectOf(frame.range))"
+    :style="rectStyle(frame.rect)"
   ></span>
-  <span class="nui-spreadsheet__fill-preview" :style="previewStyle"></span>
-  <span class="nui-spreadsheet__fill" :style="handleStyle">
+  <span
+    v-if="clearingRect"
+    class="nui-spreadsheet__fill-clear"
+    :style="rectStyle(clearingRect)"
+  ></span>
+  <span
+    v-if="previewRect"
+    class="nui-spreadsheet__fill-preview"
+    :style="rectStyle(previewRect)"
+  ></span>
+  <span
+    v-if="handleRect"
+    class="nui-spreadsheet__fill"
+    :class="{
+      'nui-spreadsheet__fill--frozen-row': handleEdge.row,
+      'nui-spreadsheet__fill--frozen-col': handleEdge.col,
+    }"
+    :style="rectStyle(handleRect)"
+  >
     <span
       class="nui-spreadsheet__fill-grip"
       aria-hidden="true"
@@ -19,16 +36,48 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { rectStyle } from './sheet-rect';
-import type { SheetMarksProps } from './sheet.types';
+import type { SheetMarksProps, ShownClip } from './sheet.types';
 
-const { rectOf, handle, preview, clips } = defineProps<SheetMarksProps>();
+const {
+  rectOf,
+  handle,
+  preview,
+  clearing,
+  clips,
+  frozenRows = 0,
+  frozenCols = 0,
+} = defineProps<SheetMarksProps>();
 
 const emit = defineEmits<{
   grip: [event: PointerEvent];
   fill: [];
 }>();
 
-const handleStyle = computed(() => rectStyle(handle === undefined ? undefined : rectOf(handle)));
+const handleRect = computed(() => (handle === undefined ? undefined : rectOf(handle)));
 
-const previewStyle = computed(() => rectStyle(preview === undefined ? undefined : rectOf(preview)));
+const handleEdge = computed(() => ({
+  row:
+    handle !== undefined &&
+    frozenRows > 0 &&
+    Math.max(handle.from.row, handle.to.row) === frozenRows - 1,
+  col:
+    handle !== undefined &&
+    frozenCols > 0 &&
+    Math.max(handle.from.col, handle.to.col) === frozenCols - 1,
+}));
+
+const previewRect = computed(() => (preview === undefined ? undefined : rectOf(preview)));
+
+const clearingRect = computed(() => (clearing === undefined ? undefined : rectOf(clearing)));
+
+const shownClips = computed(() =>
+  clips.reduce<ShownClip[]>((shown, frame) => {
+    const rect = rectOf(frame.range);
+
+    if (rect !== undefined) {
+      shown.push({ key: frame.key, rect });
+    }
+    return shown;
+  }, []),
+);
 </script>

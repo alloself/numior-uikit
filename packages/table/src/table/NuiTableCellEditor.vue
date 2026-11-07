@@ -34,6 +34,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { AriaValue, Direction, Key, PopoverState, provideDraftCommits } from '@numior/primitives';
 import { NuiTooltip } from '@numior/vue';
+import { holdScrollAfterResize } from './table-scroll-hold';
 import type { NuiTableCellEditorProps, NuiTableEditMove } from './table.types';
 
 const FOCUSABLE = 'input, textarea, select, button, [tabindex]';
@@ -68,6 +69,8 @@ const message = ref(error ?? '');
 let settled = false;
 let popup = false;
 let detach = (): void => undefined;
+let unhold = (): void => undefined;
+let echoed: { value: unknown } | undefined;
 
 const invalid = computed(() => error !== undefined);
 
@@ -83,6 +86,7 @@ const bound = computed(() => ({
   ...spec.props,
   [spec.model]: value,
   [`onUpdate:${spec.model}`]: (next: unknown) => {
+    echoed = { value: next };
     emit('update', next);
 
     if (popup) {
@@ -221,19 +225,7 @@ const roomOf = (editor: HTMLElement, viewport: HTMLElement): number => {
   return Math.floor(rtl ? rect.right - start - padding : end - padding - rect.left) - EDGE;
 };
 
-const fit = (): void => {
-  const editor = root.value;
-  const field = editor?.querySelector('input');
-  const viewport = editor?.closest('.nui-table__viewport');
-
-  if (
-    !grow ||
-    !(editor instanceof HTMLElement) ||
-    !(field instanceof HTMLInputElement) ||
-    !(viewport instanceof HTMLElement)
-  ) {
-    return;
-  }
+const widen = (editor: HTMLElement, field: HTMLInputElement, viewport: HTMLElement): void => {
   editor.style.removeProperty(SIZE);
 
   const natural = editor.getBoundingClientRect().width;
@@ -251,6 +243,27 @@ const fit = (): void => {
 
   if (short > 0 && grown < room) {
     editor.style.setProperty(SIZE, `${String(Math.min(grown + short + CARET, room))}px`);
+  }
+};
+
+const fit = (hold: boolean): void => {
+  const editor = root.value;
+  const field = editor?.querySelector('input');
+  const viewport = editor?.closest('.nui-table__viewport');
+
+  if (
+    !grow ||
+    !(editor instanceof HTMLElement) ||
+    !(field instanceof HTMLInputElement) ||
+    !(viewport instanceof HTMLElement)
+  ) {
+    return;
+  }
+  unhold();
+  widen(editor, field, viewport);
+
+  if (hold) {
+    unhold = holdScrollAfterResize(editor);
   }
 };
 
@@ -284,8 +297,11 @@ const reveal = (): void => {
 
 watch(
   () => value,
-  () => {
-    fit();
+  (next) => {
+    const own = echoed !== undefined && Object.is(echoed.value, next);
+
+    echoed = undefined;
+    fit(!own);
   },
   { flush: 'post' },
 );
@@ -305,7 +321,7 @@ onMounted(() => {
   });
 
   if (passive) {
-    fit();
+    fit(false);
     reveal();
     return;
   }
@@ -320,17 +336,18 @@ onMounted(() => {
   const field = fieldOf();
 
   if (field === undefined || field.selectionStart === null) {
-    fit();
+    fit(false);
     return;
   }
   if (typed !== undefined) {
     typeInto(field, typed);
   }
   field.setSelectionRange(field.value.length, field.value.length);
-  fit();
+  fit(false);
 });
 
 onBeforeUnmount(() => {
+  unhold();
   detach();
 });
 </script>

@@ -491,7 +491,7 @@ describe('NuiSpreadsheet', () => {
     await sheet.press('ArrowDown', { shift: true });
 
     expect(sheet.editorText).toBe('=C2:C3');
-    expect(sheet.referenceFrames).toEqual(['1']);
+    expect(sheet.referenceFrames).toEqual(['body 1']);
 
     await sheet.press('F4');
 
@@ -502,7 +502,8 @@ describe('NuiSpreadsheet', () => {
 
     expect(sheet.formula).toBe('=$C$2:$C$3+A1*C2+c2:c3');
     expect(sheet.paintedReferences).toEqual(['$C$2:$C$3 1', 'A1 2', 'C2 3', 'c2:c3 1']);
-    expect(sheet.referenceFrames).toEqual(['1', '2', '3', '1']);
+    expect(sheet.cellReferences).toEqual(['$C$2:$C$3 1', 'A1 2', 'C2 3', 'c2:c3 1']);
+    expect(sheet.referenceFrames).toEqual(['body 1', 'body 3', 'body 1', 'top 2']);
 
     await sheet.press('Escape');
 
@@ -516,17 +517,17 @@ describe('NuiSpreadsheet', () => {
     await sheet.enter(3, 1, '=C2*2+A1:A2');
     await sheet.focus(3, 1);
 
-    expect(sheet.referenceFrames).toEqual(['1', '2']);
+    expect(sheet.referenceFrames).toEqual(['body 1', 'body 2', 'top 2']);
     expect(sheet.paintedReferences).toEqual(['C2 1', 'A1:A2 2']);
     expect(sheet.frameGrips).toBe(0);
 
     await sheet.press('F2');
 
-    expect(sheet.frameGrips).toBe(16);
+    expect(sheet.frameGrips).toBe(24);
 
     await sheet.press('Escape');
 
-    expect(sheet.referenceFrames).toEqual(['1', '2']);
+    expect(sheet.referenceFrames).toEqual(['body 1', 'body 2', 'top 2']);
     expect(sheet.frameGrips).toBe(0);
 
     await sheet.focus(1, 0);

@@ -18,9 +18,21 @@
           :style="windowFrame.windowStyle.value"
           v-bind="gridAria"
         >
-          <caption v-if="slots.overlay" class="nui-table__overlay" aria-hidden="true">
-            <div class="nui-table__plane" :style="overlay.planeStyle.value">
-              <slot name="overlay" v-bind="overlay.scope.value" />
+          <caption
+            v-if="slots.overlay"
+            class="nui-table__overlay"
+            :style="overlay.style.value"
+            aria-hidden="true"
+          >
+            <div
+              v-for="pane in overlay.panes.value"
+              :key="pane.name"
+              class="nui-table__pane"
+              :class="pane.classes"
+            >
+              <div class="nui-table__plane">
+                <slot name="overlay" v-bind="pane.scope" />
+              </div>
             </div>
           </caption>
           <NuiTableTracks :tracks="rowCells.tracks" />
@@ -381,6 +393,7 @@ import {
   type NuiTableHidden,
   type NuiTablePins,
   type NuiTableProps,
+  type NuiTableRange,
   type NuiTableRanges,
   type NuiTableRowHeaders,
   type NuiTableRowHeights,
@@ -1423,6 +1436,12 @@ const mergeIndex = computed(() =>
     : NO_MERGE_INDEX,
 );
 
+const wholeRange = (range: NuiTableRange): NuiTableRange =>
+  expandToMerges(mergeIndex.value, range, {
+    rows: visibleRows.value,
+    cols: dataKeys.value.length,
+  });
+
 const mergeSlots = computed((): TableMergeSlot[] =>
   rowCells.value.cells.map((cell) => ({
     key: cell.key,
@@ -2049,11 +2068,7 @@ const picker = useTablePicking({
     return sameSpot(cell, cellEditor.session.value?.position) ? undefined : cell;
   },
   cellAt: (x, y) => rangeSelect.cellAtPoint(x, y),
-  whole: (range) =>
-    expandToMerges(mergeIndex.value, range, {
-      rows: visibleRows.value,
-      cols: dataKeys.value.length,
-    }),
+  whole: wholeRange,
   leave: (from, move) => leaveMergeBy(mergeIndex.value, from, move),
   bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
   isRtl: direction.isRtl,
@@ -2768,7 +2783,9 @@ const overlay = useTableOverlay({
   headSize: () => rowSize.value * (headRows.value + pinnedCount.value),
   headRows: () => headRows.value,
   pinnedRows: () => pinnedCount.value,
+  frozenRows: () => frozenCount.value,
   dataOffset: () => dataOffset.value,
+  expand: wholeRange,
   onWindow: (next) => {
     emit('window', next);
   },
@@ -2794,6 +2811,9 @@ defineExpose<NuiTableExposed>({
   },
   rectOf: overlay.rectOf,
   cellFromPoint: overlay.cellFromPoint,
+  cellNear: overlay.cellNear,
+  followEdge: overlay.followEdge,
+  stopEdge: overlay.stopEdge,
   startEdit: (mode, options) => cellEditor.start(mode, options?.focus ?? true),
   commitEdit: (move = 'stay') => cellEditor.commit(move),
   cancelEdit: () => {

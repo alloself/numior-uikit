@@ -1,5 +1,5 @@
 import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { createNuiConfig, type NuiConfigOptions } from '@numior/primitives';
+import { createNuiConfig, type EdgePoint, type NuiConfigOptions } from '@numior/primitives';
 import { promiseTimeout } from '@vueuse/core';
 import { vi } from 'vite-plus/test';
 import {
@@ -186,6 +186,8 @@ interface DropMark {
   readonly inset?: string | undefined;
 }
 
+const PANE_NAME = /^nui-table__pane--(?!frozen$|cols-)/;
+
 const MOUNT_DEFAULTS: MountDefaults = {
   sort: [],
   filters: [],
@@ -245,6 +247,22 @@ const pointerInit = (point: Point, options: KeyOptions): PointerEventInit => ({
 const ROW_EARLY = 10;
 const ROW_MIDDLE = 20;
 const ROW_LATE = 30;
+
+const withPointHits = <R>(hits: (x: number, y: number) => Element[], run: () => R): R => {
+  const own = Object.getOwnPropertyDescriptor(document, 'elementsFromPoint');
+
+  Object.defineProperty(document, 'elementsFromPoint', { configurable: true, value: hits });
+
+  try {
+    return run();
+  } finally {
+    if (own === undefined) {
+      Reflect.deleteProperty(document, 'elementsFromPoint');
+    } else {
+      Object.defineProperty(document, 'elementsFromPoint', own);
+    }
+  }
+};
 
 const defineRect = (element: Element, rect: DOMRect): void => {
   Object.defineProperty(element, 'getBoundingClientRect', {
@@ -1039,28 +1057,66 @@ export class TableDriver<T> {
     }));
   }
 
+  get paneMarks(): string[] {
+    return [...this.element.querySelectorAll<HTMLElement>('.nui-table__pane')].flatMap((pane) => {
+      const name = [...pane.classList]
+        .find((label) => PANE_NAME.test(label))
+        ?.slice('nui-table__pane--'.length);
+
+      return [...pane.querySelectorAll<HTMLElement>('.nui-table__plane > *')].map(
+        (mark) => `${name ?? ''} ${mark.style.insetBlockStart} ${mark.style.insetInlineStart}`,
+      );
+    });
+  }
+
   rectOf(range: NuiTableRange): NuiTableRect | undefined {
     return this.exposed.value?.rectOf(range);
   }
 
   cellAtPoint(position: number, col: number): TableCellPosition | undefined {
     const cell = this.cell(position, col);
-    const own = Object.getOwnPropertyDescriptor(document, 'elementsFromPoint');
 
-    Object.defineProperty(document, 'elementsFromPoint', {
-      configurable: true,
-      value: () => (cell === null ? [] : [cell.firstElementChild ?? cell, cell]),
+    return withPointHits(
+      () => (cell === null ? [] : [cell.firstElementChild ?? cell, cell]),
+      () => this.exposed.value?.cellFromPoint(0, 0),
+    );
+  }
+
+  pointNear(x: number, y: number): EdgePoint | undefined {
+    let probed: EdgePoint | undefined;
+
+    defineRect(
+      this.element,
+      new DOMRect(0, 0, this.element.clientWidth, this.element.clientHeight),
+    );
+
+    withPointHits(
+      (px, py) => {
+        probed = { x: px, y: py };
+        return [];
+      },
+      () => this.exposed.value?.cellNear(x, y),
+    );
+
+    return probed;
+  }
+
+  followEdge(x: number, y: number): { readonly scrollTop: number; readonly steps: number } {
+    let steps = 0;
+
+    defineRect(
+      this.element,
+      new DOMRect(0, 0, this.element.clientWidth, this.element.clientHeight),
+    );
+
+    this.exposed.value?.followEdge(x, y, () => {
+      steps += 1;
     });
 
-    try {
-      return this.exposed.value?.cellFromPoint(0, 0);
-    } finally {
-      if (own === undefined) {
-        Reflect.deleteProperty(document, 'elementsFromPoint');
-      } else {
-        Object.defineProperty(document, 'elementsFromPoint', own);
-      }
-    }
+    const scrolled = { scrollTop: this.element.scrollTop, steps };
+
+    this.exposed.value?.stopEdge();
+    return scrolled;
   }
 
   get pendingRows(): number {

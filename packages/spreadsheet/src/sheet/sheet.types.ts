@@ -44,6 +44,8 @@ export interface ReferenceFrame {
   readonly span: ReferenceSpan;
   readonly range: NuiTableRange;
   readonly tone: number;
+  readonly firstRow: boolean;
+  readonly firstCol: boolean;
 }
 
 export interface FormulaAssistOptions {
@@ -92,10 +94,16 @@ export interface SheetTabsProps {
   messages: NuiSpreadsheetMessages;
 }
 
+export interface SheetCellEditorProps {
+  invalid?: boolean | undefined;
+}
+
 export interface SheetReferenceProps {
   tone: number;
   rect: NuiTableRect | undefined;
   passive: boolean;
+  firstRow: boolean;
+  firstCol: boolean;
 }
 
 export interface SheetReferencesOptions {
@@ -112,6 +120,7 @@ export interface SheetReferencesOptions {
 export interface SheetReferences {
   readonly segments: ComputedRef<readonly FormulaSegment[]>;
   readonly frames: ComputedRef<readonly ReferenceFrame[]>;
+  readonly dragging: Readonly<ShallowRef<boolean>>;
   picking(draft: NuiTableDraft): boolean;
   onPick(range: NuiTableRange): void;
   onKeydown(event: KeyboardEvent): void;
@@ -312,15 +321,24 @@ export interface SheetFillOptions {
   readonly readonly: () => boolean;
 }
 
+export type SheetFillTarget =
+  | { readonly kind: typeof FillTargetKind.Extend; readonly range: CellRange }
+  | {
+      readonly kind: typeof FillTargetKind.Clear;
+      readonly range: CellRange;
+      readonly kept: CellRange;
+    };
+
 export interface SheetFillSession {
   readonly source: CellRange;
-  readonly target: CellRange | undefined;
+  readonly target: SheetFillTarget | undefined;
   readonly copy: boolean;
 }
 
 export interface SheetFill {
   readonly handle: ComputedRef<NuiTableRange | undefined>;
   readonly preview: ComputedRef<NuiTableRange | undefined>;
+  readonly clearing: ComputedRef<NuiTableRange | undefined>;
   onDown(event: PointerEvent): void;
   onMove(event: PointerEvent): void;
   onUp(): void;
@@ -329,11 +347,19 @@ export interface SheetFill {
   onKeydown(event: KeyboardEvent): void;
 }
 
+export interface ShownClip {
+  readonly key: string;
+  readonly rect: NuiTableRect;
+}
+
 export interface SheetMarksProps {
   readonly rectOf: (range: NuiTableRange) => NuiTableRect | undefined;
   readonly handle: NuiTableRange | undefined;
   readonly preview: NuiTableRange | undefined;
+  readonly clearing: NuiTableRange | undefined;
   readonly clips: readonly SheetClipFrame[];
+  readonly frozenRows?: number | undefined;
+  readonly frozenCols?: number | undefined;
 }
 
 export type FillKey = (typeof FillKey)[keyof typeof FillKey];
@@ -346,6 +372,8 @@ export const ValueShape = {
 } as const;
 
 export const FillKey = { Down: 'down', Right: 'right' } as const;
+
+export const FillTargetKind = { Extend: 'extend', Clear: 'clear' } as const;
 
 export const FrameGrip = {
   Top: 'top',

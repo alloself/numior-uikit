@@ -71,7 +71,7 @@
   content: '';
   position: absolute;
   inset: -1px;
-  z-index: 8;
+  z-index: 80;
   border: 1px solid var(--_line);
   border-radius: var(--nui-radius);
   pointer-events: none;
@@ -496,12 +496,26 @@
 .nui-table__body
   > .nui-table__row
   > .nui-table__cell:has(> .nui-table__content > .nui-table__editor--grow) {
-  --_cell-layer: 1;
+  --_cell-layer: 10;
 }
 .nui-table__body
   > .nui-table__row--frozen
   > .nui-table__cell:has(> .nui-table__content > .nui-table__editor--grow) {
-  --_cell-layer: 4;
+  --_cell-layer: 40;
+}
+.nui-table__body
+  > .nui-table__row
+  > .nui-table__cell:is(.nui-table__cell--pin-start, .nui-table__cell--pin-end):has(
+    > .nui-table__content > .nui-table__editor--grow
+  ) {
+  z-index: 27;
+}
+.nui-table__body
+  > .nui-table__row--frozen
+  > .nui-table__cell:is(.nui-table__cell--pin-start, .nui-table__cell--pin-end):has(
+    > .nui-table__content > .nui-table__editor--grow
+  ) {
+  z-index: 57;
 }
 .nui-table__content:has(> .nui-table__editor--grow) {
   position: relative;
@@ -517,7 +531,7 @@
   position: absolute;
   inset-block-start: 0;
   inset-inline-start: 0;
-  z-index: 1;
+  z-index: 10;
   inline-size: var(--_size, 100%);
   margin: 0;
   box-shadow: var(--nui-shadow-sm);
@@ -531,7 +545,7 @@
 .nui-table__cell--pin-start,
 .nui-table__cell--pin-end {
   position: sticky;
-  z-index: 2;
+  z-index: 20;
 }
 .nui-table__cell--pin-start {
   inset-inline-start: var(--_pin, 0px);
@@ -549,7 +563,7 @@
 .nui-table__pinned .nui-table__cell {
   position: sticky;
   inset-block-start: var(--_top, 0px);
-  z-index: 3;
+  z-index: 30;
 }
 .nui-table__header > .nui-table__row:first-child > .nui-table__cell {
   inset-block-start: calc(-1 * var(--_head-lap));
@@ -561,7 +575,7 @@
   position: absolute;
   inset-inline: -1px calc(-1 * var(--_grid-x));
   inset-block-start: 100%;
-  z-index: -1;
+  z-index: -10;
   block-size: calc(var(--_row) * var(--_pinned-rows) + var(--_frozen));
   background:
     linear-gradient(var(--_line), var(--_line)) top / 100% 1px no-repeat,
@@ -571,7 +585,7 @@
 .nui-table__footer .nui-table__cell {
   position: sticky;
   inset-block-end: calc(-1 * var(--_foot-overlap));
-  z-index: 3;
+  z-index: 30;
   padding-block-end: var(--_foot-overlap);
   scroll-margin-block-end: calc(-1 * var(--_foot-overlap));
 }
@@ -581,20 +595,20 @@
 .nui-table__header .nui-table__cell:is(.nui-table__cell--pin-start, .nui-table__cell--pin-end),
 .nui-table__pinned .nui-table__cell:is(.nui-table__cell--pin-start, .nui-table__cell--pin-end),
 .nui-table__footer .nui-table__cell:is(.nui-table__cell--pin-start, .nui-table__cell--pin-end) {
-  z-index: 5;
+  z-index: 50;
 }
 .nui-table__row--pinned {
   --_row-bg: var(--_stripe);
 }
 .nui-table__row--frozen > .nui-table__cell {
   --_cell-position: sticky;
-  --_cell-layer: 3;
+  --_cell-layer: 30;
 
   inset-block-start: var(--_top, 0px);
 }
 .nui-table__row--frozen
   > .nui-table__cell:is(.nui-table__cell--pin-start, .nui-table__cell--pin-end) {
-  z-index: 5;
+  z-index: 50;
 }
 .nui-table--striped .nui-table__body > .nui-table__row--odd {
   --_row-bg: var(--_stripe);
@@ -1023,7 +1037,7 @@
 }
 .nui-table__drop {
   position: absolute;
-  z-index: 6;
+  z-index: 60;
   background: var(--nui-primary);
   pointer-events: none;
 }
@@ -1050,7 +1064,7 @@
 }
 .nui-table__ghost {
   position: absolute;
-  z-index: 7;
+  z-index: 70;
   display: flex;
   pointer-events: none;
 }
@@ -1174,29 +1188,84 @@
   white-space: nowrap;
 }
 .nui-table__overlay {
+  --_plane-lead: 0px;
+  --_pane-lead: 0px;
+  --_pane-start: 0px;
+  --_pane-end: 0px;
+  --_pane-end-at: 0px;
+
   position: absolute;
   inset-block-start: 0;
   inset-inline-start: 0;
-  z-index: 1;
-  inline-size: 0;
-  block-size: 0;
+  display: grid;
+  grid-template: 100% / 100%;
+  inline-size: 100%;
+  block-size: 100%;
   padding: 0;
+  text-align: start;
   pointer-events: none;
 }
+.nui-table__pane {
+  position: relative;
+  z-index: 10;
+  grid-area: 1 / 1;
+  align-self: start;
+  justify-self: start;
+  inline-size: 0;
+  block-size: 0;
+}
+.nui-table__pane--frozen,
+.nui-table__pane--cols-start,
+.nui-table__pane--cols-end {
+  position: sticky;
+  overflow: clip;
+}
+.nui-table__pane--frozen {
+  inset-block-start: var(--_head-size);
+  z-index: 35;
+  inline-size: 100%;
+  block-size: var(--_frozen);
+  margin-block-start: calc(var(--_head-size) + var(--_head-lap));
+}
+.nui-table__pane--cols-start {
+  inset-inline-start: var(--_pane-lead);
+  z-index: 25;
+  inline-size: var(--_pane-start);
+  block-size: 100%;
+  margin-inline-start: var(--_pane-lead);
+}
+.nui-table__pane--cols-end {
+  inset-inline-end: 0px;
+  z-index: 25;
+  justify-self: end;
+  inline-size: var(--_pane-end);
+  block-size: 100%;
+}
+.nui-table__pane--frozen:is(.nui-table__pane--cols-start, .nui-table__pane--cols-end) {
+  z-index: 55;
+  block-size: var(--_frozen);
+}
 .nui-table__plane {
-  --_plane-lead: 0px;
-
   position: absolute;
   inset-block-start: calc(var(--_head-lap) - var(--_plane-lead));
   inset-inline-start: 0;
   inline-size: 0;
   block-size: 0;
 }
+.nui-table__pane--frozen > .nui-table__plane {
+  inset-block-start: calc(-1 * var(--_head-size));
+}
+.nui-table__pane--cols-start > .nui-table__plane {
+  inset-inline-start: calc(-1 * var(--_pane-lead));
+}
+.nui-table__pane--cols-end > .nui-table__plane {
+  inset-inline-start: calc(-1 * var(--_pane-end-at));
+}
 .nui-table__busy {
   position: absolute;
   inset-inline: 0;
   inset-block-start: calc(var(--_head-size) - 1px);
-  z-index: 5;
+  z-index: 58;
   block-size: 2px;
   overflow: hidden;
   pointer-events: none;

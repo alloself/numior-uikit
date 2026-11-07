@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { paintedRgbAt, rgbDelta } from '../helpers/color';
 import { boxOf, type Box } from '../helpers/geometry';
@@ -24,6 +24,7 @@ export class BookSection {
   readonly expand: Locator;
   readonly referenceFrames: Locator;
   readonly paintedReferences: Locator;
+  readonly cellReferences: Locator;
   readonly frameGrips: Locator;
   readonly functions: Locator;
   readonly hint: Locator;
@@ -48,7 +49,10 @@ export class BookSection {
     this.formula = this.sheet.getByRole('textbox', { name: 'Строка формул' });
     this.expand = this.sheet.getByRole('button', { name: 'Развернуть строку формул' });
     this.referenceFrames = this.sheet.locator('.nui-spreadsheet__ref');
-    this.paintedReferences = this.sheet.locator('.nui-spreadsheet__token');
+
+    this.paintedReferences = this.sheet.locator('.nui-spreadsheet__mirror .nui-spreadsheet__token');
+
+    this.cellReferences = this.sheet.locator('.nui-spreadsheet__editor .nui-spreadsheet__token');
     this.frameGrips = this.referenceFrames.locator('.nui-spreadsheet__grip');
     this.functions = this.sheet.getByRole('listbox', { name: 'Функции' });
     this.hint = this.sheet.getByRole('list', { name: 'Аргументы функции' });
@@ -127,13 +131,42 @@ export class BookSection {
   }
 
   async dragFill(to: CellLabel): Promise<void> {
+    await this.holdFill(to);
+    await this.releaseFill();
+  }
+
+  async holdFill(to: CellLabel): Promise<void> {
     const grip = await boxOf(this.fillGrip);
     const end = await boxOf(this.cell(to.row, to.col));
 
     await this.page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
     await this.page.mouse.down();
     await this.page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, { steps: 6 });
+  }
+
+  async releaseFill(): Promise<void> {
     await this.page.mouse.up();
+  }
+
+  async fillGripBelow(cell: CellLabel): Promise<boolean> {
+    const grip = await boxOf(this.fillGrip);
+    const box = await boxOf(this.cell(cell.row, cell.col));
+
+    return Math.abs(grip.y + grip.height / 2 - (box.y + box.height)) <= grip.height / 2;
+  }
+
+  async fillGripWhole(): Promise<boolean> {
+    return this.fillGrip.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      const x = box.x + box.width / 2 + 2;
+      const y = box.y + box.height / 2 + 2;
+
+      return element.ownerDocument.elementFromPoint(x, y) === element;
+    });
+  }
+
+  get fillClear(): Locator {
+    return this.sheet.locator('.nui-spreadsheet__fill-clear');
   }
 
   async dragGrip(grip: string, to: CellLabel): Promise<void> {
@@ -150,6 +183,33 @@ export class BookSection {
     await this.page.mouse.down();
     await this.page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, { steps: 6 });
     await this.page.mouse.up();
+  }
+
+  async holdPastBottom(handle: Locator, until: () => Promise<boolean>): Promise<void> {
+    const grip = await boxOf(handle);
+    const viewport = await boxOf(this.sheet.locator('.nui-table__viewport'));
+    const x = grip.x + grip.width / 2;
+
+    await this.page.mouse.move(x, grip.y + grip.height / 2);
+    await this.page.mouse.down();
+    await this.page.mouse.move(x, viewport.y + viewport.height - 4, { steps: 6 });
+    await expect.poll(until, { timeout: 10_000 }).toBe(true);
+    await this.page.mouse.up();
+  }
+
+  async gripReachable(grip: string): Promise<boolean> {
+    const handle = this.referenceFrames.first().locator(`.nui-spreadsheet__grip--${grip}`);
+
+    await handle.scrollIntoViewIfNeeded();
+
+    return handle.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      const view = element.closest('.nui-table__viewport')?.getBoundingClientRect() ?? box;
+      const left = Math.max(box.left, view.left);
+      const right = Math.min(box.right, view.right);
+
+      return document.elementFromPoint((left + right) / 2, box.y + box.height / 2) === element;
+    });
   }
 
   async goTo(name: string): Promise<void> {
@@ -283,6 +343,10 @@ export class BookSection {
     ]);
 
     return inner === undefined || outer === undefined ? Number.NaN : rgbDelta(inner, outer);
+  }
+
+  scrollTop(): Promise<number> {
+    return this.sheet.locator('.nui-table__viewport').evaluate((scroller) => scroller.scrollTop);
   }
 
   async scrollBody(pixels: number): Promise<void> {

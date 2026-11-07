@@ -60,6 +60,27 @@ describe('NuiTable overlay', () => {
     });
   });
 
+  it('splits the overlay into panes over frozen rows and pinned columns', async () => {
+    const grid = mountStaff({
+      slots: { overlay: RangeMarks },
+      pins: { id: 'start' },
+      props: { frozenRows: 2 },
+    });
+
+    await grid.settle();
+
+    expect(grid.paneMarks).toEqual([
+      'body 80px 80px',
+      'body 240px 0px',
+      'start 240px 0px',
+      'top 80px 80px',
+    ]);
+
+    await grid.receive({ frozenRows: 0 });
+
+    expect(grid.paneMarks).toEqual(['body 80px 80px', 'body 240px 0px', 'start 240px 0px']);
+  });
+
   it('follows the row heights model', async () => {
     const grid = mountStaff({ slots: { overlay: RangeMarks }, rowHeights: { 0: 60 } });
     await grid.settle();
@@ -117,5 +138,16 @@ describe('NuiTable overlay', () => {
 
     expect(grid.cellAtPoint(102, 2)).toEqual({ row: 102, col: 2 });
     expect(grid.cellAtPoint(-1, 2)).toBeUndefined();
+  });
+
+  it('finds the nearest body cell when a drag leaves the viewport and scrolls at its edge', async () => {
+    const grid = mountStaff();
+    await grid.settle();
+
+    expect(grid.pointNear(-50, 5000)).toEqual({ x: 1, y: 299 });
+    expect(grid.pointNear(5000, -50)).toEqual({ x: 899, y: 41 });
+
+    expect(grid.followEdge(450, 295)).toEqual({ scrollTop: 8, steps: 1 });
+    expect(grid.followEdge(450, 150)).toEqual({ scrollTop: 8, steps: 0 });
   });
 });
