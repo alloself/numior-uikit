@@ -166,6 +166,42 @@ describe('conditional formats', () => {
     expect(sheet.lookAt('A3')?.style).toEqual(RED);
   });
 
+  it('lets the fill of the rule with the higher priority win over a colour scale', () => {
+    const sheet = withRules();
+
+    const scale = entry(
+      {
+        kind: 'colorScale',
+        stops: [
+          { threshold: { kind: 'min' }, color: LOW },
+          { threshold: { kind: 'max' }, color: HIGH },
+        ],
+      },
+      2,
+    );
+
+    const pink = {
+      kind: 'cellIs',
+      operator: 'greaterThan',
+      formulas: [formula('1')],
+      style: { ...RED, ...BOLD },
+    } as const;
+
+    sheet.fill('A', [1, 2, 3]);
+    sheet.rules([{ ranges: [span('A1:A3')], rules: [entry(pink, 1), scale] }]);
+
+    const above = sheet.lookAt('A2');
+
+    sheet.rules([{ ranges: [span('A1:A3')], rules: [entry(pink, 3), scale] }]);
+
+    expect([above?.style?.fill, above?.scale]).toEqual([RED.fill, undefined]);
+
+    expect([sheet.lookAt('A2')?.style, sheet.lookAt('A2')?.scale?.amount]).toEqual([
+      { font: { bold: true }, fill: undefined },
+      0.5,
+    ]);
+  });
+
   it('scales colours, sizes bars and picks icons from the numbers of the range', () => {
     const sheet = withRules();
 
@@ -303,7 +339,7 @@ describe('conditional formats', () => {
 
     expect(sheet.lookAt('A2')?.style).toEqual(RED);
     expect(sheet.lookAt('A1')?.style).toEqual(BOLD);
-    expect(sheet.lookAt('A1001')?.scale?.amount).toBeCloseTo(1);
+    expect(sheet.lookAt('A1001')?.scale).toBeUndefined();
     expect(sheet.lookAt('A1')?.scale?.amount).toBeCloseTo(0);
     expect(sheet.lookAt('A3')?.scale?.amount).toBeCloseTo(2 / 3);
   });

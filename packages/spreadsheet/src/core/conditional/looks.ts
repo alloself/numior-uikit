@@ -348,9 +348,17 @@ const mergedStyle = (
         format: first.format ?? next.format,
       };
 
+const unfilled = (style: DifferentialStyle | undefined): DifferentialStyle | undefined =>
+  style?.fill === undefined ? style : { ...style, fill: undefined };
+
 const merged = (look: Mutable<ConditionalLook>, next: ConditionalLook): void => {
-  look.style = mergedStyle(look.style, next.style);
-  look.scale ??= next.scale;
+  look.scale ??= look.style?.fill === undefined ? next.scale : undefined;
+
+  look.style = mergedStyle(
+    look.style,
+    look.scale === undefined ? next.style : unfilled(next.style),
+  );
+
   look.bar ??= next.bar;
   look.icon ??= next.icon;
   look.hideValue ??= next.hideValue;
