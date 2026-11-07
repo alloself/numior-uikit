@@ -586,7 +586,7 @@ export class SpreadsheetDriver {
   }
 
   async addRule(): Promise<void> {
-    await this.wrapper.findAll('.nui-spreadsheet-rules__tools button').at(-1)?.trigger('click');
+    await this.wrapper.findAll('.nui-spreadsheet-rules__add button').at(-1)?.trigger('click');
     await nextTick();
   }
 

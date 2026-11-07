@@ -18,7 +18,7 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: var(--nui-space-3);
+  gap: var(--nui-space-2);
   inline-size: min(22rem, calc(100vw - var(--nui-space-8)));
   padding: var(--nui-space-3);
   color: var(--nui-text);
@@ -32,7 +32,7 @@
 }
 .nui-spreadsheet-rules__title {
   margin: 0;
-  font-size: var(--nui-font-size-md);
+  font-size: var(--nui-font-size-sm);
   font-weight: 600;
   line-height: var(--nui-line-height-tight, 1.25);
 }
@@ -43,7 +43,7 @@
 .nui-spreadsheet-rules__rules {
   display: flex;
   flex-direction: column;
-  gap: var(--nui-space-1);
+  gap: 2px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -54,7 +54,7 @@
   align-items: center;
   gap: var(--nui-space-2);
   min-inline-size: 0;
-  padding: var(--nui-space-2);
+  padding: var(--nui-space-1) var(--nui-space-2);
   border-radius: var(--nui-radius);
   transition:
     background-color var(--nui-duration-fast) var(--nui-easing),
@@ -118,8 +118,8 @@
   align-items: center;
   justify-content: center;
   gap: 1px;
-  inline-size: 4.5rem;
-  block-size: 1.75rem;
+  inline-size: 3.5rem;
+  block-size: 1.5rem;
   overflow: hidden;
   border: 1px solid var(--nui-border);
   border-radius: var(--nui-radius-sm);
@@ -166,6 +166,31 @@
 .nui-spreadsheet-rules__actions {
   display: inline-flex;
   flex: none;
+  opacity: 0;
+  transition: opacity var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-spreadsheet-rules__rule:hover .nui-spreadsheet-rules__actions,
+.nui-spreadsheet-rules__rule:focus-within .nui-spreadsheet-rules__actions {
+  opacity: 1;
+}
+@media (hover: none) {
+  .nui-spreadsheet-rules__actions {
+    opacity: 1;
+  }
+}
+@media (hover: hover) {
+  .nui-spreadsheet-rules__rule {
+    position: relative;
+  }
+  .nui-spreadsheet-rules__actions {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    align-items: center;
+    padding-inline: var(--nui-space-1);
+    border-radius: var(--nui-radius);
+    background: linear-gradient(var(--nui-hover), var(--nui-hover)), var(--nui-surface-overlay);
+  }
 }
 .nui-spreadsheet-rules__drop {
   position: absolute;
@@ -209,7 +234,7 @@
 .nui-spreadsheet-rules__empty {
   box-sizing: border-box;
   margin: 0;
-  padding: var(--nui-space-4);
+  padding: var(--nui-space-3);
   border: 1px dashed var(--nui-border);
   border-radius: var(--nui-radius);
   color: var(--nui-text-muted);
@@ -223,12 +248,11 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
-.nui-spreadsheet-rules__tools {
+.nui-spreadsheet-rules__add {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--nui-space-2);
+  margin-inline: calc(var(--nui-space-3) * -1);
+  padding: var(--nui-space-2) var(--nui-space-2) 0;
+  border-block-start: 1px solid var(--nui-border);
 }
 .nui-spreadsheet-rules__editor {
   box-sizing: border-box;

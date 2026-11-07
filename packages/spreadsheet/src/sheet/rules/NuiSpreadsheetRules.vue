@@ -20,20 +20,7 @@
       </NuiButton>
     </div>
     <template v-if="editing === undefined">
-      <div class="nui-spreadsheet-rules__tools">
-        <NuiSwitch v-model="only" size="sm" :label="texts.onlySelection" />
-        <NuiButton
-          v-if="!readonly"
-          ref="addButton"
-          variant="outline"
-          tone="neutral"
-          size="sm"
-          icon="plus"
-          @click="startEdit(undefined)"
-        >
-          {{ texts.addRule }}
-        </NuiButton>
-      </div>
+      <NuiSwitch v-model="only" size="sm" :label="texts.onlySelection" />
       <div ref="list" class="nui-spreadsheet-rules__list">
         <ol class="nui-spreadsheet-rules__rules" role="list">
           <NuiSpreadsheetRule
@@ -64,6 +51,18 @@
         </span>
       </div>
       <p v-for="text in empty" :key="text" class="nui-spreadsheet-rules__empty">{{ text }}</p>
+      <div v-if="!readonly" class="nui-spreadsheet-rules__add">
+        <NuiButton
+          ref="addButton"
+          variant="ghost"
+          tone="neutral"
+          size="sm"
+          icon="plus"
+          @click="startEdit(undefined)"
+        >
+          {{ texts.addRule }}
+        </NuiButton>
+      </div>
     </template>
     <NuiSpreadsheetRuleEditor
       v-else
