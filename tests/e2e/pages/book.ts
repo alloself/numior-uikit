@@ -136,6 +136,10 @@ export class BookSection {
     return this.sheet.locator('.nui-spreadsheet__fill-grip');
   }
 
+  async leaveSheet(): Promise<void> {
+    await this.section.getByRole('heading').first().click();
+  }
+
   async dragFill(to: CellLabel): Promise<void> {
     await this.holdFill(to);
     await this.releaseFill();

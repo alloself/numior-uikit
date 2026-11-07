@@ -97,7 +97,7 @@
         </span>
       </span>
     </div>
-    <div class="nui-spreadsheet__body">
+    <div ref="body" class="nui-spreadsheet__body">
       <NuiTable
         ref="grid"
         :dir="sheetDir"
@@ -195,6 +195,7 @@
 import { Direction, Key, useLocale, useMessages } from '@numior/primitives';
 import { NuiTable, tableCells, type NuiTableColumn, type NuiTableExposed } from '@numior/table';
 import { NuiButton, NuiIcon, type NuiTabDescriptor } from '@numior/vue';
+import { useFocusWithin } from '@vueuse/core';
 import { computed, provide, ref, useId, useTemplateRef, watch } from 'vue';
 import { EN_LOCALE, HelpLanguage, RU_LOCALE, createCalculator, type BookLocale } from '../core';
 import { defaultRowHeight, sheetCells } from './sheet-cells';
@@ -251,6 +252,7 @@ const nameField = useTemplateRef<HTMLInputElement>('nameField');
 const formulaField = useTemplateRef<HTMLTextAreaElement>('formulaField');
 const mirror = useTemplateRef<HTMLElement>('mirror');
 const grid = useTemplateRef<NuiTableExposed>('grid');
+const body = useTemplateRef<HTMLElement>('body');
 
 const formulaId = useId();
 
@@ -398,8 +400,11 @@ const references = useSheetReferences({
 
 provide(SHEET_SEGMENTS, references.segments);
 
+const { focused: inSheet } = useFocusWithin(body);
+
 const rootClasses = computed(() => ({
   'nui-spreadsheet--dragging': references.dragging.value,
+  'nui-spreadsheet--focused': inSheet.value,
 }));
 
 const sheetDir = computed(() =>

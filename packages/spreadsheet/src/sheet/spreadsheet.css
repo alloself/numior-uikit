@@ -390,6 +390,20 @@
   box-sizing: border-box;
   pointer-events: none;
 }
+.nui-spreadsheet__fill {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--nui-duration-fast) var(--nui-easing),
+    visibility 0s linear var(--nui-duration-fast);
+}
+.nui-spreadsheet--focused .nui-spreadsheet__fill {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--nui-duration-fast) var(--nui-easing),
+    visibility 0s linear 0s;
+}
 .nui-spreadsheet__fill-preview {
   border: 1px dashed var(--nui-text-muted);
 }

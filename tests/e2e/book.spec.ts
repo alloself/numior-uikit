@@ -50,6 +50,26 @@ test.describe('book', () => {
     await expect.poll(async () => rgbDelta(await book.fillAt('4', 1), PINK)).toBeLessThan(8);
   });
 
+  test('hides the fill handle together with the active cell when focus leaves the sheet', async ({
+    playground,
+    book,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.cell('4', 1).click();
+
+    await expect(book.fillGrip).toBeVisible();
+
+    await book.leaveSheet();
+
+    await expect(book.fillGrip).toBeHidden();
+
+    await book.cell('4', 1).click();
+
+    await expect(book.fillGrip).toBeVisible();
+  });
+
   test('switches to a sheet without gridlines and opens an xlsx file', async ({
     playground,
     book,
