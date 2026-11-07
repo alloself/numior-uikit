@@ -120,6 +120,12 @@ const luminance = (hex: string): number =>
     return sum + linear * ([0.2126, 0.7152, 0.0722][index] ?? 0);
   }, 0);
 
+const lightFill = (fill: string): boolean => {
+  const light = luminance(fill);
+
+  return (light + 0.05) / 0.05 >= 1.05 / (light + 0.05);
+};
+
 const inkOf = (
   decoration: CellDecoration,
   theme: ThemePalette,
@@ -131,19 +137,19 @@ const inkOf = (
   if (own !== undefined || fill === undefined) {
     return cssOf(own);
   }
-  const light = luminance(fill);
-
-  return (light + 0.05) / 0.05 >= 1.05 / (light + 0.05) ? '#000000' : '#FFFFFF';
+  return lightFill(fill) ? '#000000' : '#FFFFFF';
 };
+
+const schemeOf = (fill: string | undefined): Record<string, string> =>
+  fill === undefined ? {} : { 'color-scheme': lightFill(fill) ? 'light' : 'dark' };
 
 export const sheetStyle = (input: StyleInput): NuiTableCellStyle | undefined => {
   const { decoration, theme, shape } = input;
   const alignment = decoration.alignment;
   const wrap = alignment?.wrap === true;
   const align = ALIGNS[alignment?.horizontal ?? ''] ?? GENERAL_ALIGNS[shape];
-  const style = fontCss(decoration.font, input.base);
-
   const fill = fillHex(decoration, theme);
+  const style = { ...fontCss(decoration.font, input.base), ...schemeOf(fill) };
 
   const color =
     (input.formatColor === undefined ? undefined : formatColor(input.formatColor)) ??

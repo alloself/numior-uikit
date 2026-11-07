@@ -39,6 +39,7 @@
     "build": "vp build && vue-tsc -p tsconfig.build.json"
   },
   "dependencies": {
+    "@lucide/vue": "1.50.0",
     "@numior/primitives": "workspace:*",
     "@numior/table": "workspace:*",
     "@numior/vue": "workspace:*",

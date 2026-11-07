@@ -90,6 +90,44 @@ const OVERSPEND: ConditionalFormat = {
   ],
 };
 
+const MARKETING: ConditionalFormat = {
+  ranges: [{ top: 4, left: 1, bottom: 4, right: MONTHS.length }],
+  rules: [
+    {
+      rule: {
+        kind: 'dataBar',
+        min: { kind: 'max' },
+        max: { kind: 'min' },
+        color: { kind: 'rgb', argb: 'FF638EC6' },
+        showValue: true,
+      },
+      priority: 3,
+      stopIfTrue: false,
+    },
+  ],
+};
+
+const PROFIT: ConditionalFormat = {
+  ranges: [{ top: LINES.length + 2, left: 1, bottom: LINES.length + 2, right: MONTHS.length }],
+  rules: [
+    {
+      rule: {
+        kind: 'iconSet',
+        set: '3Arrows',
+        thresholds: [
+          { kind: 'min' },
+          { kind: 'percent', value: { kind: 'number', value: 33 } },
+          { kind: 'percent', value: { kind: 'number', value: 67 } },
+        ],
+        reverse: false,
+        showValue: true,
+      },
+      priority: 4,
+      stopIfTrue: false,
+    },
+  ],
+};
+
 const WIDE: LineLayout = {
   size: 18,
   custom: true,
@@ -155,7 +193,7 @@ const fillBudget = (book: Workbook, sheet: Sheet): void => {
     view: { ...sheet.layout.view, frozenRows: 2 },
   };
 
-  sheet.conditional = [OVERSPEND, GROWTH];
+  sheet.conditional = [OVERSPEND, GROWTH, MARKETING, PROFIT];
 };
 
 const sumTotals = (book: Workbook, calculator: Calculator, sheet: Sheet): void => {

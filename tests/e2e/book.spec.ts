@@ -50,6 +50,28 @@ test.describe('book', () => {
     await expect.poll(async () => rgbDelta(await book.fillAt('4', 1), PINK)).toBeLessThan(8);
   });
 
+  test('draws data bars behind the values and arrows before the totals', async ({
+    playground,
+    book,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+
+    expect(await book.barShare('5', 1)).toBeLessThan(0.15);
+    expect(await book.barShare('5', 3)).toBeGreaterThan(0.35);
+
+    const [red, green, blue] = await book.barRgb('5', 3);
+
+    expect(blue - red).toBeGreaterThan(30);
+    expect(blue - green).toBeGreaterThan(15);
+
+    await expect.poll(() => book.iconGlyph('8', 1)).toContain('lucide-arrow-down');
+
+    expect(await book.iconGlyph('8', 3)).toContain('lucide-arrow-right');
+    await expect(book.cell('8', 1)).toContainText('85');
+  });
+
   test('hides the fill handle together with the active cell when focus leaves the sheet', async ({
     playground,
     book,

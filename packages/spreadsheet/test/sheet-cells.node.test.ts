@@ -74,7 +74,7 @@ describe('sheet cells', () => {
         align: 'center',
         wrap: true,
         borders: { bottom: '1px solid currentColor' },
-        style: { 'font-weight': '700' },
+        style: { 'font-weight': '700', 'color-scheme': 'light' },
       },
     });
   });
@@ -114,6 +114,21 @@ describe('sheet cells', () => {
         (argb) => paint({ fill: { pattern: 'solid', foreground: { kind: 'rgb', argb } } })?.color,
       ),
     ).toEqual(['#000000', '#000000', '#FFFFFF']);
+  });
+
+  it('gives filled cells the colour scheme of their fill so theme colours inside stay readable', async () => {
+    const paint = await painter();
+
+    expect(
+      ['FFDAE3F3', 'FF1F3864'].map(
+        (argb) =>
+          paint({ fill: { pattern: 'solid', foreground: { kind: 'rgb', argb } } })?.style?.[
+            'color-scheme'
+          ],
+      ),
+    ).toEqual(['light', 'dark']);
+
+    expect(paint({ font: { bold: true } })?.style?.['color-scheme']).toBeUndefined();
   });
 
   it('sizes columns and rows in pixels, keeps merges and freezes the header row', async () => {

@@ -109,6 +109,27 @@ export class BookSection {
     return corner ?? [0, 0, 0];
   }
 
+  barShare(rowLabel: string, column: number): Promise<number> {
+    return this.cell(rowLabel, column).evaluate((cell) => {
+      const bar = Number.parseFloat(getComputedStyle(cell, '::after').inlineSize);
+
+      return Number.isNaN(bar) ? 0 : bar / cell.getBoundingClientRect().width;
+    });
+  }
+
+  async barRgb(rowLabel: string, column: number): Promise<Rgb> {
+    const box = await boxOf(this.cell(rowLabel, column));
+    const [inside] = await paintedRgbAt(this.cell(rowLabel, column), [[4, box.height / 2]]);
+
+    return inside ?? [0, 0, 0];
+  }
+
+  iconGlyph(rowLabel: string, column: number): Promise<string[]> {
+    return this.cell(rowLabel, column)
+      .locator('.nui-table__icon svg')
+      .evaluate((glyph) => [...glyph.classList]);
+  }
+
   merged(rowLabel: string, column: number): Promise<boolean> {
     return this.cell(rowLabel, column).evaluate((cell) =>
       cell.classList.contains('nui-table__cell--merged'),

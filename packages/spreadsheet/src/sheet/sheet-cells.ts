@@ -11,7 +11,12 @@ import {
   type Workbook,
 } from '../core';
 import { createLineIndex, type LineIndex } from './line-index';
-import { createConditionalLooks, createLookKeys, decorationWith } from './sheet-conditional';
+import {
+  createConditionalLooks,
+  createLookKeys,
+  decorationWith,
+  markedStyle,
+} from './sheet-conditional';
 import { sheetStyle } from './sheet-style';
 import type { SheetCells, SheetCellsOptions, StyleCache, ValueShape } from './sheet.types';
 import { CellValueKind } from '../core/cell.types';
@@ -152,8 +157,10 @@ const createStyles = (book: Workbook): StyleCache => {
       formatColor: color,
     });
 
-    known.set(key, style);
-    return style;
+    const marked = look === undefined ? style : markedStyle(style, look, book.decorations.theme);
+
+    known.set(key, marked);
+    return marked;
   };
 };
 
@@ -220,7 +227,7 @@ export const sheetCells = ({
     const style = styles(decoration, SHAPES[value.kind], shown.color, look);
 
     return {
-      text: shown.text,
+      text: look?.hideValue === true ? '' : shown.text,
       style: outdated?.(sheet, row, col) === true ? stale(style) : style,
     };
   };

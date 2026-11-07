@@ -1,8 +1,10 @@
+import type { NuiTableCellBar, NuiTableCellStyle } from '@numior/table';
 import {
   MAX_COLS,
   colorHex,
   createConditionalPainter,
   type Calculator,
+  type BarLook,
   type CellDecoration,
   type ConditionalLook,
   type DifferentialStyle,
@@ -12,11 +14,16 @@ import {
   type Workbook,
 } from '../core';
 import { FillPattern, StyleColorKind } from '../core/cell.types';
+import { sheetIcon } from './sheet-icons';
 import type { ConditionalLookAt, LookKeys } from './sheet.types';
 
 const ROW_LIMIT = 512;
 
 const NO_LOOK: ConditionalLookAt = () => undefined;
+
+const BAR_STEPS = 200;
+
+const BAR_COLOR = 'var(--nui-primary)';
 
 const channelsOf = (hex: string): number[] =>
   [0, 2, 4].map((at) => Number.parseInt(hex.slice(at, at + 2), 16));
@@ -66,6 +73,33 @@ export const decorationWith = (
       };
 };
 
+const barOf = (bar: BarLook, theme: ThemePalette): NuiTableCellBar => {
+  const hex = colorHex(bar.color, theme);
+
+  return {
+    length: Math.round(bar.length * BAR_STEPS) / BAR_STEPS,
+    color: hex === undefined ? BAR_COLOR : `#${hex}`,
+  };
+};
+
+export const markedStyle = (
+  style: NuiTableCellStyle | undefined,
+  look: ConditionalLook,
+  theme: ThemePalette,
+): NuiTableCellStyle | undefined => {
+  const bar = look.bar === undefined ? undefined : barOf(look.bar, theme);
+  const icon = look.icon === undefined ? undefined : sheetIcon(look.icon);
+
+  return bar === undefined && icon === undefined ? style : { ...style, bar, icon };
+};
+
+const marksKey = (look: ConditionalLook): string =>
+  [
+    look.bar === undefined ? '' : String(Math.round(look.bar.length * BAR_STEPS)),
+    look.bar === undefined ? '' : JSON.stringify(look.bar.color),
+    look.icon === undefined ? '' : `${look.icon.set}/${String(look.icon.index)}`,
+  ].join(':');
+
 export const createLookKeys = (theme: ThemePalette): LookKeys => {
   const known = new WeakMap<DifferentialStyle, number>();
   let count = 0;
@@ -83,7 +117,7 @@ export const createLookKeys = (theme: ThemePalette): LookKeys => {
   return (look) =>
     `${look.style === undefined ? '' : String(styleKey(look.style))}:${
       look.scale === undefined ? '' : (scaleHex(look.scale, theme) ?? '')
-    }`;
+    }:${marksKey(look)}`;
 };
 
 const revisionOf = (book: Workbook): number =>

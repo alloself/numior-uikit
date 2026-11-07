@@ -100,6 +100,38 @@ const asPercent: ConditionalFormat = {
   ],
 };
 
+const barsAndArrows: ConditionalFormat = {
+  ranges: [span('B1', 'B3')],
+  rules: [
+    {
+      rule: {
+        kind: 'dataBar',
+        min: { kind: 'min' },
+        max: { kind: 'max' },
+        color: { kind: 'rgb', argb: 'FF638EC6' },
+        showValue: false,
+      },
+      priority: 1,
+      stopIfTrue: false,
+    },
+    {
+      rule: {
+        kind: 'iconSet',
+        set: '3Arrows',
+        thresholds: [
+          { kind: 'min' },
+          { kind: 'percent', value: formula('33') },
+          { kind: 'percent', value: formula('67') },
+        ],
+        reverse: false,
+        showValue: true,
+      },
+      priority: 2,
+      stopIfTrue: false,
+    },
+  ],
+};
+
 describe('conditional formats in sheet cells', () => {
   it('paints the differential style of matching cells and leaves the rest as they are', () => {
     const sheet = paintedBook([greaterThanTen]);
@@ -121,6 +153,23 @@ describe('conditional formats in sheet cells', () => {
       '#B84700',
       '#00FF00',
     ]);
+  });
+
+  it('draws solid data bars in the rule colour and icons from the set, hiding the value when asked', () => {
+    const sheet = paintedBook([barsAndArrows]);
+    const cells = ['B1', 'B3'].map((address) => sheet.styleAt(address));
+
+    expect(cells.map((cell) => cell?.style?.bar)).toEqual([
+      { length: 0.1, color: '#638EC6' },
+      { length: 0.9, color: '#638EC6' },
+    ]);
+
+    expect(cells.map((cell) => cell?.style?.icon?.color)).toEqual([
+      'var(--nui-error)',
+      'var(--nui-success)',
+    ]);
+
+    expect(cells.map((cell) => cell?.text)).toEqual(['', '']);
   });
 
   it('formats values through a rule number format', () => {
