@@ -9,6 +9,7 @@ import {
   textValue,
   type Calculator,
   type CellDecoration,
+  type ConditionalFormat,
   type LineLayout,
   type Sheet,
   type Workbook,
@@ -52,6 +53,42 @@ const TOTAL: CellDecoration = {
 };
 
 const MONEY = '#,##0';
+
+const GROWTH: ConditionalFormat = {
+  ranges: [{ top: 2, left: 1, bottom: 2, right: MONTHS.length }],
+  rules: [
+    {
+      rule: {
+        kind: 'colorScale',
+        stops: [
+          { threshold: { kind: 'min' }, color: { kind: 'rgb', argb: 'FFFFFFFF' } },
+          { threshold: { kind: 'max' }, color: { kind: 'rgb', argb: 'FF63BE7B' } },
+        ],
+      },
+      priority: 2,
+      stopIfTrue: false,
+    },
+  ],
+};
+
+const OVERSPEND: ConditionalFormat = {
+  ranges: [{ top: 3, left: 1, bottom: 3, right: MONTHS.length }],
+  rules: [
+    {
+      rule: {
+        kind: 'cellIs',
+        operator: 'lessThan',
+        formulas: [{ kind: 'number', value: -650 }],
+        style: {
+          fill: { pattern: 'solid', background: { kind: 'rgb', argb: 'FFFFC7CE' } },
+          font: { color: { kind: 'rgb', argb: 'FF9C0006' } },
+        },
+      },
+      priority: 1,
+      stopIfTrue: false,
+    },
+  ],
+};
 
 const WIDE: LineLayout = {
   size: 18,
@@ -117,6 +154,8 @@ const fillBudget = (book: Workbook, sheet: Sheet): void => {
     merges: [{ top: 0, left: 0, bottom: 0, right: MONTHS.length }],
     view: { ...sheet.layout.view, frozenRows: 2 },
   };
+
+  sheet.conditional = [OVERSPEND, GROWTH];
 };
 
 const sumTotals = (book: Workbook, calculator: Calculator, sheet: Sheet): void => {

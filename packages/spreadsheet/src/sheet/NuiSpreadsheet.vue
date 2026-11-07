@@ -300,6 +300,7 @@ const cells = computed(() =>
         sheet: shownSheet.value,
         locale: bookLocale.value,
         outdated: recalc.outdated,
+        calculator: calculator ?? ownCalculator.value,
       }),
 );
 

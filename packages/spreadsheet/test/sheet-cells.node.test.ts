@@ -1,3 +1,4 @@
+import type { NuiTableCellStyle } from '@numior/table';
 import { describe, expect, it } from 'vite-plus/test';
 import { parseCell, textValue, type CellDecoration } from '../src/core';
 import { sheetCells, type SheetCells } from '../src';
@@ -17,6 +18,28 @@ const cellsOf = async (sheetXml = SALES_SHEET): Promise<SheetCells> => {
     throw new Error('Sales is missing');
   }
   return sheetCells({ book: read.book, sheet });
+};
+
+const painter = async (): Promise<
+  (decoration: CellDecoration) => NuiTableCellStyle | undefined
+> => {
+  const book = await readWorkbook(await xlsxPackage());
+
+  if (book.kind === 'rejected') {
+    throw new Error('the package was rejected');
+  }
+
+  const sheet = book.book.sheet('Sales');
+
+  if (sheet === undefined) {
+    throw new Error('Sales is missing');
+  }
+
+  return (decoration) => {
+    sheet.decorations.set(8, 0, book.book.decorations.id(decoration));
+    sheet.cells.set(8, 0, textValue('x'));
+    return sheetCells({ book: book.book, sheet }).source.cellAt(8, 0)?.style;
+  };
 };
 
 const cellAt = (cells: SheetCells, address: string) => {
@@ -58,23 +81,7 @@ describe('sheet cells', () => {
 
   it('keeps author colours readable: semantic theme colours follow the page, fills get a contrasting ink', async () => {
     const cells = await cellsOf();
-    const book = await readWorkbook(await xlsxPackage());
-
-    if (book.kind === 'rejected') {
-      throw new Error('the package was rejected');
-    }
-
-    const sheet = book.book.sheet('Sales');
-
-    if (sheet === undefined) {
-      throw new Error('Sales is missing');
-    }
-
-    const paint = (decoration: CellDecoration) => {
-      sheet.decorations.set(8, 0, book.book.decorations.id(decoration));
-      sheet.cells.set(8, 0, textValue('x'));
-      return sheetCells({ book: book.book, sheet }).source.cellAt(8, 0)?.style;
-    };
+    const paint = await painter();
 
     expect(cells.source.cellAt(0, 0)?.style?.color).toBeUndefined();
     expect(paint({ font: { color: { kind: 'theme', theme: 1, tint: 0 } } })?.color).toBeUndefined();
@@ -97,6 +104,16 @@ describe('sheet cells', () => {
         fill: { pattern: 'solid', foreground: { kind: 'rgb', argb: 'FFFFFF00' } },
       })?.color,
     ).toBe('#000000');
+  });
+
+  it('picks the ink with the higher contrast on mid-tone fills', async () => {
+    const paint = await painter();
+
+    expect(
+      ['FF63BE7B', 'FFF8696B', 'FF4472C4'].map(
+        (argb) => paint({ fill: { pattern: 'solid', foreground: { kind: 'rgb', argb } } })?.color,
+      ),
+    ).toEqual(['#000000', '#000000', '#FFFFFF']);
   });
 
   it('sizes columns and rows in pixels, keeps merges and freezes the header row', async () => {

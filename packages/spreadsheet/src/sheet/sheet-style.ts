@@ -100,8 +100,6 @@ const TEXT_ONE = 1;
 
 const BACKGROUND_ONE = 0;
 
-const LIGHT_FILL = 0.5;
-
 const semantic = (color: StyleColor | undefined, index: number): boolean =>
   color?.kind === StyleColorKind.Theme && color.theme === index && color.tint === 0;
 
@@ -133,7 +131,9 @@ const inkOf = (
   if (own !== undefined || fill === undefined) {
     return cssOf(own);
   }
-  return luminance(fill) > LIGHT_FILL ? '#000000' : '#FFFFFF';
+  const light = luminance(fill);
+
+  return (light + 0.05) / 0.05 >= 1.05 / (light + 0.05) ? '#000000' : '#FFFFFF';
 };
 
 export const sheetStyle = (input: StyleInput): NuiTableCellStyle | undefined => {

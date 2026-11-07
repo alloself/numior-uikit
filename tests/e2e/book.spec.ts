@@ -1,6 +1,13 @@
 import { expect, test } from './fixtures';
+import { rgbDelta, type Rgb } from './helpers/color';
 import { boxOf } from './helpers/geometry';
 import { ordersXlsx, pricesXlsx } from './helpers/xlsx';
+
+const PINK: Rgb = [255, 199, 206];
+
+const TWO_FIFTHS_GREEN: Rgb = [193, 229, 202];
+
+const WHITE: Rgb = [255, 255, 255];
 
 const firstRowOf = (formula: string): number => Number(/[A-Z]+(\d+)/u.exec(formula)?.[1] ?? 0);
 
@@ -23,6 +30,24 @@ test.describe('book', () => {
     await expect(book.cell('2', 0)).toBeInViewport();
     await expect(book.cell('3', 0)).not.toBeInViewport();
     expect(await book.bordered()).toBe(true);
+  });
+
+  test('paints conditional formats and repaints them after an edit', async ({
+    playground,
+    book,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+
+    expect(rgbDelta(await book.fillAt('3', 1), WHITE)).toBeLessThan(8);
+    expect(rgbDelta(await book.fillAt('3', 3), TWO_FIFTHS_GREEN)).toBeLessThan(8);
+    expect(rgbDelta(await book.fillAt('4', 3), PINK)).toBeLessThan(8);
+    expect(rgbDelta(await book.fillAt('4', 1), PINK)).toBeGreaterThan(30);
+
+    await book.enter('4', 1, '-800');
+
+    await expect.poll(async () => rgbDelta(await book.fillAt('4', 1), PINK)).toBeLessThan(8);
   });
 
   test('switches to a sheet without gridlines and opens an xlsx file', async ({

@@ -1,0 +1,142 @@
+import { describe, expect, it } from 'vite-plus/test';
+import {
+  EN_FORMULAS,
+  parseCell,
+  parseFormula,
+  type ConditionalFormat,
+  type DifferentialStyle,
+  type FormulaNode,
+} from '../src/core';
+import { sheetCells } from '../src';
+import { openBook } from './book-harness';
+
+const PINK: DifferentialStyle = {
+  fill: { pattern: 'solid', background: { kind: 'rgb', argb: 'FFFFC7CE' } },
+  font: { bold: true, color: { kind: 'rgb', argb: 'FF9C0006' } },
+};
+
+const PERCENT: DifferentialStyle = { format: '0%' };
+
+const formula = (text: string): FormulaNode => {
+  const parsed = parseFormula(text, EN_FORMULAS, { row: 0, col: 0 });
+
+  if (!parsed.ok) {
+    throw new Error(`${text} does not parse`);
+  }
+  return parsed.ast;
+};
+
+const span = (from: string, to: string) => {
+  const start = parseCell(from);
+  const end = parseCell(to);
+
+  if (start === undefined || end === undefined) {
+    throw new Error(`${from}:${to} is not a range`);
+  }
+  return { top: start.row, left: start.col, bottom: end.row, right: end.col };
+};
+
+const paintedBook = (formats: readonly ConditionalFormat[]) => {
+  const sheet = openBook();
+
+  ['5', '12', '30'].forEach((value, index) => {
+    sheet.type(`A${String(index + 1)}`, value);
+    sheet.type(`B${String(index + 1)}`, value);
+  });
+
+  sheet.type('C1', '0.25');
+  sheet.commit({ kind: 'setConditional', sheet: 'Sheet1', formats });
+
+  const cells = sheetCells({ book: sheet.book, sheet: sheet.first, calculator: sheet.calculator });
+
+  const styleAt = (address: string) => {
+    const cell = parseCell(address);
+
+    if (cell === undefined) {
+      throw new Error(`${address} is not a cell`);
+    }
+    return cells.source.cellAt(cell.row, cell.col);
+  };
+
+  return { ...sheet, styleAt };
+};
+
+const greaterThanTen: ConditionalFormat = {
+  ranges: [span('A1', 'A3')],
+  rules: [
+    {
+      rule: { kind: 'cellIs', operator: 'greaterThan', formulas: [formula('10')], style: PINK },
+      priority: 1,
+      stopIfTrue: false,
+    },
+  ],
+};
+
+const redToGreen: ConditionalFormat = {
+  ranges: [span('B1', 'B3')],
+  rules: [
+    {
+      rule: {
+        kind: 'colorScale',
+        stops: [
+          { threshold: { kind: 'min' }, color: { kind: 'rgb', argb: 'FFFF0000' } },
+          { threshold: { kind: 'max' }, color: { kind: 'rgb', argb: 'FF00FF00' } },
+        ],
+      },
+      priority: 2,
+      stopIfTrue: false,
+    },
+  ],
+};
+
+const asPercent: ConditionalFormat = {
+  ranges: [span('C1', 'C1')],
+  rules: [
+    {
+      rule: { kind: 'expression', formula: formula('=TRUE'), style: PERCENT },
+      priority: 3,
+      stopIfTrue: false,
+    },
+  ],
+};
+
+describe('conditional formats in sheet cells', () => {
+  it('paints the differential style of matching cells and leaves the rest as they are', () => {
+    const sheet = paintedBook([greaterThanTen]);
+
+    expect(sheet.styleAt('A1')?.style?.fill).toBeUndefined();
+
+    expect(sheet.styleAt('A2')?.style).toMatchObject({
+      fill: '#FFC7CE',
+      color: '#9C0006',
+      style: { 'font-weight': '700' },
+    });
+  });
+
+  it('blends colour scale fills between the stops by the value', () => {
+    const sheet = paintedBook([redToGreen]);
+
+    expect(['B1', 'B2', 'B3'].map((address) => sheet.styleAt(address)?.style?.fill)).toEqual([
+      '#FF0000',
+      '#B84700',
+      '#00FF00',
+    ]);
+  });
+
+  it('formats values through a rule number format', () => {
+    const sheet = paintedBook([asPercent]);
+
+    expect(sheet.styleAt('C1')?.text).toBe('25%');
+  });
+
+  it('follows edits of the painted values', () => {
+    const sheet = paintedBook([greaterThanTen]);
+    const before = sheet.styleAt('A1')?.style?.fill;
+
+    sheet.type('A1', '50');
+
+    expect(before).toBeUndefined();
+
+    expect(sheet.styleAt('A1')?.style?.fill).toBe('#FFC7CE');
+  });
+});

@@ -11,6 +11,7 @@ import {
   type Workbook,
 } from '../core';
 import { createLineIndex, type LineIndex } from './line-index';
+import { createConditionalLooks, createLookKeys, decorationWith } from './sheet-conditional';
 import { sheetStyle } from './sheet-style';
 import type { SheetCells, SheetCellsOptions, StyleCache, ValueShape } from './sheet.types';
 import { CellValueKind } from '../core/cell.types';
@@ -130,16 +131,21 @@ const columnWidthOf = (sheet: Sheet, col: number): number => {
 
 const createStyles = (book: Workbook): StyleCache => {
   const known = new Map<string, NuiTableCellStyle | undefined>();
+  const lookKey = createLookKeys(book.decorations.theme);
 
-  return (decoration: number, shape: ValueShape, color: number | undefined) => {
-    const key = `${String(decoration)}:${shape}:${String(color)}`;
+  return (decoration, shape, color, look) => {
+    const key = `${String(decoration)}:${shape}:${String(color)}:${
+      look === undefined ? '' : lookKey(look)
+    }`;
 
     if (known.has(key)) {
       return known.get(key);
     }
 
+    const base = book.decorations.get(decoration);
+
     const style = sheetStyle({
-      decoration: book.decorations.get(decoration),
+      decoration: look === undefined ? base : decorationWith(base, look, book.decorations.theme),
       theme: book.decorations.theme,
       base: book.decorations.defaultFont,
       shape,
@@ -188,11 +194,13 @@ export const sheetCells = ({
   sheet,
   locale = EN_LOCALE,
   outdated,
+  calculator,
 }: SheetCellsOptions): SheetCells => {
   const rows = createLineIndex(MAX_ROWS, hiddenLines(sheet.layout.rows));
   const cols = createLineIndex(MAX_COLS, hiddenLines(sheet.layout.cols));
   const styles = createStyles(book);
   const stale = createStale();
+  const looks = createConditionalLooks(book, sheet, calculator);
   const { view } = sheet.layout;
 
   const cellAt = (position: number, column: number): NuiTableSourceCell | undefined => {
@@ -200,14 +208,16 @@ export const sheetCells = ({
     const col = cols.lineAt(column);
     const value = sheet.cells.get(row, col);
     const decoration = decorationAt(sheet, row, col);
+    const look = looks(row, col);
 
-    if (value.kind === CellValueKind.Empty && decoration === 0) {
+    if (value.kind === CellValueKind.Empty && decoration === 0 && look === undefined) {
       return undefined;
     }
 
-    const shown = formatValue(value, book.formats.code(formatAt(sheet, row, col)), locale.numbers);
+    const code = look?.style?.format ?? book.formats.code(formatAt(sheet, row, col));
+    const shown = formatValue(value, code, locale.numbers);
 
-    const style = styles(decoration, SHAPES[value.kind], shown.color);
+    const style = styles(decoration, SHAPES[value.kind], shown.color, look);
 
     return {
       text: shown.text,

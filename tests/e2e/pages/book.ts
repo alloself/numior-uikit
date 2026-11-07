@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
-import { paintedRgbAt, rgbDelta } from '../helpers/color';
+import { paintedRgbAt, rgbDelta, type Rgb } from '../helpers/color';
 import { boxOf, type Box } from '../helpers/geometry';
 import type { XlsxFile } from '../helpers/xlsx';
 
@@ -101,6 +101,12 @@ export class BookSection {
 
   editorBox(): Promise<Box> {
     return boxOf(this.editor);
+  }
+
+  async fillAt(rowLabel: string, column: number): Promise<Rgb> {
+    const [corner] = await paintedRgbAt(this.cell(rowLabel, column), [[4, 4]]);
+
+    return corner ?? [0, 0, 0];
   }
 
   merged(rowLabel: string, column: number): Promise<boolean> {

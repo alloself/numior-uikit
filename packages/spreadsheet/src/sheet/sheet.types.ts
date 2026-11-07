@@ -20,6 +20,7 @@ import type {
   CellClip,
   CellRange,
   CellDecoration,
+  ConditionalLook,
   FontStyle,
   HelpLanguage,
   RecalcOptions,
@@ -140,7 +141,12 @@ export interface SheetCellsOptions {
   readonly sheet: Sheet;
   readonly locale?: BookLocale | undefined;
   readonly outdated?: CellOutdated | undefined;
+  readonly calculator?: Calculator | undefined;
 }
+
+export type ConditionalLookAt = (row: number, col: number) => ConditionalLook | undefined;
+
+export type LookKeys = (look: ConditionalLook) => string;
 
 export interface SheetCells {
   readonly source: NuiTableCellSource;
@@ -162,6 +168,7 @@ export type StyleCache = (
   decoration: number,
   shape: ValueShape,
   color: number | undefined,
+  look?: ConditionalLook,
 ) => NuiTableCellStyle | undefined;
 
 export interface NuiSpreadsheetProps {
