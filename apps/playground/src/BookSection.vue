@@ -18,6 +18,7 @@
     <NuiSpreadsheet
       :book="opened.book"
       :calculator="opened.calculator"
+      :report="opened.report"
       v-model:sheet="sheetIndex"
       label="Книга"
       data-testid="book"
@@ -50,7 +51,7 @@ const openBook: NuiUploadAdapter<SampleBook> = async (file) => {
   if (read.kind === 'rejected') {
     throw new Error(`Книга не открылась: ${read.reason}`);
   }
-  return markRaw({ book: read.book, calculator: read.calculator });
+  return markRaw({ book: read.book, calculator: read.calculator, report: read.report });
 };
 
 watch(opened, () => {

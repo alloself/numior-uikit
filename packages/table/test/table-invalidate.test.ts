@@ -74,6 +74,17 @@ describe('NuiTable invalidate', () => {
     expect(sheet.reads.size).toBeGreaterThan(2);
   });
 
+  it('shows changed texts on the first invalidate without ranges', async () => {
+    const sheet = countedSheet();
+    const grid = mountSheet(sheet);
+    await grid.settle();
+
+    sheet.texts.set('5:1', 'пересчитано');
+    await grid.invalidate();
+
+    expect(grid.cellText(5, 2)).toBe('пересчитано');
+  });
+
   it('re-renders only the rows the active cell leaves and enters and reads no cells again', async () => {
     const sheet = countedSheet();
     const grid = mountSheet(sheet);

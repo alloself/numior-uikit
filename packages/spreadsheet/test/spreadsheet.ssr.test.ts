@@ -18,4 +18,23 @@ describe('NuiSpreadsheet on the server', () => {
     expect(first).toContain('>A<');
     expect(second).toBe(first);
   });
+
+  it('renders the limitations report of a read-only book and a hidden recalculation status', async () => {
+    const html = await renderToString(NuiSpreadsheet, {
+      props: {
+        book,
+        label: 'Sales book',
+        report: {
+          readOnly: true,
+          staleFormulas: 0,
+          items: [{ code: 'macros', severity: 'info', count: 1, sheets: [], names: [] }],
+        },
+      },
+    });
+
+    expect(html).toContain('The book is open read-only');
+    expect(html).toContain('nui-alert--tone-warning');
+    expect(html).toContain('class="nui-spreadsheet__status"');
+    expect(html).not.toContain('nui-spreadsheet__status--shown');
+  });
 });

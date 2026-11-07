@@ -151,13 +151,48 @@ const createStyles = (book: Workbook): StyleCache => {
   };
 };
 
+const STALE_CLASS = 'nui-spreadsheet__stale';
+
+const STALE: NuiTableCellStyle = { class: STALE_CLASS, color: 'var(--nui-text-subtle)' };
+
+const createStale = (): ((style: NuiTableCellStyle | undefined) => NuiTableCellStyle) => {
+  const known = new WeakMap<NuiTableCellStyle, NuiTableCellStyle>();
+
+  return (style) => {
+    if (style === undefined) {
+      return STALE;
+    }
+
+    const cached = known.get(style);
+
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    const muted = {
+      ...style,
+      ...STALE,
+      class: style.class === undefined ? STALE_CLASS : `${style.class} ${STALE_CLASS}`,
+    };
+
+    known.set(style, muted);
+    return muted;
+  };
+};
+
 export const defaultRowHeight = (sheet: Sheet): number =>
   pointsToPixels(sheet.layout.defaults.rowHeight ?? DEFAULT_ROW_POINTS);
 
-export const sheetCells = ({ book, sheet, locale = EN_LOCALE }: SheetCellsOptions): SheetCells => {
+export const sheetCells = ({
+  book,
+  sheet,
+  locale = EN_LOCALE,
+  outdated,
+}: SheetCellsOptions): SheetCells => {
   const rows = createLineIndex(MAX_ROWS, hiddenLines(sheet.layout.rows));
   const cols = createLineIndex(MAX_COLS, hiddenLines(sheet.layout.cols));
   const styles = createStyles(book);
+  const stale = createStale();
   const { view } = sheet.layout;
 
   const cellAt = (position: number, column: number): NuiTableSourceCell | undefined => {
@@ -172,7 +207,12 @@ export const sheetCells = ({ book, sheet, locale = EN_LOCALE }: SheetCellsOption
 
     const shown = formatValue(value, book.formats.code(formatAt(sheet, row, col)), locale.numbers);
 
-    return { text: shown.text, style: styles(decoration, SHAPES[value.kind], shown.color) };
+    const style = styles(decoration, SHAPES[value.kind], shown.color);
+
+    return {
+      text: shown.text,
+      style: outdated?.(sheet, row, col) === true ? stale(style) : style,
+    };
   };
 
   return {

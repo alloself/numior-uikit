@@ -22,6 +22,7 @@ import type {
   CellDecoration,
   FontStyle,
   HelpLanguage,
+  RecalcOptions,
   ReferenceSpan,
   SignaturePart,
   Sheet,
@@ -29,6 +30,7 @@ import type {
   Workbook,
   WorkbookStep,
 } from '../core';
+import type { LimitationsReport } from '../xlsx/read/read.types';
 import type { NuiSpreadsheetMessages } from './spreadsheet.messages';
 
 export interface FormulaSegment {
@@ -38,6 +40,10 @@ export interface FormulaSegment {
 }
 
 export type FrameGrip = (typeof FrameGrip)[keyof typeof FrameGrip];
+
+export type RecalcPhase = (typeof RecalcPhase)[keyof typeof RecalcPhase];
+
+export type CellOutdated = (sheet: Sheet, row: number, col: number) => boolean;
 
 export interface ReferenceFrame {
   readonly key: string;
@@ -133,6 +139,7 @@ export interface SheetCellsOptions {
   readonly book: Workbook;
   readonly sheet: Sheet;
   readonly locale?: BookLocale | undefined;
+  readonly outdated?: CellOutdated | undefined;
 }
 
 export interface SheetCells {
@@ -167,6 +174,38 @@ export interface NuiSpreadsheetProps {
   formulaBar?: boolean | undefined;
   sheetTabs?: boolean | undefined;
   contextMenu?: NuiSpreadsheetContextMenu | undefined;
+  report?: LimitationsReport | undefined;
+}
+
+export interface SheetRecalcOptions {
+  readonly calculator: () => Calculator;
+  readonly table: Readonly<ShallowRef<NuiTableExposed | null>>;
+}
+
+export interface SheetRecalc {
+  readonly phase: Readonly<Ref<RecalcPhase>>;
+  readonly progress: Readonly<Ref<number>>;
+  readonly outdated: CellOutdated;
+  run(options?: RecalcOptions): void;
+  stop(): void;
+  resume(): void;
+}
+
+export interface SheetReportProps {
+  readonly report: LimitationsReport | undefined;
+  readonly messages: NuiSpreadsheetMessages;
+  readonly recalculated: boolean;
+}
+
+export interface SheetStatusProps {
+  readonly phase: RecalcPhase;
+  readonly progress: number;
+  readonly messages: NuiSpreadsheetMessages;
+}
+
+export interface ReportLine {
+  readonly key: string;
+  readonly text: string;
 }
 
 export interface NuiSpreadsheetExposed {
@@ -233,6 +272,7 @@ export interface SheetEditingOptions {
   readonly readonly: () => boolean;
   readonly messages: ComputedRef<NuiSpreadsheetMessages>;
   readonly table: Readonly<ShallowRef<NuiTableExposed | null>>;
+  readonly recalc: SheetRecalc;
   readonly changed: (change: NuiSpreadsheetChange) => void;
 }
 
@@ -270,6 +310,7 @@ export interface FormulaBar {
   readonly announcement: Ref<string>;
   keepEditing(target: Element): boolean;
   toggle(): void;
+  backToGrid(): void;
   onNameFocus(): void;
   onNameInput(): void;
   onNameKeydown(event: KeyboardEvent): void;
@@ -385,3 +426,5 @@ export const FrameGrip = {
   BottomStart: 'bottom-start',
   BottomEnd: 'bottom-end',
 } as const;
+
+export const RecalcPhase = { Idle: 'idle', Running: 'running', Stopped: 'stopped' } as const;

@@ -100,6 +100,26 @@ describe('reading xlsx', () => {
     expect(read.report.staleFormulas).toBe(10);
   });
 
+  it('recalculates values from the file on request and keeps formulas it cannot compute', async () => {
+    const read = await opened();
+    const sales = viewOf(read);
+
+    const run = read.calculator.recalculate({
+      imported: true,
+      budgetMs: Number.POSITIVE_INFINITY,
+    });
+
+    await run.settled;
+
+    expect([sales.state('C2'), sales.state('G3'), sales.shown('G3')]).toEqual([
+      'fresh',
+      'imported',
+      '42',
+    ]);
+
+    expect(read.calculator.pending).toBe(0);
+  });
+
   it('expands shared formulas and keeps the spill of an array formula', async () => {
     const read = await opened();
     const sales = viewOf(read);

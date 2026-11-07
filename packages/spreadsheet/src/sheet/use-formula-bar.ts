@@ -12,6 +12,8 @@ import { targetOf } from './sheet-navigation';
 
 const LINE_BREAK = '\n';
 
+const FIRST_CELL: TableCellPosition = { row: 0, col: 0 };
+
 const textOf = (value: unknown): string => {
   if (typeof value === 'string') {
     return value;
@@ -77,9 +79,7 @@ export const useFormulaBar = (options: FormulaBarOptions): FormulaBar => {
   };
 
   const backToGrid = (): void => {
-    if (active.value !== undefined) {
-      options.table.value?.focusCell(active.value);
-    }
+    options.table.value?.focusCell(active.value ?? FIRST_CELL);
   };
 
   const go = (text: string): boolean => {
@@ -201,6 +201,7 @@ export const useFormulaBar = (options: FormulaBarOptions): FormulaBar => {
     announcement,
     keepEditing,
     toggle,
+    backToGrid,
     onNameFocus,
     onNameInput,
     onNameKeydown,

@@ -12,6 +12,12 @@
     @pointerup="onPointerup"
     @pointercancel="onPointercancel"
   >
+    <NuiSpreadsheetReport
+      :report="report"
+      :messages="messages"
+      :recalculated="importedDone"
+      @recalculate="recalculateImported"
+    />
     <div
       v-if="formulaBar"
       ref="bar"
@@ -59,7 +65,7 @@
             class="nui-spreadsheet__formula"
             :class="{ 'nui-spreadsheet__formula--painted': painted }"
             :value="formula.formulaText.value"
-            :readonly="readonly"
+            :readonly="locked"
             :aria-label="messages.formulaBar"
             rows="1"
             dir="auto"
@@ -91,56 +97,66 @@
         </span>
       </span>
     </div>
-    <NuiTable
-      ref="grid"
-      :dir="sheetDir"
-      v-model:active="formula.active.value"
-      v-model:ranges="formula.ranges.value"
-      v-bind="table.grid"
-      :draft="editing.draft.value"
-      :columns="table.columns"
-      :merges="table.cells.merges"
-      :frozen-rows="table.cells.frozenRows"
-      :row-heights="table.cells.rowHeights"
-      :row-height="table.rowHeight"
-      :bordered="table.cells.gridlines"
-      :height="height"
-      :column-menu="false"
-      :commands="clipboard.commands"
-      :clipboard="clipboard.hooks"
-      :keep-editing="formula.keepEditing"
-      grow-editor
-      :picking="references.picking"
-      :context-menu="lines.menu"
-      :label="label"
-      size="sm"
-      @update:draft="editing.setDraft"
-      @pick="references.onPick"
-    >
-      <template #overlay="{ rectOf }">
-        <NuiSpreadsheetMarks
-          :rect-of="rectOf"
-          :handle="fill.handle.value"
-          :preview="fill.preview.value"
-          :clearing="fill.clearing.value"
-          :clips="clipboard.frames.value"
-          :frozen-rows="table.cells.frozenRows"
-          :frozen-cols="table.cells.frozenCols"
-          @grip="fill.onDown"
-          @fill="fill.onDblclick"
-        />
-        <NuiSpreadsheetReference
-          v-for="frame in references.frames.value"
-          :key="frame.key"
-          :tone="frame.tone"
-          :rect="rectOf(frame.range)"
-          :passive="editing.draft.value === undefined"
-          :first-row="frame.firstRow"
-          :first-col="frame.firstCol"
-          @grip="(event, grip) => references.onGripDown(event, frame, grip)"
-        />
-      </template>
-    </NuiTable>
+    <div class="nui-spreadsheet__body">
+      <NuiTable
+        ref="grid"
+        :dir="sheetDir"
+        v-model:active="formula.active.value"
+        v-model:ranges="formula.ranges.value"
+        v-bind="table.grid"
+        :draft="editing.draft.value"
+        :columns="table.columns"
+        :merges="table.cells.merges"
+        :frozen-rows="table.cells.frozenRows"
+        :row-heights="table.cells.rowHeights"
+        :row-height="table.rowHeight"
+        :bordered="table.cells.gridlines"
+        :height="height"
+        :column-menu="false"
+        :commands="clipboard.commands"
+        :clipboard="clipboard.hooks"
+        :keep-editing="formula.keepEditing"
+        grow-editor
+        :picking="references.picking"
+        :context-menu="lines.menu"
+        :label="label"
+        size="sm"
+        @update:draft="editing.setDraft"
+        @pick="references.onPick"
+      >
+        <template #overlay="{ rectOf }">
+          <NuiSpreadsheetMarks
+            :rect-of="rectOf"
+            :handle="fill.handle.value"
+            :preview="fill.preview.value"
+            :clearing="fill.clearing.value"
+            :clips="clipboard.frames.value"
+            :frozen-rows="table.cells.frozenRows"
+            :frozen-cols="table.cells.frozenCols"
+            @grip="fill.onDown"
+            @fill="fill.onDblclick"
+          />
+          <NuiSpreadsheetReference
+            v-for="frame in references.frames.value"
+            :key="frame.key"
+            :tone="frame.tone"
+            :rect="rectOf(frame.range)"
+            :passive="editing.draft.value === undefined"
+            :first-row="frame.firstRow"
+            :first-col="frame.firstCol"
+            @grip="(event, grip) => references.onGripDown(event, frame, grip)"
+          />
+        </template>
+      </NuiTable>
+      <NuiSpreadsheetStatus
+        :phase="recalc.phase.value"
+        :progress="recalc.progress.value"
+        :messages="messages"
+        @stop="recalc.stop"
+        @resume="recalc.resume"
+        @leave="formula.backToGrid"
+      />
+    </div>
     <div class="nui-spreadsheet__hidden" role="status" aria-live="polite">
       {{ formula.announcement.value }}
     </div>
@@ -163,7 +179,7 @@
       :shown="sheetTabs"
       :tabs="tabs"
       :current="String(sheetIndex)"
-      :readonly="readonly"
+      :readonly="locked"
       :messages="messages"
       @select="selectSheet"
       @add="addSheet"
@@ -179,19 +195,22 @@
 import { Direction, Key, useLocale, useMessages } from '@numior/primitives';
 import { NuiTable, tableCells, type NuiTableColumn, type NuiTableExposed } from '@numior/table';
 import { NuiButton, NuiIcon, type NuiTabDescriptor } from '@numior/vue';
-import { computed, provide, ref, useId, useTemplateRef } from 'vue';
+import { computed, provide, ref, useId, useTemplateRef, watch } from 'vue';
 import { EN_LOCALE, HelpLanguage, RU_LOCALE, createCalculator, type BookLocale } from '../core';
 import { defaultRowHeight, sheetCells } from './sheet-cells';
 import NuiSpreadsheetAssist from './NuiSpreadsheetAssist.vue';
 import NuiSpreadsheetMarks from './NuiSpreadsheetMarks.vue';
 import NuiSpreadsheetReference from './NuiSpreadsheetReference.vue';
+import NuiSpreadsheetReport from './NuiSpreadsheetReport.vue';
+import NuiSpreadsheetStatus from './NuiSpreadsheetStatus.vue';
 import NuiSpreadsheetTabs from './NuiSpreadsheetTabs.vue';
-import type {
-  FormulaSegment,
-  NuiSpreadsheetChange,
-  NuiSpreadsheetExposed,
-  NuiSpreadsheetProps,
-  NuiSpreadsheetSelection,
+import {
+  RecalcPhase,
+  type FormulaSegment,
+  type NuiSpreadsheetChange,
+  type NuiSpreadsheetExposed,
+  type NuiSpreadsheetProps,
+  type NuiSpreadsheetSelection,
 } from './sheet.types';
 import { spreadsheetMessages } from './spreadsheet.messages';
 import { useFormulaAssist } from './use-formula-assist';
@@ -200,6 +219,7 @@ import { useSheetClipboard } from './use-sheet-clipboard';
 import { useSheetEditing } from './use-sheet-editing';
 import { useSheetFill } from './use-sheet-fill';
 import { useSheetLines } from './use-sheet-lines';
+import { useSheetRecalc } from './use-sheet-recalc';
 import { SHEET_SEGMENTS } from './sheet-segments';
 import { useSheetReferences } from './use-sheet-references';
 import { useSheetSelection } from './use-sheet-selection';
@@ -214,6 +234,7 @@ const {
   formulaBar = true,
   sheetTabs = true,
   contextMenu,
+  report,
 } = defineProps<NuiSpreadsheetProps>();
 
 const sheetIndex = defineModel<number>('sheet', { default: 0 });
@@ -262,10 +283,24 @@ const tabs = computed((): NuiTabDescriptor[] =>
 
 const ownCalculator = computed(() => createCalculator(book, { locale: bookLocale.value }));
 
+const locked = computed(() => readonly || report?.readOnly === true);
+
+const importedDone = ref(false);
+
+const recalc = useSheetRecalc({
+  calculator: () => calculator ?? ownCalculator.value,
+  table: grid,
+});
+
 const cells = computed(() =>
   shownSheet.value === undefined
     ? undefined
-    : sheetCells({ book, sheet: shownSheet.value, locale: bookLocale.value }),
+    : sheetCells({
+        book,
+        sheet: shownSheet.value,
+        locale: bookLocale.value,
+        outdated: recalc.outdated,
+      }),
 );
 
 const editing = useSheetEditing({
@@ -274,9 +309,10 @@ const editing = useSheetEditing({
   sheet: () => shownSheet.value,
   cells: () => cells.value,
   locale: () => bookLocale.value,
-  readonly: () => readonly,
+  readonly: () => locked.value,
   messages,
   table: grid,
+  recalc,
   changed: (change) => {
     const next = sheetsKey();
 
@@ -307,7 +343,7 @@ const formula = useFormulaBar({
   book: () => book,
   sheet: () => shownSheet.value,
   cells: () => cells.value,
-  readonly: () => readonly,
+  readonly: () => locked.value,
   messages,
   editing,
   table: grid,
@@ -333,7 +369,7 @@ const fill = useSheetFill({
   selection,
   table: grid,
   root,
-  readonly: () => readonly,
+  readonly: () => locked.value,
 });
 
 const lines = useSheetLines({
@@ -341,7 +377,7 @@ const lines = useSheetLines({
   selection,
   editing,
   messages,
-  readonly: () => readonly,
+  readonly: () => locked.value,
   extra: () => contextMenu,
   announce: (text) => {
     formula.announcement.value = text;
@@ -484,6 +520,25 @@ const removeSheet = (index: number): void => {
 const refresh = (): void => {
   grid.value?.invalidate();
 };
+
+const recalculateImported = (): void => {
+  importedDone.value = true;
+  formula.backToGrid();
+  recalc.run({ imported: true });
+};
+
+watch(
+  () => report,
+  () => {
+    importedDone.value = false;
+  },
+);
+
+watch(recalc.phase, (next, before) => {
+  if (next === RecalcPhase.Idle && before === RecalcPhase.Running) {
+    formula.announcement.value = messages.value.recalcDone;
+  }
+});
 
 defineExpose<NuiSpreadsheetExposed>({ refresh, apply: editing.apply });
 </script>

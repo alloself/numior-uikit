@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures';
 import { boxOf } from './helpers/geometry';
-import { ordersXlsx } from './helpers/xlsx';
+import { ordersXlsx, pricesXlsx } from './helpers/xlsx';
 
 const firstRowOf = (formula: string): number => Number(/[A-Z]+(\d+)/u.exec(formula)?.[1] ?? 0);
 
@@ -39,6 +39,28 @@ test.describe('book', () => {
     await book.openFile(await ordersXlsx());
     await expect(book.cell('2', 1)).toHaveText(/^1\s250,50$/u);
     await expect(book.cell('1', 0)).toHaveText('Order');
+  });
+
+  test('reports values saved in an opened file and recalculates them on request', async ({
+    playground,
+    book,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+
+    await expect(book.report).toHaveCount(0);
+
+    await book.openFile(await pricesXlsx());
+    await expect(book.cell('2', 1)).toHaveText('42');
+
+    await expect(book.report.locator('.nui-alert__title')).toHaveText(
+      '1 формула показывает значение, сохранённое в файле',
+    );
+
+    await book.recalculateReport();
+    await expect(book.report).toHaveCount(0);
+    await expect(book.cell('2', 1)).toHaveText('42');
   });
 
   test('adds, renames and deletes sheets from the tabs and undoes it', async ({

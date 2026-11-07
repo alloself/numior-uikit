@@ -497,6 +497,61 @@ export class SpreadsheetDriver {
     await nextTick();
   }
 
+  get reportTitle(): string | undefined {
+    const alert = this.wrapper.find('.nui-alert:not(.nui-alert--closed)');
+
+    return alert.exists() ? alert.find('.nui-alert__title').text() : undefined;
+  }
+
+  get reportTone(): string {
+    return toneOf(this.wrapper.find('.nui-alert').classes(), 'nui-alert--tone-');
+  }
+
+  get reportStale(): string | undefined {
+    const line = this.wrapper.find('.nui-spreadsheet__report-stale');
+
+    return line.exists() ? line.text() : undefined;
+  }
+
+  get reportLines(): string[] {
+    return texts(this.wrapper, '.nui-spreadsheet__report-list li');
+  }
+
+  async recalculateFromReport(): Promise<void> {
+    await this.pressFocused('.nui-alert__actions button');
+  }
+
+  async dismissReport(): Promise<void> {
+    await this.wrapper.find('.nui-alert__close').trigger('click');
+  }
+
+  get status(): string | undefined {
+    const status = this.wrapper.find('.nui-spreadsheet__status--shown');
+
+    return status.exists() ? status.find('.nui-spreadsheet__status-text').text() : undefined;
+  }
+
+  get statusAction(): string {
+    return this.wrapper.find('.nui-spreadsheet__status button').text();
+  }
+
+  async pressStatusAction(): Promise<void> {
+    await this.pressFocused('.nui-spreadsheet__status button');
+  }
+
+  private async pressFocused(selector: string): Promise<void> {
+    const button = this.wrapper.find(selector);
+
+    if (button.element instanceof HTMLElement) {
+      button.element.focus();
+    }
+    await button.trigger('click');
+  }
+
+  stale(row: number, col: number): boolean {
+    return this.cell(row, col)?.classList.contains('nui-spreadsheet__stale') === true;
+  }
+
   unmount(): void {
     this.wrapper.unmount();
   }

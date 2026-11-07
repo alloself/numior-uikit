@@ -13,10 +13,12 @@ import {
   type Sheet,
   type Workbook,
 } from '@numior/spreadsheet/core';
+import type { LimitationsReport } from '@numior/spreadsheet/xlsx';
 
 export interface SampleBook {
   readonly book: Workbook;
   readonly calculator: Calculator;
+  readonly report?: LimitationsReport | undefined;
 }
 
 const MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь'];

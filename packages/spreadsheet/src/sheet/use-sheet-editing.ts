@@ -83,19 +83,8 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
     return createWorkbookHistory(tracked);
   });
 
-  const redrawWhenSettled = async (settled: Promise<void>): Promise<void> => {
-    await settled;
-    options.table.value?.invalidate();
-  };
-
   const refresh = (): void => {
-    const run = options.calculator().recalculate();
-
-    options.table.value?.invalidate();
-
-    if (!run.finished) {
-      void redrawWhenSettled(run.settled);
-    }
+    options.recalc.run();
   };
 
   const follow = (run: () => StepOutcome | undefined): number => {

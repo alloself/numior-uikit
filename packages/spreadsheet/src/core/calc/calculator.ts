@@ -32,6 +32,7 @@ import {
 } from '../workbook';
 import {
   EvalValueKind,
+  FormulaState,
   type ArrayValue,
   type CellContent,
   type FormulaCell,
@@ -1243,6 +1244,13 @@ export const createCalculator = (
       now = serialOf(clock());
       if (options.volatile !== false) {
         volatiles.forEach((key) => pending.add(key));
+      }
+      if (options.imported === true) {
+        formulas.forEach((record, key) => {
+          if (record.cell.state === FormulaState.Imported && !kept.has(key)) {
+            pending.add(key);
+          }
+        });
       }
 
       const run: Run = {

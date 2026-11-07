@@ -318,6 +318,14 @@ export class BookSection {
     await this.locale.getByRole('radio', { name, exact: true }).click();
   }
 
+  get report(): Locator {
+    return this.sheet.locator('.nui-alert:not(.nui-alert--closed)');
+  }
+
+  async recalculateReport(): Promise<void> {
+    await this.report.getByRole('button', { name: 'Пересчитать' }).click();
+  }
+
   async openFile(file: XlsxFile): Promise<void> {
     await this.section.locator('input[type="file"]').setInputFiles(file);
   }
