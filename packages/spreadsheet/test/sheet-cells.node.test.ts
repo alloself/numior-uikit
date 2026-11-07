@@ -71,10 +71,11 @@ describe('sheet cells', () => {
       style: {
         fill: '#FFFF00',
         color: '#000000',
+        scheme: 'light',
         align: 'center',
         wrap: true,
         borders: { bottom: '1px solid currentColor' },
-        style: { 'font-weight': '700', 'color-scheme': 'light' },
+        style: { 'font-weight': '700' },
       },
     });
   });
@@ -116,19 +117,16 @@ describe('sheet cells', () => {
     ).toEqual(['#000000', '#000000', '#FFFFFF']);
   });
 
-  it('gives filled cells the colour scheme of their fill so theme colours inside stay readable', async () => {
+  it('gives the marks of filled cells the colour scheme of their fill and leaves the cell itself to the theme', async () => {
     const paint = await painter();
 
-    expect(
-      ['FFDAE3F3', 'FF1F3864'].map(
-        (argb) =>
-          paint({ fill: { pattern: 'solid', foreground: { kind: 'rgb', argb } } })?.style?.[
-            'color-scheme'
-          ],
-      ),
-    ).toEqual(['light', 'dark']);
+    const filled = ['FFDAE3F3', 'FF1F3864'].map((argb) =>
+      paint({ fill: { pattern: 'solid', foreground: { kind: 'rgb', argb } } }),
+    );
 
-    expect(paint({ font: { bold: true } })?.style?.['color-scheme']).toBeUndefined();
+    expect(filled.map((look) => look?.scheme)).toEqual(['light', 'dark']);
+    expect(filled.map((look) => look?.style?.['color-scheme'])).toEqual([undefined, undefined]);
+    expect(paint({ font: { bold: true } })?.scheme).toBeUndefined();
   });
 
   it('sizes columns and rows in pixels, keeps merges and freezes the header row', async () => {

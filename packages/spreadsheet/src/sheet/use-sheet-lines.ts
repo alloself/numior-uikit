@@ -1,4 +1,11 @@
+import {
+  BetweenHorizontalEnd,
+  BetweenHorizontalStart,
+  BetweenVerticalEnd,
+  BetweenVerticalStart,
+} from '@lucide/vue';
 import type { NuiMenuEntry } from '@numior/vue';
+import { markRaw } from 'vue';
 import { LineAxis, MAX_COLS, MAX_ROWS, StepKind, type CellRange } from '../core';
 import type { NuiSpreadsheetSelection, SheetLines, SheetLinesOptions } from './sheet.types';
 
@@ -6,6 +13,14 @@ interface LineSpan {
   readonly first: number;
   readonly last: number;
 }
+
+const ROW_ABOVE = markRaw(BetweenHorizontalStart);
+
+const ROW_BELOW = markRaw(BetweenHorizontalEnd);
+
+const COL_BEFORE = markRaw(BetweenVerticalStart);
+
+const COL_AFTER = markRaw(BetweenVerticalEnd);
 
 const spanOf = (selection: NuiSpreadsheetSelection, rows: boolean): LineSpan =>
   selection.ranges.reduce(
@@ -49,16 +64,19 @@ export const useSheetLines = (options: SheetLinesOptions): SheetLines => {
       {
         key: `${axis}-before`,
         label: rows ? texts.insertRowsAbove({ count }) : texts.insertColsBefore({ count }),
+        icon: rows ? ROW_ABOVE : COL_BEFORE,
         onSelect: () => change(StepKind.InsertLines, axis, span.first, count),
       },
       {
         key: `${axis}-after`,
         label: rows ? texts.insertRowsBelow({ count }) : texts.insertColsAfter({ count }),
+        icon: rows ? ROW_BELOW : COL_AFTER,
         onSelect: () => change(StepKind.InsertLines, axis, span.last + 1, count),
       },
       {
         key: `${axis}-delete`,
         label: rows ? texts.deleteRows({ count }) : texts.deleteCols({ count }),
+        icon: 'trash',
         tone: 'error',
         onSelect: () => change(StepKind.DeleteLines, axis, span.first, count),
       },

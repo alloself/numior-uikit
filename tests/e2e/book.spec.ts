@@ -51,6 +51,22 @@ test.describe('book', () => {
     await expect.poll(async () => rgbDelta(await book.fillAt('4', 1), PINK)).toBeLessThan(8);
   });
 
+  test('keeps the grid lines of filled cells in the theme colour in the dark theme', async ({
+    playground,
+    book,
+  }) => {
+    await playground.open();
+    await playground.setTheme('dark');
+    await book.sheet.scrollIntoViewIfNeeded();
+
+    const plain = await book.lineColor('6', 2);
+
+    expect(await book.lineColor('2', 1)).toBe(plain);
+    expect(await book.lineColor('3', 3)).toBe(plain);
+    expect(await book.lineColor('4', 3)).toBe(plain);
+    expect(await book.lineColor('5', 3)).toBe(plain);
+  });
+
   test('draws data bars behind the values and arrows before the totals', async ({
     playground,
     book,

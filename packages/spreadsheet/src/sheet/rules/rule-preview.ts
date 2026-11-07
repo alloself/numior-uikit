@@ -1,3 +1,4 @@
+import { type NuiTableCellBorders, NuiTableCellScheme } from '@numior/table';
 import { colorHex, type ConditionalRule, type DifferentialStyle } from '../../core';
 import { ConditionalRuleKind } from '../../core/conditional/conditional.types';
 import { ValueShape } from '../sheet.types';
@@ -14,6 +15,24 @@ const INK = 'CanvasText';
 
 const BLANK: RulePreview = { kind: RulePreviewKind.Blank, style: NO_STYLE, icons: [] };
 
+const BORDER_PROPERTIES = [
+  ['top', 'border-block-start'],
+  ['bottom', 'border-block-end'],
+  ['start', 'border-inline-start'],
+  ['end', 'border-inline-end'],
+] as const;
+
+const borderCss = (borders: NuiTableCellBorders | undefined): Record<string, string> =>
+  BORDER_PROPERTIES.reduce<Record<string, string>>((css, [side, property]) => {
+    const line = borders?.[side];
+
+    if (line !== undefined) {
+      css[property] = line;
+    }
+
+    return css;
+  }, {});
+
 const hexCss = (hex: string | undefined): string | undefined =>
   hex === undefined ? undefined : `#${hex}`;
 
@@ -26,17 +45,12 @@ export const stylePreview = (style: DifferentialStyle, looks: RuleLooks): RulePr
     formatColor: undefined,
   });
 
-  const borders = cell?.borders;
-
   const css: Record<string, string> = {
-    'color-scheme': 'light',
     ...cell?.style,
+    'color-scheme': cell?.scheme ?? NuiTableCellScheme.Light,
     background: cell?.fill ?? PAPER,
     color: cell?.color ?? INK,
-    ...(borders?.top === undefined ? {} : { 'border-block-start': borders.top }),
-    ...(borders?.bottom === undefined ? {} : { 'border-block-end': borders.bottom }),
-    ...(borders?.start === undefined ? {} : { 'border-inline-start': borders.start }),
-    ...(borders?.end === undefined ? {} : { 'border-inline-end': borders.end }),
+    ...borderCss(cell?.borders),
   };
 
   return { kind: RulePreviewKind.Style, style: css, icons: [] };

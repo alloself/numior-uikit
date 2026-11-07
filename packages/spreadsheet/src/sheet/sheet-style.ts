@@ -1,4 +1,9 @@
-import { NuiTableAlign, type NuiTableCellBorders, type NuiTableCellStyle } from '@numior/table';
+import {
+  NuiTableAlign,
+  NuiTableCellScheme,
+  type NuiTableCellBorders,
+  type NuiTableCellStyle,
+} from '@numior/table';
 import {
   colorHex,
   formatColor,
@@ -141,8 +146,12 @@ const inkOf = (
   return lightFill(fill) ? '#000000' : '#FFFFFF';
 };
 
-const schemeOf = (fill: string | undefined): Record<string, string> =>
-  fill === undefined ? {} : { 'color-scheme': lightFill(fill) ? 'light' : 'dark' };
+const schemeOf = (fill: string | undefined): NuiTableCellScheme | undefined => {
+  if (fill === undefined) {
+    return undefined;
+  }
+  return lightFill(fill) ? NuiTableCellScheme.Light : NuiTableCellScheme.Dark;
+};
 
 export const sheetStyle = (input: StyleInput): NuiTableCellStyle | undefined => {
   const { decoration, theme, shape } = input;
@@ -150,7 +159,7 @@ export const sheetStyle = (input: StyleInput): NuiTableCellStyle | undefined => 
   const wrap = alignment?.wrap === true;
   const align = ALIGNS[alignment?.horizontal ?? ''] ?? GENERAL_ALIGNS[shape];
   const fill = fillHex(decoration, theme);
-  const style = { ...fontCss(decoration.font, input.base), ...schemeOf(fill) };
+  const style = fontCss(decoration.font, input.base);
 
   const ink =
     (input.formatColor === undefined ? undefined : formatColor(input.formatColor)) ??
@@ -161,6 +170,7 @@ export const sheetStyle = (input: StyleInput): NuiTableCellStyle | undefined => 
   const looks: NuiTableCellStyle = {
     fill: cssOf(fill),
     color,
+    scheme: schemeOf(fill),
     align: align === NuiTableAlign.Start ? undefined : align,
     wrap: wrap ? true : undefined,
     overflow: shape === ValueShape.Text && !wrap ? true : undefined,

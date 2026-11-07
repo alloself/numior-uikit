@@ -103,6 +103,10 @@ export class BookSection {
     return boxOf(this.editor);
   }
 
+  lineColor(rowLabel: string, column: number): Promise<string> {
+    return this.cell(rowLabel, column).evaluate((cell) => getComputedStyle(cell).borderBottomColor);
+  }
+
   async fillAt(rowLabel: string, column: number): Promise<Rgb> {
     const [corner] = await paintedRgbAt(this.cell(rowLabel, column), [[4, 4]]);
 

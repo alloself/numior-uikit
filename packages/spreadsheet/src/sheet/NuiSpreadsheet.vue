@@ -201,11 +201,12 @@
 </template>
 
 <script setup lang="ts">
+import { PaintRoller } from '@lucide/vue';
 import { Direction, Key, useLocale, useMessages } from '@numior/primitives';
 import { NuiTable, tableCells, type NuiTableColumn, type NuiTableExposed } from '@numior/table';
 import { NuiButton, NuiIcon, type NuiTabDescriptor } from '@numior/vue';
 import { useFocusWithin } from '@vueuse/core';
-import { computed, provide, ref, useId, useTemplateRef, watch } from 'vue';
+import { computed, markRaw, provide, ref, useId, useTemplateRef, watch } from 'vue';
 import {
   EN_LOCALE,
   HelpLanguage,
@@ -246,6 +247,8 @@ import { useSheetRecalc } from './use-sheet-recalc';
 import { SHEET_SEGMENTS } from './sheet-segments';
 import { useSheetReferences } from './use-sheet-references';
 import { tableRangeOf, useSheetSelection } from './use-sheet-selection';
+
+const RULES_ICON = markRaw(PaintRoller);
 
 const toneClasses = (tone: number | undefined): string[] | undefined =>
   tone === undefined
@@ -411,7 +414,14 @@ const lines = useSheetLines({
   messages,
   readonly: () => locked.value,
   extra: () => contextMenu,
-  tools: () => [{ key: 'rules', label: ruleTexts.value.openRules, onSelect: () => openRules() }],
+  tools: () => [
+    {
+      key: 'rules',
+      label: ruleTexts.value.openRules,
+      icon: RULES_ICON,
+      onSelect: () => openRules(),
+    },
+  ],
   announce: (text) => {
     formula.announcement.value = text;
   },
