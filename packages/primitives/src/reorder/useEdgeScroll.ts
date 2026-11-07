@@ -18,6 +18,8 @@ export interface EdgeScroll {
 
 const EDGE = 24;
 const STEP = 8;
+const FRAME = 1000 / 60;
+const MOST_FRAMES = 4;
 
 const deltaOf = (client: number | undefined, start: number, end: number): number => {
   if (client === undefined) {
@@ -33,19 +35,24 @@ export const useEdgeScroll = (options: EdgeScrollOptions): EdgeScroll => {
   let dx = 0;
   let dy = 0;
 
-  const step = (): void => {
+  const step = (frames: number): void => {
     const container = toValue(options.container);
 
     if (!container || (dx === 0 && dy === 0)) {
       loop.pause();
       return;
     }
-    container.scrollLeft += dx;
-    container.scrollTop += dy;
+    container.scrollLeft += Math.round(dx * frames);
+    container.scrollTop += Math.round(dy * frames);
     options.onStep();
   };
 
-  const loop = useRafFn(step, { immediate: false });
+  const loop = useRafFn(
+    ({ delta }) => {
+      step(Math.min(delta / FRAME, MOST_FRAMES));
+    },
+    { immediate: false },
+  );
 
   const stop = (): void => {
     dx = 0;
@@ -65,7 +72,7 @@ export const useEdgeScroll = (options: EdgeScrollOptions): EdgeScroll => {
 
       dx = deltaOf(point.x, rect.left, rect.right);
       dy = deltaOf(point.y, rect.top, rect.bottom);
-      step();
+      step(1);
 
       if (dx !== 0 || dy !== 0) {
         loop.resume();
