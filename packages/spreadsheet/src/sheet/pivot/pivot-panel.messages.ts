@@ -1,4 +1,5 @@
 import type { NuiMessageCatalog } from '@numior/primitives';
+import type { PivotAggregate, PivotShowAsKind } from '../../core';
 
 export interface NuiSpreadsheetPivotMessages {
   readonly insertPivot: string;
@@ -23,6 +24,36 @@ export interface NuiSpreadsheetPivotMessages {
   readonly moveToRows: string;
   readonly moveToValues: string;
   readonly removeField: string;
+  readonly filterAndSort: string;
+  readonly filterItems: string;
+  readonly subtotals: string;
+  readonly valueSettings: string;
+  readonly sortOrder: string;
+  readonly sortAscending: string;
+  readonly sortDescending: string;
+  readonly sortManual: string;
+  readonly search: string;
+  readonly items: string;
+  readonly selectAll: string;
+  readonly noMatches: string;
+  readonly apply: string;
+  readonly cancel: string;
+  readonly itemsApplied: (params: { readonly field: string }) => string;
+  readonly valueName: string;
+  readonly aggregate: string;
+  readonly aggregateName: (params: { readonly aggregate: PivotAggregate }) => string;
+  readonly showAs: string;
+  readonly showAsName: (params: { readonly kind: PivotShowAsKind }) => string;
+  readonly baseField: string;
+  readonly baseItem: string;
+  readonly previousItem: string;
+  readonly nextItem: string;
+  readonly numberFormat: string;
+  readonly formatGeneral: string;
+  readonly formatName: (params: { readonly code: string; readonly sample: string }) => string;
+  readonly nameRequired: string;
+  readonly nameTaken: string;
+  readonly valueApplied: (params: { readonly name: string }) => string;
   readonly fieldPlaced: (params: { readonly field: string; readonly area: string }) => string;
   readonly fieldRemoved: (params: { readonly field: string }) => string;
   readonly dragCancelled: string;
@@ -33,6 +64,58 @@ export interface NuiSpreadsheetPivotMessages {
   readonly pivotSheet: (params: { readonly index: number }) => string;
   readonly pivotName: (params: { readonly index: number }) => string;
 }
+
+const EN_AGGREGATES: Readonly<Record<PivotAggregate, string>> = {
+  sum: 'Sum',
+  count: 'Count',
+  average: 'Average',
+  max: 'Max',
+  min: 'Min',
+  product: 'Product',
+  countNums: 'Count Numbers',
+  stdDev: 'StdDev',
+  stdDevp: 'StdDevp',
+  var: 'Var',
+  varp: 'Varp',
+};
+
+const RU_AGGREGATES: Readonly<Record<PivotAggregate, string>> = {
+  sum: 'Сумма',
+  count: 'Количество',
+  average: 'Среднее',
+  max: 'Максимум',
+  min: 'Минимум',
+  product: 'Произведение',
+  countNums: 'Количество чисел',
+  stdDev: 'Стандартное отклонение',
+  stdDevp: 'Смещённое отклонение',
+  var: 'Дисперсия',
+  varp: 'Смещённая дисперсия',
+};
+
+const EN_SHOW_AS: Readonly<Record<PivotShowAsKind, string>> = {
+  normal: 'No calculation',
+  percentOfTotal: '% of grand total',
+  percentOfRow: '% of row total',
+  percentOfCol: '% of column total',
+  index: 'Index',
+  runTotal: 'Running total in',
+  difference: 'Difference from',
+  percent: '% of',
+  percentDiff: '% difference from',
+};
+
+const RU_SHOW_AS: Readonly<Record<PivotShowAsKind, string>> = {
+  normal: 'Без вычислений',
+  percentOfTotal: '% от общей суммы',
+  percentOfRow: '% от суммы по строке',
+  percentOfCol: '% от суммы по столбцу',
+  index: 'Индекс',
+  runTotal: 'С нарастающим итогом в поле',
+  difference: 'Отличие',
+  percent: 'Доля',
+  percentDiff: 'Приведённое отличие',
+};
 
 export const spreadsheetPivotMessages: NuiMessageCatalog<NuiSpreadsheetPivotMessages> = {
   namespace: 'spreadsheetPivot',
@@ -59,6 +142,36 @@ export const spreadsheetPivotMessages: NuiMessageCatalog<NuiSpreadsheetPivotMess
     moveToRows: 'Move to rows',
     moveToValues: 'Move to values',
     removeField: 'Remove field',
+    filterAndSort: 'Filter and sort…',
+    filterItems: 'Select items…',
+    subtotals: 'Show subtotals',
+    valueSettings: 'Value field settings…',
+    sortOrder: 'Sort',
+    sortAscending: 'Ascending (A to Z)',
+    sortDescending: 'Descending (Z to A)',
+    sortManual: 'Source order',
+    search: 'Search',
+    items: 'Items',
+    selectAll: '(Select all)',
+    noMatches: 'No matching items',
+    apply: 'Apply',
+    cancel: 'Cancel',
+    itemsApplied: ({ field }) => `${field}: items updated`,
+    valueName: 'Custom name',
+    aggregate: 'Summarize by',
+    aggregateName: ({ aggregate }) => EN_AGGREGATES[aggregate],
+    showAs: 'Show values as',
+    showAsName: ({ kind }) => EN_SHOW_AS[kind],
+    baseField: 'Base field',
+    baseItem: 'Base item',
+    previousItem: '(previous)',
+    nextItem: '(next)',
+    numberFormat: 'Number format',
+    formatGeneral: 'General',
+    formatName: ({ code, sample }) => `${code} — ${sample}`,
+    nameRequired: 'Enter a name',
+    nameTaken: 'This name is already used by a field of the pivot table',
+    valueApplied: ({ name }) => `${name}: settings applied`,
     fieldPlaced: ({ field, area }) => `${field} moved to ${area}`,
     fieldRemoved: ({ field }) => `${field} removed`,
     dragCancelled: 'Move cancelled',
@@ -92,6 +205,36 @@ export const spreadsheetPivotMessages: NuiMessageCatalog<NuiSpreadsheetPivotMess
     moveToRows: 'Переместить в строки',
     moveToValues: 'Переместить в значения',
     removeField: 'Удалить поле',
+    filterAndSort: 'Фильтр и сортировка…',
+    filterItems: 'Выбрать элементы…',
+    subtotals: 'Промежуточные итоги',
+    valueSettings: 'Параметры полей значений…',
+    sortOrder: 'Сортировка',
+    sortAscending: 'По возрастанию (от А до Я)',
+    sortDescending: 'По убыванию (от Я до А)',
+    sortManual: 'Как в источнике',
+    search: 'Поиск',
+    items: 'Элементы',
+    selectAll: '(Выделить все)',
+    noMatches: 'Совпадений нет',
+    apply: 'Применить',
+    cancel: 'Отмена',
+    itemsApplied: ({ field }) => `${field}: элементы обновлены`,
+    valueName: 'Имя',
+    aggregate: 'Операция',
+    aggregateName: ({ aggregate }) => RU_AGGREGATES[aggregate],
+    showAs: 'Дополнительные вычисления',
+    showAsName: ({ kind }) => RU_SHOW_AS[kind],
+    baseField: 'Поле',
+    baseItem: 'Элемент',
+    previousItem: '(назад)',
+    nextItem: '(вперёд)',
+    numberFormat: 'Числовой формат',
+    formatGeneral: 'Общий',
+    formatName: ({ code, sample }) => `${code} — ${sample}`,
+    nameRequired: 'Введите имя',
+    nameTaken: 'Это имя уже занято полем сводной таблицы',
+    valueApplied: ({ name }) => `${name}: параметры применены`,
     fieldPlaced: ({ field, area }) => `${field}: область «${area}»`,
     fieldRemoved: ({ field }) => `${field}: поле удалено`,
     dragCancelled: 'Перемещение отменено',

@@ -824,8 +824,10 @@ test.describe('book', () => {
     await expect(book.pivot.chips('Строки')).toHaveText(['Регион']);
     await expect(book.pivot.chips('Значения')).toHaveText(['Сумма по полю Сумма']);
     await expect(book.cell('3', 0)).toHaveText('Названия строк');
-    await expect(book.cell('4', 0)).toHaveText('Центр');
-    await expect(book.cell('4', 1)).toHaveText(/^4\s?495$/u);
+    await expect(book.cell('4', 0)).toHaveText('Северо-Запад');
+    await expect(book.cell('4', 1)).toHaveText(/^4\s?855$/u);
+    await expect(book.cell('6', 0)).toHaveText('Центр');
+    await expect(book.cell('6', 1)).toHaveText(/^4\s?495$/u);
     await expect(book.cell('7', 0)).toHaveText('Общий итог');
     await expect(book.cell('7', 1)).toHaveText(/^13\s?980$/u);
 
@@ -878,15 +880,59 @@ test.describe('book', () => {
     await book.goTo('A1');
     await book.chooseSheet('Сводная 1');
 
-    await expect(book.cell('4', 1)).toHaveText(/^4\s?495$/u);
+    await expect(book.cell('6', 1)).toHaveText(/^4\s?495$/u);
 
     await book.cellMenu('4', 1, 'Обновить');
 
-    await expect(book.cell('4', 1)).toHaveText(/^5\s?495$/u);
+    await expect(book.cell('6', 1)).toHaveText(/^5\s?495$/u);
 
     await book.cellMenu('4', 1, 'Поля сводной таблицы…');
 
     await expect(book.pivot.chips('Строки')).toHaveText(['Регион']);
+  });
+
+  test('filters and sorts a pivot row field and changes how its value is summarised', async ({
+    playground,
+    book,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Продажи');
+    await book.cellMenu('2', 0, 'Вставить сводную таблицу');
+    await book.pivot.check('Регион');
+    await book.pivot.check('Сумма');
+    await book.pivot.chooseAction('Строки', 'Регион', 'Фильтр и сортировка…');
+
+    await expect(book.pivot.search).toBeFocused();
+    await expect(book.pivot.items).toHaveText(['Северо-Запад', 'Урал', 'Центр']);
+
+    await book.pivot.sortBy('По убыванию (от Я до А)');
+    await book.pivot.item('Урал').uncheck();
+
+    await expect(book.pivot.item('(Выделить все)')).toHaveJSProperty('indeterminate', true);
+
+    await book.pivot.apply();
+
+    await expect(book.pivot.focusedChip).toHaveText('Регион');
+    await expect(book.cell('4', 0)).toHaveText('Центр');
+    await expect(book.cell('5', 0)).toHaveText('Северо-Запад');
+    await expect(book.cell('6', 1)).toHaveText(/^9\s?350$/u);
+
+    await book.pivot.chooseAction('Значения', 'Сумма по полю Сумма', 'Параметры полей значений…');
+
+    await expect(book.pivot.input('Имя')).toBeFocused();
+
+    await book.pivot.choose('Операция', 'Максимум');
+
+    await expect(book.pivot.input('Имя')).toHaveValue('Максимум по полю Сумма');
+
+    await book.pivot.choose('Числовой формат', /^#,##0\.00/u);
+    await book.pivot.apply();
+
+    await expect(book.pivot.chips('Значения')).toHaveText(['Максимум по полю Сумма']);
+    await expect(book.cell('3', 1)).toHaveText('Максимум по полю Сумма');
+    await expect(book.cell('4', 1)).toHaveText(/^\d[\d\s]*,\d{2}$/u);
   });
 
   test('keeps the pivot fields panel accessible in both themes', async ({ playground, book }) => {
@@ -905,6 +951,15 @@ test.describe('book', () => {
     await book.cellMenu('3', 0, 'Поля сводной таблицы…');
 
     await expect(book.pivot.dialog).toBeVisible();
+    expect(await playground.wcagViolations('.nui-spreadsheet-pivot')).toEqual([]);
+
+    await book.pivot.chooseAction('Строки', 'Регион', 'Фильтр и сортировка…');
+
+    expect(await playground.wcagViolations('.nui-spreadsheet-pivot')).toEqual([]);
+
+    await book.page.keyboard.press('Escape');
+    await book.pivot.chooseAction('Значения', 'Сумма по полю Сумма', 'Параметры полей значений…');
+
     expect(await playground.wcagViolations('.nui-spreadsheet-pivot')).toEqual([]);
   });
 

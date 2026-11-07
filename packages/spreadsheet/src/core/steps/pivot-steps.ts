@@ -122,7 +122,12 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
           rangesMeet(pivot.footprint, area),
       ) || book.tables.on(sheet).some((table) => rangesMeet(table.range, area));
 
-  const rendered = (sheet: Sheet, name: string, spec: PivotSpec): Rendered => {
+  const rendered = (
+    sheet: Sheet,
+    name: string,
+    spec: PivotSpec,
+    fallback: string | undefined,
+  ): Rendered => {
     const table = pivotSource(book, spec.definition.source);
     const cache = table === undefined ? undefined : buildPivotCache(table);
 
@@ -152,7 +157,7 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
         row: spec.anchor.row + cell.row,
         col: spec.anchor.col + cell.col,
         content: { kind: 'value', value: cell.value },
-        format: cell.format,
+        format: cell.format ?? fallback,
       })),
     };
   };
@@ -183,23 +188,28 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
     return [...found.values()];
   };
 
-  const cleared = (sheet: Sheet, area: CellRange | undefined): void => {
+  const cleared = (sheet: Sheet, area: CellRange | undefined, format: string | undefined): void => {
     if (area === undefined) {
       return;
     }
 
     cells.contentsIn(sheet, area).forEach((cell) => {
-      cells.write(sheet, { row: cell.row, col: cell.col, content: EMPTY_CONTENT });
+      cells.write(sheet, { row: cell.row, col: cell.col, content: EMPTY_CONTENT, format });
     });
   };
 
   const placed = (sheet: Sheet, name: string, spec: PivotSpec | undefined): StepResult => {
     const previous = book.pivots.get(sheet, name);
 
+    const reformat =
+      previous !== undefined && spec !== undefined && previous.definition !== spec.definition
+        ? GENERAL
+        : undefined;
+
     const output: Rendered =
       spec === undefined
         ? { ok: true, cells: [], footprint: NO_AREA }
-        : rendered(sheet, name, spec);
+        : rendered(sheet, name, spec, reformat);
 
     if (!output.ok) {
       return { ok: false, reason: output.reason };
@@ -208,7 +218,7 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
     const area = spec === undefined ? undefined : output.footprint;
     const restore = previousCells(sheet, [previous?.footprint, area], output.cells);
 
-    cleared(sheet, previous?.footprint);
+    cleared(sheet, previous?.footprint, reformat);
 
     output.cells.forEach((cell) => {
       cells.write(sheet, cell);

@@ -1,27 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
-import { createWorkbook, numberValue, textValue, type Workbook } from '../src/core';
+import { numberValue, type Workbook } from '../src/core';
 import { SpreadsheetDriver } from './drivers/spreadsheet';
+import { salesBook } from './support/pivot-book';
 import { stubPopovers } from './support/top-layer';
-
-const ROWS = [
-  ['Region', 'City', 'Amount'],
-  ['East', 'Boston', 100],
-  ['East', 'NYC', 200],
-  ['West', 'LA', 150],
-] as const;
-
-const salesBook = (): Workbook => {
-  const book = createWorkbook();
-  const sales = book.addSheet('Sales');
-
-  ROWS.forEach((row, at) => {
-    row.forEach((value, col) => {
-      sales.cells.set(at, col, typeof value === 'number' ? numberValue(value) : textValue(value));
-    });
-  });
-
-  return book;
-};
 
 const mounted: SpreadsheetDriver[] = [];
 
@@ -105,6 +86,7 @@ describe('NuiSpreadsheet pivot tables', () => {
       'Move to columns',
       'Move to values',
       'Remove field',
+      'Filter and sort…',
     ]);
 
     await sheet.pivot.chooseAction('Region', 'Move to columns');

@@ -10,6 +10,10 @@ interface PointerAt {
 
 const PANEL = '.nui-spreadsheet-pivot';
 
+const EDITOR = '.nui-spreadsheet-pivot__editor';
+
+const ITEMS = '.nui-spreadsheet-pivot__items';
+
 const trimmed = (element: Element): string => element.textContent?.trim() ?? '';
 
 const pointer = (type: string, at: PointerAt): PointerEvent =>
@@ -176,6 +180,163 @@ export class PivotPanelDriver {
       await this.hold(element, this.pointIn(area), touch);
       await this.release(this.pointIn(area), touch);
     }
+  }
+
+  get subview(): string | undefined {
+    const title = this.panel.find('.nui-spreadsheet-pivot__subtitle');
+
+    return title.exists() ? title.text() : undefined;
+  }
+
+  get items(): string[] {
+    return this.itemBoxes().slice(1).map(trimmed);
+  }
+
+  get checkedItems(): string[] {
+    return this.itemBoxes()
+      .slice(1)
+      .reduce<string[]>((names, label) => {
+        const input = label.querySelector('input');
+
+        return input?.checked === true ? [...names, trimmed(label)] : names;
+      }, []);
+  }
+
+  get selectAll(): string {
+    const input = this.itemBoxes()[0]?.querySelector('input');
+
+    if (input?.indeterminate === true) {
+      return 'mixed';
+    }
+    return input?.checked === true ? 'checked' : 'unchecked';
+  }
+
+  get sortOptions(): string[] {
+    return [
+      ...this.panel.element.querySelectorAll<HTMLInputElement>(`${EDITOR} input[type="radio"]`),
+    ].map((input) => input.labels?.[0]?.textContent?.trim() ?? '');
+  }
+
+  get canApply(): boolean {
+    const button = this.panel.find(`${EDITOR} button[type="submit"]`).element;
+
+    return button instanceof HTMLButtonElement && !button.disabled;
+  }
+
+  get editorErrors(): string[] {
+    return this.panel.findAll(`${EDITOR} .nui-field__error`).map((error) => error.text());
+  }
+
+  get focusedInput(): string | undefined {
+    const field = document.activeElement;
+
+    return field instanceof HTMLInputElement ? field.labels?.[0]?.textContent?.trim() : undefined;
+  }
+
+  async toggleItem(label: string): Promise<void> {
+    this.itemBoxes()
+      .find((item) => trimmed(item) === label)
+      ?.querySelector('input')
+      ?.click();
+
+    await nextTick();
+  }
+
+  async fill(label: string, value: string): Promise<void> {
+    const input = this.editorInput(label);
+
+    if (input !== undefined) {
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    await nextTick();
+  }
+
+  value(label: string): string | undefined {
+    return this.editorInput(label)?.value;
+  }
+
+  async chooseSort(label: string): Promise<void> {
+    [...this.panel.element.querySelectorAll<HTMLInputElement>(`${EDITOR} input[type="radio"]`)]
+      .find((input) => input.labels?.[0]?.textContent?.trim() === label)
+      ?.click();
+
+    await nextTick();
+  }
+
+  async choose(label: string, option: string): Promise<void> {
+    const select = [
+      ...this.panel.element.querySelectorAll<HTMLElement>(`${EDITOR} [role="combobox"]`),
+    ].find(
+      (each) =>
+        document.getElementById(each.getAttribute('aria-labelledby') ?? '')?.textContent?.trim() ===
+        label,
+    );
+
+    select?.focus();
+
+    select?.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
+    );
+
+    await nextTick();
+
+    const entry = [
+      ...this.panel.element.querySelectorAll<HTMLElement>(`${EDITOR} [role="option"]`),
+    ].find((each) => trimmed(each) === option);
+
+    if (entry === undefined) {
+      throw new Error(`No option ${option}`);
+    }
+    entry.click();
+    await nextTick();
+  }
+
+  async applyEditor(): Promise<void> {
+    await this.panel.find(EDITOR).trigger('submit');
+  }
+
+  async cancelEditor(): Promise<void> {
+    await this.panel
+      .findAll(`${EDITOR} .nui-spreadsheet-pivot__footer button`)
+      .find((button) => button.attributes('type') !== 'submit')
+      ?.trigger('click');
+  }
+
+  async toggleAction(chip: string, action: string): Promise<void> {
+    const menu = this.menuOf(chip);
+
+    menu?.showPopover();
+    await nextTick();
+
+    [...(menu?.querySelectorAll<HTMLElement>('[role="menuitemcheckbox"]') ?? [])]
+      .find((item) => trimmed(item) === action)
+      ?.click();
+
+    await nextTick();
+  }
+
+  async actionChecked(chip: string, action: string): Promise<boolean | undefined> {
+    const menu = this.menuOf(chip);
+
+    menu?.showPopover();
+    await nextTick();
+
+    const item = [...(menu?.querySelectorAll('[role="menuitemcheckbox"]') ?? [])].find(
+      (each) => trimmed(each) === action,
+    );
+
+    return item === undefined ? undefined : item.getAttribute('aria-checked') === 'true';
+  }
+
+  private itemBoxes(): Element[] {
+    return [...this.panel.element.querySelectorAll(`${ITEMS} label`)];
+  }
+
+  private editorInput(label: string): HTMLInputElement | undefined {
+    return [...this.panel.element.querySelectorAll<HTMLInputElement>(`${EDITOR} input`)].find(
+      (input) => input.labels?.[0]?.textContent?.trim() === label,
+    );
   }
 
   private async hold(source: Element, to: PointerAt, touch = false): Promise<void> {

@@ -5,7 +5,9 @@ import {
   PivotArea,
   PivotLayout,
   PivotShowAsKind,
+  PivotSort,
   type PivotDefinition,
+  type PivotField,
   type PivotFilter,
   type PivotLanguage,
   type PivotPlacement,
@@ -25,6 +27,19 @@ type AxisSpot = PivotSpot & { readonly area: Exclude<PivotArea, typeof PivotArea
 
 const NORMAL = { kind: PivotShowAsKind.Normal } as const;
 
+const KEPT: PivotField = { order: [], hidden: [], sort: PivotSort.Manual, subtotal: true };
+
+const PLACED: PivotField = { ...KEPT, sort: PivotSort.Ascending };
+
+const fieldsFor = (fields: readonly PivotField[], placed: readonly number[]): PivotField[] => {
+  const top = placed.reduce((most, field) => Math.max(most, field), fields.length - 1);
+
+  return Array.from(
+    { length: top + 1 },
+    (_, field) => fields[field] ?? (placed.includes(field) ? PLACED : KEPT),
+  );
+};
+
 const layoutOf = (definition: PivotDefinition): FieldLayout => {
   const shown = normalizedPivot(definition);
 
@@ -42,12 +57,15 @@ const settled = (definition: PivotDefinition, layout: FieldLayout): PivotDefinit
   const strip = (fields: readonly number[]): readonly number[] =>
     keepsValues ? fields : fields.filter((field) => field !== VALUES_FIELD);
 
+  const placed = [...layout.rows, ...layout.columns, ...layout.filters.map(({ field }) => field)];
+
   return {
     ...definition,
     rows: strip(layout.rows),
     columns: strip(layout.columns),
     filters: layout.filters,
     values: layout.values,
+    fields: fieldsFor(definition.fields, placed),
   };
 };
 

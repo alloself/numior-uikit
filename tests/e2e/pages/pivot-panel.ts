@@ -34,6 +34,41 @@ export class PivotPanel {
     return this.area(area).getByRole('button', { name: label, exact: true });
   }
 
+  get search(): Locator {
+    return this.dialog.getByRole('searchbox');
+  }
+
+  get items(): Locator {
+    return this.dialog
+      .getByRole('group', { name: 'Элементы' })
+      .locator('.nui-checkbox__label')
+      .filter({ hasNotText: '(Выделить все)' });
+  }
+
+  item(name: string): Locator {
+    return this.dialog.getByRole('group', { name: 'Элементы' }).getByRole('checkbox', {
+      name,
+      exact: true,
+    });
+  }
+
+  input(label: string): Locator {
+    return this.dialog.getByRole('textbox', { name: label, exact: true });
+  }
+
+  async sortBy(label: string): Promise<void> {
+    await this.dialog.getByRole('radio', { name: label, exact: true }).check();
+  }
+
+  async choose(label: string, option: string | RegExp): Promise<void> {
+    await this.dialog.getByRole('combobox', { name: label, exact: true }).click();
+    await this.page.getByRole('option', { name: option }).click();
+  }
+
+  async apply(): Promise<void> {
+    await this.dialog.getByRole('button', { name: 'Применить', exact: true }).click();
+  }
+
   get focusedChip(): Locator {
     return this.dialog.locator('.nui-spreadsheet-pivot__chip:focus');
   }

@@ -23,7 +23,21 @@
         <NuiIcon icon="x" />
       </NuiButton>
     </div>
-    <p v-if="fields === undefined" class="nui-spreadsheet-pivot__lost">{{ texts.sourceLost }}</p>
+    <NuiSpreadsheetPivotItems
+      v-if="itemsView !== undefined"
+      v-bind="itemsView"
+      @apply="applyItems"
+      @cancel="back"
+    />
+    <NuiSpreadsheetPivotValue
+      v-else-if="valueView !== undefined"
+      v-bind="valueView"
+      @apply="applyValue"
+      @cancel="back"
+    />
+    <p v-else-if="fields === undefined" class="nui-spreadsheet-pivot__lost">
+      {{ texts.sourceLost }}
+    </p>
     <template v-else>
       <ul
         ref="list"
@@ -82,13 +96,15 @@ import {
   ArrowUp,
   ArrowUpToLine,
   Columns3,
+  Funnel,
   ListFilter,
   Rows3,
+  Settings2,
   Sigma,
 } from '@lucide/vue';
 import { Key, useLocale, useMessages } from '@numior/primitives';
 import { NuiButton, NuiCheckbox, NuiIcon, type NuiMenuEntry } from '@numior/vue';
-import { computed, markRaw, ref, useTemplateRef, watch } from 'vue';
+import { computed, markRaw, ref, shallowRef, useTemplateRef, watch } from 'vue';
 import {
   PivotArea,
   PivotLanguage,
@@ -96,25 +112,40 @@ import {
   checkField,
   moveField,
   pivotAreas,
+  pivotFieldOf,
   placeField,
   removeField,
+  setPivotValue,
+  showItems,
+  showSubtotals,
+  shownItems,
+  sortField,
   usedFields,
+  type CellValue,
   type PivotDefinition,
+  type PivotSort,
+  type PivotValue,
   type PivotPlacement,
   type PivotSpot,
 } from '../../core';
 import NuiSpreadsheetPivotArea from './NuiSpreadsheetPivotArea.vue';
+import NuiSpreadsheetPivotItems from './NuiSpreadsheetPivotItems.vue';
+import NuiSpreadsheetPivotValue from './NuiSpreadsheetPivotValue.vue';
 import { spreadsheetPivotMessages } from './pivot-panel.messages';
 import {
   PivotDragKind,
   PivotDragPhase,
   PivotDropKind,
+  PivotPanelViewKind,
   type PivotAreaView,
   type PivotChip,
   type PivotDragOrigin,
   type PivotDropTarget,
   type PivotFieldView,
+  type PivotPanelView,
+  type SheetPivotItemsProps,
   type SheetPivotProps,
+  type SheetPivotValueProps,
 } from './pivot-panel.types';
 import { usePivotDrag } from './use-pivot-drag';
 
@@ -144,11 +175,24 @@ const MOVE_ICONS = {
   last: markRaw(ArrowDownToLine),
 } as const;
 
+const FILTER_ICON = markRaw(Funnel);
+
+const SETTINGS_ICON = markRaw(Settings2);
+
+const FIELDS_VIEW: PivotPanelView = { kind: PivotPanelViewKind.Fields };
+
 const AREA_SELECTOR = '.nui-spreadsheet-pivot__area';
 
 const CHIP_SELECTOR = '.nui-spreadsheet-pivot__chip';
 
-const { definition, fields, titleId, readonly = false } = defineProps<SheetPivotProps>();
+const {
+  definition,
+  fields,
+  titleId,
+  items,
+  format,
+  readonly = false,
+} = defineProps<SheetPivotProps>();
 
 const emit = defineEmits<{
   close: [];
@@ -167,6 +211,8 @@ const locale = useLocale(() => undefined);
 const announcement = ref('');
 
 const focusAfter = ref<FocusTarget>();
+
+const view = shallowRef<PivotPanelView>(FIELDS_VIEW);
 
 const placement = computed((): PivotPlacement => ({
   fields: fields ?? [],
@@ -341,6 +387,66 @@ const removeItems = (chip: PivotChip): NuiMenuEntry[] =>
         },
       ];
 
+const openView = (
+  kind: typeof PivotPanelViewKind.Items | typeof PivotPanelViewKind.Value,
+  chip: PivotChip,
+): void => {
+  view.value = { kind, chip };
+};
+
+const toggleSubtotals = (chip: PivotChip, on: boolean): void => {
+  changed(
+    showSubtotals(definition, chip.field, on),
+    { area: chip.spot.area, field: chip.field },
+    '',
+  );
+};
+
+const axisItems = (chip: PivotChip): NuiMenuEntry[] => {
+  const axis = chip.spot.area !== PivotArea.Filters;
+
+  const subtotals: NuiMenuEntry[] = axis
+    ? [
+        {
+          type: 'checkbox',
+          key: 'subtotals',
+          label: texts.value.subtotals,
+          checked: pivotFieldOf(definition, chip.field).subtotal,
+          onCheckedChange: (on) => toggleSubtotals(chip, on),
+        },
+      ]
+    : [];
+
+  return [
+    { type: 'separator', key: 'settings' },
+    ...subtotals,
+    {
+      key: 'items',
+      label: axis ? texts.value.filterAndSort : texts.value.filterItems,
+      icon: FILTER_ICON,
+      onSelect: () => openView(PivotPanelViewKind.Items, chip),
+    },
+  ];
+};
+
+const settingsItems = (chip: PivotChip): NuiMenuEntry[] => {
+  if (chip.values) {
+    return [];
+  }
+  if (chip.spot.area !== PivotArea.Values) {
+    return axisItems(chip);
+  }
+  return [
+    { type: 'separator', key: 'settings' },
+    {
+      key: 'value',
+      label: texts.value.valueSettings,
+      icon: SETTINGS_ICON,
+      onSelect: () => openView(PivotPanelViewKind.Value, chip),
+    },
+  ];
+};
+
 const menuOf = (chip: PivotChip): readonly NuiMenuEntry[] => [
   ...orderItems(chip),
   { type: 'separator', key: 'areas' },
@@ -351,7 +457,111 @@ const menuOf = (chip: PivotChip): readonly NuiMenuEntry[] => [
     onSelect: () => moved(chip, appendTo(area)),
   })),
   ...removeItems(chip),
+  ...settingsItems(chip),
 ];
+
+const back = (): void => {
+  const current = view.value;
+
+  if (current.kind !== PivotPanelViewKind.Fields) {
+    focusAfter.value = { area: current.chip.spot.area, field: current.chip.field };
+    view.value = FIELDS_VIEW;
+  }
+};
+
+const itemsView = computed((): SheetPivotItemsProps | undefined => {
+  const current = view.value;
+
+  if (current.kind !== PivotPanelViewKind.Items) {
+    return undefined;
+  }
+
+  const { field, label, spot } = current.chip;
+  const fieldItems = items(field) ?? [];
+
+  return {
+    name: label,
+    items: fieldItems,
+    shown: shownItems(
+      definition,
+      field,
+      fieldItems.map((item) => item.value),
+    ),
+    sort: spot.area === PivotArea.Filters ? undefined : pivotFieldOf(definition, field).sort,
+  };
+});
+
+const takenNames = (index: number): Set<string> => {
+  const taken = new Set((fields ?? []).map((field) => field.name.toLowerCase()));
+
+  definition.values.forEach((value, at) => {
+    if (at !== index) {
+      taken.add(value.name.toLowerCase());
+    }
+  });
+
+  return taken;
+};
+
+const valueView = computed((): SheetPivotValueProps | undefined => {
+  const current = view.value;
+
+  const value =
+    current.kind === PivotPanelViewKind.Value
+      ? definition.values[current.chip.spot.index]
+      : undefined;
+
+  if (current.kind !== PivotPanelViewKind.Value || value === undefined) {
+    return undefined;
+  }
+
+  return {
+    value,
+    fieldName: fieldName(value.field),
+    fields: fields ?? [],
+    bases: [...definition.rows, ...definition.columns].filter((field) => field !== VALUES_FIELD),
+    taken: takenNames(current.chip.spot.index),
+    items,
+    format,
+    language: placement.value.language,
+  };
+});
+
+const applyItems = (shown: readonly CellValue[], sort: PivotSort | undefined): void => {
+  const current = view.value;
+
+  if (current.kind !== PivotPanelViewKind.Items) {
+    return;
+  }
+
+  const { field, label } = current.chip;
+  const values = (items(field) ?? []).map((item) => item.value);
+  const filtered = showItems(definition, field, shown, values);
+
+  back();
+
+  changed(
+    sort === undefined ? filtered : sortField(filtered, field, sort),
+    focusAfter.value,
+    texts.value.itemsApplied({ field: label }),
+  );
+};
+
+const applyValue = (next: PivotValue): void => {
+  const current = view.value;
+
+  if (current.kind !== PivotPanelViewKind.Value) {
+    return;
+  }
+
+  back();
+
+  changed(
+    setPivotValue(definition, current.chip.spot.index, next),
+    { area: PivotArea.Values, field: next.field },
+    texts.value.valueApplied({ name: next.name }),
+  );
+};
 
 const menuLabel = (chip: PivotChip): string => texts.value.fieldMenu({ field: chip.label });
 
@@ -465,7 +675,9 @@ const onKeydown = (event: KeyboardEvent): void => {
   }
   event.preventDefault();
 
-  if (drag.state.value.phase === PivotDragPhase.Idle) {
+  if (view.value.kind !== PivotPanelViewKind.Fields) {
+    back();
+  } else if (drag.state.value.phase === PivotDragPhase.Idle) {
     emit('close');
   } else {
     drag.cancel();
@@ -473,7 +685,7 @@ const onKeydown = (event: KeyboardEvent): void => {
 };
 
 const focusChip = (target: FocusTarget): void => {
-  const at = areaViews.value.findIndex((view) => view.area === target.area);
+  const at = areaViews.value.findIndex((each) => each.area === target.area);
   const chips = areaViews.value[at]?.chips ?? [];
   const index = chips.findLastIndex((chip) => chip.field === target.field);
   const element = areaElements().get(target.area)?.querySelectorAll(CHIP_SELECTOR)[index];
@@ -484,7 +696,7 @@ const focusChip = (target: FocusTarget): void => {
 };
 
 watch(
-  areaViews,
+  [areaViews, view],
   () => {
     const target = focusAfter.value;
 

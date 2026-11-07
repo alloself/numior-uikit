@@ -104,6 +104,16 @@ export {
   removeField,
   usedFields,
 } from './pivot/pivot-layout';
+export {
+  pivotFieldItems,
+  setPivotValue,
+  showItems,
+  showSubtotals,
+  shownItems,
+  sortField,
+} from './pivot/pivot-fields';
+export { pivotKey } from './pivot/pivot-cache';
+export { pivotFieldOf } from './pivot/pivot-engine';
 export { currentRegion } from './cell-region';
 export type {
   PivotBaseItem,
@@ -225,6 +235,7 @@ export {
 export {
   PivotAggregate,
   PivotArea,
+  PivotBaseStep,
   PivotLanguage,
   PivotLayout,
   PivotShowAsKind,

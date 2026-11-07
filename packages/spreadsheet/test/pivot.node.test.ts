@@ -370,6 +370,19 @@ describe('pivot steps', () => {
     expect(book.footprint()).toBe('A5:E10');
   });
 
+  it('drops the formats of its previous layout when the definition changes', () => {
+    const book = salesBook();
+    const share = { ...sum(3, 'Sum of Sales'), showAs: { kind: 'percentOfTotal' as const } };
+
+    book.place({ row: 2, col: 0 }, { columns: [], values: [share] });
+
+    expect(book.shown('B5', 'Rates')).toMatch(/%$/u);
+
+    book.place({ row: 2, col: 0 }, { columns: [] });
+
+    expect(book.shown('B5', 'Rates')).not.toMatch(/%$/u);
+  });
+
   it('refuses edits to its cells but lets them be formatted', () => {
     const book = salesBook();
 

@@ -451,6 +451,7 @@ const pivots = useSheetPivots({
   formula,
   sheetIndex,
   readonly: () => locked.value,
+  locale: () => bookLocale.value,
   focusPanel: () => pivotPanel.value?.focusStart(),
 });
 

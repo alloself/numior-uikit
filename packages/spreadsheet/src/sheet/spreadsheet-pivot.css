@@ -214,3 +214,38 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+.nui-spreadsheet-pivot__editor {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--nui-space-3);
+  min-inline-size: 0;
+  margin: 0;
+}
+.nui-spreadsheet-pivot__subtitle {
+  margin: 0;
+  overflow: hidden;
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-sm);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nui-spreadsheet-pivot__items {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--nui-space-1);
+  min-block-size: 4rem;
+  max-block-size: 14rem;
+  padding: var(--nui-space-2);
+  overflow: auto;
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius);
+}
+.nui-spreadsheet-pivot__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--nui-space-2);
+  padding-block-start: var(--nui-space-1);
+}

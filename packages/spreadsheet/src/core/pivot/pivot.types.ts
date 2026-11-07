@@ -11,6 +11,8 @@ export type PivotSource =
 
 export type PivotAggregate = (typeof PivotAggregate)[keyof typeof PivotAggregate];
 
+export type PivotShowAsKind = (typeof PivotShowAsKind)[keyof typeof PivotShowAsKind];
+
 export type PivotBaseItem = typeof PivotBaseStep.Previous | typeof PivotBaseStep.Next | CellValue;
 
 export type PivotShowAs =

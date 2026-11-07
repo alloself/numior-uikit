@@ -17,6 +17,8 @@
       :title-id="pivots.popover.titleId"
       :definition="pivots.panel.value"
       :fields="pivots.fields.value"
+      :items="pivots.items"
+      :format="pivots.format"
       :readonly="readonly"
       @close="pivots.popover.hide"
       @change="pivots.change"

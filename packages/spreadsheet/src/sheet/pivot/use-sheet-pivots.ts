@@ -5,14 +5,19 @@ import type { NuiMenuEntry } from '@numior/vue';
 import { useMediaQuery } from '@vueuse/core';
 import { computed, markRaw, shallowRef, watch } from 'vue';
 import {
+  CellValueKind,
   PivotLanguage,
   PivotSourceKind,
   StepKind,
   containsCell,
   currentRegion,
   emptyPivot,
+  pivotFieldItems,
+  pivotKey,
   pivotSourceFields,
+  renderValue,
   type CellRange,
+  type CellValue,
   type PivotDefinition,
   type PivotSource,
   type PivotSourceField,
@@ -23,7 +28,12 @@ import {
 import { tableRangeOf } from '../use-sheet-selection';
 import { useSheetPopover } from '../use-sheet-popover';
 import { spreadsheetPivotMessages } from './pivot-panel.messages';
-import type { PivotTarget, SheetPivots, SheetPivotsOptions } from './pivot-panel.types';
+import type {
+  PivotItemView,
+  PivotTarget,
+  SheetPivots,
+  SheetPivotsOptions,
+} from './pivot-panel.types';
 
 const INSERT_ICON = markRaw(SheetIcon);
 
@@ -279,5 +289,22 @@ export const useSheetPivots = (options: SheetPivotsOptions): SheetPivots => {
     popover.shown.value ? definition.value : undefined,
   );
 
-  return { popover, definition, fields, placement, panel, tools, rect, change };
+  const format = (value: CellValue, code: string): string =>
+    renderValue(value, code, options.locale().numbers)?.text ?? '';
+
+  const items = (field: number): readonly PivotItemView[] | undefined => {
+    const current = definition.value;
+
+    const values =
+      current === undefined ? undefined : pivotFieldItems(options.book(), current, field);
+
+    return values?.map((value) => ({
+      key: pivotKey(value),
+      value,
+      label:
+        value.kind === CellValueKind.Empty ? (current?.captions.blank ?? '') : format(value, ''),
+    }));
+  };
+
+  return { popover, definition, fields, placement, panel, items, format, tools, rect, change };
 };
