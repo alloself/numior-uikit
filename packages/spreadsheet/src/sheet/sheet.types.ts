@@ -12,7 +12,7 @@ import type {
   TableCellPosition,
 } from '@numior/table';
 import type { NuiListEntry, NuiMenuEntry, NuiTabDescriptor } from '@numior/vue';
-import type { ComputedRef, Ref, ShallowRef } from 'vue';
+import type { ComponentPublicInstance, ComputedRef, Ref, ShallowRef } from 'vue';
 import type {
   BookLocale,
   Calculator,
@@ -293,6 +293,30 @@ export interface SheetEditing {
   apply(steps: readonly WorkbookStep[]): boolean;
   inputAt(position: TableCellPosition): string;
   editableColumns(columns: readonly NuiTableColumn<number>[]): NuiTableColumn<number>[];
+}
+
+export interface SheetPopoverOptions {
+  readonly focusStart: () => void;
+  readonly closed: () => void;
+  readonly back: () => void;
+}
+
+export interface SheetAnchor {
+  readonly key: string;
+  readonly rect: NuiTableRect;
+  readonly hold: SheetPopover['holdAnchor'];
+}
+
+export interface SheetPopover {
+  readonly open: Ref<boolean>;
+  readonly shown: Readonly<Ref<boolean>>;
+  readonly titleId: string;
+  readonly anchor: Readonly<ShallowRef<HTMLElement | undefined>>;
+  holdAnchor(element: Element | ComponentPublicInstance | null): void;
+  show(): void;
+  hide(): void;
+  setOpen(open: boolean): void;
+  onToggle(event: Event): void;
 }
 
 export interface FormulaBarOptions {

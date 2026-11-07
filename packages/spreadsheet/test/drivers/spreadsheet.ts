@@ -7,6 +7,7 @@ import {
   type NuiSpreadsheetProps,
   type NuiSpreadsheetSelection,
 } from '../../src';
+import { PivotPanelDriver } from './pivot-panel';
 
 interface KeyOptions {
   readonly ctrl?: boolean | undefined;
@@ -744,6 +745,15 @@ export class SpreadsheetDriver {
 
   stale(row: number, col: number): boolean {
     return this.cell(row, col)?.classList.contains('nui-spreadsheet__stale') === true;
+  }
+
+  get pivot(): PivotPanelDriver {
+    return new PivotPanelDriver(this.wrapper);
+  }
+
+  async insertPivot(row: number, col: number): Promise<void> {
+    await this.openCellMenu(row, col);
+    await this.chooseCellMenuItem('Insert pivot table');
   }
 
   unmount(): void {

@@ -144,10 +144,11 @@
             @grip="(event, grip) => references.onGripDown(event, frame, grip)"
           />
           <span
-            v-if="rulesRect(rectOf) !== undefined"
-            :ref="holdAnchor"
+            v-for="anchor in anchorsOf(rectOf)"
+            :key="anchor.key"
+            :ref="anchor.hold"
             class="nui-spreadsheet__anchor"
-            :style="rectStyle(rulesRect(rectOf))"
+            :style="rectStyle(anchor.rect)"
           ></span>
         </template>
       </NuiTable>
@@ -161,29 +162,30 @@
       />
     </div>
     <NuiPopover
-      v-model:open="rulesOpen"
-      :anchor="rulesAnchor"
+      v-model:open="rules.open.value"
+      :anchor="rules.anchor.value"
       placement="bottom-start"
       size="auto"
       padding="none"
       fit
       role="dialog"
-      :aria-labelledby="rulesTitleId"
-      @toggle="onRulesToggle"
+      :aria-labelledby="rules.titleId"
+      @toggle="rules.onToggle"
     >
       <NuiSpreadsheetRules
-        v-if="rulesShown"
-        ref="rules"
-        :title-id="rulesTitleId"
+        v-if="rules.shown.value"
+        ref="rulesPanel"
+        :title-id="rules.titleId"
         :formats="sheetFormats"
         :selection="selectedRanges"
         :looks="ruleLooks"
         :readonly="locked"
-        @close="closeRules"
+        @close="rules.hide"
         @change="setFormats"
         @hover="lightUp"
       />
     </NuiPopover>
+    <NuiSpreadsheetPivotPopover ref="pivotPanel" :pivots="pivots" :readonly="locked" />
     <div class="nui-spreadsheet__hidden" role="status" aria-live="polite">
       {{ formula.announcement.value }}
     </div>
@@ -220,7 +222,7 @@
 
 <script setup lang="ts">
 import { PaintRoller } from '@lucide/vue';
-import { Direction, Key, PopoverState, useLocale, useMessages } from '@numior/primitives';
+import { Direction, Key, useLocale, useMessages } from '@numior/primitives';
 import {
   NuiTable,
   tableCells,
@@ -232,17 +234,7 @@ import {
 } from '@numior/table';
 import { NuiButton, NuiIcon, NuiPopover, type NuiTabDescriptor } from '@numior/vue';
 import { useFocusWithin } from '@vueuse/core';
-import {
-  computed,
-  markRaw,
-  provide,
-  ref,
-  shallowRef,
-  useId,
-  useTemplateRef,
-  watch,
-  type ComponentPublicInstance,
-} from 'vue';
+import { computed, markRaw, provide, ref, shallowRef, useId, useTemplateRef, watch } from 'vue';
 import {
   EN_LOCALE,
   HelpLanguage,
@@ -260,6 +252,8 @@ import NuiSpreadsheetReference from './NuiSpreadsheetReference.vue';
 import NuiSpreadsheetReport from './NuiSpreadsheetReport.vue';
 import NuiSpreadsheetStatus from './NuiSpreadsheetStatus.vue';
 import NuiSpreadsheetTabs from './NuiSpreadsheetTabs.vue';
+import NuiSpreadsheetPivotPopover from './pivot/NuiSpreadsheetPivotPopover.vue';
+import { useSheetPivots } from './pivot/use-sheet-pivots';
 import NuiSpreadsheetRules from './rules/NuiSpreadsheetRules.vue';
 import { spreadsheetRulesMessages } from './rules/rules.messages';
 import type { RuleLooks } from './rules/rules.types';
@@ -270,6 +264,7 @@ import {
   type NuiSpreadsheetExposed,
   type NuiSpreadsheetProps,
   type NuiSpreadsheetSelection,
+  type SheetAnchor,
   type SheetClipFrame,
 } from './sheet.types';
 import { spreadsheetMessages } from './spreadsheet.messages';
@@ -279,6 +274,7 @@ import { useSheetClipboard } from './use-sheet-clipboard';
 import { useSheetEditing } from './use-sheet-editing';
 import { useSheetFill } from './use-sheet-fill';
 import { useSheetLines } from './use-sheet-lines';
+import { useSheetPopover } from './use-sheet-popover';
 import { useSheetRecalc } from './use-sheet-recalc';
 import { SHEET_SEGMENTS } from './sheet-segments';
 import { rectStyle } from './sheet-rect';
@@ -444,6 +440,20 @@ const fill = useSheetFill({
   readonly: () => locked.value,
 });
 
+const pivotPanel = useTemplateRef<{ focusStart(): void }>('pivotPanel');
+
+const pivots = useSheetPivots({
+  book: () => book,
+  sheet: () => shownSheet.value,
+  cells: () => cells.value,
+  selection,
+  editing,
+  formula,
+  sheetIndex,
+  readonly: () => locked.value,
+  focusPanel: () => pivotPanel.value?.focusStart(),
+});
+
 const lines = useSheetLines({
   sheet: () => shownSheet.value,
   selection,
@@ -458,6 +468,7 @@ const lines = useSheetLines({
       icon: RULES_ICON,
       onSelect: () => openRules(),
     },
+    ...pivots.tools(),
   ],
   announce: (text) => {
     formula.announcement.value = text;
@@ -600,19 +611,19 @@ const removeSheet = (index: number): void => {
   }
 };
 
-const rulesOpen = ref(false);
-
-const rulesShown = ref(false);
-
 const rulesCell = shallowRef<TableCellPosition>();
 
-const rulesTitleId = useId();
-
-const rulesAnchor = shallowRef<HTMLElement>();
-
-const rulesPanel = useTemplateRef<{ focusStart(): void }>('rules');
+const rulesPanel = useTemplateRef<{ focusStart(): void }>('rulesPanel');
 
 const lit = ref<readonly CellRange[]>();
+
+const rules = useSheetPopover({
+  focusStart: () => rulesPanel.value?.focusStart(),
+  closed: () => {
+    lit.value = undefined;
+  },
+  back: () => formula.backToGrid(),
+});
 
 const sheetFormats = computed((): readonly ConditionalFormat[] =>
   editing.revision.value >= 0 ? (shownSheet.value?.conditional ?? []) : [],
@@ -644,35 +655,19 @@ const rulesRect = (rectOf: NuiTableOverlaySlot['rectOf']): NuiTableRect | undefi
   return cell === undefined ? undefined : rectOf({ from: cell, to: cell });
 };
 
-const holdAnchor = (element: Element | ComponentPublicInstance | null): void => {
-  if (element instanceof HTMLElement) {
-    rulesAnchor.value = element;
-  }
-};
+const anchorsOf = (rectOf: NuiTableOverlaySlot['rectOf']): SheetAnchor[] =>
+  [
+    { key: 'rules', rect: rulesRect(rectOf), hold: rules.holdAnchor },
+    { key: 'pivot', rect: pivots.rect(rectOf), hold: pivots.popover.holdAnchor },
+  ].reduce<SheetAnchor[]>(
+    (shown, anchor) =>
+      anchor.rect === undefined ? shown : [...shown, { ...anchor, rect: anchor.rect }],
+    [],
+  );
 
 const openRules = (): void => {
   rulesCell.value = formula.active.value ?? { row: 0, col: 0 };
-  rulesShown.value = true;
-  rulesOpen.value = true;
-};
-
-const closeRules = (): void => {
-  rulesOpen.value = false;
-  formula.backToGrid();
-};
-
-const onRulesToggle = (event: Event): void => {
-  if (!('newState' in event)) {
-    return;
-  }
-
-  if (event.newState === PopoverState.Open) {
-    rulesPanel.value?.focusStart();
-    return;
-  }
-
-  rulesShown.value = false;
-  lit.value = undefined;
+  rules.show();
 };
 
 const lightUp = (ranges: readonly CellRange[] | undefined): void => {

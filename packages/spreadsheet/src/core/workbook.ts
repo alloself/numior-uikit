@@ -175,7 +175,7 @@ const createSheetTables = (): SheetTables => {
     get: (name) => tables.get(name.toLowerCase()),
     on: (sheet) =>
       [...tables.values()].reduce<SheetTable[]>((found, table) => {
-        if (table.sheet === sheet) {
+        if (table.sheet.id === sheet.id) {
           found.push(table);
         }
         return found;
@@ -183,7 +183,7 @@ const createSheetTables = (): SheetTables => {
     at: (sheet, row, col) =>
       [...tables.values()].find(
         (table) =>
-          table.sheet === sheet &&
+          table.sheet.id === sheet.id &&
           row >= table.range.top &&
           row <= table.range.bottom &&
           col >= table.range.left &&
@@ -213,7 +213,7 @@ const createSheetPivots = (): SheetPivots => {
     get: (sheet, name) => pivots.get(pivotKey(sheet, name)),
     on: (sheet) =>
       [...pivots.values()].reduce<SheetPivot[]>((found, pivot) => {
-        if (pivot.sheet === sheet) {
+        if (pivot.sheet.id === sheet.id) {
           found.push(pivot);
         }
         return found;

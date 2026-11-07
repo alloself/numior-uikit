@@ -32,6 +32,19 @@ const LINES = [
   { name: 'Зарплаты', base: -310, step: -12 },
 ];
 
+const SALES_HEADER = ['Регион', 'Город', 'Менеджер', 'Квартал', 'Сумма'];
+
+const CITIES = [
+  { region: 'Центр', city: 'Москва', manager: 'Иванова' },
+  { region: 'Центр', city: 'Тула', manager: 'Петров' },
+  { region: 'Северо-Запад', city: 'Санкт-Петербург', manager: 'Смирнова' },
+  { region: 'Северо-Запад', city: 'Псков', manager: 'Петров' },
+  { region: 'Урал', city: 'Екатеринбург', manager: 'Козлов' },
+  { region: 'Урал', city: 'Пермь', manager: 'Иванова' },
+];
+
+const QUARTERS = ['I кв.', 'II кв.', 'III кв.', 'IV кв.'];
+
 const TITLE: CellDecoration = {
   font: { bold: true, size: 14 },
   alignment: { horizontal: 'center' },
@@ -196,6 +209,38 @@ const fillBudget = (book: Workbook, sheet: Sheet): void => {
   sheet.conditional = [OVERSPEND, GROWTH, MARKETING, PROFIT];
 };
 
+const fillSales = (book: Workbook, sheet: Sheet): void => {
+  const money = book.formats.id(MONEY);
+
+  SALES_HEADER.forEach((name, col) => {
+    sheet.cells.set(0, col, textValue(name));
+    decorate(book, sheet, 0, col, HEAD);
+  });
+
+  CITIES.forEach((place, at) => {
+    QUARTERS.forEach((quarter, index) => {
+      const row = 1 + at * QUARTERS.length + index;
+
+      sheet.cells.set(row, 0, textValue(place.region));
+      sheet.cells.set(row, 1, textValue(place.city));
+      sheet.cells.set(row, 2, textValue(place.manager));
+      sheet.cells.set(row, 3, textValue(quarter));
+      sheet.cells.set(row, 4, numberValue(320 + ((at * 7 + index * 11) % 13) * 45));
+      sheet.formats.set(row, 4, money);
+    });
+  });
+
+  sheet.layout = {
+    ...sheet.layout,
+    cols: lineLayoutsOf([
+      [0, WIDE],
+      [1, WIDE],
+      [2, WIDE],
+    ]),
+    view: { ...sheet.layout.view, frozenRows: 1 },
+  };
+};
+
 const sumTotals = (book: Workbook, calculator: Calculator, sheet: Sheet): void => {
   const editor = createCellEditor(book, calculator);
   const total = LINES.length + 2;
@@ -212,8 +257,10 @@ export const sampleBook = (): SampleBook => {
   const calculator = createCalculator(book, { locale: RU_LOCALE });
   const budget = book.addSheet('Бюджет');
   const notes = book.addSheet('Заметки');
+  const sales = book.addSheet('Продажи');
 
   fillBudget(book, budget);
+  fillSales(book, sales);
   sumTotals(book, calculator, budget);
   calculator.recalculate();
   notes.cells.set(0, 0, textValue('Второй лист без сетки'));

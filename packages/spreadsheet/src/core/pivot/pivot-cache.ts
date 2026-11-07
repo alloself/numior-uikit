@@ -8,8 +8,16 @@ import {
   type PivotCache,
   type PivotGroup,
   type PivotSource,
+  type PivotSourceField,
   type PivotTable,
 } from './pivot.types';
+
+interface SourceArea {
+  readonly sheet: Sheet;
+  readonly range: CellRange;
+}
+
+const NUMERIC_SAMPLE = 200;
 
 export const pivotKey = (value: CellValue): string => {
   switch (value.kind) {
@@ -52,21 +60,24 @@ const groupOf = (values: readonly CellValue[]): PivotGroup => {
   return { items, records };
 };
 
-export const buildPivotCache = (source: PivotTable): PivotCache | undefined => {
+const fieldNamesOf = (header: readonly CellValue[]): string[] | undefined => {
   const taken = new Set<string>();
-  const groups = new Map<number, PivotGroup>();
 
-  if (
-    source.header.length === 0 ||
-    source.header.some((value) => value.kind === CellValueKind.Empty)
-  ) {
+  if (header.length === 0 || header.some((value) => value.kind === CellValueKind.Empty)) {
+    return undefined;
+  }
+  return header.map((value) => uniqueName(taken, toText(value, EN_NUMBERS)));
+};
+
+export const buildPivotCache = (source: PivotTable): PivotCache | undefined => {
+  const groups = new Map<number, PivotGroup>();
+  const names = fieldNamesOf(source.header);
+
+  if (names === undefined) {
     return undefined;
   }
 
-  const fields = source.header.map((value, col) => ({
-    name: uniqueName(taken, toText(value, EN_NUMBERS)),
-    values: source.columns[col] ?? [],
-  }));
+  const fields = names.map((name, col) => ({ name, values: source.columns[col] ?? [] }));
 
   return {
     fields,
@@ -121,11 +132,11 @@ export const pivotTableOf = (rows: readonly (readonly CellValue[])[]): PivotTabl
   };
 };
 
-export const pivotSource = (book: Workbook, source: PivotSource): PivotTable | undefined => {
+const sourceArea = (book: Workbook, source: PivotSource): SourceArea | undefined => {
   if (source.kind === PivotSourceKind.Range) {
     const sheet = book.sheet(source.sheet);
 
-    return sheet === undefined ? undefined : tableOf(sheet, source.range);
+    return sheet === undefined ? undefined : { sheet, range: source.range };
   }
   if (source.kind === PivotSourceKind.Lost) {
     return undefined;
@@ -136,8 +147,60 @@ export const pivotSource = (book: Workbook, source: PivotSource): PivotTable | u
   if (table === undefined || !table.headers) {
     return undefined;
   }
-  return tableOf(table.sheet, {
-    ...table.range,
-    bottom: table.range.bottom - (table.totals ? 1 : 0),
-  });
+  return {
+    sheet: table.sheet,
+    range: { ...table.range, bottom: table.range.bottom - (table.totals ? 1 : 0) },
+  };
+};
+
+export const pivotSource = (book: Workbook, source: PivotSource): PivotTable | undefined => {
+  const area = sourceArea(book, source);
+
+  return area === undefined ? undefined : tableOf(area.sheet, area.range);
+};
+
+const numericColumns = (area: SourceArea): boolean[] => {
+  const { range } = area;
+
+  const seen = Array.from(
+    { length: range.right - range.left + 1 },
+    (): boolean | undefined => undefined,
+  );
+
+  const sample: CellRange = {
+    ...range,
+    top: range.top + 1,
+    bottom: Math.min(range.bottom, range.top + NUMERIC_SAMPLE),
+  };
+
+  if (sample.top <= sample.bottom) {
+    area.sheet.cells.forEachInRange(sample, (_row, col, value) => {
+      const at = col - range.left;
+
+      seen[at] = seen[at] !== false && value.kind === CellValueKind.Number;
+    });
+  }
+  return seen.map((numeric) => numeric === true);
+};
+
+export const pivotSourceFields = (
+  book: Workbook,
+  source: PivotSource,
+): PivotSourceField[] | undefined => {
+  const area = sourceArea(book, source);
+
+  if (area === undefined) {
+    return undefined;
+  }
+
+  const { range } = area;
+
+  const header = Array.from({ length: range.right - range.left + 1 }, (_, at) =>
+    area.sheet.cells.get(range.top, range.left + at),
+  );
+
+  const names = fieldNamesOf(header);
+  const numeric = numericColumns(area);
+
+  return names?.map((name, at) => ({ name, numeric: numeric[at] === true }));
 };

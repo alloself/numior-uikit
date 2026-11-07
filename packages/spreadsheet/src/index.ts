@@ -10,6 +10,11 @@ export {
   spreadsheetRuleEditorMessages,
   type NuiSpreadsheetRuleEditorMessages,
 } from './sheet/rules/rule-editor.messages';
+export {
+  spreadsheetPivotMessages,
+  type NuiSpreadsheetPivotMessages,
+} from './sheet/pivot/pivot-panel.messages';
+
 export type { NuiSpreadsheetPackageMessages } from './messages.types';
 export type {
   NuiSpreadsheetChange,

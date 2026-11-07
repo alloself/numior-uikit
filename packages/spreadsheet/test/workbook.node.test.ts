@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { createWorkbook, textValue, validSheetName } from '../src/core';
+import {
+  createWorkbook,
+  emptyPivot,
+  PivotLanguage,
+  PivotSourceKind,
+  textValue,
+  validSheetName,
+} from '../src/core';
 
 describe('workbook', () => {
   it('names sheets uniquely without case and shares strings between them', () => {
@@ -25,6 +32,27 @@ describe('workbook', () => {
       false,
       false,
       true,
+    ]);
+  });
+
+  it('finds the pivot tables of a sheet seen through a proxy', () => {
+    const book = createWorkbook();
+    const sheet = book.addSheet('Pivot');
+    const range = { top: 0, left: 0, bottom: 3, right: 1 };
+
+    book.pivots.set({
+      name: 'PivotTable1',
+      sheet,
+      anchor: { row: 2, col: 0 },
+      definition: emptyPivot(
+        { kind: PivotSourceKind.Range, sheet: 'Data', range },
+        PivotLanguage.En,
+      ),
+      footprint: range,
+    });
+
+    expect(book.pivots.on(new Proxy(sheet, {})).map((pivot) => pivot.name)).toEqual([
+      'PivotTable1',
     ]);
   });
 });

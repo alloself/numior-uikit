@@ -3,6 +3,7 @@ import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { paintedRgbAt, rgbDelta, type Rgb } from '../helpers/color';
 import { boxOf, type Box } from '../helpers/geometry';
 import type { XlsxFile } from '../helpers/xlsx';
+import { PivotPanel } from './pivot-panel';
 
 interface CellLabel {
   readonly row: string;
@@ -328,6 +329,10 @@ export class BookSection {
       }
       document.activeElement?.dispatchEvent(event);
     }, text);
+  }
+
+  get pivot(): PivotPanel {
+    return new PivotPanel(this.page, this.sheet);
   }
 
   get rules(): Locator {

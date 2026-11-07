@@ -147,6 +147,23 @@ export interface PivotState extends PivotSpec {
   readonly footprint: CellRange | undefined;
 }
 
+export type PivotArea = (typeof PivotArea)[keyof typeof PivotArea];
+
+export interface PivotSpot {
+  readonly area: PivotArea;
+  readonly index: number;
+}
+
+export interface PivotSourceField {
+  readonly name: string;
+  readonly numeric: boolean;
+}
+
+export interface PivotPlacement {
+  readonly fields: readonly PivotSourceField[];
+  readonly language: PivotLanguage;
+}
+
 export const PivotSourceKind = { Range: 'range', Table: 'table', Lost: 'lost' } as const;
 
 export const PivotAggregate = {
@@ -178,6 +195,13 @@ export const PivotLineKind = {
   Group: 'group',
   Subtotal: 'subtotal',
   Grand: 'grand',
+} as const;
+
+export const PivotArea = {
+  Filters: 'filters',
+  Columns: 'columns',
+  Rows: 'rows',
+  Values: 'values',
 } as const;
 
 export const PivotBaseStep = { Previous: 'previous', Next: 'next' } as const;

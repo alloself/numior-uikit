@@ -296,14 +296,14 @@ test.describe('book', () => {
     await playground.open();
     await book.sheet.scrollIntoViewIfNeeded();
     await book.addSheetButton.click();
-    await expect(book.sheetTab('Лист3')).toHaveAttribute('aria-selected', 'true');
+    await expect(book.sheetTab('Лист4')).toHaveAttribute('aria-selected', 'true');
     await expect(book.cell('1', 0)).toHaveText('');
 
-    await book.renameSheet('Лист3', 'Заметки');
+    await book.renameSheet('Лист4', 'Заметки');
     await expect(book.sheetNameField).toHaveAccessibleDescription('Это имя уже занято');
 
     await page.keyboard.press('Escape');
-    await book.renameSheet('Лист3', 'План');
+    await book.renameSheet('Лист4', 'План');
     await expect(book.sheetTab('План')).toBeVisible();
 
     await book.sheetMenu('Заметки', 'Удалить');
@@ -801,6 +801,111 @@ test.describe('book', () => {
     await expect
       .poll(() => book.tintOver(book.referenceFrames.first(), book.columnHeader('E'), 40))
       .toBeLessThanOrEqual(3);
+  });
+
+  test('inserts a pivot table from the sales sheet and builds it from checked fields', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Продажи');
+    await book.cellMenu('2', 0, 'Вставить сводную таблицу');
+
+    await expect(book.sheetTab('Сводная 1')).toHaveAttribute('aria-selected', 'true');
+    await expect(book.pivot.dialog).toBeVisible();
+    await expect(book.pivot.field('Регион')).toBeFocused();
+
+    await book.pivot.check('Регион');
+    await book.pivot.check('Сумма');
+
+    await expect(book.pivot.chips('Строки')).toHaveText(['Регион']);
+    await expect(book.pivot.chips('Значения')).toHaveText(['Сумма по полю Сумма']);
+    await expect(book.cell('3', 0)).toHaveText('Названия строк');
+    await expect(book.cell('4', 0)).toHaveText('Центр');
+    await expect(book.cell('4', 1)).toHaveText(/^4\s?495$/u);
+    await expect(book.cell('7', 0)).toHaveText('Общий итог');
+    await expect(book.cell('7', 1)).toHaveText(/^13\s?980$/u);
+
+    await page.keyboard.press('Escape');
+    await expect(book.pivot.dialog).toBeHidden();
+    await expect(book.cell('3', 0)).toBeFocused();
+  });
+
+  test('drags pivot fields between areas and moves them from the chip menu', async ({
+    playground,
+    book,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Продажи');
+    await book.cellMenu('2', 0, 'Вставить сводную таблицу');
+    await book.pivot.check('Регион');
+    await book.pivot.check('Сумма');
+    await book.pivot.dragField('Квартал', 'Столбцы');
+
+    await expect(book.pivot.chips('Столбцы')).toHaveText(['Квартал']);
+    await expect(book.cell('4', 1)).toHaveText('I кв.');
+
+    await book.pivot.dragChip('Столбцы', 'Квартал', 'Фильтры');
+
+    await expect(book.pivot.chips('Фильтры')).toHaveText(['Квартал']);
+    await expect(book.pivot.chips('Столбцы')).toHaveCount(0);
+
+    await book.pivot.chooseAction('Строки', 'Регион', 'Переместить в столбцы');
+
+    await expect(book.pivot.chips('Столбцы')).toHaveText(['Регион']);
+    await expect(book.pivot.focusedChip).toHaveText('Регион');
+  });
+
+  test('refreshes a pivot table from its menu after the source changes', async ({
+    playground,
+    book,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Продажи');
+    await book.cellMenu('2', 0, 'Вставить сводную таблицу');
+    await book.pivot.check('Регион');
+    await book.pivot.check('Сумма');
+    await book.page.keyboard.press('Escape');
+    await book.chooseSheet('Продажи');
+    await book.enterAt('E2', '1320');
+    await book.goTo('A1');
+    await book.chooseSheet('Сводная 1');
+
+    await expect(book.cell('4', 1)).toHaveText(/^4\s?495$/u);
+
+    await book.cellMenu('4', 1, 'Обновить');
+
+    await expect(book.cell('4', 1)).toHaveText(/^5\s?495$/u);
+
+    await book.cellMenu('4', 1, 'Поля сводной таблицы…');
+
+    await expect(book.pivot.chips('Строки')).toHaveText(['Регион']);
+  });
+
+  test('keeps the pivot fields panel accessible in both themes', async ({ playground, book }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await playground.setTheme('light');
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Продажи');
+    await book.cellMenu('2', 0, 'Вставить сводную таблицу');
+    await book.pivot.check('Регион');
+    await book.pivot.check('Сумма');
+
+    expect(await playground.wcagViolations('.nui-spreadsheet-pivot')).toEqual([]);
+
+    await playground.setTheme('dark');
+    await book.cellMenu('3', 0, 'Поля сводной таблицы…');
+
+    await expect(book.pivot.dialog).toBeVisible();
+    expect(await playground.wcagViolations('.nui-spreadsheet-pivot')).toEqual([]);
   });
 
   test('book has no automatically detectable WCAG AA violations', async ({ playground }) => {

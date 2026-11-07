@@ -94,15 +94,29 @@ export type {
 export { tableData, type TableShape } from './tables';
 export { pivotCaptions, pivotValueName } from './pivot/pivot.messages';
 export { VALUES_FIELD } from './pivot/pivot-engine';
+export { pivotSourceFields } from './pivot/pivot-cache';
+export {
+  checkField,
+  emptyPivot,
+  moveField,
+  pivotAreas,
+  placeField,
+  removeField,
+  usedFields,
+} from './pivot/pivot-layout';
+export { currentRegion } from './cell-region';
 export type {
   PivotBaseItem,
   PivotCaptions,
   PivotDefinition,
   PivotField,
   PivotFilter,
+  PivotPlacement,
   PivotShowAs,
   PivotSource,
+  PivotSourceField,
   PivotSpec,
+  PivotSpot,
   PivotState,
   PivotValue,
 } from './pivot/pivot.types';
@@ -210,6 +224,7 @@ export {
 } from './conditional/conditional.types';
 export {
   PivotAggregate,
+  PivotArea,
   PivotLanguage,
   PivotLayout,
   PivotShowAsKind,

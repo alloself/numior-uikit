@@ -1,6 +1,8 @@
 const toggled = (element: HTMLElement, newState: 'open' | 'closed'): void => {
-  ['beforetoggle', 'toggle'].forEach((type) => {
-    element.dispatchEvent(Object.assign(new Event(type), { newState }));
+  element.dispatchEvent(Object.assign(new Event('beforetoggle'), { newState }));
+
+  queueMicrotask(() => {
+    element.dispatchEvent(Object.assign(new Event('toggle'), { newState }));
   });
 };
 
