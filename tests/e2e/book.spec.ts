@@ -2,6 +2,7 @@ import { expect, test } from './fixtures';
 import { rgbDelta, type Rgb } from './helpers/color';
 import { boxOf } from './helpers/geometry';
 import { ordersXlsx, pricesXlsx } from './helpers/xlsx';
+import type { Theme } from './pages/playground';
 
 const PINK: Rgb = [255, 199, 206];
 
@@ -91,6 +92,121 @@ test.describe('book', () => {
 
     await expect(book.fillGrip).toBeVisible();
   });
+
+  test('lists, lights, reorders and deletes conditional rules in the side panel', async ({
+    playground,
+    book,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.openRules('4', 1);
+
+    await expect(book.rules).toBeVisible();
+
+    await expect(book.ruleTitles).toHaveText([
+      'Значение меньше -650',
+      'Цветовая шкала из 2 цветов',
+      'Гистограммы',
+      'Набор значков',
+    ]);
+
+    await book.ruleItems.nth(2).hover();
+
+    await expect(book.litFrames).toHaveCount(1);
+
+    const lit = await boxOf(book.litFrames);
+    const marketing = await boxOf(book.cell('5', 1));
+
+    expect(Math.abs(lit.y - marketing.y)).toBeLessThan(3);
+
+    await book.dragRule(0, 1);
+
+    await expect(book.ruleTitles.first()).toHaveText('Цветовая шкала из 2 цветов');
+
+    await book.deleteRule(0);
+
+    await expect(book.ruleItems).toHaveCount(3);
+    await expect.poll(async () => rgbDelta(await book.fillAt('3', 3), WHITE)).toBeLessThan(8);
+
+    await book.page.keyboard.press('Escape');
+
+    await expect(book.rules).toBeHidden();
+    await expect(book.litFrames).toHaveCount(0);
+  });
+
+  test('adds a rule from the selection and edits it in the side panel', async ({
+    playground,
+    book,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.openRules('6', 1);
+    await book.addRule();
+
+    await expect(book.ruleField('Применить к')).toBeFocused();
+    await expect(book.ruleField('Применить к')).toHaveValue('B6');
+
+    await book.ruleField('Применить к').fill('B6:G6');
+    await book.saveRule();
+
+    await expect(book.ruleField('Значение')).toBeFocused();
+    await expect(book.ruleEditor.getByText('Введите число или формулу')).toBeVisible();
+
+    await book.ruleField('Значение').fill('-100');
+    await book.saveRule();
+
+    await expect(book.ruleEditor).toBeHidden();
+    await expect(book.ruleTitles.first()).toHaveText('Значение больше -100');
+    await expect(book.ruleItems.first().getByRole('button', { name: /^Изменить/ })).toBeFocused();
+    await expect(book.litFrames).toHaveCount(1);
+
+    await book.cell('9', 0).click();
+
+    await expect(book.litFrames).toHaveCount(0);
+    await expect.poll(async () => rgbDelta(await book.fillAt('6', 2), PINK)).toBeLessThan(8);
+
+    await book.editRule(0);
+
+    await expect(book.ruleField('Значение')).toHaveValue('-100');
+
+    await book.ruleEditor.getByRole('combobox', { name: 'Условие' }).click();
+    await book.page.keyboard.press('Escape');
+
+    await expect(book.ruleEditor.getByRole('listbox')).toBeHidden();
+    await expect(book.ruleEditor).toBeVisible();
+
+    await book.ruleField('Значение').fill('-90');
+    await book.page.keyboard.press('Enter');
+
+    await expect(book.ruleTitles.first()).toHaveText('Значение больше -90');
+
+    await book.cell('9', 0).click();
+
+    await expect(book.litFrames).toHaveCount(0);
+    await expect.poll(async () => rgbDelta(await book.fillAt('6', 2), WHITE)).toBeLessThan(8);
+  });
+
+  for (const theme of ['light', 'dark'] satisfies readonly Theme[]) {
+    test(`passes axe with the rules panel open in the ${theme} theme`, async ({
+      playground,
+      book,
+    }) => {
+      await playground.open();
+      await playground.setTheme(theme);
+      await book.sheet.scrollIntoViewIfNeeded();
+      await book.openRules('4', 1);
+
+      await expect(book.ruleItems).toHaveCount(4);
+      expect(await playground.wcagViolations('section[aria-labelledby="book-title"]')).toEqual([]);
+
+      await book.editRule(0);
+
+      await expect(book.ruleEditor).toBeVisible();
+      expect(await playground.wcagViolations('section[aria-labelledby="book-title"]')).toEqual([]);
+    });
+  }
 
   test('switches to a sheet without gridlines and opens an xlsx file', async ({
     playground,

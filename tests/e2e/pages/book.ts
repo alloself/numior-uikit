@@ -326,6 +326,78 @@ export class BookSection {
     }, text);
   }
 
+  get rules(): Locator {
+    return this.sheet.getByRole('complementary', { name: 'Условное форматирование' });
+  }
+
+  get ruleItems(): Locator {
+    return this.rules.getByRole('listitem');
+  }
+
+  get ruleTitles(): Locator {
+    return this.rules.locator('.nui-spreadsheet-rules__description');
+  }
+
+  get litFrames(): Locator {
+    return this.sheet.locator('.nui-spreadsheet__lit');
+  }
+
+  async openRules(rowLabel: string, column: number): Promise<void> {
+    await this.cellMenu(rowLabel, column, 'Условное форматирование…');
+  }
+
+  async deleteRule(index: number): Promise<void> {
+    await this.ruleItems.nth(index).hover();
+
+    await this.ruleItems
+      .nth(index)
+      .getByRole('button', { name: /^Удалить/ })
+      .click();
+  }
+
+  get ruleEditor(): Locator {
+    return this.rules.locator('form');
+  }
+
+  ruleField(label: string): Locator {
+    return this.ruleEditor.getByLabel(label, { exact: true });
+  }
+
+  async addRule(): Promise<void> {
+    await this.rules.getByRole('button', { name: 'Добавить правило' }).click();
+  }
+
+  async editRule(index: number): Promise<void> {
+    await this.ruleItems.nth(index).hover();
+
+    await this.ruleItems
+      .nth(index)
+      .getByRole('button', { name: /^Изменить/ })
+      .click();
+  }
+
+  async saveRule(): Promise<void> {
+    await this.ruleEditor.getByRole('button', { name: 'Готово' }).click();
+  }
+
+  async dragRule(from: number, to: number): Promise<void> {
+    const source = this.ruleItems.nth(from);
+
+    await source.hover();
+
+    const grip = await boxOf(source.getByRole('button', { name: /^Переместить/ }));
+    const target = await boxOf(this.ruleItems.nth(to));
+
+    await this.page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+    await this.page.mouse.down();
+
+    await this.page.mouse.move(grip.x + grip.width / 2, target.y + target.height * 0.8, {
+      steps: 8,
+    });
+
+    await this.page.mouse.up();
+  }
+
   async cellMenu(rowLabel: string, column: number, item: string): Promise<void> {
     await this.cell(rowLabel, column).click({ button: 'right' });
     await this.page.getByRole('menuitem', { name: item, exact: true }).click();

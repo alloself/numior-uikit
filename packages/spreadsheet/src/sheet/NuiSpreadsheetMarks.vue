@@ -6,6 +6,12 @@
     :style="rectStyle(frame.rect)"
   ></span>
   <span
+    v-for="frame in shownLit"
+    :key="frame.key"
+    class="nui-spreadsheet__lit"
+    :style="rectStyle(frame.rect)"
+  ></span>
+  <span
     v-if="clearingRect"
     class="nui-spreadsheet__fill-clear"
     :style="rectStyle(clearingRect)"
@@ -36,7 +42,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { rectStyle } from './sheet-rect';
-import type { SheetMarksProps, ShownClip } from './sheet.types';
+import type { SheetClipFrame, SheetMarksProps, ShownClip } from './sheet.types';
 
 const {
   rectOf,
@@ -44,6 +50,7 @@ const {
   preview,
   clearing,
   clips,
+  lit,
   frozenRows = 0,
   frozenCols = 0,
 } = defineProps<SheetMarksProps>();
@@ -70,14 +77,17 @@ const previewRect = computed(() => (preview === undefined ? undefined : rectOf(p
 
 const clearingRect = computed(() => (clearing === undefined ? undefined : rectOf(clearing)));
 
-const shownClips = computed(() =>
-  clips.reduce<ShownClip[]>((shown, frame) => {
+const shownOf = (frames: readonly SheetClipFrame[]): ShownClip[] =>
+  frames.reduce<ShownClip[]>((shown, frame) => {
     const rect = rectOf(frame.range);
 
     if (rect !== undefined) {
       shown.push({ key: frame.key, rect });
     }
     return shown;
-  }, []),
-);
+  }, []);
+
+const shownClips = computed(() => shownOf(clips));
+
+const shownLit = computed(() => shownOf(lit));
 </script>

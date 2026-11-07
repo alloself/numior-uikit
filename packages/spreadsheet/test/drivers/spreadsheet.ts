@@ -478,6 +478,178 @@ export class SpreadsheetDriver {
     await nextTick();
   }
 
+  get rulesOpen(): boolean {
+    return this.wrapper.find('.nui-spreadsheet-rules').exists();
+  }
+
+  get ruleTexts(): string[] {
+    return texts(this.wrapper, '.nui-spreadsheet-rules__description');
+  }
+
+  get ruleAreas(): string[] {
+    return texts(this.wrapper, '.nui-spreadsheet-rules__area');
+  }
+
+  get rulesEmpty(): string | undefined {
+    const empty = this.wrapper.find('.nui-spreadsheet-rules__empty');
+
+    return empty.exists() ? empty.text() : undefined;
+  }
+
+  get rulesAnnouncement(): string {
+    return this.wrapper.find('.nui-spreadsheet-rules__live').text();
+  }
+
+  get litFrames(): number {
+    return this.wrapper.findAll('.nui-spreadsheet__lit').length;
+  }
+
+  get focusInRules(): boolean {
+    return this.wrapper.find('.nui-spreadsheet-rules').element.contains(document.activeElement);
+  }
+
+  async openRules(row: number, col: number): Promise<void> {
+    await this.openCellMenu(row, col);
+    await this.chooseCellMenuItem('Conditional formatting…');
+    await nextTick();
+  }
+
+  async showOnlySelection(): Promise<void> {
+    await this.wrapper.find('.nui-spreadsheet-rules input[role="switch"]').setValue(true);
+  }
+
+  async hoverRule(index: number): Promise<void> {
+    await this.rule(index)?.trigger('pointerenter');
+  }
+
+  async leaveRule(index: number): Promise<void> {
+    await this.rule(index)?.trigger('pointerleave');
+  }
+
+  async deleteRule(index: number): Promise<void> {
+    await this.rule(index)
+      ?.findAll('.nui-spreadsheet-rules__actions button')
+      .at(-1)
+      ?.trigger('click');
+
+    await nextTick();
+  }
+
+  get ruleEditorTitle(): string | undefined {
+    const title = this.wrapper.find('.nui-spreadsheet-rules__subtitle');
+
+    return title.exists() ? title.text() : undefined;
+  }
+
+  get ruleFieldErrors(): string[] {
+    return texts(this.wrapper, '.nui-spreadsheet-rules__editor .nui-field__error');
+  }
+
+  get focusedRuleField(): string | undefined {
+    const field = document.activeElement;
+
+    return field instanceof HTMLInputElement ? field.labels?.[0]?.textContent?.trim() : undefined;
+  }
+
+  get focusedRulesButton(): string | undefined {
+    const button = document.activeElement;
+
+    return button instanceof HTMLButtonElement
+      ? (button.getAttribute('aria-label') ?? undefined)
+      : undefined;
+  }
+
+  ruleField(label: string): string | undefined {
+    return this.editorInput(label)?.value;
+  }
+
+  async addRule(): Promise<void> {
+    await this.wrapper.findAll('.nui-spreadsheet-rules__tools button').at(-1)?.trigger('click');
+    await nextTick();
+  }
+
+  async editRule(index: number): Promise<void> {
+    await this.rule(index)?.find('.nui-spreadsheet-rules__actions button').trigger('click');
+    await nextTick();
+  }
+
+  async fillRuleField(label: string, value: string): Promise<void> {
+    const input = this.editorInput(label);
+
+    if (input) {
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    await nextTick();
+  }
+
+  async chooseRuleOption(label: string, option: string): Promise<void> {
+    await this.openRuleSelect(label);
+
+    const entry = this.wrapper
+      .findAll<HTMLElement>('.nui-spreadsheet-rules__editor [role="option"]')
+      .find((each) => each.text() === option);
+
+    if (!entry) {
+      throw new Error(`No option ${option}`);
+    }
+    await entry.trigger('click');
+    await nextTick();
+  }
+
+  async openRuleSelect(label: string): Promise<void> {
+    const select = [
+      ...document.querySelectorAll<HTMLElement>('.nui-spreadsheet-rules__editor [role="combobox"]'),
+    ].find(
+      (each) =>
+        document.getElementById(each.getAttribute('aria-labelledby') ?? '')?.textContent?.trim() ===
+        label,
+    );
+
+    if (select) {
+      select.focus();
+      keydown(select, 'ArrowDown', {});
+    }
+    await nextTick();
+  }
+
+  async saveRule(): Promise<void> {
+    await this.wrapper.find('.nui-spreadsheet-rules__editor').trigger('submit');
+    await nextTick();
+  }
+
+  private editorInput(label: string): HTMLInputElement | undefined {
+    return [
+      ...document.querySelectorAll<HTMLInputElement>('.nui-spreadsheet-rules__editor input'),
+    ].find((input) => input.labels?.[0]?.textContent?.trim() === label);
+  }
+
+  async moveRuleDown(index: number): Promise<void> {
+    const grip = this.rule(index)?.find('.nui-spreadsheet-rules__grip').element;
+
+    if (grip instanceof HTMLElement) {
+      grip.focus();
+      keydown(grip, ' ', {});
+      keydown(grip, 'ArrowDown', {});
+      keydown(grip, ' ', {});
+    }
+    await nextTick();
+  }
+
+  async pressInRules(key: string): Promise<void> {
+    keydown(document.activeElement ?? document.body, key, {});
+    await nextTick();
+  }
+
+  async closeRules(): Promise<void> {
+    await this.wrapper.find('.nui-spreadsheet-rules__header button').trigger('click');
+    await nextTick();
+  }
+
+  private rule(index: number): DOMWrapper<Element> | undefined {
+    return this.wrapper.findAll('.nui-spreadsheet-rules__rule')[index];
+  }
+
   async addSheet(): Promise<void> {
     await this.wrapper.find('.nui-spreadsheet__tabs > button').trigger('click');
   }

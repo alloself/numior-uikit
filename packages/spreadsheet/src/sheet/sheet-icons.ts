@@ -109,8 +109,31 @@ const ICON_SETS: Readonly<Record<string, readonly NuiTableCellIcon[]>> = {
   '3Triangles': [icon(ChevronDown, ERROR), icon(Minus, WARNING), icon(ChevronUp, SUCCESS)],
 };
 
+export const SHEET_ICON_SETS: readonly string[] = [
+  '3TrafficLights1',
+  '4TrafficLights',
+  '3Signs',
+  '3Symbols',
+  '3Symbols2',
+  '3Flags',
+  '3Arrows',
+  '4Arrows',
+  '5Arrows',
+  '3ArrowsGray',
+  '4ArrowsGray',
+  '5ArrowsGray',
+  '3Triangles',
+  '3Stars',
+  '4Rating',
+  '5Rating',
+  '5Quarters',
+  '4RedToBlack',
+];
+
+export const sheetIcons = (set: string): readonly NuiTableCellIcon[] => ICON_SETS[set] ?? LIGHTS;
+
 export const sheetIcon = (look: IconLook): NuiTableCellIcon | undefined => {
-  const steps = ICON_SETS[look.set] ?? LIGHTS;
+  const steps = sheetIcons(look.set);
 
   return steps[Math.min(Math.max(look.index, 0), steps.length - 1)];
 };

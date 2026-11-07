@@ -218,6 +218,7 @@ export interface ReportLine {
 export interface NuiSpreadsheetExposed {
   refresh(): void;
   apply(steps: readonly WorkbookStep[]): boolean;
+  openRules(): void;
 }
 
 export interface NuiSpreadsheetSelection {
@@ -246,6 +247,7 @@ export interface SheetLinesOptions {
   readonly messages: ComputedRef<NuiSpreadsheetMessages>;
   readonly readonly: () => boolean;
   readonly extra: () => NuiSpreadsheetContextMenu | undefined;
+  readonly tools: () => readonly NuiMenuEntry[];
   readonly announce: (text: string) => void;
 }
 
@@ -406,6 +408,7 @@ export interface SheetMarksProps {
   readonly preview: NuiTableRange | undefined;
   readonly clearing: NuiTableRange | undefined;
   readonly clips: readonly SheetClipFrame[];
+  readonly lit: readonly SheetClipFrame[];
   readonly frozenRows?: number | undefined;
   readonly frozenCols?: number | undefined;
 }
