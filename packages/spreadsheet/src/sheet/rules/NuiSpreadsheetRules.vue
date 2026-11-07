@@ -17,7 +17,7 @@
         :aria-label="texts.close"
         @click="emit('close')"
       >
-        <NuiIcon alias="x" />
+        <NuiIcon icon="x" />
       </NuiButton>
     </div>
     <template v-if="editing === undefined">
@@ -60,7 +60,7 @@
           class="nui-spreadsheet-rules__ghost"
           aria-hidden="true"
         >
-          <NuiIcon alias="grip" />
+          <NuiIcon icon="grip" />
           <span>{{ row.description }}</span>
         </span>
       </div>

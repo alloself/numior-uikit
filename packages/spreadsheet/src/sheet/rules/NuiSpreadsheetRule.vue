@@ -16,7 +16,7 @@
       @pointerdown="emit('grab', $event)"
       @keydown="emit('gripKeydown', $event)"
     >
-      <NuiIcon alias="grip" />
+      <NuiIcon icon="grip" />
     </button>
     <span
       class="nui-spreadsheet-rules__preview"
@@ -59,7 +59,7 @@
         :aria-label="texts.deleteRule({ rule: row.description })"
         @click="emit('remove')"
       >
-        <NuiIcon alias="trash" />
+        <NuiIcon icon="trash" />
       </NuiButton>
     </span>
   </li>

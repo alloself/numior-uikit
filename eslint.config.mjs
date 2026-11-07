@@ -186,6 +186,18 @@ export default [
       'vue/multi-word-component-names': 'off',
       'vue/block-order': ['error', { order: ['template', 'script', 'style'] }],
       'vue/padding-line-between-blocks': 'error',
+      'vue/no-restricted-static-attribute': [
+        'error',
+        { key: 'alias', element: 'NuiIcon', message: 'NuiIcon takes the alias through `icon`.' },
+      ],
+      'vue/no-restricted-v-bind': [
+        'error',
+        {
+          argument: 'alias',
+          element: 'NuiIcon',
+          message: 'NuiIcon takes the alias through `icon`.',
+        },
+      ],
       ...spacing,
     },
   },
