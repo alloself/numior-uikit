@@ -280,9 +280,21 @@ const PAINT_PROPERTIES = [
   ['start', '--_edge-start'],
   ['spill', '--_spill'],
   ['line', '--_spill-line'],
+  ['bar', '--_bar'],
+  ['barColor', '--_bar-color'],
 ] as const;
 
-const PAINT_MARKS = ['filled', 'inked', 'edged', 'tail', 'clip', 'spill', 'seamless'] as const;
+const PAINT_MARKS = [
+  'filled',
+  'inked',
+  'edged',
+  'barred',
+  'tail',
+  'clip',
+  'spill',
+  'seamless',
+] as const;
+
 const ALIGN_PREFIX = 'nui-table__cell--align-';
 
 const alignOf = (cell: Element): string =>
@@ -595,6 +607,17 @@ export class TableDriver<T> {
 
   spillText(position: number, col: number): string | undefined {
     return this.cell(position, col)?.querySelector('.nui-table__spill')?.textContent ?? undefined;
+  }
+
+  cellIcon(position: number, col: number): { color: string; filled: boolean } | undefined {
+    const icon = this.cell(position, col)?.querySelector<HTMLElement>('.nui-table__icon');
+
+    return icon === null || icon === undefined
+      ? undefined
+      : {
+          color: icon.style.getPropertyValue('--_icon-color'),
+          filled: icon.querySelector('.nui-icon--filled') !== null,
+        };
   }
 
   cellMarks(position: number, col: number): string[] {

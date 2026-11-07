@@ -18,7 +18,7 @@ export const paintOf = (style: NuiTableCellStyle | undefined): TableCellPaint | 
   if (style === undefined) {
     return undefined;
   }
-  const { fill, color } = style;
+  const { fill, color, bar, icon } = style;
   const edges = edgesOf(style.borders);
 
   return {
@@ -28,6 +28,7 @@ export const paintOf = (style: NuiTableCellStyle | undefined): TableCellPaint | 
         'nui-table__cell--filled': fill !== undefined,
         'nui-table__cell--inked': color !== undefined,
         'nui-table__cell--edged': edges.length > 0,
+        'nui-table__cell--barred': bar !== undefined,
         'nui-table__cell--wrap': style.wrap === true,
         'nui-table__cell--clip': style.overflow === true && style.wrap !== true,
       },
@@ -37,8 +38,10 @@ export const paintOf = (style: NuiTableCellStyle | undefined): TableCellPaint | 
       ...(fill === undefined ? {} : { '--_fill': fill }),
       ...(color === undefined ? {} : { '--_ink': color }),
       ...Object.fromEntries(edges),
+      ...(bar === undefined ? {} : { '--_bar': String(bar.length), '--_bar-color': bar.color }),
     },
     align: style.align,
     overflow: style.overflow === true && style.wrap !== true,
+    icon,
   };
 };

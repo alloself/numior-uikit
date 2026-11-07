@@ -276,6 +276,38 @@
   inset-block-start: 0;
   inset-inline-start: 0;
 }
+.nui-table__cell--barred {
+  --_cell-position: relative;
+
+  isolation: isolate;
+}
+.nui-table__cell--barred::after {
+  content: '';
+  box-sizing: border-box;
+  position: absolute;
+  inset-block: 3px;
+  inset-inline-start: 2px;
+  z-index: -1;
+  inline-size: calc((100% - 4px) * var(--_bar));
+  border-radius: var(--nui-radius-sm);
+  background-color: color-mix(in oklab, var(--_bar-color) 60%, var(--nui-surface));
+  pointer-events: none;
+}
+.nui-table__icon {
+  display: inline-flex;
+  flex: none;
+  margin-inline-end: var(--nui-space-1);
+  color: var(--_icon-color);
+}
+.nui-table__cell--align-end .nui-table__icon {
+  margin-inline-end: auto;
+}
+.nui-table__cell--align-center .nui-table__icon {
+  margin-inline-end: auto;
+}
+.nui-table__cell--align-center .nui-table__icon + .nui-table__text {
+  margin-inline-end: auto;
+}
 .nui-table__cell--ranged {
   --_range-t: 0px;
   --_range-b: 0px;

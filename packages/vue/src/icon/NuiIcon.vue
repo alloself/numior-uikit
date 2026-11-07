@@ -1,5 +1,11 @@
 <template>
-  <span ref="root" class="nui-icon" :style="transformStyle" aria-hidden="true">
+  <span
+    ref="root"
+    class="nui-icon"
+    :class="{ 'nui-icon--filled': filled }"
+    :style="transformStyle"
+    aria-hidden="true"
+  >
     <component :is="glyph" v-if="glyph" class="nui-icon__glyph" focusable="false" />
   </span>
 </template>
@@ -10,7 +16,7 @@ import { computed, onMounted, useTemplateRef } from 'vue';
 import { useIcon } from './use-icon';
 import type { NuiIconProps } from './icon.types';
 
-const { icon, transform } = defineProps<NuiIconProps>();
+const { icon, transform, filled } = defineProps<NuiIconProps>();
 
 const transformStyle = computed(() =>
   transform === undefined

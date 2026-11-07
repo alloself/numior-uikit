@@ -42,6 +42,18 @@ describe('NuiIcon', () => {
     }
   });
 
+  it('fills closed shapes when asked', async () => {
+    const icon = IconDriver.mount({ icon: 'check' });
+
+    await icon.ready();
+
+    expect(icon.hasModifier('filled')).toBe(false);
+
+    await icon.receive({ filled: true });
+
+    expect(icon.hasModifier('filled')).toBe(true);
+  });
+
   it('turns and scales its glyph without swapping it', async () => {
     const icon = IconDriver.mount({ icon: 'chevron-right' });
 

@@ -14,6 +14,9 @@
   inline-size: 100%;
   block-size: 100%;
 }
+.nui-icon--filled > .nui-icon__glyph {
+  fill: currentColor;
+}
 .nui-icon--appearing .nui-icon__glyph {
   animation: nui-icon-appear var(--nui-duration-fast) var(--nui-easing);
 }

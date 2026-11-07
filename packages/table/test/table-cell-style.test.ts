@@ -27,6 +27,14 @@ const paintStaff = ({ row, column }: NuiTableCellRef<Staff>): NuiTableCellStyle 
   return column.key === 'name' && row.id === 2 ? FRAME : undefined;
 };
 
+const paintScores = ({ row, column }: NuiTableCellRef<Staff>): NuiTableCellStyle | undefined =>
+  column.key === 'salary'
+    ? {
+        bar: { length: 0.5, color: 'teal' },
+        icon: row.id % 2 === 1 ? { icon: 'check', color: 'green', filled: true } : undefined,
+      }
+    : undefined;
+
 const mountStaff = (options: Partial<TableMountOptions<Staff>> = {}): TableDriver<Staff> => {
   const grid = TableDriver.mount<Staff>({
     columns: STAFF_COLUMNS,
@@ -65,6 +73,17 @@ describe('NuiTable cell styles', () => {
     expect(grid.cellMarks(2, 1)).toEqual(['edged']);
     expect(grid.cell(2, 1)?.classList.contains('app-frame')).toBe(true);
     expect(grid.cell(2, 1)?.style.fontWeight).toBe('700');
+  });
+
+  it('draws a data bar behind the value and an icon before it', async () => {
+    const grid = mountStaff({ props: { cellStyle: paintScores } });
+    await grid.settle();
+
+    expect(grid.cellMarks(0, 3)).toEqual(['barred']);
+    expect(grid.cellPaint(0, 3)).toMatchObject({ bar: '0.5', barColor: 'teal' });
+    expect(grid.cellIcon(0, 3)).toBeUndefined();
+    expect(grid.cellIcon(1, 3)).toEqual({ color: 'green', filled: true });
+    expect(grid.cellText(1, 3)).toMatch(/\d/u);
   });
 
   it('asks for a style once per rendered cell and leaves painted rows alone when the cursor or the window moves', async () => {

@@ -55,6 +55,7 @@
             :merge="leadOf(cell)"
             :revision="ownRevision"
             :position="position"
+            :icon="paints?.get(cell.key)?.icon"
           />
         </div>
         <NuiTableResizer
@@ -80,6 +81,7 @@ import {
   type NuiTableResizerProps,
   type NuiTableRowProps,
   type TableCellLayout,
+  type NuiTableCellIcon,
   type TableDataCell,
   type TableLeadSpan,
   type TableRangeSegment,
@@ -129,6 +131,7 @@ defineSlots<{
     merge: TableLeadSpan | undefined;
     revision: number;
     position: number | undefined;
+    icon: NuiTableCellIcon | undefined;
   }): unknown;
   utility(props: { column: string; position: number | undefined }): unknown;
 }>();
@@ -341,7 +344,9 @@ const plainTexts = computed((): ReadonlyMap<string, string> | undefined => {
   }
   return shownCells.value.reduce((texts, cell) => {
     const text =
-      cell.kind === TablePlacementKind.Data && leadOf(cell) === undefined
+      cell.kind === TablePlacementKind.Data &&
+      leadOf(cell) === undefined &&
+      paints.value?.get(cell.key)?.icon === undefined
         ? plainText(position, cell.key)
         : undefined;
 

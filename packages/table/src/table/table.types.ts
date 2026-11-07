@@ -1,6 +1,12 @@
 import type { Component } from 'vue';
 import type { FieldRule } from '@numior/forms';
-import type { AriaValue, Guard, NuiControlRegistry, ReorderAxis } from '@numior/primitives';
+import type {
+  AriaValue,
+  Guard,
+  IconSource,
+  NuiControlRegistry,
+  ReorderAxis,
+} from '@numior/primitives';
 import type { NuiMenuEntry, NuiPaginationProps } from '@numior/vue';
 import type {
   TableAggregate,
@@ -231,6 +237,17 @@ export interface NuiTableCellBorders {
   readonly start?: string | undefined;
 }
 
+export interface NuiTableCellBar {
+  readonly length: number;
+  readonly color: string;
+}
+
+export interface NuiTableCellIcon {
+  readonly icon: IconSource;
+  readonly color: string;
+  readonly filled?: boolean | undefined;
+}
+
 export interface NuiTableCellStyle {
   readonly class?: string | undefined;
   readonly fill?: string | undefined;
@@ -239,6 +256,8 @@ export interface NuiTableCellStyle {
   readonly wrap?: boolean | undefined;
   readonly overflow?: boolean | undefined;
   readonly borders?: NuiTableCellBorders | undefined;
+  readonly bar?: NuiTableCellBar | undefined;
+  readonly icon?: NuiTableCellIcon | undefined;
   readonly style?: Readonly<Record<string, string>> | undefined;
 }
 
@@ -251,6 +270,7 @@ export interface TableCellPaint {
   readonly overflow: boolean;
   readonly spill?: string | undefined;
   readonly flows?: boolean | undefined;
+  readonly icon?: NuiTableCellIcon | undefined;
 }
 
 export type TableRowPaint = ReadonlyMap<string, TableCellPaint>;
@@ -518,7 +538,8 @@ export type TableRowRanges = readonly TableRangeSegment[];
 
 export type TableCellLead =
   | ({ readonly kind: typeof TableCellLeadKind.Grip } & Readonly<NuiTableRowGripProps>)
-  | ({ readonly kind: typeof TableCellLeadKind.Toggle } & Readonly<NuiTableTreeToggleProps>);
+  | ({ readonly kind: typeof TableCellLeadKind.Toggle } & Readonly<NuiTableTreeToggleProps>)
+  | ({ readonly kind: typeof TableCellLeadKind.Icon } & NuiTableCellIcon);
 
 export type TableCellView<T> =
   | { readonly kind: typeof TableCellViewKind.Skeleton }
@@ -533,6 +554,7 @@ export type TableCellView<T> =
 export interface NuiTableCellContentProps<T> {
   view: TableCellView<T>;
   editor?: NuiTableCellEditorProps | undefined;
+  icon?: NuiTableCellIcon | undefined;
 }
 
 export interface TableBodyRowContext<T> {
@@ -1039,7 +1061,7 @@ export const TableEditorPlanKind = {
 
 export const TableCellSpanKind = { Lead: 'lead', Covered: 'covered' } as const;
 
-export const TableCellLeadKind = { Grip: 'grip', Toggle: 'toggle' } as const;
+export const TableCellLeadKind = { Grip: 'grip', Toggle: 'toggle', Icon: 'icon' } as const;
 
 export const TableCellViewKind = { Skeleton: 'skeleton', Group: 'group', Data: 'data' } as const;
 

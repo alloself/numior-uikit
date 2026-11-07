@@ -6,7 +6,7 @@
     @toggle="emit('toggle')"
   />
   <template v-else>
-    <template v-for="lead in view.leads" :key="lead.kind">
+    <template v-for="lead in leads" :key="lead.kind">
       <NuiTableRowGrip
         v-if="lead.kind === TableCellLeadKind.Grip"
         :label="lead.label"
@@ -15,17 +15,20 @@
         @grab="(event: PointerEvent) => emit('grab', event)"
       />
       <NuiTableTreeToggle
-        v-else
+        v-else-if="lead.kind === TableCellLeadKind.Toggle"
         :node="lead.node"
         :level="lead.level"
         :expandable="lead.expandable"
         :loading="lead.loading"
         @toggle="emit('toggle')"
       />
+      <span v-else class="nui-table__icon" :style="{ '--_icon-color': lead.color }">
+        <NuiIcon :icon="lead.icon" :filled="lead.filled" />
+      </span>
     </template>
     <NuiTableCellEditor
-      v-if="view.editing && editor !== undefined"
-      v-bind="editor"
+      v-if="editing !== undefined"
+      v-bind="editing"
       @update="(value: unknown) => emit('update', value)"
     />
     <slot v-else name="content" v-bind="view.scope">
@@ -35,7 +38,8 @@
 </template>
 
 <script setup lang="ts" generic="T">
-import { NuiSkeleton } from '@numior/vue';
+import { NuiIcon, NuiSkeleton } from '@numior/vue';
+import { computed } from 'vue';
 import NuiTableCellEditor from './NuiTableCellEditor.vue';
 import NuiTableGroupCell from './NuiTableGroupCell.vue';
 import NuiTableRowGrip from './NuiTableRowGrip.vue';
@@ -45,9 +49,10 @@ import {
   TableCellViewKind,
   type NuiTableCellContentProps,
   type NuiTableCellSlot,
+  type TableCellLead,
 } from './table.types';
 
-const { view, editor } = defineProps<NuiTableCellContentProps<T>>();
+const { view, editor, icon } = defineProps<NuiTableCellContentProps<T>>();
 
 const emit = defineEmits<{
   toggle: [];
@@ -58,4 +63,14 @@ const emit = defineEmits<{
 defineSlots<{
   content?: (scope: NuiTableCellSlot<T>) => unknown;
 }>();
+
+const leads = computed((): readonly TableCellLead[] => {
+  const own = view.kind === TableCellViewKind.Data ? view.leads : [];
+
+  return icon === undefined ? own : [...own, { kind: TableCellLeadKind.Icon, ...icon }];
+});
+
+const editing = computed(() =>
+  view.kind === TableCellViewKind.Data && view.editing ? editor : undefined,
+);
 </script>

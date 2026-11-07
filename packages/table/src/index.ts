@@ -32,6 +32,8 @@ export type {
   NuiTableCellBorders,
   NuiTableCellRef,
   NuiTableCellSlot,
+  NuiTableCellBar,
+  NuiTableCellIcon,
   NuiTableCellStyle,
   NuiTableCellStyler,
   NuiTableDetailSlot,

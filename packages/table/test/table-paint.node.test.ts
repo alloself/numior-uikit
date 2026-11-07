@@ -14,6 +14,7 @@ describe('table cell paint', () => {
           'nui-table__cell--filled': true,
           'nui-table__cell--inked': true,
           'nui-table__cell--edged': false,
+          'nui-table__cell--barred': false,
           'nui-table__cell--wrap': false,
           'nui-table__cell--clip': false,
         },
@@ -36,9 +37,19 @@ describe('table cell paint', () => {
       'nui-table__cell--filled': false,
       'nui-table__cell--inked': false,
       'nui-table__cell--edged': true,
+      'nui-table__cell--barred': false,
       'nui-table__cell--wrap': false,
       'nui-table__cell--clip': false,
     });
+  });
+
+  it('turns a data bar into a mark with its length and colour and passes the icon on', () => {
+    const icon = { icon: 'check', color: 'green' } as const;
+    const paint = paintOf({ bar: { length: 0.25, color: '#638EC6' }, icon });
+
+    expect(paint?.class[1]).toMatchObject({ 'nui-table__cell--barred': true });
+    expect(paint?.style).toEqual({ '--_bar': '0.25', '--_bar-color': '#638EC6' });
+    expect(paint?.icon).toBe(icon);
   });
 
   it('clips a text that may overflow without an ellipsis unless it wraps', () => {
