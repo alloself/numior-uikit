@@ -8,6 +8,7 @@ import {
   type StyleColor,
   type ThemePalette,
 } from '../core';
+import { adaptiveInk } from './sheet-ink';
 import { ValueShape, type StyleInput } from './sheet.types';
 import { FillPattern, StyleColorKind } from '../core/cell.types';
 
@@ -151,9 +152,11 @@ export const sheetStyle = (input: StyleInput): NuiTableCellStyle | undefined => 
   const fill = fillHex(decoration, theme);
   const style = { ...fontCss(decoration.font, input.base), ...schemeOf(fill) };
 
-  const color =
+  const ink =
     (input.formatColor === undefined ? undefined : formatColor(input.formatColor)) ??
     inkOf(decoration, theme, fill);
+
+  const color = ink === undefined || fill !== undefined ? ink : adaptiveInk(ink);
 
   const looks: NuiTableCellStyle = {
     fill: cssOf(fill),
