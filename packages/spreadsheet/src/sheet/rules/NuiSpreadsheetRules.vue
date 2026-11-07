@@ -54,7 +54,7 @@
       <div v-if="!readonly" class="nui-spreadsheet-rules__add">
         <NuiButton
           ref="addButton"
-          variant="ghost"
+          variant="outline"
           tone="neutral"
           size="sm"
           icon="plus"

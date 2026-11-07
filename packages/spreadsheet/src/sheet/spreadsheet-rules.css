@@ -249,10 +249,7 @@
   white-space: nowrap;
 }
 .nui-spreadsheet-rules__add {
-  display: flex;
-  margin-inline: calc(var(--nui-space-3) * -1);
-  padding: var(--nui-space-2) var(--nui-space-2) 0;
-  border-block-start: 1px solid var(--nui-border);
+  display: grid;
 }
 .nui-spreadsheet-rules__editor {
   box-sizing: border-box;
