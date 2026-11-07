@@ -109,7 +109,7 @@ test.describe('book', () => {
     await expect(book.fillGrip).toBeVisible();
   });
 
-  test('lists, lights, reorders and deletes conditional rules in the side panel', async ({
+  test('lists, lights, reorders and deletes conditional rules in a popover at the cell', async ({
     playground,
     book,
   }) => {
@@ -119,6 +119,13 @@ test.describe('book', () => {
     await book.openRules('4', 1);
 
     await expect(book.rules).toBeVisible();
+
+    const popover = await boxOf(book.rules);
+    const anchor = await boxOf(book.cell('4', 1));
+
+    expect(
+      popover.y >= anchor.y + anchor.height - 1 || popover.y + popover.height <= anchor.y + 1,
+    ).toBe(true);
 
     await expect(book.ruleTitles).toHaveText([
       'Значение меньше -650',
@@ -149,9 +156,25 @@ test.describe('book', () => {
 
     await expect(book.rules).toBeHidden();
     await expect(book.litFrames).toHaveCount(0);
+    await expect(book.cell('4', 1)).toBeFocused();
   });
 
-  test('adds a rule from the selection and edits it in the side panel', async ({
+  test('closes the rules popover on a click outside it', async ({ playground, book }) => {
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.openRules('4', 1);
+    await book.ruleItems.nth(2).hover();
+
+    await expect(book.litFrames).toHaveCount(1);
+
+    await book.cell('12', 1).click();
+
+    await expect(book.rules).toBeHidden();
+    await expect(book.litFrames).toHaveCount(0);
+    await expect(book.cell('12', 1)).toBeFocused();
+  });
+
+  test('adds a rule from the selection and edits it in the rules popover', async ({
     playground,
     book,
   }) => {
@@ -178,11 +201,12 @@ test.describe('book', () => {
     await expect(book.ruleItems.first().getByRole('button', { name: /^Изменить/ })).toBeFocused();
     await expect(book.litFrames).toHaveCount(1);
 
-    await book.cell('9', 0).click();
+    await book.page.keyboard.press('Escape');
 
     await expect(book.litFrames).toHaveCount(0);
     await expect.poll(async () => rgbDelta(await book.fillAt('6', 2), PINK)).toBeLessThan(8);
 
+    await book.openRules('6', 1);
     await book.editRule(0);
 
     await expect(book.ruleField('Значение')).toHaveValue('-100');
@@ -198,8 +222,9 @@ test.describe('book', () => {
 
     await expect(book.ruleTitles.first()).toHaveText('Значение больше -90');
 
-    await book.cell('9', 0).click();
+    await book.page.keyboard.press('Escape');
 
+    await expect(book.rules).toBeHidden();
     await expect(book.litFrames).toHaveCount(0);
     await expect.poll(async () => rgbDelta(await book.fillAt('6', 2), WHITE)).toBeLessThan(8);
   });

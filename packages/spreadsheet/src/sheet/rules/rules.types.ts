@@ -58,6 +58,7 @@ export interface SheetRulesProps {
   readonly formats: readonly ConditionalFormat[];
   readonly selection: readonly CellRange[];
   readonly looks: RuleLooks;
+  readonly titleId: string;
   readonly readonly?: boolean | undefined;
 }
 

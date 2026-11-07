@@ -93,70 +93,88 @@
         </span>
       </span>
     </div>
-    <div class="nui-spreadsheet__main" :style="{ '--_rules-height': height }">
-      <div ref="body" class="nui-spreadsheet__body">
-        <NuiTable
-          ref="grid"
-          :dir="sheetDir"
-          v-model:active="formula.active.value"
-          v-model:ranges="formula.ranges.value"
-          v-bind="table.grid"
-          :draft="editing.draft.value"
-          :columns="table.columns"
-          :merges="table.cells.merges"
-          :frozen-rows="table.cells.frozenRows"
-          :row-heights="table.cells.rowHeights"
-          :row-height="table.rowHeight"
-          :bordered="table.cells.gridlines"
-          :height="height"
-          :column-menu="false"
-          :commands="clipboard.commands"
-          :clipboard="clipboard.hooks"
-          :keep-editing="formula.keepEditing"
-          grow-editor
-          :picking="references.picking"
-          :context-menu="lines.menu"
-          :label="label"
-          size="sm"
-          @update:draft="editing.setDraft"
-          @pick="references.onPick"
-        >
-          <template #overlay="{ rectOf }">
-            <NuiSpreadsheetMarks
-              :rect-of="rectOf"
-              :handle="fill.handle.value"
-              :preview="fill.preview.value"
-              :clearing="fill.clearing.value"
-              :clips="clipboard.frames.value"
-              :lit="litFrames"
-              :frozen-rows="table.cells.frozenRows"
-              :frozen-cols="table.cells.frozenCols"
-              @grip="fill.onDown"
-              @fill="fill.onDblclick"
-            />
-            <NuiSpreadsheetReference
-              v-for="frame in references.frames.value"
-              :key="frame.key"
-              :tone="frame.tone"
-              :rect="rectOf(frame.range)"
-              :passive="editing.draft.value === undefined"
-              :first-row="frame.firstRow"
-              :first-col="frame.firstCol"
-              @grip="(event, grip) => references.onGripDown(event, frame, grip)"
-            />
-          </template>
-        </NuiTable>
-        <NuiSpreadsheetStatus
-          :phase="recalc.phase.value"
-          :progress="recalc.progress.value"
-          :messages="messages"
-          @stop="recalc.stop"
-          @resume="recalc.resume"
-          @leave="formula.backToGrid"
-        />
-      </div>
+    <div ref="body" class="nui-spreadsheet__body">
+      <NuiTable
+        ref="grid"
+        :dir="sheetDir"
+        v-model:active="formula.active.value"
+        v-model:ranges="formula.ranges.value"
+        v-bind="table.grid"
+        :draft="editing.draft.value"
+        :columns="table.columns"
+        :merges="table.cells.merges"
+        :frozen-rows="table.cells.frozenRows"
+        :row-heights="table.cells.rowHeights"
+        :row-height="table.rowHeight"
+        :bordered="table.cells.gridlines"
+        :height="height"
+        :column-menu="false"
+        :commands="clipboard.commands"
+        :clipboard="clipboard.hooks"
+        :keep-editing="formula.keepEditing"
+        grow-editor
+        :picking="references.picking"
+        :context-menu="lines.menu"
+        :label="label"
+        size="sm"
+        @update:draft="editing.setDraft"
+        @pick="references.onPick"
+      >
+        <template #overlay="{ rectOf }">
+          <NuiSpreadsheetMarks
+            :rect-of="rectOf"
+            :handle="fill.handle.value"
+            :preview="fill.preview.value"
+            :clearing="fill.clearing.value"
+            :clips="clipboard.frames.value"
+            :lit="litFrames"
+            :frozen-rows="table.cells.frozenRows"
+            :frozen-cols="table.cells.frozenCols"
+            @grip="fill.onDown"
+            @fill="fill.onDblclick"
+          />
+          <NuiSpreadsheetReference
+            v-for="frame in references.frames.value"
+            :key="frame.key"
+            :tone="frame.tone"
+            :rect="rectOf(frame.range)"
+            :passive="editing.draft.value === undefined"
+            :first-row="frame.firstRow"
+            :first-col="frame.firstCol"
+            @grip="(event, grip) => references.onGripDown(event, frame, grip)"
+          />
+          <span
+            v-if="rulesRect(rectOf) !== undefined"
+            :ref="holdAnchor"
+            class="nui-spreadsheet__anchor"
+            :style="rectStyle(rulesRect(rectOf))"
+          ></span>
+        </template>
+      </NuiTable>
+      <NuiSpreadsheetStatus
+        :phase="recalc.phase.value"
+        :progress="recalc.progress.value"
+        :messages="messages"
+        @stop="recalc.stop"
+        @resume="recalc.resume"
+        @leave="formula.backToGrid"
+      />
+    </div>
+    <NuiPopover
+      v-model:open="rulesOpen"
+      :anchor="rulesAnchor"
+      placement="bottom-start"
+      size="auto"
+      padding="none"
+      fit
+      role="dialog"
+      :aria-labelledby="rulesTitleId"
+      @toggle="onRulesToggle"
+    >
       <NuiSpreadsheetRules
-        v-if="rulesOpen"
+        v-if="rulesShown"
+        ref="rules"
+        :title-id="rulesTitleId"
         :formats="sheetFormats"
         :selection="selectedRanges"
         :looks="ruleLooks"
@@ -165,7 +183,7 @@
         @change="setFormats"
         @hover="lightUp"
       />
-    </div>
+    </NuiPopover>
     <div class="nui-spreadsheet__hidden" role="status" aria-live="polite">
       {{ formula.announcement.value }}
     </div>
@@ -202,11 +220,29 @@
 
 <script setup lang="ts">
 import { PaintRoller } from '@lucide/vue';
-import { Direction, Key, useLocale, useMessages } from '@numior/primitives';
-import { NuiTable, tableCells, type NuiTableColumn, type NuiTableExposed } from '@numior/table';
-import { NuiButton, NuiIcon, type NuiTabDescriptor } from '@numior/vue';
+import { Direction, Key, PopoverState, useLocale, useMessages } from '@numior/primitives';
+import {
+  NuiTable,
+  tableCells,
+  type NuiTableColumn,
+  type NuiTableExposed,
+  type NuiTableOverlaySlot,
+  type NuiTableRect,
+  type TableCellPosition,
+} from '@numior/table';
+import { NuiButton, NuiIcon, NuiPopover, type NuiTabDescriptor } from '@numior/vue';
 import { useFocusWithin } from '@vueuse/core';
-import { computed, markRaw, provide, ref, useId, useTemplateRef, watch } from 'vue';
+import {
+  computed,
+  markRaw,
+  provide,
+  ref,
+  shallowRef,
+  useId,
+  useTemplateRef,
+  watch,
+  type ComponentPublicInstance,
+} from 'vue';
 import {
   EN_LOCALE,
   HelpLanguage,
@@ -245,6 +281,7 @@ import { useSheetFill } from './use-sheet-fill';
 import { useSheetLines } from './use-sheet-lines';
 import { useSheetRecalc } from './use-sheet-recalc';
 import { SHEET_SEGMENTS } from './sheet-segments';
+import { rectStyle } from './sheet-rect';
 import { useSheetReferences } from './use-sheet-references';
 import { tableRangeOf, useSheetSelection } from './use-sheet-selection';
 
@@ -565,6 +602,16 @@ const removeSheet = (index: number): void => {
 
 const rulesOpen = ref(false);
 
+const rulesShown = ref(false);
+
+const rulesCell = shallowRef<TableCellPosition>();
+
+const rulesTitleId = useId();
+
+const rulesAnchor = shallowRef<HTMLElement>();
+
+const rulesPanel = useTemplateRef<{ focusStart(): void }>('rules');
+
 const lit = ref<readonly CellRange[]>();
 
 const sheetFormats = computed((): readonly ConditionalFormat[] =>
@@ -591,14 +638,41 @@ const litFrames = computed((): readonly SheetClipFrame[] => {
       }));
 });
 
+const rulesRect = (rectOf: NuiTableOverlaySlot['rectOf']): NuiTableRect | undefined => {
+  const cell = rulesCell.value;
+
+  return cell === undefined ? undefined : rectOf({ from: cell, to: cell });
+};
+
+const holdAnchor = (element: Element | ComponentPublicInstance | null): void => {
+  if (element instanceof HTMLElement) {
+    rulesAnchor.value = element;
+  }
+};
+
 const openRules = (): void => {
+  rulesCell.value = formula.active.value ?? { row: 0, col: 0 };
+  rulesShown.value = true;
   rulesOpen.value = true;
 };
 
 const closeRules = (): void => {
   rulesOpen.value = false;
-  lit.value = undefined;
   formula.backToGrid();
+};
+
+const onRulesToggle = (event: Event): void => {
+  if (!('newState' in event)) {
+    return;
+  }
+
+  if (event.newState === PopoverState.Open) {
+    rulesPanel.value?.focusStart();
+    return;
+  }
+
+  rulesShown.value = false;
+  lit.value = undefined;
 };
 
 const lightUp = (ranges: readonly CellRange[] | undefined): void => {

@@ -1,12 +1,6 @@
-.nui-spreadsheet__main {
-  box-sizing: border-box;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--nui-space-3);
-  min-inline-size: 0;
-}
-.nui-spreadsheet__main > .nui-spreadsheet__body {
-  flex: 999 1 30rem;
+.nui-spreadsheet__anchor {
+  position: absolute;
+  pointer-events: none;
 }
 .nui-spreadsheet__lit {
   position: absolute;
@@ -23,26 +17,12 @@
 .nui-spreadsheet-rules {
   box-sizing: border-box;
   display: flex;
-  flex: 1 1 20rem;
   flex-direction: column;
   gap: var(--nui-space-3);
-  min-inline-size: 0;
-  max-block-size: var(--_rules-height, 28rem);
+  inline-size: min(22rem, calc(100vw - var(--nui-space-8)));
   padding: var(--nui-space-3);
-  overflow: auto;
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius-lg);
-  background: var(--nui-surface);
   color: var(--nui-text);
   font-size: var(--nui-font-size-sm);
-  transition:
-    opacity var(--nui-duration-normal) var(--nui-easing),
-    translate var(--nui-duration-normal) var(--nui-easing);
-
-  @starting-style {
-    opacity: 0;
-    translate: var(--nui-space-4) 0;
-  }
 }
 .nui-spreadsheet-rules__header {
   display: flex;

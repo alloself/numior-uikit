@@ -504,6 +504,28 @@ export class SpreadsheetDriver {
     return this.wrapper.findAll('.nui-spreadsheet__lit').length;
   }
 
+  get rulesLabel(): string | undefined {
+    const dialog = this.rulesDialog;
+    const id = dialog?.getAttribute('aria-labelledby');
+
+    return id === null || id === undefined
+      ? undefined
+      : document.getElementById(id)?.textContent?.trim();
+  }
+
+  private get rulesDialog(): Element | null | undefined {
+    return this.wrapper.find('.nui-spreadsheet-rules').element.closest('[role="dialog"]');
+  }
+
+  async dismissRules(): Promise<void> {
+    const dialog = this.rulesDialog;
+
+    if (dialog instanceof HTMLElement) {
+      dialog.hidePopover();
+    }
+    await nextTick();
+  }
+
   get focusInRules(): boolean {
     return this.wrapper.find('.nui-spreadsheet-rules').element.contains(document.activeElement);
   }

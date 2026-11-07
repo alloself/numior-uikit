@@ -331,7 +331,7 @@ export class BookSection {
   }
 
   get rules(): Locator {
-    return this.sheet.getByRole('complementary', { name: 'Условное форматирование' });
+    return this.sheet.getByRole('dialog', { name: 'Условное форматирование' });
   }
 
   get ruleItems(): Locator {

@@ -1,9 +1,8 @@
 <template>
-  <aside
+  <div
     ref="panel"
     class="nui-spreadsheet-rules"
     :class="{ 'nui-spreadsheet-rules--reordering': reordering }"
-    :aria-labelledby="titleId"
     @keydown="onKeydown"
   >
     <div class="nui-spreadsheet-rules__header">
@@ -80,7 +79,7 @@
     <span class="nui-spreadsheet-rules__live" role="status" aria-live="polite">{{
       announcement
     }}</span>
-  </aside>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -95,7 +94,7 @@ import {
   type ReorderState,
 } from '@numior/primitives';
 import { NuiButton, NuiIcon, NuiSwitch } from '@numior/vue';
-import { computed, nextTick, onMounted, ref, shallowRef, useId, useTemplateRef, watch } from 'vue';
+import { computed, nextTick, ref, shallowRef, useTemplateRef, watch } from 'vue';
 import {
   moveRule,
   putRule,
@@ -113,7 +112,7 @@ import { spreadsheetRulesMessages } from './rules.messages';
 import type { RuleEditing, RuleForm, RuleRow, SheetRulesProps } from './rules.types';
 import { useRuleRows } from './use-rule-rows';
 
-const { formats, selection, looks, readonly = false } = defineProps<SheetRulesProps>();
+const { formats, selection, looks, titleId, readonly = false } = defineProps<SheetRulesProps>();
 
 const emit = defineEmits<{
   close: [];
@@ -127,8 +126,6 @@ const panel = useTemplateRef<HTMLElement>('panel');
 
 const addButton = useTemplateRef<{ $el: HTMLElement }>('addButton');
 const editor = useTemplateRef<{ focusInvalid(): void }>('editor');
-
-const titleId = useId();
 
 const texts = useMessages(spreadsheetRulesMessages);
 
@@ -393,9 +390,9 @@ watch(
   { flush: 'post' },
 );
 
-onMounted(() => {
+const focusStart = (): void => {
   closeButton.value?.$el.focus();
-});
+};
 
 watch(
   editing,
@@ -407,4 +404,6 @@ watch(
   },
   { flush: 'post' },
 );
+
+defineExpose({ focusStart });
 </script>

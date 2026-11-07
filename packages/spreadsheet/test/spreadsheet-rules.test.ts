@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import {
   EN_FORMULAS,
   createWorkbook,
@@ -11,6 +11,7 @@ import {
   type Workbook,
 } from '../src/core';
 import { SpreadsheetDriver } from './drivers/spreadsheet';
+import { stubPopovers } from './support/top-layer';
 
 const mounted: SpreadsheetDriver[] = [];
 
@@ -60,9 +61,19 @@ const sheetOf = (book: Workbook): SpreadsheetDriver => {
   return driver;
 };
 
+const restorers: Array<() => void> = [];
+
+beforeEach(() => {
+  restorers.push(stubPopovers());
+});
+
 afterEach(() => {
   for (const driver of mounted.splice(0)) {
     driver.unmount();
+  }
+
+  for (const restore of restorers.splice(0)) {
+    restore();
   }
 });
 
@@ -74,6 +85,7 @@ describe('NuiSpreadsheet conditional formatting panel', () => {
     await sheet.openRules(1, 0);
 
     expect(sheet.rulesOpen).toBe(true);
+    expect(sheet.rulesLabel).toBe('Conditional formatting');
     expect(sheet.focusInRules).toBe(true);
     expect(sheet.ruleTexts).toEqual(['Value is greater than 10', 'Blank cells']);
     expect(sheet.ruleAreas).toEqual(['B2:B10', 'A2:A10']);
@@ -89,6 +101,27 @@ describe('NuiSpreadsheet conditional formatting panel', () => {
     await sheet.pressInRules('Escape');
 
     expect(sheet.rulesOpen).toBe(false);
+    expect(sheet.focusedCell).toEqual({ row: 1, col: 0 });
+  });
+
+  it('drops the popover and the lit range when a click outside dismisses it', async () => {
+    const sheet = sheetOf(rulesBook());
+
+    await sheet.focus(1, 1);
+    await sheet.openRules(1, 1);
+    await sheet.hoverRule(1);
+
+    expect(sheet.litFrames).toBe(1);
+
+    await sheet.dismissRules();
+
+    expect(sheet.rulesOpen).toBe(false);
+    expect(sheet.litFrames).toBe(0);
+
+    await sheet.openRules(1, 1);
+
+    expect(sheet.rulesOpen).toBe(true);
+    expect(sheet.ruleEditorTitle).toBeUndefined();
   });
 
   it('keeps only the rules that touch the selection', async () => {
