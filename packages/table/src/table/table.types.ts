@@ -40,6 +40,8 @@ export type NuiTableAlign = (typeof NuiTableAlign)[keyof typeof NuiTableAlign];
 
 export type NuiTablePin = (typeof NuiTablePin)[keyof typeof NuiTablePin];
 
+export type NuiTableCellScheme = (typeof NuiTableCellScheme)[keyof typeof NuiTableCellScheme];
+
 export type NuiTableSelection = (typeof NuiTableSelection)[keyof typeof NuiTableSelection];
 
 export type NuiTablePagination = Partial<Omit<NuiPaginationProps, 'total' | 'size'>>;
@@ -258,6 +260,7 @@ export interface NuiTableCellStyle {
   readonly borders?: NuiTableCellBorders | undefined;
   readonly bar?: NuiTableCellBar | undefined;
   readonly icon?: NuiTableCellIcon | undefined;
+  readonly scheme?: NuiTableCellScheme | undefined;
   readonly style?: Readonly<Record<string, string>> | undefined;
 }
 
@@ -942,6 +945,8 @@ export const NuiTableSize = { Sm: 'sm', Md: 'md', Lg: 'lg' } as const;
 export const NuiTableAlign = { Start: 'start', Center: 'center', End: 'end' } as const;
 
 export const NuiTablePin = { Start: 'start', End: 'end' } as const;
+
+export const NuiTableCellScheme = { Light: 'light', Dark: 'dark' } as const;
 
 export const NuiTableSelection = { Single: 'single', Multiple: 'multiple' } as const;
 

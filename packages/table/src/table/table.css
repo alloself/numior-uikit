@@ -293,6 +293,14 @@
   background-color: color-mix(in oklab, var(--_bar-color) 60%, var(--nui-surface));
   pointer-events: none;
 }
+.nui-table__cell--marks-light::after,
+.nui-table__cell--marks-light .nui-table__icon {
+  color-scheme: light;
+}
+.nui-table__cell--marks-dark::after,
+.nui-table__cell--marks-dark .nui-table__icon {
+  color-scheme: dark;
+}
 .nui-table__icon {
   display: inline-flex;
   flex: none;

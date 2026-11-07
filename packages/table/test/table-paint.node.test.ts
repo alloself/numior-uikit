@@ -52,6 +52,14 @@ describe('table cell paint', () => {
     expect(paint?.icon).toBe(icon);
   });
 
+  it('gives only the marks of a cell the colour scheme of its fill', () => {
+    const paint = paintOf({ fill: '#1F3864', scheme: 'dark' });
+
+    expect(paint?.class[2]).toBe('nui-table__cell--marks-dark');
+    expect(paint?.style).toEqual({ '--_fill': '#1F3864' });
+    expect(paintOf({ fill: 'gold' })?.class).toHaveLength(2);
+  });
+
   it('clips a text that may overflow without an ellipsis unless it wraps', () => {
     expect(paintOf({ overflow: true })?.class[1]).toMatchObject({ 'nui-table__cell--clip': true });
 

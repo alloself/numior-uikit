@@ -32,6 +32,7 @@ export const paintOf = (style: NuiTableCellStyle | undefined): TableCellPaint | 
         'nui-table__cell--wrap': style.wrap === true,
         'nui-table__cell--clip': style.overflow === true && style.wrap !== true,
       },
+      ...(style.scheme === undefined ? [] : [`nui-table__cell--marks-${style.scheme}`]),
     ],
     style: {
       ...style.style,

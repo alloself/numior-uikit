@@ -11,6 +11,7 @@ export {
 } from './table/table-cells';
 export {
   NuiTableAlign,
+  NuiTableCellScheme,
   NuiTableColumnType,
   NuiTableEdgeDirection,
   NuiTableEditKind,
