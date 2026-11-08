@@ -202,6 +202,21 @@ describe('useVirtualList', () => {
     plain.unmount();
   });
 
+  it('names the content offset of the rendered block, frozen rows included', async () => {
+    const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2, frozen: 2 });
+
+    await list.settle();
+
+    expect(list.windowOrigin).toBe(0);
+
+    await list.scroll(5000);
+
+    expect(list.range.start).toBe(250);
+    expect(list.windowOrigin).toBe(4960);
+
+    list.unmount();
+  });
+
   it('keeps the first row under the frozen rows in place when sizes change', async () => {
     const sizes = createSizeIndex(1000, 20);
     const list = VirtualHarness.mount({ height: 200, itemSize: sizes, overscan: 2, frozen: 2 });

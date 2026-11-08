@@ -4,6 +4,8 @@ import RangeMarks from './fixtures/RangeMarks.vue';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { staff, STAFF_COLUMNS, type Staff } from './support/staff';
 
+const COMPRESSED_ROW = 400;
+
 const mounted: Array<{ unmount(): void }> = [];
 
 const range = (top: number, start: number, bottom: number, end: number): NuiTableRange => ({
@@ -31,6 +33,41 @@ afterEach(() => {
 });
 
 describe('NuiTable overlay', () => {
+  it('holds the marks still while a compressed canvas scrolls inside one row window', async () => {
+    const grid = mountStaff({
+      rows: staff(40_000),
+      props: { rowHeight: COMPRESSED_ROW },
+      slots: { overlay: RangeMarks },
+    });
+
+    await grid.settle();
+
+    const marks = grid.overlayMarks;
+
+    await grid.scroll({ top: 60 });
+
+    expect(grid.overlayMarks).toEqual(marks);
+    expect(grid.planeLead).toBe('0px');
+  });
+
+  it('stands the plane where the first rendered row starts, deep in a compressed canvas', async () => {
+    const grid = mountStaff({
+      rows: staff(40_000),
+      props: { rowHeight: COMPRESSED_ROW },
+      slots: { overlay: RangeMarks },
+    });
+
+    await grid.settle();
+    await grid.scroll({ top: 14_000_000 });
+
+    const [active = -1, first = 0] = grid.renderedRows;
+    const rect = grid.rectOf(range(first, 0, first, 0));
+
+    expect(active).toBe(0);
+    expect((rect?.top ?? 0) - Number.parseFloat(grid.planeLead)).toBe(COMPRESSED_ROW * 2);
+    expect(rect?.top).toBeLessThan(8_100_000);
+  });
+
   it('lays the overlay over the cells it names and keeps it in canvas coordinates', async () => {
     const grid = mountStaff({ slots: { overlay: RangeMarks } });
     await grid.settle();

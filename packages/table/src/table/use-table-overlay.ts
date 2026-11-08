@@ -38,6 +38,7 @@ export interface TableOverlayPaneView {
 export interface TableOverlay {
   readonly panes: ComputedRef<readonly TableOverlayPaneView[]>;
   readonly style: ComputedRef<Readonly<Record<string, string>>>;
+  readonly planeBase: ComputedRef<number>;
   rectOf(range: NuiTableRange): NuiTableRect | undefined;
   cellFromPoint(x: number, y: number): TableCellPosition | undefined;
   cellNear(x: number, y: number): TableCellPosition | undefined;
@@ -65,6 +66,7 @@ interface DataBand {
 }
 
 const CELL = '.nui-table__cell';
+const PLANE_SPAN = 8_000_000;
 
 const ZONES: readonly OverlayZone[] = [
   { name: NuiTableOverlayPane.Body, frozen: false, cols: TablePaneName.Centre },
@@ -159,7 +161,11 @@ export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
   const edgeOf = (column: PlacedColumn): number =>
     paneBase(options.layout(), column.pane) + column.offset;
 
-  const rectIn = (range: NuiTableRange, shifted: boolean): NuiTableRect | undefined => {
+  const planeBase = computed(
+    () => Math.floor(options.rows.windowOrigin.value / PLANE_SPAN) * PLANE_SPAN,
+  );
+
+  const rectIn = (range: NuiTableRange): NuiTableRect | undefined => {
     const box = boxOf(range);
     const first = columnOf(box.start);
     const last = columnOf(box.end);
@@ -175,15 +181,14 @@ export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
     const rows = options.rows;
 
     return {
-      top: options.headSize() + rows.offsetOf(box.top) - (shifted ? rows.shift.value : 0),
+      top: options.headSize() + rows.offsetOf(box.top) - planeBase.value,
       start: edgeOf(first),
       width: edgeOf(last) + last.width - edgeOf(first),
       height: rows.offsetOf(box.bottom + 1) - rows.offsetOf(box.top),
     };
   };
 
-  const rectOf = (range: NuiTableRange): NuiTableRect | undefined =>
-    rectIn(options.expand(range), true);
+  const rectOf = (range: NuiTableRange): NuiTableRect | undefined => rectIn(options.expand(range));
 
   const columnZones = computed<ColumnZones>(() => ({
     start: startData.value,
@@ -200,7 +205,7 @@ export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
       const rowsIn = zone.frozen ? box.top < frozen : box.bottom >= frozen;
 
       return rowsIn && crossesColumns(zones, zone.cols, box.start, box.end)
-        ? rectIn(full, !zone.frozen)
+        ? rectIn(full)
         : undefined;
     };
 
@@ -327,10 +332,9 @@ export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
   const style = computed(() => {
     const layout = options.layout();
     const lead = utilityWidth();
-    const frame = options.rows.frame.value;
 
     return {
-      '--_plane-lead': `${frame.lead}px`,
+      '--_plane-lead': `${options.rows.windowOrigin.value - planeBase.value}px`,
       '--_pane-lead': `${lead}px`,
       '--_pane-start': `${layout.startWidth - lead}px`,
       '--_pane-end': `${layout.endWidth}px`,
@@ -341,6 +345,7 @@ export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
   return {
     panes,
     style,
+    planeBase,
     rectOf,
     cellFromPoint,
     cellNear,

@@ -1080,6 +1080,14 @@ export class TableDriver<T> {
     }));
   }
 
+  get planeLead(): string {
+    return (
+      this.element
+        .querySelector<HTMLElement>('.nui-table__overlay')
+        ?.style.getPropertyValue('--_plane-lead') ?? ''
+    );
+  }
+
   get paneMarks(): string[] {
     return [...this.element.querySelectorAll<HTMLElement>('.nui-table__pane')].flatMap((pane) => {
       const name = [...pane.classList]

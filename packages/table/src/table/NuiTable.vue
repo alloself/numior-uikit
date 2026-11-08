@@ -30,7 +30,7 @@
               class="nui-table__pane"
               :class="pane.classes"
             >
-              <div class="nui-table__plane">
+              <div :key="overlay.planeBase.value" class="nui-table__plane">
                 <slot name="overlay" v-bind="pane.scope" />
               </div>
             </div>

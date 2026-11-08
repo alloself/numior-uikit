@@ -132,6 +132,10 @@ export class VirtualHarness {
     return this.list.windowOffset.value;
   }
 
+  get windowOrigin(): number {
+    return this.list.windowOrigin.value;
+  }
+
   get frame(): VirtualFrame {
     return this.list.frame.value;
   }

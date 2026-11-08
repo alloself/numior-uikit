@@ -66,6 +66,7 @@ export interface VirtualList {
   readonly canvasSize: ComputedRef<number>;
   readonly shift: ComputedRef<number>;
   readonly windowOffset: ComputedRef<number>;
+  readonly windowOrigin: ComputedRef<number>;
   readonly startSize: ComputedRef<number>;
   readonly endSize: ComputedRef<number>;
   readonly frame: ComputedRef<VirtualFrame>;
@@ -168,6 +169,13 @@ export const useVirtualList = (
   const canvasSize = computed(() => scale.value.canvas);
   const windowOffset = computed(() => offsetAt(model.value, range.value.start) - scrollTop.value);
   const startSize = computed(() => offsetAt(model.value, range.value.start) - shift.value);
+
+  const windowOrigin = computed(() =>
+    items.value.reduce(
+      (origin, item) => origin - (item.index < range.value.start ? item.size : 0),
+      offsetAt(model.value, range.value.start),
+    ),
+  );
 
   const endSize = computed(
     () => canvasSize.value - (offsetAt(model.value, range.value.end) - shift.value),
@@ -314,6 +322,7 @@ export const useVirtualList = (
     canvasSize,
     shift,
     windowOffset,
+    windowOrigin,
     startSize,
     endSize,
     frame,
