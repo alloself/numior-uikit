@@ -40,6 +40,7 @@ export interface SheetWriting {
   readonly strings: StringTable;
   readonly extras: SheetExtras | undefined;
   readonly tables: readonly string[];
+  readonly drawing: string | undefined;
   readonly keepConditional: boolean;
   readonly signal?: AbortSignal | undefined;
 }
@@ -329,6 +330,9 @@ const tablePartsXml = (ids: readonly string[], q: string): string =>
         .map((id) => `<${q}tablePart r:id="${id}"/>`)
         .join('')}</${q}tableParts>`;
 
+const drawingXml = (id: string | undefined, q: string): string =>
+  id === undefined ? '' : `<${q}drawing xmlns:r="${RELATIONSHIPS}" r:id="${id}"/>`;
+
 const withTables = (after: string, tables: string, q: string): string => {
   const extensions = after.search(new RegExp(`<${q}extLst[\\s>]`, 'u'));
 
@@ -415,7 +419,9 @@ export const writeSheetPart = async (writing: SheetWriting): Promise<SheetOutput
 
   const tail = placeInTail(conditional, mergesXml(writing.sheet.layout.merges, q), 'mergeCells');
 
-  sink.push(withTables(tail, tablePartsXml(writing.tables, q), q));
+  const drawn = placeInTail(tail, drawingXml(writing.drawing, q), 'drawing');
+
+  sink.push(withTables(drawn, tablePartsXml(writing.tables, q), q));
   sink.push(`</${q}worksheet>`);
 
   return { chunks: sink.chunks(), ...counts };

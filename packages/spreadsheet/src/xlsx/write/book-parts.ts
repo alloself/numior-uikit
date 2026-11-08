@@ -40,6 +40,8 @@ export const TYPES = {
   styles: 'application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml',
   strings: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml',
   table: 'application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml',
+  drawing: 'application/vnd.openxmlformats-officedocument.drawing+xml',
+  chart: 'application/vnd.openxmlformats-officedocument.drawingml.chart+xml',
   metadata: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml',
   externalLink: 'application/vnd.openxmlformats-officedocument.spreadsheetml.externalLink+xml',
   pivotTable: 'application/vnd.openxmlformats-officedocument.spreadsheetml.pivotTable+xml',

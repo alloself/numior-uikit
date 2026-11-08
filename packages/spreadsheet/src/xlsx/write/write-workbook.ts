@@ -37,7 +37,9 @@ import {
   type SheetExtras,
 } from './source';
 import { createStyleBook, type StyleBook } from './styles-part';
+import { chartAnchorXml, chartXml, drawingXml } from './drawing-xml';
 import { pivotXml } from './pivot-part';
+import { DrawingKind, type SheetChart, type SheetDrawing } from '../../core/drawings/drawing.types';
 import { buildPivotCache, pivotSource } from '../../core/pivot/pivot-cache';
 import { computePivot } from '../../core/pivot/pivot-engine';
 import { renderPivot } from '../../core/pivot/pivot-render';
@@ -66,6 +68,21 @@ interface Output {
   readonly written: Set<string>;
   readonly rewritten: Set<string>;
   readonly roots: Relationship[];
+}
+
+interface NewDrawings {
+  readonly relationship: PlannedRelationship | undefined;
+  readonly appended: AppendedAnchors | undefined;
+}
+
+interface AppendedAnchors {
+  readonly part: string;
+  readonly anchors: string;
+}
+
+interface NewChart {
+  readonly drawing: SheetDrawing;
+  readonly chart: SheetChart;
 }
 
 type GeneratedPart = readonly [part: string, kind: string, type: string, content: string | Bytes];
@@ -100,6 +117,8 @@ const FIRST_TABLE_ID = 1000;
 const officeType = (kind: string): string => `${OFFICE}/${kind}`;
 
 const encoder = new TextEncoder();
+
+const FIRST_NEW_SHAPE = 1025;
 
 const textEntry = (name: string, text: string): ZipWriteEntry => ({
   name,
@@ -326,7 +345,81 @@ const copyParts = async (original: Original | undefined, output: Output): Promis
   return copied;
 };
 
-const writeParts = async (writing: Writing, plan: SheetPlan): Promise<void> => {
+const newChartsOf = (sheet: Sheet): NewChart[] =>
+  sheet.layout.drawings.reduce<NewChart[]>((charts, drawing) => {
+    if (drawing.source === undefined && drawing.content.kind === DrawingKind.Chart) {
+      charts.push({ drawing, chart: drawing.content.chart });
+    }
+    return charts;
+  }, []);
+
+const writeNewDrawings = async (
+  writing: Writing,
+  plan: SheetPlan,
+  ids: Set<string>,
+): Promise<NewDrawings> => {
+  const charts = newChartsOf(plan.sheet);
+
+  if (charts.length === 0) {
+    return { relationship: undefined, appended: undefined };
+  }
+
+  const { original, output } = writing;
+  const existing = plan.kept.find((item) => item.kind === RelationshipKind.Drawing);
+  const names = new Set([...(original?.archive.names ?? []), ...output.written]);
+
+  const part =
+    existing?.target ?? freshName(names, (index) => `xl/drawings/drawing${String(index)}.xml`);
+
+  const known =
+    existing === undefined || original === undefined
+      ? []
+      : await readRelationships(original.archive, part);
+
+  const relationIds = new Set(known.map((item) => item.id));
+  const planned = known.map((item) => toPlanned(item, part));
+
+  const anchors = charts
+    .map(({ drawing, chart }, index) => {
+      const chartPart = freshName(names, (at) => `xl/charts/chart${String(at)}.xml`);
+      const id = freshId(relationIds);
+
+      output.entries.push(textEntry(chartPart, chartXml(chart)));
+      output.overrides.set(chartPart, TYPES.chart);
+      output.written.add(chartPart);
+      planned.push({ id, type: officeType('chart'), target: relativeTarget(part, chartPart) });
+
+      return chartAnchorXml(drawing.anchor, drawing.name, FIRST_NEW_SHAPE + index, id);
+    })
+    .join('');
+
+  output.entries.push(textEntry(relationshipsOf(part), relationshipsXml(planned)));
+  output.written.add(relationshipsOf(part));
+
+  if (existing !== undefined) {
+    output.rewritten.add(relationshipsOf(part));
+    return { relationship: undefined, appended: { part, anchors } };
+  }
+
+  output.entries.push(textEntry(part, drawingXml(anchors)));
+  output.overrides.set(part, TYPES.drawing);
+  output.written.add(part);
+
+  return {
+    appended: undefined,
+    relationship: {
+      id: freshId(ids),
+      type: officeType('drawing'),
+      target: relativeTarget(plan.part, part),
+    },
+  };
+};
+
+const writeParts = async (
+  writing: Writing,
+  plan: SheetPlan,
+  appended: AppendedAnchors | undefined,
+): Promise<void> => {
   const { original, output } = writing;
   const known = plan.original?.parts ?? [];
 
@@ -334,11 +427,13 @@ const writeParts = async (writing: Writing, plan: SheetPlan): Promise<void> => {
     return;
   }
   for (const part of plan.sheet.layout.parts) {
-    if (!known.includes(part) && !output.written.has(part.path)) {
+    const extra = appended?.part === part.path ? appended.anchors : '';
+
+    if ((!known.includes(part) || extra !== '') && !output.written.has(part.path)) {
       const text = await partText(original.archive, part.path);
       const type = original.types.overrides.get(part.path);
 
-      output.entries.push(textEntry(part.path, splicePart(text, fragmentXml(part.root))));
+      output.entries.push(textEntry(part.path, splicePart(text, fragmentXml(part.root) + extra)));
       output.written.add(part.path);
       output.rewritten.add(part.path);
       if (type !== undefined) {
@@ -541,6 +636,8 @@ const bookRelationship = (
 const writeSheet = async (writing: Writing, plan: SheetPlan, firstNewId: number): Promise<void> => {
   const { output } = writing;
   const tables = await writeTables(writing.book, plan, writing.original, output);
+  const ids = new Set([...plan.kept, ...tables].map((relationship) => relationship.id));
+  const drawings = await writeNewDrawings(writing, plan, ids);
 
   const sheetOutput = await writeSheetPart({
     book: writing.book,
@@ -551,19 +648,19 @@ const writeSheet = async (writing: Writing, plan: SheetPlan, firstNewId: number)
     strings: writing.strings,
     extras: plan.extras,
     tables: tables.map((table) => table.id),
+    drawing: drawings.relationship?.id,
     keepConditional: plan.original?.conditional === plan.sheet.conditional,
     signal: writing.signal,
   });
 
-  const ids = new Set([...plan.kept, ...tables].map((relationship) => relationship.id));
-
   const relationships = [
     ...plan.kept.map((item) => toPlanned(item, plan.part)),
     ...tables,
+    ...(drawings.relationship === undefined ? [] : [drawings.relationship]),
     ...writePivots(writing, plan, ids),
   ];
 
-  await writeParts(writing, plan);
+  await writeParts(writing, plan, drawings.appended);
 
   writing.totals.stale += sheetOutput.stale;
   writing.totals.spills += sheetOutput.spills;

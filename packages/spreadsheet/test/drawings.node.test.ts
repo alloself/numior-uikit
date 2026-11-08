@@ -7,7 +7,9 @@ import {
   SheetChartKind,
   SheetChartStacking,
   StepKind,
+  chartAnchorAt,
   createStepper,
+  insertDrawing,
   placeDrawing,
   printFormula,
   removeDrawing,
@@ -25,6 +27,7 @@ interface DrawnBook {
   readonly apply: ReturnType<typeof createStepper>;
   readonly place: (id: string, anchor: DrawingAnchor) => void;
   readonly remove: (id: string) => void;
+  readonly insert: (drawing: SheetDrawing) => void;
   readonly layout: () => SheetLayout;
   readonly saved: () => Promise<readonly SheetDrawing[]>;
 }
@@ -106,6 +109,9 @@ const drawingsOf = async (
     },
     remove: (id) => {
       sheet.layout = removeDrawing(sheet.layout, id);
+    },
+    insert: (drawing) => {
+      sheet.layout = insertDrawing(sheet.layout, drawing);
     },
     layout: () => sheet.layout,
     saved: async () => {
@@ -440,5 +446,28 @@ describe('sheet drawings', () => {
       categories: 'Revenue!$A$2:$A$4',
       values: 'Revenue!$B$2:$B$4',
     });
+  });
+
+  it('adds a new chart to the drawing part and keeps what was there', async () => {
+    const book = await drawingsOf();
+    const before = book.drawings.map((drawing) => drawing.name);
+    const chart = chartOf(book.drawings[1]);
+
+    book.insert({
+      id: 'new-1',
+      name: 'Added',
+      alt: '',
+      anchor: chartAnchorAt(20, 2),
+      content: { kind: DrawingKind.Chart, chart },
+    });
+
+    const saved = await book.saved();
+
+    expect(saved.map((drawing) => drawing.name)).toEqual([...before, 'Added']);
+
+    expect([saved.at(-1)?.anchor, chartOf(saved.at(-1)).series.length]).toEqual([
+      chartAnchorAt(20, 2),
+      chart.series.length,
+    ]);
   });
 });

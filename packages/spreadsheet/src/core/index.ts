@@ -85,6 +85,13 @@ export type {
   SheetDrawing,
 } from './drawings/drawing.types';
 export { canEditDrawing, placeDrawing, removeDrawing } from './drawings/drawing-parts';
+export {
+  chartAnchorAt,
+  chartDataRange,
+  chartOfRange,
+  freshDrawingId,
+  insertDrawing,
+} from './drawings/chart-insert';
 export type {
   AlignmentStyle,
   BorderSide,
