@@ -119,7 +119,7 @@
 
 @media (pointer: coarse) {
   .nui-spreadsheet__handle::before {
-    inset: -8px;
+    inset: -9px;
   }
 }
 
