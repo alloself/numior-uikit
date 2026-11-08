@@ -5,6 +5,7 @@ import {
   MAX_ROWS,
   columnName,
   formatValue,
+  type BookLocale,
   type CellValue,
   type LineLayouts,
   type Sheet,
@@ -18,6 +19,7 @@ import {
   markedStyle,
 } from './sheet-conditional';
 import { sheetStyle } from './sheet-style';
+import type { LineSizes } from './drawings/drawings.types';
 import type { SheetCells, SheetCellsOptions, StyleCache, ValueShape } from './sheet.types';
 import { CellValueKind } from '../core/cell.types';
 
@@ -133,6 +135,30 @@ const columnWidthOf = (sheet: Sheet, col: number): number => {
 
   return size === undefined ? DEFAULT_COLUMN : charsToPixels(size);
 };
+
+export const lineSizesOf = (sheet: Sheet): LineSizes => ({
+  width: (col) => (sheet.layout.cols.get(col)?.hidden === true ? 0 : columnWidthOf(sheet, col)),
+  height: (row) => {
+    const layout = sheet.layout.rows.get(row);
+
+    return layout?.hidden === true
+      ? 0
+      : pointsToPixels(layout?.size ?? sheet.layout.defaults.rowHeight ?? DEFAULT_ROW_POINTS);
+  },
+});
+
+export const cellText = (
+  book: Workbook,
+  sheet: Sheet,
+  row: number,
+  col: number,
+  locale: BookLocale,
+): string =>
+  formatValue(
+    sheet.cells.get(row, col),
+    book.formats.code(formatAt(sheet, row, col)),
+    locale.numbers,
+  ).text;
 
 const createStyles = (book: Workbook): StyleCache => {
   const known = new Map<string, NuiTableCellStyle | undefined>();

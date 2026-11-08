@@ -1,17 +1,27 @@
 import {
+  DrawingAnchorKind,
+  DrawingKind,
+  DrawingPlacement,
+  EN_FORMULAS,
   RU_LOCALE,
+  SheetChartGaps,
+  SheetChartKind,
+  SheetChartStacking,
   createCalculator,
   createCellEditor,
   columnName,
   createWorkbook,
   lineLayoutsOf,
   numberValue,
+  parseFormula,
   textValue,
   type Calculator,
   type CellDecoration,
   type ConditionalFormat,
+  type FormulaNode,
   type LineLayout,
   type Sheet,
+  type SheetDrawing,
   type Workbook,
 } from '@numior/spreadsheet/core';
 import type { LimitationsReport } from '@numior/spreadsheet/xlsx';
@@ -151,6 +161,78 @@ const WIDE: LineLayout = {
   extra: [],
 };
 
+const LOGO =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><rect width="120" height="60" rx="10" fill="#2563eb"/><text x="60" y="38" font-family="sans-serif" font-size="22" font-weight="700" fill="#fff" text-anchor="middle">Numior</text></svg>';
+
+const reference = (text: string): FormulaNode => {
+  const parsed = parseFormula(text, EN_FORMULAS);
+
+  if (!parsed.ok) {
+    throw new Error(`${text} is not a reference`);
+  }
+  return parsed.ast;
+};
+
+const budgetChart = (total: number): SheetDrawing => ({
+  id: 'sample#chart',
+  name: 'Выручка и прибыль',
+  alt: '',
+  anchor: {
+    kind: DrawingAnchorKind.Cells,
+    placement: DrawingPlacement.TwoCell,
+    from: { row: total + 10, col: 0, dx: 0, dy: 0 },
+    to: { row: total + 26, col: 7, dx: 0, dy: 0 },
+  },
+  content: {
+    kind: DrawingKind.Chart,
+    chart: {
+      kind: SheetChartKind.Column,
+      title: 'Выручка и прибыль по месяцам',
+      legend: true,
+      stacking: SheetChartStacking.None,
+      gaps: SheetChartGaps.Break,
+      hole: undefined,
+      series: [3, total + 1].map((row) => ({
+        name: reference(`'Бюджет'!$A$${String(row)}`),
+        categories: reference(`'Бюджет'!$B$2:$G$2`),
+        values: reference(`'Бюджет'!$B$${String(row)}:$G$${String(row)}`),
+      })),
+    },
+  },
+});
+
+const NOTE_DRAWINGS: readonly SheetDrawing[] = [
+  {
+    id: 'sample#logo',
+    name: 'Логотип',
+    alt: 'Логотип Numior',
+    anchor: {
+      kind: DrawingAnchorKind.Cell,
+      from: { row: 2, col: 1, dx: 8, dy: 4 },
+      width: 120,
+      height: 60,
+    },
+    content: {
+      kind: DrawingKind.Picture,
+      media: 'xl/media/logo.svg',
+      type: 'image/svg+xml',
+      bytes: new TextEncoder().encode(LOGO),
+    },
+  },
+  {
+    id: 'sample#shape',
+    name: 'Схема',
+    alt: '',
+    anchor: {
+      kind: DrawingAnchorKind.Cells,
+      placement: DrawingPlacement.OneCell,
+      from: { row: 2, col: 4, dx: 0, dy: 0 },
+      to: { row: 8, col: 7, dx: 0, dy: 0 },
+    },
+    content: { kind: DrawingKind.Foreign, label: 'smartArt' },
+  },
+];
+
 const decorate = (
   book: Workbook,
   sheet: Sheet,
@@ -204,6 +286,7 @@ const fillBudget = (book: Workbook, sheet: Sheet): void => {
     cols: lineLayoutsOf([[0, WIDE]]),
     merges: [{ top: 0, left: 0, bottom: 0, right: MONTHS.length }],
     view: { ...sheet.layout.view, frozenRows: 2 },
+    drawings: [budgetChart(total)],
   };
 
   sheet.conditional = [OVERSPEND, GROWTH, MARKETING, PROFIT];
@@ -264,6 +347,12 @@ export const sampleBook = (): SampleBook => {
   sumTotals(book, calculator, budget);
   calculator.recalculate();
   notes.cells.set(0, 0, textValue('Второй лист без сетки'));
-  notes.layout = { ...notes.layout, view: { ...notes.layout.view, gridlines: false } };
+
+  notes.layout = {
+    ...notes.layout,
+    view: { ...notes.layout.view, gridlines: false },
+    drawings: NOTE_DRAWINGS,
+  };
+
   return { book, calculator };
 };

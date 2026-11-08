@@ -92,6 +92,34 @@ export class SpreadsheetDriver {
     return new SpreadsheetDriver(wrapper, changes);
   }
 
+  get drawings(): string[] {
+    return this.wrapper.findAll('.nui-spreadsheet__drawing').map((drawing) => {
+      const kind = toneOf(drawing.classes(), 'nui-spreadsheet__drawing--kind-');
+      const picture = drawing.find('img');
+      const title = drawing.find('.nui-spreadsheet__chart-title');
+
+      if (picture.exists()) {
+        return `${kind}: ${picture.attributes('alt') ?? ''} ${picture.attributes('src') ?? ''}`;
+      }
+      return `${kind}: ${title.exists() ? title.text() : drawing.text()}`;
+    });
+  }
+
+  drawingSize(index: number): string | undefined {
+    const style = this.wrapper.findAll('.nui-spreadsheet__drawing')[index]?.attributes('style');
+    const width = /inline-size: ([\d.]+)px/u.exec(style ?? '')?.[1];
+    const height = /block-size: ([\d.]+)px/u.exec(style ?? '')?.[1];
+
+    return width === undefined || height === undefined ? undefined : `${width}×${height}`;
+  }
+
+  chartBars(index: number): number {
+    return (
+      this.wrapper.findAll('.nui-spreadsheet__drawing')[index]?.findAll('.nui-chart__bar').length ??
+      0
+    );
+  }
+
   get rendered(): boolean {
     return this.wrapper.find('.nui-spreadsheet').exists();
   }

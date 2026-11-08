@@ -19,6 +19,8 @@ export const useSheetRecalc = (options: SheetRecalcOptions): SheetRecalc => {
 
   const progress = ref(0);
 
+  const revision = ref(0);
+
   let current: Recalculation | undefined;
 
   let stopped = false;
@@ -26,6 +28,7 @@ export const useSheetRecalc = (options: SheetRecalcOptions): SheetRecalc => {
   let outdated = NOTHING_OUTDATED;
 
   const redraw = (): void => {
+    revision.value += 1;
     options.table.value?.invalidate();
   };
 
@@ -107,6 +110,7 @@ export const useSheetRecalc = (options: SheetRecalcOptions): SheetRecalc => {
   return {
     phase,
     progress,
+    revision,
     outdated: (sheet, row, col) => outdated(sheet, row, col),
     run,
     stop,

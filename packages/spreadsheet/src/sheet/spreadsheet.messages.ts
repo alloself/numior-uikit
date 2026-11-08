@@ -39,6 +39,10 @@ export interface NuiSpreadsheetMessages {
   readonly reportDetails: string;
   readonly reportDismiss: string;
   readonly limitation: (params: { readonly code: XlsxLimitationCode }) => string;
+  readonly chart: string;
+  readonly picture: string;
+  readonly chartSeries: (params: { readonly index: number }) => string;
+  readonly foreignDrawing: (params: { readonly label: string }) => string;
 }
 
 const EN_LIMITATIONS: Readonly<Record<XlsxLimitationCode, string>> = {
@@ -140,6 +144,10 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     reportDetails: 'Details',
     reportDismiss: 'Hide',
     limitation: ({ code }) => EN_LIMITATIONS[code],
+    chart: 'Chart',
+    picture: 'Picture',
+    chartSeries: ({ index }) => `Series ${String(index)}`,
+    foreignDrawing: ({ label }) => `This object is not supported yet: ${label}`,
   },
   ru: {
     formulaError: ({ position }) => `Ошибка в формуле: символ ${String(position)}`,
@@ -186,5 +194,9 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     reportDetails: 'Подробнее',
     reportDismiss: 'Скрыть',
     limitation: ({ code }) => RU_LIMITATIONS[code],
+    chart: 'Диаграмма',
+    picture: 'Рисунок',
+    chartSeries: ({ index }) => `Ряд ${String(index)}`,
+    foreignDrawing: ({ label }) => `Этот объект пока не поддерживается: ${label}`,
   },
 };

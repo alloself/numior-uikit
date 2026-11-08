@@ -200,7 +200,7 @@
       },
       {
         "from": "spreadsheet",
-        "allow": ["spreadsheet", "table", "primitives", "vue"]
+        "allow": ["spreadsheet", "table", "charts", "primitives", "vue"]
       },
       {
         "from": "charts",

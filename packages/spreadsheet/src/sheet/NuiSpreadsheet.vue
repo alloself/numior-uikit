@@ -121,6 +121,7 @@
         @pick="references.onPick"
       >
         <template #overlay="{ rectOf }">
+          <NuiSpreadsheetDrawings :drawings="drawings" :rect-of="rectOf" :near="lineNear" />
           <NuiSpreadsheetMarks
             :rect-of="rectOf"
             :handle="fill.handle.value"
@@ -252,6 +253,9 @@ import NuiSpreadsheetReference from './NuiSpreadsheetReference.vue';
 import NuiSpreadsheetReport from './NuiSpreadsheetReport.vue';
 import NuiSpreadsheetStatus from './NuiSpreadsheetStatus.vue';
 import NuiSpreadsheetTabs from './NuiSpreadsheetTabs.vue';
+import NuiSpreadsheetDrawings from './drawings/NuiSpreadsheetDrawings.vue';
+import type { LineNear } from './drawings/drawings.types';
+import { useSheetDrawings } from './drawings/use-sheet-drawings';
 import NuiSpreadsheetPivotPopover from './pivot/NuiSpreadsheetPivotPopover.vue';
 import { useSheetPivots } from './pivot/use-sheet-pivots';
 import NuiSpreadsheetRules from './rules/NuiSpreadsheetRules.vue';
@@ -406,6 +410,19 @@ const editing = useSheetEditing({
     emit('change', change);
   },
 });
+
+const drawings = useSheetDrawings({
+  book: () => book,
+  sheet: () => shownSheet.value,
+  locale: () => bookLocale.value,
+  messages: () => messages.value,
+  revision: () => editing.revision.value + recalc.revision.value + layoutRevision.value,
+});
+
+const lineNear: LineNear = {
+  row: (line) => cells.value?.rowNear(line) ?? line,
+  col: (line) => cells.value?.colNear(line) ?? line,
+};
 
 const clipboard = useSheetClipboard({
   book: () => book,

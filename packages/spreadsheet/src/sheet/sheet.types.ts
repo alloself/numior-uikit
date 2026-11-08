@@ -192,6 +192,7 @@ export interface SheetRecalcOptions {
 export interface SheetRecalc {
   readonly phase: Readonly<Ref<RecalcPhase>>;
   readonly progress: Readonly<Ref<number>>;
+  readonly revision: Readonly<Ref<number>>;
   readonly outdated: CellOutdated;
   run(options?: RecalcOptions): void;
   stop(): void;

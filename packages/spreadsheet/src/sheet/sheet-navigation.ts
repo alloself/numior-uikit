@@ -11,13 +11,13 @@ import {
   type Workbook,
 } from '../core';
 
-interface PlacedRange {
+export interface PlacedRange {
   readonly book: number | undefined;
   readonly sheet: string | undefined;
   readonly range: CellRange;
 }
 
-const placedRange = (node: FormulaNode): PlacedRange | undefined => {
+export const placedRange = (node: FormulaNode): PlacedRange | undefined => {
   switch (node.kind) {
     case FormulaReferenceKind.Cell: {
       return { book: node.book, sheet: node.sheet, range: rangeOf(node.ref, node.ref) };

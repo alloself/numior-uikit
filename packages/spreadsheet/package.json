@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "@lucide/vue": "1.50.0",
+    "@numior/charts": "workspace:*",
     "@numior/primitives": "workspace:*",
     "@numior/table": "workspace:*",
     "@numior/vue": "workspace:*",

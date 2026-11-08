@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { paintedRgbAt, rgbDelta, type Rgb } from '../helpers/color';
-import { boxOf, type Box } from '../helpers/geometry';
+import { boxOf, type Box, type Point } from '../helpers/geometry';
 import type { XlsxFile } from '../helpers/xlsx';
 import { PivotPanel } from './pivot-panel';
 
@@ -479,5 +479,47 @@ export class BookSection {
     await this.sheet
       .locator('.nui-table__viewport')
       .evaluate((scroller, top) => scroller.scrollTo({ top }), pixels);
+  }
+
+  get charts(): Locator {
+    return this.sheet.locator('.nui-spreadsheet__drawing--kind-chart');
+  }
+
+  get chartTitle(): Locator {
+    return this.charts.locator('.nui-spreadsheet__chart-title');
+  }
+
+  get chartLegend(): Locator {
+    return this.charts.locator('.nui-chart__legend-item');
+  }
+
+  get placeholders(): Locator {
+    return this.sheet.locator('.nui-spreadsheet__drawing--kind-foreign');
+  }
+
+  picture(alt: string): Locator {
+    return this.sheet.locator(`.nui-spreadsheet__picture[alt="${alt}"]`);
+  }
+
+  pictureLoaded(alt: string): Promise<boolean> {
+    return this.picture(alt).evaluate(
+      (image) => image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0,
+    );
+  }
+
+  bars(slot: number): Locator {
+    return this.charts.locator(`.nui-chart__bar--slot-${String(slot)}`);
+  }
+
+  barHeights(slot: number): Promise<number[]> {
+    return this.bars(slot).evaluateAll((bars) =>
+      bars.map((bar) => (bar instanceof SVGGraphicsElement ? bar.getBBox().height : 0)),
+    );
+  }
+
+  async cellCorner(rowLabel: string, column: number): Promise<Point> {
+    const box = await boxOf(this.cell(rowLabel, column));
+
+    return { x: box.x, y: box.y };
   }
 }
