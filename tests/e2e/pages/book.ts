@@ -409,8 +409,62 @@ export class BookSection {
   }
 
   async cellMenu(rowLabel: string, column: number, item: string): Promise<void> {
-    await this.cell(rowLabel, column).click({ button: 'right' });
+    await this.openCellMenu(rowLabel, column);
     await this.page.getByRole('menuitem', { name: item, exact: true }).click();
+  }
+
+  async openCellMenu(rowLabel: string, column: number): Promise<void> {
+    await this.cell(rowLabel, column).click({ button: 'right' });
+  }
+
+  get cellMenuList(): Locator {
+    return this.page.getByRole('menu');
+  }
+
+  async insideScreen(target: Locator): Promise<boolean> {
+    const box = await boxOf(target);
+    const width = this.page.viewportSize()?.width ?? 0;
+
+    return box.x >= 0 && box.x + box.width <= width;
+  }
+
+  async longPress(rowLabel: string, column: number): Promise<void> {
+    const cell = this.cell(rowLabel, column);
+    const box = await boxOf(cell);
+
+    const init = {
+      bubbles: true,
+      button: 0,
+      isPrimary: true,
+      pointerId: 11,
+      pointerType: 'touch',
+      clientX: box.x + box.width / 2,
+      clientY: box.y + box.height / 2,
+    };
+
+    await cell.dispatchEvent('pointerdown', init);
+    await expect(this.cellMenuList).toBeVisible();
+    await cell.dispatchEvent('pointerup', init);
+  }
+
+  async tapCell(rowLabel: string, column: number, times = 1): Promise<void> {
+    const box = await boxOf(this.cell(rowLabel, column));
+
+    for (let tap = 0; tap < times; tap += 1) {
+      await this.page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+    }
+  }
+
+  smallestHandleTarget(): Promise<number> {
+    return this.sheet.locator('.nui-spreadsheet__handle').evaluateAll((handles) =>
+      Math.min(
+        ...handles.map((handle) => {
+          const target = getComputedStyle(handle, '::before');
+
+          return Math.min(Number.parseFloat(target.width), Number.parseFloat(target.height));
+        }),
+      ),
+    );
   }
 
   get format(): Locator {
