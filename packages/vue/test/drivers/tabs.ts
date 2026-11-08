@@ -251,8 +251,11 @@ export class TabsDriver extends ComponentDriver {
   async resizeTab(label: string, { start, size }: TabBox): Promise<void> {
     const { element } = this.tab(label);
 
-    Object.defineProperty(element, 'offsetLeft', { configurable: true, value: start });
-    Object.defineProperty(element, 'offsetWidth', { configurable: true, value: size });
+    Object.defineProperty(element, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => new DOMRect(start, 0, size, 0),
+    });
+
     this.observers?.resize(element);
     await nextTick();
   }

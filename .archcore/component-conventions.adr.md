@@ -66,7 +66,10 @@ status: accepted
   ничего не возвращает; `useListNavigation` хранит активную опцию по id и умеет назначить
   её до рендера; таблица пишет `table-layout`, естественные ширины колонок, sticky-смещения
   (`--_sticky-<index>`) и `aria-valuenow` ресайзеров в DOM из `measure()`; индикатор табов
-  и размеры шапки таблицы — custom properties на элементе. Направление письма — опция `dir`
+  и размеры шапки таблицы — custom properties на элементе. Индикатор табов меряется по
+  `getBoundingClientRect` с поправкой на масштаб предков (`offsetWidth / rect.width`), а не по
+  `offsetLeft`/`offsetWidth`: целые смещения расходились с дробной шириной вкладки на полпикселя
+  (2026-11-08, шрифт Inter). Направление письма — опция `dir`
   конфига и `useDirection(anchor)`.
 - Элементы навигации (2026-11-04): `useListNavigation` получает `items: () => readonly
   HTMLElement[]` вместо селектора. Компоненты регистрируют свои элементы в

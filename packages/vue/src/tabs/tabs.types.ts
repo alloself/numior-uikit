@@ -59,6 +59,11 @@ export interface NuiTabLinkProps {
   as?: string | Component | undefined;
 }
 
+export interface TabPlace {
+  readonly start: number;
+  readonly size: number;
+}
+
 export interface NuiTabPanelProps {
   value: string;
   lazy?: boolean | undefined;
