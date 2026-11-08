@@ -75,6 +75,18 @@ describe('NuiDialog', () => {
     dialog.unmount();
   });
 
+  it('leaves the body out when a dialog only asks a question', () => {
+    const dialog = DialogDriver.mount({
+      props: { title: 'Discard?', description: 'Edits are lost' },
+      body: false,
+      slots: { footer: () => 'Actions' },
+    });
+
+    expect(dialog.hasBody).toBe(false);
+
+    dialog.unmount();
+  });
+
   it('lets the topmost of stacked dialogs own the backdrop by marking the ones below covered', async () => {
     const base = DialogDriver.mount({ props: { title: 'Base' } });
     const upper = DialogDriver.mount({ props: { title: 'Upper' } });

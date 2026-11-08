@@ -20,7 +20,7 @@
         <slot name="description">{{ description }}</slot>
       </p>
     </header>
-    <div class="nui-dialog__body">
+    <div v-if="$slots.default" class="nui-dialog__body">
       <slot />
     </div>
     <footer v-if="$slots.footer" class="nui-dialog__footer">

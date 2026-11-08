@@ -15,18 +15,19 @@ export interface SurfaceMountOptions<P> {
   readonly props?: P;
   readonly open?: boolean;
   readonly slots?: Record<string, () => unknown>;
+  readonly body?: boolean;
   readonly config?: NuiConfigOptions;
 }
 
 const mountSurface = <P extends object>(
   component: Component,
-  { props, open = true, slots = {}, config }: SurfaceMountOptions<P>,
+  { props, open = true, slots = {}, body = true, config }: SurfaceMountOptions<P>,
 ): [VueWrapper, TopLayerStubs] => {
   const stubs = new TopLayerStubs();
 
   const wrapper = mount(component, {
     props: { ...props, open },
-    slots: { default: 'Body', ...slots },
+    slots: body ? { default: 'Body', ...slots } : slots,
     attachTo: document.body,
     global: { plugins: configPlugins(config) },
   });
@@ -81,6 +82,10 @@ abstract class SurfaceDriver extends ComponentDriver {
 
   get footer(): DOMWrapper<Element> {
     return this.wrapper.find('.nui-dialog__footer');
+  }
+
+  get hasBody(): boolean {
+    return this.wrapper.find('.nui-dialog__body').exists();
   }
 
   get emittedOpen(): boolean[] {
