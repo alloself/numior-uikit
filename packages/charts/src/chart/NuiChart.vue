@@ -8,7 +8,11 @@
     @keydown="pointer.onKeydown"
     @blur="pointer.onBlur"
   >
-    <NuiChartLegend v-if="legend.length > 1" :items="legend" :label="texts.legend" />
+    <NuiChartLegend
+      v-if="legend && legendItems.length > 1"
+      :items="legendItems"
+      :label="texts.legend"
+    />
     <div
       ref="frame"
       class="nui-chart__frame"
@@ -74,6 +78,7 @@ const {
   focusable = true,
   locale,
   showTable = false,
+  legend = true,
 } = defineProps<NuiChartProps>();
 
 const selected = defineModel<ChartHit | null>('selected', { default: null });
@@ -134,7 +139,7 @@ const scene = computed(() =>
   ),
 );
 
-const legend = computed((): NuiChartLegendItem[] => {
+const legendItems = computed((): NuiChartLegendItem[] => {
   const { slots } = scene.value;
 
   if (spec.kind === ChartKind.Pie || spec.kind === ChartKind.Doughnut) {

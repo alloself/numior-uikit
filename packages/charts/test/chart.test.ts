@@ -76,6 +76,12 @@ describe('NuiChart', () => {
     expect(chart.markerCount).toBe(3);
   });
 
+  it('leaves the legend out on request', () => {
+    const chart = chartOf({ spec: revenue, props: { legend: false } });
+
+    expect(chart.legend).toEqual([]);
+  });
+
   it('cuts pies by category and names the categories in the legend', () => {
     const chart = chartOf({ spec: { ...revenue, kind: 'pie' } });
 

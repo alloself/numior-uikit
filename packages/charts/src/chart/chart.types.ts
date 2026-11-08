@@ -11,6 +11,7 @@ export interface NuiChartProps {
   focusable?: boolean | undefined;
   locale?: string | undefined;
   showTable?: boolean | undefined;
+  legend?: boolean | undefined;
 }
 
 export interface NuiChartLegendItem {
