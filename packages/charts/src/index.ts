@@ -20,4 +20,4 @@ export type {
   ChartValueAxis,
 } from './core';
 export { ChartCategoriesKind, ChartGaps, ChartKind, ChartScale, ChartStacking } from './core';
-export { NuiChartTooltipSide } from './chart/chart.types';
+export { NuiChartHeight, NuiChartTooltipSide } from './chart/chart.types';

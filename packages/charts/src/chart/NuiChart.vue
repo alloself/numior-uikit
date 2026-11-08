@@ -1,10 +1,10 @@
 <template>
   <figure
     class="nui-chart"
-    :class="{ 'nui-chart--interactive': !empty }"
+    :class="{ 'nui-chart--interactive': !empty, 'nui-chart--fill': filled }"
     :aria-label="label"
-    :tabindex="empty ? undefined : 0"
-    :style="{ '--_height': `${height}px` }"
+    :tabindex="empty || !focusable ? undefined : 0"
+    :style="filled ? undefined : { '--_height': `${String(height)}px` }"
     @keydown="pointer.onKeydown"
     @blur="pointer.onBlur"
   >
@@ -57,6 +57,7 @@ import { categoryTexts } from './chart-table';
 import { chartMessages } from './chart.messages';
 import {
   ChartFocusSource,
+  NuiChartHeight,
   type NuiChartLegendItem,
   type NuiChartProps,
   NuiChartTooltipSide,
@@ -66,7 +67,14 @@ import { useChartFrame } from './use-chart-frame';
 import { useChartPointer } from './use-chart-pointer';
 import { ChartAxis, ChartCategoriesKind, ChartKind } from '../core/chart.types';
 
-const { spec, label, height = 300, locale, showTable = false } = defineProps<NuiChartProps>();
+const {
+  spec,
+  label,
+  height = 300,
+  focusable = true,
+  locale,
+  showTable = false,
+} = defineProps<NuiChartProps>();
 
 const selected = defineModel<ChartHit | null>('selected', { default: null });
 
@@ -75,6 +83,7 @@ defineSlots<{
 }>();
 
 const FALLBACK_WIDTH = 640;
+const FALLBACK_HEIGHT = 300;
 const FONT_SIZE = 12;
 
 const frameElement = useTemplateRef<HTMLElement>('frame');
@@ -83,6 +92,15 @@ const resolvedLocale = useLocale(() => locale);
 const direction = useDirection(frameElement);
 const sizing = useChartFrame(frameElement);
 const directionRevision = ref(0);
+
+const filled = computed(() => height === NuiChartHeight.Fill);
+
+const sceneHeight = computed((): number => {
+  if (height !== NuiChartHeight.Fill) {
+    return height;
+  }
+  return sizing.height.value > 0 ? sizing.height.value : FALLBACK_HEIGHT;
+});
 
 const empty = computed(
   () =>
@@ -103,7 +121,10 @@ const rtl = computed(() => {
 const scene = computed(() =>
   layoutChart(
     spec,
-    { width: sizing.width.value > 0 ? sizing.width.value : FALLBACK_WIDTH, height },
+    {
+      width: sizing.width.value > 0 ? sizing.width.value : FALLBACK_WIDTH,
+      height: sceneHeight.value,
+    },
     {
       rtl: rtl.value,
       locale: resolvedLocale.value,

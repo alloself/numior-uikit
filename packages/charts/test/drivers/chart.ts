@@ -220,6 +220,20 @@ export class ChartDriver {
     return this.wrapper.find('.nui-chart__svg').exists();
   }
 
+  async settle(): Promise<void> {
+    await nextTick();
+  }
+
+  get sceneHeight(): number {
+    return Number(this.wrapper.find('.nui-chart__svg').attributes('height'));
+  }
+
+  get fills(): boolean {
+    const figure = this.wrapper.find('.nui-chart');
+
+    return figure.classes('nui-chart--fill') && figure.attributes('style') === undefined;
+  }
+
   private slotsOf(selector: string, pattern: RegExp): number[] {
     return this.wrapper
       .findAll(selector)

@@ -176,6 +176,23 @@ describe('NuiChart', () => {
     expect(chart.mutedMarks).toBe(1);
   });
 
+  it('takes the height of its frame and leaves the tab order when asked', async () => {
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+      configurable: true,
+      get(this: HTMLElement) {
+        return this.classList.contains('nui-chart__frame') ? 180 : 0;
+      },
+    });
+
+    const chart = chartOf({ spec: revenue, props: { height: 'fill', focusable: false } });
+
+    await chart.settle();
+
+    Reflect.deleteProperty(HTMLElement.prototype, 'clientHeight');
+
+    expect([chart.fills, chart.sceneHeight, chart.focusable]).toEqual([true, 180, false]);
+  });
+
   it('shows a legend only for two series or more', async () => {
     const chart = chartOf({ spec: revenue });
 

@@ -2,10 +2,13 @@ import type { ChartHit, ChartScene, ChartSlot, ChartSpec } from '../core';
 
 export type ChartFocusSource = (typeof ChartFocusSource)[keyof typeof ChartFocusSource];
 
+export type NuiChartHeight = (typeof NuiChartHeight)[keyof typeof NuiChartHeight];
+
 export interface NuiChartProps {
   spec: ChartSpec;
   label: string;
-  height?: number | undefined;
+  height?: number | NuiChartHeight | undefined;
+  focusable?: boolean | undefined;
   locale?: string | undefined;
   showTable?: boolean | undefined;
 }
@@ -70,5 +73,7 @@ export const NuiChartTooltipSide = {
   Above: 'above',
   Below: 'below',
 } as const;
+
+export const NuiChartHeight = { Fill: 'fill' } as const;
 
 export const ChartFocusSource = { Pointer: 'pointer', Keyboard: 'keyboard' } as const;

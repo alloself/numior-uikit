@@ -16,6 +16,16 @@
   outline: none;
 }
 
+.nui-chart--fill {
+  block-size: 100%;
+}
+
+.nui-chart--fill .nui-chart__frame {
+  flex: 1 1 0;
+  block-size: auto;
+  min-block-size: 0;
+}
+
 .nui-chart--interactive .nui-chart__svg {
   cursor: pointer;
 }

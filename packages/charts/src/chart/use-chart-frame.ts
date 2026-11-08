@@ -4,6 +4,7 @@ import type { ChartMeasure } from './chart.types';
 
 export interface ChartFrame {
   readonly width: Readonly<ShallowRef<number>>;
+  readonly height: Readonly<ShallowRef<number>>;
   readonly measure: ComputedRef<ChartMeasure | undefined>;
 }
 
@@ -49,11 +50,13 @@ const canvasMeasure = (family: string, revision: number): ChartMeasure | undefin
 
 export const useChartFrame = (frame: Readonly<ShallowRef<HTMLElement | null>>): ChartFrame => {
   const width = shallowRef(0);
+  const height = shallowRef(0);
   const family = shallowRef<string | undefined>(undefined);
   const fonts = shallowRef(0);
 
   const read = (): void => {
     width.value = frame.value?.clientWidth ?? 0;
+    height.value = frame.value?.clientHeight ?? 0;
   };
 
   const remeasure = (): void => {
@@ -72,6 +75,7 @@ export const useChartFrame = (frame: Readonly<ShallowRef<HTMLElement | null>>): 
 
   return {
     width,
+    height,
     measure: computed(() =>
       family.value === undefined ? undefined : canvasMeasure(family.value, fonts.value),
     ),
