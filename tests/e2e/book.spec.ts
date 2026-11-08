@@ -682,6 +682,7 @@ test.describe('book', () => {
 
     await page.keyboard.press('Escape');
     await book.formula.click();
+    await page.keyboard.press('End');
 
     await expect(book.frameGrips).toHaveCount(8);
     await expect(book.paintedReferences).toHaveText(['B3:B7']);

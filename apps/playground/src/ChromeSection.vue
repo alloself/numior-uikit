@@ -43,6 +43,7 @@
           v-model="scheme"
           :items="schemes"
           variant="segmented"
+          size="sm"
           required
           label="Схема"
           data-testid="toggle-scheme"

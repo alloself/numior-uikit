@@ -1,3 +1,7 @@
+:root,
+[data-nui-theme] {
+  --nui-font: 'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif;
+}
 body {
   margin: 0;
   font-family: var(--nui-font);
