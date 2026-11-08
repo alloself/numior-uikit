@@ -173,7 +173,7 @@ const chartOf = async (
   const reading = await readChartPart(archive, target.target, options);
 
   return reading.ok
-    ? { kind: DrawingKind.Chart, chart: reading.chart }
+    ? { kind: DrawingKind.Chart, chart: reading.chart, part: target.target }
     : { kind: DrawingKind.Foreign, label: reading.label };
 };
 

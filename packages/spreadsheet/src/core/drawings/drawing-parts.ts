@@ -12,9 +12,11 @@ import type { SheetLayout } from '../layout/layout.types';
 import { emuOfPixels } from './drawings';
 import {
   DrawingAnchorKind,
+  DrawingKind,
   type DrawingAnchor,
   type DrawingMark,
   type DrawingSource,
+  type SheetChart,
   type SheetDrawing,
 } from './drawing.types';
 
@@ -174,6 +176,15 @@ export const placeDrawing = (
         drawings: layout.drawings.map((each) => (each === drawing ? { ...each, anchor } : each)),
       };
 };
+
+export const changeChart = (layout: SheetLayout, id: string, chart: SheetChart): SheetLayout => ({
+  ...layout,
+  drawings: layout.drawings.map((drawing) =>
+    drawing.id === id && drawing.content.kind === DrawingKind.Chart
+      ? { ...drawing, content: { ...drawing.content, chart, rewrite: true } }
+      : drawing,
+  ),
+});
 
 export const removeDrawing = (layout: SheetLayout, id: string): SheetLayout => {
   const drawing = layout.drawings.find((each) => each.id === id);

@@ -8,6 +8,7 @@ import {
   SheetChartStacking,
   StepKind,
   chartAnchorAt,
+  changeChart,
   pictureAnchorAt,
   createStepper,
   insertDrawing,
@@ -29,6 +30,7 @@ interface DrawnBook {
   readonly place: (id: string, anchor: DrawingAnchor) => void;
   readonly remove: (id: string) => void;
   readonly insert: (drawing: SheetDrawing) => void;
+  readonly edit: (id: string, chart: SheetChart) => void;
   readonly layout: () => SheetLayout;
   readonly saved: () => Promise<readonly SheetDrawing[]>;
 }
@@ -113,6 +115,9 @@ const drawingsOf = async (
     },
     insert: (drawing) => {
       sheet.layout = insertDrawing(sheet.layout, drawing);
+    },
+    edit: (id, chart) => {
+      sheet.layout = changeChart(sheet.layout, id, chart);
     },
     layout: () => sheet.layout,
     saved: async () => {
@@ -470,6 +475,55 @@ describe('sheet drawings', () => {
       chartAnchorAt(20, 2),
       chart.series.length,
     ]);
+  });
+
+  it('writes an edited chart from the model', async () => {
+    const book = await drawingsOf();
+    const drawing = book.drawings[1];
+
+    book.edit(drawing?.id ?? '', {
+      ...chartOf(drawing),
+      kind: SheetChartKind.Line,
+      title: 'Edited',
+      legend: false,
+    });
+
+    const saved = await book.saved();
+    const chart = chartOf(saved[1]);
+
+    expect([chart.kind, chart.title, chart.legend]).toEqual([SheetChartKind.Line, 'Edited', false]);
+    expect(seriesTexts(chart)).toEqual(seriesTexts(chartOf(drawing)));
+  });
+
+  it('keeps an edited chart marked for rewriting when its references move', async () => {
+    const book = await drawingsOf();
+    const drawing = book.drawings[1];
+
+    book.edit(drawing?.id ?? '', { ...chartOf(drawing), title: 'Edited' });
+    book.apply.apply({ kind: 'insertLines', sheet: 'Sales', axis: 'rows', at: 0, count: 1 });
+
+    expect(book.drawings[1]?.content).toMatchObject({
+      rewrite: true,
+      chart: { title: 'Edited' },
+    });
+
+    expect(seriesTexts(chartOf(book.drawings[1]))).not.toEqual(seriesTexts(chartOf(drawing)));
+  });
+
+  it('returns to the original chart part when the edit is undone', async () => {
+    const book = await drawingsOf();
+    const before = book.layout();
+    const drawing = book.drawings[1];
+
+    const edited = book.apply.apply({
+      kind: StepKind.SetLayout,
+      sheet: 'Sales',
+      layout: changeChart(before, drawing?.id ?? '', { ...chartOf(drawing), title: 'Edited' }),
+    });
+
+    expect(edited.ok && book.apply.apply(edited.inverse).ok).toBe(true);
+
+    expect(chartOf((await book.saved())[1]).title).toBe(chartOf(drawing).title);
   });
 
   it('adds a new picture to the drawing part next to its neighbours', async () => {

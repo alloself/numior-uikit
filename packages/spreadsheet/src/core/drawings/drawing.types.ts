@@ -64,7 +64,12 @@ export type DrawingContent =
       readonly type: string;
       readonly bytes: Uint8Array;
     }
-  | { readonly kind: typeof DrawingKind.Chart; readonly chart: SheetChart }
+  | {
+      readonly kind: typeof DrawingKind.Chart;
+      readonly chart: SheetChart;
+      readonly part?: string | undefined;
+      readonly rewrite?: boolean | undefined;
+    }
   | { readonly kind: typeof DrawingKind.Foreign; readonly label: string };
 
 export interface DrawingSource {

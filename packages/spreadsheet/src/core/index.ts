@@ -84,7 +84,7 @@ export type {
   SheetChartSeries,
   SheetDrawing,
 } from './drawings/drawing.types';
-export { canEditDrawing, placeDrawing, removeDrawing } from './drawings/drawing-parts';
+export { canEditDrawing, changeChart, placeDrawing, removeDrawing } from './drawings/drawing-parts';
 export {
   chartAnchorAt,
   chartDataRange,

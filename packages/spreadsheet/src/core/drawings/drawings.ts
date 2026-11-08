@@ -106,7 +106,7 @@ const mapDrawing = (drawing: SheetDrawing, map: FormulaMap): SheetDrawing => {
 
   return chart === drawing.content.chart
     ? drawing
-    : { ...drawing, content: { kind: DrawingKind.Chart, chart } };
+    : { ...drawing, content: { ...drawing.content, chart } };
 };
 
 const sameDrawings = (left: readonly SheetDrawing[], right: readonly SheetDrawing[]): boolean =>

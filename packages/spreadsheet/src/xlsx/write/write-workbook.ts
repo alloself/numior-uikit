@@ -470,6 +470,21 @@ const writeNewDrawings = async (
   };
 };
 
+const writeChangedCharts = ({ output }: Writing, plan: SheetPlan): void => {
+  plan.sheet.layout.drawings.forEach(({ content }) => {
+    if (
+      content.kind === DrawingKind.Chart &&
+      content.rewrite === true &&
+      content.part !== undefined
+    ) {
+      output.entries.push(textEntry(content.part, chartXml(content.chart)));
+      output.overrides.set(content.part, TYPES.chart);
+      output.written.add(content.part);
+      output.rewritten.add(content.part);
+    }
+  });
+};
+
 const writeParts = async (
   writing: Writing,
   plan: SheetPlan,
@@ -693,6 +708,8 @@ const writeSheet = async (writing: Writing, plan: SheetPlan, firstNewId: number)
   const tables = await writeTables(writing.book, plan, writing.original, output);
   const ids = new Set([...plan.kept, ...tables].map((relationship) => relationship.id));
   const drawings = await writeNewDrawings(writing, plan, ids);
+
+  writeChangedCharts(writing, plan);
 
   const sheetOutput = await writeSheetPart({
     book: writing.book,
