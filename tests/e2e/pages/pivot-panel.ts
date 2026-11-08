@@ -82,6 +82,27 @@ export class PivotPanel {
     await this.page.getByRole('menuitem', { name: action, exact: true }).click();
   }
 
+  get options(): Locator {
+    return this.dialog.getByRole('button', { name: 'Параметры сводной таблицы', exact: true });
+  }
+
+  option(name: string): Locator {
+    return this.page
+      .getByRole('menuitemradio', { name, exact: true })
+      .or(this.page.getByRole('menuitemcheckbox', { name, exact: true }));
+  }
+
+  async openOptions(): Promise<void> {
+    if ((await this.options.getAttribute('aria-expanded')) !== 'true') {
+      await this.options.click();
+    }
+  }
+
+  async chooseOption(name: string): Promise<void> {
+    await this.openOptions();
+    await this.option(name).click();
+  }
+
   async holdChip(area: string, chip: string, to: string): Promise<void> {
     const from = centreOf(await boxOf(this.chip(area, chip)));
     const target = centreOf(await boxOf(this.area(to)));

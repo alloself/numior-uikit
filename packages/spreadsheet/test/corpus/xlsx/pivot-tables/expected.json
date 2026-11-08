@@ -170,6 +170,7 @@
         "layout": "compact",
         "rowTotals": true,
         "columnTotals": true,
+        "autofit": true,
         "captions": {
           "rows": "Row Labels",
           "columns": "Column Labels",

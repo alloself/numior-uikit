@@ -153,6 +153,7 @@ export const emptyPivot = (source: PivotSource, language: PivotLanguage): PivotD
   layout: PivotLayout.Compact,
   rowTotals: true,
   columnTotals: true,
+  autofit: true,
   captions: pivotCaptions(language),
 });
 

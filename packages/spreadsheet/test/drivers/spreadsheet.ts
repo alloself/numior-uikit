@@ -126,6 +126,16 @@ export class SpreadsheetDriver {
     ).length;
   }
 
+  columnWidths(count: number): number[] {
+    return this.wrapper
+      .find('colgroup')
+      .findAll('col')
+      .slice(1, count + 1)
+      .map((col) =>
+        col.element instanceof HTMLElement ? Number.parseFloat(col.element.style.inlineSize) : 0,
+      );
+  }
+
   text(row: number, col: number): string | undefined {
     return this.cell(row, col)?.textContent?.trim();
   }

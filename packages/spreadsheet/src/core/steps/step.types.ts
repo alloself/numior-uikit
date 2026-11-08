@@ -78,6 +78,7 @@ export type WorkbookStep =
       readonly name: string;
       readonly pivot: PivotState | undefined;
       readonly cells?: readonly CellEdit[] | undefined;
+      readonly layout?: SheetLayout | undefined;
     }
   | { readonly kind: typeof StepKind.Batch; readonly steps: readonly WorkbookStep[] };
 

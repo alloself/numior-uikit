@@ -438,7 +438,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
       case StepKind.RefreshPivot:
         return pivots.refresh(sheet, step.name);
       case StepKind.PutPivot:
-        return pivots.put(sheet, step.name, step.pivot, step.cells);
+        return pivots.put(sheet, step.name, step.pivot, step.cells, step.layout);
     }
   };
 

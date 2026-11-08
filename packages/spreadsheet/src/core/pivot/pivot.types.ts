@@ -81,6 +81,7 @@ export interface PivotDefinition {
   readonly layout: PivotLayout;
   readonly rowTotals: boolean;
   readonly columnTotals: boolean;
+  readonly autofit: boolean;
   readonly captions: PivotCaptions;
 }
 

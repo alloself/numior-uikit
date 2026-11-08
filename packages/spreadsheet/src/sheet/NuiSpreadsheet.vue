@@ -359,8 +359,12 @@ const recalc = useSheetRecalc({
   table: grid,
 });
 
+const layoutRevision = ref(0);
+
+let knownLayout = shownSheet.value?.layout;
+
 const cells = computed(() =>
-  shownSheet.value === undefined
+  shownSheet.value === undefined || layoutRevision.value < 0
     ? undefined
     : sheetCells({
         book,
@@ -394,6 +398,10 @@ const editing = useSheetEditing({
       if (kept >= 0) {
         sheetIndex.value = kept;
       }
+    }
+    if (shownSheet.value?.layout !== knownLayout) {
+      knownLayout = shownSheet.value?.layout;
+      layoutRevision.value += 1;
     }
     emit('change', change);
   },

@@ -14,6 +14,8 @@ const EDITOR = '.nui-spreadsheet-pivot__editor';
 
 const ITEMS = '.nui-spreadsheet-pivot__items';
 
+const OPTION = '[role="menuitemradio"], [role="menuitemcheckbox"]';
+
 const trimmed = (element: Element): string => element.textContent?.trim() ?? '';
 
 const pointer = (type: string, at: PointerAt): PointerEvent =>
@@ -387,6 +389,43 @@ export class PivotPanelDriver {
       .find((chip) => chip.text() === label)?.element;
 
     return found instanceof HTMLElement ? found : undefined;
+  }
+
+  async chooseOption(label: string): Promise<void> {
+    const menu = this.optionsMenu();
+
+    menu?.showPopover();
+    await nextTick();
+
+    [...(menu?.querySelectorAll<HTMLElement>(OPTION) ?? [])]
+      .find((item) => trimmed(item) === label)
+      ?.click();
+
+    await nextTick();
+  }
+
+  async checkedOptions(): Promise<string[]> {
+    const menu = this.optionsMenu();
+
+    menu?.showPopover();
+    await nextTick();
+
+    return [...(menu?.querySelectorAll(OPTION) ?? [])].reduce<string[]>((checked, item) => {
+      if (item.getAttribute('aria-checked') === 'true') {
+        checked.push(trimmed(item));
+      }
+      return checked;
+    }, []);
+  }
+
+  private optionsMenu(): HTMLElement | undefined {
+    const id = this.panel
+      .find('.nui-spreadsheet-pivot__tools [aria-haspopup="menu"]')
+      .attributes('aria-controls');
+
+    const menu = id === undefined ? null : document.getElementById(id);
+
+    return menu instanceof HTMLElement ? menu : undefined;
   }
 
   private menuOf(chip: string): HTMLElement | undefined {

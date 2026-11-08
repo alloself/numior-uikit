@@ -935,6 +935,62 @@ test.describe('book', () => {
     await expect(book.cell('4', 1)).toHaveText(/^\d[\d\s]*,\d{2}$/u);
   });
 
+  test('changes the pivot layout, its grand totals and column autofit from the options menu', async ({
+    playground,
+    book,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Продажи');
+    await book.cellMenu('2', 0, 'Вставить сводную таблицу');
+    await book.pivot.check('Регион');
+    await book.pivot.check('Сумма');
+
+    expect((await boxOf(book.columnHeader('B'))).width).toBeGreaterThan(120);
+
+    await book.pivot.chooseOption('Табличная форма');
+
+    await expect(book.cell('3', 0)).toHaveText('Регион');
+    await expect(book.pivot.options).toBeFocused();
+
+    await book.pivot.dragField('Квартал', 'Столбцы');
+
+    await expect(book.cell('8', 0)).toHaveText('Общий итог');
+
+    await book.scrollAcross(150);
+
+    await expect(book.cell('4', 5)).toHaveText('Общий итог');
+
+    await book.pivot.chooseOption('Общие итоги для строк');
+
+    await expect(book.cell('4', 5)).toHaveText('');
+
+    await book.scrollAcross(0);
+
+    await expect(book.cell('8', 0)).toHaveText('Общий итог');
+
+    await book.pivot.chooseOption('Общие итоги для столбцов');
+
+    await expect(book.cell('8', 0)).toHaveText('');
+
+    await book.pivot.openOptions();
+
+    await expect(book.pivot.option('Табличная форма')).toHaveAttribute('aria-checked', 'true');
+
+    await expect(book.pivot.option('Общие итоги для строк')).toHaveAttribute(
+      'aria-checked',
+      'false',
+    );
+
+    await expect(book.pivot.option('Автоподбор ширины столбцов')).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+
+    expect(await playground.wcagViolations('.nui-menu')).toEqual([]);
+  });
+
   test('keeps the pivot fields panel accessible in both themes', async ({ playground, book }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();

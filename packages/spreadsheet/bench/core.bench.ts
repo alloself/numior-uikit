@@ -293,6 +293,7 @@ const pivotStep = {
       layout: 'compact',
       rowTotals: true,
       columnTotals: true,
+      autofit: true,
       captions: pivotCaptions('en'),
     },
   },

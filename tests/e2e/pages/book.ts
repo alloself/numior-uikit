@@ -469,6 +469,12 @@ export class BookSection {
     return this.sheet.locator('.nui-table__viewport').evaluate((scroller) => scroller.scrollTop);
   }
 
+  async scrollAcross(pixels: number): Promise<void> {
+    await this.sheet
+      .locator('.nui-table__viewport')
+      .evaluate((scroller, left) => scroller.scrollTo({ left }), pixels);
+  }
+
   async scrollBody(pixels: number): Promise<void> {
     await this.sheet
       .locator('.nui-table__viewport')

@@ -276,6 +276,7 @@ export const pivotOf = (
     layout,
     rowTotals: table.rowTotals,
     columnTotals: table.columnTotals,
+    autofit: table.autofit,
     captions: captionsOf(table, languageOf(context.sheet, footprint)),
   };
 

@@ -7,6 +7,15 @@ export interface NuiSpreadsheetPivotMessages {
   readonly refreshPivot: string;
   readonly title: string;
   readonly close: string;
+  readonly options: string;
+  readonly reportLayout: string;
+  readonly layoutCompact: string;
+  readonly layoutOutline: string;
+  readonly layoutTabular: string;
+  readonly rowGrandTotals: string;
+  readonly columnGrandTotals: string;
+  readonly autofit: string;
+  readonly optionsChanged: string;
   readonly fields: string;
   readonly filtersArea: string;
   readonly columnsArea: string;
@@ -125,6 +134,15 @@ export const spreadsheetPivotMessages: NuiMessageCatalog<NuiSpreadsheetPivotMess
     refreshPivot: 'Refresh',
     title: 'Pivot table fields',
     close: 'Close',
+    options: 'PivotTable options',
+    reportLayout: 'Report layout',
+    layoutCompact: 'Compact form',
+    layoutOutline: 'Outline form',
+    layoutTabular: 'Tabular form',
+    rowGrandTotals: 'Grand totals for rows',
+    columnGrandTotals: 'Grand totals for columns',
+    autofit: 'Autofit column widths',
+    optionsChanged: 'Pivot table options changed',
     fields: 'Fields',
     filtersArea: 'Filters',
     columnsArea: 'Columns',
@@ -188,6 +206,15 @@ export const spreadsheetPivotMessages: NuiMessageCatalog<NuiSpreadsheetPivotMess
     refreshPivot: 'Обновить',
     title: 'Поля сводной таблицы',
     close: 'Закрыть',
+    options: 'Параметры сводной таблицы',
+    reportLayout: 'Макет отчёта',
+    layoutCompact: 'Сжатая форма',
+    layoutOutline: 'Форма структуры',
+    layoutTabular: 'Табличная форма',
+    rowGrandTotals: 'Общие итоги для строк',
+    columnGrandTotals: 'Общие итоги для столбцов',
+    autofit: 'Автоподбор ширины столбцов',
+    optionsChanged: 'Параметры сводной таблицы изменены',
     fields: 'Поля',
     filtersArea: 'Фильтры',
     columnsArea: 'Столбцы',

@@ -11,17 +11,39 @@
   >
     <div class="nui-spreadsheet-pivot__header">
       <h2 :id="titleId" class="nui-spreadsheet-pivot__title">{{ texts.title }}</h2>
-      <NuiButton
-        ref="closeButton"
-        variant="ghost"
-        tone="neutral"
-        size="xs"
-        icon-only
-        :aria-label="texts.close"
-        @click="emit('close')"
-      >
-        <NuiIcon icon="x" />
-      </NuiButton>
+      <div class="nui-spreadsheet-pivot__tools">
+        <NuiMenu
+          v-if="!readonly"
+          :items="optionItems"
+          :label="texts.options"
+          placement="bottom-end"
+          lazy
+        >
+          <template #trigger="{ attrs }">
+            <NuiButton
+              v-bind="attrs"
+              variant="ghost"
+              tone="neutral"
+              size="xs"
+              icon-only
+              :aria-label="texts.options"
+            >
+              <NuiIcon :icon="SETTINGS_ICON" />
+            </NuiButton>
+          </template>
+        </NuiMenu>
+        <NuiButton
+          ref="closeButton"
+          variant="ghost"
+          tone="neutral"
+          size="xs"
+          icon-only
+          :aria-label="texts.close"
+          @click="emit('close')"
+        >
+          <NuiIcon icon="x" />
+        </NuiButton>
+      </div>
     </div>
     <NuiSpreadsheetPivotItems
       v-if="itemsView !== undefined"
@@ -103,11 +125,12 @@ import {
   Sigma,
 } from '@lucide/vue';
 import { Key, useLocale, useMessages } from '@numior/primitives';
-import { NuiButton, NuiCheckbox, NuiIcon, type NuiMenuEntry } from '@numior/vue';
+import { NuiButton, NuiCheckbox, NuiIcon, NuiMenu, type NuiMenuEntry } from '@numior/vue';
 import { computed, markRaw, ref, shallowRef, useTemplateRef, watch } from 'vue';
 import {
   PivotArea,
   PivotLanguage,
+  PivotLayout,
   VALUES_FIELD,
   checkField,
   moveField,
@@ -459,6 +482,59 @@ const menuOf = (chip: PivotChip): readonly NuiMenuEntry[] => [
   ...removeItems(chip),
   ...settingsItems(chip),
 ];
+
+const layoutOf = (value: string): PivotLayout | undefined =>
+  Object.values(PivotLayout).find((layout) => layout === value);
+
+const setOption = (next: PivotDefinition): void => {
+  changed(next, undefined, texts.value.optionsChanged);
+};
+
+const setLayout = (value: string): void => {
+  const layout = layoutOf(value);
+
+  if (layout !== undefined && layout !== definition.layout) {
+    setOption({ ...definition, layout });
+  }
+};
+
+const optionItems = computed((): NuiMenuEntry[] => [
+  { type: 'label', key: 'layout-title', label: texts.value.reportLayout },
+  {
+    type: 'radio-group',
+    key: 'layout',
+    value: definition.layout,
+    onChange: setLayout,
+    items: [
+      { value: PivotLayout.Compact, label: texts.value.layoutCompact },
+      { value: PivotLayout.Outline, label: texts.value.layoutOutline },
+      { value: PivotLayout.Tabular, label: texts.value.layoutTabular },
+    ],
+  },
+  { type: 'separator', key: 'totals' },
+  {
+    type: 'checkbox',
+    key: 'row-totals',
+    label: texts.value.rowGrandTotals,
+    checked: definition.rowTotals,
+    onCheckedChange: (rowTotals) => setOption({ ...definition, rowTotals }),
+  },
+  {
+    type: 'checkbox',
+    key: 'column-totals',
+    label: texts.value.columnGrandTotals,
+    checked: definition.columnTotals,
+    onCheckedChange: (columnTotals) => setOption({ ...definition, columnTotals }),
+  },
+  { type: 'separator', key: 'autofit' },
+  {
+    type: 'checkbox',
+    key: 'autofit',
+    label: texts.value.autofit,
+    checked: definition.autofit,
+    onCheckedChange: (autofit) => setOption({ ...definition, autofit }),
+  },
+]);
 
 const back = (): void => {
   const current = view.value;

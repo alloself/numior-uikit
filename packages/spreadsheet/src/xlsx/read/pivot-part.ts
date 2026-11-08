@@ -59,6 +59,7 @@ export interface PivotTableEntry {
   readonly pageRows: number;
   readonly rowTotals: boolean;
   readonly columnTotals: boolean;
+  readonly autofit: boolean;
   readonly captions: Readonly<Record<string, string>>;
   readonly fields: PivotFieldEntry[];
   readonly rows: number[];
@@ -192,6 +193,7 @@ const emptyTable = (): PivotTableEntry => ({
   pageRows: 0,
   rowTotals: true,
   columnTotals: true,
+  autofit: false,
   captions: {},
   fields: [],
   rows: [],
@@ -210,6 +212,7 @@ const tableHead = (
   cacheId: numberOf(attributeOf(attributes, 'cacheId'), -1),
   rowTotals: attributeOf(attributes, 'rowGrandTotals') !== XmlBoolean.Zero,
   columnTotals: attributeOf(attributes, 'colGrandTotals') !== XmlBoolean.Zero,
+  autofit: truthy(attributeOf(attributes, 'useAutoFormatting')),
   captions: Object.fromEntries(
     CAPTIONS.reduce<[string, string][]>((found, caption) => {
       const text = attributeOf(attributes, caption);

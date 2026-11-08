@@ -61,6 +61,7 @@ const definitionOf = (source: PivotSource, changes: Partial<PivotDefinition>): P
   layout: 'compact',
   rowTotals: true,
   columnTotals: true,
+  autofit: false,
   captions: CAPTIONS,
   ...changes,
 });
@@ -381,6 +382,38 @@ describe('pivot steps', () => {
     book.place({ row: 2, col: 0 }, { columns: [] });
 
     expect(book.shown('B5', 'Rates')).not.toMatch(/%$/u);
+  });
+
+  it('fits the columns it covers on every update and gives the widths back on undo', () => {
+    const book = salesBook();
+    const widths = () => [0, 1, 2].map((col) => book.rates.layout.cols.get(col)?.size);
+
+    book.place({ row: 2, col: 0 }, { columns: [], autofit: true });
+
+    expect(widths()).toEqual([13, 14, undefined]);
+
+    book.type('A2', 'Northern Territories');
+    book.commit({ kind: 'refreshPivot', sheet: 'Rates', name: 'Sales' });
+
+    expect(widths()).toEqual([22, 14, undefined]);
+
+    book.place({ row: 2, col: 0 }, { columns: [], autofit: false });
+    book.type('A2', 'East');
+    book.commit({ kind: 'refreshPivot', sheet: 'Rates', name: 'Sales' });
+
+    expect(widths()).toEqual([22, 14, undefined]);
+
+    book.history.undo();
+    book.history.undo();
+    book.history.undo();
+    book.history.undo();
+
+    expect(widths()).toEqual([13, 14, undefined]);
+
+    book.history.undo();
+    book.history.undo();
+
+    expect(widths()).toEqual([undefined, undefined, undefined]);
   });
 
   it('refuses edits to its cells but lets them be formatted', () => {

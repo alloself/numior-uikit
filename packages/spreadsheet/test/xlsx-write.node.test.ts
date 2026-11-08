@@ -718,6 +718,7 @@ describe('writing xlsx', () => {
       layout: 'outline',
       rowTotals: true,
       columnTotals: false,
+      autofit: false,
       captions: pivotCaptions('en'),
     };
 
@@ -821,6 +822,7 @@ describe('writing xlsx', () => {
           layout: 'compact',
           rowTotals: true,
           columnTotals: true,
+          autofit: false,
           captions: pivotCaptions('en'),
         },
       },
@@ -852,6 +854,7 @@ describe('writing xlsx', () => {
 
     expect(shown()).toEqual(before);
     expect(read.book.pivots.on(report)).toHaveLength(1);
+    expect(read.book.pivots.on(report)[0]?.definition.autofit).toBe(true);
   });
 
   it('keeps Russian default captions and rewrites a moved pivot without its old cache', async () => {

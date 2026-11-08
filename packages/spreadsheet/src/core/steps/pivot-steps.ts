@@ -14,6 +14,8 @@ import {
   type PivotState,
 } from '../pivot/pivot.types';
 import { rangesMeet } from '../tables';
+import type { SheetLayout } from '../layout/layout.types';
+import { fittedLayout } from './pivot-widths';
 import type { Sheet, SheetPivot, Workbook } from '../workbook';
 import { StepRefusal, type CellEdit, type StepResult, type WorkbookStep } from './step.types';
 
@@ -31,6 +33,7 @@ export interface PivotSteps {
     name: string,
     state: PivotState | undefined,
     restored: readonly CellEdit[] | undefined,
+    layout: SheetLayout | undefined,
   ): StepResult;
   covers(sheet: Sheet, cells: readonly CellEdit[]): boolean;
   crossed(sheet: Sheet, change: LineChange): boolean;
@@ -57,6 +60,16 @@ const EMPTY_CONTENT = { kind: 'empty' } as const;
 const NO_AREA: CellRange = { top: 0, left: 0, bottom: 0, right: 0 };
 
 const keyOf = (row: number, col: number): number => row * MAX_COLS + col;
+
+const REMOVED: Rendered = { ok: true, cells: [], footprint: NO_AREA };
+
+const reformatOf = (
+  previous: SheetPivot | undefined,
+  spec: PivotSpec | undefined,
+): string | undefined =>
+  previous !== undefined && spec !== undefined && previous.definition !== spec.definition
+    ? GENERAL
+    : undefined;
 
 const stateOf = (pivot: SheetPivot): PivotState => ({
   anchor: pivot.anchor,
@@ -198,18 +211,37 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
     });
   };
 
+  const refit = (
+    sheet: Sheet,
+    spec: PivotSpec | undefined,
+    written: readonly CellEdit[],
+  ): SheetLayout | undefined => {
+    const { layout } = sheet;
+
+    if (spec?.definition.autofit === true) {
+      sheet.layout = fittedLayout(book, sheet, written);
+    }
+    return sheet.layout === layout ? undefined : layout;
+  };
+
+  const swap = (
+    sheet: Sheet,
+    name: string,
+    previous: SheetPivot | undefined,
+    next: SheetPivot | undefined,
+  ): void => {
+    if (previous !== undefined) {
+      book.pivots.delete(previous);
+    }
+    if (next !== undefined) {
+      book.pivots.set({ ...next, name: previous?.name ?? name, sheet });
+    }
+  };
+
   const placed = (sheet: Sheet, name: string, spec: PivotSpec | undefined): StepResult => {
     const previous = book.pivots.get(sheet, name);
-
-    const reformat =
-      previous !== undefined && spec !== undefined && previous.definition !== spec.definition
-        ? GENERAL
-        : undefined;
-
-    const output: Rendered =
-      spec === undefined
-        ? { ok: true, cells: [], footprint: NO_AREA }
-        : rendered(sheet, name, spec, reformat);
+    const reformat = reformatOf(previous, spec);
+    const output = spec === undefined ? REMOVED : rendered(sheet, name, spec, reformat);
 
     if (!output.ok) {
       return { ok: false, reason: output.reason };
@@ -224,12 +256,12 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
       cells.write(sheet, cell);
     });
 
-    if (previous !== undefined) {
-      book.pivots.delete(previous);
-    }
-    if (spec !== undefined) {
-      book.pivots.set({ name: previous?.name ?? name, sheet, ...spec, footprint: area });
-    }
+    swap(
+      sheet,
+      name,
+      previous,
+      spec === undefined ? undefined : { name, sheet, ...spec, footprint: area },
+    );
 
     return {
       ok: true,
@@ -240,6 +272,7 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
         name,
         pivot: previous === undefined ? undefined : stateOf(previous),
         cells: restore,
+        layout: refit(sheet, spec, output.cells),
       },
     };
   };
@@ -253,20 +286,20 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
         ? { ok: false, reason: StepRefusal.MissingPivot }
         : placed(sheet, name, { anchor: pivot.anchor, definition: pivot.definition });
     },
-    put: (sheet, name, state, restored = []) => {
+    put: (sheet, name, state, restored = [], layout) => {
       const previous = book.pivots.get(sheet, name);
       const current = cells.snapshot(sheet, restored);
+      const shown = sheet.layout;
+
+      if (layout !== undefined) {
+        sheet.layout = layout;
+      }
 
       restored.forEach((cell) => {
         cells.write(sheet, cell);
       });
 
-      if (previous !== undefined) {
-        book.pivots.delete(previous);
-      }
-      if (state !== undefined) {
-        book.pivots.set({ name: previous?.name ?? name, sheet, ...state });
-      }
+      swap(sheet, name, previous, state === undefined ? undefined : { name, sheet, ...state });
       return {
         ok: true,
         changes: [],
@@ -276,6 +309,7 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
           name,
           pivot: previous === undefined ? undefined : stateOf(previous),
           cells: current,
+          layout: layout === undefined ? undefined : shown,
         },
       };
     },

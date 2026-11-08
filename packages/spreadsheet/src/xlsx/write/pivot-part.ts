@@ -306,7 +306,7 @@ const tableXml = (
 
   return [
     HEADER,
-    `<pivotTableDefinition xmlns="${MAIN}"${attribute('name', pivot.name)}${attribute('cacheId', context.cacheId)} applyNumberFormats="0" applyBorderFormats="0" applyFontFormats="0" applyPatternFormats="0" applyAlignmentFormats="0" applyWidthHeightFormats="1"${captionAttributes(definition)} updatedVersion="8" minRefreshableVersion="3" useAutoFormatting="1" itemPrintTitles="1" createdVersion="8" indent="0"${
+    `<pivotTableDefinition xmlns="${MAIN}"${attribute('name', pivot.name)}${attribute('cacheId', context.cacheId)} applyNumberFormats="0" applyBorderFormats="0" applyFontFormats="0" applyPatternFormats="0" applyAlignmentFormats="0" applyWidthHeightFormats="1"${captionAttributes(definition)} updatedVersion="8" minRefreshableVersion="3"${definition.autofit ? ' useAutoFormatting="1"' : ''} itemPrintTitles="1" createdVersion="8" indent="0"${
       definition.layout === PivotLayout.Compact ? '' : ' compact="0" compactData="0"'
     } outline="1" outlineData="1" multipleFieldFilters="0"${definition.rowTotals ? '' : ' rowGrandTotals="0"'}${
       definition.columnTotals ? '' : ' colGrandTotals="0"'
