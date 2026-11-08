@@ -21,6 +21,8 @@ const EMU_PER_PIXEL = 9525;
 
 export const pixelsOfEmu = (emu: number): number => emu / EMU_PER_PIXEL;
 
+export const emuOfPixels = (pixels: number): number => Math.round(pixels * EMU_PER_PIXEL);
+
 const lineOf = (mark: DrawingMark, axis: LineAxis): number =>
   axis === LineAxis.Rows ? mark.row : mark.col;
 

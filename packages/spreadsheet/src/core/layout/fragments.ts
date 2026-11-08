@@ -192,6 +192,9 @@ const shiftLine = (
 ): FragmentSlot | undefined => {
   const delta = deltas.get(slot.axis);
 
+  if (slot.policy === SlotPolicy.Fixed) {
+    return slot;
+  }
   if (slot.policy === SlotPolicy.Follow && delta !== undefined) {
     return followed(slot, change, delta);
   }
@@ -237,6 +240,7 @@ const shiftSlot = (
       return shiftSplit(slot, change);
     case FragmentSlotKind.Offset:
       return change.axis === LineAxis.Cols ? shiftOffset(slot, change, frames.parent) : slot;
+    case FragmentSlotKind.Measure:
     case FragmentSlotKind.Count:
       return slot;
   }

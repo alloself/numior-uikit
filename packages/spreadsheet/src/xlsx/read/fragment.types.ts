@@ -1,4 +1,8 @@
-import { FragmentSlotKind, type SlotPolicy } from '../../core/layout/fragments.types';
+import {
+  FragmentSlotKind,
+  type MeasureName,
+  type SlotPolicy,
+} from '../../core/layout/fragments.types';
 import type { XmlName } from '../xml/xml.types';
 import type { LineAxis } from '../../core/cell.types';
 
@@ -16,6 +20,7 @@ export type SlotSpec =
       readonly axis?: LineAxis | undefined;
     }
   | { readonly kind: typeof FragmentSpecKind.Split; readonly axis: LineAxis }
+  | { readonly kind: typeof FragmentSpecKind.Measure; readonly name: MeasureName }
   | {
       readonly kind:
         | typeof FragmentSpecKind.Offset

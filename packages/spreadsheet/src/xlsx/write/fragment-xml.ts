@@ -23,6 +23,8 @@ const slotText = (slot: FragmentSlot, anchor: CellAddress, children: number): st
       return String(slot.count);
     case FragmentSlotKind.Offset:
       return String(slot.offset);
+    case FragmentSlotKind.Measure:
+      return String(slot.value);
     case FragmentSlotKind.Formula:
       return escapeAttribute(printFormula(withFuturePrefixes(slot.ast), FILE_FORMULAS, anchor));
     case FragmentSlotKind.Count:

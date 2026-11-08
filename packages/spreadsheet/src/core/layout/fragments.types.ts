@@ -3,6 +3,8 @@ import type { FormulaNode } from '../formula/formula.types';
 
 export type SlotPolicy = (typeof SlotPolicy)[keyof typeof SlotPolicy];
 
+export type MeasureName = (typeof MeasureName)[keyof typeof MeasureName];
+
 export type FragmentSlot =
   | {
       readonly kind: typeof FragmentSlotKind.Cell;
@@ -27,6 +29,11 @@ export type FragmentSlot =
       readonly count: number;
     }
   | { readonly kind: typeof FragmentSlotKind.Offset; readonly offset: number }
+  | {
+      readonly kind: typeof FragmentSlotKind.Measure;
+      readonly name: MeasureName;
+      readonly value: number;
+    }
   | { readonly kind: typeof FragmentSlotKind.Formula; readonly ast: FormulaNode }
   | { readonly kind: typeof FragmentSlotKind.Count };
 
@@ -55,8 +62,23 @@ export const FragmentSlotKind = {
   Line: 'line',
   Split: 'split',
   Offset: 'offset',
+  Measure: 'measure',
   Formula: 'formula',
   Count: 'count',
 } as const;
 
-export const SlotPolicy = { Drop: 'drop', Clamp: 'clamp', Follow: 'follow' } as const;
+export const SlotPolicy = {
+  Drop: 'drop',
+  Clamp: 'clamp',
+  Follow: 'follow',
+  Fixed: 'fixed',
+} as const;
+
+export const MeasureName = {
+  ColOff: 'colOff',
+  RowOff: 'rowOff',
+  Width: 'cx',
+  Height: 'cy',
+  X: 'x',
+  Y: 'y',
+} as const;

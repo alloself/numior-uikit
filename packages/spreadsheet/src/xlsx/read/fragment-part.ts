@@ -1,11 +1,12 @@
 import { parseCell, parseRange } from '../../core/address';
 import type { CellRange, LineAxis } from '../../core/cell.types';
 import { anchorOf } from '../../core/layout/fragments';
-import type {
-  Fragment,
-  FragmentPiece,
-  FragmentSlot,
-  SheetXml,
+import {
+  SlotPolicy,
+  type Fragment,
+  type FragmentPiece,
+  type FragmentSlot,
+  type SheetXml,
 } from '../../core/layout/fragments.types';
 import { EN_FORMULAS } from '../../core/formula/locale';
 import { parseFormula } from '../../core/formula/parser';
@@ -94,6 +95,12 @@ const wholeNumber = (text: string): number | undefined => {
   return text.trim() !== '' && Number.isInteger(value) ? value : undefined;
 };
 
+const whole = <T>(text: string, make: (value: number) => T): T | undefined => {
+  const value = wholeNumber(text);
+
+  return value === undefined ? undefined : make(value);
+};
+
 const slotOf = (spec: SlotSpec, value: string, axis: LineAxis): Recorded | undefined => {
   switch (spec.kind) {
     case FragmentSpecKind.Cell: {
@@ -108,29 +115,24 @@ const slotOf = (spec: SlotSpec, value: string, axis: LineAxis): Recorded | undef
 
       return ranges === undefined ? undefined : { kind: 'ranges', ranges, policy: spec.policy };
     }
-    case FragmentSpecKind.Line: {
-      const line = wholeNumber(value);
-
-      return line === undefined
-        ? undefined
-        : {
-            kind: 'line',
-            axis: spec.axis ?? axis,
-            line: line - spec.base,
-            base: spec.base,
-            policy: spec.policy,
-          };
-    }
-    case FragmentSpecKind.Split: {
-      const count = wholeNumber(value);
-
-      return count === undefined ? undefined : { kind: 'split', axis: spec.axis, count };
-    }
-    case FragmentSpecKind.Offset: {
-      const offset = wholeNumber(value);
-
-      return offset === undefined ? undefined : { kind: 'offset', offset };
-    }
+    case FragmentSpecKind.Line:
+      return whole(value, (line) => ({
+        kind: 'line',
+        axis: spec.axis ?? axis,
+        line: line - spec.base,
+        base: spec.base,
+        policy: spec.policy,
+      }));
+    case FragmentSpecKind.Split:
+      return whole(value, (count) => ({ kind: 'split', axis: spec.axis, count }));
+    case FragmentSpecKind.Offset:
+      return whole(value, (offset) => ({ kind: 'offset', offset }));
+    case FragmentSpecKind.Measure:
+      return whole(value, (measured) => ({
+        kind: FragmentSpecKind.Measure,
+        name: spec.name,
+        value: measured,
+      }));
     case FragmentSpecKind.Formula:
       return { kind: 'pending', text: value };
     case FragmentSpecKind.Count:
@@ -186,7 +188,7 @@ const adjusted = (
     return spec;
   }
   if (open.mode === AnchorMode.Absolute) {
-    return undefined;
+    return { ...spec, policy: SlotPolicy.Fixed };
   }
   return open.mode === AnchorMode.OneCell && open.inTo ? { ...spec, policy: 'follow' } : spec;
 };

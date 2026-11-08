@@ -39,6 +39,7 @@ type MarkField = keyof MarkDraft;
 
 interface AnchorDraft {
   readonly kind: DrawingAnchorKind;
+  readonly index: number;
   readonly editAs: string | undefined;
   from: MarkDraft | undefined;
   to: MarkDraft | undefined;
@@ -205,8 +206,13 @@ const isFallback = (name: XmlName): boolean =>
 const isMarkEnd = (local: string): boolean =>
   local === OoxmlElement.From || local === OoxmlElement.To;
 
-const newAnchor = (kind: DrawingAnchorKind, attributes: readonly XmlAttribute[]): AnchorDraft => ({
+const newAnchor = (
+  kind: DrawingAnchorKind,
+  index: number,
+  attributes: readonly XmlAttribute[],
+): AnchorDraft => ({
   kind,
+  index,
   editAs: attributeOf(attributes, OoxmlAttribute.EditAs),
   from: undefined,
   to: undefined,
@@ -253,6 +259,7 @@ const createDrafter = () => {
   let field: MarkField | undefined;
   let text = '';
   let fallback = 0;
+  let seen = 0;
 
   const openMark = (current: AnchorDraft, local: string): void => {
     mark = emptyMark();
@@ -309,11 +316,13 @@ const createDrafter = () => {
 
       const kind = isDrawing(name) ? ANCHOR_KINDS.get(name.local) : undefined;
 
+      seen += kind === undefined ? 0 : 1;
+
       if (fallback > 0) {
         return;
       }
       if (kind !== undefined) {
-        anchor = newAnchor(kind, attributes);
+        anchor = newAnchor(kind, seen - 1, attributes);
       } else if (anchor !== undefined && isDrawing(name)) {
         openDrawingChild(anchor, name.local, attributes);
       } else if (anchor !== undefined && anchor.content === undefined) {
@@ -357,6 +366,7 @@ const drawingsOfPart = async (
       alt: draft.alt,
       anchor: anchorOf(draft),
       content: await contentOf(archive, draft.content, relations, options),
+      source: { part: path, anchor: draft.index },
     });
   }
   return drawings;

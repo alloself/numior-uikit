@@ -6,14 +6,28 @@ import {
   SheetChartGaps,
   SheetChartKind,
   SheetChartStacking,
+  StepKind,
   createStepper,
+  placeDrawing,
   printFormula,
+  removeDrawing,
+  type DrawingAnchor,
   type FormulaNode,
   type SheetChart,
   type SheetDrawing,
+  type SheetLayout,
 } from '../src/core';
-import { readWorkbook } from '../src/xlsx';
+import { readWorkbook, writeWorkbook } from '../src/xlsx';
 import { SALES_SHEET, xlsxPackage } from './xlsx-package';
+
+interface DrawnBook {
+  readonly drawings: readonly SheetDrawing[];
+  readonly apply: ReturnType<typeof createStepper>;
+  readonly place: (id: string, anchor: DrawingAnchor) => void;
+  readonly remove: (id: string) => void;
+  readonly layout: () => SheetLayout;
+  readonly saved: () => Promise<readonly SheetDrawing[]>;
+}
 
 const OFFICE = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
@@ -55,7 +69,7 @@ const PICTURE = 'not really a png';
 
 const drawingsOf = async (
   changes: Readonly<Record<string, string | undefined>> = {},
-): Promise<{ drawings: readonly SheetDrawing[]; apply: ReturnType<typeof createStepper> }> => {
+): Promise<DrawnBook> => {
   const read = await readWorkbook(
     await xlsxPackage({
       'xl/worksheets/sheet1.xml': SALES_SHEET.replace(
@@ -87,6 +101,27 @@ const drawingsOf = async (
       return sheet.layout.drawings;
     },
     apply: createStepper(read.book, read.calculator),
+    place: (id, anchor) => {
+      sheet.layout = placeDrawing(sheet.layout, id, anchor);
+    },
+    remove: (id) => {
+      sheet.layout = removeDrawing(sheet.layout, id);
+    },
+    layout: () => sheet.layout,
+    saved: async () => {
+      const written = await writeWorkbook(read.book, read.calculator, { source: read.source });
+
+      if (!written.ok) {
+        throw new Error('the workbook was refused');
+      }
+
+      const again = await readWorkbook(written.bytes);
+
+      if (again.kind === 'rejected') {
+        throw new Error('the written package was rejected');
+      }
+      return again.book.sheet('Sales')?.layout.drawings ?? [];
+    },
   };
 };
 
@@ -285,6 +320,113 @@ describe('sheet drawings', () => {
         from: { row: 0, col: 5, dx: 0, dy: 0 },
         to: { row: 4, col: 8, dx: 0, dy: 0 },
       },
+    ]);
+  });
+
+  it('writes moved and resized anchors into the drawing part', async () => {
+    const book = await drawingsOf();
+
+    const picture: DrawingAnchor = {
+      kind: DrawingAnchorKind.Cell,
+      from: { row: 4, col: 6, dx: 3, dy: 5 },
+      width: 80,
+      height: 40,
+    };
+
+    const chart: DrawingAnchor = {
+      kind: DrawingAnchorKind.Cells,
+      placement: DrawingPlacement.TwoCell,
+      from: { row: 20, col: 1, dx: 2, dy: 4 },
+      to: { row: 30, col: 5, dx: 6, dy: 8 },
+    };
+
+    const point: DrawingAnchor = {
+      kind: DrawingAnchorKind.Point,
+      x: 40,
+      y: 60,
+      width: 120,
+      height: 90,
+    };
+
+    book.place('xl/drawings/drawing1.xml#2', picture);
+    book.place('xl/drawings/drawing1.xml#3', chart);
+    book.place('xl/drawings/drawing1.xml#5', point);
+
+    const saved = await book.saved();
+
+    expect(saved.map((drawing) => drawing.anchor).slice(0, 4)).toEqual([
+      picture,
+      chart,
+      book.drawings[2]?.anchor,
+      point,
+    ]);
+  });
+
+  it('moves an anchor kept in place by editAs absolute and keeps it on row insertion', async () => {
+    const book = await drawingsOf();
+
+    const moved: DrawingAnchor = {
+      kind: DrawingAnchorKind.Cells,
+      placement: DrawingPlacement.Absolute,
+      from: { row: 2, col: 11, dx: 0, dy: 0 },
+      to: { row: 6, col: 15, dx: 0, dy: 0 },
+    };
+
+    book.place('xl/drawings/drawing1.xml#6', moved);
+
+    const saved = await book.saved();
+
+    book.apply.apply({ kind: 'insertLines', sheet: 'Sales', axis: 'rows', at: 0, count: 1 });
+
+    expect([saved[4]?.anchor, book.drawings[4]?.anchor]).toEqual([moved, moved]);
+  });
+
+  it('removes a drawing from the part and keeps editing the ones after it', async () => {
+    const book = await drawingsOf();
+
+    const point: DrawingAnchor = {
+      kind: DrawingAnchorKind.Point,
+      x: 10,
+      y: 20,
+      width: 30,
+      height: 40,
+    };
+
+    book.remove('xl/drawings/drawing1.xml#4');
+    book.place('xl/drawings/drawing1.xml#5', point);
+
+    const saved = await book.saved();
+
+    expect(saved.map((drawing) => [drawing.name, drawing.anchor.kind])).toEqual([
+      ['Logo', DrawingAnchorKind.Cell],
+      ['Sales chart', DrawingAnchorKind.Cells],
+      ['Mixed', DrawingAnchorKind.Point],
+      ['Waterfall', DrawingAnchorKind.Cells],
+    ]);
+
+    expect(saved[2]?.anchor).toEqual(point);
+  });
+
+  it('undoes a placement through the layout step and writes the original part', async () => {
+    const book = await drawingsOf();
+    const before = book.layout();
+
+    const placed = book.apply.apply({
+      kind: StepKind.SetLayout,
+      sheet: 'Sales',
+      layout: placeDrawing(before, 'xl/drawings/drawing1.xml#2', {
+        kind: DrawingAnchorKind.Cell,
+        from: { row: 9, col: 9, dx: 0, dy: 0 },
+        width: 10,
+        height: 10,
+      }),
+    });
+
+    expect(placed.ok && book.apply.apply(placed.inverse).ok).toBe(true);
+
+    expect([book.layout() === before, (await book.saved())[0]?.anchor]).toEqual([
+      true,
+      before.drawings[0]?.anchor,
     ]);
   });
 

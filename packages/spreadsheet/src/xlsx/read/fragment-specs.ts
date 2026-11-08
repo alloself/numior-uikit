@@ -1,5 +1,7 @@
+import { MeasureName } from '../../core/layout/fragments.types';
 import {
   FragmentSpace,
+  FragmentSpecKind,
   type ElementSpec,
   type ElementSpecs,
   type SlotSpec,
@@ -87,11 +89,20 @@ export const SHEET_SPECS: ElementSpecs = {
 
 const ANCHOR: ElementSpec = { fragment: 'item' };
 
+const measure = (name: MeasureName): SlotSpec => ({ kind: FragmentSpecKind.Measure, name });
+
 export const DRAWING_SPECS: ElementSpecs = {
   'xdr:twoCellAnchor': ANCHOR,
   'xdr:oneCellAnchor': ANCHOR,
+  'xdr:absoluteAnchor': ANCHOR,
   'xdr:col': { text: { kind: 'line', base: 0, policy: 'clamp', axis: 'cols' } },
   'xdr:row': { text: { kind: 'line', base: 0, policy: 'clamp', axis: 'rows' } },
+  'xdr:colOff': { text: measure(MeasureName.ColOff) },
+  'xdr:rowOff': { text: measure(MeasureName.RowOff) },
+  'xdr:ext': {
+    attributes: { cx: measure(MeasureName.Width), cy: measure(MeasureName.Height) },
+  },
+  'xdr:pos': { attributes: { x: measure(MeasureName.X), y: measure(MeasureName.Y) } },
   'xdr:sp': { attributes: { textlink: FORMULA } },
 };
 

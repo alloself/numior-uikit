@@ -79,10 +79,12 @@ export type {
   DrawingContent,
   DrawingMark,
   DrawingSize,
+  DrawingSource,
   SheetChart,
   SheetChartSeries,
   SheetDrawing,
 } from './drawings/drawing.types';
+export { canEditDrawing, placeDrawing, removeDrawing } from './drawings/drawing-parts';
 export type {
   AlignmentStyle,
   BorderSide,

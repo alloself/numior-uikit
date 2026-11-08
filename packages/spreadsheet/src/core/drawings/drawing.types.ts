@@ -67,12 +67,18 @@ export type DrawingContent =
   | { readonly kind: typeof DrawingKind.Chart; readonly chart: SheetChart }
   | { readonly kind: typeof DrawingKind.Foreign; readonly label: string };
 
+export interface DrawingSource {
+  readonly part: string;
+  readonly anchor: number;
+}
+
 export interface SheetDrawing {
   readonly id: string;
   readonly name: string;
   readonly alt: string;
   readonly anchor: DrawingAnchor;
   readonly content: DrawingContent;
+  readonly source?: DrawingSource | undefined;
 }
 
 export const DrawingPlacement = {
