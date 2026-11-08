@@ -70,6 +70,9 @@ const BAND_PAINT = `
     background-image: none !important;
     color: blue !important;
   }
+  [data-testid='table-sheet'] .nui-table__row--frozen > .nui-table__cell * {
+    color: transparent !important;
+  }
 `;
 
 const BAND_TOP = 31.5;

@@ -85,9 +85,9 @@ test.describe('table text flow', () => {
   }) => {
     await expect(flow.cell(TITLE, 0)).toContainText('Сводный отчёт');
 
-    await expectOneText(flow, TITLE, 0, 5);
-    await expectOneText(flow, BLOCKS, 1, 7);
-    await expectOneText(flow, STOPPED, 1, 5);
+    await expectOneText(flow, TITLE, 0, 4);
+    await expectOneText(flow, BLOCKS, 1, 6);
+    await expectOneText(flow, STOPPED, 1, 4);
 
     const start = await flow.pieceOf(STOPPED, 1);
 
@@ -99,7 +99,7 @@ test.describe('table text flow', () => {
     expect(await flow.pieceOf(END, 7)).toMatchObject({ hidden: false, line: '1px' });
     expect(await flow.pieceOf(STOPPED, 7)).toMatchObject({ text: 'Стоп', hidden: false });
 
-    await expectOneText(flow, CENTRE, 3, 7);
+    await expectOneText(flow, CENTRE, 4, 6);
   });
 
   test('stops at a filled cell and at a merge and clips the text inside a merge', async ({
@@ -131,7 +131,7 @@ test.describe('table text flow', () => {
       expect(await flow.ringShare(BLOCKS, 3)).toBe(1);
     }
 
-    await expectOneText(flow, DECORATED, 1, 5);
+    await expectOneText(flow, DECORATED, 1, 4);
   });
 
   test('selects only the cells under the pointer and the keyboard', async ({
@@ -148,7 +148,7 @@ test.describe('table text flow', () => {
     await page.keyboard.press('Shift+ArrowRight');
 
     expect(await flow.rangedCount()).toBe(2);
-    await expectOneText(flow, BLOCKS, 1, 7);
+    await expectOneText(flow, BLOCKS, 1, 6);
   });
 
   test('shrinks the flow when a value lands in a covered cell and restores it when it is cleared', async ({
@@ -168,7 +168,7 @@ test.describe('table text flow', () => {
     await flow.cell(STOPPED, 3).click();
     await page.keyboard.press('Delete');
 
-    await expectOneText(flow, STOPPED, 1, 5);
+    await expectOneText(flow, STOPPED, 1, 4);
   });
 
   test('keeps showing a text whose own cell left the column window', async ({
@@ -178,7 +178,7 @@ test.describe('table text flow', () => {
 
     await expect(flow.cell(CUT, 1)).toHaveCount(0);
 
-    const pieces = await shownPieces(flow, CUT, 2, 8);
+    const pieces = await shownPieces(flow, CUT, 2, 7);
 
     expect(pieces.length).toBeGreaterThan(0);
 
@@ -222,7 +222,7 @@ test.describe('table text flow', () => {
   test('mirrors the flow in a right to left layout', async ({ tableFlow: flow, playground }) => {
     await playground.setDirection('rtl');
 
-    await expectOneText(flow, STOPPED, 1, 5);
+    await expectOneText(flow, STOPPED, 1, 4);
 
     const start = await flow.pieceOf(STOPPED, 1);
 
@@ -232,7 +232,7 @@ test.describe('table text flow', () => {
     );
 
     await expectOneText(flow, END, 5, 7);
-    await expectOneText(flow, CENTRE, 3, 7);
+    await expectOneText(flow, CENTRE, 4, 6);
   });
 
   test('a flowing sheet has no automatically detectable WCAG AA violations', async ({

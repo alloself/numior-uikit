@@ -1,3 +1,4 @@
+import { useEventListener } from '@vueuse/core';
 import { nextTick, onMounted, shallowRef, type ShallowRef } from 'vue';
 
 interface TextMetrics {
@@ -18,22 +19,28 @@ const fontOf = (metrics: TextMetrics, style: TextStyle): string =>
     sizeOf(metrics, style?.['font-size']),
   )}px ${metrics.family}`;
 
+const BODY = '.nui-table__body';
+
 const SAMPLE = [
   '.nui-table__body .nui-table__cell--data > .nui-table__content--text',
   '.nui-table__body .nui-table__cell--data > .nui-table__content > .nui-table__text',
 ].join(', ');
 
+const fontsOf = (): FontFaceSet | undefined =>
+  typeof document === 'undefined' ? undefined : document.fonts;
+
 const contextOf = (): OffscreenCanvasRenderingContext2D | null =>
   typeof OffscreenCanvas === 'undefined' ? null : new OffscreenCanvas(1, 1).getContext('2d');
 
 const metricsOf = (root: HTMLElement): TextMetrics | undefined => {
+  const body = root.querySelector(BODY);
   const text = root.querySelector(SAMPLE);
   const content = text?.classList.contains('nui-table__content--text') ? text : text?.parentElement;
 
-  if (text === null || content === null || content === undefined) {
+  if (body === null || text === null || content === null || content === undefined) {
     return undefined;
   }
-  const style = getComputedStyle(text);
+  const style = getComputedStyle(body);
 
   return {
     style: style.fontStyle,
@@ -97,10 +104,18 @@ export const useTextMeasure = (
     return width;
   };
 
+  const remeasure = (): void => {
+    widths.clear();
+    contextFont = '';
+    ready.value += 1;
+  };
+
   onMounted(() => {
     context = contextOf();
     ready.value += 1;
   });
+
+  useEventListener(fontsOf, 'loadingdone', remeasure);
 
   return {
     needOf: (text: string, style?: TextStyle): number => {

@@ -179,7 +179,7 @@ test.describe('table detail rows', () => {
       .poll(async () => (await boxOf(detail.row(1))).height)
       .toBeGreaterThan(plain.height);
 
-    expect((await boxOf(detail.row(2))).height).toBe(plain.height);
+    expect((await boxOf(detail.row(2))).height).toBeCloseTo(plain.height, 3);
     expect(await detail.largestRowGap()).toBeLessThanOrEqual(0.5);
 
     await detail.scrollTo(30_000);

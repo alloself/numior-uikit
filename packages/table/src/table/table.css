@@ -626,6 +626,9 @@
   inset-block-start: var(--_top, 0px);
   z-index: 30;
 }
+.nui-table__header > .nui-table__row:first-child {
+  block-size: calc(var(--_row) + var(--_head-lap));
+}
 .nui-table__header > .nui-table__row:first-child > .nui-table__cell {
   inset-block-start: calc(-1 * var(--_head-lap));
   padding-block-start: var(--_head-lap);
