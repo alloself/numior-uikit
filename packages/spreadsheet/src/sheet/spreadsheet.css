@@ -526,6 +526,7 @@
   inset-inline-end: var(--nui-space-3);
   z-index: 1;
   display: flex;
+  max-inline-size: calc(100% - 2 * var(--nui-space-3));
   align-items: center;
   gap: var(--nui-space-2);
   padding-block: var(--nui-space-1);
@@ -554,9 +555,13 @@
     visibility 0s linear 0s;
 }
 .nui-spreadsheet__status-text {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 .nui-spreadsheet__status-progress {
+  flex: none;
   inline-size: 6rem;
 }
 .nui-spreadsheet__report-stale {
