@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { paintedRgbAt, rgbDelta, type Rgb } from '../helpers/color';
@@ -436,6 +437,47 @@ export class BookSection {
 
   async recalculateReport(): Promise<void> {
     await this.report.getByRole('button', { name: 'Пересчитать' }).click();
+  }
+
+  get fileBar(): Locator {
+    return this.sheet.locator('.nui-spreadsheet__file');
+  }
+
+  get fileName(): Locator {
+    return this.fileBar.locator('.nui-spreadsheet__file-text');
+  }
+
+  async fileNameWidth(): Promise<number> {
+    return (await boxOf(this.fileName)).width;
+  }
+
+  get fileEdited(): Locator {
+    return this.fileBar.locator('.nui-spreadsheet__file-edited');
+  }
+
+  get fileDialog(): Locator {
+    return this.sheet.locator('dialog.nui-dialog');
+  }
+
+  get fileFailure(): Locator {
+    return this.sheet.locator('.nui-alert--tone-error .nui-alert__title');
+  }
+
+  async confirmFileDialog(name: string): Promise<void> {
+    await this.fileDialog.getByRole('button', { name }).click();
+  }
+
+  async saveFile(): Promise<XlsxFile> {
+    const [download] = await Promise.all([
+      this.page.waitForEvent('download'),
+      this.fileBar.getByRole('button', { name: 'Сохранить' }).click(),
+    ]);
+
+    return {
+      name: download.suggestedFilename(),
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      buffer: await readFile(await download.path()),
+    };
   }
 
   async openFile(file: XlsxFile): Promise<void> {

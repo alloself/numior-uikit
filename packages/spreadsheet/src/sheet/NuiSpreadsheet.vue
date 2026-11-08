@@ -14,6 +14,7 @@
     @pointerup="onPointerup"
     @pointercancel="onPointercancel"
   >
+    <NuiSpreadsheetFile ref="fileView" :file="file" :bar="fileBar" :messages="messages" />
     <NuiSpreadsheetReport
       :report="report"
       :messages="messages"
@@ -278,6 +279,13 @@ import { useSheetChartSettings } from './drawings/use-sheet-chart-settings';
 import { useSheetDrawingEdit } from './drawings/use-sheet-drawing-edit';
 import { useSheetDrawings } from './drawings/use-sheet-drawings';
 import { useSheetPictureInsert } from './drawings/use-sheet-picture-insert';
+import NuiSpreadsheetFile from './file/NuiSpreadsheetFile.vue';
+import type {
+  NuiSpreadsheetFile as OpenedFile,
+  NuiSpreadsheetSaved,
+  SheetFileViewExposed,
+} from './file/file.types';
+import { useSheetFile } from './file/use-sheet-file';
 import NuiSpreadsheetPivotPopover from './pivot/NuiSpreadsheetPivotPopover.vue';
 import { useSheetPivots } from './pivot/use-sheet-pivots';
 import NuiSpreadsheetRules from './rules/NuiSpreadsheetRules.vue';
@@ -325,6 +333,10 @@ const {
   sheetTabs = true,
   contextMenu,
   report,
+  fileBar = false,
+  fileName,
+  source,
+  saveFile,
 } = defineProps<NuiSpreadsheetProps>();
 
 const sheetIndex = defineModel<number>('sheet', { default: 0 });
@@ -333,6 +345,8 @@ const selectionModel = defineModel<NuiSpreadsheetSelection | undefined>('selecti
 
 const emit = defineEmits<{
   change: [change: NuiSpreadsheetChange];
+  open: [file: OpenedFile];
+  saved: [saved: NuiSpreadsheetSaved];
 }>();
 
 const root = useTemplateRef<HTMLElement>('root');
@@ -341,6 +355,7 @@ const nameField = useTemplateRef<HTMLInputElement>('nameField');
 const formulaField = useTemplateRef<HTMLTextAreaElement>('formulaField');
 const mirror = useTemplateRef<HTMLElement>('mirror');
 const grid = useTemplateRef<NuiTableExposed>('grid');
+const fileView = useTemplateRef<SheetFileViewExposed>('fileView');
 const body = useTemplateRef<HTMLElement>('body');
 
 const formulaId = useId();
@@ -401,6 +416,33 @@ const cells = computed(() =>
       }),
 );
 
+const file = useSheetFile({
+  book: () => book,
+  calculator: () => calculator ?? ownCalculator.value,
+  source: () => source,
+  fileName: () => fileName,
+  locale: () => bookLocale.value,
+  adapter: () => saveFile,
+  hotkeys: () => fileBar,
+  messages,
+  commitDraft: () => {
+    grid.value?.commitEdit();
+  },
+  pick: () => {
+    fileView.value?.pick();
+  },
+  opened: (opened) => {
+    sheetIndex.value = 0;
+    emit('open', opened);
+  },
+  saved: (saved) => {
+    emit('saved', saved);
+  },
+  announce: (text) => {
+    formula.announcement.value = text;
+  },
+});
+
 const editing = useSheetEditing({
   book: () => book,
   calculator: () => calculator ?? ownCalculator.value,
@@ -429,6 +471,7 @@ const editing = useSheetEditing({
       knownLayout = shownSheet.value?.layout;
       layoutRevision.value += 1;
     }
+    file.noteEdit();
     emit('change', change);
   },
 });
@@ -630,6 +673,7 @@ const assist = useFormulaAssist({
 const isToned = (segment: FormulaSegment): boolean => segment.tone !== undefined;
 
 const onKeydown = (event: KeyboardEvent): void => {
+  file.onKeydown(event);
   drawingEdit.onKeydown(event);
 
   if (event.defaultPrevented) {
@@ -838,5 +882,11 @@ watch(recalc.phase, (next, before) => {
   }
 });
 
-defineExpose<NuiSpreadsheetExposed>({ refresh, apply: editing.apply, openRules });
+defineExpose<NuiSpreadsheetExposed>({
+  refresh,
+  apply: editing.apply,
+  openRules,
+  save: file.save,
+  open: file.open,
+});
 </script>

@@ -303,6 +303,14 @@ for (const file of await localImports(resolve('packages/spreadsheet/dist/xlsx/in
 await importBuild('charts', ['NuiChart', 'chartMessages']);
 await importBuild('spreadsheet', ['NuiSpreadsheet', 'sheetCells']);
 
+for (const file of await localImports(resolve('packages/spreadsheet/dist/index.js'))) {
+  assert.doesNotMatch(
+    file,
+    /xlsx[\\/](?:zip[\\/]|read[\\/]read-workbook|write[\\/]write-workbook)/,
+    `the spreadsheet base entry must load the XLSX engine on demand: ${file}`,
+  );
+}
+
 const chartsCore = await import(pathToFileURL(resolve('packages/charts/dist/core/index.js')).href);
 
 assert.equal(typeof chartsCore.layoutChart, 'function', 'charts/core must export the layout');

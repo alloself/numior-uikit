@@ -19,6 +19,15 @@ describe('NuiSpreadsheet on the server', () => {
     expect(second).toBe(first);
   });
 
+  it('renders the file bar with the name of the file', async () => {
+    const html = await renderToString(NuiSpreadsheet, {
+      props: { book, label: 'Sales book', fileBar: true, fileName: 'Sales.xlsx' },
+    });
+
+    expect(html).toContain('nui-spreadsheet__file');
+    expect(html).toContain('Sales.xlsx');
+  });
+
   it('renders the limitations report of a read-only book and a hidden recalculation status', async () => {
     const html = await renderToString(NuiSpreadsheet, {
       props: {

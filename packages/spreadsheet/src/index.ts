@@ -17,6 +17,11 @@ export {
 
 export type { NuiSpreadsheetPackageMessages } from './messages.types';
 export type {
+  NuiSpreadsheetFile,
+  NuiSpreadsheetSaveAdapter,
+  NuiSpreadsheetSaved,
+} from './sheet/file/file.types';
+export type {
   NuiSpreadsheetChange,
   NuiSpreadsheetContextMenu,
   NuiSpreadsheetExposed,

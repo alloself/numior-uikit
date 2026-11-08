@@ -1,5 +1,6 @@
 import { plural, type NuiMessageCatalog } from '@numior/primitives';
-import type { XlsxLimitationCode } from '../xlsx/read/read.types';
+import type { XlsxLimitationCode, XlsxRejection } from '../xlsx/read/read.types';
+import type { XlsxLoss } from '../xlsx/write/write.types';
 
 export interface NuiSpreadsheetMessages {
   readonly formulaError: (params: { readonly position: number }) => string;
@@ -39,6 +40,24 @@ export interface NuiSpreadsheetMessages {
   readonly reportDetails: string;
   readonly reportDismiss: string;
   readonly limitation: (params: { readonly code: XlsxLimitationCode }) => string;
+  readonly fileOpen: string;
+  readonly fileSave: string;
+  readonly fileCancel: string;
+  readonly fileEdited: string;
+  readonly fileDefaultName: string;
+  readonly fileReading: string;
+  readonly fileSaved: (params: { readonly name: string }) => string;
+  readonly fileOpened: (params: { readonly name: string }) => string;
+  readonly fileRejected: (params: { readonly reason: XlsxRejection }) => string;
+  readonly fileSaveFailed: string;
+  readonly fileOpenFailed: string;
+  readonly fileLossTitle: string;
+  readonly fileLossDescription: string;
+  readonly fileLossConfirm: string;
+  readonly fileLoss: (loss: XlsxLoss) => string;
+  readonly fileDiscardTitle: string;
+  readonly fileDiscardDescription: string;
+  readonly fileDiscardConfirm: string;
   readonly chart: string;
   readonly picture: string;
   readonly chartSeries: (params: { readonly index: number }) => string;
@@ -69,6 +88,36 @@ export interface NuiSpreadsheetMessages {
   readonly chartNoData: string;
   readonly chartName: (params: { readonly index: number }) => string;
 }
+
+const EN_REJECTIONS: Readonly<Record<XlsxRejection, string>> = {
+  'not-xlsx': 'This file is not an XLSX book',
+  encrypted: 'This book is password-protected and cannot be opened',
+  binary: 'XLSB books cannot be opened, save the book as XLSX',
+  damaged: 'This file is damaged and cannot be opened',
+};
+
+const RU_REJECTIONS: Readonly<Record<XlsxRejection, string>> = {
+  'not-xlsx': 'Этот файл не является книгой XLSX',
+  encrypted: 'Книга защищена паролем, её нельзя открыть',
+  binary: 'Книги XLSB не открываются, сохраните книгу как XLSX',
+  damaged: 'Файл повреждён, его нельзя открыть',
+};
+
+const EN_LOSSES: Readonly<Record<XlsxLoss['reason'], (sheet: string) => string>> = {
+  'moved-lines': (sheet) =>
+    `${sheet}: rows or columns moved, so unsupported items tied to cells are dropped`,
+  'renamed-sheet': (sheet) =>
+    `${sheet}: the sheet was renamed, so unsupported items that refer to it are dropped`,
+  'pivot-source': (sheet) => `${sheet}: the source of a pivot table is gone, so it becomes values`,
+};
+
+const RU_LOSSES: Readonly<Record<XlsxLoss['reason'], (sheet: string) => string>> = {
+  'moved-lines': (sheet) =>
+    `${sheet}: строки или колонки сдвинуты, неподдержанные элементы у ячеек будут удалены`,
+  'renamed-sheet': (sheet) =>
+    `${sheet}: лист переименован, неподдержанные элементы со ссылкой на него будут удалены`,
+  'pivot-source': (sheet) => `${sheet}: источник сводной таблицы удалён, она станет значениями`,
+};
 
 const EN_LIMITATIONS: Readonly<Record<XlsxLimitationCode, string>> = {
   'date-1904': 'Dates in the 1904 date system',
@@ -169,6 +218,24 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     reportDetails: 'Details',
     reportDismiss: 'Hide',
     limitation: ({ code }) => EN_LIMITATIONS[code],
+    fileOpen: 'Open',
+    fileSave: 'Save',
+    fileCancel: 'Cancel',
+    fileEdited: 'Edited',
+    fileDefaultName: 'Book',
+    fileReading: 'Opening the file',
+    fileSaved: ({ name }) => `Saved ${name}`,
+    fileOpened: ({ name }) => `Opened ${name}`,
+    fileRejected: ({ reason }) => EN_REJECTIONS[reason],
+    fileSaveFailed: 'The book could not be saved',
+    fileOpenFailed: 'The file could not be opened',
+    fileLossTitle: 'Save with losses?',
+    fileLossDescription: 'Some parts of the original file cannot be kept after these edits.',
+    fileLossConfirm: 'Save anyway',
+    fileLoss: ({ sheet, reason }) => EN_LOSSES[reason](sheet),
+    fileDiscardTitle: 'Discard unsaved edits?',
+    fileDiscardDescription: 'Opening another file replaces this book and its unsaved edits.',
+    fileDiscardConfirm: 'Open the file',
     chart: 'Chart',
     picture: 'Picture',
     chartSeries: ({ index }) => `Series ${String(index)}`,
@@ -245,6 +312,24 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     reportDetails: 'Подробнее',
     reportDismiss: 'Скрыть',
     limitation: ({ code }) => RU_LIMITATIONS[code],
+    fileOpen: 'Открыть',
+    fileSave: 'Сохранить',
+    fileCancel: 'Отмена',
+    fileEdited: 'Изменено',
+    fileDefaultName: 'Книга',
+    fileReading: 'Файл открывается',
+    fileSaved: ({ name }) => `Файл ${name} сохранён`,
+    fileOpened: ({ name }) => `Файл ${name} открыт`,
+    fileRejected: ({ reason }) => RU_REJECTIONS[reason],
+    fileSaveFailed: 'Книгу не удалось сохранить',
+    fileOpenFailed: 'Файл не удалось открыть',
+    fileLossTitle: 'Сохранить с потерями?',
+    fileLossDescription: 'После этих правок часть исходного файла не сохранится.',
+    fileLossConfirm: 'Всё равно сохранить',
+    fileLoss: ({ sheet, reason }) => RU_LOSSES[reason](sheet),
+    fileDiscardTitle: 'Отменить несохранённые правки?',
+    fileDiscardDescription: 'Другой файл заменит эту книгу вместе с несохранёнными правками.',
+    fileDiscardConfirm: 'Открыть файл',
     chart: 'Диаграмма',
     picture: 'Рисунок',
     chartSeries: ({ index }) => `Ряд ${String(index)}`,

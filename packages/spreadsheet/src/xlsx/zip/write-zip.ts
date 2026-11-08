@@ -105,7 +105,7 @@ const packed = async (entry: ZipWriteEntry, codec: ZipCodec): Promise<ZipRawEntr
     return entry.copy;
   }
 
-  const source = entry.data instanceof Uint8Array ? streamOf(entry.data) : entry.data;
+  const source = ArrayBuffer.isView(entry.data) ? streamOf(entry.data) : entry.data;
   const counter = counted();
   const measured = source.pipeThrough(counter.stream);
   const store = entry.store === true;

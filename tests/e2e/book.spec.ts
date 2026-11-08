@@ -265,6 +265,47 @@ test.describe('book', () => {
     await expect(book.cell('1', 0)).toHaveText('Order');
   });
 
+  test('saves an edited book and opens the saved file again', async ({ playground, book }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.enter('1', 0, 'Сохранённый текст');
+    await expect(book.fileEdited).toBeVisible();
+    expect(await book.fileNameWidth()).toBeGreaterThan(40);
+
+    const saved = await book.saveFile();
+
+    await expect(book.fileEdited).toHaveCount(0);
+    expect(saved.name).toBe('Образец.xlsx');
+
+    await book.enter('1', 0, 'Лишняя правка');
+    await book.openFile(saved);
+
+    await expect(book.fileDialog.locator('.nui-dialog__title')).toHaveText(
+      'Отменить несохранённые правки?',
+    );
+
+    await book.confirmFileDialog('Открыть файл');
+    await expect(book.cell('1', 0)).toHaveText('Сохранённый текст');
+    await expect(book.fileName).toHaveText('Образец.xlsx');
+    await expect(book.fileEdited).toHaveCount(0);
+  });
+
+  test('names the reason when a chosen file is not a book', async ({ playground, book }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+
+    await book.openFile({
+      name: 'notes.xlsx',
+      mimeType: 'text/plain',
+      buffer: Buffer.from('plain text'),
+    });
+
+    await expect(book.fileFailure).toHaveText('Этот файл не является книгой XLSX');
+    await expect(book.cell('1', 0)).not.toHaveText('plain text');
+  });
+
   test('reports values saved in an opened file and recalculates them on request', async ({
     playground,
     book,

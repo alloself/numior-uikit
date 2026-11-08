@@ -31,7 +31,8 @@ import type {
   Workbook,
   WorkbookStep,
 } from '../core';
-import type { LimitationsReport } from '../xlsx/read/read.types';
+import type { LimitationsReport, OriginalPackage } from '../xlsx/read/read.types';
+import type { NuiSpreadsheetSaveAdapter } from './file/file.types';
 import type { NuiSpreadsheetMessages } from './spreadsheet.messages';
 
 export interface FormulaSegment {
@@ -182,6 +183,10 @@ export interface NuiSpreadsheetProps {
   sheetTabs?: boolean | undefined;
   contextMenu?: NuiSpreadsheetContextMenu | undefined;
   report?: LimitationsReport | undefined;
+  fileBar?: boolean | undefined;
+  fileName?: string | undefined;
+  source?: OriginalPackage | undefined;
+  saveFile?: NuiSpreadsheetSaveAdapter | undefined;
 }
 
 export interface SheetRecalcOptions {
@@ -220,6 +225,8 @@ export interface NuiSpreadsheetExposed {
   refresh(): void;
   apply(steps: readonly WorkbookStep[]): boolean;
   openRules(): void;
+  save(): Promise<boolean>;
+  open(file: File): Promise<boolean>;
 }
 
 export interface NuiSpreadsheetSelection {

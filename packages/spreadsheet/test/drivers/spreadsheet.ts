@@ -4,6 +4,7 @@ import { nextTick } from 'vue';
 import {
   NuiSpreadsheet,
   type NuiSpreadsheetChange,
+  type NuiSpreadsheetFile,
   type NuiSpreadsheetProps,
   type NuiSpreadsheetSelection,
 } from '../../src';
@@ -17,6 +18,11 @@ interface DrawingDrag {
   readonly pointerType?: string | undefined;
 }
 
+interface KeyChord {
+  readonly ctrl: boolean;
+  readonly code: string;
+}
+
 interface KeyOptions {
   readonly ctrl?: boolean | undefined;
   readonly shift?: boolean | undefined;
@@ -26,6 +32,7 @@ interface KeyOptions {
 interface SpreadsheetMount extends NuiSpreadsheetProps {
   readonly sheet?: number;
   readonly selection?: NuiSpreadsheetSelection;
+  readonly onOpen?: (file: NuiSpreadsheetFile) => void;
 }
 
 interface Mounted {
@@ -960,6 +967,84 @@ export class SpreadsheetDriver {
 
   get reportLines(): string[] {
     return texts(this.wrapper, '.nui-spreadsheet__report-list li');
+  }
+
+  get fileName(): string {
+    return this.wrapper.find('.nui-spreadsheet__file-text').text();
+  }
+
+  get fileEdited(): boolean {
+    return this.wrapper.find('.nui-spreadsheet__file-edited').exists();
+  }
+
+  get fileReading(): boolean {
+    return this.wrapper.find('.nui-spreadsheet__file-progress').exists();
+  }
+
+  get fileFailure(): string | undefined {
+    const alert = this.wrapper.find('.nui-alert--tone-error .nui-alert__title');
+
+    return alert.exists() ? alert.text() : undefined;
+  }
+
+  get fileDialogOpen(): boolean {
+    return this.wrapper.find('dialog.nui-dialog').attributes('open') !== undefined;
+  }
+
+  get fileDialogTitle(): string {
+    return this.wrapper.find('dialog.nui-dialog .nui-dialog__title').text();
+  }
+
+  get fileDialogLines(): string[] {
+    return texts(this.wrapper, '.nui-spreadsheet__file-losses li');
+  }
+
+  async pressSaveFile(): Promise<void> {
+    await this.wrapper.find('.nui-spreadsheet__file-actions button:last-child').trigger('click');
+  }
+
+  async cancelFileRead(): Promise<void> {
+    await this.wrapper.find('.nui-spreadsheet__file-progress button').trigger('click');
+  }
+
+  async chooseFile(file: File): Promise<void> {
+    const input = this.wrapper.find('.nui-spreadsheet__file input[type="file"]');
+
+    Object.defineProperty(input.element, 'files', { configurable: true, value: [file] });
+    await input.trigger('change');
+  }
+
+  async confirmFileDialog(): Promise<void> {
+    await this.wrapper
+      .findAll('dialog.nui-dialog .nui-dialog__footer button')
+      .at(-1)
+      ?.trigger('click');
+  }
+
+  async dismissFileDialog(): Promise<void> {
+    await this.wrapper
+      .findAll('dialog.nui-dialog .nui-dialog__footer button')
+      .at(0)
+      ?.trigger('click');
+  }
+
+  async dismissFileFailure(): Promise<void> {
+    await this.wrapper.find('.nui-alert--tone-error .nui-alert__close').trigger('click');
+  }
+
+  async pressPrevented(key: string, options: KeyChord): Promise<boolean> {
+    const event = new KeyboardEvent('keydown', {
+      key,
+      code: options.code,
+      ctrlKey: options.ctrl,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    document.activeElement?.dispatchEvent(event);
+    await nextTick();
+
+    return event.defaultPrevented;
   }
 
   async recalculateFromReport(): Promise<void> {
