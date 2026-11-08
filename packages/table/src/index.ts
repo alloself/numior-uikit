@@ -44,6 +44,7 @@ export type {
   NuiTableRowHeights,
   NuiTableExpanded,
   NuiTableExposed,
+  NuiTableScrollPosition,
   NuiTableFilters,
   NuiTableFooterSlot,
   NuiTableGroupBy,

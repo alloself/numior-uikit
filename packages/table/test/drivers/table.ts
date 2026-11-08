@@ -1092,6 +1092,15 @@ export class TableDriver<T> {
     });
   }
 
+  get scrollPosition(): { readonly top: number; readonly left: number } | undefined {
+    return this.exposed.value?.scrollPosition();
+  }
+
+  async focusCellAt(position: TableCellPosition, scroll: boolean): Promise<void> {
+    this.exposed.value?.focusCell(position, scroll);
+    await nextTick();
+  }
+
   rectOf(range: NuiTableRange): NuiTableRect | undefined {
     return this.exposed.value?.rectOf(range);
   }

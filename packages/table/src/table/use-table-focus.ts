@@ -68,7 +68,7 @@ const samePosition = (a: TableCellPosition, b: TableCellPosition): boolean =>
   a.row === b.row && a.col === b.col;
 
 export const useTableFocus = (options: TableFocusOptions): TableFocus => {
-  const intent = createIntent<true>();
+  const intent = createIntent<boolean>();
   const requests = ref(0);
   const placement = createIntent<TableHeaderTarget>();
   const placements = ref(0);
@@ -107,7 +107,7 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     if (scroll) {
       reveal(target);
     }
-    intent.set(true);
+    intent.set(!scroll);
     requests.value += 1;
   };
 
@@ -144,7 +144,7 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     event.preventDefault();
     options.active.value = target;
     reveal(target);
-    intent.set(true);
+    intent.set(false);
   };
 
   const onFocusin = (target: EventTarget | null): void => {
@@ -170,10 +170,12 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     watch(
       [options.active, requests],
       () => {
-        if (intent.take() === true) {
+        const quiet = intent.take();
+
+        if (quiet !== undefined) {
           options.viewport.value
             ?.querySelector<HTMLElement>(OWN_ACTIVE_CELL)
-            ?.focus({ preventScroll: options.windowed() });
+            ?.focus({ preventScroll: quiet || options.windowed() });
         }
       },
       { flush: 'post' },

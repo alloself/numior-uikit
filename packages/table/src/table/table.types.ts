@@ -709,6 +709,11 @@ export type NuiTableSlots<T> = {
   [name: `footer-${string}`]: ((scope: NuiTableFooterSlot<T>) => unknown) | undefined;
 };
 
+export interface NuiTableScrollPosition {
+  readonly top: number;
+  readonly left: number;
+}
+
 export interface NuiTableExposed {
   scrollToRow(position: number): void;
   scrollToColumn(key: string): void;
@@ -722,10 +727,11 @@ export interface NuiTableExposed {
   cellNear(x: number, y: number): TableCellPosition | undefined;
   followEdge(x: number, y: number, onStep: () => void): void;
   stopEdge(): void;
+  scrollPosition(): NuiTableScrollPosition;
   startEdit(mode: NuiTableEditMode, options?: NuiTableStartEditOptions): boolean;
   commitEdit(move?: NuiTableEditMove): boolean;
   cancelEdit(): void;
-  focusCell(position: TableCellPosition): boolean;
+  focusCell(position: TableCellPosition, scroll?: boolean): boolean;
   invalidate(ranges?: NuiTableRanges): void;
 }
 

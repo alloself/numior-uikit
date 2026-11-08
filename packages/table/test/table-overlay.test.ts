@@ -150,4 +150,26 @@ describe('NuiTable overlay', () => {
     expect(grid.followEdge(450, 295)).toEqual({ scrollTop: 8, steps: 1 });
     expect(grid.followEdge(450, 150)).toEqual({ scrollTop: 8, steps: 0 });
   });
+
+  it('reports where the viewport is scrolled', async () => {
+    const grid = mountStaff();
+
+    await grid.settle();
+    await grid.scroll({ top: 120, left: 30 });
+
+    expect(grid.scrollPosition).toEqual({ top: 120, left: 30 });
+  });
+
+  it('moves the focus to a cell without scrolling to it on request', async () => {
+    const grid = mountStaff();
+
+    await grid.settle();
+    await grid.focusCellAt({ row: 200, col: 0 }, false);
+
+    expect([grid.activeCell, grid.scrollTop]).toEqual([{ row: 200, col: 0 }, 0]);
+
+    await grid.focusCellAt({ row: 201, col: 0 }, true);
+
+    expect(grid.scrollTop).toBeGreaterThan(0);
+  });
 });

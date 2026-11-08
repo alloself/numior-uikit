@@ -2658,11 +2658,11 @@ const moveActiveTo = (position: TableCellPosition): boolean => {
   return true;
 };
 
-const focusCellAt = (position: TableCellPosition): boolean => {
+const focusCellAt = (position: TableCellPosition, scroll = true): boolean => {
   if (!inBody(position)) {
     return false;
   }
-  focus.focusCell(visualCellOf(anchorOf(mergeIndex.value, position)));
+  focus.focusCell(visualCellOf(anchorOf(mergeIndex.value, position)), scroll);
   return true;
 };
 
@@ -2815,6 +2815,10 @@ defineExpose<NuiTableExposed>({
   cellNear: overlay.cellNear,
   followEdge: overlay.followEdge,
   stopEdge: overlay.stopEdge,
+  scrollPosition: () => ({
+    top: viewport.value?.scrollTop ?? 0,
+    left: viewport.value?.scrollLeft ?? 0,
+  }),
   startEdit: (mode, options) => cellEditor.start(mode, options?.focus ?? true),
   commitEdit: (move = 'stay') => cellEditor.commit(move),
   cancelEdit: () => {
