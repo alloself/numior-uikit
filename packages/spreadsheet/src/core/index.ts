@@ -92,6 +92,7 @@ export {
   freshDrawingId,
   insertDrawing,
 } from './drawings/chart-insert';
+export { PICTURE_TYPES, fittedPictureSize, pictureAnchorAt } from './drawings/picture-insert';
 export type {
   AlignmentStyle,
   BorderSide,

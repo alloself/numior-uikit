@@ -8,6 +8,7 @@ import {
   SheetChartStacking,
   StepKind,
   chartAnchorAt,
+  pictureAnchorAt,
   createStepper,
   insertDrawing,
   placeDrawing,
@@ -469,5 +470,30 @@ describe('sheet drawings', () => {
       chartAnchorAt(20, 2),
       chart.series.length,
     ]);
+  });
+
+  it('adds a new picture to the drawing part next to its neighbours', async () => {
+    const book = await drawingsOf();
+    const bytes = new TextEncoder().encode('new picture');
+    const anchor = pictureAnchorAt(30, 1, { width: 64, height: 48 });
+
+    book.insert({
+      id: 'new-1',
+      name: 'Pasted',
+      alt: '',
+      anchor,
+      content: { kind: DrawingKind.Picture, media: 'new-1', type: 'image/png', bytes },
+    });
+
+    const saved = await book.saved();
+    const added = saved.at(-1);
+
+    expect([added?.name, added?.anchor, added?.content]).toEqual([
+      'Pasted',
+      anchor,
+      { kind: DrawingKind.Picture, media: 'xl/media/image2.png', type: 'image/png', bytes },
+    ]);
+
+    expect(saved[0]?.content).toMatchObject({ media: 'xl/media/image1.png' });
   });
 });

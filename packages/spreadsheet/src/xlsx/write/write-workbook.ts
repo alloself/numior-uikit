@@ -37,9 +37,9 @@ import {
   type SheetExtras,
 } from './source';
 import { createStyleBook, type StyleBook } from './styles-part';
-import { chartAnchorXml, chartXml, drawingXml } from './drawing-xml';
+import { chartAnchorXml, chartXml, drawingXml, pictureAnchorXml } from './drawing-xml';
 import { pivotXml } from './pivot-part';
-import { DrawingKind, type SheetChart, type SheetDrawing } from '../../core/drawings/drawing.types';
+import { DrawingKind, type SheetDrawing } from '../../core/drawings/drawing.types';
 import { buildPivotCache, pivotSource } from '../../core/pivot/pivot-cache';
 import { computePivot } from '../../core/pivot/pivot-engine';
 import { renderPivot } from '../../core/pivot/pivot-render';
@@ -80,9 +80,12 @@ interface AppendedAnchors {
   readonly anchors: string;
 }
 
-interface NewChart {
-  readonly drawing: SheetDrawing;
-  readonly chart: SheetChart;
+interface AnchorWriting {
+  readonly part: string;
+  readonly output: Output;
+  readonly names: Set<string>;
+  readonly relationIds: Set<string>;
+  readonly planned: PlannedRelationship[];
 }
 
 type GeneratedPart = readonly [part: string, kind: string, type: string, content: string | Bytes];
@@ -119,6 +122,15 @@ const officeType = (kind: string): string => `${OFFICE}/${kind}`;
 const encoder = new TextEncoder();
 
 const FIRST_NEW_SHAPE = 1025;
+
+const MEDIA_EXTENSIONS: ReadonlyMap<string, string> = new Map([
+  ['image/png', 'png'],
+  ['image/jpeg', 'jpg'],
+  ['image/gif', 'gif'],
+  ['image/bmp', 'bmp'],
+  ['image/svg+xml', 'svg'],
+  ['image/webp', 'webp'],
+]);
 
 const textEntry = (name: string, text: string): ZipWriteEntry => ({
   name,
@@ -345,22 +357,73 @@ const copyParts = async (original: Original | undefined, output: Output): Promis
   return copied;
 };
 
-const newChartsOf = (sheet: Sheet): NewChart[] =>
-  sheet.layout.drawings.reduce<NewChart[]>((charts, drawing) => {
-    if (drawing.source === undefined && drawing.content.kind === DrawingKind.Chart) {
-      charts.push({ drawing, chart: drawing.content.chart });
+const canWriteNew = (drawing: SheetDrawing): boolean => {
+  const { content, source } = drawing;
+
+  return (
+    source === undefined &&
+    (content.kind === DrawingKind.Chart ||
+      (content.kind === DrawingKind.Picture && MEDIA_EXTENSIONS.has(content.type)))
+  );
+};
+
+const addNewPart = (
+  place: AnchorWriting,
+  entry: ZipWriteEntry,
+  type: string,
+  relation: string,
+): string => {
+  const id = freshId(place.relationIds);
+
+  place.output.entries.push(entry);
+  place.output.overrides.set(entry.name, type);
+  place.output.written.add(entry.name);
+
+  place.planned.push({
+    id,
+    type: officeType(relation),
+    target: relativeTarget(place.part, entry.name),
+  });
+
+  return id;
+};
+
+const newAnchorXml = (place: AnchorWriting, drawing: SheetDrawing, shape: number): string => {
+  const { content } = drawing;
+
+  switch (content.kind) {
+    case DrawingKind.Chart: {
+      const name = freshName(place.names, (at) => `xl/charts/chart${String(at)}.xml`);
+      const id = addNewPart(place, textEntry(name, chartXml(content.chart)), TYPES.chart, 'chart');
+
+      return chartAnchorXml(drawing.anchor, drawing.name, shape, id);
     }
-    return charts;
-  }, []);
+    case DrawingKind.Picture: {
+      const extension = MEDIA_EXTENSIONS.get(content.type) ?? '';
+      const name = freshName(place.names, (at) => `xl/media/image${String(at)}.${extension}`);
+
+      const id = addNewPart(
+        place,
+        { name, data: new Uint8Array(content.bytes) },
+        content.type,
+        'image',
+      );
+
+      return pictureAnchorXml(drawing, shape, id);
+    }
+    case DrawingKind.Foreign:
+      return '';
+  }
+};
 
 const writeNewDrawings = async (
   writing: Writing,
   plan: SheetPlan,
   ids: Set<string>,
 ): Promise<NewDrawings> => {
-  const charts = newChartsOf(plan.sheet);
+  const fresh = plan.sheet.layout.drawings.filter(canWriteNew);
 
-  if (charts.length === 0) {
+  if (fresh.length === 0) {
     return { relationship: undefined, appended: undefined };
   }
 
@@ -379,18 +442,10 @@ const writeNewDrawings = async (
   const relationIds = new Set(known.map((item) => item.id));
   const planned = known.map((item) => toPlanned(item, part));
 
-  const anchors = charts
-    .map(({ drawing, chart }, index) => {
-      const chartPart = freshName(names, (at) => `xl/charts/chart${String(at)}.xml`);
-      const id = freshId(relationIds);
+  const place: AnchorWriting = { part, output, names, relationIds, planned };
 
-      output.entries.push(textEntry(chartPart, chartXml(chart)));
-      output.overrides.set(chartPart, TYPES.chart);
-      output.written.add(chartPart);
-      planned.push({ id, type: officeType('chart'), target: relativeTarget(part, chartPart) });
-
-      return chartAnchorXml(drawing.anchor, drawing.name, FIRST_NEW_SHAPE + index, id);
-    })
+  const anchors = fresh
+    .map((drawing, index) => newAnchorXml(place, drawing, FIRST_NEW_SHAPE + index))
     .join('');
 
   output.entries.push(textEntry(relationshipsOf(part), relationshipsXml(planned)));

@@ -9,6 +9,7 @@ import {
   type DrawingMark,
   type SheetChart,
   type SheetChartSeries,
+  type SheetDrawing,
 } from '../../core/drawings/drawing.types';
 import type { FormulaNode } from '../../core/formula/formula.types';
 import { printFormula } from '../../core/formula/printer';
@@ -154,6 +155,16 @@ export const chartAnchorXml = (
   wrapAnchor(
     anchor,
     `<xdr:graphicFrame macro=""><xdr:nvGraphicFramePr><xdr:cNvPr id="${String(shape)}" name="${escapeAttribute(name)}"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr><xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm><a:graphic><a:graphicData uri="${CHART}"><c:chart xmlns:c="${CHART}" r:id="${relationship}"/></a:graphicData></a:graphic></xdr:graphicFrame>`,
+  );
+
+export const pictureAnchorXml = (
+  drawing: Pick<SheetDrawing, 'anchor' | 'name' | 'alt'>,
+  shape: number,
+  relationship: string,
+): string =>
+  wrapAnchor(
+    drawing.anchor,
+    `<xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${String(shape)}" name="${escapeAttribute(drawing.name)}" descr="${escapeAttribute(drawing.alt)}"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="${relationship}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic>`,
   );
 
 export const drawingXml = (anchors: string): string =>
