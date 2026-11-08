@@ -611,6 +611,30 @@ export class SpreadsheetDriver {
     await nextTick();
   }
 
+  async insertChart(row: number, col: number, kind: string): Promise<void> {
+    await this.openCellMenu(row, col);
+    await this.chooseCellMenuItem('Insert chart');
+    await this.chooseCellMenuItem(kind);
+  }
+
+  async insertChartOver(shown: CellSpot, scrollLeft: number, kind: string): Promise<void> {
+    const points = Object.getOwnPropertyDescriptor(document, 'elementsFromPoint');
+    const target = this.cell(shown.row, shown.col);
+
+    this.wrapper.find('.nui-table__viewport').element.scrollLeft = scrollLeft;
+
+    Object.defineProperty(document, 'elementsFromPoint', {
+      configurable: true,
+      value: () => (target === null ? [] : [target]),
+    });
+
+    try {
+      await this.insertChart(shown.row, shown.col, kind);
+    } finally {
+      restore(document, 'elementsFromPoint', points);
+    }
+  }
+
   get rulesOpen(): boolean {
     return this.wrapper.find('.nui-spreadsheet-rules').exists();
   }

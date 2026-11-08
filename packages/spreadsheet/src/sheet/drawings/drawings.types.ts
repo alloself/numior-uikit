@@ -9,7 +9,7 @@ import type {
   SheetDrawing,
   Workbook,
 } from '../../core';
-import type { FrameGrip, SheetEditing } from '../sheet.types';
+import type { FrameGrip, SheetCells, SheetEditing, SheetSelection } from '../sheet.types';
 import type { NuiSpreadsheetMessages } from '../spreadsheet.messages';
 
 export interface LineSizes {
@@ -120,12 +120,27 @@ export interface DrawingEditOptions {
   readonly root: Readonly<ShallowRef<HTMLElement | null>>;
 }
 
+export interface ChartInsertOptions {
+  readonly sheet: () => Sheet | undefined;
+  readonly cells: () => SheetCells | undefined;
+  readonly readonly: () => boolean;
+  readonly rtl: () => boolean;
+  readonly messages: () => NuiSpreadsheetMessages;
+  readonly announce: (text: string) => void;
+  readonly select: (id: string, name: string) => void;
+  readonly selection: SheetSelection;
+  readonly editing: SheetEditing;
+  readonly table: Readonly<ShallowRef<NuiTableExposed | null>>;
+  readonly root: Readonly<ShallowRef<HTMLElement | null>>;
+}
+
 export interface DrawingEdit {
   readonly selectedId: Readonly<ShallowRef<string | undefined>>;
   readonly moving: Readonly<ShallowRef<DrawingMoving | undefined>>;
   readonly dragging: Readonly<ShallowRef<boolean>>;
   readonly editable: ComputedRef<boolean>;
   select(shown: ShownDrawing): void;
+  selectNew(id: string, name: string): void;
   deselect(): void;
   onDown(event: PointerEvent, shown: ShownDrawing): void;
   onGripDown(event: PointerEvent, shown: ShownDrawing, grip: FrameGrip): void;

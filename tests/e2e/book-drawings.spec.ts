@@ -215,6 +215,29 @@ test.describe('book drawings', () => {
     await expect(picture).toBeVisible();
   });
 
+  test('inserts a chart from the region of a cell, selected, and takes it back on undo', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+
+    await expect(book.charts).toHaveCount(1);
+
+    await book.insertChart('3', 1, 'График');
+
+    await expect(book.charts).toHaveCount(2);
+    await expect(book.selectionFrame).toBeVisible();
+
+    expect(await book.frameClearsRowHeaders()).toBe(true);
+
+    await page.keyboard.press('Control+z');
+
+    await expect(book.charts).toHaveCount(1);
+  });
+
   test('drops the selection when a cell is clicked', async ({ playground, book }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();

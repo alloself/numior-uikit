@@ -507,6 +507,19 @@ export class BookSection {
     );
   }
 
+  async insertChart(rowLabel: string, column: number, kind: string): Promise<void> {
+    await this.cell(rowLabel, column).click({ button: 'right' });
+    await this.page.getByRole('menuitem', { name: 'Вставить диаграмму', exact: true }).click();
+    await this.page.getByRole('menuitem', { name: kind, exact: true }).click();
+  }
+
+  async frameClearsRowHeaders(): Promise<boolean> {
+    const frame = await boxOf(this.selectionFrame);
+    const header = await boxOf(this.sheet.getByRole('rowheader').first());
+
+    return frame.x >= header.x + header.width;
+  }
+
   get selectionFrame(): Locator {
     return this.sheet.locator('.nui-spreadsheet__drawing-frame--selected');
   }

@@ -327,6 +327,58 @@ describe('NuiSpreadsheet drawings', () => {
     expect(anchorsOf(book)[0]).toMatchObject({ width: 120, height: 40 });
   });
 
+  it('builds a chart from the region of the cell and selects it, undo takes it away', async () => {
+    const book = drawnBook([]);
+    const sheet = sheetOf(book);
+
+    await sheet.insertChart(2, 1, 'Bar');
+
+    expect([sheet.drawings.length, sheet.selectedDrawings, sheet.announcement]).toEqual([
+      1,
+      [0],
+      'Chart 1 selected. Arrows move it, Delete removes it, Tab goes to the next object, Escape returns to the cells',
+    ]);
+
+    expect(sheet.chartBars(0)).toBe(3);
+
+    await sheet.press('z', { ctrl: true });
+
+    expect(sheet.drawings).toEqual([]);
+  });
+
+  it('places a new chart at the column shown in the view', async () => {
+    const book = drawnBook([]);
+    const sheet = sheetOf(book);
+
+    await sheet.insertChartOver({ row: 2, col: 1 }, 0, 'Bar');
+
+    expect(anchorsOf(book)[0]).toMatchObject({ from: { col: 1 } });
+  });
+
+  it('starts a new chart after a column half hidden under the row headers', async () => {
+    const book = drawnBook([]);
+    const sheet = sheetOf(book);
+
+    await sheet.insertChartOver({ row: 2, col: 1 }, 5000, 'Bar');
+
+    expect(anchorsOf(book)[0]).toMatchObject({ from: { col: 2 } });
+  });
+
+  it('says why no chart is built from cells without numbers', async () => {
+    const book = createWorkbook();
+
+    book.addSheet('Sales').cells.set(0, 0, textValue('Item'));
+
+    const sheet = sheetOf(book);
+
+    await sheet.insertChart(1, 0, 'Line');
+
+    expect([sheet.drawings, sheet.announcement]).toEqual([
+      [],
+      'Select cells with numbers to build a chart',
+    ]);
+  });
+
   it('deletes the selected drawing and brings it back on undo', async () => {
     const book = drawnBook([PICTURE, SHAPE]);
     const sheet = sheetOf(book);

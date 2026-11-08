@@ -266,6 +266,7 @@ import NuiSpreadsheetStatus from './NuiSpreadsheetStatus.vue';
 import NuiSpreadsheetTabs from './NuiSpreadsheetTabs.vue';
 import NuiSpreadsheetDrawings from './drawings/NuiSpreadsheetDrawings.vue';
 import type { LineNear } from './drawings/drawings.types';
+import { useSheetChartInsert } from './drawings/use-sheet-chart-insert';
 import { useSheetDrawingEdit } from './drawings/use-sheet-drawing-edit';
 import { useSheetDrawings } from './drawings/use-sheet-drawings';
 import NuiSpreadsheetPivotPopover from './pivot/NuiSpreadsheetPivotPopover.vue';
@@ -507,6 +508,7 @@ const lines = useSheetLines({
       onSelect: () => openRules(),
     },
     ...pivots.tools(),
+    ...chartInsert.tools(),
   ],
   announce: (text) => {
     formula.announcement.value = text;
@@ -549,6 +551,24 @@ const drawingEdit = useSheetDrawingEdit({
   focus: () => {
     formula.holdFocus();
   },
+  editing,
+  table: grid,
+  root,
+});
+
+const chartInsert = useSheetChartInsert({
+  sheet: () => shownSheet.value,
+  cells: () => cells.value,
+  readonly: () => locked.value,
+  rtl: () => sheetDir.value === Direction.Rtl,
+  messages: () => messages.value,
+  announce: (text) => {
+    formula.announcement.value = text;
+  },
+  select: (id, name) => {
+    drawingEdit.selectNew(id, name);
+  },
+  selection,
   editing,
   table: grid,
   root,

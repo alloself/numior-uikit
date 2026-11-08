@@ -45,6 +45,16 @@ export interface NuiSpreadsheetMessages {
   readonly foreignDrawing: (params: { readonly label: string }) => string;
   readonly drawingSelected: (params: { readonly label: string }) => string;
   readonly drawingRemoved: (params: { readonly label: string }) => string;
+  readonly insertChart: string;
+  readonly chartColumn: string;
+  readonly chartBar: string;
+  readonly chartLine: string;
+  readonly chartArea: string;
+  readonly chartPie: string;
+  readonly chartDoughnut: string;
+  readonly chartScatter: string;
+  readonly chartNoData: string;
+  readonly chartName: (params: { readonly index: number }) => string;
 }
 
 const EN_LIMITATIONS: Readonly<Record<XlsxLimitationCode, string>> = {
@@ -153,6 +163,16 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     drawingSelected: ({ label }) =>
       `${label} selected. Arrows move it, Delete removes it, Tab goes to the next object, Escape returns to the cells`,
     drawingRemoved: ({ label }) => `${label} removed`,
+    insertChart: 'Insert chart',
+    chartColumn: 'Column',
+    chartBar: 'Bar',
+    chartLine: 'Line',
+    chartArea: 'Area',
+    chartPie: 'Pie',
+    chartDoughnut: 'Doughnut',
+    chartScatter: 'Scatter',
+    chartNoData: 'Select cells with numbers to build a chart',
+    chartName: ({ index }) => `Chart ${String(index)}`,
   },
   ru: {
     formulaError: ({ position }) => `Ошибка в формуле: символ ${String(position)}`,
@@ -206,5 +226,15 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     drawingSelected: ({ label }) =>
       `Выбран объект: ${label}. Стрелки двигают, Delete удаляет, Tab — следующий объект, Escape — назад к ячейкам`,
     drawingRemoved: ({ label }) => `Объект удалён: ${label}`,
+    insertChart: 'Вставить диаграмму',
+    chartColumn: 'Гистограмма',
+    chartBar: 'Линейчатая',
+    chartLine: 'График',
+    chartArea: 'С областями',
+    chartPie: 'Круговая',
+    chartDoughnut: 'Кольцевая',
+    chartScatter: 'Точечная',
+    chartNoData: 'Выделите ячейки с числами, чтобы построить диаграмму',
+    chartName: ({ index }) => `Диаграмма ${String(index)}`,
   },
 };

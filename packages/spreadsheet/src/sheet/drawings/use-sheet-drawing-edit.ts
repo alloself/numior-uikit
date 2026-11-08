@@ -101,6 +101,12 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
     }
   };
 
+  const selectNew = (id: string, name: string): void => {
+    selectedId.value = id;
+    options.announce(options.messages().drawingSelected({ label: name }));
+    options.focus();
+  };
+
   const deselect = (): void => {
     selectedId.value = undefined;
   };
@@ -311,6 +317,7 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
     dragging,
     editable,
     select,
+    selectNew,
     deselect,
     onDown,
     onGripDown,
