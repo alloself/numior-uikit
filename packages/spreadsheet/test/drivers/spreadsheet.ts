@@ -9,6 +9,14 @@ import {
 } from '../../src';
 import { PivotPanelDriver } from './pivot-panel';
 
+interface DrawingDrag {
+  readonly x: number;
+  readonly y: number;
+  readonly shift?: boolean | undefined;
+  readonly cancel?: boolean | undefined;
+  readonly pointerType?: string | undefined;
+}
+
 interface KeyOptions {
   readonly ctrl?: boolean | undefined;
   readonly shift?: boolean | undefined;
@@ -50,8 +58,19 @@ const restore = (owner: object, name: string, own: PropertyDescriptor | undefine
   }
 };
 
-const pointer = (type: string): PointerEvent =>
-  new PointerEvent(type, { bubbles: true, cancelable: true, button: 0, pointerId: 1 });
+const FAR_BOX = {
+  x: 0,
+  y: 0,
+  left: 0,
+  top: 0,
+  right: 2000,
+  bottom: 2000,
+  width: 2000,
+  height: 2000,
+};
+
+const pointer = (type: string, init: PointerEventInit = {}): PointerEvent =>
+  new PointerEvent(type, { bubbles: true, cancelable: true, button: 0, pointerId: 1, ...init });
 
 const toneOf = (classes: readonly string[], prefix: string): string =>
   classes.find((name) => name.startsWith(prefix))?.slice(prefix.length) ?? '';
@@ -111,6 +130,81 @@ export class SpreadsheetDriver {
     const height = /block-size: ([\d.]+)px/u.exec(style ?? '')?.[1];
 
     return width === undefined || height === undefined ? undefined : `${width}×${height}`;
+  }
+
+  get selectedDrawings(): number[] {
+    return this.wrapper
+      .findAll('.nui-spreadsheet__drawing')
+      .reduce<number[]>((selected, drawing, index) => {
+        if (drawing.classes('nui-spreadsheet__drawing--selected')) {
+          selected.push(index);
+        }
+        return selected;
+      }, []);
+  }
+
+  async clickDrawing(index: number): Promise<void> {
+    await this.wrapper.findAll('.nui-spreadsheet__drawing')[index]?.trigger('click');
+  }
+
+  async dragDrawing(index: number, by: DrawingDrag): Promise<void> {
+    await this.dragFrom(this.wrapper.findAll('.nui-spreadsheet__drawing')[index]?.element, by);
+  }
+
+  async dragHandle(grip: string, by: DrawingDrag): Promise<void> {
+    await this.dragFrom(
+      this.wrapper.find(
+        `.nui-spreadsheet__drawing-frame--selected .nui-spreadsheet__handle--${grip}`,
+      ).element,
+      by,
+    );
+  }
+
+  private async dragFrom(target: Element | undefined, by: DrawingDrag): Promise<void> {
+    const root = this.wrapper.find('.nui-spreadsheet').element;
+    const capture = Object.getOwnPropertyDescriptor(Element.prototype, 'setPointerCapture');
+    const start = { clientX: 100, clientY: 100 };
+    const box = Object.getOwnPropertyDescriptor(Element.prototype, 'getBoundingClientRect');
+
+    Object.defineProperty(Element.prototype, 'setPointerCapture', {
+      configurable: true,
+      writable: true,
+      value: () => undefined,
+    });
+
+    Object.defineProperty(Element.prototype, 'getBoundingClientRect', {
+      configurable: true,
+      writable: true,
+      value: () => FAR_BOX,
+    });
+
+    try {
+      target?.dispatchEvent(
+        pointer('pointerdown', {
+          ...start,
+          ...(by.pointerType === undefined ? {} : { pointerType: by.pointerType }),
+        }),
+      );
+
+      root.dispatchEvent(
+        pointer('pointermove', {
+          clientX: start.clientX + by.x,
+          clientY: start.clientY + by.y,
+          shiftKey: by.shift ?? false,
+        }),
+      );
+
+      root.dispatchEvent(pointer(by.cancel === true ? 'pointercancel' : 'pointerup'));
+    } finally {
+      restore(Element.prototype, 'setPointerCapture', capture);
+      restore(Element.prototype, 'getBoundingClientRect', box);
+    }
+    await nextTick();
+  }
+
+  async pressCell(row: number, col: number): Promise<void> {
+    this.cell(row, col)?.dispatchEvent(pointer('pointerdown'));
+    await nextTick();
   }
 
   chartBars(index: number): number {

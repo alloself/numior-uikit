@@ -43,6 +43,8 @@ export interface NuiSpreadsheetMessages {
   readonly picture: string;
   readonly chartSeries: (params: { readonly index: number }) => string;
   readonly foreignDrawing: (params: { readonly label: string }) => string;
+  readonly drawingSelected: (params: { readonly label: string }) => string;
+  readonly drawingRemoved: (params: { readonly label: string }) => string;
 }
 
 const EN_LIMITATIONS: Readonly<Record<XlsxLimitationCode, string>> = {
@@ -148,6 +150,9 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     picture: 'Picture',
     chartSeries: ({ index }) => `Series ${String(index)}`,
     foreignDrawing: ({ label }) => `This object is not supported yet: ${label}`,
+    drawingSelected: ({ label }) =>
+      `${label} selected. Arrows move it, Delete removes it, Tab goes to the next object, Escape returns to the cells`,
+    drawingRemoved: ({ label }) => `${label} removed`,
   },
   ru: {
     formulaError: ({ position }) => `Ошибка в формуле: символ ${String(position)}`,
@@ -198,5 +203,8 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     picture: 'Рисунок',
     chartSeries: ({ index }) => `Ряд ${String(index)}`,
     foreignDrawing: ({ label }) => `Этот объект пока не поддерживается: ${label}`,
+    drawingSelected: ({ label }) =>
+      `Выбран объект: ${label}. Стрелки двигают, Delete удаляет, Tab — следующий объект, Escape — назад к ячейкам`,
+    drawingRemoved: ({ label }) => `Объект удалён: ${label}`,
   },
 };

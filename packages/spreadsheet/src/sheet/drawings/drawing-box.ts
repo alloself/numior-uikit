@@ -1,11 +1,50 @@
 import type { NuiTableOverlaySlot, NuiTableRange, NuiTableRect } from '@numior/table';
-import { DrawingAnchorKind, MAX_COLS, MAX_ROWS, type DrawingAnchor } from '../../core';
-import type { DrawingSpan, LineNear, LineSizes } from './drawings.types';
+import {
+  DrawingAnchorKind,
+  MAX_COLS,
+  MAX_ROWS,
+  type DrawingAnchor,
+  type DrawingMark,
+} from '../../core';
+import { FrameGrip } from '../sheet.types';
+import type {
+  DrawingBox,
+  DrawingEdgeLimits,
+  DrawingEdges,
+  DrawingSpan,
+  LineNear,
+  LineSizes,
+} from './drawings.types';
 
 interface Reach {
   readonly line: number;
   readonly rest: number;
 }
+
+const MIN_SIZE = 8;
+
+const START_GRIPS = new Set<FrameGrip>([
+  FrameGrip.Start,
+  FrameGrip.TopStart,
+  FrameGrip.BottomStart,
+]);
+
+const END_GRIPS = new Set<FrameGrip>([FrameGrip.End, FrameGrip.TopEnd, FrameGrip.BottomEnd]);
+
+const TOP_GRIPS = new Set<FrameGrip>([FrameGrip.Top, FrameGrip.TopStart, FrameGrip.TopEnd]);
+
+const BOTTOM_GRIPS = new Set<FrameGrip>([
+  FrameGrip.Bottom,
+  FrameGrip.BottomStart,
+  FrameGrip.BottomEnd,
+]);
+
+const CORNER_GRIPS = new Set<FrameGrip>([
+  FrameGrip.TopStart,
+  FrameGrip.TopEnd,
+  FrameGrip.BottomStart,
+  FrameGrip.BottomEnd,
+]);
 
 const reach = (
   start: number,
@@ -83,6 +122,131 @@ export const spanOf = (anchor: DrawingAnchor, sizes: LineSizes): DrawingSpan => 
         sizes,
       );
   }
+};
+
+const stepped = (
+  line: number,
+  rest: number,
+  delta: number,
+  size: (line: number) => number,
+  limit: number,
+): Reach => {
+  let at = line;
+  let left = rest + delta;
+
+  while (left < 0 && at > 0) {
+    at -= 1;
+    left += size(at);
+  }
+  while (at < limit - 1 && left >= size(at)) {
+    left -= size(at);
+    at += 1;
+  }
+  return { line: at, rest: Math.max(left, 0) };
+};
+
+const movedMark = (
+  mark: DrawingMark,
+  across: number,
+  down: number,
+  sizes: LineSizes,
+): DrawingMark => {
+  const col = stepped(mark.col, mark.dx, across, sizes.width, MAX_COLS);
+  const row = stepped(mark.row, mark.dy, down, sizes.height, MAX_ROWS);
+
+  return { row: row.line, col: col.line, dx: col.rest, dy: row.rest };
+};
+
+export const movedAnchor = (
+  anchor: DrawingAnchor,
+  edges: DrawingEdges,
+  sizes: LineSizes,
+): DrawingAnchor => {
+  const { start, top, end, bottom } = edges;
+
+  switch (anchor.kind) {
+    case DrawingAnchorKind.Cells:
+      return {
+        ...anchor,
+        from: movedMark(anchor.from, start, top, sizes),
+        to: movedMark(anchor.to, end, bottom, sizes),
+      };
+    case DrawingAnchorKind.Cell:
+      return {
+        ...anchor,
+        from: movedMark(anchor.from, start, top, sizes),
+        width: anchor.width + end - start,
+        height: anchor.height + bottom - top,
+      };
+    case DrawingAnchorKind.Point:
+      return {
+        ...anchor,
+        x: Math.max(anchor.x + start, 0),
+        y: Math.max(anchor.y + top, 0),
+        width: anchor.width + end - start,
+        height: anchor.height + bottom - top,
+      };
+  }
+};
+
+export const boxOfAnchor = (anchor: DrawingAnchor, sizes: LineSizes): DrawingBox => {
+  const span = spanOf(anchor, sizes);
+
+  return {
+    x: sumOf(0, span.from.col, sizes.width) + span.from.dx,
+    y: sumOf(0, span.from.row, sizes.height) + span.from.dy,
+    width: span.width,
+    height: span.height,
+  };
+};
+
+export const allEdges = (across: number, down: number): DrawingEdges => ({
+  start: across,
+  top: down,
+  end: across,
+  bottom: down,
+});
+
+const lowEdge = (delta: number, position: number, size: number): number =>
+  Math.max(Math.min(delta, size - MIN_SIZE), -position);
+
+const highEdge = (delta: number, size: number): number => Math.max(delta, MIN_SIZE - size);
+
+const withRatio = (edges: DrawingEdges, grip: FrameGrip, box: DrawingBox): DrawingEdges => {
+  const width = box.width + edges.end - edges.start;
+  const height = box.height + edges.bottom - edges.top;
+  const scale = Math.max(width / box.width, height / box.height);
+  const wider = box.width * scale - width;
+  const taller = box.height * scale - height;
+
+  return {
+    start: START_GRIPS.has(grip) ? edges.start - wider : edges.start,
+    end: END_GRIPS.has(grip) ? edges.end + wider : edges.end,
+    top: TOP_GRIPS.has(grip) ? edges.top - taller : edges.top,
+    bottom: BOTTOM_GRIPS.has(grip) ? edges.bottom + taller : edges.bottom,
+  };
+};
+
+export const edgesOf = (
+  grip: FrameGrip | undefined,
+  across: number,
+  down: number,
+  limits: DrawingEdgeLimits,
+): DrawingEdges => {
+  const { box, keepRatio } = limits;
+
+  if (grip === undefined) {
+    return allEdges(Math.max(across, -box.x), Math.max(down, -box.y));
+  }
+
+  const edges: DrawingEdges = {
+    start: START_GRIPS.has(grip) ? lowEdge(across, box.x, box.width) : 0,
+    top: TOP_GRIPS.has(grip) ? lowEdge(down, box.y, box.height) : 0,
+    end: END_GRIPS.has(grip) ? highEdge(across, box.width) : 0,
+    bottom: BOTTOM_GRIPS.has(grip) ? highEdge(down, box.height) : 0,
+  };
+
+  return keepRatio && CORNER_GRIPS.has(grip) ? withRatio(edges, grip, box) : edges;
 };
 
 const rangeOf = (span: DrawingSpan, near: LineNear): NuiTableRange => ({

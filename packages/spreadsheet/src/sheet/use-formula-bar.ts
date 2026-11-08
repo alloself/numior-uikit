@@ -82,6 +82,10 @@ export const useFormulaBar = (options: FormulaBarOptions): FormulaBar => {
     options.table.value?.focusCell(active.value ?? FIRST_CELL);
   };
 
+  const holdFocus = (): void => {
+    options.table.value?.focusCell(active.value ?? FIRST_CELL, false);
+  };
+
   const go = (text: string): boolean => {
     const book = options.book();
     const sheet = options.sheet();
@@ -202,6 +206,7 @@ export const useFormulaBar = (options: FormulaBarOptions): FormulaBar => {
     keepEditing,
     toggle,
     backToGrid,
+    holdFocus,
     onNameFocus,
     onNameInput,
     onNameKeydown,

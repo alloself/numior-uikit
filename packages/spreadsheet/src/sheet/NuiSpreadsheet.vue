@@ -5,6 +5,7 @@
     class="nui-spreadsheet"
     :class="rootClasses"
     @keydown.capture="onKeydown"
+    @pointerdown.capture="drawingEdit.onRootDown"
     @input="assist.syncCaret"
     @keyup="assist.syncCaret"
     @focusin="assist.syncCaret"
@@ -121,7 +122,17 @@
         @pick="references.onPick"
       >
         <template #overlay="{ rectOf }">
-          <NuiSpreadsheetDrawings :drawings="drawings" :rect-of="rectOf" :near="lineNear" />
+          <NuiSpreadsheetDrawings
+            :drawings="drawings"
+            :rect-of="rectOf"
+            :near="lineNear"
+            :selected="drawingEdit.selectedId.value"
+            :moving="drawingEdit.moving.value"
+            :editable="drawingEdit.editable.value"
+            @down="drawingEdit.onDown"
+            @grip="drawingEdit.onGripDown"
+            @select="drawingEdit.select"
+          />
           <NuiSpreadsheetMarks
             :rect-of="rectOf"
             :handle="fill.handle.value"
@@ -255,6 +266,7 @@ import NuiSpreadsheetStatus from './NuiSpreadsheetStatus.vue';
 import NuiSpreadsheetTabs from './NuiSpreadsheetTabs.vue';
 import NuiSpreadsheetDrawings from './drawings/NuiSpreadsheetDrawings.vue';
 import type { LineNear } from './drawings/drawings.types';
+import { useSheetDrawingEdit } from './drawings/use-sheet-drawing-edit';
 import { useSheetDrawings } from './drawings/use-sheet-drawings';
 import NuiSpreadsheetPivotPopover from './pivot/NuiSpreadsheetPivotPopover.vue';
 import { useSheetPivots } from './pivot/use-sheet-pivots';
@@ -517,13 +529,30 @@ provide(SHEET_SEGMENTS, references.segments);
 const { focused: inSheet } = useFocusWithin(body);
 
 const rootClasses = computed(() => ({
-  'nui-spreadsheet--dragging': references.dragging.value,
+  'nui-spreadsheet--dragging': references.dragging.value || drawingEdit.dragging.value,
   'nui-spreadsheet--focused': inSheet.value,
 }));
 
 const sheetDir = computed(() =>
   table.value?.cells.rightToLeft === true ? Direction.Rtl : Direction.Ltr,
 );
+
+const drawingEdit = useSheetDrawingEdit({
+  sheet: () => shownSheet.value,
+  drawings: () => drawings.value,
+  readonly: () => locked.value,
+  rtl: () => sheetDir.value === Direction.Rtl,
+  messages: () => messages.value,
+  announce: (text) => {
+    formula.announcement.value = text;
+  },
+  focus: () => {
+    formula.holdFocus();
+  },
+  editing,
+  table: grid,
+  root,
+});
 
 const assist = useFormulaAssist({
   locale: () => bookLocale.value,
@@ -536,6 +565,11 @@ const assist = useFormulaAssist({
 const isToned = (segment: FormulaSegment): boolean => segment.tone !== undefined;
 
 const onKeydown = (event: KeyboardEvent): void => {
+  drawingEdit.onKeydown(event);
+
+  if (event.defaultPrevented) {
+    return;
+  }
   if (event.key === Key.Escape && editing.draft.value === undefined) {
     clipboard.forget();
   }
@@ -549,17 +583,20 @@ const onKeydown = (event: KeyboardEvent): void => {
 };
 
 const onPointermove = (event: PointerEvent): void => {
+  drawingEdit.onMove(event);
   references.onGripMove(event);
   fill.onMove(event);
 };
 
 const onPointerup = (): void => {
+  drawingEdit.onUp();
   references.onGripUp();
   fill.onUp();
   assist.syncCaret();
 };
 
 const onPointercancel = (): void => {
+  drawingEdit.onCancel();
   references.onGripUp();
   fill.onCancel();
 };
@@ -710,6 +747,7 @@ const setFormats = (formats: readonly ConditionalFormat[]): void => {
 
 watch(shownSheet, () => {
   lit.value = undefined;
+  drawingEdit.deselect();
 });
 
 const refresh = (): void => {

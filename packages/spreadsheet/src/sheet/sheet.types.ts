@@ -345,6 +345,7 @@ export interface FormulaBar {
   keepEditing(target: Element): boolean;
   toggle(): void;
   backToGrid(): void;
+  holdFocus(): void;
   onNameFocus(): void;
   onNameInput(): void;
   onNameKeydown(event: KeyboardEvent): void;

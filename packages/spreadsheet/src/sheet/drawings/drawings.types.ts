@@ -1,5 +1,6 @@
 import type { ChartSpec } from '@numior/charts';
-import type { NuiTableOverlaySlot, NuiTableRect } from '@numior/table';
+import type { NuiTableExposed, NuiTableOverlaySlot, NuiTableRect } from '@numior/table';
+import type { ComputedRef, ShallowRef } from 'vue';
 import type {
   BookLocale,
   CellAddress,
@@ -8,6 +9,7 @@ import type {
   SheetDrawing,
   Workbook,
 } from '../../core';
+import type { FrameGrip, SheetEditing } from '../sheet.types';
 import type { NuiSpreadsheetMessages } from '../spreadsheet.messages';
 
 export interface LineSizes {
@@ -64,10 +66,37 @@ export interface PlacedDrawing {
   readonly rect: NuiTableRect;
 }
 
+export interface DrawingBox {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+export interface DrawingEdges {
+  readonly start: number;
+  readonly top: number;
+  readonly end: number;
+  readonly bottom: number;
+}
+
+export interface DrawingEdgeLimits {
+  readonly box: DrawingBox;
+  readonly keepRatio: boolean;
+}
+
+export interface DrawingMoving {
+  readonly id: string;
+  readonly span: DrawingSpan;
+}
+
 export interface SheetDrawingsProps {
   readonly drawings: readonly ShownDrawing[];
   readonly rectOf: NuiTableOverlaySlot['rectOf'];
   readonly near: LineNear;
+  readonly selected: string | undefined;
+  readonly moving: DrawingMoving | undefined;
+  readonly editable: boolean;
 }
 
 export interface SheetDrawingsOptions {
@@ -76,6 +105,35 @@ export interface SheetDrawingsOptions {
   readonly locale: () => BookLocale;
   readonly messages: () => NuiSpreadsheetMessages;
   readonly revision: () => number;
+}
+
+export interface DrawingEditOptions {
+  readonly sheet: () => Sheet | undefined;
+  readonly drawings: () => readonly ShownDrawing[];
+  readonly readonly: () => boolean;
+  readonly rtl: () => boolean;
+  readonly messages: () => NuiSpreadsheetMessages;
+  readonly announce: (text: string) => void;
+  readonly focus: () => void;
+  readonly editing: SheetEditing;
+  readonly table: Readonly<ShallowRef<NuiTableExposed | null>>;
+  readonly root: Readonly<ShallowRef<HTMLElement | null>>;
+}
+
+export interface DrawingEdit {
+  readonly selectedId: Readonly<ShallowRef<string | undefined>>;
+  readonly moving: Readonly<ShallowRef<DrawingMoving | undefined>>;
+  readonly dragging: Readonly<ShallowRef<boolean>>;
+  readonly editable: ComputedRef<boolean>;
+  select(shown: ShownDrawing): void;
+  deselect(): void;
+  onDown(event: PointerEvent, shown: ShownDrawing): void;
+  onGripDown(event: PointerEvent, shown: ShownDrawing, grip: FrameGrip): void;
+  onMove(event: PointerEvent): void;
+  onUp(): void;
+  onCancel(): void;
+  onRootDown(event: PointerEvent): void;
+  onKeydown(event: KeyboardEvent): void;
 }
 
 export const ShownDrawingKind = {

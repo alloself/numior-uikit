@@ -507,6 +507,26 @@ export class BookSection {
     );
   }
 
+  get selectionFrame(): Locator {
+    return this.sheet.locator('.nui-spreadsheet__drawing-frame--selected');
+  }
+
+  handle(grip: string): Locator {
+    return this.selectionFrame.locator(`.nui-spreadsheet__handle--${grip}`);
+  }
+
+  async dragBy(target: Locator, across: number, down: number): Promise<void> {
+    const box = await boxOf(target);
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+
+    await this.page.mouse.move(x, y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(x + across / 2, y + down / 2, { steps: 4 });
+    await this.page.mouse.move(x + across, y + down, { steps: 4 });
+    await this.page.mouse.up();
+  }
+
   bars(slot: number): Locator {
     return this.charts.locator(`.nui-chart__bar--slot-${String(slot)}`);
   }

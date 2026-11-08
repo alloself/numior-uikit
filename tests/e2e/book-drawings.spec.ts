@@ -111,6 +111,150 @@ test.describe('book drawings', () => {
     );
   });
 
+  test('drags the picture, keeps the sheet where it was and returns it on undo', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Заметки');
+
+    const picture = book.picture('Логотип Numior');
+
+    await expect(picture).toBeVisible();
+
+    const before = await boxOf(picture);
+
+    await book.dragBy(picture, 40, 24);
+
+    await expect(book.selectionFrame).toBeVisible();
+
+    const moved = await boxOf(picture);
+
+    expect([near(moved.x, before.x + 40), near(moved.y, before.y + 24)]).toEqual([true, true]);
+
+    await page.keyboard.press('Control+z');
+
+    await expect.poll(async () => (await boxOf(picture)).x).toBeCloseTo(before.x, 0);
+  });
+
+  test('resizes the picture by a corner and keeps its ratio with Shift', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Заметки');
+
+    const picture = book.picture('Логотип Numior');
+
+    await expect(picture).toBeVisible();
+
+    await picture.click();
+
+    await expect(book.handle('bottom-end')).toBeVisible();
+
+    const before = await boxOf(picture);
+
+    await book.dragBy(book.handle('bottom-end'), -30, -20);
+
+    await expect.poll(async () => (await boxOf(picture)).width).toBeCloseTo(before.width - 30, 0);
+
+    const resized = await boxOf(picture);
+
+    expect(near(resized.height, before.height - 20)).toBe(true);
+
+    await page.keyboard.down('Shift');
+    await book.dragBy(book.handle('bottom-end'), 20, 0);
+    await page.keyboard.up('Shift');
+
+    await expect
+      .poll(async () => {
+        const box = await boxOf(picture);
+
+        return box.width / box.height;
+      })
+      .toBeCloseTo(resized.width / resized.height, 1);
+  });
+
+  test('nudges, deletes and restores a drawing from the keyboard', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Заметки');
+
+    const picture = book.picture('Логотип Numior');
+
+    await expect(picture).toBeVisible();
+
+    const before = await boxOf(picture);
+
+    await book.cell('1', 0).click();
+    await page.keyboard.press('Alt+F10');
+
+    await expect(book.selectionFrame).toBeVisible();
+
+    await page.keyboard.press('ArrowRight');
+
+    await expect.poll(async () => (await boxOf(picture)).x).toBeCloseTo(before.x + 1, 0);
+
+    await page.keyboard.press('Delete');
+
+    await expect(picture).toHaveCount(0);
+
+    await page.keyboard.press('Control+z');
+
+    await expect(picture).toBeVisible();
+  });
+
+  test('drops the selection when a cell is clicked', async ({ playground, book }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Заметки');
+
+    const picture = book.picture('Логотип Numior');
+
+    await expect(picture).toBeVisible();
+
+    await picture.click();
+
+    await expect(book.selectionFrame).toBeVisible();
+
+    await book.cell('1', 0).click();
+
+    await expect(book.selectionFrame).toHaveCount(0);
+  });
+
+  test('selects a picture with a tap and leaves the scroll to the finger', async ({
+    playground,
+    book,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, 'touch only');
+
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Заметки');
+
+    const picture = book.picture('Логотип Numior');
+
+    await expect(picture).toBeVisible();
+
+    await picture.tap();
+
+    await expect(book.selectionFrame).toBeVisible();
+  });
+
   for (const theme of ['light', 'dark'] satisfies readonly Theme[]) {
     test(`passes axe with the chart and the picture on the sheet in the ${theme} theme`, async ({
       playground,

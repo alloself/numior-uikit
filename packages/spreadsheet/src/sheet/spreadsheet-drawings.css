@@ -60,3 +60,121 @@
   line-height: var(--nui-line-height);
   text-align: center;
 }
+
+.nui-spreadsheet__drawing--editable {
+  cursor: move;
+}
+
+.nui-spreadsheet__drawing--selected {
+  touch-action: none;
+}
+
+.nui-spreadsheet--dragging .nui-spreadsheet__drawing,
+.nui-spreadsheet--dragging .nui-spreadsheet__drawing-frame {
+  transition: none;
+}
+
+.nui-spreadsheet__drawing-frame {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid var(--nui-primary);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    inset var(--nui-duration-fast) var(--nui-easing),
+    inline-size var(--nui-duration-fast) var(--nui-easing),
+    block-size var(--nui-duration-fast) var(--nui-easing),
+    opacity var(--nui-duration-fast) var(--nui-easing),
+    visibility 0s linear var(--nui-duration-fast);
+}
+
+.nui-spreadsheet__drawing-frame--selected {
+  visibility: visible;
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+.nui-spreadsheet__handle {
+  --_size: 9px;
+  --_block: calc(50% - var(--_size) / 2);
+  --_inline: calc(50% - var(--_size) / 2);
+
+  position: absolute;
+  box-sizing: border-box;
+  inline-size: var(--_size);
+  block-size: var(--_size);
+  border: 1px solid var(--nui-primary);
+  border-radius: 2px;
+  background-color: var(--nui-surface);
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.nui-spreadsheet__handle::before {
+  position: absolute;
+  inset: -4px;
+  content: '';
+}
+
+@media (pointer: coarse) {
+  .nui-spreadsheet__handle::before {
+    inset: -8px;
+  }
+}
+
+.nui-spreadsheet__handle--top,
+.nui-spreadsheet__handle--top-start,
+.nui-spreadsheet__handle--top-end {
+  inset-block-start: calc(var(--_size) / -2);
+}
+
+.nui-spreadsheet__handle--bottom,
+.nui-spreadsheet__handle--bottom-start,
+.nui-spreadsheet__handle--bottom-end {
+  inset-block-end: calc(var(--_size) / -2);
+}
+
+.nui-spreadsheet__handle--start,
+.nui-spreadsheet__handle--top-start,
+.nui-spreadsheet__handle--bottom-start {
+  inset-inline-start: calc(var(--_size) / -2);
+}
+
+.nui-spreadsheet__handle--end,
+.nui-spreadsheet__handle--top-end,
+.nui-spreadsheet__handle--bottom-end {
+  inset-inline-end: calc(var(--_size) / -2);
+}
+
+.nui-spreadsheet__handle--top,
+.nui-spreadsheet__handle--bottom {
+  inset-inline-start: var(--_inline);
+  cursor: ns-resize;
+}
+
+.nui-spreadsheet__handle--start,
+.nui-spreadsheet__handle--end {
+  inset-block-start: var(--_block);
+  cursor: ew-resize;
+}
+
+.nui-spreadsheet__handle--top-start,
+.nui-spreadsheet__handle--bottom-end {
+  cursor: nwse-resize;
+}
+
+.nui-spreadsheet__handle--top-end,
+.nui-spreadsheet__handle--bottom-start {
+  cursor: nesw-resize;
+}
+
+.nui-spreadsheet__handle--top-start:dir(rtl),
+.nui-spreadsheet__handle--bottom-end:dir(rtl) {
+  cursor: nesw-resize;
+}
+
+.nui-spreadsheet__handle--top-end:dir(rtl),
+.nui-spreadsheet__handle--bottom-start:dir(rtl) {
+  cursor: nwse-resize;
+}
