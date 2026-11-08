@@ -66,6 +66,23 @@ export type {
   SheetLayout,
   SheetView,
 } from './layout/layout.types';
+export {
+  DrawingAnchorKind,
+  DrawingKind,
+  DrawingPlacement,
+  SheetChartGaps,
+  SheetChartKind,
+  SheetChartStacking,
+} from './drawings/drawing.types';
+export type {
+  DrawingAnchor,
+  DrawingContent,
+  DrawingMark,
+  DrawingSize,
+  SheetChart,
+  SheetChartSeries,
+  SheetDrawing,
+} from './drawings/drawing.types';
 export type {
   AlignmentStyle,
   BorderSide,

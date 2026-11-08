@@ -1,5 +1,6 @@
 import type { CellRange } from '../cell.types';
 import type { LineMove } from '../lines';
+import type { SheetDrawing } from '../drawings/drawing.types';
 import type { PartXml, SheetXml } from './fragments.types';
 
 export interface LineStyle {
@@ -48,4 +49,5 @@ export interface SheetLayout {
   readonly defaults: SheetDefaults;
   readonly xml: SheetXml | undefined;
   readonly parts: readonly PartXml[];
+  readonly drawings: readonly SheetDrawing[];
 }

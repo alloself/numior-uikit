@@ -47,6 +47,7 @@ import { readSharedStrings, type SharedStrings } from './shared-strings';
 import { readPivotCache, readPivotTable, type CacheEntry } from './pivot-part';
 import { pivotOf } from './pivot-model';
 import { readPositionalParts } from './positional-parts';
+import { readDrawings } from './drawing-part';
 import { readSheetPart, type SheetCounts } from './sheet-part';
 import { readStyles, type CellStyles } from './styles';
 import { readTheme } from './theme-part';
@@ -341,6 +342,7 @@ const loadSheet = async (
   sheet.layout = {
     ...sheet.layout,
     parts: await readPositionalParts(load.archive, relationships, load.options),
+    drawings: await readDrawings(load.archive, relationships, load.options),
   };
 
   load.parsed.add(part);

@@ -216,6 +216,7 @@ export const createLayoutCollector = (styles: LayoutStyles): LayoutCollector => 
       defaults,
       xml: undefined,
       parts: [],
+      drawings: [],
     }),
   };
 };

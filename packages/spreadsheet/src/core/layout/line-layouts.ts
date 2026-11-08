@@ -1,3 +1,4 @@
+import { mapDrawingFormulas, shiftDrawings } from '../drawings/drawings';
 import { limitOf, type LineMove } from '../lines';
 import type { LineChange } from '../formula/rewrite';
 import type {
@@ -118,6 +119,7 @@ export const EMPTY_LAYOUT: SheetLayout = {
   defaults: DEFAULT_SIZES,
   xml: undefined,
   parts: [],
+  drawings: [],
 };
 
 export const lineLayoutsOf = (
@@ -148,9 +150,12 @@ const shiftView = (view: SheetView, change: LineChange): SheetView => {
 export const shiftLayout = (layout: SheetLayout, change: LineChange, own: boolean): SheetLayout => {
   const xml = layout.xml === undefined ? undefined : shiftSheetXml(layout.xml, change, own);
   const parts = shiftParts(layout.parts, change, own);
+  const drawings = shiftDrawings(layout.drawings, change, own);
 
   if (!own) {
-    return xml === layout.xml && parts === layout.parts ? layout : { ...layout, xml, parts };
+    return xml === layout.xml && parts === layout.parts && drawings === layout.drawings
+      ? layout
+      : { ...layout, xml, parts, drawings };
   }
   return {
     rows: change.axis === LineAxis.Rows ? layout.rows.shifted(change) : layout.rows,
@@ -160,6 +165,7 @@ export const shiftLayout = (layout: SheetLayout, change: LineChange, own: boolea
     defaults: layout.defaults,
     xml,
     parts,
+    drawings,
   };
 };
 
@@ -169,6 +175,9 @@ export const mapLayoutFormulas = (
 ): SheetLayout => {
   const xml = layout.xml === undefined ? undefined : mapSheetXmlFormulas(layout.xml, map);
   const parts = mapPartFormulas(layout.parts, map);
+  const drawings = mapDrawingFormulas(layout.drawings, map);
 
-  return xml === layout.xml && parts === layout.parts ? layout : { ...layout, xml, parts };
+  return xml === layout.xml && parts === layout.parts && drawings === layout.drawings
+    ? layout
+    : { ...layout, xml, parts, drawings };
 };
