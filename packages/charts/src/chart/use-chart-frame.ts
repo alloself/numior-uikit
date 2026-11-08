@@ -1,4 +1,4 @@
-import { useResizeObserver } from '@vueuse/core';
+import { useEventListener, useResizeObserver } from '@vueuse/core';
 import { computed, onMounted, shallowRef, type ComputedRef, type ShallowRef } from 'vue';
 import type { ChartMeasure } from './chart.types';
 
@@ -9,8 +9,12 @@ export interface ChartFrame {
 
 const measures = new Map<string, ChartMeasure>();
 
-const canvasMeasure = (family: string): ChartMeasure | undefined => {
-  const known = measures.get(family);
+const fontsOf = (): FontFaceSet | undefined =>
+  typeof document === 'undefined' ? undefined : document.fonts;
+
+const canvasMeasure = (family: string, revision: number): ChartMeasure | undefined => {
+  const id = `${String(revision)}|${family}`;
+  const known = measures.get(id);
 
   if (known !== undefined) {
     return known;
@@ -39,19 +43,27 @@ const canvasMeasure = (family: string): ChartMeasure | undefined => {
     return width;
   };
 
-  measures.set(family, measure);
+  measures.set(id, measure);
   return measure;
 };
 
 export const useChartFrame = (frame: Readonly<ShallowRef<HTMLElement | null>>): ChartFrame => {
   const width = shallowRef(0);
   const family = shallowRef<string | undefined>(undefined);
+  const fonts = shallowRef(0);
 
   const read = (): void => {
     width.value = frame.value?.clientWidth ?? 0;
   };
 
+  const remeasure = (): void => {
+    measures.clear();
+    fonts.value += 1;
+  };
+
   useResizeObserver(frame, read);
+
+  useEventListener(fontsOf, 'loadingdone', remeasure);
 
   onMounted(() => {
     read();
@@ -60,6 +72,8 @@ export const useChartFrame = (frame: Readonly<ShallowRef<HTMLElement | null>>): 
 
   return {
     width,
-    measure: computed(() => (family.value === undefined ? undefined : canvasMeasure(family.value))),
+    measure: computed(() =>
+      family.value === undefined ? undefined : canvasMeasure(family.value, fonts.value),
+    ),
   };
 };
