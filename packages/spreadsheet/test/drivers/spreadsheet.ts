@@ -1,4 +1,4 @@
-import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
+import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
 import { nextTick } from 'vue';
 import {
@@ -633,6 +633,31 @@ export class SpreadsheetDriver {
     } finally {
       restore(document, 'elementsFromPoint', points);
     }
+  }
+
+  async insertPictureFile(row: number, col: number, file: File): Promise<void> {
+    const chooseFile = function (this: HTMLInputElement): void {
+      Object.defineProperty(this, 'files', { configurable: true, value: [file] });
+      this.dispatchEvent(new Event('change'));
+    };
+
+    const click = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(chooseFile);
+
+    await this.openCellMenu(row, col);
+    await this.chooseCellMenuItem('Insert picture…');
+    click.mockRestore();
+    await flushPromises();
+  }
+
+  async pasteImage(file: File, text = ''): Promise<void> {
+    const event = new Event('paste', { bubbles: true, cancelable: true });
+
+    Object.defineProperty(event, 'clipboardData', {
+      value: { getData: () => text, files: [file] },
+    });
+
+    this.wrapper.find('.nui-table__viewport').element.dispatchEvent(event);
+    await flushPromises();
   }
 
   get rulesOpen(): boolean {

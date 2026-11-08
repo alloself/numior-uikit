@@ -513,6 +513,51 @@ export class BookSection {
     await this.page.getByRole('menuitem', { name: kind, exact: true }).click();
   }
 
+  async pngOf(width: number, height: number): Promise<Buffer> {
+    const url = await this.page.evaluate(
+      ([across, down]) => {
+        const canvas = document.createElement('canvas');
+
+        canvas.width = across ?? 1;
+        canvas.height = down ?? 1;
+        return canvas.toDataURL('image/png');
+      },
+      [width, height],
+    );
+
+    return Buffer.from(url.slice(url.indexOf(',') + 1), 'base64');
+  }
+
+  async insertPicture(rowLabel: string, column: number, png: Buffer): Promise<void> {
+    await this.cell(rowLabel, column).click({ button: 'right' });
+
+    const chooser = this.page.waitForEvent('filechooser');
+
+    await this.page.getByRole('menuitem', { name: 'Вставить картинку…', exact: true }).click();
+
+    const dialog = await chooser;
+
+    await dialog.setFiles({ name: 'picture.png', mimeType: 'image/png', buffer: png });
+  }
+
+  async pasteImage(png: Buffer): Promise<void> {
+    await this.page.evaluate((base64) => {
+      const bytes = Uint8Array.from(atob(base64), (letter) => letter.charCodeAt(0));
+      const file = new File([bytes], 'shot.png', { type: 'image/png' });
+      const event = new Event('paste', { bubbles: true, cancelable: true });
+
+      Object.defineProperty(event, 'clipboardData', {
+        value: { getData: () => '', files: [file] },
+      });
+
+      document.activeElement?.dispatchEvent(event);
+    }, png.toString('base64'));
+  }
+
+  get pictures(): Locator {
+    return this.sheet.locator('.nui-spreadsheet__drawing--kind-picture');
+  }
+
   async frameClearsRowHeaders(): Promise<boolean> {
     const frame = await boxOf(this.selectionFrame);
     const header = await boxOf(this.sheet.getByRole('rowheader').first());

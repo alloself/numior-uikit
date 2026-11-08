@@ -1,10 +1,12 @@
 import type { ChartSpec } from '@numior/charts';
 import type { NuiTableExposed, NuiTableOverlaySlot, NuiTableRect } from '@numior/table';
+import type { NuiMenuEntry } from '@numior/vue';
 import type { ComputedRef, ShallowRef } from 'vue';
 import type {
   BookLocale,
   CellAddress,
   DrawingMark,
+  DrawingSize,
   Sheet,
   SheetDrawing,
   Workbook,
@@ -120,18 +122,35 @@ export interface DrawingEditOptions {
   readonly root: Readonly<ShallowRef<HTMLElement | null>>;
 }
 
-export interface ChartInsertOptions {
-  readonly sheet: () => Sheet | undefined;
+export interface InsertSpotOptions {
   readonly cells: () => SheetCells | undefined;
-  readonly readonly: () => boolean;
   readonly rtl: () => boolean;
+  readonly table: Readonly<ShallowRef<NuiTableExposed | null>>;
+  readonly root: Readonly<ShallowRef<HTMLElement | null>>;
+}
+
+export interface InsertSpot {
+  readonly start: () => CellAddress | undefined;
+  readonly end: () => CellAddress | undefined;
+  readonly room: () => DrawingSize | undefined;
+}
+
+export interface DrawingInsertOptions extends InsertSpotOptions {
+  readonly sheet: () => Sheet | undefined;
+  readonly readonly: () => boolean;
   readonly messages: () => NuiSpreadsheetMessages;
   readonly announce: (text: string) => void;
   readonly select: (id: string, name: string) => void;
-  readonly selection: SheetSelection;
   readonly editing: SheetEditing;
-  readonly table: Readonly<ShallowRef<NuiTableExposed | null>>;
-  readonly root: Readonly<ShallowRef<HTMLElement | null>>;
+}
+
+export interface ChartInsertOptions extends DrawingInsertOptions {
+  readonly selection: SheetSelection;
+}
+
+export interface PictureInsert {
+  readonly tools: () => readonly NuiMenuEntry[];
+  readonly onPaste: (event: ClipboardEvent) => void;
 }
 
 export interface DrawingEdit {

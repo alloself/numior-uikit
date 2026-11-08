@@ -5,6 +5,7 @@
     class="nui-spreadsheet"
     :class="rootClasses"
     @keydown.capture="onKeydown"
+    @paste.capture="pictureInsert.onPaste"
     @pointerdown.capture="drawingEdit.onRootDown"
     @input="assist.syncCaret"
     @keyup="assist.syncCaret"
@@ -269,6 +270,7 @@ import type { LineNear } from './drawings/drawings.types';
 import { useSheetChartInsert } from './drawings/use-sheet-chart-insert';
 import { useSheetDrawingEdit } from './drawings/use-sheet-drawing-edit';
 import { useSheetDrawings } from './drawings/use-sheet-drawings';
+import { useSheetPictureInsert } from './drawings/use-sheet-picture-insert';
 import NuiSpreadsheetPivotPopover from './pivot/NuiSpreadsheetPivotPopover.vue';
 import { useSheetPivots } from './pivot/use-sheet-pivots';
 import NuiSpreadsheetRules from './rules/NuiSpreadsheetRules.vue';
@@ -509,6 +511,7 @@ const lines = useSheetLines({
     },
     ...pivots.tools(),
     ...chartInsert.tools(),
+    ...pictureInsert.tools(),
   ],
   announce: (text) => {
     formula.announcement.value = text;
@@ -569,6 +572,23 @@ const chartInsert = useSheetChartInsert({
     drawingEdit.selectNew(id, name);
   },
   selection,
+  editing,
+  table: grid,
+  root,
+});
+
+const pictureInsert = useSheetPictureInsert({
+  sheet: () => shownSheet.value,
+  cells: () => cells.value,
+  readonly: () => locked.value,
+  rtl: () => sheetDir.value === Direction.Rtl,
+  messages: () => messages.value,
+  announce: (text) => {
+    formula.announcement.value = text;
+  },
+  select: (id, name) => {
+    drawingEdit.selectNew(id, name);
+  },
   editing,
   table: grid,
   root,

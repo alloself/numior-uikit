@@ -46,6 +46,9 @@ export interface NuiSpreadsheetMessages {
   readonly drawingSelected: (params: { readonly label: string }) => string;
   readonly drawingRemoved: (params: { readonly label: string }) => string;
   readonly insertChart: string;
+  readonly insertPicture: string;
+  readonly pictureRefused: string;
+  readonly pictureName: (params: { index: number }) => string;
   readonly chartColumn: string;
   readonly chartBar: string;
   readonly chartLine: string;
@@ -164,6 +167,9 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
       `${label} selected. Arrows move it, Delete removes it, Tab goes to the next object, Escape returns to the cells`,
     drawingRemoved: ({ label }) => `${label} removed`,
     insertChart: 'Insert chart',
+    insertPicture: 'Insert picture…',
+    pictureRefused: 'This file cannot be inserted as a picture: use PNG, JPEG, GIF or BMP',
+    pictureName: ({ index }) => `Picture ${String(index)}`,
     chartColumn: 'Column',
     chartBar: 'Bar',
     chartLine: 'Line',
@@ -227,6 +233,9 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
       `Выбран объект: ${label}. Стрелки двигают, Delete удаляет, Tab — следующий объект, Escape — назад к ячейкам`,
     drawingRemoved: ({ label }) => `Объект удалён: ${label}`,
     insertChart: 'Вставить диаграмму',
+    insertPicture: 'Вставить картинку…',
+    pictureRefused: 'Этот файл нельзя вставить как картинку: подойдут PNG, JPEG, GIF и BMP',
+    pictureName: ({ index }) => `Рисунок ${String(index)}`,
     chartColumn: 'Гистограмма',
     chartBar: 'Линейчатая',
     chartLine: 'График',

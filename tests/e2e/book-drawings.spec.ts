@@ -238,6 +238,36 @@ test.describe('book drawings', () => {
     await expect(book.charts).toHaveCount(1);
   });
 
+  test('inserts a picture from a file and from the clipboard, undo takes them back', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+
+    const before = await book.pictures.count();
+    const png = await book.pngOf(120, 80);
+
+    await book.insertPicture('3', 1, png);
+
+    await expect(book.pictures).toHaveCount(before + 1);
+    await expect(book.selectionFrame).toBeVisible();
+
+    await expect.poll(async () => (await boxOf(book.selectionFrame)).width).toBeCloseTo(120, 0);
+
+    await book.cell('12', 0).click();
+    await book.pasteImage(png);
+
+    await expect(book.pictures).toHaveCount(before + 2);
+
+    await page.keyboard.press('Control+z');
+    await page.keyboard.press('Control+z');
+
+    await expect(book.pictures).toHaveCount(before);
+  });
+
   test('drops the selection when a cell is clicked', async ({ playground, book }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();

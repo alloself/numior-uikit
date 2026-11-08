@@ -27,6 +27,8 @@ const sheetOf = (book: Workbook): SpreadsheetDriver => {
   return driver;
 };
 
+const imageFile = (type = 'image/png'): File => new File(['png bytes'], 'shot.png', { type });
+
 const revoke = vi.fn<(url: string) => void>();
 
 beforeEach(() => {
@@ -34,6 +36,12 @@ beforeEach(() => {
     createObjectURL: { configurable: true, value: () => 'blob:logo' },
     revokeObjectURL: { configurable: true, value: revoke },
   });
+
+  vi.stubGlobal('createImageBitmap', async () => ({
+    width: 960,
+    height: 480,
+    close: () => undefined,
+  }));
 });
 
 afterEach(() => {
@@ -44,6 +52,7 @@ afterEach(() => {
   Reflect.deleteProperty(URL, 'createObjectURL');
   Reflect.deleteProperty(URL, 'revokeObjectURL');
   revoke.mockClear();
+  vi.unstubAllGlobals();
 });
 
 const reference = (text: string): FormulaNode => {
@@ -377,6 +386,82 @@ describe('NuiSpreadsheet drawings', () => {
       [],
       'Select cells with numbers to build a chart',
     ]);
+  });
+
+  it('inserts a picture chosen from a file, selected, undo takes it away', async () => {
+    const book = drawnBook([]);
+    const sheet = sheetOf(book);
+
+    await sheet.insertPictureFile(2, 1, imageFile());
+
+    expect([sheet.drawings.length, sheet.selectedDrawings, sheet.announcement]).toEqual([
+      1,
+      [0],
+      'Picture 1 selected. Arrows move it, Delete removes it, Tab goes to the next object, Escape returns to the cells',
+    ]);
+
+    expect(anchorsOf(book)[0]).toMatchObject({ width: 480, height: 240 });
+
+    await sheet.press('z', { ctrl: true });
+
+    expect(sheet.drawings).toEqual([]);
+  });
+
+  it('inserts an image pasted from the clipboard', async () => {
+    const book = drawnBook([]);
+    const sheet = sheetOf(book);
+
+    await sheet.pasteImage(imageFile());
+
+    expect(sheet.selectedDrawings).toEqual([0]);
+  });
+
+  it('pastes cells when the clipboard holds text next to the image', async () => {
+    const book = drawnBook([]);
+    const sheet = sheetOf(book);
+
+    await sheet.pasteImage(imageFile(), 'Pen');
+
+    expect(sheet.drawings).toEqual([]);
+  });
+
+  it('says why a file of another type is not inserted', async () => {
+    const book = drawnBook([]);
+    const sheet = sheetOf(book);
+
+    await sheet.pasteImage(imageFile('image/tiff'));
+
+    expect([sheet.drawings, sheet.announcement]).toEqual([
+      [],
+      'This file cannot be inserted as a picture: use PNG, JPEG, GIF or BMP',
+    ]);
+  });
+
+  it('says why an image that cannot be decoded is not inserted', async () => {
+    const book = drawnBook([]);
+    const sheet = sheetOf(book);
+
+    vi.stubGlobal('createImageBitmap', async () => {
+      throw new Error('broken image');
+    });
+
+    await sheet.pasteImage(imageFile());
+
+    expect([sheet.drawings, sheet.announcement]).toEqual([
+      [],
+      'This file cannot be inserted as a picture: use PNG, JPEG, GIF or BMP',
+    ]);
+  });
+
+  it('takes no picture into a read-only sheet', async () => {
+    const book = drawnBook([]);
+    const sheet = SpreadsheetDriver.mount({ book, label: 'Drawings', readonly: true });
+
+    mounted.push(sheet);
+
+    await sheet.pasteImage(imageFile());
+
+    expect(sheet.drawings).toEqual([]);
   });
 
   it('deletes the selected drawing and brings it back on undo', async () => {
