@@ -13,10 +13,12 @@ import {
   textValue,
   type DrawingAnchor,
   type FormulaNode,
+  type SheetChart,
   type SheetDrawing,
   type Workbook,
 } from '../src/core';
 import { SpreadsheetDriver } from './drivers/spreadsheet';
+import { stubPopovers } from './support/top-layer';
 
 const mounted: SpreadsheetDriver[] = [];
 
@@ -31,7 +33,11 @@ const imageFile = (type = 'image/png'): File => new File(['png bytes'], 'shot.pn
 
 const revoke = vi.fn<(url: string) => void>();
 
+const restorers: Array<() => void> = [];
+
 beforeEach(() => {
+  restorers.push(stubPopovers());
+
   Object.defineProperties(URL, {
     createObjectURL: { configurable: true, value: () => 'blob:logo' },
     revokeObjectURL: { configurable: true, value: revoke },
@@ -53,6 +59,10 @@ afterEach(() => {
   Reflect.deleteProperty(URL, 'revokeObjectURL');
   revoke.mockClear();
   vi.unstubAllGlobals();
+
+  for (const restore of restorers.splice(0)) {
+    restore();
+  }
 });
 
 const reference = (text: string): FormulaNode => {
@@ -112,12 +122,40 @@ const PICTURE: SheetDrawing = {
   },
 };
 
+const TWO_SERIES: SheetDrawing = {
+  ...CHART,
+  content: {
+    kind: DrawingKind.Chart,
+    chart: {
+      kind: SheetChartKind.Column,
+      title: 'Sales',
+      legend: true,
+      stacking: SheetChartStacking.None,
+      gaps: SheetChartGaps.Break,
+      hole: undefined,
+      series: [
+        { name: 'One', categories: undefined, values: reference('Sales!$B$2:$B$4') },
+        { name: 'Two', categories: undefined, values: reference('Sales!$B$2:$B$4') },
+      ],
+    },
+  },
+};
+
 const SHAPE: SheetDrawing = {
   id: 'shape',
   name: 'Arrow',
   alt: '',
   anchor: { kind: DrawingAnchorKind.Point, x: 10, y: 10, width: 64, height: 40 },
   content: { kind: DrawingKind.Foreign, label: 'sp' },
+};
+
+const chartInBook = (book: Workbook): SheetChart => {
+  const content = book.sheet('Sales')?.layout.drawings[0]?.content;
+
+  if (content?.kind !== DrawingKind.Chart) {
+    throw new Error('the first drawing is not a chart');
+  }
+  return content.chart;
 };
 
 const anchorsOf = (book: Workbook): readonly DrawingAnchor[] =>
@@ -145,7 +183,7 @@ describe('NuiSpreadsheet drawings', () => {
 
     expect([sheet.drawings, sheet.drawingSize(0), sheet.chartBars(0)]).toEqual([
       ['chart: Sales'],
-      '192×100',
+      '193×101',
       3,
     ]);
   });
@@ -462,6 +500,143 @@ describe('NuiSpreadsheet drawings', () => {
     await sheet.pasteImage(imageFile());
 
     expect(sheet.drawings).toEqual([]);
+  });
+
+  it('opens the chart settings from the button and closes them', async () => {
+    const book = drawnBook([CHART]);
+    const sheet = sheetOf(book);
+
+    await sheet.clickDrawing(0);
+    await sheet.openChartSettings();
+
+    expect(sheet.chartSettingsOpen).toBe(true);
+
+    await sheet.closeChartSettings();
+
+    expect(sheet.chartSettingsOpen).toBe(false);
+  });
+
+  it('opens the chart settings with Enter and a double click', async () => {
+    const book = drawnBook([CHART]);
+    const keyboard = sheetOf(book);
+
+    await keyboard.clickDrawing(0);
+    await keyboard.press('Enter');
+
+    expect(keyboard.chartSettingsOpen).toBe(true);
+
+    const pointerSheet = sheetOf(drawnBook([CHART]));
+
+    await pointerSheet.doubleClickDrawing(0);
+
+    expect(pointerSheet.chartSettingsOpen).toBe(true);
+  });
+
+  it('opens no settings for a picture', async () => {
+    const book = drawnBook([PICTURE]);
+    const sheet = sheetOf(book);
+
+    await sheet.doubleClickDrawing(0);
+
+    expect(sheet.chartSettingsOpen).toBe(false);
+  });
+
+  it('changes the chart type and undo brings it back', async () => {
+    const book = drawnBook([CHART]);
+    const sheet = sheetOf(book);
+
+    await sheet.clickDrawing(0);
+    await sheet.openChartSettings();
+    await sheet.chooseChartOption(0, 'Pie');
+
+    expect(chartInBook(book).kind).toBe(SheetChartKind.Pie);
+
+    await sheet.closeChartSettings();
+    await sheet.press('z', { ctrl: true });
+
+    expect(chartInBook(book).kind).toBe(SheetChartKind.Column);
+  });
+
+  it('sets the title when the field is committed and removes an empty one', async () => {
+    const book = drawnBook([CHART]);
+    const sheet = sheetOf(book);
+
+    await sheet.clickDrawing(0);
+    await sheet.openChartSettings();
+    await sheet.setChartTitle('Revenue');
+
+    expect(sheet.chartTitle).toBe('Revenue');
+
+    await sheet.setChartTitle('  ');
+
+    expect(chartInBook(book).title).toBeUndefined();
+  });
+
+  it('turns the legend of a chart with several series off and on', async () => {
+    const book = drawnBook([TWO_SERIES]);
+    const sheet = sheetOf(book);
+
+    await sheet.clickDrawing(0);
+    await sheet.openChartSettings();
+
+    expect(sheet.chartLegendShown).toBe(true);
+
+    await sheet.setChartSwitch(0, false);
+
+    expect(sheet.chartLegendShown).toBe(false);
+  });
+
+  it('offers stacking to columns and connecting gaps to lines only', async () => {
+    const book = drawnBook([CHART]);
+    const sheet = sheetOf(book);
+
+    await sheet.clickDrawing(0);
+    await sheet.openChartSettings();
+
+    expect(sheet.chartSettingsControls).toEqual([2, 0]);
+
+    await sheet.chooseChartOption(1, 'Stacked to 100%');
+
+    expect(chartInBook(book).stacking).toBe(SheetChartStacking.Percent);
+
+    await sheet.chooseChartOption(0, 'Line');
+
+    expect(sheet.chartSettingsControls).toEqual([2, 1]);
+
+    await sheet.setChartSwitch(0, true);
+
+    expect(chartInBook(book).gaps).toBe(SheetChartGaps.Connect);
+
+    await sheet.chooseChartOption(0, 'Pie');
+
+    expect(sheet.chartSettingsControls).toEqual([1, 1]);
+  });
+
+  it('keeps the chart in place while keys and clicks land in the settings', async () => {
+    const book = drawnBook([CHART]);
+    const sheet = sheetOf(book);
+
+    await sheet.clickDrawing(0);
+    await sheet.openChartSettings();
+    await sheet.pressInChartSettings('Delete');
+    await sheet.pressChartSettings();
+
+    expect([sheet.drawings.length, sheet.selectedDrawings]).toEqual([1, [0]]);
+  });
+
+  it('closes the settings when the chart goes away', async () => {
+    const book = drawnBook([]);
+    const sheet = sheetOf(book);
+
+    await sheet.insertChart(2, 1, 'Bar');
+    await sheet.press('Enter');
+
+    expect(sheet.chartSettingsOpen).toBe(true);
+
+    await sheet.focus(1, 0);
+    await sheet.press('z', { ctrl: true });
+
+    expect(sheet.chartSettingsOpen).toBe(false);
   });
 
   it('deletes the selected drawing and brings it back on undo', async () => {

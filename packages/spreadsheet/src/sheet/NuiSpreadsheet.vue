@@ -127,12 +127,16 @@
             :drawings="drawings"
             :rect-of="rectOf"
             :near="lineNear"
+            :frozen-rows="table.cells.frozenRows"
+            :frozen-cols="table.cells.frozenCols"
             :selected="drawingEdit.selectedId.value"
             :moving="drawingEdit.moving.value"
             :editable="drawingEdit.editable.value"
+            :settings-label="messages.chartSettings"
             @down="drawingEdit.onDown"
             @grip="drawingEdit.onGripDown"
             @select="drawingEdit.select"
+            @settings="drawingEdit.openSettings"
           />
           <NuiSpreadsheetMarks
             :rect-of="rectOf"
@@ -199,6 +203,7 @@
       />
     </NuiPopover>
     <NuiSpreadsheetPivotPopover ref="pivotPanel" :pivots="pivots" :readonly="locked" />
+    <NuiSpreadsheetChartPopover ref="chartPanel" :settings="chartSettings" :texts="messages" />
     <div class="nui-spreadsheet__hidden" role="status" aria-live="polite">
       {{ formula.announcement.value }}
     </div>
@@ -265,9 +270,11 @@ import NuiSpreadsheetReference from './NuiSpreadsheetReference.vue';
 import NuiSpreadsheetReport from './NuiSpreadsheetReport.vue';
 import NuiSpreadsheetStatus from './NuiSpreadsheetStatus.vue';
 import NuiSpreadsheetTabs from './NuiSpreadsheetTabs.vue';
+import NuiSpreadsheetChartPopover from './drawings/NuiSpreadsheetChartPopover.vue';
 import NuiSpreadsheetDrawings from './drawings/NuiSpreadsheetDrawings.vue';
 import type { LineNear } from './drawings/drawings.types';
 import { useSheetChartInsert } from './drawings/use-sheet-chart-insert';
+import { useSheetChartSettings } from './drawings/use-sheet-chart-settings';
 import { useSheetDrawingEdit } from './drawings/use-sheet-drawing-edit';
 import { useSheetDrawings } from './drawings/use-sheet-drawings';
 import { useSheetPictureInsert } from './drawings/use-sheet-picture-insert';
@@ -482,6 +489,8 @@ const fill = useSheetFill({
 
 const pivotPanel = useTemplateRef<{ focusStart(): void }>('pivotPanel');
 
+const chartPanel = useTemplateRef<{ focusStart(): void }>('chartPanel');
+
 const pivots = useSheetPivots({
   book: () => book,
   sheet: () => shownSheet.value,
@@ -554,9 +563,25 @@ const drawingEdit = useSheetDrawingEdit({
   focus: () => {
     formula.holdFocus();
   },
+  openSettings: () => {
+    chartSettings.show();
+  },
   editing,
   table: grid,
   root,
+});
+
+const chartSettings = useSheetChartSettings({
+  sheet: () => shownSheet.value,
+  selected: () => drawingEdit.selected.value,
+  editing,
+  root,
+  focusPanel: () => {
+    chartPanel.value?.focusStart();
+  },
+  back: () => {
+    formula.holdFocus();
+  },
 });
 
 const chartInsert = useSheetChartInsert({

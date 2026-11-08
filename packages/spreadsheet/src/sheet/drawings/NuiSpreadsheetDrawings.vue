@@ -12,40 +12,16 @@
       :style="rectStyle(placed.rect)"
       @pointerdown="emit('down', $event, placed.shown)"
       @click="emit('select', placed.shown)"
+      @dblclick="emit('settings', placed.shown)"
     >
-      <img
-        v-if="placed.shown.kind === ShownDrawingKind.Picture && placed.shown.url !== undefined"
-        class="nui-spreadsheet__picture"
-        :src="placed.shown.url"
-        :alt="placed.shown.label"
-        draggable="false"
-      />
-      <template v-else-if="placed.shown.kind === ShownDrawingKind.Chart">
-        <p v-if="placed.shown.title !== undefined" class="nui-spreadsheet__chart-title">
-          {{ placed.shown.title }}
-        </p>
-        <span class="nui-spreadsheet__chart">
-          <NuiChart
-            :spec="placed.shown.spec"
-            :label="placed.shown.label"
-            height="fill"
-            :focusable="false"
-          />
-        </span>
-      </template>
-      <p
-        v-else-if="placed.shown.kind === ShownDrawingKind.Foreign"
-        class="nui-spreadsheet__foreign"
-      >
-        {{ placed.shown.label }}
-      </p>
+      <NuiSpreadsheetDrawingBody :shown="placed.shown" />
     </div>
     <span
       class="nui-spreadsheet__drawing-frame"
       :class="{
         'nui-spreadsheet__drawing-frame--selected': placed.shown.drawing.id === selected,
       }"
-      :style="rectStyle(placed.rect)"
+      :style="rectStyle(placed.frame)"
     >
       <span
         v-for="grip in GRIPS"
@@ -54,16 +30,40 @@
         :class="`nui-spreadsheet__handle--${grip}`"
         @pointerdown="emit('grip', $event, placed.shown, grip)"
       ></span>
+      <span
+        v-if="
+          editable &&
+          placed.shown.kind === ShownDrawingKind.Chart &&
+          placed.shown.drawing.id === selected
+        "
+        class="nui-spreadsheet__drawing-tools"
+        @pointerdown.stop
+        @mousedown.prevent
+      >
+        <NuiButton
+          variant="outline"
+          tone="neutral"
+          size="xs"
+          icon-only
+          tabindex="-1"
+          :aria-label="settingsLabel"
+          @click="emit('settings', placed.shown)"
+        >
+          <NuiIcon :icon="SETTINGS_ICON" />
+        </NuiButton>
+      </span>
     </span>
   </template>
 </template>
 
 <script setup lang="ts">
-import { NuiChart } from '@numior/charts';
-import { computed } from 'vue';
+import { Settings2 } from '@lucide/vue';
+import { NuiButton, NuiIcon } from '@numior/vue';
+import { computed, markRaw } from 'vue';
 import { rectStyle } from '../sheet-rect';
 import { FrameGrip } from '../sheet.types';
 import { boxOf } from './drawing-box';
+import NuiSpreadsheetDrawingBody from './NuiSpreadsheetDrawingBody.vue';
 import {
   ShownDrawingKind,
   type PlacedDrawing,
@@ -73,23 +73,36 @@ import {
 
 const GRIPS = Object.values(FrameGrip);
 
+const SETTINGS_ICON = markRaw(Settings2);
+
 const kindClass = (kind: ShownDrawingKind): string => `nui-spreadsheet__drawing--kind-${kind}`;
 
-const { drawings, rectOf, near, selected, moving, editable } = defineProps<SheetDrawingsProps>();
+const {
+  drawings,
+  rectOf,
+  near,
+  frozenRows,
+  frozenCols,
+  selected,
+  moving,
+  editable,
+  settingsLabel,
+} = defineProps<SheetDrawingsProps>();
 
 const emit = defineEmits<{
   down: [event: PointerEvent, shown: ShownDrawing];
   grip: [event: PointerEvent, shown: ShownDrawing, grip: FrameGrip];
   select: [shown: ShownDrawing];
+  settings: [shown: ShownDrawing];
 }>();
 
 const placedDrawings = computed(() =>
   drawings.reduce<PlacedDrawing[]>((placed, shown) => {
     const span = moving?.id === shown.drawing.id ? moving.span : shown.span;
-    const rect = boxOf(span, near, rectOf);
+    const place = boxOf(span, near, rectOf, { rows: frozenRows, cols: frozenCols });
 
-    if (rect !== undefined && rect.width > 0 && rect.height > 0) {
-      placed.push({ shown, rect });
+    if (place !== undefined && place.rect.width > 0 && place.rect.height > 0) {
+      placed.push({ shown, ...place });
     }
     return placed;
   }, []),

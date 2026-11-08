@@ -1,17 +1,6 @@
-import {
-  ChartArea,
-  ChartBar,
-  ChartColumn,
-  ChartLine,
-  ChartPie,
-  ChartScatter,
-  Donut,
-} from '@lucide/vue';
 import { NuiMenuEntryType, type NuiMenuEntry } from '@numior/vue';
-import { markRaw } from 'vue';
 import {
   DrawingKind,
-  SheetChartKind,
   StepKind,
   chartAnchorAt,
   chartDataRange,
@@ -20,34 +9,13 @@ import {
   insertDrawing,
   type CellRange,
   type DrawingAnchor,
+  type SheetChartKind,
 } from '../../core';
-import type { NuiSpreadsheetMessages } from '../spreadsheet.messages';
+import { CHART_CHOICES, CHART_INSERT_ICON } from './chart-choices';
 import type { ChartInsertOptions } from './drawings.types';
 import { useSheetInsertSpot } from './use-sheet-insert-spot';
 
-interface ChartChoice {
-  readonly kind: SheetChartKind;
-  readonly icon: object;
-  readonly label: (messages: NuiSpreadsheetMessages) => string;
-}
-
 const BESIDE_DATA = 2;
-
-const INSERT_ICON = markRaw(ChartColumn);
-
-const CHOICES: readonly ChartChoice[] = [
-  { kind: SheetChartKind.Column, icon: INSERT_ICON, label: (texts) => texts.chartColumn },
-  { kind: SheetChartKind.Bar, icon: markRaw(ChartBar), label: (texts) => texts.chartBar },
-  { kind: SheetChartKind.Line, icon: markRaw(ChartLine), label: (texts) => texts.chartLine },
-  { kind: SheetChartKind.Area, icon: markRaw(ChartArea), label: (texts) => texts.chartArea },
-  { kind: SheetChartKind.Pie, icon: markRaw(ChartPie), label: (texts) => texts.chartPie },
-  { kind: SheetChartKind.Doughnut, icon: markRaw(Donut), label: (texts) => texts.chartDoughnut },
-  {
-    kind: SheetChartKind.Scatter,
-    icon: markRaw(ChartScatter),
-    label: (texts) => texts.chartScatter,
-  },
-];
 
 export const useSheetChartInsert = (
   options: ChartInsertOptions,
@@ -103,8 +71,8 @@ export const useSheetChartInsert = (
             type: NuiMenuEntryType.Sub,
             key: 'chart-insert',
             label: options.messages().insertChart,
-            icon: INSERT_ICON,
-            items: CHOICES.map((choice) => ({
+            icon: CHART_INSERT_ICON,
+            items: CHART_CHOICES.map((choice) => ({
               key: `chart-${choice.kind}`,
               label: choice.label(options.messages()),
               icon: choice.icon,

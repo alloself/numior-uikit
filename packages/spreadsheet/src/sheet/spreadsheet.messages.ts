@@ -47,6 +47,16 @@ export interface NuiSpreadsheetMessages {
   readonly drawingRemoved: (params: { readonly label: string }) => string;
   readonly insertChart: string;
   readonly insertPicture: string;
+  readonly chartSettings: string;
+  readonly chartSettingsClose: string;
+  readonly chartKind: string;
+  readonly chartTitleField: string;
+  readonly chartLegend: string;
+  readonly chartStacking: string;
+  readonly chartStackingNone: string;
+  readonly chartStackingStacked: string;
+  readonly chartStackingPercent: string;
+  readonly chartConnectGaps: string;
   readonly pictureRefused: string;
   readonly pictureName: (params: { index: number }) => string;
   readonly chartColumn: string;
@@ -168,6 +178,16 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     drawingRemoved: ({ label }) => `${label} removed`,
     insertChart: 'Insert chart',
     insertPicture: 'Insert picture…',
+    chartSettings: 'Chart settings',
+    chartSettingsClose: 'Close chart settings',
+    chartKind: 'Chart type',
+    chartTitleField: 'Title',
+    chartLegend: 'Legend',
+    chartStacking: 'Stacking',
+    chartStackingNone: 'None',
+    chartStackingStacked: 'Stacked',
+    chartStackingPercent: 'Stacked to 100%',
+    chartConnectGaps: 'Connect gaps in the data',
     pictureRefused: 'This file cannot be inserted as a picture: use PNG, JPEG, GIF or BMP',
     pictureName: ({ index }) => `Picture ${String(index)}`,
     chartColumn: 'Column',
@@ -234,6 +254,16 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     drawingRemoved: ({ label }) => `Объект удалён: ${label}`,
     insertChart: 'Вставить диаграмму',
     insertPicture: 'Вставить картинку…',
+    chartSettings: 'Настройки диаграммы',
+    chartSettingsClose: 'Закрыть настройки диаграммы',
+    chartKind: 'Тип диаграммы',
+    chartTitleField: 'Заголовок',
+    chartLegend: 'Легенда',
+    chartStacking: 'Накопление',
+    chartStackingNone: 'Нет',
+    chartStackingStacked: 'С накоплением',
+    chartStackingPercent: 'С накоплением до 100%',
+    chartConnectGaps: 'Соединять пропуски в данных',
     pictureRefused: 'Этот файл нельзя вставить как картинку: подойдут PNG, JPEG, GIF и BMP',
     pictureName: ({ index }) => `Рисунок ${String(index)}`,
     chartColumn: 'Гистограмма',

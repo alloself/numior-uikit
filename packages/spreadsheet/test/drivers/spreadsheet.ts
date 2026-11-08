@@ -660,6 +660,75 @@ export class SpreadsheetDriver {
     await flushPromises();
   }
 
+  private get chartSettings(): DOMWrapper<Element> {
+    return this.wrapper.find('.nui-spreadsheet-chart-settings');
+  }
+
+  get chartSettingsOpen(): boolean {
+    return this.chartSettings.exists();
+  }
+
+  get chartLegendShown(): boolean {
+    return this.wrapper.find('.nui-spreadsheet__drawing .nui-chart__legend').exists();
+  }
+
+  get chartTitle(): string | undefined {
+    const title = this.wrapper.find('.nui-spreadsheet__chart-title');
+
+    return title.exists() ? title.text() : undefined;
+  }
+
+  get chartSettingsControls(): number[] {
+    return [
+      this.chartSettings.findAll('[role="combobox"]').length,
+      this.chartSettings.findAll('input[role="switch"]').length,
+    ];
+  }
+
+  async openChartSettings(): Promise<void> {
+    await this.wrapper.find('.nui-spreadsheet__drawing-tools button').trigger('click');
+  }
+
+  async doubleClickDrawing(index: number): Promise<void> {
+    await this.wrapper.findAll('.nui-spreadsheet__drawing')[index]?.trigger('dblclick');
+  }
+
+  async closeChartSettings(): Promise<void> {
+    await this.chartSettings.find('button').trigger('click');
+  }
+
+  async chooseChartOption(control: number, label: string): Promise<void> {
+    const boxes = this.chartSettings.findAll('[role="combobox"]');
+
+    await boxes[control]?.trigger('keydown', { key: 'ArrowDown' });
+
+    await this.chartSettings
+      .findAll<HTMLElement>('[role="option"]')
+      .find((option) => option.text() === label)
+      ?.trigger('click');
+  }
+
+  async setChartTitle(text: string): Promise<void> {
+    const field = this.chartSettings.find('input:not([role])');
+
+    await field.setValue(text);
+    await field.trigger('change');
+  }
+
+  async setChartSwitch(index: number, on: boolean): Promise<void> {
+    await this.chartSettings.findAll('input[role="switch"]')[index]?.setValue(on);
+  }
+
+  async pressInChartSettings(key: string): Promise<void> {
+    keydown(this.chartSettings.element, key, {});
+    await nextTick();
+  }
+
+  async pressChartSettings(): Promise<void> {
+    this.chartSettings.element.dispatchEvent(pointer('pointerdown'));
+    await nextTick();
+  }
+
   get rulesOpen(): boolean {
     return this.wrapper.find('.nui-spreadsheet-rules').exists();
   }

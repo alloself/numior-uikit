@@ -481,6 +481,39 @@ export class BookSection {
       .evaluate((scroller, top) => scroller.scrollTo({ top }), pixels);
   }
 
+  chartRowGaps(row: string, steps: number, stride: number): Promise<number[]> {
+    return this.sheet.evaluate(
+      async (root, { label, count, step }) => {
+        const scroller = root.querySelector('.nui-table__viewport');
+        const chart = root.querySelector('.nui-spreadsheet__drawing--kind-chart');
+
+        const headerTop = (): number | undefined =>
+          [...root.querySelectorAll('[role="rowheader"]')]
+            .find((cell) => cell.textContent.trim() === label)
+            ?.getBoundingClientRect().top;
+
+        const gapAt = async (index: number, gaps: number[]): Promise<number[]> => {
+          if (index === count || scroller === null || chart === null) {
+            return gaps;
+          }
+          scroller.scrollTop = index * step;
+          await new Promise(requestAnimationFrame);
+          await new Promise(requestAnimationFrame);
+
+          const top = headerTop();
+
+          return gapAt(
+            index + 1,
+            top === undefined ? gaps : [...gaps, chart.getBoundingClientRect().top - top],
+          );
+        };
+
+        return gapAt(0, []);
+      },
+      { label: row, count: steps, step: stride },
+    );
+  }
+
   get charts(): Locator {
     return this.sheet.locator('.nui-spreadsheet__drawing--kind-chart');
   }
@@ -563,6 +596,34 @@ export class BookSection {
     const header = await boxOf(this.sheet.getByRole('rowheader').first());
 
     return frame.x >= header.x + header.width;
+  }
+
+  get chartSettings(): Locator {
+    return this.page.getByRole('dialog', { name: 'Настройки диаграммы' });
+  }
+
+  async openChartSettings(): Promise<void> {
+    await this.charts.first().click();
+
+    await this.sheet
+      .getByRole('button', { name: 'Настройки диаграммы', includeHidden: true })
+      .click();
+  }
+
+  async chooseChartKind(kind: string): Promise<void> {
+    await this.chartSettings.getByRole('combobox', { name: 'Тип диаграммы' }).click();
+    await this.page.getByRole('option', { name: kind, exact: true }).click();
+  }
+
+  async setChartTitle(title: string): Promise<void> {
+    const field = this.chartSettings.getByRole('textbox', { name: 'Заголовок' });
+
+    await field.fill(title);
+    await field.press('Enter');
+  }
+
+  async turnChartLegendOff(): Promise<void> {
+    await this.chartSettings.getByText('Легенда', { exact: true }).click();
   }
 
   get selectionFrame(): Locator {

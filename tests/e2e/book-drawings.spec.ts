@@ -34,6 +34,21 @@ test.describe('book drawings', () => {
     ]).toEqual([true, true, true, true]);
   });
 
+  test('keeps the chart on its cells frame by frame while the sheet scrolls', async ({
+    playground,
+    book,
+  }) => {
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+
+    await expect(book.charts).toHaveCount(1);
+
+    const gaps = await book.chartRowGaps('20', 24, 5);
+
+    expect(gaps.length).toBeGreaterThan(12);
+    expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThan(1);
+  });
+
   test('redraws the bars after an edit and after undo', async ({ playground, book, page }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -255,7 +270,7 @@ test.describe('book drawings', () => {
     await expect(book.pictures).toHaveCount(before + 1);
     await expect(book.selectionFrame).toBeVisible();
 
-    await expect.poll(async () => (await boxOf(book.selectionFrame)).width).toBeCloseTo(120, 0);
+    await expect.poll(async () => near((await boxOf(book.selectionFrame)).width, 120)).toBe(true);
 
     await book.cell('12', 0).click();
     await book.pasteImage(png);
@@ -266,6 +281,43 @@ test.describe('book drawings', () => {
     await page.keyboard.press('Control+z');
 
     await expect(book.pictures).toHaveCount(before);
+  });
+
+  test('changes a chart through its settings and undo brings it back', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+
+    await book.openChartSettings();
+
+    await expect(book.chartSettings).toBeVisible();
+
+    await book.setChartTitle('Итоги квартала');
+
+    await expect(book.chartTitle).toHaveText('Итоги квартала');
+
+    await book.turnChartLegendOff();
+
+    await expect(book.chartLegend).toHaveCount(0);
+
+    await book.chooseChartKind('Круговая');
+
+    await expect(book.charts.first().locator('.nui-chart__bar')).toHaveCount(0);
+
+    await page.keyboard.press('Escape');
+
+    await expect(book.chartSettings).toBeHidden();
+
+    await page.keyboard.press('Control+z');
+    await page.keyboard.press('Control+z');
+    await page.keyboard.press('Control+z');
+
+    await expect(book.chartLegend.first()).toBeVisible();
+    await expect(book.chartTitle).not.toHaveText('Итоги квартала');
   });
 
   test('drops the selection when a cell is clicked', async ({ playground, book }) => {

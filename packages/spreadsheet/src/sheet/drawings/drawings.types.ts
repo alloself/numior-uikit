@@ -1,4 +1,5 @@
 import type { ChartSpec } from '@numior/charts';
+import type { FloatingPlacement } from '@numior/primitives';
 import type { NuiTableExposed, NuiTableOverlaySlot, NuiTableRect } from '@numior/table';
 import type { NuiMenuEntry } from '@numior/vue';
 import type { ComputedRef, ShallowRef } from 'vue';
@@ -8,10 +9,17 @@ import type {
   DrawingMark,
   DrawingSize,
   Sheet,
+  SheetChart,
   SheetDrawing,
   Workbook,
 } from '../../core';
-import type { FrameGrip, SheetCells, SheetEditing, SheetSelection } from '../sheet.types';
+import type {
+  FrameGrip,
+  SheetCells,
+  SheetEditing,
+  SheetPopover,
+  SheetSelection,
+} from '../sheet.types';
 import type { NuiSpreadsheetMessages } from '../spreadsheet.messages';
 
 export interface LineSizes {
@@ -29,6 +37,7 @@ export interface DrawingSpan {
   readonly last: CellAddress;
   readonly width: number;
   readonly height: number;
+  readonly cells?: DrawingSize | undefined;
 }
 
 export interface ChartSource {
@@ -52,6 +61,7 @@ export type ShownDrawing =
       readonly span: DrawingSpan;
       readonly spec: ChartSpec;
       readonly title: string | undefined;
+      readonly legend: boolean;
       readonly label: string;
     }
   | {
@@ -63,9 +73,22 @@ export type ShownDrawing =
 
 export type ShownDrawingKind = (typeof ShownDrawingKind)[keyof typeof ShownDrawingKind];
 
-export interface PlacedDrawing {
+export interface DrawingBodyProps {
   readonly shown: ShownDrawing;
+}
+
+export interface DrawingFrozen {
+  readonly rows: number;
+  readonly cols: number;
+}
+
+export interface DrawingPlace {
   readonly rect: NuiTableRect;
+  readonly frame: NuiTableRect;
+}
+
+export interface PlacedDrawing extends DrawingPlace {
+  readonly shown: ShownDrawing;
 }
 
 export interface DrawingBox {
@@ -96,9 +119,12 @@ export interface SheetDrawingsProps {
   readonly drawings: readonly ShownDrawing[];
   readonly rectOf: NuiTableOverlaySlot['rectOf'];
   readonly near: LineNear;
+  readonly frozenRows: number;
+  readonly frozenCols: number;
   readonly selected: string | undefined;
   readonly moving: DrawingMoving | undefined;
   readonly editable: boolean;
+  readonly settingsLabel: string;
 }
 
 export interface SheetDrawingsOptions {
@@ -117,6 +143,7 @@ export interface DrawingEditOptions {
   readonly messages: () => NuiSpreadsheetMessages;
   readonly announce: (text: string) => void;
   readonly focus: () => void;
+  readonly openSettings: () => void;
   readonly editing: SheetEditing;
   readonly table: Readonly<ShallowRef<NuiTableExposed | null>>;
   readonly root: Readonly<ShallowRef<HTMLElement | null>>;
@@ -158,9 +185,11 @@ export interface DrawingEdit {
   readonly moving: Readonly<ShallowRef<DrawingMoving | undefined>>;
   readonly dragging: Readonly<ShallowRef<boolean>>;
   readonly editable: ComputedRef<boolean>;
+  readonly selected: ComputedRef<ShownDrawing | undefined>;
   select(shown: ShownDrawing): void;
   selectNew(id: string, name: string): void;
   deselect(): void;
+  openSettings(shown: ShownDrawing): void;
   onDown(event: PointerEvent, shown: ShownDrawing): void;
   onGripDown(event: PointerEvent, shown: ShownDrawing, grip: FrameGrip): void;
   onMove(event: PointerEvent): void;
@@ -168,6 +197,34 @@ export interface DrawingEdit {
   onCancel(): void;
   onRootDown(event: PointerEvent): void;
   onKeydown(event: KeyboardEvent): void;
+}
+
+export interface ChartSettingsOptions {
+  readonly sheet: () => Sheet | undefined;
+  readonly selected: () => ShownDrawing | undefined;
+  readonly editing: SheetEditing;
+  readonly root: Readonly<ShallowRef<HTMLElement | null>>;
+  readonly focusPanel: () => void;
+  readonly back: () => void;
+}
+
+export interface ChartSettings {
+  readonly popover: SheetPopover;
+  readonly chart: ComputedRef<SheetChart | undefined>;
+  readonly placement: Readonly<ShallowRef<FloatingPlacement>>;
+  show(): void;
+  change(chart: SheetChart): void;
+}
+
+export interface ChartSettingsPanelProps {
+  readonly chart: SheetChart;
+  readonly titleId: string;
+  readonly texts: NuiSpreadsheetMessages;
+}
+
+export interface ChartSettingsPopoverProps {
+  readonly settings: ChartSettings;
+  readonly texts: NuiSpreadsheetMessages;
 }
 
 export const ShownDrawingKind = {

@@ -12,13 +12,14 @@ import {
 import { lineSizesOf } from '../sheet-cells';
 import type { FrameGrip } from '../sheet.types';
 import { allEdges, boxOfAnchor, edgesOf, movedAnchor, spanOf } from './drawing-box';
-import type {
-  DrawingBox,
-  DrawingEdit,
-  DrawingEditOptions,
-  DrawingMoving,
-  LineSizes,
-  ShownDrawing,
+import {
+  ShownDrawingKind,
+  type DrawingBox,
+  type DrawingEdit,
+  type DrawingEditOptions,
+  type DrawingMoving,
+  type LineSizes,
+  type ShownDrawing,
 } from './drawings.types';
 
 interface Session {
@@ -42,6 +43,10 @@ const DRAG_THRESHOLD = 3;
 
 const TOUCH = 'touch';
 
+const SETTINGS_PANEL = '.nui-spreadsheet-chart-settings';
+
+const DRAWING_PARTS = `.nui-spreadsheet__drawing, .nui-spreadsheet__handle, .nui-spreadsheet__drawing-tools, ${SETTINGS_PANEL}`;
+
 const NUDGES: ReadonlyMap<string, readonly [number, number]> = new Map([
   [Key.ArrowLeft, [-1, 0]],
   [Key.ArrowRight, [1, 0]],
@@ -50,8 +55,10 @@ const NUDGES: ReadonlyMap<string, readonly [number, number]> = new Map([
 ]);
 
 const isDrawingTarget = (target: EventTarget | null): boolean =>
-  target instanceof Element &&
-  target.closest('.nui-spreadsheet__drawing, .nui-spreadsheet__handle') !== null;
+  target instanceof Element && target.closest(DRAWING_PARTS) !== null;
+
+const inSettings = (target: EventTarget | null): boolean =>
+  target instanceof Element && target.closest(SETTINGS_PANEL) !== null;
 
 const nameOf = (shown: ShownDrawing): string =>
   shown.drawing.name === '' ? shown.label : shown.drawing.name;
@@ -109,6 +116,13 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
 
   const deselect = (): void => {
     selectedId.value = undefined;
+  };
+
+  const openSettings = (shown: ShownDrawing): void => {
+    if (shown.kind === ShownDrawingKind.Chart && canEdit(shown)) {
+      select(shown);
+      options.openSettings();
+    }
   };
 
   const begin = (event: PointerEvent, shown: ShownDrawing, grip: FrameGrip | undefined): void => {
@@ -284,6 +298,9 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
       case Key.Tab:
         cycle(shown, event.shiftKey);
         return true;
+      case Key.Enter:
+        openSettings(shown);
+        return shown.kind === ShownDrawingKind.Chart;
       default:
         return false;
     }
@@ -292,6 +309,9 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
   const onKeydown = (event: KeyboardEvent): void => {
     const shown = selected.value;
 
+    if (inSettings(event.target)) {
+      return;
+    }
     if (shown === undefined) {
       const [first] = options.drawings().filter(canEdit);
 
@@ -316,9 +336,11 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
     moving,
     dragging,
     editable,
+    selected,
     select,
     selectNew,
     deselect,
+    openSettings,
     onDown,
     onGripDown,
     onMove,

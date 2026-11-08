@@ -60,6 +60,7 @@ export const useSheetDrawings = (
           span,
           spec: chartSpecOf(content.chart, source),
           title: content.chart.title,
+          legend: content.chart.legend,
           label: content.chart.title ?? (drawing.name || texts.chart),
         };
       case DrawingKind.Foreign:

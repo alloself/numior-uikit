@@ -11,6 +11,8 @@ import type {
   DrawingBox,
   DrawingEdgeLimits,
   DrawingEdges,
+  DrawingFrozen,
+  DrawingPlace,
   DrawingSpan,
   LineNear,
   LineSizes,
@@ -22,6 +24,8 @@ interface Reach {
 }
 
 const MIN_SIZE = 8;
+
+const GRID_LINE = 1;
 
 const START_GRIPS = new Set<FrameGrip>([
   FrameGrip.Start,
@@ -94,15 +98,18 @@ export const spanOf = (anchor: DrawingAnchor, sizes: LineSizes): DrawingSpan => 
   switch (anchor.kind) {
     case DrawingAnchorKind.Cells: {
       const { from, to } = anchor;
+      const lastRow = lastOf(from.row, to.row, to.dy);
+      const lastCol = lastOf(from.col, to.col, to.dx);
 
       return {
         from,
-        last: {
-          row: lastOf(from.row, to.row, to.dy),
-          col: lastOf(from.col, to.col, to.dx),
-        },
+        last: { row: lastRow, col: lastCol },
         width: Math.max(sumOf(from.col, to.col, sizes.width) - from.dx + to.dx, 0),
         height: Math.max(sumOf(from.row, to.row, sizes.height) - from.dy + to.dy, 0),
+        cells: {
+          width: sumOf(from.col, lastCol + 1, sizes.width),
+          height: sumOf(from.row, lastRow + 1, sizes.height),
+        },
       };
     }
     case DrawingAnchorKind.Cell:
@@ -254,19 +261,47 @@ const rangeOf = (span: DrawingSpan, near: LineNear): NuiTableRange => ({
   to: { row: near.row(span.last.row), col: near.col(span.last.col) },
 });
 
+const fitted = (own: number, shown: number, modelled: number | undefined): number =>
+  modelled === undefined ? own : own + shown - modelled;
+
+const lapOf = (offset: number): number => (offset === 0 ? GRID_LINE : 0);
+
+const grown = (rect: NuiTableRect, inline: number, block: number): NuiTableRect => ({
+  top: rect.top - block,
+  start: rect.start - inline,
+  width: rect.width + inline,
+  height: rect.height + block,
+});
+
 export const boxOf = (
   span: DrawingSpan,
   near: LineNear,
   rectOf: NuiTableOverlaySlot['rectOf'],
-): NuiTableRect | undefined => {
-  const covered = rectOf(rangeOf(span, near));
+  frozen: DrawingFrozen,
+): DrawingPlace | undefined => {
+  const range = rangeOf(span, near);
+  const covered = rectOf(range);
 
-  return covered === undefined
-    ? undefined
-    : {
-        top: covered.top + span.from.dy,
-        start: covered.start + span.from.dx,
-        width: span.width,
-        height: span.height,
-      };
+  if (covered === undefined) {
+    return undefined;
+  }
+
+  const inline = lapOf(span.from.dx);
+  const block = lapOf(span.from.dy);
+
+  const rect = {
+    top: covered.top + span.from.dy,
+    start: covered.start + span.from.dx,
+    width: fitted(span.width, covered.width, span.cells?.width),
+    height: fitted(span.height, covered.height, span.cells?.height),
+  };
+
+  return {
+    rect: grown(rect, inline, block),
+    frame: grown(
+      rect,
+      range.from.col === frozen.cols ? 0 : inline,
+      range.from.row === frozen.rows ? 0 : block,
+    ),
+  };
 };
