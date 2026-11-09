@@ -437,12 +437,18 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
         context.redraw.delete(id);
       }
     }
+    const previous = state;
+
     state = next;
     placeWidgets(context, next, sets);
     watch.ignoreOwn();
     sync.mark();
     sync.write();
     catchUp.schedule();
+
+    for (const plugin of next.plugins) {
+      plugin.props.stateChanged?.(next, previous);
+    }
   };
 
   const detach = attachInput(host, {

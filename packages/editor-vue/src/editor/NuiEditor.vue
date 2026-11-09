@@ -56,6 +56,7 @@
         @keydown="onKeydown"
       />
       <span ref="anchor" class="nui-editor__anchor" aria-hidden="true" />
+      <slot name="overlay" />
       <NuiEditorBlockHandle
         v-if="handlesShown && overlaid"
         ref="handle"
@@ -307,6 +308,8 @@ const {
   linkMetadata,
   mentions,
   format = NuiEditorFormat.Html,
+  plugins: extraPlugins = [],
+  ids,
 } = defineProps<NuiEditorProps>();
 
 const model = defineModel<V>({ required: true });
@@ -558,7 +561,8 @@ const uploads = useEditorUploads({
 
 provideEditorUploads(uploads);
 
-const plugins = [
+const editorPlugins = [
+  ...extraPlugins,
   links.plugin,
   ...(hasMedia ? [pendingUploads, uploads.plugin] : []),
   ...(schema.nodes.has('code_block') ? [codeHighlightPlugin()] : []),
@@ -586,7 +590,7 @@ const sync: EditorValue = useEditorValue({
 
 const initial = sync.initial;
 
-const current = shallowRef<EditorState>(createState({ doc: initial, plugins }));
+const current = shallowRef<EditorState>(createState({ doc: initial, plugins: editorPlugins, ids }));
 const ready = ref(false);
 const overlaid = ref(false);
 const onServer = inject(ssrContextKey, null) !== null;
@@ -691,7 +695,7 @@ const settleValue = (): void => {
 const replace = (doc: Doc): void => {
   publishing = false;
   empty.value = isEmptyDoc(doc);
-  current.value = createState({ doc, plugins });
+  current.value = createState({ doc, plugins: editorPlugins, ids });
   view?.update(current.value);
   code.reset();
   code.update(current.value);
@@ -754,6 +758,8 @@ const editor: NuiEditorApi = {
   flush: () => {
     settleValue();
   },
+  coordsAt: (pos) => view?.coordsAtPos(pos),
+  contentBox: () => contentElement.value?.getBoundingClientRect(),
 };
 
 const toolbarShown = computed(

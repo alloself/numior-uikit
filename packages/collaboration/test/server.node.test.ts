@@ -147,10 +147,11 @@ describe('reference room', () => {
     expect(fresh.inbox[0]).toEqual({
       kind: ServerMessageKind.Welcome,
       version: 0,
+      presence: [],
       snapshot: toJSON(paragraphs('one')),
     });
 
-    expect(known.inbox[0]).toEqual({ kind: ServerMessageKind.Welcome, version: 0 });
+    expect(known.inbox[0]).toEqual({ kind: ServerMessageKind.Welcome, version: 0, presence: [] });
   });
 
   it('refuses another schema version', () => {
@@ -252,6 +253,68 @@ describe('reference room', () => {
       { kind: ServerMessageKind.Error, code: ServerErrorCode.Protocol },
       { kind: ServerMessageKind.Error, code: ServerErrorCode.Protocol },
     ]);
+  });
+
+  it('relays presence and lists it for a newcomer', () => {
+    const ann = peerOf('ann');
+    const bob = peerOf('bob');
+    const room = joined(ann, bob);
+    const late = peerOf('late');
+
+    room.receive(ann, { kind: ClientMessageKind.Presence, state: 'here' });
+
+    room.join(late, {
+      kind: ClientMessageKind.Hello,
+      doc: 'doc',
+      clientId: 'late',
+      version: 0,
+      schema: SCHEMA,
+    });
+
+    expect(ann.inbox).toEqual([]);
+
+    expect(bob.inbox).toEqual([
+      { kind: ServerMessageKind.Presence, clientId: 'ann', state: 'here' },
+    ]);
+
+    expect(late.inbox[0]).toMatchObject({ presence: [{ clientId: 'ann', state: 'here' }] });
+  });
+
+  it('clears presence when it is withdrawn and when a peer leaves', () => {
+    const ann = peerOf('ann');
+    const bob = peerOf('bob');
+    const room = joined(ann, bob);
+
+    room.receive(ann, { kind: ClientMessageKind.Presence, state: 'here' });
+    room.receive(ann, { kind: ClientMessageKind.Presence, state: null });
+    room.receive(ann, { kind: ClientMessageKind.Presence, state: 'back' });
+    room.leave(ann);
+
+    expect(bob.inbox.at(-2)).toMatchObject({ clientId: 'ann', state: 'back' });
+    expect(bob.inbox.at(-1)).toMatchObject({ clientId: 'ann', state: null });
+  });
+
+  it('keeps presence when an old socket of a reconnected client closes', () => {
+    const old = peerOf('ann');
+    const bob = peerOf('bob');
+    const room = joined(old, bob);
+    const fresh = peerOf('ann');
+
+    room.receive(old, { kind: ClientMessageKind.Presence, state: 'here' });
+
+    room.join(fresh, {
+      kind: ClientMessageKind.Hello,
+      doc: 'doc',
+      clientId: 'ann',
+      version: 0,
+      schema: SCHEMA,
+    });
+
+    bob.inbox.length = 0;
+
+    room.leave(old);
+
+    expect(bob.inbox).toEqual([]);
   });
 
   it('stops broadcasting to a peer that left', () => {

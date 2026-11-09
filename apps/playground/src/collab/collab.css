@@ -1,0 +1,15 @@
+.collab {
+  box-sizing: border-box;
+  max-inline-size: 48rem;
+  margin-inline: auto;
+  padding: var(--nui-space-6) var(--nui-space-4);
+}
+
+.collab__bar {
+  display: flex;
+  gap: var(--nui-space-3);
+  align-items: center;
+  justify-content: space-between;
+  min-block-size: 2rem;
+  margin-block-end: var(--nui-space-4);
+}

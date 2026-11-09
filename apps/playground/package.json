@@ -12,6 +12,7 @@
     "@fontsource-variable/inter": "5.3.0",
     "@lucide/vue": "1.50.0",
     "@numior/charts": "workspace:*",
+    "@numior/collaboration": "workspace:*",
     "@numior/content": "workspace:*",
     "@numior/editor-core": "workspace:*",
     "@numior/editor-vue": "workspace:*",

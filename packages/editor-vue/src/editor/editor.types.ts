@@ -1,5 +1,14 @@
 import type { NuiEmbedPresetId, NuiEmbedProvider } from '@numior/content';
-import type { Command, DocJSON, EditorState, PasteSource, Schema } from '@numior/editor-core';
+import type {
+  Command,
+  DocJSON,
+  EditorState,
+  IdSource,
+  PasteSource,
+  Plugin,
+  Schema,
+} from '@numior/editor-core';
+import type { CaretRect } from '@numior/editor-core/view';
 import type { NuiHighlighter } from '@numior/primitives';
 import type { NuiFieldControlProps } from '@numior/vue';
 import type { NuiEditorBlock } from '../blocks/block.types';
@@ -29,6 +38,8 @@ export interface NuiEditorProps extends NuiFieldControlProps {
   accept?: string | undefined;
   maxSize?: number | undefined;
   maxHeight?: string | undefined;
+  plugins?: readonly Plugin[] | undefined;
+  ids?: IdSource | undefined;
 }
 
 export type NuiEditorToolbarMode = (typeof NuiEditorToolbarMode)[keyof typeof NuiEditorToolbarMode];
@@ -38,6 +49,8 @@ export interface NuiEditorApi {
   run(command: Command): boolean;
   focus(): void;
   flush(): void;
+  coordsAt(pos: number): CaretRect | undefined;
+  contentBox(): DOMRect | undefined;
 }
 
 export interface NuiEditorPaste {

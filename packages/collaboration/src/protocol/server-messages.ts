@@ -2,6 +2,7 @@ import {
   RejectReason,
   ServerErrorCode,
   ServerMessageKind,
+  type PeerPresence,
   type ServerMessage,
   type WireStep,
 } from './protocol.types';
@@ -51,9 +52,20 @@ const readAccepted = (value: Fields): ServerMessage | undefined =>
     ? { kind: ServerMessageKind.Accepted, seq: value.seq, version: value.version }
     : undefined;
 
-const readWelcome = (value: Fields): ServerMessage | undefined =>
-  isCount(value.version)
-    ? { kind: ServerMessageKind.Welcome, version: value.version, snapshot: value.snapshot }
+const isPeerPresence = (value: unknown): value is PeerPresence =>
+  isFields(value) && typeof value.clientId === 'string' && Object.hasOwn(value, 'state');
+
+const readWelcome = (value: Fields): ServerMessage | undefined => {
+  const { version, snapshot, presence } = value;
+
+  return isCount(version) && Array.isArray(presence) && presence.every(isPeerPresence)
+    ? { kind: ServerMessageKind.Welcome, version, snapshot, presence }
+    : undefined;
+};
+
+const readPresence = (value: Fields): ServerMessage | undefined =>
+  isPeerPresence(value)
+    ? { kind: ServerMessageKind.Presence, clientId: value.clientId, state: value.state }
     : undefined;
 
 const readError = (value: Fields): ServerMessage | undefined =>
@@ -72,6 +84,8 @@ export const parseServerMessage = (value: unknown): ServerMessage | undefined =>
       return readRejected(value);
     case ServerMessageKind.Steps:
       return readSteps(value);
+    case ServerMessageKind.Presence:
+      return readPresence(value);
     case ServerMessageKind.Error:
       return readError(value);
     default:

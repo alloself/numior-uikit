@@ -21,6 +21,20 @@ export type {
 } from './editor/collab.types';
 export { editorCollabDocument } from './editor/editor-document';
 export {
+  presenceOf,
+  remotePeers,
+  remotePresence,
+  samePresence,
+  setRemotePresence,
+} from './editor/presence';
+export type {
+  BlockPoint,
+  EditorPresence,
+  PresenceSelection,
+  PresenceUser,
+  RemotePeer,
+} from './editor/presence.types';
+export {
   ClientMessageKind,
   RejectReason,
   ServerErrorCode,
@@ -31,8 +45,11 @@ export type {
   ClientMessage,
   ErrorMessage,
   HelloMessage,
+  PeerPresence,
+  PresenceMessage,
   PullMessage,
   RejectedMessage,
+  SendPresenceMessage,
   SendStepsMessage,
   ServerMessage,
   StepsMessage,

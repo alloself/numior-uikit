@@ -36,6 +36,24 @@ const sameStamp = (left: SchemaStamp, right: SchemaStamp): boolean =>
 export const createRoom = (authority: RoomAuthority): Room => {
   const log = createStepLog();
   const peers = new Set<RoomPeer>();
+  const presence = new Map<RoomPeer, unknown>();
+
+  const announce = (from: RoomPeer, state: unknown): void => {
+    for (const other of peers) {
+      if (other !== from) {
+        other.send({ kind: ServerMessageKind.Presence, clientId: from.clientId, state });
+      }
+    }
+  };
+
+  const onPresence = (peer: RoomPeer, state: unknown): void => {
+    if (state === null) {
+      presence.delete(peer);
+    } else {
+      presence.set(peer, state);
+    }
+    announce(peer, state);
+  };
 
   const protocolError = (peer: RoomPeer): void => {
     peer.send({ kind: ServerMessageKind.Error, code: ServerErrorCode.Protocol });
@@ -92,6 +110,7 @@ export const createRoom = (authority: RoomAuthority): Room => {
       peer.send({
         kind: ServerMessageKind.Welcome,
         version: log.version(),
+        presence: [...presence].map(([owner, state]) => ({ clientId: owner.clientId, state })),
         ...(hello.version === null ? { snapshot: authority.snapshot() } : {}),
       });
 
@@ -105,6 +124,9 @@ export const createRoom = (authority: RoomAuthority): Room => {
         case ClientMessageKind.Pull:
           onPull(peer, message);
           break;
+        case ClientMessageKind.Presence:
+          onPresence(peer, message.state);
+          break;
         case ClientMessageKind.Hello:
           protocolError(peer);
           break;
@@ -112,6 +134,10 @@ export const createRoom = (authority: RoomAuthority): Room => {
     },
     leave: (peer) => {
       peers.delete(peer);
+
+      if (presence.delete(peer) && ![...peers].some((p) => p.clientId === peer.clientId)) {
+        announce(peer, null);
+      }
     },
   };
 };

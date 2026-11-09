@@ -1,0 +1,188 @@
+import {
+  SelectionKind,
+  createMetaKey,
+  decorationSet,
+  definePlugin,
+  inlineDecoration,
+  mirrored,
+  remoteChain,
+  type Doc,
+  type EditorState,
+  type Mappable,
+  type Plugin,
+  type Transaction,
+} from '@numior/editor-core';
+import type {
+  BlockPoint,
+  EditorPresence,
+  PresenceSelection,
+  PresenceUser,
+  RemotePeer,
+} from './presence.types';
+
+type Fields = Readonly<Record<string, unknown>>;
+
+const COLOURS = 8;
+
+const SELECTION_CLASS = 'nui-collab-selection';
+
+const presenceUpdate = createMetaKey<readonly RemotePeer[]>('presenceUpdate');
+
+const registry = new WeakMap<object, Plugin<readonly RemotePeer[]>>();
+
+const NONE: readonly RemotePeer[] = [];
+
+const isFields = (value: unknown): value is Fields =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isUser = (value: unknown): value is PresenceUser =>
+  isFields(value) &&
+  typeof value.id === 'string' &&
+  typeof value.name === 'string' &&
+  (value.avatar === undefined || typeof value.avatar === 'string');
+
+const isPoint = (value: unknown): value is BlockPoint =>
+  isFields(value) &&
+  typeof value.block === 'string' &&
+  typeof value.offset === 'number' &&
+  Number.isInteger(value.offset) &&
+  value.offset >= 0;
+
+const isSelection = (value: unknown): value is PresenceSelection | null =>
+  value === null || (isFields(value) && isPoint(value.anchor) && isPoint(value.head));
+
+const isPresence = (value: unknown): value is EditorPresence =>
+  isFields(value) && isUser(value.user) && isSelection(value.selection);
+
+const colourOf = (id: string): number =>
+  (Array.from(id).reduce((sum, char) => sum * 31 + (char.codePointAt(0) ?? 0), 7) >>> 0) % COLOURS;
+
+const pointAt = (doc: Doc, pos: number): BlockPoint => {
+  const $pos = doc.resolve(pos);
+
+  return { block: $pos.parent.id, offset: $pos.parentOffset };
+};
+
+const positionOf = (doc: Doc, point: BlockPoint): number | undefined => {
+  const node = doc.byId(point.block);
+  const start = doc.positionOf(point.block);
+
+  return node === undefined || start === undefined
+    ? undefined
+    : start + 1 + Math.min(point.offset, Math.max(0, node.size - 2));
+};
+
+const peerOf = (doc: Doc, clientId: string, value: unknown): RemotePeer | undefined => {
+  if (!isPresence(value)) {
+    return undefined;
+  }
+
+  const { user, selection } = value;
+
+  return {
+    clientId,
+    user,
+    colour: colourOf(user.id),
+    anchor: selection === null ? undefined : positionOf(doc, selection.anchor),
+    head: selection === null ? undefined : positionOf(doc, selection.head),
+  };
+};
+
+const mappingOf = (tr: Transaction): Mappable => {
+  const chain = remoteChain.read(tr);
+
+  return chain === undefined ? tr.mapping : mirrored(chain);
+};
+
+const moved = (peers: readonly RemotePeer[], tr: Transaction): readonly RemotePeer[] => {
+  const mapping = mappingOf(tr);
+
+  return peers.map((peer) => ({
+    ...peer,
+    anchor: peer.anchor === undefined ? undefined : mapping.map(peer.anchor),
+    head: peer.head === undefined ? undefined : mapping.map(peer.head),
+  }));
+};
+
+const applyPeers = (tr: Transaction, value: readonly RemotePeer[]): readonly RemotePeer[] => {
+  const update = presenceUpdate.read(tr);
+
+  if (update !== undefined) {
+    return update;
+  }
+  return tr.changed && value.length > 0 ? moved(value, tr) : value;
+};
+
+const selectionDecorations = (peers: readonly RemotePeer[]) =>
+  decorationSet(
+    peers.reduce<ReturnType<typeof inlineDecoration>[]>((found, peer) => {
+      if (peer.anchor !== undefined && peer.head !== undefined && peer.anchor !== peer.head) {
+        found.push(
+          inlineDecoration(
+            Math.min(peer.anchor, peer.head),
+            Math.max(peer.anchor, peer.head),
+            `${SELECTION_CLASS} nui-collab-colour--${peer.colour.toString()}`,
+          ),
+        );
+      }
+      return found;
+    }, []),
+  );
+
+export const remotePresence = (): Plugin<readonly RemotePeer[]> => {
+  const plugin: Plugin<readonly RemotePeer[]> = definePlugin<readonly RemotePeer[]>({
+    name: 'remotePresence',
+    state: {
+      init: () => NONE,
+      apply: applyPeers,
+    },
+    props: {
+      decorations: (state) => selectionDecorations(plugin.getState(state) ?? NONE),
+    },
+  });
+
+  registry.set(plugin, plugin);
+  return plugin;
+};
+
+export const remotePeers = (state: EditorState): readonly RemotePeer[] => {
+  for (const plugin of state.plugins) {
+    const found = registry.get(plugin);
+
+    if (found !== undefined) {
+      return found.getState(state) ?? NONE;
+    }
+  }
+  return NONE;
+};
+
+export const setRemotePresence = (
+  state: EditorState,
+  peers: ReadonlyMap<string, unknown>,
+): Transaction =>
+  state.tr.setMeta(
+    presenceUpdate,
+    [...peers].reduce<RemotePeer[]>((found, [clientId, value]) => {
+      const peer = peerOf(state.doc, clientId, value);
+
+      if (peer !== undefined) {
+        found.push(peer);
+      }
+      return found;
+    }, []),
+  );
+
+export const presenceOf = (state: EditorState, user: PresenceUser): EditorPresence => {
+  const { selection, doc } = state;
+
+  return {
+    user,
+    selection:
+      selection.kind === SelectionKind.Text
+        ? { anchor: pointAt(doc, selection.anchor), head: pointAt(doc, selection.head) }
+        : null,
+  };
+};
+
+export const samePresence = (left: EditorPresence, right: EditorPresence): boolean =>
+  JSON.stringify(left.selection) === JSON.stringify(right.selection);

@@ -302,6 +302,16 @@ for (const file of await localImports(resolve('packages/spreadsheet/dist/xlsx/in
 
 await importBuild('collaboration', ['collab', 'createCollabClient', 'webSocketTransport']);
 
+const collaborationVue = await import(
+  pathToFileURL(resolve('packages/collaboration/dist/vue/index.js')).href
+);
+
+assert.equal(
+  typeof collaborationVue.NuiCollabCarets,
+  'object',
+  'collaboration/vue must export the remote carets',
+);
+
 for (const file of await localImports(resolve('packages/collaboration/dist/index.js'))) {
   assert.doesNotMatch(
     await readFile(file, 'utf8'),

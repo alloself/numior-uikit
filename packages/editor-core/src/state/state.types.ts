@@ -60,6 +60,7 @@ export interface EditorProps {
     | ((intent: InputIntent, state: EditorState, dispatch: Dispatch) => boolean)
     | undefined;
   readonly decorations?: ((state: EditorState) => DecorationSet | undefined) | undefined;
+  readonly stateChanged?: ((state: EditorState, before: EditorState) => void) | undefined;
 }
 
 export interface PluginSpec<S> {

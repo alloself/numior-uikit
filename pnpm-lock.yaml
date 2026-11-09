@@ -170,6 +170,9 @@ importers:
       '@numior/charts':
         specifier: workspace:*
         version: link:../../packages/charts
+      '@numior/collaboration':
+        specifier: workspace:*
+        version: link:../../packages/collaboration
       '@numior/content':
         specifier: workspace:*
         version: link:../../packages/content
@@ -241,6 +244,24 @@ importers:
       '@numior/editor-core':
         specifier: workspace:*
         version: link:../editor-core
+      '@numior/editor-vue':
+        specifier: workspace:*
+        version: link:../editor-vue
+      '@numior/primitives':
+        specifier: workspace:*
+        version: link:../primitives
+      '@numior/tokens':
+        specifier: workspace:*
+        version: link:../tokens
+      '@numior/vue':
+        specifier: workspace:*
+        version: link:../vue
+      '@vueuse/core':
+        specifier: 15.0.0
+        version: 15.0.0(vue@3.5.43(typescript@5.9.3))
+      vue:
+        specifier: ^3.5.0
+        version: 3.5.43(typescript@5.9.3)
     devDependencies:
       '@numior/content':
         specifier: workspace:*
@@ -248,6 +269,9 @@ importers:
       '@types/ws':
         specifier: 8.18.2
         version: 8.18.2
+      '@vue/test-utils':
+        specifier: 2.5.1
+        version: 2.5.1(@vue/compiler-dom@3.5.43)(@vue/server-renderer@3.5.43)(vue@3.5.43(typescript@5.9.3))
       fast-check:
         specifier: 4.10.2
         version: 4.10.2

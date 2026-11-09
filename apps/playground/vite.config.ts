@@ -12,6 +12,7 @@ export default defineConfig(({ command }) => ({
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         bench: fileURLToPath(new URL('./bench.html', import.meta.url)),
+        collab: fileURLToPath(new URL('./collab.html', import.meta.url)),
       },
     },
   },

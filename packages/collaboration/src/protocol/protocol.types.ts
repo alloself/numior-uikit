@@ -29,12 +29,23 @@ export interface PullMessage {
   readonly from: number;
 }
 
-export type ClientMessage = HelloMessage | SendStepsMessage | PullMessage;
+export interface SendPresenceMessage {
+  readonly kind: typeof ClientMessageKind.Presence;
+  readonly state: unknown;
+}
+
+export type ClientMessage = HelloMessage | SendStepsMessage | PullMessage | SendPresenceMessage;
+
+export interface PeerPresence {
+  readonly clientId: string;
+  readonly state: unknown;
+}
 
 export interface WelcomeMessage {
   readonly kind: typeof ServerMessageKind.Welcome;
   readonly version: number;
   readonly snapshot?: unknown;
+  readonly presence: readonly PeerPresence[];
 }
 
 export interface AcceptedMessage {
@@ -57,6 +68,10 @@ export interface StepsMessage {
   readonly steps: readonly WireStep[];
 }
 
+export interface PresenceMessage extends PeerPresence {
+  readonly kind: typeof ServerMessageKind.Presence;
+}
+
 export interface ErrorMessage {
   readonly kind: typeof ServerMessageKind.Error;
   readonly code: ServerErrorCode;
@@ -67,15 +82,22 @@ export type ServerMessage =
   | AcceptedMessage
   | RejectedMessage
   | StepsMessage
+  | PresenceMessage
   | ErrorMessage;
 
-export const ClientMessageKind = { Hello: 'hello', Steps: 'steps', Pull: 'pull' } as const;
+export const ClientMessageKind = {
+  Hello: 'hello',
+  Steps: 'steps',
+  Pull: 'pull',
+  Presence: 'presence',
+} as const;
 
 export const ServerMessageKind = {
   Welcome: 'welcome',
   Accepted: 'accepted',
   Rejected: 'rejected',
   Steps: 'steps',
+  Presence: 'presence',
   Error: 'error',
 } as const;
 

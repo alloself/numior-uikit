@@ -24,6 +24,7 @@ export interface ClientDriver {
   readonly statuses: () => readonly CollabStatus['kind'][];
   readonly version: () => number | null;
   readonly received: () => readonly CollabBatch[];
+  readonly peers: () => ReadonlyMap<string, unknown>;
   readonly pending: () => number;
   readonly opens: () => number;
   readonly open: () => void;
@@ -47,6 +48,7 @@ export const createClientDriver = (options: ClientDriverOptions = {}): ClientDri
   const statuses: CollabStatus['kind'][] = [];
   const received: CollabBatch[] = [];
   const listeners: TransportListener[] = [];
+  let peers: ReadonlyMap<string, unknown> = new Map();
   let version = options.version === undefined ? 0 : options.version;
   let pending: readonly WireStep[] = [];
 
@@ -90,6 +92,9 @@ export const createClientDriver = (options: ClientDriverOptions = {}): ClientDri
     onStatus: (status) => {
       statuses.push(status.kind);
     },
+    onPresence: (next) => {
+      peers = next;
+    },
   });
 
   const deliver = (value: unknown): void => {
@@ -106,6 +111,7 @@ export const createClientDriver = (options: ClientDriverOptions = {}): ClientDri
     statuses: () => statuses,
     version: () => version,
     received: () => received,
+    peers: () => peers,
     pending: () => pending.length,
     opens: () => listeners.length,
     open: () => {
@@ -120,7 +126,7 @@ export const createClientDriver = (options: ClientDriverOptions = {}): ClientDri
     },
     deliver,
     welcome: (at, snapshot) => {
-      server({ kind: ServerMessageKind.Welcome, version: at, snapshot });
+      server({ kind: ServerMessageKind.Welcome, version: at, snapshot, presence: [] });
     },
     accept: (seq, at) => {
       server({ kind: ServerMessageKind.Accepted, seq, version: at });

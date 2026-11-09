@@ -17,6 +17,7 @@ import {
   type CollabClientOptions,
   type CollabStatus,
 } from './client.types';
+import { createPresenceChannel } from './presence-channel';
 import { createReconnecting } from './reconnecting';
 
 interface InFlight {
@@ -25,7 +26,7 @@ interface InFlight {
 }
 
 export const createCollabClient = (options: CollabClientOptions): CollabClient => {
-  const { doc, clientId, schema, document, onStatus } = options;
+  const { doc, clientId, schema, document, onStatus, onPresence } = options;
 
   let status: CollabStatus = { kind: CollabStatusKind.Connecting };
   let inFlight: InFlight | undefined;
@@ -41,6 +42,16 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
     setStatus({ kind: CollabStatusKind.Failed, reason });
     link.stop();
   };
+
+  const presence = createPresenceChannel({
+    send: (state) => {
+      link.send({ kind: ClientMessageKind.Presence, state });
+    },
+    ready: () =>
+      status.kind === CollabStatusKind.Online &&
+      document.pending().length === (inFlight?.count ?? 0),
+    onPeers: onPresence,
+  });
 
   const flush = (): void => {
     const version = document.version();
@@ -61,6 +72,7 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
       inFlight = { seq, count: steps.length };
       link.send({ kind: ClientMessageKind.Steps, seq, version, steps });
     }
+    presence.offer();
   };
 
   const catchUp = (version: number): void => {
@@ -87,6 +99,7 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
       fail(CollabFailure.Diverged);
       return;
     }
+    presence.welcome(message.presence);
     catchUp(message.version);
     flush();
   };
@@ -152,6 +165,9 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
       case ServerMessageKind.Rejected:
         onRejected(message);
         break;
+      case ServerMessageKind.Presence:
+        presence.peer(message.clientId, message.state);
+        break;
       case ServerMessageKind.Error:
         fail(
           message.code === ServerErrorCode.Schema ? CollabFailure.Schema : CollabFailure.Protocol,
@@ -182,6 +198,7 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
     },
     closed: () => {
       inFlight = undefined;
+      presence.offline();
 
       if (status.kind !== CollabStatusKind.Failed) {
         setStatus({ kind: CollabStatusKind.Offline });
@@ -192,7 +209,16 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
   return {
     status: () => status,
     sync: flush,
+    refresh: () => {
+      const local = document.version();
+
+      if (local !== null && status.kind === CollabStatusKind.Online) {
+        link.send({ kind: ClientMessageKind.Pull, from: local });
+      }
+    },
+    setPresence: presence.set,
     stop: () => {
+      presence.stop();
       link.stop();
     },
   };

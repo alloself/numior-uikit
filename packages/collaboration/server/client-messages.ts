@@ -49,6 +49,10 @@ export const parseClientMessage = (value: unknown): ClientMessage | undefined =>
       return readSteps(value);
     case ClientMessageKind.Pull:
       return isCount(value.from) ? { kind: ClientMessageKind.Pull, from: value.from } : undefined;
+    case ClientMessageKind.Presence:
+      return Object.hasOwn(value, 'state')
+        ? { kind: ClientMessageKind.Presence, state: value.state }
+        : undefined;
     default:
       return undefined;
   }

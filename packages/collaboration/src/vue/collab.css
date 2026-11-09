@@ -1,0 +1,78 @@
+.nui-collab-colour--0 {
+  --_colour: var(--nui-chart-1);
+}
+
+.nui-collab-colour--1 {
+  --_colour: var(--nui-chart-2);
+}
+
+.nui-collab-colour--2 {
+  --_colour: var(--nui-chart-3);
+}
+
+.nui-collab-colour--3 {
+  --_colour: var(--nui-chart-4);
+}
+
+.nui-collab-colour--4 {
+  --_colour: var(--nui-chart-5);
+}
+
+.nui-collab-colour--5 {
+  --_colour: var(--nui-chart-6);
+}
+
+.nui-collab-colour--6 {
+  --_colour: var(--nui-chart-7);
+}
+
+.nui-collab-colour--7 {
+  --_colour: var(--nui-chart-8);
+}
+
+.nui-collab-selection {
+  background: color-mix(in oklab, var(--_colour) 24%, transparent);
+  border-radius: 2px;
+}
+
+.nui-collab-carets {
+  position: absolute;
+  inset: 0;
+  direction: ltr;
+  overflow: clip;
+  pointer-events: none;
+}
+
+.nui-collab-carets__caret {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  box-sizing: border-box;
+  inline-size: 2px;
+  block-size: var(--_height, 1em);
+  background: var(--_colour);
+  border-radius: 1px;
+  opacity: 0;
+  transition:
+    transform var(--nui-duration-fast) var(--nui-easing),
+    opacity var(--nui-duration-fast) var(--nui-easing);
+}
+
+.nui-collab-carets__flag {
+  position: absolute;
+  inset-block-end: 100%;
+  inset-inline-start: 0;
+  box-sizing: border-box;
+  max-inline-size: 12rem;
+  padding: 0 var(--nui-space-1);
+  overflow: hidden;
+  color: var(--nui-text);
+  font-size: var(--nui-font-size-xs);
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: color-mix(in oklab, var(--_colour) 24%, var(--nui-surface));
+  border-radius: var(--nui-radius-sm);
+  transform: translate(var(--_flag-x, 0), var(--_flag-shift, 0));
+  transition: transform var(--nui-duration-fast) var(--nui-easing);
+}

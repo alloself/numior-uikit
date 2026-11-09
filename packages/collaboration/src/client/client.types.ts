@@ -54,11 +54,14 @@ export interface CollabClientOptions {
   readonly document: CollabDocument;
   readonly retry?: CollabRetry | undefined;
   readonly onStatus?: ((status: CollabStatus) => void) | undefined;
+  readonly onPresence?: ((peers: ReadonlyMap<string, unknown>) => void) | undefined;
 }
 
 export interface CollabClient {
   readonly status: () => CollabStatus;
   readonly sync: () => void;
+  readonly refresh: () => void;
+  readonly setPresence: (state: unknown) => void;
   readonly stop: () => void;
 }
 

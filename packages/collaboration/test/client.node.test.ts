@@ -23,6 +23,14 @@ const online = (options?: ClientDriverOptions): ClientDriver => {
   return driver;
 };
 
+const presenceSent = (driver: ClientDriver): readonly unknown[] =>
+  sentOfKind(driver, ClientMessageKind.Presence).reduce<unknown[]>((states, message) => {
+    if (message.kind === ClientMessageKind.Presence) {
+      states.push(message.state);
+    }
+    return states;
+  }, []);
+
 const sentSteps = (driver: ClientDriver): number =>
   sentOfKind(driver, ClientMessageKind.Steps).length;
 
@@ -257,7 +265,9 @@ describe('collaboration client', () => {
   it.each([
     ['garbage', 'nonsense'],
     ['an unknown kind', { kind: 'nope' }],
-    ['a malformed welcome', { kind: ServerMessageKind.Welcome, version: -1 }],
+    ['a malformed welcome', { kind: ServerMessageKind.Welcome, version: -1, presence: [] }],
+    ['a malformed presence list', { kind: ServerMessageKind.Welcome, version: 0, presence: [1] }],
+    ['malformed presence', { kind: ServerMessageKind.Presence, clientId: 1, state: 1 }],
     ['a malformed acknowledgement', { kind: ServerMessageKind.Accepted, seq: 'a', version: 1 }],
     [
       'a malformed rejection',
@@ -319,6 +329,84 @@ describe('collaboration client', () => {
 
     expect(sentSteps(driver)).toBe(2);
     expect(driver.sent().at(-1)).toMatchObject({ seq: 2, version: 0 });
+  });
+
+  it('publishes peers from the welcome and from updates', () => {
+    const driver = createClientDriver();
+
+    driver.open();
+
+    driver.deliver({
+      kind: ServerMessageKind.Welcome,
+      version: 0,
+      presence: [{ clientId: 'ann', state: 1 }],
+    });
+
+    driver.deliver({ kind: ServerMessageKind.Presence, clientId: 'bob', state: 2 });
+    driver.deliver({ kind: ServerMessageKind.Presence, clientId: 'ann', state: null });
+
+    expect(driver.peers()).toEqual(new Map([['bob', 2]]));
+  });
+
+  it('forgets peers while offline', () => {
+    const driver = online();
+
+    driver.deliver({ kind: ServerMessageKind.Presence, clientId: 'bob', state: 2 });
+    driver.drop();
+
+    expect(driver.peers().size).toBe(0);
+  });
+
+  it('sends presence once per interval and keeps the latest', () => {
+    const driver = online();
+
+    driver.client.setPresence('a');
+    driver.client.setPresence('b');
+    driver.client.setPresence('c');
+
+    expect(presenceSent(driver)).toEqual(['a']);
+
+    vi.advanceTimersByTime(60);
+
+    expect(presenceSent(driver)).toEqual(['a', 'c']);
+  });
+
+  it('holds presence while steps wait for the batch in flight', () => {
+    const driver = online();
+
+    driver.edit();
+    driver.edit();
+    driver.client.setPresence('a');
+
+    expect(presenceSent(driver)).toEqual([]);
+
+    driver.accept(1, 1);
+
+    expect(driver.sent().at(-1)).toMatchObject({ kind: ClientMessageKind.Presence, state: 'a' });
+  });
+
+  it('sends presence again after a reconnect', () => {
+    const driver = online();
+
+    driver.client.setPresence('a');
+    vi.advanceTimersByTime(60);
+    driver.drop();
+    vi.runOnlyPendingTimers();
+    driver.open();
+    driver.welcome(0);
+
+    expect(presenceSent(driver)).toEqual(['a', 'a']);
+  });
+
+  it('refreshes only when online with a document', () => {
+    const offline = createClientDriver();
+    const driver = online();
+
+    offline.client.refresh();
+    driver.client.refresh();
+
+    expect(sentOfKind(offline, ClientMessageKind.Pull)).toHaveLength(0);
+    expect(lastPull(driver)).toBe(0);
   });
 
   it('stays down after stop', () => {

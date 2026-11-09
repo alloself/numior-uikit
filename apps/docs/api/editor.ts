@@ -61,6 +61,14 @@ const docs: DocsMap = {
         ru: 'Поиск людей для упоминаний: `(query, { signal }) => Promise<{ id, label, description?, avatar? }[]>`. С ним «@» открывает список у курсора, без него это обычный символ.',
         en: 'People search for mentions: `(query, { signal }) => Promise<{ id, label, description?, avatar? }[]>`. With it, @ opens a list at the caret. Without it, @ is plain text.',
       },
+      plugins: {
+        ru: 'Дополнительные плагины ядра, читается при монтировании. Через него подключается совместная работа.',
+        en: 'Extra core plugins, read on mount. Collaboration connects through it.',
+      },
+      ids: {
+        ru: 'Источник id новых узлов. В совместной работе у каждого клиента свой.',
+        en: 'The source of ids for new nodes. Each client has its own in collaboration.',
+      },
       highlighter: {
         ru: 'Подсветка блоков кода вместо заданной в `createNuiConfig`. `false` выводит код одним цветом.',
         en: 'Highlighter for code blocks instead of the one set in `createNuiConfig`. `false` renders code in one color.',
@@ -100,6 +108,12 @@ const docs: DocsMap = {
       paste: {
         ru: 'Срабатывает при вставке. В `source` — откуда текст: `own`, `word`, `google-docs`, `excel`, `sheets`, `html` или `text`.',
         en: 'Fires on paste. `source` tells where the content came from: `own`, `word`, `google-docs`, `excel`, `sheets`, `html` or `text`.',
+      },
+    },
+    slots: {
+      overlay: {
+        ru: 'Слой поверх текста редактора, например чужие курсоры в совместной работе.',
+        en: 'A layer above the editor text, such as remote cursors in collaboration.',
       },
     },
   },
