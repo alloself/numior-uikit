@@ -34,13 +34,17 @@
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { AriaValue, Direction, Key, PopoverState, provideDraftCommits } from '@numior/primitives';
 import { NuiTooltip } from '@numior/vue';
+import { grownSize, growthEdges } from './table-editor-growth';
 import { holdScrollAfterResize } from './table-scroll-hold';
 import type { NuiTableCellEditorProps, NuiTableEditMove } from './table.types';
 
 const FOCUSABLE = 'input, textarea, select, button, [tabindex]';
 const SIZE = '--_size';
+const LIFT = '--_lift';
+const LIFTED = 'var(--nui-shadow-md)';
+const NEIGHBOURS = 64;
+const ALIGNED_END = '.nui-table__cell--align-end';
 const CARET = 4;
-const EDGE = 2;
 const PINNED = '.nui-table__cell--pin-start, .nui-table__cell--pin-end';
 const ERROR = '.nui-table__error';
 
@@ -213,36 +217,51 @@ const typeInto = (field: HTMLInputElement | HTMLTextAreaElement, text: string): 
 
 const paddingOf = (length: string): number => Number.parseFloat(length) || 0;
 
-const roomOf = (editor: HTMLElement, viewport: HTMLElement): number => {
+const growsBack = (editor: HTMLElement): boolean => editor.closest(ALIGNED_END) !== null;
+
+const roomOf = (editor: HTMLElement, viewport: HTMLElement, back: boolean): number => {
   const style = getComputedStyle(viewport);
   const rtl = style.direction === Direction.Rtl;
   const box = viewport.getBoundingClientRect();
   const start = box.left + viewport.clientLeft;
   const end = box.right - (viewport.offsetWidth - viewport.clientWidth - viewport.clientLeft);
   const rect = editor.getBoundingClientRect();
-  const padding = paddingOf(style.scrollPaddingInlineEnd);
 
-  return Math.floor(rtl ? rect.right - start - padding : end - padding - rect.left) - EDGE;
+  const padding = paddingOf(back ? style.scrollPaddingInlineStart : style.scrollPaddingInlineEnd);
+
+  return Math.floor(rtl === back ? end - padding - rect.left : rect.right - start - padding);
+};
+
+const neighbourWidths = (editor: HTMLElement, back: boolean): readonly number[] => {
+  const widths: number[] = [];
+  const cell = editor.closest('.nui-table__cell');
+  let next = back ? cell?.previousElementSibling : cell?.nextElementSibling;
+
+  while (next instanceof HTMLElement && widths.length < NEIGHBOURS) {
+    widths.push(next.getBoundingClientRect().width);
+    next = back ? next.previousElementSibling : next.nextElementSibling;
+  }
+  return widths;
 };
 
 const widen = (editor: HTMLElement, field: HTMLInputElement, viewport: HTMLElement): void => {
   editor.style.removeProperty(SIZE);
+  editor.style.removeProperty(LIFT);
 
-  const natural = editor.getBoundingClientRect().width;
-  const needed = field.scrollWidth + natural - field.clientWidth + CARET;
+  const overflow = field.scrollWidth - field.clientWidth;
 
-  if (needed <= natural) {
+  if (overflow <= 0) {
     return;
   }
-  const room = roomOf(editor, viewport);
-  const grown = Math.max(natural, Math.min(needed, room));
 
-  editor.style.setProperty(SIZE, `${String(grown)}px`);
+  const back = growsBack(editor);
+  const natural = editor.getBoundingClientRect().width;
+  const edges = growthEdges(natural, neighbourWidths(editor, back));
+  const grown = grownSize(edges, natural + overflow + CARET, roomOf(editor, viewport, back));
 
-  const short = field.scrollWidth - field.clientWidth;
-
-  if (short > 0 && grown < room) {
-    editor.style.setProperty(SIZE, `${String(Math.min(grown + short + CARET, room))}px`);
+  if (grown > natural) {
+    editor.style.setProperty(SIZE, `${String(grown)}px`);
+    editor.style.setProperty(LIFT, LIFTED);
   }
 };
 

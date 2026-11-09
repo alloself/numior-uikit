@@ -1,11 +1,5 @@
 <template>
-  <span
-    class="nui-spreadsheet__editor"
-    :class="{
-      'nui-spreadsheet__editor--invalid': invalid,
-      'nui-spreadsheet__editor--painted': painted,
-    }"
-  >
+  <span class="nui-spreadsheet__editor" :class="{ 'nui-spreadsheet__editor--painted': painted }">
     <span ref="mirror" class="nui-spreadsheet__editor-mirror" dir="auto" aria-hidden="true">
       <span v-if="painted" class="nui-spreadsheet__editor-text">
         <span

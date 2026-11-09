@@ -744,14 +744,14 @@ test.describe('book', () => {
     await playground.open();
     await book.sheet.scrollIntoViewIfNeeded();
     await book.cell('9', 1).click();
-    await page.keyboard.type('=B3+B4');
+    await page.keyboard.type('=B3');
 
     const cell = await boxOf(book.cell('9', 1));
     const short = await book.editorBox();
 
     expect(short.width).toBeLessThanOrEqual(cell.width);
 
-    await page.keyboard.type('+B5+B6+B7+C3+C4+C5+C6+C7+D3+D4+D5+D6+D7+E3+E4+E5+E6+E7+F3+F4+F5');
+    await page.keyboard.type('+B4+B5+B6+B7+C3+C4+C5+C6+C7+D3+D4+D5+D6+D7+E3+E4+E5+E6+E7+F3+F4+F5');
 
     const visible = await book.viewportBox();
     const long = await book.editorBox();
@@ -759,6 +759,51 @@ test.describe('book', () => {
     expect(long.width).toBeGreaterThan(cell.width);
     expect(long.x).toBeCloseTo(short.x, 0);
     expect(long.x + long.width).toBeLessThanOrEqual(visible.x + visible.width);
+
+    await page.keyboard.press('Escape');
+
+    await expect(book.changes).toHaveText('Правок: 0');
+  });
+
+  test('draws the cell editor as the selected cell and grows it by whole columns', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+
+    const fill = await book.fillAt('2', 0);
+
+    await book.cell('2', 0).dblclick();
+
+    const head = await boxOf(book.cell('2', 0));
+    const framed = await book.editorFrame();
+
+    expect(framed.x).toBeCloseTo(head.x, 0);
+    expect(framed.y).toBeCloseTo(head.y, 0);
+    expect(framed.width).toBeCloseTo(head.width - 1, 0);
+    expect(framed.height).toBeCloseTo(head.height - 1, 0);
+    expect(rgbDelta(await book.fillAt('2', 0), fill)).toBeLessThan(4);
+
+    await page.keyboard.press('Escape');
+    await book.cell('3', 1).click();
+    await book.formula.click();
+
+    const cell = await boxOf(book.cell('3', 1));
+    const idle = await book.editorFrame();
+
+    expect(idle.x).toBeCloseTo(cell.x, 0);
+    expect(idle.width).toBeCloseTo(cell.width - 1, 0);
+
+    await page.keyboard.type('23456');
+
+    const before = await boxOf(book.cell('3', 0));
+    const grown = await book.editorFrame();
+
+    expect(grown.x).toBeCloseTo(before.x, 0);
+    expect(grown.x + grown.width).toBeCloseTo(idle.x + idle.width, 0);
 
     await page.keyboard.press('Escape');
 

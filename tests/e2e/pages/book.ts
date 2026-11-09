@@ -105,6 +105,10 @@ export class BookSection {
     return boxOf(this.editor);
   }
 
+  editorFrame(): Promise<Box> {
+    return boxOf(this.sheet.locator('.nui-table__editor'));
+  }
+
   lineColor(rowLabel: string, column: number): Promise<string> {
     return this.cell(rowLabel, column).evaluate((cell) => getComputedStyle(cell).borderBottomColor);
   }

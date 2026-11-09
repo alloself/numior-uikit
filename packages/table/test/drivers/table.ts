@@ -56,6 +56,12 @@ import {
   type TableCellPosition,
 } from '../../src';
 
+export interface EditorLayout {
+  readonly widths: readonly number[];
+  readonly visible: number;
+  readonly glyph: number;
+}
+
 export interface TableMountOptions<T> {
   readonly columns: readonly NuiTableColumnDef<T>[];
   readonly rows: readonly T[];
@@ -1195,6 +1201,64 @@ export class TableDriver<T> {
 
   get editorGrows(): boolean {
     return this.editorElement?.classList.contains('nui-table__editor--grow') === true;
+  }
+
+  get editorSize(): number | undefined {
+    const size = this.editorElement?.style.getPropertyValue('--_size') ?? '';
+
+    return size === '' ? undefined : Number.parseFloat(size);
+  }
+
+  get editorLifted(): boolean {
+    return (this.editorElement?.style.getPropertyValue('--_lift') ?? '') !== '';
+  }
+
+  layEditorOut(layout: EditorLayout): void {
+    const editor = this.editorElement;
+    const field = this.editorField;
+    const cell = editor?.closest<HTMLElement>('.nui-table__cell');
+    const viewport = editor?.closest<HTMLElement>('.nui-table__viewport');
+
+    if (
+      !(editor instanceof HTMLElement) ||
+      !(cell instanceof HTMLElement) ||
+      !(viewport instanceof HTMLElement) ||
+      field === null
+    ) {
+      return;
+    }
+    const cells = [...(cell.parentElement?.children ?? [])];
+    const back = cell.classList.contains('nui-table__cell--align-end');
+
+    cells.reduce((left, sibling, index) => {
+      const width = layout.widths[index] ?? 0;
+
+      defineRect(sibling, new DOMRect(left, 0, width, HEAD_HEIGHT));
+      return left + width;
+    }, 0);
+
+    defineRect(viewport, new DOMRect(0, 0, layout.visible, LAYOUT_HEIGHT));
+    defineValue(viewport, 'clientWidth', layout.visible);
+    defineValue(viewport, 'offsetWidth', layout.visible);
+
+    const laidWidth = (): number => this.editorSize ?? cell.getBoundingClientRect().width;
+
+    Object.defineProperty(editor, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => {
+        const box = cell.getBoundingClientRect();
+        const width = laidWidth();
+
+        return new DOMRect(back ? box.right - width : box.left, 0, width, HEAD_HEIGHT);
+      },
+    });
+
+    Object.defineProperty(field, 'clientWidth', { configurable: true, get: laidWidth });
+
+    Object.defineProperty(field, 'scrollWidth', {
+      configurable: true,
+      get: () => Math.max(laidWidth(), field.value.length * layout.glyph),
+    });
   }
 
   get editorValue(): string | undefined {

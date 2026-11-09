@@ -118,7 +118,7 @@
   display: block;
 }
 .nui-spreadsheet__token {
-  color: color-mix(in oklab, var(--_tone), var(--nui-text) 40%);
+  color: color-mix(in oklab, var(--_tone), currentColor 40%);
 }
 .nui-spreadsheet__formula--painted {
   color: transparent;
@@ -504,29 +504,14 @@
   display: flex;
   align-items: center;
   inline-size: 100%;
+  block-size: 100%;
   min-block-size: var(--nui-control-height-sm);
-  padding-inline: var(--nui-field-padding-sm);
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius);
-  background: var(--nui-surface);
-  color: var(--nui-text);
+  padding-inline: calc(var(--nui-field-padding-sm) + 1px);
+  color: inherit;
   font-family: var(--nui-font);
   font-size: var(--nui-control-font-size-sm);
   line-height: var(--nui-line-height-tight);
   text-align: inherit;
-  transition:
-    border-color var(--nui-duration-fast) var(--nui-easing),
-    outline-color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-spreadsheet__editor:focus-within {
-  border-color: var(--nui-focus);
-  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-  outline-offset: var(--nui-focus-ring-offset);
-}
-.nui-spreadsheet__editor--invalid,
-.nui-spreadsheet__editor--invalid:focus-within {
-  border-color: var(--nui-error);
-  outline-color: var(--nui-error);
 }
 .nui-spreadsheet__editor-mirror {
   position: absolute;
@@ -534,7 +519,7 @@
   box-sizing: border-box;
   display: grid;
   align-content: center;
-  padding-inline: var(--nui-field-padding-sm);
+  padding-inline: calc(var(--nui-field-padding-sm) + 1px);
   overflow: hidden;
   white-space: pre;
   text-align: inherit;
@@ -558,8 +543,7 @@
   outline: none;
 }
 .nui-spreadsheet__editor--painted > .nui-spreadsheet__editor-control {
-  color: transparent;
-  caret-color: var(--nui-text);
+  -webkit-text-fill-color: transparent;
 }
 .nui-spreadsheet__body {
   box-sizing: border-box;

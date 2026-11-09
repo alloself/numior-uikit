@@ -140,8 +140,8 @@ const docs: DocsMap = {
         en: 'Marks elements outside the table, such as a formula bar, whose focus keeps a cell edit open: `(target) → true`. A click on them keeps the cell selection. When focus leaves such an element, end the edit with `commitEdit` or `cancelEdit`.',
       },
       growEditor: {
-        ru: 'Даёт текстовому редактору ячейки расти по ширине текста поверх соседних ячеек, как в Excel. Редактор растёт до края видимой области, дальше текст прокручивается внутри поля.',
-        en: 'Lets the text editor of a cell grow with its text over the neighbouring cells, as in Excel. It grows up to the edge of the visible area, then the text scrolls inside the field.',
+        ru: 'Кладёт текстовый редактор точно по границам ячейки с рамкой выделения и даёт ему расти поверх соседних ячеек целыми колонками, как в Excel: у ячеек с выравниванием по концу влево, у остальных вправо. Редактор растёт до края видимой области, дальше текст прокручивается внутри поля.',
+        en: 'Puts the text editor exactly on the bounds of its cell with the selection frame and lets it grow over the neighbouring cells by whole columns, as in Excel: towards the start for end-aligned cells and towards the end for the rest. It grows up to the edge of the visible area, then the text scrolls inside the field.',
       },
       picking: {
         ru: 'Включает выбор ссылок для формул: `(draft) → true`, пока черновик ждёт ссылку, например кончается оператором. Тогда щелчок, протяжка и стрелки в редакторе не завершают правку, а отправляют событие `pick`.',

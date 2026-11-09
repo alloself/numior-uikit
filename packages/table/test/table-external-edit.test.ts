@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { applyStaffEdits, staff, STAFF_COLUMNS, type Staff } from './support/staff';
 
+const STAFF_WIDTHS = [80, 160, 140, 120, 100];
+
 const mounted: TableDriver<Staff>[] = [];
 const bars: HTMLInputElement[] = [];
 
@@ -117,6 +119,64 @@ describe('NuiTable external editing', () => {
 
     expect(growing.editorGrows).toBe(true);
     expect(growing.editorValue).toBe('Казань');
+  });
+
+  it('grows the editor to the next column line once the text stops fitting and back when it fits', async () => {
+    const grid = mountStaff({ props: { growEditor: true } });
+    await grid.focusCell(1, 2);
+    await grid.press('F2');
+    grid.layEditorOut({ widths: STAFF_WIDTHS, visible: 660, glyph: 10 });
+
+    await grid.typeInEditor('Тула');
+
+    expect(grid.editorSize).toBeUndefined();
+    expect(grid.editorLifted).toBe(false);
+
+    await grid.typeInEditor('Набережные Челны');
+
+    expect(grid.editorSize).toBe(260);
+    expect(grid.editorLifted).toBe(true);
+
+    await grid.typeInEditor('Петропавловск-Камчатский, улица');
+
+    expect(grid.editorSize).toBe(360);
+
+    await grid.typeInEditor('Уфа');
+
+    expect(grid.editorSize).toBeUndefined();
+    expect(grid.editorLifted).toBe(false);
+  });
+
+  it('stops the growing editor at the edge of the visible area', async () => {
+    const grid = mountStaff({ props: { growEditor: true } });
+    await grid.focusCell(1, 2);
+    await grid.press('F2');
+    grid.layEditorOut({ widths: STAFF_WIDTHS, visible: 540, glyph: 10 });
+
+    await grid.typeInEditor('Петропавловск-Камчатский, улица Ленинская');
+
+    expect(grid.editorSize).toBe(300);
+  });
+
+  it('grows the editor of an end-aligned cell back over the columns before it', async () => {
+    const grid = mountStaff({
+      columns: STAFF_COLUMNS.map((column) =>
+        column.key === 'city' ? { ...column, align: 'end' } : column,
+      ),
+      props: { growEditor: true },
+    });
+
+    await grid.focusCell(1, 2);
+    await grid.press('F2');
+    grid.layEditorOut({ widths: STAFF_WIDTHS, visible: 660, glyph: 10 });
+
+    await grid.typeInEditor('Набережные Челны');
+
+    expect(grid.editorSize).toBe(300);
+
+    await grid.typeInEditor('Петропавловск-Камчатский, улица');
+
+    expect(grid.editorSize).toBe(380);
   });
 
   it('keeps a blank edit while focus visits the companion input and cancels back to the cell', async () => {
