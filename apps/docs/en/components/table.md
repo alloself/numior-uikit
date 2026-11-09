@@ -348,6 +348,10 @@ sorting applied, in the visible columns only. Cells get the same text as on scre
 `separator` sets the delimiter, and `headers: false` removes the header line. A long export runs
 in chunks, shows a progress bar and stops on `signal`.
 
+Text that Excel would run as a formula (it starts with `=`, `@`, a tab, or with `+` or `-` and is
+not a number) is exported with a leading apostrophe. `formulas: true` turns this protection off for
+files read by a program instead of a person in a spreadsheet editor.
+
 For Excel to open the file without garbled text, add a byte order mark at the start. Locales
 with a decimal comma also expect the `;` delimiter, as in the example.
 

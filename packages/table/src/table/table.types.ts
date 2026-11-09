@@ -385,6 +385,7 @@ export interface NuiTableClipboard<T> {
 export interface NuiTableCsvOptions {
   readonly headers?: boolean | undefined;
   readonly separator?: string | undefined;
+  readonly formulas?: boolean | undefined;
   readonly signal?: AbortSignal | undefined;
 }
 

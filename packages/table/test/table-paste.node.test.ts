@@ -41,6 +41,18 @@ describe('table paste', () => {
     expect(csvLine(['a;b', 'c,d'], ';')).toBe('"a;b";c,d');
   });
 
+  it('writes fields a spreadsheet would run as formulas with a leading apostrophe', () => {
+    expect(csvLine(['=1+1', '@SUM(A1)', '+cmd|x', '-2+3', '\tx', '\rx'], ',')).toBe(
+      "'=1+1,'@SUM(A1),'+cmd|x,'-2+3,'\tx,\"'\rx\"",
+    );
+
+    expect(csvLine(['-5', '+7.5', '-1 234,5', '-12%', 'a=b', '−5'], ';')).toBe(
+      '-5;+7.5;-1 234,5;-12%;a=b;−5',
+    );
+
+    expect(csvLine(['=1+1', '-2+3'], ',', { formulas: true })).toBe('=1+1,-2+3');
+  });
+
   it('pastes at the anchor, fills the selection with one value and repeats a block over a multiple', () => {
     expect(planPaste([['a', 'b']], [], { row: 2, col: 1 }, BOUNDS, 100)).toEqual({
       kind: 'cells',

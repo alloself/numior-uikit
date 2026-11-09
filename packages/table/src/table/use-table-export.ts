@@ -29,20 +29,25 @@ export const useTableExport = <T>(options: TableExportOptions<T>): TableExport =
     start: number,
     keys: readonly string[],
     separator: string,
+    formulas: boolean,
   ): string[] =>
     rows.slice(start, start + CHUNK_ROWS).map((row) =>
       csvLine(
         keys.map((key) => options.textOf(row, key)),
         separator,
+        { formulas },
       ),
     );
 
   const exportCsv = async (settings: NuiTableCsvOptions = {}): Promise<string> => {
     const separator = settings.separator ?? ',';
+    const formulas = settings.formulas ?? false;
     const keys = options.keys();
 
     const header =
-      settings.headers === false ? [] : [csvLine(keys.map(options.labelOf), separator)];
+      settings.headers === false
+        ? []
+        : [csvLine(keys.map(options.labelOf), separator, { formulas })];
 
     const lines: string[] = [];
 
@@ -53,7 +58,7 @@ export const useTableExport = <T>(options: TableExportOptions<T>): TableExport =
 
       for (let start = 0; start < rows.length; start += CHUNK_ROWS) {
         settings.signal?.throwIfAborted();
-        lines.push(...chunkOf(rows, start, keys, separator));
+        lines.push(...chunkOf(rows, start, keys, separator, formulas));
 
         if (start + CHUNK_ROWS < rows.length) {
           await yieldToHost();
