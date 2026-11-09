@@ -76,6 +76,9 @@ export { tableGrid } from './html/table-grid';
 export type { HtmlTableCell, HtmlTableGrid } from './html/table-grid';
 export type { FromHTMLOptions, HtmlElement, HtmlNode, HtmlText } from './html/html.types';
 export { contentHole, renderTag } from './render/render';
+export { replaceDocument } from './commands/replace-document';
+export { diffDocs, diffSchema } from './diff/diff';
+export { DiffMark, type DocDiff } from './diff/diff.types';
 export { renderTree } from './render/render-tree';
 export type { RenderBuilder } from './render/render-tree';
 export type {

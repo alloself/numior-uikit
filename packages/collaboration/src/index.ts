@@ -1,3 +1,4 @@
+export type { DocumentVersion, HistoryAdapter, NewDocumentVersion } from './history/history.types';
 export { createCollabClient } from './client/client';
 export { CollabFailure, CollabStatusKind } from './client/client.types';
 export type {

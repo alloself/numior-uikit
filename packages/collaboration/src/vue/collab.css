@@ -185,3 +185,64 @@
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
+
+.nui-collab-history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nui-space-3);
+  box-sizing: border-box;
+  min-inline-size: 0;
+}
+
+.nui-collab-history__header {
+  display: flex;
+  gap: var(--nui-space-2);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nui-collab-history__title {
+  margin: 0;
+  font-size: var(--nui-font-size-md);
+  font-weight: 600;
+}
+
+.nui-collab-history__preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nui-space-3);
+  box-sizing: border-box;
+  padding: var(--nui-space-3);
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius-md);
+}
+
+.nui-collab-history__note {
+  margin: 0;
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-sm);
+}
+
+.nui-collab-history__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nui-space-1);
+}
+
+.nui-diff {
+  border-radius: var(--nui-radius-sm);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.nui-diff--added {
+  background: var(--nui-success-soft);
+  color: var(--nui-text);
+  text-decoration-line: underline;
+}
+
+.nui-diff--removed {
+  background: var(--nui-error-soft);
+  color: var(--nui-text-muted);
+  text-decoration-line: line-through;
+}

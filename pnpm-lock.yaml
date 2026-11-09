@@ -241,6 +241,9 @@ importers:
 
   packages/collaboration:
     dependencies:
+      '@numior/content':
+        specifier: workspace:*
+        version: link:../content
       '@numior/editor-core':
         specifier: workspace:*
         version: link:../editor-core
@@ -263,9 +266,6 @@ importers:
         specifier: ^3.5.0
         version: 3.5.43(typescript@5.9.3)
     devDependencies:
-      '@numior/content':
-        specifier: workspace:*
-        version: link:../content
       '@types/ws':
         specifier: 8.18.2
         version: 8.18.2

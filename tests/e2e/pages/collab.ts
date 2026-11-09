@@ -1,4 +1,10 @@
-import type { Browser, BrowserContext, Locator, Page } from '@playwright/test';
+import {
+  expect,
+  type Browser,
+  type BrowserContext,
+  type Locator,
+  type Page,
+} from '@playwright/test';
 
 export interface TextEdges {
   readonly left: number;
@@ -14,6 +20,9 @@ export class CollabClient {
   readonly comments: Locator;
   readonly threads: Locator;
   readonly marks: Locator;
+  readonly history: Locator;
+  readonly versions: Locator;
+  readonly additions: Locator;
 
   constructor(
     readonly page: Page,
@@ -27,6 +36,9 @@ export class CollabClient {
     this.comments = page.locator('.nui-collab-comments');
     this.threads = page.locator('.nui-collab-comments__thread');
     this.marks = page.locator('.nui-editor__comment');
+    this.history = page.locator('.nui-collab-history');
+    this.versions = this.history.getByRole('option');
+    this.additions = this.history.locator('.nui-diff--added');
   }
 
   paragraph(index: number): Locator {
@@ -75,6 +87,23 @@ export class CollabClient {
 
   async pressInThread(index: number, name: string): Promise<void> {
     await this.threads.nth(index).getByRole('button', { name }).click();
+  }
+
+  async openHistory(): Promise<void> {
+    await this.page.getByRole('tab', { name: 'История' }).click();
+  }
+
+  async saveVersion(count: number): Promise<void> {
+    await this.history.getByRole('button', { name: 'Сохранить версию' }).click();
+    await expect(this.versions).toHaveCount(count);
+  }
+
+  async pickVersion(index: number): Promise<void> {
+    await this.versions.nth(index).click();
+  }
+
+  async restoreVersion(): Promise<void> {
+    await this.history.getByRole('button', { name: 'Восстановить эту версию' }).click();
   }
 
   text(): Promise<string> {

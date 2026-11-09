@@ -1,0 +1,76 @@
+<template>
+  <section class="nui-collab-history" :aria-label="text.history">
+    <header class="nui-collab-history__header">
+      <h2 class="nui-collab-history__title">{{ text.history }}</h2>
+      <NuiButton v-if="history.canSave" size="sm" variant="soft" @click="history.save()">
+        {{ text.saveVersion }}
+      </NuiButton>
+    </header>
+
+    <NuiAlert v-if="history.failed.value" tone="error" :title="text.historyFailed" />
+
+    <NuiEmpty
+      v-if="history.versions.value.length === 0"
+      size="sm"
+      hide-icon
+      :title="text.noVersions"
+    />
+
+    <NuiList
+      v-else
+      selectable="single"
+      size="sm"
+      :label="text.history"
+      :items="entries"
+      :model-value="history.selected.value ?? null"
+      @update:model-value="pick"
+    />
+
+    <NuiEditorVersionPreview
+      v-if="history.selected.value !== undefined"
+      :history="history"
+      :text="text"
+    />
+  </section>
+</template>
+
+<script setup lang="ts">
+import { useLocale, useMessages } from '@numior/primitives';
+import { NuiAlert, NuiButton, NuiEmpty, NuiList, type NuiListEntry } from '@numior/vue';
+import { computed } from 'vue';
+import { collabMessages } from './collab.messages';
+import type { NuiEditorHistoryProps } from './collab.types';
+import NuiEditorVersionPreview from './NuiEditorVersionPreview.vue';
+
+const { history, labels } = defineProps<NuiEditorHistoryProps>();
+
+const messages = useMessages(collabMessages);
+const locale = useLocale();
+
+const text = computed(() => ({ ...messages.value, ...labels }));
+
+const formatter = computed(
+  () => new Intl.DateTimeFormat(locale.value, { dateStyle: 'short', timeStyle: 'medium' }),
+);
+
+const entries = computed<readonly NuiListEntry<string>[]>(() =>
+  history.versions.value.map((version) => {
+    const time = formatter.value.format(new Date(version.createdAt));
+
+    return {
+      value: version.id,
+      label: version.label ?? time,
+      description:
+        version.label === undefined ? version.author.name : `${version.author.name}, ${time}`,
+    };
+  }),
+);
+
+const pick = (id: string | null): void => {
+  if (id === null) {
+    history.close();
+  } else {
+    void history.open(id);
+  }
+};
+</script>

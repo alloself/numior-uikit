@@ -176,6 +176,39 @@ test.describe('collaboration', () => {
     await expect(anna.threads).toHaveCount(0);
   });
 
+  test('shows what a saved version changed', async ({ collab }) => {
+    const anna = await collab.join(ANNA);
+
+    await anna.write('Первая версия');
+    await anna.openHistory();
+    await anna.saveVersion(1);
+    await anna.appendTo(0, ' правка');
+    await anna.saveVersion(2);
+
+    await anna.pickVersion(0);
+
+    await expect(anna.additions).toContainText('правка');
+    expect(await wcagViolationsOf(anna.page)).toEqual([]);
+  });
+
+  test('restores a version for everybody in the document', async ({ collab }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Первая версия');
+    await anna.openHistory();
+    await anna.saveVersion(1);
+    await anna.appendTo(0, ' правка');
+    await expect(boris.editor).toContainText('правка');
+
+    await anna.pickVersion(0);
+
+    await anna.restoreVersion();
+
+    await expect(anna.editor).toHaveText('Первая версия');
+    await expect(boris.editor).toHaveText('Первая версия');
+  });
+
   for (const theme of THEMES) {
     test(`has no axe violations with people present in the ${theme} theme`, async ({ collab }) => {
       const anna = await collab.join(ANNA);

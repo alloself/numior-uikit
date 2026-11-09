@@ -1,0 +1,187 @@
+import { enableAutoUnmount, flushPromises, renderToString } from '@vue/test-utils';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
+import type { HistoryAdapter } from '../../src';
+import { documentOf } from './comments-adapter';
+import { fakeHistoryAdapter, type StoredVersion } from './history-adapter';
+import { ANN, HistoryDriver } from './history-driver';
+import HistoryHost from './HistoryHost.vue';
+
+const OLD: StoredVersion = {
+  id: 'old',
+  at: '2026-11-08T10:00:00.000Z',
+  label: 'Draft',
+  document: documentOf('first text'),
+};
+
+const NEW: StoredVersion = {
+  id: 'new',
+  at: '2026-11-09T10:00:00.000Z',
+  label: 'Review',
+  document: documentOf('first better text'),
+};
+
+const SAME: StoredVersion = { ...NEW, id: 'same', label: 'Same', document: OLD.document };
+
+enableAutoUnmount(afterEach);
+
+describe('NuiEditorHistory', () => {
+  it('lists versions from the newest', async () => {
+    const view = HistoryDriver.mount(fakeHistoryAdapter([OLD, NEW]));
+
+    await view.loaded();
+
+    expect(view.versions.map((text) => text.split('Ann')[0])).toEqual(['Review', 'Draft']);
+  });
+
+  it('says that there are no versions yet', async () => {
+    const view = HistoryDriver.mount(fakeHistoryAdapter());
+
+    await view.loaded();
+
+    expect(view.emptyShown).toBe(true);
+  });
+
+  it('saves the current document as a version', async () => {
+    const adapter = fakeHistoryAdapter();
+    const view = HistoryDriver.mount(adapter);
+
+    await view.loaded();
+    await view.press('Save version');
+
+    expect(view.versions).toHaveLength(1);
+    expect(adapter.saved()).toEqual([documentOf('current')]);
+  });
+
+  it('offers no saving without the adapter method', async () => {
+    const adapter: HistoryAdapter = {
+      versions: () => Promise.resolve([]),
+      load: () => Promise.resolve(OLD.document),
+    };
+
+    const view = HistoryDriver.mount(adapter);
+
+    await view.loaded();
+
+    expect(view.canSave).toBe(false);
+  });
+
+  it('marks what a version changed against the previous one', async () => {
+    const view = HistoryDriver.mount(fakeHistoryAdapter([OLD, NEW]));
+
+    await view.loaded();
+    await view.pick(0);
+
+    expect(view.additions).toEqual(['better']);
+  });
+
+  it('shows the plain version with changes turned off', async () => {
+    const view = HistoryDriver.mount(fakeHistoryAdapter([OLD, NEW]));
+
+    await view.loaded();
+    await view.pick(0);
+    await view.toggleChanges();
+
+    expect(view.additions).toEqual([]);
+    expect(view.previewText).toBe('first better text');
+  });
+
+  it('shows the oldest version without marks', async () => {
+    const view = HistoryDriver.mount(fakeHistoryAdapter([OLD, NEW]));
+
+    await view.loaded();
+    await view.pick(1);
+
+    expect(view.previewText).toBe('first text');
+    expect(view.additions).toEqual([]);
+    expect(view.removals).toEqual([]);
+  });
+
+  it('says when a version changed nothing', async () => {
+    const view = HistoryDriver.mount(fakeHistoryAdapter([OLD, SAME]));
+
+    await view.loaded();
+    await view.pick(0);
+
+    expect(view.noChangesShown).toBe(true);
+  });
+
+  it('restores the version into the editor and closes the preview', async () => {
+    const view = HistoryDriver.mount(fakeHistoryAdapter([OLD, NEW]));
+
+    await view.loaded();
+    await view.pick(1);
+    await view.press('Restore this version');
+
+    expect(view.editorText).toBe('first text');
+    expect(view.previewShown).toBe(false);
+  });
+
+  it('closes the preview', async () => {
+    const view = HistoryDriver.mount(fakeHistoryAdapter([OLD, NEW]));
+
+    await view.loaded();
+    await view.pick(0);
+    await view.press('Close');
+
+    expect(view.previewShown).toBe(false);
+  });
+
+  it('shows a skeleton while the version travels', async () => {
+    const adapter = fakeHistoryAdapter([OLD, NEW]);
+    const release = adapter.holdLoad('new');
+    const view = HistoryDriver.mount(adapter);
+
+    await view.loaded();
+    await view.pickWithoutWaiting(0);
+
+    expect(view.loadingShown).toBe(true);
+
+    release();
+    await flushPromises();
+
+    expect(view.loadingShown).toBe(false);
+  });
+
+  it('ignores a version picked before another one', async () => {
+    const adapter = fakeHistoryAdapter([OLD, NEW]);
+    const release = adapter.holdLoad('new');
+    const view = HistoryDriver.mount(adapter);
+
+    await view.loaded();
+    await view.pickWithoutWaiting(0);
+    await view.pick(1);
+
+    release();
+    await flushPromises();
+
+    expect(view.previewText).toBe('first text');
+  });
+
+  it('reports a version that cannot be loaded', async () => {
+    const adapter = fakeHistoryAdapter([OLD, NEW]);
+    const view = HistoryDriver.mount(adapter);
+
+    await view.loaded();
+    adapter.failNextLoad();
+    await view.pick(0);
+
+    expect(view.failed).toBe(true);
+    expect(view.previewShown).toBe(false);
+  });
+
+  it('prefers texts passed through labels', async () => {
+    const view = HistoryDriver.mount(fakeHistoryAdapter(), { history: 'Versions' });
+
+    await view.loaded();
+
+    expect(view.title).toBe('Versions');
+  });
+
+  it('renders on the server', async () => {
+    const html = await renderToString(HistoryHost, {
+      props: { initial: documentOf('one'), adapter: fakeHistoryAdapter(), user: ANN },
+    });
+
+    expect(html).toContain('nui-collab-history');
+  });
+});

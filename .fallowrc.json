@@ -233,6 +233,7 @@
           "primitives",
           "vue",
           "editor-core",
+          "content",
           "editor-vue",
           "collaboration",
           "collaboration-vue"

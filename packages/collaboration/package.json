@@ -30,6 +30,7 @@
     "build": "vp build && vue-tsc -p tsconfig.build.json"
   },
   "dependencies": {
+    "@numior/content": "workspace:*",
     "@numior/editor-core": "workspace:*",
     "@numior/editor-vue": "workspace:*",
     "@numior/primitives": "workspace:*",
@@ -37,7 +38,6 @@
     "@vueuse/core": "15.0.0"
   },
   "devDependencies": {
-    "@numior/content": "workspace:*",
     "@types/ws": "8.18.2",
     "@vue/test-utils": "2.5.1",
     "fast-check": "4.10.2",

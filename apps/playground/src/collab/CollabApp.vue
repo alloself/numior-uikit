@@ -18,7 +18,14 @@
           <NuiCollabCarets :peers="peers" :editor="editorApi" />
         </template>
       </NuiEditor>
-      <NuiEditorComments :comments="comments" />
+      <NuiTabs v-model="side">
+        <NuiTabList label="Панели документа">
+          <NuiTab value="comments">Комментарии</NuiTab>
+          <NuiTab value="history">История</NuiTab>
+        </NuiTabList>
+        <NuiTabPanel value="comments"><NuiEditorComments :comments="comments" /></NuiTabPanel>
+        <NuiTabPanel value="history"><NuiEditorHistory :history="history" /></NuiTabPanel>
+      </NuiTabs>
     </div>
   </main>
 </template>
@@ -29,14 +36,17 @@ import {
   NuiCollabCarets,
   NuiCollabPresence,
   NuiEditorComments,
+  NuiEditorHistory,
   useCollabEditor,
   useEditorComments,
+  useEditorHistory,
 } from '@numior/collaboration/vue';
 import { contentSchema } from '@numior/content';
 import { NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
-import { NuiBadge } from '@numior/vue';
-import { computed, useTemplateRef } from 'vue';
+import { NuiBadge, NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/vue';
+import { computed, ref, useTemplateRef } from 'vue';
 import { fakeComments } from './fake-comments';
+import { fakeHistory } from './fake-history';
 
 const params = new URLSearchParams(location.search);
 const name = params.get('user') ?? 'Гость';
@@ -62,6 +72,15 @@ const comments = useEditorComments({
   adapter: fakeComments(),
   editor: () => editorApi.value,
 });
+
+const history = useEditorHistory({
+  doc,
+  user,
+  adapter: fakeHistory(),
+  editor: () => editorApi.value,
+});
+
+const side = ref('comments');
 
 const editorPlugins = computed(() => [...plugins.value, comments.plugin]);
 </script>

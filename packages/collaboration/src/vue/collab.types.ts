@@ -1,9 +1,10 @@
-import type { DocJSON, IdSource, Plugin, Schema } from '@numior/editor-core';
+import type { Doc, DocJSON, IdSource, Plugin, Schema } from '@numior/editor-core';
 import type { NuiEditorApi } from '@numior/editor-vue';
 import type { ComputedRef, Ref, ShallowRef } from 'vue';
 import type { NuiCollabMessages } from './collab.messages';
 import type { CollabStatus, CollabTransport } from '../client/client.types';
 import type { CommentReply, CommentThread, CommentsAdapter } from '../comments/comments.types';
+import type { DocumentVersion, HistoryAdapter } from '../history/history.types';
 import type { PresenceUser, RemotePeer } from '../editor/presence.types';
 
 export interface UseCollabEditorOptions {
@@ -60,6 +61,39 @@ export interface CollabComments {
   readonly resolve: (id: string, resolved: boolean) => Promise<void>;
   readonly remove: (id: string) => Promise<void>;
   readonly activate: (id: string) => void;
+}
+
+export interface UseEditorHistoryOptions {
+  readonly doc: string;
+  readonly user: PresenceUser;
+  readonly adapter: HistoryAdapter;
+  readonly editor: () => NuiEditorApi | undefined;
+}
+
+export interface CollabHistory {
+  readonly versions: ComputedRef<readonly DocumentVersion[]>;
+  readonly selected: Readonly<ShallowRef<string | undefined>>;
+  readonly preview: ComputedRef<Doc | undefined>;
+  readonly changes: ComputedRef<number | undefined>;
+  readonly comparing: Readonly<Ref<boolean>>;
+  readonly compare: (value: boolean) => void;
+  readonly loading: Readonly<Ref<boolean>>;
+  readonly failed: Readonly<Ref<boolean>>;
+  readonly canSave: boolean;
+  readonly open: (id: string) => Promise<void>;
+  readonly close: () => void;
+  readonly save: (label?: string) => Promise<void>;
+  readonly restore: () => void;
+}
+
+export interface NuiEditorHistoryProps {
+  history: CollabHistory;
+  labels?: Partial<Omit<NuiCollabMessages, 'present'>> | undefined;
+}
+
+export interface NuiEditorVersionPreviewProps {
+  history: CollabHistory;
+  text: NuiCollabMessages;
 }
 
 export interface NuiEditorCommentFormProps {

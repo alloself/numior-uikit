@@ -2,6 +2,14 @@ import type { NuiMessageCatalog } from '@numior/primitives';
 
 export interface NuiCollabMessages {
   readonly present: string;
+  readonly history: string;
+  readonly saveVersion: string;
+  readonly noVersions: string;
+  readonly showChanges: string;
+  readonly noChanges: string;
+  readonly restore: string;
+  readonly closeVersion: string;
+  readonly historyFailed: string;
   readonly comments: string;
   readonly add: string;
   readonly placeholder: string;
@@ -23,6 +31,14 @@ export const collabMessages: NuiMessageCatalog<NuiCollabMessages> = {
   namespace: 'collaboration',
   en: {
     present: 'People in this document',
+    history: 'Version history',
+    saveVersion: 'Save version',
+    noVersions: 'No saved versions yet',
+    showChanges: 'Show changes',
+    noChanges: 'Nothing changed in this version',
+    restore: 'Restore this version',
+    closeVersion: 'Close',
+    historyFailed: 'The version history is unavailable',
     comments: 'Comments',
     add: 'Add comment',
     placeholder: 'Write a comment',
@@ -41,6 +57,14 @@ export const collabMessages: NuiMessageCatalog<NuiCollabMessages> = {
   },
   ru: {
     present: 'Сейчас в документе',
+    history: 'История версий',
+    saveVersion: 'Сохранить версию',
+    noVersions: 'Сохранённых версий пока нет',
+    showChanges: 'Показать изменения',
+    noChanges: 'В этой версии нет изменений',
+    restore: 'Восстановить эту версию',
+    closeVersion: 'Закрыть',
+    historyFailed: 'История версий недоступна',
     comments: 'Комментарии',
     add: 'Добавить комментарий',
     placeholder: 'Напишите комментарий',
