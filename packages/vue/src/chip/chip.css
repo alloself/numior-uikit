@@ -22,7 +22,7 @@
   font-family: var(--nui-font);
   font-size: var(--_font-size);
   font-weight: 500;
-  line-height: var(--nui-line-height-tight);
+  line-height: var(--nui-line-height-control);
   white-space: nowrap;
   transition:
     background-color var(--nui-duration-fast) var(--nui-easing),

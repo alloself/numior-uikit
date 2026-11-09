@@ -83,6 +83,7 @@
   --nui-font-weight-bold: 700;
   --nui-line-height: 1.5;
   --nui-line-height-tight: 1.25;
+  --nui-line-height-control: round(up, 1.25em, 0.25rem);
   --nui-line-height-relaxed: 1.7;
   --nui-tracking-tight: -0.02em;
   --nui-measure: 65ch;
@@ -184,7 +185,6 @@
   --nui-control-font-size-sm: var(--nui-font-size-sm);
   --nui-control-font-size-md: var(--nui-font-size-sm);
   --nui-control-font-size-lg: var(--nui-font-size-md);
-  --nui-control-text-lift-lg: 0px;
   --nui-control-height: var(--nui-control-height-md);
   --nui-control-padding: var(--nui-control-padding-md);
   --nui-control-font-size: var(--nui-control-font-size-md);
@@ -206,7 +206,6 @@
   --nui-control-font-size-sm: var(--nui-font-size-xs);
   --nui-control-font-size-md: var(--nui-font-size-sm);
   --nui-control-font-size-lg: var(--nui-font-size-sm);
-  --nui-control-text-lift-lg: 1.5px;
   --nui-control-height: var(--nui-control-height-md);
   --nui-control-padding: var(--nui-control-padding-md);
   --nui-control-font-size: var(--nui-control-font-size-md);

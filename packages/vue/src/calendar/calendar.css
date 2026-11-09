@@ -167,6 +167,7 @@
   background: transparent;
   color: inherit;
   font: inherit;
+  line-height: var(--nui-line-height-control);
   font-variant-numeric: tabular-nums;
   cursor: pointer;
   transition:
