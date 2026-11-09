@@ -115,6 +115,9 @@ const emptyCounts = (): SheetCounts => ({
 
 const upperLetter = (code: number): boolean => code >= 65 && code <= 90;
 
+const inSheet = (row: number, col: number): boolean =>
+  Number.isInteger(row) && row >= 0 && row < MAX_ROWS && col >= 0 && col < MAX_COLS;
+
 export const cellOf = (reference: string): { row: number; col: number } | undefined => {
   let col = 0;
   let index = 0;
@@ -312,6 +315,10 @@ export const readSheetPart = async (
     }
     row = place.row;
     col = place.col;
+    if (!inSheet(row, col)) {
+      cell = undefined;
+      return;
+    }
 
     cell = {
       row,
@@ -324,13 +331,19 @@ export const readSheetPart = async (
     };
   };
 
+  const openRow = (attributes: readonly XmlAttribute[]): void => {
+    row = numberOf(attributeOf(attributes, 'r'), row + 2) - 1;
+    col = -1;
+    if (inSheet(row, 0)) {
+      counts.layout += attributeOf(attributes, 'customHeight') === XmlBoolean.One ? 1 : 0;
+      layout.row(row, attributes);
+    }
+  };
+
   const openMain = (local: string, attributes: readonly XmlAttribute[]): void => {
     switch (local) {
       case OoxmlElement.Row:
-        row = numberOf(attributeOf(attributes, 'r'), row + 2) - 1;
-        col = -1;
-        counts.layout += attributeOf(attributes, 'customHeight') === XmlBoolean.One ? 1 : 0;
-        layout.row(row, attributes);
+        openRow(attributes);
         return;
       case OoxmlElement.Col:
         counts.layout += 1;

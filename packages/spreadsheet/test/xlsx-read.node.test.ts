@@ -19,6 +19,7 @@ import {
   SALES_SHEET,
   THEME,
   WORKBOOK_RELATIONSHIPS_WITH_THEME,
+  sheetWith,
   workbookWith,
   xlsxPackage,
 } from './xlsx-package';
@@ -364,6 +365,25 @@ describe('reading xlsx', () => {
 
     expect(reading.at(-1)?.done).toBe(reading.at(-1)?.total);
     expect(seen.at(-1)).toMatchObject({ phase: 'recalculate' });
+  });
+
+  it('skips cells and rows placed outside the sheet', async () => {
+    const read = await opened({
+      'xl/worksheets/sheet2.xml': sheetWith(
+        [
+          '<row r="0"><c><v>1</v></c></row>',
+          '<row r="1.5"><c><v>2</v></c></row>',
+          '<row r="2"><c r="XFD2"><v>3</v></c><c><v>4</v></c></row>',
+          '<row r="1048577"><c><v>5</v></c></row>',
+          '<row r="3"><c r="A3"><v>6</v></c><c><v>7</v></c></row>',
+        ].join(''),
+      ),
+    });
+
+    const rates = viewOf(read, 'Rates');
+
+    expect(['XFD2', 'A3', 'B3'].map(rates.shown)).toEqual(['3', '6', '7']);
+    expect(sheetOf(read, 'Rates').cells.size).toBe(3);
   });
 
   it('refuses what is not an openable workbook', async () => {
