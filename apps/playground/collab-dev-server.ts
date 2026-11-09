@@ -14,7 +14,10 @@ export const collabDevServer = (): Plugin => ({
     const start = async (): Promise<void> => {
       try {
         const { startReferenceServer } = await server.ssrLoadModule(SERVER);
-        const running = await startReferenceServer(PORT);
+
+        const running = await startReferenceServer(PORT, (error: unknown) => {
+          server.config.logger.error(`  Collaboration room failed: ${String(error)}`);
+        });
 
         server.httpServer?.once('close', () => {
           void running.close();

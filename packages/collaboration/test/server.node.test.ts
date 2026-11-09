@@ -39,6 +39,9 @@ interface LiveEditor {
 
 const SCHEMA = { name: fixtureSchema.name, version: fixtureSchema.version };
 
+const hello = (doc: string): string =>
+  JSON.stringify({ kind: ClientMessageKind.Hello, doc, clientId: doc, version: 0, schema: SCHEMA });
+
 const peerOf = (clientId: string): Peer => {
   const inbox: ServerMessage[] = [];
 
@@ -360,6 +363,59 @@ describe('reference server over WebSocket', () => {
       expect(JSON.stringify(first.doc())).toContain('Aone');
       expect(JSON.stringify(first.doc())).toContain('oneB');
     });
+  });
+
+  it('closes the socket of a room that fails to open and keeps serving the others', async () => {
+    const failures: unknown[] = [];
+
+    running = await startCollabServer({
+      port: 0,
+      authorityFor: (doc) => {
+        if (doc === 'broken') {
+          throw new TypeError('no authority');
+        }
+        return editorAuthority(paragraphs('one'));
+      },
+      onError: (error) => {
+        failures.push(error);
+      },
+    });
+
+    const address = `ws://localhost:${running.port().toString()}`;
+
+    const broken = new WebSocket(address);
+    const closes: number[] = [];
+
+    broken.addEventListener('close', (event) => {
+      closes.push(event.code);
+    });
+
+    broken.addEventListener('open', () => {
+      broken.send(hello('broken'));
+    });
+
+    await vi.waitFor(() => {
+      expect(closes).toEqual([1011]);
+    });
+
+    const healthy = new WebSocket(address);
+    const answers: string[] = [];
+
+    healthy.addEventListener('message', (event) => {
+      answers.push(String(event.data));
+    });
+
+    healthy.addEventListener('open', () => {
+      healthy.send(hello('healthy'));
+    });
+
+    await vi.waitFor(() => {
+      expect(answers[0]).toContain(ServerMessageKind.Welcome);
+    });
+
+    expect(failures).toHaveLength(1);
+
+    healthy.close();
   });
 
   it('answers garbage with a protocol error', async () => {

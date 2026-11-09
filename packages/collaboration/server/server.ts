@@ -17,6 +17,7 @@ interface Session {
 export interface CollabServerOptions {
   readonly port: number;
   readonly authorityFor: (doc: string) => RoomAuthority;
+  readonly onError?: ((error: unknown) => void) | undefined;
 }
 
 export interface CollabServer {
@@ -32,6 +33,8 @@ const parsed = (data: RawData): unknown => {
   }
 };
 
+const INTERNAL_ERROR = 1011;
+
 const sender =
   (socket: WebSocket) =>
   (message: ServerMessage): void => {
@@ -41,6 +44,7 @@ const sender =
 export const startCollabServer = async ({
   port,
   authorityFor,
+  onError,
 }: CollabServerOptions): Promise<CollabServer> => {
   const server = new WebSocketServer({ port });
   const rooms = new Map<string, Room>();
@@ -68,7 +72,7 @@ export const startCollabServer = async ({
   server.on('connection', (socket) => {
     let session: Session | undefined;
 
-    socket.on('message', (data) => {
+    const receive = (data: RawData): void => {
       const message = parseClientMessage(parsed(data));
 
       if (message === undefined) {
@@ -77,6 +81,15 @@ export const startCollabServer = async ({
         session.room.receive(session.peer, message);
       } else if (message.kind === ClientMessageKind.Hello) {
         session = joined(socket, message);
+      }
+    };
+
+    socket.on('message', (data) => {
+      try {
+        receive(data);
+      } catch (error) {
+        onError?.(error);
+        socket.close(INTERNAL_ERROR);
       }
     });
 
