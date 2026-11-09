@@ -31,6 +31,7 @@ export class CollabClient {
   readonly history: Locator;
   readonly versions: Locator;
   readonly additions: Locator;
+  readonly overwritten: Locator;
 
   constructor(
     readonly page: Page,
@@ -47,10 +48,32 @@ export class CollabClient {
     this.history = page.locator('.nui-collab-history');
     this.versions = this.history.getByRole('option');
     this.additions = this.history.locator('.nui-diff--added');
+    this.overwritten = this.history.locator('.nui-collab-history__alternative');
   }
 
   paragraph(index: number): Locator {
     return this.editor.locator('p').nth(index);
+  }
+
+  tableCell(row: number, col: number): Locator {
+    return this.page.locator('.nui-editor .nui-table tbody tr').nth(row).locator('td').nth(col);
+  }
+
+  async insertTable(): Promise<void> {
+    await this.editor.click();
+    await this.page.keyboard.type('/table');
+    await this.page.keyboard.press('Enter');
+    await this.tableCell(0, 0).waitFor();
+  }
+
+  async setCell(row: number, col: number, text: string): Promise<void> {
+    await this.tableCell(row, col).click();
+    await this.page.keyboard.type(text);
+    await this.page.keyboard.press('Enter');
+  }
+
+  async putBack(index: number): Promise<void> {
+    await this.overwritten.nth(index).getByRole('button', { name: 'Вернуть' }).click();
   }
 
   caretOf(name: string): Locator {

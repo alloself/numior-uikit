@@ -27,7 +27,13 @@ const typing = (doc: Doc, text: string, at: number): WireStep => {
 };
 
 const restoring = (pending: readonly WireStep[], snapshot: unknown = toJSON(textDoc('ab'))) =>
-  restoredDocument(fixtureSchema, { clientId: 'me', version: 4, snapshot, pending });
+  restoredDocument(fixtureSchema, {
+    clientId: 'me',
+    version: 4,
+    snapshot,
+    pending,
+    alternatives: [],
+  });
 
 describe('restoredDocument', () => {
   it('replays the unsent steps over the snapshot', () => {

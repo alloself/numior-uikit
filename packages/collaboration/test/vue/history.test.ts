@@ -1,8 +1,8 @@
 import { enableAutoUnmount, flushPromises, renderToString } from '@vue/test-utils';
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import type { HistoryAdapter } from '../../src';
+import type { CollabAlternative, HistoryAdapter } from '../../src';
 import { documentOf } from './comments-adapter';
-import { fakeHistoryAdapter, type StoredVersion } from './history-adapter';
+import { fakeAlternatives, fakeHistoryAdapter, type StoredVersion } from './history-adapter';
 import { ANN, HistoryDriver } from './history-driver';
 import HistoryHost from './HistoryHost.vue';
 
@@ -183,5 +183,79 @@ describe('NuiEditorHistory', () => {
     });
 
     expect(html).toContain('nui-collab-history');
+  });
+});
+
+const LOST: CollabAlternative = {
+  version: 3,
+  nodeId: 'cell',
+  attr: 'value',
+  value: 'Boris',
+  clientId: 'b',
+  author: { id: 'b', name: 'Boris' },
+  createdAt: '2026-11-09T10:00:00.000Z',
+};
+
+describe('NuiEditorHistory overwritten values', () => {
+  it('shows the value and who wrote it', () => {
+    const driver = HistoryDriver.mount(
+      fakeHistoryAdapter([]),
+      undefined,
+      undefined,
+      fakeAlternatives([LOST]),
+    );
+
+    expect(driver.overwritten).toHaveLength(1);
+    expect(driver.overwritten[0]).toMatch(/^Boris \| Boris, /);
+  });
+
+  it('shows nothing while no value was overwritten', () => {
+    const driver = HistoryDriver.mount(
+      fakeHistoryAdapter([]),
+      undefined,
+      undefined,
+      fakeAlternatives([]),
+    );
+
+    expect(driver.overwritten).toEqual([]);
+  });
+
+  it('names an empty value and an author who has left', () => {
+    const driver = HistoryDriver.mount(
+      fakeHistoryAdapter([]),
+      undefined,
+      undefined,
+      fakeAlternatives([{ ...LOST, value: null, author: undefined }]),
+    );
+
+    expect(driver.overwritten[0]).toMatch(/^Empty \| Another participant, /);
+  });
+
+  it('puts the value back on request', async () => {
+    const alternatives = fakeAlternatives([LOST]);
+    const driver = HistoryDriver.mount(fakeHistoryAdapter([]), undefined, undefined, alternatives);
+
+    await driver.press('Put back');
+
+    expect(alternatives.applied()).toEqual([LOST]);
+  });
+
+  it('shows the node in the document', async () => {
+    const alternatives = fakeAlternatives([LOST]);
+    const driver = HistoryDriver.mount(fakeHistoryAdapter([]), undefined, undefined, alternatives);
+
+    await driver.pressLabelled('Show in the document');
+
+    expect(alternatives.revealed()).toEqual([LOST]);
+  });
+
+  it('hides a value without touching the document', async () => {
+    const alternatives = fakeAlternatives([LOST]);
+    const driver = HistoryDriver.mount(fakeHistoryAdapter([]), undefined, undefined, alternatives);
+
+    await driver.pressLabelled('Hide');
+
+    expect(driver.overwritten).toEqual([]);
+    expect(alternatives.applied()).toEqual([]);
   });
 });

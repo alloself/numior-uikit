@@ -1,5 +1,16 @@
+import type { CollabAlternative } from '@numior/collaboration';
 import { describe, expect, it } from 'vite-plus/test';
 import { createPersistenceDriver, insertedText } from './persistence-driver';
+
+const LOST: CollabAlternative = {
+  version: 3,
+  nodeId: 'cell',
+  attr: 'value',
+  value: 'Борис',
+  clientId: 'boris',
+  author: { id: 'boris', name: 'Борис' },
+  createdAt: '2026-11-09T10:00:00.000Z',
+};
 
 describe('offlinePersistence', () => {
   it('has nothing to restore for a new document', async () => {
@@ -68,6 +79,37 @@ describe('offlinePersistence', () => {
 
     expect(second.restored?.version).toBe(1);
     expect(second.restored?.snapshot).toMatchObject({ format: expect.any(Number) });
+  });
+
+  it('keeps overwritten values through a restart', async () => {
+    const driver = createPersistenceDriver();
+    const first = await driver.session();
+
+    first.loadFromServer('', 0);
+    first.tracking?.record([LOST]);
+    await first.restart();
+
+    const second = await driver.session();
+
+    expect(second.restored?.alternatives).toEqual([LOST]);
+  });
+
+  it('forgets a value the user dismissed', async () => {
+    const driver = createPersistenceDriver();
+    const first = await driver.session();
+
+    first.loadFromServer('', 0);
+    first.tracking?.record([LOST]);
+    await first.restart();
+
+    const second = await driver.session();
+
+    second.tracking?.forget(LOST);
+    await second.restart();
+
+    const third = await driver.session();
+
+    expect(third.restored?.alternatives).toEqual([]);
   });
 
   it('leaves a second tab without storage while the first one owns it', async () => {

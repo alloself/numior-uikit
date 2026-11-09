@@ -1,4 +1,5 @@
-import type { SchemaStamp } from '@numior/editor-core';
+import type { AttrValue, NodeId, SchemaStamp } from '@numior/editor-core';
+import type { PresenceUser } from '../editor/presence.types';
 import type { ClientMessage, WireStep } from '../protocol/protocol.types';
 
 export type CollabFailure = (typeof CollabFailure)[keyof typeof CollabFailure];
@@ -26,16 +27,29 @@ export interface CollabDocument {
   readonly confirm: (count: number, version: number) => void;
 }
 
+export interface CollabAlternative {
+  readonly version: number;
+  readonly nodeId: NodeId;
+  readonly attr: string;
+  readonly value: AttrValue;
+  readonly clientId: string;
+  readonly author: PresenceUser | undefined;
+  readonly createdAt: string;
+}
+
 export interface CollabRestored {
   readonly clientId: string;
   readonly version: number;
   readonly snapshot: unknown;
   readonly pending: readonly WireStep[];
+  readonly alternatives: readonly CollabAlternative[];
 }
 
 export interface CollabTracking {
   readonly document: CollabDocument;
   readonly changed: () => void;
+  readonly record: (found: readonly CollabAlternative[]) => void;
+  readonly forget: (alternative: CollabAlternative) => void;
 }
 
 export interface CollabPersistence {

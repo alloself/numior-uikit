@@ -1,4 +1,4 @@
-import type { WireStep } from '@numior/collaboration';
+import type { CollabAlternative, WireStep } from '@numior/collaboration';
 import type { DocJSON } from '@numior/editor-core';
 import type {
   OfflineMeta,
@@ -55,6 +55,26 @@ export const isOutbox = (value: unknown): value is OfflineOutbox => {
     steps.every(isWireStep)
   );
 };
+
+const isValue = (value: unknown): boolean =>
+  value === null || ['string', 'number', 'boolean'].includes(typeof value);
+
+const isAuthor = (value: unknown): boolean =>
+  value === undefined ||
+  (isFields(value) && typeof value['id'] === 'string' && typeof value['name'] === 'string');
+
+const isAlternative = (value: unknown): value is CollabAlternative =>
+  isFields(value) &&
+  isVersion(value['version']) &&
+  typeof value['nodeId'] === 'string' &&
+  typeof value['attr'] === 'string' &&
+  isValue(value['value']) &&
+  typeof value['clientId'] === 'string' &&
+  isAuthor(value['author']) &&
+  typeof value['createdAt'] === 'string';
+
+export const knownAlternatives = (values: readonly unknown[]): readonly CollabAlternative[] =>
+  values.filter(isAlternative);
 
 export const contiguousSteps = (
   values: readonly unknown[],

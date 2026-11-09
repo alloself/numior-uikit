@@ -13,6 +13,7 @@ import { onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import { createCollabClient } from '../client/client';
 import {
   CollabStatusKind,
+  type CollabAlternative,
   type CollabClient,
   type CollabStatus,
   type CollabTracking,
@@ -29,11 +30,13 @@ import {
 } from '../editor/presence';
 import type { EditorPresence, RemotePeer } from '../editor/presence.types';
 import { restoredDocument } from '../editor/restored';
-import type { CollabEditor, UseCollabEditorOptions } from './collab.types';
+import type { CollabAlternatives, CollabEditor, UseCollabEditorOptions } from './collab.types';
 
 const NO_PEERS: readonly RemotePeer[] = [];
 
 const NO_PLUGINS: readonly Plugin[] = [];
+
+const NO_ALTERNATIVES: readonly CollabAlternative[] = [];
 
 const newClientId = (): string => Math.random().toString(36).slice(2, 10);
 
@@ -46,6 +49,7 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
   const ids = shallowRef<IdSource>();
   const peers = shallowRef<readonly RemotePeer[]>(NO_PEERS);
   const status = shallowRef<CollabStatus>({ kind: CollabStatusKind.Connecting });
+  const overwritten = shallowRef<readonly CollabAlternative[]>(NO_ALTERNATIVES);
 
   let clientId = sessionId;
   let client: CollabClient | undefined;
@@ -98,7 +102,17 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
   };
 
   const connect = (): void => {
-    const inner = editorCollabDocument({ schema, getState: () => latest, dispatch, load });
+    const inner = editorCollabDocument({
+      schema,
+      getState: () => latest,
+      dispatch,
+      load,
+      authorOf: (id) => peers.value.find((peer) => peer.clientId === id)?.user,
+      onAlternatives: (found) => {
+        overwritten.value = [...found, ...overwritten.value];
+        tracking?.record(found);
+      },
+    });
 
     tracking = persistence?.track(inner, clientId);
 
@@ -133,8 +147,30 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
       return;
     }
     clientId = restored.clientId;
+    overwritten.value = restored.alternatives;
     awaitingEditor = true;
     load(recovered.doc, restored.version, recovered.unconfirmed);
+  };
+
+  const dismiss = (alternative: CollabAlternative): void => {
+    overwritten.value = overwritten.value.filter((item) => item !== alternative);
+    tracking?.forget(alternative);
+  };
+
+  const alternatives: CollabAlternatives = {
+    list: overwritten,
+    apply: (alternative) => {
+      const position = latest?.doc.positionOf(alternative.nodeId);
+
+      if (latest !== undefined && position !== undefined) {
+        dispatch(latest.tr.setNodeAttrs(position, { [alternative.attr]: alternative.value }));
+      }
+      dismiss(alternative);
+    },
+    dismiss,
+    reveal: (alternative) => {
+      editor()?.revealNode(alternative.nodeId);
+    },
   };
 
   onMounted(() => {
@@ -162,5 +198,5 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
     void persistence?.close();
   });
 
-  return { ready, document, plugins, ids, peers, status };
+  return { ready, document, plugins, ids, peers, status, alternatives };
 };

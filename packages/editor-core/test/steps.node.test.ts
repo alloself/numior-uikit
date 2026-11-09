@@ -10,6 +10,7 @@ import {
   type Slice,
   type Step,
 } from '../src';
+import { fixtureSchema } from '../src/fixtures';
 import { buildWith, notes } from './support/notes';
 
 const { doc, node, text } = buildWith();
@@ -23,6 +24,12 @@ const page = (): Doc =>
       node('list', [node('item', [node('paragraph', ['ab'])])]),
     ),
   );
+
+const imageDoc = (src: string, alt: string) =>
+  fixtureSchema.element(fixtureSchema.top.name, {
+    id: 'root',
+    content: [fixtureSchema.element('image', { id: 'image', attrs: { src, alt } })],
+  });
 
 const flatSlice = (...content: Slice['content']): Slice => ({ content, openStart: 0, openEnd: 0 });
 
@@ -226,6 +233,19 @@ describe('mark and attribute steps', () => {
     expect(
       applyStep(start, { kind: 'addMark', from: 1, to: 4, mark: { type: 'shadow', attrs: {} } }),
     ).toEqual({ ok: false, reason: 'range' });
+  });
+
+  it('changes only the attributes named by the step and restores only those', () => {
+    const start = createDoc(fixtureSchema, imageDoc('a.png', 'old'));
+    const changed = applied(start, { kind: 'attrs', pos: 0, attrs: { alt: 'new' } });
+
+    expect(changed.nodeAt(0)).toMatchObject({ attrs: { src: 'a.png', alt: 'new' } });
+
+    expect(invertStep({ kind: 'attrs', pos: 0, attrs: { alt: 'new' } }, start)).toEqual({
+      kind: 'attrs',
+      pos: 0,
+      attrs: { alt: 'old' },
+    });
   });
 
   it('sets the attributes of an element and of the document root', () => {

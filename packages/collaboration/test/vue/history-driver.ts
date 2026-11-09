@@ -1,5 +1,5 @@
 import type { HistoryAdapter } from '../../src';
-import type { NuiEditorHistoryProps } from '../../src/vue';
+import type { CollabAlternatives, NuiEditorHistoryProps } from '../../src/vue';
 import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { documentOf } from './comments-adapter';
 import HistoryHost from './HistoryHost.vue';
@@ -13,11 +13,12 @@ export class HistoryDriver {
     adapter: HistoryAdapter,
     labels?: NuiEditorHistoryProps['labels'],
     texts: readonly string[] = ['current'],
+    alternatives?: CollabAlternatives,
   ): HistoryDriver {
     return new HistoryDriver(
       mount(HistoryHost, {
         attachTo: document.body,
-        props: { initial: documentOf(...texts), adapter, user: ANN, labels },
+        props: { initial: documentOf(...texts), adapter, user: ANN, alternatives, labels },
       }),
     );
   }
@@ -33,6 +34,20 @@ export class HistoryDriver {
       throw new Error(`No button named ${name}`);
     }
     return found;
+  }
+
+  get overwritten(): readonly string[] {
+    return this.wrapper
+      .findAll('.nui-collab-history__alternative')
+      .map(
+        (row) =>
+          `${row.find('.nui-collab-history__value').text()} | ${row.find('.nui-collab-history__source').text()}`,
+      );
+  }
+
+  async pressLabelled(name: string): Promise<void> {
+    await this.wrapper.find(`.nui-collab-history button[aria-label="${name}"]`).trigger('click');
+    await flushPromises();
   }
 
   get versions(): readonly string[] {

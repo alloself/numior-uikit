@@ -8,6 +8,7 @@ import {
   type NodeId,
   type TextNode,
 } from '../model/node.types';
+import { changedAttrs } from './attrs';
 import { createMapping } from './mapping';
 import type { StepMap } from './mapping.types';
 import { applyStep, stepMapOf } from './step';
@@ -284,7 +285,7 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
       if (target?.kind !== ContentNodeKind.Element) {
         throw new RangeError(`No element starts at position ${pos}`);
       }
-      return transform.step({ kind: 'attrs', pos, attrs: { ...target.attrs, ...attrs } });
+      return transform.step({ kind: 'attrs', pos, attrs: changedAttrs(target, attrs) });
     },
     setNodesMarkup: (changes) => {
       const latest = new Map<number, NodeMarkup>();

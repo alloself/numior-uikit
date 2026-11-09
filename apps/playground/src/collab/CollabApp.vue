@@ -24,7 +24,9 @@
           <NuiTab value="history">История</NuiTab>
         </NuiTabList>
         <NuiTabPanel value="comments"><NuiEditorComments :comments="comments" /></NuiTabPanel>
-        <NuiTabPanel value="history"><NuiEditorHistory :history="history" /></NuiTabPanel>
+        <NuiTabPanel value="history"
+          ><NuiEditorHistory :history="history" :alternatives="alternatives"
+        /></NuiTabPanel>
       </NuiTabs>
     </div>
   </main>
@@ -59,7 +61,7 @@ const user = { id: name, name };
 const editor = useTemplateRef<{ editor: NuiEditorApi }>('editor');
 const editorApi = computed(() => editor.value?.editor);
 
-const { ready, document, plugins, ids, peers, status } = useCollabEditor({
+const { ready, document, plugins, ids, peers, status, alternatives } = useCollabEditor({
   doc,
   user,
   schema: contentSchema,

@@ -13,16 +13,20 @@ import {
   type Step,
   type Transaction,
 } from '@numior/editor-core';
-import type { CollabOptions, CollabState, UnconfirmedStep } from './collab.types';
+import type { AttrConflict, CollabOptions, CollabState, UnconfirmedStep } from './collab.types';
+import { attrConflicts } from './conflicts';
 
 interface RebasedLocal {
   readonly unconfirmed: readonly UnconfirmedStep[];
   readonly chain: MirrorMaps;
+  readonly conflicts: readonly AttrConflict[];
 }
 
 const NONE: CollabState = { version: 0, unconfirmed: [] };
 
 const collabUpdate = createMetaKey<CollabState>('collabUpdate');
+
+const collabConflicts = createMetaKey<readonly AttrConflict[]>('collabConflicts');
 
 const registry = new WeakMap<object, Plugin<CollabState>>();
 
@@ -66,6 +70,7 @@ const rebaseLocal = (
     tr.step(step);
   }
 
+  const conflicts = attrConflicts(tr.docs, remote, unconfirmed);
   const first = tr.steps.length;
 
   const { steps, chain } = rebaseSteps(
@@ -80,6 +85,7 @@ const rebaseLocal = (
       inverted: invertStep(step, tr.docs[first + index] ?? tr.before),
     })),
     chain: { ...chain, edges: new Set(chain.mirrors.keys()) },
+    conflicts,
   };
 };
 
@@ -95,6 +101,9 @@ export const collab = (options: CollabOptions = {}): Plugin<CollabState> => {
   registry.set(plugin, plugin);
   return plugin;
 };
+
+export const conflictsIn = (tr: Transaction): readonly AttrConflict[] =>
+  collabConflicts.read(tr) ?? [];
 
 export const collabVersion = (state: EditorState): number => collabStateOf(state).version;
 
@@ -118,6 +127,7 @@ export const receiveSteps = (state: EditorState, steps: readonly Step[]): Transa
   return tr
     .setSelection(mapSelection(state.selection, mirrored(rebased.chain), state.doc, tr.doc))
     .setMeta(remoteChain, rebased.chain)
+    .setMeta(collabConflicts, rebased.conflicts)
     .setMeta(collabUpdate, { version: next, unconfirmed: rebased.unconfirmed });
 };
 

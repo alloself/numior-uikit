@@ -10,6 +10,14 @@ export interface NuiCollabMessages {
   readonly restore: string;
   readonly closeVersion: string;
   readonly historyFailed: string;
+  readonly alternatives: string;
+  readonly alternativeRestore: string;
+  readonly alternativeShow: string;
+  readonly alternativeHide: string;
+  readonly alternativeUnknown: string;
+  readonly alternativeEmpty: string;
+  readonly alternativeTrue: string;
+  readonly alternativeFalse: string;
   readonly comments: string;
   readonly add: string;
   readonly placeholder: string;
@@ -39,6 +47,14 @@ export const collabMessages: NuiMessageCatalog<NuiCollabMessages> = {
     restore: 'Restore this version',
     closeVersion: 'Close',
     historyFailed: 'The version history is unavailable',
+    alternatives: 'Overwritten values',
+    alternativeRestore: 'Put back',
+    alternativeShow: 'Show in the document',
+    alternativeHide: 'Hide',
+    alternativeUnknown: 'Another participant',
+    alternativeEmpty: 'Empty',
+    alternativeTrue: 'Yes',
+    alternativeFalse: 'No',
     comments: 'Comments',
     add: 'Add comment',
     placeholder: 'Write a comment',
@@ -65,6 +81,14 @@ export const collabMessages: NuiMessageCatalog<NuiCollabMessages> = {
     restore: 'Восстановить эту версию',
     closeVersion: 'Закрыть',
     historyFailed: 'История версий недоступна',
+    alternatives: 'Перезаписанные значения',
+    alternativeRestore: 'Вернуть',
+    alternativeShow: 'Показать в документе',
+    alternativeHide: 'Скрыть',
+    alternativeUnknown: 'Другой участник',
+    alternativeEmpty: 'Пусто',
+    alternativeTrue: 'Да',
+    alternativeFalse: 'Нет',
     comments: 'Комментарии',
     add: 'Добавить комментарий',
     placeholder: 'Напишите комментарий',

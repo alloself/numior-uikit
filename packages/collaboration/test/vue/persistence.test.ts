@@ -1,8 +1,24 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { ClientMessageKind } from '../../src';
-import { createPersistenceDriver, snapshotOfFixture } from './persistence-driver';
+import { ClientMessageKind, type CollabAlternative } from '../../src';
+import { createPersistenceDriver, headingSnapshot, snapshotOfFixture } from './persistence-driver';
 
-const RESTORED = { clientId: 'saved', version: 5, snapshot: snapshotOfFixture(), pending: [] };
+const RESTORED = {
+  clientId: 'saved',
+  version: 5,
+  snapshot: snapshotOfFixture(),
+  pending: [],
+  alternatives: [],
+};
+
+const LOST: CollabAlternative = {
+  version: 3,
+  nodeId: 'title',
+  attr: 'level',
+  value: 3,
+  clientId: 'other',
+  author: undefined,
+  createdAt: '2026-11-09T10:00:00.000Z',
+};
 
 describe('useCollabEditor with persistence', () => {
   it('connects at once when nothing was saved', async () => {
@@ -43,6 +59,47 @@ describe('useCollabEditor with persistence', () => {
 
     expect(driver.collab().ready.value).toBe(false);
     expect(driver.opened()).toBe(1);
+  });
+
+  it('brings saved overwritten values back with the document', async () => {
+    const driver = createPersistenceDriver({ ...RESTORED, alternatives: [LOST] });
+
+    await driver.loaded();
+
+    expect(driver.collab().alternatives.list.value).toEqual([LOST]);
+  });
+
+  it('puts a value back into the node it came from and forgets it', async () => {
+    const driver = createPersistenceDriver({
+      ...RESTORED,
+      snapshot: headingSnapshot(),
+      alternatives: [LOST],
+    });
+
+    await driver.loaded();
+    await driver.mountEditor();
+    driver.putBack(LOST);
+
+    expect(driver.headingLevel()).toBe(3);
+    expect(driver.collab().alternatives.list.value).toEqual([]);
+    expect(driver.forgotten()).toEqual([LOST]);
+  });
+
+  it('forgets a value whose node is gone', async () => {
+    const stray = { ...LOST, nodeId: 'gone' };
+
+    const driver = createPersistenceDriver({
+      ...RESTORED,
+      snapshot: headingSnapshot(),
+      alternatives: [stray],
+    });
+
+    await driver.loaded();
+    await driver.mountEditor();
+    driver.putBack(stray);
+
+    expect(driver.headingLevel()).toBe(1);
+    expect(driver.collab().alternatives.list.value).toEqual([]);
   });
 
   it('releases the storage on unmount', async () => {

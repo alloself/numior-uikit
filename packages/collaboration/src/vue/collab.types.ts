@@ -2,7 +2,12 @@ import type { Doc, DocJSON, IdSource, Plugin, Schema } from '@numior/editor-core
 import type { NuiEditorApi } from '@numior/editor-vue';
 import type { ComputedRef, Ref, ShallowRef } from 'vue';
 import type { NuiCollabMessages } from './collab.messages';
-import type { CollabPersistence, CollabStatus, CollabTransport } from '../client/client.types';
+import type {
+  CollabAlternative,
+  CollabPersistence,
+  CollabStatus,
+  CollabTransport,
+} from '../client/client.types';
 import type { CommentReply, CommentThread, CommentsAdapter } from '../comments/comments.types';
 import type { DocumentVersion, HistoryAdapter } from '../history/history.types';
 import type { PresenceUser, RemotePeer } from '../editor/presence.types';
@@ -16,6 +21,13 @@ export interface UseCollabEditorOptions {
   readonly persistence?: CollabPersistence | undefined;
 }
 
+export interface CollabAlternatives {
+  readonly list: Readonly<ShallowRef<readonly CollabAlternative[]>>;
+  readonly apply: (alternative: CollabAlternative) => void;
+  readonly dismiss: (alternative: CollabAlternative) => void;
+  readonly reveal: (alternative: CollabAlternative) => void;
+}
+
 export interface CollabEditor {
   readonly ready: Readonly<Ref<boolean>>;
   readonly document: ShallowRef<DocJSON | undefined>;
@@ -23,6 +35,7 @@ export interface CollabEditor {
   readonly ids: Readonly<ShallowRef<IdSource | undefined>>;
   readonly peers: Readonly<ShallowRef<readonly RemotePeer[]>>;
   readonly status: Readonly<ShallowRef<CollabStatus>>;
+  readonly alternatives: CollabAlternatives;
 }
 
 export interface NuiCollabCaretsProps {
@@ -89,7 +102,14 @@ export interface CollabHistory {
 
 export interface NuiEditorHistoryProps {
   history: CollabHistory;
+  alternatives?: CollabAlternatives | undefined;
   labels?: Partial<Omit<NuiCollabMessages, 'present'>> | undefined;
+}
+
+export interface NuiEditorAlternativesProps {
+  alternatives: CollabAlternatives;
+  text: NuiCollabMessages;
+  timeOf: (value: string) => string;
 }
 
 export interface NuiEditorVersionPreviewProps {

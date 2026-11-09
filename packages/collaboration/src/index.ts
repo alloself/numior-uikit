@@ -2,6 +2,7 @@ export type { DocumentVersion, HistoryAdapter, NewDocumentVersion } from './hist
 export { createCollabClient } from './client/client';
 export { CollabFailure, CollabStatusKind } from './client/client.types';
 export type {
+  CollabAlternative,
   CollabBatch,
   CollabClient,
   CollabClientOptions,
@@ -16,8 +17,16 @@ export type {
   TransportListener,
 } from './client/client.types';
 export { webSocketTransport } from './client/web-socket-transport';
-export { collab, collabVersion, confirmSteps, receiveSteps, sendableSteps } from './editor/collab';
+export {
+  collab,
+  collabVersion,
+  confirmSteps,
+  conflictsIn,
+  receiveSteps,
+  sendableSteps,
+} from './editor/collab';
 export type {
+  AttrConflict,
   CollabOptions,
   CollabState,
   EditorCollabOptions,

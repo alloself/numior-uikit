@@ -5,6 +5,7 @@ export { default as NuiEditorHistory } from './NuiEditorHistory.vue';
 export { collabMessages } from './collab.messages';
 export type { NuiCollabMessages } from './collab.messages';
 export type {
+  CollabAlternatives,
   CollabComments,
   CollabEditor,
   CollabHistory,

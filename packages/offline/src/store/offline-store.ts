@@ -6,8 +6,9 @@ import {
   type Doc,
   type Schema,
 } from '@numior/editor-core';
+import type { CollabAlternative } from '@numior/collaboration';
 import { finished, openDatabase, requested } from './idb';
-import { contiguousSteps, isMeta, isOutbox, isSnapshot } from './records';
+import { contiguousSteps, isMeta, isOutbox, isSnapshot, knownAlternatives } from './records';
 import type {
   OfflineMeta,
   OfflineOutbox,
@@ -33,6 +34,8 @@ const STEPS = 'steps';
 
 const OUTBOX = 'outbox';
 
+const ALTERNATIVES = 'alternatives';
+
 const NO_PLUGINS: OfflinePlugins = {};
 
 const databaseName = (doc: string): string => `nui-offline:${doc}`;
@@ -42,6 +45,7 @@ const upgrade = (database: IDBDatabase): void => {
   database.createObjectStore(SNAPSHOT);
   database.createObjectStore(STEPS, { keyPath: 'version' });
   database.createObjectStore(OUTBOX);
+  database.createObjectStore(ALTERNATIVES, { keyPath: ['version', 'nodeId', 'attr'] });
 };
 
 export const replayedDoc = (schema: Schema, state: OfflineState): Doc | undefined => {
@@ -94,13 +98,14 @@ export const openOfflineStore = async (
   let logged = await requested(database.transaction(STEPS).objectStore(STEPS).count());
 
   const read = async (): Promise<OfflineState | undefined> => {
-    const transaction = database.transaction([META, SNAPSHOT, STEPS, OUTBOX]);
+    const transaction = database.transaction([META, SNAPSHOT, STEPS, OUTBOX, ALTERNATIVES]);
 
-    const [storedMeta, snapshot, steps, outbox] = await Promise.all([
+    const [storedMeta, snapshot, steps, outbox, alternatives] = await Promise.all([
       requested<unknown>(transaction.objectStore(META).get(SINGLE_KEY)),
       requested<unknown>(transaction.objectStore(SNAPSHOT).get(SINGLE_KEY)),
       requested<unknown[]>(transaction.objectStore(STEPS).getAll()),
       requested<unknown>(transaction.objectStore(OUTBOX).get(SINGLE_KEY)),
+      requested<unknown[]>(transaction.objectStore(ALTERNATIVES).getAll()),
     ]);
 
     return isMeta(storedMeta) && isSnapshot(snapshot)
@@ -109,6 +114,7 @@ export const openOfflineStore = async (
           snapshot,
           steps: contiguousSteps(steps, snapshot.version),
           outbox: isOutbox(outbox) ? outbox : undefined,
+          alternatives: knownAlternatives(alternatives).toReversed(),
         }
       : undefined;
   };
@@ -150,9 +156,15 @@ export const openOfflineStore = async (
   const appendSteps = async (
     records: readonly OfflineStep[],
     outbox?: OfflineOutbox,
+    alternatives: readonly CollabAlternative[] = [],
   ): Promise<void> => {
-    const transaction = database.transaction([STEPS, OUTBOX], 'readwrite');
+    const transaction = database.transaction([STEPS, OUTBOX, ALTERNATIVES], 'readwrite');
     const steps = transaction.objectStore(STEPS);
+    const overwritten = transaction.objectStore(ALTERNATIVES);
+
+    alternatives.forEach((alternative) => {
+      overwritten.put(alternative);
+    });
 
     records.forEach((record) => {
       steps.put(record);
@@ -170,10 +182,21 @@ export const openOfflineStore = async (
     }
   };
 
+  const removeAlternative = async (alternative: CollabAlternative): Promise<void> => {
+    const transaction = database.transaction(ALTERNATIVES, 'readwrite');
+
+    transaction
+      .objectStore(ALTERNATIVES)
+      .delete([alternative.version, alternative.nodeId, alternative.attr]);
+
+    await finished(transaction);
+  };
+
   return {
     read,
     writeSnapshot,
     appendSteps,
+    removeAlternative,
     compact,
     close: () => {
       database.close();

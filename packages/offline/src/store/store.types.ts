@@ -1,4 +1,4 @@
-import type { WireStep } from '@numior/collaboration';
+import type { CollabAlternative, WireStep } from '@numior/collaboration';
 import type { DocJSON, Schema } from '@numior/editor-core';
 
 export type OfflinePlugins = Readonly<Record<string, number>>;
@@ -29,6 +29,7 @@ export interface OfflineState {
   readonly snapshot: OfflineSnapshot;
   readonly steps: readonly OfflineStep[];
   readonly outbox: OfflineOutbox | undefined;
+  readonly alternatives: readonly CollabAlternative[];
 }
 
 export interface OfflineStoreOptions {
@@ -41,7 +42,12 @@ export interface OfflineStoreOptions {
 export interface OfflineStore {
   read(): Promise<OfflineState | undefined>;
   writeSnapshot(snapshot: OfflineSnapshot): Promise<void>;
-  appendSteps(steps: readonly OfflineStep[], outbox?: OfflineOutbox): Promise<void>;
+  appendSteps(
+    steps: readonly OfflineStep[],
+    outbox?: OfflineOutbox,
+    alternatives?: readonly CollabAlternative[],
+  ): Promise<void>;
+  removeAlternative(alternative: CollabAlternative): Promise<void>;
   compact(): Promise<boolean>;
   close(): void;
 }

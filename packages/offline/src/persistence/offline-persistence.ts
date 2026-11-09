@@ -1,4 +1,5 @@
 import type {
+  CollabAlternative,
   CollabDocument,
   CollabPersistence,
   CollabRestored,
@@ -58,6 +59,7 @@ export const offlinePersistence = (
       version,
       snapshot: toJSON(replayed),
       pending: state.outbox.steps,
+      alternatives: state.alternatives,
     };
   };
 
@@ -96,20 +98,24 @@ export const offlinePersistence = (
     clientId: string,
   ): CollabTracking => {
     let log: OfflineStep[] = [];
+    let found: CollabAlternative[] = [];
     let scheduled = false;
 
     const write = async (): Promise<void> => {
       const version = document.version();
       const steps = log;
+      const alternatives = found;
 
       scheduled = false;
       log = [];
+      found = [];
 
       await opened.appendSteps(
         steps,
         version === null
           ? undefined
           : { clientId, baseVersion: version, steps: document.pending() },
+        alternatives,
       );
     };
 
@@ -122,6 +128,14 @@ export const offlinePersistence = (
 
     return {
       changed: schedule,
+      record: (alternatives) => {
+        found.push(...alternatives);
+        schedule();
+      },
+      forget: (alternative) => {
+        found = found.filter((item) => item !== alternative);
+        enqueue(() => opened.removeAlternative(alternative));
+      },
       document: {
         ...document,
         load: (snapshot, version) => {

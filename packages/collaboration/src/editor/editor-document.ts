@@ -1,7 +1,7 @@
 import { fromJSON, stepFromJSON, stepToJSON, type Step } from '@numior/editor-core';
 import type { CollabDocument } from '../client/client.types';
 import type { WireStep } from '../protocol/protocol.types';
-import { collabVersion, confirmSteps, receiveSteps, sendableSteps } from './collab';
+import { collabVersion, confirmSteps, conflictsIn, receiveSteps, sendableSteps } from './collab';
 import type { EditorCollabOptions } from './collab.types';
 
 export const editorCollabDocument = ({
@@ -9,6 +9,8 @@ export const editorCollabDocument = ({
   getState,
   dispatch,
   load,
+  authorOf,
+  onAlternatives,
 }: EditorCollabOptions): CollabDocument => {
   const parsedSteps = (steps: readonly WireStep[]): readonly Step[] | undefined =>
     steps.reduce<Step[] | undefined>((parsed, value) => {
@@ -47,7 +49,25 @@ export const editorCollabDocument = ({
       if (state === undefined || steps === undefined) {
         return false;
       }
-      dispatch(receiveSteps(state, steps));
+
+      const tr = receiveSteps(state, steps);
+      const conflicts = conflictsIn(tr);
+
+      dispatch(tr);
+
+      if (conflicts.length > 0) {
+        onAlternatives?.(
+          conflicts.map(({ index, nodeId, attr, value }) => ({
+            version: batch.version + index,
+            nodeId,
+            attr,
+            value,
+            clientId: batch.clientId,
+            author: authorOf?.(batch.clientId),
+            createdAt: new Date().toISOString(),
+          })),
+        );
+      }
       return true;
     },
     confirm: (count, version) => {

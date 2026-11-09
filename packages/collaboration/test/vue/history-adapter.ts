@@ -1,10 +1,17 @@
 import type { DocJSON } from '@numior/editor-core';
-import type { DocumentVersion, HistoryAdapter } from '../../src';
+import { shallowRef } from 'vue';
+import type { CollabAlternative, DocumentVersion, HistoryAdapter } from '../../src';
+import type { CollabAlternatives } from '../../src/vue';
 
 export interface FakeHistoryAdapter extends HistoryAdapter {
   readonly saved: () => readonly DocJSON[];
   readonly failNextLoad: () => void;
   readonly holdLoad: (id: string) => () => void;
+}
+
+export interface FakeAlternatives extends CollabAlternatives {
+  readonly applied: () => readonly CollabAlternative[];
+  readonly revealed: () => readonly CollabAlternative[];
 }
 
 export interface StoredVersion {
@@ -76,6 +83,27 @@ export const fakeHistoryAdapter = (seed: readonly StoredVersion[] = []): FakeHis
       documents.set(version.id, document);
       versions = [...versions, version];
       return Promise.resolve(version);
+    },
+  };
+};
+
+export const fakeAlternatives = (initial: readonly CollabAlternative[]): FakeAlternatives => {
+  const list = shallowRef(initial);
+  const applied: CollabAlternative[] = [];
+  const revealed: CollabAlternative[] = [];
+
+  return {
+    list,
+    applied: () => applied,
+    revealed: () => revealed,
+    apply: (alternative) => {
+      applied.push(alternative);
+    },
+    reveal: (alternative) => {
+      revealed.push(alternative);
+    },
+    dismiss: (alternative) => {
+      list.value = list.value.filter((item) => item !== alternative);
     },
   };
 };

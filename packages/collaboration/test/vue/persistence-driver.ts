@@ -1,9 +1,15 @@
-import { createState, fromJSON, toJSON } from '@numior/editor-core';
+import { createDoc, createState, fromJSON, toJSON, type EditorState } from '@numior/editor-core';
 import { fixtureSchema, generateDoc } from '@numior/editor-core/fixtures';
 import type { NuiEditorApi } from '@numior/editor-vue';
 import { flushPromises, mount } from '@vue/test-utils';
 import { nextTick, shallowRef } from 'vue';
-import type { ClientMessage, CollabPersistence, CollabRestored, CollabTransport } from '../../src';
+import type {
+  ClientMessage,
+  CollabAlternative,
+  CollabPersistence,
+  CollabRestored,
+  CollabTransport,
+} from '../../src';
 import type { CollabEditor } from '../../src/vue/collab.types';
 import PersistenceHost from './PersistenceHost.vue';
 
@@ -15,23 +21,41 @@ interface PersistenceDriver {
   readonly mountEditor: () => Promise<void>;
   readonly loaded: () => Promise<void>;
   readonly unmount: () => void;
+  readonly putBack: (alternative: CollabAlternative) => void;
+  readonly headingLevel: () => unknown;
+  readonly forgotten: () => readonly CollabAlternative[];
 }
 
 export const snapshotOfFixture = (): unknown =>
   toJSON(generateDoc(fixtureSchema, { blocks: 1, seed: 1 }));
 
-const apiFor = (collab: CollabEditor): NuiEditorApi => {
+export const headingSnapshot = (): unknown =>
+  toJSON(
+    createDoc(
+      fixtureSchema,
+      fixtureSchema.element(fixtureSchema.top.name, {
+        id: 'root',
+        content: [fixtureSchema.element('heading', { id: 'title', attrs: { level: 1 } })],
+      }),
+    ),
+  );
+
+const apiFor = (collab: CollabEditor, onChange: (state: EditorState) => void): NuiEditorApi => {
   const read = fromJSON(fixtureSchema, collab.document.value);
 
   if (!read.ok) {
     throw new Error('The restored document did not parse');
   }
 
-  const state = createState({ doc: read.doc, plugins: [...collab.plugins.value] });
+  let state = createState({ doc: read.doc, plugins: [...collab.plugins.value] });
 
   return {
     state: () => state,
-    run: () => false,
+    run: (command) =>
+      command(state, (tr) => {
+        state = state.apply(tr);
+        onChange(state);
+      }),
     focus: () => undefined,
     flush: () => undefined,
     coordsAt: () => undefined,
@@ -48,6 +72,8 @@ export const createPersistenceDriver = (
   let opened = 0;
   let closed = 0;
   let collab: CollabEditor | undefined;
+  let edited: EditorState | undefined;
+  const forgotten: CollabAlternative[] = [];
 
   const transport: CollabTransport = {
     open: (listener) => {
@@ -65,7 +91,14 @@ export const createPersistenceDriver = (
 
   const persistence: CollabPersistence = {
     restore: () => Promise.resolve(restored),
-    track: () => undefined,
+    track: (document) => ({
+      document,
+      changed: () => undefined,
+      record: () => undefined,
+      forget: (alternative) => {
+        forgotten.push(alternative);
+      },
+    }),
     close: () => {
       closed += 1;
       return Promise.resolve();
@@ -104,12 +137,20 @@ export const createPersistenceDriver = (
       await flushPromises();
     },
     mountEditor: async () => {
-      editor.value = apiFor(current());
+      editor.value = apiFor(current(), (state) => {
+        edited = state;
+      });
+
       await nextTick();
       await flushPromises();
     },
     unmount: () => {
       wrapper.unmount();
     },
+    putBack: (alternative) => {
+      current().alternatives.apply(alternative);
+    },
+    headingLevel: () => edited?.doc.byId('title')?.attrs['level'],
+    forgotten: () => forgotten,
   };
 };

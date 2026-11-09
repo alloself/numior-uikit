@@ -1,6 +1,6 @@
 import type { Doc, Slice } from '../doc/doc.types';
 import { normalizeContent, sameMarks } from '../model/node';
-import { applyAttrs, applyDocAttrs } from './attrs';
+import { applyAttrs, applyDocAttrs, pickedAttrs } from './attrs';
 import { applyMarkup, markupBefore } from './markup';
 import { createStepMap, EMPTY_MAP } from './mapping';
 import type { Mappable, StepMap } from './mapping.types';
@@ -138,7 +138,8 @@ export const invertStep = (step: Step, doc: Doc): Step => {
 
       return {
         ...step,
-        attrs: target?.kind === ContentNodeKind.Element ? target.attrs : step.attrs,
+        attrs:
+          target?.kind === ContentNodeKind.Element ? pickedAttrs(target, step.attrs) : step.attrs,
       };
     }
     case StepKind.Markup:

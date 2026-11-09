@@ -29,6 +29,37 @@ test.describe('collaboration', () => {
     await expect(anna.editor).toContainText('Борис: Общая строка от Анны');
   });
 
+  test('settles one cell by server order and keeps the losing value', async ({ collab }) => {
+    const anna = await collab.joinOffline(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.insertTable();
+    await boris.tableCell(0, 0).waitFor();
+
+    await anna.disconnect();
+    await anna.setCell(0, 0, 'Anna');
+    await boris.setCell(0, 0, 'Boris');
+    await expect(boris.tableCell(0, 0)).toHaveText('Boris');
+
+    await anna.reconnect();
+
+    await expect(boris.tableCell(0, 0)).toHaveText('Anna');
+    await expect(anna.tableCell(0, 0)).toHaveText('Anna');
+
+    await anna.reload();
+    await anna.openHistory();
+
+    await expect(anna.overwritten).toHaveCount(1);
+    await expect(anna.overwritten).toContainText('Boris');
+    expect(await wcagViolationsOf(anna.page)).toEqual([]);
+
+    await anna.putBack(0);
+
+    await expect(anna.overwritten).toHaveCount(0);
+    await expect(boris.tableCell(0, 0)).toHaveText('Boris');
+    await expect(anna.tableCell(0, 0)).toHaveText('Boris');
+  });
+
   test('keeps unsent text through a reload and sends it on return', async ({ collab }) => {
     const anna = await collab.joinOffline(ANNA);
     const boris = await collab.join(BORIS);

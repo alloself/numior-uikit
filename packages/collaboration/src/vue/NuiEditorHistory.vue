@@ -31,6 +31,13 @@
       :history="history"
       :text="text"
     />
+
+    <NuiEditorAlternatives
+      v-if="alternatives !== undefined && alternatives.list.value.length > 0"
+      :alternatives="alternatives"
+      :text="text"
+      :time-of="timeOf"
+    />
   </section>
 </template>
 
@@ -40,9 +47,10 @@ import { NuiAlert, NuiButton, NuiEmpty, NuiList, type NuiListEntry } from '@numi
 import { computed } from 'vue';
 import { collabMessages } from './collab.messages';
 import type { NuiEditorHistoryProps } from './collab.types';
+import NuiEditorAlternatives from './NuiEditorAlternatives.vue';
 import NuiEditorVersionPreview from './NuiEditorVersionPreview.vue';
 
-const { history, labels } = defineProps<NuiEditorHistoryProps>();
+const { history, alternatives, labels } = defineProps<NuiEditorHistoryProps>();
 
 const messages = useMessages(collabMessages);
 const locale = useLocale();
@@ -53,9 +61,11 @@ const formatter = computed(
   () => new Intl.DateTimeFormat(locale.value, { dateStyle: 'short', timeStyle: 'medium' }),
 );
 
+const timeOf = (value: string): string => formatter.value.format(new Date(value));
+
 const entries = computed<readonly NuiListEntry<string>[]>(() =>
   history.versions.value.map((version) => {
-    const time = formatter.value.format(new Date(version.createdAt));
+    const time = timeOf(version.createdAt);
 
     return {
       value: version.id,
