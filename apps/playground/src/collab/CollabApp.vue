@@ -2,7 +2,10 @@
   <main class="collab">
     <div class="collab__bar">
       <NuiCollabPresence :peers="peers" data-testid="collab-peers" />
-      <NuiBadge data-testid="collab-status">{{ status.kind }}</NuiBadge>
+      <div class="collab__status">
+        <NuiSwitch v-model="online" label="Связь" data-testid="collab-link" />
+        <NuiBadge data-testid="collab-status">{{ status.kind }}</NuiBadge>
+      </div>
     </div>
     <NuiCollabReport v-if="report !== undefined" :report="report" />
     <div class="collab__page">
@@ -49,10 +52,11 @@ import {
 import { contentSchema } from '@numior/content';
 import { NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
 import { offlinePersistence } from '@numior/offline';
-import { NuiBadge, NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/vue';
+import { NuiBadge, NuiSwitch, NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/vue';
 import { computed, ref, useTemplateRef } from 'vue';
 import { fakeComments } from './fake-comments';
 import { fakeHistory } from './fake-history';
+import { useDemoLink } from './use-demo-link';
 
 const params = new URLSearchParams(location.search);
 const name = params.get('user') ?? 'Гость';
@@ -64,12 +68,14 @@ const user = { id: name, name };
 const editor = useTemplateRef<{ editor: NuiEditorApi }>('editor');
 const editorApi = computed(() => editor.value?.editor);
 
+const { online, transport } = useDemoLink(webSocketTransport(server));
+
 const { ready, document, plugins, ids, peers, status, alternatives, readOnly, report } =
   useCollabEditor({
     doc,
     user,
     schema: contentSchema,
-    transport: webSocketTransport(server),
+    transport,
     editor: () => editorApi.value,
     persistence: params.has('offline')
       ? offlinePersistence(doc, {

@@ -85,8 +85,9 @@ export const startCollabServer = async ({
     });
   });
 
-  await new Promise((resolve) => {
+  await new Promise((resolve, reject) => {
     server.once('listening', resolve);
+    server.once('error', reject);
   });
 
   return {

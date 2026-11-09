@@ -1,5 +1,6 @@
-import { createApp } from 'vue';
+import { createApp, type Component } from 'vue';
 import { createNuiConfig } from '@numior/vue';
+import '@fontsource-variable/inter/index.css';
 import '@numior/tokens/theme.css';
 import '@numior/tokens/base.css';
 import '@numior/vue/styles.css';
@@ -11,9 +12,15 @@ import '@numior/collaboration/styles.css';
 import './collab.css';
 import CollabApp from './CollabApp.vue';
 import CollabBookApp from './CollabBookApp.vue';
+import CollabLabApp from './CollabLabApp.vue';
 
-const root = new URLSearchParams(location.search).has('book') ? CollabBookApp : CollabApp;
+const pageOf = (params: URLSearchParams): Component => {
+  if (!params.has('user')) {
+    return CollabLabApp;
+  }
+  return params.has('book') ? CollabBookApp : CollabApp;
+};
 
-createApp(root)
+createApp(pageOf(new URLSearchParams(location.search)))
   .use(createNuiConfig({ locale: 'ru-RU' }))
   .mount('#collab');

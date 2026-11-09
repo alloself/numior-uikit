@@ -50,7 +50,8 @@
     "playwright.bench.config.ts",
     "tests/bench/**/*.spec.ts",
     "apps/playground/src/bench/main.ts",
-    "apps/playground/src/collab/main.ts"
+    "apps/playground/src/collab/main.ts",
+    "apps/playground/collab-dev-server.ts"
   ],
   "includeEntryExports": false,
   "ignorePatterns": [
@@ -265,6 +266,7 @@
       {
         "from": "apps",
         "allow": [
+          "collaboration-server",
           "tokens",
           "primitives",
           "tailwind",

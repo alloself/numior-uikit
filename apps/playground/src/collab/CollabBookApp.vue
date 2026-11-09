@@ -1,7 +1,11 @@
 <template>
   <main class="collab">
     <div class="collab__bar">
-      <NuiBadge data-testid="collab-status">{{ status.kind }}</NuiBadge>
+      <span>{{ clientId }}</span>
+      <div class="collab__status">
+        <NuiSwitch v-model="online" label="Связь" data-testid="collab-link" />
+        <NuiBadge data-testid="collab-status">{{ status.kind }}</NuiBadge>
+      </div>
     </div>
     <NuiSpreadsheet
       v-if="ready"
@@ -30,8 +34,9 @@ import {
   createWorkbook,
   createWorkbookDocument,
 } from '@numior/spreadsheet/core';
-import { NuiBadge } from '@numior/vue';
+import { NuiBadge, NuiSwitch } from '@numior/vue';
 import { onBeforeUnmount, ref, shallowRef } from 'vue';
+import { useDemoLink } from './use-demo-link';
 
 const params = new URLSearchParams(location.search);
 const clientId = params.get('user') ?? 'Гость';
@@ -48,12 +53,14 @@ session.subscribe(() => {
   ready.value = true;
 });
 
+const { online, transport } = useDemoLink(webSocketTransport(server));
+
 const client = createCollabClient({
   doc: params.get('doc') ?? 'book-demo',
   clientId,
   schema: WORKBOOK_SCHEMA,
   document: session,
-  transport: webSocketTransport(server),
+  transport,
   onStatus: (next) => {
     status.value = next;
   },

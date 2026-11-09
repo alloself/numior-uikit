@@ -17,6 +17,22 @@ const COLLAB_SERVER = /:4175/;
 
 const RECONNECT_TIMEOUT = 20_000;
 
+export const unsentStepsOf = (name: string): Promise<number> =>
+  new Promise<number>((resolve) => {
+    const opening = indexedDB.open(`nui-offline:${name}`);
+
+    opening.addEventListener('success', () => {
+      const reading = opening.result.transaction('outbox').objectStore('outbox').get('current');
+
+      reading.addEventListener('success', () => {
+        const steps: unknown = reading.result?.steps;
+
+        opening.result.close();
+        resolve(Array.isArray(steps) ? steps.length : 0);
+      });
+    });
+  });
+
 export class CollabClient {
   private readonly sockets = new Set<WebSocketRoute>();
   private reachable = true;
@@ -206,27 +222,7 @@ export class CollabClient {
   }
 
   unsentSteps(doc: string): Promise<number> {
-    return this.page.evaluate(
-      (name) =>
-        new Promise<number>((resolve) => {
-          const opening = indexedDB.open(`nui-offline:${name}`);
-
-          opening.addEventListener('success', () => {
-            const reading = opening.result
-              .transaction('outbox')
-              .objectStore('outbox')
-              .get('current');
-
-            reading.addEventListener('success', () => {
-              const steps: unknown = reading.result?.steps;
-
-              opening.result.close();
-              resolve(Array.isArray(steps) ? steps.length : 0);
-            });
-          });
-        }),
-      doc,
-    );
+    return this.page.evaluate(unsentStepsOf, doc);
   }
 
   leave(): Promise<void> {
