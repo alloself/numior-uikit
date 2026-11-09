@@ -16,17 +16,9 @@ import {
   type WorkbookHistory,
   type WorkbookStep,
 } from '@numior/spreadsheet/core';
-import { createRoom, type RoomPeer } from '../../server/room';
-import type { NetworkTraffic } from './network';
-import {
-  ClientMessageKind,
-  ServerMessageKind,
-  createCollabClient,
-  type ClientMessage,
-  type CollabClient,
-  type ServerMessage,
-  type TransportListener,
-} from '../../src';
+import { createRoom } from '../../server/room';
+import { createCollabClient, type CollabClient } from '../../src';
+import { createTraffic, createWire, settleAll, type NetworkTraffic } from './wire';
 
 export interface BookClient {
   readonly book: Workbook;
@@ -50,8 +42,6 @@ export interface BookNetwork {
 }
 
 const WHOLE = { top: 0, left: 0, bottom: 1_048_575, right: 16_383 };
-
-const overTheWire = (value: unknown): unknown => JSON.parse(JSON.stringify(value));
 
 export const SHEET = 'Sheet1';
 
@@ -147,13 +137,10 @@ export const createBookNetwork = (
 ): BookNetwork => {
   const authority = workbookAuthority(seed);
   const room = createRoom(authority);
-  const traffic = { submits: 0, rejections: 0, deliveries: 0 };
+  const traffic = createTraffic();
 
   const clients = names.map((name): BookClient => {
-    const toServer: ClientMessage[] = [];
-    const toClient: ServerMessage[] = [];
-    let listener: TransportListener | undefined;
-
+    const wire = createWire(room, name, traffic);
     const book = createWorkbook();
     const calculator = createCalculator(book);
     const document = createWorkbookDocument({ book, calculator });
@@ -161,35 +148,15 @@ export const createBookNetwork = (
 
     document.follow(history);
 
-    const peer: RoomPeer = {
-      clientId: name,
-      send: (message) => {
-        toClient.push(message);
-      },
-    };
-
     const client = createCollabClient({
       doc: 'book',
       clientId: name,
       schema: WORKBOOK_SCHEMA,
       document,
-      transport: {
-        open: (opened) => {
-          listener = opened;
-
-          return {
-            send: (message) => {
-              toServer.push(message);
-            },
-            close: () => {
-              listener = undefined;
-            },
-          };
-        },
-      },
+      transport: wire.transport,
     });
 
-    listener?.opened();
+    wire.open();
 
     return {
       book,
@@ -211,45 +178,15 @@ export const createBookNetwork = (
         history.redo();
         client.sync();
       },
-      toServer: () => {
-        const message = toServer.shift();
-
-        if (message === undefined) {
-          return false;
-        }
-        if (message.kind === ClientMessageKind.Hello) {
-          room.join(peer, message);
-        } else {
-          traffic.submits += Number(message.kind === ClientMessageKind.Steps);
-          room.receive(peer, message);
-        }
-        return true;
-      },
-      toClient: () => {
-        const message = toClient.shift();
-
-        if (message === undefined) {
-          return false;
-        }
-        traffic.rejections += Number(message.kind === ServerMessageKind.Rejected);
-        traffic.deliveries += 1;
-        listener?.message(overTheWire(message));
-        return true;
-      },
+      toServer: wire.toServer,
+      toClient: wire.toClient,
       dump: () => dumpBook(book, calculator),
       text: (sheet, row, col) => contentText(calculator, book, sheet, row, col),
     };
   });
 
   const settle = (): void => {
-    let moved = true;
-
-    while (moved) {
-      moved = clients.reduce(
-        (any, client) => [client.toServer(), client.toClient()].some(Boolean) || any,
-        false,
-      );
-    }
+    settleAll(clients);
   };
 
   settle();
