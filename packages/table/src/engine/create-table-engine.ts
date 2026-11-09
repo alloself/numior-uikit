@@ -753,32 +753,41 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
 
       refresh();
     },
-    run: async (query, runOptions = {}) => {
+    run: (query, runOptions = {}) => {
       generation += 1;
       const mine = generation;
-      const outcome: { prepared: Prepared | null } = { prepared: null };
 
-      const pipeline = pipelineFor(
-        planOf(query),
-        (next) => {
-          outcome.prepared = next;
-        },
-        runOptions,
-      );
+      const attempt = async (): Promise<TableRunResult> => {
+        const version = rowsVersion;
+        const outcome: { prepared: Prepared | null } = { prepared: null };
 
-      const completed =
-        pipeline === null ||
-        (await runSliced(pipeline, {
-          sliceMs,
-          yieldTo: runOptions.yieldTo ?? yieldTo,
-          signal: runOptions.signal,
-          isStale: () => mine !== generation,
-          onProgress: (done, total) => {
-            runOptions.onProgress?.({ phase: pipeline.phase(), done, total });
+        const pipeline = pipelineFor(
+          planOf(query),
+          (next) => {
+            outcome.prepared = next;
           },
-        }));
+          runOptions,
+        );
 
-      return commit(completed && mine === generation ? outcome.prepared : null);
+        const completed =
+          pipeline === null ||
+          (await runSliced(pipeline, {
+            sliceMs,
+            yieldTo: runOptions.yieldTo ?? yieldTo,
+            signal: runOptions.signal,
+            isStale: () => mine !== generation || version !== rowsVersion,
+            onProgress: (done, total) => {
+              runOptions.onProgress?.({ phase: pipeline.phase(), done, total });
+            },
+          }));
+
+        if (mine === generation && version !== rowsVersion && runOptions.signal?.aborted !== true) {
+          return attempt();
+        }
+        return commit(completed && mine === generation ? outcome.prepared : null);
+      };
+
+      return attempt();
     },
     runSync,
     patch,

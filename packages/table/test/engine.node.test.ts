@@ -107,6 +107,27 @@ describe('createTableEngine', () => {
     );
   });
 
+  it('starts a sliced run over when a row is patched under it', async () => {
+    const rows = many(20_000);
+    const first = rows[0];
+    const harness = new EngineHarness(PEOPLE_COLUMNS, rows, { sliceMs: 0 });
+    const query = { sort: [{ key: 'age', direction: 'asc' as const }] };
+    const pending = harness.run(query);
+
+    await harness.step();
+
+    if (first !== undefined) {
+      rows[0] = { ...first, age: -5 };
+    }
+
+    harness.engine.patch(query, ['age']);
+
+    expect(await harness.settle(pending)).toEqual({ kind: 'done', count: 20_000, rows: 20_000 });
+    expect(harness.visible('age')[0]).toBe(-5);
+    expect(harness.engine.runSync({ sort: [{ key: 'age', direction: 'desc' }] }).kind).toBe('done');
+    expect(harness.visible('age').at(-1)).toBe(-5);
+  });
+
   it('cancels through the signal, supersedes an older run and reports progress in slices', async () => {
     const harness = new EngineHarness(PEOPLE_COLUMNS, many(20_000), { sliceMs: 0 });
     const controller = new AbortController();
