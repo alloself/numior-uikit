@@ -21,6 +21,7 @@
     "packages/charts/src/core/index.ts",
     "packages/collaboration/src/index.ts",
     "packages/collaboration/src/vue/index.ts",
+    "packages/collaboration/src/yjs/index.ts",
     "packages/collaboration/server/main.ts",
     "packages/offline/src/index.ts",
     "apps/playground/src/tailwind.css",

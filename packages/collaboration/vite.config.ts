@@ -13,12 +13,13 @@ export default defineConfig({
       entry: {
         index: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
         'vue/index': fileURLToPath(new URL('./src/vue/index.ts', import.meta.url)),
+        'yjs/index': fileURLToPath(new URL('./src/yjs/index.ts', import.meta.url)),
       },
       formats: ['es'],
       fileName: (_format, name) => `${name}.js`,
     },
     rolldownOptions: {
-      external: [/^vue$/, /^@numior\//, /^@vueuse\/core$/],
+      external: [/^vue$/, /^@numior\//, /^@vueuse\/core$/, /^yjs$/],
     },
     sourcemap: true,
   },

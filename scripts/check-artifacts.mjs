@@ -342,6 +342,16 @@ for (const file of await localImports(resolve('packages/collaboration/dist/index
   );
 }
 
+const collaborationYjs = await import(
+  pathToFileURL(resolve('packages/collaboration/dist/yjs/index.js')).href
+);
+
+assert.equal(
+  typeof collaborationYjs.yjsBinding,
+  'function',
+  'collaboration/yjs must export yjsBinding',
+);
+
 await importBuild('charts', ['NuiChart', 'chartMessages']);
 await importBuild('spreadsheet', ['NuiSpreadsheet', 'sheetCells']);
 

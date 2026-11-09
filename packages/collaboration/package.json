@@ -21,6 +21,11 @@
       "types": "./dist/vue/index.d.ts",
       "import": "./dist/vue/index.js"
     },
+    "./yjs": {
+      "@numior/source": "./src/yjs/index.ts",
+      "types": "./dist/yjs/index.d.ts",
+      "import": "./dist/yjs/index.js"
+    },
     "./styles.css": {
       "@numior/source": "./src/styles.css",
       "default": "./dist/styles.css"
@@ -41,10 +46,17 @@
     "@types/ws": "8.18.2",
     "@vue/test-utils": "2.5.1",
     "fast-check": "4.10.2",
-    "ws": "8.22.2"
+    "ws": "8.22.2",
+    "yjs": "13.6.33"
   },
   "peerDependencies": {
     "@numior/tokens": "workspace:*",
-    "vue": "^3.5.0"
+    "vue": "^3.5.0",
+    "yjs": "^13.6.0"
+  },
+  "peerDependenciesMeta": {
+    "yjs": {
+      "optional": true
+    }
   }
 }
