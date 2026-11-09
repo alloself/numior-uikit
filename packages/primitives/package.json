@@ -13,6 +13,11 @@
       "@numior/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./guards": {
+      "@numior/source": "./src/guards/guards.ts",
+      "types": "./dist/guards/guards.d.ts",
+      "import": "./dist/guards.js"
     }
   },
   "scripts": {

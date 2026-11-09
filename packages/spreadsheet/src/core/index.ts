@@ -236,6 +236,8 @@ export { FillMode, type CellClip, type CellClips, type ClipPaste } from './steps
 export { createWorkbookHistory } from './steps/history';
 export type { HistoryOptions, WorkbookHistory } from './steps/history';
 export { mapCell } from './steps/mapping';
+export { createStepCodec } from './wire/step-codec';
+export type { StepCodec, WireWorkbookStep } from './wire/wire.types';
 export type {
   CellEdit,
   StepOutcome,
