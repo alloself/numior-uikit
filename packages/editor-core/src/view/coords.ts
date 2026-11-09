@@ -1,6 +1,6 @@
 import type { ViewHost } from './host.types';
 import { domAtPos, posAtDOM } from './positions';
-import type { CaretRect } from './view.types';
+import { Direction, type CaretRect } from './view.types';
 
 const rectOf = (rect: DOMRect, edge: number): CaretRect => ({
   left: edge,
@@ -15,6 +15,23 @@ const firstRect = (range: Range): DOMRect | undefined => {
   return rect !== undefined && rect.height > 0 ? rect : undefined;
 };
 
+const STRONG_RIGHT_TO_LEFT =
+  /[\p{Script=Arabic}\p{Script=Hebrew}\p{Script=Syriac}\p{Script=Thaana}\p{Script=Nko}]/u;
+
+const STRONG_LETTER = /\p{L}/u;
+
+const runsRightToLeft = (doc: Document, text: Text, index: number): boolean => {
+  const character = text.data.charAt(index);
+
+  if (STRONG_RIGHT_TO_LEFT.test(character)) {
+    return true;
+  }
+  if (STRONG_LETTER.test(character) || text.parentElement === null) {
+    return false;
+  }
+  return doc.defaultView?.getComputedStyle(text.parentElement).direction === Direction.Rtl;
+};
+
 const besideCharacter = (doc: Document, text: Text, offset: number): CaretRect | undefined => {
   const range = doc.createRange();
   const before = offset > 0;
@@ -23,7 +40,12 @@ const besideCharacter = (doc: Document, text: Text, offset: number): CaretRect |
   range.setEnd(text, before ? offset : offset + 1);
   const rect = firstRect(range);
 
-  return rect === undefined ? undefined : rectOf(rect, before ? rect.right : rect.left);
+  if (rect === undefined) {
+    return undefined;
+  }
+  const atRightEdge = before !== runsRightToLeft(doc, text, before ? offset - 1 : offset);
+
+  return rectOf(rect, atRightEdge ? rect.right : rect.left);
 };
 
 const elementEdge = (node: Node, offset: number): CaretRect | undefined => {

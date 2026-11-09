@@ -205,6 +205,15 @@ describe('editor view input', () => {
     expect(flat.view.coordsAtPos(6)).toEqual({ left: 0, right: 0, top: 0, bottom: 0 });
   });
 
+  it('takes the caret from the leading edge of a right-to-left character', () => {
+    const view = mounted(doc(node('paragraph', ['ابج']), node('paragraph')));
+
+    view.layText({ collapsedHeight: 0 });
+
+    expect(view.view.coordsAtPos(3)).toEqual({ left: 10, right: 10, top: 0, bottom: 20 });
+    expect(view.view.coordsAtPos(1)).toEqual({ left: 10, right: 10, top: 0, bottom: 20 });
+  });
+
   it('finds the position under a point through whichever caret API the browser has', () => {
     const view = mounted(twoParagraphs());
 
