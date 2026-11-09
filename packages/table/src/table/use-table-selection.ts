@@ -28,6 +28,13 @@ export interface TableSelection<T> {
   onKeydown(event: KeyboardEvent, active: TableCellPosition, row: T | undefined): boolean;
 }
 
+interface ScopeMix {
+  readonly picked: boolean;
+  readonly skipped: boolean;
+}
+
+const SCAN_BATCH = 4096;
+
 const plainSpace = (event: KeyboardEvent): boolean =>
   event.key === Key.Space && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey;
 
@@ -44,12 +51,12 @@ export const useTableSelection = <T>(options: TableSelectionOptions<T>): TableSe
 
   const keys = computed(() => new Set(options.selected.value.map(options.keyOf)));
 
-  const scopeRows = (): T[] => {
-    const { start, end } = options.scope();
+  const rowsBetween = (start: number, end: number): T[] => {
+    const engine = options.engine.value;
     const rows: T[] = [];
 
     for (let position = start; position < end; position += 1) {
-      const node = options.engine.value.nodeAt(position);
+      const node = engine.nodeAt(position);
 
       if (node?.kind === TableNodeKind.Row) {
         rows.push(node.row);
@@ -58,28 +65,60 @@ export const useTableSelection = <T>(options: TableSelectionOptions<T>): TableSe
     return rows;
   };
 
+  const scopeRows = (): T[] => {
+    const { start, end } = options.scope();
+
+    return rowsBetween(start, end);
+  };
+
+  const scopeHoldsRow = (): boolean => {
+    const { start, end } = options.scope();
+    const engine = options.engine.value;
+
+    for (let position = start; position < end; position += 1) {
+      if (engine.nodeAt(position)?.kind === TableNodeKind.Row) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const scopeMix = (chosen: ReadonlySet<TableSelectionKey<T>>): ScopeMix => {
+    const { start, end } = options.scope();
+    const keyOf = options.keyOf;
+    let picked = false;
+    let skipped = false;
+
+    for (let from = start; from < end && !(picked && skipped); from += SCAN_BATCH) {
+      for (const row of rowsBetween(from, Math.min(end, from + SCAN_BATCH))) {
+        const has = chosen.has(keyOf(row));
+
+        picked ||= has;
+        skipped ||= !has;
+      }
+    }
+    return { picked, skipped };
+  };
+
   const headerState = computed<CheckState>(() => {
     void options.revision.value;
     const chosen = keys.value;
-    let selectedCount = 0;
-    let total = 0;
 
-    for (const row of scopeRows()) {
-      total += 1;
-
-      if (chosen.has(options.keyOf(row))) {
-        selectedCount += 1;
-      }
-    }
-    if (total === 0 || selectedCount === 0) {
+    if (chosen.size === 0) {
       return 'unchecked';
     }
-    return selectedCount === total ? 'checked' : 'indeterminate';
+
+    const mix = scopeMix(chosen);
+
+    if (!mix.picked) {
+      return 'unchecked';
+    }
+    return mix.skipped ? 'indeterminate' : 'checked';
   });
 
   const headerDisabled = computed(() => {
     void options.revision.value;
-    return options.disabled() || scopeRows().length === 0;
+    return options.disabled() || !scopeHoldsRow();
   });
 
   const has = (row: T): boolean => keys.value.has(options.keyOf(row));
@@ -105,10 +144,15 @@ export const useTableSelection = <T>(options: TableSelectionOptions<T>): TableSe
     const chosen = keys.value;
     const missing = rows.filter((row) => !chosen.has(options.keyOf(row)));
 
+    if (missing.length > 0) {
+      options.selected.value = [...options.selected.value, ...missing];
+      return;
+    }
+
     options.selected.value =
-      missing.length === 0
-        ? without(options.selected.value, new Set(rows.map(options.keyOf)))
-        : [...options.selected.value, ...missing];
+      chosen.size === rows.length
+        ? []
+        : without(options.selected.value, new Set(rows.map(options.keyOf)));
   };
 
   const onKeydown = (
