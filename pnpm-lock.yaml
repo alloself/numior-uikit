@@ -109,6 +109,9 @@ importers:
       '@numior/primitives':
         specifier: workspace:*
         version: link:../../packages/primitives
+      '@numior/spreadsheet':
+        specifier: workspace:*
+        version: link:../../packages/spreadsheet
       '@numior/table':
         specifier: workspace:*
         version: link:../../packages/table

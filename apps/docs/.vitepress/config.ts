@@ -132,6 +132,7 @@ const ruComponents: DocsSidebarGroup[] = [
       { text: 'Empty', link: '/components/empty' },
       { text: 'Tree', link: '/components/tree' },
       { text: 'Table', link: '/components/table' },
+      { text: 'Spreadsheet', link: '/components/spreadsheet' },
     ],
   },
   {
@@ -312,6 +313,7 @@ const enComponents: DocsSidebarGroup[] = [
       { text: 'Empty', link: '/en/components/empty' },
       { text: 'Tree', link: '/en/components/tree' },
       { text: 'Table', link: '/en/components/table' },
+      { text: 'Spreadsheet', link: '/en/components/spreadsheet' },
     ],
   },
   {

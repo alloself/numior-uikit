@@ -1,0 +1,111 @@
+# Spreadsheet
+
+`NuiSpreadsheet` is a spreadsheet with formulas, sheet tabs and XLSX files. Use it when people need
+to calculate right on the page.
+
+<Example name="spreadsheet/Basic" />
+
+Create a book with `createWorkbook()`, fill its sheets and pass it to `book`. Edits change that same
+book, and the `change` event reports each of them.
+
+`createCalculator(book)` computes the formulas. Pass it to `calculator` when formulas are set before
+the sheet is shown. Otherwise the component creates its own.
+
+## Installation
+
+```ts
+import { NuiSpreadsheet } from '@numior/spreadsheet';
+import '@numior/vue/styles.css';
+import '@numior/table/styles.css';
+import '@numior/spreadsheet/styles.css';
+```
+
+The book model and formulas live in `@numior/spreadsheet/core`. That entry works without Vue,
+including on a server.
+
+## Examples
+
+### Read only
+
+The `readonly` prop turns editing off, while values can still be selected and copied. The
+`formulaBar` and `sheetTabs` props remove the formula bar and the tabs.
+
+<Example name="spreadsheet/ReadOnly" />
+
+### Opening and saving XLSX
+
+The `fileBar` prop shows a bar with the file name and Open and Save buttons. Once a file is read, the
+`open` event hands over the new book: put it in `book`.
+
+Without `saveFile` the browser downloads the file. Pass `saveFile` to send it to a server.
+
+<Example name="spreadsheet/File" />
+
+Parts of the file the component does not understand are saved unchanged. If an edit could affect
+them, the component asks whether to save with losses.
+
+### Your own menu items
+
+The `contextMenu` function receives the sheet and the selection and returns items for the cell menu.
+
+<Example name="spreadsheet/Menu" />
+
+### Editing together
+
+Create a document with `createWorkbookDocument` and pass it to `collaboration`. The
+`createCollabClient` client from `@numior/collaboration` connects the document to a server.
+
+```vue
+<template>
+  <NuiSpreadsheet
+    v-if="ready"
+    :book="book"
+    :calculator="calculator"
+    :collaboration="document"
+    label="Shared book"
+    @change="client.sync()"
+  />
+</template>
+```
+
+Call `client.sync()` from `change` to send your edits. Edits by other people appear on their own and
+do not fire `change`. Show the sheet after the book has loaded from the server.
+
+Do not show `fileBar` in a shared book: opening a file replaces the book, and the others stop seeing
+it. The `readonly` prop turns editing off.
+
+## Behavior
+
+### Formulas
+
+Text that starts with `=` becomes a formula. While the cursor sits where an operand goes, a click, a
+drag or the arrows insert a reference, and `F4` cycles its `$` signs.
+
+References in the formula text and range frames on the sheet share a color. Drag a frame by its edge
+or corner and the reference in the formula changes. A list of functions appears after letters, and
+a hint shows the current argument inside parentheses.
+
+A large book recalculates in parts. Values still being computed are marked, and the bottom of the
+sheet shows the progress with a stop button.
+
+### Selection and fill
+
+The handle in the corner of a selection continues a number series or copies formulas with shifted
+references. Dragging the handle back clears cells.
+
+The cell menu holds inserting and deleting rows and columns, conditional formatting, pivot tables,
+charts and pictures. Sheets are added, renamed and deleted on their tabs.
+
+## Accessibility
+
+The sheet is marked up as `role="grid"`. Tab enters it once, and the arrows move focus between
+cells. The formula bar is tied to the active cell, and results of edits are announced in a live
+region.
+
+On a phone a double tap starts editing and a long press opens the cell menu.
+
+<KeyboardReference name="NuiSpreadsheet" />
+
+## API
+
+<ApiReference name="NuiSpreadsheet" />
