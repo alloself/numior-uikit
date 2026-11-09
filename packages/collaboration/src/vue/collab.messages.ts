@@ -1,4 +1,4 @@
-import type { NuiMessageCatalog } from '@numior/primitives';
+import { plural, type NuiMessageCatalog } from '@numior/primitives';
 
 export interface NuiCollabMessages {
   readonly present: string;
@@ -10,6 +10,15 @@ export interface NuiCollabMessages {
   readonly restore: string;
   readonly closeVersion: string;
   readonly historyFailed: string;
+  readonly reportTitle: string;
+  readonly reportVersion: (context: {
+    readonly subject: string;
+    readonly stored: number;
+    readonly current: number;
+  }) => string;
+  readonly reportStep: (context: { readonly subject: string }) => string;
+  readonly reportDamaged: string;
+  readonly reportUnsent: (context: { readonly count: number }) => string;
   readonly alternatives: string;
   readonly alternativeRestore: string;
   readonly alternativeShow: string;
@@ -47,6 +56,13 @@ export const collabMessages: NuiMessageCatalog<NuiCollabMessages> = {
     restore: 'Restore this version',
     closeVersion: 'Close',
     historyFailed: 'The version history is unavailable',
+    reportTitle: 'This document is read-only',
+    reportVersion: ({ subject, stored, current }) =>
+      `${subject}: the saved copy has version ${stored}, this application expects ${current}`,
+    reportStep: ({ subject }) => `${subject}: saved changes cannot be converted to the new version`,
+    reportDamaged: 'The copy saved on this device cannot be read',
+    reportUnsent: ({ count }) =>
+      `${count} unsent ${plural('en', count, { one: 'change is', other: 'changes are' })} kept on this device`,
     alternatives: 'Overwritten values',
     alternativeRestore: 'Put back',
     alternativeShow: 'Show in the document',
@@ -81,6 +97,12 @@ export const collabMessages: NuiMessageCatalog<NuiCollabMessages> = {
     restore: 'Восстановить эту версию',
     closeVersion: 'Закрыть',
     historyFailed: 'История версий недоступна',
+    reportTitle: 'Документ открыт только для чтения',
+    reportVersion: ({ subject, stored, current }) =>
+      `${subject}: у сохранённой копии версия ${stored}, приложение ждёт ${current}`,
+    reportStep: ({ subject }) => `${subject}: сохранённые правки нельзя перевести на новую версию`,
+    reportDamaged: 'Копию на этом устройстве не удалось прочитать',
+    reportUnsent: ({ count }) => `Неотправленные правки сохранены на этом устройстве: ${count}`,
     alternatives: 'Перезаписанные значения',
     alternativeRestore: 'Вернуть',
     alternativeShow: 'Показать в документе',

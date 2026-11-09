@@ -32,6 +32,8 @@ export class CollabClient {
   readonly versions: Locator;
   readonly additions: Locator;
   readonly overwritten: Locator;
+  readonly report: Locator;
+  readonly readOnlyDocument: Locator;
 
   constructor(
     readonly page: Page,
@@ -49,6 +51,8 @@ export class CollabClient {
     this.versions = this.history.getByRole('option');
     this.additions = this.history.locator('.nui-diff--added');
     this.overwritten = this.history.locator('.nui-collab-history__alternative');
+    this.report = page.locator('.nui-collab-report');
+    this.readOnlyDocument = page.locator('.nui-editor--readonly');
   }
 
   paragraph(index: number): Locator {
@@ -191,6 +195,13 @@ export class CollabClient {
   async reload(): Promise<void> {
     await this.page.reload();
     await this.editor.waitFor();
+  }
+
+  async openWithPlugin(version: number): Promise<void> {
+    const url = new URL(this.page.url());
+
+    url.searchParams.set('plugin', String(version));
+    await this.page.goto(url.toString());
   }
 
   unsentSteps(doc: string): Promise<number> {

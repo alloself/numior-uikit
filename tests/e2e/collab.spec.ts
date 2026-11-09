@@ -60,6 +60,33 @@ test.describe('collaboration', () => {
     await expect(anna.tableCell(0, 0)).toHaveText('Boris');
   });
 
+  test('opens a copy of another version read-only and keeps its queue', async ({ collab }) => {
+    const anna = await collab.joinOffline(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Начало');
+    await expect(boris.editor).toContainText('Начало');
+
+    await anna.disconnect();
+    await anna.appendTo(0, ' офлайн');
+    await expect.poll(() => anna.unsentSteps(collab.name)).toBeGreaterThan(0);
+
+    await anna.openWithPlugin(2);
+
+    await expect(anna.report).toContainText('demo: у сохранённой копии версия 1');
+    await expect(anna.report).toContainText('Неотправленные правки сохранены');
+    await expect(anna.readOnlyDocument).toContainText('Начало');
+    expect(await wcagViolationsOf(anna.page)).toEqual([]);
+
+    await anna.openWithPlugin(1);
+    await anna.editor.waitFor();
+
+    await expect(anna.editor).toContainText('Начало офлайн');
+
+    await anna.reconnect();
+    await expect(boris.editor).toContainText('Начало офлайн');
+  });
+
   test('keeps unsent text through a reload and sends it on return', async ({ collab }) => {
     const anna = await collab.joinOffline(ANNA);
     const boris = await collab.join(BORIS);

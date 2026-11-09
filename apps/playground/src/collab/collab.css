@@ -1,4 +1,7 @@
 .collab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nui-space-4);
   box-sizing: border-box;
   max-inline-size: 72rem;
   margin-inline: auto;
@@ -11,7 +14,6 @@
   align-items: center;
   justify-content: space-between;
   min-block-size: 2rem;
-  margin-block-end: var(--nui-space-4);
 }
 
 .collab__page {

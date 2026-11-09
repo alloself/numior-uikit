@@ -1,13 +1,30 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { ClientMessageKind, type CollabAlternative } from '../../src';
+import {
+  ClientMessageKind,
+  CollabBlockKind,
+  CollabRestoreKind,
+  type CollabAlternative,
+  type CollabBlocked,
+} from '../../src';
 import { createPersistenceDriver, headingSnapshot, snapshotOfFixture } from './persistence-driver';
 
 const RESTORED = {
+  kind: CollabRestoreKind.Ready,
   clientId: 'saved',
   version: 5,
   snapshot: snapshotOfFixture(),
   pending: [],
   alternatives: [],
+};
+
+const BLOCKED: CollabBlocked = {
+  kind: CollabRestoreKind.Blocked,
+  version: 5,
+  snapshot: snapshotOfFixture(),
+  report: {
+    blocks: [{ kind: CollabBlockKind.Version, subject: 'schema', stored: 1, current: 2 }],
+    unsent: 3,
+  },
 };
 
 const LOST: CollabAlternative = {
@@ -52,13 +69,44 @@ describe('useCollabEditor with persistence', () => {
     });
   });
 
-  it('falls back to the server when the saved document cannot be read', async () => {
+  it('turns read-only and reports when the saved document cannot be read', async () => {
     const driver = createPersistenceDriver({ ...RESTORED, snapshot: { root: 'nothing' } });
 
     await driver.loaded();
 
-    expect(driver.collab().ready.value).toBe(false);
+    expect(driver.collab().readOnly.value).toBe(true);
+    expect(driver.collab().report.value?.blocks).toEqual([{ kind: CollabBlockKind.Damaged }]);
+    expect(driver.closed()).toBe(1);
+  });
+
+  it('shows a blocked local copy without any connection', async () => {
+    const driver = createPersistenceDriver(BLOCKED);
+
+    await driver.loaded();
+
+    expect(driver.collab().ready.value).toBe(true);
+    expect(driver.collab().readOnly.value).toBe(true);
+    expect(driver.collab().report.value).toEqual(BLOCKED.report);
+    expect(driver.opened()).toBe(0);
+  });
+
+  it('reads a blocked document from the server when the copy is unreadable', async () => {
+    const driver = createPersistenceDriver({ ...BLOCKED, snapshot: undefined });
+
+    await driver.loaded();
+
+    expect(driver.collab().readOnly.value).toBe(true);
+    expect(driver.closed()).toBe(1);
     expect(driver.opened()).toBe(1);
+  });
+
+  it('stays writable with a healthy copy', async () => {
+    const driver = createPersistenceDriver(RESTORED);
+
+    await driver.loaded();
+
+    expect(driver.collab().readOnly.value).toBe(false);
+    expect(driver.collab().report.value).toBeUndefined();
   });
 
   it('brings saved overwritten values back with the document', async () => {

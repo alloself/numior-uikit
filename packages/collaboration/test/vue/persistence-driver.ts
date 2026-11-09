@@ -7,7 +7,7 @@ import type {
   ClientMessage,
   CollabAlternative,
   CollabPersistence,
-  CollabRestored,
+  CollabRestoration,
   CollabTransport,
 } from '../../src';
 import type { CollabEditor } from '../../src/vue/collab.types';
@@ -65,7 +65,7 @@ const apiFor = (collab: CollabEditor, onChange: (state: EditorState) => void): N
 };
 
 export const createPersistenceDriver = (
-  restored: CollabRestored | undefined,
+  restored: CollabRestoration | undefined,
 ): PersistenceDriver => {
   const sent: ClientMessage[] = [];
   const editor = shallowRef<NuiEditorApi>();

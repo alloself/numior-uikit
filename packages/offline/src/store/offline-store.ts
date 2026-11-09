@@ -137,6 +137,26 @@ export const openOfflineStore = async (
     logged = remaining;
   };
 
+  const replace = async (state: OfflineState): Promise<void> => {
+    const transaction = database.transaction([META, SNAPSHOT, STEPS, OUTBOX], 'readwrite');
+    const steps = transaction.objectStore(STEPS);
+
+    transaction.objectStore(META).put(meta, SINGLE_KEY);
+    transaction.objectStore(SNAPSHOT).put(state.snapshot, SINGLE_KEY);
+    steps.clear();
+
+    state.steps.forEach((record) => {
+      steps.put(record);
+    });
+
+    if (state.outbox !== undefined) {
+      transaction.objectStore(OUTBOX).put(state.outbox, SINGLE_KEY);
+    }
+
+    await finished(transaction);
+    logged = state.steps.length;
+  };
+
   const compact = async (): Promise<boolean> => {
     const state = await read();
     const replayed = state === undefined ? undefined : replayedDoc(schema, state);
@@ -195,6 +215,7 @@ export const openOfflineStore = async (
   return {
     read,
     writeSnapshot,
+    replace,
     appendSteps,
     removeAlternative,
     compact,

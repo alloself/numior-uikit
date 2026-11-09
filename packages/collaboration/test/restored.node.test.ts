@@ -1,7 +1,14 @@
 import { createDoc, createState, stepToJSON, toJSON, type Doc } from '@numior/editor-core';
 import { fixtureSchema } from '@numior/editor-core/fixtures';
 import { describe, expect, it } from 'vite-plus/test';
-import { collab, collabVersion, restoredDocument, sendableSteps, type WireStep } from '../src';
+import {
+  collab,
+  collabVersion,
+  CollabRestoreKind,
+  restoredDocument,
+  sendableSteps,
+  type WireStep,
+} from '../src';
 
 const textDoc = (text: string): Doc =>
   createDoc(
@@ -28,6 +35,7 @@ const typing = (doc: Doc, text: string, at: number): WireStep => {
 
 const restoring = (pending: readonly WireStep[], snapshot: unknown = toJSON(textDoc('ab'))) =>
   restoredDocument(fixtureSchema, {
+    kind: CollabRestoreKind.Ready,
     clientId: 'me',
     version: 4,
     snapshot,

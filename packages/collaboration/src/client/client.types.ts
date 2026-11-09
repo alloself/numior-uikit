@@ -37,7 +37,32 @@ export interface CollabAlternative {
   readonly createdAt: string;
 }
 
+export type CollabBlock =
+  | {
+      readonly kind: typeof CollabBlockKind.Version;
+      readonly subject: string;
+      readonly stored: number;
+      readonly current: number;
+    }
+  | { readonly kind: typeof CollabBlockKind.Step; readonly subject: string }
+  | { readonly kind: typeof CollabBlockKind.Damaged };
+
+export interface CollabReport {
+  readonly blocks: readonly CollabBlock[];
+  readonly unsent: number;
+}
+
+export interface CollabBlocked {
+  readonly kind: typeof CollabRestoreKind.Blocked;
+  readonly version: number;
+  readonly snapshot: unknown;
+  readonly report: CollabReport;
+}
+
+export type CollabRestoration = CollabRestored | CollabBlocked;
+
 export interface CollabRestored {
+  readonly kind: typeof CollabRestoreKind.Ready;
   readonly clientId: string;
   readonly version: number;
   readonly snapshot: unknown;
@@ -53,7 +78,7 @@ export interface CollabTracking {
 }
 
 export interface CollabPersistence {
-  readonly restore: () => Promise<CollabRestored | undefined>;
+  readonly restore: () => Promise<CollabRestoration | undefined>;
   readonly track: (document: CollabDocument, clientId: string) => CollabTracking | undefined;
   readonly close: () => Promise<void>;
 }
@@ -96,6 +121,14 @@ export interface CollabClient {
   readonly setPresence: (state: unknown) => void;
   readonly stop: () => void;
 }
+
+export const CollabRestoreKind = { Ready: 'ready', Blocked: 'blocked' } as const;
+
+export const CollabBlockKind = {
+  Version: 'version',
+  Step: 'step',
+  Damaged: 'damaged',
+} as const;
 
 export const CollabStatusKind = {
   Connecting: 'connecting',

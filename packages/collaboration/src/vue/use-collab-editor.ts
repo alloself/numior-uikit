@@ -1,6 +1,7 @@
 import {
   createIdSource,
   definePlugin,
+  fromJSON,
   toJSON,
   type Doc,
   type DocJSON,
@@ -12,9 +13,12 @@ import {
 import { onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import { createCollabClient } from '../client/client';
 import {
+  CollabBlockKind,
+  CollabRestoreKind,
   CollabStatusKind,
   type CollabAlternative,
   type CollabClient,
+  type CollabReport,
   type CollabStatus,
   type CollabTracking,
 } from '../client/client.types';
@@ -50,6 +54,8 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
   const peers = shallowRef<readonly RemotePeer[]>(NO_PEERS);
   const status = shallowRef<CollabStatus>({ kind: CollabStatusKind.Connecting });
   const overwritten = shallowRef<readonly CollabAlternative[]>(NO_ALTERNATIVES);
+  const readOnly = ref(false);
+  const report = shallowRef<CollabReport>();
 
   let clientId = sessionId;
   let client: CollabClient | undefined;
@@ -135,15 +141,54 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
     });
   };
 
-  const begin = async (): Promise<void> => {
-    const restored = await persistence?.restore();
-    const recovered = restored === undefined ? undefined : restoredDocument(schema, restored);
+  const openBlocked = async (
+    blocked: CollabReport,
+    snapshot: unknown,
+    version: number,
+  ): Promise<void> => {
+    await persistence?.close();
 
     if (stopped) {
       return;
     }
-    if (restored === undefined || recovered === undefined) {
+
+    report.value = blocked;
+    readOnly.value = true;
+
+    const read = snapshot === undefined ? undefined : fromJSON(schema, snapshot);
+
+    if (read?.ok === true) {
+      status.value = { kind: CollabStatusKind.Offline };
+      load(read.doc, version);
+    } else {
       connect();
+    }
+  };
+
+  const begin = async (): Promise<void> => {
+    const restored = await persistence?.restore();
+
+    if (stopped) {
+      return;
+    }
+    if (restored === undefined) {
+      connect();
+      return;
+    }
+    if (restored.kind === CollabRestoreKind.Blocked) {
+      await openBlocked(restored.report, restored.snapshot, restored.version);
+      return;
+    }
+
+    const recovered = restoredDocument(schema, restored);
+
+    if (recovered === undefined) {
+      await openBlocked(
+        { blocks: [{ kind: CollabBlockKind.Damaged }], unsent: restored.pending.length },
+        undefined,
+        restored.version,
+      );
+
       return;
     }
     clientId = restored.clientId;
@@ -198,5 +243,5 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
     void persistence?.close();
   });
 
-  return { ready, document, plugins, ids, peers, status, alternatives };
+  return { ready, document, plugins, ids, peers, status, alternatives, readOnly, report };
 };

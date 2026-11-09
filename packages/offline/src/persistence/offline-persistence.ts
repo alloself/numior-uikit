@@ -1,16 +1,23 @@
-import type {
-  CollabAlternative,
-  CollabDocument,
-  CollabPersistence,
-  CollabRestored,
-  CollabTracking,
+import {
+  CollabBlockKind,
+  CollabRestoreKind,
+  type CollabAlternative,
+  type CollabBlock,
+  type CollabDocument,
+  type CollabPersistence,
+  type CollabRestoration,
+  type CollabTracking,
 } from '@numior/collaboration';
 import { toJSON } from '@numior/editor-core';
 import { openOfflineStore, replayedDoc } from '../store/offline-store';
 import { isDocument } from '../store/records';
+import { GateKind, passedGate } from './gate';
 import type {
   OfflineLocks,
+  OfflineMeta,
+  OfflineMigration,
   OfflinePersistenceOptions,
+  OfflinePlugins,
   OfflineState,
   OfflineStep,
   OfflineStore,
@@ -33,37 +40,87 @@ const acquired = (locks: OfflineLocks, name: string): Promise<Release | undefine
     });
   });
 
+const NO_MIGRATIONS: readonly OfflineMigration[] = [];
+
+const NO_PLUGINS: OfflinePlugins = {};
+
 const defaultLocks = (): OfflineLocks | undefined => globalThis.navigator?.locks;
 
 export const offlinePersistence = (
   doc: string,
   options: OfflinePersistenceOptions,
 ): CollabPersistence => {
-  const { locks = defaultLocks(), onError, ...storeOptions } = options;
+  const { locks = defaultLocks(), onError, migrations = NO_MIGRATIONS, ...storeOptions } = options;
+
+  const currentMeta: OfflineMeta = {
+    schema: { name: storeOptions.schema.name, version: storeOptions.schema.version },
+    plugins: storeOptions.plugins ?? NO_PLUGINS,
+  };
 
   let store: OfflineStore | undefined;
   let release: Release | undefined;
   let opening: Promise<unknown> = Promise.resolve();
   let tail: Promise<void> = Promise.resolve();
 
-  const restoredOf = (state: OfflineState): CollabRestored | undefined => {
+  const blockedRestore = (
+    state: OfflineState,
+    blocks: readonly CollabBlock[],
+  ): CollabRestoration => {
+    const replayed = replayedDoc(storeOptions.schema, state);
+
+    return {
+      kind: CollabRestoreKind.Blocked,
+      version: state.snapshot.version + state.steps.length,
+      snapshot: replayed === undefined ? undefined : toJSON(replayed),
+      report: { blocks, unsent: state.outbox?.steps.length ?? 0 },
+    };
+  };
+
+  const restoredOf = (state: OfflineState): CollabRestoration | undefined => {
     const replayed = replayedDoc(storeOptions.schema, state);
     const version = state.snapshot.version + state.steps.length;
+    const outbox = state.outbox;
 
-    if (replayed === undefined || state.outbox?.baseVersion !== version) {
+    if (outbox === undefined || (outbox.steps.length === 0 && outbox.baseVersion !== version)) {
       return undefined;
+    }
+    if (replayed === undefined || outbox.baseVersion !== version) {
+      return blockedRestore(state, [{ kind: CollabBlockKind.Damaged }]);
     }
 
     return {
-      clientId: state.outbox.clientId,
+      kind: CollabRestoreKind.Ready,
+      clientId: outbox.clientId,
       version,
       snapshot: toJSON(replayed),
-      pending: state.outbox.steps,
+      pending: outbox.steps,
       alternatives: state.alternatives,
     };
   };
 
-  const open = async (): Promise<CollabRestored | undefined> => {
+  const gated = async (
+    opened: OfflineStore,
+    state: OfflineState,
+  ): Promise<CollabRestoration | undefined> => {
+    const result = passedGate(state, currentMeta, migrations);
+
+    switch (result.kind) {
+      case GateKind.Blocked:
+        return blockedRestore(state, result.blocks);
+      case GateKind.Migrated: {
+        const restored = restoredOf(result.state);
+
+        if (restored?.kind === CollabRestoreKind.Ready) {
+          await opened.replace(result.state);
+        }
+        return restored;
+      }
+      case GateKind.Open:
+        return restoredOf(result.state);
+    }
+  };
+
+  const open = async (): Promise<CollabRestoration | undefined> => {
     if (locks !== undefined) {
       release = await acquired(locks, `nui-offline:${doc}`);
 
@@ -75,7 +132,7 @@ export const offlinePersistence = (
 
     const state = await store.read();
 
-    return state === undefined ? undefined : restoredOf(state);
+    return state === undefined ? undefined : gated(store, state);
   };
 
   const run = async (previous: Promise<void>, job: Job): Promise<void> => {

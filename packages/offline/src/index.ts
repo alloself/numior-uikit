@@ -3,6 +3,7 @@ export { deleteOfflineDocument, openOfflineStore } from './store/offline-store';
 export type {
   OfflineLocks,
   OfflineMeta,
+  OfflineMigration,
   OfflineOutbox,
   OfflinePersistenceOptions,
   OfflinePlugins,

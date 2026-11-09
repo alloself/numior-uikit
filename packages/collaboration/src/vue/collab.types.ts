@@ -5,6 +5,7 @@ import type { NuiCollabMessages } from './collab.messages';
 import type {
   CollabAlternative,
   CollabPersistence,
+  CollabReport,
   CollabStatus,
   CollabTransport,
 } from '../client/client.types';
@@ -36,11 +37,18 @@ export interface CollabEditor {
   readonly peers: Readonly<ShallowRef<readonly RemotePeer[]>>;
   readonly status: Readonly<ShallowRef<CollabStatus>>;
   readonly alternatives: CollabAlternatives;
+  readonly readOnly: Readonly<Ref<boolean>>;
+  readonly report: Readonly<ShallowRef<CollabReport | undefined>>;
 }
 
 export interface NuiCollabCaretsProps {
   peers: readonly RemotePeer[];
   editor?: NuiEditorApi | undefined;
+}
+
+export interface NuiCollabReportProps {
+  report: CollabReport;
+  labels?: Partial<Omit<NuiCollabMessages, 'present'>> | undefined;
 }
 
 export interface NuiCollabPresenceProps {

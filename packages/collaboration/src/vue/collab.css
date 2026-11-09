@@ -296,3 +296,8 @@
   display: flex;
   gap: var(--nui-space-1);
 }
+
+.nui-collab-report {
+  margin: 0;
+  padding-inline-start: var(--nui-space-4);
+}

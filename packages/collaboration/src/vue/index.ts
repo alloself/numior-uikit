@@ -1,5 +1,6 @@
 export { default as NuiCollabCarets } from './NuiCollabCarets.vue';
 export { default as NuiCollabPresence } from './NuiCollabPresence.vue';
+export { default as NuiCollabReport } from './NuiCollabReport.vue';
 export { default as NuiEditorComments } from './NuiEditorComments.vue';
 export { default as NuiEditorHistory } from './NuiEditorHistory.vue';
 export { collabMessages } from './collab.messages';
@@ -12,6 +13,7 @@ export type {
   CommentThreadView,
   NuiCollabCaretsProps,
   NuiCollabPresenceProps,
+  NuiCollabReportProps,
   NuiEditorCommentsProps,
   NuiEditorHistoryProps,
   UseEditorCommentsOptions,

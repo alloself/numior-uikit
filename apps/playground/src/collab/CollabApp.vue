@@ -4,6 +4,7 @@
       <NuiCollabPresence :peers="peers" data-testid="collab-peers" />
       <NuiBadge data-testid="collab-status">{{ status.kind }}</NuiBadge>
     </div>
+    <NuiCollabReport v-if="report !== undefined" :report="report" />
     <div class="collab__page">
       <NuiEditor
         v-if="ready && document !== undefined"
@@ -13,6 +14,7 @@
         label="Документ"
         :plugins="editorPlugins"
         :ids="ids"
+        :readonly="readOnly"
       >
         <template #overlay>
           <NuiCollabCarets :peers="peers" :editor="editorApi" />
@@ -37,6 +39,7 @@ import { webSocketTransport } from '@numior/collaboration';
 import {
   NuiCollabCarets,
   NuiCollabPresence,
+  NuiCollabReport,
   NuiEditorComments,
   NuiEditorHistory,
   useCollabEditor,
@@ -61,16 +64,20 @@ const user = { id: name, name };
 const editor = useTemplateRef<{ editor: NuiEditorApi }>('editor');
 const editorApi = computed(() => editor.value?.editor);
 
-const { ready, document, plugins, ids, peers, status, alternatives } = useCollabEditor({
-  doc,
-  user,
-  schema: contentSchema,
-  transport: webSocketTransport(server),
-  editor: () => editorApi.value,
-  persistence: params.has('offline')
-    ? offlinePersistence(doc, { schema: contentSchema })
-    : undefined,
-});
+const { ready, document, plugins, ids, peers, status, alternatives, readOnly, report } =
+  useCollabEditor({
+    doc,
+    user,
+    schema: contentSchema,
+    transport: webSocketTransport(server),
+    editor: () => editorApi.value,
+    persistence: params.has('offline')
+      ? offlinePersistence(doc, {
+          schema: contentSchema,
+          plugins: { demo: Number(params.get('plugin') ?? 1) },
+        })
+      : undefined,
+  });
 
 const comments = useEditorComments({
   doc,

@@ -1,16 +1,23 @@
 import type {
   CollabBatch,
+  CollabBlocked,
   CollabDocument,
   CollabPersistence,
+  CollabRestoration,
   CollabRestored,
   CollabTracking,
   WireStep,
 } from '@numior/collaboration';
+import { CollabRestoreKind } from '@numior/collaboration';
 import { toJSON } from '@numior/editor-core';
 import { fixtureSchema } from '@numior/editor-core/fixtures';
 import { IDBFactory } from 'fake-indexeddb';
-import { offlinePersistence, type OfflineLocks } from '../src';
+import { offlinePersistence, type OfflineLocks, type OfflinePersistenceOptions } from '../src';
 import { inserting, textDoc } from './support';
+
+type SessionVersions = Partial<
+  Pick<OfflinePersistenceOptions, 'plugins' | 'migrations' | 'schema'>
+>;
 
 interface FakeDocument extends CollabDocument {
   readonly add: (step: WireStep) => void;
@@ -18,6 +25,7 @@ interface FakeDocument extends CollabDocument {
 
 interface PersistenceSession {
   readonly restored: CollabRestored | undefined;
+  readonly blocked: CollabBlocked | undefined;
   readonly tracking: CollabTracking | undefined;
   readonly pending: () => readonly WireStep[];
   readonly version: () => number | null;
@@ -27,6 +35,9 @@ interface PersistenceSession {
   readonly confirm: (count: number) => void;
   readonly restart: () => Promise<void>;
 }
+
+const readyOf = (outcome: CollabRestoration | undefined): CollabRestored | undefined =>
+  outcome?.kind === CollabRestoreKind.Ready ? outcome : undefined;
 
 const fakeLocks = (): OfflineLocks => {
   const held = new Set<string>();
@@ -73,18 +84,23 @@ export const createPersistenceDriver = () => {
   const factory = new IDBFactory();
   const locks = fakeLocks();
 
-  const persistenceOf = (): CollabPersistence =>
-    offlinePersistence('doc', { schema: fixtureSchema, factory, locks });
+  const persistenceOf = (versions: SessionVersions): CollabPersistence =>
+    offlinePersistence('doc', { schema: fixtureSchema, factory, locks, ...versions });
 
-  const session = async (clientId = 'me'): Promise<PersistenceSession> => {
-    const persistence = persistenceOf();
-    const restored = await persistence.restore();
+  const session = async (
+    clientId = 'me',
+    versions: SessionVersions = {},
+  ): Promise<PersistenceSession> => {
+    const persistence = persistenceOf(versions);
+    const outcome = await persistence.restore();
+    const restored = readyOf(outcome);
     const fake = fakeDocument(restored);
     const tracking = persistence.track(fake, clientId);
     const document = tracking?.document ?? fake;
 
     return {
       restored,
+      blocked: outcome?.kind === CollabRestoreKind.Blocked ? outcome : undefined,
       tracking,
       pending: fake.pending,
       version: fake.version,

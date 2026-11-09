@@ -42,6 +42,7 @@ export interface OfflineStoreOptions {
 export interface OfflineStore {
   read(): Promise<OfflineState | undefined>;
   writeSnapshot(snapshot: OfflineSnapshot): Promise<void>;
+  replace(state: OfflineState): Promise<void>;
   appendSteps(
     steps: readonly OfflineStep[],
     outbox?: OfflineOutbox,
@@ -50,6 +51,14 @@ export interface OfflineStore {
   removeAlternative(alternative: CollabAlternative): Promise<void>;
   compact(): Promise<boolean>;
   close(): void;
+}
+
+export interface OfflineMigration {
+  readonly subject: string;
+  readonly from: number;
+  readonly to: number;
+  readonly document: (document: DocJSON) => DocJSON;
+  readonly step: (step: WireStep) => WireStep | undefined;
 }
 
 export interface OfflineLocks {
@@ -62,5 +71,6 @@ export interface OfflineLocks {
 
 export interface OfflinePersistenceOptions extends OfflineStoreOptions {
   readonly locks?: OfflineLocks | undefined;
+  readonly migrations?: readonly OfflineMigration[] | undefined;
   readonly onError?: ((error: unknown) => void) | undefined;
 }
