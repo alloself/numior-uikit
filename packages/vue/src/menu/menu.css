@@ -3,6 +3,7 @@
   --_side-y: 1;
   --_shift: calc(-1 * var(--_side-x) * var(--nui-space-1))
     calc(-1 * var(--_side-y) * var(--nui-space-1));
+  --_ring: var(--nui-focus-ring-width);
 
   box-sizing: border-box;
   position: fixed;
@@ -77,6 +78,13 @@
 .nui-menu-item:focus,
 .nui-menu-item--open {
   background: var(--nui-hover);
+}
+.nui-menu--pointed {
+  --_ring: 0px;
+}
+.nui-menu-item:focus-visible {
+  outline: var(--_ring) solid var(--nui-focus);
+  outline-offset: calc(-1 * var(--_ring));
 }
 .nui-menu-item--tone-error:hover,
 .nui-menu-item--tone-error:focus {

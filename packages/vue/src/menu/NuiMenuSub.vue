@@ -29,6 +29,7 @@
     role="menu"
     :tabindex="open ? 0 : -1"
     class="nui-menu nui-menu--sub"
+    :class="{ 'nui-menu--pointed': pointed }"
     :aria-labelledby="triggerId"
     v-bind="{ ...contentAttrs, ...surfaceAttrs }"
     @keydown="onContentKeydown"
@@ -79,6 +80,7 @@ const delay = useDelayedOpen(open, {
 const {
   control,
   context,
+  pointed,
   attrs: surfaceAttrs,
 } = useMenuSurface({
   open,

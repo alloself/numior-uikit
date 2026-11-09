@@ -108,6 +108,28 @@ describe('NuiMenu', () => {
     menu.unmount();
   });
 
+  it('steps from the menu itself onto the first item with ArrowDown and the last with ArrowUp, also after the pointer left', async () => {
+    const menu = MenuDriver.mount({ parts: true });
+    await menu.open();
+
+    await menu.press('ArrowDown');
+    expect(menu.focusedLabel).toBe('Rename');
+
+    await menu.close();
+    await menu.open();
+    await menu.press('ArrowUp');
+    expect(menu.focusedLabel).toBe('Delete');
+
+    await menu.hover('Bold');
+    await menu.leave();
+    expect(menu.focusedLabel).toBe('menu');
+
+    await menu.press('ArrowDown');
+    expect(menu.focusedLabel).toBe('Rename');
+
+    menu.unmount();
+  });
+
   it('follows the pointer, drops the highlight when it leaves and returns focus to the trigger on close', async () => {
     const menu = MenuDriver.mount({ parts: true });
     await menu.open();

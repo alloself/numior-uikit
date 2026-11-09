@@ -38,6 +38,46 @@ test.describe('navigation', () => {
     await expect(navigation.menuTrigger).toBeFocused();
   });
 
+  test('menu opened with Enter, Space or a click takes the keyboard and rings only the item reached by keys', async ({
+    playground,
+    navigation,
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'keyboard scenario');
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+
+    await navigation.menuTrigger.click();
+    await navigation.item('Дублировать').hover();
+    await expect(navigation.item('Дублировать')).toBeFocused();
+    await expect.poll(() => navigation.itemRinged('Дублировать')).toBe(false);
+
+    await page.keyboard.press('Escape');
+    await navigation.menuTrigger.click();
+    await expect(navigation.menu).toBeFocused();
+
+    await page.keyboard.press('ArrowDown');
+    await expect(navigation.item('Переименовать')).toBeFocused();
+    await expect.poll(() => navigation.itemRinged('Переименовать')).toBe(true);
+
+    await navigation.item('Документация').hover();
+    await expect(navigation.item('Документация')).toBeFocused();
+    await expect.poll(() => navigation.itemRinged('Документация')).toBe(false);
+
+    for (const key of ['Enter', 'Space']) {
+      await page.keyboard.press('Escape');
+      await expect(navigation.menuTrigger).toBeFocused();
+
+      await page.keyboard.press(key);
+      await expect(navigation.item('Переименовать')).toBeFocused();
+
+      await page.keyboard.press('ArrowDown');
+      await expect(navigation.item('Дублировать')).toBeFocused();
+      await expect.poll(() => navigation.itemRinged('Дублировать')).toBe(true);
+    }
+  });
+
   test('submenu opens on hover or ArrowRight, steps back with ArrowLeft, and light dismiss closes the chain', async ({
     playground,
     navigation,

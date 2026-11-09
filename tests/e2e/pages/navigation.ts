@@ -70,6 +70,14 @@ export class NavigationSection {
     });
   }
 
+  async itemRinged(label: string): Promise<boolean> {
+    return this.item(label).evaluate((element) => {
+      const style = getComputedStyle(element);
+
+      return style.outlineStyle !== 'none' && Number.parseFloat(style.outlineWidth) > 0;
+    });
+  }
+
   subItem(label: string): Locator {
     return this.subMenu.locator('.nui-menu-item', { hasText: label });
   }

@@ -5,7 +5,7 @@
     role="menu"
     :tabindex="open ? 0 : -1"
     class="nui-menu nui-layer"
-    :class="{ 'nui-menu--compact': compact }"
+    :class="{ 'nui-menu--compact': compact, 'nui-menu--pointed': pointed }"
     :aria-label="label"
     :aria-labelledby="label === undefined ? triggerId : undefined"
     v-bind="{ ...contentAttrs, ...surfaceAttrs, ...$attrs }"
@@ -62,6 +62,7 @@ const triggerId = useControlId(() => (id === undefined ? undefined : `${id}-trig
 const {
   control,
   context,
+  pointed,
   attrs: surfaceAttrs,
 } = useMenuSurface({
   open,
