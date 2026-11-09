@@ -59,6 +59,35 @@ describe('NuiTable edges', () => {
     expect(grid.ranges).toEqual([{ from: { row: 2, col: 2 }, to: { row: LAST_ROW, col: 2 } }]);
   });
 
+  it('goes to the last cell the data source names on Ctrl+End and to the first data column on Home', async () => {
+    const grid = mountPeople({
+      props: { selectable: 'multiple', lastCell: () => ({ row: 40, col: 3 }) },
+    });
+
+    await grid.settle();
+    await grid.focusCell(3, 2);
+    await grid.press('End', { ctrl: true });
+
+    expect(grid.focusedCell).toEqual({ row: 40, col: 4 });
+
+    await grid.press('Home');
+
+    expect(grid.focusedCell).toEqual({ row: 40, col: 1 });
+
+    await grid.press('End', { ctrl: true, shift: true });
+
+    expect(grid.ranges).toEqual([{ from: { row: 40, col: 0 }, to: { row: 40, col: 3 } }]);
+  });
+
+  it('keeps a last cell outside the table inside it', async () => {
+    const grid = mountPeople({ props: { lastCell: () => ({ row: 5000, col: 99 }) } });
+    await grid.settle();
+    await grid.focusCell(3, 2);
+    await grid.press('End', { ctrl: true });
+
+    expect(grid.focusedCell).toEqual({ row: LAST_ROW, col: LAST_COL });
+  });
+
   it('asks nextEdge for the edge of the data in data positions and keeps the answer in bounds', async () => {
     const asked: Array<[TableCellPosition, NuiTableEdgeDirection]> = [];
 

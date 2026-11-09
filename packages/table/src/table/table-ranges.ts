@@ -1,6 +1,6 @@
 import { clamp } from '@vueuse/core';
 import { Key, ListMove, listMoveFor } from '@numior/primitives';
-import { edgeDirectionOf, tableEdge, type TableEdgeOf } from './table-keys';
+import { edgeDirectionOf, tableEdge, type TableEdgeOf, type TableLastOf } from './table-keys';
 import {
   TableRangeLines,
   type CopyShapeKind,
@@ -40,6 +40,7 @@ export interface CornerKey {
   readonly page: number;
   readonly rtl: boolean;
   readonly edge?: TableEdgeOf | undefined;
+  readonly last?: TableLastOf | undefined;
 }
 
 interface RangeItem {
@@ -335,7 +336,9 @@ const edgeCorner = (
     case Key.Home:
       return input.ctrl ? { row: 0, col: 0 } : { row: corner.row, col: 0 };
     case Key.End:
-      return input.ctrl ? { row: lastRow, col: lastCol } : { row: corner.row, col: lastCol };
+      return input.ctrl
+        ? (input.last?.() ?? { row: lastRow, col: lastCol })
+        : { row: corner.row, col: lastCol };
     default:
       return undefined;
   }

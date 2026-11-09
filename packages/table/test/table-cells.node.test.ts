@@ -152,16 +152,19 @@ describe('tableCells', () => {
     expect(reads).toEqual(['2:1', '2:1']);
   });
 
-  it('leaves the edges to the source when it knows them', () => {
+  it('leaves the edges and the last cell to the source when it knows them', () => {
     const cells = tableCells({
       rows: 1_048_576,
       cols: 16_384,
       cellAt: () => undefined,
       nextEdge: (from, direction) =>
         direction === 'down' ? { row: 1_048_575, col: from.col } : from,
+      lastCell: () => ({ row: 40, col: 6 }),
     });
 
     expect(cells.nextEdge({ row: 0, col: 5 }, 'down')).toEqual({ row: 1_048_575, col: 5 });
+    expect(cells.lastCell()).toEqual({ row: 40, col: 6 });
+    expect(tableCells({ rows: 2, cols: 2, cellAt: () => undefined }).lastCell()).toBeUndefined();
     expect(cells.columns.at(-1)?.key).toBe('XFD');
   });
 });

@@ -135,6 +135,10 @@ const docs: DocsMap = {
         ru: 'Задаёт, куда ведёт Ctrl со стрелкой: `(from, direction) → позиция`, где `direction` — `up`, `down`, `previous` или `next`. Без функции курсор идёт к краю таблицы. Позиция за пределами таблицы прижимается к краю.',
         en: 'Sets where Ctrl with an arrow goes: `(from, direction) → position`, where `direction` is `up`, `down`, `previous` or `next`. Without it the cursor goes to the edge of the table. A position outside the table is clamped to its edge.',
       },
+      lastCell: {
+        ru: 'Задаёт, куда ведёт Ctrl+End и Ctrl+Shift+End: `() → позиция` в координатах данных, например последняя занятая ячейка листа. Без функции или с ответом `undefined` курсор идёт в последнюю ячейку таблицы. Позиция за пределами таблицы прижимается к краю.',
+        en: 'Sets where Ctrl+End and Ctrl+Shift+End go: `() → position` in data coordinates, such as the last used cell of a sheet. Without it, or when it answers `undefined`, the cursor goes to the last cell of the table. A position outside the table is clamped to its edge.',
+      },
       keepEditing: {
         ru: 'Отмечает элементы вне таблицы, например строку формул, фокус на которых не завершает правку: `(target) → true`. Щелчок по ним не снимает выделение ячеек. Когда фокус уходит из такого элемента, завершите правку через `commitEdit` или `cancelEdit`.',
         en: 'Marks elements outside the table, such as a formula bar, whose focus keeps a cell edit open: `(target) → true`. A click on them keeps the cell selection. When focus leaves such an element, end the edit with `commitEdit` or `cancelEdit`.',
@@ -523,8 +527,8 @@ const docs: DocsMap = {
       {
         keys: 'Home / End',
         description: {
-          ru: 'Переходит на первую или последнюю колонку строки.',
-          en: 'Moves to the first or the last column of the row.',
+          ru: 'Переходит на первую колонку данных или на последнюю колонку строки. Колонки выбора и номеров строк Home пропускает, в них ведёт стрелка.',
+          en: 'Moves to the first data column or to the last column of the row. Home skips the selection and row number columns; an arrow key reaches them.',
         },
       },
       {
@@ -537,15 +541,15 @@ const docs: DocsMap = {
       {
         keys: 'Ctrl+Home / Ctrl+End',
         description: {
-          ru: 'Переходит на первую ячейку данных или на последнюю ячейку, включая строку итогов.',
-          en: 'Moves to the first data cell or to the last cell, the totals row included.',
+          ru: 'Переходит на первую ячейку данных или на последнюю ячейку, включая строку итогов. С `lastCell` Ctrl+End ведёт в ячейку, которую назвала функция.',
+          en: 'Moves to the first data cell or to the last cell, the totals row included. With `lastCell`, Ctrl+End goes to the cell the function names.',
         },
       },
       {
         keys: 'PageUp / PageDown',
         description: {
-          ru: 'Переходит на экран строк вверх или вниз.',
-          en: 'Moves a screen of rows up or down.',
+          ru: 'Переходит на экран строк вверх или вниз. Экран — строки тела, которые помещаются между шапкой с закреплёнными строками и строкой итогов.',
+          en: 'Moves a screen of rows up or down. A screen is the body rows that fit between the header with its pinned rows and the totals row.',
         },
       },
     ],

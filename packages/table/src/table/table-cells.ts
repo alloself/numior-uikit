@@ -6,6 +6,7 @@ import type {
   NuiTableRange,
   NuiTableColumn,
   NuiTableEdgeDirection,
+  NuiTableLastCell,
   NuiTableNextEdge,
   NuiTableRowHeaders,
   TableCellPosition,
@@ -21,6 +22,7 @@ export interface NuiTableCellSource {
   readonly cols: number;
   cellAt(row: number, col: number): NuiTableSourceCell | undefined;
   nextEdge?(from: TableCellPosition, direction: NuiTableEdgeDirection): TableCellPosition;
+  lastCell?(): TableCellPosition | undefined;
   columnWidth?(col: number): number | undefined;
   rowLabel?(row: number): string;
   columnLabel?(col: number): string;
@@ -33,6 +35,7 @@ export interface NuiTableCells {
   readonly getKey: (row: number) => number;
   readonly cellStyle: NuiTableCellStyler<number>;
   readonly nextEdge: NuiTableNextEdge;
+  readonly lastCell: NuiTableLastCell;
   readonly rowHeaders: NuiTableRowHeaders<number>;
 }
 
@@ -232,6 +235,7 @@ export const tableCells = (source: NuiTableCellSource): NuiTableCells => {
       return col === undefined ? undefined : read(row, col)?.style;
     },
     nextEdge,
+    lastCell: () => source.lastCell?.(),
     rowHeaders: { label: (row) => source.rowLabel?.(row) ?? String(row + 1) },
   };
 };

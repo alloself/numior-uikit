@@ -177,7 +177,8 @@ cells and creates no objects per row or column. A sheet of 1 048 576 rows and 16
 therefore opens as fast as a small one.
 
 Ctrl with an arrow moves to the edge of the data. When the storage knows where its empty areas
-are, its `nextEdge` function finds the edge without walking over cells.
+are, its `nextEdge` function finds the edge without walking over cells. Its `lastCell` function
+names the last used cell, and Ctrl+End goes there instead of the last cell of the sheet.
 
 When data changes outside the table, for example after formulas are recalculated, call the
 `invalidate(ranges)` method on the table ref. It redraws the rows of those ranges, or every row

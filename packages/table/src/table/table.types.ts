@@ -185,6 +185,7 @@ export interface NuiTableProps<T> {
   pinnedRows?: readonly T[] | undefined;
   frozenRows?: number | undefined;
   nextEdge?: NuiTableNextEdge | undefined;
+  lastCell?: NuiTableLastCell | undefined;
   keepEditing?: ((target: Element) => boolean) | undefined;
   growEditor?: boolean | undefined;
   picking?: ((draft: NuiTableDraft) => boolean) | undefined;
@@ -317,6 +318,8 @@ export type NuiTableNextEdge = (
   from: TableCellPosition,
   direction: NuiTableEdgeDirection,
 ) => TableCellPosition;
+
+export type NuiTableLastCell = () => TableCellPosition | undefined;
 
 export interface NuiTableRange {
   readonly from: TableCellPosition;

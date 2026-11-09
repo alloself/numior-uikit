@@ -69,6 +69,7 @@ export type {
   NuiTablePagination,
   NuiTableRange,
   NuiTableRanges,
+  NuiTableLastCell,
   NuiTableNextEdge,
   NuiTableOverlaySlot,
   NuiTableRect,

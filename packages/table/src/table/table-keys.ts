@@ -7,6 +7,8 @@ export type TableEdgeOf = (
   direction: NuiTableEdgeDirection,
 ) => TableCellPosition | undefined;
 
+export type TableLastOf = () => TableCellPosition | undefined;
+
 export interface TableBounds {
   readonly rows: number;
   readonly cols: number;
@@ -14,6 +16,7 @@ export interface TableBounds {
   readonly rtl: boolean;
   readonly first?: number | undefined;
   readonly edge?: TableEdgeOf | undefined;
+  readonly last?: TableLastOf | undefined;
 }
 
 export interface TableKey {
@@ -57,10 +60,8 @@ export const stepCell = (
 
 const windowHeight = (): number => (typeof window === 'undefined' ? 0 : window.innerHeight);
 
-export const pageRowsOf = (viewport: number, size: number): number => {
-  const span = viewport > 0 ? viewport : windowHeight();
-  return Math.max(1, Math.floor((span - size) / size));
-};
+export const pageRowsOf = (body: number | undefined, size: number): number =>
+  Math.max(1, Math.floor((body ?? windowHeight() - size) / size));
 
 export const edgeDirectionOf = (key: string, rtl: boolean): NuiTableEdgeDirection | undefined => {
   if (key === Key.ArrowDown || key === Key.ArrowUp) {
@@ -131,12 +132,13 @@ const edgeTarget = (
 
   switch (input.key) {
     case Key.Home:
-      return input.ctrl
-        ? { row: bounds.rows > 0 ? 0 : -1, col: bounds.first ?? 0 }
-        : { row: from.row, col: 0 };
+      return {
+        row: input.ctrl ? Math.min(0, lastRowOf(bounds)) : from.row,
+        col: bounds.first ?? 0,
+      };
     case Key.End:
       return input.ctrl
-        ? { row: lastRowOf(bounds), col: lastCol }
+        ? (bounds.last?.() ?? { row: lastRowOf(bounds), col: lastCol })
         : { row: from.row, col: lastCol };
     default:
       return undefined;

@@ -1,7 +1,7 @@
 import { onMounted, ref, watch, type Ref, type ShallowRef } from 'vue';
 import { createIntent, Key, type VirtualList } from '@numior/primitives';
 import { controlled, DETAIL_CELL, OWN_ACTIVE_CELL } from './table-dom';
-import { nextCell, type TableEdgeOf } from './table-keys';
+import { nextCell, type TableEdgeOf, type TableLastOf } from './table-keys';
 import {
   TableHeaderTargetKind,
   TableRevealAxis,
@@ -29,6 +29,7 @@ export interface TableFocusOptions {
   readonly settle: (focused: TableCellPosition) => TableCellPosition;
   readonly leave: (from: TableCellPosition, key: string) => TableCellPosition;
   readonly edge: TableEdgeOf;
+  readonly last: TableLastOf;
 }
 
 export interface TableFocus {
@@ -141,6 +142,7 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
       rtl: options.isRtl(),
       first: options.firstCol(),
       edge: options.edge,
+      last: options.last,
     });
 
     if (target === undefined) {

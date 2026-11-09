@@ -499,6 +499,7 @@ const {
   pinnedRows = [],
   frozenRows = 0,
   nextEdge,
+  lastCell,
   keepEditing,
   growEditor = false,
   picking,
@@ -936,7 +937,7 @@ const fittingRows = computed(() => Math.ceil(bodySpan.value / rowSize.value));
 
 const pageRows = (body: number, forward: boolean): number =>
   body < 0 || body >= visibleRows.value || typeof rowSizes.itemSize.value === 'number'
-    ? pageRowsOf(rowWindow.viewport.value - frozenSize.value, rowSize.value)
+    ? pageRowsOf(rowWindow.viewport.value > 0 ? bodySpan.value : undefined, rowSize.value)
     : pageStepOf(
         { span: bodySpan.value, offsetOf: rowWindow.offsetOf, indexAt: rowWindow.indexAt },
         body,
@@ -1015,6 +1016,11 @@ const focus = useTableFocus({
   edge: (from, toward) => {
     const data = dataCellOf(from);
     const target = data === undefined ? undefined : edgeOfData(data, toward);
+
+    return target === undefined ? undefined : visualCellOf(target);
+  },
+  last: () => {
+    const target = lastOfData();
 
     return target === undefined ? undefined : visualCellOf(target);
   },
@@ -1503,6 +1509,14 @@ const edgeOfData = (
         cols: dataKeys.value.length,
       });
 
+const lastOfData = (): TableCellPosition | undefined => {
+  const last = lastCell?.();
+
+  return last === undefined
+    ? undefined
+    : clampPosition(last, { rows: visibleRows.value, cols: dataKeys.value.length });
+};
+
 const activeMerge = computed(() => {
   const data = mergeIndex.value.size === 0 ? undefined : dataCellOf(active.value);
 
@@ -1658,6 +1672,7 @@ const rangeSelect = useTableRanges({
   sorts: (col) => header.head(dataKeys.value[col] ?? '')?.sortable === true,
   merges: () => mergeIndex.value,
   edge: edgeOfData,
+  last: lastOfData,
   focus: (position) => {
     focus.focusCell(
       { row: position.row + pinnedCount.value, col: position.col + dataOffset.value },
