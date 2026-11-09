@@ -6,6 +6,7 @@ import {
   inlineDecoration,
   mirrored,
   remoteChain,
+  textPosition,
   type Doc,
   type EditorState,
   type Mappable,
@@ -172,17 +173,30 @@ export const setRemotePresence = (
     }, []),
   );
 
-export const presenceOf = (state: EditorState, user: PresenceUser): EditorPresence => {
-  const { selection, doc } = state;
+const wholeDocument = (doc: Doc): PresenceSelection | null => {
+  const anchor = textPosition(doc, 0, 1);
+  const head = textPosition(doc, doc.size, -1);
 
-  return {
-    user,
-    selection:
-      selection.kind === SelectionKind.Text
-        ? { anchor: pointAt(doc, selection.anchor), head: pointAt(doc, selection.head) }
-        : null,
-  };
+  return anchor === undefined || head === undefined
+    ? null
+    : { anchor: pointAt(doc, anchor), head: pointAt(doc, head) };
 };
+
+const selectionOf = ({ selection, doc }: EditorState): PresenceSelection | null => {
+  switch (selection.kind) {
+    case SelectionKind.Text:
+      return { anchor: pointAt(doc, selection.anchor), head: pointAt(doc, selection.head) };
+    case SelectionKind.All:
+      return wholeDocument(doc);
+    default:
+      return null;
+  }
+};
+
+export const presenceOf = (state: EditorState, user: PresenceUser): EditorPresence => ({
+  user,
+  selection: selectionOf(state),
+});
 
 export const samePresence = (left: EditorPresence, right: EditorPresence): boolean =>
   JSON.stringify(left.selection) === JSON.stringify(right.selection);

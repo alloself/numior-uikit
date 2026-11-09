@@ -125,12 +125,15 @@ describe('remote presence', () => {
     });
   });
 
-  it('sends no selection for a whole-document selection', () => {
+  it('describes a whole-document selection by the edges of its text', () => {
     const state = started();
 
     const placed = state.apply(state.tr.setSelection({ kind: 'all' }));
 
-    expect(presenceOf(placed, ANN).selection).toBeNull();
+    expect(presenceOf(placed, ANN).selection).toEqual({
+      anchor: { block: 'p0', offset: 0 },
+      head: { block: 'p1', offset: 3 },
+    });
   });
 
   it('compares presence by selection', () => {
