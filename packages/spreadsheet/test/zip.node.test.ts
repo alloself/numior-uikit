@@ -8,6 +8,7 @@ import {
   writeZip,
   type Bytes,
   type ZipArchive,
+  type ZipCodec,
   type ZipWriteEntry,
 } from '../src/xlsx';
 
@@ -46,6 +47,35 @@ const contents = async (archive: ZipArchive): Promise<Record<string, readonly nu
       archive.names.map(async (name) => [name, [...(await archive.bytes(name))]] as const),
     ),
   );
+
+const CHUNK = 1024;
+
+const flood = (chunks: number): ZipCodec => ({
+  inflate: () =>
+    new TransformStream<Bytes, Bytes>({
+      transform: () => undefined,
+      flush: (controller) => {
+        for (let sent = 0; sent < chunks; sent += 1) {
+          controller.enqueue(new Uint8Array(CHUNK));
+        }
+      },
+    }),
+  deflate: () => new TransformStream<Bytes, Bytes>(),
+});
+
+const received = async (stream: ReadableStream<Bytes>): Promise<number> => {
+  const reader = stream.getReader();
+  let chunks = 0;
+
+  try {
+    for (let next = await reader.read(); !next.done; next = await reader.read()) {
+      chunks += 1;
+    }
+  } catch {
+    return chunks;
+  }
+  return chunks;
+};
 
 describe('zip archives', () => {
   it('reads what Python writes, with stored, deflated, empty and Cyrillic entries', async () => {
@@ -118,6 +148,19 @@ describe('zip archives', () => {
       ),
       { numRuns: 60 },
     );
+  });
+
+  it('stops an entry that inflates past its declared size and refuses oversized archives', async () => {
+    const bytes = await writeZip([{ name: 'a.txt', data: text('hello hello hello hello') }]);
+    const bomb = readZip(bytes, flood(64));
+
+    if (!bomb.ok) {
+      throw new Error(`the archive was refused: ${bomb.reason}`);
+    }
+
+    expect(await received(bomb.archive.stream('a.txt'))).toBe(0);
+    expect(await reason(() => bomb.archive.text('a.txt'))).toBe('damaged');
+    expect(readZip(bytes, undefined, { maxSize: 8 })).toEqual({ ok: false, reason: 'too-large' });
   });
 
   it('refuses what is not a zip and reports damaged, encrypted and unknown entries', async () => {

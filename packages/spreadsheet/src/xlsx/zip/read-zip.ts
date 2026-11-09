@@ -1,7 +1,15 @@
 import { nativeZipCodec } from './codec';
 import { CRC_START, finishCrc, updateCrc } from './crc32';
 import { ZipError, collectBytes, streamOf } from './streams';
-import type { Bytes, ZipArchive, ZipCodec, ZipFailure, ZipRawEntry, ZipRead } from './zip.types';
+import type {
+  Bytes,
+  ZipArchive,
+  ZipCodec,
+  ZipFailure,
+  ZipRawEntry,
+  ZipRead,
+  ZipReadOptions,
+} from './zip.types';
 
 interface Entry {
   readonly name: string;
@@ -52,6 +60,8 @@ const ENCRYPTED = 0b1;
 const STORED = 0;
 
 const DEFLATED = 8;
+
+const MAX_SIZE = 0x40_00_00_00;
 
 const utf8 = new TextDecoder();
 
@@ -205,8 +215,12 @@ const checked = (entry: Entry): TransformStream<Bytes, Bytes> => {
 
   return new TransformStream<Bytes, Bytes>({
     transform: (chunk, controller) => {
-      crc = updateCrc(crc, chunk);
       size += chunk.length;
+      if (size > entry.size) {
+        controller.error(new ZipError('damaged'));
+        return;
+      }
+      crc = updateCrc(crc, chunk);
       controller.enqueue(chunk);
     },
     flush: (controller) => {
@@ -232,11 +246,21 @@ const opened = (bytes: Bytes, entry: Entry, codec: ZipCodec): ReadableStream<Byt
   );
 };
 
-export const readZip = (bytes: Bytes, codec: ZipCodec = nativeZipCodec): ZipRead => {
+const sizeOf = (entries: readonly Entry[]): number =>
+  entries.reduce((total, entry) => total + entry.size, 0);
+
+export const readZip = (
+  bytes: Bytes,
+  codec: ZipCodec = nativeZipCodec,
+  { maxSize = MAX_SIZE }: ZipReadOptions = {},
+): ZipRead => {
   const located = locate(bytes);
 
   if (!located.ok) {
     return located;
+  }
+  if (sizeOf(located.entries) > maxSize) {
+    return refuse('too-large');
   }
 
   const byName = new Map(located.entries.map((entry) => [entry.name, entry]));
