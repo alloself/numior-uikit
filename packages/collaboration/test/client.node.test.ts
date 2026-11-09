@@ -166,6 +166,18 @@ describe('collaboration client', () => {
     expect(driver.received()).toHaveLength(0);
   });
 
+  it('applies own steps the queue no longer holds as ordinary steps', () => {
+    const driver = online();
+
+    driver.edit();
+    driver.steps(0, 'me', 3);
+
+    expect(driver.pending()).toBe(0);
+    expect(driver.version()).toBe(3);
+    expect(driver.received()).toMatchObject([{ version: 1, clientId: 'me' }]);
+    expect(driver.received()[0]?.steps).toHaveLength(2);
+  });
+
   it('catches up and resends after a stale rejection', () => {
     const driver = online();
 

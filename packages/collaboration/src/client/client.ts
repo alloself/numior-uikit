@@ -120,11 +120,20 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
     if (steps.length === 0) {
       return;
     }
-    if (message.clientId === clientId) {
-      document.confirm(steps.length, local + steps.length);
-    } else if (!document.receive({ version: local, clientId: message.clientId, steps })) {
-      fail(CollabFailure.Document);
-      return;
+
+    const own =
+      message.clientId === clientId ? Math.min(steps.length, document.pending().length) : 0;
+
+    if (own > 0) {
+      document.confirm(own, local + own);
+    }
+    if (own < steps.length) {
+      const batch = { version: local + own, clientId: message.clientId, steps: steps.slice(own) };
+
+      if (!document.receive(batch)) {
+        fail(CollabFailure.Document);
+        return;
+      }
     }
     flush();
   };

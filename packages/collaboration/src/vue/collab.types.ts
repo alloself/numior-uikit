@@ -2,7 +2,7 @@ import type { Doc, DocJSON, IdSource, Plugin, Schema } from '@numior/editor-core
 import type { NuiEditorApi } from '@numior/editor-vue';
 import type { ComputedRef, Ref, ShallowRef } from 'vue';
 import type { NuiCollabMessages } from './collab.messages';
-import type { CollabStatus, CollabTransport } from '../client/client.types';
+import type { CollabPersistence, CollabStatus, CollabTransport } from '../client/client.types';
 import type { CommentReply, CommentThread, CommentsAdapter } from '../comments/comments.types';
 import type { DocumentVersion, HistoryAdapter } from '../history/history.types';
 import type { PresenceUser, RemotePeer } from '../editor/presence.types';
@@ -13,6 +13,7 @@ export interface UseCollabEditorOptions {
   readonly schema: Schema;
   readonly transport: CollabTransport;
   readonly editor: () => NuiEditorApi | undefined;
+  readonly persistence?: CollabPersistence | undefined;
 }
 
 export interface CollabEditor {

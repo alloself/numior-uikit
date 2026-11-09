@@ -1,6 +1,12 @@
 import type { WireStep } from '@numior/collaboration';
 import type { DocJSON } from '@numior/editor-core';
-import type { OfflineMeta, OfflinePlugins, OfflineSnapshot, OfflineStep } from './store.types';
+import type {
+  OfflineMeta,
+  OfflineOutbox,
+  OfflinePlugins,
+  OfflineSnapshot,
+  OfflineStep,
+} from './store.types';
 
 type Fields = Readonly<Record<string, unknown>>;
 
@@ -12,7 +18,7 @@ const isVersion = (value: unknown): value is number =>
 const isPlugins = (value: unknown): value is OfflinePlugins =>
   isFields(value) && Object.values(value).every(isVersion);
 
-const isDocument = (value: unknown): value is DocJSON => isFields(value) && 'root' in value;
+export const isDocument = (value: unknown): value is DocJSON => isFields(value) && 'root' in value;
 
 const isWireStep = (value: unknown): value is WireStep =>
   isFields(value) && typeof value['kind'] === 'string';
@@ -34,6 +40,21 @@ export const isSnapshot = (value: unknown): value is OfflineSnapshot =>
 
 const isStep = (value: unknown): value is OfflineStep =>
   isFields(value) && isVersion(value['version']) && isWireStep(value['step']);
+
+export const isOutbox = (value: unknown): value is OfflineOutbox => {
+  if (!isFields(value)) {
+    return false;
+  }
+
+  const steps = value['steps'];
+
+  return (
+    typeof value['clientId'] === 'string' &&
+    isVersion(value['baseVersion']) &&
+    Array.isArray(steps) &&
+    steps.every(isWireStep)
+  );
+};
 
 export const contiguousSteps = (
   values: readonly unknown[],

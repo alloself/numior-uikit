@@ -43,6 +43,7 @@ import {
 } from '@numior/collaboration/vue';
 import { contentSchema } from '@numior/content';
 import { NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
+import { offlinePersistence } from '@numior/offline';
 import { NuiBadge, NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/vue';
 import { computed, ref, useTemplateRef } from 'vue';
 import { fakeComments } from './fake-comments';
@@ -64,6 +65,9 @@ const { ready, document, plugins, ids, peers, status } = useCollabEditor({
   schema: contentSchema,
   transport: webSocketTransport(server),
   editor: () => editorApi.value,
+  persistence: params.has('offline')
+    ? offlinePersistence(doc, { schema: contentSchema })
+    : undefined,
 });
 
 const comments = useEditorComments({

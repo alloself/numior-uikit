@@ -18,10 +18,17 @@ export interface OfflineStep {
   readonly step: WireStep;
 }
 
+export interface OfflineOutbox {
+  readonly clientId: string;
+  readonly baseVersion: number;
+  readonly steps: readonly WireStep[];
+}
+
 export interface OfflineState {
   readonly meta: OfflineMeta;
   readonly snapshot: OfflineSnapshot;
   readonly steps: readonly OfflineStep[];
+  readonly outbox: OfflineOutbox | undefined;
 }
 
 export interface OfflineStoreOptions {
@@ -34,7 +41,20 @@ export interface OfflineStoreOptions {
 export interface OfflineStore {
   read(): Promise<OfflineState | undefined>;
   writeSnapshot(snapshot: OfflineSnapshot): Promise<void>;
-  appendSteps(steps: readonly OfflineStep[]): Promise<void>;
+  appendSteps(steps: readonly OfflineStep[], outbox?: OfflineOutbox): Promise<void>;
   compact(): Promise<boolean>;
   close(): void;
+}
+
+export interface OfflineLocks {
+  request(
+    name: string,
+    options: { readonly ifAvailable: boolean },
+    callback: (lock: unknown) => Promise<void> | undefined,
+  ): Promise<unknown>;
+}
+
+export interface OfflinePersistenceOptions extends OfflineStoreOptions {
+  readonly locks?: OfflineLocks | undefined;
+  readonly onError?: ((error: unknown) => void) | undefined;
 }

@@ -4,6 +4,7 @@ import {
   type BrowserContext,
   type Locator,
   type Page,
+  type WebSocketRoute,
 } from '@playwright/test';
 
 export interface TextEdges {
@@ -11,7 +12,14 @@ export interface TextEdges {
   readonly right: number;
 }
 
+const COLLAB_SERVER = /:4175/;
+
+const RECONNECT_TIMEOUT = 20_000;
+
 export class CollabClient {
+  private readonly sockets = new Set<WebSocketRoute>();
+  private reachable = true;
+
   readonly editor: Locator;
   readonly status: Locator;
   readonly avatars: Locator;
@@ -134,6 +142,58 @@ export class CollabClient {
     }, theme);
   }
 
+  async routeServer(): Promise<void> {
+    await this.page.routeWebSocket(COLLAB_SERVER, (socket) => {
+      if (this.reachable) {
+        this.sockets.add(socket);
+        socket.connectToServer();
+      } else {
+        void socket.close();
+      }
+    });
+  }
+
+  async disconnect(): Promise<void> {
+    this.reachable = false;
+    await Promise.all([...this.sockets].map((socket) => socket.close()));
+    this.sockets.clear();
+    await expect(this.status).toHaveText('offline');
+  }
+
+  async reconnect(): Promise<void> {
+    this.reachable = true;
+    await expect(this.status).toHaveText('online', { timeout: RECONNECT_TIMEOUT });
+  }
+
+  async reload(): Promise<void> {
+    await this.page.reload();
+    await this.editor.waitFor();
+  }
+
+  unsentSteps(doc: string): Promise<number> {
+    return this.page.evaluate(
+      (name) =>
+        new Promise<number>((resolve) => {
+          const opening = indexedDB.open(`nui-offline:${name}`);
+
+          opening.addEventListener('success', () => {
+            const reading = opening.result
+              .transaction('outbox')
+              .objectStore('outbox')
+              .get('current');
+
+            reading.addEventListener('success', () => {
+              const steps: unknown = reading.result?.steps;
+
+              opening.result.close();
+              resolve(Array.isArray(steps) ? steps.length : 0);
+            });
+          });
+        }),
+      doc,
+    );
+  }
+
   leave(): Promise<void> {
     return this.context.close();
   }
@@ -147,11 +207,26 @@ export class CollabRoom {
     private readonly doc: string,
   ) {}
 
+  get name(): string {
+    return this.doc;
+  }
+
+  async joinOffline(user: string): Promise<CollabClient> {
+    return this.open(new URLSearchParams({ doc: this.doc, user, offline: '1' }), true);
+  }
+
   async join(user: string): Promise<CollabClient> {
+    return this.open(new URLSearchParams({ doc: this.doc, user }), false);
+  }
+
+  private async open(query: URLSearchParams, routed: boolean): Promise<CollabClient> {
     const context = await this.browser.newContext();
     const page = await context.newPage();
     const client = new CollabClient(page, context);
-    const query = new URLSearchParams({ doc: this.doc, user });
+
+    if (routed) {
+      await client.routeServer();
+    }
 
     this.clients.push(client);
     await page.goto(`/collab.html?${query.toString()}`);

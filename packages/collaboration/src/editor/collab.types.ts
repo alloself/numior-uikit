@@ -12,6 +12,12 @@ export interface CollabState {
 
 export interface CollabOptions {
   readonly version?: number | undefined;
+  readonly unconfirmed?: readonly UnconfirmedStep[] | undefined;
+}
+
+export interface RestoredDocument {
+  readonly doc: Doc;
+  readonly unconfirmed: readonly UnconfirmedStep[];
 }
 
 export interface EditorCollabOptions {

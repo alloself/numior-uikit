@@ -6,8 +6,11 @@ export type {
   CollabClient,
   CollabClientOptions,
   CollabDocument,
+  CollabPersistence,
+  CollabRestored,
   CollabRetry,
   CollabStatus,
+  CollabTracking,
   CollabTransport,
   TransportConnection,
   TransportListener,
@@ -18,8 +21,10 @@ export type {
   CollabOptions,
   CollabState,
   EditorCollabOptions,
+  RestoredDocument,
   UnconfirmedStep,
 } from './editor/collab.types';
+export { restoredDocument } from './editor/restored';
 export { CommentEventKind } from './comments/comments.types';
 export type {
   CommentAnchor,

@@ -26,6 +26,24 @@ export interface CollabDocument {
   readonly confirm: (count: number, version: number) => void;
 }
 
+export interface CollabRestored {
+  readonly clientId: string;
+  readonly version: number;
+  readonly snapshot: unknown;
+  readonly pending: readonly WireStep[];
+}
+
+export interface CollabTracking {
+  readonly document: CollabDocument;
+  readonly changed: () => void;
+}
+
+export interface CollabPersistence {
+  readonly restore: () => Promise<CollabRestored | undefined>;
+  readonly track: (document: CollabDocument, clientId: string) => CollabTracking | undefined;
+  readonly close: () => Promise<void>;
+}
+
 export interface TransportListener {
   readonly opened: () => void;
   readonly message: (value: unknown) => void;

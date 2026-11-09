@@ -7,9 +7,10 @@ import {
   type Schema,
 } from '@numior/editor-core';
 import { finished, openDatabase, requested } from './idb';
-import { contiguousSteps, isMeta, isSnapshot } from './records';
+import { contiguousSteps, isMeta, isOutbox, isSnapshot } from './records';
 import type {
   OfflineMeta,
+  OfflineOutbox,
   OfflinePlugins,
   OfflineSnapshot,
   OfflineState,
@@ -30,6 +31,8 @@ const SNAPSHOT = 'snapshot';
 
 const STEPS = 'steps';
 
+const OUTBOX = 'outbox';
+
 const NO_PLUGINS: OfflinePlugins = {};
 
 const databaseName = (doc: string): string => `nui-offline:${doc}`;
@@ -38,9 +41,10 @@ const upgrade = (database: IDBDatabase): void => {
   database.createObjectStore(META);
   database.createObjectStore(SNAPSHOT);
   database.createObjectStore(STEPS, { keyPath: 'version' });
+  database.createObjectStore(OUTBOX);
 };
 
-const replayedDoc = (schema: Schema, state: OfflineState): Doc | undefined => {
+export const replayedDoc = (schema: Schema, state: OfflineState): Doc | undefined => {
   const read = fromJSON(schema, state.snapshot.document);
 
   return state.steps.reduce<Doc | undefined>(
@@ -90,16 +94,22 @@ export const openOfflineStore = async (
   let logged = await requested(database.transaction(STEPS).objectStore(STEPS).count());
 
   const read = async (): Promise<OfflineState | undefined> => {
-    const transaction = database.transaction([META, SNAPSHOT, STEPS]);
+    const transaction = database.transaction([META, SNAPSHOT, STEPS, OUTBOX]);
 
-    const [storedMeta, snapshot, steps] = await Promise.all([
+    const [storedMeta, snapshot, steps, outbox] = await Promise.all([
       requested<unknown>(transaction.objectStore(META).get(SINGLE_KEY)),
       requested<unknown>(transaction.objectStore(SNAPSHOT).get(SINGLE_KEY)),
       requested<unknown[]>(transaction.objectStore(STEPS).getAll()),
+      requested<unknown>(transaction.objectStore(OUTBOX).get(SINGLE_KEY)),
     ]);
 
     return isMeta(storedMeta) && isSnapshot(snapshot)
-      ? { meta: storedMeta, snapshot, steps: contiguousSteps(steps, snapshot.version) }
+      ? {
+          meta: storedMeta,
+          snapshot,
+          steps: contiguousSteps(steps, snapshot.version),
+          outbox: isOutbox(outbox) ? outbox : undefined,
+        }
       : undefined;
   };
 
@@ -137,13 +147,20 @@ export const openOfflineStore = async (
     return true;
   };
 
-  const appendSteps = async (records: readonly OfflineStep[]): Promise<void> => {
-    const transaction = database.transaction(STEPS, 'readwrite');
+  const appendSteps = async (
+    records: readonly OfflineStep[],
+    outbox?: OfflineOutbox,
+  ): Promise<void> => {
+    const transaction = database.transaction([STEPS, OUTBOX], 'readwrite');
     const steps = transaction.objectStore(STEPS);
 
     records.forEach((record) => {
       steps.put(record);
     });
+
+    if (outbox !== undefined) {
+      transaction.objectStore(OUTBOX).put(outbox, SINGLE_KEY);
+    }
 
     await finished(transaction);
     logged += records.length;

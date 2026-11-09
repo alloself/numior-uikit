@@ -11,6 +11,48 @@ const CARET_TOLERANCE = 4;
 const THEMES = ['light', 'dark'] as const;
 
 test.describe('collaboration', () => {
+  test('merges what was typed without a connection when it comes back', async ({ collab }) => {
+    const anna = await collab.joinOffline(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Общая строка');
+    await expect(boris.editor).toContainText('Общая строка');
+
+    await anna.disconnect();
+    await anna.appendTo(0, ' от Анны');
+    await boris.paragraph(0).click();
+    await boris.page.keyboard.press('Home');
+    await boris.page.keyboard.type('Борис: ');
+    await anna.reconnect();
+
+    await expect(boris.editor).toContainText('Борис: Общая строка от Анны');
+    await expect(anna.editor).toContainText('Борис: Общая строка от Анны');
+  });
+
+  test('keeps unsent text through a reload and sends it on return', async ({ collab }) => {
+    const anna = await collab.joinOffline(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Начало');
+    await expect(boris.editor).toContainText('Начало');
+
+    await anna.disconnect();
+    await anna.appendTo(0, ' офлайн');
+    await expect.poll(() => anna.unsentSteps(collab.name)).toBeGreaterThan(0);
+
+    await anna.reload();
+
+    await expect(anna.editor).toContainText('Начало офлайн');
+    await expect(anna.status).toHaveText('offline');
+    await expect(boris.editor).not.toContainText('офлайн');
+
+    await anna.appendTo(0, ' и после');
+    await anna.reconnect();
+
+    await expect(boris.editor).toContainText('Начало офлайн и после');
+    await expect.poll(() => anna.unsentSteps(collab.name)).toBe(0);
+  });
+
   test('shows what each person types to the other', async ({ collab }) => {
     const anna = await collab.join(ANNA);
     const boris = await collab.join(BORIS);

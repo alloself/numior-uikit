@@ -87,7 +87,7 @@ export const collab = (options: CollabOptions = {}): Plugin<CollabState> => {
   const plugin = definePlugin<CollabState>({
     name: 'collab',
     state: {
-      init: () => ({ version: options.version ?? 0, unconfirmed: [] }),
+      init: () => ({ version: options.version ?? 0, unconfirmed: options.unconfirmed ?? [] }),
       apply: applyCollab,
     },
   });

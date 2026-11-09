@@ -185,6 +185,9 @@ importers:
       '@numior/forms':
         specifier: workspace:*
         version: link:../../packages/forms
+      '@numior/offline':
+        specifier: workspace:*
+        version: link:../../packages/offline
       '@numior/spreadsheet':
         specifier: workspace:*
         version: link:../../packages/spreadsheet

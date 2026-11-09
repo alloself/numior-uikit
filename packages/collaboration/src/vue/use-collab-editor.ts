@@ -11,8 +11,14 @@ import {
 } from '@numior/editor-core';
 import { onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import { createCollabClient } from '../client/client';
-import { CollabStatusKind, type CollabClient, type CollabStatus } from '../client/client.types';
+import {
+  CollabStatusKind,
+  type CollabClient,
+  type CollabStatus,
+  type CollabTracking,
+} from '../client/client.types';
 import { collab } from '../editor/collab';
+import type { UnconfirmedStep } from '../editor/collab.types';
 import { editorCollabDocument } from '../editor/editor-document';
 import {
   presenceOf,
@@ -22,6 +28,7 @@ import {
   setRemotePresence,
 } from '../editor/presence';
 import type { EditorPresence, RemotePeer } from '../editor/presence.types';
+import { restoredDocument } from '../editor/restored';
 import type { CollabEditor, UseCollabEditorOptions } from './collab.types';
 
 const NO_PEERS: readonly RemotePeer[] = [];
@@ -31,8 +38,8 @@ const NO_PLUGINS: readonly Plugin[] = [];
 const newClientId = (): string => Math.random().toString(36).slice(2, 10);
 
 export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor => {
-  const { doc, user, schema, transport, editor } = options;
-  const clientId = newClientId();
+  const { doc, user, schema, transport, editor, persistence } = options;
+  const sessionId = newClientId();
   const ready = ref(false);
   const document = shallowRef<DocJSON>();
   const plugins = shallowRef<readonly Plugin[]>(NO_PLUGINS);
@@ -40,10 +47,14 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
   const peers = shallowRef<readonly RemotePeer[]>(NO_PEERS);
   const status = shallowRef<CollabStatus>({ kind: CollabStatusKind.Connecting });
 
+  let clientId = sessionId;
   let client: CollabClient | undefined;
+  let tracking: CollabTracking | undefined;
   let latest: EditorState | undefined;
   let present: ReadonlyMap<string, unknown> = new Map();
   let sentPresence: EditorPresence | undefined;
+  let awaitingEditor = false;
+  let stopped = false;
 
   const dispatch = (tr: Transaction): void => {
     editor()?.run((_state, apply) => {
@@ -70,6 +81,7 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
 
         if (state.doc !== before.doc) {
           client?.sync();
+          tracking?.changed();
         }
         if (state.doc !== before.doc || state.selection !== before.selection) {
           offerPresence(state);
@@ -78,20 +90,24 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
     },
   });
 
-  const load = (loaded: Doc, version: number): void => {
-    ids.value = createIdSource(`${clientId}-`);
-    plugins.value = [collab({ version }), remotePresence(), bridge];
+  const load = (loaded: Doc, version: number, unconfirmed?: readonly UnconfirmedStep[]): void => {
+    ids.value = createIdSource(`${sessionId}-`);
+    plugins.value = [collab({ version, unconfirmed }), remotePresence(), bridge];
     document.value = toJSON(loaded);
     ready.value = true;
   };
 
-  onMounted(() => {
+  const connect = (): void => {
+    const inner = editorCollabDocument({ schema, getState: () => latest, dispatch, load });
+
+    tracking = persistence?.track(inner, clientId);
+
     client = createCollabClient({
       doc,
       clientId,
       schema: { name: schema.name, version: schema.version },
       transport,
-      document: editorCollabDocument({ schema, getState: () => latest, dispatch, load }),
+      document: tracking?.document ?? inner,
       onStatus: (next) => {
         status.value = next;
       },
@@ -103,20 +119,47 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
         }
       },
     });
+  };
+
+  const begin = async (): Promise<void> => {
+    const restored = await persistence?.restore();
+    const recovered = restored === undefined ? undefined : restoredDocument(schema, restored);
+
+    if (stopped) {
+      return;
+    }
+    if (restored === undefined || recovered === undefined) {
+      connect();
+      return;
+    }
+    clientId = restored.clientId;
+    awaitingEditor = true;
+    load(recovered.doc, restored.version, recovered.unconfirmed);
+  };
+
+  onMounted(() => {
+    void begin();
   });
 
   watch(editor, (api) => {
     latest = api?.state();
 
-    if (latest !== undefined) {
-      dispatch(setRemotePresence(latest, present));
-      client?.refresh();
-      offerPresence(latest);
+    if (latest === undefined) {
+      return;
     }
+    if (awaitingEditor) {
+      awaitingEditor = false;
+      connect();
+    }
+    dispatch(setRemotePresence(latest, present));
+    client?.refresh();
+    offerPresence(latest);
   });
 
   onBeforeUnmount(() => {
+    stopped = true;
     client?.stop();
+    void persistence?.close();
   });
 
   return { ready, document, plugins, ids, peers, status };

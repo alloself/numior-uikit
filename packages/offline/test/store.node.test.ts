@@ -1,7 +1,6 @@
-import { createDoc, createState, stepToJSON, toJSON, type Doc } from '@numior/editor-core';
+import { toJSON } from '@numior/editor-core';
 import { fixtureSchema } from '@numior/editor-core/fixtures';
 import { IDBFactory } from 'fake-indexeddb';
-import type { WireStep } from '@numior/collaboration';
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import {
   deleteOfflineDocument,
@@ -9,31 +8,9 @@ import {
   type OfflineStep,
   type OfflineStore,
 } from '../src';
+import { inserting, textDoc } from './support';
 
 const DOC = 'doc';
-
-const textDoc = (text: string): Doc =>
-  createDoc(
-    fixtureSchema,
-    fixtureSchema.element(fixtureSchema.top.name, {
-      id: 'root',
-      content: [
-        fixtureSchema.element('paragraph', {
-          id: 'p',
-          content: text === '' ? [] : [fixtureSchema.text(text)],
-        }),
-      ],
-    }),
-  );
-
-const inserting = (doc: Doc, text: string, at: number): WireStep => {
-  const [step] = createState({ doc }).tr.insertText(text, at).steps;
-
-  if (step === undefined) {
-    throw new Error('The transaction made no step');
-  }
-  return stepToJSON(step);
-};
 
 const logOf = (texts: readonly string[], from = 0): readonly OfflineStep[] =>
   texts.map((text, index) => ({
