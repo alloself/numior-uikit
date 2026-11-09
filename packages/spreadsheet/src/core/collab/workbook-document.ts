@@ -11,8 +11,8 @@ import {
   type WorkbookDocumentOptions,
 } from './collab.types';
 import { mergeLayouts } from './merge-layout';
-import { rebaseStep } from './rebase-step';
-import { changeOver, changesOf } from './remote-change';
+import { changesOver, stepOver } from './rebase-queue';
+import { changesOf } from './remote-change';
 import { flattened, settleForStep, snapshotSteps } from './schema';
 
 interface Unconfirmed {
@@ -20,28 +20,9 @@ interface Unconfirmed {
   readonly inverse: WorkbookStep;
 }
 
-const stepOver = (step: WorkbookStep, changes: readonly RemoteChange[]): WorkbookStep | undefined =>
-  changes.reduce<WorkbookStep | undefined>(
-    (current, change) => (current === undefined ? undefined : rebaseStep(current, change)),
-    step,
-  );
-
-const changesOver = (
-  changes: readonly RemoteChange[],
-  local: readonly RemoteChange[],
-): readonly RemoteChange[] =>
-  local.reduce<readonly RemoteChange[]>(
-    (moving, own) =>
-      moving.reduce<RemoteChange[]>((kept, change) => {
-        const moved = changeOver(change, own);
-
-        if (moved !== undefined) {
-          kept.push(moved);
-        }
-        return kept;
-      }, []),
-    changes,
-  );
+const sameWires = (left: readonly unknown[], right: readonly unknown[]): boolean =>
+  left.length === right.length &&
+  left.every((wire, index) => JSON.stringify(wire) === JSON.stringify(right[index]));
 
 const lineChangesOf = (changes: readonly RemoteChange[]): readonly LineChange[] =>
   changes.reduce<LineChange[]>((lines, change) => {
@@ -176,6 +157,40 @@ export const createWorkbookDocument = ({
     confirm: (count, at) => {
       unconfirmed = unconfirmed.slice(count);
       version = at;
+    },
+    settle: (count, wires, at) => {
+      const steps = decodedAll(wires);
+      const sent = unconfirmed.slice(0, count);
+
+      if (steps === undefined || version === null) {
+        return false;
+      }
+      if (
+        sameWires(
+          sent.map(({ step }) => codec.encode(step)),
+          wires,
+        )
+      ) {
+        unconfirmed = unconfirmed.slice(count);
+        version = at;
+        return true;
+      }
+      rollback();
+      unconfirmed = unconfirmed.slice(count);
+
+      const remote = applyRemote(steps);
+
+      if (remote === undefined) {
+        return false;
+      }
+      version = at;
+
+      const undone = sent.toReversed().map(({ inverse }) => inverse);
+      const moving = replay([...undone.flatMap(changesOf), ...remote]);
+
+      history?.rebase((step) => stepOver(step, moving));
+      notify([...undone, ...steps]);
+      return true;
     },
     stepper: {
       apply: (step) => {

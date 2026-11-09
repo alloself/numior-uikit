@@ -25,6 +25,7 @@ export interface CollabDocument {
   readonly load: (snapshot: unknown, version: number) => boolean;
   readonly receive: (batch: CollabBatch) => boolean;
   readonly confirm: (count: number, version: number) => void;
+  readonly settle: (count: number, steps: readonly WireStep[], version: number) => boolean;
 }
 
 export interface CollabAlternative {

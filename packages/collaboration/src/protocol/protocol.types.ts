@@ -52,6 +52,7 @@ export interface AcceptedMessage {
   readonly kind: typeof ServerMessageKind.Accepted;
   readonly seq: number;
   readonly version: number;
+  readonly steps?: readonly WireStep[] | undefined;
 }
 
 export interface RejectedMessage {
@@ -66,6 +67,7 @@ export interface StepsMessage {
   readonly version: number;
   readonly clientId: string;
   readonly steps: readonly WireStep[];
+  readonly sent?: number | undefined;
 }
 
 export interface PresenceMessage extends PeerPresence {

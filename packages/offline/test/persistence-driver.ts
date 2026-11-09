@@ -74,6 +74,11 @@ const fakeDocument = (restored: CollabRestored | undefined): FakeDocument => {
       pending = pending.slice(count);
       version = confirmed;
     },
+    settle: (count, _steps, settled) => {
+      pending = pending.slice(count);
+      version = settled;
+      return true;
+    },
     add: (step) => {
       pending = [...pending, step];
     },

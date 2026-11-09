@@ -12,12 +12,15 @@ import {
   type Calculator,
   type CellEdit,
   type Workbook,
+  type WorkbookDocument,
   type WorkbookHistory,
   type WorkbookStep,
 } from '@numior/spreadsheet/core';
 import { createRoom, type RoomPeer } from '../../server/room';
+import type { NetworkTraffic } from './network';
 import {
   ClientMessageKind,
+  ServerMessageKind,
   createCollabClient,
   type ClientMessage,
   type CollabClient,
@@ -29,6 +32,7 @@ export interface BookClient {
   readonly book: Workbook;
   readonly calculator: Calculator;
   readonly history: WorkbookHistory;
+  readonly document: WorkbookDocument;
   readonly status: CollabClient['status'];
   readonly commit: (steps: readonly WorkbookStep[]) => boolean;
   readonly undo: () => void;
@@ -42,6 +46,7 @@ export interface BookClient {
 export interface BookNetwork {
   readonly clients: readonly BookClient[];
   readonly settle: () => void;
+  readonly traffic: () => NetworkTraffic;
 }
 
 const WHOLE = { top: 0, left: 0, bottom: 1_048_575, right: 16_383 };
@@ -142,6 +147,7 @@ export const createBookNetwork = (
 ): BookNetwork => {
   const authority = workbookAuthority(seed);
   const room = createRoom(authority);
+  const traffic = { submits: 0, rejections: 0, deliveries: 0 };
 
   const clients = names.map((name): BookClient => {
     const toServer: ClientMessage[] = [];
@@ -189,6 +195,7 @@ export const createBookNetwork = (
       book,
       calculator,
       history,
+      document,
       status: client.status,
       commit: (steps) => {
         const outcome = history.commit(steps);
@@ -213,6 +220,7 @@ export const createBookNetwork = (
         if (message.kind === ClientMessageKind.Hello) {
           room.join(peer, message);
         } else {
+          traffic.submits += Number(message.kind === ClientMessageKind.Steps);
           room.receive(peer, message);
         }
         return true;
@@ -223,6 +231,8 @@ export const createBookNetwork = (
         if (message === undefined) {
           return false;
         }
+        traffic.rejections += Number(message.kind === ServerMessageKind.Rejected);
+        traffic.deliveries += 1;
         listener?.message(overTheWire(message));
         return true;
       },
@@ -244,5 +254,5 @@ export const createBookNetwork = (
 
   settle();
 
-  return { clients, settle };
+  return { clients, settle, traffic: () => ({ ...traffic }) };
 };

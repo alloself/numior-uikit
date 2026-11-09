@@ -15,6 +15,7 @@ import { editorAuthority } from '../../server/authority';
 import { createRoom, type RoomPeer } from '../../server/room';
 import {
   ClientMessageKind,
+  ServerMessageKind,
   collab,
   collabVersion,
   createCollabClient,
@@ -37,11 +38,18 @@ export interface NetworkClient {
   readonly version: () => number;
 }
 
+export interface NetworkTraffic {
+  readonly submits: number;
+  readonly rejections: number;
+  readonly deliveries: number;
+}
+
 export interface CollabNetwork {
   readonly clients: readonly NetworkClient[];
   readonly settle: () => void;
   readonly server: () => unknown;
   readonly docs: () => readonly DocJSON[];
+  readonly traffic: () => NetworkTraffic;
 }
 
 const overTheWire = (value: unknown): unknown => JSON.parse(JSON.stringify(value));
@@ -63,6 +71,7 @@ export const paragraphs = (...texts: readonly string[]): Doc =>
 export const createNetwork = (doc: Doc, names: readonly string[]): CollabNetwork => {
   const authority = editorAuthority(doc);
   const room = createRoom(authority);
+  const traffic = { submits: 0, rejections: 0, deliveries: 0 };
 
   const clients = names.map((name): NetworkClient => {
     const toServer: ClientMessage[] = [];
@@ -139,6 +148,7 @@ export const createNetwork = (doc: Doc, names: readonly string[]): CollabNetwork
         if (message.kind === ClientMessageKind.Hello) {
           room.join(peer, message);
         } else {
+          traffic.submits += Number(message.kind === ClientMessageKind.Steps);
           room.receive(peer, message);
         }
         return true;
@@ -149,6 +159,8 @@ export const createNetwork = (doc: Doc, names: readonly string[]): CollabNetwork
         if (message === undefined) {
           return false;
         }
+        traffic.rejections += Number(message.kind === ServerMessageKind.Rejected);
+        traffic.deliveries += 1;
         listener?.message(overTheWire(message));
         return true;
       },
@@ -173,5 +185,6 @@ export const createNetwork = (doc: Doc, names: readonly string[]): CollabNetwork
     settle,
     server: authority.snapshot,
     docs: () => clients.map((client) => toJSON(client.state().doc)),
+    traffic: () => ({ ...traffic }),
   };
 };

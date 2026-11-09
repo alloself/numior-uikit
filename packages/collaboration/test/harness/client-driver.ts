@@ -12,6 +12,11 @@ import {
   type WireStep,
 } from '../../src';
 
+export interface SettledBatch {
+  readonly count: number;
+  readonly steps: readonly WireStep[];
+}
+
 export interface ClientDriverOptions {
   readonly version?: number | null | undefined;
   readonly loadable?: boolean | undefined;
@@ -24,6 +29,7 @@ export interface ClientDriver {
   readonly statuses: () => readonly CollabStatus['kind'][];
   readonly version: () => number | null;
   readonly received: () => readonly CollabBatch[];
+  readonly settled: () => readonly SettledBatch[];
   readonly peers: () => ReadonlyMap<string, unknown>;
   readonly pending: () => number;
   readonly opens: () => number;
@@ -32,9 +38,9 @@ export interface ClientDriver {
   readonly edit: (count?: number) => void;
   readonly deliver: (value: unknown) => void;
   readonly welcome: (version: number, snapshot?: unknown) => void;
-  readonly accept: (seq: number, version: number) => void;
+  readonly accept: (seq: number, version: number, rebased?: number) => void;
   readonly reject: (seq: number, reason: RejectReason, version: number) => void;
-  readonly steps: (version: number, clientId: string, count?: number) => void;
+  readonly steps: (version: number, clientId: string, count?: number, sent?: number) => void;
 }
 
 const STEP: WireStep = { kind: 'replace' };
@@ -47,6 +53,7 @@ export const createClientDriver = (options: ClientDriverOptions = {}): ClientDri
   const sent: ClientMessage[] = [];
   const statuses: CollabStatus['kind'][] = [];
   const received: CollabBatch[] = [];
+  const settled: SettledBatch[] = [];
   const listeners: TransportListener[] = [];
   let peers: ReadonlyMap<string, unknown> = new Map();
   let version = options.version === undefined ? 0 : options.version;
@@ -88,6 +95,12 @@ export const createClientDriver = (options: ClientDriverOptions = {}): ClientDri
         pending = pending.slice(count);
         version = confirmed;
       },
+      settle: (count, steps, settledAt) => {
+        settled.push({ count, steps });
+        pending = pending.slice(count);
+        version = settledAt;
+        return options.receivable !== false;
+      },
     },
     onStatus: (status) => {
       statuses.push(status.kind);
@@ -111,6 +124,7 @@ export const createClientDriver = (options: ClientDriverOptions = {}): ClientDri
     statuses: () => statuses,
     version: () => version,
     received: () => received,
+    settled: () => settled,
     peers: () => peers,
     pending: () => pending.length,
     opens: () => listeners.length,
@@ -128,14 +142,25 @@ export const createClientDriver = (options: ClientDriverOptions = {}): ClientDri
     welcome: (at, snapshot) => {
       server({ kind: ServerMessageKind.Welcome, version: at, snapshot, presence: [] });
     },
-    accept: (seq, at) => {
-      server({ kind: ServerMessageKind.Accepted, seq, version: at });
+    accept: (seq, at, rebased) => {
+      server({
+        kind: ServerMessageKind.Accepted,
+        seq,
+        version: at,
+        ...(rebased === undefined ? {} : { steps: stepsOf(rebased) }),
+      });
     },
     reject: (seq, reason, at) => {
       server({ kind: ServerMessageKind.Rejected, seq, reason, version: at });
     },
-    steps: (at, clientId, count = 1) => {
-      server({ kind: ServerMessageKind.Steps, version: at, clientId, steps: stepsOf(count) });
+    steps: (at, clientId, count = 1, authored) => {
+      server({
+        kind: ServerMessageKind.Steps,
+        version: at,
+        clientId,
+        steps: stepsOf(count),
+        sent: authored,
+      });
     },
   };
 };

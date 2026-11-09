@@ -178,6 +178,72 @@ describe('collaboration client', () => {
     expect(driver.received()[0]?.steps).toHaveLength(2);
   });
 
+  it('replaces the batch in flight with the steps the server rebased', () => {
+    const driver = online();
+
+    driver.edit(2);
+    driver.steps(0, 'other');
+    driver.accept(1, 2, 1);
+
+    expect(driver.settled()).toMatchObject([{ count: 2, steps: [{ kind: 'replace' }] }]);
+    expect(driver.pending()).toBe(0);
+    expect(driver.version()).toBe(2);
+    expect(driver.statuses().at(-1)).toBe(CollabStatusKind.Online);
+  });
+
+  it('sends the next batch once the rebased one is settled', () => {
+    const driver = online();
+
+    driver.edit();
+    driver.steps(0, 'other');
+    driver.edit();
+    driver.accept(1, 2, 1);
+
+    expect(sentSteps(driver)).toBe(2);
+    expect(driver.pending()).toBe(1);
+  });
+
+  it('stops when rebased steps do not follow its version', () => {
+    const driver = online();
+
+    driver.edit();
+    driver.accept(1, 3, 1);
+
+    expect(driver.settled()).toHaveLength(0);
+
+    expect(driver.client.status()).toEqual({
+      kind: CollabStatusKind.Failed,
+      reason: CollabFailure.Protocol,
+    });
+  });
+
+  it('stops when the rebased steps cannot be applied', () => {
+    const driver = online({ receivable: false });
+
+    driver.edit();
+    driver.accept(1, 1, 1);
+
+    expect(driver.client.status()).toEqual({
+      kind: CollabStatusKind.Failed,
+      reason: CollabFailure.Document,
+    });
+  });
+
+  it('settles its queue with a whole batch of its own that comes back through a pull', () => {
+    const driver = online();
+
+    driver.edit(3);
+    driver.drop();
+    vi.runOnlyPendingTimers();
+    driver.open();
+    driver.welcome(1);
+    driver.steps(0, 'me', 1, 2);
+
+    expect(driver.settled()).toMatchObject([{ count: 2 }]);
+    expect(driver.pending()).toBe(1);
+    expect(driver.version()).toBe(1);
+  });
+
   it('catches up and resends after a stale rejection', () => {
     const driver = online();
 

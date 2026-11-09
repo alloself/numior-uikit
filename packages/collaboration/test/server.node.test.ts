@@ -60,8 +60,14 @@ const insertionAt = (text: string, at: number): WireStep[] => {
   return state.tr.insertText(text, at).steps.map(stepToJSON);
 };
 
+const removalOf = (from: number, to: number): WireStep[] => {
+  const state = createState({ doc: paragraphs('one') });
+
+  return state.tr.delete(from, to).steps.map(stepToJSON);
+};
+
 const joined = (...peers: readonly Peer[]): ReturnType<typeof createRoom> => {
-  const room = createRoom(editorAuthority(paragraphs('one')));
+  const room = createRoom(editorAuthority(paragraphs('one'), { window: 2 }));
 
   for (const peer of peers) {
     room.join(peer, {
@@ -188,14 +194,99 @@ describe('reference room', () => {
     ]);
   });
 
-  it('rejects steps on an old version', () => {
+  it('moves steps written on an old version over the missed ones and tells both sides', () => {
+    const first = peerOf('first');
+    const second = peerOf('second');
+    const room = joined(first, second);
+    const moved = insertionAt('y', 4).map((step) => ({ ...step, from: 5, to: 5 }));
+
+    room.receive(first, {
+      kind: ClientMessageKind.Steps,
+      seq: 1,
+      version: 0,
+      steps: insertionAt('x', 1),
+    });
+
+    room.receive(second, {
+      kind: ClientMessageKind.Steps,
+      seq: 1,
+      version: 0,
+      steps: insertionAt('y', 4),
+    });
+
+    expect(second.inbox.at(-1)).toEqual({
+      kind: ServerMessageKind.Accepted,
+      seq: 1,
+      version: 2,
+      steps: moved,
+    });
+
+    expect(first.inbox.at(-1)).toEqual({
+      kind: ServerMessageKind.Steps,
+      version: 1,
+      clientId: 'second',
+      steps: moved,
+    });
+  });
+
+  it('acknowledges old steps that no longer change anything and tells nobody', () => {
+    const first = peerOf('first');
+    const second = peerOf('second');
+    const room = joined(first, second);
+    const steps = removalOf(1, 2);
+
+    room.receive(first, { kind: ClientMessageKind.Steps, seq: 1, version: 0, steps });
+    room.receive(second, { kind: ClientMessageKind.Steps, seq: 1, version: 0, steps });
+
+    expect(second.inbox.at(-1)).toEqual({
+      kind: ServerMessageKind.Accepted,
+      seq: 1,
+      version: 1,
+      steps: [],
+    });
+
+    expect(first.inbox).toEqual([{ kind: ServerMessageKind.Accepted, seq: 1, version: 1 }]);
+  });
+
+  it('rejects old steps it can no longer trace back to their version', () => {
     const first = peerOf('first');
     const second = peerOf('second');
     const room = joined(first, second);
     const steps = insertionAt('x', 1);
 
     room.receive(first, { kind: ClientMessageKind.Steps, seq: 1, version: 0, steps });
+    room.receive(first, { kind: ClientMessageKind.Steps, seq: 2, version: 1, steps });
+    room.receive(first, { kind: ClientMessageKind.Steps, seq: 3, version: 2, steps });
     room.receive(second, { kind: ClientMessageKind.Steps, seq: 1, version: 0, steps });
+
+    expect(second.inbox.at(-1)).toEqual({
+      kind: ServerMessageKind.Rejected,
+      seq: 1,
+      reason: RejectReason.Stale,
+      version: 3,
+    });
+  });
+
+  it.each([
+    [
+      'never fitted their own version',
+      0,
+      insertionAt('x', 1).map((step) => ({ ...step, from: 99, to: 99 })),
+    ],
+    ['claim a version from the future', 5, insertionAt('x', 1)],
+  ])('rejects old steps that %s', (_name, version, steps) => {
+    const first = peerOf('first');
+    const second = peerOf('second');
+    const room = joined(first, second);
+
+    room.receive(first, {
+      kind: ClientMessageKind.Steps,
+      seq: 1,
+      version: 0,
+      steps: insertionAt('x', 1),
+    });
+
+    room.receive(second, { kind: ClientMessageKind.Steps, seq: 1, version, steps });
 
     expect(second.inbox.at(-1)).toEqual({
       kind: ServerMessageKind.Rejected,
@@ -233,8 +324,39 @@ describe('reference room', () => {
     room.receive(second, { kind: ClientMessageKind.Pull, from: 1 });
 
     expect(second.inbox).toEqual([
-      { kind: ServerMessageKind.Steps, version: 1, clientId: 'first', steps },
-      { kind: ServerMessageKind.Steps, version: 2, clientId: 'second', steps },
+      { kind: ServerMessageKind.Steps, version: 1, clientId: 'first', steps, sent: 1 },
+      { kind: ServerMessageKind.Steps, version: 2, clientId: 'second', steps, sent: 1 },
+    ]);
+  });
+
+  it('joins the batches of one author in a pull and counts what the author sent', () => {
+    const first = peerOf('first');
+    const room = joined(first);
+    const steps = insertionAt('x', 1);
+
+    room.receive(first, { kind: ClientMessageKind.Steps, seq: 1, version: 0, steps });
+
+    room.receive(first, {
+      kind: ClientMessageKind.Steps,
+      seq: 2,
+      version: 1,
+      steps: [...steps, ...steps],
+    });
+
+    first.inbox.length = 0;
+
+    room.receive(first, { kind: ClientMessageKind.Pull, from: 0 });
+    room.receive(first, { kind: ClientMessageKind.Pull, from: 2 });
+
+    expect(first.inbox).toEqual([
+      {
+        kind: ServerMessageKind.Steps,
+        version: 0,
+        clientId: 'first',
+        steps: [...steps, ...steps, ...steps],
+        sent: 3,
+      },
+      { kind: ServerMessageKind.Steps, version: 2, clientId: 'first', steps },
     ]);
   });
 

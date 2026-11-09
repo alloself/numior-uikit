@@ -229,6 +229,18 @@ export const offlinePersistence = (
           document.confirm(count, version);
           schedule();
         },
+        settle: (count, steps, version) => {
+          const settled = document.settle(count, steps, version);
+
+          if (settled) {
+            steps.forEach((step, index) => {
+              log.push({ version: version - steps.length + index, step });
+            });
+
+            schedule();
+          }
+          return settled;
+        },
       },
     };
   };

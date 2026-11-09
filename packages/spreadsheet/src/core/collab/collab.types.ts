@@ -45,6 +45,7 @@ export interface WorkbookDocument {
   readonly load: (snapshot: unknown, version: number) => boolean;
   readonly receive: (batch: RemoteBatch) => boolean;
   readonly confirm: (count: number, version: number) => void;
+  readonly settle: (count: number, steps: readonly unknown[], version: number) => boolean;
   readonly stepper: Stepper;
   readonly follow: (history: WorkbookHistory) => void;
   readonly subscribe: (listener: WorkbookDocumentListener) => () => void;
@@ -54,6 +55,14 @@ export interface WorkbookAuthority {
   readonly schema: SchemaStampLike;
   readonly snapshot: () => unknown;
   readonly apply: (steps: readonly unknown[]) => boolean;
+  readonly rebase: (
+    steps: readonly unknown[],
+    behind: number,
+  ) => readonly WireWorkbookStep[] | undefined;
+}
+
+export interface WorkbookAuthorityOptions {
+  readonly window?: number | undefined;
 }
 
 export const RemoteChangeKind = {

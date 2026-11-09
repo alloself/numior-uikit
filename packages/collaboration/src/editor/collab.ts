@@ -7,6 +7,7 @@ import {
   rebaseSteps,
   remoteChain,
   remoteChange,
+  stepToJSON,
   type EditorState,
   type MirrorMaps,
   type Plugin,
@@ -133,6 +134,42 @@ export const receiveSteps = (state: EditorState, steps: readonly Step[]): Transa
     .setMeta(remoteChain, rebased.chain)
     .setMeta(collabConflicts, rebased.conflicts)
     .setMeta(collabUpdate, { version: next, unconfirmed: rebased.unconfirmed });
+};
+
+const sameSteps = (left: readonly Step[], right: readonly Step[]): boolean =>
+  left.length === right.length &&
+  left.every(
+    (step, index) =>
+      JSON.stringify(stepToJSON(step)) === JSON.stringify(stepToJSON(right[index] ?? step)),
+  );
+
+export const settleSteps = (
+  state: EditorState,
+  count: number,
+  steps: readonly Step[],
+  version: number,
+): Transaction => {
+  const { unconfirmed } = collabStateOf(state);
+  const sent = unconfirmed.slice(0, count);
+  const later = unconfirmed.slice(count);
+
+  if (
+    sameSteps(
+      sent.map((item) => item.step),
+      steps,
+    )
+  ) {
+    return state.tr.setMeta(collabUpdate, { version, unconfirmed: later });
+  }
+
+  const tr = state.tr.setStoredMarks(state.storedMarks).setMeta(remoteChange, true);
+  const replaced = [...sent.toReversed().map((item) => item.inverted), ...steps];
+  const rebased = rebaseLocal(tr, replaced, later);
+
+  return tr
+    .setSelection(mapSelection(state.selection, mirrored(rebased.chain), state.doc, tr.doc))
+    .setMeta(remoteChain, rebased.chain)
+    .setMeta(collabUpdate, { version, unconfirmed: rebased.unconfirmed });
 };
 
 export const confirmSteps = (state: EditorState, count: number, version: number): Transaction => {

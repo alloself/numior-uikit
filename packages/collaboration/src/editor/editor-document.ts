@@ -1,7 +1,14 @@
 import { fromJSON, stepFromJSON, stepToJSON, type Step } from '@numior/editor-core';
 import type { CollabDocument } from '../client/client.types';
 import type { WireStep } from '../protocol/protocol.types';
-import { collabVersion, confirmSteps, conflictsIn, receiveSteps, sendableSteps } from './collab';
+import {
+  collabVersion,
+  confirmSteps,
+  conflictsIn,
+  receiveSteps,
+  sendableSteps,
+  settleSteps,
+} from './collab';
 import type { EditorCollabOptions } from './collab.types';
 
 export const editorCollabDocument = ({
@@ -76,6 +83,16 @@ export const editorCollabDocument = ({
       if (state !== undefined) {
         dispatch(confirmSteps(state, count, version));
       }
+    },
+    settle: (count, wires, version) => {
+      const state = getState();
+      const steps = parsedSteps(wires);
+
+      if (state === undefined || steps === undefined) {
+        return false;
+      }
+      dispatch(settleSteps(state, count, steps, version));
+      return true;
     },
   };
 };

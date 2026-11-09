@@ -285,6 +285,101 @@ describe('workbook steps through the collaboration envelope', () => {
     expectSame(ann, bob);
   });
 
+  it('confirms sent steps the server kept as they were', () => {
+    const [ann] = createBookNetwork(['ann']).clients;
+    const version = ann?.document.version() ?? 0;
+
+    ann?.commit([writeCells(valueCell(0, 0, 'sent'))]);
+    ann?.commit([writeCells(valueCell(1, 0, 'later'))]);
+
+    const settled = ann?.document.settle(1, ann.document.pending().slice(0, 1), version + 1);
+
+    expect(settled).toBe(true);
+    expect(ann?.document.pending()).toHaveLength(1);
+    expect(ann?.document.version()).toBe(version + 1);
+    expect([ann?.text(SHEET, 0, 0), ann?.text(SHEET, 1, 0)]).toEqual(['sent', 'later']);
+  });
+
+  it('replaces sent steps with what the server made of them and keeps the later ones', () => {
+    const [ann] = createBookNetwork(['ann']).clients;
+    const version = ann?.document.version() ?? 0;
+
+    ann?.commit([writeCells(valueCell(0, 0, 'sent'))]);
+    ann?.commit([writeCells(valueCell(1, 0, 'later'))]);
+
+    const settled = ann?.document.settle(1, [writeCells(valueCell(5, 0, 'sent'))], version + 1);
+
+    expect(settled).toBe(true);
+    expect(ann?.document.pending()).toHaveLength(1);
+
+    expect([ann?.text(SHEET, 0, 0), ann?.text(SHEET, 1, 0), ann?.text(SHEET, 5, 0)]).toEqual([
+      '',
+      'later',
+      'sent',
+    ]);
+  });
+
+  it('moves later steps back when the server dropped the rows they counted on', () => {
+    const [ann] = createBookNetwork(['ann']).clients;
+    const version = ann?.document.version() ?? 0;
+
+    ann?.commit([insertRow(0)]);
+    ann?.commit([writeCells(valueCell(3, 0, 'later'))]);
+
+    const settled = ann?.document.settle(1, [], version);
+
+    expect(settled).toBe(true);
+    expect(ann?.document.pending()).toHaveLength(1);
+    expect([ann?.text(SHEET, 2, 0), ann?.text(SHEET, 3, 0)]).toEqual(['later', '']);
+  });
+
+  it('refuses to settle with steps it cannot read', () => {
+    const [ann] = createBookNetwork(['ann']).clients;
+
+    ann?.commit([writeCells(valueCell(0, 0, 'sent'))]);
+
+    expect(ann?.document.settle(1, [{ kind: 'nope' }], 2)).toBe(false);
+  });
+
+  it('has the authority move a write of an old version past the rows inserted since', () => {
+    const authority = workbookAuthority([seedSheet]);
+
+    authority.apply([insertRow(0, 2)]);
+
+    expect(authority.rebase([writeCells(valueCell(1, 0, 'late'))], 1)).toEqual([
+      writeCells(valueCell(3, 0, 'late')),
+    ]);
+  });
+
+  it('has the authority drop a write into rows removed since and keep the rest of the pack', () => {
+    const authority = workbookAuthority([seedSheet]);
+
+    authority.apply([deleteRow(1)]);
+
+    expect(
+      authority.rebase(
+        [writeCells(valueCell(1, 0, 'gone')), writeCells(valueCell(4, 0, 'kept'))],
+        1,
+      ),
+    ).toEqual([writeCells(valueCell(3, 0, 'kept'))]);
+  });
+
+  it.each([
+    ['a layout of an old version', [{ kind: 'setLayout', sheet: SHEET, layout: {} }], 1],
+    ['a step it cannot read', [{ kind: 'nope' }], 1],
+    ['a version older than it remembers', [writeCells(valueCell(0, 0, 'late'))], 2],
+  ])('has the authority leave %s to its author and keep the journal', (_name, steps, behind) => {
+    const authority = workbookAuthority([seedSheet], { window: 1 });
+
+    authority.apply([insertRow(0)]);
+    authority.apply([insertRow(0)]);
+
+    const before = authority.snapshot();
+
+    expect(authority.rebase(steps, behind)).toBeUndefined();
+    expect(authority.snapshot()).toEqual(before);
+  });
+
   it('has the authority refuse a malformed step and keep the journal', () => {
     const authority = workbookAuthority([seedSheet]);
     const before = authority.snapshot();

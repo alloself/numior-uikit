@@ -17,6 +17,9 @@ export interface RoomAuthority {
   readonly schema: SchemaStamp;
   readonly snapshot: () => unknown;
   readonly apply: (steps: readonly WireStep[]) => boolean;
+  readonly rebase?:
+    | ((steps: readonly WireStep[], behind: number) => readonly WireStep[] | undefined)
+    | undefined;
 }
 
 export interface RoomPeer {
@@ -63,28 +66,37 @@ export const createRoom = (authority: RoomAuthority): Room => {
     peer.send({ kind: ServerMessageKind.Rejected, seq, reason, version: log.version() });
   };
 
+  const taken = (message: SendStepsMessage, behind: number): readonly WireStep[] | undefined => {
+    if (behind === 0) {
+      return authority.apply(message.steps) ? message.steps : undefined;
+    }
+    return behind > 0 ? authority.rebase?.(message.steps, behind) : undefined;
+  };
+
   const onSteps = (peer: RoomPeer, message: SendStepsMessage): void => {
     const version = log.version();
+    const behind = version - message.version;
+    const steps = taken(message, behind);
 
-    if (message.version !== version) {
-      reject(peer, message.seq, RejectReason.Stale);
+    if (steps === undefined) {
+      reject(peer, message.seq, behind === 0 ? RejectReason.Invalid : RejectReason.Stale);
       return;
     }
-    if (!authority.apply(message.steps)) {
-      reject(peer, message.seq, RejectReason.Invalid);
+    log.append(steps, peer.clientId, message.steps.length);
+
+    peer.send({
+      kind: ServerMessageKind.Accepted,
+      seq: message.seq,
+      version: log.version(),
+      ...(behind === 0 ? {} : { steps }),
+    });
+
+    if (steps.length === 0) {
       return;
     }
-    log.append(message.steps, peer.clientId);
-    peer.send({ kind: ServerMessageKind.Accepted, seq: message.seq, version: log.version() });
-
     for (const other of peers) {
       if (other !== peer) {
-        other.send({
-          kind: ServerMessageKind.Steps,
-          version,
-          clientId: peer.clientId,
-          steps: message.steps,
-        });
+        other.send({ kind: ServerMessageKind.Steps, version, clientId: peer.clientId, steps });
       }
     }
   };

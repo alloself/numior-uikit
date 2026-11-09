@@ -12,7 +12,14 @@ import {
   type Step,
 } from '@numior/editor-core';
 import { describe, expect, it } from 'vite-plus/test';
-import { collab, collabVersion, confirmSteps, receiveSteps, sendableSteps } from '../src';
+import {
+  collab,
+  collabVersion,
+  confirmSteps,
+  receiveSteps,
+  sendableSteps,
+  settleSteps,
+} from '../src';
 import { paragraphs } from './harness/network';
 
 const BOLD: Mark = { type: 'bold', attrs: {} };
@@ -69,6 +76,42 @@ describe('collab plugin', () => {
 
     expect(sendableSteps(confirmed)).toHaveLength(1);
     expect(collabVersion(confirmed)).toBe(4);
+  });
+
+  it('confirms the sent steps the server kept as they were without touching the document', () => {
+    const typed = typedAt(typedAt(started(), 'a', 1), 'b', 2);
+
+    const settling = settleSteps(typed, 1, sendableSteps(typed).slice(0, 1), 4);
+    const settled = typed.apply(settling);
+
+    expect(settling.changed).toBe(false);
+    expect(firstText(settled)).toBe('abone');
+    expect(sendableSteps(settled)).toHaveLength(1);
+    expect(collabVersion(settled)).toBe(4);
+  });
+
+  it('replaces the sent steps with what the server made of them and keeps later typing', () => {
+    const state = started();
+    const typed = typedAt(typedAt(state, 'a', 1), 'b', 2);
+
+    const settled = typed.apply(settleSteps(typed, 1, insertion(state, 'a', 4), 4));
+
+    expect(firstText(settled)).toBe('bonea');
+    expect(collabVersion(settled)).toBe(4);
+
+    expect(sendableSteps(settled)).toEqual([
+      expect.objectContaining({ kind: 'replace', from: 1, to: 1 }),
+    ]);
+  });
+
+  it('takes back sent steps the server dropped', () => {
+    const typed = typedAt(typedAt(started(), 'a', 1), 'b', 2);
+
+    const settled = typed.apply(settleSteps(typed, 1, [], 3));
+
+    expect(firstText(settled)).toBe('bone');
+    expect(sendableSteps(settled)).toHaveLength(1);
+    expect(collabVersion(settled)).toBe(3);
   });
 
   it('applies remote steps without touching an empty queue', () => {

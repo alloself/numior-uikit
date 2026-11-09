@@ -33,6 +33,7 @@ export {
   conflictsIn,
   receiveSteps,
   sendableSteps,
+  settleSteps,
 } from './editor/collab';
 export type {
   AttrConflict,

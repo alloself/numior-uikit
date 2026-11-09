@@ -1,18 +1,31 @@
 import { createCalculator } from '../calc/calculator';
 import { createStepper } from '../steps/apply-step';
-import type { WorkbookStep } from '../steps/step.types';
+import { StepKind, type WorkbookStep } from '../steps/step.types';
 import { createStepCodec } from '../wire/step-codec';
 import type { WireWorkbookStep } from '../wire/wire.types';
 import { createWorkbook } from '../workbook';
-import type { WorkbookAuthority } from './collab.types';
+import type { RemoteChange, WorkbookAuthority, WorkbookAuthorityOptions } from './collab.types';
+import { changesOver, stepOver } from './rebase-queue';
+import { changesOf } from './remote-change';
 import { WORKBOOK_SCHEMA, settleForStep } from './schema';
 
-export const workbookAuthority = (seed: readonly WorkbookStep[] = []): WorkbookAuthority => {
+interface Taken {
+  readonly step: WorkbookStep;
+  readonly inverse: WorkbookStep;
+}
+
+const WINDOW = 4096;
+
+export const workbookAuthority = (
+  seed: readonly WorkbookStep[] = [],
+  { window = WINDOW }: WorkbookAuthorityOptions = {},
+): WorkbookAuthority => {
   const book = createWorkbook();
   const calculator = createCalculator(book);
   const stepper = createStepper(book, calculator);
   const codec = createStepCodec(book);
   const journal: WireWorkbookStep[] = [];
+  let tail: readonly (readonly RemoteChange[])[] = [];
 
   const applyOne = (step: WorkbookStep): WorkbookStep | undefined => {
     settleForStep(calculator, step);
@@ -22,6 +35,18 @@ export const workbookAuthority = (seed: readonly WorkbookStep[] = []): WorkbookA
     return result.ok ? result.inverse : undefined;
   };
 
+  const undo = (taken: readonly Taken[]): void => {
+    taken.toReversed().forEach(({ inverse }) => stepper.apply(inverse));
+  };
+
+  const kept = (taken: readonly Taken[]): readonly WireWorkbookStep[] => {
+    const wires = taken.map(({ step }) => codec.encode(step));
+
+    journal.push(...wires);
+    tail = [...tail, ...taken.map(({ step }) => changesOf(step))].slice(-window);
+    return wires;
+  };
+
   seed.forEach((step) => {
     applyOne(step);
     journal.push(codec.encode(step));
@@ -29,24 +54,48 @@ export const workbookAuthority = (seed: readonly WorkbookStep[] = []): WorkbookA
 
   return {
     schema: WORKBOOK_SCHEMA,
-    snapshot: () => ({ steps: journal }),
+    snapshot: () => ({ steps: [...journal] }),
     apply: (wires) => {
-      const inverses: WorkbookStep[] = [];
-      const accepted: WireWorkbookStep[] = [];
+      const taken: Taken[] = [];
 
       for (const wire of wires) {
         const step = codec.decode(wire);
         const inverse = step === undefined ? undefined : applyOne(step);
 
         if (step === undefined || inverse === undefined) {
-          inverses.toReversed().forEach((undo) => stepper.apply(undo));
+          undo(taken);
           return false;
         }
-        inverses.push(inverse);
-        accepted.push(codec.encode(step));
+        taken.push({ step, inverse });
       }
-      journal.push(...accepted);
+      kept(taken);
       return true;
+    },
+    rebase: (wires, behind) => {
+      if (behind > tail.length) {
+        return undefined;
+      }
+
+      const taken: Taken[] = [];
+      let moving: readonly RemoteChange[] = tail.slice(tail.length - behind).flat();
+
+      for (const wire of wires) {
+        const step = codec.decode(wire);
+
+        if (step === undefined || step.kind === StepKind.SetLayout) {
+          undo(taken);
+          return undefined;
+        }
+
+        const moved = stepOver(step, moving);
+        const inverse = moved === undefined ? undefined : applyOne(moved);
+
+        if (moved !== undefined && inverse !== undefined) {
+          taken.push({ step: moved, inverse });
+        }
+        moving = changesOver(moving, changesOf(step));
+      }
+      return kept(taken);
     },
   };
 };
