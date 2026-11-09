@@ -1,3 +1,5 @@
+import type { RankHost } from './rank-host';
+
 export type SourceHolds = (typeof SourceHolds)[keyof typeof SourceHolds];
 
 export type RankCaseFirst = NonNullable<Intl.CollatorOptions['caseFirst']>;
@@ -195,6 +197,7 @@ export interface TableEngineOptions<T> {
   readonly collator?: Intl.Collator | undefined;
   readonly sliceMs?: number | undefined;
   readonly yieldTo?: (() => Promise<void>) | undefined;
+  readonly rankHost?: RankHost | undefined;
 }
 
 export type TableNodePosition = readonly [id: TableNodeId, position: number];
@@ -350,6 +353,6 @@ export const RadixLaneKind = { Float: 'float', Rank: 'rank' } as const;
 
 export const RadixGroupKind = { Float: 'float', Packed: 'packed' } as const;
 
-export const RankMessageKind = { Part: 'part', Sort: 'sort' } as const;
+export const RankMessageKind = { Part: 'part', Sort: 'sort', Drop: 'drop' } as const;
 
 export const ErrorName = { Abort: 'AbortError' } as const;

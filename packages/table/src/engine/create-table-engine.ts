@@ -166,7 +166,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       return known.job;
     }
 
-    const job = createRequestJob(request, table.rows, collator);
+    const job = createRequestJob(request, table.rows, collator, options.rankHost);
 
     building.set(key, { need: request.need, job });
     return job;
@@ -179,7 +179,15 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
 
   const forget = (key: string): void => {
     stores.delete(key);
+    building.get(key)?.job.cancel?.();
     building.delete(key);
+  };
+
+  const dropBuilding = (): void => {
+    for (const { job } of building.values()) {
+      job.cancel?.();
+    }
+    building = new Map();
   };
 
   const storesJob = (needs: Iterable<readonly [string, StoreNeed]>): SliceJob | null => {
@@ -736,7 +744,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
           : flattenTree(next, options.children);
 
       stores = new Map();
-      building = new Map();
+      dropBuilding();
       generation += 1;
       rowsVersion += 1;
       toggled.clear();
@@ -890,6 +898,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       rowsVersion += 1;
       table = { rows: [], parents: new Int32Array(0), depths: new Uint16Array(0) };
       stores = new Map();
+      dropBuilding();
       prepared = emptyPrepared();
       visible = new Int32Array(0);
       toggled.clear();

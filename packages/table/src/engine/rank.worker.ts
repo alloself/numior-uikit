@@ -1,30 +1,14 @@
-import { collatedOrder, collatorOf, readRankMessage, unpackDictionary } from './rank-order';
-import { RankMessageKind } from './engine.types';
+import { createRankService } from './rank-service';
 
-const parts = new Map<number, string[]>();
+const service = createRankService(
+  (answer) => {
+    self.postMessage(answer, { transfer: [answer.order.buffer] });
+  },
+  (run) => {
+    setTimeout(run, 0);
+  },
+);
 
 self.addEventListener('message', (event: MessageEvent<unknown>) => {
-  const message = readRankMessage(event.data);
-
-  if (message === undefined) {
-    return;
-  }
-  if (message.kind === RankMessageKind.Part) {
-    const list = parts.get(message.id) ?? [];
-
-    list.push(message.text);
-    parts.set(message.id, list);
-    return;
-  }
-
-  const text = (parts.get(message.id) ?? []).join('');
-
-  parts.delete(message.id);
-
-  const order = collatedOrder(
-    unpackDictionary(text, message.lengths),
-    collatorOf(message.collation),
-  );
-
-  self.postMessage({ id: message.id, order }, { transfer: [order.buffer] });
+  service.receive(event.data);
 });

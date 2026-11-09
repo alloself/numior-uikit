@@ -143,6 +143,7 @@ describe('createStoreJob', () => {
           send: (text) => {
             sent.push(text);
           },
+          cancel: () => undefined,
           finish: async (lengths) => {
             await Promise.resolve();
 

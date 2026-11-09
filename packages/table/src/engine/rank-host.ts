@@ -4,6 +4,7 @@ import RankWorker from './rank.worker?worker&inline';
 export interface RankSession {
   send(text: string): void;
   finish(lengths: Uint32Array): Promise<Uint32Array | undefined>;
+  cancel(): void;
 }
 
 export interface RankHost {
@@ -13,6 +14,7 @@ export interface RankHost {
 type Answer = (order: Uint32Array | undefined) => void;
 
 const answers = new Map<number, Answer>();
+const live = new Set<number>();
 let worker: Worker | null | undefined;
 let nextId = 0;
 
@@ -24,6 +26,7 @@ const failAll = (): void => {
     answer(undefined);
   }
   answers.clear();
+  live.clear();
 };
 
 const onAnswer = (event: MessageEvent<unknown>): void => {
@@ -32,6 +35,7 @@ const onAnswer = (event: MessageEvent<unknown>): void => {
   if (answer !== undefined) {
     answers.get(answer.id)?.(answer.order);
     answers.delete(answer.id);
+    live.delete(answer.id);
   }
 };
 
@@ -72,6 +76,8 @@ export const workerRankHost: RankHost = {
     const id = nextId;
 
     nextId += 1;
+    live.add(id);
+
     return {
       send: (text) => {
         post(target, { kind: 'part', id, text });
@@ -88,6 +94,23 @@ export const workerRankHost: RankHost = {
             lengths.buffer,
           ]);
         }),
+      cancel: () => {
+        if (worker !== target || !live.delete(id)) {
+          return;
+        }
+
+        const waiting = answers.get(id);
+
+        answers.delete(id);
+        waiting?.(undefined);
+
+        if (waiting !== undefined && live.size === 0) {
+          target.terminate();
+          worker = undefined;
+        } else {
+          post(target, { kind: 'drop', id });
+        }
+      },
     };
   },
 };

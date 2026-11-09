@@ -160,6 +160,7 @@ export const createRankJob = (
     total: () => sorting.total() + order.length + length,
     done: () => sorting.done() + placed + ranked,
     waiting: () => sorting.waiting?.(),
+    cancel: () => sorting.cancel?.(),
     work: (deadline) => {
       if (!sorting.work(deadline) || !place(deadline)) {
         return false;
@@ -186,19 +187,24 @@ export const createRankJob = (
   };
 };
 
-const createRankedStringJob = (codes: CodesJob, collator: Intl.Collator): StoreJob => {
+const createRankedStringJob = (
+  codes: CodesJob,
+  collator: Intl.Collator,
+  host: RankHost | undefined,
+): StoreJob => {
   let ranking: StoreJob | null = null;
 
   return {
     total: () => codes.total() + (ranking?.total() ?? codes.total()),
     done: () => codes.done() + (ranking?.done() ?? 0),
     waiting: () => ranking?.waiting?.(),
+    cancel: () => ranking?.cancel?.(),
     work: (deadline) => {
       if (ranking === null) {
         if (!codes.work(deadline)) {
           return false;
         }
-        ranking = createRankJob(codes.result(), collator);
+        ranking = createRankJob(codes.result(), collator, host);
       }
       return ranking.work(deadline);
     },
@@ -211,22 +217,24 @@ export const createStoreJob = <T>(
   rows: readonly T[],
   collator: Intl.Collator,
   need: StoreNeed,
+  host: RankHost | undefined = workerRankHost,
 ): StoreJob => {
   if (column.kind !== TableEngineColumnKind.String) {
     return createNumberStoreJob(rows, numberReader(column));
   }
   const codes = createCodesJob(rows, column.value);
-  return need === StoreNeed.Codes ? codes : createRankedStringJob(codes, collator);
+  return need === StoreNeed.Codes ? codes : createRankedStringJob(codes, collator, host);
 };
 
 export const createRequestJob = <T>(
   request: StoreRequest<T>,
   rows: readonly T[],
   collator: Intl.Collator,
+  host: RankHost | undefined = workerRankHost,
 ): StoreJob =>
   request.need === StoreNeed.Ranks && request.current?.kind === ColumnStoreKind.Codes
-    ? createRankJob(request.current, collator)
-    : createStoreJob(request.column, rows, collator, request.need);
+    ? createRankJob(request.current, collator, host)
+    : createStoreJob(request.column, rows, collator, request.need, host);
 
 export const createStoresJob = <T>(
   requests: readonly StoreRequest<T>[],

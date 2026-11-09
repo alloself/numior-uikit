@@ -1,6 +1,7 @@
 import { promiseTimeout } from '@vueuse/core';
 import {
   createTableEngine,
+  type RankHost,
   type TableEngine,
   type TableEngineColumn,
   type TableNode,
@@ -40,6 +41,7 @@ export interface EngineHarnessOptions<T> {
   readonly hasChildren?: (row: T) => boolean;
   readonly detail?: (row: T) => boolean;
   readonly defaultExpanded?: boolean;
+  readonly rankHost?: RankHost;
 }
 
 export const PEOPLE_COLUMNS: readonly TableEngineColumn<Person>[] = [
@@ -179,6 +181,7 @@ export class EngineHarness<T> {
       detail: options.detail,
       defaultExpanded: options.defaultExpanded,
       sliceMs: options.sliceMs ?? 12,
+      rankHost: options.rankHost,
       collator: new Intl.Collator('ru', { numeric: true }),
       yieldTo: () => {
         this.yields += 1;

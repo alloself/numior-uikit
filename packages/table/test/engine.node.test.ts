@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import type { TableEngineColumn } from '../src/engine';
 import { EngineHarness, PEOPLE, PEOPLE_COLUMNS, type Person } from './harness/engine';
+import { recordingRankHost } from './harness/rank-host';
 
 const many = (count: number): Person[] =>
   Array.from({ length: count }, (_, index) => ({
@@ -126,6 +127,25 @@ describe('createTableEngine', () => {
     expect(harness.visible('age')[0]).toBe(-5);
     expect(harness.engine.runSync({ sort: [{ key: 'age', direction: 'desc' }] }).kind).toBe('done');
     expect(harness.visible('age').at(-1)).toBe(-5);
+  });
+
+  it('cancels the rank session of a text sort whose rows are replaced before the answer', async () => {
+    const host = recordingRankHost();
+    const harness = new EngineHarness(PEOPLE_COLUMNS, many(20_000), { sliceMs: 0, rankHost: host });
+    const pending = harness.run({ sort: [{ key: 'name', direction: 'asc' }] });
+
+    for (let turn = 0; turn < 50 && host.sessions[0]?.finished !== true; turn += 1) {
+      await harness.step();
+    }
+
+    expect(host.sessions.map((session) => session.cancelled)).toEqual([false]);
+
+    harness.engine.setRows(many(5));
+
+    expect(host.sessions.map((session) => session.cancelled)).toEqual([true]);
+    expect(await harness.settle(pending)).toEqual({ kind: 'cancelled' });
+    expect(harness.engine.runSync({ sort: [{ key: 'name', direction: 'asc' }] }).kind).toBe('done');
+    expect(harness.visible('name')).toEqual(['Имя 1', 'Имя 2', 'Имя 3', 'Имя 4', 'Имя 5']);
   });
 
   it('cancels through the signal, supersedes an older run and reports progress in slices', async () => {
