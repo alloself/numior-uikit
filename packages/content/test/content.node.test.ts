@@ -91,6 +91,20 @@ describe('content schema', () => {
     ).toEqual(['href', 'href', 'src', 'src', 'src', 'src']);
   });
 
+  it('refuses addresses that hide a scheme behind tabs, line breaks or control characters', () => {
+    expect(
+      attrIssues([
+        linked('java\tscript:alert(1)'),
+        linked('java\nscript:alert(1)'),
+        linked('java\rscript:alert(1)'),
+        linked('\u0001javascript:alert(1)'),
+        linked('javascript\u007F:alert(1)'),
+        image('java\tscript:alert(2)'),
+        file('java\tscript:alert(3)'),
+      ]),
+    ).toEqual(['href', 'href', 'href', 'href', 'href', 'src', 'url']);
+  });
+
   it('keeps files on web or relative links and image widths inside a fifth to the whole line', () => {
     expect(
       attrIssues([

@@ -102,6 +102,14 @@ describe('content HTML', () => {
     ]);
   });
 
+  it('drops pasted links whose scheme is split by an encoded tab', () => {
+    expect(
+      blocksOf(
+        '<p><a href="java&#9;script:alert(1)">x</a><a class="nui-content__file" href="java&#9;script:alert(1)" download="a.pdf">a.pdf</a></p>',
+      ),
+    ).toEqual([paragraph({ text: 'xa.pdf' })]);
+  });
+
   it('drops script links, foreign image sources and unknown presets', () => {
     expect(
       blocksOf(

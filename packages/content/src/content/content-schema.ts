@@ -38,6 +38,10 @@ const SCHEME = /^([a-z][\d+.a-z-]*):/i;
 
 const LINK_SCHEMES = new Set(['http', 'https', 'mailto', 'tel']);
 
+const LAST_CONTROL = 0x1f;
+
+const DELETE = 0x7f;
+
 const IMAGE_SCHEMES = new Set(['http', 'https']);
 
 const FILE_SCHEMES = new Set(['http', 'https']);
@@ -78,14 +82,26 @@ const oneOf =
 const schemeOf = (value: string): string | undefined =>
   SCHEME.exec(value.trim())?.[1]?.toLowerCase();
 
-const isLink = (value: AttrValue): boolean => {
-  const scheme = typeof value === 'string' ? schemeOf(value) : undefined;
+const isControl = (char: string): boolean => {
+  const code = char.codePointAt(0) ?? 0;
 
-  return typeof value === 'string' && (scheme === undefined || LINK_SCHEMES.has(scheme));
+  return code <= LAST_CONTROL || code === DELETE;
+};
+
+const isAddress = (value: AttrValue): value is string =>
+  typeof value === 'string' && !Array.from(value).some(isControl);
+
+const isLink = (value: AttrValue): boolean => {
+  if (!isAddress(value)) {
+    return false;
+  }
+  const scheme = schemeOf(value);
+
+  return scheme === undefined || LINK_SCHEMES.has(scheme);
 };
 
 const isImageSource = (value: AttrValue): boolean => {
-  if (typeof value !== 'string' || value.trim() === '') {
+  if (!isAddress(value) || value.trim() === '') {
     return false;
   }
   const scheme = schemeOf(value);
@@ -94,7 +110,7 @@ const isImageSource = (value: AttrValue): boolean => {
 };
 
 const isFileLink = (value: AttrValue): boolean => {
-  if (typeof value !== 'string' || value.trim() === '') {
+  if (!isAddress(value) || value.trim() === '') {
     return false;
   }
   const scheme = schemeOf(value);
