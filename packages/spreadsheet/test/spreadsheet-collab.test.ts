@@ -69,7 +69,6 @@ describe('NuiSpreadsheet in a shared book', () => {
     const book = shared();
     const driver = open(book);
 
-    await driver.settle();
     receive(book.session, text('remote'));
     await driver.settle();
 

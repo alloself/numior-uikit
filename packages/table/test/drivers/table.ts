@@ -1610,6 +1610,22 @@ export class TableDriver<T> {
     return window.getSelection()?.toString() ?? '';
   }
 
+  async pressCell(position: number, col: number): Promise<void> {
+    this.layoutBody();
+    this.pressDown(this.cell(position, col), this.pointAt(position, col), {});
+
+    window.dispatchEvent(
+      new PointerEvent('pointerup', pointerInit(this.pointAt(position, col), {})),
+    );
+
+    await nextTick();
+  }
+
+  async releaseOnCell(position: number, col: number): Promise<void> {
+    this.cell(position, col)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await nextTick();
+  }
+
   async clickCell(position: number, col: number, options: KeyOptions = {}): Promise<void> {
     this.layoutBody();
     const point = this.pointAt(position, col);

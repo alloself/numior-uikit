@@ -27,7 +27,7 @@ import {
   withLast,
   type RangeBounds,
 } from './table-ranges';
-import { OWN_DATA_ROWS, OWN_SPANNING_CELLS } from './table-dom';
+import { controlled, OWN_DATA_ROWS, OWN_SPANNING_CELLS } from './table-dom';
 import type { TableEdgeOf } from './table-keys';
 import { expandToMerges, leaveMerge, spansLines, type TableMergeIndex } from './table-merges';
 import type { NuiTableMessages } from './table.messages';
@@ -142,15 +142,6 @@ const NAVIGATION: ReadonlySet<string> = new Set([
   Key.PageUp,
   Key.PageDown,
 ]);
-
-const INTERACTIVE =
-  'button, a[href], input, select, textarea, label, [contenteditable="true"], .nui-table__toggle, .nui-table__editor';
-
-const controlled = (target: Element): boolean => {
-  const control = target.closest(INTERACTIVE);
-
-  return control !== null && control.closest('.nui-table') !== null;
-};
 
 const modeOf = (event: MouseEvent): SessionMode => {
   if (event.shiftKey) {

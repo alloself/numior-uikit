@@ -1,5 +1,14 @@
 const OWN_GRID = ':scope > .nui-table__grid';
 
+const INTERACTIVE =
+  'button, a[href], input, select, textarea, label, [contenteditable="true"], .nui-table__toggle, .nui-table__editor';
+
+export const controlled = (target: Element): boolean => {
+  const control = target.closest(INTERACTIVE);
+
+  return control !== null && control.closest('.nui-table') !== null;
+};
+
 export const OWN_BODY_ROWS = `${OWN_GRID} > .nui-table__body > [role="row"]`;
 
 export const OWN_DATA_ROWS = `${OWN_GRID} > .nui-table__body > .nui-table__row--body`;

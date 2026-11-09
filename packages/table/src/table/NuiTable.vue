@@ -315,6 +315,7 @@ import {
 } from './table-flood';
 import { useTextMeasure } from './use-text-measure';
 import { paintOf } from './table-paint';
+import { forgetCellReads } from './table-cells';
 import { ownCellAt, ownDetailOf } from './table-dom';
 import { cellTextOf, cellValueOf, engineColumnOf, valueTextOf } from './table-format';
 import { columnTreeOf, headerBandsOf } from './table-columns';
@@ -2267,6 +2268,8 @@ const viewportEvents = {
     focus.onFocusin(ownDetailOf(event.target, viewport.value)?.parentElement ?? event.target);
   },
   pointerdown: outsideDetail((event: PointerEvent) => {
+    focus.notePress(event.target);
+
     if (!picker.onPointerdown(event)) {
       rangeSelect.onPointerdown(event);
     }
@@ -2282,6 +2285,10 @@ const viewportEvents = {
     if (!picker.onClick(event)) {
       rangeSelect.onClick(event);
       cellEditor.onClick(event);
+
+      if (cellSelection) {
+        focus.reclaim();
+      }
     }
   }),
   dblclick: outsideDetail((event: MouseEvent) => {
@@ -2606,6 +2613,8 @@ const touchRows = (list: NuiTableRanges): void => {
 };
 
 const invalidate = (list?: NuiTableRanges): void => {
+  forgetCellReads(nextEdge);
+
   if (list === undefined || queryActive()) {
     applyChanged(dataKeys.value);
     return;

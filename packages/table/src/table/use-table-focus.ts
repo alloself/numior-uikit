@@ -1,6 +1,6 @@
 import { onMounted, ref, watch, type Ref, type ShallowRef } from 'vue';
 import { createIntent, Key, type VirtualList } from '@numior/primitives';
-import { DETAIL_CELL, OWN_ACTIVE_CELL } from './table-dom';
+import { controlled, DETAIL_CELL, OWN_ACTIVE_CELL } from './table-dom';
 import { nextCell, type TableEdgeOf } from './table-keys';
 import {
   TableHeaderTargetKind,
@@ -36,11 +36,15 @@ export interface TableFocus {
   reveal(target: TableCellPosition, axis?: TableRevealAxis): void;
   focusCell(target: TableCellPosition, scroll?: boolean): void;
   focusHeader(target: TableHeaderTarget): void;
+  notePress(target: EventTarget | null): void;
+  reclaim(): void;
   onKeydown(event: KeyboardEvent): void;
   onFocusin(target: EventTarget | null): void;
 }
 
 const CELL = '.nui-table__cell';
+
+const DATA_CELL = 'td.nui-table__cell';
 
 const ariaIndex = (element: Element | null | undefined, name: string): number => {
   const value = Number(element?.getAttribute(name));
@@ -70,6 +74,7 @@ const samePosition = (a: TableCellPosition, b: TableCellPosition): boolean =>
 export const useTableFocus = (options: TableFocusOptions): TableFocus => {
   const intent = createIntent<boolean>();
   const requests = ref(0);
+  let pressedCell: HTMLElement | null = null;
   const placement = createIntent<TableHeaderTarget>();
   const placements = ref(0);
 
@@ -210,6 +215,22 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     },
     reveal,
     focusCell,
+    notePress: (target) => {
+      const asleep = options.viewport.value?.ownerDocument.hasFocus() === false;
+
+      pressedCell =
+        asleep && target instanceof Element && !controlled(target)
+          ? target.closest<HTMLElement>(DATA_CELL)
+          : null;
+    },
+    reclaim: () => {
+      const owner = options.viewport.value?.ownerDocument;
+
+      if (owner?.activeElement === owner?.body) {
+        pressedCell?.focus({ preventScroll: true });
+      }
+      pressedCell = null;
+    },
     focusHeader: (target) => {
       placement.set(target);
       placements.value += 1;

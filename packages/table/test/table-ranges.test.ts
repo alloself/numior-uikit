@@ -89,6 +89,21 @@ describe('NuiTable cell ranges', () => {
     expect(grid.ranges).toEqual([range(1, 1, 2, 2)]);
   });
 
+  it('takes the focus back when the press only activated the window', async () => {
+    const grid = mountPeople();
+    const windowFocus = vi.spyOn(document, 'hasFocus').mockReturnValue(false);
+
+    await grid.settle();
+    await grid.pressCell(3, 1);
+    await grid.blur();
+
+    await grid.releaseOnCell(3, 1);
+
+    expect(grid.focusedCell).toEqual({ row: 3, col: 1 });
+
+    windowFocus.mockRestore();
+  });
+
   it('drags a range over the cells, marks its edges and keeps the row click to itself', async () => {
     const grid = mountPeople();
     await grid.settle();
