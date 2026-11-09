@@ -7,6 +7,7 @@ import {
   RemoteChangeKind,
   type RemoteChange,
   type WorkbookDocument,
+  type WorkbookDocumentListener,
   type WorkbookDocumentOptions,
 } from './collab.types';
 import { mergeLayouts } from './merge-layout';
@@ -54,14 +55,20 @@ export const createWorkbookDocument = ({
   book,
   calculator,
   version: initial = null,
-  changed,
 }: WorkbookDocumentOptions): WorkbookDocument => {
   const raw = createStepper(book, calculator);
   const codec = createStepCodec(book);
+  const listeners = new Set<WorkbookDocumentListener>();
 
   let version = initial;
   let unconfirmed: readonly Unconfirmed[] = [];
   let history: WorkbookHistory | undefined;
+
+  const notify = (steps: readonly WorkbookStep[]): void => {
+    listeners.forEach((listener) => {
+      listener(steps);
+    });
+  };
 
   const applied = (step: WorkbookStep): StepResult => {
     settleForStep(calculator, step);
@@ -142,7 +149,7 @@ export const createWorkbookDocument = ({
         return false;
       }
       version = at;
-      changed?.(steps);
+      notify(steps);
       return true;
     },
     receive: (batch) => {
@@ -163,7 +170,7 @@ export const createWorkbookDocument = ({
       const moving = replay(remote);
 
       history?.rebase((step) => stepOver(step, moving));
-      changed?.(steps);
+      notify(steps);
       return true;
     },
     confirm: (count, at) => {
@@ -202,6 +209,13 @@ export const createWorkbookDocument = ({
     },
     follow: (next) => {
       history = next;
+    },
+    subscribe: (listener) => {
+      listeners.add(listener);
+
+      return () => {
+        listeners.delete(listener);
+      };
     },
   };
 };

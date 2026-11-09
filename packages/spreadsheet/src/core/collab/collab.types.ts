@@ -35,8 +35,9 @@ export interface WorkbookDocumentOptions {
   readonly book: Workbook;
   readonly calculator: Calculator;
   readonly version?: number | null | undefined;
-  readonly changed?: ((steps: readonly WorkbookStep[]) => void) | undefined;
 }
+
+export type WorkbookDocumentListener = (steps: readonly WorkbookStep[]) => void;
 
 export interface WorkbookDocument {
   readonly version: () => number | null;
@@ -46,6 +47,7 @@ export interface WorkbookDocument {
   readonly confirm: (count: number, version: number) => void;
   readonly stepper: Stepper;
   readonly follow: (history: WorkbookHistory) => void;
+  readonly subscribe: (listener: WorkbookDocumentListener) => () => void;
 }
 
 export interface WorkbookAuthority {

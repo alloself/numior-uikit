@@ -8,7 +8,7 @@ import {
   type NuiTableEditEvent,
   type TableCellPosition,
 } from '@numior/table';
-import { computed, ref, shallowRef } from 'vue';
+import { computed, ref, shallowRef, watch } from 'vue';
 import {
   createCellEditor,
   createStepper,
@@ -67,7 +67,8 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
   const editor = computed((): CellEditor => createCellEditor(options.book(), options.calculator()));
 
   const history = computed(() => {
-    const stepper = createStepper(options.book(), options.calculator());
+    const stepper =
+      options.collaboration()?.stepper ?? createStepper(options.book(), options.calculator());
 
     const tracked: Stepper = {
       apply: (step) => {
@@ -83,7 +84,16 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
     return createWorkbookHistory(tracked);
   });
 
-  const refresh = (): void => {
+  watch(
+    history,
+    (next) => {
+      options.collaboration()?.follow(next);
+    },
+    { immediate: true },
+  );
+
+  const redraw = (): void => {
+    revision.value += 1;
     options.recalc.run();
   };
 
@@ -98,8 +108,7 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
       return 0;
     }
     options.changed({ steps });
-    revision.value += 1;
-    refresh();
+    redraw();
     return CHANGED_ONE;
   };
 
@@ -187,6 +196,7 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
     revision,
     setDraft,
     apply,
+    redraw,
     inputAt: inputAtPosition,
     editableColumns,
     commands: {

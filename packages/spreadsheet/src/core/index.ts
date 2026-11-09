@@ -242,6 +242,7 @@ export { createWorkbookDocument } from './collab/workbook-document';
 export type {
   WorkbookAuthority,
   WorkbookDocument,
+  WorkbookDocumentListener,
   WorkbookDocumentOptions,
 } from './collab/collab.types';
 export { createStepCodec } from './wire/step-codec';

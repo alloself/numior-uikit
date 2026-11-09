@@ -29,6 +29,7 @@ import type {
   Sheet,
   ThemePalette,
   Workbook,
+  WorkbookDocument,
   WorkbookStep,
 } from '../core';
 import type { LimitationsReport, OriginalPackage } from '../xlsx/read/read.types';
@@ -187,6 +188,7 @@ export interface NuiSpreadsheetProps {
   fileName?: string | undefined;
   source?: OriginalPackage | undefined;
   saveFile?: NuiSpreadsheetSaveAdapter | undefined;
+  collaboration?: WorkbookDocument | undefined;
 }
 
 export interface SheetRecalcOptions {
@@ -290,6 +292,7 @@ export interface SheetEditingOptions {
   readonly messages: ComputedRef<NuiSpreadsheetMessages>;
   readonly table: Readonly<ShallowRef<NuiTableExposed | null>>;
   readonly recalc: SheetRecalc;
+  readonly collaboration: () => WorkbookDocument | undefined;
   readonly changed: (change: NuiSpreadsheetChange) => void;
 }
 
@@ -299,6 +302,7 @@ export interface SheetEditing {
   readonly commands: NuiTableCommandSink<number>;
   setDraft(next: NuiTableDraft | undefined): void;
   apply(steps: readonly WorkbookStep[]): boolean;
+  redraw(): void;
   inputAt(position: TableCellPosition): string;
   editableColumns(columns: readonly NuiTableColumn<number>[]): NuiTableColumn<number>[];
 }

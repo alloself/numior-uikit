@@ -253,7 +253,17 @@ import {
 } from '@numior/table';
 import { NuiButton, NuiIcon, NuiPopover, type NuiTabDescriptor } from '@numior/vue';
 import { useFocusWithin } from '@vueuse/core';
-import { computed, markRaw, provide, ref, shallowRef, useId, useTemplateRef, watch } from 'vue';
+import {
+  computed,
+  markRaw,
+  onMounted,
+  provide,
+  ref,
+  shallowRef,
+  useId,
+  useTemplateRef,
+  watch,
+} from 'vue';
 import {
   EN_LOCALE,
   HelpLanguage,
@@ -337,6 +347,7 @@ const {
   fileName,
   source,
   saveFile,
+  collaboration,
 } = defineProps<NuiSpreadsheetProps>();
 
 const sheetIndex = defineModel<number>('sheet', { default: 0 });
@@ -443,6 +454,27 @@ const file = useSheetFile({
   },
 });
 
+const noteStructure = (): void => {
+  const next = sheetsKey();
+
+  if (next !== knownSheets) {
+    const before = shownSheet.value;
+    const kept = before === undefined ? -1 : book.sheets.indexOf(before);
+
+    knownSheets = next;
+    sheetsRevision.value += 1;
+
+    if (kept >= 0) {
+      sheetIndex.value = kept;
+    }
+  }
+  if (shownSheet.value?.layout !== knownLayout) {
+    knownLayout = shownSheet.value?.layout;
+    layoutRevision.value += 1;
+  }
+  file.noteEdit();
+};
+
 const editing = useSheetEditing({
   book: () => book,
   calculator: () => calculator ?? ownCalculator.value,
@@ -453,27 +485,28 @@ const editing = useSheetEditing({
   messages,
   table: grid,
   recalc,
+  collaboration: () => collaboration,
   changed: (change) => {
-    const next = sheetsKey();
-
-    if (next !== knownSheets) {
-      const before = shownSheet.value;
-      const kept = before === undefined ? -1 : book.sheets.indexOf(before);
-
-      knownSheets = next;
-      sheetsRevision.value += 1;
-
-      if (kept >= 0) {
-        sheetIndex.value = kept;
-      }
-    }
-    if (shownSheet.value?.layout !== knownLayout) {
-      knownLayout = shownSheet.value?.layout;
-      layoutRevision.value += 1;
-    }
-    file.noteEdit();
+    noteStructure();
     emit('change', change);
   },
+});
+
+const onRemoteSteps = (): void => {
+  noteStructure();
+  editing.redraw();
+};
+
+onMounted(() => {
+  watch(
+    () => collaboration,
+    (session, _previous, onCleanup) => {
+      if (session !== undefined) {
+        onCleanup(session.subscribe(onRemoteSteps));
+      }
+    },
+    { immediate: true },
+  );
 });
 
 const drawings = useSheetDrawings({

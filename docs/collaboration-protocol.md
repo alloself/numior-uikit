@@ -137,6 +137,10 @@
 
 `setPivot` и `refreshPivot` читают вычисленные значения. Сервер, который применяет шаги, должен закончить пересчёт перед ними.
 
+На клиенте документ создаётся через `createWorkbookDocument({ book, calculator })` и передаётся в `NuiSpreadsheet` пропом
+`collaboration`. Отправку запускает потребитель: `@change="client.sync()"`. Пример — `apps/playground/src/collab/CollabBookApp.vue`
+(`collab.html?book`); эталонный сервер отдаёт книгу комнатам, имя которых начинается с `book`.
+
 ## Пример обмена
 
 ```text

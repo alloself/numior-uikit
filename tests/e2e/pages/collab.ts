@@ -6,6 +6,7 @@ import {
   type Page,
   type WebSocketRoute,
 } from '@playwright/test';
+import { BookSection } from './book';
 
 export interface TextEdges {
   readonly left: number;
@@ -233,6 +234,22 @@ export class CollabClient {
   }
 }
 
+export class CollabBook {
+  readonly sheet: BookSection;
+
+  constructor(readonly client: CollabClient) {
+    this.sheet = new BookSection(client.page, 'collab-book');
+  }
+
+  get tabs(): Locator {
+    return this.sheet.sheet.getByRole('tab');
+  }
+
+  async undo(): Promise<void> {
+    await this.client.page.keyboard.press('Control+z');
+  }
+}
+
 export class CollabRoom {
   private readonly clients: CollabClient[] = [];
 
@@ -246,11 +263,32 @@ export class CollabRoom {
   }
 
   async joinOffline(user: string): Promise<CollabClient> {
-    return this.open(new URLSearchParams({ doc: this.doc, user, offline: '1' }), true);
+    const client = await this.open(
+      new URLSearchParams({ doc: this.doc, user, offline: '1' }),
+      true,
+    );
+
+    await client.editor.waitFor();
+
+    return client;
   }
 
   async join(user: string): Promise<CollabClient> {
-    return this.open(new URLSearchParams({ doc: this.doc, user }), false);
+    const client = await this.open(new URLSearchParams({ doc: this.doc, user }), false);
+
+    await client.editor.waitFor();
+
+    return client;
+  }
+
+  async joinBook(user: string): Promise<CollabBook> {
+    const query = new URLSearchParams({ doc: `book-${this.doc}`, user, book: '1' });
+    const client = await this.open(query, true);
+    const book = new CollabBook(client);
+
+    await book.sheet.grid.waitFor();
+
+    return book;
   }
 
   private async open(query: URLSearchParams, routed: boolean): Promise<CollabClient> {
@@ -264,7 +302,6 @@ export class CollabRoom {
 
     this.clients.push(client);
     await page.goto(`/collab.html?${query.toString()}`);
-    await client.editor.waitFor();
 
     return client;
   }

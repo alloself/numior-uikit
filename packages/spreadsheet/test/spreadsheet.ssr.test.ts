@@ -1,8 +1,14 @@
 // @vitest-environment node
 import { renderToString } from '@vue/test-utils';
-import { describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import { NuiSpreadsheet } from '../src';
-import { createWorkbook, textValue } from '../src/core';
+import {
+  createCalculator,
+  createWorkbook,
+  createWorkbookDocument,
+  textValue,
+  type WorkbookDocumentListener,
+} from '../src/core';
 
 const book = createWorkbook();
 
@@ -17,6 +23,18 @@ describe('NuiSpreadsheet on the server', () => {
     expect(first).toContain('Item');
     expect(first).toContain('>A<');
     expect(second).toBe(first);
+  });
+
+  it('does not listen to a shared book on the server', async () => {
+    const subscribe = vi.fn<(listener: WorkbookDocumentListener) => () => void>();
+    const session = createWorkbookDocument({ book, calculator: createCalculator(book) });
+
+    const html = await renderToString(NuiSpreadsheet, {
+      props: { book, label: 'Sales book', collaboration: { ...session, subscribe } },
+    });
+
+    expect(html).toContain('Item');
+    expect(subscribe).not.toHaveBeenCalled();
   });
 
   it('renders the file bar with the name of the file', async () => {
