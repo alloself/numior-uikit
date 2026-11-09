@@ -316,7 +316,7 @@ import {
 import { useTextMeasure } from './use-text-measure';
 import { paintOf } from './table-paint';
 import { forgetCellReads } from './table-cells';
-import { ownCellAt, ownDetailOf } from './table-dom';
+import { ownCellAt, ownDetailOf, rowPositionOf } from './table-dom';
 import { cellTextOf, cellValueOf, engineColumnOf, valueTextOf } from './table-format';
 import { columnTreeOf, headerBandsOf } from './table-columns';
 import { orderLeaves } from './table-order';
@@ -1392,7 +1392,7 @@ const rowDrag = useTableRowDrag<T>({
   pageStart: () => pageStart.value,
   rowCount: () => visibleRows.value,
   rowSize: () => rowSize.value,
-  headRows: () => headRows.value,
+  leading: () => headRows.value + pinnedCount.value,
   nestDelay: () => nestDelay,
   isRtl: direction.isRtl,
   canNest: (row) =>
@@ -2210,8 +2210,7 @@ const onRowsClick = (event: MouseEvent): void => {
     return;
   }
 
-  const visual =
-    Number(target.closest('[role="row"]')?.getAttribute('aria-rowindex')) - headRows.value - 1;
+  const visual = rowPositionOf(target.closest('[role="row"]'), headRows.value);
 
   const row = Number.isInteger(visual) ? rowFor(visual) : undefined;
 

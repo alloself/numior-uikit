@@ -1,5 +1,6 @@
 import { computed, onMounted, watch, type ComputedRef, type ShallowRef } from 'vue';
 import { Direction, useEdgeScroll, type VirtualList } from '@numior/primitives';
+import { ariaIndex, rowPositionOf } from './table-dom';
 import { boxOf } from './table-ranges';
 import type { PlacedColumn, TableLayout } from './table-layout';
 import {
@@ -132,9 +133,6 @@ const idle = (): void => undefined;
 const clamp = (value: number, low: number, high: number): number =>
   Math.min(Math.max(value, low + 1), high - 1);
 
-const ariaIndex = (element: Element | null | undefined, name: string): number =>
-  Number(element?.getAttribute(name));
-
 export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
   const placed = computed(
     () => new Map(options.layout().visual.map((column) => [column.key, column])),
@@ -210,11 +208,7 @@ export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
     };
 
   const positionOf = (cell: Element): TableCellPosition | undefined => {
-    const row =
-      ariaIndex(cell.parentElement, 'aria-rowindex') -
-      options.headRows() -
-      1 -
-      options.pinnedRows();
+    const row = rowPositionOf(cell.parentElement, options.headRows() + options.pinnedRows());
 
     const col = ariaIndex(cell, 'aria-colindex') - 1 - options.dataOffset();
 

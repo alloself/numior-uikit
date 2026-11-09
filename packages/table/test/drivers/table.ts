@@ -1727,12 +1727,17 @@ export class TableDriver<T> {
   }
 
   rowDragging(position: number): boolean {
-    return this.row(position)?.classList.contains('nui-table__row--dragging') ?? false;
+    return (
+      this.row(this.pinnedShown + position)?.classList.contains('nui-table__row--dragging') ?? false
+    );
+  }
+
+  private get pinnedShown(): number {
+    return this.element.querySelectorAll('.nui-table__pinned > [role="row"]').length;
   }
 
   private rowY(position: number, side: DropSide): number {
-    const pinned = this.element.querySelectorAll('.nui-table__pinned > [role="row"]').length;
-    const top = (this.headRows + pinned + position) * HEAD_HEIGHT;
+    const top = (this.headRows + this.pinnedShown + position) * HEAD_HEIGHT;
 
     switch (side) {
       case 'before':
@@ -1745,7 +1750,7 @@ export class TableDriver<T> {
   }
 
   async grabRow(position: number): Promise<void> {
-    const grip = this.rowGrip(position);
+    const grip = this.rowGrip(this.pinnedShown + position);
 
     if (grip === null) {
       throw new Error(`Row ${position} has no drag grip`);

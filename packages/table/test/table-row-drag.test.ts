@@ -88,6 +88,27 @@ describe('NuiTable row drag', () => {
     expect(grid.dropMark).toBeUndefined();
   });
 
+  it('drops a row where the pointer is when rows are pinned above the body', async () => {
+    const rows = people(50);
+    const grid = mountPeople({ rows, props: { pinnedRows: people(52).slice(50) } });
+    await grid.settle();
+
+    await grid.grabRow(1);
+
+    expect(grid.rowDragging(1)).toBe(true);
+    expect(grid.ghostText).toBe('Сотрудник 1');
+
+    await grid.moveRowTo(4, 'after');
+
+    expect(grid.dropMark).toEqual({ kind: 'line', start: '320px', inset: '0px' });
+
+    await grid.dropRow();
+
+    expect(grid.reorders).toEqual([
+      { row: rows[1], from: 1, to: 4, parent: undefined, toParent: undefined },
+    ]);
+  });
+
   it('moves a row with Alt+Shift and the arrows and follows it after the rows update', async () => {
     const rows = people(50);
     const grid = mountPeople({ rows });

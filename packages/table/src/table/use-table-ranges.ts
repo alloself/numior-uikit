@@ -27,7 +27,7 @@ import {
   withLast,
   type RangeBounds,
 } from './table-ranges';
-import { controlled, OWN_DATA_ROWS, OWN_SPANNING_CELLS } from './table-dom';
+import { controlled, OWN_DATA_ROWS, OWN_SPANNING_CELLS, rowPositionOf } from './table-dom';
 import type { TableEdgeOf } from './table-keys';
 import { expandToMerges, leaveMerge, spansLines, type TableMergeIndex } from './table-merges';
 import type { NuiTableMessages } from './table.messages';
@@ -281,9 +281,8 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   };
 
   const positionOf = (cell: Element): TableCellPosition | undefined => {
-    const rowIndex = Number(cell.parentElement?.getAttribute('aria-rowindex'));
     const colIndex = Number(cell.getAttribute('aria-colindex'));
-    const row = rowIndex - options.headRows() - options.pinnedRows() - 1;
+    const row = rowPositionOf(cell.parentElement, options.headRows() + options.pinnedRows());
     const col = colIndex - 1 - options.offset();
 
     return Number.isInteger(row) && Number.isInteger(col) ? { row, col } : undefined;

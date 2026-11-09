@@ -9,6 +9,12 @@ export const controlled = (target: Element): boolean => {
   return control !== null && control.closest('.nui-table') !== null;
 };
 
+export const ariaIndex = (element: Element | null | undefined, name: string): number =>
+  Number(element?.getAttribute(name));
+
+export const rowPositionOf = (row: Element | null | undefined, leading: number): number =>
+  ariaIndex(row, 'aria-rowindex') - leading - 1;
+
 export const OWN_BODY_ROWS = `${OWN_GRID} > .nui-table__body > [role="row"]`;
 
 export const OWN_DATA_ROWS = `${OWN_GRID} > .nui-table__body > .nui-table__row--body`;

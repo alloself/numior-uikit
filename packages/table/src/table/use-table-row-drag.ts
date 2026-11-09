@@ -7,7 +7,7 @@ import {
   type TableRowNode,
   type TableSiblings,
 } from '../engine';
-import { OWN_BODY_ROWS } from './table-dom';
+import { OWN_BODY_ROWS, rowPositionOf } from './table-dom';
 import type { NuiTableMessages } from './table.messages';
 import {
   RowZone,
@@ -26,7 +26,7 @@ export interface TableRowDragOptions<T> {
   readonly pageStart: () => number;
   readonly rowCount: () => number;
   readonly rowSize: () => number;
-  readonly headRows: () => number;
+  readonly leading: () => number;
   readonly nestDelay: () => number;
   readonly isRtl: () => boolean;
   readonly canNest: (row: T) => boolean;
@@ -180,7 +180,7 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
 
     return [...(options.viewport()?.querySelectorAll<HTMLElement>(OWN_BODY_ROWS) ?? [])].flatMap(
       (element) => {
-        const position = Number(element.getAttribute('aria-rowindex')) - options.headRows() - 1;
+        const position = rowPositionOf(element, options.leading());
 
         return position >= from && position < end
           ? []

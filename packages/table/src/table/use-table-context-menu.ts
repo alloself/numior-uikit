@@ -1,5 +1,6 @@
 import { computed, ref, shallowRef, type ComputedRef, type Ref, type ShallowRef } from 'vue';
 import type { NuiMenuEntry, NuiMenuFocus } from '@numior/vue';
+import { rowPositionOf } from './table-dom';
 import type { NuiTableMessages } from './table.messages';
 import type {
   NuiTableContextMenu,
@@ -59,7 +60,7 @@ export const useTableContextMenu = <T>(options: TableContextMenuOptions<T>): Tab
   const scope = shallowRef<NuiTableContextScope<T>>();
 
   const positionOf = (cell: Element): TableCellPosition => ({
-    row: Number(cell.parentElement?.getAttribute('aria-rowindex')) - options.headRows() - 1,
+    row: rowPositionOf(cell.parentElement, options.headRows()),
     col: Number(cell.getAttribute('aria-colindex')) - 1,
   });
 

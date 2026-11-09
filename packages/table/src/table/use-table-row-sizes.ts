@@ -9,7 +9,7 @@ import {
 } from 'vue';
 import { createSizeIndex, type ItemSize, type VirtualSize } from '@numior/primitives';
 import { TableNodeKind, type TableEngine, type TableNodeId } from '../engine';
-import { OWN_BODY_ROWS, OWN_DETAIL_ROWS } from './table-dom';
+import { OWN_BODY_ROWS, OWN_DETAIL_ROWS, rowPositionOf } from './table-dom';
 import { TableRowMode, type NuiTableRowHeights, type TableDetailSpot } from './table.types';
 
 export interface TableRowSizesOptions<T> {
@@ -49,7 +49,7 @@ const sizeOf = (entry: ResizeObserverEntry): number =>
   entry.borderBoxSize[0]?.blockSize ?? entry.target.getBoundingClientRect().height;
 
 const positionOf = (cell: Element, leading: number): number =>
-  Number(cell.parentElement?.getAttribute('aria-rowindex')) - leading - 1;
+  rowPositionOf(cell.parentElement, leading);
 
 const firstCells = (rows: Iterable<Element>): Element[] =>
   [...rows].flatMap((row) => {
