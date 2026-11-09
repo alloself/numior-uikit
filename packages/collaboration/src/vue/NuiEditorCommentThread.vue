@@ -29,7 +29,7 @@
     />
 
     <div v-else class="nui-collab-comments__actions">
-      <NuiButton size="sm" variant="ghost" tone="neutral" @click="replying = true">{{
+      <NuiButton size="sm" variant="soft" tone="primary" @click="replying = true">{{
         text.reply
       }}</NuiButton>
       <div class="nui-collab-comments__tools">
