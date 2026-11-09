@@ -73,6 +73,7 @@
         :loop="loop"
         :empty-label="emptyText"
         v-bind="control.contentAttrs.value"
+        @toggle="shown.onToggle"
         @select="onSelect"
         @load="onLoad"
         @keydown.capture="onTreeKeydown"
@@ -97,6 +98,7 @@
         :active-id="navigation.activeId.value"
         :empty-label="emptyText"
         v-bind="control.contentAttrs.value"
+        @toggle="shown.onToggle"
         @select="onSelect"
         @keydown="onListboxKeydown"
         @pointermove="activateHovered"
@@ -140,6 +142,7 @@ import NuiTree from '../tree/NuiTree.vue';
 import { isListGroup, optionIndexOf, type NuiListGroup, type NuiOption } from '../shared/options';
 import { useListboxSurface } from '../shared/use-listbox-surface';
 import { useOptionSelection } from '../shared/use-option-selection';
+import { takeFocus, useShownPopover } from '../shared/use-shown-popover';
 import { ancestorValuesOf } from '../tree/flatten';
 import type { NuiTreeItem } from '../tree/tree.types';
 import { selectMessages } from './select.messages';
@@ -326,16 +329,23 @@ const clear = (): void => {
   triggerElement.value?.focus({ preventScroll: true });
 };
 
+const enterListbox = (): boolean => {
+  if (isTree.value) {
+    return takeFocus(listboxElement.value);
+  }
+
+  navigation.reveal();
+
+  return takeFocus(navigation.activeElement());
+};
+
+const shown = useShownPopover(open, enterListbox);
+
 onMounted(() => {
   watch(
     open,
     (isOpen) => {
-      if (isOpen && isTree.value) {
-        listboxElement.value?.focus({ preventScroll: true });
-      } else if (isOpen) {
-        navigation.reveal();
-        navigation.activeElement()?.focus({ preventScroll: true });
-      } else if (inside) {
+      if (!isOpen && inside) {
         inside = false;
         triggerElement.value?.focus({ preventScroll: true });
       }

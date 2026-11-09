@@ -13,7 +13,6 @@ import {
   createCollection,
   createIntent,
   Key,
-  PopoverState,
   useFloating,
   useListNavigation,
   usePopover,
@@ -22,6 +21,7 @@ import {
   type ListNavigation,
   type PopoverControl,
 } from '@numior/primitives';
+import { takeFocus, useShownPopover } from '../shared/use-shown-popover';
 import type { MenuContext } from './menu-context';
 import { MenuFocusRequest, NuiMenuFocus } from './menu.types';
 
@@ -85,7 +85,6 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
   const opening = createIntent<NuiMenuFocus>();
   const pointed = shallowRef(false);
   let inside = false;
-  let focusOwed = false;
 
   const close = (): void => {
     if (options.close === undefined) {
@@ -115,8 +114,6 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
   };
 
   const activateOnOpen = (): void => {
-    focusOwed = true;
-
     switch (opening.peek()) {
       case NuiMenuFocus.First:
         navigation.reset();
@@ -137,28 +134,25 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     return (request === NuiMenuFocus.First ? items[0] : items.at(-1)) ?? null;
   };
 
-  const focusOnOpen = (): void => {
-    if (!focusOwed) {
-      return;
-    }
-
+  const focusOnOpen = (): boolean => {
     const request = opening.peek();
 
-    const target =
+    const focused = takeFocus(
       request === undefined
         ? options.content.value
-        : (navigation.activeElement() ?? requestedItem(request));
+        : (navigation.activeElement() ?? requestedItem(request)),
+    );
 
-    focusElement(target);
-
-    if (target !== null && target.ownerDocument.activeElement === target) {
-      focusOwed = false;
+    if (focused) {
       opening.take();
     }
+
+    return focused;
   };
 
+  const shown = useShownPopover(options.open, focusOnOpen);
+
   const onClosed = (): void => {
-    focusOwed = false;
     opening.take();
     if (inside) {
       inside = false;
@@ -181,9 +175,7 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     watch(
       () => options.open.value,
       (isOpen) => {
-        if (isOpen) {
-          focusOnOpen();
-        } else {
+        if (!isOpen) {
           onClosed();
         }
       },
@@ -223,11 +215,7 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
           close();
         }
       },
-      onToggle: (event) => {
-        if ('newState' in event && event.newState === PopoverState.Open) {
-          focusOnOpen();
-        }
-      },
+      onToggle: shown.onToggle,
       onPointermove: (event) => {
         const item = navigation.itemFrom(event.target);
         if (item && item !== navigation.activeElement()) {

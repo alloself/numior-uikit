@@ -44,6 +44,38 @@ test.describe('pickers', () => {
     await expect.poll(async () => (await pickers.readOutput()).country).toBeNull();
   });
 
+  test('select opened with a click, Enter or Space takes the keyboard into its list', async ({
+    playground,
+    pickers,
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'keyboard scenario');
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+
+    await pickers.countryTrigger.click();
+    await expect(pickers.option('Австрия')).toBeFocused();
+
+    await page.keyboard.press('ArrowDown');
+    await expect(pickers.option('Бельгия')).toBeFocused();
+
+    for (const key of ['Enter', 'Space']) {
+      await page.keyboard.press('Escape');
+      await expect(pickers.countryTrigger).toBeFocused();
+
+      await page.keyboard.press(key);
+      await expect(pickers.option('Австрия')).toBeFocused();
+
+      await page.keyboard.press('ArrowDown');
+      await expect(pickers.option('Бельгия')).toBeFocused();
+    }
+
+    await page.keyboard.press('Escape');
+    await pickers.treeTrigger.click();
+    await expect(pickers.tree).toBeFocused();
+  });
+
   test('a long value truncates with an ellipsis and keeps the clear button off the text', async ({
     playground,
     pickers,

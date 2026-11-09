@@ -182,6 +182,15 @@ status: accepted
   берёт `prop ?? messages.value.key` из `useMessages(catalog, locale?)`, компонент с пропом
   `locale` передаёт его в `useMessages`. Тексты с параметрами — функции одного объекта,
   множественное число — `plural`. Решение — `messages.adr.md`.
+- Фокус и измерения внутри поповера выполняются, когда браузер его уже показал. Поповер,
+  открытый нативным invoker (`popovertarget`: щелчок, Enter, пробел), сообщает об открытии в
+  `beforetoggle`, flush Vue проходит до показа, и `focus()` на скрытом содержимом молча не
+  срабатывает. Поэтому вход в поповер идёт через `useShownPopover(open, settle)`
+  (`packages/vue/src/shared/use-shown-popover.ts`): `settle` пробуется в post-flush (путь
+  `show()` из кода) и повторяется на нативном `toggle`, пока не вернёт `true`; `takeFocus`
+  отвечает, перешёл ли фокус. jsdom разницы не видит, поэтому открытие щелчком, Enter и
+  пробелом с проверкой фокуса и следующей стрелки проверяется в e2e (`navigation.spec.ts`,
+  `pickers.spec.ts`).
 - Одно действие — один рендер. Watcher с `flush: 'post'` только трогает DOM: вызывает
   `focus()`, `showPopover()`, измеряет и пишет `element.style` или custom properties; он не
   пишет в реактивное состояние и не запускает второй рендер. Кто активен, где tab stop и
