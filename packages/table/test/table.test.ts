@@ -216,6 +216,27 @@ describe('NuiTable', () => {
     expect(grid.renderedRows).not.toContain(2);
   });
 
+  it('renders a cell slot that appears after the table is mounted and drops it when it goes', async () => {
+    const grid = mountPeople();
+    await grid.settle();
+
+    expect(grid.cellHtml(3, 1)).not.toContain('<strong>');
+
+    await grid.setSlots({ 'cell-name': UpperCaseCell });
+
+    expect(grid.cellHtml(3, 1)).toBe('<strong>СОТРУДНИК 3</strong>');
+
+    await grid.setSlots({ 'cell-name': UpperCaseCell, 'cell-city': UpperCaseCell });
+
+    expect(grid.cellHtml(3, 1)).toBe('<strong>СОТРУДНИК 3</strong>');
+    expect(grid.cellHtml(3, 2)).toContain('<strong>');
+
+    await grid.setSlots({});
+
+    expect(grid.cellText(3, 1)).toBe('Сотрудник 3');
+    expect(grid.cellHtml(3, 1)).not.toContain('<strong>');
+  });
+
   it('renders custom cells and headers through slots and an empty state that follows the rows', async () => {
     const grid = mountPeople({
       slots: {

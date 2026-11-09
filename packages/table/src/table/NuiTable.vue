@@ -232,6 +232,7 @@
 import {
   computed,
   onBeforeUnmount,
+  onBeforeUpdate,
   onMounted,
   ref,
   shallowReactive,
@@ -2487,9 +2488,20 @@ const grabAt = (position: number | undefined, event: PointerEvent): void => {
 
 const isCellSlot = (name: string): name is `cell-${string}` => name.startsWith('cell-');
 
-const cellSlots = Object.keys(rawSlots).filter(isCellSlot);
+const cellSlotNames = (): Array<`cell-${string}`> => Object.keys(rawSlots).filter(isCellSlot);
 
-const cellSlotted = cellSlots.length > 0;
+const cellSlots = shallowRef(cellSlotNames());
+
+const cellSlotted = computed(() => cellSlots.value.length > 0);
+
+onBeforeUpdate(() => {
+  const names = cellSlotNames();
+
+  if (names.join() !== cellSlots.value.join()) {
+    cellSlots.value = names;
+    sync();
+  }
+});
 
 const bodyRowView = (item: TableBodyRow): TableBodyRowView<T> =>
   item.part === TableBodyPart.Detail

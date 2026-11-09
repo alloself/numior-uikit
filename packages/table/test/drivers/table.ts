@@ -3,6 +3,7 @@ import { createNuiConfig, type EdgePoint, type NuiConfigOptions } from '@numior/
 import { promiseTimeout } from '@vueuse/core';
 import { vi } from 'vite-plus/test';
 import {
+  markRaw,
   nextTick,
   ref,
   shallowRef,
@@ -467,7 +468,7 @@ export class TableDriver<T> {
         state: { ...models, rows: source, props },
         listeners,
         dir: settings.dir,
-        slots: settings.slots ?? {},
+        slots: markRaw({ ...settings.slots }),
         onTable: setExposed,
       },
       attachTo: document.body,
@@ -2299,6 +2300,10 @@ export class TableDriver<T> {
     this.models.sort.value = next;
     await settled;
     await nextTick();
+  }
+
+  async setSlots(slots: TableSlotViews): Promise<void> {
+    await this.wrapper.setProps({ slots: markRaw({ ...slots }) });
   }
 
   async setSource(rows: readonly T[]): Promise<void> {
