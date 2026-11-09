@@ -132,35 +132,41 @@ export const createRankJob = (
   const length = codes.length;
   const order = identityIndices(dictionary.length);
   const ranks = new Uint32Array(length);
-  let rankOf: Uint32Array | null = null;
+  const rankOf = new Uint32Array(dictionary.length);
+  let placed = 0;
+  let rank = 0;
   let ranked = 0;
 
   const sorting = createCollatedSortJob(order, dictionary, collator, host);
 
-  const rankTable = (): Uint32Array => {
-    if (rankOf === null) {
-      const table = new Uint32Array(dictionary.length);
+  const textAt = (place: number): string => dictionary[order[place] ?? 0] ?? '';
 
-      for (let place = 0; place < order.length; place += 1) {
-        table[order[place] ?? 0] = place;
+  const place = (deadline: number): boolean => {
+    while (placed < order.length) {
+      if (placed > 0 && collator.compare(textAt(placed - 1), textAt(placed)) !== 0) {
+        rank += 1;
       }
-      rankOf = table;
+      rankOf[order[placed] ?? 0] = rank;
+      placed += 1;
+
+      if (dueNow(placed, deadline)) {
+        return false;
+      }
     }
-    return rankOf;
+    return true;
   };
 
   return {
-    total: () => sorting.total() + length,
-    done: () => sorting.done() + ranked,
+    total: () => sorting.total() + order.length + length,
+    done: () => sorting.done() + placed + ranked,
     waiting: () => sorting.waiting?.(),
     work: (deadline) => {
-      if (!sorting.work(deadline)) {
+      if (!sorting.work(deadline) || !place(deadline)) {
         return false;
       }
-      const table = rankTable();
 
       while (ranked < length) {
-        ranks[ranked] = table[codes[ranked] ?? 0] ?? 0;
+        ranks[ranked] = rankOf[codes[ranked] ?? 0] ?? 0;
         ranked += 1;
 
         if (dueNow(ranked, deadline)) {
