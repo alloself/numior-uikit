@@ -1,4 +1,10 @@
-import type { NuiTableCellStyle, NuiTableRange, NuiTableSourceCell } from '@numior/table';
+import type {
+  NuiTableCellStyle,
+  NuiTableEdgeDirection,
+  NuiTableRange,
+  NuiTableSourceCell,
+  TableCellPosition,
+} from '@numior/table';
 import {
   EN_LOCALE,
   MAX_COLS,
@@ -22,6 +28,18 @@ import { sheetStyle } from './sheet-style';
 import type { LineSizes } from './drawings/drawings.types';
 import type { SheetCells, SheetCellsOptions, StyleCache, ValueShape } from './sheet.types';
 import { CellValueKind } from '../core/cell.types';
+
+interface EdgeStep {
+  readonly row: -1 | 0 | 1;
+  readonly col: -1 | 0 | 1;
+}
+
+const EDGE_STEPS: Readonly<Record<NuiTableEdgeDirection, EdgeStep>> = {
+  up: { row: -1, col: 0 },
+  down: { row: 1, col: 0 },
+  previous: { row: 0, col: -1 },
+  next: { row: 0, col: 1 },
+};
 
 const MDW = 7;
 
@@ -258,11 +276,39 @@ export const sheetCells = ({
     };
   };
 
+  const nextEdge = (
+    from: TableCellPosition,
+    direction: NuiTableEdgeDirection,
+  ): TableCellPosition => {
+    const step = EDGE_STEPS[direction];
+
+    const edge = sheet.cells.nextEdge(
+      rows.lineAt(from.row),
+      cols.lineAt(from.col),
+      step.row,
+      step.col,
+    );
+
+    return step.row === 0
+      ? { row: from.row, col: cols.positionNear(edge) }
+      : { row: rows.positionNear(edge), col: from.col };
+  };
+
+  const lastCell = (): TableCellPosition | undefined => {
+    const used = sheet.cells.usedRange();
+
+    return used === undefined
+      ? undefined
+      : { row: rows.positionNear(used.bottom), col: cols.positionNear(used.right) };
+  };
+
   return {
     source: {
       rows: rows.count,
       cols: cols.count,
       cellAt,
+      nextEdge,
+      lastCell,
       columnWidth: (column) => columnWidthOf(sheet, cols.lineAt(column)),
       rowLabel: (position) => String(rows.lineAt(position) + 1),
       columnLabel: (column) => columnName(cols.lineAt(column)),
