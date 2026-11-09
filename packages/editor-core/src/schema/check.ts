@@ -1,5 +1,5 @@
 import type { Slice } from '../doc/doc.types';
-import { contentSize, sameMarks } from '../model/node';
+import { contentSize, nodeSize, sameMarks } from '../model/node';
 import {
   ContentNodeKind,
   type Attrs,
@@ -174,15 +174,30 @@ const checkElement = (context: CheckContext, node: ElementNode): void => {
   });
 };
 
+const holeWithin = (
+  hole: number | undefined,
+  start: number,
+  child: ElementNode,
+): number | undefined =>
+  hole !== undefined && start < hole && hole < start + nodeSize(child)
+    ? hole - start - 1
+    : undefined;
+
 const checkSiblings = (
   context: CheckContext,
   nodes: readonly ContentNode[],
   parent: NodeType | undefined,
   openStart: number,
   openEnd: number,
+  hole: number | undefined,
 ): void => {
+  let offset = 0;
+
   nodes.forEach((child, index) => {
     const previous = nodes[index - 1];
+    const childStart = offset;
+
+    offset += nodeSize(child);
 
     if (child.kind === ContentNodeKind.Text) {
       if (parent !== undefined) {
@@ -200,10 +215,12 @@ const checkSiblings = (
     const start = index === 0 ? openStart : 0;
     const end = index === nodes.length - 1 ? openEnd : 0;
 
+    const inner = holeWithin(hole, childStart, child);
+
     context.path.push(index);
 
-    if (start > 0 || end > 0) {
-      checkOpen(context, child, start, end);
+    if (start > 0 || end > 0 || inner !== undefined) {
+      checkOpen(context, child, start, end, inner);
     } else {
       checkElement(context, child);
     }
@@ -216,6 +233,7 @@ const checkOpen = (
   node: ElementNode,
   openStart: number,
   openEnd: number,
+  hole: number | undefined,
 ): void => {
   const type = elementTypeOf(context, node.type);
 
@@ -224,7 +242,7 @@ const checkOpen = (
     return;
   }
   checkAttrs(context, context.path, type.attrs, node.attrs);
-  checkSiblings(context, node.content, type, openStart - 1, openEnd - 1);
+  checkSiblings(context, node.content, type, openStart - 1, openEnd - 1, hole);
 };
 
 export const checkResult = (context: CheckContext): DocCheck =>
@@ -250,10 +268,11 @@ export const checkNodes = (schema: SchemaShape, nodes: readonly ElementNode[]): 
   return checkResult(context);
 };
 
-export const checkSlice = (schema: SchemaShape, slice: Slice): DocCheck => {
+export const checkSlice = (schema: SchemaShape, slice: Slice, insert?: number): DocCheck => {
   const context = createCheckContext(schema);
+  const hole = insert === undefined ? undefined : insert + slice.openStart;
 
-  checkSiblings(context, slice.content, undefined, slice.openStart, slice.openEnd);
+  checkSiblings(context, slice.content, undefined, slice.openStart, slice.openEnd, hole);
   return checkResult(context);
 };
 

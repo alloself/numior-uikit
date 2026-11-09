@@ -6,7 +6,7 @@ import {
   type ElementNode,
   type NodeId,
 } from '../model/node.types';
-import type { Mappable } from '../transform/mapping.types';
+import type { Assoc, Mappable } from '../transform/mapping.types';
 import { GapSide, type Selection, type SelectionRange } from './selection.types';
 import { SelectionKind } from './state.types';
 
@@ -177,6 +177,30 @@ export const validSelection = (doc: Doc, selection: Selection): Selection => {
   }
 };
 
+export const followPosition = (
+  pos: number,
+  mapping: Mappable,
+  before: Doc,
+  after: Doc,
+  assoc: Assoc = 1,
+): number => {
+  const mapped = mapping.mapResult(pos, assoc);
+
+  if (!mapped.deleted) {
+    return mapped.pos;
+  }
+
+  const { parent, parentOffset } = before.resolve(pos);
+  const node = after.byId(parent.id);
+  const start = after.positionOf(parent.id);
+
+  return node === undefined ||
+    start === undefined ||
+    after.resolve(mapped.pos).parent.id === parent.id
+    ? mapped.pos
+    : start + 1 + Math.min(parentOffset, node.size - 2);
+};
+
 export const mapSelection = (
   selection: Selection,
   mapping: Mappable,
@@ -186,7 +210,10 @@ export const mapSelection = (
   if (selection.kind === SelectionKind.Text) {
     return validSelection(
       after,
-      textSelection(mapping.map(selection.anchor), mapping.map(selection.head)),
+      textSelection(
+        followPosition(selection.anchor, mapping, before, after),
+        followPosition(selection.head, mapping, before, after),
+      ),
     );
   }
   if (selection.kind === SelectionKind.All) {

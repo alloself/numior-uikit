@@ -157,6 +157,59 @@ describe('NuiEditorComments', () => {
     expect(view.activeHighlights).toEqual(['one']);
   });
 
+  it('leaves the popover shut while the caret walks through commented text', async () => {
+    const view = CommentsDriver.mount([threadOf('t')]);
+
+    await view.loaded();
+
+    await view.select(2, 2);
+
+    expect(view.popoverOpen).toBe(false);
+  });
+
+  it('opens the thread when its text is pressed without moving', async () => {
+    const view = CommentsDriver.mount([threadOf('t')]);
+
+    await view.loaded();
+
+    await view.pressMark(0);
+
+    expect(view.popoverThread).toBe('Body of t');
+  });
+
+  it('leaves the popover shut when the press drags across the text', async () => {
+    const view = CommentsDriver.mount([threadOf('t')]);
+
+    await view.loaded();
+
+    await view.pressMark(30);
+
+    expect(view.popoverOpen).toBe(false);
+  });
+
+  it('opens the thread at its text from the list', async () => {
+    const view = CommentsDriver.mount([threadOf('t')]);
+
+    await view.loaded();
+
+    await view.clickThreadBody(0);
+
+    expect(view.popoverThread).toBe('Body of t');
+  });
+
+  it('shows a new comment in the popover at its text', async () => {
+    const view = CommentsDriver.mount();
+
+    await view.loaded();
+
+    await view.select(1, 4);
+    await view.press('Add comment');
+    await view.write('Please check');
+    await view.submit();
+
+    expect(view.popoverThread).toBe('Please check');
+  });
+
   it('flags a thread whose text is gone', async () => {
     const view = CommentsDriver.mount([threadOf('t')]);
 

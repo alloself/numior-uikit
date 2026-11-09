@@ -4,6 +4,7 @@ import { nextTick } from 'vue';
 import {
   NuiSpreadsheet,
   type NuiSpreadsheetChange,
+  type NuiSpreadsheetPeer,
   type NuiSpreadsheetFile,
   type NuiSpreadsheetProps,
   type NuiSpreadsheetSelection,
@@ -125,6 +126,26 @@ export class SpreadsheetDriver {
     mounted.wrapper = wrapper;
 
     return new SpreadsheetDriver(wrapper, changes, warnings);
+  }
+
+  get peerNames(): string[] {
+    return this.wrapper.findAll('.nui-spreadsheet__peer-name').map((flag) => flag.text());
+  }
+
+  get peerAreas(): number {
+    return this.wrapper.findAll('.nui-spreadsheet__peer-area').length;
+  }
+
+  get peerFlagsBelow(): number {
+    return this.wrapper.findAll('.nui-spreadsheet__peer-cell--flag-below').length;
+  }
+
+  get places(): unknown[] {
+    return (this.wrapper.emitted('presence') ?? []).map(([place]) => place);
+  }
+
+  async setPeers(peers: readonly NuiSpreadsheetPeer[]): Promise<void> {
+    await this.wrapper.setProps({ peers });
   }
 
   get drawings(): string[] {

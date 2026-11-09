@@ -166,6 +166,36 @@ describe('step JSON', () => {
     expect(received).toMatchObject({ kind: 'replaceAround', gapFrom: 1, gapTo: 6, insert: 1 });
   });
 
+  it('carries the frame of a wrap whose hole holds the required content', () => {
+    const step: Step = {
+      kind: 'replaceAround',
+      from: 0,
+      to: 7,
+      gapFrom: 0,
+      gapTo: 7,
+      slice: { content: [node('list', [node('item')])], openStart: 0, openEnd: 0 },
+      insert: 2,
+    };
+
+    const received = stepFromJSON(notes, overTheWire(step));
+
+    expect(received).toMatchObject({ kind: 'replaceAround', insert: 2 });
+  });
+
+  it('still refuses empty nodes outside the hole of a frame', () => {
+    const step: Step = {
+      kind: 'replaceAround',
+      from: 0,
+      to: 7,
+      gapFrom: 0,
+      gapTo: 7,
+      slice: { content: [node('list', [node('item'), node('item')])], openStart: 0, openEnd: 0 },
+      insert: 2,
+    };
+
+    expect(stepFromJSON(notes, overTheWire(step))).toBeUndefined();
+  });
+
   it('accepts an open node with partial content', () => {
     const value = replaceWith({ content: [{ id: 'a', type: 'list' }], openStart: 1, openEnd: 1 });
 

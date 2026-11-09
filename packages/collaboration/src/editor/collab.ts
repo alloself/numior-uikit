@@ -77,6 +77,10 @@ const rebaseLocal = (
     unconfirmed.map((item) => item.step),
     { maps: tr.mapping.maps.slice(unconfirmed.length), mirrors: new Map() },
     (moved) => tr.maybeStep(moved).ok,
+    {
+      written: (index) => tr.docs[unconfirmed.length - index] ?? tr.before,
+      current: () => tr.doc,
+    },
   );
 
   return {

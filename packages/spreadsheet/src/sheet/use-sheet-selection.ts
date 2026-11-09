@@ -11,7 +11,7 @@ import type {
 const rangeKey = (range: CellRange): string =>
   [range.top, range.left, range.bottom, range.right].map(String).join(':');
 
-const keyOf = (selection: NuiSpreadsheetSelection | undefined): string =>
+export const selectionKey = (selection: NuiSpreadsheetSelection | undefined): string =>
   selection === undefined
     ? ''
     : [
@@ -87,13 +87,13 @@ export const useSheetSelection = (options: SheetSelectionOptions): SheetSelectio
   };
 
   watch(current, (value) => {
-    if (keyOf(value) !== keyOf(options.model.value)) {
+    if (selectionKey(value) !== selectionKey(options.model.value)) {
       options.model.value = value;
     }
   });
 
   watch(options.model, (value) => {
-    if (value !== undefined && keyOf(value) !== keyOf(current.value)) {
+    if (value !== undefined && selectionKey(value) !== selectionKey(current.value)) {
       select(value);
     }
   });

@@ -4,7 +4,7 @@ import {
   type DecorationSet,
   type InlineDecoration,
 } from '../decorations/decorations.types';
-import type { NodeId } from '../model/node.types';
+import { ContentNodeKind, type NodeId } from '../model/node.types';
 import type { EditorState } from '../state/state.types';
 
 export interface LocalDecoration {
@@ -12,6 +12,11 @@ export interface LocalDecoration {
   readonly to: number;
   readonly class: string;
   readonly tag: DecorationTag;
+}
+
+interface PlacedDecoration {
+  readonly id: NodeId;
+  readonly decoration: LocalDecoration;
 }
 
 export type BlockDecorations = ReadonlyMap<NodeId, readonly LocalDecoration[]>;
@@ -41,28 +46,56 @@ const fitsBlock = (state: EditorState, decoration: BlockDecoration): boolean => 
   );
 };
 
-const localOf = (state: EditorState, decoration: InlineDecoration) => {
-  const resolved = state.doc.resolve(decoration.from);
-  const type = state.doc.schema.nodes.get(resolved.parent.type);
+const piece = (
+  id: NodeId,
+  start: number,
+  size: number,
+  decoration: InlineDecoration,
+): PlacedDecoration | undefined => {
+  const from = Math.max(decoration.from - start, 0);
+  const to = Math.min(decoration.to - start, size);
 
-  if (type?.inlineContent !== true) {
-    return undefined;
+  return to > from
+    ? { id, decoration: { from, to, class: decoration.class, tag: decoration.tag } }
+    : undefined;
+};
+
+const piecesOf = (
+  state: EditorState,
+  decoration: InlineDecoration,
+): readonly PlacedDecoration[] => {
+  const { doc } = state;
+  const resolved = doc.resolve(decoration.from);
+
+  if (
+    doc.schema.nodes.get(resolved.parent.type)?.inlineContent === true &&
+    decoration.to <= resolved.end(resolved.depth)
+  ) {
+    const one = piece(
+      resolved.parent.id,
+      resolved.start(resolved.depth),
+      resolved.parent.size - 2,
+      decoration,
+    );
+
+    return one === undefined ? [] : [one];
   }
 
-  const start = resolved.start(resolved.depth);
-  const to = Math.min(decoration.to, resolved.end(resolved.depth)) - start;
+  const found: PlacedDecoration[] = [];
 
-  return to > decoration.from - start
-    ? {
-        id: resolved.parent.id,
-        decoration: {
-          from: decoration.from - start,
-          to,
-          class: decoration.class,
-          tag: decoration.tag,
-        },
+  doc.nodesBetween(decoration.from, decoration.to, (node, pos) => {
+    if (node.kind === ContentNodeKind.Element && doc.schema.nodes.get(node.type)?.inlineContent) {
+      const part = piece(node.id, pos + 1, node.size - 2, decoration);
+
+      if (part !== undefined) {
+        found.push(part);
       }
-    : undefined;
+      return false;
+    }
+    return true;
+  });
+
+  return found;
 };
 
 const addTo = (
@@ -93,11 +126,10 @@ export const blockDecorations = (
 
   for (const set of sets) {
     for (const decoration of set.decorations) {
-      const local =
-        decoration.from < 0 || decoration.to > limit ? undefined : localOf(state, decoration);
-
-      if (local !== undefined) {
-        addTo(blocks, local.id, local.decoration);
+      if (decoration.from >= 0 && decoration.to <= limit) {
+        piecesOf(state, decoration).forEach((part) => {
+          addTo(blocks, part.id, part.decoration);
+        });
       }
     }
     for (const decoration of set.blocks) {

@@ -44,6 +44,7 @@ export class CollabClient {
   readonly selections: Locator;
   readonly comments: Locator;
   readonly threads: Locator;
+  readonly discussions: Locator;
   readonly marks: Locator;
   readonly history: Locator;
   readonly versions: Locator;
@@ -61,8 +62,9 @@ export class CollabClient {
     this.avatars = page.locator('.nui-avatar');
     this.carets = page.locator('.nui-collab-carets__caret');
     this.selections = page.locator('.nui-collab-selection');
-    this.comments = page.locator('.nui-collab-comments');
-    this.threads = page.locator('.nui-collab-comments__thread');
+    this.comments = page.locator('.nui-collab-comment-popover');
+    this.threads = this.comments.locator('.nui-collab-comments__thread');
+    this.discussions = page.locator('.collab__discussions');
     this.marks = page.locator('.nui-editor__comment');
     this.history = page.locator('.nui-collab-history');
     this.versions = this.history.getByRole('option');
@@ -124,9 +126,33 @@ export class CollabClient {
   }
 
   async addComment(body: string): Promise<void> {
-    await this.comments.getByRole('button', { name: 'Добавить комментарий' }).click();
+    const fine = await this.page.evaluate(() => matchMedia('(pointer: fine)').matches);
+    const bar = this.page.locator(fine ? '.nui-editor-bubble' : '.nui-editor__toolbar');
+
+    await bar.getByRole('button', { name: 'Добавить комментарий' }).click();
     await this.comments.getByRole('textbox').fill(body);
     await this.comments.getByRole('button', { name: 'Отправить' }).click();
+  }
+
+  async clickAway(): Promise<void> {
+    await this.status.click();
+  }
+
+  async openMark(index: number): Promise<void> {
+    await this.marks.nth(index).click();
+    await this.threads.waitFor();
+  }
+
+  async openDiscussions(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Обсуждения' }).click();
+  }
+
+  async pressInDiscussion(index: number, name: string): Promise<void> {
+    await this.discussions
+      .locator('.nui-collab-comments__thread')
+      .nth(index)
+      .getByRole('button', { name })
+      .click();
   }
 
   async replyTo(index: number, body: string): Promise<void> {
@@ -139,10 +165,6 @@ export class CollabClient {
 
   async pressInThread(index: number, name: string): Promise<void> {
     await this.threads.nth(index).getByRole('button', { name }).click();
-  }
-
-  async openHistory(): Promise<void> {
-    await this.page.getByRole('tab', { name: 'История' }).click();
   }
 
   async saveVersion(count: number): Promise<void> {
@@ -239,6 +261,18 @@ export class CollabBook {
 
   get tabs(): Locator {
     return this.sheet.sheet.getByRole('tab');
+  }
+
+  get peers(): Locator {
+    return this.client.page.getByTestId('collab-peers').locator('.nui-avatar');
+  }
+
+  peerFrame(name: string): Locator {
+    return this.sheet.sheet.locator('.nui-spreadsheet__peer-cell', { hasText: name });
+  }
+
+  peerAreas(): Locator {
+    return this.sheet.sheet.locator('.nui-spreadsheet__peer-area');
   }
 
   async undo(): Promise<void> {

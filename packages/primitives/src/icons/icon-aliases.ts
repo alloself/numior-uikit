@@ -32,6 +32,7 @@ export const iconAliases = {
   sidebar: 'panel-left',
   menu: 'menu',
   trash: 'trash',
+  comment: 'message-square-plus',
   sun: 'sun',
   moon: 'moon',
   monitor: 'monitor',

@@ -59,6 +59,7 @@ const apiFor = (collab: CollabEditor, onChange: (state: EditorState) => void): N
     focus: () => undefined,
     flush: () => undefined,
     coordsAt: () => undefined,
+    posAt: () => undefined,
     contentBox: () => undefined,
     revealNode: () => undefined,
   };

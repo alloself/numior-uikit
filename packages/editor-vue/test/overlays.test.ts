@@ -118,6 +118,28 @@ describe('NuiEditor links, colours and bubble', () => {
     );
   });
 
+  it('opens the bubble when the whole text is selected', async () => {
+    const editor = mounted({ document: page('Hello world'), toolbar: 'bubble' });
+
+    editor.focus();
+    await editor.press('a', { ctrl: true });
+
+    expect(editor.bubbleShown).toBe(true);
+  });
+
+  it('puts actions for the selection into the bubble', async () => {
+    const editor = mounted({
+      document: page('Hello world'),
+      toolbar: 'bubble',
+      selectionActions: [{ key: 'note', label: 'Note', icon: 'comment', command: () => true }],
+    });
+
+    editor.focus();
+    await editor.select(1, 6);
+
+    expect(editor.bubbleTools).toContain('Note');
+  });
+
   it('opens the bubble over a selected range and closes it when the range collapses', async () => {
     const editor = mounted({ document: page('Hello world'), toolbar: 'bubble' });
 

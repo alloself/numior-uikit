@@ -151,6 +151,12 @@
             @grip="fill.onDown"
             @fill="fill.onDblclick"
           />
+          <NuiSpreadsheetPeers
+            :peers="peers"
+            :sheet="shownSheet?.name"
+            :cells="cells"
+            :rect-of="rectOf"
+          />
           <NuiSpreadsheetReference
             v-for="frame in references.frames.value"
             :key="frame.key"
@@ -277,7 +283,9 @@ import {
 import { defaultRowHeight, sheetCells } from './sheet-cells';
 import NuiSpreadsheetAssist from './NuiSpreadsheetAssist.vue';
 import NuiSpreadsheetMarks from './NuiSpreadsheetMarks.vue';
+import NuiSpreadsheetPeers from './NuiSpreadsheetPeers.vue';
 import NuiSpreadsheetReference from './NuiSpreadsheetReference.vue';
+import { placeKey } from './sheet-peers';
 import NuiSpreadsheetReport from './NuiSpreadsheetReport.vue';
 import NuiSpreadsheetStatus from './NuiSpreadsheetStatus.vue';
 import NuiSpreadsheetTabs from './NuiSpreadsheetTabs.vue';
@@ -307,6 +315,7 @@ import {
   type NuiSpreadsheetChange,
   type NuiSpreadsheetExposed,
   type NuiSpreadsheetProps,
+  type NuiSpreadsheetPlace,
   type NuiSpreadsheetSelection,
   type SheetAnchor,
   type SheetClipFrame,
@@ -348,6 +357,7 @@ const {
   source,
   saveFile,
   collaboration,
+  peers = [],
 } = defineProps<NuiSpreadsheetProps>();
 
 const sheetIndex = defineModel<number>('sheet', { default: 0 });
@@ -358,6 +368,7 @@ const emit = defineEmits<{
   change: [change: NuiSpreadsheetChange];
   open: [file: OpenedFile];
   saved: [saved: NuiSpreadsheetSaved];
+  presence: [place: NuiSpreadsheetPlace | null];
 }>();
 
 const root = useTemplateRef<HTMLElement>('root');
@@ -550,6 +561,20 @@ const selection = useSheetSelection({
   table: grid,
   model: selectionModel,
 });
+
+const place = computed((): NuiSpreadsheetPlace | null => {
+  const chosen = selection.current.value;
+  const name = shownSheet.value?.name;
+
+  return chosen === undefined || name === undefined ? null : { sheet: name, selection: chosen };
+});
+
+watch(
+  () => placeKey(place.value),
+  () => {
+    emit('presence', place.value);
+  },
+);
 
 const fill = useSheetFill({
   book: () => book,

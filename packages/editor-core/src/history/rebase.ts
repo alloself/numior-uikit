@@ -1,6 +1,8 @@
+import type { Doc } from '../doc/doc.types';
 import type { Assoc, MapResult, Mappable, StepMap } from '../transform/mapping.types';
 import { mapStep, stepMapOf } from '../transform/step';
 import { StepKind, type Step } from '../transform/step.types';
+import { noteRemoved, retargeted, withLatestNodes, type RemovedNodes } from './retarget';
 
 export interface MirrorMaps {
   readonly maps: readonly StepMap[];
@@ -11,6 +13,11 @@ export interface MirrorMaps {
 export interface RebasedSteps {
   readonly steps: readonly Step[];
   readonly chain: MirrorMaps;
+}
+
+export interface RebaseDocs {
+  readonly written: (index: number) => Doc;
+  readonly current: () => Doc;
 }
 
 interface Hit {
@@ -135,20 +142,47 @@ const idle = (step: Step): boolean => {
   }
 };
 
-const movedStep = (step: Step, chain: MirrorMaps): Step | undefined => {
-  const moved = mapStep(step, mirrored(chain));
+const placed = (
+  step: Step,
+  mapper: Mappable,
+  index: number,
+  docs: RebaseDocs | undefined,
+): Step | undefined =>
+  (docs === undefined
+    ? undefined
+    : retargeted(step, mapper, docs.written(index), docs.current())) ?? mapStep(step, mapper);
 
-  return moved === undefined || idle(moved) ? undefined : moved;
+const movedStep = (
+  step: Step,
+  chain: MirrorMaps,
+  index: number,
+  docs: RebaseDocs | undefined,
+  removed: RemovedNodes,
+): Step | undefined => {
+  const moved = placed(step, mirrored(chain), index, docs);
+
+  if (moved === undefined || idle(moved)) {
+    return undefined;
+  }
+  if (docs === undefined) {
+    return moved;
+  }
+
+  noteRemoved(moved, docs.current(), removed);
+  return withLatestNodes(moved, docs.current(), docs.written(index), removed);
 };
 
 export const rebaseSteps = (
   steps: readonly Step[],
   chain: MirrorMaps,
   accept?: (moved: Step) => boolean,
-): RebasedSteps =>
-  steps.reduce<RebasedSteps>(
-    (done, step) => {
-      const moved = movedStep(step, done.chain);
+  docs?: RebaseDocs,
+): RebasedSteps => {
+  const removed: RemovedNodes = new Map();
+
+  return steps.reduce<RebasedSteps>(
+    (done, step, index) => {
+      const moved = movedStep(step, done.chain, index, docs, removed);
       const back = stepMapOf(step).invert();
 
       return moved === undefined || accept?.(moved) === false
@@ -160,3 +194,4 @@ export const rebaseSteps = (
     },
     { steps: [], chain },
   );
+};

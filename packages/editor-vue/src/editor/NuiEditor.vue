@@ -297,6 +297,7 @@ const {
   toolbar = NuiEditorToolbarMode.Fixed,
   colours = CONTENT_COLOURS,
   highlights = CONTENT_COLOURS,
+  selectionActions = undefined,
   blockHandles = true,
   blocks = editorBlocks,
   highlighter = undefined,
@@ -624,7 +625,7 @@ const bubbleToolbar = computed(
 );
 
 const hasLinks = schema.marks.has('link');
-const toolOptions = computed(() => ({ colours, highlights }));
+const toolOptions = computed(() => ({ colours, highlights, selectionActions }));
 
 const validLink = (href: string): boolean =>
   schema.marks.get('link')?.attrs.href?.verify?.(href) ?? true;
@@ -759,6 +760,7 @@ const editor: NuiEditorApi = {
     settleValue();
   },
   coordsAt: (pos) => view?.coordsAtPos(pos),
+  posAt: (x, y) => view?.posAtCoords(x, y),
   contentBox: () => contentElement.value?.getBoundingClientRect(),
   revealNode: (nodeId) => {
     const dom = view?.nodeDOM(nodeId);

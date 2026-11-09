@@ -232,6 +232,7 @@ export type {
 export { createMetaKey, definePlugin } from './state/plugin';
 export {
   isCursor,
+  followPosition,
   mapSelection,
   nearestCursor,
   selectionRange,

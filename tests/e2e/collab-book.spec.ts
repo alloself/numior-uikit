@@ -1,5 +1,6 @@
 import { expect, test } from './fixtures';
 import { wcagViolationsOf } from './helpers/axe';
+import { boxOf } from './helpers/geometry';
 
 const ANNA = 'Анна';
 
@@ -20,6 +21,41 @@ test.describe('collaboration on a workbook', () => {
 
     await anna.sheet.enter('1', 0, '5');
     await expect(boris.sheet.cell('1', 1)).toHaveText('15');
+  });
+
+  test('shows where someone else stands and who is here', async ({ collab }) => {
+    const anna = await collab.joinBook(ANNA);
+    const boris = await collab.joinBook(BORIS);
+
+    await expect(anna.peers).toHaveCount(1);
+    await expect(boris.peers).toHaveCount(1);
+
+    await anna.sheet.cell('3', 1).click();
+
+    await expect(boris.peerFrame(ANNA)).toBeVisible();
+
+    await expect
+      .poll(async () => {
+        const frame = await boxOf(boris.peerFrame(ANNA));
+        const cell = await boxOf(boris.sheet.cell('3', 1));
+
+        return Math.abs(frame.x - cell.x) + Math.abs(frame.y - cell.y);
+      })
+      .toBeLessThan(2);
+  });
+
+  test('stops showing a frame once its owner goes to another sheet', async ({ collab }) => {
+    const anna = await collab.joinBook(ANNA);
+    const boris = await collab.joinBook(BORIS);
+
+    await anna.sheet.cell('2', 0).click();
+    await expect(boris.peerFrame(ANNA)).toBeVisible();
+
+    await anna.sheet.addSheetButton.click();
+
+    await expect(boris.tabs).toHaveCount(2);
+    await expect(boris.peerFrame(ANNA)).toHaveCount(0);
+    await expect(boris.peers).toHaveCount(1);
   });
 
   test('takes a write back for everyone', async ({ collab }) => {

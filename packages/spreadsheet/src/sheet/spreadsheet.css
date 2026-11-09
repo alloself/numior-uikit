@@ -169,6 +169,45 @@
 .nui-spreadsheet--dragging .nui-spreadsheet__ref {
   transition: none;
 }
+.nui-spreadsheet__peer {
+  display: contents;
+}
+.nui-spreadsheet__peer-area,
+.nui-spreadsheet__peer-cell {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: none;
+  transition:
+    inset var(--nui-duration-fast) var(--nui-easing),
+    inline-size var(--nui-duration-fast) var(--nui-easing),
+    block-size var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-spreadsheet__peer-area {
+  background-color: color-mix(in oklab, var(--_tone) 14%, transparent);
+}
+.nui-spreadsheet__peer-cell {
+  border: 2px solid var(--_tone);
+  border-radius: 2px;
+}
+.nui-spreadsheet__peer-name {
+  position: absolute;
+  inset-block-end: calc(100% + 2px);
+  inset-inline-start: -2px;
+  box-sizing: border-box;
+  max-inline-size: 12rem;
+  padding: 0 var(--nui-space-1);
+  overflow: hidden;
+  color: var(--nui-text);
+  font-size: var(--nui-font-size-xs);
+  line-height: var(--nui-line-height-control);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: color-mix(in oklab, var(--_tone) 24%, var(--nui-surface));
+  border-radius: var(--nui-radius-sm);
+}
+.nui-spreadsheet__peer-cell--flag-below .nui-spreadsheet__peer-name {
+  inset-block: calc(100% + 2px) auto;
+}
 .nui-spreadsheet__grip {
   --_grip: 8px;
   --_corner: 12px;
@@ -276,34 +315,42 @@
   }
 }
 .nui-spreadsheet__ref--tone-1,
+.nui-spreadsheet__peer--tone-1,
 .nui-spreadsheet__token--tone-1 {
   --_tone: var(--nui-chart-1);
 }
 .nui-spreadsheet__ref--tone-2,
+.nui-spreadsheet__peer--tone-2,
 .nui-spreadsheet__token--tone-2 {
   --_tone: var(--nui-chart-2);
 }
 .nui-spreadsheet__ref--tone-3,
+.nui-spreadsheet__peer--tone-3,
 .nui-spreadsheet__token--tone-3 {
   --_tone: var(--nui-chart-3);
 }
 .nui-spreadsheet__ref--tone-4,
+.nui-spreadsheet__peer--tone-4,
 .nui-spreadsheet__token--tone-4 {
   --_tone: var(--nui-chart-4);
 }
 .nui-spreadsheet__ref--tone-5,
+.nui-spreadsheet__peer--tone-5,
 .nui-spreadsheet__token--tone-5 {
   --_tone: var(--nui-chart-5);
 }
 .nui-spreadsheet__ref--tone-6,
+.nui-spreadsheet__peer--tone-6,
 .nui-spreadsheet__token--tone-6 {
   --_tone: var(--nui-chart-6);
 }
 .nui-spreadsheet__ref--tone-7,
+.nui-spreadsheet__peer--tone-7,
 .nui-spreadsheet__token--tone-7 {
   --_tone: var(--nui-chart-7);
 }
 .nui-spreadsheet__ref--tone-8,
+.nui-spreadsheet__peer--tone-8,
 .nui-spreadsheet__token--tone-8 {
   --_tone: var(--nui-chart-8);
 }

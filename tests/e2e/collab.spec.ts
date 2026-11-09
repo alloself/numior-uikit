@@ -47,7 +47,6 @@ test.describe('collaboration', () => {
     await expect(anna.tableCell(0, 0)).toHaveText('Anna');
 
     await anna.reload();
-    await anna.openHistory();
 
     await expect(anna.overwritten).toHaveCount(1);
     await expect(anna.overwritten).toContainText('Boris');
@@ -225,6 +224,60 @@ test.describe('collaboration', () => {
       .toBeLessThan(CARET_TOLERANCE);
   });
 
+  test('paints a selection of someone else over every line it crosses', async ({ collab }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Первая');
+    await anna.newLine('Вторая');
+    await expect(boris.editor).toContainText('Вторая');
+
+    await anna.page.keyboard.press('Control+a');
+
+    await expect(boris.selections).toHaveCount(2);
+  });
+
+  test('keeps the caret of someone else on a list item they indent', async ({ collab }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('- Первый');
+    await anna.newLine('Второй');
+    await anna.page.keyboard.press('Tab');
+
+    const nested = boris.editor.locator('li li p');
+
+    await expect(nested).toHaveText('Второй');
+
+    await expect
+      .poll(async () => {
+        const caret = await boxOf(boris.caretOf(ANNA));
+        const line = await boxOf(nested);
+
+        return caret.y >= line.y - 2 && caret.y <= line.y + line.height;
+      })
+      .toBe(true);
+  });
+
+  test('keeps a comment on a list item that gets indented', async ({ collab }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('- Первый');
+    await anna.newLine('Второй');
+    await expect(boris.editor).toContainText('Второй');
+
+    await anna.page.keyboard.press('Home');
+    await anna.page.keyboard.press('Shift+End');
+    await anna.addComment('Вопрос');
+
+    await boris.editor.locator('li p').nth(1).click();
+    await boris.page.keyboard.press('Tab');
+
+    await expect(anna.editor.locator('li li p')).toHaveText('Второй');
+    await expect(anna.marks).toHaveText('Второй');
+  });
+
   test('adds a comment to the selected line and marks it', async ({ collab }) => {
     const anna = await collab.join(ANNA);
 
@@ -268,19 +321,50 @@ test.describe('collaboration', () => {
 
     await anna.pressInThread(0, 'Решить');
 
-    await expect(anna.threads).toContainText('Решён');
+    await expect(anna.comments).toBeHidden();
     await expect(anna.marks).toHaveCount(0);
 
-    await anna.pressInThread(0, 'Удалить');
+    await anna.openDiscussions();
 
-    await expect(anna.threads).toHaveCount(0);
+    await expect(anna.discussions).toContainText('Решён');
+
+    await anna.pressInDiscussion(0, 'Удалить');
+
+    await expect(anna.discussions.locator('.nui-collab-comments__thread')).toHaveCount(0);
+  });
+
+  test('opens a discussion at the commented text and closes it with a click away', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+
+    await anna.write('Спорная строка');
+    await anna.newLine('Вторая');
+    await anna.selectLine(0);
+    await anna.addComment('Вопрос');
+
+    await anna.clickAway();
+
+    await expect(anna.comments).toBeHidden();
+
+    await anna.openMark(0);
+
+    const mark = await boxOf(anna.marks.first());
+    const popover = await boxOf(anna.comments);
+
+    expect(popover.y).toBeGreaterThanOrEqual(mark.y + mark.height);
+    expect(Math.abs(popover.x - mark.x)).toBeLessThan(40);
+    await expect(anna.threads).toContainText('Вопрос');
+
+    await anna.clickAway();
+
+    await expect(anna.comments).toBeHidden();
   });
 
   test('shows what a saved version changed', async ({ collab }) => {
     const anna = await collab.join(ANNA);
 
     await anna.write('Первая версия');
-    await anna.openHistory();
     await anna.saveVersion(1);
     await anna.appendTo(0, ' правка');
     await anna.saveVersion(2);
@@ -296,7 +380,6 @@ test.describe('collaboration', () => {
     const boris = await collab.join(BORIS);
 
     await anna.write('Первая версия');
-    await anna.openHistory();
     await anna.saveVersion(1);
     await anna.appendTo(0, ' правка');
     await expect(boris.editor).toContainText('правка');

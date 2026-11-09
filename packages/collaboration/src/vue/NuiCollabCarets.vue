@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { useEventListener, useResizeObserver } from '@vueuse/core';
+import { useEventListener, useMutationObserver, useResizeObserver } from '@vueuse/core';
 import { computed, onBeforeUnmount, useTemplateRef, watch } from 'vue';
 import type { NuiCollabCaretsProps } from './collab.types';
 
@@ -85,6 +85,11 @@ const schedule = (): void => {
 watch(shown, measure, { flush: 'post' });
 
 useResizeObserver(layer, schedule);
+
+useMutationObserver(() => layer.value?.closest<HTMLElement>('.nui-editor'), schedule, {
+  childList: true,
+  subtree: true,
+});
 
 useEventListener(() => layer.value?.ownerDocument, 'scroll', schedule, {
   capture: true,

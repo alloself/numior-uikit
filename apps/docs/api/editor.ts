@@ -85,6 +85,10 @@ const docs: DocsMap = {
         ru: 'Цвета фонового выделения в меню. По умолчанию — все девять.',
         en: 'Background highlight colors in the menu. All nine by default.',
       },
+      selectionActions: {
+        ru: 'Свои кнопки для выделенного текста: в панели над выделением и в панели инструментов. Кнопка отключена, пока команда неприменима.',
+        en: 'Your own buttons for selected text, in the bar over the selection and in the toolbar. A button is disabled while its command does not apply.',
+      },
     },
     models: {
       'v-model': {

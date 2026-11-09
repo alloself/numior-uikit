@@ -4,7 +4,7 @@ import type { Doc } from '../doc/doc.types';
 import { remoteChain } from '../history/history';
 import { mirrored } from '../history/rebase';
 import { createMetaKey, definePlugin } from '../state/plugin';
-import { selectionRange, textPosition } from '../state/selection';
+import { followPosition, selectionRange, textPosition } from '../state/selection';
 import {
   SelectionKind,
   type Command,
@@ -43,8 +43,8 @@ const movedAnchor = (anchor: Anchor, tr: Transaction, mapper: Mappable): Anchor 
   if (range.kind === AnchorRangeKind.Node) {
     return tr.doc.byId(range.id) === undefined ? { ...anchor, lost: true } : anchor;
   }
-  const from = mapper.map(range.from, 1);
-  const to = Math.max(from, mapper.map(range.to, -1));
+  const from = followPosition(range.from, mapper, tr.before, tr.doc, 1);
+  const to = Math.max(from, followPosition(range.to, mapper, tr.before, tr.doc, -1));
 
   return { ...anchor, range: { kind: 'text', from, to }, lost: anchor.lost || to === from };
 };

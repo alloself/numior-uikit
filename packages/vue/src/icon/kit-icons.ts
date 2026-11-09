@@ -8,7 +8,7 @@ const loaders = import.meta.glob<Component>(
     './{chevrons-up-down,circle-check,circle-x,clipboard-paste,clock,code,columns-3,command}.mjs',
     './{copy,ellipsis,eraser,external-link,eye,eye-off,file,folder,folder-open,funnel}.mjs',
     './{grip-horizontal,grip-vertical,hash,image,inbox,info,languages,link,list-tree}.mjs',
-    './{loader-circle,maximize,menu,minus,monitor,moon,move-horizontal,panel-left,plus}.mjs',
+    './{loader-circle,maximize,menu,message-square-plus,minus,monitor,moon,move-horizontal,panel-left,plus}.mjs',
     './{rotate-cw,scissors,search,smartphone,sun,table-2,tablet,terminal,trash,triangle-alert}.mjs',
     './{upload,user,x}.mjs',
   ],

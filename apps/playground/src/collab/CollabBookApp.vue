@@ -2,6 +2,7 @@
   <main class="collab">
     <div class="collab__bar">
       <span>{{ clientId }}</span>
+      <NuiCollabPresence :peers="peers" data-testid="collab-peers" />
       <div class="collab__status">
         <NuiSwitch v-model="online" label="Связь" data-testid="collab-link" />
         <NuiBadge data-testid="collab-status">{{ status.kind }}</NuiBadge>
@@ -12,9 +13,11 @@
       :book="book"
       :calculator="calculator"
       :collaboration="session"
+      :peers="peers"
       label="Книга"
       data-testid="collab-book"
       @change="sync"
+      @presence="sharePlace"
     />
   </main>
 </template>
@@ -26,13 +29,16 @@ import {
   webSocketTransport,
   type CollabStatus,
 } from '@numior/collaboration';
-import { NuiSpreadsheet } from '@numior/spreadsheet';
+import { NuiCollabPresence } from '@numior/collaboration/vue';
+import { NuiSpreadsheet, type NuiSpreadsheetPlace } from '@numior/spreadsheet';
 import {
   RU_LOCALE,
   WORKBOOK_SCHEMA,
   createCalculator,
   createWorkbook,
   createWorkbookDocument,
+  workbookPeers,
+  type WorkbookPeer,
 } from '@numior/spreadsheet/core';
 import { NuiBadge, NuiSwitch } from '@numior/vue';
 import { onBeforeUnmount, ref, shallowRef } from 'vue';
@@ -42,7 +48,10 @@ const params = new URLSearchParams(location.search);
 const clientId = params.get('user') ?? 'Гость';
 const server = params.get('server') ?? `ws://${location.hostname}:4175`;
 
+const user = { id: clientId, name: clientId };
+
 const status = shallowRef<CollabStatus>({ kind: CollabStatusKind.Connecting });
+const peers = shallowRef<readonly WorkbookPeer[]>([]);
 const ready = ref(false);
 
 const book = createWorkbook();
@@ -64,10 +73,19 @@ const client = createCollabClient({
   onStatus: (next) => {
     status.value = next;
   },
+  onPresence: (states) => {
+    peers.value = workbookPeers(states);
+  },
 });
+
+client.setPresence({ user, place: null });
 
 const sync = (): void => {
   client.sync();
+};
+
+const sharePlace = (place: NuiSpreadsheetPlace | null): void => {
+  client.setPresence({ user, place });
 };
 
 onBeforeUnmount(() => {

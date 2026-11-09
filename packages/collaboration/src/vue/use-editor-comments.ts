@@ -3,6 +3,7 @@ import {
   activeAnchor,
   anchorFromJSON,
   anchorToJSON,
+  anchorsAt,
   anchorsOf,
   AnchorRangeKind,
   definePlugin,
@@ -14,6 +15,8 @@ import {
   type Doc,
   type EditorState,
 } from '@numior/editor-core';
+import type { NuiEditorSelectionAction } from '@numior/editor-vue';
+import { useMessages } from '@numior/primitives';
 import { useDebounceFn } from '@vueuse/core';
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import {
@@ -21,7 +24,13 @@ import {
   type CommentEvent,
   type CommentThread,
 } from '../comments/comments.types';
-import type { CollabComments, CommentThreadView, UseEditorCommentsOptions } from './collab.types';
+import { collabMessages } from './collab.messages';
+import type {
+  CollabComments,
+  CommentSpot,
+  CommentThreadView,
+  UseEditorCommentsOptions,
+} from './collab.types';
 
 const DRAFT = '__nui-comment-draft';
 
@@ -51,10 +60,12 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
   const threads = shallowRef<readonly CommentThread[]>(NO_THREADS);
   const layout = shallowRef<readonly Anchor[]>(NO_LAYOUT);
   const active = shallowRef<string>();
+  const opened = shallowRef<string>();
   const placed = ref(false);
   const drafting = ref(false);
-  const canAdd = ref(false);
   const failed = ref(false);
+  const revision = ref(0);
+  const messages = useMessages(collabMessages);
   const aborter = new AbortController();
 
   let latest: EditorState | undefined;
@@ -74,7 +85,6 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
       layout.value = next;
     }
     active.value = activeAnchor(state);
-    canAdd.value = setAnchor(DRAFT)(state);
   };
 
   const place = (thread: CommentThread): void => {
@@ -88,6 +98,10 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
   const replaced = (thread: CommentThread): void => {
     const known = threads.value.some((item) => item.id === thread.id);
 
+    if (thread.resolved && opened.value === thread.id) {
+      opened.value = undefined;
+    }
+
     threads.value = known
       ? threads.value.map((item) => (item.id === thread.id ? thread : item))
       : [...threads.value, thread];
@@ -95,6 +109,10 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
 
   const dropped = (id: string): void => {
     threads.value = threads.value.filter((item) => item.id !== id);
+
+    if (opened.value === id) {
+      opened.value = undefined;
+    }
     run(removeAnchor(id));
   };
 
@@ -143,6 +161,7 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
         read(state);
 
         if (state.doc !== before.doc) {
+          revision.value += 1;
           void scheduleMoves();
         }
       },
@@ -168,9 +187,21 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
     }
   };
 
-  const start = (): void => {
-    drafting.value = run(setAnchor(DRAFT));
+  const startDraft: Command = (state, dispatch) => {
+    const able = setAnchor(DRAFT)(state, dispatch);
+
+    if (able && dispatch !== undefined) {
+      drafting.value = true;
+    }
+    return able;
   };
+
+  const action = computed<NuiEditorSelectionAction>(() => ({
+    key: 'comment',
+    label: messages.value.add,
+    icon: 'comment',
+    command: startDraft,
+  }));
 
   const cancel = (): void => {
     run(removeAnchor(DRAFT));
@@ -198,6 +229,7 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
     if (current !== undefined && !current.lost) {
       run(setAnchor(thread.id, current.range));
       run(activateAnchor(thread.id));
+      opened.value = thread.id;
     }
     cancel();
     return true;
@@ -240,6 +272,42 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
     }
   };
 
+  const close = (): void => {
+    if (drafting.value) {
+      cancel();
+    } else {
+      opened.value = undefined;
+
+      if (active.value !== undefined) {
+        run(activateAnchor(undefined));
+      }
+    }
+  };
+
+  const openAt = (pos: number): void => {
+    const id = latest === undefined ? undefined : anchorsAt(latest, pos).at(-1);
+
+    if (id !== undefined && id !== DRAFT) {
+      opened.value = id;
+    }
+  };
+
+  const spot = (): CommentSpot | undefined => {
+    const id = drafting.value ? DRAFT : opened.value;
+    const anchor = latest === undefined || id === undefined ? undefined : anchorsOf(latest).get(id);
+
+    if (latest === undefined || anchor === undefined || anchor.lost) {
+      return undefined;
+    }
+    if (anchor.range.kind === AnchorRangeKind.Text) {
+      return { from: anchor.range.from, to: anchor.range.to };
+    }
+
+    const from = latest.doc.positionOf(anchor.range.id);
+
+    return from === undefined ? undefined : { from, to: from };
+  };
+
   const activate = (id: string): void => {
     const anchor = latest === undefined ? undefined : anchorsOf(latest).get(id);
 
@@ -247,6 +315,7 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
       return;
     }
     run(activateAnchor(id));
+    opened.value = id;
     editor()?.revealNode(blockOf(latest.doc, anchor.range));
   };
 
@@ -297,10 +366,14 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
     user,
     threads: views,
     active,
+    opened,
     drafting,
-    canAdd,
     failed,
-    start,
+    revision,
+    action,
+    spot,
+    openAt,
+    close,
     cancel,
     submit,
     reply,

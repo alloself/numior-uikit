@@ -5,8 +5,11 @@ import {
   SelectionKind,
   selectionRange,
   setMark,
+  textPosition,
   type Command,
+  type Doc,
   type EditorState,
+  type SelectionRange,
 } from '@numior/editor-core';
 import type { EditorView } from '@numior/editor-core/view';
 import { useEventListener } from '@vueuse/core';
@@ -42,8 +45,23 @@ export interface EditorOverlays {
   readonly onPointerdown: (event: PointerEvent) => void;
 }
 
-const isRange = (state: EditorState): boolean =>
-  state.selection.kind === SelectionKind.Text && state.selection.anchor !== state.selection.head;
+const wholeText = (doc: Doc): SelectionRange | undefined => {
+  const from = textPosition(doc, 0, 1);
+  const to = textPosition(doc, doc.size, -1);
+
+  return from === undefined || to === undefined ? undefined : { from, to };
+};
+
+const shownRange = ({ doc, selection }: EditorState): SelectionRange =>
+  (selection.kind === SelectionKind.All ? wholeText(doc) : undefined) ??
+  selectionRange(doc, selection);
+
+const isRange = (state: EditorState): boolean => {
+  const { kind } = state.selection;
+  const { from, to } = shownRange(state);
+
+  return (kind === SelectionKind.Text || kind === SelectionKind.All) && from < to;
+};
 
 const hrefOf = (state: EditorState): string | undefined => {
   const href = markAttrs(state, 'link')?.href;
@@ -73,8 +91,7 @@ export const useEditorOverlays = (options: EditorOverlayOptions): EditorOverlays
     const anchor = options.anchor.value;
     const frame = options.frame.value?.getBoundingClientRect();
 
-    const range =
-      view === undefined ? undefined : selectionRange(view.state.doc, view.state.selection);
+    const range = view === undefined ? undefined : shownRange(view.state);
 
     const start = range === undefined ? undefined : view?.coordsAtPos(range.from);
     const end = range === undefined ? undefined : view?.coordsAtPos(range.to);

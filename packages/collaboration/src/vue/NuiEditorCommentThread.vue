@@ -3,6 +3,7 @@
     class="nui-collab-comments__thread"
     :class="{
       'nui-collab-comments__thread--active': comments.active.value === thread.id,
+      'nui-collab-comments__thread--inline': inline,
       'nui-collab-comments__thread--resolved': thread.resolved,
     }"
     @click="onClick"
@@ -67,7 +68,13 @@ interface ThreadTool {
   readonly run: () => void;
 }
 
-const { comments, thread, text, timeOf } = defineProps<NuiEditorCommentThreadProps>();
+const {
+  comments,
+  thread,
+  text,
+  timeOf,
+  inline = false,
+} = defineProps<NuiEditorCommentThreadProps>();
 
 const replying = ref(false);
 
@@ -103,7 +110,7 @@ const tools = computed<readonly ThreadTool[]>(() => {
   };
 
   return [
-    ...(thread.lost || thread.resolved ? [] : [show]),
+    ...(thread.lost || thread.resolved || inline ? [] : [show]),
     resolve,
     ...(thread.author.id === comments.user.id ? [remove] : []),
   ];

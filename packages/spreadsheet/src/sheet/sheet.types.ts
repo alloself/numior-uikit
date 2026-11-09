@@ -28,6 +28,8 @@ import type {
   SignaturePart,
   Sheet,
   ThemePalette,
+  WorkbookPeer,
+  WorkbookPlace,
   Workbook,
   WorkbookDocument,
   WorkbookStep,
@@ -190,6 +192,7 @@ export interface NuiSpreadsheetProps {
   source?: OriginalPackage | undefined;
   saveFile?: NuiSpreadsheetSaveAdapter | undefined;
   collaboration?: WorkbookDocument | undefined;
+  peers?: readonly WorkbookPeer[] | undefined;
 }
 
 export interface SheetRecalcOptions {
@@ -231,6 +234,10 @@ export interface NuiSpreadsheetExposed {
   save(): Promise<boolean>;
   open(file: File): Promise<boolean>;
 }
+
+export type NuiSpreadsheetPeer = WorkbookPeer;
+
+export type NuiSpreadsheetPlace = WorkbookPlace;
 
 export interface NuiSpreadsheetSelection {
   readonly active: CellAddress;
@@ -438,6 +445,36 @@ export interface SheetFill {
 export interface ShownClip {
   readonly key: string;
   readonly rect: NuiTableRect;
+}
+
+export interface SheetPeerFrame {
+  readonly key: string;
+  readonly name: string;
+  readonly tone: number;
+  readonly cell: NuiTableRange;
+  readonly areas: readonly NuiTableRange[];
+  readonly flagBelow: boolean;
+}
+
+export interface ShownPeerArea {
+  readonly key: string;
+  readonly rect: NuiTableRect;
+}
+
+export interface ShownPeerFrame {
+  readonly key: string;
+  readonly name: string;
+  readonly tone: number;
+  readonly flagBelow: boolean;
+  readonly rect: NuiTableRect | undefined;
+  readonly areas: readonly ShownPeerArea[];
+}
+
+export interface SheetPeersProps {
+  readonly peers: readonly WorkbookPeer[];
+  readonly sheet: string | undefined;
+  readonly cells: SheetCells | undefined;
+  readonly rectOf: (range: NuiTableRange) => NuiTableRect | undefined;
 }
 
 export interface SheetMarksProps {

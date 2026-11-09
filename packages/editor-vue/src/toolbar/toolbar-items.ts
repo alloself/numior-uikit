@@ -41,7 +41,7 @@ import type { IconSource } from '@numior/primitives';
 import type { NuiEditorMessages } from '../editor/editor.messages';
 import type { SlashItem } from '../slash/slash-items';
 import { onlyIf } from '../editor/only-if';
-import { type ToolbarItemKind } from './toolbar.types';
+import { ToolbarItemKind } from './toolbar.types';
 import { NuiContentNodeType } from '@numior/content';
 
 export interface ToolbarFace {
@@ -74,10 +74,18 @@ export interface ToolbarColours {
   readonly disabled: boolean;
 }
 
+export interface NuiEditorSelectionAction {
+  readonly key: string;
+  readonly label: string;
+  readonly icon: IconSource;
+  readonly command: Command;
+}
+
 export interface ToolbarOptions {
   readonly colours: readonly string[];
   readonly highlights: readonly string[];
   readonly docked?: boolean | undefined;
+  readonly selectionActions?: readonly NuiEditorSelectionAction[] | undefined;
 }
 
 export interface ToolbarBlock {
@@ -373,6 +381,16 @@ const insertItems = (
         },
       ];
 
+const selectionItems = ({ state, options }: Facts): ToolbarItem[] =>
+  (options.selectionActions ?? []).map((action) => ({
+    kind: ToolbarItemKind.Action,
+    key: action.key,
+    label: action.label,
+    icon: action.icon,
+    command: action.command,
+    disabled: !action.command(state),
+  }));
+
 export const toolbarGroups = (
   state: EditorState,
   texts: NuiEditorMessages,
@@ -396,6 +414,7 @@ export const toolbarGroups = (
     { key: 'insert', items: insertItems(state, texts, inserts) },
     { key: 'blocks', items: blockItems(facts) },
     { key: 'marks', items: markItems(facts) },
+    { key: 'selection', items: selectionItems(facts) },
     { key: 'structure', items: blockActions(facts) },
     { key: 'nesting', items: nestingItems(facts) },
   ].filter((group) => group.items.length > 0);

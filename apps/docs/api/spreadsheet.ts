@@ -59,6 +59,10 @@ const docs: DocsMap = {
         ru: 'Получает `{ name, bytes, report }` вместо скачивания файла браузером.',
         en: 'Receives `{ name, bytes, report }` instead of the browser downloading the file.',
       },
+      peers: {
+        ru: 'Кто ещё открыл книгу: результат `workbookPeers` из `onPresence` клиента. Выделение людей с текущего листа рисуется цветными рамками с именем.',
+        en: 'Who else has the book open: the result of `workbookPeers` from the client `onPresence`. Selections of people on the shown sheet are drawn as coloured frames with a name.',
+      },
       collaboration: {
         ru: 'Документ совместной правки из `createWorkbookDocument`. Правки других людей появляются без события `change`.',
         en: 'Shared document from `createWorkbookDocument`. Edits by other people appear without a `change` event.',
@@ -75,6 +79,10 @@ const docs: DocsMap = {
       },
     },
     events: {
+      presence: {
+        ru: 'Своё место в книге изменилось: `{ sheet, selection }` или `null`. Передайте в `client.setPresence({ user, place })`.',
+        en: 'Your place in the book changed: `{ sheet, selection }` or `null`. Pass it to `client.setPresence({ user, place })`.',
+      },
       change: {
         ru: 'Срабатывает после каждой своей правки и отмены. Передаёт `{ steps }`.',
         en: 'Fires after each local edit and undo, with `{ steps }`.',

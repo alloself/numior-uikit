@@ -1,6 +1,8 @@
 import { textSelection, type Command } from '@numior/editor-core';
 import type { NuiEditorApi } from '@numior/editor-vue';
 import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
+import { promiseTimeout } from '@vueuse/core';
+import { vi } from 'vite-plus/test';
 import type { CommentThread } from '../../src';
 import type { NuiEditorCommentsProps } from '../../src/vue';
 import CommentsHost from './CommentsHost.vue';
@@ -8,7 +10,20 @@ import { documentOf, fakeCommentsAdapter, type FakeCommentsAdapter } from './com
 
 Element.prototype.scrollIntoView = () => undefined;
 
+Range.prototype.getClientRects = () => document.createElement('div').getClientRects();
+
+Range.prototype.getBoundingClientRect = () => new DOMRect();
+
 export const ANN = { id: 'ann', name: 'Ann' };
+
+const MARK_POSITION = 2;
+
+const PRESS_X = 40;
+
+const PRESS_Y = 12;
+
+const pointer = (type: string, clientX: number): MouseEvent =>
+  new MouseEvent(type, { bubbles: true, clientX, clientY: PRESS_Y });
 
 const namedAs = (button: DOMWrapper<HTMLButtonElement>, name: string): boolean =>
   button.text() === name || button.attributes('aria-label') === name;
@@ -53,7 +68,7 @@ export class CommentsDriver {
 
   private buttonNamed(
     name: string,
-    scope = this.wrapper.find('.nui-collab-comments'),
+    scope: Pick<DOMWrapper<Element>, 'findAll'> = this.wrapper,
   ): DOMWrapper<HTMLButtonElement> {
     const found = scope.findAll('button').find((button) => namedAs(button, name));
 
@@ -64,7 +79,13 @@ export class CommentsDriver {
   }
 
   private threadAt(index: number): DOMWrapper<Element> {
-    return this.wrapper.findAll('.nui-collab-comments__thread')[index] ?? this.missing(index);
+    return this.listed('.nui-collab-comments__thread')[index] ?? this.missing(index);
+  }
+
+  private listed(selector: string): DOMWrapper<Element>[] {
+    return this.wrapper
+      .findAll(selector)
+      .filter((found) => found.element.closest('.nui-collab-comment-popover') === null);
   }
 
   private missing(index: number): never {
@@ -73,6 +94,19 @@ export class CommentsDriver {
 
   run(command: Command): void {
     this.api.run(command);
+  }
+
+  async pressMark(travel: number): Promise<void> {
+    const mark = this.wrapper.find('.nui-editor__comment');
+    const editor = this.wrapper.find('.nui-editor');
+
+    document.elementFromPoint = () => mark.element;
+    vi.spyOn(this.api, 'posAt').mockReturnValue(MARK_POSITION);
+
+    editor.element.dispatchEvent(pointer('pointerdown', PRESS_X));
+    editor.element.dispatchEvent(pointer('pointerup', PRESS_X + travel));
+    await promiseTimeout(0);
+    await flushPromises();
   }
 
   async select(from: number, to: number): Promise<void> {
@@ -111,15 +145,15 @@ export class CommentsDriver {
   }
 
   get bodies(): readonly string[] {
-    return this.wrapper
-      .findAll('.nui-collab-comments__thread > .nui-collab-comments__body')
-      .map((body) => body.text());
+    return this.listed('.nui-collab-comments__thread > .nui-collab-comments__body').map((body) =>
+      body.text(),
+    );
   }
 
   get replies(): readonly string[] {
-    return this.wrapper
-      .findAll('.nui-collab-comments__replies .nui-collab-comments__body')
-      .map((body) => body.text());
+    return this.listed('.nui-collab-comments__replies .nui-collab-comments__body').map((body) =>
+      body.text(),
+    );
   }
 
   get title(): string {
@@ -132,6 +166,16 @@ export class CommentsDriver {
 
   get addDisabled(): boolean {
     return this.buttonNamed('Add comment').element.disabled;
+  }
+
+  get popoverThread(): string {
+    return this.wrapper
+      .find('.nui-collab-comment-popover .nui-collab-comments__thread > .nui-collab-comments__body')
+      .text();
+  }
+
+  get popoverOpen(): boolean {
+    return this.wrapper.find('.nui-collab-comment-popover .nui-collab-comments__thread').exists();
   }
 
   get emptyShown(): boolean {

@@ -4,6 +4,14 @@
       <NuiCollabPresence :peers="peers" data-testid="collab-peers" />
       <div class="collab__status">
         <NuiSwitch v-model="online" label="Связь" data-testid="collab-link" />
+        <NuiPopover placement="bottom-end" padding="sm" class="collab__discussions">
+          <template #trigger="{ attrs }">
+            <NuiButton v-bind="attrs" variant="outline" tone="neutral" size="sm"
+              >Обсуждения</NuiButton
+            >
+          </template>
+          <NuiEditorComments :comments="comments" />
+        </NuiPopover>
         <NuiBadge data-testid="collab-status">{{ status.kind }}</NuiBadge>
       </div>
     </div>
@@ -15,24 +23,18 @@
         v-model="document"
         format="json"
         label="Документ"
+        toolbar="both"
         :plugins="editorPlugins"
+        :selection-actions="[comments.action.value]"
         :ids="ids"
         :readonly="readOnly"
       >
         <template #overlay>
           <NuiCollabCarets :peers="peers" :editor="editorApi" />
+          <NuiEditorCommentPopover :comments="comments" :editor="editorApi" />
         </template>
       </NuiEditor>
-      <NuiTabs v-model="side">
-        <NuiTabList label="Панели документа">
-          <NuiTab value="comments">Комментарии</NuiTab>
-          <NuiTab value="history">История</NuiTab>
-        </NuiTabList>
-        <NuiTabPanel value="comments"><NuiEditorComments :comments="comments" /></NuiTabPanel>
-        <NuiTabPanel value="history"
-          ><NuiEditorHistory :history="history" :alternatives="alternatives"
-        /></NuiTabPanel>
-      </NuiTabs>
+      <NuiEditorHistory :history="history" :alternatives="alternatives" />
     </div>
   </main>
 </template>
@@ -43,6 +45,7 @@ import {
   NuiCollabCarets,
   NuiCollabPresence,
   NuiCollabReport,
+  NuiEditorCommentPopover,
   NuiEditorComments,
   NuiEditorHistory,
   useCollabEditor,
@@ -52,8 +55,8 @@ import {
 import { contentSchema } from '@numior/content';
 import { NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
 import { offlinePersistence } from '@numior/offline';
-import { NuiBadge, NuiSwitch, NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/vue';
-import { computed, ref, useTemplateRef } from 'vue';
+import { NuiBadge, NuiButton, NuiPopover, NuiSwitch } from '@numior/vue';
+import { computed, useTemplateRef } from 'vue';
 import { fakeComments } from './fake-comments';
 import { fakeHistory } from './fake-history';
 import { useDemoLink } from './use-demo-link';
@@ -98,8 +101,6 @@ const history = useEditorHistory({
   adapter: fakeHistory(),
   editor: () => editorApi.value,
 });
-
-const side = ref('comments');
 
 const editorPlugins = computed(() => [...plugins.value, comments.plugin]);
 </script>

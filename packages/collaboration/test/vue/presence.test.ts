@@ -23,6 +23,7 @@ const fakeEditor = (
   focus: () => undefined,
   flush: () => undefined,
   coordsAt: coords,
+  posAt: () => undefined,
   contentBox: () => BOX,
   revealNode: () => undefined,
 });

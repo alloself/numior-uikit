@@ -334,7 +334,11 @@ export const sliceToJSON = (slice: Slice): SliceJSON => ({
   openEnd: slice.openEnd,
 });
 
-export const sliceFromJSON = (schema: Schema, value: unknown): Slice | undefined => {
+export const sliceFromJSON = (
+  schema: Schema,
+  value: unknown,
+  insert?: number,
+): Slice | undefined => {
   if (!isFields(value) || !isDepth(value.openStart) || !isDepth(value.openEnd)) {
     return undefined;
   }
@@ -347,7 +351,7 @@ export const sliceFromJSON = (schema: Schema, value: unknown): Slice | undefined
     openEnd: value.openEnd,
   };
 
-  return reader.issues.length === 0 && checkSlice(schema, slice).ok ? slice : undefined;
+  return reader.issues.length === 0 && checkSlice(schema, slice, insert).ok ? slice : undefined;
 };
 
 export const markFromJSON = (schema: Schema, value: unknown): Mark | undefined => {

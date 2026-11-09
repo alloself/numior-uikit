@@ -3,6 +3,7 @@ import {
   createMetaKey,
   decorationSet,
   definePlugin,
+  followPosition,
   inlineDecoration,
   mirrored,
   remoteChain,
@@ -100,8 +101,12 @@ const moved = (peers: readonly RemotePeer[], tr: Transaction): readonly RemotePe
 
   return peers.map((peer) => ({
     ...peer,
-    anchor: peer.anchor === undefined ? undefined : mapping.map(peer.anchor),
-    head: peer.head === undefined ? undefined : mapping.map(peer.head),
+    anchor:
+      peer.anchor === undefined
+        ? undefined
+        : followPosition(peer.anchor, mapping, tr.before, tr.doc),
+    head:
+      peer.head === undefined ? undefined : followPosition(peer.head, mapping, tr.before, tr.doc),
   }));
 };
 

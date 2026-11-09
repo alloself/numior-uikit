@@ -18,7 +18,8 @@
       @focusin="navigation.onFocusin"
     >
       <NuiEditorToolbarGroup
-        v-if="group"
+        v-for="group in groups"
+        :key="group.key"
         :group="group"
         @run="(command, refocus) => emit('run', command, refocus)"
         @link="emit('link')"
@@ -56,9 +57,10 @@ const hints = provideToolbarHints();
 const shown = ref(open);
 const texts = useMessages(editorMessages);
 
-const group = computed(() =>
-  toolbarGroups(state, texts.value, options).find(
-    (candidate) => candidate.key === ToolbarGroupKey.Marks,
+const groups = computed(() =>
+  toolbarGroups(state, texts.value, options).filter(
+    (candidate) =>
+      candidate.key === ToolbarGroupKey.Marks || candidate.key === ToolbarGroupKey.Selection,
   ),
 );
 

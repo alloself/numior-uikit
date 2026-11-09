@@ -82,10 +82,7 @@ const readReplace = (schema: Schema, value: Fields): Step | undefined => {
 };
 
 const readAround = (schema: Schema, value: Fields): Step | undefined => {
-  const slice = sliceFromJSON(schema, value.slice);
-
   if (
-    slice === undefined ||
     !isPosition(value.from) ||
     !isPosition(value.to) ||
     !isPosition(value.gapFrom) ||
@@ -94,6 +91,13 @@ const readAround = (schema: Schema, value: Fields): Step | undefined => {
   ) {
     return undefined;
   }
+
+  const slice = sliceFromJSON(schema, value.slice, value.insert);
+
+  if (slice === undefined) {
+    return undefined;
+  }
+
   return {
     kind: StepKind.ReplaceAround,
     from: value.from,

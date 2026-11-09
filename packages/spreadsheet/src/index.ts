@@ -26,6 +26,8 @@ export type {
   NuiSpreadsheetContextMenu,
   NuiSpreadsheetExposed,
   NuiSpreadsheetMenuScope,
+  NuiSpreadsheetPeer,
+  NuiSpreadsheetPlace,
   NuiSpreadsheetProps,
   NuiSpreadsheetSelection,
   SheetCells,

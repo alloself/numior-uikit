@@ -25,6 +25,32 @@ describe('NuiSpreadsheet on the server', () => {
     expect(second).toBe(first);
   });
 
+  it('draws where other people stand', async () => {
+    const html = await renderToString(NuiSpreadsheet, {
+      props: {
+        book,
+        label: 'Sales book',
+        peers: [
+          {
+            clientId: 'client-1',
+            colour: 1,
+            user: { id: 'anna', name: 'Анна' },
+            place: {
+              sheet: 'Sales',
+              selection: {
+                active: { row: 1, col: 1 },
+                ranges: [{ top: 1, left: 1, bottom: 1, right: 1 }],
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    expect(html).toContain('nui-spreadsheet__peer-cell');
+    expect(html).toContain('Анна');
+  });
+
   it('does not listen to a shared book on the server', async () => {
     const subscribe = vi.fn<(listener: WorkbookDocumentListener) => () => void>();
     const session = createWorkbookDocument({ book, calculator: createCalculator(book) });

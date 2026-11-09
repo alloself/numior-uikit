@@ -83,4 +83,5 @@ export const ToolbarGroupKey = {
   Insert: 'insert',
   Blocks: 'blocks',
   Marks: 'marks',
+  Selection: 'selection',
 } as const;

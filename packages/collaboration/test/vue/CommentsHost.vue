@@ -6,7 +6,12 @@
     :label="LABEL"
     :schema="fixtureSchema"
     :plugins="[comments.plugin]"
-  />
+    :selection-actions="[comments.action.value]"
+  >
+    <template #overlay>
+      <NuiEditorCommentPopover :comments="comments" :editor="editorApi" :labels="labels" />
+    </template>
+  </NuiEditor>
   <NuiEditorComments :comments="comments" :labels="labels" />
 </template>
 
@@ -16,7 +21,12 @@ import { fixtureSchema } from '@numior/editor-core/fixtures';
 import { NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
 import { computed, ref, useTemplateRef } from 'vue';
 import type { CommentsAdapter, PresenceUser } from '../../src';
-import { NuiEditorComments, useEditorComments, type NuiEditorCommentsProps } from '../../src/vue';
+import {
+  NuiEditorCommentPopover,
+  NuiEditorComments,
+  useEditorComments,
+  type NuiEditorCommentsProps,
+} from '../../src/vue';
 
 const LABEL = 'Document';
 

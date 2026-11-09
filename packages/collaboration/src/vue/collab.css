@@ -87,11 +87,18 @@
   font-size: var(--nui-font-size-sm);
 }
 
-.nui-collab-comments__header {
-  display: flex;
-  gap: var(--nui-space-2);
-  align-items: center;
-  justify-content: space-between;
+.nui-collab-comment-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.nui-collab-comment-layer__anchor {
+  position: absolute;
+}
+
+.nui-collab-comment-popover {
+  inline-size: min(22rem, calc(100vw - 2 * var(--nui-space-4)));
 }
 
 .nui-collab-comments__title {
@@ -153,6 +160,12 @@
 
 .nui-collab-comments__thread--active {
   border-color: var(--nui-primary);
+}
+
+.nui-collab-comments__thread--inline {
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
 }
 
 .nui-collab-comments__thread--resolved {
