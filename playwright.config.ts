@@ -39,7 +39,8 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'pnpm build && pnpm --filter @numior/playground preview',
+      command:
+        'pnpm build && (node packages/collaboration/server/main.ts & pnpm --filter @numior/playground preview)',
       url: PLAYGROUND_URL,
       reuseExistingServer: false,
       timeout: 120_000,
