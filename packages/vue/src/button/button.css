@@ -18,6 +18,7 @@
   --_height: var(--nui-control-height-md);
   --_padding: var(--nui-control-padding-md);
   --_font-size: var(--nui-control-font-size-md);
+  --_text-lift: 1.5px;
 
   box-sizing: border-box;
   position: relative;
@@ -85,6 +86,7 @@
   --_height: 1.75em;
   --_padding: 0.25em;
   --_font-size: 0.875em;
+  --_text-lift: 0px;
 
   padding-block: 0;
 }
@@ -104,12 +106,15 @@
   --_height: var(--nui-control-height-lg);
   --_padding: var(--nui-control-padding-lg);
   --_font-size: var(--nui-control-font-size-lg);
+  --_text-lift: var(--nui-control-text-lift-lg);
 }
 
 .nui-button--round {
   border-radius: var(--nui-radius-full);
 }
 .nui-button--icon-only {
+  --_text-lift: 0px;
+
   inline-size: var(--_height);
   padding-inline: 0;
 }
@@ -132,6 +137,8 @@
   color: var(--nui-text-muted);
 }
 .nui-button--variant-link {
+  --_text-lift: 0px;
+
   min-block-size: auto;
   padding: 0;
   border-radius: var(--nui-radius-sm);
@@ -205,7 +212,12 @@
   display: inline-flex;
   align-items: center;
   gap: var(--nui-space-2);
+  padding-block-end: var(--_text-lift);
   transition: opacity var(--nui-duration-fast) var(--nui-easing);
+}
+
+.nui-button__content > .nui-icon {
+  translate: 0 calc(var(--_text-lift) / 2);
 }
 .nui-button__icon-end {
   inline-size: 1em;
