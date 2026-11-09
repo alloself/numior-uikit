@@ -12,6 +12,7 @@ const ROOTS = [
   'packages/spreadsheet/test',
   'packages/charts/test',
   'packages/collaboration/test',
+  'packages/offline/test',
 ];
 
 const RULES = [

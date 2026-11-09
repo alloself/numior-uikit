@@ -302,6 +302,16 @@ for (const file of await localImports(resolve('packages/spreadsheet/dist/xlsx/in
 
 await importBuild('collaboration', ['collab', 'createCollabClient', 'webSocketTransport']);
 
+await importBuild('offline', ['openOfflineStore', 'deleteOfflineDocument']);
+
+for (const file of await localImports(resolve('packages/offline/dist/index.js'))) {
+  assert.doesNotMatch(
+    await readFile(file, 'utf8'),
+    /from ['"](?:vue|@vueuse\/[\w-]+)['"]/,
+    `offline must stay free of Vue: ${file}`,
+  );
+}
+
 const collaborationVue = await import(
   pathToFileURL(resolve('packages/collaboration/dist/vue/index.js')).href
 );

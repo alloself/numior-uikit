@@ -1,0 +1,172 @@
+import {
+  applyStep,
+  fromJSON,
+  stepFromJSON,
+  toJSON,
+  type Doc,
+  type Schema,
+} from '@numior/editor-core';
+import { finished, openDatabase, requested } from './idb';
+import { contiguousSteps, isMeta, isSnapshot } from './records';
+import type {
+  OfflineMeta,
+  OfflinePlugins,
+  OfflineSnapshot,
+  OfflineState,
+  OfflineStep,
+  OfflineStore,
+  OfflineStoreOptions,
+} from './store.types';
+
+const DATABASE_VERSION = 1;
+
+const COMPACT_AFTER = 500;
+
+const SINGLE_KEY = 'current';
+
+const META = 'meta';
+
+const SNAPSHOT = 'snapshot';
+
+const STEPS = 'steps';
+
+const NO_PLUGINS: OfflinePlugins = {};
+
+const databaseName = (doc: string): string => `nui-offline:${doc}`;
+
+const upgrade = (database: IDBDatabase): void => {
+  database.createObjectStore(META);
+  database.createObjectStore(SNAPSHOT);
+  database.createObjectStore(STEPS, { keyPath: 'version' });
+};
+
+const replayedDoc = (schema: Schema, state: OfflineState): Doc | undefined => {
+  const read = fromJSON(schema, state.snapshot.document);
+
+  return state.steps.reduce<Doc | undefined>(
+    (doc, record) => {
+      const step = stepFromJSON(schema, record.step);
+
+      if (doc === undefined || step === undefined) {
+        return undefined;
+      }
+
+      const applied = applyStep(doc, step);
+
+      return applied.ok ? applied.doc : undefined;
+    },
+    read.ok ? read.doc : undefined,
+  );
+};
+
+const dropCovered = async (steps: IDBObjectStore, version: number): Promise<void> => {
+  const keys = await requested(steps.getAllKeys());
+
+  keys.forEach((key) => {
+    if (typeof key === 'number' && key < version) {
+      steps.delete(key);
+    }
+  });
+};
+
+export const openOfflineStore = async (
+  doc: string,
+  options: OfflineStoreOptions,
+): Promise<OfflineStore> => {
+  const {
+    schema,
+    plugins = NO_PLUGINS,
+    factory = globalThis.indexedDB,
+    compactAfter = COMPACT_AFTER,
+  } = options;
+
+  const meta: OfflineMeta = { schema: { name: schema.name, version: schema.version }, plugins };
+  const database = await openDatabase(factory, databaseName(doc), DATABASE_VERSION, upgrade);
+
+  database.onversionchange = () => {
+    database.close();
+  };
+
+  let logged = await requested(database.transaction(STEPS).objectStore(STEPS).count());
+
+  const read = async (): Promise<OfflineState | undefined> => {
+    const transaction = database.transaction([META, SNAPSHOT, STEPS]);
+
+    const [storedMeta, snapshot, steps] = await Promise.all([
+      requested<unknown>(transaction.objectStore(META).get(SINGLE_KEY)),
+      requested<unknown>(transaction.objectStore(SNAPSHOT).get(SINGLE_KEY)),
+      requested<unknown[]>(transaction.objectStore(STEPS).getAll()),
+    ]);
+
+    return isMeta(storedMeta) && isSnapshot(snapshot)
+      ? { meta: storedMeta, snapshot, steps: contiguousSteps(steps, snapshot.version) }
+      : undefined;
+  };
+
+  const writeSnapshot = async (snapshot: OfflineSnapshot): Promise<void> => {
+    const transaction = database.transaction([META, SNAPSHOT, STEPS], 'readwrite');
+    const snapshots = transaction.objectStore(SNAPSHOT);
+    const steps = transaction.objectStore(STEPS);
+    const current = await requested<unknown>(snapshots.get(SINGLE_KEY));
+
+    if (!isSnapshot(current) || current.version <= snapshot.version) {
+      transaction.objectStore(META).put(meta, SINGLE_KEY);
+      snapshots.put(snapshot, SINGLE_KEY);
+      await dropCovered(steps, snapshot.version);
+    }
+
+    const remaining = await requested(steps.count());
+
+    await finished(transaction);
+    logged = remaining;
+  };
+
+  const compact = async (): Promise<boolean> => {
+    const state = await read();
+    const replayed = state === undefined ? undefined : replayedDoc(schema, state);
+
+    if (state === undefined || replayed === undefined || state.steps.length === 0) {
+      return false;
+    }
+
+    await writeSnapshot({
+      version: state.snapshot.version + state.steps.length,
+      document: toJSON(replayed),
+    });
+
+    return true;
+  };
+
+  const appendSteps = async (records: readonly OfflineStep[]): Promise<void> => {
+    const transaction = database.transaction(STEPS, 'readwrite');
+    const steps = transaction.objectStore(STEPS);
+
+    records.forEach((record) => {
+      steps.put(record);
+    });
+
+    await finished(transaction);
+    logged += records.length;
+
+    if (logged > compactAfter) {
+      await compact();
+    }
+  };
+
+  return {
+    read,
+    writeSnapshot,
+    appendSteps,
+    compact,
+    close: () => {
+      database.close();
+    },
+  };
+};
+
+export const deleteOfflineDocument = async (
+  doc: string,
+  factory: IDBFactory = globalThis.indexedDB,
+): Promise<void> => {
+  await requested(factory.deleteDatabase(databaseName(doc)));
+};
