@@ -94,10 +94,12 @@ export class SpreadsheetDriver {
   private constructor(
     private readonly wrapper: VueWrapper,
     readonly changes: readonly NuiSpreadsheetChange[],
+    readonly warnings: readonly string[],
   ) {}
 
   static mount(props: SpreadsheetMount): SpreadsheetDriver {
     const changes: NuiSpreadsheetChange[] = [];
+    const warnings: string[] = [];
     const mounted: Mounted = { wrapper: undefined };
 
     const wrapper = mount(NuiSpreadsheet, {
@@ -110,12 +112,19 @@ export class SpreadsheetDriver {
           void mounted.wrapper?.setProps({ sheet });
         },
       },
+      global: {
+        config: {
+          warnHandler: (message: string) => {
+            warnings.push(message);
+          },
+        },
+      },
       attachTo: document.body,
     });
 
     mounted.wrapper = wrapper;
 
-    return new SpreadsheetDriver(wrapper, changes);
+    return new SpreadsheetDriver(wrapper, changes, warnings);
   }
 
   get drawings(): string[] {

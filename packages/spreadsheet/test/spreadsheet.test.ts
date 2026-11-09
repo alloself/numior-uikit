@@ -286,6 +286,7 @@ describe('NuiSpreadsheet', () => {
     await sheet.press('F2');
 
     expect(sheet.editorText).toBe('=C2*2+C3');
+    expect(sheet.warnings).toEqual([]);
 
     await sheet.press('Escape');
     await sheet.press('9');

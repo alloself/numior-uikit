@@ -11,7 +11,7 @@ import type {
   NuiTableRect,
   TableCellPosition,
 } from '@numior/table';
-import type { NuiListEntry, NuiMenuEntry, NuiTabDescriptor } from '@numior/vue';
+import type { NuiListEntry, NuiMenuEntry, NuiSize, NuiTabDescriptor } from '@numior/vue';
 import type { ComponentPublicInstance, ComputedRef, Ref, ShallowRef } from 'vue';
 import type {
   BookLocale,
@@ -105,6 +105,7 @@ export interface SheetTabsProps {
 
 export interface SheetCellEditorProps {
   invalid?: boolean | undefined;
+  size?: NuiSize | undefined;
 }
 
 export interface SheetReferenceProps {
