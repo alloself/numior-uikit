@@ -1,8 +1,16 @@
 import type { Assoc, MapResult, Mappable, StepMap } from '../transform/mapping.types';
+import { mapStep, stepMapOf } from '../transform/step';
+import { StepKind, type Step } from '../transform/step.types';
 
 export interface MirrorMaps {
   readonly maps: readonly StepMap[];
   readonly mirrors: ReadonlyMap<number, number>;
+  readonly edges?: ReadonlySet<number> | undefined;
+}
+
+export interface RebasedSteps {
+  readonly steps: readonly Step[];
+  readonly chain: MirrorMaps;
 }
 
 interface Hit {
@@ -13,6 +21,16 @@ interface Hit {
 const insideOf = (map: StepMap, pos: number): Hit | undefined => {
   const index = map.ranges.findIndex(
     (range) => pos > range.start && pos < range.start + range.oldSize,
+  );
+
+  const range = map.ranges[index];
+
+  return range === undefined ? undefined : { index, offset: pos - range.start };
+};
+
+const atOrInsideOf = (map: StepMap, pos: number): Hit | undefined => {
+  const index = map.ranges.findIndex(
+    (range) => pos >= range.start && pos <= range.start + range.oldSize,
   );
 
   const range = map.ranges[index];
@@ -33,13 +51,14 @@ const newStart = (map: StepMap, index: number): number | undefined => {
 };
 
 const recovered = (
-  { maps, mirrors }: MirrorMaps,
+  { maps, mirrors, edges }: MirrorMaps,
   at: number,
   pos: number,
 ): { readonly pos: number; readonly at: number } | undefined => {
   const twin = mirrors.get(at);
   const map = maps[at];
-  const hit = map === undefined || twin === undefined ? undefined : insideOf(map, pos);
+  const found = edges?.has(at) === true ? atOrInsideOf : insideOf;
+  const hit = map === undefined || twin === undefined ? undefined : found(map, pos);
   const twinMap = twin === undefined ? undefined : maps[twin];
 
   const start =
@@ -88,14 +107,56 @@ export const mirrored = (chain: MirrorMaps): Mappable => {
 const shifted = (mirrors: ReadonlyMap<number, number>): Map<number, number> =>
   new Map([...mirrors].map(([from, to]) => [from + 1, to + 1]));
 
-export const passedStep = (chain: MirrorMaps, back: StepMap, ahead?: StepMap): MirrorMaps => {
+const shiftedEdges = (edges: ReadonlySet<number> | undefined): Set<number> | undefined =>
+  edges === undefined ? undefined : new Set([...edges].map((index) => index + 1));
+
+const passedStep = (chain: MirrorMaps, back: StepMap, ahead?: StepMap): MirrorMaps => {
   const mirrors = shifted(chain.mirrors);
+  const edges = shiftedEdges(chain.edges);
 
   if (ahead === undefined) {
-    return { maps: [back, ...chain.maps], mirrors };
+    return { maps: [back, ...chain.maps], mirrors, edges };
   }
   const maps = [back, ...chain.maps, ahead];
 
   mirrors.set(0, maps.length - 1);
-  return { maps, mirrors };
+  return { maps, mirrors, edges };
 };
+
+const idle = (step: Step): boolean => {
+  switch (step.kind) {
+    case StepKind.Replace:
+      return step.from === step.to && step.slice.content.length === 0;
+    case StepKind.AddMark:
+    case StepKind.RemoveMark:
+      return step.from >= step.to;
+    default:
+      return false;
+  }
+};
+
+const movedStep = (step: Step, chain: MirrorMaps): Step | undefined => {
+  const moved = mapStep(step, mirrored(chain));
+
+  return moved === undefined || idle(moved) ? undefined : moved;
+};
+
+export const rebaseSteps = (
+  steps: readonly Step[],
+  chain: MirrorMaps,
+  accept?: (moved: Step) => boolean,
+): RebasedSteps =>
+  steps.reduce<RebasedSteps>(
+    (done, step) => {
+      const moved = movedStep(step, done.chain);
+      const back = stepMapOf(step).invert();
+
+      return moved === undefined || accept?.(moved) === false
+        ? { steps: done.steps, chain: passedStep(done.chain, back) }
+        : {
+            steps: [...done.steps, moved],
+            chain: passedStep(done.chain, back, stepMapOf(moved)),
+          };
+    },
+    { steps: [], chain },
+  );

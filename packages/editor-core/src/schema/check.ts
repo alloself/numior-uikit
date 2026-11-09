@@ -1,5 +1,13 @@
+import type { Slice } from '../doc/doc.types';
 import { contentSize, sameMarks } from '../model/node';
-import { ContentNodeKind, type Attrs, type ElementNode, type TextNode } from '../model/node.types';
+import {
+  ContentNodeKind,
+  type Attrs,
+  type ContentNode,
+  type ElementNode,
+  type Mark,
+  type TextNode,
+} from '../model/node.types';
 import { specEntries } from './spec-entries';
 import {
   NodeName,
@@ -166,6 +174,59 @@ const checkElement = (context: CheckContext, node: ElementNode): void => {
   });
 };
 
+const checkSiblings = (
+  context: CheckContext,
+  nodes: readonly ContentNode[],
+  parent: NodeType | undefined,
+  openStart: number,
+  openEnd: number,
+): void => {
+  nodes.forEach((child, index) => {
+    const previous = nodes[index - 1];
+
+    if (child.kind === ContentNodeKind.Text) {
+      if (parent !== undefined) {
+        checkText(
+          context,
+          index,
+          child,
+          parent,
+          previous?.kind === ContentNodeKind.Text ? previous : undefined,
+        );
+      }
+      return;
+    }
+
+    const start = index === 0 ? openStart : 0;
+    const end = index === nodes.length - 1 ? openEnd : 0;
+
+    context.path.push(index);
+
+    if (start > 0 || end > 0) {
+      checkOpen(context, child, start, end);
+    } else {
+      checkElement(context, child);
+    }
+    context.path.pop();
+  });
+};
+
+const checkOpen = (
+  context: CheckContext,
+  node: ElementNode,
+  openStart: number,
+  openEnd: number,
+): void => {
+  const type = elementTypeOf(context, node.type);
+
+  if (type === undefined) {
+    context.issues.push({ kind: 'type', path: [...context.path], type: node.type });
+    return;
+  }
+  checkAttrs(context, context.path, type.attrs, node.attrs);
+  checkSiblings(context, node.content, type, openStart - 1, openEnd - 1);
+};
+
 export const checkResult = (context: CheckContext): DocCheck =>
   context.issues.length === 0 ? { ok: true } : { ok: false, issues: context.issues };
 
@@ -186,5 +247,24 @@ export const checkNodes = (schema: SchemaShape, nodes: readonly ElementNode[]): 
     context.path.pop();
   });
 
+  return checkResult(context);
+};
+
+export const checkSlice = (schema: SchemaShape, slice: Slice): DocCheck => {
+  const context = createCheckContext(schema);
+
+  checkSiblings(context, slice.content, undefined, slice.openStart, slice.openEnd);
+  return checkResult(context);
+};
+
+export const checkMark = (schema: SchemaShape, mark: Mark): DocCheck => {
+  const context = createCheckContext(schema);
+  const type = schema.marks.get(mark.type);
+
+  if (type === undefined) {
+    context.issues.push({ kind: 'mark', path: [], mark: mark.type });
+  } else {
+    checkAttrs(context, [], type.attrs, mark.attrs);
+  }
   return checkResult(context);
 };

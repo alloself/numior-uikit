@@ -1,0 +1,30 @@
+{
+  "name": "@numior/collaboration",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@numior/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "vp build && vue-tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@numior/editor-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@numior/content": "workspace:*",
+    "@types/ws": "8.18.2",
+    "fast-check": "4.10.2",
+    "ws": "8.22.2"
+  }
+}

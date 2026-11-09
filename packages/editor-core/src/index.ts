@@ -35,6 +35,7 @@ export type {
   MarkJSON,
   NodeJSON,
   SchemaStamp,
+  SliceJSON,
   TextJSON,
 } from './doc/json.types';
 export { contentSize, createIdSource, nodeSize, sameAttrs, sameMarks } from './model/node';
@@ -121,6 +122,8 @@ export type {
 } from './transform/mapping.types';
 export { sliceSize } from './transform/replace';
 export { applyStep, invertStep, mapStep, mergeSteps, stepMapOf } from './transform/step';
+export { stepFromJSON, stepToJSON } from './transform/step-json';
+export type { StepJSON } from './transform/step-json';
 export type { MarkupChange, Step, StepResult } from './transform/step.types';
 export { createTransform } from './transform/transform';
 export type {
@@ -186,9 +189,12 @@ export {
   redo,
   redoDepth,
   remoteChange,
+  remoteChain,
   undo,
   undoDepth,
 } from './history/history';
+export { mirrored, rebaseSteps } from './history/rebase';
+export type { MirrorMaps, RebasedSteps } from './history/rebase';
 export type { HistoryEvent, HistoryOptions, HistoryState } from './history/history.types';
 export {
   activateAnchor,

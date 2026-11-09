@@ -300,6 +300,16 @@ for (const file of await localImports(resolve('packages/spreadsheet/dist/xlsx/in
   );
 }
 
+await importBuild('collaboration', ['collab', 'createCollabClient', 'webSocketTransport']);
+
+for (const file of await localImports(resolve('packages/collaboration/dist/index.js'))) {
+  assert.doesNotMatch(
+    await readFile(file, 'utf8'),
+    /from ['"](?:vue|yjs|ws|@vueuse\/[\w-]+)['"]/,
+    `collaboration must stay free of Vue, Yjs and the server socket: ${file}`,
+  );
+}
+
 await importBuild('charts', ['NuiChart', 'chartMessages']);
 await importBuild('spreadsheet', ['NuiSpreadsheet', 'sheetCells']);
 

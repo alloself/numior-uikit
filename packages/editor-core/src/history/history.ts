@@ -10,25 +10,19 @@ import {
   type Plugin,
   type Transaction,
 } from '../state/state.types';
-import type { StepMap } from '../transform/mapping.types';
-import { invertStep, mapStep, stepMapOf } from '../transform/step';
-import { StepKind, type Step } from '../transform/step.types';
+import { invertStep } from '../transform/step';
+import type { Step } from '../transform/step.types';
 import {
   HistoryAction,
   type HistoryEvent,
   type HistoryOptions,
   type HistoryState,
 } from './history.types';
-import { mirrored, passedStep, type MirrorMaps } from './rebase';
+import { mirrored, rebaseSteps, type MirrorMaps } from './rebase';
 
 interface HistorySettings {
   readonly depth: number;
   readonly groupDelay: number;
-}
-
-interface Rebased {
-  readonly steps: readonly Step[];
-  readonly chain: MirrorMaps;
 }
 
 const GROUPED: ReadonlySet<InputSource> = new Set([
@@ -45,6 +39,8 @@ export const closeHistory = createMetaKey<boolean>('closeHistory');
 
 export const remoteChange = createMetaKey<boolean>('remote');
 
+export const remoteChain = createMetaKey<MirrorMaps>('remoteChain');
+
 const registry = new WeakMap<object, Plugin<HistoryState>>();
 
 const EMPTY: HistoryState = { done: [], undone: [], time: 0, source: undefined, open: false };
@@ -57,40 +53,6 @@ const eventOf = (tr: Transaction, before: EditorState): HistoryEvent => ({
   selection: before.selection,
 });
 
-const idle = (step: Step): boolean => {
-  switch (step.kind) {
-    case StepKind.Replace:
-      return step.from === step.to && step.slice.content.length === 0;
-    case StepKind.AddMark:
-    case StepKind.RemoveMark:
-      return step.from >= step.to;
-    default:
-      return false;
-  }
-};
-
-const movedStep = (step: Step, chain: MirrorMaps): Step | undefined => {
-  const moved = mapStep(step, mirrored(chain));
-
-  return moved === undefined || idle(moved) ? undefined : moved;
-};
-
-const rebaseSteps = (steps: readonly Step[], chain: MirrorMaps): Rebased =>
-  steps.reduce<Rebased>(
-    (done, step) => {
-      const moved = movedStep(step, done.chain);
-      const back = stepMapOf(step).invert();
-
-      return moved === undefined
-        ? { steps: done.steps, chain: passedStep(done.chain, back) }
-        : {
-            steps: [...done.steps, moved],
-            chain: passedStep(done.chain, back, stepMapOf(moved)),
-          };
-    },
-    { steps: [], chain },
-  );
-
 const movedSelection = (selection: Selection, chain: MirrorMaps): Selection => {
   const mapping = mirrored(chain);
 
@@ -101,9 +63,9 @@ const movedSelection = (selection: Selection, chain: MirrorMaps): Selection => {
 
 const rebaseEvents = (
   events: readonly HistoryEvent[],
-  maps: readonly StepMap[],
+  start: MirrorMaps,
 ): readonly HistoryEvent[] => {
-  let chain: MirrorMaps = { maps, mirrors: new Map() };
+  let chain = start;
   const kept: HistoryEvent[] = [];
 
   for (const event of events.toReversed()) {
@@ -179,10 +141,12 @@ const applyHistory = (
     return tr.selectionSet ? { ...value, open: false } : value;
   }
   if (addToHistory.read(tr) === false || remoteChange.read(tr) === true) {
+    const chain = remoteChain.read(tr) ?? { maps: tr.mapping.maps, mirrors: new Map() };
+
     return {
       ...value,
-      done: rebaseEvents(value.done, tr.mapping.maps),
-      undone: rebaseEvents(value.undone, tr.mapping.maps),
+      done: rebaseEvents(value.done, chain),
+      undone: rebaseEvents(value.undone, chain),
       open: false,
     };
   }

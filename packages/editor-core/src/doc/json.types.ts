@@ -21,6 +21,12 @@ export interface ElementJSON {
 
 export type NodeJSON = TextJSON | ElementJSON;
 
+export interface SliceJSON {
+  readonly content: readonly NodeJSON[];
+  readonly openStart: number;
+  readonly openEnd: number;
+}
+
 export interface SchemaStamp {
   readonly name: string;
   readonly version: number;

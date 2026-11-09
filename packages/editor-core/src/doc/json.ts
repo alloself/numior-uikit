@@ -11,7 +11,9 @@ import {
 import {
   checkBuilt,
   checkIdentity,
+  checkMark,
   checkResult,
+  checkSlice,
   checkText,
   checkTop,
   createCheckContext,
@@ -21,7 +23,7 @@ import {
 import type { AttrSpecs, NodeType, Schema } from '../schema/schema.types';
 import { specEntries } from '../schema/spec-entries';
 import { createDoc } from './doc';
-import type { Doc } from './doc.types';
+import type { Doc, Slice } from './doc.types';
 import type {
   DocJSON,
   DocJSONIssue,
@@ -29,6 +31,7 @@ import type {
   ElementJSON,
   MarkJSON,
   NodeJSON,
+  SliceJSON,
 } from './json.types';
 
 type Fields = Readonly<Record<string, unknown>>;
@@ -39,10 +42,10 @@ interface Reader {
   readonly check: CheckContext;
 }
 
-const isFields = (value: unknown): value is Fields =>
+export const isFields = (value: unknown): value is Fields =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-const isAttrValue = (value: unknown): value is AttrValue =>
+export const isAttrValue = (value: unknown): value is AttrValue =>
   value === null ||
   typeof value === 'string' ||
   typeof value === 'boolean' ||
@@ -54,7 +57,7 @@ const isStamp = (value: unknown): value is DocJSON['schema'] =>
 const withAttrs = (attrs: Attrs): { readonly attrs?: Attrs } =>
   Object.keys(attrs).length === 0 ? {} : { attrs };
 
-const markToJSON = (mark: Mark): MarkJSON => ({ type: mark.type, ...withAttrs(mark.attrs) });
+export const markToJSON = (mark: Mark): MarkJSON => ({ type: mark.type, ...withAttrs(mark.attrs) });
 
 const nodeToJSON = (node: ContentNode): NodeJSON => {
   if (node.kind === ContentNodeKind.Text) {
@@ -314,4 +317,44 @@ export const fromJSON = (schema: Schema, value: unknown): DocJSONResult => {
   return check.ok
     ? { ok: true, doc: createDoc(schema, root) }
     : { ok: false, issues: check.issues };
+};
+
+const partReader = (schema: Schema): Reader => ({
+  schema,
+  issues: [],
+  check: createCheckContext(schema),
+});
+
+const isDepth = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 0;
+
+export const sliceToJSON = (slice: Slice): SliceJSON => ({
+  content: slice.content.map(nodeToJSON),
+  openStart: slice.openStart,
+  openEnd: slice.openEnd,
+});
+
+export const sliceFromJSON = (schema: Schema, value: unknown): Slice | undefined => {
+  if (!isFields(value) || !isDepth(value.openStart) || !isDepth(value.openEnd)) {
+    return undefined;
+  }
+
+  const reader = partReader(schema);
+
+  const slice: Slice = {
+    content: readContent(reader, value.content, undefined),
+    openStart: value.openStart,
+    openEnd: value.openEnd,
+  };
+
+  return reader.issues.length === 0 && checkSlice(schema, slice).ok ? slice : undefined;
+};
+
+export const markFromJSON = (schema: Schema, value: unknown): Mark | undefined => {
+  const reader = partReader(schema);
+  const mark = readMark(reader, value);
+
+  return mark !== undefined && reader.issues.length === 0 && checkMark(schema, mark).ok
+    ? mark
+    : undefined;
 };
