@@ -28,7 +28,7 @@
 .nui-row__title {
   overflow: hidden;
   font-weight: var(--_row-weight, 400);
-  line-height: var(--nui-line-height-tight);
+  line-height: var(--nui-line-height-control);
   text-overflow: ellipsis;
 }
 .nui-row--nowrap .nui-row__title,
@@ -42,7 +42,7 @@
 .nui-row__description {
   color: var(--_row-muted, var(--nui-text-muted));
   font-size: var(--_row-description-size, var(--nui-font-size-xs));
-  line-height: var(--nui-line-height-tight);
+  line-height: var(--nui-line-height-control);
   transition: color var(--nui-duration-fast) var(--nui-easing);
 }
 .nui-row__trailing {
