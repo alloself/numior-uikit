@@ -297,7 +297,7 @@ export class CollabRoom {
     }
 
     this.clients.push(client);
-    await page.goto(`/collab.html?${query.toString()}`);
+    await page.goto(`/collab?${query.toString()}`);
 
     return client;
   }

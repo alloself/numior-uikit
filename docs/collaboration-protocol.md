@@ -139,7 +139,7 @@
 
 На клиенте документ создаётся через `createWorkbookDocument({ book, calculator })` и передаётся в `NuiSpreadsheet` пропом
 `collaboration`. Отправку запускает потребитель: `@change="client.sync()"`. Пример — `apps/playground/src/collab/CollabBookApp.vue`
-(`collab.html?book`); эталонный сервер отдаёт книгу комнатам, имя которых начинается с `book`.
+(`/collab?book=1&user=Анна`); эталонный сервер отдаёт книгу комнатам, имя которых начинается с `book`.
 
 ## Пример обмена
 
@@ -197,5 +197,5 @@ A ← steps    { version: 5, clientId: "b", steps: [s2'] }
 
 Эталон запускается после `pnpm build` командой `node packages/collaboration/server/main.ts` на порту 4175
 (другой порт задаёт `COLLAB_PORT`) и задаёт ожидаемое поведение. Правила выше покрыты тестами комнаты и клиента в
-`packages/collaboration/test`, а сценарии двух браузеров — в `tests/e2e/collab.spec.ts`. Песочница `collab.html`
+`packages/collaboration/test`, а сценарии двух браузеров — в `tests/e2e/collab.spec.ts`. Песочница `/collab`
 подключается к своему серверу параметром адреса `?server=ws://хост:порт`.

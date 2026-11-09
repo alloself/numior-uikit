@@ -72,7 +72,7 @@ const paneSrc = (user: string, persisted: boolean): string => {
   if (persisted && kind === 'editor') {
     query.set('offline', '1');
   }
-  return `collab.html?${query.toString()}`;
+  return `/collab?${query.toString()}`;
 };
 
 const panes = computed((): readonly LabPane[] => [

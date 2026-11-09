@@ -102,7 +102,7 @@ export class CollabLab {
   }
 
   async open(): Promise<void> {
-    await this.page.goto('/collab.html');
+    await this.page.goto('/collab');
     await this.left.editor.waitFor();
     await this.right.editor.waitFor();
   }

@@ -12,7 +12,7 @@
       <span class="eyebrow">NUMIOR UI / FOUNDATION</span>
       <h1>Свой интерфейс.<br />Общие принципы.</h1>
       <p class="description">Первые компоненты и токены будущего UI kit для Vue.</p>
-      <NuiButton href="collab.html" variant="outline" tone="neutral" data-testid="collab-lab-link">
+      <NuiButton href="/collab" variant="outline" tone="neutral" data-testid="collab-lab-link">
         Совместная работа
       </NuiButton>
     </header>
