@@ -19,6 +19,16 @@ export type {
   EditorCollabOptions,
   UnconfirmedStep,
 } from './editor/collab.types';
+export { CommentEventKind } from './comments/comments.types';
+export type {
+  CommentAnchor,
+  CommentEvent,
+  CommentReply,
+  CommentThread,
+  CommentsAdapter,
+  NewComment,
+  NewReply,
+} from './comments/comments.types';
 export { editorCollabDocument } from './editor/editor-document';
 export {
   presenceOf,

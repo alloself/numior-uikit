@@ -51,6 +51,7 @@ export interface NuiEditorApi {
   flush(): void;
   coordsAt(pos: number): CaretRect | undefined;
   contentBox(): DOMRect | undefined;
+  revealNode(id: string): void;
 }
 
 export interface NuiEditorPaste {

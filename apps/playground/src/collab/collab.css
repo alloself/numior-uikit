@@ -1,6 +1,6 @@
 .collab {
   box-sizing: border-box;
-  max-inline-size: 48rem;
+  max-inline-size: 72rem;
   margin-inline: auto;
   padding: var(--nui-space-6) var(--nui-space-4);
 }
@@ -12,4 +12,17 @@
   justify-content: space-between;
   min-block-size: 2rem;
   margin-block-end: var(--nui-space-4);
+}
+
+.collab__page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--nui-space-5);
+  align-items: start;
+}
+
+@media (min-width: 56rem) {
+  .collab__page {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+  }
 }

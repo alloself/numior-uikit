@@ -76,3 +76,112 @@
   transform: translate(var(--_flag-x, 0), var(--_flag-shift, 0));
   transition: transform var(--nui-duration-fast) var(--nui-easing);
 }
+
+.nui-collab-comments {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nui-space-3);
+  box-sizing: border-box;
+  min-inline-size: 0;
+  color: var(--nui-text);
+  font-size: var(--nui-font-size-sm);
+}
+
+.nui-collab-comments__header {
+  display: flex;
+  gap: var(--nui-space-2);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nui-collab-comments__title {
+  margin: 0;
+  font-size: var(--nui-font-size-md);
+  font-weight: 600;
+}
+
+.nui-collab-comments__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nui-space-2);
+}
+
+.nui-collab-comments__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nui-space-1);
+}
+
+.nui-collab-comments__tools {
+  display: flex;
+  gap: var(--nui-space-1);
+  margin-inline-start: auto;
+}
+
+.nui-collab-comments__list,
+.nui-collab-comments__replies {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nui-collab-comments__list {
+  gap: var(--nui-space-2);
+}
+
+.nui-collab-comments__replies {
+  gap: var(--nui-space-2);
+  padding-inline-start: var(--nui-space-3);
+  border-inline-start: 2px solid var(--nui-border);
+}
+
+.nui-collab-comments__thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nui-space-2);
+  box-sizing: border-box;
+  padding: var(--nui-space-3);
+  background: var(--nui-surface);
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius);
+  transition:
+    border-color var(--nui-duration-fast) var(--nui-easing),
+    opacity var(--nui-duration-fast) var(--nui-easing);
+}
+
+.nui-collab-comments__thread--active {
+  border-color: var(--nui-primary);
+}
+
+.nui-collab-comments__thread--resolved {
+  opacity: 0.7;
+}
+
+.nui-collab-comments__entry {
+  display: flex;
+  gap: var(--nui-space-2);
+  align-items: center;
+  min-inline-size: 0;
+}
+
+.nui-collab-comments__author {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nui-collab-comments__time {
+  flex: none;
+  margin-inline-start: auto;
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-xs);
+}
+
+.nui-collab-comments__body {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}

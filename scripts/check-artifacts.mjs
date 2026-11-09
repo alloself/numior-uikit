@@ -312,6 +312,12 @@ assert.equal(
   'collaboration/vue must export the remote carets',
 );
 
+assert.equal(
+  typeof collaborationVue.NuiEditorComments,
+  'object',
+  'collaboration/vue must export the comments panel',
+);
+
 for (const file of await localImports(resolve('packages/collaboration/dist/index.js'))) {
   assert.doesNotMatch(
     await readFile(file, 'utf8'),

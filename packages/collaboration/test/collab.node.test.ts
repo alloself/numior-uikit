@@ -1,6 +1,9 @@
 import {
+  anchorsOf,
+  commentAnchors,
   createState,
   history,
+  setAnchor,
   textSelection,
   undo,
   undoDepth,
@@ -29,6 +32,27 @@ const firstText = (state: EditorState): string =>
     : '';
 
 describe('collab plugin', () => {
+  it('moves comment anchors through remote steps under unconfirmed text', () => {
+    const base = createState({
+      doc: paragraphs('one', 'two'),
+      plugins: [commentAnchors, history(), collab({ version: 3 })],
+    });
+
+    const selected = base.apply(base.tr.setSelection(textSelection(1, 4)));
+    let anchored = selected;
+
+    setAnchor('c')(selected, (tr) => {
+      anchored = selected.apply(tr);
+    });
+
+    const remote = insertion(base, 'rr', 1);
+    const typed = typedAt(anchored, 'L', 7);
+
+    const next = typed.apply(receiveSteps(typed, remote));
+
+    expect(anchorsOf(next).get('c')?.range).toMatchObject({ from: 3, to: 6 });
+  });
+
   it('queues local steps as unconfirmed', () => {
     const state = started();
 

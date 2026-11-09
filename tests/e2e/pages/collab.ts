@@ -11,6 +11,9 @@ export class CollabClient {
   readonly avatars: Locator;
   readonly carets: Locator;
   readonly selections: Locator;
+  readonly comments: Locator;
+  readonly threads: Locator;
+  readonly marks: Locator;
 
   constructor(
     readonly page: Page,
@@ -21,6 +24,9 @@ export class CollabClient {
     this.avatars = page.locator('.nui-avatar');
     this.carets = page.locator('.nui-collab-carets__caret');
     this.selections = page.locator('.nui-collab-selection');
+    this.comments = page.locator('.nui-collab-comments');
+    this.threads = page.locator('.nui-collab-comments__thread');
+    this.marks = page.locator('.nui-editor__comment');
   }
 
   paragraph(index: number): Locator {
@@ -51,6 +57,24 @@ export class CollabClient {
     await this.paragraph(index).click();
     await this.page.keyboard.press('Home');
     await this.page.keyboard.press('Shift+End');
+  }
+
+  async addComment(body: string): Promise<void> {
+    await this.comments.getByRole('button', { name: 'Добавить комментарий' }).click();
+    await this.comments.getByRole('textbox').fill(body);
+    await this.comments.getByRole('button', { name: 'Отправить' }).click();
+  }
+
+  async replyTo(index: number, body: string): Promise<void> {
+    const thread = this.threads.nth(index);
+
+    await thread.getByRole('button', { name: 'Ответить' }).click();
+    await thread.getByRole('textbox').fill(body);
+    await thread.getByRole('button', { name: 'Отправить' }).click();
+  }
+
+  async pressInThread(index: number, name: string): Promise<void> {
+    await this.threads.nth(index).getByRole('button', { name }).click();
   }
 
   text(): Promise<string> {

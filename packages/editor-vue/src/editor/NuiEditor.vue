@@ -760,6 +760,13 @@ const editor: NuiEditorApi = {
   },
   coordsAt: (pos) => view?.coordsAtPos(pos),
   contentBox: () => contentElement.value?.getBoundingClientRect(),
+  revealNode: (nodeId) => {
+    const dom = view?.nodeDOM(nodeId);
+
+    if (dom instanceof HTMLElement) {
+      dom.scrollIntoView({ block: 'nearest' });
+    }
+  },
 };
 
 const toolbarShown = computed(

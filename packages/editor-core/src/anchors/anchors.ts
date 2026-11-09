@@ -1,8 +1,10 @@
 import { decorationSet, inlineDecoration } from '../decorations/decorations';
 import type { DecorationSet } from '../decorations/decorations.types';
 import type { Doc } from '../doc/doc.types';
+import { remoteChain } from '../history/history';
+import { mirrored } from '../history/rebase';
 import { createMetaKey, definePlugin } from '../state/plugin';
-import { selectionRange } from '../state/selection';
+import { selectionRange, textPosition } from '../state/selection';
 import {
   SelectionKind,
   type Command,
@@ -10,6 +12,7 @@ import {
   type Plugin,
   type Transaction,
 } from '../state/state.types';
+import type { Mappable } from '../transform/mapping.types';
 import {
   AnchorChangeKind,
   AnchorRangeKind,
@@ -28,25 +31,74 @@ const ACTIVE_CLASS = 'nui-editor__comment--active';
 
 const EMPTY: AnchorsState = { anchors: new Map(), active: undefined };
 
-const movedAnchor = (anchor: Anchor, tr: Transaction): Anchor => {
+const mapperOf = (tr: Transaction): Mappable => {
+  const chain = remoteChain.read(tr);
+
+  return chain === undefined ? tr.mapping : mirrored(chain);
+};
+
+const movedAnchor = (anchor: Anchor, tr: Transaction, mapper: Mappable): Anchor => {
   const { range } = anchor;
 
   if (range.kind === AnchorRangeKind.Node) {
     return tr.doc.byId(range.id) === undefined ? { ...anchor, lost: true } : anchor;
   }
-  const from = tr.mapping.map(range.from, 1);
-  const to = Math.max(from, tr.mapping.map(range.to, -1));
+  const from = mapper.map(range.from, 1);
+  const to = Math.max(from, mapper.map(range.to, -1));
 
   return { ...anchor, range: { kind: 'text', from, to }, lost: anchor.lost || to === from };
 };
 
-const moved = (value: AnchorsState, tr: Transaction): AnchorsState =>
-  !tr.changed || value.anchors.size === 0
-    ? value
-    : {
-        ...value,
-        anchors: new Map([...value.anchors].map(([id, anchor]) => [id, movedAnchor(anchor, tr)])),
-      };
+const moved = (value: AnchorsState, tr: Transaction): AnchorsState => {
+  if (!tr.changed || value.anchors.size === 0) {
+    return value;
+  }
+
+  const mapper = mapperOf(tr);
+
+  return {
+    ...value,
+    anchors: new Map(
+      [...value.anchors].map(([id, anchor]) => [id, movedAnchor(anchor, tr, mapper)]),
+    ),
+  };
+};
+
+const covers = (doc: Doc, range: AnchorRange, pos: number): boolean => {
+  if (range.kind === AnchorRangeKind.Text) {
+    return range.from <= pos && pos <= range.to;
+  }
+  const node = doc.byId(range.id);
+  const at = doc.positionOf(range.id);
+
+  return node !== undefined && at !== undefined && at <= pos && pos <= at + node.size;
+};
+
+const anchorUnder = (value: AnchorsState, doc: Doc, pos: number): string | undefined => {
+  for (const anchor of value.anchors.values()) {
+    if (!anchor.lost && covers(doc, anchor.range, pos)) {
+      return anchor.id;
+    }
+  }
+  return undefined;
+};
+
+const followed = (value: AnchorsState, tr: Transaction): AnchorsState => {
+  const { selection } = tr;
+
+  if (
+    !tr.selectionSet ||
+    value.anchors.size === 0 ||
+    selection.kind !== SelectionKind.Text ||
+    selection.anchor !== selection.head
+  ) {
+    return value;
+  }
+
+  const active = anchorUnder(value, tr.doc, selection.head);
+
+  return active === value.active ? value : { ...value, active };
+};
 
 const changed = (value: AnchorsState, change: AnchorChange | undefined): AnchorsState => {
   switch (change?.kind) {
@@ -107,7 +159,7 @@ export const commentAnchors: Plugin<AnchorsState> = definePlugin<AnchorsState>({
   name: 'anchors',
   state: {
     init: () => EMPTY,
-    apply: (tr, value) => changed(moved(value, tr), anchorChange.read(tr)),
+    apply: (tr, value) => changed(followed(moved(value, tr), tr), anchorChange.read(tr)),
   },
   props: {
     decorations: (state) => decorationsOf(commentAnchors.getState(state) ?? EMPTY),
@@ -120,11 +172,23 @@ export const anchorsOf = (state: EditorState): ReadonlyMap<string, Anchor> =>
 export const activeAnchor = (state: EditorState): string | undefined =>
   commentAnchors.getState(state)?.active;
 
+const wholeTextRange = (doc: Doc): AnchorRange | undefined => {
+  const from = textPosition(doc, 0, 1);
+  const to = textPosition(doc, doc.size, -1);
+
+  return from === undefined || to === undefined || from >= to
+    ? undefined
+    : { kind: 'text', from, to };
+};
+
 const selectedRange = (state: EditorState): AnchorRange | undefined => {
   const { selection, doc } = state;
 
   if (selection.kind === SelectionKind.Node) {
     return { kind: 'node', id: selection.id };
+  }
+  if (selection.kind === SelectionKind.All) {
+    return wholeTextRange(doc);
   }
   const { from, to } = selectionRange(doc, selection);
 
@@ -158,16 +222,6 @@ export const activateAnchor =
   (state, dispatch) =>
     (id === undefined || anchorsOf(state).has(id)) &&
     sent({ kind: 'activate', id })(state, dispatch);
-
-const covers = (doc: Doc, range: AnchorRange, pos: number): boolean => {
-  if (range.kind === AnchorRangeKind.Text) {
-    return range.from <= pos && pos <= range.to;
-  }
-  const node = doc.byId(range.id);
-  const at = doc.positionOf(range.id);
-
-  return node !== undefined && at !== undefined && at <= pos && pos <= at + node.size;
-};
 
 export const anchorsAt = (state: EditorState, pos: number): readonly string[] =>
   [...anchorsOf(state).values()].reduce<string[]>((found, anchor) => {

@@ -24,6 +24,7 @@ const fakeEditor = (
   flush: () => undefined,
   coordsAt: coords,
   contentBox: () => BOX,
+  revealNode: () => undefined,
 });
 
 const caretRect = (left: number, top: number) => ({

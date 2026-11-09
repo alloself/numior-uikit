@@ -1,0 +1,311 @@
+import {
+  activateAnchor,
+  activeAnchor,
+  anchorFromJSON,
+  anchorToJSON,
+  anchorsOf,
+  AnchorRangeKind,
+  definePlugin,
+  removeAnchor,
+  setAnchor,
+  type Anchor,
+  type AnchorRange,
+  type Command,
+  type Doc,
+  type EditorState,
+} from '@numior/editor-core';
+import { useDebounceFn } from '@vueuse/core';
+import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
+import {
+  CommentEventKind,
+  type CommentEvent,
+  type CommentThread,
+} from '../comments/comments.types';
+import type { CollabComments, CommentThreadView, UseEditorCommentsOptions } from './collab.types';
+
+const DRAFT = '__nui-comment-draft';
+
+const MOVE_DELAY = 1000;
+
+const NO_THREADS: readonly CommentThread[] = [];
+
+const NO_LAYOUT: readonly Anchor[] = [];
+
+const startOf = (doc: Doc, range: AnchorRange): number =>
+  range.kind === AnchorRangeKind.Text ? range.from : (doc.positionOf(range.id) ?? 0);
+
+const blockOf = (doc: Doc, range: AnchorRange): string =>
+  range.kind === AnchorRangeKind.Text ? doc.resolve(range.from).parent.id : range.id;
+
+const layoutOf = (doc: Doc, anchors: ReadonlyMap<string, Anchor>): readonly Anchor[] =>
+  [...anchors.values()].toSorted((a, b) => startOf(doc, a.range) - startOf(doc, b.range));
+
+const layoutKey = (layout: readonly Anchor[]): string =>
+  layout.map((anchor) => `${anchor.id}:${anchor.lost ? 1 : 0}`).join();
+
+const sameAnchor = (left: unknown, right: unknown): boolean =>
+  JSON.stringify(left) === JSON.stringify(right);
+
+export const useEditorComments = (options: UseEditorCommentsOptions): CollabComments => {
+  const { doc, user, adapter, editor } = options;
+  const threads = shallowRef<readonly CommentThread[]>(NO_THREADS);
+  const layout = shallowRef<readonly Anchor[]>(NO_LAYOUT);
+  const active = shallowRef<string>();
+  const placed = ref(false);
+  const drafting = ref(false);
+  const canAdd = ref(false);
+  const failed = ref(false);
+  const aborter = new AbortController();
+
+  let latest: EditorState | undefined;
+  let currentKey = '';
+  let unsubscribe: (() => void) | undefined;
+
+  const run = (command: Command): boolean => editor()?.run(command) ?? false;
+
+  const read = (state: EditorState): void => {
+    latest = state;
+
+    const next = layoutOf(state.doc, anchorsOf(state));
+    const key = layoutKey(next);
+
+    if (key !== currentKey) {
+      currentKey = key;
+      layout.value = next;
+    }
+    active.value = activeAnchor(state);
+    canAdd.value = setAnchor(DRAFT)(state);
+  };
+
+  const place = (thread: CommentThread): void => {
+    const range = latest === undefined ? undefined : anchorFromJSON(latest.doc, thread.anchor);
+
+    if (!thread.resolved && range !== undefined) {
+      run(setAnchor(thread.id, range));
+    }
+  };
+
+  const replaced = (thread: CommentThread): void => {
+    const known = threads.value.some((item) => item.id === thread.id);
+
+    threads.value = known
+      ? threads.value.map((item) => (item.id === thread.id ? thread : item))
+      : [...threads.value, thread];
+  };
+
+  const dropped = (id: string): void => {
+    threads.value = threads.value.filter((item) => item.id !== id);
+    run(removeAnchor(id));
+  };
+
+  const attempt = async <T>(action: () => Promise<T>): Promise<T | undefined> => {
+    failed.value = false;
+
+    try {
+      return await action();
+    } catch {
+      failed.value = true;
+      return undefined;
+    }
+  };
+
+  const writeMoves = (): void => {
+    const state = latest;
+
+    if (state === undefined || adapter.move === undefined || aborter.signal.aborted) {
+      return;
+    }
+
+    const anchors = anchorsOf(state);
+
+    threads.value.forEach((thread) => {
+      const anchor = anchors.get(thread.id);
+
+      if (anchor === undefined || anchor.lost) {
+        return;
+      }
+
+      const json = anchorToJSON(state.doc, anchor.range);
+
+      if (!sameAnchor(json, thread.anchor)) {
+        replaced({ ...thread, anchor: json });
+        void attempt(async () => adapter.move?.(doc, thread.id, json));
+      }
+    });
+  };
+
+  const scheduleMoves = useDebounceFn(writeMoves, MOVE_DELAY);
+
+  const plugin = definePlugin({
+    name: 'editorComments',
+    props: {
+      stateChanged: (state, before) => {
+        read(state);
+
+        if (state.doc !== before.doc) {
+          void scheduleMoves();
+        }
+      },
+    },
+  });
+
+  const placeAll = (): void => {
+    if (latest !== undefined) {
+      threads.value.forEach(place);
+      placed.value = true;
+    }
+  };
+
+  const onEvent = (event: CommentEvent): void => {
+    switch (event.kind) {
+      case CommentEventKind.Changed:
+        replaced(event.thread);
+        place(event.thread);
+        break;
+      case CommentEventKind.Removed:
+        dropped(event.id);
+        break;
+    }
+  };
+
+  const start = (): void => {
+    drafting.value = run(setAnchor(DRAFT));
+  };
+
+  const cancel = (): void => {
+    run(removeAnchor(DRAFT));
+    drafting.value = false;
+  };
+
+  const submit = async (body: string): Promise<boolean> => {
+    const state = latest;
+    const draft = state === undefined ? undefined : anchorsOf(state).get(DRAFT);
+
+    if (state === undefined || draft === undefined) {
+      return false;
+    }
+
+    const anchor = anchorToJSON(state.doc, draft.range);
+    const thread = await attempt(() => adapter.create(doc, { anchor, author: user, body }));
+
+    if (thread === undefined) {
+      return false;
+    }
+    replaced(thread);
+
+    const current = latest === undefined ? undefined : anchorsOf(latest).get(DRAFT);
+
+    if (current !== undefined && !current.lost) {
+      run(setAnchor(thread.id, current.range));
+      run(activateAnchor(thread.id));
+    }
+    cancel();
+    return true;
+  };
+
+  const reply = async (id: string, body: string): Promise<boolean> => {
+    const thread = await attempt(() => adapter.reply(doc, id, { author: user, body }));
+
+    if (thread !== undefined) {
+      replaced(thread);
+    }
+    return thread !== undefined;
+  };
+
+  const resolve = async (id: string, resolved: boolean): Promise<void> => {
+    const thread = await attempt(() => adapter.resolve(doc, id, resolved));
+
+    if (thread === undefined) {
+      return;
+    }
+    replaced(thread);
+
+    if (resolved) {
+      run(removeAnchor(id));
+    } else {
+      place(thread);
+    }
+  };
+
+  const remove = async (id: string): Promise<void> => {
+    let done = false;
+
+    await attempt(async () => {
+      await adapter.remove(doc, id);
+      done = true;
+    });
+
+    if (done) {
+      dropped(id);
+    }
+  };
+
+  const activate = (id: string): void => {
+    const anchor = latest === undefined ? undefined : anchorsOf(latest).get(id);
+
+    if (latest === undefined || anchor === undefined || anchor.lost) {
+      return;
+    }
+    run(activateAnchor(id));
+    editor()?.revealNode(blockOf(latest.doc, anchor.range));
+  };
+
+  const views = computed<readonly CommentThreadView[]>(() => {
+    const order = new Map(layout.value.map((anchor, index) => [anchor.id, index]));
+    const lost = new Set(layout.value.flatMap((anchor) => (anchor.lost ? [anchor.id] : [])));
+
+    return threads.value
+      .map((thread) => ({
+        ...thread,
+        lost: placed.value && !thread.resolved && (lost.has(thread.id) || !order.has(thread.id)),
+      }))
+      .toSorted(
+        (a, b) =>
+          Number(a.resolved) - Number(b.resolved) ||
+          (order.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+            (order.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+      );
+  });
+
+  onMounted(async () => {
+    unsubscribe = adapter.subscribe?.(doc, onEvent);
+
+    const loaded = await attempt(() => adapter.list(doc, aborter.signal));
+
+    if (loaded !== undefined) {
+      threads.value = loaded;
+      placeAll();
+    }
+  });
+
+  watch(editor, (api) => {
+    const state = api?.state();
+
+    if (state !== undefined) {
+      read(state);
+      placeAll();
+    }
+  });
+
+  onBeforeUnmount(() => {
+    aborter.abort();
+    unsubscribe?.();
+  });
+
+  return {
+    plugin,
+    user,
+    threads: views,
+    active,
+    drafting,
+    canAdd,
+    failed,
+    start,
+    cancel,
+    submit,
+    reply,
+    resolve,
+    remove,
+    activate,
+  };
+};

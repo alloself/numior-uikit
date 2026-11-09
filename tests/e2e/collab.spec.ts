@@ -125,6 +125,57 @@ test.describe('collaboration', () => {
       .toBeLessThan(CARET_TOLERANCE);
   });
 
+  test('adds a comment to the selected line and marks it', async ({ collab }) => {
+    const anna = await collab.join(ANNA);
+
+    await anna.write('Спорная строка');
+    await anna.selectLine(0);
+
+    await anna.addComment('Проверить');
+
+    await expect(anna.threads).toContainText('Проверить');
+    await expect(anna.marks).toHaveText('Спорная строка');
+  });
+
+  test('keeps the mark on its text when the other person types before it', async ({ collab }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Спорная строка');
+    await expect(boris.editor).toContainText('Спорная строка');
+
+    await anna.selectLine(0);
+    await anna.addComment('Проверить');
+
+    await boris.paragraph(0).click();
+    await boris.page.keyboard.press('Home');
+    await boris.page.keyboard.type('Вначале ');
+
+    await expect(anna.editor).toContainText('Вначале Спорная строка');
+    await expect(anna.marks).toHaveText('Спорная строка');
+  });
+
+  test('replies to a comment, resolves it and deletes it', async ({ collab }) => {
+    const anna = await collab.join(ANNA);
+
+    await anna.write('Строка');
+    await anna.selectLine(0);
+    await anna.addComment('Вопрос');
+
+    await anna.replyTo(0, 'Ответ');
+
+    await expect(anna.threads).toContainText('Ответ');
+
+    await anna.pressInThread(0, 'Решить');
+
+    await expect(anna.threads).toContainText('Решён');
+    await expect(anna.marks).toHaveCount(0);
+
+    await anna.pressInThread(0, 'Удалить');
+
+    await expect(anna.threads).toHaveCount(0);
+  });
+
   for (const theme of THEMES) {
     test(`has no axe violations with people present in the ${theme} theme`, async ({ collab }) => {
       const anna = await collab.join(ANNA);
@@ -137,6 +188,10 @@ test.describe('collaboration', () => {
 
       await boris.selectLine(0);
       await expect(anna.selections).toHaveCount(1);
+
+      await anna.selectLine(0);
+      await anna.addComment('Комментарий');
+      await expect(anna.threads).toHaveCount(1);
 
       const violations = await wcagViolationsOf(anna.page);
 

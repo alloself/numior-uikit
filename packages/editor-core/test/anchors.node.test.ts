@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import {
   activateAnchor,
+  activeAnchor,
   anchorFromJSON,
   anchorToJSON,
   anchorsAt,
@@ -118,6 +119,41 @@ describe('comment anchors', () => {
     expect(editor.run(removeAnchor('c1'))).toBe(true);
     expect(editor.run(removeAnchor('c1'))).toBe(false);
     expect(spans(editor.state)).toEqual([]);
+  });
+
+  it('activates the anchor under a collapsed cursor and clears it on leaving', () => {
+    const view = editing();
+
+    view.run(setAnchor('a'));
+
+    view.select(textSelection(8, 8));
+
+    expect(activeAnchor(view.state)).toBe('a');
+
+    view.select(textSelection(2, 2));
+
+    expect(activeAnchor(view.state)).toBeUndefined();
+  });
+
+  it('keeps an explicit activation while the selection does not collapse', () => {
+    const view = editing();
+
+    view.run(setAnchor('a'));
+    view.select(textSelection(1, 4));
+
+    view.run(activateAnchor('a'));
+
+    expect(activeAnchor(view.state)).toBe('a');
+  });
+
+  it('anchors a whole-document selection to the edges of its text', () => {
+    const view = editing();
+
+    view.select({ kind: 'all' });
+
+    view.run(setAnchor('a'));
+
+    expect(anchorsOf(view.state).get('a')?.range).toEqual({ kind: 'text', from: 1, to: 18 });
   });
 
   it('writes anchors as block ids with offsets and reads them back', () => {
