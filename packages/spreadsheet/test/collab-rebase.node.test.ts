@@ -1,0 +1,614 @@
+import { describe, expect, it } from 'vite-plus/test';
+import {
+  EN_FORMULAS,
+  lineLayoutsOf,
+  parseFormula,
+  printFormula,
+  type LineLayout,
+  type SheetLayout,
+  type WorkbookStep,
+} from '../src/core';
+import { RemoteChangeKind, type RemoteChange } from '../src/core/collab/collab.types';
+import { mergeLayouts } from '../src/core/collab/merge-layout';
+import { rebaseStep } from '../src/core/collab/rebase-step';
+import { changeOver, changesOf } from '../src/core/collab/remote-change';
+import type { SheetDrawing } from '../src/core/drawings/drawing.types';
+import type { LineChange } from '../src/core/formula/rewrite';
+import { EMPTY_LAYOUT } from '../src/core/layout/line-layouts';
+import type { PivotSource, PivotSpec, PivotState } from '../src/core/pivot/pivot.types';
+import { StepKind, type TableSpec } from '../src/core/steps/step.types';
+
+type Scenario = readonly [
+  what: string,
+  step: WorkbookStep,
+  change: RemoteChange,
+  after: object | undefined,
+];
+
+const lines = (
+  sheet: string,
+  axis: LineChange['axis'],
+  at: number,
+  count: number,
+): RemoteChange => ({
+  kind: RemoteChangeKind.Lines,
+  change: { sheet, axis, at, count },
+});
+
+const INSERTED = lines('S', 'rows', 1, 2);
+
+const REMOVED_ROWS = lines('S', 'rows', 1, -2);
+
+const OTHER_SHEET = lines('Q', 'rows', 0, 5);
+
+const COLUMNS = lines('S', 'cols', 0, 1);
+
+const RENAMED: RemoteChange = { kind: RemoteChangeKind.RenameSheet, from: 'S', to: 'T' };
+
+const REMOVED: RemoteChange = { kind: RemoteChangeKind.RemoveSheet, name: 'S' };
+
+const TABLE_RENAMED: RemoteChange = {
+  kind: RemoteChangeKind.RenameTable,
+  from: 'People',
+  to: 'Staff',
+};
+
+const RANGE = { top: 3, left: 0, bottom: 4, right: 1 };
+
+const MOVED_RANGE = { top: 5, left: 0, bottom: 6, right: 1 };
+
+const GONE_RANGE = { top: 1, left: 0, bottom: 2, right: 1 };
+
+const TABLE: TableSpec = {
+  sheet: 'S',
+  range: RANGE,
+  columns: ['a', 'b'],
+  headers: true,
+  totals: false,
+};
+
+const LOST: PivotSource = { kind: 'lost' };
+
+const SOURCE: PivotSource = { kind: 'range', sheet: 'S', range: RANGE };
+
+const pivotOf = (source: PivotSource, row = 3): PivotSpec => ({
+  anchor: { row, col: 0 },
+  definition: {
+    source,
+    rows: [],
+    columns: [],
+    filters: [],
+    values: [],
+    fields: [],
+    layout: 'compact',
+    rowTotals: true,
+    columnTotals: true,
+    autofit: false,
+    captions: {
+      rows: 'r',
+      columns: 'c',
+      values: 'v',
+      total: 't',
+      grandTotal: 'g',
+      blank: 'b',
+      all: 'a',
+      multiple: 'm',
+    },
+  },
+});
+
+const stateOf = (spec: PivotSpec): PivotState => ({ ...spec, footprint: RANGE });
+
+const SET_CELLS: WorkbookStep = {
+  kind: 'setCells',
+  sheet: 'S',
+  cells: [{ row: 3, col: 0, format: '0' }],
+};
+
+const LINE: LineLayout = {
+  size: 20,
+  custom: true,
+  hidden: false,
+  level: 0,
+  collapsed: false,
+  style: undefined,
+  extra: [],
+};
+
+const SCENARIOS: readonly Scenario[] = [
+  [
+    'moves a format range',
+    { kind: 'setFormat', sheet: 'S', range: RANGE, format: '0' },
+    INSERTED,
+    { range: MOVED_RANGE },
+  ],
+  [
+    'keeps a format range on another sheet',
+    { kind: 'setFormat', sheet: 'S', range: RANGE, format: '0' },
+    OTHER_SHEET,
+    { range: RANGE },
+  ],
+  [
+    'drops a format range that is gone',
+    { kind: 'setFormat', sheet: 'S', range: GONE_RANGE, format: '0' },
+    REMOVED_ROWS,
+    undefined,
+  ],
+  [
+    'drops cells that are gone',
+    { kind: 'setCells', sheet: 'S', cells: [{ row: 1, col: 0, format: '0' }] },
+    REMOVED_ROWS,
+    undefined,
+  ],
+  ['moves cells by columns', SET_CELLS, COLUMNS, { cells: [{ row: 3, col: 1, format: '0' }] }],
+  ['renames the sheet of cells', SET_CELLS, RENAMED, { sheet: 'T' }],
+  ['drops cells on a removed sheet', SET_CELLS, REMOVED, undefined],
+  [
+    'moves an insertion',
+    { kind: 'insertLines', sheet: 'S', axis: 'rows', at: 3, count: 1 },
+    INSERTED,
+    { at: 5 },
+  ],
+  [
+    'keeps an insertion on another axis',
+    { kind: 'insertLines', sheet: 'S', axis: 'rows', at: 3, count: 1 },
+    COLUMNS,
+    { at: 3 },
+  ],
+  [
+    'collapses an insertion into a deletion',
+    { kind: 'insertLines', sheet: 'S', axis: 'rows', at: 2, count: 1 },
+    REMOVED_ROWS,
+    { at: 1 },
+  ],
+  [
+    'shrinks a deletion',
+    { kind: 'deleteLines', sheet: 'S', axis: 'rows', at: 2, count: 3 },
+    REMOVED_ROWS,
+    { at: 1, count: 2 },
+  ],
+  [
+    'drops a deletion of removed lines',
+    { kind: 'deleteLines', sheet: 'S', axis: 'rows', at: 1, count: 2 },
+    REMOVED_ROWS,
+    undefined,
+  ],
+  ['keeps a new sheet', { kind: 'addSheet', name: 'N', index: 0 }, RENAMED, { name: 'N' }],
+  [
+    'follows a renamed sheet when removing',
+    { kind: 'removeSheet', name: 'S' },
+    RENAMED,
+    { name: 'T' },
+  ],
+  ['drops a removal of a removed sheet', { kind: 'removeSheet', name: 'S' }, REMOVED, undefined],
+  [
+    'follows a renamed sheet when renaming',
+    { kind: 'renameSheet', from: 'S', to: 'U' },
+    RENAMED,
+    { from: 'T' },
+  ],
+  [
+    'drops a rename of a removed sheet',
+    { kind: 'renameSheet', from: 'S', to: 'U' },
+    REMOVED,
+    undefined,
+  ],
+  [
+    'renames a name scope',
+    { kind: 'setName', name: 'n', scope: 'S', ast: undefined },
+    RENAMED,
+    { scope: 'T' },
+  ],
+  [
+    'drops a name on a removed sheet',
+    { kind: 'setName', name: 'n', scope: 'S', ast: undefined },
+    REMOVED,
+    undefined,
+  ],
+  [
+    'moves a new table',
+    { kind: 'addTable', name: 'People', table: TABLE },
+    INSERTED,
+    { table: { ...TABLE, range: MOVED_RANGE } },
+  ],
+  [
+    'follows the sheet of a new table',
+    { kind: 'addTable', name: 'People', table: TABLE },
+    RENAMED,
+    { table: { ...TABLE, sheet: 'T' } },
+  ],
+  [
+    'drops a table on a removed sheet',
+    { kind: 'addTable', name: 'People', table: TABLE },
+    REMOVED,
+    undefined,
+  ],
+  [
+    'keeps a table above the change',
+    {
+      kind: 'addTable',
+      name: 'People',
+      table: { ...TABLE, range: { ...RANGE, top: 8, bottom: 9 } },
+    },
+    lines('S', 'rows', 12, 1),
+    { name: 'People' },
+  ],
+  [
+    'drops a table in removed lines',
+    { kind: 'addTable', name: 'People', table: { ...TABLE, range: GONE_RANGE } },
+    REMOVED_ROWS,
+    undefined,
+  ],
+  [
+    'drops a table change in removed lines',
+    { kind: 'setTable', name: 'People', table: { ...TABLE, range: GONE_RANGE } },
+    REMOVED_ROWS,
+    undefined,
+  ],
+  [
+    'renames a table being removed',
+    { kind: 'setTable', name: 'People', table: undefined },
+    TABLE_RENAMED,
+    { name: 'Staff', table: undefined },
+  ],
+  [
+    'follows a renamed table',
+    { kind: 'renameTable', from: 'People', to: 'Crew' },
+    TABLE_RENAMED,
+    { from: 'Staff' },
+  ],
+  [
+    'renames the sheet of a pivot refresh',
+    { kind: 'refreshPivot', sheet: 'S', name: 'P' },
+    RENAMED,
+    { sheet: 'T' },
+  ],
+  [
+    'keeps a removed pivot',
+    { kind: 'setPivot', sheet: 'S', name: 'P', pivot: undefined },
+    RENAMED,
+    { sheet: 'T', pivot: undefined },
+  ],
+  [
+    'moves a pivot anchor',
+    { kind: 'setPivot', sheet: 'S', name: 'P', pivot: pivotOf(LOST) },
+    INSERTED,
+    { pivot: { anchor: { row: 5, col: 0 } } },
+  ],
+  [
+    'drops a pivot in removed lines',
+    { kind: 'setPivot', sheet: 'S', name: 'P', pivot: pivotOf(LOST, 1) },
+    REMOVED_ROWS,
+    undefined,
+  ],
+  [
+    'moves a pivot source',
+    { kind: 'setPivot', sheet: 'Q', name: 'P', pivot: pivotOf(SOURCE) },
+    INSERTED,
+    { pivot: { definition: { source: { range: MOVED_RANGE } } } },
+  ],
+  [
+    'follows a renamed source sheet',
+    { kind: 'setPivot', sheet: 'Q', name: 'P', pivot: pivotOf(SOURCE) },
+    RENAMED,
+    { pivot: { definition: { source: { sheet: 'T' } } } },
+  ],
+  [
+    'loses the source on a removed sheet',
+    { kind: 'setPivot', sheet: 'Q', name: 'P', pivot: pivotOf(SOURCE) },
+    REMOVED,
+    { pivot: { definition: { source: LOST } } },
+  ],
+  [
+    'loses a source in removed lines',
+    { kind: 'setPivot', sheet: 'Q', name: 'P', pivot: pivotOf({ ...SOURCE, range: GONE_RANGE }) },
+    REMOVED_ROWS,
+    { pivot: { definition: { source: LOST } } },
+  ],
+  [
+    'follows a renamed source table',
+    { kind: 'setPivot', sheet: 'Q', name: 'P', pivot: pivotOf({ kind: 'table', name: 'People' }) },
+    TABLE_RENAMED,
+    { pivot: { definition: { source: { name: 'Staff' } } } },
+  ],
+  [
+    'keeps another source table',
+    { kind: 'setPivot', sheet: 'Q', name: 'P', pivot: pivotOf({ kind: 'table', name: 'Other' }) },
+    TABLE_RENAMED,
+    { pivot: { definition: { source: { name: 'Other' } } } },
+  ],
+  [
+    'moves a restored pivot',
+    {
+      kind: 'putPivot',
+      sheet: 'S',
+      name: 'P',
+      pivot: stateOf(pivotOf(LOST)),
+      cells: [{ row: 3, col: 0, format: '0' }],
+    },
+    INSERTED,
+    {
+      pivot: { anchor: { row: 5, col: 0 }, footprint: MOVED_RANGE },
+      cells: [{ row: 5, col: 0, format: '0' }],
+    },
+  ],
+  [
+    'keeps a restore without a pivot',
+    { kind: 'putPivot', sheet: 'S', name: 'P', pivot: undefined },
+    RENAMED,
+    { sheet: 'T', pivot: undefined, cells: undefined, layout: undefined },
+  ],
+  [
+    'keeps a layout on rename',
+    { kind: 'setLayout', sheet: 'S', layout: EMPTY_LAYOUT },
+    RENAMED,
+    { sheet: 'T' },
+  ],
+  [
+    'drops a layout on a removed sheet',
+    { kind: 'setLayout', sheet: 'S', layout: EMPTY_LAYOUT },
+    REMOVED,
+    undefined,
+  ],
+  [
+    'keeps a layout on a removed other sheet',
+    { kind: 'setLayout', sheet: 'Q', layout: EMPTY_LAYOUT },
+    REMOVED,
+    { sheet: 'Q' },
+  ],
+  [
+    'keeps a layout on a renamed table',
+    { kind: 'setLayout', sheet: 'S', layout: EMPTY_LAYOUT },
+    TABLE_RENAMED,
+    { sheet: 'S' },
+  ],
+  [
+    'keeps the rules on a removed other sheet',
+    { kind: 'setConditional', sheet: 'Q', formats: [] },
+    REMOVED,
+    { formats: [] },
+  ],
+  [
+    'keeps the rules on a renamed table',
+    { kind: 'setConditional', sheet: 'S', formats: [] },
+    TABLE_RENAMED,
+    { formats: [] },
+  ],
+  [
+    'keeps the rules on a rename',
+    { kind: 'setConditional', sheet: 'S', formats: [] },
+    RENAMED,
+    { sheet: 'T' },
+  ],
+  [
+    'moves the rules with lines',
+    { kind: 'setConditional', sheet: 'S', formats: [{ ranges: [RANGE], rules: [] }] },
+    INSERTED,
+    { formats: [{ ranges: [MOVED_RANGE] }] },
+  ],
+  [
+    'keeps the rules of another sheet',
+    { kind: 'setConditional', sheet: 'Q', formats: [{ ranges: [RANGE], rules: [] }] },
+    INSERTED,
+    { formats: [{ ranges: [RANGE] }] },
+  ],
+];
+
+const astOf = (text: string, origin = { row: 0, col: 0 }) => {
+  const parsed = parseFormula(text, EN_FORMULAS, origin);
+
+  if (!parsed.ok) {
+    throw new Error(`${text} does not parse`);
+  }
+  return parsed.ast;
+};
+
+const formulaStep = (text: string): WorkbookStep => ({
+  kind: 'setCells',
+  sheet: 'Q',
+  cells: [{ row: 0, col: 0, content: { kind: 'formula', ast: astOf(text) } }],
+});
+
+const printedAfter = (step: WorkbookStep | undefined): string => {
+  const content = step?.kind === StepKind.SetCells ? step.cells[0]?.content : undefined;
+
+  return content?.kind === 'formula' ? printFormula(content.ast) : '';
+};
+
+const drawing = (id: string, name: string): SheetDrawing => ({
+  id,
+  name,
+  alt: '',
+  anchor: { kind: 'point', x: 0, y: 0, width: 1, height: 1 },
+  content: { kind: 'foreign', label: 'x' },
+});
+
+const picture = (id: string, media: string): SheetDrawing => ({
+  ...drawing(id, id),
+  content: { kind: 'picture', media, type: 'image/png', bytes: new Uint8Array([1, 2, 3]) },
+});
+
+const layoutWith = (patch: Partial<SheetLayout>): SheetLayout => ({ ...EMPTY_LAYOUT, ...patch });
+
+const namesOf = (layout: SheetLayout): readonly string[] =>
+  layout.drawings.map((item) => item.name);
+
+describe('rebasing workbook steps', () => {
+  it.each(SCENARIOS)('%s', (_what, step, change, after) => {
+    const rebased = rebaseStep(step, change);
+
+    expect({ step: rebased }).toMatchObject({ step: after });
+  });
+
+  it.each([
+    ['a renamed sheet', RENAMED, 'S!A1', 'T!A1'],
+    ['a removed sheet', REMOVED, 'S!A1', '#REF!'],
+    ['a renamed table', TABLE_RENAMED, 'SUM(People[a])', 'SUM(Staff[a])'],
+    ['moved lines', lines('S', 'rows', 0, 2), 'S!A1', 'S!A3'],
+  ])('rewrites a formula for %s', (_what, change, formula, printed) => {
+    const rebased = rebaseStep(formulaStep(`=${formula}`), change);
+
+    expect(printedAfter(rebased)).toBe(printed);
+  });
+
+  it('rewrites the formula of a scoped name', () => {
+    const step: WorkbookStep = { kind: 'setName', name: 'n', ast: astOf('=S!A1') };
+
+    const rebased = rebaseStep(step, RENAMED);
+
+    expect(rebased).toMatchObject({ ast: astOf('=T!A1') });
+  });
+
+  it('keeps the steps of a batch that survive', () => {
+    const step: WorkbookStep = {
+      kind: 'batch',
+      steps: [
+        { kind: 'setCells', sheet: 'S', cells: [{ row: 1, col: 0, format: '0' }] },
+        { kind: 'addSheet', name: 'N', index: 0 },
+      ],
+    };
+
+    const rebased = rebaseStep(step, REMOVED_ROWS);
+
+    expect(rebased).toEqual({ kind: 'batch', steps: [{ kind: 'addSheet', name: 'N', index: 0 }] });
+  });
+
+  it('drops a batch with nothing left', () => {
+    const step: WorkbookStep = { kind: 'batch', steps: [SET_CELLS] };
+
+    const rebased = rebaseStep(step, REMOVED);
+
+    expect(rebased).toBeUndefined();
+  });
+});
+
+describe('remote changes', () => {
+  it('reads changes from nested batches', () => {
+    const changes = changesOf({
+      kind: 'batch',
+      steps: [
+        { kind: 'insertLines', sheet: 'S', axis: 'rows', at: 1, count: 2 },
+        { kind: 'deleteLines', sheet: 'S', axis: 'rows', at: 1, count: 2 },
+        { kind: 'renameSheet', from: 'S', to: 'T' },
+        { kind: 'removeSheet', name: 'T' },
+        { kind: 'renameTable', from: 'People', to: 'Staff' },
+        { kind: 'addSheet', name: 'N', index: 0 },
+      ],
+    });
+
+    expect(changes).toEqual([
+      INSERTED,
+      REMOVED_ROWS,
+      RENAMED,
+      { ...REMOVED, name: 'T' },
+      TABLE_RENAMED,
+    ]);
+  });
+
+  it.each([
+    [
+      'an insertion past an insertion',
+      lines('S', 'rows', 5, 1),
+      INSERTED,
+      lines('S', 'rows', 7, 1),
+    ],
+    [
+      'an insertion inside a deletion',
+      lines('S', 'rows', 2, 1),
+      REMOVED_ROWS,
+      lines('S', 'rows', 1, 1),
+    ],
+    [
+      'a deletion past an insertion',
+      lines('S', 'rows', 5, -2),
+      INSERTED,
+      lines('S', 'rows', 7, -2),
+    ],
+    ['a change on another sheet', OTHER_SHEET, INSERTED, OTHER_SHEET],
+    ['a change on another axis', COLUMNS, INSERTED, COLUMNS],
+    ['lines on a renamed sheet', INSERTED, RENAMED, lines('T', 'rows', 1, 2)],
+    [
+      'a rename of a renamed sheet',
+      { ...RENAMED, to: 'U' },
+      RENAMED,
+      { ...RENAMED, from: 'T', to: 'U' },
+    ],
+    ['a removal', REMOVED, INSERTED, REMOVED],
+    ['a table rename', TABLE_RENAMED, RENAMED, TABLE_RENAMED],
+  ])('moves %s', (_what, change, local, after) => {
+    const moved = changeOver(change, local);
+
+    expect(moved).toEqual(after);
+  });
+
+  it('forgets a deletion of lines already gone', () => {
+    const moved = changeOver(lines('S', 'rows', 1, -2), REMOVED_ROWS);
+
+    expect(moved).toBeUndefined();
+  });
+});
+
+describe('merging layouts', () => {
+  it('takes the own line where it changed and theirs elsewhere', () => {
+    const merged = mergeLayouts(
+      layoutWith({ cols: lineLayoutsOf([[1, LINE]]) }),
+      layoutWith({ cols: lineLayoutsOf([[1, { ...LINE, size: 40 }]]) }),
+      layoutWith({
+        cols: lineLayoutsOf([
+          [1, LINE],
+          [2, { ...LINE, size: 60 }],
+        ]),
+      }),
+    );
+
+    expect([merged.cols.get(1)?.size, merged.cols.get(2)?.size]).toEqual([40, 60]);
+  });
+
+  it('removes a line the own side removed', () => {
+    const merged = mergeLayouts(
+      layoutWith({ rows: lineLayoutsOf([[1, LINE]]) }),
+      layoutWith({}),
+      layoutWith({ rows: lineLayoutsOf([[1, LINE]]) }),
+    );
+
+    expect(merged.rows.get(1)).toBeUndefined();
+  });
+
+  it('merges the view by key', () => {
+    const view = EMPTY_LAYOUT.view;
+
+    const merged = mergeLayouts(
+      layoutWith({}),
+      layoutWith({ view: { ...view, frozenRows: 2 } }),
+      layoutWith({ view: { ...view, zoom: 150 } }),
+    );
+
+    expect(merged.view).toEqual({ ...view, frozenRows: 2, zoom: 150 });
+  });
+
+  it('keeps merges of the side that changed them', () => {
+    const merges = [RANGE];
+
+    const merged = mergeLayouts(layoutWith({}), layoutWith({}), layoutWith({ merges }));
+
+    expect(merged.merges).toEqual(merges);
+  });
+
+  it('merges drawings by id', () => {
+    const merged = mergeLayouts(
+      layoutWith({ drawings: [drawing('a', 'a'), drawing('b', 'b'), drawing('c', 'c')] }),
+      layoutWith({ drawings: [drawing('a', 'mine'), drawing('c', 'c'), drawing('d', 'new')] }),
+      layoutWith({ drawings: [drawing('a', 'a'), drawing('b', 'b'), drawing('c', 'theirs')] }),
+    );
+
+    expect(namesOf(merged)).toEqual(['mine', 'theirs', 'new']);
+  });
+
+  it('compares pictures by media and not by bytes', () => {
+    const base = layoutWith({ drawings: [picture('a', 'one.png')] });
+
+    const merged = mergeLayouts(base, base, layoutWith({ drawings: [picture('a', 'two.png')] }));
+
+    expect(merged.drawings[0]?.content).toMatchObject({ media: 'two.png' });
+  });
+});

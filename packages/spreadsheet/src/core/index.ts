@@ -236,6 +236,14 @@ export { FillMode, type CellClip, type CellClips, type ClipPaste } from './steps
 export { createWorkbookHistory } from './steps/history';
 export type { HistoryOptions, WorkbookHistory } from './steps/history';
 export { mapCell } from './steps/mapping';
+export { WORKBOOK_SCHEMA } from './collab/schema';
+export { workbookAuthority } from './collab/workbook-authority';
+export { createWorkbookDocument } from './collab/workbook-document';
+export type {
+  WorkbookAuthority,
+  WorkbookDocument,
+  WorkbookDocumentOptions,
+} from './collab/collab.types';
 export { createStepCodec } from './wire/step-codec';
 export type { StepCodec, WireWorkbookStep } from './wire/wire.types';
 export type {

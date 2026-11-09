@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
+  EN_FORMULAS,
   createStepCodec,
   createWorkbook,
   parseFormula,
@@ -202,6 +203,24 @@ describe('workbook steps on the wire', () => {
       kind: 'setCells',
       sheet: 'S',
       cells: [{ row: 0, col: 0, content: { kind: 'formula', ast: astOf(formula) } }],
+    };
+
+    const decoded = overWire(step);
+
+    expect(decoded).toEqual(step);
+  });
+
+  it('keeps references that point before their cell', () => {
+    const parsed = parseFormula('=A1:B2', EN_FORMULAS, { row: 4, col: 2 });
+
+    if (!parsed.ok) {
+      throw new Error('the formula does not parse');
+    }
+
+    const step: WorkbookStep = {
+      kind: 'setCells',
+      sheet: 'S',
+      cells: [{ row: 4, col: 2, content: { kind: 'formula', ast: parsed.ast } }],
     };
 
     const decoded = overWire(step);

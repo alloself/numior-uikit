@@ -125,6 +125,18 @@
 Комната знает шаг только через адаптер `RoomAuthority { schema, snapshot, apply }`, поэтому шаги листа ездят
 тем же конвертом, а сервер отличается только реализацией `apply`.
 
+## Шаги книги
+
+`@numior/spreadsheet/core` использует тот же конверт со схемой `{ name: 'numior-workbook', version: 1 }`. `createStepCodec` переводит шаги
+в JSON и обратно и проверяет каждое поле, `workbookAuthority` реализует `RoomAuthority` и подходит как образец для сервера.
+
+Виды шагов: `setCells`, `setFormat`, `insertLines`, `deleteLines`, `addSheet`, `removeSheet`, `renameSheet`, `setName`, `addTable`, `setTable`,
+`renameTable`, `setConditional`, `setLayout`, `setPivot`, `refreshPivot`, `putPivot`. Пачка `batch` на провод не уходит: клиент раскладывает её на
+простые шаги. Эталонный снимок — `{ steps: [...] }`, список шагов от пустой книги; если книга приходит другим путём вместе с номером версии,
+клиент отправляет этот номер в `hello` и снимок не запрашивает.
+
+`setPivot` и `refreshPivot` читают вычисленные значения. Сервер, который применяет шаги, должен закончить пересчёт перед ними.
+
 ## Пример обмена
 
 ```text

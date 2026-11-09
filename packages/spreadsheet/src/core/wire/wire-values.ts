@@ -70,14 +70,23 @@ export const isCellValue: Guard<CellValue> = byKind({
   [CellValueKind.Error]: shapeOf({ kind: oneOf(CellValueKind.Error), code: isCellError }),
 });
 
+const offsetWithin =
+  (limit: number): Guard<number> =>
+  (value): value is number =>
+    typeof value === 'number' && Number.isInteger(value) && Math.abs(value) < limit;
+
+const isRowOffset = offsetWithin(MAX_ROWS);
+
+const isColOffset = offsetWithin(MAX_COLS);
+
 const isCellRef: Guard<CellRef> = shapeOf({
-  row: isRow,
-  col: isCol,
+  row: isRowOffset,
+  col: isColOffset,
   rowAbsolute: isBoolean,
   colAbsolute: isBoolean,
 });
 
-const isLineRef = shapeOf({ index: isCount, absolute: isBoolean });
+const isLineRef = shapeOf({ index: isRowOffset, absolute: isBoolean });
 
 const PLACE = { book: optional(isCount), sheet: optional(isString) };
 

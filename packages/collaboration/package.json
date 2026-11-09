@@ -43,6 +43,7 @@
     "@vueuse/core": "15.0.0"
   },
   "devDependencies": {
+    "@numior/spreadsheet": "workspace:*",
     "@types/ws": "8.18.2",
     "@vue/test-utils": "2.5.1",
     "fast-check": "4.10.2",

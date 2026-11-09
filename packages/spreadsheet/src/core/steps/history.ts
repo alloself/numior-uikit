@@ -6,6 +6,7 @@ export interface WorkbookHistory {
   undo(): StepOutcome | undefined;
   redo(): StepOutcome | undefined;
   clear(): void;
+  rebase(map: (step: WorkbookStep) => WorkbookStep | undefined): void;
   readonly canUndo: boolean;
   readonly canRedo: boolean;
 }
@@ -19,6 +20,26 @@ interface Entry {
 }
 
 const DEFAULT_LIMIT = 100;
+
+const rebased = (
+  entries: readonly Entry[],
+  map: (step: WorkbookStep) => WorkbookStep | undefined,
+): Entry[] =>
+  entries.reduce<Entry[]>((kept, entry) => {
+    const steps = entry.steps.reduce<WorkbookStep[]>((moved, step) => {
+      const next = map(step);
+
+      if (next !== undefined) {
+        moved.push(next);
+      }
+      return moved;
+    }, []);
+
+    if (steps.length > 0) {
+      kept.push({ steps });
+    }
+    return kept;
+  }, []);
 
 export const createWorkbookHistory = (
   stepper: Stepper,
@@ -70,6 +91,10 @@ export const createWorkbookHistory = (
     clear: () => {
       done.length = 0;
       undone.length = 0;
+    },
+    rebase: (map) => {
+      done.splice(0, done.length, ...rebased(done, map));
+      undone.splice(0, undone.length, ...rebased(undone, map));
     },
     get canUndo() {
       return done.length > 0;

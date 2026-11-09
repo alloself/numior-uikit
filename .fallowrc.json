@@ -256,7 +256,7 @@
       },
       {
         "from": "collaboration-server",
-        "allow": ["editor-core", "content", "collaboration", "collaboration-server"]
+        "allow": ["editor-core", "content", "spreadsheet", "collaboration", "collaboration-server"]
       },
       {
         "from": "nuxt",
