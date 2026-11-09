@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { RU_LOCALE, loadCells, numberValue, textValue, type LoadEntry } from '../src/core';
+import { openBook } from './book-harness';
 import { evaluated, openSheet } from './sheet-harness';
 
 describe('formula evaluation', () => {
@@ -421,5 +422,39 @@ describe('loading cells in slices', () => {
     await loading.settled;
 
     expect(loading.done).toBeLessThan(500);
+  });
+});
+
+describe('whole lines after an insert before them', () => {
+  it('keeps summing a whole column when rows are inserted at the top', () => {
+    const sheet = openBook();
+
+    sheet.type('A2', '5');
+    sheet.type('C1', '=SUM(A:A)');
+    sheet.type('A1', '=SUM(Sheet1!A:A)', 'Rates');
+
+    expect(sheet.shown('C1')).toBe('5');
+    expect(sheet.shown('A1', 'Rates')).toBe('5');
+
+    sheet.insert('1');
+    sheet.type('A1', '100');
+
+    expect(sheet.input('C2')).toBe('=SUM(A:A)');
+    expect(sheet.shown('C2')).toBe('105');
+    expect(sheet.shown('A1', 'Rates')).toBe('105');
+  });
+
+  it('keeps summing a whole row when columns are inserted at the start', () => {
+    const sheet = openBook();
+
+    sheet.type('B2', '10');
+    sheet.type('F6', '=SUM(2:2)');
+
+    expect(sheet.shown('F6')).toBe('10');
+
+    sheet.insert('A');
+    sheet.type('A2', '100');
+
+    expect(sheet.shown('G6')).toBe('110');
   });
 });

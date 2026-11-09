@@ -118,6 +118,11 @@ const shiftInPlace = (
 const firstLine = (range: CellRange, axis: LineMove['axis']): number =>
   axis === LineAxis.Rows ? range.top : range.left;
 
+const coversAxis = (range: CellRange, axis: LineMove['axis']): boolean =>
+  axis === LineAxis.Rows
+    ? range.top === 0 && range.bottom === MAX_ROWS - 1
+    : range.left === 0 && range.right === MAX_COLS - 1;
+
 const moveRange = (range: CellRange, change: LineMove): CellRange =>
   change.axis === LineAxis.Rows
     ? {
@@ -304,7 +309,9 @@ export const createDependencyGraph = (): DependencyGraph => {
     const offset = change.axis === LineAxis.Rows ? change.count * MAX_COLS : change.count;
 
     const movesRange = (precedent: Precedent): boolean =>
-      precedent.sheet === sheet && firstLine(precedent.range, change.axis) >= start;
+      precedent.sheet === sheet &&
+      firstLine(precedent.range, change.axis) >= start &&
+      !coversAxis(precedent.range, change.axis);
 
     const cells = singles.get(sheet);
     const moved: (readonly [number, Dependents])[] = [];
