@@ -38,6 +38,10 @@ export class PaginationDriver extends ComponentDriver {
     super(scene);
   }
 
+  async setTotal(total: number): Promise<void> {
+    await this.scene.setProps({ props: { ...this.scene.props('props'), total } });
+  }
+
   get nav(): DOMWrapper<HTMLElement> {
     return this.wrapper.find<HTMLElement>('nav');
   }

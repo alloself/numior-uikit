@@ -4,8 +4,8 @@ const docs: DocsMap = {
   NuiPagination: {
     props: {
       total: {
-        ru: 'Сколько всего записей. Число страниц считается из него и `pageSize`.',
-        en: 'Total number of records. The page count follows from it and `pageSize`.',
+        ru: 'Сколько всего записей. Число страниц считается из него и `pageSize`. Пока `total` равен 0, например данные ещё грузятся, модель `page` не меняется: страница из адреса не теряется и прижимается к числу страниц, когда `total` становится известен.',
+        en: 'Total number of records. The page count follows from it and `pageSize`. While `total` is 0, for example while data is loading, the `page` model is left alone: a page taken from the address is kept and clamped to the page count once `total` is known.',
       },
       siblings: {
         ru: 'Сколько страниц видно по обе стороны от текущей.',

@@ -118,9 +118,9 @@ const pageCount = computed(() => pageCountOf(total, pageSize.value));
 const page = computed(() => clampPage(pageModel.value, pageCount.value));
 
 watch(
-  [page, () => pageModel.value],
-  ([clamped, requested]) => {
-    if (clamped !== requested) {
+  [page, () => pageModel.value, () => total],
+  ([clamped, requested, known]) => {
+    if (known > 0 && clamped !== requested) {
       pageModel.value = clamped;
     }
   },

@@ -128,6 +128,34 @@ describe('NuiPagination', () => {
     pagination.unmount();
   });
 
+  it('keeps the requested page while the total is not known yet and clamps it once it is', async () => {
+    const pagination = PaginationDriver.mount({ props: { total: 0 }, page: 5 });
+
+    expect(pagination.page).toBe(5);
+    expect(pagination.entries).toEqual(['1']);
+
+    await pagination.setTotal(240);
+
+    expect(pagination.page).toBe(5);
+    expect(pagination.currentPage).toBe('5');
+    expect(pagination.rangeText).toBe('81–100 of 240');
+
+    await pagination.setTotal(60);
+
+    expect(pagination.page).toBe(3);
+    expect(pagination.currentPage).toBe('3');
+
+    pagination.unmount();
+
+    const single = PaginationDriver.mount({ props: { total: 0 }, page: 4 });
+
+    await single.setTotal(15);
+
+    expect(single.page).toBe(1);
+
+    single.unmount();
+  });
+
   it('shows a single empty page when there is nothing to paginate', () => {
     const pagination = PaginationDriver.mount({
       props: { total: 0, rangeLabel: (from, to, total) => `${from}–${to} из ${total}` },
