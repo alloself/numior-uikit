@@ -13,6 +13,41 @@ import {
 
 const store = (): CellStore => createCellStore(createSharedStrings());
 
+const SCATTERED: readonly (readonly [number, number])[] = [
+  [511, 31],
+  [512, 32],
+  [1023, 63],
+  [1024, 5],
+  [40, 700],
+  [3000, 64],
+  [7, 95],
+];
+
+const FILLED_ROWS = 20_000;
+
+const FILLED_COLS = 50;
+
+const USED_RANGE_CALLS = 50;
+
+const USED_RANGE_BUDGET_MS = 100;
+
+const boundsOf = (points: readonly (readonly [number, number])[]): number[] =>
+  points.reduce(
+    ([top = 0, left = 0, bottom = 0, right = 0], [row, col]) => [
+      Math.min(top, row),
+      Math.min(left, col),
+      Math.max(bottom, row),
+      Math.max(right, col),
+    ],
+    [MAX_ROWS, MAX_COLS, -1, -1],
+  );
+
+const usedOf = (cells: CellStore): number[] => {
+  const used = cells.usedRange();
+
+  return used === undefined ? [] : [used.top, used.left, used.bottom, used.right];
+};
+
 describe('cell store', () => {
   it('keeps every kind of value and forgets cleared cells and empty chunks', () => {
     const cells = store();
@@ -52,6 +87,51 @@ describe('cell store', () => {
     expect(seen.toSorted()).toEqual(['1000:2', '3:2']);
     expect(cells.usedRange()).toEqual({ top: 3, left: 2, bottom: 1000, right: 100 });
     expect(store().usedRange()).toBeUndefined();
+  });
+
+  it('finds the used range of cells scattered over chunk borders as they come and go', () => {
+    const cells = store();
+
+    const seen = SCATTERED.map((point, index) => {
+      cells.set(point[0], point[1], numberValue(index));
+
+      return usedOf(cells);
+    });
+
+    const left = SCATTERED.map((point) => {
+      cells.set(point[0], point[1], { kind: 'empty' });
+
+      return usedOf(cells);
+    });
+
+    expect(seen).toEqual(SCATTERED.map((_point, index) => boundsOf(SCATTERED.slice(0, index + 1))));
+
+    expect(left).toEqual(
+      SCATTERED.map((_point, index) =>
+        index + 1 < SCATTERED.length ? boundsOf(SCATTERED.slice(index + 1)) : [],
+      ),
+    );
+  });
+
+  it('finds the used range of a million values within the budget', () => {
+    const cells = store();
+
+    for (let row = 0; row < FILLED_ROWS; row += 1) {
+      for (let col = 0; col < FILLED_COLS; col += 1) {
+        cells.set(row, col, numberValue(row + col));
+      }
+    }
+
+    const started = performance.now();
+
+    for (let call = 0; call < USED_RANGE_CALLS; call += 1) {
+      cells.usedRange();
+    }
+
+    const spent = performance.now() - started;
+
+    expect(usedOf(cells)).toEqual([0, 0, FILLED_ROWS - 1, FILLED_COLS - 1]);
+    expect(spent).toBeLessThan(USED_RANGE_BUDGET_MS);
   });
 
   it('visits a range row by row even when it crosses chunks', () => {
