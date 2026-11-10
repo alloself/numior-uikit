@@ -53,6 +53,22 @@ describe('createTableEngine filters', () => {
     expect(harness.phases).toEqual(['keys', 'filter', 'sort']);
   });
 
+  it('keeps rows without a value when the text to look for is empty', async () => {
+    const harness = new EngineHarness(ORDER_COLUMNS, ORDERS);
+
+    expect(await ids(harness, [{ kind: 'text', key: 'note', op: 'contains', value: '' }])).toEqual([
+      1, 2, 3, 4, 5, 6,
+    ]);
+
+    expect(await ids(harness, [{ kind: 'text', key: 'note', op: 'starts', value: '' }])).toEqual([
+      1, 2, 3, 4, 5, 6,
+    ]);
+
+    expect(await ids(harness, [{ kind: 'text', key: 'note', op: 'equals', value: '' }])).toEqual([
+      2, 3,
+    ]);
+  });
+
   it('bounds numbers and dates from either side and drops missing values inside a range', async () => {
     const harness = new EngineHarness(ORDER_COLUMNS, ORDERS);
 

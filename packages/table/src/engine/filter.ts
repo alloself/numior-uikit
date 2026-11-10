@@ -317,7 +317,9 @@ const textPending = (
   store: CodedStore,
 ): PendingTest => {
   const scan = loweredScan(store.dictionary, textMatcher(filter));
-  return { scans: [scan], test: () => codedTest(store, scan.map, filter.op === TableTextOp.Empty) };
+  const blankPasses = filter.op === TableTextOp.Empty || filter.value === '';
+
+  return { scans: [scan], test: () => codedTest(store, scan.map, blankPasses) };
 };
 
 const pendingFor = <T>(filter: TableFilter, sources: FilterSources<T>): PendingTest => {
