@@ -41,7 +41,7 @@ import type { IconSource } from '@numior/primitives';
 import type { NuiEditorMessages } from '../editor/editor.messages';
 import type { SlashItem } from '../slash/slash-items';
 import { onlyIf } from '../editor/only-if';
-import { ToolbarItemKind } from './toolbar.types';
+import { ToolbarGroupKey, ToolbarItemKind } from './toolbar.types';
 import { NuiContentNodeType } from '@numior/content';
 
 export interface ToolbarFace {
@@ -86,6 +86,7 @@ export interface ToolbarOptions {
   readonly highlights: readonly string[];
   readonly docked?: boolean | undefined;
   readonly selectionActions?: readonly NuiEditorSelectionAction[] | undefined;
+  readonly actionsOnly?: boolean | undefined;
 }
 
 export interface ToolbarBlock {
@@ -408,6 +409,10 @@ export const toolbarGroups = (
     allowed: blockType?.marks ?? new Set(state.doc.schema.marks.keys()),
     ancestors: ancestorTypes(state),
   };
+
+  if (options.actionsOnly === true) {
+    return [{ key: ToolbarGroupKey.Selection, items: selectionItems(facts) }];
+  }
 
   return [
     { key: 'history', items: historyItems(facts) },

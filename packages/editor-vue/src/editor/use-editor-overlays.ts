@@ -26,7 +26,7 @@ export interface EditorOverlayOptions {
   readonly focus: () => void;
   readonly bubble: () => boolean;
   readonly caret: () => boolean;
-  readonly editable: () => boolean;
+  readonly active: () => boolean;
 }
 
 export interface EditorOverlays {
@@ -79,7 +79,7 @@ export const useEditorOverlays = (options: EditorOverlayOptions): EditorOverlays
   const bubbleOpen = computed(
     () =>
       options.bubble() &&
-      options.editable() &&
+      options.active() &&
       inside.value &&
       !selecting.value &&
       !linkOpen.value &&

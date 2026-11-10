@@ -607,25 +607,36 @@ const selectedNode = computed(() =>
   current.value.selection.kind === SelectionKind.Node ? current.value.selection.id : undefined,
 );
 
+const finePointer = useMediaQuery('(hover: hover) and (pointer: fine)');
+const coarsePointer = useMediaQuery('(pointer: coarse)');
+
+const actionsOnly = computed(
+  () => isReadonly.value && !isDisabled.value && (selectionActions?.length ?? 0) > 0,
+);
+
 const fixedToolbar = computed(
   () =>
     (toolbar === NuiEditorToolbarMode.Fixed || toolbar === NuiEditorToolbarMode.Both) &&
-    !isReadonly.value,
+    (!isReadonly.value || (actionsOnly.value && coarsePointer.value)),
 );
-
-const finePointer = useMediaQuery('(hover: hover) and (pointer: fine)');
-const coarsePointer = useMediaQuery('(pointer: coarse)');
 
 const docked = computed(() => fixedToolbar.value && coarsePointer.value && editable.value);
 
 const bubbleToolbar = computed(
   () =>
-    (toolbar === NuiEditorToolbarMode.Bubble || toolbar === NuiEditorToolbarMode.Both) &&
-    (finePointer.value || toolbar === NuiEditorToolbarMode.Bubble),
+    (actionsOnly.value && !coarsePointer.value) ||
+    ((toolbar === NuiEditorToolbarMode.Bubble || toolbar === NuiEditorToolbarMode.Both) &&
+      (finePointer.value || toolbar === NuiEditorToolbarMode.Bubble)),
 );
 
 const hasLinks = schema.marks.has('link');
-const toolOptions = computed(() => ({ colours, highlights, selectionActions }));
+
+const toolOptions = computed(() => ({
+  colours,
+  highlights,
+  selectionActions,
+  actionsOnly: actionsOnly.value,
+}));
 
 const validLink = (href: string): boolean =>
   schema.marks.get('link')?.attrs.href?.verify?.(href) ?? true;
@@ -653,6 +664,7 @@ const contentAttrs = computed(() => ({
   'aria-required': controlAttrs.value.required || undefined,
   'aria-readonly': isReadonly.value || undefined,
   'aria-disabled': isDisabled.value || undefined,
+  tabindex: isReadonly.value && !isDisabled.value ? 0 : undefined,
   'aria-placeholder': placeholder,
   'aria-controls': suggestList.value?.id,
   'aria-activedescendant': suggestList.value?.option,
@@ -749,7 +761,7 @@ const overlays = useEditorOverlays({
   bubble: () => bubbleToolbar.value,
   caret: () =>
     slash.open.value || mention.open.value || mediaOpen.value || links.pasted.value !== undefined,
-  editable: () => editable.value,
+  active: () => editable.value || actionsOnly.value,
 });
 
 const editor: NuiEditorApi = {

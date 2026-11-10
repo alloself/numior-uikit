@@ -20,6 +20,8 @@ afterEach(() => {
   driver = undefined;
 });
 
+const NOTE = { key: 'note', label: 'Note', icon: 'comment', command: () => true } as const;
+
 const paragraph = (text: string): ElementNode =>
   contentSchema.element('paragraph', { id: 'p', content: [contentSchema.text(text)] });
 
@@ -131,13 +133,52 @@ describe('NuiEditor links, colours and bubble', () => {
     const editor = mounted({
       document: page('Hello world'),
       toolbar: 'bubble',
-      selectionActions: [{ key: 'note', label: 'Note', icon: 'comment', command: () => true }],
+      selectionActions: [NOTE],
     });
 
     editor.focus();
     await editor.select(1, 6);
 
     expect(editor.bubbleTools).toContain('Note');
+  });
+
+  it('offers only the actions for the selection over a selection in a read-only editor', async () => {
+    const editor = mounted({
+      document: page('Hello world'),
+      readonly: true,
+      selectionActions: [NOTE],
+    });
+
+    editor.focus();
+    await editor.select(1, 6);
+
+    expect(editor.focused).toBe(true);
+    expect(editor.tools).toEqual(['Note']);
+    expect(editor.bubbleShown).toBe(true);
+    expect(editor.bubbleTools).toEqual(['Note']);
+  });
+
+  it('opens nothing over a selection in a read-only editor that has no actions for it', async () => {
+    const editor = mounted({ document: page('Hello world'), readonly: true, toolbar: 'both' });
+
+    editor.focus();
+    await editor.select(1, 6);
+
+    expect(editor.bubbleShown).toBe(false);
+    expect(editor.tools).toEqual([]);
+  });
+
+  it('keeps a read-only document when text is typed or pasted into it', async () => {
+    const editor = mounted({ document: page('Hello world'), readonly: true });
+
+    editor.focus();
+    await editor.select(1, 6);
+    await editor.type('x');
+    await editor.press('Backspace');
+    await editor.pasteHTML('<p>pasted</p>', 'pasted');
+
+    expect(editor.text).toBe('Hello world');
+    expect(editor.changes).toBe(0);
   });
 
   it('opens the bubble over a selected range and closes it when the range collapses', async () => {
