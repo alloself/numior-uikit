@@ -4,6 +4,7 @@ import vue from 'eslint-plugin-vue';
 import { apiNames } from './scripts/eslint/api-names.mjs';
 import { guardFirst } from './scripts/eslint/guard-first.mjs';
 import { pageListeners } from './scripts/eslint/page-listeners.mjs';
+import { spreadArguments } from './scripts/eslint/spread-arguments.mjs';
 import { testPhases } from './scripts/eslint/test-phases.mjs';
 
 const multiline = ['multiline-const', 'multiline-let', 'multiline-expression', 'function', 'class'];
@@ -235,6 +236,7 @@ export default [
           'api-names': apiNames,
           'guard-first': guardFirst,
           'page-listeners': pageListeners,
+          'spread-arguments': spreadArguments,
           'test-phases': testPhases,
         },
       },
@@ -244,6 +246,10 @@ export default [
   {
     files: ['packages/*/src/**/*.ts', 'packages/*/src/**/*.vue'],
     rules: { 'numior/api-names': 'error', 'numior/page-listeners': 'error' },
+  },
+  {
+    files: ['packages/*/{src,server}/**/*.ts', 'packages/*/{src,server}/**/*.vue'],
+    rules: { 'numior/spread-arguments': 'error' },
   },
   {
     files: ['tests/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],

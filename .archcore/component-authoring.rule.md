@@ -68,6 +68,14 @@ status: accepted
   (`const blocked = loading || (disabled && isLink.value)`). Держит правило ESLint
   `numior/guard-first` с автоисправлением (`scripts/eslint/guard-first.mjs`); оно не трогает
   функции, которые возвращают значение, и блоки с одним действием.
+- Список не разворачивается в аргументы вызова: `list.push(...found)`, `Math.max(...values)`,
+  `splice(at, 0, ...items)`, `String.fromCharCode(...bytes)` кладут каждый элемент на стек и
+  падают с `RangeError` около 125 000 элементов — а длину задают данные пользователя (точки
+  графика, строки вставки, диапазон формулы). Добавление — цикл `for…of` с `push`, крайние
+  значения — `min`, `max`, `minBy`, `maxBy` из `lodash-es`, замена содержимого — новый массив.
+  Держит правило ESLint `numior/spread-arguments` (`scripts/eslint/spread-arguments.mjs`) для
+  `packages/*/src` и `packages/*/server`; исключение — кусок фиксированного размера
+  (`...bytes.subarray(at, at + SIZE)`).
 - Приведения типов `as` и постфиксный `!` запрещены во всём репозитории, включая тесты и
   конфиги; единственное исключение — `as const`. Нужен тип — generic, type guard,
   `useTemplateRef<HTMLInputElement>()`, `wrapper.find<HTMLInputElement>()`, дискриминированное

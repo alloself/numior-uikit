@@ -18,6 +18,9 @@ that its features are implemented. Component and test conventions live in the sk
 - Leave early: a function never ends with an `if` block that wraps two or more statements; the
   condition is turned into `if (...) { return; }` and a compound condition gets a name
   (`numior/guard-first` in ESLint, autofixable).
+- Never spread a list into `push`, `unshift`, `splice`, `Math.min`, `Math.max` or
+  `String.fromCharCode`: the call throws near 125 000 entries. Push in a `for…of` loop, take
+  `min`/`max`/`maxBy` from `lodash-es` (`numior/spread-arguments` in ESLint for package sources).
 - Blank lines separate multi-line declarations, calls, imports and exports
   (`@stylistic/padding-line-between-statements` in ESLint); a `<script setup>` reads as
   logical sections (props and models, state, derived values, handlers, lifecycle), not as a
