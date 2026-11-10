@@ -66,6 +66,28 @@ describe('usePopover', () => {
     capture.unmount();
   });
 
+  it('shows a new content element after the one that was open left the page', async () => {
+    const open = ref(false);
+    const capture = captureWithElements((_, content) => usePopover(content, { open }));
+
+    capture.second.addEventListener(
+      'beforetoggle',
+      capture.value.contentAttrs.value.onBeforetoggle,
+    );
+
+    open.value = true;
+    await nextTick();
+
+    expect(topLayer.log.showPopover).toBe(1);
+
+    await capture.wrapper.setProps({ tags: ['button', 'section'] });
+    await nextTick();
+
+    expect(topLayer.log.showPopover).toBe(2);
+
+    capture.unmount();
+  });
+
   it('follows native light dismiss and honors manual mode', async () => {
     const open = ref(true);
 

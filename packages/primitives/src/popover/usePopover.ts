@@ -1,7 +1,6 @@
 import {
   computed,
   onMounted,
-  ref,
   toValue,
   watch,
   type ComputedRef,
@@ -52,7 +51,7 @@ export const usePopover = (
 ): PopoverControl => {
   const id = useControlId(options.id);
   const mode = computed<PopoverMode>(() => toValue(options.mode) ?? PopoverMode.Auto);
-  const visible = ref(false);
+  let shown: HTMLElement | undefined;
 
   const setOpen = (next: boolean): void => {
     if (options.open.value !== next) {
@@ -65,20 +64,23 @@ export const usePopover = (
     if (!canToggle(element)) {
       return;
     }
-    if (next && !visible.value) {
+    if (next && shown !== element) {
       element.showPopover();
-    } else if (!next && visible.value) {
+    } else if (!next && shown === element) {
       element.hidePopover();
     }
   };
 
   onMounted(() => {
-    watch(() => options.open.value, sync, { immediate: true, flush: 'post' });
+    watch([() => options.open.value, () => toValue(content)], ([next]) => sync(next), {
+      immediate: true,
+      flush: 'post',
+    });
   });
 
   const raise = (): void => {
     const element = toValue(content);
-    if (!canToggle(element) || !visible.value) {
+    if (!canToggle(element) || shown !== element) {
       return;
     }
     element.hidePopover();
@@ -87,7 +89,7 @@ export const usePopover = (
 
   const onBeforetoggle = (event: Event): void => {
     const next = 'newState' in event && event.newState === PopoverState.Open;
-    visible.value = next;
+    shown = next ? (toValue(content) ?? undefined) : undefined;
     setOpen(next);
   };
 
