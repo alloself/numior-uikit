@@ -15,7 +15,14 @@ import {
 } from '@numior/editor-core';
 import { fixtureSchema } from '@numior/editor-core/fixtures';
 import { describe, expect, it } from 'vite-plus/test';
-import { collab, collabVersion, confirmSteps, editorCollabDocument, sendableSteps } from '../src';
+import {
+  collab,
+  collabVersion,
+  confirmSteps,
+  editorCollabDocument,
+  positionsSince,
+  sendableSteps,
+} from '../src';
 import { paragraphs } from './harness/network';
 import { received, settledWith } from './harness/received';
 
@@ -36,6 +43,14 @@ const insertion = (state: EditorState, text: string, at: number): readonly Step[
 
 const typedAt = (state: EditorState, text: string, at: number): EditorState =>
   state.apply(state.tr.insertText(text, at));
+
+const REMEMBERED = 512;
+
+const afterOthers = (start: EditorState, count: number): EditorState =>
+  Array.from({ length: count }).reduce<EditorState>(
+    (state) => state.apply(received(state, insertion(state, 'a', 1))),
+    start,
+  );
 
 const firstText = (state: EditorState): string =>
   state.doc.root.content[0]?.kind === 'element'
@@ -79,6 +94,42 @@ describe('an editor document behind a client', () => {
 
     expect(document.settle(1, [BEYOND], 4)).toBe(false);
     expect(state()).toBe(before);
+  });
+});
+
+describe('positions since a version', () => {
+  it('carries a place through steps of others, its own confirmed steps and the ones still waiting', () => {
+    const start = started();
+    const other = start.apply(received(start, insertion(start, 'ab', 1)));
+    const typed = typedAt(other, 'x', 1);
+    const confirmed = typed.apply(confirmSteps(typed, 1, 5));
+    const waiting = typedAt(confirmed, 'y', 1);
+
+    expect(positionsSince(other, 3)?.map(2)).toBe(4);
+    expect(positionsSince(typed, 3)?.map(2)).toBe(5);
+    expect(positionsSince(waiting, 3)?.map(2)).toBe(6);
+    expect(positionsSince(waiting, 4)?.map(2)).toBe(4);
+    expect(positionsSince(waiting, 5)?.map(2)).toBe(3);
+  });
+
+  it('carries a place through the steps the server wrote instead of the sent ones', () => {
+    const start = started();
+    const typed = typedAt(start, 'x', 1);
+    const settled = typed.apply(settledWith(typed, 1, insertion(start, 'x', 2), 4));
+
+    expect(positionsSince(settled, 3)?.map(3)).toBe(4);
+    expect(positionsSince(settled, 3)?.map(1, -1)).toBe(1);
+  });
+
+  it('answers nothing for a version ahead of it, for one it no longer remembers and without the plugin', () => {
+    const start = started();
+    const far = afterOthers(start, REMEMBERED + 1);
+
+    expect(positionsSince(start, 4)).toBeUndefined();
+    expect(positionsSince(start, 2)).toBeUndefined();
+    expect(positionsSince(far, 3)).toBeUndefined();
+    expect(positionsSince(far, 4)?.map(2)).toBe(REMEMBERED + 2);
+    expect(positionsSince(createState({ doc: paragraphs('one') }), 0)).toBeUndefined();
   });
 });
 

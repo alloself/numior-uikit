@@ -29,9 +29,11 @@ export type {
 export { webSocketTransport } from './client/web-socket-transport';
 export {
   collab,
+  collabProgress,
   collabVersion,
   confirmSteps,
   conflictsIn,
+  positionsSince,
   receiveSteps,
   sendableSteps,
   settleSteps,
@@ -39,6 +41,7 @@ export {
 export type {
   AttrConflict,
   CollabOptions,
+  CollabProgress,
   CollabState,
   EditorCollabOptions,
   RestoredDocument,

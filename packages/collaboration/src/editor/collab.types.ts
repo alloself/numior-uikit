@@ -6,6 +6,7 @@ import type {
   NodeId,
   Schema,
   Step,
+  StepMap,
 } from '@numior/editor-core';
 import type { CollabAlternative } from '../client/client.types';
 import type { PresenceUser } from './presence.types';
@@ -18,6 +19,12 @@ export interface UnconfirmedStep {
 export interface CollabState {
   readonly version: number;
   readonly unconfirmed: readonly UnconfirmedStep[];
+  readonly trail: readonly StepMap[];
+}
+
+export interface CollabProgress {
+  readonly version: number;
+  readonly pending: number;
 }
 
 export interface CollabOptions {
