@@ -95,6 +95,26 @@ describe('reading typed input', () => {
     });
   });
 
+  it('reads the dates of the last month a sheet can hold', () => {
+    expect(readInput('12/31/9999', EN_NUMBERS)).toEqual({
+      kind: 'value',
+      value: numberValue(2_958_465),
+      format: 'm/d/yyyy',
+    });
+
+    expect(readInput('01.12.9999', RU_NUMBERS)).toEqual({
+      kind: 'value',
+      value: numberValue(2_958_435),
+      format: 'dd.mm.yyyy',
+    });
+
+    expect(readInput('12/32/9999', EN_NUMBERS)).toEqual({
+      kind: 'value',
+      value: textValue('12/32/9999'),
+      format: undefined,
+    });
+  });
+
   it('keeps a number too large for a cell and a repeated sign as the typed text', () => {
     const texts = ['1e400', '--5', '+-5', '-$-5', '- -5'];
 

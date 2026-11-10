@@ -123,14 +123,11 @@ const shiftedMonth = (serial: number, months: number, endOfMonth: boolean): numb
   const { year, month, day } = civilOf(serial);
   const target = month + Math.trunc(months);
 
-  if (endOfMonth) {
-    return serialOfDate(year, target + 1, 1) - 1;
-  }
-
   const first = serialOfDate(year, target, 1);
   const { year: targetYear, month: targetMonth } = civilOf(first);
+  const length = daysInMonth(targetYear, targetMonth);
 
-  return first + Math.min(day, daysInMonth(targetYear, targetMonth)) - 1;
+  return first + (endOfMonth ? length : Math.min(day, length)) - 1;
 };
 
 const monthsBetween = (from: number, to: number): number => {

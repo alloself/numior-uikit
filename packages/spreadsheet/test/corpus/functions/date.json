@@ -483,6 +483,22 @@
     {
       "formula": "=YEAR(DATE({2001,2002},1,1))",
       "expected": [[2001, 2002]]
+    },
+    {
+      "formula": "=DATEVALUE(\"12/31/9999\")",
+      "expected": 2958465
+    },
+    {
+      "formula": "=EOMONTH(DATE(9999,11,15),1)",
+      "expected": 2958465
+    },
+    {
+      "formula": "=EOMONTH(DATE(9999,12,1),0)",
+      "expected": 2958465
+    },
+    {
+      "formula": "=EDATE(DATE(9999,11,30),1)",
+      "expected": 2958464
     }
   ]
 }
