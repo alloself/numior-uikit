@@ -58,9 +58,10 @@ export const itemOf = <T extends object>(
   }
 
   const path = entryPath(raw, entry);
-  const area = entry.area ?? areaName(relativePath(path, prefix));
+  const own = relativePath(path, prefix);
+  const area = entry.area ?? areaName(own);
 
   return entry.kind === NuiSmartFormEntryKind.Field
-    ? { kind: NuiSmartFormEntryKind.Field, key: `field:${path}`, area, path, entry }
-    : { kind: NuiSmartFormEntryKind.Array, key: `array:${path}`, area, path, entry };
+    ? { kind: NuiSmartFormEntryKind.Field, key: `field:${own}`, area, path, entry }
+    : { kind: NuiSmartFormEntryKind.Array, key: `array:${own}`, area, path, entry };
 };
