@@ -17,6 +17,8 @@ const COLLAB_PORT = process.env.COLLAB_PORT ?? '4175';
 
 const RECONNECT_TIMEOUT = 20_000;
 
+const TYPING_PAUSE = 8;
+
 const isCollabServer = (url: URL): boolean => url.port === COLLAB_PORT;
 
 export const unsentStepsOf = (name: string): Promise<number> =>
@@ -119,6 +121,16 @@ export class CollabClient {
     await this.paragraph(index).click();
     await this.page.keyboard.press('End');
     await this.page.keyboard.type(text);
+  }
+
+  async appendToEach(indices: readonly number[], text: string): Promise<void> {
+    for (const index of indices) {
+      await this.appendTo(index, text);
+    }
+  }
+
+  async keepTyping(text: string): Promise<void> {
+    await this.page.keyboard.type(text, { delay: TYPING_PAUSE });
   }
 
   async selectLine(index: number): Promise<void> {

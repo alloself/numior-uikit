@@ -10,6 +10,12 @@ const CARET_TOLERANCE = 4;
 
 const THEMES = ['light', 'dark'] as const;
 
+const TURNS = Array.from({ length: 60 }, (_, turn) => turn % 2);
+
+const HALF = '+'.repeat(TURNS.length / 2);
+
+const STREAM = 'x'.repeat(800);
+
 test.describe('collaboration', () => {
   test('merges what was typed without a connection when it comes back', async ({ collab }) => {
     const anna = await collab.joinOffline(ANNA);
@@ -138,6 +144,26 @@ test.describe('collaboration', () => {
     await expect(anna.editor).toContainText('Дваслева');
     await expect(anna.editor).toContainText('Один справа');
     await expect.poll(() => boris.text()).toBe(await anna.text());
+  });
+
+  test('types where a person has just clicked while the other keeps typing', async ({ collab }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Один');
+    await anna.newLine('Два');
+    await anna.newLine('Три');
+    await expect(boris.editor).toContainText('Три');
+
+    const typing = anna.keepTyping(STREAM);
+
+    await boris.appendToEach(TURNS, '+');
+    await typing;
+
+    await expect(boris.paragraph(0)).toHaveText(`Один${HALF}`);
+    await expect(boris.paragraph(1)).toHaveText(`Два${HALF}`);
+    await expect(anna.paragraph(0)).toHaveText(`Один${HALF}`);
+    await expect(anna.paragraph(1)).toHaveText(`Два${HALF}`);
   });
 
   test('loads the current document for someone who joins later', async ({ collab }) => {
