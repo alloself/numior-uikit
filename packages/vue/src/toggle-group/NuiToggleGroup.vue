@@ -21,14 +21,19 @@
       v-for="item in items"
       :key="keyOf(item.value)"
       :disabled="!iconOnly"
-      :placement="orientation === NuiToggleGroupOrientation.Vertical ? 'right' : 'bottom'"
+      :placement="tooltipPlacement"
     >
       <template #trigger="{ attrs }">
         <button
           type="button"
           class="nui-toggle-group__item"
           :class="{ 'nui-toggle-group__item--selected': isSelected(item.value) }"
-          v-bind="{ ...itemAttrs(item), ...attrs, ref: buttons.ref(keyOf(item.value), attrs.ref) }"
+          v-bind="{
+            ...itemAttrs(item),
+            ...attrs,
+            'aria-describedby': undefined,
+            ref: buttons.ref(keyOf(item.value), attrs.ref),
+          }"
           @click="toggle(item.value)"
         >
           <slot name="item" :item="item" :selected="isSelected(item.value)">
@@ -43,8 +48,15 @@
 </template>
 
 <script setup lang="ts" generic="T">
+import { useMounted } from '@vueuse/core';
 import { computed, onMounted, useTemplateRef } from 'vue';
-import { createCollection, useListNavigation, type AttrRecord } from '@numior/primitives';
+import {
+  createCollection,
+  FloatingPlacement,
+  useDirection,
+  useListNavigation,
+  type AttrRecord,
+} from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiTooltip from '../tooltip/NuiTooltip.vue';
 import { useOptionSelection } from '../shared/use-option-selection';
@@ -76,6 +88,8 @@ const values = defineModel<T[]>('values', { default: () => [] });
 defineSlots<{ item?(props: NuiToggleItemSlot<T>): unknown }>();
 
 const root = useTemplateRef<HTMLElement>('root');
+const direction = useDirection(root);
+const mounted = useMounted();
 
 const { keyOf, selectedKeys, choose, clear } = useOptionSelection<T>({
   options: () => items,
@@ -105,6 +119,13 @@ const restingKey = computed(() => {
   return first === undefined ? undefined : keyOf(first.value);
 });
 
+const tooltipPlacement = computed(() => {
+  if (orientation !== NuiToggleGroupOrientation.Vertical) {
+    return FloatingPlacement.Bottom;
+  }
+  return mounted.value && direction.isRtl() ? FloatingPlacement.Left : FloatingPlacement.Right;
+});
+
 const navigation = useListNavigation(root, {
   items: buttons.elements,
   orientation: () => orientation,
@@ -124,10 +145,15 @@ const itemAttrs = (item: NuiToggleItem<T>): AttrRecord => {
   };
 };
 
+const isLastSelected = (value: T): boolean => isSelected(value) && selectedKeys.value.size === 1;
+
 const toggle = (value: T): void => {
+  if (required && isLastSelected(value)) {
+    return;
+  }
   if (multiple || !isSelected(value)) {
     choose(value);
-  } else if (!required) {
+  } else {
     clear();
   }
 };

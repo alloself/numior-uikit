@@ -12,8 +12,8 @@ const docs: DocsMap = {
         en: 'Lets several buttons be pressed. The values come in `v-model:values`.',
       },
       required: {
-        ru: 'Без `multiple` не даёт отжать нажатую кнопку, чтобы значение не стало пустым.',
-        en: 'Without `multiple`, keeps the pressed button from being released so the value never empties.',
+        ru: 'Не даёт отжать последнюю нажатую кнопку, чтобы значение не стало пустым. Работает и с `multiple`.',
+        en: 'Keeps the last pressed button from being released so the value never empties. Works with `multiple` too.',
       },
       variant: {
         ru: 'Оформление: `outline` — отдельные кнопки в рамке, `segmented` — кнопки одной полосой.',
