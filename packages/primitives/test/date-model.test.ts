@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import {
   addDays,
   addMonthKeys,
@@ -16,12 +16,14 @@ import {
   isWithin,
   isoWeekOf,
   joinDateTime,
+  localToday,
   monthKeyOf,
   normalizeRange,
   parseIsoDate,
   splitDateTime,
   startOfMonth,
   startOfWeek,
+  utcToday,
   weekdayOf,
 } from '../src';
 
@@ -38,6 +40,24 @@ describe('iso dates', () => {
     expect(formatIsoDate({ year: 2026, month: 9, day: 4 })).toBe('2026-09-04');
     expect(compareIsoDates('2026-01-31', '2026-02-01')).toBeLessThan(0);
     expect(compareIsoDates('2026-02-01', '2026-02-01')).toBe(0);
+  });
+
+  it('reads today from the local clock and from UTC', () => {
+    const zone = process.env.TZ;
+
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-31T22:30:00Z'));
+    process.env.TZ = 'Asia/Tokyo';
+
+    const local = localToday();
+    const utc = utcToday();
+
+    vi.useRealTimers();
+    Reflect.deleteProperty(process.env, 'TZ');
+    Object.assign(process.env, zone === undefined ? {} : { TZ: zone });
+
+    expect(local).toBe('2026-11-01');
+    expect(utc).toBe('2026-10-31');
   });
 
   it('clamps, checks bounds and normalises ranges', () => {

@@ -20,6 +20,7 @@ export interface CalendarView {
   readonly yearPage: ComputedRef<number>;
   readonly slide: Ref<CalendarSlide | undefined>;
   setMonth(key: string): void;
+  adopt(key: string): void;
   setView(view: NuiCalendarView): void;
   shift(steps: number): void;
 }
@@ -58,6 +59,10 @@ export const useCalendarView = (options: CalendarViewOptions): CalendarView => {
     options.month.value = key;
   };
 
+  const adopt = (key: string): void => {
+    fallback.value = key;
+  };
+
   const setView = (next: NuiCalendarView): void => {
     state.value =
       next === NuiCalendarView.Years
@@ -83,5 +88,5 @@ export const useCalendarView = (options: CalendarViewOptions): CalendarView => {
     }
   };
 
-  return { view, month, visibleMonths, yearPage, slide, setMonth, setView, shift };
+  return { view, month, visibleMonths, yearPage, slide, setMonth, adopt, setView, shift };
 };

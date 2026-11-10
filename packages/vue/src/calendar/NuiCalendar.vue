@@ -73,6 +73,7 @@ import {
   useDirection,
   useLocale,
   useMessages,
+  utcToday,
   weekStartOf,
 } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
@@ -134,7 +135,7 @@ const todayDate = computed(() => today ?? (mounted.value ? localToday() : undefi
 const presetList = computed(() => (mode === NuiCalendarMode.Range ? (presets ?? []) : []));
 
 const initialDate = (): string =>
-  clampIsoDate(selectedDatesOf(model.value)[0] ?? today ?? localToday(), min, max);
+  clampIsoDate(selectedDatesOf(model.value)[0] ?? today ?? utcToday(), min, max);
 
 const calendarView = useCalendarView({
   month: monthModel,
@@ -317,6 +318,13 @@ provideCalendar({
 
 onMounted(() => {
   mounted.value = true;
+
+  if (selectedDatesOf(model.value)[0] === undefined && today === undefined) {
+    const local = clampIsoDate(localToday(), min, max);
+
+    focused.value = local;
+    calendarView.adopt(monthKeyOf(local));
+  }
   watch([focusRequests, calendarView.month, calendarView.view], settle, { flush: 'post' });
 
   watch(model, (value) => {

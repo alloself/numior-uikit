@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { CalendarDriver } from './drivers/calendar';
+import { atInstant } from './support/clock';
 
 describe('NuiCalendar', () => {
   it('renders the month from the locale week start with outside days, today and one tab stop', () => {
@@ -274,6 +275,21 @@ describe('NuiCalendar', () => {
 
     await calendar.clickNav('next', 1);
     expect(calendar.captions).toEqual(['сентябрь 2026', 'октябрь 2026']);
+
+    calendar.unmount();
+  });
+
+  it('moves to the local today after mount without touching the month model', async () => {
+    const calendar = await atInstant('2026-10-31T22:30:00Z', 'Asia/Tokyo', async () => {
+      const mounted = CalendarDriver.mount({ clock: true });
+
+      await mounted.settle();
+      return mounted;
+    });
+
+    expect(calendar.tabStop).toBe('2026-11-01');
+    expect(calendar.captions).toEqual(['ноябрь 2026']);
+    expect(calendar.monthValue).toBeUndefined();
 
     calendar.unmount();
   });

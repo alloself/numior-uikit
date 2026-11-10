@@ -40,6 +40,16 @@ export const localToday = (): string => {
   return formatIsoDate({ year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() });
 };
 
+export const utcToday = (): string => {
+  const now = new Date();
+
+  return formatIsoDate({
+    year: now.getUTCFullYear(),
+    month: now.getUTCMonth() + 1,
+    day: now.getUTCDate(),
+  });
+};
+
 export const parseIsoDate = (text: string | null | undefined): DateParts | null => {
   const match = ISO_PATTERN.exec(text ?? '');
 

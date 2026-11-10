@@ -62,6 +62,7 @@ import { RouterStub } from './support/router-stub';
 import { labelTarget, popoverTarget } from './support/ssr';
 import { FILES, manyNodes } from './support/tree-items';
 import { CATEGORIES } from './support/options';
+import { atInstant } from './support/clock';
 
 interface Scenario {
   readonly name: string;
@@ -709,6 +710,18 @@ describe('server rendering', () => {
 
     expect(bare).not.toContain('aria-current');
     expect(bare).toContain('September');
+  });
+
+  it('renders the same calendar in every time zone when neither a date nor today is given', async () => {
+    const LATE_EVENING_UTC = '2026-10-31T22:30:00Z';
+    const render = (): Promise<string> =>
+      renderToString(NuiCalendar, { props: { locale: 'en-US' } });
+
+    const west = await atInstant(LATE_EVENING_UTC, 'Pacific/Honolulu', render);
+    const east = await atInstant(LATE_EVENING_UTC, 'Asia/Tokyo', render);
+
+    expect(east).toBe(west);
+    expect(west).toContain('October');
   });
 
   it('renders a date picker closed with localised text and a hidden ISO value', async () => {

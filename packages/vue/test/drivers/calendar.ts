@@ -104,6 +104,10 @@ export class CalendarDriver extends ComponentDriver {
     return this.months[0]?.findAll('.nui-calendar__row').length ?? 0;
   }
 
+  async settle(): Promise<void> {
+    await nextTick();
+  }
+
   get tabStop(): string | undefined {
     return datetimeOf(this.dayButtons.find((button) => button.element.tabIndex === 0)?.element);
   }

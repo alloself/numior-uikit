@@ -66,6 +66,7 @@ export {
   localToday,
   normalizeRange,
   parseIsoDate,
+  utcToday,
 } from './date/iso';
 export type { DateParts, DateRange } from './date/iso';
 export {
