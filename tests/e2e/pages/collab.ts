@@ -21,6 +21,8 @@ const TYPING_PAUSE = 8;
 
 const FIRST_WORD = { x: 12, y: 10 };
 
+const LAG_FRAMES = 12;
+
 const isCollabServer = (url: URL): boolean => url.port === COLLAB_PORT;
 
 export const unsentStepsOf = (name: string): Promise<number> =>
@@ -121,10 +123,62 @@ export class CollabClient {
     await this.page.keyboard.type(text);
   }
 
-  async appendTo(index: number, text: string): Promise<void> {
+  async endOf(index: number): Promise<void> {
     await this.paragraph(index).click();
     await this.page.keyboard.press('End');
+  }
+
+  async appendTo(index: number, text: string): Promise<void> {
+    await this.endOf(index);
     await this.page.keyboard.type(text);
+  }
+
+  async caretLag(name: string, line: string, act: () => Promise<void>): Promise<number> {
+    const lag = await this.page.evaluateHandle(
+      ({ who, text, frames }) => [
+        new Promise<number>((resolve) => {
+          const offsets: number[] = [];
+
+          const sample = (): void => {
+            const caret = [...document.querySelectorAll('.nui-collab-carets__caret')].find((each) =>
+              each.textContent.includes(who),
+            );
+
+            const paragraph = [...document.querySelectorAll('.nui-editor p')].find(
+              (each) => each.textContent === text,
+            );
+
+            if (caret !== undefined && paragraph !== undefined) {
+              offsets.push(
+                caret.getBoundingClientRect().top - paragraph.getBoundingClientRect().top,
+              );
+            }
+
+            if (offsets.length < frames) {
+              requestAnimationFrame(sample);
+              return;
+            }
+
+            const settled = offsets.at(-1) ?? 0;
+
+            resolve(Math.max(...offsets.map((offset) => Math.abs(offset - settled))));
+          };
+
+          document.addEventListener(
+            'keydown',
+            () => {
+              requestAnimationFrame(sample);
+            },
+            { capture: true, once: true },
+          );
+        }),
+      ],
+      { who: name, text: line, frames: LAG_FRAMES },
+    );
+
+    await act();
+
+    return lag.evaluate(([measured]) => measured);
   }
 
   async appendToEach(indices: readonly number[], text: string): Promise<void> {

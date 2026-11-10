@@ -53,9 +53,7 @@
   background: var(--_colour);
   border-radius: 1px;
   opacity: 0;
-  transition:
-    transform var(--nui-duration-fast) var(--nui-easing),
-    opacity var(--nui-duration-fast) var(--nui-easing);
+  transition: opacity var(--nui-duration-fast) var(--nui-easing);
 }
 
 .nui-collab-carets__flag {

@@ -317,6 +317,26 @@ test.describe('collaboration', () => {
     await expect(boris.selections).toHaveCount(2);
   });
 
+  test('keeps the caret of someone else on its text while a line is added above it', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Первая');
+    await anna.newLine('Вторая');
+    await boris.appendTo(1, '!');
+    await expect(anna.paragraph(1)).toHaveText('Вторая!');
+    await expect(anna.caretOf(BORIS)).toHaveCSS('opacity', '1');
+
+    await anna.endOf(0);
+
+    const lag = await anna.caretLag(BORIS, 'Вторая!', () => anna.page.keyboard.press('Enter'));
+
+    expect(lag).toBeLessThanOrEqual(1);
+    await expect(anna.paragraph(2)).toHaveText('Вторая!');
+  });
+
   test('keeps the caret of someone else on a list item they indent', async ({ collab }) => {
     const anna = await collab.join(ANNA);
     const boris = await collab.join(BORIS);
