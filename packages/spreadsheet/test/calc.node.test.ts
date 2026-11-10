@@ -3,9 +3,13 @@ import { RU_LOCALE, loadCells, numberValue, textValue, type LoadEntry } from '..
 import { openBook } from './book-harness';
 import { evaluated, openSheet } from './sheet-harness';
 
+const STALE_CALLS = 10_000;
+
 const RUNNING_ROWS = 4000;
 
 const RUNNING_BUDGET_MS = 400;
+
+const STALE_BUDGET_MS = 20;
 
 describe('formula evaluation', () => {
   it('computes operators with the Excel coercions', () => {
@@ -359,6 +363,55 @@ describe('recalculation', () => {
     sheet.recalc();
 
     expect(sheet.grid('C1:C4')).toEqual([[2], [2], [4], [2]]);
+  });
+
+  it('tells which formulas wait for a value without planning the run again', async () => {
+    const sheet = openSheet();
+
+    sheet.enter('A1', 1);
+    sheet.enter('B1', 5);
+
+    for (let row = 2; row <= 40_000; row += 1) {
+      sheet.enter(`A${String(row)}`, `=A${String(row - 1)}+1`);
+    }
+
+    const run = sheet.recalc({ budgetMs: 0, yieldTo: () => Promise.resolve() });
+    const early = [run.planned, ...['A2', 'A40000', 'A1', 'B1'].map(sheet.stale)];
+    const started = performance.now();
+
+    for (let call = 0; call < STALE_CALLS; call += 1) {
+      sheet.stale('A40000');
+    }
+
+    const spent = performance.now() - started;
+
+    await run.settled;
+
+    expect(early).toEqual([false, true, true, false, false]);
+    expect([run.planned, sheet.stale('A2'), sheet.stale('A40000')]).toEqual([true, false, false]);
+    expect(spent).toBeLessThan(STALE_BUDGET_MS);
+  });
+
+  it('marks every formula left without a value when a run is stopped', async () => {
+    const sheet = openSheet();
+
+    sheet.enter('A1', 1);
+
+    for (let row = 2; row <= 40_000; row += 1) {
+      sheet.enter(`A${String(row)}`, `=A${String(row - 1)}+1`);
+    }
+
+    const run = sheet.recalc({ budgetMs: 0, yieldTo: () => Promise.resolve() });
+
+    run.cancel();
+    await run.settled;
+
+    expect([run.planned, run.done, sheet.stale('A40000'), sheet.state('A40000')]).toEqual([
+      true,
+      0,
+      true,
+      'stale',
+    ]);
   });
 
   it('yields to the host on its own and counts only the time it spent computing', async () => {

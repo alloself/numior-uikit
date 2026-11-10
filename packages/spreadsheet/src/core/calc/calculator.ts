@@ -81,6 +81,7 @@ export interface Calculator {
   setValue(sheet: Sheet, row: number, col: number, value: CellValue): void;
   importValue(sheet: Sheet, row: number, col: number, value: CellValue): void;
   outdated(): (sheet: Sheet, row: number, col: number) => boolean;
+  staleAt(sheet: Sheet, row: number, col: number): boolean;
   importFormula(
     sheet: Sheet,
     row: number,
@@ -151,6 +152,7 @@ interface Run {
   longest: number;
   finished: boolean;
   cancelled: boolean;
+  dropped: boolean;
 }
 
 interface LookupIndex {
@@ -370,7 +372,7 @@ const indexDown = (sheet: Sheet, range: CellRange, index: LookupIndex): void => 
     }
   });
 
-  return { version, rows };
+  index.bottom = range.bottom;
 };
 
 const spillArea = (record: FormulaRecord, result: ArrayValue): SpillArea => ({
@@ -440,6 +442,9 @@ const applyShift = (move: ShiftPlan, axis: LineChange['axis']): void => {
 
 const insideSheet = (range: CellRange): boolean =>
   range.bottom < MAX_ROWS && range.right < MAX_COLS;
+
+const plannedRun = (run: Run): boolean =>
+  run.planner === undefined && run.marked >= run.queue.length;
 
 export const createCalculator = (
   workbook: Workbook,
@@ -569,6 +574,7 @@ export const createCalculator = (
   const interrupt = (): void => {
     if (current !== undefined) {
       current.cancelled = true;
+      current.dropped = true;
     }
   };
 
@@ -852,7 +858,7 @@ export const createCalculator = (
   };
 
   const proceed = (run: Run, yieldTo: () => Promise<void>): Promise<void> =>
-    yieldTo().then(() => (step(run) || run.cancelled ? undefined : proceed(run, yieldTo)));
+    yieldTo().then(() => (run.dropped || step(run) ? undefined : proceed(run, yieldTo)));
 
   const usersOf = (name: string): Set<number> => {
     const known = nameUsers.get(name);
@@ -1143,6 +1149,19 @@ export const createCalculator = (
         return id !== undefined && planned.has(id);
       };
     },
+    staleAt: (sheet, row, col) => {
+      const id = idAt(sheet.id, row, col);
+      const record = id === undefined ? undefined : formulas.get(id);
+
+      if (id === undefined || record === undefined || kept.has(id)) {
+        return false;
+      }
+      return (
+        record.cell.state === FormulaState.Stale ||
+        pending.has(id) ||
+        (current !== undefined && !current.dropped && !plannedRun(current))
+      );
+    },
     importFormula: (sheet, row, col, ast, imported) => {
       setParsed(sheet, row, col, ast);
 
@@ -1275,6 +1294,7 @@ export const createCalculator = (
         longest: 0,
         finished: false,
         cancelled: false,
+        dropped: false,
       };
 
       current = run;
@@ -1295,6 +1315,9 @@ export const createCalculator = (
         },
         get finished() {
           return run.finished || run.cancelled;
+        },
+        get planned() {
+          return plannedRun(run);
         },
         settled,
         cancel: () => {

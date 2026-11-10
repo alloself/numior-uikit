@@ -98,6 +98,7 @@ export interface Recalculation {
   readonly busyMs: number;
   readonly longestMs: number;
   readonly finished: boolean;
+  readonly planned: boolean;
   readonly settled: Promise<void>;
   cancel(): void;
 }
