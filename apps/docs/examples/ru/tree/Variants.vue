@@ -4,7 +4,7 @@
       v-model="selected"
       v-model:expanded="expanded"
       :items="changes"
-      variant="bordered"
+      variant="outline"
       size="sm"
       label="Изменения"
       class="w-full max-w-sm"

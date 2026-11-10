@@ -272,7 +272,7 @@ status: accepted
 - Дерево на каркасе списка (2026-09-30, интервью). Пользователь читает дерево как «список,
   который умеет показывать дерево», а `div`-узлы рядом с `ul`/`li` списка — как задвоение.
   `NuiTree` рендерит корень `div.nui-list.nui-tree` с `nui-list--variant-*`
-  (`plain | divided | bordered | floating`; `floating` — дерево в поповере `NuiSelect`, см.
+  (`plain | divided | outline | floating`; `floating` — дерево в поповере `NuiSelect`, см.
   @.archcore/pickers.adr.md), внутри
   `ul.nui-list__items[role="presentation"]` (тег `TransitionGroup`), а каждый узел —
   `NuiListItem` в режиме `treeitem`: `li.nui-list-item.nui-list-item--mode-treeitem` с
@@ -293,7 +293,7 @@ status: accepted
   `NuiSidebarSub`). Слот `item` стал слотом заголовка, как у списка. Плотность — как у
   `nav` (`--_row` 2 / 2.25 / 2.5rem по `size`, паддинги `space-1`, gap `space-2`), а не
   `plain` списка (≈41.5px строка): деревья плотные по природе и встают в сетку сайдбара.
-  `bordered` у дерева — рамка с паддингом `space-1` без разделителей строк, `divided` —
+  `outline` у дерева — рамка с паддингом `space-1` без разделителей строк, `divided` —
   разделители. `itemHeight` стал необязательным override: без него высота строки берётся
   из `size` (`ROW_SIZES` 32 / 36 / 40 для SSR и первого рендера), а на монтировании дерево
   один раз измеряет первую строку и держит масштаб `rowScale` (rem-высота при другом

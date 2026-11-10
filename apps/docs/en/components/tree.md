@@ -26,7 +26,7 @@ Tree rows look like [List](/en/components/list) items and take the same fields: 
 `shortcut` sit at the end of the row. The `current` field marks the node that is open right now,
 independently of the selection.
 
-The `variant` prop changes the look: `plain`, `divided`, `bordered` or `floating`. The `size`
+The `variant` prop changes the look: `plain`, `divided`, `outline` or `floating`. The `size`
 prop changes the row height.
 
 <Example name="tree/Variants" />

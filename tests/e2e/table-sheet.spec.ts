@@ -52,7 +52,7 @@ test.describe('table cell styles', () => {
     expect(await sheet.lineAfter(SALES, 1)).toBe('1px');
     expect(await sheet.lineAfter(SALES, 0)).toBe('1px');
 
-    await sheet.borderedSwitch.click();
+    await sheet.gridlinesSwitch.click();
     await expect.poll(() => sheet.lineAfter(SALES, 1)).toBe('0px');
     expect(await sheet.lineAfter(SALES, 0)).toBe('1px');
   });

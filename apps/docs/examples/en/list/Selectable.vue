@@ -4,7 +4,7 @@
       v-model:values="picked"
       :items="languages"
       selectable="multiple"
-      variant="bordered"
+      variant="outline"
       label="Interface languages"
       class="w-full max-w-sm"
     />

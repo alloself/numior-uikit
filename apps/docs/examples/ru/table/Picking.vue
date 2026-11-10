@@ -5,7 +5,7 @@
     :picking="picking"
     :column-menu="false"
     :caption="CAPTION"
-    bordered
+    gridlines
     size="sm"
     @pick="onPick"
     @edit="onEdit"

@@ -59,7 +59,7 @@ export interface NuiListItemProps {
 export const NuiListVariant = {
   Plain: 'plain',
   Divided: 'divided',
-  Bordered: 'bordered',
+  Outline: 'outline',
   Floating: 'floating',
   Nav: 'nav',
 } as const;

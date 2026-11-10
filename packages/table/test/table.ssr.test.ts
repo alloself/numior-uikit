@@ -79,7 +79,7 @@ const renderPainted = (): Promise<string> =>
     props: {
       columns: PEOPLE_COLUMNS,
       rows: people(3),
-      bordered: true,
+      gridlines: true,
       cellStyle: paintName,
     },
   });
@@ -340,7 +340,7 @@ describe('NuiTable on the server', () => {
     const html = await renderPainted();
 
     expect(html).toBe(await renderPainted());
-    expect(html).toContain('nui-table--bordered');
+    expect(html).toContain('nui-table--gridlines');
     expect(html).not.toContain('nui-table--slack');
     expect(html.match(/nui-table__cell--filled/g)).toHaveLength(1);
     expect(html.match(/nui-table__cell--edged/g)).toHaveLength(1);

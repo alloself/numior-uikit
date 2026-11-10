@@ -479,10 +479,10 @@ describe('NuiTree', () => {
   it('renders on the list shell with a variant, a size, badges, shortcuts and the current node', () => {
     const tree = TreeDriver.mount({
       items: withTrailing(),
-      props: { variant: 'bordered', size: 'sm' },
+      props: { variant: 'outline', size: 'sm' },
     });
 
-    expect(tree.listModifier('variant-bordered')).toBe(true);
+    expect(tree.listModifier('variant-outline')).toBe(true);
     expect(tree.modifierOf('src', 'size-sm')).toBe(true);
     expect(tree.trailingOf('src')).toBe('3');
     expect(tree.trailingOf('docs')).not.toBe('');

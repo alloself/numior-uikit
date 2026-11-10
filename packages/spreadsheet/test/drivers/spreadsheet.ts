@@ -264,8 +264,8 @@ export class SpreadsheetDriver {
     return this.wrapper.find('.nui-table').attributes('dir');
   }
 
-  get bordered(): boolean {
-    return this.wrapper.find('.nui-table').classes().includes('nui-table--bordered');
+  get gridlines(): boolean {
+    return this.wrapper.find('.nui-table').classes().includes('nui-table--gridlines');
   }
 
   get label(): string | undefined {

@@ -71,7 +71,7 @@ const docs: DocsMap = {
         ru: 'Объединяет ячейки. Прямоугольники `{ from, to }` задаются в тех же координатах, что `v-model:ranges`. Объединение показывает содержимое и оформление первой ячейки, выделяется целиком, а правка меняет первую ячейку. Объединение из нескольких строк не подсвечивается при наведении, полосами и выбором строки. Из двух пересекающихся прямоугольников остаётся первый. С группировкой, деревом и деталями объединения не работают.',
         en: 'Merges cells. The `{ from, to }` rectangles use the same coordinates as `v-model:ranges`. A merge shows the content and style of its first cell, is selected as a whole, and an edit changes the first cell. A merge across several rows is not highlighted by hover, stripes or row selection. Of two overlapping rectangles, the first one wins. Merges do not work with grouping, a tree or details.',
       },
-      bordered: {
+      gridlines: {
         ru: 'Рисует линии между колонками. Линия после последней колонки видна, только пока колонки не заполняют всю ширину.',
         en: 'Draws lines between the columns. The line after the last column shows only while the columns do not fill the whole width.',
       },

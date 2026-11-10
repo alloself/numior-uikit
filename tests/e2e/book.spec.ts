@@ -34,7 +34,7 @@ test.describe('book', () => {
     await book.scrollBody(400);
     await expect(book.cell('2', 0)).toBeInViewport();
     await expect(book.cell('3', 0)).not.toBeInViewport();
-    expect(await book.bordered()).toBe(true);
+    expect(await book.gridlines()).toBe(true);
   });
 
   test('paints conditional formats and repaints them after an edit', async ({
@@ -262,7 +262,7 @@ test.describe('book', () => {
     await book.sheet.scrollIntoViewIfNeeded();
     await book.chooseSheet('Заметки');
     await expect(book.cell('1', 0)).toHaveText('Второй лист без сетки');
-    expect(await book.bordered()).toBe(false);
+    expect(await book.gridlines()).toBe(false);
 
     await book.openFile(await ordersXlsx());
     await expect(book.cell('2', 1)).toHaveText(/^1\s250,50$/u);

@@ -589,8 +589,8 @@ export class TableDriver<T> {
     return this.wrapper.find('.nui-table').classes('nui-table--fluid');
   }
 
-  get bordered(): boolean {
-    return this.wrapper.find('.nui-table').classes('nui-table--bordered');
+  get gridlines(): boolean {
+    return this.wrapper.find('.nui-table').classes('nui-table--gridlines');
   }
 
   get slack(): boolean {

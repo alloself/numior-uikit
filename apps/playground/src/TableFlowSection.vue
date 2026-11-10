@@ -27,7 +27,7 @@
         :merges="MERGES"
         :frozen-rows="frozen ? FROZEN_ROWS : 0"
         :column-menu="false"
-        bordered
+        gridlines
         size="sm"
         height="22rem"
         label="Перетекание текста"

@@ -1,6 +1,6 @@
 <template>
   <NuiTree
-    variant="bordered"
+    variant="outline"
     :items="nodes"
     virtual
     height="14rem"

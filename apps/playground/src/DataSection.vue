@@ -91,7 +91,7 @@
       <NuiList
         v-model:values="picked"
         selectable="multiple"
-        variant="bordered"
+        variant="outline"
         label="Языки"
         :items="languageItems"
         data-testid="data-list-select"
@@ -99,7 +99,7 @@
       <NuiList
         v-model="channel"
         selectable="single"
-        variant="bordered"
+        variant="outline"
         label="Канал"
         data-testid="data-list-single"
       >
@@ -119,7 +119,7 @@
         </NuiButton>
         <NuiList
           :items="listEmpty ? [] : tasks"
-          variant="bordered"
+          variant="outline"
           size="sm"
           empty-label="Задач нет"
           data-testid="data-list-tasks"

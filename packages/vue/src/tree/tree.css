@@ -34,7 +34,7 @@
 .nui-tree--virtual::after {
   block-size: var(--_window-rest);
 }
-.nui-tree.nui-list--variant-bordered {
+.nui-tree.nui-list--variant-outline {
   --_divider: transparent;
 
   padding: var(--nui-space-1);

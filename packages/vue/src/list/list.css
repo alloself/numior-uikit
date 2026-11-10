@@ -22,7 +22,7 @@
 .nui-list--variant-divided {
   --_divider: var(--nui-border);
 }
-.nui-list--variant-bordered {
+.nui-list--variant-outline {
   --_divider: var(--nui-border);
 
   border: 1px solid var(--nui-border);

@@ -94,7 +94,7 @@ export class TableSheetSection {
   readonly root: Locator;
   readonly viewport: Locator;
   readonly grid: Locator;
-  readonly borderedSwitch: Locator;
+  readonly gridlinesSwitch: Locator;
   readonly heatSwitch: Locator;
   readonly windowSwitch: Locator;
   readonly quarterSwitch: Locator;
@@ -111,7 +111,7 @@ export class TableSheetSection {
     this.viewport = this.root.locator(':scope > .nui-table__frame > .nui-table__viewport');
     this.grid = this.viewport.locator(':scope > .nui-table__grid');
 
-    this.borderedSwitch = page.getByTestId('table-sheet-bordered');
+    this.gridlinesSwitch = page.getByTestId('table-sheet-gridlines');
     this.heatSwitch = page.getByTestId('table-sheet-heat');
     this.windowSwitch = page.getByTestId('table-sheet-window');
     this.quarterSwitch = page.getByTestId('table-sheet-quarter');

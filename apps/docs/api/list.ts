@@ -28,7 +28,7 @@ const docs: DocsMap = {
       },
       variant: {
         ru: 'Оформление списка: обычный, с разделителями, в рамке, всплывающий или навигация.',
-        en: 'Style of the list: plain, divided, bordered, floating or nav.',
+        en: 'Style of the list: plain, divided, outline, floating or nav.',
       },
       size: {
         ru: 'Высота строк: `sm`, `md` или `lg`.',

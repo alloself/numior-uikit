@@ -37,7 +37,7 @@ With `multiple` the header gets a checkbox that selects all rows on screen.
 
 ### Cell styles
 
-The `bordered` prop draws lines between the columns, and the `cellStyle` function styles single
+The `gridlines` prop draws lines between the columns, and the `cellStyle` function styles single
 cells. It receives the row and the column and returns a `fill`, a text `color`, an `align`,
 `borders` and text wrapping with `wrap`.
 

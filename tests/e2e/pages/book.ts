@@ -558,10 +558,10 @@ export class BookSection {
     await this.section.locator('input[type="file"]').setInputFiles(file);
   }
 
-  bordered(): Promise<boolean> {
+  gridlines(): Promise<boolean> {
     return this.sheet
       .locator('.nui-table')
-      .evaluate((table) => table.classList.contains('nui-table--bordered'));
+      .evaluate((table) => table.classList.contains('nui-table--gridlines'));
   }
 
   async tintOver(target: Locator, outside: Locator, inset: number): Promise<number> {

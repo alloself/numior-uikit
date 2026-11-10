@@ -89,7 +89,7 @@
   --_foot-size: auto;
   --_empty-min: auto;
 }
-.nui-table--bordered {
+.nui-table--gridlines {
   --_grid: 1px;
 }
 .nui-table--slack {

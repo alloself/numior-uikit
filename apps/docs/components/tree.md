@@ -25,7 +25,7 @@ import '@numior/vue/styles/tree.css';
 `shortcut` встают в конец строки. Поле `current` выделяет узел, открытый сейчас, независимо от
 выбора.
 
-Свойство `variant` меняет оформление: `plain`, `divided`, `bordered` или `floating`. Свойство
+Свойство `variant` меняет оформление: `plain`, `divided`, `outline` или `floating`. Свойство
 `size` меняет высоту строк.
 
 <Example name="tree/Variants" />

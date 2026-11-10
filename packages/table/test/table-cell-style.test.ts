@@ -255,11 +255,11 @@ describe('NuiTable cell styles', () => {
     expect(grid.cellMarks(2, 4)).toEqual(['tail', 'clip']);
   });
 
-  it('draws grid lines in a bordered table and closes the last column only while the table has spare room', async () => {
-    const grid = mountStaff({ props: { bordered: true } });
+  it('draws grid lines when asked and closes the last column only while the table has spare room', async () => {
+    const grid = mountStaff({ props: { gridlines: true } });
     await grid.settle();
 
-    expect(grid.bordered).toBe(true);
+    expect(grid.gridlines).toBe(true);
     expect(grid.cellMarks(0, 4)).toEqual(['tail']);
     expect(grid.cellMarks(0, 3)).toEqual([]);
     expect(grid.slack).toBe(false);

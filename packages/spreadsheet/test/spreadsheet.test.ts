@@ -86,7 +86,7 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.text(1, 0)).toBe('Item');
     expect(sheet.text(2, 2)).toBe('75.0%');
     expect(sheet.frozenRows).toBe(1);
-    expect(sheet.bordered).toBe(true);
+    expect(sheet.gridlines).toBe(true);
     expect(sheet.direction).toBe('ltr');
   });
 
@@ -96,7 +96,7 @@ describe('NuiSpreadsheet', () => {
     const sheet = sheetOf({ book, label: 'Sales book' });
 
     expect(sheet.direction).toBe('rtl');
-    expect(sheet.bordered).toBe(false);
+    expect(sheet.gridlines).toBe(false);
     expect(sheet.pinnedColumns).toBe(1);
     expect(sheet.frozenRows).toBe(0);
 

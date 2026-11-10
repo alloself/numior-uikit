@@ -7,7 +7,7 @@
     :get-key="keyOf"
     :locale="locale"
     :column-menu="editable"
-    bordered
+    gridlines
     v-bind="$attrs"
     @update:sort="onSort"
     @update:filters="onFilters"

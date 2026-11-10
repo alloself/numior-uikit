@@ -168,7 +168,7 @@ export interface NuiTableProps<T> {
   hasDetail?: ((row: T) => boolean) | undefined;
   cellStyle?: NuiTableCellStyler<T> | undefined;
   merges?: readonly NuiTableRange[] | undefined;
-  bordered?: boolean | undefined;
+  gridlines?: boolean | undefined;
   rowHeaders?: NuiTableRowHeaders<T> | boolean | undefined;
   treeColumn?: string | undefined;
   columnMenu?: NuiTableColumnMenu<T> | boolean | undefined;

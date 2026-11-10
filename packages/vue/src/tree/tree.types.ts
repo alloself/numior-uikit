@@ -61,7 +61,7 @@ export const NuiTreeSelectable = { Single: 'single', Multiple: 'multiple' } as c
 export const NuiTreeVariant = {
   Plain: 'plain',
   Divided: 'divided',
-  Bordered: 'bordered',
+  Outline: 'outline',
   Floating: 'floating',
 } as const;
 

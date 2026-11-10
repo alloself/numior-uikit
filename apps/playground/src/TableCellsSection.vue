@@ -34,7 +34,7 @@
         v-model:ranges="ranges"
         v-bind="cells"
         :column-menu="false"
-        bordered
+        gridlines
         size="sm"
         height="20rem"
         :clipboard="SHEET_CLIPBOARD"

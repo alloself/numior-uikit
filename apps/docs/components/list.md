@@ -6,7 +6,7 @@
 <Example name="list/Basic" />
 
 Строка с `href` или `to` работает как ссылка, строка с `interactive` — как кнопка. Оформление
-выбирает `variant`: `plain`, `divided` с линиями между строками, `bordered` в рамке, `floating` для
+выбирает `variant`: `plain`, `divided` с линиями между строками, `outline` в рамке, `floating` для
 выпадающей панели и `nav` для меню.
 
 ## Установка

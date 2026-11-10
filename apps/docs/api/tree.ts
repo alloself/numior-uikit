@@ -17,7 +17,7 @@ const docs: DocsMap = {
       },
       variant: {
         ru: 'Оформление: обычное, с разделителями, в рамке или всплывающее.',
-        en: 'Style: plain, divided, bordered or floating.',
+        en: 'Style: plain, divided, outline or floating.',
       },
       selectable: {
         ru: 'Выбор узлов: `single` — одного, `multiple` — нескольких, `false` — без выбора. С `checkable` не действует.',

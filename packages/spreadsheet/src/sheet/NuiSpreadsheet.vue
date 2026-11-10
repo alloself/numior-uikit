@@ -110,7 +110,7 @@
         :frozen-rows="table.cells.frozenRows"
         :row-heights="table.cells.rowHeights"
         :row-height="table.rowHeight"
-        :bordered="table.cells.gridlines"
+        :gridlines="table.cells.gridlines"
         :height="height"
         :column-menu="false"
         :commands="clipboard.commands"
