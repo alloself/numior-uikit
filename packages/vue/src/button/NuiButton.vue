@@ -91,9 +91,13 @@ const controlAttrs = computed(() => {
 });
 
 const onClick = (event: MouseEvent): void => {
-  if (loading || (disabled && isLink.value)) {
-    event.preventDefault();
-    event.stopImmediatePropagation();
+  const blocked = loading || (disabled && isLink.value);
+
+  if (!blocked) {
+    return;
   }
+
+  event.preventDefault();
+  event.stopImmediatePropagation();
 };
 </script>

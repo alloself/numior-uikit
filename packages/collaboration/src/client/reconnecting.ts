@@ -73,10 +73,12 @@ export const createReconnecting = (
     connection = undefined;
     listener.closed();
 
-    if (!stopped) {
-      timer = setTimeout(open, backoffDelay(retry, attempts));
-      attempts += 1;
+    if (stopped) {
+      return;
     }
+
+    timer = setTimeout(open, backoffDelay(retry, attempts));
+    attempts += 1;
   };
 
   return {
@@ -90,10 +92,12 @@ export const createReconnecting = (
     restart: () => {
       const stale = connection;
 
-      if (stale !== undefined) {
-        lost();
-        stale.close();
+      if (stale === undefined) {
+        return;
       }
+
+      lost();
+      stale.close();
     },
     stop: () => {
       stopped = true;

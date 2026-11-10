@@ -68,12 +68,14 @@ export const createHost = <V extends object, O>(
   const restore = (entry: Entry<V>): void => {
     const saved = core.retained.get(entry.path());
 
-    if (saved) {
-      core.retained.delete(entry.path());
-      entry.state.setTouched(saved.touched);
-      entry.state.setAttempted(saved.attempted);
-      writeErrors(entry.state, saved.errors);
+    if (!saved) {
+      return;
     }
+
+    core.retained.delete(entry.path());
+    entry.state.setTouched(saved.touched);
+    entry.state.setAttempted(saved.attempted);
+    writeErrors(entry.state, saved.errors);
   };
 
   const retain = (entry: Entry<V>): void => {
@@ -148,10 +150,12 @@ export const createHost = <V extends object, O>(
       core.registry.remove(entry);
       validation.async.forget(entry);
 
-      if (!claimed(entry.path(), entry) && containerExists(entry.path())) {
-        retain(entry);
-        release(entry);
+      if (claimed(entry.path(), entry) || !containerExists(entry.path())) {
+        return;
       }
+
+      retain(entry);
+      release(entry);
     },
     change: (entry, value) => {
       core.engine.setValue(entry.path(), value);

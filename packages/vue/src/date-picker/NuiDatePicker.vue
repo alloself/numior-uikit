@@ -193,10 +193,12 @@ const clear = (): void => {
 };
 
 const onTimeKeydown = (event: KeyboardEvent): void => {
-  if (event.key === Key.Enter && !event.defaultPrevented) {
-    event.preventDefault();
-    popover.hide({ focus: true });
+  if (event.key !== Key.Enter || event.defaultPrevented) {
+    return;
   }
+
+  event.preventDefault();
+  popover.hide({ focus: true });
 };
 
 defineExpose(exposed);

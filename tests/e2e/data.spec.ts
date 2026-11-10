@@ -70,15 +70,17 @@ test.describe('data display', () => {
     await data.clickSurface(data.cardButton.locator('.nui-card__content'));
     await expect.poll(async () => (await data.readOutput()).cardClicks).toBe(1);
 
-    if (!isMobile) {
-      await data.cardLink.getByRole('link').focus();
-      await page.keyboard.press('Tab');
-      await expect(data.cardButton.getByRole('button', { name: 'Проект Numior' })).toBeFocused();
-      await expect.poll(() => data.focusRingOf(data.cardButton)).toBe('solid');
-
-      await page.keyboard.press('Enter');
-      await expect.poll(async () => (await data.readOutput()).cardClicks).toBe(2);
+    if (isMobile) {
+      return;
     }
+
+    await data.cardLink.getByRole('link').focus();
+    await page.keyboard.press('Tab');
+    await expect(data.cardButton.getByRole('button', { name: 'Проект Numior' })).toBeFocused();
+    await expect.poll(() => data.focusRingOf(data.cardButton)).toBe('solid');
+
+    await page.keyboard.press('Enter');
+    await expect.poll(async () => (await data.readOutput()).cardClicks).toBe(2);
   });
 
   test('a card steps its padding and the gap between its parts down together', async ({

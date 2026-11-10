@@ -349,10 +349,14 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
   const catchUp = createCatchUp(context, settle);
 
   const onJump = (event: KeyboardEvent): void => {
-    if ((event.ctrlKey || event.metaKey) && JUMPS.has(event.key)) {
-      attaching.complete();
-      catchUp.all();
+    const jumps = (event.ctrlKey || event.metaKey) && JUMPS.has(event.key);
+
+    if (!jumps) {
+      return;
     }
+
+    attaching.complete();
+    catchUp.all();
   };
 
   root.addEventListener('keydown', onJump, { capture: true });
@@ -402,10 +406,12 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
 
       const child = parent.children[index];
 
-      if (child?.kind === DescKind.Element && context.stale.has(child)) {
-        freshen(context, child);
-        watch.ignoreOwn();
+      if (child?.kind !== DescKind.Element || !context.stale.has(child)) {
+        return;
       }
+
+      freshen(context, child);
+      watch.ignoreOwn();
     },
   };
 

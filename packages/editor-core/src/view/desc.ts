@@ -580,10 +580,12 @@ const matchElement = (
 export const freshen = (context: ViewContext, desc: ElementDesc): void => {
   const node = context.stale.get(desc);
 
-  if (node !== undefined) {
-    context.stale.delete(desc);
-    syncElement(context, desc, node);
+  if (node === undefined) {
+    return;
   }
+
+  context.stale.delete(desc);
+  syncElement(context, desc, node);
 };
 
 const sharedPrefix = (previous: readonly Desc[], next: readonly ContentNode[]): number => {
@@ -713,8 +715,10 @@ export const syncRootPrefix = (
   node: ElementNode,
   end: number,
 ): void => {
-  if (desc.node !== node) {
-    desc.node = node;
-    syncContent(context, desc, desc.dom, node.content.slice(0, end));
+  if (desc.node === node) {
+    return;
   }
+
+  desc.node = node;
+  syncContent(context, desc, desc.dom, node.content.slice(0, end));
 };

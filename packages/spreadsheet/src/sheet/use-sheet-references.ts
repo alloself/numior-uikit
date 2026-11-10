@@ -324,11 +324,13 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
       sheetRange(cells, draggedRange(current, cell, cells)),
     );
 
-    if (result.text !== textOf(draft.value)) {
-      lastPick = { text: result.text, start: current.span.start, end: result.end };
-      session = { ...current, caret: result.end };
-      editing.setDraft({ ...draft, value: result.text });
+    if (result.text === textOf(draft.value)) {
+      return;
     }
+
+    lastPick = { text: result.text, start: current.span.start, end: result.end };
+    session = { ...current, caret: result.end };
+    editing.setDraft({ ...draft, value: result.text });
   };
 
   const onGripMove = (event: PointerEvent): void => {

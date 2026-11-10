@@ -277,10 +277,12 @@ export const createDependencyGraph = (): DependencyGraph => {
     const entry = ranges.get(id);
 
     entry?.dependents.delete(key);
-    if (entry?.dependents.size === 0) {
-      ranges.delete(id);
-      place(entry, false);
+    if (entry?.dependents.size !== 0) {
+      return;
     }
+
+    ranges.delete(id);
+    place(entry, false);
   };
 
   const remove = (key: number): void => {

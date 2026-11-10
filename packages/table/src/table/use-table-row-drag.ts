@@ -509,11 +509,13 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
     drop,
     ghost,
     grab: (position, event) => {
-      if (options.enabled()) {
-        event.preventDefault();
-        held = grabOf(event, options.rowSize());
-        reorder.onPointerdown(position, event);
+      if (!options.enabled()) {
+        return;
       }
+
+      event.preventDefault();
+      held = grabOf(event, options.rowSize());
+      reorder.onPointerdown(position, event);
     },
     onKeydown: (event, body) => {
       if (body === undefined || !options.enabled() || !isChord(event)) {

@@ -209,10 +209,12 @@ export const useVirtualList = (
   const measure = (): void => {
     const element = toValue(container);
 
-    if (element) {
-      viewport.value = axis() === VirtualAxis.X ? element.clientWidth : element.clientHeight;
-      physical.value = readScroll(element);
+    if (!element) {
+      return;
     }
+
+    viewport.value = axis() === VirtualAxis.X ? element.clientWidth : element.clientHeight;
+    physical.value = readScroll(element);
   };
 
   const scrollTo = (
@@ -245,10 +247,12 @@ export const useVirtualList = (
     const element = toValue(container);
     const next = logical / scale.value.factor;
 
-    if (element && next !== physical.value) {
-      writeScroll(element, next);
-      physical.value = next;
+    if (!element || next === physical.value) {
+      return;
     }
+
+    writeScroll(element, next);
+    physical.value = next;
   };
 
   const resize = (sizes: Iterable<VirtualSize>): boolean => {

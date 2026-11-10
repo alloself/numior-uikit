@@ -393,10 +393,12 @@ const onEnter = (event: KeyboardEvent): void => {
 };
 
 const onEscape = (event: KeyboardEvent): void => {
-  if (open.value) {
-    event.preventDefault();
-    open.value = false;
+  if (!open.value) {
+    return;
   }
+
+  event.preventDefault();
+  open.value = false;
 };
 
 const onBackspace = (): void => {
@@ -431,10 +433,12 @@ const onFieldClick = (event: MouseEvent): void => {
     return;
   }
   focusInput();
-  if (!open.value) {
-    opening.set('first');
-    open.value = true;
+  if (open.value) {
+    return;
   }
+
+  opening.set('first');
+  open.value = true;
 };
 
 const onFocusout = (event: FocusEvent): void => {

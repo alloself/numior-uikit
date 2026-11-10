@@ -324,10 +324,12 @@ export const createCodeHighlighter = (
         started = performance.now();
       }
     }
-    if (!stopped) {
-      send(answers);
-      prune();
+    if (stopped) {
+      return;
     }
+
+    send(answers);
+    prune();
   };
 
   const work = async (active: NuiHighlighter): Promise<void> => {

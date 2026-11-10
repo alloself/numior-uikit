@@ -62,11 +62,13 @@ export const useBlockDrag = (options: BlockDragOptions): BlockDrag => {
   let ghostHeight = 0;
 
   const lift = (element: Element | undefined): void => {
-    if (element !== lifted) {
-      lifted?.classList.remove(LIFTED);
-      element?.classList.add(LIFTED);
-      lifted = element;
+    if (element === lifted) {
+      return;
     }
+
+    lifted?.classList.remove(LIFTED);
+    element?.classList.add(LIFTED);
+    lifted = element;
   };
 
   const placeSide = (line: HTMLElement, frame: DOMRect, rect: DOMRect, side: BesideSide): void => {
@@ -192,15 +194,17 @@ export const useBlockDrag = (options: BlockDragOptions): BlockDrag => {
     const target = current.moving ? current.target : undefined;
 
     finish();
-    if (target !== undefined) {
-      options.run(
-        target.kind === DropTargetKind.Between
-          ? moveBlock(current.slot, target.to)
-          : placeBeside(current.slot, target.id, target.side, COLUMN_TYPES),
-      );
-
-      options.onDone();
+    if (target === undefined) {
+      return;
     }
+
+    options.run(
+      target.kind === DropTargetKind.Between
+        ? moveBlock(current.slot, target.to)
+        : placeBeside(current.slot, target.id, target.side, COLUMN_TYPES),
+    );
+
+    options.onDone();
   };
 
   const onKeydown = (event: KeyboardEvent): void => {

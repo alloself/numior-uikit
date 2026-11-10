@@ -266,10 +266,12 @@ export const readSheetPart = async (
     let known = !opaque;
 
     callsIn(ast, (name) => {
-      if (!context.known(name)) {
-        counts.unknown.add(name);
-        known = false;
+      if (context.known(name)) {
+        return;
       }
+
+      counts.unknown.add(name);
+      known = false;
     });
 
     const external = formulaReferences(ast).some(
@@ -338,10 +340,12 @@ export const readSheetPart = async (
   const openRow = (attributes: readonly XmlAttribute[]): void => {
     row = numberOf(attributeOf(attributes, 'r'), row + 2) - 1;
     col = -1;
-    if (inSheet(row, 0)) {
-      counts.layout += attributeOf(attributes, 'customHeight') === XmlBoolean.One ? 1 : 0;
-      layout.row(row, attributes);
+    if (!inSheet(row, 0)) {
+      return;
     }
+
+    counts.layout += attributeOf(attributes, 'customHeight') === XmlBoolean.One ? 1 : 0;
+    layout.row(row, attributes);
   };
 
   const openMain = (local: string, attributes: readonly XmlAttribute[]): void => {

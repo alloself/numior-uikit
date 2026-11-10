@@ -49,10 +49,12 @@ export const readTheme = async (
 
         const value = attributeOf(attributes, COLOR_VALUES[element.local] ?? '');
 
-        if (slot !== undefined && value !== undefined && HEX.test(value)) {
-          palette[slot] = value.toUpperCase();
-          slot = undefined;
+        if (slot === undefined || value === undefined || !HEX.test(value)) {
+          return;
         }
+
+        palette[slot] = value.toUpperCase();
+        slot = undefined;
       },
       close: (element) => {
         if (element.uri === DRAWING && SLOTS.has(element.local)) {

@@ -86,12 +86,14 @@ const layoutOf = (tokens: readonly FormatToken[]): Layout => {
   let scale = 0;
 
   tokens.forEach((token, index) => {
-    if (token.kind === FormatTokenKind.Comma) {
-      const role = commaRole(tokens, index, { integerEnd, end });
-
-      group ||= role === CommaRole.Group;
-      scale += Number(role === CommaRole.Scale);
+    if (token.kind !== FormatTokenKind.Comma) {
+      return;
     }
+
+    const role = commaRole(tokens, index, { integerEnd, end });
+
+    group ||= role === CommaRole.Group;
+    scale += Number(role === CommaRole.Scale);
   });
 
   return {

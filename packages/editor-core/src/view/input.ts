@@ -399,10 +399,12 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   const doc = root.ownerDocument;
 
   const openGap = (): void => {
-    if (host.state().selection.kind === SelectionKind.Gap) {
-      runIntent(host, { kind: 'insertText', text: '' });
-      parts.sync.write();
+    if (host.state().selection.kind !== SelectionKind.Gap) {
+      return;
     }
+
+    runIntent(host, { kind: 'insertText', text: '' });
+    parts.sync.write();
   };
 
   const onKeydown = (event: KeyboardEvent): void => {
@@ -550,10 +552,12 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   const onWidgetMousedown = (event: MouseEvent): void => {
     const owner = widgetOwner(host.context, event.target);
 
-    if (owner?.contentDOM === null && event.button === 0 && !interactive(event.target, owner.dom)) {
-      parts.setHolding(true);
-      place(event, pointAt(event, owner.node.id));
+    if (owner?.contentDOM !== null || event.button !== 0 || interactive(event.target, owner.dom)) {
+      return;
     }
+
+    parts.setHolding(true);
+    place(event, pointAt(event, owner.node.id));
   };
 
   const onWidgetKeydown = (event: KeyboardEvent): void => {
@@ -574,10 +578,12 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   };
 
   const onMouseup = (): void => {
-    if (host.holding()) {
-      parts.setHolding(false);
-      parts.sync.write();
+    if (!host.holding()) {
+      return;
     }
+
+    parts.setHolding(false);
+    parts.sync.write();
   };
 
   const onCompositionstart = (): void => {

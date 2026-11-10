@@ -114,16 +114,20 @@ export const useMentions = (options: MentionOptions): Mentions => {
         return found;
       })
       .catch(() => {
-        if (controller === current) {
-          people.value = [];
-          failed.value = true;
+        if (controller !== current) {
+          return;
         }
+
+        people.value = [];
+        failed.value = true;
       })
       .finally(() => {
-        if (controller === current) {
-          controller = undefined;
-          loading.value = false;
+        if (controller !== current) {
+          return;
         }
+
+        controller = undefined;
+        loading.value = false;
       });
   };
 

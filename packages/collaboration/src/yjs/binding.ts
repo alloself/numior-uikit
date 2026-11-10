@@ -96,10 +96,12 @@ export const yjsBinding = (
 
     ydoc.transact(() => {
       targets.forEach((target) => {
-        if (target !== undefined) {
-          forget(target);
-          removeChild(target);
+        if (target === undefined) {
+          return;
         }
+
+        forget(target);
+        removeChild(target);
       });
     }, origin);
 
@@ -133,11 +135,13 @@ export const yjsBinding = (
       schema.text(text, marks),
     ).setMeta(remoteChange, true);
 
-    if (tr.changed) {
-      applying = true;
-      dispatch(tr);
-      applying = false;
+    if (!tr.changed) {
+      return;
     }
+
+    applying = true;
+    dispatch(tr);
+    applying = false;
   };
 
   const observer: Parameters<XmlFragment['observeDeep']>[0] = (events, transaction) => {

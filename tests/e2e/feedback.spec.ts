@@ -49,15 +49,17 @@ test.describe('feedback', () => {
     expect(bottomOf(behindBox)).toBeGreaterThan(bottomOf(frontBox));
     expect(behindBox.width).toBeLessThan(frontBox.width);
 
-    if (!isMobile) {
-      await front.hover();
-
-      await expect
-        .poll(async () => (await feedback.stackBox(1)).y)
-        .toBeGreaterThanOrEqual(bottomOf(await feedback.stackBox(0)));
-
-      expect(Math.round((await feedback.stackBox(1)).width)).toBe(Math.round(frontBox.width));
+    if (isMobile) {
+      return;
     }
+
+    await front.hover();
+
+    await expect
+      .poll(async () => (await feedback.stackBox(1)).y)
+      .toBeGreaterThanOrEqual(bottomOf(await feedback.stackBox(0)));
+
+    expect(Math.round((await feedback.stackBox(1)).width)).toBe(Math.round(frontBox.width));
   });
 
   test('toasts auto-dismiss after their duration and pause while hovered', async ({
@@ -151,10 +153,12 @@ test.describe('feedback', () => {
     await feedback.setPlacement('top-start');
     expect((await overlays.edges(feedback.toaster)).right).toBe(width - inset);
 
-    if (isMobile) {
-      const box = await boxOf(feedback.toaster);
-      expect(Math.round(box.width)).toBe(width - inset * 2);
+    if (!isMobile) {
+      return;
     }
+
+    const box = await boxOf(feedback.toaster);
+    expect(Math.round(box.width)).toBe(width - inset * 2);
   });
 
   test('alert dismisses through its close button and progress exposes native semantics', async ({

@@ -1,6 +1,7 @@
 import stylistic from '@stylistic/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import vue from 'eslint-plugin-vue';
+import { guardFirst } from './scripts/eslint/guard-first.mjs';
 import { testPhases } from './scripts/eslint/test-phases.mjs';
 
 const multiline = ['multiline-const', 'multiline-let', 'multiline-expression', 'function', 'class'];
@@ -225,8 +226,12 @@ export default [
     rules: { 'no-restricted-syntax': ['error', ...CODE_SHAPE, BOXES, SECTIONS] },
   },
   {
+    files: ['**/*.ts', '**/*.mts', '**/*.js', '**/*.mjs', '**/*.vue'],
+    plugins: { numior: { rules: { 'guard-first': guardFirst, 'test-phases': testPhases } } },
+    rules: { 'numior/guard-first': 'error' },
+  },
+  {
     files: ['tests/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
-    plugins: { numior: { rules: { 'test-phases': testPhases } } },
     rules: { 'numior/test-phases': 'error' },
   },
   {

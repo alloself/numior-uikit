@@ -139,10 +139,12 @@ const onKeydown = (event: KeyboardEvent): void => {
   const action = KEYS[event.key];
   const table = formulaTable.value;
 
-  if (action !== undefined && table !== null) {
-    event.preventDefault();
-    action(table);
+  if (action === undefined || table === null) {
+    return;
   }
+
+  event.preventDefault();
+  action(table);
 };
 
 const onBlur = (event: FocusEvent): void => {

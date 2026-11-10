@@ -154,10 +154,12 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
 
   const onClosed = (): void => {
     opening.take();
-    if (inside) {
-      inside = false;
-      focusElement(options.trigger.value);
+    if (!inside) {
+      return;
     }
+
+    inside = false;
+    focusElement(options.trigger.value);
   };
 
   watch(
@@ -218,10 +220,12 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
       onToggle: shown.onToggle,
       onPointermove: (event) => {
         const item = navigation.itemFrom(event.target);
-        if (item && item !== navigation.activeElement()) {
-          pointed.value = true;
-          navigation.setActive(item);
+        if (!item || item === navigation.activeElement()) {
+          return;
         }
+
+        pointed.value = true;
+        navigation.setActive(item);
       },
       onPointerleave: () => {
         if (!pointed.value || holdsOpenSubmenu(navigation.activeElement())) {

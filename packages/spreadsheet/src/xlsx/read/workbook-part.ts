@@ -122,10 +122,12 @@ export const readWorkbookPart = async (
         }
       },
       close: (element) => {
-        if (name !== undefined && element.local === OoxmlElement.DefinedName) {
-          names.push(name);
-          name = undefined;
+        if (name === undefined || element.local !== OoxmlElement.DefinedName) {
+          return;
         }
+
+        names.push(name);
+        name = undefined;
       },
     },
     options,

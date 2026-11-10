@@ -782,10 +782,12 @@ const painted = computed(
 const followScroll = (): void => {
   const field = formulaField.value;
 
-  if (field !== null && mirror.value !== null) {
-    mirror.value.scrollTop = field.scrollTop;
-    mirror.value.scrollLeft = field.scrollLeft;
+  if (field === null || mirror.value === null) {
+    return;
   }
+
+  mirror.value.scrollTop = field.scrollTop;
+  mirror.value.scrollLeft = field.scrollLeft;
 };
 
 const pinned = (
@@ -950,10 +952,12 @@ watch(recalc.phase, (next, before) => {
 watch(bookLocale, (next) => {
   ownLocale = next;
 
-  if (calculator === undefined) {
-    ownCalculator.value.setLocale(next);
-    recalc.run();
+  if (calculator !== undefined) {
+    return;
   }
+
+  ownCalculator.value.setLocale(next);
+  recalc.run();
 });
 
 defineExpose<NuiSpreadsheetExposed>({

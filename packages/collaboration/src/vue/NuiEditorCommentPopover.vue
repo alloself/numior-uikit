@@ -127,10 +127,12 @@ const onPointerup = async (event: PointerEvent): Promise<void> => {
   const hit = still && document.elementFromPoint(event.clientX, event.clientY)?.closest(MARK);
   const pos = hit ? editor?.posAt(event.clientX, event.clientY) : undefined;
 
-  if (pos !== undefined) {
-    await promiseTimeout(0);
-    comments.openAt(pos);
+  if (pos === undefined) {
+    return;
   }
+
+  await promiseTimeout(0);
+  comments.openAt(pos);
 };
 
 useEventListener(() => layer.value?.closest<HTMLElement>(EDITOR), 'pointerdown', onPointerdown);

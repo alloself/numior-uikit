@@ -135,10 +135,12 @@ const selectedTab = (): HTMLElement | undefined => {
 const collect = (): void => {
   const found = items.elements();
 
-  if (found !== seenTabs) {
-    seenTabs = found;
-    tabElements.value = [...found];
+  if (found === seenTabs) {
+    return;
   }
+
+  seenTabs = found;
+  tabElements.value = [...found];
 };
 
 const navigation = useListNavigation(listElement, {
@@ -174,11 +176,13 @@ const scrollTrack = (left: number, behavior: ScrollBehavior): void => {
 const page = (steps: number): void => {
   const list = listElement.value;
 
-  if (list) {
-    const sign = direction.isRtl() ? -steps : steps;
-
-    scrollTrack(sign * list.clientWidth * PAGE_SHARE, glide());
+  if (!list) {
+    return;
   }
+
+  const sign = direction.isRtl() ? -steps : steps;
+
+  scrollTrack(sign * list.clientWidth * PAGE_SHARE, glide());
 };
 
 const reveal = (behavior: ScrollBehavior): void => {

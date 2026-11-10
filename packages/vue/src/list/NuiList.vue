@@ -208,10 +208,12 @@ const onKeydown = (event: KeyboardEvent): void => {
   if (event.defaultPrevented || !isOption(event.target)) {
     return;
   }
-  if (event.key === Key.Enter || event.key === Key.Space) {
-    event.preventDefault();
-    event.target.click();
+  if (event.key !== Key.Enter && event.key !== Key.Space) {
+    return;
   }
+
+  event.preventDefault();
+  event.target.click();
 };
 
 const onFocusin = (event: FocusEvent): void => {

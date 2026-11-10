@@ -120,10 +120,12 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
   const remember = (position: number, size: number): void => {
     const node = options.engine.value.nodeAt(options.pageStart() + position);
 
-    if (node?.kind === TableNodeKind.Detail) {
-      detailSizes.set(node.id, size);
-      detailEstimate = size;
+    if (node?.kind !== TableNodeKind.Detail) {
+      return;
     }
+
+    detailSizes.set(node.id, size);
+    detailEstimate = size;
   };
 
   const onResize = (entries: readonly ResizeObserverEntry[]): void => {

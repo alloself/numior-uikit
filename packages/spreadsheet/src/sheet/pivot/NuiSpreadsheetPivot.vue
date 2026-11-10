@@ -539,10 +539,12 @@ const optionItems = computed((): NuiMenuEntry[] => [
 const back = (): void => {
   const current = view.value;
 
-  if (current.kind !== PivotPanelViewKind.Fields) {
-    focusAfter.value = { area: current.chip.spot.area, field: current.chip.field };
-    view.value = FIELDS_VIEW;
+  if (current.kind === PivotPanelViewKind.Fields) {
+    return;
   }
+
+  focusAfter.value = { area: current.chip.spot.area, field: current.chip.field };
+  view.value = FIELDS_VIEW;
 };
 
 const itemsView = computed((): SheetPivotItemsProps | undefined => {

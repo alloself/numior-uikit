@@ -384,10 +384,14 @@ watch(
   () => {
     const key = focusAfter.value;
 
-    if (key !== undefined || shown.value.length === 0) {
-      focusAfter.value = undefined;
-      focusRule(key);
+    const due = key !== undefined || shown.value.length === 0;
+
+    if (!due) {
+      return;
     }
+
+    focusAfter.value = undefined;
+    focusRule(key);
   },
   { flush: 'post' },
 );
@@ -399,10 +403,12 @@ const focusStart = (): void => {
 watch(
   editing,
   (next, before) => {
-    if (next === undefined && before !== undefined) {
-      focusBack(backTo.value);
-      backTo.value = undefined;
+    if (next !== undefined || before === undefined) {
+      return;
     }
+
+    focusBack(backTo.value);
+    backTo.value = undefined;
   },
   { flush: 'post' },
 );

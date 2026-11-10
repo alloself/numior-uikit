@@ -110,9 +110,11 @@ const onPick = (): void => {
 };
 
 watch(open, (value) => {
-  if (value) {
-    tab.value = 'upload';
-    session.value += 1;
+  if (!value) {
+    return;
   }
+
+  tab.value = 'upload';
+  session.value += 1;
 });
 </script>

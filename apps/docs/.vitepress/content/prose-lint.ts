@@ -86,10 +86,12 @@ const paragraphsOf = (markdown: string): Paragraph[] => {
   let start = 0;
 
   const flush = (): void => {
-    if (current.length > 0) {
-      paragraphs.push({ line: start, text: current.join(' '), api });
-      current = [];
+    if (current.length === 0) {
+      return;
     }
+
+    paragraphs.push({ line: start, text: current.join(' '), api });
+    current = [];
   };
 
   stripFrontmatter(markdown.split('\n')).forEach((raw, index) => {

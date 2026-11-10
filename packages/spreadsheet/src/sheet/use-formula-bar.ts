@@ -163,10 +163,12 @@ export const useFormulaBar = (options: FormulaBarOptions): FormulaBar => {
   const breakLine = (): void => {
     const field = options.formulaField.value;
 
-    if (field !== null) {
-      field.setRangeText(LINE_BREAK, field.selectionStart, field.selectionEnd, 'end');
-      onFormulaInput();
+    if (field === null) {
+      return;
     }
+
+    field.setRangeText(LINE_BREAK, field.selectionStart, field.selectionEnd, 'end');
+    onFormulaInput();
   };
 
   const onFormulaKeydown = (event: KeyboardEvent): void => {

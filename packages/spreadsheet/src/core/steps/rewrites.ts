@@ -78,10 +78,12 @@ export const createRewriter = (book: Workbook, calculator: Calculator): Rewriter
     book.names.forEach((defined) => {
       const after = rewrite(defined);
 
-      if (after !== defined.ast) {
-        changed.push({ name: defined.name, scope: defined.scope, before: defined.ast });
-        calculator.setName(defined.name, defined.scope, after);
+      if (after === defined.ast) {
+        return;
       }
+
+      changed.push({ name: defined.name, scope: defined.scope, before: defined.ast });
+      calculator.setName(defined.name, defined.scope, after);
     });
 
     return changed;

@@ -218,14 +218,18 @@ const onKeydown = (event: KeyboardEvent): void => {
 
   const menuKey = event.key === Key.ContextMenu || (event.key === Key.F10 && event.shiftKey);
 
-  if ((menuKey || event.key === Key.F2) && aim(event.target)) {
-    event.preventDefault();
+  const acts = menuKey || event.key === Key.F2;
 
-    if (menuKey) {
-      menu.value?.show('first');
-    } else {
-      startRename();
-    }
+  if (!acts || !aim(event.target)) {
+    return;
+  }
+
+  event.preventDefault();
+
+  if (menuKey) {
+    menu.value?.show('first');
+  } else {
+    startRename();
   }
 };
 
@@ -249,10 +253,12 @@ const onRenameToggle = (event: Event): void => {
 const commitRename = (): void => {
   tried.value = true;
 
-  if (nameError.value === undefined) {
-    renaming.value = false;
-    emit('rename', targetIndex.value, nextName.value);
-    target.value?.focus();
+  if (nameError.value !== undefined) {
+    return;
   }
+
+  renaming.value = false;
+  emit('rename', targetIndex.value, nextName.value);
+  target.value?.focus();
 };
 </script>

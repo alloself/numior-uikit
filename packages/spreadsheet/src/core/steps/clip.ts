@@ -368,12 +368,14 @@ export const createCellClips = (book: Workbook, calculator: Calculator): CellCli
       }
       const followed = followMove(ast, carried, { sheet: owner.name, origin: { row, col } });
 
-      if (followed !== ast) {
-        const known = edits.get(owner) ?? [];
-
-        known.push({ row, col, content: { kind: 'formula', ast: followed } });
-        edits.set(owner, known);
+      if (followed === ast) {
+        return;
       }
+
+      const known = edits.get(owner) ?? [];
+
+      known.push({ row, col, content: { kind: 'formula', ast: followed } });
+      edits.set(owner, known);
     });
 
     const steps = [...edits].reduce<WorkbookStep[]>((found, [owner, cells]) => {

@@ -291,20 +291,22 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
     for (const item of created) {
       targets.set(item.id, spot);
     }
-    if (spot.kind === UploadTargetKind.Place) {
-      for (const item of created) {
-        preview(item);
-        elementFor(item.id);
-      }
-
-      options.run(
-        startUploads(
-          created.map((item) => item.id),
-          spot.pos,
-          spot.at,
-        ),
-      );
+    if (spot.kind !== UploadTargetKind.Place) {
+      return;
     }
+
+    for (const item of created) {
+      preview(item);
+      elementFor(item.id);
+    }
+
+    options.run(
+      startUploads(
+        created.map((item) => item.id),
+        spot.pos,
+        spot.at,
+      ),
+    );
   };
 
   const add = (files: readonly File[], target?: UploadTarget, accept?: string): void => {

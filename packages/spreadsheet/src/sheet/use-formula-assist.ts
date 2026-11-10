@@ -179,11 +179,13 @@ export const useFormulaAssist = (options: FormulaAssistOptions): FormulaAssist =
   const write = (text: string, at: number): void => {
     const draft = editing.draft.value;
 
-    if (draft !== undefined) {
-      editing.setDraft({ ...draft, value: text });
-      caret.value = at;
-      void placeCaretIn(options.root.value, options.nameField.value, at);
+    if (draft === undefined) {
+      return;
     }
+
+    editing.setDraft({ ...draft, value: text });
+    caret.value = at;
+    void placeCaretIn(options.root.value, options.nameField.value, at);
   };
 
   const choose = (canonical: string): void => {
@@ -242,10 +244,12 @@ export const useFormulaAssist = (options: FormulaAssistOptions): FormulaAssist =
   };
 
   const onKeydown = (event: KeyboardEvent): void => {
-    if (open.value && !event.altKey && !event.ctrlKey && !event.metaKey && handled(event)) {
-      event.preventDefault();
-      event.stopPropagation();
+    if (!open.value || event.altKey || event.ctrlKey || event.metaKey || !handled(event)) {
+      return;
     }
+
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   watch(matches, () => {
@@ -255,10 +259,12 @@ export const useFormulaAssist = (options: FormulaAssistOptions): FormulaAssist =
   watch(
     () => (formula.value ? options.language() : undefined),
     (language) => {
-      if (language !== undefined && loaded !== language) {
-        loaded = language;
-        void loadHelp(language);
+      if (language === undefined || loaded === language) {
+        return;
       }
+
+      loaded = language;
+      void loadHelp(language);
     },
     { immediate: true },
   );
@@ -273,12 +279,14 @@ export const useFormulaAssist = (options: FormulaAssistOptions): FormulaAssist =
           before.removeAttribute(name);
         });
       }
-      if (element !== null) {
-        setAttribute(element, ARIA_AUTOCOMPLETE, formula.value ? 'list' : undefined);
-        setAttribute(element, ARIA_CONTROLS, listed ? listId : undefined);
-        setAttribute(element, ARIA_ACTIVE, listed ? optionElementId(listId, index) : undefined);
-        setAttribute(element, ARIA_DESCRIBED, hinted ? hintId : undefined);
+      if (element === null) {
+        return;
       }
+
+      setAttribute(element, ARIA_AUTOCOMPLETE, formula.value ? 'list' : undefined);
+      setAttribute(element, ARIA_CONTROLS, listed ? listId : undefined);
+      setAttribute(element, ARIA_ACTIVE, listed ? optionElementId(listId, index) : undefined);
+      setAttribute(element, ARIA_DESCRIBED, hinted ? hintId : undefined);
     },
     { flush: 'post' },
   );

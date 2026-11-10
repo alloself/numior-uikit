@@ -365,13 +365,15 @@ export class EditorDriver {
     if (!(trigger instanceof HTMLElement)) {
       throw new Error(`The ${menu} menu has no trigger`);
     }
-    if (trigger.getAttribute('aria-expanded') !== 'true') {
-      trigger.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
-      );
-
-      await nextTick();
+    if (trigger.getAttribute('aria-expanded') === 'true') {
+      return;
     }
+
+    trigger.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
+    );
+
+    await nextTick();
   }
 
   async chooseBlock(label: string): Promise<void> {

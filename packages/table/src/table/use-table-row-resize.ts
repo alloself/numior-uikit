@@ -72,11 +72,13 @@ export const useTableRowResize = (options: TableRowResizeOptions): TableRowResiz
   };
 
   const detach = (): void => {
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', stop);
-      window.removeEventListener('pointercancel', stop);
+    if (typeof window === 'undefined') {
+      return;
     }
+
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', stop);
+    window.removeEventListener('pointercancel', stop);
   };
 
   const stop = (): void => {

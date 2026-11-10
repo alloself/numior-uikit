@@ -697,10 +697,12 @@ const publish = (state: EditorState): void => {
   empty.value = isEmptyDoc(state.doc);
   sync.paused();
 
-  if (!publishing) {
-    publishing = true;
-    void afterPaint().then(publishNow);
+  if (publishing) {
+    return;
   }
+
+  publishing = true;
+  void afterPaint().then(publishNow);
 };
 
 const settleValue = (): void => {

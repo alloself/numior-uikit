@@ -220,10 +220,12 @@ export const useEditorLinks = (options: EditorLinkOptions): EditorLinks => {
       })
       .catch(() => undefined)
       .finally(() => {
-        if (controllers.get(id) === controller) {
-          controllers.delete(id);
-          loading.delete(id);
+        if (controllers.get(id) !== controller) {
+          return;
         }
+
+        controllers.delete(id);
+        loading.delete(id);
       });
   };
 

@@ -152,10 +152,12 @@ export const useTimeDraft = (options: TimeDraftOptions): TimeDraftControl => {
   };
 
   watch(options.model, (value) => {
-    if (value !== lastEmitted) {
-      lastEmitted = value;
-      draft.value = fromModel();
+    if (value === lastEmitted) {
+      return;
     }
+
+    lastEmitted = value;
+    draft.value = fromModel();
   });
 
   watch([cycle, () => options.seconds()], () => {

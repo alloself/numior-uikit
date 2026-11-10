@@ -32,11 +32,13 @@ const failAll = (): void => {
 const onAnswer = (event: MessageEvent<unknown>): void => {
   const answer = readRankAnswer(event.data);
 
-  if (answer !== undefined) {
-    answers.get(answer.id)?.(answer.order);
-    answers.delete(answer.id);
-    live.delete(answer.id);
+  if (answer === undefined) {
+    return;
   }
+
+  answers.get(answer.id)?.(answer.order);
+  answers.delete(answer.id);
+  live.delete(answer.id);
 };
 
 const createWorker = (): Worker | null => {

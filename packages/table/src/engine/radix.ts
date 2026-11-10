@@ -107,22 +107,24 @@ const groupsOf = (lanes: readonly RadixLane[]): Group[] =>
   lanes.reduce<{ groups: Group[]; open: RankLane[] }>(
     (state, lane, index) => {
       const close = (): void => {
-        if (state.open.length > 0) {
-          const bits = state.open.map((item) => bitsFor(item.size));
-          let shift = bits.reduce((sum, item) => sum + item, 0);
-          const total = shift;
-
-          state.groups.push({
-            kind: 'packed',
-            bits: total,
-            lanes: state.open.map((item, at) => {
-              shift -= bits[at] ?? 0;
-              return { lane: item, shift };
-            }),
-          });
-
-          state.open = [];
+        if (state.open.length === 0) {
+          return;
         }
+
+        const bits = state.open.map((item) => bitsFor(item.size));
+        let shift = bits.reduce((sum, item) => sum + item, 0);
+        const total = shift;
+
+        state.groups.push({
+          kind: 'packed',
+          bits: total,
+          lanes: state.open.map((item, at) => {
+            shift -= bits[at] ?? 0;
+            return { lane: item, shift };
+          }),
+        });
+
+        state.open = [];
       };
 
       if (lane.kind === RadixLaneKind.Float) {

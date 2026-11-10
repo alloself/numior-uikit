@@ -77,10 +77,12 @@ const gridOf = (cells: CellStore, sheet: string, range: CellRange): ChartGrid | 
   let left = Number.POSITIVE_INFINITY;
 
   cells.forEachInRange(range, (row, col, value) => {
-    if (value.kind === CellValueKind.Number) {
-      top = Math.min(top, row);
-      left = Math.min(left, col);
+    if (value.kind !== CellValueKind.Number) {
+      return;
     }
+
+    top = Math.min(top, row);
+    left = Math.min(left, col);
   });
 
   return top === Number.POSITIVE_INFINITY

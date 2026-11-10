@@ -45,9 +45,11 @@ const insert = (): void => {
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (event.key === Key.Escape) {
-    event.preventDefault();
-    emit('cancel');
+  if (event.key !== Key.Escape) {
+    return;
   }
+
+  event.preventDefault();
+  emit('cancel');
 };
 </script>

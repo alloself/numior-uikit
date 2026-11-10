@@ -128,10 +128,12 @@ const liveEditor = (server: CollabServer, name: string): LiveEditor => {
     client,
     doc: () => (state === undefined ? toJSON(initial) : toJSON(state.doc)),
     type: (text, at) => {
-      if (state !== undefined) {
-        apply(state.tr.insertText(text, at));
-        client.sync();
+      if (state === undefined) {
+        return;
       }
+
+      apply(state.tr.insertText(text, at));
+      client.sync();
     },
   };
 };

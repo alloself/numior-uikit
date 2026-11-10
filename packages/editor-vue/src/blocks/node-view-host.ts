@@ -18,10 +18,12 @@ export const createNodeViewHost = (): NodeViewHost => {
   const chunks = new WeakSet<Element>();
 
   const show = (entry: NodeViewEntry): void => {
-    if (entries.has(entry.key) && !shown.has(entry.key)) {
-      entry.mount();
-      shown.set(entry.key, entry);
+    if (!entries.has(entry.key) || shown.has(entry.key)) {
+      return;
     }
+
+    entry.mount();
+    shown.set(entry.key, entry);
   };
 
   const showInside = (chunk: Element): void => {

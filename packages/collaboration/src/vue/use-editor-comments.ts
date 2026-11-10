@@ -238,12 +238,14 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
       const json = statedAt(state, anchor.range);
 
       if (
-        !sameSpot(json, thread.anchor) ||
-        (json.at !== undefined && thread.anchor.at === undefined)
+        sameSpot(json, thread.anchor) &&
+        (json.at === undefined || thread.anchor.at !== undefined)
       ) {
-        replaced({ ...thread, anchor: json });
-        void attempt(async () => adapter.move?.(doc, thread.id, json));
+        return;
       }
+
+      replaced({ ...thread, anchor: json });
+      void attempt(async () => adapter.move?.(doc, thread.id, json));
     });
 
     owed.clear();
@@ -275,10 +277,12 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
   });
 
   const placeAll = (): void => {
-    if (latest !== undefined) {
-      threads.value.forEach(place);
-      placed.value = true;
+    if (latest === undefined) {
+      return;
     }
+
+    threads.value.forEach(place);
+    placed.value = true;
   };
 
   const onEvent = (event: CommentEvent): void => {
@@ -468,10 +472,12 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
   watch(editor, (api) => {
     const state = api?.state();
 
-    if (state !== undefined) {
-      read(state);
-      placeAll();
+    if (state === undefined) {
+      return;
     }
+
+    read(state);
+    placeAll();
   });
 
   onBeforeUnmount(() => {

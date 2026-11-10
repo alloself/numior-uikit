@@ -65,10 +65,12 @@ export const createSpills = (): Spills => {
       }
 
       forEachSpillCell(area, (cell, key) => {
-        if (owners.get(key) === anchor) {
-          owners.delete(key);
-          clear(cell);
+        if (owners.get(key) !== anchor) {
+          return;
         }
+
+        owners.delete(key);
+        clear(cell);
       });
     },
     block: (anchor, area) => {

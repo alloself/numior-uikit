@@ -152,13 +152,15 @@ for (const theme of THEMES) {
 
       await clean(playground);
 
-      if (!(await finePointer(page))) {
-        await editor.placeAtEnd();
-        await editor.showCaret();
-        await expect(editor.dock()).toBeVisible();
-
-        await clean(playground);
+      if (await finePointer(page)) {
+        return;
       }
+
+      await editor.placeAtEnd();
+      await editor.showCaret();
+      await expect(editor.dock()).toBeVisible();
+
+      await clean(playground);
     });
   });
 }

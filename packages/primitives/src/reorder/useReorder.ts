@@ -246,10 +246,12 @@ export const useReorder = (options: ReorderOptions): Reorder => {
   const nudge = (current: KeyboardState, step: number): void => {
     const to = nextAllowed(current.from, current.to, step);
 
-    if (to !== undefined) {
-      publish({ ...current, to });
-      emit({ type: ReorderEventType.Moved, from: current.from, to });
+    if (to === undefined) {
+      return;
     }
+
+    publish({ ...current, to });
+    emit({ type: ReorderEventType.Moved, from: current.from, to });
   };
 
   const handleActive = (current: KeyboardState, key: string): boolean => {

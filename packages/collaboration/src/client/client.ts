@@ -93,10 +93,12 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
   const catchUp = (version: number): void => {
     const local = document.version();
 
-    if (local !== null && local < version) {
-      target = version;
-      link.send({ kind: ClientMessageKind.Pull, from: local });
+    if (local === null || local >= version) {
+      return;
     }
+
+    target = version;
+    link.send({ kind: ClientMessageKind.Pull, from: local });
   };
 
   const refresh = (): void => {

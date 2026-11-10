@@ -81,10 +81,12 @@ const close = (): void => {
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (event.key === Key.Delete && closes.value) {
-    event.preventDefault();
-    emit('close');
+  if (event.key !== Key.Delete || !closes.value) {
+    return;
   }
+
+  event.preventDefault();
+  emit('close');
 };
 
 const onMousedown = (event: MouseEvent): void => {

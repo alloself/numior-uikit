@@ -21,12 +21,14 @@ const indexTree = (root: ElementNode): Map<NodeId, Placed> => {
     const offsets = childOffsets(node);
 
     node.content.forEach((child, position) => {
-      if (child.kind === ContentNodeKind.Element) {
-        const pos = start + (offsets[position] ?? 0);
-
-        index.set(child.id, { node: child, pos });
-        walk(child, pos + 1);
+      if (child.kind !== ContentNodeKind.Element) {
+        return;
       }
+
+      const pos = start + (offsets[position] ?? 0);
+
+      index.set(child.id, { node: child, pos });
+      walk(child, pos + 1);
     });
   };
 

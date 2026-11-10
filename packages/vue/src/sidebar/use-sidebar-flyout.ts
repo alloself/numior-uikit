@@ -110,11 +110,13 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
       delay.closeNow();
       return;
     }
-    if (event.key === forwardKey() || event.key === Key.Enter || event.key === Key.Space) {
-      event.preventDefault();
-      landing.set(ListMove.First);
-      delay.openNow();
+    if (event.key !== forwardKey() && event.key !== Key.Enter && event.key !== Key.Space) {
+      return;
     }
+
+    event.preventDefault();
+    landing.set(ListMove.First);
+    delay.openNow();
   };
 
   const onContentKeydown = (event: KeyboardEvent): void => {

@@ -82,10 +82,12 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
   const offerPresence = (state: EditorState): void => {
     const next = presenceOf(state, user);
 
-    if (sentPresence === undefined || presenceChanged(sentPresence, next, state)) {
-      sentPresence = next;
-      client?.setPresence(next);
+    if (sentPresence !== undefined && !presenceChanged(sentPresence, next, state)) {
+      return;
     }
+
+    sentPresence = next;
+    client?.setPresence(next);
   };
 
   const bridge = definePlugin({
@@ -139,10 +141,12 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
       onStatus: (next) => {
         status.value = next;
 
-        if (next.kind === CollabStatusKind.Failed) {
-          failure.value = { reason: next.reason, unsent: held.pending().length };
-          readOnly.value = true;
+        if (next.kind !== CollabStatusKind.Failed) {
+          return;
         }
+
+        failure.value = { reason: next.reason, unsent: held.pending().length };
+        readOnly.value = true;
       },
       onPresence: (next) => {
         present = next;

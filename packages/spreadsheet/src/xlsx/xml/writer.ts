@@ -48,11 +48,13 @@ export const createXmlWriter = (
   const push = (piece: string): void => {
     pieces.push(piece);
     length += piece.length;
-    if (length >= limit) {
-      sink(pieces.join(''));
-      pieces = [];
-      length = 0;
+    if (length < limit) {
+      return;
     }
+
+    sink(pieces.join(''));
+    pieces = [];
+    length = 0;
   };
 
   const close = (): void => {
@@ -83,11 +85,13 @@ export const createXmlWriter = (
       if (open.length > 0) {
         throw new RangeError(`${open.join(', ')} are still open`);
       }
-      if (pieces.length > 0) {
-        sink(pieces.join(''));
-        pieces = [];
-        length = 0;
+      if (pieces.length === 0) {
+        return;
       }
+
+      sink(pieces.join(''));
+      pieces = [];
+      length = 0;
     },
   };
 };

@@ -351,10 +351,12 @@ onMounted(() => {
   watch(
     open,
     (isOpen) => {
-      if (!isOpen && inside) {
-        inside = false;
-        triggerElement.value?.focus({ preventScroll: true });
+      if (isOpen || !inside) {
+        return;
       }
+
+      inside = false;
+      triggerElement.value?.focus({ preventScroll: true });
     },
     { flush: 'post' },
   );
@@ -373,11 +375,13 @@ const OPENERS: Readonly<Record<string, SelectOpenFocus>> = {
 const pickByTypeahead = (event: KeyboardEvent): void => {
   const element = navigation.matchTypeahead(event.key);
   const match = optionOf(element);
-  if (match && !match.disabled) {
-    event.preventDefault();
-    navigation.setActive(element, { focus: false });
-    model.value = match.value;
+  if (!match || match.disabled) {
+    return;
   }
+
+  event.preventDefault();
+  navigation.setActive(element, { focus: false });
+  model.value = match.value;
 };
 
 const onTriggerKeydown = (event: KeyboardEvent): void => {
@@ -418,11 +422,13 @@ const onTreeKeydown = (event: KeyboardEvent): void => {
     control.hide();
     return;
   }
-  if (multiple && event.key === Key.Enter) {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    control.hide();
+  if (!multiple || event.key !== Key.Enter) {
+    return;
   }
+
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  control.hide();
 };
 
 const onFocusin = (event: FocusEvent): void => {
@@ -438,9 +444,11 @@ const onFocusout = (event: FocusEvent): void => {
     (listboxElement.value?.contains(next) === true ||
       triggerElement.value?.contains(next) === true);
 
-  if (!within) {
-    inside = false;
-    control.hide();
+  if (within) {
+    return;
   }
+
+  inside = false;
+  control.hide();
 };
 </script>

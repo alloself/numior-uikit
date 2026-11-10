@@ -572,10 +572,12 @@ export const createCalculator = (
   };
 
   const interrupt = (): void => {
-    if (current !== undefined) {
-      current.cancelled = true;
-      current.dropped = true;
+    if (current === undefined) {
+      return;
     }
+
+    current.cancelled = true;
+    current.dropped = true;
   };
 
   const touch = (cell: SpillCell): void => {
@@ -888,16 +890,18 @@ export const createCalculator = (
   const forget = (sheet: Sheet, row: number, col: number): void => {
     const id = idAt(sheet.id, row, col);
 
-    if (id !== undefined) {
-      kept.delete(id);
-      unregister(id, formulas.get(id)?.names ?? NO_NAMES);
-      formulas.delete(id);
-      positions.get(sheet.id)?.delete(cellIndex(row, col));
-      graph.remove(id);
-      pending.delete(id);
-      volatiles.delete(id);
-      release(id);
+    if (id === undefined) {
+      return;
     }
+
+    kept.delete(id);
+    unregister(id, formulas.get(id)?.names ?? NO_NAMES);
+    formulas.delete(id);
+    positions.get(sheet.id)?.delete(cellIndex(row, col));
+    graph.remove(id);
+    pending.delete(id);
+    volatiles.delete(id);
+    release(id);
   };
 
   const claim = (key: number): void => {
@@ -976,10 +980,12 @@ export const createCalculator = (
         record.precedents = links.precedents;
         graph.set(key, links.precedents);
       }
-      if (rewrite === undefined || !unchanged) {
-        record.cell.state = 'stale';
-        pending.add(key);
+      if (rewrite !== undefined && unchanged) {
+        return;
       }
+
+      record.cell.state = 'stale';
+      pending.add(key);
     });
   };
 
@@ -1009,10 +1015,12 @@ export const createCalculator = (
     workbook.names.forEach((defined) => {
       const ast = shiftFormula(defined.ast, change, false, ORIGIN);
 
-      if (ast !== defined.ast) {
-        shifted.push({ name: defined.name, scope: defined.scope, before: defined.ast });
-        setName(defined.name, defined.scope, ast);
+      if (ast === defined.ast) {
+        return;
       }
+
+      shifted.push({ name: defined.name, scope: defined.scope, before: defined.ast });
+      setName(defined.name, defined.scope, ast);
     });
 
     return shifted;

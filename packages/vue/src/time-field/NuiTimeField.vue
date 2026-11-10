@@ -385,10 +385,12 @@ const onGroupKeydown = (event: KeyboardEvent): void => {
 
 const onGroupFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
-  if (!(next instanceof Node && groupElement.value?.contains(next) === true)) {
-    times.settle();
-    navigation.reset();
+  if (next instanceof Node && groupElement.value?.contains(next) === true) {
+    return;
   }
+
+  times.settle();
+  navigation.reset();
 };
 
 const open = ref(false);
@@ -438,10 +440,12 @@ const onFocusWheel = (type: TimeSegmentType): void => {
 };
 
 const returnFocus = (): void => {
-  if (state.inside) {
-    state.inside = false;
-    focusSegment(state.segment);
+  if (!state.inside) {
+    return;
   }
+
+  state.inside = false;
+  focusSegment(state.segment);
 };
 
 const confirmWheels = (): void => {
@@ -479,10 +483,12 @@ const onPanelFocusout = (event: FocusEvent): void => {
     next instanceof Node &&
     (panelElement.value?.contains(next) === true || rootElement.value?.contains(next) === true);
 
-  if (!within) {
-    state.inside = false;
-    control.hide();
+  if (within) {
+    return;
   }
+
+  state.inside = false;
+  control.hide();
 };
 
 onMounted(() => {

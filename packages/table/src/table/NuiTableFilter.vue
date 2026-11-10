@@ -175,10 +175,12 @@ const chooseAll = (checked: boolean): void => {
 const load = async (): Promise<void> => {
   const result = await loadValues();
 
-  if (result !== null) {
-    values.value = result.values;
-    truncated.value = result.truncated;
+  if (result === null) {
+    return;
   }
+
+  values.value = result.values;
+  truncated.value = result.truncated;
 };
 
 const close = (next: NuiTableColumnFilter | null): void => {
@@ -222,12 +224,14 @@ const onToggle = (event: Event): void => {
 watch(
   open,
   (isOpen) => {
-    if (isOpen) {
-      draft.value = draftOf(kind, filter);
+    if (!isOpen) {
+      return;
+    }
 
-      if (kind === NuiTableFilterKind.Set) {
-        void load();
-      }
+    draft.value = draftOf(kind, filter);
+
+    if (kind === NuiTableFilterKind.Set) {
+      void load();
     }
   },
   { immediate: true },

@@ -473,15 +473,17 @@ const writeNewDrawings = async (
 const writeChangedCharts = ({ output }: Writing, plan: SheetPlan): void => {
   plan.sheet.layout.drawings.forEach(({ content }) => {
     if (
-      content.kind === DrawingKind.Chart &&
-      content.rewrite === true &&
-      content.part !== undefined
+      content.kind !== DrawingKind.Chart ||
+      content.rewrite !== true ||
+      content.part === undefined
     ) {
-      output.entries.push(textEntry(content.part, chartXml(content.chart)));
-      output.overrides.set(content.part, TYPES.chart);
-      output.written.add(content.part);
-      output.rewritten.add(content.part);
+      return;
     }
+
+    output.entries.push(textEntry(content.part, chartXml(content.chart)));
+    output.overrides.set(content.part, TYPES.chart);
+    output.written.add(content.part);
+    output.rewritten.add(content.part);
   });
 };
 

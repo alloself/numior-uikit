@@ -47,10 +47,12 @@ export const createRankService = (
   };
 
   const schedule = (): void => {
-    if (!scheduled) {
-      scheduled = true;
-      defer(drain);
+    if (scheduled) {
+      return;
     }
+
+    scheduled = true;
+    defer(drain);
   };
 
   return {

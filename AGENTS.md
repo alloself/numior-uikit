@@ -15,6 +15,9 @@ that its features are implemented. Component and test conventions live in the sk
 - Arrow functions only (`const f = () => {}`); `function` solely where an own `this` is
   required. No nested function declarations: closure-free helpers live at module level.
   Every block is braced (`curly: all`, `func-style: expression` in Oxlint).
+- Leave early: a function never ends with an `if` block that wraps two or more statements; the
+  condition is turned into `if (...) { return; }` and a compound condition gets a name
+  (`numior/guard-first` in ESLint, autofixable).
 - Blank lines separate multi-line declarations, calls, imports and exports
   (`@stylistic/padding-line-between-statements` in ESLint); a `<script setup>` reads as
   logical sections (props and models, state, derived values, handlers, lifecycle), not as a

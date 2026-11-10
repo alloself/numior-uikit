@@ -111,10 +111,12 @@ const onChange = (): void => {
   model.value = element.checked;
 
   void nextTick(() => {
-    if (checkboxElement.value) {
-      checkboxElement.value.checked = model.value;
-      checkboxElement.value.indeterminate = indeterminate;
+    if (!checkboxElement.value) {
+      return;
     }
+
+    checkboxElement.value.checked = model.value;
+    checkboxElement.value.indeterminate = indeterminate;
   });
 };
 </script>

@@ -219,11 +219,13 @@ export const addText = (
   const top = topOf(builder);
   const value = top.type.code ? text : trimStart(builder, text, keep);
 
-  if (value !== '') {
-    const allowed = marks.filter((mark) => top.type.marks.has(mark.type));
-
-    append(top, builder.schema.text(value, allowed));
+  if (value === '') {
+    return;
   }
+
+  const allowed = marks.filter((mark) => top.type.marks.has(mark.type));
+
+  append(top, builder.schema.text(value, allowed));
 };
 
 export const finishBuilder = (builder: Builder): ElementNode => {

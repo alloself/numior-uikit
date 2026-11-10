@@ -33,10 +33,12 @@ export const useSheetRecalc = (options: SheetRecalcOptions): SheetRecalc => {
         return;
       }
       progress.value = shareOf(current);
-      if (!exact && current.planned) {
-        exact = true;
-        redraw();
+      if (exact || !current.planned) {
+        return;
       }
+
+      exact = true;
+      redraw();
     },
     { immediate: false },
   );

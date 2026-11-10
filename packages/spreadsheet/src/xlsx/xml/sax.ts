@@ -308,10 +308,12 @@ export const createXmlParser = (handlers: XmlHandlers): XmlParser => {
   };
 
   const keepText = (from: number, to: number): void => {
-    if (to > from) {
-      pendingAt = pending === '' ? offset + from : pendingAt;
-      pending += buffer.slice(from, to);
+    if (to <= from) {
+      return;
     }
+
+    pendingAt = pending === '' ? offset + from : pendingAt;
+    pending += buffer.slice(from, to);
   };
 
   const consume = (): void => {

@@ -84,10 +84,12 @@ const slowRuns = (book: Workbook): SlowRuns => {
     finish: () => {
       const run = runs.at(-1);
 
-      if (run !== undefined) {
-        run.finished = true;
-        run.resolve();
+      if (run === undefined) {
+        return;
       }
+
+      run.finished = true;
+      run.resolve();
     },
   };
 

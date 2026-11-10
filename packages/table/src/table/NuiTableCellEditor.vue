@@ -206,13 +206,15 @@ const typeInto = (field: HTMLInputElement | HTMLTextAreaElement, text: string): 
     }),
   );
 
-  if (accepted) {
-    field.value = text;
-
-    field.dispatchEvent(
-      new InputEvent('input', { inputType: 'insertText', data: text, bubbles: true }),
-    );
+  if (!accepted) {
+    return;
   }
+
+  field.value = text;
+
+  field.dispatchEvent(
+    new InputEvent('input', { inputType: 'insertText', data: text, bubbles: true }),
+  );
 };
 
 const paddingOf = (length: string): number => Number.parseFloat(length) || 0;
@@ -259,10 +261,12 @@ const widen = (editor: HTMLElement, field: HTMLInputElement, viewport: HTMLEleme
   const edges = growthEdges(natural, neighbourWidths(editor, back));
   const grown = grownSize(edges, natural + overflow + CARET, roomOf(editor, viewport, back));
 
-  if (grown > natural) {
-    editor.style.setProperty(SIZE, `${String(grown)}px`);
-    editor.style.setProperty(LIFT, LIFTED);
+  if (grown <= natural) {
+    return;
   }
+
+  editor.style.setProperty(SIZE, `${String(grown)}px`);
+  editor.style.setProperty(LIFT, LIFTED);
 };
 
 const fit = (hold: boolean): void => {

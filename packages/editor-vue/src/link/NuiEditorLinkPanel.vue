@@ -71,17 +71,21 @@ const apply = (): void => {
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (event.key === Key.Escape) {
-    event.preventDefault();
-    emit('cancel');
+  if (event.key !== Key.Escape) {
+    return;
   }
+
+  event.preventDefault();
+  emit('cancel');
 };
 
 watch(open, (value) => {
-  if (value) {
-    draft.value = href;
-    invalid.value = false;
+  if (!value) {
+    return;
   }
+
+  draft.value = href;
+  invalid.value = false;
 });
 
 const onToggle = (event: Event): void => {

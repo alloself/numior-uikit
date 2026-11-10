@@ -118,10 +118,12 @@ const viewOf = (source: ViewSource, block: NuiEditorBlock, node: ElementNode): N
     widget,
     node: current,
     mount: () => {
-      if (fallback) {
-        fallback = false;
-        widget.replaceChildren();
+      if (!fallback) {
+        return;
       }
+
+      fallback = false;
+      widget.replaceChildren();
     },
   });
 

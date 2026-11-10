@@ -519,11 +519,13 @@ const measureRow = (): void => {
 const measureFrame = (): void => {
   const element = root.value;
 
-  if (element) {
-    const style = getComputedStyle(element);
-
-    framePadding.value = lengthOf(style.paddingBlockStart) + lengthOf(style.paddingBlockEnd);
+  if (!element) {
+    return;
   }
+
+  const style = getComputedStyle(element);
+
+  framePadding.value = lengthOf(style.paddingBlockStart) + lengthOf(style.paddingBlockEnd);
 };
 
 onMounted(() => {

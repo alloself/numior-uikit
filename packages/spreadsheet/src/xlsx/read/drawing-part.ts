@@ -227,11 +227,13 @@ const newAnchor = (
 });
 
 const readNames = (current: AnchorDraft, attributes: readonly XmlAttribute[]): void => {
-  if (current.id === '') {
-    current.id = attributeOf(attributes, OoxmlAttribute.Id) ?? '';
-    current.name = attributeOf(attributes, OoxmlAttribute.Name) ?? '';
-    current.alt = attributeOf(attributes, OoxmlAttribute.Descr) ?? '';
+  if (current.id !== '') {
+    return;
   }
+
+  current.id = attributeOf(attributes, OoxmlAttribute.Id) ?? '';
+  current.name = attributeOf(attributes, OoxmlAttribute.Name) ?? '';
+  current.alt = attributeOf(attributes, OoxmlAttribute.Descr) ?? '';
 };
 
 const graphicContent = (

@@ -56,12 +56,14 @@ const clientOf = (
     schema: fixtureSchema,
     getState: () => state,
     dispatch: (tr) => {
-      if (state !== undefined) {
-        const before = state;
-
-        state = state.apply(tr);
-        emit(binding.plugin, state, before);
+      if (state === undefined) {
+        return;
       }
+
+      const before = state;
+
+      state = state.apply(tr);
+      emit(binding.plugin, state, before);
     },
     onInvalid,
   });

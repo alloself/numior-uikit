@@ -53,10 +53,12 @@ export const createStepLog = (): StepLog => {
   return {
     version: () => version,
     append: (steps, clientId, sent) => {
-      if (steps.length > 0) {
-        batches.push({ version, clientId, steps, sent });
-        version += steps.length;
+      if (steps.length === 0) {
+        return;
       }
+
+      batches.push({ version, clientId, steps, sent });
+      version += steps.length;
     },
     batchesSince: (from) =>
       batches.slice(firstAfter(batches, from)).reduce<LoggedBatch[]>((merged, batch) => {

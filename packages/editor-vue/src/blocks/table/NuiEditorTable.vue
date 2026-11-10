@@ -268,18 +268,22 @@ const onReorder = (event: NuiTableReorderEvent<NuiContentTableRow>): void => {
 watchDebounced(
   widths,
   (value) => {
-    if (Object.keys(value).length > 0) {
-      editor.run(resizeTableColumns(node.id, value));
-      widths.value = {};
+    if (Object.keys(value).length === 0) {
+      return;
     }
+
+    editor.run(resizeTableColumns(node.id, value));
+    widths.value = {};
   },
   { debounce: 400 },
 );
 
 watch(order, (value) => {
-  if (value.length > 0) {
-    editor.run(orderTableColumns(node.id, value));
-    order.value = [];
+  if (value.length === 0) {
+    return;
   }
+
+  editor.run(orderTableColumns(node.id, value));
+  order.value = [];
 });
 </script>

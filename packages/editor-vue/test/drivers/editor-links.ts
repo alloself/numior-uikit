@@ -7,10 +7,12 @@ const fill = (
   field: HTMLInputElement | HTMLTextAreaElement | null | undefined,
   value?: string,
 ): void => {
-  if (field !== null && field !== undefined && value !== undefined) {
-    field.value = value;
-    field.dispatchEvent(new Event('input', { bubbles: true }));
+  if (field === null || field === undefined || value === undefined) {
+    return;
   }
+
+  field.value = value;
+  field.dispatchEvent(new Event('input', { bubbles: true }));
 };
 
 export class EditorLinksDriver {

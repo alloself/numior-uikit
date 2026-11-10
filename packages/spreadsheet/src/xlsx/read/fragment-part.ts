@@ -399,10 +399,12 @@ export const createFragmentRecorder = (options: RecorderOptions): FragmentRecord
         top.frame.pieces[top.index] = `${top.opening}${declarations}`;
         top = undefined;
       }
-      if (open?.frame !== undefined) {
-        frames.pop();
-        push(settled(open.frame, opaque));
+      if (open?.frame === undefined) {
+        return;
       }
+
+      frames.pop();
+      push(settled(open.frame, opaque));
     },
     tail: () => {
       frames.splice(0, frames.length, tail);

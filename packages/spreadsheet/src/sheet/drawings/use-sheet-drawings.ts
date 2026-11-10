@@ -105,10 +105,12 @@ export const useSheetDrawings = (
     );
 
     urls.forEach((url, bytes) => {
-      if (!kept.has(url)) {
-        URL.revokeObjectURL(url);
-        urls.delete(bytes);
+      if (kept.has(url)) {
+        return;
       }
+
+      URL.revokeObjectURL(url);
+      urls.delete(bytes);
     });
   });
 

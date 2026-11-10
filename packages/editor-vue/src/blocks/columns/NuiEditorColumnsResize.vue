@@ -69,29 +69,33 @@ const pairAt = (index: number) => {
 const commit = (index: number, ratio: number): void => {
   const pair = pairAt(index);
 
-  if (pair !== undefined) {
-    const [first, second] = splitShares(pair.total, ratio);
-
-    editor.run(
-      setShares([
-        [pair.left.id, first],
-        [pair.right.id, second],
-      ]),
-    );
+  if (pair === undefined) {
+    return;
   }
+
+  const [first, second] = splitShares(pair.total, ratio);
+
+  editor.run(
+    setShares([
+      [pair.left.id, first],
+      [pair.right.id, second],
+    ]),
+  );
 };
 
 const preview = (index: number, ratio: number): void => {
   const pair = pairAt(index);
   const [first, second] = columnElements(element).slice(index, index + 2);
 
-  if (pair !== undefined && first !== undefined && second !== undefined) {
-    const [left, right] = splitShares(pair.total, ratio);
-
-    first.style.flexGrow = String(left);
-    second.style.flexGrow = String(right);
-    measure();
+  if (pair === undefined || first === undefined || second === undefined) {
+    return;
   }
+
+  const [left, right] = splitShares(pair.total, ratio);
+
+  first.style.flexGrow = String(left);
+  second.style.flexGrow = String(right);
+  measure();
 };
 
 const onPointerdown = (index: number, event: PointerEvent): void => {

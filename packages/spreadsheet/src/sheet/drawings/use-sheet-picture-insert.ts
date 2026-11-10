@@ -89,11 +89,13 @@ export const useSheetPictureInsert = (options: DrawingInsertOptions): PictureIns
   const onPaste = (event: ClipboardEvent): void => {
     const file = pastedImage(event.clipboardData);
 
-    if (file !== undefined && canInsert()) {
-      event.preventDefault();
-      event.stopPropagation();
-      void insert(file);
+    if (file === undefined || !canInsert()) {
+      return;
     }
+
+    event.preventDefault();
+    event.stopPropagation();
+    void insert(file);
   };
 
   const tools = (): readonly NuiMenuEntry[] =>

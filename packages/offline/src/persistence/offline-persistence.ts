@@ -177,10 +177,12 @@ export const offlinePersistence = (
     };
 
     const schedule = (): void => {
-      if (!scheduled) {
-        scheduled = true;
-        enqueue(write);
+      if (scheduled) {
+        return;
       }
+
+      scheduled = true;
+      enqueue(write);
     };
 
     return {

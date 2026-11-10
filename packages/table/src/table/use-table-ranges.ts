@@ -247,10 +247,12 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   };
 
   const stopReading = (): void => {
-    if (reading.value !== undefined) {
-      reading.value = undefined;
-      clearTextSelection();
+    if (reading.value === undefined) {
+      return;
     }
+
+    reading.value = undefined;
+    clearTextSelection();
   };
 
   const leaveReadingOn = (event: KeyboardEvent): void => {
@@ -269,16 +271,18 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   const announceSize = (list: NuiTableRanges): void => {
     const last = list.at(-1);
 
-    if (last !== undefined) {
-      const box = boxOf(last);
-
-      options.announce(
-        options.messages.value.rangeSelected({
-          rows: box.bottom - box.top + 1,
-          cols: box.end - box.start + 1,
-        }),
-      );
+    if (last === undefined) {
+      return;
     }
+
+    const box = boxOf(last);
+
+    options.announce(
+      options.messages.value.rangeSelected({
+        rows: box.bottom - box.top + 1,
+        cols: box.end - box.start + 1,
+      }),
+    );
   };
 
   const positionOf = (cell: Element): NuiTableCellPosition | undefined => {
@@ -446,11 +450,13 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   };
 
   const detach = (): void => {
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
-      window.removeEventListener('pointercancel', finish);
+    if (typeof window === 'undefined') {
+      return;
     }
+
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    window.removeEventListener('pointercancel', finish);
   };
 
   const finish = (): void => {
@@ -758,10 +764,12 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   watch(options.resetOn, clear);
 
   watch(options.ranges, (value) => {
-    if (!sameRanges(value, written)) {
-      others = undefined;
-      deselected.value = false;
+    if (sameRanges(value, written)) {
+      return;
     }
+
+    others = undefined;
+    deselected.value = false;
   });
 
   watch(options.enabled, (on) => {
@@ -795,10 +803,12 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     cellAtPoint: (x, y) => hitAt({ x, y }),
     onPointerdown,
     onMousedown: (event) => {
-      if (holdFocus || keepsMenuFocus(event)) {
-        holdFocus = false;
-        event.preventDefault();
+      if (!holdFocus && !keepsMenuFocus(event)) {
+        return;
       }
+
+      holdFocus = false;
+      event.preventDefault();
     },
     onClick,
     onDblclick,

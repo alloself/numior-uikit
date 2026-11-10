@@ -103,11 +103,13 @@ test.describe('wizard', () => {
     await expect(wizard.errorOf(wizard.control('email'))).toBeVisible();
     expect(await playground.hasHorizontalOverflow()).toBe(false);
 
-    if (!isMobile) {
-      const first = await boxOf(wizard.stepItem('Аккаунт'));
-      const second = await boxOf(wizard.stepItem('Команда'));
-
-      expect(first.x).toBeGreaterThan(second.x);
+    if (isMobile) {
+      return;
     }
+
+    const first = await boxOf(wizard.stepItem('Аккаунт'));
+    const second = await boxOf(wizard.stepItem('Команда'));
+
+    expect(first.x).toBeGreaterThan(second.x);
   });
 });

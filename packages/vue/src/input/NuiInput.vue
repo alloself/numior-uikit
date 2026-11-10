@@ -91,10 +91,12 @@ const state = { raw: mask ? applyMask(model.value, mask).raw : '' };
 
 watch(model, (value) => {
   const mirrored = outgoing(modifiers.trim ? draft.value.trim() : draft.value);
-  if (mirrored !== value) {
-    draft.value = display(value);
-    state.raw = mask ? applyMask(value, mask).raw : '';
+  if (mirrored === value) {
+    return;
   }
+
+  draft.value = display(value);
+  state.raw = mask ? applyMask(value, mask).raw : '';
 });
 
 const reformat = (element: HTMLInputElement, pattern: string, event: Event): void => {

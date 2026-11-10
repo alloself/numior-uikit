@@ -882,10 +882,12 @@ const columnWindow = useVirtualList(viewport, {
 });
 
 const onViewportScroll = (): void => {
-  if (windowed.value) {
-    rowWindow.measure();
-    columnWindow.measure();
+  if (!windowed.value) {
+    return;
   }
+
+  rowWindow.measure();
+  columnWindow.measure();
 };
 
 const wrappedCentre = computed(() => (fluid.value ? wrappedCentreOf(layout.value) : NO_COLUMNS));
@@ -2300,13 +2302,15 @@ const viewportEvents = {
   contextmenu: outsideDetail(cellMenu.onContextmenu),
   paste: outsideDetail(editing.onPaste),
   click: outsideDetail((event: MouseEvent) => {
-    if (!picker.onClick(event)) {
-      rangeSelect.onClick(event);
-      cellEditor.onClick(event);
+    if (picker.onClick(event)) {
+      return;
+    }
 
-      if (cellSelection) {
-        focus.reclaim();
-      }
+    rangeSelect.onClick(event);
+    cellEditor.onClick(event);
+
+    if (cellSelection) {
+      focus.reclaim();
     }
   }),
   dblclick: outsideDetail((event: MouseEvent) => {
@@ -2500,10 +2504,12 @@ const cellSlotted = computed(() => cellSlots.value.length > 0);
 onBeforeUpdate(() => {
   const names = cellSlotNames();
 
-  if (names.join() !== cellSlots.value.join()) {
-    cellSlots.value = names;
-    sync();
+  if (names.join() === cellSlots.value.join()) {
+    return;
   }
+
+  cellSlots.value = names;
+  sync();
 });
 
 const bodyRowView = (item: TableBodyRow): TableBodyRowView<T> =>

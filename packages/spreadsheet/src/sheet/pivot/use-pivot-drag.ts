@@ -224,11 +224,13 @@ export const usePivotDrag = (options: PivotDragOptions): PivotDrag => {
   };
 
   const onClickCapture = (event: MouseEvent): void => {
-    if (swallowClick) {
-      swallowClick = false;
-      event.preventDefault();
-      event.stopPropagation();
+    if (!swallowClick) {
+      return;
     }
+
+    swallowClick = false;
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   const cancel = (): void => {

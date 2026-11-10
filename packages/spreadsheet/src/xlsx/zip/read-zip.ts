@@ -120,10 +120,12 @@ const widened = (
       let field = at + 4;
 
       result.forEach((value, index) => {
-        if (value === WIDE && field + 8 <= at + 4 + size) {
-          result[index] = wide(view, field);
-          field += 8;
+        if (value !== WIDE || field + 8 > at + 4 + size) {
+          return;
         }
+
+        result[index] = wide(view, field);
+        field += 8;
       });
 
       return result;

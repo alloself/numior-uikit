@@ -143,17 +143,21 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
   };
 
   const push = (element: Element | undefined): void => {
-    if (element !== pushed || element?.classList.contains(PUSHED) === false) {
-      const before = pushed;
-      const leaving = atomStart(before);
-      const coming = atomStart(element);
+    const settled = element === pushed && element?.classList.contains(PUSHED) !== false;
 
-      before?.classList.remove(PUSHED);
-      element?.classList.add(PUSHED);
-      pushed = element;
-      glide(before, leaving);
-      glide(element, coming);
+    if (settled) {
+      return;
     }
+
+    const before = pushed;
+    const leaving = atomStart(before);
+    const coming = atomStart(element);
+
+    before?.classList.remove(PUSHED);
+    element?.classList.add(PUSHED);
+    pushed = element;
+    glide(before, leaving);
+    glide(element, coming);
   };
 
   const place = (element: Element | undefined, beside: boolean): void => {
@@ -218,10 +222,12 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
       const lost = hovered.value !== undefined && childNode(state.doc, hovered.value) === undefined;
       const moved = coarse.value && state.selection !== previous.selection;
 
-      if (lost || moved) {
-        hovered.value = undefined;
-        pin = undefined;
+      if (!lost && !moved) {
+        return;
       }
+
+      hovered.value = undefined;
+      pin = undefined;
     },
   );
 
@@ -237,15 +243,17 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
 
   const measure = (element: Element | undefined, beside: boolean): void => {
     measuredBeside = beside;
-    if (element !== measured) {
-      if (measured !== undefined) {
-        sizes?.unobserve(measured);
-      }
-      if (element !== undefined) {
-        sizes?.observe(element);
-      }
-      measured = element;
+    if (element === measured) {
+      return;
     }
+
+    if (measured !== undefined) {
+      sizes?.unobserve(measured);
+    }
+    if (element !== undefined) {
+      sizes?.observe(element);
+    }
+    measured = element;
   };
 
   onScopeDispose(() => {
@@ -296,10 +304,12 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
   };
 
   const release = (): void => {
-    if (!menuOpen.value && !dragging.value && pin?.armed !== false) {
-      hovered.value = undefined;
-      pin = undefined;
+    if (menuOpen.value || dragging.value || pin?.armed === false) {
+      return;
     }
+
+    hovered.value = undefined;
+    pin = undefined;
   };
 
   const outside = (target: Element): boolean =>
@@ -360,10 +370,12 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
       const outer =
         slot.value === undefined ? undefined : containerSlot(options.state().doc, slot.value);
 
-      if (outer !== undefined) {
-        hovered.value = outer;
-        pin = { armed: false };
+      if (outer === undefined) {
+        return;
       }
+
+      hovered.value = outer;
+      pin = { armed: false };
     },
   };
 };

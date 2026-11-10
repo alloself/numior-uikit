@@ -101,18 +101,22 @@ export const useTooltipTargets = (options: TooltipTargetsOptions): TooltipTarget
       }
     },
     onPointerout: (event) => {
-      if (targetOf(event.target) !== null && targetOf(event.relatedTarget) === null) {
-        hovered = null;
-        options.delay.scheduleClose();
+      if (targetOf(event.target) === null || targetOf(event.relatedTarget) !== null) {
+        return;
       }
+
+      hovered = null;
+      options.delay.scheduleClose();
     },
     onFocusin: (event) => {
       const next = targetOf(event.target);
 
-      if (next !== null && !options.disabled() && !options.pressedRecently()) {
-        take(next);
-        options.delay.openNow();
+      if (next === null || options.disabled() || options.pressedRecently()) {
+        return;
       }
+
+      take(next);
+      options.delay.openNow();
     },
     onFocusout: (event) => {
       if (targetOf(event.relatedTarget) === null) {

@@ -445,12 +445,14 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
   const resize = (): void => {
     const next = Math.max(1, options.blockSize());
 
-    if (next !== size) {
-      size = next;
-      reset(false);
-      notify();
-      options.onChange();
+    if (next === size) {
+      return;
     }
+
+    size = next;
+    reset(false);
+    notify();
+    options.onChange();
   };
 
   const beyond = (store: SourceStore<T>, block: number): boolean => {
@@ -537,22 +539,28 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
 
     query = next;
 
-    if (nextKey !== queryKey) {
-      queryKey = nextKey;
-      reset(!regrouped);
-      notify();
-      options.onChange();
-      fill();
+    if (nextKey === queryKey) {
+      return;
     }
+
+    queryKey = nextKey;
+    reset(!regrouped);
+    notify();
+    options.onChange();
+    fill();
   };
 
   const whenAnswered = (own: number): Promise<void> =>
     new Promise((resolve) => {
       const check = (): void => {
-        if (root.answered || failed || own !== version) {
-          listeners.delete(check);
-          resolve();
+        const waiting = !root.answered && !failed && own === version;
+
+        if (waiting) {
+          return;
         }
+
+        listeners.delete(check);
+        resolve();
       };
 
       listeners.add(check);

@@ -150,10 +150,12 @@ const activateFirst = (): void => {
 };
 
 const onInput = (event: Event): void => {
-  if (event.target instanceof HTMLInputElement) {
-    query.value = event.target.value;
-    emit('search', event.target.value);
+  if (!(event.target instanceof HTMLInputElement)) {
+    return;
   }
+
+  query.value = event.target.value;
+  emit('search', event.target.value);
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
@@ -162,10 +164,12 @@ const onKeydown = (event: KeyboardEvent): void => {
   }
   navigation.onKeydown(event);
 
-  if (event.key === Key.Enter && !event.defaultPrevented) {
-    event.preventDefault();
-    navigation.activeElement()?.click();
+  if (event.key !== Key.Enter || event.defaultPrevented) {
+    return;
   }
+
+  event.preventDefault();
+  navigation.activeElement()?.click();
 };
 
 const activateHovered = (event: PointerEvent): void => {

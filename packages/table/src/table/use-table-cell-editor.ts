@@ -298,10 +298,12 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
   const cancel = (): void => {
     const current = session.value;
 
-    if (current !== undefined) {
-      close();
-      options.focus(current.position);
+    if (current === undefined) {
+      return;
     }
+
+    close();
+    options.focus(current.position);
   };
 
   const input = (value: unknown): void => {

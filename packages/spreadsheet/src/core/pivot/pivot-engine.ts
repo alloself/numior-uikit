@@ -189,13 +189,15 @@ const rolledUp = (
 
     lineageOf(axes.rows.tree, rowLeaf).forEach((row) => {
       columnLineage.forEach((col) => {
-        if (row !== rowLeaf || col !== columnLeaf) {
-          const at = row * columnCount + col;
-          const target = totals.get(at) ?? createPivotAccumulator();
-
-          mergePivot(target, source);
-          totals.set(at, target);
+        if (row === rowLeaf && col === columnLeaf) {
+          return;
         }
+
+        const at = row * columnCount + col;
+        const target = totals.get(at) ?? createPivotAccumulator();
+
+        mergePivot(target, source);
+        totals.set(at, target);
       });
     });
   });
@@ -295,20 +297,22 @@ const linesOf = (
         });
       }
       walk(level + 1, child, next, nextValue);
-      if (!top && subtotalOf(level)) {
-        const values = known ? [nextValue] : definition.values.map((_, index) => index);
-
-        values.forEach((data) => {
-          lines.push({
-            kind: 'subtotal',
-            items: next,
-            depth: level,
-            node: child,
-            value: data,
-            shows: true,
-          });
-        });
+      if (top || !subtotalOf(level)) {
+        return;
       }
+
+      const values = known ? [nextValue] : definition.values.map((_, index) => index);
+
+      values.forEach((data) => {
+        lines.push({
+          kind: 'subtotal',
+          items: next,
+          depth: level,
+          node: child,
+          value: data,
+          shows: true,
+        });
+      });
     });
   };
 

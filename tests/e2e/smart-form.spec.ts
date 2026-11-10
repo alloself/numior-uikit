@@ -277,10 +277,12 @@ test.describe('smart form', () => {
     await expect(smartForm.errorOf(smartForm.control('name'))).toBeVisible();
     expect(await playground.hasHorizontalOverflow()).toBe(false);
 
-    if (!isMobile) {
-      const name = await boxOf(smartForm.control('name'));
-      const email = await boxOf(smartForm.control('email'));
-      expect(name.x).toBeGreaterThan(email.x + email.width);
+    if (isMobile) {
+      return;
     }
+
+    const name = await boxOf(smartForm.control('name'));
+    const email = await boxOf(smartForm.control('email'));
+    expect(name.x).toBeGreaterThan(email.x + email.width);
   });
 });

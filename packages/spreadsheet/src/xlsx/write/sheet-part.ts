@@ -146,13 +146,15 @@ const formulaBands = (sheet: Sheet, calculator: Calculator): Map<number, number[
   const bands = new Map<number, number[]>();
 
   calculator.forEachFormula((owner, row, col) => {
-    if (owner === sheet) {
-      const band = Math.floor(row / CHUNK_ROWS);
-      const keys = bands.get(band) ?? [];
-
-      keys.push(row * MAX_COLS + col);
-      bands.set(band, keys);
+    if (owner !== sheet) {
+      return;
     }
+
+    const band = Math.floor(row / CHUNK_ROWS);
+    const keys = bands.get(band) ?? [];
+
+    keys.push(row * MAX_COLS + col);
+    bands.set(band, keys);
   });
 
   return bands;
@@ -233,11 +235,13 @@ const createSink = (signal: AbortSignal | undefined): Sink => {
       }
     },
     pause: async () => {
-      if (performance.now() - started > BUDGET_MS) {
-        signal?.throwIfAborted();
-        await nextTask();
-        started = performance.now();
+      if (performance.now() - started <= BUDGET_MS) {
+        return;
       }
+
+      signal?.throwIfAborted();
+      await nextTask();
+      started = performance.now();
     },
     chunks: () => {
       flush();

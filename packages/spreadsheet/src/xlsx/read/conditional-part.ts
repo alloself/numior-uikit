@@ -522,10 +522,12 @@ export const createExtensionCollector = (): ConditionalCollector => {
   const closeRule = (current: ExtensionRule, name: XmlName): void => {
     current.raw.close(name);
     current.depth -= 1;
-    if (name.local === OoxmlElement.F && name.uri === XM && current.formula !== undefined) {
-      current.formulas.push(current.formula);
-      current.formula = undefined;
+    if (name.local !== OoxmlElement.F || name.uri !== XM || current.formula === undefined) {
+      return;
     }
+
+    current.formulas.push(current.formula);
+    current.formula = undefined;
   };
 
   const finished = (): void => {

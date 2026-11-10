@@ -298,14 +298,16 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
     const item = find(id);
 
     if (
-      item?.status === UploadStatus.Error &&
-      item.error.reason === UploadReason.Upload &&
-      item.file
+      item?.status !== UploadStatus.Error ||
+      item.error.reason !== UploadReason.Upload ||
+      !item.file
     ) {
-      replace(id, (current) => ({ ...fileOf(current), status: UploadStatus.Queued }));
-      state.cursor = Math.min(state.cursor, state.positions.get(id) ?? 0);
-      fill();
+      return;
     }
+
+    replace(id, (current) => ({ ...fileOf(current), status: UploadStatus.Queued }));
+    state.cursor = Math.min(state.cursor, state.positions.get(id) ?? 0);
+    fill();
   };
 
   const remove = (id: string): void => {

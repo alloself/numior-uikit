@@ -116,10 +116,12 @@ const onScroll = (): void => {
 const onKeydown = (event: KeyboardEvent): void => {
   const target = wheelTarget(event.key, options, selected);
 
-  if (target !== null) {
-    event.preventDefault();
-    choose(target);
+  if (target === null) {
+    return;
   }
+
+  event.preventDefault();
+  choose(target);
 };
 
 const onItemClick = (index: number): void => {

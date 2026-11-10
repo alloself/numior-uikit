@@ -205,10 +205,12 @@ const settle = (): void => {
 
   const button = root.value?.querySelector(`time[datetime="${focused.value}"]`)?.closest('button');
 
-  if (button instanceof HTMLButtonElement) {
-    focusIntent = undefined;
-    button.focus({ preventScroll: true });
+  if (!(button instanceof HTMLButtonElement)) {
+    return;
   }
+
+  focusIntent = undefined;
+  button.focus({ preventScroll: true });
 };
 
 const remember = (value: NuiCalendarValue | undefined): void => {

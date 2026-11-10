@@ -122,12 +122,14 @@ const gridElement = (): HTMLElement | null => {
 };
 
 const pinLeaving = (element: Element): void => {
-  if (element instanceof HTMLElement) {
-    element.inert = true;
-    element.style.top = `${element.offsetTop}px`;
-    element.style.left = `${element.offsetLeft}px`;
-    element.style.inlineSize = `${element.offsetWidth}px`;
+  if (!(element instanceof HTMLElement)) {
+    return;
   }
+
+  element.inert = true;
+  element.style.top = `${element.offsetTop}px`;
+  element.style.left = `${element.offsetLeft}px`;
+  element.style.inlineSize = `${element.offsetWidth}px`;
 };
 
 useBlockSizeTween(gridElement);

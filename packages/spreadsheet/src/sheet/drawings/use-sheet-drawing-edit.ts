@@ -101,11 +101,13 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
   };
 
   const select = (shown: ShownDrawing): void => {
-    if (canEdit(shown) && selectedId.value !== shown.drawing.id) {
-      selectedId.value = shown.drawing.id;
-      options.announce(options.messages().drawingSelected({ label: nameOf(shown) }));
-      options.focus();
+    if (!canEdit(shown) || selectedId.value === shown.drawing.id) {
+      return;
     }
+
+    selectedId.value = shown.drawing.id;
+    options.announce(options.messages().drawingSelected({ label: nameOf(shown) }));
+    options.focus();
   };
 
   const selectNew = (id: string, name: string): void => {
@@ -119,10 +121,12 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
   };
 
   const openSettings = (shown: ShownDrawing): void => {
-    if (shown.kind === ShownDrawingKind.Chart && canEdit(shown)) {
-      select(shown);
-      options.openSettings();
+    if (shown.kind !== ShownDrawingKind.Chart || !canEdit(shown)) {
+      return;
     }
+
+    select(shown);
+    options.openSettings();
   };
 
   const begin = (event: PointerEvent, shown: ShownDrawing, grip: FrameGrip | undefined): void => {
@@ -226,11 +230,13 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
   const onUp = (): void => {
     const ended = finish();
 
-    if (ended?.moved === true && ended.latest !== undefined) {
-      const { id, latest } = ended;
-
-      write((layout) => placeDrawing(layout, id, latest));
+    if (ended?.moved !== true || ended.latest === undefined) {
+      return;
     }
+
+    const { id, latest } = ended;
+
+    write((layout) => placeDrawing(layout, id, latest));
   };
 
   const onCancel = (): void => {
@@ -272,10 +278,12 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
   };
 
   const remove = (shown: ShownDrawing): void => {
-    if (write((layout) => removeDrawing(layout, shown.drawing.id))) {
-      deselect();
-      options.announce(options.messages().drawingRemoved({ label: nameOf(shown) }));
+    if (!write((layout) => removeDrawing(layout, shown.drawing.id))) {
+      return;
     }
+
+    deselect();
+    options.announce(options.messages().drawingRemoved({ label: nameOf(shown) }));
   };
 
   const onSelectedKey = (event: KeyboardEvent, shown: ShownDrawing): boolean => {

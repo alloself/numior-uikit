@@ -122,10 +122,12 @@ export const useUploadPreviews = <R>(): UploadPreviews<R> => {
     forget: (itemId) => {
       const url = previews.get(itemId);
 
-      if (url !== undefined) {
-        URL.revokeObjectURL(url);
-        previews.delete(itemId);
+      if (url === undefined) {
+        return;
       }
+
+      URL.revokeObjectURL(url);
+      previews.delete(itemId);
     },
     previewOf: (item) =>
       previews.get(item.id) ?? (item.type.startsWith('image/') ? item.url : undefined),
@@ -141,9 +143,11 @@ export const useUploadPicker = (options: UploadPickerOptions): UploadPicker => (
   onChange: () => {
     const input = options.input.value;
 
-    if (input) {
-      options.onFiles(Array.from(input.files ?? []));
-      input.value = '';
+    if (!input) {
+      return;
     }
+
+    options.onFiles(Array.from(input.files ?? []));
+    input.value = '';
   },
 });

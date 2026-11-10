@@ -167,10 +167,12 @@ export class PivotPanelDriver {
     const element = this.chip(chip);
     const list = this.panel.find('.nui-spreadsheet-pivot__fields').element;
 
-    if (element !== undefined) {
-      await this.hold(element, centreOf(list));
-      await this.release(centreOf(list));
+    if (element === undefined) {
+      return;
     }
+
+    await this.hold(element, centreOf(list));
+    await this.release(centreOf(list));
   }
 
   async dragField(field: string, area: string, touch = false): Promise<void> {
@@ -178,10 +180,12 @@ export class PivotPanelDriver {
       .findAll('.nui-spreadsheet-pivot__field')
       .find((item) => item.text() === field)?.element;
 
-    if (element !== undefined) {
-      await this.hold(element, this.pointIn(area), touch);
-      await this.release(this.pointIn(area), touch);
+    if (element === undefined) {
+      return;
     }
+
+    await this.hold(element, this.pointIn(area), touch);
+    await this.release(this.pointIn(area), touch);
   }
 
   get subview(): string | undefined {

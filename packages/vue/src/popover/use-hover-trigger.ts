@@ -79,10 +79,12 @@ export const useHoverTrigger = (options: HoverTriggerOptions): HoverTrigger => {
     }
     delay.closeNow();
 
-    if (within(document.activeElement, options.content())) {
-      returning = true;
-      options.trigger()?.focus();
+    if (!within(document.activeElement, options.content())) {
+      return;
     }
+
+    returning = true;
+    options.trigger()?.focus();
   };
 
   useEventListener(

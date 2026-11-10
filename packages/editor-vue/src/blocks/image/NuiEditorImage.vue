@@ -384,10 +384,12 @@ const keyStep = (event: KeyboardEvent): number | undefined => {
 const onGripKeydown = (event: KeyboardEvent): void => {
   const step = keyStep(event);
 
-  if (step !== undefined) {
-    event.preventDefault();
-    setWidth(share.value + step);
+  if (step === undefined) {
+    return;
   }
+
+  event.preventDefault();
+  setWidth(share.value + step);
 };
 
 const choose = (): void => {

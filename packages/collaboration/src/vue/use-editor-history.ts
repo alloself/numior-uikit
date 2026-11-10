@@ -149,10 +149,12 @@ export const useEditorHistory = (options: UseEditorHistoryOptions): CollabHistor
   const restore = (): void => {
     const version = loaded.value?.doc;
 
-    if (version !== undefined) {
-      editor()?.run(replaceDocument(version));
-      close();
+    if (version === undefined) {
+      return;
     }
+
+    editor()?.run(replaceDocument(version));
+    close();
   };
 
   onMounted(async () => {

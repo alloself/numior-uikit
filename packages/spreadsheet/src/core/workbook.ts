@@ -381,10 +381,12 @@ export const createWorkbook = (): Workbook => {
     removeSheet: (target) => {
       const index = sheets.indexOf(target);
 
-      if (index >= 0) {
-        sheets.splice(index, 1);
-        count.writes += 1;
+      if (index < 0) {
+        return;
       }
+
+      sheets.splice(index, 1);
+      count.writes += 1;
     },
     renameSheet: (target, name) => {
       const taken = sheet(name);
