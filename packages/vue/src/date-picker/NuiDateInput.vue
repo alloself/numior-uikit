@@ -14,8 +14,8 @@
     @beforeinput="onBeforeinput"
     @input="onInput"
     @compositionend="onCompositionend"
-    @change="text.settle"
-    @blur="text.settle"
+    @change="settle"
+    @blur="settle"
   />
 </template>
 
@@ -55,7 +55,7 @@ const {
   label,
 } = defineProps<NuiDateInputProps>();
 
-const emit = defineEmits<{ 'update:modelValue': [value: string | null] }>();
+const emit = defineEmits<{ 'update:modelValue': [value: string | null]; settle: [] }>();
 
 const inputElement = useTemplateRef<HTMLInputElement>('input');
 const localeRef = computed(() => locale);
@@ -136,6 +136,11 @@ const onInput = (event: Event): void => {
     return;
   }
   settleRaw(element, !(event instanceof InputEvent && event.inputType.startsWith('delete')));
+};
+
+const settle = (): void => {
+  text.settle();
+  emit('settle');
 };
 
 const onCompositionend = (): void => {

@@ -3,6 +3,30 @@ import { DateRangePickerDriver } from './drivers/date-range-picker';
 import { fieldTextsOf } from './support/field-texts';
 
 describe('NuiDateRangePicker', () => {
+  it('keeps a typed date in its field while it reverses the range and swaps the ends when the field is left', async () => {
+    const picker = DateRangePickerDriver.mount({
+      modelValue: { start: '2026-09-10', end: '2026-09-20' },
+    });
+
+    await picker.type(0, '25.09.2026');
+
+    expect(picker.texts).toEqual(['25.09.2026', '20.09.2026']);
+    expect(picker.value).toEqual({ start: '2026-09-10', end: '2026-09-20' });
+
+    await picker.leave(0);
+
+    expect(picker.value).toEqual({ start: '2026-09-20', end: '2026-09-25' });
+    expect(picker.texts).toEqual(['20.09.2026', '25.09.2026']);
+
+    await picker.type(1, '01.09.2026');
+    await picker.type(1, '22.09.2026');
+    await picker.leave(1);
+
+    expect(picker.value).toEqual({ start: '2026-09-20', end: '2026-09-22' });
+
+    picker.unmount();
+  });
+
   it('shows both ends, labels the end input and swaps reversed typed dates', async () => {
     const picker = DateRangePickerDriver.mount({
       modelValue: { start: '2026-09-10', end: '2026-09-20' },
@@ -16,6 +40,7 @@ describe('NuiDateRangePicker', () => {
     expect(picker.inputs[1]?.attributes('aria-label')).toBe('Конец');
 
     await picker.type(1, '05.09.2026');
+    await picker.leave(1);
     expect(picker.value).toEqual({ start: '2026-09-05', end: '2026-09-10' });
 
     await picker.type(0, '');

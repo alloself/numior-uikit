@@ -150,6 +150,42 @@ test.describe('dates', () => {
     await expect(input).toBeFocused();
   });
 
+  test('range picker keeps a typed date in its field and swaps the ends when the field is left', async ({
+    playground,
+    dates,
+    page,
+  }) => {
+    await playground.open();
+
+    const start = dates.input(dates.rangePicker, 0);
+    const end = dates.input(dates.rangePicker, 1);
+
+    await start.scrollIntoViewIfNeeded();
+    await start.fill('05.09.2026');
+    await end.fill('10.09.2026');
+
+    await expect
+      .poll(async () => (await dates.readOutput()).period)
+      .toEqual({ start: '2026-09-05', end: '2026-09-10' });
+
+    await start.focus();
+    await page.keyboard.press('ControlOrMeta+a');
+    await page.keyboard.type('20.09.2026');
+
+    await expect(start).toHaveValue('20.09.2026');
+    await expect(start).toBeFocused();
+    expect((await dates.readOutput()).period).toEqual({ start: '2026-09-05', end: '2026-09-10' });
+
+    await page.keyboard.press('Tab');
+
+    await expect
+      .poll(async () => (await dates.readOutput()).period)
+      .toEqual({ start: '2026-09-10', end: '2026-09-20' });
+
+    await expect(start).toHaveValue('10.09.2026');
+    await expect(end).toHaveValue('20.09.2026');
+  });
+
   test('range picker takes two picks or a preset and the time picker keeps the time', async ({
     playground,
     dates,
