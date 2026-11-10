@@ -127,8 +127,15 @@ test.describe('smart form', () => {
     await expect.poll(() => smartForm.names()).toEqual(['Вера', 'Борис', 'Анна']);
     await expect(smartForm.grip(3)).toBeFocused();
 
+    await page.keyboard.press('Space');
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('Space');
+    await expect.poll(() => smartForm.names()).toEqual(['Анна', 'Вера', 'Борис']);
+    await expect(smartForm.grip(1)).toBeFocused();
+
     await smartForm.remove(1).click();
-    await expect.poll(() => smartForm.names()).toEqual(['Борис', 'Анна']);
+    await expect.poll(() => smartForm.names()).toEqual(['Вера', 'Борис']);
     await expect(smartForm.addContact).toBeEnabled();
   });
 

@@ -10,6 +10,11 @@ export type RowFocus =
 const ROWS =
   ':scope > .nui-field-array__rows > .nui-field-array__row:not(.nui-field-array__row--leaving)';
 
+const PARTS: Readonly<Record<RowPart, string>> = {
+  [RowPart.Grip]: '.nui-field-array__grip',
+  [RowPart.Control]: '.nui-field-array__content',
+};
+
 const isElement = (node: Element): node is HTMLElement => node instanceof HTMLElement;
 
 export const rowsOf = (list: HTMLElement | null | undefined): HTMLElement[] =>
@@ -45,10 +50,7 @@ export const pointerOffset = (list: HTMLElement, pointer: number): number =>
   pointer - list.getBoundingClientRect().top;
 
 export const focusRow = (row: Element | null | undefined, part: RowPart): void => {
-  const element =
-    part === RowPart.Grip
-      ? row?.querySelector('.nui-field-array__grip')
-      : row?.querySelector('.nui-field-array__content')?.querySelector(FOCUSABLE);
+  const element = row?.querySelector(PARTS[part])?.querySelector(FOCUSABLE);
 
   if (element instanceof HTMLElement) {
     element.focus();

@@ -37,6 +37,7 @@
           :reorderable="reorderable"
           :removable="canRemove"
           :grip-disabled="gripDisabled"
+          :label="rowText(row.index + 1)"
           :move-label="moveText(row.index + 1)"
           :remove-label="removeText(row.index + 1)"
           @grab="onGripPointerdown(row.index, $event)"
@@ -63,7 +64,7 @@
       <span class="nui-field-array__indicator" aria-hidden="true" />
       <div v-if="ghostRow !== undefined" class="nui-field-array__ghost" aria-hidden="true">
         <span class="nui-field-array__ghost-grip"><NuiIcon icon="grip" /></span>
-        <span>{{ localized.row({ index: ghostRow + 1 }) }}</span>
+        <span>{{ rowText(ghostRow + 1) }}</span>
       </div>
     </div>
     <p v-if="array.errorMessage.value" :id="errorId" class="nui-field-array__error">
@@ -138,6 +139,7 @@ const {
   validateOn,
   addLabel,
   emptyLabel,
+  rowLabel,
   removeLabel,
   moveLabel,
 } = defineProps<NuiFieldArrayProps<T, R>>();
@@ -217,6 +219,8 @@ const describedBy = computed(
 );
 
 const rowId = (key: string): string => `${baseId.value}-row-${key}`;
+
+const rowText = (index: number): string => rowLabel?.(index) ?? localized.value.row({ index });
 
 const removeText = (index: number): string =>
   removeLabel?.(index) ?? localized.value.remove({ index });

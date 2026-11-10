@@ -51,6 +51,7 @@
           :reorderable="item.entry.reorderable"
           :new-row="item.entry.newRow"
           :add-label="item.entry.addLabel"
+          :row-label="item.entry.rowLabel"
           :remove-label="item.entry.removeLabel"
           :move-label="item.entry.moveLabel"
         >
