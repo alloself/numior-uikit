@@ -25,6 +25,10 @@ const SALES: readonly (readonly Input[])[] = [
 
 const CAPTIONS = pivotCaptions('en');
 
+const LONG_ITEMS = 4000;
+
+const SHOW_AS_BUDGET_MS = 100;
+
 const valueOf = (input: Input): CellValue => {
   if (typeof input === 'number') {
     return numberValue(input);
@@ -77,6 +81,33 @@ const shownText = (value: CellValue, format: string | undefined): string => {
     default:
       return String(value.value);
   }
+};
+
+const longPivot = (showAs: PivotValue['showAs']) => {
+  const cache = buildPivotCache(
+    pivotTableOf([
+      [textValue('Key'), textValue('Side'), textValue('Value')],
+      ...Array.from({ length: LONG_ITEMS * 2 }, (_, at) => [
+        numberValue(at % LONG_ITEMS),
+        textValue(at < LONG_ITEMS ? 'a' : 'b'),
+        numberValue((at % LONG_ITEMS) + 1),
+      ]),
+    ]),
+  );
+
+  if (cache === undefined) {
+    throw new Error('the source has no header');
+  }
+
+  const definition = definitionOf(
+    { kind: 'lost' },
+    { rows: [0], columns: [1], values: [{ ...sum(2, 'Shown'), showAs }] },
+  );
+
+  const started = performance.now();
+  const { cells } = computePivot(definition, cache);
+
+  return { cells, spent: performance.now() - started };
 };
 
 const grid = (changes: Partial<PivotDefinition>, rows: readonly (readonly Input[])[] = SALES) => {
@@ -282,6 +313,19 @@ describe('pivot engine', () => {
         ],
       }).slice(2),
     ).toEqual(['East |  | -250 | ', 'West |  | -80 | ', 'Grand Total |  | -330 | ']);
+  });
+
+  it('shows running totals, differences and shares of an item over thousands of items within the budget', () => {
+    const running = longPivot({ kind: 'runTotal', field: 0 });
+    const change = longPivot({ kind: 'difference', field: 0, item: 'previous' });
+    const share = longPivot({ kind: 'percent', field: 0, item: numberValue(0) });
+    const last = LONG_ITEMS - 1;
+
+    expect(running.cells[last]?.[1]).toEqual(numberValue((LONG_ITEMS * (LONG_ITEMS + 1)) / 2));
+    expect(change.cells[0]?.[0]).toEqual(EMPTY);
+    expect(change.cells[last]?.[0]).toEqual(numberValue(1));
+    expect(share.cells[last]?.[0]).toEqual(numberValue(LONG_ITEMS));
+    expect(Math.max(running.spent, change.spent, share.spent)).toBeLessThan(SHOW_AS_BUDGET_MS);
   });
 
   it('averages, spreads and counts with Excel semantics', () => {

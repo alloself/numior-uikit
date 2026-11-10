@@ -1,3 +1,4 @@
+import { memoize } from 'lodash-es';
 import { CellValueKind, type CellValue } from '../cell.types';
 import { ordered } from '../calc/coerce';
 import { EMPTY, errorValue, numberValue } from '../values';
@@ -350,6 +351,19 @@ const nodeAt = (axis: Axis, items: readonly number[]): number | undefined =>
     0,
   );
 
+const rankedItems = (rank: Int32Array | undefined): number[] =>
+  rank === undefined
+    ? []
+    : [...rank.keys()]
+        .filter((item) => (rank[item] ?? -1) >= 0)
+        .toSorted((left, right) => (rank[left] ?? 0) - (rank[right] ?? 0));
+
+const itemPlaces = (items: readonly CellValue[]): Map<string, number> =>
+  items.reduceRight(
+    (places, value, index) => places.set(pivotKey(value), index),
+    new Map<string, number>(),
+  );
+
 const ratio = (value: CellValue, base: CellValue): CellValue => {
   if (value.kind !== CellValueKind.Number || base.kind !== CellValueKind.Number) {
     return value.kind === CellValueKind.Error
@@ -412,6 +426,8 @@ const createEvaluator = (
   },
 ) => {
   const { rows, columns, totals, ranks } = context;
+  const orderOf = memoize((field: number) => rankedItems(ranks.get(field)));
+  const placesOf = memoize((field: number) => itemPlaces(cache.group(field)?.items ?? []));
 
   const raw = (data: number, row: number, col: number): CellValue => {
     const value = definition.values[data];
@@ -447,42 +463,41 @@ const createEvaluator = (
     rank: Int32Array,
     current: number,
   ): number | undefined => {
-    const order = [...rank.keys()]
-      .filter((item) => (rank[item] ?? -1) >= 0)
-      .toSorted((left, right) => (rank[left] ?? 0) - (rank[right] ?? 0));
-
-    const at = order.indexOf(current);
-    const items = cache.group(show.field)?.items ?? [];
+    const at = rank[current] ?? -1;
 
     if (show.item === PivotBaseStep.Previous) {
-      return order[at - 1];
+      return orderOf(show.field)[at - 1];
     }
     if (show.item === PivotBaseStep.Next) {
-      return order[at + 1];
+      return orderOf(show.field)[at + 1];
     }
-
-    const wanted = pivotKey(show.item);
-    const found = items.findIndex((value) => pivotKey(value) === wanted);
-
-    return found < 0 ? undefined : found;
+    return placesOf(show.field).get(pivotKey(show.item));
   };
 
-  const runningTotal = (
-    data: number,
-    placed: Placed,
-    rank: Int32Array,
-    position: { readonly current: number; readonly other: number },
-  ): CellValue =>
-    numberValue(
-      [...rank.keys()].reduce((sum, item) => {
-        const included =
-          (rank[item] ?? -1) >= 0 && (rank[item] ?? 0) <= (rank[position.current] ?? 0);
+  const runOf = memoize(
+    (data: number, field: number, placed: Placed, other: number): Float64Array => {
+      const order = orderOf(field);
+      const run = new Float64Array(order.length);
 
-        const total = included ? shifted(data, placed, position.other, item) : EMPTY;
+      order.reduce((sum, item, at) => {
+        const total = shifted(data, placed, other, item);
+        const next = sum + (total.kind === CellValueKind.Number ? total.value : 0);
 
-        return sum + (total.kind === CellValueKind.Number ? total.value : 0);
-      }, 0),
-    );
+        run[at] = next;
+        return next;
+      }, 0);
+
+      return run;
+    },
+    (data, field, placed, other) =>
+      [
+        data,
+        field,
+        other,
+        placed.axis === rows,
+        ...realItems(placed.axis, placed.line).with(placed.level, -1),
+      ].join(' '),
+  );
 
   const relative = (data: number, value: CellValue, row: PivotLine, col: PivotLine): CellValue => {
     const show = definition.values[data]?.showAs;
@@ -505,7 +520,7 @@ const createEvaluator = (
       return EMPTY;
     }
     if (show.kind === PivotShowAsKind.RunTotal) {
-      return runningTotal(data, placed, rank, { current, other });
+      return numberValue(runOf(data, show.field, placed, other)[rank[current] ?? -1] ?? 0);
     }
 
     const item = baseItem(show, rank, current);
