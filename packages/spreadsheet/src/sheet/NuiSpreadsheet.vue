@@ -411,7 +411,9 @@ const tabs = computed((): NuiTabDescriptor[] =>
   sheetList.value.map((each, index) => ({ value: String(index), label: each.name })),
 );
 
-const ownCalculator = computed(() => createCalculator(book, { locale: bookLocale.value }));
+let ownLocale = bookLocale.value;
+
+const ownCalculator = computed(() => createCalculator(book, { locale: ownLocale }));
 
 const locked = computed(() => readonly || report?.readOnly === true);
 
@@ -942,6 +944,15 @@ watch(
 watch(recalc.phase, (next, before) => {
   if (next === RecalcPhase.Idle && before === RecalcPhase.Running) {
     formula.announcement.value = messages.value.recalcDone;
+  }
+});
+
+watch(bookLocale, (next) => {
+  ownLocale = next;
+
+  if (calculator === undefined) {
+    ownCalculator.value.setLocale(next);
+    recalc.run();
   }
 });
 

@@ -343,6 +343,25 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.editorText).toBe('=СУММ(C2;0,25)');
   });
 
+  it('keeps formulas and the undo history when the locale changes', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.enter(3, 1, '=SUM(C2,0.25)');
+    await sheet.show({ locale: RU_LOCALE });
+
+    expect(sheet.text(3, 1)).toBe('100,0%');
+
+    await sheet.focus(3, 1);
+    await sheet.press('F2');
+
+    expect(sheet.editorText).toBe('=СУММ(C2;0,25)');
+
+    await sheet.press('Escape');
+    await sheet.press('z', { ctrl: true });
+
+    expect(sheet.text(3, 1)).toBe('');
+  });
+
   it('leaves a read-only sheet untouched', async () => {
     const sheet = sheetOf({ book: salesBook(), label: 'Sales book', readonly: true });
 
