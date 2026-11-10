@@ -139,6 +139,7 @@ const messages = useMessages(numberFieldMessages, locale);
 const incrementText = computed(() => incrementLabel ?? messages.value.increment);
 const decrementText = computed(() => decrementLabel ?? messages.value.decrement);
 const options = computed(() => withStepPrecision(formatOptions, step));
+const formatKey = computed(() => JSON.stringify([locale.value, options.value]));
 const symbols = computed(() => numberSymbols(locale.value, options.value));
 const format = (value: number | null): string => formatNumber(value, locale.value, options.value);
 const parse = (text: string): number | null => parseNumber(text, locale.value, options.value);
@@ -165,7 +166,7 @@ watch(model, (value) => {
   }
 });
 
-watch([locale, options], () => {
+watch(formatKey, () => {
   draft.value = format(model.value);
 });
 
@@ -175,6 +176,9 @@ const apply = (value: number | null): void => {
 };
 
 const commit = (): void => {
+  if (draft.value === valueText.value) {
+    return;
+  }
   const parsed = parse(draft.value);
   if (parsed === null) {
     apply(null);
