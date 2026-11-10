@@ -10,6 +10,10 @@ const TWO_FIFTHS_GREEN: Rgb = [193, 229, 202];
 
 const WHITE: Rgb = [255, 255, 255];
 
+const COLUMN_DRAG = 40;
+
+const DEFAULT_COLUMN = 64;
+
 const firstRowOf = (formula: string): number => Number(/[A-Z]+(\d+)/u.exec(formula)?.[1] ?? 0);
 
 test.describe('book', () => {
@@ -355,6 +359,40 @@ test.describe('book', () => {
 
     await book.chooseSheet('Заметки');
     await expect(book.cell('1', 0)).toHaveText('Второй лист без сетки');
+  });
+
+  test('keeps the width of a dragged column on its sheet, undoes it and resets it by a double click', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Заметки');
+
+    const elsewhere = await book.columnWidth('B');
+
+    await book.chooseSheet('Продажи');
+
+    const before = await book.columnWidth('B');
+
+    await book.dragColumnEdge('B', COLUMN_DRAG);
+    await expect.poll(() => book.columnWidth('B')).toBe(before + COLUMN_DRAG);
+
+    await book.chooseSheet('Заметки');
+    await expect.poll(() => book.columnWidth('B')).toBe(elsewhere);
+
+    await book.chooseSheet('Продажи');
+    await expect.poll(() => book.columnWidth('B')).toBe(before + COLUMN_DRAG);
+
+    await book.cell('2', 0).click();
+    await page.keyboard.press('Control+z');
+    await expect.poll(() => book.columnWidth('B')).toBe(before);
+
+    await page.keyboard.press('Control+y');
+    await book.columnEdge('B').dblclick();
+    await expect.poll(() => book.columnWidth('B')).toBe(DEFAULT_COLUMN);
   });
 
   test('shows the sheet under the tab menu and leaves the focus on the shown sheet', async ({

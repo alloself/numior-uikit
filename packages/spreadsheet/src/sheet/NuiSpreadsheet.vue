@@ -102,6 +102,7 @@
         :dir="sheetDir"
         v-model:active="formula.active.value"
         v-model:ranges="formula.ranges.value"
+        v-model:widths="columnSizes.widths.value"
         v-bind="table.grid"
         :draft="editing.draft.value"
         :columns="table.columns"
@@ -122,6 +123,7 @@
         size="sm"
         @update:draft="editing.setDraft"
         @pick="references.onPick"
+        @column-resize="columnSizes.commit"
       >
         <template #overlay="{ rectOf }">
           <NuiSpreadsheetDrawings
@@ -282,6 +284,7 @@ import {
 } from '../core';
 import { defaultRowHeight, sheetCells } from './sheet-cells';
 import { liveSource, sameColumns, type ColumnShape } from './sheet-table';
+import { useSheetColumnSizes } from './use-sheet-column-sizes';
 import NuiSpreadsheetAssist from './NuiSpreadsheetAssist.vue';
 import NuiSpreadsheetMarks from './NuiSpreadsheetMarks.vue';
 import NuiSpreadsheetPeers from './NuiSpreadsheetPeers.vue';
@@ -506,6 +509,15 @@ const editing = useSheetEditing({
     emit('change', change);
   },
 });
+
+const columnSizes = useSheetColumnSizes({
+  sheet: () => shownSheet.value,
+  cells: () => cells.value,
+  readonly: () => locked.value,
+  editing,
+});
+
+watch([shownSheet, layoutRevision], columnSizes.forget);
 
 const onRemoteSteps = (): void => {
   noteStructure();

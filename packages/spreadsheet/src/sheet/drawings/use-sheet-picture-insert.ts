@@ -5,13 +5,13 @@ import { markRaw } from 'vue';
 import {
   DrawingKind,
   PICTURE_TYPES,
-  StepKind,
   fittedPictureSize,
   freshDrawingId,
   insertDrawing,
   pictureAnchorAt,
   type DrawingSize,
 } from '../../core';
+import { applyLayout } from '../sheet-layout-step';
 import type { DrawingInsertOptions, PictureInsert } from './drawings.types';
 import { useSheetInsertSpot } from './use-sheet-insert-spot';
 
@@ -61,7 +61,7 @@ export const useSheetPictureInsert = (options: DrawingInsertOptions): PictureIns
       content: { kind: DrawingKind.Picture, media: id, type, bytes },
     });
 
-    if (options.editing.apply([{ kind: StepKind.SetLayout, sheet: sheet.name, layout }])) {
+    if (applyLayout(options.editing, sheet, layout)) {
       options.select(id, name);
     }
   };

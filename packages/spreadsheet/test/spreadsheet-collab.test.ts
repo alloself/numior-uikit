@@ -3,10 +3,12 @@ import {
   createCalculator,
   createWorkbook,
   createWorkbookDocument,
+  withLineSizes,
   type Calculator,
   type Workbook,
   type WorkbookDocument,
 } from '../src/core';
+import { layoutStepOf } from '../src/sheet/sheet-layout-step';
 import { SpreadsheetDriver } from './drivers/spreadsheet';
 
 interface SharedBook {
@@ -16,6 +18,10 @@ interface SharedBook {
 }
 
 const SHEET = 'Sheet1';
+
+const WIDE_COLUMN = 3;
+
+const WIDE_CHARS = 20;
 
 const SNAPSHOT = { steps: [{ kind: 'addSheet', name: SHEET, index: 0 }] };
 
@@ -53,6 +59,23 @@ const open = (
   mounted.push(driver);
 
   return driver;
+};
+
+const widen = ({ book, session }: SharedBook, col: number, chars: number): void => {
+  const sheet = book.sheet(SHEET);
+
+  const step =
+    sheet === undefined
+      ? undefined
+      : layoutStepOf(sheet, {
+          ...sheet.layout,
+          cols: withLineSizes(sheet.layout.cols, new Map([[col, chars]])),
+        });
+
+  if (step === undefined) {
+    throw new Error('the width did not change');
+  }
+  session.stepper.apply(step);
 };
 
 const receive = (session: WorkbookDocument, ...steps: readonly unknown[]): boolean =>
@@ -151,6 +174,24 @@ describe('NuiSpreadsheet in a shared book', () => {
     await driver.press('Enter');
 
     expect([driver.text(2, 0), driver.text(3, 0)]).toEqual(['', '']);
+  });
+
+  it('sends the width of a dragged column as one step and shows a width from someone else', async () => {
+    const mine = shared();
+    const theirs = shared();
+    const driver = open(mine);
+
+    await driver.settle();
+    await driver.dragColumnEdge('B', 36);
+
+    const sent = mine.session.pending().length;
+
+    widen(theirs, WIDE_COLUMN, WIDE_CHARS);
+    receive(mine.session, ...theirs.session.pending());
+    await driver.settle();
+
+    expect(sent).toBe(1);
+    expect([driver.columnWidth('B'), driver.columnWidth('D')]).toEqual(['100px', '140px']);
   });
 
   it('stops listening when it leaves the page', async () => {

@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { paintedRgbAt, rgbDelta, type Rgb } from '../helpers/color';
-import { boxOf, type Box, type Point } from '../helpers/geometry';
+import { boxOf, dragAcross, renderedWidth, type Box, type Point } from '../helpers/geometry';
 import type { XlsxFile } from '../helpers/xlsx';
 import { PivotPanel } from './pivot-panel';
 
@@ -69,6 +69,18 @@ export class BookSection {
 
   columnHeader(name: string): Locator {
     return this.grid.getByRole('columnheader', { name, exact: true });
+  }
+
+  columnEdge(name: string): Locator {
+    return this.columnHeader(name).locator('.nui-table__resizer');
+  }
+
+  columnWidth(name: string): Promise<number> {
+    return renderedWidth(this.columnHeader(name));
+  }
+
+  async dragColumnEdge(name: string, dx: number): Promise<void> {
+    await dragAcross(this.columnEdge(name), dx);
   }
 
   row(label: string): Locator {

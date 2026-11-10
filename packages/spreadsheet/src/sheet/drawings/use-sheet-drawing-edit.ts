@@ -2,7 +2,6 @@ import { Key } from '@numior/primitives';
 import { computed, shallowRef } from 'vue';
 import {
   DrawingKind,
-  StepKind,
   canEditDrawing,
   placeDrawing,
   removeDrawing,
@@ -11,6 +10,7 @@ import {
 } from '../../core';
 import { lineSizesOf } from '../sheet-cells';
 import { inField, inGrid } from '../sheet-keys';
+import { applyLayout } from '../sheet-layout-step';
 import type { FrameGrip } from '../sheet.types';
 import { allEdges, boxOfAnchor, edgesOf, movedAnchor, spanOf } from './drawing-box';
 import {
@@ -93,12 +93,7 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
   const write = (change: (layout: SheetLayout) => SheetLayout): boolean => {
     const sheet = options.sheet();
 
-    return (
-      sheet !== undefined &&
-      options.editing.apply([
-        { kind: StepKind.SetLayout, sheet: sheet.name, layout: change(sheet.layout) },
-      ])
-    );
+    return sheet !== undefined && applyLayout(options.editing, sheet, change(sheet.layout));
   };
 
   const select = (shown: ShownDrawing): void => {

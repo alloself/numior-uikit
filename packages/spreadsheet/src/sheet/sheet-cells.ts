@@ -43,6 +43,8 @@ const EDGE_STEPS: Readonly<Record<NuiTableEdgeDirection, EdgeStep>> = {
 
 const MDW = 7;
 
+const WIDTH_STEPS = 256;
+
 const DEFAULT_COLUMN = 64;
 
 const DEFAULT_ROW_POINTS = 15;
@@ -59,6 +61,9 @@ const SHAPES: Readonly<Record<CellValue['kind'], ValueShape>> = {
 
 export const charsToPixels = (chars: number): number =>
   Math.trunc(((256 * chars + Math.trunc(128 / MDW)) / 256) * MDW);
+
+export const pixelsToChars = (pixels: number): number =>
+  Math.round((pixels / MDW) * WIDTH_STEPS) / WIDTH_STEPS;
 
 export const pointsToPixels = (points: number): number => Math.round(points * POINT);
 

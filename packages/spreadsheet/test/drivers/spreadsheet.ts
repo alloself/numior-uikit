@@ -46,6 +46,10 @@ interface CellSpot {
   readonly col: number;
 }
 
+const EDGE_POINTER = 9;
+
+const EDGE_START = 100;
+
 const keydown = (target: Element, key: string, options: KeyOptions): boolean =>
   target.dispatchEvent(
     new KeyboardEvent('keydown', {
@@ -270,6 +274,70 @@ export class SpreadsheetDriver {
 
   get columnLabels(): string[] {
     return texts(this.wrapper, '.nui-table__row--head [role="columnheader"]').slice(1, 6);
+  }
+
+  private columnHeader(label: string): Element | undefined {
+    return this.wrapper
+      .findAll('.nui-table__row--head [role="columnheader"]')
+      .find((cell) => cell.text() === label)?.element;
+  }
+
+  columnWidth(label: string): string | undefined {
+    const head = this.columnHeader(label);
+    const siblings = [...(head?.parentElement?.children ?? [])];
+
+    const track =
+      head === undefined
+        ? undefined
+        : this.wrapper.element.querySelectorAll('colgroup > col')[siblings.indexOf(head)];
+
+    return track instanceof HTMLElement ? track.style.inlineSize : undefined;
+  }
+
+  async focusColumnHeader(label: string): Promise<void> {
+    const head = this.columnHeader(label);
+
+    if (head instanceof HTMLElement) {
+      head.focus();
+    }
+    await nextTick();
+  }
+
+  async resetColumnEdge(label: string): Promise<void> {
+    this.columnHeader(label)
+      ?.querySelector('.nui-table__resizer')
+      ?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+
+    await nextTick();
+  }
+
+  async dragColumnEdge(label: string, dx: number): Promise<void> {
+    const handle = this.columnHeader(label)?.querySelector('.nui-table__resizer');
+
+    if (handle === null || handle === undefined) {
+      throw new Error(`Column ${label} has no resize handle`);
+    }
+
+    handle.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        bubbles: true,
+        button: 0,
+        pointerId: EDGE_POINTER,
+        clientX: EDGE_START,
+      }),
+    );
+
+    window.dispatchEvent(
+      new PointerEvent('pointermove', { pointerId: EDGE_POINTER, clientX: EDGE_START + dx }),
+    );
+
+    await nextTick();
+
+    window.dispatchEvent(
+      new PointerEvent('pointerup', { pointerId: EDGE_POINTER, clientX: EDGE_START + dx }),
+    );
+
+    await nextTick();
   }
 
   get rowLabels(): string[] {

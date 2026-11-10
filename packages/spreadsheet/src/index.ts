@@ -1,5 +1,11 @@
 export { default as NuiSpreadsheet } from './sheet/NuiSpreadsheet.vue';
-export { charsToPixels, defaultRowHeight, pointsToPixels, sheetCells } from './sheet/sheet-cells';
+export {
+  charsToPixels,
+  defaultRowHeight,
+  pixelsToChars,
+  pointsToPixels,
+  sheetCells,
+} from './sheet/sheet-cells';
 export { spreadsheetMessages, type NuiSpreadsheetMessages } from './sheet/spreadsheet.messages';
 export {
   spreadsheetRulesMessages,

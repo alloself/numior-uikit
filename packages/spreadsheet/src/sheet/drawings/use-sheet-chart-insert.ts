@@ -1,7 +1,6 @@
 import { NuiMenuEntryType, type NuiMenuEntry } from '@numior/vue';
 import {
   DrawingKind,
-  StepKind,
   chartAnchorAt,
   chartDataRange,
   chartOfRange,
@@ -11,6 +10,7 @@ import {
   type DrawingAnchor,
   type SheetChartKind,
 } from '../../core';
+import { applyLayout } from '../sheet-layout-step';
 import { CHART_CHOICES, CHART_INSERT_ICON } from './chart-choices';
 import type { ChartInsertOptions } from './drawings.types';
 import { useSheetInsertSpot } from './use-sheet-insert-spot';
@@ -58,7 +58,7 @@ export const useSheetChartInsert = (
       content: { kind: DrawingKind.Chart, chart },
     });
 
-    if (options.editing.apply([{ kind: StepKind.SetLayout, sheet: sheet.name, layout }])) {
+    if (applyLayout(options.editing, sheet, layout)) {
       options.select(id, name);
     }
   };

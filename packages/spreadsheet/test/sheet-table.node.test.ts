@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { sheetCells, type SheetCells } from '../src';
+import { charsToPixels, pixelsToChars, sheetCells, type SheetCells } from '../src';
 import {
   EN_LOCALE,
   createCalculator,
@@ -7,6 +7,7 @@ import {
   createWorkbook,
   lineLayoutsOf,
   numberValue,
+  withLineSizes,
   type LineLayout,
   type Sheet,
   type WorkbookStep,
@@ -22,6 +23,8 @@ interface OpenSheet {
 const SHEET = 'Sheet1';
 
 const WIDE_COLUMN = 3;
+
+const WIDEST_PIXELS = 600;
 
 const WIDE: LineLayout = {
   size: 40,
@@ -117,5 +120,33 @@ describe('columns of a sheet', () => {
     expect(live.nextEdge({ row: 0, col: 0 }, 'down')).toEqual({ row: 3, col: 0 });
     expect([live.rows, live.cols]).toEqual([built.rows, built.cols]);
     expect([live.columnLabel(1), live.rowLabel(3)]).toEqual(['B', '4']);
+  });
+});
+
+describe('widths of columns', () => {
+  it('come back as the same pixels after they are stored in characters', () => {
+    const pixels = Array.from({ length: WIDEST_PIXELS }, (_, index) => index + 1);
+
+    expect(pixels.map((each) => charsToPixels(pixelsToChars(each)))).toEqual(pixels);
+  });
+
+  it('are set on a line as a width of its own and leave no trace once they are reset', () => {
+    const sized = withLineSizes(lineLayoutsOf([]), new Map([[WIDE_COLUMN, WIDE.size]]));
+    const reset = withLineSizes(sized, new Map([[WIDE_COLUMN, undefined]]));
+
+    expect(sized.get(WIDE_COLUMN)).toEqual({ ...WIDE, size: WIDE.size });
+    expect(reset.size).toBe(0);
+  });
+
+  it('keep what else a line holds when its width is reset', () => {
+    const hidden = lineLayoutsOf([[WIDE_COLUMN, { ...WIDE, hidden: true }]]);
+    const reset = withLineSizes(hidden, new Map([[WIDE_COLUMN, undefined]]));
+
+    expect(reset.get(WIDE_COLUMN)).toEqual({
+      ...WIDE,
+      size: undefined,
+      custom: false,
+      hidden: true,
+    });
   });
 });

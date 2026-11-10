@@ -96,6 +96,14 @@ references. Dragging the handle back clears cells.
 The cell menu holds inserting and deleting rows and columns, conditional formatting, pivot tables,
 charts and pictures. Sheets are added, renamed and deleted on their tabs.
 
+### Column widths
+
+Drag the right edge of a column header, or press `Alt` with an arrow on the header. The width is
+stored in the book per sheet: `Ctrl+Z` undoes it, XLSX files keep it and co-authors see it. A double
+click on the edge returns the default width.
+
+In a read-only book the width changes on screen only, while this sheet is shown.
+
 ## Accessibility
 
 The sheet is marked up as `role="grid"`. Tab enters it once, and the arrows move focus between
