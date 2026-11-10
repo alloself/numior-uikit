@@ -2,7 +2,7 @@ import { fromHTML, toHTML, toJSON } from '@numior/editor-core';
 import { generateDoc } from '@numior/editor-core/fixtures';
 import { describe, expect, it } from 'vite-plus/test';
 import { contentSchema } from '../src';
-import { everyBlock } from './support/documents';
+import { docOf, everyBlock, node } from './support/documents';
 
 const blocksOf = (html: string): readonly unknown[] =>
   toJSON(fromHTML(contentSchema, html)).root.content?.map((block) => stripIds(block)) ?? [];
@@ -33,6 +33,36 @@ describe('content HTML', () => {
     expect(toHTML(fromHTML(contentSchema, toHTML(page), { whitespace: 'preserve' }))).toBe(
       toHTML(page),
     );
+  });
+
+  it('keeps the caption of an image set in the line through its markup', () => {
+    const page = docOf(
+      node('paragraph', [
+        'See ',
+        node('image', [], { src: 'a.png', alt: 'A', caption: 'Hidden for now', wrap: 'inline' }),
+      ]),
+    );
+
+    const markup = toHTML(page);
+
+    expect(markup).not.toContain('nui-content__caption');
+
+    expect(blocksOf(markup)).toEqual([
+      paragraph(
+        { text: 'See ' },
+        {
+          type: 'image',
+          attrs: {
+            src: 'a.png',
+            alt: 'A',
+            caption: 'Hidden for now',
+            width: null,
+            align: 'center',
+            wrap: 'inline',
+          },
+        },
+      ),
+    ]);
   });
 
   it('reads generated documents back from their markup', () => {

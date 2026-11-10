@@ -216,7 +216,9 @@ const captionIn = (holder: HtmlElement | undefined): string =>
     )
   )
     ?.text()
-    .trim() ?? '';
+    .trim() ??
+  holder?.attr('data-caption')?.trim() ??
+  '';
 
 const imageAttrs = (image: HtmlElement | undefined, holder?: HtmlElement): ParsedAttrs => {
   const src = image?.attr('src');
@@ -344,13 +346,15 @@ export const imageWidthStyle = (width: AttrValue | undefined): string | null =>
 
 const renderImage = (node: ElementNode) => {
   const wrap = textOf(node.attrs.wrap);
-  const caption = wrap === NuiContentWrap.Inline ? '' : textOf(node.attrs.caption);
+  const kept = textOf(node.attrs.caption);
+  const caption = wrap === NuiContentWrap.Inline ? '' : kept;
 
   return renderTag(
     'span',
     {
       class: part('image', `wrap-${wrap}`, `align-${textOf(node.attrs.align)}`),
       style: imageWidthStyle(node.attrs.width),
+      'data-caption': caption === '' && kept !== '' ? kept : null,
     },
     [
       renderTag('img', {
