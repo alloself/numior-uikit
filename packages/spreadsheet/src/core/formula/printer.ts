@@ -99,7 +99,9 @@ const wrapped = (node: FormulaNode, printing: Printing, above: number): string =
   return precedenceOf(node) < above ? `(${text})` : text;
 };
 
-const constantText = (node: FormulaNode, locale: FormulaLocale): string | undefined => {
+const constantText = (node: FormulaNode, printing: Printing): string | undefined => {
+  const { locale } = printing;
+
   switch (node.kind) {
     case FormulaNodeKind.Number:
       return numberText(node.value, locale);
@@ -108,9 +110,11 @@ const constantText = (node: FormulaNode, locale: FormulaLocale): string | undefi
     case FormulaNodeKind.Boolean:
       return node.value ? locale.trueText : locale.falseText;
     case FormulaNodeKind.Error:
-      return locale.errors[node.code];
+      return `${sheetPrefix(node, printing)}${locale.errors[node.code]}`;
     case FormulaNodeKind.Missing:
       return '';
+    case FormulaNodeKind.Opaque:
+      return node.text;
     default:
       return undefined;
   }
@@ -162,7 +166,7 @@ const operationText = (node: FormulaNode, printing: Printing): string => {
 const printNode = (node: FormulaNode, printing: Printing): string =>
   node.kind === FormulaNodeKind.Structured
     ? `${sheetPrefix({ book: node.book }, printing)}${printStructured(node, printing.locale)}`
-    : (constantText(node, printing.locale) ??
+    : (constantText(node, printing) ??
       referenceText(node, printing) ??
       operationText(node, printing));
 

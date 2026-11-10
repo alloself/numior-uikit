@@ -542,6 +542,23 @@ describe('writing xlsx', () => {
     expect(await partOf(bytes, 'xl/worksheets/sheet1.xml')).not.toContain('scenario');
   });
 
+  it('writes back as they were the formulas it could not read', async () => {
+    const sheet = SALES_SHEET.replace('B2*Rate', 'SUM(Sales:Rates!B1)')
+      .replace('B3*Rate', '_xlfn.XLOOKUP(1,B2:B4 B3:C3,1)')
+      .replace('B4*Rate', 'Rates!#REF!+1');
+
+    const read = await opened(await xlsxPackage({ 'xl/worksheets/sheet1.xml': sheet }));
+    const text = await partOf(await written(read, read.source), 'xl/worksheets/sheet1.xml');
+
+    [
+      '<f>SUM(Sales:Rates!B1)</f><v>0.75</v>',
+      '<f>_xlfn.XLOOKUP(1,B2:B4 B3:C3,1)</f><v>0.25</v>',
+      '<f>Rates!#REF!+1</f>',
+    ].forEach((piece) => {
+      expect(text).toContain(piece);
+    });
+  });
+
   it('moves the sheet view, validations, links, breaks and filters with lines and sheet names', async () => {
     const validations = `<dataValidations count="2"><dataValidation type="list" sqref="B2:B4"><formula1>$A$2:$A$4</formula1></dataValidation><dataValidation type="whole" sqref="H9"><formula1>B2</formula1></dataValidation></dataValidations>`;
     const links = `<hyperlinks><hyperlink ref="A2" r:id="rId2"/><hyperlink ref="A4" location="Rates!B1" display="Rate"/></hyperlinks>`;

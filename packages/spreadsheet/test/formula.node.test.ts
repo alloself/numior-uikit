@@ -327,6 +327,20 @@ describe('formula parser', () => {
     expect(printFormula(astOf('=-@A1:A3+SINGLE(B1:B2)'))).toBe('-@A1:A3+@B1:B2');
   });
 
+  it('reads and prints a lost reference that still names its sheet', () => {
+    expect(astOf('=Rates!#REF!+1')).toMatchObject({
+      kind: 'binary',
+      left: { kind: 'error', code: '#REF!', sheet: 'Rates' },
+    });
+
+    expect(printFormula(astOf("='My sheet'!#REF!*Rates!#REF!"))).toBe(
+      "'My sheet'!#REF!*Rates!#REF!",
+    );
+
+    expect(printFormula(astOf('=Лист1!#ССЫЛКА!', RU_FORMULAS), RU_FORMULAS)).toBe('Лист1!#ССЫЛКА!');
+    expect(failureOf('=Rates!#N/A')).toMatchObject({ reason: 'reference' });
+  });
+
   it('points at the place where a formula breaks', () => {
     expect(failureOf('=1+')).toEqual({ position: 3, reason: 'end' });
     expect(failureOf('=1+)')).toEqual({ position: 3, reason: 'token' });

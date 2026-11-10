@@ -48,6 +48,7 @@ export interface SheetCounts {
   formulas: number;
   kept: number;
   unparsed: number;
+  opaque: number;
   dataTables: number;
   merges: number;
   conditional: number;
@@ -100,6 +101,7 @@ const emptyCounts = (): SheetCounts => ({
   formulas: 0,
   kept: 0,
   unparsed: 0,
+  opaque: 0,
   dataTables: 0,
   merges: 0,
   conditional: 0,
@@ -234,7 +236,7 @@ export const readSheetPart = async (
     const parsed = parseFormula(formula.text.replaceAll(PREFIXES, ''), EN_FORMULAS, current);
 
     if (!parsed.ok) {
-      return undefined;
+      return formula.text.trim() === '' ? undefined : { kind: 'opaque', text: formula.text };
     }
 
     const ast =
@@ -260,7 +262,8 @@ export const readSheetPart = async (
       return;
     }
 
-    let known = true;
+    const opaque = ast.kind === FormulaNodeKind.Opaque;
+    let known = !opaque;
 
     callsIn(ast, (name) => {
       if (!context.known(name)) {
@@ -275,6 +278,7 @@ export const readSheetPart = async (
     );
 
     counts.formulas += 1;
+    counts.opaque += opaque ? 1 : 0;
     counts.kept += known ? 0 : 1;
     counts.externalTables += external ? 1 : 0;
 

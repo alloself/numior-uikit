@@ -186,6 +186,8 @@ const constantOf = (node: FormulaNode): CellValue => {
       return { kind: 'boolean', value: node.value };
     case FormulaNodeKind.Error:
       return errorValue(node.code);
+    case FormulaNodeKind.Opaque:
+      return errorValue('#NAME?');
     default:
       return EMPTY;
   }

@@ -96,7 +96,11 @@ export const isFormula: Guard<FormulaNode> = byKind({
   [FormulaNodeKind.Number]: shapeOf({ kind: oneOf(FormulaNodeKind.Number), value: isNumber }),
   [FormulaNodeKind.String]: shapeOf({ kind: oneOf(FormulaNodeKind.String), value: isString }),
   [FormulaNodeKind.Boolean]: shapeOf({ kind: oneOf(FormulaNodeKind.Boolean), value: isBoolean }),
-  [FormulaNodeKind.Error]: shapeOf({ kind: oneOf(FormulaNodeKind.Error), code: isCellError }),
+  [FormulaNodeKind.Error]: shapeOf({
+    kind: oneOf(FormulaNodeKind.Error),
+    code: isCellError,
+    ...PLACE,
+  }),
   [FormulaNodeKind.Cell]: shapeOf({
     kind: oneOf(FormulaNodeKind.Cell),
     ...PLACE,
@@ -159,6 +163,7 @@ export const isFormula: Guard<FormulaNode> = byKind({
     rows: listOf(listOf(operand)),
   }),
   [FormulaNodeKind.Missing]: shapeOf({ kind: oneOf(FormulaNodeKind.Missing) }),
+  [FormulaNodeKind.Opaque]: shapeOf({ kind: oneOf(FormulaNodeKind.Opaque), text: isString }),
 });
 
 export const isCellContent: Guard<CellContent> = byKind({

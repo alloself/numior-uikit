@@ -121,6 +121,7 @@ const READ_ONLY = new Set<XlsxLimitationCode>([
 const SHEET_COUNTS: readonly (readonly [keyof Omit<SheetCounts, 'unknown'>, XlsxLimitationCode])[] =
   [
     ['unparsed', 'formula-syntax'],
+    ['opaque', 'formula-kept'],
     ['dataTables', 'data-tables'],
     ['merges', 'merged-cells'],
     ['conditional', 'conditional-formats'],

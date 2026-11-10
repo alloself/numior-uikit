@@ -26,6 +26,10 @@ import {
 
 type Opened = Extract<XlsxRead, { readonly kind: 'editable' | 'read-only' }>;
 
+const UNREAD_FORMULAS = SALES_SHEET.replace('B2*Rate', 'SUM(Sales:Rates!B1)')
+  .replace('B3*Rate', 'B2:B4 B3:C3')
+  .replace('B4*Rate', 'Rates!#REF!+1');
+
 const opened = async (
   changes: Readonly<Record<string, string | undefined>> = {},
   options: ReadOptions = {},
@@ -331,9 +335,32 @@ describe('reading xlsx', () => {
 
     expect(
       (
-        await opened({ 'xl/worksheets/sheet1.xml': SALES_SHEET.replace('B2*Rate', 'B2*(') })
+        await opened({ 'xl/worksheets/sheet1.xml': SALES_SHEET.replace('B2*2', 'B2*(') })
       ).report.items.find((item) => item.code === 'formula-syntax'),
-    ).toMatchObject({ severity: 'read-only', count: 1, sheets: ['Sales'] });
+    ).toMatchObject({ severity: 'read-only', count: 2, sheets: ['Sales'] });
+  });
+
+  it('keeps a formula it cannot read with the value saved in the file', async () => {
+    const read = await opened({ 'xl/worksheets/sheet1.xml': UNREAD_FORMULAS });
+    const sales = viewOf(read);
+
+    read.calculator.recalculate({ imported: true, budgetMs: Number.POSITIVE_INFINITY });
+
+    expect(read.kind).toBe('editable');
+
+    expect(read.report.items.find((item) => item.code === 'formula-kept')).toMatchObject({
+      severity: 'info',
+      count: 2,
+      sheets: ['Sales'],
+    });
+
+    expect(['C2', 'C3', 'C4'].map(sales.input)).toEqual([
+      '=SUM(Sales:Rates!B1)',
+      '=B2:B4 B3:C3',
+      '=Rates!#REF!+1',
+    ]);
+
+    expect(['C2', 'C3', 'C4'].map(sales.shown)).toEqual(['75.0%', '25.0%', '#REF!']);
   });
 
   it('keeps the original bytes and tells parsed parts from opaque ones', async () => {

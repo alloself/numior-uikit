@@ -51,7 +51,12 @@ export type FormulaNode =
   | { readonly kind: typeof FormulaNodeKind.Number; readonly value: number }
   | { readonly kind: typeof FormulaNodeKind.String; readonly value: string }
   | { readonly kind: typeof FormulaNodeKind.Boolean; readonly value: boolean }
-  | { readonly kind: typeof FormulaNodeKind.Error; readonly code: CellError }
+  | {
+      readonly kind: typeof FormulaNodeKind.Error;
+      readonly code: CellError;
+      readonly book?: number | undefined;
+      readonly sheet?: string | undefined;
+    }
   | {
       readonly kind: typeof FormulaReferenceKind.Cell;
       readonly book?: number | undefined;
@@ -119,7 +124,8 @@ export type FormulaNode =
       readonly kind: typeof FormulaNodeKind.Array;
       readonly rows: readonly (readonly FormulaNode[])[];
     }
-  | { readonly kind: typeof FormulaNodeKind.Missing };
+  | { readonly kind: typeof FormulaNodeKind.Missing }
+  | { readonly kind: typeof FormulaNodeKind.Opaque; readonly text: string };
 
 export interface FormulaFailure {
   readonly position: number;
@@ -152,6 +158,7 @@ export const FormulaNodeKind = {
   Binary: 'binary',
   Array: 'array',
   Missing: 'missing',
+  Opaque: 'opaque',
 } as const;
 
 export const StructuredPartKind = { Special: 'special', Columns: 'columns' } as const;

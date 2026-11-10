@@ -40,6 +40,8 @@ class FormulaSyntaxError extends Error {
 
 const COMPARISONS: readonly BinaryOperator[] = ['=', '<>', '<', '>', '<=', '>='];
 
+const LOST_REFERENCE = '#REF!';
+
 const COLUMN_WORD = /^(\$?)([A-Za-z]{1,3})$/u;
 
 const ROW_WORD = /^(\$?)(\d{1,7})$/u;
@@ -264,6 +266,7 @@ const createParser = (
   const sheetItem = (place: SheetPlace, token: Token): FormulaNode =>
     reference(place, token) ??
     bookTable(place, token) ??
+    lostReference(place, token) ??
     (token.kind === TokenKind.Word && !isPunct('(') && booleanOf(token, locale) === undefined
       ? { kind: 'name', ...place, name: token.text }
       : fail(token, 'reference'));
@@ -350,6 +353,11 @@ const createParser = (
     },
   };
 };
+
+const lostReference = (place: SheetPlace, token: Token): FormulaNode | undefined =>
+  token.kind === TokenKind.Error && token.text === LOST_REFERENCE
+    ? { kind: 'error', code: LOST_REFERENCE, ...place }
+    : undefined;
 
 const placeOf = (token: Token, books: ParseOptions['books']): SheetPlace | undefined => {
   const sheet = token.text === '' ? {} : { sheet: token.text };
