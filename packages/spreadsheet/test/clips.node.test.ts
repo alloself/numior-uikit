@@ -41,14 +41,14 @@ const openClips = () => {
       run(pasted?.step);
       return pasted?.area;
     },
-    cutPaste: (from: string, to: string) => {
+    cutPaste: (from: string, to: string, sheet = 'Sheet1') => {
       const clip = clips.copy('Sheet1', rangeAt(from));
       const target = rangeAt(to);
 
       if (clip === undefined) {
         throw new Error(`${from} cannot be copied`);
       }
-      run(clips.move('Sheet1', clip, { row: target.top, col: target.left })?.step);
+      run(clips.move(sheet, clip, { row: target.top, col: target.left })?.step);
     },
     fill: (from: string, to: string, mode?: FillMode) => {
       run(clips.fill('Sheet1', rangeAt(from), rangeAt(to), mode));
@@ -108,6 +108,65 @@ describe('cell clips', () => {
     expect(sheet.input('B1')).toBe('');
     expect(sheet.input('D5')).toBe('=A1+1');
     expect(sheet.shown('D5')).toBe('5');
+  });
+
+  it('moves a cut block with the references between its own cells', () => {
+    const sheet = openClips();
+
+    sheet.type('A1', '2');
+    sheet.type('A2', '5');
+    sheet.type('B2', '=A2*10+$A$1');
+    sheet.type('C2', '=SUM(A2:B2)');
+    sheet.cutPaste('A2:C2', 'D7');
+
+    expect(sheet.input('E7')).toBe('=D7*10+$A$1');
+    expect(sheet.input('F7')).toBe('=SUM(D7:E7)');
+    expect(sheet.shown('F7')).toBe('57');
+    expect(['A2', 'B2', 'C2'].map((cell) => sheet.input(cell))).toEqual(['', '', '']);
+  });
+
+  it('points the formulas of the book at the place a cut block has moved to', () => {
+    const sheet = openClips();
+
+    sheet.type('A1', '4');
+    sheet.type('A2', '6');
+    sheet.type('C1', '=A1+$A$2');
+    sheet.type('C2', '=SUM(A1:A2)');
+    sheet.type('C3', '=SUM(A1:A5)');
+    sheet.type('C4', '=SUM(A:A)');
+    sheet.type('B1', '=Sheet1!A2', 'Rates');
+    sheet.cutPaste('A1:A2', 'D5');
+
+    expect(['C1', 'C2', 'C3', 'C4'].map((cell) => sheet.input(cell))).toEqual([
+      '=D5+$D$6',
+      '=SUM(D5:D6)',
+      '=SUM(A1:A5)',
+      '=SUM(A:A)',
+    ]);
+
+    expect(sheet.input('B1', 'Rates')).toBe('=Sheet1!D6');
+    expect(['C1', 'C2', 'C3'].map((cell) => sheet.shown(cell))).toEqual(['10', '10', '0']);
+
+    sheet.history.undo();
+
+    expect(['C1', 'C2'].map((cell) => sheet.input(cell))).toEqual(['=A1+$A$2', '=SUM(A1:A2)']);
+    expect(sheet.input('B1', 'Rates')).toBe('=Sheet1!A2');
+    expect(sheet.shown('C2')).toBe('10');
+  });
+
+  it('keeps the references of a block cut to another sheet on the cells they named', () => {
+    const sheet = openClips();
+
+    sheet.type('A1', '4');
+    sheet.type('B1', '=A1+1');
+    sheet.type('B2', '=B1*2');
+    sheet.type('C1', '=B1+B2');
+    sheet.cutPaste('B1:B2', 'A1', 'Rates');
+
+    expect(sheet.input('A1', 'Rates')).toBe('=Sheet1!A1+1');
+    expect(sheet.input('A2', 'Rates')).toBe('=A1*2');
+    expect(sheet.input('C1')).toBe('=Rates!A1+Rates!A2');
+    expect(sheet.shown('C1')).toBe('15');
   });
 
   it('undoes a paste in one step', () => {

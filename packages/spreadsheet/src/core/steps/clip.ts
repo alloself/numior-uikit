@@ -1,11 +1,11 @@
-import { MAX_COLS, MAX_ROWS } from '../address';
+import { MAX_COLS, MAX_ROWS, containsCell } from '../address';
 import type { Calculator } from '../calc/calculator';
 import type { CellContent } from '../calc/calc.types';
 import { CellInputKind, CellValueKind, type CellAddress, type CellRange } from '../cell.types';
 import type { CellDecoration } from '../decorations';
 import { parseNumberFormat } from '../format/format-code';
 import { SectionKind } from '../format/format.types';
-import { absoluteFormula, relativeFormula } from '../formula/origin';
+import { followMove, type BlockMove, type FormulaPlace } from '../formula/follow-move';
 import { numberValue, textValue } from '../values';
 import type { Sheet, Workbook } from '../workbook';
 import { FillMode, type CellClip, type CellClips, type ClipPaste } from './clip.types';
@@ -212,9 +212,14 @@ const tiledArea = (clip: CellClip, target: CellRange): CellRange => {
   };
 };
 
-const placedContent = (content: CellContent | undefined, from: CellAddress, to: CellAddress) =>
+const placedContent = (
+  content: CellContent | undefined,
+  move: BlockMove,
+  from: FormulaPlace,
+  to: FormulaPlace,
+) =>
   content?.kind === CellInputKind.Formula
-    ? { kind: content.kind, ast: relativeFormula(absoluteFormula(content.ast, from), to) }
+    ? { kind: content.kind, ast: followMove(content.ast, move, from, to) }
     : content;
 
 export const createCellClips = (book: Workbook, calculator: Calculator): CellClips => {
@@ -314,18 +319,6 @@ export const createCellClips = (book: Workbook, calculator: Calculator): CellCli
       return undefined;
     }
 
-    const placed: CellClip = {
-      ...clip,
-      cells: clip.cells.map((cell) => ({
-        ...cell,
-        content: placedContent(
-          cell.content,
-          { row: clip.origin.row + cell.row, col: clip.origin.col + cell.col },
-          { row: at.row + cell.row, col: at.col + cell.col },
-        ),
-      })),
-    };
-
     const sourceArea: CellRange = {
       top: clip.origin.row,
       left: clip.origin.col,
@@ -333,24 +326,69 @@ export const createCellClips = (book: Workbook, calculator: Calculator): CellCli
       right: clip.origin.col + clip.cols - 1,
     };
 
+    const carried: BlockMove = {
+      from: from.name,
+      area: sourceArea,
+      to: sheet.name,
+      rows: at.row - clip.origin.row,
+      cols: at.col - clip.origin.col,
+    };
+
+    const placed: CellClip = {
+      ...clip,
+      cells: clip.cells.map((cell) => ({
+        ...cell,
+        content: placedContent(
+          cell.content,
+          carried,
+          {
+            sheet: from.name,
+            origin: { row: clip.origin.row + cell.row, col: clip.origin.col + cell.col },
+          },
+          { sheet: sheet.name, origin: { row: at.row + cell.row, col: at.col + cell.col } },
+        ),
+      })),
+    };
+
     const sources = [...cellContentsIn(book, calculator, from, sourceArea).values()].map((cell) =>
       cleared(cell.row, cell.col),
     );
 
-    const targets = [...pasteEdits(sheet, placed, area).values()];
+    const edits = new Map<Sheet, CellEdit[]>([
+      [from, sources],
+      [sheet, [...(from === sheet ? sources : []), ...pasteEdits(sheet, placed, area).values()]],
+    ]);
 
-    const step: WorkbookStep =
-      from === sheet
-        ? { kind: 'setCells', sheet: name, cells: [...sources, ...targets] }
-        : {
-            kind: 'batch',
-            steps: [
-              { kind: 'setCells', sheet: from.name, cells: sources },
-              { kind: 'setCells', sheet: name, cells: targets },
-            ],
-          };
+    calculator.forEachFormula((owner, row, col, ast) => {
+      if (
+        (owner === from && containsCell(sourceArea, row, col)) ||
+        (owner === sheet && containsCell(area, row, col))
+      ) {
+        return;
+      }
+      const followed = followMove(ast, carried, { sheet: owner.name, origin: { row, col } });
 
-    return { step, area };
+      if (followed !== ast) {
+        const known = edits.get(owner) ?? [];
+
+        known.push({ row, col, content: { kind: 'formula', ast: followed } });
+        edits.set(owner, known);
+      }
+    });
+
+    const steps = [...edits].reduce<WorkbookStep[]>((found, [owner, cells]) => {
+      if (cells.length > 0) {
+        found.push({ kind: 'setCells', sheet: owner.name, cells });
+      }
+      return found;
+    }, []);
+
+    const [only] = steps;
+
+    return {
+      step: steps.length === 1 && only !== undefined ? only : { kind: 'batch', steps },
+      area,
+    };
   };
 
   const laneOf = (sheet: Sheet, cells: readonly CellAddress[]): Lane => ({
