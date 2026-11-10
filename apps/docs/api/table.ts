@@ -527,8 +527,8 @@ const docs: DocsMap = {
       {
         keys: 'Home / End',
         description: {
-          ru: 'Переходит на первую колонку данных или на последнюю колонку строки. Колонки выбора и номеров строк Home пропускает, в них ведёт стрелка.',
-          en: 'Moves to the first data column or to the last column of the row. Home skips the selection and row number columns; an arrow key reaches them.',
+          ru: 'Переходит на первую колонку данных или на последнюю колонку строки. Повторный Home из первой колонки данных ведёт в колонку выбора или номеров строк.',
+          en: 'Moves to the first data column or to the last column of the row. Home pressed again in the first data column leads to the selection or row number column.',
         },
       },
       {

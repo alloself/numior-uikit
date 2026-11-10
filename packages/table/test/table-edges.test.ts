@@ -74,6 +74,16 @@ describe('NuiTable edges', () => {
 
     expect(grid.focusedCell).toEqual({ row: 40, col: 1 });
 
+    await grid.press('Home');
+
+    expect(grid.focusedCell).toEqual({ row: 40, col: 0 });
+
+    await grid.press('Home');
+
+    expect(grid.focusedCell).toEqual({ row: 40, col: 0 });
+
+    await grid.press('ArrowRight');
+
     await grid.press('End', { ctrl: true, shift: true });
 
     expect(grid.ranges).toEqual([{ from: { row: 40, col: 0 }, to: { row: 40, col: 3 } }]);

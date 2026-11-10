@@ -129,13 +129,13 @@ const edgeTarget = (
   bounds: TableBounds,
 ): TableCellPosition | undefined => {
   const lastCol = Math.max(0, bounds.cols - 1);
+  const firstCol = bounds.first ?? 0;
 
   switch (input.key) {
     case Key.Home:
-      return {
-        row: input.ctrl ? Math.min(0, lastRowOf(bounds)) : from.row,
-        col: bounds.first ?? 0,
-      };
+      return input.ctrl
+        ? { row: Math.min(0, lastRowOf(bounds)), col: firstCol }
+        : { row: from.row, col: from.col > firstCol ? firstCol : 0 };
     case Key.End:
       return input.ctrl
         ? (bounds.last?.() ?? { row: lastRowOf(bounds), col: lastCol })
