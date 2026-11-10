@@ -181,6 +181,20 @@
   display: block;
   block-size: var(--_window-lead);
 }
+.nui-table__header,
+.nui-table__pinned,
+.nui-table__body,
+.nui-table__status,
+.nui-table__footer {
+  --_canvas: initial;
+}
+.nui-table__pinned,
+.nui-table__body,
+.nui-table__status,
+.nui-table__footer {
+  --_start: initial;
+  --_end: initial;
+}
 .nui-table:not(.nui-table--auto) > .nui-table__frame > .nui-table__viewport::after {
   content: '';
   display: block;
