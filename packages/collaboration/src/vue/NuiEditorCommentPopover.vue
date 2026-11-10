@@ -80,13 +80,18 @@ const shown = computed({
 const timeOf = (value: string): string => formatter.value.format(new Date(value));
 
 const place = (): void => {
-  const spot = comments.spot();
-  const start = spot === undefined ? undefined : editor?.coordsAt(spot.from);
-  const end = spot === undefined ? undefined : editor?.coordsAt(spot.to);
-  const origin = layer.value?.getBoundingClientRect();
+  const spot = shown.value ? comments.spot() : undefined;
   const element = anchor.value;
 
-  if (start === undefined || end === undefined || origin === undefined || element === null) {
+  if (spot === undefined || element === null) {
+    return;
+  }
+
+  const start = editor?.coordsAt(spot.from);
+  const end = editor?.coordsAt(spot.to);
+  const origin = layer.value?.getBoundingClientRect();
+
+  if (start === undefined || end === undefined || origin === undefined) {
     return;
   }
 

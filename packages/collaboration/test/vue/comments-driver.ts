@@ -132,6 +132,15 @@ export class CommentsDriver {
     await flushPromises();
   }
 
+  async measuresWhile(action: () => Promise<void>): Promise<number> {
+    const layer = this.wrapper.find('.nui-collab-comment-layer').element;
+    const measured = vi.spyOn(layer, 'getBoundingClientRect');
+
+    await action();
+
+    return measured.mock.calls.length;
+  }
+
   async typedByOther(text: string, at: number): Promise<void> {
     this.run((state, dispatch) => {
       const tr = receiveSteps(state, state.tr.insertText(text, at).steps);

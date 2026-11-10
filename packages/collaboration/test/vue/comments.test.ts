@@ -391,6 +391,21 @@ describe('NuiEditorComments', () => {
     });
   });
 
+  it('measures the page for the popover only while a thread or a draft is open', async () => {
+    const view = CommentsDriver.mount([threadOf('t')]);
+
+    await view.loaded();
+
+    const shut = await view.measuresWhile(() => view.insert('xx', 7));
+
+    await view.pressIn(0, 'Show in text');
+
+    const open = await view.measuresWhile(() => view.insert('yy', 7));
+
+    expect(shut).toBe(0);
+    expect(open).toBeGreaterThan(0);
+  });
+
   it('applies changes pushed by the adapter', async () => {
     const view = CommentsDriver.mount([threadOf('t')]);
 
