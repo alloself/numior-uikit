@@ -118,13 +118,13 @@ import {
   useFieldControl,
   useMessages,
   useSplitAttrs,
+  isComposing,
 } from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiButton from '../button/NuiButton.vue';
 import NuiChip from '../chip/NuiChip.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
-import { isComposing } from '../shared/composition';
 import { filterOptions, flattenEntries, optionElementId, type NuiOption } from '../shared/options';
 import { useListboxSurface } from '../shared/use-listbox-surface';
 import { useOptionSelection } from '../shared/use-option-selection';

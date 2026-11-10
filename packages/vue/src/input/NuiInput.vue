@@ -22,6 +22,7 @@
         :type="type"
         :value="draft"
         @input="onInput"
+        @compositionend="onInput"
         @change="onChange"
       />
       <span v-if="$slots.suffix" class="nui-input__suffix">
@@ -36,6 +37,7 @@ import { ref, useTemplateRef, watch } from 'vue';
 import {
   applyMask,
   InputType,
+  isComposingInput,
   maskCaret,
   useFieldControl,
   useSplitAttrs,
@@ -112,7 +114,8 @@ const reformat = (element: HTMLInputElement, pattern: string, event: Event): voi
 
 const onInput = (event: Event): void => {
   const element = inputElement.value;
-  if (!element) {
+
+  if (!element || isComposingInput(event)) {
     return;
   }
   if (mask) {

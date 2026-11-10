@@ -12,6 +12,7 @@
       :rows="rows"
       :value="draft"
       @input="onInput"
+      @compositionend="onInput"
       @change="onChange"
     />
   </NuiFieldFrame>
@@ -19,7 +20,7 @@
 
 <script setup lang="ts">
 import { ref, useAttrs, useTemplateRef, watch } from 'vue';
-import { useFieldControl } from '@numior/primitives';
+import { isComposingInput, useFieldControl } from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import {
   NuiTextareaResize,
@@ -67,9 +68,10 @@ watch(model, (value) => {
   }
 });
 
-const onInput = (): void => {
+const onInput = (event: Event): void => {
   const element = textareaElement.value;
-  if (!element) {
+
+  if (!element || isComposingInput(event)) {
     return;
   }
   draft.value = element.value;

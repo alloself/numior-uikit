@@ -128,6 +128,36 @@ describe('NuiInput', () => {
     raw.unmount();
   });
 
+  it('leaves the text and the model alone during an IME composition and applies both at its end', async () => {
+    const phone = InputDriver.mount({ modelValue: '', props: { mask: '+7 (###) ###-##-##' } });
+
+    await phone.compose('９９９');
+
+    expect(phone.value).toBe('９９９');
+    expect(phone.emittedValues).toEqual([]);
+
+    await phone.compose('999');
+    await phone.endComposition();
+
+    expect(phone.value).toBe('+7 (999');
+    expect(phone.emittedValues).toEqual(['+7 (999']);
+
+    phone.unmount();
+
+    const plain = InputDriver.mount({ modelValue: '' });
+
+    await plain.compose('ni');
+
+    expect(plain.emittedValues).toEqual([]);
+
+    await plain.compose('你');
+    await plain.endComposition();
+
+    expect(plain.emittedValues).toEqual(['你']);
+
+    plain.unmount();
+  });
+
   it('deletes the character before a mask literal on Backspace', async () => {
     const phone = InputDriver.mount({ modelValue: '', props: { mask: '+7 (###) ###-##-##' } });
     await phone.type('99912');

@@ -39,6 +39,10 @@ digit. The field inserts the other mask characters, such as the brackets and das
 With `v-model.lazy` the value reaches the model when the user leaves the field or presses Enter,
 not on every keystroke. `.trim` removes spaces at the start and the end.
 
+While text is typed through an input method editor (CJK, Android keyboard suggestions), the
+field touches neither the mask nor the model: the value reaches them when the composition ends.
+`v-model` on a plain `<input>` behaves the same way.
+
 <Example name="input/Lazy" />
 
 ### States

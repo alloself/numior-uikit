@@ -34,6 +34,9 @@ only the height and is the default, `both` resizes in both directions, and `none
 With `v-model.lazy` the value updates when the user leaves the field instead of on every
 keystroke. The `.trim` modifier removes spaces at the start and the end of the text.
 
+While text is typed through an input method editor, the model does not change: the value reaches
+it when the composition ends.
+
 <Example name="textarea/Lazy" />
 
 ## Accessibility

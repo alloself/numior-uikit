@@ -57,12 +57,11 @@
 
 <script setup lang="ts" generic="T">
 import { computed, onMounted, shallowRef, useTemplateRef, watch } from 'vue';
-import { Key, useControlId, useListNavigation, useMessages } from '@numior/primitives';
+import { Key, useControlId, useListNavigation, useMessages, isComposing } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
 import { provideListItems } from '../list/list-context';
 import { createListItems } from '../list/list-items';
-import { isComposing } from '../shared/composition';
 import {
   defaultOptionKey,
   filterOptions,

@@ -27,3 +27,19 @@ export const eraseBefore = (element: HTMLInputElement): void => {
   }
   element.dispatchEvent(new InputEvent('input', { inputType: 'deleteContentBackward' }));
 };
+
+export const composeInto = (
+  element: HTMLInputElement | HTMLTextAreaElement,
+  text: string,
+): void => {
+  element.value = text;
+
+  element.dispatchEvent(
+    new InputEvent('input', {
+      inputType: 'insertCompositionText',
+      data: text,
+      isComposing: true,
+      bubbles: true,
+    }),
+  );
+};

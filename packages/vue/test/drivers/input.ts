@@ -2,6 +2,7 @@ import { mount, type ComponentMountingOptions, type DOMWrapper } from '@vue/test
 import { nextTick } from 'vue';
 import { NuiInput, type NuiInputModifiers, type NuiInputProps } from '../../src';
 import InputFocusHandle from '../fixtures/InputFocusHandle.vue';
+import { composeInto } from '../support/text-input';
 import { ComponentDriver, emittedStrings } from './component';
 
 export interface InputMountOptions {
@@ -65,6 +66,15 @@ export class InputDriver extends ComponentDriver {
   async type(text: string): Promise<void> {
     this.control.element.value = text;
     await this.control.trigger('input');
+  }
+
+  async compose(text: string): Promise<void> {
+    composeInto(this.control.element, text);
+    await nextTick();
+  }
+
+  async endComposition(): Promise<void> {
+    await this.control.trigger('compositionend');
   }
 
   async commit(): Promise<void> {
