@@ -78,13 +78,13 @@ const client = createCollabClient({
   },
 });
 
-client.setPresence({ user, place: null });
+client.setPresence({ user });
 
 const sync = (): void => {
   client.sync();
 };
 
-const sharePlace = (place: NuiSpreadsheetPlace | null): void => {
+const sharePlace = (place: NuiSpreadsheetPlace | undefined): void => {
   client.setPresence({ user, place });
 };
 

@@ -24,16 +24,16 @@ describe('workbook presence', () => {
   });
 
   it('keeps someone who has not picked a cell yet', () => {
-    const [peer] = peersOf({ user: USER, place: null });
+    const [peer] = peersOf({ user: USER });
 
-    expect(peer?.place).toBeNull();
+    expect(peer?.place).toBeUndefined();
   });
 
   it.each([
     ['nothing', undefined],
     ['a string', 'Анна'],
-    ['no user', { place: null }],
-    ['a user without a name', { user: { id: 'anna' }, place: null }],
+    ['no user', {}],
+    ['a user without a name', { user: { id: 'anna' } }],
     [
       'a negative row',
       { user: USER, place: { ...PLACE, selection: { active: { row: -1, col: 0 }, ranges: [] } } },
@@ -51,7 +51,7 @@ describe('workbook presence', () => {
   });
 
   it('gives the same person the same colour on every client', () => {
-    const [first] = peersOf({ user: USER, place: null });
+    const [first] = peersOf({ user: USER });
     const [second] = workbookPeers(new Map([['client-2', { user: USER, place: PLACE }]]));
 
     expect(first?.colour).toBe(second?.colour);

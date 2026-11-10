@@ -18,7 +18,7 @@ export interface WorkbookPlace {
 
 export interface WorkbookPresence {
   readonly user: WorkbookUser;
-  readonly place: WorkbookPlace | null;
+  readonly place?: WorkbookPlace | undefined;
 }
 
 export interface WorkbookPeer extends WorkbookPresence {

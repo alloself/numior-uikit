@@ -168,7 +168,7 @@
 слияние раскладки требует прежней раскладки, которая есть только у автора.
 
 На клиенте документ создаётся через `createWorkbookDocument({ book, calculator })` и передаётся в `NuiSpreadsheet` пропом
-`collaboration`. Отправку запускает потребитель: `@change="client.sync()"`. Присутствие — объект `{ user, place }`, где `place` равно `{ sheet, selection }` или `null`: его даёт событие `@presence`, входящее читает `workbookPeers` для пропа `peers`. Пример — `apps/playground/src/collab/CollabBookApp.vue`
+`collaboration`. Отправку запускает потребитель: `@change="client.sync()"`. Присутствие — объект `{ user, place }`, где `place` равно `{ sheet, selection }` или отсутствует: его даёт событие `@presence`, входящее читает `workbookPeers` для пропа `peers`. Пример — `apps/playground/src/collab/CollabBookApp.vue`
 (`/collab?book=1&user=Анна`); эталонный сервер отдаёт книгу комнатам, имя которых начинается с `book`.
 
 ## Пример обмена

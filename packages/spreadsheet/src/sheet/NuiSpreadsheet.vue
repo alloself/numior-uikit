@@ -368,7 +368,7 @@ const emit = defineEmits<{
   change: [change: NuiSpreadsheetChange];
   open: [file: OpenedFile];
   saved: [saved: NuiSpreadsheetSaved];
-  presence: [place: NuiSpreadsheetPlace | null];
+  presence: [place: NuiSpreadsheetPlace | undefined];
 }>();
 
 const root = useTemplateRef<HTMLElement>('root');
@@ -562,11 +562,13 @@ const selection = useSheetSelection({
   model: selectionModel,
 });
 
-const place = computed((): NuiSpreadsheetPlace | null => {
+const place = computed((): NuiSpreadsheetPlace | undefined => {
   const chosen = selection.current.value;
   const name = shownSheet.value?.name;
 
-  return chosen === undefined || name === undefined ? null : { sheet: name, selection: chosen };
+  return chosen === undefined || name === undefined
+    ? undefined
+    : { sheet: name, selection: chosen };
 });
 
 watch(

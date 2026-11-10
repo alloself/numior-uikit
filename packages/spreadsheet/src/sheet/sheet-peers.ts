@@ -31,7 +31,7 @@ export const peerFramesOf = (
   cells === undefined
     ? []
     : peers.reduce<SheetPeerFrame[]>((frames, peer) => {
-        if (peer.place === null || peer.place.sheet !== sheet) {
+        if (peer.place === undefined || peer.place.sheet !== sheet) {
           return frames;
         }
 
@@ -55,5 +55,5 @@ export const peerFramesOf = (
         return frames;
       }, []);
 
-export const placeKey = (place: WorkbookPlace | null): string =>
-  place === null ? '' : `${place.sheet}/${selectionKey(place.selection)}`;
+export const placeKey = (place: WorkbookPlace | undefined): string =>
+  place === undefined ? '' : `${place.sheet}/${selectionKey(place.selection)}`;

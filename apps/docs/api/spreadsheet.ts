@@ -80,8 +80,8 @@ const docs: DocsMap = {
     },
     events: {
       presence: {
-        ru: 'Своё место в книге изменилось: `{ sheet, selection }` или `null`. Передайте в `client.setPresence({ user, place })`.',
-        en: 'Your place in the book changed: `{ sheet, selection }` or `null`. Pass it to `client.setPresence({ user, place })`.',
+        ru: 'Своё место в книге изменилось: `{ sheet, selection }` или `undefined`, пока лист не показан. Передайте в `client.setPresence({ user, place })`.',
+        en: 'Your place in the book changed: `{ sheet, selection }` or `undefined` while no sheet is shown. Pass it to `client.setPresence({ user, place })`.',
       },
       change: {
         ru: 'Срабатывает после каждой своей правки и отмены. Передаёт `{ steps }`.',

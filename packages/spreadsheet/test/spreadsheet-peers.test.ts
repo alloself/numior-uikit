@@ -69,7 +69,7 @@ describe('someone else on the sheet', () => {
   });
 
   it('leaves out someone who has not picked a cell', () => {
-    const driver = open([{ ...peerOn(SHEET, single(0, 0)), place: null }]);
+    const driver = open([{ ...peerOn(SHEET, single(0, 0)), place: undefined }]);
 
     expect(driver.peerNames).toEqual([]);
   });
