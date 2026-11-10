@@ -38,6 +38,9 @@ to a screen reader. `NuiFieldArray` reorders field groups this way.
 the container while the point is within 24 pixels of its edge and calls `onStep` after every
 step. `stop()` stops the scrolling.
 
+`follow` only records the point, and one step is made per frame. So the speed does not depend on
+how often the pointer moves.
+
 This is how [Table](/en/components/table) scrolls when a cell selection is dragged past the
 edge.
 

@@ -184,8 +184,8 @@ describe('NuiTable overlay', () => {
     expect(grid.pointNear(-50, 5000)).toEqual({ x: 1, y: 299 });
     expect(grid.pointNear(5000, -50)).toEqual({ x: 899, y: 41 });
 
-    expect(grid.followEdge(450, 295)).toEqual({ scrollTop: 8, steps: 1 });
-    expect(grid.followEdge(450, 150)).toEqual({ scrollTop: 8, steps: 0 });
+    expect(await grid.followEdge(450, 295)).toEqual({ scrollTop: 8, steps: 1 });
+    expect(await grid.followEdge(450, 150)).toEqual({ scrollTop: 8, steps: 0 });
   });
 
   it('reports where the viewport is scrolled', async () => {

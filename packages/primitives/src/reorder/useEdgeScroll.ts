@@ -31,53 +31,46 @@ const deltaOf = (client: number | undefined, start: number, end: number): number
   return client > end - EDGE ? STEP : 0;
 };
 
+const framesOf = (delta: number): number => (delta > 0 ? Math.min(delta / FRAME, MOST_FRAMES) : 1);
+
 export const useEdgeScroll = (options: EdgeScrollOptions): EdgeScroll => {
-  let dx = 0;
-  let dy = 0;
-
-  const step = (frames: number): void => {
-    const container = toValue(options.container);
-
-    if (!container || (dx === 0 && dy === 0)) {
-      loop.pause();
-      return;
-    }
-    container.scrollLeft += Math.round(dx * frames);
-    container.scrollTop += Math.round(dy * frames);
-    options.onStep();
-  };
+  let point: EdgePoint | undefined;
+  let stepped = -1;
 
   const loop = useRafFn(
-    ({ delta }) => {
-      step(Math.min(delta / FRAME, MOST_FRAMES));
+    ({ delta, timestamp }) => {
+      if (timestamp === stepped) {
+        return;
+      }
+      stepped = timestamp;
+
+      const container = toValue(options.container);
+      const rect = container?.getBoundingClientRect();
+      const dx = rect ? deltaOf(point?.x, rect.left, rect.right) : 0;
+      const dy = rect ? deltaOf(point?.y, rect.top, rect.bottom) : 0;
+
+      if (!container || (dx === 0 && dy === 0)) {
+        loop.pause();
+        return;
+      }
+
+      const frames = framesOf(delta);
+
+      container.scrollLeft += Math.round(dx * frames);
+      container.scrollTop += Math.round(dy * frames);
+      options.onStep();
     },
     { immediate: false },
   );
 
-  const stop = (): void => {
-    dx = 0;
-    dy = 0;
-    loop.pause();
-  };
-
   return {
-    follow: (point) => {
-      const container = toValue(options.container);
-
-      if (!container) {
-        stop();
-        return;
-      }
-      const rect = container.getBoundingClientRect();
-
-      dx = deltaOf(point.x, rect.left, rect.right);
-      dy = deltaOf(point.y, rect.top, rect.bottom);
-      step(1);
-
-      if (dx !== 0 || dy !== 0) {
-        loop.resume();
-      }
+    follow: (next) => {
+      point = next;
+      loop.resume();
     },
-    stop,
+    stop: () => {
+      point = undefined;
+      loop.pause();
+    },
   };
 };

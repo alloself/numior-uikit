@@ -354,6 +354,11 @@ const isExposed = (value: unknown): value is NuiTableExposed =>
 const DETAIL_CONTROLS = 'button, input, a[href]';
 const IDLE_WAIT = 100;
 
+const nextFrame = (): Promise<number> =>
+  new Promise((resolve) => {
+    requestAnimationFrame(resolve);
+  });
+
 const nameOf = (control: Element): string =>
   control.getAttribute('aria-label') ?? control.textContent?.trim() ?? '';
 
@@ -1148,7 +1153,10 @@ export class TableDriver<T> {
     return probed;
   }
 
-  followEdge(x: number, y: number): { readonly scrollTop: number; readonly steps: number } {
+  async followEdge(
+    x: number,
+    y: number,
+  ): Promise<{ readonly scrollTop: number; readonly steps: number }> {
     let steps = 0;
 
     defineRect(
@@ -1159,6 +1167,8 @@ export class TableDriver<T> {
     this.exposed.value?.followEdge(x, y, () => {
       steps += 1;
     });
+
+    await nextFrame();
 
     const scrolled = { scrollTop: this.element.scrollTop, steps };
 
@@ -2053,10 +2063,7 @@ export class TableDriver<T> {
   }
 
   async nextPaint(): Promise<void> {
-    await new Promise((resolve) => {
-      requestAnimationFrame(resolve);
-    });
-
+    await nextFrame();
     await promiseTimeout(0);
     await flushPromises();
   }
