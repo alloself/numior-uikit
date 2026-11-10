@@ -10,6 +10,7 @@ import {
   type MaybeRefOrGetter,
   type Ref,
 } from 'vue';
+import { Key } from '../keyboard/key.types';
 
 export interface DialogOptions {
   readonly open: Ref<boolean>;
@@ -20,6 +21,7 @@ export interface DialogOptions {
 
 export interface DialogAttrs {
   readonly onCancel: (event: Event) => void;
+  readonly onKeydown: (event: KeyboardEvent) => void;
   readonly onClose: () => void;
   readonly onPointerdown: (event: PointerEvent) => void;
   readonly onClick: (event: MouseEvent) => void;
@@ -40,6 +42,8 @@ interface RootLock {
   readonly overflow: string;
   readonly padding: string;
 }
+
+const OPEN_POPOVER = ':popover-open';
 
 const modalCapable = (
   element: HTMLDialogElement | null | undefined,
@@ -99,6 +103,19 @@ const outside = (element: HTMLDialogElement, point: { clientX: number; clientY: 
   );
 };
 
+const holdsOpenPopover = (dialog: HTMLElement): boolean => {
+  try {
+    return dialog.querySelector(OPEN_POPOVER) !== null;
+  } catch {
+    return false;
+  }
+};
+
+const ownsKey = (dialog: HTMLElement, event: KeyboardEvent): boolean =>
+  event.target instanceof Element &&
+  event.target.closest('dialog') === dialog &&
+  !holdsOpenPopover(dialog);
+
 export const useDialog = (element: DialogRef, options: DialogOptions): DialogControl => {
   const returnValue = ref('');
   const pressedOutside = ref(false);
@@ -142,6 +159,13 @@ export const useDialog = (element: DialogRef, options: DialogOptions): DialogCon
   const attrs: DialogAttrs = {
     onCancel: (event) => {
       if (!dismissible()) {
+        event.preventDefault();
+      }
+    },
+    onKeydown: (event) => {
+      const dialog = toValue(element);
+
+      if (event.key === Key.Escape && !dismissible() && dialog && ownsKey(dialog, event)) {
         event.preventDefault();
       }
     },

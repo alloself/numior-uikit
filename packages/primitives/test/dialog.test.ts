@@ -21,6 +21,7 @@ const mountDialog = (options: DialogOptions) => {
 
   const { attrs } = capture.value;
   capture.second.addEventListener('cancel', attrs.onCancel);
+  capture.second.addEventListener('keydown', attrs.onKeydown);
   capture.second.addEventListener('close', attrs.onClose);
   capture.second.addEventListener('pointerdown', attrs.onPointerdown);
   capture.second.addEventListener('click', attrs.onClick);
@@ -30,6 +31,13 @@ const mountDialog = (options: DialogOptions) => {
 const press = (dialog: HTMLElement, clientX: number) => {
   dialog.dispatchEvent(new PointerEvent('pointerdown', { clientX, clientY: 0, bubbles: true }));
   dialog.dispatchEvent(new MouseEvent('click', { clientX, clientY: 0, bubbles: true }));
+};
+
+const pressKey = (target: HTMLElement, key: string): boolean => {
+  const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+
+  target.dispatchEvent(event);
+  return event.defaultPrevented;
 };
 
 const ROOT_METRICS = ['scrollHeight', 'clientHeight', 'clientWidth'] as const;
@@ -167,6 +175,24 @@ describe('useDialog', () => {
 
     dismissible.value = false;
     expect(cancel()).toBe(true);
+
+    capture.unmount();
+  });
+
+  it('keeps the Escape key from reaching the browser while not dismissible', () => {
+    const dismissible = ref(false);
+    const capture = mountDialog({ open: ref(true), dismissible });
+    const inner = document.createElement('dialog');
+
+    capture.second.append(inner);
+
+    expect(pressKey(capture.second, 'Escape')).toBe(true);
+    expect(pressKey(capture.second, 'Enter')).toBe(false);
+    expect(pressKey(inner, 'Escape')).toBe(false);
+
+    dismissible.value = true;
+
+    expect(pressKey(capture.second, 'Escape')).toBe(false);
 
     capture.unmount();
   });

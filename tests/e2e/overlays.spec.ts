@@ -82,6 +82,12 @@ test.describe('layers', () => {
     await overlays.clickBackdrop();
     await expect(overlays.persistentDialog).toBeVisible();
 
+    await overlays.pressEscape();
+    await overlays.pressEscape();
+    await overlays.pressEscape();
+
+    await expect(overlays.persistentDialog).toBeVisible();
+
     await overlays.persistentClose.click();
     await expect(overlays.persistentDialog).toBeHidden();
   });
