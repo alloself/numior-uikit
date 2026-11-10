@@ -1924,6 +1924,7 @@ const clipboard = useTableClipboard<T>({
   labelOf: (key) => columnAt(key).label,
   textOf: (row, key) => textOf(row, key),
   limit: () => copyLimit,
+  last: () => lastCell?.(),
   messages,
   announce,
 });

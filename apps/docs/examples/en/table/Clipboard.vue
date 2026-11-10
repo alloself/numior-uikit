@@ -76,20 +76,18 @@ const copied = ref('');
 const isField = (key: string | undefined): key is Field =>
   key === 'sku' || key === 'name' || key === 'stock';
 
-const between = (from: number, to: number): number[] =>
-  Array.from({ length: Math.abs(to - from) + 1 }, (_, index) => Math.min(from, to) + index);
+const markdownOf = ({
+  rows,
+  cols,
+  headers,
+  rowAt,
+  keyAt,
+}: NuiTableClipboardScope<Item>): string => {
+  const fields = cols.map(keyAt).filter(isField);
 
-const markdownOf = ({ ranges, headers, rowAt, keyAt }: NuiTableClipboardScope<Item>): string => {
-  const last = ranges.at(-1);
-
-  const fields =
-    last === undefined ? [] : between(last.from.col, last.to.col).map(keyAt).filter(isField);
-
-  const rows = last === undefined ? [] : between(last.from.row, last.to.row).map(rowAt);
-
-  const body = rows.map((row) =>
-    fields.map((field) => (row === undefined ? '' : TEXTS[field](row))),
-  );
+  const body = rows
+    .map(rowAt)
+    .map((row) => fields.map((field) => (row === undefined ? '' : TEXTS[field](row))));
 
   const head = headers ? [fields.map((field) => LABELS[field]), fields.map(() => '---')] : [];
 

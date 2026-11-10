@@ -1,7 +1,7 @@
 import { ref, type ComputedRef, type Ref } from 'vue';
 import { useClipboard } from '@numior/primitives';
 import { yieldToHost } from '../engine';
-import { copyShapeOf, spanItems, spanLength, type RangeSpan } from './table-ranges';
+import { copyShapeOf, spanItems, spanLength, type CopyShape, type RangeSpan } from './table-ranges';
 import { htmlOf, tsvOf } from './table-clipboard';
 import type { NuiTableMessages } from './table.messages';
 import {
@@ -24,17 +24,20 @@ export interface TableClipboardOptions<T> {
   readonly ranges: () => NuiTableRanges;
   readonly cell: () => TableCopyCell<T> | undefined;
   readonly position: () => NuiTableCellPosition | undefined;
-  readonly serialize: () =>
-    | ((scope: NuiTableClipboardScope<T>) => NuiTableClipboardData)
-    | undefined;
+  readonly serialize: () => ClipboardSerializer<T> | undefined;
   readonly rowAt: (position: number) => T | undefined;
   readonly keyAt: (col: number) => string | undefined;
   readonly labelOf: (key: string) => string;
   readonly textOf: (row: T, key: string) => string;
   readonly limit: () => number;
+  readonly last: () => NuiTableCellPosition | undefined;
   readonly messages: ComputedRef<NuiTableMessages>;
   readonly announce: (text: string) => void;
 }
+
+type ClipboardSerializer<T> = (
+  scope: NuiTableClipboardScope<T>,
+) => NuiTableClipboardData | Promise<NuiTableClipboardData>;
 
 export interface TableClipboard {
   readonly busy: Readonly<Ref<boolean>>;
@@ -62,6 +65,12 @@ type CopyPlan<T> =
     }
   | { readonly kind: typeof CopyPlanKind.Disjoint };
 
+interface CopyBlock {
+  readonly rows: readonly number[];
+  readonly cols: readonly number[];
+  readonly total: number;
+}
+
 const SYNC_CELLS = 50_000;
 const CHUNK_CELLS = 20_000;
 
@@ -84,6 +93,43 @@ const selectsText = (target: EventTarget | null): boolean => {
     target instanceof Node &&
     selection.getRangeAt(0).intersectsNode(target)
   );
+};
+
+const filledSpans = (spans: readonly RangeSpan[], last: number | undefined): RangeSpan[] => {
+  const first = spans[0];
+
+  const kept = spans.flatMap((span) =>
+    last !== undefined && span.start > last
+      ? []
+      : [{ start: span.start, end: Math.min(span.end, last ?? span.end) }],
+  );
+
+  return kept.length > 0 || first === undefined ? kept : [{ start: first.start, end: first.start }];
+};
+
+const leadingItems = (spans: readonly RangeSpan[], max: number): number[] =>
+  spans.reduce<number[]>((items, span) => {
+    const length = Math.min(span.end - span.start + 1, max - items.length);
+
+    return length > 0
+      ? items.concat(Array.from({ length }, (_, index) => span.start + index))
+      : items;
+  }, []);
+
+const blockOf = (
+  shape: CopyShape,
+  last: NuiTableCellPosition | undefined,
+  limit: number,
+): CopyBlock => {
+  if (shape.kind === CopyShapeKind.Disjoint) {
+    return { rows: [], cols: [], total: 0 };
+  }
+
+  const cols = leadingItems(filledSpans(shape.cols, last?.col), Math.max(1, limit));
+  const spans = filledSpans(shape.rows, last?.row);
+  const rows = leadingItems(spans, Math.max(1, Math.floor(limit / Math.max(1, cols.length))));
+
+  return { rows, cols, total: spanLength(spans) };
 };
 
 const advance = <T>(
@@ -200,17 +246,36 @@ export const useTableClipboard = <T>(options: TableClipboardOptions<T>): TableCl
   };
 
   const delegate = async (
-    serialize: (scope: NuiTableClipboardScope<T>) => NuiTableClipboardData,
+    serialize: ClipboardSerializer<T>,
     headers: boolean,
   ): Promise<boolean> => {
     const ranges = scopeRanges();
-    const shape = copyShapeOf(ranges);
-    const count = shape.kind === CopyShapeKind.Disjoint ? 0 : spanLength(shape.rows);
-    const data = serialize({ ranges, headers, rowAt: options.rowAt, keyAt: options.keyAt });
+    const { rows, cols, total } = blockOf(copyShapeOf(ranges), options.last(), options.limit());
+
+    const written = serialize({
+      ranges,
+      rows,
+      cols,
+      headers,
+      rowAt: options.rowAt,
+      keyAt: options.keyAt,
+    });
+
+    busy.value = written instanceof Promise;
+
+    const data = await written;
+
+    busy.value = false;
+
     const copied = await clipboard.copyRich(data);
     const texts = options.messages.value;
 
-    options.announce(copied ? texts.copied({ count }) : texts.copyFailed);
+    const done =
+      rows.length < total
+        ? texts.copiedPart({ count: rows.length, total })
+        : texts.copied({ count: rows.length });
+
+    options.announce(copied ? done : texts.copyFailed);
     return copied;
   };
 

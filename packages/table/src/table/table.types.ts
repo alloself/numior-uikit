@@ -359,6 +359,8 @@ export interface NuiTableClipboardData {
 
 export interface NuiTableClipboardScope<T> {
   readonly ranges: NuiTableRanges;
+  readonly rows: readonly number[];
+  readonly cols: readonly number[];
   readonly headers: boolean;
   readonly rowAt: (position: number) => T | undefined;
   readonly keyAt: (col: number) => string | undefined;
@@ -372,7 +374,9 @@ export interface NuiTablePasteScope {
 }
 
 export interface NuiTableClipboard<T> {
-  readonly serialize?: ((scope: NuiTableClipboardScope<T>) => NuiTableClipboardData) | undefined;
+  readonly serialize?:
+    | ((scope: NuiTableClipboardScope<T>) => NuiTableClipboardData | Promise<NuiTableClipboardData>)
+    | undefined;
   readonly paste?:
     | ((data: NuiTableClipboardData, scope: NuiTablePasteScope) => NuiTableRanges | undefined)
     | undefined;

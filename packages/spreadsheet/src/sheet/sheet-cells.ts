@@ -276,6 +276,21 @@ export const sheetCells = ({
     };
   };
 
+  const textAt = (position: number, column: number): string => {
+    const row = rows.lineAt(position);
+    const col = cols.lineAt(column);
+    const value = sheet.cells.get(row, col);
+    const look = looks(row, col);
+
+    if (value.kind === CellValueKind.Empty || look?.hideValue === true) {
+      return '';
+    }
+
+    const code = look?.style?.format ?? book.formats.code(formatAt(sheet, row, col));
+
+    return formatValue(value, code, locale.numbers).text;
+  };
+
   const nextEdge = (
     from: NuiTableCellPosition,
     direction: NuiTableEdgeDirection,
@@ -319,6 +334,7 @@ export const sheetCells = ({
     rowHeights: rowHeightsOf(sheet, rows),
     gridlines: view.gridlines,
     rightToLeft: view.rightToLeft,
+    textAt,
     rowAt: rows.lineAt,
     colAt: cols.lineAt,
     rowNear: rows.positionNear,

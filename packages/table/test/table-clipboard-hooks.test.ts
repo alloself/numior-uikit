@@ -71,6 +71,30 @@ describe('NuiTable clipboard hooks', () => {
     expect(grid.announcement).toBe('Скопированы 2 строки');
   });
 
+  it('hands serialize the rows and columns to copy, cut to the filled part and to the copy limit', async () => {
+    clipboard = installClipboard({ api: 'granted' });
+
+    const blocks: string[] = [];
+
+    const hooks: NuiTableClipboard<Staff> = {
+      serialize: ({ rows, cols }) => {
+        blocks.push(`${rows.join(',')} x ${cols.join(',')}`);
+        return { text: '' };
+      },
+    };
+
+    const grid = mountStaff({
+      props: { clipboard: hooks, copyLimit: 2, lastCell: () => ({ row: 4, col: 1 }) },
+    });
+
+    await grid.dragRange({ row: 2, col: 1 }, { row: 5, col: 2 });
+    await grid.press('c', { ctrl: true });
+    await flushPromises();
+
+    expect(blocks).toEqual(['2,3 x 1']);
+    expect(grid.announcement).toBe('Скопировано строк: 2 из 3');
+  });
+
   it('pastes the block parse reads and falls back to tab separated text', async () => {
     const rows = staff(20);
 

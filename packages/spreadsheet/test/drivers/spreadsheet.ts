@@ -383,6 +383,10 @@ export class SpreadsheetDriver {
     return this.wrapper.find('.nui-spreadsheet__hidden').text();
   }
 
+  get gridAnnouncement(): string {
+    return this.wrapper.find('.nui-table__hidden[aria-live]').text();
+  }
+
   get focusedCell(): CellSpot | undefined {
     const cell = document.activeElement?.closest('[role="gridcell"]');
     const label = cell?.parentElement?.querySelector('[role="rowheader"]')?.textContent?.trim();

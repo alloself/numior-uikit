@@ -184,8 +184,8 @@ const docs: DocsMap = {
         en: 'Maximum number of cells in one copy. 200,000 by default. Rows past the limit are dropped, and screen readers announce it.',
       },
       clipboard: {
-        ru: 'Задаёт свой формат буфера обмена. `serialize({ ranges, headers, rowAt, keyAt }) → { text, html }` заменяет копирование и вырезание, `copyLimit` на него не действует. `parse(data, target)` получает текст и HTML вставки и возвращает блок строк для вставки; `undefined` оставляет разбор таблице.',
-        en: 'Sets a custom clipboard format. `serialize({ ranges, headers, rowAt, keyAt }) → { text, html }` replaces copy and cut, and `copyLimit` does not apply to it. `parse(data, target)` receives the pasted text and HTML and returns a block of strings to paste; `undefined` leaves parsing to the table.',
+        ru: 'Задаёт свой формат буфера обмена. `serialize({ ranges, rows, cols, headers, rowAt, keyAt }) → { text, html }` заменяет копирование и вырезание. `rows` и `cols` — позиции строк и колонок копируемого блока: объединение выделенных диапазонов, обрезанное по `lastCell` и по `copyLimit`. `parse(data, target)` получает текст и HTML вставки и возвращает блок строк для вставки; `undefined` оставляет разбор таблице.',
+        en: 'Sets a custom clipboard format. `serialize({ ranges, rows, cols, headers, rowAt, keyAt }) → { text, html }` replaces copy and cut. `rows` and `cols` are the row and column positions of the copied block: the union of the selected ranges, cut to `lastCell` and to `copyLimit`. `parse(data, target)` receives the pasted text and HTML and returns a block of strings to paste; `undefined` leaves parsing to the table.',
       },
       commands: {
         ru: 'Подключает свою историю правок вместо встроенной. `push(command)` получает каждую правку, а Ctrl+Z, Ctrl+Y и методы `undo` и `redo` вызывают `undo()` и `redo()`, которые возвращают число изменённых ячеек.',

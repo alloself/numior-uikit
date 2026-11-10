@@ -161,6 +161,7 @@ export interface SheetCells {
   readonly rowHeights: Readonly<Record<number, number>>;
   readonly gridlines: boolean;
   readonly rightToLeft: boolean;
+  readonly textAt: (position: number, column: number) => string;
   readonly rowAt: (position: number) => number;
   readonly colAt: (position: number) => number;
   readonly rowNear: (line: number) => number;

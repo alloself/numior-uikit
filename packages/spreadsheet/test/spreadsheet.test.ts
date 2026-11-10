@@ -12,6 +12,12 @@ import {
 import { installClipboard, type ClipboardStub } from '../../primitives/test/support/clipboard';
 import { SpreadsheetDriver } from './drivers/spreadsheet';
 
+const WHOLE_COLUMN = 1_048_575;
+
+const TALL_ROWS = 2500;
+
+const TALL_COLS = 10;
+
 const mounted: SpreadsheetDriver[] = [];
 
 const salesBook = (view: Partial<SheetView> = { frozenRows: 1 }): Workbook => {
@@ -34,6 +40,18 @@ const sheetOf = (...args: Parameters<typeof SpreadsheetDriver.mount>): Spreadshe
 
   mounted.push(driver);
   return driver;
+};
+
+const tallBook = (): Workbook => {
+  const book = createWorkbook();
+  const sheet = book.addSheet('Tall');
+
+  for (let row = 0; row < TALL_ROWS; row += 1) {
+    for (let col = 0; col < TALL_COLS; col += 1) {
+      sheet.cells.set(row, col, numberValue(row + 1));
+    }
+  }
+  return book;
 };
 
 let clipboard: ClipboardStub | undefined;
@@ -213,6 +231,81 @@ describe('NuiSpreadsheet', () => {
     await sheet.enter(2, 2, '1');
 
     expect(sheet.text(2, 2)).toBe('100.0%');
+  });
+
+  it('copies ranges that share rows side by side and a whole column down to its last filled cell', async () => {
+    clipboard = installClipboard({ api: 'granted' });
+
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.select({
+      active: { row: 0, col: 0 },
+      ranges: [
+        { top: 0, left: 0, bottom: 1, right: 0 },
+        { top: 0, left: 2, bottom: 1, right: 2 },
+      ],
+    });
+
+    await sheet.press('c', { ctrl: true });
+    await flushPromises();
+
+    expect(clipboard.copies.at(-1)).toBe('Item\t\nPen\t75.0%');
+
+    await sheet.select({
+      active: { row: 0, col: 0 },
+      ranges: [{ top: 0, left: 0, bottom: WHOLE_COLUMN, right: 0 }],
+    });
+
+    await sheet.press('c', { ctrl: true });
+    await flushPromises();
+
+    expect(clipboard.copies.at(-1)).toBe('Item\nPen');
+    expect(sheet.gridAnnouncement).toBe('Copied 2 rows');
+  });
+
+  it('copies a block too big for one slice in full', async () => {
+    const stub = installClipboard({ api: 'granted' });
+
+    clipboard = stub;
+
+    const sheet = sheetOf({ book: tallBook(), label: 'Tall book' });
+
+    await sheet.select({
+      active: { row: 0, col: 0 },
+      ranges: [{ top: 0, left: 0, bottom: TALL_ROWS - 1, right: TALL_COLS - 1 }],
+    });
+
+    await sheet.press('c', { ctrl: true });
+
+    await expect.poll(() => stub.copies.length).toBe(1);
+
+    const lines = stub.copies[0]?.split('\n') ?? [];
+
+    expect(lines).toHaveLength(TALL_ROWS);
+
+    expect(lines.at(-1)).toBe(
+      Array.from({ length: TALL_COLS }, () => String(TALL_ROWS)).join('\t'),
+    );
+  });
+
+  it('pastes copied formulas from a clipboard that turned line feeds into CRLF', async () => {
+    clipboard = installClipboard({ api: 'granted' });
+
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.enter(2, 3, '=C2*2');
+    await sheet.enter(3, 3, '=C3*2');
+
+    await sheet.focus(2, 3);
+    await sheet.press('ArrowDown', { shift: true });
+    await sheet.press('c', { ctrl: true });
+    await flushPromises();
+    await sheet.press('ArrowDown');
+    await sheet.press('ArrowDown');
+    await sheet.paste((clipboard.copies.at(-1) ?? '').replaceAll('\n', '\r\n'));
+    await sheet.press('ArrowDown');
+
+    expect(sheet.formula).toBe('=C5*2');
   });
 
   it('keeps Ctrl+R and Ctrl+D from the browser while a cell is edited or several ranges are selected', async () => {
