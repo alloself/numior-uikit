@@ -50,6 +50,10 @@ For a check on the server, use `customAsync`: the function receives the value an
 While the user types, the previous request is aborted and the field shows that a check is
 running.
 
+When a check throws, the field counts as unchecked and shows "Could not check this value".
+The submission is blocked, and the next submission or leaving the field sends the request again.
+The error itself goes to `onCheckError(error, path)` in the `useForm` options.
+
 <Example name="form/Async" />
 
 ## When to validate

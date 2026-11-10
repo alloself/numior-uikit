@@ -60,6 +60,60 @@ describe('asynchronous checks', () => {
     expect(check.calls).toEqual(['ann']);
   });
 
+  it('blocks the submission with a message when a check cannot answer and asks again at the next one', async () => {
+    const check = new LoginCheck(['ann']);
+    const failures: unknown[] = [];
+
+    const form = FormHarness.mount({
+      initialValues: { login: '' },
+      fields: [{ path: 'login', rules: [required(), check.rule] }],
+      onCheckError: (error, path) => failures.push([path, String(error)]),
+    });
+
+    check.down = true;
+    await form.type('login', 'bob');
+
+    const submitting = form.startSubmit();
+
+    await form.wait(100);
+
+    expect((await submitting).status).toBe('invalid');
+    expect(form.error('login')).toBe('Could not check this value. Try again.');
+    expect(failures).toEqual([['login', 'Error: network down']]);
+    expect(form.submissions).toEqual([]);
+
+    check.down = false;
+
+    const again = form.startSubmit();
+
+    await form.wait(100);
+
+    expect((await again).status).toBe('submitted');
+    expect(form.error('login')).toBeUndefined();
+    expect(check.calls).toEqual(['bob', 'bob']);
+  });
+
+  it('holds a field invalid while its background check cannot answer and asks again when the field is left', async () => {
+    const check = new LoginCheck(['ann']);
+    const form = mountLogin(check, { validateOn: 'change', debounce: 0 });
+
+    check.down = true;
+    await form.type('login', 'bob');
+    await form.wait(100);
+
+    expect(form.error('login')).toBe('Could not check this value. Try again.');
+    expect(form.pending('login')).toBe(false);
+    expect(form.meta.valid).toBe(false);
+
+    check.down = false;
+    await form.blur('login');
+    await form.wait(100);
+
+    expect(form.error('login')).toBeUndefined();
+    expect(form.meta.valid).toBe(true);
+    expect(check.calls).toEqual(['bob', 'bob']);
+  });
+
   it('debounces checks after an attempt and aborts a check that lost the race', async () => {
     const check = new LoginCheck(['ann']);
     const form = mountLogin(check);

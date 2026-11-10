@@ -8,6 +8,7 @@ const sleep = (milliseconds: number): Promise<void> =>
 export class LoginCheck {
   readonly calls: string[] = [];
   readonly signals: AbortSignal[] = [];
+  down = false;
 
   readonly rule: AsyncFieldRule = customAsync(async (value, { signal }) => {
     const login = typeof value === 'string' ? value : '';
@@ -15,6 +16,10 @@ export class LoginCheck {
     this.calls.push(login);
     this.signals.push(signal);
     await sleep(this.latency);
+
+    if (this.down) {
+      throw new Error('network down');
+    }
     return this.taken.includes(login) ? 'This login is taken' : undefined;
   });
 

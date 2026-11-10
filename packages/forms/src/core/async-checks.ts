@@ -13,6 +13,7 @@ interface AsyncResult {
   readonly value: unknown;
   readonly reads: ReadonlyMap<string, unknown>;
   readonly message: string | undefined;
+  readonly failed: boolean;
 }
 
 type AsyncPhase =
@@ -31,6 +32,7 @@ export interface AsyncChecks<V extends object> {
   schedule(entry: Entry<V>, delay: number): void;
   settle(entries: readonly Entry<V>[]): Promise<boolean>;
   refresh(changed: readonly Entry<V>[]): void;
+  retry(entries: readonly Entry<V>[]): void;
   cancel(entry: Entry<V>): void;
   forget(entry: Entry<V>): void;
   reset(): void;
@@ -146,11 +148,19 @@ export const createAsyncChecks = <V extends object, O>(
         (await entry.checkAsync(context));
 
       if (token === state.token) {
-        state.result = { value, reads: log.reads(), message };
+        state.result = { value, reads: log.reads(), message, failed: false };
       }
     } catch (error) {
-      if (!controller.signal.aborted) {
-        throw error;
+      if (controller.signal.aborted) {
+        return;
+      }
+
+      core.onCheckError?.(error, entry.path());
+
+      if (token === state.token) {
+        const message = core.messages.value.unchecked;
+
+        state.result = { value, reads: log.reads(), message, failed: true };
       }
     }
   };
@@ -217,6 +227,15 @@ export const createAsyncChecks = <V extends object, O>(
       for (const [entry, state] of states) {
         if (!changed.includes(entry) && outdated(entry, state)) {
           schedule(entry, entry.debounce());
+        }
+      }
+    },
+    retry: (entries) => {
+      for (const entry of entries) {
+        const state = states.get(entry);
+
+        if (state?.result?.failed === true) {
+          state.result = undefined;
         }
       }
     },
