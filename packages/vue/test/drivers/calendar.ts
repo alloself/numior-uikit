@@ -23,8 +23,8 @@ export interface CellState {
 const datetimeOf = (element: Element | null | undefined): string | undefined =>
   element?.querySelector('time')?.getAttribute('datetime') ?? undefined;
 
-const pointer = (type: string): PointerEvent =>
-  new PointerEvent(type, { bubbles: true, cancelable: true, pointerType: 'mouse' });
+const pointer = (type: string, pointerType = 'mouse'): PointerEvent =>
+  new PointerEvent(type, { bubbles: true, cancelable: true, pointerType });
 
 export class CalendarDriver extends ComponentDriver {
   protected readonly block = 'nui-calendar';
@@ -245,6 +245,31 @@ export class CalendarDriver extends ComponentDriver {
     element.dispatchEvent(pointer('pointerdown'));
     element.dispatchEvent(pointer('pointerup'));
     await this.day(date).trigger('click');
+    await nextTick();
+  }
+
+  async tapDay(date: string): Promise<void> {
+    const element = this.day(date).element;
+
+    element.dispatchEvent(pointer('pointerdown', 'touch'));
+    element.dispatchEvent(pointer('pointerup', 'touch'));
+    await this.day(date).trigger('click');
+    await nextTick();
+  }
+
+  async scrollFromDay(date: string): Promise<void> {
+    const element = this.day(date).element;
+
+    element.dispatchEvent(pointer('pointerdown', 'touch'));
+    element.dispatchEvent(pointer('pointercancel', 'touch'));
+    await nextTick();
+  }
+
+  async cancelPress(date: string): Promise<void> {
+    const element = this.day(date).element;
+
+    element.dispatchEvent(pointer('pointerdown'));
+    element.dispatchEvent(pointer('pointercancel'));
     await nextTick();
   }
 

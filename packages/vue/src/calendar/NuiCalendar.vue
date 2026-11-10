@@ -17,6 +17,7 @@
     ]"
     :inert="disabled || undefined"
     @pointerup="onPointerup"
+    @pointercancel="onPointercancel"
     @pointerleave="selection.hovered.value = undefined"
   >
     <aside v-if="presetList.length > 0" class="nui-calendar__presets">
@@ -263,6 +264,10 @@ const onPointerup = (event: PointerEvent): void => {
   if (!(event.target instanceof Element && event.target.closest('.nui-calendar__day'))) {
     selection.clearArm();
   }
+};
+
+const onPointercancel = (): void => {
+  remember(selection.disarm());
 };
 
 const applyPreset = (preset: NuiDatePreset): void => {

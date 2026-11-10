@@ -1,6 +1,8 @@
 import { expect, test } from './fixtures';
 import { boxOf } from './helpers/geometry';
 
+const SWIPE = -160;
+
 test.describe('dates', () => {
   test('calendar picks by click, moves with the keyboard and switches views', async ({
     playground,
@@ -50,6 +52,34 @@ test.describe('dates', () => {
     await dates.calendar.getByRole('button', { name: /^сент/ }).click();
     await expect.poll(() => dates.captionText(dates.calendar)).toBe('сентябрь 2026');
     await expect.poll(async () => (await dates.readOutput()).month).toBe('2026-09');
+  });
+
+  test('range calendar picks by taps and keeps the range when a touch on a day scrolls the page', async ({
+    playground,
+    dates,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, 'touch only');
+    await playground.open();
+    await dates.range.scrollIntoViewIfNeeded();
+
+    const fifth = await dates.dayOfThisMonth(5);
+    const ninth = await dates.dayOfThisMonth(9);
+    const twentieth = await dates.dayOfThisMonth(20);
+
+    await dates.day(dates.range, fifth).tap();
+    await dates.day(dates.range, ninth).tap();
+
+    await expect
+      .poll(async () => (await dates.readOutput()).range)
+      .toEqual({
+        start: fifth,
+        end: ninth,
+      });
+
+    await dates.swipeFromDay(dates.range, twentieth, SWIPE);
+
+    expect((await dates.readOutput()).range).toEqual({ start: fifth, end: ninth });
   });
 
   test('date picker parses typed text, opens from the button and returns focus after a pick', async ({

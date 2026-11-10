@@ -245,6 +245,44 @@ describe('NuiCalendar', () => {
     calendar.unmount();
   });
 
+  it('keeps the range when a touch on a day turns into a scroll and picks by taps', async () => {
+    const calendar = CalendarDriver.mount({
+      props: { mode: 'range' },
+      modelValue: { start: '2026-09-10', end: '2026-09-12' },
+    });
+
+    await calendar.scrollFromDay('2026-09-20');
+
+    expect(calendar.value).toEqual({ start: '2026-09-10', end: '2026-09-12' });
+
+    await calendar.tapDay('2026-09-20');
+
+    expect(calendar.value).toEqual({ start: '2026-09-20', end: null });
+
+    await calendar.tapDay('2026-09-22');
+
+    expect(calendar.value).toEqual({ start: '2026-09-20', end: '2026-09-22' });
+
+    calendar.unmount();
+  });
+
+  it('gives the range back when a press on a day is cancelled', async () => {
+    const calendar = CalendarDriver.mount({
+      props: { mode: 'range' },
+      modelValue: { start: '2026-09-10', end: '2026-09-12' },
+    });
+
+    await calendar.cancelPress('2026-09-20');
+
+    expect(calendar.value).toEqual({ start: '2026-09-10', end: '2026-09-12' });
+
+    await calendar.clickDay('2026-09-20');
+
+    expect(calendar.value).toEqual({ start: '2026-09-20', end: null });
+
+    calendar.unmount();
+  });
+
   it('shows presets in range mode and marks the matching one as pressed', async () => {
     const calendar = CalendarDriver.mount({
       props: {
