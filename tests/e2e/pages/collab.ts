@@ -143,13 +143,50 @@ export class CollabClient {
     await this.page.keyboard.press('Shift+End');
   }
 
-  async addComment(body: string): Promise<void> {
+  async writeLines(count: number): Promise<void> {
+    await this.editor.click();
+
+    for (const line of Array.from({ length: count }, (_, index) => `Строка ${String(index)}`)) {
+      await this.page.keyboard.insertText(line);
+      await this.page.keyboard.press('Enter');
+    }
+  }
+
+  async selectEverything(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+a');
+  }
+
+  async scrollToMiddle(): Promise<void> {
+    await this.page.evaluate(() => {
+      scrollTo({ top: (document.documentElement.scrollHeight - innerHeight) / 2 });
+    });
+  }
+
+  async selectionBar(): Promise<Locator> {
     const fine = await this.page.evaluate(() => matchMedia('(pointer: fine)').matches);
-    const bar = this.page.locator(fine ? '.nui-editor-bubble' : '.nui-editor__toolbar');
+
+    return this.page.locator(fine ? '.nui-editor-bubble' : '.nui-editor__toolbar');
+  }
+
+  async startComment(): Promise<void> {
+    const bar = await this.selectionBar();
 
     await bar.getByRole('button', { name: 'Добавить комментарий' }).click();
+    await this.comments.getByRole('textbox').waitFor();
+  }
+
+  async addComment(body: string): Promise<void> {
+    await this.startComment();
     await this.comments.getByRole('textbox').fill(body);
     await this.comments.getByRole('button', { name: 'Отправить' }).click();
+  }
+
+  async enterDiscussion(): Promise<void> {
+    await this.page.keyboard.press('Tab');
+  }
+
+  async leaveWithKeyboard(): Promise<void> {
+    await this.page.keyboard.press('Escape');
   }
 
   async clickAway(): Promise<void> {

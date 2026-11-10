@@ -93,8 +93,16 @@
   pointer-events: none;
 }
 
-.nui-collab-comment-layer__anchor {
+.nui-collab-comment-layer__range {
   position: absolute;
+}
+
+.nui-collab-comment-layer__anchor {
+  position: sticky;
+  inset-block-start: var(--nui-space-4);
+  display: block;
+  block-size: 100%;
+  max-block-size: 50dvh;
 }
 
 .nui-collab-comment-popover {

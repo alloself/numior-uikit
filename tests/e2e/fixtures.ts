@@ -1,4 +1,5 @@
 import { test as base } from '@playwright/test';
+import { BenchEditor } from './pages/bench-editor';
 import { CollabRoom } from './pages/collab';
 import { CollabLab } from './pages/collab-lab';
 import { DocsSite } from './pages/docs';
@@ -8,6 +9,7 @@ import { PlaygroundPage } from './pages/playground';
 interface PageObjects {
   readonly playground: PlaygroundPage;
   readonly collab: CollabRoom;
+  readonly benchEditor: BenchEditor;
   readonly collabLab: CollabLab;
   readonly docs: DocsSite;
   readonly app: NuxtApp;
@@ -46,6 +48,9 @@ export const test = base.extend<PageObjects>({
   },
   docs: async ({ page }, use) => {
     await use(new DocsSite(page));
+  },
+  benchEditor: async ({ page }, use) => {
+    await use(new BenchEditor(page));
   },
   collabLab: async ({ page }, use) => {
     await use(new CollabLab(page));

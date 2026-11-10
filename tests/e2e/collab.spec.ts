@@ -16,6 +16,8 @@ const HALF = '+'.repeat(TURNS.length / 2);
 
 const STREAM = 'x'.repeat(800);
 
+const TALL_TEXT = 60;
+
 test.describe('collaboration', () => {
   test('merges what was typed without a connection when it comes back', async ({ collab }) => {
     const anna = await collab.joinOffline(ANNA);
@@ -437,6 +439,43 @@ test.describe('collaboration', () => {
     await anna.clickAway();
 
     await expect(anna.comments).toBeHidden();
+  });
+
+  test('gives the text back the focus when a discussion is closed from the keyboard', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+
+    await anna.write('Спорная строка');
+    await anna.selectLine(0);
+    await anna.addComment('Вопрос');
+    await anna.clickAway();
+    await anna.openMark(0);
+
+    await anna.enterDiscussion();
+
+    await expect(anna.threads.getByRole('button', { name: 'Ответить' })).toBeFocused();
+
+    await anna.leaveWithKeyboard();
+
+    await expect(anna.comments).toBeHidden();
+    await expect(anna.editor).toBeFocused();
+  });
+
+  test('keeps the actions and the comment on screen for a selection taller than the window', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+
+    await anna.writeLines(TALL_TEXT);
+    await anna.selectEverything();
+    await anna.scrollToMiddle();
+
+    await expect(await anna.selectionBar()).toBeInViewport({ ratio: 1 });
+
+    await anna.startComment();
+
+    await expect(anna.comments).toBeInViewport({ ratio: 1 });
   });
 
   test('shows what a saved version changed', async ({ collab }) => {

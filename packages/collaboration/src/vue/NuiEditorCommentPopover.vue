@@ -1,6 +1,8 @@
 <template>
   <span ref="layer" class="nui-collab-comment-layer">
-    <span ref="anchor" class="nui-collab-comment-layer__anchor"></span>
+    <span ref="range" class="nui-collab-comment-layer__range">
+      <span ref="anchor" class="nui-collab-comment-layer__anchor"></span>
+    </span>
   </span>
   <NuiPopover
     v-model:open="shown"
@@ -10,7 +12,11 @@
     :offset="6"
     padding="sm"
   >
-    <section class="nui-collab-comments nui-collab-comment-popover" :aria-label="text.comments">
+    <section
+      ref="panel"
+      class="nui-collab-comments nui-collab-comment-popover"
+      :aria-label="text.comments"
+    >
       <NuiAlert v-if="comments.failed.value" tone="error" :title="text.failed" />
       <NuiEditorCommentForm
         v-if="comments.drafting.value"
@@ -51,7 +57,9 @@ const CLICK_SLOP = 4;
 const { comments, editor, labels } = defineProps<NuiEditorCommentPopoverProps>();
 
 const layer = useTemplateRef<HTMLElement>('layer');
+const range = useTemplateRef<HTMLElement>('range');
 const anchor = useTemplateRef<HTMLElement>('anchor');
+const panel = useTemplateRef<HTMLElement>('panel');
 
 let pressed: { readonly x: number; readonly y: number } | undefined;
 
@@ -81,7 +89,7 @@ const timeOf = (value: string): string => formatter.value.format(new Date(value)
 
 const place = (): void => {
   const spot = shown.value ? comments.spot() : undefined;
-  const element = anchor.value;
+  const element = range.value;
 
   if (spot === undefined || element === null) {
     return;
@@ -90,18 +98,21 @@ const place = (): void => {
   const start = editor?.coordsAt(spot.from);
   const end = editor?.coordsAt(spot.to);
   const origin = layer.value?.getBoundingClientRect();
+  const port = editor?.contentBox();
 
-  if (start === undefined || end === undefined || origin === undefined) {
+  if (start === undefined || end === undefined || origin === undefined || port === undefined) {
     return;
   }
 
   const left = Math.min(start.left, end.left);
   const right = Math.max(start.right, end.right);
+  const top = Math.min(Math.max(start.top, port.top), port.bottom);
+  const bottom = Math.max(Math.min(end.bottom, port.bottom), top);
 
   element.style.left = `${String(left - origin.left)}px`;
-  element.style.top = `${String(start.top - origin.top)}px`;
+  element.style.top = `${String(top - origin.top)}px`;
   element.style.width = `${String(Math.max(1, right - left))}px`;
-  element.style.height = `${String(Math.max(1, end.bottom - start.top))}px`;
+  element.style.height = `${String(Math.max(1, bottom - top))}px`;
 };
 
 const onPointerdown = (event: PointerEvent): void => {
@@ -126,10 +137,21 @@ useEventListener(() => layer.value?.closest<HTMLElement>(EDITOR), 'pointerdown',
 
 useEventListener(() => layer.value?.closest<HTMLElement>(EDITOR), 'pointerup', onPointerup);
 
+useEventListener(() => layer.value?.closest<HTMLElement>(EDITOR), 'scroll', place, {
+  capture: true,
+  passive: true,
+});
+
 watch([shown, comments.revision, comments.opened], place, { flush: 'post' });
 
 watch(comments.drafting, (now, was) => {
   if (was && !now) {
+    editor?.focus();
+  }
+});
+
+watch(shown, (now, was) => {
+  if (was && !now && panel.value?.contains(document.activeElement) === true) {
     editor?.focus();
   }
 });

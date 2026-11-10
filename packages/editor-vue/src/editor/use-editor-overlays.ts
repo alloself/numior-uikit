@@ -19,7 +19,8 @@ import type { ColourMark } from '../toolbar/toolbar.types';
 export interface EditorOverlayOptions {
   readonly frame: Readonly<Ref<HTMLElement | null>>;
   readonly content: Readonly<Ref<HTMLElement | null>>;
-  readonly anchor: Readonly<Ref<HTMLElement | null>>;
+  readonly range: Readonly<Ref<HTMLElement | null>>;
+  readonly bar: () => number;
   readonly view: () => EditorView | undefined;
   readonly state: () => EditorState;
   readonly run: (command: Command) => boolean;
@@ -88,24 +89,34 @@ export const useEditorOverlays = (options: EditorOverlayOptions): EditorOverlays
 
   const place = (): void => {
     const view = bubbleOpen.value || linkOpen.value || options.caret() ? options.view() : undefined;
-    const anchor = options.anchor.value;
+    const box = options.range.value;
     const frame = options.frame.value?.getBoundingClientRect();
+    const port = options.content.value?.getBoundingClientRect();
 
     const range = view === undefined ? undefined : shownRange(view.state);
 
     const start = range === undefined ? undefined : view?.coordsAtPos(range.from);
     const end = range === undefined ? undefined : view?.coordsAtPos(range.to);
 
-    if (anchor === null || frame === undefined || start === undefined || end === undefined) {
+    if (
+      box === null ||
+      frame === undefined ||
+      port === undefined ||
+      start === undefined ||
+      end === undefined
+    ) {
       return;
     }
     const left = Math.min(start.left, end.left);
     const right = Math.max(start.right, end.right);
+    const top = Math.min(Math.max(start.top, port.top), port.bottom);
+    const bottom = Math.max(Math.min(end.bottom, port.bottom), top);
 
-    anchor.style.left = `${String(left - frame.left)}px`;
-    anchor.style.top = `${String(start.top - frame.top)}px`;
-    anchor.style.width = `${String(Math.max(1, right - left))}px`;
-    anchor.style.height = `${String(Math.max(1, end.bottom - start.top))}px`;
+    box.style.setProperty('--_bar', `${String(options.bar())}px`);
+    box.style.left = `${String(left - frame.left)}px`;
+    box.style.top = `${String(top - frame.top)}px`;
+    box.style.width = `${String(Math.max(1, right - left))}px`;
+    box.style.height = `${String(Math.max(1, bottom - top))}px`;
   };
 
   const openLink = (): void => {
@@ -144,6 +155,8 @@ export const useEditorOverlays = (options: EditorOverlayOptions): EditorOverlays
   };
 
   watch([options.state, bubbleOpen, linkOpen, options.caret], place, { flush: 'post' });
+
+  useEventListener(options.content, 'scroll', place, { passive: true });
 
   useEventListener(globalThis, 'pointerup', () => {
     selecting.value = false;

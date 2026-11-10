@@ -6,6 +6,10 @@ import { boxOf } from './helpers/geometry';
 const office = (path: string): string =>
   readFileSync(new URL(`fixtures/paste/${path}`, import.meta.url), 'utf8');
 
+const LINKED_PARAGRAPH = 3;
+
+const SCROLL_STEP = 150;
+
 const openEditor = async (playground: PlaygroundPage): Promise<void> => {
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
@@ -897,6 +901,29 @@ test.describe('editor', () => {
     ).toHaveCount(1);
 
     expect(await editor.isFocused()).toBe(true);
+  });
+
+  test('keeps the link panel at its text while a text area with its own scroll is scrolled', async ({
+    benchEditor,
+  }) => {
+    await benchEditor.open();
+    await benchEditor.linkParagraph(LINKED_PARAGRAPH);
+    const below = await benchEditor.panelBelow(LINKED_PARAGRAPH);
+
+    await benchEditor.scrollText(SCROLL_STEP);
+
+    await expect.poll(() => benchEditor.panelBelow(LINKED_PARAGRAPH)).toBe(below);
+  });
+
+  test('keeps the link panel on screen when the selection is taller than the text area', async ({
+    benchEditor,
+  }) => {
+    await benchEditor.open();
+    await benchEditor.scrollTextToMiddle();
+
+    await benchEditor.linkEverything();
+
+    await expect(benchEditor.linkPanel).toBeInViewport({ ratio: 1 });
   });
 
   test('passes axe in light and dark, fits phones and types in RTL', async ({

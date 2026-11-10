@@ -55,7 +55,9 @@
         @paste="onPaste"
         @keydown="onKeydown"
       />
-      <span ref="anchor" class="nui-editor__anchor" aria-hidden="true" />
+      <span ref="range" class="nui-editor__range" aria-hidden="true">
+        <span ref="anchor" class="nui-editor__anchor" />
+      </span>
       <slot name="overlay" />
       <NuiEditorBlockHandle
         v-if="handlesShown && overlaid"
@@ -354,6 +356,7 @@ const {
 
 const contentElement = useTemplateRef<HTMLElement>('content');
 const frameElement = useTemplateRef<HTMLElement>('frame');
+const rangeElement = useTemplateRef<HTMLElement>('range');
 const anchorElement = useTemplateRef<HTMLElement>('anchor');
 const toolbarElement = useTemplateRef<InstanceType<typeof NuiEditorToolbar>>('toolbar');
 const bubbleElement = useTemplateRef<InstanceType<typeof NuiEditorBubble>>('bubble');
@@ -750,10 +753,17 @@ const code = createCodeHighlighter(
 
 const run: NuiEditorApi['run'] = (command) => view !== undefined && command(view.state, dispatch);
 
+const stuckBar = (): number => {
+  const bar: unknown = docked.value ? undefined : toolbarElement.value?.$el;
+
+  return bar instanceof HTMLElement ? bar.offsetHeight : 0;
+};
+
 const overlays = useEditorOverlays({
   frame: frameElement,
   content: contentElement,
-  anchor: anchorElement,
+  range: rangeElement,
+  bar: stuckBar,
   view: () => view,
   state: () => current.value,
   run: (command) => run(command),
