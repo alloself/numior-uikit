@@ -1,7 +1,15 @@
 import { expect, test } from './fixtures';
 import { boxOf } from './helpers/geometry';
+import type { TableSection } from './pages/table';
 
 const TREE_HEAD_ROWS = 1;
+
+const menuEndGap = async (table: TableSection, col: number): Promise<number> => {
+  const menu = await boxOf(table.menu);
+  const header = await boxOf(table.header(col));
+
+  return Math.abs(menu.x + menu.width - header.x - header.width);
+};
 
 test.describe('table', () => {
   test('windowed table keeps its rows on screen before the scroll event catches up', async ({
@@ -767,8 +775,7 @@ test.describe('table', () => {
     await table.openMenu(3);
     await expect(table.menu).toBeVisible();
 
-    const menu = await boxOf(table.menu);
-    expect(Math.abs(menu.x + menu.width - header.x - header.width)).toBeLessThanOrEqual(1);
+    await expect.poll(() => menuEndGap(table, 3)).toBeLessThanOrEqual(1);
 
     await page.keyboard.press('Escape');
     await expect(table.menu).toBeHidden();
