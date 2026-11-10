@@ -5,6 +5,7 @@ export interface NuiSpreadsheetPivotMessages {
   readonly insertPivot: string;
   readonly pivotFields: string;
   readonly refreshPivot: string;
+  readonly removePivot: string;
   readonly title: string;
   readonly close: string;
   readonly options: string;
@@ -70,6 +71,7 @@ export interface NuiSpreadsheetPivotMessages {
   readonly sourceLost: string;
   readonly refused: string;
   readonly refreshed: string;
+  readonly removed: string;
   readonly pivotSheet: (params: { readonly index: number }) => string;
   readonly pivotName: (params: { readonly index: number }) => string;
 }
@@ -132,6 +134,7 @@ export const spreadsheetPivotMessages: NuiMessageCatalog<NuiSpreadsheetPivotMess
     insertPivot: 'Insert pivot table',
     pivotFields: 'Pivot table fields…',
     refreshPivot: 'Refresh',
+    removePivot: 'Remove pivot table',
     title: 'Pivot table fields',
     close: 'Close',
     options: 'PivotTable options',
@@ -197,6 +200,7 @@ export const spreadsheetPivotMessages: NuiMessageCatalog<NuiSpreadsheetPivotMess
     sourceLost: 'The source of this pivot table is gone',
     refused: 'The pivot table did not change: it would cover other data',
     refreshed: 'Pivot table refreshed',
+    removed: 'Pivot table removed',
     pivotSheet: ({ index }) => `Pivot ${String(index)}`,
     pivotName: ({ index }) => `PivotTable${String(index)}`,
   },
@@ -204,6 +208,7 @@ export const spreadsheetPivotMessages: NuiMessageCatalog<NuiSpreadsheetPivotMess
     insertPivot: 'Вставить сводную таблицу',
     pivotFields: 'Поля сводной таблицы…',
     refreshPivot: 'Обновить',
+    removePivot: 'Удалить сводную таблицу',
     title: 'Поля сводной таблицы',
     close: 'Закрыть',
     options: 'Параметры сводной таблицы',
@@ -269,6 +274,7 @@ export const spreadsheetPivotMessages: NuiMessageCatalog<NuiSpreadsheetPivotMess
     sourceLost: 'Источник этой сводной таблицы больше не существует',
     refused: 'Сводная таблица не изменилась: она закрыла бы другие данные',
     refreshed: 'Сводная таблица обновлена',
+    removed: 'Сводная таблица удалена',
     pivotSheet: ({ index }) => `Сводная ${String(index)}`,
     pivotName: ({ index }) => `СводнаяТаблица${String(index)}`,
   },

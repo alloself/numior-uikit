@@ -202,6 +202,39 @@ describe('NuiSpreadsheet pivot tables', () => {
     expect(sheet.tabs).toEqual(['Sales']);
   });
 
+  it('removes a pivot table from the menu of its cell and brings it back on undo', async () => {
+    const book = salesBook();
+    const sheet = sheetOf(book);
+
+    await sheet.focus(1, 0);
+    await sheet.insertPivot(1, 0);
+    await sheet.pivot.check('Region');
+    await sheet.pivot.check('Amount');
+    await sheet.pivot.press('Escape');
+
+    const total = sheet.text(5, 1);
+
+    await sheet.openCellMenu(5, 1);
+
+    expect(total).not.toBe('');
+    expect(sheet.cellMenuItems).toContain('Remove pivot table');
+
+    await sheet.chooseCellMenuItem('Remove pivot table');
+
+    expect(sheet.text(5, 1)).toBe('');
+    expect(sheet.announcement).toBe('Pivot table removed');
+
+    await sheet.press('z', { ctrl: true });
+
+    expect(sheet.text(5, 1)).toBe(total);
+
+    await sheet.press('y', { ctrl: true });
+    await sheet.openCellMenu(5, 1);
+
+    expect(sheet.cellMenuItems).toContain('Insert pivot table');
+    expect(sheet.cellMenuItems).not.toContain('Refresh');
+  });
+
   it('opens the fields and refreshes the table from the menu of a pivot cell', async () => {
     const book = salesBook();
     const sheet = sheetOf(book);

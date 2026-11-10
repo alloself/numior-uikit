@@ -1046,6 +1046,31 @@ test.describe('book', () => {
     await expect(book.pivot.chips('Строки')).toHaveText(['Регион']);
   });
 
+  test('removes a pivot table from its menu and brings it back on undo', async ({
+    playground,
+    book,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Продажи');
+    await book.cellMenu('2', 0, 'Вставить сводную таблицу');
+    await book.pivot.check('Регион');
+    await book.pivot.check('Сумма');
+    await book.page.keyboard.press('Escape');
+
+    await expect(book.cell('6', 1)).toHaveText(/^4\s?495$/u);
+
+    await book.cellMenu('4', 1, 'Удалить сводную таблицу');
+
+    await expect(book.cell('6', 1)).toHaveText('');
+    await expect(book.cell('3', 0)).toHaveText('');
+
+    await book.page.keyboard.press('Control+z');
+
+    await expect(book.cell('6', 1)).toHaveText(/^4\s?495$/u);
+  });
+
   test('filters and sorts a pivot row field and changes how its value is summarised', async ({
     playground,
     book,

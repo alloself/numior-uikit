@@ -1,7 +1,7 @@
-import { RefreshCw, Sheet as SheetIcon, TableProperties } from '@lucide/vue';
+import { RefreshCw, Sheet as SheetIcon, TableProperties, Trash2 } from '@lucide/vue';
 import { FloatingPlacement, useLocale, useMessages } from '@numior/primitives';
 import type { NuiTableOverlaySlot, NuiTableRect } from '@numior/table';
-import type { NuiMenuEntry } from '@numior/vue';
+import { NuiMenuItemTone, type NuiMenuEntry } from '@numior/vue';
 import { useMediaQuery } from '@vueuse/core';
 import { computed, markRaw, shallowRef, watch } from 'vue';
 import {
@@ -40,6 +40,8 @@ const INSERT_ICON = markRaw(SheetIcon);
 const FIELDS_ICON = markRaw(TableProperties);
 
 const REFRESH_ICON = markRaw(RefreshCw);
+
+const REMOVE_ICON = markRaw(Trash2);
 
 const ANCHOR = { row: 2, col: 0 } as const;
 
@@ -204,6 +206,14 @@ export const useSheetPivots = (options: SheetPivotsOptions): SheetPivots => {
     announce(applied ? texts.value.refreshed : texts.value.refused);
   };
 
+  const remove = (found: SheetPivot): void => {
+    const applied = options.editing.apply([
+      { kind: StepKind.SetPivot, sheet: found.sheet.name, name: found.name, pivot: undefined },
+    ]);
+
+    announce(applied ? texts.value.removed : texts.value.refused);
+  };
+
   const tools = (): readonly NuiMenuEntry[] => {
     if (options.readonly()) {
       return [];
@@ -233,6 +243,13 @@ export const useSheetPivots = (options: SheetPivotsOptions): SheetPivots => {
         label: texts.value.refreshPivot,
         icon: REFRESH_ICON,
         onSelect: () => refresh(found),
+      },
+      {
+        key: 'pivot-remove',
+        label: texts.value.removePivot,
+        icon: REMOVE_ICON,
+        tone: NuiMenuItemTone.Error,
+        onSelect: () => remove(found),
       },
     ];
   };
