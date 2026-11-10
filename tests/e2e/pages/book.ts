@@ -300,8 +300,12 @@ export class BookSection {
     await this.page.keyboard.press('Enter');
   }
 
-  async sheetMenu(name: string, item: string): Promise<void> {
+  async openSheetMenu(name: string): Promise<void> {
     await this.sheetTab(name).click({ button: 'right' });
+  }
+
+  async sheetMenu(name: string, item: string): Promise<void> {
+    await this.openSheetMenu(name);
     await this.page.getByRole('menuitem', { name: item, exact: true }).click();
   }
 

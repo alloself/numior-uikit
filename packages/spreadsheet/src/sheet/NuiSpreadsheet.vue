@@ -232,7 +232,7 @@
     <NuiSpreadsheetTabs
       :shown="sheetTabs"
       :tabs="tabs"
-      :current="String(sheetIndex)"
+      :current="String(shownSheet?.id)"
       :readonly="locked"
       :messages="messages"
       @select="selectSheet"
@@ -408,7 +408,7 @@ const shownIndex = computed(() =>
 const shownSheet = computed(() => sheetList.value[shownIndex.value]);
 
 const tabs = computed((): NuiTabDescriptor[] =>
-  sheetList.value.map((each, index) => ({ value: String(index), label: each.name })),
+  sheetList.value.map((each) => ({ value: String(each.id), label: each.name })),
 );
 
 let ownLocale = bookLocale.value;

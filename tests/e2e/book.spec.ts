@@ -357,6 +357,36 @@ test.describe('book', () => {
     await expect(book.cell('1', 0)).toHaveText('Второй лист без сетки');
   });
 
+  test('shows the sheet under the tab menu and leaves the focus on the shown sheet', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Продажи');
+
+    await book.sheetMenu('Бюджет', 'Удалить');
+    await expect(book.sheetTab('Бюджет')).toHaveCount(0);
+    await expect(book.sheetTab('Заметки')).toHaveAttribute('aria-selected', 'true');
+    await expect(book.sheetTab('Заметки')).toBeFocused();
+
+    await page.keyboard.press('Control+z');
+    await expect(book.sheetTab('Бюджет')).toBeVisible();
+    await expect(book.sheetTab('Заметки')).toHaveAttribute('aria-selected', 'true');
+    await expect(book.sheetTab('Заметки')).toBeFocused();
+
+    await book.sheetMenu('Продажи', 'Вставить лист');
+    await expect(book.sheetTab('Лист4')).toHaveAttribute('aria-selected', 'true');
+    await expect(book.sheetTab('Лист4')).toBeFocused();
+
+    await book.openSheetMenu('Продажи');
+    await page.keyboard.press('Escape');
+    await expect(book.sheetTab('Продажи')).toHaveAttribute('aria-selected', 'true');
+    await expect(book.sheetTab('Продажи')).toBeFocused();
+  });
+
   test('edits a cell, recalculates the formula totals and undoes the edit', async ({
     playground,
     book,

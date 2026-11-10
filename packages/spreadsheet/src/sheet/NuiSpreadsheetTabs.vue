@@ -66,7 +66,7 @@ import {
   type NuiMenuEntry,
   type NuiMenuExposed,
 } from '@numior/vue';
-import { computed, ref, shallowRef, useTemplateRef } from 'vue';
+import { computed, nextTick, ref, shallowRef, useTemplateRef } from 'vue';
 import { validSheetName } from '../core';
 import { isKey } from './sheet-keys';
 import type { SheetTabsProps } from './sheet.types';
@@ -122,15 +122,32 @@ const startRename = (): void => {
   renaming.value = true;
 };
 
+const focusShown = (): void => {
+  root.value
+    ?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
+    ?.focus({ preventScroll: true });
+};
+
+const restructure = async (change: () => void): Promise<void> => {
+  target.value?.focus({ preventScroll: true });
+  change();
+  await nextTick();
+  focusShown();
+};
+
 const menuItems = computed((): readonly NuiMenuEntry[] => [
-  { key: 'insert', label: messages.insertSheet, onSelect: () => emit('add', targetIndex.value) },
+  {
+    key: 'insert',
+    label: messages.insertSheet,
+    onSelect: () => restructure(() => emit('add', targetIndex.value)),
+  },
   { key: 'rename', label: messages.renameSheet, onSelect: startRename },
   {
     key: 'delete',
     label: messages.deleteSheet,
     tone: 'error',
     disabled: tabs.length < 2,
-    onSelect: () => emit('remove', targetIndex.value),
+    onSelect: () => restructure(() => emit('remove', targetIndex.value)),
   },
 ]);
 
@@ -151,13 +168,14 @@ const aim = (node: EventTarget | null): boolean => {
   }
   target.value = tab;
   targetIndex.value = indexOf(tab);
+  emit('select', targetIndex.value);
   return true;
 };
 
 const onSelect = (value: string | undefined): void => {
-  const index = Number(value);
+  const index = tabs.findIndex((tab) => tab.value === value);
 
-  if (Number.isInteger(index)) {
+  if (index >= 0) {
     emit('select', index);
   }
 };

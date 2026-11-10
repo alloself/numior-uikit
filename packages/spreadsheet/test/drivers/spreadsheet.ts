@@ -595,6 +595,12 @@ export class SpreadsheetDriver {
     return this.wrapper.find('.nui-spreadsheet__rename .nui-field__error').text();
   }
 
+  get focusedTab(): string | undefined {
+    const focused = document.activeElement;
+
+    return focused?.getAttribute('role') === 'tab' ? focused.textContent?.trim() : undefined;
+  }
+
   private tab(name: string): Element | undefined {
     return this.wrapper.findAll('[role="tab"]').find((tab) => tab.text() === name)?.element;
   }
@@ -984,6 +990,27 @@ export class SpreadsheetDriver {
 
     await field.setValue(next);
     await this.wrapper.find('.nui-spreadsheet__rename').trigger('submit');
+  }
+
+  async openTabMenu(name: string): Promise<void> {
+    this.tab(name)?.dispatchEvent(
+      new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 }),
+    );
+
+    await nextTick();
+  }
+
+  async chooseTabMenuItem(label: string): Promise<void> {
+    [...document.querySelectorAll<HTMLElement>('.nui-spreadsheet__tabs [role="menuitem"]')]
+      .find((item) => item.textContent?.trim() === label)
+      ?.click();
+
+    await nextTick();
+  }
+
+  async removeTab(name: string): Promise<void> {
+    await this.openTabMenu(name);
+    await this.chooseTabMenuItem('Delete');
   }
 
   async show(props: Partial<SpreadsheetMount>): Promise<void> {

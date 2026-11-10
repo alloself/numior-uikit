@@ -147,6 +147,32 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.changes).toHaveLength(3);
   });
 
+  it('shows the sheet whose menu is opened and its neighbour once it is deleted', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.addSheet();
+    await sheet.openTabMenu('Sales');
+
+    expect(sheet.selectedTab).toBe('Sales');
+
+    await sheet.chooseTabMenuItem('Delete');
+
+    expect(sheet.tabs).toEqual(['Rates', 'Sheet3']);
+    expect(sheet.selectedTab).toBe('Rates');
+    expect(sheet.focusedTab).toBe('Rates');
+
+    await sheet.removeTab('Sheet3');
+
+    expect(sheet.tabs).toEqual(['Rates']);
+    expect(sheet.selectedTab).toBe('Rates');
+    expect(sheet.focusedTab).toBe('Rates');
+
+    await sheet.press('z', { ctrl: true });
+
+    expect(sheet.tabs).toEqual(['Rates', 'Sheet3']);
+    expect(sheet.selectedTab).toBe('Rates');
+  });
+
   it('reports the selection in sheet addresses and follows a selection set from outside', async () => {
     const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
 
