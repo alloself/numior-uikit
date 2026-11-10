@@ -70,5 +70,6 @@ date: 2026-09-28
 `when: { path, equals | in }`, `rules: required | min | max | email | pattern`), поля строятся с
 `byPath`-селекторами и значениями `unknown`, а неизвестный тип, отклонённые props и непонятные
 записи собираются в `issues` с кодом (`unknown-type`, `rejected-props`, `not-a-list`,
-`invalid-entry`) и путём `fields.2.props` — без текстов: диагностику показывает приложение. Грид получит `editor: 'select'` из того же
+`invalid-entry`, `invalid-pattern` для `source`, который не разбирается как регулярное выражение,
+с путём до правила `fields.0.rules.1`) и путём `fields.2.props` — без текстов: диагностику показывает приложение. Грид получит `editor: 'select'` из того же
 реестра.
