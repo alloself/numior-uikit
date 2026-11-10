@@ -1,4 +1,5 @@
 import {
+  moveChild,
   redo,
   splitBlock,
   textSelection,
@@ -86,10 +87,50 @@ const splitting =
     client.run(splitBlock);
   };
 
+const moving =
+  (from: number, to: number): Change =>
+  (client) => {
+    const { root } = client.state().doc;
+    const blocks = Math.max(1, root.content.length);
+
+    client.run(moveChild(root.id, from % blocks, to % blocks));
+  };
+
+const lettersOf = (doc: Doc): number => doc.textBetween(0, doc.size, '').length;
+
+const typed = (client: NetworkClient, change: Change): number => {
+  const before = lettersOf(client.state().doc);
+
+  change(client);
+
+  return lettersOf(client.state().doc) - before;
+};
+
+const sending: Change = (client) => {
+  client.toServer();
+};
+
+const receiving: Change = (client) => {
+  client.toClient();
+};
+
+const movingArbitrary = fc.tuple(fc.nat(), fc.nat()).map(([from, to]) => moving(from, to));
+
+const typingArbitrary = fc
+  .tuple(fc.nat(), fc.string({ minLength: 1, maxLength: 3, unit: 'grapheme-ascii' }))
+  .map(([at, text]) => typing(at, text));
+
+const carryArbitrary = fc.oneof(
+  { weight: 3, arbitrary: typingArbitrary },
+  { weight: 2, arbitrary: movingArbitrary },
+  { weight: 1, arbitrary: fc.nat().map(splitting) },
+  { weight: 2, arbitrary: fc.constant(sending) },
+  { weight: 2, arbitrary: fc.constant(receiving) },
+);
+
 const editArbitrary = fc.oneof(
-  fc
-    .tuple(fc.nat(), fc.string({ minLength: 1, maxLength: 3, unit: 'grapheme-ascii' }))
-    .map(([at, text]) => typing(at, text)),
+  typingArbitrary,
+  movingArbitrary,
   fc.tuple(fc.nat(), fc.integer({ min: 1, max: 6 })).map(([at, size]) => removing(at, size)),
   fc.tuple(fc.nat(), fc.integer({ min: 1, max: 6 })).map(([at, size]) => bolding(at, size)),
   fc.nat().map(splitting),
@@ -103,18 +144,8 @@ const editArbitrary = fc.oneof(
 
 const actionArbitrary = fc.oneof(
   { weight: 3, arbitrary: editArbitrary },
-  {
-    weight: 2,
-    arbitrary: fc.constant<Change>((client) => {
-      client.toServer();
-    }),
-  },
-  {
-    weight: 2,
-    arbitrary: fc.constant<Change>((client) => {
-      client.toClient();
-    }),
-  },
+  { weight: 2, arbitrary: fc.constant(sending) },
+  { weight: 2, arbitrary: fc.constant(receiving) },
 );
 
 describe('convergence under the server order', () => {
@@ -149,4 +180,39 @@ describe('convergence under the server order', () => {
       { numRuns: 120 },
     );
   });
+
+  it.each([[2], [3]])(
+    'keeps every letter typed by %i clients while they carry and split blocks',
+    (count) => {
+      const names = ['ann', 'bob', 'cid'].slice(0, count);
+
+      fc.assert(
+        fc.property(
+          fc.integer({ min: 1, max: 1000 }),
+          fc.array(fc.tuple(fc.nat({ max: count - 1 }), carryArbitrary), { maxLength: 40 }),
+          (seed, actions) => {
+            const start = generateDoc(fixtureSchema, { blocks: 6, seed });
+            const network = createNetwork(start, names);
+
+            const written = actions.reduce((letters, [index, action]) => {
+              const client = network.clients[index];
+
+              return client === undefined ? letters : letters + typed(client, action);
+            }, lettersOf(start));
+
+            network.settle();
+
+            for (const client of network.clients) {
+              expect(lettersOf(client.state().doc)).toBe(written);
+              expect(client.status().kind).toBe(CollabStatusKind.Online);
+            }
+            for (const doc of network.docs()) {
+              expect(doc).toEqual(network.server());
+            }
+          },
+        ),
+        { numRuns: 120 },
+      );
+    },
+  );
 });

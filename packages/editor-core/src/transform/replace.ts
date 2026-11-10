@@ -16,7 +16,7 @@ import { TokenKind, type StepResult } from './step.types';
 import { contentTokens, cutTokens, rebuild, sliceFrame, sliceTokens, type Token } from './tokens';
 import { liftInto } from './tree';
 
-interface Region {
+export interface Region {
   readonly first: number;
   readonly last: number;
   readonly start: number;
@@ -40,7 +40,7 @@ const failed = (reason: 'range' | 'depth' | 'content' | 'id'): StepResult => ({
   reason,
 });
 
-const regionOf = (node: ElementNode, start: number, from: number, to: number): Region => {
+export const regionOf = (node: ElementNode, start: number, from: number, to: number): Region => {
   const offsets = childOffsets(node);
   const first = childIndexAt(node, from - start);
   const firstStart = start + (offsets[first] ?? 0);
@@ -82,7 +82,7 @@ export const fits = (schema: Schema, node: ElementNode): boolean => {
   );
 };
 
-const fitsEdited = (
+export const fitsEdited = (
   schema: Schema,
   before: ElementNode,
   after: ElementNode,

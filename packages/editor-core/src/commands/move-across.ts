@@ -11,7 +11,8 @@ import { NodeSlots, type Schema } from '../schema/schema.types';
 import { textSelection } from '../state/selection';
 import type { Selection } from '../state/selection.types';
 import { SelectionKind, type Command, type Transaction } from '../state/state.types';
-import { childNode, isSlot, moveChild, type ChildSlot } from './move';
+import { StepKind } from '../transform/step.types';
+import { childNode, isSlot, moveChild, slotStart, type ChildSlot } from './move';
 import { BesideSide } from './commands.types';
 
 export interface BlockTarget {
@@ -432,6 +433,35 @@ const committed = (
   return before !== undefined && after !== undefined && replaceWithin(doc, tr, before, after);
 };
 
+const carriedWhole = (doc: Doc, tr: Transaction, plan: Plan, to: BlockTarget): boolean => {
+  const { schema } = doc;
+  const { node, source, target } = plan;
+  const start = doc.positionOf(node.id);
+  const place = slotStart(doc, to);
+  const kept = converted({ tr, schema, node, source, target }) ?? [];
+
+  return (
+    start !== undefined &&
+    place !== undefined &&
+    kept.length === 1 &&
+    kept[0] === node &&
+    merged(schema, target.content[to.index - 1], node) === undefined &&
+    merged(schema, node, target.content[to.index]) === undefined &&
+    tr.maybeStep({ kind: StepKind.Move, from: start, to: start + node.size, target: place }).ok
+  );
+};
+
+const carriedRebuilt = (doc: Doc, tr: Transaction, plan: Plan, to: BlockTarget): boolean => {
+  const tree = rebuilt(doc, tr, plan, to);
+
+  return committed(
+    doc,
+    tr,
+    plan.sourcePath,
+    tree === undefined ? undefined : { tree, path: plan.targetPath },
+  );
+};
+
 export const moveBlock =
   (from: ChildSlot, to: BlockTarget): Command =>
   (state, dispatch) => {
@@ -446,12 +476,11 @@ export const moveBlock =
     }
     const plan = planOf(doc, from, to);
     const tr = state.tr;
-    const tree = plan === undefined ? undefined : rebuilt(doc, tr, plan, to);
 
-    const placed =
-      tree === undefined || plan === undefined ? undefined : { tree, path: plan.targetPath };
-
-    if (plan === undefined || !committed(doc, tr, plan.sourcePath, placed)) {
+    if (
+      plan === undefined ||
+      !(carriedWhole(doc, tr, plan, to) || carriedRebuilt(doc, tr, plan, to))
+    ) {
       return false;
     }
     follow(tr, doc, plan.node, state.selection);

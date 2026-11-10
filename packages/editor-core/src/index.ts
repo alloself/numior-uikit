@@ -115,10 +115,12 @@ export type {
   SchemaSpec,
 } from './schema/schema.types';
 export { createMapping, createStepMap } from './transform/mapping';
+export { StepMapKind } from './transform/mapping.types';
 export type {
   Assoc,
   MapRange,
   MapResult,
+  MapSpan,
   Mappable,
   Mapping,
   StepMap,

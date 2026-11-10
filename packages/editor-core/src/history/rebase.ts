@@ -1,5 +1,12 @@
 import type { Doc } from '../doc/doc.types';
-import type { Assoc, MapResult, Mappable, StepMap } from '../transform/mapping.types';
+import {
+  StepMapKind,
+  type Assoc,
+  type MapResult,
+  type MapSpan,
+  type Mappable,
+  type StepMap,
+} from '../transform/mapping.types';
 import { mapStep, stepMapOf } from '../transform/step';
 import { StepKind, type Step } from '../transform/step.types';
 import { noteRemoved, retargeted, withLatestNodes, type RemovedNodes } from './retarget';
@@ -18,6 +25,15 @@ export interface RebasedSteps {
 export interface RebaseDocs {
   readonly written: (index: number) => Doc;
   readonly current: () => Doc;
+}
+
+interface Walk {
+  pos: number;
+  at: number;
+  deleted: boolean;
+  deletedBefore: boolean;
+  deletedAfter: boolean;
+  deletedAcross: boolean;
 }
 
 interface Hit {
@@ -76,39 +92,112 @@ const recovered = (
     : { pos: start + hit.offset, at: twin };
 };
 
+const walkFrom = (pos: number): Walk => ({
+  pos,
+  at: 0,
+  deleted: false,
+  deletedBefore: false,
+  deletedAfter: false,
+  deletedAcross: false,
+});
+
+const passed = (walk: Walk, result: MapResult): void => {
+  walk.pos = result.pos;
+  walk.deleted ||= result.deleted;
+  walk.deletedBefore ||= result.deletedBefore;
+  walk.deletedAfter ||= result.deletedAfter;
+  walk.deletedAcross ||= result.deletedAcross;
+  walk.at += 1;
+};
+
+const advance = (chain: MirrorMaps, walk: Walk, assoc: Assoc): void => {
+  const jump = recovered(chain, walk.at, walk.pos);
+  const map = chain.maps[walk.at];
+
+  if (jump !== undefined) {
+    walk.pos = jump.pos;
+    walk.at = jump.at + 1;
+  } else if (map === undefined) {
+    walk.at += 1;
+  } else {
+    passed(walk, map.mapResult(walk.pos, assoc));
+  }
+};
+
+const reached = ({
+  pos,
+  deleted,
+  deletedBefore,
+  deletedAfter,
+  deletedAcross,
+}: Walk): MapResult => ({
+  pos,
+  deleted,
+  deletedBefore,
+  deletedAfter,
+  deletedAcross,
+});
+
+const together = (chain: MirrorMaps, left: Walk, right: Walk, outward: boolean): boolean => {
+  const map = chain.maps[left.at];
+
+  if (
+    map === undefined ||
+    recovered(chain, left.at, left.pos) !== undefined ||
+    recovered(chain, right.at, right.pos) !== undefined
+  ) {
+    advance(chain, left, outward ? -1 : 1);
+    advance(chain, right, outward ? 1 : -1);
+    return true;
+  }
+  const span = map.mapSpan(left.pos, right.pos, outward);
+
+  if (span === undefined) {
+    return false;
+  }
+  passed(left, span.from);
+  passed(right, span.to);
+  return true;
+};
+
+const alone = (chain: MirrorMaps, left: Walk, right: Walk, outward: boolean): boolean => {
+  const behind = left.at < right.at ? left : right;
+
+  if (chain.maps[behind.at]?.kind === StepMapKind.Move) {
+    return false;
+  }
+  advance(chain, behind, (behind === left) === outward ? -1 : 1);
+  return true;
+};
+
 export const mirrored = (chain: MirrorMaps): Mappable => {
   const mapResult = (from: number, assoc: Assoc = 1): MapResult => {
-    let pos = from;
-    let at = 0;
-    let deleted = false;
-    let deletedBefore = false;
-    let deletedAfter = false;
-    let deletedAcross = false;
+    const walk = walkFrom(from);
 
-    while (at < chain.maps.length) {
-      const jump = recovered(chain, at, pos);
-      const map = chain.maps[at];
-
-      if (jump !== undefined) {
-        pos = jump.pos;
-        at = jump.at + 1;
-      } else if (map === undefined) {
-        at += 1;
-      } else {
-        const result = map.mapResult(pos, assoc);
-
-        pos = result.pos;
-        deleted ||= result.deleted;
-        deletedBefore ||= result.deletedBefore;
-        deletedAfter ||= result.deletedAfter;
-        deletedAcross ||= result.deletedAcross;
-        at += 1;
-      }
+    while (walk.at < chain.maps.length) {
+      advance(chain, walk, assoc);
     }
-    return { pos, deleted, deletedBefore, deletedAfter, deletedAcross };
+    return reached(walk);
   };
 
-  return { mapResult, map: (pos, assoc) => mapResult(pos, assoc).pos };
+  const mapSpan = (from: number, to: number, outward = false): MapSpan | undefined => {
+    const left = walkFrom(from);
+    const right = walkFrom(to);
+
+    while (left.at < chain.maps.length || right.at < chain.maps.length) {
+      const whole =
+        left.at === right.at
+          ? together(chain, left, right, outward)
+          : alone(chain, left, right, outward);
+
+      if (!whole) {
+        return undefined;
+      }
+    }
+    return { from: reached(left), to: reached(right) };
+  };
+
+  return { mapResult, mapSpan, map: (pos, assoc) => mapResult(pos, assoc).pos };
 };
 
 const shifted = (mirrors: ReadonlyMap<number, number>): Map<number, number> =>
@@ -137,6 +226,8 @@ const idle = (step: Step): boolean => {
     case StepKind.AddMark:
     case StepKind.RemoveMark:
       return step.from >= step.to;
+    case StepKind.Move:
+      return step.from >= step.to || (step.target >= step.from && step.target <= step.to);
     default:
       return false;
   }

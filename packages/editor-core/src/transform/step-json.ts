@@ -38,6 +38,12 @@ export type StepJSON =
       readonly mark: MarkJSON;
       readonly skip?: readonly StepSpan[] | undefined;
     }
+  | {
+      readonly kind: typeof StepKind.Move;
+      readonly from: number;
+      readonly to: number;
+      readonly target: number;
+    }
   | { readonly kind: typeof StepKind.Attrs; readonly pos: number; readonly attrs: Attrs }
   | { readonly kind: typeof StepKind.Markup; readonly changes: readonly MarkupChange[] }
   | { readonly kind: typeof StepKind.DocAttrs; readonly attrs: Attrs };
@@ -123,6 +129,15 @@ const readMarkStep = (schema: Schema, value: Fields, kind: MarkStepKind): Step |
     : { kind, from: value.from, to: value.to, mark, skip: value.skip };
 };
 
+const readMove = (value: Fields): Step | undefined =>
+  isPosition(value.from) &&
+  isPosition(value.to) &&
+  isPosition(value.target) &&
+  value.from < value.to &&
+  (value.target <= value.from || value.target >= value.to)
+    ? { kind: StepKind.Move, from: value.from, to: value.to, target: value.target }
+    : undefined;
+
 const readAttrs = (value: Fields): Step | undefined =>
   isPosition(value.pos) && isAttrs(value.attrs)
     ? { kind: StepKind.Attrs, pos: value.pos, attrs: value.attrs }
@@ -152,6 +167,8 @@ export const stepFromJSON = (schema: Schema, value: unknown): Step | undefined =
       return readMarkStep(schema, value, StepKind.AddMark);
     case StepKind.RemoveMark:
       return readMarkStep(schema, value, StepKind.RemoveMark);
+    case StepKind.Move:
+      return readMove(value);
     case StepKind.Attrs:
       return readAttrs(value);
     case StepKind.Markup:

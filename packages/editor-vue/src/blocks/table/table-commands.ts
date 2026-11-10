@@ -13,6 +13,7 @@ import {
   ContentNodeKind,
   insertBlock,
   nodeSize,
+  StepKind,
   type AttrValue,
   type Command,
   type ElementNode,
@@ -101,11 +102,15 @@ const remove = (tr: Transaction, node: ElementNode | undefined): void => {
 };
 
 const moveChild = (tr: Transaction, parentId: NodeId, from: number, to: number): void => {
-  const node = elementsOf(tr.doc.byId(parentId))[from];
+  const parent = tr.doc.byId(parentId);
+  const node = elementsOf(parent)[from];
+  const start = node === undefined ? undefined : startOf(tr, node);
 
-  if (node !== undefined && from !== to) {
-    remove(tr, node);
-    insertAt(tr, parentId, to, [node]);
+  const target =
+    parent === undefined || from === to ? undefined : childAt(tr, parent, to > from ? to + 1 : to);
+
+  if (node !== undefined && start !== undefined && target !== undefined) {
+    tr.maybeStep({ kind: StepKind.Move, from: start, to: start + nodeSize(node), target });
   }
 };
 
