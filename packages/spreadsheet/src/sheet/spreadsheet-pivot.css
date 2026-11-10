@@ -248,6 +248,11 @@
   border: 1px solid var(--nui-border);
   border-radius: var(--nui-radius);
 }
+.nui-spreadsheet-pivot__note {
+  margin: 0;
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-xs);
+}
 .nui-spreadsheet-pivot__footer {
   display: flex;
   justify-content: flex-end;

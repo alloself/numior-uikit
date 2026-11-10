@@ -38,6 +38,10 @@ export class PivotPanel {
     return this.dialog.getByRole('searchbox');
   }
 
+  get itemsNote(): Locator {
+    return this.dialog.locator('.nui-spreadsheet-pivot__note');
+  }
+
   get items(): Locator {
     return this.dialog
       .getByRole('group', { name: 'Элементы' })

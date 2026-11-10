@@ -46,6 +46,7 @@ export interface NuiSpreadsheetPivotMessages {
   readonly items: string;
   readonly selectAll: string;
   readonly noMatches: string;
+  readonly itemsListed: (params: { readonly listed: string; readonly total: string }) => string;
   readonly apply: string;
   readonly cancel: string;
   readonly itemsApplied: (params: { readonly field: string }) => string;
@@ -175,6 +176,8 @@ export const spreadsheetPivotMessages: NuiMessageCatalog<NuiSpreadsheetPivotMess
     items: 'Items',
     selectAll: '(Select all)',
     noMatches: 'No matching items',
+    itemsListed: ({ listed, total }) =>
+      `The first ${listed} of ${total} items are listed. Search to find the rest.`,
     apply: 'Apply',
     cancel: 'Cancel',
     itemsApplied: ({ field }) => `${field}: items updated`,
@@ -249,6 +252,8 @@ export const spreadsheetPivotMessages: NuiMessageCatalog<NuiSpreadsheetPivotMess
     items: 'Элементы',
     selectAll: '(Выделить все)',
     noMatches: 'Совпадений нет',
+    itemsListed: ({ listed, total }) =>
+      `Показаны первые ${listed} элементов из ${total}. Остальные найдёт поиск.`,
     apply: 'Применить',
     cancel: 'Отмена',
     itemsApplied: ({ field }) => `${field}: элементы обновлены`,

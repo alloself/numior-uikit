@@ -19,3 +19,18 @@ export const salesBook = (): Workbook => {
 
   return book;
 };
+
+export const citiesBook = (count: number): Workbook => {
+  const book = createWorkbook();
+  const sales = book.addSheet('Sales');
+
+  sales.cells.set(0, 0, textValue('City'));
+  sales.cells.set(0, 1, textValue('Amount'));
+
+  for (let row = 1; row <= count; row += 1) {
+    sales.cells.set(row, 0, textValue(`City ${String(row)}`));
+    sales.cells.set(row, 1, numberValue(row));
+  }
+
+  return book;
+};

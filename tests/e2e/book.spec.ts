@@ -14,6 +14,16 @@ const COLUMN_DRAG = 40;
 
 const DEFAULT_COLUMN = 64;
 
+const LONG_FIELD = 300;
+
+const LISTED_ITEMS = 100;
+
+const citiesBlock = (count: number): string =>
+  [
+    'Город\tСумма',
+    ...Array.from({ length: count }, (_, at) => `Город ${String(at + 1)}\t${String(at + 1)}`),
+  ].join('\n');
+
 const firstRowOf = (formula: string): number => Number(/[A-Z]+(\d+)/u.exec(formula)?.[1] ?? 0);
 
 test.describe('book', () => {
@@ -1069,6 +1079,43 @@ test.describe('book', () => {
     await book.page.keyboard.press('Control+z');
 
     await expect(book.cell('6', 1)).toHaveText(/^4\s?495$/u);
+  });
+
+  test('lists the first items of a long pivot field and finds the rest by search', async ({
+    playground,
+    book,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Заметки');
+    await book.cell('3', 0).click();
+    await book.paste(citiesBlock(LONG_FIELD));
+
+    await expect(book.cell('4', 0)).toHaveText('Город 1');
+
+    await book.cellMenu('4', 0, 'Вставить сводную таблицу');
+    await book.pivot.check('Город');
+    await book.pivot.check('Сумма');
+    await book.pivot.chooseAction('Строки', 'Город', 'Фильтр и сортировка…');
+
+    await expect(book.pivot.items).toHaveCount(LISTED_ITEMS);
+
+    await expect(book.pivot.itemsNote).toHaveText(
+      'Показаны первые 100 элементов из 300. Остальные найдёт поиск.',
+    );
+
+    await book.pivot.item('(Выделить все)').uncheck();
+    await book.pivot.search.fill('Город 299');
+
+    await expect(book.pivot.items).toHaveText(['Город 299']);
+    await expect(book.pivot.itemsNote).toBeHidden();
+
+    await book.pivot.item('Город 299').check();
+    await book.pivot.apply();
+
+    await expect(book.cell('4', 0)).toHaveText('Город 299');
+    await expect(book.cell('5', 0)).toHaveText('Общий итог');
   });
 
   test('filters and sorts a pivot row field and changes how its value is summarised', async ({

@@ -217,6 +217,12 @@ export class PivotPanelDriver {
     return input?.checked === true ? 'checked' : 'unchecked';
   }
 
+  get itemsNote(): string | undefined {
+    const note = this.panel.find('.nui-spreadsheet-pivot__note');
+
+    return note.exists() ? note.text() : undefined;
+  }
+
   get sortOptions(): string[] {
     return [
       ...this.panel.element.querySelectorAll<HTMLInputElement>(`${EDITOR} input[type="radio"]`),
