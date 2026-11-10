@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
-import { boxOf, renderedWidth, type Box } from '../helpers/geometry';
+import { boxOf, dragAcross, renderedWidth, type Box } from '../helpers/geometry';
 import { sectionScope } from '../helpers/axe';
 
 export interface TableCell {
@@ -294,23 +294,11 @@ export class TableSection {
   }
 
   async dragBandResizer(label: string, dx: number): Promise<void> {
-    await this.dragHandle(this.bandCell(label).locator('.nui-table__resizer'), dx);
+    await dragAcross(this.bandCell(label).locator('.nui-table__resizer'), dx);
   }
 
   async dragResizer(col: number, dx: number): Promise<void> {
-    await this.dragHandle(this.resizer(col), dx);
-  }
-
-  private async dragHandle(handle: Locator, dx: number): Promise<void> {
-    const box = await boxOf(handle);
-    const x = box.x + box.width / 2;
-    const y = box.y + box.height / 2;
-
-    await this.page.mouse.move(x, y);
-    await this.page.mouse.down();
-    await this.page.mouse.move(x + dx / 2, y);
-    await this.page.mouse.move(x + dx, y, { steps: 4 });
-    await this.page.mouse.up();
+    await dragAcross(this.resizer(col), dx);
   }
 
   filterButton(col: number): Locator {

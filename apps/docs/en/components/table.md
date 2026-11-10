@@ -275,9 +275,11 @@ clearing skip the cells that fail the rules.
 ### Custom clipboard format
 
 The `clipboard` prop defines what goes to the clipboard on copy and how a paste is parsed. The
-`serialize` function receives the ranges, the block to copy (`rows` and `cols` are row and column
-positions), the rows and the column keys and returns text and HTML. The block is the union of the
-selected ranges that share rows or columns; the table cuts it to `lastCell` and to `copyLimit`.
+`serialize` function receives the ranges, the block to copy, the rows and the column keys and
+returns text and HTML.
+
+The block lists row and column positions in `rows` and `cols`. It is the union of the selected
+ranges that share rows or columns, cut to `lastCell` and to `copyLimit`.
 
 The `parse` function receives the text and HTML from the clipboard and the top left target cell,
 and returns rows of cell values. The paste then goes on as usual: parsing by column type, rule

@@ -40,6 +40,19 @@ export const textBoxOf = (target: Locator): Promise<Box> =>
 export const renderedWidth = async (target: Locator): Promise<number> =>
   (await target.boundingBox())?.width ?? 0;
 
+export const dragAcross = async (handle: Locator, dx: number): Promise<void> => {
+  const { mouse } = handle.page();
+  const box = await boxOf(handle);
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+
+  await mouse.move(x, y);
+  await mouse.down();
+  await mouse.move(x + dx / 2, y);
+  await mouse.move(x + dx, y, { steps: 4 });
+  await mouse.up();
+};
+
 export const spanBox = async (first: Locator, last: Locator): Promise<Box> => {
   const [a, b] = await Promise.all([boxOf(first), boxOf(last)]);
   const x = Math.min(a.x, b.x);

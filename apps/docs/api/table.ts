@@ -238,8 +238,8 @@ const docs: DocsMap = {
         en: 'Selected rows, as the objects from `rows`. Compared by `getKey`, or by reference without it.',
       },
       'v-model:widths': {
-        ru: 'Ширины колонок в пикселях по ключу, заданные вручную. Пока таблица помещается, ручка забирает ширину у соседней колонки, при прокрутке растёт только сама колонка. Колонка из модели больше не делит свободное место через `flex`.',
-        en: 'Column widths in pixels by key, set by hand. While the table fits, the handle takes width from the neighbouring column; once it scrolls, only the column itself grows. A column in the model stops sharing free space through `flex`.',
+        ru: 'Ширины колонок в пикселях по ключу, заданные вручную. Пока таблица помещается, ручка забирает ширину у соседней колонки, при прокрутке растёт только сама колонка. Колонка из модели больше не делит свободное место через `flex`. Двойной щелчок по ручке убирает колонку из модели.',
+        en: 'Column widths in pixels by key, set by hand. While the table fits, the handle takes width from the neighbouring column; once it scrolls, only the column itself grows. A column in the model stops sharing free space through `flex`. A double click on the handle removes the column from the model.',
       },
       'v-model:rowHeights': {
         ru: 'Высоты строк в пикселях по ключу строки, заданные вручную. Ручку у нижнего края заголовка строки включает `rowHeaders.resizable`, двойной щелчок по ней возвращает высоту по умолчанию. С `height` и числовой `rowHeight` высота точная, иначе это минимум. С `source` не действует.',
@@ -290,6 +290,10 @@ const docs: DocsMap = {
       reorder: {
         ru: 'Строку перетащили. Передаёт `row`, прежние индекс `from` и родителя `parent`, новые индекс `to` и родителя `toParent`; индексы считаются среди соседей, `undefined` — корень. Порядок в данных меняете вы.',
         en: 'A row was dragged. Carries `row`, the old index `from` and parent `parent`, and the new index `to` and parent `toParent`; indices count among siblings, `undefined` is the root. You apply the order to the data.',
+      },
+      columnResize: {
+        ru: 'Ширину колонки поменяли: перетаскивание закончилось, сделан шаг с клавиатуры или ширина сброшена. Передаёт список `{ key, width }`; `width: undefined` значит сброс. Во время перетаскивания меняется только `v-model:widths`.',
+        en: 'A column width changed: a drag ended, a keyboard step was made or the width was reset. Carries a list of `{ key, width }`; `width: undefined` means a reset. During a drag only `v-model:widths` changes.',
       },
       editRefused: {
         ru: 'Свой редактор колонки не открылся. Передаёт `row`, `key` и `reason`: `control` — контрола нет в реестре, `props` — свойства не прошли проверку, `value` — значение не подходит контролу.',

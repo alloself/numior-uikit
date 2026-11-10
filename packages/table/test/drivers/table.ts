@@ -39,6 +39,7 @@ import {
   type NuiTablePins,
   type NuiTableWidths,
   type NuiTableColumnOrder,
+  type NuiTableColumnResize,
   type NuiTableReorderEvent,
   type NuiTableDraft,
   type NuiTableEditEvent,
@@ -155,6 +156,7 @@ export interface TableHostState<T> extends TableModels<T> {
 export interface TableHostListeners<T> {
   readonly onRowClick: (row: T) => void;
   readonly onReorder: (event: NuiTableReorderEvent<T>) => void;
+  readonly onColumnResize: (changes: readonly NuiTableColumnResize[]) => void;
   readonly onWindow: (next: NuiTableWindow) => void;
   readonly onPick: (range: NuiTableRange) => void;
   readonly onEditRefused: (event: NuiTableEditRefusal<T>) => void;
@@ -171,6 +173,7 @@ interface TableEvents<T> {
   readonly loads: T[];
   readonly clicks: T[];
   readonly reorders: NuiTableReorderEvent<T>[];
+  readonly resizes: (readonly NuiTableColumnResize[])[];
   readonly edits: NuiTableEditEvent<T>[];
   readonly refusals: NuiTableEditRefusal<T>[];
   readonly errors: unknown[];
@@ -398,6 +401,7 @@ export class TableDriver<T> {
       loads: [],
       clicks: [],
       reorders: [],
+      resizes: [],
       edits: [],
       refusals: [],
       errors: [],
@@ -416,6 +420,9 @@ export class TableDriver<T> {
       },
       onReorder: (event) => {
         events.reorders.push(event);
+      },
+      onColumnResize: (changes) => {
+        events.resizes.push(changes);
       },
       onWindow: (next) => {
         events.windows.push(next);
@@ -1061,6 +1068,10 @@ export class TableDriver<T> {
 
   get reorders(): readonly NuiTableReorderEvent<T>[] {
     return this.events.reorders;
+  }
+
+  get resizes(): readonly (readonly NuiTableColumnResize[])[] {
+    return this.events.resizes;
   }
 
   get edits(): readonly NuiTableEditEvent<T>[] {
@@ -2024,6 +2035,11 @@ export class TableDriver<T> {
 
   async dragResizer(col: number, dx: number): Promise<void> {
     await dragHandle(this.resizer(col), `column ${col}`, dx);
+  }
+
+  async resetResizer(col: number): Promise<void> {
+    this.resizer(col)?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    await nextTick();
   }
 
   get windowFrame(): TableWindowFrameText | undefined {
