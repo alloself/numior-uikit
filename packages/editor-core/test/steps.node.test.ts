@@ -554,6 +554,14 @@ describe('mapping and merging steps', () => {
       ),
     ).toMatchObject({ from: 5, to: 7 });
 
+    const restored = mergeSteps(insert(3), insert(3));
+
+    expect(
+      restored?.kind === 'replace'
+        ? [restored.from, restored.to, restored.slice.content.length]
+        : [],
+    ).toEqual([3, 3, 1]);
+
     expect(mergeSteps(insert(3), insert(9))).toBeUndefined();
 
     expect(

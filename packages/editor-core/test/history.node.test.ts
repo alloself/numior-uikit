@@ -47,6 +47,42 @@ describe('editor history', () => {
     expect(editor.selection).toEqual(textSelection(6));
   });
 
+  it('takes a run of typing, of Backspace and of Delete back in one step each', () => {
+    const editor = blank();
+
+    editor.type('abcdef');
+    editor.press('Mod-z');
+
+    expect(editor.outline).toBe('paragraph()');
+    expect(editor.lastSteps).toBe(1);
+
+    editor.press('Mod-Shift-z');
+
+    expect(editor.outline).toBe('paragraph("abcdef")');
+    expect(editor.lastSteps).toBe(1);
+
+    editor.pause(1000);
+    editor.backspace();
+    editor.backspace();
+    editor.backspace();
+    editor.press('Mod-z');
+
+    expect(editor.outline).toBe('paragraph("abcdef")');
+    expect(editor.lastSteps).toBe(1);
+
+    editor.select(textSelection(1));
+    editor.deleteForward();
+    editor.deleteForward();
+    editor.deleteForward();
+
+    expect(editor.outline).toBe('paragraph("def")');
+
+    editor.press('Mod-z');
+
+    expect(editor.outline).toBe('paragraph("abcdef")');
+    expect(editor.lastSteps).toBe(1);
+  });
+
   it('starts a new step for another kind of input, a moved cursor or a fired rule', () => {
     const editor = blank();
 

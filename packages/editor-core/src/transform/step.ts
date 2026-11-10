@@ -290,6 +290,17 @@ const mergeReplace = (
       },
     };
   }
+  if (second.from === second.to && second.from === first.from) {
+    return {
+      ...first,
+      slice: {
+        content: normalizeContent([...second.slice.content, ...first.slice.content]),
+        openStart: 0,
+        openEnd: 0,
+      },
+    };
+  }
+
   const emptied = first.slice.content.length === 0 && second.slice.content.length === 0;
 
   if (emptied && second.to === first.from) {

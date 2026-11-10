@@ -10,7 +10,7 @@ import {
   type Plugin,
   type Transaction,
 } from '../state/state.types';
-import { invertStep } from '../transform/step';
+import { invertStep, mergeSteps } from '../transform/step';
 import type { Step } from '../transform/step.types';
 import {
   HistoryAction,
@@ -52,6 +52,16 @@ const eventOf = (tr: Transaction, before: EditorState): HistoryEvent => ({
   steps: invertAll(tr),
   selection: before.selection,
 });
+
+const joined = (newer: readonly Step[], older: readonly Step[]): readonly Step[] => {
+  const last = newer.at(-1);
+  const first = older[0];
+  const merged = last === undefined || first === undefined ? undefined : mergeSteps(last, first);
+
+  return merged === undefined
+    ? [...newer, ...older]
+    : [...newer.slice(0, -1), merged, ...older.slice(1)];
+};
 
 const movedSelection = (selection: Selection, chain: MirrorMaps): Selection => {
   const mapping = mirrored(chain);
@@ -119,7 +129,7 @@ const recorded = (
     last !== undefined && joins(value, tr, source, options.groupDelay)
       ? [
           ...value.done.slice(0, -1),
-          { steps: [...event.steps, ...last.steps], selection: last.selection },
+          { steps: joined(event.steps, last.steps), selection: last.selection },
         ]
       : [...value.done, event].slice(-options.depth);
 
