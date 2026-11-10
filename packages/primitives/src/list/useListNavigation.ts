@@ -321,8 +321,11 @@ export const useListNavigation = (
   const items = (): readonly HTMLElement[] => itemIndex().list;
 
   const activeElement = (): HTMLElement | null => {
-    if (held.node?.isConnected) {
-      return held.node;
+    const node = held.node;
+    const named = roving() || activeId.value === undefined || node?.id === activeId.value;
+
+    if (node?.isConnected && named) {
+      return node;
     }
 
     held.node = activeId.value === undefined ? null : resolveTarget(activeId.value, itemIndex());

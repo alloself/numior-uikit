@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test';
+import type { NuiCommandSource } from '../src';
 import { CommandDriver } from './drivers/command';
+
+const KEYED: NuiCommandSource<unknown> = [
+  { key: 'home', value: 'home', label: 'Home' },
+  { key: 'docs', value: 'docs', label: 'Documentation', keywords: ['guides'] },
+  { key: 'theme', value: 'theme', label: 'Toggle theme' },
+];
 
 describe('NuiCommand', () => {
   it('lists grouped commands with shortcuts and activates the first one for the keyboard', async () => {
@@ -34,6 +41,20 @@ describe('NuiCommand', () => {
     expect(command.labels).toEqual([]);
     expect(command.emptyText).toBe('No results');
     expect(command.activeLabel).toBeUndefined();
+  });
+
+  it('runs the highlighted command after the query is cleared when commands carry keys', async () => {
+    const command = CommandDriver.mount({ props: { items: KEYED } });
+
+    await command.ready();
+    await command.type('guides');
+    await command.type('');
+
+    expect(command.activeLabel).toBe('Home');
+
+    await command.press('Enter');
+
+    expect(command.selections.map((item) => item.value)).toEqual(['home']);
   });
 
   it('asks the browser for focus whenever the layer around it opens', () => {
