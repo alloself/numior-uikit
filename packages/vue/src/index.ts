@@ -292,7 +292,7 @@ export {
   NuiTreeSelectable,
   NuiTreeVariant,
 } from './tree/tree.types';
-export { CheckState } from './tree/tree.types';
+export { NuiCheckState } from './tree/tree.types';
 export { default as NuiChip } from './chip/NuiChip.vue';
 export { type NuiChipProps, NuiChipSize, NuiChipVariant } from './chip/chip.types';
 export { default as NuiCombobox } from './combobox/NuiCombobox.vue';

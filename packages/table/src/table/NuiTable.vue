@@ -258,7 +258,7 @@ import {
   type VirtualFrame,
 } from '@numior/primitives';
 import {
-  CheckState,
+  NuiCheckState,
   NuiEmpty,
   NuiMenu,
   NuiPagination,
@@ -1155,8 +1155,8 @@ const headUtility = (column: string): NuiTableUtilityCellProps => {
   return column === SELECT_KEY && selection.multiple.value
     ? {
         control: 'checkbox',
-        checked: selection.headerState.value === CheckState.Checked,
-        indeterminate: selection.headerState.value === CheckState.Indeterminate,
+        checked: selection.headerState.value === NuiCheckState.Checked,
+        indeterminate: selection.headerState.value === NuiCheckState.Indeterminate,
         disabled: selection.headerDisabled.value,
         label: selectAllText.value,
       }

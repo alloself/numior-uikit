@@ -1,5 +1,5 @@
 import type { NuiOptionKey } from '../shared/options';
-import { CheckState, type NuiTreeItem } from './tree.types';
+import { NuiCheckState, type NuiTreeItem } from './tree.types';
 
 interface EnabledTally {
   readonly any: boolean;
@@ -29,8 +29,8 @@ export const checkStates = <T>(
   items: readonly NuiTreeItem<T>[],
   checked: ReadonlySet<string>,
   keyOf: NuiOptionKey<T>,
-): ReadonlyMap<string, CheckState> => {
-  const states = new Map<string, CheckState>();
+): ReadonlyMap<string, NuiCheckState> => {
+  const states = new Map<string, NuiCheckState>();
 
   const visit = (item: NuiTreeItem<T>): boolean => {
     const key = keyOf(item.value);
@@ -48,7 +48,7 @@ export const checkStates = <T>(
 
     states.set(
       key,
-      own ? CheckState.Checked : below ? CheckState.Indeterminate : CheckState.Unchecked,
+      own ? NuiCheckState.Checked : below ? NuiCheckState.Indeterminate : NuiCheckState.Unchecked,
     );
 
     return own || below;

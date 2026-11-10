@@ -1,5 +1,5 @@
 import { computed, type ComputedRef, type Ref, type ShallowRef } from 'vue';
-import type { CheckState } from '@numior/vue';
+import type { NuiCheckState } from '@numior/vue';
 import { TableNodeKind, type TableEngine, type TableNodeId } from '../engine';
 import { NuiTableSelection, type NuiTableCellPosition, type TablePageWindow } from './table.types';
 import { Key } from '@numior/primitives';
@@ -20,7 +20,7 @@ export interface TableSelectionOptions<T> {
 export interface TableSelection<T> {
   readonly enabled: ComputedRef<boolean>;
   readonly multiple: ComputedRef<boolean>;
-  readonly headerState: ComputedRef<CheckState>;
+  readonly headerState: ComputedRef<NuiCheckState>;
   readonly headerDisabled: ComputedRef<boolean>;
   has(row: T): boolean;
   toggle(row: T): void;
@@ -100,7 +100,7 @@ export const useTableSelection = <T>(options: TableSelectionOptions<T>): TableSe
     return { picked, skipped };
   };
 
-  const headerState = computed<CheckState>(() => {
+  const headerState = computed<NuiCheckState>(() => {
     void options.revision.value;
     const chosen = keys.value;
 

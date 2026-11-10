@@ -59,8 +59,8 @@ const docs: DocsMap = {
         en: 'The list handles arrow keys itself. Turn it off when an outer field, such as a select, drives the keyboard.',
       },
       activeId: {
-        ru: '`id` подсвеченного пункта, когда клавиатурой управляет поле снаружи.',
-        en: '`id` of the highlighted item while an outer field drives the keyboard.',
+        ru: '`id` подсвеченного пункта, когда клавиатурой управляет поле снаружи. Его даёт `optionElementId(listId, index)`; обратно номер пункта возвращает `optionIndexOf(element)`.',
+        en: '`id` of the highlighted item while an outer field drives the keyboard. `optionElementId(listId, index)` builds it; `optionIndexOf(element)` gives the index back.',
       },
       loading: {
         ru: 'Показывает индикатор загрузки вместо пунктов.',

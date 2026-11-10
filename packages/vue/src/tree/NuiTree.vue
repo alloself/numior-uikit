@@ -93,7 +93,7 @@ import {
 } from './cascade';
 import { findTreeItem, flattenTree, restIndexOf, siblingIndicesOf, type TreeNode } from './flatten';
 import {
-  CheckState,
+  NuiCheckState,
   NuiTreeSelectable,
   NuiTreeVariant,
   type NuiTreeItem,
@@ -120,8 +120,8 @@ const afterPaint = (callback: () => void): void => {
   requestAnimationFrame(() => requestAnimationFrame(callback));
 };
 
-const ariaChecked = (state: CheckState | undefined): boolean | 'mixed' =>
-  state === CheckState.Indeterminate ? AriaValue.Mixed : state === CheckState.Checked;
+const ariaChecked = (state: NuiCheckState | undefined): boolean | 'mixed' =>
+  state === NuiCheckState.Indeterminate ? AriaValue.Mixed : state === NuiCheckState.Checked;
 
 const FOLDING = {
   tag: 'ul',
@@ -197,7 +197,7 @@ const { keyOf, selectedKeys, choose } = useOptionSelection<T>({
 const expandedKeys = computed(() => new Set(expanded.value.map(keyOf)));
 
 const checkStates = computed(() =>
-  checkable ? checkStatesOf(items, selectedKeys.value, keyOf) : new Map<string, CheckState>(),
+  checkable ? checkStatesOf(items, selectedKeys.value, keyOf) : new Map<string, NuiCheckState>(),
 );
 
 const pending = shallowReactive(new Set<string>());

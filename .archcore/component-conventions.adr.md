@@ -136,6 +136,12 @@ status: accepted
   которого есть только встроенные тексты, берёт локаль из настроек кита.
 - Диапазон выделения таблицы (`{ from, to }`, с направлением) и прямоугольник ядра листа
   (`{ top, left, bottom, right }`) — разные понятия и не сводятся.
+- Узкие наборы тонов — константы: `ToastTone` в `@numior/primitives`, `NuiMenuItemTone` собран из
+  членов `NuiTone`. Подмножество держит компилятор: `toneIcon` принимает `NuiTone` и получает тон
+  уведомления.
+- Публичные имена `@numior/vue` носят префикс `Nui` (`NuiCheckState`); примитивы экспортируют без
+  префикса. `optionElementId(listId, index)` и `optionIndexOf(element)` остаются в экспорте: это
+  договор об `id` пунктов для списка с `keyboard: false` и `activeId`, им пользуются лист и редактор.
 - Проверка: правило ESLint `numior/api-names` (`scripts/eslint/api-names.mjs`) для `packages/*/src`.
   Оно читает интерфейсы `*Props` и `*Options` (кроме полей-функций), интерфейсы `*Events` и
   `*Emits`, типы `defineEmits` и имена `defineModel` и называет нужное слово вместо запрещённого.
