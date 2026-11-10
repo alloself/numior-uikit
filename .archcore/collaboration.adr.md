@@ -14,7 +14,11 @@ SaleHub сможет реализовать у себя. Yjs — необяза�
 ## Decision
 
 - Пакет `@numior/collaboration` (приватный). Точка входа `.` без Vue и DOM зависит только от
-  `@numior/editor-core`; `check-artifacts.mjs` проверяет отсутствие `vue`, `yjs` и `ws`. Зоны fallow:
+  `@numior/editor-core`, и в `dependencies` пакета стоит только он: серверу, который ставит пакет ради
+  протокола и клиента, Vue-кит не нужен. Всё, что нужно входам `./vue` и `./yjs` (`vue`, `@vueuse/core`,
+  `@numior/vue`, `@numior/primitives`, `@numior/editor-vue`, `@numior/content`, `@numior/tokens`, `yjs`), —
+  необязательные peer. `check-artifacts.mjs` проверяет, что сборка корневого входа не импортирует ничего,
+  кроме `@numior/editor-core`, что в `dependencies` нет других пакетов и что обязательных peer нет. Зоны fallow:
   `collaboration` (только ядро редактора) и `collaboration-server` (`server/`, `test/`).
 - Сервер — источник порядка. Журнал только дополняется, `version` равна его длине. Пачка от текущей
   версии принимается как есть. Пачку от прошлой версии сервер переносит сам через пропущенные шаги

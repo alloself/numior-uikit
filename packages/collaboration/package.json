@@ -35,27 +35,55 @@
     "build": "vp build && vue-tsc -p tsconfig.build.json"
   },
   "dependencies": {
-    "@numior/content": "workspace:*",
-    "@numior/editor-core": "workspace:*",
-    "@numior/editor-vue": "workspace:*",
-    "@numior/primitives": "workspace:*",
-    "@numior/vue": "workspace:*",
-    "@vueuse/core": "15.0.0"
+    "@numior/editor-core": "workspace:*"
   },
   "devDependencies": {
+    "@numior/content": "workspace:*",
+    "@numior/editor-vue": "workspace:*",
+    "@numior/primitives": "workspace:*",
     "@numior/spreadsheet": "workspace:*",
+    "@numior/tokens": "workspace:*",
+    "@numior/vue": "workspace:*",
     "@types/ws": "8.18.2",
     "@vue/test-utils": "2.5.1",
+    "@vueuse/core": "15.0.0",
     "fast-check": "4.10.2",
+    "vue": "3.5.43",
     "ws": "8.22.2",
     "yjs": "13.6.33"
   },
   "peerDependencies": {
+    "@numior/content": "workspace:*",
+    "@numior/editor-vue": "workspace:*",
+    "@numior/primitives": "workspace:*",
     "@numior/tokens": "workspace:*",
+    "@numior/vue": "workspace:*",
+    "@vueuse/core": "^15.0.0",
     "vue": "^3.5.0",
     "yjs": "^13.6.0"
   },
   "peerDependenciesMeta": {
+    "@numior/content": {
+      "optional": true
+    },
+    "@numior/editor-vue": {
+      "optional": true
+    },
+    "@numior/primitives": {
+      "optional": true
+    },
+    "@numior/tokens": {
+      "optional": true
+    },
+    "@numior/vue": {
+      "optional": true
+    },
+    "@vueuse/core": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    },
     "yjs": {
       "optional": true
     }
