@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { Key, PopoverState, afterRelease } from '@numior/primitives';
+import { Key, PopoverState, afterRelease, isComposing } from '@numior/primitives';
 import {
   NuiButton,
   NuiIcon,
@@ -185,6 +185,10 @@ const historyAction = (event: KeyboardEvent): (() => void) | undefined => {
 
 const onKeydown = (event: KeyboardEvent): void => {
   const action = tabOf(event.target) === undefined ? undefined : historyAction(event);
+
+  if (isComposing(event)) {
+    return;
+  }
 
   if (action !== undefined) {
     event.preventDefault();

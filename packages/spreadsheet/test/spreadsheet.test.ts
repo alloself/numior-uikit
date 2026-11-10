@@ -368,6 +368,32 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.formula).toBe('75%');
   });
 
+  it('leaves Enter, Escape and the arrows to the IME while a composition runs', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.focus(3, 1);
+    await sheet.focusFormula();
+    await sheet.typeFormula('にほん');
+    await sheet.pressInFormula('Enter', { composing: true });
+    await sheet.pressInFormula('Escape', { composing: true });
+
+    expect(sheet.editing).toBe(true);
+    expect(sheet.editorText).toBe('にほん');
+    expect(sheet.changes).toHaveLength(0);
+
+    await sheet.pressInFormula('Escape');
+    await sheet.focus(3, 1);
+    await sheet.press('F2');
+    await sheet.type('=SU');
+    await sheet.press('Enter', { composing: true });
+    await sheet.press('Tab', { composing: true });
+
+    expect(sheet.editing).toBe(true);
+    expect(sheet.editorText).toBe('=SU');
+
+    sheet.unmount();
+  });
+
   it('edits the active cell from the formula bar and shares the draft with the cell editor', async () => {
     const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
 

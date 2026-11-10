@@ -28,6 +28,7 @@ interface KeyOptions {
   readonly ctrl?: boolean | undefined;
   readonly shift?: boolean | undefined;
   readonly alt?: boolean | undefined;
+  readonly composing?: boolean | undefined;
 }
 
 interface SpreadsheetMount extends NuiSpreadsheetProps {
@@ -52,6 +53,7 @@ const keydown = (target: Element, key: string, options: KeyOptions): void => {
       ctrlKey: options.ctrl ?? false,
       shiftKey: options.shift ?? false,
       altKey: options.alt ?? false,
+      isComposing: options.composing ?? false,
       bubbles: true,
       cancelable: true,
     }),

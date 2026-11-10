@@ -247,7 +247,7 @@
 
 <script setup lang="ts">
 import { PaintRoller } from '@lucide/vue';
-import { Direction, Key, useLocale, useMessages } from '@numior/primitives';
+import { Direction, Key, isComposing, useLocale, useMessages } from '@numior/primitives';
 import {
   NuiTable,
   tableCells,
@@ -733,6 +733,9 @@ const assist = useFormulaAssist({
 const isToned = (segment: FormulaSegment): boolean => segment.tone !== undefined;
 
 const onKeydown = (event: KeyboardEvent): void => {
+  if (isComposing(event)) {
+    return;
+  }
   file.onKeydown(event);
   drawingEdit.onKeydown(event);
 

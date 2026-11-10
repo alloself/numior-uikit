@@ -87,6 +87,7 @@ import {
   ReorderAxis,
   ReorderEventType,
   ReorderPhase,
+  isComposing,
   useMessages,
   useReorder,
   type ReorderEvent,
@@ -339,7 +340,9 @@ const popupOpen = (): boolean =>
   (panel.value?.querySelector('[aria-expanded="true"]') ?? null) !== null;
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (event.key !== Key.Escape || event.defaultPrevented || reordering.value || popupOpen()) {
+  const busy = isComposing(event) || event.defaultPrevented || reordering.value || popupOpen();
+
+  if (event.key !== Key.Escape || busy) {
     return;
   }
   event.preventDefault();

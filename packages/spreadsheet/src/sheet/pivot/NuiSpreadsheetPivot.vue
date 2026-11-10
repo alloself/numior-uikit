@@ -124,7 +124,7 @@ import {
   Settings2,
   Sigma,
 } from '@lucide/vue';
-import { Key, useLocale, useMessages } from '@numior/primitives';
+import { Key, isComposing, useLocale, useMessages } from '@numior/primitives';
 import { NuiButton, NuiCheckbox, NuiIcon, NuiMenu, type NuiMenuEntry } from '@numior/vue';
 import { computed, markRaw, ref, shallowRef, useTemplateRef, watch } from 'vue';
 import {
@@ -746,7 +746,7 @@ const popupOpen = (): boolean =>
   (panel.value?.querySelector('[aria-expanded="true"]') ?? null) !== null;
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (event.key !== Key.Escape || event.defaultPrevented || popupOpen()) {
+  if (event.key !== Key.Escape || isComposing(event) || event.defaultPrevented || popupOpen()) {
     return;
   }
   event.preventDefault();

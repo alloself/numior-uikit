@@ -1,4 +1,4 @@
-import { Key } from '@numior/primitives';
+import { Key, isComposing } from '@numior/primitives';
 import {
   NuiTableEditMode,
   NuiTableEditMove,
@@ -113,6 +113,9 @@ export const useFormulaBar = (options: FormulaBarOptions): FormulaBar => {
   };
 
   const onNameKeydown = (event: KeyboardEvent): void => {
+    if (isComposing(event)) {
+      return;
+    }
     if (event.key === Key.Escape) {
       event.preventDefault();
       nameDraft.value = undefined;
@@ -170,6 +173,9 @@ export const useFormulaBar = (options: FormulaBarOptions): FormulaBar => {
     const table = options.table.value;
     const move = commitMoveOf(event);
 
+    if (isComposing(event)) {
+      return;
+    }
     if (table === null || editing.draft.value === undefined) {
       if (event.key === Key.Escape) {
         event.preventDefault();
