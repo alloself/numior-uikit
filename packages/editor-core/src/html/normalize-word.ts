@@ -21,11 +21,34 @@ interface ListDraft {
   readonly items: ItemDraft[];
 }
 
+interface Marker {
+  readonly tag: 'ul' | 'ol';
+  readonly start: number | undefined;
+}
+
 const LEVEL = /^l\d+\s+level(\d+)/iu;
 
-const ORDERED = /^(?:\d+|[a-z]{1,3}|[ivxlcdm]+)[.)]$/iu;
+const SHAPE = /^\(?(?:[\da-z]+\.)*([\da-z]+)([.)]?)$/iu;
 
-const NUMBER = /^\d+/u;
+const DIGITS = /^\d+$/u;
+
+const LETTERED = /^(?:[a-z]{1,3}|[ivxlcdm]+)$/iu;
+
+const ROMAN = /^[ivx]+$/iu;
+
+const REPEATED = /^([a-z])\1{0,2}$/iu;
+
+const ALPHABET = 26;
+
+const BEFORE_A = 'a'.charCodeAt(0) - 1;
+
+const BULLET: Marker = { tag: 'ul', start: undefined };
+
+const ROMAN_DIGITS: ReadonlyMap<string, number> = new Map([
+  ['i', 1],
+  ['v', 5],
+  ['x', 10],
+]);
 
 const TITLES: ReadonlyMap<string, string> = new Map([
   ['MsoTitle', 'h1'],
@@ -51,19 +74,43 @@ const markerIn = (nodes: readonly HtmlNode[]): HtmlElement | undefined => {
 const withoutMarkers = (paragraph: HtmlElement): HtmlElement =>
   rewriteTree(paragraph, (children) => children.filter((child) => !isMarker(child)));
 
+const romanCount = (text: string): number =>
+  text.split('').reduce((total, letter, index, letters) => {
+    const value = ROMAN_DIGITS.get(letter) ?? 0;
+    const next = ROMAN_DIGITS.get(letters[index + 1] ?? '') ?? 0;
+
+    return value < next ? total - value : total + value;
+  }, 0);
+
+const letterCount = (text: string): number | undefined =>
+  REPEATED.test(text) ? (text.length - 1) * ALPHABET + text.charCodeAt(0) - BEFORE_A : undefined;
+
+const markerOf = (text: string): Marker => {
+  const [, last, end] = SHAPE.exec(text.toLowerCase()) ?? [];
+
+  if (last === undefined) {
+    return BULLET;
+  }
+
+  if (DIGITS.test(last)) {
+    return { tag: 'ol', start: Number(last) };
+  }
+
+  if (end === '' || !LETTERED.test(last)) {
+    return BULLET;
+  }
+  return { tag: 'ol', start: ROMAN.test(last) ? romanCount(last) : letterCount(last) };
+};
+
 const itemOf = (node: HtmlNode): WordItem | undefined => {
   const level = isElement(node, 'p') ? LEVEL.exec(node.style('mso-list') ?? '')?.[1] : undefined;
 
   if (!isElement(node) || level === undefined) {
     return undefined;
   }
-  const marker = (markerIn(node.children)?.text() ?? '').replaceAll(/\s/gu, '');
-  const start = NUMBER.exec(marker)?.[0];
-
   return {
     level: Number(level),
-    tag: ORDERED.test(marker) ? 'ol' : 'ul',
-    start: start === undefined ? undefined : Number(start),
+    ...markerOf((markerIn(node.children)?.text() ?? '').replaceAll(/\s/gu, '')),
     paragraph: withoutMarkers(node),
   };
 };

@@ -48,6 +48,15 @@ const gridOf = (html: string): HtmlTableGrid | undefined => {
   return grid;
 };
 
+const wordItem = (level: number, marker: string, label: string): string =>
+  `<p class=MsoListParagraph style='text-indent:-18.0pt;mso-list:l0 level${level} lfo1'>` +
+  `<![if !supportLists]><span lang=EN-US><span style='mso-list:Ignore'>${marker}` +
+  `<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp; </span></span></span><![endif]>` +
+  `<span lang=EN-US>${label}</span></p>`;
+
+const wordList = (...items: readonly (readonly [number, string, string])[]): string =>
+  items.map(([level, marker, label]) => wordItem(level, marker, label)).join('\n');
+
 describe('HTML parsing', () => {
   it('wraps loose text into paragraphs and reads marks from tags', () => {
     expect(read('Hello <b>bold</b>, <i>it</i> and <a href="/x">link</a><p>Next</p>')).toBe(
@@ -139,6 +148,47 @@ describe('HTML parsing', () => {
 
     expect(link?.kind === 'element' ? link.content[0] : undefined).toEqual(
       text('q', [fixtureSchema.mark('link', { href: '/a?lt=1&lt=2&ampx=3&y=4&z>' })]),
+    );
+  });
+
+  it('keeps a numbered list from Word numbered on every level', () => {
+    expect(
+      read(
+        wordList([1, '1.', 'One'], [2, '1.1.', 'Deep'], [2, '1.2.', 'Deeper'], [1, '2.', 'Two']),
+      ),
+    ).toBe(
+      'ordered_list(list_item(paragraph("One") ordered_list(list_item(paragraph("Deep")) list_item(paragraph("Deeper")))) ' +
+        'list_item(paragraph("Two")))',
+    );
+
+    expect(read(wordList([1, '1', 'One'], [2, '1.1', 'Deep'], [3, '1.1.1', 'Deepest']))).toBe(
+      'ordered_list(list_item(paragraph("One") ordered_list(list_item(paragraph("Deep") ' +
+        'ordered_list(list_item(paragraph("Deepest")))))))',
+    );
+  });
+
+  it('starts a list from Word at the number its first item shows', () => {
+    expect(read(wordList([1, '2.', 'Two'], [2, '2.3.', 'Third'], [2, '2.4.', 'Fourth']))).toBe(
+      'ordered_list{start=2}(list_item(paragraph("Two") ' +
+        'ordered_list{start=3}(list_item(paragraph("Third")) list_item(paragraph("Fourth")))))',
+    );
+
+    expect(read(wordList([1, '(4)', 'Four'], [2, 'c)', 'Third'], [3, 'iv.', 'Fourth']))).toBe(
+      'ordered_list{start=4}(list_item(paragraph("Four") ordered_list{start=3}(list_item(paragraph("Third") ' +
+        'ordered_list{start=4}(list_item(paragraph("Fourth")))))))',
+    );
+
+    expect(read(wordList([1, 'bb.', 'Twenty-eighth'], [1, 'cc.', 'Next']))).toBe(
+      'ordered_list{start=28}(list_item(paragraph("Twenty-eighth")) list_item(paragraph("Next")))',
+    );
+  });
+
+  it('keeps bullets from Word as bullets whatever glyph draws them', () => {
+    expect(
+      read(wordList([1, '·', 'Dot'], [2, 'o', 'Circle'], [3, '§', 'Square'], [1, 'v', 'Diamond'])),
+    ).toBe(
+      'bullet_list(list_item(paragraph("Dot") bullet_list(list_item(paragraph("Circle") ' +
+        'bullet_list(list_item(paragraph("Square")))))) list_item(paragraph("Diamond")))',
     );
   });
 
