@@ -125,9 +125,11 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
   const aborter = new AbortController();
   const owed = new Set<string>();
   const waiting = new Map<string, CommentThread>();
+  const early: CommentEvent[] = [];
 
   let latest: EditorState | undefined;
   let currentKey = '';
+  let loading = true;
   let unsubscribe: (() => void) | undefined;
 
   const run = (command: Command): boolean => editor()?.run(command) ?? false;
@@ -280,6 +282,10 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
   };
 
   const onEvent = (event: CommentEvent): void => {
+    if (loading) {
+      early.push(event);
+    }
+
     switch (event.kind) {
       case CommentEventKind.Changed:
         replaced(event.thread);
@@ -449,10 +455,14 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
 
     const loaded = await attempt(() => adapter.list(doc, aborter.signal));
 
+    loading = false;
+
     if (loaded !== undefined) {
       threads.value = loaded;
       placeAll();
+      early.forEach(onEvent);
     }
+    early.length = 0;
   });
 
   watch(editor, (api) => {

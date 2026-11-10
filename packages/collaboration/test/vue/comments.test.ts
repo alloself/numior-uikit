@@ -368,6 +368,29 @@ describe('NuiEditorComments', () => {
     ]);
   });
 
+  it('keeps what the adapter pushed while the list of threads was loading', async () => {
+    const adapter = fakeCommentsAdapter([threadOf('t'), threadOf('gone', { anchor: secondLine })]);
+
+    adapter.holdList();
+
+    const view = CommentsDriver.mount([], undefined, adapter);
+
+    await view.loaded();
+
+    adapter.emit({
+      kind: CommentEventKind.Changed,
+      thread: threadOf('pushed', { anchor: secondLine }),
+    });
+
+    adapter.emit({ kind: CommentEventKind.Removed, id: 'gone' });
+    adapter.releaseList();
+    await view.loaded();
+
+    await vi.waitFor(() => {
+      expect(view.bodies).toEqual(['Body of t', 'Body of pushed']);
+    });
+  });
+
   it('applies changes pushed by the adapter', async () => {
     const view = CommentsDriver.mount([threadOf('t')]);
 

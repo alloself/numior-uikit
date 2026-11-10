@@ -12,6 +12,8 @@ export interface FakeCommentsAdapter extends CommentsAdapter {
   readonly moved: readonly (readonly [string, CommentAnchor])[];
   readonly created: () => number;
   readonly stored: () => readonly CommentThread[];
+  readonly holdList: () => void;
+  readonly releaseList: () => void;
   readonly failNext: () => void;
   readonly emit: (event: CommentEvent) => void;
 }
@@ -57,6 +59,8 @@ export const fakeCommentsAdapter = (seed: readonly CommentThread[] = []): FakeCo
   let threads = [...seed];
   let serial = 0;
   let failing = false;
+  let held: Promise<void> | undefined;
+  let release: (() => void) | undefined;
   let listener: ((event: CommentEvent) => void) | undefined;
   const moved: (readonly [string, CommentAnchor])[] = [];
 
@@ -80,13 +84,26 @@ export const fakeCommentsAdapter = (seed: readonly CommentThread[] = []): FakeCo
     moved,
     created: () => serial,
     stored: () => threads,
+    holdList: () => {
+      held = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+    },
+    releaseList: () => {
+      release?.();
+    },
     failNext: () => {
       failing = true;
     },
     emit: (event) => {
       listener?.(event);
     },
-    list: () => guarded(() => threads),
+    list: async () => {
+      const listed = threads;
+
+      await held;
+      return guarded(() => listed);
+    },
     create: (_doc, comment) =>
       guarded(() => {
         serial += 1;
