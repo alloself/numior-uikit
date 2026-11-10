@@ -210,6 +210,12 @@ export class LayoutDriver extends ComponentDriver {
     return this.wrapper.find('.nui-sidebar-sub__flyout');
   }
 
+  get flyoutShown(): boolean {
+    const flyout = this.flyout.element;
+
+    return flyout instanceof HTMLElement && this.stubs.shown.has(flyout);
+  }
+
   get focusedLabel(): string | undefined {
     const focused = document.activeElement;
 
@@ -264,6 +270,14 @@ export class LayoutDriver extends ComponentDriver {
 
   async leaveSub(): Promise<void> {
     await this.subToggle.trigger('pointerleave');
+  }
+
+  async pressOutside(): Promise<void> {
+    await this.wrapper.find('.editor').trigger('pointerdown');
+  }
+
+  async pressInFlyout(): Promise<void> {
+    await this.flyout.trigger('pointerdown');
   }
 
   async pressOnSub(key: string): Promise<void> {

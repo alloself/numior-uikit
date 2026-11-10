@@ -793,6 +793,15 @@ describe('server rendering', () => {
     expect(html).not.toContain('<dialog');
   });
 
+  it('renders a sub list that holds the current page expanded on the server', async () => {
+    const html = await renderToString(LayoutScene);
+
+    expect(html).toContain('nui-sidebar-sub--open');
+    expect(html).toContain('id="reports-items"');
+    expect(html).not.toMatch(/id="reports-items"[^>]*inert/);
+    expect(html).toContain('href="#sales"');
+  });
+
   it('renders an upload zone with a labelled button and existing files without previews', async () => {
     const html = await renderToString(NuiUpload<string>, {
       props: {

@@ -1,3 +1,4 @@
+import { useEventListener } from '@vueuse/core';
 import {
   computed,
   onMounted,
@@ -57,10 +58,14 @@ const OPEN_DELAY = 100;
 const CLOSE_DELAY = 300;
 const OFFSET = 4;
 
+const pageDocument = (): Document | undefined =>
+  typeof document === 'undefined' ? undefined : document;
+
 export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout => {
   const open = ref(false);
   const direction = useDirection(options.trigger);
   const landing = createIntent<typeof ListMove.First>();
+  let pinned = false;
 
   const popover = usePopover(options.content, { open, id: options.id, mode: 'manual' });
 
@@ -88,9 +93,25 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
   const forwardKey = (): string => (direction.isRtl() ? Key.ArrowLeft : Key.ArrowRight);
   const backKey = (): string => (direction.isRtl() ? Key.ArrowRight : Key.ArrowLeft);
 
+  const holds = (target: EventTarget | null): boolean =>
+    target instanceof Node &&
+    (options.content.value?.contains(target) === true ||
+      options.trigger.value?.contains(target) === true);
+
   const holdsFocus = (): boolean => {
     const content = options.content.value;
     return content !== null && content.contains(document.activeElement);
+  };
+
+  const pin = (): void => {
+    pinned = true;
+    delay.openNow();
+  };
+
+  const leave = (): void => {
+    if (!pinned) {
+      delay.scheduleClose();
+    }
   };
 
   const closeAndReturn = (): void => {
@@ -116,7 +137,7 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
 
     event.preventDefault();
     landing.set(ListMove.First);
-    delay.openNow();
+    pin();
   };
 
   const onContentKeydown = (event: KeyboardEvent): void => {
@@ -133,17 +154,35 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
   };
 
   const onContentFocusout = (event: FocusEvent): void => {
-    const next = event.relatedTarget;
-
-    const within =
-      next instanceof Node &&
-      (options.content.value?.contains(next) === true ||
-        options.trigger.value?.contains(next) === true);
-
-    if (!within) {
+    if (!holds(event.relatedTarget)) {
       delay.closeNow();
     }
   };
+
+  const onPagePointerdown = (event: PointerEvent): void => {
+    if (!holds(event.target)) {
+      delay.closeNow();
+    }
+  };
+
+  useEventListener(
+    () => (open.value ? pageDocument() : undefined),
+    'pointerdown',
+    onPagePointerdown,
+    {
+      capture: true,
+    },
+  );
+
+  watch(
+    open,
+    (isOpen) => {
+      if (!isOpen) {
+        pinned = false;
+      }
+    },
+    { flush: 'sync' },
+  );
 
   watch(options.enabled, (isEnabled) => {
     if (!isEnabled) {
@@ -173,20 +212,20 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
     contentAttrs: popover.contentAttrs,
     triggerHandlers: {
       onPointerenter: onTriggerPointerenter,
-      onPointerleave: () => delay.scheduleClose(),
+      onPointerleave: leave,
       onKeydown: onTriggerKeydown,
     },
     contentHandlers: {
       onPointerenter: () => delay.cancel(),
-      onPointerleave: () => delay.scheduleClose(),
+      onPointerleave: leave,
       onKeydown: onContentKeydown,
       onFocusout: onContentFocusout,
     },
     toggle: () => {
-      if (open.value) {
+      if (open.value && pinned) {
         delay.closeNow();
       } else {
-        delay.openNow();
+        pin();
       }
     },
     dismiss: () => delay.closeNow(),

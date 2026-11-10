@@ -15,6 +15,7 @@ export class TopLayerStubs {
   readonly showModalCalls: { count: number };
   readonly closedWith: string[];
   readonly popoverCalls: { show: number; hide: number };
+  readonly shown: Set<HTMLElement>;
   private readonly restorers: Array<() => void> = [];
 
   constructor() {
@@ -24,10 +25,13 @@ export class TopLayerStubs {
     this.showModalCalls = showModalCalls;
     this.closedWith = closedWith;
     this.popoverCalls = popoverCalls;
+    const shown = new Set<HTMLElement>();
+    this.shown = shown;
 
     this.define(HTMLElement.prototype, 'showPopover', {
       value(this: HTMLElement) {
         popoverCalls.show += 1;
+        shown.add(this);
         announce(this, 'open');
       },
     });
@@ -35,6 +39,7 @@ export class TopLayerStubs {
     this.define(HTMLElement.prototype, 'hidePopover', {
       value(this: HTMLElement) {
         popoverCalls.hide += 1;
+        shown.delete(this);
         announce(this, 'closed');
       },
     });

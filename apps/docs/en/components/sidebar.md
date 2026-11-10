@@ -49,6 +49,12 @@ the screen edges.
 In the collapsed icon rail an item label shows in a tooltip. A nested list opens as a panel
 next to the rail on hover, on click or on an arrow key.
 
+A panel opened by hover closes once the pointer leaves. A click on the button pins the panel.
+A pinned panel closes on a press outside it, on a second click on the button or on Escape.
+
+`NuiSidebarSub` with `active` is expanded from the first frame, on the server too. With
+`v-model:open`, the owner of the model sets the initial value.
+
 `side="end"` puts the panel on the right, and on the left in right-to-left text. A group with
 `collapsible` collapses through a button in its label, and `NuiSidebarSub` through a button in
 the item row.

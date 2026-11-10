@@ -158,6 +158,60 @@ describe('NuiLayout with NuiSidebar', () => {
     layout.unmount();
   });
 
+  it('shows the flyout again after the sidebar was expanded and collapsed with the flyout open', async () => {
+    const layout = LayoutDriver.mount({ collapsible: 'icon' });
+
+    await layout.clickTrigger();
+    await layout.clickSub();
+
+    expect(layout.flyoutShown).toBe(true);
+
+    await layout.pressShortcut();
+    await layout.pressShortcut();
+
+    expect(layout.subToggle.attributes('aria-expanded')).toBe('false');
+
+    await layout.clickSub();
+
+    expect(layout.flyoutShown).toBe(true);
+
+    layout.unmount();
+  });
+
+  it('keeps a flyout opened by hover when its button is clicked and closes it on a press outside', async () => {
+    vi.useFakeTimers();
+    const layout = LayoutDriver.mount({ collapsible: 'icon' });
+
+    await layout.clickTrigger();
+    await layout.hoverSub();
+    await layout.advance(100);
+    await layout.clickSub();
+
+    expect(layout.subToggle.attributes('aria-expanded')).toBe('true');
+
+    await layout.leaveSub();
+    await layout.advance(300);
+    await layout.pressInFlyout();
+
+    expect(layout.subToggle.attributes('aria-expanded')).toBe('true');
+
+    await layout.pressOutside();
+
+    expect(layout.subToggle.attributes('aria-expanded')).toBe('false');
+
+    await layout.clickSub();
+    await layout.pressOutside();
+
+    expect(layout.subToggle.attributes('aria-expanded')).toBe('false');
+
+    await layout.clickSub();
+    await layout.clickSub();
+
+    expect(layout.subToggle.attributes('aria-expanded')).toBe('false');
+
+    layout.unmount();
+  });
+
   it('moves into a drawer on small screens and closes it after an item is picked', async () => {
     const layout = LayoutDriver.mount({ collapsible: 'offcanvas' });
     expect(layout.drawer.exists()).toBe(false);
