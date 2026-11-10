@@ -1,10 +1,13 @@
+import { sortBy } from 'lodash-es';
 import { inlineText } from '../commands/input';
 import type { InputIntent } from '../state/input.types';
+import { nearestCursor } from '../state/selection';
 import {
   descAround,
   redrawContent,
   textblockAround,
   widgetAround,
+  type Desc,
   type ElementDesc,
   type ViewContext,
 } from './desc';
@@ -12,6 +15,11 @@ import type { ViewHost } from './host.types';
 import { contentStart } from './positions';
 import { commonPrefix, commonSuffix } from './text-diff';
 import { DescKind, DomName } from './view.types';
+
+interface Seen {
+  readonly text: string;
+  readonly caret: number | undefined;
+}
 
 export interface DomWatch {
   ignoreOwn(): void;
@@ -79,28 +87,39 @@ const caretIn = (context: ViewContext, content: Node): number | undefined => {
     : offsetWithin(context, content, focus, selection?.focusOffset ?? 0);
 };
 
+const isTextblock = (context: ViewContext, desc: ElementDesc): boolean =>
+  context.schema.nodes.get(desc.node.type)?.inlineContent === true;
+
+const stayedTextblock = (context: ViewContext, desc: Desc | undefined): boolean =>
+  desc?.kind === DescKind.Element && desc.dom.isConnected && isTextblock(context, desc);
+
+const seenIn = (context: ViewContext, desc: ElementDesc): Seen | undefined =>
+  desc.contentDOM === null
+    ? undefined
+    : {
+        text: readInline(context, desc.contentDOM),
+        caret: caretIn(context, desc.contentDOM),
+      };
+
 const intentOf = (
   context: ViewContext,
   desc: ElementDesc,
-  dom: string,
+  seen: Seen | undefined,
 ): InputIntent | undefined => {
   const model = inlineText(desc.node);
-  const textblock = context.schema.nodes.get(desc.node.type)?.inlineContent === true;
 
-  if (!textblock || dom === model || desc.contentDOM === null) {
+  if (seen === undefined || !isTextblock(context, desc) || seen.text === model) {
     return undefined;
   }
-  const prefix = commonPrefix(model, dom);
-  const suffix = commonSuffix(model, dom, prefix);
+  const prefix = commonPrefix(model, seen.text);
+  const suffix = commonSuffix(model, seen.text, prefix);
   const start = contentStart(desc);
-
-  const caret = caretIn(context, desc.contentDOM);
 
   return {
     kind: 'compose',
-    text: dom.slice(prefix, dom.length - suffix).replaceAll(ATOM, ''),
+    text: seen.text.slice(prefix, seen.text.length - suffix).replaceAll(ATOM, ''),
     range: { from: start + prefix, to: start + model.length - suffix },
-    caret: caret === undefined ? undefined : start + caret,
+    caret: seen.caret === undefined ? undefined : start + seen.caret,
   };
 };
 
@@ -108,22 +127,44 @@ export const createDomWatch = (
   host: ViewHost,
   apply: (intent: InputIntent) => void,
   redrawn: () => void,
+  restored: () => void,
 ): DomWatch => {
   const pending = new Set<ElementDesc>();
   let composing = false;
   let observer: MutationObserver | undefined;
 
+  const mirrorJoins = (container: ElementDesc): void => {
+    const joined = container.children.filter(
+      (child, index): child is ElementDesc =>
+        child.kind === DescKind.Element &&
+        !child.dom.isConnected &&
+        isTextblock(host.context, child) &&
+        stayedTextblock(host.context, container.children[index - 1]),
+    );
+
+    for (const desc of joined.toReversed()) {
+      const state = host.state();
+
+      host.dispatch(state.tr.setSelection(nearestCursor(state.doc, contentStart(desc))), 'key');
+      apply({ kind: 'delete', direction: 'backward', unit: 'character' });
+    }
+  };
+
   const flush = (): void => {
-    const blocks = [...pending];
+    const blocks = sortBy([...pending], (desc) => !isTextblock(host.context, desc));
+
+    const containers = blocks.filter((desc) => !isTextblock(host.context, desc));
+    const seen = new Map(blocks.map((desc) => [desc, seenIn(host.context, desc)]));
 
     pending.clear();
-    for (const desc of blocks) {
-      const content = desc.contentDOM;
+    containers.forEach(mirrorJoins);
 
-      const intent =
-        content === null
-          ? undefined
-          : intentOf(host.context, desc, readInline(host.context, content));
+    for (const desc of blocks) {
+      if (!desc.dom.isConnected) {
+        continue;
+      }
+
+      const intent = intentOf(host.context, desc, seen.get(desc));
 
       redrawContent(host.context, desc);
       redrawn();
@@ -131,6 +172,10 @@ export const createDomWatch = (
       if (intent !== undefined) {
         apply(intent);
       }
+    }
+
+    if (containers.length > 0) {
+      restored();
     }
   };
 

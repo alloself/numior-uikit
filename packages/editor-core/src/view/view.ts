@@ -425,6 +425,9 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     () => {
       placeWidgets(context, state, sets);
     },
+    () => {
+      sync.write();
+    },
   );
 
   const update = (next: EditorState): void => {

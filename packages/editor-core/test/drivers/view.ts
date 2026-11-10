@@ -432,6 +432,25 @@ export class EditorViewDriver {
     this.host.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: '' }));
   }
 
+  async composeJoining(block: number, typed = ''): Promise<void> {
+    const kept = textNodesOf(this.blocks[block - 1] ?? this.host)[0];
+    const gone = this.blocks[block];
+
+    this.startComposition();
+
+    if (kept !== undefined) {
+      const at = kept.data.length;
+
+      kept.appendData(`${typed}${gone?.textContent ?? ''}`);
+      document.getSelection()?.collapse(kept, at + typed.length);
+    }
+
+    gone?.remove();
+    await settle();
+    this.endComposition();
+    await settle();
+  }
+
   async compose(text: string): Promise<boolean> {
     const selection = document.getSelection();
     const anchor = selection?.anchorNode;

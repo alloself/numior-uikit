@@ -230,6 +230,30 @@ describe('editor view input', () => {
     expect(view.selection).toEqual(textSelection(2, 6));
   });
 
+  it('follows the browser when it joins two lines in the middle of a composition', async () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(4);
+    await view.composeJoining(1);
+
+    expect(view.modelTexts).toEqual(['abcd']);
+    expect(view.domTexts).toEqual(['abcd']);
+    expect(view.selection).toEqual(textSelection(3));
+  });
+
+  it('keeps what a composition wrote at the place where the browser joined two lines', async () => {
+    const view = mounted(
+      doc(node('paragraph', ['ab']), node('paragraph', ['cd']), node('paragraph', ['ef'])),
+    );
+
+    view.place(4);
+    await view.composeJoining(1, 'й');
+
+    expect(view.modelTexts).toEqual(['abйcd', 'ef']);
+    expect(view.domTexts).toEqual(['abйcd', 'ef']);
+    expect(view.selection).toEqual(textSelection(4));
+  });
+
   it('lets the composition edit the DOM and catches the model up when it ends', async () => {
     const view = mounted(twoParagraphs());
 
