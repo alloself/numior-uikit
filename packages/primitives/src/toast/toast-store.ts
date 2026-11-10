@@ -1,5 +1,6 @@
 import { computed, shallowRef, type ComputedRef, type ShallowRef } from 'vue';
 import { createTimers } from './toast-timers';
+import type { ToastHold } from './toast.types';
 
 export type ToastTone = 'neutral' | 'info' | 'success' | 'warning' | 'error';
 
@@ -42,8 +43,8 @@ export interface ToastStore {
   show(options: ToastOptions): string;
   dismiss(id: string): void;
   clear(): void;
-  pause(id: string): void;
-  resume(id: string): void;
+  hold(reason: ToastHold): void;
+  release(reason: ToastHold): void;
 }
 
 const DEFAULT_DURATION = 5000;
@@ -80,6 +81,7 @@ export const createToastStore = (options: ToastStoreOptions = {}): ToastStore =>
   const visible = computed(() => visibleSlice(toasts.value, options.limit));
   const timers = createTimers();
   const removals = new Map<string, ReturnType<typeof setTimeout>>();
+  const holds = new Set<ToastHold>();
   let counter = 0;
 
   const settle = (): void => {
@@ -89,6 +91,10 @@ export const createToastStore = (options: ToastStoreOptions = {}): ToastStore =>
     for (const toast of visible.value) {
       if (!toast.leaving && toast.duration > 0 && !timers.has(toast.id)) {
         timers.start(toast.id, toast.duration, () => dismiss(toast.id));
+
+        if (holds.size > 0) {
+          timers.pause(toast.id);
+        }
       }
     }
   };
@@ -164,7 +170,21 @@ export const createToastStore = (options: ToastStoreOptions = {}): ToastStore =>
         }, new Set()),
       );
     },
-    pause: (id) => timers.pause(id),
-    resume: (id) => timers.resume(id),
+    hold: (reason) => {
+      holds.add(reason);
+
+      for (const toast of toasts.value) {
+        timers.pause(toast.id);
+      }
+    },
+    release: (reason) => {
+      holds.delete(reason);
+
+      if (holds.size === 0) {
+        for (const toast of toasts.value) {
+          timers.resume(toast.id);
+        }
+      }
+    },
   };
 };

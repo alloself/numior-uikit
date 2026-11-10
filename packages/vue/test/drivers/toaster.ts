@@ -162,6 +162,10 @@ export class ToasterDriver extends ComponentDriver {
     return this.stubs.popoverCalls;
   }
 
+  get outsideFocused(): boolean {
+    return document.activeElement === this.wrapper.find('.outside').element;
+  }
+
   get customToasts(): string[] {
     return this.wrapper.findAll('.custom-toast').map((toast) => toast.text());
   }
@@ -176,6 +180,16 @@ export class ToasterDriver extends ComponentDriver {
 
   error(title: string, options?: ToastMessageOptions): string {
     return this.service.error(title, options);
+  }
+
+  async focusOutside(): Promise<void> {
+    this.wrapper.find<HTMLElement>('.outside').element.focus();
+    await nextTick();
+  }
+
+  async clear(): Promise<void> {
+    this.service.clear();
+    await nextTick();
   }
 
   async hoverStack(): Promise<void> {

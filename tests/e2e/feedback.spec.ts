@@ -84,6 +84,31 @@ test.describe('feedback', () => {
     await expect.poll(async () => (await feedback.readOutput()).toastCount).toBe(0);
   });
 
+  test('closing a toast with the pointer hands focus back and the rest keep counting', async ({
+    playground,
+    feedback,
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'pointer scenario');
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await feedback.toastError.click();
+    await feedback.toastShow.click();
+    await feedback.toastShow.focus();
+    const rest = feedback.toastByText('Уведомление №');
+
+    await rest.hover();
+    await feedback.closeButtonOf(feedback.toastByText('Не удалось сохранить')).click();
+
+    await expect(feedback.toastShow).toBeFocused();
+    await expect(rest).toBeVisible();
+
+    await page.mouse.move(0, 0);
+
+    await expect(rest).toBeHidden({ timeout: 7000 });
+  });
+
   test('error toasts are alerts, keep focusable actions and close on Escape', async ({
     playground,
     feedback,

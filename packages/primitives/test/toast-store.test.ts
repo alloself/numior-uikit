@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
-import { useToast } from '../src';
+import { ToastHold, useToast } from '../src';
 import { captureSetup } from './harness/capture';
 import { ToastHarness } from './harness/toast';
 
@@ -29,24 +29,57 @@ describe('toast store', () => {
     expect(toasts.ids).toEqual([]);
   });
 
-  it('keeps persistent toasts and pauses and resumes running timers', () => {
+  it('keeps persistent toasts and holds every countdown until the last reason to hold is gone', () => {
     const toasts = ToastHarness.create({ duration: 1000 });
     const sticky = toasts.show({ title: 'Stay', duration: 0 });
     const timed = toasts.show({ title: 'Go' });
+
     toasts.advance(400);
-    toasts.pause(timed);
+    toasts.hold(ToastHold.Hover);
+    toasts.hold(ToastHold.Focus);
     toasts.advance(5000);
+    toasts.release(ToastHold.Hover);
+    toasts.advance(5000);
+
     expect(toasts.leavingIds).toEqual([]);
 
-    toasts.resume(timed);
+    toasts.release(ToastHold.Focus);
     toasts.advance(599);
+
     expect(toasts.leavingIds).toEqual([]);
 
     toasts.advance(1);
+
     expect(toasts.leavingIds).toEqual([timed]);
 
     toasts.advance(10000);
+
     expect(toasts.ids).toEqual([sticky]);
+  });
+
+  it('holds a toast shown or promoted from the queue while the stack is held', () => {
+    const toasts = ToastHarness.create({ duration: 1000, limit: 1 });
+    const first = toasts.show({ title: 'A' });
+
+    toasts.hold(ToastHold.Hover);
+
+    const second = toasts.show({ title: 'B' });
+
+    toasts.dismiss(first);
+    toasts.advance(200);
+    toasts.advance(5000);
+
+    expect(toasts.visibleIds).toEqual([second]);
+    expect(toasts.leavingIds).toEqual([]);
+
+    toasts.release(ToastHold.Hover);
+    toasts.advance(999);
+
+    expect(toasts.leavingIds).toEqual([]);
+
+    toasts.advance(1);
+
+    expect(toasts.leavingIds).toEqual([second]);
   });
 
   it('queues beyond the limit and starts a queued timer only when promoted', () => {

@@ -32,10 +32,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, shallowReactive, shallowRef, useTemplateRef, watch } from 'vue';
+import {
+  computed,
+  onBeforeUnmount,
+  ref,
+  shallowReactive,
+  shallowRef,
+  useTemplateRef,
+  watch,
+} from 'vue';
 import { useEventListener, useResizeObserver } from '@vueuse/core';
-import { useMessages, usePopover, useToastStore } from '@numior/primitives';
+import { ToastHold, useMessages, usePopover, useToastStore, type Toast } from '@numior/primitives';
 import NuiToast from './NuiToast.vue';
+import { focusTargetIn, keyboardFocused, stayingNear } from './toast-focus';
 import { frontSize, itemStyle, layoutStack } from './toast-stack';
 import { toastMessages } from './toast.messages';
 import { NuiToasterPlacement, type NuiToasterProps, type NuiToasterSlot } from './toast.types';
@@ -72,6 +81,7 @@ const pageDocument = (): Document | undefined =>
   typeof document === 'undefined' ? undefined : document;
 
 const observed = new Map<HTMLElement, string>();
+const wrappers = new Map<string, HTMLElement>();
 const observedElements = shallowRef<HTMLElement[]>([]);
 
 const measure = (entries: readonly ResizeObserverEntry[]): void => {
@@ -90,6 +100,12 @@ useResizeObserver(observedElements, measure);
 
 const track = (toastId: string, element: unknown): void => {
   const target = element instanceof HTMLElement ? element.firstElementChild : null;
+
+  if (element instanceof HTMLElement) {
+    wrappers.set(toastId, element);
+  } else {
+    wrappers.delete(toastId);
+  }
   if (target instanceof HTMLElement) {
     if (!observed.has(target)) {
       observed.set(target, toastId);
@@ -117,52 +133,79 @@ watch(
   },
 );
 
-const applyToVisible = (apply: (toastId: string) => void): void => {
-  for (const toast of visible.value) {
-    apply(toast.id);
+let origin: HTMLElement | undefined;
+
+const focusedLeaving = (toasts: readonly Toast[]): number =>
+  toasts.findIndex(
+    (toast) => toast.leaving && wrappers.get(toast.id)?.contains(document.activeElement) === true,
+  );
+
+watch(visible, (toasts) => {
+  const leaving = focusedLeaving(toasts);
+
+  if (leaving === -1) {
+    return;
   }
-};
+  const staying = keyboardFocused() ? stayingNear(toasts, leaving) : undefined;
+  const wrapper = staying === undefined ? undefined : wrappers.get(staying.id);
+  const target = (wrapper === undefined ? undefined : focusTargetIn(wrapper)) ?? origin;
 
-const pauseAll = (): void => applyToVisible(store.pause);
-const resumeAll = (): void => applyToVisible(store.resume);
-
-const holds = { hover: false, focus: false };
-
-const release = (): void => {
-  if (!holds.hover && !holds.focus) {
-    resumeAll();
+  if (target?.isConnected === true) {
+    target.focus();
+  } else if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur();
   }
-};
+});
+
+watch(
+  visible,
+  (toasts) => {
+    if (toasts.length === 0) {
+      store.release(ToastHold.Hover);
+    }
+    if (regionElement.value?.contains(document.activeElement) !== true) {
+      store.release(ToastHold.Focus);
+    }
+  },
+  { flush: 'post' },
+);
 
 const onPointerenter = (): void => {
-  holds.hover = true;
-  pauseAll();
+  store.hold(ToastHold.Hover);
 };
 
 const onPointerleave = (): void => {
-  holds.hover = false;
-  release();
+  store.release(ToastHold.Hover);
 };
 
-const onFocusin = (): void => {
-  holds.focus = true;
-  pauseAll();
+const onFocusin = (event: FocusEvent): void => {
+  const previous = event.relatedTarget;
+
+  if (previous instanceof HTMLElement && regionElement.value?.contains(previous) !== true) {
+    origin = previous;
+  }
+  store.hold(ToastHold.Focus);
 };
 
 const onFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
 
-  holds.focus = next instanceof Node && regionElement.value?.contains(next) === true;
-  release();
+  if (!(next instanceof Node) || regionElement.value?.contains(next) !== true) {
+    store.release(ToastHold.Focus);
+  }
 };
 
 const onVisibilityChange = (): void => {
   if (document.hidden) {
-    pauseAll();
+    store.hold(ToastHold.Hidden);
   } else {
-    resumeAll();
+    store.release(ToastHold.Hidden);
   }
 };
 
 useEventListener(pageDocument, 'visibilitychange', onVisibilityChange);
+
+onBeforeUnmount(() => {
+  Object.values(ToastHold).forEach(store.release);
+});
 </script>

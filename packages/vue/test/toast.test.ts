@@ -100,6 +100,78 @@ describe('NuiToaster and NuiToast', () => {
     toaster.unmount();
   });
 
+  it('holds a toast that comes to the front while the pointer is over the stack', async () => {
+    const toaster = ToasterDriver.mount({ storeOptions: { duration: 1000, limit: 1 } });
+
+    toaster.show({ title: 'First' });
+    await toaster.advance(0);
+    await toaster.hoverStack();
+    toaster.show({ title: 'Queued' });
+    await toaster.toast(0).clickClose();
+    await toaster.advance(200);
+    await toaster.advance(5000);
+
+    expect(toaster.toasts.map((toast) => toast.title)).toEqual(['Queued']);
+    expect(toaster.toast(0).leaving).toBe(false);
+
+    await toaster.leaveStack();
+    await toaster.advance(1000);
+
+    expect(toaster.toast(0).leaving).toBe(true);
+
+    toaster.unmount();
+  });
+
+  it('keeps the countdown held when the tab comes back while a toast is focused', async () => {
+    const toaster = ToasterDriver.mount({ storeOptions: { duration: 1000 } });
+
+    toaster.show({ title: 'Read me' });
+    await toaster.advance(0);
+    await toaster.toast(0).focus();
+    await toaster.setTabHidden(true);
+    await toaster.setTabHidden(false);
+    await toaster.advance(5000);
+
+    expect(toaster.toast(0).leaving).toBe(false);
+
+    toaster.unmount();
+  });
+
+  it('returns focus to where it came from when the last focused toast closes and counts again', async () => {
+    const toaster = ToasterDriver.mount({ storeOptions: { duration: 1000 } });
+
+    toaster.show({ title: 'Only' });
+    await toaster.advance(0);
+    await toaster.focusOutside();
+    await toaster.toast(0).focus();
+    await toaster.toast(0).pressEscape();
+
+    expect(toaster.outsideFocused).toBe(true);
+
+    await toaster.advance(200);
+    toaster.show({ title: 'Next' });
+    await toaster.advance(1000);
+
+    expect(toaster.toast(0).leaving).toBe(true);
+
+    toaster.unmount();
+  });
+
+  it('returns focus when every toast is cleared at once', async () => {
+    const toaster = ToasterDriver.mount({ storeOptions: { duration: 0 } });
+
+    toaster.show({ title: 'First' });
+    toaster.show({ title: 'Second' });
+    await toaster.advance(0);
+    await toaster.focusOutside();
+    await toaster.toast(1).focus();
+    await toaster.clear();
+
+    expect(toaster.outsideFocused).toBe(true);
+
+    toaster.unmount();
+  });
+
   it('dismisses a focused toast on Escape and moves focus to its neighbour', async () => {
     const toaster = ToasterDriver.mount({ storeOptions: { duration: 0 } });
     toaster.show({ title: 'First' });
