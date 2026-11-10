@@ -16,6 +16,10 @@ const docs: DocsMap = {
         ru: 'Свои компоненты для типов блоков, которые получают свойство `node`. Таблицу с сортировкой и фильтрами даёт `{ table: NuiContentTable }` из `@numior/content/table`, подсветку кода — `{ code_block: NuiContentCode }` из `@numior/content/code`.',
         en: 'Custom components for block types. Each receives the `node` prop. `{ table: NuiContentTable }` from `@numior/content/table` adds sorting and filters, `{ code_block: NuiContentCode }` from `@numior/content/code` highlights code.',
       },
+      embeds: {
+        ru: 'Какие встраивания показываются окном: тот же список, что у `NuiEditor`. Остальные выводятся ссылкой. Без свойства ссылкой выводятся все.',
+        en: 'Embeds shown as a frame: the same list `NuiEditor` takes. The rest render as a link. Without the prop every embed is a link.',
+      },
     },
     events: {
       invalid: {

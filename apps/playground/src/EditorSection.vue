@@ -46,6 +46,7 @@
           :document="document"
           :schema="playgroundSchema"
           :views="views"
+          :embeds="EMBEDS"
           data-testid="editor-preview"
         />
       </div>

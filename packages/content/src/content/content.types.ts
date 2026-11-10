@@ -1,5 +1,6 @@
 import type { Doc, DocJSON, ElementNode, NodeId, Schema } from '@numior/editor-core';
 import type { Component } from 'vue';
+import type { NuiEmbedPresetId, NuiEmbedProvider } from './embeds';
 
 export type NuiContentFileKind = (typeof NuiContentFileKind)[keyof typeof NuiContentFileKind];
 
@@ -81,6 +82,7 @@ export interface NuiContentProps {
   schema?: Schema | undefined;
   size?: NuiContentSize | undefined;
   views?: NuiContentViews | undefined;
+  embeds?: readonly (NuiEmbedPresetId | NuiEmbedProvider)[] | undefined;
 }
 
 export const NuiContentTone = {
