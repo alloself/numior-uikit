@@ -26,6 +26,10 @@ export type CellVisitor = (row: number, col: number, value: CellValue) => void;
 
 export type ChunkVisitor = (stamp: number, area: CellRange) => void;
 
+export interface WriteCount {
+  writes: number;
+}
+
 export interface CellStore {
   get(row: number, col: number): CellValue;
   set(row: number, col: number, value: CellValue): void;
@@ -157,7 +161,10 @@ const pastChunk = (next: Point, step: Point): Point => {
   };
 };
 
-export const createCellStore = (strings: SharedStrings): CellStore => {
+export const createCellStore = (
+  strings: SharedStrings,
+  book: WriteCount = { writes: 0 },
+): CellStore => {
   const chunks = new Map<number, Chunk>();
   let size = 0;
 
@@ -233,6 +240,7 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
   return {
     shiftLines: (axis, at, count) => {
       revision += 1;
+      book.writes += 1;
 
       shiftChunkLines(
         {
@@ -266,6 +274,7 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
       const key = chunkKey(row, col);
 
       revision += 1;
+      book.writes += 1;
       const slot = slotOf(row, col);
 
       const chunk =

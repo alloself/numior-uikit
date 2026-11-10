@@ -9,6 +9,26 @@ import {
 } from '../src/core';
 
 describe('workbook', () => {
+  it('counts every change of its cells and sheets in one revision', () => {
+    const book = createWorkbook();
+    const first = book.addSheet();
+    const second = book.addSheet();
+    const seen = [book.revision];
+
+    first.cells.set(0, 0, textValue('x'));
+    seen.push(book.revision);
+    second.cells.set(4, 4, textValue('y'));
+    seen.push(book.revision);
+    second.cells.shiftLines('rows', 0, 1);
+    seen.push(book.revision);
+    book.removeSheet(second);
+    seen.push(book.revision);
+
+    expect(seen.every((revision, index) => index === 0 || revision > (seen[index - 1] ?? 0))).toBe(
+      true,
+    );
+  });
+
   it('names sheets uniquely without case and shares strings between them', () => {
     const book = createWorkbook();
     const first = book.addSheet();

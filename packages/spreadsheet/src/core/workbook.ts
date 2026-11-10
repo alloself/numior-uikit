@@ -1,6 +1,6 @@
 import { parseCell } from './address';
 import { createCellFormats, type CellFormats } from './cell-formats';
-import { createCellStore, type CellStore } from './cell-store';
+import { createCellStore, type CellStore, type WriteCount } from './cell-store';
 import type { CellAddress, CellRange } from './cell.types';
 import type { ConditionalFormat } from './conditional/conditional.types';
 import type { PivotDefinition } from './pivot/pivot.types';
@@ -97,6 +97,7 @@ export interface Workbook {
   readonly pivots: SheetPivots;
   readonly sheets: readonly Sheet[];
   readonly externals: readonly ExternalBook[];
+  readonly revision: number;
   addSheet(name?: string, index?: number): Sheet;
   addExternal(init: ExternalBookInit): ExternalBook;
   removeSheet(sheet: Sheet): void;
@@ -292,10 +293,15 @@ const named = (sheets: readonly Sheet[], name: string): Sheet | undefined => {
   return sheets.find((candidate) => candidate.name.toLowerCase() === wanted);
 };
 
-const blankSheet = (id: number, name: string, strings: SharedStrings): Sheet => ({
+const blankSheet = (
+  id: number,
+  name: string,
+  strings: SharedStrings,
+  count?: WriteCount,
+): Sheet => ({
   id,
   name,
-  cells: createCellStore(strings),
+  cells: createCellStore(strings, count),
   formats: createCellFormats(),
   decorations: createCellFormats(),
   shifts: 0,
@@ -324,6 +330,7 @@ export const createWorkbook = (): Workbook => {
   const formats = createNumberFormats();
   const sheets: Sheet[] = [];
   const externals: ExternalBook[] = [];
+  const count: WriteCount = { writes: 0 };
   let next = 1;
 
   const sheet = (name: string): Sheet | undefined => named(sheets, name);
@@ -347,6 +354,9 @@ export const createWorkbook = (): Workbook => {
     sheets,
     externals,
     sheet,
+    get revision() {
+      return count.writes;
+    },
     addSheet: (name, index = sheets.length) => {
       const title = name ?? freeName();
 
@@ -354,7 +364,7 @@ export const createWorkbook = (): Workbook => {
         throw new RangeError(`The sheet name ${title} is taken or not allowed`);
       }
 
-      const created = blankSheet(next, title, strings);
+      const created = blankSheet(next, title, strings, count);
 
       next += 1;
       sheets.splice(Math.min(Math.max(index, 0), sheets.length), 0, created);
@@ -373,6 +383,7 @@ export const createWorkbook = (): Workbook => {
 
       if (index >= 0) {
         sheets.splice(index, 1);
+        count.writes += 1;
       }
     },
     renameSheet: (target, name) => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
   EN_FORMULAS,
+  columnName,
   parseCell,
   parseFormula,
   type ConditionalFormat,
@@ -60,6 +61,14 @@ const paintedBook = (formats: readonly ConditionalFormat[]) => {
 
   return { ...sheet, styleAt };
 };
+
+const MANY_SHEETS = 2000;
+
+const SCREEN_ROWS = 60;
+
+const SCREEN_COLS = 40;
+
+const LOOKS_BUDGET_MS = 40;
 
 const greaterThanTen: ConditionalFormat = {
   ranges: [span('A1', 'A3')],
@@ -187,5 +196,28 @@ describe('conditional formats in sheet cells', () => {
     expect(before).toBeUndefined();
 
     expect(sheet.styleAt('A1')?.style?.fill).toBe('#FFC7CE');
+  });
+
+  it('reads the looks of a screen of cells in a book of many sheets within the budget', () => {
+    const book = paintedBook([greaterThanTen]);
+
+    for (let index = 0; index < MANY_SHEETS; index += 1) {
+      book.book.addSheet(`Extra${String(index)}`);
+    }
+
+    const screen = (): number => {
+      const started = performance.now();
+
+      for (let row = 0; row < SCREEN_ROWS; row += 1) {
+        for (let col = 0; col < SCREEN_COLS; col += 1) {
+          book.styleAt(`${columnName(col)}${String(row + 1)}`);
+        }
+      }
+      return performance.now() - started;
+    };
+
+    screen();
+
+    expect(screen()).toBeLessThan(LOOKS_BUDGET_MS);
   });
 });
