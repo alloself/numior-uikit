@@ -59,6 +59,34 @@ describe('formula evaluation', () => {
     expect(evaluated('=A9=0')).toEqual({ kind: 'boolean', value: true });
     expect(evaluated('=A9=""')).toEqual({ kind: 'boolean', value: true });
   });
+
+  it('compares numbers by the fifteen digits a cell can show', () => {
+    expect(evaluated('=0.1+0.2=0.3')).toEqual({ kind: 'boolean', value: true });
+    expect(evaluated('=0.1+0.2>0.3')).toEqual({ kind: 'boolean', value: false });
+    expect(evaluated('=0.1+0.2<>0.3')).toEqual({ kind: 'boolean', value: false });
+    expect(evaluated('=1.1-1<=0.1')).toEqual({ kind: 'boolean', value: true });
+    expect(evaluated('=1E+300*3=3E+300')).toEqual({ kind: 'boolean', value: true });
+    expect(evaluated('=0.3=0.300000000000001')).toEqual({ kind: 'boolean', value: false });
+    expect(evaluated('=1E-20=0')).toEqual({ kind: 'boolean', value: false });
+    expect(evaluated('=SWITCH(0.1+0.2,0.3,"found","missed")')).toEqual(textValue('found'));
+  });
+
+  it('looks a value up and counts by the stored number, not by the shown digits', () => {
+    const sheet = openSheet();
+
+    sheet.enter('A1', '=0.1+0.2');
+    sheet.enter('A2', 0.5);
+    sheet.enter('B1', '=MATCH(0.3,A1:A2,0)');
+    sheet.enter('B2', '=MATCH(0.5,A1:A2,0)');
+    sheet.enter('B3', '=COUNTIF(A1:A2,0.3)');
+    sheet.enter('B4', '=A1=0.3');
+    sheet.recalc();
+
+    expect(sheet.value('B1')).toEqual({ kind: 'error', code: '#N/A' });
+    expect(sheet.value('B2')).toEqual(numberValue(2));
+    expect(sheet.value('B3')).toEqual(numberValue(0));
+    expect(sheet.value('B4')).toEqual({ kind: 'boolean', value: true });
+  });
 });
 
 describe('base functions', () => {

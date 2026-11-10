@@ -3,7 +3,7 @@ import { EMPTY, numberValue } from '../values';
 import { MANY } from './aggregate';
 import { buildArray } from './array';
 import { EvalValueKind, type EvalValue, type FunctionArgs, type FunctionSpec } from './calc.types';
-import { compareValues, raise } from './coerce';
+import { compareExact, raise } from './coerce';
 import { wildcardSource } from './criteria';
 import { scalarOf } from './evaluate';
 import { defineFunction } from './registry';
@@ -77,11 +77,11 @@ const equal = (key: CellValue, wanted: CellValue, pattern: RegExp | undefined): 
   }
   return pattern !== undefined && key.kind === CellValueKind.String
     ? pattern.test(key.value)
-    : compareValues(key, wanted) === 0;
+    : compareExact(key, wanted) === 0;
 };
 
 const orderOf = (key: CellValue, wanted: CellValue): number | undefined =>
-  comparable(key, wanted) ? compareValues(key, wanted) : undefined;
+  comparable(key, wanted) ? compareExact(key, wanted) : undefined;
 
 const binary = (vector: Vector, wanted: CellValue, descending: boolean): number | undefined => {
   let low = 0;
@@ -107,7 +107,7 @@ const indices = (length: number, reverse: boolean): number[] =>
   Array.from({ length }, (_, index) => (reverse ? length - 1 - index : index));
 
 const closer = (candidate: CellValue, best: CellValue | undefined, side: -1 | 1): boolean =>
-  best === undefined || side * compareValues(candidate, best) < 0;
+  best === undefined || side * compareExact(candidate, best) < 0;
 
 const nearest = (
   vector: Vector,

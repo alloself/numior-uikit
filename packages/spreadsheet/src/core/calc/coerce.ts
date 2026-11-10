@@ -10,7 +10,13 @@ type Comparable = Exclude<
   { readonly kind: typeof CellValueKind.Empty } | { readonly kind: typeof CellValueKind.Error }
 >;
 
+type NumberOrder = (a: number, b: number) => number;
+
 const COLLATOR = new Intl.Collator('en', { sensitivity: 'accent' });
+
+const SHOWN_DIGITS = 15;
+
+const CLOSE = 1e-14;
 
 const RANKS = { number: 0, string: 1, boolean: 2 } as const;
 
@@ -21,7 +27,7 @@ const generalText = (value: number, decimal: string): string => {
   if (Number.isInteger(value) && Math.abs(value) < 1e15) {
     return String(value);
   }
-  const [mantissa = '', exponent] = value.toPrecision(15).split('e');
+  const [mantissa = '', exponent] = value.toPrecision(SHOWN_DIGITS).split('e');
   const digits = mantissa.includes('.') ? mantissa.replace(/\.?0+$/u, '') : mantissa;
 
   if (exponent === undefined) {
@@ -108,22 +114,37 @@ const comparable = (value: CellValue, other: CellValue): Comparable => {
   }
 };
 
-const sameKind = (left: Comparable, right: Comparable): number => {
+const exactOrder: NumberOrder = (a, b) => Math.sign(a - b);
+
+const shownOrder: NumberOrder = (a, b) =>
+  a === b ||
+  (Math.abs(a - b) <= Math.max(Math.abs(a), Math.abs(b)) * CLOSE &&
+    a.toPrecision(SHOWN_DIGITS) === b.toPrecision(SHOWN_DIGITS))
+    ? 0
+    : Math.sign(a - b);
+
+const sameKind = (left: Comparable, right: Comparable, numbers: NumberOrder): number => {
   if (left.kind === CellValueKind.String && right.kind === CellValueKind.String) {
     return Math.sign(COLLATOR.compare(left.value, right.value));
   }
   const a = left.kind === CellValueKind.String ? 0 : Number(left.value);
   const b = right.kind === CellValueKind.String ? 0 : Number(right.value);
 
-  return Math.sign(a - b);
+  return numbers(a, b);
 };
 
-export const compareValues = (left: CellValue, right: CellValue): number => {
-  const a = comparable(left, right);
-  const b = comparable(right, left);
+const comparing =
+  (numbers: NumberOrder) =>
+  (left: CellValue, right: CellValue): number => {
+    const a = comparable(left, right);
+    const b = comparable(right, left);
 
-  return a.kind === b.kind ? sameKind(a, b) : Math.sign(RANKS[a.kind] - RANKS[b.kind]);
-};
+    return a.kind === b.kind ? sameKind(a, b, numbers) : Math.sign(RANKS[a.kind] - RANKS[b.kind]);
+  };
+
+export const compareValues = comparing(shownOrder);
+
+export const compareExact = comparing(exactOrder);
 
 export const lookupKey = (value: CellValue): string | undefined => {
   switch (value.kind) {
@@ -148,7 +169,7 @@ const SORT_RANK: Readonly<Record<CellValue['kind'], number>> = {
 
 const sortOrder = (left: CellValue, right: CellValue): number =>
   left.kind === right.kind && left.kind !== CellValueKind.Error && left.kind !== CellValueKind.Empty
-    ? compareValues(left, right)
+    ? compareExact(left, right)
     : SORT_RANK[left.kind] - SORT_RANK[right.kind];
 
 export const ordered =
