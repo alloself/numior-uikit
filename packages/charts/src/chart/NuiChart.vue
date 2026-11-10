@@ -118,9 +118,10 @@ const empty = computed(
 const configuredDirection = inject(DIRECTION_KEY, null);
 const mounted = useMounted();
 
-const rtl = computed(() =>
-  mounted.value ? direction.isRtl() : configuredDirection?.value === Direction.Rtl,
-);
+const rtl = computed(() => {
+  void sizing.restyled.value;
+  return mounted.value ? direction.isRtl() : configuredDirection?.value === Direction.Rtl;
+});
 
 const scene = computed(() =>
   layoutChart(

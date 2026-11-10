@@ -96,7 +96,15 @@ export class ChartTheme {
 
   async setFontSize(size: number): Promise<void> {
     themeStyle().textContent = fontRule(size);
+    await this.restyle();
+  }
 
+  async setPageDirection(dir: Direction): Promise<void> {
+    document.documentElement.dir = dir;
+    await this.restyle();
+  }
+
+  private async restyle(): Promise<void> {
     for (const callback of this.resized) {
       callback([], new ResizeObserver(callback));
     }

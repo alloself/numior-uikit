@@ -54,6 +54,10 @@
   pointer-events: none;
 }
 
+.nui-chart__font-probe:dir(rtl) {
+  inline-size: calc(1em + 1px);
+}
+
 .nui-chart__svg {
   display: block;
   overflow: visible;

@@ -293,6 +293,18 @@ describe('NuiChart', () => {
     expect(theme.observed).toEqual([]);
   });
 
+  it('follows a direction set on the page after mounting', async () => {
+    const theme = ChartTheme.install();
+    const chart = chartOf({ spec: revenue });
+
+    await chart.settle();
+    expect(chart.categoryTickX('Q1')).toBeLessThan(chart.categoryTickX('Q3'));
+
+    await theme.setPageDirection('rtl');
+    expect(chart.categoryTickX('Q1')).toBeGreaterThan(chart.categoryTickX('Q3'));
+    expect(theme.observed).toEqual([]);
+  });
+
   it('lays the labels out with the font size of the theme and follows a theme change', async () => {
     const theme = ChartTheme.install();
     const chart = chartOf({ spec: revenue });
