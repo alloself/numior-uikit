@@ -10,7 +10,7 @@ import {
   type WorkbookDocumentListener,
   type WorkbookDocumentOptions,
 } from './collab.types';
-import { mergeLayouts } from './merge-layout';
+import { mergeLayouts } from '../layout/merge-layout';
 import { changesOver, stepOver } from './rebase-queue';
 import { changesOf } from './remote-change';
 import { flattened, settleForStep, snapshotSteps } from './schema';
@@ -81,15 +81,15 @@ export const createWorkbookDocument = ({
     inverse: WorkbookStep,
     changes: readonly RemoteChange[],
   ): WorkbookStep => {
-    if (step.kind !== StepKind.SetLayout) {
+    if (step.kind !== StepKind.SetLayout || step.base !== undefined) {
       return step;
     }
 
     const base = stepOver(inverse, changes);
     const sheet = book.sheet(step.sheet);
 
-    return base?.kind === StepKind.SetLayout && sheet !== undefined
-      ? { ...step, layout: mergeLayouts(base.layout, step.layout, sheet.layout) }
+    return base?.kind === StepKind.SetLayout && base.base !== undefined && sheet !== undefined
+      ? { ...step, layout: mergeLayouts(base.layout, base.base, sheet.layout) }
       : step;
   };
 

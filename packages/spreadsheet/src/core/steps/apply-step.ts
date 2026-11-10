@@ -7,6 +7,7 @@ import type { FormulaNode } from '../formula/formula.types';
 import { formulaReferences, onSheetNamed } from '../formula/references';
 import type { SheetLayout } from '../layout/layout.types';
 import { mapLayoutFormulas, shiftLayout } from '../layout/line-layouts';
+import { layoutBack, layoutDelta, patchLayout } from '../layout/merge-layout';
 import { dropSheetFromFormula, renameInFormula, type LineChange } from '../formula/rewrite';
 import { validDefinedName, validSheetName, type Sheet, type Workbook } from '../workbook';
 import { cellContentsIn } from './contents';
@@ -26,9 +27,16 @@ import {
   shiftConditional,
   shiftConditionalReferences,
 } from '../conditional/shift';
+import { patchFormats, sameFormats } from '../conditional/patch';
 
 export interface Stepper {
   apply(step: WorkbookStep): StepResult;
+}
+
+interface SheetLook {
+  readonly sheet: Sheet;
+  readonly conditional: readonly ConditionalFormat[];
+  readonly layout: SheetLayout;
 }
 
 const EMPTY_CONTENT: CellContent = { kind: 'empty' };
@@ -57,18 +65,73 @@ const done = (inverse: WorkbookStep, changes: readonly LineChange[] = NO_CHANGES
 const mentions = (ast: FormulaNode, name: string): boolean =>
   formulaReferences(ast).some((reference) => onSheetNamed(reference, name));
 
-const setConditional = (sheet: Sheet, formats: readonly ConditionalFormat[]): StepResult => {
+const setConditional = (
+  sheet: Sheet,
+  formats: readonly ConditionalFormat[],
+  base: readonly ConditionalFormat[] | undefined,
+): StepResult => {
   const previous = sheet.conditional;
 
-  sheet.conditional = formats;
-  return done({ kind: 'setConditional', sheet: sheet.name, formats: previous });
+  sheet.conditional = base === undefined ? formats : patchFormats(base, formats, previous);
+
+  return done({
+    kind: 'setConditional',
+    sheet: sheet.name,
+    formats: previous,
+    base: sheet.conditional,
+  });
 };
 
-const setLayout = (sheet: Sheet, layout: SheetLayout): StepResult => {
+const setLayout = (
+  sheet: Sheet,
+  layout: SheetLayout,
+  base: SheetLayout | undefined,
+): StepResult => {
   const previous = sheet.layout;
 
-  sheet.layout = layout;
-  return done({ kind: 'setLayout', sheet: sheet.name, layout: previous });
+  sheet.layout = base === undefined ? layout : patchLayout(base, layout, previous);
+  return done({ kind: 'setLayout', sheet: sheet.name, ...layoutBack(sheet.layout, previous) });
+};
+
+const looksOf = (book: Workbook): SheetLook[] =>
+  book.sheets.map((sheet) => ({ sheet, conditional: sheet.conditional, layout: sheet.layout }));
+
+const lookSteps = (
+  { sheet, conditional, layout }: SheetLook,
+  formats: readonly ConditionalFormat[],
+  expected: SheetLayout,
+): WorkbookStep[] => {
+  const steps: WorkbookStep[] = [];
+
+  if (!sameFormats(formats, conditional)) {
+    steps.push({ kind: 'setConditional', sheet: sheet.name, formats: conditional, base: formats });
+  }
+  const delta = layoutDelta(expected, layout);
+
+  if (delta !== undefined) {
+    steps.push({ kind: 'setLayout', sheet: sheet.name, ...delta });
+  }
+  return steps;
+};
+
+const looksAfterLines = (
+  looks: readonly SheetLook[],
+  moved: Sheet,
+  change: LineChange,
+): WorkbookStep[] => {
+  const back: LineChange = { ...change, count: -change.count };
+
+  return looks.flatMap((look) => {
+    const own = look.sheet === moved;
+
+    return lookSteps(
+      look,
+      own
+        ? shiftConditional(look.sheet.conditional, back)
+        : shiftConditionalReferences(look.sheet.conditional, back),
+      look.sheet.layout === look.layout ? look.layout : shiftLayout(look.sheet.layout, back, own),
+    );
+  });
 };
 
 export const createStepper = (book: Workbook, calculator: Calculator): Stepper => {
@@ -170,14 +233,6 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
 
   const pivots = createPivotSteps(book, { contentsIn, write, snapshot: snapshotOf });
 
-  const snapshot = (): WorkbookStep[] => [
-    ...book.sheets.flatMap((each): WorkbookStep[] => [
-      { kind: 'setConditional', sheet: each.name, formats: each.conditional },
-      { kind: 'setLayout', sheet: each.name, layout: each.layout },
-    ]),
-    ...pivots.snapshot(),
-  ];
-
   const moveConditional = (sheet: Sheet, change: LineChange): void => {
     book.sheets.forEach((each) => {
       each.conditional =
@@ -215,6 +270,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     drops: TableDrops;
     restores: WorkbookStep[];
   } => {
+    const looks = looksOf(book);
     const removed = Math.max(-change.count, 0);
 
     const deleted =
@@ -242,8 +298,18 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     sheet.decorations.shiftLines(change.axis, change.at, change.count);
     sheet.shifts += 1;
     tables.move(sheet, moves, change);
-    pivots.move(sheet, change);
-    return { deleted, rewrites, names, drops, restores: tables.restores(moves) };
+
+    return {
+      deleted,
+      rewrites,
+      names,
+      drops,
+      restores: [
+        ...tables.restores(moves),
+        ...looksAfterLines(looks, sheet, change),
+        ...pivots.move(sheet, change),
+      ],
+    };
   };
 
   const insertLines = (sheet: Sheet, axis: LineAxis, at: number, count: number): StepResult => {
@@ -259,7 +325,6 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
       return refused(StepRefusal.PivotOverlap);
     }
 
-    const saved = snapshot();
     const { rewrites, names, drops, restores } = moveLines(sheet, change);
 
     return done(
@@ -272,7 +337,6 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
           ...formulaEdits(drops.rewrites),
           ...nameEdits(drops.names),
           ...restores,
-          ...saved,
         ],
       },
       [change],
@@ -286,7 +350,6 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
       return refused(StepRefusal.PivotOverlap);
     }
 
-    const saved = snapshot();
     const { deleted, rewrites, names, drops, restores } = moveLines(sheet, change);
 
     return done(
@@ -300,7 +363,6 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
           ...formulaEdits(drops.rewrites),
           ...nameEdits(drops.names),
           ...restores,
-          ...saved,
         ],
       },
       [change],
@@ -335,7 +397,8 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
 
     const index = book.sheets.indexOf(sheet);
     const contents = [...contentsIn(sheet, WHOLE_SHEET).values()];
-    const saved = snapshot();
+    const looks = looksOf(book);
+    const kept = pivots.kept(sheet);
     const removed = book.tables.on(sheet);
 
     removed.forEach((table) => {
@@ -376,7 +439,20 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
         })),
         ...formulaEdits(rewrites),
         ...nameEdits(names),
-        ...saved,
+        ...looks.flatMap((look): WorkbookStep[] =>
+          look.sheet === sheet
+            ? [
+                {
+                  kind: 'setConditional',
+                  sheet: sheet.name,
+                  formats: look.conditional,
+                  base: undefined,
+                },
+                { kind: 'setLayout', sheet: sheet.name, layout: look.layout, base: undefined },
+              ]
+            : lookSteps(look, look.sheet.conditional, look.sheet.layout),
+        ),
+        ...kept,
       ],
     });
   };
@@ -438,15 +514,15 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
       case StepKind.DeleteLines:
         return deleteLines(sheet, step.axis, step.at, step.count);
       case StepKind.SetConditional:
-        return setConditional(sheet, step.formats);
+        return setConditional(sheet, step.formats, step.base);
       case StepKind.SetLayout:
-        return setLayout(sheet, step.layout);
+        return setLayout(sheet, step.layout, step.base);
       case StepKind.SetPivot:
         return pivots.set(sheet, step.name, step.pivot);
       case StepKind.RefreshPivot:
         return pivots.refresh(sheet, step.name);
       case StepKind.PutPivot:
-        return pivots.put(sheet, step.name, step.pivot, step.cells, step.layout);
+        return pivots.put(sheet, step.name, step.pivot, step.cells, step.layout, step.base);
     }
   };
 

@@ -1,7 +1,14 @@
 import {
+  createStepCodec,
+  createWorkbook,
   lineLayoutsOf,
+  pivotCaptions,
   workbookAuthority,
+  type ConditionalFormat,
   type LineLayout,
+  type LineLayouts,
+  type PivotSpec,
+  type Sheet,
   type WorkbookStep,
 } from '@numior/spreadsheet/core';
 import * as fc from 'fast-check';
@@ -36,6 +43,23 @@ const deleteRow = (at: number, count = 1): WorkbookStep => ({
   count,
 });
 
+const REGIONS: PivotSpec = {
+  anchor: { row: 0, col: 0 },
+  definition: {
+    source: { kind: 'range', sheet: SHEET, range: { top: 0, left: 5, bottom: 1, right: 5 } },
+    rows: [0],
+    columns: [],
+    filters: [],
+    values: [],
+    fields: [],
+    layout: 'compact',
+    rowTotals: true,
+    columnTotals: true,
+    autofit: true,
+    captions: pivotCaptions('en'),
+  },
+};
+
 const network = (): BookNetwork => createBookNetwork(['ann', 'bob']);
 
 const pair = ({ clients: [ann, bob] }: BookNetwork): readonly [BookClient, BookClient] => {
@@ -45,47 +69,103 @@ const pair = ({ clients: [ann, bob] }: BookNetwork): readonly [BookClient, BookC
   return [ann, bob];
 };
 
-const resized = (client: BookClient, col: number, size: number): void => {
-  const sheet = client.book.sheet(SHEET);
+const sizedLine = (size: number): LineLayout => ({
+  size,
+  custom: true,
+  hidden: false,
+  level: 0,
+  collapsed: false,
+  style: undefined,
+  extra: [],
+});
+
+const sheetOf = (client: BookClient, name: string): Sheet => {
+  const sheet = client.book.sheet(name);
 
   if (sheet === undefined) {
-    throw new Error('the sheet is missing');
+    throw new Error(`the sheet ${name} is missing`);
   }
+  return sheet;
+};
 
+const withLine = (lines: LineLayouts, line: number, size: number): LineLayouts => {
   const entries: [number, LineLayout][] = [];
 
-  sheet.layout.cols.forEach((line, layout) => {
-    entries.push([line, layout]);
+  lines.forEach((at, layout) => {
+    if (at !== line) {
+      entries.push([at, layout]);
+    }
   });
+
+  return lineLayoutsOf([...entries, [line, sizedLine(size)]]);
+};
+
+const cols = (...sizes: readonly (readonly [number, number])[]): LineLayouts =>
+  lineLayoutsOf(sizes.map(([col, size]) => [col, sizedLine(size)]));
+
+const resizedOn = (client: BookClient, name: string, col: number, size: number): void => {
+  const { layout } = sheetOf(client, name);
+
+  client.commit([
+    {
+      kind: 'setLayout',
+      sheet: name,
+      layout: { ...layout, cols: withLine(layout.cols, col, size) },
+    },
+  ]);
+};
+
+const resized = (client: BookClient, col: number, size: number): void => {
+  resizedOn(client, SHEET, col, size);
+};
+
+const heightened = (client: BookClient, row: number, size: number): void => {
+  const { layout } = sheetOf(client, SHEET);
 
   client.commit([
     {
       kind: 'setLayout',
       sheet: SHEET,
-      layout: {
-        ...sheet.layout,
-        cols: lineLayoutsOf([
-          ...entries,
-          [
-            col,
-            {
-              size,
-              custom: true,
-              hidden: false,
-              level: 0,
-              collapsed: false,
-              style: undefined,
-              extra: [],
-            },
-          ],
-        ]),
-      },
+      layout: { ...layout, rows: withLine(layout.rows, row, size) },
     },
   ]);
 };
 
-const colSize = (client: BookClient, col: number): number | undefined =>
-  client.book.sheet(SHEET)?.layout.cols.get(col)?.size;
+const ruleOn = (top: number, bottom: number): ConditionalFormat => ({
+  ranges: [{ top, left: 0, bottom, right: 0 }],
+  rules: [
+    {
+      rule: {
+        kind: 'blanks',
+        style: { fill: { pattern: 'solid', foreground: { kind: 'rgb', argb: 'FFFF0000' } } },
+      },
+      priority: 1,
+      stopIfTrue: false,
+    },
+  ],
+});
+
+const ruled = (client: BookClient, ...formats: readonly ConditionalFormat[]): void => {
+  client.commit([
+    {
+      kind: 'setConditional',
+      sheet: SHEET,
+      formats: [...sheetOf(client, SHEET).conditional, ...formats],
+    },
+  ]);
+};
+
+const ruleRows = (client: BookClient): readonly (readonly [number, number])[] =>
+  sheetOf(client, SHEET)
+    .conditional.flatMap((format) => format.ranges)
+    .map((range): readonly [number, number] => [range.top, range.bottom])
+    .toSorted(([left], [right]) => left - right);
+
+const colSize = (client: BookClient, col: number, name = SHEET): number | undefined =>
+  client.book.sheet(name)?.layout.cols.get(col)?.size;
+
+const rowSize = (client: BookClient, row: number): number | undefined =>
+  client.book.sheet(SHEET)?.layout.rows.get(row)?.size;
 
 const expectSame = (ann: BookClient, bob: BookClient): void => {
   expect(ann.status()).toEqual({ kind: CollabStatusKind.Online });
@@ -308,6 +388,141 @@ describe('workbook steps through the collaboration envelope', () => {
     expectSame(ann, bob);
   });
 
+  it('keeps a width someone else has set out of the undo of inserted rows', () => {
+    const net = network();
+    const [ann, bob] = pair(net);
+
+    ann.commit([insertRow(1)]);
+    net.settle();
+    resized(bob, 3, 70);
+    net.settle();
+    ann.undo();
+    net.settle();
+
+    expect(colSize(ann, 3)).toBe(70);
+    expectSame(ann, bob);
+
+    ann.redo();
+    net.settle();
+
+    expect(colSize(ann, 3)).toBe(70);
+    expectSame(ann, bob);
+  });
+
+  it('brings back the height of a deleted row next to a width set since', () => {
+    const net = network();
+    const [ann, bob] = pair(net);
+
+    heightened(ann, 2, 40);
+    ann.commit([deleteRow(2)]);
+    net.settle();
+    resized(bob, 3, 70);
+    net.settle();
+    ann.undo();
+    net.settle();
+
+    expect([rowSize(ann, 2), colSize(ann, 3)]).toEqual([40, 70]);
+    expectSame(ann, bob);
+  });
+
+  it('leaves the other sheets as they are when rows and a sheet come back', () => {
+    const net = network();
+    const [ann, bob] = pair(net);
+
+    ann.commit([{ kind: 'addSheet', name: 'Extra', index: 1 }]);
+    resizedOn(ann, 'Extra', 1, 50);
+    ann.commit([insertRow(1)]);
+    net.settle();
+    resizedOn(bob, 'Extra', 3, 70);
+    net.settle();
+    ann.undo();
+    net.settle();
+
+    expect([colSize(ann, 1, 'Extra'), colSize(ann, 3, 'Extra')]).toEqual([50, 70]);
+    expectSame(ann, bob);
+
+    ann.commit([{ kind: 'removeSheet', name: 'Extra' }]);
+    net.settle();
+    resized(bob, 4, 90);
+    net.settle();
+    ann.undo();
+    net.settle();
+
+    expect([colSize(ann, 3, 'Extra'), colSize(ann, 4)]).toEqual([70, 90]);
+    expectSame(ann, bob);
+  });
+
+  it('undoes an own width and leaves the widths of the others', () => {
+    const net = network();
+    const [ann, bob] = pair(net);
+
+    resized(ann, 1, 50);
+    resized(ann, 2, 60);
+    net.settle();
+    resized(bob, 3, 70);
+    resized(bob, 1, 80);
+    net.settle();
+    ann.undo();
+    ann.undo();
+    net.settle();
+
+    expect([colSize(ann, 1), colSize(ann, 2), colSize(ann, 3)]).toEqual([80, undefined, 70]);
+    expectSame(ann, bob);
+  });
+
+  it('keeps a rule someone else has added when deleted rows come back with their rule', () => {
+    const net = network();
+    const [ann, bob] = pair(net);
+
+    ruled(ann, ruleOn(2, 2));
+    ann.commit([deleteRow(2)]);
+    net.settle();
+    ruled(bob, ruleOn(5, 6));
+    net.settle();
+    ann.undo();
+    net.settle();
+
+    expect(ruleRows(ann)).toEqual([
+      [2, 2],
+      [6, 7],
+    ]);
+
+    expect(ruleRows(bob)).toEqual(ruleRows(ann));
+    expectSame(ann, bob);
+
+    ann.undo();
+    net.settle();
+
+    expect(ruleRows(bob)).toEqual([[6, 7]]);
+  });
+
+  it('gives back the widths a pivot has fitted and leaves the width set next to them', () => {
+    const net = network();
+    const [ann, bob] = pair(net);
+
+    ann.commit([
+      writeCells(valueCell(0, 5, 'Region'), valueCell(1, 5, 'Northern Territories')),
+      { kind: 'setPivot', sheet: SHEET, name: 'Regions', pivot: REGIONS },
+    ]);
+
+    net.settle();
+
+    const fitted = colSize(ann, 0);
+
+    resized(bob, 3, 70);
+    net.settle();
+    ann.undo();
+    net.settle();
+
+    expect([fitted === undefined, colSize(ann, 0), colSize(ann, 3)]).toEqual([
+      false,
+      undefined,
+      70,
+    ]);
+
+    expectSame(ann, bob);
+  });
+
   it('keeps two sheets added at the same time', () => {
     const net = network();
     const [ann, bob] = pair(net);
@@ -389,6 +604,31 @@ describe('workbook steps through the collaboration envelope', () => {
     expect(authority.rebase([writeCells(valueCell(1, 0, 'late'))], 1)).toEqual([
       writeCells(valueCell(3, 0, 'late')),
     ]);
+  });
+
+  it('has the authority refuse a late whole layout and merge a late change of a layout', () => {
+    const authority = workbookAuthority([seedSheet]);
+    const blank = createWorkbook();
+    const codec = createStepCodec(blank);
+    const empty = blank.addSheet(SHEET).layout;
+
+    const layoutStep = (layout: LineLayouts, base?: LineLayouts): unknown =>
+      codec.encode({
+        kind: 'setLayout',
+        sheet: SHEET,
+        layout: { ...empty, cols: layout },
+        base: base === undefined ? undefined : { ...empty, cols: base },
+      });
+
+    authority.apply([layoutStep(cols([1, 50], [3, 70]))]);
+
+    const late = [
+      authority.rebase([layoutStep(cols([1, 60]))], 1),
+      authority.rebase([layoutStep(cols(), cols([1, 50]))], 1),
+    ];
+
+    expect(late).toEqual([undefined, [layoutStep(cols(), cols([1, 50]))]]);
+    expect(authority.rebase([layoutStep(cols([3, 70]), cols([3, 70]))], 0)).toHaveLength(1);
   });
 
   it('has the authority drop a write into rows removed since and keep the rest of the pack', () => {

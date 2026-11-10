@@ -589,7 +589,7 @@ describe('writing xlsx', () => {
       expect(result.ok && stepper.apply(result.inverse).ok).toBe(true);
     });
 
-    expect(sheetOf(read, 'Sales').layout.xml).toBe(original);
+    expect(sheetOf(read, 'Sales').layout.xml).toEqual(original);
   });
 
   it('moves pictures and comments with lines and drops the comments of deleted rows', async () => {

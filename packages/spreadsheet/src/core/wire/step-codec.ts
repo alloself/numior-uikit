@@ -36,6 +36,11 @@ import type {
   WireWorkbookStep,
 } from './wire.types';
 
+interface LayoutPair {
+  readonly layout: SheetLayout | undefined;
+  readonly base: SheetLayout | undefined;
+}
+
 const BYTES_PER_PIECE = 0x8000;
 
 const isCellEdit: Guard<CellEdit> = shapeOf({
@@ -111,11 +116,13 @@ const isWireStep: Guard<WireWorkbookStep> = byKind({
     kind: oneOf(StepKind.SetConditional),
     sheet: isString,
     formats: listOf(isConditionalFormat),
+    base: optional(listOf(isConditionalFormat)),
   }),
   [StepKind.SetLayout]: shapeOf({
     kind: oneOf(StepKind.SetLayout),
     sheet: isString,
     layout: isWireLayout,
+    base: optional(isWireLayout),
   }),
   [StepKind.SetPivot]: shapeOf({
     kind: oneOf(StepKind.SetPivot),
@@ -135,6 +142,7 @@ const isWireStep: Guard<WireWorkbookStep> = byKind({
     pivot: optional(isPivotState),
     cells: optional(listOf(isCellEdit)),
     layout: optional(isWireLayout),
+    base: optional(isWireLayout),
   }),
   [StepKind.Batch]: shapeOf({ kind: oneOf(StepKind.Batch), steps: listOf(nested) }),
 });
@@ -236,14 +244,34 @@ export const createStepCodec = (book: Workbook): StepCodec => {
         };
   };
 
+  const pairFromWire = (
+    layout: WireLayout | undefined,
+    base: WireLayout | undefined,
+  ): LayoutPair | undefined => {
+    const pair: LayoutPair = {
+      layout: layout === undefined ? undefined : layoutFromWire(layout),
+      base: base === undefined ? undefined : layoutFromWire(base),
+    };
+
+    return (layout !== undefined && pair.layout === undefined) ||
+      (base !== undefined && pair.base === undefined)
+      ? undefined
+      : pair;
+  };
+
   const encode = (step: WorkbookStep): WireWorkbookStep => {
     switch (step.kind) {
       case StepKind.SetLayout:
-        return { ...step, layout: layoutToWire(step.layout) };
+        return {
+          ...step,
+          layout: layoutToWire(step.layout),
+          base: step.base === undefined ? undefined : layoutToWire(step.base),
+        };
       case StepKind.PutPivot:
         return {
           ...step,
           layout: step.layout === undefined ? undefined : layoutToWire(step.layout),
+          base: step.base === undefined ? undefined : layoutToWire(step.base),
         };
       case StepKind.Batch:
         return { ...step, steps: step.steps.map(encode) };
@@ -255,18 +283,16 @@ export const createStepCodec = (book: Workbook): StepCodec => {
   const fromWire = (step: WireWorkbookStep): WorkbookStep | undefined => {
     switch (step.kind) {
       case StepKind.SetLayout: {
-        const layout = layoutFromWire(step.layout);
+        const pair = pairFromWire(step.layout, step.base);
 
-        return layout === undefined ? undefined : { ...step, layout };
+        return pair?.layout === undefined
+          ? undefined
+          : { ...step, layout: pair.layout, base: pair.base };
       }
       case StepKind.PutPivot: {
-        if (step.layout === undefined) {
-          return { ...step, layout: undefined };
-        }
+        const pair = pairFromWire(step.layout, step.base);
 
-        const layout = layoutFromWire(step.layout);
-
-        return layout === undefined ? undefined : { ...step, layout };
+        return pair === undefined ? undefined : { ...step, ...pair };
       }
       case StepKind.Batch: {
         const steps = step.steps.reduce<WorkbookStep[] | undefined>((decoded, part) => {

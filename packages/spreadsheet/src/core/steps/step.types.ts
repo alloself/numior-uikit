@@ -59,11 +59,13 @@ export type WorkbookStep =
       readonly kind: typeof StepKind.SetConditional;
       readonly sheet: string;
       readonly formats: readonly ConditionalFormat[];
+      readonly base?: readonly ConditionalFormat[] | undefined;
     }
   | {
       readonly kind: typeof StepKind.SetLayout;
       readonly sheet: string;
       readonly layout: SheetLayout;
+      readonly base?: SheetLayout | undefined;
     }
   | {
       readonly kind: typeof StepKind.SetPivot;
@@ -79,6 +81,7 @@ export type WorkbookStep =
       readonly pivot: PivotState | undefined;
       readonly cells?: readonly CellEdit[] | undefined;
       readonly layout?: SheetLayout | undefined;
+      readonly base?: SheetLayout | undefined;
     }
   | { readonly kind: typeof StepKind.Batch; readonly steps: readonly WorkbookStep[] };
 

@@ -125,7 +125,8 @@ export const EMPTY_LAYOUT: SheetLayout = {
 export const lineLayoutsOf = (
   entries: readonly (readonly [line: number, layout: LineLayout])[],
 ): LineLayouts => {
-  const sorted = entries.toSorted(([left], [right]) => left - right);
+  const ordered = entries.toSorted(([left], [right]) => left - right);
+  const sorted = ordered.filter(([line], index) => ordered[index + 1]?.[0] !== line);
 
   return sorted.length === 0
     ? EMPTY_LINES

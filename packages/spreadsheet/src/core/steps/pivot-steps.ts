@@ -15,6 +15,7 @@ import {
 } from '../pivot/pivot.types';
 import { rangesMeet } from '../tables';
 import type { SheetLayout } from '../layout/layout.types';
+import { layoutBack, patchLayout } from '../layout/merge-layout';
 import { fittedLayout } from './pivot-widths';
 import type { Sheet, SheetPivot, Workbook } from '../workbook';
 import { StepRefusal, type CellEdit, type StepResult, type WorkbookStep } from './step.types';
@@ -34,13 +35,14 @@ export interface PivotSteps {
     state: PivotState | undefined,
     restored: readonly CellEdit[] | undefined,
     layout: SheetLayout | undefined,
+    base: SheetLayout | undefined,
   ): StepResult;
   covers(sheet: Sheet, cells: readonly CellEdit[]): boolean;
   crossed(sheet: Sheet, change: LineChange): boolean;
-  move(sheet: Sheet, change: LineChange): void;
+  move(sheet: Sheet, change: LineChange): WorkbookStep[];
   rename(from: string, to: string): void;
   dropSheet(sheet: Sheet): void;
-  snapshot(): WorkbookStep[];
+  kept(sheet: Sheet): WorkbookStep[];
 }
 
 type Rendered =
@@ -123,6 +125,48 @@ const movedSource = (source: PivotSource, change: LineChange): PivotSource => {
 
   return range === undefined ? { kind: 'lost' } : { ...source, range };
 };
+
+const movedPivot = (
+  pivot: SheetPivot,
+  sheet: Sheet,
+  change: LineChange,
+): SheetPivot | undefined => {
+  const source = movedSource(pivot.definition.source, change);
+
+  const definition =
+    source === pivot.definition.source ? pivot.definition : { ...pivot.definition, source };
+
+  if (pivot.sheet !== sheet) {
+    return definition === pivot.definition ? pivot : { ...pivot, definition };
+  }
+
+  const footprint = pivot.footprint === undefined ? undefined : movedRange(pivot.footprint, change);
+
+  const anchor = movedRange(
+    {
+      top: pivot.anchor.row,
+      left: pivot.anchor.col,
+      bottom: pivot.anchor.row,
+      right: pivot.anchor.col,
+    },
+    change,
+  );
+
+  return anchor === undefined || (pivot.footprint !== undefined && footprint === undefined)
+    ? undefined
+    : { ...pivot, anchor: { row: anchor.top, col: anchor.left }, footprint, definition };
+};
+
+const samePivot = (left: SheetPivot | undefined, right: SheetPivot): boolean =>
+  left !== undefined &&
+  (left === right || JSON.stringify(stateOf(left)) === JSON.stringify(stateOf(right)));
+
+const putBack = (pivot: SheetPivot): WorkbookStep => ({
+  kind: 'putPivot',
+  sheet: pivot.sheet.name,
+  name: pivot.name,
+  pivot: stateOf(pivot),
+});
 
 export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps => {
   const overlaps = (sheet: Sheet, name: string, area: CellRange): boolean =>
@@ -263,6 +307,8 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
       spec === undefined ? undefined : { name, sheet, ...spec, footprint: area },
     );
 
+    const layout = refit(sheet, spec, output.cells);
+
     return {
       ok: true,
       changes: [],
@@ -272,7 +318,7 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
         name,
         pivot: previous === undefined ? undefined : stateOf(previous),
         cells: restore,
-        layout: refit(sheet, spec, output.cells),
+        ...(layout === undefined ? undefined : layoutBack(sheet.layout, layout)),
       },
     };
   };
@@ -286,13 +332,13 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
         ? { ok: false, reason: StepRefusal.MissingPivot }
         : placed(sheet, name, { anchor: pivot.anchor, definition: pivot.definition });
     },
-    put: (sheet, name, state, restored = [], layout) => {
+    put: (sheet, name, state, restored = [], layout, base) => {
       const previous = book.pivots.get(sheet, name);
       const current = cells.snapshot(sheet, restored);
       const shown = sheet.layout;
 
       if (layout !== undefined) {
-        sheet.layout = layout;
+        sheet.layout = base === undefined ? layout : patchLayout(base, layout, shown);
       }
 
       restored.forEach((cell) => {
@@ -309,7 +355,7 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
           name,
           pivot: previous === undefined ? undefined : stateOf(previous),
           cells: current,
-          layout: layout === undefined ? undefined : shown,
+          ...(layout === undefined ? undefined : layoutBack(sheet.layout, shown)),
         },
       };
     },
@@ -329,46 +375,27 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
         .on(sheet)
         .some((pivot) => pivot.footprint !== undefined && crosses(pivot.footprint, change)),
     move: (sheet, change) => {
+      const back: LineChange = { ...change, count: -change.count };
       const pivots: SheetPivot[] = [];
 
       book.pivots.forEach((pivot) => {
         pivots.push(pivot);
       });
 
-      pivots.forEach((pivot) => {
-        const source = movedSource(pivot.definition.source, change);
-        const own = pivot.sheet === sheet;
+      return pivots.reduce<WorkbookStep[]>((lost, pivot) => {
+        const moved = movedPivot(pivot, sheet, change);
 
-        const footprint =
-          own && pivot.footprint !== undefined
-            ? movedRange(pivot.footprint, change)
-            : pivot.footprint;
-
-        const anchor = own
-          ? movedRange(
-              {
-                top: pivot.anchor.row,
-                left: pivot.anchor.col,
-                bottom: pivot.anchor.row,
-                right: pivot.anchor.col,
-              },
-              change,
-            )
-          : undefined;
-
-        book.pivots.delete(pivot);
-        if (own && (footprint === undefined || anchor === undefined)) {
-          return;
+        if (moved !== pivot) {
+          book.pivots.delete(pivot);
         }
-
-        book.pivots.set({
-          ...pivot,
-          anchor: anchor === undefined ? pivot.anchor : { row: anchor.top, col: anchor.left },
-          footprint,
-          definition:
-            source === pivot.definition.source ? pivot.definition : { ...pivot.definition, source },
-        });
-      });
+        if (moved !== undefined && moved !== pivot) {
+          book.pivots.set(moved);
+        }
+        if (!samePivot(moved === undefined ? undefined : movedPivot(moved, sheet, back), pivot)) {
+          lost.push(putBack(pivot));
+        }
+        return lost;
+      }, []);
     },
     rename: (from, to) => {
       book.pivots.forEach((pivot) => {
@@ -387,19 +414,6 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
         book.pivots.delete(pivot);
       });
     },
-    snapshot: () => {
-      const steps: WorkbookStep[] = [];
-
-      book.pivots.forEach((pivot) => {
-        steps.push({
-          kind: 'putPivot',
-          sheet: pivot.sheet.name,
-          name: pivot.name,
-          pivot: stateOf(pivot),
-        });
-      });
-
-      return steps;
-    },
+    kept: (sheet) => book.pivots.on(sheet).map(putBack),
   };
 };

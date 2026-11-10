@@ -82,7 +82,7 @@ export const workbookAuthority = (
       for (const wire of wires) {
         const step = codec.decode(wire);
 
-        if (step === undefined || step.kind === StepKind.SetLayout) {
+        if (step === undefined || (step.kind === StepKind.SetLayout && step.base === undefined)) {
           undo(taken);
           return undefined;
         }
