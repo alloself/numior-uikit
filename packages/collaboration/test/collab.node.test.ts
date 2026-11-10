@@ -3,6 +3,7 @@ import {
   commentAnchors,
   createState,
   history,
+  redo,
   setAnchor,
   textSelection,
   undo,
@@ -189,6 +190,26 @@ describe('collab plugin', () => {
 
     expect(firstText(rebased)).toBe('rrLone');
     expect(firstText(current)).toBe('rrone');
+  });
+
+  it('undoes a word it wrote and leaves the text someone else typed inside the word', () => {
+    const typed = typedAt(started(), 'LMNO', 2);
+    const confirmed = typed.apply(confirmSteps(typed, 1, 4));
+    const rebased = confirmed.apply(receiveSteps(confirmed, insertion(confirmed, 'rr', 4)));
+    let current = rebased;
+
+    undo(current, (tr) => {
+      current = current.apply(tr);
+    });
+
+    expect(firstText(rebased)).toBe('oLMrrNOne');
+    expect(firstText(current)).toBe('orrne');
+
+    redo(current, (tr) => {
+      current = current.apply(tr);
+    });
+
+    expect(firstText(current)).toBe('oLMrrNOne');
   });
 
   it('drops local text typed inside a range the remote side deleted', () => {

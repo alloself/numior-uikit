@@ -18,7 +18,7 @@ import {
   type HistoryOptions,
   type HistoryState,
 } from './history.types';
-import { mirrored, rebaseSteps, type MirrorMaps } from './rebase';
+import { mirrored, rebaseHistory, type MirrorMaps } from './rebase';
 
 interface HistorySettings {
   readonly depth: number;
@@ -69,7 +69,7 @@ const rebaseEvents = (
   const kept: HistoryEvent[] = [];
 
   for (const event of events.toReversed()) {
-    const rebased = rebaseSteps(event.steps, chain);
+    const rebased = rebaseHistory(event.steps, chain);
 
     chain = rebased.chain;
     if (rebased.steps.length > 0) {

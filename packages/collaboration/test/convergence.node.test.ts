@@ -12,9 +12,17 @@ import { fixtureSchema, generateDoc } from '@numior/editor-core/fixtures';
 import * as fc from 'fast-check';
 import { describe, expect, it } from 'vite-plus/test';
 import { CollabStatusKind } from '../src';
-import { createNetwork, type NetworkClient } from './harness/network';
+import { createNetwork, type CollabNetwork, type NetworkClient } from './harness/network';
 
 type Change = (client: NetworkClient) => void;
+
+interface Round {
+  readonly at: number;
+  readonly size: number;
+  readonly inside: readonly number[];
+  readonly undos: number;
+  readonly redos: number;
+}
 
 interface TextSpot {
   readonly pos: number;
@@ -23,6 +31,10 @@ interface TextSpot {
 }
 
 const BOLD: Mark = { type: 'bold', attrs: {} };
+
+const OWN_MARK = '§';
+
+const WORD_MARK = '¤';
 
 const textSpots = (doc: Doc): readonly TextSpot[] => {
   const spots: TextSpot[] = [];
@@ -128,6 +140,66 @@ const carryArbitrary = fc.oneof(
   { weight: 2, arbitrary: fc.constant(receiving) },
 );
 
+const marksIn = (doc: Doc): number => doc.textBetween(0, doc.size, '').split(OWN_MARK).length - 1;
+
+const insideWord =
+  (at: number): Change =>
+  (client) => {
+    const { doc } = client.state();
+
+    const inside = textSpots(doc).filter(
+      (spot) => doc.textBetween(spot.pos - 1, spot.pos + 1, '') === WORD_MARK.repeat(2),
+    );
+
+    const spot = inside[at % Math.max(1, inside.length)];
+
+    if (spot !== undefined) {
+      client.edit((tr) => {
+        tr.insertText(OWN_MARK, spot.pos);
+      });
+    }
+  };
+
+const roundArbitrary = fc.record({
+  at: fc.nat(),
+  size: fc.integer({ min: 2, max: 4 }),
+  inside: fc.array(fc.nat(), { minLength: 1, maxLength: 3 }),
+  undos: fc.integer({ min: 1, max: 3 }),
+  redos: fc.integer({ min: 0, max: 3 }),
+});
+
+const played = (network: CollabNetwork, round: Round): number => {
+  const [writer, owner] = network.clients;
+
+  if (writer === undefined || owner === undefined) {
+    throw new Error('The network has two clients');
+  }
+
+  typing(round.at, WORD_MARK.repeat(round.size))(owner);
+  network.settle();
+
+  const before = marksIn(writer.state().doc);
+
+  for (const at of round.inside) {
+    insideWord(at)(writer);
+  }
+
+  const written = marksIn(writer.state().doc) - before;
+
+  network.settle();
+
+  for (let turn = 0; turn < round.undos; turn += 1) {
+    owner.run(undo);
+  }
+  for (let turn = 0; turn < round.redos; turn += 1) {
+    owner.run(redo);
+  }
+
+  network.settle();
+
+  return written;
+};
+
 const editArbitrary = fc.oneof(
   typingArbitrary,
   movingArbitrary,
@@ -174,6 +246,31 @@ describe('convergence under the server order', () => {
           for (const client of network.clients) {
             expect(client.pending()).toBe(0);
             expect(client.status().kind).toBe(CollabStatusKind.Online);
+          }
+        },
+      ),
+      { numRuns: 120 },
+    );
+  });
+
+  it('keeps the letters someone wrote inside a word while its owner undoes and redoes it', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 1, max: 1000 }),
+        fc.array(roundArbitrary, { minLength: 1, maxLength: 5 }),
+        (seed, rounds) => {
+          const network = createNetwork(generateDoc(fixtureSchema, { blocks: 4, seed }), [
+            'ann',
+            'bob',
+          ]);
+
+          const written = rounds.reduce((marks, round) => marks + played(network, round), 0);
+
+          for (const client of network.clients) {
+            expect(marksIn(client.state().doc)).toBe(written);
+          }
+          for (const doc of network.docs()) {
+            expect(doc).toEqual(network.server());
           }
         },
       ),

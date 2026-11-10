@@ -7,8 +7,9 @@ import {
   type Mappable,
   type StepMap,
 } from '../transform/mapping.types';
+import { createStepMap } from '../transform/mapping';
 import { mapStep, stepMapOf } from '../transform/step';
-import { StepKind, type Step } from '../transform/step.types';
+import { StepKind, type Step, type StepSpan } from '../transform/step.types';
 import { noteRemoved, retargeted, withLatestNodes, type RemovedNodes } from './retarget';
 
 export interface MirrorMaps {
@@ -25,6 +26,13 @@ export interface RebasedSteps {
 export interface RebaseDocs {
   readonly written: (index: number) => Doc;
   readonly current: () => Doc;
+}
+
+type Removal = Extract<Step, { readonly kind: 'replace' }>;
+
+interface Moved {
+  readonly steps: readonly Step[];
+  readonly map: StepMap | undefined;
 }
 
 interface Walk {
@@ -263,6 +271,68 @@ const movedStep = (
   return withLatestNodes(moved, docs.current(), docs.written(index), removed);
 };
 
+const NOTHING: Moved = { steps: [], map: undefined };
+
+const single = (moved: Step | undefined): Moved =>
+  moved === undefined ? NOTHING : { steps: [moved], map: stepMapOf(moved) };
+
+const isRemoval = (step: Step): step is Removal =>
+  step.kind === StepKind.Replace && step.from < step.to && step.slice.content.length === 0;
+
+const sparedSpans = (from: number, to: number, mapper: Mappable): readonly StepSpan[] => {
+  const spans: StepSpan[] = [];
+  let start = mapper.map(from, 1);
+
+  for (let pos = from + 1; pos < to; pos += 1) {
+    const before = mapper.map(pos, -1);
+    const after = mapper.map(pos, 1);
+
+    if (after > before && before > start) {
+      spans.push({ from: start, to: before });
+    }
+    start = after > before ? Math.max(start, after) : start;
+  }
+  const end = mapper.map(to, -1);
+
+  if (end > start) {
+    spans.push({ from: start, to: end });
+  }
+  return spans;
+};
+
+const removalsOf = (step: Removal, mapper: Mappable): Moved => {
+  const spans = sparedSpans(step.from, step.to, mapper);
+
+  return spans.length === 0
+    ? NOTHING
+    : {
+        steps: spans.toReversed().map((span) => ({ ...step, ...span })),
+        map: createStepMap(
+          spans.map((span) => ({ start: span.from, oldSize: span.to - span.from, newSize: 0 })),
+        ),
+      };
+};
+
+const rebasedWith = (
+  steps: readonly Step[],
+  chain: MirrorMaps,
+  move: (step: Step, chain: MirrorMaps, index: number) => Moved,
+): RebasedSteps =>
+  steps.reduce<RebasedSteps>(
+    (done, step, index) => {
+      const moved = move(step, done.chain, index);
+      const back = stepMapOf(step).invert();
+
+      return moved.map === undefined
+        ? { steps: done.steps, chain: passedStep(done.chain, back) }
+        : {
+            steps: [...done.steps, ...moved.steps],
+            chain: passedStep(done.chain, back, moved.map),
+          };
+    },
+    { steps: [], chain },
+  );
+
 export const rebaseSteps = (
   steps: readonly Step[],
   chain: MirrorMaps,
@@ -271,18 +341,21 @@ export const rebaseSteps = (
 ): RebasedSteps => {
   const removed: RemovedNodes = new Map();
 
-  return steps.reduce<RebasedSteps>(
-    (done, step, index) => {
-      const moved = movedStep(step, done.chain, index, docs, removed);
-      const back = stepMapOf(step).invert();
+  return rebasedWith(steps, chain, (step, behind, index) => {
+    const moved = movedStep(step, behind, index, docs, removed);
 
-      return moved === undefined || accept?.(moved) === false
-        ? { steps: done.steps, chain: passedStep(done.chain, back) }
-        : {
-            steps: [...done.steps, moved],
-            chain: passedStep(done.chain, back, stepMapOf(moved)),
-          };
-    },
-    { steps: [], chain },
-  );
+    return moved === undefined || accept?.(moved) === false ? NOTHING : single(moved);
+  });
 };
+
+export const rebaseHistory = (steps: readonly Step[], chain: MirrorMaps): RebasedSteps =>
+  rebasedWith(steps, chain, (step, behind) => {
+    const mapper = mirrored(behind);
+
+    if (isRemoval(step)) {
+      return removalsOf(step, mapper);
+    }
+    const moved = mapStep(step, mapper);
+
+    return moved === undefined || idle(moved) ? NOTHING : single(moved);
+  });
