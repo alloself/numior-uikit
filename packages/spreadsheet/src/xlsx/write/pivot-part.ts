@@ -151,7 +151,7 @@ const cacheXml = (pivot: SheetPivot, cache: PivotCache): string => {
     ...cache.fields.map(
       (field, index) =>
         `<cacheField${attribute('name', field.name)} numFmtId="0">${sharedItemsXml(
-          field.values,
+          cache.values(index),
           groups.has(index) ? cache.group(index)?.items : undefined,
         )}</cacheField>`,
     ),

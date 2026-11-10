@@ -3,7 +3,7 @@ import { CellInputKind, LineAxis, type CellRange } from '../cell.types';
 import { sameName, type LineChange } from '../formula/rewrite';
 import { shiftIndex } from '../lines';
 import { shiftRanges } from '../layout/shift-ranges';
-import { buildPivotCache, pivotSource, pivotSourceArea } from '../pivot/pivot-cache';
+import { pivotCacheOf, pivotSourceArea } from '../pivot/pivot-cache';
 import { VALUES_FIELD, computePivot } from '../pivot/pivot-engine';
 import { renderPivot } from '../pivot/pivot-render';
 import {
@@ -203,8 +203,7 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
     spec: PivotSpec,
     fallback: string | undefined,
   ): Rendered => {
-    const table = pivotSource(book, spec.definition.source);
-    const cache = table === undefined ? undefined : buildPivotCache(table);
+    const cache = pivotCacheOf(book, spec.definition.source);
 
     if (cache === undefined || !validFields(spec.definition, cache.fields.length)) {
       return { ok: false, reason: StepRefusal.InvalidPivot };

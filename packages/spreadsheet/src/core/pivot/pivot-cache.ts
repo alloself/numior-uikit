@@ -1,5 +1,7 @@
+import { memoize } from 'lodash-es';
 import { CellValueKind, type CellRange, type CellValue } from '../cell.types';
 import { lookupKey, toText } from '../calc/coerce';
+import type { CellStore } from '../cell-store';
 import { EN_NUMBERS } from '../format';
 import { EMPTY } from '../values';
 import type { Sheet, Workbook } from '../workbook';
@@ -16,6 +18,13 @@ interface SourceArea {
   readonly sheet: Sheet;
   readonly range: CellRange;
 }
+
+interface KeptCaches {
+  readonly revision: number;
+  readonly caches: Map<string, PivotCache | undefined>;
+}
+
+const kept = new WeakMap<CellStore, KeptCaches>();
 
 const NUMERIC_SAMPLE = 200;
 
@@ -70,56 +79,46 @@ const fieldNamesOf = (header: readonly CellValue[]): string[] | undefined => {
 };
 
 export const buildPivotCache = (source: PivotTable): PivotCache | undefined => {
-  const groups = new Map<number, PivotGroup>();
   const names = fieldNamesOf(source.header);
 
   if (names === undefined) {
     return undefined;
   }
 
-  const fields = names.map((name, col) => ({ name, values: source.columns[col] ?? [] }));
+  const fields = names.map((name) => ({ name }));
 
   return {
     fields,
     count: source.count,
-    group: (field) => {
-      const values = fields[field]?.values;
-      const known = groups.get(field);
-
-      if (known !== undefined || values === undefined) {
-        return known;
-      }
-
-      const group = groupOf(values);
-
-      groups.set(field, group);
-      return group;
-    },
+    values: (field) => source.column(field),
+    group: memoize((field: number) =>
+      fields[field] === undefined ? undefined : groupOf(source.column(field)),
+    ),
   };
 };
 
 const tableOf = (sheet: Sheet, range: CellRange): PivotTable => {
   const width = range.right - range.left + 1;
   const count = range.bottom - range.top;
-  const header: CellValue[] = Array.from({ length: width }, () => EMPTY);
 
-  const columns: CellValue[][] = Array.from({ length: width }, () =>
-    Array.from({ length: count }, (): CellValue => EMPTY),
-  );
+  return {
+    header: Array.from({ length: width }, (_, at) => sheet.cells.get(range.top, range.left + at)),
+    count,
+    column: memoize((index: number): readonly CellValue[] => {
+      const values = Array.from({ length: count }, (): CellValue => EMPTY);
+      const col = range.left + index;
 
-  sheet.cells.forEachInRange(range, (row, col, value) => {
-    if (row === range.top) {
-      header[col - range.left] = value;
-    } else {
-      const column = columns[col - range.left];
-
-      if (column !== undefined) {
-        column[row - range.top - 1] = value;
+      if (index >= 0 && index < width && count > 0) {
+        sheet.cells.forEachInRange(
+          { top: range.top + 1, bottom: range.bottom, left: col, right: col },
+          (row, _col, value) => {
+            values[row - range.top - 1] = value;
+          },
+        );
       }
-    }
-  });
-
-  return { header, columns, count };
+      return values;
+    }),
+  };
 };
 
 export const pivotTableOf = (rows: readonly (readonly CellValue[])[]): PivotTable => {
@@ -128,7 +127,7 @@ export const pivotTableOf = (rows: readonly (readonly CellValue[])[]): PivotTabl
   return {
     header,
     count: Math.max(rows.length - 1, 0),
-    columns: header.map((_, col) => rows.slice(1).map((row) => row[col] ?? EMPTY)),
+    column: memoize((col: number) => rows.slice(1).map((row) => row[col] ?? EMPTY)),
   };
 };
 
@@ -153,10 +152,34 @@ export const pivotSourceArea = (book: Workbook, source: PivotSource): SourceArea
   };
 };
 
-export const pivotSource = (book: Workbook, source: PivotSource): PivotTable | undefined => {
+const cachesOf = (cells: CellStore): Map<string, PivotCache | undefined> => {
+  const known = kept.get(cells);
+
+  if (known?.revision === cells.revision) {
+    return known.caches;
+  }
+
+  const caches = new Map<string, PivotCache | undefined>();
+
+  kept.set(cells, { revision: cells.revision, caches });
+  return caches;
+};
+
+export const pivotCacheOf = (book: Workbook, source: PivotSource): PivotCache | undefined => {
   const area = pivotSourceArea(book, source);
 
-  return area === undefined ? undefined : tableOf(area.sheet, area.range);
+  if (area === undefined) {
+    return undefined;
+  }
+
+  const { range } = area;
+  const caches = cachesOf(area.sheet.cells);
+  const key = [range.top, range.left, range.bottom, range.right].join(' ');
+
+  if (!caches.has(key)) {
+    caches.set(key, buildPivotCache(tableOf(area.sheet, range)));
+  }
+  return caches.get(key);
 };
 
 const numericColumns = (area: SourceArea): boolean[] => {

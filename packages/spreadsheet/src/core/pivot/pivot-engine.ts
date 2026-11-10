@@ -216,7 +216,7 @@ const accumulate = (
 
   const accumulators = definition.values.map((value) => {
     const leaves = new Map<number, PivotAccumulator>();
-    const values = cache.fields[value.field]?.values ?? [];
+    const values = cache.values(value.field);
 
     for (let record = 0; record < cache.count; record += 1) {
       if (visible[record] === 1) {

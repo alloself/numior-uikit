@@ -41,7 +41,7 @@ import { createStyleBook, type StyleBook } from './styles-part';
 import { chartAnchorXml, chartXml, drawingXml, pictureAnchorXml } from './drawing-xml';
 import { pivotXml } from './pivot-part';
 import { DrawingKind, type SheetDrawing } from '../../core/drawings/drawing.types';
-import { buildPivotCache, pivotSource } from '../../core/pivot/pivot-cache';
+import { pivotCacheOf, pivotSourceArea } from '../../core/pivot/pivot-cache';
 import { computePivot } from '../../core/pivot/pivot-engine';
 import { renderPivot } from '../../core/pivot/pivot-render';
 import type { WriteOptions, XlsxLoss, XlsxWrite } from './write.types';
@@ -567,7 +567,7 @@ const pivotLosses = (book: Workbook): XlsxLoss[] => {
   const losses: XlsxLoss[] = [];
 
   book.pivots.forEach((pivot) => {
-    if (pivotSource(book, pivot.definition.source) === undefined) {
+    if (pivotSourceArea(book, pivot.definition.source) === undefined) {
       losses.push({ sheet: pivot.sheet.name, reason: 'pivot-source' });
     }
   });
@@ -617,8 +617,7 @@ const writePivots = (
   }
 
   return writing.book.pivots.on(plan.sheet).reduce<PlannedRelationship[]>((planned, pivot) => {
-    const table = pivotSource(writing.book, pivot.definition.source);
-    const cache = table === undefined ? undefined : buildPivotCache(table);
+    const cache = pivotCacheOf(writing.book, pivot.definition.source);
 
     if (cache === undefined) {
       return planned;

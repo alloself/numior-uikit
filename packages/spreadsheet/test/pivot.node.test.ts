@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import { formatRange, parseRange, pivotCaptions, type CellValue } from '../src/core';
 import { buildPivotCache, pivotTableOf } from '../src/core/pivot/pivot-cache';
 import { VALUES_FIELD, computePivot } from '../src/core/pivot/pivot-engine';
+import { pivotFieldItems } from '../src/core/pivot/pivot-fields';
 import { renderPivot } from '../src/core/pivot/pivot-render';
 import type {
   PivotDefinition,
@@ -28,6 +29,14 @@ const CAPTIONS = pivotCaptions('en');
 const LONG_ITEMS = 4000;
 
 const SHOW_AS_BUDGET_MS = 100;
+
+const SOURCE_ROWS = 250_000;
+
+const SOURCE_COLS = 12;
+
+const SOURCE_KEYS = 500;
+
+const CHANGE_BUDGET_MS = 100;
 
 const valueOf = (input: Input): CellValue => {
   if (typeof input === 'number') {
@@ -170,6 +179,41 @@ const salesBook = () => {
   };
 
   return { ...sheet, place, footprint };
+};
+
+const wideBook = () => {
+  const sheet = openBook();
+  const { cells } = sheet.first;
+
+  for (let col = 0; col < SOURCE_COLS; col += 1) {
+    cells.set(0, col, textValue(`Field ${String(col)}`));
+  }
+  for (let row = 1; row <= SOURCE_ROWS; row += 1) {
+    cells.set(row, 0, textValue(`key ${String(row % SOURCE_KEYS)}`));
+
+    for (let col = 1; col < SOURCE_COLS; col += 1) {
+      cells.set(row, col, numberValue(row * col));
+    }
+  }
+
+  const definition = definitionOf(
+    {
+      kind: 'range',
+      sheet: 'Sheet1',
+      range: { top: 0, left: 0, bottom: SOURCE_ROWS, right: SOURCE_COLS - 1 },
+    },
+    { rows: [0], columns: [], values: [sum(1, 'Total')] },
+  );
+
+  const place = (changes: Partial<PivotDefinition> = {}) =>
+    sheet.commit({
+      kind: 'setPivot',
+      sheet: 'Rates',
+      name: 'Wide',
+      pivot: { anchor: { row: 0, col: 0 }, definition: { ...definition, ...changes } },
+    });
+
+  return { ...sheet, definition, place };
 };
 
 describe('pivot engine', () => {
@@ -387,6 +431,22 @@ describe('pivot steps', () => {
     book.history.undo();
     book.history.undo();
     expect([book.footprint(), book.shown('A3', 'Rates')]).toEqual([undefined, '']);
+  });
+
+  it('changes a pivot over a wide source and lists the items of its field within the budget', () => {
+    const book = wideBook();
+
+    expect(book.place().ok).toBe(true);
+
+    const started = performance.now();
+    const changed = book.place({ values: [{ ...sum(1, 'Largest'), aggregate: 'max' }] });
+    const items = pivotFieldItems(book.book, book.definition, 0);
+    const spent = performance.now() - started;
+
+    expect(changed.ok).toBe(true);
+    expect(items).toHaveLength(SOURCE_KEYS);
+    expect(book.rates.cells.get(SOURCE_KEYS + 1, 1)).toEqual(numberValue(SOURCE_ROWS));
+    expect(spent).toBeLessThan(CHANGE_BUDGET_MS);
   });
 
   it('moves with lines, grows its source and refuses lines that cut through it', () => {

@@ -61,6 +61,7 @@ const salesBook = () => {
   );
 
   return {
+    sheet,
     book: sheet.book,
     definition: checkField(checkField(source, 0, true, PLACEMENT), 2, true, PLACEMENT),
   };
@@ -83,6 +84,24 @@ describe('pivot field items', () => {
       'East',
       'North',
     ]);
+  });
+
+  it('lists the items anew after the source changes, the change is undone or a line leaves it', () => {
+    const { sheet, book, definition } = salesBook();
+
+    expect(labels(pivotFieldItems(book, definition, 0))).toEqual(['East', 'North', 'West']);
+
+    sheet.type('A2', 'South');
+
+    expect(labels(pivotFieldItems(book, definition, 0))).toEqual(['East', 'North', 'South']);
+
+    sheet.history.undo();
+
+    expect(labels(pivotFieldItems(book, definition, 0))).toEqual(['East', 'North', 'West']);
+
+    sheet.remove('4');
+
+    expect(labels(pivotFieldItems(book, definition, 0))).not.toContain('North');
   });
 
   it('hides the unchecked items of a row field and still lists them', () => {
