@@ -105,6 +105,32 @@ describe('NuiTable filters', () => {
     expect(grid.announcement).toBe('Показано 667 строк');
   });
 
+  it('keeps the rows of unlisted values when all listed values of a long column are chosen', async () => {
+    const grid = mountPeople({
+      columns: PEOPLE_COLUMNS.map((column) =>
+        column.key === 'name' ? { ...column, filter: 'set' } : column,
+      ),
+    });
+
+    await grid.openFilter(1);
+
+    expect(grid.filterValueLabels).toHaveLength(100);
+
+    await grid.chooseAllValues();
+    await grid.applyFilter();
+
+    expect(grid.filters).toEqual([]);
+    expect(grid.rowCount).toBe(1001);
+
+    await grid.openFilter(1);
+    await grid.chooseAllValues();
+    await grid.chooseValue(grid.filterValueLabels[0] ?? '');
+    await grid.applyFilter();
+
+    expect(grid.filters).toHaveLength(1);
+    expect(grid.rowCount).toBe(100);
+  });
+
   it('honours the column filter option and opens the popover through the column menu from the keyboard', async () => {
     const grid = mountPeople({
       columns: PEOPLE_COLUMNS.map((column) => {

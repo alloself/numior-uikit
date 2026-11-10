@@ -150,7 +150,7 @@ const chosenValues = (): readonly TableFilterValue[] =>
 const chosen = (value: TableFilterValue): boolean => chosenValues().includes(value);
 
 const allChosen = computed(
-  () => options.value.length > 0 && chosenValues().length === options.value.length,
+  () => options.value.length > 0 && options.value.every((option) => chosen(option.value)),
 );
 
 const someChosen = computed(() => chosenValues().length > 0 && !allChosen.value);
@@ -190,7 +190,7 @@ const close = (next: NuiTableColumnFilter | null): void => {
 };
 
 const apply = (): void => {
-  close(filterFromDraft(columnKey, draft.value));
+  close(allChosen.value ? null : filterFromDraft(columnKey, draft.value));
 };
 
 const reset = (): void => {

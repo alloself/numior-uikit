@@ -2197,6 +2197,15 @@ export class TableDriver<T> {
     await nextTick();
   }
 
+  async chooseAllValues(): Promise<void> {
+    const all = [...(this.popover?.querySelectorAll<HTMLElement>('label') ?? [])].find(
+      (entry) => entry.textContent?.trim() === 'Выбрать все',
+    );
+
+    all?.querySelector<HTMLInputElement>('input')?.click();
+    await nextTick();
+  }
+
   async applyFilter(): Promise<void> {
     const settled = this.nextSettle();
 
