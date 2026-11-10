@@ -27,6 +27,7 @@ import type {
   ReferenceSpan,
   SignaturePart,
   Sheet,
+  StepRefusal,
   ThemePalette,
   WorkbookPeer,
   WorkbookPlace,
@@ -311,6 +312,7 @@ export interface SheetEditing {
   readonly commands: NuiTableCommandSink<number>;
   setDraft(next: NuiTableDraft | undefined): void;
   apply(steps: readonly WorkbookStep[]): boolean;
+  attempt(steps: readonly WorkbookStep[]): StepRefusal | undefined;
   redraw(): void;
   inputAt(position: NuiTableCellPosition): string;
   editableColumns(columns: readonly NuiTableColumn<number>[]): NuiTableColumn<number>[];

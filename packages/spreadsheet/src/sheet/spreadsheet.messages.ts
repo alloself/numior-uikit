@@ -28,6 +28,8 @@ export interface NuiSpreadsheetMessages {
   readonly deleteRows: (params: { readonly count: number }) => string;
   readonly deleteCols: (params: { readonly count: number }) => string;
   readonly sheetFull: string;
+  readonly linesCrossPivot: string;
+  readonly linesRefused: string;
   readonly recalculating: (params: { readonly share: string }) => string;
   readonly recalcStopped: string;
   readonly recalcDone: string;
@@ -207,6 +209,8 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     deleteCols: ({ count }) =>
       `Delete ${String(count)} ${plural('en', count, { one: 'column', other: 'columns' })}`,
     sheetFull: 'Cannot insert: the last rows or columns of the sheet hold data',
+    linesCrossPivot: 'Cannot change rows or columns that run through a pivot table',
+    linesRefused: 'These rows or columns cannot be changed',
     recalculating: ({ share }) => `Recalculating ${share}`,
     recalcStopped: 'Recalculation stopped',
     recalcDone: 'Recalculation finished',
@@ -301,6 +305,8 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     deleteCols: ({ count }) =>
       `Удалить ${String(count)} ${plural('ru', count, { one: 'столбец', few: 'столбца', many: 'столбцов', other: 'столбца' })}`,
     sheetFull: 'Нельзя вставить: в последних строках или столбцах листа есть данные',
+    linesCrossPivot: 'Нельзя изменить строки или столбцы, которые проходят через сводную таблицу',
+    linesRefused: 'Эти строки или столбцы изменить нельзя',
     recalculating: ({ share }) => `Пересчёт ${share}`,
     recalcStopped: 'Пересчёт остановлен',
     recalcDone: 'Пересчёт завершён',

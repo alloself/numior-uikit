@@ -231,6 +231,21 @@ describe('NuiSpreadsheet pivot tables', () => {
     expect(sheet.pivot.chips('Rows')).toEqual(['Region']);
   });
 
+  it('says that a row cannot be inserted through a pivot table', async () => {
+    const sheet = await pivotOf();
+
+    await sheet.pivot.check('Region');
+    await sheet.pivot.check('Amount');
+    await sheet.pivot.press('Escape');
+
+    await sheet.focus(5, 0);
+    await sheet.openCellMenu(5, 0);
+    await sheet.chooseCellMenuItem('Insert 1 row above');
+
+    expect(sheet.announcement).toBe('Cannot change rows or columns that run through a pivot table');
+    expect([sheet.text(4, 0), sheet.text(5, 0)]).toEqual(['East', 'West']);
+  });
+
   it('refuses a source without a header row', async () => {
     const sheet = sheetOf(salesBook());
 

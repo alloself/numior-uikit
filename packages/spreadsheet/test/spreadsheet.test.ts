@@ -42,6 +42,17 @@ const sheetOf = (...args: Parameters<typeof SpreadsheetDriver.mount>): Spreadshe
   return driver;
 };
 
+const gappedBook = (): Workbook => {
+  const book = createWorkbook();
+  const sheet = book.addSheet('Rows');
+
+  ['one', 'two', 'three', 'four', 'five'].forEach((text, row) => {
+    sheet.cells.set(row, 0, textValue(text));
+  });
+
+  return book;
+};
+
 const tallBook = (): Workbook => {
   const book = createWorkbook();
   const sheet = book.addSheet('Tall');
@@ -310,6 +321,54 @@ describe('NuiSpreadsheet', () => {
     await sheet.press('ArrowDown');
 
     expect(sheet.formula).toBe('=C5*2');
+  });
+
+  it('deletes two rows picked apart as two rows and takes them back in one step', async () => {
+    const sheet = sheetOf({ book: gappedBook(), label: 'Gapped book' });
+
+    await sheet.select({
+      active: { row: 1, col: 0 },
+      ranges: [
+        { top: 1, left: 0, bottom: 1, right: 0 },
+        { top: 3, left: 0, bottom: 3, right: 0 },
+      ],
+    });
+
+    await sheet.openCellMenu(2, 0);
+
+    expect(sheet.cellMenuItems).toEqual(
+      expect.arrayContaining(['Insert 2 rows above', 'Delete 2 rows']),
+    );
+
+    await sheet.chooseCellMenuItem('Delete 2 rows');
+
+    expect([sheet.text(1, 0), sheet.text(2, 0), sheet.text(3, 0)]).toEqual([
+      'one',
+      'three',
+      'five',
+    ]);
+
+    await sheet.press('z', { ctrl: true });
+
+    expect([sheet.text(2, 0), sheet.text(4, 0)]).toEqual(['two', 'four']);
+  });
+
+  it('says that the sheet is full when a row cannot be inserted', async () => {
+    const book = gappedBook();
+
+    book.sheets[0]?.cells.set(WHOLE_COLUMN, 0, textValue('last'));
+
+    const sheet = sheetOf({ book, label: 'Gapped book' });
+
+    await sheet.focus(2, 0);
+    await sheet.openCellMenu(2, 0);
+    await sheet.chooseCellMenuItem('Insert 1 row above');
+
+    expect(sheet.announcement).toBe(
+      'Cannot insert: the last rows or columns of the sheet hold data',
+    );
+
+    expect(sheet.text(2, 0)).toBe('two');
   });
 
   it('keeps Ctrl+R and Ctrl+D from the browser while a cell is edited or several ranges are selected', async () => {

@@ -17,6 +17,7 @@ import {
   type CellEditor,
   type Sheet,
   type StepOutcome,
+  type StepRefusal,
   type Stepper,
   type WorkbookStep,
 } from '../core';
@@ -203,11 +204,27 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
   const apply = (steps: readonly WorkbookStep[]): boolean =>
     follow(() => history.value.commit(steps)) > 0;
 
+  const attempt = (steps: readonly WorkbookStep[]): StepRefusal | undefined => {
+    const tried: { refusal?: StepRefusal } = {};
+
+    follow(() => {
+      const outcome = history.value.commit(steps);
+
+      if (!outcome.ok) {
+        tried.refusal = outcome.reason;
+      }
+      return outcome;
+    });
+
+    return tried.refusal;
+  };
+
   return {
     draft,
     revision,
     setDraft,
     apply,
+    attempt,
     redraw,
     inputAt: inputAtPosition,
     editableColumns,
