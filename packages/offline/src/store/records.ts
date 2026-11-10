@@ -83,6 +83,9 @@ export const contiguousSteps = (
   const steps: OfflineStep[] = [];
 
   values.every((value) => {
+    if (isStep(value) && value.version < from) {
+      return true;
+    }
     if (!isStep(value) || value.version !== from + steps.length) {
       return false;
     }

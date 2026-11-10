@@ -118,6 +118,18 @@ test.describe('collaboration', () => {
     await expect.poll(() => anna.unsentSteps(collab.name)).toBe(0);
   });
 
+  test('keeps the local copy in one tab and says so in the other', async ({ collab }) => {
+    const anna = await collab.joinOffline(ANNA);
+
+    await anna.write('Начало');
+    await expect(anna.copy).toHaveText('Копия пишется');
+
+    const second = await anna.secondTab();
+
+    await expect(second.editor).toContainText('Начало');
+    await expect(second.copy).toHaveText('Копия в другой вкладке');
+  });
+
   test('takes a comment on a copy opened read-only and leaves its text alone', async ({
     collab,
   }) => {

@@ -50,6 +50,7 @@ export class CollabClient {
   readonly avatars: Locator;
   readonly carets: Locator;
   readonly selections: Locator;
+  readonly copy: Locator;
   readonly comments: Locator;
   readonly threads: Locator;
   readonly discussions: Locator;
@@ -68,6 +69,7 @@ export class CollabClient {
   ) {
     this.editor = page.locator('.nui-editor [contenteditable="true"]');
     this.status = page.getByTestId('collab-status');
+    this.copy = page.getByTestId('collab-copy');
     this.avatars = page.locator('.nui-avatar');
     this.carets = page.locator('.nui-collab-carets__caret');
     this.selections = page.locator('.nui-collab-selection');
@@ -343,6 +345,16 @@ export class CollabClient {
   async reload(): Promise<void> {
     await this.page.reload();
     await this.editor.waitFor();
+  }
+
+  async secondTab(): Promise<CollabClient> {
+    const page = await this.context.newPage();
+    const tab = new CollabClient(page, this.context);
+
+    await page.goto(this.page.url());
+    await tab.editor.waitFor();
+
+    return tab;
   }
 
   async loseSync(): Promise<void> {

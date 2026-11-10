@@ -20,6 +20,7 @@
           </template>
           <NuiEditorComments :comments="comments" />
         </NuiPopover>
+        <NuiBadge v-if="copy !== undefined" data-testid="collab-copy">{{ COPY[copy] }}</NuiBadge>
         <NuiBadge data-testid="collab-status">{{ status.kind }}</NuiBadge>
       </div>
     </div>
@@ -69,13 +70,20 @@ import {
 } from '@numior/collaboration/vue';
 import { contentSchema } from '@numior/content';
 import { NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
-import { offlinePersistence } from '@numior/offline';
+import { OfflineCopy, offlinePersistence } from '@numior/offline';
 import { NuiBadge, NuiButton, NuiPopover, NuiSwitch } from '@numior/vue';
-import { computed, useTemplateRef } from 'vue';
+import { computed, ref, useTemplateRef } from 'vue';
 import { fakeComments } from './fake-comments';
 import { fakeHistory } from './fake-history';
 import { collabServerOf } from './collab-server';
 import { useDemoLink } from './use-demo-link';
+
+const COPY: Readonly<Record<OfflineCopy, string>> = {
+  [OfflineCopy.Kept]: 'Копия пишется',
+  [OfflineCopy.Failing]: 'Копия не пишется',
+  [OfflineCopy.Elsewhere]: 'Копия в другой вкладке',
+  [OfflineCopy.Unavailable]: 'Копии нет',
+};
 
 const params = new URLSearchParams(location.search);
 const name = params.get('user') ?? 'Гость';
@@ -83,6 +91,8 @@ const server = collabServerOf(params);
 
 const doc = params.get('doc') ?? 'demo';
 const user = { id: name, name };
+
+const copy = ref<OfflineCopy>();
 
 const editor = useTemplateRef<{ editor: NuiEditorApi }>('editor');
 const editorApi = computed(() => editor.value?.editor);
@@ -111,6 +121,9 @@ const {
     ? offlinePersistence(doc, {
         schema: contentSchema,
         plugins: { demo: Number(params.get('plugin') ?? 1) },
+        onState: (state) => {
+          copy.value = state;
+        },
       })
     : undefined,
 });

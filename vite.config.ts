@@ -105,6 +105,12 @@ export default defineConfig({
           'import/default': 'off',
         },
       },
+      {
+        files: ['packages/offline/src/persistence/ownership.ts'],
+        rules: {
+          'unicorn/require-post-message-target-origin': 'off',
+        },
+      },
     ],
     options: {
       typeAware: true,
