@@ -1,4 +1,9 @@
-import { createState, textSelection, type EditorState } from '@numior/editor-core';
+import {
+  createState,
+  textSelection,
+  type DecorationSet,
+  type EditorState,
+} from '@numior/editor-core';
 import { describe, expect, it } from 'vite-plus/test';
 import {
   collab,
@@ -21,6 +26,9 @@ const presenceAt = (block: string, offset: number, head = offset): EditorPresenc
 
 const started = (): EditorState =>
   createState({ doc: paragraphs('one', 'two'), plugins: [remotePresence(), collab()] });
+
+const decorationsOf = (state: EditorState): DecorationSet | undefined =>
+  state.plugins[0]?.props.decorations?.(state);
 
 const withPeers = (state: EditorState, values: readonly (readonly [string, unknown])[]) =>
   state.apply(setRemotePresence(state, new Map(values)));
@@ -112,6 +120,29 @@ describe('remote presence', () => {
 
     expect(set?.decorations).toHaveLength(1);
     expect(set?.decorations[0]).toMatchObject({ from: 2, to: 4 });
+  });
+
+  it('hands the view the same decorations while nobody else has a selection', () => {
+    const start = withPeers(started(), [['c1', presenceAt('p0', 2)]]);
+    const typed = start.apply(start.tr.insertText('xy', 1));
+    const moved = withPeers(typed, [['c1', presenceAt('p1', 1)]]);
+
+    expect(decorationsOf(typed)).toBe(decorationsOf(start));
+    expect(decorationsOf(moved)).toBe(decorationsOf(start));
+    expect(decorationsOf(moved)).toBe(decorationsOf(moved));
+  });
+
+  it('keeps the decorations of a selection through typing after it and moves them with typing before it', () => {
+    const start = withPeers(started(), [['c1', presenceAt('p0', 1, 3)]]);
+    const after = start.apply(start.tr.insertText('xy', 7));
+    const before = start.apply(start.tr.insertText('xy', 1));
+
+    expect(decorationsOf(after)).toBe(decorationsOf(start));
+    expect(remotePeers(after)).toBe(remotePeers(start));
+
+    expect(decorationsOf(before)?.decorations).toEqual([
+      expect.objectContaining({ from: 4, to: 6 }),
+    ]);
   });
 
   it('describes a text selection by block and offset', () => {

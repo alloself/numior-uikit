@@ -8,6 +8,7 @@ import {
   mirrored,
   remoteChain,
   textPosition,
+  type DecorationSet,
   type Doc,
   type EditorState,
   type Mappable,
@@ -33,6 +34,10 @@ const presenceUpdate = createMetaKey<readonly RemotePeer[]>('presenceUpdate');
 const registry = new WeakMap<object, Plugin<readonly RemotePeer[]>>();
 
 const NONE: readonly RemotePeer[] = [];
+
+const NO_SELECTIONS = decorationSet([]);
+
+const drawn = new WeakMap<readonly RemotePeer[], DecorationSet>();
 
 const isFields = (value: unknown): value is Fields =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -99,15 +104,19 @@ const mappingOf = (tr: Transaction): Mappable => {
 const moved = (peers: readonly RemotePeer[], tr: Transaction): readonly RemotePeer[] => {
   const mapping = mappingOf(tr);
 
-  return peers.map((peer) => ({
-    ...peer,
-    anchor:
+  const next = peers.map((peer) => {
+    const anchor =
       peer.anchor === undefined
         ? undefined
-        : followPosition(peer.anchor, mapping, tr.before, tr.doc),
-    head:
-      peer.head === undefined ? undefined : followPosition(peer.head, mapping, tr.before, tr.doc),
-  }));
+        : followPosition(peer.anchor, mapping, tr.before, tr.doc);
+
+    const head =
+      peer.head === undefined ? undefined : followPosition(peer.head, mapping, tr.before, tr.doc);
+
+    return anchor === peer.anchor && head === peer.head ? peer : { ...peer, anchor, head };
+  });
+
+  return next.every((peer, index) => peer === peers[index]) ? peers : next;
 };
 
 const applyPeers = (tr: Transaction, value: readonly RemotePeer[]): readonly RemotePeer[] => {
@@ -119,21 +128,33 @@ const applyPeers = (tr: Transaction, value: readonly RemotePeer[]): readonly Rem
   return tr.changed && value.length > 0 ? moved(value, tr) : value;
 };
 
-const selectionDecorations = (peers: readonly RemotePeer[]) =>
-  decorationSet(
-    peers.reduce<ReturnType<typeof inlineDecoration>[]>((found, peer) => {
-      if (peer.anchor !== undefined && peer.head !== undefined && peer.anchor !== peer.head) {
-        found.push(
-          inlineDecoration(
-            Math.min(peer.anchor, peer.head),
-            Math.max(peer.anchor, peer.head),
-            `${SELECTION_CLASS} nui-collab-colour--${peer.colour.toString()}`,
-          ),
-        );
-      }
-      return found;
-    }, []),
-  );
+const selectionRanges = (peers: readonly RemotePeer[]): ReturnType<typeof inlineDecoration>[] =>
+  peers.reduce<ReturnType<typeof inlineDecoration>[]>((found, peer) => {
+    if (peer.anchor !== undefined && peer.head !== undefined && peer.anchor !== peer.head) {
+      found.push(
+        inlineDecoration(
+          Math.min(peer.anchor, peer.head),
+          Math.max(peer.anchor, peer.head),
+          `${SELECTION_CLASS} nui-collab-colour--${peer.colour.toString()}`,
+        ),
+      );
+    }
+    return found;
+  }, []);
+
+const selectionDecorations = (peers: readonly RemotePeer[]): DecorationSet => {
+  const known = drawn.get(peers);
+
+  if (known !== undefined) {
+    return known;
+  }
+
+  const ranges = selectionRanges(peers);
+  const set = ranges.length === 0 ? NO_SELECTIONS : decorationSet(ranges);
+
+  drawn.set(peers, set);
+  return set;
+};
 
 export const remotePresence = (): Plugin<readonly RemotePeer[]> => {
   const plugin: Plugin<readonly RemotePeer[]> = definePlugin<readonly RemotePeer[]>({
