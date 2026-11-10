@@ -33,6 +33,7 @@ import {
   NuiSeparator,
   NuiSkeleton,
   NuiSkipLink,
+  NuiSplitter,
   NuiStepper,
   NuiSwitch,
   NuiTabs,
@@ -1002,6 +1003,15 @@ describe('server rendering', () => {
     expect(windowed).toContain('--_window-lead:0px');
     expect(windowed).toContain('--_window-rest:17280px');
     expect(windowed).toContain('--_window-clamp-start:-720px');
+  });
+
+  it('renders a splitter ratio outside its bounds clamped on the server', async () => {
+    const html = await renderToString(NuiSplitter, {
+      props: { id: 'panes', ratio: 0.95, min: 0.2, max: 0.8 },
+    });
+
+    expect(html).toContain('--_ratio:0.8');
+    expect(html).toContain('aria-valuenow="80"');
   });
 
   it('renders a select with nested options as a tree on the server', async () => {

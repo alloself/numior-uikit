@@ -60,6 +60,22 @@ describe('NuiSplitter', () => {
     expect(off.divider.attributes('tabindex')).toBe('-1');
   });
 
+  it('renders a ratio outside its bounds clamped from the start and leaves the model alone until moved', async () => {
+    const wide = SplitterDriver.mount({ ratio: 0.95, props: { min: 0.2, max: 0.8 } });
+    expect(wide.valueNow).toBe(80);
+    expect(wide.cssRatio).toBe('0.8');
+    expect(wide.ratio.value).toBe(0.95);
+
+    await wide.press('ArrowLeft');
+    expect(wide.ratio.value).toBeCloseTo(0.75);
+    expect(wide.valueNow).toBe(75);
+
+    const narrow = SplitterDriver.mount({ ratio: 0.05, props: { min: 0.2, max: 0.8 } });
+    expect(narrow.valueNow).toBe(20);
+    expect(narrow.cssRatio).toBe('0.2');
+    expect(narrow.ratio.value).toBe(0.05);
+  });
+
   it('speaks the configured language and lets the label prop win', () => {
     expect(SplitterDriver.mount({ config: { locale: 'ru-RU' } }).label).toBe(
       'Изменить размер панелей',
