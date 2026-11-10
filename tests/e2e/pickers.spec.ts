@@ -213,7 +213,7 @@ test.describe('pickers', () => {
 
     await pickers.pageSizeTrigger.click();
     await pickers.option('50').click();
-    await expect(pickers.rangeText).toHaveText('151–200 из 240');
+    await expect(pickers.rangeText).toHaveText('51–100 из 240');
     await expect.poll(async () => (await pickers.readOutput()).pageSize).toBe(50);
     await expect(pickers.pageLink(2)).toHaveAttribute('aria-current', 'page');
     await expect(pickers.pageLink(3)).toHaveAttribute('href', '#page-3');
