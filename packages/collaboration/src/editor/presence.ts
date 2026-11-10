@@ -74,8 +74,10 @@ const isVersion = (value: unknown): value is number | undefined =>
 const isPresence = (value: unknown): value is EditorPresence =>
   isFields(value) && isUser(value.user) && isSelection(value.selection) && isVersion(value.version);
 
-const colourOf = (id: string): number =>
-  (Array.from(id).reduce((sum, char) => sum * 31 + (char.codePointAt(0) ?? 0), 7) >>> 0) % COLOURS;
+const hashOf = (id: string): number =>
+  Array.from(id).reduce((sum, char) => (Math.imul(sum, 31) + (char.codePointAt(0) ?? 0)) | 0, 7);
+
+const colourOf = (id: string): number => (hashOf(id) >>> 0) % COLOURS;
 
 const pointAt = (doc: Doc, pos: number): BlockPoint => {
   const $pos = doc.resolve(pos);

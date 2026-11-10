@@ -41,8 +41,10 @@ const isPlace = (value: unknown): value is WorkbookPlace =>
 const isPresence = (value: unknown): value is WorkbookPresence =>
   isRecord(value) && isUser(value.user) && (value.place === undefined || isPlace(value.place));
 
-const colourOf = (id: string): number =>
-  (Array.from(id).reduce((sum, char) => sum * 31 + (char.codePointAt(0) ?? 0), 7) >>> 0) % COLOURS;
+const hashOf = (id: string): number =>
+  Array.from(id).reduce((sum, char) => (Math.imul(sum, 31) + (char.codePointAt(0) ?? 0)) | 0, 7);
+
+const colourOf = (id: string): number => (hashOf(id) >>> 0) % COLOURS;
 
 export const workbookPeers = (states: ReadonlyMap<string, unknown>): readonly WorkbookPeer[] =>
   [...states].reduce<WorkbookPeer[]>((peers, [clientId, state]) => {

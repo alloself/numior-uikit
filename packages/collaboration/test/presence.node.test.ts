@@ -21,6 +21,18 @@ import { received } from './harness/received';
 
 const ANN = { id: 'ann', name: 'Ann' };
 
+const LONG_IDS = [
+  '3f2b8c1e-7a44-4d0b-9c1f-0a6f5d2e8b11',
+  'b81d4e02-55c7-4f3a-8e90-c2d71a9f6e34',
+  '0c9a7f56-1e2d-4b8c-a3f4-9d8e7c6b5a40',
+  'e47f1a93-8b2c-4d6e-b5a1-3c2d1e0f9a88',
+  '7d5e3c21-9f0a-4b1c-8d2e-6f7a8b9c0d15',
+  'a2c4e6f8-1b3d-4f5a-9c7e-0d2f4a6c8e19',
+  'user-with-a-long-readable-identifier-0001',
+];
+
+const LONG_ID_COLOURS = [7, 2, 5, 4, 4, 7, 1];
+
 const presenceAt = (block: string, offset: number, head = offset): EditorPresence => ({
   user: ANN,
   selection: { anchor: { block, offset }, head: { block, offset: head } },
@@ -109,6 +121,18 @@ describe('remote presence', () => {
     expect(first?.colour).toBe(second?.colour);
     expect(first?.colour).toBeGreaterThanOrEqual(0);
     expect(first?.colour).toBeLessThan(8);
+  });
+
+  it('spreads people with long ids over the colours, the same way the sheet does', () => {
+    const state = withPeers(
+      started(),
+      LONG_IDS.map((id, index): [string, EditorPresence] => [
+        `c${String(index)}`,
+        { ...presenceAt('p0', 1), user: { id, name: id } },
+      ]),
+    );
+
+    expect(remotePeers(state).map((peer) => peer.colour)).toEqual(LONG_ID_COLOURS);
   });
 
   it('decorates a selected range and not a caret', () => {
