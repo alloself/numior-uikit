@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { computed, ref, useTemplateRef, watch } from 'vue';
-import { FloatingPlacement, Key, useControlId } from '@numior/primitives';
+import { FLOATING_OFFSET, FloatingPlacement, Key, useControlId } from '@numior/primitives';
 import { useTriggerElement } from '../shared/trigger-ref';
 import NuiMenuEntries from './NuiMenuEntries.vue';
 import { provideMenu } from './menu-context';
@@ -38,7 +38,7 @@ defineOptions({ inheritAttrs: false });
 const {
   id,
   placement = FloatingPlacement.BottomStart,
-  offset = 4,
+  offset = FLOATING_OFFSET,
   items,
   closeOnSelect = true,
   loop = true,

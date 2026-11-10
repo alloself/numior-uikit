@@ -181,7 +181,12 @@ export { useSplitAttrs } from './attrs/useSplitAttrs';
 export type { AttrRecord, SplitAttrs } from './attrs/useSplitAttrs';
 export { useFloating } from './floating/useFloating';
 export type { FloatingOptions, FloatingSize } from './floating/useFloating';
-export { FloatingPlacement, FloatingSide, FloatingStrategy } from './floating/floating.types';
+export {
+  FLOATING_OFFSET,
+  FloatingPlacement,
+  FloatingSide,
+  FloatingStrategy,
+} from './floating/floating.types';
 export { useAfterRelease } from './popover/useAfterRelease';
 export type { AfterRelease } from './popover/useAfterRelease';
 export { usePopover } from './popover/usePopover';

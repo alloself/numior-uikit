@@ -1,5 +1,6 @@
 import { ref, toValue, type MaybeRefOrGetter, type Ref, type ShallowRef } from 'vue';
 import {
+  FLOATING_OFFSET,
   useFloating,
   usePopover,
   type FloatingPlacement,
@@ -37,7 +38,7 @@ export const usePickerPopover = (options: PickerPopoverOptions): PickerPopover =
 
   useFloating(options.anchor, panelElement, {
     placement: () => toValue(options.placement),
-    offset: 4,
+    offset: FLOATING_OFFSET,
     size: { fitHeight: true },
     enabled: open,
   });

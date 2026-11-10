@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { boxOf } from '../helpers/geometry';
+import { boxOf, gapBetween } from '../helpers/geometry';
 import {
   isBoolean,
   isString,
@@ -51,6 +51,7 @@ export class OverlaysSection {
   readonly popoverTrigger: Locator;
   readonly popover: Locator;
   readonly popoverInput: Locator;
+  readonly popoverArrow: Locator;
   readonly tooltipTrigger: Locator;
   readonly tooltip: Locator;
   readonly output: Locator;
@@ -77,6 +78,7 @@ export class OverlaysSection {
     this.popoverTrigger = page.getByTestId('popover-trigger');
     this.popover = page.getByTestId('popover');
     this.popoverInput = page.getByTestId('popover-input');
+    this.popoverArrow = page.getByTestId('popover-arrow');
     this.tooltipTrigger = page.getByTestId('tooltip-trigger');
     this.tooltip = page.getByTestId('tooltip');
     this.output = page.getByTestId('overlays-output');
@@ -84,6 +86,18 @@ export class OverlaysSection {
 
   async setDrawerSide(side: DrawerSide): Promise<void> {
     await this.drawerSide.selectOption(side);
+  }
+
+  async popoverGap(): Promise<number> {
+    await this.popoverTrigger.click();
+    await this.popover.waitFor({ state: 'visible' });
+
+    const gap = await gapBetween(this.popoverTrigger, this.popover);
+
+    await this.pressEscape();
+    await this.popover.waitFor({ state: 'hidden' });
+
+    return gap;
   }
 
   async clickBackdrop(): Promise<void> {

@@ -32,3 +32,5 @@ export const FloatingPlacement = {
   RightStart: 'right-start',
   RightEnd: 'right-end',
 } as const satisfies Record<string, Placement>;
+
+export const FLOATING_OFFSET = 4;

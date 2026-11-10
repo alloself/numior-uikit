@@ -28,7 +28,10 @@ const docs: DocsMap = {
         ru: 'С какой стороны триггера открывается меню, например `bottom-start`.',
         en: 'Side of the trigger the menu opens on, such as `bottom-start`.',
       },
-      offset: { ru: 'Отступ от триггера в пикселях.', en: 'Distance from the trigger in pixels.' },
+      offset: {
+        ru: 'Отступ от триггера в пикселях. По умолчанию 4, как у всех выпадающих списков.',
+        en: 'Distance from the trigger in pixels. Defaults to 4, as for every dropdown list.',
+      },
       items: {
         ru: 'Пункты меню массивом вместо дочерних компонентов.',
         en: 'Menu entries as an array instead of child components.',

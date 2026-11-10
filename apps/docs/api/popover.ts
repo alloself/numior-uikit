@@ -11,7 +11,10 @@ const docs: DocsMap = {
         ru: 'С какой стороны триггера открывается поповер, например `bottom-start`.',
         en: 'Side of the trigger the popover opens on, such as `bottom-start`.',
       },
-      offset: { ru: 'Отступ от триггера в пикселях.', en: 'Distance from the trigger in pixels.' },
+      offset: {
+        ru: 'Отступ от триггера в пикселях. По умолчанию 4, со стрелкой — 8: стрелка касается триггера.',
+        en: 'Distance from the trigger in pixels. Defaults to 4, and to 8 with an arrow, so the arrow touches the trigger.',
+      },
       arrow: {
         ru: 'Показывает стрелку, направленную на триггер.',
         en: 'Shows an arrow pointing at the trigger.',

@@ -37,6 +37,8 @@ import { useTooltipTargets } from './use-tooltip-targets';
 
 const POINTER_FOCUS_WINDOW = 500;
 
+const ARROW_OFFSET = 6;
+
 const isTargets = (
   value: HTMLElement | NuiTooltipTargets | null | undefined,
 ): value is NuiTooltipTargets => value !== null && value !== undefined && 'selector' in value;
@@ -46,7 +48,7 @@ defineOptions({ inheritAttrs: false });
 const {
   id,
   placement = FloatingPlacement.Top,
-  offset = 6,
+  offset = ARROW_OFFSET,
   openDelay = 300,
   closeDelay = 100,
   disabled = false,

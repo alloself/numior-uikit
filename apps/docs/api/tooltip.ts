@@ -11,7 +11,10 @@ const docs: DocsMap = {
         ru: 'С какой стороны триггера появляется подсказка, например `top` или `bottom-start`.',
         en: 'Side of the trigger the tooltip appears on, such as `top` or `bottom-start`.',
       },
-      offset: { ru: 'Отступ от триггера в пикселях.', en: 'Distance from the trigger in pixels.' },
+      offset: {
+        ru: 'Отступ от триггера в пикселях. По умолчанию 6: стрелка касается триггера.',
+        en: 'Distance from the trigger in pixels. Defaults to 6, so the arrow touches the trigger.',
+      },
       openDelay: {
         ru: 'Через сколько миллисекунд после наведения появляется подсказка.',
         en: 'Delay in milliseconds before the tooltip shows on hover.',

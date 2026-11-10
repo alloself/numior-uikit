@@ -62,6 +62,7 @@
 <script setup lang="ts">
 import { computed, ref, shallowRef, useTemplateRef, watch } from 'vue';
 import {
+  FLOATING_OFFSET,
   PopoverMode,
   PopoverState,
   useFloating,
@@ -108,7 +109,7 @@ const { contentAttrs } = usePopover(content, { open, mode: PopoverMode.Auto });
 
 useFloating(() => anchor, content, {
   placement: 'bottom-start',
-  offset: 4,
+  offset: FLOATING_OFFSET,
   enabled: open,
 });
 

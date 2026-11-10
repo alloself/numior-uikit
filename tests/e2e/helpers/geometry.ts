@@ -21,6 +21,12 @@ export const boxOf = async (target: Locator): Promise<Box> => {
   return box;
 };
 
+export const gapBetween = async (trigger: Locator, surface: Locator): Promise<number> => {
+  const [from, to] = await Promise.all([boxOf(trigger), boxOf(surface)]);
+
+  return Math.round(Math.max(to.y - (from.y + from.height), from.y - (to.y + to.height)));
+};
+
 export const CELL_TEXT =
   ':scope > .nui-table__content--text, :scope > .nui-table__content > .nui-table__text';
 

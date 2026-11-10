@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures';
 import { expectRgb } from './helpers/color';
-import { boxOf } from './helpers/geometry';
+import { boxOf, gapBetween } from './helpers/geometry';
 
 test.describe('layers', () => {
   test('dialog opens modally, traps focus, closes on Escape and restores focus', async ({
@@ -185,6 +185,28 @@ test.describe('layers', () => {
     await overlays.clickBackdrop();
     await expect(overlays.popover).toBeHidden();
     await expect.poll(async () => (await overlays.readOutput()).popoverOpen).toBe(false);
+  });
+
+  test('a popover stands as far from its trigger as a menu and steps back for its arrow', async ({
+    playground,
+    overlays,
+    navigation,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+
+    const arrowed = await overlays.popoverGap();
+
+    await overlays.popoverArrow.click();
+
+    const plain = await overlays.popoverGap();
+
+    await navigation.menuTrigger.click();
+    await expect(navigation.menu).toBeVisible();
+
+    expect(plain).toBe(await gapBetween(navigation.menuTrigger, navigation.menu));
+    expect(plain).toBe(4);
+    expect(arrowed).toBe(8);
   });
 
   test('popover content follows the trigger in the tab order', async ({

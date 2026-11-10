@@ -99,6 +99,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
 import {
+  FLOATING_OFFSET,
   createCollection,
   formatSegment,
   formatTimeModel,
@@ -401,7 +402,7 @@ const control = usePopover(panelElement, { open, id: panelId, mode: PopoverMode.
 
 useFloating(rootElement, panelElement, {
   placement: () => placement,
-  offset: 4,
+  offset: FLOATING_OFFSET,
   enabled: open,
 });
 

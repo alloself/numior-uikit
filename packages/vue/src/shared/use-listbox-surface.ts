@@ -1,5 +1,6 @@
 import { toValue, type MaybeRefOrGetter, type Ref, type ShallowRef } from 'vue';
 import {
+  FLOATING_OFFSET,
   useFloating,
   useListNavigation,
   usePopover,
@@ -46,7 +47,7 @@ export const useListboxSurface = (options: ListboxSurfaceOptions): ListboxSurfac
 
   useFloating(options.anchor, listboxElement, {
     placement: () => toValue(options.placement),
-    offset: 4,
+    offset: FLOATING_OFFSET,
     size: { matchWidth: true, fitHeight: true, maxBlockSize: options.maxBlockSize },
     enabled: options.open,
   });
