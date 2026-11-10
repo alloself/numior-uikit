@@ -18,6 +18,10 @@ const atLeastThree = custom(
   (value) => typeof value !== 'string' || value.length >= 3 || 'Too short',
 );
 
+const MANY_FIELDS = 1000;
+
+const HIDE_BUDGET_MS = 100;
+
 describe('conditional fields', () => {
   it('lets rules read every value while a hidden field stays out of the submission', async () => {
     const form = FormHarness.mount({
@@ -136,6 +140,41 @@ describe('conditional fields', () => {
 
     expect(form.shownValue('note')).toBe('abcd');
     expect(form.error('note')).toBeUndefined();
+  });
+
+  it('keeps the value of a leaving field while another owner still holds its path', async () => {
+    const form = FormHarness.mount({
+      initialValues: { name: 'Ann', company: 'Acme' },
+      fields: ['name', { path: 'company', keepValue: false }],
+    });
+
+    const release = form.hold('company');
+
+    await form.hide('company');
+
+    expect(form.values).toEqual({ name: 'Ann', company: 'Acme' });
+
+    await form.show('company');
+    release();
+    await form.hide('company');
+
+    expect(form.values).toEqual({ name: 'Ann' });
+  });
+
+  it('takes a thousand fields away within the budget of one action', async () => {
+    const paths = Array.from({ length: MANY_FIELDS }, (_, index) => `field${index}`);
+
+    const form = FormHarness.mount({
+      initialValues: Object.fromEntries(paths.map((path) => [path, ''])),
+      fields: paths,
+    });
+
+    const started = performance.now();
+
+    await form.hideAll(paths);
+
+    expect(performance.now() - started).toBeLessThan(HIDE_BUDGET_MS);
+    expect(form.values).toEqual(Object.fromEntries(paths.map((path) => [path, ''])));
   });
 
   it('sends a disabled field without validating it', async () => {

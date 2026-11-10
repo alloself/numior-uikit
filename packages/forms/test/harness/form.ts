@@ -142,6 +142,14 @@ export class FormHarness<V extends object> {
     await nextTick();
   }
 
+  hold(path: Parameters<FormContext<V>['register']>[0]): () => void {
+    const owner = this.form.register(path);
+
+    return () => {
+      owner.unregister();
+    };
+  }
+
   async setValues(values: Parameters<FormContext<V>['setValues']>[0]): Promise<void> {
     await this.form.setValues(values);
     await nextTick();
@@ -178,6 +186,13 @@ export class FormHarness<V extends object> {
 
   async hide(path: string): Promise<void> {
     this.view.hidden.add(path);
+    await nextTick();
+  }
+
+  async hideAll(paths: readonly string[]): Promise<void> {
+    for (const path of paths) {
+      this.view.hidden.add(path);
+    }
     await nextTick();
   }
 

@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, effect, shallowRef } from 'vue';
 import type { EntryState } from '../engine/engine.types';
 import { patternOf, prefixesOf } from '../paths/paths';
 import type { AsyncRuleContext, FieldFlush, FieldRuleContext, ValidateOn } from './form.types';
@@ -53,17 +53,49 @@ interface Placed<V extends object> {
   readonly active: boolean;
 }
 
+interface Claims<V extends object> {
+  readonly owners: Map<string, Set<Entry<V>>>;
+  readonly places: Map<Entry<V>, string>;
+}
+
 const insideInactive = (path: string, inactive: ReadonlySet<string>): boolean =>
   prefixesOf(path).some((prefix) => prefix !== path && inactive.has(prefix));
 
-const collect = <V extends object>(placed: readonly Placed<V>[]): RegistryIndex<V> => {
-  const inactive = placed.reduce<Set<string>>((found, item) => {
+const placedOf = <V extends object>(entries: ReadonlySet<Entry<V>>): Placed<V>[] =>
+  Array.from(entries, (entry) => ({ entry, path: entry.path(), active: entry.active() }));
+
+const inactiveOf = <V extends object>(placed: readonly Placed<V>[]): Set<string> =>
+  placed.reduce<Set<string>>((found, item) => {
     if (!item.active) {
       found.add(item.path);
     }
     return found;
   }, new Set());
 
+const claimsOf = <V extends object>(placed: readonly Placed<V>[]): Claims<V> => {
+  const inactive = inactiveOf(placed);
+  const owners = new Map<string, Set<Entry<V>>>();
+  const places = new Map<Entry<V>, string>();
+
+  for (const item of placed) {
+    if (!item.active || insideInactive(item.path, inactive)) {
+      continue;
+    }
+
+    const known = owners.get(item.path);
+
+    if (known) {
+      known.add(item.entry);
+    } else {
+      owners.set(item.path, new Set([item.entry]));
+    }
+    places.set(item.entry, item.path);
+  }
+  return { owners, places };
+};
+
+const collect = <V extends object>(placed: readonly Placed<V>[]): RegistryIndex<V> => {
+  const inactive = inactiveOf(placed);
   const active: Entry<V>[] = [];
   const byPath = new Map<string, Entry<V>[]>();
   const covered = new Set<string>();
@@ -89,15 +121,35 @@ export const createRegistry = <V extends object>(): Registry<V> => {
   const entries = new Set<Entry<V>>();
   const known = new Set<string>();
   const version = shallowRef(0);
+  let claims: Claims<V> | undefined;
   let counter = 0;
 
   const index = computed(() => {
     void version.value;
-
-    return collect(
-      [...entries].map((entry) => ({ entry, path: entry.path(), active: entry.active() })),
-    );
+    return collect(placedOf(entries));
   });
+
+  const readClaims = effect(() => claimsOf(placedOf(entries)), {
+    scheduler: () => {
+      claims = undefined;
+    },
+  });
+
+  const claimsNow = (): Claims<V> => {
+    claims ??= readClaims();
+    return claims;
+  };
+
+  const disclaim = (entry: Entry<V>): void => {
+    const path = claims?.places.get(entry);
+
+    if (claims === undefined || path === undefined) {
+      return;
+    }
+
+    claims.places.delete(entry);
+    claims.owners.get(path)?.delete(entry);
+  };
 
   return {
     known,
@@ -106,15 +158,22 @@ export const createRegistry = <V extends object>(): Registry<V> => {
       known.add(patternOf(entry.path()));
       entries.add(entry);
       version.value += 1;
+      claims = undefined;
     },
     remove: (entry) => {
       entries.delete(entry);
+      disclaim(entry);
       version.value += 1;
     },
     index: () => index.value,
     active: () => index.value.active,
-    claimed: (path, except) =>
-      (index.value.byPath.get(path) ?? []).some((entry) => entry !== except),
+    claimed: (path, except) => {
+      const owners = claimsNow().owners.get(path);
+
+      return (
+        owners !== undefined && (owners.size > 1 || (owners.size === 1 && !owners.has(except)))
+      );
+    },
     nextId: () => {
       counter += 1;
       return counter;
