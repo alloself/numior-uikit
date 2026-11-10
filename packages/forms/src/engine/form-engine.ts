@@ -1,3 +1,4 @@
+import { at, clamp, range } from 'lodash-es';
 import { computed, getCurrentScope, onScopeDispose, shallowRef } from 'vue';
 import { deleteAt, getAt, mergeInto, replaceContents, setAt } from '../values/access';
 import { cloneValue } from '../values/clone';
@@ -44,24 +45,23 @@ const clearState = (state: EntryState): void => {
   state.setPending(false);
 };
 
-const moved = <T>(items: readonly T[], from: number, to: number): T[] => {
-  const next = [...items];
-  const [item] = next.splice(from, 1);
+const isPlace = (length: number, index: number): boolean =>
+  Number.isInteger(index) && index >= 0 && index < length;
 
-  if (item !== undefined) {
-    next.splice(to, 0, item);
+const movedPlaces = (length: number, from: number, to: number): number[] | undefined => {
+  if (!isPlace(length, from)) {
+    return undefined;
   }
-  return next;
+
+  const rest = range(length).toSpliced(from, 1);
+
+  return rest.toSpliced(clamp(to, 0, rest.length), 0, from);
 };
 
-const swapped = <T>(items: readonly T[], first: number, second: number): T[] => {
-  const left = items[first];
-  const right = items[second];
-
-  return left === undefined || right === undefined
-    ? [...items]
-    : items.map((item, index) => (index === first ? right : index === second ? left : item));
-};
+const swappedPlaces = (length: number, first: number, second: number): number[] | undefined =>
+  isPlace(length, first) && isPlace(length, second)
+    ? range(length).with(first, second).with(second, first)
+    : undefined;
 
 const lengthAt = (values: object, path: string): number => {
   const list = getAt(values, path);
@@ -81,14 +81,29 @@ const createArray = (host: ArrayHost, path: () => string): EngineArray => {
     host.write(path(), next);
   };
 
-  const keys = computed((): readonly EngineKey[] => {
-    const length = lengthAt(host.values, path());
-
+  const sized = (length: number): void => {
     order.splice(length);
 
     while (order.length < length) {
       order.push(host.fresh());
     }
+  };
+
+  const arrange = (places: (length: number) => readonly number[] | undefined): void => {
+    const list = current();
+    const next = places(list.length);
+
+    if (next === undefined) {
+      return;
+    }
+
+    sized(list.length);
+    order = at(order, next);
+    write(at(list, next));
+  };
+
+  const keys = computed((): readonly EngineKey[] => {
+    sized(lengthAt(host.values, path()));
     return [...order];
   });
 
@@ -113,12 +128,10 @@ const createArray = (host: ArrayHost, path: () => string): EngineArray => {
       write(current().toSpliced(index, 1));
     },
     move: (from, to) => {
-      order = moved(order, from, to);
-      write(moved(current(), from, to));
+      arrange((length) => movedPlaces(length, from, to));
     },
     swap: (first, second) => {
-      order = swapped(order, first, second);
-      write(swapped(current(), first, second));
+      arrange((length) => swappedPlaces(length, first, second));
     },
     replace: (next) => {
       order = next.map(() => host.fresh());
