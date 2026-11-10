@@ -1,6 +1,16 @@
 import { MAX_COLS, MAX_ROWS } from './address';
-import { CellValueKind, LineAxis, type CellRange, type CellValue } from './cell.types';
-import { shiftIndex, type LineMove } from './lines';
+import { CellValueKind, type LineAxis, type CellRange, type CellValue } from './cell.types';
+import {
+  CHUNKS_PER_ROW,
+  CHUNK_COLS,
+  CHUNK_ROWS,
+  CHUNK_SIZE,
+  chunkKey,
+  copyPlane,
+  filledSlots,
+  shiftChunkLines,
+  slotOf,
+} from './chunks';
 import type { SharedStrings } from './strings';
 import { CELL_ERRORS, EMPTY } from './values';
 
@@ -31,34 +41,14 @@ export interface CellStore {
   readonly chunks: number;
 }
 
-interface RawCells {
-  readonly rows: number[];
-  readonly cols: number[];
-  readonly kinds: number[];
-  readonly numbers: number[];
-  readonly refs: number[];
-}
-
 interface Point {
   readonly row: number;
   readonly col: number;
 }
 
-export const CHUNK_ROWS = 512;
-
-export const CHUNK_COLS = 32;
-
-const CHUNK_SIZE = CHUNK_ROWS * CHUNK_COLS;
-
-const CHUNKS_PER_ROW = MAX_COLS / CHUNK_COLS;
+export { CHUNK_COLS, CHUNK_ROWS };
 
 const Kind = { Empty: 0, Number: 1, String: 2, Boolean: 3, Error: 4 } as const;
-
-const chunkKey = (row: number, col: number): number =>
-  Math.floor(row / CHUNK_ROWS) * CHUNKS_PER_ROW + Math.floor(col / CHUNK_COLS);
-
-const slotOf = (row: number, col: number): number =>
-  (row % CHUNK_ROWS) * CHUNK_COLS + (col % CHUNK_COLS);
 
 const newChunk = (): Chunk => ({
   kinds: new Uint8Array(CHUNK_SIZE),
@@ -117,8 +107,19 @@ const write = (chunk: Chunk, slot: number, value: CellValue, strings: SharedStri
   }
 };
 
-const lineOf = (axis: LineAxis, row: number, col: number): number =>
-  axis === LineAxis.Rows ? row : col;
+const moveSlots = (source: Chunk, from: number, to: number, target: Chunk, at: number): void => {
+  copyPlane(source.kinds, from, to, target.kinds, at);
+  if (source.numbers !== undefined) {
+    copyPlane(source.numbers, from, to, numbersOf(target), at);
+  }
+  if (source.refs !== undefined) {
+    copyPlane(source.refs, from, to, refsOf(target), at);
+  }
+};
+
+const clearSlots = (chunk: Chunk, from: number, to: number): void => {
+  chunk.kinds.fill(Kind.Empty, from, to);
+};
 
 const clamp = (value: number, max: number): number => Math.min(Math.max(value, 0), max);
 
@@ -227,80 +228,33 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
     return along(point, step);
   };
 
-  const takeLines = (axis: LineAxis, from: number): RawCells => {
-    const taken: RawCells = { rows: [], cols: [], kinds: [], numbers: [], refs: [] };
-
-    chunks.forEach((chunk, key) => {
-      const top = Math.floor(key / CHUNKS_PER_ROW) * CHUNK_ROWS;
-      const left = (key % CHUNKS_PER_ROW) * CHUNK_COLS;
-
-      if (lineOf(axis, top + CHUNK_ROWS - 1, left + CHUNK_COLS - 1) < from) {
-        return;
-      }
-      for (let slot = 0; slot < CHUNK_SIZE; slot += 1) {
-        const kind = chunk.kinds[slot] ?? Kind.Empty;
-        const row = top + Math.floor(slot / CHUNK_COLS);
-        const col = left + (slot % CHUNK_COLS);
-
-        if (kind !== Kind.Empty && lineOf(axis, row, col) >= from) {
-          taken.rows.push(row);
-          taken.cols.push(col);
-          taken.kinds.push(kind);
-          taken.numbers.push(chunk.numbers?.[slot] ?? 0);
-          taken.refs.push(chunk.refs?.[slot] ?? 0);
-          chunk.kinds[slot] = Kind.Empty;
-          chunk.count -= 1;
-          size -= 1;
-        }
-      }
-      if (chunk.count === 0) {
-        chunks.delete(key);
-      }
-    });
-
-    return taken;
-  };
-
   let revision = 0;
-
-  const putRaw = (row: number, col: number, kind: number, number: number, ref: number): void => {
-    const key = chunkKey(row, col);
-    const chunk = chunks.get(key) ?? newChunk();
-    const slot = slotOf(row, col);
-
-    chunk.kinds[slot] = kind;
-    if (kind === Kind.Number || kind === Kind.Boolean) {
-      numbersOf(chunk)[slot] = number;
-    } else {
-      refsOf(chunk)[slot] = ref;
-    }
-    chunk.count += 1;
-    chunk.stamp = revision;
-    size += 1;
-    chunks.set(key, chunk);
-  };
 
   return {
     shiftLines: (axis, at, count) => {
-      const change: LineMove = { axis, at, count };
-
       revision += 1;
-      const taken = takeLines(axis, at);
 
-      taken.rows.forEach((row, index) => {
-        const col = taken.cols[index] ?? 0;
-        const line = shiftIndex(lineOf(axis, row, col), change);
+      shiftChunkLines(
+        {
+          chunks,
+          create: newChunk,
+          move: moveSlots,
+          clear: clearSlots,
+          settle: (key, chunk) => {
+            const count = filledSlots(chunk.kinds);
 
-        if (line !== undefined) {
-          putRaw(
-            axis === LineAxis.Rows ? line : row,
-            axis === LineAxis.Rows ? col : line,
-            taken.kinds[index] ?? Kind.Empty,
-            taken.numbers[index] ?? 0,
-            taken.refs[index] ?? 0,
-          );
-        }
-      });
+            size += count - chunk.count;
+            chunk.count = count;
+            chunk.stamp = revision;
+            if (count === 0) {
+              chunks.delete(key);
+            }
+          },
+        },
+        axis,
+        at,
+        count,
+      );
     },
     get: (row, col) => {
       const chunk = chunks.get(chunkKey(row, col));
