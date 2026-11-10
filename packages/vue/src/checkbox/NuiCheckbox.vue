@@ -113,6 +113,7 @@ const onChange = (): void => {
   void nextTick(() => {
     if (checkboxElement.value) {
       checkboxElement.value.checked = model.value;
+      checkboxElement.value.indeterminate = indeterminate;
     }
   });
 };

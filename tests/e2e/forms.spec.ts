@@ -64,11 +64,11 @@ test.describe('form controls', () => {
     await expect(forms.terms).toBeChecked();
     await expect.poll(async () => (await forms.readOutput()).terms).toBe(true);
 
-    expect(
-      await forms.indeterminate.evaluate(
-        (element) => element instanceof HTMLInputElement && element.indeterminate,
-      ),
-    ).toBe(true);
+    await expect(forms.indeterminate).toHaveJSProperty('indeterminate', true);
+
+    await forms.indeterminate.click();
+
+    await expect(forms.indeterminate).toHaveJSProperty('indeterminate', true);
 
     await forms.channelEmail.check();
     await forms.channelSms.check();
