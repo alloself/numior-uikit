@@ -40,6 +40,18 @@ const docs: DocsMap = {
         en: 'Fires on close with the `returnValue` of a `method="dialog"` form.',
       },
     },
+    slots: {
+      title: { ru: 'Свой заголовок вместо `title`.', en: 'Custom title instead of `title`.' },
+      description: {
+        ru: 'Своё описание вместо `description`.',
+        en: 'Custom description instead of `description`.',
+      },
+      default: { ru: 'Содержимое панели.', en: 'Drawer content.' },
+      footer: {
+        ru: 'Кнопки внизу панели. Кнопка в форме с `method="dialog"` закрывает её без кода.',
+        en: 'Buttons at the bottom of the drawer. A button in a `method="dialog"` form closes it without code.',
+      },
+    },
   },
 };
 
