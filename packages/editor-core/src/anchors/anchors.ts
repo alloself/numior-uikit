@@ -1,7 +1,7 @@
 import { decorationSet, inlineDecoration } from '../decorations/decorations';
 import type { DecorationSet } from '../decorations/decorations.types';
 import type { Doc } from '../doc/doc.types';
-import { remoteChain } from '../history/history';
+import { addToHistory, historyTravel, remoteChain, remoteChange } from '../history/history';
 import { mirrored } from '../history/rebase';
 import { createMetaKey, definePlugin } from '../state/plugin';
 import { followPosition, selectionRange, textPosition } from '../state/selection';
@@ -22,6 +22,15 @@ import {
   type AnchorRange,
   type AnchorsState,
 } from './anchors.types';
+import {
+  drifted,
+  released,
+  traced,
+  withoutRedo,
+  type Ghost,
+  type Span,
+  type Trace,
+} from './ghosts';
 
 const anchorChange = createMetaKey<AnchorChange>('anchors');
 
@@ -29,7 +38,9 @@ const ANCHOR_CLASS = 'nui-editor__comment';
 
 const ACTIVE_CLASS = 'nui-editor__comment--active';
 
-const EMPTY: AnchorsState = { anchors: new Map(), active: undefined };
+const NO_GHOSTS: readonly Ghost[] = [];
+
+const EMPTY: AnchorsState = { anchors: new Map(), active: undefined, ghosts: NO_GHOSTS, cuts: 0 };
 
 const mapperOf = (tr: Transaction): Mappable => {
   const chain = remoteChain.read(tr);
@@ -37,30 +48,84 @@ const mapperOf = (tr: Transaction): Mappable => {
   return chain === undefined ? tr.mapping : mirrored(chain);
 };
 
-const movedAnchor = (anchor: Anchor, tr: Transaction, mapper: Mappable): Anchor => {
+const spansOf = (anchors: ReadonlyMap<string, Anchor>): ReadonlyMap<string, Span> => {
+  const spans = new Map<string, Span>();
+
+  for (const [id, { range }] of anchors) {
+    if (range.kind === AnchorRangeKind.Text) {
+      spans.set(id, range);
+    }
+  }
+  return spans;
+};
+
+const tracedBy = (value: AnchorsState, tr: Transaction, mapper: Mappable): Trace => {
+  const own = addToHistory.read(tr) !== false && remoteChange.read(tr) !== true;
+  const travel = historyTravel(tr);
+  const revived = new Set<string>();
+
+  if (!own) {
+    return { spans: new Map(), ghosts: drifted(value.ghosts, mapper), revived };
+  }
+
+  return traced(
+    {
+      spans: spansOf(value.anchors),
+      ghosts: travel === undefined ? withoutRedo(value.ghosts) : value.ghosts,
+      revived,
+    },
+    tr,
+    value.cuts,
+    travel,
+  );
+};
+
+const joined = (kept: Span, back: Span | undefined): Span => {
+  if (back === undefined || back.from === back.to) {
+    return kept;
+  }
+
+  return kept.from === kept.to
+    ? back
+    : { from: Math.min(kept.from, back.from), to: Math.max(kept.to, back.to) };
+};
+
+const stagesIn = (tr: Transaction): number =>
+  tr.mapping.maps.reduce((count, map) => count + Math.max(1, map.ranges.length), 0);
+
+const movedAnchor = (anchor: Anchor, tr: Transaction, mapper: Mappable, trace: Trace): Anchor => {
   const { range } = anchor;
 
   if (range.kind === AnchorRangeKind.Node) {
-    return tr.doc.byId(range.id) === undefined ? { ...anchor, lost: true } : anchor;
+    return { ...anchor, lost: tr.doc.byId(range.id) === undefined };
   }
+
   const from = followPosition(range.from, mapper, tr.before, tr.doc, 1);
   const to = Math.max(from, followPosition(range.to, mapper, tr.before, tr.doc, -1));
+  const back = trace.revived.has(anchor.id) ? trace.spans.get(anchor.id) : undefined;
+  const whole = joined({ from, to }, back);
 
-  return { ...anchor, range: { kind: 'text', from, to }, lost: anchor.lost || to === from };
+  return { ...anchor, range: { kind: 'text', ...whole }, lost: whole.to === whole.from };
 };
 
 const moved = (value: AnchorsState, tr: Transaction): AnchorsState => {
-  if (!tr.changed || value.anchors.size === 0) {
+  if (!tr.changed) {
     return value;
+  }
+  if (value.anchors.size === 0) {
+    return value.ghosts.length === 0 ? value : { ...value, ghosts: NO_GHOSTS };
   }
 
   const mapper = mapperOf(tr);
+  const trace = tracedBy(value, tr, mapper);
 
   return {
     ...value,
     anchors: new Map(
-      [...value.anchors].map(([id, anchor]) => [id, movedAnchor(anchor, tr, mapper)]),
+      [...value.anchors].map(([id, anchor]) => [id, movedAnchor(anchor, tr, mapper, trace)]),
     ),
+    ghosts: trace.ghosts,
+    cuts: value.cuts + stagesIn(tr),
   };
 };
 
@@ -100,6 +165,13 @@ const followed = (value: AnchorsState, tr: Transaction): AnchorsState => {
   return active === value.active ? value : { ...value, active };
 };
 
+const without = <T>(known: ReadonlyMap<string, T>, id: string): ReadonlyMap<string, T> => {
+  const rest = new Map(known);
+
+  rest.delete(id);
+  return rest;
+};
+
 const changed = (value: AnchorsState, change: AnchorChange | undefined): AnchorsState => {
   switch (change?.kind) {
     case AnchorChangeKind.Set:
@@ -110,16 +182,15 @@ const changed = (value: AnchorsState, change: AnchorChange | undefined): Anchors
           range: change.range,
           lost: false,
         }),
+        ghosts: released(value.ghosts, change.id),
       };
-    case AnchorChangeKind.Remove: {
-      const anchors = new Map(value.anchors);
-
-      anchors.delete(change.id);
+    case AnchorChangeKind.Remove:
       return {
-        anchors,
+        ...value,
+        anchors: without(value.anchors, change.id),
         active: value.active === change.id ? undefined : value.active,
+        ghosts: released(value.ghosts, change.id),
       };
-    }
     case AnchorChangeKind.Activate:
       return { ...value, active: change.id };
     case undefined:

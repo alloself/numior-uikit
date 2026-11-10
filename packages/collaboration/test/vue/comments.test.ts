@@ -221,6 +221,19 @@ describe('NuiEditorComments', () => {
     expect(view.hasButton(0, 'Show in text')).toBe(false);
   });
 
+  it('takes the flag off and marks the text again when the removal is undone', async () => {
+    const view = CommentsDriver.mount([threadOf('t')]);
+
+    await view.loaded();
+
+    await view.remove(1, 4);
+    await view.undo();
+
+    expect(view.badges(0)).toEqual([]);
+    expect(view.highlights).toEqual(['one']);
+    expect(view.hasButton(0, 'Show in text')).toBe(true);
+  });
+
   it('flags a thread whose anchor no longer resolves', async () => {
     const view = CommentsDriver.mount([
       threadOf('t', {
@@ -316,6 +329,48 @@ describe('NuiEditorComments', () => {
         },
       ],
     ]);
+  });
+
+  it('writes an anchor again when undo brings its removed text back, for the others to see', async () => {
+    const view = CommentsDriver.mountShared([threadOf('t')]);
+
+    await view.loaded();
+
+    vi.useFakeTimers();
+    await view.remove(1, 4);
+    await view.confirm();
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(view.adapter.moved).toEqual([]);
+
+    await view.undo();
+    await view.confirm();
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(view.adapter.moved).toEqual([
+      ['t', { ...firstLine, at: { version: 2, from: 1, to: 4 } }],
+    ]);
+  });
+
+  it('marks the text again when the one who removed it writes that it is back', async () => {
+    const view = CommentsDriver.mountShared([threadOf('t')]);
+
+    await view.loaded();
+    await view.removedByOther(1, 4);
+    await view.typedByOther('one', 1);
+
+    expect(view.badges(0)).toEqual(['The text was removed']);
+
+    view.adapter.emit({
+      kind: CommentEventKind.Changed,
+      thread: threadOf('t', { anchor: { ...firstLine, at: { version: 2, from: 1, to: 4 } } }),
+    });
+
+    await vi.waitFor(() => {
+      expect(view.highlights).toEqual(['one']);
+    });
+
+    expect(view.badges(0)).toEqual([]);
   });
 
   it('leaves an anchor moved by someone else to the one who moved it', async () => {

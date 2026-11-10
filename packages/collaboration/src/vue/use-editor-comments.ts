@@ -111,6 +111,21 @@ const movedByOwnEdit = (state: EditorState, before: EditorState): readonly strin
   }, []);
 };
 
+const backByOwnEdit = (state: EditorState, before: EditorState): readonly string[] => {
+  if (collabProgress(state)?.version !== collabProgress(before)?.version) {
+    return [];
+  }
+
+  const known = anchorsOf(before);
+
+  return [...anchorsOf(state).values()].reduce<string[]>((found, anchor) => {
+    if (!anchor.lost && known.get(anchor.id)?.lost === true) {
+      found.push(anchor.id);
+    }
+    return found;
+  }, []);
+};
+
 export const useEditorComments = (options: UseEditorCommentsOptions): CollabComments => {
   const { doc, user, adapter, editor } = options;
   const threads = shallowRef<readonly CommentThread[]>(NO_THREADS);
@@ -124,6 +139,7 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
   const messages = useMessages(collabMessages);
   const aborter = new AbortController();
   const owed = new Set<string>();
+  const back = new Set<string>();
   const waiting = new Map<string, CommentThread>();
   const early: CommentEvent[] = [];
 
@@ -237,10 +253,10 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
 
       const json = statedAt(state, anchor.range);
 
-      if (
-        sameSpot(json, thread.anchor) &&
-        (json.at === undefined || thread.anchor.at !== undefined)
-      ) {
+      const known =
+        sameSpot(json, thread.anchor) && (json.at === undefined || thread.anchor.at !== undefined);
+
+      if (known && !back.has(thread.id)) {
         return;
       }
 
@@ -249,6 +265,7 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
     });
 
     owed.clear();
+    back.clear();
   };
 
   const scheduleMoves = useDebounceFn(writeMoves, MOVE_DELAY);
@@ -262,6 +279,7 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
         if (state.doc !== before.doc) {
           revision.value += 1;
           movedByOwnEdit(state, before).forEach((id) => owed.add(id));
+          backByOwnEdit(state, before).forEach((id) => back.add(id));
         }
         if (owed.size > 0) {
           void scheduleMoves();

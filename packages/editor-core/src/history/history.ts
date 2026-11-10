@@ -194,6 +194,8 @@ const travel =
     return true;
   };
 
+export const historyTravel = (tr: Transaction): HistoryAction | undefined => historyAction.read(tr);
+
 export const undo: Command = travel('undo');
 
 export const redo: Command = travel('redo');

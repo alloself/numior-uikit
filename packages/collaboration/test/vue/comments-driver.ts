@@ -1,4 +1,4 @@
-import { textSelection, type Command } from '@numior/editor-core';
+import { textSelection, undo, type Command } from '@numior/editor-core';
 import type { NuiEditorApi } from '@numior/editor-vue';
 import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { promiseTimeout } from '@vueuse/core';
@@ -162,6 +162,24 @@ export class CommentsDriver {
         dispatch?.(confirmSteps(state, progress.pending, progress.version + progress.pending));
       }
       return progress !== undefined;
+    });
+
+    await flushPromises();
+  }
+
+  async undo(): Promise<void> {
+    this.run(undo);
+    await flushPromises();
+  }
+
+  async removedByOther(from: number, to: number): Promise<void> {
+    this.run((state, dispatch) => {
+      const tr = receiveSteps(state, state.tr.delete(from, to).steps);
+
+      if (tr !== undefined) {
+        dispatch?.(tr);
+      }
+      return tr !== undefined;
     });
 
     await flushPromises();
