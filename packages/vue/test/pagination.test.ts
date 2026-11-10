@@ -111,6 +111,27 @@ describe('NuiPagination', () => {
     pagination.unmount();
   });
 
+  it('keeps the first visible row on the page when the page size changes', async () => {
+    const pagination = PaginationDriver.mount({
+      props: { total: 240, pageSizes: [10, 20, 50] },
+      page: 5,
+    });
+
+    expect(pagination.rangeText).toBe('81–100 of 240');
+
+    await pagination.choosePageSize(50);
+
+    expect(pagination.page).toBe(2);
+    expect(pagination.rangeText).toBe('51–100 of 240');
+
+    await pagination.choosePageSize(10);
+
+    expect(pagination.page).toBe(6);
+    expect(pagination.rangeText).toBe('51–60 of 240');
+
+    pagination.unmount();
+  });
+
   it('changes the page size through the select and clamps the page to the new count', async () => {
     const pagination = PaginationDriver.mount({
       props: { total: 240, pageSizes: [10, 20, 50], pageSizeLabel: 'На странице' },

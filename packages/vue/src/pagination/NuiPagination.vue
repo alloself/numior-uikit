@@ -156,9 +156,13 @@ const go = (target: number): void => {
 };
 
 const changePageSize = (value: number | null): void => {
-  if (value !== null) {
-    pageSize.value = value;
+  if (value === null || value === pageSize.value) {
+    return;
   }
+  const first = (page.value - 1) * pageSize.value;
+
+  pageSize.value = value;
+  pageModel.value = clampPage(Math.floor(first / value) + 1, pageCountOf(total, value));
 };
 
 const controlProps = (target: number, name: string, disabled: boolean) => ({
