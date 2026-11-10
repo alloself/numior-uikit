@@ -521,6 +521,38 @@ describe('pivot steps', () => {
     expect(book.table('F7:G9', undefined, 'Rates').ok).toBe(true);
   });
 
+  it('follows its source table through a rename and the undo of the rename', () => {
+    const book = salesBook();
+
+    book.table('A1:D6', { name: 'Orders' });
+
+    expect(
+      book.commit({
+        kind: 'setPivot',
+        sheet: 'Rates',
+        name: 'Sales',
+        pivot: {
+          anchor: { row: 2, col: 0 },
+          definition: definitionOf({ kind: 'table', name: 'Orders' }, { rows: [0] }),
+        },
+      }).ok,
+    ).toBe(true);
+
+    expect(book.commit({ kind: 'renameTable', from: 'orders', to: 'Deals' }).ok).toBe(true);
+
+    book.type('D2', '1000');
+
+    expect(book.commit({ kind: 'refreshPivot', sheet: 'Rates', name: 'Sales' }).ok).toBe(true);
+    expect(book.shown('D7', 'Rates')).toBe('1470');
+
+    book.history.undo();
+    book.history.undo();
+    book.history.undo();
+
+    expect(book.commit({ kind: 'refreshPivot', sheet: 'Rates', name: 'Sales' }).ok).toBe(true);
+    expect(book.shown('D7', 'Rates')).toBe('570');
+  });
+
   it('refuses pivots over other pivots and fields the source does not have', () => {
     const book = salesBook();
 

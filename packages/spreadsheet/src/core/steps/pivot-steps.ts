@@ -40,7 +40,8 @@ export interface PivotSteps {
   covers(sheet: Sheet, cells: readonly CellEdit[]): boolean;
   crossed(sheet: Sheet, change: LineChange): boolean;
   move(sheet: Sheet, change: LineChange): WorkbookStep[];
-  rename(from: string, to: string): void;
+  renameSheet(from: string, to: string): void;
+  renameTable(from: string, to: string): void;
   dropSheet(sheet: Sheet): void;
   kept(sheet: Sheet): WorkbookStep[];
 }
@@ -221,6 +222,7 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
     if (footprint.bottom >= MAX_ROWS || footprint.right >= MAX_COLS) {
       return { ok: false, reason: StepRefusal.SheetFull };
     }
+
     const taken =
       overlaps(sheet, name, footprint) ||
       feeds(sheet, spec.definition.source, footprint) ||
@@ -345,6 +347,16 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
     };
   };
 
+  const resourced = (rename: (source: PivotSource) => PivotSource): void => {
+    book.pivots.forEach((pivot) => {
+      const source = rename(pivot.definition.source);
+
+      if (source !== pivot.definition.source) {
+        book.pivots.set({ ...pivot, definition: { ...pivot.definition, source } });
+      }
+    });
+  };
+
   return {
     set: placed,
     refresh: (sheet, name) => {
@@ -419,17 +431,19 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
         return lost;
       }, []);
     },
-    rename: (from, to) => {
-      book.pivots.forEach((pivot) => {
-        const { source } = pivot.definition;
-
-        if (source.kind === PivotSourceKind.Range && sameName(source.sheet, from)) {
-          book.pivots.set({
-            ...pivot,
-            definition: { ...pivot.definition, source: { ...source, sheet: to } },
-          });
-        }
-      });
+    renameSheet: (from, to) => {
+      resourced((source) =>
+        source.kind === PivotSourceKind.Range && sameName(source.sheet, from)
+          ? { ...source, sheet: to }
+          : source,
+      );
+    },
+    renameTable: (from, to) => {
+      resourced((source) =>
+        source.kind === PivotSourceKind.Table && sameName(source.name, from)
+          ? { ...source, name: to }
+          : source,
+      );
     },
     dropSheet: (sheet) => {
       book.pivots.on(sheet).forEach((pivot) => {

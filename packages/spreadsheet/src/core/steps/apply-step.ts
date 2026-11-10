@@ -457,6 +457,15 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     });
   };
 
+  const renameTable = (from: string, to: string): StepResult => {
+    const result = tables.rename(from, to);
+
+    if (result.ok) {
+      pivots.renameTable(from, to);
+    }
+    return result;
+  };
+
   const renameSheet = (sheet: Sheet, to: string): StepResult => {
     const from = sheet.name;
 
@@ -465,7 +474,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     }
     rewriter.formulas((_owner, ast) => renameInFormula(ast, from, to));
     rewriter.names((defined) => renameInFormula(defined.ast, from, to));
-    pivots.rename(from, to);
+    pivots.renameSheet(from, to);
 
     book.sheets.forEach((each) => {
       each.conditional = mapConditionalFormulas(each.conditional, (ast) =>
@@ -545,7 +554,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
       case StepKind.SetTable:
         return tables.set(step.name, step.table);
       case StepKind.RenameTable:
-        return tables.rename(step.from, step.to);
+        return renameTable(step.from, step.to);
       case StepKind.Batch:
         return applyBatch(step.steps);
       default:
