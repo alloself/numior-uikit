@@ -566,7 +566,7 @@ const selection = useSheetSelection({
 
 const place = computed((): NuiSpreadsheetPlace | undefined => {
   const chosen = selection.current.value;
-  const name = shownSheet.value?.name;
+  const name = tabs.value[shownIndex.value]?.label;
 
   return chosen === undefined || name === undefined
     ? undefined

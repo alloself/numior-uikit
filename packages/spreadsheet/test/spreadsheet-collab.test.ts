@@ -150,4 +150,20 @@ describe('NuiSpreadsheet in a shared book', () => {
 
     expect(stop).toHaveBeenCalledOnce();
   });
+
+  it('tells others the new name of the sheet when someone else renames it', async () => {
+    const book = shared();
+    const driver = open(book);
+
+    await driver.select({
+      active: { row: 3, col: 2 },
+      ranges: [{ top: 3, left: 2, bottom: 3, right: 2 }],
+    });
+
+    receive(book.session, { kind: 'renameSheet', from: SHEET, to: 'Plan' });
+    await driver.settle();
+
+    expect(driver.tabs).toEqual(['Plan']);
+    expect(driver.places.at(-1)).toMatchObject({ sheet: 'Plan' });
+  });
 });
