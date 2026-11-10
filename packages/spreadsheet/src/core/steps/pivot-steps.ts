@@ -1,9 +1,9 @@
 import { MAX_COLS, MAX_ROWS, containsCell } from '../address';
-import { LineAxis, type CellRange } from '../cell.types';
+import { CellInputKind, LineAxis, type CellRange } from '../cell.types';
 import { sameName, type LineChange } from '../formula/rewrite';
 import { shiftIndex } from '../lines';
 import { shiftRanges } from '../layout/shift-ranges';
-import { buildPivotCache, pivotSource } from '../pivot/pivot-cache';
+import { buildPivotCache, pivotSource, pivotSourceArea } from '../pivot/pivot-cache';
 import { VALUES_FIELD, computePivot } from '../pivot/pivot-engine';
 import { renderPivot } from '../pivot/pivot-render';
 import {
@@ -179,6 +179,23 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
           rangesMeet(pivot.footprint, area),
       ) || book.tables.on(sheet).some((table) => rangesMeet(table.range, area));
 
+  const feeds = (sheet: Sheet, source: PivotSource, area: CellRange): boolean => {
+    const from = pivotSourceArea(book, source);
+
+    return from !== undefined && from.sheet === sheet && rangesMeet(from.range, area);
+  };
+
+  const holdsData = (sheet: Sheet, name: string, area: CellRange): boolean => {
+    const own = book.pivots.get(sheet, name)?.footprint;
+
+    return [...cells.contentsIn(sheet, area).values()].some(
+      (cell) =>
+        cell.content !== undefined &&
+        cell.content.kind !== CellInputKind.Empty &&
+        !(own !== undefined && containsCell(own, cell.row, cell.col)),
+    );
+  };
+
   const rendered = (
     sheet: Sheet,
     name: string,
@@ -204,7 +221,12 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
     if (footprint.bottom >= MAX_ROWS || footprint.right >= MAX_COLS) {
       return { ok: false, reason: StepRefusal.SheetFull };
     }
-    if (overlaps(sheet, name, footprint)) {
+    const taken =
+      overlaps(sheet, name, footprint) ||
+      feeds(sheet, spec.definition.source, footprint) ||
+      holdsData(sheet, name, footprint);
+
+    if (taken) {
       return { ok: false, reason: StepRefusal.PivotOverlap };
     }
     return {

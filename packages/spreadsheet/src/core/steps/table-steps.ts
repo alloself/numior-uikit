@@ -252,6 +252,13 @@ export const createTableSteps = (
 
     const wanted = name.toLowerCase();
 
+    const overPivot = book.pivots
+      .on(sheet)
+      .some((pivot) => pivot.footprint !== undefined && rangesMeet(pivot.footprint, spec.range));
+
+    if (overPivot) {
+      return StepRefusal.PivotOverlap;
+    }
     return book.tables
       .on(sheet)
       .some((other) => other.name.toLowerCase() !== wanted && rangesMeet(other.range, spec.range))

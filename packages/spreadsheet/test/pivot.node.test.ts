@@ -446,6 +446,81 @@ describe('pivot steps', () => {
     expect(book.shown('B5', 'Rates')).toBe('1');
   });
 
+  it('never covers cells that hold data, when placed and when a refresh grows it', () => {
+    const book = salesBook();
+
+    book.place();
+    book.type('A8', 'note', 'Rates');
+    book.type('A6', 'North');
+
+    expect(book.commit({ kind: 'refreshPivot', sheet: 'Rates', name: 'Sales' })).toEqual({
+      ok: false,
+      reason: 'pivot-overlap',
+    });
+
+    expect([book.footprint(), book.shown('A8', 'Rates')]).toEqual(['A3:D7', 'note']);
+
+    book.type('A8', '', 'Rates');
+
+    expect(book.commit({ kind: 'refreshPivot', sheet: 'Rates', name: 'Sales' }).ok).toBe(true);
+    expect([book.footprint(), book.shown('A7', 'Rates')]).toEqual(['A3:D8', 'North']);
+
+    book.type('G2', '=1+1', 'Rates');
+
+    expect(
+      book.commit({
+        kind: 'setPivot',
+        sheet: 'Rates',
+        name: 'Other',
+        pivot: {
+          anchor: { row: 0, col: 5 },
+          definition: definitionOf({ kind: 'range', sheet: 'Sheet1', range: rangeAt('A1:D6') }, {}),
+        },
+      }),
+    ).toEqual({ ok: false, reason: 'pivot-overlap' });
+
+    expect(book.shown('G2', 'Rates')).toBe('2');
+  });
+
+  it('covers cells that only carry a format', () => {
+    const book = salesBook();
+
+    book.place();
+    book.commit({ kind: 'setCells', sheet: 'Rates', cells: [{ row: 7, col: 0, format: '0.0' }] });
+    book.type('A6', 'North');
+
+    expect(book.commit({ kind: 'refreshPivot', sheet: 'Rates', name: 'Sales' }).ok).toBe(true);
+    expect(book.footprint()).toBe('A3:D8');
+  });
+
+  it('refuses a pivot inside its own source and a table over a pivot', () => {
+    const book = salesBook();
+
+    expect(
+      book.commit({
+        kind: 'setPivot',
+        sheet: 'Sheet1',
+        name: 'Inside',
+        pivot: {
+          anchor: { row: 9, col: 0 },
+          definition: definitionOf(
+            { kind: 'range', sheet: 'Sheet1', range: rangeAt('A1:D20') },
+            { rows: [0] },
+          ),
+        },
+      }),
+    ).toEqual({ ok: false, reason: 'pivot-overlap' });
+
+    book.place();
+
+    expect(book.table('A1:D5', undefined, 'Rates')).toEqual({
+      ok: false,
+      reason: 'pivot-overlap',
+    });
+
+    expect(book.table('F7:G9', undefined, 'Rates').ok).toBe(true);
+  });
+
   it('refuses pivots over other pivots and fields the source does not have', () => {
     const book = salesBook();
 

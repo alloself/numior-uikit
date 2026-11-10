@@ -132,7 +132,7 @@ export const pivotTableOf = (rows: readonly (readonly CellValue[])[]): PivotTabl
   };
 };
 
-const sourceArea = (book: Workbook, source: PivotSource): SourceArea | undefined => {
+export const pivotSourceArea = (book: Workbook, source: PivotSource): SourceArea | undefined => {
   if (source.kind === PivotSourceKind.Range) {
     const sheet = book.sheet(source.sheet);
 
@@ -154,7 +154,7 @@ const sourceArea = (book: Workbook, source: PivotSource): SourceArea | undefined
 };
 
 export const pivotSource = (book: Workbook, source: PivotSource): PivotTable | undefined => {
-  const area = sourceArea(book, source);
+  const area = pivotSourceArea(book, source);
 
   return area === undefined ? undefined : tableOf(area.sheet, area.range);
 };
@@ -187,7 +187,7 @@ export const pivotSourceFields = (
   book: Workbook,
   source: PivotSource,
 ): PivotSourceField[] | undefined => {
-  const area = sourceArea(book, source);
+  const area = pivotSourceArea(book, source);
 
   if (area === undefined) {
     return undefined;
