@@ -139,6 +139,9 @@ export const createRoom = (authority: RoomAuthority): Room => {
         case ClientMessageKind.Presence:
           onPresence(peer, message.state);
           break;
+        case ClientMessageKind.Ping:
+          peer.send({ kind: ServerMessageKind.Pong });
+          break;
         case ClientMessageKind.Hello:
           protocolError(peer);
           break;

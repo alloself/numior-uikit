@@ -17,6 +17,7 @@ interface Session {
 export interface CollabServerOptions {
   readonly port: number;
   readonly authorityFor: (doc: string) => RoomAuthority;
+  readonly heartbeat?: number | undefined;
   readonly onError?: ((error: unknown) => void) | undefined;
 }
 
@@ -35,6 +36,8 @@ const parsed = (data: RawData): unknown => {
 
 const INTERNAL_ERROR = 1011;
 
+const HEARTBEAT = 30_000;
+
 const sender =
   (socket: WebSocket) =>
   (message: ServerMessage): void => {
@@ -44,10 +47,24 @@ const sender =
 export const startCollabServer = async ({
   port,
   authorityFor,
+  heartbeat = HEARTBEAT,
   onError,
 }: CollabServerOptions): Promise<CollabServer> => {
   const server = new WebSocketServer({ port });
   const rooms = new Map<string, Room>();
+  const heard = new WeakSet<WebSocket>();
+
+  const sweep = (): void => {
+    for (const client of server.clients) {
+      if (heard.delete(client)) {
+        client.ping();
+      } else {
+        client.terminate();
+      }
+    }
+  };
+
+  const beat = heartbeat > 0 ? setInterval(sweep, heartbeat) : undefined;
 
   const roomOf = (doc: string): Room => {
     const known = rooms.get(doc);
@@ -72,6 +89,12 @@ export const startCollabServer = async ({
   server.on('connection', (socket) => {
     let session: Session | undefined;
 
+    heard.add(socket);
+
+    socket.on('pong', () => {
+      heard.add(socket);
+    });
+
     const receive = (data: RawData): void => {
       const message = parseClientMessage(parsed(data));
 
@@ -85,6 +108,8 @@ export const startCollabServer = async ({
     };
 
     socket.on('message', (data) => {
+      heard.add(socket);
+
       try {
         receive(data);
       } catch (error) {
@@ -110,6 +135,8 @@ export const startCollabServer = async ({
       return address !== null && typeof address === 'object' ? address.port : port;
     },
     close: async () => {
+      clearInterval(beat);
+
       for (const client of server.clients) {
         client.terminate();
       }

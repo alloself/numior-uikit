@@ -19,6 +19,7 @@ import {
   type CollabClientOptions,
   type CollabStatus,
 } from './client.types';
+import { createLiveness } from './liveness';
 import { createPresenceChannel } from './presence-channel';
 import { createReconnecting } from './reconnecting';
 
@@ -40,8 +41,19 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
     onStatus?.(next);
   };
 
+  const liveness = createLiveness({
+    settings: options.liveness,
+    ping: () => {
+      link.send({ kind: ClientMessageKind.Ping });
+    },
+    lost: () => {
+      link.restart();
+    },
+  });
+
   const fail = (reason: CollabFailure): void => {
     setStatus({ kind: CollabStatusKind.Failed, reason });
+    liveness.stop();
     link.stop();
   };
 
@@ -73,6 +85,7 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
       seq += 1;
       inFlight = { seq, count: steps.length };
       link.send({ kind: ClientMessageKind.Steps, seq, version, steps });
+      liveness.expect();
     }
     presence.offer();
   };
@@ -221,6 +234,8 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
       case ServerMessageKind.Presence:
         presence.peer(message.clientId, message.state);
         break;
+      case ServerMessageKind.Pong:
+        break;
       case ServerMessageKind.Error:
         fail(
           message.code === ServerErrorCode.Schema ? CollabFailure.Schema : CollabFailure.Protocol,
@@ -239,6 +254,8 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
         version: document.version(),
         schema,
       });
+
+      liveness.expect();
     },
     message: (value) => {
       const message = parseServerMessage(value);
@@ -246,11 +263,13 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
       if (message === undefined) {
         fail(CollabFailure.Protocol);
       } else {
+        liveness.heard();
         onMessage(message);
       }
     },
     closed: () => {
       inFlight = undefined;
+      liveness.stop();
       presence.offline();
 
       if (status.kind !== CollabStatusKind.Failed) {
@@ -259,6 +278,8 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
     },
   });
 
+  link.start();
+
   return {
     status: () => status,
     sync: flush,
@@ -266,6 +287,7 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
     setPresence: presence.set,
     stop: () => {
       presence.stop();
+      liveness.stop();
       link.stop();
     },
   };

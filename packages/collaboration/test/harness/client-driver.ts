@@ -5,6 +5,7 @@ import {
   type ClientMessage,
   type CollabBatch,
   type CollabClient,
+  type CollabLiveness,
   type CollabStatus,
   type RejectReason,
   type ServerMessage,
@@ -21,6 +22,8 @@ export interface ClientDriverOptions {
   readonly version?: number | null | undefined;
   readonly loadable?: boolean | undefined;
   readonly receivable?: boolean | undefined;
+  readonly liveness?: CollabLiveness | undefined;
+  readonly eager?: boolean | undefined;
 }
 
 export interface ClientDriver {
@@ -37,6 +40,9 @@ export interface ClientDriver {
   readonly drop: () => void;
   readonly edit: (count?: number) => void;
   readonly deliver: (value: unknown) => void;
+  readonly deliverLate: (value: unknown) => void;
+  readonly dropLate: () => void;
+  readonly pong: () => void;
   readonly welcome: (version: number, snapshot?: unknown) => void;
   readonly accept: (seq: number, version: number, rebased?: number) => void;
   readonly reject: (seq: number, reason: RejectReason, version: number) => void;
@@ -63,16 +69,21 @@ export const createClientDriver = (options: ClientDriverOptions = {}): ClientDri
     doc: 'doc',
     clientId: 'me',
     schema: SCHEMA,
+    liveness: options.liveness,
     transport: {
       open: (listener) => {
         listeners.push(listener);
+
+        if (options.eager === true) {
+          listener.opened();
+        }
 
         return {
           send: (message) => {
             sent.push(message);
           },
           close: () => {
-            listeners.at(-1)?.closed();
+            listener.closed();
           },
         };
       },
@@ -139,6 +150,15 @@ export const createClientDriver = (options: ClientDriverOptions = {}): ClientDri
       client.sync();
     },
     deliver,
+    deliverLate: (value) => {
+      listeners.at(-2)?.message(value);
+    },
+    dropLate: () => {
+      listeners.at(-2)?.closed();
+    },
+    pong: () => {
+      server({ kind: ServerMessageKind.Pong });
+    },
     welcome: (at, snapshot) => {
       server({ kind: ServerMessageKind.Welcome, version: at, snapshot, presence: [] });
     },

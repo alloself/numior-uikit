@@ -92,6 +92,8 @@ export const parseServerMessage = (value: unknown): ServerMessage | undefined =>
       return readSteps(value);
     case ServerMessageKind.Presence:
       return readPresence(value);
+    case ServerMessageKind.Pong:
+      return { kind: ServerMessageKind.Pong };
     case ServerMessageKind.Error:
       return readError(value);
     default:

@@ -8,6 +8,7 @@ import {
 } from '@numior/editor-core';
 import { fixtureSchema } from '@numior/editor-core/fixtures';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import { WebSocket as NodeSocket } from 'ws';
 import { editorAuthority } from '../server/authority';
 import { createRoom, type RoomPeer } from '../server/room';
 import { startCollabServer, type CollabServer } from '../server/server';
@@ -39,8 +40,14 @@ interface LiveEditor {
 
 const SCHEMA = { name: fixtureSchema.name, version: fixtureSchema.version };
 
-const hello = (doc: string): string =>
-  JSON.stringify({ kind: ClientMessageKind.Hello, doc, clientId: doc, version: 0, schema: SCHEMA });
+const hello = (doc: string, clientId = doc): string =>
+  JSON.stringify({ kind: ClientMessageKind.Hello, doc, clientId, version: 0, schema: SCHEMA });
+
+const HEARTBEAT = 150;
+
+const PATIENCE = { timeout: 5000 };
+
+const GONE = JSON.stringify({ kind: ServerMessageKind.Presence, clientId: 'silent', state: null });
 
 const peerOf = (clientId: string): Peer => {
   const inbox: ServerMessage[] = [];
@@ -459,6 +466,17 @@ describe('reference room', () => {
     expect(bob.inbox).toEqual([]);
   });
 
+  it('answers a ping of a client that hears nothing else', () => {
+    const ann = peerOf('ann');
+    const bob = peerOf('bob');
+    const room = joined(ann, bob);
+
+    room.receive(ann, { kind: ClientMessageKind.Ping });
+
+    expect(ann.inbox).toEqual([{ kind: ServerMessageKind.Pong }]);
+    expect(bob.inbox).toEqual([]);
+  });
+
   it('stops broadcasting to a peer that left', () => {
     const author = peerOf('author');
     const gone = peerOf('gone');
@@ -555,6 +573,46 @@ describe('reference server over WebSocket', () => {
     expect(failures).toHaveLength(1);
 
     healthy.close();
+  });
+
+  it('drops a client that stopped answering and withdraws its presence', async () => {
+    running = await startCollabServer({
+      port: 0,
+      heartbeat: HEARTBEAT,
+      authorityFor: () => editorAuthority(paragraphs('one')),
+    });
+
+    const address = `ws://localhost:${running.port().toString()}`;
+    const silent = new NodeSocket(address, { autoPong: false });
+    const watcher = new WebSocket(address);
+    const seen: string[] = [];
+    const closes: number[] = [];
+
+    silent.on('open', () => {
+      silent.send(hello('room', 'silent'));
+      silent.send(JSON.stringify({ kind: ClientMessageKind.Presence, state: 'here' }));
+    });
+
+    silent.on('close', (code) => {
+      closes.push(code);
+    });
+
+    watcher.addEventListener('message', (event) => {
+      seen.push(String(event.data));
+    });
+
+    watcher.addEventListener('open', () => {
+      watcher.send(hello('room', 'watcher'));
+    });
+
+    await vi.waitFor(() => {
+      expect(seen).toContain(GONE);
+      expect(closes).toHaveLength(1);
+    }, PATIENCE);
+
+    expect(watcher.readyState).toBe(WebSocket.OPEN);
+
+    watcher.close();
   });
 
   it('answers garbage with a protocol error', async () => {

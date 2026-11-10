@@ -14,6 +14,7 @@ export type {
   CollabClient,
   CollabClientOptions,
   CollabDocument,
+  CollabLiveness,
   CollabPersistence,
   CollabReport,
   CollabRestoration,
