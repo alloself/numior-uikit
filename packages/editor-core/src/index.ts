@@ -154,12 +154,11 @@ export { setBlockType } from './commands/block-type';
 export {
   chainCommands,
   deleteSelection,
-  joinBackward,
-  joinForward,
   selectAll,
   splitBlock,
   toggleMark,
 } from './commands/commands';
+export { joinBackward, joinForward } from './commands/join';
 export {
   activeBlock,
   activeMarks,

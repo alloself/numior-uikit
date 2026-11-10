@@ -189,6 +189,7 @@ import {
   baseKeymap,
   commentAnchors,
   createState,
+  definePlugin,
   detectPasteSource,
   history,
   inputRules,
@@ -575,6 +576,16 @@ const editorPlugins = [
   pasteSchema(limitedSchema),
   inputRules(markdownRules),
   ...blocks.flatMap((block) => (block.keymap === undefined ? [] : [keymap(keysOf(block.keymap))])),
+  ...blocks.flatMap((block) =>
+    block.conceals === undefined
+      ? []
+      : [
+          definePlugin({
+            name: `conceals-${block.name}`,
+            props: { conceals: block.conceals(blockEditor) },
+          }),
+        ],
+  ),
   keymap(baseKeymap),
   history(),
   commentAnchors,

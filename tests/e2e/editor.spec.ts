@@ -715,6 +715,43 @@ test.describe('editor', () => {
     expect(await editor.gripBeside(table)).toBe(true);
   });
 
+  test('joins lines across lists, a callout and a closed toggle with Delete and Backspace', async ({
+    playground,
+    editor,
+    page,
+  }) => {
+    await openEditor(playground);
+
+    await editor.placeInText('Обновить тарифы', 15);
+    await page.keyboard.press('Delete');
+    await expect(editor.item('Обновить тарифы')).toHaveText('Обновить тарифыСогласовать дату');
+    await expect(editor.content.locator('.nui-content__todo')).toHaveCount(1);
+
+    await editor.placeInText('pnpm', 0);
+    await page.keyboard.press('Backspace');
+
+    await expect(editor.toggle().locator('p').first()).toHaveText(
+      'Детали релизаpnpm release:check',
+    );
+
+    await expect(editor.toggle().getByText('Ветка release/2.4')).toBeHidden();
+
+    await page.keyboard.type('!');
+
+    await expect(editor.toggle().locator('p').first()).toHaveText(
+      'Детали релиза!pnpm release:check',
+    );
+
+    await editor.placeInText('Релиз во вторник', 25);
+    await page.keyboard.press('Delete');
+
+    await expect(editor.content.locator('.nui-content__callout p')).toHaveText(
+      'Релиз во вторник в 10:00.Детали релиза!pnpm release:check',
+    );
+
+    await expect(editor.toggle().locator('p')).toHaveText(['Ветка release/2.4, миграций: 3.']);
+  });
+
   test('writes after the last blocks and leaves a toggle from its empty last line', async ({
     playground,
     editor,

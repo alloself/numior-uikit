@@ -45,6 +45,9 @@ export interface NuiEditorBlock {
     | ((node: ElementNode) => NuiEditorHandlePlacement)
     | undefined;
   readonly keymap?: Keymap | ((editor: NuiEditorBlockEditor) => Keymap) | undefined;
+  readonly conceals?:
+    | ((editor: NuiEditorBlockEditor) => (parent: ElementNode, index: number) => boolean)
+    | undefined;
   readonly slash?: ((texts: NuiEditorMessages) => readonly SlashItem[]) | undefined;
   readonly menu?:
     | ((

@@ -284,6 +284,18 @@ export class EditorDriver {
     await nextTick();
   }
 
+  async erase(direction: 'backward' | 'forward'): Promise<void> {
+    this.content.dispatchEvent(
+      new InputEvent('beforeinput', {
+        inputType: direction === 'backward' ? 'deleteContentBackward' : 'deleteContentForward',
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+
+    await nextTick();
+  }
+
   async press(key: string, options: KeyOptions = {}): Promise<void> {
     this.content.dispatchEvent(
       new KeyboardEvent('keydown', {
