@@ -281,6 +281,7 @@ import {
   type ConditionalFormat,
 } from '../core';
 import { defaultRowHeight, sheetCells } from './sheet-cells';
+import { liveSource, sameColumns, type ColumnShape } from './sheet-table';
 import NuiSpreadsheetAssist from './NuiSpreadsheetAssist.vue';
 import NuiSpreadsheetMarks from './NuiSpreadsheetMarks.vue';
 import NuiSpreadsheetPeers from './NuiSpreadsheetPeers.vue';
@@ -484,6 +485,7 @@ const noteStructure = (): void => {
   if (shownSheet.value?.layout !== knownLayout) {
     knownLayout = shownSheet.value?.layout;
     layoutRevision.value += 1;
+    grid.value?.cancelEdit();
   }
   file.noteEdit();
 };
@@ -796,7 +798,7 @@ const pinned = (
 ): NuiTableColumn<number>[] =>
   columns.map((column, index) => (index < count ? { ...column, pin: 'start' } : column));
 
-const table = computed(() => {
+const columnShape = computed<ColumnShape | undefined>((previous) => {
   const shown = shownSheet.value;
   const current = cells.value;
 
@@ -804,12 +806,47 @@ const table = computed(() => {
     return undefined;
   }
 
-  const { columns, ...rest } = tableCells(current.source);
+  const next: ColumnShape = {
+    sheet: shown,
+    lines: shown.layout.cols,
+    width: shown.layout.defaults.colWidth,
+    frozen: current.frozenCols,
+    source: current.source,
+  };
+
+  return previous !== undefined && sameColumns(previous, next) ? previous : next;
+});
+
+const tableParts = computed(() => {
+  const shape = columnShape.value;
+
+  if (shape === undefined) {
+    return undefined;
+  }
+
+  const built = tableCells(liveSource(shape.source, () => cells.value?.source));
+
+  return {
+    built,
+    columns: editing.editableColumns(pinned(built.columns, shape.frozen)),
+  };
+});
+
+const table = computed(() => {
+  const shown = shownSheet.value;
+  const current = cells.value;
+  const parts = tableParts.value;
+
+  if (shown === undefined || current === undefined || parts === undefined) {
+    return undefined;
+  }
+
+  const { columns: _columns, ...rest } = parts.built;
 
   return {
     cells: current,
     grid: rest,
-    columns: editing.editableColumns(pinned(columns, current.frozenCols)),
+    columns: parts.columns,
     rowHeight: defaultRowHeight(shown),
   };
 });

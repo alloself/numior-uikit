@@ -205,7 +205,9 @@ export const tableCells = (source: NuiTableCellSource): NuiTableCells => {
 
   return {
     cellSelection: true,
-    rows: lineNumbers(source.rows),
+    get rows() {
+      return lineNumbers(source.rows);
+    },
     columns,
     getKey: (row) => row,
     cellStyle: ({ row, column }) => {

@@ -154,8 +154,10 @@ export type ConditionalLookAt = (row: number, col: number) => ConditionalLook | 
 
 export type LookKeys = (look: ConditionalLook) => string;
 
+export type SheetSource = Required<NuiTableCellSource>;
+
 export interface SheetCells {
-  readonly source: NuiTableCellSource;
+  readonly source: SheetSource;
   readonly merges: readonly NuiTableRange[];
   readonly frozenRows: number;
   readonly frozenCols: number;

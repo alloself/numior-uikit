@@ -139,6 +139,20 @@ describe('NuiSpreadsheet in a shared book', () => {
     expect(driver.text(1, 0)).toBe('remote');
   });
 
+  it('does not write a draft into the row that slid under it when someone else adds a row above', async () => {
+    const book = shared();
+    const driver = open(book);
+
+    await driver.focus(2, 0);
+    await driver.press('F2');
+    await driver.type('draft');
+    receive(book.session, { kind: 'insertLines', sheet: SHEET, axis: 'rows', at: 0, count: 1 });
+    await driver.settle();
+    await driver.press('Enter');
+
+    expect([driver.text(2, 0), driver.text(3, 0)]).toEqual(['', '']);
+  });
+
   it('stops listening when it leaves the page', async () => {
     const stop = vi.fn<() => void>();
     const book = shared();
