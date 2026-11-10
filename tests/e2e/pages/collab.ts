@@ -135,8 +135,8 @@ export class CollabClient {
 
   async caretLag(name: string, line: string, act: () => Promise<void>): Promise<number> {
     const lag = await this.page.evaluateHandle(
-      ({ who, text, frames }) => [
-        new Promise<number>((resolve) => {
+      ({ who, text, frames }) => ({
+        measured: new Promise<number>((resolve) => {
           const offsets: number[] = [];
 
           const sample = (): void => {
@@ -172,13 +172,13 @@ export class CollabClient {
             { capture: true, once: true },
           );
         }),
-      ],
+      }),
       { who: name, text: line, frames: LAG_FRAMES },
     );
 
     await act();
 
-    return lag.evaluate(([measured]) => measured);
+    return lag.evaluate((held) => held.measured);
   }
 
   async appendToEach(indices: readonly number[], text: string): Promise<void> {
