@@ -310,6 +310,10 @@
   gap: var(--nui-space-1);
 }
 
+.nui-collab-failure__line {
+  margin: 0;
+}
+
 .nui-collab-report {
   margin: 0;
   padding-inline-start: var(--nui-space-4);

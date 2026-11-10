@@ -4,6 +4,14 @@
       <NuiCollabPresence :peers="peers" data-testid="collab-peers" />
       <div class="collab__status">
         <NuiSwitch v-model="online" label="Связь" data-testid="collab-link" />
+        <NuiButton
+          variant="ghost"
+          tone="neutral"
+          size="sm"
+          data-testid="collab-garble"
+          @click="garble"
+          >Сбой</NuiButton
+        >
         <NuiPopover placement="bottom-end" padding="sm" class="collab__discussions">
           <template #trigger="{ attrs }">
             <NuiButton v-bind="attrs" variant="outline" tone="neutral" size="sm"
@@ -16,6 +24,12 @@
       </div>
     </div>
     <NuiCollabReport v-if="report !== undefined" :report="report" />
+    <NuiCollabFailure
+      v-if="failure !== undefined"
+      :failure="failure"
+      data-testid="collab-failure"
+      @rejoin="rejoin"
+    />
     <div class="collab__page">
       <NuiEditor
         v-if="ready && document !== undefined"
@@ -43,6 +57,7 @@
 import { webSocketTransport } from '@numior/collaboration';
 import {
   NuiCollabCarets,
+  NuiCollabFailure,
   NuiCollabPresence,
   NuiCollabReport,
   NuiEditorCommentPopover,
@@ -72,22 +87,33 @@ const user = { id: name, name };
 const editor = useTemplateRef<{ editor: NuiEditorApi }>('editor');
 const editorApi = computed(() => editor.value?.editor);
 
-const { online, transport } = useDemoLink(webSocketTransport(server));
+const { online, transport, garble } = useDemoLink(webSocketTransport(server));
 
-const { ready, document, plugins, ids, peers, status, alternatives, readOnly, report } =
-  useCollabEditor({
-    doc,
-    user,
-    schema: contentSchema,
-    transport,
-    editor: () => editorApi.value,
-    persistence: params.has('offline')
-      ? offlinePersistence(doc, {
-          schema: contentSchema,
-          plugins: { demo: Number(params.get('plugin') ?? 1) },
-        })
-      : undefined,
-  });
+const {
+  ready,
+  document,
+  plugins,
+  ids,
+  peers,
+  status,
+  alternatives,
+  readOnly,
+  report,
+  failure,
+  rejoin,
+} = useCollabEditor({
+  doc,
+  user,
+  schema: contentSchema,
+  transport,
+  editor: () => editorApi.value,
+  persistence: params.has('offline')
+    ? offlinePersistence(doc, {
+        schema: contentSchema,
+        plugins: { demo: Number(params.get('plugin') ?? 1) },
+      })
+    : undefined,
+});
 
 const comments = useEditorComments({
   doc,

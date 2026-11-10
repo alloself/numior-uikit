@@ -5,11 +5,26 @@
       <NuiCollabPresence :peers="peers" data-testid="collab-peers" />
       <div class="collab__status">
         <NuiSwitch v-model="online" label="Связь" data-testid="collab-link" />
+        <NuiButton
+          variant="ghost"
+          tone="neutral"
+          size="sm"
+          data-testid="collab-garble"
+          @click="garble"
+          >Сбой</NuiButton
+        >
         <NuiBadge data-testid="collab-status">{{ status.kind }}</NuiBadge>
       </div>
     </div>
+    <NuiCollabFailure
+      v-if="failure !== undefined"
+      :failure="failure"
+      data-testid="collab-failure"
+      @rejoin="reopen"
+    />
     <NuiSpreadsheet
       v-if="ready"
+      :readonly="failure !== undefined"
       :book="book"
       :calculator="calculator"
       :collaboration="session"
@@ -29,7 +44,11 @@ import {
   webSocketTransport,
   type CollabStatus,
 } from '@numior/collaboration';
-import { NuiCollabPresence } from '@numior/collaboration/vue';
+import {
+  NuiCollabFailure,
+  NuiCollabPresence,
+  type CollabFailureView,
+} from '@numior/collaboration/vue';
 import { NuiSpreadsheet, type NuiSpreadsheetPlace } from '@numior/spreadsheet';
 import {
   RU_LOCALE,
@@ -40,7 +59,7 @@ import {
   workbookPeers,
   type WorkbookPeer,
 } from '@numior/spreadsheet/core';
-import { NuiBadge, NuiSwitch } from '@numior/vue';
+import { NuiBadge, NuiButton, NuiSwitch } from '@numior/vue';
 import { onBeforeUnmount, ref, shallowRef } from 'vue';
 import { collabServerOf } from './collab-server';
 import { useDemoLink } from './use-demo-link';
@@ -53,6 +72,7 @@ const user = { id: clientId, name: clientId };
 
 const status = shallowRef<CollabStatus>({ kind: CollabStatusKind.Connecting });
 const peers = shallowRef<readonly WorkbookPeer[]>([]);
+const failure = shallowRef<CollabFailureView>();
 const ready = ref(false);
 
 const book = createWorkbook();
@@ -63,7 +83,7 @@ session.subscribe(() => {
   ready.value = true;
 });
 
-const { online, transport } = useDemoLink(webSocketTransport(server));
+const { online, transport, garble } = useDemoLink(webSocketTransport(server));
 
 const client = createCollabClient({
   doc: params.get('doc') ?? 'book-demo',
@@ -73,6 +93,10 @@ const client = createCollabClient({
   transport,
   onStatus: (next) => {
     status.value = next;
+
+    if (next.kind === CollabStatusKind.Failed) {
+      failure.value = { reason: next.reason, unsent: session.pending().length };
+    }
   },
   onPresence: (states) => {
     peers.value = workbookPeers(states);
@@ -83,6 +107,10 @@ client.setPresence({ user });
 
 const sync = (): void => {
   client.sync();
+};
+
+const reopen = (): void => {
+  location.reload();
 };
 
 const sharePlace = (place: NuiSpreadsheetPlace | undefined): void => {

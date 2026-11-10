@@ -58,6 +58,25 @@ test.describe('collaboration on a workbook', () => {
     await expect(boris.peers).toHaveCount(1);
   });
 
+  test('says why a book lost sync and opens it again from the server', async ({ collab }) => {
+    const anna = await collab.joinBook(ANNA);
+    const boris = await collab.joinBook(BORIS);
+
+    await anna.sheet.enter('1', 0, '2');
+    await expect(boris.sheet.cell('1', 0)).toHaveText('2');
+
+    await anna.client.loseSync();
+
+    await expect(anna.client.failure).toContainText('Правки больше не отправляются');
+    expect(await wcagViolationsOf(anna.client.page)).toEqual([]);
+
+    await boris.sheet.enter('1', 1, '7');
+    await anna.client.openAgain();
+
+    await expect(anna.client.failure).toHaveCount(0);
+    await expect(anna.sheet.cell('1', 1)).toHaveText('7');
+  });
+
   test('takes a write back for everyone', async ({ collab }) => {
     const anna = await collab.joinBook(ANNA);
     const boris = await collab.joinBook(BORIS);

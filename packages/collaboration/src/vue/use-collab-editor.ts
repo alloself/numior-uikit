@@ -10,7 +10,7 @@ import {
   type Plugin,
   type Transaction,
 } from '@numior/editor-core';
-import { onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import { createCollabClient } from '../client/client';
 import {
   CollabBlockKind,
@@ -34,7 +34,12 @@ import {
 } from '../editor/presence';
 import type { EditorPresence, RemotePeer } from '../editor/presence.types';
 import { restoredDocument } from '../editor/restored';
-import type { CollabAlternatives, CollabEditor, UseCollabEditorOptions } from './collab.types';
+import type {
+  CollabAlternatives,
+  CollabEditor,
+  CollabFailureView,
+  UseCollabEditorOptions,
+} from './collab.types';
 
 const NO_PEERS: readonly RemotePeer[] = [];
 
@@ -56,6 +61,7 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
   const overwritten = shallowRef<readonly CollabAlternative[]>(NO_ALTERNATIVES);
   const readOnly = ref(false);
   const report = shallowRef<CollabReport>();
+  const failure = shallowRef<CollabFailureView>();
 
   let clientId = sessionId;
   let client: CollabClient | undefined;
@@ -122,14 +128,21 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
 
     tracking = persistence?.track(inner, clientId);
 
+    const held = tracking?.document ?? inner;
+
     client = createCollabClient({
       doc,
       clientId,
       schema: { name: schema.name, version: schema.version },
       transport,
-      document: tracking?.document ?? inner,
+      document: held,
       onStatus: (next) => {
         status.value = next;
+
+        if (next.kind === CollabStatusKind.Failed) {
+          failure.value = { reason: next.reason, unsent: held.pending().length };
+          readOnly.value = true;
+        }
       },
       onPresence: (next) => {
         present = next;
@@ -218,6 +231,28 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
     },
   };
 
+  const rejoin = async (): Promise<void> => {
+    if (failure.value === undefined) {
+      return;
+    }
+    client?.stop();
+    client = undefined;
+    tracking = undefined;
+    latest = undefined;
+    sentPresence = undefined;
+    present = new Map();
+    failure.value = undefined;
+    readOnly.value = report.value !== undefined;
+    ready.value = false;
+    status.value = { kind: CollabStatusKind.Connecting };
+
+    await nextTick();
+
+    if (!stopped) {
+      connect();
+    }
+  };
+
   onMounted(() => {
     void begin();
   });
@@ -243,5 +278,17 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
     void persistence?.close();
   });
 
-  return { ready, document, plugins, ids, peers, status, alternatives, readOnly, report };
+  return {
+    ready,
+    document,
+    plugins,
+    ids,
+    peers,
+    status,
+    alternatives,
+    readOnly,
+    report,
+    failure,
+    rejoin,
+  };
 };

@@ -4,6 +4,7 @@ import type { ComputedRef, Ref, ShallowRef } from 'vue';
 import type { NuiCollabMessages } from './collab.messages';
 import type {
   CollabAlternative,
+  CollabFailure,
   CollabPersistence,
   CollabReport,
   CollabStatus,
@@ -29,6 +30,11 @@ export interface CollabAlternatives {
   readonly reveal: (alternative: CollabAlternative) => void;
 }
 
+export interface CollabFailureView {
+  readonly reason: CollabFailure;
+  readonly unsent: number;
+}
+
 export interface CollabEditor {
   readonly ready: Readonly<Ref<boolean>>;
   readonly document: ShallowRef<DocJSON | undefined>;
@@ -39,6 +45,8 @@ export interface CollabEditor {
   readonly alternatives: CollabAlternatives;
   readonly readOnly: Readonly<Ref<boolean>>;
   readonly report: Readonly<ShallowRef<CollabReport | undefined>>;
+  readonly failure: Readonly<ShallowRef<CollabFailureView | undefined>>;
+  readonly rejoin: () => Promise<void>;
 }
 
 export interface NuiCollabCaretsProps {
@@ -48,6 +56,11 @@ export interface NuiCollabCaretsProps {
 
 export interface NuiCollabReportProps {
   report: CollabReport;
+  labels?: Partial<Omit<NuiCollabMessages, 'present'>> | undefined;
+}
+
+export interface NuiCollabFailureProps {
+  failure: CollabFailureView;
   labels?: Partial<Omit<NuiCollabMessages, 'present'>> | undefined;
 }
 

@@ -57,6 +57,7 @@ export class CollabClient {
   readonly additions: Locator;
   readonly overwritten: Locator;
   readonly report: Locator;
+  readonly failure: Locator;
   readonly readOnlyDocument: Locator;
 
   constructor(
@@ -77,6 +78,7 @@ export class CollabClient {
     this.additions = this.history.locator('.nui-diff--added');
     this.overwritten = this.history.locator('.nui-collab-history__alternative');
     this.report = page.locator('.nui-collab-report');
+    this.failure = page.getByTestId('collab-failure');
     this.readOnlyDocument = page.locator('.nui-editor--readonly');
   }
 
@@ -250,6 +252,16 @@ export class CollabClient {
   async reload(): Promise<void> {
     await this.page.reload();
     await this.editor.waitFor();
+  }
+
+  async loseSync(): Promise<void> {
+    await this.page.getByTestId('collab-garble').click();
+    await expect(this.status).toHaveText('failed');
+  }
+
+  async openAgain(): Promise<void> {
+    await this.failure.getByRole('button', { name: 'Открыть заново' }).click();
+    await expect(this.status).toHaveText('online', { timeout: RECONNECT_TIMEOUT });
   }
 
   async selectWordInCopy(index: number): Promise<void> {

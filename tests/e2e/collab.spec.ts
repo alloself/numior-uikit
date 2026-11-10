@@ -142,6 +142,32 @@ test.describe('collaboration', () => {
     expect(await wcagViolationsOf(anna.page)).toEqual([]);
   });
 
+  test('closes a document that lost sync, says why and opens it again from the server', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Общая строка');
+    await expect(boris.editor).toContainText('Общая строка');
+
+    await anna.loseSync();
+
+    await expect(anna.failure).toContainText('Правки больше не отправляются');
+    await expect(anna.failure).toContainText('Сервер прислал ответ');
+    await expect(anna.readOnlyDocument).toContainText('Общая строка');
+    expect(await wcagViolationsOf(anna.page)).toEqual([]);
+
+    await boris.appendTo(0, ' и ещё');
+    await anna.openAgain();
+
+    await expect(anna.failure).toHaveCount(0);
+    await expect(anna.editor).toContainText('Общая строка и ещё');
+
+    await anna.appendTo(0, '!');
+    await expect(boris.editor).toContainText('Общая строка и ещё!');
+  });
+
   test('shows what each person types to the other', async ({ collab }) => {
     const anna = await collab.join(ANNA);
     const boris = await collab.join(BORIS);

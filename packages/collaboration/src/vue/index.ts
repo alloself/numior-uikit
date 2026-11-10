@@ -1,4 +1,5 @@
 export { default as NuiCollabCarets } from './NuiCollabCarets.vue';
+export { default as NuiCollabFailure } from './NuiCollabFailure.vue';
 export { default as NuiCollabPresence } from './NuiCollabPresence.vue';
 export { default as NuiCollabReport } from './NuiCollabReport.vue';
 export { default as NuiEditorCommentPopover } from './NuiEditorCommentPopover.vue';
@@ -10,9 +11,11 @@ export type {
   CollabAlternatives,
   CollabComments,
   CollabEditor,
+  CollabFailureView,
   CollabHistory,
   CommentThreadView,
   NuiCollabCaretsProps,
+  NuiCollabFailureProps,
   NuiCollabPresenceProps,
   NuiCollabReportProps,
   NuiEditorCommentPopoverProps,
