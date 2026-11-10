@@ -11,6 +11,7 @@ import {
 import { checkNodes } from '../schema/check';
 import { matchesSplice } from '../schema/content-match';
 import type { NodeType, Schema } from '../schema/schema.types';
+import { validAttrs } from './attrs';
 import { TokenKind, type StepResult } from './step.types';
 import { contentTokens, cutTokens, rebuild, sliceFrame, sliceTokens, type Token } from './tokens';
 import { liftInto } from './tree';
@@ -57,18 +58,27 @@ const regionOf = (node: ElementNode, start: number, from: number, to: number): R
   return { first, last, start: firstStart };
 };
 
-const allowedText = (type: NodeType | undefined, content: readonly ContentNode[]): boolean =>
+const allowedText = (
+  schema: Schema,
+  type: NodeType | undefined,
+  content: readonly ContentNode[],
+): boolean =>
   content.every(
     (child) =>
       child.kind === ContentNodeKind.Element ||
-      child.marks.every((mark) => type?.marks.has(mark.type) === true),
+      child.marks.every(
+        (mark) =>
+          type?.marks.has(mark.type) === true &&
+          validAttrs(schema.marks.get(mark.type)?.attrs, mark.attrs),
+      ),
   );
 
 export const fits = (schema: Schema, node: ElementNode): boolean => {
   const type = schema.nodes.get(node.type);
 
   return (
-    type?.content.matchContent(node.content)?.validEnd === true && allowedText(type, node.content)
+    type?.content.matchContent(node.content)?.validEnd === true &&
+    allowedText(schema, type, node.content)
   );
 };
 
@@ -90,7 +100,7 @@ const fitsEdited = (
 
   return (
     matchesSplice(type.content, before, prefix, before.content.length - suffix, inserted) &&
-    allowedText(type, inserted)
+    allowedText(schema, type, inserted)
   );
 };
 

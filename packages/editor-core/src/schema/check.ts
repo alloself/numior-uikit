@@ -60,6 +60,23 @@ const checkAttrs = (
   }
 };
 
+const checkMarks = (
+  context: CheckContext,
+  path: readonly number[],
+  node: TextNode,
+  parent: NodeType | undefined,
+): void => {
+  for (const mark of node.marks) {
+    const type = context.schema.marks.get(mark.type);
+
+    if (type === undefined || parent?.marks.has(mark.type) === false) {
+      context.issues.push({ kind: 'mark', path: [...path], mark: mark.type });
+    } else {
+      checkAttrs(context, path, type.attrs, mark.attrs);
+    }
+  }
+};
+
 export const checkText = (
   context: CheckContext,
   index: number,
@@ -75,15 +92,7 @@ export const checkText = (
   if (previous !== undefined && sameMarks(previous.marks, node.marks)) {
     context.issues.push({ kind: 'text', path: at(), reason: 'unmerged' });
   }
-  for (const mark of node.marks) {
-    const type = context.schema.marks.get(mark.type);
-
-    if (type === undefined || !parent.marks.has(mark.type)) {
-      context.issues.push({ kind: 'mark', path: at(), mark: mark.type });
-    } else {
-      checkAttrs(context, at(), type.attrs, mark.attrs);
-    }
-  }
+  checkMarks(context, at(), node, parent);
 };
 
 export const checkIdentity = (context: CheckContext, id: string): void => {
@@ -200,7 +209,9 @@ const checkSiblings = (
     offset += nodeSize(child);
 
     if (child.kind === ContentNodeKind.Text) {
-      if (parent !== undefined) {
+      if (parent === undefined) {
+        checkMarks(context, [...context.path, index], child, undefined);
+      } else {
         checkText(
           context,
           index,

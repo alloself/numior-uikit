@@ -65,7 +65,10 @@ const isSpan = (value: unknown): value is StepSpan =>
   isFields(value) && isPosition(value.from) && isPosition(value.to);
 
 const isSkip = (value: unknown): value is readonly StepSpan[] | undefined =>
-  value === undefined || (Array.isArray(value) && value.every(isSpan));
+  value === undefined ||
+  (Array.isArray(value) &&
+    value.every(isSpan) &&
+    value.every((span, index) => span.from < span.to && span.from >= (value[index - 1]?.to ?? 0)));
 
 const isMarkupChange = (value: unknown): value is MarkupChange =>
   isFields(value) &&

@@ -60,6 +60,17 @@ const insertionAt = (text: string, at: number): WireStep[] => {
   return state.tr.insertText(text, at).steps.map(stepToJSON);
 };
 
+const linkedText = (attrs: Readonly<Record<string, unknown>>): WireStep[] => [
+  {
+    kind: 'replace',
+    from: 1,
+    to: 1,
+    slice: { content: [{ text: 'x', marks: [{ type: 'link', attrs }] }], openStart: 0, openEnd: 0 },
+  },
+];
+
+const BOLD_ALL = { kind: 'addMark', from: 1, to: 4, mark: { type: 'bold' } } as const;
+
 const removalOf = (from: number, to: number): WireStep[] => {
   const state = createState({ doc: paragraphs('one') });
 
@@ -299,6 +310,12 @@ describe('reference room', () => {
   it.each([
     ['an unreadable step', [{ kind: 'nope' }]],
     ['a position past the end', insertionAt('x', 1).map((step) => ({ ...step, from: 99, to: 99 }))],
+    ['typed text with a link the schema refuses', linkedText({ href: 7 })],
+    [
+      'typed text with a link attribute the schema does not know',
+      linkedText({ href: 'a', on: 'b' }),
+    ],
+    ['a mark with gaps that run backwards', [{ ...BOLD_ALL, skip: [{ from: 3, to: 2 }] }]],
   ])('rejects %s and keeps the log', (_name, steps) => {
     const peer = peerOf('bad');
     const room = joined(peer);

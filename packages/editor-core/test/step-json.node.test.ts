@@ -62,6 +62,8 @@ const STEPS: readonly (readonly [string, Step])[] = [
 
 const replaceWith = (slice: unknown): unknown => ({ kind: 'replace', from: 1, to: 1, slice });
 
+const MARKED = { kind: 'addMark', from: 1, to: 6, mark: BOLD } as const;
+
 const REFUSED: readonly (readonly [string, unknown])[] = [
   ['a non-object', 'step'],
   ['an unknown kind', { kind: 'teleport' }],
@@ -109,6 +111,22 @@ const REFUSED: readonly (readonly [string, unknown])[] = [
   ],
   ['a malformed node', replaceWith({ content: [7], openStart: 0, openEnd: 0 })],
   [
+    'loose text with a mark of an unknown type',
+    replaceWith({ content: [{ text: 'x', marks: [{ type: 'glow' }] }], openStart: 0, openEnd: 0 }),
+  ],
+  [
+    'loose text with a bad mark attribute',
+    replaceWith({
+      content: [{ text: 'x', marks: [{ type: 'link', attrs: { href: 'a', rel: 'b' } }] }],
+      openStart: 0,
+      openEnd: 0,
+    }),
+  ],
+  [
+    'loose text with a mark that lacks its attribute',
+    replaceWith({ content: [{ text: 'x', marks: [{ type: 'link' }] }], openStart: 0, openEnd: 0 }),
+  ],
+  [
     'a replace around with a bad gap',
     { kind: 'replaceAround', from: 0, to: 2, gapFrom: 'a', gapTo: 1, slice: EMPTY, insert: 0 },
   ],
@@ -119,6 +137,28 @@ const REFUSED: readonly (readonly [string, unknown])[] = [
   ],
   ['a malformed mark', { kind: 'addMark', from: 1, to: 2, mark: 'bold' }],
   ['malformed gaps', { kind: 'addMark', from: 1, to: 2, mark: BOLD, skip: [{ from: 'a', to: 1 }] }],
+  ['a gap that ends before it starts', { ...MARKED, skip: [{ from: 4, to: 2 }] }],
+  ['an empty gap', { ...MARKED, skip: [{ from: 3, to: 3 }] }],
+  [
+    'gaps out of order',
+    {
+      ...MARKED,
+      skip: [
+        { from: 4, to: 5 },
+        { from: 2, to: 3 },
+      ],
+    },
+  ],
+  [
+    'gaps that overlap',
+    {
+      ...MARKED,
+      skip: [
+        { from: 2, to: 4 },
+        { from: 3, to: 5 },
+      ],
+    },
+  ],
   ['attrs with an object value', { kind: 'attrs', pos: 0, attrs: { level: {} } }],
   ['attrs without a position', { kind: 'attrs', attrs: {} }],
   ['a malformed markup change', { kind: 'markup', changes: [{ pos: 0, type: 1, attrs: {} }] }],
