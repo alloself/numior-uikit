@@ -490,6 +490,11 @@ const scenarios: Scenario[] = [
   { name: 'NuiTooltip', render: () => renderToString(TooltipScene) },
 ];
 
+const LATE_EVENING_UTC = '2026-10-31T22:30:00Z';
+
+const renderBareCalendar = (): Promise<string> =>
+  renderToString(NuiCalendar, { props: { locale: 'en-US' } });
+
 describe('server rendering', () => {
   for (const scenario of scenarios) {
     it(`${scenario.name} renders deterministic markup without a DOM`, async () => {
@@ -715,12 +720,8 @@ describe('server rendering', () => {
   });
 
   it('renders the same calendar in every time zone when neither a date nor today is given', async () => {
-    const LATE_EVENING_UTC = '2026-10-31T22:30:00Z';
-    const render = (): Promise<string> =>
-      renderToString(NuiCalendar, { props: { locale: 'en-US' } });
-
-    const west = await atInstant(LATE_EVENING_UTC, 'Pacific/Honolulu', render);
-    const east = await atInstant(LATE_EVENING_UTC, 'Asia/Tokyo', render);
+    const west = await atInstant(LATE_EVENING_UTC, 'Pacific/Honolulu', renderBareCalendar);
+    const east = await atInstant(LATE_EVENING_UTC, 'Asia/Tokyo', renderBareCalendar);
 
     expect(east).toBe(west);
     expect(west).toContain('October');
