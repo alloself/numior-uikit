@@ -114,10 +114,73 @@ export const parentIndexOf = <T>(nodes: readonly TreeNode<T>[], index: number): 
   return nodes.findIndex((candidate) => candidate.key === node.parentKey);
 };
 
-export const firstChildIndexOf = <T>(nodes: readonly TreeNode<T>[], index: number): number => {
-  const node = nodes[index];
-  const next = nodes[index + 1];
-  return node && next && next.parentKey === node.key ? index + 1 : -1;
+export const firstEnabledChildIndexOf = <T>(
+  nodes: readonly TreeNode<T>[],
+  index: number,
+): number => {
+  const parent = nodes[index];
+
+  if (!parent) {
+    return -1;
+  }
+
+  for (let position = index + 1; position < nodes.length; position += 1) {
+    const node = nodes[position];
+
+    if (!node || node.level <= parent.level) {
+      return -1;
+    }
+
+    if (node.parentKey === parent.key && !node.item.disabled) {
+      return position;
+    }
+  }
+
+  return -1;
+};
+
+const ancestorsOf = <T>(nodes: readonly TreeNode<T>[], index: number): TreeNode<T>[] => {
+  const chain: TreeNode<T>[] = [];
+  let level = nodes[index]?.level ?? 1;
+
+  for (let position = index - 1; position >= 0 && level > 1; position -= 1) {
+    const node = nodes[position];
+
+    if (node && node.level < level) {
+      chain.push(node);
+      level = node.level;
+    }
+  }
+
+  return chain;
+};
+
+const nearestEnabledIndexOf = <T>(nodes: readonly TreeNode<T>[], position: number): number => {
+  const after = nodes.findIndex((node, index) => index >= position && !node.item.disabled);
+
+  return after >= 0 ? after : nodes.findLastIndex((node) => !node.item.disabled);
+};
+
+export const restIndexOf = <T>(
+  previous: readonly TreeNode<T>[],
+  next: readonly TreeNode<T>[],
+  indices: ReadonlyMap<string, number>,
+  key: string,
+): number => {
+  const lost = previous.findIndex((node) => node.key === key);
+  const ancestor = ancestorsOf(previous, lost).find((node) => indices.has(node.key));
+  const shelter = ancestor === undefined ? -1 : (indices.get(ancestor.key) ?? -1);
+
+  if (shelter >= 0 && !next[shelter]?.expanded) {
+    return nearestEnabledIndexOf(next, shelter);
+  }
+
+  const before = previous.findLast((node, index) => index < lost && indices.has(node.key));
+
+  return nearestEnabledIndexOf(
+    next,
+    before === undefined ? 0 : (indices.get(before.key) ?? -1) + 1,
+  );
 };
 
 export const siblingIndicesOf = <T>(nodes: readonly TreeNode<T>[], index: number): number[] => {

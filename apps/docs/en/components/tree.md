@@ -90,6 +90,11 @@ The whole tree is one Tab stop, and the arrows move between the nodes. The focus
 referenced through `aria-activedescendant`, so the focus is not lost when rows leave the DOM
 while scrolling.
 
+When the focused node is hidden from outside (its parent is collapsed through
+`v-model:expanded`), the focus moves to the nearest visible ancestor. When the node is gone from
+`items`, the node that took its place gets the focus. The arrows continue from there, not from
+the start of the tree.
+
 The tree is built on a `ul` list with the `tree` and `treeitem` roles. `aria-level`,
 `aria-setsize` and `aria-posinset` carry the level and position of a node, and `aria-expanded`,
 `aria-selected`, `aria-checked` and `aria-current` carry its state.

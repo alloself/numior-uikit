@@ -306,6 +306,16 @@ export class TreeDriver extends ComponentDriver {
     await nextTick();
   }
 
+  async disable(label: string): Promise<void> {
+    const found = findItem(this.scene.vm.items, label);
+
+    if (!found) {
+      throw new Error(`No tree item labelled ${label}`);
+    }
+    Object.assign(found, { disabled: true });
+    await nextTick();
+  }
+
   async setHeight(height: number): Promise<void> {
     defineSize(this.tree.element, 'clientHeight', height);
     this.tree.element.dispatchEvent(new Event('scroll'));

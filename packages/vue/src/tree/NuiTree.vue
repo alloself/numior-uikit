@@ -91,7 +91,7 @@ import {
   completeChecked,
   sameKeys,
 } from './cascade';
-import { findTreeItem, flattenTree, siblingIndicesOf, type TreeNode } from './flatten';
+import { findTreeItem, flattenTree, restIndexOf, siblingIndicesOf, type TreeNode } from './flatten';
 import {
   CheckState,
   NuiTreeSelectable,
@@ -325,6 +325,14 @@ watch(visible, (next, previous) => {
   }
   const before = new Set(previous.map((node) => node.key));
   revealAdded(next.flatMap((node) => (before.has(node.key) ? [] : [node.key])));
+});
+
+watch(visible, (next, previous) => {
+  const key = activeKey.value;
+
+  if (key !== undefined && !indexByKey.value.has(key)) {
+    activeKey.value = next[restIndexOf(previous, next, indexByKey.value, key)]?.key;
+  }
 });
 
 const setChecked = (next: ReadonlySet<string>): void => {

@@ -124,8 +124,8 @@ const docs: DocsMap = {
       {
         keys: 'ArrowRight',
         description: {
-          ru: 'Раскрывает узел или переходит к первому вложенному. При письме справа налево — наоборот.',
-          en: 'Expands the node or moves to its first child. Reversed in right-to-left layouts.',
+          ru: 'Раскрывает узел или переходит к первому доступному вложенному. При письме справа налево — наоборот.',
+          en: 'Expands the node or moves to its first enabled child. Reversed in right-to-left layouts.',
         },
       },
       {
