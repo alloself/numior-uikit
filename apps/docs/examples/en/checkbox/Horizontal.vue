@@ -1,6 +1,6 @@
 <template>
   <NuiCheckboxGroup
-    v-model="days"
+    v-model:values="days"
     :options="weekdays"
     label="Delivery days"
     orientation="horizontal"

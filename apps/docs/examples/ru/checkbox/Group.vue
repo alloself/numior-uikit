@@ -1,6 +1,6 @@
 <template>
   <NuiCheckboxGroup
-    v-model="channels"
+    v-model:values="channels"
     :options="options"
     label="Каналы уведомлений"
     :description="`Выбрано: ${channels.length}`"

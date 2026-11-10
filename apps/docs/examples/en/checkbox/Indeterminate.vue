@@ -2,7 +2,7 @@
   <NuiCheckbox :model-value="all" :indeterminate="some" @update:model-value="toggleAll">
     All regions
   </NuiCheckbox>
-  <NuiCheckboxGroup v-model="selected" :options="regions" class="ms-6" />
+  <NuiCheckboxGroup v-model:values="selected" :options="regions" class="ms-6" />
 </template>
 
 <script setup lang="ts">

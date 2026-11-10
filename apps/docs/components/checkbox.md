@@ -24,7 +24,7 @@ import '@numior/vue/styles/checkbox.css';
 
 ### Набор значений
 
-`NuiCheckboxGroup` выводит флажок для каждого варианта из `options`. В `v-model` лежит массив
+`NuiCheckboxGroup` выводит флажок для каждого варианта из `options`. В `v-model:values` лежит массив
 выбранных значений в том порядке, в котором их отмечали.
 
 <Example name="checkbox/Group" />

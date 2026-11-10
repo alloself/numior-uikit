@@ -63,7 +63,7 @@ const {
 defineOptions({ inheritAttrs: false });
 
 const passthrough = useAttrs();
-const model = defineModel<T[]>({ default: () => [] });
+const values = defineModel<T[]>('values', { default: () => [] });
 
 const {
   frame: fieldFrame,
@@ -79,13 +79,13 @@ const {
 
 const labelledBy = computed(() => field.value?.labelledBy.value);
 const keyOf = (value: T): string => (getKey ?? defaultOptionKey)(value);
-const checkedKeys = computed(() => new Set(model.value.map(keyOf)));
+const checkedKeys = computed(() => new Set(values.value.map(keyOf)));
 
 const toggle = (value: T, checked: boolean): void => {
   const key = keyOf(value);
-  const others = model.value.filter((item) => keyOf(item) !== key);
+  const others = values.value.filter((item) => keyOf(item) !== key);
 
-  model.value = checked ? [...others, value] : others;
+  values.value = checked ? [...others, value] : others;
 };
 
 provideCheckboxGroup({

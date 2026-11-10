@@ -124,7 +124,7 @@ export class CheckboxGroupDriver extends ComponentDriver {
   }
 
   get emittedModels(): string[][] {
-    return (this.scene.findComponent(NuiCheckboxGroup).emitted('update:modelValue') ?? []).flatMap(
+    return (this.scene.findComponent(NuiCheckboxGroup).emitted('update:values') ?? []).flatMap(
       ([value]) => (isStrings(value) ? [value] : []),
     );
   }

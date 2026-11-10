@@ -24,7 +24,7 @@ Pass the checkbox text in the slot or in `label`, and a hint under it in `descri
 
 ### A set of values
 
-`NuiCheckboxGroup` renders a checkbox for every option in `options`. `v-model` holds an array of
+`NuiCheckboxGroup` renders a checkbox for every option in `options`. `v-model:values` holds an array of
 the selected values in the order they were checked.
 
 <Example name="checkbox/Group" />

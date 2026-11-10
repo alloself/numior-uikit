@@ -42,7 +42,7 @@
       <NuiCheckbox v-model="terms" data-testid="checkbox-terms">Принимаю условия</NuiCheckbox>
       <NuiCheckbox indeterminate data-testid="checkbox-indeterminate">Частично выбрано</NuiCheckbox>
       <NuiCheckboxGroup
-        v-model="channels"
+        v-model:values="channels"
         :options="CHANNELS"
         label="Каналы"
         orientation="horizontal"

@@ -1,6 +1,6 @@
 <template>
   <OptionalField :field="field">
-    <NuiCheckboxGroup v-bind="group" v-model="model" :options="options" />
+    <NuiCheckboxGroup v-bind="group" v-model:values="model" :options="options" />
   </OptionalField>
 </template>
 
