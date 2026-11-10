@@ -1,3 +1,4 @@
+import { nextTick } from 'vue';
 import { toOutcome, type FormIssue, type SchemaOutcome } from '../schema/standard';
 import { getAt } from '../values/access';
 import { cloneValue } from '../values/clone';
@@ -125,15 +126,18 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
   };
 
   const execute = (own?: readonly Entry<V>[], keep = false): MaybePromise<RunResult<V, O>> => {
-    const epoch = core.session.epoch;
+    const { epoch, shape } = core.session;
 
     core.session.started += 1;
 
     const order = core.session.started;
 
-    const settle = (result: RunResult<V, O>): RunResult<V, O> => {
+    const settle = (result: RunResult<V, O>): MaybePromise<RunResult<V, O>> => {
       if (epoch !== core.session.epoch) {
         return result;
+      }
+      if (shape !== core.session.shape) {
+        return nextTick().then(() => execute(own, keep));
       }
       if (own) {
         applyTo(own, result);

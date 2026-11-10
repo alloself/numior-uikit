@@ -14,11 +14,13 @@ const {
   form,
   row,
   rules = [],
+  keepValue = undefined,
   probes,
 } = defineProps<{
   form: FormContext<Team>;
   row: FieldArrayRow<Contact>;
   rules?: readonly AnyFieldRule<string | undefined, Team>[] | undefined;
+  keepValue?: boolean | undefined;
   probes: RowProbes;
 }>();
 
@@ -26,7 +28,7 @@ const text = (value: unknown): string => (typeof value === 'string' ? value : ''
 
 const field = useField(
   toRef(() => (values: Team) => values.contacts[row.index]?.name),
-  { form, rules },
+  { form, rules, keepValue: () => keepValue },
 );
 
 const { value, errorMessage } = field;

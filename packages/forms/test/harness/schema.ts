@@ -15,6 +15,10 @@ export interface ProbeSchema<O> extends StandardSchema<unknown, O> {
   readonly inputs: readonly SchemaValues[];
 }
 
+export interface HeldSchema extends ProbeSchema<SchemaValues> {
+  release(): void;
+}
+
 export const issue = (message: string, ...path: Segment[]): StandardIssue =>
   path.length === 0 ? { message } : { message, path };
 
@@ -46,3 +50,32 @@ export const transformSchema = <O>(
 
 export const probeSchema = (check: Check, options: ProbeOptions = {}): ProbeSchema<SchemaValues> =>
   transformSchema(check, (values) => values, options);
+
+export const heldSchema = (check: Check): HeldSchema => {
+  const inputs: SchemaValues[] = [];
+  const waiting: Array<() => void> = [];
+
+  return {
+    inputs,
+    release: () => {
+      for (const answer of waiting.splice(0)) {
+        answer();
+      }
+    },
+    '~standard': {
+      version: 1,
+      vendor: 'probe',
+      validate: (value) =>
+        new Promise((resolve) => {
+          const values = isRecord(value) ? value : {};
+          const issues = check(values);
+
+          inputs.push(values);
+
+          waiting.push(() => {
+            resolve(issues.length > 0 ? { issues } : { value: values });
+          });
+        }),
+    },
+  };
+};

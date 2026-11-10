@@ -1,20 +1,25 @@
-import { mount, type DOMWrapper } from '@vue/test-utils';
+import { flushPromises, mount, type DOMWrapper } from '@vue/test-utils';
 import { nextTick } from 'vue';
 import type {
   AnyFieldRule,
   FieldArray,
   FormContext,
   FormField,
+  StandardSchema,
   SubmitResult,
   SubmittedValues,
 } from '../../src';
 import ArrayScene from '../fixtures/ArrayScene.vue';
 import type { Contact, RowProbes, Team } from '../fixtures/scenes.types';
+import type { HeldSchema } from './schema';
 
 export interface ArrayHarnessOptions {
   readonly initialValues: Team;
   readonly listRules?: readonly AnyFieldRule<readonly Contact[], Team>[];
   readonly rowRules?: readonly AnyFieldRule<string | undefined, Team>[];
+  readonly rowKeepValue?: boolean;
+  readonly schema?: StandardSchema<unknown, unknown>;
+  readonly onSubmit?: (values: SubmittedValues<Team>) => unknown;
 }
 
 type ArraySceneWrapper = ReturnType<typeof mountScene>;
@@ -25,6 +30,9 @@ const mountScene = (options: ArrayHarnessOptions) =>
       initialValues: options.initialValues,
       listRules: options.listRules,
       rowRules: options.rowRules,
+      rowKeepValue: options.rowKeepValue,
+      schema: options.schema,
+      onSubmit: options.onSubmit,
     },
     attachTo: document.body,
   });
@@ -94,6 +102,27 @@ export class ArrayHarness {
     await input.trigger('input');
     await this.probes.work.get(this.keyAt(index));
     await nextTick();
+  }
+
+  startType(index: number, value: string): void {
+    const input = this.input(index);
+
+    input.element.value = value;
+    input.element.dispatchEvent(new Event('input'));
+  }
+
+  startMove(from: number, to: number): void {
+    void this.list.move(from, to);
+  }
+
+  startSubmit(): Promise<SubmitResult> {
+    return this.form.submit();
+  }
+
+  async answer(schema: HeldSchema): Promise<void> {
+    await flushPromises();
+    schema.release();
+    await flushPromises();
   }
 
   async blur(index: number): Promise<void> {

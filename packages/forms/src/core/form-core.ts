@@ -20,12 +20,14 @@ export interface RetainedState {
   readonly touched: boolean;
   readonly attempted: boolean;
   readonly errors: readonly string[];
+  readonly value: unknown;
 }
 
 export interface Session {
   epoch: number;
   started: number;
   applied: number;
+  shape: number;
   formAttempted: boolean;
 }
 
@@ -80,5 +82,5 @@ export const createFormCore = <V extends object, O>(
   submission: shallowRef<Submission>(IDLE_SUBMISSION),
   external: new Map(),
   retained: new Map(),
-  session: { epoch: 0, started: 0, applied: 0, formAttempted: false },
+  session: { epoch: 0, started: 0, applied: 0, shape: 0, formAttempted: false },
 });

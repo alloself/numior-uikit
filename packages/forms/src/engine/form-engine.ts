@@ -1,9 +1,10 @@
-import { at, clamp, range } from 'lodash-es';
+import { at } from 'lodash-es';
 import { computed, getCurrentScope, onScopeDispose, shallowRef } from 'vue';
 import { deleteAt, getAt, mergeInto, replaceContents, setAt } from '../values/access';
 import { cloneValue } from '../values/clone';
 import { reactiveView } from '../values/view';
 import type { EngineArray, EngineKey, EntryState, FormEngine } from './engine.types';
+import { movedPlaces, swappedPlaces } from './places';
 
 interface ArrayHost {
   readonly raw: object;
@@ -44,24 +45,6 @@ const clearState = (state: EntryState): void => {
   state.setErrors([]);
   state.setPending(false);
 };
-
-const isPlace = (length: number, index: number): boolean =>
-  Number.isInteger(index) && index >= 0 && index < length;
-
-const movedPlaces = (length: number, from: number, to: number): number[] | undefined => {
-  if (!isPlace(length, from)) {
-    return undefined;
-  }
-
-  const rest = range(length).toSpliced(from, 1);
-
-  return rest.toSpliced(clamp(to, 0, rest.length), 0, from);
-};
-
-const swappedPlaces = (length: number, first: number, second: number): number[] | undefined =>
-  isPlace(length, first) && isPlace(length, second)
-    ? range(length).with(first, second).with(second, first)
-    : undefined;
 
 const lengthAt = (values: object, path: string): number => {
   const list = getAt(values, path);

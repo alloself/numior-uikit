@@ -142,6 +142,11 @@ export class FormHarness<V extends object> {
     await nextTick();
   }
 
+  async setValues(values: Parameters<FormContext<V>['setValues']>[0]): Promise<void> {
+    await this.form.setValues(values);
+    await nextTick();
+  }
+
   async blur(path: string): Promise<void> {
     await this.input(path).trigger('blur');
     await this.probes.work.get(path);
