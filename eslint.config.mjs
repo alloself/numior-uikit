@@ -1,6 +1,7 @@
 import stylistic from '@stylistic/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import vue from 'eslint-plugin-vue';
+import { apiNames } from './scripts/eslint/api-names.mjs';
 import { guardFirst } from './scripts/eslint/guard-first.mjs';
 import { pageListeners } from './scripts/eslint/page-listeners.mjs';
 import { testPhases } from './scripts/eslint/test-phases.mjs';
@@ -231,6 +232,7 @@ export default [
     plugins: {
       numior: {
         rules: {
+          'api-names': apiNames,
           'guard-first': guardFirst,
           'page-listeners': pageListeners,
           'test-phases': testPhases,
@@ -241,7 +243,7 @@ export default [
   },
   {
     files: ['packages/*/src/**/*.ts', 'packages/*/src/**/*.vue'],
-    rules: { 'numior/page-listeners': 'error' },
+    rules: { 'numior/api-names': 'error', 'numior/page-listeners': 'error' },
   },
   {
     files: ['tests/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
