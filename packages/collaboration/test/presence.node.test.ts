@@ -7,6 +7,8 @@ import {
 import { describe, expect, it } from 'vite-plus/test';
 import {
   collab,
+  confirmSteps,
+  presenceChanged,
   presenceOf,
   remotePeers,
   remotePresence,
@@ -143,6 +145,57 @@ describe('remote presence', () => {
     expect(decorationsOf(before)?.decorations).toEqual([
       expect.objectContaining({ from: 4, to: 6 }),
     ]);
+  });
+
+  it('holds a caret stated on a version it has not reached and places it when the steps arrive', () => {
+    const start = started();
+    const told = withPeers(start, [['c1', { ...presenceAt('p0', 3), version: 1 }]]);
+
+    const caught = told.apply(received(told, start.tr.insertText('x', 3).steps));
+
+    expect(remotePeers(told)).toEqual([
+      expect.objectContaining({ clientId: 'c1', user: ANN, head: undefined }),
+    ]);
+
+    expect(remotePeers(caught)[0]?.head).toBe(4);
+  });
+
+  it('keeps the place a caret had while its next place waits for steps', () => {
+    const start = withPeers(started(), [['c1', presenceAt('p0', 1)]]);
+
+    const told = withPeers(start, [['c1', { ...presenceAt('p0', 3), version: 1 }]]);
+    const caught = told.apply(received(told, start.tr.insertText('x', 3).steps));
+
+    expect(remotePeers(told)[0]?.head).toBe(2);
+    expect(remotePeers(caught)[0]?.head).toBe(4);
+  });
+
+  it('ignores presence with a version that is not a count', () => {
+    const state = withPeers(started(), [['c1', { ...presenceAt('p0', 1), version: -1 }]]);
+
+    expect(remotePeers(state)).toHaveLength(0);
+  });
+
+  it('states the version its selection is written on, steps on the way included', () => {
+    const state = started();
+
+    const typed = state.apply(state.tr.insertText('x', 1));
+
+    expect(presenceOf(state, ANN).version).toBe(0);
+    expect(presenceOf(typed, ANN).version).toBe(1);
+  });
+
+  it('says again where it is once the version it stated no longer fits its selection', () => {
+    const state = started();
+    const typed = state.apply(state.tr.insertText('x', 1));
+    const told = presenceOf(typed, ANN);
+
+    const pushed = typed.apply(received(typed, state.tr.insertText('y', 7).steps));
+    const confirmed = typed.apply(confirmSteps(typed, 1, 1));
+
+    expect(presenceChanged(told, presenceOf(pushed, ANN), pushed)).toBe(true);
+    expect(presenceChanged(told, presenceOf(confirmed, ANN), confirmed)).toBe(false);
+    expect(presenceChanged({ ...told, version: 3 }, presenceOf(typed, ANN), typed)).toBe(true);
   });
 
   it('describes a text selection by block and offset', () => {

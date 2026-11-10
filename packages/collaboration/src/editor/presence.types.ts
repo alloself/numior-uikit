@@ -19,6 +19,7 @@ export interface PresenceSelection {
 export interface EditorPresence {
   readonly user: PresenceUser;
   readonly selection: PresenceSelection | null;
+  readonly version?: number | undefined;
 }
 
 export interface RemotePeer {

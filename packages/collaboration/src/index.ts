@@ -60,6 +60,7 @@ export type {
 } from './comments/comments.types';
 export { editorCollabDocument } from './editor/editor-document';
 export {
+  presenceChanged,
   presenceOf,
   remotePeers,
   remotePresence,

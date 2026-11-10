@@ -26,10 +26,10 @@ import { collab } from '../editor/collab';
 import type { UnconfirmedStep } from '../editor/collab.types';
 import { editorCollabDocument } from '../editor/editor-document';
 import {
+  presenceChanged,
   presenceOf,
   remotePeers,
   remotePresence,
-  samePresence,
   setRemotePresence,
 } from '../editor/presence';
 import type { EditorPresence, RemotePeer } from '../editor/presence.types';
@@ -76,7 +76,7 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
   const offerPresence = (state: EditorState): void => {
     const next = presenceOf(state, user);
 
-    if (sentPresence === undefined || !samePresence(sentPresence, next)) {
+    if (sentPresence === undefined || presenceChanged(sentPresence, next, state)) {
       sentPresence = next;
       client?.setPresence(next);
     }

@@ -15,6 +15,7 @@ import {
   type Plugin,
   type Transaction,
 } from '@numior/editor-core';
+import { collabProgress, collabVersionAfter } from './collab';
 import type {
   BlockPoint,
   EditorPresence,
@@ -25,15 +26,24 @@ import type {
 
 type Fields = Readonly<Record<string, unknown>>;
 
+interface PresenceState {
+  readonly peers: readonly RemotePeer[];
+  readonly held: ReadonlyMap<string, EditorPresence>;
+}
+
 const COLOURS = 8;
 
 const SELECTION_CLASS = 'nui-collab-selection';
 
-const presenceUpdate = createMetaKey<readonly RemotePeer[]>('presenceUpdate');
+const presenceUpdate = createMetaKey<ReadonlyMap<string, unknown>>('presenceUpdate');
 
-const registry = new WeakMap<object, Plugin<readonly RemotePeer[]>>();
+const registry = new WeakMap<object, Plugin<PresenceState>>();
 
 const NONE: readonly RemotePeer[] = [];
+
+const NO_HELD: ReadonlyMap<string, EditorPresence> = new Map();
+
+const IDLE: PresenceState = { peers: NONE, held: NO_HELD };
 
 const NO_SELECTIONS = decorationSet([]);
 
@@ -58,8 +68,11 @@ const isPoint = (value: unknown): value is BlockPoint =>
 const isSelection = (value: unknown): value is PresenceSelection | null =>
   value === null || (isFields(value) && isPoint(value.anchor) && isPoint(value.head));
 
+const isVersion = (value: unknown): value is number | undefined =>
+  value === undefined || (typeof value === 'number' && Number.isInteger(value) && value >= 0);
+
 const isPresence = (value: unknown): value is EditorPresence =>
-  isFields(value) && isUser(value.user) && isSelection(value.selection);
+  isFields(value) && isUser(value.user) && isSelection(value.selection) && isVersion(value.version);
 
 const colourOf = (id: string): number =>
   (Array.from(id).reduce((sum, char) => sum * 31 + (char.codePointAt(0) ?? 0), 7) >>> 0) % COLOURS;
@@ -79,19 +92,72 @@ const positionOf = (doc: Doc, point: BlockPoint): number | undefined => {
     : start + 1 + Math.min(point.offset, Math.max(0, node.size - 2));
 };
 
-const peerOf = (doc: Doc, clientId: string, value: unknown): RemotePeer | undefined => {
-  if (!isPresence(value)) {
-    return undefined;
+const peerOf = (doc: Doc, clientId: string, { user, selection }: EditorPresence): RemotePeer => ({
+  clientId,
+  user,
+  colour: colourOf(user.id),
+  anchor: selection === null ? undefined : positionOf(doc, selection.anchor),
+  head: selection === null ? undefined : positionOf(doc, selection.head),
+});
+
+const unplaced = (clientId: string, { user }: EditorPresence): RemotePeer => ({
+  clientId,
+  user,
+  colour: colourOf(user.id),
+  anchor: undefined,
+  head: undefined,
+});
+
+const stated = (
+  values: ReadonlyMap<string, unknown>,
+  known: PresenceState,
+  doc: Doc,
+  version: number,
+): PresenceState => {
+  const held = new Map<string, EditorPresence>();
+
+  const peers = [...values].reduce<RemotePeer[]>((found, [clientId, value]) => {
+    if (!isPresence(value)) {
+      return found;
+    }
+    if ((value.version ?? 0) > version) {
+      held.set(clientId, value);
+
+      found.push(
+        known.peers.find((peer) => peer.clientId === clientId) ?? unplaced(clientId, value),
+      );
+    } else {
+      found.push(peerOf(doc, clientId, value));
+    }
+    return found;
+  }, []);
+
+  return { peers, held: held.size === 0 ? NO_HELD : held };
+};
+
+const released = (value: PresenceState, doc: Doc, version: number): PresenceState => {
+  const held = new Map<string, EditorPresence>();
+  const ready = new Map<string, EditorPresence>();
+
+  value.held.forEach((presence, clientId) => {
+    if ((presence.version ?? 0) > version) {
+      held.set(clientId, presence);
+    } else {
+      ready.set(clientId, presence);
+    }
+  });
+
+  if (ready.size === 0) {
+    return value;
   }
 
-  const { user, selection } = value;
-
   return {
-    clientId,
-    user,
-    colour: colourOf(user.id),
-    anchor: selection === null ? undefined : positionOf(doc, selection.anchor),
-    head: selection === null ? undefined : positionOf(doc, selection.head),
+    peers: value.peers.map((peer) => {
+      const presence = ready.get(peer.clientId);
+
+      return presence === undefined ? peer : peerOf(doc, peer.clientId, presence);
+    }),
+    held: held.size === 0 ? NO_HELD : held,
   };
 };
 
@@ -119,13 +185,22 @@ const moved = (peers: readonly RemotePeer[], tr: Transaction): readonly RemotePe
   return next.every((peer, index) => peer === peers[index]) ? peers : next;
 };
 
-const applyPeers = (tr: Transaction, value: readonly RemotePeer[]): readonly RemotePeer[] => {
+const applyPresence = (
+  tr: Transaction,
+  value: PresenceState,
+  before: EditorState,
+): PresenceState => {
   const update = presenceUpdate.read(tr);
+  const version = collabVersionAfter(tr, before) ?? Infinity;
 
   if (update !== undefined) {
-    return update;
+    return stated(update, value, tr.doc, version);
   }
-  return tr.changed && value.length > 0 ? moved(value, tr) : value;
+
+  const peers = tr.changed && value.peers.length > 0 ? moved(value.peers, tr) : value.peers;
+  const next = peers === value.peers ? value : { ...value, peers };
+
+  return next.held.size === 0 ? next : released(next, tr.doc, version);
 };
 
 const selectionRanges = (peers: readonly RemotePeer[]): ReturnType<typeof inlineDecoration>[] =>
@@ -156,15 +231,15 @@ const selectionDecorations = (peers: readonly RemotePeer[]): DecorationSet => {
   return set;
 };
 
-export const remotePresence = (): Plugin<readonly RemotePeer[]> => {
-  const plugin: Plugin<readonly RemotePeer[]> = definePlugin<readonly RemotePeer[]>({
+export const remotePresence = (): Plugin<PresenceState> => {
+  const plugin: Plugin<PresenceState> = definePlugin<PresenceState>({
     name: 'remotePresence',
     state: {
-      init: () => NONE,
-      apply: applyPeers,
+      init: () => IDLE,
+      apply: applyPresence,
     },
     props: {
-      decorations: (state) => selectionDecorations(plugin.getState(state) ?? NONE),
+      decorations: (state) => selectionDecorations((plugin.getState(state) ?? IDLE).peers),
     },
   });
 
@@ -177,7 +252,7 @@ export const remotePeers = (state: EditorState): readonly RemotePeer[] => {
     const found = registry.get(plugin);
 
     if (found !== undefined) {
-      return found.getState(state) ?? NONE;
+      return (found.getState(state) ?? IDLE).peers;
     }
   }
   return NONE;
@@ -186,18 +261,7 @@ export const remotePeers = (state: EditorState): readonly RemotePeer[] => {
 export const setRemotePresence = (
   state: EditorState,
   peers: ReadonlyMap<string, unknown>,
-): Transaction =>
-  state.tr.setMeta(
-    presenceUpdate,
-    [...peers].reduce<RemotePeer[]>((found, [clientId, value]) => {
-      const peer = peerOf(state.doc, clientId, value);
-
-      if (peer !== undefined) {
-        found.push(peer);
-      }
-      return found;
-    }, []),
-  );
+): Transaction => state.tr.setMeta(presenceUpdate, peers);
 
 const wholeDocument = (doc: Doc): PresenceSelection | null => {
   const anchor = textPosition(doc, 0, 1);
@@ -219,10 +283,29 @@ const selectionOf = ({ selection, doc }: EditorState): PresenceSelection | null 
   }
 };
 
-export const presenceOf = (state: EditorState, user: PresenceUser): EditorPresence => ({
-  user,
-  selection: selectionOf(state),
-});
+export const presenceOf = (state: EditorState, user: PresenceUser): EditorPresence => {
+  const progress = collabProgress(state);
+  const selection = selectionOf(state);
+
+  return progress === undefined
+    ? { user, selection }
+    : { user, selection, version: progress.version + progress.pending };
+};
 
 export const samePresence = (left: EditorPresence, right: EditorPresence): boolean =>
   JSON.stringify(left.selection) === JSON.stringify(right.selection);
+
+export const presenceChanged = (
+  sent: EditorPresence,
+  next: EditorPresence,
+  state: EditorState,
+): boolean => {
+  const told = sent.version ?? 0;
+  const now = next.version ?? 0;
+
+  return (
+    !samePresence(sent, next) ||
+    told > now ||
+    (told < now && (collabProgress(state)?.pending ?? 0) > 0)
+  );
+};
