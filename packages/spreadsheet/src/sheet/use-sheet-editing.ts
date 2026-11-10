@@ -112,8 +112,13 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
     return CHANGED_ONE;
   };
 
-  const stepOf = (sheet: Sheet, cells: SheetCells, change: NuiTableEdit<number>): WorkbookStep => {
-    const line = lineOf(cells, change.row, columnIndex(change.key));
+  const stepOf = (
+    sheet: Sheet,
+    cells: SheetCells,
+    change: NuiTableEdit<number>,
+    col: number,
+  ): WorkbookStep => {
+    const line = lineOf(cells, change.row, col);
     const text = textOf(change.value);
     const result = editor.value.input(sheet, line.row, line.col, text, options.locale());
 
@@ -128,7 +133,14 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
       return;
     }
 
-    const steps = command.changes.map((change) => stepOf(sheet, cells, change));
+    const steps = command.changes.reduce<WorkbookStep[]>((found, change) => {
+      const col = columnIndex(change.key);
+
+      if (col !== undefined) {
+        found.push(stepOf(sheet, cells, change, col));
+      }
+      return found;
+    }, []);
 
     follow(() => history.value.commit(steps));
   };

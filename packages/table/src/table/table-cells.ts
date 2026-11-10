@@ -1,4 +1,4 @@
-import { graphemesOf } from '@numior/primitives';
+import { columnName } from '@numior/primitives/address';
 import { getCurrentInstance } from 'vue';
 import type {
   NuiTableCellStyle,
@@ -53,28 +53,7 @@ interface EdgeWalk {
   readonly step: TableCellPosition;
 }
 
-const LETTERS = 26;
-const CODE_A = 65;
 const COLUMN_WIDTH = 96;
-
-export const columnName = (col: number): string => {
-  let rest = Math.max(0, Math.floor(col)) + 1;
-  let name = '';
-
-  while (rest > 0) {
-    const letter = (rest - 1) % LETTERS;
-
-    name = String.fromCodePoint(CODE_A + letter) + name;
-    rest = Math.floor((rest - 1) / LETTERS);
-  }
-  return name;
-};
-
-export const columnIndex = (name: string): number =>
-  graphemesOf(name.toUpperCase()).reduce(
-    (sum, letter) => sum * LETTERS + letter.charCodeAt(0) - CODE_A + 1,
-    0,
-  ) - 1;
 
 export const cellName = (position: TableCellPosition): string =>
   `${columnName(position.col)}${position.row + 1}`;

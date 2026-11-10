@@ -1,3 +1,4 @@
+import { columnIndex as lettersIndex, columnName } from '@numior/primitives/address';
 import type { CellAddress, CellRange, CellRef } from './cell.types';
 import { FormulaChar } from './formula/formula.types';
 
@@ -5,35 +6,18 @@ export const MAX_ROWS = 1_048_576;
 
 export const MAX_COLS = 16_384;
 
-const LETTERS = 26;
-
 const CELL = /^(\$?)([A-Za-z]{1,3})(\$?)(\d{1,7})$/u;
 
 const COLUMN = /^\$?([A-Za-z]{1,3})$/u;
 
 const ROW = /^\$?(\d{1,7})$/u;
 
-export const columnName = (index: number): string => {
-  let name = '';
-
-  for (let rest = index + 1; rest > 0; rest = Math.floor((rest - 1) / LETTERS)) {
-    name = String.fromCodePoint(65 + ((rest - 1) % LETTERS)) + name;
-  }
-  return name;
-};
+export { columnName };
 
 export const columnIndex = (name: string): number | undefined => {
-  let index = 0;
+  const index = lettersIndex(name);
 
-  for (const letter of name.toUpperCase()) {
-    const code = letter.codePointAt(0) ?? 0;
-
-    if (code < 65 || code > 90) {
-      return undefined;
-    }
-    index = index * LETTERS + (code - 64);
-  }
-  return index > 0 && index <= MAX_COLS ? index - 1 : undefined;
+  return index !== undefined && index < MAX_COLS ? index : undefined;
 };
 
 const rowIndex = (digits: string): number | undefined => {

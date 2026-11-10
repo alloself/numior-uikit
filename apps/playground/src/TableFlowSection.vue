@@ -43,7 +43,6 @@ import { computed, ref, shallowRef } from 'vue';
 import { NuiButton, NuiSwitch } from '@numior/vue';
 import {
   NuiTable,
-  columnIndex,
   columnName,
   tableCells,
   type NuiTableCellSource,
@@ -137,7 +136,7 @@ const onEdit = (event: NuiTableEditEvent<number>): void => {
   const next = new Map(entries.value);
 
   for (const change of event.changes) {
-    next.set(nameOf(change.row, columnIndex(change.key)), String(change.value ?? ''));
+    next.set(`${change.key}${String(change.row + 1)}`, String(change.value ?? ''));
   }
   entries.value = next;
 };

@@ -1,14 +1,8 @@
 export { default as NuiTable } from './table/NuiTable.vue';
 export { clipboardDataOf } from './table/table-clipboard';
 export { tableEditor } from './table/table-editors';
-export {
-  cellEdge,
-  cellName,
-  columnIndex,
-  columnName,
-  rangeName,
-  tableCells,
-} from './table/table-cells';
+export { columnIndex, columnName } from '@numior/primitives/address';
+export { cellEdge, cellName, rangeName, tableCells } from './table/table-cells';
 export {
   NuiTableAlign,
   NuiTableCellScheme,

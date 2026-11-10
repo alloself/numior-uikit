@@ -14,6 +14,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./address": {
+      "@numior/source": "./src/address/address.ts",
+      "types": "./dist/address/address.d.ts",
+      "import": "./dist/address.js"
+    },
     "./guards": {
       "@numior/source": "./src/guards/guards.ts",
       "types": "./dist/guards/guards.d.ts",

@@ -114,7 +114,7 @@ const onEdit = (event: NuiTableEditEvent<number>): void => {
 
 const cellOf = (letters = 'A', digits = '1') => ({
   row: Number(digits) - 1,
-  col: columnIndex(letters),
+  col: columnIndex(letters) ?? 0,
 });
 
 const boxesOf = (rectOf: (range: NuiTableRange) => NuiTableRect | undefined) => {
