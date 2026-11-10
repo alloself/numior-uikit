@@ -94,7 +94,12 @@ export const useCalendarSelection = (options: CalendarSelectionOptions): Calenda
   };
 
   const arm = (date: string): NuiCalendarValue | undefined => {
-    if (options.mode() !== NuiCalendarMode.Range || picking.value) {
+    if (options.mode() !== NuiCalendarMode.Range) {
+      return undefined;
+    }
+    if (picking.value) {
+      armed.value = undefined;
+
       return undefined;
     }
 

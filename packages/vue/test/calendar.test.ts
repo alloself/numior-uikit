@@ -283,6 +283,22 @@ describe('NuiCalendar', () => {
     calendar.unmount();
   });
 
+  it('ends the range with a click after a press that was let go outside the calendar', async () => {
+    const calendar = CalendarDriver.mount({ props: { mode: 'range' } });
+
+    await calendar.pressDay('2026-09-05');
+
+    expect(calendar.value).toEqual({ start: '2026-09-05', end: null });
+
+    await calendar.pressDay('2026-09-09');
+    await calendar.releaseDay('2026-09-09');
+    await calendar.activateDay('2026-09-09');
+
+    expect(calendar.value).toEqual({ start: '2026-09-05', end: '2026-09-09' });
+
+    calendar.unmount();
+  });
+
   it('shows presets in range mode and marks the matching one as pressed', async () => {
     const calendar = CalendarDriver.mount({
       props: {

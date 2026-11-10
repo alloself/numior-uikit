@@ -265,6 +265,20 @@ export class CalendarDriver extends ComponentDriver {
     await nextTick();
   }
 
+  async pressDay(date: string): Promise<void> {
+    this.day(date).element.dispatchEvent(pointer('pointerdown'));
+    await nextTick();
+  }
+
+  async releaseDay(date: string): Promise<void> {
+    this.day(date).element.dispatchEvent(pointer('pointerup'));
+    await nextTick();
+  }
+
+  async activateDay(date: string): Promise<void> {
+    await this.day(date).trigger('click');
+  }
+
   async cancelPress(date: string): Promise<void> {
     const element = this.day(date).element;
 
