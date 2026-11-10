@@ -126,9 +126,10 @@ const rowUnder = (clientY: number, rows: readonly RenderedRow[]): RowTarget | un
   if (hit !== undefined) {
     return { position: hit.position, zone: zoneOf(clientY, hit.rect) };
   }
-  return clientY < first.rect.top
-    ? { position: first.position, zone: 'before' }
-    : { position: lastRow.position, zone: 'after' };
+  if (clientY < first.rect.top) {
+    return { position: first.position, zone: 'before' };
+  }
+  return clientY >= lastRow.rect.bottom ? { position: lastRow.position, zone: 'after' } : undefined;
 };
 
 const isArrow = (key: string): boolean =>
@@ -386,8 +387,11 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
     const room = frame.getBoundingClientRect().height;
     const start = state.position - frame.getBoundingClientRect().top - held.offset;
 
+    const destination = at === undefined ? undefined : destinationOf(state.from, at);
+    const moves = destination !== undefined && !staysPut(state.from, destination);
+
     target = at;
-    drop.value = at === undefined ? undefined : markOf(state.from, at);
+    drop.value = at !== undefined && moves ? markOf(state.from, at) : undefined;
 
     ghost.value =
       source === undefined

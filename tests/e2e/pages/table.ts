@@ -176,6 +176,30 @@ export class TableSection {
     await this.page.mouse.up();
   }
 
+  async dragTreeRowAndReturn(from: number, over: number): Promise<void> {
+    await this.treeRow(from).hover();
+
+    await expect.poll(() => renderedWidth(this.treeGrip(from))).toBeGreaterThan(20);
+
+    const grip = await boxOf(this.treeGrip(from));
+    const own = await boxOf(this.treeRow(from));
+    const other = await boxOf(this.treeRow(over));
+    const x = grip.x + grip.width / 2;
+    const y = grip.y + grip.height / 2;
+    const mark = this.tree.locator('.nui-table__drop');
+
+    await this.page.mouse.move(x, y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(x, y + 8);
+    await this.page.mouse.move(x, other.y + other.height * 0.85, { steps: 6 });
+    await expect(mark).toBeVisible();
+
+    await this.page.mouse.move(x, own.y + own.height / 2, { steps: 6 });
+    await expect(mark).toBeHidden();
+
+    await this.page.mouse.up();
+  }
+
   treeCheckbox(position: number): Locator {
     return this.treeRow(position).getByRole('checkbox');
   }

@@ -88,6 +88,44 @@ describe('NuiTable row drag', () => {
     expect(grid.dropMark).toBeUndefined();
   });
 
+  it('leaves a row where it was when it is dropped over its own place', async () => {
+    const grid = mountPeople();
+    await grid.settle();
+
+    await grid.grabRow(3);
+    await grid.moveRowTo(6, 'after');
+
+    expect(grid.dropMark).toEqual({ kind: 'line', start: '320px', inset: '0px' });
+
+    await grid.moveRowTo(3, 'inside');
+
+    expect(grid.dropMark).toBeUndefined();
+    expect(grid.rowDragging(3)).toBe(true);
+
+    await grid.dropRow();
+
+    expect(grid.reorders).toEqual([]);
+    expect(grid.rowDragging(3)).toBe(false);
+  });
+
+  it('shows no drop line where a drop would leave the row in its place', async () => {
+    const grid = mountPeople();
+    await grid.settle();
+
+    await grid.grabRow(3);
+    await grid.moveRowTo(2, 'after');
+
+    expect(grid.dropMark).toBeUndefined();
+
+    await grid.moveRowTo(4, 'before');
+
+    expect(grid.dropMark).toBeUndefined();
+
+    await grid.dropRow();
+
+    expect(grid.reorders).toEqual([]);
+  });
+
   it('drops a row where the pointer is when rows are pinned above the body', async () => {
     const rows = people(50);
     const grid = mountPeople({ rows, props: { pinnedRows: people(52).slice(50) } });
@@ -230,7 +268,7 @@ describe('NuiTable row drag', () => {
     await grid.grabRow(5);
     await grid.moveRowTo(4, 'inside');
     await vi.advanceTimersByTimeAsync(600);
-    expect(grid.dropMark?.kind).toBe('line');
+    expect(grid.dropMark).toBeUndefined();
 
     await grid.dropRow();
     expect(grid.reorders).toHaveLength(1);

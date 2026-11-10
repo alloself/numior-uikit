@@ -145,6 +145,21 @@ test.describe('table', () => {
     await expect(table.header(1)).toHaveText('Клиент');
   });
 
+  test('a tree row carried away and back to its own place stays there', async ({
+    playground,
+    table,
+  }) => {
+    await playground.open();
+    await table.tree.scrollIntoViewIfNeeded();
+    await expect(table.treeRow(0)).toContainText('Продажи');
+
+    await table.dragTreeRowAndReturn(0, 1);
+
+    await expect(table.treeRow(0)).toContainText('Продажи');
+    await expect(table.treeRow(1)).toContainText('Разработка');
+    await expect(table.output).toContainText('"lastReorder":null');
+  });
+
   test('drags a tree row among its siblings and moves it from the keyboard', async ({
     playground,
     table,
