@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
-import { ToastHold, useToast } from '../src';
+import { ToastHold, ToastTone, useToast } from '../src';
 import { captureSetup } from './harness/capture';
 import { ToastHarness } from './harness/toast';
 
@@ -13,7 +13,7 @@ describe('toast store', () => {
     expect(id).toBe('nui-toast-1');
 
     expect(toasts.record(id)).toMatchObject({
-      tone: 'neutral',
+      tone: ToastTone.Neutral,
       duration: 5000,
       closable: true,
       leaving: false,
@@ -132,7 +132,7 @@ describe('toast store', () => {
     expect(service).toBeTruthy();
 
     expect(ToastHarness.shared().record(id)).toMatchObject({
-      tone: 'error',
+      tone: ToastTone.Error,
       description: 'Retry later',
     });
 

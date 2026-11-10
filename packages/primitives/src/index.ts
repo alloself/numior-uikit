@@ -315,14 +315,13 @@ export { useDelayedOpen } from './timing/useDelayedOpen';
 export { useMediaQuery } from './media/useMediaQuery';
 export type { DelayedOpen, DelayedOpenOptions } from './timing/useDelayedOpen';
 export { createToastStore } from './toast/toast-store';
-export { ToastHold } from './toast/toast.types';
+export { ToastHold, ToastTone } from './toast/toast.types';
 export type {
   Toast,
   ToastAction,
   ToastOptions,
   ToastStore,
   ToastStoreOptions,
-  ToastTone,
 } from './toast/toast-store';
 export { TOASTS_KEY, provideToasts, useToast, useToastStore } from './toast/useToast';
 export type { ToastMessageOptions, ToastService } from './toast/useToast';

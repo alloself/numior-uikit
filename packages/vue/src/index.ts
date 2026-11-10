@@ -328,6 +328,7 @@ export type { NuiFieldControlProps } from './shared/field-control.types';
 export { NuiSize, NuiTone } from './shared/scale.types';
 export type { NuiVueMessages } from './messages.types';
 export {
+  ToastTone,
   colorSchemeScript,
   createNuiConfig,
   createToastStore,
@@ -389,7 +390,6 @@ export type {
   ToastService,
   ToastStore,
   ToastStoreOptions,
-  ToastTone,
   WebOtpControl,
   WebOtpOptions,
 } from '@numior/primitives';

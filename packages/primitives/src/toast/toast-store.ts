@@ -1,8 +1,6 @@
 import { computed, shallowRef, type ComputedRef, type ShallowRef } from 'vue';
 import { createTimers } from './toast-timers';
-import type { ToastHold } from './toast.types';
-
-export type ToastTone = 'neutral' | 'info' | 'success' | 'warning' | 'error';
+import { ToastTone, type ToastHold } from './toast.types';
 
 export interface ToastAction {
   readonly label: string;
@@ -56,7 +54,7 @@ const normalizeToast = (options: ToastOptions, id: string, fallbackDuration: num
   id,
   title: options.title,
   description: options.description,
-  tone: options.tone ?? 'neutral',
+  tone: options.tone ?? ToastTone.Neutral,
   duration: options.duration ?? fallbackDuration,
   action: options.action,
   closable: options.closable ?? true,

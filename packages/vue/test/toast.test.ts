@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+import { ToastTone } from '../src';
 import { ToasterDriver } from './drivers/toaster';
 
 describe('NuiToaster and NuiToast', () => {
@@ -29,12 +30,12 @@ describe('NuiToaster and NuiToast', () => {
     const saved = toaster.toast(1);
     expect(saved.title).toBe('Saved');
     expect(saved.description).toBe('All changes are stored');
-    expect(saved.hasTone('success')).toBe(true);
+    expect(saved.hasTone(ToastTone.Success)).toBe(true);
     expect(saved.hasIcon).toBe(true);
     expect(saved.role).toBeUndefined();
     expect(saved.closeIsIconOnly).toBe(true);
     expect(failed.role).toBe('alert');
-    expect(failed.hasTone('error')).toBe(true);
+    expect(failed.hasTone(ToastTone.Error)).toBe(true);
 
     await toaster.advance(1000);
     expect(toaster.toast(0).leaving).toBe(true);
