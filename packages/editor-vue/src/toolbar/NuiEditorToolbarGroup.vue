@@ -18,7 +18,7 @@
         v-else-if="item.kind === ToolbarItemKind.Colours"
         :colours="item"
         :disabled="disabled"
-        @choose="(mark, name) => emit('colour', mark, name)"
+        @select="(mark, name) => emit('colour', mark, name)"
       />
       <NuiEditorToolbarButton
         v-else-if="item.kind === ToolbarItemKind.Link"

@@ -51,7 +51,7 @@ const { listId, hintId, entries, active, anchor, open, hint, summary, typed, lab
   defineProps<SheetAssistProps>();
 
 const emit = defineEmits<{
-  choose: [key: string];
+  select: [key: string];
   hover: [index: number];
 }>();
 
@@ -115,7 +115,7 @@ useFloating(() => anchor, hintPanel, {
 
 const choose = (entry: NuiListEntry): void => {
   if (entry.value !== undefined) {
-    emit('choose', entry.value);
+    emit('select', entry.value);
   }
 };
 

@@ -42,7 +42,7 @@ const {
 } = defineProps<NuiEditorSuggestMenuProps>();
 
 const emit = defineEmits<{
-  choose: [key: string];
+  select: [key: string];
   hover: [index: number];
 }>();
 
@@ -65,7 +65,7 @@ useFloating(() => anchor, list, { placement: 'bottom-start', offset: 6, enabled:
 
 const choose = (entry: NuiListEntry<string>): void => {
   if (entry.value !== undefined) {
-    emit('choose', entry.value);
+    emit('select', entry.value);
   }
 };
 

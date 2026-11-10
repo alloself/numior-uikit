@@ -83,7 +83,7 @@ import type { ColourMark, ColourOption, NuiEditorColourMenuProps } from './toolb
 const { colours, disabled = false } = defineProps<NuiEditorColourMenuProps>();
 
 const emit = defineEmits<{
-  choose: [mark: ColourMark, name: string | null];
+  select: [mark: ColourMark, name: string | null];
 }>();
 
 const texts = useMessages(editorMessages);
@@ -106,7 +106,7 @@ const textOptions = computed(() => optionsOf(colours.colours, 'text', texts.valu
 const fillOptions = computed(() => optionsOf(colours.highlights, 'fill', texts.value.noHighlight));
 
 const choose = (mark: ColourMark, value: string | undefined): void => {
-  emit('choose', mark, value === undefined || value === '' ? null : value);
+  emit('select', mark, value === undefined || value === '' ? null : value);
 };
 
 const menu = useTemplateRef<InstanceType<typeof NuiMenu>>('menu');

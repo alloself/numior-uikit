@@ -86,8 +86,8 @@
         :anchor="anchorElement"
         :provider="pastedProvider"
         :bookmark="schema.nodes.has('bookmark')"
-        @choose="onPasteChoice"
-        @dismiss="onPasteDismiss"
+        @select="onPasteChoice"
+        @close="onPasteDismiss"
       />
       <NuiEditorUploads
         v-if="overlaid"
@@ -137,7 +137,7 @@
         :anchor="anchorElement"
         :open="slash.open.value"
         :label="blockTexts.blocks"
-        @choose="onSlashChoose"
+        @select="onSlashChoose"
         @hover="slash.hover"
       />
       <NuiEditorSuggestMenu
@@ -152,7 +152,7 @@
         :loading="mention.loading.value"
         :loading-label="blockTexts.mentionsLoading"
         :empty-label="mentionsEmpty"
-        @choose="onMentionChoose"
+        @select="onMentionChoose"
         @hover="mention.hover"
       >
         <template #leading="{ item }">

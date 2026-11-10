@@ -228,7 +228,7 @@
       :typed="assist.typed.value"
       :label="messages.functions"
       :hint-label="messages.arguments"
-      @choose="assist.choose"
+      @select="assist.choose"
       @hover="assist.hover"
     />
     <NuiSpreadsheetTabs

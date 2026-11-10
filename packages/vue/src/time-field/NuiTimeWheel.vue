@@ -40,7 +40,7 @@ const SETTLE_DELAY = 150;
 
 const { options, selected, label, tabStop } = defineProps<NuiTimeWheelProps>();
 
-const emit = defineEmits<{ pick: [index: number] }>();
+const emit = defineEmits<{ select: [index: number] }>();
 
 const wheel = useTemplateRef<HTMLDivElement>('wheel');
 const timer: { id: ReturnType<typeof setTimeout> | undefined } = { id: undefined };
@@ -85,7 +85,7 @@ const stopTimer = (): void => {
 
 const choose = (index: number): void => {
   if (options[index]?.disabled === false) {
-    emit('pick', index);
+    emit('select', index);
   }
 };
 

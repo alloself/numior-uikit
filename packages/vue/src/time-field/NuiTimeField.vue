@@ -87,7 +87,7 @@
           :columns="columns"
           :labels="labels"
           :empty-text="emptyText"
-          @pick="pickWheel"
+          @select="pickWheel"
           @focus-wheel="onFocusWheel"
         />
       </div>
