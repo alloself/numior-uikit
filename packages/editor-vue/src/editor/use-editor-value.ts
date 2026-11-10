@@ -3,6 +3,7 @@ import {
   createHTMLWriter,
   fromHTML,
   fromJSON,
+  sameDocJSON,
   toJSON,
   type Doc,
   type DocJSON,
@@ -81,10 +82,15 @@ export const useEditorValue = <V extends NuiEditorValue | undefined>(
     publish(options.format() === NuiEditorFormat.Json ? toJSON(doc) : write(doc));
   };
 
+  const echoes = (value: NuiEditorValue | undefined): boolean =>
+    value === written ||
+    (typeof value === 'object' && typeof written === 'object' && sameDocJSON(value, written));
+
   watch(options.model, () => {
     const value = current();
 
-    if (value === written) {
+    if (echoes(value)) {
+      written = value;
       return;
     }
     stop();

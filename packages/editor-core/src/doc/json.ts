@@ -42,6 +42,12 @@ interface Reader {
   readonly check: CheckContext;
 }
 
+const NO_ATTRS: Attrs = {};
+
+const NO_MARKS: readonly MarkJSON[] = [];
+
+const NO_NODES: readonly NodeJSON[] = [];
+
 export const isFields = (value: unknown): value is Fields =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -362,3 +368,56 @@ export const markFromJSON = (schema: Schema, value: unknown): Mark | undefined =
     ? mark
     : undefined;
 };
+
+const sameAttrs = (one: Attrs = NO_ATTRS, other: Attrs = NO_ATTRS): boolean => {
+  const keys = Object.keys(one);
+
+  return keys.length === Object.keys(other).length && keys.every((key) => one[key] === other[key]);
+};
+
+const sameMarkList = (
+  one: readonly MarkJSON[] = NO_MARKS,
+  other: readonly MarkJSON[] = NO_MARKS,
+): boolean =>
+  one.length === other.length &&
+  one.every((mark, index) => {
+    const peer = other[index];
+
+    return peer !== undefined && mark.type === peer.type && sameAttrs(mark.attrs, peer.attrs);
+  });
+
+const sameNodeJSON = (one: NodeJSON, other: NodeJSON): boolean => {
+  if (one === other) {
+    return true;
+  }
+
+  if ('text' in one || 'text' in other) {
+    return (
+      'text' in one &&
+      'text' in other &&
+      one.text === other.text &&
+      sameMarkList(one.marks, other.marks)
+    );
+  }
+  const left = one.content ?? NO_NODES;
+  const right = other.content ?? NO_NODES;
+
+  return (
+    one.id === other.id &&
+    one.type === other.type &&
+    left.length === right.length &&
+    sameAttrs(one.attrs, other.attrs) &&
+    left.every((node, index) => {
+      const peer = right[index];
+
+      return peer !== undefined && sameNodeJSON(node, peer);
+    })
+  );
+};
+
+export const sameDocJSON = (one: DocJSON, other: DocJSON): boolean =>
+  one === other ||
+  (one.format === other.format &&
+    one.schema.name === other.schema.name &&
+    one.schema.version === other.schema.version &&
+    sameNodeJSON(one.root, other.root));

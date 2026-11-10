@@ -87,6 +87,23 @@ describe('NuiEditor', () => {
     expect(editor.text).toBe('New');
   });
 
+  it('keeps the cursor and the history when the owner of the model hands back a copy', async () => {
+    const editor = mounted({ document: note('Old') });
+
+    editor.focus();
+    await editor.select(4);
+    await editor.type('!');
+    await editor.receive({ document: structuredClone(editor.documents.at(-1)) });
+    await editor.type('?');
+
+    expect(editor.text).toBe('Old!?');
+
+    await editor.receive({ document: structuredClone(editor.documents.at(-1)) });
+    await editor.press('z', { ctrl: true });
+
+    expect(editor.text).toBe('Old');
+  });
+
   it('turns markdown into blocks and undoes it with Ctrl+Z', async () => {
     const editor = mounted();
 
