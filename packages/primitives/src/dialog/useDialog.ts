@@ -14,7 +14,7 @@ import { Key } from '../keyboard/key.types';
 
 export interface DialogOptions {
   readonly open: Ref<boolean>;
-  readonly dismissible?: MaybeRefOrGetter<boolean | undefined>;
+  readonly closable?: MaybeRefOrGetter<boolean | undefined>;
   readonly closeOnBackdrop?: MaybeRefOrGetter<boolean | undefined>;
   readonly onClose?: ((returnValue: string) => void) | undefined;
 }
@@ -119,7 +119,7 @@ const ownsKey = (dialog: HTMLElement, event: KeyboardEvent): boolean =>
 export const useDialog = (element: DialogRef, options: DialogOptions): DialogControl => {
   const returnValue = ref('');
   const pressedOutside = ref(false);
-  const dismissible = (): boolean => toValue(options.dismissible) !== false;
+  const closable = (): boolean => toValue(options.closable) !== false;
   const closeOnBackdrop = (): boolean => toValue(options.closeOnBackdrop) !== false;
 
   const sync = (next: boolean): void => {
@@ -158,14 +158,14 @@ export const useDialog = (element: DialogRef, options: DialogOptions): DialogCon
 
   const attrs: DialogAttrs = {
     onCancel: (event) => {
-      if (!dismissible()) {
+      if (!closable()) {
         event.preventDefault();
       }
     },
     onKeydown: (event) => {
       const dialog = toValue(element);
 
-      if (event.key === Key.Escape && !dismissible() && dialog && ownsKey(dialog, event)) {
+      if (event.key === Key.Escape && !closable() && dialog && ownsKey(dialog, event)) {
         event.preventDefault();
       }
     },
@@ -188,7 +188,7 @@ export const useDialog = (element: DialogRef, options: DialogOptions): DialogCon
         return;
       }
       pressedOutside.value = false;
-      if (dismissible() && closeOnBackdrop()) {
+      if (closable() && closeOnBackdrop()) {
         close();
       }
     },

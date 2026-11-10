@@ -30,7 +30,7 @@ const control = useDialog(dialog, { open, closeOnBackdrop: true, onClose: (value
 </script>
 ```
 
-`dismissible: false` запрещает закрывать окно по Escape и клику по подложке.
+`closable: false` запрещает закрывать окно по Escape и клику по подложке.
 `closeOnBackdrop: false` отключает только закрытие по клику.
 
 Пока окно открыто, страница под ним не прокручивается. После закрытия фокус возвращается на

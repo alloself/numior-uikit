@@ -35,7 +35,7 @@ The `show` method takes all options at once:
 - `duration` — how long the toast stays, in milliseconds, 5000 by default; `0` keeps it until it
   is closed;
 - `action` — an action button with `label` and `onClick`;
-- `dismissible` — the close button, shown by default; `false` removes it;
+- `closable` — the close button, shown by default; `false` removes it;
 - `id` — the key used to replace the toast.
 
 Toasts appear in the corner of the screen set by `placement`, `top-end` by default. A new toast

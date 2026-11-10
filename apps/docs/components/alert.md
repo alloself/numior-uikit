@@ -23,10 +23,10 @@ import '@numior/vue/styles/alert.css';
 
 ### Закрываемый алерт с действием
 
-Передайте `dismissible`, чтобы в углу появилась кнопка закрытия. Нажатие на неё скрывает алерт,
-ставит `v-model:open` в `false` и вызывает событие `dismiss`.
+Передайте `closable`, чтобы в углу появилась кнопка закрытия. Нажатие на неё скрывает алерт,
+ставит `v-model:open` в `false` и вызывает событие `close`.
 
-<Example name="alert/Dismissible" />
+<Example name="alert/Closable" />
 
 Кнопки действий кладутся в слот `actions`. Внутри алерта `soft` берите кнопки `outline` или
 `solid`: кнопка `soft` того же тона сливается с фоном.

@@ -4,8 +4,8 @@
     v-model:open="open"
     :tone="report.readOnly ? 'warning' : 'info'"
     :title="title"
-    dismissible
-    :dismiss-label="messages.reportDismiss"
+    closable
+    :close-label="messages.reportDismiss"
   >
     <p v-if="staleShown && title !== staleText" class="nui-spreadsheet__report-stale">
       {{ staleText }}

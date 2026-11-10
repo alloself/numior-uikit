@@ -468,7 +468,7 @@ const scenarios: Scenario[] = [
   {
     name: 'NuiAlert',
     render: () =>
-      renderToString(NuiAlert, { props: { tone: 'error', title: 'Failed', dismissible: true } }),
+      renderToString(NuiAlert, { props: { tone: 'error', title: 'Failed', closable: true } }),
   },
   {
     name: 'NuiProgress determinate',
@@ -491,7 +491,7 @@ const scenarios: Scenario[] = [
             tone: 'error',
             duration: 0,
             action: undefined,
-            dismissible: true,
+            closable: true,
             leaving: false,
           },
         },

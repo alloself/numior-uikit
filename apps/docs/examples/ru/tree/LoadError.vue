@@ -14,8 +14,8 @@
       variant="soft"
       title="Не удалось загрузить папку"
       :description="error"
-      dismissible
-      @dismiss="error = undefined"
+      closable
+      @close="error = undefined"
     />
   </div>
 </template>

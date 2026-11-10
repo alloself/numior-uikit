@@ -22,7 +22,7 @@
       {{ toast.action.label }}
     </NuiButton>
     <NuiButton
-      v-if="toast.dismissible"
+      v-if="toast.closable"
       variant="ghost"
       tone="neutral"
       size="sm"
@@ -62,7 +62,7 @@ const runAction = (): void => {
 };
 
 const onEscape = (): void => {
-  if (toast.dismissible) {
+  if (toast.closable) {
     dismiss();
   }
 };

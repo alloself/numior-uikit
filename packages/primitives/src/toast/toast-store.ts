@@ -16,7 +16,7 @@ export interface ToastOptions {
   readonly tone?: ToastTone | undefined;
   readonly duration?: number | undefined;
   readonly action?: ToastAction | undefined;
-  readonly dismissible?: boolean | undefined;
+  readonly closable?: boolean | undefined;
 }
 
 export interface Toast {
@@ -26,7 +26,7 @@ export interface Toast {
   readonly tone: ToastTone;
   readonly duration: number;
   readonly action: ToastAction | undefined;
-  readonly dismissible: boolean;
+  readonly closable: boolean;
   readonly leaving: boolean;
 }
 
@@ -59,7 +59,7 @@ const normalizeToast = (options: ToastOptions, id: string, fallbackDuration: num
   tone: options.tone ?? 'neutral',
   duration: options.duration ?? fallbackDuration,
   action: options.action,
-  dismissible: options.dismissible ?? true,
+  closable: options.closable ?? true,
   leaving: false,
 });
 

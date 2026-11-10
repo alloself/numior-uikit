@@ -40,7 +40,7 @@ status: accepted
   приходит пропом `icon`, и `NuiButton` без текста становится квадратным сам; глиф
   выравнивается по первой строке текста и по краю отступа.
 - `NuiAlert`: `variant` (soft/outline/solid) × `tone`, иконка тона из реестра,
-  `dismissible` с `v-model:open`, `role="alert"` только для `error`.
+  `closable` с `v-model:open`, `role="alert"` только для `error`.
 - `NuiProgress` — нативный `<progress>` с вендорными псевдоэлементами по одному правилу на
   движок; indeterminate — сплошной сегмент 40 % поверх трека, который полностью выходит за
   оба края (`background-position` −67 % → 167 %), поэтому цикл без шва; под reduced motion

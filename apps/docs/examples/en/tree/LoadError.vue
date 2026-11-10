@@ -14,8 +14,8 @@
       variant="soft"
       title="The folder failed to load"
       :description="error"
-      dismissible
-      @dismiss="error = undefined"
+      closable
+      @close="error = undefined"
     />
   </div>
 </template>

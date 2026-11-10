@@ -15,7 +15,7 @@ describe('toast store', () => {
     expect(toasts.record(id)).toMatchObject({
       tone: 'neutral',
       duration: 5000,
-      dismissible: true,
+      closable: true,
       leaving: false,
     });
 

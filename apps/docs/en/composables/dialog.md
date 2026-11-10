@@ -30,7 +30,7 @@ const control = useDialog(dialog, { open, closeOnBackdrop: true, onClose: (value
 </script>
 ```
 
-`dismissible: false` stops the window from closing on Escape and on a backdrop click.
+`closable: false` stops the window from closing on Escape and on a backdrop click.
 `closeOnBackdrop: false` turns off only the click.
 
 While the window is open, the page under it does not scroll. After closing, focus returns to the

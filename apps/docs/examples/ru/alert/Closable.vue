@@ -1,9 +1,11 @@
 <template>
   <div class="flex w-full flex-col gap-3">
-    <NuiAlert v-model:open="open" tone="warning" title="Draft not saved" dismissible>
-      Your changes are lost when you leave the page.
+    <NuiAlert v-model:open="open" tone="warning" title="Черновик не сохранён" closable>
+      Изменения пропадут при выходе со страницы.
       <template #actions>
-        <NuiButton size="sm" variant="outline" tone="warning" @click="open = false">Save</NuiButton>
+        <NuiButton size="sm" variant="outline" tone="warning" @click="open = false"
+          >Сохранить</NuiButton
+        >
       </template>
     </NuiAlert>
     <NuiButton
@@ -14,7 +16,7 @@
       tone="neutral"
       @click="open = true"
     >
-      Show again
+      Показать снова
     </NuiButton>
   </div>
 </template>

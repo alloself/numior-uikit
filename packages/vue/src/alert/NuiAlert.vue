@@ -21,14 +21,14 @@
       </div>
     </div>
     <NuiButton
-      v-if="dismissible"
+      v-if="closable"
       variant="ghost"
       tone="neutral"
       size="sm"
       class="nui-alert__close"
-      :aria-label="dismissText"
+      :aria-label="closeText"
       icon="x"
-      @click="dismiss"
+      @click="close"
     />
   </div>
 </template>
@@ -50,23 +50,23 @@ const {
   description,
   icon,
   hideIcon = false,
-  dismissible = false,
-  dismissLabel,
+  closable = false,
+  closeLabel,
 } = defineProps<NuiAlertProps>();
 
 const open = defineModel<boolean>('open', { default: true });
-const emit = defineEmits<{ dismiss: [] }>();
+const emit = defineEmits<{ close: [] }>();
 
 const slots = useSlots();
 const messages = useMessages(alertMessages);
 
-const dismissText = computed(() => dismissLabel ?? messages.value.dismiss);
+const closeText = computed(() => closeLabel ?? messages.value.close);
 const iconAlias = computed(() => (hideIcon ? undefined : (icon ?? toneIcon(tone))));
 const hasTitle = (): boolean => Boolean(title || slots.title);
 const hasBody = (): boolean => Boolean(description || slots.default);
 
-const dismiss = (): void => {
+const close = (): void => {
   open.value = false;
-  emit('dismiss');
+  emit('close');
 };
 </script>

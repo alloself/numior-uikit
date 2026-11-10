@@ -39,7 +39,7 @@
         tone="warning"
         title="Черновик не сохранён"
         description="Изменения пропадут при выходе со страницы."
-        dismissible
+        closable
         data-testid="alert"
       >
         <template #actions>

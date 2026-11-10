@@ -41,8 +41,8 @@
     v-if="file.failure.value !== undefined"
     tone="error"
     :title="file.failure.value"
-    dismissible
-    :dismiss-label="messages.reportDismiss"
+    closable
+    :close-label="messages.reportDismiss"
     @update:open="file.clearFailure"
   />
   <NuiDialog
