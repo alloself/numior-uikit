@@ -11,6 +11,7 @@ import {
   type CellValue,
 } from '../src/core';
 import { createCellFormats } from '../src/core/cell-formats';
+import { filledSlots } from '../src/core/chunks';
 import { shiftIndex, type LineMove } from '../src/core/lines';
 
 interface Placed<T> {
@@ -26,6 +27,10 @@ const FILLED_COLS = 50;
 const ROW_BUDGET_MS = 40;
 
 const BUDGET_MS = 100;
+
+const BYTES = [0, 1, 0x7f, 0x80, 0xff, 0, 0, 4, 0x80, 0, 0xff, 0];
+
+const FILLED_BYTES = 7;
 
 const WHOLE = { top: 0, left: 0, bottom: MAX_ROWS - 1, right: MAX_COLS - 1 };
 
@@ -132,6 +137,20 @@ describe('line shift of chunked stores', () => {
 
     expect(sorted(seen)).toEqual(sorted(expected));
     expect(formats.size).toBe(expected.length);
+  });
+
+  it('counts the filled slots of a plane of any item width, aligned to words or not', () => {
+    const bytes = Uint8Array.from(BYTES);
+    const offset = new Uint8Array(Uint8Array.from([1, ...BYTES, 0, 0, 0]).buffer, 1, BYTES.length);
+    const ragged = Uint8Array.from([...BYTES, 9]);
+    const wide = Uint16Array.from(BYTES, (byte) => byte * 0x100);
+
+    expect([bytes, offset, ragged, wide].map(filledSlots)).toEqual([
+      FILLED_BYTES,
+      FILLED_BYTES,
+      FILLED_BYTES + 1,
+      FILLED_BYTES,
+    ]);
   });
 
   it('inserts a row and a column above a million values within the budget', () => {

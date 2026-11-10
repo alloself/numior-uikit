@@ -36,6 +36,18 @@ export const CHUNKS_PER_ROW = MAX_COLS / CHUNK_COLS;
 
 const SHORT_RUN = 8;
 
+const WORD_BYTES = 4;
+
+const LOW_BITS = 0x7f7f7f7f;
+
+const HIGH_BITS = 0x80808080;
+
+const HIGH_BIT = 7;
+
+const BYTE_ONES = 0x01010101;
+
+const TOP_BYTE = 24;
+
 export const chunkKey = (row: number, col: number): number =>
   Math.floor(row / CHUNK_ROWS) * CHUNKS_PER_ROW + Math.floor(col / CHUNK_COLS);
 
@@ -129,7 +141,23 @@ const runsOf = <C>(
   return runs;
 };
 
-export const filledSlots = (plane: ChunkPlane): number => {
+const filledBytes = (plane: Uint8Array): number => {
+  const words = new Uint32Array(plane.buffer, plane.byteOffset, plane.length / WORD_BYTES);
+  let count = 0;
+
+  for (let index = 0; index < words.length; index += 1) {
+    const word = words[index] ?? 0;
+
+    if (word !== 0) {
+      const marks = (((word & LOW_BITS) + LOW_BITS) | word) & HIGH_BITS;
+
+      count += Math.imul(marks >>> HIGH_BIT, BYTE_ONES) >>> TOP_BYTE;
+    }
+  }
+  return count;
+};
+
+const filledItems = (plane: ChunkPlane): number => {
   let count = 0;
 
   for (let slot = 0; slot < plane.length; slot += 1) {
@@ -137,6 +165,14 @@ export const filledSlots = (plane: ChunkPlane): number => {
   }
   return count;
 };
+
+const wordAligned = (plane: ChunkPlane): plane is Uint8Array =>
+  plane instanceof Uint8Array &&
+  plane.byteOffset % WORD_BYTES === 0 &&
+  plane.length % WORD_BYTES === 0;
+
+export const filledSlots = (plane: ChunkPlane): number =>
+  wordAligned(plane) ? filledBytes(plane) : filledItems(plane);
 
 const applyRun = <C>(
   ops: ChunkShift<C>,
