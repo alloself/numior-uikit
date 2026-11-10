@@ -136,6 +136,25 @@ describe('NuiPopover', () => {
       popover.unmount();
     });
 
+    it('listens for page keys only while it is open', async () => {
+      vi.useFakeTimers();
+
+      const popover = PopoverDriver.mount({ props: { trigger: 'hover', openDelay: 0 } });
+      expect(popover.pageKeyListeners).toBe(0);
+
+      await popover.hover();
+      await popover.advance(0);
+      expect(popover.modelOpen).toBe(true);
+      expect(popover.pageKeyListeners).toBe(1);
+
+      await popover.leave();
+      await popover.advance(1000);
+      expect(popover.modelOpen).toBe(false);
+      expect(popover.pageKeyListeners).toBe(0);
+
+      popover.unmount();
+    });
+
     it('opens on keyboard focus, keeps focus inside the content and closes on Escape back to the trigger', async () => {
       const popover = PopoverDriver.mount({ props: { trigger: 'hover' } });
 

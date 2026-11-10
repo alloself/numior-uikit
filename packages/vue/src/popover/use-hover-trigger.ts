@@ -85,11 +85,11 @@ export const useHoverTrigger = (options: HoverTriggerOptions): HoverTrigger => {
     }
   };
 
-  useEventListener(pageDocument, 'keydown', (event: KeyboardEvent) => {
-    if (options.enabled()) {
-      onDocumentKeydown(event);
-    }
-  });
+  useEventListener(
+    () => (options.enabled() && options.open.value ? pageDocument() : undefined),
+    'keydown',
+    onDocumentKeydown,
+  );
 
   const triggerAttrs = computed<NuiPopoverHoverAttrs>(() =>
     options.enabled() ? { onPointerenter, onPointerleave, onPointerdown, onFocus, onFocusout } : {},
