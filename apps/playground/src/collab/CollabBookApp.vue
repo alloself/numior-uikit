@@ -42,11 +42,12 @@ import {
 } from '@numior/spreadsheet/core';
 import { NuiBadge, NuiSwitch } from '@numior/vue';
 import { onBeforeUnmount, ref, shallowRef } from 'vue';
+import { collabServerOf } from './collab-server';
 import { useDemoLink } from './use-demo-link';
 
 const params = new URLSearchParams(location.search);
 const clientId = params.get('user') ?? 'Гость';
-const server = params.get('server') ?? `ws://${location.hostname}:4175`;
+const server = collabServerOf(params);
 
 const user = { id: clientId, name: clientId };
 

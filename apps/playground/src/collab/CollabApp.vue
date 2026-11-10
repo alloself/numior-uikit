@@ -59,11 +59,12 @@ import { NuiBadge, NuiButton, NuiPopover, NuiSwitch } from '@numior/vue';
 import { computed, useTemplateRef } from 'vue';
 import { fakeComments } from './fake-comments';
 import { fakeHistory } from './fake-history';
+import { collabServerOf } from './collab-server';
 import { useDemoLink } from './use-demo-link';
 
 const params = new URLSearchParams(location.search);
 const name = params.get('user') ?? 'Гость';
-const server = params.get('server') ?? `ws://${location.hostname}:4175`;
+const server = collabServerOf(params);
 
 const doc = params.get('doc') ?? 'demo';
 const user = { id: name, name };

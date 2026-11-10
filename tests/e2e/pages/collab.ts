@@ -13,9 +13,11 @@ export interface TextEdges {
   readonly right: number;
 }
 
-const COLLAB_SERVER = /:4175/;
+const COLLAB_PORT = process.env.COLLAB_PORT ?? '4175';
 
 const RECONNECT_TIMEOUT = 20_000;
+
+const isCollabServer = (url: URL): boolean => url.port === COLLAB_PORT;
 
 export const unsentStepsOf = (name: string): Promise<number> =>
   new Promise<number>((resolve) => {
@@ -209,7 +211,7 @@ export class CollabClient {
   }
 
   async routeServer(): Promise<void> {
-    await this.page.routeWebSocket(COLLAB_SERVER, (socket) => {
+    await this.page.routeWebSocket(isCollabServer, (socket) => {
       if (this.reachable) {
         this.sockets.add(socket);
         socket.connectToServer();
