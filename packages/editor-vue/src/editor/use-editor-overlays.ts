@@ -1,4 +1,5 @@
 import {
+  canMark,
   insertMarked,
   markAttrs,
   markExtent,
@@ -122,6 +123,10 @@ export const useEditorOverlays = (options: EditorOverlayOptions): EditorOverlays
   const openLink = (): void => {
     const state = options.state();
     const href = hrefOf(state);
+
+    if (!canMark(state, 'link')) {
+      return;
+    }
 
     linkHref.value = href ?? '';
     linkRemovable.value = href !== undefined;

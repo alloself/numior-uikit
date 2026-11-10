@@ -221,8 +221,11 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
     insert: (pos, content) => transform.replace(pos, pos, { content, openStart: 0, openEnd: 0 }),
     delete: (from, to) => transform.replace(from, to),
     insertText: (text, from, to = from, marks) => {
-      const before = doc.resolve(from).nodeBefore;
-      const kept = marks ?? (before?.kind === ContentNodeKind.Text ? before.marks : []);
+      const { nodeBefore: before, parent } = doc.resolve(from);
+
+      const kept = (marks ?? (before?.kind === ContentNodeKind.Text ? before.marks : [])).filter(
+        (mark) => allows(doc, parent, mark.type),
+      );
 
       return text === ''
         ? transform.delete(from, to)

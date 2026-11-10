@@ -33,6 +33,19 @@ const page = (text: string) =>
     ),
   );
 
+const codePage = (text: string) =>
+  toJSON(
+    createDoc(
+      contentSchema,
+      contentSchema.element('doc', {
+        id: 'root',
+        content: [
+          contentSchema.element('code_block', { id: 'c', content: [contentSchema.text(text)] }),
+        ],
+      }),
+    ),
+  );
+
 describe('NuiEditor links, colours and bubble', () => {
   it('links the selection from Ctrl+K, edits the link under the cursor and removes it', async () => {
     const editor = mounted({ document: page('Hello world') });
@@ -81,6 +94,33 @@ describe('NuiEditor links, colours and bubble', () => {
     await editor.submitLink('/docs');
 
     expect(editor.markup).toContain('See <a class="nui-content__link" href="/docs">/docs</a>');
+  });
+
+  it('pastes an address into code as text and keeps the link panel out of code', async () => {
+    const editor = mounted({ document: codePage('let x') });
+
+    editor.focus();
+    await editor.select(3);
+    await editor.pasteHTML('', 'https://numior.test');
+
+    expect(editor.blockTexts).toEqual(['pre:lehttps://numior.testt x']);
+    expect(editor.markup).not.toContain('<a ');
+
+    await editor.select(1, 3);
+    await editor.pasteHTML('', 'https://numior.test');
+
+    expect(editor.blockTexts).toEqual(['pre:https://numior.testhttps://numior.testt x']);
+    expect(editor.available('Link')).toBe(false);
+    expect(editor.available('Bold')).toBe(false);
+
+    await editor.press('k', { ctrl: true });
+
+    expect(editor.linkShown).toBe(false);
+
+    await editor.press('b', { ctrl: true });
+    await editor.type('!');
+
+    expect(editor.blockTexts).toEqual(['pre:https://numior.test!https://numior.testt x']);
   });
 
   it('colours the selection from the author palette and drops other colours on paste', async () => {

@@ -20,6 +20,7 @@ import {
 } from '@lucide/vue';
 import {
   activeBlock,
+  canMark,
   activeMarks,
   ancestorTypes,
   insertDivider,
@@ -392,21 +393,21 @@ const selectionItems = ({ state, options }: Facts): ToolbarItem[] =>
     disabled: !action.command(state),
   }));
 
+const markable = (state: EditorState): ReadonlySet<string> =>
+  new Set([...state.doc.schema.marks.keys()].filter((mark) => canMark(state, mark)));
+
 export const toolbarGroups = (
   state: EditorState,
   texts: NuiEditorMessages,
   options: ToolbarOptions,
   inserts: readonly SlashItem[] = [],
 ): ToolbarGroup[] => {
-  const block = activeBlock(state);
-  const blockType = block === undefined ? undefined : state.doc.schema.nodes.get(block.type);
-
   const facts: Facts = {
     state,
     texts,
     options,
     marks: activeMarks(state),
-    allowed: blockType?.marks ?? new Set(state.doc.schema.marks.keys()),
+    allowed: markable(state),
     ancestors: ancestorTypes(state),
   };
 

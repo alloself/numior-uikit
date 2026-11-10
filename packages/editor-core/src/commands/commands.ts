@@ -8,6 +8,7 @@ import {
 } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
 import { isAtom } from './atoms';
+import { canMark } from './format';
 import { isCursor, selectionRange, textSelection } from '../state/selection';
 import {
   SelectionKind,
@@ -192,8 +193,10 @@ const everyHas = (state: EditorState, from: number, to: number, type: string): b
 export const toggleMark =
   (type: string, attrs: Readonly<Record<string, AttrValue>> = {}): Command =>
   (state, dispatch) => {
-    if (dispatch === undefined) {
-      return state.doc.schema.marks.has(type);
+    const able = canMark(state, type);
+
+    if (dispatch === undefined || !able) {
+      return able;
     }
 
     const mark = state.doc.schema.mark(type, attrs);

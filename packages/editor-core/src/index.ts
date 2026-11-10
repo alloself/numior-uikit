@@ -164,6 +164,7 @@ export {
   activeBlock,
   activeMarks,
   ancestorTypes,
+  canMark,
   insertMarked,
   markAttrs,
   markExtent,
