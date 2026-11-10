@@ -1,11 +1,11 @@
+import { isOwnClipboard } from './clipboard';
 import { PasteSource, type HtmlElement } from './html.types';
 import { normalizeGoogleDocs } from './normalize-google';
 import { normalizeSheet } from './normalize-sheet';
 import { normalizeWord } from './normalize-word';
 import { nestLists, rewriteTree } from './rewrite';
 
-const SIGNS: readonly (readonly [Exclude<PasteSource, 'html' | 'text'>, RegExp])[] = [
-  ['own', /data-numior-editor/u],
+const SIGNS: readonly (readonly [Exclude<PasteSource, 'html' | 'text' | 'own'>, RegExp])[] = [
   ['google-docs', /id="docs-internal-guid-/u],
   ['sheets', /<google-sheets-html-origin|data-sheets-root/u],
   ['excel', /ProgId content="?Excel\.Sheet|urn:schemas-microsoft-com:office:excel/iu],
@@ -15,8 +15,12 @@ const SIGNS: readonly (readonly [Exclude<PasteSource, 'html' | 'text'>, RegExp])
   ],
 ];
 
-export const detectPasteSource = (html: string): PasteSource =>
-  html.trim() === '' ? 'text' : (SIGNS.find(([, sign]) => sign.test(html))?.[0] ?? 'html');
+export const detectPasteSource = (html: string): PasteSource => {
+  if (html.trim() === '') {
+    return 'text';
+  }
+  return isOwnClipboard(html) ? 'own' : (SIGNS.find(([, sign]) => sign.test(html))?.[0] ?? 'html');
+};
 
 const bySource = (root: HtmlElement, source: PasteSource): HtmlElement => {
   switch (source) {

@@ -74,7 +74,7 @@ describe('editor view', () => {
         '<pre><code>let x</code></pre>',
         '<hr contenteditable="false">',
         '<img src="a.png" alt="A" contenteditable="false">',
-        '<p><span contenteditable="false">@Ann</span>end<br><br></p>',
+        '<p><span data-user="u1" contenteditable="false">@Ann</span>end<br><br></p>',
         '<table contenteditable="false"><thead><tr><th><span contenteditable="false">H</span><datalist></datalist></th></tr></thead><tbody><tr><td contenteditable="false">1</td></tr></tbody></table>',
       ].join(''),
     );

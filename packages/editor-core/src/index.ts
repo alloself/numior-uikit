@@ -69,6 +69,7 @@ export { moveBlock, placeBeside } from './commands/move-across';
 export type { BlockTarget, ColumnTypes } from './commands/move-across';
 export { BesideSide, type BlockMaker } from './commands/commands.types';
 export { insertHTML, insertPlainText, pasteSchema } from './commands/paste';
+export { clipboardHTML } from './html/clipboard';
 export { fromHTML } from './html/parse';
 export { detectPasteSource } from './html/sources';
 export { contentToHTML, createHTMLWriter, toHTML } from './html/serialize';

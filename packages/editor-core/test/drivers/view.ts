@@ -435,6 +435,20 @@ export class EditorViewDriver {
     );
   }
 
+  get mentions(): readonly string[] {
+    return this.state.doc.root.content.flatMap((block) =>
+      block.kind === 'element'
+        ? block.content.flatMap((node) =>
+            node.kind === 'element' &&
+            node.type === 'mention' &&
+            typeof node.attrs.user === 'string'
+              ? [node.attrs.user]
+              : [],
+          )
+        : [],
+    );
+  }
+
   get markup(): string {
     return withoutStyles(this.host);
   }

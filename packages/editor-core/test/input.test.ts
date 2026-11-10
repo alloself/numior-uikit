@@ -307,8 +307,8 @@ describe('editor view input', () => {
 
     expect(view.copy('copy')).toBe('yb\nc');
 
-    expect(view.copy('copy', 'text/html')).toBe(
-      '<div data-numior-editor="1"><p><strong>y</strong>b</p><p>c</p></div>',
+    expect(view.copy('copy', 'text/html')).toMatch(
+      /^<div data-numior-editor="[\da-f]{32}"><p><strong>y<\/strong>b<\/p><p>c<\/p><\/div>$/u,
     );
 
     expect(view.copy('cut')).toBe('yb\nc');
@@ -333,6 +333,28 @@ describe('editor view input', () => {
     view.selectAll();
 
     expect(view.copy('copy')).toBe('one\ntwo @Ann\nthree');
+  });
+
+  it('pastes a mention copied here as a mention and a mention from other markup as its text', () => {
+    const view = mounted(
+      doc(node('paragraph', ['hi ', node('mention', [], { user: 'u1', label: 'Ann' })])),
+    );
+
+    view.focus();
+    view.selectAll();
+
+    const copied = view.copy('copy', 'text/html') ?? '';
+
+    view.place(1);
+    view.paste('', copied);
+    expect(view.mentions).toEqual(['u1', 'u1']);
+
+    view.place(1);
+    view.paste('', '<p><span data-user="boss">@Boss</span></p>');
+    view.paste('', '<div data-numior-editor="1"><p><span data-user="boss">@Chief</span></p></div>');
+
+    expect(view.mentions).toEqual(['u1', 'u1']);
+    expect(view.modelTexts).toEqual(['@Boss@Chiefhi \ufffchi \ufffc']);
   });
 
   it('keeps a whole-document selection in the model and copies, cuts and leaves it by itself', () => {

@@ -3,7 +3,7 @@ import { tableGrid, type HtmlTableCell } from '../html/table-grid';
 import type { AttrValue, ElementNode } from '../model/node.types';
 import { contentHole, renderTag } from '../render/render';
 import { createSchema } from '../schema/schema';
-import type { NodeMaker, ParsedContent } from '../schema/schema.types';
+import type { NodeMaker, ParsedAttrs, ParsedContent } from '../schema/schema.types';
 
 const LEVELS: ReadonlySet<AttrValue> = new Set([1, 2, 3]);
 
@@ -12,6 +12,12 @@ const isLevel = (value: AttrValue): boolean => LEVELS.has(value);
 const isText = (value: AttrValue): boolean => typeof value === 'string';
 
 const textOf = (value: AttrValue | undefined): string => (typeof value === 'string' ? value : '');
+
+const mentionOf = (span: HtmlElement): ParsedAttrs => {
+  const user = span.attr('data-user');
+
+  return user === undefined ? false : { user, label: span.text().replace(/^@/u, '') };
+};
 
 const cellText = (value: AttrValue | undefined): string =>
   value === null || value === undefined ? '' : String(value);
@@ -183,7 +189,11 @@ export const fixtureSchema = createSchema({
       inline: true,
       attrs: { user: { verify: isText }, label: {} },
       plainText: (node) => `@${textOf(node.attrs.label)}`,
-      render: (node) => renderTag('span', {}, [`@${textOf(node.attrs.label)}`]),
+      render: (node) =>
+        renderTag('span', { 'data-user': textOf(node.attrs.user) }, [
+          `@${textOf(node.attrs.label)}`,
+        ]),
+      parse: [{ tag: 'span', own: true, attrs: mentionOf }],
     },
   },
   marks: {

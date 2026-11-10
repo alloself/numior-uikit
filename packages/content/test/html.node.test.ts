@@ -26,7 +26,19 @@ const stripIds = (value: unknown): unknown => {
 
 const paragraph = (...content: readonly unknown[]) => ({ type: 'paragraph', content });
 
+const MENTION = '<p><span class="nui-content__mention" data-user="u1">@Ann</span></p>';
+
 describe('content HTML', () => {
+  it('reads a mention from a stored page and only its text from markup of another page', () => {
+    const pasted = toJSON(fromHTML(contentSchema, MENTION, { foreign: true })).root.content;
+
+    expect(blocksOf(MENTION)).toEqual([
+      paragraph({ type: 'mention', attrs: { user: 'u1', label: 'Ann' } }),
+    ]);
+
+    expect(stripIds(pasted)).toEqual([paragraph({ text: '@Ann' })]);
+  });
+
   it('reads its own markup of every block and mark back into the same document', () => {
     const page = everyBlock();
 

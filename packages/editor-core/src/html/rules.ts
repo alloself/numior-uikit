@@ -105,9 +105,13 @@ const attrsBy = (
   return given === false ? undefined : safeAttrs(specs, given);
 };
 
-export const nodeCandidates = (schema: Schema, element: HtmlElement): NodeCandidate[] =>
+export const nodeCandidates = (
+  schema: Schema,
+  element: HtmlElement,
+  own: boolean,
+): NodeCandidate[] =>
   (indexOf(schema).nodes.get(element.tag) ?? []).flatMap(({ type, rule }) => {
-    const attrs = attrsBy(rule, type.attrs, element);
+    const attrs = rule.own === true && !own ? undefined : attrsBy(rule, type.attrs, element);
 
     return attrs === undefined ? [] : [{ type, attrs, read: rule.read }];
   });

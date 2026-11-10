@@ -28,6 +28,7 @@ export interface FromHTMLOptions {
   readonly ids?: IdSource | undefined;
   readonly whitespace?: HtmlWhitespace | undefined;
   readonly source?: PasteSource | undefined;
+  readonly foreign?: boolean | undefined;
 }
 
 export const HtmlWhitespace = { Collapse: 'collapse', Preserve: 'preserve' } as const;

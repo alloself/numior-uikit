@@ -182,7 +182,7 @@ const flatten = (
 };
 
 const parsedBlocks = (tr: Transaction, html: string, schema: Schema): ElementNode[] => {
-  const doc = fromHTML(schema, html, { ids: { next: () => tr.newId() } });
+  const doc = fromHTML(schema, html, { ids: { next: () => tr.newId() }, foreign: true });
 
   return isEmptyDoc(doc)
     ? []

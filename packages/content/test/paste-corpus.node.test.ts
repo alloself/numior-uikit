@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync } from 'node:fs';
-import { detectPasteSource, fromHTML, toJSON } from '@numior/editor-core';
+import { clipboardHTML, detectPasteSource, fromHTML, toJSON } from '@numior/editor-core';
 import { describe, expect, it } from 'vite-plus/test';
 import { contentSchema } from '../src';
 
@@ -54,7 +54,8 @@ describe('paste corpus', () => {
 
   it('tells plain text, own markup and other pages apart', () => {
     expect(detectPasteSource('  ')).toBe('text');
-    expect(detectPasteSource('<div data-numior-editor="1"><p>a</p></div>')).toBe('own');
+    expect(detectPasteSource(clipboardHTML(contentSchema, []))).toBe('own');
+    expect(detectPasteSource('<div data-numior-editor="1"><p>a</p></div>')).toBe('html');
     expect(detectPasteSource('<p>a</p>')).toBe('html');
   });
 });

@@ -31,6 +31,7 @@ export type ParsedContent = readonly ContentNode[] | false;
 export interface NodeParseRule {
   readonly tag: string;
   readonly priority?: number | undefined;
+  readonly own?: boolean | undefined;
   readonly attrs?: ((element: HtmlElement) => ParsedAttrs) | undefined;
   readonly read?: ((element: HtmlElement, make: NodeMaker) => ParsedContent) | undefined;
 }

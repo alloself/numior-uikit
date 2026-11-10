@@ -618,7 +618,7 @@ const CONTENT_SPEC: SchemaSpec = {
         renderTag('span', { class: part('mention'), 'data-user': textOf(node.attrs.user) }, [
           `@${textOf(node.attrs.label)}`,
         ]),
-      parse: [{ tag: 'span', attrs: mentionAttrs }],
+      parse: [{ tag: 'span', attrs: mentionAttrs, own: true }],
     },
   },
   marks: {
