@@ -11,7 +11,12 @@ import {
   type TextDirection,
   type TextUnit,
 } from '../state/input.types';
-import { InputIntentKind, SelectionKind, type Transaction } from '../state/state.types';
+import {
+  InputIntentKind,
+  SelectionKind,
+  type EditorState,
+  type Transaction,
+} from '../state/state.types';
 import { posAtCoords } from './coords';
 import { descAround, widgetAround, widgetOwner } from './desc';
 import type { DomWatch } from './dom-change';
@@ -43,6 +48,13 @@ interface Arrow {
   readonly forward: boolean;
   readonly vertical: boolean;
 }
+
+interface Carried {
+  readonly text: string;
+  readonly html: string;
+}
+
+type Extend = (tr: Transaction) => Transaction;
 
 const DELETES: Readonly<Record<string, readonly [TextDirection, TextUnit]>> = {
   deleteContentBackward: ['backward', 'character'],
@@ -184,12 +196,12 @@ const sourceOf = (intent: InputIntent): InputSource => {
   }
 };
 
-export const runIntent = (host: ViewHost, intent: InputIntent): boolean => {
+export const runIntent = (host: ViewHost, intent: InputIntent, extend?: Extend): boolean => {
   const state = host.state();
   const source = sourceOf(intent);
 
   const dispatch = (tr: Transaction): void => {
-    host.dispatch(tr, source);
+    host.dispatch(extend?.(tr) ?? tr, source);
   };
 
   return (
@@ -390,13 +402,37 @@ const interactive = (target: EventTarget | null, owner: Element): boolean => {
 const carriesFiles = (event: DragEvent): boolean =>
   [...(event.dataTransfer?.types ?? [])].includes('Files');
 
-const onDrag = (event: DragEvent): void => {
-  event.preventDefault();
+const onDragover = (event: DragEvent): void => {
+  if (carriesFiles(event)) {
+    event.preventDefault();
+  }
 };
+
+const carried = (state: EditorState, range: SelectionRange): Carried => ({
+  text: state.doc.textBetween(range.from, range.to, '\n'),
+  html: clipboardHTML(state.doc.schema, state.doc.slice(range.from, range.to).content),
+});
+
+const withinSelection = (doc: Document, target: EventTarget | null): boolean => {
+  const selection = doc.getSelection();
+
+  return (
+    target instanceof Node &&
+    selection !== null &&
+    selection.rangeCount > 0 &&
+    selection.getRangeAt(0).intersectsNode(target)
+  );
+};
+
+const without =
+  (moved: SelectionRange): Extend =>
+  (tr) =>
+    tr.delete(tr.mapping.map(moved.from, 1), tr.mapping.map(moved.to, -1));
 
 export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => {
   const { root } = host;
   const doc = root.ownerDocument;
+  let dragging = false;
 
   const openGap = (): void => {
     if (host.state().selection.kind !== SelectionKind.Gap) {
@@ -451,11 +487,11 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     if (range.from === range.to || event.clipboardData === null) {
       return;
     }
-    const slice = state.doc.slice(range.from, range.to);
+    const { text, html } = carried(state, range);
 
     event.preventDefault();
-    event.clipboardData.setData('text/plain', state.doc.textBetween(range.from, range.to, '\n'));
-    event.clipboardData.setData('text/html', clipboardHTML(state.doc.schema, slice.content));
+    event.clipboardData.setData('text/plain', text);
+    event.clipboardData.setData('text/html', html);
     if (
       event.type === DomEventType.Cut &&
       root.getAttribute('contenteditable') === AttrToken.True
@@ -464,18 +500,51 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     }
   };
 
+  const onDragstart = (event: DragEvent): void => {
+    const transfer = event.dataTransfer;
+
+    parts.sync.read();
+    const state = host.state();
+    const range = selectionRange(state.doc, state.selection);
+
+    if (transfer === null || range.from === range.to || !withinSelection(doc, event.target)) {
+      event.preventDefault();
+      return;
+    }
+
+    const { text, html } = carried(state, range);
+
+    transfer.setData('text/plain', text);
+    transfer.setData('text/html', html);
+
+    transfer.effectAllowed =
+      root.getAttribute('contenteditable') === AttrToken.True ? 'copyMove' : 'copy';
+
+    dragging = true;
+  };
+
+  const onDragend = (): void => {
+    dragging = false;
+  };
+
   const onDrop = (event: DragEvent): void => {
     const intent = transferred(event.dataTransfer);
 
     const pos = posAtCoords(host, event.clientX, event.clientY);
     const state = host.state();
+    const source = dragging ? selectionRange(state.doc, state.selection) : undefined;
+    const copies = event.ctrlKey || event.altKey;
+
+    const ontoItself =
+      source !== undefined && pos !== undefined && pos >= source.from && pos <= source.to;
 
     event.preventDefault();
-    if (intent === undefined || pos === undefined) {
+    dragging = false;
+    if (intent === undefined || pos === undefined || ontoItself) {
       return;
     }
     host.dispatch(state.tr.setSelection(nearestCursor(state.doc, pos)), 'pointer');
-    runIntent(host, intent);
+    runIntent(host, intent, source === undefined || copies ? undefined : without(source));
   };
 
   const onWidgetDrag = (event: DragEvent): void => {
@@ -635,7 +704,8 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   const paste = clipboard(onPaste);
   const copy = clipboard(onCopy);
   const drop = own(onDrop);
-  const drag = own(onDrag);
+  const dragover = own(onDragover);
+  const dragstart = own(onDragstart);
   const mousedown = own(onMousedown);
   const compositionstart = own(onCompositionstart);
   const compositionend = own(onCompositionend);
@@ -649,8 +719,9 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   root.addEventListener('drop', drop);
   root.addEventListener('drop', onWidgetDrop);
   root.addEventListener('dragover', onWidgetDrag);
-  root.addEventListener('dragover', drag);
-  root.addEventListener('dragstart', drag);
+  root.addEventListener('dragover', dragover);
+  root.addEventListener('dragstart', dragstart);
+  root.addEventListener('dragend', onDragend);
   root.addEventListener('mousedown', mousedown);
   root.addEventListener('mousedown', onWidgetMousedown);
   doc.addEventListener('mouseup', onMouseup);
@@ -668,8 +739,9 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     root.removeEventListener('drop', drop);
     root.removeEventListener('drop', onWidgetDrop);
     root.removeEventListener('dragover', onWidgetDrag);
-    root.removeEventListener('dragover', drag);
-    root.removeEventListener('dragstart', drag);
+    root.removeEventListener('dragover', dragover);
+    root.removeEventListener('dragstart', dragstart);
+    root.removeEventListener('dragend', onDragend);
     root.removeEventListener('mousedown', mousedown);
     root.removeEventListener('mousedown', onWidgetMousedown);
     doc.removeEventListener('mouseup', onMouseup);

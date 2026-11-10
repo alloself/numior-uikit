@@ -42,6 +42,34 @@ test.describe('editor', () => {
     expect((await editor.readOutput()).changes).toBeGreaterThan(3);
   });
 
+  test('drags selected text to another line, copies it with Ctrl and undoes each in one step', async ({
+    playground,
+    editor,
+    page,
+  }) => {
+    await openEditor(playground);
+
+    const fine = await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    test.skip(!fine, 'selected text is dragged with a mouse');
+
+    await editor.clear();
+    await page.keyboard.type('alpha beta');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('gamma');
+
+    await editor.dragText('beta', 'mma');
+    await expect.poll(() => editor.blockTexts()).toEqual(['alpha ', 'gabetamma']);
+
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect.poll(() => editor.blockTexts()).toEqual(['alpha beta', 'gamma']);
+
+    await editor.dragText('alpha', 'mma', 'Control');
+    await expect.poll(() => editor.blockTexts()).toEqual(['alpha beta', 'gaalphamma']);
+  });
+
   test('turns markdown shortcuts into blocks and nests list items with Tab', async ({
     playground,
     editor,

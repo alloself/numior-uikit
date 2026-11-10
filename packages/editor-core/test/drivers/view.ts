@@ -3,7 +3,9 @@ import {
   createDoc,
   createState,
   inlineText,
+  selectionRange,
   textSelection,
+  type Command,
   type EditorState,
   type ElementNode,
   type NodeId,
@@ -31,6 +33,17 @@ export interface KeyOptions {
 }
 
 export type CaretApi = 'position' | 'range' | 'none';
+
+export interface DragOptions {
+  readonly copy?: boolean;
+  readonly from?: Element | undefined;
+}
+
+export interface Dragged {
+  readonly started: boolean;
+  readonly offered: boolean;
+  readonly effect: string;
+}
 
 export interface LayoutOptions {
   readonly collapsedHeight: number;
@@ -337,6 +350,48 @@ export class EditorViewDriver {
     target?.dispatchEvent(over);
 
     return over.defaultPrevented && !(target?.dispatchEvent(drop) ?? true);
+  }
+
+  run(command: Command): boolean {
+    return command(this.state, (tr) => {
+      this.view.dispatch(tr);
+    });
+  }
+
+  dragSelectionTo(text: string, offset: number, options: DragOptions = {}): Dragged {
+    const carried = new Map<string, string>();
+
+    const transfer = {
+      effectAllowed: 'uninitialized',
+      files: [],
+      types: ['text/plain', 'text/html'],
+      setData: (format: string, value: string) => {
+        carried.set(format, value);
+      },
+      getData: (format: string) => carried.get(format) ?? '',
+    };
+
+    const eventOf = (type: string): Event => {
+      const event = new Event(type, { bubbles: true, cancelable: true });
+
+      Object.defineProperty(event, 'dataTransfer', { value: transfer });
+      Object.defineProperty(event, 'ctrlKey', { value: options.copy ?? false });
+      return event;
+    };
+
+    const start = this.view.domAtPos(selectionRange(this.state.doc, this.state.selection).from);
+    const source = options.from ?? start.node.parentElement ?? this.host;
+    const over = eventOf('dragover');
+    const started = source.dispatchEvent(eventOf('dragstart'));
+
+    if (started) {
+      this.caretFrom('range', text, offset);
+      this.host.dispatchEvent(over);
+      this.host.dispatchEvent(eventOf('drop'));
+    }
+
+    source.dispatchEvent(eventOf('dragend'));
+    return { started, offered: !over.defaultPrevented, effect: transfer.effectAllowed };
   }
 
   copy(type: 'copy' | 'cut', format = 'text/plain'): string | undefined {

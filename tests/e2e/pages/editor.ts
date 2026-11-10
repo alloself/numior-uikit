@@ -16,6 +16,11 @@ export interface Copied {
   readonly html: string;
 }
 
+interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+
 export interface PastedFile {
   readonly name: string;
   readonly type: string;
@@ -139,6 +144,66 @@ export class EditorSection {
       },
       { text, offset },
     );
+  }
+
+  private textPoints(text: string, before: string): Promise<{ from: Point; to: Point }> {
+    return this.content.evaluate(
+      (root, wanted) => {
+        const rangeOf = (part: string): Range => {
+          const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+
+          for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+            const at = node.textContent?.indexOf(part) ?? -1;
+
+            if (at !== -1) {
+              const range = document.createRange();
+
+              range.setStart(node, at);
+              range.setEnd(node, at + part.length);
+              return range;
+            }
+          }
+          throw new Error(`No text reads ${part}`);
+        };
+
+        const source = rangeOf(wanted.text);
+        const from = source.getBoundingClientRect();
+        const to = rangeOf(wanted.before).getBoundingClientRect();
+
+        root.focus();
+        document.getSelection()?.removeAllRanges();
+        document.getSelection()?.addRange(source);
+
+        return {
+          from: { x: from.left + from.width / 2, y: from.top + from.height / 2 },
+          to: { x: to.left + 1, y: to.top + to.height / 2 },
+        };
+      },
+      { text, before },
+    );
+  }
+
+  async dragText(text: string, before: string, modifier?: 'Control'): Promise<void> {
+    const first = await this.textPoints(text, before);
+
+    await this.page.mouse.move(first.from.x, first.from.y);
+
+    const points = await this.textPoints(text, before);
+
+    await this.page.mouse.move(points.from.x, points.from.y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(points.to.x, points.to.y, { steps: 8 });
+
+    if (modifier !== undefined) {
+      await this.page.keyboard.down(modifier);
+    }
+
+    await this.page.mouse.move(points.to.x, points.to.y);
+    await this.page.mouse.up();
+
+    if (modifier !== undefined) {
+      await this.page.keyboard.up(modifier);
+    }
   }
 
   tool(name: string): Locator {

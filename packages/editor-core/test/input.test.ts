@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { definePlugin, inputSource, textSelection, type InputSource } from '../src';
+import { definePlugin, history, inputSource, textSelection, undo, type InputSource } from '../src';
 import { fixtureSchema } from '../src/fixtures';
 import { EditorViewDriver } from './drivers/view';
 import { buildWith } from './support/notes';
@@ -141,6 +141,83 @@ describe('editor view input', () => {
 
     expect(view.modelTexts).toEqual(['ab', 'cd']);
     expect(view.domTexts).toEqual(['ab', 'cd']);
+  });
+
+  it('moves the selected text to where it is dropped and takes the move back in one step', () => {
+    const view = mounted(twoParagraphs(), fixtureSchema, [history()]);
+
+    view.place(1, 3);
+
+    expect(view.dragSelectionTo('cd', 1)).toEqual({
+      started: true,
+      offered: true,
+      effect: 'copyMove',
+    });
+
+    expect(view.modelTexts).toEqual(['', 'cabd']);
+    expect(view.domTexts).toEqual(['', 'cabd']);
+    expect(view.selection).toEqual(textSelection(6));
+
+    view.run(undo);
+
+    expect(view.modelTexts).toEqual(['ab', 'cd']);
+  });
+
+  it('moves text forward and backward inside one line', () => {
+    const view = mounted(doc(node('paragraph', ['abcdef'])));
+
+    view.place(1, 3);
+    view.dragSelectionTo('abcdef', 5);
+
+    expect(view.modelTexts).toEqual(['cdeabf']);
+
+    view.place(4, 6);
+    view.dragSelectionTo('cdeabf', 0);
+
+    expect(view.modelTexts).toEqual(['abcdef']);
+  });
+
+  it('leaves a copy behind when the text is dropped with Ctrl held', () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(1, 3);
+    view.dragSelectionTo('cd', 2, { copy: true });
+
+    expect(view.modelTexts).toEqual(['ab', 'cdab']);
+  });
+
+  it('changes nothing when the text is dropped onto itself', () => {
+    const view = mounted(doc(node('paragraph', ['abcdef'])));
+
+    view.place(2, 5);
+    view.dragSelectionTo('abcdef', 2);
+
+    expect(view.modelTexts).toEqual(['abcdef']);
+    expect(view.selection).toEqual(textSelection(2, 5));
+  });
+
+  it('does not start a drag without selected text or from outside the selection', () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(2);
+
+    expect(view.dragSelectionTo('cd', 1).started).toBe(false);
+
+    view.place(1, 3);
+
+    expect(view.dragSelectionTo('ab', 0, { from: view.blocks[1] }).started).toBe(false);
+    expect(view.modelTexts).toEqual(['ab', 'cd']);
+  });
+
+  it('lets a reader drag text out of a view that is not editable and keeps the text', () => {
+    const view = mounted(twoParagraphs());
+
+    view.setEditable(false);
+    view.focus();
+    view.selectInDom(1, 3);
+
+    expect(view.dragSelectionTo('cd', 1).effect).toBe('copy');
+    expect(view.modelTexts).toEqual(['ab', 'cd']);
   });
 
   it('still reads a selection made in a view that is not editable', () => {
