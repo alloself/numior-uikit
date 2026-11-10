@@ -1,6 +1,5 @@
 import { FormatChar, type NumberLocale } from './format.types';
 import { currencyFormat } from './number-locale';
-import { UnaryOperator } from '../formula/formula.types';
 
 export interface ReadNumber {
   readonly value: number;
@@ -12,6 +11,11 @@ interface Body {
   readonly decimals: number;
   readonly grouped: boolean;
   readonly exponent: boolean;
+}
+
+interface Signed {
+  readonly text: string;
+  readonly sign: number;
 }
 
 interface Marks {
@@ -58,21 +62,27 @@ const readBody = (text: string, locale: NumberLocale): Body | undefined => {
   }
 
   const digits = whole.replaceAll(/\D/gu, '');
+  const value = Number(`${digits === '' ? '0' : digits}.${fraction}e${found[3] ?? '0'}`);
 
-  return {
-    value: Number(`${digits === '' ? '0' : digits}.${fraction}e${found[3] ?? '0'}`),
-    decimals: fraction.length,
-    grouped: digits.length !== whole.length,
-    exponent: found[3] !== undefined,
-  };
+  return Number.isFinite(value)
+    ? {
+        value,
+        decimals: fraction.length,
+        grouped: digits.length !== whole.length,
+        exponent: found[3] !== undefined,
+      }
+    : undefined;
 };
 
-const withoutSign = (text: string): readonly [string, boolean] => {
-  const sign = text.charAt(0);
-
-  return sign === FormatChar.Minus || sign === FormatChar.Plus
-    ? [text.slice(1).trim(), sign === UnaryOperator.Minus]
-    : [text, false];
+const withoutSign = (text: string): Signed => {
+  switch (text.charAt(0)) {
+    case FormatChar.Minus:
+      return { text: text.slice(1).trim(), sign: -1 };
+    case FormatChar.Plus:
+      return { text: text.slice(1).trim(), sign: 1 };
+    default:
+      return { text, sign: 0 };
+  }
 };
 
 const withoutCurrency = (text: string, locale: NumberLocale): readonly [string, boolean] => {
@@ -90,14 +100,16 @@ const withoutCurrency = (text: string, locale: NumberLocale): readonly [string, 
 const marksOf = (raw: string, locale: NumberLocale): Marks => {
   const trimmed = raw.trim();
   const bracketed = trimmed.startsWith('(') && trimmed.endsWith(')');
-  const [signed, leadingMinus] = withoutSign(bracketed ? trimmed.slice(1, -1).trim() : trimmed);
-  const [plain, currency] = withoutCurrency(signed, locale);
-  const [unsigned, innerMinus] = withoutSign(plain);
+  const outer = withoutSign(bracketed ? trimmed.slice(1, -1).trim() : trimmed);
+  const [plain, currency] = withoutCurrency(outer.text, locale);
+  const inner = withoutSign(plain);
+  const repeated = inner.sign !== 0 && (outer.sign !== 0 || !currency);
+  const unsigned = repeated ? plain : inner.text;
   const percent = unsigned.endsWith('%');
 
   return {
     text: percent ? unsigned.slice(0, -1).trim() : unsigned,
-    negative: bracketed || leadingMinus || innerMinus,
+    negative: bracketed || outer.sign < 0 || inner.sign < 0,
     percent,
     currency,
   };

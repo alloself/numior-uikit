@@ -95,6 +95,22 @@ describe('reading typed input', () => {
     });
   });
 
+  it('keeps a number too large for a cell and a repeated sign as the typed text', () => {
+    const texts = ['1e400', '--5', '+-5', '-$-5', '- -5'];
+
+    expect(texts.map((text) => readInput(text, EN_NUMBERS))).toEqual(
+      texts.map((text) => ({ kind: 'value', value: textValue(text), format: undefined })),
+    );
+
+    expect(
+      ['-5', '+5', '-$5', '$-5', '(5)', '1e300'].map((text) => {
+        const read = readInput(text, EN_NUMBERS);
+
+        return read.kind === 'value' ? read.value : undefined;
+      }),
+    ).toEqual([-5, 5, -5, -5, -5, 1e300].map(numberValue));
+  });
+
   it('keeps quoted, logical, formula and empty entries apart', () => {
     expect(readInput("'0123", EN_NUMBERS)).toEqual({
       kind: 'value',
