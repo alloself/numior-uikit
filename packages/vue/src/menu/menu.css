@@ -54,7 +54,7 @@
   align-items: center;
   gap: var(--nui-space-2);
   inline-size: 100%;
-  min-block-size: 2rem;
+  min-block-size: var(--nui-control-height-sm);
   margin: 0;
   padding: var(--nui-space-1) var(--nui-space-2);
   border: 0;

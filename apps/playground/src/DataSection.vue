@@ -2,7 +2,7 @@
   <section class="panel" aria-labelledby="data-title">
     <div class="section-heading">
       <h2 id="data-title">Данные</h2>
-      <span class="tag">NuiBadge · NuiAvatar · NuiCard · NuiList · NuiEmpty</span>
+      <span class="tag">NuiBadge · NuiChip · NuiAvatar · NuiCard · NuiList · NuiEmpty</span>
     </div>
     <div class="data-row" data-testid="data-badges">
       <NuiBadge>Черновик</NuiBadge>
@@ -18,6 +18,13 @@
         </NuiButton>
         <NuiBadge tone="error" :count="3" floating data-testid="data-badge-floating" />
       </span>
+    </div>
+    <div class="data-row" data-testid="data-chips">
+      <NuiChip>Дизайн</NuiChip>
+      <NuiChip tone="primary" icon="check" removable>Фронтенд</NuiChip>
+      <NuiChip tone="success" variant="solid" removable>Готово</NuiChip>
+      <NuiChip size="sm">Аналитика</NuiChip>
+      <NuiChip size="sm" tone="warning" variant="outline" removable>Ждёт</NuiChip>
     </div>
     <div class="data-row">
       <NuiAvatar
@@ -154,6 +161,7 @@ import {
   NuiCardHeader,
   NuiCardMedia,
   NuiCardTitle,
+  NuiChip,
   NuiEmpty,
   NuiIcon,
   NuiList,
