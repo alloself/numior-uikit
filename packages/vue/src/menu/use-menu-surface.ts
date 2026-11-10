@@ -167,8 +167,6 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     (isOpen) => {
       if (isOpen) {
         activateOnOpen();
-      } else {
-        navigation.reset();
       }
     },
   );

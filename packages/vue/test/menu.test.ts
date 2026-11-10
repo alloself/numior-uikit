@@ -108,6 +108,23 @@ describe('NuiMenu', () => {
     menu.unmount();
   });
 
+  it('starts over from the first item when it is opened again after its last item was reached', async () => {
+    const menu = MenuDriver.mount({ parts: true });
+
+    await menu.pressTrigger('ArrowDown');
+    await menu.press('End');
+    await menu.close();
+    await menu.pressTrigger('ArrowDown');
+
+    expect(menu.focusedLabel).toBe('Rename');
+
+    await menu.press('ArrowDown');
+
+    expect(menu.focusedLabel).toBe('Docs');
+
+    menu.unmount();
+  });
+
   it('steps from the menu itself onto the first item with ArrowDown and the last with ArrowUp, also after the pointer left', async () => {
     const menu = MenuDriver.mount({ parts: true });
     await menu.open();
