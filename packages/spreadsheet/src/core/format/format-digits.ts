@@ -3,16 +3,30 @@ export interface Digits {
   readonly fraction: string;
 }
 
+interface Significant {
+  readonly digits: string;
+  readonly exponent: number;
+}
+
 const SIGNIFICANT = 15;
 
-const scaledDigits = (value: number, decimals: number): string => {
+const GENERAL_WIDTH = 11;
+
+const EXACT_DECIMALS = 12;
+
+const significantOf = (value: number): Significant => {
+  const [mantissa = '0', exponent = '0'] = value.toExponential(SIGNIFICANT - 1).split('e');
+
+  return { digits: mantissa.replace('.', ''), exponent: Number(exponent) };
+};
+
+const scaledDigits = (value: number, decimals: number, power: number): string => {
   if (value === 0) {
     return '0';
   }
 
-  const [mantissa = '0', exponent = '0'] = value.toExponential(SIGNIFICANT - 1).split('e');
-  const digits = mantissa.replace('.', '');
-  const keep = Number(exponent) + 1 + decimals;
+  const { digits, exponent } = significantOf(value);
+  const keep = exponent - power + 1 + decimals;
 
   if (keep >= SIGNIFICANT) {
     return digits + '0'.repeat(keep - SIGNIFICANT);
@@ -26,21 +40,15 @@ const scaledDigits = (value: number, decimals: number): string => {
   return (BigInt(digits.slice(0, keep)) + up).toString();
 };
 
-export const roundDigits = (value: number, decimals: number): Digits => {
-  const scaled = scaledDigits(Math.abs(value), decimals).padStart(decimals + 1, '0');
+export const roundDigits = (value: number, decimals: number, power = 0): Digits => {
+  const scaled = scaledDigits(Math.abs(value), decimals, power).padStart(decimals + 1, '0');
   const whole = scaled.slice(0, scaled.length - decimals).replace(/^0+/u, '');
 
   return { whole, fraction: scaled.slice(scaled.length - decimals) };
 };
 
 export const decimalExponent = (value: number): number =>
-  value === 0
-    ? 0
-    : Number(
-        Math.abs(value)
-          .toExponential(SIGNIFICANT - 1)
-          .split('e')[1],
-      );
+  value === 0 ? 0 : significantOf(Math.abs(value)).exponent;
 
 export const groupDigits = (digits: string, separator: string): string => {
   let result = '';
@@ -53,19 +61,23 @@ export const groupDigits = (digits: string, separator: string): string => {
   return result;
 };
 
-const scientific = (value: number, decimal: string, budget: number): string => {
+const scientific = (value: number, decimal: string): string => {
   const first = decimalExponent(value);
   const width = Math.abs(first) >= 100 ? 3 : 2;
-  const decimals = Math.max(budget - 4 - width, 0);
-  const rounded = roundDigits(value / 10 ** first, decimals);
+  const decimals = GENERAL_WIDTH - 4 - width;
+  const rounded = roundDigits(value, decimals, first);
   const carried = rounded.whole.length > 1;
   const exponent = carried ? first + 1 : first;
-  const mantissa = carried ? roundDigits(value / 10 ** exponent, decimals) : rounded;
+  const mantissa = carried ? roundDigits(value, decimals, exponent) : rounded;
   const fraction = mantissa.fraction.replace(/0+$/u, '');
   const power = String(Math.abs(exponent)).padStart(2, '0');
 
   return `${mantissa.whole}${fraction === '' ? '' : decimal + fraction}E${exponent < 0 ? '-' : '+'}${power}`;
 };
+
+const losesSmallDigits = (value: number, exponent: number): boolean =>
+  exponent < -4 &&
+  roundDigits(value, EXACT_DECIMALS).fraction.replace(/0+$/u, '').length > GENERAL_WIDTH - 2;
 
 export const generalNumber = (value: number, decimal: string): string => {
   if (value === 0) {
@@ -73,13 +85,12 @@ export const generalNumber = (value: number, decimal: string): string => {
   }
 
   const sign = value < 0 ? '-' : '';
-  const budget = 11 - sign.length;
   const exponent = decimalExponent(value);
-  const decimals = Math.max(budget - Math.max(exponent + 1, 1) - 1, 0);
+  const decimals = Math.max(GENERAL_WIDTH - Math.max(exponent + 1, 1) - 1, 0);
   const { whole, fraction } = roundDigits(value, decimals);
 
-  if (exponent < -9 || whole.length > budget) {
-    return sign + scientific(Math.abs(value), decimal, budget);
+  if (exponent < -9 || whole.length > GENERAL_WIDTH || losesSmallDigits(value, exponent)) {
+    return sign + scientific(Math.abs(value), decimal);
   }
 
   const shown = fraction.replace(/0+$/u, '');

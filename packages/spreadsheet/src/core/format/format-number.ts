@@ -199,7 +199,7 @@ const exponentParts = (
 
   const first = decimalExponent(value);
   const exponent = engineering ? Math.floor(first / count) * count : first - (count - 1);
-  const digits = roundDigits(value / 10 ** exponent, layout.fraction.length);
+  const digits = roundDigits(value, layout.fraction.length, exponent);
 
   if (digits.whole.length <= count) {
     return { exponent, digits };
@@ -207,7 +207,7 @@ const exponentParts = (
 
   const next = exponent + (engineering ? count : 1);
 
-  return { exponent: next, digits: roundDigits(value / 10 ** next, layout.fraction.length) };
+  return { exponent: next, digits: roundDigits(value, layout.fraction.length, next) };
 };
 
 const renderTokens = (
