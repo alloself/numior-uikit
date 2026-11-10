@@ -19,16 +19,17 @@ const retargetedRange = (
   const from = written.resolve(step.from);
   const to = written.resolve(step.to);
   const { id, type } = from.parent;
-  const mapped = mapper.map(step.from, 1);
+  const mapped = mapper.mapResult(step.from, 1);
+  const removed = mapped.deletedBefore || mapped.deletedAfter;
 
-  if (to.parent.id !== id || !holdsText(written, type) || mapped > current.size) {
+  if (!removed || to.parent.id !== id || !holdsText(written, type) || mapped.pos > current.size) {
     return undefined;
   }
 
   const node = current.byId(id);
   const start = current.positionOf(id);
 
-  if (node === undefined || start === undefined || current.resolve(mapped).parent.id === id) {
+  if (node === undefined || start === undefined || current.resolve(mapped.pos).parent.id === id) {
     return undefined;
   }
 

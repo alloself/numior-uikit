@@ -36,6 +36,10 @@ const INSIDE_MOVED_ONE = 9;
 
 const INSIDE_NOTE = 8;
 
+const SPLIT_AT = 6;
+
+const IN_WORLD = 9;
+
 const lastToTop = moveChild('root', 2, 0);
 
 const firstToEnd = moveChild('root', 0, 2);
@@ -300,6 +304,54 @@ describe('a carried block and the history', () => {
       'p0',
       'p1',
     ]);
+  });
+});
+
+describe('text edited in a block that someone else split before the edit arrived', () => {
+  it('keeps typed text in the half it was typed into', () => {
+    const network = connected(paragraphs('Hello world'));
+    const { ann, bob } = peers(network);
+
+    ann.edit((tr) => {
+      tr.split(SPLIT_AT);
+    });
+
+    ann.toServer();
+
+    bob.edit((tr) => {
+      tr.insertText('X', IN_WORLD);
+    });
+
+    network.settle();
+
+    const [left, right] = network.docs();
+
+    expect(textOf(bob.state().doc)).toBe('Hello| woXrld');
+
+    expect(left).toEqual(right);
+  });
+
+  it('removes the text that was selected and nothing else', () => {
+    const network = connected(paragraphs('Hello world'));
+    const { ann, bob } = peers(network);
+
+    ann.edit((tr) => {
+      tr.split(SPLIT_AT);
+    });
+
+    ann.toServer();
+
+    bob.edit((tr) => {
+      tr.delete(IN_WORLD, IN_WORLD + 2);
+    });
+
+    network.settle();
+
+    const [left, right] = network.docs();
+
+    expect(textOf(bob.state().doc)).toBe('Hello| wod');
+
+    expect(left).toEqual(right);
   });
 });
 
