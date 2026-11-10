@@ -10,6 +10,7 @@ import {
 } from './desc';
 import type { ViewHost } from './host.types';
 import { contentStart } from './positions';
+import { commonPrefix, commonSuffix } from './text-diff';
 import { DescKind, DomName } from './view.types';
 
 export interface DomWatch {
@@ -76,25 +77,6 @@ const caretIn = (context: ViewContext, content: Node): number | undefined => {
   return focus === null || focus === undefined || !content.contains(focus)
     ? undefined
     : offsetWithin(context, content, focus, selection?.focusOffset ?? 0);
-};
-
-const commonPrefix = (left: string, right: string): number => {
-  let index = 0;
-
-  while (index < left.length && index < right.length && left[index] === right[index]) {
-    index += 1;
-  }
-  return index;
-};
-
-const commonSuffix = (left: string, right: string, prefix: number): number => {
-  let count = 0;
-  const limit = Math.min(left.length, right.length) - prefix;
-
-  while (count < limit && left[left.length - 1 - count] === right[right.length - 1 - count]) {
-    count += 1;
-  }
-  return count;
 };
 
 const intentOf = (

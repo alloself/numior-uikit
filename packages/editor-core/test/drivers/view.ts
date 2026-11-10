@@ -261,6 +261,17 @@ export class EditorViewDriver {
     document.dispatchEvent(new Event('selectionchange'));
   }
 
+  pointInDom(anchor: number, head = anchor): void {
+    const from = this.view.domAtPos(anchor);
+    const to = this.view.domAtPos(head);
+
+    document.getSelection()?.setBaseAndExtent(from.node, from.offset, to.node, to.offset);
+  }
+
+  noticeSelection(): void {
+    document.dispatchEvent(new Event('selectionchange'));
+  }
+
   selectRootChildren(from: number, to: number): void {
     document.getSelection()?.setBaseAndExtent(this.host, from, this.host, to);
     document.dispatchEvent(new Event('selectionchange'));
@@ -524,6 +535,10 @@ export class EditorViewDriver {
 
   receive(state: EditorState): void {
     this.view.update(state);
+  }
+
+  changeOutside(edit: (tr: Transaction) => Transaction): void {
+    this.view.update(this.state.apply(edit(this.state.tr)));
   }
 
   get blockIds(): readonly NodeId[] {

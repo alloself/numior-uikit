@@ -10,6 +10,7 @@ import type { NodeType, Schema } from '../schema/schema.types';
 import { appendChunk, fillChunks, placeInChunks, tidyChunks, type ChunkSet } from './chunks';
 import { segmentsOf, type BlockDecorations, type LocalDecoration } from './decorate';
 import { renderLeaf, renderParent, type RenderedDom } from './render-dom';
+import { commonPrefix, commonSuffix } from './text-diff';
 import { DescKind, DomName, type NodeView, type NodeViewFactory } from './view.types';
 
 export interface ElementDesc {
@@ -514,13 +515,24 @@ const findText = (matching: Matching, node: TextNode): TextMatch | undefined => 
   return undefined;
 };
 
+const rewriteText = (dom: Text, text: string): void => {
+  const prefix = commonPrefix(dom.data, text);
+  const suffix = commonSuffix(dom.data, text, prefix);
+
+  dom.replaceData(
+    prefix,
+    dom.data.length - prefix - suffix,
+    text.slice(prefix, text.length - suffix),
+  );
+};
+
 const syncText = (desc: TextDesc, node: TextNode, index: number): void => {
   const part = desc.parts[0];
 
   desc.node = node;
   desc.index = index;
   if (part !== undefined && part.dom.data !== node.text) {
-    part.dom.data = node.text;
+    rewriteText(part.dom, node.text);
   }
 };
 

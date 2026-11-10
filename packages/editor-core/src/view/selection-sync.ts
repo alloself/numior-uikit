@@ -14,9 +14,17 @@ interface Span {
   readonly head: number;
 }
 
+interface DomMark {
+  readonly anchorNode: Node | null;
+  readonly anchorOffset: number;
+  readonly focusNode: Node | null;
+  readonly focusOffset: number;
+}
+
 export interface SelectionSync {
   read(): void;
   write(): void;
+  unread(): boolean;
   mark(): void;
 }
 
@@ -114,6 +122,27 @@ const domSpan = (host: ViewHost): Span | undefined => {
   };
 };
 
+const markOf = (host: ViewHost): DomMark | undefined => {
+  const selection = host.root.ownerDocument.getSelection();
+
+  return selection === null
+    ? undefined
+    : {
+        anchorNode: selection.anchorNode,
+        anchorOffset: selection.anchorOffset,
+        focusNode: selection.focusNode,
+        focusOffset: selection.focusOffset,
+      };
+};
+
+const sameMark = (left: DomMark | undefined, right: DomMark | undefined): boolean =>
+  left !== undefined &&
+  right !== undefined &&
+  left.anchorNode === right.anchorNode &&
+  left.anchorOffset === right.anchorOffset &&
+  left.focusNode === right.focusNode &&
+  left.focusOffset === right.focusOffset;
+
 const holds = (selection: globalThis.Selection, points: readonly [DomPoint, DomPoint]): boolean =>
   selection.anchorNode === points[0].node &&
   selection.anchorOffset === points[0].offset &&
@@ -172,6 +201,7 @@ const focused = (host: ViewHost): boolean => {
 export const createSelectionSync = (host: ViewHost): SelectionSync => {
   let marked: HTMLElement | undefined;
   let gapped: HTMLElement | undefined;
+  let seen: DomMark | undefined;
 
   const markGap = (selection: Selection): void => {
     const next =
@@ -204,7 +234,12 @@ export const createSelectionSync = (host: ViewHost): SelectionSync => {
     read: () => {
       const span = host.composing() || inWidget(host) ? undefined : domSpan(host);
 
-      if (span === undefined || matches(span)) {
+      if (span === undefined) {
+        return;
+      }
+      seen = markOf(host);
+
+      if (matches(span)) {
         return;
       }
       const state = host.state();
@@ -225,19 +260,24 @@ export const createSelectionSync = (host: ViewHost): SelectionSync => {
         host.holding() ||
         !focused(host) ||
         selection === null ||
-        points === undefined ||
-        holds(selection, points) ||
-        (span !== undefined && matches(span))
+        points === undefined
       ) {
         return;
       }
+      if (!holds(selection, points) && (span === undefined || !matches(span))) {
+        selection.setBaseAndExtent(
+          points[0].node,
+          points[0].offset,
+          points[1].node,
+          points[1].offset,
+        );
+      }
+      seen = markOf(host);
+    },
+    unread: () => {
+      const span = host.composing() || !focused(host) ? undefined : domSpan(host);
 
-      selection.setBaseAndExtent(
-        points[0].node,
-        points[0].offset,
-        points[1].node,
-        points[1].offset,
-      );
+      return span !== undefined && !matches(span) && !sameMark(markOf(host), seen);
     },
     mark: () => {
       const selection = host.state().selection;

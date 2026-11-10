@@ -300,6 +300,7 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
   let state = options.state;
   let composing = false;
   let holding = false;
+  let acting = false;
 
   let sets = decorationSets(state);
 
@@ -363,13 +364,21 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
   placeWidgets(context, state, sets);
 
   const dispatch = (tr: Transaction, source?: InputSource): void => {
+    const nested = acting;
+
     if (source !== undefined) {
       tr.setMeta(inputSource, source);
     }
-    if (options.dispatch === undefined) {
-      update(state.apply(tr));
-    } else {
-      options.dispatch(tr);
+    acting = true;
+
+    try {
+      if (options.dispatch === undefined) {
+        update(state.apply(tr));
+      } else {
+        options.dispatch(tr);
+      }
+    } finally {
+      acting = nested;
     }
   };
 
@@ -409,6 +418,7 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
 
   const update = (next: EditorState): void => {
     const end = next.doc.root === state.doc.root ? undefined : attaching.prefix(next.doc.root);
+    const kept = !acting && sync.unread();
 
     if (next.doc.schema !== context.schema) {
       throw new RangeError('The view renders one schema; create a new view for another');
@@ -443,7 +453,10 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     placeWidgets(context, next, sets);
     watch.ignoreOwn();
     sync.mark();
-    sync.write();
+
+    if (!kept) {
+      sync.write();
+    }
     catchUp.schedule();
 
     for (const plugin of next.plugins) {

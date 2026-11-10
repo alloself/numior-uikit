@@ -92,6 +92,43 @@ describe('editor view input', () => {
     expect(view.domSpan).toEqual({ anchor: 6, head: 6 });
   });
 
+  it('keeps a caret the reader has just placed when a change from outside comes before it is read', () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(1);
+    view.pointInDom(6);
+    view.changeOutside((tr) => tr.insertText('x', 3));
+    view.changeOutside((tr) => tr.insertText('y', 3));
+
+    expect(view.domSpan).toEqual({ anchor: 8, head: 8 });
+
+    view.noticeSelection();
+
+    expect(view.selection).toEqual(textSelection(8));
+  });
+
+  it('keeps a caret the reader has just placed in the text a change from outside rewrites', () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(6);
+    view.pointInDom(3);
+    view.changeOutside((tr) => tr.insertText('xy', 1));
+    view.noticeSelection();
+
+    expect(view.domTexts).toEqual(['xyab', 'cd']);
+    expect(view.selection).toEqual(textSelection(5));
+  });
+
+  it('moves the caret with a change from outside when the reader has not touched it', () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(6);
+    view.changeOutside((tr) => tr.insertText('xy', 1));
+
+    expect(view.selection).toEqual(textSelection(8));
+    expect(view.domSpan).toEqual({ anchor: 8, head: 8 });
+  });
+
   it('lets the composition edit the DOM and catches the model up when it ends', async () => {
     const view = mounted(twoParagraphs());
 
