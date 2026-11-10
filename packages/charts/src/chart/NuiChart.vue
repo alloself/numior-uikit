@@ -20,6 +20,7 @@
       @pointerleave="pointer.onPointerleave"
       @click="pointer.onClick"
     >
+      <span ref="probe" class="nui-chart__font-probe" aria-hidden="true"></span>
       <p v-if="empty" class="nui-chart__empty">{{ texts.empty }}</p>
       <NuiChartScene v-else :scene="scene" :focus="focus" />
       <NuiChartTooltip
@@ -49,7 +50,7 @@
 
 <script setup lang="ts">
 import { Direction, DIRECTION_KEY, useDirection, useLocale, useMessages } from '@numior/primitives';
-import { useMounted, useMutationObserver } from '@vueuse/core';
+import { useMounted } from '@vueuse/core';
 import { computed, inject, ref, useTemplateRef, watch } from 'vue';
 import { anchorOf, layoutChart, type ChartHit, type ChartScene, type SceneAnchor } from '../core';
 import NuiChartLegend from './NuiChartLegend.vue';
@@ -89,14 +90,13 @@ defineSlots<{
 
 const FALLBACK_WIDTH = 640;
 const FALLBACK_HEIGHT = 300;
-const FONT_SIZE = 12;
 
 const frameElement = useTemplateRef<HTMLElement>('frame');
+const probeElement = useTemplateRef<HTMLElement>('probe');
 const texts = useMessages(chartMessages, () => locale);
 const resolvedLocale = useLocale(() => locale);
 const direction = useDirection(frameElement);
-const sizing = useChartFrame(frameElement);
-const directionRevision = ref(0);
+const sizing = useChartFrame(frameElement, probeElement);
 
 const filled = computed(() => height === NuiChartHeight.Fill);
 
@@ -118,10 +118,9 @@ const empty = computed(
 const configuredDirection = inject(DIRECTION_KEY, null);
 const mounted = useMounted();
 
-const rtl = computed(() => {
-  void directionRevision.value;
-  return mounted.value ? direction.isRtl() : configuredDirection?.value === Direction.Rtl;
-});
+const rtl = computed(() =>
+  mounted.value ? direction.isRtl() : configuredDirection?.value === Direction.Rtl,
+);
 
 const scene = computed(() =>
   layoutChart(
@@ -133,7 +132,7 @@ const scene = computed(() =>
     {
       rtl: rtl.value,
       locale: resolvedLocale.value,
-      fontSize: FONT_SIZE,
+      fontSize: sizing.fontSize.value,
       measure: sizing.measure.value,
     },
   ),
@@ -155,17 +154,6 @@ const legendItems = computed((): NuiChartLegendItem[] => {
     slot: slots[index] ?? 0,
   }));
 });
-
-const documentRoot = (): HTMLElement | undefined =>
-  typeof document === 'undefined' ? undefined : document.documentElement;
-
-useMutationObserver(
-  documentRoot,
-  () => {
-    directionRevision.value += 1;
-  },
-  { attributes: true, attributeFilter: ['dir'], subtree: true },
-);
 
 const pointer = useChartPointer({
   scene: () => scene.value,

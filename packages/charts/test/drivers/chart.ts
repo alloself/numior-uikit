@@ -1,7 +1,8 @@
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
+import { vi } from 'vite-plus/test';
 import { renderToString } from 'vue/server-renderer';
-import { createNuiConfig, type NuiConfigOptions } from '@numior/primitives';
-import { createSSRApp, nextTick } from 'vue';
+import { createNuiConfig, type Direction, type NuiConfigOptions } from '@numior/primitives';
+import { createSSRApp, nextTick, shallowRef, toValue, type ShallowRef } from 'vue';
 import { NuiChart, type ChartHit, type ChartSpec, type NuiChartProps } from '../../src';
 
 export interface ChartMountOptions {
@@ -25,15 +26,101 @@ const AREA_SLOT = /nui-chart__area--slot-(\d)/;
 
 const SLICE_SLOT = /nui-chart__slice--slot-(\d)/;
 
+const THEME_STYLE_ID = 'chart-theme';
+
+const DEFAULT_FONT_SIZE = 12;
+
+const fontRule = (size: number): string =>
+  `.nui-chart__font-probe { font-size: ${String(size)}px; }`;
+
+const themeStyle = (): HTMLStyleElement => {
+  const existing = document.getElementById(THEME_STYLE_ID);
+
+  if (existing instanceof HTMLStyleElement) {
+    return existing;
+  }
+
+  const style = document.createElement('style');
+
+  style.id = THEME_STYLE_ID;
+  style.textContent = fontRule(DEFAULT_FONT_SIZE);
+  document.head.append(style);
+  return style;
+};
+
 const textsOf = (wrapper: VueWrapper, selector: string): string[] =>
   wrapper.findAll(selector).map((item) => item.text());
+
+export class ChartTheme {
+  private readonly resized = new Set<ResizeObserverCallback>();
+
+  readonly observed: Node[] = [];
+
+  static install(): ChartTheme {
+    return new ChartTheme();
+  }
+
+  private constructor() {
+    const { resized, observed } = this;
+    const NativeMutationObserver = MutationObserver;
+
+    vi.stubGlobal(
+      'ResizeObserver',
+      class implements ResizeObserver {
+        constructor(private readonly callback: ResizeObserverCallback) {}
+
+        observe(): void {
+          resized.add(this.callback);
+        }
+
+        unobserve(): void {
+          resized.delete(this.callback);
+        }
+
+        disconnect(): void {
+          resized.delete(this.callback);
+        }
+      },
+    );
+
+    vi.stubGlobal(
+      'MutationObserver',
+      class extends NativeMutationObserver {
+        override observe(target: Node, options?: MutationObserverInit): void {
+          observed.push(target);
+          super.observe(target, options);
+        }
+      },
+    );
+  }
+
+  async setFontSize(size: number): Promise<void> {
+    themeStyle().textContent = fontRule(size);
+
+    for (const callback of this.resized) {
+      callback([], new ResizeObserver(callback));
+    }
+
+    await nextTick();
+  }
+
+  static reset(): void {
+    themeStyle().textContent = fontRule(DEFAULT_FONT_SIZE);
+    vi.unstubAllGlobals();
+  }
+}
 
 export class ChartDriver {
   readonly selections: (ChartHit | null)[] = [];
 
   private readonly wrapper: VueWrapper;
 
+  private readonly direction: ShallowRef<Direction | undefined>;
+
   private constructor({ spec, label = 'Revenue', props = {}, config }: ChartMountOptions) {
+    this.direction = shallowRef(toValue(config?.dir));
+    themeStyle();
+
     this.wrapper = mount(NuiChart, {
       props: {
         spec,
@@ -45,7 +132,9 @@ export class ChartDriver {
           void this.wrapper.setProps({ selected: hit });
         },
       },
-      global: { plugins: config === undefined ? [] : [createNuiConfig(config)] },
+      global: {
+        plugins: config === undefined ? [] : [createNuiConfig({ ...config, dir: this.direction })],
+      },
       attachTo: document.body,
     });
   }
@@ -245,9 +334,9 @@ export class ChartDriver {
     await nextTick();
   }
 
-  async setDocumentDirection(dir: 'ltr' | 'rtl'): Promise<void> {
-    document.documentElement.dir = dir;
-    await flushPromises();
+  async setDirection(dir: Direction): Promise<void> {
+    this.direction.value = dir;
+    await nextTick();
   }
 
   unmount(): void {

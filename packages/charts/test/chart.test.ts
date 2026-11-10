@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import type { ChartSpec } from '../src';
-import { ChartDriver } from './drivers/chart';
+import { ChartDriver, ChartTheme } from './drivers/chart';
 
 const mounted: ChartDriver[] = [];
 
@@ -27,6 +27,7 @@ afterEach(() => {
   }
 
   document.documentElement.removeAttribute('dir');
+  ChartTheme.reset();
 });
 
 const MIDDLE = 150;
@@ -272,11 +273,43 @@ describe('NuiChart', () => {
     }
   });
 
-  it('follows a direction set on the page after mounting', async () => {
+  it('follows a direction switched in the config after mounting', async () => {
+    const chart = chartOf({ spec: revenue, config: { dir: 'ltr' } });
+    expect(chart.categoryTickX('Q1')).toBeLessThan(chart.categoryTickX('Q3'));
+
+    await chart.setDirection('rtl');
+    expect(chart.categoryTickX('Q1')).toBeGreaterThan(chart.categoryTickX('Q3'));
+  });
+
+  it('takes the direction of the page it is mounted on without watching the document', async () => {
+    const theme = ChartTheme.install();
+
+    document.documentElement.dir = 'rtl';
+
     const chart = chartOf({ spec: revenue });
 
-    await chart.setDocumentDirection('rtl');
-
+    await chart.settle();
     expect(chart.categoryTickX('Q1')).toBeGreaterThan(chart.categoryTickX('Q3'));
+    expect(theme.observed).toEqual([]);
+  });
+
+  it('lays the labels out with the font size of the theme and follows a theme change', async () => {
+    const theme = ChartTheme.install();
+    const chart = chartOf({ spec: revenue });
+
+    await chart.settle();
+
+    const tick = chart.categoryTickX('Q1');
+
+    await theme.setFontSize(24);
+    expect(chart.categoryTickX('Q1')).toBeGreaterThan(tick);
+
+    const late = chartOf({ spec: revenue });
+
+    await late.settle();
+    expect(late.categoryTickX('Q1')).toBe(chart.categoryTickX('Q1'));
+
+    await theme.setFontSize(12);
+    expect(chart.categoryTickX('Q1')).toBe(tick);
   });
 });
