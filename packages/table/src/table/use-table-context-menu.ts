@@ -8,7 +8,7 @@ import type {
   NuiTableRanges,
   NuiTableCellPosition,
 } from './table.types';
-import { Key, PointerType, afterRelease } from '@numior/primitives';
+import { Key, PointerType, useAfterRelease } from '@numior/primitives';
 
 export interface TableContextMenuOptions<T> {
   readonly enabled: () => boolean;
@@ -58,6 +58,7 @@ export const useTableContextMenu = <T>(options: TableContextMenuOptions<T>): Tab
   const open = ref(false);
   const target = shallowRef<HTMLElement | null>(null);
   const scope = shallowRef<NuiTableContextScope<T>>();
+  const afterRelease = useAfterRelease();
 
   const positionOf = (cell: Element): NuiTableCellPosition => ({
     row: rowPositionOf(cell.parentElement, options.headRows()),

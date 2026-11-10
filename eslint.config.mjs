@@ -2,6 +2,7 @@ import stylistic from '@stylistic/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import vue from 'eslint-plugin-vue';
 import { guardFirst } from './scripts/eslint/guard-first.mjs';
+import { pageListeners } from './scripts/eslint/page-listeners.mjs';
 import { testPhases } from './scripts/eslint/test-phases.mjs';
 
 const multiline = ['multiline-const', 'multiline-let', 'multiline-expression', 'function', 'class'];
@@ -227,8 +228,20 @@ export default [
   },
   {
     files: ['**/*.ts', '**/*.mts', '**/*.js', '**/*.mjs', '**/*.vue'],
-    plugins: { numior: { rules: { 'guard-first': guardFirst, 'test-phases': testPhases } } },
+    plugins: {
+      numior: {
+        rules: {
+          'guard-first': guardFirst,
+          'page-listeners': pageListeners,
+          'test-phases': testPhases,
+        },
+      },
+    },
     rules: { 'numior/guard-first': 'error' },
+  },
+  {
+    files: ['packages/*/src/**/*.ts', 'packages/*/src/**/*.vue'],
+    rules: { 'numior/page-listeners': 'error' },
   },
   {
     files: ['tests/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],

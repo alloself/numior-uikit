@@ -7,7 +7,7 @@ import {
 } from '@numior/editor-core';
 import type { EditorView } from '@numior/editor-core/view';
 import { Key, useEdgeScroll } from '@numior/primitives';
-import { computed, shallowRef, type ComputedRef, type Ref } from 'vue';
+import { computed, onScopeDispose, shallowRef, type ComputedRef, type Ref } from 'vue';
 import { COLUMN_TYPES } from '../blocks/columns/columns';
 import {
   elementOf,
@@ -212,6 +212,8 @@ export const useBlockDrag = (options: BlockDragOptions): BlockDrag => {
       finish();
     }
   };
+
+  onScopeDispose(finish);
 
   return {
     source: computed(() => session.value?.slot),

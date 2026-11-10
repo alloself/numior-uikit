@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { Key, PopoverState, afterRelease, isComposing } from '@numior/primitives';
+import { Key, PopoverState, isComposing, useAfterRelease } from '@numior/primitives';
 import {
   NuiButton,
   NuiIcon,
@@ -92,6 +92,7 @@ const renameForm = useTemplateRef<HTMLFormElement>('renameForm');
 const target = shallowRef<HTMLElement | null>(null);
 const targetIndex = ref(-1);
 const menuOpen = ref(false);
+const afterRelease = useAfterRelease();
 const renaming = ref(false);
 const draftName = ref('');
 const tried = ref(false);

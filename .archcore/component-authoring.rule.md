@@ -197,6 +197,14 @@ status: accepted
   отвечает, перешёл ли фокус. jsdom разницы не видит, поэтому открытие щелчком, Enter и
   пробелом с проверкой фокуса и следующей стрелки проверяется в e2e (`navigation.spec.ts`,
   `pickers.spec.ts`).
+- Жест, который на своё время вешает слушатели на `window` или `document` (перетаскивание,
+  изменение размера, ожидание отпускания кнопки), заканчивается вместе с владельцем: функция
+  завершения жеста зарегистрирована в `onScopeDispose`. Компонент, размонтированный посреди
+  жеста, не оставляет слушателей, таймеров и отложенных действий. Проверка — правило ESLint
+  `numior/page-listeners` (`scripts/eslint/page-listeners.mjs`) для `packages/*/src`: файл с
+  `window|document|globalThis.addEventListener` обязан вызывать `onScopeDispose`,
+  `tryOnScopeDispose`, `onBeforeUnmount` или `onUnmounted`. Отложенный показ меню после
+  отпускания кнопки — композабл `useAfterRelease()` из `@numior/primitives`.
 - Одно действие — один рендер. Watcher с `flush: 'post'` только трогает DOM: вызывает
   `focus()`, `showPopover()`, измеряет и пишет `element.style` или custom properties; он не
   пишет в реактивное состояние и не запускает второй рендер. Кто активен, где tab stop и

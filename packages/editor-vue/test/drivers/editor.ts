@@ -42,6 +42,8 @@ const MENU_SELECTORS: Readonly<Record<EditorMenu, string>> = {
   handle: '.nui-editor-handle [role="menu"]',
 };
 
+const DRAG_POINTER = { bubbles: true, cancelable: true, pointerId: 1, button: 0 };
+
 const withoutComments = (html: string): string => html.replaceAll(/<!--[\s\S]*?-->/g, '');
 
 const isDocument = (value: unknown): value is DocJSON =>
@@ -478,7 +480,7 @@ export class EditorDriver {
 
   dropShown = false;
 
-  async dragBlockTo(text: string, x: number, y: number): Promise<void> {
+  async liftBlock(text: string, x: number, y: number): Promise<void> {
     const block = [...this.content.querySelectorAll('p')].find(
       (candidate) => candidate.textContent === text,
     );
@@ -488,15 +490,28 @@ export class EditorDriver {
     await nextTick();
 
     const grip = this.root.querySelector('.nui-editor-handle__grip');
-    const pointer = { bubbles: true, pointerId: 1, button: 0 };
 
-    grip?.dispatchEvent(new PointerEvent('pointerdown', { ...pointer, clientX: x, clientY: 0 }));
-
-    globalThis.dispatchEvent(
-      new PointerEvent('pointermove', { ...pointer, clientX: x, clientY: y }),
+    grip?.dispatchEvent(
+      new PointerEvent('pointerdown', { ...DRAG_POINTER, clientX: x, clientY: 0 }),
     );
 
-    globalThis.dispatchEvent(new PointerEvent('pointerup', { ...pointer, clientX: x, clientY: y }));
+    this.movePointer(x, y);
+  }
+
+  movePointer(x: number, y: number): boolean {
+    const event = new PointerEvent('pointermove', { ...DRAG_POINTER, clientX: x, clientY: y });
+
+    globalThis.dispatchEvent(event);
+    return event.defaultPrevented;
+  }
+
+  async dragBlockTo(text: string, x: number, y: number): Promise<void> {
+    await this.liftBlock(text, x, y);
+
+    globalThis.dispatchEvent(
+      new PointerEvent('pointerup', { ...DRAG_POINTER, clientX: x, clientY: y }),
+    );
+
     await nextTick();
   }
 
