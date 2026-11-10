@@ -7,9 +7,17 @@ export interface WorkbookHistory {
   redo(): StepOutcome | undefined;
   clear(): void;
   rebase(map: (step: WorkbookStep) => WorkbookStep | undefined): void;
+  trace<T>(start: T, pass: HistoryPass<T>): void;
   readonly canUndo: boolean;
   readonly canRedo: boolean;
 }
+
+export interface HistoryTrace<T> {
+  readonly step: WorkbookStep | undefined;
+  readonly state: T;
+}
+
+export type HistoryPass<T> = (state: T, step: WorkbookStep) => HistoryTrace<T>;
 
 export interface HistoryOptions {
   readonly limit?: number | undefined;
@@ -40,6 +48,30 @@ const rebased = (
     }
     return kept;
   }, []);
+
+const traced = <T>(entries: readonly Entry[], start: T, pass: HistoryPass<T>): Entry[] => {
+  let state = start;
+
+  return entries
+    .toReversed()
+    .reduce<Entry[]>((kept, entry) => {
+      const steps = entry.steps.reduce<WorkbookStep[]>((left, step) => {
+        const next = pass(state, step);
+
+        state = next.state;
+        if (next.step !== undefined) {
+          left.push(next.step);
+        }
+        return left;
+      }, []);
+
+      if (steps.length > 0) {
+        kept.push({ steps });
+      }
+      return kept;
+    }, [])
+    .toReversed();
+};
 
 export const createWorkbookHistory = (
   stepper: Stepper,
@@ -95,6 +127,10 @@ export const createWorkbookHistory = (
     rebase: (map) => {
       done.splice(0, done.length, ...rebased(done, map));
       undone.splice(0, undone.length, ...rebased(undone, map));
+    },
+    trace: (start, pass) => {
+      done.splice(0, done.length, ...traced(done, start, pass));
+      undone.splice(0, undone.length, ...traced(undone, start, pass));
     },
     get canUndo() {
       return done.length > 0;

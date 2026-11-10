@@ -14,6 +14,7 @@ import { mergeLayouts } from './merge-layout';
 import { changesOver, stepOver } from './rebase-queue';
 import { changesOf } from './remote-change';
 import { flattened, settleForStep, snapshotSteps } from './schema';
+import { foreignEdits, touchedOver, yieldStep } from './yield-step';
 
 interface Unconfirmed {
   readonly step: WorkbookStep;
@@ -166,6 +167,18 @@ export const createWorkbookDocument = ({
       const moving = replay(remote);
 
       history?.rebase((step) => stepOver(step, moving));
+
+      history?.trace(
+        foreignEdits(
+          steps,
+          unconfirmed.map(({ step }) => step),
+        ),
+        (touched, step) => ({
+          step: yieldStep(step, touched),
+          state: touchedOver(touched, step),
+        }),
+      );
+
       notify(steps);
       return true;
     },

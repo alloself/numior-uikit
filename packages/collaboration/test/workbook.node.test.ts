@@ -268,6 +268,46 @@ describe('workbook steps through the collaboration envelope', () => {
     expectSame(ann, bob);
   });
 
+  it('leaves a cell someone else has rewritten out of an undo and a redo', () => {
+    const net = network();
+    const [ann, bob] = pair(net);
+
+    ann.commit([writeCells(valueCell(0, 0, 'base'), valueCell(0, 1, 'kept'))]);
+    net.settle();
+    ann.commit([writeCells(valueCell(0, 0, 'mine'), valueCell(0, 1, 'mine too'))]);
+    net.settle();
+    bob.commit([writeCells(valueCell(0, 0, 'theirs'))]);
+    net.settle();
+    ann.undo();
+    net.settle();
+
+    expect([ann.text(SHEET, 0, 0), ann.text(SHEET, 0, 1)]).toEqual(['theirs', 'kept']);
+    expectSame(ann, bob);
+
+    ann.redo();
+    net.settle();
+
+    expect([ann.text(SHEET, 0, 0), ann.text(SHEET, 0, 1)]).toEqual(['theirs', 'mine too']);
+    expectSame(ann, bob);
+  });
+
+  it('finds the rewritten cell of an older step under the rows inserted since', () => {
+    const net = network();
+    const [ann, bob] = pair(net);
+
+    ann.commit([writeCells(valueCell(2, 0, 'mine'), valueCell(2, 1, 'mine too'))]);
+    ann.commit([insertRow(0)]);
+    net.settle();
+    bob.commit([writeCells(valueCell(3, 0, 'theirs'))]);
+    net.settle();
+    ann.undo();
+    ann.undo();
+    net.settle();
+
+    expect([ann.text(SHEET, 2, 0), ann.text(SHEET, 2, 1)]).toEqual(['theirs', '']);
+    expectSame(ann, bob);
+  });
+
   it('keeps two sheets added at the same time', () => {
     const net = network();
     const [ann, bob] = pair(net);
