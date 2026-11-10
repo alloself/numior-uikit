@@ -84,6 +84,9 @@
   --nui-line-height: 1.5;
   --nui-line-height-tight: 1.25;
   --nui-line-height-control: round(up, 1.25em, 0.25rem);
+  --nui-line-height-label: round(down, calc(1em * var(--nui-line-height)), 0.25rem);
+  --nui-icon-size: round(1.15em, 2px);
+  --nui-icon-size-sm: round(1em, 2px);
   --nui-line-height-relaxed: 1.7;
   --nui-tracking-tight: -0.02em;
   --nui-measure: 65ch;

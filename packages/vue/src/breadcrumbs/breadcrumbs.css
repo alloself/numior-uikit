@@ -3,7 +3,7 @@
   color: var(--nui-text-muted);
   font-family: var(--nui-font);
   font-size: var(--nui-font-size-sm);
-  line-height: var(--nui-line-height);
+  line-height: var(--nui-line-height-control);
 }
 .nui-breadcrumbs__list {
   display: flex;
@@ -42,12 +42,12 @@
   font-weight: 500;
 }
 .nui-breadcrumbs__icon {
-  inline-size: 1em;
-  block-size: 1em;
+  inline-size: var(--nui-icon-size-sm);
+  block-size: var(--nui-icon-size-sm);
 }
 .nui-breadcrumbs__separator {
-  inline-size: 1em;
-  block-size: 1em;
+  inline-size: var(--nui-icon-size-sm);
+  block-size: var(--nui-icon-size-sm);
   opacity: 0.6;
 }
 .nui-breadcrumbs__separator:dir(rtl) {

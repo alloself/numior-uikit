@@ -3,6 +3,10 @@ import { expectRgb, rgbOf, tokenRgbIn } from './helpers/color';
 import { boxOf } from './helpers/geometry';
 import type { Theme } from './pages/playground';
 
+const FLUID_DEMO_PARTS = /^nui-card(__media)? > |^nui-splitter__pane text/;
+
+const sizedByKit = (part: string): boolean => !FLUID_DEMO_PARTS.test(part);
+
 test('standalone button activates by keyboard and loading blocks activation', async ({
   playground,
   buttons: { primary, loading, loadingToggle, link },
@@ -115,6 +119,25 @@ test('every enabled control that reacts to a click shows the pointer cursor', as
 }) => {
   await playground.open();
   expect(await playground.controlsWithoutPointer()).toEqual([]);
+});
+
+test('kit boxes, icons and text lines sit on whole pixels in both densities', async ({
+  playground,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'text metrics are rounded per engine');
+  test.slow();
+
+  await playground.open();
+
+  const comfortable = await playground.offPixelParts();
+
+  await playground.setDensity('compact');
+
+  const compact = await playground.offPixelParts();
+
+  expect(comfortable.filter(sizedByKit)).toEqual([]);
+  expect(compact.filter(sizedByKit)).toEqual([]);
 });
 
 test('light and dark playground have no automatically detectable WCAG AA violations', async ({

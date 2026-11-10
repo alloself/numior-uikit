@@ -9,7 +9,7 @@
   color: var(--nui-text);
   font-family: var(--nui-font);
   font-size: var(--nui-font-size-sm);
-  line-height: var(--nui-line-height);
+  line-height: var(--nui-line-height-label);
   outline: none;
 }
 .nui-list__items,
@@ -84,8 +84,8 @@
 }
 .nui-list--variant-nav .nui-list-item {
   --_min-size: 2.25rem;
+  --_divider-size: 0px;
 
-  border-block-start: 0;
   border-radius: var(--nui-radius-sm);
 }
 .nui-list--variant-nav .nui-list-item__inner {
@@ -157,12 +157,13 @@
   --_hover: var(--nui-hover);
   --_row-weight: 500;
   --_row-description-size: var(--nui-font-size-sm);
+  --_divider-size: 1px;
 
   box-sizing: border-box;
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  border-block-start: 1px solid var(--_divider);
+  border-block-start: var(--_divider-size) solid var(--_divider);
   transition:
     background-color var(--nui-duration-fast) var(--nui-easing),
     color var(--nui-duration-fast) var(--nui-easing);
@@ -185,8 +186,8 @@
   --_min-size: 2rem;
   --_row-weight: 400;
   --_row-description-size: var(--nui-font-size-xs);
+  --_divider-size: 0px;
 
-  border-block-start: 0;
   border-radius: var(--nui-radius-sm);
 }
 .nui-list-item__inner {

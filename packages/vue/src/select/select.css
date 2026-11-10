@@ -2,7 +2,7 @@
   --_height: var(--nui-control-height-md);
   --_padding: var(--nui-field-padding-md);
   --_font-size: var(--nui-control-font-size-md);
-  --_chevron: calc(1.25 * var(--_font-size));
+  --_chevron: round(calc(1.15 * var(--nui-control-font-size-xs)), 2px);
   --_clear-inset: calc(var(--_padding) + var(--_chevron) + var(--nui-space-2));
 
   box-sizing: border-box;

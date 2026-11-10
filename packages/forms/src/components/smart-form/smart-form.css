@@ -76,7 +76,7 @@
   color: var(--nui-text);
   font-size: var(--nui-font-size-md);
   font-weight: 600;
-  line-height: var(--nui-line-height-tight);
+  line-height: var(--nui-line-height-control);
 }
 
 .nui-smart-form__section-description {

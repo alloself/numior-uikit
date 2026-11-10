@@ -1,7 +1,7 @@
 .nui-avatar {
   --_size: 2rem;
   --_radius: var(--nui-radius-full);
-  --_font-size: calc(var(--_size) * 0.4);
+  --_font-size: round(calc(var(--_size) * 0.4), 1px);
   --_status-tone: var(--nui-text-subtle);
 
   box-sizing: border-box;
@@ -46,7 +46,7 @@
   color: var(--nui-text);
   font-size: var(--_font-size);
   font-weight: 600;
-  line-height: 1;
+  line-height: var(--nui-line-height-control);
   user-select: none;
   transition:
     background-color var(--nui-duration-fast) var(--nui-easing),
@@ -59,16 +59,16 @@
   object-fit: cover;
 }
 .nui-avatar__icon {
-  inline-size: 55%;
-  block-size: 55%;
+  inline-size: round(55%, 2px);
+  block-size: round(55%, 2px);
   color: var(--nui-text-muted);
 }
 .nui-avatar__status {
   position: absolute;
   inset-block-end: 0;
   inset-inline-end: 0;
-  inline-size: calc(var(--_size) * 0.28);
-  block-size: calc(var(--_size) * 0.28);
+  inline-size: round(calc(var(--_size) * 0.28), 2px);
+  block-size: round(calc(var(--_size) * 0.28), 2px);
   border-radius: 50%;
   background: var(--_status-tone);
   box-shadow: 0 0 0 2px var(--nui-ring);
@@ -79,10 +79,10 @@
   inset-block-start: 0;
   inset-inline-end: 0;
   display: inline-flex;
-  translate: 30% -30%;
+  translate: round(30%, 1px) round(-30%, 1px);
 }
 .nui-avatar__badge:dir(rtl) {
-  translate: -30% -30%;
+  translate: round(-30%, 1px) round(-30%, 1px);
 }
 .nui-avatar--grouped:not(:first-child) {
   margin-inline-start: calc(-1 * var(--_overlap, 0.5rem));
@@ -104,7 +104,7 @@
   --_overlap: 0.5rem;
 }
 .nui-avatar-group__overflow .nui-avatar__figure {
-  --_font-size: calc(var(--_size) * 0.34);
+  --_font-size: round(calc(var(--_size) * 0.34), 1px);
 
   background: var(--nui-surface-muted);
   color: var(--nui-text);

@@ -1,5 +1,13 @@
 import type { Locator, Page } from '@playwright/test';
 import { sectionScope, wcagViolationsOf, type AxeViolations } from '../helpers/axe';
+import {
+  hideLayer,
+  kitPixelsOf,
+  motionSettled,
+  offPixel,
+  showLayer,
+  type KitPixels,
+} from '../helpers/pixels';
 import { DataSection } from './data';
 import { DatesSection } from './dates';
 import { FeedbackSection } from './feedback';
@@ -151,6 +159,8 @@ const CLICKABLE_CONTROLS = [
 const ZOOM_CONTROLS = '.nui-content__zoom';
 
 const DRAG_GRIPS = '.nui-table__row-grip, .nui-button--grip';
+
+const LAYERS = '[popover], dialog';
 
 export class PlaygroundPage {
   readonly workspace: Locator;
@@ -304,6 +314,25 @@ export class PlaygroundPage {
         }),
       { selector: CLICKABLE_CONTROLS, grips: DRAG_GRIPS, zooms: ZOOM_CONTROLS },
     );
+  }
+
+  async offPixelParts(): Promise<string[]> {
+    await motionSettled(this.page);
+
+    const measured: KitPixels[] = [await kitPixelsOf(this.page.locator('body'))];
+
+    for (const layer of await this.page.locator(LAYERS).all()) {
+      if (await showLayer(layer)) {
+        measured.push(await kitPixelsOf(layer));
+
+        await hideLayer(layer);
+      }
+    }
+
+    return offPixel({
+      boxes: measured.flatMap((part) => part.boxes),
+      lines: measured.flatMap((part) => part.lines),
+    });
   }
 
   hasHorizontalOverflow(): Promise<boolean> {

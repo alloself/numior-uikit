@@ -18,7 +18,7 @@
   color: var(--nui-text);
   font-family: var(--nui-font);
   font-size: var(--nui-font-size-sm);
-  line-height: var(--nui-line-height);
+  line-height: var(--nui-line-height-label);
   box-shadow: var(--nui-shadow-md);
   overflow-y: auto;
   outline: none;
@@ -46,7 +46,7 @@
 
 .nui-menu-item {
   --_tone: var(--nui-text);
-  --_indicator: 1.25em;
+  --_indicator: var(--nui-icon-size);
 
   box-sizing: border-box;
   position: relative;

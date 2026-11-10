@@ -214,8 +214,8 @@
   outline-offset: calc(var(--nui-focus-ring-offset) * -1);
 }
 .nui-code__expand-icon {
-  inline-size: 1em;
-  block-size: 1em;
+  inline-size: var(--nui-icon-size-sm);
+  block-size: var(--nui-icon-size-sm);
   transition: rotate var(--nui-duration-normal) var(--nui-easing);
 }
 .nui-code__expand[aria-expanded='true'] .nui-code__expand-icon {

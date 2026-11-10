@@ -145,6 +145,17 @@ export class TableSheetSection {
     return cell.locator(':scope > .nui-table__content');
   }
 
+  async textLines(position: number, col: number): Promise<number> {
+    const text = this.text(position, col);
+
+    const [box, line] = await Promise.all([
+      textBoxOf(text),
+      text.evaluate((element) => Number.parseFloat(getComputedStyle(element).lineHeight)),
+    ]);
+
+    return Math.round(box.height / line);
+  }
+
   async canvasTop(target: Locator): Promise<number> {
     const [box, frame, scrolled] = await Promise.all([
       boxOf(target),

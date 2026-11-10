@@ -15,6 +15,7 @@
   min-inline-size: 0;
   margin: 0;
   font-size: var(--nui-font-size-sm);
+  line-height: var(--nui-line-height-control);
 }
 .nui-spreadsheet__file-text {
   overflow: hidden;

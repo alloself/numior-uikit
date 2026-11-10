@@ -68,7 +68,7 @@
   overflow: hidden;
   color: var(--nui-text);
   font-size: var(--nui-font-size-xs);
-  line-height: 1.4;
+  line-height: var(--nui-line-height-control);
   text-overflow: ellipsis;
   white-space: nowrap;
   background: color-mix(in oklab, var(--_colour) 24%, var(--nui-surface));
