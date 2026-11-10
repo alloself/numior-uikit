@@ -262,6 +262,35 @@ describe('NuiSpreadsheet drawings', () => {
     expect(anchorsOf(book)[1]).toMatchObject({ x: 0, y: 10, width: 64, height: 40 });
   });
 
+  it('leaves the keys of an open cell menu to the menu while a drawing is selected', async () => {
+    const book = drawnBook([PICTURE]);
+    const sheet = sheetOf(book);
+
+    await sheet.clickDrawing(0);
+    await sheet.openCellMenu(2, 0);
+    await sheet.pressInCellMenu('ArrowDown');
+    await sheet.pressInCellMenu('Delete');
+    await sheet.pressInCellMenu('Tab');
+
+    expect([sheet.drawings.length, anchorsOf(book)[0]]).toEqual([1, PICTURE.anchor]);
+  });
+
+  it('leaves the keys of a cell editor to the editor and lets the drawing go', async () => {
+    const book = drawnBook([PICTURE]);
+    const sheet = sheetOf(book);
+
+    await sheet.focus(2, 0);
+    await sheet.clickDrawing(0);
+    await sheet.press('F2');
+
+    expect([sheet.editing, sheet.selectedDrawings]).toEqual([true, []]);
+
+    await sheet.press('ArrowLeft');
+    await sheet.press('Backspace');
+
+    expect([sheet.drawings.length, anchorsOf(book)[0]]).toEqual([1, PICTURE.anchor]);
+  });
+
   it('moves a picture with the pointer in one undoable step', async () => {
     const book = drawnBook([PICTURE]);
     const sheet = sheetOf(book);

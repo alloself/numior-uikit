@@ -253,6 +253,38 @@ test.describe('book drawings', () => {
     await expect(book.charts).toHaveCount(1);
   });
 
+  test('leaves the keys of a cell menu to the menu and the focus in the sheet while a chart is selected', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.insertChart('3', 1, 'График');
+    await expect(book.selectedDrawing).toHaveCount(1);
+
+    const placed = await boxOf(book.selectedDrawing);
+
+    await page.keyboard.press('Shift+F10');
+    await page.keyboard.press('ArrowDown');
+    await expect(page.getByRole('menuitem', { name: 'Копировать', exact: true })).toBeFocused();
+
+    await page.keyboard.press('Escape');
+    await expect(book.cellMenuList).toBeHidden();
+    await expect(book.selectedDrawing).toHaveCount(1);
+
+    expect(await boxOf(book.selectedDrawing)).toEqual(placed);
+
+    await book.selectedDrawing.click({ button: 'right' });
+    await expect(book.focusedCell).toHaveCount(1);
+
+    await page.keyboard.press('F2');
+    await page.keyboard.press('Backspace');
+    await expect(book.charts).toHaveCount(2);
+    await expect(book.selectedDrawing).toHaveCount(0);
+  });
+
   test('inserts a picture from a file and from the clipboard, undo takes them back', async ({
     playground,
     book,

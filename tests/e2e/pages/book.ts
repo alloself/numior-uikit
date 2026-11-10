@@ -622,6 +622,14 @@ export class BookSection {
     return this.sheet.locator('.nui-spreadsheet__drawing--kind-chart');
   }
 
+  get selectedDrawing(): Locator {
+    return this.sheet.locator('.nui-spreadsheet__drawing--selected');
+  }
+
+  get focusedCell(): Locator {
+    return this.sheet.locator('[role="gridcell"]:focus');
+  }
+
   get chartTitle(): Locator {
     return this.charts.locator('.nui-spreadsheet__chart-title');
   }

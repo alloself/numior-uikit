@@ -10,6 +10,7 @@ import {
   type SheetLayout,
 } from '../../core';
 import { lineSizesOf } from '../sheet-cells';
+import { inField, inGrid } from '../sheet-keys';
 import type { FrameGrip } from '../sheet.types';
 import { allEdges, boxOfAnchor, edgesOf, movedAnchor, spanOf } from './drawing-box';
 import {
@@ -159,6 +160,8 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
   };
 
   const onDown = (event: PointerEvent, shown: ShownDrawing): void => {
+    event.preventDefault();
+
     if (
       event.button !== PRIMARY_BUTTON ||
       !canEdit(shown) ||
@@ -320,6 +323,13 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
     if (inSettings(event.target)) {
       return;
     }
+    if (inField(event.target)) {
+      deselect();
+      return;
+    }
+    if (!inGrid(event.target)) {
+      return;
+    }
     if (shown === undefined) {
       const [first] = options.drawings().filter(canEdit);
 
@@ -334,7 +344,7 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
     }
     if (onSelectedKey(event, shown)) {
       consume(event);
-    } else if (event.key.length === 1) {
+    } else if (event.key.length === 1 || event.key === Key.F2) {
       deselect();
     }
   };

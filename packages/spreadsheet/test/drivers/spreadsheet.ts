@@ -666,6 +666,15 @@ export class SpreadsheetDriver {
     await nextTick();
   }
 
+  async pressInCellMenu(key: string): Promise<void> {
+    const item = document.querySelector('.nui-table__cell-menu [role="menuitem"]');
+
+    if (item !== null) {
+      keydown(item, key, {});
+    }
+    await nextTick();
+  }
+
   async insertChart(row: number, col: number, kind: string): Promise<void> {
     await this.openCellMenu(row, col);
     await this.chooseCellMenuItem('Insert chart');

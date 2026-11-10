@@ -8,7 +8,7 @@ import {
   type Sheet,
   type WorkbookStep,
 } from '../core';
-import { isKey } from './sheet-keys';
+import { inGrid, isKey } from './sheet-keys';
 import {
   FillKey,
   FillTargetKind,
@@ -138,9 +138,6 @@ const fillKey = (event: KeyboardEvent): FillKey | undefined => {
 };
 
 const withCtrl = (event: MouseEvent): boolean => event.ctrlKey || event.metaKey;
-
-const inGrid = (target: EventTarget | null): boolean =>
-  target instanceof Element && target.closest('[role="grid"]') !== null;
 
 const activeWithin = (kept: CellRange, active: CellAddress | undefined): CellAddress =>
   active !== undefined && inside(kept, active) ? active : { row: kept.top, col: kept.left };
