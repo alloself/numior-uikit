@@ -33,8 +33,8 @@ const docs: DocsMap = {
         en: 'Arrow keys wrap from the last command to the first and back.',
       },
       autofocus: {
-        ru: 'Переводит фокус в поле поиска при монтировании.',
-        en: 'Focuses the search input on mount.',
+        ru: 'Переводит фокус в поле поиска при монтировании и при каждом открытии поповера или диалога, в котором лежит палитра.',
+        en: 'Focuses the search input on mount and every time the popover or dialog that holds the palette opens.',
       },
       embedded: {
         ru: 'Убирает рамку и скругление. Нужно внутри поповера или диалога, у которых уже есть своя рамка.',
@@ -142,8 +142,8 @@ const docs: DocsMap = {
         en: 'Arrow keys wrap from the last command to the first and back.',
       },
       autofocus: {
-        ru: 'Переводит фокус в поле поиска при монтировании.',
-        en: 'Focuses the search input on mount.',
+        ru: 'Переводит фокус в поле поиска при монтировании и при каждом открытии поповера или диалога, в котором лежит палитра.',
+        en: 'Focuses the search input on mount and every time the popover or dialog that holds the palette opens.',
       },
       getKey: {
         ru: 'Функция, которая возвращает ключ значения-объекта. Без неё ключом служит JSON значения.',

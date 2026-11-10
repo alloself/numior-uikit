@@ -20,6 +20,7 @@
         :aria-activedescendant="navigation.activeId.value"
         :aria-label="texts.label"
         :placeholder="texts.placeholder"
+        :autofocus="autofocus"
         :value="query"
         @input="onInput"
         @keydown="onKeydown"

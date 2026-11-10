@@ -36,6 +36,14 @@ describe('NuiCommand', () => {
     expect(command.activeLabel).toBeUndefined();
   });
 
+  it('asks the browser for focus whenever the layer around it opens', () => {
+    const asked = CommandDriver.mount({ props: { autofocus: true } });
+    const plain = CommandDriver.mount();
+
+    expect(asked.input.attributes('autofocus')).toBeDefined();
+    expect(plain.input.attributes('autofocus')).toBeUndefined();
+  });
+
   it('moves the active option with the arrows, on hover, and reports clicks', async () => {
     const command = CommandDriver.mount();
     await command.ready();
