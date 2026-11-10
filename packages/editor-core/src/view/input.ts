@@ -350,6 +350,12 @@ const moveInGap = (host: ViewHost, event: KeyboardEvent): boolean => {
 
 const IME_KEYS = new Set(['Process', 'Unidentified']);
 
+const sameGap = (selection: Selection, gap: Selection | undefined): boolean =>
+  selection.kind === SelectionKind.Gap &&
+  gap?.kind === SelectionKind.Gap &&
+  selection.id === gap.id &&
+  selection.side === gap.side;
+
 const handleKey = (host: ViewHost, event: KeyboardEvent): boolean => {
   const key = keyOf(event);
   const state = host.state();
@@ -433,20 +439,23 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   const { root } = host;
   const doc = root.ownerDocument;
   let dragging = false;
+  let opened: Selection | undefined;
 
-  const openGap = (): void => {
-    if (host.state().selection.kind !== SelectionKind.Gap) {
-      return;
+  const openGap = (): Selection | undefined => {
+    const gap = host.state().selection;
+
+    if (gap.kind !== SelectionKind.Gap) {
+      return undefined;
     }
 
     runIntent(host, { kind: 'insertText', text: '' });
     parts.sync.write();
+    return gap;
   };
 
   const onKeydown = (event: KeyboardEvent): void => {
-    if (IME_KEYS.has(event.key)) {
-      openGap();
-    }
+    opened = IME_KEYS.has(event.key) ? openGap() : undefined;
+
     if (host.composing() || event.isComposing || event.key === Key.Process) {
       return;
     }
@@ -457,6 +466,9 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   };
 
   const onBeforeinput = (event: InputEvent): void => {
+    const gap = opened;
+
+    opened = undefined;
     if (PASSIVE.has(event.inputType) || event.isComposing || host.composing()) {
       return;
     }
@@ -464,7 +476,13 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     event.preventDefault();
     const intent = readIntent(event, host);
 
-    if (intent !== undefined) {
+    if (intent === undefined) {
+      return;
+    }
+
+    runIntent(host, intent);
+
+    if (intent.kind === InputIntentKind.Delete && sameGap(host.state().selection, gap)) {
       runIntent(host, intent);
     }
   };

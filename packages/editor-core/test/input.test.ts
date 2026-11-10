@@ -272,6 +272,35 @@ describe('editor view input', () => {
     expect(view.press('ArrowRight')).toBe(false);
   });
 
+  it('deletes a picture from the place after it with a keyboard that names no keys', () => {
+    const image = node('image', [], { src: 'a.png' });
+    const view = mounted(doc(node('paragraph', ['ab']), image, node('paragraph', ['cd'])));
+
+    view.focus();
+    view.change((tr) => tr.setSelection({ kind: 'gap', id: image.id, side: 'end' }));
+    view.press('Unidentified');
+    view.input('deleteContentBackward');
+
+    expect(view.selection).toEqual({ kind: 'node', id: image.id });
+
+    view.press('Unidentified');
+    view.input('deleteContentBackward');
+
+    expect(view.modelTexts).toEqual(['ab', 'cd']);
+  });
+
+  it('writes in the place after a picture with a keyboard that names no keys', () => {
+    const image = node('image', [], { src: 'a.png' });
+    const view = mounted(doc(node('paragraph', ['ab']), image));
+
+    view.focus();
+    view.change((tr) => tr.setSelection({ kind: 'gap', id: image.id, side: 'end' }));
+    view.press('Unidentified');
+    view.type('x');
+
+    expect(view.modelTexts).toEqual(['ab', '', 'x']);
+  });
+
   it('selects the whole table when a click lands on one of its cells', () => {
     const cell = node('table_cell', [], { value: 1 });
 
