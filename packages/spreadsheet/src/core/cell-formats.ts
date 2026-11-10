@@ -78,11 +78,11 @@ export const createCellFormats = (): CellFormats => {
           move: moveSlots,
           clear: clearSlots,
           settle: (key, chunk) => {
-            const count = filledSlots(chunk.ids);
+            const held = filledSlots(chunk.ids);
 
-            size += count - chunk.count;
-            chunk.count = count;
-            if (count === 0) {
+            size += held - chunk.count;
+            chunk.count = held;
+            if (held === 0) {
               chunks.delete(key);
             }
           },

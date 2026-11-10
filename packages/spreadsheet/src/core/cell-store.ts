@@ -241,12 +241,12 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
           move: moveSlots,
           clear: clearSlots,
           settle: (key, chunk) => {
-            const count = filledSlots(chunk.kinds);
+            const held = filledSlots(chunk.kinds);
 
-            size += count - chunk.count;
-            chunk.count = count;
+            size += held - chunk.count;
+            chunk.count = held;
             chunk.stamp = revision;
-            if (count === 0) {
+            if (held === 0) {
               chunks.delete(key);
             }
           },
