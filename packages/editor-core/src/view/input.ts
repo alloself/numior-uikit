@@ -350,6 +350,9 @@ const moveInGap = (host: ViewHost, event: KeyboardEvent): boolean => {
 
 const IME_KEYS = new Set(['Process', 'Unidentified']);
 
+const isPlainInput = (event: InputEvent): boolean =>
+  !event.isComposing && !event.inputType.includes('Composition');
+
 const sameGap = (selection: Selection, gap: Selection | undefined): boolean =>
   selection.kind === SelectionKind.Gap &&
   gap?.kind === SelectionKind.Gap &&
@@ -453,6 +456,17 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     return gap;
   };
 
+  const onCompositionstart = (): void => {
+    openGap();
+    parts.setComposing(true);
+    parts.watch.startComposition();
+  };
+
+  const onCompositionend = (): void => {
+    parts.setComposing(false);
+    parts.watch.endComposition();
+  };
+
   const onKeydown = (event: KeyboardEvent): void => {
     opened = IME_KEYS.has(event.key) ? openGap() : undefined;
 
@@ -469,6 +483,9 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     const gap = opened;
 
     opened = undefined;
+    if (host.composing() && isPlainInput(event)) {
+      onCompositionend();
+    }
     if (PASSIVE.has(event.inputType) || event.isComposing || host.composing()) {
       return;
     }
@@ -671,17 +688,6 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
 
     parts.setHolding(false);
     parts.sync.write();
-  };
-
-  const onCompositionstart = (): void => {
-    openGap();
-    parts.setComposing(true);
-    parts.watch.startComposition();
-  };
-
-  const onCompositionend = (): void => {
-    parts.setComposing(false);
-    parts.watch.endComposition();
   };
 
   const onSelectionchange = (): void => {

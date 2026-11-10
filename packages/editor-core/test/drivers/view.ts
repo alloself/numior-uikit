@@ -88,6 +88,19 @@ const settle = (): Promise<void> =>
 const beforeinput = (inputType: string, data: string | null = null): InputEvent =>
   new InputEvent('beforeinput', { inputType, data, bubbles: true, cancelable: true });
 
+const writeAtCaret = (text: string): void => {
+  const selection = document.getSelection();
+  const anchor = selection?.anchorNode;
+  const offset = selection?.anchorOffset ?? 0;
+
+  if (!(anchor instanceof Text)) {
+return;
+}
+
+anchor.insertData(offset, text);
+    selection?.collapse(anchor, offset + text.length);
+};
+
 const textNodesOf = (root: Node): Text[] => {
   const found: Text[] = [];
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -452,21 +465,30 @@ export class EditorViewDriver {
   }
 
   async compose(text: string): Promise<boolean> {
-    const selection = document.getSelection();
-    const anchor = selection?.anchorNode;
-    const offset = selection?.anchorOffset ?? 0;
-
-    this.host.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    this.startComposition();
     const passive = this.host.dispatchEvent(beforeinput('insertCompositionText', text));
 
-    if (anchor instanceof Text) {
-      anchor.insertData(offset, text);
-      selection?.collapse(anchor, offset + text.length);
-    }
+    writeAtCaret(text);
     await settle();
     this.host.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: text }));
     await settle();
     return passive;
+  }
+
+  async startComposing(text: string): Promise<void> {
+    this.startComposition();
+    writeAtCaret(text);
+    await settle();
+  }
+
+  async finishComposing(): Promise<void> {
+    this.endComposition();
+    await settle();
+  }
+
+  async commitUnannounced(text: string): Promise<void> {
+    this.type(text);
+    await settle();
   }
 
   async editDom(block: number, text: string): Promise<void> {

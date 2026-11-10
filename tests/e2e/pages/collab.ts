@@ -2,6 +2,8 @@ import {
   expect,
   type Browser,
   type BrowserContext,
+  type CDPSession,
+  type JSHandle,
   type Locator,
   type Page,
   type WebSocketRoute,
@@ -44,6 +46,8 @@ export const unsentStepsOf = (name: string): Promise<number> =>
 export class CollabClient {
   private readonly sockets = new Set<WebSocketRoute>();
   private reachable = true;
+  private keyboard: CDPSession | undefined;
+  private compositions: JSHandle<string[]> | undefined;
 
   readonly editor: Locator;
   readonly status: Locator;
@@ -181,6 +185,40 @@ export class CollabClient {
     await act();
 
     return lag.evaluate((held) => held.measured);
+  }
+
+  async prependTo(index: number, text: string): Promise<void> {
+    await this.paragraph(index).click();
+    await this.page.keyboard.press('Home');
+    await this.page.keyboard.type(text);
+  }
+
+  async startComposing(text: string): Promise<void> {
+    this.compositions ??= await this.page.evaluateHandle(() => {
+      const started: string[] = [];
+
+      document.addEventListener('compositionstart', (event) => {
+        started.push(event.type);
+      });
+
+      return started;
+    });
+
+    this.keyboard ??= await this.page.context().newCDPSession(this.page);
+
+    await this.keyboard.send('Input.imeSetComposition', {
+      text,
+      selectionStart: text.length,
+      selectionEnd: text.length,
+    });
+  }
+
+  async commitComposed(text: string): Promise<void> {
+    await this.keyboard?.send('Input.insertText', { text });
+  }
+
+  async compositionsStarted(): Promise<number> {
+    return (await this.compositions?.evaluate((started) => started.length)) ?? 0;
   }
 
   async appendToEach(indices: readonly number[], text: string): Promise<void> {

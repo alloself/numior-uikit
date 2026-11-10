@@ -10,7 +10,7 @@ import type { NodeType, Schema } from '../schema/schema.types';
 import { appendChunk, fillChunks, placeInChunks, tidyChunks, type ChunkSet } from './chunks';
 import { segmentsOf, type BlockDecorations, type LocalDecoration } from './decorate';
 import { renderLeaf, renderParent, type RenderedDom } from './render-dom';
-import { commonPrefix, commonSuffix } from './text-diff';
+import { changeBetween, shiftAround } from './text-diff';
 import { DescKind, DomName, type NodeView, type NodeViewFactory } from './view.types';
 
 export interface ElementDesc {
@@ -515,24 +515,22 @@ const findText = (matching: Matching, node: TextNode): TextMatch | undefined => 
   return undefined;
 };
 
-const rewriteText = (dom: Text, text: string): void => {
-  const prefix = commonPrefix(dom.data, text);
-  const suffix = commonSuffix(dom.data, text, prefix);
+const rewriteText = (dom: Text, known: string, text: string): void => {
+  const change = changeBetween(known, text);
+  const shift = shiftAround(known, dom.data, change);
+  const { from, to, text: put } = shift === undefined ? changeBetween(dom.data, text) : change;
 
-  dom.replaceData(
-    prefix,
-    dom.data.length - prefix - suffix,
-    text.slice(prefix, text.length - suffix),
-  );
+  dom.replaceData(from + (shift ?? 0), to - from, put);
 };
 
 const syncText = (desc: TextDesc, node: TextNode, index: number): void => {
   const part = desc.parts[0];
+  const known = desc.node.text;
 
   desc.node = node;
   desc.index = index;
-  if (part !== undefined && part.dom.data !== node.text) {
-    rewriteText(part.dom, node.text);
+  if (part !== undefined && known !== node.text && part.dom.data !== node.text) {
+    rewriteText(part.dom, known, node.text);
   }
 };
 

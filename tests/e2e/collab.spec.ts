@@ -232,6 +232,34 @@ test.describe('collaboration', () => {
     await expect(anna.paragraph(1)).toHaveText(`Два${HALF}`);
   });
 
+  test('keeps a word being composed in its place while the other person types in the same line', async ({
+    collab,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'chromium',
+      'the composition is driven through the DevTools protocol',
+    );
+
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('one two');
+    await expect(boris.editor).toContainText('one two');
+
+    await anna.startComposing('にほ');
+    await boris.prependTo(0, 'B>');
+
+    await expect(anna.paragraph(0)).toHaveText('B>one twoにほ');
+
+    await anna.commitComposed('日本');
+    await anna.keepTyping('!');
+
+    await expect(boris.paragraph(0)).toHaveText('B>one two日本!');
+    await expect(anna.paragraph(0)).toHaveText('B>one two日本!');
+    expect(await anna.compositionsStarted()).toBe(1);
+  });
+
   test('loads the current document for someone who joins later', async ({ collab }) => {
     const anna = await collab.join(ANNA);
 

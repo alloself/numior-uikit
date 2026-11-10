@@ -254,6 +254,65 @@ describe('editor view input', () => {
     expect(view.selection).toEqual(textSelection(4));
   });
 
+  it('leaves the text being composed in its place when a change from outside lands earlier in the line', async () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(3);
+    await view.startComposing('й');
+    view.changeOutside((tr) => tr.insertText('xy', 1));
+
+    expect(view.domTexts).toEqual(['xyabй', 'cd']);
+    expect(view.domSpan).toEqual({ anchor: 6, head: 6 });
+
+    await view.finishComposing();
+
+    expect(view.modelTexts).toEqual(['xyabй', 'cd']);
+    expect(view.selection).toEqual(textSelection(6));
+  });
+
+  it('puts a change from outside after the text being composed at the same place', async () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(3);
+    await view.startComposing('й');
+    view.changeOutside((tr) => tr.insertText('xy', 3));
+
+    expect(view.domTexts).toEqual(['abйxy', 'cd']);
+    expect(view.domSpan).toEqual({ anchor: 4, head: 4 });
+
+    await view.finishComposing();
+
+    expect(view.modelTexts).toEqual(['abйxy', 'cd']);
+    expect(view.selection).toEqual(textSelection(4));
+  });
+
+  it('keeps the text being composed through a change from outside that deletes the letter before it', async () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(3);
+    await view.startComposing('й');
+    view.changeOutside((tr) => tr.delete(2, 3));
+
+    expect(view.domTexts).toEqual(['aй', 'cd']);
+
+    await view.finishComposing();
+
+    expect(view.modelTexts).toEqual(['aй', 'cd']);
+    expect(view.selection).toEqual(textSelection(3));
+  });
+
+  it('goes on reading what is typed when the keyboard commits without ending its composition', async () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(3);
+    await view.startComposing('й');
+    await view.commitUnannounced('z');
+
+    expect(view.view.composing).toBe(false);
+    expect(view.modelTexts).toEqual(['abйz', 'cd']);
+    expect(view.domTexts).toEqual(['abйz', 'cd']);
+  });
+
   it('lets the composition edit the DOM and catches the model up when it ends', async () => {
     const view = mounted(twoParagraphs());
 
