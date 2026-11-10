@@ -309,17 +309,23 @@ export const useSheetFill = (options: SheetFillOptions): SheetFill => {
   };
 
   const onKeydown = (event: KeyboardEvent): void => {
-    const key = idle() || !inGrid(event.target) ? undefined : fillKey(event);
-    const range = source();
+    const editing = options.editing.draft.value !== undefined;
+    const owned = !options.readonly() && (editing || inGrid(event.target));
+    const key = owned ? fillKey(event) : undefined;
 
-    const plan =
-      key === undefined || range === undefined ? undefined : keyFill(range, key === FillKey.Down);
+    if (key === undefined) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const range = editing ? undefined : source();
+    const plan = range === undefined ? undefined : keyFill(range, key === FillKey.Down);
 
     if (plan === undefined || range === undefined) {
       return;
     }
 
-    event.preventDefault();
     event.stopPropagation();
 
     if (Math.min(plan.from.top, plan.from.left) >= 0) {

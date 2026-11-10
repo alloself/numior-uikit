@@ -215,6 +215,39 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.text(2, 2)).toBe('100.0%');
   });
 
+  it('keeps Ctrl+R and Ctrl+D from the browser while a cell is edited or several ranges are selected', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.focus(2, 1);
+    await sheet.press('F2');
+    await sheet.type('unsaved');
+
+    expect(await sheet.leavesToBrowser('r', { ctrl: true })).toBe(false);
+    expect(await sheet.leavesToBrowser('d', { ctrl: true })).toBe(false);
+    expect(sheet.editing).toBe(true);
+
+    await sheet.press('Escape');
+
+    await sheet.select({
+      active: { row: 2, col: 0 },
+      ranges: [
+        { top: 2, left: 0, bottom: 2, right: 0 },
+        { top: 4, left: 1, bottom: 4, right: 1 },
+      ],
+    });
+
+    expect(await sheet.leavesToBrowser('r', { ctrl: true })).toBe(false);
+    expect(sheet.changes).toEqual([]);
+  });
+
+  it('leaves Ctrl+R to the browser in a read-only book', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book', readonly: true });
+
+    await sheet.focus(2, 1);
+
+    expect(await sheet.leavesToBrowser('r', { ctrl: true })).toBe(true);
+  });
+
   it('fills down and right with Ctrl+D and Ctrl+R and continues a series to the neighbour data', async () => {
     const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
 

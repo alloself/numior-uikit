@@ -46,7 +46,7 @@ interface CellSpot {
   readonly col: number;
 }
 
-const keydown = (target: Element, key: string, options: KeyOptions): void => {
+const keydown = (target: Element, key: string, options: KeyOptions): boolean =>
   target.dispatchEvent(
     new KeyboardEvent('keydown', {
       key,
@@ -58,7 +58,6 @@ const keydown = (target: Element, key: string, options: KeyOptions): void => {
       cancelable: true,
     }),
   );
-};
 
 const restore = (owner: object, name: string, own: PropertyDescriptor | undefined): void => {
   if (own === undefined) {
@@ -326,6 +325,13 @@ export class SpreadsheetDriver {
   async press(key: string, options: KeyOptions = {}): Promise<void> {
     keydown(document.activeElement ?? document.body, key, options);
     await nextTick();
+  }
+
+  async leavesToBrowser(key: string, options: KeyOptions = {}): Promise<boolean> {
+    const left = keydown(document.activeElement ?? document.body, key, options);
+
+    await nextTick();
+    return left;
   }
 
   async type(text: string): Promise<void> {
