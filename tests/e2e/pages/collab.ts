@@ -19,6 +19,8 @@ const RECONNECT_TIMEOUT = 20_000;
 
 const TYPING_PAUSE = 8;
 
+const FIRST_WORD = { x: 12, y: 10 };
+
 const isCollabServer = (url: URL): boolean => url.port === COLLAB_PORT;
 
 export const unsentStepsOf = (name: string): Promise<number> =>
@@ -248,6 +250,10 @@ export class CollabClient {
   async reload(): Promise<void> {
     await this.page.reload();
     await this.editor.waitFor();
+  }
+
+  async selectWordInCopy(index: number): Promise<void> {
+    await this.readOnlyDocument.locator('p').nth(index).dblclick({ position: FIRST_WORD });
   }
 
   async openWithPlugin(version: number): Promise<void> {

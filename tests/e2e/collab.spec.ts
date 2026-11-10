@@ -116,6 +116,32 @@ test.describe('collaboration', () => {
     await expect.poll(() => anna.unsentSteps(collab.name)).toBe(0);
   });
 
+  test('takes a comment on a copy opened read-only and leaves its text alone', async ({
+    collab,
+  }) => {
+    const anna = await collab.joinOffline(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Начало');
+    await expect(boris.editor).toContainText('Начало');
+
+    await anna.disconnect();
+    await anna.appendTo(0, ' офлайн');
+    await expect.poll(() => anna.unsentSteps(collab.name)).toBeGreaterThan(0);
+
+    await anna.openWithPlugin(2);
+    await expect(anna.readOnlyDocument).toContainText('Начало');
+
+    await anna.selectWordInCopy(0);
+    await anna.page.keyboard.type('лишнее');
+    await anna.addComment('Заметка');
+
+    await expect(anna.threads).toContainText('Заметка');
+    await expect(anna.readOnlyDocument.locator('.nui-editor__comment')).toHaveText('Начало');
+    await expect(anna.readOnlyDocument).not.toContainText('лишнее');
+    expect(await wcagViolationsOf(anna.page)).toEqual([]);
+  });
+
   test('shows what each person types to the other', async ({ collab }) => {
     const anna = await collab.join(ANNA);
     const boris = await collab.join(BORIS);

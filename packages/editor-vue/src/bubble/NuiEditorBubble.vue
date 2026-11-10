@@ -5,6 +5,7 @@
     :anchor="anchor"
     mode="manual"
     placement="top"
+    size="auto"
     :offset="8"
     padding="sm"
     @mousedown.prevent

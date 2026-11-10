@@ -6,8 +6,8 @@ const docs: DocsMap = {
     props: {
       ...fieldControl,
       readonly: {
-        ru: 'Показывает документ без возможности правки. Текст можно выделить и скопировать.',
-        en: 'Shows the document without editing. The text can still be selected and copied.',
+        ru: 'Показывает документ без возможности правки. Текст можно выделить и скопировать, поле получает фокус. Кнопки из `selectionActions` остаются доступны.',
+        en: 'Shows the document without editing. The text can still be selected and copied, and the field takes focus. Buttons from `selectionActions` stay available.',
       },
       schema: {
         ru: 'Схема документа: какие блоки и стили допустимы. По умолчанию — `contentSchema` из `@numior/content`.',
@@ -86,8 +86,8 @@ const docs: DocsMap = {
         en: 'Background highlight colors in the menu. All nine by default.',
       },
       selectionActions: {
-        ru: 'Свои кнопки для выделенного текста: в панели над выделением и в панели инструментов. Кнопка отключена, пока команда неприменима.',
-        en: 'Your own buttons for selected text, in the bar over the selection and in the toolbar. A button is disabled while its command does not apply.',
+        ru: 'Свои кнопки для выделенного текста: в панели над выделением и в панели инструментов. Кнопка отключена, пока команда неприменима. В режиме `readonly` показываются только они: над выделением, а на сенсорном экране — в панели.',
+        en: 'Your own buttons for selected text, in the bar over the selection and in the toolbar. A button is disabled while its command does not apply. In `readonly` mode only these are shown: over the selection, or in the toolbar on a touch screen.',
       },
     },
     models: {
