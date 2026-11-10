@@ -75,6 +75,7 @@ export const yjsBinding = (
   const context: ReadContext = { schema, known };
   const origin = Symbol('nui-yjs');
   let applying = false;
+  let unread = false;
 
   const forget = (element: XmlElement): void => {
     let current: unknown = element;
@@ -126,6 +127,8 @@ export const yjsBinding = (
 
     const root = validRoot(state.doc.root);
 
+    unread = root === undefined;
+
     if (root === undefined) {
       onInvalid?.();
       return;
@@ -173,7 +176,7 @@ export const yjsBinding = (
       name: 'yjsBinding',
       props: {
         stateChanged: (state, before) => {
-          if (state.doc !== before.doc && !applying) {
+          if (state.doc !== before.doc && !applying && !unread) {
             write(state.doc.root);
           }
         },

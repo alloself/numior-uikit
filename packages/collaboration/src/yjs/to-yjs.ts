@@ -6,7 +6,7 @@ import {
   type TextNode,
 } from '@numior/editor-core';
 import { XmlElement, XmlText, type XmlFragment } from 'yjs';
-import { commonRun } from './common-run';
+import { commonRun, commonText } from './common-run';
 import { deltaRuns, ID_ATTRIBUTE, type DeltaRun } from './from-yjs';
 
 type Wanted =
@@ -111,14 +111,7 @@ const updateText = (text: XmlText, runs: readonly TextNode[]): void => {
     .join('');
 
   const after = runs.map((run) => run.text).join('');
-  const limit = Math.min(before.length, after.length);
-  const head = commonRun(limit, (index) => before[index] === after[index]);
-
-  const tail = commonRun(
-    limit - head,
-    (index) => before[before.length - 1 - index] === after[after.length - 1 - index],
-  );
-
+  const { head, tail } = commonText(before, after);
   const wanted = runs.map((run) => ({ text: run.text, format: formatOf(run.marks) }));
 
   if (before.length - head - tail > 0) {

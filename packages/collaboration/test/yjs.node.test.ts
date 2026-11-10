@@ -159,6 +159,21 @@ describe('yjsBinding', () => {
     expect(right.text()).toBe('>> Hello');
   });
 
+  it('carries a character outside the basic plane typed or deleted next to another one', () => {
+    const [left, right] = pair(docOf(paragraph('a', '\u{1F600}')));
+
+    left.insertAt('a', '\u{1F601}');
+    exchange(left, right);
+
+    expect(right.text()).toBe('\u{1F601}\u{1F600}');
+
+    left.apply((from) => from.tr.delete(1, 3));
+    exchange(left, right);
+
+    expect(left.text()).toBe('\u{1F600}');
+    expect(right.text()).toBe('\u{1F600}');
+  });
+
   it('merges typing from both sides', () => {
     const [left, right] = pair(docOf(paragraph('a', 'middle')));
 
@@ -288,6 +303,34 @@ describe('yjsBinding', () => {
     expect(onInvalid).toHaveBeenCalledTimes(1);
     expect(fragment.length).toBe(2);
     expect(client.text()).toBe('Hello');
+  });
+
+  it('writes nothing over a tree it could not read and goes on once it reads again', () => {
+    const doc = docOf(paragraph('a', 'Hello'));
+    const client = clientOf(doc);
+    const fragment = client.ydoc.getXmlFragment(FRAGMENT);
+
+    client.binding.seed(doc);
+
+    client.ydoc.transact(() => {
+      const foreign = new XmlElement('hologram');
+
+      fragment.insert(1, [foreign]);
+      foreign.setAttribute('nui:id', 'alien');
+    });
+
+    client.insertAt('a', '!');
+
+    expect(fragment.length).toBe(2);
+
+    client.ydoc.transact(() => {
+      fragment.delete(1, 1);
+    });
+
+    client.insertAt('a', '?');
+
+    expect(client.text()).toBe('?Hello');
+    expect(client.binding.read()?.root.content).toEqual(client.state().doc.root.content);
   });
 
   it('stops listening once destroyed', () => {
