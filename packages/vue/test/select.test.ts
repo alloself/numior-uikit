@@ -260,6 +260,20 @@ describe('NuiSelect', () => {
     off.unmount();
   });
 
+  it('marks a required select with aria-required and keeps form attributes off its button', () => {
+    const required = SelectDriver.mount({ props: { required: true } });
+    expect(required.trigger.attributes('aria-required')).toBe('true');
+    expect(required.trigger.attributes('required')).toBeUndefined();
+
+    required.unmount();
+    const optional = SelectDriver.mount();
+    expect(optional.trigger.attributes('aria-required')).toBeUndefined();
+    expect(optional.trigger.attributes('required')).toBeUndefined();
+    expect(optional.trigger.attributes('readonly')).toBeUndefined();
+
+    optional.unmount();
+  });
+
   it('keeps a readonly select closed while its value stays readable', async () => {
     const select = SelectDriver.mount({
       modelValue: 'lime',

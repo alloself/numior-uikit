@@ -68,8 +68,8 @@ const docs: DocsMap = {
         en: 'Shows the value but does not open the list. Inside `NuiField` it defaults to the field value.',
       },
       required: {
-        ru: 'Помечает поле обязательным. Внутри `NuiField` по умолчанию берётся из поля.',
-        en: 'Marks the field as required. Inside `NuiField` it defaults to the field value.',
+        ru: 'Помечает поле обязательным через `aria-required`. Внутри `NuiField` по умолчанию берётся из поля.',
+        en: 'Marks the field as required with `aria-required`. Inside `NuiField` it defaults to the field value.',
       },
       invalid: {
         ru: 'Показывает состояние ошибки без текста. Внутри `NuiField` по умолчанию берётся из поля.',

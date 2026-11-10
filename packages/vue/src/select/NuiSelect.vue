@@ -24,7 +24,7 @@
         :aria-labelledby="field?.labelledBy.value"
         :aria-required="isRequired || undefined"
         v-bind="{
-          ...controlAttrs,
+          ...triggerAttrs,
           ...split.controlAttrs(),
           ...control.invokerAttrs.value,
           ...readonlyInvoker,
@@ -197,6 +197,12 @@ const {
   () => ({ id, disabled, readonly, required, invalid, label, description, error }),
   { readonlyAttr: 'aria-readonly' },
 );
+
+const triggerAttrs = computed(() => {
+  const { required: _required, readonly: _readonly, ...rest } = controlAttrs.value;
+
+  return rest;
+});
 
 const listboxId = computed(() => `${controlAttrs.value.id}-listbox`);
 const entries = computed((): readonly SelectEntry<T>[] => options);

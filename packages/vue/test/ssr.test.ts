@@ -104,6 +104,15 @@ const renderReadonlySelect = () =>
     },
   });
 
+const renderRequiredSelect = () =>
+  renderToString(NuiSelect, {
+    props: {
+      modelValue: 'banana',
+      required: true,
+      options: [{ value: 'banana', label: 'Banana' }],
+    },
+  });
+
 const renderCombobox = () => renderToString(FieldScene, { props: { scene: 'combobox' } });
 
 const renderPopover = () => renderToString(PopoverScene);
@@ -698,6 +707,13 @@ describe('server rendering', () => {
     expect(html).toContain('class="nui-select__value"');
     expect(html).toContain('Banana');
     expect(await renderReadonlySelect()).toContain('aria-readonly="true"');
+  });
+
+  it('renders a required select with aria-required and no required attribute on its button', async () => {
+    const html = await renderRequiredSelect();
+
+    expect(html).toContain('aria-required="true"');
+    expect(html).not.toMatch(/<button[^>]*\srequired/);
   });
 
   it('renders a calendar grid with one tab stop and a deterministic today marker', async () => {
