@@ -109,6 +109,34 @@ describe('NuiSelect', () => {
     labelled.unmount();
   });
 
+  it('shows the loading state inside the listbox while its options load', () => {
+    const select = SelectDriver.mount({ props: { options: [], loading: true } });
+
+    expect(select.statusText).toBe('Loading');
+
+    select.unmount();
+
+    const labelled = SelectDriver.mount({
+      props: { options: [], loading: true, loadingLabel: 'Ищем…' },
+    });
+
+    expect(labelled.statusText).toBe('Ищем…');
+
+    labelled.unmount();
+  });
+
+  it('speaks the language of its own locale over the configured one', () => {
+    const select = SelectDriver.mount({
+      props: { options: [], loading: true, locale: 'ru-RU' },
+      config: { locale: 'en-US' },
+    });
+
+    expect(select.statusText).toBe('Загрузка');
+    expect(select.toggleLabel).toBe('Показать варианты');
+
+    select.unmount();
+  });
+
   it('shows the placeholder without a value and picks options by typeahead while closed', async () => {
     const select = SelectDriver.mount({ props: { placeholder: 'Pick a fruit' } });
     expect(select.valueText).toBe('Pick a fruit');

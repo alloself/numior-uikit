@@ -71,6 +71,8 @@
         :checkable="multiple"
         :get-key="getKey"
         :loop="loop"
+        :loading="loading"
+        :loading-label="loadingText"
         :empty-label="emptyText"
         v-bind="control.contentAttrs.value"
         @toggle="shown.onToggle"
@@ -96,6 +98,8 @@
         :get-key="getKey"
         :keyboard="false"
         :active-id="navigation.activeId.value"
+        :loading="loading"
+        :loading-label="loadingText"
         :empty-label="emptyText"
         v-bind="control.contentAttrs.value"
         @toggle="shown.onToggle"
@@ -131,6 +135,7 @@ import {
   FloatingPlacement,
   Key,
   useFieldControl,
+  useLocale,
   useMessages,
   useSplitAttrs,
 } from '@numior/primitives';
@@ -138,6 +143,7 @@ import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
+import { listMessages } from '../list/list.messages';
 import NuiTree from '../tree/NuiTree.vue';
 import { isListGroup, optionIndexOf, type NuiListGroup, type NuiOption } from '../shared/options';
 import { useListboxSurface } from '../shared/use-listbox-surface';
@@ -171,8 +177,11 @@ const {
   name,
   getKey,
   loop = true,
+  loading = false,
+  locale: localeProp,
   placement = FloatingPlacement.BottomStart,
   emptyLabel,
+  loadingLabel,
   clearLabel,
   toggleLabel,
   countLabel,
@@ -183,7 +192,9 @@ const values = defineModel<T[]>('values', { default: () => [] });
 const emit = defineEmits<{ load: [item: NuiTreeItem<T>] }>();
 
 const split = useSplitAttrs();
-const messages = useMessages(selectMessages);
+const locale = useLocale(() => localeProp);
+const messages = useMessages(selectMessages, locale);
+const listTexts = useMessages(listMessages, locale);
 
 const {
   frame: fieldFrame,
@@ -246,6 +257,7 @@ const displayLabel = computed(() => {
 });
 
 const emptyText = computed(() => emptyLabel ?? messages.value.empty);
+const loadingText = computed(() => loadingLabel ?? listTexts.value.loading);
 const clearText = computed(() => clearLabel ?? messages.value.clear);
 const toggleText = computed(() => toggleLabel ?? messages.value.toggle);
 

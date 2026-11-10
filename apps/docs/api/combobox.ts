@@ -38,6 +38,14 @@ const docs: DocsMap = {
         ru: 'Функция, которая превращает введённый текст в значение. Enter добавляет его, если в списке ничего не выделено.',
         en: 'Function that turns the typed text into a value. Enter adds it when no option is highlighted.',
       },
+      loop: {
+        ru: 'С последнего варианта стрелка переходит на первый и обратно. По умолчанию включено.',
+        en: 'Arrow keys wrap from the last option to the first and back. On by default.',
+      },
+      locale: {
+        ru: 'Язык поиска по тексту и встроенных текстов, например `tr-TR`. По умолчанию — язык из `createNuiConfig`.',
+        en: 'Locale of the text search and the built-in texts, such as `tr-TR`. Defaults to the locale from `createNuiConfig`.',
+      },
       placement: {
         ru: 'Где открывается список, например `bottom-start` или `top`.',
         en: 'Where the list opens, such as `bottom-start` or `top`.',

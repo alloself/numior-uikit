@@ -13,8 +13,11 @@ export interface NuiSelectProps<T> extends NuiFieldControlProps {
   name?: string | undefined;
   getKey?: NuiOptionKey<T> | undefined;
   loop?: boolean | undefined;
+  loading?: boolean | undefined;
+  locale?: string | undefined;
   placement?: FloatingPlacement | undefined;
   emptyLabel?: string | undefined;
+  loadingLabel?: string | undefined;
   clearLabel?: string | undefined;
   toggleLabel?: string | undefined;
   countLabel?: ((count: number) => string) | undefined;

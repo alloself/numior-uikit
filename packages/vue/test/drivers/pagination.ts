@@ -1,5 +1,5 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import type { NuiConfigOptions, NuiPaginationProps } from '../../src';
+import { NuiSize, type NuiConfigOptions, type NuiPaginationProps } from '../../src';
 import PaginationScene from '../fixtures/PaginationScene.vue';
 import { configPlugins } from '../support/config';
 import { choosePageSize } from '../support/page-size';
@@ -14,6 +14,8 @@ export interface PaginationMountOptions {
 }
 
 type PaginationSceneWrapper = VueWrapper<InstanceType<typeof PaginationScene>>;
+
+const SIZES = Object.values(NuiSize);
 
 export class PaginationDriver extends ComponentDriver {
   protected readonly block = 'nui-pagination';
@@ -95,6 +97,12 @@ export class PaginationDriver extends ComponentDriver {
 
   get pageSizeText(): string {
     return this.wrapper.find('.nui-pagination__page-size-label').text();
+  }
+
+  get pageSizeSelectSize(): string | undefined {
+    return SIZES.find((size) =>
+      this.wrapper.find('.nui-pagination__select').classes(`nui-select--size-${size}`),
+    );
   }
 
   get previousDisabled(): boolean {

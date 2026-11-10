@@ -206,4 +206,31 @@ describe('NuiPagination', () => {
 
     pagination.unmount();
   });
+
+  it('writes the numbers of the range by its own locale', () => {
+    const pagination = PaginationDriver.mount({
+      props: { total: 12_345, locale: 'de-DE' },
+      page: 100,
+    });
+
+    expect(pagination.rangeText).toBe('1.981–2.000 of 12.345');
+
+    pagination.unmount();
+  });
+
+  it('gives the page size select the size of the pagination', () => {
+    const large = PaginationDriver.mount({
+      props: { total: 240, pageSizes: [10, 20], size: 'lg' },
+    });
+
+    expect(large.pageSizeSelectSize).toBe('lg');
+
+    large.unmount();
+
+    const usual = PaginationDriver.mount({ props: { total: 240, pageSizes: [10, 20] } });
+
+    expect(usual.pageSizeSelectSize).toBe('md');
+
+    usual.unmount();
+  });
 });

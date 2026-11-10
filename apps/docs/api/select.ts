@@ -31,6 +31,14 @@ const docs: DocsMap = {
         ru: 'С последнего варианта стрелка переходит на первый и обратно.',
         en: 'Arrow keys wrap from the last option to the first and back.',
       },
+      loading: {
+        ru: 'Показывает в списке строку «Загрузка», пока варианты загружаются.',
+        en: 'Shows a "Loading" row in the list while the options load.',
+      },
+      locale: {
+        ru: 'Язык встроенных текстов этого поля, например `ru-RU`. По умолчанию — язык из `createNuiConfig`.',
+        en: 'Locale of the built-in texts of this field, such as `en-US`. Defaults to the locale from `createNuiConfig`.',
+      },
       placement: {
         ru: 'С какой стороны поля открывается список, по умолчанию `bottom-start`.',
         en: 'Side of the field the list opens on, `bottom-start` by default.',
@@ -38,6 +46,10 @@ const docs: DocsMap = {
       emptyLabel: {
         ru: 'Текст пустого списка. По умолчанию — «Нет вариантов» из словаря.',
         en: 'Text of an empty list. Defaults to "No options" from the dictionary.',
+      },
+      loadingLabel: {
+        ru: 'Текст строки загрузки. По умолчанию — «Загрузка» из словаря.',
+        en: 'Text of the loading row. Defaults to "Loading" from the dictionary.',
       },
       clearLabel: {
         ru: 'Подпись кнопки очистки для экранных дикторов. По умолчанию — «Очистить» из словаря.',

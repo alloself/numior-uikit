@@ -82,7 +82,7 @@
         :keyboard="false"
         :active-id="navigation.activeId.value"
         :loading="loading"
-        :loading-label="loadingLabel"
+        :loading-label="texts.loading"
         :empty-label="texts.empty"
         v-bind="control.contentAttrs.value"
         @select="onSelect"
@@ -116,6 +116,7 @@ import {
   Key,
   ListMove,
   useFieldControl,
+  useLocale,
   useMessages,
   useSplitAttrs,
   isComposing,
@@ -128,6 +129,7 @@ import NuiList from '../list/NuiList.vue';
 import { filterOptions, flattenEntries, optionElementId, type NuiOption } from '../shared/options';
 import { useListboxSurface } from '../shared/use-listbox-surface';
 import { useOptionSelection } from '../shared/use-option-selection';
+import { listMessages } from '../list/list.messages';
 import { comboboxMessages } from './combobox.messages';
 import { ComboboxDraftKind, type ComboboxDraft, type NuiComboboxProps } from './combobox.types';
 import { NuiSize } from '../shared/scale.types';
@@ -153,6 +155,8 @@ const {
   getKey,
   filter = undefined,
   loading = false,
+  loop = true,
+  locale: localeProp,
   customValue,
   placement = FloatingPlacement.BottomStart,
   emptyLabel,
@@ -167,7 +171,9 @@ const values = defineModel<T[]>('values', { default: () => [] });
 const emit = defineEmits<{ search: [query: string] }>();
 
 const split = useSplitAttrs();
-const messages = useMessages(comboboxMessages);
+const locale = useLocale(() => localeProp);
+const messages = useMessages(comboboxMessages, locale);
+const listTexts = useMessages(listMessages, locale);
 
 const {
   frame: fieldFrame,
@@ -184,6 +190,7 @@ const listboxId = computed(() => `${controlAttrs.value.id}-listbox`);
 
 const texts = computed(() => ({
   empty: emptyLabel ?? messages.value.empty,
+  loading: loadingLabel ?? listTexts.value.loading,
   clear: clearLabel ?? messages.value.clear,
   remove: removeLabel ?? messages.value.remove,
   toggle: toggleLabel ?? messages.value.toggle,
@@ -223,17 +230,19 @@ const query = computed(() =>
   draft.value.kind === ComboboxDraftKind.Typed ? draft.value.text : singleLabel.value,
 );
 
+const lower = (text: string): string => text.toLocaleLowerCase(locale.value);
+
 const lowered = computed(
-  () => new Map(flattenEntries(options).map((option) => [option, option.label.toLowerCase()])),
+  () => new Map(flattenEntries(options).map((option) => [option, lower(option.label)])),
 );
 
 const defaultFilter = (option: NuiOption<T>, needle: string): boolean =>
-  (lowered.value.get(option) ?? option.label.toLowerCase()).includes(needle);
+  (lowered.value.get(option) ?? lower(option.label)).includes(needle);
 
 const isEnabled = (option: NuiOption<T>): boolean => !option.disabled;
 
 const filtered = computed(() => {
-  const needle = query.value.trim().toLowerCase();
+  const needle = lower(query.value.trim());
   if (filter === false || !typing.value || needle === '') {
     return options;
   }
@@ -256,7 +265,7 @@ const { listboxElement, setListbox, control, navigation, activateHovered, restAc
     mode: 'manual',
     placement: () => placement,
     focus: 'virtual',
-    loop: true,
+    loop: () => loop,
     typeahead: false,
   });
 
