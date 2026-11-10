@@ -6,7 +6,6 @@ import {
   referenceSpans,
   retarget,
   toggleAnchors,
-  type CellRange,
   type ReferenceSpan,
   type Sheet,
 } from '../core';
@@ -113,15 +112,8 @@ const frameOf = (cells: SheetCells, span: ReferenceSpan, tone: number): Referenc
   };
 };
 
-const sheetRange = (cells: SheetCells, range: NuiTableRange): CellRange => ({
-  top: cells.rowAt(Math.min(range.from.row, range.to.row)),
-  left: cells.colAt(Math.min(range.from.col, range.to.col)),
-  bottom: cells.rowAt(Math.max(range.from.row, range.to.row)),
-  right: cells.colAt(Math.max(range.from.col, range.to.col)),
-});
-
 const referenceText = (cells: SheetCells, range: NuiTableRange): string =>
-  formatRange(sheetRange(cells, range));
+  formatRange(cells.rangeOf(range));
 
 const clampShift = (shift: number, low: number, high: number, last: number): number =>
   Math.min(Math.max(shift, -low), last - high);
@@ -321,7 +313,7 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
     const result = retarget(
       current.text,
       current.span,
-      sheetRange(cells, draggedRange(current, cell, cells)),
+      cells.rangeOf(draggedRange(current, cell, cells)),
     );
 
     if (result.text === textOf(draft.value)) {

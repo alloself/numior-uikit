@@ -19,19 +19,8 @@ export const selectionKey = (selection: NuiSpreadsheetSelection | undefined): st
         ...selection.ranges.map(rangeKey),
       ].join('/');
 
-export const lineRange = (cells: SheetCells, range: NuiTableRange): CellRange => {
-  const top = Math.min(range.from.row, range.to.row);
-  const bottom = Math.max(range.from.row, range.to.row);
-  const left = Math.min(range.from.col, range.to.col);
-  const right = Math.max(range.from.col, range.to.col);
-
-  return {
-    top: cells.rowAt(top),
-    left: cells.colAt(left),
-    bottom: cells.rowAt(bottom),
-    right: cells.colAt(right),
-  };
-};
+export const lineRange = (cells: SheetCells, range: NuiTableRange): CellRange =>
+  cells.rangeOf(range);
 
 const cellRange = (cell: CellAddress): CellRange => ({
   top: cell.row,
@@ -59,7 +48,7 @@ export const useSheetSelection = (options: SheetSelectionOptions): SheetSelectio
       return undefined;
     }
 
-    const active = { row: cells.rowAt(position.row), col: cells.colAt(position.col) };
+    const active = cells.cellOf(position.row, position.col);
     const ranges = options.formula.ranges.value.map((range) => lineRange(cells, range));
 
     return { active, ranges: ranges.length === 0 ? [cellRange(active)] : ranges };

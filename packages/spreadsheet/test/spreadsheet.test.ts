@@ -4,8 +4,10 @@ import {
   RU_LOCALE,
   createCalculator,
   createWorkbook,
+  lineLayoutsOf,
   numberValue,
   textValue,
+  type LineLayout,
   type SheetView,
   type Workbook,
 } from '../src/core';
@@ -17,6 +19,16 @@ const WHOLE_COLUMN = 1_048_575;
 const TALL_ROWS = 2500;
 
 const TALL_COLS = 10;
+
+const HIDDEN_LINE: LineLayout = {
+  size: undefined,
+  custom: false,
+  hidden: true,
+  level: 0,
+  collapsed: false,
+  style: undefined,
+  extra: [],
+};
 
 const mounted: SpreadsheetDriver[] = [];
 
@@ -171,6 +183,32 @@ describe('NuiSpreadsheet', () => {
 
     expect(sheet.tabs).toEqual(['Rates', 'Sheet3']);
     expect(sheet.selectedTab).toBe('Rates');
+  });
+
+  it('reads and writes a merge through its first cell when the first row is hidden', async () => {
+    const book = createWorkbook();
+    const merged = book.addSheet('Merged');
+
+    merged.cells.set(0, 0, textValue('Total'));
+
+    merged.layout = {
+      ...merged.layout,
+      merges: [{ top: 0, left: 0, bottom: 2, right: 1 }],
+      rows: lineLayoutsOf([[0, HIDDEN_LINE]]),
+    };
+
+    const sheet = sheetOf({ book, label: 'Merged book' });
+
+    await sheet.focus(2, 0);
+
+    expect(sheet.text(2, 0)).toBe('Total');
+    expect(sheet.nameBox).toBe('A1');
+
+    await sheet.enter(2, 0, 'Sum');
+
+    expect(merged.cells.get(0, 0)).toEqual(textValue('Sum'));
+    expect(merged.cells.get(1, 0).kind).toBe('empty');
+    expect(sheet.text(2, 0)).toBe('Sum');
   });
 
   it('reports the selection in sheet addresses and follows a selection set from outside', async () => {

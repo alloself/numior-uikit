@@ -165,6 +165,8 @@ export interface SheetCells {
   readonly gridlines: boolean;
   readonly rightToLeft: boolean;
   readonly textAt: (position: number, column: number) => string;
+  readonly cellOf: (position: number, column: number) => CellAddress;
+  readonly rangeOf: (range: NuiTableRange) => CellRange;
   readonly rowAt: (position: number) => number;
   readonly colAt: (position: number) => number;
   readonly rowNear: (line: number) => number;

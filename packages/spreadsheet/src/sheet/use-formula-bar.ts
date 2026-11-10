@@ -58,7 +58,7 @@ export const useFormulaBar = (options: FormulaBarOptions): FormulaBar => {
 
     return position === undefined || cells === undefined
       ? ''
-      : formatCell({ row: cells.rowAt(position.row), col: cells.colAt(position.col) });
+      : formatCell(cells.cellOf(position.row, position.col));
   });
 
   const nameText = computed(() => nameDraft.value ?? cellName.value);

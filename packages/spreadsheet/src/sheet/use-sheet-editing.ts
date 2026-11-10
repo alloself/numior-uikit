@@ -42,10 +42,7 @@ const textOf = (value: unknown): string => {
   return typeof value === 'number' || typeof value === 'boolean' ? String(value) : '';
 };
 
-const lineOf = (cells: SheetCells, row: number, col: number): SheetLine => ({
-  row: cells.rowAt(row),
-  col: cells.colAt(col),
-});
+const lineOf = (cells: SheetCells, row: number, col: number): SheetLine => cells.cellOf(row, col);
 
 const plainStep = (sheet: Sheet, line: SheetLine, text: string): WorkbookStep => ({
   kind: 'setCells',
