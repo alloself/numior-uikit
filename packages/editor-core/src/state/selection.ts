@@ -177,6 +177,17 @@ export const validSelection = (doc: Doc, selection: Selection): Selection => {
   }
 };
 
+const heldAt = (doc: Doc, pos: number, id: NodeId): number | undefined => {
+  const node = doc.nodeAt(pos);
+
+  return node?.kind === ContentNodeKind.Element && node.id === id ? pos : undefined;
+};
+
+const startAfter = (id: NodeId, start: number, mapping: Mappable, after: Doc): number | undefined =>
+  heldAt(after, mapping.map(start, -1), id) ??
+  heldAt(after, mapping.map(start, 1), id) ??
+  after.positionOf(id);
+
 export const followPosition = (
   pos: number,
   mapping: Mappable,
@@ -191,14 +202,17 @@ export const followPosition = (
   }
 
   const { parent, parentOffset } = before.resolve(pos);
-  const node = after.byId(parent.id);
-  const start = after.positionOf(parent.id);
 
-  return node === undefined ||
-    start === undefined ||
-    after.resolve(mapped.pos).parent.id === parent.id
+  if (parent === before.root || after.resolve(mapped.pos).parent.id === parent.id) {
+    return mapped.pos;
+  }
+
+  const start = startAfter(parent.id, pos - parentOffset - 1, mapping, after);
+  const node = start === undefined ? undefined : after.nodeAt(start);
+
+  return start === undefined || node === undefined
     ? mapped.pos
-    : start + 1 + Math.min(parentOffset, node.size - 2);
+    : start + 1 + Math.min(parentOffset, nodeSize(node) - 2);
 };
 
 export const mapSelection = (
