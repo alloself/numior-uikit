@@ -11,7 +11,7 @@ import {
   type NuiTableRange,
   type NuiTableRect,
   type NuiTableWindow,
-  type TableCellPosition,
+  type NuiTableCellPosition,
 } from './table.types';
 
 export interface TableOverlayOptions {
@@ -41,8 +41,8 @@ export interface TableOverlay {
   readonly style: ComputedRef<Readonly<Record<string, string>>>;
   readonly planeBase: ComputedRef<number>;
   rectOf(range: NuiTableRange): NuiTableRect | undefined;
-  cellFromPoint(x: number, y: number): TableCellPosition | undefined;
-  cellNear(x: number, y: number): TableCellPosition | undefined;
+  cellFromPoint(x: number, y: number): NuiTableCellPosition | undefined;
+  cellNear(x: number, y: number): NuiTableCellPosition | undefined;
   followEdge(x: number, y: number, onStep: () => void): void;
   stopEdge(): void;
 }
@@ -207,7 +207,7 @@ export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
         : undefined;
     };
 
-  const positionOf = (cell: Element): TableCellPosition | undefined => {
+  const positionOf = (cell: Element): NuiTableCellPosition | undefined => {
     const row = rowPositionOf(cell.parentElement, options.headRows() + options.pinnedRows());
 
     const col = ariaIndex(cell, 'aria-colindex') - 1 - options.dataOffset();
@@ -217,7 +217,7 @@ export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
       : undefined;
   };
 
-  const cellFromPoint = (x: number, y: number): TableCellPosition | undefined => {
+  const cellFromPoint = (x: number, y: number): NuiTableCellPosition | undefined => {
     const viewport = options.viewport.value;
 
     if (viewport === null || typeof document.elementsFromPoint !== 'function') {
@@ -260,7 +260,7 @@ export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
     };
   };
 
-  const cellNear = (x: number, y: number): TableCellPosition | undefined => {
+  const cellNear = (x: number, y: number): NuiTableCellPosition | undefined => {
     const viewport = options.viewport.value;
 
     if (viewport === null) {

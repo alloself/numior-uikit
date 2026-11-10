@@ -3,7 +3,7 @@ import {
   type NuiTableRange,
   type NuiTableRanges,
   type PastePlanKind,
-  type TableCellPosition,
+  type NuiTableCellPosition,
 } from './table.types';
 
 export interface PasteCell {
@@ -61,7 +61,7 @@ const fillOf = (ranges: NuiTableRanges, text: string, limit: number): PastePlan 
 
 const targetOf = (
   ranges: NuiTableRanges,
-  anchor: TableCellPosition | undefined,
+  anchor: NuiTableCellPosition | undefined,
 ): RangeBox | undefined => {
   const last = ranges.at(-1);
 
@@ -86,7 +86,7 @@ const clipped = (size: BlockSize, box: RangeBox, bounds: RangeBounds): BlockSize
 export const planPaste = (
   block: readonly (readonly string[])[],
   ranges: NuiTableRanges,
-  anchor: TableCellPosition | undefined,
+  anchor: NuiTableCellPosition | undefined,
   bounds: RangeBounds,
   limit: number,
 ): PastePlan => {

@@ -20,14 +20,14 @@ import {
   type NuiTablePasteScope,
   type NuiTableRanges,
   type ParsedCell,
-  type TableCellPosition,
+  type NuiTableCellPosition,
 } from './table.types';
 import { Key } from '@numior/primitives';
 
 export interface TableEditingOptions<T> {
   readonly enabled: () => boolean;
   readonly ranges: () => NuiTableRanges;
-  readonly cell: () => TableCellPosition | undefined;
+  readonly cell: () => NuiTableCellPosition | undefined;
   readonly rowAt: (position: number) => T | undefined;
   readonly keyAt: (col: number) => string | undefined;
   readonly editable: (row: T, key: string) => boolean;
@@ -42,7 +42,7 @@ export interface TableEditingOptions<T> {
   readonly parse: (row: T, key: string, text: string) => ParsedCell;
   readonly readBlock: (
     data: NuiTableClipboardData,
-    target: TableCellPosition,
+    target: NuiTableCellPosition,
   ) => NuiTableClipboardBlock | undefined;
   readonly pasteHook: (
     data: NuiTableClipboardData,
@@ -405,7 +405,7 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     return true;
   };
 
-  const targetCell = (): TableCellPosition | undefined => {
+  const targetCell = (): NuiTableCellPosition | undefined => {
     const last = options.ranges().at(-1);
 
     if (last === undefined) {

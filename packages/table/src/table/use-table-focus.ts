@@ -5,13 +5,13 @@ import { nextCell, type TableEdgeOf, type TableLastOf } from './table-keys';
 import {
   TableHeaderTargetKind,
   TableRevealAxis,
-  type TableCellPosition,
+  type NuiTableCellPosition,
   type TableHeaderTarget,
 } from './table.types';
 
 export interface TableFocusOptions {
   readonly viewport: Readonly<ShallowRef<HTMLElement | null>>;
-  readonly active: Ref<TableCellPosition>;
+  readonly active: Ref<NuiTableCellPosition>;
   readonly rows: VirtualList;
   readonly columns: VirtualList;
   readonly rowCount: () => number;
@@ -25,17 +25,17 @@ export interface TableFocusOptions {
   readonly columnIndexOf: (key: string) => number;
   readonly isRtl: () => boolean;
   readonly windowed: () => boolean;
-  readonly lead: () => TableCellPosition;
-  readonly settle: (focused: TableCellPosition) => TableCellPosition;
-  readonly leave: (from: TableCellPosition, key: string) => TableCellPosition;
+  readonly lead: () => NuiTableCellPosition;
+  readonly settle: (focused: NuiTableCellPosition) => NuiTableCellPosition;
+  readonly leave: (from: NuiTableCellPosition, key: string) => NuiTableCellPosition;
   readonly edge: TableEdgeOf;
   readonly last: TableLastOf;
 }
 
 export interface TableFocus {
   activeIn(position: number): number;
-  reveal(target: TableCellPosition, axis?: TableRevealAxis): void;
-  focusCell(target: TableCellPosition, scroll?: boolean): void;
+  reveal(target: NuiTableCellPosition, axis?: TableRevealAxis): void;
+  focusCell(target: NuiTableCellPosition, scroll?: boolean): void;
   focusHeader(target: TableHeaderTarget): void;
   notePress(target: EventTarget | null): void;
   reclaim(): void;
@@ -56,7 +56,7 @@ const positionOf = (
   target: EventTarget | null,
   headRows: number,
   column: number,
-): TableCellPosition | undefined => {
+): NuiTableCellPosition | undefined => {
   const cell = target instanceof Element ? target.closest(CELL) : null;
   const row = ariaIndex(cell?.closest('[role="row"]'), 'aria-rowindex');
 
@@ -69,7 +69,7 @@ const positionOf = (
 const isCell = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement && target.matches(CELL);
 
-const samePosition = (a: TableCellPosition, b: TableCellPosition): boolean =>
+const samePosition = (a: NuiTableCellPosition, b: NuiTableCellPosition): boolean =>
   a.row === b.row && a.col === b.col;
 
 export const useTableFocus = (options: TableFocusOptions): TableFocus => {
@@ -95,7 +95,7 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     }
   };
 
-  const reveal = (target: TableCellPosition, axis: TableRevealAxis = 'both'): void => {
+  const reveal = (target: NuiTableCellPosition, axis: TableRevealAxis = 'both'): void => {
     if (!options.windowed()) {
       return;
     }
@@ -107,7 +107,7 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     }
   };
 
-  const focusCell = (target: TableCellPosition, scroll = true): void => {
+  const focusCell = (target: NuiTableCellPosition, scroll = true): void => {
     options.active.value = target;
 
     if (scroll) {

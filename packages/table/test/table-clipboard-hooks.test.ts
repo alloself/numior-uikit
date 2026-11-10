@@ -5,7 +5,7 @@ import type {
   NuiTableClipboard,
   NuiTableClipboardData,
   NuiTableRanges,
-  TableCellPosition,
+  NuiTableCellPosition,
 } from '../src';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { applyStaffEdits, staff, STAFF_COLUMNS, type Staff } from './support/staff';
@@ -76,7 +76,7 @@ describe('NuiTable clipboard hooks', () => {
 
     const reads: Array<{
       readonly data: NuiTableClipboardData;
-      readonly target: TableCellPosition;
+      readonly target: NuiTableCellPosition;
     }> = [];
 
     const hooks: NuiTableClipboard<Staff> = {

@@ -411,7 +411,7 @@ import {
   type TableCellLayout,
   type TableCellLead,
   type TableCellPaint,
-  type TableCellPosition,
+  type NuiTableCellPosition,
   type TableCellSpan,
   type TableCellView,
   type TableDetailSpot,
@@ -461,8 +461,10 @@ const BLOCK_SIZE = 100;
 const SKELETON_ROWS = 5;
 const LONG_PRESS = 500;
 
-const sameSpot = (a: TableCellPosition | undefined, b: TableCellPosition | undefined): boolean =>
-  a?.row === b?.row && a?.col === b?.col;
+const sameSpot = (
+  a: NuiTableCellPosition | undefined,
+  b: NuiTableCellPosition | undefined,
+): boolean => a?.row === b?.row && a?.col === b?.col;
 
 const {
   columns,
@@ -530,9 +532,9 @@ const page = defineModel<number>('page', { default: 1 });
 const pageSize = defineModel<number>('pageSize', { default: 20 });
 const ranges = defineModel<NuiTableRanges>('ranges', { default: () => [] });
 const rowHeights = defineModel<NuiTableRowHeights>('rowHeights', { default: () => ({}) });
-const activeCell = defineModel<TableCellPosition | undefined>('active');
+const activeCell = defineModel<NuiTableCellPosition | undefined>('active');
 const draft = defineModel<NuiTableDraft | undefined>('draft');
-const activeEchoes = createEchoes<TableCellPosition | undefined>(sameSpot);
+const activeEchoes = createEchoes<NuiTableCellPosition | undefined>(sameSpot);
 const draftEchoes = createEchoes<NuiTableDraft | undefined>(Object.is);
 const emit = defineEmits<NuiTableEvents<T>>();
 const slots = defineSlots<NuiTableSlots<T>>();
@@ -727,7 +729,7 @@ const warming = useTableWarmup({
   enabled: () => source === undefined,
 });
 
-const active = ref<TableCellPosition>({ row: rowCount.value > 0 ? 0 : -1, col: 0 });
+const active = ref<NuiTableCellPosition>({ row: rowCount.value > 0 ? 0 : -1, col: 0 });
 
 const room = shallowRef(0);
 
@@ -1485,7 +1487,7 @@ const mergeLayout = computed<TableMergeLayout<RangeBox> | undefined>((previous) 
 const spansOf = (item: TableBodyRow): TableRowSpan | undefined =>
   mergeLayout.value?.spans.get(item.index);
 
-const dataCellOf = (visual: TableCellPosition): TableCellPosition | undefined => {
+const dataCellOf = (visual: NuiTableCellPosition): NuiTableCellPosition | undefined => {
   const row = visual.row - pinnedCount.value;
   const col = visual.col - dataOffset.value;
 
@@ -1494,15 +1496,15 @@ const dataCellOf = (visual: TableCellPosition): TableCellPosition | undefined =>
     : undefined;
 };
 
-const visualCellOf = (data: TableCellPosition): TableCellPosition => ({
+const visualCellOf = (data: NuiTableCellPosition): NuiTableCellPosition => ({
   row: data.row + pinnedCount.value,
   col: data.col + dataOffset.value,
 });
 
 const edgeOfData = (
-  from: TableCellPosition,
+  from: NuiTableCellPosition,
   toward: NuiTableEdgeDirection,
-): TableCellPosition | undefined =>
+): NuiTableCellPosition | undefined =>
   nextEdge === undefined
     ? undefined
     : clampPosition(nextEdge(from, toward), {
@@ -1510,7 +1512,7 @@ const edgeOfData = (
         cols: dataKeys.value.length,
       });
 
-const lastOfData = (): TableCellPosition | undefined => {
+const lastOfData = (): NuiTableCellPosition | undefined => {
   const last = lastCell?.();
 
   return last === undefined
@@ -1524,13 +1526,13 @@ const activeMerge = computed(() => {
   return data === undefined ? undefined : mergeIndex.value.at(data.row, data.col);
 });
 
-const activeAnchor = computed((): TableCellPosition | undefined => {
+const activeAnchor = computed((): NuiTableCellPosition | undefined => {
   const merge = activeMerge.value;
 
   return merge === undefined ? undefined : { row: merge.top, col: merge.start };
 });
 
-const allyOf = (item: TableBodyRow): TableCellPosition | undefined => {
+const allyOf = (item: TableBodyRow): NuiTableCellPosition | undefined => {
   const merge = activeMerge.value;
 
   return merge !== undefined && item.index >= merge.top && item.index <= merge.bottom
@@ -1538,7 +1540,7 @@ const allyOf = (item: TableBodyRow): TableCellPosition | undefined => {
     : undefined;
 };
 
-const activeLead = computed((): TableCellPosition => {
+const activeLead = computed((): NuiTableCellPosition => {
   const current = active.value;
   const merge = activeMerge.value;
   const data = merge === undefined ? undefined : dataCellOf(current);
@@ -1558,13 +1560,13 @@ const hostsCursor = (span: TableLeadSpan): boolean => {
   return lead.row === piece.row && lead.col === piece.col;
 };
 
-const settleFocus = (focused: TableCellPosition): TableCellPosition => {
+const settleFocus = (focused: NuiTableCellPosition): NuiTableCellPosition => {
   const lead = activeLead.value;
 
   return focused.row === lead.row && focused.col === lead.col ? active.value : focused;
 };
 
-const leaveFrom = (from: TableCellPosition, key: string): TableCellPosition => {
+const leaveFrom = (from: NuiTableCellPosition, key: string): NuiTableCellPosition => {
   const data = mergeIndex.value.size === 0 ? undefined : dataCellOf(from);
 
   return data === undefined
@@ -1572,13 +1574,13 @@ const leaveFrom = (from: TableCellPosition, key: string): TableCellPosition => {
     : visualCellOf(leaveMerge(mergeIndex.value, data, key, direction.isRtl()));
 };
 
-const cellOfTarget = (target: EventTarget | null): TableCellPosition | undefined => {
+const cellOfTarget = (target: EventTarget | null): NuiTableCellPosition | undefined => {
   const cell = rangeSelect.cellAt(target);
 
   return cell === undefined ? undefined : anchorOf(mergeIndex.value, cell);
 };
 
-const activeData = (): TableCellPosition | undefined => {
+const activeData = (): NuiTableCellPosition | undefined => {
   const body = bodyActive();
   const col = body === undefined ? -1 : body.col - dataOffset.value;
 
@@ -1587,18 +1589,18 @@ const activeData = (): TableCellPosition | undefined => {
     : undefined;
 };
 
-const shownActive = computed<TableCellPosition | undefined>((previous) => {
+const shownActive = computed<NuiTableCellPosition | undefined>((previous) => {
   const next = activeData();
 
   return sameSpot(next, previous) ? previous : next;
 });
 
-const rangeAnchor = (): TableCellPosition | undefined =>
+const rangeAnchor = (): NuiTableCellPosition | undefined =>
   viewport.value?.contains(document.activeElement) === true ? activeData() : undefined;
 
 const revealed = createIntent<TableReveal>();
 
-const revealCorner = (corner: TableCellPosition, axis: TableRevealAxis): void => {
+const revealCorner = (corner: NuiTableCellPosition, axis: TableRevealAxis): void => {
   const target = { row: corner.row + pinnedCount.value, col: corner.col + dataOffset.value };
 
   if (windowed.value) {
@@ -2098,7 +2100,7 @@ const picker = useTablePicking({
   },
 });
 
-const selectForMenu = (target: TableCellPosition): NuiTableRanges => {
+const selectForMenu = (target: NuiTableCellPosition): NuiTableRanges => {
   const body = { row: target.row - pinnedCount.value, col: target.col - dataOffset.value };
 
   if (body.row >= 0 && rangeSelect.contains(body)) {
@@ -2119,7 +2121,7 @@ const selectForMenu = (target: TableCellPosition): NuiTableRanges => {
 };
 
 const contextScopeOf = (
-  focused: TableCellPosition,
+  focused: NuiTableCellPosition,
   current: NuiTableRanges,
 ): NuiTableContextScope<T> | undefined => {
   const data = dataCellOf(focused);
@@ -2235,7 +2237,7 @@ const onRowsClick = (event: MouseEvent): void => {
   }
 };
 
-const bodyActive = (): TableCellPosition | undefined => {
+const bodyActive = (): NuiTableCellPosition | undefined => {
   const row = active.value.row - pinnedCount.value;
   return row >= 0 && row < visibleRows.value ? { row, col: active.value.col } : undefined;
 };
@@ -2669,13 +2671,13 @@ watch(quick, () => {
   rowsIntent.set(true);
 });
 
-const inBody = (position: TableCellPosition): boolean =>
+const inBody = (position: NuiTableCellPosition): boolean =>
   position.row >= 0 &&
   position.row < visibleRows.value &&
   position.col >= 0 &&
   position.col < dataKeys.value.length;
 
-const moveActiveTo = (position: TableCellPosition): boolean => {
+const moveActiveTo = (position: NuiTableCellPosition): boolean => {
   if (!inBody(position)) {
     return false;
   }
@@ -2693,7 +2695,7 @@ const moveActiveTo = (position: TableCellPosition): boolean => {
   return true;
 };
 
-const focusCellAt = (position: TableCellPosition, scroll = true): boolean => {
+const focusCellAt = (position: NuiTableCellPosition, scroll = true): boolean => {
   if (!inBody(position)) {
     return false;
   }
@@ -2701,7 +2703,7 @@ const focusCellAt = (position: TableCellPosition, scroll = true): boolean => {
   return true;
 };
 
-const shareActive = (next: TableCellPosition | undefined): void => {
+const shareActive = (next: NuiTableCellPosition | undefined): void => {
   activeEchoes.sent(next);
   activeCell.value = next;
 };

@@ -315,15 +315,15 @@ export interface NuiTableOverlaySlot {
 }
 
 export type NuiTableNextEdge = (
-  from: TableCellPosition,
+  from: NuiTableCellPosition,
   direction: NuiTableEdgeDirection,
-) => TableCellPosition;
+) => NuiTableCellPosition;
 
-export type NuiTableLastCell = () => TableCellPosition | undefined;
+export type NuiTableLastCell = () => NuiTableCellPosition | undefined;
 
 export interface NuiTableRange {
-  readonly from: TableCellPosition;
-  readonly to: TableCellPosition;
+  readonly from: NuiTableCellPosition;
+  readonly to: NuiTableCellPosition;
 }
 
 export type NuiTableRanges = readonly NuiTableRange[];
@@ -368,7 +368,7 @@ export type NuiTableClipboardBlock = readonly (readonly string[])[];
 
 export interface NuiTablePasteScope {
   readonly ranges: NuiTableRanges;
-  readonly target: TableCellPosition;
+  readonly target: NuiTableCellPosition;
 }
 
 export interface NuiTableClipboard<T> {
@@ -380,7 +380,7 @@ export interface NuiTableClipboard<T> {
   readonly parse?:
     | ((
         data: NuiTableClipboardData,
-        target: TableCellPosition,
+        target: NuiTableCellPosition,
       ) => NuiTableClipboardBlock | undefined)
     | undefined;
 }
@@ -451,7 +451,7 @@ export type TableEditorPlan =
     };
 
 export interface TableEditSession<T> {
-  readonly position: TableCellPosition;
+  readonly position: NuiTableCellPosition;
   readonly row: T;
   readonly key: string;
   readonly label: string;
@@ -486,7 +486,7 @@ export type TableRangeLines = (typeof TableRangeLines)[keyof typeof TableRangeLi
 export type TableRevealAxis = (typeof TableRevealAxis)[keyof typeof TableRevealAxis];
 
 export interface TableReveal {
-  readonly target: TableCellPosition;
+  readonly target: NuiTableCellPosition;
   readonly axis: TableRevealAxis;
 }
 
@@ -505,7 +505,7 @@ export interface TableLeadSpan {
   readonly rowspan: number;
   readonly colspan: number;
   readonly span: number;
-  readonly anchor: TableCellPosition;
+  readonly anchor: NuiTableCellPosition;
   readonly rows: number;
   readonly cols: number;
   readonly edge: boolean;
@@ -727,15 +727,15 @@ export interface NuiTableExposed {
   exportCsv(options?: NuiTableCsvOptions): Promise<string>;
   refresh(): void;
   rectOf(range: NuiTableRange): NuiTableRect | undefined;
-  cellFromPoint(x: number, y: number): TableCellPosition | undefined;
-  cellNear(x: number, y: number): TableCellPosition | undefined;
+  cellFromPoint(x: number, y: number): NuiTableCellPosition | undefined;
+  cellNear(x: number, y: number): NuiTableCellPosition | undefined;
   followEdge(x: number, y: number, onStep: () => void): void;
   stopEdge(): void;
   scrollPosition(): NuiTableScrollPosition;
   startEdit(mode: NuiTableEditMode, options?: NuiTableStartEditOptions): boolean;
   commitEdit(move?: NuiTableEditMove): boolean;
   cancelEdit(): void;
-  focusCell(position: TableCellPosition, scroll?: boolean): boolean;
+  focusCell(position: NuiTableCellPosition, scroll?: boolean): boolean;
   invalidate(ranges?: NuiTableRanges): void;
 }
 
@@ -817,7 +817,7 @@ export interface NuiTableRowGripProps {
   active?: boolean | undefined;
 }
 
-export interface TableCellPosition {
+export interface NuiTableCellPosition {
   readonly row: number;
   readonly col: number;
 }
@@ -905,7 +905,7 @@ export interface NuiTableRowProps {
   ranged?: TableRowRanges | undefined;
   rangedAt?: ((position: number) => TableRowRanges | undefined) | undefined;
   spans?: TableRowSpan | undefined;
-  ally?: TableCellPosition | undefined;
+  ally?: NuiTableCellPosition | undefined;
   marks?: readonly TableSpan[] | undefined;
   sized?: Readonly<Record<string, string>> | undefined;
   sizable?: boolean | undefined;

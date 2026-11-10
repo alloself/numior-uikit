@@ -255,7 +255,7 @@ import {
   type NuiTableExposed,
   type NuiTableOverlaySlot,
   type NuiTableRect,
-  type TableCellPosition,
+  type NuiTableCellPosition,
 } from '@numior/table';
 import { NuiButton, NuiIcon, NuiPopover, type NuiTabDescriptor } from '@numior/vue';
 import { useFocusWithin } from '@vueuse/core';
@@ -841,7 +841,7 @@ const removeSheet = (index: number): void => {
   }
 };
 
-const rulesCell = shallowRef<TableCellPosition>();
+const rulesCell = shallowRef<NuiTableCellPosition>();
 
 const rulesPanel = useTemplateRef<{ focusStart(): void }>('rulesPanel');
 

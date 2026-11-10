@@ -3,7 +3,7 @@ import {
   NuiTableEditMode,
   NuiTableEditMove,
   type NuiTableRanges,
-  type TableCellPosition,
+  type NuiTableCellPosition,
 } from '@numior/table';
 import { computed, ref, shallowRef } from 'vue';
 import { formatCell, type CellRange } from '../core';
@@ -12,7 +12,7 @@ import { targetOf } from './sheet-navigation';
 
 const LINE_BREAK = '\n';
 
-const FIRST_CELL: TableCellPosition = { row: 0, col: 0 };
+const FIRST_CELL: NuiTableCellPosition = { row: 0, col: 0 };
 
 const textOf = (value: unknown): string => {
   if (typeof value === 'string') {
@@ -37,7 +37,7 @@ const inside = (target: EventTarget | null, element: HTMLElement | null): boolea
 const positionsOf = (
   cells: SheetCells,
   range: CellRange,
-): readonly [TableCellPosition, TableCellPosition] => [
+): readonly [NuiTableCellPosition, NuiTableCellPosition] => [
   { row: cells.rowNear(range.top), col: cells.colNear(range.left) },
   { row: cells.rowNear(range.bottom), col: cells.colNear(range.right) },
 ];
@@ -45,7 +45,7 @@ const positionsOf = (
 export const useFormulaBar = (options: FormulaBarOptions): FormulaBar => {
   const { editing } = options;
 
-  const active = shallowRef<TableCellPosition>();
+  const active = shallowRef<NuiTableCellPosition>();
   const ranges = shallowRef<NuiTableRanges>([]);
   const nameDraft = ref<string>();
   const nameInvalid = ref(false);

@@ -40,7 +40,7 @@ import {
   TableRangeLines,
   type NuiTableRange,
   type NuiTableRanges,
-  type TableCellPosition,
+  type NuiTableCellPosition,
   type TableRevealAxis,
   type TableRowRanges,
 } from './table.types';
@@ -59,14 +59,14 @@ export interface TableRangesOptions {
   readonly rowSize: () => number;
   readonly pageRows: (row: number, forward: boolean) => number;
   readonly isRtl: () => boolean;
-  readonly anchor: () => TableCellPosition | undefined;
-  readonly cursor: () => TableCellPosition | undefined;
+  readonly anchor: () => NuiTableCellPosition | undefined;
+  readonly cursor: () => NuiTableCellPosition | undefined;
   readonly sorts: (col: number) => boolean;
   readonly merges: () => TableMergeIndex;
   readonly edge: TableEdgeOf;
   readonly last: TableLastOf;
-  readonly focus: (position: TableCellPosition) => void;
-  readonly reveal: (corner: TableCellPosition, axis: TableRevealAxis) => void;
+  readonly focus: (position: NuiTableCellPosition) => void;
+  readonly reveal: (corner: NuiTableCellPosition, axis: TableRevealAxis) => void;
   readonly resetOn: WatchSource[];
   readonly messages: ComputedRef<NuiTableMessages>;
   readonly announce: (text: string) => void;
@@ -75,11 +75,11 @@ export interface TableRangesOptions {
 export interface TableRanges {
   readonly dragging: Readonly<Ref<boolean>>;
   readonly deselected: Readonly<Ref<boolean>>;
-  readonly reading: Readonly<Ref<TableCellPosition | undefined>>;
+  readonly reading: Readonly<Ref<NuiTableCellPosition | undefined>>;
   segmentsOf(row: number): TableRowRanges | undefined;
-  contains(position: TableCellPosition): boolean;
-  cellAt(target: EventTarget | null): TableCellPosition | undefined;
-  cellAtPoint(x: number, y: number): TableCellPosition | undefined;
+  contains(position: NuiTableCellPosition): boolean;
+  cellAt(target: EventTarget | null): NuiTableCellPosition | undefined;
+  cellAtPoint(x: number, y: number): NuiTableCellPosition | undefined;
   onPointerdown(event: PointerEvent): void;
   onMousedown(event: MouseEvent): void;
   onClick(event: MouseEvent): void;
@@ -96,7 +96,7 @@ type SessionAction =
   | { readonly kind: typeof SessionActionKind.Remove; readonly base: NuiTableRanges };
 
 interface SessionStart {
-  readonly from: TableCellPosition;
+  readonly from: NuiTableCellPosition;
   readonly action: SessionAction;
   readonly lines: TableRangeLines;
 }
@@ -105,7 +105,7 @@ type RangeOrigin =
   | {
       readonly kind: typeof RangeOriginKind.Lines;
       readonly lines: TableRangeLines;
-      readonly position: TableCellPosition;
+      readonly position: NuiTableCellPosition;
     }
   | { readonly kind: typeof RangeOriginKind.All };
 
@@ -199,7 +199,7 @@ const clearTextSelection = (): void => {
 export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   const dragging = ref(false);
   const deselected = ref(false);
-  const reading = shallowRef<TableCellPosition | undefined>();
+  const reading = shallowRef<NuiTableCellPosition | undefined>();
   let session: RangeSession | undefined;
   let point: EdgePoint = {};
   let swallow = false;
@@ -281,7 +281,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     }
   };
 
-  const positionOf = (cell: Element): TableCellPosition | undefined => {
+  const positionOf = (cell: Element): NuiTableCellPosition | undefined => {
     const colIndex = Number(cell.getAttribute('aria-colindex'));
     const row = rowPositionOf(cell.parentElement, options.headRows() + options.pinnedRows());
     const col = colIndex - 1 - options.offset();
@@ -289,7 +289,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     return Number.isInteger(row) && Number.isInteger(col) ? { row, col } : undefined;
   };
 
-  const startOf = (target: EventTarget | null): TableCellPosition | undefined => {
+  const startOf = (target: EventTarget | null): NuiTableCellPosition | undefined => {
     if (!(target instanceof Element) || controlled(target)) {
       return undefined;
     }
@@ -346,7 +346,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   const widen = (range: NuiTableRange, lines: TableRangeLines): NuiTableRange =>
     widenRange(range, lines, options.bounds());
 
-  const cursorFor = (start: TableCellPosition, lines: TableRangeLines): TableCellPosition => {
+  const cursorFor = (start: NuiTableCellPosition, lines: TableRangeLines): NuiTableCellPosition => {
     const cursor = options.cursor();
 
     switch (lines) {
@@ -373,7 +373,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     };
   };
 
-  const hitAt = (target: EdgePoint): TableCellPosition | undefined => {
+  const hitAt = (target: EdgePoint): NuiTableCellPosition | undefined => {
     const viewport = options.viewport();
 
     if (viewport === null || target.x === undefined || target.y === undefined) {
@@ -476,21 +476,21 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     finish();
   };
 
-  const materialized = (anchor: TableCellPosition | undefined): NuiTableRanges => {
+  const materialized = (anchor: NuiTableCellPosition | undefined): NuiTableRanges => {
     const list = latest();
     return list.length === 0 && anchor !== undefined ? [{ from: anchor, to: anchor }] : list;
   };
 
   const addFrom = (
-    start: TableCellPosition,
-    anchor: TableCellPosition | undefined,
+    start: NuiTableCellPosition,
+    anchor: NuiTableCellPosition | undefined,
     lines: TableRangeLines,
   ): SessionStart => {
     shape(widen({ from: start, to: start }, lines), materialized(anchor));
     return { from: start, action: SHAPE, lines };
   };
 
-  const removeFrom = (start: TableCellPosition, lines: TableRangeLines): SessionStart => {
+  const removeFrom = (start: NuiTableCellPosition, lines: TableRangeLines): SessionStart => {
     const base = latest();
 
     take(base, widen({ from: start, to: start }, lines));
@@ -498,8 +498,8 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   };
 
   const shiftFrom = (
-    start: TableCellPosition,
-    anchor: TableCellPosition | undefined,
+    start: NuiTableCellPosition,
+    anchor: NuiTableCellPosition | undefined,
     lines: TableRangeLines,
   ): SessionStart => {
     if (inRanges(latest(), start)) {
@@ -511,7 +511,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     return { from, action: SHAPE, lines };
   };
 
-  const claim = (start: TableCellPosition, begun: SessionStart): SessionStart => {
+  const claim = (start: NuiTableCellPosition, begun: SessionStart): SessionStart => {
     holdFocus = true;
     swallow = true;
     clearTextSelection();
@@ -519,7 +519,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     return begun;
   };
 
-  const plainFrom = (start: TableCellPosition, lines: TableRangeLines): SessionStart => {
+  const plainFrom = (start: NuiTableCellPosition, lines: TableRangeLines): SessionStart => {
     clear();
 
     return lines === TableRangeLines.Cells
@@ -529,8 +529,8 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
 
   const sessionFor = (
     mode: SessionMode,
-    start: TableCellPosition,
-    anchor: TableCellPosition | undefined,
+    start: NuiTableCellPosition,
+    anchor: NuiTableCellPosition | undefined,
     lines: TableRangeLines,
   ): SessionStart => {
     switch (mode) {
@@ -555,7 +555,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     announceSize(shape(range, []));
   };
 
-  const readsAt = (position: TableCellPosition, event: PointerEvent): boolean => {
+  const readsAt = (position: NuiTableCellPosition, event: PointerEvent): boolean => {
     const current = reading.value;
 
     return (
@@ -623,7 +623,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     }
   };
 
-  const cornerOf = (last: NuiTableRange | undefined, anchor: TableCellPosition, key: string) => {
+  const cornerOf = (last: NuiTableRange | undefined, anchor: NuiTableCellPosition, key: string) => {
     const moving = last?.to ?? anchor;
 
     return last !== undefined && spansLines(last, options.bounds())
@@ -631,7 +631,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
       : leaveMerge(options.merges(), moving, key, options.isRtl());
   };
 
-  const extendBy = (event: KeyboardEvent, anchor: TableCellPosition): boolean => {
+  const extendBy = (event: KeyboardEvent, anchor: NuiTableCellPosition): boolean => {
     const last = latest().at(-1);
     const from = cornerOf(last, anchor, event.key);
 
@@ -669,14 +669,14 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     return true;
   };
 
-  const selectLines = (event: KeyboardEvent, anchor: TableCellPosition): boolean => {
+  const selectLines = (event: KeyboardEvent, anchor: NuiTableCellPosition): boolean => {
     const base = latest().at(-1) ?? { from: anchor, to: anchor };
     const bounds = options.bounds();
 
     return replaceLast(event, event.shiftKey ? rowsOf(base, bounds) : colsOf(base, bounds));
   };
 
-  const onNavigation = (event: KeyboardEvent, anchor: TableCellPosition): boolean => {
+  const onNavigation = (event: KeyboardEvent, anchor: NuiTableCellPosition): boolean => {
     if (event.shiftKey) {
       return extendBy(event, anchor);
     }

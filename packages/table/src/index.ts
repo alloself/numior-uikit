@@ -89,7 +89,7 @@ export type {
   NuiTableControlEditor,
   NuiTableColumnEditor,
   NuiTableEditRefusal,
-  TableCellPosition,
+  NuiTableCellPosition,
 } from './table/table.types';
 export type {
   TableAggregate,

@@ -12,7 +12,7 @@ import {
   type NuiTableClipboardData,
   type NuiTableClipboardScope,
   type NuiTableRanges,
-  type TableCellPosition,
+  type NuiTableCellPosition,
 } from './table.types';
 
 export interface TableCopyCell<T> {
@@ -23,7 +23,7 @@ export interface TableCopyCell<T> {
 export interface TableClipboardOptions<T> {
   readonly ranges: () => NuiTableRanges;
   readonly cell: () => TableCopyCell<T> | undefined;
-  readonly position: () => TableCellPosition | undefined;
+  readonly position: () => NuiTableCellPosition | undefined;
   readonly serialize: () =>
     | ((scope: NuiTableClipboardScope<T>) => NuiTableClipboardData)
     | undefined;

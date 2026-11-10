@@ -1,4 +1,4 @@
-import type { NuiTableRange, TableCellPosition } from '@numior/table';
+import type { NuiTableRange, NuiTableCellPosition } from '@numior/table';
 import type { CellAddress, DrawingSize } from '../../core';
 import type { InsertSpot, InsertSpotOptions } from './drawings.types';
 
@@ -22,7 +22,7 @@ export const useSheetInsertSpot = (options: InsertSpotOptions): InsertSpot => {
     return options.rtl() ? box.right - offset : box.left + offset;
   };
 
-  const cellInView = (across: number, down: number): TableCellPosition | undefined => {
+  const cellInView = (across: number, down: number): NuiTableCellPosition | undefined => {
     const box = options.root.value?.getBoundingClientRect();
 
     return box === undefined
@@ -30,14 +30,14 @@ export const useSheetInsertSpot = (options: InsertSpotOptions): InsertSpot => {
       : options.table.value?.cellNear(pointAcross(box, across), box.top + box.height * down);
   };
 
-  const wholeColumn = (cell: TableCellPosition): TableCellPosition => {
+  const wholeColumn = (cell: NuiTableCellPosition): NuiTableCellPosition => {
     const start = options.table.value?.rectOf({ from: cell, to: cell })?.start ?? 0;
     const scrolled = Math.abs(options.table.value?.scrollPosition().left ?? 0);
 
     return start < scrolled + leadWidth() ? { ...cell, col: cell.col + 1 } : cell;
   };
 
-  const addressOf = (cell: TableCellPosition | undefined): CellAddress | undefined => {
+  const addressOf = (cell: NuiTableCellPosition | undefined): CellAddress | undefined => {
     const cells = options.cells();
 
     return cell === undefined || cells === undefined

@@ -12,7 +12,7 @@ import type { NuiTableMessages } from './table.messages';
 import {
   RowZone,
   type NuiTableReorderEvent,
-  type TableCellPosition,
+  type NuiTableCellPosition,
   type TableDropInset,
   type TableDropMark,
   type TableGhost,
@@ -43,7 +43,7 @@ export interface TableRowDrag {
   readonly drop: Readonly<Ref<TableDropMark | undefined>>;
   readonly ghost: Readonly<Ref<TableGhost | undefined>>;
   grab(position: number, event: PointerEvent): void;
-  onKeydown(event: KeyboardEvent, body: TableCellPosition | undefined): boolean;
+  onKeydown(event: KeyboardEvent, body: NuiTableCellPosition | undefined): boolean;
 }
 
 interface RowPlace<T> {

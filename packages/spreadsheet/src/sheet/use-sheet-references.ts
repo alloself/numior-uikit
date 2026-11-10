@@ -1,5 +1,5 @@
 import { Key } from '@numior/primitives';
-import type { NuiTableDraft, NuiTableRange, TableCellPosition } from '@numior/table';
+import type { NuiTableDraft, NuiTableRange, NuiTableCellPosition } from '@numior/table';
 import { computed, shallowRef } from 'vue';
 import {
   formatRange,
@@ -29,7 +29,7 @@ interface LastPick {
 interface GripSession {
   readonly grip: FrameGrip;
   readonly origin: NuiTableRange;
-  readonly grab: TableCellPosition;
+  readonly grab: NuiTableCellPosition;
   readonly text: string;
   readonly span: ReferenceSpan;
   readonly caret: number | undefined;
@@ -126,7 +126,11 @@ const referenceText = (cells: SheetCells, range: NuiTableRange): string =>
 const clampShift = (shift: number, low: number, high: number, last: number): number =>
   Math.min(Math.max(shift, -low), last - high);
 
-const moved = (session: GripSession, cell: TableCellPosition, cells: SheetCells): NuiTableRange => {
+const moved = (
+  session: GripSession,
+  cell: NuiTableCellPosition,
+  cells: SheetCells,
+): NuiTableRange => {
   const { origin, grab } = session;
 
   const rows = clampShift(
@@ -149,7 +153,7 @@ const moved = (session: GripSession, cell: TableCellPosition, cells: SheetCells)
   };
 };
 
-const fixedCorner = (origin: NuiTableRange, grip: FrameGrip): TableCellPosition => {
+const fixedCorner = (origin: NuiTableRange, grip: FrameGrip): NuiTableCellPosition => {
   switch (grip) {
     case FrameGrip.TopStart: {
       return origin.to;
@@ -168,7 +172,7 @@ const fixedCorner = (origin: NuiTableRange, grip: FrameGrip): TableCellPosition 
 
 const draggedRange = (
   session: GripSession,
-  cell: TableCellPosition,
+  cell: NuiTableCellPosition,
   cells: SheetCells,
 ): NuiTableRange =>
   CORNERS.has(session.grip)

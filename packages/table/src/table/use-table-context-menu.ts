@@ -6,7 +6,7 @@ import type {
   NuiTableContextMenu,
   NuiTableContextScope,
   NuiTableRanges,
-  TableCellPosition,
+  NuiTableCellPosition,
 } from './table.types';
 import { Key, PointerType, afterRelease } from '@numior/primitives';
 
@@ -18,10 +18,10 @@ export interface TableContextMenuOptions<T> {
   readonly viewport: () => HTMLElement | null;
   readonly headRows: () => number;
   readonly scopeOf: (
-    target: TableCellPosition,
+    target: NuiTableCellPosition,
     ranges: NuiTableRanges,
   ) => NuiTableContextScope<T> | undefined;
-  readonly select: (target: TableCellPosition) => NuiTableRanges;
+  readonly select: (target: NuiTableCellPosition) => NuiTableRanges;
   readonly copyable: () => boolean;
   readonly copy: (headers: boolean) => void;
   readonly editable: () => boolean;
@@ -59,7 +59,7 @@ export const useTableContextMenu = <T>(options: TableContextMenuOptions<T>): Tab
   const target = shallowRef<HTMLElement | null>(null);
   const scope = shallowRef<NuiTableContextScope<T>>();
 
-  const positionOf = (cell: Element): TableCellPosition => ({
+  const positionOf = (cell: Element): NuiTableCellPosition => ({
     row: rowPositionOf(cell.parentElement, options.headRows()),
     col: Number(cell.getAttribute('aria-colindex')) - 1,
   });

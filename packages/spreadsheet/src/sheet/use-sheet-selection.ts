@@ -1,4 +1,4 @@
-import type { NuiTableRange, TableCellPosition } from '@numior/table';
+import type { NuiTableRange, NuiTableCellPosition } from '@numior/table';
 import { computed, watch } from 'vue';
 import type { CellAddress, CellRange } from '../core';
 import type {
@@ -40,7 +40,7 @@ const cellRange = (cell: CellAddress): CellRange => ({
   right: cell.col,
 });
 
-const positionOf = (cells: SheetCells, cell: CellAddress): TableCellPosition => ({
+const positionOf = (cells: SheetCells, cell: CellAddress): NuiTableCellPosition => ({
   row: cells.rowNear(cell.row),
   col: cells.colNear(cell.col),
 });

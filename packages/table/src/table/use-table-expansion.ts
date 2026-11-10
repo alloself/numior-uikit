@@ -13,7 +13,7 @@ import { aggregateTextOf, cellTextOf, cellValueFrom, valueTextOf } from './table
 import {
   TableBodyRowViewKind,
   type NuiTableColumn,
-  type TableCellPosition,
+  type NuiTableCellPosition,
   type TableGroupCell,
   type TableGroupRow,
 } from './table.types';
@@ -38,7 +38,7 @@ export interface TableExpansion {
   rowAt(position: number): TableGroupRow | undefined;
   toggle(position: number): void;
   settle(): void;
-  onKeydown(event: KeyboardEvent, active: TableCellPosition): boolean;
+  onKeydown(event: KeyboardEvent, active: NuiTableCellPosition): boolean;
 }
 
 interface GroupContext {

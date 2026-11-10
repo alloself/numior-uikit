@@ -1,7 +1,7 @@
 import { computed, type ComputedRef, type Ref, type ShallowRef } from 'vue';
 import type { CheckState } from '@numior/vue';
 import { TableNodeKind, type TableEngine, type TableNodeId } from '../engine';
-import { NuiTableSelection, type TableCellPosition, type TablePageWindow } from './table.types';
+import { NuiTableSelection, type NuiTableCellPosition, type TablePageWindow } from './table.types';
 import { Key } from '@numior/primitives';
 
 export type TableSelectionKey<T> = TableNodeId | T;
@@ -25,7 +25,7 @@ export interface TableSelection<T> {
   has(row: T): boolean;
   toggle(row: T): void;
   toggleAll(): void;
-  onKeydown(event: KeyboardEvent, active: TableCellPosition, row: T | undefined): boolean;
+  onKeydown(event: KeyboardEvent, active: NuiTableCellPosition, row: T | undefined): boolean;
 }
 
 interface ScopeMix {
@@ -157,7 +157,7 @@ export const useTableSelection = <T>(options: TableSelectionOptions<T>): TableSe
 
   const onKeydown = (
     event: KeyboardEvent,
-    active: TableCellPosition,
+    active: NuiTableCellPosition,
     row: T | undefined,
   ): boolean => {
     if (!enabled.value || options.disabled()) {

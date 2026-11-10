@@ -3,7 +3,7 @@ import type {
   NuiTableEdgeDirection,
   NuiTableRange,
   NuiTableSourceCell,
-  TableCellPosition,
+  NuiTableCellPosition,
 } from '@numior/table';
 import {
   EN_LOCALE,
@@ -277,9 +277,9 @@ export const sheetCells = ({
   };
 
   const nextEdge = (
-    from: TableCellPosition,
+    from: NuiTableCellPosition,
     direction: NuiTableEdgeDirection,
-  ): TableCellPosition => {
+  ): NuiTableCellPosition => {
     const step = EDGE_STEPS[direction];
 
     const edge = sheet.cells.nextEdge(
@@ -294,7 +294,7 @@ export const sheetCells = ({
       : { row: rows.positionNear(edge), col: from.col };
   };
 
-  const lastCell = (): TableCellPosition | undefined => {
+  const lastCell = (): NuiTableCellPosition | undefined => {
     const used = sheet.cells.usedRange();
 
     return used === undefined

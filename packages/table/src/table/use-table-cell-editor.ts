@@ -21,14 +21,14 @@ import {
   type NuiTableDraft,
   type NuiTableEditRefusalReason,
   type TableCellEditorSpec,
-  type TableCellPosition,
+  type NuiTableCellPosition,
   type TableEditorPlan,
   type TableEditSession,
 } from './table.types';
 
 export interface TableCellEditorOptions<T> {
   readonly enabled: () => boolean;
-  readonly cell: () => TableCellPosition | undefined;
+  readonly cell: () => NuiTableCellPosition | undefined;
   readonly rowAt: (position: number) => T | undefined;
   readonly keyAt: (col: number) => string | undefined;
   readonly labelOf: (key: string) => string;
@@ -36,15 +36,15 @@ export interface TableCellEditorOptions<T> {
   readonly valueOf: (row: T, key: string) => NuiTableCellValue;
   readonly plan: (row: T, key: string) => TableEditorPlan;
   readonly check: (row: T, key: string, value: NuiTableCellValue) => string | undefined;
-  readonly leave: (from: TableCellPosition, move: NuiTableEditMove) => TableCellPosition;
+  readonly leave: (from: NuiTableCellPosition, move: NuiTableEditMove) => NuiTableCellPosition;
   readonly invalid: () => string;
   readonly save: (row: T, key: string, value: NuiTableCellValue) => void;
   readonly fill: (key: string, value: NuiTableCellValue) => void;
   readonly share: (draft: NuiTableDraft | undefined) => void;
   readonly refuse: (row: T, key: string, reason: NuiTableEditRefusalReason) => void;
   readonly bounds: () => RangeBounds;
-  readonly locate: (target: EventTarget | null) => TableCellPosition | undefined;
-  readonly focus: (position: TableCellPosition) => void;
+  readonly locate: (target: EventTarget | null) => NuiTableCellPosition | undefined;
+  readonly focus: (position: NuiTableCellPosition) => void;
   readonly resetOn: WatchSource[];
   readonly messages: ComputedRef<NuiTableMessages>;
   readonly announce: (text: string) => void;
@@ -80,7 +80,7 @@ interface TableEditOutcome {
 }
 
 interface TableEditTarget<T> {
-  readonly position: TableCellPosition;
+  readonly position: NuiTableCellPosition;
   readonly row: T;
   readonly key: string;
 }
@@ -125,7 +125,7 @@ const openingOf = (event: KeyboardEvent): TableOpening | undefined => {
   return typed === undefined ? undefined : { kind: 'typed', text: typed };
 };
 
-const clampTo = (position: TableCellPosition, bounds: RangeBounds): TableCellPosition => ({
+const clampTo = (position: NuiTableCellPosition, bounds: RangeBounds): NuiTableCellPosition => ({
   row: Math.max(0, Math.min(position.row, bounds.rows - 1)),
   col: Math.max(0, Math.min(position.col, bounds.cols - 1)),
 });
@@ -199,7 +199,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     setDraft(spec.toControl(blank ? null : options.valueOf(target.row, target.key)));
   };
 
-  const open = (position: TableCellPosition, opening: TableOpening): boolean => {
+  const open = (position: NuiTableCellPosition, opening: TableOpening): boolean => {
     const row = options.rowAt(position.row);
     const key = options.keyAt(position.col);
 
@@ -361,7 +361,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     }
   };
 
-  const locate = (target: EventTarget | null): TableCellPosition | undefined =>
+  const locate = (target: EventTarget | null): NuiTableCellPosition | undefined =>
     options.enabled() && session.value === undefined ? options.locate(target) : undefined;
 
   const onDblclick = (event: MouseEvent): boolean => {

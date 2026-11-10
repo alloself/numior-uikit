@@ -54,7 +54,7 @@ import {
   type NuiTableRect,
   type NuiTableRowHeights,
   type NuiTableWindow,
-  type TableCellPosition,
+  type NuiTableCellPosition,
 } from '../../src';
 
 export interface EditorLayout {
@@ -76,7 +76,7 @@ export interface TableMountOptions<T> {
   readonly widths?: NuiTableWidths;
   readonly columnOrder?: NuiTableColumnOrder;
   readonly rowHeights?: NuiTableRowHeights;
-  readonly active?: TableCellPosition;
+  readonly active?: NuiTableCellPosition;
   readonly selected?: readonly T[];
   readonly page?: number;
   readonly pageSize?: number;
@@ -141,7 +141,7 @@ interface TableModels<T> {
   readonly pageSize: ShallowRef<number>;
   readonly ranges: Ref<NuiTableRanges>;
   readonly rowHeights: ShallowRef<NuiTableRowHeights>;
-  readonly active: ShallowRef<TableCellPosition | undefined>;
+  readonly active: ShallowRef<NuiTableCellPosition | undefined>;
   readonly draft: ShallowRef<NuiTableDraft | undefined>;
 }
 
@@ -375,7 +375,7 @@ export class TableDriver<T> {
     const pageSize = shallowRef(settings.pageSize ?? 20);
     const ranges = ref<NuiTableRanges>([]);
     const rowHeights = shallowRef<NuiTableRowHeights>(settings.rowHeights ?? {});
-    const active = shallowRef<TableCellPosition | undefined>(settings.active);
+    const active = shallowRef<NuiTableCellPosition | undefined>(settings.active);
     const draft = shallowRef<NuiTableDraft>();
 
     const props = shallowRef<TableProps<T>>({
@@ -1111,7 +1111,7 @@ export class TableDriver<T> {
     return this.exposed.value?.scrollPosition();
   }
 
-  async focusCellAt(position: TableCellPosition, scroll: boolean): Promise<void> {
+  async focusCellAt(position: NuiTableCellPosition, scroll: boolean): Promise<void> {
     this.exposed.value?.focusCell(position, scroll);
     await nextTick();
   }
@@ -1120,7 +1120,7 @@ export class TableDriver<T> {
     return this.exposed.value?.rectOf(range);
   }
 
-  cellAtPoint(position: number, col: number): TableCellPosition | undefined {
+  cellAtPoint(position: number, col: number): NuiTableCellPosition | undefined {
     const cell = this.cell(position, col);
 
     return withPointHits(
@@ -2235,7 +2235,7 @@ export class TableDriver<T> {
     await nextTick();
   }
 
-  get activeModel(): TableCellPosition | undefined {
+  get activeModel(): NuiTableCellPosition | undefined {
     return this.models.active.value;
   }
 
@@ -2243,7 +2243,7 @@ export class TableDriver<T> {
     return this.models.draft.value;
   }
 
-  async setActive(next: TableCellPosition): Promise<void> {
+  async setActive(next: NuiTableCellPosition): Promise<void> {
     this.models.active.value = next;
     await nextTick();
   }
@@ -2272,7 +2272,7 @@ export class TableDriver<T> {
     await nextTick();
   }
 
-  async focusCellByRef(position: TableCellPosition): Promise<boolean> {
+  async focusCellByRef(position: NuiTableCellPosition): Promise<boolean> {
     const focused = this.exposed.value?.focusCell(position) ?? false;
 
     await nextTick();

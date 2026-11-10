@@ -9,7 +9,7 @@ import type {
   NuiTableLastCell,
   NuiTableNextEdge,
   NuiTableRowHeaders,
-  TableCellPosition,
+  NuiTableCellPosition,
 } from './table.types';
 
 export interface NuiTableSourceCell {
@@ -21,8 +21,8 @@ export interface NuiTableCellSource {
   readonly rows: number;
   readonly cols: number;
   cellAt(row: number, col: number): NuiTableSourceCell | undefined;
-  nextEdge?(from: TableCellPosition, direction: NuiTableEdgeDirection): TableCellPosition;
-  lastCell?(): TableCellPosition | undefined;
+  nextEdge?(from: NuiTableCellPosition, direction: NuiTableEdgeDirection): NuiTableCellPosition;
+  lastCell?(): NuiTableCellPosition | undefined;
   columnWidth?(col: number): number | undefined;
   rowLabel?(row: number): string;
   columnLabel?(col: number): string;
@@ -50,12 +50,12 @@ interface EdgeWalk {
   readonly read: CellRead;
   readonly rows: number;
   readonly cols: number;
-  readonly step: TableCellPosition;
+  readonly step: NuiTableCellPosition;
 }
 
 const COLUMN_WIDTH = 96;
 
-export const cellName = (position: TableCellPosition): string =>
+export const cellName = (position: NuiTableCellPosition): string =>
   `${columnName(position.col)}${position.row + 1}`;
 
 export const rangeName = (range: NuiTableRange): string => {
@@ -72,25 +72,25 @@ export const rangeName = (range: NuiTableRange): string => {
   return start === end ? start : `${start}:${end}`;
 };
 
-const STEPS: Readonly<Record<NuiTableEdgeDirection, TableCellPosition>> = {
+const STEPS: Readonly<Record<NuiTableEdgeDirection, NuiTableCellPosition>> = {
   up: { row: -1, col: 0 },
   down: { row: 1, col: 0 },
   previous: { row: 0, col: -1 },
   next: { row: 0, col: 1 },
 };
 
-const inside = (walk: EdgeWalk, at: TableCellPosition): boolean =>
+const inside = (walk: EdgeWalk, at: NuiTableCellPosition): boolean =>
   at.row >= 0 && at.row < walk.rows && at.col >= 0 && at.col < walk.cols;
 
-const filled = (walk: EdgeWalk, at: TableCellPosition): boolean =>
+const filled = (walk: EdgeWalk, at: NuiTableCellPosition): boolean =>
   inside(walk, at) && (walk.read(at.row, at.col)?.text ?? '') !== '';
 
-const ahead = (walk: EdgeWalk, at: TableCellPosition): TableCellPosition => ({
+const ahead = (walk: EdgeWalk, at: NuiTableCellPosition): NuiTableCellPosition => ({
   row: at.row + walk.step.row,
   col: at.col + walk.step.col,
 });
 
-const blockEnd = (walk: EdgeWalk, from: TableCellPosition): TableCellPosition => {
+const blockEnd = (walk: EdgeWalk, from: NuiTableCellPosition): NuiTableCellPosition => {
   let at = from;
 
   while (filled(walk, ahead(walk, at))) {
@@ -99,7 +99,7 @@ const blockEnd = (walk: EdgeWalk, from: TableCellPosition): TableCellPosition =>
   return at;
 };
 
-const nextFilled = (walk: EdgeWalk, from: TableCellPosition): TableCellPosition => {
+const nextFilled = (walk: EdgeWalk, from: NuiTableCellPosition): NuiTableCellPosition => {
   let at = from;
 
   while (inside(walk, ahead(walk, at))) {
@@ -115,9 +115,9 @@ const nextFilled = (walk: EdgeWalk, from: TableCellPosition): TableCellPosition 
 export const cellEdge = (
   read: CellRead,
   size: { readonly rows: number; readonly cols: number },
-  from: TableCellPosition,
+  from: NuiTableCellPosition,
   direction: NuiTableEdgeDirection,
-): TableCellPosition => {
+): NuiTableCellPosition => {
   const walk: EdgeWalk = { read, rows: size.rows, cols: size.cols, step: STEPS[direction] };
 
   return filled(walk, from) && filled(walk, ahead(walk, from))

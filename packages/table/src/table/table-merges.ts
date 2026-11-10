@@ -4,7 +4,7 @@ import {
   TableCellSpanKind,
   type NuiTableEditMove,
   type NuiTableRange,
-  type TableCellPosition,
+  type NuiTableCellPosition,
   type TableCellSpan,
   type TableMergeLayout,
   type TableMergePiece,
@@ -142,8 +142,8 @@ export const expandToMerges = (
 
 export const anchorOf = (
   index: TableMergeIndex,
-  position: TableCellPosition,
-): TableCellPosition => {
+  position: NuiTableCellPosition,
+): NuiTableCellPosition => {
   const merge = index.at(position.row, position.col);
 
   return merge === undefined ? position : { row: merge.top, col: merge.start };
@@ -174,7 +174,11 @@ const sideOfKey = (key: string, rtl: boolean): MergeSide | undefined => {
   }
 };
 
-const edgeOf = (merge: RangeBox, from: TableCellPosition, side: MergeSide): TableCellPosition => {
+const edgeOf = (
+  merge: RangeBox,
+  from: NuiTableCellPosition,
+  side: MergeSide,
+): NuiTableCellPosition => {
   switch (side) {
     case MergeSide.Bottom:
       return { row: merge.bottom, col: from.col };
@@ -189,9 +193,9 @@ const edgeOf = (merge: RangeBox, from: TableCellPosition, side: MergeSide): Tabl
 
 const toEdge = (
   index: TableMergeIndex,
-  from: TableCellPosition,
+  from: NuiTableCellPosition,
   side: MergeSide | undefined,
-): TableCellPosition => {
+): NuiTableCellPosition => {
   const merge = index.at(from.row, from.col);
 
   return merge === undefined || side === undefined ? from : edgeOf(merge, from, side);
@@ -199,16 +203,16 @@ const toEdge = (
 
 export const leaveMerge = (
   index: TableMergeIndex,
-  from: TableCellPosition,
+  from: NuiTableCellPosition,
   key: string,
   rtl: boolean,
-): TableCellPosition => toEdge(index, from, sideOfKey(key, rtl));
+): NuiTableCellPosition => toEdge(index, from, sideOfKey(key, rtl));
 
 export const leaveMergeBy = (
   index: TableMergeIndex,
-  from: TableCellPosition,
+  from: NuiTableCellPosition,
   move: NuiTableEditMove,
-): TableCellPosition => toEdge(index, from, MOVE_SIDES[move]);
+): NuiTableCellPosition => toEdge(index, from, MOVE_SIDES[move]);
 
 export const consecutiveRuns = (positions: readonly number[], edge = 0): number[][] => {
   const runs: number[][] = [];
@@ -365,7 +369,7 @@ export const keepSpans = (
 
 export const pieceOf = (
   pieces: readonly TableMergePiece[] | undefined,
-  position: TableCellPosition,
+  position: NuiTableCellPosition,
 ): TableMergePiece | undefined =>
   pieces?.find(
     (piece) =>

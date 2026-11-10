@@ -65,7 +65,7 @@ import {
   type NuiTableExposed,
   type NuiTableRange,
   type NuiTableRanges,
-  type TableCellPosition,
+  type NuiTableCellPosition,
 } from '@numior/table';
 import { bigSheet, SHEET_COLS } from './sheet-source';
 
@@ -95,7 +95,7 @@ const editableSheet: NuiTableCellSource = {
   },
 };
 
-const textAt = (position: TableCellPosition): string =>
+const textAt = (position: NuiTableCellPosition): string =>
   editableSheet.cellAt(position.row, position.col)?.text ?? '';
 
 const recalculateRow = (row: number): void => {

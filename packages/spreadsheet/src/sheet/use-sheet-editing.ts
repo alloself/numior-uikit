@@ -6,7 +6,7 @@ import {
   type NuiTableDraft,
   type NuiTableEdit,
   type NuiTableEditEvent,
-  type TableCellPosition,
+  type NuiTableCellPosition,
 } from '@numior/table';
 import { computed, ref, shallowRef, watch } from 'vue';
 import {
@@ -145,13 +145,13 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
     follow(() => history.value.commit(steps));
   };
 
-  const inputAt = (sheet: Sheet, cells: SheetCells, next: TableCellPosition): string => {
+  const inputAt = (sheet: Sheet, cells: SheetCells, next: NuiTableCellPosition): string => {
     const line = lineOf(cells, next.row, next.col);
 
     return editor.value.inputText(sheet, line.row, line.col, options.locale());
   };
 
-  const inputAtPosition = (position: TableCellPosition): string => {
+  const inputAtPosition = (position: NuiTableCellPosition): string => {
     const sheet = options.sheet();
     const cells = options.cells();
 

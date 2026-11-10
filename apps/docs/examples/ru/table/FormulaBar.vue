@@ -39,7 +39,7 @@ import {
   type NuiTableDraft,
   type NuiTableEditEvent,
   type NuiTableExposed,
-  type TableCellPosition,
+  type NuiTableCellPosition,
 } from '@numior/table';
 
 interface Contact {
@@ -88,14 +88,14 @@ const columns: NuiTableColumn<Contact>[] = FIELDS.map((key) => ({
 const formulaTable = useTemplateRef<NuiTableExposed>('formula-table');
 const root = useTemplateRef<HTMLElement>('root');
 const bar = useTemplateRef<HTMLElement>('bar');
-const active = ref<TableCellPosition>();
+const active = ref<NuiTableCellPosition>();
 const draft = ref<NuiTableDraft>();
 
 const keyOf = (contact: Contact): number => contact.id;
 
 const isField = (key: string): key is Field => FIELDS.some((field) => field === key);
 
-const valueAt = (cell: TableCellPosition): string => {
+const valueAt = (cell: NuiTableCellPosition): string => {
   const field = FIELDS[cell.col];
   const row = contacts.value[cell.row];
 

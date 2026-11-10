@@ -9,7 +9,7 @@ import type {
   NuiTableRange,
   NuiTableRanges,
   NuiTableRect,
-  TableCellPosition,
+  NuiTableCellPosition,
 } from '@numior/table';
 import type { NuiListEntry, NuiMenuEntry, NuiSize, NuiTabDescriptor } from '@numior/vue';
 import type { ComponentPublicInstance, ComputedRef, Ref, ShallowRef } from 'vue';
@@ -311,7 +311,7 @@ export interface SheetEditing {
   setDraft(next: NuiTableDraft | undefined): void;
   apply(steps: readonly WorkbookStep[]): boolean;
   redraw(): void;
-  inputAt(position: TableCellPosition): string;
+  inputAt(position: NuiTableCellPosition): string;
   editableColumns(columns: readonly NuiTableColumn<number>[]): NuiTableColumn<number>[];
 }
 
@@ -354,7 +354,7 @@ export interface FormulaBarOptions {
 }
 
 export interface FormulaBar {
-  readonly active: Ref<TableCellPosition | undefined>;
+  readonly active: Ref<NuiTableCellPosition | undefined>;
   readonly ranges: Ref<NuiTableRanges>;
   readonly nameText: ComputedRef<string>;
   readonly nameInvalid: Readonly<Ref<boolean>>;

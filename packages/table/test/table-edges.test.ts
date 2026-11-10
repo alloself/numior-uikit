@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import type { NuiTableEdgeDirection, NuiTableNextEdge, TableCellPosition } from '../src';
+import type { NuiTableEdgeDirection, NuiTableNextEdge, NuiTableCellPosition } from '../src';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { people, PEOPLE_COLUMNS, type Person } from './support/people';
 
@@ -99,7 +99,7 @@ describe('NuiTable edges', () => {
   });
 
   it('asks nextEdge for the edge of the data in data positions and keeps the answer in bounds', async () => {
-    const asked: Array<[TableCellPosition, NuiTableEdgeDirection]> = [];
+    const asked: Array<[NuiTableCellPosition, NuiTableEdgeDirection]> = [];
 
     const nextEdge: NuiTableNextEdge = (from, direction) => {
       asked.push([from, direction]);
