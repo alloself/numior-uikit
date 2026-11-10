@@ -53,11 +53,13 @@ export const editorCollabDocument = ({
       const state = getState();
       const steps = parsedSteps(batch.steps);
 
-      if (state === undefined || steps === undefined) {
+      const tr =
+        state === undefined || steps === undefined ? undefined : receiveSteps(state, steps);
+
+      if (tr === undefined) {
         return false;
       }
 
-      const tr = receiveSteps(state, steps);
       const conflicts = conflictsIn(tr);
 
       dispatch(tr);
@@ -88,11 +90,15 @@ export const editorCollabDocument = ({
       const state = getState();
       const steps = parsedSteps(wires);
 
-      if (state === undefined || steps === undefined) {
-        return false;
+      const tr =
+        state === undefined || steps === undefined
+          ? undefined
+          : settleSteps(state, count, steps, version);
+
+      if (tr !== undefined) {
+        dispatch(tr);
       }
-      dispatch(settleSteps(state, count, steps, version));
-      return true;
+      return tr !== undefined;
     },
   };
 };

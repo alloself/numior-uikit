@@ -59,16 +59,18 @@ const collabStateOf = (state: EditorState): CollabState => {
   return NONE;
 };
 
+const taken = (tr: Transaction, steps: readonly Step[]): boolean =>
+  steps.every((step) => tr.maybeStep(step).ok);
+
 const rebaseLocal = (
   tr: Transaction,
   remote: readonly Step[],
   unconfirmed: readonly UnconfirmedStep[],
-): RebasedLocal => {
-  for (const item of unconfirmed.toReversed()) {
-    tr.step(item.inverted);
-  }
-  for (const step of remote) {
-    tr.step(step);
+): RebasedLocal | undefined => {
+  const undone = unconfirmed.toReversed().map((item) => item.inverted);
+
+  if (!taken(tr, undone) || !taken(tr, remote)) {
+    return undefined;
   }
 
   const conflicts = attrConflicts(tr.docs, remote, unconfirmed);
@@ -115,25 +117,27 @@ export const collabVersion = (state: EditorState): number => collabStateOf(state
 export const sendableSteps = (state: EditorState): readonly Step[] =>
   collabStateOf(state).unconfirmed.map((item) => item.step);
 
-export const receiveSteps = (state: EditorState, steps: readonly Step[]): Transaction => {
+export const receiveSteps = (
+  state: EditorState,
+  steps: readonly Step[],
+): Transaction | undefined => {
   const { version, unconfirmed } = collabStateOf(state);
   const tr = state.tr.setStoredMarks(state.storedMarks).setMeta(remoteChange, true);
   const next = version + steps.length;
 
   if (unconfirmed.length === 0) {
-    for (const step of steps) {
-      tr.step(step);
-    }
-    return tr.setMeta(collabUpdate, { version: next, unconfirmed });
+    return taken(tr, steps) ? tr.setMeta(collabUpdate, { version: next, unconfirmed }) : undefined;
   }
 
   const rebased = rebaseLocal(tr, steps, unconfirmed);
 
-  return tr
-    .setSelection(mapSelection(state.selection, mirrored(rebased.chain), state.doc, tr.doc))
-    .setMeta(remoteChain, rebased.chain)
-    .setMeta(collabConflicts, rebased.conflicts)
-    .setMeta(collabUpdate, { version: next, unconfirmed: rebased.unconfirmed });
+  return rebased === undefined
+    ? undefined
+    : tr
+        .setSelection(mapSelection(state.selection, mirrored(rebased.chain), state.doc, tr.doc))
+        .setMeta(remoteChain, rebased.chain)
+        .setMeta(collabConflicts, rebased.conflicts)
+        .setMeta(collabUpdate, { version: next, unconfirmed: rebased.unconfirmed });
 };
 
 const sameSteps = (left: readonly Step[], right: readonly Step[]): boolean =>
@@ -148,7 +152,7 @@ export const settleSteps = (
   count: number,
   steps: readonly Step[],
   version: number,
-): Transaction => {
+): Transaction | undefined => {
   const { unconfirmed } = collabStateOf(state);
   const sent = unconfirmed.slice(0, count);
   const later = unconfirmed.slice(count);
@@ -166,10 +170,12 @@ export const settleSteps = (
   const replaced = [...sent.toReversed().map((item) => item.inverted), ...steps];
   const rebased = rebaseLocal(tr, replaced, later);
 
-  return tr
-    .setSelection(mapSelection(state.selection, mirrored(rebased.chain), state.doc, tr.doc))
-    .setMeta(remoteChain, rebased.chain)
-    .setMeta(collabUpdate, { version, unconfirmed: rebased.unconfirmed });
+  return rebased === undefined
+    ? undefined
+    : tr
+        .setSelection(mapSelection(state.selection, mirrored(rebased.chain), state.doc, tr.doc))
+        .setMeta(remoteChain, rebased.chain)
+        .setMeta(collabUpdate, { version, unconfirmed: rebased.unconfirmed });
 };
 
 export const confirmSteps = (state: EditorState, count: number, version: number): Transaction => {

@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vite-plus/test';
 import {
   collab,
   presenceOf,
-  receiveSteps,
   remotePeers,
   remotePresence,
   samePresence,
@@ -11,6 +10,7 @@ import {
   type EditorPresence,
 } from '../src';
 import { paragraphs } from './harness/network';
+import { received } from './harness/received';
 
 const ANN = { id: 'ann', name: 'Ann' };
 
@@ -83,7 +83,7 @@ describe('remote presence', () => {
     const remote = state.tr.insertText('rr', 1).steps;
     const typed = state.apply(state.tr.insertText('L', 4));
 
-    const next = typed.apply(receiveSteps(typed, remote));
+    const next = typed.apply(received(typed, remote));
 
     expect(remotePeers(next)[0]?.head).toBe(5);
   });
