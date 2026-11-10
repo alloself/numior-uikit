@@ -195,6 +195,53 @@ test.describe('navigation', () => {
     await expect.poll(async () => (await navigation.readOutput()).manualTab).toBe('week');
   });
 
+  test('overflowing tabs scroll with the wheel and the edge buttons and keep the selected tab in view', async ({
+    playground,
+    navigation,
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'wheel and pointer scenario');
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await navigation.overflowTabs.scrollIntoViewIfNeeded();
+
+    await expect(navigation.tabEdge('start')).toBeHidden();
+    await expect(navigation.tabEdge('end')).toBeVisible();
+    await expect(navigation.monthTab('Декабрь')).not.toBeInViewport();
+
+    const pageScroll = await page.evaluate(() => window.scrollY);
+
+    await navigation.monthTrack.hover();
+    await page.mouse.wheel(0, 120);
+
+    await expect.poll(() => navigation.monthScroll()).toBe(120);
+    await expect(navigation.tabEdge('start')).toBeVisible();
+    expect(await page.evaluate(() => window.scrollY)).toBe(pageScroll);
+
+    await navigation.tabEdge('start').click();
+
+    await expect.poll(() => navigation.monthScroll()).toBe(0);
+    await expect(navigation.tabEdge('start')).toBeHidden();
+
+    await navigation.tabEdge('end').click();
+
+    await expect.poll(() => navigation.monthScroll()).toBe(358);
+
+    await page.mouse.wheel(0, 5000);
+
+    await expect(navigation.tabEdge('end')).toBeHidden();
+    await expect(navigation.monthTab('Декабрь')).toBeInViewport({ ratio: 1 });
+
+    await navigation.monthTab('Декабрь').click();
+    await page.keyboard.press('Home');
+
+    await expect(navigation.monthTab('Январь')).toBeFocused();
+    await expect(navigation.monthTab('Январь')).toBeInViewport({ ratio: 1 });
+    await expect.poll(() => navigation.monthScroll()).toBe(0);
+    expect(await page.evaluate(() => window.scrollY)).toBe(pageScroll);
+  });
+
   test('closable tabs close from the cross, Delete and the middle button while the indicator stays under the selected tab', async ({
     playground,
     navigation,

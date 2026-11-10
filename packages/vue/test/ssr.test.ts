@@ -639,7 +639,9 @@ describe('server rendering', () => {
     expect(close).toContain('nui-button--size-inline');
     expect(close).toContain('tabindex="-1"');
     expect(close).toContain('aria-hidden="true"');
-    expect(html.match(/<button/g)).toHaveLength(3);
+    expect(html.match(/<button[^>]*nui-tab__close/g)).toHaveLength(1);
+    expect(html.match(/<span[^>]*nui-tab-list__edge[^>]*aria-hidden="true"/g)).toHaveLength(2);
+    expect(html).not.toContain('nui-tab-list__edge--shown');
   });
 
   it('renders link tabs as a labelled nav of links with the current page marked', async () => {
