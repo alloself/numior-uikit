@@ -1,5 +1,6 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
+import { nextTick } from 'vue';
 import { type ListFocusMode, type ListNavigation, type ListOrientation } from '../../src';
 import ListNavigationHost from '../fixtures/ListNavigationHost.vue';
 
@@ -85,6 +86,31 @@ export class ListHarness {
 
   disableNow(index: number): void {
     this.buttons[index]?.setAttribute('aria-disabled', 'true');
+  }
+
+  async disable(index: number): Promise<void> {
+    this.buttons[index]?.setAttribute('disabled', '');
+    await nextTick();
+  }
+
+  async disableAndBlur(index: number): Promise<void> {
+    const button = this.buttons[index];
+
+    button?.setAttribute('disabled', '');
+    button?.blur();
+    await nextTick();
+  }
+
+  async disableAll(): Promise<void> {
+    this.buttons.forEach((button) => {
+      button.setAttribute('disabled', '');
+    });
+
+    await nextTick();
+  }
+
+  rest(index: number): void {
+    this.navigation.setActive(index, { focus: false });
   }
 
   relabelNow(index: number, label: string): void {

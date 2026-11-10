@@ -8,6 +8,7 @@ import {
   type MaybeRefOrGetter,
   type Ref,
 } from 'vue';
+import { useEventListener } from '@vueuse/core';
 import { useDirection } from '../direction/direction-context';
 import { AriaValue } from '../aria/aria.types';
 import { Key } from '../keyboard/key.types';
@@ -67,6 +68,11 @@ interface ItemIndex {
   lowered: readonly string[] | undefined;
 }
 
+interface HeldItem {
+  node: HTMLElement | null;
+  dropped: HTMLElement | null;
+}
+
 interface ItemWatch {
   root: HTMLElement | null;
   observer: MutationObserver | null;
@@ -93,6 +99,20 @@ const isUsable = (element: HTMLElement): boolean =>
   !element.hasAttribute('disabled') &&
   !element.hidden;
 
+const usableNear = (source: readonly HTMLElement[], at: number): HTMLElement | null =>
+  source.slice(at + 1).find(isUsable) ??
+  source.slice(0, Math.max(at, 0)).findLast(isUsable) ??
+  null;
+
+const heldFocus = (active: HTMLElement, dropped: HTMLElement | null): boolean => {
+  const focused = active.ownerDocument.activeElement;
+
+  return (
+    focused === active ||
+    (dropped === active && (focused === null || focused === active.ownerDocument.body))
+  );
+};
+
 const defaultText = (element: HTMLElement): string =>
   (element.getAttribute('aria-label') ?? element.textContent ?? '').trim();
 
@@ -110,7 +130,7 @@ const indexItems = (source: readonly HTMLElement[]): ItemIndex => {
   };
 };
 
-const observe = (watch: ItemWatch, root: HTMLElement): void => {
+const observe = (watch: ItemWatch, root: HTMLElement, changed: () => void): void => {
   watch.observer?.disconnect();
   watch.root = root;
   watch.index = null;
@@ -120,6 +140,7 @@ const observe = (watch: ItemWatch, root: HTMLElement): void => {
       ? null
       : new MutationObserver(() => {
           watch.index = null;
+          changed();
         });
 
   watch.observer?.observe(root, WATCHED);
@@ -236,12 +257,44 @@ export const useListNavigation = (
   const activeId = ref<string | undefined>();
   const typeahead = ref<TypeaheadState>(emptyTypeahead);
   const direction = useDirection(container);
-  const held: { node: HTMLElement | null } = { node: null };
+  const held: HeldItem = { node: null, dropped: null };
   const watch: ItemWatch = { root: null, observer: null, index: null };
-  const pending = { frame: 0 };
+  const pending = { frame: 0, mend: false };
 
   const roving = (): boolean =>
     (toValue(options.mode) ?? ListFocusMode.Roving) === ListFocusMode.Roving;
+
+  const mend = (): void => {
+    const active = held.node;
+
+    if (!roving() || active === null || !active.isConnected || isUsable(active)) {
+      return;
+    }
+
+    const source = options.items();
+    const next = usableNear(source, source.indexOf(active));
+
+    if (next === null) {
+      return;
+    }
+
+    applyTabStop(active, next, heldFocus(active, held.dropped));
+    held.node = next;
+    held.dropped = null;
+    activeId.value = idOf(next);
+  };
+
+  const mendSoon = (): void => {
+    if (pending.mend) {
+      return;
+    }
+    pending.mend = true;
+
+    queueMicrotask(() => {
+      pending.mend = false;
+      mend();
+    });
+  };
 
   const itemIndex = (): ItemIndex => {
     const root = toValue(container);
@@ -250,13 +303,18 @@ export const useListNavigation = (
       return EMPTY_INDEX;
     }
     if (watch.root !== root) {
-      observe(watch, root);
+      observe(watch, root, mend);
     }
 
     const source = options.items();
-    const index = settledIndex(watch, source) ?? indexItems(source);
+    const settled = settledIndex(watch, source);
+    const index = settled ?? indexItems(source);
 
     watch.index = index;
+
+    if (settled === null && held.node !== null && !isUsable(held.node)) {
+      mendSoon();
+    }
     return index;
   };
 
@@ -383,6 +441,18 @@ export const useListNavigation = (
       setActive(item, { focus: false });
     }
   };
+
+  useEventListener(container, 'focusout', (event: FocusEvent) => {
+    const active = held.node;
+
+    held.dropped =
+      active !== null &&
+      event.target === active &&
+      event.relatedTarget === null &&
+      !isUsable(active)
+        ? active
+        : null;
+  });
 
   if (getCurrentScope()) {
     onScopeDispose(() => {

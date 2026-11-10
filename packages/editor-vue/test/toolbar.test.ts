@@ -152,4 +152,26 @@ describe('NuiEditor toolbar', () => {
 
     expect(editor.focused).toBe(true);
   });
+
+  it('stays reachable from the keyboard when the control under focus turns off', async () => {
+    const editor = mounted({ document: page(paragraph('p', 'Hello world')) });
+
+    await editor.select(1, 6);
+    await editor.useTool('Bold');
+    editor.focus();
+    await editor.press('F10', { alt: true });
+    await editor.toolbarKey('ArrowLeft');
+
+    expect(editor.toolbarFocus).toBe('Undo');
+
+    await editor.useTool('Undo');
+
+    expect(editor.available('Undo')).toBe(false);
+    expect(editor.toolbarFocus).toBe('Redo');
+
+    await editor.toolbarKey('Escape');
+    await editor.press('F10', { alt: true });
+
+    expect(editor.toolbarFocus).toBe('Redo');
+  });
 });

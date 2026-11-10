@@ -254,6 +254,30 @@ test.describe('editor', () => {
     await expect(editor.content).toBeFocused();
   });
 
+  test('keeps the toolbar reachable from the keyboard when the control under focus turns off', async ({
+    playground,
+    editor,
+    page,
+  }) => {
+    await openEditor(playground);
+    const coarse = await page.evaluate(() => matchMedia('(pointer: coarse)').matches);
+
+    test.skip(coarse, 'the docked toolbar of a touch screen leaves with the focus of the text');
+
+    await editor.clear();
+    await page.keyboard.type('Hello');
+    await editor.undoAllWith('Space');
+
+    await expect(editor.tool('Повторить')).toBeFocused();
+
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Alt+F10');
+    await expect(editor.tool('Повторить')).toBeFocused();
+
+    await page.keyboard.press('ArrowRight');
+    await expect(editor.tool('Вставить')).toBeFocused();
+  });
+
   test('links with Ctrl+K and colours a selection from the bubble over it', async ({
     playground,
     editor,

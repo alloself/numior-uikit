@@ -147,6 +147,16 @@ export class EditorSection {
       .getByRole('button', { name, exact: true });
   }
 
+  async undoAllWith(key: string): Promise<void> {
+    const undo = this.tool('Отменить');
+
+    await undo.focus();
+
+    while (await undo.isEnabled()) {
+      await this.page.keyboard.press(key);
+    }
+  }
+
   bubble(): Locator {
     return this.root.locator('.nui-editor-bubble');
   }
