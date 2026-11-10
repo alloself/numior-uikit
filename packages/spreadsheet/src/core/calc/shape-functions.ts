@@ -1,3 +1,4 @@
+import { max } from 'lodash-es';
 import type { NumberLocale } from '../format/format.types';
 import { CellValueKind, type CellValue } from '../cell.types';
 import { EMPTY, errorValue } from '../values';
@@ -156,7 +157,7 @@ const stack = (args: FunctionArgs, byCol: boolean): EvalValue => {
     byCol ? transpose(args.matrix(index)) : args.matrix(index),
   );
 
-  const width = Math.max(...parts.map(widthOf));
+  const width = max(parts.map(widthOf)) ?? 0;
 
   const rows = parts.flatMap((part) =>
     part.map((row) => Array.from({ length: width }, (_, col) => row[col] ?? MISSING_ITEM)),

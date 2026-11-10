@@ -68,7 +68,9 @@ export const createSubmit = <V extends object, O>(deps: SubmitDeps<V, O>) => {
 
     for (const [path, messages] of Object.entries(error.errors)) {
       if (normalizePath(path) === '') {
-        formMessages.push(...toMessages(messages));
+        for (const entry of toMessages(messages)) {
+          formMessages.push(entry);
+        }
       } else {
         deps.errors.setFieldError(path, toMessages(messages));
       }

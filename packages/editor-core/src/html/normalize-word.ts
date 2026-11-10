@@ -179,7 +179,10 @@ const wordLists: ChildrenRewrite = (children) => {
     if (item !== undefined) {
       run.push(item);
     } else if (!(isBlank(child) && run.length > 0)) {
-      result.push(...buildLists(run), child);
+      for (const list of buildLists(run)) {
+        result.push(list);
+      }
+      result.push(child);
       run = [];
     }
   }

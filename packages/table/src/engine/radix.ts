@@ -1,3 +1,4 @@
+import { maxBy } from 'lodash-es';
 import { CHECK_INTERVAL, type SliceJob } from './slicer';
 import { RadixGroupKind, RadixLaneKind } from './engine.types';
 
@@ -238,8 +239,12 @@ export const createKeptRadixJob = (
   const length = indices.length;
   const groups = groupsOf(lanes);
   const layouts = groups.map(layoutOf);
-  const buckets = 1 << Math.max(...layouts.map((layout) => layout.width), 1);
-  const counts = new Uint32Array(buckets * Math.max(...layouts.map((layout) => layout.digits), 1));
+  const buckets = 1 << Math.max(maxBy(layouts, (layout) => layout.width)?.width ?? 1, 1);
+
+  const counts = new Uint32Array(
+    buckets * Math.max(maxBy(layouts, (layout) => layout.digits)?.digits ?? 1, 1),
+  );
+
   const total = Math.max(1, layouts.reduce((sum, layout) => sum + 1 + layout.digits, 0) * length);
   const buffers = buffersFor(length);
 

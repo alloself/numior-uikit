@@ -107,7 +107,9 @@ export const readPositionalParts = async (
       parts.push(await recordPart(archive, relationship.target, specs, options));
 
       if (relationship.kind === RelationshipKind.Drawing) {
-        parts.push(...(await chartsOf(archive, relationship.target, options)));
+        for (const entry of await chartsOf(archive, relationship.target, options)) {
+          parts.push(entry);
+        }
       }
     }
   }

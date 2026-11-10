@@ -388,7 +388,9 @@ export const readDrawings = async (
       archive.has(relationship.target)
     ) {
       try {
-        drawings.push(...(await drawingsOfPart(archive, relationship.target, options)));
+        for (const entry of await drawingsOfPart(archive, relationship.target, options)) {
+          drawings.push(entry);
+        }
       } catch (error) {
         if (!(error instanceof XlsxPartError)) {
           throw error;

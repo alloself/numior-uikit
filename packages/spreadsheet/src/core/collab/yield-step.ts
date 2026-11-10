@@ -73,7 +73,7 @@ export const foreignEdits = (
   steps: readonly WorkbookStep[],
   local: readonly WorkbookStep[],
 ): readonly WorkbookStep[] => {
-  const later = local.flatMap(changesOf);
+  let later = local.flatMap(changesOf);
 
   return steps
     .flatMap(flattened)
@@ -85,7 +85,7 @@ export const foreignEdits = (
           found.push(moved);
         }
       }
-      later.unshift(...changesOf(part));
+      later = [...changesOf(part), ...later];
       return found;
     }, [])
     .toReversed();

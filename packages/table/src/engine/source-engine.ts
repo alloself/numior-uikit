@@ -618,7 +618,9 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
       const found = isGroups(result) ? [] : result.rows;
       const next = offset + found.length;
 
-      rows.push(...found);
+      for (const entry of found) {
+        rows.push(entry);
+      }
 
       if (
         found.length === COLLECT_CHUNK &&

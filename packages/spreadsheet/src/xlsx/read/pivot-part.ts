@@ -163,7 +163,9 @@ export const readPivotCache = async (
           return;
         }
 
-        unsupported.push(...cacheProblems(element.local, attributes));
+        for (const entry of cacheProblems(element.local, attributes)) {
+          unsupported.push(entry);
+        }
 
         if (element.local === OoxmlElement.WorksheetSource) {
           source = cacheSourceOf(attributes);

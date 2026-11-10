@@ -11,6 +11,8 @@ const RUNNING_BUDGET_MS = 400;
 
 const STALE_BUDGET_MS = 20;
 
+const LONG_ROWS = 150_000;
+
 describe('formula evaluation', () => {
   it('computes operators with the Excel coercions', () => {
     expect(evaluated('=1+2*3')).toEqual(numberValue(7));
@@ -294,6 +296,30 @@ describe('recalculation', () => {
     expect(run.total).toBe(19_999);
     expect(run.done).toBe(19_999);
     expect(sheet.value('A20000')).toEqual(numberValue(20_000));
+  });
+
+  it('takes extremes and the mode of a column too long to spread into a call', () => {
+    const sheet = openSheet();
+
+    for (let row = 1; row <= LONG_ROWS; row += 1) {
+      sheet.enter(`A${String(row)}`, row);
+    }
+    sheet.enter(`A${String(LONG_ROWS + 1)}`, 7);
+    sheet.enter('C1', `=MAXIFS(A1:A${String(LONG_ROWS)},A1:A${String(LONG_ROWS)},">0")`);
+    sheet.enter('C2', `=MINIFS(A1:A${String(LONG_ROWS)},A1:A${String(LONG_ROWS)},">0")`);
+    sheet.enter('C3', `=SUBTOTAL(4,A1:A${String(LONG_ROWS)})`);
+    sheet.enter('C4', `=SUBTOTAL(5,A1:A${String(LONG_ROWS)})`);
+    sheet.enter('C5', `=MODE(A1:A${String(LONG_ROWS + 1)})`);
+
+    sheet.recalc();
+
+    expect(['C1', 'C2', 'C3', 'C4', 'C5'].map((address) => sheet.value(address))).toEqual([
+      numberValue(LONG_ROWS),
+      numberValue(1),
+      numberValue(LONG_ROWS),
+      numberValue(1),
+      numberValue(7),
+    ]);
   });
 
   it('finds exact matches in ranges that grow down a column within the budget', () => {

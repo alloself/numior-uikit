@@ -154,7 +154,9 @@ const readChildren = (
     if (content === undefined || read === undefined) {
       return undefined;
     }
-    content.push(...read);
+    for (const entry of read) {
+      content.push(entry);
+    }
     return content;
   }, []);
 };

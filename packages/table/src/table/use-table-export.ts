@@ -58,7 +58,9 @@ export const useTableExport = <T>(options: TableExportOptions<T>): TableExport =
 
       for (let start = 0; start < rows.length; start += CHUNK_ROWS) {
         settings.signal?.throwIfAborted();
-        lines.push(...chunkOf(rows, start, keys, separator, formulas));
+        for (const entry of chunkOf(rows, start, keys, separator, formulas)) {
+          lines.push(entry);
+        }
 
         if (start + CHUNK_ROWS < rows.length) {
           await yieldToHost();

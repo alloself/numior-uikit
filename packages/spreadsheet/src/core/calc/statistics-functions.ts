@@ -1,3 +1,4 @@
+import { max, min } from 'lodash-es';
 import { CellValueKind, type CellValue } from '../cell.types';
 import type { NumberLocale } from '../format/format.types';
 import { numberValue } from '../values';
@@ -104,7 +105,7 @@ const mode = (values: readonly number[]): number => {
     seen.set(value, (seen.get(value) ?? 0) + 1);
   });
 
-  const top = Math.max(0, ...seen.values());
+  const top = max([...seen.values()]) ?? 0;
   const found = values.find((value) => seen.get(value) === top);
 
   return top < 2 || found === undefined ? raise('#N/A') : found;
@@ -174,11 +175,11 @@ const averageIf = (args: FunctionArgs): EvalValue => {
 };
 
 const ifsExtreme =
-  (pick: (values: readonly number[]) => number) =>
+  (pick: (values: readonly number[]) => number | undefined) =>
   (args: FunctionArgs): EvalValue => {
     const found = matched(conditionsOf(args, 1), referenceOf(args.value(0)));
 
-    return numberValue(found.length === 0 ? 0 : pick(found));
+    return numberValue(pick(found) ?? 0);
   };
 
 const countBlank = (args: FunctionArgs): EvalValue => {
@@ -231,8 +232,8 @@ const SUBTOTAL_COMPUTE: Readonly<
   1: (values) => mean(values),
   2: (values) => values.length,
   3: (_values, filled) => filled,
-  4: (values) => (values.length === 0 ? 0 : Math.max(...values)),
-  5: (values) => (values.length === 0 ? 0 : Math.min(...values)),
+  4: (values) => max(values) ?? 0,
+  5: (values) => min(values) ?? 0,
   6: (values) => (values.length === 0 ? 0 : values.reduce((total, value) => total * value, 1)),
   7: (values) => Math.sqrt(variance(values, true)),
   8: (values) => Math.sqrt(variance(values, false)),
@@ -355,13 +356,13 @@ export const STATISTICS_FUNCTIONS: readonly FunctionSpec[] = [
     name: 'MINIFS',
     min: 3,
     max: MANY,
-    evaluate: ifsExtreme((values) => Math.min(...values)),
+    evaluate: ifsExtreme(min),
   }),
   defineFunction({
     name: 'MAXIFS',
     min: 3,
     max: MANY,
-    evaluate: ifsExtreme((values) => Math.max(...values)),
+    evaluate: ifsExtreme(max),
   }),
   MEDIAN,
   MODE,

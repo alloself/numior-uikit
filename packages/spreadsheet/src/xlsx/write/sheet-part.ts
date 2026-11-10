@@ -1,3 +1,4 @@
+import { max } from 'lodash-es';
 import { MAX_COLS, formatCell, formatRange } from '../../core/address';
 import {
   bookArrays,
@@ -166,7 +167,7 @@ const lastRowOf = (sheet: Sheet, formulas: ReadonlyMap<number, number[]>): numbe
     sheet.formats.lastRow(),
     sheet.decorations.lastRow(),
     sheet.layout.rows.last(),
-    ...[...formulas.keys()].map((band) => band * CHUNK_ROWS + CHUNK_ROWS - 1),
+    (max([...formulas.keys()]) ?? -1) * CHUNK_ROWS + CHUNK_ROWS - 1,
   );
 
 const bandKeys = (

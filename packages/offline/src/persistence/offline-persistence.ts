@@ -177,7 +177,9 @@ export const offlinePersistence = (
     return {
       changed: schedule,
       record: (alternatives) => {
-        found.push(...alternatives);
+        for (const entry of alternatives) {
+          found.push(entry);
+        }
         schedule();
       },
       forget: (alternative) => {

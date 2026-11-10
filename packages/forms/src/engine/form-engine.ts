@@ -74,7 +74,7 @@ const listAt = (raw: object, path: string): readonly unknown[] => {
 };
 
 const createArray = (host: ArrayHost, path: () => string): EngineArray => {
-  const order: EngineKey[] = [];
+  let order: EngineKey[] = [];
   const current = (): readonly unknown[] => listAt(host.raw, path());
 
   const write = (next: readonly unknown[]): void => {
@@ -113,15 +113,15 @@ const createArray = (host: ArrayHost, path: () => string): EngineArray => {
       write(current().toSpliced(index, 1));
     },
     move: (from, to) => {
-      order.splice(0, order.length, ...moved(order, from, to));
+      order = moved(order, from, to);
       write(moved(current(), from, to));
     },
     swap: (first, second) => {
-      order.splice(0, order.length, ...swapped(order, first, second));
+      order = swapped(order, first, second);
       write(swapped(current(), first, second));
     },
     replace: (next) => {
-      order.splice(0, order.length, ...next.map(() => host.fresh()));
+      order = next.map(() => host.fresh());
       write(next.map(cloneValue));
     },
   };

@@ -42,7 +42,9 @@ export const workbookAuthority = (
   const kept = (taken: readonly Taken[]): readonly WireWorkbookStep[] => {
     const wires = taken.map(({ step }) => codec.encode(step));
 
-    journal.push(...wires);
+    for (const entry of wires) {
+      journal.push(entry);
+    }
     tail = [...tail, ...taken.map(({ step }) => changesOf(step))].slice(-window);
     return wires;
   };

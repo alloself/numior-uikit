@@ -46,7 +46,9 @@ const slicedLines = async (
   const lines: string[][] = [];
 
   for (let from = 0; from < rows.length; from += step) {
-    lines.push(...textLines(cells, rows.slice(from, from + step), cols));
+    for (const entry of textLines(cells, rows.slice(from, from + step), cols)) {
+      lines.push(entry);
+    }
     await yieldToHost();
   }
   return lines;

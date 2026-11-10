@@ -5,6 +5,7 @@ import { planPaste } from '../src/table/table-paste';
 
 const BOUNDS = { rows: 10, cols: 4 };
 const TEXTS = { yes: 'Да', no: 'Нет' };
+const LONG_LINES = 150_000;
 
 const range = (top: number, start: number, bottom: number, end: number) => ({
   from: { row: top, col: start },
@@ -83,6 +84,14 @@ describe('table paste', () => {
       '1',
       '2',
     ]);
+  });
+
+  it('measures a block of more lines than a call takes arguments', () => {
+    const block = Array.from({ length: LONG_LINES }, (_, index) => [String(index), 'x']);
+
+    const plan = planPaste(block, [], { row: 0, col: 0 }, { rows: LONG_LINES, cols: 4 }, 100);
+
+    expect(plan).toEqual({ kind: 'limit', count: LONG_LINES * 2 });
   });
 
   it('clips the block at the table edge, keeps within the limit and ignores an empty clipboard', () => {

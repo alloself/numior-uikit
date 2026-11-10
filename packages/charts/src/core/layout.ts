@@ -1,3 +1,4 @@
+import { max, min } from 'lodash-es';
 import { layoutBars } from './bars';
 import { layoutLines, stackedLineExtent } from './lines';
 import { layoutSlices } from './pies';
@@ -73,8 +74,10 @@ const categoryCount = (spec: ChartSpec): number =>
     ? spec.categories.labels.length
     : spec.categories.values.length;
 
-const extent = (values: readonly number[]): readonly [number, number] =>
-  values.length === 0 ? [0, 1] : [Math.min(...values), Math.max(...values)];
+const extent = (values: readonly number[]): readonly [number, number] => [
+  min(values) ?? 0,
+  max(values) ?? 1,
+];
 
 const linear = (spec: ChartSpec): boolean =>
   spec.kind === ChartKind.Line || spec.kind === ChartKind.Area;

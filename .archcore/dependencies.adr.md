@@ -50,7 +50,11 @@ Kit писался с нуля: `engineering-quality.rule.md` требовал �
   `clampNumber` (lodash `clamp` с одной границей считает её верхней); в ядре редактора
   `sameDocJSON` (`isEqual` различает отсутствующее поле и пустое и на документе в 10 000 блоков
   работает 24 мс против 3–6 мс). С 2026-11-10 `lodash-es` — зависимость и `@numior/editor-core`
-  (решение пользователя: общие утилиты ядро берёт из lodash, а не пишет свои).
+  (решение пользователя: общие утилиты ядро берёт из lodash, а не пишет свои), с 2026-11-11 — и
+  `@numior/charts`, `@numior/table` и `@numior/spreadsheet` (`min`, `max`, `maxBy` вместо
+  `Math.min(...values)`, который падает на 130 000 значений; правило `numior/spread-arguments`).
+  В `@numior/primitives` единственное такое место (`number-step.ts`, три аргумента) записано
+  через `reduce`: базовый пакет зависимость от lodash не получил.
 
 ## Alternatives Considered
 

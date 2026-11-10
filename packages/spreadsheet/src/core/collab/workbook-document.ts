@@ -129,7 +129,9 @@ export const createWorkbookDocument = ({
         return undefined;
       }
       inverses.push(result.inverse);
-      changes.push(...changesOf(step));
+      for (const entry of changesOf(step)) {
+        changes.push(entry);
+      }
     }
     return changes;
   };
@@ -237,7 +239,9 @@ export const createWorkbookDocument = ({
             return result;
           }
           recorded.push({ step: part, inverse: result.inverse });
-          changes.push(...changesOf(part));
+          for (const entry of changesOf(part)) {
+            changes.push(entry);
+          }
         }
         unconfirmed = [...unconfirmed, ...recorded];
 

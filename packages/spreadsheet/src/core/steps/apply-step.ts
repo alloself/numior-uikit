@@ -490,7 +490,9 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
         return result;
       }
       inverses.push(result.inverse);
-      changes.push(...result.changes);
+      for (const entry of result.changes) {
+        changes.push(entry);
+      }
     }
     return done({ kind: 'batch', steps: inverses.toReversed() }, changes);
   };

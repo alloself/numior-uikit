@@ -77,8 +77,8 @@ export const createWorkbookHistory = (
   stepper: Stepper,
   { limit = DEFAULT_LIMIT }: HistoryOptions = {},
 ): WorkbookHistory => {
-  const done: Entry[] = [];
-  const undone: Entry[] = [];
+  let done: Entry[] = [];
+  let undone: Entry[] = [];
 
   const run = (steps: readonly WorkbookStep[]): { outcome: StepOutcome; inverse: Entry } => {
     const result = stepper.apply({ kind: 'batch', steps });
@@ -125,12 +125,12 @@ export const createWorkbookHistory = (
       undone.length = 0;
     },
     rebase: (map) => {
-      done.splice(0, done.length, ...rebased(done, map));
-      undone.splice(0, undone.length, ...rebased(undone, map));
+      done = rebased(done, map);
+      undone = rebased(undone, map);
     },
     trace: (start, pass) => {
-      done.splice(0, done.length, ...traced(done, start, pass));
-      undone.splice(0, undone.length, ...traced(undone, start, pass));
+      done = traced(done, start, pass);
+      undone = traced(undone, start, pass);
     },
     get canUndo() {
       return done.length > 0;

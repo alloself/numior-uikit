@@ -77,6 +77,8 @@ export const htmlElement = (
 ): HtmlElement => {
   const built = openElement(tag, attrs);
 
-  built.children.push(...children);
+  for (const entry of children) {
+    built.children.push(entry);
+  }
   return built.element;
 };

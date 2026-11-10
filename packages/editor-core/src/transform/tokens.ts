@@ -61,15 +61,17 @@ export const contentTokens = (
     const inside = cuts.filter((cut) => cut > offset && cut < end);
 
     if (child.kind === ContentNodeKind.Text) {
-      tokens.push(...splitText(child, offset, inside));
+      for (const entry of splitText(child, offset, inside)) {
+        tokens.push(entry);
+      }
     } else if (inside.length === 0 || child.leaf) {
       tokens.push({ kind: 'node', node: child });
     } else {
-      tokens.push(
-        { kind: 'open', node: child },
-        ...contentTokens(child.content, offset + 1, inside),
-        CLOSE,
-      );
+      tokens.push({ kind: 'open', node: child });
+      for (const entry of contentTokens(child.content, offset + 1, inside)) {
+        tokens.push(entry);
+      }
+      tokens.push(CLOSE);
     }
     offset = end;
   }

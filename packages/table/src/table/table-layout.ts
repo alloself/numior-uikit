@@ -384,7 +384,11 @@ export const rowCellsOf = (layout: TableLayout, centre: readonly number[]): Tabl
       cursor = column.offset + column.width;
     }
   }
-  cells.push(gapCell(TRAIL_KEY), ...layout.end.map((column) => column.cell));
-  tracks.push({ key: TRAIL_KEY, width: undefined }, ...layout.end.map(trackOf));
+  cells.push(gapCell(TRAIL_KEY));
+  tracks.push({ key: TRAIL_KEY, width: undefined });
+  for (const column of layout.end) {
+    cells.push(column.cell);
+    tracks.push(trackOf(column));
+  }
   return { cells, tracks };
 };

@@ -848,18 +848,15 @@ const onFramePointermove = (event: PointerEvent): void => {
 };
 
 const blockMenu = (node: ElementNode): NuiMenuEntry[] =>
-  blocks.reduce<NuiMenuEntry[]>((found, block) => {
-    if (block.name === node.type) {
-      found.push(
-        ...(block.menu?.(
+  blocks.flatMap((block) =>
+    block.name === node.type
+      ? (block.menu?.(
           node,
           blockContext(node.id, run, editor.focus, () => view?.nodeDOM(node.id)),
           blockTexts.value,
-        ) ?? []),
-      );
-    }
-    return found;
-  }, []);
+        ) ?? [])
+      : [],
+  );
 
 const onHandleRun = (command: Command): void => {
   run(command);

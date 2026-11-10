@@ -225,8 +225,15 @@ const checkOwnAt = (
 
   checkBuilt(context, node, type);
 
-  if (context.issues.length > before && before > mark) {
-    context.issues.splice(mark, 0, ...context.issues.splice(before));
+  if (context.issues.length <= before || before <= mark) {
+    return;
+  }
+
+  const own = context.issues.splice(before);
+  const nested = context.issues.splice(mark);
+
+  for (const issue of [...own, ...nested]) {
+    context.issues.push(issue);
   }
 };
 

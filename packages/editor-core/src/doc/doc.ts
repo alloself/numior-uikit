@@ -94,7 +94,9 @@ const cutContent = (node: ElementNode, start: number, from: number, to: number):
     const child = content[index];
 
     if (child !== undefined) {
-      cut.push(...cutChild(child, childStart, from, to));
+      for (const entry of cutChild(child, childStart, from, to)) {
+        cut.push(entry);
+      }
     }
     index += 1;
     childStart = start + (offsets[index] ?? 0);

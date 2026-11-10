@@ -183,7 +183,9 @@ export const columnMenuEntries = (
     if (shown > 0) {
       found.push({ type: 'separator', key: `separator-${shown}` });
     }
-    found.push(...section);
+    for (const entry of section) {
+      found.push(entry);
+    }
     shown += 1;
     return found;
   }, []);

@@ -122,7 +122,9 @@ const markNode = (node: ElementNode, start: number, task: MarkTask): ElementNode
     const parts = markChild(child, childStart, allowed, task);
 
     changed ||= parts.length !== 1 || parts[0] !== child;
-    touched.push(...parts);
+    for (const entry of parts) {
+      touched.push(entry);
+    }
   }
   return changed ? spliceContent(node, first, last, touched) : node;
 };

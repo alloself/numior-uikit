@@ -1,3 +1,4 @@
+import { maxBy } from 'lodash-es';
 import { MAX_COLS, MAX_ROWS, containsCell } from '../address';
 import type { Calculator } from '../calc/calculator';
 import type { CellContent } from '../calc/calc.types';
@@ -137,7 +138,7 @@ const textSeries = (lane: Lane): Series | undefined => {
     return undefined;
   }
 
-  const width = Math.max(...parts.map((part) => part.digits.length));
+  const width = maxBy(parts, (part) => part.digits.length)?.digits.length ?? 0;
   const numbers = parts.map((part) => Number(part.digits));
   const trend = numbers.length === 1 ? { base: numbers[0] ?? 0, step: 1 } : trendOf(numbers);
 

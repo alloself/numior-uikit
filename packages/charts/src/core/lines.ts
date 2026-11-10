@@ -194,9 +194,15 @@ export const layoutLines = (
     const below = stacking === ChartStacking.None ? undefined : tops[position - 1];
     const drawn = pathsOf(frame, runs, position, below);
 
-    areas.push(...drawn.areas);
-    lines.push(...drawn.lines);
-    points.push(...pointsOf(frame, runs, item, position));
+    for (const entry of drawn.areas) {
+      areas.push(entry);
+    }
+    for (const entry of drawn.lines) {
+      lines.push(entry);
+    }
+    for (const entry of pointsOf(frame, runs, item, position)) {
+      points.push(entry);
+    }
   });
 
   return { paths: [...areas, ...lines], points };

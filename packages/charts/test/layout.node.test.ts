@@ -216,4 +216,19 @@ describe('chart layout', () => {
     expect(texts(narrow, 'value-tick').length).toBeLessThan(6);
     expect(Math.min(...tickGaps(narrow))).toBeGreaterThan(40);
   });
+
+  it('lays out a series too long to spread into a call', () => {
+    const values = Array.from({ length: 150_000 }, (_, index) => index % 1000);
+
+    const scene = layoutChart(
+      {
+        kind: 'line',
+        categories: { kind: 'number', values: values.map((_, index) => index) },
+        series: [{ id: 'load', name: 'Load', values }],
+      },
+      SIZE,
+    );
+
+    expect(texts(scene, 'value-tick').at(-1)).toBe('1,000');
+  });
 });

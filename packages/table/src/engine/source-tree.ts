@@ -146,7 +146,9 @@ export const createSourceLayouts = <T>(
       const child = branch.index + branch.before + 1;
 
       if (from < child + branch.size && to > child) {
-        found.push(...spans(branch.store, from - child, to - child, base + child));
+        for (const entry of spans(branch.store, from - child, to - child, base + child)) {
+          found.push(entry);
+        }
       }
     }
     own(layout.own, layout.size - layout.own);

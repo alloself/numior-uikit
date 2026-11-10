@@ -748,7 +748,11 @@ export const createCalculator = (
               : [direct]
             : inside(precedent);
 
-          seeds.push(...found.filter((candidate) => planned.has(candidate)));
+          for (const candidate of found) {
+            if (planned.has(candidate)) {
+              seeds.push(candidate);
+            }
+          }
         });
       }
     }

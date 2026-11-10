@@ -1,3 +1,4 @@
+import { maxBy } from 'lodash-es';
 import { boxOf, type RangeBounds, type RangeBox } from './table-ranges';
 import {
   type NuiTableRange,
@@ -99,7 +100,7 @@ export const planPaste = (
   if (block.length === 1 && first.length === 1 && ranges.length > 0) {
     return fillOf(ranges, first[0] ?? '', limit);
   }
-  const size = { rows: block.length, cols: Math.max(...block.map((line) => line.length)) };
+  const size = { rows: block.length, cols: maxBy(block, (line) => line.length)?.length ?? 0 };
   const target = sizeOf(box);
   const area = clipped(ranges.length === 1 && tiles(size, target) ? target : size, box, bounds);
   const count = area.rows * area.cols;

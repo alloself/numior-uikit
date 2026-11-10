@@ -1,3 +1,4 @@
+import { maxBy } from 'lodash-es';
 import type { Calculator } from '../../core/calc/calculator';
 import { nextTask } from '../../core/calc/tasks';
 import type { SheetXml } from '../../core/layout/fragments.types';
@@ -741,7 +742,9 @@ const writeSheet = async (writing: Writing, plan: SheetPlan, firstNewId: number)
   output.entries.push({ name: plan.part, data: streamOfChunks(sheetOutput.chunks) });
   output.overrides.set(plan.part, TYPES.worksheet);
   output.written.add(plan.part);
-  output.roots.push(...plan.kept);
+  for (const entry of plan.kept) {
+    output.roots.push(entry);
+  }
   if (relationships.length > 0) {
     output.entries.push(textEntry(relationshipsOf(plan.part), relationshipsXml(relationships)));
     output.written.add(relationshipsOf(plan.part));
@@ -845,14 +848,20 @@ const writeWorkbookPart = async (writing: Writing): Promise<void> => {
   const rootRelationships =
     original === undefined ? [] : await readRelationships(original.archive, '');
 
-  writing.workbookRelationships.push(...keptBook.map((item) => toPlanned(item, workbookPart)));
+  for (const item of keptBook) {
+    writing.workbookRelationships.push(toPlanned(item, workbookPart));
+  }
 
   const externals = writeExternals(writing);
 
-  output.roots.push(
-    ...keptBook,
-    ...rootRelationships.filter((item) => item.kind !== RelationshipKind.OfficeDocument),
-  );
+  for (const entry of keptBook) {
+    output.roots.push(entry);
+  }
+  for (const entry of rootRelationships) {
+    if (entry.kind !== RelationshipKind.OfficeDocument) {
+      output.roots.push(entry);
+    }
+  }
 
   output.entries.push(
     textEntry(
@@ -922,7 +931,7 @@ export const writeWorkbook = async (
     pivots: { keep: keepPivots, caches: [] },
   };
 
-  const firstNewId = Math.max(0, ...(source?.sheets.map((entry) => entry.sheetId) ?? [])) + 1;
+  const firstNewId = Math.max(0, maxBy(source?.sheets, (entry) => entry.sheetId)?.sheetId ?? 0) + 1;
 
   for (const plan of plans) {
     await writeSheet(writing, plan, firstNewId);
