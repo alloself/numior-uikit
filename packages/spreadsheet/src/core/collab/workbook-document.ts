@@ -69,6 +69,12 @@ export const createWorkbookDocument = ({
     });
   };
 
+  const restore = (): void => {
+    unconfirmed.forEach(({ step }) => {
+      applied(step);
+    });
+  };
+
   const withMergedLayout = (
     step: WorkbookStep,
     inverse: WorkbookStep,
@@ -109,11 +115,19 @@ export const createWorkbookDocument = ({
 
   const applyRemote = (steps: readonly WorkbookStep[]): readonly RemoteChange[] | undefined => {
     const changes: RemoteChange[] = [];
+    const inverses: WorkbookStep[] = [];
 
     for (const step of steps) {
-      if (!applied(step).ok) {
+      const result = applied(step);
+
+      if (!result.ok) {
+        inverses.toReversed().forEach((inverse) => {
+          raw.apply(inverse);
+        });
+
         return undefined;
       }
+      inverses.push(result.inverse);
       changes.push(...changesOf(step));
     }
     return changes;
@@ -144,6 +158,7 @@ export const createWorkbookDocument = ({
       const remote = applyRemote(steps);
 
       if (remote === undefined) {
+        restore();
         return false;
       }
       version += steps.length;
@@ -176,13 +191,14 @@ export const createWorkbookDocument = ({
         return true;
       }
       rollback();
-      unconfirmed = unconfirmed.slice(count);
 
       const remote = applyRemote(steps);
 
       if (remote === undefined) {
+        restore();
         return false;
       }
+      unconfirmed = unconfirmed.slice(count);
       version = at;
 
       const undone = sent.toReversed().map(({ inverse }) => inverse);
