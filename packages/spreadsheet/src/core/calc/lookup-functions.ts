@@ -144,18 +144,37 @@ const exact = (
   return indices(vector.length, reverse).find((index) => equal(vector.at(index), wanted, pattern));
 };
 
-const search = (
+const columnExact = (
+  args: FunctionArgs,
+  source: EvalValue,
   vector: Vector,
+  wanted: CellValue,
+  wildcards: boolean,
+): number | undefined =>
+  source.kind === EvalValueKind.Reference &&
+  !vector.horizontal &&
+  source.range.left === source.range.right &&
+  (!wildcards || patternOf(wanted) === undefined)
+    ? args.lookup(source, 0, wanted)
+    : exact(vector, wanted, false, wildcards);
+
+const search = (
+  args: FunctionArgs,
+  source: EvalValue,
   wanted: CellValue,
   mode: MatchMode,
   reverse: boolean,
 ): number | undefined => {
+  const vector = vectorOf(source);
+
   switch (mode) {
     case -1:
     case 1:
       return nearest(vector, wanted, mode, reverse);
     default:
-      return exact(vector, wanted, reverse, mode === 2);
+      return reverse
+        ? exact(vector, wanted, true, mode === 2)
+        : columnExact(args, source, vector, wanted, mode === 2);
   }
 };
 
@@ -221,9 +240,12 @@ const hlookup = (args: FunctionArgs): EvalValue => {
 
 const match = (args: FunctionArgs): EvalValue => {
   const wanted = wantedOf(args);
-  const vector = vectorOf(args.value(1));
+  const source = args.value(1);
+  const vector = vectorOf(source);
   const type = Math.sign(args.number(2, 1));
-  const found = type === 0 ? exact(vector, wanted, false, true) : binary(vector, wanted, type < 0);
+
+  const found =
+    type === 0 ? columnExact(args, source, vector, wanted, true) : binary(vector, wanted, type < 0);
 
   return found === undefined ? raise('#N/A') : numberValue(found + 1);
 };
@@ -254,7 +276,8 @@ const searchOf = (value: number): boolean => {
 
 const xmatch = (args: FunctionArgs): EvalValue => {
   const found = search(
-    vectorOf(args.value(1)),
+    args,
+    args.value(1),
     wantedOf(args),
     modeOf(args.number(2, 0)),
     searchOf(args.number(3, 1)),
@@ -283,13 +306,15 @@ const slice = (value: EvalValue, index: number, horizontal: boolean): EvalValue 
 };
 
 const xlookup = (args: FunctionArgs): EvalValue => {
-  const vector = vectorOf(args.value(1));
+  const source = args.value(1);
+  const vector = vectorOf(source);
   const results = args.value(2);
   const grid = gridOf(results);
   const length = vector.horizontal ? grid.cols : grid.rows;
 
   const found = search(
-    vector,
+    args,
+    source,
     wantedOf(args),
     modeOf(args.number(4, 0)),
     searchOf(args.number(5, 1)),

@@ -3,6 +3,10 @@ import { RU_LOCALE, loadCells, numberValue, textValue, type LoadEntry } from '..
 import { openBook } from './book-harness';
 import { evaluated, openSheet } from './sheet-harness';
 
+const RUNNING_ROWS = 4000;
+
+const RUNNING_BUDGET_MS = 400;
+
 describe('formula evaluation', () => {
   it('computes operators with the Excel coercions', () => {
     expect(evaluated('=1+2*3')).toEqual(numberValue(7));
@@ -286,6 +290,75 @@ describe('recalculation', () => {
     expect(run.total).toBe(19_999);
     expect(run.done).toBe(19_999);
     expect(sheet.value('A20000')).toEqual(numberValue(20_000));
+  });
+
+  it('finds exact matches in ranges that grow down a column within the budget', () => {
+    const sheet = openSheet();
+
+    for (let row = 1; row <= RUNNING_ROWS; row += 1) {
+      sheet.enter(`A${String(row)}`, `key${String(row)}`);
+      sheet.enter(`B${String(row)}`, `=MATCH("key${String(row)}",$A$1:A${String(row)},0)`);
+    }
+
+    const started = performance.now();
+
+    sheet.recalc();
+
+    const spent = performance.now() - started;
+
+    expect([sheet.value('B1'), sheet.value(`B${String(RUNNING_ROWS)}`)]).toEqual([
+      numberValue(1),
+      numberValue(RUNNING_ROWS),
+    ]);
+
+    expect(spent).toBeLessThan(RUNNING_BUDGET_MS);
+  });
+
+  it('finds the same rows by the column index as by reading the cells one by one', () => {
+    const sheet = openSheet();
+
+    ['pear', 'Apple', 'plum', 'apple', 7, true, 'p*m'].forEach((input, index) => {
+      sheet.enter(`A${String(index + 1)}`, input);
+      sheet.enter(`B${String(index + 1)}`, index * 10);
+    });
+
+    [
+      '=MATCH("APPLE",A1:A7,0)',
+      '=MATCH("p*m",A1:A7,0)',
+      '=XMATCH("p*m",A1:A7)',
+      '=XMATCH("apple",A1:A7,0,-1)',
+      '=XMATCH(7,A1:A7)',
+      '=XLOOKUP(TRUE,A1:A7,B1:B7)',
+      '=XLOOKUP("fig",A1:A7,B1:B7,"none")',
+      '=MATCH("7",A1:A7,0)',
+    ].forEach((formula, index) => {
+      sheet.enter(`D${String(index + 1)}`, formula);
+    });
+
+    sheet.recalc();
+
+    expect(sheet.grid('D1:D8')).toEqual([[2], [3], [7], [4], [5], [50], ['none'], ['#N/A']]);
+  });
+
+  it('does not find a value below the end of a shorter range with the same start', () => {
+    const sheet = openSheet();
+
+    ['a', 'b', 'c', 'b', 'e'].forEach((text, index) => {
+      sheet.enter(`A${String(index + 1)}`, text);
+    });
+
+    sheet.enter('C1', '=MATCH("e",A1:A5,0)');
+    sheet.enter('C2', '=MATCH("e",A1:A3,0)');
+    sheet.enter('C3', '=MATCH("b",A1:A5,0)');
+    sheet.enter('C4', '=MATCH("e",A1:A4,0)');
+    sheet.recalc();
+
+    expect(sheet.grid('C1:C4')).toEqual([[5], ['#N/A'], [2], ['#N/A']]);
+
+    sheet.enter('A2', 'e');
+    sheet.recalc();
+
+    expect(sheet.grid('C1:C4')).toEqual([[2], [2], [4], [2]]);
   });
 
   it('yields to the host on its own and counts only the time it spent computing', async () => {

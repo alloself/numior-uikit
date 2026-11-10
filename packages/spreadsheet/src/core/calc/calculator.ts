@@ -156,6 +156,7 @@ interface Run {
 interface LookupIndex {
   readonly version: number;
   readonly rows: Map<string, number>;
+  bottom: number;
 }
 
 interface Links {
@@ -360,14 +361,12 @@ const usesVolatile = (node: FormulaNode, functions: FunctionRegistry): boolean =
   }
 };
 
-const indexColumn = (sheet: Sheet, range: CellRange, version: number): LookupIndex => {
-  const rows = new Map<string, number>();
-
-  sheet.cells.forEachInRange(range, (row, _col, value) => {
+const indexDown = (sheet: Sheet, range: CellRange, index: LookupIndex): void => {
+  sheet.cells.forEachInRange({ ...range, top: index.bottom + 1 }, (row, _col, value) => {
     const key = lookupKey(value);
 
-    if (key !== undefined && !rows.has(key)) {
-      rows.set(key, row - range.top);
+    if (key !== undefined && !index.rows.has(key)) {
+      index.rows.set(key, row - range.top);
     }
   });
 
@@ -511,13 +510,21 @@ export const createCalculator = (
 
   const lookup = (sheet: Sheet, range: CellRange, wanted: CellValue): number | undefined => {
     const key = lookupKey(wanted);
-    const id = `${String(sheet.id)}:${String(range.top)}:${String(range.bottom)}:${String(range.left)}`;
+    const id = `${String(sheet.id)}:${String(range.top)}:${String(range.left)}`;
     const version = columnVersion(sheet, range.left);
     const known = lookups.get(id);
-    const index = known?.version === version ? known : indexColumn(sheet, range, version);
 
+    const index =
+      known?.version === version ? known : { version, rows: new Map(), bottom: range.top - 1 };
+
+    if (index.bottom < range.bottom) {
+      indexDown(sheet, range, index);
+    }
     lookups.set(id, index);
-    return key === undefined ? undefined : index.rows.get(key);
+
+    const found = key === undefined ? undefined : index.rows.get(key);
+
+    return found === undefined || found > range.bottom - range.top ? undefined : found;
   };
 
   const contextFor = (sheet: Sheet): EvalContext => {
