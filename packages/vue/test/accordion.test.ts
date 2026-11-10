@@ -54,4 +54,20 @@ describe('NuiAccordion', () => {
     expect(accordion.focusedLabel).toBe('Install');
     expect(accordion.expandedLabels).toEqual([]);
   });
+
+  it('leaves the arrows, Home and End to a field inside a panel and takes them on its headers', async () => {
+    const accordion = AccordionDriver.mount({ modelValue: 'install' });
+    await accordion.focusField();
+    await accordion.press('ArrowDown');
+    await accordion.press('ArrowUp');
+    await accordion.press('Home');
+    await accordion.press('End');
+    expect(accordion.consumedKeys).toEqual([]);
+    expect(accordion.fieldFocused).toBe(true);
+
+    await accordion.focus('Install');
+    await accordion.press('ArrowDown');
+    expect(accordion.consumedKeys).toEqual(['ArrowDown']);
+    expect(accordion.focusedLabel).toBe('Usage');
+  });
 });

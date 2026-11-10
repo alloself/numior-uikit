@@ -35,7 +35,8 @@ the page outline. A section works the same way as a [Collapsible](/en/components
 ## Accessibility
 
 Section headings are buttons with `aria-expanded`. The up and down arrows move between them and
-wrap around; Home and End jump to the first and the last section.
+wrap around; Home and End jump to the first and the last section. The keys work only while the
+focus is on a heading: in fields inside a section they move the caret as usual.
 
 <KeyboardReference name="NuiAccordion" />
 

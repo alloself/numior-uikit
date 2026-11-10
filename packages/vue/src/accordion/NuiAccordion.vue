@@ -4,7 +4,7 @@
     ref="root"
     class="nui-accordion"
     :class="[`nui-accordion--variant-${variant}`, { 'nui-accordion--disabled': disabled }]"
-    @keydown="navigation.onKeydown"
+    @keydown="onKeydown"
     @focusin="navigation.onFocusin"
   >
     <slot />
@@ -46,6 +46,12 @@ const navigation = useListNavigation(root, {
   loop: true,
   typeahead: false,
 });
+
+const onKeydown = (event: KeyboardEvent): void => {
+  if (navigation.itemFrom(event.target) !== null) {
+    navigation.onKeydown(event);
+  }
+};
 
 const toggleMany = (value: string, open: boolean): void => {
   const others = values.value.filter((item) => item !== value);
