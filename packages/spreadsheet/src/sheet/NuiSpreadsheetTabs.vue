@@ -104,14 +104,16 @@ const takenNames = computed(() =>
   ),
 );
 
+const nextName = computed(() => draftName.value.trim());
+
 const nameError = computed((): string | undefined => {
   if (!tried.value) {
     return undefined;
   }
-  if (!validSheetName(draftName.value)) {
+  if (!validSheetName(nextName.value)) {
     return messages.sheetNameInvalid;
   }
-  return takenNames.value.has(draftName.value.toLowerCase()) ? messages.sheetNameTaken : undefined;
+  return takenNames.value.has(nextName.value.toLowerCase()) ? messages.sheetNameTaken : undefined;
 });
 
 const startRename = (): void => {
@@ -231,7 +233,7 @@ const commitRename = (): void => {
 
   if (nameError.value === undefined) {
     renaming.value = false;
-    emit('rename', targetIndex.value, draftName.value.trim());
+    emit('rename', targetIndex.value, nextName.value);
     target.value?.focus();
   }
 };

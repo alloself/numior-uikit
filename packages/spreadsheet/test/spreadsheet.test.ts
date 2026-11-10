@@ -119,6 +119,10 @@ describe('NuiSpreadsheet', () => {
 
     expect(sheet.renameError).toBe('This name is already taken');
 
+    await sheet.renameTab('Rates', 'Sales ');
+
+    expect(sheet.renameError).toBe('This name is already taken');
+
     await sheet.renameTab('Rates', 'Курсы');
 
     expect(sheet.tabs).toEqual(['Sales', 'Курсы', 'Sheet3']);
