@@ -121,6 +121,27 @@ describe('HTML parsing', () => {
     ).toBe('paragraph("keep") paragraph("& A&unknown; < <" "bare")'.replace('" "', ''));
   });
 
+  it('ends a comment that closes at once, as a browser does', () => {
+    expect(read('<!-->one<p>two</p><!--->three<!-- four -->')).toBe(
+      'paragraph("one") paragraph("two") paragraph("three")',
+    );
+  });
+
+  it('reads numeric references of the Windows range as the characters a browser shows', () => {
+    expect(read('<p>1995&#150;2005 &#128;5 &#x99; &#147;q&#148;</p>')).toBe(
+      'paragraph("1995–2005 €5 ™ “q”")',
+    );
+  });
+
+  it('keeps a reference without a semicolon inside an attribute value when a name or = follows', () => {
+    const link = fromHTML(fixtureSchema, `<a href="/a?lt=1&lt=2&ampx=3&amp;y=4&#38;z&gt">q</a>`)
+      .root.content[0];
+
+    expect(link?.kind === 'element' ? link.content[0] : undefined).toEqual(
+      text('q', [fixtureSchema.mark('link', { href: '/a?lt=1&lt=2&ampx=3&y=4&z>' })]),
+    );
+  });
+
   it('nests a list that follows an item and keeps spaces the markup asks to keep', () => {
     expect(
       read(

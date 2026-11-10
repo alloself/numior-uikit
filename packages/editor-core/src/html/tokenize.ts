@@ -1,4 +1,4 @@
-import { decodeEntities } from './entities';
+import { decodeAttribute, decodeEntities } from './entities';
 import { HtmlChar, type HtmlTokenKind } from './html.types';
 
 export type HtmlToken =
@@ -16,6 +16,10 @@ interface Cursor {
   readonly tokens: HtmlToken[];
   at: number;
 }
+
+const COMMENT_OPEN = '<!--';
+
+const ABRUPT_ENDS = ['>', '->'] as const;
 
 const RAW = new Set([
   'script',
@@ -46,6 +50,17 @@ const skipTo = (cursor: Cursor, marker: string, from: number): void => {
   cursor.at = end === -1 ? cursor.html.length : end + marker.length;
 };
 
+const skipComment = (cursor: Cursor): void => {
+  const body = cursor.at + COMMENT_OPEN.length;
+  const abrupt = ABRUPT_ENDS.find((end) => cursor.html.startsWith(end, body));
+
+  if (abrupt === undefined) {
+    skipTo(cursor, '-->', body);
+  } else {
+    cursor.at = body + abrupt.length;
+  }
+};
+
 const nameAt = (cursor: Cursor, at: number): string | undefined => {
   TAG_NAME.lastIndex = at;
   return TAG_NAME.exec(cursor.html)?.[0];
@@ -68,7 +83,7 @@ const readAttribute = (cursor: Cursor, attrs: Map<string, string>): void => {
   const name = (match[1] ?? '').toLowerCase();
 
   if (!attrs.has(name)) {
-    attrs.set(name, decodeEntities(match[2] ?? match[3] ?? match[4] ?? ''));
+    attrs.set(name, decodeAttribute(match[2] ?? match[3] ?? match[4] ?? ''));
   }
   cursor.at = ATTRIBUTE.lastIndex;
 };
@@ -135,8 +150,8 @@ const readMarkup = (cursor: Cursor): void => {
   const { html, at } = cursor;
   const next = html[at + 1];
 
-  if (html.startsWith('<!--', at)) {
-    skipTo(cursor, '-->', at + 4);
+  if (html.startsWith(COMMENT_OPEN, at)) {
+    skipComment(cursor);
   } else if (next === HtmlChar.Bang || next === HtmlChar.Question) {
     skipTo(cursor, '>', at + 1);
   } else if (next === HtmlChar.Slash) {
