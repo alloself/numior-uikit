@@ -51,6 +51,7 @@ export { restoredDocument } from './editor/restored';
 export { CommentEventKind } from './comments/comments.types';
 export type {
   CommentAnchor,
+  CommentPlace,
   CommentEvent,
   CommentReply,
   CommentThread,

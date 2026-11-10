@@ -250,6 +250,124 @@ describe('NuiEditorComments', () => {
     ]);
   });
 
+  it('puts a comment made on an older version where its text is now', async () => {
+    const view = CommentsDriver.mountShared();
+
+    await view.loaded();
+    await view.typedByOther('xx', 1);
+
+    view.adapter.emit({
+      kind: CommentEventKind.Changed,
+      thread: threadOf('t', { anchor: { ...firstLine, at: { version: 0, from: 1, to: 4 } } }),
+    });
+
+    await vi.waitFor(() => {
+      expect(view.highlights).toEqual(['one']);
+    });
+  });
+
+  it('waits with a comment made on a version it has not reached', async () => {
+    const view = CommentsDriver.mountShared();
+
+    await view.loaded();
+
+    view.adapter.emit({
+      kind: CommentEventKind.Changed,
+      thread: threadOf('t', { anchor: { ...secondLine, at: { version: 1, from: 8, to: 11 } } }),
+    });
+
+    await vi.waitFor(() => {
+      expect(view.bodies).toEqual(['Body of t']);
+    });
+
+    expect(view.highlights).toEqual([]);
+
+    await view.typedByOther('xx', 1);
+
+    await vi.waitFor(() => {
+      expect(view.highlights).toEqual(['two']);
+    });
+  });
+
+  it('writes an anchor its own edit moved once the edit is confirmed, with the version it holds on', async () => {
+    const view = CommentsDriver.mountShared([threadOf('t')]);
+
+    await view.loaded();
+
+    vi.useFakeTimers();
+    await view.insert('xx', 1);
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(view.adapter.moved).toEqual([]);
+
+    await view.confirm();
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(view.adapter.moved).toEqual([
+      [
+        't',
+        {
+          kind: 'text',
+          fromId: 'p0',
+          fromOffset: 2,
+          toId: 'p0',
+          toOffset: 5,
+          at: { version: 1, from: 3, to: 6 },
+        },
+      ],
+    ]);
+  });
+
+  it('leaves an anchor moved by someone else to the one who moved it', async () => {
+    const view = CommentsDriver.mountShared([threadOf('t')]);
+
+    await view.loaded();
+
+    vi.useFakeTimers();
+    await view.typedByOther('xx', 1);
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(view.highlights).toEqual(['one']);
+    expect(view.adapter.moved).toEqual([]);
+  });
+
+  it('states a new comment with the version it was made on', async () => {
+    const view = CommentsDriver.mountShared();
+
+    await view.loaded();
+
+    await view.select(1, 4);
+    await view.press('Add comment');
+    await view.write('Please check');
+    await view.submit();
+
+    expect(view.adapter.stored().map((thread) => thread.anchor)).toEqual([
+      { ...firstLine, at: { version: 0, from: 1, to: 4 } },
+    ]);
+  });
+
+  it('states a new comment without a version while its own edits wait, and adds it once they are confirmed', async () => {
+    const view = CommentsDriver.mountShared();
+
+    await view.loaded();
+
+    vi.useFakeTimers();
+    await view.insert('x', 7);
+    await view.select(1, 4);
+    await view.press('Add comment');
+    await view.write('Please check');
+    await view.submit();
+
+    expect(view.adapter.stored().map((thread) => thread.anchor)).toEqual([firstLine]);
+
+    await view.confirm();
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(view.adapter.moved).toEqual([
+      ['new-1', { ...firstLine, at: { version: 1, from: 1, to: 4 } }],
+    ]);
+  });
+
   it('applies changes pushed by the adapter', async () => {
     const view = CommentsDriver.mount([threadOf('t')]);
 

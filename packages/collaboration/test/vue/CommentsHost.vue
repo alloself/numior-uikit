@@ -5,7 +5,7 @@
     format="json"
     :label="LABEL"
     :schema="fixtureSchema"
-    :plugins="[comments.plugin]"
+    :plugins="plugins"
     :selection-actions="[comments.action.value]"
   >
     <template #overlay>
@@ -20,7 +20,7 @@ import type { DocJSON } from '@numior/editor-core';
 import { fixtureSchema } from '@numior/editor-core/fixtures';
 import { NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
 import { computed, ref, useTemplateRef } from 'vue';
-import type { CommentsAdapter, PresenceUser } from '../../src';
+import { collab, type CommentsAdapter, type PresenceUser } from '../../src';
 import {
   NuiEditorCommentPopover,
   NuiEditorComments,
@@ -30,11 +30,12 @@ import {
 
 const LABEL = 'Document';
 
-const { initial, adapter, user, labels } = defineProps<{
+const { initial, adapter, user, labels, shared } = defineProps<{
   initial: DocJSON;
   adapter: CommentsAdapter;
   user: PresenceUser;
   labels?: NuiEditorCommentsProps['labels'];
+  shared?: boolean;
 }>();
 
 const value = ref(initial);
@@ -49,4 +50,6 @@ const comments = useEditorComments({
   adapter,
   editor: () => editorApi.value,
 });
+
+const plugins = shared ? [collab(), comments.plugin] : [comments.plugin];
 </script>

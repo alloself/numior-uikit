@@ -11,6 +11,7 @@ import {
 export interface FakeCommentsAdapter extends CommentsAdapter {
   readonly moved: readonly (readonly [string, CommentAnchor])[];
   readonly created: () => number;
+  readonly stored: () => readonly CommentThread[];
   readonly failNext: () => void;
   readonly emit: (event: CommentEvent) => void;
 }
@@ -78,6 +79,7 @@ export const fakeCommentsAdapter = (seed: readonly CommentThread[] = []): FakeCo
   return {
     moved,
     created: () => serial,
+    stored: () => threads,
     failNext: () => {
       failing = true;
     },

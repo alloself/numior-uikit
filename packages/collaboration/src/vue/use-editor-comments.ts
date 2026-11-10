@@ -18,12 +18,14 @@ import {
 import type { NuiEditorSelectionAction } from '@numior/editor-vue';
 import { useMessages } from '@numior/primitives';
 import { useDebounceFn } from '@vueuse/core';
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import {
   CommentEventKind,
+  type CommentAnchor,
   type CommentEvent,
   type CommentThread,
 } from '../comments/comments.types';
+import { collabProgress, positionsSince } from '../editor/collab';
 import { collabMessages } from './collab.messages';
 import type {
   CollabComments,
@@ -52,8 +54,62 @@ const layoutOf = (doc: Doc, anchors: ReadonlyMap<string, Anchor>): readonly Anch
 const layoutKey = (layout: readonly Anchor[]): string =>
   layout.map((anchor) => `${anchor.id}:${anchor.lost ? 1 : 0}`).join();
 
-const sameAnchor = (left: unknown, right: unknown): boolean =>
-  JSON.stringify(left) === JSON.stringify(right);
+const sameSpot = (left: CommentAnchor, right: CommentAnchor): boolean =>
+  JSON.stringify({ ...left, at: undefined }) === JSON.stringify({ ...right, at: undefined });
+
+const isAhead = (state: EditorState, anchor: CommentAnchor): boolean =>
+  anchor.at !== undefined && anchor.at.version > (collabProgress(state)?.version ?? Infinity);
+
+const isTraced = (state: EditorState, anchor: CommentAnchor): boolean =>
+  anchor.kind === AnchorRangeKind.Text &&
+  anchor.at !== undefined &&
+  positionsSince(state, anchor.at.version) !== undefined;
+
+const carried = (state: EditorState, anchor: CommentAnchor): AnchorRange | undefined => {
+  const mapping = anchor.at === undefined ? undefined : positionsSince(state, anchor.at.version);
+
+  if (anchor.at === undefined || mapping === undefined) {
+    return undefined;
+  }
+
+  const from = mapping.map(anchor.at.from, 1);
+  const to = mapping.map(anchor.at.to, -1);
+
+  return from < to && to <= state.doc.size ? { kind: AnchorRangeKind.Text, from, to } : undefined;
+};
+
+const rangeIn = (state: EditorState, anchor: CommentAnchor): AnchorRange | undefined =>
+  isTraced(state, anchor) ? carried(state, anchor) : anchorFromJSON(state.doc, anchor);
+
+const statedAt = (state: EditorState, range: AnchorRange): CommentAnchor => {
+  const json = anchorToJSON(state.doc, range);
+  const progress = collabProgress(state);
+
+  return progress?.pending === 0 && range.kind === AnchorRangeKind.Text
+    ? { ...json, at: { version: progress.version, from: range.from, to: range.to } }
+    : json;
+};
+
+const movedByOwnEdit = (state: EditorState, before: EditorState): readonly string[] => {
+  if (collabProgress(state)?.version !== collabProgress(before)?.version) {
+    return [];
+  }
+
+  const known = anchorsOf(before);
+
+  return [...anchorsOf(state).values()].reduce<string[]>((found, anchor) => {
+    const was = known.get(anchor.id);
+
+    if (
+      !anchor.lost &&
+      was !== undefined &&
+      !sameSpot(anchorToJSON(state.doc, anchor.range), anchorToJSON(before.doc, was.range))
+    ) {
+      found.push(anchor.id);
+    }
+    return found;
+  }, []);
+};
 
 export const useEditorComments = (options: UseEditorCommentsOptions): CollabComments => {
   const { doc, user, adapter, editor } = options;
@@ -67,6 +123,8 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
   const revision = ref(0);
   const messages = useMessages(collabMessages);
   const aborter = new AbortController();
+  const owed = new Set<string>();
+  const waiting = new Map<string, CommentThread>();
 
   let latest: EditorState | undefined;
   let currentKey = '';
@@ -88,11 +146,38 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
   };
 
   const place = (thread: CommentThread): void => {
-    const range = latest === undefined ? undefined : anchorFromJSON(latest.doc, thread.anchor);
+    const state = latest;
 
-    if (!thread.resolved && range !== undefined) {
+    waiting.delete(thread.id);
+
+    if (state === undefined || thread.resolved) {
+      return;
+    }
+    if (isAhead(state, thread.anchor)) {
+      waiting.set(thread.id, thread);
+      return;
+    }
+
+    const range = rangeIn(state, thread.anchor);
+    const held = anchorsOf(state).get(thread.id);
+
+    const trusted =
+      held === undefined ||
+      held.lost ||
+      collabProgress(state) === undefined ||
+      isTraced(state, thread.anchor);
+
+    if (range !== undefined && trusted) {
       run(setAnchor(thread.id, range));
     }
+  };
+
+  const placeWaiting = (): void => {
+    waiting.forEach((thread) => {
+      if (latest !== undefined && !isAhead(latest, thread.anchor)) {
+        place(thread);
+      }
+    });
   };
 
   const replaced = (thread: CommentThread): void => {
@@ -113,6 +198,8 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
     if (opened.value === id) {
       opened.value = undefined;
     }
+    owed.delete(id);
+    waiting.delete(id);
     run(removeAnchor(id));
   };
 
@@ -133,23 +220,31 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
     if (state === undefined || adapter.move === undefined || aborter.signal.aborted) {
       return;
     }
+    if ((collabProgress(state)?.pending ?? 0) > 0) {
+      return;
+    }
 
     const anchors = anchorsOf(state);
 
     threads.value.forEach((thread) => {
       const anchor = anchors.get(thread.id);
 
-      if (anchor === undefined || anchor.lost) {
+      if (!owed.has(thread.id) || anchor === undefined || anchor.lost) {
         return;
       }
 
-      const json = anchorToJSON(state.doc, anchor.range);
+      const json = statedAt(state, anchor.range);
 
-      if (!sameAnchor(json, thread.anchor)) {
+      if (
+        !sameSpot(json, thread.anchor) ||
+        (json.at !== undefined && thread.anchor.at === undefined)
+      ) {
         replaced({ ...thread, anchor: json });
         void attempt(async () => adapter.move?.(doc, thread.id, json));
       }
     });
+
+    owed.clear();
   };
 
   const scheduleMoves = useDebounceFn(writeMoves, MOVE_DELAY);
@@ -162,7 +257,16 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
 
         if (state.doc !== before.doc) {
           revision.value += 1;
+          movedByOwnEdit(state, before).forEach((id) => owed.add(id));
+        }
+        if (owed.size > 0) {
           void scheduleMoves();
+        }
+        if (
+          waiting.size > 0 &&
+          collabProgress(state)?.version !== collabProgress(before)?.version
+        ) {
+          void nextTick(placeWaiting);
         }
       },
     },
@@ -216,13 +320,17 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
       return false;
     }
 
-    const anchor = anchorToJSON(state.doc, draft.range);
+    const anchor = statedAt(state, draft.range);
     const thread = await attempt(() => adapter.create(doc, { anchor, author: user, body }));
 
     if (thread === undefined) {
       return false;
     }
     replaced(thread);
+
+    if (anchor.at === undefined && collabProgress(state) !== undefined) {
+      owed.add(thread.id);
+    }
 
     const current = latest === undefined ? undefined : anchorsOf(latest).get(DRAFT);
 

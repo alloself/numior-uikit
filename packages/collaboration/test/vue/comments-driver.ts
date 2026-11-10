@@ -3,7 +3,7 @@ import type { NuiEditorApi } from '@numior/editor-vue';
 import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { promiseTimeout } from '@vueuse/core';
 import { vi } from 'vite-plus/test';
-import type { CommentThread } from '../../src';
+import { collabProgress, confirmSteps, receiveSteps, type CommentThread } from '../../src';
 import type { NuiEditorCommentsProps } from '../../src/vue';
 import CommentsHost from './CommentsHost.vue';
 import { documentOf, fakeCommentsAdapter, type FakeCommentsAdapter } from './comments-adapter';
@@ -41,13 +41,18 @@ export class CommentsDriver {
     seed: readonly CommentThread[] = [],
     labels?: NuiEditorCommentsProps['labels'],
     adapter = fakeCommentsAdapter(seed),
+    shared = false,
   ): CommentsDriver {
     const wrapper = mount(CommentsHost, {
       attachTo: document.body,
-      props: { initial: documentOf('one', 'two'), adapter, user: ANN, labels },
+      props: { initial: documentOf('one', 'two'), adapter, user: ANN, labels, shared },
     });
 
     return new CommentsDriver(wrapper, adapter);
+  }
+
+  static mountShared(seed: readonly CommentThread[] = []): CommentsDriver {
+    return CommentsDriver.mount(seed, undefined, fakeCommentsAdapter(seed), true);
   }
 
   async loaded(): Promise<void> {
@@ -122,6 +127,32 @@ export class CommentsDriver {
     this.run((state, dispatch) => {
       dispatch?.(state.tr.insertText(text, at));
       return true;
+    });
+
+    await flushPromises();
+  }
+
+  async typedByOther(text: string, at: number): Promise<void> {
+    this.run((state, dispatch) => {
+      const tr = receiveSteps(state, state.tr.insertText(text, at).steps);
+
+      if (tr !== undefined) {
+        dispatch?.(tr);
+      }
+      return tr !== undefined;
+    });
+
+    await flushPromises();
+  }
+
+  async confirm(): Promise<void> {
+    this.run((state, dispatch) => {
+      const progress = collabProgress(state);
+
+      if (progress !== undefined) {
+        dispatch?.(confirmSteps(state, progress.pending, progress.version + progress.pending));
+      }
+      return progress !== undefined;
     });
 
     await flushPromises();
