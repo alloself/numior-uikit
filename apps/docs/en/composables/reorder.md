@@ -26,7 +26,7 @@ const reorder = useReorder({
 
 Put `onPointerdown(index, event)` and `onKeydown(index, event)` on the item handle. With the
 keyboard, Enter or Space picks the item up, the arrow keys move it, and Enter or Space again
-drops it.
+drops it. `onBlur(index)` on the handle's `blur` event cancels the move when focus leaves it.
 
 `state.phase` shows the stage: `idle`, `pending`, `dragging` or `keyboard`. `onEvent` receives
 the `grabbed`, `moved`, `dropped` and `cancelled` events, which are handy for announcing the move

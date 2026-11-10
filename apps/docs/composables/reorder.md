@@ -26,7 +26,8 @@ const reorder = useReorder({
 
 Повесьте `onPointerdown(index, event)` и `onKeydown(index, event)` на ручку пункта. С
 клавиатуры пункт берут Enter или пробелом, двигают стрелками и ставят на место повторным
-нажатием Enter или пробела.
+нажатием Enter или пробела. `onBlur(index)` на событии `blur` ручки отменяет перенос, когда
+фокус уходит с неё.
 
 `state.phase` показывает этап: `idle`, `pending`, `dragging` или `keyboard`. `onEvent` получает
 события `grabbed`, `moved`, `dropped` и `cancelled`, по ним удобно сообщать о перестановке

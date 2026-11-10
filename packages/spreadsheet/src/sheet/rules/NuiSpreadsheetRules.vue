@@ -33,6 +33,7 @@
             :texts="texts"
             @grab="onGrab(at, $event)"
             @grip-keydown="onGripKeydown(at, $event)"
+            @grip-blur="reorder.onBlur(at)"
             @remove="remove(at)"
             @edit="startEdit(row.placed)"
             @hover="emit('hover', row.placed.ranges)"

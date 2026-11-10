@@ -56,6 +56,7 @@ export interface Reorder {
   readonly source: ComputedRef<number | undefined>;
   onPointerdown(index: number, event: PointerEvent): void;
   onKeydown(index: number, event: KeyboardEvent): boolean;
+  onBlur(index: number): void;
   cancel(): void;
 }
 
@@ -120,7 +121,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     }
     window.removeEventListener('pointermove', onPointermove);
     window.removeEventListener('pointerup', onPointerup);
-    window.removeEventListener('pointercancel', cancel);
+    window.removeEventListener('pointercancel', onPointercancel);
     window.removeEventListener('keydown', onWindowKeydown);
   };
 
@@ -146,10 +147,13 @@ export const useReorder = (options: ReorderOptions): Reorder => {
   const drop = (current: KeyboardState | PointerState, to: number): void => {
     const moved = to !== current.from && allowed(current.from, to);
 
-    if (moved) {
-      options.onMove(current.from, to);
+    try {
+      if (moved) {
+        options.onMove(current.from, to);
+      }
+    } finally {
+      finish();
     }
-    finish();
 
     if (moved) {
       emit({ type: ReorderEventType.Dropped, from: current.from, to });
@@ -204,6 +208,14 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     }
   };
 
+  const onPointercancel = (event: PointerEvent): void => {
+    const current = state.value;
+
+    if (isPointer(current) && event.pointerId === current.pointerId) {
+      cancel();
+    }
+  };
+
   const onWindowKeydown = (event: KeyboardEvent): void => {
     if (event.key === Key.Escape && isPointer(state.value)) {
       cancel();
@@ -228,7 +240,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
 
     window.addEventListener('pointermove', onPointermove);
     window.addEventListener('pointerup', onPointerup);
-    window.addEventListener('pointercancel', cancel);
+    window.addEventListener('pointercancel', onPointercancel);
     window.addEventListener('keydown', onWindowKeydown);
   };
 
@@ -290,7 +302,15 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     }
   };
 
+  const onBlur = (index: number): void => {
+    const current = state.value;
+
+    if (current.phase === ReorderPhase.Keyboard && current.from === index) {
+      cancel();
+    }
+  };
+
   onScopeDispose(cancel);
 
-  return { state, source, onPointerdown, onKeydown, cancel };
+  return { state, source, onPointerdown, onKeydown, onBlur, cancel };
 };

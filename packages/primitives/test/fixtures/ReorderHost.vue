@@ -7,6 +7,7 @@
       class="handle"
       @pointerdown="reorder.onPointerdown(index, $event)"
       @keydown="onKeydown(index, $event)"
+      @blur="reorder.onBlur(index)"
     >
       Item {{ index }}
     </button>

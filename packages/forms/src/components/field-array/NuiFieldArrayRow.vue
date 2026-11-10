@@ -22,6 +22,7 @@
         icon="grip"
         @pointerdown="emit('grab', $event)"
         @keydown="emit('grip-keydown', $event)"
+        @blur="emit('grip-blur')"
       />
     </span>
     <div class="nui-field-array__content">
@@ -63,6 +64,7 @@ const {
 const emit = defineEmits<{
   grab: [event: PointerEvent];
   'grip-keydown': [event: KeyboardEvent];
+  'grip-blur': [];
   remove: [];
 }>();
 

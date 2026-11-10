@@ -109,6 +109,18 @@ describe('NuiFieldArray', () => {
     expect(list.reordering).toBe(false);
   });
 
+  it('lets go of a row taken from the keyboard when the focus leaves its grip', async () => {
+    const list = FieldArrayDriver.mount({ names: ['Ann', 'Bob'], reorderable: true });
+
+    await list.press(0, ' ');
+    await list.press(0, 'ArrowDown');
+    await list.leaveGrip(0);
+
+    expect(list.names).toEqual(['Ann', 'Bob']);
+    expect(list.live).toBe('Row 1, move cancelled.');
+    expect(list.reordering).toBe(false);
+  });
+
   it('drags a row with the pointer under an opaque ghost and moves its message along', async () => {
     const list = FieldArrayDriver.mount({
       names: ['', 'Bob', 'Cid'],

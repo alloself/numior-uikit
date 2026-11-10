@@ -139,6 +139,18 @@ describe('NuiSpreadsheet conditional formatting panel', () => {
     expect(sheet.rulesEmpty).toBe('No rules touch the selection');
   });
 
+  it('lets go of a rule taken from the keyboard when the focus leaves its grip', async () => {
+    const sheet = sheetOf(rulesBook());
+
+    await sheet.focus(1, 0);
+    await sheet.openRules(1, 0);
+    await sheet.takeRuleAndLeave(0);
+
+    expect(sheet.rulesAnnouncement).toBe('Move cancelled');
+    expect(sheet.ruleTexts).toEqual(['Value is greater than 10', 'Blank cells']);
+    expect(sheet.changes).toHaveLength(0);
+  });
+
   it('moves and deletes rules as undoable steps', async () => {
     const book = rulesBook();
     const sheet = sheetOf(book);

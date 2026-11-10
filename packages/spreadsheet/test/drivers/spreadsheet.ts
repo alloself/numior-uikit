@@ -1041,6 +1041,18 @@ export class SpreadsheetDriver {
     await nextTick();
   }
 
+  async takeRuleAndLeave(index: number): Promise<void> {
+    const grip = this.rule(index)?.find('.nui-spreadsheet-rules__grip').element;
+
+    if (grip instanceof HTMLElement) {
+      grip.focus();
+      keydown(grip, ' ', {});
+      keydown(grip, 'ArrowDown', {});
+      grip.blur();
+    }
+    await nextTick();
+  }
+
   async pressInRules(key: string): Promise<void> {
     keydown(document.activeElement ?? document.body, key, {});
     await nextTick();

@@ -47,6 +47,63 @@ describe('useReorder', () => {
     list.unmount();
   });
 
+  it('keeps a drag when another pointer is cancelled', async () => {
+    const list = ReorderHarness.mount();
+
+    await list.pointerDown(0, 10);
+    await list.pointerMove(130);
+    await list.pointerCancel(7);
+
+    expect(list.state.phase).toBe('dragging');
+
+    await list.pointerUp(130);
+
+    expect(list.moves).toEqual([[0, 3]]);
+
+    list.unmount();
+  });
+
+  it('lets go of the page when the move handler throws', async () => {
+    const list = ReorderHarness.mount({
+      onMove: () => {
+        throw new Error('refused');
+      },
+    });
+
+    await list.pointerDown(0, 10);
+    await list.pointerMove(130);
+
+    expect(await list.pointerUpFailing(130)).toHaveLength(1);
+    expect(list.state.phase).toBe('idle');
+
+    await list.pointerMove(50);
+
+    expect(list.state.phase).toBe('idle');
+
+    list.unmount();
+  });
+
+  it('lets go of an item taken from the keyboard when the focus leaves it', async () => {
+    const list = ReorderHarness.mount();
+
+    await list.press(1, ' ');
+    await list.press(1, 'ArrowDown');
+
+    expect(list.state).toEqual({ phase: 'keyboard', from: 1, to: 2 });
+
+    await list.blur(0);
+
+    expect(list.state.phase).toBe('keyboard');
+
+    await list.blur(1);
+
+    expect(list.state.phase).toBe('idle');
+    expect(list.events.at(-1)).toEqual({ type: 'cancelled', from: 1 });
+    expect(list.moves).toEqual([]);
+
+    list.unmount();
+  });
+
   it('respects canMove while dragging and keeps the last allowed target', async () => {
     const list = ReorderHarness.mount({ canMove: (_from, to) => to < 3 });
     await list.pointerDown(0, 10);

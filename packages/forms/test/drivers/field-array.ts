@@ -200,6 +200,11 @@ export class FieldArrayDriver {
     await this.settle();
   }
 
+  async leaveGrip(index: number): Promise<void> {
+    this.grip(index).element.blur();
+    await this.settle();
+  }
+
   async drag(from: number, to: number): Promise<void> {
     const list = this.wrapper.find('.nui-field-array__list').element;
 

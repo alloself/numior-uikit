@@ -41,6 +41,7 @@
           :remove-label="removeText(row.index + 1)"
           @grab="onGripPointerdown(row.index, $event)"
           @grip-keydown="onGripKeydown(row.index, $event)"
+          @grip-blur="reorder.onBlur(row.index)"
           @remove="remove(row.index)"
         >
           <slot
