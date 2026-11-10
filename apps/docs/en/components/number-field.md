@@ -28,8 +28,10 @@ import '@numior/vue/styles/number-field.css';
 
 The `min` and `max` props set the allowed range. `step` sets how much the arrow keys and the
 plus and minus buttons change the number. On blur or Enter the typed number is brought back
-into the range and rounded to the precision of `step`. A value that was not edited in the
-field stays in the model as it was, even when it is more precise than the format or out of range.
+into the range and rounded to the precision of `step`.
+
+A value that was not edited in the field stays in the model as it was. That holds even when it
+is more precise than the format or out of range.
 
 `:steppers="false"` removes the buttons. In a `readonly` field neither the buttons nor the keys
 change the value.

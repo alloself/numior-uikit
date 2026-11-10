@@ -30,9 +30,10 @@ The same menu can be described with the `items` array. A regular item is a
 ## Behaviour
 
 A click on the button opens the menu. When it is opened from the keyboard, the focus goes straight
-to the first item, or to the last one when opened with ArrowUp. After a click the focus rests on the
-menu itself: ArrowDown leads to the first item and ArrowUp to the last one. Hovering an item with
-the mouse moves the focus to it.
+to the first item, or to the last one when opened with ArrowUp.
+
+After a click the focus rests on the menu itself: ArrowDown leads to the first item and ArrowUp to
+the last one. Hovering an item with the mouse moves the focus to it.
 
 An item reached from the keyboard is outlined with the focus ring. Under the mouse an item is only
 highlighted, and the ring comes back with the first key press.

@@ -41,10 +41,11 @@ Dates before `min`, after `max` and those for which `isDateDisabled` returns `tr
 picked. A click on the month name or the year opens a list of months or years.
 
 The calendar takes today's date from the browser clock. With server rendering pass it in
-`today`, otherwise today is highlighted only after the page loads. Without `today` and without a
-selected date the server and the browser draw the month of the UTC date, so the markup matches
-in every time zone, and after loading the calendar moves to the local date. When a page is
-served from a cache for longer than a day, pass `today` or `month`.
+`today`, otherwise today is highlighted only after the page loads.
+
+Without `today` and a selected date both server and browser draw the month of the UTC date. The
+markup then matches in every time zone, and after loading the calendar moves to the local date.
+When a page is served from a cache for longer than a day, pass `today` or `month`.
 
 ## Accessibility
 

@@ -43,7 +43,7 @@ comes to the front, and the previous ones shrink and stack behind it.
 
 On hover or focus the stack expands into a list, and with `expand` it stays expanded. While the
 pointer is over the stack, the focus is inside it or the browser tab is hidden, the countdown
-pauses, also for toasts that appear or leave the queue in the meantime.
+pauses. It pauses for toasts that appear or leave the queue in the meantime too.
 
 When a focused toast closes, keyboard focus moves to the neighbouring one and, after the last
 one, back to where it entered the stack from. After closing with the pointer the focus returns

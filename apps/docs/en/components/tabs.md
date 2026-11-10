@@ -59,10 +59,12 @@ location `getKey` sets the key, as in the select. A click without modifier keys 
 
 Arrow keys wrap around and skip disabled tabs. Without an initial `v-model` value no tab is open.
 
-When the tabs do not fit the width, the list scrolls: by a swipe, by the mouse wheel over the
-list and by the arrow buttons that appear at the edge with hidden tabs. While the list can still
-scroll in the direction of the wheel, the page does not scroll. The selected tab and the focused
-tab are always brought into view. A vertical list does not scroll.
+When the tabs do not fit the width, the list scrolls by a swipe, by the mouse wheel and by
+arrow buttons. The buttons appear at the edge that hides tabs. While the list can still scroll
+in the direction of the wheel, the page does not scroll.
+
+The selected tab and the focused tab are always brought into view. A vertical list does not
+scroll.
 
 Hidden panels stay in the DOM. With `lazy` a panel renders only when it is opened for the first
 time.

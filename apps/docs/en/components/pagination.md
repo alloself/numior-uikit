@@ -44,7 +44,7 @@ many at the start and the end. Both default to one. The component corrects a pag
 out of range by itself, for example when there are fewer records.
 
 When the user changes the page size, the component recalculates the page so that the first
-visible record stays on screen: from page 5 of 20 records (81–100) a switch to 50 records leads
+visible record stays on screen. From page 5 of 20 records (81–100) a switch to 50 records leads
 to page 2 (51–100).
 
 ## Accessibility

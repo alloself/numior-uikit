@@ -321,11 +321,12 @@ It returns `false` for a position outside the table.
 List in `keepEditing` the elements that can take the focus without ending the edit. Ctrl+Enter in
 the editor writes the value to every selected cell in columns of the same type.
 
-With `growEditor` the editor sits exactly on the bounds of its cell, wears the selection frame and
-keeps the fill and text colour of the cell. Once the text stops fitting, the editor grows over the
-neighbouring cells by whole columns, as in Excel: towards the start for end-aligned cells and
-towards the end for the rest. It stops at the edge of the visible area, and the text scrolls inside
-the field.
+With `growEditor` the editor sits exactly on the bounds of its cell and wears the selection
+frame. It keeps the fill and text colour of the cell.
+
+Once the text stops fitting, the editor grows over the neighbouring cells by whole columns, as in
+Excel. End-aligned cells grow towards the start, the rest towards the end. The editor stops at
+the edge of the visible area, and the text scrolls inside the field.
 
 <Example name="table/FormulaBar" />
 
@@ -352,9 +353,9 @@ sorting applied, in the visible columns only. Cells get the same text as on scre
 `separator` sets the delimiter, and `headers: false` removes the header line. A long export runs
 in chunks, shows a progress bar and stops on `signal`.
 
-Text that Excel would run as a formula (it starts with `=`, `@`, a tab, or with `+` or `-` and is
-not a number) is exported with a leading apostrophe. `formulas: true` turns this protection off for
-files read by a program instead of a person in a spreadsheet editor.
+Text that Excel would run as a formula is exported with a leading apostrophe. Such text starts
+with `=`, `@`, a tab, or with `+` or `-` and is not a number. `formulas: true` turns this
+protection off for files read by a program instead of a person in a spreadsheet editor.
 
 For Excel to open the file without garbled text, add a byte order mark at the start. Locales
 with a decimal comma also expect the `;` delimiter, as in the example.
