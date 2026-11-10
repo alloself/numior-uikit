@@ -280,15 +280,29 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
   };
 
   const orderKeysOf = (plan: Plan<T>): OrderKey[] => {
-    const leading = plan.groupBy.map((key): TableSort => ({ key, direction: 'asc' }));
+    const grouping = plan.groupBy.flatMap((key): OrderKey[] => {
+      const store = stores.get(key);
 
-    return [...leading, ...plan.sort].flatMap((sort) => {
+      if (store === undefined || store.kind === ColumnStoreKind.Codes) {
+        return [];
+      }
+
+      const collated = { store, descending: false, exact: false };
+
+      return store.kind === ColumnStoreKind.String
+        ? [collated, { store, descending: false, exact: true }]
+        : [collated];
+    });
+
+    const sorting = plan.sort.flatMap((sort): OrderKey[] => {
       const store = stores.get(sort.key);
 
       return store === undefined || store.kind === ColumnStoreKind.Codes
         ? []
-        : [{ store, descending: sort.direction === TableSortDirection.Desc }];
+        : [{ store, descending: sort.direction === TableSortDirection.Desc, exact: false }];
     });
+
+    return [...grouping, ...sorting];
   };
 
   const filterStage = (
