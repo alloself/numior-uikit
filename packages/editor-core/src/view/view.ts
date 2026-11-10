@@ -301,6 +301,7 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
   let composing = false;
   let holding = false;
   let acting = false;
+  let editable = options.editable ?? true;
 
   let sets = decorationSets(state);
 
@@ -356,7 +357,7 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
 
   root.addEventListener('keydown', onJump, { capture: true });
 
-  prepareRoot(root, options.editable ?? true);
+  prepareRoot(root, editable);
 
   const { desc: rootDesc, rest } = createRootDesc(context, root, state.doc.root, FIRST_BLOCKS);
   const attaching = createFilling(root, rest, settle);
@@ -387,7 +388,11 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     context,
     rootDesc,
     state: () => state,
-    dispatch,
+    dispatch: (tr, source) => {
+      if (editable || !tr.changed) {
+        dispatch(tr, source);
+      }
+    },
     composing: () => composing,
     holding: () => holding,
     fresh: (parent, index) => {
@@ -489,8 +494,9 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     dispatch: (tr) => {
       dispatch(tr);
     },
-    setEditable: (editable) => {
-      root.setAttribute('contenteditable', editable ? 'true' : 'false');
+    setEditable: (value) => {
+      editable = value;
+      root.setAttribute('contenteditable', value ? 'true' : 'false');
     },
     focus: () => {
       root.focus({ preventScroll: true });

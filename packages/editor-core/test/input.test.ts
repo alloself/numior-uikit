@@ -129,6 +129,30 @@ describe('editor view input', () => {
     expect(view.domSpan).toEqual({ anchor: 8, head: 8 });
   });
 
+  it('leaves the document alone when keys, typing and a paste reach a view that is not editable', () => {
+    const view = mounted(twoParagraphs());
+
+    view.setEditable(false);
+    view.place(3);
+    view.type('x');
+    view.press('Backspace');
+    view.press('Enter');
+    view.paste('pasted');
+
+    expect(view.modelTexts).toEqual(['ab', 'cd']);
+    expect(view.domTexts).toEqual(['ab', 'cd']);
+  });
+
+  it('still reads a selection made in a view that is not editable', () => {
+    const view = mounted(twoParagraphs());
+
+    view.setEditable(false);
+    view.focus();
+    view.selectInDom(2, 6);
+
+    expect(view.selection).toEqual(textSelection(2, 6));
+  });
+
   it('lets the composition edit the DOM and catches the model up when it ends', async () => {
     const view = mounted(twoParagraphs());
 
