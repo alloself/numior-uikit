@@ -165,6 +165,7 @@ const compileNode = (
     attrs: limitedAttrs(node.attrs ?? {}, allowed.values[name]),
     code: node.code === true,
     slots: node.slots ?? (groupsOf(node.group).has('list') ? 'all' : 'none'),
+    plainText: node.plainText,
     render: node.render ?? defaultRender(inline, leaf),
     parse: node.parse ?? [],
   };

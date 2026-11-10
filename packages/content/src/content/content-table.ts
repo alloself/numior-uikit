@@ -39,6 +39,8 @@ const TYPE_PREFIX = `${COLUMN}--type-`;
 
 const WIDTH = /^(\d+(?:\.\d+)?)px;?$/u;
 
+const CELL_BREAK = /[\t\n\r]+/gu;
+
 const isType = (value: AttrValue | string | undefined): value is NuiContentTableType =>
   CONTENT_TABLE_TYPES.some((type) => type === value);
 
@@ -226,11 +228,35 @@ const renderCell = (node: ElementNode) => {
   ]);
 };
 
+const elementChildren = (node: ElementNode | undefined): readonly ElementNode[] =>
+  (node?.content ?? []).filter(
+    (child): child is ElementNode => child.kind === ContentNodeKind.Element,
+  );
+
+const plainCell = (value: AttrValue | undefined): string =>
+  (typeof value === 'boolean' ? String(value).toUpperCase() : cellText(value)).replaceAll(
+    CELL_BREAK,
+    ' ',
+  );
+
+const plainLine = (cells: readonly ElementNode[], attr: string): string =>
+  cells.map((cell) => plainCell(cell.attrs[attr])).join('\t');
+
+const tablePlainText = (table: ElementNode): string => {
+  const [head, body] = elementChildren(table);
+
+  return [
+    plainLine(elementChildren(head), 'name'),
+    ...elementChildren(body).map((row) => plainLine(elementChildren(row), 'value')),
+  ].join('\n');
+};
+
 export const TABLE_NODES: Readonly<Record<string, NodeSpec>> = {
   table: {
     group: 'block',
     atom: true,
     content: 'table_head table_body',
+    plainText: tablePlainText,
     render: () =>
       renderTag('div', { class: part('table') }, [
         renderTag('table', { class: part('grid') }, [contentHole]),
@@ -274,11 +300,6 @@ export const TABLE_NODES: Readonly<Record<string, NodeSpec>> = {
   table_row: { content: 'table_cell+', render: () => renderTag('tr') },
   table_cell: { attrs: { value: { default: null, verify: isCell } }, render: renderCell },
 };
-
-const elementChildren = (node: ElementNode | undefined): readonly ElementNode[] =>
-  (node?.content ?? []).filter(
-    (child): child is ElementNode => child.kind === ContentNodeKind.Element,
-  );
 
 const columnOf = (node: ElementNode): NuiContentTableColumn => ({
   id: node.id,

@@ -106,6 +106,7 @@ export type {
   MarkType,
   NodeMaker,
   NodeParseRule,
+  NodePlainText,
   NodeSpec,
   NodeType,
   ParsedAttrs,

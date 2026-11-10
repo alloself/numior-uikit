@@ -127,8 +127,20 @@ export const createDoc = (schema: Schema, root: ElementNode): Doc => {
 
       visitRange(root, 0, from, to, (node, pos) => {
         if (node.kind === ContentNodeKind.Element) {
-          pending ||= text !== '' && schema.nodes.get(node.type)?.inline !== true;
-          return true;
+          const type = schema.nodes.get(node.type);
+          const own = type?.plainText?.(node);
+
+          pending ||= text !== '' && type?.inline !== true;
+
+          if (own === undefined) {
+            return true;
+          }
+
+          if (own !== '') {
+            text += `${pending ? separator : ''}${own}`;
+            pending = false;
+          }
+          return false;
         }
         text += `${pending ? separator : ''}${node.text.slice(Math.max(from, pos) - pos, to - pos)}`;
         pending = false;

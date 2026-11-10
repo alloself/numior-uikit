@@ -564,6 +564,7 @@ const CONTENT_SPEC: SchemaSpec = {
         size: { default: null, verify: isSize },
         type: { default: '', verify: isText },
       },
+      plainText: (node) => textOf(node.attrs.name) || textOf(node.attrs.url),
       render: renderFile,
       parse: [{ tag: 'a', priority: 1, attrs: fileAttrs }],
     },
@@ -600,6 +601,7 @@ const CONTENT_SPEC: SchemaSpec = {
     hard_break: {
       group: 'inline',
       inline: true,
+      plainText: () => '\n',
       render: () => renderTag('br'),
       parse: [{ tag: 'br' }],
     },
@@ -607,6 +609,7 @@ const CONTENT_SPEC: SchemaSpec = {
       group: 'inline',
       inline: true,
       attrs: { user: { verify: isText }, label: { verify: isText } },
+      plainText: (node) => `@${textOf(node.attrs.label)}`,
       render: (node) =>
         renderTag('span', { class: part('mention'), 'data-user': textOf(node.attrs.user) }, [
           `@${textOf(node.attrs.label)}`,

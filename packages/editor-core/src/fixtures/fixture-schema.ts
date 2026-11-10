@@ -174,6 +174,7 @@ export const fixtureSchema = createSchema({
     hard_break: {
       group: 'inline',
       inline: true,
+      plainText: () => '\n',
       render: () => renderTag('br'),
       parse: [{ tag: 'br' }],
     },
@@ -181,6 +182,7 @@ export const fixtureSchema = createSchema({
       group: 'inline',
       inline: true,
       attrs: { user: { verify: isText }, label: {} },
+      plainText: (node) => `@${textOf(node.attrs.label)}`,
       render: (node) => renderTag('span', {}, [`@${textOf(node.attrs.label)}`]),
     },
   },

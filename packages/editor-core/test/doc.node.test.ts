@@ -1,8 +1,32 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { createDoc, type ContentNode } from '../src';
+import { createDoc, createSchema, type ContentNode } from '../src';
 import { buildWith, notes } from './support/notes';
 
 const { doc, node } = buildWith();
+
+const labelOf = (label: unknown): string => (typeof label === 'string' ? label : '');
+
+const labels = createSchema({
+  nodes: {
+    doc: { content: 'block+' },
+    paragraph: { group: 'block', content: 'inline*' },
+    card: {
+      group: 'block',
+      content: 'paragraph+',
+      attrs: { label: {} },
+      plainText: (card) => labelOf(card.attrs.label),
+    },
+    text: { group: 'inline', inline: true },
+    tag: {
+      group: 'inline',
+      inline: true,
+      attrs: { label: {} },
+      plainText: (tag) => `#${labelOf(tag.attrs.label)}`,
+    },
+  },
+});
+
+const tagged = buildWith(labels);
 
 const list = node('list', [node('item', [node('paragraph', ['ab'])])]);
 const image = node('image', [], { src: 'a.png' });
@@ -108,6 +132,22 @@ describe('document positions', () => {
     expect(page.textBetween(0, 16)).toBe('Hello\nab');
     expect(page.textBetween(3, 11, ' / ')).toBe('llo / a');
     expect(page.textBetween(2, 4)).toBe('el');
+  });
+
+  it('reads a node without text nodes as the text its type gives it', () => {
+    const labelled = createDoc(
+      labels,
+      tagged.doc(
+        tagged.node('paragraph', ['a', tagged.node('tag', [], { label: 'x' }), 'b']),
+        tagged.node('card', [tagged.node('paragraph', ['hidden'])], { label: 'Card' }),
+        tagged.node('card', [tagged.node('paragraph', ['hidden'])], { label: '' }),
+        tagged.node('paragraph', ['c']),
+      ),
+    );
+
+    expect(labelled.textBetween(0, labelled.size)).toBe('a#xb\nCard\nc');
+    expect(labelled.textBetween(2, 3)).toBe('#x');
+    expect(labelled.textBetween(0, 2, '|')).toBe('a');
   });
 
   it('cuts slices with open depths at both sides', () => {

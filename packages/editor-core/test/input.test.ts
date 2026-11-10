@@ -315,6 +315,26 @@ describe('editor view input', () => {
     expect(view.markup).toContain('<p>a</p><ul><li><p>x</p></li></ul><p>d</p>');
   });
 
+  it('copies line breaks and mentions into the plain text of the clipboard', () => {
+    const view = mounted(
+      doc(
+        node('paragraph', [
+          'one',
+          node('hard_break'),
+          'two ',
+          node('mention', [], { user: 'u1', label: 'Ann' }),
+        ]),
+        node('divider'),
+        node('paragraph', ['three']),
+      ),
+    );
+
+    view.focus();
+    view.selectAll();
+
+    expect(view.copy('copy')).toBe('one\ntwo @Ann\nthree');
+  });
+
   it('keeps a whole-document selection in the model and copies, cuts and leaves it by itself', () => {
     const view = mounted(twoParagraphs());
 
