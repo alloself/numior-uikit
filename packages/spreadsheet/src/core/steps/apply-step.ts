@@ -260,12 +260,20 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     }
 
     const saved = snapshot();
+    const { rewrites, names, drops, restores } = moveLines(sheet, change);
 
-    moveLines(sheet, change);
     return done(
       {
         kind: 'batch',
-        steps: [{ kind: 'deleteLines', sheet: sheet.name, axis, at, count }, ...saved],
+        steps: [
+          { kind: 'deleteLines', sheet: sheet.name, axis, at, count },
+          ...formulaEdits(rewrites),
+          ...nameEdits(names),
+          ...formulaEdits(drops.rewrites),
+          ...nameEdits(drops.names),
+          ...restores,
+          ...saved,
+        ],
       },
       [change],
     );

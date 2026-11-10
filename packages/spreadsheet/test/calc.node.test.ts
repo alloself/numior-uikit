@@ -454,6 +454,30 @@ describe('loading cells in slices', () => {
 });
 
 describe('whole lines after an insert before them', () => {
+  it('brings back the references an insert has pushed off the sheet when it is undone', () => {
+    const sheet = openBook();
+
+    sheet.type('B1', '=SUM(A1048575:A1048576)');
+    sheet.type('C1', '=A1048576');
+    sheet.type('A1', '=Sheet1!XFD1+SUM(Sheet1!XFC1:XFD1)', 'Rates');
+    sheet.name('Tail', '=Sheet1!$A$1048576');
+    sheet.insert('1');
+
+    expect(sheet.input('B2')).toBe('=SUM(A1048576:A1048576)');
+    expect(sheet.input('C2')).toBe('=#REF!');
+
+    sheet.history.undo();
+
+    expect(sheet.input('B1')).toBe('=SUM(A1048575:A1048576)');
+    expect(sheet.input('C1')).toBe('=A1048576');
+    expect(sheet.definition('Tail')).toBe('=Sheet1!$A$1048576');
+
+    sheet.insert('A');
+    sheet.history.undo();
+
+    expect(sheet.input('A1', 'Rates')).toBe('=Sheet1!XFD1+SUM(Sheet1!XFC1:XFD1)');
+  });
+
   it('keeps summing a whole column when rows are inserted at the top', () => {
     const sheet = openBook();
 
