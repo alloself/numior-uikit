@@ -1,6 +1,6 @@
 # Tailwind
 
-How to lay out pages with Tailwind 4 classes in the colours and sizes of the Numior UI theme.
+How to lay out pages with Tailwind 4 classes in the colors and sizes of the Numior UI theme.
 
 <Example name="guide/Tailwind" />
 
@@ -37,7 +37,7 @@ the classes and the components change.
 
 | Group             | Classes                                                                                                                                                                                                                                                                                               |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Colours           | `bg-surface`, `bg-surface-muted`, `bg-surface-elevated`, `bg-<role>`, `bg-<role>-soft`, `text-foreground`, `text-muted-foreground`, `text-subtle-foreground`, `text-<role>`, `text-<role>-foreground`, `border-border`, `border-border-strong`, `ring-ring`, `bg-surface-code`, `text-syntax-<scope>` |
+| Colors            | `bg-surface`, `bg-surface-muted`, `bg-surface-elevated`, `bg-<role>`, `bg-<role>-soft`, `text-foreground`, `text-muted-foreground`, `text-subtle-foreground`, `text-<role>`, `text-<role>-foreground`, `border-border`, `border-border-strong`, `ring-ring`, `bg-surface-code`, `text-syntax-<scope>` |
 | Radii             | `rounded-sm`, `rounded-md`, `rounded-lg`, `rounded-xl` from `--nui-radius-*`                                                                                                                                                                                                                          |
 | Spacing           | the `p-*`, `m-*`, `gap-*` scale from `--nui-space-1`, that is 0.25rem per step                                                                                                                                                                                                                        |
 | Fonts             | `font-sans`, `font-mono`, `font-heading`, `text-xs` … `text-4xl` with line heights from the tokens, `font-normal` … `font-bold`, `leading-tight`, `leading-relaxed`, `tracking-tight`, `tracking-heading`, `max-w-prose`                                                                              |
@@ -46,7 +46,7 @@ the classes and the components change.
 | Grid and backdrop | `grid-auto`, `grid-auto-sm`, `grid-auto-lg`: a grid whose columns are at least 16, 12 or 20rem wide and wrap to a new row on their own; `bg-dots`: a dotted background                                                                                                                                |
 
 Replace `<role>` with `primary`, `secondary`, `success`, `warning`, `error`, `info` or
-`neutral`. The `border` class without a colour draws a border in `--nui-border`, as on the
+`neutral`. The `border` class without a color draws a border in `--nui-border`, as on the
 components.
 
 ## Classes on components

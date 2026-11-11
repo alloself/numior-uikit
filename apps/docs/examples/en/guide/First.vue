@@ -3,7 +3,7 @@
     <NuiInput v-model="name" label="Name" description="How to address you" />
     <div class="flex items-center gap-3">
       <NuiButton type="submit">Save</NuiButton>
-      <span v-if="saved">Saved: {{ name }}</span>
+      <span v-if="saved">Saved the name “{{ name }}”.</span>
     </div>
   </form>
 </template>

@@ -21,7 +21,8 @@
         {{ tool }}
       </NuiButton>
     </div>
-    <p class="m-0 text-sm text-muted-foreground">Последнее действие: {{ last || '—' }}</p>
+    <p v-if="last" class="m-0 text-sm text-muted-foreground">Нажата кнопка «{{ last }}».</p>
+    <p v-else class="m-0 text-sm text-muted-foreground">Кнопка ещё не нажата.</p>
   </div>
 </template>
 

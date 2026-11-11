@@ -1,11 +1,11 @@
 # Theming
 
-How to switch between the light and dark theme and change the accent colour, density and
-component colours.
+How to switch between the light and dark theme and change the accent color, density and
+component colors.
 
 <Example name="guide/Scheme" />
 
-The colours, radii, spacing and sizes of components come from the `--nui-*` CSS variables,
+The colors, radii, spacing and sizes of components come from the `--nui-*` CSS variables,
 called tokens. Every token has a value for the light and for the dark theme. The
 `data-nui-theme` attribute picks which one applies.
 
@@ -20,7 +20,7 @@ import '@numior/tokens/accents.css';
 ```
 
 What `theme.css` and `base.css` do is covered in [Getting started](/en/guide/getting-started#styles).
-You need `accents.css` only if you change the accent colour with the `data-nui-accent` attribute.
+You need `accents.css` only if you change the accent color with the `data-nui-accent` attribute.
 
 ## Theme switcher
 
@@ -52,9 +52,9 @@ To keep the choice between visits, pass `colorScheme: { storageKey: 'theme' }` t
 To keep the page from flashing the light theme on load, add the `colorSchemeScript('theme')`
 script to `<head>`. It applies the saved theme before the first paint.
 
-## Accent colour
+## Accent color
 
-The `data-nui-accent` attribute changes the main colour of buttons, switches, links and the focus
+The `data-nui-accent` attribute changes the main color of buttons, switches, links and the focus
 ring. The values are `indigo`, `blue`, `violet`, `emerald`, `teal`, `rose`, `orange`, `amber` and
 `slate`.
 
@@ -91,7 +91,7 @@ attribute on a table or a sidebar to make only them denser.
 | Group captions | `--nui-caption-weight`, `-tracking`, `-transform` — the look of group captions in lists and the sidebar; `--nui-caption-open`, `-close` — marks around a caption, such as `'[ '` and `' ]'`                                                                                                                                                                                                            |
 | Article text   | `--nui-prose-marker` — the list marker in `nui-prose`: `disc`, `square` or your own; `--nui-prose-marker-color`                                                                                                                                                                                                                                                                                        |
 | Code           | `--nui-syntax-keyword`, `-string`, `-number`, `-function`, `-type`, `-tag`, `-attribute`, `-property`, `-comment`, `-variable`, `-punctuation`, `-highlight`                                                                                                                                                                                                                                           |
-| Charts         | `--nui-chart-1…8` (categorical palette checked for colour blindness in both themes), `--nui-chart-other`, `--nui-chart-grid`, `--nui-chart-axis`                                                                                                                                                                                                                                                       |
+| Charts         | `--nui-chart-1…8` (categorical palette checked for color blindness in both themes), `--nui-chart-other`, `--nui-chart-grid`, `--nui-chart-axis`                                                                                                                                                                                                                                                        |
 | Shadows        | `--nui-shadow-sm`, `--nui-shadow-md`, `--nui-shadow-lg`                                                                                                                                                                                                                                                                                                                                                |
 | Motion         | `--nui-duration-instant`, `--nui-duration-fast`, `--nui-duration-normal`, `--nui-duration-slow`, `--nui-easing`; hover and press use `fast`, a press starts at once (`instant`); under `prefers-reduced-motion` the durations are 0; infinite animations (spinners, skeletons, the loading bar) read `--nui-animation-play-state`, and `paused` on your own wrapper stops them, for example off screen |
 | Layers         | `--nui-z-dropdown`, `--nui-z-overlay`, `--nui-z-toast`                                                                                                                                                                                                                                                                                                                                                 |

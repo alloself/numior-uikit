@@ -30,7 +30,7 @@ const reorder = useReorder({
 
 `state.phase` показывает этап: `idle`, `pending`, `dragging` или `keyboard`. `onEvent` получает
 события `grabbed`, `moved`, `dropped` и `cancelled`, по ним удобно сообщать о перестановке
-скринридеру. Так переставляются группы полей в `NuiFieldArray`.
+экранному диктору. Так переставляются группы полей в `NuiFieldArray`.
 
 ## Автопрокрутка у краёв
 
