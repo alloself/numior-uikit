@@ -98,6 +98,39 @@ export class OverlaysSection {
     return surface.evaluate((element) => element.contains(document.activeElement));
   }
 
+  async watchLeave(dialog: Locator): Promise<void> {
+    await dialog.evaluate((element) => {
+      let frames = 0;
+
+      const sample = (): void => {
+        if (getComputedStyle(element).display === 'none') {
+          element.dataset.leaveFrames = String(frames);
+          element.dataset.leave = element.dataset.leave ?? 'locked';
+          return;
+        }
+        frames += 1;
+        if (getComputedStyle(document.documentElement).overflow !== 'hidden') {
+          element.dataset.leave = 'unlocked';
+        }
+        requestAnimationFrame(sample);
+      };
+
+      element.addEventListener('close', sample, { once: true });
+    });
+  }
+
+  leaveState(dialog: Locator): Promise<string | null> {
+    return dialog.getAttribute('data-leave');
+  }
+
+  async leaveFrames(dialog: Locator): Promise<number> {
+    return Number(await dialog.getAttribute('data-leave-frames'));
+  }
+
+  scaleOf(surface: Locator): Promise<string> {
+    return surface.evaluate((element) => getComputedStyle(element).scale);
+  }
+
   documentOverflow(): Promise<string> {
     return this.page.evaluate(() => getComputedStyle(document.documentElement).overflow);
   }

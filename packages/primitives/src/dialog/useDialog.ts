@@ -50,7 +50,7 @@ const openModals = shallowRef<readonly HTMLDialogElement[]>([]);
 
 let rootLock: RootLock | undefined;
 
-const scrollbarWidth = (root: HTMLElement): number => window.innerWidth - root.clientWidth;
+const rootWidth = (root: HTMLElement): number => root.getBoundingClientRect().width;
 
 const lockRoot = (): void => {
   if (rootLock !== undefined || typeof document === 'undefined') {
@@ -60,17 +60,20 @@ const lockRoot = (): void => {
   if (root.scrollHeight <= root.clientHeight) {
     return;
   }
-  const width = scrollbarWidth(root);
+  const narrow = rootWidth(root);
 
   rootLock = { overflow: root.style.overflow, padding: root.style.paddingInlineEnd };
   root.style.overflow = 'hidden';
-  if (width > 0) {
-    root.style.paddingInlineEnd = `${width}px`;
+
+  const scrollbar = rootWidth(root) - narrow;
+
+  if (scrollbar > 0) {
+    root.style.paddingInlineEnd = `${scrollbar}px`;
   }
 };
 
 const unlockRoot = (): void => {
-  if (rootLock === undefined) {
+  if (rootLock === undefined || openModals.value.length > 0) {
     return;
   }
   const root = document.documentElement;
@@ -79,13 +82,25 @@ const unlockRoot = (): void => {
   rootLock = undefined;
 };
 
+const leaving = (dialog: HTMLDialogElement): Animation[] =>
+  typeof dialog.getAnimations === 'function' ? dialog.getAnimations() : [];
+
+const unlockAfterLeave = (dialog: HTMLDialogElement): void => {
+  const animations = leaving(dialog);
+
+  if (animations.length === 0) {
+    unlockRoot();
+    return;
+  }
+  void Promise.allSettled(animations.map((animation) => animation.finished)).then(unlockRoot);
+};
+
 const track = (dialog: HTMLDialogElement, isOpen: boolean): void => {
   const others = openModals.value.filter((entry) => entry !== dialog);
+
   openModals.value = isOpen ? [...others, dialog] : others;
-  if (openModals.value.length > 0) {
+  if (isOpen) {
     lockRoot();
-  } else {
-    unlockRoot();
   }
 };
 
@@ -126,6 +141,7 @@ export const useDialog = (element: DialogRef, options: DialogOptions): DialogCon
     const dialog = toValue(element);
     if (dialog) {
       track(dialog, false);
+      unlockRoot();
     }
   });
 
@@ -149,6 +165,7 @@ export const useDialog = (element: DialogRef, options: DialogOptions): DialogCon
       const dialog = toValue(element);
       if (dialog) {
         track(dialog, false);
+        unlockAfterLeave(dialog);
       }
       returnValue.value = dialog?.returnValue ?? '';
       options.open.value = false;

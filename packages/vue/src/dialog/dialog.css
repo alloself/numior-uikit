@@ -22,11 +22,9 @@
   box-shadow: var(--nui-shadow-lg);
   opacity: 0;
   translate: 0 var(--nui-space-2);
-  scale: 0.98;
   transition:
     opacity var(--nui-duration-normal) var(--nui-easing),
     translate var(--nui-duration-normal) var(--nui-easing),
-    scale var(--nui-duration-normal) var(--nui-easing),
     display var(--nui-duration-normal) allow-discrete,
     overlay var(--nui-duration-normal) allow-discrete;
 }
@@ -61,13 +59,11 @@
   display: flex;
   opacity: 1;
   translate: 0 0;
-  scale: 1;
 }
 @starting-style {
   .nui-dialog[open] {
     opacity: 0;
     translate: 0 var(--nui-space-2);
-    scale: 0.98;
   }
   .nui-dialog--placement-top[open] {
     translate: 0 calc(var(--nui-space-2) * -1);

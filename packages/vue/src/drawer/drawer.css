@@ -15,7 +15,6 @@
   border-start-start-radius: var(--nui-radius-lg);
   border-end-start-radius: var(--nui-radius-lg);
   translate: var(--_shift);
-  scale: 1;
 }
 .nui-drawer--size-sm {
   --_size: 16rem;
@@ -61,11 +60,9 @@
 }
 .nui-drawer[open] {
   translate: 0 0;
-  scale: 1;
 }
 @starting-style {
   .nui-drawer[open] {
     translate: var(--_shift);
-    scale: 1;
   }
 }

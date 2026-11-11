@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+import { promiseTimeout, until } from '@vueuse/core';
 import { nextTick, ref } from 'vue';
 import { useDialog, type DialogOptions } from '../src';
 import { captureWithElements } from './harness/elements';
@@ -32,7 +33,8 @@ const press = (dialog: HTMLElement, clientX: number) => {
   dialog.dispatchEvent(new MouseEvent('click', { clientX, clientY: 0, bubbles: true }));
 };
 
-const ROOT_METRICS = ['scrollHeight', 'clientHeight', 'clientWidth'] as const;
+const ROOT_METRICS = ['scrollHeight', 'clientHeight', 'getBoundingClientRect'] as const;
+const VIEWPORT_WIDTH = 1024;
 
 const defineMetric = (name: string, get: () => number): void => {
   Object.defineProperty(document.documentElement, name, { configurable: true, get });
@@ -41,12 +43,31 @@ const defineMetric = (name: string, get: () => number): void => {
 const describeRoot = (metrics: RootMetrics): void => {
   const root = document.documentElement;
 
-  const clientWidth = () =>
-    window.innerWidth - (root.style.overflow === 'hidden' ? 0 : metrics.scrollbar);
+  const width = () => VIEWPORT_WIDTH - (root.style.overflow === 'hidden' ? 0 : metrics.scrollbar);
 
   defineMetric('scrollHeight', () => metrics.scrollHeight);
   defineMetric('clientHeight', () => metrics.clientHeight);
-  defineMetric('clientWidth', clientWidth);
+
+  Object.defineProperty(root, 'getBoundingClientRect', {
+    configurable: true,
+    value: () => new DOMRect(0, 0, width(), metrics.clientHeight),
+  });
+};
+
+const holdLeave = (dialog: HTMLElement): { finish(): void } => {
+  const left = ref(false);
+  const finished = until(left).toBe(true);
+
+  Object.defineProperty(dialog, 'getAnimations', {
+    configurable: true,
+    value: () => [{ finished }],
+  });
+
+  return {
+    finish: () => {
+      left.value = true;
+    },
+  };
 };
 
 const forgetRoot = (): void => {
@@ -95,6 +116,50 @@ describe('useDialog', () => {
 
     second.unmount();
     first.unmount();
+  });
+
+  it('pads the root by a fractional scrollbar so the page stays in place', () => {
+    describeRoot({ scrollHeight: 2000, clientHeight: 800, scrollbar: 15.25 });
+    const capture = mountDialog({ open: ref(true) });
+
+    expect(rootStyle()).toEqual({ overflow: 'hidden', padding: '15.25px' });
+
+    capture.unmount();
+  });
+
+  it('keeps the root locked until the closing dialog has left the screen', async () => {
+    describeRoot({ scrollHeight: 2000, clientHeight: 800, scrollbar: 15 });
+    const capture = mountDialog({ open: ref(true) });
+    const leave = holdLeave(capture.second);
+
+    capture.value.close();
+    await nextTick();
+    expect(rootStyle().overflow).toBe('hidden');
+
+    leave.finish();
+
+    await vi.waitFor(() => {
+      expect(rootStyle()).toEqual({ overflow: '', padding: '' });
+    });
+
+    capture.unmount();
+  });
+
+  it('stays locked when a dialog opens again while another one is leaving', async () => {
+    describeRoot({ scrollHeight: 2000, clientHeight: 800, scrollbar: 15 });
+    const open = ref(true);
+    const capture = mountDialog({ open });
+    const leave = holdLeave(capture.second);
+
+    capture.value.close();
+    await nextTick();
+    open.value = true;
+    await nextTick();
+    leave.finish();
+    await promiseTimeout(0);
+    expect(rootStyle().overflow).toBe('hidden');
+
+    capture.unmount();
   });
 
   it('pads nothing when the scrollbar takes no space', () => {

@@ -24,6 +24,41 @@ test.describe('layers', () => {
     expect(await overlays.documentOverflow()).not.toBe('hidden');
   });
 
+  test('the page stays locked for as long as a closing dialog is on screen and its text is never scaled', async ({
+    playground,
+    overlays,
+  }) => {
+    await playground.open();
+    const before = await boxOf(overlays.dialogOpen);
+
+    await overlays.dialogOpen.click();
+    await expect(overlays.dialog).toBeVisible();
+    expect(await overlays.scaleOf(overlays.dialog)).toBe('none');
+
+    await overlays.watchLeave(overlays.dialog);
+    await overlays.pressEscape();
+    await expect(overlays.dialog).toBeHidden();
+    await expect.poll(() => overlays.leaveState(overlays.dialog)).toBe('locked');
+    await expect.poll(() => overlays.documentOverflow()).not.toBe('hidden');
+    expect((await boxOf(overlays.dialogOpen)).x).toBe(before.x);
+  });
+
+  test('a closing dialog fades over several frames with the page still locked', async ({
+    playground,
+    overlays,
+    browserName,
+  }) => {
+    test.skip(browserName !== 'chromium', 'Firefox and WebKit remove a closed dialog at once');
+    await playground.open();
+    await overlays.dialogOpen.click();
+    await expect(overlays.dialog).toBeVisible();
+
+    await overlays.watchLeave(overlays.dialog);
+    await overlays.pressEscape();
+    await expect.poll(() => overlays.leaveState(overlays.dialog)).toBe('locked');
+    expect(await overlays.leaveFrames(overlays.dialog)).toBeGreaterThan(1);
+  });
+
   test('dialog closes from a method=dialog form with its return value and from the backdrop', async ({
     playground,
     overlays,
