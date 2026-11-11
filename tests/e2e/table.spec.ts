@@ -145,6 +145,26 @@ test.describe('table', () => {
     await expect(table.header(1)).toHaveText('Клиент');
   });
 
+  test('the drop line of a carried column stays on a column edge while the table scrolls under a still pointer', async ({
+    playground,
+    table,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'mouse scenario');
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+    await expect(table.header(1)).toHaveText('Клиент');
+
+    await table.carryHeaderToEdge(1);
+
+    const drift = await table.dropLineDrift(20);
+
+    await table.releasePointer();
+
+    expect(drift.scrolled).toBeGreaterThan(40);
+    expect(drift.farthest).toBeLessThanOrEqual(2);
+  });
+
   test('a tree row carried away and back to its own place stays there', async ({
     playground,
     table,

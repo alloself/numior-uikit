@@ -188,6 +188,24 @@ describe('useReorder', () => {
     vi.useRealTimers();
   });
 
+  it('reports every autoscroll step under a still pointer so the owner can place its drop mark again', async () => {
+    vi.useFakeTimers();
+    const list = ReorderHarness.mount({ count: 100, size: 20, viewport: 100 });
+
+    await list.pointerDown(0, 20);
+    await list.pointerMove(95);
+
+    const reported = list.changes.length;
+
+    await list.advance(160);
+
+    expect(list.scrollTop).toBeGreaterThan(40);
+    expect(list.changes.length - reported).toBe(list.scrollTop / 8);
+
+    list.unmount();
+    vi.useRealTimers();
+  });
+
   it('swaps horizontal arrows in RTL', async () => {
     const list = ReorderHarness.mount({ axis: 'x', rtl: true });
     await list.press(2, ' ');

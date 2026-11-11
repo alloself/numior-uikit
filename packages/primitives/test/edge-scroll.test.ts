@@ -44,6 +44,19 @@ describe('useEdgeScroll', () => {
     edge.unmount();
   });
 
+  it('reports no step while the container has nowhere left to scroll and keeps watching the edge', () => {
+    const edge = EdgeScrollHarness.mount({ stuck: true });
+
+    edge.moveTo(190);
+    edge.frame();
+    edge.frame();
+
+    expect([edge.scrollTop, edge.steps]).toEqual([0, 0]);
+    expect(edge.awaitsFrame).toBe(true);
+
+    edge.unmount();
+  });
+
   it('keeps one step per frame after the pointer leaves an edge and comes straight back', () => {
     const edge = EdgeScrollHarness.mount();
     edge.moveTo(190);

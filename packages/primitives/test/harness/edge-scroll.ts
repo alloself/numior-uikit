@@ -4,6 +4,7 @@ import { captureSetup, type Capture } from './capture';
 
 export interface EdgeScrollHarnessOptions {
   readonly size?: number;
+  readonly stuck?: boolean;
 }
 
 export interface EdgeDragOptions {
@@ -44,13 +45,25 @@ const defineRect = (element: HTMLElement, size: number): void => {
   });
 };
 
+const holdScroll = (element: HTMLElement): void => {
+  Object.defineProperty(element, 'scrollTop', {
+    get: () => 0,
+    set: (value: number) => value,
+    configurable: true,
+  });
+};
+
 export class EdgeScrollHarness {
-  static mount({ size = 200 }: EdgeScrollHarnessOptions = {}): EdgeScrollHarness {
+  static mount({ size = 200, stuck = false }: EdgeScrollHarnessOptions = {}): EdgeScrollHarness {
     const queue = installFrames();
     const container = document.createElement('div');
     const steps = { count: 0 };
 
     defineRect(container, size);
+
+    if (stuck) {
+      holdScroll(container);
+    }
 
     const capture = captureSetup(() =>
       useEdgeScroll({

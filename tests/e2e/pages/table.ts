@@ -19,7 +19,13 @@ export interface TableScroll {
   readonly left?: number;
 }
 
+export interface DropLineDrift {
+  readonly scrolled: number;
+  readonly farthest: number;
+}
+
 const HEAD_ROWS = 2;
+const EDGE_REACH = 8;
 
 export class TableSection {
   readonly scope = sectionScope('table');
@@ -306,6 +312,61 @@ export class TableSection {
     await this.page.mouse.down();
     await this.page.mouse.move(x + 8, y);
     await this.page.mouse.move(destination.x + destination.width * 0.75, y, { steps: 6 });
+    await this.page.mouse.up();
+  }
+
+  async carryHeaderToEdge(col: number): Promise<void> {
+    await this.header(col).hover();
+
+    await expect.poll(() => renderedWidth(this.grip(col))).toBeGreaterThan(8);
+
+    const grip = await boxOf(this.grip(col));
+    const view = await boxOf(this.viewport);
+    const x = grip.x + grip.width / 2;
+    const y = grip.y + grip.height / 2;
+
+    await this.page.mouse.move(x, y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(x + 8, y);
+    await this.page.mouse.move(view.x + view.width - EDGE_REACH, y, { steps: 4 });
+  }
+
+  async dropLineDrift(frames: number): Promise<DropLineDrift> {
+    return this.root.evaluate(
+      (root, count) =>
+        new Promise<DropLineDrift>((resolve) => {
+          const viewport = root.querySelector('.nui-table__viewport');
+          const from = viewport?.scrollLeft ?? 0;
+          const seen = { frames: 0, farthest: 0 };
+
+          const watch = (): void => {
+            const line = root.querySelector('.nui-table__drop--x')?.getBoundingClientRect();
+            const heads = root.querySelectorAll('.nui-table__row--head [role="columnheader"]');
+
+            const gaps = Array.from(heads, (head) => {
+              const rect = head.getBoundingClientRect();
+              const middle = line === undefined ? Number.NaN : line.left + line.width / 2;
+
+              return Math.min(Math.abs(rect.left - middle), Math.abs(rect.right - middle));
+            });
+
+            seen.farthest = Math.max(seen.farthest, Math.min(...gaps));
+            seen.frames += 1;
+
+            if (seen.frames < count) {
+              requestAnimationFrame(watch);
+              return;
+            }
+            resolve({ scrolled: (viewport?.scrollLeft ?? 0) - from, farthest: seen.farthest });
+          };
+
+          requestAnimationFrame(watch);
+        }),
+      frames,
+    );
+  }
+
+  async releasePointer(): Promise<void> {
     await this.page.mouse.up();
   }
 

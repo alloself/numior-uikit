@@ -55,10 +55,14 @@ export const useEdgeScroll = (options: EdgeScrollOptions): EdgeScroll => {
       }
 
       const frames = framesOf(delta);
+      const { scrollLeft, scrollTop } = container;
 
       container.scrollLeft += Math.round(dx * frames);
       container.scrollTop += Math.round(dy * frames);
-      options.onStep();
+
+      if (container.scrollLeft !== scrollLeft || container.scrollTop !== scrollTop) {
+        options.onStep();
+      }
     },
     { immediate: false },
   );

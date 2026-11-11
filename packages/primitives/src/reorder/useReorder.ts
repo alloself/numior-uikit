@@ -108,9 +108,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     }
     const target = options.indexAt(current.position, current.from);
 
-    if (target !== current.to && allowed(current.from, target)) {
-      publish({ ...current, to: target });
-    }
+    publish({ ...current, to: allowed(current.from, target) ? target : current.to });
   };
 
   const edge = useEdgeScroll({ container: options.container, onStep: retarget });
