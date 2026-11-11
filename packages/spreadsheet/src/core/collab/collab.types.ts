@@ -37,7 +37,10 @@ export interface WorkbookDocumentOptions {
   readonly version?: number | null | undefined;
 }
 
-export type WorkbookDocumentListener = (steps: readonly WorkbookStep[]) => void;
+export type WorkbookDocumentListener = (
+  steps: readonly WorkbookStep[],
+  lines: readonly LineChange[],
+) => void;
 
 export interface WorkbookDocument {
   readonly version: () => number | null;

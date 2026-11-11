@@ -8,6 +8,8 @@ import {
   createWorkbookHistory,
   lineLayoutsOf,
   mapCell,
+  mapCellNear,
+  mapRange,
   parseCell,
   parseFormula,
   parseRange,
@@ -161,6 +163,22 @@ describe('reference rewriting', () => {
     expect(mapCell(changes, 'Sheet1', at('B5'))).toEqual(at('B6'));
     expect(mapCell(changes, 'Sheet1', at('B1'))).toBeUndefined();
     expect(mapCell(changes, 'Rates', at('B5'))).toEqual(at('B5'));
+  });
+
+  it('leaves a cell on the line that took the place of a removed one and cuts a range', () => {
+    const changes = [rowsAt(2, -3)];
+
+    expect(mapCellNear(changes, 'Sheet1', at('B3'))).toEqual(at('B2'));
+    expect(mapCellNear(changes, 'Sheet1', at('B7'))).toEqual(at('B4'));
+
+    expect(mapRange(changes, 'Sheet1', { top: 0, left: 0, bottom: 5, right: 1 })).toEqual({
+      top: 0,
+      left: 0,
+      bottom: 2,
+      right: 1,
+    });
+
+    expect(mapRange(changes, 'Sheet1', { top: 1, left: 0, bottom: 2, right: 1 })).toBeUndefined();
   });
 });
 

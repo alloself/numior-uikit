@@ -324,6 +324,14 @@ table.
 `focusCell({ row, col })` moves the focus into a cell from outside, for example from a name box.
 It returns `false` for a position outside the table.
 
+`moveActive({ row, col })` is for rows or columns of a source that shifted under the table, for
+example when someone else inserted a row above. The active cell moves to the new position, and an
+editor open in it keeps its text, focus and caret.
+
+The table does not scroll and does not take the focus from a field outside it. The method returns
+`false` when the position is outside the table or its cell cannot be edited: the editor then stays
+where it was.
+
 List in `keepEditing` the elements that can take the focus without ending the edit. Ctrl+Enter in
 the editor writes the value to every selected cell in columns of the same type.
 

@@ -3,8 +3,10 @@ import {
   createCalculator,
   createWorkbook,
   createWorkbookDocument,
+  lineLayoutsOf,
   withLineSizes,
   type Calculator,
+  type LineLayout,
   type Workbook,
   type WorkbookDocument,
 } from '../src/core';
@@ -77,6 +79,38 @@ const widen = ({ book, session }: SharedBook, col: number, chars: number): void 
   }
   session.stepper.apply(step);
 };
+
+const HIDDEN_ROW: LineLayout = {
+  size: undefined,
+  custom: false,
+  hidden: true,
+  level: 0,
+  collapsed: false,
+  style: undefined,
+  extra: [],
+};
+
+const hide = ({ book, session }: SharedBook, row: number): void => {
+  const sheet = book.sheet(SHEET);
+
+  const step =
+    sheet === undefined
+      ? undefined
+      : layoutStepOf(sheet, { ...sheet.layout, rows: lineLayoutsOf([[row, HIDDEN_ROW]]) });
+
+  if (step === undefined) {
+    throw new Error('the row was hidden already');
+  }
+  session.stepper.apply(step);
+};
+
+const rowsAdded = (at: number, count: number): unknown => ({
+  kind: 'insertLines',
+  sheet: SHEET,
+  axis: 'rows',
+  at,
+  count,
+});
 
 const receive = (session: WorkbookDocument, ...steps: readonly unknown[]): boolean =>
   session.receive({ version: session.version() ?? 0, clientId: 'bob', steps });
@@ -162,18 +196,139 @@ describe('NuiSpreadsheet in a shared book', () => {
     expect(driver.text(1, 0)).toBe('remote');
   });
 
-  it('does not write a draft into the row that slid under it when someone else adds a row above', async () => {
+  it('carries a draft down with its row when someone else adds a row above', async () => {
     const book = shared();
     const driver = open(book);
 
     await driver.focus(2, 0);
     await driver.press('F2');
     await driver.type('draft');
-    receive(book.session, { kind: 'insertLines', sheet: SHEET, axis: 'rows', at: 0, count: 1 });
+    driver.placeCaret(2);
+    receive(book.session, rowsAdded(0, 1));
     await driver.settle();
+
+    expect(driver.editingCell).toEqual({ row: 3, col: 0 });
+    expect(driver.editorText).toBe('draft');
+    expect(driver.caret).toBe(2);
+    expect(driver.nameBox).toBe('A3');
+
     await driver.press('Enter');
 
-    expect([driver.text(2, 0), driver.text(3, 0)]).toEqual(['', '']);
+    expect([driver.text(2, 0), driver.text(3, 0)]).toEqual(['', 'draft']);
+    expect(driver.refusals).toEqual([]);
+  });
+
+  it('carries a draft typed in the formula bar and leaves the focus in the bar', async () => {
+    const book = shared();
+    const driver = open(book);
+
+    await driver.focus(2, 1);
+    await driver.focusFormula();
+    await driver.typeFormula('=1+1');
+    receive(book.session, rowsAdded(0, 2));
+    await driver.settle();
+
+    expect(driver.editingCell).toEqual({ row: 4, col: 1 });
+    expect(driver.formula).toBe('=1+1');
+    expect(driver.formulaFocused).toBe(true);
+
+    await driver.pressInFormula('Enter');
+
+    expect([driver.text(2, 1), driver.text(4, 1)]).toEqual(['', '2']);
+  });
+
+  it('keeps a draft in its cell when someone else changes rows below or a column width', async () => {
+    const mine = shared();
+    const theirs = shared();
+    const driver = open(mine);
+
+    await driver.focus(2, 0);
+    await driver.press('F2');
+    await driver.type('draft');
+    receive(mine.session, rowsAdded(5, 1));
+    widen(theirs, WIDE_COLUMN, WIDE_CHARS);
+    receive(mine.session, ...theirs.session.pending());
+    await driver.settle();
+
+    expect(driver.editingCell).toEqual({ row: 2, col: 0 });
+    expect(driver.editorText).toBe('draft');
+  });
+
+  it('closes a draft with a note when someone else removes its row', async () => {
+    const book = shared();
+    const driver = open(book);
+
+    await driver.focus(3, 0);
+    await driver.press('F2');
+    await driver.type('draft');
+    receive(book.session, { kind: 'deleteLines', sheet: SHEET, axis: 'rows', at: 2, count: 1 });
+    await driver.settle();
+
+    expect(driver.editing).toBe(false);
+
+    expect(driver.note).toBe(
+      'Someone else removed or hid this cell. The text you typed was not saved',
+    );
+
+    expect(driver.refusals).toMatchObject([{ reason: 'cell-gone' }]);
+    expect(driver.text(3, 0)).toBe('');
+  });
+
+  it('closes a draft with a note and steps the active cell aside when someone else hides its row', async () => {
+    const mine = shared();
+    const theirs = shared();
+    const driver = open(mine);
+
+    await driver.focus(3, 0);
+    await driver.press('F2');
+    await driver.type('draft');
+    hide(theirs, 2);
+    receive(mine.session, ...theirs.session.pending());
+    await driver.settle();
+
+    expect(driver.editing).toBe(false);
+    expect(driver.refusals).toMatchObject([{ reason: 'cell-gone' }]);
+    expect(driver.rowLabels.slice(0, 3)).toEqual(['1', '2', '4']);
+    expect(driver.nameBox).toBe('A4');
+  });
+
+  it('moves the active cell and the selected range with their rows and columns', async () => {
+    const book = shared();
+    const driver = open(book);
+
+    await driver.select({
+      active: { row: 3, col: 2 },
+      ranges: [{ top: 3, left: 2, bottom: 5, right: 3 }],
+    });
+
+    receive(
+      book.session,
+      rowsAdded(1, 2),
+      { kind: 'insertLines', sheet: SHEET, axis: 'cols', at: 0, count: 1 },
+      { kind: 'deleteLines', sheet: SHEET, axis: 'rows', at: 6, count: 1 },
+    );
+
+    await driver.settle();
+
+    expect(driver.selection).toEqual({
+      active: { row: 5, col: 3 },
+      ranges: [{ top: 5, left: 3, bottom: 6, right: 4 }],
+    });
+
+    expect(driver.nameBox).toBe('D6');
+  });
+
+  it('leaves the focus outside the sheet when the active cell moves', async () => {
+    const book = shared();
+    const driver = open(book);
+
+    await driver.focus(3, 0);
+    await driver.focusFormula();
+    receive(book.session, rowsAdded(0, 1));
+    await driver.settle();
+
+    expect(driver.nameBox).toBe('A4');
+    expect(driver.formulaFocused).toBe(true);
   });
 
   it('sends the width of a dragged column as one step and shows a width from someone else', async () => {

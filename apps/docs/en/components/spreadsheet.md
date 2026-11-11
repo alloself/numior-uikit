@@ -74,6 +74,10 @@ Create a document with `createWorkbookDocument` and pass it to `collaboration`. 
 Call `client.sync()` from `change` to send your edits. Edits by other people appear on their own and
 do not fire `change`. Show the sheet after the book has loaded from the server.
 
+When someone else inserts or removes rows and columns, the active cell and the selection stay on
+their data. An open cell moves with its row: the typed text, the focus and the caret are kept. If
+its row or column was removed, the edit closes and the sheet says so in a note.
+
 Do not show `fileBar` in a shared book: opening a file replaces the book, and the others stop seeing
 it. The `readonly` prop turns editing off.
 
@@ -111,7 +115,8 @@ In a read-only book the width changes on screen only, while this sheet is shown.
 
 An action the sheet did not apply is explained by a note in the bottom corner of the sheet. The
 sheet answers this way to a fill across merged cells, an edit of a pivot table cell and a row
-inserted past the limit.
+inserted past the limit. A note with the `cell-gone` reason also reports an edit whose cell was
+removed by someone else.
 
 The note fades after six seconds, after the next edit that goes through, or on a click. It stays
 while the pointer is over it. The live region gets the same text.

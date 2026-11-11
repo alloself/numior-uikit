@@ -455,6 +455,22 @@ export type TableEditorPlan =
       readonly reason: NuiTableEditRefusalReason;
     };
 
+export interface TableEditCaret {
+  readonly start: number;
+  readonly end: number;
+  readonly direction: NonNullable<HTMLInputElement['selectionDirection']>;
+}
+
+export interface TableEditorLeave {
+  readonly focused: boolean;
+  readonly caret: TableEditCaret | undefined;
+}
+
+export interface TableEditorLink {
+  readonly flush: () => void;
+  readonly release: () => TableEditorLeave;
+}
+
 export interface TableEditSession<T> {
   readonly position: NuiTableCellPosition;
   readonly row: T;
@@ -463,6 +479,7 @@ export interface TableEditSession<T> {
   readonly spec: TableCellEditorSpec;
   readonly typed: string | undefined;
   readonly passive: boolean;
+  readonly caret: TableEditCaret | undefined;
 }
 
 export interface NuiTableCellEditorProps {
@@ -473,10 +490,11 @@ export interface NuiTableCellEditorProps {
   error?: string | undefined;
   typed?: string | undefined;
   passive?: boolean | undefined;
+  caret?: TableEditCaret | undefined;
   grow?: boolean | undefined;
   keep?: ((target: Element) => boolean) | undefined;
   pick?: ((event: KeyboardEvent) => boolean) | undefined;
-  attach: (flush: () => void) => () => void;
+  attach: (link: TableEditorLink) => () => void;
   commit: (move: NuiTableEditMove) => boolean;
   cancel: () => void;
 }
@@ -747,6 +765,7 @@ export interface NuiTableExposed {
   commitEdit(move?: NuiTableEditMove): boolean;
   cancelEdit(): void;
   focusCell(position: NuiTableCellPosition, scroll?: boolean): boolean;
+  moveActive(position: NuiTableCellPosition): boolean;
   invalidate(ranges?: NuiTableRanges): void;
 }
 

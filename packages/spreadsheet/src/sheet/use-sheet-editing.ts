@@ -232,6 +232,16 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
     draft.value = next === undefined || sameCell(draft.value, next) ? next : opened(next);
   };
 
+  const moveDraft = (position: NuiTableCellPosition): void => {
+    const current = draft.value;
+
+    if (current === undefined) {
+      return;
+    }
+
+    draft.value = { ...current, row: position.row, col: position.col };
+  };
+
   const formulaRule =
     (col: number) =>
     (value: string | null, context: { readonly values: number }): true | string => {
@@ -281,6 +291,7 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
     draft,
     revision,
     setDraft,
+    moveDraft,
     apply,
     attempt,
     redraw,

@@ -12,7 +12,7 @@ import {
 } from './collab.types';
 import { mergeLayouts } from '../layout/merge-layout';
 import { changesOver, stepOver } from './rebase-queue';
-import { changesOf } from './remote-change';
+import { changesOf, linesAfter } from './remote-change';
 import { flattened, settleForStep, snapshotSteps } from './schema';
 import { foreignEdits, yieldPass } from './yield-step';
 
@@ -46,9 +46,11 @@ export const createWorkbookDocument = ({
   let unconfirmed: readonly Unconfirmed[] = [];
   let history: WorkbookHistory | undefined;
 
-  const notify = (steps: readonly WorkbookStep[]): void => {
+  const notify = (steps: readonly WorkbookStep[], moved: readonly RemoteChange[]): void => {
+    const lines = linesAfter(moved);
+
     listeners.forEach((listener) => {
-      listener(steps);
+      listener(steps, lines);
     });
   };
 
@@ -147,7 +149,7 @@ export const createWorkbookDocument = ({
         return false;
       }
       version = at;
-      notify(steps);
+      notify(steps, []);
       return true;
     },
     receive: (batch) => {
@@ -181,7 +183,7 @@ export const createWorkbookDocument = ({
         yieldPass,
       );
 
-      notify(steps);
+      notify(steps, moving);
       return true;
     },
     confirm: (count, at) => {
@@ -220,7 +222,7 @@ export const createWorkbookDocument = ({
       const moving = replay([...undone.flatMap(changesOf), ...remote]);
 
       history?.rebase((step) => stepOver(step, moving));
-      notify([...undone, ...steps]);
+      notify([...undone, ...steps], moving);
       return true;
     },
     stepper: {

@@ -289,6 +289,8 @@ import {
   type BookLocale,
   type CellRange,
   type ConditionalFormat,
+  type LineChange,
+  type WorkbookStep,
 } from '../core';
 import { defaultRowHeight, sheetCells } from './sheet-cells';
 import { liveSource, sameColumns, type ColumnShape } from './sheet-table';
@@ -349,6 +351,7 @@ import { useSheetRecalc } from './use-sheet-recalc';
 import { SHEET_SEGMENTS } from './sheet-segments';
 import { rectStyle } from './sheet-rect';
 import { useSheetReferences } from './use-sheet-references';
+import { useSheetPlaces } from './use-sheet-places';
 import { tableRangeOf, useSheetSelection } from './use-sheet-selection';
 
 const RULES_ICON = markRaw(PaintRoller);
@@ -493,7 +496,7 @@ const file = useSheetFile({
   },
 });
 
-const noteStructure = (): void => {
+const noteStructure = (): boolean => {
   const next = sheetsKey();
 
   if (next !== knownSheets) {
@@ -507,12 +510,14 @@ const noteStructure = (): void => {
       sheetIndex.value = kept;
     }
   }
-  if (shownSheet.value?.layout !== knownLayout) {
+  const laidOut = shownSheet.value?.layout !== knownLayout;
+
+  if (laidOut) {
     knownLayout = shownSheet.value?.layout;
     layoutRevision.value += 1;
-    grid.value?.cancelEdit();
   }
   file.noteEdit();
+  return laidOut;
 };
 
 const editing = useSheetEditing({
@@ -528,7 +533,10 @@ const editing = useSheetEditing({
   collaboration: () => collaboration,
   changed: (change) => {
     note.hide();
-    noteStructure();
+
+    if (noteStructure()) {
+      grid.value?.cancelEdit();
+    }
     emit('change', change);
   },
   refused: (refusal, message) => {
@@ -545,9 +553,12 @@ const columnSizes = useSheetColumnSizes({
 
 watch([shownSheet, layoutRevision], columnSizes.forget);
 
-const onRemoteSteps = (): void => {
+const onRemoteSteps = (_steps: readonly WorkbookStep[], lines: readonly LineChange[]): void => {
+  const held = places.hold();
+
   noteStructure();
   editing.redraw();
+  places.restore(held, lines);
 };
 
 onMounted(() => {
@@ -597,6 +608,16 @@ const formula = useFormulaBar({
   bar,
   nameField,
   formulaField,
+});
+
+const places = useSheetPlaces({
+  sheet: () => shownSheet.value,
+  cells: () => cells.value,
+  formula,
+  editing,
+  table: grid,
+  messages,
+  refuse,
 });
 
 const selection = useSheetSelection({

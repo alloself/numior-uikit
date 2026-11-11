@@ -31,6 +31,7 @@ export interface NuiSpreadsheetMessages {
   readonly linesCrossPivot: string;
   readonly linesRefused: string;
   readonly fillMerged: string;
+  readonly cellGone: string;
   readonly pivotCells: string;
   readonly actionRefused: string;
   readonly recalculating: (params: { readonly share: string }) => string;
@@ -219,6 +220,7 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     linesCrossPivot: 'Cannot change rows or columns that run through a pivot table',
     linesRefused: 'These rows or columns cannot be changed',
     fillMerged: 'Cannot fill: the range has merged cells',
+    cellGone: 'Someone else removed or hid this cell. The text you typed was not saved',
     pivotCells: 'Cells of a pivot table cannot be changed',
     actionRefused: 'The action was not applied',
     recalculating: ({ share }) => `Recalculating ${share}`,
@@ -318,6 +320,7 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     linesCrossPivot: 'Нельзя изменить строки или столбцы, которые проходят через сводную таблицу',
     linesRefused: 'Эти строки или столбцы изменить нельзя',
     fillMerged: 'Нельзя заполнить: в диапазоне есть объединённые ячейки',
+    cellGone: 'Ячейку удалил или скрыл другой участник. Набранный текст не сохранён',
     pivotCells: 'Ячейки сводной таблицы изменить нельзя',
     actionRefused: 'Действие не выполнено',
     recalculating: ({ share }) => `Пересчёт ${share}`,

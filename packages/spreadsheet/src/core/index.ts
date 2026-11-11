@@ -238,7 +238,7 @@ export { mergesApartStep, mergesMeeting, outsideCovered } from './steps/clip-mer
 export { FillMode, type CellClip, type CellClips, type ClipPaste } from './steps/clip.types';
 export { createWorkbookHistory } from './steps/history';
 export type { HistoryOptions, WorkbookHistory } from './steps/history';
-export { mapCell } from './steps/mapping';
+export { mapCell, mapCellNear, mapRange } from './steps/mapping';
 export { workbookPeers } from './collab/presence';
 export type {
   WorkbookPeer,

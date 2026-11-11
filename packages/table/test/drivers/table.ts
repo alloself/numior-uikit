@@ -2310,6 +2310,23 @@ export class TableDriver<T> {
     await nextTick();
   }
 
+  async moveActive(position: NuiTableCellPosition): Promise<boolean> {
+    const moved = this.exposed.value?.moveActive(position) ?? false;
+
+    await nextTick();
+    return moved;
+  }
+
+  get editorCaret(): readonly [number | null, number | null] | undefined {
+    const field = this.editorField;
+
+    return field === null ? undefined : [field.selectionStart, field.selectionEnd];
+  }
+
+  placeEditorCaret(start: number, end: number): void {
+    this.editorField?.setSelectionRange(start, end);
+  }
+
   async focusCellByRef(position: NuiTableCellPosition): Promise<boolean> {
     const focused = this.exposed.value?.focusCell(position) ?? false;
 

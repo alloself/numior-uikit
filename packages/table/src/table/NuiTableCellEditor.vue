@@ -36,7 +36,12 @@ import { AriaValue, Direction, Key, PopoverState, provideDraftCommits } from '@n
 import { NuiTooltip } from '@numior/vue';
 import { grownSize, growthEdges } from './table-editor-growth';
 import { holdScrollAfterResize } from './table-scroll-hold';
-import type { NuiTableCellEditorProps, NuiTableEditMove } from './table.types';
+import type {
+  NuiTableCellEditorProps,
+  NuiTableEditMove,
+  TableEditCaret,
+  TableEditorLeave,
+} from './table.types';
 
 const FOCUSABLE = 'input, textarea, select, button, [tabindex]';
 const SIZE = '--_size';
@@ -56,6 +61,7 @@ const {
   error,
   typed,
   passive,
+  caret,
   grow,
   keep,
   pick,
@@ -227,6 +233,30 @@ const typeInto = (field: HTMLInputElement | HTMLTextAreaElement, text: string): 
   );
 };
 
+const caretOf = (
+  field: HTMLInputElement | HTMLTextAreaElement | undefined,
+): TableEditCaret | undefined =>
+  field?.selectionStart === null ||
+  field?.selectionStart === undefined ||
+  field.selectionEnd === null
+    ? undefined
+    : {
+        start: field.selectionStart,
+        end: field.selectionEnd,
+        direction: field.selectionDirection ?? 'none',
+      };
+
+const release = (): TableEditorLeave => {
+  const field = fieldOf();
+
+  settled = true;
+
+  return {
+    focused: root.value?.contains(document.activeElement) === true,
+    caret: caretOf(field),
+  };
+};
+
 const paddingOf = (length: string): number => Number.parseFloat(length) || 0;
 
 const growsBack = (editor: HTMLElement): boolean => editor.closest(ALIGNED_END) !== null;
@@ -355,8 +385,11 @@ watch(
 );
 
 onMounted(() => {
-  detach = attach(() => {
-    drafts.commitAll();
+  detach = attach({
+    flush: () => {
+      drafts.commitAll();
+    },
+    release,
   });
 
   if (passive) {
@@ -381,7 +414,13 @@ onMounted(() => {
   if (typed !== undefined) {
     typeInto(field, typed);
   }
-  field.setSelectionRange(field.value.length, field.value.length);
+
+  field.setSelectionRange(
+    caret?.start ?? field.value.length,
+    caret?.end ?? field.value.length,
+    caret?.direction,
+  );
+
   fit(false);
 });
 

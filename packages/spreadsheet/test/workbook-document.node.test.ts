@@ -48,6 +48,34 @@ const openDocument = () => {
 };
 
 describe('workbook document', () => {
+  it('tells a listener where lines moved over its own unsent rows and under the last name of the sheet', () => {
+    const client = openDocument();
+    const heard: unknown[] = [];
+
+    client.document.subscribe((_steps, lines) => {
+      heard.push(lines);
+    });
+
+    client.document.stepper.apply({
+      kind: 'insertLines',
+      sheet: SHEET,
+      axis: 'rows',
+      at: 0,
+      count: 2,
+    });
+
+    client.document.receive({
+      version: 2,
+      clientId: 'other',
+      steps: client.wires(
+        { kind: 'insertLines', sheet: SHEET, axis: 'rows', at: 5, count: 1 },
+        { kind: 'renameSheet', from: SHEET, to: 'Plan' },
+      ),
+    });
+
+    expect(heard).toEqual([[{ sheet: 'Plan', axis: 'rows', at: 7, count: 1 }]]);
+  });
+
   it('applies a batch of another author under the own unsent edit', () => {
     const client = openDocument();
 

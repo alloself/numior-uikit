@@ -106,6 +106,73 @@ describe('NuiTable external editing', () => {
     expect(grid.focusedCell).toEqual({ row: 2, col: 2 });
   });
 
+  it('carries an open editor to another row with its draft, focus and caret', async () => {
+    const rows = staff(20);
+    const grid = mountStaff({ rows });
+    await grid.focusCell(1, 2);
+    await grid.press('F2');
+    await grid.typeInEditor('Тула');
+    grid.placeEditorCaret(1, 3);
+
+    expect(await grid.moveActive({ row: 3, col: 2 })).toBe(true);
+
+    expect(grid.editing).toEqual({ row: 3, col: 2 });
+    expect(grid.editorValue).toBe('Тула');
+    expect(grid.editorFocused).toBe(true);
+    expect(grid.editorCaret).toEqual([1, 3]);
+    expect(grid.draftModel).toEqual({ row: 3, col: 2, key: 'city', value: 'Тула' });
+    expect(grid.activeModel).toEqual({ row: 3, col: 2 });
+
+    await grid.press('Enter');
+
+    expect(grid.edits).toEqual([
+      { kind: 'edit', changes: [{ row: rows[3], key: 'city', value: 'Тула', previous: 'Москва' }] },
+    ]);
+  });
+
+  it('carries an editor driven from outside without taking the focus', async () => {
+    const grid = mountStaff();
+    const bar = formulaBar();
+    await grid.focusCell(1, 2);
+    await grid.focusOutside(bar);
+    await grid.startEdit('append', { focus: false });
+    await grid.setDraft({ row: 1, col: 2, key: 'city', value: 'Тула' });
+
+    expect(await grid.moveActive({ row: 4, col: 2 })).toBe(true);
+
+    expect(grid.editing).toEqual({ row: 4, col: 2 });
+    expect(grid.editorValue).toBe('Тула');
+    expect(document.activeElement).toBe(bar);
+  });
+
+  it('moves the active cell without an editor and keeps the focus where it was', async () => {
+    const grid = mountStaff();
+    const bar = formulaBar();
+    await grid.focusCell(2, 1);
+
+    expect(await grid.moveActive({ row: 5, col: 1 })).toBe(true);
+    expect(grid.focusedCell).toEqual({ row: 5, col: 1 });
+
+    await grid.focusOutside(bar);
+
+    expect(await grid.moveActive({ row: 7, col: 1 })).toBe(true);
+    expect(grid.activeModel).toEqual({ row: 7, col: 1 });
+    expect(document.activeElement).toBe(bar);
+    expect(await grid.moveActive({ row: 40, col: 1 })).toBe(false);
+  });
+
+  it('keeps the editor where it is when the new cell cannot be edited', async () => {
+    const grid = mountStaff();
+    await grid.focusCell(1, 2);
+    await grid.press('F2');
+    await grid.typeInEditor('Тула');
+
+    expect(await grid.moveActive({ row: 3, col: 0 })).toBe(false);
+
+    expect(grid.editing).toEqual({ row: 1, col: 2 });
+    expect(grid.editorValue).toBe('Тула');
+  });
+
   it('lets the editor grow past its cell only when the table asks for it', async () => {
     const fixed = mountStaff();
     await fixed.focusCell(1, 2);

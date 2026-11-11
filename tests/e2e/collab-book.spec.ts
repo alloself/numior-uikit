@@ -119,6 +119,40 @@ test.describe('collaboration on a workbook', () => {
     await expect(anna.sheet.cell('6', 0)).toHaveText('Борис');
   });
 
+  test('carries the cell someone types in when someone else inserts a row above', async ({
+    collab,
+  }) => {
+    const anna = await collab.joinBook(ANNA);
+    const boris = await collab.joinBook(BORIS);
+
+    await anna.sheet.startEdit('3', 0);
+    await anna.sheet.typeAtCaret('draft');
+    await anna.sheet.typeAtCaret('', 2);
+    await boris.sheet.cellMenu('1', 0, 'Вставить 1 строку выше');
+
+    await expect(anna.sheet.editorIn('4', 0)).toBeFocused();
+
+    await anna.sheet.typeAtCaret('X');
+    await anna.client.page.keyboard.press('Enter');
+
+    await expect(boris.sheet.cell('4', 0)).toHaveText('draXft');
+    await expect(anna.sheet.cell('4', 0)).toHaveText('draXft');
+    await expect(anna.sheet.cell('3', 0)).toHaveText('');
+  });
+
+  test('closes a draft with a note when someone else removes its row', async ({ collab }) => {
+    const anna = await collab.joinBook(ANNA);
+    const boris = await collab.joinBook(BORIS);
+
+    await anna.sheet.startEdit('3', 0);
+    await anna.sheet.typeAtCaret('draft');
+    await boris.sheet.cellMenu('3', 0, 'Удалить 1 строку');
+
+    await expect(anna.sheet.note).toContainText('удалил');
+    await expect(anna.sheet.editorIn('3', 0)).toHaveCount(0);
+    await expect(anna.sheet.cell('3', 0)).toHaveText('');
+  });
+
   test('adds a sheet for everyone', async ({ collab }) => {
     const anna = await collab.joinBook(ANNA);
     const boris = await collab.joinBook(BORIS);

@@ -295,6 +295,18 @@ export class BookSection {
     await this.page.keyboard.press('F2');
   }
 
+  editorIn(rowLabel: string, column: number): Locator {
+    return this.cell(rowLabel, column).locator('.nui-table__editor input');
+  }
+
+  async typeAtCaret(text: string, stepsBack = 0): Promise<void> {
+    for (let step = 0; step < stepsBack; step += 1) {
+      await this.page.keyboard.press('ArrowLeft');
+    }
+
+    await this.page.keyboard.type(text);
+  }
+
   async chooseSheet(name: string): Promise<void> {
     await this.sheetTab(name).click();
   }

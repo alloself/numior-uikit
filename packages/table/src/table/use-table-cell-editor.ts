@@ -22,6 +22,8 @@ import {
   type NuiTableEditRefusalReason,
   type TableCellEditorSpec,
   type NuiTableCellPosition,
+  type TableEditorLeave,
+  type TableEditorLink,
   type TableEditorPlan,
   type TableEditSession,
 } from './table.types';
@@ -58,7 +60,8 @@ export interface TableCellEditor<T> {
   input(value: unknown): void;
   receive(next: NuiTableDraft | undefined): void;
   start(mode: NuiTableEditMode, focus: boolean): boolean;
-  attach(flush: () => void): () => void;
+  carry(position: NuiTableCellPosition): boolean;
+  attach(link: TableEditorLink): () => void;
   commit(move: NuiTableEditMove): boolean;
   cancel(): void;
   onKeydown(event: KeyboardEvent): boolean;
@@ -97,6 +100,18 @@ type TableOpening =
 const DOUBLE_TAP = 300;
 const TAP_GRACE = 500;
 const GESTURE: TableOpening = { kind: 'gesture' };
+const LEFT_ALONE: TableEditorLeave = { focused: false, caret: undefined };
+
+const leaveOf = (links: ReadonlySet<TableEditorLink>): TableEditorLeave => {
+  let found = LEFT_ALONE;
+
+  for (const link of links) {
+    const leave = link.release();
+
+    found = leave.focused ? leave : found;
+  }
+  return found;
+};
 
 const isCellTarget = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement && target.matches('.nui-table__cell');
@@ -140,7 +155,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
   const session = shallowRef<TableEditSession<T>>();
   const draft = shallowRef<unknown>();
   const error = ref<string>();
-  const flushers = new Set<() => void>();
+  const links = new Set<TableEditorLink>();
   let tap: TableTap | undefined;
   let tapped = Number.NEGATIVE_INFINITY;
   let pointer = '';
@@ -192,6 +207,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
       spec,
       typed: opening.kind === TableOpeningKind.Typed ? opening.text : undefined,
       passive: opening.kind === TableOpeningKind.Start && !opening.focus,
+      caret: undefined,
     };
 
     error.value = undefined;
@@ -237,12 +253,43 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     return opened;
   };
 
-  const attach = (flush: () => void): (() => void) => {
-    flushers.add(flush);
+  const attach = (link: TableEditorLink): (() => void) => {
+    links.add(link);
 
     return () => {
-      flushers.delete(flush);
+      links.delete(link);
     };
+  };
+
+  const carry = (position: NuiTableCellPosition): boolean => {
+    const current = session.value;
+    const row = options.rowAt(position.row);
+    const key = options.keyAt(position.col);
+
+    if (
+      current === undefined ||
+      row === undefined ||
+      key === undefined ||
+      !options.editable(row, key) ||
+      options.plan(row, key).kind !== TableEditorPlanKind.Editor
+    ) {
+      return false;
+    }
+    const leave = leaveOf(links);
+
+    session.value = {
+      ...current,
+      position,
+      row,
+      key,
+      label: options.labelOf(key),
+      typed: undefined,
+      passive: !leave.focused,
+      caret: leave.caret,
+    };
+
+    setDraft(draft.value);
+    return true;
   };
 
   const outcomeOf = (current: TableEditSession<T>, control: unknown): TableEditOutcome => {
@@ -266,8 +313,8 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
   };
 
   const commit = (move: NuiTableEditMove): boolean => {
-    for (const flush of flushers) {
-      flush();
+    for (const link of links) {
+      link.flush();
     }
     const current = session.value;
 
@@ -421,6 +468,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     input,
     receive,
     start,
+    carry,
     attach,
     commit,
     cancel,

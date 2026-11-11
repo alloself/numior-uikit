@@ -2086,7 +2086,6 @@ const cellEditor = useTableCellEditor<T>({
     expanded,
     pageStart,
     () => rows,
-    () => columns,
     () => dataKeys.value.join('\u0000'),
   ],
   messages,
@@ -2416,6 +2415,7 @@ const editorProps = computed(() => {
         error: cellEditor.error.value,
         typed: current.typed,
         passive: current.passive,
+        caret: current.caret,
         grow: growEditor,
         keep: keepEditing,
         pick: picker.onKeydown,
@@ -2783,6 +2783,28 @@ const focusCellAt = (position: NuiTableCellPosition, scroll = true): boolean => 
   return true;
 };
 
+const moveActiveCell = (position: NuiTableCellPosition): boolean => {
+  if (!inBody(position)) {
+    return false;
+  }
+  const target = visualCellOf(position);
+
+  if (cellEditor.session.value !== undefined) {
+    if (!cellEditor.carry(position)) {
+      return false;
+    }
+    active.value = target;
+    focus.reveal(target);
+    return true;
+  }
+  if (viewport.value?.contains(document.activeElement) === true) {
+    focus.focusCell(target, false);
+  } else {
+    active.value = target;
+  }
+  return true;
+};
+
 const shareActive = (next: NuiTableCellPosition | undefined): void => {
   activeEchoes.sent(next);
   activeCell.value = next;
@@ -2950,6 +2972,7 @@ defineExpose<NuiTableExposed>({
     cellEditor.cancel();
   },
   focusCell: focusCellAt,
+  moveActive: moveActiveCell,
   invalidate,
 });
 </script>

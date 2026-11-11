@@ -23,6 +23,7 @@ import type {
   ConditionalLook,
   FontStyle,
   HelpLanguage,
+  LineChange,
   RecalcOptions,
   ReferenceSpan,
   SignaturePart,
@@ -291,6 +292,39 @@ export interface SheetSelectionOptions {
   readonly model: Ref<NuiSpreadsheetSelection | undefined>;
 }
 
+export interface SheetHeldRange {
+  readonly lines: CellRange;
+  readonly up: boolean;
+  readonly back: boolean;
+}
+
+export interface SheetHeldCell {
+  readonly line: CellAddress;
+  readonly position: NuiTableCellPosition;
+}
+
+export interface SheetHold {
+  readonly cells: SheetCells;
+  readonly active: SheetHeldCell | undefined;
+  readonly draft: SheetHeldCell | undefined;
+  readonly ranges: readonly SheetHeldRange[];
+}
+
+export interface SheetPlacesOptions {
+  readonly sheet: () => Sheet | undefined;
+  readonly cells: () => SheetCells | undefined;
+  readonly formula: FormulaBar;
+  readonly editing: SheetEditing;
+  readonly table: Readonly<ShallowRef<NuiTableExposed | null>>;
+  readonly messages: ComputedRef<NuiSpreadsheetMessages>;
+  readonly refuse: Refuse;
+}
+
+export interface SheetPlaces {
+  hold(): SheetHold | undefined;
+  restore(held: SheetHold | undefined, lines: readonly LineChange[]): void;
+}
+
 export interface SheetLinesOptions {
   readonly sheet: () => Sheet | undefined;
   readonly selection: SheetSelection;
@@ -342,6 +376,7 @@ export interface SheetEditing {
   readonly revision: Readonly<Ref<number>>;
   readonly commands: NuiTableCommandSink<number>;
   setDraft(next: NuiTableDraft | undefined): void;
+  moveDraft(position: NuiTableCellPosition): void;
   apply(steps: readonly WorkbookStep[], say?: RefusalText): boolean;
   attempt(steps: readonly WorkbookStep[]): StepRefusal | undefined;
   redraw(): void;
@@ -553,6 +588,7 @@ export const RecalcPhase = { Idle: 'idle', Running: 'running', Stopped: 'stopped
 export const NuiSpreadsheetRefusalReason = {
   ...StepRefusal,
   FillMerged: 'fill-merged',
+  CellGone: 'cell-gone',
   PivotSource: 'pivot-source',
   ChartData: 'chart-data',
   PictureFile: 'picture-file',

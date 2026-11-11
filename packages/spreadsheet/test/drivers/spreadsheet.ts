@@ -399,6 +399,20 @@ export class SpreadsheetDriver {
     return this.editorField !== null;
   }
 
+  get editingCell(): CellSpot | undefined {
+    const cell = this.editorField?.closest('[role="gridcell"]');
+    const label = cell?.parentElement?.querySelector('[role="rowheader"]')?.textContent?.trim();
+    const index = Number(cell?.getAttribute('aria-colindex'));
+
+    return label === undefined || Number.isNaN(index)
+      ? undefined
+      : { row: Number(label), col: index - 2 };
+  }
+
+  placeCaret(at: number): void {
+    this.editorField?.setSelectionRange(at, at);
+  }
+
   async focus(row: number, col: number): Promise<void> {
     this.cell(row, col)?.focus();
     await nextTick();
