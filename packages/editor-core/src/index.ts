@@ -152,6 +152,7 @@ export {
 } from './commands/input';
 export { isAtom } from './commands/atoms';
 export { setBlockType } from './commands/block-type';
+export { insertBelow } from './commands/below';
 export {
   chainCommands,
   deleteSelection,

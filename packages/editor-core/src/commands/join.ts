@@ -26,7 +26,7 @@ const EMPTY_SLICE = { content: [], openStart: 0, openEnd: 0 } as const;
 const isLeaf = (schema: Schema, node: ElementNode): boolean =>
   schema.nodes.get(node.type)?.inlineContent === true || isAtom(schema, node);
 
-const concealed = (state: EditorState, parent: ElementNode, index: number): boolean =>
+export const concealed = (state: EditorState, parent: ElementNode, index: number): boolean =>
   state.plugins.some((plugin) => plugin.props.conceals?.(parent, index, state) === true);
 
 const leafFrom = (

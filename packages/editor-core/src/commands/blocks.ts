@@ -42,13 +42,13 @@ interface LiftPlan {
 const typeOf = (schema: Schema, node: ContentNode | undefined) =>
   node?.kind === ContentNodeKind.Element ? schema.nodes.get(node.type) : undefined;
 
-const isList = (schema: Schema, node: ContentNode | undefined): boolean =>
+export const isList = (schema: Schema, node: ContentNode | undefined): boolean =>
   typeOf(schema, node)?.groups.has('list') === true;
 
-const isTextblock = (schema: Schema, node: ContentNode | undefined): boolean =>
+export const isTextblock = (schema: Schema, node: ContentNode | undefined): boolean =>
   typeOf(schema, node)?.inlineContent === true;
 
-const splices = (
+export const splices = (
   schema: Schema,
   parent: ElementNode,
   from: number,
@@ -211,7 +211,7 @@ export const wrapInList = (
   return true;
 };
 
-const PROBE_ID = 'probe';
+export const PROBE_ID = 'probe';
 
 const probeId = (): string => PROBE_ID;
 
