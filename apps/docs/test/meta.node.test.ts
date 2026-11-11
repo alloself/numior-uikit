@@ -55,6 +55,17 @@ describe('page meta', () => {
     expect(contentOf(head, 'og:url')).toBeUndefined();
   });
 
+  it('points at the Markdown copy of the page when it has one', () => {
+    const head = pageHead(site, { ...button, twin: '/en/components/button.md' });
+
+    expect(hrefsOf(head, 'alternate')).toEqual(['/en/components/button.md']);
+
+    expect(head).toContainEqual([
+      'link',
+      { rel: 'alternate', type: 'text/markdown', href: '/en/components/button.md' },
+    ]);
+  });
+
   it('points at the page and its other language once the site address is known', () => {
     const head = pageHead(published, button);
 

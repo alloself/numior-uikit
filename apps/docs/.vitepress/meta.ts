@@ -9,6 +9,7 @@ export interface PageMeta {
   readonly title: string;
   readonly description: string;
   readonly pages: readonly string[];
+  readonly twin?: string | undefined;
 }
 
 const SITE_NAME = 'Numior UI';
@@ -77,6 +78,11 @@ const addressHead = (site: DocsSite, meta: PageMeta): HeadConfig[] => {
   ];
 };
 
+const twinHead = (meta: PageMeta): HeadConfig[] =>
+  meta.twin === undefined
+    ? []
+    : [['link', { rel: 'alternate', type: 'text/markdown', href: meta.twin }]];
+
 export const pageHead = (site: DocsSite, meta: PageMeta): HeadConfig[] => {
   const locale = localeOfPage(meta.relativePath);
   const title = meta.title === '' || meta.title === SITE_NAME ? SITE_NAME : meta.title;
@@ -94,6 +100,7 @@ export const pageHead = (site: DocsSite, meta: PageMeta): HeadConfig[] => {
         { property: 'og:locale:alternate', content: OG_LOCALES[other] },
       ]),
     ['meta', { name: 'twitter:card', content: 'summary' }],
+    ...twinHead(meta),
     ...addressHead(site, meta),
   ];
 };

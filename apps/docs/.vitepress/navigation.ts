@@ -3,6 +3,7 @@ import type {
   DocsNavItem,
   DocsSidebarGroup,
   DocsSidebarSections,
+  NavEntry,
   NavGroup,
   NavSection,
   NavTitle,
@@ -23,6 +24,7 @@ const GUIDE: readonly NavGroup[] = [
       { link: '/guide/forms-validation', title: { ru: 'Валидация форм', en: 'Forms validation' } },
       { link: '/guide/accessibility', title: { ru: 'Доступность', en: 'Accessibility' } },
       { link: '/guide/typescript', title: 'TypeScript' },
+      { link: '/guide/ai', title: { ru: 'ИИ-ассистенты', en: 'AI assistants' } },
     ],
   },
   {
@@ -270,6 +272,21 @@ export const navigationTexts = (
       ...group.pages.map((page) => textOf(page.title, locale)),
     ]),
   ]);
+
+export const navigationPages = (
+  locale: ExampleLocale,
+  sections: readonly NavSection[] = NAVIGATION,
+): NavEntry[] =>
+  sections.flatMap((section) =>
+    section.groups.flatMap((group) =>
+      group.pages.map((page) => ({
+        link: localized(page.link, locale),
+        title: textOf(page.title, locale),
+        group: textOf(group.title, locale),
+        section: textOf(section.title, locale),
+      })),
+    ),
+  );
 
 export const navigationLinks = (sections: readonly NavSection[] = NAVIGATION): string[] =>
   sections.flatMap((section) =>

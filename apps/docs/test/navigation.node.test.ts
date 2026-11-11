@@ -6,6 +6,7 @@ import {
   localized,
   navOf,
   navigationLinks,
+  navigationPages,
   navigationTexts,
   sidebarOf,
 } from '../.vitepress/navigation';
@@ -77,6 +78,12 @@ describe('docs navigation', () => {
     ]);
 
     expect(navigationLinks(SHOP)).toEqual(['/guide/theming', '/composables/toast']);
+
+    expect(navigationPages('en', SHOP)).toEqual([
+      { link: '/en/guide/theming', title: 'Theming', group: 'Guide', section: 'Docs' },
+      { link: '/en/composables/toast', title: 'useToast', group: 'Hooks', section: 'Docs' },
+    ]);
+
     expect(localized('/guide/theming', 'ru')).toBe('/guide/theming');
   });
 

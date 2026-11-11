@@ -102,9 +102,11 @@ export class DocsSite {
   readonly languageButton: Locator;
   readonly commandDialog: Locator;
   readonly commandInput: Locator;
+  readonly copyPage: Locator;
 
   constructor(readonly page: Page) {
     this.header = page.locator('.nui-app-bar');
+    this.copyPage = page.getByRole('button', { name: 'Скопировать страницу' });
     this.sidebar = page.locator('aside.nui-sidebar');
     this.drawer = page.locator('dialog.nui-sidebar-drawer');
     this.trigger = page.locator('.nui-sidebar-trigger');
@@ -283,6 +285,12 @@ export class DocsSite {
 
   home(): DocsHome {
     return new DocsHome(this.page);
+  }
+
+  async markdownOf(path: string): Promise<string> {
+    const response = await this.page.request.get(path, { headers: { Accept: 'text/markdown' } });
+
+    return response.ok() ? response.text() : '';
   }
 
   stubClipboard(): Promise<void> {

@@ -46,6 +46,13 @@ export interface NavGroup {
   readonly pages: readonly NavPage[];
 }
 
+export interface NavEntry {
+  readonly link: string;
+  readonly title: string;
+  readonly group: string;
+  readonly section: string;
+}
+
 export interface NavSection {
   readonly title: NavTitle;
   readonly prefixes: readonly string[];
@@ -112,6 +119,7 @@ export interface DocsTexts {
   readonly invertTheme: string;
   readonly rtl: string;
   readonly copyCode: string;
+  readonly copyPage: string;
   readonly copied: string;
   readonly exampleFiles: string;
   readonly codeVariants: string;
@@ -190,6 +198,11 @@ export interface ExampleViewProps {
 export interface ExampleFrameProps {
   component: Component;
   files: readonly ExampleFile[];
+  texts: DocsTexts;
+}
+
+export interface CopyPageProps {
+  path: string;
   texts: DocsTexts;
 }
 

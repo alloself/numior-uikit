@@ -9,6 +9,9 @@ import { CODE_LANGUAGES, docsMarkdown } from './markdown';
 import { headingPermalink } from './markdown/anchors';
 import { docsDemo, demoRootOf } from './examples/demo';
 import { docsExamples } from './examples/plugin';
+import { writeLlms } from './llms/files';
+import { twinPaths } from './llms/paths';
+import { docsLlms } from './llms/plugin';
 import { isEnglishPage } from './markdown/env';
 import { descriptionOf, localeOfPage, pageHead } from './meta';
 import { navOf, sidebarOf } from './navigation';
@@ -38,6 +41,7 @@ const searchOptions: DocsSearchOptions = {
 };
 
 const origin = absoluteUrl(site, '');
+const twins = twinPaths();
 const descriptions = { ru: ru.description, en: en.description } as const;
 
 const highlighter = await createHighlighter({
@@ -82,10 +86,14 @@ export default defineConfigWithTheme<DocsThemeConfig>({
             title: pageData.title,
             description,
             pages: siteConfig.pages,
+            twin: twins.has(pageData.relativePath) ? `/${pageData.relativePath}` : undefined,
           }),
         ],
       },
     };
+  },
+  buildEnd: (siteConfig) => {
+    writeLlms(siteConfig.outDir, { srcDir: siteConfig.srcDir, examplesRoot, bundle, site });
   },
   markdown: {
     headers: { level: [2, 3] },
@@ -99,6 +107,7 @@ export default defineConfigWithTheme<DocsThemeConfig>({
       docsDemo(demoRootOf(examplesRoot)),
       docsExamples(examplesRoot, highlighter),
       docsReference(bundleFile, highlighter),
+      docsLlms({ examplesRoot, bundle, site }),
     ],
   },
   themeConfig: {
