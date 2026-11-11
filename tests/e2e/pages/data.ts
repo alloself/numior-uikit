@@ -67,7 +67,7 @@ export class DataSection {
     this.cardSoft = page.getByTestId('data-card-soft');
     this.cardDense = page.getByTestId('data-card-dense');
     this.cardLoading = page.getByTestId('data-card-loading');
-    this.cardLoadingToggle = page.getByTestId('data-card-loading-toggle').getByRole('switch');
+    this.cardLoadingToggle = page.getByTestId('data-card-loading-toggle');
     this.list = page.getByTestId('data-list');
     this.selectList = page.getByTestId('data-list-select');
     this.singleList = page.getByTestId('data-list-single');
