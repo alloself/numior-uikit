@@ -279,7 +279,7 @@ test.describe('layout', () => {
       .poll(() => layout.markerOf('overview'))
       .toEqual({ opacity: 1, width: 6, height: 6 });
 
-    expect((await layout.markerOf('calendar')).opacity).toBe(0);
+    await expect.poll(async () => (await layout.markerOf('calendar')).opacity).toBe(0);
 
     await layout.item('calendar').click();
 
@@ -289,7 +289,7 @@ test.describe('layout', () => {
     }
 
     await expect.poll(async () => (await layout.markerOf('calendar')).opacity).toBe(1);
-    expect((await layout.markerOf('overview')).opacity).toBe(0);
+    await expect.poll(async () => (await layout.markerOf('overview')).opacity).toBe(0);
 
     if (isMobile) {
       await layout.item('calendar').click();
