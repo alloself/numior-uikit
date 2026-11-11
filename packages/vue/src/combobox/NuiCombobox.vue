@@ -119,6 +119,7 @@ import {
   useLocale,
   useMessages,
   useSplitAttrs,
+  foldText,
   isComposing,
 } from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame.vue';
@@ -232,12 +233,17 @@ const query = computed(() =>
 
 const lower = (text: string): string => text.toLocaleLowerCase(locale.value);
 
-const lowered = computed(
-  () => new Map(flattenEntries(options).map((option) => [option, lower(option.label)])),
+const fold = (text: string): string => foldText(text, locale.value);
+
+const folded = computed(
+  () => new Map(flattenEntries(options).map((option) => [option, fold(option.label)])),
 );
 
-const defaultFilter = (option: NuiOption<T>, needle: string): boolean =>
-  (lowered.value.get(option) ?? lower(option.label)).includes(needle);
+const labelFilter = (needle: string): ((option: NuiOption<T>) => boolean) => {
+  const wanted = fold(needle);
+
+  return (option) => (folded.value.get(option) ?? fold(option.label)).includes(wanted);
+};
 
 const isEnabled = (option: NuiOption<T>): boolean => !option.disabled;
 
@@ -246,7 +252,12 @@ const filtered = computed(() => {
   if (filter === false || !typing.value || needle === '') {
     return options;
   }
-  return filterOptions(options, (option) => (filter ?? defaultFilter)(option, needle));
+  const custom = filter;
+
+  return filterOptions(
+    options,
+    custom === undefined ? labelFilter(needle) : (option) => custom(option, needle),
+  );
 });
 
 const showClear = computed(

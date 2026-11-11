@@ -21,6 +21,9 @@ Pass the options in `options` in the same shape as for a [Select](/en/components
 and `label`. The list keeps the options whose label contains the typed text. The `clearable` prop
 adds a clear button.
 
+The search ignores case, Latin accents and the difference between the Russian «е» and «ё». Your
+own function in `filter` gets the text in lower case only and compares on its own.
+
 ## Examples
 
 ### Several values

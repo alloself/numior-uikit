@@ -54,7 +54,8 @@ Kit писался с нуля: `engineering-quality.rule.md` требовал �
   `@numior/charts`, `@numior/table` и `@numior/spreadsheet` (`min`, `max`, `maxBy` вместо
   `Math.min(...values)`, который падает на 130 000 значений; правило `numior/spread-arguments`).
   В `@numior/primitives` единственное такое место (`number-step.ts`, три аргумента) записано
-  через `reduce`: базовый пакет зависимость от lodash не получил.
+  через `reduce`. С 2026-11-11 `lodash-es` — зависимость и `@numior/primitives`: `foldText`
+  (`intl/fold-text.ts`) снимает акценты латиницы через `deburr`.
 
 ## Alternatives Considered
 

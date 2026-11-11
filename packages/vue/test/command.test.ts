@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import type { NuiCommandSource } from '../src';
-import { CommandDriver } from './drivers/command';
+import { CommandDialogDriver, CommandDriver } from './drivers/command';
 
 const KEYED: NuiCommandSource<unknown> = [
   { key: 'home', value: 'home', label: 'Home' },
@@ -41,6 +41,35 @@ describe('NuiCommand', () => {
     expect(command.labels).toEqual([]);
     expect(command.emptyText).toBe('No results');
     expect(command.activeLabel).toBeUndefined();
+  });
+
+  it('finds a command typed without its accents or with «е» for «ё»', async () => {
+    const command = CommandDriver.mount({
+      props: {
+        items: [
+          { value: 'creme', label: 'Crème brûlée' },
+          { value: 'tree', label: 'Ёлка', keywords: ['Зелёная'] },
+          { value: 'home', label: 'Home' },
+        ],
+      },
+    });
+
+    await command.ready();
+    await command.type('creme bru');
+
+    expect(command.labels).toEqual(['Crème brûlée']);
+
+    await command.type('елка');
+
+    expect(command.labels).toEqual(['Ёлка']);
+
+    await command.type('зелен');
+
+    expect(command.labels).toEqual(['Ёлка']);
+
+    await command.type('HÖME');
+
+    expect(command.labels).toEqual(['Home']);
   });
 
   it('runs the highlighted command after the query is cleared when commands carry keys', async () => {
@@ -119,5 +148,24 @@ describe('NuiCommand', () => {
     const custom = CommandDriver.mount({ props: { placeholder: 'Go to…', label: 'Jump' } });
     expect(custom.placeholder).toBe('Go to…');
     expect(custom.listLabel).toBe('Jump');
+  });
+});
+
+describe('NuiCommandDialog', () => {
+  it('starts every opening with an empty query', async () => {
+    const palette = CommandDialogDriver.mount();
+
+    await palette.open();
+    await palette.type('dark');
+
+    expect(palette.labels).toEqual(['Toggle theme']);
+
+    await palette.close();
+    await palette.open();
+
+    expect(palette.query).toBe('');
+    expect(palette.labels).toEqual(['Home', 'Documentation', 'Toggle theme', 'Locked action']);
+
+    palette.unmount();
   });
 });

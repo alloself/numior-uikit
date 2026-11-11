@@ -18,7 +18,7 @@ import {
   type Command,
   type Schema,
 } from '@numior/editor-core';
-import type { IconSource } from '@numior/primitives';
+import { foldText, type IconSource } from '@numior/primitives';
 import type { NuiEditorMessages } from '../editor/editor.messages';
 import { type SlashItemKind } from '../suggest/suggest.types';
 
@@ -152,13 +152,13 @@ export const slashItems = (schema: Schema, texts: NuiEditorMessages): SlashComma
   }, []);
 
 export const filterSlash = (items: readonly SlashItem[], query: string): SlashItem[] => {
-  const needle = query.trim().toLocaleLowerCase();
+  const needle = foldText(query.trim());
 
   return needle === ''
     ? [...items]
     : items.filter(
         (item) =>
-          item.label.toLocaleLowerCase().includes(needle) ||
-          item.keywords.some((keyword) => keyword.startsWith(needle)),
+          foldText(item.label).includes(needle) ||
+          item.keywords.some((keyword) => foldText(keyword).startsWith(needle)),
       );
 };

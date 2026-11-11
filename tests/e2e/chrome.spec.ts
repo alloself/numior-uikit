@@ -183,12 +183,23 @@ test('the command palette opens on top, filters as you type and picks with the k
   await expect(chrome.commandDialog).toBeHidden();
   await expect(chrome.commandOutput).toHaveText('theme');
 
+  await chrome.commandOpen.click();
+  await expect(chrome.commandInput).toHaveValue('');
+  await expect(chrome.commandOptions()).toHaveCount(5);
+
+  await chrome.commandInput.fill('темизация');
+  await expect(chrome.commandOptions()).toHaveCount(1);
+
+  await page.keyboard.press('Escape');
+  await expect(chrome.commandDialog).toBeHidden();
+
   if (isMobile) {
     return;
   }
 
   await page.keyboard.press('Control+k');
   await expect(chrome.commandDialog).toBeVisible();
+  await expect(chrome.commandInput).toHaveValue('');
 
   await page.keyboard.press('Escape');
   await expect(chrome.commandDialog).toBeHidden();

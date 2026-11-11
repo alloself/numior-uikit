@@ -1,13 +1,15 @@
-import { mount, type DOMWrapper } from '@vue/test-utils';
+import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { nextTick } from 'vue';
 import {
   NuiCommand,
+  NuiCommandDialog,
   type NuiCommandItem,
   type NuiCommandProps,
   type NuiCommandSource,
   type NuiConfigOptions,
 } from '../../src';
 import { configPlugins } from '../support/config';
+import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
 
 export interface CommandMountOptions {
@@ -149,5 +151,62 @@ export class CommandDriver extends ComponentDriver {
     }
     option.element.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }));
     await nextTick();
+  }
+}
+
+export class CommandDialogDriver {
+  private constructor(
+    private readonly wrapper: VueWrapper,
+    private readonly stubs: TopLayerStubs,
+  ) {}
+
+  static mount(): CommandDialogDriver {
+    const stubs = new TopLayerStubs();
+
+    const wrapper: VueWrapper = mount(NuiCommandDialog, {
+      props: {
+        items: COMMANDS,
+        open: false,
+        'onUpdate:open': async (open: boolean) => {
+          await wrapper.setProps({ open });
+        },
+        'onUpdate:query': async (query: string) => {
+          await wrapper.setProps({ query });
+        },
+      },
+      attachTo: document.body,
+    });
+
+    return new CommandDialogDriver(wrapper, stubs);
+  }
+
+  private get input(): DOMWrapper<HTMLInputElement> {
+    return this.wrapper.find<HTMLInputElement>('.nui-command__input');
+  }
+
+  get query(): string {
+    return this.input.element.value;
+  }
+
+  get labels(): string[] {
+    return this.wrapper.findAll('[role="option"] .nui-row__title').map((title) => title.text());
+  }
+
+  async open(): Promise<void> {
+    await this.wrapper.setProps({ open: true });
+  }
+
+  async close(): Promise<void> {
+    await this.wrapper.setProps({ open: false });
+  }
+
+  async type(text: string): Promise<void> {
+    this.input.element.value = text;
+    await this.input.trigger('input');
+  }
+
+  unmount(): void {
+    this.stubs.restore();
+    this.wrapper.unmount();
   }
 }

@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { useLocale, useMessages } from '@numior/primitives';
+import { foldText, useLocale, useMessages } from '@numior/primitives';
 import { NuiButton, NuiCheckbox, NuiInput, NuiRadioGroup, type NuiOption } from '@numior/vue';
 import { computed, onMounted, ref, shallowRef, useTemplateRef } from 'vue';
 import { PivotSort, pivotKey, type CellValue } from '../../core';
@@ -85,12 +85,14 @@ const sorts = computed((): NuiOption<PivotSort>[] => [
   { value: PivotSort.Manual, label: texts.value.sortManual },
 ]);
 
+const folded = computed(() => items.map((item) => foldText(item.label)));
+
 const matches = computed((): readonly PivotItemView[] => {
-  const needle = query.value.trim().toLocaleLowerCase();
+  const needle = foldText(query.value.trim());
 
   return needle === ''
     ? items
-    : items.filter((item) => item.label.toLocaleLowerCase().includes(needle));
+    : items.filter((_item, index) => folded.value[index]?.includes(needle) === true);
 });
 
 const listed = computed(() => matches.value.slice(0, LISTED_ITEMS));

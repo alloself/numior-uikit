@@ -41,6 +41,9 @@ Choosing a command closes the dialog, and `:close-on-select="false"` keeps it op
 The palette looks for the typed text in the label, the description and the `keywords` list. This
 way the "Button" command is also found by "btn".
 
+The search ignores case, Latin accents and the difference between the Russian «е» and «ё», so
+"resume" finds "Résumé". The dialog opens with an empty query unless the app set one of its own.
+
 For server-side search pass `:filter="false"` and listen to the `search` event, which arrives with
 the query text. Pass the found commands to `items`, and turn on `loading` while they load.
 

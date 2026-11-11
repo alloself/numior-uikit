@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts" generic="T">
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { useHotkey, useMessages } from '@numior/primitives';
 import NuiDialog from '../dialog/NuiDialog.vue';
 import NuiKbd from '../kbd/NuiKbd.vue';
@@ -84,6 +84,20 @@ const onSelect = (item: NuiCommandItem<T>): void => {
     open.value = false;
   }
 };
+
+let left: string | undefined;
+
+watch(open, (shown) => {
+  if (!shown) {
+    left = query.value;
+    return;
+  }
+  if (query.value === left) {
+    query.value = '';
+  }
+
+  left = undefined;
+});
 
 useHotkey(
   () => (hotkey === false ? '' : (hotkey ?? 'mod+k')),

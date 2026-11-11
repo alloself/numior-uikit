@@ -92,6 +92,27 @@ describe('NuiCombobox', () => {
     combobox.unmount();
   });
 
+  it('finds an option typed without its accents or with «е» for «ё»', async () => {
+    const combobox = ComboboxDriver.mount({
+      props: {
+        options: [
+          { value: 'creme', label: 'Crème brûlée' },
+          { value: 'tree', label: 'Ёлка' },
+        ],
+      },
+    });
+
+    await combobox.type('brul');
+
+    expect(combobox.optionLabels).toEqual(['Crème brûlée']);
+
+    await combobox.type('елк');
+
+    expect(combobox.optionLabels).toEqual(['Ёлка']);
+
+    combobox.unmount();
+  });
+
   it('shows loading and empty states and clears the active option when nothing matches', async () => {
     const combobox = ComboboxDriver.mount();
     await combobox.receive({ loading: true });
