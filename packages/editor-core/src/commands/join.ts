@@ -1,9 +1,11 @@
+import { sumBy } from 'lodash-es';
 import type { Doc, ResolvedPos } from '../doc/doc.types';
-import { nodeSize } from '../model/node';
+import { childOffsets, nodeSize } from '../model/node';
 import { ContentNodeKind, type ContentNode, type ElementNode } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
 import { textSelection } from '../state/selection';
 import type { Command, Dispatch, EditorState, Transaction } from '../state/state.types';
+import { StepKind, type StepSpan } from '../transform/step.types';
 import { attempt } from './attempt';
 import { isAtom } from './atoms';
 import { textCursor } from './cursor';
@@ -15,10 +17,15 @@ interface Leaf {
   readonly pos: number;
 }
 
+interface Kept {
+  readonly node: ContentNode;
+  readonly pos: number;
+}
+
 interface Removal {
   readonly from: number;
   readonly to: number;
-  readonly fill: readonly ContentNode[];
+  readonly fill: readonly Kept[];
 }
 
 const EMPTY_SLICE = { content: [], openStart: 0, openEnd: 0 } as const;
@@ -87,41 +94,67 @@ const adjacentLeaf = (state: EditorState, cursor: ResolvedPos, side: Side): Leaf
   return undefined;
 };
 
-const spliced = (
+const placed = (parent: ElementNode, start: number): Kept[] => {
+  const offsets = childOffsets(parent);
+
+  return parent.content.map((node, index) => ({ node, pos: start + (offsets[index] ?? 0) }));
+};
+
+const around = (
   parent: ElementNode,
+  start: number,
   index: number,
-  content: readonly ContentNode[],
-): ContentNode[] => [
-  ...parent.content.slice(0, index),
-  ...content,
-  ...parent.content.slice(index + 1),
-];
+  inner: readonly Kept[],
+): Kept[] => {
+  const all = placed(parent, start);
+
+  return [...all.slice(0, index), ...inner, ...all.slice(index + 1)];
+};
+
+const opened = (kept: readonly Kept[]): Kept[] =>
+  kept.flatMap((entry) =>
+    entry.node.kind === ContentNodeKind.Element ? placed(entry.node, entry.pos + 1) : [entry],
+  );
+
+const nodesOf = (kept: readonly Kept[]): ContentNode[] => kept.map((entry) => entry.node);
 
 const fits = (schema: Schema, parent: ElementNode, content: readonly ContentNode[]): boolean =>
   content.length > 0 &&
   schema.nodes.get(parent.type)?.content.matchContent(content)?.validEnd === true;
 
-const unwrapped = (nodes: readonly ContentNode[]): ContentNode[] =>
-  nodes.flatMap((node) => (node.kind === ContentNodeKind.Element ? node.content : [node]));
-
 const removalOf = (doc: Doc, pos: number): Removal | undefined => {
   const inside = doc.resolve(pos + 1);
-  let fill: readonly ContentNode[] = [];
+  let fill: readonly Kept[] = [];
 
   for (let depth = inside.depth - 1; depth >= 0; depth -= 1) {
     const parent = inside.node(depth);
+    const start = inside.start(depth);
     const index = inside.indexAt(depth);
 
-    const found = [fill, unwrapped(fill)].find((content) =>
-      fits(doc.schema, parent, spliced(parent, index, content)),
+    const found = [fill, opened(fill)].find((content) =>
+      fits(doc.schema, parent, nodesOf(around(parent, start, index, content))),
     );
 
     if (found !== undefined) {
       return { from: inside.before(depth + 1), to: inside.after(depth + 1), fill: found };
     }
-    fill = spliced(parent, index, fill);
+    fill = around(parent, start, index, fill);
   }
   return undefined;
+};
+
+const spanOf = (kept: readonly Kept[]): StepSpan | undefined => {
+  const first = kept[0];
+  const last = kept.at(-1);
+
+  if (first === undefined || last === undefined) {
+    return undefined;
+  }
+  const to = last.pos + nodeSize(last.node);
+
+  return sumBy(kept, (entry) => nodeSize(entry.node)) === to - first.pos
+    ? { from: first.pos, to }
+    : undefined;
 };
 
 const flowed = (doc: Doc, into: ElementNode, from: Leaf): ContentNode[] => {
@@ -145,9 +178,102 @@ const removed = (tr: Transaction, doc: Doc, pos: number): boolean => {
   if (removal === undefined) {
     return false;
   }
-  tr.replace(removal.from, removal.to, { content: removal.fill, openStart: 0, openEnd: 0 });
+  const { from, to, fill } = removal;
+  const gap = spanOf(fill);
+
+  const lifted =
+    gap !== undefined &&
+    tr.maybeStep({
+      kind: StepKind.ReplaceAround,
+      from,
+      to,
+      gapFrom: gap.from,
+      gapTo: gap.to,
+      slice: EMPTY_SLICE,
+      insert: 0,
+    }).ok;
+
+  if (!lifted) {
+    tr.replace(from, to, { content: nodesOf(fill), openStart: 0, openEnd: 0 });
+  }
   return true;
 };
+
+const stripped = (tr: Transaction, doc: Doc, into: ElementNode, from: Leaf): boolean => {
+  const type = doc.schema.nodes.get(into.type);
+
+  const texts = from.node.content.flatMap((node) =>
+    node.kind === ContentNodeKind.Text ? [node] : [],
+  );
+
+  if (type?.code === true && texts.length < from.node.content.length) {
+    return false;
+  }
+
+  const banned = new Set(
+    texts.flatMap((node) =>
+      node.marks.flatMap((mark) => (type?.marks.has(mark.type) === true ? [] : [mark.type])),
+    ),
+  );
+
+  for (const mark of banned) {
+    tr.removeMark(from.pos + 1, from.pos + nodeSize(from.node) - 1, mark);
+  }
+  return true;
+};
+
+const standsAlone = (doc: Doc, leaf: Leaf): boolean => {
+  const removal = removalOf(doc, leaf.pos);
+
+  return (
+    removal?.fill.length === 0 &&
+    removal.from === leaf.pos &&
+    removal.to === leaf.pos + nodeSize(leaf.node)
+  );
+};
+
+const pulledBeside = (tr: Transaction, doc: Doc, left: Leaf, right: Leaf): boolean => {
+  const after = left.pos + nodeSize(left.node);
+  const to = right.pos + nodeSize(right.node);
+
+  return (
+    standsAlone(doc, right) &&
+    stripped(tr, doc, left.node, right) &&
+    tr.maybeStep({ kind: StepKind.Move, from: right.pos, to, target: after }).ok &&
+    tr.maybeStep({ kind: StepKind.Replace, from: after - 1, to: after + 1, slice: EMPTY_SLICE }).ok
+  );
+};
+
+const pouredInto = (tr: Transaction, doc: Doc, left: Leaf, right: Leaf): boolean => {
+  const from = right.pos + 1;
+  const to = right.pos + nodeSize(right.node) - 1;
+  const target = left.pos + nodeSize(left.node) - 1;
+
+  if (
+    !stripped(tr, doc, left.node, right) ||
+    (from < to && !tr.maybeStep({ kind: StepKind.Move, from, to, target }).ok)
+  ) {
+    return false;
+  }
+  const emptied = tr.doc.positionOf(right.node.id);
+
+  return emptied !== undefined && removed(tr, tr.doc, emptied);
+};
+
+const copiedInto = (tr: Transaction, doc: Doc, left: Leaf, right: Leaf): boolean => {
+  const content = flowed(doc, left.node, right);
+
+  if (!removed(tr, doc, right.pos)) {
+    return false;
+  }
+
+  if (content.length > 0) {
+    tr.insert(left.pos + nodeSize(left.node) - 1, content);
+  }
+  return true;
+};
+
+const JOINS = [pulledBeside, pouredInto, copiedInto] as const;
 
 const joinLeaves = (
   state: EditorState,
@@ -155,21 +281,17 @@ const joinLeaves = (
   right: Leaf,
   dispatch: Dispatch | undefined,
 ): boolean =>
-  attempt(state, dispatch, (tr) => {
-    const content = flowed(state.doc, left.node, right);
-    const start = removed(tr, state.doc, right.pos) ? tr.doc.positionOf(left.node.id) : undefined;
+  JOINS.some((join) =>
+    attempt(state, dispatch, (tr) => {
+      const start = join(tr, state.doc, left, right) ? tr.doc.positionOf(left.node.id) : undefined;
 
-    if (start === undefined) {
-      return false;
-    }
-    const end = start + nodeSize(left.node) - 1;
-
-    if (content.length > 0) {
-      tr.insert(end, content);
-    }
-    tr.setSelection(textSelection(end));
-    return true;
-  });
+      if (start === undefined) {
+        return false;
+      }
+      tr.setSelection(textSelection(start + nodeSize(left.node) - 1));
+      return true;
+    }),
+  );
 
 const leaveEmpty = (
   state: EditorState,

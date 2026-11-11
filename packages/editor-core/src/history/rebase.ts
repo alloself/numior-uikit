@@ -49,6 +49,7 @@ interface Moved {
 interface Walk {
   pos: number;
   at: number;
+  mend: number;
   deleted: boolean;
   deletedBefore: boolean;
   deletedAfter: boolean;
@@ -59,6 +60,8 @@ interface Hit {
   readonly index: number;
   readonly offset: number;
 }
+
+const NO_MEND = -1;
 
 const onSideOf = (map: StepMap, pos: number, assoc: Assoc): Hit | undefined => {
   const index = map.ranges.findIndex((range) => {
@@ -126,6 +129,7 @@ const recovered = (
 const walkFrom = (pos: number): Walk => ({
   pos,
   at: 0,
+  mend: NO_MEND,
   deleted: false,
   deletedBefore: false,
   deletedAfter: false,
@@ -169,6 +173,22 @@ const reached = ({
   deletedAcross,
 });
 
+const mends = (chain: MirrorMaps, left: Walk, right: Walk): boolean => {
+  const at = left.at;
+  const twin = chain.mirrors.get(at);
+  const closes = left.mend === at;
+
+  if (chain.maps[at]?.kind !== StepMapKind.Move || (!closes && left.mend !== NO_MEND)) {
+    return false;
+  }
+  if (!closes && twin === undefined) {
+    return false;
+  }
+  left.mend = closes || twin === undefined ? NO_MEND : twin;
+  right.mend = left.mend;
+  return true;
+};
+
 const together = (chain: MirrorMaps, left: Walk, right: Walk, outward: boolean): boolean => {
   const map = chain.maps[left.at];
 
@@ -183,11 +203,16 @@ const together = (chain: MirrorMaps, left: Walk, right: Walk, outward: boolean):
   }
   const span = map.mapSpan(left.pos, right.pos, outward);
 
-  if (span === undefined) {
+  if (span !== undefined) {
+    passed(left, span.from);
+    passed(right, span.to);
+    return true;
+  }
+  if (!mends(chain, left, right)) {
     return false;
   }
-  passed(left, span.from);
-  passed(right, span.to);
+  advance(chain, left, outward ? -1 : 1);
+  advance(chain, right, outward ? 1 : -1);
   return true;
 };
 

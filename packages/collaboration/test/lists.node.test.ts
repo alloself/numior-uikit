@@ -1,5 +1,4 @@
 import {
-  createDoc,
   liftAtStart,
   liftListItem,
   sinkListItem,
@@ -7,70 +6,25 @@ import {
   splitListItem,
   textSelection,
   toggleList,
-  type Command,
   type Doc,
-  type ElementNode,
 } from '@numior/editor-core';
 import { fixtureSchema } from '@numior/editor-core/fixtures';
 import { describe, expect, it } from 'vite-plus/test';
 import { exitEmptyLast } from '../../editor-core/src/commands/blocks';
-import { createNetwork, type CollabNetwork, type NetworkClient } from './harness/network';
+import { createNetwork } from './harness/network';
 
-interface Place {
-  readonly block: string;
-  readonly offset: number;
-}
-
-interface Race {
-  readonly doc: Doc;
-  readonly command: Command;
-  readonly caret: Place;
-  readonly typed: Place;
-}
-
-type Order = (
-  ann: NetworkClient,
-  bob: NetworkClient,
-  typing: () => void,
-  acting: () => void,
-) => void;
-
-const ORDERS: readonly (readonly [string, Order])[] = [
-  [
-    'when the typed text reaches the server first',
-    (ann, _bob, typing, acting) => {
-      typing();
-      ann.toServer();
-      acting();
-    },
-  ],
-  [
-    'when the command reaches the server first',
-    (_ann, bob, typing, acting) => {
-      acting();
-      bob.toServer();
-      typing();
-    },
-  ],
-];
-
-const paragraph = (id: string, text: string): ElementNode =>
-  fixtureSchema.element('paragraph', {
-    id,
-    content: text === '' ? [] : [fixtureSchema.text(text)],
-  });
-
-const item = (id: string, text: string, ...rest: readonly ElementNode[]): ElementNode =>
-  fixtureSchema.element('list_item', { id, content: [paragraph(`${id}-text`, text), ...rest] });
-
-const list = (id: string, ...items: readonly ElementNode[]): ElementNode =>
-  fixtureSchema.element('bullet_list', { id, content: items });
-
-const page = (...blocks: readonly ElementNode[]): Doc =>
-  createDoc(
-    fixtureSchema,
-    fixtureSchema.element(fixtureSchema.top.name, { id: 'root', content: blocks }),
-  );
+import {
+  ORDERS,
+  at,
+  item,
+  list,
+  page,
+  pairOf,
+  paragraph,
+  raced,
+  sameDocs,
+  textsOf,
+} from './harness/races';
 
 const three = (): Doc => page(list('list', item('a', 'one'), item('b', 'two'), item('c', 'three')));
 
@@ -90,55 +44,6 @@ const quote = (): Doc =>
       content: [paragraph('q0', 'first'), paragraph('q1', 'second'), paragraph('q2', '')],
     }),
   );
-
-const at = (client: NetworkClient, place: Place): number =>
-  (client.state().doc.positionOf(place.block) ?? 0) + 1 + place.offset;
-
-const textOf = (client: NetworkClient): string => {
-  const { doc } = client.state();
-
-  return doc.textBetween(0, doc.size, '|');
-};
-
-const raced = (race: Race, order: Order): CollabNetwork => {
-  const network = createNetwork(race.doc, ['ann', 'bob']);
-  const [ann, bob] = network.clients;
-
-  network.settle();
-
-  if (ann === undefined || bob === undefined) {
-    throw new Error('The network has no two clients');
-  }
-
-  order(
-    ann,
-    bob,
-    () => {
-      ann.edit((tr) => {
-        tr.insertText('ANN', at(ann, race.typed));
-      });
-    },
-    () => {
-      bob.edit((tr) => {
-        tr.setSelection(textSelection(at(bob, race.caret)));
-      });
-
-      bob.run(race.command);
-    },
-  );
-
-  network.settle();
-
-  return network;
-};
-
-const textsOf = (network: CollabNetwork): readonly string[] => network.clients.map(textOf);
-
-const sameDocs = (network: CollabNetwork): boolean => {
-  const [first, second] = network.docs();
-
-  return JSON.stringify(first) === JSON.stringify(second);
-};
 
 describe.each(ORDERS)(
   'a list item taken out of its list while someone types %s',
@@ -251,13 +156,9 @@ describe.each(ORDERS)(
   (_name, order) => {
     it('keeps a paragraph someone split off inside the item', () => {
       const network = createNetwork(three(), ['ann', 'bob']);
-      const [ann, bob] = network.clients;
+      const [ann, bob] = pairOf(network);
 
       network.settle();
-
-      if (ann === undefined || bob === undefined) {
-        throw new Error('The network has no two clients');
-      }
 
       order(
         ann,
