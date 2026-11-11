@@ -50,6 +50,10 @@
     "packages/spreadsheet/crosscheck/excel.ts",
     "playwright.bench.config.ts",
     "tests/bench/**/*.spec.ts",
+    "playwright.parity.config.ts",
+    "tests/parity/*.spec.ts",
+    "tests/parity/cli.ts",
+    "tests/parity/css-cli.ts",
     "apps/playground/src/bench/main.ts",
     "apps/playground/src/collab/main.ts",
     "apps/playground/collab-dev-server.ts"
