@@ -8,6 +8,7 @@ import {
 import { XmlElement, XmlText, type XmlFragment } from 'yjs';
 import { commonRun, commonText } from './common-run';
 import { deltaRuns, ID_ATTRIBUTE, type DeltaRun } from './from-yjs';
+import { risingRun } from './rising-run';
 
 type Wanted =
   | { readonly kind: typeof ContentNodeKind.Text; readonly runs: readonly TextNode[] }
@@ -171,6 +172,69 @@ const updated = (known: Known, child: YChild | undefined, wanted: Wanted | undef
   }
 };
 
+const keyOf = (type: string, id: unknown): string => `${type} ${String(id)}`;
+
+const childKey = (child: YChild): string | undefined =>
+  child instanceof XmlElement ? keyOf(child.nodeName, child.getAttribute(ID_ATTRIBUTE)) : undefined;
+
+const placesOf = (wanted: readonly Wanted[]): ReadonlyMap<string, number> =>
+  wanted.reduce((places, item, index) => {
+    if (item.kind === ContentNodeKind.Element) {
+      places.set(keyOf(item.node.type, item.node.id), index);
+    }
+    return places;
+  }, new Map<string, number>());
+
+const dropOthers = (
+  parent: XmlFragment,
+  start: number,
+  count: number,
+  kept: ReadonlySet<number>,
+): void => {
+  let end = count;
+
+  for (let index = count - 1; index >= -1; index -= 1) {
+    if (index >= 0 && !kept.has(index)) {
+      continue;
+    }
+    if (end - index > 1) {
+      parent.delete(start + index + 1, end - index - 1);
+    }
+    end = index;
+  }
+};
+
+const syncMiddle = (
+  known: Known,
+  parent: XmlFragment,
+  start: number,
+  current: readonly YChild[],
+  wanted: readonly Wanted[],
+): void => {
+  const places = placesOf(wanted);
+  const targets = current.map((child) => places.get(childKey(child) ?? '') ?? -1);
+  const kept = risingRun(targets);
+
+  const staying = current.reduce((children, child, index) => {
+    if (kept.has(index)) {
+      children.set(targets[index] ?? -1, child);
+    }
+    return children;
+  }, new Map<number, YChild>());
+
+  dropOthers(parent, start, current.length, kept);
+
+  wanted.forEach((item, index) => {
+    const child = staying.get(index);
+
+    if (child === undefined) {
+      created(known, parent, start + index, item);
+    } else {
+      updated(known, child, item);
+    }
+  });
+};
+
 export const syncChildren = (
   known: Known,
   parent: XmlFragment,
@@ -193,11 +257,11 @@ export const syncChildren = (
     updated(known, child, wanted[wanted.length - tail + index]);
   });
 
-  if (current.length - head - tail > 0) {
-    parent.delete(head, current.length - head - tail);
-  }
-
-  wanted.slice(head, wanted.length - tail).forEach((item, index) => {
-    created(known, parent, head + index, item);
-  });
+  syncMiddle(
+    known,
+    parent,
+    head,
+    current.slice(head, current.length - tail),
+    wanted.slice(head, wanted.length - tail),
+  );
 };
