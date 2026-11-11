@@ -29,6 +29,9 @@ stay in place while the page scrolls, and each scrolls on its own.
 
 ## Behaviour
 
+The `footer` slot renders a footer. With `header="full"` it spans the full width under the menu and
+the content, and with `header="inset"` it sits under the content.
+
 On screens up to 48rem wide the menu moves into a sliding [Drawer](/en/components/drawer). The
 `NuiSidebarTrigger` button opens it, and picking an item closes it. `mobileQuery` sets the width
 at which this happens.

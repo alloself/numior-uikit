@@ -81,6 +81,7 @@
     <input class="editor" type="text" />
     <p>Content</p>
     <template v-if="end" #end><nav>Outline</nav></template>
+    <template v-if="footer" #footer><footer>Legal</footer></template>
   </NuiLayout>
 </template>
 
@@ -111,6 +112,7 @@ const {
   label,
   header,
   end,
+  footer = false,
   sticky,
   collapsibleGroup,
   variant,
@@ -124,6 +126,7 @@ const {
   label?: string | undefined;
   header: NuiLayoutHeader;
   end: boolean;
+  footer?: boolean;
   sticky: boolean;
   collapsibleGroup: boolean;
   variant: NuiSidebarVariant;

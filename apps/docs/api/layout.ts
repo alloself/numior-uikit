@@ -66,6 +66,10 @@ const docs: DocsMap = {
         ru: 'Колонка после содержимого, например оглавление.',
         en: 'Column after the content, such as a table of contents.',
       },
+      footer: {
+        ru: 'Подвал. С `header="full"` занимает всю ширину под боковой панелью и содержимым, с `header="inset"` стоит под содержимым.',
+        en: 'Footer. With `header="full"` it spans the full width under the sidebar and the content, with `header="inset"` it sits under the content.',
+      },
     },
     keyboard: [
       {

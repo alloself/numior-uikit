@@ -22,11 +22,13 @@
         <component :is="contentAs" :id="contentId" class="nui-layout__content">
           <slot />
         </component>
+        <slot v-if="header === NuiLayoutHeader.Inset" name="footer" />
       </div>
       <div v-if="$slots.end" class="nui-layout__end">
         <slot name="end" />
       </div>
     </div>
+    <slot v-if="header === NuiLayoutHeader.Full" name="footer" />
   </div>
 </template>
 
@@ -54,7 +56,13 @@ const {
 const open = defineModel<boolean>('open', { default: true });
 const mobileOpen = defineModel<boolean>('mobileOpen', { default: false });
 
-defineSlots<{ sidebar?(): unknown; header?(): unknown; default?(): unknown; end?(): unknown }>();
+defineSlots<{
+  sidebar?(): unknown;
+  header?(): unknown;
+  default?(): unknown;
+  end?(): unknown;
+  footer?(): unknown;
+}>();
 
 const mobile = useMediaQuery(() => mobileQuery);
 const mounted = ref(false);

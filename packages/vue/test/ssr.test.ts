@@ -759,6 +759,19 @@ describe('server rendering', () => {
     expect(toc).toContain('nui-toc--marker-square');
   });
 
+  it('renders the footer of the shell after its row on the server', async () => {
+    const site = await renderToString(LayoutScene, { props: { header: 'full', footer: true } });
+    const app = await renderToString(LayoutScene, { props: { footer: true } });
+
+    expect(site).toContain('</div><!----></div><!--[--><footer>Legal</footer><!--]--></div>');
+
+    expect(app).toContain(
+      '<p>Content</p><!--]--></div><!--[--><footer>Legal</footer><!--]--></div>',
+    );
+
+    expect(await renderToString(LayoutScene)).not.toContain('<footer>');
+  });
+
   it('renders the app shell with an expanded sidebar and no drawer on the server', async () => {
     const html = await renderToString(LayoutScene, { props: { variant: 'inset' } });
 

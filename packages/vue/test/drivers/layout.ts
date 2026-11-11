@@ -24,6 +24,7 @@ export interface LayoutMountOptions {
   readonly config?: NuiConfigOptions;
   readonly header?: NuiLayoutHeader;
   readonly end?: boolean;
+  readonly footer?: boolean;
   readonly sticky?: boolean;
   readonly collapsibleGroup?: boolean;
   readonly variant?: NuiSidebarVariant;
@@ -65,6 +66,7 @@ export class LayoutDriver extends ComponentDriver {
     config,
     header = 'inset',
     end = false,
+    footer = false,
     sticky = false,
     collapsibleGroup = false,
     variant = 'panel',
@@ -85,6 +87,7 @@ export class LayoutDriver extends ComponentDriver {
         label,
         header,
         end,
+        footer,
         sticky,
         collapsibleGroup,
         variant,
@@ -144,6 +147,21 @@ export class LayoutDriver extends ComponentDriver {
     const row = this.wrapper.find('.nui-layout__row').element;
 
     return (bar.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+  }
+
+  get footerParent(): string | undefined {
+    return this.wrapper.find('footer').element.parentElement?.className;
+  }
+
+  get footerFollowsContent(): boolean {
+    const content = this.wrapper.find('.nui-layout__content').element;
+    const footer = this.wrapper.find('footer').element;
+
+    return (content.compareDocumentPosition(footer) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+  }
+
+  get hasFooter(): boolean {
+    return this.wrapper.find('footer').exists();
   }
 
   get endColumn(): DOMWrapper<Element> {

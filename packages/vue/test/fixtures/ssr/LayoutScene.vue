@@ -1,5 +1,5 @@
 <template>
-  <NuiLayout id="shell" content-as="div">
+  <NuiLayout id="shell" content-as="div" :header="header">
     <template #sidebar>
       <NuiSidebar collapsible="icon" :variant="variant" :marker="marker" label="Sections">
         <NuiSidebarContent>
@@ -19,6 +19,7 @@
       </NuiAppBar>
     </template>
     <p>Content</p>
+    <template v-if="footer" #footer><footer>Legal</footer></template>
   </NuiLayout>
 </template>
 
@@ -31,12 +32,20 @@ import {
   NuiSidebarGroup,
   NuiSidebarItem,
   NuiSidebarTrigger,
+  type NuiLayoutHeader,
   type NuiSidebarMarker,
   type NuiSidebarVariant,
 } from '../../../src';
 
-const { variant, marker } = defineProps<{
+const {
+  variant,
+  marker,
+  header = 'inset',
+  footer = false,
+} = defineProps<{
   variant?: NuiSidebarVariant | undefined;
   marker?: NuiSidebarMarker | undefined;
+  header?: NuiLayoutHeader;
+  footer?: boolean;
 }>();
 </script>

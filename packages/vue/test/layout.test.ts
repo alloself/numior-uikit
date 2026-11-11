@@ -209,6 +209,28 @@ describe('NuiLayout with NuiSidebar', () => {
     inset.unmount();
   });
 
+  it('puts the footer under the whole row with a full header and under the content with an inset one', async () => {
+    const site = LayoutDriver.mount({ header: 'full', footer: true });
+
+    await site.ready();
+    expect(site.footerParent).toContain('nui-layout--header-full');
+    expect(site.footerFollowsContent).toBe(true);
+
+    site.unmount();
+    const app = LayoutDriver.mount({ footer: true });
+
+    await app.ready();
+    expect(app.footerParent).toBe('nui-layout__body');
+    expect(app.footerFollowsContent).toBe(true);
+
+    app.unmount();
+    const bare = LayoutDriver.mount();
+
+    expect(bare.hasFooter).toBe(false);
+
+    bare.unmount();
+  });
+
   it('collapses a group behind its label and reveals a sub list when a child becomes current', async () => {
     const layout = LayoutDriver.mount({ collapsibleGroup: true });
     expect(layout.groupToggle.attributes('aria-expanded')).toBe('true');
