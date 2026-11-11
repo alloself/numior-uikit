@@ -4,7 +4,7 @@ import {
   type DecorationSet,
   type InlineDecoration,
 } from '../decorations/decorations.types';
-import { ContentNodeKind, type NodeId } from '../model/node.types';
+import { ContentNodeKind, type ElementNode, type NodeId } from '../model/node.types';
 import type { EditorState } from '../state/state.types';
 
 export interface LocalDecoration {
@@ -17,6 +17,11 @@ export interface LocalDecoration {
 interface PlacedDecoration {
   readonly id: NodeId;
   readonly decoration: LocalDecoration;
+}
+
+interface PlacedRanges {
+  readonly root: ElementNode;
+  readonly blocks: BlockDecorations;
 }
 
 export type BlockDecorations = ReadonlyMap<NodeId, readonly LocalDecoration[]>;
@@ -117,31 +122,86 @@ export const sameSets = (
   right: readonly DecorationSet[],
 ): boolean => left.length === right.length && left.every((set, index) => set === right[index]);
 
+const NONE: BlockDecorations = new Map();
+
+const ranges = new WeakMap<DecorationSet, PlacedRanges>();
+
+const anchored = new WeakMap<DecorationSet, BlockDecorations>();
+
+const rangesOf = (state: EditorState, set: DecorationSet): BlockDecorations => {
+  if (set.decorations.length === 0) {
+    return NONE;
+  }
+
+  const known = ranges.get(set);
+
+  if (known?.root === state.doc.root) {
+    return known.blocks;
+  }
+
+  const blocks = new Map<NodeId, LocalDecoration[]>();
+  const limit = state.doc.root.size - 2;
+
+  for (const decoration of set.decorations) {
+    if (decoration.from >= 0 && decoration.to <= limit) {
+      piecesOf(state, decoration).forEach((part) => {
+        addTo(blocks, part.id, part.decoration);
+      });
+    }
+  }
+
+  ranges.set(set, { root: state.doc.root, blocks });
+  return blocks;
+};
+
+const anchoredOf = (state: EditorState, set: DecorationSet): BlockDecorations => {
+  if (set.blocks.length === 0) {
+    return NONE;
+  }
+
+  const known = anchored.get(set);
+
+  if (known !== undefined) {
+    return known;
+  }
+
+  const blocks = new Map<NodeId, LocalDecoration[]>();
+
+  for (const decoration of set.blocks) {
+    if (fitsBlock(state, decoration)) {
+      addTo(blocks, decoration.block, {
+        from: decoration.from,
+        to: decoration.to,
+        class: decoration.class,
+        tag: decoration.tag,
+      });
+    }
+  }
+
+  anchored.set(set, blocks);
+  return blocks;
+};
+
+const laidOver = (
+  blocks: Map<NodeId, readonly LocalDecoration[]>,
+  part: BlockDecorations,
+): void => {
+  for (const [id, list] of part) {
+    const known = blocks.get(id);
+
+    blocks.set(id, known === undefined ? list : [...known, ...list]);
+  }
+};
+
 export const blockDecorations = (
   state: EditorState,
   sets: readonly DecorationSet[],
 ): BlockDecorations => {
-  const blocks = new Map<NodeId, LocalDecoration[]>();
-  const limit = state.doc.root.size - 2;
+  const blocks = new Map<NodeId, readonly LocalDecoration[]>();
 
   for (const set of sets) {
-    for (const decoration of set.decorations) {
-      if (decoration.from >= 0 && decoration.to <= limit) {
-        piecesOf(state, decoration).forEach((part) => {
-          addTo(blocks, part.id, part.decoration);
-        });
-      }
-    }
-    for (const decoration of set.blocks) {
-      if (fitsBlock(state, decoration)) {
-        addTo(blocks, decoration.block, {
-          from: decoration.from,
-          to: decoration.to,
-          class: decoration.class,
-          tag: decoration.tag,
-        });
-      }
-    }
+    laidOver(blocks, rangesOf(state, set));
+    laidOver(blocks, anchoredOf(state, set));
   }
   return blocks;
 };
@@ -154,9 +214,12 @@ const signatureOf = (decorations: readonly LocalDecoration[] | undefined): strin
     .join(' ');
 
 export const changedBlocks = (before: BlockDecorations, after: BlockDecorations): NodeId[] =>
-  [...new Set([...before.keys(), ...after.keys()])].filter(
-    (id) => signatureOf(before.get(id)) !== signatureOf(after.get(id)),
-  );
+  [...new Set([...before.keys(), ...after.keys()])].filter((id) => {
+    const earlier = before.get(id);
+    const later = after.get(id);
+
+    return earlier !== later && signatureOf(earlier) !== signatureOf(later);
+  });
 
 export const segmentsOf = (
   decorations: readonly LocalDecoration[],
