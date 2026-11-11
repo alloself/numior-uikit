@@ -18,6 +18,9 @@ import {
   createPropagateJob,
   createSiblingSortJob,
   flattenTree,
+  shownUnder,
+  splicedRefs,
+  subtreeEnd,
   walkTree,
   type TreeLists,
   type TreeTable,
@@ -70,6 +73,7 @@ const DEFAULT_SLICE_MS = 12;
 const DEFAULT_DISTINCT_LIMIT = 100;
 const DETAIL_REF = 2 ** 30;
 const NO_DETAILS: readonly number[] = [];
+const FEW_TOGGLES = 8;
 
 const hasCodes = (
   store: ColumnStore | undefined,
@@ -333,6 +337,15 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     return { phase: 'filter', job: setup, next: passStage };
   };
 
+  const aggregatesOf = (plan: Plan<T>): AggregateColumn<T>[] =>
+    plan.aggregates.flatMap((column): AggregateColumn<T>[] => {
+      const store = stores.get(column.key);
+
+      return store === undefined || column.aggregate === undefined
+        ? []
+        : [{ key: column.key, store, aggregate: column.aggregate }];
+    });
+
   const groupStage = (
     plan: Plan<T>,
     filtered: Uint32Array,
@@ -348,15 +361,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       return store === undefined ? [] : [{ column: columnOf(key), store }];
     });
 
-    const aggregates = plan.aggregates.flatMap((column): AggregateColumn<T>[] => {
-      const store = stores.get(column.key);
-
-      return store === undefined || column.aggregate === undefined
-        ? []
-        : [{ key: column.key, store, aggregate: column.aggregate }];
-    });
-
-    const job = createGroupJob(table.rows, filtered, levels, aggregates);
+    const job = createGroupJob(table.rows, filtered, levels, aggregatesOf(plan));
 
     return {
       phase: 'group',
@@ -394,19 +399,29 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
   ): PipelineStage | null => {
     const tree = buildTreeLists(pass, table.parents);
 
-    const complete = (): null => {
-      finish({ filtered: new Uint32Array(0), groups: null, tree, groupDepth: 0 });
+    const complete = (groups: GroupTable | null): null => {
+      finish({ filtered: new Uint32Array(0), groups, tree, groupDepth: 0 });
       return null;
+    };
+
+    const totalStage = (): PipelineStage | null => {
+      if (plan.aggregates.length === 0) {
+        return complete(null);
+      }
+
+      const job = createGroupJob(table.rows, compactPass(pass), [], aggregatesOf(plan));
+
+      return { phase: 'group', job, next: () => complete(job.result()) };
     };
 
     const keys = orderKeysOf(plan);
 
     return keys.length === 0
-      ? complete()
+      ? totalStage()
       : {
           phase: 'sort',
           job: createSiblingSortJob(tree, (indices) => createOrderJob(indices, keys)),
-          next: complete,
+          next: totalStage,
         };
   };
 
@@ -654,13 +669,68 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     return found;
   };
 
+  const positionOf = (id: TableNodeId): number =>
+    options.keyOf === undefined
+      ? visible.indexOf(Number(id))
+      : visible.findIndex((index) => idOf(index) === id);
+
+  const redrawUnder = (tree: TreeLists, id: TableNodeId): void => {
+    const position = positionOf(id);
+    const index = visible[position];
+
+    if (index === undefined) {
+      return;
+    }
+
+    visible = splicedRefs(
+      visible,
+      position + 1,
+      subtreeEnd(visible, table.depths, position),
+      isExpanded(id) ? shownUnder(tree, index, (child) => isExpanded(idOf(child))) : [],
+    );
+  };
+
+  const retoggle = (changed: readonly TableNodeId[]): void => {
+    const { tree } = prepared;
+
+    if (changed.length === 0) {
+      return;
+    }
+    if (tree === null || changed.length > FEW_TOGGLES) {
+      refresh();
+      return;
+    }
+    for (const id of changed) {
+      redrawUnder(tree, id);
+    }
+  };
+
   const setExpanded = (id: TableNodeId, expanded: boolean): void => {
+    if (expanded === isExpanded(id)) {
+      return;
+    }
     if (expanded === defaultExpanded) {
       toggled.delete(id);
     } else {
       toggled.add(id);
     }
-    refresh();
+    retoggle([id]);
+  };
+
+  const setToggled = (ids: Iterable<TableNodeId>): void => {
+    const next = new Set(ids);
+
+    const changed = [
+      ...Array.from(toggled).filter((id) => !next.has(id)),
+      ...Array.from(next).filter((id) => !toggled.has(id)),
+    ];
+
+    toggled.clear();
+
+    for (const id of next) {
+      toggled.add(id);
+    }
+    retoggle(changed);
   };
 
   const distinctStage = (
@@ -725,6 +795,36 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     }
   };
 
+  const retotal = (plan: Plan<T>): void => {
+    for (const column of plan.aggregates) {
+      forget(column.key);
+    }
+
+    const rows = prepared.filtered;
+    const outcome: { groups: GroupTable | null } = { groups: null };
+
+    const pipeline = createPipeline(
+      storesStage(plan.needs, () => {
+        const job = createGroupJob(table.rows, rows, [], aggregatesOf(plan));
+
+        return {
+          phase: 'group',
+          job,
+          next: () => {
+            outcome.groups = job.result();
+            return null;
+          },
+        };
+      }),
+    );
+
+    pipeline?.work(Number.POSITIVE_INFINITY);
+
+    if (outcome.groups !== null) {
+      prepared = { ...prepared, groups: outcome.groups };
+    }
+  };
+
   const patch = (query: TableQuery, keys: readonly string[]): void => {
     const changed = new Set(keys);
 
@@ -733,10 +833,15 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     }
     rowsVersion += 1;
 
-    if (options.children !== undefined || prepared.groups === null) {
+    if (prepared.groups === null) {
       return;
     }
     const plan = planOf(query);
+
+    if (prepared.tree !== null) {
+      retotal(plan);
+      return;
+    }
 
     if (plan.groupBy.some((key) => changed.has(key))) {
       runSync(query);
@@ -857,14 +962,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       setExpanded(node.id, !node.expanded);
     },
     setExpanded,
-    setToggled: (ids) => {
-      toggled.clear();
-
-      for (const id of ids) {
-        toggled.add(id);
-      }
-      refresh();
-    },
+    setToggled,
     isExpanded,
     totals: () => prepared.groups?.totals ?? {},
     distinct: async (key, distinctOptions = {}) => {

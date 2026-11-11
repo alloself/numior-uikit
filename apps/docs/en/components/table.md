@@ -110,6 +110,9 @@ When the children are not loaded yet, mark the row with `hasChildren`. On expand
 the `load` event and shows the children once they arrive. A click on the arrow expands the row
 without moving the focus or selecting a cell.
 
+The totals row of a tree counts every row left after the filters, collapsed ones included. The
+parents of found rows stay in the tree and count too.
+
 <Example name="table/Tree" />
 
 ### Row details

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { TableDriver, type TableMountOptions } from './drivers/table';
+import type { NuiTableColumn } from '../src';
 import { FILE_COLUMNS, FILES, type FileNode } from './support/files';
 
 const SIBLINGS: readonly FileNode[] = [
@@ -16,6 +17,10 @@ const SIBLINGS: readonly FileNode[] = [
     items: [{ path: 'b/file', name: 'file', size: 1 }],
   },
 ];
+
+const SUMMED_COLUMNS: readonly NuiTableColumn<FileNode>[] = FILE_COLUMNS.map((column) =>
+  column.key === 'size' && column.type === 'number' ? { ...column, aggregate: 'sum' } : column,
+);
 
 const mounted: Array<{ unmount(): void }> = [];
 
@@ -136,5 +141,19 @@ describe('NuiTable tree rows', () => {
     expect(grid.rowExpanded(1)).toBe('true');
     expect(grid.chevron(1)).not.toBeNull();
     expect(grid.chevron(1)).not.toBe(innerChevron);
+  });
+
+  it('sums a column of a tree into the totals row, collapsed rows included, and follows the filter', async () => {
+    const grid = mountFiles({ columns: SUMMED_COLUMNS });
+
+    await grid.nextPaint();
+
+    expect(grid.cellText(3, 0)).toBe('Итого7 строк');
+    expect(grid.cellText(3, 1)).toBe('11');
+
+    await grid.setQuick('md');
+
+    expect(grid.cellText(2, 0)).toBe('Итого4 строки');
+    expect(grid.cellText(2, 1)).toBe('10');
   });
 });
