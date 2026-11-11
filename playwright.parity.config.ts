@@ -6,6 +6,7 @@ import { PROFILES } from './tests/parity/profiles';
 const TARGET = process.env.PARITY_TARGET ?? 'all';
 
 const URLS = { playground: 'http://127.0.0.1:4173', docs: 'http://127.0.0.1:4174' };
+const RASTER = ['--disable-partial-raster'];
 const SPECS = { playground: /playground\.spec\.ts$/, docs: /docs\.spec\.ts$/ };
 
 const profiles = PROFILES.filter((profile) => TARGET === 'all' || profile.target === TARGET);
@@ -25,6 +26,7 @@ export default defineConfig<ParityOptions>({
     testMatch: SPECS[profile.target],
     use: {
       browserName: 'chromium',
+      launchOptions: { args: RASTER },
       baseURL: URLS[profile.target],
       viewport: { width: profile.width, height: profile.height },
       deviceScaleFactor: profile.dpr,

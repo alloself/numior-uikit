@@ -2,6 +2,7 @@ import type { CollectOptions, Note, RawNode, RawScene, SeekOptions } from './par
 
 export const collect = ({ root, properties }: CollectOptions): RawScene => {
   const skipped = new Set(['SCRIPT', 'STYLE', 'LINK', 'META', 'TITLE', 'HEAD', 'TEMPLATE']);
+  const margins = new Set(['margin-top', 'margin-right', 'margin-bottom', 'margin-left']);
   const values: string[] = [];
   const indexes = new Map<string, number>();
   const nodes: RawNode[] = [];
@@ -26,8 +27,15 @@ export const collect = ({ root, properties }: CollectOptions): RawScene => {
 
   const styleOf = (element: Element, pseudo: string | null): number[] => {
     const style = getComputedStyle(element, pseudo);
+    const computed = pseudo === null ? element.computedStyleMap() : undefined;
 
-    return properties.map((name) => intern(style.getPropertyValue(name)));
+    return properties.map((name) =>
+      intern(
+        margins.has(name)
+          ? (computed?.get(name)?.toString() ?? style.getPropertyValue(name))
+          : style.getPropertyValue(name),
+      ),
+    );
   };
 
   const rectOf = (element: Element): string => {
@@ -101,6 +109,12 @@ export const freezeMotion = (): number => {
   }, 0);
 };
 
+export const dropMountMarkers = (): void => {
+  document.querySelectorAll('.nui-icon--appearing').forEach((icon) => {
+    icon.classList.remove('nui-icon--appearing');
+  });
+};
+
 export const recordMotion = async (root: string): Promise<Note[]> => {
   const origin = document.querySelector(root);
 
@@ -112,9 +126,12 @@ export const recordMotion = async (root: string): Promise<Note[]> => {
 
   const frame = (): Promise<void> => {
     return new Promise((resolve) => {
-      view.requestAnimationFrame(() => {
+      const observer = new view.IntersectionObserver(() => {
+        observer.disconnect();
         resolve();
       });
+
+      observer.observe(origin);
     });
   };
 
@@ -190,14 +207,54 @@ export const seekMotion = ({ root, progress }: SeekOptions): void => {
     });
 };
 
-export const nextFrame = (): Promise<void> => {
-  return new Promise((resolve) => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
+export const showCurrentLinks = (): void => {
+  const scrolling = new Set(['auto', 'scroll']);
+
+  const scrollerOf = (element: HTMLElement): HTMLElement | null => {
+    let node = element.parentElement;
+
+    while (
+      node !== null &&
+      !(scrolling.has(getComputedStyle(node).overflowY) && node.scrollHeight > node.clientHeight)
+    ) {
+      node = node.parentElement;
+    }
+
+    return node;
+  };
+
+  document.querySelectorAll<HTMLElement>('[aria-current="page"]').forEach((current) => {
+    const scroller = scrollerOf(current);
+
+    if (scroller === null) {
+      return;
+    }
+
+    scroller.scrollTop = 0;
+    const item = current.getBoundingClientRect();
+    const frame = scroller.getBoundingClientRect();
+
+    if (item.top < frame.top || item.bottom > frame.bottom) {
+      scroller.scrollTop = item.top - frame.top - (frame.height - item.height) / 2;
+    }
+  });
+};
+
+export const clockNow = (): number => {
+  return Date.now();
+};
+
+export const nextFrame = async (): Promise<void> => {
+  for (let rendered = 0; rendered < 2; rendered += 1) {
+    await new Promise<void>((resolve) => {
+      const observer = new IntersectionObserver(() => {
+        observer.disconnect();
         resolve();
       });
+
+      observer.observe(document.documentElement);
     });
-  });
+  }
 };
 
 export const fontsReady = async (): Promise<void> => {

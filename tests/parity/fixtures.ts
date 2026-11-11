@@ -1,8 +1,10 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { test as base } from '../e2e/fixtures';
 import { sectionScope } from '../e2e/helpers/axe';
 import {
+  clockNow,
   collect,
+  dropMountMarkers,
   fontsReady,
   freezeMotion,
   nextFrame,
@@ -11,6 +13,7 @@ import {
   scrollPageTo,
   seedRandom,
   seekMotion,
+  showCurrentLinks,
 } from './page-scripts';
 import { DEFAULT_PROFILE } from './profiles';
 import { PROPERTIES } from './properties';
@@ -27,6 +30,11 @@ interface ParityFixtures {
 
 const OUTPUT = process.env.PARITY_OUT ?? 'test-results/parity';
 const FIXED_NOW = new Date('2026-11-11T09:00:00Z');
+const TIMED_SECONDS = 31;
+const SECOND = 1000;
+const FRAME = 16;
+const HELD_FRAMES = 4;
+const HOLD_LEAD = 250;
 const SETTLE_ROUNDS = 60;
 const QUIET_ROUNDS = 3;
 const SHOT = { animations: 'disabled', caret: 'hide', scale: 'device' } as const;
@@ -36,6 +44,7 @@ const RUNNING = { playbackRate: 1 };
 
 export class SceneRecorder {
   private pending = 0;
+  private held = false;
 
   constructor(
     private readonly page: Page,
@@ -69,6 +78,31 @@ export class SceneRecorder {
     if (quiet < QUIET_ROUNDS) {
       throw new Error('The page never came to rest');
     }
+
+    await this.page.evaluate(dropMountMarkers);
+  }
+
+  async finishTimers(): Promise<void> {
+    for (let second = 0; second < TIMED_SECONDS; second += 1) {
+      await this.page.clock.fastForward(SECOND);
+    }
+  }
+
+  async showCurrentLinks(): Promise<void> {
+    await this.page.evaluate(showCurrentLinks);
+    await this.page.evaluate(nextFrame);
+  }
+
+  async holdTimers(): Promise<void> {
+    const now = await this.page.evaluate(clockNow);
+
+    await this.page.clock.pauseAt(now + HOLD_LEAD);
+    this.held = true;
+  }
+
+  async releaseTimers(): Promise<void> {
+    await this.page.clock.resume();
+    this.held = false;
   }
 
   async reveal(): Promise<void> {
@@ -88,12 +122,25 @@ export class SceneRecorder {
     await this.store(name, root, () => this.shoot(shot));
   }
 
-  async motion(name: string, root: string, act: () => Promise<void>): Promise<void> {
+  async motion(
+    name: string,
+    root: string,
+    act: () => Promise<void>,
+    pointer?: Locator,
+  ): Promise<void> {
+    await pointer?.hover();
+    await this.settle();
     const session = await this.page.context().newCDPSession(this.page);
 
     await session.send('Animation.enable');
     await session.send('Animation.setPlaybackRate', FROZEN);
+
     await act();
+
+    if (this.held) {
+      await this.page.clock.runFor(HELD_FRAMES * FRAME);
+    }
+
     await this.quiet();
     const notes = await this.page.evaluate(recordMotion, root);
 
@@ -101,10 +148,11 @@ export class SceneRecorder {
       throw new Error(`Nothing moved in ${name}`);
     }
 
-    await this.page.evaluate(seekMotion, { root, progress: 0 });
+    await this.seek(root, 0);
     await this.store(`${name}--first-frame`, root, () => this.page.screenshot(LIVE_SHOT), notes);
-    await this.page.evaluate(seekMotion, { root, progress: 0.5 });
+    await this.seek(root, 0.5);
     await this.store(`${name}--half-way`, root, () => this.page.screenshot(LIVE_SHOT));
+
     await session.send('Animation.setPlaybackRate', RUNNING);
     await session.detach();
     await this.settle();
@@ -119,6 +167,11 @@ export class SceneRecorder {
 
     await target.and(this.page.locator(':not(.panel--away)')).waitFor();
     await this.capture(name, sectionScope(section), target);
+  }
+
+  private async seek(root: string, progress: number): Promise<void> {
+    await this.page.evaluate(seekMotion, { root, progress });
+    await this.page.evaluate(nextFrame);
   }
 
   private async quiet(): Promise<void> {

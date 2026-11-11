@@ -15,6 +15,7 @@ const routesIn = (folder: string): string[] =>
 
 const ROUTES = ['/', ...routesIn('guide'), ...routesIn('components')];
 const OPENED_BY_BUTTON = ['dialog', 'drawer', 'menu', 'popover', 'date-picker'];
+const TIMED = ['toast'];
 const OPENED_BY_COMBOBOX = ['select', 'combobox'];
 
 const POPOVER_SIDES = ['Сверху', 'Справа', 'Снизу у края', 'Слева'];
@@ -39,6 +40,8 @@ for (const route of ROUTES) {
   test(`page ${route}`, async ({ docs, scenes }) => {
     await docs.open(route);
     await scenes.reveal();
+    await scenes.finishTimers();
+    await scenes.showCurrentLinks();
     await scenes.capture(sceneOf(route), 'html', 'page');
   });
 }
@@ -46,6 +49,8 @@ for (const route of ROUTES) {
 test('example frame options', async ({ docs, scenes }) => {
   test.skip(!scenes.profile.states || scenes.profile.width < PHONE_WIDTH);
   await docs.open('/components/button');
+  await scenes.finishTimers();
+  await scenes.showCurrentLinks();
   const example = docs.example();
 
   await example.invertTheme.click();
@@ -65,6 +70,8 @@ test('example frame options', async ({ docs, scenes }) => {
 test('configurator options', async ({ docs, scenes }) => {
   test.skip(!scenes.profile.states || scenes.profile.width < PHONE_WIDTH);
   await docs.open('/components/button');
+  await scenes.finishTimers();
+  await scenes.showCurrentLinks();
   const configurator = docs.configurator();
 
   await configurator.choose('variant', 'soft');
@@ -77,6 +84,8 @@ test('configurator options', async ({ docs, scenes }) => {
 test('shell surfaces', async ({ docs, scenes, page }) => {
   test.skip(!scenes.profile.states);
   await docs.open('/components/input');
+  await scenes.finishTimers();
+  await scenes.showCurrentLinks();
   await docs.themeButton.click();
   await scenes.capture('states/shell--theme-menu', 'html', 'viewport');
   await page.keyboard.press('Escape');
@@ -92,8 +101,12 @@ test('shell surfaces', async ({ docs, scenes, page }) => {
 test('shell drawer', async ({ docs, scenes }) => {
   test.skip(!scenes.profile.states || scenes.profile.width >= PHONE_WIDTH);
   await docs.open('/components/input');
+  await scenes.finishTimers();
+  await scenes.showCurrentLinks();
   await docs.trigger.click();
   await expect(docs.drawer).toBeVisible();
+
+  await scenes.showCurrentLinks();
 
   await scenes.capture('states/shell--drawer', 'html', 'viewport');
 });
@@ -101,6 +114,8 @@ test('shell drawer', async ({ docs, scenes }) => {
 test('missing page', async ({ docs, scenes }) => {
   test.skip(!scenes.profile.states);
   await docs.open('/components/absent');
+  await scenes.finishTimers();
+  await scenes.showCurrentLinks();
   await scenes.capture('states/shell--not-found', 'html', 'viewport');
 });
 
@@ -108,6 +123,8 @@ for (const name of OPENED_BY_BUTTON) {
   test(`opened ${name} example`, async ({ docs, scenes }) => {
     test.skip(!scenes.profile.states);
     await docs.open(`/components/${name}`);
+    await scenes.finishTimers();
+    await scenes.showCurrentLinks();
     await docs.example().preview.getByRole('button').first().click();
     await scenes.capture(`states/${name}--open`, 'html', 'viewport');
   });
@@ -117,6 +134,8 @@ for (const name of OPENED_BY_COMBOBOX) {
   test(`opened ${name} example`, async ({ docs, scenes }) => {
     test.skip(!scenes.profile.states);
     await docs.open(`/components/${name}`);
+    await scenes.finishTimers();
+    await scenes.showCurrentLinks();
     await docs.example().preview.getByRole('combobox').first().click();
     await scenes.capture(`states/${name}--open`, 'html', 'viewport');
   });
@@ -125,6 +144,8 @@ for (const name of OPENED_BY_COMBOBOX) {
 test('focused and hovered input example', async ({ docs, scenes }) => {
   test.skip(!scenes.profile.states);
   await docs.open('/components/input');
+  await scenes.finishTimers();
+  await scenes.showCurrentLinks();
   const field = docs.example().preview.getByRole('textbox').first();
 
   await field.press('Shift');
@@ -137,12 +158,21 @@ test('focused and hovered input example', async ({ docs, scenes }) => {
 test('popover motion on every side', async ({ docs, scenes, page }) => {
   test.skip(!scenes.profile.states);
   await docs.open('/components/popover');
+  await scenes.finishTimers();
+  await scenes.showCurrentLinks();
 
   for (const [index, side] of POPOVER_SIDES.entries()) {
     const trigger = docs.article.getByRole('button', { name: side, exact: true });
 
     await trigger.scrollIntoViewIfNeeded();
-    await scenes.motion(`states/popover-side-${index}-enter`, 'html', () => trigger.click());
+
+    await scenes.motion(
+      `states/popover-side-${index}-enter`,
+      'html',
+      () => trigger.click(),
+      trigger,
+    );
+
     await scenes.capture(`states/popover-side-${index}`, 'html', 'viewport');
 
     await scenes.motion(`states/popover-side-${index}-leave`, 'html', () =>
@@ -154,6 +184,8 @@ test('popover motion on every side', async ({ docs, scenes, page }) => {
 test('tooltip motion above and below', async ({ docs, scenes, page }) => {
   test.skip(!scenes.profile.states);
   await docs.open('/components/tooltip');
+  await scenes.finishTimers();
+  await scenes.showCurrentLinks();
 
   for (const [index, name] of TOOLTIP_TRIGGERS.entries()) {
     const trigger = docs.example().preview.getByRole('button', { name, exact: true });
@@ -168,17 +200,25 @@ for (const name of ['dialog', 'drawer', 'menu', 'toast']) {
   test(`${name} motion in the first example`, async ({ docs, scenes }) => {
     test.skip(!scenes.profile.states);
     await docs.open(`/components/${name}`);
+    await scenes.finishTimers();
+    await scenes.showCurrentLinks();
     const trigger = docs.example().preview.getByRole('button').first();
 
-    await scenes.motion(`states/${name}-enter`, 'html', () => trigger.click());
+    if (TIMED.includes(name)) {
+      await scenes.holdTimers();
+    }
+
+    await scenes.motion(`states/${name}-enter`, 'html', () => trigger.click(), trigger);
   });
 }
 
 test('select list motion', async ({ docs, scenes, page }) => {
   test.skip(!scenes.profile.states);
   await docs.open('/components/select');
+  await scenes.finishTimers();
+  await scenes.showCurrentLinks();
   const trigger = docs.example().preview.getByRole('combobox').first();
 
-  await scenes.motion('states/select-enter', 'html', () => trigger.click());
+  await scenes.motion('states/select-enter', 'html', () => trigger.click(), trigger);
   await scenes.motion('states/select-leave', 'html', () => page.keyboard.press('Escape'));
 });
