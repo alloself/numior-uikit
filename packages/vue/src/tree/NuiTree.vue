@@ -271,7 +271,7 @@ const nodeOf = (value: T): TreeItemState | undefined => {
     level: node.level,
     setSize: node.setSize,
     posInSet: node.posInSet,
-    expanded: node.hasChildren ? node.expanded : undefined,
+    expanded: node.hasChildren ? node.open : undefined,
     checked: checkable ? ariaChecked(checkStates.value.get(key)) : undefined,
     loading: node.loading,
   };

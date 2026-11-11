@@ -28,8 +28,12 @@ test.describe('tree', () => {
     const docs = tree.item(tree.tree, 'Документация');
     await tree.toggleOf(docs).click();
     await expect(docs).toHaveAttribute('aria-busy', 'true');
+    await expect(docs).toHaveAttribute('aria-expanded', 'false');
+    await expect(tree.openFolderOf(docs)).toHaveCSS('opacity', '0');
     await expect(tree.item(tree.tree, 'Руководство.md')).toBeVisible();
     await expect(docs).not.toHaveAttribute('aria-busy', 'true');
+    await expect(docs).toHaveAttribute('aria-expanded', 'true');
+    await expect(tree.openFolderOf(docs)).toHaveCSS('opacity', '1');
     await expect.poll(async () => (await tree.readOutput()).loaded).toEqual(['docs']);
   });
 

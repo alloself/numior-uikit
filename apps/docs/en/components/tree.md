@@ -46,6 +46,10 @@ A node with `lazy` and without `children` can be expanded even though it has no 
 expand the tree emits the `load` event and shows a loading indicator until the application adds
 the children to `items`.
 
+The value of the node enters `v-model:expanded` at once. The folder stays closed and
+`aria-expanded` is `false` until the children arrive: a node looks expanded when it has rows
+under it.
+
 If the folder was checked, the children that arrive are checked too.
 
 <Example name="tree/Lazy" />

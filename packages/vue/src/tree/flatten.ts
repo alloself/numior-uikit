@@ -10,6 +10,7 @@ export interface TreeNode<T> {
   readonly posInSet: number;
   readonly hasChildren: boolean;
   readonly expanded: boolean;
+  readonly open: boolean;
   readonly loading: boolean;
 }
 
@@ -40,6 +41,7 @@ const visit = <T>(
       posInSet: index + 1,
       hasChildren,
       expanded,
+      open: expanded && item.children !== undefined,
       loading,
     });
 

@@ -89,7 +89,10 @@ const docs: DocsMap = {
         ru: 'Срабатывает, когда узел выбирают или меняют его отметку.',
         en: 'Fires when a node is selected or its check changes.',
       },
-      expand: { ru: 'Срабатывает, когда узел раскрывают.', en: 'Fires when a node is expanded.' },
+      expand: {
+        ru: 'Срабатывает, когда узел раскрывают. У узла с `lazy` приходит сразу, до загрузки детей.',
+        en: 'Fires when a node is expanded. For a node with `lazy` it comes at once, before its children load.',
+      },
       collapse: {
         ru: 'Срабатывает, когда узел сворачивают.',
         en: 'Fires when a node is collapsed.',
@@ -101,8 +104,8 @@ const docs: DocsMap = {
     },
     slots: {
       item: {
-        ru: 'Своя разметка строки. Получает `item`, `level`, `expanded`, `selected`, `checked` и `loading`.',
-        en: 'Custom row markup. Receives `item`, `level`, `expanded`, `selected`, `checked` and `loading`.',
+        ru: 'Своя разметка строки. Получает `item`, `level`, `expanded`, `selected`, `checked` и `loading`. `expanded` становится `true`, когда дети узла показаны.',
+        en: 'Custom row markup. Receives `item`, `level`, `expanded`, `selected`, `checked` and `loading`. `expanded` turns `true` once the children of the node are shown.',
       },
       empty: { ru: 'Что показать, когда узлов нет.', en: 'Content shown when there are no nodes.' },
     },

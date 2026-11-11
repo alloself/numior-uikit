@@ -435,7 +435,6 @@ describe('NuiTree', () => {
     await tree.clickToggle('docs');
     expect(tree.loads).toEqual(['docs']);
     expect(tree.attr('docs', 'aria-busy')).toBe('true');
-    expect(tree.attr('docs', 'aria-expanded')).toBe('true');
     expect(tree.hasPart('docs', 'spinner')).toBe(true);
     expect(tree.value).toBeNull();
 
@@ -449,6 +448,40 @@ describe('NuiTree', () => {
     expect(tree.labels).not.toContain('guide.md');
 
     tree.unmount();
+  });
+
+  it('keeps a lazy node closed while its children load and opens it when they arrive', async () => {
+    const tree = TreeDriver.mount();
+
+    await tree.clickToggle('docs');
+    expect(tree.expandedValues).toEqual(['docs']);
+    expect(tree.isOpen('docs')).toBe(false);
+    expect(tree.attr('docs', 'aria-expanded')).toBe('false');
+
+    await tree.receiveItems(withDocs([{ value: 'guide', label: 'guide.md' }]));
+    expect(tree.isOpen('docs')).toBe(true);
+    expect(tree.attr('docs', 'aria-expanded')).toBe('true');
+
+    tree.unmount();
+    const waiting = TreeDriver.mount();
+
+    await waiting.clickToggle('docs');
+    await waiting.clickToggle('docs');
+    expect(waiting.expandedValues).toEqual([]);
+    expect(waiting.hasPart('docs', 'spinner')).toBe(false);
+
+    waiting.unmount();
+    const slotted = TreeDriver.mount({
+      itemSlot: ({ item, expanded }) => `${item.label}:${expanded ? 'open' : 'closed'}`,
+    });
+
+    await slotted.clickToggle('docs:closed');
+    expect(slotted.labels).toContain('docs:closed');
+
+    await slotted.receiveItems(withDocs([{ value: 'guide', label: 'guide.md' }]));
+    expect(slotted.labels).toContain('docs:open');
+
+    slotted.unmount();
   });
 
   it('selects on click, toggles on the chevron and on double click and renders the item slot', async () => {

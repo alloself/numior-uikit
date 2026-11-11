@@ -187,6 +187,10 @@ export class TreeDriver extends ComponentDriver {
     return this.node(label).classes().includes(`nui-list-item--${modifier}`);
   }
 
+  isOpen(label: string): boolean {
+    return this.node(label).classes().includes('nui-tree__item--expanded');
+  }
+
   trailingOf(label: string): string {
     return this.node(label).find('.nui-row__trailing').text();
   }

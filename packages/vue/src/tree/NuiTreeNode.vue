@@ -10,7 +10,7 @@
     :disabled="node.item.disabled"
     class="nui-tree__item"
     :class="{
-      'nui-tree__item--expanded': node.expanded,
+      'nui-tree__item--expanded': node.open,
       'nui-tree__item--loading': node.loading,
       'nui-tree__item--revealing': revealing,
     }"
@@ -51,7 +51,7 @@
       <slot
         :item="node.item"
         :level="node.level"
-        :expanded="node.expanded"
+        :expanded="node.open"
         :selected="selected"
         :checked="checked ?? NuiCheckState.Unchecked"
         :loading="node.loading"
