@@ -393,37 +393,67 @@
 
   position: absolute;
   box-sizing: border-box;
-  background-image:
-    linear-gradient(90deg, var(--_dash) 50%, transparent 0),
-    linear-gradient(90deg, var(--_dash) 50%, transparent 0),
-    linear-gradient(0deg, var(--_dash) 50%, transparent 0),
-    linear-gradient(0deg, var(--_dash) 50%, transparent 0);
-  background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
-  background-size:
-    var(--_step) 2px,
-    var(--_step) 2px,
-    2px var(--_step),
-    2px var(--_step);
-  background-position:
-    0 0,
-    0 100%,
-    0 0,
-    100% 0;
+  overflow: hidden;
   pointer-events: none;
+}
+.nui-spreadsheet__clip-edge {
+  --_run-x: 0px;
+  --_run-y: 0px;
+
+  position: absolute;
   animation: nui-spreadsheet-ants 0.8s linear infinite;
   animation-play-state: var(--nui-animation-play-state, running);
 }
+.nui-spreadsheet__clip-edge--top,
+.nui-spreadsheet__clip-edge--bottom {
+  block-size: 2px;
+  background-image: linear-gradient(90deg, var(--_dash) 50%, transparent 0);
+  background-size: var(--_step) 2px;
+}
+.nui-spreadsheet__clip-edge--left,
+.nui-spreadsheet__clip-edge--right {
+  inline-size: 2px;
+  background-image: linear-gradient(0deg, var(--_dash) 50%, transparent 0);
+  background-size: 2px var(--_step);
+}
+.nui-spreadsheet__clip-edge--top {
+  --_run-x: var(--_step);
+
+  top: 0;
+  right: 0;
+  left: calc(-1 * var(--_step));
+}
+.nui-spreadsheet__clip-edge--bottom {
+  --_run-x: calc(-1 * var(--_step));
+
+  right: calc(-1 * var(--_step));
+  bottom: 0;
+  left: 0;
+}
+.nui-spreadsheet__clip-edge--left {
+  --_run-y: calc(-1 * var(--_step));
+
+  top: 0;
+  bottom: calc(-1 * var(--_step));
+  left: 0;
+}
+.nui-spreadsheet__clip-edge--right {
+  --_run-y: var(--_step);
+
+  top: calc(-1 * var(--_step));
+  right: 0;
+  bottom: 0;
+}
 @keyframes nui-spreadsheet-ants {
+  from {
+    translate: 0 0;
+  }
   to {
-    background-position:
-      var(--_step) 0,
-      calc(-1 * var(--_step)) 100%,
-      0 calc(-1 * var(--_step)),
-      100% var(--_step);
+    translate: var(--_run-x) var(--_run-y);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .nui-spreadsheet__clip {
+  .nui-spreadsheet__clip-edge {
     animation-duration: 3.2s;
   }
 }

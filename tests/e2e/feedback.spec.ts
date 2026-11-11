@@ -2,6 +2,10 @@ import { expect, test } from './fixtures';
 import { paintedRgb, rgbDelta } from './helpers/color';
 import { bottomOf } from './pages/feedback';
 import { boxOf } from './helpers/geometry';
+import { paintsOver } from './helpers/motion';
+
+const IDLE_WINDOW = 600;
+const IDLE_PAINTS = 6;
 
 test.describe('feedback', () => {
   test('a toast fired from an open dialog paints above it and outlives it', async ({
@@ -233,7 +237,23 @@ test.describe('feedback', () => {
       'true',
     );
 
-    expect(await feedback.animationName(feedback.skeletonLine)).toBe('none');
+    expect((await feedback.shimmerOf(feedback.skeletonLine)).name).toBe('none');
+  });
+
+  test('a skeleton and an endless progress bar animate without waking the main thread', async ({
+    playground,
+    feedback,
+    page,
+  }) => {
+    await playground.open();
+    await feedback.skeleton.scrollIntoViewIfNeeded();
+    await expect(feedback.progressIndeterminate).toBeInViewport();
+
+    await expect
+      .poll(() => feedback.shimmerOf(feedback.skeletonLine))
+      .toEqual({ name: 'nui-skeleton-shimmer', state: 'running' });
+
+    expect(await paintsOver(page, IDLE_WINDOW)).toBeLessThanOrEqual(IDLE_PAINTS);
   });
 
   test('visible feedback has no automatically detectable WCAG AA violations', async ({

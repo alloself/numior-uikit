@@ -12,6 +12,11 @@ import { sectionScope } from '../helpers/axe';
 
 export type FeedbackOutput = Guarded<typeof isFeedbackOutput>;
 
+export interface Shimmer {
+  readonly name: string;
+  readonly state: string;
+}
+
 const isFeedbackOutput = shapeOf({
   placement: isString,
   toastCount: isNumber,
@@ -126,8 +131,12 @@ export class FeedbackSection {
     });
   }
 
-  animationName(target: Locator): Promise<string> {
-    return target.evaluate((element) => getComputedStyle(element).animationName);
+  shimmerOf(line: Locator): Promise<Shimmer> {
+    return line.evaluate((element) => {
+      const style = getComputedStyle(element, '::after');
+
+      return { name: style.animationName, state: style.animationPlayState };
+    });
   }
 
   async readOutput(): Promise<FeedbackOutput> {

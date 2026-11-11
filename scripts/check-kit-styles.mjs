@@ -245,6 +245,53 @@ const endless = sources.flatMap((file) =>
   ),
 );
 
+const COMPOSITED = new Set(['transform', 'translate', 'rotate', 'scale', 'opacity']);
+const STEPPED = /\bstep-(?:start|end)\b|\bsteps\(/u;
+
+const blockEnd = (text, open) => {
+  let depth = 0;
+  let end = open;
+
+  do {
+    depth += text[end] === '{' ? 1 : text[end] === '}' ? -1 : 0;
+    end += 1;
+  } while (depth > 0 && end < text.length);
+
+  return end;
+};
+
+const keyframesOf = (text) =>
+  [...text.matchAll(/@keyframes\s+([\w-]+)\s*\{/gu)].map((match) => {
+    const open = (match.index ?? 0) + match[0].length - 1;
+    const body = text.slice(open, blockEnd(text, open));
+
+    return [match[1], new Set([...body.matchAll(/([\w-]+)\s*:/gu)].map((found) => found[1]))];
+  });
+
+const keyframes = new Map(
+  sources.flatMap((file) =>
+    stylesOf(file.path, file.source).flatMap((style) => keyframesOf(style.text)),
+  ),
+);
+
+const offCompositor = sources.flatMap((file) =>
+  stylesOf(file.path, file.source).flatMap((style) =>
+    [...style.text.matchAll(/animation:[^;{}]*\binfinite\b[^;{}]*;/gu)].flatMap((match) => {
+      const name = match[0].split(/[\s:;]+/u).find((word) => keyframes.has(word));
+
+      const painted = [...(keyframes.get(name) ?? [])].filter(
+        (property) => !COMPOSITED.has(property),
+      );
+
+      return painted.length === 0 || STEPPED.test(match[0])
+        ? []
+        : [
+            `${relative(ROOT, file.path)}:${lineOf(file.source, style.offset + (match.index ?? 0))}: ${name} animates ${painted.join(', ')}`,
+          ];
+    }),
+  ),
+);
+
 if (findings.length > 0) {
   console.error(
     `Kit components are styled from outside their package (use props, own wrappers or a kit API):\n${findings.join('\n')}`,
@@ -263,4 +310,14 @@ if (endless.length > 0) {
   process.exitCode = 1;
 } else {
   console.log('kit styles: every infinite animation can be paused');
+}
+
+if (offCompositor.length > 0) {
+  console.error(
+    `Infinite animations must animate only ${[...COMPOSITED].join(', ')} or move in steps (anything else wakes the main thread on every frame):\n${offCompositor.join('\n')}`,
+  );
+
+  process.exitCode = 1;
+} else {
+  console.log('kit styles: every infinite animation runs off the main thread');
 }

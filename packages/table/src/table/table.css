@@ -1393,6 +1393,8 @@
   inset-inline-start: calc(-1 * var(--_pane-end-at));
 }
 .nui-table__busy {
+  --_flow: 1;
+
   position: absolute;
   inset-inline: 0;
   inset-block-start: calc(var(--_head-size) - 1px);
@@ -1401,19 +1403,26 @@
   overflow: hidden;
   pointer-events: none;
 }
+.nui-table__busy:dir(rtl) {
+  --_flow: -1;
+}
 .nui-table__busy::after {
   content: '';
   position: absolute;
   inset-block: 0;
-  inset-inline-start: -40%;
+  inset-inline-start: 0;
   inline-size: 40%;
   background: var(--nui-primary);
+  translate: calc(var(--_flow) * -100%) 0;
   animation: nui-table-busy calc(var(--nui-duration-slow) * 4) var(--nui-easing) infinite;
   animation-play-state: var(--nui-animation-play-state, running);
 }
 @keyframes nui-table-busy {
+  from {
+    translate: calc(var(--_flow) * -100%) 0;
+  }
   to {
-    inset-inline-start: 100%;
+    translate: calc(var(--_flow) * 250%) 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {

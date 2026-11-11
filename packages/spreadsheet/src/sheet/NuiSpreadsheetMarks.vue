@@ -4,7 +4,14 @@
     :key="frame.key"
     class="nui-spreadsheet__clip"
     :style="rectStyle(frame.rect)"
-  ></span>
+  >
+    <span
+      v-for="edge in CLIP_EDGES"
+      :key="edge"
+      class="nui-spreadsheet__clip-edge"
+      :class="`nui-spreadsheet__clip-edge--${edge}`"
+    ></span>
+  </span>
   <span
     v-for="frame in shownLit"
     :key="frame.key"
@@ -43,6 +50,8 @@
 import { computed } from 'vue';
 import { rectStyle } from './sheet-rect';
 import type { SheetClipFrame, SheetMarksProps, ShownClip } from './sheet.types';
+
+const CLIP_EDGES = ['top', 'right', 'bottom', 'left'] as const;
 
 const {
   rectOf,
