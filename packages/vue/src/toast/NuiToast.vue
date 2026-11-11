@@ -63,8 +63,23 @@ const dismiss = (): void => {
   store.dismiss(toast.id);
 };
 
+const releaseFocus = (): void => {
+  const focused = document.activeElement;
+
+  if (focused instanceof HTMLElement && rootElement.value?.contains(focused) === true) {
+    focused.blur();
+  }
+};
+
 const runAction = (): void => {
-  toast.action?.onClick();
+  const shown = toast;
+
+  shown.action?.onClick();
+
+  if (store.toasts.value.some((entry) => entry.id === shown.id && entry !== shown)) {
+    releaseFocus();
+    return;
+  }
   dismiss();
 };
 

@@ -112,6 +112,10 @@ export class DocsSite {
     return this.article.getByRole('heading', { level: 1 });
   }
 
+  get toasts(): Locator {
+    return this.page.locator('.nui-toast:not(.nui-toast--leaving)');
+  }
+
   get inputFrame(): Locator {
     return this.article.locator('.nui-input').first();
   }

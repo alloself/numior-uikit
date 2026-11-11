@@ -130,6 +130,53 @@ describe('NuiToaster and NuiToast', () => {
     toaster.unmount();
   });
 
+  it('keeps a toast that its action updated, lets focus go and closes it by its timer', async () => {
+    const toaster = ToasterDriver.mount({ storeOptions: { duration: 1000 } });
+
+    const id = toaster.show({
+      title: 'Not saved',
+      tone: 'error',
+      duration: 0,
+      action: {
+        label: 'Retry',
+        onClick: () => toaster.show({ id, title: 'Saved', tone: 'success' }),
+      },
+    });
+
+    await toaster.advance(0);
+    await toaster.toast(0).focusAction();
+    await toaster.toast(0).clickAction();
+    await toaster.advance(0);
+
+    expect(toaster.toast(0).title).toBe('Saved');
+    expect(toaster.toast(0).leaving).toBe(false);
+    expect(toaster.toast(0).hasAction).toBe(false);
+    expect(toaster.toast(0).holdsFocus).toBe(false);
+
+    await toaster.advance(1000);
+    expect(toaster.toast(0).leaving).toBe(true);
+
+    toaster.unmount();
+  });
+
+  it('holds a toast updated under the pointer until the pointer leaves', async () => {
+    const toaster = ToasterDriver.mount({ storeOptions: { duration: 1000 } });
+    const id = toaster.show({ title: 'Publishing', duration: 0 });
+
+    await toaster.advance(0);
+    await toaster.hoverStack();
+    toaster.show({ id, title: 'Published' });
+    await toaster.advance(0);
+    await toaster.advance(1500);
+    expect(toaster.toast(0).leaving).toBe(false);
+
+    await toaster.leaveStack();
+    await toaster.advance(1000);
+    expect(toaster.toast(0).leaving).toBe(true);
+
+    toaster.unmount();
+  });
+
   it('lets the slot render each toast and works without the plugin', async () => {
     const custom = ToasterDriver.mount({ customToast: true, storeOptions: { duration: 0 } });
     custom.show({ title: 'Custom' });

@@ -134,6 +134,15 @@ const release = (): void => {
   }
 };
 
+watch(
+  () => store.toasts.value,
+  () => {
+    if (holds.hover || holds.focus) {
+      pauseAll();
+    }
+  },
+);
+
 const onPointerenter = (): void => {
   holds.hover = true;
   pauseAll();

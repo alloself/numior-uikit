@@ -62,3 +62,15 @@ test('a menu opened with ArrowUp focuses its last item', async ({ docs, page }) 
   await page.keyboard.press('ArrowUp');
   await expect(docs.article.getByRole('menuitem', { name: 'Удалить' }).first()).toBeFocused();
 });
+
+test('the action of a toast replaces its text in place', async ({ docs, page }) => {
+  await docs.open('/components/toast');
+  await docs.article.getByRole('button', { name: 'Ошибка с действием' }).click();
+  await expect(docs.toasts).toHaveText([/Не удалось сохранить/]);
+
+  await page.getByRole('button', { name: 'Повторить' }).click();
+  await expect(docs.toasts).toHaveText([/Сохранено/]);
+
+  await page.mouse.move(0, 0);
+  await expect(docs.toasts).toHaveCount(0, { timeout: 8000 });
+});

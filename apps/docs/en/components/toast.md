@@ -38,6 +38,9 @@ The `show` method takes all options at once:
 - `dismissible` — the close button, shown by default; `false` removes it;
 - `id` — the key used to replace the toast.
 
+A click on the action button closes the toast. If the handler calls `show` with the `id` of the
+toast, the toast stays in place with the new text.
+
 Toasts appear in the corner of the screen set by `placement`, `top-end` by default. A new toast
 comes to the front, and the previous ones shrink and stack behind it.
 

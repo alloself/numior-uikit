@@ -86,6 +86,19 @@ class ToastView {
     await this.root.trigger('keydown', { key: 'Escape' });
   }
 
+  get holdsFocus(): boolean {
+    return this.root.element.contains(document.activeElement);
+  }
+
+  get hasAction(): boolean {
+    return this.root.find('.nui-toast__action').exists();
+  }
+
+  async focusAction(): Promise<void> {
+    this.root.find<HTMLElement>('.nui-toast__action').element.focus();
+    await this.root.trigger('focusin');
+  }
+
   async clickAction(): Promise<void> {
     await this.root.find('.nui-toast__action').trigger('click');
   }

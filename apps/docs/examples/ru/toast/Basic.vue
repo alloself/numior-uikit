@@ -16,9 +16,12 @@ import { NuiButton, useToast } from '@numior/vue';
 const toast = useToast();
 
 const fail = (): void => {
-  toast.error('Не удалось сохранить', {
+  const id = toast.error('Не удалось сохранить', {
     duration: 0,
-    action: { label: 'Повторить', onClick: () => toast.success('Сохранено') },
+    action: {
+      label: 'Повторить',
+      onClick: () => toast.show({ id, title: 'Сохранено', tone: 'success' }),
+    },
   });
 };
 </script>
