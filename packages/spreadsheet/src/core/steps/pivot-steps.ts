@@ -250,19 +250,23 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
     const found = new Map<number, CellEdit>();
 
     areas.forEach((area) => {
-      if (area !== undefined) {
-        cells.contentsIn(sheet, area).forEach((cell, key) => {
-          found.set(key, cell);
-        });
+      if (area === undefined) {
+        return;
       }
+
+      cells.contentsIn(sheet, area).forEach((cell, key) => {
+        found.set(key, cell);
+      });
     });
 
     written.forEach((cell) => {
       const key = keyOf(cell.row, cell.col);
 
-      if (!found.has(key)) {
-        found.set(key, { row: cell.row, col: cell.col, content: EMPTY_CONTENT, format: GENERAL });
+      if (found.has(key)) {
+        return;
       }
+
+      found.set(key, { row: cell.row, col: cell.col, content: EMPTY_CONTENT, format: GENERAL });
     });
 
     return [...found.values()];
@@ -300,9 +304,11 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
     if (previous !== undefined) {
       book.pivots.delete(previous);
     }
-    if (next !== undefined) {
-      book.pivots.set({ ...next, name: previous?.name ?? name, sheet });
+    if (next === undefined) {
+      return;
     }
+
+    book.pivots.set({ ...next, name: previous?.name ?? name, sheet });
   };
 
   const placed = (sheet: Sheet, name: string, spec: PivotSpec | undefined): StepResult => {
@@ -350,9 +356,11 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
     book.pivots.forEach((pivot) => {
       const source = rename(pivot.definition.source);
 
-      if (source !== pivot.definition.source) {
-        book.pivots.set({ ...pivot, definition: { ...pivot.definition, source } });
+      if (source === pivot.definition.source) {
+        return;
       }
+
+      book.pivots.set({ ...pivot, definition: { ...pivot.definition, source } });
     });
   };
 

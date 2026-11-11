@@ -194,12 +194,14 @@ export const useSheetFill = (options: SheetFillOptions): SheetFill => {
     const step =
       sheet === undefined ? undefined : clips.value.fill(sheet.name, from, unionOf(from, to), mode);
 
-    if (step !== undefined && options.editing.apply([step])) {
-      options.selection.select({
-        active: active ?? { row: shown.top, col: shown.left },
-        ranges: [shown],
-      });
+    if (step === undefined || !options.editing.apply([step])) {
+      return;
     }
+
+    options.selection.select({
+      active: active ?? { row: shown.top, col: shown.left },
+      ranges: [shown],
+    });
   };
 
   const onDown = (event: PointerEvent): void => {
@@ -307,9 +309,11 @@ export const useSheetFill = (options: SheetFillOptions): SheetFill => {
     const target =
       sheet === undefined || range === undefined ? undefined : downTarget(sheet, range);
 
-    if (range !== undefined && target !== undefined) {
-      fillWith(range, target, FillMode.Series, unionOf(range, target));
+    if (range === undefined || target === undefined) {
+      return;
     }
+
+    fillWith(range, target, FillMode.Series, unionOf(range, target));
   };
 
   const onKeydown = (event: KeyboardEvent): void => {
@@ -332,9 +336,11 @@ export const useSheetFill = (options: SheetFillOptions): SheetFill => {
 
     event.stopPropagation();
 
-    if (Math.min(plan.from.top, plan.from.left) >= 0) {
-      fillWith(plan.from, plan.to, FillMode.Copy, range);
+    if (Math.min(plan.from.top, plan.from.left) < 0) {
+      return;
     }
+
+    fillWith(plan.from, plan.to, FillMode.Copy, range);
   };
 
   const onCancel = (): void => {

@@ -209,9 +209,11 @@ export const useSheetPivots = (options: SheetPivotsOptions): SheetPivots => {
       refusedText,
     );
 
-    if (applied) {
-      announce(texts.value.refreshed);
+    if (!applied) {
+      return;
     }
+
+    announce(texts.value.refreshed);
   };
 
   const remove = (found: SheetPivot): void => {
@@ -220,9 +222,11 @@ export const useSheetPivots = (options: SheetPivotsOptions): SheetPivots => {
       refusedText,
     );
 
-    if (applied) {
-      announce(texts.value.removed);
+    if (!applied) {
+      return;
     }
+
+    announce(texts.value.removed);
   };
 
   const tools = (): readonly NuiMenuEntry[] => {
@@ -307,9 +311,11 @@ export const useSheetPivots = (options: SheetPivotsOptions): SheetPivots => {
   };
 
   watch(pivot, (next) => {
-    if (next === undefined && popover.open.value) {
-      popover.hide();
+    if (next !== undefined || !popover.open.value) {
+      return;
     }
+
+    popover.hide();
   });
 
   const panel = computed((): PivotDefinition | undefined =>

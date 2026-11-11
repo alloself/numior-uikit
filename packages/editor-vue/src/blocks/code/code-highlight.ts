@@ -249,15 +249,17 @@ const changedCode = (
   let previous: ReadonlyMap<NodeId, ElementNode> | undefined;
 
   for (const [index, child] of after.content.entries()) {
-    if (child.kind === ContentNodeKind.Element) {
-      const aligned = before?.content[index];
-
-      if (aligned === child || inlineOnly(schema, child)) {
-        continue;
-      }
-      previous ??= elementsOf(before);
-      changedCode(schema, previous.get(child.id), child, found);
+    if (child.kind !== ContentNodeKind.Element) {
+      continue;
     }
+
+    const aligned = before?.content[index];
+
+    if (aligned === child || inlineOnly(schema, child)) {
+      continue;
+    }
+    previous ??= elementsOf(before);
+    changedCode(schema, previous.get(child.id), child, found);
   }
 };
 
@@ -279,9 +281,11 @@ export const createCodeHighlighter = (
   const current = (block: CodeBlock): boolean => asked.get(block.id) === keyOf(block);
 
   const send = (answers: readonly CodeAnswer[]): void => {
-    if (answers.length > 0) {
-      dispatch(state().tr.setMeta(answerKey, answers));
+    if (answers.length === 0) {
+      return;
     }
+
+    dispatch(state().tr.setMeta(answerKey, answers));
   };
 
   const ask = async (active: NuiHighlighter, block: CodeBlock): Promise<CodeAnswer | undefined> => {
@@ -299,9 +303,11 @@ export const createCodeHighlighter = (
     const { doc } = state();
 
     for (const id of asked.keys()) {
-      if (doc.byId(id) === undefined) {
-        asked.delete(id);
+      if (doc.byId(id) !== undefined) {
+        continue;
       }
+
+      asked.delete(id);
     }
   };
 
@@ -317,12 +323,14 @@ export const createCodeHighlighter = (
       if (answer !== undefined && !stopped) {
         answers.push(answer);
       }
-      if (performance.now() - started > SLICE_MS) {
-        send(answers);
-        answers = [];
-        await nextTask();
-        started = performance.now();
+      if (performance.now() - started <= SLICE_MS) {
+        continue;
       }
+
+      send(answers);
+      answers = [];
+      await nextTask();
+      started = performance.now();
     }
     if (stopped) {
       return;
@@ -364,14 +372,18 @@ export const createCodeHighlighter = (
 
       seen = { root: next.doc.root, highlighter: active };
       for (const block of found) {
-        if (!current(block)) {
-          asked.set(block.id, keyOf(block));
-          queue.set(block.id, block);
+        if (current(block)) {
+          continue;
         }
+
+        asked.set(block.id, keyOf(block));
+        queue.set(block.id, block);
       }
-      if (!running && queue.size > 0 && !stopped) {
-        void work(active);
+      if (running || queue.size === 0 || stopped) {
+        return;
       }
+
+      void work(active);
     },
     reset: () => {
       asked.clear();

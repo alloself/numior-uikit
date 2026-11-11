@@ -134,9 +134,11 @@ export const marksOf = (schema: Schema, element: HtmlElement): Mark[] => {
         ? undefined
         : attrsBy(rule, type.attrs, element);
 
-    if (attrs !== undefined) {
-      found.set(type.name, { type: type.name, attrs });
+    if (attrs === undefined) {
+      continue;
     }
+
+    found.set(type.name, { type: type.name, attrs });
   }
   return [...found.values()];
 };

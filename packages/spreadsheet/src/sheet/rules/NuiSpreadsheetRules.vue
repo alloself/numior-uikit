@@ -257,15 +257,19 @@ const ghosts = computed((): RuleRow[] => {
 });
 
 const onGrab = (at: number, event: PointerEvent): void => {
-  if (!readonly) {
-    reorder.onPointerdown(at, event);
+  if (readonly) {
+    return;
   }
+
+  reorder.onPointerdown(at, event);
 };
 
 const onGripKeydown = (at: number, event: KeyboardEvent): void => {
-  if (!readonly && reorder.onKeydown(at, event)) {
-    event.preventDefault();
+  if (readonly || !reorder.onKeydown(at, event)) {
+    return;
   }
+
+  event.preventDefault();
 };
 
 const remove = (at: number): void => {
@@ -293,9 +297,11 @@ const editingForm = computed({
   set: (form: RuleForm) => {
     const current = editing.value;
 
-    if (current !== undefined) {
-      editing.value = { ...current, form };
+    if (current === undefined) {
+      return;
     }
+
+    editing.value = { ...current, form };
   },
 });
 

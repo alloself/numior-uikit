@@ -161,9 +161,11 @@ const toggle = (value: T): void => {
 const onFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
 
-  if (!(next instanceof Node && root.value?.contains(next))) {
-    navigation.reset();
+  if (next instanceof Node && root.value?.contains(next)) {
+    return;
   }
+
+  navigation.reset();
 };
 
 onMounted(() => navigation.reset());

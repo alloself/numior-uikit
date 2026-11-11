@@ -48,9 +48,11 @@ const verify = async (value: string): Promise<void> => {
   check.value = 'checking';
   await new Promise((resolve) => setTimeout(resolve, 600));
   check.value = value === '123456' ? 'passed' : 'failed';
-  if (check.value === 'failed') {
-    code.value = '';
+  if (check.value !== 'failed') {
+    return;
   }
+
+  code.value = '';
 };
 
 const resend = (): void => {
@@ -60,9 +62,11 @@ const resend = (): void => {
 };
 
 watch(code, (value) => {
-  if (check.value === 'failed' && value !== '') {
-    check.value = 'waiting';
+  if (check.value !== 'failed' || value === '') {
+    return;
   }
+
+  check.value = 'waiting';
 });
 
 onMounted(countDown);

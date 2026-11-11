@@ -146,9 +146,11 @@ const createRecorder = (): Recorder => {
     const colon = name.qname.indexOf(':');
     const prefix = colon > 0 ? name.qname.slice(0, colon) : '';
 
-    if (prefix !== '' && prefix !== XmlPrefix.Xml) {
-      prefixes.set(prefix, name.uri);
+    if (prefix === '' || prefix === XmlPrefix.Xml) {
+      return;
     }
+
+    prefixes.set(prefix, name.uri);
   };
 
   return {
@@ -514,9 +516,11 @@ export const createExtensionCollector = (): ConditionalCollector => {
   const openRule = (current: ExtensionRule, name: XmlName, attributes: readonly XmlAttribute[]) => {
     current.raw.open(name, attributes);
     current.depth += 1;
-    if (name.local === OoxmlElement.F && name.uri === XM) {
-      current.formula = '';
+    if (name.local !== OoxmlElement.F || name.uri !== XM) {
+      return;
     }
+
+    current.formula = '';
   };
 
   const closeRule = (current: ExtensionRule, name: XmlName): void => {

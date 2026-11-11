@@ -50,9 +50,11 @@ export const useTablePicking = (options: TablePickingOptions): TablePicking => {
   const onMove = (event: PointerEvent): void => {
     const cell = options.cellAt(event.clientX, event.clientY);
 
-    if (cell !== undefined && cursor !== undefined && !samePosition(cell, cursor.focus)) {
-      send({ anchor: cursor.anchor, focus: cell });
+    if (cell === undefined || cursor === undefined || samePosition(cell, cursor.focus)) {
+      return;
     }
+
+    send({ anchor: cursor.anchor, focus: cell });
   };
 
   const stop = (): void => {

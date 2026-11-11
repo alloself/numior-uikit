@@ -45,8 +45,10 @@ const choose = (): void => {
   }
   radio.select(value);
   emit('select');
-  if (closeOnSelect) {
-    menu.closeAll();
+  if (!closeOnSelect) {
+    return;
   }
+
+  menu.closeAll();
 };
 </script>

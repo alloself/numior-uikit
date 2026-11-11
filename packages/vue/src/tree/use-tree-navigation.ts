@@ -76,10 +76,12 @@ const walk = <T>(
   let seen = 0;
 
   for (let index = from; index >= 0 && index < nodes.length && seen < count; index += direction) {
-    if (isEnabled(nodes, index)) {
-      found = index;
-      seen += 1;
+    if (!isEnabled(nodes, index)) {
+      continue;
     }
+
+    found = index;
+    seen += 1;
   }
   return found;
 };
@@ -121,9 +123,11 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
   const typeaheadIndex = computed(() => typeaheadIndexOf(options.nodes()));
 
   const moveTo = (index: number): void => {
-    if (index >= 0) {
-      options.onMove(index);
+    if (index < 0) {
+      return;
     }
+
+    options.onMove(index);
   };
 
   const stepInto = (): void => {
@@ -152,9 +156,11 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
       return;
     }
     const parent = parentIndexOf(nodes, index);
-    if (parent >= 0 && !nodes[parent]?.item.disabled) {
-      moveTo(parent);
+    if (parent < 0 || nodes[parent]?.item.disabled) {
+      return;
     }
+
+    moveTo(parent);
   };
 
   const moveBy = (key: string): boolean => {
@@ -186,9 +192,11 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
       slots.get(options.activeIndex()) ?? -1,
     );
 
-    if (found >= 0) {
-      moveTo(enabled[found] ?? -1);
+    if (found < 0) {
+      return;
     }
+
+    moveTo(enabled[found] ?? -1);
   };
 
   const horizontal = (key: string): boolean => {
@@ -198,11 +206,12 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
       stepInto();
       return true;
     }
-    if (key === backward) {
-      stepOut();
-      return true;
+    if (key !== backward) {
+      return false;
     }
-    return false;
+
+    stepOut();
+    return true;
   };
 
   const handle = (event: KeyboardEvent): boolean => {
@@ -221,19 +230,22 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
       options.onActivate(options.activeIndex());
       return true;
     }
-    if (options.typeahead() && isPrintable(event)) {
-      type(event.key);
-      return true;
+    if (!options.typeahead() || !isPrintable(event)) {
+      return false;
     }
-    return false;
+
+    type(event.key);
+    return true;
   };
 
   return {
     typeaheadQuery: computed(() => typeahead.value.query),
     onKeydown: (event) => {
-      if (!event.defaultPrevented && handle(event)) {
-        event.preventDefault();
+      if (event.defaultPrevented || !handle(event)) {
+        return;
       }
+
+      event.preventDefault();
     },
     reset: () => {
       typeahead.value = emptyTypeahead;

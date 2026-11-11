@@ -75,12 +75,14 @@ const numberAt = (source: string, at: number, locale: FormulaLocale): Token | un
 
 const quotedEnd = (source: string, at: number, quote: string): number | undefined => {
   for (let end = at + 1; end < source.length; end += 1) {
-    if (source[end] === quote) {
-      if (source[end + 1] !== quote) {
-        return end;
-      }
-      end += 1;
+    if (source[end] !== quote) {
+      continue;
     }
+
+    if (source[end + 1] !== quote) {
+      return end;
+    }
+    end += 1;
   }
   return undefined;
 };

@@ -12,6 +12,8 @@ const tester = new RuleTester({ languageOptions: { parser: tsParser } });
 
 const error = { messageId: 'guard' };
 
+const skip = { messageId: 'skip' };
+
 tester.run('guard-first', guardFirst, {
   valid: [
     `const onClick = (event) => {
@@ -21,11 +23,6 @@ tester.run('guard-first', guardFirst, {
 
   event.preventDefault();
   event.stopImmediatePropagation();
-};`,
-    `const open = () => {
-  if (ready) {
-    show();
-  }
 };`,
     `const pick = (items) => {
   if (items.length > 0) {
@@ -41,13 +38,27 @@ tester.run('guard-first', guardFirst, {
     show();
   }
 };`,
-    `const each = (items) => {
+    `const check = (value) => {
+  prepare(value);
+  if (value === undefined) {
+    throw new Error('empty');
+  }
+};`,
+    `const find = (items) => {
   for (const item of items) {
+    mark(item);
     if (item.ready) {
       show(item);
-      count(item);
+      break;
     }
   }
+};`,
+    `const read = (key) => {
+  if (cache.has(key)) {
+    touch(key);
+    return cache.get(key);
+  }
+  return compute(key);
 };`,
   ],
   invalid: [
@@ -166,6 +177,144 @@ const handle = (event) => {
   }
 };`,
       errors: [error, error],
+    },
+    {
+      code: `const open = () => {
+  if (ready) {
+    show();
+  }
+};`,
+      output: `const open = () => {
+  if (!ready) {
+return;
+}
+
+show();
+};`,
+      errors: [error],
+    },
+    {
+      code: `const close = () => {
+  if (shown) {
+    hide();
+    return;
+  }
+};`,
+      output: `const close = () => {
+  if (!shown) {
+return;
+}
+
+hide();
+};`,
+      errors: [error],
+    },
+    {
+      code: `const each = (items) => {
+  for (const item of items) {
+    if (item.ready) {
+      show(item);
+    }
+  }
+};`,
+      output: `const each = (items) => {
+  for (const item of items) {
+    if (!item.ready) {
+continue;
+}
+
+show(item);
+  }
+};`,
+      errors: [skip],
+    },
+    {
+      code: `const drain = () => {
+  while (queue.length > 0) {
+    const item = queue.pop();
+    if (item !== undefined && item.live) {
+      send(item);
+      count += 1;
+    }
+  }
+};`,
+      output: `const drain = () => {
+  while (queue.length > 0) {
+    const item = queue.pop();
+    if (item === undefined || !item.live) {
+continue;
+}
+
+send(item);
+      count += 1;
+  }
+};`,
+      errors: [skip],
+    },
+    {
+      code: `const first = (items) => {
+  if (items.length > 0) {
+    note(items);
+    return items[0];
+  }
+  return undefined;
+};`,
+      output:
+        `const first = (items) => {
+  if (items.length === 0) {
+return undefined;
+}
+
+note(items);
+    return items[0];
+` +
+        '  ' +
+        `
+};`,
+      errors: [error],
+    },
+    {
+      code: `const fit = (size) => {
+  if ((size ?? 0) > limit && (wide ? left : right) !== edge) {
+    shrink();
+  }
+};`,
+      output: `const fit = (size) => {
+  if ((size ?? 0) <= limit || (wide ? left : right) === edge) {
+return;
+}
+
+shrink();
+};`,
+      errors: [error],
+    },
+    {
+      code: `const wake = () => {
+  if (!(quiet ? idle : busy) && armed) {
+    ring();
+  }
+};`,
+      output: `const wake = () => {
+  if ((quiet ? idle : busy) || !armed) {
+return;
+}
+
+ring();
+};`,
+      errors: [error],
+    },
+    {
+      code: `const scan = (rows) => {
+  for (const row of rows) {
+    const cell = row.first;
+    if (cell.live) {
+      const cell = row.last;
+      send(cell);
+    }
+  }
+};`,
+      output: null,
+      errors: [skip],
     },
   ],
 });

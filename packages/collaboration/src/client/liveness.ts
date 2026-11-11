@@ -39,12 +39,14 @@ export const createLiveness = ({ settings, ping, lost }: LivenessOptions): Liven
   const heard = (): void => {
     stop();
 
-    if (interval > 0) {
-      quiet = setTimeout(() => {
-        ping();
-        expect();
-      }, interval);
+    if (interval <= 0) {
+      return;
     }
+
+    quiet = setTimeout(() => {
+      ping();
+      expect();
+    }, interval);
   };
 
   return { heard, expect, stop };

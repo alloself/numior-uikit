@@ -125,10 +125,12 @@ const nearest = (
     if (order === 0) {
       return index;
     }
-    if (order !== undefined && Math.sign(order) === side && closer(key, best, side)) {
-      found = index;
-      best = key;
+    if (order === undefined || Math.sign(order) !== side || !closer(key, best, side)) {
+      continue;
     }
+
+    found = index;
+    best = key;
   }
   return found;
 };

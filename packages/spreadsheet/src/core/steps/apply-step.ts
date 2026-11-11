@@ -159,9 +159,11 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     if (cell.format !== undefined) {
       sheet.formats.set(cell.row, cell.col, book.formats.id(cell.format));
     }
-    if (cell.decoration !== undefined) {
-      sheet.decorations.set(cell.row, cell.col, book.decorations.id(cell.decoration));
+    if (cell.decoration === undefined) {
+      return;
     }
+
+    sheet.decorations.set(cell.row, cell.col, book.decorations.id(cell.decoration));
   };
 
   const setName = (
@@ -376,15 +378,19 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     book.addSheet(name, index);
 
     calculator.forEachFormula((sheet, row, col, ast) => {
-      if (mentions(ast, name)) {
-        calculator.setContent(sheet, row, col, { kind: 'formula', ast });
+      if (!mentions(ast, name)) {
+        return;
       }
+
+      calculator.setContent(sheet, row, col, { kind: 'formula', ast });
     });
 
     book.names.forEach((defined) => {
-      if (mentions(defined.ast, name)) {
-        calculator.setName(defined.name, defined.scope, defined.ast);
+      if (!mentions(defined.ast, name)) {
+        return;
       }
+
+      calculator.setName(defined.name, defined.scope, defined.ast);
     });
 
     return done({ kind: 'removeSheet', name });

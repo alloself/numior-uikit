@@ -45,9 +45,11 @@ const visit = <T>(
       loading,
     });
 
-    if (expanded && item.children) {
-      visit(item.children, level + 1, key, keyOf, expandedKeys, pendingKeys, out);
+    if (!expanded || !item.children) {
+      return;
     }
+
+    visit(item.children, level + 1, key, keyOf, expandedKeys, pendingKeys, out);
   });
 };
 
@@ -92,9 +94,11 @@ const collectAncestors = <T>(
         out.set(keyOf(ancestor), ancestor);
       }
     }
-    if (item.children) {
-      collectAncestors(item.children, keys, keyOf, [...path, item.value], out);
+    if (!item.children) {
+      continue;
     }
+
+    collectAncestors(item.children, keys, keyOf, [...path, item.value], out);
   }
 };
 
@@ -148,10 +152,12 @@ const ancestorsOf = <T>(nodes: readonly TreeNode<T>[], index: number): TreeNode<
   for (let position = index - 1; position >= 0 && level > 1; position -= 1) {
     const node = nodes[position];
 
-    if (node && node.level < level) {
-      chain.push(node);
-      level = node.level;
+    if (!node || node.level >= level) {
+      continue;
     }
+
+    chain.push(node);
+    level = node.level;
   }
 
   return chain;

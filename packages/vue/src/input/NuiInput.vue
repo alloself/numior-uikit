@@ -124,9 +124,11 @@ const onInput = (event: Event): void => {
     reformat(element, mask, event);
   }
   draft.value = element.value;
-  if (!modifiers.lazy) {
-    model.value = outgoing(element.value);
+  if (modifiers.lazy) {
+    return;
   }
+
+  model.value = outgoing(element.value);
 };
 
 const onChange = (): void => {
@@ -142,9 +144,11 @@ const onChange = (): void => {
 };
 
 const commitDraft = (): void => {
-  if (modifiers.lazy) {
-    onChange();
+  if (!modifiers.lazy) {
+    return;
   }
+
+  onChange();
 };
 
 defineExpose({ focus: () => inputElement.value?.focus() });

@@ -7,9 +7,11 @@ const EUR = { style: 'currency', currency: 'EUR' } as const;
 
 describe('NuiNumberField', () => {
   afterEach(() => {
-    if (languageDescriptor) {
-      Object.defineProperty(navigator, 'language', languageDescriptor);
+    if (!languageDescriptor) {
+      return;
     }
+
+    Object.defineProperty(navigator, 'language', languageDescriptor);
   });
 
   it('formats the model for the default locale with spinbutton semantics', () => {

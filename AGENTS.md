@@ -15,9 +15,10 @@ that its features are implemented. Component and test conventions live in the sk
 - Arrow functions only (`const f = () => {}`); `function` solely where an own `this` is
   required. No nested function declarations: closure-free helpers live at module level.
   Every block is braced (`curly: all`, `func-style: expression` in Oxlint).
-- Leave early: a function never ends with an `if` block that wraps two or more statements; the
-  condition is turned into `if (...) { return; }` and a compound condition gets a name
-  (`numior/guard-first` in ESLint, autofixable).
+- Leave early: a function or a loop body never ends with an `if` block without `else`, one wrapped
+  statement included; the condition is turned into `if (...) { return; }` (`continue` in a loop)
+  and a compound condition gets a name. No `else` after `return`
+  (`numior/guard-first` and `no-else-return` in ESLint, autofixable).
 - Never spread a list into `push`, `unshift`, `splice`, `Math.min`, `Math.max` or
   `String.fromCharCode`: the call throws near 125 000 entries. Push in a `for…of` loop, take
   `min`/`max`/`maxBy` from `lodash-es` (`numior/spread-arguments` in ESLint for package sources).

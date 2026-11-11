@@ -63,21 +63,27 @@ const closes = computed(() => closable && !disabled);
 let focusedOnLeave = false;
 
 const activate = (): void => {
-  if (!disabled) {
-    tabs.select(value);
+  if (disabled) {
+    return;
   }
+
+  tabs.select(value);
 };
 
 const onFocus = (): void => {
-  if (tabs.activation.value === NuiTabsActivation.Automatic) {
-    activate();
+  if (tabs.activation.value !== NuiTabsActivation.Automatic) {
+    return;
   }
+
+  activate();
 };
 
 const close = (): void => {
-  if (closes.value) {
-    emit('close');
+  if (!closes.value) {
+    return;
   }
+
+  emit('close');
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
@@ -90,9 +96,11 @@ const onKeydown = (event: KeyboardEvent): void => {
 };
 
 const onMousedown = (event: MouseEvent): void => {
-  if (event.button !== PRIMARY_BUTTON) {
-    event.preventDefault();
+  if (event.button === PRIMARY_BUTTON) {
+    return;
   }
+
+  event.preventDefault();
 };
 
 const onCloseMousedown = (event: MouseEvent): void => {
@@ -100,9 +108,11 @@ const onCloseMousedown = (event: MouseEvent): void => {
 };
 
 const onAuxclick = (event: MouseEvent): void => {
-  if (event.button === MIDDLE_BUTTON) {
-    close();
+  if (event.button !== MIDDLE_BUTTON) {
+    return;
   }
+
+  close();
 };
 
 onBeforeUnmount(() => {
@@ -112,8 +122,10 @@ onBeforeUnmount(() => {
 });
 
 onUnmounted(() => {
-  if (focusedOnLeave) {
-    list.restoreFocus();
+  if (!focusedOnLeave) {
+    return;
   }
+
+  list.restoreFocus();
 });
 </script>

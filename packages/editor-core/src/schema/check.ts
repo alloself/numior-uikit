@@ -45,9 +45,11 @@ const checkAttrs = (
   attrs: Attrs,
 ): void => {
   for (const attr of Object.keys(attrs)) {
-    if (!Object.hasOwn(specs, attr)) {
-      context.issues.push({ kind: 'attr', path: [...path], attr, reason: 'unknown' });
+    if (Object.hasOwn(specs, attr)) {
+      continue;
     }
+
+    context.issues.push({ kind: 'attr', path: [...path], attr, reason: 'unknown' });
   }
   for (const [attr, spec] of specEntries(specs)) {
     const value = attrs[attr];
@@ -111,9 +113,11 @@ export const elementTypeOf = (context: CheckContext, type: string): NodeType | u
   type === NodeName.Text ? undefined : context.schema.nodes.get(type);
 
 const checkContent = (context: CheckContext, node: ElementNode, type: NodeType): void => {
-  if (type.content.matchContent(node.content)?.validEnd !== true) {
-    context.issues.push({ kind: 'content', path: [...context.path], type: node.type });
+  if (type.content.matchContent(node.content)?.validEnd === true) {
+    return;
   }
+
+  context.issues.push({ kind: 'content', path: [...context.path], type: node.type });
 };
 
 const checkOwn = (context: CheckContext, node: ElementNode, type: NodeType | undefined): void => {
@@ -149,9 +153,11 @@ export const checkBuilt = (
 };
 
 export const checkTop = (context: CheckContext, root: ElementNode): void => {
-  if (root.type !== context.schema.top.name) {
-    context.issues.unshift({ kind: 'type', path: [], type: root.type });
+  if (root.type === context.schema.top.name) {
+    return;
   }
+
+  context.issues.unshift({ kind: 'type', path: [], type: root.type });
 };
 
 const checkElement = (context: CheckContext, node: ElementNode): void => {

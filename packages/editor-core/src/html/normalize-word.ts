@@ -60,12 +60,14 @@ const isMarker = (node: HtmlNode): boolean =>
 
 const markerIn = (nodes: readonly HtmlNode[]): HtmlElement | undefined => {
   for (const node of nodes) {
-    if (isElement(node)) {
-      const found = isMarker(node) ? node : markerIn(node.children);
+    if (!isElement(node)) {
+      continue;
+    }
 
-      if (found !== undefined) {
-        return found;
-      }
+    const found = isMarker(node) ? node : markerIn(node.children);
+
+    if (found !== undefined) {
+      return found;
     }
   }
   return undefined;

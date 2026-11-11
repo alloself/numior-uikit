@@ -101,9 +101,11 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
           client?.sync();
           tracking?.changed();
         }
-        if (state.doc !== before.doc || state.selection !== before.selection) {
-          offerPresence(state);
+        if (state.doc === before.doc && state.selection === before.selection) {
+          return;
         }
+
+        offerPresence(state);
       },
     },
   });
@@ -151,9 +153,11 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
       onPresence: (next) => {
         present = next;
 
-        if (latest !== undefined) {
-          dispatch(setRemotePresence(latest, next));
+        if (latest === undefined) {
+          return;
         }
+
+        dispatch(setRemotePresence(latest, next));
       },
     });
   };
@@ -252,9 +256,11 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
 
     await nextTick();
 
-    if (!stopped) {
-      connect();
+    if (stopped) {
+      return;
     }
+
+    connect();
   };
 
   onMounted(() => {

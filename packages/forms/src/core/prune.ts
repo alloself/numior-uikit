@@ -10,9 +10,11 @@ export const prune = (
 ): void => {
   for (const pattern of patterns) {
     for (const path of expandPattern(target, pattern)) {
-      if (!covered.has(path)) {
-        deleteAt(target, path);
+      if (covered.has(path)) {
+        continue;
       }
+
+      deleteAt(target, path);
     }
   }
 };

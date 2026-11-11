@@ -247,9 +247,11 @@ const receive = (files: File[]): void => {
 
   remember(queue.add(entries));
 
-  if (outcome.rejected.length > 0) {
-    emit('reject', outcome.rejected);
+  if (outcome.rejected.length === 0) {
+    return;
   }
+
+  emit('reject', outcome.rejected);
 };
 
 const drop = useFileDrop({ disabled: isInert, onFiles: receive });
@@ -275,9 +277,11 @@ defineExpose({
   remove: (itemId: string) => {
     const item = model.value.find((entry) => entry.id === itemId);
 
-    if (item) {
-      discard(item);
+    if (!item) {
+      return;
     }
+
+    discard(item);
   },
 });
 </script>

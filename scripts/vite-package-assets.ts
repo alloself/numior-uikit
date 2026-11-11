@@ -77,8 +77,10 @@ export const packageAssets = ({ root, styles, bundled = [] }: PackageAssetsOptio
 
     await emitLicenses(emit, root, bundled);
 
-    if (styles !== undefined) {
-      await emitStyles(emit, new URL(styles, root));
+    if (styles === undefined) {
+      return;
     }
+
+    await emitStyles(emit, new URL(styles, root));
   },
 });

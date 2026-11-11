@@ -99,9 +99,11 @@ const onPointerup = (event: PointerEvent): void => {
   }
   dragging.value = false;
 
-  if (event.currentTarget instanceof HTMLElement) {
-    event.currentTarget.releasePointerCapture(event.pointerId);
+  if (!(event.currentTarget instanceof HTMLElement)) {
+    return;
   }
+
+  event.currentTarget.releasePointerCapture(event.pointerId);
 };
 
 const onKeydown = (event: KeyboardEvent): void => {

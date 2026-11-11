@@ -104,9 +104,11 @@ const stacks = computed(() => STACKED_KINDS.has(chart.kind));
 const bridges = computed(() => chart.kind === SheetChartKind.Line);
 
 const setKind = (kind: SheetChartKind | null): void => {
-  if (kind !== null) {
-    change({ kind });
+  if (kind === null) {
+    return;
   }
+
+  change({ kind });
 };
 
 const setLegend = (legend: boolean): void => {
@@ -114,9 +116,11 @@ const setLegend = (legend: boolean): void => {
 };
 
 const setStacking = (stacking: SheetChartStacking | null): void => {
-  if (stacking !== null) {
-    change({ stacking });
+  if (stacking === null) {
+    return;
   }
+
+  change({ stacking });
 };
 
 const setGaps = (connect: boolean): void => {

@@ -82,9 +82,11 @@ export const editorCollabDocument = ({
     confirm: (count, version) => {
       const state = getState();
 
-      if (state !== undefined) {
-        dispatch(confirmSteps(state, count, version));
+      if (state === undefined) {
+        return;
       }
+
+      dispatch(confirmSteps(state, count, version));
     },
     settle: (count, wires, version) => {
       const state = getState();

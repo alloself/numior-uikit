@@ -149,14 +149,16 @@ const removeItem = (client: Client, id: string): void => {
   client.ydoc.transact(() => {
     const items = client.ydoc.getXmlFragment(FRAGMENT).get(1);
 
-    if (items instanceof XmlElement) {
-      items.delete(
-        items
-          .toArray()
-          .findIndex((child) => child instanceof XmlElement && child.getAttribute('nui:id') === id),
-        1,
-      );
+    if (!(items instanceof XmlElement)) {
+      return;
     }
+
+    items.delete(
+      items
+        .toArray()
+        .findIndex((child) => child instanceof XmlElement && child.getAttribute('nui:id') === id),
+      1,
+    );
   });
 };
 
@@ -469,9 +471,11 @@ describe('yjsBinding convergence', () => {
         edits.forEach(({ side, block, kind, text, exchanged }) => {
           applyEdit(side ? left : right, block, kind, text);
 
-          if (exchanged) {
-            exchange(left, right);
+          if (!exchanged) {
+            return;
           }
+
+          exchange(left, right);
         });
 
         exchange(left, right);

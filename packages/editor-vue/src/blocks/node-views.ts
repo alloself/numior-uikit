@@ -35,9 +35,11 @@ const syncClasses = (dom: HTMLElement, before: Element, after: Element): void =>
   const next = new Set(tokensOf(after));
 
   for (const token of tokensOf(before)) {
-    if (!next.has(token)) {
-      dom.classList.remove(token);
+    if (next.has(token)) {
+      continue;
     }
+
+    dom.classList.remove(token);
   }
   dom.classList.add(...next);
 };
@@ -64,9 +66,11 @@ const stripStatic = (dom: HTMLElement, content: HTMLElement | null): void => {
     return;
   }
   for (const element of dom.querySelectorAll('[contenteditable="false"]')) {
-    if (!element.contains(content)) {
-      element.remove();
+    if (element.contains(content)) {
+      continue;
     }
+
+    element.remove();
   }
 };
 

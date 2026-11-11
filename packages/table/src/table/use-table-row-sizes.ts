@@ -136,14 +136,18 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
       const size = sizeOf(entry);
       const position = positionOf(entry.target, leading);
 
-      if (size > 0 && Number.isInteger(position) && position >= 0) {
-        sizes.push([position, size]);
-        remember(position, size);
+      if (size <= 0 || !Number.isInteger(position) || position < 0) {
+        continue;
       }
+
+      sizes.push([position, size]);
+      remember(position, size);
     }
-    if (sizes.length > 0) {
-      options.resize(sizes);
+    if (sizes.length === 0) {
+      return;
     }
+
+    options.resize(sizes);
   };
 
   watch(
@@ -156,13 +160,17 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
       for (const [key, position] of sizedPositions.value) {
         const size = next[key];
 
-        if (size !== undefined && previous[key] !== undefined && size !== previous[key]) {
-          changed.push([position, size]);
+        if (size === undefined || previous[key] === undefined || size === previous[key]) {
+          continue;
         }
+
+        changed.push([position, size]);
       }
-      if (changed.length > 0) {
-        options.resize(changed);
+      if (changed.length === 0) {
+        return;
       }
+
+      options.resize(changed);
     },
     { flush: 'sync' },
   );

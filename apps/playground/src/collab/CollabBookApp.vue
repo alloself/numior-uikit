@@ -94,9 +94,11 @@ const client = createCollabClient({
   onStatus: (next) => {
     status.value = next;
 
-    if (next.kind === CollabStatusKind.Failed) {
-      failure.value = { reason: next.reason, unsent: session.pending().length };
+    if (next.kind !== CollabStatusKind.Failed) {
+      return;
     }
+
+    failure.value = { reason: next.reason, unsent: session.pending().length };
   },
   onPresence: (states) => {
     peers.value = workbookPeers(states);

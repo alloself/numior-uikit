@@ -347,9 +347,11 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
       options.table.value?.stopEdge();
     }
 
-    if (caret !== undefined) {
-      void placeCaretIn(options.root.value, options.nameField.value, caret);
+    if (caret === undefined) {
+      return;
     }
+
+    void placeCaretIn(options.root.value, options.nameField.value, caret);
   };
 
   return {

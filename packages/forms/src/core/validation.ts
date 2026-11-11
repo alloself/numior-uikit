@@ -103,17 +103,21 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
 
   const dropStaleExternal = (): void => {
     for (const [path, error] of core.external) {
-      if (!isEqualValue(getAt(core.engine.values, path), error.snapshot)) {
-        core.external.delete(path);
+      if (isEqualValue(getAt(core.engine.values, path), error.snapshot)) {
+        continue;
       }
+
+      core.external.delete(path);
     }
   };
 
   const applyTo = (entries: readonly Entry<V>[], result: RunResult<V, O>): void => {
     for (const entry of entries) {
-      if (entry.state.attempted.value) {
-        writeErrors(entry.state, result.byOwner.get(entry.path()) ?? []);
+      if (!entry.state.attempted.value) {
+        continue;
       }
+
+      writeErrors(entry.state, result.byOwner.get(entry.path()) ?? []);
     }
   };
 

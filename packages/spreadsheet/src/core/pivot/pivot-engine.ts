@@ -99,10 +99,12 @@ const ranksOf = (field: PivotField, items: readonly CellValue[]): Int32Array => 
   let rank = 0;
 
   for (const index of itemOrder(field, items)) {
-    if (!hidden.has(pivotKey(items[index] ?? EMPTY))) {
-      ranks[index] = rank;
-      rank += 1;
+    if (hidden.has(pivotKey(items[index] ?? EMPTY))) {
+      continue;
     }
+
+    ranks[index] = rank;
+    rank += 1;
   }
   return ranks;
 };
@@ -148,26 +150,28 @@ const buildAxis = (levels: readonly number[], cache: PivotCache, visible: Uint8A
   const leaves = new Int32Array(cache.count);
 
   for (let record = 0; record < cache.count; record += 1) {
-    if (visible[record] === 1) {
-      let node = 0;
-
-      groups.forEach((records) => {
-        const item = records?.[record] ?? 0;
-        const children = tree.children[node] ?? new Map<number, number>();
-        let next = children.get(item);
-
-        if (next === undefined) {
-          next = tree.items.length;
-          children.set(item, next);
-          tree.children.push(new Map());
-          tree.items.push(item);
-          tree.parents.push(node);
-        }
-        node = next;
-      });
-
-      leaves[record] = node;
+    if (visible[record] !== 1) {
+      continue;
     }
+
+    let node = 0;
+
+    groups.forEach((records) => {
+      const item = records?.[record] ?? 0;
+      const children = tree.children[node] ?? new Map<number, number>();
+      let next = children.get(item);
+
+      if (next === undefined) {
+        next = tree.items.length;
+        children.set(item, next);
+        tree.children.push(new Map());
+        tree.items.push(item);
+        tree.parents.push(node);
+      }
+      node = next;
+    });
+
+    leaves[record] = node;
   }
   return { levels, real, tree, leaves };
 };
@@ -224,16 +228,18 @@ const accumulate = (
     const values = cache.values(value.field);
 
     for (let record = 0; record < cache.count; record += 1) {
-      if (visible[record] === 1) {
-        const key = (rows.leaves[record] ?? 0) * columnCount + (columns.leaves[record] ?? 0);
-        let target = leaves.get(key);
-
-        if (target === undefined) {
-          target = createPivotAccumulator();
-          leaves.set(key, target);
-        }
-        accumulatePivot(target, values[record] ?? EMPTY);
+      if (visible[record] !== 1) {
+        continue;
       }
+
+      const key = (rows.leaves[record] ?? 0) * columnCount + (columns.leaves[record] ?? 0);
+      let target = leaves.get(key);
+
+      if (target === undefined) {
+        target = createPivotAccumulator();
+        leaves.set(key, target);
+      }
+      accumulatePivot(target, values[record] ?? EMPTY);
     }
     return rolledUp(leaves, axes, columnCount);
   });

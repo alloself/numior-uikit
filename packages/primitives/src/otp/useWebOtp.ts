@@ -53,9 +53,11 @@ export const useWebOtp = (options: WebOtpOptions): WebOtpControl => {
     if (state.controller === controller) {
       state.controller = null;
     }
-    if (code !== undefined && !controller.signal.aborted) {
-      options.onCode(code);
+    if (code === undefined || controller.signal.aborted) {
+      return;
     }
+
+    options.onCode(code);
   };
 
   watch(

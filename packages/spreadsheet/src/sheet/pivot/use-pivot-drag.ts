@@ -82,9 +82,11 @@ export const usePivotDrag = (options: PivotDragOptions): PivotDrag => {
     let found: PivotDropTarget | undefined;
 
     options.areas().forEach((element: HTMLElement, area: PivotArea) => {
-      if (found === undefined && inside(element, x, y)) {
-        found = { kind: PivotDropKind.Area, spot: { area, index: chipIndexAt(element, y) } };
+      if (found !== undefined || !inside(element, x, y)) {
+        return;
       }
+
+      found = { kind: PivotDropKind.Area, spot: { area, index: chipIndexAt(element, y) } };
     });
 
     if (found === undefined && list !== null && inside(list, x, y)) {
@@ -134,9 +136,11 @@ export const usePivotDrag = (options: PivotDragOptions): PivotDrag => {
   const release = (pointerId: number): void => {
     const panel = options.panel();
 
-    if (panel?.hasPointerCapture(pointerId) === true) {
-      panel.releasePointerCapture(pointerId);
+    if (panel?.hasPointerCapture(pointerId) !== true) {
+      return;
     }
+
+    panel.releasePointerCapture(pointerId);
   };
 
   const onPointerdown = (origin: PivotDragOrigin, event: PointerEvent): void => {
@@ -188,16 +192,18 @@ export const usePivotDrag = (options: PivotDragOptions): PivotDrag => {
     placeLine(target);
 
     if (
-      current.phase === PivotDragPhase.Pending ||
-      targetKey(current.target) !== targetKey(target)
+      current.phase !== PivotDragPhase.Pending &&
+      targetKey(current.target) === targetKey(target)
     ) {
-      state.value = {
-        phase: PivotDragPhase.Dragging,
-        origin: current.origin,
-        pointerId: current.pointerId,
-        target,
-      };
+      return;
     }
+
+    state.value = {
+      phase: PivotDragPhase.Dragging,
+      origin: current.origin,
+      pointerId: current.pointerId,
+      target,
+    };
   };
 
   const onPointerup = (event: PointerEvent): void => {
@@ -243,9 +249,11 @@ export const usePivotDrag = (options: PivotDragOptions): PivotDrag => {
     state.value = IDLE;
     release(current.pointerId);
 
-    if (current.phase === PivotDragPhase.Dragging) {
-      options.cancelled();
+    if (current.phase !== PivotDragPhase.Dragging) {
+      return;
     }
+
+    options.cancelled();
   };
 
   return { state, dragging, onPointerdown, onPointermove, onPointerup, onClickCapture, cancel };

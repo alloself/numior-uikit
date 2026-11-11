@@ -29,10 +29,12 @@ export const encodeXstring = (text: string): string => {
   let from = 0;
 
   for (let index = 0; index < literal.length; index += 1) {
-    if (unsafeAt(literal, index)) {
-      pieces.push(literal.slice(from, index), `_x${hex(literal.charCodeAt(index))}_`);
-      from = index + 1;
+    if (!unsafeAt(literal, index)) {
+      continue;
     }
+
+    pieces.push(literal.slice(from, index), `_x${hex(literal.charCodeAt(index))}_`);
+    from = index + 1;
   }
   return from === 0 ? literal : pieces.join('') + literal.slice(from);
 };

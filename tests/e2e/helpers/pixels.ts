@@ -114,21 +114,23 @@ export const kitPixelsOf = (scope: Locator): Promise<KitPixels> =>
         const first = rects[0];
 
         if (
-          parent !== null &&
-          holder !== null &&
-          first !== undefined &&
-          rects.length === 1 &&
-          first.width > 0 &&
-          holder.getBoundingClientRect().height > 0 &&
-          parent.closest(running) === null &&
-          parent.checkVisibility({ opacityProperty: true, visibilityProperty: true })
+          parent === null ||
+          holder === null ||
+          first === undefined ||
+          rects.length !== 1 ||
+          first.width <= 0 ||
+          holder.getBoundingClientRect().height <= 0 ||
+          parent.closest(running) !== null ||
+          !parent.checkVisibility({ opacityProperty: true, visibilityProperty: true })
         ) {
-          lines.push({
-            name: `${holder.classList[0] ?? holder.tagName} text`,
-            height: Number.parseFloat(getComputedStyle(parent).lineHeight),
-            top: first.top - holder.getBoundingClientRect().top,
-          });
+          continue;
         }
+
+        lines.push({
+          name: `${holder.classList[0] ?? holder.tagName} text`,
+          height: Number.parseFloat(getComputedStyle(parent).lineHeight),
+          top: first.top - holder.getBoundingClientRect().top,
+        });
       }
 
       return { boxes, lines };

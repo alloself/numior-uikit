@@ -6,11 +6,13 @@ export const placeHeadings = (scope: ParentNode, positions: HeadingPositions): v
   for (const [id, top] of Object.entries(positions)) {
     const element = scope.querySelector(`#${id}`);
 
-    if (element !== null) {
-      Object.defineProperty(element, 'getBoundingClientRect', {
-        configurable: true,
-        value: () => ({ top, bottom: top + 24, left: 0, right: 0, width: 0, height: 24 }),
-      });
+    if (element === null) {
+      continue;
     }
+
+    Object.defineProperty(element, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({ top, bottom: top + 24, left: 0, right: 0, width: 0, height: 24 }),
+    });
   }
 };

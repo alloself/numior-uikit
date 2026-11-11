@@ -54,9 +54,11 @@ export const useSheetColumnSizes = (options: SheetColumnSizesOptions): SheetColu
     const cols = withLineSizes(sheet.layout.cols, sizesOf(cells, changes));
     const step = layoutStepOf(sheet, { ...sheet.layout, cols });
 
-    if (step === undefined || options.editing.apply([step])) {
-      forget();
+    if (step !== undefined && !options.editing.apply([step])) {
+      return;
     }
+
+    forget();
   };
 
   return { widths, commit, forget };

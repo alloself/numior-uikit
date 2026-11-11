@@ -344,12 +344,14 @@ export const createTableSteps = (
         const content = calculator.contentAt(sheet, table.range.top, col);
 
         if (
-          content.kind !== CellInputKind.Value ||
-          content.value.kind !== CellValueKind.String ||
-          content.value.value !== name
+          content.kind === CellInputKind.Value &&
+          content.value.kind === CellValueKind.String &&
+          content.value.value === name
         ) {
-          writeHeader(sheet, table.range.top, col, name);
+          return;
         }
+
+        writeHeader(sheet, table.range.top, col, name);
       });
 
       const renames = columnRenames(table.columns, columns);
@@ -419,9 +421,11 @@ export const createTableSteps = (
       shape.columns.forEach((name, index) => {
         const col = shape.range.left + index;
 
-        if (col >= change.at && col < change.at + change.count) {
-          writeHeader(sheet, shape.range.top, col, name);
+        if (col < change.at || col >= change.at + change.count) {
+          return;
         }
+
+        writeHeader(sheet, shape.range.top, col, name);
       });
     });
   };

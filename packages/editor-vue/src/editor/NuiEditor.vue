@@ -461,9 +461,11 @@ const slashEntries = computed((): NuiListEntry<string>[] =>
 const onSlashChoose = (key: string): void => {
   const item = slash.items.value.find((candidate) => candidate.key === key);
 
-  if (item !== undefined) {
-    slash.choose(item);
+  if (item === undefined) {
+    return;
   }
+
+  slash.choose(item);
 };
 
 const mentionsId = useId();
@@ -496,9 +498,11 @@ const avatarOf = (user: string | undefined): string | undefined =>
 const onMentionChoose = (user: string): void => {
   const person = mention.people.value.find((candidate) => candidate.id === user);
 
-  if (person !== undefined) {
-    mention.choose(person);
+  if (person === undefined) {
+    return;
   }
+
+  mention.choose(person);
 };
 
 let view: EditorView | undefined;
@@ -689,9 +693,11 @@ const contentAttrs = computed(() => ({
 }));
 
 const onPaste = (event: ClipboardEvent): void => {
-  if (editable.value) {
-    emit('paste', { source: detectPasteSource(event.clipboardData?.getData('text/html') ?? '') });
+  if (!editable.value) {
+    return;
   }
+
+  emit('paste', { source: detectPasteSource(event.clipboardData?.getData('text/html') ?? '') });
 };
 
 let publishing = false;
@@ -757,9 +763,11 @@ const dispatch = (tr: Transaction): void => {
   current.value = applied.state;
   links.follow(applied.state);
   code.update(applied.state);
-  if (applied.transactions.some((step) => step.changed)) {
-    publish(applied.state);
+  if (!applied.transactions.some((step) => step.changed)) {
+    return;
   }
+
+  publish(applied.state);
 };
 
 const code = createCodeHighlighter(
@@ -875,16 +883,20 @@ const onHandleRun = (command: Command): void => {
 };
 
 const onInsertOpen = (item: SlashItem): void => {
-  if (item.kind === SlashItemKind.Open) {
-    item.open();
+  if (item.kind !== SlashItemKind.Open) {
+    return;
   }
+
+  item.open();
 };
 
 const onToolbarRun = (command: Command, refocus: boolean): void => {
   run(command);
-  if (refocus) {
-    editor.focus();
+  if (!refocus) {
+    return;
   }
+
+  editor.focus();
 };
 
 const isLinkKey = (event: KeyboardEvent): boolean =>
@@ -928,18 +940,22 @@ watch(
     const overlap =
       caret !== undefined && dock instanceof HTMLElement ? hiddenUnder(caret, dock) : 0;
 
-    if (overlap > 0 && dock instanceof HTMLElement) {
-      dock.ownerDocument.defaultView?.scrollBy({ top: overlap });
+    if (overlap <= 0 || !(dock instanceof HTMLElement)) {
+      return;
     }
+
+    dock.ownerDocument.defaultView?.scrollBy({ top: overlap });
   },
   { flush: 'post' },
 );
 
 const highlightWhenIdle = async (): Promise<void> => {
   await afterIdle();
-  if (view !== undefined) {
-    code.update(current.value);
+  if (view === undefined) {
+    return;
   }
+
+  code.update(current.value);
 };
 
 onMounted(() => {
@@ -962,9 +978,11 @@ onMounted(() => {
 
   void highlightWhenIdle();
 
-  if (autofocus) {
-    view.focus();
+  if (!autofocus) {
+    return;
   }
+
+  view.focus();
 });
 
 onBeforeUnmount(() => {

@@ -18,9 +18,11 @@ export const isInside = (path: string, list: string): boolean =>
 
 export const forgetInside = (kept: Map<string, unknown>, list: string): void => {
   for (const path of kept.keys()) {
-    if (isInside(path, list)) {
-      kept.delete(path);
+    if (!isInside(path, list)) {
+      continue;
     }
+
+    kept.delete(path);
   }
 };
 

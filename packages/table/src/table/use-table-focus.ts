@@ -82,17 +82,21 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
   const revealRow = (row: number): void => {
     const body = row - options.pinnedRows();
 
-    if (body >= 0 && body < options.bodyRows()) {
-      options.rows.scrollTo(body, { align: 'auto' });
+    if (body < 0 || body >= options.bodyRows()) {
+      return;
     }
+
+    options.rows.scrollTo(body, { align: 'auto' });
   };
 
   const revealColumn = (col: number): void => {
     const centre = options.centreIndexOf(col);
 
-    if (centre !== undefined) {
-      options.columns.scrollTo(centre, { align: 'auto' });
+    if (centre === undefined) {
+      return;
     }
+
+    options.columns.scrollTo(centre, { align: 'auto' });
   };
 
   const reveal = (target: NuiTableCellPosition, axis: TableRevealAxis = 'both'): void => {
@@ -102,9 +106,11 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     if (axis === TableRevealAxis.Both || axis === TableRevealAxis.Row) {
       revealRow(target.row);
     }
-    if (axis === TableRevealAxis.Both || axis === TableRevealAxis.Col) {
-      revealColumn(target.col);
+    if (axis !== TableRevealAxis.Both && axis !== TableRevealAxis.Col) {
+      return;
     }
+
+    revealColumn(target.col);
   };
 
   const focusCell = (target: NuiTableCellPosition, scroll = true): void => {
@@ -158,17 +164,21 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     const focused = positionOf(target, options.headRows(), options.active.value.col);
     const position = focused === undefined ? undefined : options.settle(focused);
 
-    if (position !== undefined && !samePosition(position, options.active.value)) {
-      options.active.value = position;
+    if (position === undefined || samePosition(position, options.active.value)) {
+      return;
     }
+
+    options.active.value = position;
   };
 
   watch(placements, () => {
     const target = placement.take();
 
-    if (target !== undefined) {
-      focusCell({ row: -1, col: headerColumn(target) });
+    if (target === undefined) {
+      return;
     }
+
+    focusCell({ row: -1, col: headerColumn(target) });
   });
 
   onMounted(() => {
@@ -179,11 +189,13 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
       () => {
         const quiet = intent.take();
 
-        if (quiet !== undefined) {
-          options.viewport.value
-            ?.querySelector<HTMLElement>(OWN_ACTIVE_CELL)
-            ?.focus({ preventScroll: quiet || options.windowed() });
+        if (quiet === undefined) {
+          return;
         }
+
+        options.viewport.value
+          ?.querySelector<HTMLElement>(OWN_ACTIVE_CELL)
+          ?.focus({ preventScroll: quiet || options.windowed() });
       },
       { flush: 'post' },
     );
@@ -201,9 +213,11 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
       () => {
         const viewport = options.viewport.value;
 
-        if (owned && viewport !== null && !viewport.contains(document.activeElement)) {
-          viewport.querySelector<HTMLElement>(OWN_ACTIVE_CELL)?.focus({ preventScroll: true });
+        if (!owned || viewport === null || viewport.contains(document.activeElement)) {
+          return;
         }
+
+        viewport.querySelector<HTMLElement>(OWN_ACTIVE_CELL)?.focus({ preventScroll: true });
       },
       { flush: 'post' },
     );

@@ -133,9 +133,11 @@ const moveSlots = (source: Chunk, from: number, to: number, target: Chunk, at: n
   if (source.numbers !== undefined) {
     copyPlane(source.numbers, from, to, numbersOf(target), at);
   }
-  if (source.refs !== undefined) {
-    copyPlane(source.refs, from, to, refsOf(target), at);
+  if (source.refs === undefined) {
+    return;
   }
+
+  copyPlane(source.refs, from, to, refsOf(target), at);
 };
 
 const clearSlots = (chunk: Chunk, from: number, to: number): void => {
@@ -292,9 +294,11 @@ export const createCellStore = (
         for (let col = left; col <= right; col += 1) {
           const slot = slotOf(row, col);
 
-          if (chunk.kinds[slot] !== Kind.Empty) {
-            visit(row, col, read(chunk, slot, strings));
+          if (chunk.kinds[slot] === Kind.Empty) {
+            continue;
           }
+
+          visit(row, col, read(chunk, slot, strings));
         }
       }
     }
@@ -336,9 +340,11 @@ export const createCellStore = (
             size += held - chunk.count;
             chunk.count = held;
             chunk.stamp = revision;
-            if (held === 0) {
-              chunks.delete(key);
+            if (held !== 0) {
+              return;
             }
+
+            chunks.delete(key);
           },
         },
         axis,
@@ -401,9 +407,11 @@ export const createCellStore = (
           return chunk === undefined ? [] : [{ chunk, col }];
         });
 
-        if (present.length > 0) {
-          visitBand(present, band, range, visit);
+        if (present.length === 0) {
+          continue;
         }
+
+        visitBand(present, band, range, visit);
       }
     },
     forEachChunk: (range, visit) => {
@@ -413,14 +421,16 @@ export const createCellStore = (
         for (const col of columns) {
           const chunk = chunks.get(band * CHUNKS_PER_ROW + col);
 
-          if (chunk !== undefined) {
-            visit(chunk.stamp, {
-              top: Math.max(range.top, band * CHUNK_ROWS),
-              left: Math.max(range.left, col * CHUNK_COLS),
-              bottom: Math.min(range.bottom, band * CHUNK_ROWS + CHUNK_ROWS - 1),
-              right: Math.min(range.right, col * CHUNK_COLS + CHUNK_COLS - 1),
-            });
+          if (chunk === undefined) {
+            continue;
           }
+
+          visit(chunk.stamp, {
+            top: Math.max(range.top, band * CHUNK_ROWS),
+            left: Math.max(range.left, col * CHUNK_COLS),
+            bottom: Math.min(range.bottom, band * CHUNK_ROWS + CHUNK_ROWS - 1),
+            right: Math.min(range.right, col * CHUNK_COLS + CHUNK_COLS - 1),
+          });
         }
       }
     },
@@ -445,9 +455,11 @@ export const createCellStore = (
         if (col === bands.left) {
           edge.left = firstLine(chunk.kinds, COL_LINES, edge.left);
         }
-        if (col === bands.right) {
-          edge.right = lastLine(chunk.kinds, COL_LINES, edge.right);
+        if (col !== bands.right) {
+          continue;
         }
+
+        edge.right = lastLine(chunk.kinds, COL_LINES, edge.right);
       }
 
       return {

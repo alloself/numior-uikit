@@ -37,16 +37,20 @@ export const useLayoutWatch = (
         listener();
       });
 
-      if (listeners.size > 0 && inMotion()) {
-        schedule();
+      if (listeners.size === 0 || !inMotion()) {
+        return;
       }
+
+      schedule();
     });
   };
 
   const follow = (): void => {
-    if (listeners.size > 0) {
-      schedule();
+    if (listeners.size === 0) {
+      return;
     }
+
+    schedule();
   };
 
   useResizeObserver(content, follow);
@@ -71,9 +75,11 @@ export const useLayoutWatch = (
   onScopeDispose(() => {
     listeners.clear();
 
-    if (pending !== undefined) {
-      cancelAnimationFrame(pending);
+    if (pending === undefined) {
+      return;
     }
+
+    cancelAnimationFrame(pending);
   });
 
   return {

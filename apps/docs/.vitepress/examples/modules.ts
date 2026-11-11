@@ -46,9 +46,11 @@ const listExamples = (localeDir: string): string[] => {
       for (const entry of readdirSync(componentDir).toSorted()) {
         const name = exampleNameOf(componentDir, component, entry);
 
-        if (name !== undefined) {
-          found.push(name);
+        if (name === undefined) {
+          continue;
         }
+
+        found.push(name);
       }
       return found;
     }, []);

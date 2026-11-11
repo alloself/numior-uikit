@@ -104,9 +104,11 @@ const onPick = (): void => {
   if (picker.value !== null) {
     picker.value.value = '';
   }
-  if (files.length > 0) {
-    emit('files', files);
+  if (files.length === 0) {
+    return;
   }
+
+  emit('files', files);
 };
 
 watch(open, (value) => {

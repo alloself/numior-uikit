@@ -82,9 +82,11 @@ const visited = shallowReactive(new Set<string>());
 watch(
   () => model.value,
   (value) => {
-    if (value !== undefined) {
-      visited.add(value);
+    if (value === undefined) {
+      return;
     }
+
+    visited.add(value);
   },
   { immediate: true },
 );

@@ -52,9 +52,11 @@ const spansOf = (anchors: ReadonlyMap<string, Anchor>): ReadonlyMap<string, Span
   const spans = new Map<string, Span>();
 
   for (const [id, { range }] of anchors) {
-    if (range.kind === AnchorRangeKind.Text) {
-      spans.set(id, range);
+    if (range.kind !== AnchorRangeKind.Text) {
+      continue;
     }
+
+    spans.set(id, range);
   }
   return spans;
 };

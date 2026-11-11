@@ -116,9 +116,11 @@ export class ListHarness {
   relabelNow(index: number, label: string): void {
     const button = this.buttons[index];
 
-    if (button) {
-      button.textContent = label;
+    if (!button) {
+      return;
     }
+
+    button.textContent = label;
   }
 
   countIndexBuilds(run: () => void): number {

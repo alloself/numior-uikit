@@ -398,9 +398,11 @@ export class TableSheetSection {
 
   async focusNatively(target: Locator): Promise<void> {
     await target.evaluate((element) => {
-      if (element instanceof HTMLElement) {
-        element.focus();
+      if (!(element instanceof HTMLElement)) {
+        return;
       }
+
+      element.focus();
     });
 
     await this.painted();

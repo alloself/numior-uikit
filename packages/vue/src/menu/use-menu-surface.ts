@@ -165,9 +165,11 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
   watch(
     () => options.open.value,
     (isOpen) => {
-      if (isOpen) {
-        activateOnOpen();
+      if (!isOpen) {
+        return;
       }
+
+      activateOnOpen();
     },
   );
 
@@ -175,9 +177,11 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     watch(
       () => options.open.value,
       (isOpen) => {
-        if (!isOpen) {
-          onClosed();
+        if (isOpen) {
+          return;
         }
+
+        onClosed();
       },
       { flush: 'post' },
     );
@@ -211,9 +215,11 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
           return;
         }
         inside = false;
-        if (options.open.value) {
-          close();
+        if (!options.open.value) {
+          return;
         }
+
+        close();
       },
       onToggle: shown.onToggle,
       onPointermove: (event) => {

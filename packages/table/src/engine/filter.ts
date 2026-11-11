@@ -235,9 +235,11 @@ const numberSetTest = (store: NumberStore, values: readonly TableFilterValue[]):
   for (const value of values) {
     const key = numericValue(value);
 
-    if (key !== null) {
-      wanted.add(key);
+    if (key === null) {
+      continue;
     }
+
+    wanted.add(key);
   }
   return (index) => (store.nulls[index] === 1 ? nullPasses : wanted.has(store.keys[index] ?? 0));
 };
@@ -404,10 +406,12 @@ export const compactPass = (pass: Uint8Array): Uint32Array => {
   let cursor = 0;
 
   for (let index = 0; index < pass.length; index += 1) {
-    if (pass[index] === 1) {
-      indices[cursor] = index;
-      cursor += 1;
+    if (pass[index] !== 1) {
+      continue;
     }
+
+    indices[cursor] = index;
+    cursor += 1;
   }
   return indices;
 };

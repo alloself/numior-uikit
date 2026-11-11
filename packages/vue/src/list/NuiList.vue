@@ -164,9 +164,11 @@ const select = (value: T): void => {
   choose(value);
 
   const entry = entryOf(value);
-  if (entry) {
-    emit('select', entry);
+  if (!entry) {
+    return;
   }
+
+  emit('select', entry);
 };
 
 const listItems = useListItems() ?? createListItems();
@@ -217,21 +219,27 @@ const onKeydown = (event: KeyboardEvent): void => {
 };
 
 const onFocusin = (event: FocusEvent): void => {
-  if (owns()) {
-    navigation.onFocusin(event);
+  if (!owns()) {
+    return;
   }
+
+  navigation.onFocusin(event);
 };
 
 const onFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
-  if (owns() && !(next instanceof Node && rootElement.value?.contains(next))) {
-    navigation.reset();
+  if (!owns() || (next instanceof Node && rootElement.value?.contains(next))) {
+    return;
   }
+
+  navigation.reset();
 };
 
 onMounted(() => {
-  if (owns()) {
-    navigation.reset();
+  if (!owns()) {
+    return;
   }
+
+  navigation.reset();
 });
 </script>

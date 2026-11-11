@@ -48,9 +48,11 @@ const indicesOf = (tokens: readonly FormatToken[], from: number, to: number): nu
   const found: number[] = [];
 
   for (let index = from; index < to; index += 1) {
-    if (isDigit(tokens[index])) {
-      found.push(index);
+    if (!isDigit(tokens[index])) {
+      continue;
     }
+
+    found.push(index);
   }
   return found;
 };
@@ -345,10 +347,12 @@ const closest = (fraction: number, limit: number): readonly [number, number] => 
     const numerator = Math.round(fraction * denominator);
     const miss = Math.abs(fraction - numerator / denominator);
 
-    if (miss < error - 1e-12) {
-      best = [numerator, denominator];
-      error = miss;
+    if (miss >= error - 1e-12) {
+      continue;
     }
+
+    best = [numerator, denominator];
+    error = miss;
   }
   return best;
 };

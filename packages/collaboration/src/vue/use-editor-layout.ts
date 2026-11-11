@@ -11,9 +11,11 @@ export const useEditorLayout = (
   watch(
     [editor, mounted],
     ([api, ready], _before, onCleanup) => {
-      if (api !== undefined && ready) {
-        onCleanup(api.watchLayout(place));
+      if (api === undefined || !ready) {
+        return;
       }
+
+      onCleanup(api.watchLayout(place));
     },
     { immediate: true },
   );

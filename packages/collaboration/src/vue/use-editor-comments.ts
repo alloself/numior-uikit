@@ -185,16 +185,20 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
       collabProgress(state) === undefined ||
       isTraced(state, thread.anchor);
 
-    if (range !== undefined && trusted) {
-      run(setAnchor(thread.id, range));
+    if (range === undefined || !trusted) {
+      return;
     }
+
+    run(setAnchor(thread.id, range));
   };
 
   const placeWaiting = (): void => {
     waiting.forEach((thread) => {
-      if (latest !== undefined && !isAhead(latest, thread.anchor)) {
-        place(thread);
+      if (latest === undefined || isAhead(latest, thread.anchor)) {
+        return;
       }
+
+      place(thread);
     });
   };
 
@@ -285,11 +289,13 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
           void scheduleMoves();
         }
         if (
-          waiting.size > 0 &&
-          collabProgress(state)?.version !== collabProgress(before)?.version
+          waiting.size === 0 ||
+          collabProgress(state)?.version === collabProgress(before)?.version
         ) {
-          void nextTick(placeWaiting);
+          return;
         }
+
+        void nextTick(placeWaiting);
       },
     },
   });
@@ -403,9 +409,11 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
       done = true;
     });
 
-    if (done) {
-      dropped(id);
+    if (!done) {
+      return;
     }
+
+    dropped(id);
   };
 
   const close = (): void => {
@@ -423,9 +431,11 @@ export const useEditorComments = (options: UseEditorCommentsOptions): CollabComm
   const openAt = (pos: number): void => {
     const id = latest === undefined ? undefined : anchorsAt(latest, pos).at(-1);
 
-    if (id !== undefined && id !== DRAFT) {
-      opened.value = id;
+    if (id === undefined || id === DRAFT) {
+      return;
     }
+
+    opened.value = id;
   };
 
   const spot = (): CommentSpot | undefined => {

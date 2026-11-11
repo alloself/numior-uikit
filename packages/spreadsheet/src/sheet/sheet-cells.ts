@@ -78,9 +78,11 @@ const hiddenLines = (lines: LineLayouts): number[] => {
   const hidden: number[] = [];
 
   lines.forEach((line, layout) => {
-    if (layout.hidden) {
-      hidden.push(line);
+    if (!layout.hidden) {
+      return;
     }
+
+    hidden.push(line);
   });
 
   return hidden;
@@ -162,9 +164,11 @@ const rowHeightsOf = (sheet: Sheet, rows: LineIndex): Record<number, number> => 
   sheet.layout.rows.forEach((row, layout) => {
     const position = rows.positionOf(row);
 
-    if (position !== undefined && layout.size !== undefined) {
-      heights[position] = pointsToPixels(layout.size);
+    if (position === undefined || layout.size === undefined) {
+      return;
     }
+
+    heights[position] = pointsToPixels(layout.size);
   });
 
   return heights;

@@ -108,9 +108,11 @@ const collectIds = (node: ElementNode, into: NodeId[]): void => {
   into.push(node.id);
 
   for (const child of node.content) {
-    if (child.kind === ContentNodeKind.Element) {
-      collectIds(child, into);
+    if (child.kind !== ContentNodeKind.Element) {
+      continue;
     }
+
+    collectIds(child, into);
   }
 };
 

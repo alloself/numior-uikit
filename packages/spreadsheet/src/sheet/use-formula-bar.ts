@@ -146,18 +146,22 @@ export const useFormulaBar = (options: FormulaBarOptions): FormulaBar => {
   };
 
   const onFormulaFocus = (): void => {
-    if (!options.readonly() && editing.draft.value === undefined) {
-      options.table.value?.startEdit(NuiTableEditMode.Append, { focus: false });
+    if (options.readonly() || editing.draft.value !== undefined) {
+      return;
     }
+
+    options.table.value?.startEdit(NuiTableEditMode.Append, { focus: false });
   };
 
   const onFormulaInput = (): void => {
     const draft = editing.draft.value;
     const field = options.formulaField.value;
 
-    if (draft !== undefined && field !== null) {
-      editing.setDraft({ ...draft, value: field.value });
+    if (draft === undefined || field === null) {
+      return;
     }
+
+    editing.setDraft({ ...draft, value: field.value });
   };
 
   const breakLine = (): void => {
@@ -198,9 +202,11 @@ export const useFormulaBar = (options: FormulaBarOptions): FormulaBar => {
   };
 
   const onFormulaBlur = (event: FocusEvent): void => {
-    if (editing.draft.value !== undefined && !inside(event.relatedTarget, options.root.value)) {
-      options.table.value?.commitEdit(NuiTableEditMove.Blur);
+    if (editing.draft.value === undefined || inside(event.relatedTarget, options.root.value)) {
+      return;
     }
+
+    options.table.value?.commitEdit(NuiTableEditMove.Blur);
   };
 
   return {

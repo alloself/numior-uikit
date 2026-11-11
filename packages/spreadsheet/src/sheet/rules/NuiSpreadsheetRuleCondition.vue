@@ -157,32 +157,42 @@ const set = <K extends keyof RuleForm>(key: K, value: RuleForm[K]): void => {
 };
 
 const setOperator = (operator: CellIsOperator | null): void => {
-  if (operator !== null) {
-    set('operator', operator);
+  if (operator === null) {
+    return;
   }
+
+  set('operator', operator);
 };
 
 const setTextOperator = (operator: TextOperator | null): void => {
-  if (operator !== null) {
-    set('textOperator', operator);
+  if (operator === null) {
+    return;
   }
+
+  set('textOperator', operator);
 };
 
 const setPeriod = (period: TimePeriod | null): void => {
-  if (period !== null) {
-    set('period', period);
+  if (period === null) {
+    return;
   }
+
+  set('period', period);
 };
 
 const setEdge = (bottom: boolean | null): void => {
-  if (bottom !== null) {
-    set('bottom', bottom);
+  if (bottom === null) {
+    return;
   }
+
+  set('bottom', bottom);
 };
 
 const setAverage = (choice: AverageChoice | null): void => {
-  if (choice !== null) {
-    set('average', choice);
+  if (choice === null) {
+    return;
   }
+
+  set('average', choice);
 };
 </script>

@@ -52,7 +52,9 @@ export const pointerOffset = (list: HTMLElement, pointer: number): number =>
 export const focusRow = (row: Element | null | undefined, part: RowPart): void => {
   const element = row?.querySelector(PARTS[part])?.querySelector(FOCUSABLE);
 
-  if (element instanceof HTMLElement) {
-    element.focus();
+  if (!(element instanceof HTMLElement)) {
+    return;
   }
+
+  element.focus();
 };

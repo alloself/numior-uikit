@@ -271,13 +271,15 @@ const innerAttrs = (): AttrRecord => {
 
 const onClick = (): void => {
   if (
-    list?.kind === ListContextKind.List &&
-    mode() === ListItemMode.Option &&
-    !disabled &&
-    value !== undefined
+    list?.kind !== ListContextKind.List ||
+    mode() !== ListItemMode.Option ||
+    disabled ||
+    value === undefined
   ) {
-    list.select(value);
+    return;
   }
+
+  list.select(value);
 };
 
 onUpdated(register);

@@ -38,11 +38,13 @@ const nextPaint = async (): Promise<void> => {
 
 const afterIdle = async (): Promise<void> => {
   await nextPaint();
-  if (typeof requestIdleCallback === 'function') {
-    await new Promise((resolve) => {
-      requestIdleCallback(resolve, { timeout: IDLE_TIMEOUT });
-    });
+  if (typeof requestIdleCallback !== 'function') {
+    return;
   }
+
+  await new Promise((resolve) => {
+    requestIdleCallback(resolve, { timeout: IDLE_TIMEOUT });
+  });
 };
 
 const shapesRows = (query: TableQuery): boolean =>

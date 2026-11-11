@@ -184,9 +184,11 @@ const columnMenu: NuiTableColumnMenu<NuiContentTableRow> = ({ column, anchor }) 
           key: 'types',
           value: type,
           onChange: (value) => {
-            if (isType(value)) {
-              editor.run(retypeTableColumn(node.id, column.key, value));
+            if (!isType(value)) {
+              return;
             }
+
+            editor.run(retypeTableColumn(node.id, column.key, value));
           },
           items: CONTENT_TABLE_TYPES.map((option) => ({
             value: option,

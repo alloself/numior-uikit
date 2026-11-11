@@ -152,9 +152,11 @@ export const useBlockDrag = (options: BlockDragOptions): BlockDrag => {
   const edge = useEdgeScroll({
     container: options.frame,
     onStep: () => {
-      if (session.value?.moving === true) {
-        show(retarget(session.value));
+      if (session.value?.moving !== true) {
+        return;
       }
+
+      show(retarget(session.value));
     },
   });
 
@@ -208,9 +210,11 @@ export const useBlockDrag = (options: BlockDragOptions): BlockDrag => {
   };
 
   const onKeydown = (event: KeyboardEvent): void => {
-    if (event.key === Key.Escape) {
-      finish();
+    if (event.key !== Key.Escape) {
+      return;
     }
+
+    finish();
   };
 
   onScopeDispose(finish);

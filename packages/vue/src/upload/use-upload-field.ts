@@ -114,9 +114,11 @@ export const useUploadPreviews = <R>(): UploadPreviews<R> => {
   return {
     remember: (items) => {
       for (const item of items) {
-        if (item.file && canPreview(item) && !previews.has(item.id)) {
-          previews.set(item.id, URL.createObjectURL(item.file));
+        if (!item.file || !canPreview(item) || previews.has(item.id)) {
+          continue;
         }
+
+        previews.set(item.id, URL.createObjectURL(item.file));
       }
     },
     forget: (itemId) => {
@@ -136,9 +138,11 @@ export const useUploadPreviews = <R>(): UploadPreviews<R> => {
 
 export const useUploadPicker = (options: UploadPickerOptions): UploadPicker => ({
   open: () => {
-    if (!options.inert.value) {
-      options.input.value?.click();
+    if (options.inert.value) {
+      return;
     }
+
+    options.input.value?.click();
   },
   onChange: () => {
     const input = options.input.value;

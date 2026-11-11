@@ -100,9 +100,11 @@ export const useDatePickerShell = (options: DatePickerShellOptions): DatePickerS
   watch(popover.open, (isOpen) => {
     const quiet = keepFocus.take() === true;
 
-    if (isOpen && !quiet) {
-      focusCalendar();
+    if (!isOpen || quiet) {
+      return;
     }
+
+    focusCalendar();
   });
 
   return {

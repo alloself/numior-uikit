@@ -77,9 +77,11 @@ export const createCollatedSortJob = (
         ? stage.answer
         : undefined,
     cancel: () => {
-      if (stage.kind === CollationStage.Pack || stage.kind === CollationStage.Wait) {
-        opened?.cancel();
+      if (stage.kind !== CollationStage.Pack && stage.kind !== CollationStage.Wait) {
+        return;
       }
+
+      opened?.cancel();
     },
     work: (deadline) => {
       switch (stage.kind) {

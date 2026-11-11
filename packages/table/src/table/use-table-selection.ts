@@ -58,9 +58,11 @@ export const useTableSelection = <T>(options: TableSelectionOptions<T>): TableSe
     for (let position = start; position < end; position += 1) {
       const node = engine.nodeAt(position);
 
-      if (node?.kind === TableNodeKind.Row) {
-        rows.push(node.row);
+      if (node?.kind !== TableNodeKind.Row) {
+        continue;
       }
+
+      rows.push(node.row);
     }
     return rows;
   };

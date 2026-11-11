@@ -117,9 +117,11 @@ export const readWorkbookPart = async (
         }
       },
       text: (text) => {
-        if (name !== undefined) {
-          name.text += text;
+        if (name === undefined) {
+          return;
         }
+
+        name.text += text;
       },
       close: (element) => {
         if (name === undefined || element.local !== OoxmlElement.DefinedName) {

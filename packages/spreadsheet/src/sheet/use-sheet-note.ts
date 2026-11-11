@@ -30,9 +30,11 @@ export const useSheetNote = (): SheetNote => {
     },
     hold: fade.stop,
     release: () => {
-      if (shown.value) {
-        fade.start();
+      if (!shown.value) {
+        return;
       }
+
+      fade.start();
     },
   };
 };

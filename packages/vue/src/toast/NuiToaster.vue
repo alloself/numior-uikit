@@ -95,13 +95,17 @@ const observedElements = shallowRef<HTMLElement[]>([]);
 
 const measure = (entries: readonly ResizeObserverEntry[]): void => {
   for (const entry of entries) {
-    if (entry.target instanceof HTMLElement) {
-      const toastId = observed.get(entry.target);
-
-      if (toastId !== undefined) {
-        sizes.set(toastId, entry.target.offsetHeight);
-      }
+    if (!(entry.target instanceof HTMLElement)) {
+      continue;
     }
+
+    const toastId = observed.get(entry.target);
+
+    if (toastId === undefined) {
+      continue;
+    }
+
+    sizes.set(toastId, entry.target.offsetHeight);
   }
 };
 
@@ -123,9 +127,11 @@ const track = (toastId: string, element: unknown): void => {
     return;
   }
   for (const [node, ownerId] of observed) {
-    if (ownerId === toastId) {
-      observed.delete(node);
+    if (ownerId !== toastId) {
+      continue;
     }
+
+    observed.delete(node);
   }
   observedElements.value = [...observed.keys()];
   sizes.delete(toastId);
@@ -136,9 +142,11 @@ const modalOpen = (): boolean => document.querySelector('dialog[open]') !== null
 watch(
   () => store.toasts.value.length,
   (next, previous) => {
-    if (next > previous && modalOpen()) {
-      raise();
+    if (next <= previous || !modalOpen()) {
+      return;
     }
+
+    raise();
   },
 );
 
@@ -172,9 +180,11 @@ watch(
     if (toasts.length === 0) {
       hover.end();
     }
-    if (regionElement.value?.contains(document.activeElement) !== true) {
-      store.release(ToastHold.Focus);
+    if (regionElement.value?.contains(document.activeElement) === true) {
+      return;
     }
+
+    store.release(ToastHold.Focus);
   },
   { flush: 'post' },
 );
@@ -203,9 +213,11 @@ const onFocusin = (event: FocusEvent): void => {
 const onFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
 
-  if (!(next instanceof Node) || regionElement.value?.contains(next) !== true) {
-    store.release(ToastHold.Focus);
+  if (next instanceof Node && regionElement.value?.contains(next) === true) {
+    return;
   }
+
+  store.release(ToastHold.Focus);
 };
 
 const onVisibilityChange = (): void => {

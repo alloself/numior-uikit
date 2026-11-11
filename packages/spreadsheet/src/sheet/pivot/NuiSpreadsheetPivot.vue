@@ -346,9 +346,11 @@ const placed = (field: number, to: PivotSpot): void => {
 const check = (field: number, on: boolean): void => {
   const next = checkField(definition, field, on, placement.value);
 
-  if (next !== definition) {
-    emit('change', next);
+  if (next === definition) {
+    return;
   }
+
+  emit('change', next);
 };
 
 const appendTo = (area: PivotArea): PivotSpot => ({ area, index: areas.value[area].length });
@@ -493,9 +495,11 @@ const setOption = (next: PivotDefinition): void => {
 const setLayout = (value: string): void => {
   const layout = layoutOf(value);
 
-  if (layout !== undefined && layout !== definition.layout) {
-    setOption({ ...definition, layout });
+  if (layout === undefined || layout === definition.layout) {
+    return;
   }
+
+  setOption({ ...definition, layout });
 };
 
 const optionItems = computed((): NuiMenuEntry[] => [
@@ -573,9 +577,11 @@ const takenNames = (index: number): Set<string> => {
   const taken = new Set((fields ?? []).map((field) => field.name.toLowerCase()));
 
   definition.values.forEach((value, at) => {
-    if (at !== index) {
-      taken.add(value.name.toLowerCase());
+    if (at === index) {
+      return;
     }
+
+    taken.add(value.name.toLowerCase());
   });
 
   return taken;
@@ -714,15 +720,19 @@ const ghostLabel = computed(() => {
 });
 
 const onFieldDown = (item: PivotFieldView, event: PointerEvent): void => {
-  if (!readonly) {
-    drag.onPointerdown({ kind: PivotDragKind.Field, field: item.field, label: item.name }, event);
+  if (readonly) {
+    return;
   }
+
+  drag.onPointerdown({ kind: PivotDragKind.Field, field: item.field, label: item.name }, event);
 };
 
 const onChipDown = (chip: PivotChip, event: PointerEvent): void => {
-  if (!readonly) {
-    drag.onPointerdown({ kind: PivotDragKind.Chip, chip }, event);
+  if (readonly) {
+    return;
   }
+
+  drag.onPointerdown({ kind: PivotDragKind.Chip, chip }, event);
 };
 
 const onChipKeydown = (chip: PivotChip, event: KeyboardEvent): void => {
@@ -768,9 +778,11 @@ const focusChip = (target: FocusTarget): void => {
   const index = chips.findLastIndex((chip) => chip.field === target.field);
   const element = areaElements().get(target.area)?.querySelectorAll(CHIP_SELECTOR)[index];
 
-  if (element instanceof HTMLElement) {
-    element.focus();
+  if (!(element instanceof HTMLElement)) {
+    return;
   }
+
+  element.focus();
 };
 
 watch(
@@ -780,9 +792,11 @@ watch(
 
     focusAfter.value = undefined;
 
-    if (target !== undefined) {
-      focusChip(target);
+    if (target === undefined) {
+      return;
     }
+
+    focusChip(target);
   },
   { flush: 'post' },
 );

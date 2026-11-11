@@ -217,16 +217,18 @@ const putIn = (trace: Trace, change: Change): Trace => {
         const from = start + offset + hold.from;
         const to = start + offset + hold.to;
 
-        if (span !== undefined) {
-          revived.add(hold.id);
-
-          spans.set(
-            hold.id,
-            span.from === span.to
-              ? { from, to }
-              : { from: Math.min(span.from, from), to: Math.max(span.to, to) },
-          );
+        if (span === undefined) {
+          continue;
         }
+
+        revived.add(hold.id);
+
+        spans.set(
+          hold.id,
+          span.from === span.to
+            ? { from, to }
+            : { from: Math.min(span.from, from), to: Math.max(span.to, to) },
+        );
       }
 
       offset += ghost.size;

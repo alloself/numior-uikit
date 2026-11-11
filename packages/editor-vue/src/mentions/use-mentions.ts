@@ -114,9 +114,11 @@ export const useMentions = (options: MentionOptions): Mentions => {
 
     const person = found[active.value];
 
-    if (ahead && person !== undefined && place !== undefined) {
-      insert(person, place);
+    if (!ahead || person === undefined || place === undefined) {
+      return;
     }
+
+    insert(person, place);
   };
 
   const ask = (query: string): void => {
@@ -207,9 +209,11 @@ export const useMentions = (options: MentionOptions): Mentions => {
     choose: (person) => {
       const found = match.value;
 
-      if (found !== undefined) {
-        insert(person, found);
+      if (found === undefined) {
+        return;
       }
+
+      insert(person, found);
     },
   };
 };

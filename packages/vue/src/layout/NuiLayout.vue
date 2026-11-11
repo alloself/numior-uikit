@@ -70,9 +70,11 @@ const toggle = (): void => {
 };
 
 watch(mobile, (isMobile) => {
-  if (!isMobile) {
-    mobileOpen.value = false;
+  if (isMobile) {
+    return;
   }
+
+  mobileOpen.value = false;
 });
 
 provideLayout({ open, mobileOpen, mobile, sidebarId, toggle });

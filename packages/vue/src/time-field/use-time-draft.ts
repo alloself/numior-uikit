@@ -134,9 +134,11 @@ export const useTimeDraft = (options: TimeDraftOptions): TimeDraftControl => {
 
   const shift = (minutes: number): void => {
     const time = complete();
-    if (time) {
-      setTime(clampTime(shiftTime(time, minutes), options.min(), options.max()));
+    if (!time) {
+      return;
     }
+
+    setTime(clampTime(shiftTime(time, minutes), options.min(), options.max()));
   };
 
   const settle = (): void => {
@@ -146,9 +148,11 @@ export const useTimeDraft = (options: TimeDraftOptions): TimeDraftControl => {
       return;
     }
     const clamped = clampTime(time, options.min(), options.max());
-    if (compareTime(clamped, time) !== 0) {
-      setTime(clamped);
+    if (compareTime(clamped, time) === 0) {
+      return;
     }
+
+    setTime(clamped);
   };
 
   watch(options.model, (value) => {

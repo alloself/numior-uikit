@@ -139,9 +139,11 @@ const nextTask = (run: () => void): (() => void) => {
     'message',
     () => {
       channel.port1.close();
-      if (live) {
-        run();
+      if (!live) {
+        return;
       }
+
+      run();
     },
     { once: true },
   );
@@ -262,23 +264,29 @@ const createCatchUp = (context: ViewContext, settle: () => void): CatchUp => {
       Math.min(SLICE_MS - (performance.now() - started), deadline?.timeRemaining() ?? SLICE_MS),
     );
 
-    if (context.stale.size > 0) {
-      cancel = idle(slice);
+    if (context.stale.size === 0) {
+      return;
     }
+
+    cancel = idle(slice);
   };
 
   return {
     schedule: () => {
-      if (cancel === undefined && context.stale.size > 0) {
-        cancel = idle(slice);
+      if (cancel !== undefined || context.stale.size === 0) {
+        return;
       }
+
+      cancel = idle(slice);
     },
     all: () => {
       cancel?.();
       cancel = undefined;
-      if (context.stale.size > 0) {
-        run(() => Number.POSITIVE_INFINITY);
+      if (context.stale.size === 0) {
+        return;
       }
+
+      run(() => Number.POSITIVE_INFINITY);
     },
     stop: () => {
       cancel?.();
@@ -336,14 +344,18 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     for (const block of chunk.children) {
       const desc = context.descs.get(block);
 
-      if (desc?.kind === DescKind.Element && context.stale.has(desc)) {
-        freshen(context, desc);
-        changed = true;
+      if (desc?.kind !== DescKind.Element || !context.stale.has(desc)) {
+        continue;
       }
+
+      freshen(context, desc);
+      changed = true;
     }
-    if (changed) {
-      settle();
+    if (!changed) {
+      return;
     }
+
+    settle();
   };
 
   const catchUp = createCatchUp(context, settle);
@@ -393,9 +405,11 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     rootDesc,
     state: () => state,
     dispatch: (tr, source) => {
-      if (editable || !tr.changed) {
-        dispatch(tr, source);
+      if (!editable && tr.changed) {
+        return;
       }
+
+      dispatch(tr, source);
     },
     composing: () => composing,
     holding: () => holding,
@@ -456,10 +470,12 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     for (const id of context.redraw) {
       const desc = context.byId.get(id);
 
-      if (desc !== undefined && !context.stale.has(desc)) {
-        redrawContent(context, desc);
-        context.redraw.delete(id);
+      if (desc === undefined || context.stale.has(desc)) {
+        continue;
       }
+
+      redrawContent(context, desc);
+      context.redraw.delete(id);
     }
     const previous = state;
 

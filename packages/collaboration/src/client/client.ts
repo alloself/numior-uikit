@@ -104,9 +104,11 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
   const refresh = (): void => {
     const local = document.version();
 
-    if (local !== null && status.kind === CollabStatusKind.Online) {
-      link.send({ kind: ClientMessageKind.Pull, from: local });
+    if (local === null || status.kind !== CollabStatusKind.Online) {
+      return;
     }
+
+    link.send({ kind: ClientMessageKind.Pull, from: local });
   };
 
   const onWelcome = (message: WelcomeMessage): void => {
@@ -181,11 +183,12 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
       fail(CollabFailure.Protocol);
       return false;
     }
-    if (!document.settle(count, steps, version)) {
-      fail(CollabFailure.Document);
-      return false;
+    if (document.settle(count, steps, version)) {
+      return true;
     }
-    return true;
+
+    fail(CollabFailure.Document);
+    return false;
   };
 
   const onAccepted = (message: AcceptedMessage): void => {
@@ -274,9 +277,11 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
       liveness.stop();
       presence.offline();
 
-      if (status.kind !== CollabStatusKind.Failed) {
-        setStatus({ kind: CollabStatusKind.Offline });
+      if (status.kind === CollabStatusKind.Failed) {
+        return;
       }
+
+      setStatus({ kind: CollabStatusKind.Offline });
     },
   });
 

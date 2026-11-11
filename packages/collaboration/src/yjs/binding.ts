@@ -57,9 +57,11 @@ const elementAt = (
 const removeChild = (element: XmlElement): void => {
   const parent = element.parent;
 
-  if (parent instanceof XmlElement || isFragment(parent)) {
-    parent.delete(parent.toArray().indexOf(element), 1);
+  if (!(parent instanceof XmlElement) && !isFragment(parent)) {
+    return;
   }
+
+  parent.delete(parent.toArray().indexOf(element), 1);
 };
 
 const isFragment = (value: unknown): value is XmlFragment =>
@@ -176,9 +178,11 @@ export const yjsBinding = (
       name: 'yjsBinding',
       props: {
         stateChanged: (state, before) => {
-          if (state.doc !== before.doc && !applying && !unread) {
-            write(state.doc.root);
+          if (state.doc === before.doc || applying || unread) {
+            return;
           }
+
+          write(state.doc.root);
         },
       },
     }),

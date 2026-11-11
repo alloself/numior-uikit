@@ -96,9 +96,11 @@ const close = (value: string): void => {
   closed.push(value);
   shown.value = shown.value.filter((tab) => tab.value !== value);
 
-  if (model.value === value) {
-    model.value = (shown.value[index] ?? shown.value[index - 1])?.value;
+  if (model.value !== value) {
+    return;
   }
+
+  model.value = (shown.value[index] ?? shown.value[index - 1])?.value;
 };
 
 defineExpose({ model, closed });

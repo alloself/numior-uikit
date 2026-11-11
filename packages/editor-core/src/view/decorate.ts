@@ -89,15 +89,16 @@ const piecesOf = (
   const found: PlacedDecoration[] = [];
 
   doc.nodesBetween(decoration.from, decoration.to, (node, pos) => {
-    if (node.kind === ContentNodeKind.Element && doc.schema.nodes.get(node.type)?.inlineContent) {
-      const part = piece(node.id, pos + 1, node.size - 2, decoration);
-
-      if (part !== undefined) {
-        found.push(part);
-      }
-      return false;
+    if (node.kind !== ContentNodeKind.Element || !doc.schema.nodes.get(node.type)?.inlineContent) {
+      return true;
     }
-    return true;
+
+    const part = piece(node.id, pos + 1, node.size - 2, decoration);
+
+    if (part !== undefined) {
+      found.push(part);
+    }
+    return false;
   });
 
   return found;
@@ -143,11 +144,13 @@ const rangesOf = (state: EditorState, set: DecorationSet): BlockDecorations => {
   const limit = state.doc.root.size - 2;
 
   for (const decoration of set.decorations) {
-    if (decoration.from >= 0 && decoration.to <= limit) {
-      piecesOf(state, decoration).forEach((part) => {
-        addTo(blocks, part.id, part.decoration);
-      });
+    if (decoration.from < 0 || decoration.to > limit) {
+      continue;
     }
+
+    piecesOf(state, decoration).forEach((part) => {
+      addTo(blocks, part.id, part.decoration);
+    });
   }
 
   ranges.set(set, { root: state.doc.root, blocks });
@@ -168,14 +171,16 @@ const anchoredOf = (state: EditorState, set: DecorationSet): BlockDecorations =>
   const blocks = new Map<NodeId, LocalDecoration[]>();
 
   for (const decoration of set.blocks) {
-    if (fitsBlock(state, decoration)) {
-      addTo(blocks, decoration.block, {
-        from: decoration.from,
-        to: decoration.to,
-        class: decoration.class,
-        tag: decoration.tag,
-      });
+    if (!fitsBlock(state, decoration)) {
+      continue;
     }
+
+    addTo(blocks, decoration.block, {
+      from: decoration.from,
+      to: decoration.to,
+      class: decoration.class,
+      tag: decoration.tag,
+    });
   }
 
   anchored.set(set, blocks);
@@ -230,9 +235,11 @@ export const segmentsOf = (
 
   for (const decoration of decorations) {
     for (const edge of [decoration.from - start, decoration.to - start]) {
-      if (edge > 0 && edge < length) {
-        edges.add(edge);
+      if (edge <= 0 || edge >= length) {
+        continue;
       }
+
+      edges.add(edge);
     }
   }
 

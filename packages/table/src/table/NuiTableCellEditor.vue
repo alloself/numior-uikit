@@ -81,9 +81,11 @@ const invalid = computed(() => error !== undefined);
 const keepOpen = (): void => undefined;
 
 const finish = (move: NuiTableEditMove): void => {
-  if (!settled) {
-    settled = commit(move);
+  if (settled) {
+    return;
   }
+
+  settled = commit(move);
 };
 
 const bound = computed(() => ({
@@ -93,9 +95,11 @@ const bound = computed(() => ({
     echoed = { value: next };
     emit('update', next);
 
-    if (popup) {
-      finish('stay');
+    if (!popup) {
+      return;
     }
+
+    finish('stay');
   },
 }));
 
@@ -151,9 +155,11 @@ const onFocusout = (event: FocusEvent): void => {
   }
 
   queueMicrotask(() => {
-    if (root.value?.contains(document.activeElement) !== true) {
-      finish('blur');
+    if (root.value?.contains(document.activeElement) === true) {
+      return;
     }
+
+    finish('blur');
   });
 };
 
@@ -171,20 +177,24 @@ const unfold = (): void => {
   const trigger = document.activeElement;
 
   if (
-    trigger instanceof HTMLButtonElement &&
-    trigger.hasAttribute('aria-haspopup') &&
-    trigger.getAttribute('aria-expanded') !== AriaValue.True
+    !(trigger instanceof HTMLButtonElement) ||
+    !trigger.hasAttribute('aria-haspopup') ||
+    trigger.getAttribute('aria-expanded') === AriaValue.True
   ) {
-    trigger.dispatchEvent(
-      new KeyboardEvent('keydown', { key: Key.ArrowDown, bubbles: true, cancelable: true }),
-    );
+    return;
   }
+
+  trigger.dispatchEvent(
+    new KeyboardEvent('keydown', { key: Key.ArrowDown, bubbles: true, cancelable: true }),
+  );
 };
 
 const onMousedown = (event: MouseEvent): void => {
-  if (event.target instanceof Element && event.target.closest(FOCUSABLE) === null) {
-    event.preventDefault();
+  if (!(event.target instanceof Element) || event.target.closest(FOCUSABLE) !== null) {
+    return;
   }
+
+  event.preventDefault();
 };
 
 const fieldOf = (): HTMLInputElement | HTMLTextAreaElement | undefined => {
@@ -285,9 +295,11 @@ const fit = (hold: boolean): void => {
   unhold();
   widen(editor, field, viewport);
 
-  if (hold) {
-    unhold = holdScrollAfterResize(editor);
+  if (!hold) {
+    return;
   }
+
+  unhold = holdScrollAfterResize(editor);
 };
 
 const reveal = (): void => {
@@ -310,12 +322,14 @@ const reveal = (): void => {
   const right = inner + viewport.clientWidth - (rtl ? start : end);
   const rect = cell.getBoundingClientRect();
 
-  if (rect.left < left || rect.right > right) {
-    cell.scrollIntoView?.({
-      block: 'nearest',
-      inline: rect.width <= right - left ? 'nearest' : 'start',
-    });
+  if (rect.left >= left && rect.right <= right) {
+    return;
   }
+
+  cell.scrollIntoView?.({
+    block: 'nearest',
+    inline: rect.width <= right - left ? 'nearest' : 'start',
+  });
 };
 
 watch(
@@ -332,9 +346,11 @@ watch(
 watch(
   () => error,
   (next) => {
-    if (next !== undefined) {
-      message.value = next;
+    if (next === undefined) {
+      return;
     }
+
+    message.value = next;
   },
 );
 

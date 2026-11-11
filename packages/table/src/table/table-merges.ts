@@ -71,12 +71,14 @@ export const createMergeIndex = (
   for (const merge of merges) {
     const box = clipped(boxOf(merge), bounds);
 
-    if (spansCells(box) && !near(box.top, box.bottom).some((other) => crosses(other, box))) {
-      kept.push(box);
+    if (!spansCells(box) || near(box.top, box.bottom).some((other) => crosses(other, box))) {
+      continue;
+    }
 
-      for (let block = blockOf(box.top); block <= blockOf(box.bottom); block += 1) {
-        blocks.set(block, [...(blocks.get(block) ?? NO_MERGES), box]);
-      }
+    kept.push(box);
+
+    for (let block = blockOf(box.top); block <= blockOf(box.bottom); block += 1) {
+      blocks.set(block, [...(blocks.get(block) ?? NO_MERGES), box]);
     }
   }
 
@@ -244,9 +246,11 @@ const slotSegments = (merge: RangeBox, slots: readonly TableMergeSlot[]): Segmen
   const segments = new Map<string, Segment>();
 
   slots.forEach((slot, at) => {
-    if (slot.col !== undefined && slot.col >= merge.start && slot.col <= merge.end) {
-      segments.set(slot.pane, { first: segments.get(slot.pane)?.first ?? at, last: at });
+    if (slot.col === undefined || slot.col < merge.start || slot.col > merge.end) {
+      return;
     }
+
+    segments.set(slot.pane, { first: segments.get(slot.pane)?.first ?? at, last: at });
   });
 
   return [...segments.values()];

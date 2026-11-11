@@ -38,9 +38,11 @@ export const parseThemeTokens = (css: string): TokenReference[] => {
   for (const match of css.matchAll(DECLARATION_RE)) {
     const [, name, value] = match;
 
-    if (name !== undefined && value !== undefined && !tokens.has(name)) {
-      tokens.set(name, tokenOf(name, value));
+    if (name === undefined || value === undefined || tokens.has(name)) {
+      continue;
     }
+
+    tokens.set(name, tokenOf(name, value));
   }
   return [...tokens.values()];
 };

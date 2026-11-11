@@ -12,9 +12,11 @@ const truths = (args: FunctionArgs): boolean[] => {
     if (value.kind === CellValueKind.Error) {
       raise(value.code);
     }
-    if (direct || value.kind === CellValueKind.Number || value.kind === CellValueKind.Boolean) {
-      found.push(toLogical(value, args.locale));
+    if (!direct && value.kind !== CellValueKind.Number && value.kind !== CellValueKind.Boolean) {
+      return;
     }
+
+    found.push(toLogical(value, args.locale));
   });
 
   return found.length === 0 ? raise('#VALUE!') : found;

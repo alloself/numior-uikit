@@ -102,20 +102,24 @@ export const createHost = <V extends object, O>(
   const retain = (entry: Entry<V>): void => {
     const { touched, attempted, errors } = entry.state;
 
-    if (touched.value || attempted.value || errors.value.length > 0) {
-      core.retained.set(entry.path(), {
-        touched: touched.value,
-        attempted: attempted.value,
-        errors: errors.value,
-        value: cloneValue(entry.value()),
-      });
+    if (!touched.value && !attempted.value && errors.value.length === 0) {
+      return;
     }
+
+    core.retained.set(entry.path(), {
+      touched: touched.value,
+      attempted: attempted.value,
+      errors: errors.value,
+      value: cloneValue(entry.value()),
+    });
   };
 
   const release = (entry: Entry<V>): void => {
-    if (!entry.keepValue()) {
-      core.engine.unsetValue(entry.path());
+    if (entry.keepValue()) {
+      return;
     }
+
+    core.engine.unsetValue(entry.path());
   };
 
   const commitFor = (entry: Entry<V>): ((value: unknown) => boolean) => {
@@ -161,9 +165,11 @@ export const createHost = <V extends object, O>(
 
       if (getCurrentScope()) {
         watch(entry.active, (active) => {
-          if (!active && !entry.keepValue() && !claimed(entry.path(), entry)) {
-            release(entry);
+          if (active || entry.keepValue() || claimed(entry.path(), entry)) {
+            return;
           }
+
+          release(entry);
         });
       }
       return entry;

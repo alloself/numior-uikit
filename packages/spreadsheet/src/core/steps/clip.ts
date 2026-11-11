@@ -532,9 +532,11 @@ export const createCellClips = (book: Workbook, calculator: Calculator): CellCli
 
     for (const range of ranges) {
       for (const cell of cellContentsIn(book, calculator, sheet, range).values()) {
-        if (cell.content?.kind !== CellInputKind.Empty) {
-          edits.set(cellKey(cell.row, cell.col), { row: cell.row, col: cell.col, content: EMPTY });
+        if (cell.content?.kind === CellInputKind.Empty) {
+          continue;
         }
+
+        edits.set(cellKey(cell.row, cell.col), { row: cell.row, col: cell.col, content: EMPTY });
       }
     }
     return edits.size === 0

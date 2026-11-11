@@ -59,13 +59,15 @@ const cutsOf = (skip: readonly StepSpan[], from: number, to: number): Cut[] => {
     const start = Math.max(span.from, cursor);
     const end = Math.min(span.to, to);
 
-    if (end > start) {
-      if (start > cursor) {
-        cuts.push({ from: cursor, to: start, changed: true });
-      }
-      cuts.push({ from: start, to: end, changed: false });
-      cursor = end;
+    if (end <= start) {
+      continue;
     }
+
+    if (start > cursor) {
+      cuts.push({ from: cursor, to: start, changed: true });
+    }
+    cuts.push({ from: start, to: end, changed: false });
+    cursor = end;
   }
   if (cursor < to) {
     cuts.push({ from: cursor, to, changed: true });

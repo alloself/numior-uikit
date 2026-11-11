@@ -60,9 +60,11 @@ const withSpot =
   (transform) => {
     const spot = pick(textSpots(transform.doc), at);
 
-    if (spot !== undefined) {
-      act(transform, spot);
+    if (spot === undefined) {
+      return;
     }
+
+    act(transform, spot);
   };
 
 const typing = (at: number, value: string): Change =>
@@ -98,9 +100,11 @@ const unmarking = (at: number, length: number): Change =>
 
 const splitting = (at: number): Change =>
   withSpot(at, (transform, spot) => {
-    if (transform.doc.resolve(spot.pos).parent.type !== 'code_block') {
-      transform.split(spot.pos);
+    if (transform.doc.resolve(spot.pos).parent.type === 'code_block') {
+      return;
     }
+
+    transform.split(spot.pos);
   });
 
 const joining =
@@ -108,9 +112,11 @@ const joining =
   (transform) => {
     const pos = pick(boundaries(transform.doc), at);
 
-    if (pos !== undefined) {
-      transform.maybeStep({ kind: 'replace', from: pos - 1, to: pos + 1, slice: EMPTY });
+    if (pos === undefined) {
+      return;
     }
+
+    transform.maybeStep({ kind: 'replace', from: pos - 1, to: pos + 1, slice: EMPTY });
   };
 
 const topTextblocks = (doc: Doc): { readonly pos: number; readonly type: string }[] => {

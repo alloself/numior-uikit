@@ -229,9 +229,11 @@ const createChartDrafter = () => {
       inPlotArea += 1;
       return;
     }
-    if (!openSetting(name.local, attributes)) {
-      openSeriesPart(name.local);
+    if (openSetting(name.local, attributes)) {
+      return;
     }
+
+    openSeriesPart(name.local);
   };
 
   const closeCapture = (): void => {

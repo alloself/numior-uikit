@@ -124,9 +124,11 @@ const keptValues = computed((): readonly CellValue[] =>
 );
 
 const setOrder = (next: PivotSort | null): void => {
-  if (next !== null) {
-    order.value = next;
+  if (next === null) {
+    return;
   }
+
+  order.value = next;
 };
 
 const checkItem = (item: PivotItemView, on: boolean): void => {

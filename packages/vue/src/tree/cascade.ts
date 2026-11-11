@@ -12,10 +12,12 @@ const pushEnabledDescendants = <T>(
   out: string[],
 ): void => {
   for (const child of item.children ?? []) {
-    if (!child.disabled) {
-      out.push(keyOf(child.value));
-      pushEnabledDescendants(child, keyOf, out);
+    if (child.disabled) {
+      continue;
     }
+
+    out.push(keyOf(child.value));
+    pushEnabledDescendants(child, keyOf, out);
   }
 };
 
@@ -39,9 +41,11 @@ export const checkStates = <T>(
     for (const child of item.children ?? []) {
       const marked = visit(child);
 
-      if (marked && !child.disabled) {
-        below = true;
+      if (!marked || child.disabled) {
+        continue;
       }
+
+      below = true;
     }
 
     const own = checked.has(key);

@@ -386,9 +386,11 @@ const atomAt = (host: ViewHost, target: EventTarget | null): string | undefined 
     current !== null;
     current = current.parent
   ) {
-    if (isAtom(host.context.schema, current.node)) {
-      found = current.node.id;
+    if (!isAtom(host.context.schema, current.node)) {
+      continue;
     }
+
+    found = current.node.id;
   }
   return found;
 };
@@ -412,9 +414,11 @@ const carriesFiles = (event: DragEvent): boolean =>
   [...(event.dataTransfer?.types ?? [])].includes('Files');
 
 const onDragover = (event: DragEvent): void => {
-  if (carriesFiles(event)) {
-    event.preventDefault();
+  if (!carriesFiles(event)) {
+    return;
   }
+
+  event.preventDefault();
 };
 
 const carried = (state: EditorState, range: SelectionRange): Carried => ({
@@ -474,9 +478,11 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
       return;
     }
     parts.sync.read();
-    if (handleKey(host, event)) {
-      event.preventDefault();
+    if (!handleKey(host, event)) {
+      return;
     }
+
+    event.preventDefault();
   };
 
   const onBeforeinput = (event: InputEvent): void => {
@@ -499,9 +505,11 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
 
     runIntent(host, intent);
 
-    if (intent.kind === InputIntentKind.Delete && sameGap(host.state().selection, gap)) {
-      runIntent(host, intent);
+    if (intent.kind !== InputIntentKind.Delete || !sameGap(host.state().selection, gap)) {
+      return;
     }
+
+    runIntent(host, intent);
   };
 
   const onPaste = (event: ClipboardEvent): void => {
@@ -509,9 +517,11 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
 
     event.preventDefault();
     parts.sync.read();
-    if (intent !== undefined) {
-      runIntent(host, intent);
+    if (intent === undefined) {
+      return;
     }
+
+    runIntent(host, intent);
   };
 
   const onCopy = (event: ClipboardEvent): void => {
@@ -528,11 +538,13 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     event.clipboardData.setData('text/plain', text);
     event.clipboardData.setData('text/html', html);
     if (
-      event.type === DomEventType.Cut &&
-      root.getAttribute('contenteditable') === AttrToken.True
+      event.type !== DomEventType.Cut ||
+      root.getAttribute('contenteditable') !== AttrToken.True
     ) {
-      runIntent(host, { kind: 'delete', direction: 'backward', unit: 'character' });
+      return;
     }
+
+    runIntent(host, { kind: 'delete', direction: 'backward', unit: 'character' });
   };
 
   const onDragstart = (event: DragEvent): void => {
@@ -583,9 +595,11 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   };
 
   const onWidgetDrag = (event: DragEvent): void => {
-    if (widgetAround(host.context, event.target) && carriesFiles(event)) {
-      event.preventDefault();
+    if (!widgetAround(host.context, event.target) || !carriesFiles(event)) {
+      return;
     }
+
+    event.preventDefault();
   };
 
   const onWidgetDrop = (event: DragEvent): void => {
@@ -691,17 +705,21 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   };
 
   const onSelectionchange = (): void => {
-    if (!host.holding() && !widgetAround(host.context, doc.getSelection()?.focusNode ?? null)) {
-      parts.sync.read();
+    if (host.holding() || widgetAround(host.context, doc.getSelection()?.focusNode ?? null)) {
+      return;
     }
+
+    parts.sync.read();
   };
 
   const own =
     <E extends Event>(handler: (event: E) => void) =>
     (event: E): void => {
-      if (!widgetAround(host.context, event.target)) {
-        handler(event);
+      if (widgetAround(host.context, event.target)) {
+        return;
       }
+
+      handler(event);
     };
 
   const selectedOwner = (target: EventTarget | null): boolean => {
@@ -718,9 +736,11 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   const clipboard =
     <E extends Event>(handler: (event: E) => void) =>
     (event: E): void => {
-      if (!widgetAround(host.context, event.target) || selectedOwner(event.target)) {
-        handler(event);
+      if (widgetAround(host.context, event.target) && !selectedOwner(event.target)) {
+        return;
       }
+
+      handler(event);
     };
 
   const keydown = own(onKeydown);

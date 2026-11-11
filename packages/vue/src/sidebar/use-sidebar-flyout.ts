@@ -109,9 +109,11 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
   };
 
   const leave = (): void => {
-    if (!pinned) {
-      delay.scheduleClose();
+    if (pinned) {
+      return;
     }
+
+    delay.scheduleClose();
   };
 
   const closeAndReturn = (): void => {
@@ -120,9 +122,11 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
   };
 
   const onTriggerPointerenter = (event: PointerEvent): void => {
-    if (event.pointerType !== PointerType.Touch) {
-      delay.scheduleOpen();
+    if (event.pointerType === PointerType.Touch) {
+      return;
     }
+
+    delay.scheduleOpen();
   };
 
   const onTriggerKeydown = (event: KeyboardEvent): void => {
@@ -154,15 +158,19 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
   };
 
   const onContentFocusout = (event: FocusEvent): void => {
-    if (!holds(event.relatedTarget)) {
-      delay.closeNow();
+    if (holds(event.relatedTarget)) {
+      return;
     }
+
+    delay.closeNow();
   };
 
   const onPagePointerdown = (event: PointerEvent): void => {
-    if (!holds(event.target)) {
-      delay.closeNow();
+    if (holds(event.target)) {
+      return;
     }
+
+    delay.closeNow();
   };
 
   useEventListener(
@@ -177,17 +185,21 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
   watch(
     open,
     (isOpen) => {
-      if (!isOpen) {
-        pinned = false;
+      if (isOpen) {
+        return;
       }
+
+      pinned = false;
     },
     { flush: 'sync' },
   );
 
   watch(options.enabled, (isEnabled) => {
-    if (!isEnabled) {
-      delay.closeNow();
+    if (isEnabled) {
+      return;
     }
+
+    delay.closeNow();
   });
 
   onMounted(() => {

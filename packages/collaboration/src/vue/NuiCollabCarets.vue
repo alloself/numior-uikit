@@ -70,9 +70,11 @@ const measure = (): void => {
   shown.value.forEach((peer, index) => {
     const element = carets[index];
 
-    if (element instanceof HTMLElement && peer.head !== undefined) {
-      place(element, peer.head);
+    if (!(element instanceof HTMLElement) || peer.head === undefined) {
+      return;
     }
+
+    place(element, peer.head);
   });
 };
 
@@ -95,8 +97,10 @@ useEventListener(() => layer.value?.ownerDocument, 'scroll', schedule, {
 });
 
 onBeforeUnmount(() => {
-  if (frame !== undefined) {
-    cancelAnimationFrame(frame);
+  if (frame === undefined) {
+    return;
   }
+
+  cancelAnimationFrame(frame);
 });
 </script>

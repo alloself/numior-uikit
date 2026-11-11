@@ -56,9 +56,11 @@ const shown = computed((): readonly FormulaSegment[] => {
 const painted = computed(() => shown.value.some(isToned));
 
 const follow = (): void => {
-  if (field.value !== null && mirror.value !== null) {
-    mirror.value.scrollLeft = field.value.scrollLeft;
+  if (field.value === null || mirror.value === null) {
+    return;
   }
+
+  mirror.value.scrollLeft = field.value.scrollLeft;
 };
 
 defineExpose({

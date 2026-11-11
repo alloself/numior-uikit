@@ -125,9 +125,11 @@ const page = computed(() => clampPage(pageModel.value, pageCount.value));
 watch(
   [page, () => pageModel.value, () => total],
   ([clamped, requested, known]) => {
-    if (known > 0 && clamped !== requested) {
-      pageModel.value = clamped;
+    if (known <= 0 || clamped === requested) {
+      return;
     }
+
+    pageModel.value = clamped;
   },
   { immediate: true },
 );

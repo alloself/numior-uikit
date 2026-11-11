@@ -82,9 +82,11 @@ export const createCellFormats = (): CellFormats => {
 
             size += held - chunk.count;
             chunk.count = held;
-            if (held === 0) {
-              chunks.delete(key);
+            if (held !== 0) {
+              return;
             }
+
+            chunks.delete(key);
           },
         },
         axis,
@@ -119,9 +121,11 @@ export const createCellFormats = (): CellFormats => {
           const row = top + Math.floor(slot / CHUNK_COLS);
           const col = left + (slot % CHUNK_COLS);
 
-          if (id !== 0 && containsCell(range, row, col)) {
-            visit(row, col, id);
+          if (id === 0 || !containsCell(range, row, col)) {
+            return;
           }
+
+          visit(row, col, id);
         });
       });
     },

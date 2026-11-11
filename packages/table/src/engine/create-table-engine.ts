@@ -105,9 +105,11 @@ const detailPositions = (refs: Int32Array): readonly number[] => {
   const positions: number[] = [];
 
   refs.forEach((ref, position) => {
-    if (ref >= DETAIL_REF) {
-      positions.push(position);
+    if (ref < DETAIL_REF) {
+      return;
     }
+
+    positions.push(position);
   });
 
   return positions;
@@ -258,9 +260,11 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     const want = (key: string, need: StoreNeed): void => {
       const resolved = columnOf(key).key;
 
-      if (needs.get(resolved) !== StoreNeed.Ranks) {
-        needs.set(resolved, need);
+      if (needs.get(resolved) === StoreNeed.Ranks) {
+        return;
       }
+
+      needs.set(resolved, need);
     };
 
     for (const entry of sort) {
@@ -486,11 +490,13 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       refs[target] = position;
       target += 1;
 
-      if (open[next] === position) {
-        refs[target] = DETAIL_REF + position;
-        target += 1;
-        next += 1;
+      if (open[next] !== position) {
+        continue;
       }
+
+      refs[target] = DETAIL_REF + position;
+      target += 1;
+      next += 1;
     }
     return refs;
   };
@@ -519,16 +525,20 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       refs[size] = -(index + 1);
       size += 1;
 
-      if (expanded && group.level === prepared.groupDepth - 1) {
-        for (let position = group.start; position < group.end; position += 1) {
-          refs[size] = position;
-          size += 1;
+      if (!expanded || group.level !== prepared.groupDepth - 1) {
+        return;
+      }
 
-          if (detailing && detailed(position)) {
-            refs[size] = DETAIL_REF + position;
-            size += 1;
-          }
+      for (let position = group.start; position < group.end; position += 1) {
+        refs[size] = position;
+        size += 1;
+
+        if (!detailing || !detailed(position)) {
+          continue;
         }
+
+        refs[size] = DETAIL_REF + position;
+        size += 1;
       }
     });
 
@@ -663,9 +673,11 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       const index = sourceIndexAt(position);
       const id = index === undefined ? undefined : idOf(index);
 
-      if (id !== undefined && matches(id)) {
-        found.push([id, position]);
+      if (id === undefined || !matches(id)) {
+        continue;
       }
+
+      found.push([id, position]);
     }
     return found;
   };
@@ -791,9 +803,11 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
 
     pipeline?.work(Number.POSITIVE_INFINITY);
 
-    if (outcome.prepared !== null) {
-      commit(outcome.prepared);
+    if (outcome.prepared === null) {
+      return;
     }
+
+    commit(outcome.prepared);
   };
 
   const retotal = (plan: Plan<T>): void => {
@@ -817,9 +831,11 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
 
     pipeline?.work(Number.POSITIVE_INFINITY);
 
-    if (outcome.groups !== null) {
-      prepared = { ...prepared, groups: outcome.groups };
+    if (outcome.groups === null) {
+      return;
     }
+
+    prepared = { ...prepared, groups: outcome.groups };
   };
 
   const indicesOf = (rows: readonly T[]): number[] | undefined => {
@@ -829,9 +845,11 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     for (let index = 0; index < table.rows.length && found.length < wanted.size; index += 1) {
       const row = table.rows[index];
 
-      if (row !== undefined && wanted.has(row)) {
-        found.push(index);
+      if (row === undefined || !wanted.has(row)) {
+        continue;
       }
+
+      found.push(index);
     }
     return found.length === wanted.size ? found : undefined;
   };
@@ -853,9 +871,11 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     at: readonly number[] | undefined,
   ): void => {
     for (const key of changed) {
-      if (at === undefined || !reread(key, at)) {
-        forget(key);
+      if (at !== undefined && reread(key, at)) {
+        continue;
       }
+
+      forget(key);
     }
     for (const { key } of plan?.aggregates ?? []) {
       if (changed.has(key)) {

@@ -128,9 +128,11 @@ export const buildReference = async (
 
     components[entry.name] = collected.component;
     problems.push(...collected.problems, ...unresolvedDefaults(collected.component));
-    if (collected.catalog !== undefined) {
-      catalogs[collected.catalog.namespace] = collected.catalog;
+    if (collected.catalog === undefined) {
+      continue;
     }
+
+    catalogs[collected.catalog.namespace] = collected.catalog;
   }
   const componentNames = new Set(Object.keys(components));
 

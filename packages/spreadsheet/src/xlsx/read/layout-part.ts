@@ -160,9 +160,11 @@ export const createLayoutCollector = (styles: LayoutStyles): LayoutCollector => 
     row: (row, attributes) => {
       const layout = layoutOf(attributes, ROW, style('s'));
 
-      if (!blank(layout)) {
-        rows.push([row, shared(layout)]);
+      if (blank(layout)) {
+        return;
       }
+
+      rows.push([row, shared(layout)]);
     },
     col: (attributes) => {
       const layout = layoutOf(attributes, COL, style('style'));
@@ -182,9 +184,11 @@ export const createLayoutCollector = (styles: LayoutStyles): LayoutCollector => 
     merge: (reference) => {
       const range = reference === undefined ? undefined : parseRange(reference);
 
-      if (range !== undefined) {
-        merges.push(range);
+      if (range === undefined) {
+        return;
       }
+
+      merges.push(range);
     },
     view: (attributes) => {
       views += 1;

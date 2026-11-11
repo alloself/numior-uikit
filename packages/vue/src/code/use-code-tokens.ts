@@ -20,9 +20,11 @@ export const useCodeTokens = (source: () => CodeSource): ShallowRef<NuiCodeToken
   const settle = async (pending: Promise<NuiCodeTokens>, current: number): Promise<void> => {
     const next = await pending;
 
-    if (current === revision) {
-      tokens.value = next;
+    if (current !== revision) {
+      return;
     }
+
+    tokens.value = next;
   };
 
   const run = ({ code, language, highlighter }: CodeSource): void => {

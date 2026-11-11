@@ -151,9 +151,11 @@ const syncHack = (context: ViewContext, desc: ElementDesc): void => {
   const hack = desc.hack ?? context.document.createElement('br');
 
   desc.hack = hack;
-  if (content.lastChild !== hack) {
-    content.append(hack);
+  if (content.lastChild === hack) {
+    return;
   }
+
+  content.append(hack);
 };
 
 const plainBody = (context: ViewContext, text: string): TextBody => {
@@ -488,9 +490,11 @@ const elementsById = (children: readonly Desc[]): Map<NodeId, ElementDesc> => {
   const found = new Map<NodeId, ElementDesc>();
 
   for (const child of children) {
-    if (child.kind === DescKind.Element) {
-      found.set(child.node.id, child);
+    if (child.kind !== DescKind.Element) {
+      continue;
     }
+
+    found.set(child.node.id, child);
   }
   return found;
 };
@@ -530,9 +534,11 @@ const syncText = (desc: TextDesc, node: TextNode, index: number): void => {
 
   desc.node = node;
   desc.index = index;
-  if (part !== undefined && known !== node.text && part.dom.data !== node.text) {
-    rewriteText(part.dom, known, node.text);
+  if (part === undefined || known === node.text || part.dom.data === node.text) {
+    return;
   }
+
+  rewriteText(part.dom, known, node.text);
 };
 
 const matchText = (
@@ -632,10 +638,12 @@ const reconcile = (
   );
 
   for (const child of previous) {
-    if (!matching.used.has(child)) {
-      outerOf(child).remove();
-      forget(context, child);
+    if (matching.used.has(child)) {
+      continue;
     }
+
+    outerOf(child).remove();
+    forget(context, child);
   }
   return next;
 };
@@ -703,9 +711,11 @@ export const syncElement = (context: ViewContext, desc: ElementDesc, node: Eleme
     redrawContent(context, desc);
     return;
   }
-  if (content !== null) {
-    syncContent(context, desc, content, node.content);
+  if (content === null) {
+    return;
   }
+
+  syncContent(context, desc, content, node.content);
 };
 
 export const syncRootPrefix = (

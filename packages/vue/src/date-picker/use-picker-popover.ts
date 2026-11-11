@@ -55,9 +55,11 @@ export const usePickerPopover = (options: PickerPopoverOptions): PickerPopover =
 
     control.hide();
 
-    if (focus) {
-      options.returnFocus();
+    if (!focus) {
+      return;
     }
+
+    options.returnFocus();
   };
 
   const onFocusout = (event: FocusEvent): void => {
@@ -72,9 +74,11 @@ export const usePickerPopover = (options: PickerPopoverOptions): PickerPopover =
     }
 
     queueMicrotask(() => {
-      if (!contains(document.activeElement)) {
-        hide();
+      if (contains(document.activeElement)) {
+        return;
       }
+
+      hide();
     });
   };
 

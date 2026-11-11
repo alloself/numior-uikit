@@ -172,9 +172,11 @@ const addElement = (): HTMLElement | null => {
 const focusArray = (): void => {
   const target = addElement() ?? root.value?.querySelector(FOCUSABLE);
 
-  if (target instanceof HTMLElement) {
-    target.focus();
+  if (!(target instanceof HTMLElement)) {
+    return;
   }
+
+  target.focus();
 };
 
 const array = useFieldArray(
@@ -353,15 +355,19 @@ const remove = (index: number): void => {
 };
 
 const onGripPointerdown = (index: number, event: PointerEvent): void => {
-  if (!isInert.value) {
-    reorder.onPointerdown(index, event);
+  if (isInert.value) {
+    return;
   }
+
+  reorder.onPointerdown(index, event);
 };
 
 const onGripKeydown = (index: number, event: KeyboardEvent): void => {
-  if (!isInert.value && reorder.onKeydown(index, event)) {
-    event.preventDefault();
+  if (isInert.value || !reorder.onKeydown(index, event)) {
+    return;
   }
+
+  event.preventDefault();
 };
 
 watch(

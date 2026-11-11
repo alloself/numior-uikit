@@ -60,9 +60,11 @@ export const eachValueAsNumber = (args: FunctionArgs, visit: (value: number) => 
   args.forEachValue(0, (value, direct) => {
     const number = numberOfAny(value, direct, args.locale);
 
-    if (number !== undefined) {
-      visit(number);
+    if (number === undefined) {
+      return;
     }
+
+    visit(number);
   });
 };
 
@@ -138,9 +140,11 @@ export const forEachMatch = (
     const offsetRow = row - source.range.top;
     const offsetCol = col - source.range.left;
 
-    if (passes(conditions, offsetRow, offsetCol)) {
-      visit(offsetRow, offsetCol);
+    if (!passes(conditions, offsetRow, offsetCol)) {
+      return;
     }
+
+    visit(offsetRow, offsetCol);
   });
 };
 

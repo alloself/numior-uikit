@@ -38,9 +38,11 @@ probes.rows.set(key, field);
 onBeforeUnmount(() => probes.rows.delete(key));
 
 const onInput = (event: Event): void => {
-  if (event.target instanceof HTMLInputElement) {
-    probes.work.set(key, field.setValue(event.target.value));
+  if (!(event.target instanceof HTMLInputElement)) {
+    return;
   }
+
+  probes.work.set(key, field.setValue(event.target.value));
 };
 
 const onBlur = (): void => {

@@ -167,9 +167,11 @@ const joinSiblings = (tr: Transaction, pos: number): void => {
   if (after?.kind === ContentNodeKind.Element && after.type === node.type) {
     tr.join(pos + node.size);
   }
-  if (before?.kind === ContentNodeKind.Element && before.type === node.type) {
-    tr.join(pos);
+  if (before?.kind !== ContentNodeKind.Element || before.type !== node.type) {
+    return;
   }
+
+  tr.join(pos);
 };
 
 const listTypesAt = (
@@ -854,9 +856,11 @@ export const followingTextblock = (schema: Schema, parent: ElementNode): string 
 export const caretInto = (tr: Transaction, start: number): void => {
   const caret = textPosition(tr.doc, start, 1);
 
-  if (caret !== undefined) {
-    tr.setSelection(textSelection(caret));
+  if (caret === undefined) {
+    return;
   }
+
+  tr.setSelection(textSelection(caret));
 };
 
 const insertFits = (state: EditorState, build: (make: BlockMaker) => ElementNode): boolean => {

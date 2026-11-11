@@ -239,18 +239,21 @@ const closeDocument = (value: string): void => {
 
   documents.value = documents.value.filter((file) => file.value !== value);
 
-  if (openDocument.value === value) {
-    openDocument.value =
-      documents.value.at(Math.min(index, documents.value.length - 1))?.value ?? '';
+  if (openDocument.value !== value) {
+    return;
   }
+
+  openDocument.value = documents.value.at(Math.min(index, documents.value.length - 1))?.value ?? '';
 };
 
 const moveSignup = (delta: number): void => {
   const target = signupSteps[signupIndex.value + delta];
 
-  if (target) {
-    signupStep.value = target.value;
+  if (!target) {
+    return;
   }
+
+  signupStep.value = target.value;
 };
 
 const output = computed(() =>

@@ -87,13 +87,17 @@ export const createToastStore = (options: ToastStoreOptions = {}): ToastStore =>
       return;
     }
     for (const toast of visible.value) {
-      if (!toast.leaving && toast.duration > 0 && !timers.has(toast.id)) {
-        timers.start(toast.id, toast.duration, () => dismiss(toast.id));
-
-        if (holds.size > 0) {
-          timers.pause(toast.id);
-        }
+      if (toast.leaving || toast.duration <= 0 || timers.has(toast.id)) {
+        continue;
       }
+
+      timers.start(toast.id, toast.duration, () => dismiss(toast.id));
+
+      if (holds.size === 0) {
+        continue;
+      }
+
+      timers.pause(toast.id);
     }
   };
 
@@ -129,9 +133,11 @@ export const createToastStore = (options: ToastStoreOptions = {}): ToastStore =>
   const dismiss = (id: string): void => {
     const target = toasts.value.find((toast) => toast.id === id);
 
-    if (target && !target.leaving) {
-      leave(new Set([id]));
+    if (!target || target.leaving) {
+      return;
     }
+
+    leave(new Set([id]));
   };
 
   const nextId = (): string => {
@@ -178,10 +184,12 @@ export const createToastStore = (options: ToastStoreOptions = {}): ToastStore =>
     release: (reason) => {
       holds.delete(reason);
 
-      if (holds.size === 0) {
-        for (const toast of toasts.value) {
-          timers.resume(toast.id);
-        }
+      if (holds.size !== 0) {
+        return;
+      }
+
+      for (const toast of toasts.value) {
+        timers.resume(toast.id);
       }
     },
   };

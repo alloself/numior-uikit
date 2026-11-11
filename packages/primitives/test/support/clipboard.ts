@@ -49,9 +49,11 @@ export const installClipboard = ({
       if (text !== undefined) {
         copies.push(await textOf(text));
       }
-      if (html !== undefined) {
-        htmls.push(await textOf(html));
+      if (html === undefined) {
+        continue;
       }
+
+      htmls.push(await textOf(html));
     }
   };
 

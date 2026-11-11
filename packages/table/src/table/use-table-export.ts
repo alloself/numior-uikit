@@ -62,9 +62,11 @@ export const useTableExport = <T>(options: TableExportOptions<T>): TableExport =
           lines.push(entry);
         }
 
-        if (start + CHUNK_ROWS < rows.length) {
-          await yieldToHost();
+        if (start + CHUNK_ROWS >= rows.length) {
+          continue;
         }
+
+        await yieldToHost();
       }
     } finally {
       busy.value = false;

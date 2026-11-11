@@ -73,15 +73,19 @@ const mergeLines = (
   mine.forEach(decide);
 
   theirs.forEach((line, layout) => {
-    if (!decided.has(line)) {
-      entries.push([line, layout]);
+    if (decided.has(line)) {
+      return;
     }
+
+    entries.push([line, layout]);
   });
 
   decided.forEach((layout, line) => {
-    if (layout !== undefined) {
-      entries.push([line, layout]);
+    if (layout === undefined) {
+      return;
     }
+
+    entries.push([line, layout]);
   });
 
   return lineLayoutsOf(entries);
@@ -91,9 +95,11 @@ const linesApart = (lines: LineLayouts, others: LineLayouts): LineLayouts => {
   const entries: LineEntry[] = [];
 
   lines.forEach((line, layout) => {
-    if (!sameLine(layout, others.get(line))) {
-      entries.push([line, layout]);
+    if (sameLine(layout, others.get(line))) {
+      return;
     }
+
+    entries.push([line, layout]);
   });
 
   return lineLayoutsOf(entries);

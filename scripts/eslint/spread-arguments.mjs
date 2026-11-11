@@ -52,9 +52,11 @@ export const spreadArguments = {
       }
 
       node.arguments.forEach((argument) => {
-        if (argument.type === 'SpreadElement' && !isChunk(argument.argument)) {
-          context.report({ node: argument, messageId: 'spread', data: target });
+        if (argument.type !== 'SpreadElement' || isChunk(argument.argument)) {
+          return;
         }
+
+        context.report({ node: argument, messageId: 'spread', data: target });
       });
     },
   }),

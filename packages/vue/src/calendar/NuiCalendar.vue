@@ -182,9 +182,11 @@ const request = (date: string, options: RequestOptions = {}): void => {
 
   focusIntent = focus === FocusRequest.None ? undefined : focus;
 
-  if (focusIntent !== undefined) {
-    focusRequests.value += 1;
+  if (focusIntent === undefined) {
+    return;
   }
+
+  focusRequests.value += 1;
 };
 
 const holdsFocus = (): boolean => {
@@ -215,9 +217,11 @@ const settle = (): void => {
 };
 
 const remember = (value: NuiCalendarValue | undefined): void => {
-  if (value !== undefined) {
-    picks.last = value;
+  if (value === undefined) {
+    return;
   }
+
+  picks.last = value;
 };
 
 const pick = (date: string): void => {
@@ -261,9 +265,11 @@ const goToday = (): void => {
 };
 
 const onPointerup = (event: PointerEvent): void => {
-  if (!(event.target instanceof Element && event.target.closest('.nui-calendar__day'))) {
-    selection.clearArm();
+  if (event.target instanceof Element && event.target.closest('.nui-calendar__day')) {
+    return;
   }
+
+  selection.clearArm();
 };
 
 const onPointercancel = (): void => {
@@ -280,9 +286,11 @@ const applyPreset = (preset: NuiDatePreset): void => {
   model.value = range;
   picks.last = range;
 
-  if (range.start) {
-    request(range.start, { focus: FocusRequest.None });
+  if (!range.start) {
+    return;
   }
+
+  request(range.start, { focus: FocusRequest.None });
 };
 
 provideCalendar({
@@ -342,9 +350,11 @@ onMounted(() => {
     picks.last = value;
     const first = selectedDatesOf(value)[0];
 
-    if (first) {
-      request(first, { focus: FocusRequest.None });
+    if (!first) {
+      return;
     }
+
+    request(first, { focus: FocusRequest.None });
   });
 });
 

@@ -26,9 +26,11 @@ export const distinctStrings = (store: RankedStrings, limit: number): TableDisti
     if (values.length === limit) {
       break;
     }
-    if (entry !== '') {
-      values.push(entry);
+    if (entry === '') {
+      continue;
     }
+
+    values.push(entry);
   }
   if (filled > limit || !(blank || store.nulls.includes(1))) {
     return { values, truncated: filled > limit };
@@ -59,9 +61,11 @@ const insertBounded = (kept: number[], key: number, cap: number): void => {
   }
   kept.splice(low, 0, key);
 
-  if (kept.length > cap) {
-    kept.pop();
+  if (kept.length <= cap) {
+    return;
   }
+
+  kept.pop();
 };
 
 const numberValue = <T>(column: TableEngineColumn<T>, key: number): TableFilterValue =>

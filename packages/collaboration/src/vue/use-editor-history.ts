@@ -141,9 +141,11 @@ export const useEditorHistory = (options: UseEditorHistoryOptions): CollabHistor
       lifetime.signal,
     );
 
-    if (version !== undefined) {
-      stored.value = [...stored.value, version];
+    if (version === undefined) {
+      return;
     }
+
+    stored.value = [...stored.value, version];
   };
 
   const restore = (): void => {
@@ -160,9 +162,11 @@ export const useEditorHistory = (options: UseEditorHistoryOptions): CollabHistor
   onMounted(async () => {
     const listed = await attempt(() => adapter.versions(doc, lifetime.signal), lifetime.signal);
 
-    if (listed !== undefined) {
-      stored.value = listed;
+    if (listed === undefined) {
+      return;
     }
+
+    stored.value = listed;
   });
 
   onBeforeUnmount(() => {

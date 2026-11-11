@@ -71,9 +71,11 @@ const scrollToIndex = (index: number, instant: boolean): void => {
 const springBack = (): void => {
   const element = wheel.value;
 
-  if (element) {
-    scrollToIndex(nearestEnabled(options, indexAt(element.scrollTop)), false);
+  if (!element) {
+    return;
   }
+
+  scrollToIndex(nearestEnabled(options, indexAt(element.scrollTop)), false);
 };
 
 const drag = useWheelDrag({ element: () => wheel.value, release: springBack });
@@ -84,9 +86,11 @@ const stopTimer = (): void => {
 };
 
 const choose = (index: number): void => {
-  if (options[index]?.disabled === false) {
-    emit('select', index);
+  if (options[index]?.disabled !== false) {
+    return;
   }
+
+  emit('select', index);
 };
 
 const settle = (): void => {
@@ -125,17 +129,21 @@ const onKeydown = (event: KeyboardEvent): void => {
 };
 
 const onItemClick = (index: number): void => {
-  if (!drag.swallowClick()) {
-    choose(index);
+  if (drag.swallowClick()) {
+    return;
   }
+
+  choose(index);
 };
 
 watch(
   () => selected,
   (index) => {
-    if (!drag.holding()) {
-      scrollToIndex(index, false);
+    if (drag.holding()) {
+      return;
     }
+
+    scrollToIndex(index, false);
   },
   { flush: 'post' },
 );

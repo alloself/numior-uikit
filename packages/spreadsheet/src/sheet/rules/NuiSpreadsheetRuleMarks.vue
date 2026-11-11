@@ -74,18 +74,22 @@ const valueFields = computed((): string[] =>
 );
 
 const setSet = (set: string | null): void => {
-  if (set !== null) {
-    form.value = { ...form.value, iconSet: set };
+  if (set === null) {
+    return;
   }
+
+  form.value = { ...form.value, iconSet: set };
 };
 
 const setColor = (at: number, color: StyleColor | undefined): void => {
-  if (color !== undefined) {
-    form.value = {
-      ...form.value,
-      colors: form.value.colors.map((each, index) => (index === at ? color : each)),
-    };
+  if (color === undefined) {
+    return;
   }
+
+  form.value = {
+    ...form.value,
+    colors: form.value.colors.map((each, index) => (index === at ? color : each)),
+  };
 };
 
 const setShown = (showValue: boolean): void => {

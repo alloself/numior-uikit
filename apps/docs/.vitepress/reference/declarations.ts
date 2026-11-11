@@ -64,14 +64,18 @@ export const enumerationMembers = (file: string): ReadonlyMap<string, string> =>
     const symbol =
       exported.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(exported) : exported;
 
-    if (symbol.flags & ts.SymbolFlags.Variable) {
-      for (const member of checker.getTypeOfSymbol(symbol).getProperties()) {
-        const value = checker.getTypeOfSymbol(member);
+    if (!(symbol.flags & ts.SymbolFlags.Variable)) {
+      continue;
+    }
 
-        if (value.isStringLiteral()) {
-          members.set(`${exported.name}.${member.name}`, JSON.stringify(value.value));
-        }
+    for (const member of checker.getTypeOfSymbol(symbol).getProperties()) {
+      const value = checker.getTypeOfSymbol(member);
+
+      if (!value.isStringLiteral()) {
+        continue;
       }
+
+      members.set(`${exported.name}.${member.name}`, JSON.stringify(value.value));
     }
   }
   return members;

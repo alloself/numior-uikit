@@ -43,9 +43,11 @@ export const useChartPointer = (options: ChartPointerOptions): ChartPointer => {
   };
 
   const toggle = (hit: ChartHit | undefined): void => {
-    if (hit !== undefined) {
-      options.selected.value = sameHit(options.selected.value, hit) ? null : hit;
+    if (hit === undefined) {
+      return;
     }
+
+    options.selected.value = sameHit(options.selected.value, hit) ? null : hit;
   };
 
   const onPointermove = (event: PointerEvent): void => {

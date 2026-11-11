@@ -168,9 +168,11 @@ const applyTabStop = (
 
   next.tabIndex = 0;
 
-  if (focus) {
-    next.focus({ preventScroll: true });
+  if (!focus) {
+    return;
   }
+
+  next.focus({ preventScroll: true });
 };
 
 const revealAxis = (
@@ -213,9 +215,11 @@ const revealIn = (container: HTMLElement, element: HTMLElement | null): void => 
     container.clientWidth,
   );
 
-  if (left !== undefined) {
-    container.scrollLeft = left;
+  if (left === undefined) {
+    return;
   }
+
+  container.scrollLeft = left;
 };
 
 const idOf = (element: HTMLElement | null): string | undefined =>
@@ -346,9 +350,11 @@ export const useListNavigation = (
   const reveal = (): void => {
     const root = toValue(container);
 
-    if (root) {
-      revealIn(root, activeElement());
+    if (!root) {
+      return;
     }
+
+    revealIn(root, activeElement());
   };
 
   const revealSoon = (): void => {
@@ -440,9 +446,11 @@ export const useListNavigation = (
     const index = itemIndex();
     const item = itemFrom(event.target, toValue(container), index);
 
-    if (roving() && item && item !== activeElement()) {
-      setActive(item, { focus: false });
+    if (!roving() || !item || item === activeElement()) {
+      return;
     }
+
+    setActive(item, { focus: false });
   };
 
   useEventListener(container, 'focusout', (event: FocusEvent) => {

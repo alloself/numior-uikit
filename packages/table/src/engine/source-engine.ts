@@ -200,9 +200,11 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
     groups.forEach((group, at) => {
       const id = groupIdOf(store, group);
 
-      if (expanded.has(id) && !store.open.has(offset + at)) {
-        store.open.set(offset + at, { id, store: childOf(store, group) });
+      if (!expanded.has(id) || store.open.has(offset + at)) {
+        return;
       }
+
+      store.open.set(offset + at, { id, store: childOf(store, group) });
     });
   };
 
@@ -276,9 +278,11 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
       const branch =
         expanded.has(id) && !store.open.has(offset + at) ? branchFor(store, id, row) : undefined;
 
-      if (branch !== undefined) {
-        store.open.set(offset + at, { id, store: branch });
+      if (branch === undefined) {
+        return;
       }
+
+      store.open.set(offset + at, { id, store: branch });
     });
   };
 
@@ -288,26 +292,32 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
   const reopen = (): void => {
     for (const store of [root, ...stores.values()]) {
       for (const [index, branch] of store.open) {
-        if (!expanded.has(branch.id)) {
-          store.open.delete(index);
+        if (expanded.has(branch.id)) {
+          continue;
         }
+
+        store.open.delete(index);
       }
     }
     for (const [key, groups] of groupBlocks.entries()) {
       const at = storeOfBlockKey(key);
       const store = storeOf(at.store);
 
-      if (store !== undefined) {
-        adopt(store, at.block * size, groups);
+      if (store === undefined) {
+        continue;
       }
+
+      adopt(store, at.block * size, groups);
     }
     for (const [key, rows] of rowBlocks.entries()) {
       const at = storeOfBlockKey(key);
       const store = storeOf(at.store);
 
-      if (store !== undefined) {
-        adoptRows(store, at.block * size, rows);
+      if (store === undefined) {
+        continue;
       }
+
+      adoptRows(store, at.block * size, rows);
     }
     layouts.invalidate();
   };
@@ -371,18 +381,22 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
     for (let block = run.first + 1; block <= run.last; block += 1) {
       inflight.delete(blockKeyOf(run.store.key, block));
     }
-    if (held) {
-      running -= 1;
+    if (!held) {
+      return;
     }
+
+    running -= 1;
   };
 
   const fail = (error: unknown): void => {
     failed = true;
     notify();
 
-    if (!isAbort(error)) {
-      options.onError(error);
+    if (isAbort(error)) {
+      return;
     }
+
+    options.onError(error);
   };
 
   const land = (run: SourceRun<T>, result: TableFetchResult<T>): void => {
@@ -528,9 +542,11 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
   };
 
   const fill = (): void => {
-    if (wanted) {
-      ensure(range.from, range.to);
+    if (!wanted) {
+      return;
     }
+
+    ensure(range.from, range.to);
   };
 
   const apply = (next: TableQuery): void => {
@@ -623,12 +639,14 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
       }
 
       if (
-        found.length === COLLECT_CHUNK &&
-        result.hasMore !== false &&
-        (result.total === undefined || next < result.total)
+        found.length !== COLLECT_CHUNK ||
+        result.hasMore === false ||
+        (result.total !== undefined && next >= result.total)
       ) {
-        await page(next);
+        return;
       }
+
+      await page(next);
     };
 
     await page(0);
@@ -644,9 +662,11 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
   };
 
   const expectTotals = (next: TableQuery): void => {
-    if (next.totals === true) {
-      totalsDue = true;
+    if (next.totals !== true) {
+      return;
     }
+
+    totalsDue = true;
   };
 
   const groupNode = (store: SourceStore<T>, group: TableSourceGroup): TableNode<T> => {
@@ -709,9 +729,11 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
 
     for (const [store, base] of layouts.bases(root)) {
       for (const [index, branch] of store.open) {
-        if (branch.store.holds === SourceHolds.Detail && index < ownCount(store)) {
-          positions.push(layouts.flatOf(store, base, index) + 1);
+        if (branch.store.holds !== SourceHolds.Detail || index >= ownCount(store)) {
+          continue;
         }
+
+        positions.push(layouts.flatOf(store, base, index) + 1);
       }
     }
     return positions.toSorted((a, b) => a - b);
@@ -726,10 +748,12 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
       const store = at.store === '' ? root : stores.get(at.store);
       const base = store === undefined ? undefined : bases.get(store);
 
-      if (store !== undefined && base !== undefined) {
-        for (let offset = 0; offset < rows.length; offset += 1) {
-          positions.push(layouts.flatOf(store, base, at.block * size + offset));
-        }
+      if (store === undefined || base === undefined) {
+        continue;
+      }
+
+      for (let offset = 0; offset < rows.length; offset += 1) {
+        positions.push(layouts.flatOf(store, base, at.block * size + offset));
       }
     }
     return Uint32Array.from(positions.toSorted((a, b) => a - b));
@@ -808,11 +832,13 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
       const node = nodeAt(position);
 
       if (
-        node?.kind === TableNodeKind.Group ||
-        (node?.kind === TableNodeKind.Row && node.expandable)
+        node?.kind !== TableNodeKind.Group &&
+        (node?.kind !== TableNodeKind.Row || !node.expandable)
       ) {
-        setExpanded(node.id, !node.expanded);
+        return;
       }
+
+      setExpanded(node.id, !node.expanded);
     },
     setExpanded,
     setToggled,

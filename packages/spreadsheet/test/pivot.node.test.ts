@@ -145,9 +145,11 @@ const grid = (changes: Partial<PivotDefinition>, rows: readonly (readonly Input[
   output.cells.forEach((cell) => {
     const line = lines[cell.row];
 
-    if (line !== undefined) {
-      line[cell.col] = shownText(cell.value, cell.format);
+    if (line === undefined) {
+      return;
     }
+
+    line[cell.col] = shownText(cell.value, cell.format);
   });
 
   return lines.map((line) => line.join(' | '));

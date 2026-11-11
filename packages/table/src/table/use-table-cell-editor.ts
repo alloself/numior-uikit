@@ -311,22 +311,26 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
 
     setDraft(value);
 
-    if (current !== undefined && strict) {
-      error.value = outcomeOf(current, value).failure;
+    if (current === undefined || !strict) {
+      return;
     }
+
+    error.value = outcomeOf(current, value).failure;
   };
 
   const receive = (next: NuiTableDraft | undefined): void => {
     const at = session.value?.position;
 
     if (
-      next !== undefined &&
-      next.row === at?.row &&
-      next.col === at.col &&
-      next.value !== draft.value
+      next === undefined ||
+      next.row !== at?.row ||
+      next.col !== at.col ||
+      next.value === draft.value
     ) {
-      input(next.value);
+      return;
     }
+
+    input(next.value);
   };
 
   const onKeydown = (event: KeyboardEvent): boolean => {
@@ -350,17 +354,20 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     }
     const opening = openingOf(event);
 
-    if (opening !== undefined && open(cell, opening)) {
-      event.preventDefault();
-      return true;
+    if (opening === undefined || !open(cell, opening)) {
+      return false;
     }
-    return false;
+
+    event.preventDefault();
+    return true;
   };
 
   const onFocusin = (event: FocusEvent): void => {
-    if (session.value !== undefined && !inEditor(event.target) && !inEditor(event.relatedTarget)) {
-      commit('blur');
+    if (session.value === undefined || inEditor(event.target) || inEditor(event.relatedTarget)) {
+      return;
     }
+
+    commit('blur');
   };
 
   const locate = (target: EventTarget | null): NuiTableCellPosition | undefined =>
@@ -391,15 +398,19 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
 
     close();
 
-    if (current !== undefined && bounds.rows > 0) {
-      options.focus(clampTo(current.position, bounds));
+    if (current === undefined || bounds.rows <= 0) {
+      return;
     }
+
+    options.focus(clampTo(current.position, bounds));
   });
 
   watch(options.enabled, (on) => {
-    if (!on) {
-      close();
+    if (on) {
+      return;
     }
+
+    close();
   });
 
   return {

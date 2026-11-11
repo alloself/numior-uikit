@@ -89,8 +89,10 @@ watch(open, (value) => {
 });
 
 const onToggle = (event: Event): void => {
-  if ('newState' in event && event.newState === PopoverState.Open) {
-    form.value?.querySelector('input')?.focus();
+  if (!('newState' in event) || event.newState !== PopoverState.Open) {
+    return;
   }
+
+  form.value?.querySelector('input')?.focus();
 };
 </script>

@@ -276,9 +276,11 @@ const { open, onChange } = useUploadPicker({
 });
 
 const retry = (): void => {
-  if (model.value) {
-    queue.retry(model.value.id);
+  if (!model.value) {
+    return;
   }
+
+  queue.retry(model.value.id);
 };
 
 const remove = (): void => {

@@ -175,9 +175,11 @@ const onKeydown = (event: KeyboardEvent): void => {
 const activateHovered = (event: PointerEvent): void => {
   const option = navigation.itemFrom(event.target);
 
-  if (option !== null && option !== navigation.activeElement()) {
-    navigation.setActive(option, { focus: false });
+  if (option === null || option === navigation.activeElement()) {
+    return;
   }
+
+  navigation.setActive(option, { focus: false });
 };
 
 const onSelect = (item: NuiCommandItem<T>): void => {
@@ -188,9 +190,11 @@ const onSelect = (item: NuiCommandItem<T>): void => {
 const onFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
 
-  if (!(next instanceof HTMLInputElement && next === input.value)) {
-    navigation.reveal();
+  if (next instanceof HTMLInputElement && next === input.value) {
+    return;
   }
+
+  navigation.reveal();
 };
 
 watch([() => items, query], () => activateFirst(), { flush: 'pre' });
@@ -207,9 +211,11 @@ watch(
 onMounted(() => {
   activateFirst();
 
-  if (autofocus) {
-    input.value?.focus();
+  if (!autofocus) {
+    return;
   }
+
+  input.value?.focus();
 });
 
 defineExpose({

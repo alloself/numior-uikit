@@ -92,9 +92,11 @@ const withLine = (lines: LineLayouts, line: number, size: number): LineLayouts =
   const entries: [number, LineLayout][] = [];
 
   lines.forEach((at, layout) => {
-    if (at !== line) {
-      entries.push([at, layout]);
+    if (at === line) {
+      return;
     }
+
+    entries.push([at, layout]);
   });
 
   return lineLayoutsOf([...entries, [line, sizedLine(size)]]);

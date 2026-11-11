@@ -63,9 +63,11 @@ const textareaElement = useTemplateRef<HTMLTextAreaElement>('textarea');
 const draft = ref(model.value);
 
 watch(model, (value) => {
-  if (!(modifiers.trim && draft.value.trim() === value)) {
-    draft.value = value;
+  if (modifiers.trim && draft.value.trim() === value) {
+    return;
   }
+
+  draft.value = value;
 });
 
 const onInput = (event: Event): void => {
@@ -75,9 +77,11 @@ const onInput = (event: Event): void => {
     return;
   }
   draft.value = element.value;
-  if (!modifiers.lazy) {
-    model.value = element.value;
+  if (modifiers.lazy) {
+    return;
   }
+
+  model.value = element.value;
 };
 
 const onChange = (): void => {
@@ -93,9 +97,11 @@ const onChange = (): void => {
 };
 
 const commitDraft = (): void => {
-  if (modifiers.lazy) {
-    onChange();
+  if (!modifiers.lazy) {
+    return;
   }
+
+  onChange();
 };
 
 defineExpose({ focus: () => textareaElement.value?.focus() });

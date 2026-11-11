@@ -159,9 +159,11 @@ const matched = (conditions: readonly Condition[], range: Reference): number[] =
     if (value.kind === CellValueKind.Error) {
       raise(value.code);
     }
-    if (value.kind === CellValueKind.Number) {
-      found.push(value.value);
+    if (value.kind !== CellValueKind.Number) {
+      return;
     }
+
+    found.push(value.value);
   });
 
   return found;
@@ -259,9 +261,11 @@ const subtotal = (args: FunctionArgs): EvalValue => {
         raise(value.code);
       }
       filled += 1;
-      if (value.kind === CellValueKind.Number) {
-        values.push(value.value);
+      if (value.kind !== CellValueKind.Number) {
+        return;
       }
+
+      values.push(value.value);
     });
   }
   return numberValue(compute(values, filled));

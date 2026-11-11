@@ -351,9 +351,11 @@ const copyParts = async (original: Original | undefined, output: Output): Promis
     if (raw !== undefined) {
       output.entries.push({ name: part, copy: raw });
     }
-    if (type !== undefined) {
-      output.overrides.set(part, type);
+    if (type === undefined) {
+      return;
     }
+
+    output.overrides.set(part, type);
   });
 
   return copied;
@@ -503,17 +505,21 @@ const writeParts = async (
   for (const part of plan.sheet.layout.parts) {
     const extra = appended?.part === part.path ? appended.anchors : '';
 
-    if ((!known.includes(part) || extra !== '') && !output.written.has(part.path)) {
-      const text = await partText(original.archive, part.path);
-      const type = original.types.overrides.get(part.path);
-
-      output.entries.push(textEntry(part.path, splicePart(text, fragmentXml(part.root) + extra)));
-      output.written.add(part.path);
-      output.rewritten.add(part.path);
-      if (type !== undefined) {
-        output.overrides.set(part.path, type);
-      }
+    if ((known.includes(part) && extra === '') || output.written.has(part.path)) {
+      continue;
     }
+
+    const text = await partText(original.archive, part.path);
+    const type = original.types.overrides.get(part.path);
+
+    output.entries.push(textEntry(part.path, splicePart(text, fragmentXml(part.root) + extra)));
+    output.written.add(part.path);
+    output.rewritten.add(part.path);
+    if (type === undefined) {
+      continue;
+    }
+
+    output.overrides.set(part.path, type);
   }
 };
 
@@ -543,9 +549,11 @@ const defaultsOf = (original: Original | undefined, output: Output): Map<string,
     const extension = entry.name.slice(entry.name.lastIndexOf('.') + 1).toLowerCase();
     const type = original?.types.defaults.get(extension);
 
-    if (type !== undefined && !defaults.has(extension)) {
-      defaults.set(extension, type);
+    if (type === undefined || defaults.has(extension)) {
+      return;
     }
+
+    defaults.set(extension, type);
   });
 
   return defaults;
@@ -568,9 +576,11 @@ const pivotLosses = (book: Workbook): XlsxLoss[] => {
   const losses: XlsxLoss[] = [];
 
   book.pivots.forEach((pivot) => {
-    if (pivotSourceArea(book, pivot.definition.source) === undefined) {
-      losses.push({ sheet: pivot.sheet.name, reason: 'pivot-source' });
+    if (pivotSourceArea(book, pivot.definition.source) !== undefined) {
+      return;
     }
+
+    losses.push({ sheet: pivot.sheet.name, reason: 'pivot-source' });
   });
 
   return losses;
@@ -604,9 +614,11 @@ const planAll = async (
     const { plan, loss } = await planSheet(sheet, original, { lossy, charts, taken, keepPivots });
 
     plans.push(plan);
-    if (loss !== undefined) {
-      losses.push(loss);
+    if (loss === undefined) {
+      continue;
     }
+
+    losses.push(loss);
   }
   return { plans, losses, keepPivots };
 };
@@ -863,9 +875,11 @@ const writeWorkbookPart = async (writing: Writing): Promise<void> => {
     output.roots.push(entry);
   }
   for (const entry of rootRelationships) {
-    if (entry.kind !== RelationshipKind.OfficeDocument) {
-      output.roots.push(entry);
+    if (entry.kind === RelationshipKind.OfficeDocument) {
+      continue;
     }
+
+    output.roots.push(entry);
   }
 
   output.entries.push(

@@ -226,9 +226,11 @@ const checked = (entry: Entry): TransformStream<Bytes, Bytes> => {
       controller.enqueue(chunk);
     },
     flush: (controller) => {
-      if (finishCrc(crc) !== entry.crc || size !== entry.size) {
-        controller.error(new ZipError('damaged'));
+      if (finishCrc(crc) === entry.crc && size === entry.size) {
+        return;
       }
+
+      controller.error(new ZipError('damaged'));
     },
   });
 };

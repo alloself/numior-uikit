@@ -137,9 +137,11 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     }
     finish();
 
-    if (current.phase === ReorderPhase.Keyboard) {
-      emit({ type: ReorderEventType.Cancelled, from: current.from });
+    if (current.phase !== ReorderPhase.Keyboard) {
+      return;
     }
+
+    emit({ type: ReorderEventType.Cancelled, from: current.from });
   };
 
   const drop = (current: KeyboardState | PointerState, to: number): void => {
@@ -209,15 +211,19 @@ export const useReorder = (options: ReorderOptions): Reorder => {
   const onPointercancel = (event: PointerEvent): void => {
     const current = state.value;
 
-    if (isPointer(current) && event.pointerId === current.pointerId) {
-      cancel();
+    if (!isPointer(current) || event.pointerId !== current.pointerId) {
+      return;
     }
+
+    cancel();
   };
 
   const onWindowKeydown = (event: KeyboardEvent): void => {
-    if (event.key === Key.Escape && isPointer(state.value)) {
-      cancel();
+    if (event.key !== Key.Escape || !isPointer(state.value)) {
+      return;
     }
+
+    cancel();
   };
 
   const onPointerdown = (index: number, event: PointerEvent): void => {
@@ -303,9 +309,11 @@ export const useReorder = (options: ReorderOptions): Reorder => {
   const onBlur = (index: number): void => {
     const current = state.value;
 
-    if (current.phase === ReorderPhase.Keyboard && current.from === index) {
-      cancel();
+    if (current.phase !== ReorderPhase.Keyboard || current.from !== index) {
+      return;
     }
+
+    cancel();
   };
 
   onScopeDispose(cancel);

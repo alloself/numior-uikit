@@ -195,9 +195,11 @@ const removeFrom = <K, V>(map: Map<K, Set<V>>, key: K, value: V): void => {
   const known = map.get(key);
 
   known?.delete(value);
-  if (known?.size === 0) {
-    map.delete(key);
+  if (known?.size !== 0) {
+    return;
   }
+
+  map.delete(key);
 };
 
 export const createDependencyGraph = (): DependencyGraph => {
@@ -300,9 +302,11 @@ export const createDependencyGraph = (): DependencyGraph => {
     visit: (key: number) => void,
   ): void => {
     entries?.forEach((entry) => {
-      if (containsCell(entry.range, row, col)) {
-        entry.dependents.forEach(visit);
+      if (!containsCell(entry.range, row, col)) {
+        return;
       }
+
+      entry.dependents.forEach(visit);
     });
   };
 
@@ -319,11 +323,11 @@ export const createDependencyGraph = (): DependencyGraph => {
     const moved: (readonly [number, Dependents])[] = [];
 
     cells?.forEach((members, cell) => {
-      if (
-        (change.axis === LineAxis.Rows ? Math.floor(cell / MAX_COLS) : cell % MAX_COLS) >= start
-      ) {
-        moved.push([cell, members]);
+      if ((change.axis === LineAxis.Rows ? Math.floor(cell / MAX_COLS) : cell % MAX_COLS) < start) {
+        return;
       }
+
+      moved.push([cell, members]);
     });
 
     moved.forEach(([cell]) => cells?.delete(cell));
@@ -332,9 +336,11 @@ export const createDependencyGraph = (): DependencyGraph => {
     const moving: (readonly [string, RangeEntry])[] = [];
 
     ranges.forEach((entry, id) => {
-      if (movesRange(entry)) {
-        moving.push([id, entry]);
+      if (!movesRange(entry)) {
+        return;
       }
+
+      moving.push([id, entry]);
     });
 
     moving.forEach(([id, entry]) => {
@@ -356,9 +362,11 @@ export const createDependencyGraph = (): DependencyGraph => {
 
     precedents.forEach((list) => {
       list.forEach((precedent) => {
-        if (movesRange(precedent)) {
-          shiftInPlace(precedent.range, change);
+        if (!movesRange(precedent)) {
+          return;
         }
+
+        shiftInPlace(precedent.range, change);
       });
     });
   };
@@ -442,9 +450,11 @@ export const createPlanner = (
     }
     const parent = frames.at(-1);
 
-    if (parent !== undefined) {
-      low.set(parent.key, Math.min(low.get(parent.key) ?? 0, own));
+    if (parent === undefined) {
+      return;
     }
+
+    low.set(parent.key, Math.min(low.get(parent.key) ?? 0, own));
   };
 
   const advance = (frame: Frame): void => {

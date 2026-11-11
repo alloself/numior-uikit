@@ -106,9 +106,11 @@ const textNodesOf = (root: Node): Text[] => {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
 
   for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
-    if (node instanceof Text) {
-      found.push(node);
+    if (!(node instanceof Text)) {
+      continue;
     }
+
+    found.push(node);
   }
   return found;
 };
@@ -552,10 +554,12 @@ export class EditorViewDriver {
   setChunkInView(index: number, visible: boolean): void {
     const chunk = this.chunkElements[index];
 
-    if (chunk !== undefined) {
-      for (const callback of sights) {
-        callback([{ target: chunk, isIntersecting: visible }]);
-      }
+    if (chunk === undefined) {
+      return;
+    }
+
+    for (const callback of sights) {
+      callback([{ target: chunk, isIntersecting: visible }]);
     }
   }
 

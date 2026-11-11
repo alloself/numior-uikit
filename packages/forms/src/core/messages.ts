@@ -13,7 +13,9 @@ const sameMessages = (left: readonly string[], right: readonly string[]): boolea
   left.length === right.length && left.every((message, index) => message === right[index]);
 
 export const writeErrors = (state: EntryState, messages: readonly string[]): void => {
-  if (!sameMessages(state.errors.value, messages)) {
-    state.setErrors(messages);
+  if (sameMessages(state.errors.value, messages)) {
+    return;
   }
+
+  state.setErrors(messages);
 };

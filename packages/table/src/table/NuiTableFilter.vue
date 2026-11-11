@@ -158,19 +158,23 @@ const someChosen = computed(() => chosenValues().length > 0 && !allChosen.value)
 const toggle = (value: TableFilterValue): void => {
   const current = draft.value;
 
-  if (current.kind === NuiTableFilterKind.Set) {
-    current.values = chosen(value)
-      ? current.values.filter((entry) => entry !== value)
-      : [...current.values, value];
+  if (current.kind !== NuiTableFilterKind.Set) {
+    return;
   }
+
+  current.values = chosen(value)
+    ? current.values.filter((entry) => entry !== value)
+    : [...current.values, value];
 };
 
 const chooseAll = (checked: boolean): void => {
   const current = draft.value;
 
-  if (current.kind === NuiTableFilterKind.Set) {
-    current.values = checked ? options.value.map((option) => option.value) : [];
+  if (current.kind !== NuiTableFilterKind.Set) {
+    return;
   }
+
+  current.values = checked ? options.value.map((option) => option.value) : [];
 };
 
 const load = async (): Promise<void> => {
@@ -231,9 +235,11 @@ watch(
 
     draft.value = draftOf(kind, filter);
 
-    if (kind === NuiTableFilterKind.Set) {
-      void load();
+    if (kind !== NuiTableFilterKind.Set) {
+      return;
     }
+
+    void load();
   },
   { immediate: true },
 );

@@ -119,9 +119,11 @@ const inBar = (target: Element): boolean => bar.value?.contains(target) === true
 
 const onEdit = (event: NuiTableEditEvent<Contact>): void => {
   for (const { row, key, value } of event.changes) {
-    if (isField(key)) {
-      row[key] = typeof value === 'string' ? value : '';
+    if (!isField(key)) {
+      continue;
     }
+
+    row[key] = typeof value === 'string' ? value : '';
   }
 };
 
@@ -130,9 +132,11 @@ const onFocus = (): void => {
 };
 
 const onInput = (text: string): void => {
-  if (draft.value !== undefined) {
-    draft.value = { ...draft.value, value: text };
+  if (draft.value === undefined) {
+    return;
   }
+
+  draft.value = { ...draft.value, value: text };
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
@@ -150,8 +154,10 @@ const onKeydown = (event: KeyboardEvent): void => {
 const onBlur = (event: FocusEvent): void => {
   const next = event.relatedTarget;
 
-  if (!(next instanceof Node && root.value?.contains(next) === true)) {
-    formulaTable.value?.commitEdit('blur');
+  if (next instanceof Node && root.value?.contains(next) === true) {
+    return;
   }
+
+  formulaTable.value?.commitEdit('blur');
 };
 </script>

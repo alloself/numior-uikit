@@ -112,9 +112,11 @@ const onPointerdown = (index: number, event: PointerEvent): void => {
 
   const move = (next: PointerEvent): void => {
     ratio = ratioAt(element, index, next.clientX, rtl());
-    if (ratio !== undefined) {
-      preview(index, ratio);
+    if (ratio === undefined) {
+      return;
     }
+
+    preview(index, ratio);
   };
 
   const end = (): void => {
@@ -122,9 +124,11 @@ const onPointerdown = (index: number, event: PointerEvent): void => {
     separator.removeEventListener('pointerup', end);
     separator.removeEventListener('pointercancel', end);
     active.value = undefined;
-    if (ratio !== undefined) {
-      commit(index, ratio);
+    if (ratio === undefined) {
+      return;
     }
+
+    commit(index, ratio);
   };
 
   separator.addEventListener('pointermove', move);

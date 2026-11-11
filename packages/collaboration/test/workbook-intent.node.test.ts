@@ -143,9 +143,11 @@ const bottomOf = (places: ReadonlyMap<string, Place>, col: number): number => {
   let bottom = 0;
 
   places.forEach((place) => {
-    if (place.col === col) {
-      bottom = Math.max(bottom, place.row);
+    if (place.col !== col) {
+      return;
     }
+
+    bottom = Math.max(bottom, place.row);
   });
 
   return bottom;
@@ -209,9 +211,11 @@ const makeRoom = (author: Author, count: number): void => {
   const places = placesOf(author.client);
   const head = places.get(author.peer);
 
-  if (head !== undefined) {
-    addLines(author, 'rows', bottomOf(places, head.col) + 1, count);
+  if (head === undefined) {
+    return;
   }
+
+  addLines(author, 'rows', bottomOf(places, head.col) + 1, count);
 };
 
 const play = (move: Move, author: Author, net: BookNetwork): void => {

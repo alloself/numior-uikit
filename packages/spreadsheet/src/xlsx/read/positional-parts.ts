@@ -47,15 +47,19 @@ const recordPart = async (
           depth += 1;
         },
         text: (text) => {
-          if (depth >= 2) {
-            recorder?.text(text);
+          if (depth < 2) {
+            return;
           }
+
+          recorder?.text(text);
         },
         close: (name) => {
           depth -= 1;
-          if (depth >= 1) {
-            recorder?.close(name);
+          if (depth < 1) {
+            return;
           }
+
+          recorder?.close(name);
         },
       },
       options,
@@ -103,14 +107,18 @@ export const readPositionalParts = async (
   for (const relationship of relationships) {
     const specs = SHEET_PARTS.get(relationship.kind);
 
-    if (specs !== undefined && !relationship.external && archive.has(relationship.target)) {
-      parts.push(await recordPart(archive, relationship.target, specs, options));
+    if (specs === undefined || relationship.external || !archive.has(relationship.target)) {
+      continue;
+    }
 
-      if (relationship.kind === RelationshipKind.Drawing) {
-        for (const entry of await chartsOf(archive, relationship.target, options)) {
-          parts.push(entry);
-        }
-      }
+    parts.push(await recordPart(archive, relationship.target, specs, options));
+
+    if (relationship.kind !== RelationshipKind.Drawing) {
+      continue;
+    }
+
+    for (const entry of await chartsOf(archive, relationship.target, options)) {
+      parts.push(entry);
     }
   }
   return parts;

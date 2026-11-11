@@ -57,9 +57,11 @@ export const readTheme = async (
         slot = undefined;
       },
       close: (element) => {
-        if (element.uri === DRAWING && SLOTS.has(element.local)) {
-          slot = undefined;
+        if (element.uri !== DRAWING || !SLOTS.has(element.local)) {
+          return;
         }
+
+        slot = undefined;
       },
     },
     options,

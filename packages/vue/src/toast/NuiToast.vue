@@ -79,8 +79,10 @@ const runAction = (): void => {
 };
 
 const onEscape = (): void => {
-  if (toast.closable) {
-    dismiss();
+  if (!toast.closable) {
+    return;
   }
+
+  dismiss();
 };
 </script>

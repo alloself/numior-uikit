@@ -169,9 +169,11 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
   };
 
   const onGripDown = (event: PointerEvent, shown: ShownDrawing, grip: FrameGrip): void => {
-    if (event.button === PRIMARY_BUTTON && canEdit(shown)) {
-      begin(event, shown, grip);
+    if (event.button !== PRIMARY_BUTTON || !canEdit(shown)) {
+      return;
     }
+
+    begin(event, shown, grip);
   };
 
   const dragTo = (x: number, y: number, keepRatio: boolean): void => {
@@ -242,9 +244,11 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
   };
 
   const onRootDown = (event: PointerEvent): void => {
-    if (selectedId.value !== undefined && !isDrawingTarget(event.target)) {
-      deselect();
+    if (selectedId.value === undefined || isDrawingTarget(event.target)) {
+      return;
     }
+
+    deselect();
   };
 
   const nudge = (shown: ShownDrawing, across: number, down: number, whole: boolean): void => {
@@ -270,9 +274,11 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
     const at = list.indexOf(shown);
     const next = list[(at + (backwards ? -1 : 1) + list.length) % list.length];
 
-    if (next !== undefined) {
-      select(next);
+    if (next === undefined) {
+      return;
     }
+
+    select(next);
   };
 
   const remove = (shown: ShownDrawing): void => {

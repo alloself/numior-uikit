@@ -74,10 +74,12 @@ const appendRound = (
     const extra = unseen.length === 0 ? undefined : plugin.appendTransaction(unseen, start, base);
     const next = extra === undefined ? undefined : applyOne(base, ids, extra);
 
-    if (extra !== undefined && next !== undefined) {
-      transactions.push(extra);
-      latest = next;
+    if (extra === undefined || next === undefined) {
+      continue;
     }
+
+    transactions.push(extra);
+    latest = next;
   }
   return latest;
 };

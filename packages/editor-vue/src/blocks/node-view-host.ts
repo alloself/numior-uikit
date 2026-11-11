@@ -28,10 +28,12 @@ export const createNodeViewHost = (): NodeViewHost => {
 
   const showInside = (chunk: Element): void => {
     for (const entry of entries.values()) {
-      if (!shown.has(entry.key) && chunk.contains(entry.dom)) {
-        show(entry);
-        observer?.unobserve(entry.dom);
+      if (shown.has(entry.key) || !chunk.contains(entry.dom)) {
+        continue;
       }
+
+      show(entry);
+      observer?.unobserve(entry.dom);
     }
   };
 

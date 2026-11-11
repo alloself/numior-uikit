@@ -165,9 +165,11 @@ const walkTransparent = (walk: Walk, element: HtmlElement): void => {
     closeTextblocks(walk.builder);
   }
   walkChildren(walk, element, withMarks(walk.marks, marksOf(walk.builder.schema, element)));
-  if (block) {
-    closeTextblocks(walk.builder);
+  if (!block) {
+    return;
   }
+
+  closeTextblocks(walk.builder);
 };
 
 const walkWhole = (walk: Walk, element: HtmlElement, candidate: NodeCandidate): boolean => {

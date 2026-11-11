@@ -104,9 +104,11 @@ const closeTop = (builder: Builder): void => {
   const open = builder.stack.pop();
   const parent = builder.stack.at(-1);
 
-  if (open !== undefined && parent !== undefined) {
-    parent.content.push(finalize(builder, open));
+  if (open === undefined || parent === undefined) {
+    return;
   }
+
+  parent.content.push(finalize(builder, open));
 };
 
 const closeTo = (builder: Builder, depth: number): void => {
@@ -146,9 +148,11 @@ export const openNode = (builder: Builder, type: NodeType, attrs: Attrs): OpenNo
 export const closeNode = (builder: Builder, open: OpenNode): void => {
   const depth = builder.stack.indexOf(open);
 
-  if (depth > 0) {
-    closeTo(builder, depth - 1);
+  if (depth <= 0) {
+    return;
   }
+
+  closeTo(builder, depth - 1);
 };
 
 export const addNode = (
@@ -157,12 +161,14 @@ export const addNode = (
   attrs: Attrs,
   content: readonly ContentNode[] = [],
 ): void => {
-  if (place(builder, type.name)) {
-    append(
-      topOf(builder),
-      builder.schema.element(type.name, { id: builder.ids.next(), attrs, content }),
-    );
+  if (!place(builder, type.name)) {
+    return;
   }
+
+  append(
+    topOf(builder),
+    builder.schema.element(type.name, { id: builder.ids.next(), attrs, content }),
+  );
 };
 
 export const nodeMaker =

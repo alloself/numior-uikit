@@ -71,9 +71,11 @@ export const useListboxSurface = (options: ListboxSurfaceOptions): ListboxSurfac
   const activateHovered = (event: PointerEvent): void => {
     const option = navigation.itemFrom(event.target);
 
-    if (option !== null && option !== navigation.activeElement()) {
-      navigation.setActive(option);
+    if (option === null || option === navigation.activeElement()) {
+      return;
     }
+
+    navigation.setActive(option);
   };
 
   return {

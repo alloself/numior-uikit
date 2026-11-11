@@ -332,9 +332,11 @@ const createDrafter = () => {
       }
     },
     text: (chunk: string): void => {
-      if (field !== undefined) {
-        text += chunk;
+      if (field === undefined) {
+        return;
       }
+
+      text += chunk;
     },
     close: (name: XmlName): void => {
       if (isFallback(name)) {
@@ -383,18 +385,20 @@ export const readDrawings = async (
 
   for (const relationship of relationships) {
     if (
-      relationship.kind === RelationshipKind.Drawing &&
-      !relationship.external &&
-      archive.has(relationship.target)
+      relationship.kind !== RelationshipKind.Drawing ||
+      relationship.external ||
+      !archive.has(relationship.target)
     ) {
-      try {
-        for (const entry of await drawingsOfPart(archive, relationship.target, options)) {
-          drawings.push(entry);
-        }
-      } catch (error) {
-        if (!(error instanceof XlsxPartError)) {
-          throw error;
-        }
+      continue;
+    }
+
+    try {
+      for (const entry of await drawingsOfPart(archive, relationship.target, options)) {
+        drawings.push(entry);
+      }
+    } catch (error) {
+      if (!(error instanceof XlsxPartError)) {
+        throw error;
       }
     }
   }

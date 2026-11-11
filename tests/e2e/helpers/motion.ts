@@ -12,9 +12,11 @@ const PAINT = 'Paint';
 export const slowMotion = (scope: Locator, token = '--nui-duration-fast'): Promise<void> =>
   scope.evaluate(
     (element, { name, value }) => {
-      if (element instanceof HTMLElement) {
-        element.style.setProperty(name, value);
+      if (!(element instanceof HTMLElement)) {
+        return;
       }
+
+      element.style.setProperty(name, value);
     },
     { name: token, value: `${SLOW_MOTION}ms` },
   );

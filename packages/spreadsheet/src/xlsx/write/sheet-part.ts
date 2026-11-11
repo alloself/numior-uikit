@@ -126,10 +126,12 @@ export const createStringTable = (): StringTable => {
           ),
         );
 
-        if (performance.now() - started > BUDGET_MS) {
-          await nextTask();
-          started = performance.now();
+        if (performance.now() - started <= BUDGET_MS) {
+          continue;
         }
+
+        await nextTask();
+        started = performance.now();
       }
       chunks.push(encoder.encode('</sst>'));
       return concatBytes(chunks);
@@ -232,9 +234,11 @@ const createSink = (signal: AbortSignal | undefined): Sink => {
     push: (piece) => {
       pieces.push(piece);
       length += piece.length;
-      if (length >= CHUNK) {
-        flush();
+      if (length < CHUNK) {
+        return;
       }
+
+      flush();
     },
     pause: async () => {
       if (performance.now() - started <= BUDGET_MS) {
@@ -391,9 +395,11 @@ const writeRows = async (
         open(cellRow);
       }
       sink.push(cellXml(cellRow, key % MAX_COLS));
-      if (index % CHECK_EVERY === 0) {
-        await sink.pause();
+      if (index % CHECK_EVERY !== 0) {
+        continue;
       }
+
+      await sink.pause();
     }
     openBefore(range.bottom + 1);
   }

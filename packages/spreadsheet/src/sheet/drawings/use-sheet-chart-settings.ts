@@ -46,15 +46,19 @@ export const useSheetChartSettings = (options: ChartSettingsOptions): ChartSetti
     const sheet = options.sheet();
     const id = options.selected()?.drawing.id;
 
-    if (sheet !== undefined && id !== undefined) {
-      applyLayout(options.editing, sheet, changeChart(sheet.layout, id, next));
+    if (sheet === undefined || id === undefined) {
+      return;
     }
+
+    applyLayout(options.editing, sheet, changeChart(sheet.layout, id, next));
   };
 
   watch(chart, (shown) => {
-    if (shown === undefined) {
-      popover.setOpen(false);
+    if (shown !== undefined) {
+      return;
     }
+
+    popover.setOpen(false);
   });
 
   return { popover, chart, placement, show, change };

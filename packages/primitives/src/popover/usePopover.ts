@@ -54,9 +54,11 @@ export const usePopover = (
   let shown: HTMLElement | undefined;
 
   const setOpen = (next: boolean): void => {
-    if (options.open.value !== next) {
-      options.open.value = next;
+    if (options.open.value === next) {
+      return;
     }
+
+    options.open.value = next;
   };
 
   const sync = (next: boolean): void => {

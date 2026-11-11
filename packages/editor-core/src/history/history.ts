@@ -82,9 +82,11 @@ const rebaseEvents = (
     const rebased = rebaseHistory(event.steps, chain);
 
     chain = rebased.chain;
-    if (rebased.steps.length > 0) {
-      kept.push({ steps: rebased.steps, selection: movedSelection(event.selection, chain) });
+    if (rebased.steps.length === 0) {
+      continue;
     }
+
+    kept.push({ steps: rebased.steps, selection: movedSelection(event.selection, chain) });
   }
   return kept.toReversed();
 };

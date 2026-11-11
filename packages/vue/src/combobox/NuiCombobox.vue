@@ -305,9 +305,11 @@ watch(open, (isOpen) => {
 });
 
 watch(filtered, () => {
-  if (open.value) {
-    activate(ListMove.First);
+  if (!open.value) {
+    return;
   }
+
+  activate(ListMove.First);
 });
 
 const focusInput = (): void => inputElement.value?.focus({ preventScroll: true });
@@ -326,9 +328,11 @@ const onSelect = (): void => {
 };
 
 const commitDraft = (): void => {
-  if (typing.value && !commitCustom()) {
-    settleQuery();
+  if (!typing.value || commitCustom()) {
+    return;
   }
+
+  settleQuery();
 };
 
 const commitCustom = (): boolean => {
@@ -357,9 +361,11 @@ onMounted(() => {
   watch(
     [open, filtered],
     () => {
-      if (open.value) {
-        navigation.reveal();
+      if (!open.value) {
+        return;
       }
+
+      navigation.reveal();
     },
     { flush: 'post' },
   );
@@ -407,9 +413,11 @@ const onEnter = (event: KeyboardEvent): void => {
     return;
   }
 
-  if (typing.value) {
-    settleQuery();
+  if (!typing.value) {
+    return;
   }
+
+  settleQuery();
 };
 
 const onEscape = (event: KeyboardEvent): void => {
@@ -423,9 +431,11 @@ const onEscape = (event: KeyboardEvent): void => {
 
 const onBackspace = (): void => {
   const last = chips.value.at(-1);
-  if (multiple && query.value === '' && last) {
-    choose(last.value);
+  if (!multiple || query.value !== '' || !last) {
+    return;
   }
+
+  choose(last.value);
 };
 
 const KEY_HANDLERS: Record<string, (event: KeyboardEvent) => void> = {
@@ -442,9 +452,11 @@ const onKeydown = (event: KeyboardEvent): void => {
     return;
   }
 
-  if (!openFromKey(event)) {
-    KEY_HANDLERS[event.key]?.(event);
+  if (openFromKey(event)) {
+    return;
   }
+
+  KEY_HANDLERS[event.key]?.(event);
 };
 
 const onFieldClick = (event: MouseEvent): void => {

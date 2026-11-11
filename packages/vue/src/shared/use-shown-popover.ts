@@ -22,9 +22,11 @@ export const useShownPopover = (
   let owed = false;
 
   const attempt = (): void => {
-    if (owed && settle()) {
-      owed = false;
+    if (!owed || !settle()) {
+      return;
     }
+
+    owed = false;
   };
 
   watch(open, (isOpen) => {
@@ -35,9 +37,11 @@ export const useShownPopover = (
     watch(
       open,
       (isOpen) => {
-        if (isOpen) {
-          attempt();
+        if (!isOpen) {
+          return;
         }
+
+        attempt();
       },
       { flush: 'post' },
     );
@@ -45,9 +49,11 @@ export const useShownPopover = (
 
   return {
     onToggle: (event) => {
-      if ('newState' in event && event.newState === PopoverState.Open) {
-        attempt();
+      if (!('newState' in event) || event.newState !== PopoverState.Open) {
+        return;
       }
+
+      attempt();
     },
   };
 };

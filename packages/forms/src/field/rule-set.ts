@@ -39,9 +39,11 @@ export const createRuleSet = <T, V>(source: RuleSource<T, V>): RuleSet<T, V> => 
       }
 
       watch(rules, (next, previous) => {
-        if (!sameRules(next, previous)) {
-          react();
+        if (sameRules(next, previous)) {
+          return;
         }
+
+        react();
       });
     },
   };

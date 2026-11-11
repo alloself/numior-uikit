@@ -42,9 +42,11 @@ const stepperSteps = computed(() =>
 );
 
 const onSelect = (value: string | undefined): void => {
-  if (value !== undefined) {
-    emit('select', value);
+  if (value === undefined) {
+    return;
   }
+
+  emit('select', value);
 };
 
 defineExpose({ panel: (index: number): HTMLElement | undefined => panels.value?.[index] });

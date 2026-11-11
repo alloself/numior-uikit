@@ -113,9 +113,11 @@ const OPENERS = new Map<string, Opener>([
   [
     'v',
     (found) => {
-      if (found.cell !== undefined) {
-        found.cell.reading = true;
+      if (found.cell === undefined) {
+        return;
       }
+
+      found.cell.reading = true;
     },
   ],
 ]);
@@ -161,19 +163,25 @@ export const readExternalPart = async (
     part,
     {
       open: (element, attributes) => {
-        if (MAIN.has(element.uri)) {
-          OPENERS.get(element.local)?.(found, attributes);
+        if (!MAIN.has(element.uri)) {
+          return;
         }
+
+        OPENERS.get(element.local)?.(found, attributes);
       },
       text: (text) => {
-        if (found.cell?.reading === true) {
-          found.cell.value += text;
+        if (found.cell?.reading !== true) {
+          return;
         }
+
+        found.cell.value += text;
       },
       close: (element) => {
-        if (MAIN.has(element.uri)) {
-          closed(found, element.local, strings);
+        if (!MAIN.has(element.uri)) {
+          return;
         }
+
+        closed(found, element.local, strings);
       },
     },
     options,

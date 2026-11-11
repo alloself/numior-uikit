@@ -248,9 +248,11 @@ export class EngineHarness<T> {
     for (let position = 0; position < this.engine.count(); position += 1) {
       const node = this.engine.nodeAt(position);
 
-      if (node !== undefined) {
-        list.push(node);
+      if (node === undefined) {
+        continue;
       }
+
+      list.push(node);
     }
     return list;
   }

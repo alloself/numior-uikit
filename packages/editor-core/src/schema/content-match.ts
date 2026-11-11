@@ -130,10 +130,12 @@ const closureOf = (automaton: Automaton, states: Iterable<number>): number[] => 
 
   for (let state = stack.pop(); state !== undefined; state = stack.pop()) {
     for (const edge of automaton.edges[state] ?? []) {
-      if (edge.type === null && !seen.has(edge.to)) {
-        seen.add(edge.to);
-        stack.push(edge.to);
+      if (edge.type !== null || seen.has(edge.to)) {
+        continue;
       }
+
+      seen.add(edge.to);
+      stack.push(edge.to);
     }
   }
   return [...seen].toSorted((left, right) => left - right);
@@ -144,9 +146,11 @@ const movesOf = (automaton: Automaton, states: readonly number[]): Map<string, n
 
   for (const state of states) {
     for (const edge of automaton.edges[state] ?? []) {
-      if (edge.type !== null) {
-        moves.set(edge.type, [...(moves.get(edge.type) ?? []), edge.to]);
+      if (edge.type === null) {
+        continue;
       }
+
+      moves.set(edge.type, [...(moves.get(edge.type) ?? []), edge.to]);
     }
   }
   return moves;
@@ -210,10 +214,12 @@ const reachable = (match: ContentMatch, follow: (type: string) => boolean): Cont
 
   for (let current = stack.pop(); current !== undefined; current = stack.pop()) {
     for (const [type, target] of current.next) {
-      if (follow(type) && !seen.has(target)) {
-        seen.add(target);
-        stack.push(target);
+      if (!follow(type) || seen.has(target)) {
+        continue;
       }
+
+      seen.add(target);
+      stack.push(target);
     }
   }
   return [...seen];

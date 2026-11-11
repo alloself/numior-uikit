@@ -176,9 +176,11 @@ const aim = (node: EventTarget | null): boolean => {
 const onSelect = (value: string | undefined): void => {
   const index = tabs.findIndex((tab) => tab.value === value);
 
-  if (index >= 0) {
-    emit('select', index);
+  if (index < 0) {
+    return;
   }
+
+  emit('select', index);
 };
 
 const onContextmenu = (event: MouseEvent): void => {
@@ -235,9 +237,11 @@ const onKeydown = (event: KeyboardEvent): void => {
 };
 
 const onDblclick = (event: MouseEvent): void => {
-  if (aim(event.target)) {
-    startRename();
+  if (!aim(event.target)) {
+    return;
   }
+
+  startRename();
 };
 
 const onRenameToggle = (event: Event): void => {

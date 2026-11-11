@@ -578,16 +578,18 @@ const titles = (frame: Frame, plot: Box, texts: SceneText[], horizontal: boolean
       rotate: frame.rtl ? 90 : -90,
     });
   }
-  if (bottomTitle !== undefined && bottomTitle !== '') {
-    texts.push({
-      role: horizontal ? 'value-title' : 'category-title',
-      text: bottomTitle,
-      x: plot.x + plot.width / 2,
-      y: frame.size.height - PADDING,
-      anchor: 'middle',
-      baseline: 'bottom',
-    });
+  if (bottomTitle === undefined || bottomTitle === '') {
+    return;
   }
+
+  texts.push({
+    role: horizontal ? 'value-title' : 'category-title',
+    text: bottomTitle,
+    x: plot.x + plot.width / 2,
+    y: frame.size.height - PADDING,
+    anchor: 'middle',
+    baseline: 'bottom',
+  });
 };
 
 const sceneOf = (

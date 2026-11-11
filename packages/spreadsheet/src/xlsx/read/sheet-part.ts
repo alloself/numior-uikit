@@ -306,9 +306,11 @@ export const readSheetPart = async (
     if (format !== undefined && format !== FormatCode.General) {
       sheet.formats.set(current.row, current.col, context.book.formats.id(format));
     }
-    if (decoration !== 0) {
-      sheet.decorations.set(current.row, current.col, decoration);
+    if (decoration === 0) {
+      return;
     }
+
+    sheet.decorations.set(current.row, current.col, decoration);
   };
 
   const openCell = (attributes: readonly XmlAttribute[]): void => {

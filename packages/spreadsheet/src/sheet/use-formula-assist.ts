@@ -164,9 +164,11 @@ export const useFormulaAssist = (options: FormulaAssistOptions): FormulaAssist =
   const loadHelp = async (language: HelpLanguage): Promise<void> => {
     const catalog = await loadFunctionHelp(language);
 
-    if (loaded === language) {
-      help.value = catalog;
+    if (loaded !== language) {
+      return;
     }
+
+    help.value = catalog;
   };
 
   const syncCaret = (): void => {

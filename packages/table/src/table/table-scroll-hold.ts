@@ -12,9 +12,11 @@ const restore = (mark: TableScrollMark): void => {
   if (mark.element.scrollTop !== mark.top) {
     mark.element.scrollTop = mark.top;
   }
-  if (mark.element.scrollLeft !== mark.left) {
-    mark.element.scrollLeft = mark.left;
+  if (mark.element.scrollLeft === mark.left) {
+    return;
   }
+
+  mark.element.scrollLeft = mark.left;
 };
 
 const NOTHING = (): void => undefined;
@@ -31,9 +33,11 @@ export const holdScrollAfterResize = (element: Element): (() => void) => {
     const target = event.target === root ? root.scrollingElement : event.target;
 
     marks.forEach((mark) => {
-      if (mark.element === target) {
-        restore(mark);
+      if (mark.element !== target) {
+        return;
       }
+
+      restore(mark);
     });
   };
 

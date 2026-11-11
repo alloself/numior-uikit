@@ -26,9 +26,11 @@ if (run.error !== undefined) {
 }
 
 for (const entry of readdirSync(OUT_DIR, { recursive: true, withFileTypes: true })) {
-  if (entry.isFile() && !entry.name.endsWith('.vue.d.ts')) {
-    rmSync(join(entry.parentPath, entry.name));
+  if (!entry.isFile() || entry.name.endsWith('.vue.d.ts')) {
+    continue;
   }
+
+  rmSync(join(entry.parentPath, entry.name));
 }
 
 process.exitCode = run.status ?? 1;

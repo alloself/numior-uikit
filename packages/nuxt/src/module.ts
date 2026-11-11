@@ -44,11 +44,13 @@ const registerNamespace = (id: string, namespace: ModuleNamespace, what: Registr
       addComponent({ name, export: name, filePath: id });
     }
   }
-  if (what.composables) {
-    addImports(
-      composableNames(namespace).map((name) => ({ name, from: id, priority: YIELDING_PRIORITY })),
-    );
+  if (!what.composables) {
+    return;
   }
+
+  addImports(
+    composableNames(namespace).map((name) => ({ name, from: id, priority: YIELDING_PRIORITY })),
+  );
 };
 
 const colorSchemeOf = (options: NuiNuxtOptions): NuiNuxtColorScheme | undefined => {

@@ -554,9 +554,11 @@ onMounted(() => {
   watch(
     () => collaboration,
     (session, _previous, onCleanup) => {
-      if (session !== undefined) {
-        onCleanup(session.subscribe(onRemoteSteps));
+      if (session === undefined) {
+        return;
       }
+
+      onCleanup(session.subscribe(onRemoteSteps));
     },
     { immediate: true },
   );
@@ -795,9 +797,11 @@ const onKeydown = (event: KeyboardEvent): void => {
   fill.onKeydown(event);
   assist.onKeydown(event);
 
-  if (!event.defaultPrevented) {
-    references.onKeydown(event);
+  if (event.defaultPrevented) {
+    return;
   }
+
+  references.onKeydown(event);
 };
 
 const onPointermove = (event: PointerEvent): void => {
@@ -908,25 +912,31 @@ const selectSheet = (index: number): void => {
 };
 
 const addSheet = (index: number): void => {
-  if (editing.apply([{ kind: 'addSheet', name: freeSheetName(), index }])) {
-    sheetIndex.value = index;
+  if (!editing.apply([{ kind: 'addSheet', name: freeSheetName(), index }])) {
+    return;
   }
+
+  sheetIndex.value = index;
 };
 
 const renameSheet = (index: number, name: string): void => {
   const from = book.sheets[index]?.name;
 
-  if (from !== undefined && from !== name) {
-    editing.apply([{ kind: 'renameSheet', from, to: name }]);
+  if (from === undefined || from === name) {
+    return;
   }
+
+  editing.apply([{ kind: 'renameSheet', from, to: name }]);
 };
 
 const removeSheet = (index: number): void => {
   const name = book.sheets[index]?.name;
 
-  if (name !== undefined && editing.apply([{ kind: 'removeSheet', name }])) {
-    sheetIndex.value = Math.min(index, book.sheets.length - 1);
+  if (name === undefined || !editing.apply([{ kind: 'removeSheet', name }])) {
+    return;
   }
+
+  sheetIndex.value = Math.min(index, book.sheets.length - 1);
 };
 
 const rulesCell = shallowRef<NuiTableCellPosition>();
@@ -995,9 +1005,11 @@ const lightUp = (ranges: readonly CellRange[] | undefined): void => {
 const setFormats = (formats: readonly ConditionalFormat[]): void => {
   const sheet = shownSheet.value;
 
-  if (sheet !== undefined) {
-    editing.apply([{ kind: StepKind.SetConditional, sheet: sheet.name, formats }]);
+  if (sheet === undefined) {
+    return;
   }
+
+  editing.apply([{ kind: StepKind.SetConditional, sheet: sheet.name, formats }]);
 };
 
 watch(shownSheet, () => {
@@ -1023,9 +1035,11 @@ watch(
 );
 
 watch(recalc.phase, (next, before) => {
-  if (next === RecalcPhase.Idle && before === RecalcPhase.Running) {
-    formula.announcement.value = messages.value.recalcDone;
+  if (next !== RecalcPhase.Idle || before !== RecalcPhase.Running) {
+    return;
   }
+
+  formula.announcement.value = messages.value.recalcDone;
 });
 
 watch(bookLocale, (next) => {

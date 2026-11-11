@@ -81,9 +81,11 @@ export const apiNames = {
     const check = (node, name, words, messageId) => {
       const wanted = name === undefined ? undefined : words.get(name);
 
-      if (wanted !== undefined) {
-        context.report({ node, messageId, data: { name, wanted } });
+      if (wanted === undefined) {
+        return;
       }
+
+      context.report({ node, messageId, data: { name, wanted } });
     };
 
     return {
@@ -95,9 +97,11 @@ export const apiNames = {
         }
 
         node.body.body.forEach((member) => {
-          if (member.type === 'TSPropertySignature' && !isCallback(member)) {
-            check(member.key, nameOf(member.key), words.names, words.messageId);
+          if (member.type !== 'TSPropertySignature' || isCallback(member)) {
+            return;
           }
+
+          check(member.key, nameOf(member.key), words.names, words.messageId);
         });
       },
       CallExpression: (node) => {
@@ -105,9 +109,11 @@ export const apiNames = {
 
         if (isCallTo(node, 'defineEmits')) {
           membersOf(type).forEach((member) => {
-            if (member.type === 'TSPropertySignature') {
-              check(member.key, nameOf(member.key), EVENTS, 'event');
+            if (member.type !== 'TSPropertySignature') {
+              return;
             }
+
+            check(member.key, nameOf(member.key), EVENTS, 'event');
           });
 
           return;
@@ -115,9 +121,11 @@ export const apiNames = {
 
         const [first] = node.arguments;
 
-        if (isCallTo(node, 'defineModel') && first?.type === 'Literal') {
-          check(first, nameOf(first), MODELS, 'model');
+        if (!isCallTo(node, 'defineModel') || first?.type !== 'Literal') {
+          return;
         }
+
+        check(first, nameOf(first), MODELS, 'model');
       },
     };
   },

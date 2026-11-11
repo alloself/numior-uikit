@@ -39,9 +39,11 @@ const SPACE = /\s*/y;
 const ATTRIBUTE = /([^\s"'/=>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/y;
 
 const pushText = (cursor: Cursor, text: string): void => {
-  if (text !== '') {
-    cursor.tokens.push({ kind: 'text', text: decodeEntities(text) });
+  if (text === '') {
+    return;
   }
+
+  cursor.tokens.push({ kind: 'text', text: decodeEntities(text) });
 };
 
 const skipTo = (cursor: Cursor, marker: string, from: number): void => {
@@ -132,9 +134,11 @@ const readOpen = (cursor: Cursor, name: string): void => {
   const closed = readAttributes(cursor, attrs);
 
   cursor.tokens.push({ kind: 'open', tag, attrs, closed });
-  if (!closed && RAW.has(tag)) {
-    readRaw(cursor, tag);
+  if (closed || !RAW.has(tag)) {
+    return;
   }
+
+  readRaw(cursor, tag);
 };
 
 const readClose = (cursor: Cursor): void => {
@@ -177,9 +181,11 @@ export const tokenize = (html: string): HtmlToken[] => {
 
     pushText(cursor, html.slice(cursor.at, stop));
     cursor.at = stop;
-    if (open !== -1) {
-      readMarkup(cursor);
+    if (open === -1) {
+      continue;
     }
+
+    readMarkup(cursor);
   }
   return cursor.tokens;
 };

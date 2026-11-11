@@ -311,9 +311,11 @@ export const useVirtualList = (
     watch(
       [() => toValue(container), enabled, axis],
       ([element, on]) => {
-        if (element && on) {
-          measure();
+        if (!element || !on) {
+          return;
         }
+
+        measure();
       },
       { immediate: true, flush: 'post' },
     );

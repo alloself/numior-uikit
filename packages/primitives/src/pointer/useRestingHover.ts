@@ -39,9 +39,11 @@ export const useRestingHover = (
 
     resting.value = false;
 
-    if (!(over instanceof Node) || toValue(target)?.contains(over) !== true) {
-      end();
+    if (over instanceof Node && toValue(target)?.contains(over) === true) {
+      return;
     }
+
+    end();
   };
 
   useEventListener(
@@ -82,9 +84,11 @@ export const useRestingHover = (
     page,
     'pointermove',
     (event) => {
-      if (!isAt(event, last)) {
-        settle(event);
+      if (isAt(event, last)) {
+        return;
       }
+
+      settle(event);
     },
     { capture: true, passive: true },
   );

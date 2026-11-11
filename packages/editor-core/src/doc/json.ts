@@ -112,9 +112,11 @@ const readAttrs = (reader: Reader, value: unknown, specs: AttrSpecs): Attrs => {
     return {};
   }
   for (const [key, spec] of specEntries(specs)) {
-    if (spec.default !== undefined) {
-      attrs[key] = spec.default;
+    if (spec.default === undefined) {
+      continue;
     }
+
+    attrs[key] = spec.default;
   }
   if (!isFields(value)) {
     return attrs;

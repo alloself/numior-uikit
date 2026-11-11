@@ -211,9 +211,11 @@ export const createSelectionSync = (host: ViewHost): SelectionSync => {
       clearGap(gapped);
     }
     gapped = next;
-    if (next !== undefined && selection.kind === SelectionKind.Gap) {
-      paintGap(host, next, selection.id, selection.side);
+    if (next === undefined || selection.kind !== SelectionKind.Gap) {
+      return;
     }
+
+    paintGap(host, next, selection.id, selection.side);
   };
 
   const matches = (span: Span): boolean => {
@@ -245,9 +247,11 @@ export const createSelectionSync = (host: ViewHost): SelectionSync => {
       const state = host.state();
       const next = selectionOfSpan(state.doc, span);
 
-      if (!sameSelection(next, state.selection)) {
-        host.dispatch(state.tr.setSelection(next), 'pointer');
+      if (sameSelection(next, state.selection)) {
+        return;
       }
+
+      host.dispatch(state.tr.setSelection(next), 'pointer');
     },
     write: () => {
       const span = domSpan(host);

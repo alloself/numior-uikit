@@ -62,9 +62,11 @@ export const useSheetPictureInsert = (options: DrawingInsertOptions): PictureIns
       content: { kind: DrawingKind.Picture, media: id, type, bytes },
     });
 
-    if (applyLayout(options.editing, sheet, layout)) {
-      options.select(id, name);
+    if (!applyLayout(options.editing, sheet, layout)) {
+      return;
     }
+
+    options.select(id, name);
   };
 
   const insert = async (file: File): Promise<void> => {
@@ -82,9 +84,11 @@ export const useSheetPictureInsert = (options: DrawingInsertOptions): PictureIns
   dialog.onChange((files) => {
     const file = files?.[0];
 
-    if (file !== undefined) {
-      void insert(file);
+    if (file === undefined) {
+      return;
     }
+
+    void insert(file);
   });
 
   const onPaste = (event: ClipboardEvent): void => {

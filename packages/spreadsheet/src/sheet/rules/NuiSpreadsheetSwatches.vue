@@ -123,9 +123,11 @@ const focusSwatch = (index: number): void => {
   void nextTick(() => {
     const target = grid.value?.children[index];
 
-    if (target instanceof HTMLElement) {
-      target.focus();
+    if (!(target instanceof HTMLElement)) {
+      return;
     }
+
+    target.focus();
   });
 };
 

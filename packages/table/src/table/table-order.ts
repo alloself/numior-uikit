@@ -11,10 +11,12 @@ export const orderLeaves = <T>(
   for (const key of order) {
     const leaf = byKey.get(key);
 
-    if (leaf !== undefined && !placed.has(key)) {
-      placed.add(key);
-      ordered.push(leaf);
+    if (leaf === undefined || placed.has(key)) {
+      continue;
     }
+
+    placed.add(key);
+    ordered.push(leaf);
   }
   return [...ordered, ...leaves.filter((leaf) => !placed.has(leaf.key))];
 };

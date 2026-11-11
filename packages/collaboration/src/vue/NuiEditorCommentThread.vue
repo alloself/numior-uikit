@@ -124,8 +124,10 @@ const sendReply = async (body: string): Promise<boolean> => {
 };
 
 const onClick = (event: MouseEvent): void => {
-  if (event.target instanceof Element && event.target.closest('button, textarea, a') === null) {
-    comments.activate(thread.id);
+  if (!(event.target instanceof Element) || event.target.closest('button, textarea, a') !== null) {
+    return;
   }
+
+  comments.activate(thread.id);
 };
 </script>

@@ -44,9 +44,11 @@ export const createRoom = (authority: RoomAuthority): Room => {
 
   const announce = (from: RoomPeer, state: unknown): void => {
     for (const other of peers) {
-      if (other !== from) {
-        other.send({ kind: ServerMessageKind.Presence, clientId: from.clientId, state });
+      if (other === from) {
+        continue;
       }
+
+      other.send({ kind: ServerMessageKind.Presence, clientId: from.clientId, state });
     }
   };
 
@@ -96,9 +98,11 @@ export const createRoom = (authority: RoomAuthority): Room => {
       return;
     }
     for (const other of peers) {
-      if (other !== peer) {
-        other.send({ kind: ServerMessageKind.Steps, version, clientId: peer.clientId, steps });
+      if (other === peer) {
+        continue;
       }
+
+      other.send({ kind: ServerMessageKind.Steps, version, clientId: peer.clientId, steps });
     }
   };
 
@@ -115,17 +119,21 @@ export const createRoom = (authority: RoomAuthority): Room => {
   const leave = (peer: RoomPeer): void => {
     peers.delete(peer);
 
-    if (presence.delete(peer)) {
-      announce(peer, null);
+    if (!presence.delete(peer)) {
+      return;
     }
+
+    announce(peer, null);
   };
 
   const supersede = (peer: RoomPeer): void => {
     for (const old of peers) {
-      if (old.clientId === peer.clientId) {
-        leave(old);
-        old.drop?.();
+      if (old.clientId !== peer.clientId) {
+        continue;
       }
+
+      leave(old);
+      old.drop?.();
     }
   };
 

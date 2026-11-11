@@ -29,9 +29,11 @@ export const flattenTree = <T>(
   for (let index = roots.length - 1; index >= 0; index -= 1) {
     const row = roots[index];
 
-    if (row !== undefined) {
-      stack.push({ row, parent: -1, depth: 0 });
+    if (row === undefined) {
+      continue;
     }
+
+    stack.push({ row, parent: -1, depth: 0 });
   }
   while (stack.length > 0) {
     const entry = stack.pop();
@@ -48,9 +50,11 @@ export const flattenTree = <T>(
     for (let position = nested.length - 1; position >= 0; position -= 1) {
       const child = nested[position];
 
-      if (child !== undefined) {
-        stack.push({ row: child, parent: index, depth: entry.depth + 1 });
+      if (child === undefined) {
+        continue;
       }
+
+      stack.push({ row: child, parent: index, depth: entry.depth + 1 });
     }
   }
   return { rows, parents: Int32Array.from(parentList), depths: Uint16Array.from(depthList) };
@@ -89,10 +93,12 @@ const countChildren = (pass: Uint8Array, parents: Int32Array, root: number): Uin
   const counts = new Uint32Array(root + 1);
 
   for (let index = 0; index < pass.length; index += 1) {
-    if (pass[index] === 1) {
-      const slot = slotOf(parents, index, root);
-      counts[slot] = (counts[slot] ?? 0) + 1;
+    if (pass[index] !== 1) {
+      continue;
     }
+
+    const slot = slotOf(parents, index, root);
+    counts[slot] = (counts[slot] ?? 0) + 1;
   }
   return counts;
 };
@@ -116,11 +122,13 @@ const fillLists = (
   const lists = new Uint32Array(starts[root + 1] ?? 0);
 
   for (let index = 0; index < pass.length; index += 1) {
-    if (pass[index] === 1) {
-      const slot = slotOf(parents, index, root);
-      lists[cursors[slot] ?? 0] = index;
-      cursors[slot] = (cursors[slot] ?? 0) + 1;
+    if (pass[index] !== 1) {
+      continue;
     }
+
+    const slot = slotOf(parents, index, root);
+    lists[cursors[slot] ?? 0] = index;
+    cursors[slot] = (cursors[slot] ?? 0) + 1;
   }
   return lists;
 };
@@ -197,9 +205,11 @@ export const shownUnder = (
     }
     shown.push(next);
 
-    if ((tree.starts[next + 1] ?? 0) > (tree.starts[next] ?? 0) && isExpanded(next)) {
-      open(next);
+    if ((tree.starts[next + 1] ?? 0) <= (tree.starts[next] ?? 0) || !isExpanded(next)) {
+      continue;
     }
+
+    open(next);
   }
   return shown;
 };

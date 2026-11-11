@@ -121,9 +121,11 @@ useFloating(reference, contentElement, {
 });
 
 const onPointerenter = (event: PointerEvent): void => {
-  if (event.pointerType !== PointerType.Touch && !disabled) {
-    delay.scheduleOpen();
+  if (event.pointerType === PointerType.Touch || disabled) {
+    return;
   }
+
+  delay.scheduleOpen();
 };
 
 const onPointerleave = (): void => delay.scheduleClose();
@@ -134,17 +136,21 @@ const onPointerdown = (): void => {
 };
 
 const onFocus = (): void => {
-  if (!disabled && !pressedRecently()) {
-    delay.openNow();
+  if (disabled || pressedRecently()) {
+    return;
   }
+
+  delay.openNow();
 };
 
 const onBlur = (): void => delay.closeNow();
 
 const onDocumentKeydown = (event: KeyboardEvent): void => {
-  if (event.key === Key.Escape) {
-    delay.closeNow();
+  if (event.key !== Key.Escape) {
+    return;
   }
+
+  delay.closeNow();
 };
 
 const openDocument = (): Document | undefined =>
@@ -153,9 +159,11 @@ const openDocument = (): Document | undefined =>
 watch(
   () => disabled,
   (isDisabled) => {
-    if (isDisabled) {
-      delay.closeNow();
+    if (!isDisabled) {
+      return;
     }
+
+    delay.closeNow();
   },
 );
 

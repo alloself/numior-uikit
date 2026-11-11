@@ -138,12 +138,13 @@ export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T
       event.preventDefault();
       return true;
     }
-    if (head(key)?.filterable === true) {
-      event.preventDefault();
-      openFor(key, cell);
-      return true;
+    if (head(key)?.filterable !== true) {
+      return false;
     }
-    return false;
+
+    event.preventDefault();
+    openFor(key, cell);
+    return true;
   };
 
   const onKeydown = (event: KeyboardEvent): boolean => {
@@ -178,25 +179,31 @@ export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T
     onClick: (event) => {
       const key = keyOf(headerOf(event.target));
 
-      if (key !== undefined) {
-        toggleSort(key, event.shiftKey);
+      if (key === undefined) {
+        return;
       }
+
+      toggleSort(key, event.shiftKey);
     },
     onKeydown,
     openFilter: (key, event) => {
       const cell = headerOf(event.target);
 
-      if (cell !== null) {
-        openFor(key, cell);
+      if (cell === null) {
+        return;
       }
+
+      openFor(key, cell);
     },
     openFilterAt: openFor,
     openMenu: (key, event) => {
       const cell = headerOf(event.target);
 
-      if (cell !== null) {
-        options.menu(key, cell);
+      if (cell === null) {
+        return;
       }
+
+      options.menu(key, cell);
     },
     applyFilter: (next) => {
       const current = target.value;

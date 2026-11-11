@@ -54,9 +54,11 @@ export const useTableRowResize = (options: TableRowResizeOptions): TableRowResiz
   const write = (key: string, height: number): void => {
     latest.height = height;
 
-    if (options.heights.value[key] !== height) {
-      options.heights.value = { ...options.heights.value, [key]: height };
+    if (options.heights.value[key] === height) {
+      return;
     }
+
+    options.heights.value = { ...options.heights.value, [key]: height };
   };
 
   const announceHeight = (position: number, height: number): void => {
@@ -66,9 +68,11 @@ export const useTableRowResize = (options: TableRowResizeOptions): TableRowResiz
   const onMove = (event: PointerEvent): void => {
     const current = session.value;
 
-    if (current !== undefined && event.pointerId === current.pointerId) {
-      write(current.key, clampHeight(current.height + event.clientY - current.origin));
+    if (current === undefined || event.pointerId !== current.pointerId) {
+      return;
     }
+
+    write(current.key, clampHeight(current.height + event.clientY - current.origin));
   };
 
   const detach = (): void => {
@@ -87,9 +91,11 @@ export const useTableRowResize = (options: TableRowResizeOptions): TableRowResiz
     detach();
     session.value = undefined;
 
-    if (current !== undefined) {
-      announceHeight(current.position, latest.height);
+    if (current === undefined) {
+      return;
     }
+
+    announceHeight(current.position, latest.height);
   };
 
   const start = (position: number, event: PointerEvent): void => {

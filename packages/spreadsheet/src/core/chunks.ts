@@ -148,11 +148,13 @@ const filledBytes = (plane: Uint8Array): number => {
   for (let index = 0; index < words.length; index += 1) {
     const word = words[index] ?? 0;
 
-    if (word !== 0) {
-      const marks = (((word & LOW_BITS) + LOW_BITS) | word) & HIGH_BITS;
-
-      count += Math.imul(marks >>> HIGH_BIT, BYTE_ONES) >>> TOP_BYTE;
+    if (word === 0) {
+      continue;
     }
+
+    const marks = (((word & LOW_BITS) + LOW_BITS) | word) & HIGH_BITS;
+
+    count += Math.imul(marks >>> HIGH_BIT, BYTE_ONES) >>> TOP_BYTE;
   }
   return count;
 };
@@ -222,19 +224,21 @@ export const shiftChunkLines = <C>(
       const known = ops.chunks.get(key);
       const runs = runsOf(ops.chunks, shift, strip, index);
 
-      if (known !== undefined || runs.some((run) => run.source !== undefined)) {
-        const target = known ?? ops.create();
-
-        ops.chunks.set(key, target);
-
-        const whole = runs[0]?.from === 0;
-
-        (count > 0 ? runs.toReversed() : runs).forEach((run) => {
-          applyRun(ops, rows, target, run, whole);
-        });
-
-        ops.settle(key, target);
+      if (known === undefined && !runs.some((run) => run.source !== undefined)) {
+        continue;
       }
+
+      const target = known ?? ops.create();
+
+      ops.chunks.set(key, target);
+
+      const whole = runs[0]?.from === 0;
+
+      (count > 0 ? runs.toReversed() : runs).forEach((run) => {
+        applyRun(ops, rows, target, run, whole);
+      });
+
+      ops.settle(key, target);
     }
   });
 };

@@ -80,9 +80,11 @@ const thread = computed(() =>
 const shown = computed({
   get: () => comments.drafting.value || thread.value !== undefined,
   set: (open) => {
-    if (!open) {
-      comments.close();
+    if (open) {
+      return;
     }
+
+    comments.close();
   },
 });
 
@@ -150,14 +152,18 @@ watch([shown, comments.revision, comments.opened], place, { flush: 'post' });
 useEditorLayout(() => editor, place);
 
 watch(comments.drafting, (now, was) => {
-  if (was && !now) {
-    editor?.focus();
+  if (!was || now) {
+    return;
   }
+
+  editor?.focus();
 });
 
 watch(shown, (now, was) => {
-  if (was && !now && panel.value?.contains(document.activeElement) === true) {
-    editor?.focus();
+  if (!was || now || panel.value?.contains(document.activeElement) !== true) {
+    return;
   }
+
+  editor?.focus();
 });
 </script>

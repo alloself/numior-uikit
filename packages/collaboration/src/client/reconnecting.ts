@@ -63,9 +63,11 @@ export const createReconnecting = (
     connection = held.own;
 
     for (const act of early) {
-      if (connection === held.own) {
-        act();
+      if (connection !== held.own) {
+        continue;
       }
+
+      act();
     }
   };
 

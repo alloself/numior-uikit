@@ -92,15 +92,19 @@ const groupName = computed(() => {
 const checkboxElement = useTemplateRef<HTMLInputElement>('checkbox');
 
 watchPostEffect(() => {
-  if (checkboxElement.value) {
-    checkboxElement.value.indeterminate = indeterminate;
+  if (!checkboxElement.value) {
+    return;
   }
+
+  checkboxElement.value.indeterminate = indeterminate;
 });
 
 const onClick = (event: MouseEvent): void => {
-  if (isReadonly.value) {
-    event.preventDefault();
+  if (!isReadonly.value) {
+    return;
   }
+
+  event.preventDefault();
 };
 
 const onChange = (): void => {

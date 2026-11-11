@@ -281,11 +281,13 @@ const onChar = (type: TimeSegmentType, char: string): void => {
   }
   const period = periodOf(char);
   if (
-    period !== null &&
-    (target === TimeSegmentType.DayPeriod || layout.value.cycle === HourCycle.H12)
+    period === null ||
+    (target !== TimeSegmentType.DayPeriod && layout.value.cycle !== HourCycle.H12)
   ) {
-    times.setPeriod(period);
+    return;
   }
+
+  times.setPeriod(period);
 };
 
 const segmentTypeOf = (target: EventTarget | null): TimeSegmentType | undefined =>
@@ -294,9 +296,11 @@ const segmentTypeOf = (target: EventTarget | null): TimeSegmentType | undefined 
 const focusSegment = (type: TimeSegmentType): void => {
   const segment = segments.get(type);
 
-  if (segment !== undefined) {
-    navigation.setActive(segment);
+  if (segment === undefined) {
+    return;
   }
+
+  navigation.setActive(segment);
 };
 
 const clockElement = (): Element | null => {
@@ -422,17 +426,21 @@ const wheelInput = computed(() => ({
 const columns = computed(() => wheelColumns(wheelInput.value));
 
 const setWheelTime = (time: TimeValue): void => {
-  if (!isReadonly.value && formatTimeModel(time, seconds) !== model.value) {
-    times.setTime(time);
+  if (isReadonly.value || formatTimeModel(time, seconds) === model.value) {
+    return;
   }
+
+  times.setTime(time);
 };
 
 const pickWheel = (type: TimeSegmentType, index: number): void => {
   const option = columns.value.find((column) => column.type === type)?.options[index];
 
-  if (option) {
-    setWheelTime(pickedTime(wheelInput.value, type, option.value));
+  if (!option) {
+    return;
   }
+
+  setWheelTime(pickedTime(wheelInput.value, type, option.value));
 };
 
 const onFocusWheel = (type: TimeSegmentType): void => {
@@ -496,9 +504,11 @@ onMounted(() => {
   watch(
     open,
     (isOpen) => {
-      if (isOpen) {
-        wheels.value?.focus(state.segment);
+      if (!isOpen) {
+        return;
       }
+
+      wheels.value?.focus(state.segment);
     },
     { flush: 'post' },
   );

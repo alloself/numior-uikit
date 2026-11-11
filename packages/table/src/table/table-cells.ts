@@ -137,9 +137,11 @@ const lineNumbers = (count: number): readonly number[] => {
 const forgetters = new WeakMap<object, () => void>();
 
 export const forgetCellReads = (nextEdge: NuiTableNextEdge | undefined): void => {
-  if (nextEdge !== undefined) {
-    forgetters.get(nextEdge)?.();
+  if (nextEdge === undefined) {
+    return;
   }
+
+  forgetters.get(nextEdge)?.();
 };
 
 const oncePerRender = (read: CellRead, cols: number): ReadCache => {

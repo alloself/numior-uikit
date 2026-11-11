@@ -83,9 +83,11 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
   const write = (patch: NuiTableWidths): void => {
     const current = options.widths.value;
 
-    if (Object.entries(patch).some(([key, value]) => current[key] !== value)) {
-      options.widths.value = { ...current, ...patch };
+    if (!Object.entries(patch).some(([key, value]) => current[key] !== value)) {
+      return;
     }
+
+    options.widths.value = { ...current, ...patch };
   };
 
   const announceWidth = (key: string, width: number): void => {
@@ -114,9 +116,11 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
   const onMove = (event: PointerEvent): void => {
     const current = session.value;
 
-    if (current !== undefined && event.pointerId === current.pointerId) {
-      apply(current, (event.clientX - current.origin) * current.sign);
+    if (current === undefined || event.pointerId !== current.pointerId) {
+      return;
     }
+
+    apply(current, (event.clientX - current.origin) * current.sign);
   };
 
   const detach = (): void => {
@@ -141,9 +145,11 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
 
     announceWidth(current.key, latest.width);
 
-    if (latest.width !== current.width) {
-      options.resized(changesOf(current, latest));
+    if (latest.width === current.width) {
+      return;
     }
+
+    options.resized(changesOf(current, latest));
   };
 
   const start = (key: string, event: PointerEvent): void => {

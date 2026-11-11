@@ -182,9 +182,11 @@ const pickDate = (value: NuiCalendarValue): void => {
 };
 
 const pickTime = (value: string | null): void => {
-  if (value !== null && dateValue.value !== null) {
-    model.value = joinDateTime(dateValue.value, value);
+  if (value === null || dateValue.value === null) {
+    return;
   }
+
+  model.value = joinDateTime(dateValue.value, value);
 };
 
 const clear = (): void => {

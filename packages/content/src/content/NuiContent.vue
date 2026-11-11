@@ -45,9 +45,11 @@ provideAllowedEmbeds(() => providers.value);
 watch(
   read,
   (result) => {
-    if (!result.ok) {
-      emit('invalid', result.issues);
+    if (result.ok) {
+      return;
     }
+
+    emit('invalid', result.issues);
   },
   { immediate: true },
 );

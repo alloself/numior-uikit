@@ -68,9 +68,11 @@ const lockRoot = (): void => {
 
   rootLock = { overflow: root.style.overflow, padding: root.style.paddingInlineEnd };
   root.style.overflow = 'hidden';
-  if (width > 0) {
-    root.style.paddingInlineEnd = `${width}px`;
+  if (width <= 0) {
+    return;
   }
+
+  root.style.paddingInlineEnd = `${width}px`;
 };
 
 const unlockRoot = (): void => {
@@ -141,9 +143,11 @@ export const useDialog = (element: DialogRef, options: DialogOptions): DialogCon
 
   onScopeDispose(() => {
     const dialog = toValue(element);
-    if (dialog) {
-      track(dialog, false);
+    if (!dialog) {
+      return;
     }
+
+    track(dialog, false);
   });
 
   const close = (value?: string): void => {
@@ -158,16 +162,20 @@ export const useDialog = (element: DialogRef, options: DialogOptions): DialogCon
 
   const attrs: DialogAttrs = {
     onCancel: (event) => {
-      if (!closable()) {
-        event.preventDefault();
+      if (closable()) {
+        return;
       }
+
+      event.preventDefault();
     },
     onKeydown: (event) => {
       const dialog = toValue(element);
 
-      if (event.key === Key.Escape && !closable() && dialog && ownsKey(dialog, event)) {
-        event.preventDefault();
+      if (event.key !== Key.Escape || closable() || !dialog || !ownsKey(dialog, event)) {
+        return;
       }
+
+      event.preventDefault();
     },
     onClose: () => {
       const dialog = toValue(element);
@@ -188,9 +196,11 @@ export const useDialog = (element: DialogRef, options: DialogOptions): DialogCon
         return;
       }
       pressedOutside.value = false;
-      if (closable() && closeOnBackdrop()) {
-        close();
+      if (!closable() || !closeOnBackdrop()) {
+        return;
       }
+
+      close();
     },
   };
 

@@ -241,7 +241,10 @@ export default [
         },
       },
     },
-    rules: { 'numior/guard-first': 'error' },
+    rules: {
+      'numior/guard-first': 'error',
+      'no-else-return': ['error', { allowElseIf: false }],
+    },
   },
   {
     files: ['packages/*/src/**/*.ts', 'packages/*/src/**/*.vue'],

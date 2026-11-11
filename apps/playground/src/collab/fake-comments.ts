@@ -92,9 +92,11 @@ export const fakeComments = (): CommentsAdapter => {
   };
 
   const answered = (doc: string): void => {
-    if (rooms.has(doc)) {
-      post({ kind: NoticeKind.All, doc, threads: threadsOf(doc) });
+    if (!rooms.has(doc)) {
+      return;
     }
+
+    post({ kind: NoticeKind.All, doc, threads: threadsOf(doc) });
   };
 
   const announced = (doc: string, event: CommentEvent): void => {

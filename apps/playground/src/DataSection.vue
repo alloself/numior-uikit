@@ -243,9 +243,11 @@ const cardLoading = ref(true);
 const listEmpty = ref(false);
 
 const onCardClick = (event: MouseEvent): void => {
-  if (event.target instanceof Element && event.target.closest('.nui-card__action')) {
-    cardClicks.value += 1;
+  if (!(event.target instanceof Element) || !event.target.closest('.nui-card__action')) {
+    return;
   }
+
+  cardClicks.value += 1;
 };
 
 const output = computed(() =>

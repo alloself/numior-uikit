@@ -64,11 +64,13 @@ const atSpot =
     const spots = textSpots(client.state().doc);
     const spot = spots[at % Math.max(1, spots.length)];
 
-    if (spot !== undefined) {
-      client.edit((tr) => {
-        act(tr, spot);
-      });
+    if (spot === undefined) {
+      return;
     }
+
+    client.edit((tr) => {
+      act(tr, spot);
+    });
   };
 
 const typing = (at: number, text: string): Change =>
@@ -80,18 +82,22 @@ const removing = (at: number, size: number): Change =>
   atSpot(at, (tr, spot) => {
     const to = Math.min(spot.end, spot.pos + size);
 
-    if (to > spot.pos) {
-      tr.delete(spot.pos, to);
+    if (to <= spot.pos) {
+      return;
     }
+
+    tr.delete(spot.pos, to);
   });
 
 const bolding = (at: number, size: number): Change =>
   atSpot(at, (tr, spot) => {
     const to = Math.min(spot.end, spot.pos + size);
 
-    if (to > spot.pos && spot.marked) {
-      tr.addMark(spot.pos, to, BOLD);
+    if (to <= spot.pos || !spot.marked) {
+      return;
     }
+
+    tr.addMark(spot.pos, to, BOLD);
   });
 
 const splitting =
@@ -175,11 +181,13 @@ const insideWord =
 
     const spot = inside[at % Math.max(1, inside.length)];
 
-    if (spot !== undefined) {
-      client.edit((tr) => {
-        tr.insertText(OWN_MARK, spot.pos);
-      });
+    if (spot === undefined) {
+      return;
     }
+
+    client.edit((tr) => {
+      tr.insertText(OWN_MARK, spot.pos);
+    });
   };
 
 const roundArbitrary = fc.record({
@@ -289,9 +297,11 @@ describe('convergence under the server order', () => {
           for (const [index, action] of actions) {
             const client = network.clients[index];
 
-            if (client !== undefined) {
-              action(client);
+            if (client === undefined) {
+              continue;
             }
+
+            action(client);
           }
           network.mend();
           network.close();

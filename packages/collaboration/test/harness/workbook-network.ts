@@ -115,9 +115,11 @@ const dumpBook = (book: Workbook, calculator: Calculator): string => {
     sheet.cells.forEachInRange(WHOLE, remember);
 
     calculator.forEachFormula((owner, row, col) => {
-      if (owner === sheet) {
-        remember(row, col);
+      if (owner !== sheet) {
+        return;
       }
+
+      remember(row, col);
     });
 
     const formats: string[] = [];

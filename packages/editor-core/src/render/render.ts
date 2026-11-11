@@ -22,9 +22,11 @@ export const renderTag = (
   for (const [name, value] of Object.entries(attrs)) {
     const text = attrText(value);
 
-    if (text !== undefined) {
-      written[name] = text;
+    if (text === undefined) {
+      continue;
     }
+
+    written[name] = text;
   }
   return { kind: 'element', tag, attrs: written, children: children.map(childOf) };
 };

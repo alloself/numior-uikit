@@ -312,9 +312,11 @@ const revealSelected = (): void => {
     (value) => !known.has(keyOf(value)),
   );
 
-  if (added.length > 0) {
-    treeExpanded.value = [...treeExpanded.value, ...added];
+  if (added.length === 0) {
+    return;
   }
+
+  treeExpanded.value = [...treeExpanded.value, ...added];
 };
 
 watch(open, (isOpen) => {
@@ -333,9 +335,11 @@ const optionOf = (element: HTMLElement | null): NuiOption<T> | undefined =>
   element ? flat.value[optionIndexOf(element)] : undefined;
 
 const onSelect = (): void => {
-  if (!multiple) {
-    control.hide();
+  if (multiple) {
+    return;
   }
+
+  control.hide();
 };
 
 const onLoad = (item: NuiTreeItem<T>): void => {

@@ -141,9 +141,11 @@ const writeAll = (changes: readonly NuiTableEdit<number>[], back: boolean): void
   for (const change of changes) {
     const col = columnIndex(change.key);
 
-    if (col !== undefined) {
-      next.set(indexOf(change.row, col), textOf(back ? change.previous : change.value));
+    if (col === undefined) {
+      continue;
     }
+
+    next.set(indexOf(change.row, col), textOf(back ? change.previous : change.value));
   }
   entries.value = next;
 };

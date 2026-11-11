@@ -76,8 +76,10 @@ watch(
 );
 
 watch(open, (value) => {
-  if (!value && !chosen && pasted !== undefined) {
-    emit('close');
+  if (value || chosen || pasted === undefined) {
+    return;
   }
+
+  emit('close');
 });
 </script>

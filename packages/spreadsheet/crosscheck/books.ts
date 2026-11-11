@@ -197,9 +197,11 @@ const compared = (
   shown: Input | undefined,
   looseErrors: boolean,
 ): void => {
-  if (shown === undefined || !matches(shown, check, looseErrors)) {
-    recorded(found, check, shown);
+  if (shown !== undefined && matches(shown, check, looseErrors)) {
+    return;
   }
+
+  recorded(found, check, shown);
 };
 
 export const mismatchesOf = async (

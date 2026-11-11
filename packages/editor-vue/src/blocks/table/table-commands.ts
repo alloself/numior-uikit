@@ -126,17 +126,21 @@ const insertAt = (
   const parent = tr.doc.byId(parentId);
   const pos = parent === undefined ? undefined : childAt(tr, parent, index);
 
-  if (pos !== undefined) {
-    tr.insert(pos, nodes);
+  if (pos === undefined) {
+    return;
   }
+
+  tr.insert(pos, nodes);
 };
 
 const remove = (tr: Transaction, node: ElementNode | undefined): void => {
   const pos = node === undefined ? undefined : startOf(tr, node);
 
-  if (node !== undefined && pos !== undefined) {
-    tr.delete(pos, pos + nodeSize(node));
+  if (node === undefined || pos === undefined) {
+    return;
   }
+
+  tr.delete(pos, pos + nodeSize(node));
 };
 
 const moveChild = (tr: Transaction, parentId: NodeId, from: number, to: number): void => {
@@ -147,9 +151,11 @@ const moveChild = (tr: Transaction, parentId: NodeId, from: number, to: number):
   const target =
     parent === undefined || from === to ? undefined : childAt(tr, parent, to > from ? to + 1 : to);
 
-  if (node !== undefined && start !== undefined && target !== undefined) {
-    tr.maybeStep({ kind: StepKind.Move, from: start, to: start + nodeSize(node), target });
+  if (node === undefined || start === undefined || target === undefined) {
+    return;
   }
+
+  tr.maybeStep({ kind: StepKind.Move, from: start, to: start + nodeSize(node), target });
 };
 
 const run =
@@ -179,12 +185,14 @@ const addOption = (tr: Transaction, id: NodeId, value: NuiContentCellValue): voi
   }, []);
 
   if (
-    column?.attrs.type === NuiContentTableType.Select &&
-    typeof value === 'string' &&
-    !options.includes(value)
+    column?.attrs.type !== NuiContentTableType.Select ||
+    typeof value !== 'string' ||
+    options.includes(value)
   ) {
-    insertAt(tr, id, options.length, [element(tr, 'table_option', { label: value })]);
+    return;
   }
+
+  insertAt(tr, id, options.length, [element(tr, 'table_option', { label: value })]);
 };
 
 const planCells = (
@@ -315,9 +323,11 @@ const setColumn = (
 ): void => {
   const pos = tr.doc.positionOf(column);
 
-  if (pos !== undefined) {
-    tr.setNodeAttrs(pos, attrs);
+  if (pos === undefined) {
+    return;
   }
+
+  tr.setNodeAttrs(pos, attrs);
 };
 
 export const renameTableColumn = (id: NodeId, column: NodeId, name: string): Command =>
@@ -398,9 +408,11 @@ export const resizeTableColumns = (id: NodeId, widths: Readonly<Record<NodeId, n
     for (const column of elementsOf(parts.head)) {
       const width = widths[column.id];
 
-      if (width !== undefined && width !== column.attrs.width) {
-        setColumn(tr, column.id, { width: Math.round(width) });
+      if (width === undefined || width === column.attrs.width) {
+        continue;
       }
+
+      setColumn(tr, column.id, { width: Math.round(width) });
     }
     return true;
   });
@@ -412,9 +424,11 @@ export const sortTable = (id: NodeId, sort: readonly NuiContentTableSort[]): Com
       const direction = sort[rank]?.direction ?? null;
       const sortRank = rank < 0 ? null : rank + 1;
 
-      if (column.attrs.sort !== direction || column.attrs.sortRank !== sortRank) {
-        setColumn(tr, column.id, { sort: direction, sortRank });
+      if (column.attrs.sort === direction && column.attrs.sortRank === sortRank) {
+        continue;
       }
+
+      setColumn(tr, column.id, { sort: direction, sortRank });
     }
     return true;
   });
@@ -447,11 +461,11 @@ export const filterTable = (id: NodeId, filters: readonly TableColumnFilter[]): 
       }
       remove(tr, current === undefined ? undefined : tr.doc.byId(current.id));
 
-      if (wanted !== undefined) {
-        insertAt(tr, column.id, elementsOf(tr.doc.byId(column.id)).length, [
-          filterNode(tr, wanted),
-        ]);
+      if (wanted === undefined) {
+        continue;
       }
+
+      insertAt(tr, column.id, elementsOf(tr.doc.byId(column.id)).length, [filterNode(tr, wanted)]);
     }
     return true;
   });

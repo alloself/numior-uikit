@@ -132,15 +132,19 @@ const onChosen = (): void => {
   if (chosen !== undefined) {
     void file.open(chosen);
   }
-  if (input.value !== null) {
-    input.value.value = '';
+  if (input.value === null) {
+    return;
   }
+
+  input.value.value = '';
 };
 
 const onDialog = (open: boolean): void => {
-  if (!open) {
-    file.dismiss();
+  if (open) {
+    return;
   }
+
+  file.dismiss();
 };
 
 defineExpose<SheetFileViewExposed>({ pick });

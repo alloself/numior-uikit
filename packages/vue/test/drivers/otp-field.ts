@@ -247,9 +247,11 @@ export class OtpFieldDriver extends ComponentDriver {
 
     layoutSlots(this.slots);
     element.dispatchEvent(pointerDown(index));
-    if (!this.focused) {
-      element.focus();
+    if (this.focused) {
+      return;
     }
+
+    element.focus();
   }
 
   async pressSlot(index: number): Promise<void> {

@@ -44,9 +44,11 @@ const createLineLayouts = (lines: Int32Array, layouts: readonly LineLayout[]): L
     for (let index = from; index < to; index += 1) {
       const layout = layouts[index];
 
-      if (layout !== undefined) {
-        visit(lines[index] ?? 0, layout);
+      if (layout === undefined) {
+        continue;
       }
+
+      visit(lines[index] ?? 0, layout);
     }
   };
 
@@ -161,17 +163,21 @@ export const withLineSizes = (
   const entries: [number, LineLayout][] = [];
 
   lines.forEach((line, layout) => {
-    if (!sizes.has(line)) {
-      entries.push([line, layout]);
+    if (sizes.has(line)) {
+      return;
     }
+
+    entries.push([line, layout]);
   });
 
   sizes.forEach((size, line) => {
     const sized = { ...(lines.get(line) ?? BLANK_LINE), size, custom: size !== undefined };
 
-    if (!isBlank(sized)) {
-      entries.push([line, sized]);
+    if (isBlank(sized)) {
+      return;
     }
+
+    entries.push([line, sized]);
   });
 
   return lineLayoutsOf(entries);

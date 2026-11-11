@@ -65,9 +65,11 @@ export const provideNuiConfig = (options: NuiConfigOptions): void => {
   if (options.controls !== undefined) {
     provideControls(options.controls);
   }
-  if (options.highlighter !== undefined) {
-    provideHighlighter(options.highlighter);
+  if (options.highlighter === undefined) {
+    return;
   }
+
+  provideHighlighter(options.highlighter);
 };
 
 export const createNuiConfig = (options: NuiConfigOptions): Plugin => ({
@@ -110,8 +112,10 @@ export const createNuiConfig = (options: NuiConfigOptions): Plugin => ({
     if (options.controls !== undefined) {
       app.provide(CONTROLS_KEY, options.controls);
     }
-    if (options.highlighter !== undefined) {
-      app.provide(HIGHLIGHTER_KEY, options.highlighter);
+    if (options.highlighter === undefined) {
+      return;
     }
+
+    app.provide(HIGHLIGHTER_KEY, options.highlighter);
   },
 });

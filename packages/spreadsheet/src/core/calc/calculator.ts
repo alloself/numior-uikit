@@ -236,9 +236,11 @@ const structuredLinks = (
   if (owner !== undefined) {
     links.names.add(owner.toLowerCase());
   }
-  if (table !== undefined && typeof range === 'object') {
-    links.precedents.push({ sheet: table.sheet.id, range });
+  if (table === undefined || typeof range !== 'object') {
+    return;
   }
+
+  links.precedents.push({ sheet: table.sheet.id, range });
 };
 
 const collectLinks = (
@@ -261,9 +263,11 @@ const collectLinks = (
     const target = localSheet(workbook, found, record.sheet);
     const range = referenceRange(found, record);
 
-    if (target !== undefined && range !== undefined) {
-      links.precedents.push({ sheet: target.id, range });
+    if (target === undefined || range === undefined) {
+      return;
     }
+
+    links.precedents.push({ sheet: target.id, range });
   });
 };
 
@@ -367,9 +371,11 @@ const indexDown = (sheet: Sheet, range: CellRange, index: LookupIndex): void => 
   sheet.cells.forEachInRange({ ...range, top: index.bottom + 1 }, (row, _col, value) => {
     const key = lookupKey(value);
 
-    if (key !== undefined && !index.rows.has(key)) {
-      index.rows.set(key, row - range.top);
+    if (key === undefined || index.rows.has(key)) {
+      return;
     }
+
+    index.rows.set(key, row - range.top);
   });
 
   index.bottom = range.bottom;
@@ -689,9 +695,11 @@ export const createCalculator = (
     }
     record.dynamic = found.length > 0;
     graph.set(key, [...record.precedents, ...found]);
-    if (found.some(pendingInside)) {
-      pending.add(key);
+    if (!found.some(pendingInside)) {
+      return;
     }
+
+    pending.add(key);
   };
 
   const compute = (key: number, cycles: ReadonlySet<number>): void => {
@@ -736,25 +744,29 @@ export const createCalculator = (
       });
 
     for (let key = seeds.pop(); key !== undefined; key = seeds.pop()) {
-      if (!needed.has(key)) {
-        needed.add(key);
-
-        graph.precedentsOf(key).forEach((precedent) => {
-          const direct = idAt(precedent.sheet, precedent.range.top, precedent.range.left);
-
-          const found = oneCell(precedent.range)
-            ? direct === undefined
-              ? []
-              : [direct]
-            : inside(precedent);
-
-          for (const candidate of found) {
-            if (planned.has(candidate)) {
-              seeds.push(candidate);
-            }
-          }
-        });
+      if (needed.has(key)) {
+        continue;
       }
+
+      needed.add(key);
+
+      graph.precedentsOf(key).forEach((precedent) => {
+        const direct = idAt(precedent.sheet, precedent.range.top, precedent.range.left);
+
+        const found = oneCell(precedent.range)
+          ? direct === undefined
+            ? []
+            : [direct]
+          : inside(precedent);
+
+        for (const candidate of found) {
+          if (!planned.has(candidate)) {
+            continue;
+          }
+
+          seeds.push(candidate);
+        }
+      });
     }
     return needed;
   };
@@ -776,9 +788,11 @@ export const createCalculator = (
     const record = formulas.get(key);
 
     pending.add(key);
-    if (record !== undefined && !kept.has(key)) {
-      record.cell.state = 'stale';
+    if (record === undefined || kept.has(key)) {
+      return;
     }
+
+    record.cell.state = 'stale';
   };
 
   const plan = (viewport: RecalcOptions['viewport']) => {
@@ -911,9 +925,11 @@ export const createCalculator = (
   const claim = (key: number): void => {
     const owner = spills.claim(key);
 
-    if (owner !== undefined) {
-      pending.add(owner);
+    if (owner === undefined) {
+      return;
     }
+
+    pending.add(owner);
   };
 
   const setParsed = (sheet: Sheet, row: number, col: number, parsed: FormulaNode): void => {
@@ -1034,9 +1050,11 @@ export const createCalculator = (
     const crossing: number[] = [];
 
     spills.forEachArea((anchor, area) => {
-      if (area.sheet === sheet && lastLine(area.range, change.axis) >= change.at) {
-        crossing.push(anchor);
+      if (area.sheet !== sheet || lastLine(area.range, change.axis) < change.at) {
+        return;
       }
+
+      crossing.push(anchor);
     });
 
     crossing.forEach((anchor) => {
@@ -1053,9 +1071,11 @@ export const createCalculator = (
     const moved: number[] = [];
 
     local?.forEach((id, cell) => {
-      if ((rows ? Math.floor(cell / MAX_COLS) : cell % MAX_COLS) >= start) {
-        moved.push(cell, id);
+      if ((rows ? Math.floor(cell / MAX_COLS) : cell % MAX_COLS) < start) {
+        return;
       }
+
+      moved.push(cell, id);
     });
 
     for (let index = 0; index < moved.length; index += 2) {
@@ -1191,9 +1211,11 @@ export const createCalculator = (
       }
       record.cell.state = 'imported';
       write(sheet, row, col, imported.value);
-      if (imported.spill !== undefined && !oneCell(imported.spill)) {
-        spills.occupy(key, { sheet, range: imported.spill });
+      if (imported.spill === undefined || oneCell(imported.spill)) {
+        return;
       }
+
+      spills.occupy(key, { sheet, range: imported.spill });
     },
     setContent: (sheet, row, col, content) => {
       switch (content.kind) {
@@ -1231,9 +1253,11 @@ export const createCalculator = (
       snapshot.forEach((key) => {
         const record = formulas.get(key);
 
-        if (record !== undefined) {
-          visit(record.sheet, record.row, record.col, record.cell.ast);
+        if (record === undefined) {
+          return;
         }
+
+        visit(record.sheet, record.row, record.col, record.cell.ast);
       });
     },
     hasFormulaIn: (sheet, range) => {
@@ -1285,9 +1309,11 @@ export const createCalculator = (
       }
       if (options.imported === true) {
         formulas.forEach((record, key) => {
-          if (record.cell.state === FormulaState.Imported && !kept.has(key)) {
-            pending.add(key);
+          if (record.cell.state !== FormulaState.Imported || kept.has(key)) {
+            return;
           }
+
+          pending.add(key);
         });
       }
 

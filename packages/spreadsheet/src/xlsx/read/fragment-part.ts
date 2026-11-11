@@ -243,9 +243,11 @@ export const createFragmentRecorder = (options: RecorderOptions): FragmentRecord
     const colon = name.qname.indexOf(':');
     const prefix = colon > 0 ? name.qname.slice(0, colon) : '';
 
-    if (top !== undefined && prefix !== '' && prefix !== XmlPrefix.Xml) {
-      top.prefixes.set(prefix, name.uri);
+    if (top === undefined || prefix === '' || prefix === XmlPrefix.Xml) {
+      return;
     }
+
+    top.prefixes.set(prefix, name.uri);
   };
 
   const attributeXml = (
@@ -283,14 +285,16 @@ export const createFragmentRecorder = (options: RecorderOptions): FragmentRecord
     if (spec?.fragment !== undefined) {
       frames.push({ pieces: [], group: spec.fragment === PivotLineKind.Group });
     }
-    if (stack.length === 0) {
-      top = {
-        frame: current(),
-        index: current().pieces.length,
-        opening: `<${name.qname}`,
-        prefixes: new Map(),
-      };
+    if (stack.length !== 0) {
+      return;
     }
+
+    top = {
+      frame: current(),
+      index: current().pieces.length,
+      opening: `<${name.qname}`,
+      prefixes: new Map(),
+    };
   };
 
   const openingXml = (

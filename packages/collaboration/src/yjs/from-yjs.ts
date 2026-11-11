@@ -136,12 +136,13 @@ const readChild = (
   if (child instanceof XmlText) {
     return readText(context.schema, child);
   }
-  if (child instanceof XmlElement) {
-    const node = readElement(context, child);
-
-    return node === undefined ? undefined : [node];
+  if (!(child instanceof XmlElement)) {
+    return undefined;
   }
-  return undefined;
+
+  const node = readElement(context, child);
+
+  return node === undefined ? undefined : [node];
 };
 
 const readChildren = (

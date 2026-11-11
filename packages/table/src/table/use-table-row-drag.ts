@@ -410,9 +410,11 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
     indexAt: (client, from) => rowUnder(client, renderedRows(from))?.position ?? from,
     canMove: (from, to) => to !== from,
     onMove: (from) => {
-      if (target !== undefined) {
-        commit(from, destinationOf(from, target));
+      if (target === undefined) {
+        return;
       }
+
+      commit(from, destinationOf(from, target));
     },
     onChange: follow,
   });

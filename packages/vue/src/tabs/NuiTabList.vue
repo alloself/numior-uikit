@@ -194,9 +194,11 @@ const reveal = (behavior: ScrollBehavior): void => {
   }
   const hidden = hiddenPart(list, tab);
 
-  if (hidden !== 0) {
-    scrollTrack(hidden, behavior);
+  if (hidden === 0) {
+    return;
   }
+
+  scrollTrack(hidden, behavior);
 };
 
 const onWheel = (event: WheelEvent): void => {
@@ -211,9 +213,11 @@ const onWheel = (event: WheelEvent): void => {
 
   scrollTrack(direction.isRtl() ? -wheelPixels(event) : wheelPixels(event), 'instant');
 
-  if (list.scrollLeft !== before) {
-    event.preventDefault();
+  if (list.scrollLeft === before) {
+    return;
   }
+
+  event.preventDefault();
 };
 
 const measure = (): void => {
@@ -240,9 +244,11 @@ const measure = (): void => {
 
 const onFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
-  if (!(next instanceof Node && listElement.value?.contains(next))) {
-    navigation.reset();
+  if (next instanceof Node && listElement.value?.contains(next)) {
+    return;
   }
+
+  navigation.reset();
 };
 
 const roleAttrs = computed(() =>

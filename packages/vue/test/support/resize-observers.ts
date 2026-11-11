@@ -44,9 +44,11 @@ export class ResizeObservers {
 
   resize(target: Element): void {
     for (const watch of this.watches) {
-      if (watch.targets.has(target)) {
-        watch.notify([entryOf(target)], watch.observer);
+      if (!watch.targets.has(target)) {
+        continue;
       }
+
+      watch.notify([entryOf(target)], watch.observer);
     }
   }
 

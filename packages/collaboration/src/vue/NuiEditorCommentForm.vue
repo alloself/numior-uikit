@@ -30,8 +30,10 @@ const emit = defineEmits<{
 const body = ref('');
 
 const send = async (): Promise<void> => {
-  if (await submit(body.value.trim())) {
-    body.value = '';
+  if (!(await submit(body.value.trim()))) {
+    return;
   }
+
+  body.value = '';
 };
 </script>

@@ -201,9 +201,11 @@ export class EditorSection {
     await this.page.mouse.move(points.to.x, points.to.y);
     await this.page.mouse.up();
 
-    if (modifier !== undefined) {
-      await this.page.keyboard.up(modifier);
+    if (modifier === undefined) {
+      return;
     }
+
+    await this.page.keyboard.up(modifier);
   }
 
   tool(name: string): Locator {

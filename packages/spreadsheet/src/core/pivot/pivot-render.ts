@@ -35,9 +35,11 @@ const RATIOS = new Set([
 ]);
 
 const put = (grid: Grid, row: number, col: number, value: CellValue, format?: string): void => {
-  if (value.kind !== CellValueKind.Empty) {
-    grid.cells.push({ row: grid.top + row, col, value, format });
+  if (value.kind === CellValueKind.Empty) {
+    return;
   }
+
+  grid.cells.push({ row: grid.top + row, col, value, format });
 };
 
 const fieldName = (labels: Labels, field: number): string =>
@@ -143,9 +145,11 @@ const columnHeaders = (labels: Labels, grid: Grid, result: PivotResult, at: numb
 
     if (line.kind === PivotLineKind.Item) {
       levels.forEach((_, level) => {
-        if (changedFrom(previous, line, level)) {
-          put(grid, 1 + level, col, itemLabel(labels, levels, line, level));
+        if (!changedFrom(previous, line, level)) {
+          return;
         }
+
+        put(grid, 1 + level, col, itemLabel(labels, levels, line, level));
       });
 
       previous = line;
@@ -185,9 +189,11 @@ const rowLabels = (labels: Labels, grid: Grid, result: PivotResult, header: numb
     }
     if (definition.layout === PivotLayout.Tabular) {
       levels.slice(0, line.depth + 1).forEach((_, level) => {
-        if (changedFrom(previous, line, level)) {
-          put(grid, row, level, itemLabel(labels, levels, line, level));
+        if (!changedFrom(previous, line, level)) {
+          return;
         }
+
+        put(grid, row, level, itemLabel(labels, levels, line, level));
       });
 
       previous = line;

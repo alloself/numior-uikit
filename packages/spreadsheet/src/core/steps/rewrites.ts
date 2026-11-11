@@ -52,9 +52,11 @@ const rewriteEach = (
   each((sheet, row, col, before) => {
     const after = rewrite(sheet, before, row, col);
 
-    if (after !== before) {
-      found.push({ sheet, row, col, before, after });
+    if (after === before) {
+      return;
     }
+
+    found.push({ sheet, row, col, before, after });
   });
 
   found.forEach((change) => {

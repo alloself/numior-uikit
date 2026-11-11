@@ -59,9 +59,11 @@ export const useSheetChartInsert = (
       content: { kind: DrawingKind.Chart, chart },
     });
 
-    if (applyLayout(options.editing, sheet, layout)) {
-      options.select(id, name);
+    if (!applyLayout(options.editing, sheet, layout)) {
+      return;
     }
+
+    options.select(id, name);
   };
 
   const tools = (): readonly NuiMenuEntry[] =>

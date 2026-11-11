@@ -48,9 +48,11 @@ const navigation = useListNavigation(root, {
 });
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (navigation.itemFrom(event.target) !== null) {
-    navigation.onKeydown(event);
+  if (navigation.itemFrom(event.target) === null) {
+    return;
   }
+
+  navigation.onKeydown(event);
 };
 
 const toggleMany = (value: string, open: boolean): void => {

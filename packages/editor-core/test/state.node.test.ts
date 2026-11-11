@@ -170,13 +170,14 @@ describe('editor state', () => {
     const echo = definePlugin({
       name: 'echo',
       appendTransaction: (transactions, _before, after) => {
-        if (transactions.some((tr) => tr.getMeta(locked) === false)) {
-          const tr = after.tr.insertText('!', 1);
-
-          appended.push(tr);
-          return tr;
+        if (!transactions.some((tr) => tr.getMeta(locked) === false)) {
+          return undefined;
         }
-        return undefined;
+
+        const tr = after.tr.insertText('!', 1);
+
+        appended.push(tr);
+        return tr;
       },
     });
 

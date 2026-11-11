@@ -228,9 +228,11 @@ const pickRange = (value: NuiCalendarValue): void => {
   held.value = undefined;
   model.value = value;
 
-  if (value.start && value.end) {
-    popover.hide({ focus: true });
+  if (!value.start || !value.end) {
+    return;
   }
+
+  popover.hide({ focus: true });
 };
 
 const clear = (): void => {

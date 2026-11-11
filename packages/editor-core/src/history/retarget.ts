@@ -108,14 +108,16 @@ export const retargeted = (
 };
 
 export const noteRemoved = (step: Step, doc: Doc, removed: RemovedNodes): void => {
-  if (step.kind === StepKind.Replace && step.from < step.to) {
-    doc.nodesBetween(step.from, step.to, (node, pos) => {
-      if (node.kind === ContentNodeKind.Element && pos >= step.from && pos + node.size <= step.to) {
-        removed.set(node.id, node);
-      }
-      return true;
-    });
+  if (step.kind !== StepKind.Replace || step.from >= step.to) {
+    return;
   }
+
+  doc.nodesBetween(step.from, step.to, (node, pos) => {
+    if (node.kind === ContentNodeKind.Element && pos >= step.from && pos + node.size <= step.to) {
+      removed.set(node.id, node);
+    }
+    return true;
+  });
 };
 
 const sameNode = (left: ContentNode, right: ContentNode): boolean =>

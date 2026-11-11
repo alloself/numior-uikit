@@ -183,15 +183,19 @@ export const createAsyncChecks = <V extends object, O>(
     }
     await run(entry, state, token, core.engine.snapshot());
 
-    if (token === state.token) {
-      revalidate();
+    if (token !== state.token) {
+      return;
     }
+
+    revalidate();
   };
 
   const finish = (entry: Entry<V>, state: AsyncState, token: number): void => {
-    if (token === state.token) {
-      settleAt(entry, state, IDLE);
+    if (token !== state.token) {
+      return;
     }
+
+    settleAt(entry, state, IDLE);
   };
 
   const outdated = (entry: Entry<V>, state: AsyncState): boolean =>
@@ -213,9 +217,11 @@ export const createAsyncChecks = <V extends object, O>(
       delayed(entry, state, token, delay).finally(() => {
         finish(entry, state, token);
 
-        if (token === state.token && outdated(entry, state)) {
-          schedule(entry, entry.debounce());
+        if (token !== state.token || !outdated(entry, state)) {
+          return;
         }
+
+        schedule(entry, entry.debounce());
       }),
     );
   };
@@ -229,18 +235,22 @@ export const createAsyncChecks = <V extends object, O>(
     schedule,
     refresh: (changed) => {
       for (const [entry, state] of states) {
-        if (!changed.includes(entry) && outdated(entry, state)) {
-          schedule(entry, entry.debounce());
+        if (changed.includes(entry) || !outdated(entry, state)) {
+          continue;
         }
+
+        schedule(entry, entry.debounce());
       }
     },
     retry: (entries) => {
       for (const entry of entries) {
         const state = states.get(entry);
 
-        if (state?.result?.failed === true) {
-          state.result = undefined;
+        if (state?.result?.failed !== true) {
+          continue;
         }
+
+        state.result = undefined;
       }
     },
     settle: async (entries) => {

@@ -76,15 +76,19 @@ export const useSheetSelection = (options: SheetSelectionOptions): SheetSelectio
   };
 
   watch(current, (value) => {
-    if (selectionKey(value) !== selectionKey(options.model.value)) {
-      options.model.value = value;
+    if (selectionKey(value) === selectionKey(options.model.value)) {
+      return;
     }
+
+    options.model.value = value;
   });
 
   watch(options.model, (value) => {
-    if (value !== undefined && selectionKey(value) !== selectionKey(current.value)) {
-      select(value);
+    if (value === undefined || selectionKey(value) === selectionKey(current.value)) {
+      return;
     }
+
+    select(value);
   });
 
   return { current, select };

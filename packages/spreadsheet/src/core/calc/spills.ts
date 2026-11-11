@@ -33,9 +33,11 @@ export const forEachSpillCell = (
 
   for (let row = range.top; row <= range.bottom; row += 1) {
     for (let col = range.left; col <= range.right; col += 1) {
-      if (row !== range.top || col !== range.left) {
-        visit({ sheet, row, col }, formulaKey(sheet.id, row, col));
+      if (row === range.top && col === range.left) {
+        continue;
       }
+
+      visit({ sheet, row, col }, formulaKey(sheet.id, row, col));
     }
   }
 };
@@ -90,9 +92,11 @@ export const createSpills = (): Spills => {
     },
     waiting: (sheet, row, col, visit) => {
       blocked.forEach((area, anchor) => {
-        if (area.sheet === sheet && containsCell(area.range, row, col)) {
-          visit(anchor);
+        if (area.sheet !== sheet || !containsCell(area.range, row, col)) {
+          return;
         }
+
+        visit(anchor);
       });
     },
   };

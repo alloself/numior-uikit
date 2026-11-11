@@ -15,10 +15,12 @@ export const layoutStack = (
   let offset = 0;
   for (const toast of toasts.toReversed()) {
     items.push({ toast, index, offset });
-    if (!toast.leaving) {
-      index += 1;
-      offset += sizes.get(toast.id) ?? 0;
+    if (toast.leaving) {
+      continue;
     }
+
+    index += 1;
+    offset += sizes.get(toast.id) ?? 0;
   }
   return items;
 };

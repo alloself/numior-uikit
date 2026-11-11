@@ -55,9 +55,11 @@ const reorder = useReorder({
 });
 
 const onKeydown = (index: number, event: KeyboardEvent): void => {
-  if (reorder.onKeydown(index, event)) {
-    event.preventDefault();
+  if (!reorder.onKeydown(index, event)) {
+    return;
   }
+
+  event.preventDefault();
 };
 
 defineExpose({ reorder });

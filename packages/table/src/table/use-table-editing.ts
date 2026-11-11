@@ -185,11 +185,12 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     const count = areaOf(ranges);
     const limit = options.limit();
 
-    if (count > limit) {
-      options.announce(options.messages.value.editLimit({ count, limit }));
-      return false;
+    if (count <= limit) {
+      return true;
     }
-    return true;
+
+    options.announce(options.messages.value.editLimit({ count, limit }));
+    return false;
   };
 
   const record = (
@@ -500,12 +501,13 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
       }
       return true;
     }
-    if (isKey(event, 'KeyY', 'y') && !event.shiftKey) {
-      event.preventDefault();
-      redo();
-      return true;
+    if (!isKey(event, 'KeyY', 'y') || event.shiftKey) {
+      return false;
     }
-    return false;
+
+    event.preventDefault();
+    redo();
+    return true;
   };
 
   return {
@@ -537,12 +539,13 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
       if (event.ctrlKey || event.metaKey) {
         return onModified(event);
       }
-      if (!event.shiftKey && (event.key === Key.Delete || event.key === Key.Backspace)) {
-        event.preventDefault();
-        clearCells('clear');
-        return true;
+      if (event.shiftKey || (event.key !== Key.Delete && event.key !== Key.Backspace)) {
+        return false;
       }
-      return false;
+
+      event.preventDefault();
+      clearCells('clear');
+      return true;
     },
     commitCell: (row, key, value) => {
       const previous = options.valueOf(row, key);

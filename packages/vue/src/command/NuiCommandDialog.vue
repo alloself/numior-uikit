@@ -80,9 +80,11 @@ const texts = computed(() => ({ title: title ?? messages.value.title }));
 const onSelect = (item: NuiCommandItem<T>): void => {
   emit('select', item);
 
-  if (closeOnSelect) {
-    open.value = false;
+  if (!closeOnSelect) {
+    return;
   }
+
+  open.value = false;
 };
 
 let left: string | undefined;

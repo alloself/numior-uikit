@@ -70,9 +70,11 @@ export const useTextMeasure = (
 
     void nextTick(() => {
       waiting = false;
-      if (root.value?.querySelector(SAMPLE) !== null) {
-        ready.value += 1;
+      if (root.value?.querySelector(SAMPLE) === null) {
+        return;
       }
+
+      ready.value += 1;
     });
   };
 

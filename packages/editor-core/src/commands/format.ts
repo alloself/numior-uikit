@@ -107,10 +107,12 @@ export const sequence =
       ) {
         return false;
       }
-      if (produced.tr !== undefined) {
-        combined = appendTo(combined, produced.tr);
-        current = current.apply(produced.tr);
+      if (produced.tr === undefined) {
+        continue;
       }
+
+      combined = appendTo(combined, produced.tr);
+      current = current.apply(produced.tr);
     }
     if (combined !== undefined) {
       dispatch?.(combined);

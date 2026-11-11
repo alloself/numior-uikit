@@ -51,9 +51,11 @@ export const readSharedStrings = async (
         }
       },
       text: (text) => {
-        if (inText) {
-          item?.push(text);
+        if (!inText) {
+          return;
         }
+
+        item?.push(text);
       },
       close: (element) => {
         switch (element.local) {

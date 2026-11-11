@@ -161,9 +161,11 @@ const canDecrement = computed(
 );
 
 watch(model, (value) => {
-  if (parse(draft.value) !== value) {
-    draft.value = format(value);
+  if (parse(draft.value) === value) {
+    return;
   }
+
+  draft.value = format(value);
 });
 
 watch(formatKey, () => {
@@ -199,18 +201,22 @@ const stepBy = (steps: number): void => {
 
 const onInput = (): void => {
   const element = inputElement.value;
-  if (element) {
-    draft.value = element.value;
+  if (!element) {
+    return;
   }
+
+  draft.value = element.value;
 };
 
 const onBeforeinput = (event: InputEvent): void => {
   const inserting =
     event.inputType.startsWith('insert') && !event.inputType.includes('Composition');
 
-  if (inserting && event.data !== null && !isPartialNumber(event.data, symbols.value)) {
-    event.preventDefault();
+  if (!inserting || event.data === null || isPartialNumber(event.data, symbols.value)) {
+    return;
   }
+
+  event.preventDefault();
 };
 
 const onKeydown = (event: KeyboardEvent): void => {

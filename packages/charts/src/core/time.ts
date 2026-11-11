@@ -95,9 +95,11 @@ export const timeTicks = (min: number, max: number, count = 6): TimeTicks => {
   const values: number[] = [];
 
   for (let tick = floorTo(min, chosen); tick <= max; tick = advance(tick, chosen)) {
-    if (tick >= min) {
-      values.push(tick);
+    if (tick < min) {
+      continue;
     }
+
+    values.push(tick);
   }
   return { unit: chosen.unit, step: chosen.step, values };
 };

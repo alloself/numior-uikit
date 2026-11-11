@@ -19,15 +19,17 @@ export const cellContentsIn = (
     const format = sheet.formats.get(row, col);
     const decoration = sheet.decorations.get(row, col);
 
-    if (content.kind !== CellInputKind.Empty || format !== 0 || decoration !== 0) {
-      found.set(cellKey(row, col), {
-        row,
-        col,
-        content,
-        format: book.formats.code(format),
-        decoration: decoration === 0 ? undefined : book.decorations.get(decoration),
-      });
+    if (content.kind === CellInputKind.Empty && format === 0 && decoration === 0) {
+      return;
     }
+
+    found.set(cellKey(row, col), {
+      row,
+      col,
+      content,
+      format: book.formats.code(format),
+      decoration: decoration === 0 ? undefined : book.decorations.get(decoration),
+    });
   };
 
   sheet.cells.forEachInRange(range, add);
@@ -35,9 +37,11 @@ export const cellContentsIn = (
   sheet.decorations.forEachInRange(range, add);
 
   calculator.forEachFormula((owner, row, col) => {
-    if (owner === sheet && containsCell(range, row, col)) {
-      add(row, col);
+    if (owner !== sheet || !containsCell(range, row, col)) {
+      return;
     }
+
+    add(row, col);
   });
 
   return found;

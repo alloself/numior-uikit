@@ -280,11 +280,12 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
       pin.armed = true;
       return true;
     }
-    if (pin.armed) {
-      pin = undefined;
-      return false;
+    if (!pin.armed) {
+      return true;
     }
-    return true;
+
+    pin = undefined;
+    return false;
   };
 
   const nearStart = (
@@ -342,9 +343,11 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
     const found = slotAt(view.state.doc, view.posAtDOM(point, 0));
     const next = found === undefined ? undefined : deepestSlot(view, found, event.clientY);
 
-    if (!sameSlot(next, hovered.value)) {
-      hovered.value = nearStart(event, view, next) ? next : undefined;
+    if (sameSlot(next, hovered.value)) {
+      return;
     }
+
+    hovered.value = nearStart(event, view, next) ? next : undefined;
   };
 
   const onGripPointerdown = (event: PointerEvent): void => {
@@ -352,9 +355,11 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
     const current = slot.value;
     const element = view === undefined ? undefined : elementOf(view, current);
 
-    if (current !== undefined && element !== undefined) {
-      drag.start(current, element, event);
+    if (current === undefined || element === undefined) {
+      return;
     }
+
+    drag.start(current, element, event);
   };
 
   return {

@@ -97,9 +97,11 @@ export class PivotPanel {
   }
 
   async openOptions(): Promise<void> {
-    if ((await this.options.getAttribute('aria-expanded')) !== 'true') {
-      await this.options.click();
+    if ((await this.options.getAttribute('aria-expanded')) === 'true') {
+      return;
     }
+
+    await this.options.click();
   }
 
   async chooseOption(name: string): Promise<void> {

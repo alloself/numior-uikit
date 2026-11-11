@@ -59,14 +59,16 @@ const filledPart = (cells: CellStore, range: CellRange): CellRange | undefined =
   let filled: CellRange | undefined;
 
   cells.forEachInRange(range, (row, col, value) => {
-    if (value.kind !== CellValueKind.Empty) {
-      filled = {
-        top: Math.min(filled?.top ?? row, row),
-        left: Math.min(filled?.left ?? col, col),
-        bottom: Math.max(filled?.bottom ?? row, row),
-        right: Math.max(filled?.right ?? col, col),
-      };
+    if (value.kind === CellValueKind.Empty) {
+      return;
     }
+
+    filled = {
+      top: Math.min(filled?.top ?? row, row),
+      left: Math.min(filled?.left ?? col, col),
+      bottom: Math.max(filled?.bottom ?? row, row),
+      right: Math.max(filled?.right ?? col, col),
+    };
   });
 
   return filled;

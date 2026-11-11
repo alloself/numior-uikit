@@ -151,9 +151,11 @@ export class PivotPanelDriver {
   async holdChip(chip: string, area: string, slot?: number): Promise<void> {
     const element = this.chip(chip);
 
-    if (element !== undefined) {
-      await this.hold(element, this.pointIn(area, slot));
+    if (element === undefined) {
+      return;
     }
+
+    await this.hold(element, this.pointIn(area, slot));
   }
 
   async dragChip(chip: string, area: string, slot?: number): Promise<void> {

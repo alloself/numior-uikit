@@ -84,9 +84,11 @@ export const summarizeFrames = (name: string, frames: readonly number[]): Operat
 const collectGarbage = (): void => {
   const gc: unknown = Reflect.get(globalThis, 'gc');
 
-  if (typeof gc === 'function') {
-    gc();
+  if (typeof gc !== 'function') {
+    return;
   }
+
+  gc();
 };
 
 export const measure = async (

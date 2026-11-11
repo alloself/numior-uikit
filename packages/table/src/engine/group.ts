@@ -74,9 +74,11 @@ const mergeAll = (into: readonly Accumulator[], from: readonly Accumulator[]): v
   from.forEach((source, index) => {
     const target = into[index];
 
-    if (target !== undefined) {
-      mergeAccumulator(target, source);
+    if (target === undefined) {
+      return;
     }
+
+    mergeAccumulator(target, source);
   });
 };
 
@@ -226,16 +228,18 @@ export const createGroupJob = <T>(
     aggregates.forEach((column, index) => {
       const target = targets[index];
 
-      if (target !== undefined) {
-        accumulateRange(
-          target,
-          column.store,
-          sorted,
-          from,
-          to,
-          column.aggregate === TableAggregateKind.Count,
-        );
+      if (target === undefined) {
+        return;
       }
+
+      accumulateRange(
+        target,
+        column.store,
+        sorted,
+        from,
+        to,
+        column.aggregate === TableAggregateKind.Count,
+      );
     });
   };
 
@@ -258,12 +262,14 @@ export const createGroupJob = <T>(
         sinceCheck += end - position;
         position = end;
 
-        if (sinceCheck >= CHECK_INTERVAL) {
-          sinceCheck = 0;
+        if (sinceCheck < CHECK_INTERVAL) {
+          continue;
+        }
 
-          if (performance.now() >= deadline && position < length) {
-            return false;
-          }
+        sinceCheck = 0;
+
+        if (performance.now() >= deadline && position < length) {
+          return false;
         }
       }
       closeFrom(0, length);

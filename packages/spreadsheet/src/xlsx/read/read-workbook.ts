@@ -190,9 +190,11 @@ const setNames = (calculator: Calculator, part: WorkbookPart, sheets: readonly S
     const parsed = parseFormula(entry.text.replaceAll(/_xl(?:fn|ws)\./gu, ''), EN_FORMULAS, ORIGIN);
     const scope = entry.sheet === undefined ? undefined : sheets[entry.sheet];
 
-    if (parsed.ok && validDefinedName(entry.name)) {
-      calculator.setName(entry.name, scope, parsed.ast);
+    if (!parsed.ok || !validDefinedName(entry.name)) {
+      return;
     }
+
+    calculator.setName(entry.name, scope, parsed.ast);
   });
 };
 
@@ -458,9 +460,11 @@ const loadPivots = async (
           ? await loadPivot(pivots, sheet, relationship.target)
           : undefined;
 
-      if (failed !== undefined) {
-        refused.push(failed);
+      if (failed === undefined) {
+        continue;
       }
+
+      refused.push(failed);
     }
   }
   return refused;
@@ -547,9 +551,11 @@ const readBook = async (
   book.decorations.theme = await readTheme(archive, themePart, load.parts);
 
   [stringsPart, stylesPart].forEach((part) => {
-    if (part !== undefined) {
-      load.parsed.add(part);
+    if (part === undefined) {
+      return;
     }
+
+    load.parsed.add(part);
   });
 
   await loadExternals(load, workbook.externalLinks, relationships, strings.strings);

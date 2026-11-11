@@ -9,12 +9,14 @@ export const typeInto = (element: HTMLInputElement, keys: string): void => {
       cancelable: true,
     });
 
-    if (element.dispatchEvent(before)) {
-      const at = element.selectionStart ?? element.value.length;
-
-      element.setRangeText(key, at, element.selectionEnd ?? at, 'end');
-      element.dispatchEvent(new InputEvent('input', { inputType: 'insertText', data: key }));
+    if (!element.dispatchEvent(before)) {
+      continue;
     }
+
+    const at = element.selectionStart ?? element.value.length;
+
+    element.setRangeText(key, at, element.selectionEnd ?? at, 'end');
+    element.dispatchEvent(new InputEvent('input', { inputType: 'insertText', data: key }));
   }
 };
 

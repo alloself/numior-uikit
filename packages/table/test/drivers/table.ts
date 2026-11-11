@@ -1427,9 +1427,11 @@ export class TableDriver<T> {
 
       defineRect(row, new DOMRect(0, top, LAYOUT_WIDTH, HEAD_HEIGHT));
 
-      if (row.firstElementChild) {
-        defineRect(row.firstElementChild, new DOMRect(0, top, LAYOUT_WIDTH, HEAD_HEIGHT));
+      if (!row.firstElementChild) {
+        continue;
       }
+
+      defineRect(row.firstElementChild, new DOMRect(0, top, LAYOUT_WIDTH, HEAD_HEIGHT));
     }
   }
 
@@ -1507,9 +1509,11 @@ export class TableDriver<T> {
 
     cell?.dispatchEvent(pressed);
 
-    if (!pressed.defaultPrevented) {
-      cell?.focus();
+    if (pressed.defaultPrevented) {
+      return;
     }
+
+    cell?.focus();
   }
 
   async dragRange(from: CellPosition, to: CellPosition, options: KeyOptions = {}): Promise<void> {
@@ -1687,9 +1691,11 @@ export class TableDriver<T> {
   selectText(position: number, col: number): void {
     const cell = this.cell(position, col);
 
-    if (cell !== null) {
-      window.getSelection()?.selectAllChildren(cell);
+    if (cell === null) {
+      return;
     }
+
+    window.getSelection()?.selectAllChildren(cell);
   }
 
   get textSelection(): string {

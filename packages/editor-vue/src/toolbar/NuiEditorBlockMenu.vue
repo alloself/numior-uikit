@@ -56,9 +56,11 @@ const current = computed(() => blocks.options.find((option) => option.active)?.k
 const choose = (key: string | undefined): void => {
   const option = blocks.options.find((candidate) => candidate.key === key);
 
-  if (option !== undefined) {
-    emit('run', option.command);
+  if (option === undefined) {
+    return;
   }
+
+  emit('run', option.command);
 };
 
 const menu = useTemplateRef<InstanceType<typeof NuiMenu>>('menu');

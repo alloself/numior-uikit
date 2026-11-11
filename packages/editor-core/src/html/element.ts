@@ -15,9 +15,11 @@ const stylesOf = (value: string | undefined): ReadonlyMap<string, string> => {
     const colon = part.indexOf(':');
     const name = part.slice(0, colon).trim().toLowerCase();
 
-    if (colon > 0 && name !== '') {
-      styles.set(name, part.slice(colon + 1).trim());
+    if (colon <= 0 || name === '') {
+      continue;
     }
+
+    styles.set(name, part.slice(colon + 1).trim());
   }
   return styles;
 };
@@ -27,12 +29,14 @@ const textOf = (nodes: readonly HtmlNode[]): string =>
 
 const findIn = (nodes: readonly HtmlNode[], tag: string): HtmlElement | undefined => {
   for (const node of nodes) {
-    if (node.kind === HtmlNodeKind.Element) {
-      const found = node.tag === tag ? node : node.find(tag);
+    if (node.kind !== HtmlNodeKind.Element) {
+      continue;
+    }
 
-      if (found !== undefined) {
-        return found;
-      }
+    const found = node.tag === tag ? node : node.find(tag);
+
+    if (found !== undefined) {
+      return found;
     }
   }
   return undefined;

@@ -256,9 +256,11 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   };
 
   const leaveReadingOn = (event: KeyboardEvent): void => {
-    if (NAVIGATION.has(event.key) || event.key === Key.Escape) {
-      stopReading();
+    if (!NAVIGATION.has(event.key) && event.key !== Key.Escape) {
+      return;
     }
+
+    stopReading();
   };
 
   const clear = (): void => {
@@ -613,9 +615,11 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   const onDblclick = (event: MouseEvent): void => {
     const cell = options.enabled() && !touched ? startOf(event.target) : undefined;
 
-    if (cell !== undefined) {
-      reading.value = cell;
+    if (cell === undefined) {
+      return;
     }
+
+    reading.value = cell;
   };
 
   const onClick = (event: MouseEvent): void => {
@@ -624,9 +628,11 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     const origin =
       target instanceof Element && !controlled(target) ? lineOrigin(target) : undefined;
 
-    if (origin !== undefined) {
-      selectOrigin(origin);
+    if (origin === undefined) {
+      return;
     }
+
+    selectOrigin(origin);
   };
 
   const cornerOf = (last: NuiTableRange | undefined, anchor: NuiTableCellPosition, key: string) => {
@@ -701,9 +707,11 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   };
 
   const onOutside = (event: PointerEvent): void => {
-    if (event.target instanceof Node && !options.inside(event.target)) {
-      clear();
+    if (!(event.target instanceof Node) || options.inside(event.target)) {
+      return;
     }
+
+    clear();
   };
 
   const onHeaderKey = (event: KeyboardEvent): boolean => {
@@ -773,9 +781,11 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   });
 
   watch(options.enabled, (on) => {
-    if (!on) {
-      clear();
+    if (on) {
+      return;
     }
+
+    clear();
   });
 
   onScopeDispose(finish);

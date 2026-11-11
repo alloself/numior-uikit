@@ -54,9 +54,11 @@ const onInput = (event: Event): void => {
 };
 
 const commit = (): void => {
-  if (draft.value.trim() !== caption.value) {
-    editor.setAttrs({ caption: draft.value.trim() });
+  if (draft.value.trim() === caption.value) {
+    return;
   }
+
+  editor.setAttrs({ caption: draft.value.trim() });
 };
 
 const paragraphAfter: Command = (state, dispatch) => {

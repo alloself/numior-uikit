@@ -169,14 +169,18 @@ export const createDomWatch = (
       redrawContent(host.context, desc);
       redrawn();
       observer?.takeRecords();
-      if (intent !== undefined) {
-        apply(intent);
+      if (intent === undefined) {
+        continue;
       }
+
+      apply(intent);
     }
 
-    if (containers.length > 0) {
-      restored();
+    if (containers.length === 0) {
+      return;
     }
+
+    restored();
   };
 
   const collect = (records: readonly MutationRecord[]): void => {
@@ -188,13 +192,17 @@ export const createDomWatch = (
       const desc =
         textblockAround(host.context, record.target) ?? descAround(host.context, record.target);
 
-      if (desc?.kind === DescKind.Element) {
-        pending.add(desc);
+      if (desc?.kind !== DescKind.Element) {
+        continue;
       }
+
+      pending.add(desc);
     }
-    if (!composing) {
-      flush();
+    if (composing) {
+      return;
     }
+
+    flush();
   };
 
   observer = typeof MutationObserver === 'function' ? new MutationObserver(collect) : undefined;

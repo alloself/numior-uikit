@@ -146,9 +146,11 @@ const settle = (): void => {
 const onCompositionend = (): void => {
   const element = inputElement.value;
 
-  if (element) {
-    settleRaw(element, true);
+  if (!element) {
+    return;
   }
+
+  settleRaw(element, true);
 };
 
 defineExpose({ focus: () => inputElement.value?.focus({ preventScroll: true }) });

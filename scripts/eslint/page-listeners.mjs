@@ -28,9 +28,11 @@ export const pageListeners = {
           return;
         }
 
-        if (listensToPage(node.callee)) {
-          added.push(node);
+        if (!listensToPage(node.callee)) {
+          return;
         }
+
+        added.push(node);
       },
       'Program:exit': () => {
         if (state.released) {

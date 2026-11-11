@@ -588,9 +588,11 @@ export class TableSection {
 
     await this.page.mouse.up();
 
-    if (modifier !== undefined) {
-      await this.page.keyboard.up(modifier);
+    if (modifier === undefined) {
+      return;
     }
+
+    await this.page.keyboard.up(modifier);
   }
 
   async longPress(position: number, col: number): Promise<void> {

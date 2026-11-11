@@ -91,9 +91,11 @@ const setContainer = (element: unknown): void => {
 };
 
 onBeforeUpdate(() => {
-  if (container.value !== null) {
-    emit('render', container.value);
+  if (container.value === null) {
+    return;
   }
+
+  emit('render', container.value);
 });
 
 emit('ready', virtual);

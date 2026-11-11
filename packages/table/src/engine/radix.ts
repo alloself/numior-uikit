@@ -324,9 +324,11 @@ export const createKeptRadixJob = (
       state.done += length;
       state.digit += 1;
     }
-    if (state.digit < layout.digits) {
-      offsetsFrom(counts, state.digit * buckets, buckets);
+    if (state.digit >= layout.digits) {
+      return;
     }
+
+    offsetsFrom(counts, state.digit * buckets, buckets);
   };
 
   const step = (group: Group, layout: Layout, deadline: number): boolean => {

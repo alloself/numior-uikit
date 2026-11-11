@@ -54,9 +54,11 @@ export const loadCells = (
 
     const parsed = calculator.setFormula(sheet, entry.row, entry.col, entry.formula, syntax);
 
-    if (!parsed.ok) {
-      failures.push({ ...parsed.error, row: entry.row, col: entry.col });
+    if (parsed.ok) {
+      return;
     }
+
+    failures.push({ ...parsed.error, row: entry.row, col: entry.col });
   };
 
   const pending = (): boolean => !cancelled && index < entries.length;

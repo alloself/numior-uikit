@@ -351,15 +351,15 @@ const follow = (tr: Transaction, before: Doc, node: ElementNode, selection: Sele
   const moved = tr.doc.positionOf(node.id);
 
   if (
-    selection.kind === SelectionKind.Text &&
-    moved !== undefined &&
-    selection.head > start &&
-    selection.head < start + node.size
+    selection.kind !== SelectionKind.Text ||
+    moved === undefined ||
+    selection.head <= start ||
+    selection.head >= start + node.size
   ) {
-    tr.setSelection(
-      textSelection(selection.anchor - start + moved, selection.head - start + moved),
-    );
+    return;
   }
+
+  tr.setSelection(textSelection(selection.anchor - start + moved, selection.head - start + moved));
 };
 
 const planOf = (doc: Doc, from: ChildSlot, to: BlockTarget): Plan | undefined => {

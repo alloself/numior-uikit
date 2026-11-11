@@ -343,9 +343,11 @@ export const useEditorLinks = (options: EditorLinkOptions): EditorLinks => {
         selection.kind === SelectionKind.Text &&
         state.doc.resolve(selection.head).parent.id === block.id;
 
-      if (link !== undefined && (!inside || inlineText(block) !== link.url)) {
-        pasted.value = undefined;
+      if (link === undefined || (inside && inlineText(block) === link.url)) {
+        return;
       }
+
+      pasted.value = undefined;
     },
     dismiss: () => {
       pasted.value = undefined;

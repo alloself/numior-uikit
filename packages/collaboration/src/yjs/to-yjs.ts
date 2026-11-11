@@ -86,9 +86,11 @@ const reformat = (text: XmlText, wanted: readonly DeltaRun[]): void => {
     const before = formatAt(current, currentEnds, start);
     const after = formatAt(wanted, wantedEnds, start);
 
-    if (!sameFormat(before, after)) {
-      text.format(start, (cuts[index + 1] ?? start) - start, formatPatch(before, after));
+    if (sameFormat(before, after)) {
+      return;
     }
+
+    text.format(start, (cuts[index + 1] ?? start) - start, formatPatch(before, after));
   });
 };
 
@@ -139,9 +141,11 @@ const updateElement = (known: Known, element: XmlElement, node: ElementNode): vo
   Object.entries(node.attrs).forEach(([key, value]) => {
     const encoded = JSON.stringify(value);
 
-    if (element.getAttribute(key) !== encoded) {
-      element.setAttribute(key, encoded);
+    if (element.getAttribute(key) === encoded) {
+      return;
     }
+
+    element.setAttribute(key, encoded);
   });
 
   syncChildren(known, element, node.content);

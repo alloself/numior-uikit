@@ -27,12 +27,14 @@ const isProvider = (value: AttrValue): boolean => typeof value === 'string' && P
 
 const descendant = (element: HtmlElement, name: string): HtmlElement | undefined => {
   for (const child of element.children) {
-    if (child.kind === ContentNodeKind.Element) {
-      const found = child.hasClass(name) ? child : descendant(child, name);
+    if (child.kind !== ContentNodeKind.Element) {
+      continue;
+    }
 
-      if (found !== undefined) {
-        return found;
-      }
+    const found = child.hasClass(name) ? child : descendant(child, name);
+
+    if (found !== undefined) {
+      return found;
     }
   }
   return undefined;

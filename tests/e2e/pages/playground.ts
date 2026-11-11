@@ -322,11 +322,13 @@ export class PlaygroundPage {
     const measured: KitPixels[] = [await kitPixelsOf(this.page.locator('body'))];
 
     for (const layer of await this.page.locator(LAYERS).all()) {
-      if (await showLayer(layer)) {
-        measured.push(await kitPixelsOf(layer));
-
-        await hideLayer(layer);
+      if (!(await showLayer(layer))) {
+        continue;
       }
+
+      measured.push(await kitPixelsOf(layer));
+
+      await hideLayer(layer);
     }
 
     return offPixel({

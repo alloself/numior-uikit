@@ -75,9 +75,11 @@ export const networkDays = (
   let count = workdaysFrom(first, last, mask);
 
   for (const holiday of holidays) {
-    if (holiday >= first && holiday <= last && isWorkday(holiday, mask)) {
-      count -= 1;
+    if (holiday < first || holiday > last || !isWorkday(holiday, mask)) {
+      continue;
     }
+
+    count -= 1;
   }
   return from > to ? -count : count;
 };
@@ -99,9 +101,11 @@ export const workday = (
     if (serial < 0 || serial > LAST_SERIAL) {
       return raise('#NUM!');
     }
-    if (isWorkday(serial, mask) && !holidays.has(serial)) {
-      left -= 1;
+    if (!isWorkday(serial, mask) || holidays.has(serial)) {
+      continue;
     }
+
+    left -= 1;
   }
   return serial;
 };

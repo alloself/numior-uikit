@@ -47,14 +47,18 @@ const calendar = useCalendar();
 const state = computed(() => calendar.dayState(date, month));
 
 const act = (action: (date: string) => void): void => {
-  if (!state.value.disabled) {
-    action(date);
+  if (state.value.disabled) {
+    return;
   }
+
+  action(date);
 };
 
 const arm = (event: PointerEvent): void => {
-  if (event.pointerType !== PointerType.Touch) {
-    act(calendar.arm);
+  if (event.pointerType === PointerType.Touch) {
+    return;
   }
+
+  act(calendar.arm);
 };
 </script>

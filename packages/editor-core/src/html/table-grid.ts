@@ -75,9 +75,11 @@ const place = (
     for (let col = column; col < column + colspan; col += 1) {
       const target = grid[row];
 
-      if (target !== undefined) {
-        target[col] = row === rowIndex && col === column ? cellOf(cell) : EMPTY;
+      if (target === undefined) {
+        continue;
       }
+
+      target[col] = row === rowIndex && col === column ? cellOf(cell) : EMPTY;
     }
   }
   return column + colspan;
