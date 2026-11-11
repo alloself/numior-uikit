@@ -65,6 +65,7 @@ export const useMentions = (options: MentionOptions): Mentions => {
   const pointer = ref({ query: '', index: 0 });
   let controller: AbortController | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let chosenAhead = false;
 
   const onKey = (key: KeyInput, found: SuggestionMatch): boolean => keyed(key, found);
 
@@ -94,6 +95,28 @@ export const useMentions = (options: MentionOptions): Mentions => {
     clearTimeout(timer);
     controller?.abort();
     controller = undefined;
+    chosenAhead = false;
+  };
+
+  const insert = (person: NuiEditorMention, found: SuggestionMatch): void => {
+    cancel();
+    options.run(insertMention(found, person));
+  };
+
+  const answered = (found: readonly NuiEditorMention[]): void => {
+    const ahead = chosenAhead;
+    const place = match.value;
+
+    chosenAhead = false;
+    people.value = found;
+    failed.value = false;
+    loading.value = false;
+
+    const person = found[active.value];
+
+    if (ahead && person !== undefined && place !== undefined) {
+      insert(person, place);
+    }
   };
 
   const ask = (query: string): void => {
@@ -108,8 +131,8 @@ export const useMentions = (options: MentionOptions): Mentions => {
     search(query, { signal: current.signal })
       .then((found) => {
         if (controller === current) {
-          people.value = found;
-          failed.value = false;
+          controller = undefined;
+          answered(found);
         }
         return found;
       })
@@ -118,22 +141,12 @@ export const useMentions = (options: MentionOptions): Mentions => {
           return;
         }
 
+        controller = undefined;
+        chosenAhead = false;
         people.value = [];
         failed.value = true;
-      })
-      .finally(() => {
-        if (controller !== current) {
-          return;
-        }
-
-        controller = undefined;
         loading.value = false;
       });
-  };
-
-  const insert = (person: NuiEditorMention, found: SuggestionMatch): void => {
-    cancel();
-    options.run(insertMention(found, person));
   };
 
   const keyed = (key: KeyInput, found: SuggestionMatch): boolean => {
@@ -148,11 +161,19 @@ export const useMentions = (options: MentionOptions): Mentions => {
       point((active.value + move + list.length) % list.length);
       return true;
     }
-    if ((key.key === Key.Enter || key.key === Key.Tab) && chosen !== undefined) {
-      insert(chosen, found);
+    if (key.key !== Key.Enter && key.key !== Key.Tab) {
+      return key.key === Key.Escape && options.run(suggestion.dismiss);
+    }
+    if (loading.value) {
+      chosenAhead = true;
       return true;
     }
-    return key.key === Key.Escape && options.run(suggestion.dismiss);
+    if (chosen === undefined) {
+      return false;
+    }
+
+    insert(chosen, found);
+    return true;
   };
 
   watch(

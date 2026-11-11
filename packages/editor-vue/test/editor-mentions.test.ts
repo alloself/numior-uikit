@@ -151,6 +151,45 @@ describe('NuiEditor mentions', () => {
     expect(inline(editor.documents.at(-1))).toEqual(['Hi @o']);
   });
 
+  it('applies Enter pressed during a search to its answer, not to the list still on screen', async () => {
+    const people = directory();
+    const editor = await typing(people.search);
+    const mentions = EditorMentionsDriver.of(editor);
+
+    await editor.type('@');
+    await mentions.pause(150);
+    people.lookups[0]?.answer(PEOPLE);
+    await mentions.pause(0);
+    await editor.type('ol');
+    await editor.press('Enter');
+
+    expect(mentions.shown).toBe(true);
+    expect(inline(editor.documents.at(-1))).toEqual(['Hi @ol']);
+
+    await mentions.pause(150);
+    people.lookups[1]?.answer(matching('ol'));
+    await mentions.pause(0);
+
+    expect(inline(editor.documents.at(-1))).toEqual(['Hi ', '@olga:Olga Smirnova', ' ']);
+    expect(mentions.shown).toBe(false);
+  });
+
+  it('forgets Enter pressed during a search once the typing goes on', async () => {
+    const people = directory();
+    const editor = await typing(people.search);
+    const mentions = EditorMentionsDriver.of(editor);
+
+    await editor.type('@ol');
+    await editor.press('Enter');
+    await editor.type('g');
+    await mentions.pause(150);
+    people.lookups[0]?.answer(matching('olg'));
+    await mentions.pause(0);
+
+    expect(mentions.options).toEqual(['OS|Olga Smirnova|']);
+    expect(inline(editor.documents.at(-1))).toEqual(['Hi @olg']);
+  });
+
   it('chooses with the pointer and leaves @ alone without a search adapter', async () => {
     const people = directory();
     const editor = await typing(people.search);
