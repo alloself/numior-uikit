@@ -657,6 +657,14 @@ export class EditorViewDriver {
     );
   }
 
+  drawn(pos: number): boolean {
+    return this.view.drawn(pos);
+  }
+
+  draw(pos: number): void {
+    this.view.draw(pos);
+  }
+
   onPage(id: NodeId): boolean {
     return this.view.nodeDOM(id)?.isConnected ?? false;
   }

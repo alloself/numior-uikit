@@ -700,6 +700,20 @@ export class EditorDriver {
     }
   }
 
+  get blockCount(): number {
+    return this.content.querySelectorAll('.nui-editor__chunk > *').length;
+  }
+
+  measured(id: string): boolean {
+    const pos = this.api.state()?.doc.positionOf(id);
+
+    return pos !== undefined && this.api.coordsAt(pos + 1) !== undefined;
+  }
+
+  reveal(id: string): void {
+    this.api.revealNode(id);
+  }
+
   get blockTexts(): readonly string[] {
     return [...this.content.querySelectorAll('.nui-editor__chunk > *')].map(
       (block) => `${block.tagName.toLowerCase()}:${textWithoutWidgets(block)}`,

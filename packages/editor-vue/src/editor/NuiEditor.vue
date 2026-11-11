@@ -794,15 +794,18 @@ const editor: NuiEditorApi = {
   flush: () => {
     settleValue();
   },
-  coordsAt: (pos) => view?.coordsAtPos(pos),
+  coordsAt: (pos) => (view?.drawn(pos) ? view.coordsAtPos(pos) : undefined),
   posAt: (x, y) => view?.posAtCoords(x, y),
   contentBox: () => contentElement.value?.getBoundingClientRect(),
   revealNode: (nodeId) => {
-    const dom = view?.nodeDOM(nodeId);
+    const pos = view?.state.doc.positionOf(nodeId);
 
-    if (dom instanceof HTMLElement) {
-      dom.scrollIntoView({ block: 'nearest' });
+    if (view === undefined || pos === undefined) {
+      return;
     }
+
+    view.draw(pos);
+    view.nodeDOM(nodeId)?.scrollIntoView({ block: 'nearest' });
   },
 };
 

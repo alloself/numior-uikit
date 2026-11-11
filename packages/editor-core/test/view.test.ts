@@ -172,6 +172,21 @@ describe('editor view', () => {
     );
   });
 
+  it('tells whether a place is drawn without drawing the rest and draws it when asked', () => {
+    const paragraphs = Array.from({ length: 300 }, (_, index) => node('paragraph', [`p${index}`]));
+    const view = mounted(doc(...paragraphs));
+    const far = view.positionOf(paragraphs[250]?.id ?? '') + 1;
+
+    expect(view.drawn(1)).toBe(true);
+    expect(view.drawn(far)).toBe(false);
+    expect(view.blocks).toHaveLength(128);
+
+    view.draw(far);
+
+    expect(view.drawn(far)).toBe(true);
+    expect(view.blocks).toHaveLength(300);
+  });
+
   it('draws edited blocks of the part not drawn yet from the new document', async () => {
     const paragraphs = Array.from({ length: 300 }, (_, index) => node('paragraph', [`p${index}`]));
     const view = mounted(doc(...paragraphs));

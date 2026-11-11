@@ -515,6 +515,10 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     posAtDOM: (node, offset) => posAtDOM(context, node, offset),
     domAtPos: (pos) => domAtPos(rootDesc, state.doc, pos, host.fresh),
     coordsAtPos: (pos) => coordsAtPos(host, pos),
+    drawn: (pos) => attaching.covers(state.doc.resolve(pos).indexAt(0)),
+    draw: (pos) => {
+      host.fresh(rootDesc, state.doc.resolve(pos).indexAt(0));
+    },
     posAtCoords: (x, y) => posAtCoords(host, x, y),
     nodeDOM: (id) => context.byId.get(id)?.dom,
     inWidget: (target) => widgetAround(context, target),

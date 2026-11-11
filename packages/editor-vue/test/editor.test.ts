@@ -1,7 +1,8 @@
 import { contentSchema } from '@numior/content';
 import { createDoc, selectAll, toJSON } from '@numior/editor-core';
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { afterEach, beforeAll, describe, expect, it } from 'vite-plus/test';
 import { EditorDriver } from './drivers/editor';
+import { installPopovers } from './support/popovers';
 
 let driver: EditorDriver | undefined;
 
@@ -9,6 +10,10 @@ const mounted = (...args: Parameters<typeof EditorDriver.mount>): EditorDriver =
   driver = EditorDriver.mount(...args);
   return driver;
 };
+
+beforeAll(() => {
+  installPopovers();
+});
 
 afterEach(() => {
   driver?.destroy();
@@ -24,6 +29,22 @@ const note = (text: string) =>
         content: [
           contentSchema.element('paragraph', { id: 'p', content: [contentSchema.text(text)] }),
         ],
+      }),
+    ),
+  );
+
+const longNote = (blocks: number) =>
+  toJSON(
+    createDoc(
+      contentSchema,
+      contentSchema.element('doc', {
+        id: 'root',
+        content: Array.from({ length: blocks }, (_unused, index) =>
+          contentSchema.element('paragraph', {
+            id: `p${String(index)}`,
+            content: [contentSchema.text(`line ${String(index)}`)],
+          }),
+        ),
       }),
     ),
   );
@@ -149,6 +170,17 @@ describe('NuiEditor', () => {
 
     expect(editor.emitted('focus')).toBe(1);
     expect(editor.emitted('blur')).toBe(1);
+  });
+
+  it('measures only what is drawn and draws the rest to show a block', () => {
+    const editor = mounted({ document: longNote(300) });
+
+    expect(editor.measured('p250')).toBe(false);
+    expect(editor.blockCount).toBe(128);
+
+    editor.reveal('p250');
+
+    expect(editor.blockCount).toBe(300);
   });
 
   it('bounds the text area by maxHeight only when it is given', () => {

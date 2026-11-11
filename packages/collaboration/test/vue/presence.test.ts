@@ -90,6 +90,15 @@ describe('NuiCollabCarets', () => {
     expect(wrapper.find<HTMLElement>('.nui-collab-carets__caret').element.style.opacity).toBe('0');
   });
 
+  it('hides a caret whose place the editor has not drawn yet', async () => {
+    const editor = fakeEditor(() => undefined);
+    const wrapper = mount(NuiCollabCarets, { props: { peers: [], editor } });
+
+    await wrapper.setProps({ peers: [peer('ann', 3)] });
+
+    expect(wrapper.find<HTMLElement>('.nui-collab-carets__caret').element.style.opacity).toBe('0');
+  });
+
   it('renders on the server without an editor', async () => {
     const html = await renderToString(NuiCollabCarets, { props: { peers: [peer('ann', 3)] } });
 
