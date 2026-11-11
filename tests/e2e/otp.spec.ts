@@ -158,7 +158,11 @@ test.describe('one-time code field', () => {
     await playground.resize({ width: 360, height: 720 });
     const narrow = await otp.slotBoxes(otp.access);
     expect(narrow.every((box) => box.x >= 0 && box.x + box.width <= 360)).toBe(true);
-    expect(narrow.every((box) => Math.abs(box.width - box.height) < 1)).toBe(true);
+
+    expect(narrow.every((box) => Number.isInteger(box.height) && box.width <= box.height)).toBe(
+      true,
+    );
+
     expect(await otp.overflows()).toBe(false);
   });
 

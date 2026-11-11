@@ -54,7 +54,7 @@
   flex: 0 1 auto;
   inline-size: var(--_height);
   min-inline-size: 0;
-  aspect-ratio: 1;
+  block-size: var(--_height);
   border: 1px solid var(--_border);
   background: var(--nui-surface);
   outline: var(--nui-focus-ring-width) solid transparent;
