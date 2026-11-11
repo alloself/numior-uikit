@@ -475,6 +475,7 @@ const forget = (context: ViewContext, desc: Desc): void => {
     return;
   }
   desc.view?.destroy();
+  context.stale.delete(desc);
   if (context.byId.get(desc.node.id) === desc) {
     context.byId.delete(desc.node.id);
   }

@@ -235,6 +235,30 @@ describe('editor view', () => {
     expect(html(69)).toBe('p69');
   });
 
+  it('keeps the nodes of a hidden block on the page when the block is replaced before it caught up', async () => {
+    const first = node('list_item', [node('paragraph', ['one'])]);
+    const second = node('list_item', [node('paragraph', ['two'])]);
+    const list = node('ordered_list', [first]);
+
+    const view = mounted(
+      doc(node('paragraph', ['top']), list),
+      fixtureSchema,
+      [],
+      {},
+      undefined,
+      true,
+    );
+
+    view.setChunkInView(0, false);
+    view.change((tr) => tr.insert(view.positionOf(first.id) + first.size, [second]));
+    view.change((tr) => tr.setNodeAttrs(view.positionOf(list.id), { start: 5 }));
+    await view.finishFilling();
+
+    expect(view.onPage(second.id)).toBe(true);
+    expect(view.onPage(first.id)).toBe(true);
+    expect(view.texts).toEqual(['top', 'one', 'two']);
+  });
+
   it('types into the same text node and leaves every other block alone', () => {
     const middle = node('paragraph', ['two']);
     const view = mounted(doc(node('paragraph', ['one']), middle, node('paragraph', ['three'])));

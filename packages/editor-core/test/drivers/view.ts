@@ -657,6 +657,10 @@ export class EditorViewDriver {
     );
   }
 
+  onPage(id: NodeId): boolean {
+    return this.view.nodeDOM(id)?.isConnected ?? false;
+  }
+
   positionOf(id: NodeId): number {
     return this.state.doc.positionOf(id) ?? -1;
   }
