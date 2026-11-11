@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHighlighter } from 'shiki';
 import tailwindcss from '@tailwindcss/vite';
@@ -9,6 +10,7 @@ import { headingPermalink } from './markdown/anchors';
 import { docsDemo, demoRootOf } from './examples/demo';
 import { docsExamples } from './examples/plugin';
 import { isEnglishPage } from './markdown/env';
+import { descriptionOf, localeOfPage, pageHead } from './meta';
 import { navOf, sidebarOf } from './navigation';
 import { parseBundle } from './reference/bundle';
 import { docsReference } from './reference/plugin';
@@ -16,6 +18,7 @@ import { apiSearchText } from './reference/search-text';
 import type { DocsSearchOptions } from './theme/theme.types';
 import { ACCENT_STORAGE_KEY, accentScript } from './theme/composables/use-accent';
 import { searchFields } from './theme/search-index';
+import { absoluteUrl, site } from './theme/site';
 import { en, ru } from './theme/texts';
 import type { DocsThemeConfig } from './theme/theme.types';
 
@@ -33,6 +36,9 @@ const searchOptions: DocsSearchOptions = {
       env,
     ),
 };
+
+const origin = absoluteUrl(site, '');
+const descriptions = { ru: ru.description, en: en.description } as const;
 
 const highlighter = await createHighlighter({
   themes: ['github-light'],
@@ -52,6 +58,35 @@ export default defineConfigWithTheme<DocsThemeConfig>({
     ['script', {}, colorSchemeScript('nui-theme')],
     ['script', {}, accentScript(ACCENT_STORAGE_KEY)],
   ],
+  ...(origin === undefined ? {} : { sitemap: { hostname: origin } }),
+  transformPageData: (pageData, { siteConfig }) => {
+    const file = join(siteConfig.srcDir, pageData.filePath);
+
+    if (pageData.isNotFound === true || !existsSync(file)) {
+      return undefined;
+    }
+
+    const description = descriptionOf(
+      readFileSync(file, 'utf8'),
+      descriptions[localeOfPage(pageData.relativePath)],
+    );
+
+    return {
+      description,
+      frontmatter: {
+        ...pageData.frontmatter,
+        head: [
+          ...(Array.isArray(pageData.frontmatter.head) ? pageData.frontmatter.head : []),
+          ...pageHead(site, {
+            relativePath: pageData.relativePath,
+            title: pageData.title,
+            description,
+            pages: siteConfig.pages,
+          }),
+        ],
+      },
+    };
+  },
   markdown: {
     headers: { level: [2, 3] },
     anchor: { permalink: headingPermalink },

@@ -96,6 +96,8 @@ const leadOf = (blocks: readonly Block[]): string | undefined => {
     : undefined;
 };
 
+export const leadTextOf = (markdown: string): string | undefined => leadOf(blocksOf(markdown));
+
 const paragraphsUntilExample = (blocks: readonly Block[]): string[] | undefined => {
   const end = blocks.findIndex((block) => block.kind !== 'paragraph');
 

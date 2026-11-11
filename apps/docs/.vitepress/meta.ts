@@ -1,0 +1,99 @@
+import type { HeadConfig } from 'vitepress';
+import { leadTextOf } from './content/page-guards.ts';
+import type { ExampleLocale } from './examples/example.types.ts';
+import { absoluteUrl } from './theme/site.ts';
+import type { DocsSite } from './theme/theme.types.ts';
+
+export interface PageMeta {
+  readonly relativePath: string;
+  readonly title: string;
+  readonly description: string;
+  readonly pages: readonly string[];
+}
+
+const SITE_NAME = 'Numior UI';
+const EN_PREFIX = 'en/';
+const DEFAULT_LOCALE: ExampleLocale = 'ru';
+const OG_LOCALES = { ru: 'ru_RU', en: 'en_US' } as const;
+const LINK_RE = /\[([^\]]*)\]\([^)]*\)/g;
+const MARKUP_RE = /<[^>]+>|[`*_]/g;
+
+export const localeOfPage = (relativePath: string): ExampleLocale =>
+  relativePath.startsWith(EN_PREFIX) ? 'en' : 'ru';
+
+const otherLocale = (locale: ExampleLocale): ExampleLocale => (locale === 'ru' ? 'en' : 'ru');
+
+const pageOf = (relativePath: string, locale: ExampleLocale): string => {
+  const tail = relativePath.startsWith(EN_PREFIX)
+    ? relativePath.slice(EN_PREFIX.length)
+    : relativePath;
+
+  return locale === 'en' ? `${EN_PREFIX}${tail}` : tail;
+};
+
+export const routeOf = (relativePath: string): string =>
+  `/${relativePath.replace(/(^|\/)index\.md$/u, '$1').replace(/\.md$/u, '')}`;
+
+export const descriptionOf = (markdown: string, fallback: string): string => {
+  const lead = leadTextOf(markdown);
+
+  return lead === undefined
+    ? fallback
+    : lead.replaceAll(LINK_RE, '$1').replaceAll(MARKUP_RE, '').replaceAll(/\s+/g, ' ').trim();
+};
+
+const alternatesOf = (meta: PageMeta): ExampleLocale[] => {
+  const locale = localeOfPage(meta.relativePath);
+  const other = otherLocale(locale);
+
+  return meta.pages.includes(pageOf(meta.relativePath, other)) ? [locale, other] : [locale];
+};
+
+const addressHead = (site: DocsSite, meta: PageMeta): HeadConfig[] => {
+  const url = absoluteUrl(site, routeOf(meta.relativePath));
+
+  if (url === undefined) {
+    return [];
+  }
+
+  const locales = alternatesOf(meta);
+
+  const alternates = locales.reduce<HeadConfig[]>((links, locale) => {
+    const href = absoluteUrl(site, routeOf(pageOf(meta.relativePath, locale)));
+
+    if (href !== undefined) {
+      links.push(['link', { rel: 'alternate', hreflang: locale, href }]);
+    }
+    if (href !== undefined && locale === DEFAULT_LOCALE) {
+      links.push(['link', { rel: 'alternate', hreflang: 'x-default', href }]);
+    }
+    return links;
+  }, []);
+
+  return [
+    ['link', { rel: 'canonical', href: url }],
+    ['meta', { property: 'og:url', content: url }],
+    ...(locales.length > 1 ? alternates : []),
+  ];
+};
+
+export const pageHead = (site: DocsSite, meta: PageMeta): HeadConfig[] => {
+  const locale = localeOfPage(meta.relativePath);
+  const title = meta.title === '' || meta.title === SITE_NAME ? SITE_NAME : meta.title;
+
+  return [
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:site_name', content: SITE_NAME }],
+    ['meta', { property: 'og:title', content: title }],
+    ['meta', { property: 'og:description', content: meta.description }],
+    ['meta', { property: 'og:locale', content: OG_LOCALES[locale] }],
+    ...alternatesOf(meta)
+      .slice(1)
+      .map<HeadConfig>((other) => [
+        'meta',
+        { property: 'og:locale:alternate', content: OG_LOCALES[other] },
+      ]),
+    ['meta', { name: 'twitter:card', content: 'summary' }],
+    ...addressHead(site, meta),
+  ];
+};

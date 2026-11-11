@@ -1,7 +1,8 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { lintProse } from './prose-lint.ts';
 import { PENDING_PAGES } from './pending.ts';
+import type { DocsSite } from '../theme/theme.types.ts';
 
 const SKIPPED_DIRS = new Set(['node_modules', '.reference', 'cache', 'dist']);
 
@@ -80,10 +81,74 @@ export const checkContent = (root: string): string[] => {
 const UNRESOLVED_RE =
   /<(?:Nui[A-Za-z]*|Example|ApiReference|Configurator|SignatureReference|KeyboardReference)\b/;
 
-export const checkDist = (dist: string): string[] =>
-  walk(dist).reduce<string[]>((found, file) => {
-    if (file.endsWith('.html') && UNRESOLVED_RE.test(readFileSync(file, 'utf8'))) {
-      found.push(`${relative(dist, file)}: has an unresolved component tag`);
-    }
-    return found;
-  }, []);
+const NOT_FOUND_PAGE = '404.html';
+const SITEMAP = 'sitemap.xml';
+const DESCRIPTION_RE = /<meta name="description" content="[^"]+">/;
+const PREVIEW_TITLE_RE = /<meta property="og:title" content="[^"]+">/;
+const ADDRESS_RE = /rel="canonical"|property="og:url"|hreflang="/;
+const CANONICAL_RE = /rel="canonical"/;
+const EDIT_LINK_RE = /href="[^"]*\/edit\/[^"]*\/apps\/docs\//;
+const FOOTER_RE = /<footer[\s\S]*?<\/footer>/;
+const REPOSITORY_LINK_RE = /GitHub/;
+
+const metaProblems = (html: string): string[] => [
+  ...(DESCRIPTION_RE.test(html) ? [] : ['has no description']),
+  ...(PREVIEW_TITLE_RE.test(html) ? [] : ['has no title for link previews']),
+];
+
+const addressProblems = (page: string, html: string, site: DocsSite): string[] => {
+  if (site.siteUrl.trim() === '') {
+    return ADDRESS_RE.test(html) ? ['has an address although the site address is not set'] : [];
+  }
+  return page === NOT_FOUND_PAGE || CANONICAL_RE.test(html) ? [] : ['has no canonical address'];
+};
+
+const repositoryProblems = (html: string, site: DocsSite): string[] => {
+  if (site.repository.trim() !== '') {
+    return [];
+  }
+  return [
+    ...(EDIT_LINK_RE.test(html) ? ['has an edit link although the repository is not set'] : []),
+    ...(REPOSITORY_LINK_RE.test(FOOTER_RE.exec(html)?.[0] ?? '')
+      ? ['links to GitHub in the footer although the repository is not set']
+      : []),
+  ];
+};
+
+export const pageDistProblems = (page: string, html: string, site: DocsSite): string[] => [
+  ...(UNRESOLVED_RE.test(html) ? ['has an unresolved component tag'] : []),
+  ...(page === NOT_FOUND_PAGE ? [] : metaProblems(html)),
+  ...addressProblems(page, html, site),
+  ...repositoryProblems(html, site),
+];
+
+const sitemapProblems = (dist: string, site: DocsSite): string[] => {
+  const published = site.siteUrl.trim() !== '';
+  const written = existsSync(join(dist, SITEMAP));
+
+  if (published === written) {
+    return [];
+  }
+  return [
+    published
+      ? `${SITEMAP}: is missing although the site address is set`
+      : `${SITEMAP}: is written although the site address is not set`,
+  ];
+};
+
+export const checkDist = (dist: string, site: DocsSite): string[] =>
+  walk(dist).reduce<string[]>(
+    (found, file) => {
+      if (file.endsWith('.html')) {
+        const page = relative(dist, file);
+
+        found.push(
+          ...pageDistProblems(page, readFileSync(file, 'utf8'), site).map(
+            (problem) => `${page}: ${problem}`,
+          ),
+        );
+      }
+      return found;
+    },
+    sitemapProblems(dist, site),
+  );

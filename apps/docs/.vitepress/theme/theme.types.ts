@@ -86,6 +86,7 @@ export interface DocsTexts {
   readonly previous: string;
   readonly next: string;
   readonly skip: string;
+  readonly editPage: string;
   readonly notFoundTitle: string;
   readonly notFoundText: string;
   readonly notFoundSearch: string;
