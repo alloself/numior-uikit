@@ -88,6 +88,9 @@ const BAND_POINTS: readonly Point[] = Array.from(
 
 const showsBody = ([red, green, blue]: Rgb): boolean => blue - Math.max(red, green) > LEAK;
 
+const LINE_ROWS = [-6, -2, -1, 0];
+const BLACK: Rgb = [0, 0, 0];
+
 export class TableSheetSection {
   readonly scope = '[data-testid="table-sheet"]';
   readonly toggle: Locator;
@@ -353,6 +356,35 @@ export class TableSheetSection {
     await this.painted();
 
     return (await paintedRgbAt(this.root, BAND_POINTS)).filter(showsBody);
+  }
+
+  async linesBelow(fraction: number, cells: readonly Locator[]): Promise<Rgb[]> {
+    await this.shiftTo(fraction);
+    await this.painted();
+    await this.page.mouse.move(0, 0);
+
+    const [root, ...boxes] = await Promise.all([boxOf(this.root), ...cells.map(boxOf)]);
+
+    const points = boxes.flatMap((box) =>
+      LINE_ROWS.map((row): Point => [
+        box.x + box.width / 2 - root.x,
+        box.y + box.height + row - root.y,
+      ]),
+    );
+
+    const painted = await paintedRgbAt(this.root, points);
+
+    return boxes.map((_, cell) => {
+      const [inside = BLACK, ...edge] = painted.slice(
+        cell * LINE_ROWS.length,
+        (cell + 1) * LINE_ROWS.length,
+      );
+
+      return edge.reduce(
+        (line, pixel) => (rgbDelta(pixel, inside) > rgbDelta(line, inside) ? pixel : line),
+        inside,
+      );
+    });
   }
 
   scrollTop(): Promise<number> {

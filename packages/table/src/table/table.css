@@ -237,7 +237,7 @@
   --_ring-l: var(--_ring-s);
   --_ring-r: var(--_ring-e);
 
-  clip-path: inset(0);
+  overflow: clip;
 }
 .nui-table__cell--merged:dir(rtl) {
   --_ring-l: var(--_ring-e);

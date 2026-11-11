@@ -1,4 +1,5 @@
 import { expect, test } from './fixtures';
+import { rgbDelta, type Rgb } from './helpers/color';
 import { boxOf, textBoxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
@@ -24,6 +25,8 @@ const HEAD_HEIGHT = 32;
 const TITLE_HEIGHT = 44;
 const FROZEN_BOTTOM = HEAD_HEIGHT + TITLE_HEIGHT + ROW;
 const BAND_SCROLLS = [97, 333];
+const LINE_DELTA = 6;
+const BLACK: Rgb = [0, 0, 0];
 
 const expectSolidHeader = async (
   playground: PlaygroundPage,
@@ -341,6 +344,27 @@ test.describe('table cell styles', () => {
     await sheet.cell(SALES, 1).click();
     await expect(sheet.cell(INCOME, 0)).not.toHaveClass(/nui-table__cell--allied/);
     await expect.poll(() => sheet.fillLayers(INCOME, 0)).toBe(1);
+  });
+
+  test('draws the line under a merged cell as strong as under its neighbour at any pixel fraction', async ({
+    tableSheet: sheet,
+    playground,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await sheet.show();
+    await sheet.scrollTo(0, CENTRE_WIDTH);
+    await expect(sheet.cell(SALES, LAST_COLUMN)).toHaveAttribute('rowspan', '3');
+
+    const cells = [sheet.cell(SALES, LAST_COLUMN), sheet.cell(SALES + 2, LAST_COLUMN - 1)];
+
+    for (const fraction of PIXEL_FRACTIONS) {
+      const [merged = BLACK, plain = BLACK] = await sheet.linesBelow(fraction, cells);
+
+      expect(rgbDelta(merged, plain), `at a pixel fraction of ${fraction}`).toBeLessThanOrEqual(
+        LINE_DELTA,
+      );
+    }
   });
 
   test('continues a tall merge through the row window without moving its content', async ({
