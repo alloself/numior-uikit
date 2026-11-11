@@ -97,5 +97,5 @@ const choose = (chosen: NuiCommandItem): void => {
   }
 };
 
-useToolbarControl(() => popover.value?.trigger);
+useToolbarControl(() => popover.value?.triggerElement);
 </script>

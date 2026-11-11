@@ -63,5 +63,5 @@ const choose = (key: string | undefined): void => {
 
 const menu = useTemplateRef<InstanceType<typeof NuiMenu>>('menu');
 
-useToolbarControl(() => menu.value?.trigger);
+useToolbarControl(() => menu.value?.triggerElement);
 </script>

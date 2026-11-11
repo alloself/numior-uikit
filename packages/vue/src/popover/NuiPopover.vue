@@ -102,7 +102,7 @@ watch(open, (value) => {
 });
 
 defineExpose<NuiPopoverExposed>({
-  get trigger() {
+  get triggerElement() {
     return trigger.value;
   },
 });

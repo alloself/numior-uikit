@@ -94,7 +94,7 @@ export type NuiMenuFocus = (typeof NuiMenuFocus)[keyof typeof NuiMenuFocus];
 export type MenuFocusRequest = (typeof MenuFocusRequest)[keyof typeof MenuFocusRequest];
 
 export interface NuiMenuExposed {
-  readonly trigger: HTMLElement | null;
+  readonly triggerElement: HTMLElement | null;
   show(focus?: NuiMenuFocus): void;
 }
 

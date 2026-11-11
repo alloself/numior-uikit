@@ -67,7 +67,7 @@ const docs: DocsMap = {
     },
     models: { 'v-model:open': { ru: 'Открыто ли меню.', en: 'Whether the menu is open.' } },
     exposed: {
-      trigger: {
+      triggerElement: {
         ru: 'Элемент кнопки из слота `trigger`, пока меню смонтировано.',
         en: 'The `trigger` slot button element while the menu is mounted.',
       },

@@ -105,7 +105,7 @@ const triggerAttrs = computed<NuiMenuTriggerAttrs>(() => ({
 }));
 
 defineExpose<NuiMenuExposed>({
-  get trigger() {
+  get triggerElement() {
     return trigger.value;
   },
   show: (focus) => {

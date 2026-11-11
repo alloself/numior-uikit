@@ -25,7 +25,7 @@ const popover = useTemplateRef<InstanceType<typeof NuiPopover>>('popover');
 defineExpose({
   open,
   get trigger() {
-    return popover.value?.trigger ?? null;
+    return popover.value?.triggerElement ?? null;
   },
 });
 </script>
