@@ -74,3 +74,15 @@ test('the action of a toast replaces its text in place', async ({ docs, page }) 
   await page.mouse.move(0, 0);
   await expect(docs.toasts).toHaveCount(0, { timeout: 8000 });
 });
+
+for (const route of ['/components/input', '/components/textarea', '/components/number-field']) {
+  test(`a disabled field on ${route} draws no text caret`, async ({ docs }) => {
+    await docs.open(route);
+    const configurator = docs.configurator();
+    expect(await configurator.caretColor()).not.toBe('rgba(0, 0, 0, 0)');
+
+    await configurator.enable('disabled');
+
+    expect(await configurator.caretColor()).toBe('rgba(0, 0, 0, 0)');
+  });
+}

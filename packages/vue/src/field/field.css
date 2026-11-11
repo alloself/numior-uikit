@@ -38,6 +38,9 @@
     @apply text-error;
     animation: nui-field-reveal var(--transition-duration-normal) var(--ease-nui);
   }
+  .nui-field--disabled {
+    @apply caret-transparent;
+  }
   .nui-field--disabled > .nui-field__label {
     @apply opacity-disabled;
   }

@@ -63,6 +63,13 @@ export class DocsConfigurator {
   async enable(label: string): Promise<void> {
     await this.panel.getByRole('switch', { name: label }).check();
   }
+
+  caretColor(): Promise<string> {
+    return this.preview
+      .locator('input, textarea')
+      .first()
+      .evaluate((control) => getComputedStyle(control).caretColor);
+  }
 }
 
 export class DocsHome {
