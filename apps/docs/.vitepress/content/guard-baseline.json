@@ -267,11 +267,7 @@
     "en/components/tooltip.md",
     "en/components/upload.md"
   ],
-  "catalog": [
-    ".vitepress/theme/home-content.ts",
-    ".vitepress/theme/texts.ts",
-    "api/table.ts"
-  ],
+  "catalog": [".vitepress/theme/home-content.ts", ".vitepress/theme/texts.ts", "api/table.ts"],
   "api-tautology": [
     "api/accordion.ts",
     "api/alert.ts",
