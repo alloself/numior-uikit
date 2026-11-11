@@ -5,7 +5,7 @@ import { DocsSite } from './pages/docs';
 import { NuxtApp } from './pages/nuxt-app';
 import { PlaygroundPage } from './pages/playground';
 
-interface PageObjects {
+export interface PageObjects {
   readonly playground: PlaygroundPage;
   readonly collab: CollabRoom;
   readonly collabLab: CollabLab;

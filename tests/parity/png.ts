@@ -1,6 +1,13 @@
 import { inflateSync } from 'node:zlib';
 import type { Image } from './parity.types.ts';
 
+interface RowLayout {
+  readonly stride: number;
+  readonly channels: number;
+}
+
+type Predictor = (left: number, up: number, corner: number) => number;
+
 const SIGNATURE_LENGTH = 8;
 
 const CHANNELS_BY_COLOR_TYPE = new Map([
@@ -20,8 +27,10 @@ const paeth = (left: number, up: number, corner: number): number => {
   return byUp <= byCorner ? up : corner;
 };
 
-const predictors: readonly ((left: number, up: number, corner: number) => number)[] = [
-  () => 0,
+const unfiltered: Predictor = () => 0;
+
+const predictors: readonly Predictor[] = [
+  unfiltered,
   (left) => left,
   (_left, up) => up,
   (left, up) => (left + up) >> 1,
@@ -48,22 +57,32 @@ const chunksOf = (file: Uint8Array): Map<string, Buffer[]> => {
   return chunks;
 };
 
+const sampleOf = (pixels: Uint8Array, index: number, exists: boolean): number =>
+  exists ? (pixels[index] ?? 0) : 0;
+
+const unfilterRow = (raw: Uint8Array, pixels: Uint8Array, row: number, layout: RowLayout): void => {
+  const { stride, channels } = layout;
+  const predict = predictors[raw[row * (stride + 1)] ?? 0] ?? unfiltered;
+  const source = row * (stride + 1) + 1;
+  const target = row * stride;
+  const hasUp = row > 0;
+
+  for (let at = 0; at < stride; at += 1) {
+    const hasLeft = at >= channels;
+    const left = sampleOf(pixels, target + at - channels, hasLeft);
+    const up = sampleOf(pixels, target + at - stride, hasUp);
+    const corner = sampleOf(pixels, target + at - stride - channels, hasLeft && hasUp);
+
+    pixels[target + at] = ((raw[source + at] ?? 0) + predict(left, up, corner)) & 0xff;
+  }
+};
+
 const unfilter = (raw: Uint8Array, width: number, height: number, channels: number): Uint8Array => {
   const stride = width * channels;
   const pixels = new Uint8Array(stride * height);
 
   for (let row = 0; row < height; row += 1) {
-    const predict = predictors[raw[row * (stride + 1)] ?? 0] ?? predictors[0];
-    const source = row * (stride + 1) + 1;
-    const target = row * stride;
-
-    for (let at = 0; at < stride; at += 1) {
-      const left = at >= channels ? (pixels[target + at - channels] ?? 0) : 0;
-      const up = row > 0 ? (pixels[target + at - stride] ?? 0) : 0;
-      const corner = at >= channels && row > 0 ? (pixels[target + at - stride - channels] ?? 0) : 0;
-
-      pixels[target + at] = ((raw[source + at] ?? 0) + (predict?.(left, up, corner) ?? 0)) & 0xff;
-    }
+    unfilterRow(raw, pixels, row, { stride, channels });
   }
 
   return pixels;
