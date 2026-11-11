@@ -20,6 +20,7 @@ import {
   type ListNavigation,
   type PopoverControl,
 } from '@numior/primitives';
+import { popoverShown } from '../shared/popover-toggle';
 import type { MenuContext } from './menu-context';
 import { MenuFocusRequest, NuiMenuFocus } from './menu.types';
 
@@ -39,6 +40,7 @@ export interface MenuSurfaceOptions {
 }
 
 export interface MenuSurfaceAttrs {
+  readonly onToggle: (event: Event) => void;
   readonly onKeydown: (event: KeyboardEvent) => void;
   readonly onFocusin: (event: FocusEvent) => void;
   readonly onFocusout: (event: FocusEvent) => void;
@@ -55,6 +57,17 @@ export interface MenuSurface {
 
 const focusElement = (element: HTMLElement | null | undefined): void => {
   element?.focus({ preventScroll: true });
+};
+
+const entryOf = (key: string): NuiMenuFocus | undefined => {
+  switch (key) {
+    case Key.ArrowDown:
+      return NuiMenuFocus.First;
+    case Key.ArrowUp:
+      return NuiMenuFocus.Last;
+    default:
+      return undefined;
+  }
 };
 
 const holdsOpenSubmenu = (element: HTMLElement | null): boolean =>
@@ -124,8 +137,11 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     return (request === NuiMenuFocus.First ? items[0] : items.at(-1)) ?? null;
   };
 
+  const holdsFocus = (): boolean =>
+    options.content.value?.contains(document.activeElement) === true;
+
   const focusOnOpen = (): void => {
-    const request = opening.take();
+    const request = opening.peek();
 
     focusElement(
       request === undefined
@@ -147,6 +163,7 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
       if (isOpen) {
         activateOnOpen();
       } else {
+        opening.take();
         navigation.reset();
       }
     },
@@ -176,12 +193,26 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     navigation,
     context,
     attrs: {
+      onToggle: (event) => {
+        if (popoverShown(event) && !holdsFocus()) {
+          focusOnOpen();
+        }
+      },
       onKeydown: (event) => {
         pointer = false;
         if (event.key === Key.Tab) {
           context.closeAll();
           return;
         }
+
+        const entry = event.target === options.content.value ? entryOf(event.key) : undefined;
+
+        if (entry !== undefined) {
+          event.preventDefault();
+          navigation.setActive(requestedItem(entry));
+          return;
+        }
+
         navigation.onKeydown(event);
       },
       onFocusin: (event) => {

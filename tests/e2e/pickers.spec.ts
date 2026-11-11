@@ -44,6 +44,30 @@ test.describe('pickers', () => {
     await expect.poll(async () => (await pickers.readOutput()).country).toBeNull();
   });
 
+  test('a select opened by click or Enter moves focus into the listbox', async ({
+    playground,
+    pickers,
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'keyboard scenario');
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+
+    await pickers.countryTrigger.click();
+
+    await expect(pickers.option('Австрия')).toBeFocused();
+
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+
+    await expect(pickers.countryTrigger).toHaveText('Бельгия');
+
+    await page.keyboard.press('Enter');
+
+    await expect(pickers.option('Бельгия')).toBeFocused();
+  });
+
   test('a long value truncates with an ellipsis and keeps the clear button off the text', async ({
     playground,
     pickers,

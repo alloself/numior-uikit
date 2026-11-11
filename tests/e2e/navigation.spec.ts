@@ -38,6 +38,30 @@ test.describe('navigation', () => {
     await expect(navigation.menuTrigger).toBeFocused();
   });
 
+  test('a menu opened by click or Enter takes focus, so the arrows walk its items', async ({
+    playground,
+    navigation,
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'keyboard scenario');
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+
+    await navigation.menuTrigger.click();
+
+    await expect(navigation.menu).toBeFocused();
+
+    await page.keyboard.press('ArrowDown');
+
+    await expect(navigation.item('Переименовать')).toBeFocused();
+
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Enter');
+
+    await expect(navigation.item('Переименовать')).toBeFocused();
+  });
+
   test('submenu opens on hover or ArrowRight, steps back with ArrowLeft, and light dismiss closes the chain', async ({
     playground,
     navigation,
