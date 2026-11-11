@@ -80,6 +80,15 @@ export const usePopover = (
     });
   });
 
+  const hide = (): void => {
+    const element = toValue(content);
+
+    if (canToggle(element) && shown === element) {
+      element.hidePopover();
+    }
+    setOpen(false);
+  };
+
   const raise = (): void => {
     const element = toValue(content);
     if (!canToggle(element) || shown !== element) {
@@ -105,8 +114,15 @@ export const usePopover = (
       'aria-controls': id.value,
     })),
     show: () => setOpen(true),
-    hide: () => setOpen(false),
-    toggle: () => setOpen(!options.open.value),
+    hide,
+    toggle: () => {
+      if (options.open.value) {
+        hide();
+        return;
+      }
+
+      setOpen(true);
+    },
     raise,
   };
 };

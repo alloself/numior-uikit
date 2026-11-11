@@ -39,6 +39,29 @@ describe('usePopover', () => {
     capture.unmount();
   });
 
+  it('hides its element at once, before anything that the same action changed is drawn', async () => {
+    const open = ref(false);
+    const capture = captureWithElements((_, content) => usePopover(content, { open }));
+
+    capture.second.addEventListener(
+      'beforetoggle',
+      capture.value.contentAttrs.value.onBeforetoggle,
+    );
+
+    open.value = true;
+    await nextTick();
+    capture.value.hide();
+
+    expect(topLayer.log.hidePopover).toBe(1);
+    expect(open.value).toBe(false);
+
+    await nextTick();
+
+    expect(topLayer.log.hidePopover).toBe(1);
+
+    capture.unmount();
+  });
+
   it('raises an open popover by hiding and showing it again', async () => {
     const open = ref(false);
     const capture = captureWithElements((_, content) => usePopover(content, { open }));
