@@ -13,6 +13,7 @@ describe('@numior/nuxt', () => {
       '@numior/table/styles.css',
     ]);
 
+    expect(await host.vitePlugins()).toContain('@tailwindcss/vite:generate:build');
     expect(host.headScripts).toEqual([host.expectedScript('light')]);
     expect(host.lang).toBe('ru');
 
@@ -50,6 +51,7 @@ describe('@numior/nuxt', () => {
     );
 
     expect(host.css).toEqual([]);
+    expect(await host.vitePlugins()).toEqual([]);
     expect(host.headScripts).toEqual([]);
     expect(host.runtime).toEqual({ locale: 'ru-RU' });
     expect(host.runtimeKeys).toEqual(['locale']);

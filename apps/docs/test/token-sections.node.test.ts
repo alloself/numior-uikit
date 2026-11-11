@@ -1,14 +1,17 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vite-plus/test';
+import { legacyTokenCss } from '../.vitepress/reference/legacy-tokens';
 import { parseThemeTokens } from '../.vitepress/reference/tokens';
 import { TokenSample, TokenSection } from '../.vitepress/theme/theme.types';
 import { tokenRowsOf, tokenSectionOf } from '../.vitepress/theme/token-sections';
 
 const THEME = parseThemeTokens(
-  readFileSync(
-    fileURLToPath(new URL('../../../packages/tokens/src/theme.css', import.meta.url)),
-    'utf8',
+  legacyTokenCss(
+    readFileSync(
+      fileURLToPath(new URL('../../../packages/tokens/src/theme.css', import.meta.url)),
+      'utf8',
+    ),
   ),
 );
 

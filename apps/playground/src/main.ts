@@ -2,7 +2,6 @@ import { createApp } from 'vue';
 import { createNuiConfig, type NuiLocaleMessages, type NuiVueMessages } from '@numior/vue';
 import { createShikiHighlighter } from '@numior/vue/shiki';
 import '@fontsource-variable/inter/index.css';
-import '@numior/tokens/theme.css';
 import '@numior/tokens/base.css';
 import '@numior/tokens/accents.css';
 import '@numior/vue/styles.css';

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vite-plus/test';
+import { legacyTokenCss, withLegacyNames } from '../.vitepress/reference/legacy-tokens';
 import { DocsAccent } from '../.vitepress/theme/theme.types';
 import { contrastOf, mixColors, parseColor, type Oklab } from './support/color';
 
@@ -42,9 +43,15 @@ const BLOCK_RE = /([^{}]+)\{([^{}]*)\}/gu;
 const read = (path: string): string =>
   readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8');
 
-const kitTheme = read('../../../packages/tokens/src/theme.css');
-const builtInAccents = read('../../../packages/tokens/src/accents.css');
-const numior = read('../.vitepress/theme/numior.css');
+const themeSource = read('../../../packages/tokens/src/theme.css');
+const kitTheme = legacyTokenCss(themeSource);
+
+const builtInAccents = withLegacyNames(
+  read('../../../packages/tokens/src/accents.css'),
+  themeSource,
+);
+
+const numior = withLegacyNames(read('../.vitepress/theme/numior.css'), themeSource);
 
 const schemeValue = (value: string, scheme: Scheme): string => {
   const inner = LIGHT_DARK_RE.exec(value.trim())?.[1];

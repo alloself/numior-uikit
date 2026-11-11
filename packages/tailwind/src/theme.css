@@ -1,103 +1,10 @@
-@theme inline {
-  --color-surface: var(--nui-surface);
-  --color-surface-muted: var(--nui-surface-muted);
-  --color-surface-elevated: var(--nui-surface-elevated);
-  --color-surface-overlay: var(--nui-surface-overlay);
-  --color-backdrop: var(--nui-backdrop);
-  --color-foreground: var(--nui-text);
-  --color-muted-foreground: var(--nui-text-muted);
-  --color-subtle-foreground: var(--nui-text-subtle);
-  --color-border: var(--nui-border);
-  --color-border-strong: var(--nui-border-strong);
-  --color-primary: var(--nui-primary);
-  --color-primary-foreground: var(--nui-primary-foreground);
-  --color-primary-soft: var(--nui-primary-soft);
-  --color-primary-soft-foreground: var(--nui-primary-soft-foreground);
-  --color-secondary: var(--nui-secondary);
-  --color-secondary-foreground: var(--nui-secondary-foreground);
-  --color-secondary-soft: var(--nui-secondary-soft);
-  --color-secondary-soft-foreground: var(--nui-secondary-soft-foreground);
-  --color-success: var(--nui-success);
-  --color-success-foreground: var(--nui-success-foreground);
-  --color-success-soft: var(--nui-success-soft);
-  --color-success-soft-foreground: var(--nui-success-soft-foreground);
-  --color-warning: var(--nui-warning);
-  --color-warning-foreground: var(--nui-warning-foreground);
-  --color-warning-soft: var(--nui-warning-soft);
-  --color-warning-soft-foreground: var(--nui-warning-soft-foreground);
-  --color-error: var(--nui-error);
-  --color-error-foreground: var(--nui-error-foreground);
-  --color-error-soft: var(--nui-error-soft);
-  --color-error-soft-foreground: var(--nui-error-soft-foreground);
-  --color-info: var(--nui-info);
-  --color-info-foreground: var(--nui-info-foreground);
-  --color-info-soft: var(--nui-info-soft);
-  --color-info-soft-foreground: var(--nui-info-soft-foreground);
-  --color-neutral: var(--nui-neutral);
-  --color-neutral-foreground: var(--nui-neutral-foreground);
-  --color-neutral-soft: var(--nui-neutral-soft);
-  --color-neutral-soft-foreground: var(--nui-neutral-soft-foreground);
-  --color-ring: var(--nui-focus);
-  --color-surface-code: var(--nui-surface-code);
-  --color-syntax-keyword: var(--nui-syntax-keyword);
-  --color-syntax-string: var(--nui-syntax-string);
-  --color-syntax-number: var(--nui-syntax-number);
-  --color-syntax-function: var(--nui-syntax-function);
-  --color-syntax-type: var(--nui-syntax-type);
-  --color-syntax-tag: var(--nui-syntax-tag);
-  --color-syntax-attribute: var(--nui-syntax-attribute);
-  --color-syntax-property: var(--nui-syntax-property);
-  --color-syntax-comment: var(--nui-syntax-comment);
-  --color-syntax-variable: var(--nui-syntax-variable);
-  --color-syntax-punctuation: var(--nui-syntax-punctuation);
-  --color-syntax-highlight: var(--nui-syntax-highlight);
-  --color-code-inline: var(--nui-code-inline);
-  --radius-sm: var(--nui-radius-sm);
-  --radius-md: var(--nui-radius-md);
-  --radius-lg: var(--nui-radius-lg);
-  --radius-xl: var(--nui-radius-xl);
-  --spacing: var(--nui-space-1);
-  --font-sans: var(--nui-font);
-  --font-mono: var(--nui-font-mono);
-  --font-heading: var(--nui-font-heading);
-  --text-xs: var(--nui-font-size-xs);
-  --text-xs--line-height: var(--nui-line-height);
-  --text-sm: var(--nui-font-size-sm);
-  --text-sm--line-height: var(--nui-line-height);
-  --text-base: var(--nui-font-size-md);
-  --text-base--line-height: var(--nui-line-height);
-  --text-lg: var(--nui-font-size-lg);
-  --text-lg--line-height: var(--nui-line-height);
-  --text-xl: var(--nui-font-size-xl);
-  --text-xl--line-height: var(--nui-line-height-tight);
-  --text-2xl: var(--nui-font-size-2xl);
-  --text-2xl--line-height: var(--nui-line-height-tight);
-  --text-3xl: var(--nui-font-size-3xl);
-  --text-3xl--line-height: var(--nui-line-height-tight);
-  --text-4xl: var(--nui-font-size-4xl);
-  --text-4xl--line-height: var(--nui-line-height-tight);
-  --font-weight-normal: var(--nui-font-weight-normal);
-  --font-weight-medium: var(--nui-font-weight-medium);
-  --font-weight-semibold: var(--nui-font-weight-semibold);
-  --font-weight-bold: var(--nui-font-weight-bold);
-  --leading-tight: var(--nui-line-height-tight);
-  --leading-normal: var(--nui-line-height);
-  --leading-relaxed: var(--nui-line-height-relaxed);
-  --tracking-tight: var(--nui-tracking-tight);
-  --tracking-heading: var(--nui-tracking-heading);
-  --container-prose: var(--nui-measure);
-  --shadow-sm: var(--nui-shadow-sm);
-  --shadow-md: var(--nui-shadow-md);
-  --shadow-lg: var(--nui-shadow-lg);
-  --ease-nui: var(--nui-easing);
-  --default-transition-timing-function: var(--nui-easing);
-}
+@import '@numior/tokens/theme.css' layer(theme);
 
 @layer base {
   *,
   ::before,
   ::after {
-    border-color: var(--nui-border);
+    border-color: var(--color-border);
   }
 }
 
@@ -123,6 +30,6 @@
 }
 
 @utility bg-dots {
-  background-image: radial-gradient(var(--nui-border) 1px, transparent 1px);
+  background-image: radial-gradient(var(--color-border) 1px, transparent 1px);
   background-size: 1rem 1rem;
 }

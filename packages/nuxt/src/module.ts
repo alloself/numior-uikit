@@ -2,10 +2,12 @@ import {
   addComponent,
   addImports,
   addPlugin,
+  addVitePlugin,
   createResolver,
   defineNuxtModule,
   tryResolveModule,
 } from '@nuxt/kit';
+import tailwindcss from '@tailwindcss/vite';
 import { colorSchemeScript } from '@numior/vue';
 import type { Nuxt } from '@nuxt/schema';
 import { componentNames, composableNames, type ModuleNamespace } from './exports';
@@ -28,6 +30,8 @@ interface Registration {
   readonly composables: boolean;
 }
 
+type VitePlugins = Extract<Parameters<typeof addVitePlugin>[0], readonly unknown[]>;
+
 const VUE = '@numior/vue';
 const DEFAULT_STORAGE_KEY = 'nui-theme';
 const YIELDING_PRIORITY = -1;
@@ -37,6 +41,18 @@ const OPTIONAL: readonly OptionalPackage[] = [
   { id: '@numior/forms', load: () => import('@numior/forms') },
   { id: '@numior/table', load: () => import('@numior/table') },
 ];
+
+const isVitePlugins = (value: unknown): value is VitePlugins =>
+  Array.isArray(value) &&
+  value.every((plugin) => typeof plugin === 'object' && plugin !== null && 'name' in plugin);
+
+const addTailwind = (): void => {
+  const plugins: unknown = tailwindcss();
+
+  if (isVitePlugins(plugins)) {
+    addVitePlugin(plugins);
+  }
+};
 
 const registerNamespace = (id: string, namespace: ModuleNamespace, what: Registration): void => {
   if (what.components) {
@@ -107,6 +123,7 @@ export default defineNuxtModule<NuiNuxtOptions>({
     nuxt.options.runtimeConfig.public.numior = runtimeOptionsOf(options);
     addHead(nuxt, colorSchemeOf(options));
     if (options.css === true) {
+      addTailwind();
       nuxt.options.css.push(...KIT_CSS, ...installed.map((entry) => `${entry.id}/styles.css`));
     }
     registerNamespace(VUE, await import('@numior/vue'), registration);

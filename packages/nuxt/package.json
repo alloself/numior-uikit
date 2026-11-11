@@ -22,7 +22,9 @@
   },
   "dependencies": {
     "@nuxt/kit": "4.5.2",
-    "@nuxt/schema": "4.5.2"
+    "@nuxt/schema": "4.5.2",
+    "@tailwindcss/vite": "4.3.3",
+    "tailwindcss": "4.3.3"
   },
   "devDependencies": {
     "@nuxt/test-utils": "4.3.2",

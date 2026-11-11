@@ -15,7 +15,15 @@ export default defineConfig({
     },
     sourcemap: true,
     rolldownOptions: {
-      external: [/^@nuxt\//, /^@numior\//, /^nuxt\//, '#components', 'vue', /^node:/],
+      external: [
+        /^@nuxt\//,
+        /^@numior\//,
+        /^@tailwindcss\//,
+        /^nuxt\//,
+        '#components',
+        'vue',
+        /^node:/,
+      ],
     },
   },
 });

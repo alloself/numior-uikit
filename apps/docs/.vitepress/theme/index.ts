@@ -5,7 +5,6 @@ import * as forms from '@numior/forms';
 import * as table from '@numior/table';
 import * as spreadsheet from '@numior/spreadsheet';
 import { createNuiConfig } from '@numior/vue';
-import '@numior/tokens/theme.css';
 import '@numior/tokens/base.css';
 import '@numior/vue/styles.css';
 import '@numior/forms/styles.css';

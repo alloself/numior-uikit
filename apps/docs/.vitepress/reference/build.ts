@@ -7,6 +7,7 @@ import { parseBlocks, parseTokens } from './css.ts';
 import { enumerationMembers, exportedDeclarations } from './declarations.ts';
 import { applyDocs, checkDocs } from './docs.ts';
 import { parseIconAliases } from './icons.ts';
+import { legacyTokenCss } from './legacy-tokens.ts';
 import { componentReference } from './meta.ts';
 import { componentEntries, familyFile, familyStyleImport } from './sources.ts';
 import { parseThemeTokens } from './tokens.ts';
@@ -142,7 +143,9 @@ export const buildReference = async (
       declarations: [PRIMITIVES, ...PACKAGES].flatMap((pkg) =>
         exportedDeclarations(join(root, pkg.dir, 'dist/index.d.ts'), pkg.name, componentNames),
       ),
-      tokens: parseThemeTokens(readFileSync(join(root, 'packages/tokens/src/theme.css'), 'utf8')),
+      tokens: parseThemeTokens(
+        legacyTokenCss(readFileSync(join(root, 'packages/tokens/src/theme.css'), 'utf8')),
+      ),
       icons: parseIconAliases(
         readFileSync(join(root, 'packages/primitives/src/icons/icon-aliases.ts'), 'utf8'),
       ),
