@@ -120,7 +120,7 @@ const paragraphsOf = (markdown: string): Paragraph[] => {
   return paragraphs;
 };
 
-const sentencesOf = (text: string): string[] =>
+export const sentencesOf = (text: string): string[] =>
   text
     .split(SENTENCE_END_RE)
     .map((sentence) => sentence.trim())
