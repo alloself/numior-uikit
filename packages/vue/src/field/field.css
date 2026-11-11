@@ -46,6 +46,9 @@
   color: var(--nui-error);
   animation: nui-field-reveal var(--nui-duration-normal) var(--nui-easing);
 }
+.nui-field--disabled {
+  caret-color: transparent;
+}
 .nui-field--disabled > .nui-field__label {
   opacity: var(--nui-disabled-opacity);
 }
