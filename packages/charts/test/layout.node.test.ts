@@ -20,6 +20,13 @@ const texts = (scene: ChartScene, role: string): string[] =>
     return found;
   }, []);
 
+const drawn = (scene: ChartScene): string =>
+  [
+    ...scene.bars.map((bar) => bar.path),
+    ...scene.paths.map((path) => path.d),
+    ...scene.points.map((point) => `${String(point.x)},${String(point.y)}`),
+  ].join(' ');
+
 const barsOf = (scene: ChartScene, series: number): SceneBar[] =>
   scene.bars.filter((bar) => bar.series === series);
 
@@ -196,6 +203,76 @@ describe('chart layout', () => {
     );
 
     expect(texts(scene, 'value-tick')).toEqual(['1', '10', '100', '1K', '10K']);
+  });
+
+  it('labels the fractions of a log axis', () => {
+    const scene = layoutChart(
+      {
+        ...quarters,
+        series: [{ id: 'a', name: 'A', values: [0.05, 0.5, 2, 5] }],
+        valueAxis: { scale: 'log' },
+      },
+      SIZE,
+    );
+
+    expect(texts(scene, 'value-tick')).toEqual(['0.01', '0.1', '1', '10']);
+  });
+
+  it('leaves the values a log axis cannot show out of the picture', () => {
+    const steps = { kind: 'text', labels: ['a', 'b', 'c', 'd'] } as const;
+
+    const columns = layoutChart(
+      {
+        kind: 'column',
+        categories: steps,
+        series: [{ id: 'a', name: 'A', values: [0, -5, 50, 500] }],
+        valueAxis: { scale: 'log' },
+      },
+      SIZE,
+    );
+
+    const line = layoutChart(
+      {
+        kind: 'line',
+        categories: steps,
+        series: [{ id: 'a', name: 'A', values: [0, -5, 50, 500] }],
+        valueAxis: { scale: 'log' },
+      },
+      SIZE,
+    );
+
+    expect(columns.bars.map((bar) => bar.index)).toEqual([2, 3]);
+    expect(line.points.map((point) => point.index)).toEqual([2, 3]);
+    expect(drawn(columns)).not.toMatch(/NaN|Infinity/);
+    expect(drawn(line)).not.toMatch(/NaN|Infinity/);
+  });
+
+  it('ignores a bound of a log axis that is not positive', () => {
+    const scene = layoutChart(
+      {
+        kind: 'line',
+        categories: { kind: 'text', labels: ['a', 'b', 'c'] },
+        series: [{ id: 'a', name: 'A', values: [1, 10, 100] }],
+        valueAxis: { scale: 'log', min: 0, max: -1 },
+      },
+      SIZE,
+    );
+
+    expect(texts(scene, 'value-tick')).toEqual(['1', '10', '100']);
+  });
+
+  it('thins the ticks of a long log axis to the room it has', () => {
+    const scene = layoutChart(
+      {
+        kind: 'line',
+        categories: { kind: 'text', labels: ['a', 'b'] },
+        series: [{ id: 'a', name: 'A', values: [1, 1e12] }],
+        valueAxis: { scale: 'log' },
+      },
+      { width: 300, height: 120 },
+    );
+
+    expect(texts(scene, 'value-tick')).toEqual(['1', '1K', '1M', '1B', '1T']);
   });
 
   it('drops value ticks until their labels fit along a narrow axis', () => {

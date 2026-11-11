@@ -118,6 +118,14 @@ const stackedExtent = (spec: ChartSpec, count: number): readonly [number, number
   return extent(sums.flatMap((sum) => [sum.positive, sum.negative]));
 };
 
+const positiveOr = (bound: number | undefined, fallback: number): number =>
+  bound !== undefined && bound > 0 ? bound : fallback;
+
+const positiveOnly = (series: ChartSeries): ChartSeries => ({
+  ...series,
+  values: series.values.map((value) => (finite(value) && value > 0 ? value : null)),
+});
+
 const valuesOf = (spec: ChartSpec): number[] =>
   spec.series.flatMap((item) => item.values.filter(finite));
 
@@ -155,7 +163,10 @@ const domainOf = (
   if (axis.scale === ChartScale.Log && stacking === ChartStacking.None && positive.length > 0) {
     const [low, high] = extent(positive);
 
-    return { domain: logDomain(axis.min ?? low, axis.max ?? high), log: true };
+    return {
+      domain: logDomain(positiveOr(axis.min, low), positiveOr(axis.max, high), ticks),
+      log: true,
+    };
   }
 
   const [low, high] = stackedOrPlain(spec, count, lines);
@@ -227,7 +238,7 @@ const frameOf = (
     );
 
   return {
-    spec,
+    spec: log ? { ...spec, series: spec.series.map(positiveOnly) } : spec,
     size,
     rtl: options.rtl ?? false,
     fontSize,
@@ -235,7 +246,7 @@ const frameOf = (
     measure: options.measure ?? estimateWidth,
     domain,
     log,
-    valueTexts: domain.ticks.map((tick) => format(tick, domain.step)),
+    valueTexts: domain.ticks.map((tick) => format(tick, log ? tick : domain.step)),
     categoryTexts: categoryTextsOf(spec, options, locale),
     axis,
     axisTexts: axis === undefined ? [] : axis.ticks.map((tick) => axisFormat(tick, axis.step)),

@@ -49,6 +49,20 @@ describe('chart scales', () => {
     expect(logDomain(3, 4200).ticks).toEqual([1, 10, 100, 1000, 10_000]);
   });
 
+  it('keeps a log axis on positive powers of ten whatever bounds it is given', () => {
+    expect(logDomain(0, 100).ticks).toEqual([10, 100]);
+    expect(logDomain(-5, 0).ticks).toEqual([0.1, 1]);
+    expect(logDomain(5, 5).ticks).toEqual([1, 10]);
+    expect(logDomain(Number.NaN, Number.POSITIVE_INFINITY).ticks).toEqual([0.1, 1]);
+  });
+
+  it('thins the ticks of a long log axis to the asked count', () => {
+    expect(logDomain(1e-3, 1e9, 4).ticks).toEqual([0.001, 1, 1000, 1e6, 1e9]);
+    expect(logDomain(1, 1e13, 5)).toMatchObject({ min: 1, max: 1e13 });
+    expect(logDomain(1, 1e13, 5).ticks).toEqual([1, 1000, 1e6, 1e9, 1e12]);
+    expect(logDomain(1e-300, 1e300, 5).ticks.length).toBeLessThanOrEqual(6);
+  });
+
   it('maps values and lays out bands in either direction', () => {
     const toPixels = linearScale([0, 100], [200, 0]);
     const forward = bandScale(4, [0, 400]);
