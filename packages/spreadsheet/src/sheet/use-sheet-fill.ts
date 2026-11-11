@@ -3,6 +3,7 @@ import {
   CellValueKind,
   FillMode,
   createCellClips,
+  mergesMeeting,
   type CellAddress,
   type CellRange,
   type Sheet,
@@ -183,6 +184,11 @@ export const useSheetFill = (options: SheetFillOptions): SheetFill => {
   const fillWith = (from: CellRange, to: CellRange, mode: FillMode, shown: CellRange): void => {
     const sheet = options.sheet();
     const active = options.selection.current.value?.active;
+
+    if (sheet !== undefined && mergesMeeting(sheet, unionOf(from, to)).length > 0) {
+      options.announce(options.messages.value.fillMerged);
+      return;
+    }
 
     const step =
       sheet === undefined ? undefined : clips.value.fill(sheet.name, from, unionOf(from, to), mode);

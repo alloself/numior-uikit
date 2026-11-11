@@ -308,8 +308,8 @@ const docs: DocsMap = {
         en: 'The set of rendered rows and columns changed. `rows` and `cols` are position spans `{ start, end }`, `end` excluded.',
       },
       edit: {
-        ru: 'Ячейки изменили. Передаёт `kind` (`edit`, `clear`, `cut`, `paste`, `undo`, `redo`) и `changes` со строкой, ключом колонки, новым и прежним значением. Таблица сама строки не меняет — примените изменения к данным.',
-        en: 'Cells were changed. Carries `kind` (`edit`, `clear`, `cut`, `paste`, `undo`, `redo`) and `changes` with the row, column key, new and previous value. The table never changes rows itself, so apply the changes to your data.',
+        ru: 'Ячейки изменили. Передаёт `kind` (`edit`, `clear`, `cut`, `paste`, `undo`, `redo`) и `changes` со строкой, ключом колонки, новым и прежним значением. У вставки блока есть `area` — диапазон, который он занял; у одного значения, вставленного в выделение, его нет. Таблица сама строки не меняет — примените изменения к данным.',
+        en: 'Cells were changed. Carries `kind` (`edit`, `clear`, `cut`, `paste`, `undo`, `redo`) and `changes` with the row, column key, new and previous value. A pasted block also carries `area`, the range it took; one value pasted into a selection has none. The table never changes rows itself, so apply the changes to your data.',
       },
     },
     slots: {

@@ -10,6 +10,15 @@ import { followMove, type BlockMove, type FormulaPlace } from '../formula/follow
 import { numberValue, textValue } from '../values';
 import type { Sheet, Workbook } from '../workbook';
 import { FillMode, type CellClip, type CellClips, type ClipPaste } from './clip.types';
+import {
+  batched,
+  mergesMeeting,
+  mergesStep,
+  outsideCovered,
+  rangeHolds,
+  rangesMeet,
+  shiftedRange,
+} from './clip-merges';
 import { cellContentsIn, cellKey } from './contents';
 import type { CellEdit, WorkbookStep } from './step.types';
 
@@ -213,6 +222,12 @@ const tiledArea = (clip: CellClip, target: CellRange): CellRange => {
   };
 };
 
+const isOneCell = (clip: CellClip): boolean =>
+  clip.rows === 1 && clip.cols === 1 && clip.merges.length === 0;
+
+const stepsOf = (step: WorkbookStep | undefined): WorkbookStep[] =>
+  step === undefined ? [] : [step];
+
 const placedContent = (
   content: CellContent | undefined,
   move: BlockMove,
@@ -222,6 +237,39 @@ const placedContent = (
   content?.kind === CellInputKind.Formula
     ? { kind: content.kind, ast: followMove(content.ast, move, from, to) }
     : content;
+
+const tiledMerges = (clip: CellClip, area: CellRange): CellRange[] => {
+  const placed: CellRange[] = [];
+
+  for (let top = area.top; top <= area.bottom; top += clip.rows) {
+    for (let left = area.left; left <= area.right; left += clip.cols) {
+      for (const merge of clip.merges) {
+        placed.push(shiftedRange(merge, top, left));
+      }
+    }
+  }
+  return placed;
+};
+
+const movedMerges = (
+  from: Sheet,
+  sourceArea: CellRange,
+  sheet: Sheet,
+  area: CellRange,
+  clip: CellClip,
+): WorkbookStep[] => {
+  const left = from.layout.merges.filter((merge) => !rangeHolds(sourceArea, merge));
+  const carried = clip.merges.map((merge) => shiftedRange(merge, area.top, area.left));
+
+  const kept = (from === sheet ? left : sheet.layout.merges).filter(
+    (merge) => !rangesMeet(merge, area),
+  );
+
+  return [
+    ...(from === sheet ? [] : stepsOf(mergesStep(from, left))),
+    ...stepsOf(mergesStep(sheet, [...kept, ...carried])),
+  ];
+};
 
 export const createCellClips = (book: Workbook, calculator: Calculator): CellClips => {
   const blank = book.decorations.get(0);
@@ -270,6 +318,12 @@ export const createCellClips = (book: Workbook, calculator: Calculator): CellCli
       rows: heightOf(range),
       cols: widthOf(range),
       cells,
+      merges: sheet.layout.merges.reduce<CellRange[]>((carried, merge) => {
+        if (rangeHolds(range, merge)) {
+          carried.push(shiftedRange(merge, -range.top, -range.left));
+        }
+        return carried;
+      }, []),
     };
   };
 
@@ -299,10 +353,28 @@ export const createCellClips = (book: Workbook, calculator: Calculator): CellCli
     if (sheet === undefined || !inSheet(area)) {
       return undefined;
     }
-    return {
-      step: { kind: 'setCells', sheet: name, cells: [...pasteEdits(sheet, clip, area).values()] },
-      area,
-    };
+
+    const met = mergesMeeting(sheet, area);
+    const edits = [...pasteEdits(sheet, clip, area).values()];
+
+    if (isOneCell(clip)) {
+      return {
+        step: { kind: 'setCells', sheet: name, cells: outsideCovered(met, edits) },
+        area,
+      };
+    }
+
+    const merges = [
+      ...sheet.layout.merges.filter((merge) => !met.includes(merge)),
+      ...tiledMerges(clip, area),
+    ];
+
+    const step = batched([
+      ...stepsOf(mergesStep(sheet, merges)),
+      { kind: 'setCells', sheet: name, cells: edits },
+    ]);
+
+    return step === undefined ? undefined : { step, area };
   };
 
   const move = (name: string, clip: CellClip, at: CellAddress): ClipPaste | undefined => {
@@ -379,19 +451,19 @@ export const createCellClips = (book: Workbook, calculator: Calculator): CellCli
       edits.set(owner, known);
     });
 
-    const steps = [...edits].reduce<WorkbookStep[]>((found, [owner, cells]) => {
-      if (cells.length > 0) {
-        found.push({ kind: 'setCells', sheet: owner.name, cells });
-      }
-      return found;
-    }, []);
+    const step = batched(
+      [...edits].reduce<WorkbookStep[]>(
+        (found, [owner, cells]) => {
+          if (cells.length > 0) {
+            found.push({ kind: 'setCells', sheet: owner.name, cells });
+          }
+          return found;
+        },
+        movedMerges(from, sourceArea, sheet, area, clip),
+      ),
+    );
 
-    const [only] = steps;
-
-    return {
-      step: steps.length === 1 && only !== undefined ? only : { kind: 'batch', steps },
-      area,
-    };
+    return step === undefined ? undefined : { step, area };
   };
 
   const laneOf = (sheet: Sheet, cells: readonly CellAddress[]): Lane => ({
@@ -432,7 +504,12 @@ export const createCellClips = (book: Workbook, calculator: Calculator): CellCli
     const sheet = sheetNamed(name);
     const plan = fillPlan(source, target);
 
-    if (sheet === undefined || plan === undefined || !inSheet(target)) {
+    if (
+      sheet === undefined ||
+      plan === undefined ||
+      !inSheet(target) ||
+      mergesMeeting(sheet, target).length > 0
+    ) {
       return undefined;
     }
     return {

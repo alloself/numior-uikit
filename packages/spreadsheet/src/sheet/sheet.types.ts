@@ -421,6 +421,8 @@ export interface SheetFillOptions {
   readonly table: Readonly<ShallowRef<NuiTableExposed | null>>;
   readonly root: Readonly<ShallowRef<HTMLElement | null>>;
   readonly readonly: () => boolean;
+  readonly messages: ComputedRef<NuiSpreadsheetMessages>;
+  readonly announce: (text: string) => void;
 }
 
 export type SheetFillTarget =

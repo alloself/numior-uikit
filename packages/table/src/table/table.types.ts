@@ -408,6 +408,7 @@ export interface NuiTableEdit<T> {
 export interface NuiTableEditEvent<T> {
   readonly kind: NuiTableEditKind;
   readonly changes: readonly NuiTableEdit<T>[];
+  readonly area?: NuiTableRange;
 }
 
 export type NuiTableEditRefusalReason =

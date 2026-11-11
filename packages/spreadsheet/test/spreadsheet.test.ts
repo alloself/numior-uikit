@@ -211,6 +211,78 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.text(2, 0)).toBe('Sum');
   });
 
+  it('takes merged cells apart under a pasted block of text and merges them back on one undo', async () => {
+    const book = createWorkbook();
+    const merged = book.addSheet('Merged');
+    const merge = { top: 0, left: 0, bottom: 1, right: 1 };
+
+    merged.cells.set(0, 0, textValue('Total'));
+    merged.layout = { ...merged.layout, merges: [merge] };
+
+    const sheet = sheetOf({ book, label: 'Merged book' });
+
+    await sheet.focus(1, 0);
+    await sheet.paste('1\t2\n3\t4');
+
+    expect(merged.layout.merges).toEqual([]);
+
+    expect([sheet.text(1, 0), sheet.text(1, 1), sheet.text(2, 0), sheet.text(2, 1)]).toEqual([
+      '1',
+      '2',
+      '3',
+      '4',
+    ]);
+
+    await sheet.press('z', { ctrl: true });
+
+    expect(merged.layout.merges).toEqual([merge]);
+    expect(sheet.text(1, 0)).toBe('Total');
+    expect(merged.cells.get(1, 1).kind).toBe('empty');
+  });
+
+  it('writes one pasted value into the first cell of a merge in the selection and keeps it merged', async () => {
+    const book = createWorkbook();
+    const merged = book.addSheet('Merged');
+    const merge = { top: 0, left: 0, bottom: 1, right: 1 };
+
+    merged.cells.set(0, 0, textValue('Total'));
+    merged.layout = { ...merged.layout, merges: [merge] };
+
+    const sheet = sheetOf({ book, label: 'Merged book' });
+
+    await sheet.select({
+      active: { row: 0, col: 0 },
+      ranges: [{ top: 0, left: 0, bottom: 2, right: 1 }],
+    });
+
+    await sheet.focus(1, 0);
+    await sheet.paste('New');
+
+    expect(merged.layout.merges).toEqual([merge]);
+    expect([sheet.text(1, 0), sheet.text(3, 0), sheet.text(3, 1)]).toEqual(['New', 'New', 'New']);
+    expect([merged.cells.get(0, 1).kind, merged.cells.get(1, 0).kind]).toEqual(['empty', 'empty']);
+  });
+
+  it('refuses to fill down over merged cells and says why', async () => {
+    const book = createWorkbook();
+    const merged = book.addSheet('Merged');
+
+    merged.cells.set(0, 0, textValue('Top'));
+    merged.layout = { ...merged.layout, merges: [{ top: 1, left: 0, bottom: 2, right: 0 }] };
+
+    const sheet = sheetOf({ book, label: 'Merged book' });
+
+    await sheet.select({
+      active: { row: 0, col: 0 },
+      ranges: [{ top: 0, left: 0, bottom: 3, right: 0 }],
+    });
+
+    await sheet.press('d', { ctrl: true });
+
+    expect(sheet.announcement).toBe('Cannot fill: the range has merged cells');
+    expect([merged.cells.get(1, 0).kind, merged.cells.get(2, 0).kind]).toEqual(['empty', 'empty']);
+  });
+
   it('reports the selection in sheet addresses and follows a selection set from outside', async () => {
     const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
 

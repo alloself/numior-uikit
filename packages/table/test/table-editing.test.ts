@@ -145,6 +145,7 @@ describe('NuiTable edits', () => {
           { row: rows[1], key: 'salary', value: 1500, previous: 1010 },
           { row: rows[2], key: 'city', value: 'Тула', previous: 'Ереван' },
         ],
+        area: range(1, 2, 2, 3),
       },
     ]);
 
@@ -155,6 +156,7 @@ describe('NuiTable edits', () => {
     await grid.dragRange({ row: 3, col: 2 }, { row: 5, col: 2 });
     await grid.paste('Сочи');
     expect([3, 4, 5].map((row) => grid.cellText(row, 2))).toEqual(['Сочи', 'Сочи', 'Сочи']);
+    expect(grid.edits[1]?.area).toBeUndefined();
 
     await grid.dragRange({ row: 2, col: 4 }, { row: 5, col: 4 });
     await grid.paste('нет\nда');

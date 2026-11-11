@@ -133,6 +133,7 @@ describe('NuiTable clipboard hooks', () => {
           { row: rows[1], key: 'city', value: 'Тула', previous: 'Казань' },
           { row: rows[1], key: 'salary', value: 1500, previous: 1010 },
         ],
+        area: { from: { row: 1, col: 2 }, to: { row: 1, col: 3 } },
       },
       {
         kind: 'paste',
@@ -140,6 +141,7 @@ describe('NuiTable clipboard hooks', () => {
           { row: rows[4], key: 'city', value: 'Омск', previous: 'Казань' },
           { row: rows[5], key: 'city', value: 'Омск', previous: 'Ереван' },
         ],
+        area: { from: { row: 4, col: 2 }, to: { row: 5, col: 3 } },
       },
     ]);
   });

@@ -18,6 +18,7 @@ import {
   type NuiTableEdit,
   type NuiTableEditEvent,
   type NuiTablePasteScope,
+  type NuiTableRange,
   type NuiTableRanges,
   type ParsedCell,
   type NuiTableCellPosition,
@@ -191,18 +192,23 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     return true;
   };
 
-  const record = (kind: EditKind, changes: readonly NuiTableEdit<T>[]): void => {
+  const record = (
+    kind: EditKind,
+    changes: readonly NuiTableEdit<T>[],
+    area?: NuiTableRange,
+  ): void => {
     if (changes.length === 0) {
       return;
     }
     const sink = options.sink();
+    const event = area === undefined ? { kind, changes } : { kind, changes, area };
 
-    options.emit({ kind, changes });
+    options.emit(event);
 
     if (sink === undefined) {
       history.push({ kind, changes });
     } else {
-      sink.push({ kind, changes });
+      sink.push(event);
     }
     options.applied(keysOf(changes), rowsOf(changes));
   };
@@ -394,14 +400,14 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     return sameValue(previous, parsed.value) ? 'same' : { row, key, value: parsed.value, previous };
   };
 
-  const pasteCells = (cells: readonly PasteCell[], area: NuiTableRanges): boolean => {
+  const pasteCells = (cells: readonly PasteCell[], area: NuiTableRange | undefined): boolean => {
     const outcomes = cells.map(outcomeOf);
     const skipped = skippedOf(outcomes);
 
-    record('paste', outcomes.filter(isChange));
+    record('paste', outcomes.filter(isChange), area);
 
-    if (area.length > 0) {
-      options.select(area);
+    if (area !== undefined) {
+      options.select([area]);
     }
     options.announce(options.messages.value.pasted({ count: cells.length - skipped, skipped }));
     return true;
@@ -464,7 +470,7 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
         options.announce(options.messages.value.editLimit({ count: plan.count, limit }));
         return false;
       case PastePlanKind.Cells:
-        return pasteCells(plan.cells, plan.area === undefined ? [] : [plan.area]);
+        return pasteCells(plan.cells, plan.area);
     }
   };
 

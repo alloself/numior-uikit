@@ -503,6 +503,27 @@ test.describe('book', () => {
     await expect(book.cell('12', 0)).toHaveText('');
   });
 
+  test('takes the merged title apart under a pasted block and merges it back on undo', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.cell('1', 0).click();
+    await book.paste('Раз\tДва');
+
+    await expect(book.cell('1', 0)).toHaveText('Раз');
+    await expect(book.cell('1', 1)).toHaveText('Два');
+    await expect.poll(() => book.merged('1', 0)).toBe(false);
+
+    await page.keyboard.press('Control+z');
+
+    await expect(book.cell('1', 0)).toHaveText('Бюджет на первое полугодие, тыс. ₽');
+    await expect.poll(() => book.merged('1', 0)).toBe(true);
+  });
+
   test('scrolls the sheet while a reference frame or the fill handle is held at its edge', async ({
     playground,
     book,

@@ -604,6 +604,10 @@ const fill = useSheetFill({
   table: grid,
   root,
   readonly: () => locked.value,
+  messages,
+  announce: (text) => {
+    formula.announcement.value = text;
+  },
 });
 
 const pivotPanel = useTemplateRef<{ focusStart(): void }>('pivotPanel');

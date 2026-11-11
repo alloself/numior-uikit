@@ -9,6 +9,7 @@ export interface CellClip {
   readonly rows: number;
   readonly cols: number;
   readonly cells: readonly CellEdit[];
+  readonly merges: readonly CellRange[];
 }
 
 export interface ClipPaste {
