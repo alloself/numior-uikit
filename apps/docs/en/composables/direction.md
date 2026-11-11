@@ -24,4 +24,4 @@ const arrow = computed(() => (direction.isRtl() ? 'arrow-left' : 'arrow-right'))
 
 `dir()` and `isRtl()` are functions, not refs. Call them inside `computed` or a handler to get
 the current value. What flips in Numior UI components in RTL is covered in the
-[Direction](/en/guide/direction) guide.
+[RTL](/en/guide/direction) guide.

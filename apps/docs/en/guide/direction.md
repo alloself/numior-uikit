@@ -1,4 +1,4 @@
-# Direction
+# RTL
 
 How to render the interface right to left for Arabic, Hebrew and other RTL languages.
 
