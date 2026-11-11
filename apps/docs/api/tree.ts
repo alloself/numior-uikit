@@ -2,6 +2,12 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 
 const docs: DocsMap = {
   NuiTree: {
+    configurator: {
+      scene: 'tree/Example',
+      props: ['variant', 'size', 'checkable', 'icons', 'loop', 'label'],
+      choices: { variant: ['plain', 'divided', 'bordered'] },
+      values: { variant: 'bordered', label: { ru: 'Категории', en: 'Categories' } },
+    },
     props: {
       id: {
         ru: 'Идентификатор дерева. По умолчанию создаётся автоматически.',

@@ -5,6 +5,7 @@ import {
   configuratorCode,
   configuratorState,
   resetState,
+  sceneCode,
   stateValues,
 } from '../.vitepress/theme/configurator-code';
 
@@ -18,6 +19,23 @@ const prop = (overrides: Partial<ReferenceProp>): ReferenceProp => ({
   description: undefined,
   ...overrides,
 });
+
+const SCENE = `<template>
+  <NuiButton @click="open = true">Open</NuiButton>
+  <NuiDialog v-model:open="open" v-bind="$attrs">
+    <p>Text</p>
+  </NuiDialog>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import { NuiButton, NuiDialog } from '@numior/vue';
+
+defineOptions({ inheritAttrs: false });
+
+const open = ref(false);
+</script>
+`;
 
 const PROPS: readonly ReferenceProp[] = [
   prop({ name: 'variant', kind: 'enum', default: '"solid"', values: ['solid', 'soft'] }),
@@ -66,6 +84,61 @@ describe('configurator code', () => {
 
     expect(configuratorCode('NuiButton', PROPS, stateValues(state), '')).toBe(
       '<template>\n  <NuiButton variant="soft" disabled :loop="false" :max="5" placeholder="Name" />\n</template>',
+    );
+  });
+
+  it('leaves out a switched-off flag that has no default', () => {
+    const flag = [prop({ name: 'invalid', kind: 'boolean', default: undefined })];
+    const state = configuratorState(flag);
+
+    expect(configuratorCode('NuiInput', flag, stateValues(state), undefined)).toBe(
+      '<template>\n  <NuiInput />\n</template>',
+    );
+
+    state.flags.invalid = true;
+
+    expect(configuratorCode('NuiInput', flag, stateValues(state), undefined)).toBe(
+      '<template>\n  <NuiInput invalid />\n</template>',
+    );
+  });
+
+  it('prints a scene without its plumbing and with the chosen props on the component', () => {
+    const state = configuratorState(PROPS);
+
+    expect(sceneCode(SCENE, 'NuiDialog', PROPS, stateValues(state))).toBe(
+      SCENE.replace(' v-bind="$attrs"', '')
+        .replace('defineOptions({ inheritAttrs: false });\n\n', '')
+        .trimEnd(),
+    );
+
+    state.enums.variant = 'soft';
+    state.numbers.max = 5;
+
+    expect(sceneCode(SCENE, 'NuiDialog', PROPS, stateValues(state))).toContain(
+      '\n  <NuiDialog variant="soft" :max="5" v-model:open="open">\n    <p>Text</p>',
+    );
+
+    expect(sceneCode(SCENE, 'NuiTree', PROPS, stateValues(state))).not.toContain('variant');
+  });
+
+  it('breaks the component tag of a scene into lines once it outgrows the line', () => {
+    const state = configuratorState(PROPS);
+
+    const source =
+      '<template>\n  <NuiSelect v-model="manager" :options="managers" />\n</template>\n';
+
+    state.strings.placeholder = 'Выберите менеджера, который ведёт этот заказ до доставки';
+
+    expect(sceneCode(source, 'NuiSelect', PROPS, stateValues(state))).toBe(
+      [
+        '<template>',
+        '  <NuiSelect',
+        '    placeholder="Выберите менеджера, который ведёт этот заказ до доставки"',
+        '    v-model="manager"',
+        '    :options="managers"',
+        '  />',
+        '</template>',
+      ].join('\n'),
     );
   });
 

@@ -2,6 +2,11 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 
 const docs: DocsMap = {
   NuiTabs: {
+    configurator: {
+      scene: 'tabs/Example',
+      props: ['variant', 'size', 'orientation', 'activation', 'label'],
+      values: { label: { ru: 'Заказы по статусу', en: 'Orders by status' } },
+    },
     props: {
       id: {
         ru: 'Идентификатор вкладок. По умолчанию создаётся автоматически.',

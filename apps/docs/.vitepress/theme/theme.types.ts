@@ -4,7 +4,7 @@ import type { MarkdownRenderer } from 'vitepress';
 import type { Component } from 'vue';
 import type { ConfiguratorChange, ConfiguratorState } from './configurator-code';
 import type { SearchFields } from './search-index';
-import type { ExampleFile, ExampleLocale } from '../examples/example.types';
+import type { ExampleFile, ExampleLocale, ExampleModule } from '../examples/example.types';
 import type {
   CatalogReference,
   ComponentReference,
@@ -193,6 +193,11 @@ export interface ExampleFrameProps {
   texts: DocsTexts;
 }
 
+export interface ExampleFilesProps {
+  files: readonly ExampleFile[];
+  texts: DocsTexts;
+}
+
 export interface DocsTokensProps {
   section: TokenSection;
 }
@@ -314,6 +319,7 @@ export interface ConfiguratorFrameProps {
   component: ComponentReference;
   locale: ExampleLocale;
   texts: DocsTexts;
+  scene?: ExampleModule | undefined;
 }
 
 export interface InlineSegment {

@@ -6,8 +6,10 @@ import { catalogReference } from './catalogs.ts';
 import { parseBlocks, parseTokens } from './css.ts';
 import { enumerationMembers, exportedDeclarations } from './declarations.ts';
 import { applyDocs, checkDocs } from './docs.ts';
+import { exampleSources } from '../examples/modules.ts';
 import { parseIconAliases } from './icons.ts';
 import { componentReference } from './meta.ts';
+import { sceneProblems, type SceneSource } from './scenes.ts';
 import { componentEntries, familyFile, familyStyleImport } from './sources.ts';
 import { parseThemeTokens } from './tokens.ts';
 import type {
@@ -73,6 +75,7 @@ const collectComponent = async (
   entry: ComponentEntry,
   docs: DocsMap,
   members: ReadonlyMap<string, string>,
+  sceneOf: SceneSource,
 ): Promise<CollectedComponent> => {
   const messagesFile = familyFile(entry, '.messages.ts');
   const catalog = messagesFile === undefined ? undefined : await loadCatalog(messagesFile);
@@ -90,7 +93,13 @@ const collectComponent = async (
   return {
     component: applyDocs(component, componentDocs),
     catalog,
-    problems: componentDocs === undefined ? [] : checkDocs(component, componentDocs),
+    problems:
+      componentDocs === undefined
+        ? []
+        : [
+            ...checkDocs(component, componentDocs),
+            ...sceneProblems(component.name, componentDocs.configurator, sceneOf),
+          ],
   };
 };
 
@@ -104,6 +113,16 @@ const unresolvedDefaults = (component: ComponentReference): string[] =>
         ]
       : [],
   );
+
+const EXAMPLES_DIR = 'apps/docs/examples';
+
+const sceneSourceOf =
+  (root: string): SceneSource =>
+  (locale, name) => {
+    const entry = exampleSources(join(root, EXAMPLES_DIR), `${locale}/${name}`)?.entry;
+
+    return entry === undefined ? undefined : readFileSync(entry, 'utf8');
+  };
 
 const allEntries = (root: string): ComponentEntry[] =>
   PACKAGES.flatMap((pkg) => componentEntries(join(root, pkg.dir, 'src/index.ts'), pkg.name));
@@ -122,9 +141,10 @@ export const buildReference = async (
   const components: Record<string, ComponentReference> = {};
   const catalogs: Record<string, CatalogReference> = {};
   const problems: string[] = [];
+  const sceneOf = sceneSourceOf(root);
 
   for (const entry of allEntries(root)) {
-    const collected = await collectComponent(checker, entry, docs, members);
+    const collected = await collectComponent(checker, entry, docs, members, sceneOf);
 
     components[entry.name] = collected.component;
     problems.push(...collected.problems, ...unresolvedDefaults(collected.component));

@@ -19,6 +19,12 @@ import '@numior/vue/styles/list.css';
 import '@numior/vue/styles/select.css';
 ```
 
+## Использование
+
+Поменяйте размер, сторону списка и состояния поля, чтобы подобрать вид под форму.
+
+<Configurator name="NuiSelect" />
+
 ## Примеры
 
 ### Группы и недоступные варианты

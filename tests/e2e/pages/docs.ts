@@ -39,18 +39,28 @@ export class DocsConfigurator {
   readonly panel: Locator;
   readonly preview: Locator;
   readonly code: Locator;
+  readonly files: Locator;
+  private readonly frame: Locator;
 
   constructor(private readonly page: Page) {
     this.panel = page.locator('form[aria-label="Свойства"]');
     this.preview = this.panel.locator('..').locator('[role="group"][aria-label="Превью"]').first();
 
-    this.code = this.panel
-      .locator('xpath=ancestor::*[contains(@class, "nui-tabs")][1]')
-      .locator('.nui-code__code');
+    this.frame = this.panel.locator('xpath=ancestor::*[contains(@class, "nui-tabs")][1]');
+    this.code = this.frame.locator('.nui-code__code').first();
+    this.files = this.frame.getByRole('tablist', { name: 'Файлы примера' }).getByRole('tab');
+  }
+
+  async showCode(): Promise<void> {
+    await this.frame.getByRole('tab', { name: 'Код', exact: true }).click();
+  }
+
+  async showPreview(): Promise<void> {
+    await this.frame.getByRole('tab', { name: 'Превью', exact: true }).click();
   }
 
   async choose(label: string, option: string): Promise<void> {
-    const group = this.panel.getByRole('group', { name: label });
+    const group = this.panel.getByRole('radiogroup', { name: label });
 
     if ((await group.count()) > 0) {
       await group.getByRole('radio', { name: option }).click();

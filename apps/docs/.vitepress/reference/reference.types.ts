@@ -56,6 +56,8 @@ export interface ReferenceConfigurator {
   readonly props: readonly string[];
   readonly content?: LocalizedText | undefined;
   readonly values?: Readonly<Record<string, ConfiguratorSeed>> | undefined;
+  readonly scene?: string | undefined;
+  readonly choices?: Readonly<Record<string, readonly string[]>> | undefined;
 }
 
 export interface ComponentReference {

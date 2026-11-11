@@ -65,18 +65,36 @@ const sectionProblems = (
   ];
 };
 
+const choiceProblems = (component: ComponentReference, docs: ComponentDocs): string[] =>
+  Object.entries(docs.configurator?.choices ?? {}).flatMap(([name, choices]) => {
+    const values = component.props.find((prop) => prop.name === name)?.values ?? [];
+
+    return choices.reduce<string[]>((found, choice) => {
+      if (!values.includes(choice)) {
+        found.push(
+          `${component.name}: configurator choice "${choice}" is not a value of "${name}"`,
+        );
+      }
+      return found;
+    }, []);
+  });
+
 const configuratorProblems = (component: ComponentReference, docs: ComponentDocs): string[] => {
   const names = new Set(component.props.map((prop) => prop.name));
 
   return [
     ...(docs.configurator?.props ?? []),
     ...Object.keys(docs.configurator?.values ?? {}),
-  ].reduce<string[]>((found, name) => {
-    if (!names.has(name)) {
-      found.push(`${component.name}: configurator prop "${name}" does not exist`);
-    }
-    return found;
-  }, []);
+    ...Object.keys(docs.configurator?.choices ?? {}),
+  ].reduce<string[]>(
+    (found, name) => {
+      if (!names.has(name)) {
+        found.push(`${component.name}: configurator prop "${name}" does not exist`);
+      }
+      return found;
+    },
+    choiceProblems(component, docs),
+  );
 };
 
 export const checkDocs = (component: ComponentReference, docs: ComponentDocs): string[] => [

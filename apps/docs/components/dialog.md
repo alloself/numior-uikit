@@ -17,6 +17,12 @@ import { NuiDialog } from '@numior/vue';
 import '@numior/vue/styles/dialog.css';
 ```
 
+## Использование
+
+Откройте диалог и поменяйте размер, положение и способы закрытия.
+
+<Configurator name="NuiDialog" />
+
 ## Примеры
 
 ### Обязательный диалог

@@ -18,6 +18,12 @@ import '@numior/vue/styles/list.css';
 import '@numior/vue/styles/tree.css';
 ```
 
+## Usage
+
+Change the look, the row size and the checkboxes on a tree of shop categories.
+
+<Configurator name="NuiTree" />
+
 ## Examples
 
 ### Styling and row labels

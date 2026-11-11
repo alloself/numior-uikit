@@ -2,6 +2,17 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 
 const docs: DocsMap = {
   NuiDialog: {
+    configurator: {
+      scene: 'dialog/Example',
+      props: ['title', 'description', 'size', 'placement', 'closable', 'closeOnBackdrop'],
+      values: {
+        title: { ru: 'Вернуть деньги за заказ?', en: 'Refund this order?' },
+        description: {
+          ru: 'Покупатель получит всю сумму на карту.',
+          en: 'The customer gets the full amount back to the card.',
+        },
+      },
+    },
     props: {
       id: {
         ru: 'Атрибут `id` диалога. Без него создаётся автоматически.',

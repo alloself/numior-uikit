@@ -15,6 +15,12 @@ import { NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/vue';
 import '@numior/vue/styles/tabs.css';
 ```
 
+## Использование
+
+Поменяйте вид, размер и направление вкладок на списке заказов.
+
+<Configurator name="NuiTabs" />
+
 ## Примеры
 
 ### Вкладки из данных

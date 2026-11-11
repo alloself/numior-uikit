@@ -42,22 +42,40 @@ test('copying puts the example source on the clipboard', async ({ docs }) => {
     .toContain('<NuiButton variant="link">Подробнее</NuiButton>');
 });
 
-test('the configurator drives the live component and the generated code', async ({
-  docs,
-  page,
-}) => {
+test('the configurator drives the live component and the generated code', async ({ docs }) => {
   await docs.open('/components/button');
   const configurator = docs.configurator();
-  await page.getByRole('tab', { name: 'Код', exact: true }).last().click();
+  await configurator.showCode();
   await expect(configurator.code).toContainText('<NuiButton>Сохранить</NuiButton>');
 
+  await configurator.showPreview();
   await configurator.choose('variant', 'soft');
   await configurator.enable('disabled');
   const button = configurator.preview.getByRole('button', { name: 'Сохранить' });
   await expect(button).toHaveClass(/nui-button--variant-soft/);
   await expect(button).toBeDisabled();
 
+  await configurator.showCode();
+
   await expect(configurator.code).toContainText(
     '<NuiButton variant="soft" disabled>Сохранить</NuiButton>',
   );
+});
+
+test('a configurator scene keeps its own data and prints the whole example', async ({ docs }) => {
+  await docs.open('/components/tree');
+  const configurator = docs.configurator();
+  const tree = configurator.preview.getByRole('tree', { name: 'Категории' });
+  await expect(tree.getByRole('treeitem', { name: 'Столы' })).toBeVisible();
+
+  await configurator.choose('size', 'sm');
+  await configurator.enable('checkable');
+  await expect(tree).toHaveClass(/nui-tree--size-sm/);
+
+  await configurator.showCode();
+  await expect(configurator.files).toHaveText(['Example.vue', 'products.ts']);
+  await expect(configurator.code).toContainText('size="sm"');
+  await expect(configurator.code).toContainText('checkable');
+  await expect(configurator.code).toContainText('label="Категории"');
+  await expect(configurator.code).toContainText("import { categories } from './products';");
 });

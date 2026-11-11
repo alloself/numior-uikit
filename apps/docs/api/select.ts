@@ -2,6 +2,25 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 
 const docs: DocsMap = {
   NuiSelect: {
+    configurator: {
+      scene: 'select/Example',
+      props: [
+        'size',
+        'placement',
+        'clearable',
+        'disabled',
+        'readonly',
+        'invalid',
+        'label',
+        'placeholder',
+        'description',
+        'error',
+      ],
+      values: {
+        label: { ru: 'Менеджер', en: 'Manager' },
+        placeholder: { ru: 'Выберите менеджера', en: 'Pick a manager' },
+      },
+    },
     props: {
       options: {
         ru: 'Варианты и группы списка. С `children` или `lazy` у вариантов список становится деревом.',

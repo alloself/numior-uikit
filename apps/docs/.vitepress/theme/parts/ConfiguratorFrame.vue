@@ -22,7 +22,8 @@
     </div>
     <NuiTabPanel value="preview" class="mt-2 flex flex-col gap-4">
       <PreviewFrame :texts="texts" :options="previewOptions">
-        <component :is="component.name" v-bind="bound">
+        <component :is="scene.component" v-if="scene" v-bind="bound" />
+        <component :is="component.name" v-else v-bind="bound">
           <template v-if="hasContent" #default>{{ content }}</template>
         </component>
       </PreviewFrame>
@@ -60,7 +61,7 @@
       </form>
     </NuiTabPanel>
     <NuiTabPanel value="code" class="mt-2">
-      <NuiCode :code="code" :tokens="tokens" language="vue" :copyable="false" />
+      <ExampleFiles v-model:name="fileName" :files="files" :texts="texts" />
     </NuiTabPanel>
   </NuiTabs>
 </template>
@@ -68,34 +69,41 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
 import { useClipboard } from '@numior/primitives';
-import {
-  NuiButton,
-  NuiCode,
-  NuiInput,
-  NuiTab,
-  NuiTabList,
-  NuiTabPanel,
-  NuiTabs,
-} from '@numior/vue';
+import { NuiButton, NuiInput, NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/vue';
 import {
   applyChange,
   boundValues,
   configuratorCode,
   configuratorState,
   resetState,
+  sceneCode,
   stateValues,
   type ConfiguratorChange,
 } from '../configurator-code';
+import { fileNamed } from '../example-files';
 import { useVueTokens } from '../highlight';
+import type { ExampleFile } from '../../examples/example.types';
+import type { ReferenceProp } from '../../reference/reference.types';
 import type { ConfiguratorFrameProps, PreviewOption } from '../theme.types';
 import ConfiguratorControl from './ConfiguratorControl.vue';
+import ExampleFiles from './ExampleFiles.vue';
 import PreviewFrame from './PreviewFrame.vue';
 import PreviewOptions from './PreviewOptions.vue';
 
-const { component, locale, texts } = defineProps<ConfiguratorFrameProps>();
+const SNIPPET = 'Example.vue';
+
+const { component, locale, texts, scene } = defineProps<ConfiguratorFrameProps>();
 
 const configured = new Set(component.configurator?.props ?? []);
-const props = component.props.filter((prop) => configured.has(prop.name));
+const choices = component.configurator?.choices ?? {};
+
+const props = component.props.reduce<ReferenceProp[]>((found, prop) => {
+  if (configured.has(prop.name)) {
+    found.push({ ...prop, values: choices[prop.name] ?? prop.values });
+  }
+  return found;
+}, []);
+
 const fields = props.filter((prop) => prop.kind !== 'boolean');
 const flags = props.filter((prop) => prop.kind === 'boolean');
 const hasContent = component.configurator?.content !== undefined;
@@ -118,10 +126,25 @@ const reset = (): void => {
 
 const values = computed(() => stateValues(state));
 const bound = computed(() => boundValues(values.value));
-const code = computed(() => configuratorCode(component.name, props, values.value, content.value));
+const sceneFiles = scene?.files ?? [];
+const sceneEntry = sceneFiles[0];
+const entryName = sceneEntry?.name ?? SNIPPET;
+const fileName = ref(entryName);
+
+const code = computed(() =>
+  sceneEntry === undefined
+    ? configuratorCode(component.name, props, values.value, content.value)
+    : sceneCode(sceneEntry.source, component.name, props, values.value),
+);
+
 const tokens = useVueTokens(code);
 
+const files = computed<ExampleFile[]>(() => [
+  { name: entryName, language: 'vue', source: code.value, tokens: tokens.value },
+  ...sceneFiles.slice(1),
+]);
+
 const copy = (): void => {
-  void clipboard.copy(code.value);
+  void clipboard.copy(fileNamed(files.value, fileName.value).source);
 };
 </script>

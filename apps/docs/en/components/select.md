@@ -19,6 +19,12 @@ import '@numior/vue/styles/list.css';
 import '@numior/vue/styles/select.css';
 ```
 
+## Usage
+
+Change the size, the side of the list and the field states to fit your form.
+
+<Configurator name="NuiSelect" />
+
 ## Examples
 
 ### Groups and disabled options
