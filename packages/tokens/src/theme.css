@@ -86,6 +86,17 @@
   --nui-line-height-control: round(up, 1.25em, 0.25rem);
   --nui-line-height-relaxed: 1.7;
   --nui-tracking-tight: -0.02em;
+  --nui-font-heading: var(--nui-font);
+  --nui-font-weight-heading: var(--nui-font-weight-semibold);
+  --nui-font-weight-title: var(--nui-font-weight-bold);
+  --nui-tracking-heading: var(--nui-tracking-tight);
+  --nui-caption-weight: var(--nui-font-weight-semibold);
+  --nui-caption-tracking: 0.02em;
+  --nui-caption-transform: none;
+  --nui-caption-open: '';
+  --nui-caption-close: '';
+  --nui-prose-marker: disc;
+  --nui-prose-marker-color: var(--nui-text-muted);
   --nui-measure: 65ch;
 
   --nui-surface-code: light-dark(oklch(0.967 0.001 286.38), oklch(0.17 0.006 285.89));

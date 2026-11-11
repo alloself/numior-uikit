@@ -1,3 +1,5 @@
+export type NuiTocMarker = (typeof NuiTocMarker)[keyof typeof NuiTocMarker];
+
 export interface NuiTocItem {
   readonly id: string;
   readonly label: string;
@@ -10,6 +12,7 @@ export interface NuiTocProps {
   label?: string | undefined;
   root?: HTMLElement | null | undefined;
   line?: number | undefined;
+  marker?: NuiTocMarker | undefined;
 }
 
 export interface NuiTocEntriesProps {
@@ -17,3 +20,5 @@ export interface NuiTocEntriesProps {
   activeId: string | undefined;
   depth: number;
 }
+
+export const NuiTocMarker = { Line: 'line', Square: 'square' } as const;

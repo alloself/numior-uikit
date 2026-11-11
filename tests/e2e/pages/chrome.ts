@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { paintedRgbAt, rgbDelta } from '../helpers/color';
-import { boxOf } from '../helpers/geometry';
+import { beforeBoxOf, boxOf, type PseudoBox } from '../helpers/geometry';
 
 export class ChromeSection {
   readonly root: Locator;
@@ -26,6 +26,7 @@ export class ChromeSection {
   readonly commandInput: Locator;
   readonly toc: Locator;
   readonly tocArticle: Locator;
+  readonly tocMarkerSwitch: Locator;
   readonly splitter: Locator;
   readonly splitterDivider: Locator;
   readonly splitterStart: Locator;
@@ -53,6 +54,7 @@ export class ChromeSection {
     this.commandInput = this.commandDialog.locator('.nui-command__input');
     this.toc = page.getByTestId('toc');
     this.tocArticle = page.getByTestId('toc-article');
+    this.tocMarkerSwitch = page.getByRole('switch', { name: 'Квадратный маркер' });
     this.splitter = page.getByTestId('splitter');
     this.splitterDivider = this.splitter.locator('.nui-splitter__divider');
     this.splitterStart = page.getByTestId('splitter-start');
@@ -83,6 +85,10 @@ export class ChromeSection {
 
   currentTocLink(): Locator {
     return this.toc.locator('[aria-current="location"]');
+  }
+
+  currentTocMarker(): Promise<PseudoBox> {
+    return beforeBoxOf(this.currentTocLink());
   }
 
   scrollArticleTo(id: string): Promise<void> {

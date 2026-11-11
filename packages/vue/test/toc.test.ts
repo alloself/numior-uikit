@@ -46,6 +46,15 @@ describe('NuiToc', () => {
     expect(toc.currentLabel).toBe('API');
   });
 
+  it('marks the current section with a line unless a square is asked for', () => {
+    expect(TocDriver.mount().hasModifier('marker-line')).toBe(true);
+
+    const squared = TocDriver.mount({ props: { marker: 'square' } });
+
+    expect(squared.hasModifier('marker-square')).toBe(true);
+    expect(squared.hasModifier('marker-line')).toBe(false);
+  });
+
   it('speaks the configured language and lets props win', () => {
     const toc = TocDriver.mount({ config: { locale: 'ru-RU' } });
     expect(toc.title).toBe('На странице');

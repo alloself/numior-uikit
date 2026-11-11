@@ -101,12 +101,16 @@
           <p>Токены читаются из темы и меняются через акценты.</p>
           <p>Проверки доступности выполняются в браузере.</p>
         </div>
-        <NuiToc
-          :items="tocItems"
-          :root="tocRoot"
-          data-testid="toc"
-          @select="lastHeading = $event"
-        />
+        <div class="flex flex-col gap-3">
+          <NuiSwitch v-model="squareMarker" label="Квадратный маркер" />
+          <NuiToc
+            :items="tocItems"
+            :root="tocRoot"
+            :marker="squareMarker ? NuiTocMarker.Square : NuiTocMarker.Line"
+            data-testid="toc"
+            @select="lastHeading = $event"
+          />
+        </div>
       </div>
       <NuiSplitter
         v-model:ratio="ratio"
@@ -152,7 +156,9 @@ import {
   NuiKbd,
   NuiSeparator,
   NuiSplitter,
+  NuiSwitch,
   NuiToc,
+  NuiTocMarker,
   NuiToggleGroup,
   type NuiCodeLine,
   type NuiCommandSource,
@@ -163,6 +169,7 @@ import {
 const ratio = ref(0.5);
 const tocRoot = useTemplateRef<HTMLElement>('toc-article');
 const lastHeading = ref('');
+const squareMarker = ref(false);
 
 const tocItems: readonly NuiTocItem[] = [
   { id: 'toc-install', label: 'Установка' },

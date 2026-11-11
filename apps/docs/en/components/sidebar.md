@@ -30,6 +30,13 @@ colour. The sidebar of this documentation looks like this.
 
 <Example name="sidebar/Plain" />
 
+### Mark the item with a square
+
+Add `marker="square"` to a plain sidebar: a square marks the current item and the group rules go
+away.
+
+<Example name="sidebar/SquareMarker" />
+
 ### On a backdrop
 
 `variant="inset"` puts the panel on a muted background and the page content into a raised card

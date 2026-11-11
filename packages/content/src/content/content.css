@@ -49,9 +49,10 @@
 }
 .nui-content__heading {
   color: var(--nui-text);
-  font-weight: var(--nui-font-weight-semibold);
+  font-family: var(--nui-font-heading);
+  font-weight: var(--nui-font-weight-heading);
   line-height: var(--nui-line-height-tight);
-  letter-spacing: var(--nui-tracking-tight);
+  letter-spacing: var(--nui-tracking-heading);
 }
 .nui-content > .nui-content__heading {
   margin-block-start: 1.4em;
@@ -67,7 +68,7 @@
 }
 .nui-content__heading--level-1 {
   font-size: var(--nui-font-size-3xl);
-  font-weight: var(--nui-font-weight-bold);
+  font-weight: var(--nui-font-weight-title);
 }
 .nui-content__heading--level-2 {
   font-size: var(--nui-font-size-2xl);

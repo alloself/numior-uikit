@@ -112,8 +112,15 @@
   padding: var(--_padding-block) var(--_padding-inline) var(--nui-space-1);
   color: var(--nui-text-muted);
   font-size: var(--nui-font-size-xs);
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-weight: var(--nui-caption-weight);
+  letter-spacing: var(--nui-caption-tracking);
+  text-transform: var(--nui-caption-transform);
+}
+.nui-list__group-label::before {
+  content: var(--nui-caption-open) / '';
+}
+.nui-list__group-label::after {
+  content: var(--nui-caption-close) / '';
 }
 .nui-list__group .nui-list-item__inner {
   padding-inline-start: calc(var(--_padding-inline) + var(--_indent));

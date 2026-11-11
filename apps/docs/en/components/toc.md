@@ -15,6 +15,14 @@ import { NuiToc } from '@numior/vue';
 import '@numior/vue/styles/toc.css';
 ```
 
+## Examples
+
+### Mark the section with a square
+
+Set `marker="square"`: a square marks the current section and the rule on the left goes away.
+
+<Example name="toc/SquareMarker" />
+
 ## Behaviour
 
 The highlighted item is the last heading that has scrolled above the `line`. The line is a share

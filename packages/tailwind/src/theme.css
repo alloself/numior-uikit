@@ -59,6 +59,7 @@
   --spacing: var(--nui-space-1);
   --font-sans: var(--nui-font);
   --font-mono: var(--nui-font-mono);
+  --font-heading: var(--nui-font-heading);
   --text-xs: var(--nui-font-size-xs);
   --text-xs--line-height: var(--nui-line-height);
   --text-sm: var(--nui-font-size-sm);
@@ -83,6 +84,7 @@
   --leading-normal: var(--nui-line-height);
   --leading-relaxed: var(--nui-line-height-relaxed);
   --tracking-tight: var(--nui-tracking-tight);
+  --tracking-heading: var(--nui-tracking-heading);
   --container-prose: var(--nui-measure);
   --shadow-sm: var(--nui-shadow-sm);
   --shadow-md: var(--nui-shadow-md);

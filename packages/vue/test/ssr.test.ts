@@ -745,6 +745,20 @@ describe('server rendering', () => {
     expect(html).toContain('tabindex="-1"');
   });
 
+  it('renders the square marker of a plain sidebar and of a table of contents on the server', async () => {
+    const shell = await renderToString(LayoutScene, {
+      props: { variant: 'plain', marker: 'square' },
+    });
+
+    const toc = await renderToString(NuiToc, {
+      props: { items: [{ id: 'install', label: 'Install' }], marker: 'square' },
+    });
+
+    expect(shell).toContain('nui-sidebar--variant-plain');
+    expect(shell).toContain('nui-sidebar--marker-square');
+    expect(toc).toContain('nui-toc--marker-square');
+  });
+
   it('renders the app shell with an expanded sidebar and no drawer on the server', async () => {
     const html = await renderToString(LayoutScene, { props: { variant: 'inset' } });
 

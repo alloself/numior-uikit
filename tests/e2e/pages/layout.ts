@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { boxOf, renderedWidth } from '../helpers/geometry';
+import { beforeBoxOf, boxOf, renderedWidth, type PseudoBox } from '../helpers/geometry';
 import {
   isBoolean,
   isString,
@@ -34,6 +34,7 @@ export class LayoutSection {
   readonly collapsible: Locator;
   readonly side: Locator;
   readonly variant: Locator;
+  readonly marker: Locator;
   readonly subToggle: Locator;
   readonly subIcon: Locator;
   readonly flyout: Locator;
@@ -54,6 +55,7 @@ export class LayoutSection {
     this.collapsible = page.getByTestId('layout-collapsible');
     this.side = page.getByTestId('layout-side');
     this.variant = page.getByTestId('layout-variant');
+    this.marker = page.getByTestId('layout-marker');
     this.subToggle = page.getByTestId('layout-sub');
     this.subIcon = this.subToggle.locator('.nui-row__leading');
     this.flyout = this.root.locator('.nui-sidebar-sub__flyout');
@@ -68,6 +70,10 @@ export class LayoutSection {
 
   item(key: string): Locator {
     return this.page.getByTestId(`layout-item-${key}`);
+  }
+
+  markerOf(key: string): Promise<PseudoBox> {
+    return beforeBoxOf(this.item(key), '.nui-list-item');
   }
 
   itemLabel(key: string): Locator {

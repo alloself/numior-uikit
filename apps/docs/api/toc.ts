@@ -23,6 +23,10 @@ const docs: DocsMap = {
         ru: 'Линия чтения в долях высоты, по умолчанию `0.2`. Текущим становится последний заголовок выше неё.',
         en: 'Reading line as a fraction of the height, `0.2` by default. The last heading above it becomes current.',
       },
+      marker: {
+        ru: 'Чем отмечен текущий раздел: `line` — линией слева, `square` — квадратом без линии. По умолчанию `line`.',
+        en: 'How the current section is marked: `line` with a rule on the left, `square` with a square and no rule. Defaults to `line`.',
+      },
     },
     events: {
       select: {

@@ -245,6 +245,21 @@ describe('NuiLayout with NuiSidebar', () => {
     panel.unmount();
   });
 
+  it('marks the current item of the plain look with a line unless a square is asked for', () => {
+    const lined = LayoutDriver.mount({ variant: 'plain' });
+
+    expect(lined.sidebarModifier('marker-line')).toBe(true);
+
+    lined.unmount();
+
+    const squared = LayoutDriver.mount({ variant: 'plain', marker: 'square' });
+
+    expect(squared.sidebarModifier('marker-square')).toBe(true);
+    expect(squared.sidebarModifier('marker-line')).toBe(false);
+
+    squared.unmount();
+  });
+
   it('names the sidebar, its trigger and the drawer in the configured language', async () => {
     const russian = LayoutDriver.mount({ config: { locale: 'ru-RU' } });
     expect(russian.sidebarLabel).toBe('Навигация');

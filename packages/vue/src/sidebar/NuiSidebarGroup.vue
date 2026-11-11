@@ -15,7 +15,9 @@
       <span class="nui-sidebar-group__text">{{ label }}</span>
       <NuiIcon icon="chevron-down" class="nui-sidebar-group__chevron" />
     </button>
-    <div v-else-if="label" :id="labelId" class="nui-sidebar-group__label">{{ label }}</div>
+    <div v-else-if="label" :id="labelId" class="nui-sidebar-group__label">
+      <span class="nui-sidebar-group__text">{{ label }}</span>
+    </div>
     <div class="nui-sidebar-group__panel">
       <NuiList
         :id="listId"

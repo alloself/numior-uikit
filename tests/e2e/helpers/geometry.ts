@@ -12,6 +12,12 @@ export interface Box {
   readonly height: number;
 }
 
+export interface PseudoBox {
+  readonly opacity: number;
+  readonly width: number;
+  readonly height: number;
+}
+
 export const boxOf = async (target: Locator): Promise<Box> => {
   const box = await target.boundingBox();
 
@@ -57,3 +63,15 @@ export const boxGaps = (box: Box, other: Box): number[] =>
   [box.x - other.x, box.y - other.y, box.width - other.width, box.height - other.height].map(
     (gap) => Math.round(Math.abs(gap)),
   );
+
+export const beforeBoxOf = (target: Locator, host?: string): Promise<PseudoBox> =>
+  target.evaluate((element, selector) => {
+    const owner = selector === undefined ? element : (element.closest(selector) ?? element);
+    const style = getComputedStyle(owner, '::before');
+
+    return {
+      opacity: Number(style.opacity),
+      width: Number.parseFloat(style.width),
+      height: Number.parseFloat(style.height),
+    };
+  }, host);

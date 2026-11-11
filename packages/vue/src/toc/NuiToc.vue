@@ -1,5 +1,5 @@
 <template>
-  <nav class="nui-toc" :aria-label="labelText">
+  <nav class="nui-toc" :class="`nui-toc--marker-${marker}`" :aria-label="labelText">
     <p v-if="titleText !== ''" class="nui-toc__title">{{ titleText }}</p>
     <NuiTocEntries :items="items" :active-id="activeId" :depth="0" @select="onSelect" />
   </nav>
@@ -10,9 +10,9 @@ import { computed } from 'vue';
 import { useMessages, useScrollSpy } from '@numior/primitives';
 import NuiTocEntries from './NuiTocEntries.vue';
 import { tocMessages } from './toc.messages';
-import type { NuiTocItem, NuiTocProps } from './toc.types';
+import { NuiTocMarker, type NuiTocItem, type NuiTocProps } from './toc.types';
 
-const { items, title, label, root, line } = defineProps<NuiTocProps>();
+const { items, title, label, root, line, marker = NuiTocMarker.Line } = defineProps<NuiTocProps>();
 
 const emit = defineEmits<{ select: [id: string] }>();
 

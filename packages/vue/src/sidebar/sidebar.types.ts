@@ -5,6 +5,7 @@ import type { NuiListEntry } from '../shared/options';
 
 export type NuiSidebarCollapsible =
   (typeof NuiSidebarCollapsible)[keyof typeof NuiSidebarCollapsible];
+export type NuiSidebarMarker = (typeof NuiSidebarMarker)[keyof typeof NuiSidebarMarker];
 export type NuiSidebarSide = (typeof NuiSidebarSide)[keyof typeof NuiSidebarSide];
 export type NuiSidebarVariant = (typeof NuiSidebarVariant)[keyof typeof NuiSidebarVariant];
 
@@ -12,6 +13,7 @@ export interface NuiSidebarProps {
   collapsible?: NuiSidebarCollapsible | undefined;
   side?: NuiSidebarSide | undefined;
   variant?: NuiSidebarVariant | undefined;
+  marker?: NuiSidebarMarker | undefined;
   label?: string | undefined;
   title?: string | undefined;
   closeLabel?: string | undefined;
@@ -56,6 +58,8 @@ export const NuiSidebarCollapsible = {
   Offcanvas: 'offcanvas',
   None: 'none',
 } as const;
+
+export const NuiSidebarMarker = { Line: 'line', Square: 'square' } as const;
 
 export const NuiSidebarSide = { Start: 'start', End: 'end' } as const;
 

@@ -11,7 +11,13 @@
     :skip-label="skipLabel"
   >
     <template #sidebar>
-      <NuiSidebar :collapsible="collapsible" :side="side" :label="label" :variant="variant">
+      <NuiSidebar
+        :collapsible="collapsible"
+        :side="side"
+        :label="label"
+        :variant="variant"
+        :marker="marker"
+      >
         <NuiSidebarHeader><strong>Brand</strong></NuiSidebarHeader>
         <NuiSidebarContent>
           <NuiSidebarGroup id="overview" label="Overview" :collapsible="collapsibleGroup">
@@ -93,6 +99,7 @@ import {
   NuiSidebarTrigger,
   type NuiLayoutHeader,
   type NuiSidebarCollapsible,
+  type NuiSidebarMarker,
   type NuiSidebarSide,
   type NuiSidebarVariant,
 } from '../../src';
@@ -107,6 +114,7 @@ const {
   sticky,
   collapsibleGroup,
   variant,
+  marker,
   skipLink = undefined,
   skipLabel,
 } = defineProps<{
@@ -119,6 +127,7 @@ const {
   sticky: boolean;
   collapsibleGroup: boolean;
   variant: NuiSidebarVariant;
+  marker?: NuiSidebarMarker | undefined;
   skipLink?: boolean | undefined;
   skipLabel?: string | undefined;
 }>();

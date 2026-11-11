@@ -5,6 +5,7 @@ import type {
   NuiConfigOptions,
   NuiLayoutHeader,
   NuiSidebarCollapsible,
+  NuiSidebarMarker,
   NuiSidebarSide,
   NuiSidebarVariant,
 } from '../../src';
@@ -26,6 +27,7 @@ export interface LayoutMountOptions {
   readonly sticky?: boolean;
   readonly collapsibleGroup?: boolean;
   readonly variant?: NuiSidebarVariant;
+  readonly marker?: NuiSidebarMarker;
   readonly skipLink?: boolean;
   readonly skipLabel?: string;
 }
@@ -66,6 +68,7 @@ export class LayoutDriver extends ComponentDriver {
     sticky = false,
     collapsibleGroup = false,
     variant = 'panel',
+    marker,
     skipLink,
     skipLabel,
   }: LayoutMountOptions = {}): LayoutDriver {
@@ -85,6 +88,7 @@ export class LayoutDriver extends ComponentDriver {
         sticky,
         collapsibleGroup,
         variant,
+        marker,
         skipLink,
         skipLabel,
       },

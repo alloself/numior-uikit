@@ -12,7 +12,11 @@
     <div
       ref="root"
       class="nui-sidebar nui-sidebar--mobile"
-      :class="[`nui-sidebar--side-${side}`, `nui-sidebar--variant-${variant}`]"
+      :class="[
+        `nui-sidebar--side-${side}`,
+        `nui-sidebar--variant-${variant}`,
+        `nui-sidebar--marker-${marker}`,
+      ]"
     >
       <slot />
     </div>
@@ -25,6 +29,7 @@
     :class="[
       `nui-sidebar--side-${side}`,
       `nui-sidebar--variant-${variant}`,
+      `nui-sidebar--marker-${marker}`,
       `nui-sidebar--collapsible-${collapsible}`,
       { 'nui-sidebar--collapsed': collapsed, 'nui-sidebar--rail': rail },
     ]"
@@ -44,6 +49,7 @@ import { provideSidebar } from './sidebar-context';
 import { sidebarMessages } from './sidebar.messages';
 import {
   NuiSidebarCollapsible,
+  NuiSidebarMarker,
   NuiSidebarSide,
   NuiSidebarVariant,
   type NuiSidebarProps,
@@ -53,6 +59,7 @@ const {
   collapsible = NuiSidebarCollapsible.Offcanvas,
   side = NuiSidebarSide.Start,
   variant = NuiSidebarVariant.Panel,
+  marker = NuiSidebarMarker.Line,
   label,
   title,
   closeLabel,

@@ -25,16 +25,17 @@
 .nui-not-prose .nui-prose :where(h1, h2, h3, h4, h5, h6):not(:where([class])) {
   margin-block: 1.75em 0.6em;
   color: var(--nui-text);
-  font-weight: var(--nui-font-weight-semibold);
+  font-family: var(--nui-font-heading);
+  font-weight: var(--nui-font-weight-heading);
   line-height: var(--nui-line-height-tight);
-  letter-spacing: var(--nui-tracking-tight);
+  letter-spacing: var(--nui-tracking-heading);
   scroll-margin-block-start: 5rem;
 }
 .nui-prose :where(h1):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(h1):not(:where([class])) {
   margin-block-start: 0;
   font-size: var(--nui-font-size-3xl);
-  font-weight: var(--nui-font-weight-bold);
+  font-weight: var(--nui-font-weight-title);
 }
 .nui-prose :where(h2):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(h2):not(:where([class])) {
@@ -114,7 +115,7 @@
 }
 .nui-prose :where(ul):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(ul):not(:where([class])) {
-  list-style: disc;
+  list-style: var(--nui-prose-marker);
 }
 .nui-prose :where(ol):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(ol):not(:where([class])) {
@@ -127,7 +128,7 @@
 }
 .nui-prose :where(li):not(:where([class], .nui-not-prose *))::marker,
 .nui-not-prose .nui-prose :where(li):not(:where([class]))::marker {
-  color: var(--nui-text-muted);
+  color: var(--nui-prose-marker-color);
 }
 .nui-prose :where(li > ul, li > ol):not(:where([class], .nui-not-prose *)),
 .nui-not-prose .nui-prose :where(li > ul, li > ol):not(:where([class])) {

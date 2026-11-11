@@ -260,6 +260,45 @@ test.describe('layout', () => {
     await layout.variant.selectOption('panel');
   });
 
+  test('a plain sidebar marks the current item with a square on request', async ({
+    playground,
+    layout,
+    isMobile,
+  }) => {
+    await playground.open();
+    await layout.root.scrollIntoViewIfNeeded();
+    await layout.variant.selectOption('plain');
+    await layout.marker.selectOption('square');
+
+    if (isMobile) {
+      await layout.trigger.click();
+      await expect(layout.drawer).toBeVisible();
+    }
+
+    await expect
+      .poll(() => layout.markerOf('overview'))
+      .toEqual({ opacity: 1, width: 6, height: 6 });
+
+    expect((await layout.markerOf('calendar')).opacity).toBe(0);
+
+    await layout.item('calendar').click();
+
+    if (isMobile) {
+      await layout.trigger.click();
+      await expect(layout.drawer).toBeVisible();
+    }
+
+    await expect.poll(async () => (await layout.markerOf('calendar')).opacity).toBe(1);
+    expect((await layout.markerOf('overview')).opacity).toBe(0);
+
+    if (isMobile) {
+      await layout.item('calendar').click();
+    }
+
+    await layout.marker.selectOption('line');
+    await layout.variant.selectOption('panel');
+  });
+
   test('sidebar becomes a drawer on small screens and closes after navigation', async ({
     playground,
     layout,

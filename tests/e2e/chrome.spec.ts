@@ -221,6 +221,23 @@ test('the table of contents follows the section in view and links to headings', 
   await expect(chrome.currentTocLink()).toHaveText('Базовый пример');
 });
 
+test('the table of contents marks the current section with a square on request', async ({
+  playground,
+  chrome,
+}) => {
+  await playground.open();
+  await chrome.tocArticle.scrollIntoViewIfNeeded();
+  await expect(chrome.toc).toHaveClass(/nui-toc--marker-line/);
+  await expect(chrome.currentTocLink()).toHaveText('Установка');
+
+  await chrome.tocMarkerSwitch.click();
+  await expect(chrome.toc).toHaveClass(/nui-toc--marker-square/);
+  await expect.poll(() => chrome.currentTocMarker()).toEqual({ opacity: 1, width: 6, height: 6 });
+
+  await chrome.tocMarkerSwitch.click();
+  await expect(chrome.toc).toHaveClass(/nui-toc--marker-line/);
+});
+
 test('the skip link appears on focus and moves focus to its target', async ({
   playground,
   page,

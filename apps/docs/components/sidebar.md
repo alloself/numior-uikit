@@ -29,6 +29,12 @@ import '@numior/vue/styles/sidebar.css';
 
 <Example name="sidebar/Plain" />
 
+### Отметить пункт квадратом
+
+Добавьте `marker="square"` к панели без фона: текущий пункт отметит квадрат, линии групп исчезнут.
+
+<Example name="sidebar/SquareMarker" />
+
 ### На подложке
 
 `variant="inset"` кладёт панель на приглушённый фон, а содержимое страницы — в приподнятую

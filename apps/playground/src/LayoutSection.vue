@@ -30,6 +30,13 @@
         </select>
       </label>
       <label
+        >Маркер
+        <select v-model="marker" data-testid="layout-marker">
+          <option value="line">Линия</option>
+          <option value="square">Квадрат</option>
+        </select>
+      </label>
+      <label
         >Панель
         <select v-model="header" data-testid="layout-header">
           <option value="inset">Рядом с боковой</option>
@@ -60,7 +67,13 @@
         data-testid="layout"
       >
         <template #sidebar>
-          <NuiSidebar :collapsible="collapsible" :side="side" :variant="variant" label="Разделы">
+          <NuiSidebar
+            :collapsible="collapsible"
+            :side="side"
+            :variant="variant"
+            :marker="marker"
+            label="Разделы"
+          >
             <NuiSidebarHeader>
               <div class="layout-brand">
                 <span class="layout-brand__mark" aria-hidden="true">N</span>
@@ -160,6 +173,7 @@ import {
   NuiSidebarTrigger,
   type NuiLayoutHeader,
   type NuiSidebarCollapsible,
+  type NuiSidebarMarker,
   type NuiSidebarSide,
   type NuiSidebarVariant,
 } from '@numior/vue';
@@ -188,6 +202,7 @@ const titles: Record<string, string> = {
 const collapsible = ref<NuiSidebarCollapsible>('icon');
 const side = ref<NuiSidebarSide>('start');
 const variant = ref<NuiSidebarVariant>('panel');
+const marker = ref<NuiSidebarMarker>('line');
 const header = ref<NuiLayoutHeader>('inset');
 const withEnd = ref(false);
 const open = ref(true);

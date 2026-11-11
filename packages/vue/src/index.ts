@@ -47,7 +47,7 @@ export type {
 } from './command/command.types';
 export type { NuiCommandMessages } from './command/command.messages';
 export { default as NuiToc } from './toc/NuiToc.vue';
-export type { NuiTocItem, NuiTocProps } from './toc/toc.types';
+export { NuiTocMarker, type NuiTocItem, type NuiTocProps } from './toc/toc.types';
 export type { NuiTocMessages } from './toc/toc.messages';
 export { default as NuiSkipLink } from './skip-link/NuiSkipLink.vue';
 export type { NuiSkipLinkProps } from './skip-link/skip-link.types';
@@ -129,6 +129,7 @@ export { useLayout } from './layout/layout-context';
 export type { LayoutContext } from './layout/layout-context';
 export {
   NuiSidebarCollapsible,
+  NuiSidebarMarker,
   type NuiSidebarContentProps,
   type NuiSidebarGroupProps,
   type NuiSidebarItemProps,
