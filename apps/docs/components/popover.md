@@ -16,6 +16,12 @@ import { NuiPopover } from '@numior/vue';
 import '@numior/vue/styles/popover.css';
 ```
 
+## Использование
+
+Откройте поповер и поменяйте сторону, стрелку, отступы и способ открытия.
+
+<Configurator name="NuiPopover" />
+
 ## Примеры
 
 ### Размещение

@@ -48,15 +48,14 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { NuiInput, NuiNumberField, NuiSelect, NuiSwitch, NuiToggleGroup } from '@numior/vue';
+import { fitsSegments } from '../configurator-controls';
 import { withoutInlineCode } from '../inline-code';
 import type { ConfiguratorControlEmits, ConfiguratorControlProps } from '../theme.types';
-
-const SHORT_ENUM = 4;
 
 const { prop, state, locale } = defineProps<ConfiguratorControlProps>();
 const emit = defineEmits<ConfiguratorControlEmits>();
 
-const short = computed(() => (prop.values?.length ?? 0) <= SHORT_ENUM);
+const short = computed(() => fitsSegments(prop.values ?? []));
 
 const description = computed(() => {
   const text = prop.description?.[locale];

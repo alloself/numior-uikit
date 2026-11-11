@@ -2,6 +2,20 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 
 const docs: DocsMap = {
   NuiTable: {
+    configurator: {
+      scene: 'table/Example',
+      props: [
+        'size',
+        'bordered',
+        'striped',
+        'selectable',
+        'rowHeaders',
+        'columnMenu',
+        'loading',
+        'caption',
+      ],
+      values: { caption: { ru: 'Последние заказы', en: 'Latest orders' } },
+    },
     props: {
       columns: {
         ru: "Колонки таблицы. Обязательны `key`, `label`, `type` (`text`, `number`, `date`, `boolean`) и `value` — функция, которая берёт значение из строки. `format` превращает значение в текст; в группах и в списке фильтра строка приходит как `undefined`. Ширину задают `width`, `minWidth`, `maxWidth` и `flex`: колонки с `flex` делят свободное место, пока их не растянули вручную. `resizable: false` убирает ручку ширины и клавиши Alt+стрелки, `reorderable: false` — ручку перестановки и Alt+Shift+стрелки, `hideable: false` не даёт скрыть колонку из меню. `pin` закрепляет колонку в начале или в конце, `align` выравнивает текст, `wrap` переносит его, и без `height` строка растёт по тексту. `sortable` включает сортировку, `filter` выбирает фильтр (`text`, `number`, `date`, `set`) или убирает его значением `false`. `aggregate` считает итог для групп и строки итогов: у `number` — `sum`, `count`, `avg`, `min`, `max`, у `date` — `min`, `max`, `count`, у `text` и `boolean` — `count`; везде подходит и своя функция. `editable` (`true` или функция строки) открывает ячейки для правки, вставки и очистки, изменения приходят в событии `edit`. `parse(text, row)` разбирает вставленный текст и отклоняет ячейку ответом `undefined`; без него число, дата и `boolean` разбираются по типу колонки. `rules` — правила `@numior/forms`, они проверяют значение перед сохранением. `editor` подключает свой редактор: `tableEditor(Компонент, проверка, { props })` или ключ реестра контролов (`'select'` или `{ control, props }`); редактор даты работает со строкой ISO. Группа `{ key, label, children }` рисует общую подпись над заголовками своих колонок.",

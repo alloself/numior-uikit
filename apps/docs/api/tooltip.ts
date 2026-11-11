@@ -2,6 +2,10 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 
 const docs: DocsMap = {
   NuiTooltip: {
+    configurator: {
+      scene: 'tooltip/Example',
+      props: ['placement', 'offset', 'openDelay', 'closeDelay', 'disabled'],
+    },
     props: {
       id: {
         ru: 'Идентификатор подсказки. По умолчанию создаётся автоматически.',

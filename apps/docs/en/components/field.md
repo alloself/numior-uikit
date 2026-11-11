@@ -16,6 +16,12 @@ import { NuiField } from '@numior/vue';
 import '@numior/vue/styles/field.css';
 ```
 
+## Usage
+
+Add a description and an error, mark the field as required or disable it.
+
+<Configurator name="NuiField" />
+
 ## Examples
 
 ### Label with markup

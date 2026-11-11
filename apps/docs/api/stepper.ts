@@ -2,6 +2,11 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 
 const docs: DocsMap = {
   NuiStepper: {
+    configurator: {
+      scene: 'stepper/Example',
+      props: ['orientation', 'linear', 'label'],
+      values: { label: { ru: 'Этапы заказа', en: 'Order stages' } },
+    },
     props: {
       steps: {
         ru: 'Список шагов с полями `value` и `label`, а также `description`, `status` и `disabled`.',

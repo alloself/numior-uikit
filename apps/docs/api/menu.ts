@@ -19,6 +19,10 @@ const label = { ru: 'Текст пункта.', en: 'Text of the item.' };
 
 const docs: DocsMap = {
   NuiMenu: {
+    configurator: {
+      scene: 'menu/Example',
+      props: ['placement', 'offset', 'closeOnSelect', 'loop'],
+    },
     props: {
       id: {
         ru: 'Идентификатор меню. По умолчанию создаётся автоматически.',

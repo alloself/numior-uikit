@@ -126,6 +126,20 @@ const actions = {
 
 const docs: DocsMap = {
   NuiDatePicker: {
+    configurator: {
+      scene: 'date-picker/Example',
+      props: [
+        'size',
+        'placement',
+        'clearable',
+        'openOnClick',
+        'disabled',
+        'label',
+        'description',
+        'error',
+      ],
+      values: { label: { ru: 'Дата отгрузки', en: 'Ship date' } },
+    },
     props: {
       ...fieldControl,
       ...calendar,
@@ -176,6 +190,20 @@ const docs: DocsMap = {
     ],
   },
   NuiDateRangePicker: {
+    configurator: {
+      scene: 'date-range-picker/Example',
+      props: [
+        'size',
+        'placement',
+        'months',
+        'clearable',
+        'openOnClick',
+        'disabled',
+        'label',
+        'error',
+      ],
+      values: { label: { ru: 'Период продаж', en: 'Sales period' } },
+    },
     props: {
       ...fieldControl,
       ...calendar,

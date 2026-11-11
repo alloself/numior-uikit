@@ -7,6 +7,11 @@ const dictionary = (ru: string, en: string, ruDefault: string, enDefault: string
 
 const docs: DocsMap = {
   NuiCode: {
+    configurator: {
+      scene: 'code/Example',
+      props: ['title', 'lineNumbers', 'copyable', 'wrap', 'maxLines'],
+      values: { title: 'orders.jsonl' },
+    },
     props: {
       code: {
         ru: 'Текст кода. Каждый перевод строки начинает новую строку.',

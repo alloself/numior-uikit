@@ -12,6 +12,12 @@ import { NuiCalendar } from '@numior/vue';
 import '@numior/vue/styles/calendar.css';
 ```
 
+## Использование
+
+Покажите рядом несколько месяцев, включите номера недель и поменяйте размер ячеек.
+
+<Configurator name="NuiCalendar" />
+
 ## Примеры
 
 ### Несколько дат

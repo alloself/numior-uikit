@@ -7,6 +7,14 @@ const dictionary = (ru: string, en: string, ruDefault: string, enDefault: string
 
 const docs: DocsMap = {
   NuiCommand: {
+    configurator: {
+      scene: 'command/Example',
+      props: ['placeholder', 'label', 'embedded', 'loading', 'loop'],
+      values: {
+        placeholder: { ru: 'Найти команду', en: 'Search commands' },
+        label: { ru: 'Команды магазина', en: 'Store commands' },
+      },
+    },
     props: {
       id: {
         ru: 'Атрибут `id` поля поиска. Без него создаётся автоматически.',

@@ -16,6 +16,12 @@ import { NuiTooltip } from '@numior/vue';
 import '@numior/vue/styles/tooltip.css';
 ```
 
+## Usage
+
+Hover over the button and change the side of the tooltip, its offset and the delays.
+
+<Configurator name="NuiTooltip" />
+
 ## Examples
 
 ### Icon button

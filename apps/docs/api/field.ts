@@ -10,6 +10,14 @@ const fieldProp = {
 
 const docs: DocsMap = {
   NuiField: {
+    configurator: {
+      scene: 'field/Example',
+      props: ['label', 'description', 'error', 'required', 'disabled', 'readonly', 'reserveError'],
+      values: {
+        label: { ru: 'Почта покупателя', en: 'Customer email' },
+        description: { ru: 'На этот адрес уйдёт чек', en: 'The receipt goes to this address' },
+      },
+    },
     props: {
       ...fieldTexts,
       id: {

@@ -7,6 +7,18 @@ const dictionary = (ru: string, en: string, ruDefault: string, enDefault: string
 
 const docs: DocsMap = {
   NuiCalendar: {
+    configurator: {
+      scene: 'calendar/Example',
+      props: [
+        'size',
+        'months',
+        'weekNumbers',
+        'fixedWeeks',
+        'showOutsideDays',
+        'showToday',
+        'disabled',
+      ],
+    },
     props: {
       id: {
         ru: 'Атрибут `id` календаря. Без него создаётся автоматически.',

@@ -17,6 +17,12 @@ import '@numior/vue/styles/field.css';
 import '@numior/vue/styles/radio.css';
 ```
 
+## Usage
+
+Lay the options out in a row and change the size and the states of the group.
+
+<Configurator name="NuiRadioGroup" />
+
 ## Examples
 
 ### In a row

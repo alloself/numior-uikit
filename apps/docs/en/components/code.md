@@ -21,6 +21,10 @@ file name above the code; without it the header shows the language name.
 `lineNumbers` numbers the lines, and `highlight` highlights the lines with the given numbers,
 such as `[3]`. With `:copyable="false"` there is no copy button.
 
+Turn on line numbers, wrapping and collapsing on an export of orders.
+
+<Configurator name="NuiCode" />
+
 ## Examples
 
 ### Long output

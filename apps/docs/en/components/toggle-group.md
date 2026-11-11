@@ -17,6 +17,12 @@ import { NuiToggleGroup } from '@numior/vue';
 import '@numior/vue/styles/toggle-group.css';
 ```
 
+## Usage
+
+Change the look, size and direction of the group or keep only the icons on the buttons.
+
+<Configurator name="NuiToggleGroup" />
+
 ## Examples
 
 ### Several pressed buttons

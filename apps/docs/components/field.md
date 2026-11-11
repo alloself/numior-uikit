@@ -16,6 +16,12 @@ import { NuiField } from '@numior/vue';
 import '@numior/vue/styles/field.css';
 ```
 
+## Использование
+
+Допишите описание и ошибку, отметьте поле обязательным или отключите его.
+
+<Configurator name="NuiField" />
+
 ## Примеры
 
 ### Подпись с разметкой

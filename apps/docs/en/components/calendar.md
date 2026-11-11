@@ -12,6 +12,12 @@ import { NuiCalendar } from '@numior/vue';
 import '@numior/vue/styles/calendar.css';
 ```
 
+## Usage
+
+Show several months side by side, turn on week numbers and change the cell size.
+
+<Configurator name="NuiCalendar" />
+
 ## Examples
 
 ### Several dates

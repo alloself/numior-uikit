@@ -17,6 +17,12 @@ import '@numior/vue/styles/dialog.css';
 import '@numior/vue/styles/drawer.css';
 ```
 
+## Использование
+
+Откройте панель и поменяйте край экрана, ширину и способы закрытия.
+
+<Configurator name="NuiDrawer" />
+
 ## Примеры
 
 ### Стороны

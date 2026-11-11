@@ -2,6 +2,11 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 
 const docs: DocsMap = {
   NuiToggleGroup: {
+    configurator: {
+      scene: 'toggle-group/Example',
+      props: ['variant', 'size', 'orientation', 'required', 'disabled', 'iconOnly', 'label'],
+      values: { label: { ru: 'Какие заказы показать', en: 'Orders to show' } },
+    },
     props: {
       items: {
         ru: 'Кнопки группы с полями `value`, `label`, а также `icon` и `disabled`.',

@@ -16,6 +16,12 @@ import { NuiList, NuiListItem } from '@numior/vue';
 import '@numior/vue/styles/list.css';
 ```
 
+## Использование
+
+Поменяйте оформление и размер строк, включите выбор одного или нескольких сотрудников.
+
+<Configurator name="NuiList" />
+
 ## Примеры
 
 ### Выбор значений

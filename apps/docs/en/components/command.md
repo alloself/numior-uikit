@@ -24,6 +24,10 @@ arrives in the `select` event.
 The `shortcut` field shows a key combination next to a command, such as `mod+1`. Your app decides
 what pressing that combination does.
 
+Type a query in the palette and change its frame, the input hint and the loading state.
+
+<Configurator name="NuiCommand" />
+
 ## Examples
 
 ### In a dialog

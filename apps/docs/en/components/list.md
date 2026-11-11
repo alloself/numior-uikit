@@ -17,6 +17,12 @@ import { NuiList, NuiListItem } from '@numior/vue';
 import '@numior/vue/styles/list.css';
 ```
 
+## Usage
+
+Change the look and the row size, then turn on picking one or several teammates.
+
+<Configurator name="NuiList" />
+
 ## Examples
 
 ### Selecting values

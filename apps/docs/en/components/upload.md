@@ -17,6 +17,12 @@ import '@numior/vue/styles/field.css';
 import '@numior/vue/styles/upload.css';
 ```
 
+## Usage
+
+Add a few photos and change the look of the drop zone, the list layout and the field states.
+
+<Configurator name="NuiUpload" />
+
 ## Examples
 
 ### Thumbnail grid

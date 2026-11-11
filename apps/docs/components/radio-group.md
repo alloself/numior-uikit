@@ -16,6 +16,12 @@ import '@numior/vue/styles/field.css';
 import '@numior/vue/styles/radio.css';
 ```
 
+## Использование
+
+Разверните варианты в строку, поменяйте размер и состояния группы.
+
+<Configurator name="NuiRadioGroup" />
+
 ## Примеры
 
 ### В строку

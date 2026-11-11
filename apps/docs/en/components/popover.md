@@ -16,6 +16,12 @@ import { NuiPopover } from '@numior/vue';
 import '@numior/vue/styles/popover.css';
 ```
 
+## Usage
+
+Open the popover and change its side, arrow, padding and the way it opens.
+
+<Configurator name="NuiPopover" />
+
 ## Examples
 
 ### Placement

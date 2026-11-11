@@ -17,6 +17,12 @@ import '@numior/vue/styles/dialog.css';
 import '@numior/vue/styles/drawer.css';
 ```
 
+## Usage
+
+Open the drawer and change its side, width and the ways to close it.
+
+<Configurator name="NuiDrawer" />
+
 ## Examples
 
 ### Sides

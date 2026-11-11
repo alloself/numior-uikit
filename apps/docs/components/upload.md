@@ -17,6 +17,12 @@ import '@numior/vue/styles/field.css';
 import '@numior/vue/styles/upload.css';
 ```
 
+## Использование
+
+Добавьте несколько фото и поменяйте вид зоны, раскладку списка и состояния поля.
+
+<Configurator name="NuiUpload" />
+
 ## Примеры
 
 ### Сетка миниатюр

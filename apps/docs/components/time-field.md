@@ -16,6 +16,12 @@ import '@numior/vue/styles/field.css';
 import '@numior/vue/styles/time-field.css';
 ```
 
+## Использование
+
+Добавьте секунды, поменяйте формат часов и шаг списка времени.
+
+<Configurator name="NuiTimeField" />
+
 ## Примеры
 
 ### Время в разных языках

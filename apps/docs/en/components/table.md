@@ -24,6 +24,12 @@ import '@numior/table/styles.css';
 The filters, column menus, checkboxes and pagination of the table are `@numior/vue` components,
 so their styles are needed too.
 
+## Usage
+
+Change the row density, borders and stripes, then turn on row selection and row numbers.
+
+<Configurator name="NuiTable" />
+
 ## Examples
 
 ### Custom cells and row selection

@@ -15,6 +15,12 @@ import '@numior/vue/styles/calendar.css';
 import '@numior/vue/styles/date-picker.css';
 ```
 
+## Usage
+
+Open the calendar and change the field size, the way it opens and the texts under it.
+
+<Configurator name="NuiDatePicker" />
+
 ## Examples
 
 ### Date and time

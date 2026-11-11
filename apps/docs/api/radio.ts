@@ -3,6 +3,20 @@ import { fieldControl } from './shared/field.ts';
 
 const docs: DocsMap = {
   NuiRadioGroup: {
+    configurator: {
+      scene: 'radio-group/Example',
+      props: [
+        'orientation',
+        'size',
+        'disabled',
+        'readonly',
+        'invalid',
+        'label',
+        'description',
+        'error',
+      ],
+      values: { label: { ru: 'Способ доставки', en: 'Delivery method' } },
+    },
     props: {
       ...fieldControl,
       name: {
