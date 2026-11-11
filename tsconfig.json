@@ -20,7 +20,10 @@
     "customConditions": ["@numior/source"],
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "rootDirs": [".", "./node_modules/.cache/vue-dts"]
+    "rootDirs": [".", "./node_modules/.cache/vue-dts"],
+    "paths": {
+      "#demo/*": ["./apps/docs/demo/ru/*", "./apps/docs/demo/shared/*"]
+    }
   },
   "include": [
     "packages/**/*.ts",

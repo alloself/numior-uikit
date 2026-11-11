@@ -6,6 +6,7 @@ import { defineConfigWithTheme } from 'vitepress';
 import { colorSchemeScript } from '@numior/primitives';
 import { CODE_LANGUAGES, docsMarkdown } from './markdown';
 import { headingPermalink } from './markdown/anchors';
+import { docsDemo, demoRootOf } from './examples/demo';
 import { docsExamples } from './examples/plugin';
 import { isEnglishPage } from './markdown/env';
 import { parseBundle } from './reference/bundle';
@@ -16,6 +17,7 @@ import { ACCENT_STORAGE_KEY, accentScript } from './theme/composables/use-accent
 import { en, ru } from './theme/texts';
 import type { DocsSidebarGroup, DocsSidebarSections, DocsThemeConfig } from './theme/theme.types';
 
+const examplesRoot = fileURLToPath(new URL('../examples', import.meta.url));
 const bundleFile = fileURLToPath(new URL('../.reference/bundle.json', import.meta.url));
 const bundle = existsSync(bundleFile) ? parseBundle(readFileSync(bundleFile, 'utf8')) : undefined;
 
@@ -418,7 +420,8 @@ export default defineConfigWithTheme<DocsThemeConfig>({
     resolve: process.env.NODE_ENV === 'production' ? {} : { conditions: ['@numior/source'] },
     plugins: [
       tailwindcss(),
-      docsExamples(fileURLToPath(new URL('../examples', import.meta.url)), highlighter),
+      docsDemo(demoRootOf(examplesRoot)),
+      docsExamples(examplesRoot, highlighter),
       docsReference(bundleFile, highlighter),
     ],
   },

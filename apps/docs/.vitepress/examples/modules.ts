@@ -3,6 +3,7 @@ import { basename, extname, join, posix, sep } from 'node:path';
 import type { Highlighter } from 'shiki';
 import { isCodeLanguage } from '../markdown/languages.ts';
 import { tokenizeCode } from '../markdown/tokens.ts';
+import { copyableSource, demoFilesOf, demoLocaleOf, demoRootOf } from './demo.ts';
 import type { ExampleLocale, ExampleSources } from './example.types.ts';
 
 export const EXAMPLE_LOCALES: readonly ExampleLocale[] = ['ru', 'en'];
@@ -59,11 +60,11 @@ export const exampleNames = (root: string): Readonly<Record<ExampleLocale, reado
   en: listExamples(join(root, 'en')),
 });
 
-export const exampleSources = (root: string, key: string): ExampleSources | undefined => {
+const ownFiles = (root: string, key: string): string[] | undefined => {
   const single = join(root, `${key}${VUE}`);
 
   if (existsSync(single)) {
-    return { entry: single, files: [single] };
+    return [single];
   }
   const dir = join(root, key);
   const entry = join(dir, ENTRY);
@@ -77,7 +78,28 @@ export const exampleSources = (root: string, key: string): ExampleSources | unde
     .toSorted()
     .map((name) => join(dir, name));
 
-  return { entry, files: [entry, ...rest] };
+  return [entry, ...rest];
+};
+
+const dataOf = (root: string, own: readonly string[]): string[] => {
+  const locale = demoLocaleOf(own[0] ?? '');
+  const data = locale === undefined ? [] : demoFilesOf(demoRootOf(root), locale, own);
+  const names = [...own, ...data].map((file) => basename(file));
+  const repeated = names.find((name, index) => names.indexOf(name) !== index);
+
+  if (repeated !== undefined) {
+    throw new Error(`Two files of one example are named ${repeated}: ${own[0]}`);
+  }
+  return data;
+};
+
+export const exampleSources = (root: string, key: string): ExampleSources | undefined => {
+  const own = ownFiles(root, key);
+  const entry = own?.[0];
+
+  return own === undefined || entry === undefined
+    ? undefined
+    : { entry, files: own, data: dataOf(root, own) };
 };
 
 const languageOf = (file: string): string | undefined => {
@@ -102,8 +124,8 @@ export const registryModule = (root: string): string => {
 };
 
 export const exampleModule = (highlighter: Highlighter, sources: ExampleSources): string => {
-  const files = sources.files.map((file) => {
-    const source = readFileSync(file, 'utf8').replace(/\n$/, '');
+  const files = [...sources.files, ...sources.data].map((file) => {
+    const source = copyableSource(readFileSync(file, 'utf8').replace(/\n$/, ''));
     const language = languageOf(file);
 
     return {
@@ -140,7 +162,7 @@ export const loadVirtualModule = (
   if (sources === undefined) {
     throw new Error(`Unknown docs example: ${key}`);
   }
-  for (const file of sources.files) {
+  for (const file of [...sources.files, ...sources.data]) {
     watch(file);
   }
   return exampleModule(highlighter, sources);

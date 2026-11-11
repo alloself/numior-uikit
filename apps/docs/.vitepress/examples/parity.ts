@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { basename } from 'node:path';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { basename, join } from 'node:path';
 import {
   NodeTypes,
   type AttributeNode,
@@ -12,6 +12,8 @@ import { EXAMPLE_LOCALES, exampleNames, exampleSources } from './modules.ts';
 import type { ExampleLocale, ExampleSources } from './example.types.ts';
 
 const STRING_RE = /'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`(?:[^`\\]|\\.)*`/g;
+
+const NUMBER_RE = /\b\d[\d_]*(?:\.\d+)?\b/g;
 
 const withoutStrings = (code: string): string =>
   code.replace(STRING_RE, '""').replace(/\s+/g, ' ').trim();
@@ -93,4 +95,36 @@ export const compareExamples = (root: string): string[] => {
     }
   }
   return problems;
+};
+
+const dataSignature = (file: string): string =>
+  withoutStrings(readFileSync(file, 'utf8')).replace(NUMBER_RE, '0');
+
+const dataNames = (dir: string): string[] =>
+  existsSync(dir)
+    ? readdirSync(dir)
+        .filter((name) => name.endsWith('.ts'))
+        .toSorted()
+    : [];
+
+export const compareDemo = (demoRoot: string): string[] => {
+  const names = { ru: dataNames(join(demoRoot, 'ru')), en: dataNames(join(demoRoot, 'en')) };
+
+  const missing = EXAMPLE_LOCALES.flatMap((locale) =>
+    names[locale].reduce<string[]>((problems, name) => {
+      if (!names[otherLocale(locale)].includes(name)) {
+        problems.push(`demo/${otherLocale(locale)}/${name} is missing`);
+      }
+      return problems;
+    }, []),
+  );
+
+  return names.ru.reduce<string[]>((problems, name) => {
+    const [ru, en] = [join(demoRoot, 'ru', name), join(demoRoot, 'en', name)];
+
+    if (names.en.includes(name) && dataSignature(ru) !== dataSignature(en)) {
+      problems.push(`demo/ru/${name} and demo/en/${name} differ beyond their strings and numbers`);
+    }
+    return problems;
+  }, missing);
 };

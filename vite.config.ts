@@ -1,8 +1,10 @@
+import { fileURLToPath } from 'node:url';
 import vue from '@vitejs/plugin-vue';
 import { configDefaults, defineConfig } from 'vite-plus';
+import { docsDemo } from './apps/docs/.vitepress/examples/demo.ts';
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [vue(), docsDemo(fileURLToPath(new URL('./apps/docs/demo', import.meta.url)))],
   resolve: { conditions: ['@numior/source'] },
   ssr: { resolve: { conditions: ['@numior/source'] } },
   test: {

@@ -30,20 +30,10 @@ import {
   type TableSort,
   type TableSource,
 } from '@numior/table';
+import { ordersOf } from '#demo/many-orders';
+import type { Order } from '#demo/orders';
 
-interface Order {
-  readonly id: number;
-  readonly customer: string;
-  readonly amount: number;
-}
-
-const NAMES = ['Анна Титова', 'Игорь Белов', 'Мария Ким', 'Олег Смирнов', 'Вера Орлова'];
-
-const orders: readonly Order[] = Array.from({ length: 20_000 }, (_, index) => ({
-  id: index + 1,
-  customer: NAMES[index % NAMES.length] ?? '',
-  amount: ((index * 7919) % 50_000) + 500,
-}));
+const orders = ordersOf(20_000);
 
 const SIGN = { asc: 1, desc: -1 } as const;
 
@@ -52,7 +42,7 @@ const NO_ORDER: TableSort = { key: '', direction: 'asc' };
 const compare: Readonly<Record<string, (a: Order, b: Order) => number>> = {
   id: (a, b) => a.id - b.id,
   customer: (a, b) => a.customer.localeCompare(b.customer),
-  amount: (a, b) => a.amount - b.amount,
+  total: (a, b) => a.total - b.total,
 };
 
 const isQuick = (filter: TableFilter): filter is Extract<TableFilter, { kind: 'quick' }> =>
@@ -119,12 +109,12 @@ const columns: NuiTableColumn<Order>[] = [
     value: (row) => row.customer,
   },
   {
-    key: 'amount',
+    key: 'total',
     label: 'Сумма',
     type: 'number',
     width: 140,
     filter: false,
-    value: (row) => row.amount,
+    value: (row) => row.total,
   },
 ];
 

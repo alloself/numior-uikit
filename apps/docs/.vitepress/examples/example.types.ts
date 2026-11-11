@@ -24,4 +24,5 @@ export type ExampleRegistry = Readonly<
 export interface ExampleSources {
   readonly entry: string;
   readonly files: readonly string[];
+  readonly data: readonly string[];
 }

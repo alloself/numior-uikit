@@ -2,9 +2,9 @@
   <NuiTable
     v-model:sort="sort"
     :columns="columns"
-    :rows="orders"
+    :rows="latest"
     :get-key="keyOf"
-    caption="Заказы за неделю"
+    caption="Последние заказы"
     striped
   />
 </template>
@@ -12,28 +12,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { NuiTable, type NuiTableColumn, type TableSort } from '@numior/table';
+import { ORDER_STATUSES, orders, type Order } from '#demo/orders';
 
-interface Order {
-  readonly id: number;
-  readonly customer: string;
-  readonly status: 'paid' | 'pending' | 'cancelled';
-  readonly total: number;
-  readonly date: string;
-}
-
-const orders: Order[] = [
-  { id: 20419, customer: 'Анна Титова', status: 'paid', total: 12400, date: '2026-09-21' },
-  { id: 20420, customer: 'Игорь Белов', status: 'pending', total: 3150, date: '2026-09-22' },
-  { id: 20421, customer: 'Мария Ким', status: 'paid', total: 48900, date: '2026-09-23' },
-  { id: 20422, customer: 'Олег Смирнов', status: 'cancelled', total: 990, date: '2026-09-24' },
-  { id: 20423, customer: 'Дина Ахметова', status: 'paid', total: 7600, date: '2026-09-25' },
-];
-
-const STATUSES: Record<Order['status'], string> = {
-  paid: 'Оплачен',
-  pending: 'Ждёт оплаты',
-  cancelled: 'Отменён',
-};
+const latest = orders.slice(-6);
 
 const money = new Intl.NumberFormat('ru-RU', {
   style: 'currency',
@@ -63,7 +44,7 @@ const columns: NuiTableColumn<Order>[] = [
     label: 'Статус',
     type: 'text',
     width: 120,
-    value: (row) => STATUSES[row.status],
+    value: (row) => ORDER_STATUSES[row.status],
   },
   {
     key: 'total',

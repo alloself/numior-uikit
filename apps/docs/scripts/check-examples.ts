@@ -1,9 +1,10 @@
 import { fileURLToPath } from 'node:url';
-import { compareExamples } from '../.vitepress/examples/parity.ts';
+import { demoRootOf } from '../.vitepress/examples/demo.ts';
+import { compareDemo, compareExamples } from '../.vitepress/examples/parity.ts';
 import { exampleNames } from '../.vitepress/examples/modules.ts';
 
 const root = fileURLToPath(new URL('../examples', import.meta.url));
-const problems = compareExamples(root);
+const problems = [...compareExamples(root), ...compareDemo(demoRootOf(root))];
 
 if (problems.length > 0) {
   console.error(problems.join('\n'));
