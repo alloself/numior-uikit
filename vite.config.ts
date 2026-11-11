@@ -30,6 +30,7 @@ export default defineConfig({
             'packages/**/*.node.test.ts',
             'scripts/eslint/*.node.test.mjs',
             'tests/parity/*.node.test.ts',
+            'tests/tailwind/*.node.test.ts',
           ],
         },
       },

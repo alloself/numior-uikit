@@ -13,6 +13,11 @@ export class NuxtApp {
   readonly back: Locator;
   readonly notify: Locator;
   readonly toasts: Locator;
+  readonly styledPage: Locator;
+  readonly themed: Locator;
+  readonly restyled: Locator;
+  readonly track: Locator;
+  readonly swatch: Locator;
   private readonly console: string[] = [];
 
   constructor(private readonly page: Page) {
@@ -23,6 +28,11 @@ export class NuxtApp {
     this.back = page.getByTestId('back');
     this.notify = page.getByTestId('notify');
     this.toasts = page.locator('.nui-toaster__item');
+    this.styledPage = page.getByTestId('styled-page');
+    this.themed = page.getByTestId('themed');
+    this.restyled = page.getByTestId('restyled');
+    this.track = page.getByTestId('track');
+    this.swatch = page.getByTestId('swatch');
 
     page.on('console', (message) => {
       if (message.type() === 'warning' || message.type() === 'error') {
@@ -64,6 +74,12 @@ export class NuxtApp {
 
   marked(): Promise<string | null> {
     return this.page.locator('html').getAttribute('data-nui-mark');
+  }
+
+  styleOf(target: Locator, property: string): Promise<string> {
+    return target.evaluate((element, name) => {
+      return getComputedStyle(element).getPropertyValue(name);
+    }, property);
   }
 
   wcagViolations(): Promise<AxeViolations> {
