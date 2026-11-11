@@ -36,6 +36,7 @@
 }
 .nui-tree.nui-list--variant-bordered {
   --_divider: transparent;
+  --_divider-size: 0px;
 
   padding: var(--nui-space-1);
 }

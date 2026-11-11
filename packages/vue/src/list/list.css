@@ -1,5 +1,6 @@
 .nui-list {
   --_divider: transparent;
+  --_divider-size: 0px;
   --_padding-inline: var(--nui-space-4);
   --_padding-block: var(--nui-space-3);
   --_gap: var(--nui-space-3);
@@ -21,9 +22,11 @@
 }
 .nui-list--variant-divided {
   --_divider: var(--nui-border);
+  --_divider-size: 1px;
 }
 .nui-list--variant-bordered {
   --_divider: var(--nui-border);
+  --_divider-size: 1px;
 
   border: 1px solid var(--nui-border);
   background: var(--nui-surface);
@@ -169,7 +172,8 @@
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  border-block-start: 1px solid var(--_divider);
+  border-block-start: var(--_divider-size) solid var(--_divider);
+  background-clip: padding-box;
   transition:
     background-color var(--nui-duration-fast) var(--nui-easing),
     color var(--nui-duration-fast) var(--nui-easing);
@@ -238,7 +242,7 @@
 .nui-list-item--mode-treeitem:not(.nui-list-item--disabled, .nui-list-item--selected):hover,
 .nui-list-item--mode-option:not(.nui-list-item--selected):focus-visible,
 .nui-list-item--active:not(.nui-list-item--selected) {
-  background: var(--_hover);
+  background-color: var(--_hover);
 }
 .nui-list-item--current {
   --_row-icon: var(--nui-primary-soft-foreground);
@@ -248,7 +252,7 @@
     oklch(from var(--nui-primary-soft) calc(l + var(--nui-state-hover-subtle)) c h)
   );
 
-  background: var(--nui-primary-soft);
+  background-color: var(--nui-primary-soft);
   color: var(--nui-primary-soft-foreground);
 }
 .nui-list-item--selected {
@@ -259,13 +263,13 @@
     var(--nui-primary-soft)
   );
 
-  background: var(--nui-primary-soft);
+  background-color: var(--nui-primary-soft);
   color: var(--nui-primary-soft-foreground);
 }
 .nui-list-item--selected:hover,
 .nui-list-item--selected:focus-visible,
 .nui-list-item--selected.nui-list-item--active {
-  background: light-dark(
+  background-color: light-dark(
     oklch(from var(--nui-primary-soft) calc(l - var(--nui-state-hover-subtle)) c h),
     oklch(from var(--nui-primary-soft) calc(l + var(--nui-state-hover-subtle)) c h)
   );
@@ -274,13 +278,13 @@
   --_row-icon: var(--nui-text-muted);
   --_row-muted: var(--nui-text-muted);
 
-  background: transparent;
+  background-color: transparent;
   color: inherit;
 }
 .nui-list--variant-floating .nui-list-item--selected:hover,
 .nui-list--variant-floating .nui-list-item--selected:focus-visible,
 .nui-list--variant-floating .nui-list-item--selected.nui-list-item--active {
-  background: var(--_hover);
+  background-color: var(--_hover);
 }
 .nui-list-item--mode-option:focus-visible {
   outline: var(--nui-focus-ring-width) solid var(--nui-focus);

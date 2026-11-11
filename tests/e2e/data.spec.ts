@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures';
 import { motionOf, SLOW_MOTION, slowMotion } from './helpers/motion';
-import { boxOf } from './helpers/geometry';
+import { boxOf, rowFillInsets } from './helpers/geometry';
 
 test.describe('data display', () => {
   test('badge caps its count, a status dot exposes its label and a floating badge sits on its host', async ({
@@ -129,6 +129,22 @@ test.describe('data display', () => {
 
     await data.option(data.singleList, 'Push').click();
     await expect.poll(async () => (await data.readOutput()).channel).toBe('push');
+  });
+
+  test('a list row fills from its divider down and centres its content in the fill', async ({
+    playground,
+    data,
+  }) => {
+    await playground.open();
+    const option = data.option(data.singleList, 'Push');
+
+    await option.click();
+    await expect(option).toHaveAttribute('aria-selected', 'true');
+
+    const insets = await rowFillInsets(option);
+
+    expect(insets.top).toBeCloseTo(0, 1);
+    expect(insets.bottom).toBeCloseTo(0, 1);
   });
 
   test('a selected option fades its icon and its description together with its label', async ({

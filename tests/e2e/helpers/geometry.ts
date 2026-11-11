@@ -18,6 +18,11 @@ export interface PseudoBox {
   readonly height: number;
 }
 
+export interface FillInsets {
+  readonly top: number;
+  readonly bottom: number;
+}
+
 export const boxOf = async (target: Locator): Promise<Box> => {
   const box = await target.boundingBox();
 
@@ -41,6 +46,22 @@ export const textBoxOf = (target: Locator): Promise<Box> =>
       : element.getBoundingClientRect();
 
     return { x, y, width, height };
+  });
+
+export const rowFillInsets = (row: Locator): Promise<FillInsets> =>
+  row.evaluate((element) => {
+    const inner = element.querySelector('.nui-list-item__inner');
+
+    if (inner === null) {
+      throw new Error('Row has no inner part');
+    }
+
+    const style = getComputedStyle(element);
+    const divider = style.backgroundClip === 'padding-box' ? parseFloat(style.borderTopWidth) : 0;
+    const fill = element.getBoundingClientRect();
+    const content = inner.getBoundingClientRect();
+
+    return { top: content.top - fill.top - divider, bottom: fill.bottom - content.bottom };
   });
 
 export const renderedWidth = async (target: Locator): Promise<number> =>

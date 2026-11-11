@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { boxOf } from './helpers/geometry';
+import { boxOf, rowFillInsets } from './helpers/geometry';
 
 test.describe('tree', () => {
   test('expands on the chevron without selecting, selects on click and loads lazy children', async ({
@@ -178,6 +178,20 @@ test.describe('tree', () => {
 
     await page.keyboard.press('ArrowRight');
     await expect(sources).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  test('a tree row keeps its content in the middle of its fill', async ({ playground, tree }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const sources = tree.item(tree.tree, 'Исходники');
+
+    await tree.labelOf(sources).click();
+    await expect(sources).toHaveAttribute('aria-selected', 'true');
+
+    const insets = await rowFillInsets(sources);
+
+    expect(insets.top).toBeCloseTo(0, 1);
+    expect(insets.bottom).toBeCloseTo(0, 1);
   });
 
   test('tree has no automatically detectable WCAG AA violations', async ({ playground, tree }) => {
