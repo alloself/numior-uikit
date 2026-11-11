@@ -246,7 +246,7 @@ const image = (generator: Generator): ElementNode => {
 const BUILDERS: Readonly<Record<FixtureBlock, (generator: Generator) => ElementNode>> = {
   paragraph,
   heading: (generator) =>
-    element(generator, 'heading', inline(generator, 2, 6), { level: generator.random.int(1, 3) }),
+    element(generator, 'heading', inline(generator, 2, 6), { level: generator.random.int(1, 6) }),
   list: (generator) => listOf(generator, 1),
   table,
   code,

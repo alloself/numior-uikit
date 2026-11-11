@@ -166,3 +166,10 @@
 .nui-editor .nui-editor__ghost--shown {
   opacity: 1;
 }
+.nui-editor-insert {
+  display: flex;
+  flex-direction: column;
+  inline-size: 16rem;
+  max-block-size: 22rem;
+  border-radius: inherit;
+}

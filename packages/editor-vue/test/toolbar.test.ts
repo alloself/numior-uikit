@@ -29,9 +29,9 @@ describe('NuiEditor toolbar', () => {
     const editor = mounted({ document: page(paragraph('p', 'Hello')) });
 
     expect(editor.tools).toEqual([
+      'Insert',
       'Undo',
       'Redo',
-      'Insert',
       'Block type: Text',
       'Bold',
       'Italic',
@@ -160,7 +160,8 @@ describe('NuiEditor toolbar', () => {
     await editor.useTool('Bold');
     editor.focus();
     await editor.press('F10', { alt: true });
-    await editor.toolbarKey('ArrowLeft');
+    await editor.toolbarKey('Home');
+    await editor.toolbarKey('ArrowRight');
 
     expect(editor.toolbarFocus).toBe('Undo');
 

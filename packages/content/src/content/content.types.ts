@@ -6,6 +6,8 @@ export type NuiContentFileKind = (typeof NuiContentFileKind)[keyof typeof NuiCon
 
 export type NuiContentTone = (typeof NuiContentTone)[keyof typeof NuiContentTone];
 
+export type NuiContentHeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
 export type NuiContentColour = (typeof NuiContentColour)[keyof typeof NuiContentColour];
 
 export type NuiContentAlign = (typeof NuiContentAlign)[keyof typeof NuiContentAlign];

@@ -237,16 +237,47 @@ test.describe('editor', () => {
   test('inserts a callout from the toolbar menu with the slash menu items', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
     await editor.clear();
     await editor.tool('Вставить').click();
-    await expect(page.getByRole('menuitem', { name: 'Картинка' })).toBeVisible();
+    await expect(editor.insertOption('Картинка')).toBeVisible();
 
-    await page.getByRole('menuitem', { name: 'Выноска' }).click();
+    await editor.insertOption('Выноска').click();
     await expect(editor.content.locator('.nui-content__callout')).toHaveCount(1);
+  });
+
+  test('finds a block in the plus menu and puts it below the list the caret is in', async ({
+    playground,
+    editor,
+    page,
+  }) => {
+    await openEditor(playground);
+
+    await editor.clear();
+    await page.keyboard.type('- one');
+    await expect.poll(() => editor.blockTags()).toEqual(['ul']);
+
+    await editor.tool('Вставить').click();
+    await expect(editor.insertSearch()).toBeFocused();
+    await expect(editor.insertOptions().and(page.locator('[aria-disabled="true"]'))).toHaveCount(0);
+
+    await page.keyboard.type('загол');
+    await expect(editor.insertOptions()).toHaveCount(6);
+
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await expect.poll(() => editor.blockTags()).toEqual(['ul', 'h2']);
+    await expect(editor.content).toBeFocused();
+
+    await page.keyboard.type('Next');
+    await expect(editor.content.locator('h2')).toHaveText('Next');
+    await expect(editor.content.locator('li')).toHaveText('one');
+
+    await editor.tool('Вставить').click();
+    await expect(editor.insertSearch()).toHaveValue('');
+    await expect(editor.insertOptions().first()).toBeVisible();
   });
 
   test('formats from the toolbar without losing the selection and changes blocks from its menu', async ({
@@ -268,7 +299,15 @@ test.describe('editor', () => {
     await expect(editor.tool('Жирный')).toHaveAttribute('aria-pressed', 'true');
     await expect(editor.content).toBeFocused();
 
+    const fine = await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    await expect(editor.headerBlockMenu()).toHaveCount(fine ? 0 : 1);
+
     await editor.blockMenu().click();
+    await expect(page.getByRole('menuitemradio', { name: 'Заголовок 6' })).toBeVisible();
+
     await page.getByRole('menuitemradio', { name: 'Заголовок 1' }).click();
     await expect.poll(() => editor.blockTags()).toEqual(['h1']);
     await expect(editor.content).toBeFocused();
@@ -277,10 +316,7 @@ test.describe('editor', () => {
     await expect(editor.tool('Вставить')).toBeFocused();
 
     await page.keyboard.press('ArrowRight');
-    await expect(editor.tool('Тип блока: Заголовок 1')).toBeFocused();
-
-    await page.keyboard.press('ArrowRight');
-    await expect(editor.tool('Жирный')).toBeFocused();
+    await expect(editor.tool('Отменить')).toBeFocused();
 
     await page.keyboard.press('Escape');
     await expect(editor.content).toBeFocused();
@@ -307,7 +343,7 @@ test.describe('editor', () => {
     await expect(editor.tool('Повторить')).toBeFocused();
 
     await page.keyboard.press('ArrowRight');
-    await expect(editor.tool('Вставить')).toBeFocused();
+    await expect(editor.tool('Жирный')).toBeFocused();
   });
 
   test('links with Ctrl+K and colours a selection from the bubble over it', async ({

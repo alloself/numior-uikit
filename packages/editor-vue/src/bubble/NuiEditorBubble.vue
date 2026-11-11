@@ -44,6 +44,12 @@ import { toolbarGroups } from '../toolbar/toolbar-items';
 import { ToolbarGroupKey, type ColourMark } from '../toolbar/toolbar.types';
 import type { NuiEditorBubbleProps } from './bubble.types';
 
+const BUBBLE_GROUPS: ReadonlySet<string> = new Set([
+  ToolbarGroupKey.Blocks,
+  ToolbarGroupKey.Marks,
+  ToolbarGroupKey.Selection,
+]);
+
 const { state, options, anchor, open } = defineProps<NuiEditorBubbleProps>();
 
 const emit = defineEmits<{
@@ -59,9 +65,8 @@ const shown = ref(open);
 const texts = useMessages(editorMessages);
 
 const groups = computed(() =>
-  toolbarGroups(state, texts.value, options).filter(
-    (candidate) =>
-      candidate.key === ToolbarGroupKey.Marks || candidate.key === ToolbarGroupKey.Selection,
+  toolbarGroups(state, texts.value, { ...options, blockMenu: true }).filter((candidate) =>
+    BUBBLE_GROUPS.has(candidate.key),
   ),
 );
 

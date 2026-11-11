@@ -59,6 +59,8 @@ export interface NuiEditorMessages {
   readonly deleteBlock: string;
   readonly table: string;
   readonly insert: string;
+  readonly insertSearch: string;
+  readonly insertEmpty: string;
   readonly embed: string;
   readonly bookmark: string;
   readonly openLink: string;
@@ -270,6 +272,8 @@ export const editorMessages: NuiMessageCatalog<NuiEditorMessages> = {
     deleteBlock: 'Delete',
     table: 'Table',
     insert: 'Insert',
+    insertSearch: 'Search blocks',
+    insertEmpty: 'No such block',
     embed: 'Embed',
     bookmark: 'Bookmark',
     openLink: 'Open link',
@@ -400,6 +404,8 @@ export const editorMessages: NuiMessageCatalog<NuiEditorMessages> = {
     deleteBlock: 'Удалить',
     table: 'Таблица',
     insert: 'Вставить',
+    insertSearch: 'Найти блок',
+    insertEmpty: 'Такого блока нет',
     embed: 'Встраивание',
     bookmark: 'Закладка',
     openLink: 'Открыть ссылку',

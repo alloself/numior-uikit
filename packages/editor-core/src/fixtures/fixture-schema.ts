@@ -6,9 +6,9 @@ import type { RenderChild, RenderElement } from '../render/render.types';
 import { createSchema } from '../schema/schema';
 import type { NodeMaker, ParsedAttrs, ParsedContent } from '../schema/schema.types';
 
-const LEVELS: ReadonlySet<AttrValue> = new Set([1, 2, 3]);
+const LEVELS: readonly number[] = [1, 2, 3, 4, 5, 6];
 
-const isLevel = (value: AttrValue): boolean => LEVELS.has(value);
+const isLevel = (value: AttrValue): boolean => typeof value === 'number' && LEVELS.includes(value);
 
 const isText = (value: AttrValue): boolean => typeof value === 'string';
 
@@ -125,7 +125,7 @@ export const fixtureSchema = createSchema({
       content: 'inline*',
       attrs: { level: { default: 1, verify: isLevel } },
       render: (node) => renderTag(`h${String(node.attrs.level)}`),
-      parse: [1, 2, 3].map((level) => ({ tag: `h${String(level)}`, attrs: () => ({ level }) })),
+      parse: LEVELS.map((level) => ({ tag: `h${String(level)}`, attrs: () => ({ level }) })),
     },
     blockquote: {
       group: 'block',

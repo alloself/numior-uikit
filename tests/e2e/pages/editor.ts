@@ -410,6 +410,24 @@ export class EditorSection {
     return this.root.locator('.nui-editor-toolbar__blocks');
   }
 
+  headerBlockMenu(): Locator {
+    return this.root
+      .getByRole('toolbar', { name: 'Форматирование', exact: true })
+      .locator('.nui-editor-toolbar__blocks');
+  }
+
+  insertSearch(): Locator {
+    return this.root.locator('.nui-editor-insert').getByRole('combobox');
+  }
+
+  insertOptions(): Locator {
+    return this.root.locator('.nui-editor-insert').getByRole('option');
+  }
+
+  insertOption(name: string): Locator {
+    return this.root.locator('.nui-editor-insert').getByRole('option', { name, exact: true });
+  }
+
   anchors(): Locator {
     return this.content.locator('.nui-editor__comment');
   }

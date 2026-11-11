@@ -1,9 +1,6 @@
 import {
   Bold,
   Braces,
-  Heading1,
-  Heading2,
-  Heading3,
   Italic,
   List,
   ListIndentDecrease,
@@ -41,9 +38,10 @@ import {
 import type { IconSource } from '@numior/primitives';
 import type { NuiEditorMessages } from '../editor/editor.messages';
 import type { SlashItem } from '../slash/slash-items';
+import { HEADING_ICONS } from '../editor/heading-icons';
 import { onlyIf } from '../editor/only-if';
 import { ToolbarGroupKey, ToolbarItemKind } from './toolbar.types';
-import { NuiContentNodeType } from '@numior/content';
+import { CONTENT_HEADING_LEVELS, NuiContentNodeType } from '@numior/content';
 
 export interface ToolbarFace {
   readonly label: string;
@@ -86,6 +84,7 @@ export interface ToolbarOptions {
   readonly colours: readonly string[];
   readonly highlights: readonly string[];
   readonly docked?: boolean | undefined;
+  readonly blockMenu?: boolean | undefined;
   readonly selectionActions?: readonly NuiEditorSelectionAction[] | undefined;
   readonly actionsOnly?: boolean | undefined;
 }
@@ -149,14 +148,6 @@ const LISTS: readonly (readonly [string, keyof NuiEditorMessages, IconSource])[]
   ['todo_list', 'todoList', ListTodo],
 ];
 
-const HEADINGS = [1, 2, 3] as const;
-
-const HEADING_ICONS: Readonly<Record<(typeof HEADINGS)[number], IconSource>> = {
-  1: Heading1,
-  2: Heading2,
-  3: Heading3,
-};
-
 const textOf = (texts: NuiEditorMessages, key: keyof NuiEditorMessages): string => {
   const text = texts[key];
 
@@ -189,7 +180,7 @@ const blockOptions = (facts: Facts): ToolbarBlock[] => {
   const current = activeBlock(facts.state);
 
   const headings = schema.nodes.has('heading')
-    ? HEADINGS.map((level): ToolbarBlock => ({
+    ? CONTENT_HEADING_LEVELS.map((level): ToolbarBlock => ({
         key: `heading-${String(level)}`,
         label: facts.texts.heading({ level }),
         icon: HEADING_ICONS[level],
@@ -415,13 +406,17 @@ export const toolbarGroups = (
     return [{ key: ToolbarGroupKey.Selection, items: selectionItems(facts) }];
   }
 
+  const blockMenu = options.docked === true || options.blockMenu === true;
+
   return [
-    { key: 'history', items: historyItems(facts) },
-    { key: 'insert', items: insertItems(state, texts, inserts) },
-    { key: 'blocks', items: blockItems(facts) },
-    { key: 'marks', items: markItems(facts) },
-    { key: 'selection', items: selectionItems(facts) },
-    { key: 'structure', items: blockActions(facts) },
-    { key: 'nesting', items: nestingItems(facts) },
+    {
+      key: ToolbarGroupKey.Document,
+      items: [...insertItems(state, texts, inserts), ...historyItems(facts)],
+    },
+    { key: ToolbarGroupKey.Blocks, items: blockMenu ? blockItems(facts) : [] },
+    { key: ToolbarGroupKey.Marks, items: markItems(facts) },
+    { key: ToolbarGroupKey.Selection, items: selectionItems(facts) },
+    { key: ToolbarGroupKey.Structure, items: blockActions(facts) },
+    { key: ToolbarGroupKey.Nesting, items: nestingItems(facts) },
   ].filter((group) => group.items.length > 0);
 };

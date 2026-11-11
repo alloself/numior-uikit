@@ -138,7 +138,7 @@ describe('content HTML', () => {
           },
         ],
       },
-      { type: 'heading', attrs: { level: 3 }, content: [{ text: 'Deep' }] },
+      { type: 'heading', attrs: { level: 5 }, content: [{ text: 'Deep' }] },
       { type: 'code_block', attrs: { language: 'ts' }, content: [{ text: 'let x' }] },
       paragraph({ text: 'hi', marks: [{ type: 'highlight', attrs: { name: 'yellow' } }] }),
     ]);

@@ -2,9 +2,11 @@ import { contentSchema } from '@numior/content';
 import { createDoc, toJSON, type ElementNode } from '@numior/editor-core';
 import { afterEach, beforeAll, describe, expect, it } from 'vite-plus/test';
 import { EditorDriver } from './drivers/editor';
+import { installMouse } from './support/media';
 import { installPopovers } from './support/popovers';
 
 let driver: EditorDriver | undefined;
+let restoreMedia: (() => void) | undefined;
 
 const mounted = (...args: Parameters<typeof EditorDriver.mount>): EditorDriver => {
   driver = EditorDriver.mount(...args);
@@ -18,6 +20,8 @@ beforeAll(() => {
 afterEach(() => {
   driver?.destroy();
   driver = undefined;
+  restoreMedia?.();
+  restoreMedia = undefined;
 });
 
 const NOTE = { key: 'note', label: 'Note', icon: 'comment', command: () => true } as const;
@@ -232,6 +236,7 @@ describe('NuiEditor links, colours and bubble', () => {
     expect(editor.bubbleShown).toBe(true);
 
     expect(editor.bubbleTools).toEqual([
+      'Block type: Text',
       'Bold',
       'Italic',
       'Underline',
@@ -243,11 +248,40 @@ describe('NuiEditor links, colours and bubble', () => {
 
     await editor.press('F10', { alt: true });
 
-    expect(editor.toolbarFocus).toBe('Bold');
+    expect(editor.toolbarFocus).toBe('Block type: Text');
 
     await editor.toolbarKey('Escape');
     await editor.select(3);
 
     expect(editor.bubbleShown).toBe(false);
+  });
+
+  it('turns the block of the selection into a heading from the bubble', async () => {
+    const editor = mounted({ document: page('Hello world'), toolbar: 'bubble' });
+
+    editor.focus();
+    await editor.select(1, 6);
+    await editor.chooseBlock('Heading 5');
+
+    expect(editor.markup).toContain(
+      '<h5 class="nui-content__heading nui-content__heading--level-5">Hello world</h5>',
+    );
+
+    expect(editor.blockType).toBe('Heading 5');
+    expect(editor.bubbleShown).toBe(true);
+    expect(editor.focused).toBe(true);
+  });
+
+  it('keeps the block type out of the header while the bubble offers it', async () => {
+    restoreMedia = installMouse();
+
+    const editor = mounted({ document: page('Hello world'), toolbar: 'both' });
+
+    expect(editor.headerTools.slice(0, 4)).toEqual(['Insert', 'Undo', 'Redo', 'Bold']);
+
+    editor.focus();
+    await editor.select(1, 6);
+
+    expect(editor.bubbleTools[0]).toBe('Block type: Text');
   });
 });

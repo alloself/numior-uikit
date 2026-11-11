@@ -24,6 +24,8 @@ describe('markdown input rules', () => {
   it.each([
     ['# x', 'heading("x")'],
     ['### x', 'heading{level=3}("x")'],
+    ['###### x', 'heading{level=6}("x")'],
+    ['####### x', 'paragraph("####### x")'],
     ['> x', 'blockquote(paragraph("x"))'],
     ['- x', 'bullet_list(list_item(paragraph("x")))'],
     ['* x', 'bullet_list(list_item(paragraph("x")))'],

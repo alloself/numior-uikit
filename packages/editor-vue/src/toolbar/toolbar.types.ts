@@ -75,9 +75,10 @@ export const ToolbarItemKind = {
 } as const;
 
 export const ToolbarGroupKey = {
-  History: 'history',
-  Insert: 'insert',
+  Document: 'document',
   Blocks: 'blocks',
   Marks: 'marks',
   Selection: 'selection',
+  Structure: 'structure',
+  Nesting: 'nesting',
 } as const;

@@ -2,6 +2,7 @@ export { default as NuiContent } from './content/NuiContent.vue';
 export {
   CONTENT_ALIGNS,
   CONTENT_COLOURS,
+  CONTENT_HEADING_LEVELS,
   CONTENT_TONES,
   CONTENT_WRAPS,
   IMAGE_WIDTH,
@@ -45,6 +46,7 @@ export { renderContent } from './content/render-content';
 export type { RenderContentOptions } from './content/render-content';
 export type {
   NuiContentCellValue,
+  NuiContentHeadingLevel,
   NuiContentProps,
   NuiContentTableColumn,
   NuiContentTableData,

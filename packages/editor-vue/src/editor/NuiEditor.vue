@@ -28,7 +28,7 @@
         :docked="docked"
         :state="current"
         :options="toolOptions"
-        :inserts="inserts"
+        :inserts="toolbarInserts"
         :disabled="isDisabled"
         :controls="controlAttrs.id"
         @run="onToolbarRun"
@@ -258,7 +258,7 @@ import { useBlockHandle } from '../handle/use-block-handle';
 import { useMentions } from '../mentions/use-mentions';
 import NuiEditorSuggestMenu from '../suggest/NuiEditorSuggestMenu.vue';
 import { useSlash } from '../slash/use-slash';
-import { slashItems, type SlashItem } from '../slash/slash-items';
+import { belowItems, slashItems, type SlashItem } from '../slash/slash-items';
 import NuiEditorUploads from '../uploads/NuiEditorUploads.vue';
 import { provideEditorLinks } from '../links/links-context';
 import type { LinkKind } from '../links/links.types';
@@ -443,6 +443,8 @@ const inserts = computed((): readonly SlashItem[] => [
   ),
   ...mediaSlash(),
 ]);
+
+const toolbarInserts = computed(() => belowItems(inserts.value));
 
 const slash = useSlash({
   state: () => current.value,
@@ -650,6 +652,7 @@ const toolOptions = computed(() => ({
   highlights,
   selectionActions,
   actionsOnly: actionsOnly.value,
+  blockMenu: !bubbleToolbar.value,
 }));
 
 const validLink = (href: string): boolean =>

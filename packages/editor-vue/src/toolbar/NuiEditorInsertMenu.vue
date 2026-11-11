@@ -1,11 +1,10 @@
 <template>
-  <NuiMenu
-    ref="menu"
-    lazy
+  <NuiPopover
+    ref="popover"
     v-model:open="open"
-    :label="insert.label"
-    class="nui-editor-toolbar__menu nui-editor-insert"
-    :items="entries"
+    placement="bottom-start"
+    padding="none"
+    @toggle="onToggle"
   >
     <template #trigger="{ attrs }">
       <NuiButton
@@ -20,18 +19,32 @@
         :disabled="disabled"
       />
     </template>
-  </NuiMenu>
+    <div class="nui-editor-insert">
+      <NuiCommand
+        ref="finder"
+        v-model:query="search"
+        :items="items"
+        :filter="matchesSlash"
+        :label="insert.label"
+        :placeholder="texts.insertSearch"
+        :empty-label="texts.insertEmpty"
+        embedded
+        @select="choose"
+      />
+    </div>
+  </NuiPopover>
 </template>
 
 <script setup lang="ts">
-import { useTemplateRef } from 'vue';
-import { useToolbarControl } from './toolbar-hints';
 import type { Command } from '@numior/editor-core';
-import { NuiButton, NuiMenu, type NuiMenuEntry } from '@numior/vue';
-import { computed, ref } from 'vue';
-import type { SlashItem } from '../slash/slash-items';
-import type { NuiEditorInsertMenuProps } from './toolbar.types';
+import { PopoverState, useMessages } from '@numior/primitives';
+import { NuiButton, NuiCommand, NuiPopover, type NuiCommandItem } from '@numior/vue';
+import { computed, ref, useTemplateRef } from 'vue';
+import { editorMessages } from '../editor/editor.messages';
+import { matchesSlash, type SlashItem } from '../slash/slash-items';
 import { SlashItemKind } from '../suggest/suggest.types';
+import { useToolbarControl } from './toolbar-hints';
+import type { NuiEditorInsertMenuProps } from './toolbar.types';
 
 const { insert, disabled = false } = defineProps<NuiEditorInsertMenuProps>();
 
@@ -40,31 +53,49 @@ const emit = defineEmits<{
   open: [item: SlashItem];
 }>();
 
+const texts = useMessages(editorMessages);
 const open = ref(false);
+const search = ref('');
+const popover = useTemplateRef<InstanceType<typeof NuiPopover>>('popover');
+const finder = useTemplateRef<{ focus(): void }>('finder');
 
-const choose = (item: SlashItem): void => {
-  switch (item.kind) {
+const items = computed((): NuiCommandItem[] =>
+  insert.items.map((item) => ({
+    value: item.key,
+    label: item.label,
+    icon: item.icon,
+    keywords: item.keywords,
+    disabled: open.value && item.kind === SlashItemKind.Command && !item.command(insert.state),
+  })),
+);
+
+const onToggle = (event: Event): void => {
+  if (!('newState' in event)) {
+    return;
+  }
+  if (event.newState === PopoverState.Open) {
+    finder.value?.focus();
+  } else {
+    search.value = '';
+  }
+};
+
+const choose = (chosen: NuiCommandItem): void => {
+  const item = insert.items.find((candidate) => candidate.key === chosen.value);
+
+  open.value = false;
+
+  switch (item?.kind) {
     case SlashItemKind.Command:
       emit('run', item.command);
       break;
     case SlashItemKind.Open:
       emit('open', item);
       break;
+    case undefined:
+      break;
   }
 };
 
-const entries = computed((): NuiMenuEntry[] =>
-  insert.items.map((item) => ({
-    label: item.label,
-    icon: item.icon,
-    disabled: open.value && item.kind === SlashItemKind.Command && !item.command(insert.state),
-    onSelect: () => {
-      choose(item);
-    },
-  })),
-);
-
-const menu = useTemplateRef<InstanceType<typeof NuiMenu>>('menu');
-
-useToolbarControl(() => menu.value?.trigger);
+useToolbarControl(() => popover.value?.trigger);
 </script>

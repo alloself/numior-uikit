@@ -339,6 +339,12 @@ export class EditorDriver {
     );
   }
 
+  get headerTools(): readonly string[] {
+    return [...this.root.querySelectorAll('.nui-editor-toolbar .nui-editor-toolbar__control')].map(
+      (button) => button.getAttribute('aria-label') ?? '',
+    );
+  }
+
   pressed(label: string): boolean {
     return this.tool(label).getAttribute('aria-pressed') === 'true';
   }
@@ -372,7 +378,38 @@ export class EditorDriver {
     await nextTick();
   }
 
+  private get insertSurface(): HTMLElement {
+    const surface = this.find(MENU_SELECTORS.insert).closest('[popover]');
+
+    if (!(surface instanceof HTMLElement)) {
+      throw new Error('The insert menu has no popover');
+    }
+    return surface;
+  }
+
+  private async openInsert(): Promise<void> {
+    if (isShown(this.insertSurface)) {
+      return;
+    }
+
+    this.insertSurface.showPopover();
+    await nextTick();
+  }
+
+  async closeInsert(): Promise<void> {
+    if (!isShown(this.insertSurface)) {
+      return;
+    }
+
+    this.insertSurface.hidePopover();
+    await nextTick();
+  }
+
   async openMenu(menu: EditorMenu): Promise<void> {
+    if (menu === 'insert') {
+      await this.openInsert();
+      return;
+    }
     const content = this.find(MENU_SELECTORS[menu]);
     const trigger = this.root.querySelector(`[aria-controls="${content.id}"]`);
 
@@ -404,18 +441,50 @@ export class EditorDriver {
     await nextTick();
   }
 
+  private get insertItems(): Element[] {
+    return [...this.root.querySelectorAll('.nui-editor-insert [role="option"]')];
+  }
+
   get insertOptions(): readonly string[] {
-    return [...this.root.querySelectorAll('.nui-editor-insert [role^="menuitem"]')].map(
-      (item) => item.textContent?.trim() ?? '',
-    );
+    return this.insertItems.map((item) => item.textContent?.trim() ?? '');
+  }
+
+  get insertUnavailable(): readonly string[] {
+    return this.insertItems.reduce<string[]>((found, item) => {
+      if (item.getAttribute('aria-disabled') === 'true') {
+        found.push(item.textContent?.trim() ?? '');
+      }
+      return found;
+    }, []);
+  }
+
+  get insertShown(): boolean {
+    return isShown(this.insertSurface);
+  }
+
+  get insertSearchFocused(): boolean {
+    const active = this.wrapper.element.ownerDocument.activeElement;
+
+    return active !== null && active === this.root.querySelector('.nui-editor-insert input');
+  }
+
+  async searchInsert(text: string): Promise<void> {
+    await this.openMenu('insert');
+
+    const input = this.root.querySelector('.nui-editor-insert input');
+
+    if (!(input instanceof HTMLInputElement)) {
+      throw new Error('The insert menu has no search field');
+    }
+    input.value = text;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await nextTick();
   }
 
   async chooseInsert(label: string): Promise<void> {
     await this.openMenu('insert');
 
-    const option = [...this.root.querySelectorAll('.nui-editor-insert [role^="menuitem"]')].find(
-      (item) => item.textContent?.trim() === label,
-    );
+    const option = this.insertItems.find((item) => item.textContent?.trim() === label);
 
     if (!(option instanceof HTMLElement)) {
       throw new Error(`No insert option reads ${label}`);

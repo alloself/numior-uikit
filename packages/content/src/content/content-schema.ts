@@ -22,9 +22,12 @@ import {
   NuiContentAlign,
   NuiContentColour,
   NuiContentTone,
+  type NuiContentHeadingLevel,
 } from './content.types';
 
 export const CONTENT_TONES: readonly NuiContentTone[] = Object.values(NuiContentTone);
+
+export const CONTENT_HEADING_LEVELS: readonly NuiContentHeadingLevel[] = [1, 2, 3, 4, 5, 6];
 
 export const CONTENT_COLOURS: readonly NuiContentColour[] = Object.values(NuiContentColour);
 
@@ -402,14 +405,14 @@ const CONTENT_SPEC: SchemaSpec = {
     heading: {
       group: 'block',
       content: 'inline*',
-      attrs: { level: { default: 1, verify: oneOf([1, 2, 3]) } },
+      attrs: { level: { default: 1, verify: oneOf(CONTENT_HEADING_LEVELS) } },
       render: (node) =>
         renderTag(`h${String(node.attrs.level)}`, {
           class: part('heading', `level-${String(node.attrs.level)}`),
         }),
-      parse: [1, 2, 3, 4, 5, 6].map((level) => ({
+      parse: CONTENT_HEADING_LEVELS.map((level) => ({
         tag: `h${String(level)}`,
-        attrs: () => ({ level: Math.min(level, 3) }),
+        attrs: () => ({ level }),
       })),
     },
     blockquote: {
