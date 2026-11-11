@@ -14,6 +14,7 @@ export interface TableFocusOptions {
   readonly active: Ref<NuiTableCellPosition>;
   readonly rows: VirtualList;
   readonly columns: VirtualList;
+  readonly merges: () => unknown;
   readonly rowCount: () => number;
   readonly bodyRows: () => number;
   readonly pinnedRows: () => number;
@@ -201,7 +202,7 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     );
 
     watch(
-      options.rows.range,
+      [options.rows.range, options.merges],
       () => {
         owned = options.viewport.value?.contains(document.activeElement) ?? false;
       },
@@ -209,7 +210,7 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     );
 
     watch(
-      options.rows.range,
+      [options.rows.range, options.merges],
       () => {
         const viewport = options.viewport.value;
 

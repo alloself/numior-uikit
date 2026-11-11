@@ -1007,6 +1007,7 @@ const focus = useTableFocus({
   active,
   rows: rowWindow,
   columns: columnWindow,
+  merges: () => mergeIndex.value,
   rowCount: () => pinnedCount.value + visibleRows.value + footRows.value,
   bodyRows: () => visibleRows.value,
   pinnedRows: () => pinnedCount.value,

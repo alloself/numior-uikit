@@ -558,6 +558,29 @@ test.describe('book', () => {
     await expect.poll(() => book.merged('3', 0)).toBe(false);
   });
 
+  test('keeps the keyboard in the sheet after merging a selection dragged upwards', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.dragAcross({ row: '5', col: 0 }, { row: '3', col: 0 });
+    await book.cellMenu('4', 0, 'Объединить ячейки');
+
+    await expect.poll(() => book.merged('3', 0)).toBe(true);
+    await expect(book.cell('3', 0)).toBeFocused();
+
+    await page.keyboard.press('ArrowDown');
+
+    await expect(book.cell('6', 0)).toBeFocused();
+
+    await page.keyboard.press('Control+z');
+
+    await expect(book.cell('5', 0)).toHaveText('Маркетинг');
+  });
+
   for (const theme of ['light', 'dark'] satisfies readonly Theme[]) {
     test(`shows why a fill over the merged title did nothing in the ${theme} theme`, async ({
       playground,
