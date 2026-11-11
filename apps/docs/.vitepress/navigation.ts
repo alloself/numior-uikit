@@ -22,6 +22,14 @@ const GUIDE: readonly NavGroup[] = [
       { link: '/guide/tailwind', title: 'Tailwind' },
       { link: '/guide/forms-validation', title: { ru: 'Валидация форм', en: 'Forms validation' } },
       { link: '/guide/accessibility', title: { ru: 'Доступность', en: 'Accessibility' } },
+      { link: '/guide/typescript', title: 'TypeScript' },
+    ],
+  },
+  {
+    title: { ru: 'О проекте', en: 'About' },
+    pages: [
+      { link: '/guide/browsers', title: { ru: 'Браузеры', en: 'Browser support' } },
+      { link: '/guide/versions', title: { ru: 'Версии', en: 'Versioning' } },
     ],
   },
 ];
