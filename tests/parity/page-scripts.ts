@@ -257,6 +257,16 @@ export const nextFrame = async (): Promise<void> => {
   }
 };
 
+export const scrollState = (): string => {
+  const scrolled = Array.from(document.querySelectorAll('*'), (element) =>
+    element.scrollTop === 0 && element.scrollLeft === 0
+      ? ''
+      : `${element.scrollTop}/${element.scrollLeft}`,
+  );
+
+  return `${document.documentElement.scrollHeight} ${scrolled.join(' ')}`;
+};
+
 export const fontsReady = async (): Promise<void> => {
   await document.fonts.ready;
 };

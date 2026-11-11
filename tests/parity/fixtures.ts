@@ -11,6 +11,7 @@ import {
   pageHeight,
   recordMotion,
   scrollPageTo,
+  scrollState,
   seedRandom,
   seekMotion,
   showCurrentLinks,
@@ -38,7 +39,10 @@ const HOLD_LEAD = 250;
 const SETTLE_ROUNDS = 60;
 const QUIET_ROUNDS = 3;
 const SHOT = { animations: 'disabled', caret: 'hide', scale: 'device' } as const;
+const PAGE_SHOT = { ...SHOT, fullPage: true } as const;
 const LIVE_SHOT = { ...SHOT, animations: 'allow' } as const;
+const PAGE_ATTEMPTS = 4;
+const RETRY_FRAMES = 12;
 const FROZEN = { playbackRate: 0 };
 const RUNNING = { playbackRate: 1 };
 
@@ -148,10 +152,14 @@ export class SceneRecorder {
       throw new Error(`Nothing moved in ${name}`);
     }
 
+    const frame = Number.isInteger(this.profile.dpr)
+      ? (): Promise<Buffer> => this.page.screenshot(LIVE_SHOT)
+      : undefined;
+
     await this.seek(root, 0);
-    await this.store(`${name}--first-frame`, root, () => this.page.screenshot(LIVE_SHOT), notes);
+    await this.store(`${name}--first-frame`, root, frame, notes);
     await this.seek(root, 0.5);
-    await this.store(`${name}--half-way`, root, () => this.page.screenshot(LIVE_SHOT));
+    await this.store(`${name}--half-way`, root, frame);
 
     await session.send('Animation.setPlaybackRate', RUNNING);
     await session.detach();
@@ -186,20 +194,44 @@ export class SceneRecorder {
   private async store(
     name: string,
     root: string,
-    shoot: () => Promise<Uint8Array>,
+    shoot: (() => Promise<Uint8Array>) | undefined,
     notes: readonly Note[] = [],
   ): Promise<void> {
     const raw = await this.page.evaluate(collect, { root, properties: PROPERTIES });
     const scene = encodeScene(`${this.profile.id}/${name}`, PROPERTIES, raw, notes);
 
-    await writeScene(OUTPUT, scene, await shoot());
+    await writeScene(OUTPUT, scene, await shoot?.());
   }
 
   private shoot(shot: Shot): Promise<Buffer> {
-    if (shot === 'page' || shot === 'viewport') {
-      return this.page.screenshot({ ...SHOT, fullPage: shot === 'page' });
+    if (shot === 'page') {
+      return this.shootPage();
+    }
+
+    if (shot === 'viewport') {
+      return this.page.screenshot(SHOT);
     }
     return shot.screenshot(SHOT);
+  }
+
+  private async shootPage(): Promise<Buffer> {
+    for (let attempt = 0; attempt < PAGE_ATTEMPTS; attempt += 1) {
+      const scrolled = await this.page.evaluate(scrollState);
+      const picture = await this.page.screenshot(PAGE_SHOT);
+
+      if ((await this.page.evaluate(scrollState)) === scrolled) {
+        return picture;
+      }
+
+      await this.showCurrentLinks();
+      await this.settle();
+
+      for (let frame = 0; frame < RETRY_FRAMES; frame += 1) {
+        await this.page.evaluate(nextFrame);
+      }
+    }
+
+    throw new Error('The page kept losing its scroll positions while its picture was taken');
   }
 }
 

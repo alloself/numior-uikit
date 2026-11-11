@@ -7,6 +7,9 @@ import type { Note, RawScene, StoredScene } from './parity.types';
 
 const PROPERTIES = ['color', 'padding-left', 'display'];
 const BUTTON = 'section.panel:0 > button.nui-button.nui-button--size-sm:1';
+const UTILITY_BUTTON = 'button.nui-button.mt-3:2';
+const RED = 5;
+const BLACK = 2;
 
 const scene = (
   color: string,
@@ -31,6 +34,12 @@ const scene = (
     notes,
   );
 };
+
+const withButton = (segment: string, color: number): StoredScene =>
+  scene('red', [
+    [0, segment, '0 60 96 32', [5, 3, 4]],
+    [4, 'span:0', '0 60 5 5', [color, 1, 0]],
+  ]);
 
 const chunk = (type: string, data: Buffer): Buffer => {
   const head = Buffer.alloc(8);
@@ -111,6 +120,24 @@ describe('scene comparison', () => {
         after: '0 4 800 20',
       },
     ]);
+  });
+
+  it('matches an element whose listed class was dropped and still compares its values', () => {
+    const plain = withButton('button.nui-button:2', RED);
+    const change = { element: '^button\\.nui-button\\.mt-3$', dropped: ['mt-3'], reason: 'dead' };
+
+    expect(
+      diffScenes(withButton(UTILITY_BUTTON, RED), plain).map((finding) => finding.property),
+    ).toEqual(['(element)', '(element)']);
+
+    expect(diffScenes(withButton(UTILITY_BUTTON, RED), plain, [change])).toEqual([]);
+
+    expect(
+      diffScenes(withButton(UTILITY_BUTTON, BLACK), plain, [change]).map((finding) => [
+        finding.element,
+        finding.property,
+      ]),
+    ).toEqual([['section.panel:0 > button.nui-button:2 > span:0', 'color']]);
   });
 
   it('reports a changed, a lost and a new motion record', () => {
@@ -215,6 +242,18 @@ describe('pixel comparison', () => {
     ]);
 
     expect(diffImages('s', png(2, rows), png(1, [[0, 1, 2, 3]]))[0]?.after).toBe('size 1x1');
+  });
+
+  it('passes a scene taken without pictures and reports a picture only one take has', () => {
+    const picture = png(1, [[0, 1, 2, 3]]);
+
+    expect(diffImages('s', undefined, undefined)).toEqual([]);
+
+    expect(
+      diffImages('s', picture, undefined).map((finding) => [finding.before, finding.after]),
+    ).toEqual([['present', 'missing']]);
+
+    expect(diffImages('s', undefined, picture)[0]?.after).toBe('present');
   });
 
   it('rejects images it cannot read', () => {

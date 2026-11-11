@@ -2,6 +2,7 @@ import { describePixelDiff, decodePng } from './png.ts';
 import { styleOf } from './store.ts';
 import type {
   Allowance,
+  ClassChange,
   Finding,
   Note,
   SceneTotals,
@@ -9,18 +10,41 @@ import type {
   StoredScene,
 } from './parity.types.ts';
 
+interface IgnoredClasses {
+  readonly pattern: RegExp;
+  readonly dropped: ReadonlySet<string>;
+}
+
 const ELEMENT = '(element)';
 const RECT = '(rect)';
 const PIXELS = '(pixels)';
 const ABSENT = '(absent)';
 const NOTE_SEPARATOR = ' | ';
 
-const pathsOf = (scene: StoredScene): Map<string, StoredNode> => {
+const withoutDropped = (segment: string, ignored: readonly IgnoredClasses[]): string => {
+  const cut = segment.lastIndexOf(':');
+  const head = cut > 0 ? segment.slice(0, cut) : segment;
+  const match = ignored.find(({ pattern }) => pattern.test(head));
+
+  if (match === undefined) {
+    return segment;
+  }
+
+  const kept = head.split('.').filter((name, index) => index === 0 || !match.dropped.has(name));
+
+  return `${kept.join('.')}${segment.slice(head.length)}`;
+};
+
+const pathsOf = (
+  scene: StoredScene,
+  ignored: readonly IgnoredClasses[],
+): Map<string, StoredNode> => {
   const paths: string[] = [];
   const byPath = new Map<string, StoredNode>();
 
   scene.nodes.forEach((node) => {
-    const [parent, segment] = node;
+    const [parent, own] = node;
+    const segment = ignored.length === 0 ? own : withoutDropped(own, ignored);
     const path = parent < 0 ? segment : `${paths[parent] ?? ''} > ${segment}`;
 
     paths.push(path);
@@ -107,13 +131,22 @@ const noteFindings = (scene: string, base: readonly Note[], next: readonly Note[
   }, []);
 };
 
-export const diffScenes = (base: StoredScene, next: StoredScene): Finding[] => {
+export const diffScenes = (
+  base: StoredScene,
+  next: StoredScene,
+  changes: readonly ClassChange[] = [],
+): Finding[] => {
   if (base.properties.join() !== next.properties.join()) {
     throw new Error(`Property lists differ in ${base.name}: retake the baseline`);
   }
 
-  const before = pathsOf(base);
-  const after = pathsOf(next);
+  const ignored = changes.map(({ element, dropped }) => ({
+    pattern: new RegExp(element),
+    dropped: new Set(dropped),
+  }));
+
+  const before = pathsOf(base, ignored);
+  const after = pathsOf(next, ignored);
 
   const findings = [
     ...orphans(base.name, before, after, ['present', 'missing']),
@@ -132,7 +165,25 @@ export const diffScenes = (base: StoredScene, next: StoredScene): Finding[] => {
   return findings;
 };
 
-export const diffImages = (scene: string, base: Uint8Array, next: Uint8Array): Finding[] => {
+export const diffImages = (
+  scene: string,
+  base: Uint8Array | undefined,
+  next: Uint8Array | undefined,
+): Finding[] => {
+  if (base === undefined || next === undefined) {
+    return base === next
+      ? []
+      : [
+          {
+            scene,
+            element: PIXELS,
+            property: 'png',
+            before: base === undefined ? 'missing' : 'present',
+            after: next === undefined ? 'missing' : 'present',
+          },
+        ];
+  }
+
   if (Buffer.from(base).equals(Buffer.from(next))) {
     return [];
   }

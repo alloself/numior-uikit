@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
@@ -87,13 +88,25 @@ export const imageFile = (directory: string, name: string): string =>
 export const writeScene = async (
   directory: string,
   scene: StoredScene,
-  image: Uint8Array,
+  image?: Uint8Array,
 ): Promise<void> => {
   const file = sceneFile(directory, scene.name);
 
   await mkdir(dirname(file), { recursive: true });
   await writeFile(file, gzipSync(JSON.stringify(scene)));
-  await writeFile(imageFile(directory, scene.name), image);
+
+  if (image !== undefined) {
+    await writeFile(imageFile(directory, scene.name), image);
+  }
+};
+
+export const readImage = async (
+  directory: string,
+  name: string,
+): Promise<Uint8Array | undefined> => {
+  const file = imageFile(directory, name);
+
+  return existsSync(file) ? readFile(file) : undefined;
 };
 
 export const readScene = async (directory: string, name: string): Promise<StoredScene> => {

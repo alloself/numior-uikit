@@ -1,0 +1,22 @@
+[
+  {
+    "element": "^button\\.nui-button\\..*\\.font-normal\\.text-muted-foreground$",
+    "dropped": ["font-normal", "text-muted-foreground"],
+    "reason": "cf3472f9 the search button of the docs header lost two utilities that never took effect"
+  },
+  {
+    "element": "^figure\\.nui-code\\..*\\.mb-5$",
+    "dropped": ["mb-5"],
+    "reason": "cf3472f9 the code block of the signature reference lost a margin utility that never took effect"
+  },
+  {
+    "element": "^div\\.nui-splitter\\..*\\.min-h-40\\.",
+    "dropped": ["min-h-40"],
+    "reason": "cf3472f9 the splitter example lost a height utility that never took effect"
+  },
+  {
+    "element": "^div\\.nui-field\\..*\\.mt-3$",
+    "dropped": ["mt-3"],
+    "reason": "cf8a9461 the field of the controls example lost a margin utility that never took effect"
+  }
+]

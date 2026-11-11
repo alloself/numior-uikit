@@ -63,6 +63,12 @@ export interface Allowance {
   readonly reason: string;
 }
 
+export interface ClassChange {
+  readonly element: string;
+  readonly dropped: readonly string[];
+  readonly reason: string;
+}
+
 export interface SceneTotals {
   readonly elements: number;
   readonly values: number;

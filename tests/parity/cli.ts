@@ -1,8 +1,13 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { parseArgs } from 'node:util';
 import { diffImages, diffScenes, isAllowed, tailOf, totalsOf } from './compare.ts';
-import { imageFile, readScene, sceneNames } from './store.ts';
-import type { Allowance, Comparison, Finding } from './parity.types.ts';
+import { readImage, readScene, sceneNames } from './store.ts';
+import type { Allowance, ClassChange, Comparison, Finding } from './parity.types.ts';
+
+interface ScenePair {
+  readonly pictured: boolean;
+  readonly findings: Finding[];
+}
 
 const GROUP_LIMIT = 25;
 const SCENE_LIMIT = 40;
@@ -26,6 +31,30 @@ const readAllowances = async (): Promise<Allowance[]> => {
   return parsed;
 };
 
+const isClassChanges = (value: unknown): value is ClassChange[] =>
+  Array.isArray(value) &&
+  value.every(
+    (entry: unknown) =>
+      typeof entry === 'object' &&
+      entry !== null &&
+      'element' in entry &&
+      'dropped' in entry &&
+      Array.isArray(entry.dropped) &&
+      'reason' in entry &&
+      entry.reason !== '',
+  );
+
+const readClassChanges = async (): Promise<ClassChange[]> => {
+  const parsed: unknown = JSON.parse(
+    await readFile(new URL('./class-changes.json', import.meta.url), 'utf8'),
+  );
+
+  if (!isClassChanges(parsed)) {
+    throw new Error('Every class change needs an element, the dropped classes and a reason');
+  }
+  return parsed;
+};
+
 const missingScene = (scene: string, before: string, after: string): Finding => ({
   scene,
   element: '(scene)',
@@ -34,19 +63,27 @@ const missingScene = (scene: string, before: string, after: string): Finding => 
   after,
 });
 
-const compareScene = async (base: string, next: string, name: string): Promise<Finding[]> => {
+const compareScene = async (
+  base: string,
+  next: string,
+  name: string,
+  changes: readonly ClassChange[],
+): Promise<ScenePair> => {
   const [before, after] = await Promise.all([readScene(base, name), readScene(next, name)]);
 
   const [beforeImage, afterImage] = await Promise.all([
-    readFile(imageFile(base, name)),
-    readFile(imageFile(next, name)),
+    readImage(base, name),
+    readImage(next, name),
   ]);
 
-  return [...diffScenes(before, after), ...diffImages(name, beforeImage, afterImage)];
+  return {
+    pictured: beforeImage !== undefined && afterImage !== undefined,
+    findings: [...diffScenes(before, after, changes), ...diffImages(name, beforeImage, afterImage)],
+  };
 };
 
 const compare = async (base: string, next: string, filter: RegExp): Promise<Comparison> => {
-  const allowances = await readAllowances();
+  const [allowances, changes] = await Promise.all([readAllowances(), readClassChanges()]);
   const pick = (name: string): boolean => filter.test(name);
   const [baseNames, nextNames] = await Promise.all([sceneNames(base), sceneNames(next)]);
   const known = new Set(baseNames);
@@ -69,12 +106,14 @@ const compare = async (base: string, next: string, filter: RegExp): Promise<Comp
 
     const sceneTotals = totalsOf(await readScene(base, name));
 
+    const pair = await compareScene(base, next, name, changes);
+
     totals.scenes += 1;
-    totals.images += 1;
+    totals.images += pair.pictured ? 1 : 0;
     totals.elements += sceneTotals.elements;
     totals.values += sceneTotals.values;
 
-    (await compareScene(base, next, name)).forEach((finding) => {
+    pair.findings.forEach((finding) => {
       (isAllowed(finding, allowances) ? allowed : findings).push(finding);
     });
   }

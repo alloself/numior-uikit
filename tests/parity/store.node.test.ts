@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vite-plus/test';
 import {
   encodeScene,
   imageFile,
+  readImage,
   readScene,
   sceneFile,
   sceneNames,
@@ -71,6 +72,16 @@ describe('scene store', () => {
       ['rgb(0, 0, 0)', 'block'],
       ['rgb(255, 0, 0)', 'block'],
     ]);
+  });
+
+  it('stores a scene without a picture when none was taken', async () => {
+    const root = await directory();
+    const taken = scene('pg-dark-1440/menu-enter--first-frame');
+
+    await writeScene(root, taken);
+
+    expect(await readScene(root, taken.name)).toEqual(taken);
+    expect(await readImage(root, taken.name)).toBeUndefined();
   });
 
   it('keeps only the values of a node that differ from the most common ones', () => {
