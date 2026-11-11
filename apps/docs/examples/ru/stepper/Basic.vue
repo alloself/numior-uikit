@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-4 w-full max-w-lg">
+  <div class="flex flex-col gap-4 w-full max-w-2xl">
     <NuiStepper v-model="step" :steps="steps" label="Регистрация" />
     <div class="flex justify-end gap-2">
       <NuiButton variant="ghost" tone="neutral" :disabled="index === 0" @click="move(-1)"
