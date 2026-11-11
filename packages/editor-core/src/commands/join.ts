@@ -9,6 +9,7 @@ import { StepKind, type StepSpan } from '../transform/step.types';
 import { attempt } from './attempt';
 import { isAtom } from './atoms';
 import { textCursor } from './cursor';
+import { EMPTY_SLICE } from './tree-edits';
 
 type Side = -1 | 1;
 
@@ -27,8 +28,6 @@ interface Removal {
   readonly to: number;
   readonly fill: readonly Kept[];
 }
-
-const EMPTY_SLICE = { content: [], openStart: 0, openEnd: 0 } as const;
 
 const isLeaf = (schema: Schema, node: ElementNode): boolean =>
   schema.nodes.get(node.type)?.inlineContent === true || isAtom(schema, node);

@@ -1,6 +1,7 @@
+import { createDoc } from '../doc/doc';
 import type { Doc } from '../doc/doc.types';
 import { emptyTextblock } from '../doc/empty';
-import { contentSize } from '../model/node';
+import { contentSize, sameAttrs } from '../model/node';
 import {
   ContentNodeKind,
   type ContentNode,
@@ -12,8 +13,11 @@ import { textSelection } from '../state/selection';
 import type { Selection } from '../state/selection.types';
 import { SelectionKind, type Command, type Transaction } from '../state/state.types';
 import { StepKind } from '../transform/step.types';
+import { createTransform } from '../transform/transform';
+import type { Transform } from '../transform/transform.types';
 import { childNode, isSlot, moveChild, slotStart, type ChildSlot } from './move';
 import { BesideSide } from './commands.types';
+import { applyEdits, sameTree } from './tree-edits';
 
 export interface BlockTarget {
   readonly parent: NodeId;
@@ -61,6 +65,15 @@ interface Beside {
 interface Placed {
   readonly tree: ElementNode;
   readonly path: Path;
+}
+
+interface Landing {
+  readonly node: ElementNode;
+  readonly parent: ElementNode;
+  readonly index: number;
+  readonly host: ElementNode;
+  readonly hostIndex: number;
+  readonly wrappers: readonly ElementNode[];
 }
 
 interface BesidePlan {
@@ -158,8 +171,10 @@ const asTextblock = (schema: Schema, node: ElementNode): ElementNode | undefined
     : schema.element(paragraph.type, { id: node.id, content: node.content });
 };
 
-const retyped = (schema: Schema, item: ElementNode, type: string): ElementNode =>
-  item.type === type ? item : schema.element(type, { id: item.id, content: item.content });
+const retyped = (move: Move, item: ElementNode, type: string): ElementNode =>
+  item.type === type
+    ? item
+    : move.schema.element(type, { id: move.tr.newId(), content: item.content });
 
 const intoList = (move: Move): readonly ContentNode[] | undefined => {
   const { schema, node, target, tr } = move;
@@ -170,11 +185,11 @@ const intoList = (move: Move): readonly ContentNode[] | undefined => {
   }
   if (isList(schema, node)) {
     return node.content.flatMap((item) =>
-      item.kind === ContentNodeKind.Element ? [retyped(schema, item, itemType)] : [],
+      item.kind === ContentNodeKind.Element ? [retyped(move, item, itemType)] : [],
     );
   }
   if (isItemOf(schema, node)) {
-    return [retyped(schema, node, itemType)];
+    return [retyped(move, node, itemType)];
   }
   const paragraph = asTextblock(schema, node);
 
@@ -240,12 +255,14 @@ const merged = (
   schema: Schema,
   left: ContentNode | undefined,
   right: ContentNode | undefined,
+  shell: ContentNode | undefined = left,
 ): ElementNode | undefined =>
   left?.kind === ContentNodeKind.Element &&
   right?.kind === ContentNodeKind.Element &&
+  shell?.kind === ContentNodeKind.Element &&
   left.type === right.type &&
   isList(schema, left)
-    ? element(schema, left, [...left.content, ...right.content])
+    ? element(schema, shell, [...left.content, ...right.content])
     : undefined;
 
 const spliced = (
@@ -263,7 +280,8 @@ const spliced = (
     before.pop();
     middle[0] = head;
   }
-  const tail = merged(schema, middle.at(-1), after[0]);
+  const whole = head !== undefined && middle.length === 1;
+  const tail = merged(schema, middle.at(-1), after[0], whole ? middle[0] : after[0]);
 
   if (tail !== undefined) {
     after.shift();
@@ -414,23 +432,221 @@ const rebuilt = (
   return fits(schema, place, content) ? editAt(schema, tidy, targetPath, () => content) : undefined;
 };
 
+const settled = (work: Transform, tr: Transaction, tree: ElementNode): boolean => {
+  if (!applyEdits(work, tree) || !sameTree(work.doc.root, tree)) {
+    return false;
+  }
+
+  for (const step of work.steps) {
+    tr.step(step);
+  }
+  return true;
+};
+
+const replaced = (doc: Doc, tr: Transaction, sourcePath: Path, placed: Placed): boolean => {
+  const common = sourcePath.slice(0, commonDepth(sourcePath, placed.path) + 1);
+  const before = atPath(doc.root, common);
+  const after = atPath(placed.tree, common);
+
+  return before !== undefined && after !== undefined && replaceWithin(doc, tr, before, after);
+};
+
 const committed = (
   doc: Doc,
   tr: Transaction,
   sourcePath: Path,
   placed: Placed | undefined,
+): boolean =>
+  placed !== undefined &&
+  (settled(createTransform(doc), tr, placed.tree) || replaced(doc, tr, sourcePath, placed));
+
+const fillerOf = (
+  schema: Schema,
+  parent: ElementNode,
+  tr: Transaction,
+): ElementNode | undefined => {
+  const block = emptyTextblock(schema, tr.newId());
+  const type = [...(schema.nodes.get(parent.type)?.content.next.keys() ?? [])][0];
+
+  if (block === undefined || fits(schema, parent, [block])) {
+    return block;
+  }
+
+  const wrapped =
+    type === undefined ? undefined : schema.element(type, { id: tr.newId(), content: [block] });
+
+  return wrapped !== undefined && fits(schema, parent, [wrapped]) && fits(schema, wrapped, [block])
+    ? wrapped
+    : undefined;
+};
+
+const landingOf = (doc: Doc, final: Doc, id: NodeId): Landing | undefined => {
+  const pos = final.positionOf(id);
+  const $pos = pos === undefined ? undefined : final.resolve(pos);
+
+  if ($pos === undefined) {
+    return undefined;
+  }
+  const chain = Array.from({ length: $pos.depth + 1 }, (_, depth) => $pos.node(depth));
+  const known = chain.findLastIndex((node) => nodeOf(doc, node.id) !== undefined);
+  const host = chain[known];
+  const node = $pos.parent.content[$pos.indexAt($pos.depth)];
+  const wrappers = chain.slice(known + 1);
+
+  return host === undefined ||
+    node?.kind !== ContentNodeKind.Element ||
+    chain.slice(0, known).some((ancestor) => nodeOf(doc, ancestor.id) === undefined)
+    ? undefined
+    : {
+        node,
+        parent: $pos.parent,
+        index: $pos.indexAt($pos.depth),
+        host,
+        hostIndex: $pos.indexAt(known),
+        wrappers,
+      };
+};
+
+const placeIn = (doc: Doc, parent: ElementNode, index: number): number | undefined => {
+  const start = parent.id === doc.root.id ? 0 : (doc.positionOf(parent.id) ?? Number.NaN) + 1;
+  const prev = index === 0 ? undefined : parent.content[index - 1];
+  const now = prev?.kind === ContentNodeKind.Element ? doc.byId(prev.id) : undefined;
+  const pos = now === undefined ? undefined : doc.positionOf(now.id);
+
+  if (index === 0) {
+    return Number.isNaN(start) ? undefined : start;
+  }
+  return now === undefined || pos === undefined || doc.resolve(pos).parent.id !== parent.id
+    ? undefined
+    : pos + now.size;
+};
+
+const insertedAt = (work: Transform, pos: number | undefined, node: ElementNode): boolean =>
+  pos !== undefined &&
+  work.maybeStep({
+    kind: StepKind.Replace,
+    from: pos,
+    to: pos,
+    slice: { content: [node], openStart: 0, openEnd: 0 },
+  }).ok;
+
+const retypedTo = (work: Transform, node: ElementNode, landed: ElementNode): boolean => {
+  const pos = work.doc.positionOf(node.id);
+
+  if (node.type === landed.type && sameAttrs(node.attrs, landed.attrs)) {
+    return true;
+  }
+  return (
+    pos !== undefined &&
+    work.maybeStep({
+      kind: StepKind.Markup,
+      changes: [{ pos, type: landed.type, attrs: landed.attrs }],
+    }).ok
+  );
+};
+
+const shelled = (
+  work: Transform,
+  tr: Transaction,
+  landing: Landing,
+): ElementNode | undefined | false => {
+  const { schema } = work.doc;
+  const filler = landing.wrappers.length === 0 ? undefined : fillerOf(schema, landing.parent, tr);
+
+  if (landing.wrappers.length === 0) {
+    return undefined;
+  }
+  if (filler === undefined) {
+    return false;
+  }
+
+  const shell = landing.wrappers.reduceRight(
+    (inner, wrapper) => element(schema, wrapper, [inner]),
+    filler,
+  );
+
+  return insertedAt(work, placeIn(work.doc, landing.host, landing.hostIndex), shell) && filler;
+};
+
+const spared = (work: Transform, tr: Transaction, node: ElementNode): boolean => {
+  const { doc } = work;
+  const start = doc.positionOf(node.id);
+  const source = start === undefined ? undefined : doc.resolve(start).parent;
+
+  if (start === undefined || source === undefined) {
+    return false;
+  }
+  const rest = source.content.filter((child) => child !== doc.byId(node.id));
+  const filler = fits(doc.schema, source, rest) ? undefined : fillerOf(doc.schema, source, tr);
+
+  return (
+    fits(doc.schema, source, rest) || (filler !== undefined && insertedAt(work, start, filler))
+  );
+};
+
+const unitsOf = (final: Doc, node: ElementNode): ElementNode[] | undefined => {
+  const units: ElementNode[] = [];
+
+  if (final.byId(node.id) !== undefined) {
+    return [node];
+  }
+
+  for (const child of node.content) {
+    const inner = child.kind === ContentNodeKind.Element ? unitsOf(final, child) : undefined;
+
+    if (inner === undefined) {
+      return undefined;
+    }
+
+    for (const unit of inner) {
+      units.push(unit);
+    }
+  }
+  return units;
+};
+
+const carriedUnit = (work: Transform, tr: Transaction, final: Doc, unit: ElementNode): boolean => {
+  const landing = landingOf(work.doc, final, unit.id);
+
+  if (landing === undefined || !retypedTo(work, unit, landing.node)) {
+    return false;
+  }
+  const filler = shelled(work, tr, landing);
+
+  if (filler === false || !spared(work, tr, unit)) {
+    return false;
+  }
+  const from = work.doc.positionOf(unit.id);
+  const beside = filler === undefined ? undefined : work.doc.positionOf(filler.id);
+
+  const target =
+    filler === undefined
+      ? placeIn(work.doc, landing.parent, landing.index)
+      : beside === undefined
+        ? undefined
+        : beside + filler.size;
+
+  return (
+    from !== undefined &&
+    target !== undefined &&
+    work.maybeStep({ kind: StepKind.Move, from, to: from + unit.size, target }).ok
+  );
+};
+
+const carriedAlong = (
+  work: Transform,
+  tr: Transaction,
+  node: ElementNode,
+  tree: ElementNode,
 ): boolean => {
-  const common =
-    placed === undefined
-      ? undefined
-      : sourcePath.slice(0, commonDepth(sourcePath, placed.path) + 1);
+  const final = createDoc(work.doc.schema, tree);
+  const units = unitsOf(final, node);
 
-  const before = common === undefined ? undefined : atPath(doc.root, common);
-
-  const after =
-    common === undefined || placed === undefined ? undefined : atPath(placed.tree, common);
-
-  return before !== undefined && after !== undefined && replaceWithin(doc, tr, before, after);
+  return (
+    units !== undefined &&
+    units.length > 0 &&
+    units.every((unit) => carriedUnit(work, tr, final, unit))
+  );
 };
 
 const carriedWhole = (doc: Doc, tr: Transaction, plan: Plan, to: BlockTarget): boolean => {
@@ -453,12 +669,12 @@ const carriedWhole = (doc: Doc, tr: Transaction, plan: Plan, to: BlockTarget): b
 
 const carriedRebuilt = (doc: Doc, tr: Transaction, plan: Plan, to: BlockTarget): boolean => {
   const tree = rebuilt(doc, tr, plan, to);
+  const work = createTransform(doc);
 
-  return committed(
-    doc,
-    tr,
-    plan.sourcePath,
-    tree === undefined ? undefined : { tree, path: plan.targetPath },
+  return (
+    tree !== undefined &&
+    ((carriedAlong(work, tr, plan.node, tree) && settled(work, tr, tree)) ||
+      committed(doc, tr, plan.sourcePath, { tree, path: plan.targetPath }))
   );
 };
 
