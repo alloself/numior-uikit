@@ -80,6 +80,7 @@ export class BookSection {
   }
 
   async dragColumnEdge(name: string, dx: number): Promise<void> {
+    await this.columnEdge(name).scrollIntoViewIfNeeded();
     await dragAcross(this.columnEdge(name), dx);
   }
 
