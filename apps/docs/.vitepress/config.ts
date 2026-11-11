@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createHighlighter } from 'shiki';
+import { getSingletonHighlighter } from 'shiki';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfigWithTheme } from 'vitepress';
 import { colorSchemeScript } from '@numior/primitives';
@@ -45,7 +45,7 @@ const origin = absoluteUrl(site, '');
 const twins = twinPaths();
 const descriptions = { ru: ru.description, en: en.description } as const;
 
-const highlighter = await createHighlighter({
+const highlighter = await getSingletonHighlighter({
   themes: ['github-light'],
   langs: [...CODE_LANGUAGES],
 });
