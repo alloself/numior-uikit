@@ -740,6 +740,26 @@ export class SpreadsheetDriver {
     await nextTick();
   }
 
+  cellSpan(row: number, col: number): number[] {
+    const cell = this.cell(row, col);
+
+    return cell instanceof HTMLTableCellElement ? [cell.rowSpan, cell.colSpan] : [];
+  }
+
+  async mergeCells(): Promise<boolean> {
+    const done = this.wrapper.findComponent(NuiSpreadsheet).vm.mergeCells();
+
+    await nextTick();
+    return done;
+  }
+
+  async unmergeCells(): Promise<boolean> {
+    const done = this.wrapper.findComponent(NuiSpreadsheet).vm.unmergeCells();
+
+    await nextTick();
+    return done;
+  }
+
   get cellMenuItems(): string[] {
     return [...document.querySelectorAll('.nui-table__cell-menu [role="menuitem"]')].map(
       (item) => item.textContent?.trim() ?? '',

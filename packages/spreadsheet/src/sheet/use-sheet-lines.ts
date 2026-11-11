@@ -130,7 +130,7 @@ export const useSheetLines = (options: SheetLinesOptions): SheetLines => {
     const cols = lineItems(selection, LineAxis.Cols);
     const extra = [...(options.extra()?.({ sheet, selection }) ?? [])];
 
-    return [rows, cols, [...options.tools()], extra].reduce<NuiMenuEntry[]>(
+    return [rows, cols, [...options.cells()], [...options.tools()], extra].reduce<NuiMenuEntry[]>(
       (entries, group, index) => {
         if (group.length === 0) {
           return entries;

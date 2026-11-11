@@ -461,6 +461,10 @@ export class BookSection {
     await this.cell(rowLabel, column).click({ button: 'right' });
   }
 
+  cellMenuItem(name: string): Locator {
+    return this.page.getByRole('menuitem', { name, exact: true });
+  }
+
   get cellMenuList(): Locator {
     return this.page.getByRole('menu');
   }

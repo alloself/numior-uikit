@@ -106,8 +106,16 @@ const docs: DocsMap = {
         en: 'Recalculates formulas and redraws cells after the book changed from outside.',
       },
       apply: {
-        ru: 'Применяет шаги книги как одну правку с отменой. Возвращает `false`, если шаг не применился.',
-        en: 'Applies workbook steps as one undoable edit. Returns `false` when a step fails.',
+        ru: 'Применяет шаги книги как одну правку с отменой. Возвращает `false`, если шаг не применился или список шагов пуст.',
+        en: 'Applies workbook steps as one undoable edit. Returns `false` when a step fails or the list is empty.',
+      },
+      mergeCells: {
+        ru: 'Объединяет каждый выделенный диапазон в одну ячейку, как пункт меню «Объединить ячейки». Возвращает `false`, если объединять нечего или лист отказал.',
+        en: 'Merges each selected range into one cell, as "Merge cells" of the cell menu does. Returns `false` when there is nothing to merge or the sheet refused.',
+      },
+      unmergeCells: {
+        ru: 'Разбирает объединения, которые задевает выделение. Возвращает `false`, если таких объединений нет.',
+        en: 'Takes apart the merges that the selection meets. Returns `false` when there are none.',
       },
       openRules: {
         ru: 'Открывает поповер правил условного форматирования у активной ячейки.',

@@ -109,8 +109,23 @@ sheet shows the progress with a stop button.
 The handle in the corner of a selection continues a number series or copies formulas with shifted
 references. Dragging the handle back clears cells.
 
-The cell menu holds inserting and deleting rows and columns, conditional formatting, pivot tables,
-charts and pictures. Sheets are added, renamed and deleted on their tabs.
+The cell menu holds inserting and deleting rows and columns, merging cells, conditional formatting,
+pivot tables, charts and pictures. Sheets are added, renamed and deleted on their tabs.
+
+### Merging cells
+
+"Merge cells" in the cell menu turns the selected range into one cell. Each selected range is merged
+on its own, and the merges inside it are replaced by the new one.
+
+The merged cell keeps the value of the first filled cell of the range, counted row by row. The
+other values are removed, and the sheet says so in a note. `Ctrl+Z` returns the cells and their
+values in one step.
+
+"Unmerge cells" takes apart the merges that the selection meets. The value stays in the first cell.
+Whole rows and columns are not merged, and inside a table or a pivot table the sheet refuses with
+the `merge-blocked` reason.
+
+Your own toolbar runs the same actions with the `mergeCells()` and `unmergeCells()` methods.
 
 ### Column widths
 
@@ -123,9 +138,10 @@ In a read-only book the width changes on screen only, while this sheet is shown.
 ### Refused actions
 
 An action the sheet did not apply is explained by a note in the bottom corner of the sheet. The
-sheet answers this way to a fill across merged cells, an edit of a pivot table cell and a row
-inserted past the limit. A note with the `cell-gone` reason also reports an edit whose cell was
-removed by someone else.
+sheet answers this way to a fill across merged cells and to a merge of table cells. An edit of a
+pivot table cell and a row inserted past the limit get the same note.
+
+A note with the `cell-gone` reason also reports an edit whose cell was removed by someone else.
 
 The note fades after six seconds, after the next edit that goes through, or on a click. It stays
 while the pointer is over it. The live region gets the same text.

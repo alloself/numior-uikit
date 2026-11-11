@@ -346,6 +346,7 @@ import { useSheetClipboard } from './use-sheet-clipboard';
 import { useSheetEditing } from './use-sheet-editing';
 import { useSheetFill } from './use-sheet-fill';
 import { useSheetLines } from './use-sheet-lines';
+import { useSheetMerges } from './use-sheet-merges';
 import { useSheetPopover } from './use-sheet-popover';
 import { useSheetRecalc } from './use-sheet-recalc';
 import { SHEET_SEGMENTS } from './sheet-segments';
@@ -679,6 +680,24 @@ const pivots = useSheetPivots({
   focusPanel: () => pivotPanel.value?.focusStart(),
 });
 
+const merges = useSheetMerges({
+  book: () => book,
+  calculator: () => calculator ?? ownCalculator.value,
+  sheet: () => shownSheet.value,
+  selection,
+  editing,
+  messages,
+  readonly: () => locked.value,
+  refuse,
+  announce: (text) => {
+    formula.announcement.value = text;
+  },
+  notify: (text) => {
+    formula.announcement.value = text;
+    note.show(text);
+  },
+});
+
 const lines = useSheetLines({
   sheet: () => shownSheet.value,
   selection,
@@ -686,6 +705,7 @@ const lines = useSheetLines({
   messages,
   readonly: () => locked.value,
   extra: () => contextMenu,
+  cells: merges.tools,
   tools: () => [
     {
       key: 'rules',
@@ -1079,6 +1099,8 @@ watch(bookLocale, (next) => {
 defineExpose<NuiSpreadsheetExposed>({
   refresh,
   apply: editing.apply,
+  mergeCells: merges.merge,
+  unmergeCells: merges.unmerge,
   openRules,
   save: file.save,
   open: file.open,

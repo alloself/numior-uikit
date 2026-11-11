@@ -524,6 +524,40 @@ test.describe('book', () => {
     await expect.poll(() => book.merged('1', 0)).toBe(true);
   });
 
+  test('merges the selected cells from the cell menu, takes them apart and returns the values on undo', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.dragAcross({ row: '3', col: 0 }, { row: '4', col: 0 });
+    await book.openCellMenu('3', 0);
+
+    await expect(book.cellMenuItem('Объединить ячейки')).toBeVisible();
+    await expect(book.cellMenuItem('Разъединить ячейки')).toBeHidden();
+    expect(await playground.wcagViolations('[role="menu"]')).toEqual([]);
+
+    await book.cellMenuItem('Объединить ячейки').click();
+
+    await expect.poll(() => book.merged('3', 0)).toBe(true);
+    await expect(book.cell('3', 0)).toHaveText('Выручка');
+    await expect(book.note).toHaveText('Ячейки объединены. Осталось только первое значение');
+    await expect(book.cell('3', 0)).toBeFocused();
+
+    await book.cellMenu('3', 0, 'Разъединить ячейки');
+
+    await expect.poll(() => book.merged('3', 0)).toBe(false);
+    await expect(book.cell('4', 0)).toHaveText('');
+
+    await page.keyboard.press('Control+z');
+    await page.keyboard.press('Control+z');
+
+    await expect(book.cell('4', 0)).toHaveText('Себестоимость');
+    await expect.poll(() => book.merged('3', 0)).toBe(false);
+  });
+
   for (const theme of ['light', 'dark'] satisfies readonly Theme[]) {
     test(`shows why a fill over the merged title did nothing in the ${theme} theme`, async ({
       playground,

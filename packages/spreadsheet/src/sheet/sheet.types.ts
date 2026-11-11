@@ -264,6 +264,8 @@ export interface ReportLine {
 export interface NuiSpreadsheetExposed {
   refresh(): void;
   apply(steps: readonly WorkbookStep[]): boolean;
+  mergeCells(): boolean;
+  unmergeCells(): boolean;
   openRules(): void;
   save(): Promise<boolean>;
   open(file: File): Promise<boolean>;
@@ -332,7 +334,27 @@ export interface SheetLinesOptions {
   readonly messages: ComputedRef<NuiSpreadsheetMessages>;
   readonly readonly: () => boolean;
   readonly extra: () => NuiSpreadsheetContextMenu | undefined;
+  readonly cells: () => readonly NuiMenuEntry[];
   readonly tools: () => readonly NuiMenuEntry[];
+}
+
+export interface SheetMergesOptions {
+  readonly book: () => Workbook;
+  readonly calculator: () => Calculator;
+  readonly sheet: () => Sheet | undefined;
+  readonly selection: SheetSelection;
+  readonly editing: SheetEditing;
+  readonly messages: ComputedRef<NuiSpreadsheetMessages>;
+  readonly readonly: () => boolean;
+  readonly refuse: Refuse;
+  readonly announce: (text: string) => void;
+  readonly notify: (text: string) => void;
+}
+
+export interface SheetMerges {
+  merge(): boolean;
+  unmerge(): boolean;
+  tools(): readonly NuiMenuEntry[];
 }
 
 export interface SheetLines {
@@ -588,6 +610,7 @@ export const RecalcPhase = { Idle: 'idle', Running: 'running', Stopped: 'stopped
 export const NuiSpreadsheetRefusalReason = {
   ...StepRefusal,
   FillMerged: 'fill-merged',
+  MergeBlocked: 'merge-blocked',
   CellGone: 'cell-gone',
   PivotSource: 'pivot-source',
   ChartData: 'chart-data',

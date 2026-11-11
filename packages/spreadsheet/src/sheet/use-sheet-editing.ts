@@ -268,7 +268,7 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
     );
 
   const apply = (steps: readonly WorkbookStep[], say?: RefusalText): boolean =>
-    follow(() => history.value.commit(steps), say) > 0;
+    steps.length > 0 && follow(() => history.value.commit(steps), say) > 0;
 
   const attempt = (steps: readonly WorkbookStep[]): StepRefusal | undefined => {
     const tried: { refusal?: StepRefusal } = {};

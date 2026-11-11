@@ -237,6 +237,13 @@ export { bookSteps } from './steps/book-steps';
 export { createCellClips } from './steps/clip';
 export { mergesApartStep, mergesMeeting, outsideCovered } from './steps/clip-merges';
 export { FillMode, type CellClip, type CellClips, type ClipPaste } from './steps/clip.types';
+export {
+  mergeBlocked,
+  mergeCells,
+  mergeableRanges,
+  unmergeCells,
+  type CellsMerge,
+} from './steps/merge-cells';
 export { createWorkbookHistory } from './steps/history';
 export type { HistoryOptions, WorkbookHistory } from './steps/history';
 export { mapCell, mapCellNear, mapRange } from './steps/mapping';

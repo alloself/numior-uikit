@@ -31,6 +31,12 @@ export interface NuiSpreadsheetMessages {
   readonly linesCrossPivot: string;
   readonly linesRefused: string;
   readonly fillMerged: string;
+  readonly mergeCells: string;
+  readonly unmergeCells: string;
+  readonly cellsMerged: string;
+  readonly cellsMergedFirst: string;
+  readonly cellsUnmerged: string;
+  readonly mergeBlocked: string;
   readonly cellGone: string;
   readonly pivotCells: string;
   readonly actionRefused: string;
@@ -220,6 +226,12 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     linesCrossPivot: 'Cannot change rows or columns that run through a pivot table',
     linesRefused: 'These rows or columns cannot be changed',
     fillMerged: 'Cannot fill: the range has merged cells',
+    mergeCells: 'Merge cells',
+    unmergeCells: 'Unmerge cells',
+    cellsMerged: 'Cells merged',
+    cellsMergedFirst: 'Cells merged. Only the first value was kept',
+    cellsUnmerged: 'Cells unmerged',
+    mergeBlocked: 'Cells of a table or a pivot table cannot be merged',
     cellGone: 'Someone else removed or hid this cell. The text you typed was not saved',
     pivotCells: 'Cells of a pivot table cannot be changed',
     actionRefused: 'The action was not applied',
@@ -320,6 +332,12 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     linesCrossPivot: 'Нельзя изменить строки или столбцы, которые проходят через сводную таблицу',
     linesRefused: 'Эти строки или столбцы изменить нельзя',
     fillMerged: 'Нельзя заполнить: в диапазоне есть объединённые ячейки',
+    mergeCells: 'Объединить ячейки',
+    unmergeCells: 'Разъединить ячейки',
+    cellsMerged: 'Ячейки объединены',
+    cellsMergedFirst: 'Ячейки объединены. Осталось только первое значение',
+    cellsUnmerged: 'Ячейки разъединены',
+    mergeBlocked: 'Ячейки таблицы и сводной таблицы объединить нельзя',
     cellGone: 'Ячейку удалил или скрыл другой участник. Набранный текст не сохранён',
     pivotCells: 'Ячейки сводной таблицы изменить нельзя',
     actionRefused: 'Действие не выполнено',
