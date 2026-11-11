@@ -3,6 +3,8 @@ import type {
   CatalogReference,
   ComponentReference,
   DeclarationSlice,
+  IconReference,
+  TokenReference,
 } from '../reference/reference.types';
 
 export const loadComponentReference = async (name: string): Promise<ComponentReference> => {
@@ -46,3 +48,9 @@ export const loadDeclarationReference = async (name: string): Promise<Declaratio
   }
   return declaration;
 };
+
+export const loadTokenReference = async (): Promise<readonly TokenReference[]> =>
+  (await import('virtual:nui-reference/tokens')).default;
+
+export const loadIconReference = async (): Promise<readonly IconReference[]> =>
+  (await import('virtual:nui-reference/icons')).default;

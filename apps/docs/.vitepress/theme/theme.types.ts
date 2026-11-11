@@ -8,10 +8,12 @@ import type { ExampleFile, ExampleLocale } from '../examples/example.types';
 import type {
   CatalogReference,
   ComponentReference,
+  IconReference,
   LocalizedText,
   ReferenceKey,
   ReferenceProp,
   ReferenceStyles,
+  TokenReference,
 } from '../reference/reference.types';
 
 export interface DocsNavItem {
@@ -62,6 +64,14 @@ export interface DocsSidebarGroup {
 
 export type DocsSidebarSections = Readonly<Record<string, readonly DocsSidebarGroup[]>>;
 
+export type TokenSample = (typeof TokenSample)[keyof typeof TokenSample];
+
+export type TokenSection = (typeof TokenSection)[keyof typeof TokenSection];
+
+export interface TokenRow extends TokenReference {
+  readonly sample: TokenSample;
+}
+
 export type DocsAccent = (typeof DocsAccent)[keyof typeof DocsAccent];
 
 export interface DocsTexts {
@@ -105,6 +115,17 @@ export interface DocsTexts {
   readonly copied: string;
   readonly exampleFiles: string;
   readonly codeVariants: string;
+  readonly tokens: string;
+  readonly tokenSample: string;
+  readonly tokenName: string;
+  readonly tokenValue: string;
+  readonly tokenDark: string;
+  readonly icons: string;
+  readonly iconSearch: string;
+  readonly iconGlyph: string;
+  readonly iconName: string;
+  readonly iconLucide: string;
+  readonly iconCopy: string;
   readonly apiProps: string;
   readonly apiModels: string;
   readonly apiEvents: string;
@@ -169,6 +190,29 @@ export interface ExampleViewProps {
 export interface ExampleFrameProps {
   component: Component;
   files: readonly ExampleFile[];
+  texts: DocsTexts;
+}
+
+export interface DocsTokensProps {
+  section: TokenSection;
+}
+
+export interface TokensViewProps {
+  section: TokenSection;
+  texts: DocsTexts;
+}
+
+export interface TokenTableProps {
+  rows: readonly TokenRow[];
+  texts: DocsTexts;
+}
+
+export interface TokenSampleProps {
+  row: TokenRow;
+}
+
+export interface IconTableProps {
+  icons: readonly IconReference[];
   texts: DocsTexts;
 }
 
@@ -301,6 +345,28 @@ export interface ConfiguratorControlProps {
 export interface ConfiguratorControlEmits {
   change: [change: ConfiguratorChange];
 }
+
+export const TokenSample = {
+  Color: 'color',
+  Radius: 'radius',
+  Size: 'size',
+  Shadow: 'shadow',
+  Font: 'font',
+  FontSize: 'font-size',
+  FontWeight: 'font-weight',
+  None: 'none',
+} as const;
+
+export const TokenSection = {
+  Surfaces: 'surfaces',
+  Tones: 'tones',
+  States: 'states',
+  Shape: 'shape',
+  Sizes: 'sizes',
+  Type: 'type',
+  Code: 'code',
+  Effects: 'effects',
+} as const;
 
 export const DocsAccent = {
   Indigo: 'indigo',

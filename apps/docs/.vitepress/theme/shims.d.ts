@@ -42,3 +42,15 @@ declare module 'virtual:nui-reference' {
 
   export default registry;
 }
+
+declare module 'virtual:nui-reference/tokens' {
+  const tokens: readonly import('../reference/reference.types').TokenReference[];
+
+  export default tokens;
+}
+
+declare module 'virtual:nui-reference/icons' {
+  const icons: readonly import('../reference/reference.types').IconReference[];
+
+  export default icons;
+}

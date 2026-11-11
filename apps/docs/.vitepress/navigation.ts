@@ -184,6 +184,13 @@ const COMPONENTS: readonly NavGroup[] = [
   },
 ];
 
+const THEME: readonly NavGroup[] = [
+  {
+    title: { ru: 'Справочники', en: 'Reference' },
+    pages: [{ link: '/theme/tokens', title: { ru: 'Токены', en: 'Tokens' } }],
+  },
+];
+
 export const NAVIGATION: readonly NavSection[] = [
   {
     title: { ru: 'Документация', en: 'Docs' },
@@ -194,6 +201,11 @@ export const NAVIGATION: readonly NavSection[] = [
     title: { ru: 'Компоненты', en: 'Components' },
     prefixes: ['/components/'],
     groups: COMPONENTS,
+  },
+  {
+    title: { ru: 'Темы', en: 'Themes' },
+    prefixes: ['/theme/'],
+    groups: THEME,
   },
 ];
 

@@ -1,4 +1,5 @@
 import { expect, test } from '../fixtures';
+import { expectRgb } from '../helpers/color';
 import { boxOf } from '../helpers/geometry';
 
 test('the sidebar navigates, marks the current page and the contents follow the scroll', async ({
@@ -168,7 +169,7 @@ test('search lists every page once by section and marks the found words in a sni
 }) => {
   await docs.open('/components/kbd');
   await docs.searchButton.click();
-  await expect(docs.commandGroups).toHaveText(['Документация', 'Компоненты']);
+  await expect(docs.commandGroups).toHaveText(['Документация', 'Компоненты', 'Темы']);
   await expect(docs.commandOption('Начало работы')).toHaveCount(1);
 
   await docs.commandInput.fill('индикатор загрузки');
@@ -214,4 +215,30 @@ test('code tabs switch the package manager and keep the pick after a reload', as
   await docs.open('/guide/getting-started');
   await expect(docs.codeVariant('npm')).toHaveAttribute('aria-selected', 'true');
   await expect(docs.shownVariant).toHaveText('npm install @numior/vue @numior/tokens');
+});
+
+test('the tokens page shows a colour of the base theme in both schemes whatever the site theme', async ({
+  docs,
+}) => {
+  await docs.open('/theme/tokens', 'dark');
+  await expect(docs.heading).toHaveText('Токены');
+  await expect(docs.tokenRow('--nui-primary')).toContainText('oklch(0.457 0.215 277.02)');
+
+  await expectRgb(docs.tokenSwatches('--nui-surface').nth(0), 'background-color', [255, 255, 255]);
+  await expectRgb(docs.tokenSwatches('--nui-surface').nth(1), 'background-color', [24, 24, 27]);
+});
+
+test('the icon page finds an icon by its Lucide name and copies the name components use', async ({
+  docs,
+}) => {
+  await docs.stubClipboard();
+  await docs.open('/components/icon');
+  await expect(docs.iconRows.first()).toContainText('check');
+
+  await docs.iconSearch.fill('triangle');
+  await expect(docs.iconRows).toHaveCount(1);
+  await expect(docs.iconRows.first()).toContainText('warning');
+
+  await docs.copyIconName('warning').click();
+  await expect.poll(() => docs.copiedTexts()).toEqual(['warning']);
 });

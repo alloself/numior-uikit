@@ -223,6 +223,30 @@ export class DocsSite {
     return target.evaluate((element) => element.scrollLeft);
   }
 
+  get iconSearch(): Locator {
+    return this.article.getByRole('searchbox', { name: /Найти иконку|Find an icon/ });
+  }
+
+  get iconRows(): Locator {
+    return this.article
+      .getByRole('grid', { name: /Иконки компонентов|Component icons/ })
+      .locator('.nui-table__body [role="row"]');
+  }
+
+  copyIconName(name: string): Locator {
+    return this.article.getByRole('button', { name: `Скопировать имя ${name}`, exact: true });
+  }
+
+  tokenRow(name: string): Locator {
+    return this.article
+      .getByRole('row')
+      .filter({ has: this.page.locator('code').getByText(name, { exact: true }) });
+  }
+
+  tokenSwatches(name: string): Locator {
+    return this.tokenRow(name).locator('[data-nui-theme] > span');
+  }
+
   codeVariant(name: string): Locator {
     return this.article.getByRole('tab', { name, exact: true }).first();
   }

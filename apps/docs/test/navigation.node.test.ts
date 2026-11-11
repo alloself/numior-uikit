@@ -12,7 +12,7 @@ import {
 import type { NavSection } from '../.vitepress/theme/theme.types';
 
 const DOCS = fileURLToPath(new URL('..', import.meta.url));
-const SECTION_DIRS = ['guide', 'components', 'composables'];
+const SECTION_DIRS = ['guide', 'components', 'composables', 'theme'];
 
 const SHOP: readonly NavSection[] = [
   {

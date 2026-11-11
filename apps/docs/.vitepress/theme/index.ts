@@ -22,8 +22,10 @@ import ApiReference from './parts/ApiReference.vue';
 import DocsCodeGroup from './parts/DocsCodeGroup.vue';
 import DocsConfigurator from './parts/DocsConfigurator.vue';
 import DocsExample from './parts/DocsExample.vue';
+import DocsIcons from './parts/DocsIcons.vue';
 import DocsKeyboard from './parts/DocsKeyboard.vue';
 import DocsSignature from './parts/DocsSignature.vue';
+import DocsTokens from './parts/DocsTokens.vue';
 
 const isComponent = (value: unknown): value is Component =>
   typeof value === 'object' && value !== null && ('setup' in value || 'render' in value);
@@ -54,7 +56,9 @@ export default {
     app.component('CodeGroup', DocsCodeGroup);
     app.component('Configurator', DocsConfigurator);
     app.component('Example', DocsExample);
+    app.component('IconReference', DocsIcons);
     app.component('KeyboardReference', DocsKeyboard);
     app.component('SignatureReference', DocsSignature);
+    app.component('TokenReference', DocsTokens);
   },
 } satisfies Theme;

@@ -60,6 +60,12 @@ its component.
 
 The keys of `icons` are type-checked, so a typo in a name shows up in the editor right away.
 
+### Icon names
+
+Every name components take an icon by, and the Lucide icon behind it:
+
+<IconReference />
+
 ## Accessibility
 
 Screen readers skip the icon. Give a button that holds only an icon an `aria-label`. The icon is
