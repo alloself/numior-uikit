@@ -1042,6 +1042,42 @@ export class TableDriver<T> {
     return this.filterButton(col)?.getAttribute('aria-expanded') === 'true';
   }
 
+  get filterSearchable(): boolean {
+    return this.filterInput('Поиск') !== undefined;
+  }
+
+  get filterNote(): string | undefined {
+    return this.popover?.querySelector('.nui-table-filter__note')?.textContent?.trim();
+  }
+
+  get filterChosenLabels(): string[] {
+    return [
+      ...(this.popover?.querySelectorAll<HTMLElement>('.nui-table-filter__values label') ?? []),
+    ].flatMap((entry) =>
+      entry.querySelector<HTMLInputElement>('input')?.checked === true
+        ? [entry.textContent?.trim() ?? '']
+        : [],
+    );
+  }
+
+  get filterAllState(): 'all' | 'some' | 'none' | undefined {
+    const input = this.allValuesInput;
+
+    if (input === null || input === undefined) {
+      return undefined;
+    }
+    if (input.indeterminate) {
+      return 'some';
+    }
+    return input.checked ? 'all' : 'none';
+  }
+
+  private get allValuesInput(): HTMLInputElement | null | undefined {
+    return [...(this.popover?.querySelectorAll<HTMLElement>('label') ?? [])]
+      .find((entry) => entry.textContent?.trim() === 'Выбрать все')
+      ?.querySelector<HTMLInputElement>('input');
+  }
+
   filterValue(label: string): string | undefined {
     return this.filterInput(label)?.value;
   }
@@ -2204,12 +2240,18 @@ export class TableDriver<T> {
   }
 
   async chooseAllValues(): Promise<void> {
-    const all = [...(this.popover?.querySelectorAll<HTMLElement>('label') ?? [])].find(
-      (entry) => entry.textContent?.trim() === 'Выбрать все',
-    );
-
-    all?.querySelector<HTMLInputElement>('input')?.click();
+    this.allValuesInput?.click();
     await nextTick();
+  }
+
+  async searchFilterValues(text: string): Promise<void> {
+    const input = this.filterInput('Поиск');
+
+    if (input !== undefined) {
+      input.value = text;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    await flushPromises();
   }
 
   async applyFilter(): Promise<void> {

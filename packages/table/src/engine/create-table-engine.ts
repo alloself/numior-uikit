@@ -5,7 +5,13 @@ import {
   type StoreJob,
   type StoreRequest,
 } from './column-store';
-import { createDistinctNumbersJob, distinctStrings } from './distinct';
+import {
+  createDistinctNumbersJob,
+  createDistinctStringsJob,
+  distinctSearch,
+  type DistinctJob,
+  type DistinctSearch,
+} from './distinct';
 import { compactPass, createFilterJob, createFilterSetup, createLoweringJob } from './filter';
 import { createGroupJob, type AggregateColumn, type GroupLevel, type GroupTable } from './group';
 import { createPipeline, type Pipeline, type PipelineStage } from './pipeline';
@@ -113,6 +119,24 @@ const detailPositions = (refs: Int32Array): readonly number[] => {
   });
 
   return positions;
+};
+
+const distinctStage = (
+  job: DistinctJob | undefined,
+  finish: (found: TableDistinct) => void,
+): PipelineStage | null => {
+  if (job === undefined) {
+    finish({ values: [], truncated: false });
+    return null;
+  }
+  return {
+    phase: 'keys',
+    job,
+    next: () => {
+      finish(job.result());
+      return null;
+    },
+  };
 };
 
 export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngine<T> => {
@@ -746,34 +770,22 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     retoggle(changed);
   };
 
-  const distinctStage = (
+  const distinctJob = (
     column: TableEngineColumn<T>,
     limit: number,
-    finish: (found: TableDistinct) => void,
-  ): PipelineStage | null => {
+    search: DistinctSearch,
+  ): DistinctJob | undefined => {
     const store = stores.get(column.key);
 
     switch (store?.kind) {
       case undefined:
-        finish({ values: [], truncated: false });
-        return null;
+        return undefined;
       case ColumnStoreKind.Codes:
         throw new Error(`Table engine lists values of "${column.key}" only from a ranked store`);
       case ColumnStoreKind.String:
-        finish(distinctStrings(store, limit));
-        return null;
-      case ColumnStoreKind.Number: {
-        const job = createDistinctNumbersJob(column, store, limit);
-
-        return {
-          phase: 'keys',
-          job,
-          next: () => {
-            finish(job.result());
-            return null;
-          },
-        };
-      }
+        return createDistinctStringsJob(store, limit, search);
+      case ColumnStoreKind.Number:
+        return createDistinctNumbersJob(column, store, limit, search);
     }
   };
 
@@ -1026,6 +1038,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       const version = rowsVersion;
       const limit = distinctOptions.limit ?? DEFAULT_DISTINCT_LIMIT;
       const column = columnOf(key);
+      const search = distinctSearch(distinctOptions.search, distinctOptions.text);
       const outcome: { found: TableDistinct | null } = { found: null };
 
       if (distinctOptions.signal?.aborted === true) {
@@ -1034,7 +1047,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
 
       const pipeline = createPipeline(
         storesStage(new Map([[column.key, 'ranks']]), () =>
-          distinctStage(column, limit, (found) => {
+          distinctStage(distinctJob(column, limit, search), (found) => {
             outcome.found = found;
           }),
         ),

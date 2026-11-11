@@ -40,6 +40,27 @@ const sums = () =>
     ]),
   );
 
+const picked = (exclude: boolean) =>
+  docOf(
+    node('table', [
+      node('table_head', [
+        node(
+          'table_column',
+          [
+            node(
+              'table_filter',
+              [node('table_value', [], { value: 'a' }), node('table_value', [], { value: 'c' })],
+              { kind: 'set', exclude },
+            ),
+          ],
+          { key: 'item', name: 'Item' },
+        ),
+        node('table_column', [], { key: 'sum', name: 'Sum', type: 'number' }),
+      ]),
+      node('table_body', [row('a', 1), row('b', 3), row('c', 9)]),
+    ]),
+  );
+
 describe('NuiContentTable', () => {
   it('draws tables with the table view it is given and keeps the markup table without one', async () => {
     const doc = everyBlock();
@@ -64,6 +85,13 @@ describe('NuiContentTable', () => {
 
     await view.clickHeader(0);
     expect(view.tableRows).toEqual(['c|9|', 'b|3|']);
+  });
+
+  it('shows the rows of the picked values or every row but them, as the filter in the document says', () => {
+    const views = { table: NuiContentTable };
+
+    expect(mounted({ document: picked(false), views }).tableRows).toEqual(['a|1|', 'c|9|']);
+    expect(mounted({ document: picked(true), views }).tableRows).toEqual(['b|3|']);
   });
 
   it('draws cells of a type through the view the app registers', async () => {

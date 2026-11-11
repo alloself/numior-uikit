@@ -73,6 +73,7 @@ export const VIEW_NODES: Readonly<Record<string, NodeSpec>> = {
       max: { default: null, verify: orNull(isNumber) },
       from: { default: null, verify: orNull(isText) },
       to: { default: null, verify: orNull(isText) },
+      exclude: { default: false, verify: (value) => typeof value === 'boolean' },
     },
     render: () => renderTag('span', { class: FILTER_CLASS, hidden: true }, [contentHole]),
   },
@@ -98,7 +99,7 @@ const readFilter = (node: ElementNode): NuiContentTableFilter | undefined => {
     case NuiContentTableFilterKind.Date:
       return { kind: 'date', from: textOf(attrs.from), to: textOf(attrs.to) };
     case NuiContentTableFilterKind.Set:
-      return { kind: 'set', values: valuesOf(node) };
+      return { kind: 'set', values: valuesOf(node), exclude: attrs.exclude === true };
     default:
       return undefined;
   }
@@ -137,6 +138,6 @@ export const filterAttrs = (filter: NuiContentTableFilter): Readonly<Record<stri
     case NuiContentTableFilterKind.Date:
       return { kind: 'date', from: filter.from, to: filter.to };
     case NuiContentTableFilterKind.Set:
-      return { kind: 'set' };
+      return { kind: 'set', exclude: filter.exclude };
   }
 };

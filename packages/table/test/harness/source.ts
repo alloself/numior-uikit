@@ -8,6 +8,7 @@ import {
   type TableFetchResult,
   type TableRowsResult,
   type TableSourceGroup,
+  type TableValuesRequest,
 } from '../../src/engine';
 
 export interface Item {
@@ -67,6 +68,7 @@ const flush = (): Promise<void> => promiseTimeout(0);
 export class SourceHarness {
   readonly engine: TableEngine<Item>;
   readonly errors: unknown[] = [];
+  readonly asked: TableValuesRequest[] = [];
   changes = 0;
   size: number;
   private readonly pending: PendingFetch[] = [];
@@ -92,7 +94,13 @@ export class SourceHarness {
                 })
             : undefined,
         totals: totals === undefined ? undefined : () => Promise.resolve(totals),
-        values: values === undefined ? undefined : () => Promise.resolve(values),
+        values:
+          values === undefined
+            ? undefined
+            : (request) => {
+                this.asked.push(request);
+                return Promise.resolve(values);
+              },
       },
       keyOf: (item) => item.id,
       hasChildren: (item) => item.id % 10 === 0,

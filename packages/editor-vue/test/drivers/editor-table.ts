@@ -171,6 +171,14 @@ export class EditorTableDriver {
     await nextTick();
   }
 
+  async hideValues(column: number, values: readonly string[]): Promise<void> {
+    this.table.vm.$emit('update:filters', [
+      { kind: 'set', key: this.keyAt(column), values, exclude: true },
+    ]);
+
+    await nextTick();
+  }
+
   async order(columns: readonly number[]): Promise<void> {
     this.table.vm.$emit(
       'update:columnOrder',

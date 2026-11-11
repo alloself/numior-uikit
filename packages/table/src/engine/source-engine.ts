@@ -851,6 +851,7 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
             key,
             filters: query.filters ?? EMPTY_FILTERS,
             limit: distinctOptions.limit ?? 100,
+            search: (distinctOptions.search ?? '').trim(),
             signal: distinctOptions.signal ?? controller.signal,
           }),
     store: () => undefined,

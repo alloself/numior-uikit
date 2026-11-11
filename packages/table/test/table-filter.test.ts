@@ -16,6 +16,12 @@ const mountPeople = (options: Partial<TableMountOptions<Person>> = {}): TableDri
   return grid;
 };
 
+const withSet = (key: string): Partial<TableMountOptions<Person>> => ({
+  columns: PEOPLE_COLUMNS.map((column) =>
+    column.key === key ? { ...column, filter: 'set' } : column,
+  ),
+});
+
 const JANUARY_2020 = {
   kind: 'date',
   key: 'hired',
@@ -89,6 +95,7 @@ describe('NuiTable filters', () => {
 
     await grid.openFilter(5);
     expect(grid.filterValueLabels).toEqual(['В офисе', 'Удалённо', '(пусто)']);
+    expect(grid.filterSearchable).toBe(false);
 
     await grid.chooseValue('Удалённо');
     await grid.applyFilter();
@@ -106,11 +113,7 @@ describe('NuiTable filters', () => {
   });
 
   it('keeps the rows of unlisted values when all listed values of a long column are chosen', async () => {
-    const grid = mountPeople({
-      columns: PEOPLE_COLUMNS.map((column) =>
-        column.key === 'name' ? { ...column, filter: 'set' } : column,
-      ),
-    });
+    const grid = mountPeople(withSet('name'));
 
     await grid.openFilter(1);
 
@@ -121,14 +124,126 @@ describe('NuiTable filters', () => {
 
     expect(grid.filters).toEqual([]);
     expect(grid.rowCount).toBe(1001);
+  });
+
+  it('hides only the unchecked value of a long column and shows the same choice when the filter opens again', async () => {
+    const grid = mountPeople(withSet('name'));
 
     await grid.openFilter(1);
     await grid.chooseAllValues();
-    await grid.chooseValue(grid.filterValueLabels[0] ?? '');
+    await grid.chooseValue('Сотрудник 0');
+
+    expect(grid.filterAllState).toBe('some');
+
     await grid.applyFilter();
 
-    expect(grid.filters).toHaveLength(1);
-    expect(grid.rowCount).toBe(100);
+    expect(grid.filters).toEqual([
+      { kind: 'set', key: 'name', values: ['Сотрудник 0'], exclude: true },
+    ]);
+
+    expect(grid.rowCount).toBe(1000);
+
+    await grid.openFilter(1);
+
+    expect(grid.filterChosenLabels).toHaveLength(99);
+    expect(grid.filterChosenLabels).not.toContain('Сотрудник 0');
+
+    await grid.chooseValue('Сотрудник 0');
+
+    expect(grid.filterAllState).toBe('all');
+
+    await grid.applyFilter();
+
+    expect(grid.filters).toEqual([]);
+    expect(grid.rowCount).toBe(1001);
+  });
+
+  it('finds a value beyond the listed ones by search and keeps what was chosen before the search', async () => {
+    const grid = mountPeople(withSet('name'));
+
+    await grid.openFilter(1);
+
+    expect(grid.filterSearchable).toBe(true);
+    expect(grid.filterNote).toBe('Показаны только первые значения. Остальные найдёт поиск.');
+
+    await grid.chooseValue('Сотрудник 0');
+    await grid.searchFilterValues('НИК 99');
+
+    expect(grid.filterValueLabels).toHaveLength(11);
+    expect(grid.filterValueLabels).toContain('Сотрудник 995');
+    expect(grid.filterNote).toBeUndefined();
+
+    await grid.chooseValue('Сотрудник 995');
+    await grid.searchFilterValues('');
+
+    expect(grid.filterValueLabels).toHaveLength(100);
+    expect(grid.filterChosenLabels).toEqual(['Сотрудник 0']);
+
+    await grid.applyFilter();
+
+    expect(grid.filters).toEqual([
+      { kind: 'set', key: 'name', values: ['Сотрудник 0', 'Сотрудник 995'] },
+    ]);
+
+    expect(grid.rowCount).toBe(3);
+  });
+
+  it('chooses and drops only the found values when a search is on', async () => {
+    const grid = mountPeople(withSet('name'));
+
+    await grid.openFilter(1);
+    await grid.searchFilterValues('ник 99');
+    await grid.chooseAllValues();
+
+    expect(grid.filterAllState).toBe('all');
+    expect(grid.filterChosenLabels).toHaveLength(11);
+
+    await grid.applyFilter();
+
+    expect(grid.rowCount).toBe(12);
+
+    await grid.openFilter(1);
+    await grid.searchFilterValues('ник 990');
+
+    expect(grid.filterValueLabels).toEqual(['Сотрудник 990']);
+    expect(grid.filterAllState).toBe('all');
+
+    await grid.chooseAllValues();
+
+    expect(grid.filterAllState).toBe('none');
+
+    await grid.applyFilter();
+
+    expect(grid.rowCount).toBe(11);
+  });
+
+  it('says that nothing matches and finds the blank marker and formatted values by their labels', async () => {
+    const grid = mountPeople(withSet('salary'));
+
+    await grid.openFilter(3);
+
+    expect(grid.filterValueLabels).toHaveLength(101);
+    expect(grid.filterValueLabels.at(-1)).toBe('(пусто)');
+
+    await grid.searchFilterValues('zzz');
+
+    expect(grid.filterValueLabels).toEqual([]);
+    expect(grid.filterNote).toBe('Совпадений нет');
+    expect(grid.filterAllState).toBeUndefined();
+
+    await grid.searchFilterValues('1\u00a0001\u00a0234');
+
+    expect(grid.filterValueLabels).toEqual(['1\u00a0001\u00a0234,5']);
+
+    await grid.searchFilterValues('ПУС');
+
+    expect(grid.filterValueLabels).toEqual(['(пусто)']);
+
+    await grid.chooseValue('(пусто)');
+    await grid.applyFilter();
+
+    expect(grid.filters).toEqual([{ kind: 'set', key: 'salary', values: [null] }]);
+    expect(grid.rowCount).toBe(201);
   });
 
   it('honours the column filter option and opens the popover through the column menu from the keyboard', async () => {

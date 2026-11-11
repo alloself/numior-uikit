@@ -166,6 +166,17 @@ describe('NuiEditor table block', () => {
     expect(table.rows).toEqual(['Pears|12|Open|', 'Plums|3||']);
   });
 
+  it('keeps a filter that hides the named values in the document', async () => {
+    const { editor, table } = await shown();
+
+    await table.hideValues(0, ['Pears']);
+
+    expect(table.rows).toEqual(['Plums|3||']);
+    expect(JSON.stringify(tableJSON(editor))).toContain('"exclude":true');
+    expect(await table.undo()).toBe(1);
+    expect(table.rows).toEqual(['Pears|12|Open|', 'Plums|3||']);
+  });
+
   it('moves rows dropped by their grip and inserts a table from the slash menu', async () => {
     const { editor, table } = await shown();
 

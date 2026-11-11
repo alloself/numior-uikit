@@ -899,6 +899,60 @@ test.describe('table', () => {
     await expect(table.filterButton(10)).toHaveCount(0);
   });
 
+  test('finds a value of a long column by search and hides only the unchecked one', async ({
+    playground,
+    table,
+  }) => {
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+    await table.openFilter(2);
+
+    await expect(table.filter).toHaveAccessibleName('Фильтр: Почта');
+    await expect(table.filterSearch).toBeFocused();
+    await expect(table.filterValues).toHaveCount(100);
+
+    await expect(table.filterNote).toHaveText(
+      'Показаны только первые значения. Остальные найдёт поиск.',
+    );
+
+    await table.filterAll.check();
+    await table.filterSearch.fill('zzz');
+
+    await expect(table.filterNote).toHaveText('Совпадений нет');
+    await expect(table.filterAll).toHaveCount(0);
+
+    await table.filterSearch.fill('CLIENT9999');
+
+    await expect(table.filterValues).toHaveCount(1);
+    await expect(table.filterValue('client9999@example.com')).toBeChecked();
+    expect(await playground.wcagViolations(table.scope)).toEqual([]);
+
+    await table.filterValue('client9999@example.com').uncheck();
+    await table.applyFilter();
+
+    await expect(table.filter).toBeHidden();
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '10002');
+
+    await expect(table.output).toContainText(
+      JSON.stringify([
+        { kind: 'set', key: 'email', values: ['client9999@example.com'], exclude: true },
+      ]),
+    );
+
+    await table.openFilter(2);
+
+    await expect(table.filterValues).toHaveCount(100);
+    await expect(table.filterAll).toHaveJSProperty('indeterminate', true);
+
+    await table.filterSearch.fill('client9999');
+
+    await expect(table.filterValue('client9999@example.com')).not.toBeChecked();
+
+    await table.resetFilter();
+
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '10003');
+  });
+
   test('narrows the rows with the quick filter and a number range and clears both', async ({
     playground,
     table,

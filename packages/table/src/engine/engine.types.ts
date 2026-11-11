@@ -40,6 +40,7 @@ export type TableFilter =
       readonly kind: typeof TableFilterKind.Set;
       readonly key: string;
       readonly values: readonly TableFilterValue[];
+      readonly exclude?: boolean | undefined;
     }
   | {
       readonly kind: typeof TableFilterKind.Quick;
@@ -179,6 +180,8 @@ export interface TableSiblings<T> {
 
 export interface TableDistinctOptions {
   readonly limit?: number | undefined;
+  readonly search?: string | undefined;
+  readonly text?: ((value: TableFilterValue) => string) | undefined;
   readonly signal?: AbortSignal | undefined;
 }
 
@@ -265,6 +268,7 @@ export interface TableValuesRequest {
   readonly key: string;
   readonly filters: readonly TableFilter[];
   readonly limit: number;
+  readonly search: string;
   readonly signal: AbortSignal;
 }
 

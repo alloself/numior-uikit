@@ -142,6 +142,87 @@ describe('createTableEngine filters', () => {
     ]);
   });
 
+  it('keeps the rows outside an excluded set and reads the blank marker the same way', async () => {
+    const harness = new EngineHarness(ORDER_COLUMNS, ORDERS);
+
+    expect(
+      await ids(harness, [{ kind: 'set', key: 'city', values: ['Moscow'], exclude: true }]),
+    ).toEqual([2, 3, 5, 6]);
+
+    expect(
+      await ids(harness, [{ kind: 'set', key: 'city', values: ['Moscow', null], exclude: true }]),
+    ).toEqual([2, 3, 6]);
+
+    expect(
+      await ids(harness, [{ kind: 'set', key: 'note', values: [null], exclude: true }]),
+    ).toEqual([1, 4, 5, 6]);
+
+    expect(
+      await ids(harness, [{ kind: 'set', key: 'paid', values: [true], exclude: true }]),
+    ).toEqual([2, 3, 5]);
+
+    expect(
+      await ids(harness, [{ kind: 'set', key: 'amount', values: [100, null], exclude: true }]),
+    ).toEqual([2, 4, 5, 6]);
+
+    expect(await ids(harness, [{ kind: 'set', key: 'city', values: [], exclude: true }])).toEqual([
+      1, 2, 3, 4, 5, 6,
+    ]);
+  });
+
+  it('lists only the values that hold the searched text, in any case and by the label of a value', async () => {
+    const harness = new EngineHarness(ORDER_COLUMNS, ORDERS);
+
+    expect(await harness.settle(harness.engine.distinct('note', { search: ' GIFT ' }))).toEqual({
+      values: ['Gift', 'gift wrap'],
+      truncated: false,
+    });
+
+    expect(
+      await harness.settle(harness.engine.distinct('note', { search: 'gift', limit: 1 })),
+    ).toEqual({ values: ['Gift'], truncated: true });
+
+    expect(await harness.settle(harness.engine.distinct('city', { search: 'zzz' }))).toEqual({
+      values: [],
+      truncated: false,
+    });
+
+    expect(await harness.settle(harness.engine.distinct('amount', { search: '0' }))).toEqual({
+      values: [100, 120, 250, 300],
+      truncated: false,
+    });
+
+    expect(
+      await harness.settle(
+        harness.engine.distinct('paid', {
+          search: 'yes',
+          text: (value) => (value === true ? 'Yes' : 'No'),
+        }),
+      ),
+    ).toEqual({ values: [true], truncated: false });
+
+    expect(
+      await harness.settle(
+        harness.engine.distinct('city', {
+          search: 'capital',
+          text: (value) => (value === 'Moscow' ? 'Capital' : String(value)),
+        }),
+      ),
+    ).toEqual({ values: ['Moscow'], truncated: false });
+  });
+
+  it('lists the values found in a long column within the budget of one action', async () => {
+    const harness = new EngineHarness(ACCOUNT_COLUMNS, accounts(ROWS));
+
+    await harness.settle(harness.engine.distinct('email', { search: 'user4999' }));
+    const started = performance.now();
+
+    const found = await harness.settle(harness.engine.distinct('email', { search: 'user49999' }));
+
+    expect(performance.now() - started).toBeLessThan(100);
+    expect(found).toEqual({ values: ['User49999@Example.com'], truncated: false });
+  });
+
   it('rejects filters on columns of another kind', async () => {
     const harness = new EngineHarness(ORDER_COLUMNS, ORDERS);
 
@@ -167,7 +248,7 @@ describe('createTableEngine filters', () => {
     });
 
     expect(await harness.settle(harness.engine.distinct('city', { limit: 2 }))).toEqual({
-      values: ['Almaty', 'Kazan'],
+      values: ['Almaty', 'Kazan', null],
       truncated: true,
     });
 
@@ -182,7 +263,7 @@ describe('createTableEngine filters', () => {
     });
 
     expect(await harness.settle(harness.engine.distinct('note', { limit: 3 }))).toEqual({
-      values: ['Gift', 'gift wrap', 'urgent'],
+      values: ['Gift', 'gift wrap', 'urgent', null],
       truncated: true,
     });
 
@@ -192,7 +273,7 @@ describe('createTableEngine filters', () => {
     });
 
     expect(await harness.settle(harness.engine.distinct('amount', { limit: 3 }))).toEqual({
-      values: [75, 100, 120],
+      values: [75, 100, 120, null],
       truncated: true,
     });
 

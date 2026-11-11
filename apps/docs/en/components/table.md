@@ -81,6 +81,10 @@ The filter in the column menu depends on the column type: text, number or date. 
 `filter: 'set'` the filter offers a list of values to pick from. The `v-model:quick` model
 searches all text columns at once.
 
+A long list shows the first hundred values, and the search above the list finds the rest. "Select
+all" with a box unchecked afterwards gives a filter with `exclude: true`: it hides the named
+values, and values that appear later stay visible.
+
 A column with `aggregate` adds a totals row at the bottom, such as a sum or an average. The
 totals row shows the `totalsLabel` caption and the number of rows left after filtering.
 

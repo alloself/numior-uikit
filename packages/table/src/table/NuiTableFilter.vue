@@ -28,25 +28,37 @@
         <NuiDatePicker v-model="draft.to" :label="texts.to" :locale="locale" size="sm" />
       </template>
       <template v-else>
-        <NuiCheckbox
-          :model-value="allChosen"
-          :indeterminate="someChosen"
+        <NuiInput
+          v-if="searchable"
+          v-model="query"
+          type="search"
+          :label="texts.search"
           size="sm"
-          @update:model-value="chooseAll"
-        >
-          {{ texts.selectAll }}
-        </NuiCheckbox>
-        <div class="nui-table-filter__values" role="group" :aria-label="title">
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <p v-if="nothingFound" class="nui-table-filter__note">{{ texts.noMatches }}</p>
+        <template v-else>
           <NuiCheckbox
-            v-for="option in options"
-            :key="option.key"
-            :model-value="chosen(option.value)"
+            :model-value="allChosen"
+            :indeterminate="someChosen"
             size="sm"
-            @update:model-value="toggle(option.value)"
+            @update:model-value="chooseAll"
           >
-            {{ option.label }}
+            {{ texts.selectAll }}
           </NuiCheckbox>
-        </div>
+          <div class="nui-table-filter__values" role="group" :aria-label="title">
+            <NuiCheckbox
+              v-for="option in options"
+              :key="option.key"
+              :model-value="chosen(option.value)"
+              size="sm"
+              @update:model-value="toggle(option.value)"
+            >
+              {{ option.label }}
+            </NuiCheckbox>
+          </div>
+        </template>
         <p v-if="truncated" class="nui-table-filter__note">{{ texts.truncated }}</p>
       </template>
       <div class="nui-table-filter__actions">
@@ -79,7 +91,15 @@ import {
 } from '@numior/vue';
 import { TableTextOp, type TableFilterValue } from '../engine';
 import { tableMessages } from './table.messages';
-import { draftOf, filterFromDraft, type FilterDraft } from './table-filter';
+import {
+  chosenIn,
+  draftOf,
+  filterFromDraft,
+  valuesToggled,
+  valuesWith,
+  type FilterDraft,
+  type SetFilterDraft,
+} from './table-filter';
 import {
   NuiTableFilterKind,
   type NuiTableColumnFilter,
@@ -91,6 +111,8 @@ interface ValueOption {
   readonly value: TableFilterValue;
   readonly label: string;
 }
+
+const SEARCH_FROM = 8;
 
 const { title, kind, columnKey, filter, anchor, locale, loadValues, valueLabel } =
   defineProps<NuiTableFilterProps>();
@@ -104,6 +126,10 @@ const messages = useMessages(tableMessages, () => locale);
 const draft = ref<FilterDraft>(draftOf(kind, filter));
 const values = shallowRef<readonly TableFilterValue[]>([]);
 const truncated = ref(false);
+const query = ref('');
+const searchable = ref(false);
+const blankListed = ref(false);
+let asking: AbortController | undefined;
 
 const { contentAttrs } = usePopover(content, { open, mode: PopoverMode.Auto });
 
@@ -121,6 +147,8 @@ const texts = computed(() => ({
   from: messages.value.filterFrom,
   to: messages.value.filterTo,
   selectAll: messages.value.filterSelectAll,
+  search: messages.value.filterSearch,
+  noMatches: messages.value.filterNoMatches,
   truncated: messages.value.filterTruncated,
   apply: messages.value.filterApply,
   reset: messages.value.filterReset,
@@ -140,51 +168,102 @@ const operators = computed(() => {
   }));
 });
 
+const needle = computed(() => query.value.trim());
+
 const options = computed<readonly ValueOption[]>(() =>
-  values.value.map((value, index) => ({ key: `${index}`, value, label: valueLabel(value) })),
+  values.value.map((value) => ({
+    key: `${typeof value}:${String(value)}`,
+    value,
+    label: valueLabel(value),
+  })),
 );
 
-const chosenValues = (): readonly TableFilterValue[] =>
-  draft.value.kind === NuiTableFilterKind.Set ? draft.value.values : [];
+const setDraft = computed<SetFilterDraft | undefined>(() =>
+  draft.value.kind === NuiTableFilterKind.Set ? draft.value : undefined,
+);
 
-const chosen = (value: TableFilterValue): boolean => chosenValues().includes(value);
+const chosen = (value: TableFilterValue): boolean =>
+  setDraft.value !== undefined && chosenIn(setDraft.value, value);
 
-const allChosen = computed(
+const everyListed = computed(
   () => options.value.length > 0 && options.value.every((option) => chosen(option.value)),
 );
 
-const someChosen = computed(() => chosenValues().length > 0 && !allChosen.value);
+const someListed = computed(() => options.value.some((option) => chosen(option.value)));
+
+const whole = computed(() => needle.value === '' && !truncated.value);
+
+const nothingKept = computed(
+  () => setDraft.value?.exclude === true && setDraft.value.values.length === 0,
+);
+
+const everyChosen = computed(() => nothingKept.value || (whole.value && everyListed.value));
+
+const allChosen = computed(() => (needle.value === '' ? everyChosen.value : everyListed.value));
+
+const someChosen = computed(() => {
+  if (allChosen.value) {
+    return false;
+  }
+  return needle.value === ''
+    ? setDraft.value?.exclude === true || (setDraft.value?.values.length ?? 0) > 0
+    : someListed.value;
+});
+
+const nothingFound = computed(() => needle.value !== '' && options.value.length === 0);
 
 const toggle = (value: TableFilterValue): void => {
-  const current = draft.value;
+  const current = setDraft.value;
 
-  if (current.kind !== NuiTableFilterKind.Set) {
+  if (current === undefined) {
     return;
   }
 
-  current.values = chosen(value)
-    ? current.values.filter((entry) => entry !== value)
-    : [...current.values, value];
+  current.values = valuesToggled(current, value);
 };
 
 const chooseAll = (checked: boolean): void => {
-  const current = draft.value;
+  const current = setDraft.value;
 
-  if (current.kind !== NuiTableFilterKind.Set) {
+  if (current === undefined) {
+    return;
+  }
+  if (needle.value === '') {
+    current.exclude = checked;
+    current.values = [];
     return;
   }
 
-  current.values = checked ? options.value.map((option) => option.value) : [];
+  current.values = valuesWith(current, values.value, checked);
 };
 
-const load = async (): Promise<void> => {
-  const result = await loadValues();
+const withBlank = (
+  found: readonly TableFilterValue[],
+  search: string,
+): readonly TableFilterValue[] =>
+  blankListed.value &&
+  !found.includes(null) &&
+  valueLabel(null).toLowerCase().includes(search.toLowerCase())
+    ? [...found, null]
+    : found;
 
-  if (result === null) {
+const load = async (search: string): Promise<void> => {
+  const controller = new AbortController();
+
+  asking?.abort();
+  asking = controller;
+
+  const result = await loadValues(search, controller.signal);
+
+  if (result === null || controller.signal.aborted) {
     return;
   }
+  if (search === '') {
+    blankListed.value = result.values.includes(null);
+    searchable.value = result.truncated || result.values.length > SEARCH_FROM;
+  }
 
-  values.value = result.values;
+  values.value = search === '' ? result.values : withBlank(result.values, search);
   truncated.value = result.truncated;
 };
 
@@ -193,8 +272,12 @@ const close = (next: NuiTableColumnFilter | null): void => {
   open.value = false;
 };
 
+const noneChosen = computed(() => whole.value && options.value.length > 0 && !someListed.value);
+
+const unfiltered = (): boolean => everyChosen.value || noneChosen.value;
+
 const apply = (): void => {
-  close(allChosen.value ? null : filterFromDraft(columnKey, draft.value));
+  close(unfiltered() ? null : filterFromDraft(columnKey, draft.value));
 };
 
 const reset = (): void => {
@@ -234,13 +317,22 @@ watch(
     }
 
     draft.value = draftOf(kind, filter);
+    query.value = '';
 
     if (kind !== NuiTableFilterKind.Set) {
       return;
     }
 
-    void load();
+    void load('');
   },
   { immediate: true },
 );
+
+watch(needle, (search) => {
+  if (!open.value) {
+    return;
+  }
+
+  void load(search);
+});
 </script>

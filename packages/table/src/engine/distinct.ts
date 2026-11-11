@@ -1,3 +1,4 @@
+import { loweredAt, loweredOf } from './filter';
 import { CHECK_INTERVAL, type SliceJob } from './slicer';
 import {
   TableEngineColumnKind,
@@ -11,31 +12,78 @@ type NumberStore = Extract<ColumnStore, { kind: 'number' }>;
 
 type RankedStrings = Extract<ColumnStore, { kind: 'string' }>;
 
-interface DistinctJob extends SliceJob {
+export interface DistinctJob extends SliceJob {
   result(): TableDistinct;
 }
 
-export const distinctStrings = (store: RankedStrings, limit: number): TableDistinct => {
+export interface DistinctSearch {
+  readonly needle: string;
+  readonly text: ((value: TableFilterValue) => string) | undefined;
+}
+
+export const distinctSearch = (
+  search: string | undefined,
+  text: ((value: TableFilterValue) => string) | undefined,
+): DistinctSearch => ({ needle: (search ?? '').trim().toLowerCase(), text });
+
+const listed = (
+  values: readonly TableFilterValue[],
+  blank: boolean,
+  truncated: boolean,
+): TableDistinct => ({ values: blank ? [...values, null] : values, truncated });
+
+export const createDistinctStringsJob = (
+  store: RankedStrings,
+  limit: number,
+  search: DistinctSearch,
+): DistinctJob => {
+  const { dictionary, sortedCodes } = store;
+  const { needle, text } = search;
+  const lowered = loweredOf(dictionary);
   const values: TableFilterValue[] = [];
-  const blank = store.dictionary.includes('');
-  const filled = store.dictionary.length - (blank ? 1 : 0);
+  let position = 0;
+  let more = false;
 
-  for (const code of store.sortedCodes) {
-    const entry = store.dictionary[code] ?? '';
+  const holds = (code: number, entry: string): boolean =>
+    needle === '' ||
+    (text === undefined
+      ? loweredAt(dictionary, lowered, code)
+      : text(entry).toLowerCase()
+    ).includes(needle);
 
+  const fits = (code: number): boolean => {
+    const entry = dictionary[code] ?? '';
+
+    if (entry === '' || !holds(code, entry)) {
+      return true;
+    }
     if (values.length === limit) {
-      break;
+      return false;
     }
-    if (entry === '') {
-      continue;
-    }
-
     values.push(entry);
-  }
-  if (filled > limit || !(blank || store.nulls.includes(1))) {
-    return { values, truncated: filled > limit };
-  }
-  return { values: [...values, null], truncated: false };
+    return true;
+  };
+
+  return {
+    total: () => sortedCodes.length,
+    done: () => position,
+    work: (deadline) => {
+      while (position < sortedCodes.length) {
+        if (!fits(sortedCodes[position] ?? 0)) {
+          more = true;
+          return true;
+        }
+        position += 1;
+
+        if (position % CHECK_INTERVAL === 0 && performance.now() >= deadline) {
+          return false;
+        }
+      }
+      return true;
+    },
+    result: () =>
+      listed(values, needle === '' && (dictionary.includes('') || store.nulls.includes(1)), more),
+  };
 };
 
 const insertBounded = (kept: number[], key: number, cap: number): void => {
@@ -75,22 +123,52 @@ export const createDistinctNumbersJob = <T>(
   column: TableEngineColumn<T>,
   store: NumberStore,
   limit: number,
+  search: DistinctSearch,
 ): DistinctJob => {
+  const { needle, text } = search;
   const kept: number[] = [];
+  const verdicts = new Map<number, boolean>();
   const length = store.keys.length;
   let position = 0;
   let blank = false;
+
+  const read = (key: number): boolean => {
+    const value = numberValue(column, key);
+
+    return (text === undefined ? String(value) : text(value)).toLowerCase().includes(needle);
+  };
+
+  const holds = (key: number): boolean => {
+    const known = verdicts.get(key);
+
+    if (known !== undefined) {
+      return known;
+    }
+    const verdict = read(key);
+
+    verdicts.set(key, verdict);
+    return verdict;
+  };
+
+  const take = (index: number): void => {
+    if (store.nulls[index] === 1) {
+      blank = true;
+      return;
+    }
+    const key = store.keys[index] ?? 0;
+
+    if (needle !== '' && !holds(key)) {
+      return;
+    }
+    insertBounded(kept, key, limit + 1);
+  };
 
   return {
     total: () => length,
     done: () => position,
     work: (deadline) => {
       while (position < length) {
-        if (store.nulls[position] === 1) {
-          blank = true;
-        } else {
-          insertBounded(kept, store.keys[position] ?? 0, limit + 1);
-        }
+        take(position);
         position += 1;
 
         if (position % CHECK_INTERVAL === 0 && performance.now() >= deadline) {
@@ -99,13 +177,11 @@ export const createDistinctNumbersJob = <T>(
       }
       return true;
     },
-    result: () => {
-      const truncated = kept.length > limit;
-      const values = kept.slice(0, limit).map((key) => numberValue(column, key));
-
-      return truncated || !blank
-        ? { values, truncated }
-        : { values: [...values, null], truncated: false };
-    },
+    result: () =>
+      listed(
+        kept.slice(0, limit).map((key) => numberValue(column, key)),
+        blank && needle === '',
+        kept.length > limit,
+      ),
   };
 };

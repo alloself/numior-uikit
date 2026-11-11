@@ -724,7 +724,7 @@ export interface NuiTableFilterProps {
   filter: NuiTableColumnFilter | undefined;
   anchor: HTMLElement | null;
   locale: string;
-  loadValues: () => Promise<TableDistinct | null>;
+  loadValues: (search: string, signal: AbortSignal) => Promise<TableDistinct | null>;
   valueLabel: (value: TableFilterValue) => string;
 }
 

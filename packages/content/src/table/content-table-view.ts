@@ -34,7 +34,9 @@ const tableFilterOf = (key: NodeId, filter: NuiContentTableFilter): NuiTableColu
     case NuiContentTableFilterKind.Date:
       return { kind: 'date', key, from: dayOf(filter.from), to: dayOf(filter.to) };
     case NuiContentTableFilterKind.Set:
-      return { kind: 'set', key, values: filter.values };
+      return filter.exclude
+        ? { kind: 'set', key, values: filter.values, exclude: true }
+        : { kind: 'set', key, values: filter.values };
   }
 };
 
@@ -47,7 +49,7 @@ const contentFilterOf = (filter: NuiTableColumnFilter): NuiContentTableFilter =>
     case NuiContentTableFilterKind.Date:
       return { kind: 'date', from: isoOf(filter.from), to: isoOf(filter.to) };
     case NuiContentTableFilterKind.Set:
-      return { kind: 'set', values: filter.values };
+      return { kind: 'set', values: filter.values, exclude: filter.exclude === true };
   }
 };
 

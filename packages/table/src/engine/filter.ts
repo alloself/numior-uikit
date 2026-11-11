@@ -34,6 +34,8 @@ type NumberStore = Extract<ColumnStore, { kind: 'number' }>;
 
 type CodedStore = Exclude<ColumnStore, { kind: 'number' }>;
 
+type SetFilter = Extract<TableFilter, { kind: 'set' }>;
+
 interface ScanState {
   readonly dictionary: readonly string[];
   readonly map: Uint8Array;
@@ -60,7 +62,7 @@ interface QuickLane {
 
 const loweredCache = new WeakMap<readonly string[], string[]>();
 
-const loweredOf = (dictionary: readonly string[]): string[] => {
+export const loweredOf = (dictionary: readonly string[]): string[] => {
   const cached = loweredCache.get(dictionary);
 
   if (cached !== undefined) {
@@ -71,7 +73,11 @@ const loweredOf = (dictionary: readonly string[]): string[] => {
   return created;
 };
 
-const loweredAt = (dictionary: readonly string[], lowered: string[], code: number): string => {
+export const loweredAt = (
+  dictionary: readonly string[],
+  lowered: string[],
+  code: number,
+): string => {
   const known = lowered[code];
 
   if (known !== undefined) {
@@ -193,9 +199,9 @@ const textMatcher = (filter: Extract<TableFilter, { kind: 'text' }>): TextMatch 
 };
 
 const codedTest =
-  (store: StringCodes, map: Uint8Array, nullPasses: boolean): RowTest =>
+  (store: StringCodes, map: Uint8Array, nullPasses: boolean, hit: 0 | 1): RowTest =>
   (index) =>
-    store.nulls[index] === 1 ? nullPasses : map[store.codes[index] ?? 0] === 1;
+    store.nulls[index] === 1 ? nullPasses : map[store.codes[index] ?? 0] === hit;
 
 const rangeTest = (
   store: NumberStore,
@@ -228,11 +234,12 @@ const numericValue = (value: TableFilterValue): number | null => {
   }
 };
 
-const numberSetTest = (store: NumberStore, values: readonly TableFilterValue[]): RowTest => {
-  const nullPasses = values.includes(null);
+const numberSetTest = (store: NumberStore, filter: SetFilter): RowTest => {
+  const outside = filter.exclude === true;
+  const nullPasses = filter.values.includes(null) !== outside;
   const wanted = new Set<number>();
 
-  for (const value of values) {
+  for (const value of filter.values) {
     const key = numericValue(value);
 
     if (key === null) {
@@ -241,7 +248,8 @@ const numberSetTest = (store: NumberStore, values: readonly TableFilterValue[]):
 
     wanted.add(key);
   }
-  return (index) => (store.nulls[index] === 1 ? nullPasses : wanted.has(store.keys[index] ?? 0));
+  return (index) =>
+    store.nulls[index] === 1 ? nullPasses : wanted.has(store.keys[index] ?? 0) !== outside;
 };
 
 const quickTest =
@@ -275,15 +283,19 @@ const sourceOf = <T>(
   return { column, store };
 };
 
-const setPending = (store: ColumnStore, values: readonly TableFilterValue[]): PendingTest => {
+const setPending = (store: ColumnStore, filter: SetFilter): PendingTest => {
   if (store.kind === ColumnStoreKind.Number) {
-    return ready(numberSetTest(store, values));
+    return ready(numberSetTest(store, filter));
   }
-  const nullPasses = values.includes(null);
-  const strings = values.filter((value) => typeof value === 'string');
-  const scan = exactScan(store.dictionary, new Set(nullPasses ? [...strings, ''] : strings));
+  const outside = filter.exclude === true;
+  const blank = filter.values.includes(null);
+  const strings = filter.values.filter((value) => typeof value === 'string');
+  const scan = exactScan(store.dictionary, new Set(blank ? [...strings, ''] : strings));
 
-  return { scans: [scan], test: () => codedTest(store, scan.map, nullPasses) };
+  return {
+    scans: [scan],
+    test: () => codedTest(store, scan.map, blank !== outside, outside ? 0 : 1),
+  };
 };
 
 const quickPending = (value: string, stores: readonly StringCodes[]): PendingTest => {
@@ -321,7 +333,7 @@ const textPending = (
   const scan = loweredScan(store.dictionary, textMatcher(filter));
   const blankPasses = filter.op === TableTextOp.Empty || filter.value === '';
 
-  return { scans: [scan], test: () => codedTest(store, scan.map, blankPasses) };
+  return { scans: [scan], test: () => codedTest(store, scan.map, blankPasses, 1) };
 };
 
 const pendingFor = <T>(filter: TableFilter, sources: FilterSources<T>): PendingTest => {
@@ -347,7 +359,7 @@ const pendingFor = <T>(filter: TableFilter, sources: FilterSources<T>): PendingT
       }
       return ready(rangeTest(store, filter.from, filter.to));
     case TableFilterKind.Set:
-      return setPending(store, filter.values);
+      return setPending(store, filter);
   }
 };
 

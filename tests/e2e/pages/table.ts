@@ -429,6 +429,22 @@ export class TableSection {
     return this.filter.getByRole('checkbox', { name: label, exact: true });
   }
 
+  get filterSearch(): Locator {
+    return this.filter.getByRole('searchbox', { name: 'Поиск', exact: true });
+  }
+
+  get filterAll(): Locator {
+    return this.filter.getByRole('checkbox', { name: 'Выбрать все', exact: true });
+  }
+
+  get filterValues(): Locator {
+    return this.filter.locator('.nui-table-filter__values').getByRole('checkbox');
+  }
+
+  get filterNote(): Locator {
+    return this.filter.locator('.nui-table-filter__note');
+  }
+
   filterField(label: string): Locator {
     return this.filter.getByLabel(label, { exact: true });
   }

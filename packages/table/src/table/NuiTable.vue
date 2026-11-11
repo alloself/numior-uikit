@@ -2356,14 +2356,6 @@ const viewportEvents = {
   pointerup: outsideDetail(cellEditor.onPointerup),
 };
 
-const loadValues = (): Promise<TableDistinct | null> => {
-  const current = header.target.value;
-
-  return current === null
-    ? Promise.resolve(null)
-    : engine.value.distinct(current.key, { limit: DISTINCT_LIMIT });
-};
-
 const valueLabel = (value: TableFilterValue): string => {
   const current = header.target.value;
 
@@ -2379,6 +2371,23 @@ const valueLabel = (value: TableFilterValue): string => {
         );
 
   return text === '' ? messages.value.blank : text;
+};
+
+const loadValues = (search: string, signal: AbortSignal): Promise<TableDistinct | null> => {
+  const current = header.target.value;
+
+  if (current === null) {
+    return Promise.resolve(null);
+  }
+  const column = columnAt(current.key);
+  const plain = column.type === NuiTableColumnType.Text && column.format === undefined;
+
+  return engine.value.distinct(current.key, {
+    limit: DISTINCT_LIMIT,
+    search,
+    text: plain ? undefined : valueLabel,
+    signal,
+  });
 };
 
 const scopeOf = (row: T, position: number, key: string, pinned: boolean): NuiTableCellSlot<T> => {

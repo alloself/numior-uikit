@@ -42,6 +42,7 @@ export type NuiContentTableFilter =
   | {
       readonly kind: typeof NuiContentTableFilterKind.Set;
       readonly values: readonly NuiContentCellValue[];
+      readonly exclude: boolean;
     };
 
 export type NuiContentSortDirection =
