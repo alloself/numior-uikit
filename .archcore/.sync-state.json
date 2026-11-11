@@ -256,6 +256,26 @@
       "source": "otp-field.adr.md",
       "target": "component-authoring.rule.md",
       "type": "related"
+    },
+    {
+      "source": "tailwind-first.adr.md",
+      "target": "modular-foundation.adr.md",
+      "type": "depends_on"
+    },
+    {
+      "source": "tailwind-first.adr.md",
+      "target": "component-authoring.rule.md",
+      "type": "related"
+    },
+    {
+      "source": "tailwind-first.adr.md",
+      "target": "engineering-quality.rule.md",
+      "type": "related"
+    },
+    {
+      "source": "tailwind-first.adr.md",
+      "target": "nuxt-module.adr.md",
+      "type": "related"
     }
   ]
 }
