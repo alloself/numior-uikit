@@ -21,16 +21,12 @@ export const demoLocaleOf = (importer: string): ExampleLocale | undefined => {
   return isLocale(locale) ? locale : undefined;
 };
 
-export const demoFileOf = (
-  demoRoot: string,
-  locale: ExampleLocale,
-  name: string,
-): string | undefined =>
+const demoFileOf = (demoRoot: string, locale: ExampleLocale, name: string): string | undefined =>
   [join(demoRoot, locale, `${name}.ts`), join(demoRoot, SHARED, `${name}.ts`)].find((file) =>
     existsSync(file),
   );
 
-export const demoNamesOf = (source: string): string[] =>
+const demoNamesOf = (source: string): string[] =>
   [...source.matchAll(IMPORT_RE)].reduce<string[]>((names, [, name = '']) => {
     if (!names.includes(name)) {
       names.push(name);
