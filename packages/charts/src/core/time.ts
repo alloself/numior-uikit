@@ -1,9 +1,14 @@
-import { TimeUnit } from './chart.types';
+import { TimeContext, TimeUnit } from './chart.types';
 
 export interface TimeTicks {
   readonly unit: TimeUnit;
   readonly step: number;
   readonly values: readonly number[];
+}
+
+export interface TimeGrain {
+  readonly unit: TimeUnit;
+  readonly context: TimeContext;
 }
 
 interface Interval {
@@ -32,6 +37,18 @@ const INTERVALS: readonly Interval[] = [
     step,
     length: step * 365 * DAY,
   })),
+];
+
+const YEARS: Interval = { unit: 'year', step: 1, length: 365 * DAY };
+
+const DAYS: Interval = { unit: 'day', step: 1, length: DAY };
+
+const GRAINS: readonly Interval[] = [
+  YEARS,
+  { unit: 'month', step: 1, length: 28 * DAY },
+  DAYS,
+  { unit: 'hour', step: 1, length: HOUR },
+  { unit: 'minute', step: 1, length: MINUTE },
 ];
 
 const LONGEST: Interval = { unit: 'year', step: 1000, length: 1000 * 365 * DAY };
@@ -83,4 +100,53 @@ export const timeTicks = (min: number, max: number, count = 6): TimeTicks => {
     }
   }
   return { unit: chosen.unit, step: chosen.step, values };
+};
+
+const apart = (moments: Float64Array, grain: Interval): boolean =>
+  moments.every((moment, index) => {
+    const previous = moments[index - 1];
+
+    return (
+      previous === undefined ||
+      previous === moment ||
+      floorTo(moment, grain) !== floorTo(previous, grain)
+    );
+  });
+
+const closest = (moments: Float64Array): number =>
+  moments.reduce((gap, moment, index) => {
+    const previous = moments[index - 1];
+
+    return previous === undefined || previous === moment ? gap : Math.min(gap, moment - previous);
+  }, Number.POSITIVE_INFINITY);
+
+const contextOf = (unit: TimeUnit, first: number, last: number): TimeContext => {
+  if (unit === TimeUnit.Month || unit === TimeUnit.Year) {
+    return TimeContext.None;
+  }
+  if (floorTo(first, YEARS) !== floorTo(last, YEARS)) {
+    return TimeContext.Year;
+  }
+
+  const timed = unit !== TimeUnit.Day && unit !== TimeUnit.Week;
+
+  return timed && floorTo(first, DAYS) !== floorTo(last, DAYS)
+    ? TimeContext.Date
+    : TimeContext.None;
+};
+
+export const timeGrain = (values: readonly number[]): TimeGrain => {
+  const moments = Float64Array.from(values.filter(Number.isFinite)).toSorted();
+  const [first = 0] = moments;
+  const last = moments.at(-1) ?? first;
+  const gap = closest(moments);
+
+  const unit =
+    GRAINS.find((grain) =>
+      Number.isFinite(gap)
+        ? grain.length <= gap && apart(moments, grain)
+        : floorTo(first, grain) === first,
+    )?.unit ?? TimeUnit.Second;
+
+  return { unit, context: contextOf(unit, first, last) };
 };

@@ -27,6 +27,19 @@ const drawn = (scene: ChartScene): string =>
     ...scene.points.map((point) => `${String(point.x)},${String(point.y)}`),
   ].join(' ');
 
+const timeLabels = (values: readonly number[]): string[] =>
+  texts(
+    layoutChart(
+      {
+        kind: 'line',
+        categories: { kind: 'time', values },
+        series: [{ id: 'a', name: 'A', values: values.map((_value, index) => index) }],
+      },
+      { width: 800, height: 300 },
+    ),
+    'category-tick',
+  );
+
 const barsOf = (scene: ChartScene, series: number): SceneBar[] =>
   scene.bars.filter((bar) => bar.series === series);
 
@@ -177,6 +190,143 @@ describe('chart layout', () => {
     expect(texts(scene, 'category-tick').length).toBeLessThan(30);
     expect(texts(scene, 'category-tick')[0]).toBe('Jan 1');
     expect(texts(scene, 'value-tick').at(-1)).toBe('50K');
+  });
+
+  it('tells the value ticks apart at any magnitude', () => {
+    const steps = { kind: 'text', labels: ['a', 'b', 'c'] } as const;
+
+    const millions = layoutChart(
+      {
+        kind: 'line',
+        categories: steps,
+        series: [{ id: 'a', name: 'A', values: [1_000_000, 1_004_000, 1_010_000] }],
+      },
+      SIZE,
+    );
+
+    const fractions = layoutChart(
+      {
+        kind: 'column',
+        categories: steps,
+        series: [{ id: 'a', name: 'A', values: [250_000, 900_000, 1_250_000] }],
+      },
+      SIZE,
+    );
+
+    const tiny = layoutChart(
+      {
+        kind: 'column',
+        categories: steps,
+        series: [{ id: 'a', name: 'A', values: [1e-9, 3e-9, 5e-9] }],
+      },
+      SIZE,
+    );
+
+    expect(texts(millions, 'value-tick')).toEqual([
+      '1M',
+      '1.002M',
+      '1.004M',
+      '1.006M',
+      '1.008M',
+      '1.01M',
+    ]);
+
+    expect(texts(fractions, 'value-tick')).toEqual(['0', '250K', '500K', '750K', '1M', '1.25M']);
+    expect(texts(tiny, 'value-tick')).toEqual(['0', '1E-9', '2E-9', '3E-9', '4E-9', '5E-9']);
+  });
+
+  it('keeps category labels readable when there are more categories than pixels', () => {
+    const days = Array.from({ length: 10_000 }, (_unused, index) => Date.UTC(2000, 0, 1 + index));
+    const values = days.map((_day, index) => index % 17);
+
+    const line = layoutChart(
+      {
+        kind: 'line',
+        categories: { kind: 'time', values: days },
+        series: [{ id: 'a', name: 'A', values }],
+      },
+      { width: 800, height: 300 },
+    );
+
+    const bars = layoutChart(
+      {
+        kind: 'bar',
+        categories: { kind: 'text', labels: days.map((_day, index) => `Item ${String(index)}`) },
+        series: [{ id: 'a', name: 'A', values }],
+      },
+      { width: 800, height: 300 },
+    );
+
+    const across = line.texts.filter((text) => text.role === 'category-tick');
+    const down = bars.texts.filter((text) => text.role === 'category-tick');
+
+    expect(across.length).toBeGreaterThan(4);
+    expect(across.every((text) => !text.text.includes('…'))).toBe(true);
+    expect(new Set(across.map((text) => text.text)).size).toBe(across.length);
+    expect(nth(across, 1).x - nth(across, 0).x).toBeGreaterThan(40);
+    expect(down.length).toBeGreaterThan(4);
+    expect(nth(down, 1).y - nth(down, 0).y).toBeGreaterThanOrEqual(15);
+  });
+
+  it('formats only the labels that could ever be shown', () => {
+    const hours = Array.from({ length: 10_000 }, (_unused, index) => index * 3_600_000);
+    const asked: number[] = [];
+
+    const scene = layoutChart(
+      {
+        kind: 'line',
+        categories: { kind: 'time', values: hours },
+        series: [{ id: 'a', name: 'A', values: hours.map((_hour, index) => index % 7) }],
+      },
+      { width: 800, height: 300 },
+      {
+        formatTime: (value) => {
+          asked.push(value);
+          return `t${String(value / 3_600_000)}`;
+        },
+      },
+    );
+
+    expect(asked.length).toBeLessThanOrEqual(2000);
+    expect(texts(scene, 'category-tick')[0]).toBe('t0');
+    expect(texts(scene, 'category-tick').length).toBeGreaterThan(4);
+  });
+
+  it('labels time categories by the grain of their values', () => {
+    expect(timeLabels([Date.UTC(2026, 2, 2)])).toEqual(['Mar 2']);
+    expect(timeLabels([Date.UTC(2026, 2, 1), Date.UTC(2026, 2, 2)])).toEqual(['Mar 1', 'Mar 2']);
+
+    expect(timeLabels([Date.UTC(2026, 0, 1), Date.UTC(2026, 0, 2), Date.UTC(2026, 5, 1)])).toEqual([
+      'Jan 1',
+      'Jun 1',
+    ]);
+
+    expect(timeLabels([Date.UTC(2025, 11, 31), Date.UTC(2026, 0, 1)])).toEqual([
+      'Dec 31, 2025',
+      'Jan 1, 2026',
+    ]);
+
+    expect(timeLabels([Date.UTC(2026, 0, 1), Date.UTC(2026, 1, 1)])).toEqual([
+      'Jan 2026',
+      'Feb 2026',
+    ]);
+
+    expect(timeLabels([Date.UTC(2026, 0, 1), Date.UTC(2026, 0, 31)])).toEqual(['Jan 1', 'Jan 31']);
+
+    expect(timeLabels([Date.UTC(2026, 2, 1, 21), Date.UTC(2026, 2, 2, 21)])).toEqual([
+      'Mar 1',
+      'Mar 2',
+    ]);
+
+    expect(timeLabels([Date.UTC(2025, 11, 1), Date.UTC(2026, 5, 1)])).toEqual([
+      'Dec 2025',
+      'Jun 2026',
+    ]);
+
+    expect(timeLabels([Date.UTC(2026, 2, 2, 9), Date.UTC(2026, 2, 2, 15)])).toEqual([
+      '09:00 AM',
+      '03:00 PM',
+    ]);
   });
 
   it('keeps the fixed palette order and folds series past the eighth into other', () => {

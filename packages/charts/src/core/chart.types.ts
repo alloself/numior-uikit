@@ -10,6 +10,8 @@ export type ChartScale = (typeof ChartScale)[keyof typeof ChartScale];
 
 export type NumberStyle = (typeof NumberStyle)[keyof typeof NumberStyle];
 
+export type TimeContext = (typeof TimeContext)[keyof typeof TimeContext];
+
 export type BarEnd = (typeof BarEnd)[keyof typeof BarEnd];
 
 export type ChartKind = (typeof ChartKind)[keyof typeof ChartKind];
@@ -189,7 +191,14 @@ export const TimeUnit = {
 
 export const BarEnd = { Top: 'top', Bottom: 'bottom', Left: 'left', Right: 'right' } as const;
 
-export const NumberStyle = { Plain: 'plain', Compact: 'compact', Percent: 'percent' } as const;
+export const TimeContext = { None: 'none', Date: 'date', Year: 'year' } as const;
+
+export const NumberStyle = {
+  Plain: 'plain',
+  Compact: 'compact',
+  Percent: 'percent',
+  Scientific: 'scientific',
+} as const;
 
 export const ChartCategoriesKind = { Text: 'text', Time: 'time', Number: 'number' } as const;
 

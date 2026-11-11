@@ -8,6 +8,7 @@ import {
   ChartKind,
   ChartScale,
   ChartStacking,
+  NumberStyle,
   SceneLineRole,
   SceneTextRole,
   type Box,
@@ -30,7 +31,12 @@ import {
   type BandScale,
   type NiceDomain,
 } from './scales';
-import { timeTicks } from './time';
+import { timeGrain } from './time';
+
+interface CategoryLabel {
+  readonly index: number;
+  readonly text: string;
+}
 
 interface Frame {
   readonly spec: ChartSpec;
@@ -42,7 +48,8 @@ interface Frame {
   readonly domain: NiceDomain;
   readonly log: boolean;
   readonly valueTexts: readonly string[];
-  readonly categoryTexts: readonly string[];
+  readonly count: number;
+  readonly labels: readonly CategoryLabel[];
   readonly axis: NiceDomain | undefined;
   readonly axisTexts: readonly string[];
 }
@@ -64,6 +71,10 @@ const MOST_TICKS = 5;
 const FEWEST_TICKS = 2;
 
 const CLIP_SLACK = 1;
+
+const ROUNDING = 1e-6;
+
+const MOST_LABELS = 2000;
 
 const slotsOf = (series: readonly ChartSeries[]): ChartSlot[] =>
   series.map((item, index) => item.slot ?? SLOTS[index] ?? 0);
@@ -184,24 +195,38 @@ const domainOf = (
   };
 };
 
-const categoryTextsOf = (spec: ChartSpec, options: LayoutOptions, locale: string): string[] => {
+const categoryText = (
+  spec: ChartSpec,
+  options: LayoutOptions,
+  locale: string,
+): ((index: number) => string) => {
   if (spec.categories.kind === ChartCategoriesKind.Text) {
-    return [...spec.categories.labels];
+    const { labels } = spec.categories;
+
+    return (index) => labels[index] ?? '';
   }
 
   const { values } = spec.categories;
 
   if (spec.categories.kind === ChartCategoriesKind.Number) {
-    const plain = numberFormatter(locale, 'plain');
+    const plain = numberFormatter(locale, NumberStyle.Plain);
 
-    return values.map((value) => plain(value, 0));
+    return (index) => plain(values[index] ?? Number.NaN, 0);
   }
 
-  const [low, high] = extent(values);
-  const { unit } = timeTicks(low, high, Math.max(values.length, 2));
-  const format = options.formatTime ?? timeFormatter(locale);
+  const { unit, context } = timeGrain(values);
+  const format = options.formatTime ?? timeFormatter(locale, context);
 
-  return values.map((value) => format(value, unit));
+  return (index) => format(values[index] ?? Number.NaN, unit);
+};
+
+const categoryLabels = (count: number, text: (index: number) => string): CategoryLabel[] => {
+  const stride = Math.max(1, Math.ceil(count / MOST_LABELS));
+
+  return Array.from({ length: Math.ceil(count / stride) }, (_unused, place) => ({
+    index: place * stride,
+    text: text(place * stride),
+  }));
 };
 
 const scatterAxis = (spec: ChartSpec, ticks: number): NiceDomain | undefined => {
@@ -249,7 +274,8 @@ const frameOf = (
     domain,
     log,
     valueTexts: domain.ticks.map((tick) => format(tick, log ? tick : domain.step)),
-    categoryTexts: categoryTextsOf(spec, options, locale),
+    count,
+    labels: categoryLabels(count, categoryText(spec, options, locale)),
     axis,
     axisTexts: axis === undefined ? [] : axis.ticks.map((tick) => axisFormat(tick, axis.step)),
   };
@@ -257,6 +283,12 @@ const frameOf = (
 
 const widest = (frame: Frame, texts: readonly string[]): number =>
   texts.reduce((width, text) => Math.max(width, frame.measure(text, frame.fontSize)), 0);
+
+const widestLabel = (frame: Frame): number =>
+  frame.labels.reduce(
+    (width, label) => Math.max(width, frame.measure(label.text, frame.fontSize)),
+    0,
+  );
 
 const titleRoom = (frame: Frame, title: string | undefined): number =>
   title === undefined || title === '' ? 0 : frame.line + TICK_GAP;
@@ -272,8 +304,19 @@ const valueMapper = (
 const baselineOf = (frame: Frame, value: (value: number) => number): number =>
   value(frame.log ? frame.domain.min : Math.min(Math.max(0, frame.domain.min), frame.domain.max));
 
-const thinned = (frame: Frame, band: BandScale, labels: readonly string[]): number =>
-  Math.max(1, Math.ceil((widest(frame, labels) + TICK_GAP) / Math.max(band.step, 1)));
+const spacedOut = (
+  labels: readonly CategoryLabel[],
+  at: (index: number) => number,
+  room: number,
+): CategoryLabel[] =>
+  labels.reduce<CategoryLabel[]>((kept, label) => {
+    const last = kept.at(-1);
+
+    if (last === undefined || Math.abs(at(label.index) - at(last.index)) >= room - ROUNDING) {
+      kept.push(label);
+    }
+    return kept;
+  }, []);
 
 const clipOf = (frame: Frame, plot: Box): Box | undefined => {
   const axis = frame.spec.valueAxis;
@@ -362,29 +405,25 @@ const columnScene = (frame: Frame): ChartScene => {
   const { rtl } = frame;
   const plot = verticalPlot(frame, 0);
 
-  const count = frame.categoryTexts.length;
-
   const band = bandScale(
-    count,
+    frame.count,
     rtl ? [plot.x + plot.width, plot.x] : [plot.x, plot.x + plot.width],
   );
 
   const value = valueMapper(frame, [plot.y + plot.height, plot.y]);
-  const every = thinned(frame, band, frame.categoryTexts);
   const at = pointAt(frame.spec, band);
   const texts = verticalTicks(frame, plot, value);
+  const room = Math.min(widestLabel(frame), plot.width);
 
-  frame.categoryTexts.forEach((text, index) => {
-    if (index % every === 0) {
-      texts.push({
-        role: SceneTextRole.CategoryTick,
-        text: truncated(text, band.step * every - TICK_GAP, frame.fontSize, frame.measure),
-        x: at(index),
-        y: plot.y + plot.height + TICK_GAP,
-        anchor: 'middle',
-        baseline: 'top',
-      });
-    }
+  spacedOut(frame.labels, at, room + TICK_GAP).forEach((label) => {
+    texts.push({
+      role: SceneTextRole.CategoryTick,
+      text: truncated(label.text, room, frame.fontSize, frame.measure),
+      x: at(label.index),
+      y: plot.y + plot.height + TICK_GAP,
+      anchor: 'middle',
+      baseline: 'top',
+    });
   });
 
   titles(frame, plot, texts, false);
@@ -462,7 +501,7 @@ const scatterScene = (frame: Frame): ChartScene => {
 };
 
 const barCategoryWidth = (frame: Frame): number =>
-  Math.min(widest(frame, frame.categoryTexts), frame.size.width * CATEGORY_SHARE) + TICK_GAP;
+  Math.min(widestLabel(frame), frame.size.width * CATEGORY_SHARE) + TICK_GAP;
 
 const barPlot = (frame: Frame): Box => {
   const { size, rtl, line } = frame;
@@ -485,7 +524,7 @@ const barScene = (frame: Frame): ChartScene => {
   const plot = barPlot(frame);
   const categoryWidth = barCategoryWidth(frame);
 
-  const band = bandScale(frame.categoryTexts.length, [plot.y, plot.y + plot.height]);
+  const band = bandScale(frame.count, [plot.y, plot.y + plot.height]);
 
   const value = valueMapper(
     frame,
@@ -506,12 +545,12 @@ const barScene = (frame: Frame): ChartScene => {
     });
   });
 
-  frame.categoryTexts.forEach((text, index) => {
+  spacedOut(frame.labels, band.center, frame.line).forEach((label) => {
     texts.push({
       role: SceneTextRole.CategoryTick,
-      text: truncated(text, categoryWidth - TICK_GAP, frame.fontSize, frame.measure),
+      text: truncated(label.text, categoryWidth - TICK_GAP, frame.fontSize, frame.measure),
       x: labelX,
-      y: band.center(index),
+      y: band.center(label.index),
       anchor: rtl ? 'start' : 'end',
       baseline: 'middle',
     });
@@ -562,7 +601,7 @@ const sceneOf = (
   const slots = slotsOf(frame.spec.series);
   const baseline = baselineOf(frame, value);
   const stacking = frame.spec.stacking ?? 'none';
-  const count = frame.categoryTexts.length;
+  const { count } = frame;
 
   if (linear(frame.spec)) {
     const at = pointAt(frame.spec, band);
