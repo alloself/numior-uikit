@@ -348,6 +348,40 @@ describe('workbook steps through the collaboration envelope', () => {
     expectSame(ann, bob);
   });
 
+  it('keeps rows someone else has written into out of the undo of their insertion', () => {
+    const net = network();
+    const [ann, bob] = pair(net);
+
+    ann.commit([writeCells(valueCell(9, 0, 'mine'))]);
+    ann.commit([insertRow(3, 2)]);
+    net.settle();
+    bob.commit([writeCells(valueCell(3, 0, 'theirs'))]);
+    net.settle();
+    ann.undo();
+    net.settle();
+
+    expect([ann.text(SHEET, 3, 0), bob.text(SHEET, 3, 0)]).toEqual(['theirs', 'theirs']);
+    expect([bob.text(SHEET, 9, 0), bob.text(SHEET, 11, 0)]).toEqual(['', '']);
+    expect(ann.dump()).toBe(bob.dump());
+  });
+
+  it('keeps a row someone else has edited out of the redo of its deletion', () => {
+    const net = network();
+    const [ann, bob] = pair(net);
+
+    ann.commit([writeCells(valueCell(3, 0, 'mine'), valueCell(3, 1, 'kept'))]);
+    ann.commit([deleteRow(3)]);
+    ann.undo();
+    net.settle();
+    bob.commit([writeCells(valueCell(3, 0, 'theirs'))]);
+    net.settle();
+    ann.redo();
+    net.settle();
+
+    expect([bob.text(SHEET, 3, 0), bob.text(SHEET, 3, 1)]).toEqual(['theirs', 'kept']);
+    expect(ann.dump()).toBe(bob.dump());
+  });
+
   it('leaves a cell someone else has rewritten out of an undo and a redo', () => {
     const net = network();
     const [ann, bob] = pair(net);

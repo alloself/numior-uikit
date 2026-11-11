@@ -33,15 +33,17 @@ export interface BookClient {
   readonly toClient: () => boolean;
   readonly dump: () => string;
   readonly text: (sheet: string, row: number, col: number) => string;
+  readonly stop: () => void;
 }
 
 export interface BookNetwork {
   readonly clients: readonly BookClient[];
   readonly settle: () => void;
   readonly traffic: () => NetworkTraffic;
+  readonly close: () => void;
 }
 
-const WHOLE = { top: 0, left: 0, bottom: 1_048_575, right: 16_383 };
+export const WHOLE = { top: 0, left: 0, bottom: 1_048_575, right: 16_383 };
 
 export const SHEET = 'Sheet1';
 
@@ -182,6 +184,7 @@ export const createBookNetwork = (
       toClient: wire.toClient,
       dump: () => dumpBook(book, calculator),
       text: (sheet, row, col) => contentText(calculator, book, sheet, row, col),
+      stop: client.stop,
     };
   });
 
@@ -191,5 +194,11 @@ export const createBookNetwork = (
 
   settle();
 
-  return { clients, settle, traffic: () => ({ ...traffic }) };
+  const close = (): void => {
+    clients.forEach((client) => {
+      client.stop();
+    });
+  };
+
+  return { clients, settle, traffic: () => ({ ...traffic }), close };
 };

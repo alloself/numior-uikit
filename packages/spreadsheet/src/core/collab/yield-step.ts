@@ -1,10 +1,23 @@
 import { containsCell } from '../address';
-import type { CellRange } from '../cell.types';
+import { CellInputKind, LineAxis, type CellRange } from '../cell.types';
 import { cellKey } from '../steps/contents';
 import { StepKind, type CellEdit, type WorkbookStep } from '../steps/step.types';
-import { stepOver } from './rebase-queue';
+import { RemoteChangeKind, type RemoteChange } from './collab.types';
+import { changesOver, stepOver } from './rebase-queue';
 import { changesOf } from './remote-change';
 import { flattened } from './schema';
+
+export interface Yielding {
+  readonly touched: readonly WorkbookStep[];
+  readonly kept: readonly RemoteChange[];
+}
+
+interface YieldTrace {
+  readonly step: WorkbookStep | undefined;
+  readonly state: Yielding;
+}
+
+type LinesStep = Extract<WorkbookStep, { readonly axis: LineAxis }>;
 
 interface Touches {
   readonly cells: ReadonlyMap<string, ReadonlyMap<number, CellEdit>>;
@@ -158,4 +171,84 @@ export const yieldStep = (
     cells.every((edit, index) => edit === step.cells[index])
     ? step
     : { ...step, cells };
+};
+
+const isRemoval = (step: WorkbookStep): step is LinesStep => step.kind === StepKind.DeleteLines;
+
+const writtenInto = (removal: LinesStep, touched: readonly WorkbookStep[]): boolean =>
+  touched.some(
+    (step) =>
+      step.kind === StepKind.SetCells &&
+      sheetKey(step.sheet) === sheetKey(removal.sheet) &&
+      step.cells.some((cell) => {
+        const line = removal.axis === LineAxis.Rows ? cell.row : cell.col;
+
+        return (
+          cell.content !== undefined &&
+          cell.content.kind !== CellInputKind.Empty &&
+          line >= removal.at &&
+          line < removal.at + removal.count
+        );
+      }),
+  );
+
+const removesForeign = (step: WorkbookStep, touched: readonly WorkbookStep[]): boolean => {
+  const parts = flattened(step);
+  let current = touched;
+
+  if (current.length === 0 || !parts.some(isRemoval)) {
+    return false;
+  }
+
+  for (const part of parts) {
+    if (isRemoval(part) && writtenInto(part, current)) {
+      return true;
+    }
+    current = touchedOver(current, part);
+  }
+  return false;
+};
+
+const undone = (change: RemoteChange): RemoteChange | undefined => {
+  switch (change.kind) {
+    case RemoteChangeKind.Lines:
+      return { kind: change.kind, change: { ...change.change, count: -change.change.count } };
+    case RemoteChangeKind.RenameSheet:
+    case RemoteChangeKind.RenameTable:
+      return { ...change, from: change.to, to: change.from };
+    case RemoteChangeKind.RemoveSheet:
+      return undefined;
+  }
+};
+
+const withoutStep = (step: WorkbookStep): RemoteChange[] =>
+  changesOf(step).reduceRight<RemoteChange[]>((back, change) => {
+    const inverse = undone(change);
+
+    if (inverse !== undefined) {
+      back.push(inverse);
+    }
+    return back;
+  }, []);
+
+export const yieldPass = (state: Yielding, step: WorkbookStep): YieldTrace => {
+  const moved = state.kept.length === 0 ? step : stepOver(step, state.kept);
+
+  if (moved === undefined) {
+    return { step: undefined, state };
+  }
+  if (removesForeign(moved, state.touched)) {
+    return {
+      step: undefined,
+      state: { touched: state.touched, kept: [...withoutStep(step), ...state.kept] },
+    };
+  }
+
+  return {
+    step: yieldStep(moved, state.touched),
+    state: {
+      touched: touchedOver(state.touched, moved),
+      kept: changesOver(state.kept, changesOf(step)),
+    },
+  };
 };

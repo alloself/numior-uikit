@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { textValue, type CellEdit, type WorkbookStep } from '../src/core';
-import { foreignEdits, touchedOver, yieldStep } from '../src/core/collab/yield-step';
+import { foreignEdits, touchedOver, yieldPass, yieldStep } from '../src/core/collab/yield-step';
 
 const SHEET = 'Sheet1';
 
@@ -24,6 +24,14 @@ const insertRow = (at: number): WorkbookStep => ({
   axis: 'rows',
   at,
   count: 1,
+});
+
+const deleteRows = (at: number, count: number): WorkbookStep => ({
+  kind: 'deleteLines',
+  sheet: SHEET,
+  axis: 'rows',
+  at,
+  count,
 });
 
 describe('yield of an undo step to the edits of other authors', () => {
@@ -71,6 +79,32 @@ describe('yield of an undo step to the edits of other authors', () => {
     ];
 
     expect(yieldStep(mine, theirs)).toEqual(cells({ row: 9, col: 9, format: '0.00' }));
+  });
+
+  it('gives up a deletion of rows someone else has written into and moves the older steps past them', () => {
+    const theirs = { touched: [cells(text(3, 0, 'theirs'))], kept: [] };
+    const removal: WorkbookStep = { kind: 'batch', steps: [deleteRows(3, 2)] };
+
+    const newest = yieldPass(theirs, removal);
+    const older = yieldPass(newest.state, cells(text(9, 0, 'before')));
+
+    expect(newest.step).toBeUndefined();
+    expect(older.step).toEqual(cells(text(11, 0, 'before')));
+  });
+
+  it('keeps a deletion of rows no one else has written into', () => {
+    const removal: WorkbookStep = { kind: 'batch', steps: [deleteRows(3, 2)] };
+
+    const cleared = yieldPass(
+      { touched: [cells({ row: 3, col: 0, content: { kind: 'empty' } })], kept: [] },
+      removal,
+    );
+
+    const beside = yieldPass({ touched: [cells(text(5, 0, 'theirs'))], kept: [] }, removal);
+
+    expect(cleared.step).toBe(removal);
+    expect(beside.step).toBe(removal);
+    expect(beside.state.touched).toEqual([cells(text(3, 0, 'theirs'))]);
   });
 
   it('reads the edits of a pack in the rows the book has after the pack and the own steps', () => {
