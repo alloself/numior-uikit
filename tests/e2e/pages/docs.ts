@@ -266,6 +266,16 @@ export class DocsSite {
     await this.page.getByRole('menuitem', { name }).click();
   }
 
+  async scrollToEnd(): Promise<void> {
+    await this.footer.evaluate((element) => {
+      element.scrollIntoView({ block: 'end' });
+    });
+  }
+
+  async tocTop(): Promise<number> {
+    return (await boxOf(this.toc)).y;
+  }
+
   async scrollTo(id: string): Promise<void> {
     await this.page.locator(`#${id}`).evaluate((element) => {
       element.scrollIntoView({ block: 'start' });
