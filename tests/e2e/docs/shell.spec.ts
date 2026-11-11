@@ -45,6 +45,21 @@ test('header sections switch the sidebar and mark the current section', async ({
   await expect(docs.sidebar).toHaveCount(0);
 });
 
+test('a focused field shows its frame without an outer ring and a button keeps the ring', async ({
+  docs,
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'focus rings follow the keyboard');
+  await docs.open('/components/input');
+  await docs.inputFrame.getByRole('textbox').focus();
+  await expect(docs.inputFrame).toHaveCSS('outline-width', '0px');
+
+  await page.keyboard.press('Tab');
+  await docs.searchButton.focus();
+  await expect(docs.searchButton).toHaveCSS('outline-width', '2px');
+});
+
 test('a missing address offers the search and the page with a similar address', async ({
   docs,
   page,

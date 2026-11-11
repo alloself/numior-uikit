@@ -1,7 +1,7 @@
 <template>
   <div class="p-6 pt-8">
     <DocsCaption class="mb-2">{{ texts.onThisPage }}</DocsCaption>
-    <NuiToc :items="items" title="" :label="texts.onThisPage" marker="square" />
+    <NuiToc :items="items" title="" :label="texts.onThisPage" />
   </div>
 </template>
 

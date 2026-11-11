@@ -13,6 +13,7 @@
   --nui-caption-close: ' ]';
   --nui-prose-marker: square;
   --nui-radius-base: 0.25rem;
+  --nui-field-ring-width: 0px;
 }
 
 :root:not([data-nui-accent]),
