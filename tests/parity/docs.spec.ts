@@ -13,7 +13,7 @@ const routesIn = (folder: string): string[] =>
     return routes;
   }, []);
 
-const ROUTES = ['/', ...routesIn('guide'), ...routesIn('components')];
+const ROUTES = ['/', ...['guide', 'components', 'composables', 'theme'].flatMap(routesIn)];
 const OPENED_BY_BUTTON = ['dialog', 'drawer', 'menu', 'popover', 'date-picker'];
 const TIMED = ['toast'];
 const OPENED_BY_COMBOBOX = ['select', 'combobox'];
