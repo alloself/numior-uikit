@@ -548,6 +548,12 @@
   --nui-control-font-size-sm: var(--_font-size);
   --nui-focus-ring-width: 1px;
   --nui-focus-ring-offset: 0px;
+  --spacing-control-sm: var(--nui-control-height-sm);
+  --spacing-field-pad-sm: var(--nui-field-padding-sm);
+  --text-control-sm: var(--nui-control-font-size-sm);
+  --focus-ring-width: var(--nui-focus-ring-width);
+  --focus-ring-offset: var(--nui-focus-ring-offset);
+  --radius: var(--nui-radius);
 
   box-sizing: border-box;
   flex: 1 1 auto;
