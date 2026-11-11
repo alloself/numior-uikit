@@ -402,6 +402,35 @@ test.describe('collaboration', () => {
     expect(released).toBeLessThanOrEqual(1);
   });
 
+  test('keeps the other person and the sync when a line turns into a list item or a to-do item', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Первая');
+    await anna.newLine('Вторая');
+    await anna.newLine('Третья');
+    await expect(boris.paragraph(2)).toHaveText('Третья');
+
+    await boris.endOf(2);
+    await expect(anna.caretOf(BORIS)).toHaveCSS('opacity', '1');
+
+    await anna.prependTo(0, '- ');
+    await anna.prependTo(1, '[] ');
+
+    await expect(boris.bullets).toHaveText(['Первая']);
+    await expect(boris.todos).toHaveText(['Вторая']);
+    await expect(anna.status).toHaveText('online');
+    await expect(boris.status).toHaveText('online');
+    await expect(anna.caretOf(BORIS)).toHaveCSS('opacity', '1');
+    await expect(boris.caretOf(ANNA)).toHaveCSS('opacity', '1');
+
+    await boris.appendTo(2, '!');
+
+    await expect(anna.paragraph(2)).toHaveText('Третья!');
+  });
+
   test('keeps the caret of someone else on a list item they indent', async ({ collab }) => {
     const anna = await collab.join(ANNA);
     const boris = await collab.join(BORIS);

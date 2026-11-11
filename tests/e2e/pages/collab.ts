@@ -72,6 +72,8 @@ export class CollabClient {
   readonly failure: Locator;
   readonly readOnlyDocument: Locator;
   readonly pushedLines: Locator;
+  readonly bullets: Locator;
+  readonly todos: Locator;
 
   constructor(
     readonly page: Page,
@@ -95,6 +97,8 @@ export class CollabClient {
     this.failure = page.getByTestId('collab-failure');
     this.readOnlyDocument = page.locator('.nui-editor--readonly');
     this.pushedLines = this.editor.locator('.nui-editor__pushed');
+    this.bullets = this.editor.locator('.nui-content__item');
+    this.todos = this.editor.locator('.nui-content__todo');
   }
 
   paragraph(index: number): Locator {
