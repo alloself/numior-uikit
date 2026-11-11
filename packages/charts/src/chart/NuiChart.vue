@@ -107,14 +107,6 @@ const sceneHeight = computed((): number => {
   return sizing.height.value > 0 ? sizing.height.value : FALLBACK_HEIGHT;
 });
 
-const empty = computed(
-  () =>
-    spec.series.length === 0 ||
-    (spec.categories.kind === ChartCategoriesKind.Text
-      ? spec.categories.labels.length === 0
-      : spec.categories.values.length === 0),
-);
-
 const configuredDirection = inject(DIRECTION_KEY, null);
 const mounted = useMounted();
 
@@ -139,10 +131,21 @@ const scene = computed(() =>
   ),
 );
 
+const round = computed(() => spec.kind === ChartKind.Pie || spec.kind === ChartKind.Doughnut);
+
+const empty = computed(
+  () =>
+    spec.series.length === 0 ||
+    (spec.categories.kind === ChartCategoriesKind.Text
+      ? spec.categories.labels.length === 0
+      : spec.categories.values.length === 0) ||
+    (round.value && scene.value.slices.length === 0),
+);
+
 const legendItems = computed((): NuiChartLegendItem[] => {
   const { slots } = scene.value;
 
-  if (spec.kind === ChartKind.Pie || spec.kind === ChartKind.Doughnut) {
+  if (round.value) {
     return categoryTexts(spec, resolvedLocale.value).map((name, index) => ({
       id: `category-${String(index)}`,
       name,

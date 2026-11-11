@@ -272,6 +272,20 @@ describe('NuiChart', () => {
     expect(chart.empty).toBe('Нет данных для графика');
   });
 
+  it('says there is nothing to show when a pie has no positive value to cut', () => {
+    const chart = chartOf({
+      spec: {
+        kind: 'pie',
+        categories: { kind: 'text', labels: ['Web', 'Stores', 'Other'] },
+        series: [{ id: 'sales', name: 'Sales', values: [0, -4, null] }],
+      },
+    });
+
+    expect(chart.empty).toBe('No data to show');
+    expect(chart.drawn).toBe(false);
+    expect(chart.focusable).toBe(false);
+  });
+
   it('mirrors the category axis in right-to-left layouts', () => {
     const ltr = chartOf({ spec: revenue });
     const rtl = chartOf({ spec: revenue, config: { dir: 'rtl' } });
