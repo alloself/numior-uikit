@@ -12,6 +12,8 @@ export const ru: DocsTexts = {
   dark: 'Тёмная',
   system: 'Системная',
   more: 'Ещё',
+  license: 'Распространяется по лицензии MIT.',
+  footerSections: 'Разделы сайта',
   accent: 'Акцент',
   builtInAccents: 'Встроенные акценты',
   accents: {
@@ -84,6 +86,8 @@ export const en: DocsTexts = {
   dark: 'Dark',
   system: 'System',
   more: 'More',
+  license: 'Released under the MIT License.',
+  footerSections: 'Site sections',
   accent: 'Accent',
   builtInAccents: 'Built-in accents',
   accents: {

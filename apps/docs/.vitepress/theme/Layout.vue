@@ -19,6 +19,9 @@
     <template v-if="showToc" #end>
       <DocsToc />
     </template>
+    <template #footer>
+      <DocsFooter />
+    </template>
   </NuiLayout>
   <DocsSearch v-model:open="searchOpen" />
   <NuiToaster />
@@ -29,6 +32,7 @@ import { computed, ref, watch } from 'vue';
 import { useData, useRoute } from 'vitepress';
 import { NuiLayout, NuiToaster, useMediaQuery } from '@numior/vue';
 import { useDocs } from './composables/use-docs';
+import DocsFooter from './parts/DocsFooter.vue';
 import DocsHeader from './parts/DocsHeader.vue';
 import DocsHome from './parts/DocsHome.vue';
 import DocsNotFound from './parts/DocsNotFound.vue';

@@ -112,6 +112,14 @@ export class DocsSite {
     return this.article.getByRole('heading', { level: 1 });
   }
 
+  get footer(): Locator {
+    return this.page.getByRole('contentinfo');
+  }
+
+  footerLink(text: string): Locator {
+    return this.footer.getByRole('link', { name: text, exact: true });
+  }
+
   navLink(text: string): Locator {
     return this.header.getByRole('link', { name: text, exact: true });
   }

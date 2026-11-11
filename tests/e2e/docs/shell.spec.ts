@@ -45,6 +45,18 @@ test('header sections switch the sidebar and mark the current section', async ({
   await expect(docs.sidebar).toHaveCount(0);
 });
 
+test('the footer closes a page with the license and the sections of the site', async ({
+  docs,
+  page,
+}) => {
+  await docs.open('/components/kbd');
+  await expect(docs.footer).toContainText('Распространяется по лицензии MIT.');
+
+  await docs.footerLink('Документация').click();
+  await expect(page).toHaveURL(/\/guide\/getting-started$/);
+  await expect(docs.footer).toBeAttached();
+});
+
 test('the sidebar scrolls to the page that is open', async ({ docs, isMobile }) => {
   test.skip(isMobile, 'the sidebar lives in a drawer on phones');
   await docs.open('/composables/block-size-tween');

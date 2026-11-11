@@ -74,6 +74,8 @@ export interface DocsTexts {
   readonly dark: string;
   readonly system: string;
   readonly more: string;
+  readonly license: string;
+  readonly footerSections: string;
   readonly accent: string;
   readonly builtInAccents: string;
   readonly accents: Readonly<Record<DocsAccent, string>>;
