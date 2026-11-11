@@ -852,6 +852,57 @@ describe('writing xlsx', () => {
     expect(definition?.values).toEqual(values);
   });
 
+  it('writes a pivot that has no values yet without an empty list of them', async () => {
+    const sheet = openBook();
+
+    [
+      ['Region', 'Sales'],
+      ['East', '100'],
+      ['West', '150'],
+    ].forEach((row, index) => {
+      row.forEach((text, col) => {
+        sheet.type(`${'AB'.charAt(col)}${String(index + 1)}`, text);
+      });
+    });
+
+    sheet.commit({
+      kind: 'setPivot',
+      sheet: 'Rates',
+      name: 'Regions',
+      pivot: {
+        anchor: { row: 0, col: 0 },
+        definition: {
+          source: {
+            kind: 'range',
+            sheet: 'Sheet1',
+            range: { top: 0, left: 0, bottom: 2, right: 1 },
+          },
+          rows: [0],
+          columns: [],
+          filters: [],
+          values: [],
+          fields: [],
+          layout: 'compact',
+          rowTotals: true,
+          columnTotals: true,
+          autofit: false,
+          captions: pivotCaptions('en'),
+        },
+      },
+    });
+
+    const bytes = await written(sheet);
+    const part = await partOf(bytes, 'xl/pivotTables/pivotTable1.xml');
+    const again = await opened(bytes);
+
+    expect(part).toContain('<rowFields count="1">');
+    expect(part).not.toContain('<dataFields');
+
+    expect(again.book.pivots.get(sheetOf(again, 'Rates'), 'Regions')?.definition.values).toEqual(
+      [],
+    );
+  });
+
   it('refreshes a pivot read from a file into the cells the file shows', async () => {
     const read = await opened(await corpusPackage('pivot-tables'));
     const report = sheetOf(read, 'Report');
