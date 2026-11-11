@@ -156,12 +156,12 @@ export class EditingHarness {
     return pos + Math.min(length, parent.size - 2 - parentOffset);
   }
 
-  placeIn(text: string, offset = 0): void {
+  private textAt(text: string): number {
     let found: number | undefined;
 
     this.current.doc.nodesBetween(0, this.current.doc.size, (node, pos) => {
       if (found === undefined && node.kind === 'text' && node.text === text) {
-        found = pos + offset;
+        found = pos;
       }
       return found === undefined;
     });
@@ -169,7 +169,15 @@ export class EditingHarness {
     if (found === undefined) {
       throw new Error(`No text node reads ${text}`);
     }
-    this.select(textSelection(found));
+    return found;
+  }
+
+  placeIn(text: string, offset = 0): void {
+    this.select(textSelection(this.textAt(text) + offset));
+  }
+
+  blockOf(text: string): string {
+    return this.current.doc.resolve(this.textAt(text)).parent.id;
   }
 
   select(selection: Selection): void {
