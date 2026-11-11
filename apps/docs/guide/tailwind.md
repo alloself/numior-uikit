@@ -4,9 +4,12 @@
 
 <Example name="guide/Tailwind" />
 
-Пресет `@numior/tailwind` связывает классы Tailwind с токенами темы. `bg-surface`,
-`text-muted-foreground`, `rounded-md` и `text-sm` дают те же цвета, скругления и размеры, что у
-компонентов. Все примеры этой документации свёрстаны так.
+Карточку заказа держат классы Tailwind: рамка, фон, отступы и сетка. Аватар, статус и кнопки
+внутри неё берутся из библиотеки.
+
+Пресет `@numior/tailwind` связывает классы с токенами темы, поэтому `bg-surface-elevated`,
+`text-muted-foreground`, `rounded-lg` и `text-sm` дают те же цвета, скругления и размеры, что у
+компонентов.
 
 ## Установка
 
@@ -44,6 +47,22 @@ export default defineConfig({ plugins: [tailwindcss()] });
 
 Вместо `<role>` подставьте `primary`, `secondary`, `success`, `warning`, `error`, `info` или
 `neutral`. Класс `border` без цвета рисует рамку цвета `--nui-border`, как у компонентов.
+
+## Классы на компонентах
+
+Класс на теге компонента попадает на его корневой элемент. Так компонент ставят в раскладку:
+`w-full` растягивает его на ширину колонки, `col-span-2` занимает две колонки сетки, `mt-4`
+отодвигает от соседа.
+
+```html
+<form class="grid grid-cols-2 gap-4">
+  <NuiInput v-model="name" class="col-span-2" />
+  <NuiButton type="submit" class="w-full">Сохранить</NuiButton>
+</form>
+```
+
+Цвет, высоту и скругление компонента классами не перекрыть: стили компонентов лежат вне слоёв
+CSS и сильнее утилит Tailwind. Меняйте их свойствами `tone`, `variant`, `size` и токенами темы.
 
 ## Preflight и стили компонентов
 

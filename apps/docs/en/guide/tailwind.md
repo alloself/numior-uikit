@@ -4,9 +4,12 @@ How to lay out pages with Tailwind 4 classes in the colours and sizes of the Num
 
 <Example name="guide/Tailwind" />
 
-The `@numior/tailwind` preset links Tailwind classes to the theme tokens. `bg-surface`,
-`text-muted-foreground`, `rounded-md` and `text-sm` give the same colours, radii and sizes as
-the components. Every example in these docs is laid out this way.
+Tailwind classes hold the order card together: the border, the background, the spacing and the
+layout. The avatar, the status and the buttons inside it come from the library.
+
+The `@numior/tailwind` preset links the classes to the theme tokens. `bg-surface-elevated`,
+`text-muted-foreground`, `rounded-lg` and `text-sm` give the same colors, radii and sizes as the
+components.
 
 ## Installation
 
@@ -45,6 +48,23 @@ the classes and the components change.
 Replace `<role>` with `primary`, `secondary`, `success`, `warning`, `error`, `info` or
 `neutral`. The `border` class without a colour draws a border in `--nui-border`, as on the
 components.
+
+## Classes on components
+
+A class on a component tag lands on its root element. Use it to place the component in a layout.
+`w-full` stretches it to the column width, `col-span-2` takes two grid columns, and `mt-4` moves
+it away from its neighbor.
+
+```html
+<form class="grid grid-cols-2 gap-4">
+  <NuiInput v-model="name" class="col-span-2" />
+  <NuiButton type="submit" class="w-full">Save</NuiButton>
+</form>
+```
+
+Classes cannot override the color, height or radius of a component: component styles sit outside
+CSS layers and win over Tailwind utilities. Change them with the `tone`, `variant` and `size`
+props and with theme tokens.
 
 ## Preflight and component styles
 
