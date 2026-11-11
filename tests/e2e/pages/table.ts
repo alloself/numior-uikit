@@ -39,6 +39,8 @@ const LAYER_SLACK = 2;
 const LEAK = 2;
 const HEADER_TOP = 2;
 const HEADER_EDGE = 3;
+const FOOTER_TOP = 2;
+const FOOTER_EDGE = 4;
 const FRAME_CORNER = 12;
 
 const BODY_PAINT = `
@@ -674,21 +676,40 @@ export class TableSection {
   async headerLeak(target: TableScroll): Promise<number> {
     await this.scrollTo(target);
 
-    const hidden = await this.shotWith(BODY_HIDE);
-    const painted = await this.shotWith(BODY_PAINT);
-
     const [frame, last] = await Promise.all([
       boxOf(this.root),
       boxOf(this.root.locator('.nui-table__header > tr:last-child > .nui-table__cell').first()),
     ]);
 
-    return unlikePixels(this.page, [hidden, painted], {
+    return this.bodyLeak({
       x: frame.x + FRAME_CORNER,
       y: frame.y + HEADER_TOP,
       width: frame.width - 2 * FRAME_CORNER,
       height: last.y + last.height - frame.y - HEADER_TOP - HEADER_EDGE,
-      delta: LEAK,
     });
+  }
+
+  async footerLeak(target: TableScroll): Promise<number> {
+    await this.scrollTo(target);
+
+    const [frame, first] = await Promise.all([
+      boxOf(this.root),
+      boxOf(this.root.locator('.nui-table__footer .nui-table__cell').first()),
+    ]);
+
+    return this.bodyLeak({
+      x: frame.x + FRAME_CORNER,
+      y: first.y + FOOTER_TOP,
+      width: frame.width - 2 * FRAME_CORNER,
+      height: first.height - FOOTER_TOP - FOOTER_EDGE,
+    });
+  }
+
+  private async bodyLeak(area: Box): Promise<number> {
+    const hidden = await this.shotWith(BODY_HIDE);
+    const painted = await this.shotWith(BODY_PAINT);
+
+    return unlikePixels(this.page, [hidden, painted], { ...area, delta: LEAK });
   }
 
   async scrollTo(target: TableScroll): Promise<void> {

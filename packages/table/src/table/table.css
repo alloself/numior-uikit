@@ -666,38 +666,54 @@
   padding-block-start: var(--_head-lap);
   scroll-margin-block-start: calc(-1 * var(--_head-lap));
 }
-.nui-table__row--band > .nui-table__cell::after,
-.nui-table__row--band
-  > .nui-table__cell--data:not(
-    .nui-table__cell--pin-start,
-    .nui-table__cell--pin-end,
-    :last-child
-  )::before {
+.nui-table__header,
+.nui-table__footer {
+  --_seam-start: 0px;
+  --_seam-end: var(--_seam-lap);
+  --_seam-drop: 0px;
+  --_seam-turn: -1;
+  --_seam-rise: -1px;
+}
+.nui-table__header:dir(rtl),
+.nui-table__footer:dir(rtl) {
+  --_seam-turn: 1;
+}
+.nui-table__footer {
+  --_seam-rise: 1px;
+}
+.nui-table__row--band {
+  --_seam-drop: var(--_head-lap);
+}
+:is(.nui-table__header, .nui-table__footer)
+  .nui-table__cell:is(.nui-table__cell--pin-start, .nui-table__cell--pin-end, :last-child) {
+  --_seam-end: 0px;
+}
+:is(.nui-table__header, .nui-table__footer)
+  .nui-table__cell--tail:has(+ .nui-table__cell--gap:last-child) {
+  --_seam-end: calc(var(--_seam-lap) * var(--_slack));
+}
+:is(.nui-table__header, .nui-table__footer)
+  .nui-table__cell--pin-start
+  + .nui-table__cell:not(.nui-table__cell--pin-start, .nui-table__cell--pin-end) {
+  --_seam-start: var(--_seam-lap);
+}
+:is(.nui-table__header, .nui-table__footer) .nui-table__cell::before {
   content: '';
   position: absolute;
+  inset-block: 0 calc(-1px - var(--_seam-drop));
+  inset-inline: calc(-1 * var(--_seam-start)) calc(-1 * (var(--_grid-x) + var(--_seam-end)));
   z-index: -10;
-  background-color: var(--_head-bg);
+  border: 0 solid transparent;
+  border-inline-width: var(--_seam-start) var(--_seam-end);
+  border-block-end-width: var(--_seam-drop);
+  background-color: inherit;
+  box-shadow:
+    inset calc(var(--_seam-turn) * var(--_grid-x)) 0 0 0 var(--_line),
+    inset 0 var(--_seam-rise) 0 0 var(--_line);
   pointer-events: none;
 }
-.nui-table__row--band > .nui-table__cell::after {
-  inset-inline: 0 calc(-1 * var(--_grid-x));
-  inset-block-start: 100%;
-  block-size: calc(1px + var(--_head-lap));
-  background-image: linear-gradient(var(--_line), var(--_line));
-  background-size: 100% 1px;
-  background-repeat: no-repeat;
-}
-.nui-table__row--band
-  > .nui-table__cell--data:not(
-    .nui-table__cell--pin-start,
-    .nui-table__cell--pin-end,
-    :last-child
-  )::before {
-  box-sizing: border-box;
-  inset-block: 0 calc(-1px - var(--_head-lap));
-  inset-inline-start: 100%;
-  inline-size: calc(var(--_grid-x) + var(--_seam-lap));
-  border-inline-start: var(--_grid-x) solid var(--_line);
+.nui-table__footer .nui-table__cell::before {
+  inset-block: -1px 0;
 }
 .nui-table--underlay .nui-table__row--head > .nui-table__cell::after {
   content: '';

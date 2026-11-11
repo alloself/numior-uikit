@@ -3,7 +3,7 @@ import { boxOf } from './helpers/geometry';
 import type { TableSection } from './pages/table';
 
 const TREE_HEAD_ROWS = 1;
-const PIXEL_RATIOS = [1.25, 1.5, 1.75];
+const PIXEL_RATIOS = [0.9, 1.1, 1.25, 1.33, 1.5, 1.75];
 
 const SEAM_SCROLLS = [{ top: 3340 }, { top: 20_007 }, { top: 3340, left: 120 }];
 const SEAM_SCROLLS_RTL = [{ top: 3340 }, { top: 20_007 }, { top: 3340, left: -120 }];
@@ -1329,7 +1329,7 @@ for (const ratio of PIXEL_RATIOS) {
   test.describe(`table header at a pixel ratio of ${ratio}`, () => {
     test.use({ deviceScaleFactor: ratio });
 
-    test('keeps scrolled rows from showing between its header rows', async ({
+    test('keeps scrolled rows from showing between the cells of its header and footer', async ({
       playground,
       table,
       isMobile,
@@ -1341,11 +1341,14 @@ for (const ratio of PIXEL_RATIOS) {
       await expect(table.cell(0, 1)).toBeVisible();
 
       for (const scroll of SEAM_SCROLLS) {
-        expect(await table.headerLeak(scroll), `at a scroll of ${JSON.stringify(scroll)}`).toBe(0);
+        const at = `at a scroll of ${JSON.stringify(scroll)}`;
+
+        expect(await table.headerLeak(scroll), `the header ${at}`).toBe(0);
+        expect(await table.footerLeak(scroll), `the footer ${at}`).toBe(0);
       }
     });
 
-    test('keeps scrolled rows from showing between its header rows when it reads right to left', async ({
+    test('keeps scrolled rows from showing between the cells of its header and footer when it reads right to left', async ({
       playground,
       table,
       isMobile,
@@ -1358,7 +1361,10 @@ for (const ratio of PIXEL_RATIOS) {
       await expect(table.cell(0, 1)).toBeVisible();
 
       for (const scroll of SEAM_SCROLLS_RTL) {
-        expect(await table.headerLeak(scroll), `at a scroll of ${JSON.stringify(scroll)}`).toBe(0);
+        const at = `at a scroll of ${JSON.stringify(scroll)}`;
+
+        expect(await table.headerLeak(scroll), `the header ${at}`).toBe(0);
+        expect(await table.footerLeak(scroll), `the footer ${at}`).toBe(0);
       }
     });
   });
