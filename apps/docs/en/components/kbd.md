@@ -1,11 +1,11 @@
 # Kbd
 
-`NuiKbd` shows a key or a key combination in a hint, a menu or a button. Combinations use the same
-notation as `useHotkey`: `mod+k` looks like ⌘ K on a Mac and like Ctrl K on Windows and Linux.
+A key or a key combination inside text.
 
 <Example name="kbd/Basic" />
 
-`variant="plain"` renders the key as plain text without a frame.
+Write the combination the way [`useHotkey`](/en/composables/hotkey) takes it: `mod+k` shows ⌘ K
+on Mac and Ctrl K on Windows and Linux.
 
 ## Installation
 
@@ -16,30 +16,45 @@ import '@numior/vue/styles/kbd.css';
 
 ## Usage
 
+Change the combination and the look of the keys.
+
 <Configurator name="NuiKbd" />
 
 ## Examples
 
-### Platform
+### Set the platform
 
-The `platform` prop, `mac` or `other`, sets how modifiers look: ⌘ ⌥ ⇧ or Ctrl, Alt and Shift.
-Without it, the platform is detected in the browser after the page loads. On the server and
-until then, Ctrl, Alt and Shift are shown.
+Pass `platform` when the server knows the user's system.
 
 <Example name="kbd/Platform" />
 
-## Behaviour
+Without it, modifiers show as Ctrl, Alt and Shift until the page loads in the browser.
 
-Arrows, Enter, Backspace, Delete and Tab render as symbols: ↑, ↵, ⌫, ⌦, ⇥. Letters are shown in
-upper case and key names are capitalized, so `escape` becomes Esc.
+### Show a sequence of keys
 
-Pass an array to `keys` to show several combinations in a row. Put text that is not a key, such as
-"Middle mouse button", into the default slot.
+Pass an array to `keys`.
+
+<Example name="kbd/Several" />
+
+## Key notation
+
+| In `keys`                                         | On screen  |
+| ------------------------------------------------- | ---------- |
+| `arrowup`, `arrowdown`, `arrowleft`, `arrowright` | ↑, ↓, ←, → |
+| `enter`                                           | ↵          |
+| `backspace`                                       | ⌫          |
+| `delete`                                          | ⌦          |
+| `tab`                                             | ⇥          |
+| `escape`                                          | Esc        |
+| `k`                                               | K          |
+| `home`                                            | Home       |
+
+Leave `keys` out and put text that is not a key, such as "Scroll wheel", into the default slot.
 
 ## Accessibility
 
-Screen readers read the symbols by their Unicode names, such as "upwards arrow". So describe the
-action in words next to the combination: "Press ⌘ K to search".
+Every key is a native `<kbd>` element. Symbols such as ⌘ and ⌫ carry no text label, so say the
+action in words next to the keys: "Press ⌘ K to find an order".
 
 ## API
 

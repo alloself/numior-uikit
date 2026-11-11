@@ -9,7 +9,7 @@ test('an example shows the preview first and switches to the source', async ({ d
 
   await example.codeToggle.click();
   await expect(example.code).toBeVisible();
-  await expect(example.code).toContainText('<NuiButton>Сохранить</NuiButton>');
+  await expect(example.code).toContainText('<NuiButton>Сохранить заказ</NuiButton>');
   await expect(example.preview).toBeHidden();
 });
 
@@ -39,7 +39,7 @@ test('copying puts the example source on the clipboard', async ({ docs }) => {
 
   await expect
     .poll(async () => (await docs.copiedTexts()).at(-1))
-    .toContain('<NuiButton variant="link">Подробнее</NuiButton>');
+    .toContain('<NuiButton variant="ghost" tone="neutral">Отмена</NuiButton>');
 });
 
 test('the configurator drives the live component and the generated code', async ({ docs }) => {

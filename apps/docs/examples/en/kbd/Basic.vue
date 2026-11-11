@@ -1,7 +1,6 @@
 <template>
   <p class="m-0 text-sm">
-    Press <NuiKbd keys="mod+k" /> to search, <NuiKbd :keys="['mod+shift+p']" /> for the command
-    palette and <NuiKbd variant="plain">Esc</NuiKbd> to leave.
+    Press <NuiKbd keys="mod+k" /> to find an order and <NuiKbd keys="escape" /> to close the search.
   </p>
 </template>
 

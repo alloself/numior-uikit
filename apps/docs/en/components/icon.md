@@ -1,13 +1,10 @@
 # Icon
 
-`NuiIcon` renders an icon by name, such as `check` or `search`, or your own icon component. By
-default the names map to [Lucide](https://lucide.dev) icons from the `@lucide/vue` package.
+An icon by its name or from your own component.
 
 <Example name="icon/Basic" />
 
-Each icon loads separately the first time it is needed, so the bundle does not include the whole
-set. Icons inside Numior UI components, such as the select arrow or the dialog close button, render the
-same way.
+Each icon loads separately, the first time it is needed.
 
 ## Installation
 
@@ -18,24 +15,23 @@ import '@numior/vue/styles/icon.css';
 
 ## Usage
 
+Type an icon name from the [table below](#icon-names).
+
 <Configurator name="NuiIcon" />
 
 ## Examples
 
-### Custom component
+### Render your own icon
 
-`icon` also takes any component, for example an SVG icon in its own `.vue` file. It renders as
-is, with the same size and color.
+Pass the component to `icon`.
 
 <Example name="icon/Custom" />
 
-App icons need no registration: import the one you need and pass it directly, for example
-`<NuiIcon :icon="Save" />` with `import { Save } from '@lucide/vue'`.
+An icon from `@lucide/vue` works the same way: import it and pass it directly.
 
-### Custom icons in components
+### Replace icons in components
 
-The icons that Numior UI components use (`check`, `x`, `chevron-down`, `loader` and others) can be
-replaced with your own. For the whole app, pass them to `icons` of the `createNuiConfig` plugin:
+Pass your icons to `icons` of the `createNuiConfig` plugin:
 
 ```ts
 import { createApp } from 'vue';
@@ -54,22 +50,18 @@ createApp(App)
   .mount('#app');
 ```
 
-Only the listed icons change, the rest stay Lucide. `lazyIcon` loads an icon only when it is
-first needed. To replace icons in one part of the page, call `provideNuiConfig` in the `setup` of
-its component.
-
-The keys of `icons` are type-checked, so a typo in a name shows up in the editor right away.
+Only the icons you list change; the rest stay as they are. `lazyIcon` turns on lazy loading: the
+file arrives when the icon first appears on screen.
 
 ### Icon names
 
-Every name components take an icon by, and the Lucide icon behind it:
+Search by a name or by the Lucide icon behind it.
 
 <IconReference />
 
 ## Accessibility
 
-Screen readers skip the icon. Give a button that holds only an icon an `aria-label`. The icon is
-1.25 times the font size and takes the color of the text around it.
+Screen readers skip the icon, so name a button that holds only an icon with `aria-label`.
 
 ## API
 

@@ -1,7 +1,7 @@
 <template>
-  <NuiButton icon="plus" aria-label="Add" />
-  <NuiButton variant="plain" icon="eye" aria-label="Show password" />
-  <NuiButton variant="ghost" tone="neutral" icon="x" aria-label="Close" />
+  <NuiButton variant="ghost" tone="neutral" icon="copy" aria-label="Copy order" />
+  <NuiButton variant="ghost" tone="neutral" icon="external-link" aria-label="Open order" />
+  <NuiButton variant="ghost" tone="error" icon="trash" aria-label="Delete order" />
 </template>
 
 <script setup lang="ts">

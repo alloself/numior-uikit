@@ -1,6 +1,6 @@
 <template>
-  <NuiButton icon="plus">Add</NuiButton>
-  <NuiButton variant="outline" tone="error" icon="trash">Delete</NuiButton>
+  <NuiButton icon="plus">Add product</NuiButton>
+  <NuiButton variant="outline" tone="neutral" icon-end="chevron-down">Export</NuiButton>
 </template>
 
 <script setup lang="ts">

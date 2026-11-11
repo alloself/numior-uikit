@@ -7,7 +7,7 @@ test('a page is copied as Markdown with the code of its examples', async ({ docs
   await docs.copyPage.click();
 
   await expect.poll(async () => (await docs.copiedTexts()).at(-1) ?? '').toMatch(/^# Button\n/);
-  expect((await docs.copiedTexts()).at(-1)).toContain('<NuiButton>Сохранить</NuiButton>');
+  expect((await docs.copiedTexts()).at(-1)).toContain('<NuiButton>Сохранить заказ</NuiButton>');
   expect((await docs.copiedTexts()).at(-1)).toContain('| `variant` | `NuiButtonVariant` |');
 });
 

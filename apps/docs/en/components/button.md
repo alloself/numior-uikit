@@ -1,7 +1,6 @@
 # Button
 
-`NuiButton` is a button for actions: save a form, open a dialog, delete a record. For a link
-inside text use a [Link](/en/components/link).
+A button for actions on the page.
 
 <Example name="button/Basic" />
 
@@ -14,58 +13,51 @@ import '@numior/vue/styles/button.css';
 
 ## Usage
 
-The `variant` prop sets the look of the button: `solid` (the default), `soft`, `outline`,
-`ghost`, `plain` or `link`. The `tone` prop sets the colour: `primary`, `success`, `error`,
-`neutral` and others.
+Pick the look, the color and the size of the button.
 
 <Configurator name="NuiButton" />
 
 ## Examples
 
-### Sizes
+### Show a loading state
 
-The `size` prop accepts `xs`, `sm`, `md` and `lg`, with `md` by default. The `inline` size
-follows the surrounding font and suits a button inside a line of text. In the compact density
-every size gets shorter.
+Turn on `loading` while a request is running.
 
-<Example name="button/Sizes" />
+<Example name="button/Loading" />
 
-### States
+The button keeps its width and its focus, and presses do nothing until loading ends.
 
-`disabled` turns the button off. The `loading` prop shows a spinner and blocks presses, while
-the button keeps its width and its focus.
+### Add an icon
 
-<Example name="button/States" />
-
-### With an icon
-
-The `icon` prop puts an icon before the text, and `iconEnd` after it. An icon can also go into
-the slot along with the text.
+Pass an icon name to `icon` or `iconEnd`.
 
 <Example name="button/WithIcon" />
 
-### Icon only
+### Leave only the icon
 
-A button with a single icon and no text becomes square. Label it with `aria-label`, otherwise a
-screen reader has no name to announce.
+Name a button that has no text with `aria-label`.
 
 <Example name="button/IconOnly" />
 
-The `plain` variant suits buttons inside a field: open the list, clear, show the password. It has
-no background, and the muted icon darkens on hover.
+Inside a field, set `variant="plain"`: the button has no background, and its muted icon takes
+the text color on hover.
 
-### Link
+### Fit a button into text
 
-Pass `href` or `to` to turn the button into a link with the same look. With `to` the button
-becomes the app's `RouterLink` or `NuxtLink`, and the `as` prop puts another component in its
-place.
+Set `size="inline"`, and the button follows the size of the text around it.
+
+<Example name="button/Inline" />
+
+### Turn a button into a link
+
+Pass `href` or `to`; for a link inside a sentence use [Link](/en/components/link).
 
 <Example name="button/Link" />
 
 ## Accessibility
 
-A button stays a native `<button>` and a link an `<a>`, so the keyboard and screen readers handle
-them as usual. While loading, the button gets `aria-busy` and stays in the tab order.
+The button is a native `<button>`, and with `href` or `to` a link, so the keyboard and screen
+readers treat it as usual. While loading, it gets `aria-busy` and stays reachable with Tab.
 
 <KeyboardReference name="NuiButton" />
 

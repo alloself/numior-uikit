@@ -2,7 +2,7 @@
   <div class="flex items-center gap-3">
     <NuiButton variant="ghost" tone="error" aria-label="Delete" icon="trash" />
     <NuiButton variant="outline" tone="neutral">
-      <NuiIcon :icon="HeartIcon" /> Add to favourites
+      <NuiIcon :icon="HeartIcon" /> Add to favorites
     </NuiButton>
   </div>
 </template>

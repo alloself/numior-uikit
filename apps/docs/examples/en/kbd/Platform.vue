@@ -1,9 +1,8 @@
 <template>
-  <div class="flex items-center gap-4 text-sm">
-    <span>Mac: <NuiKbd keys="mod+alt+arrowup" platform="mac" /></span>
-    <span>Windows and Linux: <NuiKbd keys="mod+alt+arrowup" platform="other" /></span>
-    <span>Small size: <NuiKbd keys="enter" size="sm" /></span>
-  </div>
+  <p class="m-0 text-sm">
+    Save the order: <NuiKbd keys="mod+s" platform="mac" /> on Mac,
+    <NuiKbd keys="mod+s" platform="other" /> on Windows and Linux.
+  </p>
 </template>
 
 <script setup lang="ts">

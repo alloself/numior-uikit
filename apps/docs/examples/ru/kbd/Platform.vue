@@ -1,9 +1,8 @@
 <template>
-  <div class="flex items-center gap-4 text-sm">
-    <span>Mac: <NuiKbd keys="mod+alt+arrowup" platform="mac" /></span>
-    <span>Windows и Linux: <NuiKbd keys="mod+alt+arrowup" platform="other" /></span>
-    <span>Малый размер: <NuiKbd keys="enter" size="sm" /></span>
-  </div>
+  <p class="m-0 text-sm">
+    Сохранить заказ: <NuiKbd keys="mod+s" platform="mac" /> на Mac,
+    <NuiKbd keys="mod+s" platform="other" /> в Windows и Linux.
+  </p>
 </template>
 
 <script setup lang="ts">

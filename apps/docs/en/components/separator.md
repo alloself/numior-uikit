@@ -1,11 +1,8 @@
 # Separator
 
-`NuiSeparator` is a line between blocks of a page or between buttons in a toolbar. With a label
-it divides, for example, signing in with Google from signing in by email.
+A line between blocks of a page or between buttons of a toolbar.
 
 <Example name="separator/Basic" />
-
-The `label` prop or the default slot sets the text in the middle of the line.
 
 ## Installation
 
@@ -16,24 +13,22 @@ import '@numior/vue/styles/separator.css';
 
 ## Usage
 
+Change the direction and the label of the line.
+
 <Configurator name="NuiSeparator" />
 
 ## Examples
 
-### In a row
+### Divide toolbar buttons
 
-`orientation="vertical"` draws a vertical line as tall as the row, for example between toolbar
-buttons.
+Set `orientation="vertical"`, and the line takes the height of the row.
 
 <Example name="separator/Vertical" />
 
 ## Accessibility
 
-A screen reader announces the separator as a boundary between parts of the page. When the line
-only decorates a row, pass `decorative` and the screen reader skips it, as with the second line
-in the example.
-
-The `label` text reads as ordinary text.
+A screen reader announces the line as a separator between parts of the page. When the line is
+only decoration, pass `decorative`, and the screen reader skips it.
 
 ## API
 

@@ -1,13 +1,12 @@
 <template>
-  <div class="flex items-center gap-3">
-    <NuiButton variant="ghost" tone="neutral" size="sm">File</NuiButton>
+  <div class="flex items-center gap-1">
+    <NuiButton variant="ghost" tone="neutral" size="sm">Export</NuiButton>
     <NuiSeparator orientation="vertical" />
-    <NuiButton variant="ghost" tone="neutral" size="sm">Edit</NuiButton>
-    <NuiSeparator orientation="vertical" decorative />
-    <NuiKbd keys="mod+s" size="sm" />
+    <NuiButton variant="ghost" tone="neutral" size="sm">Filter</NuiButton>
+    <NuiButton variant="ghost" tone="neutral" size="sm">Sort</NuiButton>
   </div>
 </template>
 
 <script setup lang="ts">
-import { NuiButton, NuiKbd, NuiSeparator } from '@numior/vue';
+import { NuiButton, NuiSeparator } from '@numior/vue';
 </script>
