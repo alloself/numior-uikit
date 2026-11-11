@@ -50,6 +50,18 @@ With `interactive` the card acts as a button: a click anywhere on it emits the `
 
 <Example name="card/Interactive" />
 
+### Loading
+
+While the data is on its way, `loading` shows placeholders where the title, the description,
+the text and the image will be. A placeholder line takes the space of a text line, and the card
+header keeps its height when the data arrives. `lines` sets the number of lines in
+`NuiCardContent`.
+
+The card link or button is off for that time, the footer stays as it is. The placeholders need
+the `@numior/vue/styles/skeleton.css` file.
+
+<Example name="card/Loading" />
+
 ### Variants and padding
 
 The `variant` prop sets the look: `outline` with a border, `elevated` with a shadow or `soft`
@@ -71,6 +83,9 @@ markup.
 A link card and an interactive card need a title: a `NuiCardTitle` or the `title` prop. A screen
 reader names the link or the button by this title rather than by the whole card text. The focus
 ring goes around the entire card.
+
+A card with `loading` carries `aria-busy`: a screen reader learns that its content is still
+loading.
 
 <KeyboardReference name="NuiCard" />
 

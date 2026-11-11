@@ -977,6 +977,18 @@ describe('server rendering', () => {
     expect(plain).not.toContain('nui-card--interactive');
   });
 
+  it('renders a loading card busy, with skeletons in its parts and without its action', async () => {
+    const loading = await renderToString(CardScene, { props: { body: 'Body', loading: true } });
+
+    expect(loading).toContain('aria-busy="true"');
+    expect(loading).toContain('nui-card__title--loading');
+    expect(loading).toContain('nui-card__content--loading');
+    expect(loading).toContain('nui-skeleton--shape-rect');
+    expect(loading).not.toContain('nui-card__action');
+    expect(loading).not.toContain('Plans');
+    expect(loading).not.toContain('<img');
+  });
+
   it('renders a selectable list with one selected option and one tab stop', async () => {
     const items = [
       { label: 'Go', value: 'go' },

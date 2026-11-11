@@ -1,5 +1,5 @@
 <template>
-  <NuiCard href="/plans" title="Plans" description="Pick one">
+  <NuiCard href="/plans" title="Plans" description="Pick one" :loading="loading">
     <NuiCardMedia src="/cover.png" alt="Cover" />
     <NuiCardContent v-if="body">{{ body }}</NuiCardContent>
   </NuiCard>
@@ -8,5 +8,8 @@
 <script setup lang="ts">
 import { NuiCard, NuiCardContent, NuiCardMedia } from '../../../src';
 
-const { body } = defineProps<{ body?: string | undefined }>();
+const { body, loading = false } = defineProps<{
+  body?: string | undefined;
+  loading?: boolean | undefined;
+}>();
 </script>

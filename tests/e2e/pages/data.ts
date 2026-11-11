@@ -14,6 +14,11 @@ import { sectionScope } from '../helpers/axe';
 
 export type DataOutput = Guarded<typeof isDataOutput>;
 
+export interface CardTextBoxes {
+  readonly title: number;
+  readonly description: number;
+}
+
 const isDataOutput = shapeOf({
   picked: listOf(isString),
   channel: nullable(isString),
@@ -39,6 +44,8 @@ export class DataSection {
   readonly cardNested: Locator;
   readonly cardSoft: Locator;
   readonly cardDense: Locator;
+  readonly cardLoading: Locator;
+  readonly cardLoadingToggle: Locator;
   readonly list: Locator;
   readonly selectList: Locator;
   readonly singleList: Locator;
@@ -59,6 +66,8 @@ export class DataSection {
     this.cardNested = page.getByTestId('data-card-nested');
     this.cardSoft = page.getByTestId('data-card-soft');
     this.cardDense = page.getByTestId('data-card-dense');
+    this.cardLoading = page.getByTestId('data-card-loading');
+    this.cardLoadingToggle = page.getByTestId('data-card-loading-toggle').getByRole('switch');
     this.list = page.getByTestId('data-list');
     this.selectList = page.getByTestId('data-list-select');
     this.singleList = page.getByTestId('data-list-single');
@@ -98,6 +107,28 @@ export class DataSection {
     return card
       .locator('.nui-card__action')
       .evaluate((element) => getComputedStyle(element, '::after').outlineStyle);
+  }
+
+  skeletonsOf(card: Locator): Locator {
+    return card.locator('.nui-skeleton');
+  }
+
+  async textBoxesOf(card: Locator): Promise<CardTextBoxes> {
+    const [title, description] = await Promise.all([
+      boxOf(card.locator('.nui-card__title')),
+      boxOf(card.locator('.nui-card__description')),
+    ]);
+
+    return { title: title.height, description: description.height };
+  }
+
+  async mediaCoverOf(card: Locator): Promise<number> {
+    const [media, skeleton] = await Promise.all([
+      boxOf(card.locator('.nui-card__media')),
+      boxOf(card.locator('.nui-card__media .nui-skeleton')),
+    ]);
+
+    return (skeleton.width * skeleton.height) / (media.width * media.height);
   }
 
   insetOf(card: Locator): Promise<{ padding: number; gap: number }> {

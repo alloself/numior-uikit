@@ -81,6 +81,49 @@ describe('NuiCard', () => {
     headless.unmount();
   });
 
+  it('draws a skeleton in every part while it loads and takes the card action away', async () => {
+    const card = CardDriver.mount({
+      props: { loading: true, href: '/plans/team' },
+      parts: {
+        title: 'Team',
+        description: 'Seats',
+        content: 'Body',
+        contentLines: 4,
+        footer: 'Footer',
+        media: { src: '/cover.png' },
+      },
+    });
+
+    expect(card.busy).toBe(true);
+    expect(card.placeholders).toEqual({ title: 1, description: 1, content: 4, media: 1 });
+    expect(card.text).toBe('Footer');
+    expect(card.hasImage).toBe(false);
+    expect(card.hasModifier('interactive')).toBe(false);
+    expect(card.focusable).toBe(0);
+
+    await card.load({ href: '/plans/team' });
+
+    expect(card.busy).toBe(false);
+    expect(card.placeholders).toEqual({ title: 0, description: 0, content: 0, media: 0 });
+    expect(card.text).toBe('TeamSeatsBodyFooter');
+    expect(card.hasImage).toBe(true);
+    expect(card.actionTag).toBe('a');
+
+    card.unmount();
+  });
+
+  it('draws three lines for a loading content block and a header from its own title', () => {
+    const card = CardDriver.mount({
+      props: { loading: true, title: 'Plan', description: 'Team seats' },
+      parts: { content: 'Body' },
+    });
+
+    expect(card.placeholders).toEqual({ title: 1, description: 1, content: 3, media: 0 });
+    expect(card.text).toBe('');
+
+    card.unmount();
+  });
+
   it('renders a button card whose nested actions stay independent from the card action', async () => {
     const card = CardDriver.mount({
       props: { interactive: true },

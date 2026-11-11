@@ -9,6 +9,7 @@
         'nui-layer nui-layer--elevated': variant === NuiCardVariant.Elevated,
       },
     ]"
+    :aria-busy="loading || undefined"
   >
     <NuiCardHeader v-if="title || description">
       <NuiCardTitle v-if="title">{{ title }}</NuiCardTitle>
@@ -35,14 +36,19 @@ const {
   interactive = false,
   title,
   description,
+  loading = false,
 } = defineProps<NuiCardProps>();
 
 const action = computed<CardAction | undefined>(() => {
+  if (loading) {
+    return undefined;
+  }
+
   if (href !== undefined || to !== undefined) {
     return { kind: CardActionKind.Link, href, to, as };
   }
   return interactive ? { kind: CardActionKind.Button } : undefined;
 });
 
-provideCard({ action });
+provideCard({ action, loading: computed(() => loading) });
 </script>

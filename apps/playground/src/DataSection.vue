@@ -92,6 +92,19 @@
         description="С отступом xs"
         data-testid="data-card-dense"
       />
+      <NuiCard :loading="cardLoading" href="#catalogue" data-testid="data-card-loading">
+        <NuiCardMedia :src="COVER_SRC" alt="" aspect="3 / 1" />
+        <NuiCardHeader>
+          <NuiCardTitle>Каталог 2026</NuiCardTitle>
+          <NuiCardDescription>Обновлён вчера</NuiCardDescription>
+        </NuiCardHeader>
+        <NuiCardContent :lines="2">Весенняя коллекция готова к публикации.</NuiCardContent>
+        <NuiCardFooter>
+          <NuiSwitch v-model="cardLoading" data-testid="data-card-loading-toggle">
+            Загрузка
+          </NuiSwitch>
+        </NuiCardFooter>
+      </NuiCard>
     </div>
     <div class="data-lists">
       <NuiList variant="divided" :items="linkItems" data-testid="data-list" />
@@ -166,6 +179,7 @@ import {
   NuiIcon,
   NuiList,
   NuiListItem,
+  NuiSwitch,
   type NuiAvatarItem,
   type NuiListEntry,
   type NuiListSource,
@@ -225,6 +239,7 @@ const picked = ref<string[]>([]);
 const channel = ref<string>();
 const cardClicks = ref(0);
 const nestedClicks = ref(0);
+const cardLoading = ref(true);
 const listEmpty = ref(false);
 
 const onCardClick = (event: MouseEvent): void => {

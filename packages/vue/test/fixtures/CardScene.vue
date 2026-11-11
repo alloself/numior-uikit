@@ -12,7 +12,9 @@
         <button type="button" class="nested" @click="nested += 1">More</button>
       </template>
     </NuiCardHeader>
-    <NuiCardContent v-if="parts.content !== undefined">{{ parts.content }}</NuiCardContent>
+    <NuiCardContent v-if="parts.content !== undefined" :lines="parts.contentLines">
+      {{ parts.content }}
+    </NuiCardContent>
     <NuiCardFooter v-if="parts.footer !== undefined">{{ parts.footer }}</NuiCardFooter>
   </NuiCard>
 </template>

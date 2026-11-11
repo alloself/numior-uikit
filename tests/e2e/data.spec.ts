@@ -83,6 +83,30 @@ test.describe('data display', () => {
     await expect.poll(async () => (await data.readOutput()).cardClicks).toBe(2);
   });
 
+  test('a loading card is busy, keeps a skeleton in the line box of each text and gives its link back when loaded', async ({
+    playground,
+    data,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await data.cardLoading.scrollIntoViewIfNeeded();
+    await expect(data.cardLoading).toHaveAttribute('aria-busy', 'true');
+    await expect(data.cardLoading.getByRole('link')).toHaveCount(0);
+    await expect(data.skeletonsOf(data.cardLoading)).toHaveCount(4);
+    await expect(data.cardLoading).not.toContainText('Каталог 2026');
+
+    const loading = await data.textBoxesOf(data.cardLoading);
+
+    expect(await data.mediaCoverOf(data.cardLoading)).toBe(1);
+
+    await data.cardLoadingToggle.click();
+    await expect(data.cardLoading).not.toHaveAttribute('aria-busy');
+    await expect(data.cardLoading.getByRole('link')).toHaveAccessibleName('Каталог 2026');
+    await expect(data.skeletonsOf(data.cardLoading)).toHaveCount(0);
+    expect(await data.textBoxesOf(data.cardLoading)).toEqual(loading);
+    expect(await playground.wcagViolations(data.scope)).toEqual([]);
+  });
+
   test('a card steps its padding and the gap between its parts down together', async ({
     playground,
     data,

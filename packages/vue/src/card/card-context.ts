@@ -1,5 +1,12 @@
 import type { NuiRouteLocation } from '../shared/destination';
-import { inject, provide, type Component, type ComputedRef, type InjectionKey } from 'vue';
+import {
+  computed,
+  inject,
+  provide,
+  type Component,
+  type ComputedRef,
+  type InjectionKey,
+} from 'vue';
 import { type CardActionKind } from './card.types';
 
 export type CardAction =
@@ -13,6 +20,7 @@ export type CardAction =
 
 export interface CardContext {
   readonly action: ComputedRef<CardAction | undefined>;
+  readonly loading: ComputedRef<boolean>;
 }
 
 const CARD_KEY: InjectionKey<CardContext> = Symbol('nui:card');
@@ -22,3 +30,9 @@ export const provideCard = (context: CardContext): void => {
 };
 
 export const useCard = (): CardContext | null => inject(CARD_KEY, null);
+
+export const useCardLoading = (): ComputedRef<boolean> => {
+  const card = useCard();
+
+  return computed(() => card?.loading.value ?? false);
+};

@@ -16,6 +16,11 @@ export interface NuiCardProps {
   interactive?: boolean | undefined;
   title?: string | undefined;
   description?: string | undefined;
+  loading?: boolean | undefined;
+}
+
+export interface NuiCardContentProps {
+  lines?: number | undefined;
 }
 
 export interface NuiCardTitleProps {

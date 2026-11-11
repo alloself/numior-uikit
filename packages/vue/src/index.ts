@@ -270,6 +270,7 @@ export { default as NuiCardContent } from './card/NuiCardContent.vue';
 export { default as NuiCardFooter } from './card/NuiCardFooter.vue';
 export { default as NuiCardMedia } from './card/NuiCardMedia.vue';
 export {
+  type NuiCardContentProps,
   type NuiCardMediaProps,
   NuiCardPadding,
   type NuiCardProps,
