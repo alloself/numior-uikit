@@ -14,7 +14,7 @@ const indexOf = (element: HTMLElement): number =>
 export class DocsNavDriver {
   constructor(readonly wrapper: VueWrapper) {}
 
-  static async mount(items: readonly DocsNavLink[], fits: number): Promise<DocsNavDriver> {
+  static mount(items: readonly DocsNavLink[], fits: number): DocsNavDriver {
     Object.defineProperty(HTMLElement.prototype, 'offsetTop', {
       configurable: true,
       get(this: HTMLElement) {
@@ -22,15 +22,16 @@ export class DocsNavDriver {
       },
     });
 
-    const driver = new DocsNavDriver(
+    return new DocsNavDriver(
       mount(DocsNav, {
         props: { items, label: 'Основные разделы', moreLabel: MORE },
         attachTo: document.body,
       }),
     );
+  }
 
+  async measured(): Promise<void> {
     await nextTick();
-    return driver;
   }
 
   get visible(): string[] {

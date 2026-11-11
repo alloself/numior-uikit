@@ -9,7 +9,9 @@ const SECTIONS = ['Документация', 'Компоненты', 'Табл�
 
 describe('DocsNav', () => {
   it('shows every section while the row has room for them', async () => {
-    const nav = await DocsNavDriver.mount(SECTIONS, SECTIONS.length);
+    const nav = DocsNavDriver.mount(SECTIONS, SECTIONS.length);
+
+    await nav.measured();
 
     expect(nav.visible).toEqual(['Документация', 'Компоненты', 'Таблица', 'Книга', 'Блоки']);
     expect(nav.current).toEqual(['Книга']);
@@ -19,7 +21,9 @@ describe('DocsNav', () => {
   });
 
   it('moves the sections that wrapped to the next row into the menu', async () => {
-    const nav = await DocsNavDriver.mount(SECTIONS, 3);
+    const nav = DocsNavDriver.mount(SECTIONS, 3);
+
+    await nav.measured();
 
     expect(nav.visible).toEqual(['Документация', 'Компоненты', 'Таблица']);
     expect(nav.hasMore).toBe(true);
