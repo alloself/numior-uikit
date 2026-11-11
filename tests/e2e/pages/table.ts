@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
+import { unlikePixels } from '../helpers/color';
 import { boxOf, dragAcross, renderedWidth, type Box } from '../helpers/geometry';
 import { sectionScope } from '../helpers/axe';
 
@@ -35,6 +36,24 @@ const HEAD_ROWS = 2;
 const EDGE_REACH = 8;
 const SCROLL_REPAINT = 'RepaintsOnScroll';
 const LAYER_SLACK = 2;
+const LEAK = 2;
+const HEADER_TOP = 2;
+const HEADER_EDGE = 3;
+const FRAME_CORNER = 12;
+
+const BODY_PAINT = `
+  [data-testid='table'] .nui-table__body .nui-table__cell {
+    background-color: blue !important;
+    background-image: none !important;
+    color: blue !important;
+  }
+`;
+
+const BODY_HIDE = `
+  [data-testid='table'] .nui-table__body {
+    visibility: hidden !important;
+  }
+`;
 
 export class TableSection {
   readonly scope = sectionScope('table');
@@ -627,6 +646,49 @@ export class TableSection {
             animation.transitionProperty === 'background-color',
         ),
     );
+  }
+
+  private async shotWith(css: string): Promise<Buffer> {
+    const style = await this.page.addStyleTag({ content: css });
+
+    await this.viewport.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              resolve();
+            });
+          });
+        }),
+    );
+
+    const shot = await this.page.screenshot({ animations: 'disabled' });
+
+    await style.evaluate((element) => {
+      element.parentNode?.removeChild(element);
+    });
+
+    return shot;
+  }
+
+  async headerLeak(target: TableScroll): Promise<number> {
+    await this.scrollTo(target);
+
+    const hidden = await this.shotWith(BODY_HIDE);
+    const painted = await this.shotWith(BODY_PAINT);
+
+    const [frame, last] = await Promise.all([
+      boxOf(this.root),
+      boxOf(this.root.locator('.nui-table__header > tr:last-child > .nui-table__cell').first()),
+    ]);
+
+    return unlikePixels(this.page, [hidden, painted], {
+      x: frame.x + FRAME_CORNER,
+      y: frame.y + HEADER_TOP,
+      width: frame.width - 2 * FRAME_CORNER,
+      height: last.y + last.height - frame.y - HEADER_TOP - HEADER_EDGE,
+      delta: LEAK,
+    });
   }
 
   async scrollTo(target: TableScroll): Promise<void> {

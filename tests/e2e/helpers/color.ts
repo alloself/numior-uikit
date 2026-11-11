@@ -1,4 +1,4 @@
-import { expect, type Locator } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 export type Rgb = readonly [number, number, number];
 
@@ -234,6 +234,66 @@ export const inkedPixels = async (
     .page()
     .evaluate(countInk, { base64: png.toString('base64'), area: { ...area, delta: INK_DELTA } });
 };
+
+const countUnlike = async ({
+  shots,
+  area,
+}: {
+  shots: readonly string[];
+  area: PaintedArea;
+}): Promise<number> => {
+  const left = Math.ceil(area.x * devicePixelRatio);
+  const top = Math.ceil(area.y * devicePixelRatio);
+  const width = Math.max(Math.floor(area.width * devicePixelRatio), 1);
+  const height = Math.max(Math.floor(area.height * devicePixelRatio), 1);
+
+  const [first = new Uint8ClampedArray(), second = new Uint8ClampedArray()] = await Promise.all(
+    shots.map(async (base64) => {
+      const image = new Image();
+
+      image.src = `data:image/png;base64,${base64}`;
+      await image.decode();
+
+      const canvas = document.createElement('canvas');
+
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+
+      if (!context) {
+        throw new Error('2D canvas is unavailable');
+      }
+
+      context.drawImage(image, 0, 0);
+
+      return context.getImageData(left, top, width, height).data;
+    }),
+  );
+
+  let unlike = 0;
+
+  for (let offset = 0; offset < first.length; offset += 4) {
+    const differs = [0, 1, 2].some(
+      (channel) =>
+        Math.abs((first[offset + channel] ?? 0) - (second[offset + channel] ?? 0)) > area.delta,
+    );
+
+    unlike += Number(differs);
+  }
+
+  return unlike;
+};
+
+export const unlikePixels = (
+  page: Page,
+  shots: readonly [Buffer, Buffer],
+  area: PaintedArea,
+): Promise<number> =>
+  page.evaluate(countUnlike, {
+    shots: shots.map((shot) => shot.toString('base64')),
+    area,
+  });
 
 export const rgbDelta = (a: Rgb, b: Rgb): number =>
   a.reduce((max, channel, i) => Math.max(max, Math.abs(channel - (b[i] ?? 0))), 0);
