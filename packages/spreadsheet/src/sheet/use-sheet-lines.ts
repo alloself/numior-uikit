@@ -83,11 +83,7 @@ export const useSheetLines = (options: SheetLinesOptions): SheetLines => {
       count: sizeOf(span),
     }));
 
-    const refusal = options.editing.attempt(steps);
-
-    if (refusal !== undefined) {
-      options.announce(refusalText(refusal, options.messages.value));
-    }
+    options.editing.apply(steps, (refusal) => refusalText(refusal, options.messages.value));
   };
 
   const lineItems = (selection: NuiSpreadsheetSelection, axis: LineAxis): NuiMenuEntry[] => {

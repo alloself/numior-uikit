@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { flushPromises } from '@vue/test-utils';
 import {
   RU_LOCALE,
@@ -11,10 +11,13 @@ import {
   type SheetView,
   type Workbook,
 } from '../src/core';
+import { NuiSpreadsheetRefusalReason } from '../src';
 import { installClipboard, type ClipboardStub } from '../../primitives/test/support/clipboard';
 import { SpreadsheetDriver } from './drivers/spreadsheet';
 
 const WHOLE_COLUMN = 1_048_575;
+
+const NOTE_MS = 6000;
 
 const TALL_ROWS = 2500;
 
@@ -86,6 +89,7 @@ afterEach(() => {
 
   clipboard?.restore();
   clipboard = undefined;
+  vi.useRealTimers();
 });
 
 describe('NuiSpreadsheet', () => {
@@ -281,6 +285,48 @@ describe('NuiSpreadsheet', () => {
 
     expect(sheet.announcement).toBe('Cannot fill: the range has merged cells');
     expect([merged.cells.get(1, 0).kind, merged.cells.get(2, 0).kind]).toEqual(['empty', 'empty']);
+  });
+
+  it('shows a refusal for a while and takes it away on a press or once an edit goes through', async () => {
+    const book = createWorkbook();
+    const merged = book.addSheet('Merged');
+    const message = 'Cannot fill: the range has merged cells';
+
+    merged.cells.set(0, 0, textValue('Top'));
+    merged.layout = { ...merged.layout, merges: [{ top: 1, left: 0, bottom: 2, right: 0 }] };
+
+    const sheet = sheetOf({ book, label: 'Merged book' });
+
+    vi.useFakeTimers();
+
+    await sheet.select({
+      active: { row: 0, col: 0 },
+      ranges: [{ top: 0, left: 0, bottom: 3, right: 0 }],
+    });
+
+    await sheet.press('d', { ctrl: true });
+
+    const said = [sheet.note, sheet.refusals];
+
+    await vi.advanceTimersByTimeAsync(NOTE_MS);
+
+    const faded = sheet.note;
+
+    await sheet.press('d', { ctrl: true });
+
+    const again = sheet.note;
+
+    await sheet.pressNote();
+
+    const pressed = sheet.note;
+
+    await sheet.press('d', { ctrl: true });
+    vi.useRealTimers();
+    await sheet.enter(6, 2, 'Fine');
+
+    expect(said).toEqual([message, [{ reason: NuiSpreadsheetRefusalReason.FillMerged, message }]]);
+    expect([faded, again, pressed, sheet.note]).toEqual([undefined, message, undefined, undefined]);
+    expect(sheet.refusals).toHaveLength(3);
   });
 
   it('reports the selection in sheet addresses and follows a selection set from outside', async () => {

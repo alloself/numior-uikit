@@ -12,6 +12,7 @@ import {
   type DrawingSize,
 } from '../../core';
 import { applyLayout } from '../sheet-layout-step';
+import { NuiSpreadsheetRefusalReason } from '../sheet.types';
 import type { DrawingInsertOptions, PictureInsert } from './drawings.types';
 import { useSheetInsertSpot } from './use-sheet-insert-spot';
 
@@ -70,7 +71,7 @@ export const useSheetPictureInsert = (options: DrawingInsertOptions): PictureIns
     const natural = PICTURE_TYPES.includes(file.type) ? await naturalSize(file) : undefined;
 
     if (natural === undefined) {
-      options.announce(options.messages().pictureRefused);
+      options.refuse(NuiSpreadsheetRefusalReason.PictureFile, options.messages().pictureRefused);
       return;
     }
     place(file.type, new Uint8Array(await file.arrayBuffer()), natural);

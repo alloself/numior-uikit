@@ -15,6 +15,7 @@ import type {
 } from '../../core';
 import type {
   FrameGrip,
+  Refuse,
   SheetCells,
   SheetEditing,
   SheetPopover,
@@ -166,7 +167,7 @@ export interface DrawingInsertOptions extends InsertSpotOptions {
   readonly sheet: () => Sheet | undefined;
   readonly readonly: () => boolean;
   readonly messages: () => NuiSpreadsheetMessages;
-  readonly announce: (text: string) => void;
+  readonly refuse: Refuse;
   readonly select: (id: string, name: string) => void;
   readonly editing: SheetEditing;
 }

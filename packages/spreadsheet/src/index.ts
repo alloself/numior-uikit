@@ -27,6 +27,7 @@ export type {
   NuiSpreadsheetSaveAdapter,
   NuiSpreadsheetSaved,
 } from './sheet/file/file.types';
+export { NuiSpreadsheetRefusalReason } from './sheet/sheet.types';
 export type {
   NuiSpreadsheetChange,
   NuiSpreadsheetContextMenu,
@@ -35,6 +36,7 @@ export type {
   NuiSpreadsheetPeer,
   NuiSpreadsheetPlace,
   NuiSpreadsheetProps,
+  NuiSpreadsheetRefusal,
   NuiSpreadsheetSelection,
   SheetCells,
   SheetCellsOptions,

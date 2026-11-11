@@ -13,6 +13,7 @@ import { inGrid, isKey } from './sheet-keys';
 import {
   FillKey,
   FillTargetKind,
+  NuiSpreadsheetRefusalReason,
   type SheetFill,
   type SheetFillOptions,
   type SheetFillSession,
@@ -186,7 +187,7 @@ export const useSheetFill = (options: SheetFillOptions): SheetFill => {
     const active = options.selection.current.value?.active;
 
     if (sheet !== undefined && mergesMeeting(sheet, unionOf(from, to)).length > 0) {
-      options.announce(options.messages.value.fillMerged);
+      options.refuse(NuiSpreadsheetRefusalReason.FillMerged, options.messages.value.fillMerged);
       return;
     }
 

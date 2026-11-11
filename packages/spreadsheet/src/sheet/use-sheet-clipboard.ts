@@ -156,7 +156,7 @@ export const useSheetClipboard = (options: SheetClipboardOptions): SheetClipboar
       ? placed(current, lineRange(cells, last))
       : undefined;
 
-    if (result === undefined || !options.editing.apply([result.step])) {
+    if (result === undefined || options.editing.attempt([result.step]) !== undefined) {
       return undefined;
     }
 

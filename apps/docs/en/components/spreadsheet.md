@@ -107,6 +107,18 @@ click on the edge returns the default width.
 
 In a read-only book the width changes on screen only, while this sheet is shown.
 
+### Refused actions
+
+An action the sheet did not apply is explained by a note in the bottom corner of the sheet. The
+sheet answers this way to a fill across merged cells, an edit of a pivot table cell and a row
+inserted past the limit.
+
+The note fades after six seconds, after the next edit that goes through, or on a click. It stays
+while the pointer is over it. The live region gets the same text.
+
+The `refuse` event carries `{ reason, message }`. The reasons are listed in
+`NuiSpreadsheetRefusalReason`: an app uses them to show its own message or to keep a log.
+
 ## Accessibility
 
 The sheet is marked up as `role="grid"`. Tab enters it once, and the arrows move focus between

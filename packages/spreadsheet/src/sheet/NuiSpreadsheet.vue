@@ -186,6 +186,14 @@
         @resume="recalc.resume"
         @leave="formula.backToGrid"
       />
+      <NuiSpreadsheetNote
+        :text="note.text.value"
+        :shown="note.shown.value"
+        :lifted="recalc.phase.value !== RecalcPhase.Idle"
+        @hold="note.hold"
+        @release="note.release"
+        @close="note.hide"
+      />
     </div>
     <NuiPopover
       v-model:open="rules.open.value"
@@ -287,9 +295,12 @@ import { liveSource, sameColumns, type ColumnShape } from './sheet-table';
 import { useSheetColumnSizes } from './use-sheet-column-sizes';
 import NuiSpreadsheetAssist from './NuiSpreadsheetAssist.vue';
 import NuiSpreadsheetMarks from './NuiSpreadsheetMarks.vue';
+import NuiSpreadsheetNote from './NuiSpreadsheetNote.vue';
 import NuiSpreadsheetPeers from './NuiSpreadsheetPeers.vue';
 import NuiSpreadsheetReference from './NuiSpreadsheetReference.vue';
 import { placeKey } from './sheet-peers';
+import { stepRefusalText } from './sheet-refusals';
+import { useSheetNote } from './use-sheet-note';
 import NuiSpreadsheetReport from './NuiSpreadsheetReport.vue';
 import NuiSpreadsheetStatus from './NuiSpreadsheetStatus.vue';
 import NuiSpreadsheetTabs from './NuiSpreadsheetTabs.vue';
@@ -317,6 +328,8 @@ import {
   RecalcPhase,
   type FormulaSegment,
   type NuiSpreadsheetChange,
+  type NuiSpreadsheetRefusal,
+  type NuiSpreadsheetRefusalReason,
   type NuiSpreadsheetExposed,
   type NuiSpreadsheetProps,
   type NuiSpreadsheetPlace,
@@ -373,6 +386,7 @@ const emit = defineEmits<{
   open: [file: OpenedFile];
   saved: [saved: NuiSpreadsheetSaved];
   presence: [place: NuiSpreadsheetPlace | undefined];
+  refuse: [refusal: NuiSpreadsheetRefusal];
 }>();
 
 const root = useTemplateRef<HTMLElement>('root');
@@ -389,6 +403,14 @@ const formulaId = useId();
 const kitLocale = useLocale(() => undefined);
 
 const messages = useMessages(spreadsheetMessages);
+
+const note = useSheetNote();
+
+const refuse = (reason: NuiSpreadsheetRefusalReason, message: string): void => {
+  formula.announcement.value = message;
+  note.show(message);
+  emit('refuse', { reason, message });
+};
 
 const ruleTexts = useMessages(spreadsheetRulesMessages);
 
@@ -505,8 +527,12 @@ const editing = useSheetEditing({
   recalc,
   collaboration: () => collaboration,
   changed: (change) => {
+    note.hide();
     noteStructure();
     emit('change', change);
+  },
+  refused: (refusal, message) => {
+    refuse(refusal, message ?? stepRefusalText(refusal, messages.value));
   },
 });
 
@@ -605,8 +631,8 @@ const fill = useSheetFill({
   root,
   readonly: () => locked.value,
   messages,
-  announce: (text) => {
-    formula.announcement.value = text;
+  refuse: (reason, message) => {
+    refuse(reason, message);
   },
 });
 
@@ -621,6 +647,9 @@ const pivots = useSheetPivots({
   selection,
   editing,
   formula,
+  refuse: (reason, message) => {
+    refuse(reason, message);
+  },
   sheetIndex,
   readonly: () => locked.value,
   locale: () => bookLocale.value,
@@ -645,9 +674,6 @@ const lines = useSheetLines({
     ...chartInsert.tools(),
     ...pictureInsert.tools(),
   ],
-  announce: (text) => {
-    formula.announcement.value = text;
-  },
 });
 
 const references = useSheetReferences({
@@ -713,8 +739,8 @@ const chartInsert = useSheetChartInsert({
   readonly: () => locked.value,
   rtl: () => sheetDir.value === Direction.Rtl,
   messages: () => messages.value,
-  announce: (text) => {
-    formula.announcement.value = text;
+  refuse: (reason, message) => {
+    refuse(reason, message);
   },
   select: (id, name) => {
     drawingEdit.selectNew(id, name);
@@ -731,8 +757,8 @@ const pictureInsert = useSheetPictureInsert({
   readonly: () => locked.value,
   rtl: () => sheetDir.value === Direction.Rtl,
   messages: () => messages.value,
-  announce: (text) => {
-    formula.announcement.value = text;
+  refuse: (reason, message) => {
+    refuse(reason, message);
   },
   select: (id, name) => {
     drawingEdit.selectNew(id, name);

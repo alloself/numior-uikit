@@ -149,6 +149,20 @@ export class SpreadsheetDriver {
     return (this.wrapper.emitted('presence') ?? []).map(([place]) => place);
   }
 
+  get note(): string | undefined {
+    const note = this.wrapper.find('.nui-spreadsheet__note--shown');
+
+    return note.exists() ? note.text() : undefined;
+  }
+
+  async pressNote(): Promise<void> {
+    await this.wrapper.find('.nui-spreadsheet__note').trigger('click');
+  }
+
+  get refusals(): unknown[] {
+    return (this.wrapper.emitted('refuse') ?? []).map(([refusal]) => refusal);
+  }
+
   async setPeers(peers: readonly NuiSpreadsheetPeer[]): Promise<void> {
     await this.wrapper.setProps({ peers });
   }

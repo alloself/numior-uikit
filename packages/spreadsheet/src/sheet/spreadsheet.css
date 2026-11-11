@@ -581,6 +581,57 @@
     translate var(--nui-duration-normal) var(--nui-easing),
     visibility 0s linear 0s;
 }
+.nui-spreadsheet__note {
+  --_lift: 0px;
+
+  box-sizing: border-box;
+  position: absolute;
+  inset-block-end: calc(var(--nui-space-3) + var(--_lift));
+  inset-inline-start: var(--nui-space-3);
+  z-index: 1;
+  display: flex;
+  max-inline-size: min(32rem, calc(100% - 2 * var(--nui-space-3)));
+  align-items: flex-start;
+  gap: var(--nui-space-2);
+  padding: var(--nui-space-2) var(--nui-space-3);
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius);
+  background: var(--nui-surface-elevated);
+  box-shadow: var(--nui-shadow-md);
+  color: var(--nui-text);
+  font-size: var(--nui-font-size-sm);
+  line-height: var(--nui-line-height-label);
+  opacity: 0;
+  translate: 0 var(--nui-space-2);
+  visibility: hidden;
+  transition:
+    opacity var(--nui-duration-normal) var(--nui-easing),
+    translate var(--nui-duration-normal) var(--nui-easing),
+    visibility 0s linear var(--nui-duration-normal);
+}
+.nui-spreadsheet__note--shown {
+  opacity: 1;
+  translate: 0 0;
+  visibility: visible;
+  transition:
+    opacity var(--nui-duration-normal) var(--nui-easing),
+    translate var(--nui-duration-normal) var(--nui-easing),
+    visibility 0s linear 0s;
+}
+.nui-spreadsheet__note--lifted {
+  --_lift: calc(var(--nui-control-height-xs) + 2 * var(--nui-space-1) + var(--nui-space-2) + 2px);
+}
+.nui-spreadsheet__note-icon {
+  display: flex;
+  flex: none;
+  block-size: 1lh;
+  align-items: center;
+  color: var(--nui-warning);
+}
+.nui-spreadsheet__note-text {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
 .nui-spreadsheet__status-text {
   min-inline-size: 0;
   overflow: hidden;

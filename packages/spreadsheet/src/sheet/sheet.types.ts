@@ -27,7 +27,6 @@ import type {
   ReferenceSpan,
   SignaturePart,
   Sheet,
-  StepRefusal,
   ThemePalette,
   WorkbookPeer,
   WorkbookPlace,
@@ -35,6 +34,7 @@ import type {
   WorkbookDocument,
   WorkbookStep,
 } from '../core';
+import { StepRefusal } from '../core';
 import type { LimitationsReport, OriginalPackage } from '../xlsx/read/read.types';
 import type { NuiSpreadsheetSaveAdapter } from './file/file.types';
 import type { NuiSpreadsheetMessages } from './spreadsheet.messages';
@@ -48,6 +48,33 @@ export interface FormulaSegment {
 export type FrameGrip = (typeof FrameGrip)[keyof typeof FrameGrip];
 
 export type RecalcPhase = (typeof RecalcPhase)[keyof typeof RecalcPhase];
+
+export type NuiSpreadsheetRefusalReason =
+  (typeof NuiSpreadsheetRefusalReason)[keyof typeof NuiSpreadsheetRefusalReason];
+
+export interface NuiSpreadsheetRefusal {
+  readonly reason: NuiSpreadsheetRefusalReason;
+  readonly message: string;
+}
+
+export type RefusalText = (refusal: StepRefusal) => string;
+
+export type Refuse = (reason: NuiSpreadsheetRefusalReason, message: string) => void;
+
+export interface SheetNote {
+  readonly text: Readonly<ShallowRef<string>>;
+  readonly shown: Readonly<ShallowRef<boolean>>;
+  show(text: string): void;
+  hide(): void;
+  hold(): void;
+  release(): void;
+}
+
+export interface SheetNoteProps {
+  readonly text: string;
+  readonly shown: boolean;
+  readonly lifted: boolean;
+}
 
 export type CellOutdated = (sheet: Sheet, row: number, col: number) => boolean;
 
@@ -272,7 +299,6 @@ export interface SheetLinesOptions {
   readonly readonly: () => boolean;
   readonly extra: () => NuiSpreadsheetContextMenu | undefined;
   readonly tools: () => readonly NuiMenuEntry[];
-  readonly announce: (text: string) => void;
 }
 
 export interface SheetLines {
@@ -308,6 +334,7 @@ export interface SheetEditingOptions {
   readonly recalc: SheetRecalc;
   readonly collaboration: () => WorkbookDocument | undefined;
   readonly changed: (change: NuiSpreadsheetChange) => void;
+  readonly refused: (refusal: StepRefusal, message: string | undefined) => void;
 }
 
 export interface SheetEditing {
@@ -315,7 +342,7 @@ export interface SheetEditing {
   readonly revision: Readonly<Ref<number>>;
   readonly commands: NuiTableCommandSink<number>;
   setDraft(next: NuiTableDraft | undefined): void;
-  apply(steps: readonly WorkbookStep[]): boolean;
+  apply(steps: readonly WorkbookStep[], say?: RefusalText): boolean;
   attempt(steps: readonly WorkbookStep[]): StepRefusal | undefined;
   redraw(): void;
   inputAt(position: NuiTableCellPosition): string;
@@ -422,7 +449,7 @@ export interface SheetFillOptions {
   readonly root: Readonly<ShallowRef<HTMLElement | null>>;
   readonly readonly: () => boolean;
   readonly messages: ComputedRef<NuiSpreadsheetMessages>;
-  readonly announce: (text: string) => void;
+  readonly refuse: Refuse;
 }
 
 export type SheetFillTarget =
@@ -522,3 +549,11 @@ export const FrameGrip = {
 } as const;
 
 export const RecalcPhase = { Idle: 'idle', Running: 'running', Stopped: 'stopped' } as const;
+
+export const NuiSpreadsheetRefusalReason = {
+  ...StepRefusal,
+  FillMerged: 'fill-merged',
+  PivotSource: 'pivot-source',
+  ChartData: 'chart-data',
+  PictureFile: 'picture-file',
+} as const;

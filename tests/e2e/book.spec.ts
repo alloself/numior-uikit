@@ -524,6 +524,29 @@ test.describe('book', () => {
     await expect.poll(() => book.merged('1', 0)).toBe(true);
   });
 
+  for (const theme of ['light', 'dark'] satisfies readonly Theme[]) {
+    test(`shows why a fill over the merged title did nothing in the ${theme} theme`, async ({
+      playground,
+      book,
+      page,
+    }) => {
+      await playground.emulate({ reducedMotion: 'reduce' });
+      await playground.open();
+      await playground.setTheme(theme);
+      await book.sheet.scrollIntoViewIfNeeded();
+      await book.dragAcross({ row: '3', col: 0 }, { row: '1', col: 0 });
+      await page.keyboard.press('Control+d');
+
+      await expect(book.note).toHaveText('Нельзя заполнить: в диапазоне есть объединённые ячейки');
+      await expect(book.cell('1', 0)).toHaveText('Бюджет на первое полугодие, тыс. ₽');
+      expect(await playground.wcagViolations('section[aria-labelledby="book-title"]')).toEqual([]);
+
+      await book.enter('12', 0, '1');
+
+      await expect(book.note).toBeHidden();
+    });
+  }
+
   test('scrolls the sheet while a reference frame or the fill handle is held at its edge', async ({
     playground,
     book,

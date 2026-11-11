@@ -304,6 +304,7 @@ describe('recalculation', () => {
     for (let row = 1; row <= LONG_ROWS; row += 1) {
       sheet.enter(`A${String(row)}`, row);
     }
+
     sheet.enter(`A${String(LONG_ROWS + 1)}`, 7);
     sheet.enter('C1', `=MAXIFS(A1:A${String(LONG_ROWS)},A1:A${String(LONG_ROWS)},">0")`);
     sheet.enter('C2', `=MINIFS(A1:A${String(LONG_ROWS)},A1:A${String(LONG_ROWS)},">0")`);

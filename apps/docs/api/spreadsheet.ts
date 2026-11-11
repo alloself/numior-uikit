@@ -87,6 +87,10 @@ const docs: DocsMap = {
         ru: 'Срабатывает после каждой своей правки и отмены. Передаёт `{ steps }`.',
         en: 'Fires after each local edit and undo, with `{ steps }`.',
       },
+      refuse: {
+        ru: 'Лист не выполнил действие. Передаёт `{ reason, message }`: причину из `NuiSpreadsheetRefusalReason` и текст, который лист показал заметкой.',
+        en: 'The sheet did not apply an action. Carries `{ reason, message }`: a reason from `NuiSpreadsheetRefusalReason` and the text the sheet showed in its note.',
+      },
       open: {
         ru: 'Срабатывает, когда файл открыт. Передаёт новые `book`, `calculator`, `report`, `source` и `fileName`.',
         en: 'Fires when a file is opened, with the new `book`, `calculator`, `report`, `source` and `fileName`.',

@@ -19,6 +19,7 @@ import type {
 } from '../../core';
 import type {
   FormulaBar,
+  Refuse,
   SheetCells,
   SheetEditing,
   SheetPopover,
@@ -167,6 +168,7 @@ export interface SheetPivotsOptions {
   readonly selection: SheetSelection;
   readonly editing: SheetEditing;
   readonly formula: FormulaBar;
+  readonly refuse: Refuse;
   readonly sheetIndex: Ref<number>;
   readonly readonly: () => boolean;
   readonly locale: () => BookLocale;

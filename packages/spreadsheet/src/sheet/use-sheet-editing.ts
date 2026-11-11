@@ -27,7 +27,7 @@ import {
   type WorkbookStep,
 } from '../core';
 import NuiSpreadsheetCellEditor from './NuiSpreadsheetCellEditor.vue';
-import type { SheetCells, SheetEditing, SheetEditingOptions } from './sheet.types';
+import type { RefusalText, SheetCells, SheetEditing, SheetEditingOptions } from './sheet.types';
 
 interface SheetLine {
   readonly row: number;
@@ -150,12 +150,16 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
     options.recalc.run();
   };
 
-  const follow = (run: () => StepOutcome | undefined): number => {
+  const follow = (run: () => StepOutcome | undefined, say?: RefusalText): number => {
     applied = [];
     const outcome = run();
     const steps = applied;
 
     applied = [];
+
+    if (outcome?.ok === false) {
+      options.refused(outcome.reason, say?.(outcome.reason));
+    }
 
     if (outcome === undefined || !outcome.ok || steps.length === 0) {
       return 0;
@@ -253,8 +257,8 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
         : column,
     );
 
-  const apply = (steps: readonly WorkbookStep[]): boolean =>
-    follow(() => history.value.commit(steps)) > 0;
+  const apply = (steps: readonly WorkbookStep[], say?: RefusalText): boolean =>
+    follow(() => history.value.commit(steps), say) > 0;
 
   const attempt = (steps: readonly WorkbookStep[]): StepRefusal | undefined => {
     const tried: { refusal?: StepRefusal } = {};
@@ -262,10 +266,12 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
     follow(() => {
       const outcome = history.value.commit(steps);
 
-      if (!outcome.ok) {
-        tried.refusal = outcome.reason;
+      if (outcome.ok) {
+        return outcome;
       }
-      return outcome;
+
+      tried.refusal = outcome.reason;
+      return undefined;
     });
 
     return tried.refusal;

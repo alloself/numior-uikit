@@ -11,6 +11,7 @@ import {
   type SheetChartKind,
 } from '../../core';
 import { applyLayout } from '../sheet-layout-step';
+import { NuiSpreadsheetRefusalReason } from '../sheet.types';
 import { CHART_CHOICES, CHART_INSERT_ICON } from './chart-choices';
 import type { ChartInsertOptions } from './drawings.types';
 import { useSheetInsertSpot } from './use-sheet-insert-spot';
@@ -43,7 +44,7 @@ export const useSheetChartInsert = (
         : chartOfRange(sheet.cells, sheet.name, range, kind);
 
     if (sheet === undefined || range === undefined || chart === undefined) {
-      options.announce(options.messages().chartNoData);
+      options.refuse(NuiSpreadsheetRefusalReason.ChartData, options.messages().chartNoData);
       return;
     }
 

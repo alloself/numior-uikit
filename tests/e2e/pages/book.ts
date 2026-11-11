@@ -179,6 +179,10 @@ export class BookSection {
     return this.sheet.locator('.nui-spreadsheet__fill-grip');
   }
 
+  get note(): Locator {
+    return this.sheet.locator('.nui-spreadsheet__note--shown');
+  }
+
   async leaveSheet(): Promise<void> {
     await this.section.getByRole('heading').first().click();
   }

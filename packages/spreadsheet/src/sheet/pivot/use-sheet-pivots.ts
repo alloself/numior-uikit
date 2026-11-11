@@ -25,6 +25,7 @@ import {
   type SheetPivot,
   type Workbook,
 } from '../../core';
+import { NuiSpreadsheetRefusalReason } from '../sheet.types';
 import { tableRangeOf } from '../use-sheet-selection';
 import { useSheetPopover } from '../use-sheet-popover';
 import { spreadsheetPivotMessages } from './pivot-panel.messages';
@@ -131,6 +132,8 @@ export const useSheetPivots = (options: SheetPivotsOptions): SheetPivots => {
     options.formula.announcement.value = text;
   };
 
+  const refusedText = (): string => texts.value.refused;
+
   const sourceOf = (sheet: Sheet): PivotSource | undefined => {
     const selection = options.selection.current.value;
     const picked = selection?.ranges[0];
@@ -164,7 +167,7 @@ export const useSheetPivots = (options: SheetPivotsOptions): SheetPivots => {
       source === undefined ||
       pivotSourceFields(book, source) === undefined
     ) {
-      announce(texts.value.noSource);
+      options.refuse(NuiSpreadsheetRefusalReason.PivotSource, texts.value.noSource);
       return;
     }
 
@@ -173,20 +176,22 @@ export const useSheetPivots = (options: SheetPivotsOptions): SheetPivots => {
     const sheetName = freeName(taken, (at) => texts.value.pivotSheet({ index: at }));
     const name = freeName(pivotNames(book), (at) => texts.value.pivotName({ index: at }));
 
-    const applied = options.editing.apply([
-      { kind: StepKind.AddSheet, name: sheetName, index },
-      {
-        kind: StepKind.SetPivot,
-        sheet: sheetName,
-        name,
-        pivot: { anchor: ANCHOR, definition: emptyPivot(source, language()) },
-      },
-    ]);
+    const applied = options.editing.apply(
+      [
+        { kind: StepKind.AddSheet, name: sheetName, index },
+        {
+          kind: StepKind.SetPivot,
+          sheet: sheetName,
+          name,
+          pivot: { anchor: ANCHOR, definition: emptyPivot(source, language()) },
+        },
+      ],
+      refusedText,
+    );
 
     const created = book.sheet(sheetName);
 
     if (!applied || created === undefined) {
-      announce(texts.value.refused);
       return;
     }
 
@@ -199,19 +204,25 @@ export const useSheetPivots = (options: SheetPivotsOptions): SheetPivots => {
   };
 
   const refresh = (found: SheetPivot): void => {
-    const applied = options.editing.apply([
-      { kind: StepKind.RefreshPivot, sheet: found.sheet.name, name: found.name },
-    ]);
+    const applied = options.editing.apply(
+      [{ kind: StepKind.RefreshPivot, sheet: found.sheet.name, name: found.name }],
+      refusedText,
+    );
 
-    announce(applied ? texts.value.refreshed : texts.value.refused);
+    if (applied) {
+      announce(texts.value.refreshed);
+    }
   };
 
   const remove = (found: SheetPivot): void => {
-    const applied = options.editing.apply([
-      { kind: StepKind.SetPivot, sheet: found.sheet.name, name: found.name, pivot: undefined },
-    ]);
+    const applied = options.editing.apply(
+      [{ kind: StepKind.SetPivot, sheet: found.sheet.name, name: found.name, pivot: undefined }],
+      refusedText,
+    );
 
-    announce(applied ? texts.value.removed : texts.value.refused);
+    if (applied) {
+      announce(texts.value.removed);
+    }
   };
 
   const tools = (): readonly NuiMenuEntry[] => {
@@ -282,18 +293,17 @@ export const useSheetPivots = (options: SheetPivotsOptions): SheetPivots => {
       return;
     }
 
-    const applied = options.editing.apply([
-      {
-        kind: StepKind.SetPivot,
-        sheet: current.sheet.name,
-        name: current.name,
-        pivot: { anchor: current.anchor, definition: next },
-      },
-    ]);
-
-    if (!applied) {
-      announce(texts.value.refused);
-    }
+    options.editing.apply(
+      [
+        {
+          kind: StepKind.SetPivot,
+          sheet: current.sheet.name,
+          name: current.name,
+          pivot: { anchor: current.anchor, definition: next },
+        },
+      ],
+      refusedText,
+    );
   };
 
   watch(pivot, (next) => {

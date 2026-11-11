@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
+import { flushPromises } from '@vue/test-utils';
+import { installClipboard } from '../../primitives/test/support/clipboard';
+import { NuiSpreadsheetRefusalReason } from '../src';
 import { numberValue, type Workbook } from '../src/core';
 import { SpreadsheetDriver } from './drivers/spreadsheet';
 import { salesBook } from './support/pivot-book';
@@ -276,7 +279,47 @@ describe('NuiSpreadsheet pivot tables', () => {
     await sheet.chooseCellMenuItem('Insert 1 row above');
 
     expect(sheet.announcement).toBe('Cannot change rows or columns that run through a pivot table');
+    expect(sheet.note).toBe('Cannot change rows or columns that run through a pivot table');
     expect([sheet.text(4, 0), sheet.text(5, 0)]).toEqual(['East', 'West']);
+  });
+
+  it('shows why a cell of a pivot table did not change and tells the page', async () => {
+    const sheet = await pivotOf();
+    const message = 'Cells of a pivot table cannot be changed';
+
+    await sheet.pivot.check('Region');
+    await sheet.pivot.check('Amount');
+    await sheet.pivot.press('Escape');
+
+    await sheet.enter(5, 0, 'Mine');
+
+    expect(sheet.text(5, 0)).toBe('West');
+    expect([sheet.note, sheet.announcement]).toEqual([message, message]);
+    expect(sheet.refusals).toEqual([{ reason: NuiSpreadsheetRefusalReason.PivotOutput, message }]);
+  });
+
+  it('says once that a copied cell did not land in a pivot table', async () => {
+    const stub = installClipboard({ api: 'granted' });
+
+    restorers.push(() => {
+      stub.restore();
+    });
+
+    const sheet = await pivotOf();
+
+    await sheet.pivot.check('Region');
+    await sheet.pivot.check('Amount');
+    await sheet.pivot.press('Escape');
+
+    await sheet.focus(4, 0);
+    await sheet.press('c', { ctrl: true });
+    await flushPromises();
+    await sheet.focus(5, 0);
+    await sheet.paste(stub.copies.at(-1) ?? '');
+
+    expect(sheet.text(5, 0)).toBe('West');
+    expect(sheet.refusals).toHaveLength(1);
+    expect(sheet.note).toBe('Cells of a pivot table cannot be changed');
   });
 
   it('refuses a source without a header row', async () => {
@@ -288,5 +331,6 @@ describe('NuiSpreadsheet pivot tables', () => {
     expect(sheet.tabs).toEqual(['Sales']);
     expect(sheet.pivot.open).toBe(false);
     expect(sheet.announcement).toBe('Select a table with a header row to build a pivot table');
+    expect(sheet.note).toBe('Select a table with a header row to build a pivot table');
   });
 });
