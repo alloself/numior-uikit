@@ -62,6 +62,7 @@ const apiFor = (collab: CollabEditor, onChange: (state: EditorState) => void): N
     posAt: () => undefined,
     contentBox: () => undefined,
     revealNode: () => undefined,
+    watchLayout: () => () => undefined,
   };
 };
 

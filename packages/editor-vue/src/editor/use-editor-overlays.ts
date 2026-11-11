@@ -14,13 +14,14 @@ import {
 } from '@numior/editor-core';
 import type { EditorView } from '@numior/editor-core/view';
 import { useEventListener } from '@vueuse/core';
-import { computed, ref, watch, type ComputedRef, type Ref } from 'vue';
+import { computed, onScopeDispose, ref, watch, type ComputedRef, type Ref } from 'vue';
 import type { ColourMark } from '../toolbar/toolbar.types';
 
 export interface EditorOverlayOptions {
   readonly frame: Readonly<Ref<HTMLElement | null>>;
   readonly content: Readonly<Ref<HTMLElement | null>>;
   readonly range: Readonly<Ref<HTMLElement | null>>;
+  readonly watchLayout: (listener: () => void) => () => void;
   readonly bar: () => number;
   readonly view: () => EditorView | undefined;
   readonly state: () => EditorState;
@@ -162,6 +163,8 @@ export const useEditorOverlays = (options: EditorOverlayOptions): EditorOverlays
   watch([options.state, bubbleOpen, linkOpen, options.caret], place, { flush: 'post' });
 
   useEventListener(options.content, 'scroll', place, { passive: true });
+
+  onScopeDispose(options.watchLayout(place));
 
   useEventListener(globalThis, 'pointerup', () => {
     selecting.value = false;

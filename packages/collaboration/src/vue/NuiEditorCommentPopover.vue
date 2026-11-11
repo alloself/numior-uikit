@@ -47,6 +47,7 @@ import { collabMessages } from './collab.messages';
 import type { NuiEditorCommentPopoverProps } from './collab.types';
 import NuiEditorCommentForm from './NuiEditorCommentForm.vue';
 import NuiEditorCommentThread from './NuiEditorCommentThread.vue';
+import { useEditorLayout } from './use-editor-layout';
 
 const MARK = '.nui-editor__comment';
 
@@ -145,6 +146,8 @@ useEventListener(() => layer.value?.closest<HTMLElement>(EDITOR), 'scroll', plac
 });
 
 watch([shown, comments.revision, comments.opened], place, { flush: 'post' });
+
+useEditorLayout(() => editor, place);
 
 watch(comments.drafting, (now, was) => {
   if (was && !now) {

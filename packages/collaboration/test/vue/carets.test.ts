@@ -14,76 +14,23 @@ afterEach(() => {
 });
 
 describe('a caret of someone else beside a line that moves', () => {
-  it('follows the line when a class shifts it', async () => {
+  it('goes after its text when the editor says the text may have moved', async () => {
     const scene = await mounted();
 
     expect(scene.caret).toBe('translate(40px, 30px)');
 
-    await scene.pushLine(32);
+    scene.shiftText(32);
 
     expect(scene.caret).toBe('translate(72px, 30px)');
   });
 
-  it('follows a transition that starts without a change in the markup', async () => {
+  it('stops listening to the editor once the layer is gone', async () => {
     const scene = await mounted();
 
-    await scene.startTransition(12);
+    expect(scene.listening).toBe(true);
 
-    expect(scene.caret).toBe('translate(52px, 30px)');
-  });
+    scene.unmount();
 
-  it('follows the text when a picture in it has loaded', async () => {
-    const scene = await mounted();
-
-    await scene.loadPicture(100);
-
-    expect(scene.caret).toBe('translate(140px, 30px)');
-  });
-
-  it('follows a running animation frame by frame and stops with it', async () => {
-    const scene = await mounted();
-
-    await scene.glideLine([50, 60, 72]);
-
-    expect(scene.caret).toBe('translate(40px, 30px)');
-
-    await scene.paint();
-
-    expect(scene.caret).toBe('translate(50px, 30px)');
-
-    await scene.paint();
-    await scene.paint();
-
-    expect(scene.caret).toBe('translate(72px, 30px)');
-
-    const settled = scene.measurements;
-
-    await scene.paint();
-
-    expect(scene.measurements).toBe(settled);
-  });
-
-  it('does not chase an animation that never ends', async () => {
-    const scene = await mounted();
-
-    await scene.glideLine([50, 60, 72], Infinity);
-
-    const settled = scene.measurements;
-
-    await scene.paint();
-
-    expect(scene.caret).toBe('translate(40px, 30px)');
-    expect(scene.measurements).toBe(settled);
-  });
-
-  it('measures once for a change and not again for what it wrote itself', async () => {
-    const scene = await mounted();
-    const before = scene.measurements;
-
-    await scene.pushLine(32);
-    await scene.paint();
-    await scene.paint();
-
-    expect(scene.measurements).toBe(before + 1);
+    expect(scene.listening).toBe(false);
   });
 });

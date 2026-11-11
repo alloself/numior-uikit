@@ -226,6 +226,35 @@ export class EditorSection {
     return this.root.locator('.nui-editor-bubble');
   }
 
+  pushed(): Locator {
+    return this.content.locator('.nui-editor__pushed');
+  }
+
+  async settled(block: Locator): Promise<void> {
+    await block.evaluate(async (element) => {
+      await Promise.all(element.getAnimations().map((each) => each.finished));
+
+      await new Promise((resolve) => {
+        requestAnimationFrame(resolve);
+      });
+    });
+  }
+
+  selectionGap(): Promise<number> {
+    return this.root.evaluate((root) => {
+      const frame = root.querySelector('.nui-editor__range');
+      const selection = document.getSelection();
+
+      if (frame === null || selection === null || selection.rangeCount === 0) {
+        return Number.NaN;
+      }
+
+      return Math.abs(
+        frame.getBoundingClientRect().left - selection.getRangeAt(0).getBoundingClientRect().left,
+      );
+    });
+  }
+
   codeLanguage(): Locator {
     return this.content.locator('.nui-editor-code__language > button').first();
   }

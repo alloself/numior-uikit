@@ -1,15 +1,11 @@
 import type { NuiEditorApi } from '@numior/editor-vue';
-import { promiseTimeout } from '@vueuse/core';
 import { mount, type VueWrapper } from '@vue/test-utils';
-import { vi } from 'vite-plus/test';
 import type { RemotePeer } from '../../src';
-import CaretsHost from './CaretsHost.vue';
+import { NuiCollabCarets } from '../../src/vue';
 
 interface Scene {
   left: number;
-  measured: number;
-  path: number[];
-  iterations: number;
+  readonly listeners: Set<() => void>;
 }
 
 const BOX = new DOMRect(0, 0, 400, 100);
@@ -33,23 +29,18 @@ const editorOf = (scene: Scene): NuiEditorApi => ({
   run: () => false,
   focus: () => undefined,
   flush: () => undefined,
-  coordsAt: () => {
-    scene.measured += 1;
-
-    return { left: scene.left, right: scene.left, top: TOP, bottom: TOP + LINE };
-  },
+  coordsAt: () => ({ left: scene.left, right: scene.left, top: TOP, bottom: TOP + LINE }),
   posAt: () => undefined,
   contentBox: () => BOX,
   revealNode: () => undefined,
+  watchLayout: (listener) => {
+    scene.listeners.add(listener);
+
+    return () => {
+      scene.listeners.delete(listener);
+    };
+  },
 });
-
-const nextPaint = async (): Promise<void> => {
-  await new Promise((resolve) => {
-    requestAnimationFrame(resolve);
-  });
-
-  await promiseTimeout(0);
-};
 
 export class CaretsDriver {
   private constructor(
@@ -58,33 +49,11 @@ export class CaretsDriver {
   ) {}
 
   static async mount(): Promise<CaretsDriver> {
-    const scene: Scene = { left: START, measured: 0, path: [], iterations: 1 };
+    const scene: Scene = { left: START, listeners: new Set() };
 
-    const wrapper = mount(CaretsHost, {
+    const wrapper = mount(NuiCollabCarets, {
       attachTo: document.body,
       props: { peers: [], editor: editorOf(scene) },
-    });
-
-    vi.stubGlobal('KeyframeEffect', EventTarget);
-
-    Object.defineProperty(wrapper.element, 'getAnimations', {
-      configurable: true,
-      value: () => {
-        const left = scene.path.shift();
-
-        if (left === undefined) {
-          return [];
-        }
-
-        scene.left = left;
-
-        return [
-          {
-            playState: 'running',
-            effect: { getComputedTiming: () => ({ iterations: scene.iterations }) },
-          },
-        ];
-      },
     });
 
     await wrapper.setProps({ peers: [BOB] });
@@ -92,49 +61,23 @@ export class CaretsDriver {
     return new CaretsDriver(wrapper, scene);
   }
 
-  private get line(): Element {
-    return this.wrapper.get('.carets-host__line').element;
-  }
-
   get caret(): string {
     return this.wrapper.get<HTMLElement>('.nui-collab-carets__caret').element.style.transform;
   }
 
-  get measurements(): number {
-    return this.scene.measured;
+  get listening(): boolean {
+    return this.scene.listeners.size > 0;
   }
 
-  async pushLine(by: number): Promise<void> {
+  shiftText(by: number): void {
     this.scene.left += by;
-    this.line.classList.add('carets-host__line--pushed');
-    await nextPaint();
-  }
 
-  async startTransition(by: number): Promise<void> {
-    this.scene.left += by;
-    this.line.dispatchEvent(new Event('transitionrun', { bubbles: true }));
-    await nextPaint();
-  }
-
-  async loadPicture(by: number): Promise<void> {
-    this.scene.left += by;
-    this.wrapper.get('.carets-host__picture').element.dispatchEvent(new Event('load'));
-    await nextPaint();
-  }
-
-  async glideLine(path: readonly number[], iterations = 1): Promise<void> {
-    this.scene.path = [...path];
-    this.scene.iterations = iterations;
-    this.line.classList.toggle('carets-host__line--gliding');
-    await nextPaint();
-  }
-
-  async paint(): Promise<void> {
-    await nextPaint();
+    this.scene.listeners.forEach((listener) => {
+      listener();
+    });
   }
 
   unmount(): void {
     this.wrapper.unmount();
-    vi.unstubAllGlobals();
   }
 }

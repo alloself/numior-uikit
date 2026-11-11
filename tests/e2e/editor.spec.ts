@@ -10,6 +10,8 @@ const LINKED_PARAGRAPH = 3;
 
 const SCROLL_STEP = 150;
 
+const SELECTION_TOLERANCE = 2;
+
 const openEditor = async (playground: PlaygroundPage): Promise<void> => {
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
@@ -777,6 +779,42 @@ test.describe('editor', () => {
     await page.waitForTimeout(400);
 
     expect(await editor.gripBeside(table)).toBe(true);
+  });
+
+  test('keeps the menu over a selection on its text while the grip pushes the line and lets it go', async ({
+    playground,
+    editor,
+    page,
+  }) => {
+    await playground.open();
+    await editor.root.scrollIntoViewIfNeeded();
+
+    const fine = await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    test.skip(!fine, 'the handle follows a mouse');
+
+    const line = editor.content.locator('p').first();
+
+    await editor.clear();
+    await page.keyboard.type('Hello world');
+    await page.keyboard.press('Shift+Home');
+    await expect(editor.bubble()).toBeVisible();
+
+    await editor.hoverStart(line);
+    await expect(editor.pushed()).toHaveCount(1);
+
+    await editor.settled(line);
+
+    expect(await editor.selectionGap()).toBeLessThanOrEqual(SELECTION_TOLERANCE);
+
+    await page.mouse.move(0, 0);
+    await expect(editor.pushed()).toHaveCount(0);
+
+    await editor.settled(line);
+
+    expect(await editor.selectionGap()).toBeLessThanOrEqual(SELECTION_TOLERANCE);
   });
 
   test('joins lines across lists, a callout and a closed toggle with Delete and Backspace', async ({

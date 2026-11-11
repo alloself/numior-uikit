@@ -270,6 +270,7 @@ import { useEditorUploads } from '../uploads/use-editor-uploads';
 import { editorMessages } from './editor.messages';
 import { useEditorValue, type EditorValue } from './use-editor-value';
 import { useEditorOverlays } from './use-editor-overlays';
+import { useLayoutWatch } from './use-layout-watch';
 import {
   KeyCode,
   NuiEditorFormat,
@@ -775,10 +776,13 @@ const stuckBar = (): number => {
   return bar instanceof HTMLElement ? bar.offsetHeight : 0;
 };
 
+const layout = useLayoutWatch(frameElement, contentElement);
+
 const overlays = useEditorOverlays({
   frame: frameElement,
   content: contentElement,
   range: rangeElement,
+  watchLayout: layout.watch,
   bar: stuckBar,
   view: () => view,
   state: () => current.value,
@@ -810,6 +814,7 @@ const editor: NuiEditorApi = {
     view.draw(pos);
     view.nodeDOM(nodeId)?.scrollIntoView({ block: 'nearest' });
   },
+  watchLayout: layout.watch,
 };
 
 const toolbarShown = computed(

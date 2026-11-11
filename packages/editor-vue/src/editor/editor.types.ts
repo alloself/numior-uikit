@@ -55,6 +55,7 @@ export interface NuiEditorApi {
   posAt(x: number, y: number): number | undefined;
   contentBox(): DOMRect | undefined;
   revealNode(id: string): void;
+  watchLayout(listener: () => void): () => void;
 }
 
 export interface NuiEditorPaste {
@@ -75,3 +76,5 @@ export const KeyCode = { K: 'KeyK' } as const;
 export const CssDisplay = { ListItem: 'list-item' } as const;
 
 export const DomAttr = { Class: 'class', ContentEditable: 'contenteditable' } as const;
+
+export const PlayState = { Running: 'running' } as const;

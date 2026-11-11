@@ -26,6 +26,7 @@ const fakeEditor = (
   posAt: () => undefined,
   contentBox: () => BOX,
   revealNode: () => undefined,
+  watchLayout: () => () => undefined,
 });
 
 const caretRect = (left: number, top: number) => ({

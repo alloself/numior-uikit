@@ -12,31 +12,18 @@
 </template>
 
 <script setup lang="ts">
-import { useEventListener, useMutationObserver, useResizeObserver } from '@vueuse/core';
+import { useEventListener, useResizeObserver } from '@vueuse/core';
 import { computed, onBeforeUnmount, useTemplateRef, watch } from 'vue';
 import type { NuiCollabCaretsProps } from './collab.types';
+import { useEditorLayout } from './use-editor-layout';
 
 const FLAG_ROOM = 20;
-
-const LOOK = ['class', 'style', 'dir', 'hidden', 'open'];
-
-const isMoving = (animation: Animation, apart: Element | null): boolean => {
-  const { effect } = animation;
-  const target = effect instanceof KeyframeEffect ? effect.target : null;
-
-  return (
-    animation.playState === 'running' &&
-    effect?.getComputedTiming().iterations !== Infinity &&
-    !(target !== null && apart?.contains(target) === true)
-  );
-};
 
 const { peers, editor } = defineProps<NuiCollabCaretsProps>();
 
 const layer = useTemplateRef<HTMLElement>('layer');
 
 const shown = computed(() => peers.filter((peer) => peer.head !== undefined));
-const host = computed(() => layer.value?.closest<HTMLElement>('.nui-editor'));
 
 let frame: number | undefined;
 
@@ -89,66 +76,20 @@ const measure = (): void => {
   });
 };
 
-const inMotion = (): boolean => {
-  const element = host.value;
-
-  return (
-    typeof element?.getAnimations === 'function' &&
-    element.getAnimations({ subtree: true }).some((each) => isMoving(each, layer.value))
-  );
-};
-
 const schedule = (): void => {
   frame ??= requestAnimationFrame(() => {
     frame = undefined;
     measure();
-
-    if (inMotion()) {
-      schedule();
-    }
   });
 };
 
-const follow = (): void => {
-  if (shown.value.length > 0) {
-    schedule();
-  }
-};
+watch(shown, measure, { flush: 'post' });
 
-const onMutations = (records: readonly MutationRecord[]): void => {
-  if (records.some((record) => layer.value?.contains(record.target) !== true)) {
-    follow();
-  }
-};
+useEditorLayout(() => editor, measure);
 
-watch(
-  shown,
-  () => {
-    measure();
+useResizeObserver(layer, schedule);
 
-    if (inMotion()) {
-      follow();
-    }
-  },
-  { flush: 'post' },
-);
-
-useResizeObserver(layer, follow);
-
-useMutationObserver(host, onMutations, {
-  childList: true,
-  subtree: true,
-  attributes: true,
-  attributeFilter: LOOK,
-});
-
-useEventListener(host, ['transitionrun', 'animationstart'], follow, { passive: true });
-
-useEventListener(host, 'load', follow, { capture: true, passive: true });
-
-useEventListener(() => layer.value?.ownerDocument.fonts, 'loadingdone', follow, { passive: true });
-
-useEventListener(() => layer.value?.ownerDocument, 'scroll', follow, {
+useEventListener(() => layer.value?.ownerDocument, 'scroll', schedule, {
   capture: true,
   passive: true,
 });
