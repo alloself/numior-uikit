@@ -2,6 +2,7 @@ import type { NuiTableColumn } from '@numior/table';
 import type { MarkdownRenderer } from 'vitepress';
 import type { Component } from 'vue';
 import type { ConfiguratorChange, ConfiguratorState } from './configurator-code';
+import type { SearchFields } from './search-index';
 import type { ExampleFile, ExampleLocale } from '../examples/example.types';
 import type {
   CatalogReference,
@@ -87,6 +88,8 @@ export interface DocsTexts {
   readonly skip: string;
   readonly notFoundTitle: string;
   readonly notFoundText: string;
+  readonly notFoundSearch: string;
+  readonly notFoundSimilar: string;
   readonly home: string;
   readonly details: string;
   readonly exampleView: string;
@@ -128,6 +131,7 @@ export interface DocsTexts {
 }
 
 export interface DocsSearchOptions {
+  readonly miniSearch: { readonly options: SearchFields };
   readonly _render: (source: string, env: unknown, md: MarkdownRenderer) => string;
 }
 

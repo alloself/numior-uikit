@@ -45,6 +45,22 @@ test('header sections switch the sidebar and mark the current section', async ({
   await expect(docs.sidebar).toHaveCount(0);
 });
 
+test('a missing address offers the search and the page with a similar address', async ({
+  docs,
+  page,
+}) => {
+  await docs.open('/components/buton');
+  await expect(docs.article).toContainText('Страница не найдена');
+  expect(await docs.wcagViolations()).toEqual([]);
+
+  await docs.article.getByRole('button', { name: 'Открыть поиск' }).click();
+  await expect(docs.commandInput).toBeFocused();
+
+  await page.keyboard.press('Escape');
+  await docs.similarPage('Button').click();
+  await expect(page).toHaveURL(/\/components\/button$/);
+});
+
 test('the footer closes a page with the license and the sections of the site', async ({
   docs,
   page,
@@ -108,6 +124,19 @@ test('search finds a page by text and opens it', async ({ docs, page, isMobile }
   await docs.commandOptions.first().click();
   await expect(page).toHaveURL(/\/components\/button/);
   await expect(docs.commandDialog).toBeHidden();
+});
+
+test('search lists every page once by section and marks the found words in a snippet', async ({
+  docs,
+}) => {
+  await docs.open('/components/kbd');
+  await docs.searchButton.click();
+  await expect(docs.commandGroups).toHaveText(['Документация', 'Компоненты']);
+  await expect(docs.commandOption('Начало работы')).toHaveCount(1);
+
+  await docs.commandInput.fill('индикатор загрузки');
+  await expect(docs.commandGroups.first()).toHaveText('Компоненты');
+  await expect(docs.commandMarks.first()).toHaveText(/индикатор|загруз/i);
 });
 
 test('the sidebar lives in a drawer on phones and closes after navigation', async ({

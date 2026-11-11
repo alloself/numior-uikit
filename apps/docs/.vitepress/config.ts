@@ -15,6 +15,7 @@ import { docsReference } from './reference/plugin';
 import { apiSearchText } from './reference/search-text';
 import type { DocsSearchOptions } from './theme/theme.types';
 import { ACCENT_STORAGE_KEY, accentScript } from './theme/composables/use-accent';
+import { searchFields } from './theme/search-index';
 import { en, ru } from './theme/texts';
 import type { DocsThemeConfig } from './theme/theme.types';
 
@@ -23,6 +24,7 @@ const bundleFile = fileURLToPath(new URL('../.reference/bundle.json', import.met
 const bundle = existsSync(bundleFile) ? parseBundle(readFileSync(bundleFile, 'utf8')) : undefined;
 
 const searchOptions: DocsSearchOptions = {
+  miniSearch: { options: searchFields() },
   _render: (source, env, md) =>
     md.render(
       bundle === undefined

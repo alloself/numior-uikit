@@ -1,5 +1,6 @@
 import { computed, type ComputedRef } from 'vue';
 import { useData, useRoute, withBase } from 'vitepress';
+import { uniqBy } from 'lodash-es';
 import type { DocsSidebarGroup, DocsSidebarItem, DocsTexts, DocsThemeConfig } from '../theme.types';
 
 export interface LocaleLink {
@@ -97,7 +98,12 @@ export const useDocs = (): Docs => {
   const sectionLinks = computed(() => sidebar.value.flatMap((group) => group.items));
 
   const allLinks = computed(() =>
-    Object.values(theme.value.sidebar).flatMap((groups) => groups.flatMap((group) => group.items)),
+    uniqBy(
+      Object.values(theme.value.sidebar).flatMap((groups) =>
+        groups.flatMap((group) => group.items),
+      ),
+      (item) => item.link,
+    ),
   );
 
   const pager = computed<Pager>(() => {

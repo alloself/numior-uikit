@@ -10,7 +10,11 @@
     :placeholder="texts.searchPlaceholder"
     :empty-label="texts.searchEmpty"
     @select="go"
-  />
+  >
+    <template #item="{ item }">
+      <SearchSnippet :label="item.label" :parts="snippets.get(item.value)" />
+    </template>
+  </NuiCommandDialog>
 </template>
 
 <script setup lang="ts">
@@ -19,11 +23,22 @@ import { useData, useRouter } from 'vitepress';
 import localSearchIndex from '@localSearchIndex';
 import { NuiCommandDialog, type NuiCommandItem, type NuiCommandSource } from '@numior/vue';
 import { useDocs } from '../composables/use-docs';
-import { loadSearchIndex, searchItems, type SearchIndex } from '../search-index';
+import {
+  loadSearchIndex,
+  pageGroups,
+  searchGroups,
+  searchHits,
+  snippetsOf,
+  type SearchHit,
+  type SearchIndex,
+  type SearchSection,
+} from '../search-index';
+import type { DocsThemeConfig } from '../theme.types';
+import SearchSnippet from './SearchSnippet.vue';
 
 const open = defineModel<boolean>('open', { default: false });
 
-const { localeIndex } = useData();
+const { localeIndex, theme } = useData<DocsThemeConfig>();
 const router = useRouter();
 const { texts, allLinks } = useDocs();
 const query = ref('');
@@ -43,19 +58,27 @@ const loadIndex = async (): Promise<void> => {
   loading.value = false;
 };
 
-const pages = computed<NuiCommandSource>(() => [
-  {
-    label: texts.value.searchPages,
-    items: allLinks.value.map((item) => ({ value: item.link, label: item.text, icon: 'file' })),
-  },
-]);
+const sections = computed<SearchSection[]>(() =>
+  theme.value.nav.map((item) => ({ label: item.text, prefixes: item.sections })),
+);
 
-const items = computed<NuiCommandSource>(() => {
+const pages = computed<NuiCommandSource>(() =>
+  pageGroups(allLinks.value, sections.value, texts.value.searchPages),
+);
+
+const hits = computed<SearchHit[]>(() => {
   const needle = query.value.trim();
   const search = index.value;
 
-  return needle === '' || search === null ? pages.value : searchItems(search, needle);
+  return needle === '' || search === null ? [] : searchHits(search, needle);
 });
+
+const searching = computed(() => query.value.trim() !== '' && index.value !== null);
+const snippets = computed(() => snippetsOf(hits.value));
+
+const items = computed<NuiCommandSource>(() =>
+  searching.value ? searchGroups(hits.value, sections.value, texts.value.searchPages) : pages.value,
+);
 
 const go = (item: NuiCommandItem): void => {
   void router.go(item.value);

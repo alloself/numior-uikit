@@ -1,28 +1,30 @@
 <template>
-  <NuiLayout
-    id="docs-layout"
-    header="full"
-    sticky
-    :mobile-query="MOBILE_QUERY"
-    end-width="16rem"
-    :skip-label="texts.skip"
-  >
-    <template #header>
-      <DocsHeader @search="searchOpen = true" />
-    </template>
-    <template v-if="hasSidebar" #sidebar>
-      <DocsSidebar />
-    </template>
-    <DocsNotFound v-if="page.isNotFound" />
-    <DocsHome v-else-if="frontmatter.layout === 'home'" />
-    <DocsPage v-else />
-    <template v-if="showToc" #end>
-      <DocsToc />
-    </template>
-    <template #footer>
-      <DocsFooter />
-    </template>
-  </NuiLayout>
+  <div class="grid min-h-dvh grid-cols-[minmax(0,1fr)]">
+    <NuiLayout
+      id="docs-layout"
+      header="full"
+      sticky
+      :mobile-query="MOBILE_QUERY"
+      end-width="16rem"
+      :skip-label="texts.skip"
+    >
+      <template #header>
+        <DocsHeader @search="searchOpen = true" />
+      </template>
+      <template v-if="hasSidebar" #sidebar>
+        <DocsSidebar />
+      </template>
+      <DocsNotFound v-if="page.isNotFound" @search="searchOpen = true" />
+      <DocsHome v-else-if="frontmatter.layout === 'home'" />
+      <DocsPage v-else />
+      <template v-if="showToc" #end>
+        <DocsToc />
+      </template>
+      <template #footer>
+        <DocsFooter />
+      </template>
+    </NuiLayout>
+  </div>
   <DocsSearch v-model:open="searchOpen" />
   <NuiToaster />
 </template>

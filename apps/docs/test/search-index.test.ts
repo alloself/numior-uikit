@@ -3,8 +3,14 @@ import { describe, expect, it } from 'vite-plus/test';
 import {
   createSearchIndex,
   loadSearchIndex,
+  pageGroups,
   searchFields,
-  searchItems,
+  searchGroups,
+  searchHits,
+  snippetOf,
+  snippetsOf,
+  type SearchSection,
+  type SnippetPart,
 } from '../.vitepress/theme/search-index';
 
 interface SearchDocument {
@@ -14,10 +20,22 @@ interface SearchDocument {
   readonly text: string;
 }
 
+const LONG_TEXT = [
+  'Заказы приходят из кабинета магазина каждый день, и менеджер открывает их по одному.',
+  'Чтобы не ждать ответа сервера, покажите индикатор загрузки на кнопке &quot;Сохранить&quot;',
+  'и верните фокус на неё, когда запрос закончится, а потом закройте окно заказа.',
+].join('\n');
+
 const DOCUMENTS: readonly SearchDocument[] = [
-  { id: '/components/button', title: 'Кнопка', titles: [], text: 'Нативная кнопка.' },
-  { id: '/components/button#размеры', title: 'Размеры', titles: ['Кнопка'], text: 'Три ступени.' },
-  { id: '/components/select', title: 'Выбор из списка', titles: [], text: 'Кнопка со списком.' },
+  { id: '/components/button', title: 'Button', titles: [], text: 'Кнопка для действий.' },
+  { id: '/components/button#sizes', title: 'Размеры', titles: ['Button'], text: LONG_TEXT },
+  { id: '/guide/forms', title: 'Формы', titles: [], text: 'Кнопка отправляет форму.' },
+  { id: '/changelog', title: 'Изменения', titles: [], text: 'Кнопка получила новый размер.' },
+];
+
+const SECTIONS: readonly SearchSection[] = [
+  { label: 'Документация', prefixes: ['/guide/', '/composables/'] },
+  { label: 'Компоненты', prefixes: ['/components/'] },
 ];
 
 const serializedIndex = (): string => {
@@ -27,32 +45,109 @@ const serializedIndex = (): string => {
   return JSON.stringify(index);
 };
 
-describe('docs search index', () => {
-  it('finds sections by a word prefix and joins parent titles into the description', () => {
-    const items = searchItems(createSearchIndex(serializedIndex()), 'кноп');
+const hitTexts = (parts: readonly SnippetPart[]): string[] =>
+  parts.reduce<string[]>((texts, part) => {
+    if (part.hit) {
+      texts.push(part.text);
+    }
+    return texts;
+  }, []);
 
-    expect(items.map((item) => item.value)).toEqual([
+const textOf = (parts: readonly { readonly text: string }[]): string =>
+  parts.map((part) => part.text).join('');
+
+describe('docs search index', () => {
+  it('finds sections by a word prefix and names a section by its page and heading', () => {
+    const hits = searchHits(createSearchIndex(serializedIndex()), 'кноп');
+
+    expect(hits.map((hit) => hit.link)).toEqual([
+      '/components/button#sizes',
       '/components/button',
-      '/components/button#размеры',
-      '/components/select',
+      '/guide/forms',
+      '/changelog',
     ]);
 
-    expect(items[0]).toEqual({ value: '/components/button', label: 'Кнопка' });
-    expect(items[1]?.description).toBe('Кнопка');
+    expect(hits[0]?.label).toBe('Button › Размеры');
+  });
+
+  it('cuts a snippet around the first found word and marks every found word in it', () => {
+    const [hit] = searchHits(createSearchIndex(serializedIndex()), 'индикатор кнопке');
+    const snippet = hit?.snippet ?? [];
+
+    expect(hit?.link).toBe('/components/button#sizes');
+
+    expect(hitTexts(snippet)).toEqual(['индикатор', 'кнопке']);
+
+    expect(textOf(snippet)).toMatch(/^….*покажите индикатор загрузки на кнопке "Сохранить".*…$/u);
+    expect(textOf(snippet).length).toBeLessThan(150);
+  });
+
+  it('leaves a result found by its title without a snippet', () => {
+    const [hit] = searchHits(createSearchIndex(serializedIndex()), 'размеры');
+
+    expect(hit?.label).toBe('Button › Размеры');
+    expect(hit?.snippet).toEqual([]);
+    expect(snippetOf('Короткий текст.', [])).toEqual([]);
+  });
+
+  it('keeps a short text whole and matches the found word in any letter case', () => {
+    expect(snippetOf('Кнопка отправляет форму.', ['кнопка'])).toEqual([
+      { text: 'Кнопка', hit: true },
+      { text: ' отправляет форму.', hit: false },
+    ]);
+  });
+
+  it('groups results by the section of the site in the order of the best result', () => {
+    const hits = searchHits(createSearchIndex(serializedIndex()), 'кноп');
+
+    expect(searchGroups(hits, SECTIONS, 'Страницы')).toEqual([
+      {
+        label: 'Компоненты',
+        items: [
+          { value: '/components/button#sizes', label: 'Button › Размеры' },
+          { value: '/components/button', label: 'Button' },
+        ],
+      },
+      { label: 'Документация', items: [{ value: '/guide/forms', label: 'Формы' }] },
+      { label: 'Страницы', items: [{ value: '/changelog', label: 'Изменения' }] },
+    ]);
+
+    expect(snippetsOf(hits).get('/guide/forms')).toEqual([
+      { text: 'Кнопка', hit: true },
+      { text: ' отправляет форму.', hit: false },
+    ]);
+  });
+
+  it('lists the pages by section before anything is typed', () => {
+    const pages = [
+      { text: 'Начало работы', link: '/guide/getting-started' },
+      { text: 'Button', link: '/components/button' },
+    ];
+
+    expect(pageGroups(pages, SECTIONS, 'Страницы')).toEqual([
+      {
+        label: 'Документация',
+        items: [{ value: '/guide/getting-started', label: 'Начало работы', icon: 'file' }],
+      },
+      {
+        label: 'Компоненты',
+        items: [{ value: '/components/button', label: 'Button', icon: 'file' }],
+      },
+    ]);
   });
 
   it('loads a locale index on demand and yields nothing for a locale without one', async () => {
     const loaded = await loadSearchIndex(() => Promise.resolve({ default: serializedIndex() }));
 
-    expect(loaded === null ? [] : searchItems(loaded, 'выбор').map((item) => item.label)).toEqual([
-      'Выбор из списка',
+    expect(loaded === null ? [] : searchHits(loaded, 'формы').map((hit) => hit.label)).toEqual([
+      'Формы',
     ]);
 
     expect(await loadSearchIndex(undefined)).toBeNull();
   });
 
   it('caps the number of results', () => {
-    expect(searchItems(createSearchIndex(serializedIndex()), 'кноп', 1)).toHaveLength(1);
-    expect(searchItems(createSearchIndex(serializedIndex()), 'zzz')).toEqual([]);
+    expect(searchHits(createSearchIndex(serializedIndex()), 'кноп', 1)).toHaveLength(1);
+    expect(searchHits(createSearchIndex(serializedIndex()), 'zzz')).toEqual([]);
   });
 });

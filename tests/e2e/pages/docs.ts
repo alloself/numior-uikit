@@ -112,6 +112,12 @@ export class DocsSite {
     return this.article.getByRole('heading', { level: 1 });
   }
 
+  similarPage(name: string): Locator {
+    return this.article
+      .getByRole('navigation', { name: 'Похожие страницы' })
+      .getByRole('link', { name, exact: true });
+  }
+
   get footer(): Locator {
     return this.page.getByRole('contentinfo');
   }
@@ -142,6 +148,18 @@ export class DocsSite {
 
   get commandOptions(): Locator {
     return this.commandDialog.getByRole('option');
+  }
+
+  get commandGroups(): Locator {
+    return this.commandDialog.locator('.nui-list__group-label');
+  }
+
+  get commandMarks(): Locator {
+    return this.commandDialog.locator('mark');
+  }
+
+  commandOption(name: string): Locator {
+    return this.commandDialog.getByRole('option', { name, exact: true });
   }
 
   commandGroupTextStart(): Promise<number> {
