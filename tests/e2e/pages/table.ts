@@ -24,8 +24,17 @@ export interface DropLineDrift {
   readonly farthest: number;
 }
 
+interface TableLayer {
+  readonly scrollRects?: readonly {
+    readonly type: string;
+    readonly rect: { readonly width: number; readonly height: number };
+  }[];
+}
+
 const HEAD_ROWS = 2;
 const EDGE_REACH = 8;
+const SCROLL_REPAINT = 'RepaintsOnScroll';
+const LAYER_SLACK = 2;
 
 export class TableSection {
   readonly scope = sectionScope('table');
@@ -580,6 +589,44 @@ export class TableSection {
     await cell.dispatchEvent('pointerdown', init);
     await expect(this.cellMenu).toBeVisible();
     await cell.dispatchEvent('pointerup', init);
+  }
+
+  async repaintsOnScroll(): Promise<boolean> {
+    const session = await this.viewport.page().context().newCDPSession(this.viewport.page());
+    const box = await boxOf(this.viewport);
+
+    const layers = await new Promise<readonly TableLayer[]>((resolve) => {
+      session.once('LayerTree.layerTreeDidChange', (event) => {
+        resolve(event.layers ?? []);
+      });
+
+      void session.send('LayerTree.enable');
+    });
+
+    await session.detach();
+
+    return layers.some((layer) =>
+      (layer.scrollRects ?? []).some(
+        (area) =>
+          area.type === SCROLL_REPAINT &&
+          Math.abs(area.rect.width - box.width) < LAYER_SLACK &&
+          Math.abs(area.rect.height - box.height) < LAYER_SLACK,
+      ),
+    );
+  }
+
+  async fadesBackgroundUnder(row: number, col: number): Promise<boolean> {
+    await this.cell(row, col).hover();
+
+    return this.row(row).evaluate((element) =>
+      element
+        .getAnimations()
+        .some(
+          (animation) =>
+            animation instanceof CSSTransition &&
+            animation.transitionProperty === 'background-color',
+        ),
+    );
   }
 
   async scrollTo(target: TableScroll): Promise<void> {

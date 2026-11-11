@@ -142,6 +142,7 @@
   overflow: auto;
   overflow-anchor: none;
   overscroll-behavior: var(--_overscroll);
+  background: var(--nui-surface);
   scroll-padding-block: calc(var(--_head-size) + var(--_frozen)) var(--_foot);
   scroll-padding-inline: var(--_start) var(--_end);
   scrollbar-width: thin;
@@ -176,7 +177,6 @@
 
   block-size: var(--_row);
   background: var(--_row-bg);
-  transition: background-color var(--nui-duration-fast) var(--nui-easing);
 }
 .nui-table:not(.nui-table--auto) > .nui-table__frame > .nui-table__viewport::before {
   content: '';

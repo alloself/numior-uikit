@@ -35,6 +35,22 @@ test.describe('table', () => {
     await expect(table.cell(0, 1)).toBeVisible();
   });
 
+  test('scrolls its rows off the main thread and changes the row under the pointer at once', async ({
+    playground,
+    table,
+    browserName,
+  }) => {
+    test.skip(browserName !== 'chromium', 'Layers are read through the Chromium protocol');
+    await playground.emulate({ reducedMotion: 'no-preference' });
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+    await expect(table.cell(0, 1)).toBeVisible();
+
+    expect(await table.repaintsOnScroll()).toBe(false);
+    expect(await table.fadesBackgroundUnder(2, 1)).toBe(false);
+    expect(await table.fadesBackgroundUnder(3, 1)).toBe(false);
+  });
+
   test('windows ten thousand rows and keeps the pinned columns in place while scrolling', async ({
     playground,
     table,
