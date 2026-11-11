@@ -8,6 +8,7 @@ import {
   type Page,
   type WebSocketRoute,
 } from '@playwright/test';
+import { boxOf } from '../helpers/geometry';
 import { BookSection } from './book';
 
 export interface TextEdges {
@@ -24,6 +25,10 @@ const TYPING_PAUSE = 8;
 const FIRST_WORD = { x: 12, y: 10 };
 
 const LAG_FRAMES = 12;
+
+const DRIFT_FRAMES = 30;
+
+const LINE_START = 4;
 
 const isCollabServer = (url: URL): boolean => url.port === COLLAB_PORT;
 
@@ -66,6 +71,7 @@ export class CollabClient {
   readonly report: Locator;
   readonly failure: Locator;
   readonly readOnlyDocument: Locator;
+  readonly pushedLines: Locator;
 
   constructor(
     readonly page: Page,
@@ -88,6 +94,7 @@ export class CollabClient {
     this.report = page.locator('.nui-collab-report');
     this.failure = page.getByTestId('collab-failure');
     this.readOnlyDocument = page.locator('.nui-editor--readonly');
+    this.pushedLines = this.editor.locator('.nui-editor__pushed');
   }
 
   paragraph(index: number): Locator {
@@ -185,6 +192,67 @@ export class CollabClient {
     await act();
 
     return lag.evaluate((held) => held.measured);
+  }
+
+  async pushLine(index: number): Promise<void> {
+    const box = await boxOf(this.paragraph(index));
+
+    await this.page.mouse.move(box.x + LINE_START, box.y + box.height / 2);
+    await expect(this.pushedLines).toHaveCount(1);
+  }
+
+  async letLineGo(): Promise<void> {
+    await this.page.mouse.move(0, 0);
+    await expect(this.pushedLines).toHaveCount(0);
+  }
+
+  async caretDrift(name: string, index: number, act: () => Promise<void>): Promise<number> {
+    const drift = await this.paragraph(index).evaluateHandle((line, who) => {
+      const offsets: number[] = [];
+      let rest = Number.POSITIVE_INFINITY;
+      let finish: ((worst: number) => void) | undefined;
+
+      const sample = (): void => {
+        const caret = [...document.querySelectorAll('.nui-collab-carets__caret')].find((each) =>
+          each.textContent.includes(who),
+        );
+
+        const range = document.createRange();
+
+        range.selectNodeContents(line);
+
+        if (caret !== undefined) {
+          offsets.push(caret.getBoundingClientRect().left - range.getBoundingClientRect().right);
+        }
+
+        rest -= 1;
+
+        if (rest <= 0) {
+          const [base = 0] = offsets;
+
+          finish?.(offsets.reduce((worst, offset) => Math.max(worst, Math.abs(offset - base)), 0));
+          return;
+        }
+
+        requestAnimationFrame(() => {
+          setTimeout(sample);
+        });
+      };
+
+      sample();
+
+      return {
+        settled: (frames: number) =>
+          new Promise<number>((resolve) => {
+            rest = frames;
+            finish = resolve;
+          }),
+      };
+    }, name);
+
+    await act();
+
+    return drift.evaluate((held, frames) => held.settled(frames), DRIFT_FRAMES);
   }
 
   async prependTo(index: number, text: string): Promise<void> {

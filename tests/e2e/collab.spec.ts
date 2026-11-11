@@ -377,6 +377,31 @@ test.describe('collaboration', () => {
     await expect(anna.paragraph(2)).toHaveText('Вторая!');
   });
 
+  test('keeps the caret of someone else on its text while the grip pushes the line and lets it go', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+
+    const fine = await anna.page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    test.skip(!fine, 'the handle follows a mouse');
+
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Первая');
+    await boris.appendTo(0, '!');
+    await expect(anna.paragraph(0)).toHaveText('Первая!');
+    await expect(anna.caretOf(BORIS)).toHaveCSS('opacity', '1');
+
+    const pushed = await anna.caretDrift(BORIS, 0, () => anna.pushLine(0));
+    const released = await anna.caretDrift(BORIS, 0, () => anna.letLineGo());
+
+    expect(pushed).toBeLessThanOrEqual(1);
+    expect(released).toBeLessThanOrEqual(1);
+  });
+
   test('keeps the caret of someone else on a list item they indent', async ({ collab }) => {
     const anna = await collab.join(ANNA);
     const boris = await collab.join(BORIS);
