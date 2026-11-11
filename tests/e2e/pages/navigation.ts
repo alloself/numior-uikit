@@ -190,6 +190,15 @@ export class NavigationSection {
     return stepper.locator('.nui-stepper__summary');
   }
 
+  async summaryGrowth(stepper: Locator): Promise<number> {
+    const [summary, label] = await Promise.all([
+      boxOf(this.stepperSummary(stepper)),
+      boxOf(stepper.locator('.nui-stepper__summary-label')),
+    ]);
+
+    return summary.height - label.height;
+  }
+
   async typeInMenu(character: string): Promise<void> {
     await this.menu.locator(':focus').dispatchEvent('keydown', { key: character });
   }

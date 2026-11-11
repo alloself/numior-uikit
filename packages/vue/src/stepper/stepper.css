@@ -163,6 +163,7 @@
 .nui-stepper__summary-count {
   color: var(--nui-text-muted);
   font-size: var(--nui-font-size-xs);
+  line-height: var(--nui-line-height-control);
   font-variant-numeric: tabular-nums;
 }
 .nui-stepper--orientation-vertical .nui-stepper__list {

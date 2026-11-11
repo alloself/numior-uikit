@@ -27,6 +27,7 @@
   flex: none;
   color: var(--nui-text-muted);
   font-size: var(--nui-font-size-xs);
+  line-height: var(--nui-line-height-control);
 }
 .nui-spreadsheet__file-progress {
   display: flex;

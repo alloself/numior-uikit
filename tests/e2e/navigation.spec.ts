@@ -380,6 +380,7 @@ test.describe('navigation', () => {
 
     if (isMobile) {
       await expect(navigation.stepperSummary(navigation.stepper)).toContainText('Шаг 3 из 4');
+      expect(await navigation.summaryGrowth(navigation.stepper)).toBe(0);
 
       await navigation.step(navigation.stepper, 'Аккаунт').tap();
     } else {
