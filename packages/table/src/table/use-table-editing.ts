@@ -32,6 +32,7 @@ export interface TableEditingOptions<T> {
   readonly rowAt: (position: number) => T | undefined;
   readonly keyAt: (col: number) => string | undefined;
   readonly editable: (row: T, key: string) => boolean;
+  readonly covered: (row: number, col: number) => boolean;
   readonly valueOf: (row: T, key: string) => NuiTableCellValue;
   readonly resolve: (row: T) => T | undefined;
   readonly limit: () => number;
@@ -146,7 +147,12 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     for (let col = box.start; col <= box.end; col += 1) {
       const key = options.keyAt(col);
 
-      if (key !== undefined && options.editable(row, key) && visit({ row, key })) {
+      if (
+        key !== undefined &&
+        !options.covered(position, col) &&
+        options.editable(row, key) &&
+        visit({ row, key })
+      ) {
         return true;
       }
     }
@@ -386,6 +392,9 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     const key = options.keyAt(cell.col);
 
     if (row === undefined || key === undefined || !options.editable(row, key)) {
+      return 'skip';
+    }
+    if (options.sink() === undefined && options.covered(cell.row, cell.col)) {
       return 'skip';
     }
     const parsed = options.parse(row, key, cell.text);

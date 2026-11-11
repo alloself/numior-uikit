@@ -130,6 +130,33 @@ describe('NuiTable edits', () => {
     expect(grid.edits).toHaveLength(1);
   });
 
+  it('leaves the cells under a merged cell as they were when a block is pasted, a value fills the selection or it is cleared', async () => {
+    const rows = staff(20);
+    const grid = mountStaff({ rows, props: { merges: [range(1, 2, 2, 2)] } });
+
+    await grid.focusCell(1, 2);
+    await grid.paste('Самара\t1500\r\nТула\t1600\r\n');
+
+    expect(grid.edits.at(-1)?.changes).toEqual([
+      { row: rows[1], key: 'city', value: 'Самара', previous: 'Казань' },
+      { row: rows[1], key: 'salary', value: 1500, previous: 1010 },
+      { row: rows[2], key: 'salary', value: 1600, previous: 1020 },
+    ]);
+
+    expect(grid.announcement).toBe('Вставлены 3 ячейки, пропущено: 1');
+
+    await grid.dragRange({ row: 1, col: 2 }, { row: 3, col: 2 });
+    await grid.paste('Сочи');
+
+    expect(grid.edits.at(-1)?.changes.map((change) => change.row)).toEqual([rows[1], rows[3]]);
+    expect(rows[2]?.city).toBe('Ереван');
+
+    await grid.press('Delete');
+
+    expect(grid.edits.at(-1)?.changes.map((change) => change.row)).toEqual([rows[1], rows[3]]);
+    expect(rows[2]?.city).toBe('Ереван');
+  });
+
   it('pastes a block from the active cell, fills a selection, repeats a block and skips what does not fit', async () => {
     const rows = staff(20);
     const grid = mountStaff({ rows });

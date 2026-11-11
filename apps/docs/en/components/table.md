@@ -146,6 +146,12 @@ The cursor lands on a merged cell as a whole and leaves it from its far edge. A 
 to cover merged cells completely, while selections of whole rows and columns stay as they are.
 An edit changes the value of the first cell.
 
+Paste, fill and clear leave the cells under a merged cell alone: their values are not seen. A paste
+counts such cells as skipped.
+
+When your own `commands` takes the edits, a block arrives whole with its `area`. The owner of the
+data then decides what happens to the merges.
+
 When a merged cell reaches into a pinned column, it is split at the edge of that column. A cell
 spanning several rows gets no hover or row selection highlight and no stripe color. Merging does
 not work with grouping, in a tree or with row details.

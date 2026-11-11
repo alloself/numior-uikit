@@ -1458,6 +1458,12 @@ const mergeIndex = computed(() =>
     : NO_MERGE_INDEX,
 );
 
+const coveredAt = (row: number, col: number): boolean => {
+  const merge = mergeIndex.value.at(row, col);
+
+  return merge !== undefined && (merge.top !== row || merge.start !== col);
+};
+
 const wholeRange = (range: NuiTableRange): NuiTableRange =>
   expandToMerges(mergeIndex.value, range, {
     rows: visibleRows.value,
@@ -2008,6 +2014,7 @@ const editing = useTableEditing<T>({
   rowAt: rowAtPosition,
   keyAt: (col) => dataKeys.value[col],
   editable: editableOf,
+  covered: coveredAt,
   valueOf: (row, key) => cellValueOf(columnAt(key), row),
   resolve: resolveRow,
   limit: () => copyLimit,
