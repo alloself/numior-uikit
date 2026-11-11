@@ -41,6 +41,28 @@ test.describe('collaboration lab', () => {
     await expect(collabLab.right.editor).toContainText('saved');
   });
 
+  test('opens a new room empty and working for the document and the workbook', async ({
+    collabLab,
+  }) => {
+    await collabLab.left.write('old');
+    await expect(collabLab.right.editor).toContainText('old');
+
+    await collabLab.newRoom();
+
+    await expect(collabLab.left.editor).not.toContainText('old');
+    await expect(collabLab.left.status).toHaveText('online');
+    await expect(collabLab.right.status).toHaveText('online');
+
+    await collabLab.left.write('fresh');
+
+    await expect(collabLab.right.editor).toContainText('fresh');
+
+    await collabLab.showBook();
+    await collabLab.left.enter('1', 0, '7');
+
+    await expect(collabLab.right.cell('1', 0)).toHaveText('7');
+  });
+
   test('edits a workbook together', async ({ collabLab }) => {
     await collabLab.showBook();
 
