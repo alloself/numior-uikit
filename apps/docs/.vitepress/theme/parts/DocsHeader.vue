@@ -6,22 +6,12 @@
         <DocsLogo />
       </NuiLink>
     </template>
-    <nav
+    <DocsNav
       v-if="!layout.mobile.value"
-      :aria-label="texts.sections"
-      class="flex items-center gap-1 font-normal"
-    >
-      <NuiButton
-        v-for="item in theme.nav"
-        :key="item.link"
-        :href="withBase(item.link)"
-        variant="ghost"
-        tone="neutral"
-        size="sm"
-        :aria-current="startsCurrent(item.section) ? 'page' : undefined"
-        >{{ item.text }}</NuiButton
-      >
-    </nav>
+      :items="navLinks"
+      :label="texts.sections"
+      :more-label="texts.more"
+    />
     <template #end>
       <NuiButton
         variant="soft"
@@ -118,10 +108,11 @@ import {
   useLayout,
 } from '@numior/vue';
 import DocsLogo from './DocsLogo.vue';
+import DocsNav from './DocsNav.vue';
 import { NUMIOR_PALETTE, useAccent } from '../composables/use-accent';
 import { useDocs } from '../composables/use-docs';
 import type { ColorScheme, IconAlias } from '@numior/primitives';
-import { DocsAccent, type DocsThemeConfig } from '../theme.types';
+import { DocsAccent, type DocsNavLink, type DocsThemeConfig } from '../theme.types';
 
 const emit = defineEmits<{ search: [] }>();
 
@@ -140,4 +131,12 @@ const SCHEME_ICONS: Record<ColorScheme, IconAlias> = {
 };
 
 const schemeIcon = computed(() => SCHEME_ICONS[scheme.scheme.value]);
+
+const navLinks = computed<DocsNavLink[]>(() =>
+  theme.value.nav.map((item) => ({
+    text: item.text,
+    link: withBase(item.link),
+    current: item.sections.some(startsCurrent),
+  })),
+);
 </script>

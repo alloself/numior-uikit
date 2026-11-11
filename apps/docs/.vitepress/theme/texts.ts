@@ -11,6 +11,7 @@ export const ru: DocsTexts = {
   light: 'Светлая',
   dark: 'Тёмная',
   system: 'Системная',
+  more: 'Ещё',
   accent: 'Акцент',
   builtInAccents: 'Встроенные акценты',
   accents: {
@@ -82,6 +83,7 @@ export const en: DocsTexts = {
   light: 'Light',
   dark: 'Dark',
   system: 'System',
+  more: 'More',
   accent: 'Accent',
   builtInAccents: 'Built-in accents',
   accents: {

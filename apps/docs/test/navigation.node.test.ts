@@ -1,0 +1,99 @@
+import { existsSync, readdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { describe, expect, it } from 'vite-plus/test';
+import {
+  NAVIGATION,
+  localized,
+  navOf,
+  navigationLinks,
+  navigationTexts,
+  sidebarOf,
+} from '../.vitepress/navigation';
+import type { NavSection } from '../.vitepress/theme/theme.types';
+
+const DOCS = fileURLToPath(new URL('..', import.meta.url));
+const SECTION_DIRS = ['guide', 'components', 'composables'];
+
+const SHOP: readonly NavSection[] = [
+  {
+    title: { ru: 'Документация', en: 'Docs' },
+    prefixes: ['/guide/', '/composables/'],
+    groups: [
+      {
+        title: { ru: 'Руководство', en: 'Guide' },
+        pages: [{ link: '/guide/theming', title: { ru: 'Темы оформления', en: 'Theming' } }],
+      },
+      { title: 'Hooks', pages: [{ link: '/composables/toast', title: 'useToast' }] },
+    ],
+  },
+  { title: 'Blocks', prefixes: ['/blocks/'], groups: [] },
+];
+
+const pagesOf = (dir: string): string[] =>
+  readdirSync(`${DOCS}${dir}`).reduce<string[]>((links, name) => {
+    if (name.endsWith('.md') && name !== 'index.md') {
+      links.push(`/${dir}/${name.slice(0, -'.md'.length)}`);
+    }
+    return links;
+  }, []);
+
+describe('docs navigation', () => {
+  it('builds the header items and the sidebar of each locale from one record', () => {
+    expect(navOf('ru', SHOP)).toEqual([
+      {
+        text: 'Документация',
+        link: '/guide/theming',
+        sections: ['/guide/', '/composables/'],
+      },
+    ]);
+
+    expect(navOf('en', SHOP)).toEqual([
+      {
+        text: 'Docs',
+        link: '/en/guide/theming',
+        sections: ['/en/guide/', '/en/composables/'],
+      },
+    ]);
+
+    expect(sidebarOf('en', SHOP)).toEqual({
+      '/en/guide/': [
+        { text: 'Guide', items: [{ text: 'Theming', link: '/en/guide/theming' }] },
+        { text: 'Hooks', items: [{ text: 'useToast', link: '/en/composables/toast' }] },
+      ],
+      '/en/composables/': [
+        { text: 'Guide', items: [{ text: 'Theming', link: '/en/guide/theming' }] },
+        { text: 'Hooks', items: [{ text: 'useToast', link: '/en/composables/toast' }] },
+      ],
+      '/en/blocks/': [],
+    });
+
+    expect(navigationTexts('ru', SHOP)).toEqual([
+      'Документация',
+      'Руководство',
+      'Темы оформления',
+      'Hooks',
+      'useToast',
+      'Blocks',
+    ]);
+
+    expect(navigationLinks(SHOP)).toEqual(['/guide/theming', '/composables/toast']);
+    expect(localized('/guide/theming', 'ru')).toBe('/guide/theming');
+  });
+
+  it('lists every page of the site once and points only at pages of both locales', () => {
+    const links = navigationLinks();
+
+    expect(links.toSorted()).toEqual(SECTION_DIRS.flatMap(pagesOf).toSorted());
+    expect(new Set(links).size).toBe(links.length);
+
+    expect(
+      links.filter(
+        (link) => !existsSync(`${DOCS}${link.slice(1)}.md`) || !existsSync(`${DOCS}en${link}.md`),
+      ),
+    ).toEqual([]);
+
+    expect(navOf('ru').map((item) => item.text)).toEqual(
+      NAVIGATION.map((section) => navigationTexts('ru', [section])[0]),
+    );
+  });
+});

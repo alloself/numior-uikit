@@ -19,6 +19,7 @@ import {
   type GuardProblem,
   type GuardVerdict,
 } from './guard.types.ts';
+import { navigationTexts } from '../navigation.ts';
 import { openingGuards, pageGuards } from './page-guards.ts';
 
 const LOCALES: readonly ExampleLocale[] = ['ru', 'en'];
@@ -34,6 +35,7 @@ const PAGE_SKIPPED = new Set([
 
 const RULES: ReadonlySet<string> = new Set(Object.values(GuardRule));
 const API_DIR = 'api';
+const NAVIGATION_FILE = '.vitepress/navigation.ts';
 const TEXTS_FILE = '.vitepress/theme/texts.ts';
 const HOME_FILE = '.vitepress/theme/home-content.ts';
 const VUE_INDEX = 'packages/vue/src/index.ts';
@@ -170,7 +172,10 @@ const themeGuards = async (docsRoot: string): Promise<GuardProblem[]> => {
 
   return [
     ...catalogGuards(
-      LOCALES.flatMap((locale) => textEntriesOf(TEXTS_FILE, locale, texts[locale])),
+      LOCALES.flatMap((locale) => [
+        ...textEntriesOf(TEXTS_FILE, locale, texts[locale]),
+        ...textEntriesOf(NAVIGATION_FILE, locale, navigationTexts(locale)),
+      ]),
       true,
     ),
     ...catalogGuards(home, true),

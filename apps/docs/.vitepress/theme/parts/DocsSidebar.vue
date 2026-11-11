@@ -13,8 +13,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useData, withBase } from 'vitepress';
+import { computed, onMounted, watch } from 'vue';
+import { useCurrentElement } from '@vueuse/core';
+import { useData, useRoute, withBase } from 'vitepress';
 import {
   NuiSidebar,
   NuiSidebarContent,
@@ -22,12 +23,15 @@ import {
   useLayout,
   type NuiListEntry,
 } from '@numior/vue';
+import { revealCurrent } from '../composables/reveal-current';
 import { useDocs } from '../composables/use-docs';
 import type { DocsSidebarGroup, DocsThemeConfig } from '../theme.types';
 
 const { theme } = useData<DocsThemeConfig>();
 const { texts, sidebar, isCurrent, startsCurrent } = useDocs();
 const layout = useLayout();
+const route = useRoute();
+const root = useCurrentElement<HTMLElement>();
 
 const entriesOf = (group: DocsSidebarGroup): NuiListEntry<unknown>[] =>
   group.items.map((item) => ({
@@ -42,7 +46,14 @@ const sectionEntries = computed<NuiListEntry<unknown>[]>(() =>
     key: item.link,
     label: item.text,
     href: withBase(item.link),
-    current: startsCurrent(item.section),
+    current: item.sections.some(startsCurrent),
   })),
 );
+
+const reveal = (): void => {
+  revealCurrent(root.value);
+};
+
+onMounted(reveal);
+watch(() => route.path, reveal, { flush: 'post' });
 </script>

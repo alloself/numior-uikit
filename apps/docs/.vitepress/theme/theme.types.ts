@@ -15,7 +15,37 @@ import type {
 export interface DocsNavItem {
   readonly text: string;
   readonly link: string;
-  readonly section: string;
+  readonly sections: readonly string[];
+}
+
+export interface DocsNavLink {
+  readonly text: string;
+  readonly link: string;
+  readonly current: boolean;
+}
+
+export interface DocsNavProps {
+  items: readonly DocsNavLink[];
+  label: string;
+  moreLabel: string;
+}
+
+export type NavTitle = string | LocalizedText;
+
+export interface NavPage {
+  readonly link: string;
+  readonly title: NavTitle;
+}
+
+export interface NavGroup {
+  readonly title: NavTitle;
+  readonly pages: readonly NavPage[];
+}
+
+export interface NavSection {
+  readonly title: NavTitle;
+  readonly prefixes: readonly string[];
+  readonly groups: readonly NavGroup[];
 }
 
 export interface DocsSidebarItem {
@@ -43,6 +73,7 @@ export interface DocsTexts {
   readonly light: string;
   readonly dark: string;
   readonly system: string;
+  readonly more: string;
   readonly accent: string;
   readonly builtInAccents: string;
   readonly accents: Readonly<Record<DocsAccent, string>>;

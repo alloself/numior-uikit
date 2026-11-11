@@ -30,14 +30,26 @@ test('header sections switch the sidebar and mark the current section', async ({
   await expect(docs.navLink('Компоненты')).toHaveAttribute('aria-current', 'page');
   await expect(docs.sidebarLink('Начало работы')).toHaveCount(0);
 
-  await docs.navLink('Руководство').click();
+  await docs.navLink('Документация').click();
   await expect(page).toHaveURL(/\/guide\/getting-started$/);
-  await expect(docs.navLink('Руководство')).toHaveAttribute('aria-current', 'page');
+  await expect(docs.navLink('Документация')).toHaveAttribute('aria-current', 'page');
   await expect(docs.sidebarLink('Темы оформления')).toBeVisible();
   await expect(docs.sidebarLink('Button')).toHaveCount(0);
 
+  await docs.sidebarLink('useToast').click();
+  await expect(page).toHaveURL(/\/composables\/toast$/);
+  await expect(docs.navLink('Документация')).toHaveAttribute('aria-current', 'page');
+  await expect(docs.sidebarLink('Темы оформления')).toBeVisible();
+
   await docs.open('/');
   await expect(docs.sidebar).toHaveCount(0);
+});
+
+test('the sidebar scrolls to the page that is open', async ({ docs, isMobile }) => {
+  test.skip(isMobile, 'the sidebar lives in a drawer on phones');
+  await docs.open('/composables/block-size-tween');
+
+  await expect(docs.sidebarLink('useBlockSizeTween')).toBeInViewport({ ratio: 1 });
 });
 
 test('the theme menu switches the scheme and the choice survives a reload', async ({
