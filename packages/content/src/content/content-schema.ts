@@ -390,7 +390,7 @@ const renderFile = (node: ElementNode) => {
 
 const CONTENT_SPEC: SchemaSpec = {
   name: 'numior-content',
-  version: 4,
+  version: 5,
   nodes: {
     doc: { content: 'block+' },
     paragraph: {

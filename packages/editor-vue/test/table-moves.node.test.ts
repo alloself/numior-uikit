@@ -1,4 +1,4 @@
-import { contentSchema } from '@numior/content';
+import { contentSchema, contentTableData } from '@numior/content';
 import {
   applyStep,
   createDoc,
@@ -11,7 +11,14 @@ import {
   type Step,
 } from '@numior/editor-core';
 import { describe, expect, it } from 'vite-plus/test';
-import { moveTableRow, orderTableColumns } from '../src/blocks/table/table-commands';
+import {
+  deleteTableColumn,
+  insertTableColumn,
+  moveTableRow,
+  orderTableColumns,
+  renameTableColumn,
+  setTableCells,
+} from '../src/blocks/table/table-commands';
 
 interface Carried {
   readonly doc: Doc;
@@ -29,7 +36,12 @@ const row = (id: string, ...values: readonly (string | number)[]): ElementNode =
   element(
     'table_row',
     id,
-    values.map((value, index) => element('table_cell', `${id}-${String(index)}`, [], { value })),
+    values.map((value, index) =>
+      element('table_cell', `${id}-${String(index)}`, [], {
+        column: index === 0 ? 'name' : 'price',
+        value,
+      }),
+    ),
   );
 
 const prices = (): Doc =>
@@ -38,8 +50,8 @@ const prices = (): Doc =>
     element('doc', 'root', [
       element('table', 't', [
         element('table_head', 'h', [
-          element('table_column', 'name', [], { name: 'Item' }),
-          element('table_column', 'price', [], { name: 'Price', type: 'number' }),
+          element('table_column', 'name', [], { key: 'name', name: 'Item' }),
+          element('table_column', 'price', [], { key: 'price', name: 'Price', type: 'number' }),
         ]),
         element('table_body', 'b', [row('r1', 'Pears', 12), row('r2', 'Plums', 3)]),
       ]),
@@ -74,23 +86,30 @@ const landed = (written: Step, { doc, steps }: Carried): Doc => {
   return result?.ok === true ? result.doc : doc;
 };
 
-const valuesOf = (doc: Doc): readonly string[] =>
-  (doc.byId('b')?.content ?? []).map((line) =>
-    line.kind === 'element'
-      ? line.content
-          .map((cell) => (cell.kind === 'element' ? `${cell.id}=${String(cell.attrs.value)}` : ''))
-          .join(' ')
-      : '',
-  );
+const gridOf = (doc: Doc): readonly string[] => {
+  const table = doc.byId('t');
+
+  if (table === undefined) {
+    return [];
+  }
+
+  const { columns, rows } = contentTableData(table);
+
+  return [
+    columns.map((column) => column.name).join(' | '),
+    ...rows.map((line) => line.cells.map(String).join(' | ')),
+  ];
+};
 
 describe('rows and columns carried in a document table', () => {
   it('keeps a value someone else writes into a row while it is carried down', () => {
     const start = prices();
     const moved = carried(start, moveTableRow('t', 'r1', 1));
 
-    expect(valuesOf(landed(priced(start, 'r1-1', 99), moved))).toEqual([
-      'r2-0=Plums r2-1=3',
-      'r1-0=Pears r1-1=99',
+    expect(gridOf(landed(priced(start, 'r1-1', 99), moved))).toEqual([
+      'Item | Price',
+      'Plums | 3',
+      'Pears | 99',
     ]);
   });
 
@@ -98,9 +117,60 @@ describe('rows and columns carried in a document table', () => {
     const start = prices();
     const moved = carried(start, orderTableColumns('t', ['price', 'name']));
 
-    expect(valuesOf(landed(priced(start, 'r2-1', 7), moved))).toEqual([
-      'r1-1=12 r1-0=Pears',
-      'r2-1=7 r2-0=Plums',
+    expect(moved.steps).toHaveLength(1);
+
+    expect(gridOf(landed(priced(start, 'r2-1', 7), moved))).toEqual([
+      'Price | Item',
+      '12 | Pears',
+      '7 | Plums',
     ]);
+  });
+
+  it('changes a column with one step however many rows the table has', () => {
+    const start = prices();
+
+    expect(carried(start, insertTableColumn('t', 0, 'New')).steps).toHaveLength(1);
+    expect(carried(start, deleteTableColumn('t', 'name')).steps).toHaveLength(1);
+
+    expect(gridOf(carried(start, insertTableColumn('t', 1, 'New')).doc)[1]).toBe(
+      'Pears | null | 12',
+    );
+
+    expect(gridOf(carried(start, deleteTableColumn('t', 'name')).doc)).toEqual([
+      'Price',
+      '12',
+      '3',
+    ]);
+  });
+
+  it('writes into a cell nobody filled yet and into a filled one', () => {
+    const start = carried(prices(), insertTableColumn('t', 2, 'Note')).doc;
+    const note = contentTableData(start.byId('t') ?? element('table', 'none')).columns[2]?.id ?? '';
+
+    const written = carried(
+      start,
+      setTableCells('t', [
+        { row: 'r2', column: note, value: 'ripe' },
+        { row: 'r1', column: 'price', value: 15 },
+        { row: 'r1', column: note, value: 'firm' },
+      ]),
+    );
+
+    expect(gridOf(written.doc)).toEqual([
+      'Item | Price | Note',
+      'Pears | 15 | firm',
+      'Plums | 3 | ripe',
+    ]);
+  });
+
+  it('leaves the history alone when a column is renamed to its own or to an empty name', () => {
+    const start = prices();
+
+    expect(carried(start, renameTableColumn('t', 'name', 'Item')).steps).toHaveLength(0);
+    expect(carried(start, renameTableColumn('t', 'name', '  ')).steps).toHaveLength(0);
+
+    expect(gridOf(carried(start, renameTableColumn('t', 'name', ' Fruit ')).doc)[0]).toBe(
+      'Fruit | Price',
+    );
   });
 });

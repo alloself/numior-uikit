@@ -134,8 +134,10 @@ describe('input commands', () => {
 
   it('selects a table of cells as one atom before Backspace deletes it', () => {
     const table = node('table', [
-      node('table_head', [node('table_column', [], { name: 'A' })]),
-      node('table_body', [node('table_row', [node('table_cell', [], { value: 'x' })])]),
+      node('table_head', [node('table_column', [], { key: 'a', name: 'A' })]),
+      node('table_body', [
+        node('table_row', [node('table_cell', [], { column: 'a', value: 'x' })]),
+      ]),
     ]);
 
     const after = node('paragraph', ['cd']);

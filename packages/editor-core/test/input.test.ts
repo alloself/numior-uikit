@@ -385,10 +385,10 @@ describe('editor view input', () => {
   });
 
   it('selects the whole table when a click lands on one of its cells', () => {
-    const cell = node('table_cell', [], { value: 1 });
+    const cell = node('table_cell', [], { column: 'a', value: 1 });
 
     const table = node('table', [
-      node('table_head', [node('table_column', [], { name: 'A' })]),
+      node('table_head', [node('table_column', [], { key: 'a', name: 'A' })]),
       node('table_body', [node('table_row', [cell])]),
     ]);
 

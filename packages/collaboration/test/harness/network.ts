@@ -73,10 +73,10 @@ export const createNetwork = (doc: Doc, names: readonly string[]): CollabNetwork
     const client = createCollabClient({
       doc: 'doc',
       clientId: name,
-      schema: { name: fixtureSchema.name, version: fixtureSchema.version },
+      schema: { name: doc.schema.name, version: doc.schema.version },
       transport: wire.transport,
       document: editorCollabDocument({
-        schema: fixtureSchema,
+        schema: doc.schema,
         getState: () => state,
         dispatch: (tr) => {
           state = state.apply(tr);

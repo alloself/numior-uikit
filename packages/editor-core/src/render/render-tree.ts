@@ -79,6 +79,10 @@ const fromElement = <T>(walk: Walk<T>, node: ElementNode): readonly T[] => {
     return [];
   }
 
+  if (type.renderSubtree !== undefined) {
+    return fromSpec(walk, type.renderSubtree(node), () => [], node);
+  }
+
   const trail =
     type.inlineContent && rendersBreak(walk.schema, node.content.at(-1))
       ? [walk.builder.element('br', {}, [], undefined, undefined)]

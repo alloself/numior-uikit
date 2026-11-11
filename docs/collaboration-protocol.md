@@ -209,10 +209,10 @@
 ## Пример обмена
 
 ```text
-A → hello    { doc: "d1", clientId: "a", version: null, schema: { name: "numior-content", version: 4 } }
+A → hello    { doc: "d1", clientId: "a", version: null, schema: { name: "numior-content", version: 5 } }
 A ← welcome  { version: 4, presence: [], snapshot: { format: 1, … } }
 
-B → hello    { doc: "d1", clientId: "b", version: 4, schema: { name: "numior-content", version: 4 } }
+B → hello    { doc: "d1", clientId: "b", version: 4, schema: { name: "numior-content", version: 5 } }
 B ← welcome  { version: 4, presence: [] }
 
 A → steps    { seq: 1, version: 4, steps: [s1] }

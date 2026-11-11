@@ -59,8 +59,10 @@ describe('editor view', () => {
           node('hard_break'),
         ]),
         node('table', [
-          node('table_head', [node('table_column', [], { name: 'H' })]),
-          node('table_body', [node('table_row', [node('table_cell', [], { value: 1 })])]),
+          node('table_head', [node('table_column', [], { key: 'h', name: 'H' })]),
+          node('table_body', [
+            node('table_row', [node('table_cell', [], { column: 'h', value: 1 })]),
+          ]),
         ]),
       ),
     );

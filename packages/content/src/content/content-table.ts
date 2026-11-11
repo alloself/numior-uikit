@@ -10,6 +10,8 @@ import {
   type NodeMaker,
   type NodeSpec,
   type ParsedContent,
+  type RenderChild,
+  type RenderElement,
 } from '@numior/editor-core';
 import {
   ContentAttrValue,
@@ -21,7 +23,7 @@ import {
   type NuiContentTableData,
   type NuiContentTableRow,
 } from './content.types';
-import { SORT_ATTRS, VIEW_NODES, filterOf, sortOf } from './table-view';
+import { SORT_ATTRS, VIEW_NODES, filterOf, renderFilter, sortOf } from './table-view';
 import {
   CONTENT_TABLE_TYPES,
   cellText,
@@ -54,6 +56,10 @@ const isWidth = (value: AttrValue): boolean =>
   value === null || (typeof value === 'number' && Number.isFinite(value) && value > 0);
 
 const isCell = (value: AttrValue): boolean => typeof value !== 'number' || Number.isFinite(value);
+
+const isKey = (value: AttrValue): boolean => typeof value === 'string' && value !== '';
+
+const parsedKey = (index: number): string => `c${String(index)}`;
 
 const textOf = (value: AttrValue | undefined): string => (typeof value === 'string' ? value : '');
 
@@ -190,7 +196,12 @@ const readContentTable = (table: HtmlElement, make: NodeMaker): ParsedContent =>
   const columns = types.map((type, index) =>
     make(
       'table_column',
-      { name: nameOf(head?.[index], index), type, width: parsedWidth(head?.[index]) },
+      {
+        key: parsedKey(index),
+        name: nameOf(head?.[index], index),
+        type,
+        width: parsedWidth(head?.[index]),
+      },
       optionsOf(head?.[index]).map((label) => make('table_option', { label })),
     ),
   );
@@ -207,7 +218,10 @@ const readContentTable = (table: HtmlElement, make: NodeMaker): ParsedContent =>
           types.map((type, index) => {
             const cell = row[index];
 
-            return make('table_cell', { value: cell === undefined ? null : valueOf(cell, type) });
+            return make('table_cell', {
+              column: parsedKey(index),
+              value: cell === undefined ? null : valueOf(cell, type),
+            });
           }),
         ),
       ),
@@ -218,15 +232,14 @@ const readContentTable = (table: HtmlElement, make: NodeMaker): ParsedContent =>
 const part = (name: string, modifier?: string | false): string =>
   [`nui-content__${name}`, ...(modifier ? [`nui-content__${name}--${modifier}`] : [])].join(' ');
 
-const renderCell = (node: ElementNode) => {
-  const { value } = node.attrs;
-
-  return renderTag('td', { class: part('table-cell', typeof value === 'number' && 'number') }, [
+const renderValue = (value: AttrValue | undefined): RenderElement =>
+  renderTag('td', { class: part('table-cell', typeof value === 'number' && 'number') }, [
     typeof value === 'boolean'
       ? renderTag('input', { type: 'checkbox', checked: value, disabled: true, tabindex: -1 })
       : cellText(value),
   ]);
-};
+
+const renderCell = (node: ElementNode): RenderElement => renderValue(node.attrs.value);
 
 const elementChildren = (node: ElementNode | undefined): readonly ElementNode[] =>
   (node?.content ?? []).filter(
@@ -239,16 +252,69 @@ const plainCell = (value: AttrValue | undefined): string =>
     ' ',
   );
 
-const plainLine = (cells: readonly ElementNode[], attr: string): string =>
-  cells.map((cell) => plainCell(cell.attrs[attr])).join('\t');
+const keyOf = (column: ElementNode): string => textOf(column.attrs.key);
+
+const valuesByKey = (row: ElementNode): ReadonlyMap<AttrValue, AttrValue> =>
+  new Map(
+    elementChildren(row).map((cell) => [cell.attrs.column ?? null, cell.attrs.value ?? null]),
+  );
+
+const lineOf = (row: ElementNode, columns: readonly ElementNode[]): (AttrValue | undefined)[] => {
+  const values = valuesByKey(row);
+
+  return columns.map((column) => values.get(keyOf(column)));
+};
 
 const tablePlainText = (table: ElementNode): string => {
   const [head, body] = elementChildren(table);
+  const columns = elementChildren(head);
 
   return [
-    plainLine(elementChildren(head), 'name'),
-    ...elementChildren(body).map((row) => plainLine(elementChildren(row), 'value')),
+    columns.map((column) => plainCell(column.attrs.name)).join('\t'),
+    ...elementChildren(body).map((row) => lineOf(row, columns).map(plainCell).join('\t')),
   ].join('\n');
+};
+
+const renderOption = (node: ElementNode): RenderElement =>
+  renderTag('option', { value: textOf(node.attrs.label) });
+
+const renderColumn = (node: ElementNode, children: readonly RenderChild[]): RenderElement => {
+  const width = widthOf(node.attrs.width);
+
+  return renderTag(
+    'th',
+    {
+      class: `${COLUMN} ${TYPE_PREFIX}${typeOf(node.attrs.type)}`,
+      style: width === undefined ? null : `width: ${String(width)}px;`,
+    },
+    [renderTag('span', {}, [textOf(node.attrs.name)]), renderTag('datalist', {}, children)],
+  );
+};
+
+const renderColumnParts = (node: ElementNode): RenderElement =>
+  renderColumn(
+    node,
+    elementChildren(node).map((child) =>
+      child.type === NuiContentNodeType.TableOption ? renderOption(child) : renderFilter(child),
+    ),
+  );
+
+const renderTable = (table: ElementNode): RenderElement => {
+  const [head, body] = elementChildren(table);
+  const columns = elementChildren(head);
+
+  return renderTag('div', { class: part('table') }, [
+    renderTag('table', { class: part('grid') }, [
+      renderTag('thead', {}, [renderTag('tr', {}, columns.map(renderColumnParts))]),
+      renderTag(
+        'tbody',
+        {},
+        elementChildren(body).map((row) =>
+          renderTag('tr', {}, lineOf(row, columns).map(renderValue)),
+        ),
+      ),
+    ]),
+  ]);
 };
 
 export const TABLE_NODES: Readonly<Record<string, NodeSpec>> = {
@@ -261,6 +327,7 @@ export const TABLE_NODES: Readonly<Record<string, NodeSpec>> = {
       renderTag('div', { class: part('table') }, [
         renderTag('table', { class: part('grid') }, [contentHole]),
       ]),
+    renderSubtree: renderTable,
     parse: [{ tag: 'table', read: readContentTable }],
   },
   table_head: {
@@ -270,39 +337,30 @@ export const TABLE_NODES: Readonly<Record<string, NodeSpec>> = {
   table_column: {
     content: 'table_option* table_filter?',
     attrs: {
+      key: { verify: isKey },
       name: { default: '', verify: (value) => typeof value === 'string' },
       type: { default: 'text', verify: isType },
       width: { default: null, verify: isWidth },
       ...SORT_ATTRS,
     },
-    render: (node) => {
-      const width = widthOf(node.attrs.width);
-
-      return renderTag(
-        'th',
-        {
-          class: `${COLUMN} ${TYPE_PREFIX}${typeOf(node.attrs.type)}`,
-          style: width === undefined ? null : `width: ${String(width)}px;`,
-        },
-        [
-          renderTag('span', {}, [textOf(node.attrs.name)]),
-          renderTag('datalist', {}, [contentHole]),
-        ],
-      );
-    },
+    render: (node) => renderColumn(node, [contentHole]),
   },
   table_option: {
     attrs: { label: { verify: (value) => typeof value === 'string' && value !== '' } },
-    render: (node) => renderTag('option', { value: textOf(node.attrs.label) }),
+    render: renderOption,
   },
   ...VIEW_NODES,
   table_body: { content: 'table_row*', render: () => renderTag('tbody') },
-  table_row: { content: 'table_cell+', render: () => renderTag('tr') },
-  table_cell: { attrs: { value: { default: null, verify: isCell } }, render: renderCell },
+  table_row: { content: 'table_cell*', render: () => renderTag('tr') },
+  table_cell: {
+    attrs: { column: { verify: isKey }, value: { default: null, verify: isCell } },
+    render: renderCell,
+  },
 };
 
 const columnOf = (node: ElementNode): NuiContentTableColumn => ({
   id: node.id,
+  key: keyOf(node),
   name: textOf(node.attrs.name),
   type: typeOf(node.attrs.type),
   width: widthOf(node.attrs.width),
@@ -343,11 +401,11 @@ const rowOf = (
   if (known?.columns === columns) {
     return known.row;
   }
-  const cells = elementChildren(node);
+  const values = valuesByKey(node);
 
   const row = {
     id: node.id,
-    cells: columns.map((column, index) => cellValueOf(cells[index]?.attrs.value, column.type)),
+    cells: columns.map((column) => cellValueOf(values.get(column.key), column.type)),
   };
 
   rowCache.set(node, { columns, row });

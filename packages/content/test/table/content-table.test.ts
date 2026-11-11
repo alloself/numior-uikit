@@ -19,16 +19,17 @@ afterEach(() => {
 
 const row = (item: string, sum: number) =>
   node('table_row', [
-    node('table_cell', [], { value: item }),
-    node('table_cell', [], { value: sum }),
+    node('table_cell', [], { column: 'item', value: item }),
+    node('table_cell', [], { column: 'sum', value: sum }),
   ]);
 
 const sums = () =>
   docOf(
     node('table', [
       node('table_head', [
-        node('table_column', [], { name: 'Item' }),
+        node('table_column', [], { key: 'item', name: 'Item' }),
         node('table_column', [node('table_filter', [], { kind: 'number', min: 2, max: null })], {
+          key: 'sum',
           name: 'Sum',
           type: 'number',
           sort: 'desc',

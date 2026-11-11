@@ -29,11 +29,18 @@ const element = (
   attrs: Readonly<Record<string, string | number | boolean | null>> = {},
 ): ElementNode => contentSchema.element(type, { id, attrs, content });
 
+const COLUMNS = ['name', 'price', 'state'];
+
 const row = (id: string, ...values: readonly (string | number | null)[]): ElementNode =>
   element(
     'table_row',
     id,
-    values.map((value, index) => element('table_cell', `${id}-${String(index)}`, [], { value })),
+    values.map((value, index) =>
+      element('table_cell', `${id}-${String(index)}`, [], {
+        column: COLUMNS[index] ?? '',
+        value,
+      }),
+    ),
   );
 
 const prices = (): DocJSON =>
@@ -44,13 +51,14 @@ const prices = (): DocJSON =>
         element('paragraph', 'p'),
         element('table', 't', [
           element('table_head', 'h', [
-            element('table_column', 'name', [], { name: 'Item' }),
-            element('table_column', 'price', [], { name: 'Price', type: 'number' }),
+            element('table_column', 'name', [], { key: 'name', name: 'Item' }),
+            element('table_column', 'price', [], { key: 'price', name: 'Price', type: 'number' }),
             element(
               'table_column',
               'state',
               [element('table_option', 'o1', [], { label: 'Open' })],
               {
+                key: 'state',
                 name: 'State',
                 type: 'select',
               },
@@ -185,7 +193,7 @@ describe('NuiEditor table block', () => {
           element('doc', 'root', [
             element('table', 't', [
               element('table_head', 'h', [
-                element('table_column', 'done', [], { name: 'Done', type: 'boolean' }),
+                element('table_column', 'done', [], { key: 'name', name: 'Done', type: 'boolean' }),
               ]),
               element('table_body', 'b', [row('r1', null)]),
             ]),

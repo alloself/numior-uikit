@@ -52,6 +52,7 @@ export interface NuiContentTableSort {
 
 export interface NuiContentTableColumn {
   readonly id: NodeId;
+  readonly key: string;
   readonly name: string;
   readonly type: NuiContentTableType;
   readonly width: number | undefined;

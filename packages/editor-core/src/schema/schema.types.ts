@@ -55,6 +55,7 @@ export interface NodeSpec {
   readonly slots?: NodeSlots | undefined;
   readonly plainText?: NodePlainText | undefined;
   readonly render?: NodeRender | undefined;
+  readonly renderSubtree?: NodeRender | undefined;
   readonly parse?: readonly NodeParseRule[] | undefined;
 }
 
@@ -96,6 +97,7 @@ export interface NodeType {
   readonly slots: SlotRule;
   readonly plainText: NodePlainText | undefined;
   readonly render: NodeRender;
+  readonly renderSubtree: NodeRender | undefined;
   readonly parse: readonly NodeParseRule[];
 }
 

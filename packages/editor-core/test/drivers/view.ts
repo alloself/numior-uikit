@@ -94,11 +94,11 @@ const writeAtCaret = (text: string): void => {
   const offset = selection?.anchorOffset ?? 0;
 
   if (!(anchor instanceof Text)) {
-return;
-}
+    return;
+  }
 
-anchor.insertData(offset, text);
-    selection?.collapse(anchor, offset + text.length);
+  anchor.insertData(offset, text);
+  selection?.collapse(anchor, offset + text.length);
 };
 
 const textNodesOf = (root: Node): Text[] => {

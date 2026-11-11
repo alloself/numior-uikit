@@ -167,6 +167,7 @@ const compileNode = (
     slots: node.slots ?? (groupsOf(node.group).has('list') ? 'all' : 'none'),
     plainText: node.plainText,
     render: node.render ?? defaultRender(inline, leaf),
+    renderSubtree: node.renderSubtree,
     parse: node.parse ?? [],
   };
 };

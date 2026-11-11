@@ -1,7 +1,8 @@
 import { HtmlNodeKind, HtmlTag, type HtmlElement } from '../html/html.types';
 import { tableGrid, type HtmlTableCell } from '../html/table-grid';
-import type { AttrValue, ElementNode } from '../model/node.types';
+import { ContentNodeKind, type AttrValue, type ElementNode } from '../model/node.types';
 import { contentHole, renderTag } from '../render/render';
+import type { RenderChild, RenderElement } from '../render/render.types';
 import { createSchema } from '../schema/schema';
 import type { NodeMaker, ParsedAttrs, ParsedContent } from '../schema/schema.types';
 
@@ -29,6 +30,52 @@ const optionsOf = (cell: HtmlTableCell, make: NodeMaker): ElementNode[] =>
       : [],
   );
 
+const keyAt = (index: number): string => `c${String(index)}`;
+
+const elementsOf = (node: ElementNode | undefined): ElementNode[] =>
+  (node?.content ?? []).filter(
+    (child): child is ElementNode => child.kind === ContentNodeKind.Element,
+  );
+
+const renderOption = (node: ElementNode): RenderElement =>
+  renderTag('option', { value: textOf(node.attrs.label) });
+
+const renderColumn = (node: ElementNode, children: readonly RenderChild[]): RenderElement =>
+  renderTag('th', {}, [
+    renderTag('span', {}, [textOf(node.attrs.name)]),
+    renderTag('datalist', {}, children),
+  ]);
+
+const renderLine = (row: ElementNode, columns: readonly ElementNode[]): RenderElement => {
+  const values = new Map(elementsOf(row).map((cell) => [cell.attrs.column, cell.attrs.value]));
+
+  return renderTag(
+    'tr',
+    {},
+    columns.map((column) => renderTag('td', {}, [cellText(values.get(column.attrs.key))])),
+  );
+};
+
+const renderTable = (table: ElementNode): RenderElement => {
+  const [head, body] = elementsOf(table);
+  const columns = elementsOf(head);
+
+  return renderTag('table', {}, [
+    renderTag('thead', {}, [
+      renderTag(
+        'tr',
+        {},
+        columns.map((column) => renderColumn(column, elementsOf(column).map(renderOption))),
+      ),
+    ]),
+    renderTag(
+      'tbody',
+      {},
+      elementsOf(body).map((row) => renderLine(row, columns)),
+    ),
+  ]);
+};
+
 const readTable = (table: HtmlElement, make: NodeMaker): ParsedContent => {
   const [head, ...rows] = tableGrid(table).rows;
 
@@ -39,7 +86,9 @@ const readTable = (table: HtmlElement, make: NodeMaker): ParsedContent => {
     make(
       'table_head',
       {},
-      head.map((cell) => make('table_column', { name: cell.text }, optionsOf(cell, make))),
+      head.map((cell, index) =>
+        make('table_column', { key: keyAt(index), name: cell.text }, optionsOf(cell, make)),
+      ),
     ),
     make(
       'table_body',
@@ -48,7 +97,12 @@ const readTable = (table: HtmlElement, make: NodeMaker): ParsedContent => {
         make(
           'table_row',
           {},
-          row.map((cell) => make('table_cell', { value: cell.text === '' ? null : cell.text })),
+          row.map((cell, index) =>
+            make('table_cell', {
+              column: keyAt(index),
+              value: cell.text === '' ? null : cell.text,
+            }),
+          ),
         ),
       ),
     ),
@@ -151,6 +205,7 @@ export const fixtureSchema = createSchema({
       atom: true,
       content: 'table_head table_body',
       render: () => renderTag('table', {}, [contentHole]),
+      renderSubtree: renderTable,
       parse: [{ tag: 'table', read: readTable }],
     },
     table_head: {
@@ -159,21 +214,22 @@ export const fixtureSchema = createSchema({
     },
     table_column: {
       content: 'table_option*',
-      attrs: { name: { default: '' }, type: { default: 'text' }, width: { default: null } },
-      render: (node) =>
-        renderTag('th', {}, [
-          renderTag('span', {}, [textOf(node.attrs.name)]),
-          renderTag('datalist', {}, [contentHole]),
-        ]),
+      attrs: {
+        key: { verify: isText },
+        name: { default: '' },
+        type: { default: 'text' },
+        width: { default: null },
+      },
+      render: (node) => renderColumn(node, [contentHole]),
     },
     table_option: {
       attrs: { label: { verify: isText } },
-      render: (node) => renderTag('option', { value: textOf(node.attrs.label) }),
+      render: renderOption,
     },
     table_body: { content: 'table_row*', render: () => renderTag('tbody') },
-    table_row: { content: 'table_cell+', render: () => renderTag('tr') },
+    table_row: { content: 'table_cell*', render: () => renderTag('tr') },
     table_cell: {
-      attrs: { value: { default: null } },
+      attrs: { column: { verify: isText }, value: { default: null } },
       render: (node) => renderTag('td', {}, [cellText(node.attrs.value)]),
     },
     text: { group: 'inline', inline: true },

@@ -6,7 +6,7 @@ import { EVERY_BLOCK_MARKUP, docOf, everyBlock, node } from './support/documents
 
 const stamped = (blocks: readonly unknown[]) => ({
   format: 1,
-  schema: { name: 'numior-content', version: 4 },
+  schema: { name: 'numior-content', version: 5 },
   root: { id: 'r', type: 'doc', content: blocks },
 });
 
@@ -87,13 +87,16 @@ describe('content schema', () => {
   it('keeps a table cell on its own line and in its own column whatever its text holds', () => {
     const page = docOf(
       node('table', [
-        node('table_head', [node('table_column', [], { name: 'A\tB' }), node('table_column')]),
+        node('table_head', [
+          node('table_column', [], { key: 'a', name: 'A\tB' }),
+          node('table_column', [], { key: 'b' }),
+        ]),
         node('table_body', [
           node('table_row', [
-            node('table_cell', [], { value: 'two\nlines' }),
-            node('table_cell', [], { value: false }),
+            node('table_cell', [], { column: 'b', value: false }),
+            node('table_cell', [], { column: 'a', value: 'two\nlines' }),
           ]),
-          node('table_row', [node('table_cell'), node('table_cell', [], { value: 7 })]),
+          node('table_row', [node('table_cell', [], { column: 'b', value: 7 })]),
         ]),
       ]),
     );

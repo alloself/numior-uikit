@@ -88,9 +88,12 @@ describe('HTML parsing', () => {
         '<p>before<table><tr><th>H<td colspan=2>V<tr><td>a<td rowspan=2>b<td>c<tr><td>d<td>e</table><table></table>',
       ),
     ).toBe(
-      'paragraph("before") table(table_head(table_column{name=H}() table_column{name=V}() table_column()) ' +
-        'table_body(table_row(table_cell{value=a} table_cell{value=b} table_cell{value=c}) ' +
-        'table_row(table_cell{value=d} table_cell table_cell{value=e})))',
+      'paragraph("before") table(table_head(table_column{key=c0,name=H}() ' +
+        'table_column{key=c1,name=V}() table_column{key=c2}()) ' +
+        'table_body(table_row(table_cell{column=c0,value=a} table_cell{column=c1,value=b} ' +
+        'table_cell{column=c2,value=c}) ' +
+        'table_row(table_cell{column=c0,value=d} table_cell{column=c1} ' +
+        'table_cell{column=c2,value=e})))',
     );
   });
 
@@ -255,9 +258,11 @@ describe('HTML serialization', () => {
       node('divider'),
       node('table', [
         node('table_head', [
-          node('table_column', [node('table_option', [], { label: 'x' })], { name: 'N' }),
+          node('table_column', [node('table_option', [], { label: 'x' })], { key: 'n', name: 'N' }),
         ]),
-        node('table_body', [node('table_row', [node('table_cell', [], { value: 'c' })])]),
+        node('table_body', [
+          node('table_row', [node('table_cell', [], { column: 'n', value: 'c' })]),
+        ]),
       ]),
     );
 

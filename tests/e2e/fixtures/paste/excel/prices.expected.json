@@ -8,6 +8,7 @@
           {
             "type": "table_column",
             "attrs": {
+              "key": "c0",
               "name": "Товар",
               "type": "text",
               "width": null,
@@ -18,6 +19,7 @@
           {
             "type": "table_column",
             "attrs": {
+              "key": "c1",
               "name": "Цена",
               "type": "number",
               "width": null,
@@ -36,12 +38,14 @@
               {
                 "type": "table_cell",
                 "attrs": {
+                  "column": "c0",
                   "value": "Яблоки сезонные"
                 }
               },
               {
                 "type": "table_cell",
                 "attrs": {
+                  "column": "c1",
                   "value": 120
                 }
               }
@@ -53,12 +57,14 @@
               {
                 "type": "table_cell",
                 "attrs": {
+                  "column": "c0",
                   "value": "Груши"
                 }
               },
               {
                 "type": "table_cell",
                 "attrs": {
+                  "column": "c1",
                   "value": 95.5
                 }
               }
