@@ -1,13 +1,15 @@
 import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
+import { posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compile } from '@tailwindcss/node';
-import { compareRules, parseAliases, parseRules } from './css-rules';
-import type { CssRule } from './css-rules.types';
+import { compareRules, foldColorMixFallbacks, parseAliases, parseRules } from './css-rules.ts';
+import type { CssRule } from './css-rules.types.ts';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const THEME = fileURLToPath(new URL('../../packages/tokens/src/theme.css', import.meta.url));
 const LAYER = '@layer components';
+const RELATIVE_IMPORT = /^@import\s+['"](\.{1,2}\/[^'"]+\.css)['"]\s*;\s*$/gm;
 
 const entryFor = (file: string): string =>
   [
@@ -16,6 +18,14 @@ const entryFor = (file: string): string =>
     `@import '${THEME}' layer(theme);`,
     `@import '${ROOT}${file}';`,
   ].join('\n');
+
+const sourceAt = (ref: string, file: string): string => {
+  const source = execFileSync('git', ['show', `${ref}:${file}`], { cwd: ROOT }).toString();
+
+  return source.replace(RELATIVE_IMPORT, (_line, specifier: string) =>
+    sourceAt(ref, posix.join(posix.dirname(file), specifier)),
+  );
+};
 
 const compiled = async (file: string): Promise<string> => {
   const compiler = await compile(entryFor(file), { base: ROOT, onDependency: () => undefined });
@@ -41,16 +51,16 @@ const helperIssues = (output: string): string[] => {
 };
 
 const check = async (ref: string, file: string, aliases: Map<string, string>): Promise<number> => {
-  const before = parseRules(
-    execFileSync('git', ['show', `${ref}:${file}`], { cwd: ROOT }).toString(),
-  );
+  const before = parseRules(sourceAt(ref, file));
 
   const output = await compiled(file);
-  const after = kitRules(output);
+  const { rules: after, fallbacks } = foldColorMixFallbacks(kitRules(output));
   const issues = [...compareRules(before, after, aliases), ...helperIssues(output)];
   const count = after.reduce((total, rule) => total + rule.declarations.length, 0);
 
-  console.log(`${file}: ${after.length} rules, ${count} declarations, ${issues.length} issues`);
+  console.log(
+    `${file}: ${after.length} rules, ${count} declarations, ${fallbacks} color-mix fallbacks, ${issues.length} issues`,
+  );
 
   issues.forEach((issue) => {
     console.log(`  ${issue}`);

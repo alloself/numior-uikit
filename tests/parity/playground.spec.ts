@@ -223,3 +223,29 @@ test('toast states and motion', async ({ feedback, scenes }) => {
     feedback.closeButtonOf(feedback.stackItems.first()).click(),
   );
 });
+
+test('table cell editors', async ({ table, tableCells, scenes, page }) => {
+  test.skip(!scenes.profile.states);
+
+  await table.root.scrollIntoViewIfNeeded();
+  await table.cell(1, 3).click();
+  await page.keyboard.press('Enter');
+  await expect(table.editorField()).toBeFocused();
+
+  await scenes.capture('table--text-editor', sectionScope('table'), 'viewport');
+  await page.keyboard.press('Escape');
+  await table.cell(2, 5).click();
+  await page.keyboard.press('F2');
+  await table.editorField().fill('-5');
+  await page.keyboard.press('Enter');
+  await expect(table.editorError()).toBeVisible();
+
+  await scenes.capture('table--invalid-editor', sectionScope('table'), 'viewport');
+  await page.keyboard.press('Escape');
+  await tableCells.show();
+  await tableCells.cell(1, 1).click();
+  await page.keyboard.type('42');
+  await expect(tableCells.editor(1, 1)).toHaveValue('42');
+
+  await scenes.capture('table-cells--editor', sectionScope('table-cells'), 'viewport');
+});

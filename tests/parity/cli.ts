@@ -1,8 +1,8 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { parseArgs } from 'node:util';
-import { diffImages, diffScenes, isAllowed, tailOf, totalsOf } from './compare';
-import { imageFile, readScene, sceneNames } from './store';
-import type { Allowance, Comparison, Finding } from './parity.types';
+import { diffImages, diffScenes, isAllowed, tailOf, totalsOf } from './compare.ts';
+import { imageFile, readScene, sceneNames } from './store.ts';
+import type { Allowance, Comparison, Finding } from './parity.types.ts';
 
 const GROUP_LIMIT = 25;
 const SCENE_LIMIT = 40;

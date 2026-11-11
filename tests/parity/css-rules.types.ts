@@ -15,3 +15,8 @@ export interface CssBlock {
 }
 
 export type Aliases = ReadonlyMap<string, string>;
+
+export interface FoldedRules {
+  readonly rules: CssRule[];
+  readonly fallbacks: number;
+}

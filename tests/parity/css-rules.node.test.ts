@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { canonical, compareRules, parseAliases, parseRules } from './css-rules';
+import {
+  canonical,
+  compareRules,
+  foldColorMixFallbacks,
+  parseAliases,
+  parseRules,
+} from './css-rules';
 
 const ALIASES = parseAliases(`
   :root, [data-nui-theme] {
@@ -105,5 +111,41 @@ describe('rule comparison of a rewritten stylesheet', () => {
     expect(canonical("var(--nui-radius) .5rem 0px 'x'", ALIASES)).toBe(
       'var(--radius-md) 0.5rem 0 "x"',
     );
+  });
+
+  it('folds the color-mix fallback of the compiler back into its rule', () => {
+    const compiled = parseRules(`
+      .nui-alert {
+        border-color: var(--_tone);
+        @supports (color: color-mix(in lab, red, red)) {
+          border-color: color-mix(in oklab, var(--_tone) 50%, var(--color-border));
+        }
+        color: red;
+      }
+      .nui-alert__icon { color: blue; }
+    `);
+
+    const { rules, fallbacks } = foldColorMixFallbacks(compiled);
+
+    expect(fallbacks).toBe(1);
+
+    expect(rules).toEqual([
+      {
+        context: '',
+        selector: '.nui-alert',
+        declarations: [
+          {
+            property: 'border-color',
+            value: 'color-mix(in oklab, var(--_tone) 50%, var(--color-border))',
+          },
+          { property: 'color', value: 'red' },
+        ],
+      },
+      {
+        context: '',
+        selector: '.nui-alert__icon',
+        declarations: [{ property: 'color', value: 'blue' }],
+      },
+    ]);
   });
 });

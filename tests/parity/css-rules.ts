@@ -1,4 +1,4 @@
-import type { Aliases, CssBlock, CssDeclaration, CssRule } from './css-rules.types';
+import type { Aliases, CssBlock, CssDeclaration, CssRule, FoldedRules } from './css-rules.types.ts';
 
 const OPENERS = new Map([
   ['(', 1],
@@ -76,6 +76,43 @@ const rulesIn = (source: string, context: string, parent: string): CssRule[] => 
 };
 
 export const parseRules = (source: string): CssRule[] => rulesIn(withoutComments(source), '', '');
+
+const COLOR_MIX_GUARD = '@supports (color: color-mix(in lab, red, red))';
+
+const guardedBy = (rule: CssRule, owner: CssRule | undefined): owner is CssRule =>
+  owner !== undefined &&
+  rule.selector === owner.selector &&
+  rule.context === `${owner.context} ${COLOR_MIX_GUARD}`.trim();
+
+const withGuarded = (owner: CssRule, guarded: CssRule): CssRule => {
+  const values = new Map(guarded.declarations.map(({ property, value }) => [property, value]));
+
+  return {
+    ...owner,
+    declarations: owner.declarations.map(({ property, value }) => ({
+      property,
+      value: values.get(property) ?? value,
+    })),
+  };
+};
+
+export const foldColorMixFallbacks = (rules: readonly CssRule[]): FoldedRules => {
+  return rules.reduce<FoldedRules>(
+    (folded, rule) => {
+      const owner = folded.rules.at(-1);
+
+      if (!guardedBy(rule, owner)) {
+        return { rules: [...folded.rules, rule], fallbacks: folded.fallbacks };
+      }
+
+      return {
+        rules: [...folded.rules.slice(0, -1), withGuarded(owner, rule)],
+        fallbacks: folded.fallbacks + rule.declarations.length,
+      };
+    },
+    { rules: [], fallbacks: 0 },
+  );
+};
 
 export const parseAliases = (source: string): Map<string, string> => {
   return parseRules(source).reduce((aliases, rule) => {

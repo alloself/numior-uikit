@@ -1,5 +1,5 @@
-import { describePixelDiff, decodePng } from './png';
-import { styleOf } from './store';
+import { describePixelDiff, decodePng } from './png.ts';
+import { styleOf } from './store.ts';
 import type {
   Allowance,
   Finding,
@@ -7,7 +7,7 @@ import type {
   SceneTotals,
   StoredNode,
   StoredScene,
-} from './parity.types';
+} from './parity.types.ts';
 
 const ELEMENT = '(element)';
 const RECT = '(rect)';

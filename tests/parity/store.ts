@@ -1,7 +1,7 @@
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
-import type { Note, RawScene, StoredNode, StoredScene } from './parity.types';
+import type { Note, RawScene, StoredNode, StoredScene } from './parity.types.ts';
 
 const SCENE_SUFFIX = '.json.gz';
 

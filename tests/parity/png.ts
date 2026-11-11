@@ -1,5 +1,5 @@
 import { inflateSync } from 'node:zlib';
-import type { Image } from './parity.types';
+import type { Image } from './parity.types.ts';
 
 const SIGNATURE_LENGTH = 8;
 
