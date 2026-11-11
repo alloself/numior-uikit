@@ -82,6 +82,29 @@ describe('useClipboard', () => {
     expect(clipboard.commands).toBe(1);
   });
 
+  it('copies text that arrives later in one clipboard write', async () => {
+    clipboard = installClipboard({ api: 'granted' });
+    const control = captureSetup(() => useClipboard()).value;
+
+    expect(await control.copy(Promise.resolve('later'))).toBe(true);
+    expect(clipboard.copies).toEqual(['later']);
+    expect(clipboard.writes).toBe(1);
+    expect(clipboard.commands).toBe(0);
+    expect(control.copied.value).toBe(true);
+  });
+
+  it('waits for the text before the copy command and fails when the text never arrives', async () => {
+    clipboard = installClipboard({ api: 'missing' });
+    const control = captureSetup(() => useClipboard()).value;
+
+    expect(await control.copy(Promise.resolve('later'))).toBe(true);
+    expect(clipboard.copies).toEqual(['later']);
+
+    expect(await control.copy(Promise.reject(new Error('offline')))).toBe(false);
+    expect(control.copied.value).toBe(false);
+    expect(clipboard.copies).toEqual(['later']);
+  });
+
   it('reports failure when neither the API nor the command can copy', async () => {
     clipboard = installClipboard({ api: 'missing', legacy: false });
     const control = captureSetup(() => useClipboard()).value;

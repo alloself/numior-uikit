@@ -21,5 +21,8 @@ uses `document.execCommand('copy')`.
 editor pastes the markup, a plain input pastes the text. This is how
 [Table](/en/components/table) copies selected cells.
 
+`copy` also takes a promise of the text. The request for the text runs after the click, and Safari
+still allows the clipboard write.
+
 When the browser does not accept HTML, only the text is copied. On the server `supported` is
 `false` and `copy` resolves to `false`.
