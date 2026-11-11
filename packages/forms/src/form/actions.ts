@@ -94,7 +94,7 @@ export const createActions = <V extends object, O>(
     await host.flush(entries);
 
     if (options.silent) {
-      return summarize(await validation.run(), scope);
+      return summarize(await validation.inspect(entries), scope);
     }
     if (scope === undefined) {
       core.session.formAttempted = true;

@@ -172,6 +172,10 @@ export class FormHarness<V extends object> {
     return this.form.submit();
   }
 
+  startValidate(options?: ValidateOptions): Promise<ValidationSummary> {
+    return this.form.validate(options);
+  }
+
   async validate(options?: ValidateOptions): Promise<ValidationSummary> {
     const summary = await this.form.validate(options);
 

@@ -54,6 +54,10 @@ When a check throws, the field counts as unchecked and shows "Could not check th
 The submission is blocked, and the next submission or leaving the field sends the request again.
 The error itself goes to `onCheckError(error, path)` in the `useForm` options.
 
+A check reads other fields through `values`. When such a field changes while the request runs, the
+answer is dropped and the request is sent again. `form.validate({ silent: true })` waits for the
+async checks as well, but shows no errors.
+
 <Example name="form/Async" />
 
 ## When to validate

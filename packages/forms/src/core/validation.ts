@@ -30,6 +30,7 @@ export interface Validation<V extends object, O> {
     scope?: ApplyScope,
   ): Promise<RunResult<V, O>>;
   validateFully(entries: readonly Entry<V>[]): Promise<RunResult<V, O>>;
+  inspect(entries: readonly Entry<V>[]): Promise<RunResult<V, O>>;
 }
 
 export const isClean = (result: Classified): boolean =>
@@ -189,6 +190,29 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
     return result;
   };
 
+  const passingAfter = (entries: readonly Entry<V>[], outcome: RunResult<V, O>): Entry<V>[] =>
+    entries.reduce<Entry<V>[]>((passing, entry) => {
+      if (outcome.byOwner.has(entry.path())) {
+        asyncChecks.cancel(entry);
+      } else {
+        passing.push(entry);
+      }
+      return passing;
+    }, []);
+
+  const complete = async (
+    entries: readonly Entry<V>[],
+    first: MaybePromise<RunResult<V, O>>,
+    again: () => MaybePromise<RunResult<V, O>>,
+  ): Promise<RunResult<V, O>> => {
+    let result = await first;
+
+    while (await asyncChecks.settle(passingAfter(entries, result))) {
+      result = await again();
+    }
+    return result;
+  };
+
   return {
     async: asyncChecks,
     run,
@@ -202,25 +226,11 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
         ? outcome.then((result) => followAsync(entries, result, trigger))
         : Promise.resolve(followAsync(entries, outcome, trigger));
     },
-    validateFully: async (entries) => {
-      const passingAfter = (outcome: typeof result): Entry<V>[] =>
-        entries.reduce<Entry<V>[]>((passing, entry) => {
-          if (outcome.byOwner.has(entry.path())) {
-            asyncChecks.cancel(entry);
-          } else {
-            passing.push(entry);
-          }
-          return passing;
-        }, []);
-
+    validateFully: (entries) => {
       asyncChecks.retry(entries);
 
-      let result = await attempt(entries, 'attempted', true);
-
-      while (await asyncChecks.settle(passingAfter(result))) {
-        result = await execute(undefined, true);
-      }
-      return result;
+      return complete(entries, attempt(entries, 'attempted', true), () => execute(undefined, true));
     },
+    inspect: (entries) => complete(entries, run(), () => run()),
   };
 };

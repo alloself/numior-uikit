@@ -194,6 +194,13 @@ export const createAsyncChecks = <V extends object, O>(
     }
   };
 
+  const outdated = (entry: Entry<V>, state: AsyncState): boolean =>
+    state.result !== undefined &&
+    state.phase.kind === AsyncPhaseKind.Idle &&
+    entry.active() &&
+    validatesOnChange(entry.validateOn(), entry.state.attempted.value) &&
+    freshResult(entry) === undefined;
+
   const schedule = (entry: Entry<V>, delay: number): void => {
     if (!needsCheck(entry)) {
       cancel(entry);
@@ -205,16 +212,13 @@ export const createAsyncChecks = <V extends object, O>(
     void core.tracker.track(
       delayed(entry, state, token, delay).finally(() => {
         finish(entry, state, token);
+
+        if (token === state.token && outdated(entry, state)) {
+          schedule(entry, entry.debounce());
+        }
       }),
     );
   };
-
-  const outdated = (entry: Entry<V>, state: AsyncState): boolean =>
-    state.result !== undefined &&
-    state.phase.kind === AsyncPhaseKind.Idle &&
-    entry.active() &&
-    validatesOnChange(entry.validateOn(), entry.state.attempted.value) &&
-    freshResult(entry) === undefined;
 
   return {
     issues: (active) =>

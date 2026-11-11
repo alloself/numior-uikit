@@ -233,6 +233,35 @@ describe('asynchronous checks', () => {
     expect(check.calls).toEqual(['fr:A123', 'de:A123']);
   });
 
+  it('asks again when a value its running check read has changed before the answer', async () => {
+    const check = new DocumentCheck(PASSPORTS);
+    const form = mountDocument(check, { validateOn: 'change' });
+
+    await form.type('document', 'A123');
+    await form.wait(350);
+    expect(check.calls).toEqual(['fr:A123']);
+
+    await form.type('country', 'de');
+    await form.wait(600);
+    await form.settle();
+    expect(check.calls).toEqual(['fr:A123', 'de:A123']);
+    expect(form.error('document')).toBe('Unknown document for this country');
+  });
+
+  it('answers a silent validation after the checks it needs and shows nothing', async () => {
+    const check = new LoginCheck(['ann']);
+    const form = mountLogin(check);
+
+    await form.type('login', 'ann');
+
+    const validating = form.startValidate({ silent: true });
+
+    await form.wait(100);
+    expect((await validating).valid).toBe(false);
+    expect(form.error('login')).toBeUndefined();
+    expect(check.calls).toEqual(['ann']);
+  });
+
   it('checks a value that changed while its submit check ran before delivering it', async () => {
     const check = new CodeCheck();
 
