@@ -90,6 +90,10 @@ export class DatePickerDriver extends ComponentDriver {
       : undefined;
   }
 
+  get selectedDate(): string | undefined {
+    return this.wrapper.find('.nui-calendar__day--selected time').attributes('datetime');
+  }
+
   get inputFocused(): boolean {
     return document.activeElement === this.input.element;
   }

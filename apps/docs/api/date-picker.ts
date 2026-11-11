@@ -149,8 +149,8 @@ const docs: DocsMap = {
         en: 'The `name` of a hidden input that sends the date with the form in ISO format.',
       },
       time: {
-        ru: 'Добавляет поле времени под календарём. Значение становится `YYYY-MM-DDTHH:mm`.',
-        en: 'Adds a time field under the calendar. The value becomes `YYYY-MM-DDTHH:mm`.',
+        ru: 'Добавляет поле времени под календарём. Значение становится `YYYY-MM-DDTHH:mm`; дата без времени читается как полночь.',
+        en: 'Adds a time field under the calendar. The value becomes `YYYY-MM-DDTHH:mm`; a date without a time reads as midnight.',
       },
       timeStep: {
         ru: 'Шаг минут при выборе времени, например 15.',
