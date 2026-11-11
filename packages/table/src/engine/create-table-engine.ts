@@ -1,6 +1,7 @@
 import {
   createRequestJob,
   createStoresJob,
+  rereadNumbers,
   type StoreJob,
   type StoreRequest,
 } from './column-store';
@@ -796,10 +797,6 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
   };
 
   const retotal = (plan: Plan<T>): void => {
-    for (const column of plan.aggregates) {
-      forget(column.key);
-    }
-
     const rows = prepared.filtered;
     const outcome: { groups: GroupTable | null } = { groups: null };
 
@@ -825,30 +822,70 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     }
   };
 
-  const patch = (query: TableQuery, keys: readonly string[]): void => {
-    const changed = new Set(keys);
+  const indicesOf = (rows: readonly T[]): number[] | undefined => {
+    const wanted = new Set(rows);
+    const found: number[] = [];
 
-    for (const key of changed) {
-      forget(key);
+    for (let index = 0; index < table.rows.length && found.length < wanted.size; index += 1) {
+      const row = table.rows[index];
+
+      if (row !== undefined && wanted.has(row)) {
+        found.push(index);
+      }
     }
+    return found.length === wanted.size ? found : undefined;
+  };
+
+  const reread = (key: string, at: readonly number[]): boolean => {
+    const store = stores.get(key);
+    const column = columnOf(key);
+
+    if (store?.kind !== ColumnStoreKind.Number || column.kind === TableEngineColumnKind.String) {
+      return false;
+    }
+    rereadNumbers(store, column, table.rows, at);
+    return true;
+  };
+
+  const refreshStores = (
+    plan: Plan<T> | undefined,
+    changed: ReadonlySet<string>,
+    at: readonly number[] | undefined,
+  ): void => {
+    for (const key of changed) {
+      if (at === undefined || !reread(key, at)) {
+        forget(key);
+      }
+    }
+    for (const { key } of plan?.aggregates ?? []) {
+      if (changed.has(key)) {
+        continue;
+      }
+      if (at === undefined) {
+        forget(key);
+      } else {
+        reread(key, at);
+      }
+    }
+  };
+
+  const patch = (query: TableQuery, keys: readonly string[], rows?: readonly T[]): void => {
+    const changed = new Set(keys);
+    const plan = prepared.groups === null ? undefined : planOf(query);
+
+    refreshStores(plan, changed, rows === undefined ? undefined : indicesOf(rows));
     rowsVersion += 1;
 
-    if (prepared.groups === null) {
+    if (plan === undefined) {
       return;
     }
-    const plan = planOf(query);
-
     if (prepared.tree !== null) {
       retotal(plan);
       return;
     }
-
     if (plan.groupBy.some((key) => changed.has(key))) {
       runSync(query);
       return;
-    }
-    for (const column of plan.aggregates) {
-      forget(column.key);
     }
     regroup(plan);
   };

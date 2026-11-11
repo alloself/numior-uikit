@@ -38,7 +38,7 @@ export interface TableEditingOptions<T> {
   readonly emit: (event: NuiTableEditEvent<T>) => void;
   readonly sink: () => NuiTableCommandSink<T> | undefined;
   readonly keys: () => readonly string[];
-  readonly applied: (keys: readonly string[]) => void;
+  readonly applied: (keys: readonly string[], rows?: readonly T[]) => void;
   readonly parse: (row: T, key: string, text: string) => ParsedCell;
   readonly readBlock: (
     data: NuiTableClipboardData,
@@ -100,6 +100,8 @@ const isKey = (event: KeyboardEvent, code: string, key: string): boolean =>
 const keysOf = <T>(changes: readonly NuiTableEdit<T>[]): string[] => [
   ...new Set(changes.map((change) => change.key)),
 ];
+
+const rowsOf = <T>(changes: readonly NuiTableEdit<T>[]): T[] => changes.map((change) => change.row);
 
 const sameValue = (a: NuiTableCellValue, b: NuiTableCellValue): boolean =>
   a instanceof Date || b instanceof Date ? instantOf(a) === instantOf(b) : a === b;
@@ -202,7 +204,7 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     } else {
       sink.push({ kind, changes });
     }
-    options.applied(keysOf(changes));
+    options.applied(keysOf(changes), rowsOf(changes));
   };
 
   const clearOutcome = ({ row, key }: TableEditCell<T>): CellOutcome<T> => {
@@ -296,7 +298,7 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
 
     if (resolved.length > 0) {
       options.emit({ kind, changes: resolved });
-      options.applied(keysOf(resolved));
+      options.applied(keysOf(resolved), rowsOf(resolved));
     }
     return resolved.length;
   };

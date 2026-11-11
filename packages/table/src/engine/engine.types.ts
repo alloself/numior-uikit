@@ -208,7 +208,7 @@ export interface TableEngine<T> {
   setRows(rows: readonly T[]): void;
   run(query: TableQuery, options?: TableRunOptions): Promise<TableRunResult>;
   runSync(query: TableQuery): TableRunResult;
-  patch(query: TableQuery, keys: readonly string[]): void;
+  patch(query: TableQuery, keys: readonly string[], rows?: readonly T[]): void;
   visibleIndices(): Uint32Array;
   nodeAt(position: number): TableNode<T> | undefined;
   positionsOf(matches: (id: TableNodeId) => boolean, limit: number): TableNodePosition[];

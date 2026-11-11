@@ -19,6 +19,8 @@ type NumberRead<T> = (row: T) => number | null | undefined;
 
 type NumberColumn<T> = Exclude<TableEngineColumn<T>, { kind: 'string' }>;
 
+type NumberStore = Extract<ColumnStore, { kind: 'number' }>;
+
 export interface StoreRequest<T> {
   readonly column: TableEngineColumn<T>;
   readonly need: StoreNeed;
@@ -49,6 +51,33 @@ const numberReader = <T>(column: NumberColumn<T>): NumberRead<T> => {
 const dueNow = (count: number, deadline: number): boolean =>
   count % CHECK_INTERVAL === 0 && performance.now() >= deadline;
 
+const writeNumber = (
+  keys: Float64Array,
+  nulls: Uint8Array,
+  position: number,
+  value: number | null | undefined,
+): void => {
+  const missing = value === null || value === undefined || Number.isNaN(value);
+
+  nulls[position] = missing ? 1 : 0;
+  keys[position] = missing ? 0 : value;
+};
+
+export const rereadNumbers = <T>(
+  store: NumberStore,
+  column: NumberColumn<T>,
+  rows: readonly T[],
+  indices: readonly number[],
+): void => {
+  const read = numberReader(column);
+
+  for (const index of indices) {
+    const row = rows[index];
+
+    writeNumber(store.keys, store.nulls, index, row === undefined ? null : read(row));
+  }
+};
+
 const createNumberStoreJob = <T>(rows: readonly T[], read: NumberRead<T>): StoreJob => {
   const length = rows.length;
   const keys = new Float64Array(length);
@@ -61,13 +90,8 @@ const createNumberStoreJob = <T>(rows: readonly T[], read: NumberRead<T>): Store
     work: (deadline) => {
       while (position < length) {
         const row = rows[position];
-        const value = row === undefined ? null : read(row);
 
-        if (value === null || value === undefined || Number.isNaN(value)) {
-          nulls[position] = 1;
-        } else {
-          keys[position] = value;
-        }
+        writeNumber(keys, nulls, position, row === undefined ? null : read(row));
         position += 1;
 
         if (dueNow(position, deadline)) {

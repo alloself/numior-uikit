@@ -89,6 +89,24 @@ describe('NuiTable edits', () => {
     expect(grid.edits).toHaveLength(3);
   });
 
+  it('follows in the totals a value the owner changed and named by its range', async () => {
+    const rows = staff(20);
+    const grid = mountStaff({ rows });
+    const [, second] = rows;
+
+    await grid.nextPaint();
+
+    if (second === undefined) {
+      throw new Error('The staff is missing');
+    }
+
+    second.salary = 5010;
+    await grid.invalidate([range(1, 3, 1, 3)]);
+
+    expect(grid.cellText(1, 3)).toBe('5 010');
+    expect(grid.cellText(20, 3)).toBe('25 900');
+  });
+
   it('cuts editable cells and refuses read-only cells and too many cells at once', async () => {
     clipboard = installClipboard({ api: 'granted' });
     const grid = mountStaff({ props: { copyLimit: 6 } });

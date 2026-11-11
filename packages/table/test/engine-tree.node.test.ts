@@ -240,6 +240,11 @@ describe('createTableEngine trees', () => {
 
     expect(harness.engine.totals()).toEqual({ size: 40, rows: 2 });
     expect(harness.render(label)).toEqual(['docs -', '  a.md']);
+
+    file.size = 7;
+    harness.engine.patch(TOTALS, ['size'], [file]);
+
+    expect(harness.engine.totals()).toEqual({ size: 7, rows: 2 });
   });
 
   it('shows after every opening and closing what a fresh walk of the tree shows', () => {

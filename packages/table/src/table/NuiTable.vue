@@ -461,6 +461,7 @@ const NEST_DELAY = 600;
 const COPY_LIMIT = 200_000;
 const BLOCK_SIZE = 100;
 const SKELETON_ROWS = 5;
+const NAMED_ROWS = 10_000;
 const LONG_PRESS = 500;
 
 const sameSpot = (
@@ -2004,8 +2005,8 @@ const editing = useTableEditing<T>({
   },
   sink: () => commands,
   keys: () => dataKeys.value,
-  applied: (keys) => {
-    applyChanged(keys);
+  applied: (keys, changed) => {
+    applyChanged(keys, changed);
   },
   parse: (row, key, text) =>
     parseCell(columnAt(key), text, row, resolvedLocale.value, booleanTexts.value),
@@ -2621,12 +2622,12 @@ const sync = (): void => {
   }
 };
 
-const applyChanged = (keys: readonly string[]): void => {
+const applyChanged = (keys: readonly string[], changed?: readonly T[]): void => {
   totals.reset();
 
   const ran = currentQuery();
 
-  engine.value.patch(ran, keys);
+  engine.value.patch(ran, keys, changed);
   totals.take(ran);
   sync();
 };
@@ -2652,11 +2653,30 @@ const touchRows = (list: NuiTableRanges): void => {
   }
 };
 
+const rowsIn = (list: NuiTableRanges): T[] | undefined => {
+  const boxes = list.map(boxOf);
+  const count = boxes.reduce((sum, box) => sum + box.bottom - box.top + 1, 0);
+
+  if (count > NAMED_ROWS) {
+    return undefined;
+  }
+  return boxes.reduce<T[]>((found, box) => {
+    for (let position = box.top; position <= box.bottom; position += 1) {
+      const row = rowAtPosition(position);
+
+      if (row !== undefined) {
+        found.push(row);
+      }
+    }
+    return found;
+  }, []);
+};
+
 const invalidate = (list?: NuiTableRanges): void => {
   forgetCellReads(nextEdge);
 
   if (list === undefined || queryActive()) {
-    applyChanged(dataKeys.value);
+    applyChanged(dataKeys.value, list === undefined ? undefined : rowsIn(list));
     return;
   }
   touchRows(list);
