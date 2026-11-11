@@ -3,13 +3,14 @@
     ref="region"
     role="region"
     class="nui-toaster"
-    :class="[`nui-toaster--placement-${placement}`, { 'nui-toaster--expanded': expand }]"
+    :class="[
+      `nui-toaster--placement-${placement}`,
+      { 'nui-toaster--expanded': expand, 'nui-toaster--hovered': hover.hovered.value },
+    ]"
     :style="regionStyle"
     aria-live="polite"
     :aria-label="labelText"
     v-bind="{ ...contentAttrs, ...$attrs }"
-    @pointerenter="onPointerenter"
-    @pointerleave="onPointerleave"
     @focusin="onFocusin"
     @focusout="onFocusout"
   >
@@ -42,7 +43,14 @@ import {
   watch,
 } from 'vue';
 import { useEventListener, useResizeObserver } from '@vueuse/core';
-import { ToastHold, useMessages, usePopover, useToastStore, type Toast } from '@numior/primitives';
+import {
+  ToastHold,
+  useMessages,
+  usePopover,
+  useRestingHover,
+  useToastStore,
+  type Toast,
+} from '@numior/primitives';
 import NuiToast from './NuiToast.vue';
 import { focusTargetIn, keyboardFocused, stayingNear } from './toast-focus';
 import { frontSize, itemStyle, layoutStack } from './toast-stack';
@@ -67,6 +75,7 @@ const visible = store.visible;
 const open = ref(true);
 const regionElement = useTemplateRef<HTMLElement>('region');
 const { contentAttrs, raise } = usePopover(regionElement, { open, id: () => id, mode: 'manual' });
+const hover = useRestingHover(regionElement);
 
 const sizes = shallowReactive(new Map<string, number>());
 const labelText = computed(() => label ?? messages.value.label);
@@ -161,7 +170,7 @@ watch(
   visible,
   (toasts) => {
     if (toasts.length === 0) {
-      store.release(ToastHold.Hover);
+      hover.end();
     }
     if (regionElement.value?.contains(document.activeElement) !== true) {
       store.release(ToastHold.Focus);
@@ -170,13 +179,17 @@ watch(
   { flush: 'post' },
 );
 
-const onPointerenter = (): void => {
-  store.hold(ToastHold.Hover);
-};
-
-const onPointerleave = (): void => {
-  store.release(ToastHold.Hover);
-};
+watch(
+  hover.hovered,
+  (hovered) => {
+    if (hovered) {
+      store.hold(ToastHold.Hover);
+    } else {
+      store.release(ToastHold.Hover);
+    }
+  },
+  { flush: 'sync' },
+);
 
 const onFocusin = (event: FocusEvent): void => {
   const previous = event.relatedTarget;

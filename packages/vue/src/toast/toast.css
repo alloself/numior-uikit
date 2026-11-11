@@ -111,7 +111,8 @@
   opacity: 0;
   pointer-events: none;
 }
-.nui-toaster:not(:hover, :focus-within, .nui-toaster--expanded) .nui-toaster__item--behind {
+.nui-toaster:not(.nui-toaster--hovered, :focus-within, .nui-toaster--expanded)
+  .nui-toaster__item--behind {
   --_position: calc(min(var(--_index), 2) * var(--_peek));
   --_scale: calc(1 - min(var(--_index), 2) * 0.05);
 
@@ -121,7 +122,9 @@
   box-shadow: var(--nui-shadow-md);
   opacity: clamp(0, 3 - var(--_index), 1);
 }
-.nui-toaster:not(:hover, :focus-within, .nui-toaster--expanded) .nui-toaster__item--behind > * {
+.nui-toaster:not(.nui-toaster--hovered, :focus-within, .nui-toaster--expanded)
+  .nui-toaster__item--behind
+  > * {
   opacity: 0;
 }
 

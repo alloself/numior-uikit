@@ -3,6 +3,8 @@ export { Key } from './keyboard/key.types';
 export { isComposing, isComposingInput } from './keyboard/composition';
 export { InputType } from './input/input.types';
 export { PointerType } from './pointer/pointer.types';
+export { useRestingHover } from './pointer/useRestingHover';
+export type { RestingHover } from './pointer/useRestingHover';
 export {
   FIELD_KEY,
   createFieldContext,

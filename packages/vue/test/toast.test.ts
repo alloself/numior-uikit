@@ -203,6 +203,50 @@ describe('NuiToaster and NuiToast', () => {
     toaster.unmount();
   });
 
+  it('swaps a toast in place when its action shows another one under the same id', async () => {
+    const toaster = ToasterDriver.mount({ storeOptions: { duration: 0 } });
+
+    const id = toaster.error('Not saved', {
+      action: { label: 'Retry', onClick: () => toaster.success('Saved', { id }) },
+    });
+
+    toaster.show({ title: 'Plain' });
+    await toaster.advance(0);
+
+    await toaster.toast(1).clickAction();
+
+    expect(toaster.toasts.map((toast) => toast.title)).toEqual(['Plain', 'Saved']);
+    expect(toaster.toast(1).leaving).toBe(false);
+    expect(toaster.toast(1).hasAction).toBe(false);
+
+    toaster.unmount();
+  });
+
+  it('keeps the stack open and held when the toast under a mouse at rest closes', async () => {
+    const toaster = ToasterDriver.mount({ storeOptions: { duration: 1000 } });
+
+    toaster.show({ title: 'Stays' });
+    toaster.show({ title: 'Goes' });
+    await toaster.advance(0);
+    await toaster.restOnStack();
+
+    await toaster.toast(0).clickClose();
+    await toaster.loseWhatIsUnderThePointer();
+    await toaster.advance(5000);
+
+    expect(toaster.stackOpen).toBe(true);
+    expect(toaster.toasts.map((toast) => toast.title)).toEqual(['Stays']);
+    expect(toaster.toast(0).leaving).toBe(false);
+
+    await toaster.movePointerAway();
+    await toaster.advance(1000);
+
+    expect(toaster.stackOpen).toBe(false);
+    expect(toaster.toast(0).leaving).toBe(true);
+
+    toaster.unmount();
+  });
+
   it('lets the slot render each toast and works without the plugin', async () => {
     const custom = ToasterDriver.mount({ customToast: true, storeOptions: { duration: 0 } });
     custom.show({ title: 'Custom' });

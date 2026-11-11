@@ -102,6 +102,23 @@ export class FeedbackSection {
     return box;
   }
 
+  async painted(): Promise<void> {
+    await this.toaster.evaluate(
+      () =>
+        new Promise((resolve) => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(resolve);
+          });
+        }),
+    );
+  }
+
+  async stackOpen(): Promise<boolean> {
+    const [front, behind] = [await this.stackBox(0), await this.stackBox(1)];
+
+    return behind.y >= bottomOf(front);
+  }
+
   isSquare(target: Locator): Promise<boolean> {
     return target.evaluate((element) => {
       const rect = element.getBoundingClientRect();

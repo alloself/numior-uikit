@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="root"
     class="nui-toast nui-layer"
     :class="[`nui-toast--tone-${toast.tone}`, { 'nui-toast--leaving': toast.leaving }]"
     :role="toast.tone === NuiTone.Error ? 'alert' : undefined"
@@ -35,17 +36,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, useTemplateRef } from 'vue';
 import { useMessages, useToastStore } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { toneIcon } from '../shared/tone-icon';
+import { keyboardFocused } from './toast-focus';
 import { toastMessages } from './toast.messages';
 import type { NuiToastProps } from './toast.types';
 import { NuiTone } from '../shared/scale.types';
 
 const { toast, closeLabel } = defineProps<NuiToastProps>();
 
+const root = useTemplateRef<HTMLElement>('root');
 const store = useToastStore();
 const messages = useMessages(toastMessages);
 
@@ -57,8 +60,22 @@ const dismiss = (): void => {
 };
 
 const runAction = (): void => {
+  const active = document.activeElement;
+  const focused = active instanceof HTMLElement && root.value?.contains(active) === true;
+  const byKeyboard = keyboardFocused();
+
   toast.action?.onClick();
-  dismiss();
+
+  if (store.toasts.value.includes(toast)) {
+    dismiss();
+    return;
+  }
+
+  if (focused && byKeyboard) {
+    root.value?.focus();
+  } else if (focused) {
+    active.blur();
+  }
 };
 
 const onEscape = (): void => {

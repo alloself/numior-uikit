@@ -45,6 +45,10 @@ On hover or focus the stack expands into a list, and with `expand` it stays expa
 pointer is over the stack, the focus is inside it or the browser tab is hidden, the countdown
 pauses. It pauses for toasts that appear or leave the queue in the meantime too.
 
+The stack stays expanded when the toast under a resting pointer closes, and collapses when the
+pointer moves away. A toast closes after its action. When the action shows a toast with the same
+`id`, that toast takes its place.
+
 When a focused toast closes, keyboard focus moves to the neighbouring one and, after the last
 one, back to where it entered the stack from. After closing with the pointer the focus returns
 at once, and the remaining toasts keep counting.

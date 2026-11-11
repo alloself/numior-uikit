@@ -111,6 +111,49 @@ test.describe('feedback', () => {
     await expect(rest).toBeHidden({ timeout: 7000 });
   });
 
+  test('the stack stays open when the toast under a pointer at rest closes or is swapped by its action', async ({
+    playground,
+    feedback,
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'pointer scenario');
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await feedback.toastShow.click();
+    await feedback.toastError.click();
+    await feedback.toastShow.click();
+    await expect(feedback.stackItems).toHaveCount(3);
+
+    const failed = feedback.toastByText('Не удалось сохранить');
+
+    await feedback.stackItems.first().hover();
+    await expect.poll(() => feedback.stackOpen()).toBe(true);
+
+    const place = await boxOf(failed);
+
+    await feedback.actionOf(failed).click();
+
+    const saved = feedback.toastByText('Повторили');
+
+    await expect(saved).toBeVisible();
+    await expect(feedback.stackItems).toHaveCount(3);
+    expect((await boxOf(saved)).y).toBe(place.y);
+    expect(await feedback.stackOpen()).toBe(true);
+
+    await feedback.closeButtonOf(feedback.toastByText('Уведомление №1')).click();
+
+    await expect(feedback.stackItems).toHaveCount(2);
+
+    await feedback.painted();
+
+    expect(await feedback.stackOpen()).toBe(true);
+
+    await page.mouse.move(0, 0);
+
+    await expect.poll(() => feedback.stackOpen()).toBe(false);
+  });
+
   test('error toasts are alerts, keep focusable actions and close on Escape', async ({
     playground,
     feedback,
@@ -131,8 +174,10 @@ test.describe('feedback', () => {
     await expect(toast).toBeHidden();
 
     await feedback.toastError.click();
-    await feedback.actionOf(feedback.toastByText('Не удалось сохранить')).click();
-    await expect(feedback.toastByText('Повторили')).toBeVisible();
+    await feedback.actionOf(feedback.toastByText('Не удалось сохранить')).focus();
+    await page.keyboard.press('Enter');
+
+    await expect(feedback.toastByText('Повторили')).toBeFocused();
     await expect(feedback.toastByText('Не удалось сохранить')).toBeHidden();
   });
 

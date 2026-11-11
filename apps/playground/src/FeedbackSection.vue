@@ -120,12 +120,12 @@ const quick = (): void => {
 };
 
 const failure = (): void => {
-  toast.error('Не удалось сохранить', {
+  const id = toast.error('Не удалось сохранить', {
     duration: 0,
     action: {
       label: 'Повторить',
       onClick: () => {
-        toast.success('Повторили');
+        toast.success('Повторили', { id });
       },
     },
   });
