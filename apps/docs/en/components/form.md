@@ -72,6 +72,10 @@ does nothing. When validation fails, the focus moves to the first field with an 
 `form.submit()` submits the form from code and returns `{ status, invalid, formErrors }`. A
 `type="reset"` button and a `resetForm()` call restore the initial values.
 
+To take the server answer as the new initial values after saving, call
+`helpers.resetForm({ values })` inside `onSubmit`. The submit then ends with the `submitted` status.
+A reset from outside during a submit cancels it: `signal` is aborted and the status is `aborted`.
+
 ## Hidden and disabled fields
 
 A field that is not rendered on the page is neither validated nor submitted, but keeps its value.
