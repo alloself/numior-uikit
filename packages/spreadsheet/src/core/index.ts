@@ -26,6 +26,7 @@ export {
   isCellError,
   numberValue,
   sameValue,
+  MAX_CELL_TEXT,
   textValue,
 } from './values';
 export { createWorkbook, validDefinedName, validSheetName } from './workbook';

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
   EN_FORMULAS,
+  MAX_CELL_TEXT,
   createCellEditor,
   createStepper,
   formatRange,
@@ -540,6 +541,40 @@ describe('writing xlsx', () => {
 
     expect(lossy.ok).toBe(true);
     expect(await partOf(bytes, 'xl/worksheets/sheet1.xml')).not.toContain('scenario');
+  });
+
+  it('asks before it cuts a text longer than a cell of the file holds', async () => {
+    const read = await opened(await xlsxPackage({}));
+    const long = `${'a'.repeat(MAX_CELL_TEXT - 1)}\u{1F600}tail`;
+    const stepper = createStepper(read.book, read.calculator);
+
+    stepper.apply({
+      kind: 'setCells',
+      sheet: 'Sales',
+      cells: [
+        { row: 20, col: 0, content: { kind: 'value', value: { kind: 'string', value: long } } },
+        { row: 21, col: 0, content: { kind: 'value', value: { kind: 'string', value: 'short' } } },
+      ],
+    });
+
+    const refused = await writeWorkbook(read.book, read.calculator, { source: read.source });
+
+    const lossy = await writeWorkbook(read.book, read.calculator, {
+      source: read.source,
+      lossy: true,
+    });
+
+    const back = await opened(lossy.ok ? lossy.bytes : new Uint8Array());
+    const cells = back.book.sheet('Sales')?.cells;
+
+    expect(refused).toMatchObject({
+      ok: false,
+      report: { losses: [{ sheet: 'Sales', reason: 'long-text' }] },
+    });
+
+    expect(cells?.get(20, 0)).toEqual({ kind: 'string', value: 'a'.repeat(MAX_CELL_TEXT - 1) });
+    expect(cells?.get(21, 0)).toEqual({ kind: 'string', value: 'short' });
+    expect(read.book.sheet('Sales')?.cells.get(20, 0)).toEqual({ kind: 'string', value: long });
   });
 
   it('writes back as they were the formulas it could not read', async () => {

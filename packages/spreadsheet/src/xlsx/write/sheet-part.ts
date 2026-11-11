@@ -17,6 +17,7 @@ import { printFormula } from '../../core/formula/printer';
 import type { Sheet, Workbook } from '../../core/workbook';
 import { escapeAttribute, escapeText } from '../xml/writer';
 import { encodeXstring } from '../xml/xstring';
+import { cellText } from './long-text';
 import { concatBytes } from '../zip/streams';
 import type { Bytes } from '../zip/zip.types';
 import { withFuturePrefixes } from './future-functions';
@@ -203,8 +204,8 @@ const valueParts = (
       return ['', inner(numberText(value.value))];
     case CellValueKind.String:
       return formula
-        ? [' t="str"', inner(escapeText(encodeXstring(value.value)))]
-        : [' t="s"', inner(String(strings.index(value.value)))];
+        ? [' t="str"', inner(escapeText(encodeXstring(cellText(value.value))))]
+        : [' t="s"', inner(String(strings.index(cellText(value.value))))];
     case CellValueKind.Boolean:
       return [' t="b"', inner(value.value ? '1' : '0')];
     case CellValueKind.Error:

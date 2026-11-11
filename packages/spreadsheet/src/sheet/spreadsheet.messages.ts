@@ -112,6 +112,8 @@ const EN_LOSSES: Readonly<Record<XlsxLoss['reason'], (sheet: string) => string>>
   'renamed-sheet': (sheet) =>
     `${sheet}: the sheet was renamed, so unsupported items that refer to it are dropped`,
   'pivot-source': (sheet) => `${sheet}: the source of a pivot table is gone, so it becomes values`,
+  'long-text': (sheet) =>
+    `${sheet}: a cell of the file holds 32,767 characters, longer texts are cut in the file`,
 };
 
 const RU_LOSSES: Readonly<Record<XlsxLoss['reason'], (sheet: string) => string>> = {
@@ -120,6 +122,8 @@ const RU_LOSSES: Readonly<Record<XlsxLoss['reason'], (sheet: string) => string>>
   'renamed-sheet': (sheet) =>
     `${sheet}: лист переименован, неподдержанные элементы со ссылкой на него будут удалены`,
   'pivot-source': (sheet) => `${sheet}: источник сводной таблицы удалён, она станет значениями`,
+  'long-text': (sheet) =>
+    `${sheet}: ячейка файла вмещает 32 767 символов, более длинный текст в файле будет обрезан`,
 };
 
 const EN_LIMITATIONS: Readonly<Record<XlsxLimitationCode, string>> = {

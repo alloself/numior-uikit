@@ -44,6 +44,9 @@ Without `saveFile` the browser downloads the file. Pass `saveFile` to send it to
 Parts of the file the component does not understand are saved unchanged. If an edit could affect
 them, the component asks whether to save with losses.
 
+A cell of an XLSX file holds 32,767 characters. The sheet keeps a longer text whole. On saving, the
+component asks about the loss and cuts such a text in the file only.
+
 ### Your own menu items
 
 The `contextMenu` function receives the sheet and the selection and returns items for the cell menu.

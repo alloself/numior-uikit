@@ -25,6 +25,7 @@ import {
 import { withoutConditional, withoutExtensions } from './conditional-part';
 import { createStringTable, writeSheetPart, type StringTable } from './sheet-part';
 import { fragmentXml } from './fragment-xml';
+import { textLosses } from './long-text';
 import {
   cleanHead,
   cleanTail,
@@ -577,6 +578,7 @@ const pivotLosses = (book: Workbook): XlsxLoss[] => {
 
 const planAll = async (
   book: Workbook,
+  calculator: Calculator,
   original: Original | undefined,
   lossy: boolean,
 ): Promise<{
@@ -592,7 +594,11 @@ const planAll = async (
   );
 
   const plans: SheetPlan[] = [];
-  const losses: XlsxLoss[] = keepPivots ? [] : pivotLosses(book);
+
+  const losses: XlsxLoss[] = [
+    ...(keepPivots ? [] : pivotLosses(book)),
+    ...textLosses(book, calculator),
+  ];
 
   for (const sheet of book.sheets) {
     const { plan, loss } = await planSheet(sheet, original, { lossy, charts, taken, keepPivots });
@@ -900,7 +906,13 @@ export const writeWorkbook = async (
   await nextTask();
 
   const original = source === undefined ? undefined : await openOriginal(source);
-  const { plans, losses, keepPivots } = await planAll(book, original, options.lossy === true);
+
+  const { plans, losses, keepPivots } = await planAll(
+    book,
+    calculator,
+    original,
+    options.lossy === true,
+  );
 
   if (losses.length > 0 && options.lossy !== true) {
     return { ok: false, report: { staleFormulas: 0, losses, copiedParts: 0 } };

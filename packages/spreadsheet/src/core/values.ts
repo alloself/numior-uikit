@@ -17,6 +17,8 @@ export const EMPTY: CellValue = { kind: 'empty' };
 export const numberValue = (value: number): CellValue =>
   Number.isFinite(value) ? { kind: 'number', value } : { kind: 'error', code: '#NUM!' };
 
+export const MAX_CELL_TEXT = 32_767;
+
 export const textValue = (value: string): CellValue => ({ kind: 'string', value });
 
 export const booleanValue = (value: boolean): CellValue => ({ kind: 'boolean', value });

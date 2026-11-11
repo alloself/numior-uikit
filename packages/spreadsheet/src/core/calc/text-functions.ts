@@ -1,5 +1,5 @@
 import { EN_NUMBERS } from '../format/number-locale';
-import { numberValue, textValue } from '../values';
+import { MAX_CELL_TEXT, numberValue, textValue } from '../values';
 import { MANY } from './aggregate';
 import { matrixOf } from './array';
 import { EvalValueKind, type EvalValue, type FunctionArgs, type FunctionSpec } from './calc.types';
@@ -7,8 +7,6 @@ import { numberFromText, raise, toText } from './coerce';
 import { wildcardSource } from './criteria';
 import { defineFunction } from './registry';
 import { CellValueKind } from '../cell.types';
-
-const MAX_TEXT = 32_767;
 
 const WINDOWS_1252 = [
   0x20_ac, 0x81, 0x20_1a, 0x1_92, 0x20_1e, 0x20_26, 0x20_20, 0x20_21, 0x2_c6, 0x20_30, 0x1_60,
@@ -21,7 +19,7 @@ const LETTER = /\p{L}/u;
 const PRINTABLE = 32;
 
 const limited = (text: string): EvalValue =>
-  text.length > MAX_TEXT ? raise('#VALUE!') : textValue(text);
+  text.length > MAX_CELL_TEXT ? raise('#VALUE!') : textValue(text);
 
 const count = (args: FunctionArgs, index: number, fallback: number): number => {
   const value = Math.trunc(args.number(index, fallback));
