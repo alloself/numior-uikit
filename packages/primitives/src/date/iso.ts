@@ -11,6 +11,14 @@ export interface DateRange {
 
 const ISO_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
+const FIRST_YEAR = 100;
+
+const LAST_YEAR = 9999;
+
+export const MIN_ISO_DATE = '0100-01-01';
+
+export const MAX_ISO_DATE = '9999-12-31';
+
 const pad = (value: number, length: number): string => String(value).padStart(length, '0');
 
 export const toUtc = (parts: DateParts): number => Date.UTC(parts.year, parts.month - 1, parts.day);
@@ -27,11 +35,20 @@ export const formatIsoDate = (parts: DateParts): string =>
 export const partsOf = (parts: DateParts): DateParts | null => {
   const normalized = fromUtc(toUtc(parts));
 
-  return normalized.year === parts.year &&
+  return parts.year >= FIRST_YEAR &&
+    parts.year <= LAST_YEAR &&
+    normalized.year === parts.year &&
     normalized.month === parts.month &&
     normalized.day === parts.day
     ? normalized
     : null;
+};
+
+export const closestIsoDate = (parts: DateParts): string => {
+  if (parts.year < FIRST_YEAR) {
+    return MIN_ISO_DATE;
+  }
+  return parts.year > LAST_YEAR ? MAX_ISO_DATE : formatIsoDate(parts);
 };
 
 export const localToday = (): string => {

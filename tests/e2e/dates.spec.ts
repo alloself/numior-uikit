@@ -113,6 +113,28 @@ test.describe('dates', () => {
     await expect.poll(async () => (await dates.readOutput()).picked).toBeNull();
   });
 
+  test('date picker opens its calendar on the last day the calendar has and stops there', async ({
+    playground,
+    dates,
+    page,
+  }) => {
+    await playground.open();
+    const input = dates.input(dates.picker);
+
+    await input.scrollIntoViewIfNeeded();
+    await input.fill('31.12.9999');
+    await expect.poll(async () => (await dates.readOutput()).picked).toBe('9999-12-31');
+
+    await dates.openButton(dates.picker).click();
+    await expect(dates.day(dates.picker, '9999-12-31')).toBeFocused();
+    await expect.poll(() => dates.captionText(dates.picker)).toBe('декабрь 9999');
+
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('PageDown');
+    await expect(dates.day(dates.picker, '9999-12-31')).toBeFocused();
+    await expect(dates.grid(dates.picker).locator('td:empty')).toHaveCount(9);
+  });
+
   test('date fields mask typed digits and a field opens its calendar from a click', async ({
     playground,
     dates,

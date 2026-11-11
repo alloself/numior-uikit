@@ -42,6 +42,21 @@ describe('iso dates', () => {
     expect(compareIsoDates('2026-02-01', '2026-02-01')).toBe(0);
   });
 
+  it('stops at either end of the calendar instead of stepping out of it', () => {
+    expect(parseIsoDate('9999-12-31')).toEqual({ year: 9999, month: 12, day: 31 });
+    expect(addDays('9999-12-31', 1)).toBe('9999-12-31');
+    expect(addDays('9999-12-28', 7)).toBe('9999-12-31');
+    expect(addMonths('9999-12-15', 1)).toBe('9999-12-31');
+    expect(addYears('9990-05-05', 12)).toBe('9999-12-31');
+    expect(endOfWeek('9999-12-29', 1)).toBe('9999-12-31');
+    expect(addDays('0100-01-01', -1)).toBe('0100-01-01');
+    expect(addMonths('0100-01-20', -1)).toBe('0100-01-01');
+    expect(startOfWeek('0100-01-02', 1)).toBe('0100-01-01');
+    expect(addMonthKeys('9999-12', 1)).toBe('9999-12');
+    expect(addMonthKeys('9999-05', 12)).toBe('9999-05');
+    expect(addMonthKeys('0100-01', -1)).toBe('0100-01');
+  });
+
   it('reads today from the local clock and from UTC', () => {
     const zone = process.env.TZ;
 

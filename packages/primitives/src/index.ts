@@ -65,6 +65,8 @@ export {
   isIsoDate,
   isWithin,
   localToday,
+  MAX_ISO_DATE,
+  MIN_ISO_DATE,
   normalizeRange,
   parseIsoDate,
   utcToday,
@@ -92,7 +94,7 @@ export {
   monthGrid,
   weekNumberOfRow,
 } from './date/grid';
-export type { MonthGridOptions } from './date/grid';
+export type { MonthGridCell, MonthGridOptions } from './date/grid';
 export { CellMove, DateField, DateMaskField, DateMaskPartKind, GridMove } from './date/date.types';
 export {
   formatDateLabel,

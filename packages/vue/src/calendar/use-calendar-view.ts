@@ -1,5 +1,6 @@
 import { computed, ref, shallowRef, type ComputedRef, type Ref } from 'vue';
-import { addMonthKeys } from '@numior/primitives';
+import { MAX_ISO_DATE, MIN_ISO_DATE, addMonthKeys, monthKeyOf } from '@numior/primitives';
+import { clamp } from '@vueuse/core';
 import { CalendarSlide, NuiCalendarView } from './calendar.types';
 
 export interface CalendarViewOptions {
@@ -29,6 +30,21 @@ const YEARS_PER_PAGE = 12;
 
 export const yearOfKey = (key: string): number => Number(key.slice(0, 4));
 
+const FIRST_YEAR = yearOfKey(MIN_ISO_DATE);
+
+const LAST_YEAR = yearOfKey(MAX_ISO_DATE);
+
+const pageOf = (year: number): number => Math.floor(year / YEARS_PER_PAGE) * YEARS_PER_PAGE;
+
+export const yearsOn = (page: number): number[] => {
+  const first = Math.max(page, FIRST_YEAR);
+  const last = Math.min(page + YEARS_PER_PAGE - 1, LAST_YEAR);
+
+  return Array.from({ length: last - first + 1 }, (_, offset) => first + offset);
+};
+
+const earlier = (left: string, right: string): string => (left < right ? left : right);
+
 export const useCalendarView = (options: CalendarViewOptions): CalendarView => {
   const state = shallowRef<ViewState>({ view: NuiCalendarView.Days });
   const view = computed(() => state.value.view);
@@ -36,27 +52,32 @@ export const useCalendarView = (options: CalendarViewOptions): CalendarView => {
   const slide = ref<CalendarSlide>();
   const month = computed(() => options.month.value ?? fallback.value);
 
-  const visibleMonths = computed(() =>
-    Array.from({ length: Math.max(1, options.months()) }, (_, offset) =>
-      addMonthKeys(month.value, offset),
-    ),
-  );
+  const count = computed(() => Math.max(1, options.months()));
+  const lastStart = computed(() => addMonthKeys(monthKeyOf(MAX_ISO_DATE), 1 - count.value));
+
+  const visibleMonths = computed(() => {
+    const start = earlier(month.value, lastStart.value);
+
+    return Array.from({ length: count.value }, (_, offset) => addMonthKeys(start, offset));
+  });
 
   const yearPage = computed(() => {
     const current = state.value;
     const page = current.view === NuiCalendarView.Years ? current.page : undefined;
 
-    return page ?? Math.floor(yearOfKey(month.value) / YEARS_PER_PAGE) * YEARS_PER_PAGE;
+    return page ?? pageOf(yearOfKey(month.value));
   });
 
   const setMonth = (key: string): void => {
-    if (key === month.value) {
+    const next = earlier(key, lastStart.value);
+
+    if (next === month.value) {
       return;
     }
 
-    slide.value = key > month.value ? CalendarSlide.Next : CalendarSlide.Prev;
-    fallback.value = key;
-    options.month.value = key;
+    slide.value = next > month.value ? CalendarSlide.Next : CalendarSlide.Prev;
+    fallback.value = next;
+    options.month.value = next;
   };
 
   const adopt = (key: string): void => {
@@ -75,7 +96,11 @@ export const useCalendarView = (options: CalendarViewOptions): CalendarView => {
       case NuiCalendarView.Years:
         state.value = {
           view: NuiCalendarView.Years,
-          page: yearPage.value + steps * YEARS_PER_PAGE,
+          page: clamp(
+            yearPage.value + steps * YEARS_PER_PAGE,
+            pageOf(FIRST_YEAR),
+            pageOf(LAST_YEAR),
+          ),
         };
 
         break;

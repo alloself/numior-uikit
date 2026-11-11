@@ -37,6 +37,9 @@ side by side.
 Dates are passed as `YYYY-MM-DD` strings, such as `2026-09-27`. Month and weekday names and the
 first day of the week come from the app language; `locale` and `weekStart` override them.
 
+The calendar runs from 1 January 100 to 31 December 9999. Neither the arrow keys nor the month
+buttons lead past these ends, and the day cells beyond them stay empty.
+
 Dates before `min`, after `max` and those for which `isDateDisabled` returns `true` cannot be
 picked. A click on the month name or the year opens a list of months or years.
 

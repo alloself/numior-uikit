@@ -394,6 +394,56 @@ describe('NuiCalendar', () => {
     expect(english.todayButton.text()).toBe('Now');
   });
 
+  it('shows the last month of the calendar and stops at its last day', async () => {
+    const calendar = CalendarDriver.mount({ modelValue: '9999-12-31', props: { months: 2 } });
+
+    expect(calendar.captions).toEqual(['ноябрь 9999', 'декабрь 9999']);
+    expect(calendar.days.at(-1)).toBe('9999-12-31');
+
+    await calendar.focusDay('9999-12-31');
+    await calendar.press('ArrowRight');
+    await calendar.press('PageDown');
+
+    expect(calendar.focusedDate).toBe('9999-12-31');
+
+    await calendar.clickNav('next', 1);
+
+    expect(calendar.captions).toEqual(['ноябрь 9999', 'декабрь 9999']);
+
+    calendar.unmount();
+  });
+
+  it('offers only the years and months the calendar has', async () => {
+    const calendar = CalendarDriver.mount({ modelValue: '9999-12-31' });
+
+    await calendar.clickTitle('year');
+
+    expect(calendar.options).toEqual(['9996', '9997', '9998', '9999']);
+
+    await calendar.press('PageDown');
+
+    expect(calendar.options).toEqual(['9996', '9997', '9998', '9999']);
+
+    await calendar.clickOption('9998');
+    await calendar.clickNav('next');
+    await calendar.clickNav('next');
+
+    expect(calendar.captions).toEqual(['декабрь 9999']);
+
+    calendar.unmount();
+  });
+
+  it('keeps a year below a thousand whole in the month picker', async () => {
+    const calendar = CalendarDriver.mount({ modelValue: '0201-05-05' });
+
+    await calendar.clickTitle('month');
+    await calendar.clickOption('июнь');
+
+    expect(calendar.focusedDate).toBe('0201-06-05');
+
+    calendar.unmount();
+  });
+
   it('gives every month its own picker id so two-month calendars keep their controls unambiguous', async () => {
     const calendar = CalendarDriver.mount({ modelValue: '2026-09-24', props: { months: 2 } });
 

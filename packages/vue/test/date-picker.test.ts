@@ -278,6 +278,17 @@ describe('NuiDatePicker', () => {
     });
   });
 
+  it('reads a pasted date with one digit too many in the year as far as the pattern goes', async () => {
+    const picker = DatePickerDriver.mount({ modelValue: '2026-09-24' });
+
+    await picker.type('22.11.20011');
+
+    expect(picker.text).toBe('22.11.2001');
+    expect(picker.value).toBe('2001-11-22');
+
+    picker.unmount();
+  });
+
   it('keeps typed dates outside min, max and isDateDisabled out of the model and rolls the text back', async () => {
     const picker = DatePickerDriver.mount({
       modelValue: '2026-09-24',

@@ -36,7 +36,7 @@ import {
 } from '@numior/primitives';
 import { NuiCalendarView, type CalendarPickerKind } from './calendar.types';
 import { useCalendar } from './calendar-context';
-import { yearOfKey } from './use-calendar-view';
+import { yearOfKey, yearsOn } from './use-calendar-view';
 
 interface PickerOption {
   readonly key: string;
@@ -45,7 +45,7 @@ interface PickerOption {
 
 const COLUMNS = 3;
 
-const pad = (value: number): string => String(value).padStart(2, '0');
+const pad = (value: number, length = 2): string => String(value).padStart(length, '0');
 
 const { kind, month } = defineProps<{ kind: CalendarPickerKind; month: string }>();
 
@@ -58,16 +58,15 @@ const options = computed<PickerOption[]>(() => {
     const year = yearOfKey(calendar.month.value);
 
     return monthLabels(calendar.locale.value, 'short').map((label, index) => ({
-      key: `${year}-${pad(index + 1)}`,
+      key: `${pad(year, 4)}-${pad(index + 1)}`,
       label,
     }));
   }
 
-  return Array.from({ length: 12 }, (_, offset) => {
-    const year = calendar.yearPage.value + offset;
-
-    return { key: String(year), label: formatDayNumber(year, calendar.locale.value) };
-  });
+  return yearsOn(calendar.yearPage.value).map((year) => ({
+    key: String(year),
+    label: formatDayNumber(year, calendar.locale.value),
+  }));
 });
 
 const current = computed(() =>
