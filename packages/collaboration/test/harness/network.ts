@@ -21,7 +21,7 @@ import {
   sendableSteps,
   type CollabClient,
 } from '../../src';
-import { createTraffic, createWire, settleAll, type NetworkTraffic } from './wire';
+import { RETRY, createTraffic, createWire, mendAll, settleAll, type NetworkTraffic } from './wire';
 
 export interface NetworkClient {
   readonly state: () => EditorState;
@@ -30,13 +30,19 @@ export interface NetworkClient {
   readonly run: (command: Command) => boolean;
   readonly toServer: () => boolean;
   readonly toClient: () => boolean;
+  readonly cut: () => void;
+  readonly relink: () => void;
+  readonly late: () => boolean;
   readonly pending: () => number;
   readonly version: () => number;
+  readonly stop: () => void;
 }
 
 export interface CollabNetwork {
   readonly clients: readonly NetworkClient[];
   readonly settle: () => void;
+  readonly mend: () => void;
+  readonly close: () => void;
   readonly server: () => unknown;
   readonly docs: () => readonly DocJSON[];
   readonly traffic: () => NetworkTraffic;
@@ -75,6 +81,7 @@ export const createNetwork = (doc: Doc, names: readonly string[]): CollabNetwork
       clientId: name,
       schema: { name: doc.schema.name, version: doc.schema.version },
       transport: wire.transport,
+      retry: RETRY,
       document: editorCollabDocument({
         schema: doc.schema,
         getState: () => state,
@@ -107,8 +114,12 @@ export const createNetwork = (doc: Doc, names: readonly string[]): CollabNetwork
       },
       toServer: wire.toServer,
       toClient: wire.toClient,
+      cut: wire.cut,
+      relink: wire.relink,
+      late: wire.late,
       pending: () => sendableSteps(state).length,
       version: () => collabVersion(state),
+      stop: client.stop,
     };
   });
 
@@ -116,9 +127,21 @@ export const createNetwork = (doc: Doc, names: readonly string[]): CollabNetwork
     settleAll(clients);
   };
 
+  const mend = (): void => {
+    mendAll(clients);
+  };
+
+  const close = (): void => {
+    clients.forEach((client) => {
+      client.stop();
+    });
+  };
+
   return {
     clients,
     settle,
+    mend,
+    close,
     server: authority.snapshot,
     docs: () => clients.map((client) => toJSON(client.state().doc)),
     traffic: () => ({ ...traffic }),

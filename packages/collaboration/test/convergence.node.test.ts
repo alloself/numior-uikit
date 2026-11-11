@@ -10,9 +10,14 @@ import {
 } from '@numior/editor-core';
 import { fixtureSchema, generateDoc } from '@numior/editor-core/fixtures';
 import * as fc from 'fast-check';
-import { describe, expect, it } from 'vite-plus/test';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { CollabStatusKind } from '../src';
-import { createNetwork, type CollabNetwork, type NetworkClient } from './harness/network';
+import {
+  createNetwork,
+  paragraphs,
+  type CollabNetwork,
+  type NetworkClient,
+} from './harness/network';
 
 type Change = (client: NetworkClient) => void;
 
@@ -126,6 +131,23 @@ const receiving: Change = (client) => {
   client.toClient();
 };
 
+const cutting: Change = (client) => {
+  client.cut();
+};
+
+const relinking: Change = (client) => {
+  client.relink();
+};
+
+const lagging: Change = (client) => {
+  client.late();
+};
+
+const linkArbitrary = fc.constantFrom(cutting, relinking, lagging);
+
+const breaking = (actions: fc.Arbitrary<Change>): fc.Arbitrary<Change> =>
+  fc.oneof({ weight: 8, arbitrary: actions }, { weight: 2, arbitrary: linkArbitrary });
+
 const movingArbitrary = fc.tuple(fc.nat(), fc.nat()).map(([from, to]) => moving(from, to));
 
 const typingArbitrary = fc
@@ -221,13 +243,46 @@ const actionArbitrary = fc.oneof(
 );
 
 describe('convergence under the server order', () => {
-  it.each([[2], [3]])('brings %i clients to one document', (count) => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('writes once what an old connection delivers after its client has come back', () => {
+    const network = createNetwork(paragraphs('one'), ['ann', 'bob']);
+    const [ann] = network.clients;
+
+    network.settle();
+
+    ann?.edit((tr) => {
+      tr.insertText('x', 1);
+    });
+
+    ann?.cut();
+    ann?.relink();
+    network.settle();
+    ann?.late();
+    network.mend();
+
+    const texts = network.clients.map((client) => client.state().doc.textBetween(0, 5, ''));
+
+    network.close();
+
+    expect(texts).toEqual(['xone', 'xone']);
+  });
+
+  it.each([[2], [3]])('brings %i clients to one document through broken links', (count) => {
     const names = ['ann', 'bob', 'cid'].slice(0, count);
 
     fc.assert(
       fc.property(
         fc.integer({ min: 1, max: 1000 }),
-        fc.array(fc.tuple(fc.nat({ max: count - 1 }), actionArbitrary), { maxLength: 40 }),
+        fc.array(fc.tuple(fc.nat({ max: count - 1 }), breaking(actionArbitrary)), {
+          maxLength: 40,
+        }),
         (seed, actions) => {
           const network = createNetwork(generateDoc(fixtureSchema, { blocks: 6, seed }), names);
 
@@ -238,7 +293,8 @@ describe('convergence under the server order', () => {
               action(client);
             }
           }
-          network.settle();
+          network.mend();
+          network.close();
 
           for (const doc of network.docs()) {
             expect(doc).toEqual(network.server());
@@ -279,14 +335,16 @@ describe('convergence under the server order', () => {
   });
 
   it.each([[2], [3]])(
-    'keeps every letter typed by %i clients while they carry and split blocks',
+    'keeps every letter typed by %i clients while they carry and split blocks and links break',
     (count) => {
       const names = ['ann', 'bob', 'cid'].slice(0, count);
 
       fc.assert(
         fc.property(
           fc.integer({ min: 1, max: 1000 }),
-          fc.array(fc.tuple(fc.nat({ max: count - 1 }), carryArbitrary), { maxLength: 40 }),
+          fc.array(fc.tuple(fc.nat({ max: count - 1 }), breaking(carryArbitrary)), {
+            maxLength: 40,
+          }),
           (seed, actions) => {
             const start = generateDoc(fixtureSchema, { blocks: 6, seed });
             const network = createNetwork(start, names);
@@ -297,7 +355,8 @@ describe('convergence under the server order', () => {
               return client === undefined ? letters : letters + typed(client, action);
             }, lettersOf(start));
 
-            network.settle();
+            network.mend();
+            network.close();
 
             for (const client of network.clients) {
               expect(lettersOf(client.state().doc)).toBe(written);

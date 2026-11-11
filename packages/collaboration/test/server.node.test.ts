@@ -30,6 +30,7 @@ import { paragraphs } from './harness/network';
 
 interface Peer extends RoomPeer {
   readonly inbox: ServerMessage[];
+  readonly drops: () => number;
 }
 
 interface LiveEditor {
@@ -45,18 +46,25 @@ const hello = (doc: string, clientId = doc): string =>
 
 const HEARTBEAT = 150;
 
+const SUPERSEDED = 4001;
+
 const PATIENCE = { timeout: 5000 };
 
 const GONE = JSON.stringify({ kind: ServerMessageKind.Presence, clientId: 'silent', state: null });
 
 const peerOf = (clientId: string): Peer => {
   const inbox: ServerMessage[] = [];
+  let dropped = 0;
 
   return {
     clientId,
     inbox,
+    drops: () => dropped,
     send: (message) => {
       inbox.push(message);
+    },
+    drop: () => {
+      dropped += 1;
     },
   };
 };
@@ -445,11 +453,12 @@ describe('reference room', () => {
     expect(bob.inbox.at(-1)).toMatchObject({ clientId: 'ann', state: null });
   });
 
-  it('keeps presence when an old socket of a reconnected client closes', () => {
+  it('takes a client that came back as its only connection', () => {
     const old = peerOf('ann');
     const bob = peerOf('bob');
     const room = joined(old, bob);
     const fresh = peerOf('ann');
+    const steps = insertionAt('x', 1);
 
     room.receive(old, { kind: ClientMessageKind.Presence, state: 'here' });
 
@@ -461,11 +470,20 @@ describe('reference room', () => {
       schema: SCHEMA,
     });
 
-    bob.inbox.length = 0;
-
+    room.receive(old, { kind: ClientMessageKind.Steps, seq: 1, version: 0, steps });
+    room.receive(fresh, { kind: ClientMessageKind.Steps, seq: 2, version: 0, steps });
     room.leave(old);
 
-    expect(bob.inbox).toEqual([]);
+    expect([old.drops(), fresh.drops()]).toEqual([1, 0]);
+    expect(old.inbox).toEqual([]);
+    expect(fresh.inbox.at(0)).toMatchObject({ kind: ServerMessageKind.Welcome, presence: [] });
+    expect(fresh.inbox.at(-1)).toEqual({ kind: ServerMessageKind.Accepted, seq: 2, version: 1 });
+
+    expect(bob.inbox).toEqual([
+      { kind: ServerMessageKind.Presence, clientId: 'ann', state: 'here' },
+      { kind: ServerMessageKind.Presence, clientId: 'ann', state: null },
+      { kind: ServerMessageKind.Steps, version: 0, clientId: 'ann', steps },
+    ]);
   });
 
   it('answers a ping of a client that hears nothing else', () => {
@@ -615,6 +633,37 @@ describe('reference server over WebSocket', () => {
     expect(watcher.readyState).toBe(WebSocket.OPEN);
 
     watcher.close();
+  });
+
+  it('closes the old socket of a client that came back over a new one', async () => {
+    running = await startCollabServer({
+      port: 0,
+      authorityFor: () => editorAuthority(paragraphs('one')),
+    });
+
+    const address = `ws://localhost:${running.port().toString()}`;
+    const old = new WebSocket(address);
+    const closes: number[] = [];
+
+    old.addEventListener('close', (event) => {
+      closes.push(event.code);
+    });
+
+    old.addEventListener('open', () => {
+      old.send(hello('room', 'ann'));
+    });
+
+    old.addEventListener('message', () => {
+      const fresh = new WebSocket(address);
+
+      fresh.addEventListener('open', () => {
+        fresh.send(hello('room', 'ann'));
+      });
+    });
+
+    await vi.waitFor(() => {
+      expect(closes).toEqual([SUPERSEDED]);
+    }, PATIENCE);
   });
 
   it('answers garbage with a protocol error', async () => {

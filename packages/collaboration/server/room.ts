@@ -25,6 +25,7 @@ export interface RoomAuthority {
 export interface RoomPeer {
   readonly clientId: string;
   readonly send: (message: ServerMessage) => void;
+  readonly drop?: (() => void) | undefined;
 }
 
 export interface Room {
@@ -111,12 +112,30 @@ export const createRoom = (authority: RoomAuthority): Room => {
     }
   };
 
+  const leave = (peer: RoomPeer): void => {
+    peers.delete(peer);
+
+    if (presence.delete(peer)) {
+      announce(peer, null);
+    }
+  };
+
+  const supersede = (peer: RoomPeer): void => {
+    for (const old of peers) {
+      if (old.clientId === peer.clientId) {
+        leave(old);
+        old.drop?.();
+      }
+    }
+  };
+
   return {
     join: (peer, hello) => {
       if (!sameStamp(hello.schema, authority.schema)) {
         peer.send({ kind: ServerMessageKind.Error, code: ServerErrorCode.Schema });
         return false;
       }
+      supersede(peer);
       peers.add(peer);
 
       peer.send({
@@ -129,6 +148,10 @@ export const createRoom = (authority: RoomAuthority): Room => {
       return true;
     },
     receive: (peer, message) => {
+      if (!peers.has(peer)) {
+        return;
+      }
+
       switch (message.kind) {
         case ClientMessageKind.Steps:
           onSteps(peer, message);
@@ -147,12 +170,6 @@ export const createRoom = (authority: RoomAuthority): Room => {
           break;
       }
     },
-    leave: (peer) => {
-      peers.delete(peer);
-
-      if (presence.delete(peer) && ![...peers].some((p) => p.clientId === peer.clientId)) {
-        announce(peer, null);
-      }
-    },
+    leave,
   };
 };

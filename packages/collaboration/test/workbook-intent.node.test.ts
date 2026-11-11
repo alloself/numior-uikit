@@ -1,6 +1,6 @@
 import { columnName, type WorkbookStep } from '@numior/spreadsheet/core';
 import * as fc from 'fast-check';
-import { describe, expect, it } from 'vite-plus/test';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import {
   SHEET,
   WHOLE,
@@ -35,10 +35,13 @@ interface Desk {
   readonly net: BookNetwork;
   readonly ann: Author;
   readonly bob: Author;
+  readonly seeded: number;
 }
 
 interface Kept {
   readonly same: boolean;
+  readonly steps: number;
+  readonly deeds: number;
   readonly tokens: readonly string[];
   readonly written: readonly string[];
   readonly references: readonly (string | undefined)[];
@@ -65,7 +68,10 @@ type Move =
   | { readonly kind: typeof MoveKind.Redo }
   | { readonly kind: typeof MoveKind.Send }
   | { readonly kind: typeof MoveKind.Receive }
-  | { readonly kind: typeof MoveKind.Settle };
+  | { readonly kind: typeof MoveKind.Settle }
+  | { readonly kind: typeof MoveKind.Cut }
+  | { readonly kind: typeof MoveKind.Relink }
+  | { readonly kind: typeof MoveKind.Late };
 
 const DeedKind = { Token: 'token', Formula: 'formula', Lines: 'lines' } as const;
 
@@ -79,6 +85,9 @@ const MoveKind = {
   Send: 'send',
   Receive: 'receive',
   Settle: 'settle',
+  Cut: 'cut',
+  Relink: 'relink',
+  Late: 'late',
 } as const;
 
 const PROPERTY_TIMEOUT = 30_000;
@@ -112,7 +121,12 @@ const desk = (): Desk => {
   const net = createBookNetwork(['ann', 'bob'], SEED);
   const [ann, bob] = net.clients;
 
-  return { net, ann: authorOf('ann', 'bob', ann), bob: authorOf('bob', 'ann', bob) };
+  return {
+    net,
+    ann: authorOf('ann', 'bob', ann),
+    bob: authorOf('bob', 'ann', bob),
+    seeded: ann?.document.version() ?? 0,
+  };
 };
 
 const placesOf = (client: BookClient): Map<string, Place> => {
@@ -233,10 +247,19 @@ const play = (move: Move, author: Author, net: BookNetwork): void => {
     case MoveKind.Settle:
       net.settle();
       break;
+    case MoveKind.Cut:
+      author.client.cut();
+      break;
+    case MoveKind.Relink:
+      author.client.relink();
+      break;
+    case MoveKind.Late:
+      author.client.late();
+      break;
   }
 };
 
-const keptOf = (author: Author, reader: BookClient, other: BookClient): Kept => {
+const keptOf = (author: Author, reader: BookClient, other: BookClient, seeded = 0): Kept => {
   const own = new RegExp(`^${author.name}\\d+$`, 'u');
   const places = placesOf(reader);
   const mark = places.get(`${author.name}${FORMULA_MARK}`);
@@ -244,6 +267,8 @@ const keptOf = (author: Author, reader: BookClient, other: BookClient): Kept => 
 
   return {
     same: reader.dump() === other.dump(),
+    steps: (reader.document.version() ?? 0) - seeded,
+    deeds: author.done.length,
     tokens: [...places.keys()].filter((text) => own.test(text)).toSorted(),
     written: tokensOf(author).toSorted(),
     references: spots.map((place) =>
@@ -279,6 +304,13 @@ const writerArbitrary: fc.Arbitrary<Move> = fc.oneof(
   ...deliveries,
 );
 
+const breakerArbitrary: fc.Arbitrary<Move> = fc.oneof(
+  { weight: 8, arbitrary: writerArbitrary },
+  { weight: 1, arbitrary: fc.constant({ kind: MoveKind.Cut }) },
+  { weight: 1, arbitrary: fc.constant({ kind: MoveKind.Relink }) },
+  { weight: 1, arbitrary: fc.constant({ kind: MoveKind.Late }) },
+);
+
 const undoerArbitrary: fc.Arbitrary<Move> = fc.oneof(
   { weight: 3, arbitrary: roomArbitrary },
   { weight: 3, arbitrary: fc.constant({ kind: MoveKind.Undo }) },
@@ -289,27 +321,38 @@ const undoerArbitrary: fc.Arbitrary<Move> = fc.oneof(
 );
 
 describe('what authors meant in a shared book', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it(
-    'keeps every value and every reference to it while rows and columns arrive from both sides',
+    'keeps every value and every reference to it while rows and columns arrive from both sides and links break',
     () => {
       fc.assert(
         fc.property(
-          fc.array(fc.tuple(fc.boolean(), writerArbitrary), { maxLength: MOVES }),
+          fc.array(fc.tuple(fc.boolean(), breakerArbitrary), { maxLength: MOVES }),
           (moves) => {
-            const { net, ann, bob } = desk();
+            const table = desk();
+            const { net, ann, bob } = table;
 
             moves.forEach(([first, move]) => {
               play(move, first ? ann : bob, net);
             });
 
-            net.settle();
+            net.mend();
 
-            const hers = keptOf(ann, bob.client, ann.client);
-            const his = keptOf(bob, ann.client, bob.client);
+            const hers = keptOf(ann, bob.client, ann.client, table.seeded);
+            const his = keptOf(bob, ann.client, bob.client, table.seeded);
+            const deeds = hers.deeds + his.deeds;
 
             net.close();
 
             expect(hers.same).toBe(true);
+            expect([hers.steps, his.steps]).toEqual([deeds, deeds]);
             expect([hers.tokens, his.tokens]).toEqual([hers.written, his.written]);
             expect([hers.references, his.references]).toEqual([hers.referred, his.referred]);
           },

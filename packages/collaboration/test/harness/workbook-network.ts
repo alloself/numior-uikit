@@ -18,7 +18,7 @@ import {
 } from '@numior/spreadsheet/core';
 import { createRoom } from '../../server/room';
 import { createCollabClient, type CollabClient } from '../../src';
-import { createTraffic, createWire, settleAll, type NetworkTraffic } from './wire';
+import { RETRY, createTraffic, createWire, mendAll, settleAll, type NetworkTraffic } from './wire';
 
 export interface BookClient {
   readonly book: Workbook;
@@ -31,6 +31,9 @@ export interface BookClient {
   readonly redo: () => void;
   readonly toServer: () => boolean;
   readonly toClient: () => boolean;
+  readonly cut: () => void;
+  readonly relink: () => void;
+  readonly late: () => boolean;
   readonly dump: () => string;
   readonly text: (sheet: string, row: number, col: number) => string;
   readonly stop: () => void;
@@ -39,6 +42,7 @@ export interface BookClient {
 export interface BookNetwork {
   readonly clients: readonly BookClient[];
   readonly settle: () => void;
+  readonly mend: () => void;
   readonly traffic: () => NetworkTraffic;
   readonly close: () => void;
 }
@@ -156,6 +160,7 @@ export const createBookNetwork = (
       schema: WORKBOOK_SCHEMA,
       document,
       transport: wire.transport,
+      retry: RETRY,
     });
 
     wire.open();
@@ -182,6 +187,9 @@ export const createBookNetwork = (
       },
       toServer: wire.toServer,
       toClient: wire.toClient,
+      cut: wire.cut,
+      relink: wire.relink,
+      late: wire.late,
       dump: () => dumpBook(book, calculator),
       text: (sheet, row, col) => contentText(calculator, book, sheet, row, col),
       stop: client.stop,
@@ -200,5 +208,9 @@ export const createBookNetwork = (
     });
   };
 
-  return { clients, settle, traffic: () => ({ ...traffic }), close };
+  const mend = (): void => {
+    mendAll(clients);
+  };
+
+  return { clients, settle, mend, traffic: () => ({ ...traffic }), close };
 };

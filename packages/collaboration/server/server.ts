@@ -36,6 +36,8 @@ const parsed = (data: RawData): unknown => {
 
 const INTERNAL_ERROR = 1011;
 
+const SUPERSEDED = 4001;
+
 const HEARTBEAT = 30_000;
 
 const sender =
@@ -81,7 +83,14 @@ export const startCollabServer = async ({
 
   const joined = (socket: WebSocket, hello: HelloMessage): Session | undefined => {
     const room = roomOf(hello.doc);
-    const peer: RoomPeer = { clientId: hello.clientId, send: sender(socket) };
+
+    const peer: RoomPeer = {
+      clientId: hello.clientId,
+      send: sender(socket),
+      drop: () => {
+        socket.close(SUPERSEDED);
+      },
+    };
 
     return room.join(peer, hello) ? { room, peer } : undefined;
   };

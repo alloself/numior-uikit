@@ -12,7 +12,7 @@ import {
   type WorkbookStep,
 } from '@numior/spreadsheet/core';
 import * as fc from 'fast-check';
-import { describe, expect, it } from 'vite-plus/test';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { CollabStatusKind } from '../src';
 import {
   SHEET,
@@ -219,9 +219,31 @@ const actionArbitrary: fc.Arbitrary<Change> = fc.oneof(
       client.toClient();
     }),
   },
+  {
+    weight: 1,
+    arbitrary: fc.constantFrom<Change>(
+      (client) => {
+        client.cut();
+      },
+      (client) => {
+        client.relink();
+      },
+      (client) => {
+        client.late();
+      },
+    ),
+  },
 );
 
 describe('workbook steps through the collaboration envelope', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('loads the seeded book from the snapshot', () => {
     const [ann, bob] = pair(
       createBookNetwork(['ann', 'bob'], [seedSheet, writeCells(valueCell(0, 0, 'seed'))]),
@@ -717,7 +739,7 @@ describe('workbook steps through the collaboration envelope', () => {
   });
 
   it(
-    'brings every interleaving to one book',
+    'brings every interleaving to one book through broken links',
     () => {
       fc.assert(
         fc.property(
@@ -730,7 +752,8 @@ describe('workbook steps through the collaboration envelope', () => {
               act(who === 0 ? ann : bob);
             });
 
-            net.settle();
+            net.mend();
+            net.close();
 
             expect([ann.status(), bob.status()]).toEqual(BOTH_ONLINE);
             expect(ann.dump()).toBe(bob.dump());
