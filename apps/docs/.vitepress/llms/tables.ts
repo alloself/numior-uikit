@@ -20,7 +20,7 @@ const code = (text: string | undefined): string =>
 const textOf = (description: LocalizedText | undefined, locale: ExampleLocale): string =>
   description?.[locale] ?? '';
 
-export const tableOf = (head: Row, rows: readonly Row[]): string[] =>
+const tableOf = (head: Row, rows: readonly Row[]): string[] =>
   rows.length === 0
     ? []
     : [
