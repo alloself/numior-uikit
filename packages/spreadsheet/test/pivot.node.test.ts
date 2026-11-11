@@ -24,6 +24,15 @@ const SALES: readonly (readonly Input[])[] = [
   ['West', 'LA', 2022, 70],
 ];
 
+const GAPS: readonly (readonly Input[])[] = [
+  ['Product', 'Month', 'Sales'],
+  ['Pen', 1, 10],
+  ['Ink', 2, 7],
+  ['Pen', 3, 5],
+  ['Ink', 3, 1],
+  ['Cap', 1, 4],
+];
+
 const CAPTIONS = pivotCaptions('en');
 
 const LONG_ITEMS = 4000;
@@ -143,6 +152,9 @@ const grid = (changes: Partial<PivotDefinition>, rows: readonly (readonly Input[
 
   return lines.map((line) => line.join(' | '));
 };
+
+const gapped = (showAs: PivotValue['showAs']) =>
+  grid({ rows: [0], columns: [1], values: [{ ...sum(2, 'Shown'), showAs }] }, GAPS).slice(2);
 
 const rangeAt = (address: string) => {
   const range = parseRange(address);
@@ -357,6 +369,22 @@ describe('pivot engine', () => {
         ],
       }).slice(2),
     ).toEqual(['East |  | -250 | ', 'West |  | -80 | ', 'Grand Total |  | -330 | ']);
+  });
+
+  it('carries a running total over a month without sales and counts such a month as zero in a difference', () => {
+    expect(gapped({ kind: 'runTotal', field: 1 })).toEqual([
+      'Pen | 10 | 10 | 15 | ',
+      'Ink |  | 7 | 8 | ',
+      'Cap | 4 | 4 | 4 | ',
+      'Grand Total | 14 | 21 | 27 | ',
+    ]);
+
+    expect(gapped({ kind: 'difference', field: 1, item: 'previous' })).toEqual([
+      'Pen |  | -10 | 5 | ',
+      'Ink |  | 7 | -6 | ',
+      'Cap |  | -4 |  | ',
+      'Grand Total |  | -7 | -1 | ',
+    ]);
   });
 
   it('shows running totals, differences and shares of an item over thousands of items within the budget', () => {

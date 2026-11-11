@@ -41,6 +41,11 @@ interface Totals {
   readonly columns: number;
 }
 
+interface Run {
+  readonly sums: Float64Array;
+  readonly from: number;
+}
+
 interface Placed {
   readonly axis: Axis;
   readonly level: number;
@@ -396,16 +401,34 @@ export const normalizedPivot = (definition: PivotDefinition): PivotDefinition =>
     ? { ...definition, columns: [...definition.columns, VALUES_FIELD] }
     : definition;
 
+const amountOf = (value: CellValue): number =>
+  value.kind === CellValueKind.Number ? value.value : 0;
+
+const difference = (value: CellValue, base: CellValue): CellValue => {
+  if (value.kind === CellValueKind.Empty && base.kind === CellValueKind.Empty) {
+    return EMPTY;
+  }
+  if (value.kind !== CellValueKind.Number && value.kind !== CellValueKind.Empty) {
+    return value;
+  }
+  return base.kind === CellValueKind.Number || base.kind === CellValueKind.Empty
+    ? numberValue(amountOf(value) - amountOf(base))
+    : base;
+};
+
 const compared = (
   show: Extract<PivotShowAs, { readonly item: unknown }>,
   value: CellValue,
-  base: CellValue,
+  base: CellValue | undefined,
 ): CellValue => {
-  if (base.kind === CellValueKind.Empty || value.kind !== CellValueKind.Number) {
-    return base.kind === CellValueKind.Empty ? EMPTY : value;
+  if (base === undefined) {
+    return EMPTY;
   }
   if (show.kind === PivotShowAsKind.Difference) {
-    return base.kind === CellValueKind.Number ? numberValue(value.value - base.value) : base;
+    return difference(value, base);
+  }
+  if (base.kind === CellValueKind.Empty || value.kind !== CellValueKind.Number) {
+    return base.kind === CellValueKind.Empty ? EMPTY : value;
   }
 
   const share = ratio(value, base);
@@ -448,12 +471,17 @@ const createEvaluator = (
     return colLevel >= 0 ? { axis: columns, level: colLevel, line: col } : undefined;
   };
 
-  const shifted = (data: number, placed: Placed, other: number, item: number): CellValue => {
+  const shifted = (
+    data: number,
+    placed: Placed,
+    other: number,
+    item: number,
+  ): CellValue | undefined => {
     const items = realItems(placed.axis, placed.line);
     const node = nodeAt(placed.axis, items.with(placed.level, item));
 
     if (node === undefined) {
-      return EMPTY;
+      return undefined;
     }
     return placed.axis === rows ? raw(data, node, other) : raw(data, other, node);
   };
@@ -475,19 +503,23 @@ const createEvaluator = (
   };
 
   const runOf = memoize(
-    (data: number, field: number, placed: Placed, other: number): Float64Array => {
+    (data: number, field: number, placed: Placed, other: number): Run => {
       const order = orderOf(field);
-      const run = new Float64Array(order.length);
+      const sums = new Float64Array(order.length);
 
-      order.reduce((sum, item, at) => {
-        const total = shifted(data, placed, other, item);
-        const next = sum + (total.kind === CellValueKind.Number ? total.value : 0);
+      const { from } = order.reduce(
+        (run, item, at) => {
+          const total = shifted(data, placed, other, item);
+          const counted = total?.kind === CellValueKind.Number;
+          const sum = run.sum + (counted ? total.value : 0);
 
-        run[at] = next;
-        return next;
-      }, 0);
+          sums[at] = sum;
+          return { sum, from: counted ? Math.min(run.from, at) : run.from };
+        },
+        { sum: 0, from: order.length },
+      );
 
-      return run;
+      return { sums, from };
     },
     (data, field, placed, other) =>
       [
@@ -510,7 +542,7 @@ const createEvaluator = (
     const rank = ranks.get(show.field);
 
     if (placed === undefined || rank === undefined) {
-      return NOT_AVAILABLE;
+      return value.kind === CellValueKind.Empty ? EMPTY : NOT_AVAILABLE;
     }
 
     const current = realItems(placed.axis, placed.line)[placed.level];
@@ -520,12 +552,22 @@ const createEvaluator = (
       return EMPTY;
     }
     if (show.kind === PivotShowAsKind.RunTotal) {
-      return numberValue(runOf(data, show.field, placed, other)[rank[current] ?? -1] ?? 0);
+      const run = runOf(data, show.field, placed, other);
+      const at = rank[current] ?? -1;
+
+      return at < run.from ? EMPTY : numberValue(run.sums[at] ?? 0);
+    }
+    if (value.kind === CellValueKind.Empty && show.kind !== PivotShowAsKind.Difference) {
+      return EMPTY;
     }
 
     const item = baseItem(show, rank, current);
 
-    return compared(show, value, item === undefined ? EMPTY : shifted(data, placed, other, item));
+    return compared(
+      show,
+      value,
+      item === undefined ? undefined : shifted(data, placed, other, item),
+    );
   };
 
   const shown = (data: number, row: PivotLine, col: PivotLine): CellValue => {
@@ -548,7 +590,7 @@ const createEvaluator = (
         return ratio(share, whole);
       }
       default:
-        return value.kind === CellValueKind.Empty ? value : relative(data, value, row, col);
+        return relative(data, value, row, col);
     }
   };
 
