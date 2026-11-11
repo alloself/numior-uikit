@@ -7,7 +7,8 @@ import { parseBlocks, parseTokens } from './css.ts';
 import { enumerationMembers, exportedDeclarations } from './declarations.ts';
 import { applyDocs, checkDocs } from './docs.ts';
 import { parseIconAliases } from './icons.ts';
-import { legacyTokenCss } from './legacy-tokens.ts';
+import { compiledKitCss, isLayered, THEME_FILE } from './kit-css.ts';
+import { legacyTokenCss, legacyTokensOf } from './legacy-tokens.ts';
 import { componentReference } from './meta.ts';
 import { componentEntries, familyFile, familyStyleImport } from './sources.ts';
 import { parseThemeTokens } from './tokens.ts';
@@ -54,7 +55,12 @@ const CHECKER_OPTIONS: MetaCheckerOptions = {
 export const createReferenceChecker = (root: string): ReferenceChecker =>
   createChecker(join(root, 'tsconfig.reference.json'), CHECKER_OPTIONS);
 
-const stylesOf = (entry: ComponentEntry): ReferenceStyles | undefined => {
+const tokensOf = async (css: string): Promise<string[]> =>
+  isLayered(css)
+    ? legacyTokensOf(await compiledKitCss(css), readFileSync(THEME_FILE, 'utf8'))
+    : parseTokens(css);
+
+const stylesOf = async (entry: ComponentEntry): Promise<ReferenceStyles | undefined> => {
   const file = familyFile(entry, '.css');
   const importPath = familyStyleImport(entry);
 
@@ -63,7 +69,7 @@ const stylesOf = (entry: ComponentEntry): ReferenceStyles | undefined => {
   }
   const css = readFileSync(file, 'utf8');
 
-  return { import: importPath, blocks: parseBlocks(css), tokens: parseTokens(css) };
+  return { import: importPath, blocks: parseBlocks(css), tokens: await tokensOf(css) };
 };
 
 const loadCatalog = async (file: string): Promise<CatalogReference | undefined> =>
@@ -81,7 +87,7 @@ const collectComponent = async (
   const component = componentReference(
     entry,
     checker.getComponentMeta(entry.file),
-    stylesOf(entry),
+    await stylesOf(entry),
     catalog?.namespace,
     members,
   );
@@ -143,9 +149,7 @@ export const buildReference = async (
       declarations: [PRIMITIVES, ...PACKAGES].flatMap((pkg) =>
         exportedDeclarations(join(root, pkg.dir, 'dist/index.d.ts'), pkg.name, componentNames),
       ),
-      tokens: parseThemeTokens(
-        legacyTokenCss(readFileSync(join(root, 'packages/tokens/src/theme.css'), 'utf8')),
-      ),
+      tokens: parseThemeTokens(legacyTokenCss(readFileSync(THEME_FILE, 'utf8'))),
       icons: parseIconAliases(
         readFileSync(join(root, 'packages/primitives/src/icons/icon-aliases.ts'), 'utf8'),
       ),

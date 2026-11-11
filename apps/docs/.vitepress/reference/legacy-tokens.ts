@@ -5,6 +5,9 @@ const REFERENCE_RE = /var\((--[a-z0-9-]+)\)/g;
 const SINGLE_REFERENCE_RE = /^var\((--[a-z0-9-]+)\)$/;
 const STEP_RE = /^calc\(var\(--spacing\) \* (\d+)\)$/;
 const LENGTH_RE = /^([\d.]+)([a-z]+)$/;
+const SPACING_STEP_RE = /calc\(var\(--spacing\) \* -?(\d+)\)/g;
+const VARIABLE_RE = /var\((--[a-z0-9-]+)/g;
+const LEGACY_PREFIX = '--nui-';
 
 const squash = (value: string): string =>
   value.replace(/\s+/g, ' ').replace(/\( /g, '(').replace(/ \)/g, ')').trim();
@@ -57,4 +60,24 @@ export const legacyTokenCss = (themeCss: string): string => {
   };
 
   return aliases.map(([legacy, expression]) => `${legacy}: ${literalOf(expression)};`).join('\n');
+};
+
+export const legacyTokensOf = (compiledCss: string, themeCss: string): string[] => {
+  const names = legacyNamesOf(declarationsOf(themeCss, ALIAS_RE));
+
+  const steps = Array.from(
+    compiledCss.matchAll(SPACING_STEP_RE),
+    ([, step = '']) => `${LEGACY_PREFIX}space-${step}`,
+  );
+
+  const tokens = Array.from(compiledCss.replace(SPACING_STEP_RE, '').matchAll(VARIABLE_RE)).reduce(
+    (found, [, name = '']) => {
+      const legacy = name.startsWith(LEGACY_PREFIX) ? name : names.get(name);
+
+      return legacy === undefined ? found : found.add(legacy);
+    },
+    new Set(steps),
+  );
+
+  return [...tokens].toSorted();
 };

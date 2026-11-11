@@ -1,47 +1,49 @@
-.nui-tooltip {
-  --_side-x: 0;
-  --_side-y: -1;
-  --_shift: calc(-1 * var(--_side-x) * var(--nui-space-1))
-    calc(-1 * var(--_side-y) * var(--nui-space-1));
-  --_arrow: 0.5rem;
+@layer components {
+  .nui-tooltip {
+    --_side-x: 0;
+    --_side-y: -1;
+    --_shift: calc(-1 * var(--_side-x) * var(--nui-space-1))
+      calc(-1 * var(--_side-y) * var(--nui-space-1));
+    --_arrow: 0.5rem;
 
-  box-sizing: border-box;
-  position: fixed;
-  inset: auto;
-  max-inline-size: min(18rem, calc(100vw - var(--nui-space-4)));
-  margin: 0;
-  padding: var(--nui-space-1) var(--nui-space-2);
-  border: 0;
-  border-radius: var(--nui-radius-sm);
-  background: var(--nui-neutral);
-  color: var(--nui-neutral-foreground);
-  font-family: var(--nui-font);
-  font-size: var(--nui-font-size-xs);
-  line-height: var(--nui-line-height);
-  box-shadow: var(--nui-shadow-sm);
-  overflow: visible;
-  opacity: 0;
-  translate: var(--_shift);
-  transition:
-    opacity var(--nui-duration-fast) var(--nui-easing),
-    translate var(--nui-duration-fast) var(--nui-easing),
-    display var(--nui-duration-fast) allow-discrete,
-    overlay var(--nui-duration-fast) allow-discrete;
-}
-.nui-tooltip:popover-open {
-  opacity: 1;
-  translate: 0 0;
-}
-@starting-style {
-  .nui-tooltip:popover-open {
+    box-sizing: border-box;
+    position: fixed;
+    inset: auto;
+    max-inline-size: min(18rem, calc(100vw - var(--nui-space-4)));
+    margin: 0;
+    padding: var(--nui-space-1) var(--nui-space-2);
+    border: 0;
+    border-radius: var(--nui-radius-sm);
+    background: var(--nui-neutral);
+    color: var(--nui-neutral-foreground);
+    font-family: var(--nui-font);
+    font-size: var(--nui-font-size-xs);
+    line-height: var(--nui-line-height);
+    box-shadow: var(--nui-shadow-sm);
+    overflow: visible;
     opacity: 0;
     translate: var(--_shift);
+    transition:
+      opacity var(--nui-duration-fast) var(--nui-easing),
+      translate var(--nui-duration-fast) var(--nui-easing),
+      display var(--nui-duration-fast) allow-discrete,
+      overlay var(--nui-duration-fast) allow-discrete;
   }
-}
-.nui-tooltip__arrow {
-  position: absolute;
-  inline-size: var(--_arrow);
-  block-size: var(--_arrow);
-  background: inherit;
-  rotate: 45deg;
+  .nui-tooltip:popover-open {
+    opacity: 1;
+    translate: 0 0;
+  }
+  @starting-style {
+    .nui-tooltip:popover-open {
+      opacity: 0;
+      translate: var(--_shift);
+    }
+  }
+  .nui-tooltip__arrow {
+    position: absolute;
+    inline-size: var(--_arrow);
+    block-size: var(--_arrow);
+    background: inherit;
+    rotate: 45deg;
+  }
 }

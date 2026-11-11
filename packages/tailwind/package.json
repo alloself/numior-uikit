@@ -11,6 +11,10 @@
     "**/*.css"
   ],
   "exports": {
+    ".": {
+      "@numior/source": "./src/theme.css",
+      "default": "./dist/theme.css"
+    },
     "./theme.css": {
       "@numior/source": "./src/theme.css",
       "default": "./dist/theme.css"

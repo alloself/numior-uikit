@@ -2,17 +2,9 @@ import { createApp } from 'vue';
 import { createNuiConfig, type NuiLocaleMessages, type NuiVueMessages } from '@numior/vue';
 import { createShikiHighlighter } from '@numior/vue/shiki';
 import '@fontsource-variable/inter/index.css';
-import '@numior/tokens/base.css';
 import '@numior/tokens/accents.css';
-import '@numior/vue/styles.css';
-import '@numior/forms/styles.css';
-import '@numior/table/styles.css';
-import '@numior/charts/styles.css';
-import '@numior/spreadsheet/styles.css';
-import '@numior/content/styles.css';
-import '@numior/editor-vue/styles.css';
-import '@numior/tokens/prose.css';
 import './tailwind.css';
+import './layers.css';
 import './style.css';
 import App from './App.vue';
 

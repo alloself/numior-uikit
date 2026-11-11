@@ -1,66 +1,68 @@
-.nui-link {
-  --_tone: var(--nui-primary);
+@layer components {
+  .nui-link {
+    --_tone: var(--nui-primary);
 
-  box-sizing: border-box;
-  border-radius: var(--nui-radius-sm);
-  color: var(--_tone);
-  font: inherit;
-  text-decoration: underline;
-  text-decoration-color: color-mix(in oklab, var(--_tone) 40%, transparent);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
-  cursor: pointer;
-  transition:
-    color var(--nui-duration-fast) var(--nui-easing),
-    text-decoration-color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-link--tone-secondary {
-  --_tone: var(--nui-secondary);
-}
-.nui-link--tone-success {
-  --_tone: var(--nui-success);
-}
-.nui-link--tone-warning {
-  --_tone: var(--nui-warning);
-}
-.nui-link--tone-error {
-  --_tone: var(--nui-error);
-}
-.nui-link--tone-info {
-  --_tone: var(--nui-info);
-}
-.nui-link--tone-neutral {
-  --_tone: var(--nui-text);
-}
-.nui-link:hover {
-  color: color-mix(in oklab, var(--_tone), var(--nui-text) 15%);
-  text-decoration-color: currentColor;
-}
-.nui-link--underline-hover {
-  text-decoration-color: transparent;
-}
-.nui-link--underline-hover:hover,
-.nui-link--underline-hover:focus-visible {
-  text-decoration-color: currentColor;
-}
-.nui-link--underline-none,
-.nui-link--underline-none:hover {
-  text-decoration: none;
-}
-.nui-link:focus-visible {
-  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-  outline-offset: var(--nui-focus-ring-offset);
-}
-.nui-link--disabled,
-.nui-link--disabled:hover {
-  color: var(--nui-text-muted);
-  opacity: var(--nui-disabled-opacity);
-  text-decoration: none;
-  cursor: not-allowed;
-}
-.nui-link__icon {
-  inline-size: 0.9em;
-  block-size: 0.9em;
-  margin-inline-start: 0.25em;
-  vertical-align: -0.1em;
+    box-sizing: border-box;
+    border-radius: var(--nui-radius-sm);
+    color: var(--_tone);
+    font: inherit;
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklab, var(--_tone) 40%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+    transition:
+      color var(--nui-duration-fast) var(--nui-easing),
+      text-decoration-color var(--nui-duration-fast) var(--nui-easing);
+  }
+  .nui-link--tone-secondary {
+    --_tone: var(--nui-secondary);
+  }
+  .nui-link--tone-success {
+    --_tone: var(--nui-success);
+  }
+  .nui-link--tone-warning {
+    --_tone: var(--nui-warning);
+  }
+  .nui-link--tone-error {
+    --_tone: var(--nui-error);
+  }
+  .nui-link--tone-info {
+    --_tone: var(--nui-info);
+  }
+  .nui-link--tone-neutral {
+    --_tone: var(--nui-text);
+  }
+  .nui-link:hover {
+    color: color-mix(in oklab, var(--_tone), var(--nui-text) 15%);
+    text-decoration-color: currentColor;
+  }
+  .nui-link--underline-hover {
+    text-decoration-color: transparent;
+  }
+  .nui-link--underline-hover:hover,
+  .nui-link--underline-hover:focus-visible {
+    text-decoration-color: currentColor;
+  }
+  .nui-link--underline-none,
+  .nui-link--underline-none:hover {
+    text-decoration: none;
+  }
+  .nui-link:focus-visible {
+    outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+    outline-offset: var(--nui-focus-ring-offset);
+  }
+  .nui-link--disabled,
+  .nui-link--disabled:hover {
+    color: var(--nui-text-muted);
+    opacity: var(--nui-disabled-opacity);
+    text-decoration: none;
+    cursor: not-allowed;
+  }
+  .nui-link__icon {
+    inline-size: 0.9em;
+    block-size: 0.9em;
+    margin-inline-start: 0.25em;
+    vertical-align: -0.1em;
+  }
 }

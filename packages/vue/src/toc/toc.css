@@ -1,97 +1,99 @@
-.nui-toc {
-  --_indent: var(--nui-space-3);
-  --_line: var(--nui-border);
-  --_current: var(--nui-primary);
-  --_current-line: var(--nui-primary);
-  --_marker-size: 0.375rem;
+@layer components {
+  .nui-toc {
+    --_indent: var(--nui-space-3);
+    --_line: var(--nui-border);
+    --_current: var(--nui-primary);
+    --_current-line: var(--nui-primary);
+    --_marker-size: 0.375rem;
 
-  box-sizing: border-box;
-  display: block;
-  font-family: var(--nui-font);
-  font-size: var(--nui-font-size-sm);
-  line-height: var(--nui-line-height);
-  color: var(--nui-text-muted);
-}
-.nui-toc--marker-square {
-  --_line: transparent;
-  --_current: var(--nui-text);
-  --_current-line: transparent;
-}
-.nui-toc__title {
-  margin: 0 0 var(--nui-space-2);
-  color: var(--nui-text);
-  font-size: var(--nui-font-size-sm);
-  font-weight: var(--nui-font-weight-semibold);
-}
-.nui-toc__list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.nui-toc__list--depth-0 {
-  border-inline-start: 1px solid var(--_line);
-}
-.nui-toc__item {
-  margin: 0;
-}
-.nui-toc__link {
-  box-sizing: border-box;
-  position: relative;
-  display: block;
-  margin-inline-start: -1px;
-  padding-block: var(--nui-space-1);
-  padding-inline-start: calc(var(--_indent) + var(--nui-space-3) * var(--_depth, 0));
-  padding-inline-end: var(--nui-space-2);
-  border-inline-start: 2px solid transparent;
-  border-radius: 0 var(--nui-radius-sm) var(--nui-radius-sm) 0;
-  color: inherit;
-  text-decoration: none;
-  overflow-wrap: anywhere;
-  cursor: pointer;
-  transition:
-    color var(--nui-duration-fast) var(--nui-easing),
-    border-color var(--nui-duration-fast) var(--nui-easing),
-    background-color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-toc__list--depth-1 .nui-toc__link {
-  --_depth: 1;
-}
-.nui-toc__list--depth-2 .nui-toc__link {
-  --_depth: 2;
-}
-.nui-toc__list--depth-3 .nui-toc__link {
-  --_depth: 3;
-}
-.nui-toc__link:hover {
-  color: var(--nui-text);
-}
-.nui-toc__link:focus-visible {
-  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-  outline-offset: calc(var(--nui-focus-ring-offset) * -1);
-}
-.nui-toc__item--current > .nui-toc__link {
-  border-inline-start-color: var(--_current-line);
-  color: var(--_current);
-  font-weight: var(--nui-font-weight-medium);
-}
-.nui-toc--marker-square .nui-toc__link::before {
-  content: '';
-  position: absolute;
-  inset-block-start: calc(var(--nui-space-1) + (1lh - var(--_marker-size)) / 2);
-  inset-inline-start: -2px;
-  inline-size: var(--_marker-size);
-  block-size: var(--_marker-size);
-  background: var(--nui-primary);
-  opacity: 0;
-  scale: 0.5;
-  transition:
-    opacity var(--nui-duration-fast) var(--nui-easing),
-    scale var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-toc--marker-square .nui-toc__item--current > .nui-toc__link::before {
-  opacity: 1;
-  scale: 1;
-}
-.nui-toc__list:dir(rtl) .nui-toc__link {
-  border-radius: var(--nui-radius-sm) 0 0 var(--nui-radius-sm);
+    box-sizing: border-box;
+    display: block;
+    font-family: var(--nui-font);
+    font-size: var(--nui-font-size-sm);
+    line-height: var(--nui-line-height);
+    color: var(--nui-text-muted);
+  }
+  .nui-toc--marker-square {
+    --_line: transparent;
+    --_current: var(--nui-text);
+    --_current-line: transparent;
+  }
+  .nui-toc__title {
+    margin: 0 0 var(--nui-space-2);
+    color: var(--nui-text);
+    font-size: var(--nui-font-size-sm);
+    font-weight: var(--nui-font-weight-semibold);
+  }
+  .nui-toc__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .nui-toc__list--depth-0 {
+    border-inline-start: 1px solid var(--_line);
+  }
+  .nui-toc__item {
+    margin: 0;
+  }
+  .nui-toc__link {
+    box-sizing: border-box;
+    position: relative;
+    display: block;
+    margin-inline-start: -1px;
+    padding-block: var(--nui-space-1);
+    padding-inline-start: calc(var(--_indent) + var(--nui-space-3) * var(--_depth, 0));
+    padding-inline-end: var(--nui-space-2);
+    border-inline-start: 2px solid transparent;
+    border-radius: 0 var(--nui-radius-sm) var(--nui-radius-sm) 0;
+    color: inherit;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+    transition:
+      color var(--nui-duration-fast) var(--nui-easing),
+      border-color var(--nui-duration-fast) var(--nui-easing),
+      background-color var(--nui-duration-fast) var(--nui-easing);
+  }
+  .nui-toc__list--depth-1 .nui-toc__link {
+    --_depth: 1;
+  }
+  .nui-toc__list--depth-2 .nui-toc__link {
+    --_depth: 2;
+  }
+  .nui-toc__list--depth-3 .nui-toc__link {
+    --_depth: 3;
+  }
+  .nui-toc__link:hover {
+    color: var(--nui-text);
+  }
+  .nui-toc__link:focus-visible {
+    outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+    outline-offset: calc(var(--nui-focus-ring-offset) * -1);
+  }
+  .nui-toc__item--current > .nui-toc__link {
+    border-inline-start-color: var(--_current-line);
+    color: var(--_current);
+    font-weight: var(--nui-font-weight-medium);
+  }
+  .nui-toc--marker-square .nui-toc__link::before {
+    content: '';
+    position: absolute;
+    inset-block-start: calc(var(--nui-space-1) + (1lh - var(--_marker-size)) / 2);
+    inset-inline-start: -2px;
+    inline-size: var(--_marker-size);
+    block-size: var(--_marker-size);
+    background: var(--nui-primary);
+    opacity: 0;
+    scale: 0.5;
+    transition:
+      opacity var(--nui-duration-fast) var(--nui-easing),
+      scale var(--nui-duration-fast) var(--nui-easing);
+  }
+  .nui-toc--marker-square .nui-toc__item--current > .nui-toc__link::before {
+    opacity: 1;
+    scale: 1;
+  }
+  .nui-toc__list:dir(rtl) .nui-toc__link {
+    border-radius: var(--nui-radius-sm) 0 0 var(--nui-radius-sm);
+  }
 }

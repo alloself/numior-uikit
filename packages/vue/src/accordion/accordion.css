@@ -1,15 +1,17 @@
-.nui-accordion {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  font-family: var(--nui-font);
-}
-.nui-accordion--variant-plain .nui-accordion__item {
-  border-block-end: 1px solid var(--nui-border);
-}
-.nui-accordion--variant-plain .nui-accordion__item:first-child {
-  border-block-start: 1px solid var(--nui-border);
-}
-.nui-accordion--variant-card {
-  gap: var(--nui-space-2);
+@layer components {
+  .nui-accordion {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--nui-font);
+  }
+  .nui-accordion--variant-plain .nui-accordion__item {
+    border-block-end: 1px solid var(--nui-border);
+  }
+  .nui-accordion--variant-plain .nui-accordion__item:first-child {
+    border-block-start: 1px solid var(--nui-border);
+  }
+  .nui-accordion--variant-card {
+    gap: var(--nui-space-2);
+  }
 }

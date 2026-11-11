@@ -2,6 +2,7 @@ import {
   addComponent,
   addImports,
   addPlugin,
+  addTemplate,
   addVitePlugin,
   createResolver,
   defineNuxtModule,
@@ -11,6 +12,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { colorSchemeScript } from '@numior/vue';
 import type { Nuxt } from '@nuxt/schema';
 import { componentNames, composableNames, type ModuleNamespace } from './exports';
+import { kitEntry, layersEntry } from './kit-css';
 import type { NuiNuxtColorScheme, NuiNuxtOptions, NuiRuntimeOptions } from './module.types';
 
 export type {
@@ -30,12 +32,15 @@ interface Registration {
   readonly composables: boolean;
 }
 
+interface LayerOptions {
+  readonly packages: readonly string[];
+}
+
 type VitePlugins = Extract<Parameters<typeof addVitePlugin>[0], readonly unknown[]>;
 
 const VUE = '@numior/vue';
 const DEFAULT_STORAGE_KEY = 'nui-theme';
 const YIELDING_PRIORITY = -1;
-const KIT_CSS = ['@numior/tokens/theme.css', '@numior/tokens/base.css', `${VUE}/styles.css`];
 
 const OPTIONAL: readonly OptionalPackage[] = [
   { id: '@numior/forms', load: () => import('@numior/forms') },
@@ -52,6 +57,21 @@ const addTailwind = (): void => {
   if (isVitePlugins(plugins)) {
     addVitePlugin(plugins);
   }
+};
+
+const addKitCss = (nuxt: Nuxt, packages: readonly string[]): void => {
+  addTailwind();
+
+  const kit = addTemplate({ filename: 'numior/kit.css', write: true, getContents: kitEntry });
+
+  const layers = addTemplate<LayerOptions>({
+    filename: 'numior/layers.css',
+    write: true,
+    options: { packages },
+    getContents: ({ options }) => layersEntry(options.packages),
+  });
+
+  nuxt.options.css.unshift(kit.dst, layers.dst);
 };
 
 const registerNamespace = (id: string, namespace: ModuleNamespace, what: Registration): void => {
@@ -123,8 +143,10 @@ export default defineNuxtModule<NuiNuxtOptions>({
     nuxt.options.runtimeConfig.public.numior = runtimeOptionsOf(options);
     addHead(nuxt, colorSchemeOf(options));
     if (options.css === true) {
-      addTailwind();
-      nuxt.options.css.push(...KIT_CSS, ...installed.map((entry) => `${entry.id}/styles.css`));
+      addKitCss(
+        nuxt,
+        installed.map((entry) => entry.id),
+      );
     }
     registerNamespace(VUE, await import('@numior/vue'), registration);
 

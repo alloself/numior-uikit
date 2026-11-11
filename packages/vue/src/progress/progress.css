@@ -1,82 +1,84 @@
-.nui-progress {
-  --_height: 0.5rem;
-  --_tone: var(--nui-primary);
-  --_track: var(--nui-surface-muted);
+@layer components {
+  .nui-progress {
+    --_height: 0.5rem;
+    --_tone: var(--nui-primary);
+    --_track: var(--nui-surface-muted);
 
-  box-sizing: border-box;
-  display: block;
-  inline-size: 100%;
-  block-size: var(--_height);
-  border: 0;
-  border-radius: var(--nui-radius-full);
-  background: var(--_track);
-  color: var(--_tone);
-  appearance: none;
-  overflow: hidden;
-}
-.nui-progress--size-sm {
-  --_height: 0.25rem;
-}
-.nui-progress--size-lg {
-  --_height: 0.75rem;
-}
-.nui-progress--tone-secondary {
-  --_tone: var(--nui-secondary);
-}
-.nui-progress--tone-success {
-  --_tone: var(--nui-success);
-}
-.nui-progress--tone-warning {
-  --_tone: var(--nui-warning);
-}
-.nui-progress--tone-error {
-  --_tone: var(--nui-error);
-}
-.nui-progress--tone-info {
-  --_tone: var(--nui-info);
-}
-.nui-progress--tone-neutral {
-  --_tone: var(--nui-neutral);
-}
-.nui-progress::-webkit-progress-bar {
-  border-radius: inherit;
-  background: var(--_track);
-}
-.nui-progress::-webkit-progress-value {
-  border-radius: inherit;
-  background: var(--_tone);
-  transition: inline-size var(--nui-duration-normal) var(--nui-easing);
-}
-.nui-progress::-moz-progress-bar {
-  border-radius: inherit;
-  background: var(--_tone);
-  transition: inline-size var(--nui-duration-normal) var(--nui-easing);
-}
-.nui-progress:indeterminate {
-  background-color: var(--_track);
-  background-image: linear-gradient(var(--_tone), var(--_tone));
-  background-repeat: no-repeat;
-  background-size: 40% 100%;
-  background-position: -67% 0;
-  animation: nui-progress-slide 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
-  animation-play-state: var(--nui-animation-play-state, running);
-}
-.nui-progress:indeterminate::-webkit-progress-bar {
-  background: transparent;
-}
-.nui-progress:indeterminate::-moz-progress-bar {
-  background: transparent;
-}
-@keyframes nui-progress-slide {
-  from {
-    background-position: -67% 0;
+    box-sizing: border-box;
+    display: block;
+    inline-size: 100%;
+    block-size: var(--_height);
+    border: 0;
+    border-radius: var(--nui-radius-full);
+    background: var(--_track);
+    color: var(--_tone);
+    appearance: none;
+    overflow: hidden;
   }
-  to {
-    background-position: 167% 0;
+  .nui-progress--size-sm {
+    --_height: 0.25rem;
   }
-}
-@media (prefers-reduced-motion: reduce) {
+  .nui-progress--size-lg {
+    --_height: 0.75rem;
+  }
+  .nui-progress--tone-secondary {
+    --_tone: var(--nui-secondary);
+  }
+  .nui-progress--tone-success {
+    --_tone: var(--nui-success);
+  }
+  .nui-progress--tone-warning {
+    --_tone: var(--nui-warning);
+  }
+  .nui-progress--tone-error {
+    --_tone: var(--nui-error);
+  }
+  .nui-progress--tone-info {
+    --_tone: var(--nui-info);
+  }
+  .nui-progress--tone-neutral {
+    --_tone: var(--nui-neutral);
+  }
+  .nui-progress::-webkit-progress-bar {
+    border-radius: inherit;
+    background: var(--_track);
+  }
+  .nui-progress::-webkit-progress-value {
+    border-radius: inherit;
+    background: var(--_tone);
+    transition: inline-size var(--nui-duration-normal) var(--nui-easing);
+  }
+  .nui-progress::-moz-progress-bar {
+    border-radius: inherit;
+    background: var(--_tone);
+    transition: inline-size var(--nui-duration-normal) var(--nui-easing);
+  }
   .nui-progress:indeterminate {
-    animation-duration: 3.2s;
+    background-color: var(--_track);
+    background-image: linear-gradient(var(--_tone), var(--_tone));
+    background-repeat: no-repeat;
+    background-size: 40% 100%;
+    background-position: -67% 0;
+    animation: nui-progress-slide 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+    animation-play-state: var(--nui-animation-play-state, running);
+  }
+  .nui-progress:indeterminate::-webkit-progress-bar {
+    background: transparent;
+  }
+  .nui-progress:indeterminate::-moz-progress-bar {
+    background: transparent;
+  }
+  @keyframes nui-progress-slide {
+    from {
+      background-position: -67% 0;
+    }
+    to {
+      background-position: 167% 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nui-progress:indeterminate {
+      animation-duration: 3.2s;
+    }
   }
 }

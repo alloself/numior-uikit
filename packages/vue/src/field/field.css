@@ -1,57 +1,50 @@
-.nui-field {
-  box-sizing: border-box;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-content: start;
-  gap: var(--nui-space-1);
-  min-inline-size: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  color: var(--nui-text);
-  font-family: var(--nui-font);
-}
-.nui-field--inline {
-  display: inline-grid;
-  justify-items: start;
-}
-.nui-field__label {
-  font-size: var(--nui-font-size-sm);
-  font-weight: 500;
-  line-height: var(--nui-line-height);
-  transition: opacity var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-field--group > .nui-field__label {
-  padding: 0;
-  margin-block-end: var(--nui-space-1);
-}
-.nui-field__required {
-  margin-inline-start: 0.2em;
-  color: var(--nui-error);
-}
-.nui-field__description,
-.nui-field__error {
-  margin: 0;
-  font-size: var(--nui-font-size-sm);
-  line-height: var(--nui-line-height);
-}
-.nui-field__description {
-  color: var(--nui-text-muted);
-}
-.nui-field__reserve {
-  display: block;
-  min-block-size: calc(var(--nui-font-size-sm) * var(--nui-line-height));
-}
-.nui-field__error {
-  color: var(--nui-error);
-  animation: nui-field-reveal var(--nui-duration-normal) var(--nui-easing);
-}
-.nui-field--disabled > .nui-field__label {
-  opacity: var(--nui-disabled-opacity);
-}
-@keyframes nui-field-reveal {
-  from {
-    opacity: 0;
-    translate: 0 -0.25rem;
+@layer components {
+  .nui-field {
+    @apply box-border grid gap-1 min-inline-0 m-0 p-0 text-foreground font-sans;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    border: 0;
+  }
+  .nui-field--inline {
+    @apply inline-grid justify-items-start;
+  }
+  .nui-field__label {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    line-height: var(--leading-normal);
+    transition: opacity var(--transition-duration-fast) var(--ease-nui);
+  }
+  .nui-field--group > .nui-field__label {
+    @apply p-0 mbe-1;
+  }
+  .nui-field__required {
+    @apply text-error;
+    margin-inline-start: 0.2em;
+  }
+  .nui-field__description,
+  .nui-field__error {
+    @apply m-0;
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+  }
+  .nui-field__description {
+    @apply text-muted-foreground;
+  }
+  .nui-field__reserve {
+    @apply block;
+    min-block-size: calc(var(--text-sm) * var(--leading-normal));
+  }
+  .nui-field__error {
+    @apply text-error;
+    animation: nui-field-reveal var(--transition-duration-normal) var(--ease-nui);
+  }
+  .nui-field--disabled > .nui-field__label {
+    @apply opacity-disabled;
+  }
+  @keyframes nui-field-reveal {
+    from {
+      opacity: 0;
+      translate: 0 -0.25rem;
+    }
   }
 }

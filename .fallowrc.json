@@ -42,6 +42,7 @@
     "packages/nuxt/vitest.config.ts",
     "packages/nuxt/test/fixture/nuxt.config.ts",
     "packages/nuxt/test/fixture/app/app.config.ts",
+    "packages/nuxt/test/fixture/app/assets/theme.css",
     "packages/nuxt/test/fixture/app/**/*.vue",
     "packages/nuxt/test/**/*.test.ts",
     "packages/table/bench/engine.bench.ts",
@@ -267,7 +268,7 @@
       },
       {
         "from": "nuxt",
-        "allow": ["tokens", "primitives", "vue", "forms", "table", "nuxt"]
+        "allow": ["tokens", "tailwind", "primitives", "vue", "forms", "table", "nuxt"]
       },
       {
         "from": "apps",

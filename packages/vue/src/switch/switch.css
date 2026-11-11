@@ -1,102 +1,104 @@
-.nui-switch {
-  --_track-inline: 2.5rem;
-  --_track-block: 1.5rem;
-  --_thumb: 1.125rem;
-  --_inset: 0.1875rem;
-  --_font-size: var(--nui-font-size-sm);
+@layer components {
+  .nui-switch {
+    --_track-inline: 2.5rem;
+    --_track-block: 1.5rem;
+    --_thumb: 1.125rem;
+    --_inset: 0.1875rem;
+    --_font-size: var(--nui-font-size-sm);
 
-  box-sizing: border-box;
-  position: relative;
-  display: inline-flex;
-  align-items: flex-start;
-  gap: var(--nui-space-2);
-  color: var(--nui-text);
-  font-family: var(--nui-font);
-  font-size: var(--_font-size);
-  line-height: var(--nui-line-height);
-  cursor: pointer;
-  -webkit-user-select: none;
-  user-select: none;
-  isolation: isolate;
-}
-.nui-switch--size-sm {
-  --_track-inline: 2rem;
-  --_track-block: 1.25rem;
-  --_thumb: 0.875rem;
-  --_font-size: var(--nui-font-size-xs);
-}
-.nui-switch--size-lg {
-  --_track-inline: 3rem;
-  --_track-block: 1.75rem;
-  --_thumb: 1.375rem;
-  --_font-size: var(--nui-font-size-md);
-}
-.nui-switch__control {
-  position: absolute;
-  z-index: 1;
-  inset-block-start: calc((1lh - var(--_track-block)) / 2);
-  inset-inline-start: 0;
-  inline-size: var(--_track-inline);
-  block-size: var(--_track-block);
-  margin: 0;
-  opacity: 0;
-  appearance: none;
-  cursor: inherit;
-}
-.nui-switch__track {
-  pointer-events: none;
-  position: relative;
-  flex: none;
-  inline-size: var(--_track-inline);
-  block-size: var(--_track-block);
-  margin-block-start: calc((1lh - var(--_track-block)) / 2);
-  border-radius: var(--nui-radius-full);
-  background: var(--nui-border-strong);
-  transition: background-color var(--nui-duration-normal) var(--nui-easing);
-}
-.nui-switch__thumb {
-  --_travel: calc(var(--_track-inline) - var(--_thumb) - 2 * var(--_inset));
-  --_shift: 0px;
+    box-sizing: border-box;
+    position: relative;
+    display: inline-flex;
+    align-items: flex-start;
+    gap: var(--nui-space-2);
+    color: var(--nui-text);
+    font-family: var(--nui-font);
+    font-size: var(--_font-size);
+    line-height: var(--nui-line-height);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    isolation: isolate;
+  }
+  .nui-switch--size-sm {
+    --_track-inline: 2rem;
+    --_track-block: 1.25rem;
+    --_thumb: 0.875rem;
+    --_font-size: var(--nui-font-size-xs);
+  }
+  .nui-switch--size-lg {
+    --_track-inline: 3rem;
+    --_track-block: 1.75rem;
+    --_thumb: 1.375rem;
+    --_font-size: var(--nui-font-size-md);
+  }
+  .nui-switch__control {
+    position: absolute;
+    z-index: 1;
+    inset-block-start: calc((1lh - var(--_track-block)) / 2);
+    inset-inline-start: 0;
+    inline-size: var(--_track-inline);
+    block-size: var(--_track-block);
+    margin: 0;
+    opacity: 0;
+    appearance: none;
+    cursor: inherit;
+  }
+  .nui-switch__track {
+    pointer-events: none;
+    position: relative;
+    flex: none;
+    inline-size: var(--_track-inline);
+    block-size: var(--_track-block);
+    margin-block-start: calc((1lh - var(--_track-block)) / 2);
+    border-radius: var(--nui-radius-full);
+    background: var(--nui-border-strong);
+    transition: background-color var(--nui-duration-normal) var(--nui-easing);
+  }
+  .nui-switch__thumb {
+    --_travel: calc(var(--_track-inline) - var(--_thumb) - 2 * var(--_inset));
+    --_shift: 0px;
 
-  position: absolute;
-  inset-block-start: calc((var(--_track-block) - var(--_thumb)) / 2);
-  inset-inline-start: var(--_inset);
-  inline-size: var(--_thumb);
-  block-size: var(--_thumb);
-  border-radius: var(--nui-radius-full);
-  background: var(--nui-surface);
-  box-shadow: var(--nui-shadow-sm);
-  translate: var(--_shift) 0;
-  transition:
-    translate var(--nui-duration-normal) var(--nui-easing),
-    scale var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-switch__control:checked + .nui-switch__track {
-  background: var(--nui-primary);
-}
-.nui-switch__control:checked + .nui-switch__track .nui-switch__thumb {
-  --_shift: var(--_travel);
-}
-.nui-switch__control:checked + .nui-switch__track .nui-switch__thumb:dir(rtl) {
-  --_shift: calc(-1 * var(--_travel));
-}
-.nui-switch__control:active:not(:disabled) + .nui-switch__track .nui-switch__thumb {
-  scale: 1.15 0.9;
-}
-.nui-switch__control:focus-visible + .nui-switch__track {
-  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-  outline-offset: var(--nui-focus-ring-offset);
-}
-.nui-switch--invalid .nui-switch__track {
-  background: var(--nui-error);
-}
-.nui-switch--invalid .nui-switch__control:focus-visible + .nui-switch__track {
-  outline-color: var(--nui-error);
-}
-.nui-switch--readonly {
-  cursor: default;
-}
-.nui-switch--disabled {
-  opacity: var(--nui-disabled-opacity);
-  cursor: not-allowed;
+    position: absolute;
+    inset-block-start: calc((var(--_track-block) - var(--_thumb)) / 2);
+    inset-inline-start: var(--_inset);
+    inline-size: var(--_thumb);
+    block-size: var(--_thumb);
+    border-radius: var(--nui-radius-full);
+    background: var(--nui-surface);
+    box-shadow: var(--nui-shadow-sm);
+    translate: var(--_shift) 0;
+    transition:
+      translate var(--nui-duration-normal) var(--nui-easing),
+      scale var(--nui-duration-fast) var(--nui-easing);
+  }
+  .nui-switch__control:checked + .nui-switch__track {
+    background: var(--nui-primary);
+  }
+  .nui-switch__control:checked + .nui-switch__track .nui-switch__thumb {
+    --_shift: var(--_travel);
+  }
+  .nui-switch__control:checked + .nui-switch__track .nui-switch__thumb:dir(rtl) {
+    --_shift: calc(-1 * var(--_travel));
+  }
+  .nui-switch__control:active:not(:disabled) + .nui-switch__track .nui-switch__thumb {
+    scale: 1.15 0.9;
+  }
+  .nui-switch__control:focus-visible + .nui-switch__track {
+    outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+    outline-offset: var(--nui-focus-ring-offset);
+  }
+  .nui-switch--invalid .nui-switch__track {
+    background: var(--nui-error);
+  }
+  .nui-switch--invalid .nui-switch__control:focus-visible + .nui-switch__track {
+    outline-color: var(--nui-error);
+  }
+  .nui-switch--readonly {
+    cursor: default;
+  }
+  .nui-switch--disabled {
+    opacity: var(--nui-disabled-opacity);
+    cursor: not-allowed;
+  }
 }

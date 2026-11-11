@@ -27,6 +27,7 @@
     "tailwindcss": "4.3.3"
   },
   "devDependencies": {
+    "@numior/tailwind": "workspace:*",
     "@nuxt/test-utils": "4.3.2",
     "nuxt": "4.5.2",
     "vitest": "catalog:"

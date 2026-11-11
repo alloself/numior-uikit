@@ -1,0 +1,6 @@
+@import 'tailwindcss';
+@import '@numior/tailwind';
+
+@theme {
+  --radius: 1rem;
+}

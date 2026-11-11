@@ -86,6 +86,11 @@ export class NuxtHost {
     return [...new Set(list.map((entry) => entry.priority ?? 0))];
   }
 
+  templateOptions(filename: string): unknown {
+    return this.nuxt.options.build.templates.find((template) => template.filename === filename)
+      ?.options;
+  }
+
   async vitePlugins(): Promise<string[]> {
     const extension: ViteExtension = { nuxt: this.nuxt, config: { plugins: [] } };
 

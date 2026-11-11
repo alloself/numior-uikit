@@ -5,6 +5,7 @@ export default defineNuxtConfig({
   modules: ['../../src/module'],
   devtools: { enabled: false },
   telemetry: false,
+  css: ['~/assets/theme.css'],
   app: { head: { htmlAttrs: { lang: 'ru' }, title: 'Numior в Nuxt' } },
   vite: { define: { __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'true' } },
   numior: {

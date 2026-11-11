@@ -1,74 +1,76 @@
-.nui-date-picker,
-.nui-time-field {
-  --_height: var(--nui-control-height-md);
-  --_padding: var(--nui-field-padding-md);
-  --_font-size: var(--nui-control-font-size-md);
+@layer components {
+  .nui-date-picker,
+  .nui-time-field {
+    --_height: var(--nui-control-height-md);
+    --_padding: var(--nui-field-padding-md);
+    --_font-size: var(--nui-control-font-size-md);
 
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--nui-space-1);
-  inline-size: 100%;
-  min-block-size: var(--_height);
-  padding-inline: var(--_padding) var(--nui-space-1);
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius);
-  background: var(--nui-surface);
-  color: var(--nui-text);
-  font-family: var(--nui-font);
-  font-size: var(--_font-size);
-  line-height: var(--nui-line-height-control);
-  transition:
-    border-color var(--nui-duration-fast) var(--nui-easing),
-    outline-color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-date-picker--size-sm,
-.nui-time-field--size-sm {
-  --_height: var(--nui-control-height-sm);
-  --_padding: var(--nui-field-padding-sm);
-  --_font-size: var(--nui-control-font-size-sm);
-}
-.nui-date-picker--size-lg,
-.nui-time-field--size-lg {
-  --_height: var(--nui-control-height-lg);
-  --_padding: var(--nui-field-padding-lg);
-  --_font-size: var(--nui-control-font-size-lg);
-}
-.nui-date-picker:hover:not(
-    .nui-date-picker--disabled,
-    .nui-date-picker--readonly,
-    .nui-date-picker--invalid,
-    :focus-within
-  ),
-.nui-time-field:hover:not(
-    .nui-time-field--disabled,
-    .nui-time-field--readonly,
-    .nui-time-field--invalid,
-    :focus-within
-  ) {
-  border-color: var(--nui-border-strong);
-}
-.nui-date-picker:focus-within,
-.nui-time-field:focus-within {
-  border-color: var(--nui-focus);
-  outline: var(--nui-field-ring-width) solid var(--nui-focus);
-  outline-offset: var(--nui-focus-ring-offset);
-}
-.nui-date-picker--invalid,
-.nui-time-field--invalid {
-  border-color: var(--nui-error);
-}
-.nui-date-picker--invalid:focus-within,
-.nui-time-field--invalid:focus-within {
-  border-color: var(--nui-error);
-  outline-color: var(--nui-error);
-}
-.nui-date-picker--readonly,
-.nui-time-field--readonly {
-  cursor: default;
-}
-.nui-date-picker--disabled,
-.nui-time-field--disabled {
-  opacity: var(--nui-disabled-opacity);
-  cursor: not-allowed;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nui-space-1);
+    inline-size: 100%;
+    min-block-size: var(--_height);
+    padding-inline: var(--_padding) var(--nui-space-1);
+    border: 1px solid var(--nui-border);
+    border-radius: var(--nui-radius);
+    background: var(--nui-surface);
+    color: var(--nui-text);
+    font-family: var(--nui-font);
+    font-size: var(--_font-size);
+    line-height: var(--nui-line-height-control);
+    transition:
+      border-color var(--nui-duration-fast) var(--nui-easing),
+      outline-color var(--nui-duration-fast) var(--nui-easing);
+  }
+  .nui-date-picker--size-sm,
+  .nui-time-field--size-sm {
+    --_height: var(--nui-control-height-sm);
+    --_padding: var(--nui-field-padding-sm);
+    --_font-size: var(--nui-control-font-size-sm);
+  }
+  .nui-date-picker--size-lg,
+  .nui-time-field--size-lg {
+    --_height: var(--nui-control-height-lg);
+    --_padding: var(--nui-field-padding-lg);
+    --_font-size: var(--nui-control-font-size-lg);
+  }
+  .nui-date-picker:hover:not(
+      .nui-date-picker--disabled,
+      .nui-date-picker--readonly,
+      .nui-date-picker--invalid,
+      :focus-within
+    ),
+  .nui-time-field:hover:not(
+      .nui-time-field--disabled,
+      .nui-time-field--readonly,
+      .nui-time-field--invalid,
+      :focus-within
+    ) {
+    border-color: var(--nui-border-strong);
+  }
+  .nui-date-picker:focus-within,
+  .nui-time-field:focus-within {
+    border-color: var(--nui-focus);
+    outline: var(--nui-field-ring-width) solid var(--nui-focus);
+    outline-offset: var(--nui-focus-ring-offset);
+  }
+  .nui-date-picker--invalid,
+  .nui-time-field--invalid {
+    border-color: var(--nui-error);
+  }
+  .nui-date-picker--invalid:focus-within,
+  .nui-time-field--invalid:focus-within {
+    border-color: var(--nui-error);
+    outline-color: var(--nui-error);
+  }
+  .nui-date-picker--readonly,
+  .nui-time-field--readonly {
+    cursor: default;
+  }
+  .nui-date-picker--disabled,
+  .nui-time-field--disabled {
+    opacity: var(--nui-disabled-opacity);
+    cursor: not-allowed;
+  }
 }

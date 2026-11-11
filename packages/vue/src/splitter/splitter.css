@@ -1,88 +1,90 @@
-.nui-splitter {
-  --_ratio: 0.5;
-  --_divider: 13px;
+@layer components {
+  .nui-splitter {
+    --_ratio: 0.5;
+    --_divider: 13px;
 
-  box-sizing: border-box;
-  display: flex;
-  min-inline-size: 0;
-  min-block-size: 0;
-  font-family: var(--nui-font);
-  isolation: isolate;
-}
-.nui-splitter--orientation-vertical {
-  flex-direction: column;
-}
-.nui-splitter__pane {
-  box-sizing: border-box;
-  min-inline-size: 0;
-  min-block-size: 0;
-  overflow: auto;
-}
-.nui-splitter__pane--start {
-  flex: 0 0 round(down, calc(var(--_ratio) * 100% - var(--_divider) / 2), 1px);
-}
-.nui-splitter__pane--end {
-  flex: 1 1 0;
-}
-.nui-splitter__divider {
-  box-sizing: border-box;
-  position: relative;
-  flex: 0 0 var(--_divider);
-  display: grid;
-  place-items: center;
-  cursor: col-resize;
-  touch-action: none;
-  user-select: none;
-  outline-offset: -2px;
-}
-.nui-splitter--orientation-vertical .nui-splitter__divider {
-  cursor: row-resize;
-}
-.nui-splitter__divider::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto;
-  inline-size: 1px;
-  justify-self: center;
-  background: var(--nui-border);
-  transition: background-color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-splitter--orientation-vertical .nui-splitter__divider::before {
-  inset: auto 0;
-  inline-size: auto;
-  block-size: 1px;
-  align-self: center;
-  justify-self: stretch;
-}
-.nui-splitter__grip {
-  position: relative;
-  z-index: 1;
-  inline-size: 5px;
-  block-size: 2rem;
-  border-radius: var(--nui-radius-full);
-  background: var(--nui-border-strong);
-  transition: background-color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-splitter--orientation-vertical .nui-splitter__grip {
-  inline-size: 2rem;
-  block-size: 5px;
-}
-.nui-splitter__divider:hover .nui-splitter__grip,
-.nui-splitter--dragging .nui-splitter__grip {
-  background: var(--nui-primary);
-}
-.nui-splitter__divider:hover::before,
-.nui-splitter--dragging .nui-splitter__divider::before {
-  background: var(--nui-primary);
-}
-.nui-splitter__divider:focus-visible {
-  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-  border-radius: var(--nui-radius-sm);
-}
-.nui-splitter--dragging .nui-splitter__pane {
-  pointer-events: none;
-}
-.nui-splitter--disabled .nui-splitter__divider {
-  cursor: default;
-  opacity: var(--nui-disabled-opacity);
+    box-sizing: border-box;
+    display: flex;
+    min-inline-size: 0;
+    min-block-size: 0;
+    font-family: var(--nui-font);
+    isolation: isolate;
+  }
+  .nui-splitter--orientation-vertical {
+    flex-direction: column;
+  }
+  .nui-splitter__pane {
+    box-sizing: border-box;
+    min-inline-size: 0;
+    min-block-size: 0;
+    overflow: auto;
+  }
+  .nui-splitter__pane--start {
+    flex: 0 0 round(down, calc(var(--_ratio) * 100% - var(--_divider) / 2), 1px);
+  }
+  .nui-splitter__pane--end {
+    flex: 1 1 0;
+  }
+  .nui-splitter__divider {
+    box-sizing: border-box;
+    position: relative;
+    flex: 0 0 var(--_divider);
+    display: grid;
+    place-items: center;
+    cursor: col-resize;
+    touch-action: none;
+    user-select: none;
+    outline-offset: -2px;
+  }
+  .nui-splitter--orientation-vertical .nui-splitter__divider {
+    cursor: row-resize;
+  }
+  .nui-splitter__divider::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto;
+    inline-size: 1px;
+    justify-self: center;
+    background: var(--nui-border);
+    transition: background-color var(--nui-duration-fast) var(--nui-easing);
+  }
+  .nui-splitter--orientation-vertical .nui-splitter__divider::before {
+    inset: auto 0;
+    inline-size: auto;
+    block-size: 1px;
+    align-self: center;
+    justify-self: stretch;
+  }
+  .nui-splitter__grip {
+    position: relative;
+    z-index: 1;
+    inline-size: 5px;
+    block-size: 2rem;
+    border-radius: var(--nui-radius-full);
+    background: var(--nui-border-strong);
+    transition: background-color var(--nui-duration-fast) var(--nui-easing);
+  }
+  .nui-splitter--orientation-vertical .nui-splitter__grip {
+    inline-size: 2rem;
+    block-size: 5px;
+  }
+  .nui-splitter__divider:hover .nui-splitter__grip,
+  .nui-splitter--dragging .nui-splitter__grip {
+    background: var(--nui-primary);
+  }
+  .nui-splitter__divider:hover::before,
+  .nui-splitter--dragging .nui-splitter__divider::before {
+    background: var(--nui-primary);
+  }
+  .nui-splitter__divider:focus-visible {
+    outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+    border-radius: var(--nui-radius-sm);
+  }
+  .nui-splitter--dragging .nui-splitter__pane {
+    pointer-events: none;
+  }
+  .nui-splitter--disabled .nui-splitter__divider {
+    cursor: default;
+    opacity: var(--nui-disabled-opacity);
+  }
 }

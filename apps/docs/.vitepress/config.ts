@@ -14,6 +14,7 @@ import { descriptionOf, localeOfPage, pageHead } from './meta';
 import { navOf, sidebarOf } from './navigation';
 import { parseBundle } from './reference/bundle';
 import { docsReference } from './reference/plugin';
+import { sourceCssAliases } from '../../../scripts/source-css';
 import { apiSearchText } from './reference/search-text';
 import type { DocsSearchOptions } from './theme/theme.types';
 import { ACCENT_STORAGE_KEY, accentScript } from './theme/composables/use-accent';
@@ -93,7 +94,10 @@ export default defineConfigWithTheme<DocsThemeConfig>({
     config: (md) => docsMarkdown(md, highlighter),
   },
   vite: {
-    resolve: process.env.NODE_ENV === 'production' ? {} : { conditions: ['@numior/source'] },
+    resolve:
+      process.env.NODE_ENV === 'production'
+        ? {}
+        : { conditions: ['@numior/source'], alias: sourceCssAliases() },
     plugins: [
       tailwindcss(),
       docsDemo(demoRootOf(examplesRoot)),

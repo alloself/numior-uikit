@@ -1,82 +1,84 @@
 @import '../shared/segmented-field.css';
 
-.nui-date-picker {
-  --_side-x: 0;
-  --_side-y: 1;
-  --_shift: calc(-1 * var(--_side-x) * var(--nui-space-1))
-    calc(-1 * var(--_side-y) * var(--nui-space-1));
+@layer components {
+  .nui-date-picker {
+    --_side-x: 0;
+    --_side-y: 1;
+    --_shift: calc(-1 * var(--_side-x) * var(--nui-space-1))
+      calc(-1 * var(--_side-y) * var(--nui-space-1));
 
-  position: relative;
-}
-.nui-date-picker__input {
-  flex: 1 1 auto;
-  min-inline-size: 0;
-  inline-size: 100%;
-  min-block-size: calc(var(--_height) - 2px);
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-variant-numeric: tabular-nums;
-  outline: none;
-}
-.nui-date-picker__input::placeholder {
-  color: var(--nui-text-muted);
-  opacity: 1;
-}
-.nui-date-picker__separator {
-  margin-inline: var(--nui-space-1);
-  color: var(--nui-text-muted);
-}
-.nui-date-picker__clear,
-.nui-date-picker__open {
-  flex: none;
-  margin-inline-start: auto;
-}
-.nui-date-picker__clear + .nui-date-picker__open {
-  margin-inline-start: 0;
-}
-.nui-date-picker--disabled .nui-date-picker__input {
-  cursor: not-allowed;
-}
-.nui-date-picker__panel {
-  box-sizing: border-box;
-  position: fixed;
-  inset: auto;
-  margin: 0;
-  padding: 0;
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius);
-  background: var(--nui-surface-overlay);
-  color: var(--nui-text);
-  box-shadow: var(--nui-shadow-md);
-  overflow: auto;
-  overscroll-behavior: contain;
-  opacity: 0;
-  translate: var(--_shift);
-  transition:
-    opacity var(--nui-duration-fast) var(--nui-easing),
-    translate var(--nui-duration-normal) var(--nui-easing),
-    display var(--nui-duration-fast) allow-discrete,
-    overlay var(--nui-duration-fast) allow-discrete;
-}
-.nui-date-picker__panel:popover-open {
-  opacity: 1;
-  translate: 0 0;
-}
-@starting-style {
-  .nui-date-picker__panel:popover-open {
+    position: relative;
+  }
+  .nui-date-picker__input {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    inline-size: 100%;
+    min-block-size: calc(var(--_height) - 2px);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    outline: none;
+  }
+  .nui-date-picker__input::placeholder {
+    color: var(--nui-text-muted);
+    opacity: 1;
+  }
+  .nui-date-picker__separator {
+    margin-inline: var(--nui-space-1);
+    color: var(--nui-text-muted);
+  }
+  .nui-date-picker__clear,
+  .nui-date-picker__open {
+    flex: none;
+    margin-inline-start: auto;
+  }
+  .nui-date-picker__clear + .nui-date-picker__open {
+    margin-inline-start: 0;
+  }
+  .nui-date-picker--disabled .nui-date-picker__input {
+    cursor: not-allowed;
+  }
+  .nui-date-picker__panel {
+    box-sizing: border-box;
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--nui-border);
+    border-radius: var(--nui-radius);
+    background: var(--nui-surface-overlay);
+    color: var(--nui-text);
+    box-shadow: var(--nui-shadow-md);
+    overflow: auto;
+    overscroll-behavior: contain;
     opacity: 0;
     translate: var(--_shift);
+    transition:
+      opacity var(--nui-duration-fast) var(--nui-easing),
+      translate var(--nui-duration-normal) var(--nui-easing),
+      display var(--nui-duration-fast) allow-discrete,
+      overlay var(--nui-duration-fast) allow-discrete;
   }
-}
-.nui-date-picker__time {
-  margin: 0 var(--nui-space-3) var(--nui-space-3);
-  inline-size: auto;
-}
-.nui-date-picker--range .nui-date-picker__input {
-  flex: 0 1 auto;
-  inline-size: auto;
-  field-sizing: content;
+  .nui-date-picker__panel:popover-open {
+    opacity: 1;
+    translate: 0 0;
+  }
+  @starting-style {
+    .nui-date-picker__panel:popover-open {
+      opacity: 0;
+      translate: var(--_shift);
+    }
+  }
+  .nui-date-picker__time {
+    margin: 0 var(--nui-space-3) var(--nui-space-3);
+    inline-size: auto;
+  }
+  .nui-date-picker--range .nui-date-picker__input {
+    flex: 0 1 auto;
+    inline-size: auto;
+    field-sizing: content;
+  }
 }
