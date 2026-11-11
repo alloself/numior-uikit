@@ -17,7 +17,6 @@
         variant="soft"
         tone="neutral"
         size="sm"
-        class="font-normal text-muted-foreground"
         :aria-label="texts.search"
         icon="search"
         @click="emit('search')"

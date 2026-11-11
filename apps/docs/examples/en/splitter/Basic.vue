@@ -4,7 +4,7 @@
       v-model:ratio="ratio"
       :min="0.2"
       :max="0.8"
-      class="w-full min-h-40 border rounded-md bg-surface"
+      class="w-full border rounded-md bg-surface"
     >
       <template #start>
         <div class="p-4 text-center text-muted-foreground">Preview</div>

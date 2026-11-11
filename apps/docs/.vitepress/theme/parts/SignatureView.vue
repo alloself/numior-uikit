@@ -2,7 +2,6 @@
   <NuiCode
     v-for="declaration in declarations"
     :key="declaration.name"
-    class="mb-5"
     :code="declaration.signature"
     :tokens="declaration.tokens"
     :title="importLineOf(declaration)"
