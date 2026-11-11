@@ -1,3 +1,4 @@
+import { sortBy } from 'lodash-es';
 import { MAX_COLS, MAX_ROWS } from './address';
 import { CellValueKind, type LineAxis, type CellRange, type CellValue } from './cell.types';
 import {
@@ -54,6 +55,11 @@ interface ChunkLines {
 
 interface Point {
   readonly row: number;
+  readonly col: number;
+}
+
+interface BandChunk {
+  readonly chunk: Chunk;
   readonly col: number;
 }
 
@@ -147,6 +153,42 @@ const bandsOf = (from: number, to: number, size: number): number[] => {
   return bands;
 };
 
+const bandCount = (from: number, to: number, size: number): number =>
+  Math.floor(to / size) - Math.floor(from / size) + 1;
+
+const filledBands = (
+  chunks: ReadonlyMap<number, Chunk>,
+  range: CellRange,
+): [number, BandChunk[]][] => {
+  const top = Math.floor(range.top / CHUNK_ROWS);
+  const bottom = Math.floor(range.bottom / CHUNK_ROWS);
+  const left = Math.floor(range.left / CHUNK_COLS);
+  const right = Math.floor(range.right / CHUNK_COLS);
+  const bands = new Map<number, BandChunk[]>();
+
+  chunks.forEach((chunk, key) => {
+    const band = Math.floor(key / CHUNKS_PER_ROW);
+    const col = key % CHUNKS_PER_ROW;
+
+    if (band < top || band > bottom || col < left || col > right) {
+      return;
+    }
+
+    const present = bands.get(band);
+
+    if (present === undefined) {
+      bands.set(band, [{ chunk, col }]);
+    } else {
+      present.push({ chunk, col });
+    }
+  });
+
+  return sortBy([...bands], ([band]) => band).map(([band, present]) => [
+    band,
+    sortBy(present, (each) => each.col),
+  ]);
+};
+
 const inside = (row: number, col: number): boolean =>
   row >= 0 && row < MAX_ROWS && col >= 0 && col < MAX_COLS;
 
@@ -234,7 +276,7 @@ export const createCellStore = (
     (chunks.get(chunkKey(row, col))?.kinds[slotOf(row, col)] ?? Kind.Empty) !== Kind.Empty;
 
   const visitBand = (
-    present: readonly { readonly chunk: Chunk; readonly col: number }[],
+    present: readonly BandChunk[],
     band: number,
     range: CellRange,
     visit: CellVisitor,
@@ -338,6 +380,18 @@ export const createCellStore = (
       }
     },
     forEachInRange: (range, visit) => {
+      const spanned =
+        bandCount(range.top, range.bottom, CHUNK_ROWS) *
+        bandCount(range.left, range.right, CHUNK_COLS);
+
+      if (spanned > chunks.size) {
+        filledBands(chunks, range).forEach(([band, present]) => {
+          visitBand(present, band, range, visit);
+        });
+
+        return;
+      }
+
       const columns = bandsOf(range.left, range.right, CHUNK_COLS);
 
       for (const band of bandsOf(range.top, range.bottom, CHUNK_ROWS)) {

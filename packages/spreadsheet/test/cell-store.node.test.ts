@@ -31,6 +31,12 @@ const USED_RANGE_CALLS = 50;
 
 const USED_RANGE_BUDGET_MS = 100;
 
+const WHOLE_SHEET = { top: 0, left: 0, bottom: MAX_ROWS - 1, right: MAX_COLS - 1 };
+
+const WHOLE_WALKS = 50;
+
+const WHOLE_WALKS_BUDGET_MS = 100;
+
 const boundsOf = (points: readonly (readonly [number, number])[]): number[] =>
   points.reduce(
     ([top = 0, left = 0, bottom = 0, right = 0], [row, col]) => [
@@ -149,6 +155,30 @@ describe('cell store', () => {
     });
 
     expect(seen).toEqual(['1', '2', '3', '4', '5']);
+  });
+
+  it('walks a whole sheet as fast as its filled chunks allow and still row by row', () => {
+    const cells = store();
+    const seen: string[] = [];
+
+    SCATTERED.forEach(([row, col]) => {
+      cells.set(row, col, textValue(`${String(row)}:${String(col)}`));
+    });
+
+    const started = performance.now();
+
+    for (let walk = 0; walk < WHOLE_WALKS; walk += 1) {
+      seen.length = 0;
+
+      cells.forEachInRange(WHOLE_SHEET, (row, col) => {
+        seen.push(`${String(row)}:${String(col)}`);
+      });
+    }
+
+    const spent = performance.now() - started;
+
+    expect(seen).toEqual(['7:95', '40:700', '511:31', '512:32', '1023:63', '1024:5', '3000:64']);
+    expect(spent).toBeLessThan(WHOLE_WALKS_BUDGET_MS);
   });
 
   it('jumps like Ctrl with the arrows to the edges of filled runs and of the sheet', () => {
