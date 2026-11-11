@@ -30,6 +30,7 @@ import {
   NuiPopoverPadding,
   NuiPopoverSize,
   NuiPopoverTrigger,
+  type NuiPopoverExposed,
   type NuiPopoverProps,
   type NuiPopoverTriggerAttrs,
   type NuiPopoverTriggerSlot,
@@ -98,5 +99,11 @@ const triggerAttrs = computed<NuiPopoverTriggerAttrs>(() => {
 
 watch(open, (value) => {
   opened.value ||= value;
+});
+
+defineExpose<NuiPopoverExposed>({
+  get trigger() {
+    return trigger.value;
+  },
 });
 </script>

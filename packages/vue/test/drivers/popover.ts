@@ -52,6 +52,10 @@ export class PopoverDriver extends ComponentDriver {
     return this.scene.vm.open;
   }
 
+  get handsOutTrigger(): boolean {
+    return this.scene.vm.trigger === this.trigger.element;
+  }
+
   get popoverCalls(): { show: number; hide: number } {
     return this.stubs.popoverCalls;
   }

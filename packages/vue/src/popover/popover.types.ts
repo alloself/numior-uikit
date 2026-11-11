@@ -42,6 +42,10 @@ export interface NuiPopoverTriggerSlot {
   readonly open: boolean;
 }
 
+export interface NuiPopoverExposed {
+  readonly trigger: HTMLElement | null;
+}
+
 export const NuiPopoverPadding = { None: 'none', Sm: 'sm', Md: 'md' } as const;
 
 export const NuiPopoverSize = { Md: 'md', Auto: 'auto' } as const;

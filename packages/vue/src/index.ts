@@ -166,6 +166,7 @@ export { default as NuiDrawer } from './drawer/NuiDrawer.vue';
 export { type NuiDrawerProps, NuiDrawerSide, NuiDrawerSize } from './drawer/drawer.types';
 export { default as NuiPopover } from './popover/NuiPopover.vue';
 export {
+  type NuiPopoverExposed,
   type NuiPopoverHoverAttrs,
   NuiPopoverPadding,
   type NuiPopoverProps,

@@ -57,6 +57,12 @@ const docs: DocsMap = {
       },
     },
     models: { 'v-model:open': { ru: 'Открыт ли поповер.', en: 'Whether the popover is open.' } },
+    exposed: {
+      trigger: {
+        ru: 'Элемент кнопки из слота `trigger`, пока поповер смонтирован.',
+        en: 'The `trigger` slot button element while the popover is mounted.',
+      },
+    },
     slots: {
       trigger: {
         ru: 'Кнопка, которая открывает поповер. Получает `attrs` для `v-bind` и `open`.',

@@ -24,6 +24,14 @@ describe('NuiPopover', () => {
     popover.unmount();
   });
 
+  it('hands the element of its trigger to the owner', () => {
+    const popover = PopoverDriver.mount();
+
+    expect(popover.handsOutTrigger).toBe(true);
+
+    popover.unmount();
+  });
+
   it('creates lazy content on the first open and keeps it after closing', async () => {
     const popover = PopoverDriver.mount({ props: { lazy: true } });
 
