@@ -10,6 +10,8 @@ What Numior UI components do for accessibility on their own and what is left to 
 - The focus ring appears when the user works with the keyboard (`:focus-visible`). The
   `--nui-focus`, `--nui-focus-ring-width` and `--nui-focus-ring-offset` tokens set its colour,
   width and offset.
+- A focused input field changes its border color and gets the same ring. The
+  `--nui-field-ring-width` token sets the ring width on fields: with `0px` only the border stays.
 - A button in the loading state keeps focus.
 - `useHotkey` compares physical keys, so Ctrl+K also works on a Russian keyboard layout.
   Shortcuts without Ctrl or ⌘ do not fire while the user types in an input.

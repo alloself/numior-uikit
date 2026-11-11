@@ -47,7 +47,7 @@
 }
 .nui-textarea:focus-visible {
   border-color: var(--nui-focus);
-  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline: var(--nui-field-ring-width) solid var(--nui-focus);
   outline-offset: var(--nui-focus-ring-offset);
 }
 .nui-textarea--invalid {

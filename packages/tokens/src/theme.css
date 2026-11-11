@@ -39,6 +39,7 @@
   --nui-focus: var(--nui-primary);
   --nui-focus-ring-width: 2px;
   --nui-focus-ring-offset: 2px;
+  --nui-field-ring-width: var(--nui-focus-ring-width);
   --nui-disabled-opacity: 0.5;
   --nui-state-hover: 0.06;
   --nui-state-pressed: 0.12;
