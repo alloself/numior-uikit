@@ -40,7 +40,7 @@ A folder is checked when all its children are checked, and partly checked when o
 
 <Example name="tree/Checkable" />
 
-### Loading on demand
+### Lazy loading
 
 A node with `lazy` and without `children` can be expanded even though it has no children yet. On
 expand the tree emits the `load` event and shows a loading indicator until the application adds
