@@ -47,6 +47,26 @@ describe('ExampleFrame', () => {
     frame.unmount();
   });
 
+  it('shows the preview in the base theme of the library and keeps the scheme inversion', async () => {
+    const frame = ExampleFrameDriver.mount(SINGLE);
+
+    expect(frame.previewAccent).toBeUndefined();
+
+    await frame.toggleBase();
+    expect(frame.previewAccent).toBe('indigo');
+    expect(frame.previewTheme).toBe('');
+
+    await frame.toggleTheme();
+    expect(frame.previewAccent).toBe('indigo');
+    expect(frame.previewTheme).toBe('dark');
+
+    await frame.toggleBase();
+    expect(frame.previewAccent).toBeUndefined();
+    expect(frame.previewTheme).toBe('dark');
+
+    frame.unmount();
+  });
+
   it('copies the source of the current file', async () => {
     const frame = ExampleFrameDriver.mount(MULTI);
 

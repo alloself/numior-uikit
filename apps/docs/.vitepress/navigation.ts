@@ -15,6 +15,7 @@ const GUIDE: readonly NavGroup[] = [
       { link: '/guide/getting-started', title: { ru: 'Начало работы', en: 'Getting started' } },
       { link: '/guide/configuration', title: { ru: 'Конфигурация', en: 'Configuration' } },
       { link: '/guide/theming', title: { ru: 'Темы оформления', en: 'Theming' } },
+      { link: '/guide/custom-theme', title: { ru: 'Своя тема', en: 'Custom theme' } },
       { link: '/guide/localization', title: { ru: 'Локализация', en: 'Localization' } },
       { link: '/guide/direction', title: 'RTL' },
       { link: '/guide/ssr', title: { ru: 'SSR и Nuxt', en: 'SSR and Nuxt' } },

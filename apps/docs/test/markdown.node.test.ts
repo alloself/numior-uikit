@@ -63,6 +63,13 @@ describe('docs markdown', () => {
     );
   });
 
+  it('fills a code block with the file that the page imports as a snippet', () => {
+    const props = codeProps(md.render('<<< @/demo/shared/random.ts\n', RU));
+
+    expect(props.language).toBe('ts');
+    expect(props.code).toContain('export type Random = () => number;');
+  });
+
   it('renders a fence as a code block with tokens, title, highlighted lines and line numbers', () => {
     const html = md.render(
       '```ts title="a.ts" {2} :line-numbers\nconst a = 1;\nconst b = 2;\n```\n',

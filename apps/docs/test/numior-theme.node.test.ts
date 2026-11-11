@@ -159,22 +159,15 @@ describe('Numior theme of the docs site', () => {
   it('holds nothing but kit custom properties on the theme scopes', () => {
     const blocks = [...numior.matchAll(BLOCK_RE)];
 
-    const selectors = blocks.flatMap(([, selector = '']) =>
-      selector.split(',').map((part) => part.trim()),
-    );
+    const selectors = blocks.map(([, selector = '']) => selector.trim().replaceAll(/\s+/gu, ' '));
 
     const properties = blocks.flatMap(([, , body = '']) =>
       [...body.matchAll(DECLARATION_RE)].map(([, name = '']) => name),
     );
 
-    expect(new Set(selectors)).toEqual(
-      new Set([
-        ':root',
-        '[data-nui-theme]',
-        ':root:not([data-nui-accent])',
-        '[data-nui-theme]:not([data-nui-accent])',
-      ]),
-    );
+    expect(selectors).toEqual([
+      ':root:not([data-nui-accent]), [data-nui-theme]:not([data-nui-accent], [data-nui-accent] *)',
+    ]);
 
     expect(properties.filter((name) => !name.startsWith('--nui-'))).toEqual([]);
   });

@@ -9,6 +9,7 @@ export class DocsExample {
   readonly root: Locator;
   readonly previewToggle: Locator;
   readonly codeToggle: Locator;
+  readonly baseTheme: Locator;
   readonly invertTheme: Locator;
   readonly rtl: Locator;
   readonly copy: Locator;
@@ -20,10 +21,17 @@ export class DocsExample {
     this.root = this.preview.locator('xpath=ancestor::*[contains(@class, "nui-tabs")][1]');
     this.previewToggle = this.root.getByRole('tab', { name: previewLabel });
     this.codeToggle = this.root.getByRole('tab', { name: 'Код' });
+    this.baseTheme = this.root.getByRole('button', { name: 'Базовая тема' });
     this.invertTheme = this.root.getByRole('button', { name: 'Обратная тема' });
     this.rtl = this.root.getByRole('button', { name: 'Справа налево' });
     this.copy = this.root.getByRole('button', { name: 'Скопировать код' });
     this.code = this.root.locator('.nui-code__code');
+  }
+
+  radiusOf(name: string): Promise<string> {
+    return this.preview
+      .getByRole('button', { name })
+      .evaluate((element) => getComputedStyle(element).borderRadius);
   }
 }
 

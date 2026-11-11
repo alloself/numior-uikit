@@ -1,7 +1,14 @@
+import { readFileSync } from 'node:fs';
 import type { MarkdownRenderer } from 'vitepress';
 import type { Highlighter } from 'shiki';
 import type { NuiCodeProps } from '@numior/vue';
 import { tokenizeCode } from './tokens.ts';
+
+interface FenceToken {
+  readonly info: string;
+  readonly content: string;
+  readonly meta: unknown;
+}
 
 interface FenceInfo {
   readonly lang: string;
@@ -12,6 +19,7 @@ interface FenceInfo {
 
 const HIGHLIGHT_RE = /\{([\d,-]+)\}/;
 const TITLE_RE = /title="([^"]*)"/;
+const LABEL_RE = /\[([^\]]+)\]/;
 const PLAIN_LANGUAGES = new Set(['', 'txt', 'text']);
 
 const highlightedLines = (info: string): number[] => {
@@ -32,13 +40,6 @@ const highlightedLines = (info: string): number[] => {
   });
 };
 
-const attributeJson = (value: unknown): string =>
-  JSON.stringify(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll("'", '&#39;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
-
 const parseFenceInfo = (info: string): FenceInfo => {
   const lines = highlightedLines(info);
 
@@ -49,6 +50,13 @@ const parseFenceInfo = (info: string): FenceInfo => {
     lineNumbers: /:line-numbers/.test(info) ? true : undefined,
   };
 };
+
+export const attributeJson = (value: unknown): string =>
+  JSON.stringify(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll("'", '&#39;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
 
 const fenceProps = (highlighter: Highlighter, info: string, content: string): NuiCodeProps => {
   const { lang, title, highlight, lineNumbers } = parseFenceInfo(info.trim());
@@ -65,12 +73,50 @@ const fenceProps = (highlighter: Highlighter, info: string, content: string): Nu
   };
 };
 
+const snippetPath = (token: { readonly meta: unknown }): string | undefined => {
+  const { meta } = token;
+  const source: unknown = typeof meta === 'object' && meta !== null ? Reflect.get(meta, 'src') : '';
+
+  return typeof source === 'string' && source !== '' ? source : undefined;
+};
+
+const trackSnippet = (env: unknown, path: string): void => {
+  const includes: unknown =
+    typeof env === 'object' && env !== null ? Reflect.get(env, 'includes') : undefined;
+
+  if (Array.isArray(includes)) {
+    includes.push(path);
+  }
+};
+
+const fenceContent = (token: FenceToken, env: unknown): string => {
+  const path = snippetPath(token);
+
+  if (path === undefined) {
+    return token.content;
+  }
+  trackSnippet(env, path);
+  return readFileSync(path, 'utf8');
+};
+
+export const fenceLabel = (token: FenceToken): string => {
+  const info = token.info.trim();
+
+  return LABEL_RE.exec(info)?.[1] ?? parseFenceInfo(info).lang;
+};
+
+export const fenceCode = (
+  highlighter: Highlighter,
+  token: FenceToken,
+  env: unknown,
+): NuiCodeProps => fenceProps(highlighter, token.info, fenceContent(token, env));
+
 export const codeFence = (md: MarkdownRenderer, highlighter: Highlighter): void => {
-  md.renderer.rules.fence = (tokens, idx) => {
+  md.renderer.rules.fence = (tokens, idx, _options, env) => {
     const token = tokens[idx];
 
     return token === undefined
       ? ''
-      : `<div class="mb-5"><NuiCode v-bind='${attributeJson(fenceProps(highlighter, token.info, token.content))}'></NuiCode></div>\n`;
+      : `<div class="mb-5"><NuiCode v-bind='${attributeJson(fenceCode(highlighter, token, env))}'></NuiCode></div>\n`;
   };
 };

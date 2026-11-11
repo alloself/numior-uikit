@@ -60,6 +60,28 @@ test('a focused field shows its frame without an outer ring and a button keeps t
   await expect(docs.searchButton).toHaveCSS('outline-width', '2px');
 });
 
+test('an example leaves the site theme for the base one and the guide shows the theme file', async ({
+  docs,
+  page,
+}) => {
+  await docs.open('/guide/custom-theme');
+  const example = docs.example();
+
+  await expect(example.preview).not.toHaveAttribute('data-nui-accent');
+  expect(await example.radiusOf('Подтвердить заказ')).toBe('4px');
+
+  await example.baseTheme.click();
+  await expect(example.preview).toHaveAttribute('data-nui-accent', 'indigo');
+  expect(await example.radiusOf('Подтвердить заказ')).toBe('8px');
+
+  await example.baseTheme.click();
+  expect(await example.radiusOf('Подтвердить заказ')).toBe('4px');
+
+  await expect(
+    page.getByText('--nui-primary: light-dark(#b04010, #e0561a);').last(),
+  ).toBeAttached();
+});
+
 test('a missing address offers the search and the page with a similar address', async ({
   docs,
   page,

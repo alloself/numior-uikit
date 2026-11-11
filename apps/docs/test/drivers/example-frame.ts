@@ -94,6 +94,14 @@ export class ExampleFrameDriver {
     await this.button(ru.preview).trigger('click');
   }
 
+  get previewAccent(): string | undefined {
+    return this.preview.attributes('data-nui-accent');
+  }
+
+  async toggleBase(): Promise<void> {
+    await this.button(ru.baseTheme).trigger('click');
+  }
+
   async toggleTheme(): Promise<void> {
     await this.button(ru.invertTheme).trigger('click');
   }

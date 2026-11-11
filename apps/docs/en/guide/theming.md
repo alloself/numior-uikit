@@ -60,24 +60,10 @@ ring. The values are `indigo`, `blue`, `violet`, `emerald`, `teal`, `rose`, `ora
 
 <Example name="guide/Accent" />
 
-## Custom colours
+## Custom colors
 
-To set your own colour, override the `--nui-<role>` and `--nui-<role>-foreground` token pair:
-the background colour and the text colour on it. The shades for hover, press, focus and the soft
-background (`-soft`) are computed from them.
-
-```css
-[data-nui-theme] {
-  --nui-primary: light-dark(oklch(0.55 0.2 300), oklch(0.8 0.12 300));
-  --nui-primary-foreground: light-dark(oklch(1 0 0), oklch(0.25 0.08 300));
-  --nui-radius-base: 0.75rem;
-}
-```
-
-Set the tokens on `:root` or on an element with `data-nui-theme`. On any other element shades
-such as `--nui-primary-soft` and `--nui-focus` are not recomputed and keep the old values.
-
-Radii depend on `--nui-radius-base`: `sm` is half of it, `lg` one and a half times, `xl` twice.
+Your own colors, radii and font live in a theme file. The [Custom theme](/en/guide/custom-theme)
+guide builds one step by step, using the theme of this site.
 
 ## Density
 

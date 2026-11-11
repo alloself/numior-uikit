@@ -97,6 +97,7 @@ export interface DocsTexts {
   readonly preview: string;
   readonly code: string;
   readonly exampleOptions: string;
+  readonly baseTheme: string;
   readonly invertTheme: string;
   readonly rtl: string;
   readonly copyCode: string;
@@ -269,7 +270,7 @@ export interface PreviewFrameProps {
   options: readonly PreviewOption[];
 }
 
-export type PreviewOption = 'dark' | 'rtl';
+export type PreviewOption = 'base' | 'dark' | 'rtl';
 
 export interface PreviewOptionsProps {
   texts: DocsTexts;
