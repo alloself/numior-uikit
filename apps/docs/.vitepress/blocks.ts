@@ -9,8 +9,14 @@ const BLOCK_FAMILY = 'blocks';
 const VIEW_ROUTE = '/blocks/view/';
 
 export const BLOCKS: readonly BlockEntry[] = [
+  { name: 'AppShell', height: 720 },
   { name: 'OrdersTable', height: 640 },
   { name: 'SignIn', height: 600 },
+  { name: 'OrderDialog', height: 640 },
+  { name: 'ProductForm', height: 860 },
+  { name: 'CommandPalette', height: 560 },
+  { name: 'CustomersSplit', height: 720 },
+  { name: 'PriceSheet', height: 640 },
 ];
 
 export const blockExampleOf = (name: string): string => `${BLOCK_FAMILY}/${name}`;
