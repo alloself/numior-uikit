@@ -8,7 +8,11 @@
     @pointerenter="delay.cancel()"
     @pointerleave="delay.scheduleClose()"
   >
-    <slot :target="targeted.target.value" />
+    <span v-if="keys !== undefined" class="nui-tooltip__keyed">
+      <span class="nui-tooltip__text"><slot :target="targeted.target.value" /></span>
+      <NuiKbd :keys="keys" size="sm" variant="soft" />
+    </span>
+    <slot v-else :target="targeted.target.value" />
     <span ref="arrow-node" class="nui-tooltip__arrow"></span>
   </div>
 </template>
@@ -24,6 +28,7 @@ import {
   useFloating,
   usePopover,
 } from '@numior/primitives';
+import NuiKbd from '../kbd/NuiKbd.vue';
 import { useTriggerElement } from '../shared/trigger-ref';
 import type {
   NuiTooltipContentSlot,
@@ -53,6 +58,7 @@ const {
   closeDelay = 100,
   disabled = false,
   anchor,
+  shortcut,
 } = defineProps<NuiTooltipProps>();
 
 const open = defineModel<boolean>('open', { default: false });
@@ -95,6 +101,10 @@ const targeted = useTooltipTargets({
     pointerPressedAt.value = Date.now();
   },
 });
+
+const keys = computed(() =>
+  typeof shortcut === 'function' ? shortcut(targeted.target.value) : shortcut,
+);
 
 const reference = (): HTMLElement | null => {
   if (targets.value !== undefined) {

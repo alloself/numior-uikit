@@ -25,6 +25,16 @@ import '@numior/vue/styles/tooltip.css';
 
 <Example name="tooltip/IconButton" />
 
+### Сочетание клавиш
+
+Свойство `shortcut` показывает клавиши действия после текста подсказки. Сочетание записывается
+так же, как для `NuiKbd`: `mod+shift+c` на Mac выглядит как ⇧ ⌘ C, а в Windows — как Ctrl Shift C.
+
+Клавишам нужны стили `@numior/vue/styles/kbd.css`. С целями в `anchor` передайте функцию: она
+получает элемент под курсором и возвращает его сочетание.
+
+<Example name="tooltip/Shortcut" />
+
 ## Доступность
 
 Подсказка следует WCAG 1.4.13: её закрывает Esc, на неё можно навести курсор, и она не исчезает

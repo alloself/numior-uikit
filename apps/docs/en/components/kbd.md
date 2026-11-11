@@ -5,7 +5,8 @@ notation as `useHotkey`: `mod+k` looks like ⌘ K on a Mac and like Ctrl K on Wi
 
 <Example name="kbd/Basic" />
 
-`variant="plain"` renders the key as plain text without a frame.
+`variant="plain"` renders the key as plain text without a frame. `variant="soft"` puts the key on
+a translucent tint of the text colour: it reads on any background, a tooltip included.
 
 ## Installation
 

@@ -176,7 +176,9 @@ export {
 } from './popover/popover.types';
 export { default as NuiTooltip } from './tooltip/NuiTooltip.vue';
 export type {
+  NuiTooltipKeys,
   NuiTooltipProps,
+  NuiTooltipShortcut,
   NuiTooltipTargets,
   NuiTooltipContentSlot,
   NuiTooltipTargetsAttrs,

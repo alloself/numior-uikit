@@ -3,7 +3,8 @@ import { NuiKbdPlatform } from './kbd.types';
 
 const MAC_MODIFIERS = { ctrl: '⌃', alt: '⌥', shift: '⇧', meta: '⌘', mod: '⌘' };
 const OTHER_MODIFIERS = { ctrl: 'Ctrl', alt: 'Alt', shift: 'Shift', meta: 'Win', mod: 'Ctrl' };
-const MODIFIER_ORDER = ['ctrl', 'alt', 'shift', 'meta', 'mod'] as const;
+const MAC_ORDER = ['ctrl', 'alt', 'shift', 'meta', 'mod'] as const;
+const OTHER_ORDER = ['meta', 'ctrl', 'mod', 'alt', 'shift'] as const;
 
 const KEY_GLYPHS: Record<string, string> = {
   arrowup: '↑',
@@ -31,10 +32,12 @@ const keyLabel = (key: string, text: string): string => {
 };
 
 const comboLabels = (hotkey: Hotkey, platform: NuiKbdPlatform): string[] => {
-  const modifiers = platform === NuiKbdPlatform.Mac ? MAC_MODIFIERS : OTHER_MODIFIERS;
+  const apple = platform === NuiKbdPlatform.Mac;
+  const modifiers = apple ? MAC_MODIFIERS : OTHER_MODIFIERS;
+  const order = apple ? MAC_ORDER : OTHER_ORDER;
 
   return [
-    ...MODIFIER_ORDER.reduce<string[]>((found, name) => {
+    ...order.reduce<string[]>((found, name) => {
       if (hotkey[name]) {
         found.push(modifiers[name]);
       }

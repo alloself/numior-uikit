@@ -25,6 +25,16 @@ needs an `aria-label`.
 
 <Example name="tooltip/IconButton" />
 
+### Key combination
+
+The `shortcut` prop shows the keys of an action after the tooltip text. A combination uses the same
+notation as `NuiKbd`: `mod+shift+c` looks like ⇧ ⌘ C on a Mac and like Ctrl Shift C on Windows.
+
+The keys need the `@numior/vue/styles/kbd.css` styles. With targets in `anchor`, pass a function:
+it receives the element under the pointer and returns its combination.
+
+<Example name="tooltip/Shortcut" />
+
 ## Accessibility
 
 The tooltip follows WCAG 1.4.13: Esc closes it, the pointer can move onto it, and it never

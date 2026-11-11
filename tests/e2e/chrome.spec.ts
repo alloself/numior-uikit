@@ -26,7 +26,7 @@ test('kbd renders combos per platform, boxed or plain', async ({ playground, chr
   expect(await chrome.keysOf(chrome.comboKbd)).toEqual(apple ? ['⌘', 'K'] : ['Ctrl', 'K']);
 
   expect(await chrome.keysOf(chrome.listKbd)).toEqual(
-    apple ? ['⇧', '⌘', 'P'] : ['Shift', 'Ctrl', 'P'],
+    apple ? ['⇧', '⌘', 'P'] : ['Ctrl', 'Shift', 'P'],
   );
 
   expect(await chrome.keysOf(chrome.plainKbd)).toEqual(['Esc']);

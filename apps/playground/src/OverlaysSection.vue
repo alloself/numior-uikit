@@ -122,6 +122,19 @@
         </template>
         Сохраняет документ и историю
       </NuiTooltip>
+      <NuiTooltip shortcut="mod+shift+c" placement="bottom" data-testid="tooltip-keys">
+        <template #trigger="{ attrs }">
+          <NuiButton
+            v-bind="attrs"
+            variant="ghost"
+            tone="neutral"
+            icon="copy"
+            aria-label="Скопировать ссылку"
+            data-testid="tooltip-keys-trigger"
+          />
+        </template>
+        Скопировать ссылку
+      </NuiTooltip>
     </div>
     <pre class="output" data-testid="overlays-output">{{ output }}</pre>
   </section>

@@ -66,10 +66,6 @@ export interface NuiEditorToolbarHintsProps {
   disabled?: boolean | undefined;
 }
 
-export interface NuiEditorToolbarHintProps {
-  face?: ToolbarFace | undefined;
-}
-
 export const ToolbarItemKind = {
   Action: 'action',
   Blocks: 'blocks',

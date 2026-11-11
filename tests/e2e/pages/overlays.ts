@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { boxOf, gapBetween } from '../helpers/geometry';
+import { boxOf, gapBetween, textBoxOf } from '../helpers/geometry';
 import {
   isBoolean,
   isString,
@@ -54,6 +54,8 @@ export class OverlaysSection {
   readonly popoverArrow: Locator;
   readonly tooltipTrigger: Locator;
   readonly tooltip: Locator;
+  readonly keysTooltipTrigger: Locator;
+  readonly keysTooltip: Locator;
   readonly output: Locator;
 
   constructor(private readonly page: Page) {
@@ -81,6 +83,8 @@ export class OverlaysSection {
     this.popoverArrow = page.getByTestId('popover-arrow');
     this.tooltipTrigger = page.getByTestId('tooltip-trigger');
     this.tooltip = page.getByTestId('tooltip');
+    this.keysTooltipTrigger = page.getByTestId('tooltip-keys-trigger');
+    this.keysTooltip = page.getByTestId('tooltip-keys');
     this.output = page.getByTestId('overlays-output');
   }
 
@@ -98,6 +102,19 @@ export class OverlaysSection {
     await this.popover.waitFor({ state: 'hidden' });
 
     return gap;
+  }
+
+  tooltipKeys(): Promise<string[]> {
+    return this.keysTooltip.locator('.nui-kbd__key').allInnerTexts();
+  }
+
+  async tooltipKeysSkew(): Promise<number> {
+    const [text, key] = await Promise.all([
+      textBoxOf(this.keysTooltip.locator('.nui-tooltip__text')),
+      boxOf(this.keysTooltip.locator('.nui-kbd__key').first()),
+    ]);
+
+    return Math.abs(text.y + text.height / 2 - (key.y + key.height / 2));
   }
 
   async clickBackdrop(): Promise<void> {

@@ -35,11 +35,6 @@
   block-size: 1.25rem;
   background: var(--nui-border);
 }
-.nui-editor-toolbar__hint {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--nui-space-2);
-}
 .nui-editor-toolbar--docked {
   position: fixed;
   inset-block: auto var(--_keyboard, 0px);

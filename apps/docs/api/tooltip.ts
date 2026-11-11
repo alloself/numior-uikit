@@ -28,6 +28,10 @@ const docs: DocsMap = {
         ru: 'Элемент-триггер вместо слота `trigger`. Объект `{ within, selector }` даёт одну подсказку всем элементам по селектору внутри `within` или слота. Между соседними она переходит без задержки.',
         en: 'Trigger element in place of the `trigger` slot. An object `{ within, selector }` gives one tooltip to every match inside `within` or the slot. It moves between neighbours without a delay.',
       },
+      shortcut: {
+        ru: 'Сочетание клавиш после текста, например `mod+s`. Функция получает элемент-цель из `anchor` и возвращает его сочетание.',
+        en: 'Key combination after the text, such as `mod+s`. A function receives the target element from `anchor` and returns its combination.',
+      },
     },
     models: {
       'v-model:open': { ru: 'Показана ли подсказка.', en: 'Whether the tooltip is shown.' },

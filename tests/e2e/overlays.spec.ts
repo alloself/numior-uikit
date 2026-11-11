@@ -226,6 +226,33 @@ test.describe('layers', () => {
     await expect(overlays.popoverInput).toBeFocused();
   });
 
+  test('tooltip shows the keys of its action level with the text and as tall as a plain one', async ({
+    playground,
+    overlays,
+    chrome,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'tooltips stay hidden on touch');
+
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await overlays.tooltipTrigger.focus();
+
+    const plain = await boxOf(overlays.tooltip);
+
+    await overlays.keysTooltipTrigger.focus();
+
+    await expect(overlays.keysTooltip).toBeVisible();
+
+    expect(await overlays.tooltipKeys()).toEqual(
+      (await chrome.isApplePlatform()) ? ['⇧', '⌘', 'C'] : ['Ctrl', 'Shift', 'C'],
+    );
+
+    expect(await overlays.tooltipKeysSkew()).toBeLessThanOrEqual(1);
+    expect((await boxOf(overlays.keysTooltip)).height).toBe(plain.height);
+    await expect(overlays.keysTooltipTrigger).toHaveAccessibleDescription(/^Скопировать ссылку/);
+  });
+
   test('tooltip appears on hover and focus, hides on leave and Escape, ignores touch', async ({
     playground,
     overlays,
