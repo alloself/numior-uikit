@@ -471,6 +471,7 @@ describe('NuiTree', () => {
     expect(waiting.hasPart('docs', 'spinner')).toBe(false);
 
     waiting.unmount();
+
     const slotted = TreeDriver.mount({
       itemSlot: ({ item, expanded }) => `${item.label}:${expanded ? 'open' : 'closed'}`,
     });
