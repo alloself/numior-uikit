@@ -44,6 +44,18 @@ test.describe('collaboration on a workbook', () => {
       .toBeLessThan(2);
   });
 
+  test('puts the frame of someone else on its new cell at once', async ({ collab }) => {
+    const anna = await collab.joinBook(ANNA);
+    const boris = await collab.joinBook(BORIS);
+
+    await anna.sheet.cell('3', 1).click();
+    await expect(boris.peerFrame(ANNA)).toBeVisible();
+
+    const stops = await boris.peerFrameStops(ANNA, () => anna.sheet.cell('3', 4).click());
+
+    expect(stops).toBe(1);
+  });
+
   test('stops showing a frame once its owner goes to another sheet', async ({ collab }) => {
     const anna = await collab.joinBook(ANNA);
     const boris = await collab.joinBook(BORIS);

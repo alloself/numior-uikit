@@ -177,10 +177,6 @@
   position: absolute;
   box-sizing: border-box;
   pointer-events: none;
-  transition:
-    inset var(--nui-duration-fast) var(--nui-easing),
-    inline-size var(--nui-duration-fast) var(--nui-easing),
-    block-size var(--nui-duration-fast) var(--nui-easing);
 }
 .nui-spreadsheet__peer-area {
   background-color: color-mix(in oklab, var(--_tone) 14%, transparent);

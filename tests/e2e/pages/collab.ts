@@ -448,6 +448,50 @@ export class CollabBook {
     return this.sheet.sheet.locator('.nui-spreadsheet__peer-area');
   }
 
+  async peerFrameStops(name: string, act: () => Promise<void>): Promise<number> {
+    const stops = await this.client.page.evaluateHandle(
+      ({ who, frames }) => ({
+        measured: new Promise<number>((resolve) => {
+          const frame = [...document.querySelectorAll('.nui-spreadsheet__peer-cell')].find((each) =>
+            each.textContent.includes(who),
+          );
+
+          if (frame === undefined) {
+            resolve(0);
+            return;
+          }
+
+          const seen = new Set<number>();
+          let left = frames;
+
+          const sample = (): void => {
+            seen.add(Math.round(frame.getBoundingClientRect().left));
+            left -= 1;
+
+            if (left > 0) {
+              requestAnimationFrame(sample);
+              return;
+            }
+
+            resolve(seen.size);
+          };
+
+          const observer = new MutationObserver(() => {
+            observer.disconnect();
+            requestAnimationFrame(sample);
+          });
+
+          observer.observe(frame, { attributes: true, attributeFilter: ['style'] });
+        }),
+      }),
+      { who: name, frames: LAG_FRAMES },
+    );
+
+    await act();
+
+    return stops.evaluate((held) => held.measured);
+  }
+
   async undo(): Promise<void> {
     await this.client.page.keyboard.press('Control+z');
   }
