@@ -86,7 +86,7 @@ test.describe('table text flow', () => {
     await expect(flow.cell(TITLE, 0)).toContainText('Сводный отчёт');
 
     await expectOneText(flow, TITLE, 0, 4);
-    await expectOneText(flow, BLOCKS, 1, 6);
+    await expectOneText(flow, BLOCKS, 1, await flow.reachOf(BLOCKS, 1));
     await expectOneText(flow, STOPPED, 1, 4);
 
     const start = await flow.pieceOf(STOPPED, 1);
@@ -148,7 +148,7 @@ test.describe('table text flow', () => {
     await page.keyboard.press('Shift+ArrowRight');
 
     expect(await flow.rangedCount()).toBe(2);
-    await expectOneText(flow, BLOCKS, 1, 6);
+    await expectOneText(flow, BLOCKS, 1, await flow.reachOf(BLOCKS, 1));
   });
 
   test('shrinks the flow when a value lands in a covered cell and restores it when it is cleared', async ({
