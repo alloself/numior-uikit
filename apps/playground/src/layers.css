@@ -5,3 +5,4 @@
 @import '@numior/content/styles.css' layer(components);
 @import '@numior/editor-vue/styles.css' layer(components);
 @import '@numior/tokens/prose.css' layer(components);
+@import './style.css' layer(components);
