@@ -109,6 +109,10 @@ export class DataSection {
       .evaluate((element) => getComputedStyle(element, '::after').outlineStyle);
   }
 
+  switchTrackOf(card: Locator): Locator {
+    return card.locator('.nui-switch__track');
+  }
+
   skeletonsOf(card: Locator): Locator {
     return card.locator('.nui-skeleton');
   }

@@ -107,6 +107,26 @@ test.describe('data display', () => {
     expect(await playground.wcagViolations(data.scope)).toEqual([]);
   });
 
+  test('a switch in the footer of a linked card keeps its place and toggles without opening the link', async ({
+    playground,
+    data,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await data.cardLoading.scrollIntoViewIfNeeded();
+
+    const loading = await boxOf(data.switchTrackOf(data.cardLoading));
+
+    await data.cardLoadingToggle.click();
+    await expect(data.cardLoading.getByRole('link')).toHaveCount(1);
+    expect((await boxOf(data.switchTrackOf(data.cardLoading))).x).toBe(loading.x);
+
+    await data.cardLoadingToggle.click();
+    await expect(data.cardLoading).toHaveAttribute('aria-busy', 'true');
+    expect(page.url()).not.toContain('#catalogue');
+  });
+
   test('a card steps its padding and the gap between its parts down together', async ({
     playground,
     data,
