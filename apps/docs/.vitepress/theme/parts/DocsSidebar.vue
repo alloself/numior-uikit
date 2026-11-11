@@ -1,5 +1,5 @@
 <template>
-  <NuiSidebar :label="texts.navigation" collapsible="offcanvas" variant="plain">
+  <NuiSidebar :label="texts.navigation" collapsible="offcanvas" variant="plain" marker="square">
     <NuiSidebarContent>
       <NuiSidebarGroup v-if="layout.mobile.value" :label="texts.sections" :items="sectionEntries" />
       <NuiSidebarGroup

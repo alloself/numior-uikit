@@ -1,6 +1,7 @@
 <template>
   <div class="p-6 pt-8">
-    <NuiToc :items="items" :title="texts.onThisPage" :label="texts.onThisPage" />
+    <DocsCaption class="mb-2">{{ texts.onThisPage }}</DocsCaption>
+    <NuiToc :items="items" title="" :label="texts.onThisPage" marker="square" />
   </div>
 </template>
 
@@ -9,6 +10,7 @@ import { computed } from 'vue';
 import { useData } from 'vitepress';
 import { NuiToc } from '@numior/vue';
 import { useDocs } from '../composables/use-docs';
+import DocsCaption from './DocsCaption.vue';
 import { tocItemsOf } from '../toc-items';
 
 const { page } = useData();

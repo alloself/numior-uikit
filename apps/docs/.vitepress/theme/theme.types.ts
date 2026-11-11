@@ -30,6 +30,8 @@ export interface DocsSidebarGroup {
 
 export type DocsSidebarSections = Readonly<Record<string, readonly DocsSidebarGroup[]>>;
 
+export type DocsAccent = (typeof DocsAccent)[keyof typeof DocsAccent];
+
 export interface DocsTexts {
   readonly navigation: string;
   readonly sections: string;
@@ -41,6 +43,9 @@ export interface DocsTexts {
   readonly light: string;
   readonly dark: string;
   readonly system: string;
+  readonly accent: string;
+  readonly builtInAccents: string;
+  readonly accents: Readonly<Record<DocsAccent, string>>;
   readonly language: string;
   readonly onThisPage: string;
   readonly pager: string;
@@ -241,3 +246,14 @@ export interface ConfiguratorControlProps {
 export interface ConfiguratorControlEmits {
   change: [change: ConfiguratorChange];
 }
+
+export const DocsAccent = {
+  Indigo: 'indigo',
+  Blue: 'blue',
+  Violet: 'violet',
+  Emerald: 'emerald',
+  Teal: 'teal',
+  Rose: 'rose',
+  Amber: 'amber',
+  Slate: 'slate',
+} as const;

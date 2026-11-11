@@ -52,6 +52,30 @@
           <NuiMenuRadioItem value="system">{{ texts.system }}</NuiMenuRadioItem>
         </NuiMenuRadioGroup>
       </NuiMenu>
+      <NuiMenu :label="texts.accent" placement="bottom-end">
+        <template #trigger="{ attrs }">
+          <NuiButton
+            v-bind="attrs"
+            variant="ghost"
+            tone="neutral"
+            size="sm"
+            icon-only
+            :aria-label="texts.accent"
+          >
+            <span class="size-3 bg-primary" />
+          </NuiButton>
+        </template>
+        <NuiMenuRadioGroup v-model="palette.choice.value">
+          <NuiMenuRadioItem :value="NUMIOR_PALETTE">Numior</NuiMenuRadioItem>
+        </NuiMenuRadioGroup>
+        <NuiMenuSeparator />
+        <NuiMenuLabel>{{ texts.builtInAccents }}</NuiMenuLabel>
+        <NuiMenuRadioGroup v-model="palette.choice.value">
+          <NuiMenuRadioItem v-for="accent in ACCENTS" :key="accent" :value="accent">
+            {{ texts.accents[accent] }}
+          </NuiMenuRadioItem>
+        </NuiMenuRadioGroup>
+      </NuiMenu>
       <NuiMenu :label="texts.language" placement="bottom-end">
         <template #trigger="{ attrs }">
           <NuiButton
@@ -85,16 +109,19 @@ import {
   NuiLink,
   NuiMenu,
   NuiMenuItem,
+  NuiMenuLabel,
   NuiMenuRadioGroup,
   NuiMenuRadioItem,
+  NuiMenuSeparator,
   NuiSidebarTrigger,
   useColorScheme,
   useLayout,
 } from '@numior/vue';
 import DocsLogo from './DocsLogo.vue';
+import { NUMIOR_PALETTE, useAccent } from '../composables/use-accent';
 import { useDocs } from '../composables/use-docs';
 import type { ColorScheme, IconAlias } from '@numior/primitives';
-import type { DocsThemeConfig } from '../theme.types';
+import { DocsAccent, type DocsThemeConfig } from '../theme.types';
 
 const emit = defineEmits<{ search: [] }>();
 
@@ -102,6 +129,9 @@ const { theme, site } = useData<DocsThemeConfig>();
 const { texts, localeBase, locales, startsCurrent } = useDocs();
 const layout = useLayout();
 const scheme = useColorScheme();
+const palette = useAccent();
+
+const ACCENTS = Object.values(DocsAccent);
 
 const SCHEME_ICONS: Record<ColorScheme, IconAlias> = {
   light: 'sun',

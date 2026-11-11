@@ -12,6 +12,7 @@ import { parseBundle } from './reference/bundle';
 import { docsReference } from './reference/plugin';
 import { apiSearchText } from './reference/search-text';
 import type { DocsSearchOptions } from './theme/theme.types';
+import { ACCENT_STORAGE_KEY, accentScript } from './theme/composables/use-accent';
 import { en, ru } from './theme/texts';
 import type { DocsSidebarGroup, DocsSidebarSections, DocsThemeConfig } from './theme/theme.types';
 
@@ -96,7 +97,7 @@ const ruComponents: DocsSidebarGroup[] = [
     ],
   },
   {
-    text: 'Уведомления и состояния',
+    text: 'Обратная связь',
     items: [
       { text: 'Toast', link: '/components/toast' },
       { text: 'Alert', link: '/components/alert' },
@@ -277,7 +278,7 @@ const enComponents: DocsSidebarGroup[] = [
     ],
   },
   {
-    text: 'Notifications and status',
+    text: 'Feedback',
     items: [
       { text: 'Toast', link: '/en/components/toast' },
       { text: 'Alert', link: '/en/components/alert' },
@@ -406,6 +407,7 @@ export default defineConfigWithTheme<DocsThemeConfig>({
     ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' }],
     ['link', { rel: 'manifest', href: '/site.webmanifest' }],
     ['script', {}, colorSchemeScript('nui-theme')],
+    ['script', {}, accentScript(ACCENT_STORAGE_KEY)],
   ],
   markdown: {
     headers: { level: [2, 3] },
