@@ -19,6 +19,7 @@ import './numior.css';
 import './tailwind.css';
 import Layout from './Layout.vue';
 import ApiReference from './parts/ApiReference.vue';
+import DocsBlock from './parts/DocsBlock.vue';
 import DocsCodeGroup from './parts/DocsCodeGroup.vue';
 import DocsConfigurator from './parts/DocsConfigurator.vue';
 import DocsExample from './parts/DocsExample.vue';
@@ -53,6 +54,7 @@ export default {
     registerKit(app, table);
     registerKit(app, spreadsheet);
     app.component('ApiReference', ApiReference);
+    app.component('Block', DocsBlock);
     app.component('CodeGroup', DocsCodeGroup);
     app.component('Configurator', DocsConfigurator);
     app.component('Example', DocsExample);

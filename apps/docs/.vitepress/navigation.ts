@@ -213,6 +213,12 @@ export const NAVIGATION: readonly NavSection[] = [
     groups: COMPONENTS,
   },
   {
+    title: { ru: 'Блоки', en: 'Blocks' },
+    link: '/blocks/',
+    prefixes: ['/blocks/'],
+    groups: [],
+  },
+  {
     title: { ru: 'Темы', en: 'Themes' },
     prefixes: ['/theme/'],
     groups: THEME,
@@ -239,12 +245,12 @@ export const navOf = (
   sections: readonly NavSection[] = NAVIGATION,
 ): DocsNavItem[] =>
   sections.reduce<DocsNavItem[]>((items, section) => {
-    const first = section.groups[0]?.pages[0];
+    const link = section.link ?? section.groups[0]?.pages[0]?.link;
 
-    if (first !== undefined) {
+    if (link !== undefined) {
       items.push({
         text: textOf(section.title, locale),
-        link: localized(first.link, locale),
+        link: localized(link, locale),
         sections: section.prefixes.map((prefix) => localized(prefix, locale)),
       });
     }

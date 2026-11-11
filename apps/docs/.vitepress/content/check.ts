@@ -80,7 +80,7 @@ export const checkContent = (root: string): string[] => {
 };
 
 const UNRESOLVED_RE =
-  /<(?:Nui[A-Za-z]*|Example|ApiReference|Configurator|SignatureReference|KeyboardReference)\b/;
+  /<(?:Nui[A-Za-z]*|Example|Block|ApiReference|Configurator|SignatureReference|KeyboardReference)\b/;
 
 const NOT_FOUND_PAGE = '404.html';
 const SITEMAP = 'sitemap.xml';

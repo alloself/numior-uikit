@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import type { FrameLocator, Locator, Page } from '@playwright/test';
 import { wcagViolationsOf, type AxeViolations } from '../helpers/axe';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { boxOf } from '../helpers/geometry';
@@ -82,6 +82,36 @@ export class DocsConfigurator {
   }
 }
 
+export class DocsBlock {
+  readonly screen: Locator;
+  readonly content: FrameLocator;
+  readonly code: Locator;
+  private readonly frame: Locator;
+
+  constructor(page: Page, name: string) {
+    this.screen = page.locator(`iframe[src$="/blocks/view/${name}"]`);
+    this.content = page.frameLocator(`iframe[src$="/blocks/view/${name}"]`);
+    this.frame = this.screen.locator('xpath=ancestor::*[contains(@class, "nui-tabs")][1]');
+    this.code = this.frame.locator('.nui-code__code').first();
+  }
+
+  async resize(label: string): Promise<void> {
+    await this.frame.getByRole('radio', { name: label }).click();
+  }
+
+  async showCode(): Promise<void> {
+    await this.frame.getByRole('tab', { name: 'Код', exact: true }).click();
+  }
+
+  async width(): Promise<number> {
+    return (await boxOf(this.screen)).width;
+  }
+
+  theme(): Promise<string | null> {
+    return this.content.locator('html').getAttribute('data-nui-theme');
+  }
+}
+
 export class DocsHome {
   readonly title: Locator;
   readonly start: Locator;
@@ -132,7 +162,11 @@ export class DocsSite {
       await this.page.addInitScript((value) => localStorage.setItem('nui-theme', value), scheme);
     }
     await this.page.goto(path, { waitUntil: 'networkidle' });
-    await this.page.locator('.nui-layout:not(.nui-layout--pending)').first().waitFor();
+
+    await this.page
+      .locator('.nui-layout:not(.nui-layout--pending), main#docs-content')
+      .first()
+      .waitFor();
   }
 
   get heading(): Locator {
@@ -284,6 +318,10 @@ export class DocsSite {
 
   example(previewLabel = 'Превью'): DocsExample {
     return new DocsExample(this.page, previewLabel);
+  }
+
+  block(name: string): DocsBlock {
+    return new DocsBlock(this.page, name);
   }
 
   configurator(): DocsConfigurator {

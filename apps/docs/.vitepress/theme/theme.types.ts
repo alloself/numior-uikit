@@ -55,6 +55,7 @@ export interface NavEntry {
 
 export interface NavSection {
   readonly title: NavTitle;
+  readonly link?: string | undefined;
   readonly prefixes: readonly string[];
   readonly groups: readonly NavGroup[];
 }
@@ -74,6 +75,7 @@ export type DocsSidebarSections = Readonly<Record<string, readonly DocsSidebarGr
 export type TokenSample = (typeof TokenSample)[keyof typeof TokenSample];
 
 export type TokenSection = (typeof TokenSection)[keyof typeof TokenSection];
+export type BlockViewport = (typeof BlockViewport)[keyof typeof BlockViewport];
 
 export interface TokenRow extends TokenReference {
   readonly sample: TokenSample;
@@ -120,6 +122,11 @@ export interface DocsTexts {
   readonly rtl: string;
   readonly copyCode: string;
   readonly copyPage: string;
+  readonly blockViewport: string;
+  readonly viewportDesktop: string;
+  readonly viewportTablet: string;
+  readonly viewportPhone: string;
+  readonly blockOpen: string;
   readonly copied: string;
   readonly exampleFiles: string;
   readonly codeVariants: string;
@@ -197,6 +204,19 @@ export interface ExampleViewProps {
 
 export interface ExampleFrameProps {
   component: Component;
+  files: readonly ExampleFile[];
+  texts: DocsTexts;
+}
+
+export interface BlockStageProps {
+  name: string;
+  locale: ExampleLocale;
+}
+
+export interface BlockFrameProps {
+  name: string;
+  src: string;
+  height: number;
   files: readonly ExampleFile[];
   texts: DocsTexts;
 }
@@ -374,6 +394,12 @@ export const TokenSample = {
   FontSize: 'font-size',
   FontWeight: 'font-weight',
   None: 'none',
+} as const;
+
+export const BlockViewport = {
+  Desktop: 'desktop',
+  Tablet: 'tablet',
+  Phone: 'phone',
 } as const;
 
 export const TokenSection = {

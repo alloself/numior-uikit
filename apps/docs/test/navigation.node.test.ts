@@ -79,6 +79,10 @@ describe('docs navigation', () => {
 
     expect(navigationLinks(SHOP)).toEqual(['/guide/theming', '/composables/toast']);
 
+    expect(
+      navOf('en', [{ title: 'Blocks', link: '/blocks/', prefixes: ['/blocks/'], groups: [] }]),
+    ).toEqual([{ text: 'Blocks', link: '/en/blocks/', sections: ['/en/blocks/'] }]);
+
     expect(navigationPages('en', SHOP)).toEqual([
       { link: '/en/guide/theming', title: 'Theming', group: 'Guide', section: 'Docs' },
       { link: '/en/composables/toast', title: 'useToast', group: 'Hooks', section: 'Docs' },

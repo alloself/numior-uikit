@@ -5,6 +5,7 @@ import { createHighlighter } from 'shiki';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfigWithTheme } from 'vitepress';
 import { colorSchemeScript } from '@numior/primitives';
+import { isBlockView } from './blocks';
 import { CODE_LANGUAGES, docsMarkdown } from './markdown';
 import { headingPermalink } from './markdown/anchors';
 import { docsDemo, demoRootOf } from './examples/demo';
@@ -62,7 +63,14 @@ export default defineConfigWithTheme<DocsThemeConfig>({
     ['script', {}, colorSchemeScript('nui-theme')],
     ['script', {}, accentScript(ACCENT_STORAGE_KEY)],
   ],
-  ...(origin === undefined ? {} : { sitemap: { hostname: origin } }),
+  ...(origin === undefined
+    ? {}
+    : {
+        sitemap: {
+          hostname: origin,
+          transformItems: (items) => items.filter((item) => !isBlockView(item.url)),
+        },
+      }),
   transformPageData: (pageData, { siteConfig }) => {
     const file = join(siteConfig.srcDir, pageData.filePath);
 

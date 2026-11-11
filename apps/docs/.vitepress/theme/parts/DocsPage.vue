@@ -1,5 +1,5 @@
 <template>
-  <div class="relative max-w-3xl mx-auto p-6">
+  <div class="relative mx-auto p-6" :class="wide ? 'max-w-6xl' : 'max-w-3xl'">
     <CopyPage v-if="twin" :path="twin" :texts="texts" />
     <article id="docs-content" class="nui-prose" tabindex="-1">
       <Content />
@@ -20,9 +20,10 @@ import { editUrl, site } from '../site';
 import CopyPage from './CopyPage.vue';
 import DocsPager from './DocsPager.vue';
 
-const { page } = useData();
+const { page, frontmatter } = useData();
 const { texts, allLinks, isCurrent } = useDocs();
 
+const wide = computed(() => frontmatter.value.layout === 'wide');
 const edit = computed(() => editUrl(site, page.value.relativePath));
 
 const twin = computed(() =>
