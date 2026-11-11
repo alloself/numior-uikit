@@ -145,12 +145,26 @@ export const createWorkbookDocument = ({
       const wires = snapshotSteps(snapshot);
       const steps = wires === undefined ? undefined : decodedAll(wires);
 
-      if (steps === undefined || applyRemote(steps) === undefined) {
+      if (steps === undefined) {
         return false;
       }
+
+      const before = raw.clear();
+
+      if (applyRemote(steps) === undefined) {
+        raw.clear();
+        raw.apply(before);
+        return false;
+      }
+      unconfirmed = [];
       version = at;
+      history?.clear();
       notify(steps, []);
       return true;
+    },
+    reset: () => {
+      unconfirmed = [];
+      version = null;
     },
     receive: (batch) => {
       const steps = decodedAll(batch.steps);

@@ -162,7 +162,7 @@ const samePivot = (left: SheetPivot | undefined, right: SheetPivot): boolean =>
   left !== undefined &&
   (left === right || JSON.stringify(stateOf(left)) === JSON.stringify(stateOf(right)));
 
-const putBack = (pivot: SheetPivot): WorkbookStep => ({
+export const putBack = (pivot: SheetPivot): WorkbookStep => ({
   kind: 'putPivot',
   sheet: pivot.sheet.name,
   name: pivot.name,

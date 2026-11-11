@@ -29,9 +29,9 @@ const SNAPSHOT = { steps: [{ kind: 'addSheet', name: SHEET, index: 0 }] };
 
 const mounted: SpreadsheetDriver[] = [];
 
-const writeAt = (row: number, col: number, value: unknown): unknown => ({
+const writeAt = (row: number, col: number, value: unknown, sheet = SHEET): unknown => ({
   kind: 'setCells',
-  sheet: SHEET,
+  sheet,
   cells: [{ row, col, content: { kind: 'value', value } }],
 });
 
@@ -169,6 +169,39 @@ describe('NuiSpreadsheet in a shared book', () => {
     await driver.press('z', { ctrl: true });
 
     expect(driver.text(3, 0)).toBe('');
+  });
+
+  it('shows the book of the server on the sheet it was on after the book is opened again', async () => {
+    const book = shared();
+    const driver = open(book);
+
+    receive(book.session, { kind: 'addSheet', name: 'Plan', index: 1 });
+    await driver.settle();
+    await driver.chooseTab('Plan');
+    await driver.enter(1, 0, 'unsent');
+
+    book.session.reset();
+
+    book.session.load(
+      {
+        steps: [
+          { kind: 'addSheet', name: 'Intro', index: 0 },
+          { kind: 'addSheet', name: SHEET, index: 1 },
+          { kind: 'addSheet', name: 'Plan', index: 2 },
+          writeAt(0, 0, { kind: 'string', value: 'theirs' }, 'Plan'),
+        ],
+      },
+      9,
+    );
+
+    await driver.settle();
+    await driver.focus(1, 0);
+    await driver.press('z', { ctrl: true });
+
+    expect(driver.tabs).toEqual(['Intro', SHEET, 'Plan']);
+    expect(driver.selectedTab).toBe('Plan');
+    expect(driver.text(1, 0)).toBe('theirs');
+    expect(book.session.pending()).toEqual([]);
   });
 
   it('adds a tab for a sheet created by someone else', async () => {

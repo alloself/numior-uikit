@@ -44,6 +44,7 @@ export interface BookNetwork {
   readonly settle: () => void;
   readonly mend: () => void;
   readonly traffic: () => NetworkTraffic;
+  readonly newcomer: () => string;
   readonly close: () => void;
 }
 
@@ -214,5 +215,13 @@ export const createBookNetwork = (
     mendAll(clients);
   };
 
-  return { clients, settle, mend, traffic: () => ({ ...traffic }), close };
+  const newcomer = (): string => {
+    const book = createWorkbook();
+    const calculator = createCalculator(book);
+    const document = createWorkbookDocument({ book, calculator });
+
+    return document.load(authority.snapshot(), 0) ? dumpBook(book, calculator) : '';
+  };
+
+  return { clients, settle, mend, traffic: () => ({ ...traffic }), newcomer, close };
 };

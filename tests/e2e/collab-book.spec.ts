@@ -89,6 +89,29 @@ test.describe('collaboration on a workbook', () => {
     await expect(anna.sheet.cell('1', 1)).toHaveText('7');
   });
 
+  test('opens a book again on the sheet it showed and goes on sending edits', async ({
+    collab,
+  }) => {
+    const anna = await collab.joinBook(ANNA);
+    const boris = await collab.joinBook(BORIS);
+
+    await anna.sheet.addSheetButton.click();
+    await expect(boris.tabs).toHaveCount(2);
+
+    await boris.sheet.chooseSheet('Лист2');
+    await anna.client.loseSync();
+    await boris.sheet.enter('1', 0, 'пока не было связи');
+
+    await anna.client.openAgain();
+
+    await expect(anna.sheet.sheetTab('Лист2')).toHaveAttribute('aria-selected', 'true');
+    await expect(anna.sheet.cell('1', 0)).toHaveText('пока не было связи');
+
+    await anna.sheet.enter('2', 0, 'снова вместе');
+
+    await expect(boris.sheet.cell('2', 0)).toHaveText('снова вместе');
+  });
+
   test('takes a write back for everyone', async ({ collab }) => {
     const anna = await collab.joinBook(ANNA);
     const boris = await collab.joinBook(BORIS);

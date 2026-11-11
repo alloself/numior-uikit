@@ -9,8 +9,14 @@ import type { SheetLayout } from '../layout/layout.types';
 import { mapLayoutFormulas, shiftLayout } from '../layout/line-layouts';
 import { layoutBack, layoutDelta, patchLayout } from '../layout/merge-layout';
 import { dropSheetFromFormula, renameInFormula, type LineChange } from '../formula/rewrite';
-import { validDefinedName, validSheetName, type Sheet, type Workbook } from '../workbook';
-import { cellContentsIn } from './contents';
+import {
+  validDefinedName,
+  validSheetName,
+  type DefinedName,
+  type Sheet,
+  type Workbook,
+} from '../workbook';
+import { WHOLE_SHEET, cellContentsIn } from './contents';
 import { createRewriter, formulaEdits, nameEdits } from './rewrites';
 import {
   StepKind,
@@ -33,6 +39,10 @@ export interface Stepper {
   apply(step: WorkbookStep): StepResult;
 }
 
+export interface BookStepper extends Stepper {
+  clear(): WorkbookStep;
+}
+
 interface SheetLook {
   readonly sheet: Sheet;
   readonly conditional: readonly ConditionalFormat[];
@@ -51,8 +61,6 @@ const linesRange = (axis: LineAxis, from: number, to: number): CellRange =>
   axis === LineAxis.Rows
     ? { top: from, bottom: to, left: 0, right: MAX_COLS - 1 }
     : { top: 0, bottom: MAX_ROWS - 1, left: from, right: to };
-
-const WHOLE_SHEET: CellRange = { top: 0, left: 0, bottom: MAX_ROWS - 1, right: MAX_COLS - 1 };
 
 const refused = (reason: StepRefusal): StepResult => ({ ok: false, reason });
 
@@ -134,7 +142,7 @@ const looksAfterLines = (
   });
 };
 
-export const createStepper = (book: Workbook, calculator: Calculator): Stepper => {
+export const createStepper = (book: Workbook, calculator: Calculator): BookStepper => {
   const rewriter = createRewriter(book, calculator);
   const tables = createTableSteps(book, calculator, rewriter);
 
@@ -396,11 +404,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     return done({ kind: 'removeSheet', name });
   };
 
-  const removeSheet = (sheet: Sheet): StepResult => {
-    if (book.sheets.length === 1) {
-      return refused(StepRefusal.LastSheet);
-    }
-
+  const dropSheet = (sheet: Sheet): WorkbookStep => {
     const index = book.sheets.indexOf(sheet);
     const contents = [...contentsIn(sheet, WHOLE_SHEET).values()];
     const looks = looksOf(book);
@@ -433,7 +437,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
       each.layout = mapLayoutFormulas(each.layout, (ast) => dropSheetFromFormula(ast, sheet.name));
     });
 
-    return done({
+    return {
       kind: 'batch',
       steps: [
         { kind: 'addSheet', name: sheet.name, index },
@@ -460,7 +464,31 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
         ),
         ...kept,
       ],
+    };
+  };
+
+  const removeSheet = (sheet: Sheet): StepResult =>
+    book.sheets.length === 1 ? refused(StepRefusal.LastSheet) : done(dropSheet(sheet));
+
+  const clearBook = (): WorkbookStep => {
+    const shared: DefinedName[] = [];
+
+    book.names.forEach((defined) => {
+      if (defined.scope !== undefined) {
+return;
+}
+
+shared.push(defined);
     });
+
+    const named = shared.map((defined): WorkbookStep => {
+      calculator.setName(defined.name, undefined, undefined);
+      return { kind: 'setName', name: defined.name, ast: defined.ast };
+    });
+
+    const dropped = book.sheets.toReversed().map(dropSheet);
+
+    return { kind: 'batch', steps: [...dropped.toReversed(), ...named] };
   };
 
   const renameTable = (from: string, to: string): StepResult => {
@@ -568,5 +596,5 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     }
   };
 
-  return { apply };
+  return { apply, clear: clearBook };
 };

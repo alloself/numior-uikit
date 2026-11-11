@@ -232,7 +232,8 @@ export type {
   NumberFormat,
   NumberLocale,
 } from './format';
-export { createStepper, type Stepper } from './steps/apply-step';
+export { createStepper, type BookStepper, type Stepper } from './steps/apply-step';
+export { bookSteps } from './steps/book-steps';
 export { createCellClips } from './steps/clip';
 export { mergesApartStep, mergesMeeting, outsideCovered } from './steps/clip-merges';
 export { FillMode, type CellClip, type CellClips, type ClipPaste } from './steps/clip.types';
@@ -255,6 +256,7 @@ export type {
   WorkbookDocument,
   WorkbookDocumentListener,
   WorkbookDocumentOptions,
+  WorkbookSnapshot,
 } from './collab/collab.types';
 export { createStepCodec } from './wire/step-codec';
 export type { StepCodec, WireWorkbookStep } from './wire/wire.types';

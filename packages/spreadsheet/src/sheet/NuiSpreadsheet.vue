@@ -501,7 +501,7 @@ const noteStructure = (): boolean => {
 
   if (next !== knownSheets) {
     const before = shownSheet.value;
-    const kept = before === undefined ? -1 : book.sheets.indexOf(before);
+    const kept = before === undefined ? -1 : book.sheets.indexOf(book.sheet(before.name) ?? before);
 
     knownSheets = next;
     sheetsRevision.value += 1;

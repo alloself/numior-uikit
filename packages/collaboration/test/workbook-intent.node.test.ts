@@ -352,10 +352,12 @@ describe('what authors meant in a shared book', () => {
             const hers = keptOf(ann, bob.client, ann.client, table.seeded);
             const his = keptOf(bob, ann.client, bob.client, table.seeded);
             const deeds = hers.deeds + his.deeds;
+            const late = net.newcomer();
 
             net.close();
 
             expect(hers.same).toBe(true);
+            expect(late).toBe(ann.client.dump());
             expect([hers.steps, his.steps]).toEqual([deeds, deeds]);
             expect([hers.tokens, his.tokens]).toEqual([hers.written, his.written]);
             expect([hers.references, his.references]).toEqual([hers.referred, his.referred]);
@@ -389,10 +391,12 @@ describe('what authors meant in a shared book', () => {
             net.settle();
 
             const his = keptOf(bob, ann.client, bob.client);
+            const late = net.newcomer();
 
             net.close();
 
             expect(his.same).toBe(true);
+            expect(late).toBe(bob.client.dump());
             expect(his.tokens).toEqual(his.written);
             expect(his.references).toEqual(his.referred);
           },

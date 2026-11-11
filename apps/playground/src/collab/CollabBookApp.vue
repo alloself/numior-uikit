@@ -24,7 +24,7 @@
     />
     <NuiSpreadsheet
       v-if="ready"
-      :readonly="failure !== undefined"
+      :readonly="failure !== undefined || joining"
       :book="book"
       :calculator="calculator"
       :collaboration="session"
@@ -42,6 +42,7 @@ import {
   CollabStatusKind,
   createCollabClient,
   webSocketTransport,
+  type CollabClient,
   type CollabStatus,
 } from '@numior/collaboration';
 import {
@@ -74,6 +75,7 @@ const status = shallowRef<CollabStatus>({ kind: CollabStatusKind.Connecting });
 const peers = shallowRef<readonly WorkbookPeer[]>([]);
 const failure = shallowRef<CollabFailureView>();
 const ready = ref(false);
+const joining = ref(false);
 
 const book = createWorkbook();
 const calculator = createCalculator(book, { locale: RU_LOCALE });
@@ -81,41 +83,54 @@ const session = createWorkbookDocument({ book, calculator });
 
 session.subscribe(() => {
   ready.value = true;
+  joining.value = false;
 });
 
 const { online, transport, garble } = useDemoLink(webSocketTransport(server));
 
-const client = createCollabClient({
-  doc: params.get('doc') ?? 'book-demo',
-  clientId,
-  schema: WORKBOOK_SCHEMA,
-  document: session,
-  transport,
-  onStatus: (next) => {
-    status.value = next;
+let shownPlace: NuiSpreadsheetPlace | undefined;
 
-    if (next.kind !== CollabStatusKind.Failed) {
-      return;
-    }
+const join = (): CollabClient => {
+  const joined = createCollabClient({
+    doc: params.get('doc') ?? 'book-demo',
+    clientId,
+    schema: WORKBOOK_SCHEMA,
+    document: session,
+    transport,
+    onStatus: (next) => {
+      status.value = next;
 
-    failure.value = { reason: next.reason, unsent: session.pending().length };
-  },
-  onPresence: (states) => {
-    peers.value = workbookPeers(states);
-  },
-});
+      if (next.kind !== CollabStatusKind.Failed) {
+        return;
+      }
 
-client.setPresence({ user });
+      failure.value = { reason: next.reason, unsent: session.pending().length };
+    },
+    onPresence: (states) => {
+      peers.value = workbookPeers(states);
+    },
+  });
+
+  joined.setPresence({ user, place: shownPlace });
+  return joined;
+};
+
+let client = join();
 
 const sync = (): void => {
   client.sync();
 };
 
 const reopen = (): void => {
-  location.reload();
+  client.stop();
+  session.reset();
+  failure.value = undefined;
+  joining.value = true;
+  client = join();
 };
 
 const sharePlace = (place: NuiSpreadsheetPlace | undefined): void => {
+  shownPlace = place;
   client.setPresence({ user, place });
 };
 

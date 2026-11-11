@@ -1,8 +1,15 @@
-import { MAX_COLS, containsCell } from '../address';
+import { MAX_COLS, MAX_ROWS, containsCell } from '../address';
 import type { Calculator } from '../calc/calculator';
 import { CellInputKind, type CellRange } from '../cell.types';
 import type { Sheet, Workbook } from '../workbook';
 import type { CellEdit } from './step.types';
+
+export const WHOLE_SHEET: CellRange = {
+  top: 0,
+  left: 0,
+  bottom: MAX_ROWS - 1,
+  right: MAX_COLS - 1,
+};
 
 export const cellKey = (row: number, col: number): number => row * MAX_COLS + col;
 

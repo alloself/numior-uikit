@@ -706,7 +706,7 @@ describe('workbook steps through the collaboration envelope', () => {
     ['a layout of an old version', [{ kind: 'setLayout', sheet: SHEET, layout: {} }], 1],
     ['a step it cannot read', [{ kind: 'nope' }], 1],
     ['a version older than it remembers', [writeCells(valueCell(0, 0, 'late'))], 2],
-  ])('has the authority leave %s to its author and keep the journal', (_name, steps, behind) => {
+  ])('has the authority leave %s to its author and keep the book', (_name, steps, behind) => {
     const authority = workbookAuthority([seedSheet], { window: 1 });
 
     authority.apply([insertRow(0)]);
@@ -718,7 +718,7 @@ describe('workbook steps through the collaboration envelope', () => {
     expect(authority.snapshot()).toEqual(before);
   });
 
-  it('has the authority refuse a malformed step and keep the journal', () => {
+  it('has the authority refuse a malformed step and keep the book', () => {
     const authority = workbookAuthority([seedSheet]);
     const before = authority.snapshot();
 
@@ -759,6 +759,7 @@ describe('workbook steps through the collaboration envelope', () => {
 
             expect([ann.status(), bob.status()]).toEqual(BOTH_ONLINE);
             expect(ann.dump()).toBe(bob.dump());
+            expect(net.newcomer()).toBe(ann.dump());
           },
         ),
         { numRuns: 150 },

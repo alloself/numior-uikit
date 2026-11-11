@@ -1,10 +1,16 @@
 import { createCalculator } from '../calc/calculator';
 import { createStepper } from '../steps/apply-step';
+import { bookSteps } from '../steps/book-steps';
 import { StepKind, type WorkbookStep } from '../steps/step.types';
 import { createStepCodec } from '../wire/step-codec';
 import type { WireWorkbookStep } from '../wire/wire.types';
 import { createWorkbook } from '../workbook';
-import type { RemoteChange, WorkbookAuthority, WorkbookAuthorityOptions } from './collab.types';
+import type {
+  RemoteChange,
+  WorkbookAuthority,
+  WorkbookAuthorityOptions,
+  WorkbookSnapshot,
+} from './collab.types';
 import { changesOver, stepOver } from './rebase-queue';
 import { changesOf } from './remote-change';
 import { WORKBOOK_SCHEMA, settleForStep } from './schema';
@@ -24,8 +30,8 @@ export const workbookAuthority = (
   const calculator = createCalculator(book);
   const stepper = createStepper(book, calculator);
   const codec = createStepCodec(book);
-  const journal: WireWorkbookStep[] = [];
   let tail: readonly (readonly RemoteChange[])[] = [];
+  let shot: WorkbookSnapshot | undefined;
 
   const applyOne = (step: WorkbookStep): WorkbookStep | undefined => {
     settleForStep(calculator, step);
@@ -40,23 +46,23 @@ export const workbookAuthority = (
   };
 
   const kept = (taken: readonly Taken[]): readonly WireWorkbookStep[] => {
-    const wires = taken.map(({ step }) => codec.encode(step));
-
-    for (const entry of wires) {
-      journal.push(entry);
+    if (taken.length > 0) {
+      shot = undefined;
     }
     tail = [...tail, ...taken.map(({ step }) => changesOf(step))].slice(-window);
-    return wires;
+    return taken.map(({ step }) => codec.encode(step));
   };
 
   seed.forEach((step) => {
     applyOne(step);
-    journal.push(codec.encode(step));
   });
 
   return {
     schema: WORKBOOK_SCHEMA,
-    snapshot: () => ({ steps: [...journal] }),
+    snapshot: () => {
+      shot ??= { steps: bookSteps(book, calculator).map((step) => codec.encode(step)) };
+      return shot;
+    },
     apply: (wires) => {
       const taken: Taken[] = [];
 
