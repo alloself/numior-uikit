@@ -164,9 +164,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   border-block-start: var(--_divider-size) solid var(--_divider);
-  transition:
-    background-color var(--nui-duration-fast) var(--nui-easing),
-    color var(--nui-duration-fast) var(--nui-easing);
+  transition: color var(--nui-duration-fast) var(--nui-easing);
 }
 .nui-list-item:first-child {
   border-block-start-color: transparent;
@@ -208,7 +206,6 @@
   font: inherit;
   text-align: start;
   cursor: pointer;
-  transition: background-color var(--nui-duration-fast) var(--nui-easing);
 }
 .nui-list .nui-list-item__action:hover {
   background: var(--_hover);

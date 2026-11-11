@@ -194,7 +194,7 @@ test.describe('data display', () => {
     expect(await motionOf(data.titleOf(option), 'color')).toBeNull();
   });
 
-  test('a linked list item fades its hover background and leaves the text colour to its row', async ({
+  test('a list row changes its hover background at once and leaves the text colour of a link to its row', async ({
     playground,
     data,
     isMobile,
@@ -206,8 +206,15 @@ test.describe('data display', () => {
     await slowMotion(data.list);
     await link.hover();
 
-    expect((await motionOf(link, 'background-color'))?.duration).toBe(SLOW_MOTION);
-    await expect(link).toHaveCSS('transition-property', 'background-color');
+    expect(await motionOf(link, 'background-color')).toBeNull();
+    expect(await motionOf(link, 'color')).toBeNull();
+
+    const option = data.option(data.singleList, 'Почта');
+
+    await slowMotion(data.singleList);
+    await option.hover();
+
+    expect(await motionOf(option, 'background-color')).toBeNull();
   });
 
   test('list items render as links or buttons and an emptied list shows the empty state', async ({

@@ -1,5 +1,6 @@
 import { expect, test } from './fixtures';
 import { boxOf } from './helpers/geometry';
+import { motionOf, slowMotion } from './helpers/motion';
 
 test.describe('tree', () => {
   test('expands on the chevron without selecting, selects on click and loads lazy children', async ({
@@ -103,6 +104,23 @@ test.describe('tree', () => {
     await expect.poll(async () => (await tree.readOutput()).checked).toEqual(['index']);
     await expect(sources).toHaveAttribute('aria-checked', 'mixed');
     expect((await tree.readOutput()).selected).toBeNull();
+  });
+
+  test('a tree row changes its hover background at once', async ({
+    playground,
+    tree,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'hover scenario');
+    await playground.open();
+    const row = tree.item(tree.virtualTree, 'Узел 3');
+
+    await row.scrollIntoViewIfNeeded();
+    await slowMotion(tree.virtualTree);
+    await row.hover();
+
+    await expect(row).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    expect(await motionOf(row, 'background-color')).toBeNull();
   });
 
   test('virtual tree renders a window of ten thousand nodes and keeps the active node rendered', async ({

@@ -123,7 +123,7 @@ test.describe('layout', () => {
     await playground.setDirection('ltr');
   });
 
-  test('a navigation item fades its icon and its hover background together with its label', async ({
+  test('a navigation item fades its icon together with its label and changes its background at once', async ({
     playground,
     layout,
     isMobile,
@@ -137,7 +137,7 @@ test.describe('layout', () => {
 
     expect(label?.duration).toBe(SLOW_MOTION);
     expect(await motionOf(layout.itemIcon('calendar'), 'color')).toEqual(label);
-    expect(await motionOf(layout.item('calendar'), 'background-color')).toEqual(label);
+    expect(await motionOf(layout.item('calendar'), 'background-color')).toBeNull();
     expect(await motionOf(layout.item('calendar'), 'color')).toBeNull();
 
     await layout.subToggle.click();
