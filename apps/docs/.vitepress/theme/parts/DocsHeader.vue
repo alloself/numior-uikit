@@ -2,13 +2,9 @@
   <NuiAppBar>
     <template #start>
       <NuiSidebarTrigger v-if="layout.mobile.value" />
-      <NuiLink
-        :href="localeBase"
-        tone="neutral"
-        underline="none"
-        class="font-semibold text-base whitespace-nowrap"
-        >Numior UI</NuiLink
-      >
+      <NuiLink :href="localeBase" tone="neutral" underline="none" :aria-label="site.title">
+        <DocsLogo />
+      </NuiLink>
     </template>
     <nav
       v-if="!layout.mobile.value"
@@ -95,13 +91,14 @@ import {
   useColorScheme,
   useLayout,
 } from '@numior/vue';
+import DocsLogo from './DocsLogo.vue';
 import { useDocs } from '../composables/use-docs';
 import type { ColorScheme, IconAlias } from '@numior/primitives';
 import type { DocsThemeConfig } from '../theme.types';
 
 const emit = defineEmits<{ search: [] }>();
 
-const { theme } = useData<DocsThemeConfig>();
+const { theme, site } = useData<DocsThemeConfig>();
 const { texts, localeBase, locales, startsCurrent } = useDocs();
 const layout = useLayout();
 const scheme = useColorScheme();

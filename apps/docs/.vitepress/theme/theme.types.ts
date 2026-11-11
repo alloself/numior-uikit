@@ -86,6 +86,7 @@ export interface DocsTexts {
   readonly apiEnglish: string;
   readonly reset: string;
   readonly facts: string;
+  readonly description: string;
 }
 
 export interface DocsSearchOptions {
@@ -95,6 +96,11 @@ export interface DocsSearchOptions {
 export interface DocsSearchConfig {
   readonly provider: 'local';
   readonly options?: DocsSearchOptions | undefined;
+}
+
+export interface DocsSite {
+  readonly siteUrl: string;
+  readonly repository: string;
 }
 
 export interface DocsThemeConfig {

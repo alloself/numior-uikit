@@ -397,10 +397,16 @@ const enSidebar: DocsSidebarSections = {
 
 export default defineConfigWithTheme<DocsThemeConfig>({
   title: 'Numior UI',
-  description: 'Independent Vue 3.5+ UI kit — foundation in development.',
+  description: en.description,
   cleanUrls: true,
   appearance: false,
-  head: [['script', {}, colorSchemeScript('nui-theme')]],
+  head: [
+    ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
+    ['link', { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' }],
+    ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' }],
+    ['link', { rel: 'manifest', href: '/site.webmanifest' }],
+    ['script', {}, colorSchemeScript('nui-theme')],
+  ],
   markdown: {
     headers: { level: [2, 3] },
     anchor: { permalink: headingPermalink },
@@ -424,7 +430,7 @@ export default defineConfigWithTheme<DocsThemeConfig>({
     root: {
       label: 'Русский',
       lang: 'ru',
-      description: 'Независимый UI kit для Vue 3.5+ — основание в разработке.',
+      description: ru.description,
       themeConfig: {
         nav: [
           { text: 'Руководство', link: '/guide/getting-started', section: '/guide/' },
@@ -438,6 +444,7 @@ export default defineConfigWithTheme<DocsThemeConfig>({
     en: {
       label: 'English',
       lang: 'en',
+      description: en.description,
       themeConfig: {
         nav: [
           { text: 'Guide', link: '/en/guide/getting-started', section: '/en/guide/' },

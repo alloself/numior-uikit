@@ -56,6 +56,7 @@ export const ru: DocsTexts = {
   apiEnglish: 'English',
   reset: 'Сбросить',
   facts: 'Коротко о наборе',
+  description: 'UI-кит для Vue 3, на котором студия Numior собирает свои продукты.',
 };
 
 export const en: DocsTexts = {
@@ -114,4 +115,5 @@ export const en: DocsTexts = {
   apiEnglish: 'English',
   reset: 'Reset',
   facts: 'The kit in short',
+  description: 'A UI kit for Vue 3 that the Numior studio builds its own products on.',
 };
