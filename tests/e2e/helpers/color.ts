@@ -9,6 +9,14 @@ export interface PaintedColumn {
   readonly pixels: readonly Rgb[];
 }
 
+export interface PaintedArea {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly delta: number;
+}
+
 export const rgbOf = (locator: Locator, property: string): Promise<Rgb> => {
   return locator.evaluate((element, prop) => {
     const value = getComputedStyle(element).getPropertyValue(prop);
@@ -173,6 +181,58 @@ export const paintedColumn = async (
 ): Promise<PaintedColumn> => {
   const png = await locator.screenshot({ animations: 'disabled' });
   return locator.page().evaluate(readColumn, { base64: png.toString('base64'), x, from, to });
+};
+
+const INK_DELTA = 24;
+
+const countInk = async ({
+  base64,
+  area,
+}: {
+  base64: string;
+  area: PaintedArea;
+}): Promise<number> => {
+  const image = new Image();
+  image.src = `data:image/png;base64,${base64}`;
+  await image.decode();
+  const canvas = document.createElement('canvas');
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  if (!context) {
+    throw new Error('2D canvas is unavailable');
+  }
+  context.drawImage(image, 0, 0);
+
+  const { data } = context.getImageData(
+    Math.round(area.x * devicePixelRatio),
+    Math.round(area.y * devicePixelRatio),
+    Math.max(Math.round(area.width * devicePixelRatio), 1),
+    Math.max(Math.round(area.height * devicePixelRatio), 1),
+  );
+
+  const paper = [data[0] ?? 0, data[1] ?? 0, data[2] ?? 0];
+  let ink = 0;
+
+  for (let offset = 0; offset < data.length; offset += 4) {
+    const unlike = paper.some(
+      (channel, index) => Math.abs((data[offset + index] ?? 0) - channel) > area.delta,
+    );
+
+    ink += Number(unlike);
+  }
+  return ink;
+};
+
+export const inkedPixels = async (
+  locator: Locator,
+  area: Omit<PaintedArea, 'delta'>,
+): Promise<number> => {
+  const png = await locator.screenshot({ animations: 'disabled' });
+
+  return locator
+    .page()
+    .evaluate(countInk, { base64: png.toString('base64'), area: { ...area, delta: INK_DELTA } });
 };
 
 export const rgbDelta = (a: Rgb, b: Rgb): number =>

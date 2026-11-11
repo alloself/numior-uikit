@@ -30,6 +30,14 @@ describe('chart scales', () => {
     expect(niceDomain(3, 97, { min: 10, max: 50 })).toMatchObject({ min: 10, max: 50, step: 10 });
   });
 
+  it('puts ticks on whole steps inside bounds set by hand', () => {
+    expect(niceDomain(5, 10, { min: 3, max: 17 })).toMatchObject({ min: 3, max: 17 });
+    expect(niceDomain(5, 10, { min: 3, max: 17 }).ticks).toEqual([5, 10, 15]);
+    expect(niceDomain(50, 90, { max: 95 }).ticks).toEqual([0, 20, 40, 60, 80]);
+    expect(niceDomain(5, 12, { min: -3, max: 17 }).ticks).toEqual([0, 5, 10, 15]);
+    expect(niceDomain(12, 47, { min: 12 }).ticks).toEqual([20, 30, 40, 50]);
+  });
+
   it('covers every value with ticks on whole steps', () => {
     fc.assert(
       fc.property(value, value, (left, right) => {

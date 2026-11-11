@@ -152,6 +152,7 @@ export interface ChartScene {
   readonly width: number;
   readonly height: number;
   readonly plot: Box;
+  readonly clip: Box | undefined;
   readonly bars: readonly SceneBar[];
   readonly paths: readonly ScenePath[];
   readonly points: readonly ScenePoint[];

@@ -144,6 +144,21 @@ test.describe('charts', () => {
     await expect(charts.selectedNote).toHaveText('Щёлкните по кварталу, чтобы выбрать его');
   });
 
+  test('cuts a spike off at the edge of a value axis bounded by hand', async ({
+    playground,
+    charts,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await charts.bounded.scrollIntoViewIfNeeded();
+
+    const ticks = await charts.ticks(charts.bounded, 'value-tick');
+
+    expect(ticks.map((tick) => tick.text)).toEqual(['100', '200', '300', '400']);
+    expect(await charts.inkAbovePlot(charts.bounded)).toBe(0);
+    expect([0, 6]).toContain(await charts.points(charts.bounded).count());
+  });
+
   test('keeps value labels apart on a narrow screen', async ({ playground, charts }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.resize({ width: 360, height: 800 });

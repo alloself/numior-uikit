@@ -77,6 +77,21 @@ describe('NuiChart', () => {
     expect(chart.markerCount).toBe(3);
   });
 
+  it('clips the marks that leave a value axis bounded by hand and hides their markers', async () => {
+    const chart = chartOf({ spec: { ...revenue, valueAxis: { max: 100 } } });
+
+    expect(chart.clippedMarks).toBe(5);
+    expect(chart.valueTicks.at(-1)).toBe('100');
+
+    await chart.show({ ...revenue, kind: 'line', valueAxis: { max: 100 } });
+    expect(chart.clippedMarks).toBe(2);
+    expect(chart.markerCount).toBe(4);
+
+    await chart.show({ ...revenue, kind: 'line' });
+    expect(chart.clippedMarks).toBe(0);
+    expect(chart.markerCount).toBe(5);
+  });
+
   it('leaves the legend out on request', () => {
     const chart = chartOf({ spec: revenue, props: { legend: false } });
 

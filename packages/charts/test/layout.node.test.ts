@@ -275,6 +275,34 @@ describe('chart layout', () => {
     expect(texts(scene, 'value-tick')).toEqual(['1', '1K', '1M', '1B', '1T']);
   });
 
+  it('keeps the ticks inside a value axis bounded by hand and clips the marks to the plot', () => {
+    const scene = layoutChart(
+      {
+        kind: 'column',
+        categories: { kind: 'text', labels: ['a', 'b'] },
+        series: [{ id: 'a', name: 'A', values: [40, 90] }],
+        valueAxis: { max: 50 },
+      },
+      SIZE,
+    );
+
+    const { plot } = scene;
+    const inside = (y: number): boolean => y >= plot.y - 0.01 && y <= plot.y + plot.height + 0.01;
+
+    expect(texts(scene, 'value-tick')).toEqual(['0', '10', '20', '30', '40', '50']);
+    expect(scene.texts.every((text) => text.role !== 'value-tick' || inside(text.y))).toBe(true);
+    expect(scene.lines.every((line) => inside(line.y1))).toBe(true);
+
+    expect(scene.clip).toEqual({
+      x: plot.x - 1,
+      y: plot.y - 1,
+      width: plot.width + 2,
+      height: plot.height + 2,
+    });
+
+    expect(layoutChart(quarters, SIZE).clip).toBeUndefined();
+  });
+
   it('drops value ticks until their labels fit along a narrow axis', () => {
     const shares: ChartSpec = {
       kind: 'bar',

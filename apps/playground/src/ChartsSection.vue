@@ -59,6 +59,12 @@
         :show-table="showTable"
         data-testid="chart-scatter"
       />
+      <NuiChart
+        :spec="latency"
+        label="Время ответа сервиса за неделю, мс: ось от 100 до 400"
+        :show-table="showTable"
+        data-testid="chart-bounded"
+      />
     </div>
   </section>
 </template>
@@ -165,5 +171,12 @@ const discounts: ChartSpec = {
   ],
   valueAxis: { title: 'Прирост, %' },
   categoryAxis: { title: 'Скидка, %' },
+};
+
+const latency: ChartSpec = {
+  kind: 'line',
+  categories: { kind: 'text', labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'] },
+  series: [{ id: 'p95', name: 'p95', values: [180, 210, 195, 1240, 230, 170, 160] }],
+  valueAxis: { title: 'мс', min: 100, max: 400 },
 };
 </script>

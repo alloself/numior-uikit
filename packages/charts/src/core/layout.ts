@@ -63,6 +63,8 @@ const MOST_TICKS = 5;
 
 const FEWEST_TICKS = 2;
 
+const CLIP_SLACK = 1;
+
 const slotsOf = (series: readonly ChartSeries[]): ChartSlot[] =>
   series.map((item, index) => item.slot ?? SLOTS[index] ?? 0);
 
@@ -273,6 +275,19 @@ const baselineOf = (frame: Frame, value: (value: number) => number): number =>
 const thinned = (frame: Frame, band: BandScale, labels: readonly string[]): number =>
   Math.max(1, Math.ceil((widest(frame, labels) + TICK_GAP) / Math.max(band.step, 1)));
 
+const clipOf = (frame: Frame, plot: Box): Box | undefined => {
+  const axis = frame.spec.valueAxis;
+
+  return axis?.min === undefined && axis?.max === undefined
+    ? undefined
+    : {
+        x: plot.x - CLIP_SLACK,
+        y: plot.y - CLIP_SLACK,
+        width: plot.width + CLIP_SLACK * 2,
+        height: plot.height + CLIP_SLACK * 2,
+      };
+};
+
 const valueLines = (
   frame: Frame,
   plot: Box,
@@ -412,6 +427,7 @@ const scatterScene = (frame: Frame): ChartScene => {
     width: frame.size.width,
     height: frame.size.height,
     plot,
+    clip: clipOf(frame, plot),
     bars: [],
     paths: [],
     slices: [],
@@ -555,6 +571,7 @@ const sceneOf = (
       width: frame.size.width,
       height: frame.size.height,
       plot,
+      clip: clipOf(frame, plot),
       bars: [],
       slices: [],
       axis: { horizontal, positions: Array.from({ length: count }, (_unused, index) => at(index)) },
@@ -582,6 +599,7 @@ const sceneOf = (
     width: frame.size.width,
     height: frame.size.height,
     plot,
+    clip: clipOf(frame, plot),
     paths: [],
     points: [],
     slices: [],
@@ -625,6 +643,7 @@ const pieScene = (spec: ChartSpec, size: ChartSize): ChartScene => {
       width: radius * 2,
       height: radius * 2,
     },
+    clip: undefined,
     bars: [],
     paths: [],
     points: [],

@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { inkedPixels } from '../helpers/color';
 import { boxOf, renderedWidth } from '../helpers/geometry';
 
 export interface ChartTextBox {
@@ -10,6 +11,8 @@ export interface ChartTextBox {
 const exactly = (text: string): RegExp =>
   new RegExp(`^\\s*${text.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`);
 
+const PLOT_EDGE = 3;
+
 export class ChartsSection {
   readonly section: Locator;
   readonly columns: Locator;
@@ -19,6 +22,7 @@ export class ChartsSection {
   readonly pie: Locator;
   readonly doughnut: Locator;
   readonly scatter: Locator;
+  readonly bounded: Locator;
   readonly tableSwitch: Locator;
   readonly selectedNote: Locator;
   readonly gapsSwitch: Locator;
@@ -33,6 +37,7 @@ export class ChartsSection {
     this.pie = page.getByTestId('chart-pie');
     this.doughnut = page.getByTestId('chart-doughnut');
     this.scatter = page.getByTestId('chart-scatter');
+    this.bounded = page.getByTestId('chart-bounded');
     this.tableSwitch = page.getByRole('switch', { name: 'Показать таблицу данных' });
     this.selectedNote = page.getByTestId('charts-selected');
     this.gapsSwitch = page.getByRole('switch', { name: 'Соединять пропуски' });
@@ -89,6 +94,21 @@ export class ChartsSection {
     return this.bridges(chart).evaluateAll((bridges) =>
       bridges.map((bridge) => getComputedStyle(bridge).strokeDasharray),
     );
+  }
+
+  async inkAbovePlot(chart: Locator): Promise<number> {
+    const plot = await chart.locator('.nui-chart__line--grid').evaluateAll((lines) => ({
+      left: Math.min(...lines.map((line) => Number(line.getAttribute('x1')))),
+      right: Math.max(...lines.map((line) => Number(line.getAttribute('x2')))),
+      top: Math.min(...lines.map((line) => Number(line.getAttribute('y1')))),
+    }));
+
+    return inkedPixels(chart.locator('.nui-chart__svg'), {
+      x: plot.left,
+      y: 0,
+      width: plot.right - plot.left,
+      height: plot.top - PLOT_EDGE,
+    });
   }
 
   points(chart: Locator): Locator {

@@ -269,6 +269,14 @@ export class ChartDriver {
     return this.slotsOf('.nui-chart__slice', SLICE_SLOT);
   }
 
+  get clippedMarks(): number {
+    const clip = this.wrapper.find('clipPath');
+
+    return clip.exists()
+      ? this.wrapper.findAll(`[clip-path="url(#${clip.attributes('id') ?? ''})"] > path`).length
+      : 0;
+  }
+
   get markerCount(): number {
     return this.wrapper.findAll('.nui-chart__point').length;
   }
