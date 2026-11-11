@@ -112,6 +112,24 @@ test.describe('collaboration on a workbook', () => {
     await expect(boris.sheet.cell('2', 0)).toHaveText('снова вместе');
   });
 
+  test('keeps the formatting rules two people add while one of them is offline', async ({
+    collab,
+  }) => {
+    const anna = await collab.joinBook(ANNA);
+    const boris = await collab.joinBook(BORIS);
+
+    await anna.client.disconnect();
+    await anna.sheet.addValueRule('2', 0, '5');
+    await boris.sheet.addValueRule('3', 1, '7');
+    await expect(boris.sheet.ruleTitles).toHaveCount(1);
+
+    await anna.client.reconnect();
+    await anna.sheet.openRules('5', 3);
+
+    await expect(anna.sheet.ruleTitles).toHaveCount(2);
+    await expect(boris.sheet.ruleTitles).toHaveCount(2);
+  });
+
   test('takes a write back for everyone', async ({ collab }) => {
     const anna = await collab.joinBook(ANNA);
     const boris = await collab.joinBook(BORIS);

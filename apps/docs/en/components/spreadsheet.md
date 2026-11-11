@@ -78,6 +78,9 @@ When someone else inserts or removes rows and columns, the active cell and the s
 their data. An open cell moves with its row: the typed text, the focus and the caret are kept. If
 its row or column was removed, the edit closes and the sheet says so in a note.
 
+Conditional formatting rules that different people add at the same time are all kept. The order of
+the rules follows the person who changed it.
+
 Once the client is `failed`, edits are no longer sent: set `readonly` on the sheet and offer to
 open the book again. To do that, stop the client, call `document.reset()` and create a new client.
 

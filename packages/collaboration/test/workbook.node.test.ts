@@ -2,7 +2,10 @@ import {
   createStepCodec,
   createWorkbook,
   lineLayoutsOf,
+  moveRule,
   pivotCaptions,
+  putRule,
+  rulesOf,
   workbookAuthority,
   type ConditionalFormat,
   type LineLayout,
@@ -156,6 +159,44 @@ const ruled = (client: BookClient, ...formats: readonly ConditionalFormat[]): vo
     },
   ]);
 };
+
+const ruleAdded = (client: BookClient, row: number): void => {
+  const current = sheetOf(client, SHEET).conditional;
+  const [added] = ruleOn(row, row).rules;
+
+  if (added === undefined) {
+    throw new Error('the rule is missing');
+  }
+
+  client.commit([
+    {
+      kind: 'setConditional',
+      sheet: SHEET,
+      formats: putRule(current, {
+        ranges: [{ top: row, left: 0, bottom: row, right: 0 }],
+        rule: added.rule,
+        stopIfTrue: false,
+      }),
+      base: current,
+    },
+  ]);
+};
+
+const ruleMovedDown = (client: BookClient, index: number): void => {
+  const current = sheetOf(client, SHEET).conditional;
+
+  client.commit([
+    {
+      kind: 'setConditional',
+      sheet: SHEET,
+      formats: moveRule(current, index, index + 1),
+      base: current,
+    },
+  ]);
+};
+
+const ruleOrder = (client: BookClient): readonly number[] =>
+  rulesOf(sheetOf(client, SHEET).conditional).map((placed) => placed.ranges[0]?.top ?? -1);
 
 const ruleRows = (client: BookClient): readonly (readonly [number, number])[] =>
   sheetOf(client, SHEET)
@@ -526,6 +567,52 @@ describe('workbook steps through the collaboration envelope', () => {
 
     expect([colSize(ann, 1), colSize(ann, 2), colSize(ann, 3)]).toEqual([80, undefined, 70]);
     expectSame(ann, bob);
+  });
+
+  it('keeps every rule once when two people add a rule at the same time', () => {
+    const net = network();
+    const [ann, bob] = pair(net);
+
+    ruleAdded(ann, 9);
+    net.settle();
+    ruleAdded(ann, 2);
+    ruleAdded(bob, 5);
+    net.settle();
+
+    expect(ruleOrder(ann).toSorted((left, right) => left - right)).toEqual([2, 5, 9]);
+    expect(ruleOrder(bob)).toEqual(ruleOrder(ann));
+  });
+
+  it('keeps the new order of the rules and a rule added by someone else at the same time', () => {
+    const net = network();
+    const [ann, bob] = pair(net);
+
+    ruleAdded(ann, 9);
+    ruleAdded(ann, 4);
+    net.settle();
+    ruleMovedDown(ann, 0);
+    ruleAdded(bob, 5);
+    net.settle();
+
+    expect(ruleOrder(ann)).toEqual([5, 9, 4]);
+    expect(ruleOrder(bob)).toEqual(ruleOrder(ann));
+  });
+
+  it('takes back only its own rule after someone else has added one', () => {
+    const net = network();
+    const [ann, bob] = pair(net);
+
+    ruleAdded(ann, 9);
+    net.settle();
+    ruleAdded(ann, 2);
+    net.settle();
+    ruleAdded(bob, 5);
+    net.settle();
+    ann.undo();
+    net.settle();
+
+    expect(ruleOrder(ann)).toEqual([5, 9]);
+    expect(ruleOrder(bob)).toEqual(ruleOrder(ann));
   });
 
   it('keeps a rule someone else has added when deleted rows come back with their rule', () => {

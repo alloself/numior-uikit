@@ -414,6 +414,13 @@ export class BookSection {
     await this.rules.getByRole('button', { name: 'Добавить правило' }).click();
   }
 
+  async addValueRule(rowLabel: string, column: number, value: string): Promise<void> {
+    await this.openRules(rowLabel, column);
+    await this.addRule();
+    await this.ruleField('Значение').fill(value);
+    await this.saveRule();
+  }
+
   async editRule(index: number): Promise<void> {
     await this.ruleItems.nth(index).hover();
 

@@ -1030,7 +1030,9 @@ const setFormats = (formats: readonly ConditionalFormat[]): void => {
     return;
   }
 
-  editing.apply([{ kind: StepKind.SetConditional, sheet: sheet.name, formats }]);
+  editing.apply([
+    { kind: StepKind.SetConditional, sheet: sheet.name, formats, base: sheet.conditional },
+  ]);
 };
 
 watch(shownSheet, () => {
