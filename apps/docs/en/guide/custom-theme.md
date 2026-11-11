@@ -128,7 +128,7 @@ keep the values of the page theme.
 
 This is the theme you are reading the docs in:
 
-<<< @/.vitepress/theme/numior.css
+<<< @/guide/snippets/numior-theme.css
 
 The `:not([data-nui-accent])` condition is specific to the site. It turns the theme off where
 a built-in accent is picked in the header or the base theme is on above an example.

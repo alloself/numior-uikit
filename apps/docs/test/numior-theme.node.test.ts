@@ -52,6 +52,12 @@ const builtInAccents = withLegacyNames(
 );
 
 const numior = withLegacyNames(read('../.vitepress/theme/numior.css'), themeSource);
+const printed = read('../guide/snippets/numior-theme.css');
+
+const squash = (value: string): string => value.replaceAll(/\s+/gu, ' ').trim();
+
+const declared = (css: string): string[] =>
+  [...css.matchAll(DECLARATION_RE)].map(([, name = '', value = '']) => `${name}: ${squash(value)}`);
 
 const schemeValue = (value: string, scheme: Scheme): string => {
   const inner = LIGHT_DARK_RE.exec(value.trim())?.[1];
@@ -177,6 +183,10 @@ describe('Numior theme of the docs site', () => {
     ]);
 
     expect(properties.filter((name) => !name.startsWith('--nui-'))).toEqual([]);
+  });
+
+  it('prints in the guide the same values under the documented token names', () => {
+    expect(declared(printed)).toEqual(declared(numior));
   });
 
   it('overrides only tokens that the kit theme declares', () => {
