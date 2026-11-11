@@ -6,9 +6,25 @@
 
 Установите компоненты и темы:
 
-```sh
+::: code-group
+
+```sh [pnpm]
 pnpm add @numior/vue @numior/tokens
 ```
+
+```sh [npm]
+npm install @numior/vue @numior/tokens
+```
+
+```sh [yarn]
+yarn add @numior/vue @numior/tokens
+```
+
+```sh [bun]
+bun add @numior/vue @numior/tokens
+```
+
+:::
 
 Формы и пресет для Tailwind ставятся отдельно: это пакеты `@numior/forms` и `@numior/tailwind`.
 

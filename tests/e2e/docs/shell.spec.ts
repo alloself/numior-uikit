@@ -202,3 +202,16 @@ test('the skip link moves focus to the content', async ({ docs, page, isMobile }
   await page.keyboard.press('Enter');
   await expect(docs.main).toBeFocused();
 });
+
+test('code tabs switch the package manager and keep the pick after a reload', async ({ docs }) => {
+  await docs.open('/guide/getting-started');
+  await expect(docs.codeVariant('pnpm')).toHaveAttribute('aria-selected', 'true');
+  await expect(docs.shownVariant).toHaveText('pnpm add @numior/vue @numior/tokens');
+
+  await docs.codeVariant('npm').click();
+  await expect(docs.shownVariant).toHaveText('npm install @numior/vue @numior/tokens');
+
+  await docs.open('/guide/getting-started');
+  await expect(docs.codeVariant('npm')).toHaveAttribute('aria-selected', 'true');
+  await expect(docs.shownVariant).toHaveText('npm install @numior/vue @numior/tokens');
+});

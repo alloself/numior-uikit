@@ -25,6 +25,8 @@ const isCodeProps = shapeOf({
   tokens: optional(listOf(listOf(isToken))),
 });
 
+const isCodeGroup = listOf(shapeOf({ label: isString, code: isCodeProps }));
+
 const decodeAttribute = (value: string): string =>
   value
     .replaceAll('&lt;', '<')
@@ -39,6 +41,15 @@ const codeProps = (html: string) => {
     throw new Error(`No code block in: ${html}`);
   }
   return parseAs(decodeAttribute(match[1]), isCodeProps, 'code props');
+};
+
+const codeGroup = (html: string) => {
+  const match = /<CodeGroup :items='([^']*)'><\/CodeGroup>/.exec(html);
+
+  if (match?.[1] === undefined) {
+    throw new Error(`No code group in: ${html}`);
+  }
+  return parseAs(decodeAttribute(match[1]), isCodeGroup, 'code group');
 };
 
 const pageEnv = (relativePath: string) => ({ path: relativePath, relativePath, cleanUrls: true });
@@ -85,6 +96,22 @@ describe('docs markdown', () => {
     expect(props.lineNumbers).toBe(true);
     expect(props.tokens).toHaveLength(2);
     expect(props.tokens?.[0]?.[0]).toEqual({ text: 'const', scope: 'keyword' });
+  });
+
+  it('gathers the fences of a code group into labelled variants of one block', () => {
+    const html = md.render(
+      '::: code-group\n\n```ts [first]\nconst a = 1;\n```\n\n```ts {1}\nconst b = 2;\n```\n\n:::\n\n```ts\nconst c = 3;\n```\n',
+      RU,
+    );
+
+    const variants = codeGroup(html);
+
+    expect(variants.map((variant) => variant.label)).toEqual(['first', 'ts']);
+    expect(variants[0]?.code.code).toBe('const a = 1;');
+    expect(variants[0]?.code.tokens).toHaveLength(1);
+    expect(variants[1]?.code.highlight).toEqual([1]);
+    expect(codeProps(html).code).toBe('const c = 3;');
+    expect(html.match(/<NuiCode /g)).toHaveLength(1);
   });
 
   it('keeps plain fences without a language or tokens', () => {

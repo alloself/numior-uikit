@@ -223,6 +223,14 @@ export class DocsSite {
     return target.evaluate((element) => element.scrollLeft);
   }
 
+  codeVariant(name: string): Locator {
+    return this.article.getByRole('tab', { name, exact: true }).first();
+  }
+
+  get shownVariant(): Locator {
+    return this.article.getByRole('tabpanel').first().locator('.nui-code__code');
+  }
+
   get codeScroller(): Locator {
     return this.article.locator('.nui-code__pre').first();
   }

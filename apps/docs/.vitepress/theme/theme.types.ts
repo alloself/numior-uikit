@@ -1,4 +1,5 @@
 import type { NuiTableColumn } from '@numior/table';
+import type { NuiCodeProps } from '@numior/vue';
 import type { MarkdownRenderer } from 'vitepress';
 import type { Component } from 'vue';
 import type { ConfiguratorChange, ConfiguratorState } from './configurator-code';
@@ -103,6 +104,7 @@ export interface DocsTexts {
   readonly copyCode: string;
   readonly copied: string;
   readonly exampleFiles: string;
+  readonly codeVariants: string;
   readonly apiProps: string;
   readonly apiModels: string;
   readonly apiEvents: string;
@@ -167,6 +169,20 @@ export interface ExampleViewProps {
 export interface ExampleFrameProps {
   component: Component;
   files: readonly ExampleFile[];
+  texts: DocsTexts;
+}
+
+export interface CodeGroupItem {
+  readonly label: string;
+  readonly code: NuiCodeProps;
+}
+
+export interface DocsCodeGroupProps {
+  items: readonly CodeGroupItem[];
+}
+
+export interface CodeTabsProps {
+  items: readonly CodeGroupItem[];
   texts: DocsTexts;
 }
 

@@ -6,9 +6,25 @@ Install and configure Numior UI in a Vue 3.5+ project.
 
 Install the components and themes:
 
-```sh
+::: code-group
+
+```sh [pnpm]
 pnpm add @numior/vue @numior/tokens
 ```
+
+```sh [npm]
+npm install @numior/vue @numior/tokens
+```
+
+```sh [yarn]
+yarn add @numior/vue @numior/tokens
+```
+
+```sh [bun]
+bun add @numior/vue @numior/tokens
+```
+
+:::
 
 Forms and the Tailwind preset are installed separately: they are the `@numior/forms` and
 `@numior/tailwind` packages.
