@@ -2,7 +2,13 @@ import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vite-plus/test';
-import { BRAND_FILES, MARK_BLOCK, MARK_MODULE } from '../.vitepress/theme/brand';
+import {
+  BRAND_FILES,
+  LOCKUP_PATHS,
+  LOCKUP_VIEW_BOX,
+  MARK_BLOCK,
+  MARK_MODULE,
+} from '../.vitepress/theme/brand';
 
 const publicDirectory = fileURLToPath(new URL('../public/', import.meta.url));
 
@@ -31,5 +37,13 @@ describe('brand files of the docs site', () => {
 
     expect(mark).toContain(`d="${MARK_BLOCK}"`);
     expect(mark).toContain(`d="${MARK_MODULE}"`);
+  });
+
+  it('draws the header lockup with the contours of the brandbook lockup', () => {
+    const lockup = readFileSync(`${publicDirectory}numior-ui-lockup-h.svg`, 'utf8');
+    const contours = [...lockup.matchAll(/<path d="([^"]+)"\/>/gu)].map(([, contour]) => contour);
+
+    expect(contours).toEqual(LOCKUP_PATHS);
+    expect(lockup).toContain(`viewBox="${LOCKUP_VIEW_BOX}"`);
   });
 });
