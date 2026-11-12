@@ -128,7 +128,7 @@ export const useEditorOverlays = (options: EditorOverlayOptions): EditorOverlays
 
   watch([options.state, bubbleOpen, linkOpen, options.caret], place, { flush: 'post' });
 
-  useEventListener(globalThis, 'pointerup', () => {
+  useEventListener('pointerup', () => {
     selecting.value = false;
   });
 

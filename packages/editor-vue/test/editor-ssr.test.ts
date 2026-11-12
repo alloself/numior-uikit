@@ -84,4 +84,13 @@ describe('NuiEditor on the server', () => {
 
     expect(await EditorDriver.hydrate({ modelValue })).toEqual([]);
   });
+
+  it('renders with the toolbar on the server and hydrates it without warnings', async () => {
+    const document = toJSON(everything());
+
+    const html = await EditorDriver.ssr({ document, toolbar: 'both' });
+
+    expect(html).toContain('nui-editor-toolbar');
+    expect(await EditorDriver.hydrate({ document, toolbar: 'both' })).toEqual([]);
+  });
 });
