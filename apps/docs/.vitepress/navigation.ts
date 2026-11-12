@@ -210,6 +210,12 @@ export const NAVIGATION: readonly NavSection[] = [
     groups: COMPONENTS,
   },
   {
+    title: { ru: 'Графики', en: 'Charts' },
+    link: '/charts/',
+    prefixes: ['/charts/'],
+    groups: [],
+  },
+  {
     title: { ru: 'Блоки', en: 'Blocks' },
     link: '/blocks/',
     prefixes: ['/blocks/'],

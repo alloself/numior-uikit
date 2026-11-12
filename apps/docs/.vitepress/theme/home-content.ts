@@ -64,6 +64,7 @@ const ru: HomeContent = {
       title: 'По графику ходят стрелками',
       text: 'График получает фокус с клавиатуры: стрелки переходят от точки к точке и показывают подсказку. Книга рисует свои диаграммы этим же движком.',
       block: 'SalesDashboard',
+      more: { text: 'Открыть графики', link: '/charts/' },
     },
     {
       label: 'Формы',
@@ -118,6 +119,7 @@ const en: HomeContent = {
       title: 'Arrow keys walk a chart',
       text: 'A chart takes keyboard focus: arrow keys move from point to point and show the tooltip. The spreadsheet draws its charts with the same engine.',
       block: 'SalesDashboard',
+      more: { text: 'Open the charts', link: '/en/charts/' },
     },
     {
       label: 'Forms',
