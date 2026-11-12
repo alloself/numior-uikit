@@ -6,6 +6,7 @@ import {
   type StoreRequest,
 } from './column-store';
 import {
+  createDistinctCodesJob,
   createDistinctNumbersJob,
   createDistinctStringsJob,
   distinctSearch,
@@ -781,7 +782,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       case undefined:
         return undefined;
       case ColumnStoreKind.Codes:
-        throw new Error(`Table engine lists values of "${column.key}" only from a ranked store`);
+        return createDistinctCodesJob(store, limit, search, collator);
       case ColumnStoreKind.String:
         return createDistinctStringsJob(store, limit, search);
       case ColumnStoreKind.Number:
@@ -1046,7 +1047,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       }
 
       const pipeline = createPipeline(
-        storesStage(new Map([[column.key, 'ranks']]), () =>
+        storesStage(new Map([[column.key, 'codes']]), () =>
           distinctStage(distinctJob(column, limit, search), (found) => {
             outcome.found = found;
           }),
