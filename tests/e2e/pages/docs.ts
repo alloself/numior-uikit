@@ -278,21 +278,6 @@ export class DocsSite {
     return this.commandDialog.getByRole('option', { name, exact: true });
   }
 
-  commandGroupTextStart(): Promise<number> {
-    return this.commandDialog
-      .locator('.nui-list__group-label')
-      .first()
-      .evaluate(
-        (label) =>
-          label.getBoundingClientRect().left +
-          Number.parseFloat(getComputedStyle(label).paddingInlineStart),
-      );
-  }
-
-  async commandLeadingStart(): Promise<number> {
-    return (await boxOf(this.commandOptions.first().locator('.nui-row__leading'))).x;
-  }
-
   pressSearchHotkeyOnRussianLayout(): Promise<void> {
     return this.page.locator('body').dispatchEvent('keydown', {
       key: 'л',

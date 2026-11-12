@@ -3,13 +3,14 @@ import { describe, expect, it } from 'vite-plus/test';
 import {
   createSearchIndex,
   loadSearchIndex,
-  pageGroups,
+  namedSections,
+  pageItems,
   searchFields,
-  searchGroups,
   searchHits,
+  searchItems,
+  sectionOf,
   snippetOf,
   snippetsOf,
-  type SearchSection,
   type SnippetPart,
 } from '../.vitepress/theme/search-index';
 
@@ -31,11 +32,6 @@ const DOCUMENTS: readonly SearchDocument[] = [
   { id: '/components/button#sizes', title: 'Размеры', titles: ['Button'], text: LONG_TEXT },
   { id: '/guide/forms', title: 'Формы', titles: [], text: 'Кнопка отправляет форму.' },
   { id: '/changelog', title: 'Изменения', titles: [], text: 'Кнопка получила новый размер.' },
-];
-
-const SECTIONS: readonly SearchSection[] = [
-  { label: 'Документация', prefixes: ['/guide/', '/composables/'] },
-  { label: 'Компоненты', prefixes: ['/components/'] },
 ];
 
 const serializedIndex = (): string => {
@@ -97,19 +93,14 @@ describe('docs search index', () => {
     ]);
   });
 
-  it('groups results by the section of the site in the order of the best result', () => {
+  it('keeps the results in the order of relevance and cuts a snippet for each', () => {
     const hits = searchHits(createSearchIndex(serializedIndex()), 'кноп');
 
-    expect(searchGroups(hits, SECTIONS, 'Страницы')).toEqual([
-      {
-        label: 'Компоненты',
-        items: [
-          { value: '/components/button#sizes', label: 'Button › Размеры' },
-          { value: '/components/button', label: 'Button' },
-        ],
-      },
-      { label: 'Документация', items: [{ value: '/guide/forms', label: 'Формы' }] },
-      { label: 'Страницы', items: [{ value: '/changelog', label: 'Изменения' }] },
+    expect(searchItems(hits)).toEqual([
+      { value: '/components/button#sizes', label: 'Button › Размеры' },
+      { value: '/components/button', label: 'Button' },
+      { value: '/guide/forms', label: 'Формы' },
+      { value: '/changelog', label: 'Изменения' },
     ]);
 
     expect(snippetsOf(hits).get('/guide/forms')).toEqual([
@@ -118,22 +109,31 @@ describe('docs search index', () => {
     ]);
   });
 
-  it('lists the pages by section before anything is typed', () => {
+  it('lists the pages before anything is typed', () => {
     const pages = [
       { text: 'Начало работы', link: '/guide/getting-started' },
       { text: 'Button', link: '/components/button' },
     ];
 
-    expect(pageGroups(pages, SECTIONS, 'Страницы')).toEqual([
-      {
-        label: 'Документация',
-        items: [{ value: '/guide/getting-started', label: 'Начало работы', icon: 'file' }],
-      },
-      {
-        label: 'Компоненты',
-        items: [{ value: '/components/button', label: 'Button', icon: 'file' }],
-      },
+    expect(pageItems(pages)).toEqual([
+      { value: '/guide/getting-started', label: 'Начало работы', icon: 'file' },
+      { value: '/components/button', label: 'Button', icon: 'file' },
     ]);
+  });
+
+  it('names the header section of a page outside the docs section', () => {
+    const sections = namedSections([
+      { text: 'Документация', link: '/guide/getting-started', sections: ['/guide/'] },
+      { text: 'Компоненты', link: '/components/button', sections: ['/components/'] },
+    ]);
+
+    expect(sections).toEqual([{ label: 'Компоненты', prefixes: ['/components/'] }]);
+
+    expect(
+      ['/components/button#sizes', '/guide/forms', '/changelog'].map((link) =>
+        sectionOf(link, sections),
+      ),
+    ).toEqual(['Компоненты', undefined, undefined]);
   });
 
   it('loads a locale index on demand and yields nothing for a locale without one', async () => {
