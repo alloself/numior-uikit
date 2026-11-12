@@ -1,5 +1,6 @@
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { startedClosing } from '../e2e/helpers/motion';
 import { expect, test } from './fixtures';
 import { takesStillStates } from './profiles';
 
@@ -192,9 +193,17 @@ test('tooltip motion above and below', async ({ docs, scenes, page }) => {
   for (const [index, name] of TOOLTIP_TRIGGERS.entries()) {
     const trigger = docs.example().preview.getByRole('button', { name, exact: true });
 
-    await scenes.motion(`states/tooltip-${index}-enter`, 'html', () => trigger.hover());
+    await scenes.motion(`states/tooltip-${index}-enter`, 'html', async () => {
+      await trigger.hover();
+      await expect(docs.tooltip).toBeVisible();
+    });
+
     await scenes.capture(`states/tooltip-${index}`, 'html', 'viewport');
-    await scenes.motion(`states/tooltip-${index}-leave`, 'html', () => page.mouse.move(0, 0));
+
+    await scenes.motion(`states/tooltip-${index}-leave`, 'html', async () => {
+      await page.mouse.move(0, 0);
+      await startedClosing(docs.tooltip);
+    });
   }
 });
 

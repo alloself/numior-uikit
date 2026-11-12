@@ -1,4 +1,5 @@
 import { sectionScope } from '../e2e/helpers/axe';
+import { startedClosing } from '../e2e/helpers/motion';
 import { expect, test } from './fixtures';
 import { takesStillStates } from './profiles';
 
@@ -173,7 +174,12 @@ test('popover and tooltip states and motion', async ({ overlays, scenes, page })
   });
 
   await scenes.capture('overlays--tooltip', scope, 'viewport');
-  await scenes.motion('overlays--tooltip-leave', scope, () => page.mouse.move(0, 0));
+
+  await scenes.motion('overlays--tooltip-leave', scope, async () => {
+    await page.mouse.move(0, 0);
+    await startedClosing(overlays.tooltip);
+  });
+
   await expect(overlays.tooltip).toBeHidden();
 });
 

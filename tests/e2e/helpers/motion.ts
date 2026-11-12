@@ -1,4 +1,4 @@
-import type { Locator } from '@playwright/test';
+import { expect, type Locator } from '@playwright/test';
 
 export interface Motion {
   readonly duration: number;
@@ -16,6 +16,12 @@ export const slowMotion = (scope: Locator, token = '--nui-duration-fast'): Promi
     },
     { name: token, value: `${SLOW_MOTION}ms` },
   );
+
+export const startedClosing = async (popover: Locator): Promise<void> => {
+  await expect
+    .poll(() => popover.evaluate((element) => element.matches(':popover-open')))
+    .toBe(false);
+};
 
 export const motionOf = (target: Locator, property: string): Promise<Motion | null> =>
   target.evaluate((element, name) => {
