@@ -5,12 +5,15 @@ import { navigationPages } from '../navigation.ts';
 const INDEX_PATHS = { ru: 'llms-ru.txt', en: 'llms.txt' } as const;
 const FULL_PATHS = { ru: 'llms-full-ru.txt', en: 'llms-full.txt' } as const;
 const TWIN_EXTENSION = '.md';
+const LEADING_SLASHES = /^\/+/u;
+const TRAILING_SLASH = /\/$/u;
 
 export const indexPathOf = (locale: ExampleLocale): string => INDEX_PATHS[locale];
 
 export const fullPathOf = (locale: ExampleLocale): string => FULL_PATHS[locale];
 
-export const twinPathOf = (link: string): string => `${link.replace(/^\/+/u, '')}${TWIN_EXTENSION}`;
+export const twinPathOf = (link: string): string =>
+  `${link.replace(LEADING_SLASHES, '').replace(TRAILING_SLASH, '/index')}${TWIN_EXTENSION}`;
 
 export const twinPaths = (): Set<string> =>
   new Set(

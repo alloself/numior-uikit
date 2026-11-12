@@ -14,6 +14,7 @@ import '@numior/spreadsheet/styles.css';
 import '@numior/charts/styles.css';
 import '@numior/content/styles.css';
 import '@numior/editor-vue/styles.css';
+import '@numior/collaboration/styles.css';
 import '@numior/tokens/accents.css';
 import '@numior/tokens/prose.css';
 import '@fontsource-variable/manrope/index.css';

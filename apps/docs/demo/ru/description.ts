@@ -1,12 +1,14 @@
-export const description = `
+export const brief = `
 <h2>Кресло «Осло»</h2>
-<p>Мягкое кресло на каркасе из <strong>массива дуба</strong>. Чехол снимается и стирается при 30 °C.</p>
+<p>Мягкое кресло на каркасе из <strong>массива дуба</strong>. Чехол снимается и стирается при 30&nbsp;°C.</p>
 <ul>
   <li>Ширина 78 см, глубина 84 см, высота 92 см</li>
   <li>Высота сиденья 42 см</li>
   <li>Выдерживает до 120 кг</li>
 </ul>
-<div class="nui-content__callout nui-content__callout--tone-warning">
+`;
+
+export const description = `${brief}<div class="nui-content__callout nui-content__callout--tone-warning">
   <p>Не ставьте кресло вплотную к батарее: дуб рассыхается.</p>
 </div>
 <h3>Обивка</h3>

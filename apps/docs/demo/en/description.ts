@@ -1,12 +1,14 @@
-export const description = `
+export const brief = `
 <h2>Oslo armchair</h2>
-<p>A soft armchair on a <strong>solid oak</strong> frame. The cover comes off and washes at 30 °C.</p>
+<p>A soft armchair on a <strong>solid oak</strong> frame. The cover comes off and washes at 30&nbsp;°C.</p>
 <ul>
   <li>31 in wide, 33 in deep, 36 in high</li>
   <li>Seat height 16.5 in</li>
   <li>Holds up to 265 lb</li>
 </ul>
-<div class="nui-content__callout nui-content__callout--tone-warning">
+`;
+
+export const description = `${brief}<div class="nui-content__callout nui-content__callout--tone-warning">
   <p>Keep the chair away from radiators: oak dries out and cracks.</p>
 </div>
 <h3>Upholstery</h3>

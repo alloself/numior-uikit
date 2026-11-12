@@ -19,6 +19,7 @@ export const BLOCKS: readonly BlockEntry[] = [
   { name: 'CustomersSplit', height: 720 },
   { name: 'PriceSheet', height: 680 },
   { name: 'ProductDescription', height: 760 },
+  { name: 'CoEditing', height: 480 },
   { name: 'SalesDashboard', height: 680 },
 ];
 

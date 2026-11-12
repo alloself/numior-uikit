@@ -58,6 +58,12 @@ A formula builds the price from the cost and the markup, and the stock total rec
 
 <Block name="ProductDescription" />
 
+## Editing a description together
+
+Two panes edit one document: each shows the caret of the other, and edits made offline merge once the connection is back.
+
+<Block name="CoEditing" />
+
 ## Sales
 
 Revenue, order count, and revenue per order come from the orders; the charts show days and statuses.

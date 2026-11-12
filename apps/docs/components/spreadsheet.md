@@ -54,7 +54,7 @@ import '@numior/spreadsheet/styles.css';
 
 <Example name="spreadsheet/Menu" />
 
-### Совместная правка
+### Совместная работа
 
 `useCollabWorkbook` из `@numior/collaboration/spreadsheet` связывает книгу с сервером. Для него рядом с
 `@numior/collaboration` должен стоять `@numior/spreadsheet`.
