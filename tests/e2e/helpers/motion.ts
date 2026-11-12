@@ -18,9 +18,7 @@ export const slowMotion = (scope: Locator, token = '--nui-duration-fast'): Promi
   );
 
 export const startedClosing = async (popover: Locator): Promise<void> => {
-  await expect
-    .poll(() => popover.evaluate((element) => element.matches(':popover-open')))
-    .toBe(false);
+  await expect(popover.and(popover.page().locator(':popover-open'))).toHaveCount(0);
 };
 
 export const motionOf = (target: Locator, property: string): Promise<Motion | null> =>
