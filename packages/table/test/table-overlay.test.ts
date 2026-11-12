@@ -211,6 +211,20 @@ describe('NuiTable overlay', () => {
     expect(grid.scrollPosition).toEqual({ top: 120, left: 30 });
   });
 
+  it('names the row and column at the top edge and scrolls others to the same place', async () => {
+    const grid = mountStaff({ props: { rowHeight: 40 }, width: 300 });
+
+    await grid.settle();
+    await grid.scroll({ top: 125, left: 30 });
+
+    expect(grid.scrollAnchor).toEqual({ row: 3, rowOffset: 5, col: 0, colOffset: 30 });
+
+    await grid.scroll({ top: 0, left: 0 });
+    await grid.scrollToAnchor({ row: 5, rowOffset: 5, col: 0, colOffset: 30 });
+
+    expect(grid.scrollPosition).toEqual({ top: 205, left: 30 });
+  });
+
   it('moves the focus to a cell without scrolling to it on request', async () => {
     const grid = mountStaff();
 

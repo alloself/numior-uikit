@@ -252,6 +252,7 @@ export type { SizeIndex } from './virtual/size-index';
 export { VirtualAlign, VirtualAxis } from './virtual/virtual.types';
 export type {
   ItemSize,
+  VirtualAnchor,
   VirtualFrame,
   VirtualItem,
   VirtualList,

@@ -3,6 +3,7 @@ import { nextTick } from 'vue';
 import {
   type ItemSize,
   type VirtualAlign,
+  type VirtualAnchor,
   type VirtualAxis,
   type VirtualFrame,
   type VirtualList,
@@ -194,6 +195,21 @@ export class VirtualHarness {
   async scrollToIndex(index: number, align?: VirtualAlign): Promise<void> {
     this.list.scrollTo(index, { align });
     await nextTick();
+  }
+
+  get anchor(): VirtualAnchor {
+    return this.list.anchor();
+  }
+
+  async scrollToAnchor(anchor: VirtualAnchor, itemSize?: ItemSize): Promise<void> {
+    this.list.scrollToAnchor(anchor);
+
+    if (itemSize === undefined) {
+      await nextTick();
+      return;
+    }
+
+    await this.wrapper.setProps({ itemSize });
   }
 
   async measure(): Promise<void> {

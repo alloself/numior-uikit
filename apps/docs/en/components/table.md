@@ -362,6 +362,13 @@ The table does not scroll and does not take the focus from a field outside it. T
 `false` when the position is outside the table or its cell cannot be edited: the editor then stays
 where it was.
 
+To keep the same data on the screen, take `scrollAnchor()` before the shift. It answers with the
+row and column at the top and start edges of the window and how far they went past the edge. After
+the shift, pass the new positions of the same row and column to
+`scrollToAnchor({ row, rowOffset, col, colOffset })`.
+
+A table without a row window (`height: 'auto'`) answers `undefined` and does not scroll.
+
 `fitWidth(text, style)` answers with the column width in pixels at which a cell shows this text on
 one line. It counts the font of the cell style, the cell paddings, the grid line and the room of an
 icon. The method returns `undefined` until the table is mounted.

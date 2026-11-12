@@ -400,6 +400,7 @@ import {
   type NuiTableProps,
   type NuiTableRange,
   type NuiTableRanges,
+  type NuiTableScrollAnchor,
   type NuiTableRowHeaders,
   type NuiTableRowHeights,
   type NuiTableRowProps,
@@ -887,6 +888,41 @@ const columnWindow = useVirtualList(viewport, {
   inset: () => layout.value.startWidth + layout.value.endWidth,
   listen: false,
 });
+
+const scrollAnchor = (): NuiTableScrollAnchor | undefined => {
+  if (!windowed.value) {
+    return undefined;
+  }
+
+  const top = rowWindow.anchor();
+  const start = columnWindow.anchor();
+  const centred = layout.value.centre.length > 0;
+
+  return {
+    row: top.index + pinnedCount.value,
+    rowOffset: top.within,
+    col: centred ? start.index + layout.value.start.length : undefined,
+    colOffset: centred ? start.within : 0,
+  };
+};
+
+const scrollToAnchor = (anchor: NuiTableScrollAnchor): void => {
+  if (!windowed.value) {
+    return;
+  }
+
+  const body = anchor.row - pinnedCount.value;
+  const centre = anchor.col === undefined ? undefined : centreIndexOf(layout.value, anchor.col);
+
+  if (body >= 0 && body < visibleRows.value) {
+    rowWindow.scrollToAnchor({ index: body, within: anchor.rowOffset });
+  }
+  if (centre === undefined) {
+    return;
+  }
+
+  columnWindow.scrollToAnchor({ index: centre, within: anchor.colOffset });
+};
 
 const onViewportScroll = (): void => {
   if (!windowed.value) {
@@ -3024,6 +3060,8 @@ defineExpose<NuiTableExposed>({
     top: viewport.value?.scrollTop ?? 0,
     left: viewport.value?.scrollLeft ?? 0,
   }),
+  scrollAnchor,
+  scrollToAnchor,
   startEdit: (mode, options) => cellEditor.start(mode, options?.focus ?? true),
   commitEdit: (move = 'stay') => cellEditor.commit(move),
   cancelEdit: () => {

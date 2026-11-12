@@ -771,6 +771,13 @@ export interface NuiTableScrollPosition {
   readonly left: number;
 }
 
+export interface NuiTableScrollAnchor {
+  readonly row: number;
+  readonly rowOffset: number;
+  readonly col: number | undefined;
+  readonly colOffset: number;
+}
+
 export interface NuiTableExposed {
   scrollToRow(position: number): void;
   scrollToColumn(key: string): void;
@@ -787,6 +794,8 @@ export interface NuiTableExposed {
   followEdge(x: number, y: number, onStep: () => void): void;
   stopEdge(): void;
   scrollPosition(): NuiTableScrollPosition;
+  scrollAnchor(): NuiTableScrollAnchor | undefined;
+  scrollToAnchor(anchor: NuiTableScrollAnchor): void;
   startEdit(mode: NuiTableEditMode, options?: NuiTableStartEditOptions): boolean;
   commitEdit(move?: NuiTableEditMove): boolean;
   cancelEdit(): void;

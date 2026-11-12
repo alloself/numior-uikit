@@ -55,6 +55,7 @@ import {
   type NuiTableRanges,
   type NuiTableRect,
   type NuiTableRowHeights,
+  type NuiTableScrollAnchor,
   type NuiTableWindow,
   type NuiTableCellKey,
   type NuiTableCellPosition,
@@ -1204,6 +1205,15 @@ export class TableDriver<T> {
 
   get scrollPosition(): { readonly top: number; readonly left: number } | undefined {
     return this.exposed.value?.scrollPosition();
+  }
+
+  get scrollAnchor(): NuiTableScrollAnchor | undefined {
+    return this.exposed.value?.scrollAnchor();
+  }
+
+  async scrollToAnchor(anchor: NuiTableScrollAnchor): Promise<void> {
+    this.exposed.value?.scrollToAnchor(anchor);
+    await nextTick();
   }
 
   async focusCellAt(position: NuiTableCellPosition, scroll: boolean): Promise<void> {
