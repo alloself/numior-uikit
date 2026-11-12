@@ -113,6 +113,21 @@ describe('NuiChart', () => {
     expect(chart.mutedMarks).toBe(0);
   });
 
+  it('shows each value with its share of the column when the columns stack to 100%', async () => {
+    const chart = chartOf({
+      spec: { ...revenue, stacking: 'percent' },
+      config: { locale: 'en-US' },
+    });
+
+    await chart.hover(chart.categoryTickX('Q2') + 6, MIDDLE);
+
+    expect(chart.tooltip?.rows).toEqual(['Online 51.5 · 45.8%', 'Stores 61 · 54.2%']);
+
+    await chart.hover(chart.categoryTickX('Q3') + 6, MIDDLE);
+
+    expect(chart.tooltip?.rows).toEqual(['Online —', 'Stores 59 · 100%']);
+  });
+
   it('follows a crosshair on lines and marks the points it crosses', async () => {
     const chart = chartOf({ spec: { ...revenue, kind: 'line' } });
     const x = chart.categoryTickX('Q3');

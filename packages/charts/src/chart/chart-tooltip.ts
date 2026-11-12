@@ -1,4 +1,5 @@
-import type { ChartHit, ChartScene, ChartSpec } from '../core';
+import type { ChartHit, ChartScene, ChartSpec, ChartValue } from '../core';
+import { ChartStacking } from '../core/chart.types';
 import { categoryTexts, valueText } from './chart-table';
 import type { NuiChartTooltipContent } from './chart.types';
 
@@ -11,6 +12,32 @@ const percentText = (share: number, locale: string): string => {
 
   percents.set(locale, known);
   return known.format(share);
+};
+
+const finiteOf = (value: ChartValue | undefined): number | undefined =>
+  value === null || value === undefined || !Number.isFinite(value) ? undefined : value;
+
+const shareText = (
+  spec: ChartSpec,
+  index: number,
+  locale: string,
+): ((value: ChartValue | undefined) => string) => {
+  if (spec.stacking !== ChartStacking.Percent) {
+    return (value) => valueText(value, locale);
+  }
+
+  const total = spec.series.reduce(
+    (sum, item) => sum + Math.abs(finiteOf(item.values[index]) ?? 0),
+    0,
+  );
+
+  return (value) => {
+    const finite = finiteOf(value);
+
+    return finite === undefined || total === 0
+      ? valueText(value, locale)
+      : `${valueText(finite, locale)} · ${percentText(Math.abs(finite) / total, locale)}`;
+  };
 };
 
 export const tooltipContent = (
@@ -50,13 +77,15 @@ export const tooltipContent = (
       ],
     };
   }
+  const textOf = shareText(spec, hit.index, locale);
+
   return {
     title: category,
     rows: spec.series.map((item, position) => ({
       key: item.id,
       slot: scene.slots[position],
       name: item.name,
-      value: valueText(item.values[hit.index], locale),
+      value: textOf(item.values[hit.index]),
     })),
   };
 };
