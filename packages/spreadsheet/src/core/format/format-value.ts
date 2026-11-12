@@ -13,7 +13,7 @@ import {
   type NumberFormat,
   type NumberLocale,
 } from './format.types';
-import { createOutput, type Output } from './output';
+import { createOutput, pushFill, pushText, type Output } from './output';
 import { BinaryOperator } from '../formula/formula.types';
 
 interface Choice {
@@ -22,6 +22,8 @@ interface Choice {
 }
 
 const GENERAL = 'General';
+
+const CHOICES = 3;
 
 const HASHES: FormattedValue = { text: '#', color: undefined, fill: { char: '#', at: 0 } };
 
@@ -47,7 +49,7 @@ const negativeOnly = (condition: FormatCondition): boolean =>
   (condition.op === BinaryOperator.LessOrEqual && condition.value < 0);
 
 const explicitChoice = (sections: readonly FormatSection[], value: number): Choice | undefined => {
-  for (const section of sections.slice(0, 3)) {
+  for (const section of sections.slice(0, CHOICES)) {
     const { condition } = section;
 
     if (condition === undefined || passes(condition, value)) {
@@ -67,14 +69,17 @@ const implicitIndex = (count: number, value: number): number => {
   return value < 0 ? 1 : 2;
 };
 
-const numberChoice = (format: NumberFormat, value: number): Choice | undefined => {
-  const sections = format.sections.slice(0, 3);
+const hasCondition = (sections: readonly FormatSection[]): boolean =>
+  sections.some((section, index) => index < CHOICES && section.condition !== undefined);
 
-  if (sections.some((section) => section.condition !== undefined)) {
+const numberChoice = (format: NumberFormat, value: number): Choice | undefined => {
+  const { sections } = format;
+
+  if (hasCondition(sections)) {
     return explicitChoice(sections, value);
   }
 
-  const index = implicitIndex(sections.length, value);
+  const index = implicitIndex(Math.min(sections.length, CHOICES), value);
   const section = sections[index];
 
   return section === undefined ? undefined : { section, negative: index === 0 && value < 0 };
@@ -85,11 +90,11 @@ const textOutput = (section: FormatSection, text: string): Output => {
 
   section.tokens.forEach((token) => {
     if (token.kind === FormatTokenKind.Text) {
-      output.push(text);
+      pushText(output, text);
     } else if (token.kind === FormatTokenKind.Literal) {
-      output.push(token.text);
+      pushText(output, token.text);
     } else if (token.kind === FormatTokenKind.Fill) {
-      output.fill(token.char);
+      pushFill(output, token.char);
     }
   });
 

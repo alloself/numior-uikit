@@ -25,6 +25,12 @@ interface FormatCase {
   readonly fill: FormatFill | undefined;
 }
 
+const BUDGET_MS = 100;
+
+const BUDGET_CELLS = 20_000;
+
+const BUDGET_CODES = ['General', '#,##0.00', '0.00%'];
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -101,5 +107,32 @@ describe('built-in formats and colours', () => {
   it('maps palette indices to colours', () => {
     expect(formatColor(3)).toBe('#FF0000');
     expect(formatColor(57)).toBeUndefined();
+  });
+});
+
+describe('cost', () => {
+  it('formats twenty thousand numbers in three common formats within the budget', () => {
+    const values = Array.from({ length: BUDGET_CELLS }, (_, index) =>
+      numberValue(index * 37.31 - 400_000),
+    );
+
+    const formatAll = (): number =>
+      BUDGET_CODES.reduce(
+        (total, code) =>
+          values.reduce(
+            (sum, value) => sum + formatValue(value, code, RU_NUMBERS).text.length,
+            total,
+          ),
+        0,
+      );
+
+    formatAll();
+
+    const started = performance.now();
+    const length = formatAll();
+    const spent = performance.now() - started;
+
+    expect(length).toBeGreaterThan(0);
+    expect(spent).toBeLessThan(BUDGET_MS);
   });
 });

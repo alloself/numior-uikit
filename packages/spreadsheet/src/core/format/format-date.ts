@@ -1,6 +1,6 @@
 import { civilOf, mondayIndex, type CivilDate } from '../calc/serials';
 import { DateUnit, FormatTokenKind, type FormatToken, type NumberLocale } from './format.types';
-import { createOutput, type Output } from './output';
+import { createOutput, pushFill, pushText, type Output } from './output';
 
 type DateToken = Extract<FormatToken, { kind: typeof FormatTokenKind.Date }>;
 
@@ -193,13 +193,14 @@ export const formatDateSection = (
 
   tokens.forEach((token, index) => {
     if (token.kind === FormatTokenKind.Date) {
-      output.push(
+      pushText(
+        output,
         dateText(tokens, index, token, moment, locale) ?? clockText(token, moment, twelve, locale),
       );
     } else if (token.kind === FormatTokenKind.Fill) {
-      output.fill(token.char);
+      pushFill(output, token.char);
     } else if (token.kind === FormatTokenKind.Literal) {
-      output.push(token.text);
+      pushText(output, token.text);
     }
   });
 

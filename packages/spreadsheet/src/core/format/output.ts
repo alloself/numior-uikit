@@ -1,28 +1,16 @@
 import type { FormatFill } from './format.types';
 
 export interface Output {
-  push(text: string): void;
-  fill(char: string): void;
-  readonly text: string;
-  readonly filler: FormatFill | undefined;
+  text: string;
+  filler: FormatFill | undefined;
 }
 
-export const createOutput = (): Output => {
-  let text = '';
-  let filler: FormatFill | undefined;
+export const createOutput = (): Output => ({ text: '', filler: undefined });
 
-  return {
-    push: (part) => {
-      text += part;
-    },
-    fill: (char) => {
-      filler ??= { char, at: text.length };
-    },
-    get text() {
-      return text;
-    },
-    get filler() {
-      return filler;
-    },
-  };
+export const pushText = (output: Output, part: string): void => {
+  output.text += part;
+};
+
+export const pushFill = (output: Output, char: string): void => {
+  output.filler ??= { char, at: output.text.length };
 };
