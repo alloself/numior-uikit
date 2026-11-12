@@ -1083,7 +1083,7 @@
   overflow: hidden;
   border-radius: var(--nui-radius-sm);
   color: var(--nui-text-muted);
-  font-size: 0.7rem;
+  font-size: 0.875rem;
   cursor: grab;
   opacity: 0;
   touch-action: none;
@@ -1092,21 +1092,23 @@
     inline-size var(--nui-duration-fast) var(--nui-easing),
     margin var(--nui-duration-fast) var(--nui-easing),
     opacity var(--nui-duration-fast) var(--nui-easing),
-    color var(--nui-duration-fast) var(--nui-easing);
+    color var(--nui-duration-fast) var(--nui-easing),
+    background-color var(--nui-duration-fast) var(--nui-easing);
 }
 .nui-table__cell:hover > .nui-table__content > .nui-table__grip,
 .nui-table__grip--active {
   inline-size: 1.5rem;
-  margin-inline-start: calc(-1 * var(--_pad-x));
+  margin-inline: calc(-1 * var(--_pad-x)) 0;
   opacity: 1;
 }
 .nui-table__grip:hover {
+  background: var(--nui-hover);
   color: var(--nui-text);
 }
 @media (hover: none) {
   .nui-table__grip {
     inline-size: 1.5rem;
-    margin-inline-start: calc(-1 * var(--_pad-x));
+    margin-inline: calc(-1 * var(--_pad-x)) 0;
     opacity: 1;
   }
 }
@@ -1119,7 +1121,7 @@
 }
 .nui-table--dragging .nui-table__grip:not(.nui-table__grip--active) {
   inline-size: 0;
-  margin-inline-start: 0;
+  margin-inline: 0 calc(-1 * var(--nui-space-1));
   opacity: 0;
 }
 .nui-table__cell--dragging > .nui-table__content {
@@ -1146,7 +1148,7 @@
   border-radius: var(--nui-radius-sm);
   background: none;
   color: var(--nui-text-muted);
-  font-size: 0.7rem;
+  font-size: 0.875rem;
   cursor: grab;
   opacity: 0;
   touch-action: none;
@@ -1300,7 +1302,7 @@
   margin-inline-start: calc(-1 * var(--nui-space-1));
   overflow: hidden;
   color: var(--nui-text-muted);
-  font-size: 0.7rem;
+  font-size: 0.875rem;
   opacity: 0;
   transition:
     max-inline-size var(--nui-duration-fast) var(--nui-easing),
@@ -1327,6 +1329,25 @@
 .nui-table__cell--sortable:focus-visible .nui-table__sort,
 .nui-table__sort--active {
   opacity: 1;
+}
+.nui-table__sort-button {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-inline-size: 1.5rem;
+  block-size: 1.5rem;
+  padding: 0 var(--nui-space-1);
+  border-radius: var(--nui-radius-sm);
+  transition:
+    color var(--nui-duration-fast) var(--nui-easing),
+    background-color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-table__sort-button:hover {
+  background: var(--nui-hover);
+  color: var(--nui-text);
 }
 .nui-table__sort-order {
   font-size: 0.625rem;

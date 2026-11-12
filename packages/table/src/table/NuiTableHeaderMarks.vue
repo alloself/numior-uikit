@@ -8,11 +8,13 @@
     }"
     aria-hidden="true"
   >
-    <NuiIcon
-      :icon="state.direction === undefined ? 'arrow-up-down' : 'arrow-up'"
-      :transform="{ rotate: state.direction === TableSortDirection.Desc ? 180 : 0 }"
-    />
-    <span v-if="state.order" class="nui-table__sort-order">{{ state.order }}</span>
+    <span class="nui-table__sort-button">
+      <NuiIcon
+        :icon="state.direction === undefined ? 'arrow-up-down' : 'arrow-up'"
+        :transform="{ rotate: state.direction === TableSortDirection.Desc ? 180 : 0 }"
+      />
+      <span v-if="state.order" class="nui-table__sort-order">{{ state.order }}</span>
+    </span>
   </span>
   <span v-if="hint" class="nui-table__hidden">{{ hint }}</span>
   <button
