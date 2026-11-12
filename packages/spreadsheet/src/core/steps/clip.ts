@@ -6,7 +6,7 @@ import { CellInputKind, CellValueKind, type CellAddress, type CellRange } from '
 import type { CellDecoration } from '../decorations';
 import { parseNumberFormat } from '../format/format-code';
 import { SectionKind } from '../format/format.types';
-import { followMove, type BlockMove, type FormulaPlace } from '../formula/follow-move';
+import { followMove, type BlockMove, type FormulaSite } from '../formula/follow-move';
 import { numberValue, textValue } from '../values';
 import type { Sheet, Workbook } from '../workbook';
 import { FillMode, type CellClip, type CellClips, type ClipPaste } from './clip.types';
@@ -231,8 +231,8 @@ const stepsOf = (step: WorkbookStep | undefined): WorkbookStep[] =>
 const placedContent = (
   content: CellContent | undefined,
   move: BlockMove,
-  from: FormulaPlace,
-  to: FormulaPlace,
+  from: FormulaSite,
+  to: FormulaSite,
 ) =>
   content?.kind === CellInputKind.Formula
     ? { kind: content.kind, ast: followMove(content.ast, move, from, to) }

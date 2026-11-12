@@ -16,7 +16,7 @@ afterEach(() => {
 
 describe('an overlay told that the text may have moved', () => {
   it('hears once when a class shifts a line', async () => {
-    const layout = await listening();
+    const layout: LayoutWatchDriver = await listening();
 
     await layout.shiftLine();
     await layout.paint();
@@ -25,7 +25,7 @@ describe('an overlay told that the text may have moved', () => {
   });
 
   it('hears when the text of a line changes', async () => {
-    const layout = await listening();
+    const layout: LayoutWatchDriver = await listening();
 
     await layout.retype('A longer line');
 
@@ -33,7 +33,7 @@ describe('an overlay told that the text may have moved', () => {
   });
 
   it('hears when a bar appears above the text', async () => {
-    const layout = await listening();
+    const layout: LayoutWatchDriver = await listening();
 
     await layout.addBar();
 
@@ -41,7 +41,7 @@ describe('an overlay told that the text may have moved', () => {
   });
 
   it('hears a transition that starts without a change in the markup', async () => {
-    const layout = await listening();
+    const layout: LayoutWatchDriver = await listening();
 
     await layout.startTransition();
 
@@ -49,7 +49,7 @@ describe('an overlay told that the text may have moved', () => {
   });
 
   it('hears a picture that has loaded inside the text', async () => {
-    const layout = await listening();
+    const layout: LayoutWatchDriver = await listening();
 
     await layout.loadPicture();
 
@@ -57,7 +57,7 @@ describe('an overlay told that the text may have moved', () => {
   });
 
   it('hears every frame of a running animation and stops with it', async () => {
-    const layout = await listening();
+    const layout: LayoutWatchDriver = await listening();
 
     await layout.glideLine(2);
 
@@ -74,7 +74,7 @@ describe('an overlay told that the text may have moved', () => {
   });
 
   it('does not chase an animation that never ends', async () => {
-    const layout = await listening();
+    const layout: LayoutWatchDriver = await listening();
 
     await layout.glideLine(5, Infinity);
     await layout.paint();
@@ -83,7 +83,7 @@ describe('an overlay told that the text may have moved', () => {
   });
 
   it('hears nothing after it has left', async () => {
-    const layout = await listening();
+    const layout: LayoutWatchDriver = await listening();
 
     layout.leave();
     await layout.shiftLine();

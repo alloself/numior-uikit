@@ -12,7 +12,7 @@ export interface BlockMove {
   readonly cols: number;
 }
 
-export interface FormulaPlace {
+export interface FormulaSite {
   readonly sheet: string;
   readonly origin: CellAddress;
 }
@@ -48,8 +48,8 @@ const named = (reference: LocatedReference, target: string, home: string): Locat
 export const followMove = (
   node: FormulaNode,
   move: BlockMove,
-  before: FormulaPlace,
-  after: FormulaPlace = before,
+  before: FormulaSite,
+  after: FormulaSite = before,
 ): FormulaNode =>
   mapReferences(node, (reference) => {
     if (isSymbolic(reference)) {

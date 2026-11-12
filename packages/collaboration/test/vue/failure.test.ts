@@ -19,7 +19,7 @@ afterEach(() => {
 
 describe('a shared document that stopped syncing', () => {
   it('closes for writing and says why when the server refuses a change', async () => {
-    const shared = await opened();
+    const shared: SessionDriver = await opened();
 
     await shared.welcome(documentOf('one', 'two'), 4);
     await shared.insert('X', 2);
@@ -37,7 +37,7 @@ describe('a shared document that stopped syncing', () => {
   });
 
   it('opens the document from the server again without the refused change', async () => {
-    const shared = await opened();
+    const shared: SessionDriver = await opened();
 
     await shared.welcome(documentOf('one', 'two'), 4);
     await shared.insert('X', 2);
@@ -55,7 +55,7 @@ describe('a shared document that stopped syncing', () => {
   });
 
   it('offers no way back when the page is older than the document', async () => {
-    const shared = await opened();
+    const shared: SessionDriver = await opened();
 
     await shared.refuseAsOutdated();
 

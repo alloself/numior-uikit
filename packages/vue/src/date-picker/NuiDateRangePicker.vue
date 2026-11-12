@@ -192,10 +192,14 @@ const showClear = computed(
     !isReadonly.value,
 );
 
-const withEnd = (end: DateRangeEnd, date: string | null): NuiDateRange => ({
-  ...model.value,
-  [end]: date,
-});
+const withEnd = (end: DateRangeEnd, date: string | null): NuiDateRange => {
+  switch (end) {
+    case DateRangeEnd.Start:
+      return { start: date, end: model.value.end };
+    case DateRangeEnd.End:
+      return { start: model.value.start, end: date };
+  }
+};
 
 const setEnd = (end: DateRangeEnd, date: string | null): void => {
   const next = withEnd(end, date);

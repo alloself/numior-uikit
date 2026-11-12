@@ -144,7 +144,11 @@
       },
       {
         "name": "collaboration-server",
-        "patterns": ["packages/collaboration/server/**", "packages/collaboration/test/**"]
+        "patterns": ["packages/collaboration/server/**"]
+      },
+      {
+        "name": "collaboration-test",
+        "patterns": ["packages/collaboration/test/**"]
       },
       {
         "name": "collaboration",
@@ -258,6 +262,18 @@
       {
         "from": "collaboration-server",
         "allow": ["editor-core", "content", "spreadsheet", "collaboration", "collaboration-server"]
+      },
+      {
+        "from": "collaboration-test",
+        "allow": [
+          "editor-core",
+          "content",
+          "editor-vue",
+          "spreadsheet",
+          "collaboration",
+          "collaboration-server",
+          "collaboration-test"
+        ]
       },
       {
         "from": "nuxt",

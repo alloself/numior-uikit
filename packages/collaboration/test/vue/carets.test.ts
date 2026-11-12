@@ -15,7 +15,7 @@ afterEach(() => {
 
 describe('a caret of someone else beside a line that moves', () => {
   it('goes after its text when the editor says the text may have moved', async () => {
-    const scene = await mounted();
+    const scene: CaretsDriver = await mounted();
 
     expect(scene.caret).toBe('translate(40px, 30px)');
 
@@ -25,7 +25,7 @@ describe('a caret of someone else beside a line that moves', () => {
   });
 
   it('stops listening to the editor once the layer is gone', async () => {
-    const scene = await mounted();
+    const scene: CaretsDriver = await mounted();
 
     expect(scene.listening).toBe(true);
 

@@ -62,7 +62,7 @@ interface QuickLane {
 
 const loweredCache = new WeakMap<readonly string[], string[]>();
 
-export const loweredOf = (dictionary: readonly string[]): string[] => {
+const loweredOf = (dictionary: readonly string[]): string[] => {
   const cached = loweredCache.get(dictionary);
 
   if (cached !== undefined) {
@@ -73,11 +73,7 @@ export const loweredOf = (dictionary: readonly string[]): string[] => {
   return created;
 };
 
-export const loweredAt = (
-  dictionary: readonly string[],
-  lowered: string[],
-  code: number,
-): string => {
+const loweredAt = (dictionary: readonly string[], lowered: string[], code: number): string => {
   const known = lowered[code];
 
   if (known !== undefined) {
