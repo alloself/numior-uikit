@@ -5,6 +5,8 @@
     :class="{ 'nui-icon--filled': filled }"
     :style="transformStyle"
     aria-hidden="true"
+    @animationend="settle"
+    @animationcancel="settle"
   >
     <component :is="glyph" v-if="glyph" class="nui-icon__glyph" focusable="false" />
   </span>
@@ -12,13 +14,11 @@
 
 <script setup lang="ts">
 import { iconPending } from '@numior/primitives';
-import { useEventListener } from '@vueuse/core';
 import { computed, onMounted, useTemplateRef } from 'vue';
 import { useIcon } from './use-icon';
 import type { NuiIconProps } from './icon.types';
 
 const APPEARING = 'nui-icon--appearing';
-const APPEARED = ['animationend', 'animationcancel'];
 
 const { icon, transform, filled } = defineProps<NuiIconProps>();
 
@@ -42,14 +42,13 @@ onMounted(() => {
   }
 
   element.classList.add(APPEARING);
-
-  const stop = useEventListener(element, APPEARED, (event) => {
-    if (event.target === element) {
-      return;
-    }
-
-    element.classList.remove(APPEARING);
-    stop();
-  });
 });
+
+const settle = (event: AnimationEvent): void => {
+  if (event.target === event.currentTarget) {
+    return;
+  }
+
+  root.value?.classList.remove(APPEARING);
+};
 </script>
