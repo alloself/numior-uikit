@@ -195,6 +195,20 @@ const docs: DocsMap = {
         },
       },
       {
+        keys: 'Shift+F10 / ContextMenu',
+        description: {
+          ru: 'Открывает меню ячейки или выбранного рисунка.',
+          en: 'Opens the menu of the cell or of the selected picture.',
+        },
+      },
+      {
+        keys: 'Alt+F10',
+        description: {
+          ru: 'Выбирает первый рисунок листа; `Tab` переходит к следующему, `Escape` возвращает к ячейкам.',
+          en: 'Selects the first picture of the sheet; `Tab` moves to the next one, `Escape` returns to the cells.',
+        },
+      },
+      {
         keys: 'Ctrl+S / Ctrl+O',
         description: {
           ru: 'С `fileBar` сохраняет книгу и открывает файл.',

@@ -144,6 +144,7 @@
             @grip="drawingEdit.onGripDown"
             @select="drawingEdit.select"
             @settings="drawingEdit.openSettings"
+            @menu="drawingEdit.onContextmenu"
           />
           <NuiSpreadsheetMarks
             :rect-of="rectOf"
@@ -198,6 +199,7 @@
         @release="note.release"
         @close="note.hide"
       />
+      <span ref="drawingSpot" class="nui-spreadsheet__anchor" aria-hidden="true"></span>
     </div>
     <NuiPopover
       v-model:open="rules.open.value"
@@ -225,6 +227,14 @@
     </NuiPopover>
     <NuiSpreadsheetPivotPopover ref="pivotPanel" :pivots="pivots" :readonly="locked" />
     <NuiSpreadsheetChartPopover ref="chartPanel" :settings="chartSettings" :texts="messages" />
+    <NuiMenu
+      ref="drawingMenuList"
+      v-model:open="drawingMenu.open.value"
+      :anchor="drawingMenu.anchor.value"
+      :items="drawingMenu.items.value"
+      :label="messages.drawingMenu"
+      placement="bottom-start"
+    />
     <div class="nui-spreadsheet__hidden" role="status" aria-live="polite">
       {{ formula.announcement.value }}
     </div>
@@ -271,7 +281,14 @@ import {
   type NuiTableRect,
   type NuiTableCellPosition,
 } from '@numior/table';
-import { NuiButton, NuiIcon, NuiPopover, type NuiTabDescriptor } from '@numior/vue';
+import {
+  NuiButton,
+  NuiIcon,
+  NuiMenu,
+  NuiPopover,
+  type NuiMenuExposed,
+  type NuiTabDescriptor,
+} from '@numior/vue';
 import { useFocusWithin } from '@vueuse/core';
 import {
   computed,
@@ -316,6 +333,7 @@ import type { LineNear } from './drawings/drawings.types';
 import { useSheetChartInsert } from './drawings/use-sheet-chart-insert';
 import { useSheetChartSettings } from './drawings/use-sheet-chart-settings';
 import { useSheetDrawingEdit } from './drawings/use-sheet-drawing-edit';
+import { useSheetDrawingMenu } from './drawings/use-sheet-drawing-menu';
 import { useSheetDrawings } from './drawings/use-sheet-drawings';
 import { useSheetPictureInsert } from './drawings/use-sheet-picture-insert';
 import NuiSpreadsheetFile from './file/NuiSpreadsheetFile.vue';
@@ -768,9 +786,30 @@ const drawingEdit = useSheetDrawingEdit({
   openSettings: () => {
     chartSettings.show();
   },
+  openMenu: (shown, event) => {
+    drawingMenu.show(shown, event);
+  },
   editing,
   table: grid,
   root,
+});
+
+const drawingMenuList = useTemplateRef<NuiMenuExposed>('drawingMenuList');
+
+const drawingSpot = useTemplateRef<HTMLElement>('drawingSpot');
+
+const drawingMenu = useSheetDrawingMenu({
+  root,
+  body,
+  spot: drawingSpot,
+  messages: () => messages.value,
+  pressed: drawingEdit.pressed,
+  request: drawingEdit.onContextmenu,
+  remove: drawingEdit.remove,
+  openSettings: drawingEdit.openSettings,
+  show: (focus) => {
+    drawingMenuList.value?.show(focus);
+  },
 });
 
 const chartSettings = useSheetChartSettings({

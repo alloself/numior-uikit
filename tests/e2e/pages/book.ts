@@ -797,6 +797,45 @@ export class BookSection {
     return frame.x >= header.x + header.width;
   }
 
+  get shownMenus(): Locator {
+    return this.page.getByRole('menu');
+  }
+
+  get drawingMenu(): Locator {
+    return this.page.getByRole('menu', { name: 'Действия с объектом' });
+  }
+
+  async openDrawingMenuAt(target: Locator): Promise<{ x: number; y: number }> {
+    const box = await boxOf(target);
+    const spot = { x: box.width / 3, y: box.height / 3 };
+
+    await target.click({ button: 'right', position: spot });
+    await expect(this.drawingMenu).toBeVisible();
+    return { x: box.x + spot.x, y: box.y + spot.y };
+  }
+
+  async holdDrawing(target: Locator): Promise<void> {
+    const box = await boxOf(target);
+
+    const init = {
+      bubbles: true,
+      button: 0,
+      isPrimary: true,
+      pointerId: 12,
+      pointerType: 'touch',
+      clientX: box.x + box.width / 2,
+      clientY: box.y + box.height / 2,
+    };
+
+    await target.dispatchEvent('pointerdown', init);
+    await expect(this.drawingMenu).toBeVisible();
+    await target.dispatchEvent('pointerup', init);
+  }
+
+  async chooseDrawingMenuItem(label: string): Promise<void> {
+    await this.drawingMenu.getByRole('menuitem', { name: label, exact: true }).click();
+  }
+
   get chartSettings(): Locator {
     return this.page.getByRole('dialog', { name: 'Настройки диаграммы' });
   }

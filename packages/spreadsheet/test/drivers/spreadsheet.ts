@@ -46,6 +46,8 @@ interface CellSpot {
   readonly col: number;
 }
 
+const DRAWING_MENU = '[role="menu"][aria-label="Object actions"]';
+
 const EDGE_POINTER = 9;
 
 const EDGE_START = 100;
@@ -201,6 +203,46 @@ export class SpreadsheetDriver {
 
   async clickDrawing(index: number): Promise<void> {
     await this.wrapper.findAll('.nui-spreadsheet__drawing')[index]?.trigger('click');
+  }
+
+  get drawingMenuItems(): string[] {
+    return [...document.querySelectorAll(`${DRAWING_MENU} [role="menuitem"]`)].map(
+      (item) => item.textContent?.trim() ?? '',
+    );
+  }
+
+  get drawingMenuFocused(): boolean {
+    return (document.activeElement?.closest(DRAWING_MENU) ?? null) !== null;
+  }
+
+  async openDrawingMenu(index: number): Promise<boolean> {
+    const left =
+      this.drawingAt(index)?.dispatchEvent(
+        new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 }),
+      ) ?? true;
+
+    await nextTick();
+    return left;
+  }
+
+  async holdDrawing(index: number, ms: number): Promise<void> {
+    this.drawingAt(index)?.dispatchEvent(
+      pointer('pointerdown', { pointerType: 'touch', clientX: 100, clientY: 100 }),
+    );
+
+    await vi.advanceTimersByTimeAsync(ms);
+  }
+
+  private drawingAt(index: number): Element | undefined {
+    return this.wrapper.findAll('.nui-spreadsheet__drawing')[index]?.element;
+  }
+
+  async chooseDrawingMenuItem(label: string): Promise<void> {
+    [...document.querySelectorAll<HTMLElement>(`${DRAWING_MENU} [role="menuitem"]`)]
+      .find((item) => item.textContent?.trim() === label)
+      ?.click();
+
+    await nextTick();
   }
 
   async dragDrawing(index: number, by: DrawingDrag): Promise<void> {

@@ -64,6 +64,9 @@ const inSettings = (target: EventTarget | null): boolean =>
 const nameOf = (shown: ShownDrawing): string =>
   shown.drawing.name === '' ? shown.label : shown.drawing.name;
 
+const isMenuKey = (event: KeyboardEvent): boolean =>
+  event.key === Key.ContextMenu || (event.key === Key.F10 && event.shiftKey);
+
 const consume = (event: KeyboardEvent): void => {
   event.preventDefault();
   event.stopPropagation();
@@ -71,6 +74,8 @@ const consume = (event: KeyboardEvent): void => {
 
 export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit => {
   let session: Session | undefined;
+
+  let pressed: ShownDrawing | undefined;
 
   const selectedId = shallowRef<string>();
 
@@ -156,6 +161,7 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
 
   const onDown = (event: PointerEvent, shown: ShownDrawing): void => {
     event.preventDefault();
+    pressed = shown;
 
     if (
       event.button !== PRIMARY_BUTTON ||
@@ -244,6 +250,8 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
   };
 
   const onRootDown = (event: PointerEvent): void => {
+    pressed = undefined;
+
     if (selectedId.value === undefined || isDrawingTarget(event.target)) {
       return;
     }
@@ -290,11 +298,25 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
     options.announce(options.messages().drawingRemoved({ label: nameOf(shown) }));
   };
 
+  const onContextmenu = (event: MouseEvent, shown: ShownDrawing): void => {
+    if (!canEdit(shown)) {
+      return;
+    }
+
+    event.preventDefault();
+    select(shown);
+    options.openMenu(shown, event);
+  };
+
   const onSelectedKey = (event: KeyboardEvent, shown: ShownDrawing): boolean => {
     const step = NUDGES.get(event.key);
 
     if (step !== undefined) {
       nudge(shown, step[0], step[1], event.shiftKey);
+      return true;
+    }
+    if (isMenuKey(event)) {
+      options.openMenu(shown, undefined);
       return true;
     }
 
@@ -360,6 +382,9 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
     selectNew,
     deselect,
     openSettings,
+    remove,
+    pressed: () => pressed,
+    onContextmenu,
     onDown,
     onGripDown,
     onMove,

@@ -13,6 +13,7 @@
       @pointerdown="emit('down', $event, placed.shown)"
       @click="emit('select', placed.shown)"
       @dblclick="emit('settings', placed.shown)"
+      @contextmenu="emit('menu', $event, placed.shown)"
     >
       <NuiSpreadsheetDrawingBody :shown="placed.shown" />
     </div>
@@ -94,6 +95,7 @@ const emit = defineEmits<{
   grip: [event: PointerEvent, shown: ShownDrawing, grip: FrameGrip];
   select: [shown: ShownDrawing];
   settings: [shown: ShownDrawing];
+  menu: [event: MouseEvent, shown: ShownDrawing];
 }>();
 
 const placedDrawings = computed(() =>

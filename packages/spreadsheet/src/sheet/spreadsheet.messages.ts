@@ -82,6 +82,8 @@ export interface NuiSpreadsheetMessages {
   readonly insertChart: string;
   readonly insertPicture: string;
   readonly chartSettings: string;
+  readonly drawingMenu: string;
+  readonly removeDrawing: string;
   readonly chartSettingsClose: string;
   readonly chartKind: string;
   readonly chartTitleField: string;
@@ -284,6 +286,8 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     insertChart: 'Insert chart',
     insertPicture: 'Insert picture…',
     chartSettings: 'Chart settings',
+    drawingMenu: 'Object actions',
+    removeDrawing: 'Delete',
     chartSettingsClose: 'Close chart settings',
     chartKind: 'Chart type',
     chartTitleField: 'Title',
@@ -395,6 +399,8 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     insertChart: 'Вставить диаграмму',
     insertPicture: 'Вставить картинку…',
     chartSettings: 'Настройки диаграммы',
+    drawingMenu: 'Действия с объектом',
+    removeDrawing: 'Удалить',
     chartSettingsClose: 'Закрыть настройки диаграммы',
     chartKind: 'Тип диаграммы',
     chartTitleField: 'Заголовок',

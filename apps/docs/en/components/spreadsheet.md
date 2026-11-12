@@ -152,6 +152,15 @@ reason.
 
 In a read-only book the size changes on screen only, while this sheet is shown.
 
+### Pictures and charts
+
+A picture is selected with a click, or with `Alt+F10` from a cell. `Tab` moves to the next
+picture. The arrows move a selected picture and `Delete` removes it.
+
+A picture has its own menu: a right click, a long press on a phone, or `Shift+F10` on a selected
+picture. The menu offers «Delete», and a chart also offers «Chart settings». A read-only book shows
+no picture menu.
+
 ### Refused actions
 
 An action the sheet did not apply is explained by a note in the bottom corner of the sheet. The
@@ -172,7 +181,7 @@ The sheet is marked up as `role="grid"`. Tab enters it once, and the arrows move
 cells. The formula bar is tied to the active cell, and results of edits are announced in a live
 region.
 
-On a phone a double tap starts editing and a long press opens the cell menu.
+On a phone a double tap starts editing and a long press opens the menu of a cell or a picture.
 
 <KeyboardReference name="NuiSpreadsheet" />
 
