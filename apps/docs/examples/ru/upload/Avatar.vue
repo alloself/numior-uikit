@@ -2,8 +2,8 @@
   <NuiAvatarUpload
     v-model="avatar"
     :upload="upload"
-    name="Анна Смирнова"
-    label="Фото профиля"
+    name="Анна Титова"
+    label="Фото сотрудника"
     description="PNG или JPEG до 2 МБ"
     :max-size="2 * 1024 * 1024"
   />

@@ -1,35 +1,31 @@
 <template>
-  <NuiUpload
-    v-model="documents"
-    :upload="upload"
-    label="Документы"
-    description="PDF до 5 МБ, не больше трёх файлов"
-    accept=".pdf"
-    :max-size="5 * 1024 * 1024"
-    :max-files="3"
-  />
+  <div class="w-full max-w-md">
+    <NuiUpload
+      v-model="photos"
+      :upload="upload"
+      label="Фото товара"
+      description="JPEG или PNG до 5 МБ, не больше пяти фото"
+      accept="image/jpeg,image/png"
+      :max-size="5 * 1024 * 1024"
+      :max-files="5"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { promiseTimeout } from '@vueuse/core';
 import { NuiUpload, type NuiUploadAdapter, type NuiUploadItem } from '@numior/vue';
 
-const documents = ref<NuiUploadItem<string>[]>([]);
+const STEPS = [0.2, 0.4, 0.6, 0.8, 1];
 
-const wait = (ms: number, signal: AbortSignal): Promise<void> =>
-  new Promise((resolve, reject) => {
-    const timer = setTimeout(resolve, ms);
-
-    signal.addEventListener('abort', () => {
-      clearTimeout(timer);
-      reject(new Error('Загрузка отменена'));
-    });
-  });
+const photos = ref<NuiUploadItem<string>[]>([]);
 
 const upload: NuiUploadAdapter<string> = async (file, { onProgress, signal }) => {
-  for (let step = 1; step <= 5; step += 1) {
-    await wait(300, signal);
-    onProgress(step / 5);
+  for (const share of STEPS) {
+    await promiseTimeout(300);
+    signal.throwIfAborted();
+    onProgress(share);
   }
   return `https://files.example/${encodeURIComponent(file.name)}`;
 };

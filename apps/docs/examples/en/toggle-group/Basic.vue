@@ -1,19 +1,22 @@
 <template>
-  <div class="flex flex-col gap-3">
-    <NuiToggleGroup v-model="scheme" :items="schemes" variant="segmented" required label="Scheme" />
-    <p class="m-0 text-sm text-muted-foreground">Selected: {{ scheme }}</p>
-  </div>
+  <NuiToggleGroup
+    v-model="view"
+    :items="views"
+    variant="segmented"
+    required
+    label="Order list view"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { LayoutGrid } from '@lucide/vue';
 import { NuiToggleGroup, type NuiToggleItem } from '@numior/vue';
 
-const scheme = ref<string | null>('system');
+const view = ref<string | null>('table');
 
-const schemes: readonly NuiToggleItem[] = [
-  { value: 'light', label: 'Light', icon: 'sun' },
-  { value: 'dark', label: 'Dark', icon: 'moon' },
-  { value: 'system', label: 'System', icon: 'monitor' },
+const views: readonly NuiToggleItem[] = [
+  { value: 'table', label: 'Table', icon: 'table' },
+  { value: 'cards', label: 'Cards', icon: LayoutGrid },
 ];
 </script>

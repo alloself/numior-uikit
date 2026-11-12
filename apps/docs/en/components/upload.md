@@ -1,13 +1,20 @@
 # Upload
 
-`NuiUpload` is a field for uploading files. Files can be dropped onto a zone on the page or
-chosen in a dialog, and the list below shows their upload progress and errors.
+File uploads by drag and drop or from the file picker.
 
 <Example name="upload/Basic" />
 
-The component sends no requests itself: each file goes to the `upload` function. It uploads the
-file, reports progress through `onProgress` and returns a result such as the file URL. `v-model`
-holds an array of files with the `queued`, `uploading`, `done` and `error` statuses.
+Your `upload` function sends each file to the server:
+
+```ts
+type NuiUploadAdapter<R> = (
+  file: File,
+  context: { onProgress: (fraction: number) => void; signal: AbortSignal },
+) => Promise<R>;
+```
+
+Report the uploaded share from 0 to 1 to `onProgress`, and pass `signal` to `fetch` so a canceled
+file stops its request. The returned value becomes the `result` of the file in the model.
 
 ## Installation
 
@@ -19,63 +26,65 @@ import '@numior/vue/styles/upload.css';
 
 ## Usage
 
-Add a few photos and change the look of the drop zone, the list layout and the field states.
+Add a few photos, then change the look of the field and the layout of the files.
 
 <Configurator name="NuiUpload" />
 
 ## Examples
 
-### Thumbnail grid
+### Show thumbnails
 
-With `layout="grid"` images show as thumbnails right after they are chosen, before the upload.
-Files that are already uploaded take the thumbnail from their `url`.
+Set `layout="grid"`.
 
 <Example name="upload/Grid" />
 
-### Upload on a button
+An image shows as a thumbnail as soon as it is picked, before the upload ends. Files that are
+already on the server take the thumbnail from their `url`.
 
-With `:auto="false"` chosen files wait in the `queued` status. The upload starts when the
-application calls the `start()` method on a component ref.
+### Upload on a button press
+
+Turn off `auto` and start the upload yourself.
 
 <Example name="upload/Manual" />
 
-### Button only
+Picked files wait in the `queued` status until you call `start()` on the component ref.
 
-With `variant="button"` the drop zone gives way to a single browse button and the file list.
-Files cannot be dropped onto such a field.
+### Keep only a button
+
+Set `variant="button"`.
 
 <Example name="upload/Button" />
 
-### Avatar
+Such a field takes no dropped files, and the file list stays below the button.
 
-`NuiAvatarUpload` uploads one image and shows it in an [Avatar](/en/components/avatar). To
-replace the photo, click the avatar or drop a new file onto it; a separate button removes the
-photo.
+### Upload an avatar
 
-When a new file fails the checks, the current image stays in place.
+Use `NuiAvatarUpload`.
 
 <Example name="upload/Avatar" />
 
-## Behaviour
+Click the avatar or drop an image on it to replace the photo. A file that fails the checks shows
+the reason and leaves the current photo in place.
 
-Every file goes through the checks: the type against `accept`, the size against `maxSize`, the
-count against `maxFiles` and the `validate` function. With the default `rejected="list"` rejected
-files stay in the list with the reason, and with `rejected="drop"` they never reach the model.
+## Behavior
 
-At most `concurrency` files upload at the same time, 3 by default. Cancelling aborts the request
-through `signal`, and on an error the row shows a "Retry" button.
-
-Removing an uploaded file emits the `remove` event, and the application deletes the file on the
-server. With `:multiple="false"` a new file replaces the previous one, but a rejected file leaves
-it in place. The `disabled` prop blocks both adding and removing files.
+- Each file goes through the checks: the type against `accept`, the size against `maxSize`, the
+  count against `maxFiles`, then your `validate`. A rejected file stays in the list with the
+  reason, and with `rejected="drop"` it never gets there.
+- At most `concurrency` files upload at once, and the rest wait in the queue.
+- Canceling stops the request through `signal` and takes the file off the list. A failed upload
+  gets a retry button that sends the same file again.
+- Removing a file emits `remove`, so delete an uploaded file on the server in its handler. With
+  `:multiple="false"` a new file takes the place of the old one, and `disabled` blocks both adding
+  and removing.
 
 ## Accessibility
 
-A click anywhere in the zone opens the file dialog. On the keyboard the "Choose files" button
-picks files, and the field label, hint and error are linked to it.
+A click anywhere in the zone opens the file picker, and on the keyboard the browse button does the
+same. The label, the hint and the error are linked to that button.
 
-Rows announce the upload progress and status. The cancel, retry and remove buttons have names
-for screen readers.
+Each row shows the upload progress, and a screen reader announces when a file is uploaded or
+fails. The cancel, retry and remove buttons have names for screen readers.
 
 <KeyboardReference name="NuiUpload" />
 

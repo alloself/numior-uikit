@@ -1,20 +1,24 @@
 <template>
-  <NuiCombobox v-model="assignee" :options="people" label="Assignee" placeholder="Assign">
+  <NuiCombobox v-model="customer" :options="buyers" label="Customer" placeholder="Search by name">
     <template #option="{ option }">
-      <span>{{ option.label }}</span>
-      <span class="text-muted-foreground ms-2">{{ option.description }}</span>
+      <span class="flex items-baseline justify-between gap-4">
+        <span>{{ option.label }}</span>
+        <span class="text-xs text-muted-foreground">{{ summaryOf(option.value) }}</span>
+      </span>
     </template>
   </NuiCombobox>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiCombobox, type NuiOptionSource } from '@numior/vue';
+import { plural } from '@numior/primitives';
+import { NuiCombobox } from '@numior/vue';
+import { customers, type Customer } from '#demo/customers';
 
-const assignee = ref<string | null>(null);
+const customer = ref<Customer | null>(null);
 
-const people: NuiOptionSource<string> = [
-  { value: 'titova', label: 'Anna Titova', description: 'design' },
-  { value: 'belov', label: 'Igor Belov', description: 'engineering' },
-];
+const buyers = customers.map((person) => ({ value: person, label: person.name }));
+
+const summaryOf = (person: Customer): string =>
+  `${person.city}, ${person.orders} ${plural('en', person.orders, { one: 'order', other: 'orders' })}`;
 </script>

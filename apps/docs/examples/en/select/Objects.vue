@@ -1,32 +1,34 @@
 <template>
-  <NuiSelect
-    label="Assignee"
-    v-model="assignee"
-    :options="people"
-    :get-key="keyOf"
-    placeholder="Assign"
-  >
-    <template #option="{ option }">
-      <span>{{ option.label }}</span>
-      <span class="text-muted-foreground ms-2">{{ option.description }}</span>
-    </template>
-  </NuiSelect>
+  <div class="flex flex-col gap-3">
+    <NuiSelect
+      v-model="customer"
+      :options="buyers"
+      :get-key="keyOf"
+      label="Customer"
+      placeholder="Pick a customer"
+    />
+    <p class="m-0 text-sm text-muted-foreground">{{ receipt }}</p>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { NuiSelect, type NuiOptionSource } from '@numior/vue';
+import { computed, ref } from 'vue';
+import { NuiSelect } from '@numior/vue';
+import { customers, type Customer } from '#demo/customers';
 
-interface Person {
-  readonly id: number;
-  readonly name: string;
-}
+const customer = ref<Customer | null>(null);
 
-const assignee = ref<Person | null>(null);
-const keyOf = (person: Person): string => String(person.id);
+const buyers = customers.map((person) => ({
+  value: person,
+  label: person.name,
+  description: person.city,
+}));
 
-const people: NuiOptionSource<Person> = [
-  { value: { id: 1, name: 'Anna' }, label: 'Anna', description: 'Design' },
-  { value: { id: 2, name: 'Igor' }, label: 'Igor', description: 'Engineering' },
-];
+const receipt = computed(() =>
+  customer.value === null
+    ? 'The receipt goes to the customer’s email'
+    : `The receipt goes to ${customer.value.email}`,
+);
+
+const keyOf = (person: Customer): string => String(person.id);
 </script>

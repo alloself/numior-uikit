@@ -1,14 +1,10 @@
 # Select
 
-`NuiSelect` is a field with a dropdown list for picking one or several values: a country, a
-city, an assignee. When users need to search the list or type their own value, use a
-[Combobox](/en/components/combobox).
+A field with a dropdown list of values.
 
 <Example name="select/Basic" />
 
-Options go into `options` as `{ value, label }` entries, and the chosen value lives in
-`v-model`. With `clearable` a clear button appears next to the value. The list opens at least as
-wide as the field.
+Pass the options to `options` as `{ value, label }` entries.
 
 ## Installation
 
@@ -21,61 +17,53 @@ import '@numior/vue/styles/select.css';
 
 ## Usage
 
-Change the size, the side of the list and the field states to fit your form.
+Change the size, the side the list opens on and the states of the field.
 
 <Configurator name="NuiSelect" />
 
+To let users search the list, use a [Combobox](/en/components/combobox).
+
 ## Examples
 
-### Groups and disabled options
+### Split the options into groups
 
-To split options into groups, pass a `{ label, items }` entry. An option with `disabled` stays
-visible in the list, but it cannot be chosen and the arrow keys skip it.
+Pass a `{ label, items }` entry.
 
 <Example name="select/Groups" />
 
-### Several values
+An option with `disabled` stays in the list, but it cannot be picked and the arrow keys skip it.
 
-With `multiple` a click on an option checks it, and the list stays open. The chosen values live
-in `v-model:values`. The field shows the option label, or "3 selected" when there is more than
-one.
+### Pick several values
+
+Add `multiple`.
 
 <Example name="select/Multiple" />
 
-### Objects as values
+The values come to `v-model:values`, and when more than one is picked, the field shows how many.
 
-When values are objects, pass `getKey`: the function returns the key that tells options apart.
-The `option` slot changes the markup of an option, for example to add a job title next to a
-name.
+### Keep an object in the model
+
+Pass `getKey`.
 
 <Example name="select/Objects" />
 
-### Tree
+The field finds the picked option by the key from `getKey`, such as the customer id. Without it the
+key is the JSON of the object, and a copy with one changed field no longer matches its option.
 
-When options have `children`, a tree opens instead of a list, with the branch of the chosen value
-already expanded. With `multiple` the options get checkboxes, and checking a parent checks all
-its descendants.
+### Pick from a tree
 
-A branch with `lazy` instead of `children` loads on expand: `NuiSelect` emits a `load` event,
-like [Tree](/en/components/tree).
+Add `children` to the options.
 
 <Example name="select/Tree" />
 
-### Sizes
-
-`size` takes `sm`, `md` and `lg`, as in the other inputs, so fields of different types in one
-form line up in height.
-
-<Example name="select/Sizes" />
+The list opens with the branch of the picked value expanded. Mark a branch `lazy` to load it on
+expand, and fill its `children` in the `load` handler, as in a [Tree](/en/components/tree).
 
 ## Accessibility
 
-The field is a native button with the `combobox` role, and the list is a `listbox` with `option`
-items. A screen reader announces whether the list is open and reads the chosen option. For a
-tree the roles become `tree` and `treeitem`.
-
-As with a native `<select>`, typing the first letters of an option on the closed field changes
-the value without opening the list.
+The field has the `combobox` role and opens a `listbox` of options, or a `tree` for nested ones.
+As with a native `<select>`, typing the first letters on the closed field picks a matching option
+in a flat list of single values.
 
 <KeyboardReference name="NuiSelect" />
 

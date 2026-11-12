@@ -2,8 +2,8 @@
   <NuiAvatarUpload
     v-model="avatar"
     :upload="upload"
-    name="Ann Smith"
-    label="Profile photo"
+    name="Anna Turner"
+    label="Team member photo"
     description="PNG or JPEG up to 2 MB"
     :max-size="2 * 1024 * 1024"
   />

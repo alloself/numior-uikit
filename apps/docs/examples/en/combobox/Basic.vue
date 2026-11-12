@@ -1,24 +1,19 @@
 <template>
   <NuiCombobox
-    v-model="city"
-    :options="cities"
-    label="Delivery city"
-    placeholder="Start typing"
+    v-model="customer"
+    :options="buyers"
+    label="Customer"
+    placeholder="Search by name"
     clearable
   />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiCombobox, type NuiOptionSource } from '@numior/vue';
+import { NuiCombobox } from '@numior/vue';
+import { customers } from '#demo/customers';
 
-const city = ref<string | null>(null);
+const customer = ref<number | null>(null);
 
-const cities: NuiOptionSource<string> = [
-  { value: 'lis', label: 'Lisbon' },
-  { value: 'por', label: 'Porto' },
-  { value: 'brg', label: 'Braga' },
-  { value: 'cbr', label: 'Coimbra' },
-  { value: 'fnc', label: 'Funchal' },
-];
+const buyers = customers.map((person) => ({ value: person.id, label: person.name }));
 </script>

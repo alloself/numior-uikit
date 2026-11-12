@@ -1,35 +1,33 @@
 <template>
-  <NuiUpload
-    v-model="photos"
-    :upload="upload"
-    label="Product photos"
-    accept="image/*"
-    layout="grid"
-    drop-label="Drop images here"
-    browse-label="Choose images"
-  />
+  <div class="w-full max-w-md">
+    <NuiUpload
+      v-model="photos"
+      :upload="upload"
+      label="Product gallery"
+      description="Up to eight photos, the first one becomes the card cover"
+      accept="image/*"
+      layout="grid"
+      :max-files="8"
+      drop-label="Drop photos here"
+      browse-label="Choose photos"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { promiseTimeout } from '@vueuse/core';
 import { NuiUpload, type NuiUploadAdapter, type NuiUploadItem } from '@numior/vue';
+
+const STEPS = [0.2, 0.4, 0.6, 0.8, 1];
 
 const photos = ref<NuiUploadItem<string>[]>([]);
 
-const wait = (ms: number, signal: AbortSignal): Promise<void> =>
-  new Promise((resolve, reject) => {
-    const timer = setTimeout(resolve, ms);
-
-    signal.addEventListener('abort', () => {
-      clearTimeout(timer);
-      reject(new Error('Upload cancelled'));
-    });
-  });
-
 const upload: NuiUploadAdapter<string> = async (file, { onProgress, signal }) => {
-  for (let step = 1; step <= 5; step += 1) {
-    await wait(300, signal);
-    onProgress(step / 5);
+  for (const share of STEPS) {
+    await promiseTimeout(300);
+    signal.throwIfAborted();
+    onProgress(share);
   }
   return `https://files.example/${encodeURIComponent(file.name)}`;
 };

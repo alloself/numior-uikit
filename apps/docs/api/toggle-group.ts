@@ -32,7 +32,10 @@ const docs: DocsMap = {
         ru: 'Располагает кнопки в ряд или столбцом. В столбце работают стрелки вверх и вниз.',
         en: 'Lays out the buttons in a row or a column. A column uses the up and down arrows.',
       },
-      disabled: { ru: 'Отключает всю группу.', en: 'Disables the whole group.' },
+      disabled: {
+        ru: 'Отключает все кнопки группы: их нельзя нажать, и Tab их пропускает.',
+        en: 'Turns off every button of the group, so none can be pressed or reached with Tab.',
+      },
       iconOnly: {
         ru: 'Показывает только иконки. Подпись видна в подсказке при наведении и читается экранными дикторами.',
         en: 'Shows icons only. The label appears in a tooltip on hover and is read by screen readers.',

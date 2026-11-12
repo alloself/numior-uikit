@@ -1,16 +1,24 @@
 <template>
-  <NuiSelect label="Tags" v-model:values="tags" :options="options" multiple clearable />
+  <NuiSelect
+    v-model:values="recipients"
+    :options="people"
+    label="Notify about new orders"
+    placeholder="Pick team members"
+    multiple
+    clearable
+  />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiSelect, type NuiOptionSource } from '@numior/vue';
+import { NuiSelect } from '@numior/vue';
+import { team } from '#demo/team';
 
-const tags = ref(['frontend']);
+const recipients = ref(['anna', 'maria']);
 
-const options: NuiOptionSource<string> = [
-  { value: 'frontend', label: 'Frontend' },
-  { value: 'backend', label: 'Backend' },
-  { value: 'design', label: 'Design' },
-];
+const people = team.map((person) => ({
+  value: person.id,
+  label: person.name,
+  description: person.role,
+}));
 </script>

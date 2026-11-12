@@ -1,9 +1,10 @@
 # Chip
 
-`NuiChip` is a label for a value the user has picked: a tag, a filter, an email recipient. A chip
-can be removable. For a status or a counter use a [Badge](/en/components/badge).
+A label for a picked value that the user can remove.
 
 <Example name="chip/Basic" />
+
+For a status or a count, use a [Badge](/en/components/badge).
 
 ## Installation
 
@@ -14,35 +15,25 @@ import '@numior/vue/styles/chip.css';
 
 ## Usage
 
-The `tone` prop sets the colour, and `variant` the fill: `soft`, `outline` or `solid`. `icon`
-puts an icon before the text.
+Change the tone, the fill and the size of the chip, or add a remove button.
 
 <Configurator name="NuiChip" />
 
 ## Examples
 
-### Removable filters
+### Remove a filter with a cross
 
-Add `removable` to show a button with a cross in the chip. Pressing it emits the `remove` event,
-and your app removes the chip from the list.
+Add `removable` and take the value out of your list in the `remove` handler.
 
 <Example name="chip/Removable" />
 
-### Sizes and disabled state
-
-The `sm` size suits tables and lists, and `md` is the default. With `disabled` the chip fades and
-its remove button cannot be pressed.
-
-<Example name="chip/Sizes" />
-
 ## Accessibility
 
-The remove button is labelled "Remove". When there are several chips, put the chip name into
-`removeLabel`, such as "Remove the Vue filter". Then a screen reader tells the buttons apart.
+A screen reader reads every remove button as "Remove". Put the value into `removeLabel`, such as
+"Remove the Boston filter", so the user can tell the buttons apart.
 
-The remove button can be reached with the Tab key, and `:remove-tabbable="false"` makes Tab skip
-it. The [Combobox](/en/components/combobox) does this, because its chips are removed with the
-keyboard right from the field.
+Tab reaches the remove button. Turn off `remove-tabbable` when chips sit in a field that removes
+them with Backspace, as a [Combobox](/en/components/combobox) does.
 
 ## API
 

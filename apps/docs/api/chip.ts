@@ -45,7 +45,7 @@ const docs: DocsMap = {
     slots: { default: { ru: 'Текст чипа.', en: 'Chip text.' } },
     configurator: {
       props: ['tone', 'variant', 'size', 'removable', 'disabled'],
-      content: { ru: 'Дизайн-система', en: 'Design system' },
+      content: { ru: 'Новинка', en: 'New' },
     },
   },
 };
