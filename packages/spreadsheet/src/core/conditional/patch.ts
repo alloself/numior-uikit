@@ -97,10 +97,10 @@ const woven = (
     const found = result.findIndex((each, index) => index > anchor && each.key === rule.key);
 
     if (found < 0) {
-continue;
-}
+      continue;
+    }
 
-anchor = found;
+    anchor = found;
   }
   return result;
 };

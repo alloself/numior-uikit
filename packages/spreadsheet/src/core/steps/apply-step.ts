@@ -475,10 +475,10 @@ export const createStepper = (book: Workbook, calculator: Calculator): BookStepp
 
     book.names.forEach((defined) => {
       if (defined.scope !== undefined) {
-return;
-}
+        return;
+      }
 
-shared.push(defined);
+      shared.push(defined);
     });
 
     const named = shared.map((defined): WorkbookStep => {
