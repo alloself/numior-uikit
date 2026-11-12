@@ -224,6 +224,17 @@ export class DocsSite {
     return this.article.getByRole('heading', { level: 1 });
   }
 
+  async follow(link: string): Promise<void> {
+    await this.article.getByRole('link', { name: link, exact: true }).click();
+    await this.network.quiet();
+  }
+
+  async sectionTop(title: string): Promise<number> {
+    const heading = this.article.getByRole('heading', { name: title }).first();
+
+    return Math.round((await boxOf(heading)).y);
+  }
+
   get toasts(): Locator {
     return this.page.locator('.nui-toast:not(.nui-toast--leaving)');
   }

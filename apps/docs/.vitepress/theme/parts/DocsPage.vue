@@ -15,6 +15,7 @@
 import { computed } from 'vue';
 import { Content, useData, withBase } from 'vitepress';
 import { NuiLink } from '@numior/vue';
+import { useAnchorHold } from '../composables/use-anchor-hold';
 import { useDocs } from '../composables/use-docs';
 import { editUrl, site } from '../site';
 import CopyPage from './CopyPage.vue';
@@ -31,4 +32,6 @@ const twin = computed(() =>
     ? withBase(`/${page.value.relativePath}`)
     : undefined,
 );
+
+useAnchorHold();
 </script>

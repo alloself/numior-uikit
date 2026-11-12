@@ -2,6 +2,8 @@ import { expect, test } from '../fixtures';
 import { expectRgb } from '../helpers/color';
 import { boxOf } from '../helpers/geometry';
 
+const SECTION_TOP = 80;
+
 test('the sidebar navigates, marks the current page and the contents follow the scroll', async ({
   docs,
   page,
@@ -120,6 +122,16 @@ test('the contents stay in place when the footer scrolls into view', async ({ do
 
   await expect(docs.footer).toBeInViewport({ ratio: 0.99 });
   expect(await docs.tocTop()).toBe(top);
+});
+
+test('a link to a section of another page keeps the section at the top while the page loads', async ({
+  docs,
+}) => {
+  await docs.open('/editor/collaboration');
+
+  await docs.follow('Spreadsheet');
+
+  await expect.poll(() => docs.sectionTop('Совместная работа')).toBe(SECTION_TOP);
 });
 
 test('the sidebar scrolls to the page that is open', async ({ docs, isMobile }) => {
