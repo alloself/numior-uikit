@@ -20,8 +20,8 @@ const OPENED_BY_BUTTON = ['dialog', 'drawer', 'menu', 'popover', 'date-picker'];
 const TIMED = ['toast'];
 const OPENED_BY_COMBOBOX = ['select', 'combobox'];
 
-const POPOVER_SIDES = ['Сверху', 'Справа', 'Снизу у края', 'Слева'];
-const TOOLTIP_TRIGGERS = ['Сохранить', 'Опубликовать'];
+const POPOVER_TRIGGERS = ['Пётр Волков'];
+const TOOLTIP_TRIGGERS = ['Отправить счёт', 'Скопировать ссылку'];
 
 const sceneOf = (route: string): string => (route === '/' ? 'home' : route.slice(1));
 
@@ -160,27 +160,22 @@ test('focused and hovered input example', async ({ docs, scenes }) => {
   await scenes.capture('states/input--hover', 'html', 'viewport');
 });
 
-test('popover motion on every side', async ({ docs, scenes, page }) => {
+test('popover motion', async ({ docs, scenes, page }) => {
   test.skip(!scenes.profile.states);
   await docs.open('/components/popover');
   await scenes.finishTimers();
   await scenes.showCurrentLinks();
 
-  for (const [index, side] of POPOVER_SIDES.entries()) {
-    const trigger = docs.article.getByRole('button', { name: side, exact: true });
+  for (const [index, name] of POPOVER_TRIGGERS.entries()) {
+    const trigger = docs.article.getByRole('button', { name, exact: true });
 
     await trigger.scrollIntoViewIfNeeded();
 
-    await scenes.motion(
-      `states/popover-side-${index}-enter`,
-      'html',
-      () => trigger.click(),
-      trigger,
-    );
+    await scenes.motion(`states/popover-${index}-enter`, 'html', () => trigger.click(), trigger);
 
-    await scenes.capture(`states/popover-side-${index}`, 'html', 'viewport');
+    await scenes.capture(`states/popover-${index}`, 'html', 'viewport');
 
-    await scenes.motion(`states/popover-side-${index}-leave`, 'html', () =>
+    await scenes.motion(`states/popover-${index}-leave`, 'html', () =>
       page.keyboard.press('Escape'),
     );
   }
@@ -193,7 +188,9 @@ test('tooltip motion above and below', async ({ docs, scenes, page }) => {
   await scenes.showCurrentLinks();
 
   for (const [index, name] of TOOLTIP_TRIGGERS.entries()) {
-    const trigger = docs.example().preview.getByRole('button', { name, exact: true });
+    const trigger = docs.article.getByRole('button', { name, exact: true });
+
+    await trigger.scrollIntoViewIfNeeded();
 
     await scenes.motion(`states/tooltip-${index}-enter`, 'html', async () => {
       await trigger.hover();
