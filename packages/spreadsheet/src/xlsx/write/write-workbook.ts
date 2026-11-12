@@ -31,6 +31,7 @@ import { withoutConditional, withoutExtensions } from './conditional-part';
 import { createStringTable, writeSheetPart, type StringTable } from './sheet-part';
 import { fragmentXml } from './fragment-xml';
 import { textLosses } from './long-text';
+import { formulaLosses } from './refused-formulas';
 import {
   cleanHead,
   cleanTail,
@@ -648,9 +649,11 @@ const planAll = async (
   readonly plans: SheetPlan[];
   readonly losses: XlsxLoss[];
   readonly keepPivots: boolean;
+  readonly refused: boolean;
 }> => {
   const taken = new Set(original?.archive.names ?? []);
   const keepPivots = samePivots(book, original);
+  const refused = formulaLosses(book, calculator);
 
   const charts = book.sheets.some((sheet) =>
     sheet.layout.parts.some((part) => part.opaque.length > 0),
@@ -661,6 +664,7 @@ const planAll = async (
   const losses: XlsxLoss[] = [
     ...(keepPivots ? [] : pivotLosses(book)),
     ...textLosses(book, calculator),
+    ...refused,
   ];
 
   for (const sheet of book.sheets) {
@@ -673,7 +677,15 @@ const planAll = async (
 
     losses.push(loss);
   }
-  return { plans, losses, keepPivots };
+  return { plans, losses, keepPivots, refused: refused.length > 0 };
+};
+
+const settleRefused = (calculator: Calculator, refused: boolean): void => {
+  if (!refused || calculator.pending === 0) {
+    return;
+  }
+
+  calculator.recalculate({ budgetMs: Number.POSITIVE_INFINITY });
 };
 
 const writePivots = (
@@ -978,7 +990,7 @@ export const writeWorkbook = async (
 
   const original = source === undefined ? undefined : await openOriginal(source);
 
-  const { plans, losses, keepPivots } = await planAll(
+  const { plans, losses, keepPivots, refused } = await planAll(
     book,
     calculator,
     original,
@@ -988,6 +1000,8 @@ export const writeWorkbook = async (
   if (losses.length > 0 && options.lossy !== true) {
     return { ok: false, report: { staleFormulas: 0, losses, copiedParts: 0 } };
   }
+
+  settleRefused(calculator, refused);
 
   const writing: Writing = {
     book,

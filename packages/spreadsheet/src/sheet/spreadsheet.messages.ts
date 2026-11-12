@@ -4,6 +4,15 @@ import type { XlsxLoss } from '../xlsx/write/write.types';
 
 export interface NuiSpreadsheetMessages {
   readonly formulaError: (params: { readonly position: number }) => string;
+  readonly formulaArguments: (params: { readonly name: string }) => string;
+  readonly formulaReference: (params: {
+    readonly name: string;
+    readonly argument: number;
+  }) => string;
+  readonly formulaLongText: string;
+  readonly formulaBigNumber: string;
+  readonly formulaSmallNumber: string;
+  readonly formulaTooLong: string;
   readonly nameBox: string;
   readonly formulaBar: string;
   readonly expandFormula: string;
@@ -128,6 +137,8 @@ const EN_LOSSES: Readonly<Record<XlsxLoss['reason'], (sheet: string) => string>>
   'pivot-source': (sheet) => `${sheet}: the source of a pivot table is gone, so it becomes values`,
   'long-text': (sheet) =>
     `${sheet}: a cell of the file holds 32,767 characters, longer texts are cut in the file`,
+  'refused-formula': (sheet) =>
+    `${sheet}: Excel does not take some formulas of the sheet, the file keeps their values`,
 };
 
 const RU_LOSSES: Readonly<Record<XlsxLoss['reason'], (sheet: string) => string>> = {
@@ -138,6 +149,8 @@ const RU_LOSSES: Readonly<Record<XlsxLoss['reason'], (sheet: string) => string>>
   'pivot-source': (sheet) => `${sheet}: источник сводной таблицы удалён, она станет значениями`,
   'long-text': (sheet) =>
     `${sheet}: ячейка файла вмещает 32 767 символов, более длинный текст в файле будет обрезан`,
+  'refused-formula': (sheet) =>
+    `${sheet}: Excel не принимает часть формул листа, в файле останутся их значения`,
 };
 
 const EN_LIMITATIONS: Readonly<Record<XlsxLimitationCode, string>> = {
@@ -198,6 +211,13 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
   namespace: 'spreadsheet',
   en: {
     formulaError: ({ position }) => `The formula has an error at character ${String(position)}`,
+    formulaArguments: ({ name }) => `${name} gets a wrong number of arguments`,
+    formulaReference: ({ name, argument }) =>
+      `Argument ${String(argument)} of ${name} must be a cell reference`,
+    formulaLongText: 'A text in a formula holds up to 255 characters',
+    formulaBigNumber: 'A number in a formula must be smaller than 1E+308',
+    formulaSmallNumber: 'A number in a formula must be zero or at least 1E-309',
+    formulaTooLong: 'A formula holds up to 8,192 characters',
     nameBox: 'Name box',
     formulaBar: 'Formula bar',
     expandFormula: 'Expand the formula bar',
@@ -311,6 +331,13 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
   },
   ru: {
     formulaError: ({ position }) => `Ошибка в формуле: символ ${String(position)}`,
+    formulaArguments: ({ name }) => `У функции ${name} неверное число аргументов`,
+    formulaReference: ({ name, argument }) =>
+      `Аргумент ${String(argument)} функции ${name} должен быть ссылкой на ячейки`,
+    formulaLongText: 'Текст в формуле вмещает до 255 знаков',
+    formulaBigNumber: 'Число в формуле должно быть меньше 1E+308',
+    formulaSmallNumber: 'Число в формуле должно быть нулём или не меньше 1E-309',
+    formulaTooLong: 'Формула вмещает до 8 192 знаков',
     nameBox: 'Поле имени',
     formulaBar: 'Строка формул',
     expandFormula: 'Развернуть строку формул',

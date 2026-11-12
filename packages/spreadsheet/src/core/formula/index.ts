@@ -1,10 +1,13 @@
 export type {
+  CallSignature,
   FormulaFailure,
   FormulaLocale,
   FormulaNode,
   FormulaParse,
   LineRef,
+  SignatureOf,
 } from './formula.types';
+export { FormulaFailureReason } from './formula.types';
 export { functionCallAt, functionPrefixAt, type FunctionCall, type FunctionPrefix } from './assist';
 export { EN_FORMULAS, RU_FORMULAS } from './locale';
 export { canonicalFunction, localFunction } from './localization';

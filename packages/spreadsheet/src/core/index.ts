@@ -161,6 +161,7 @@ export type {
 } from './pivot/pivot.types';
 export {
   EN_FORMULAS,
+  FormulaFailureReason,
   RU_FORMULAS,
   canonicalFunction,
   formulaReferences,
@@ -180,6 +181,7 @@ export type {
   AnchoredText,
   TextEdit,
   TextShift,
+  CallSignature,
   FunctionCall,
   FunctionPrefix,
   FormulaFailure,
@@ -189,6 +191,7 @@ export type {
   FormulaReference,
   LineRef,
   ReferenceSpan,
+  SignatureOf,
 } from './formula';
 export {
   BASE_FUNCTIONS,

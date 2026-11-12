@@ -7,6 +7,7 @@ import { numberFromText, raise, toText } from './coerce';
 import { wildcardSource } from './criteria';
 import { defineFunction } from './registry';
 import { CellValueKind } from '../cell.types';
+import { NEWER_MANY } from './signatures';
 
 const WINDOWS_1252 = [
   0x20_ac, 0x81, 0x20_1a, 0x1_92, 0x20_1e, 0x20_26, 0x20_20, 0x20_21, 0x2_c6, 0x20_30, 0x1_60,
@@ -219,13 +220,13 @@ export const TEXT_FUNCTIONS: readonly FunctionSpec[] = [
   defineFunction({
     name: 'CONCAT',
     min: 1,
-    max: MANY,
+    max: NEWER_MANY,
     evaluate: (args) => limited(piecesOf(args, 0, false).join('')),
   }),
   textual('CONCATENATE', 1, MANY, (args) =>
     limited(Array.from({ length: args.count }, (_, index) => args.text(index)).join('')),
   ),
-  defineFunction({ name: 'TEXTJOIN', min: 3, max: MANY, evaluate: textJoin }),
+  defineFunction({ name: 'TEXTJOIN', min: 3, max: NEWER_MANY, evaluate: textJoin }),
   textual('LEFT', 1, 2, (args) => textValue(args.text(0).slice(0, count(args, 1, 1)))),
   textual('RIGHT', 1, 2, (args) => {
     const text = args.text(0);

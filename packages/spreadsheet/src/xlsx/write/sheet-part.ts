@@ -22,6 +22,7 @@ import { concatBytes } from '../zip/streams';
 import type { Bytes } from '../zip/zip.types';
 import { withFuturePrefixes } from './future-functions';
 import { richErrorSlot } from './value-errors';
+import { refusedByExcel } from './refused-formulas';
 import { conditionalXml, extensionXml, withConditional, withExtensions } from './conditional-part';
 import { colsXml, mergesXml, rowAttributes } from './layout-part';
 import { placeInTail } from './tail';
@@ -308,7 +309,13 @@ const formulaCellXml = (
   }
 
   const written = fileFormula(writing, place, formula.ast);
-  const text = escapeText(printFormula(withFuturePrefixes(written.ast), FILE_FORMULAS, place));
+  const printed = printFormula(withFuturePrefixes(written.ast), FILE_FORMULAS, place);
+
+  if (refusedByExcel(calculator, formula.ast, place, printed)) {
+    return undefined;
+  }
+
+  const text = escapeText(printed);
   const spill = written.array;
   const fresh = formula.state === FormulaState.Fresh || formula.state === FormulaState.Imported;
   const known = fresh && !writing.outdated(sheet, place.row, place.col);

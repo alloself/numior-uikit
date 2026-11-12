@@ -18,6 +18,7 @@ import {
 import type { EvalValue, FunctionArgs, FunctionSpec } from './calc.types';
 import { numberFromText, raise } from './coerce';
 import { defineFunction } from './registry';
+import { NEWER_MANY, firstArgument, pairsAfter, rangesAfter, secondArgument } from './signatures';
 
 const counts = (value: CellValue, direct: boolean, locale: NumberLocale): boolean => {
   switch (value.kind) {
@@ -130,11 +131,15 @@ const rank = (args: FunctionArgs): number => {
 const positive = (values: readonly number[]): readonly number[] =>
   values.some((value) => value <= 0) ? raise('#NUM!') : values;
 
-const statistic = (name: string, compute: (values: readonly number[]) => number): FunctionSpec =>
+const statistic = (
+  name: string,
+  compute: (values: readonly number[]) => number,
+  most = MANY,
+): FunctionSpec =>
   defineFunction({
     name,
     min: 1,
-    max: MANY,
+    max: most,
     evaluate: (args) => numberValue(compute(numbersOf(args))),
   });
 
@@ -197,20 +202,19 @@ const countBlank = (args: FunctionArgs): EvalValue => {
 
 const MEDIAN = statistic('MEDIAN', (values) => percentile(values, 0.5, false));
 
-const MODE = statistic('MODE.SNGL', mode);
+const sampleDeviation = (values: readonly number[]): number => Math.sqrt(variance(values, true));
 
-const STDEV = statistic('STDEV.S', (values) => Math.sqrt(variance(values, true)));
+const wholeDeviation = (values: readonly number[]): number => Math.sqrt(variance(values, false));
 
-const STDEVP = statistic('STDEV.P', (values) => Math.sqrt(variance(values, false)));
+const sampleVariance = (values: readonly number[]): number => variance(values, true);
 
-const VAR = statistic('VAR.S', (values) => variance(values, true));
-
-const VARP = statistic('VAR.P', (values) => variance(values, false));
+const wholeVariance = (values: readonly number[]): number => variance(values, false);
 
 const RANK = defineFunction({
   name: 'RANK.EQ',
   min: 2,
   max: 3,
+  referenceAt: secondArgument,
   evaluate: (args) => numberValue(rank(args)),
 });
 
@@ -272,7 +276,13 @@ const subtotal = (args: FunctionArgs): EvalValue => {
 };
 
 export const STATISTICS_FUNCTIONS: readonly FunctionSpec[] = [
-  defineFunction({ name: 'SUBTOTAL', min: 2, max: MANY, evaluate: subtotal }),
+  defineFunction({
+    name: 'SUBTOTAL',
+    min: 2,
+    max: MANY,
+    referenceAt: (index) => index > 0,
+    evaluate: subtotal,
+  }),
   defineFunction({
     name: 'AVERAGE',
     min: 1,
@@ -293,11 +303,19 @@ export const STATISTICS_FUNCTIONS: readonly FunctionSpec[] = [
       return numberValue(mean(found));
     },
   }),
-  defineFunction({ name: 'AVERAGEIF', min: 2, max: 3, evaluate: averageIf }),
+  defineFunction({
+    name: 'AVERAGEIF',
+    min: 2,
+    max: 3,
+    referenceAt: (index) => index !== 1,
+    evaluate: averageIf,
+  }),
   defineFunction({
     name: 'AVERAGEIFS',
     min: 3,
     max: MANY,
+    counts: pairsAfter(1),
+    referenceAt: rangesAfter(1),
     evaluate: (args) =>
       numberValue(mean(matched(conditionsOf(args, 1), referenceOf(args.value(0))))),
   }),
@@ -329,17 +347,26 @@ export const STATISTICS_FUNCTIONS: readonly FunctionSpec[] = [
       return numberValue(count);
     },
   }),
-  defineFunction({ name: 'COUNTBLANK', min: 1, max: 1, evaluate: countBlank }),
+  defineFunction({
+    name: 'COUNTBLANK',
+    min: 1,
+    max: 1,
+    referenceAt: firstArgument,
+    evaluate: countBlank,
+  }),
   defineFunction({
     name: 'COUNTIF',
     min: 2,
     max: 2,
+    referenceAt: firstArgument,
     evaluate: (args) => numberValue(countMatches(conditionsOf(args, 0))),
   }),
   defineFunction({
     name: 'COUNTIFS',
     min: 2,
-    max: MANY,
+    max: NEWER_MANY,
+    counts: pairsAfter(0),
+    referenceAt: rangesAfter(0),
     evaluate: (args) => numberValue(countMatches(conditionsOf(args, 0))),
   }),
   defineFunction({ name: 'MIN', min: 1, max: MANY, evaluate: extreme(Math.min, eachNumber) }),
@@ -359,18 +386,22 @@ export const STATISTICS_FUNCTIONS: readonly FunctionSpec[] = [
   defineFunction({
     name: 'MINIFS',
     min: 3,
-    max: MANY,
+    max: NEWER_MANY - 1,
+    counts: pairsAfter(1),
+    referenceAt: rangesAfter(1),
     evaluate: ifsExtreme(min),
   }),
   defineFunction({
     name: 'MAXIFS',
     min: 3,
-    max: MANY,
+    max: NEWER_MANY - 1,
+    counts: pairsAfter(1),
+    referenceAt: rangesAfter(1),
     evaluate: ifsExtreme(max),
   }),
   MEDIAN,
-  MODE,
-  alias(MODE, 'MODE'),
+  statistic('MODE.SNGL', mode, NEWER_MANY),
+  statistic('MODE', mode),
   defineFunction({
     name: 'LARGE',
     min: 2,
@@ -401,14 +432,14 @@ export const STATISTICS_FUNCTIONS: readonly FunctionSpec[] = [
     max: 2,
     evaluate: (args) => numberValue(quartile(args, true)),
   }),
-  STDEV,
-  alias(STDEV, 'STDEV'),
-  STDEVP,
-  alias(STDEVP, 'STDEVP'),
-  VAR,
-  alias(VAR, 'VAR'),
-  VARP,
-  alias(VARP, 'VARP'),
+  statistic('STDEV.S', sampleDeviation, NEWER_MANY),
+  statistic('STDEV', sampleDeviation),
+  statistic('STDEV.P', wholeDeviation, NEWER_MANY),
+  statistic('STDEVP', wholeDeviation),
+  statistic('VAR.S', sampleVariance, NEWER_MANY),
+  statistic('VAR', sampleVariance),
+  statistic('VAR.P', wholeVariance, NEWER_MANY),
+  statistic('VARP', wholeVariance),
   statistic('DEVSQ', squares),
   statistic('AVEDEV', (values) => {
     const centre = mean(values);

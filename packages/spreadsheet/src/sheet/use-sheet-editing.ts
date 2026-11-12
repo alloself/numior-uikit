@@ -27,6 +27,7 @@ import {
   type WorkbookStep,
 } from '../core';
 import NuiSpreadsheetCellEditor from './NuiSpreadsheetCellEditor.vue';
+import { formulaFailureText } from './formula-failure';
 import type { RefusalText, SheetCells, SheetEditing, SheetEditingOptions } from './sheet.types';
 
 interface SheetLine {
@@ -253,11 +254,12 @@ export const useSheetEditing = (options: SheetEditingOptions): SheetEditing => {
       }
 
       const line = lineOf(cells, context.values, col);
-      const result = editor.value.input(sheet, line.row, line.col, value, options.locale());
+      const locale = options.locale();
+      const result = editor.value.input(sheet, line.row, line.col, value, locale);
 
       return result.ok
         ? true
-        : options.messages.value.formulaError({ position: result.error.position + 1 });
+        : formulaFailureText(result.error, options.messages.value, locale.formulas);
     };
 
   const editableColumns = (columns: readonly NuiTableColumn<number>[]): NuiTableColumn<number>[] =>

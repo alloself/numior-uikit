@@ -132,7 +132,6 @@ describe('base functions', () => {
     expect(evaluated('=NOT(0)')).toEqual({ kind: 'boolean', value: true });
     expect(evaluated('=IFERROR(1/0, "none")')).toEqual(textValue('none'));
     expect(evaluated('=ABS(-4)')).toEqual(numberValue(4));
-    expect(evaluated('=ROUND(1)')).toEqual({ kind: 'error', code: '#VALUE!' });
   });
 
   it('looks values up exactly and in sorted tables', () => {

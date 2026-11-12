@@ -680,6 +680,41 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.changes).toEqual([]);
   });
 
+  it('keeps a formula Excel would not take in the editor and says why', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.enter(4, 1, '=SUBTOTAL(9,{1,2})');
+
+    expect(sheet.editing).toBe(true);
+    expect(sheet.editorError).toBe('Argument 2 of SUBTOTAL must be a cell reference');
+
+    await sheet.press('Escape');
+    await sheet.enter(4, 1, '=ROUND(1)');
+
+    expect(sheet.editorError).toBe('ROUND gets a wrong number of arguments');
+
+    await sheet.press('Escape');
+    await sheet.enter(4, 1, '=1E-400');
+
+    expect(sheet.editorError).toBe('A number in a formula must be zero or at least 1E-309');
+    expect(sheet.changes).toEqual([]);
+  });
+
+  it('names the refusing function in the language of the sheet', async () => {
+    const book = salesBook();
+
+    const sheet = sheetOf({
+      book,
+      calculator: createCalculator(book),
+      locale: RU_LOCALE,
+      label: 'Продажи',
+    });
+
+    await sheet.enter(4, 1, '=СУММЕСЛИ({1;2};1)');
+
+    expect(sheet.editorError).toBe('Argument 1 of СУММЕСЛИ must be a cell reference');
+  });
+
   it('undoes and redoes edits through the workbook history', async () => {
     const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
 

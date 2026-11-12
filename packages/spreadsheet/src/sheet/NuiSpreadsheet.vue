@@ -1067,11 +1067,16 @@ const sheetFormats = computed((): readonly ConditionalFormat[] =>
 
 const selectedRanges = computed((): readonly CellRange[] => selection.current.value?.ranges ?? []);
 
-const ruleLooks = computed((): RuleLooks => ({
-  theme: book.decorations.theme,
-  font: book.decorations.defaultFont,
-  locale: bookLocale.value,
-}));
+const ruleLooks = computed((): RuleLooks => {
+  const functions = (calculator ?? ownCalculator.value).functions;
+
+  return {
+    theme: book.decorations.theme,
+    font: book.decorations.defaultFont,
+    locale: bookLocale.value,
+    signatures: (name) => functions.get(name),
+  };
+});
 
 const litFrames = computed((): readonly SheetClipFrame[] => {
   const current = cells.value;

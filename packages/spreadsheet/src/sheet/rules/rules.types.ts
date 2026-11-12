@@ -2,11 +2,13 @@ import type { NuiTableCellIcon } from '@numior/table';
 import type { ComputedRef } from 'vue';
 import type {
   BookLocale,
+  CellAddress,
   CellRange,
   ConditionalFormat,
   FontStyle,
   FormulaNode,
   PlacedRule,
+  SignatureOf,
   ThemePalette,
 } from '../../core';
 import type { StyleColor } from '../../core/decorations';
@@ -52,6 +54,7 @@ export interface RuleLooks {
   readonly theme: ThemePalette;
   readonly font: FontStyle;
   readonly locale: BookLocale;
+  readonly signatures: SignatureOf;
 }
 
 export interface SheetRulesProps {
@@ -119,6 +122,12 @@ export interface RuleForm {
 }
 
 export type ParsedValue = { readonly ok: true; readonly ast: FormulaNode } | { readonly ok: false };
+
+export interface RuleReading {
+  readonly locale: BookLocale;
+  readonly origin: CellAddress;
+  readonly signatures: SignatureOf;
+}
 
 export type RuleFormResult =
   | { readonly ok: true; readonly draft: RuleDraft }

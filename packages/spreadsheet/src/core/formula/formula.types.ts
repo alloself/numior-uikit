@@ -38,6 +38,8 @@ export type BinaryOperator = (typeof BinaryOperator)[keyof typeof BinaryOperator
 
 export type UnaryOperator = (typeof UnaryOperator)[keyof typeof UnaryOperator];
 
+export type FormulaFailureReason = (typeof FormulaFailureReason)[keyof typeof FormulaFailureReason];
+
 export type BookIndexOf = (name: string) => number | undefined;
 
 export type BookLabelOf = (index: number) => string | undefined;
@@ -129,12 +131,37 @@ export type FormulaNode =
 
 export interface FormulaFailure {
   readonly position: number;
-  readonly reason: 'token' | 'end' | 'reference' | 'array';
+  readonly reason: FormulaFailureReason;
+  readonly name?: string | undefined;
+  readonly argument?: number | undefined;
 }
+
+export interface CallSignature {
+  readonly min: number;
+  readonly max: number;
+  readonly counts?: ((count: number) => boolean) | undefined;
+  readonly referenceAt?: ((index: number) => boolean) | undefined;
+  readonly givesReference?: boolean | undefined;
+}
+
+export type SignatureOf = (name: string) => CallSignature | undefined;
 
 export type FormulaParse =
   | { readonly ok: true; readonly ast: FormulaNode }
   | { readonly ok: false; readonly error: FormulaFailure };
+
+export const FormulaFailureReason = {
+  Token: 'token',
+  End: 'end',
+  Reference: 'reference',
+  Array: 'array',
+  Arguments: 'arguments',
+  ReferenceArgument: 'reference-argument',
+  LongText: 'long-text',
+  BigNumber: 'big-number',
+  SmallNumber: 'small-number',
+  LongFormula: 'long-formula',
+} as const;
 
 export const FormulaReferenceKind = {
   Cell: 'cell',

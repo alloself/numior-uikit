@@ -337,7 +337,22 @@ const lineIndex = (value: number, size: number): number => {
   return index < 0 || index > size ? raise('#REF!') : index;
 };
 
+const onlyArea = (args: FunctionArgs): void => {
+  const area = Math.trunc(args.number(3, 1));
+
+  if (area < 1) {
+    raise('#VALUE!');
+  }
+  if (area === 1) {
+    return;
+  }
+
+  raise('#REF!');
+};
+
 const indexAt = (args: FunctionArgs): EvalValue => {
+  onlyArea(args);
+
   const table = args.value(0);
   const grid = gridOf(table);
   const single = grid.rows === 1 && args.missing(2);
@@ -373,13 +388,29 @@ export const LOOKUP_FUNCTIONS: readonly FunctionSpec[] = [
   defineFunction({ name: 'HLOOKUP', min: 3, max: 4, lift: [0], arrays: [1], evaluate: hlookup }),
   defineFunction({ name: 'MATCH', min: 2, max: 3, lift: [0], arrays: [1], evaluate: match }),
   defineFunction({ name: 'XMATCH', min: 2, max: 4, lift: [0], arrays: [1], evaluate: xmatch }),
-  defineFunction({ name: 'XLOOKUP', min: 3, max: 6, lift: [0], arrays: [1, 2], evaluate: xlookup }),
-  defineFunction({ name: 'INDEX', min: 2, max: 3, arrays: [0], evaluate: indexAt }),
+  defineFunction({
+    name: 'XLOOKUP',
+    min: 3,
+    max: 6,
+    lift: [0],
+    arrays: [1, 2],
+    givesReference: true,
+    evaluate: xlookup,
+  }),
+  defineFunction({
+    name: 'INDEX',
+    min: 2,
+    max: 4,
+    arrays: [0],
+    givesReference: true,
+    evaluate: indexAt,
+  }),
   defineFunction({ name: 'LOOKUP', min: 2, max: 3, lift: [0], arrays: [1, 2], evaluate: lookup }),
   defineFunction({
     name: 'CHOOSE',
     min: 2,
     max: MANY,
+    givesReference: true,
     lift: [0],
     evaluate: (args) => {
       const index = Math.trunc(args.number(0));

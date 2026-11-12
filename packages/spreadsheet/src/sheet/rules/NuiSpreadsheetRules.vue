@@ -330,7 +330,7 @@ const save = (): void => {
     return;
   }
 
-  const result = ruleOf(current.form, looks.locale);
+  const result = ruleOf(current.form, looks.locale, looks.signatures);
 
   if (!result.ok) {
     editing.value = { ...current, error: result.field };

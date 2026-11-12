@@ -11,7 +11,12 @@ export interface WriteOptions {
 
 export interface XlsxLoss {
   readonly sheet: string;
-  readonly reason: 'moved-lines' | 'renamed-sheet' | 'pivot-source' | 'long-text';
+  readonly reason:
+    | 'moved-lines'
+    | 'renamed-sheet'
+    | 'pivot-source'
+    | 'long-text'
+    | 'refused-formula';
 }
 
 export interface WriteReport {

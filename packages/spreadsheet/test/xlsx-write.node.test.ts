@@ -67,6 +67,15 @@ const partOf = async (bytes: Bytes, part: string): Promise<string> => {
   return zip.archive.has(part) ? zip.archive.text(part) : '';
 };
 
+const formulaCell = (row: number, text: string) => {
+  const parsed = parseFormula(text, EN_FORMULAS, { row, col: 0 });
+
+  if (!parsed.ok) {
+    throw new Error(`${text} is not a formula`);
+  }
+  return { row, col: 0, content: { kind: 'formula', ast: parsed.ast } } as const;
+};
+
 const at = (address: string): { readonly row: number; readonly col: number } => {
   const cell = parseCell(address);
 
@@ -677,6 +686,44 @@ describe('writing xlsx', () => {
     expect(cells?.get(20, 0)).toEqual({ kind: 'string', value: 'a'.repeat(MAX_CELL_TEXT - 1) });
     expect(cells?.get(21, 0)).toEqual({ kind: 'string', value: 'short' });
     expect(read.book.sheet('Sales')?.cells.get(20, 0)).toEqual({ kind: 'string', value: long });
+  });
+
+  it('asks before it writes as values the formulas Excel would not open', async () => {
+    const read = await opened(await xlsxPackage({}));
+    const stepper = createStepper(read.book, read.calculator);
+    const long = 'a'.repeat(300);
+
+    stepper.apply({
+      kind: 'setCells',
+      sheet: 'Sales',
+      cells: [
+        formulaCell(20, '=SUBTOTAL(9,{1,2})'),
+        formulaCell(21, `="${long}"`),
+        formulaCell(22, '=1+1'),
+      ],
+    });
+
+    const refused = await writeWorkbook(read.book, read.calculator, { source: read.source });
+
+    const lossy = await writeWorkbook(read.book, read.calculator, {
+      source: read.source,
+      lossy: true,
+    });
+
+    const bytes = lossy.ok ? lossy.bytes : new Uint8Array();
+    const text = await partOf(bytes, 'xl/worksheets/sheet1.xml');
+    const cells = (await opened(bytes)).book.sheet('Sales')?.cells;
+
+    expect(refused).toMatchObject({
+      ok: false,
+      report: { losses: [{ sheet: 'Sales', reason: 'refused-formula' }] },
+    });
+
+    expect(text).not.toContain('SUBTOTAL');
+    expect(text).not.toContain(`<f>"${long}"</f>`);
+    expect(text).toContain('<f>1+1</f>');
+    expect(cells?.get(20, 0)).toEqual({ kind: 'error', code: '#VALUE!' });
+    expect(cells?.get(21, 0)).toEqual({ kind: 'string', value: long });
   });
 
   it('writes back as they were the formulas it could not read', async () => {

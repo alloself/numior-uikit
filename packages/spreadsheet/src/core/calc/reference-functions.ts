@@ -5,6 +5,7 @@ import { buildArray, shapeOf } from './array';
 import { EvalValueKind, type EvalValue, type FunctionArgs, type FunctionSpec } from './calc.types';
 import { raise } from './coerce';
 import { defineFunction } from './registry';
+import { firstArgument } from './signatures';
 
 const PLAIN_SHEET = /^[\p{L}_][\p{L}\p{N}_.]*$/u;
 
@@ -80,8 +81,20 @@ const offset = (args: FunctionArgs): EvalValue => {
 };
 
 export const REFERENCE_FUNCTIONS: readonly FunctionSpec[] = [
-  defineFunction({ name: 'ROW', min: 0, max: 1, evaluate: (args) => position(args, true) }),
-  defineFunction({ name: 'COLUMN', min: 0, max: 1, evaluate: (args) => position(args, false) }),
+  defineFunction({
+    name: 'ROW',
+    min: 0,
+    max: 1,
+    referenceAt: firstArgument,
+    evaluate: (args) => position(args, true),
+  }),
+  defineFunction({
+    name: 'COLUMN',
+    min: 0,
+    max: 1,
+    referenceAt: firstArgument,
+    evaluate: (args) => position(args, false),
+  }),
   defineFunction({
     name: 'ROWS',
     min: 1,
@@ -95,11 +108,20 @@ export const REFERENCE_FUNCTIONS: readonly FunctionSpec[] = [
     evaluate: (args) => numberValue(shapeOf(args.value(0)).cols),
   }),
   defineFunction({ name: 'ADDRESS', min: 2, max: 5, lift: [0, 1], evaluate: address }),
-  defineFunction({ name: 'OFFSET', min: 3, max: 5, volatile: true, evaluate: offset }),
+  defineFunction({
+    name: 'OFFSET',
+    min: 3,
+    max: 5,
+    volatile: true,
+    referenceAt: firstArgument,
+    givesReference: true,
+    evaluate: offset,
+  }),
   defineFunction({
     name: 'INDIRECT',
     min: 1,
     max: 2,
+    givesReference: true,
     volatile: true,
     evaluate: (args) => args.indirect(args.text(0), args.logical(1, true)),
   }),

@@ -1163,7 +1163,15 @@ export const createCalculator = (
 
   return {
     setFormula: (sheet, row, col, text, syntax = locale.formulas) => {
-      const parsed = parseFormula(text, syntax, { row, col }, bookNames(workbook));
+      const parsed = parseFormula(
+        text,
+        syntax,
+        { row, col },
+        {
+          ...bookNames(workbook),
+          signatures: (name) => functions.get(name),
+        },
+      );
 
       if (parsed.ok) {
         setParsed(sheet, row, col, parsed.ast);
