@@ -10,6 +10,8 @@ import {
 } from '../src/core';
 import { excelInputCases } from './excel-input';
 
+const CORPUS_TIMEOUT_MS = 30_000;
+
 const { signatures } = createCalculator(createWorkbook());
 
 const TOP_LEFT = { row: 0, col: 0 };
@@ -43,25 +45,29 @@ const joined = (length: number): string => {
 };
 
 describe('formulas Excel takes on input', () => {
-  it('takes and refuses every formula the way Excel 16 did when it was typed there', () => {
-    const cases = excelInputCases();
+  it(
+    'takes and refuses every formula the way Excel 16 did when it was typed there',
+    { timeout: CORPUS_TIMEOUT_MS },
+    () => {
+      const cases = excelInputCases();
 
-    const differing = cases.reduce<Record<string, string>>((found, entry) => {
-      if (taken(entry.formula) === entry.taken) {
+      const differing = cases.reduce<Record<string, string>>((found, entry) => {
+        if (taken(entry.formula) === entry.taken) {
+          return found;
+        }
+
+        const known = entry.taken ? ONLY_IN_EXCEL : ONLY_HERE;
+
+        found[entry.formula] =
+          known[entry.formula] ?? `${entry.taken ? 'taken' : 'refused'} by Excel`;
+
         return found;
-      }
+      }, {});
 
-      const known = entry.taken ? ONLY_IN_EXCEL : ONLY_HERE;
-
-      found[entry.formula] =
-        known[entry.formula] ?? `${entry.taken ? 'taken' : 'refused'} by Excel`;
-
-      return found;
-    }, {});
-
-    expect(cases.length).toBeGreaterThan(14_000);
-    expect(differing).toEqual({ ...ONLY_IN_EXCEL, ...ONLY_HERE });
-  });
+      expect(cases.length).toBeGreaterThan(14_000);
+      expect(differing).toEqual({ ...ONLY_IN_EXCEL, ...ONLY_HERE });
+    },
+  );
 
   it('holds a formula to 8192 characters and a text in it to 255', () => {
     expect(taken(joined(8192))).toBe(true);

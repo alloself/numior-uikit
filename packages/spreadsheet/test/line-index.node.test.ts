@@ -41,16 +41,20 @@ describe('line index of a sheet', () => {
     expect(index.positionNear(9)).toBe(6);
   });
 
-  it('finds the lines of a screen below half a million hidden rows within the budget', () => {
-    const hidden = Array.from({ length: BLOCK }, (_, at) => at + 10);
-    const index = createLineIndex(TOTAL, hidden);
-    const started = performance.now();
+  it(
+    'finds the lines of a screen below half a million hidden rows within the budget',
+    { tags: ['budget'] },
+    () => {
+      const hidden = Array.from({ length: BLOCK }, (_, at) => at + 10);
+      const index = createLineIndex(TOTAL, hidden);
+      const started = performance.now();
 
-    const lines = Array.from({ length: SCREEN }, (_, at) => index.lineAt(at));
+      const lines = Array.from({ length: SCREEN }, (_, at) => index.lineAt(at));
 
-    const spent = performance.now() - started;
+      const spent = performance.now() - started;
 
-    expect(lines.slice(0, 12)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, BLOCK + 10, BLOCK + 11]);
-    expect(spent).toBeLessThan(BUDGET_MS);
-  });
+      expect(lines.slice(0, 12)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, BLOCK + 10, BLOCK + 11]);
+      expect(spent).toBeLessThan(BUDGET_MS);
+    },
+  );
 });

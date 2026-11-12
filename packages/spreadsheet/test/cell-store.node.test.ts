@@ -119,7 +119,7 @@ describe('cell store', () => {
     );
   });
 
-  it('finds the used range of a million values within the budget', () => {
+  it('finds the used range of a million values within the budget', { tags: ['budget'] }, () => {
     const cells = store();
 
     for (let row = 0; row < FILLED_ROWS; row += 1) {
@@ -157,29 +157,33 @@ describe('cell store', () => {
     expect(seen).toEqual(['1', '2', '3', '4', '5']);
   });
 
-  it('walks a whole sheet as fast as its filled chunks allow and still row by row', () => {
-    const cells = store();
-    const seen: string[] = [];
+  it(
+    'walks a whole sheet as fast as its filled chunks allow and still row by row',
+    { tags: ['budget'] },
+    () => {
+      const cells = store();
+      const seen: string[] = [];
 
-    SCATTERED.forEach(([row, col]) => {
-      cells.set(row, col, textValue(`${String(row)}:${String(col)}`));
-    });
-
-    const started = performance.now();
-
-    for (let walk = 0; walk < WHOLE_WALKS; walk += 1) {
-      seen.length = 0;
-
-      cells.forEachInRange(WHOLE_SHEET, (row, col) => {
-        seen.push(`${String(row)}:${String(col)}`);
+      SCATTERED.forEach(([row, col]) => {
+        cells.set(row, col, textValue(`${String(row)}:${String(col)}`));
       });
-    }
 
-    const spent = performance.now() - started;
+      const started = performance.now();
 
-    expect(seen).toEqual(['7:95', '40:700', '511:31', '512:32', '1023:63', '1024:5', '3000:64']);
-    expect(spent).toBeLessThan(WHOLE_WALKS_BUDGET_MS);
-  });
+      for (let walk = 0; walk < WHOLE_WALKS; walk += 1) {
+        seen.length = 0;
+
+        cells.forEachInRange(WHOLE_SHEET, (row, col) => {
+          seen.push(`${String(row)}:${String(col)}`);
+        });
+      }
+
+      const spent = performance.now() - started;
+
+      expect(seen).toEqual(['7:95', '40:700', '511:31', '512:32', '1023:63', '1024:5', '3000:64']);
+      expect(spent).toBeLessThan(WHOLE_WALKS_BUDGET_MS);
+    },
+  );
 
   it('jumps like Ctrl with the arrows to the edges of filled runs and of the sheet', () => {
     const cells = store();

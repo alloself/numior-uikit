@@ -153,31 +153,39 @@ describe('line shift of chunked stores', () => {
     ]);
   });
 
-  it('inserts a row and a column above a million values within the budget', () => {
-    const cells = createCellStore(createSharedStrings());
+  it(
+    'inserts a row and a column above a million values within the budget',
+    { tags: ['budget'] },
+    () => {
+      const cells = createCellStore(createSharedStrings());
 
-    for (let row = 0; row < FILLED_ROWS; row += 1) {
-      for (let col = 0; col < FILLED_COLS; col += 1) {
-        cells.set(row, col, numberValue(row + col));
+      for (let row = 0; row < FILLED_ROWS; row += 1) {
+        for (let col = 0; col < FILLED_COLS; col += 1) {
+          cells.set(row, col, numberValue(row + col));
+        }
       }
-    }
 
-    const started = performance.now();
+      const started = performance.now();
 
-    cells.shiftLines('rows', 0, 1);
+      cells.shiftLines('rows', 0, 1);
 
-    const rowSpent = performance.now() - started;
+      const rowSpent = performance.now() - started;
 
-    cells.shiftLines('cols', 0, 1);
+      cells.shiftLines('cols', 0, 1);
 
-    const spent = performance.now() - started;
+      const spent = performance.now() - started;
 
-    expect(cells.get(1, 1)).toEqual(numberValue(0));
-    expect(cells.get(FILLED_ROWS, FILLED_COLS)).toEqual(numberValue(FILLED_ROWS + FILLED_COLS - 2));
-    expect(cells.size).toBe(FILLED_ROWS * FILLED_COLS);
-    expect(rowSpent).toBeLessThan(ROW_BUDGET_MS);
-    expect(spent).toBeLessThan(BUDGET_MS);
-  });
+      expect(cells.get(1, 1)).toEqual(numberValue(0));
+
+      expect(cells.get(FILLED_ROWS, FILLED_COLS)).toEqual(
+        numberValue(FILLED_ROWS + FILLED_COLS - 2),
+      );
+
+      expect(cells.size).toBe(FILLED_ROWS * FILLED_COLS);
+      expect(rowSpent).toBeLessThan(ROW_BUDGET_MS);
+      expect(spent).toBeLessThan(BUDGET_MS);
+    },
+  );
 
   it('forgets the chunks a shift has emptied and marks the touched ones as changed', () => {
     const cells = createCellStore(createSharedStrings());

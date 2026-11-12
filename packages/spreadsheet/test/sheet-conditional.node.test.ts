@@ -198,26 +198,30 @@ describe('conditional formats in sheet cells', () => {
     expect(sheet.styleAt('A1')?.style?.fill).toBe('#FFC7CE');
   });
 
-  it('reads the looks of a screen of cells in a book of many sheets within the budget', () => {
-    const book = paintedBook([greaterThanTen]);
+  it(
+    'reads the looks of a screen of cells in a book of many sheets within the budget',
+    { tags: ['budget'] },
+    () => {
+      const book = paintedBook([greaterThanTen]);
 
-    for (let index = 0; index < MANY_SHEETS; index += 1) {
-      book.book.addSheet(`Extra${String(index)}`);
-    }
-
-    const screen = (): number => {
-      const started = performance.now();
-
-      for (let row = 0; row < SCREEN_ROWS; row += 1) {
-        for (let col = 0; col < SCREEN_COLS; col += 1) {
-          book.styleAt(`${columnName(col)}${String(row + 1)}`);
-        }
+      for (let index = 0; index < MANY_SHEETS; index += 1) {
+        book.book.addSheet(`Extra${String(index)}`);
       }
-      return performance.now() - started;
-    };
 
-    screen();
+      const screen = (): number => {
+        const started = performance.now();
 
-    expect(screen()).toBeLessThan(LOOKS_BUDGET_MS);
-  });
+        for (let row = 0; row < SCREEN_ROWS; row += 1) {
+          for (let col = 0; col < SCREEN_COLS; col += 1) {
+            book.styleAt(`${columnName(col)}${String(row + 1)}`);
+          }
+        }
+        return performance.now() - started;
+      };
+
+      screen();
+
+      expect(screen()).toBeLessThan(LOOKS_BUDGET_MS);
+    },
+  );
 });

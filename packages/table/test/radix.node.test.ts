@@ -134,31 +134,35 @@ describe('createRadixSortJob', () => {
     expect(sorted(length, wide)).toEqual(merged(length, wide));
   });
 
-  it('keeps every slice near its budget and reports the whole job as done', () => {
-    const random = mulberry32(5);
-    const length = 400_000;
-    const keys = Float64Array.from({ length }, () => random() * 1e9);
-    const nulls = new Uint8Array(length);
-    const indices = identityIndices(length);
-    const job = createRadixSortJob(indices, [{ kind: 'float', keys, nulls, descending: false }]);
-    const laps: number[] = [];
-    let finished = false;
+  it(
+    'keeps every slice near its budget and reports the whole job as done',
+    { tags: ['budget'] },
+    () => {
+      const random = mulberry32(5);
+      const length = 400_000;
+      const keys = Float64Array.from({ length }, () => random() * 1e9);
+      const nulls = new Uint8Array(length);
+      const indices = identityIndices(length);
+      const job = createRadixSortJob(indices, [{ kind: 'float', keys, nulls, descending: false }]);
+      const laps: number[] = [];
+      let finished = false;
 
-    while (!finished) {
-      const started = performance.now();
-      finished = job.work(started + BUDGET_MS);
-      laps.push(performance.now() - started);
-    }
+      while (!finished) {
+        const started = performance.now();
+        finished = job.work(started + BUDGET_MS);
+        laps.push(performance.now() - started);
+      }
 
-    expect(laps.length).toBeGreaterThan(2);
+      expect(laps.length).toBeGreaterThan(2);
 
-    expect(laps.reduce((count, lap) => count + Number(lap > FRAME_MS - BUDGET_MS), 0)).toBeLessThan(
-      laps.length / 2,
-    );
+      expect(
+        laps.reduce((count, lap) => count + Number(lap > FRAME_MS - BUDGET_MS), 0),
+      ).toBeLessThan(laps.length / 2);
 
-    expect(job.done()).toBe(job.total());
+      expect(job.done()).toBe(job.total());
 
-    const ordered = Array.from(indices, (index) => keys[index] ?? 0);
-    expect(ordered.every((key, at) => at === 0 || key >= (ordered[at - 1] ?? 0))).toBe(true);
-  });
+      const ordered = Array.from(indices, (index) => keys[index] ?? 0);
+      expect(ordered.every((key, at) => at === 0 || key >= (ordered[at - 1] ?? 0))).toBe(true);
+    },
+  );
 });

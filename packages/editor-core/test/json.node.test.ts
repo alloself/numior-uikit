@@ -137,22 +137,26 @@ describe('document JSON', () => {
     );
   });
 
-  it('compares a ten-thousand-block document with its copy within the budget of a keystroke', () => {
-    const written = toJSON(generateDoc(fixtureSchema, { blocks: 10_000, seed: 5 }));
-    const copy = structuredClone(written);
+  it(
+    'compares a ten-thousand-block document with its copy within the budget of a keystroke',
+    { tags: ['budget'] },
+    () => {
+      const written = toJSON(generateDoc(fixtureSchema, { blocks: 10_000, seed: 5 }));
+      const copy = structuredClone(written);
 
-    const fastest = Math.min(
-      ...Array.from({ length: 8 }, () => {
-        const started = performance.now();
+      const fastest = Math.min(
+        ...Array.from({ length: 8 }, () => {
+          const started = performance.now();
 
-        sameDocJSON(written, copy);
-        return performance.now() - started;
-      }),
-    );
+          sameDocJSON(written, copy);
+          return performance.now() - started;
+        }),
+      );
 
-    expect(sameDocJSON(written, copy)).toBe(true);
-    expect(fastest).toBeLessThan(50);
-  });
+      expect(sameDocJSON(written, copy)).toBe(true);
+      expect(fastest).toBeLessThan(50);
+    },
+  );
 
   it('refuses foreign formats, schemas and malformed trees with the path of each problem', () => {
     expect(issuesOf(fromJSON(fixtureSchema, 'text'))).toEqual([{ kind: 'format' }]);
