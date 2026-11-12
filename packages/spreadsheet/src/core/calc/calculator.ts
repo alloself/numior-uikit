@@ -12,6 +12,7 @@ import {
   type FormulaLocale,
   type FormulaNode,
   type FormulaParse,
+  type SignatureOf,
 } from '../formula/formula.types';
 import { EN_LOCALE, type BookLocale } from '../locale';
 import { shiftIndex } from '../lines';
@@ -57,6 +58,7 @@ import {
   type Precedent,
   type RecalcPlanner,
 } from './graph';
+import { signaturesOf } from './excel-signatures';
 import { createFunctionRegistry } from './registry';
 import { createTreeSharing } from './shared-trees';
 import { nextTask } from './tasks';
@@ -109,6 +111,7 @@ export interface Calculator {
   setLocale(locale: BookLocale): void;
   readonly locale: BookLocale;
   readonly functions: FunctionRegistry;
+  readonly signatures: SignatureOf;
   readonly pending: number;
   readonly limitations: readonly Limitation[];
 }
@@ -443,6 +446,7 @@ export const createCalculator = (
 ): Calculator => {
   const graph = createDependencyGraph();
   const trees = createTreeSharing();
+  const signatures = signaturesOf(functions);
   const spills = createSpills();
   const formulas = new Map<number, FormulaRecord>();
   const positions = new Map<number, Map<number, number>>();
@@ -1149,7 +1153,7 @@ export const createCalculator = (
         { row, col },
         {
           ...bookNames(workbook),
-          signatures: (name) => functions.get(name),
+          signatures,
         },
       );
 
@@ -1280,6 +1284,7 @@ export const createCalculator = (
       formulas.forEach((_record, key) => pending.add(key));
     },
     functions,
+    signatures,
     get locale() {
       return locale;
     },

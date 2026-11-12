@@ -1,21 +1,21 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
-  BASE_FUNCTIONS,
   EN_FORMULAS,
   FormulaFailureReason,
   RU_FORMULAS,
-  createFunctionRegistry,
+  createCalculator,
+  createWorkbook,
   parseFormula,
   type FormulaLocale,
 } from '../src/core';
 import { excelInputCases } from './excel-input';
 
-const FUNCTIONS = createFunctionRegistry(BASE_FUNCTIONS);
+const { signatures } = createCalculator(createWorkbook());
 
 const TOP_LEFT = { row: 0, col: 0 };
 
 const typed = (formula: string, locale: FormulaLocale = EN_FORMULAS) =>
-  parseFormula(formula, locale, TOP_LEFT, { signatures: (name) => FUNCTIONS.get(name) });
+  parseFormula(formula, locale, TOP_LEFT, { signatures });
 
 const taken = (formula: string): boolean => typed(formula).ok;
 
@@ -36,13 +36,11 @@ const ONLY_IN_EXCEL: Readonly<Record<string, string>> = {
   '=SUMIF(INDEX(A1:A2,1):A2,1)': 'the parser reads no range starting with a call',
   '=SUMIF(A1:A2:B3,1)': 'the parser reads no range of ranges',
   '=SUMIF(LAMBDA(x,x)(A1:A2),1)': 'the parser reads no call of a LAMBDA',
+  '=LET(\\a,1,\\a)': 'the parser reads no name starting with a backslash',
+  '=LET(a?,1,2)': 'the parser reads no question mark in a name',
 };
 
-const ONLY_HERE: Readonly<Record<string, string>> = {
-  '=CELL("row",)': 'CELL is not a function of the sheet',
-  '=RANK.AVG(1,{1,2})': 'RANK.AVG is not a function of the sheet',
-  '=ISFORMULA(1)': 'ISFORMULA is not a function of the sheet',
-};
+const ONLY_HERE: Readonly<Record<string, string>> = {};
 
 const quoted = (length: number) => `="${'a'.repeat(length)}"`;
 

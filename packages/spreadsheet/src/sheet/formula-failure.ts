@@ -30,6 +30,8 @@ export const formulaFailureText = (
       return messages.formulaNesting;
     case FormulaFailureReason.Depth:
       return messages.formulaDepth;
+    case FormulaFailureReason.LocalName:
+      return messages.formulaLocalName({ name, argument: failure.argument ?? 1 });
     default:
       return messages.formulaError({ position: failure.position + 1 });
   }

@@ -66,6 +66,39 @@ const givesReference = (node: FormulaNode, signatureOf: SignatureOf): boolean =>
   }
 };
 
+const localNameKey = (node: FormulaNode): string | undefined => {
+  const placed = node.kind === FormulaReferenceKind.Name || node.kind === FormulaReferenceKind.Cell;
+
+  if (!placed || node.sheet !== undefined || node.book !== undefined) {
+    return undefined;
+  }
+  if (node.kind === FormulaReferenceKind.Name) {
+    return node.name.includes('.') ? undefined : `name ${node.name.toUpperCase()}`;
+  }
+  return node.ref.rowAbsolute || node.ref.colAbsolute
+    ? undefined
+    : `cell ${String(node.ref.row)} ${String(node.ref.col)}`;
+};
+
+const misnamed = (signature: CallSignature, args: readonly FormulaNode[]): number => {
+  const seen = new Set<string>();
+
+  for (const [index, arg] of args.entries()) {
+    if (signature.namesAt?.(index, args.length) !== true) {
+      continue;
+    }
+
+    const key = localNameKey(arg);
+
+    if (key === undefined || seen.has(key)) {
+      return index;
+    }
+
+    seen.add(key);
+  }
+  return -1;
+};
+
 const fitsCount = (signature: CallSignature, count: number): boolean =>
   count >= signature.min && count <= signature.max && (signature.counts?.(count) ?? true);
 
@@ -84,12 +117,17 @@ export const callRefusal = (
   }
 
   const argument = args.findIndex(
-    (arg, index) => signature.referenceAt?.(index) === true && !givesReference(arg, signatureOf),
+    (arg, index) =>
+      signature.referenceAt?.(index, args.length) === true && !givesReference(arg, signatureOf),
   );
 
-  return argument < 0
-    ? undefined
-    : { reason: FormulaFailureReason.ReferenceArgument, name, argument };
+  if (argument >= 0) {
+    return { reason: FormulaFailureReason.ReferenceArgument, name, argument };
+  }
+
+  const named = misnamed(signature, args);
+
+  return named < 0 ? undefined : { reason: FormulaFailureReason.LocalName, name, argument: named };
 };
 
 const outside = (

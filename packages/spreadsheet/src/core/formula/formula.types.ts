@@ -140,7 +140,8 @@ export interface CallSignature {
   readonly min: number;
   readonly max: number;
   readonly counts?: ((count: number) => boolean) | undefined;
-  readonly referenceAt?: ((index: number) => boolean) | undefined;
+  readonly referenceAt?: ((index: number, count: number) => boolean) | undefined;
+  readonly namesAt?: ((index: number, count: number) => boolean) | undefined;
   readonly givesReference?: boolean | undefined;
 }
 
@@ -163,6 +164,7 @@ export const FormulaFailureReason = {
   LongFormula: 'long-formula',
   Nesting: 'nesting',
   Depth: 'depth',
+  LocalName: 'local-name',
 } as const;
 
 export const FormulaReferenceKind = {

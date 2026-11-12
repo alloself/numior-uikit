@@ -15,6 +15,10 @@ export interface NuiSpreadsheetMessages {
   readonly formulaTooLong: string;
   readonly formulaNesting: string;
   readonly formulaDepth: string;
+  readonly formulaLocalName: (params: {
+    readonly name: string;
+    readonly argument: number;
+  }) => string;
   readonly nameBox: string;
   readonly formulaBar: string;
   readonly expandFormula: string;
@@ -223,6 +227,8 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     formulaNesting:
       'A formula holds up to 256 nested brackets, 65 nested functions and 1,024 plus or minus signs in a row',
     formulaDepth: 'A formula holds up to 2,048 operations inside each other',
+    formulaLocalName: ({ name, argument }) =>
+      `Argument ${String(argument)} of ${name} must be a name not given before in it`,
     nameBox: 'Name box',
     formulaBar: 'Formula bar',
     expandFormula: 'Expand the formula bar',
@@ -346,6 +352,8 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     formulaNesting:
       'Формула вмещает до 256 вложенных скобок, 65 вложенных функций и 1 024 знаков «+» и «−» подряд',
     formulaDepth: 'Формула вмещает до 2 048 действий друг в друге',
+    formulaLocalName: ({ name, argument }) =>
+      `Аргумент ${String(argument)} функции ${name} должен быть именем, которого в ней ещё не было`,
     nameBox: 'Поле имени',
     formulaBar: 'Строка формул',
     expandFormula: 'Развернуть строку формул',

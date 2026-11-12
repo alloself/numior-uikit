@@ -348,7 +348,7 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
 
   const typedOptions = (): ParseOptions => ({
     ...bookNames(book),
-    signatures: (name) => calculator.functions.get(name),
+    signatures: calculator.signatures,
   });
 
   const formatAt = (sheet: Sheet, row: number, col: number): string =>

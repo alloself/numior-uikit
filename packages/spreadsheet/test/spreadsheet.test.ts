@@ -709,6 +709,16 @@ describe('NuiSpreadsheet', () => {
     await sheet.enter(4, 1, `=${'1+'.repeat(2048)}1`);
 
     expect(sheet.editorError).toBe('A formula holds up to 2,048 operations inside each other');
+
+    await sheet.press('Escape');
+    await sheet.enter(4, 1, '=CELL("row",1)');
+
+    expect(sheet.editorError).toBe('Argument 2 of CELL must be a cell reference');
+
+    await sheet.press('Escape');
+    await sheet.enter(4, 1, '=LET(rate,0.2,Rate,0.3,rate)');
+
+    expect(sheet.editorError).toBe('Argument 3 of LET must be a name not given before in it');
     expect(sheet.changes).toEqual([]);
   });
 

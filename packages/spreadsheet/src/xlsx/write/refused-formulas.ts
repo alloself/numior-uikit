@@ -49,7 +49,7 @@ export const refusedByExcel = (
   place: CellAddress,
   written?: string,
 ): boolean =>
-  formulaRefusal(ast, (name) => calculator.functions.get(name)) !== undefined ||
+  formulaRefusal(ast, calculator.signatures) !== undefined ||
   tooLong(ast, place, written) ||
   tooDeep(ast, place);
 
