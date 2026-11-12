@@ -8,6 +8,8 @@ const BORIS = 'Борис';
 
 const CARET_TOLERANCE = 4;
 
+const FRAME_TOLERANCE = 1;
+
 const THEMES = ['light', 'dark'] as const;
 
 const TURNS = Array.from({ length: 60 }, (_, turn) => turn % 2);
@@ -65,6 +67,36 @@ test.describe('collaboration', () => {
     await expect(anna.overwritten).toHaveCount(0);
     await expect(boris.tableCell(0, 0)).toHaveText('Boris');
     await expect(anna.tableCell(0, 0)).toHaveText('Boris');
+  });
+
+  test('frames the table cell someone works in instead of a caret in the text', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.insertTable();
+    await boris.tableCell(0, 0).waitFor();
+    await anna.tableCell(0, 0).click();
+
+    await expect(boris.tablePeer(ANNA)).toBeVisible();
+    await expect(boris.caretOf(ANNA)).toHaveCount(0);
+
+    await anna.page.keyboard.press('ArrowRight');
+    await anna.page.keyboard.press('ArrowDown');
+    await anna.page.keyboard.press('ArrowDown');
+
+    await expect.poll(() => boris.tablePeerDrift(ANNA, 2, 1)).toBeLessThanOrEqual(FRAME_TOLERANCE);
+
+    await anna.page.keyboard.type('Cheese');
+
+    await expect(boris.tablePeer(ANNA)).toBeVisible();
+
+    await anna.page.keyboard.press('Escape');
+    await anna.backToText();
+
+    await expect(boris.tablePeer(ANNA)).toHaveCount(0);
+    await expect(boris.caretOf(ANNA)).toHaveCSS('opacity', '1');
   });
 
   test('opens a copy of another version read-only and keeps its queue', async ({ collab }) => {

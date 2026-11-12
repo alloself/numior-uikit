@@ -1,5 +1,8 @@
 import {
+  blockSpots,
   createState,
+  peerSpotsOf,
+  setBlockSpot,
   textSelection,
   type DecorationSet,
   type EditorState,
@@ -41,6 +44,12 @@ const presenceAt = (block: string, offset: number, head = offset): EditorPresenc
 const started = (): EditorState =>
   createState({ doc: paragraphs('one', 'two'), plugins: [remotePresence(), collab()] });
 
+const spotted = (): EditorState =>
+  createState({
+    doc: paragraphs('one', 'two'),
+    plugins: [remotePresence(), blockSpots(), collab()],
+  });
+
 const decorationsOf = (state: EditorState): DecorationSet | undefined =>
   state.plugins[0]?.props.decorations?.(state);
 
@@ -79,6 +88,15 @@ describe('remote presence', () => {
     ['a bad user', { user: { id: 1, name: 'x' }, selection: null }],
     ['a bad avatar', { user: { id: 'a', name: 'x', avatar: 1 }, selection: null }],
     ['a bad selection', { user: ANN, selection: { anchor: 1, head: 2 } }],
+    ['a spot without a block', { user: ANN, selection: null, spot: { part: ['r1'] } }],
+    [
+      'a spot part that is not text',
+      { user: ANN, selection: null, spot: { block: 't', part: [1] } },
+    ],
+    [
+      'a spot with too many parts',
+      { user: ANN, selection: null, spot: { block: 't', part: Array.from({ length: 9 }, String) } },
+    ],
     [
       'a negative offset',
       {
@@ -244,8 +262,70 @@ describe('remote presence', () => {
     });
   });
 
-  it('compares presence by selection', () => {
+  it('compares presence by selection and by the spot inside a block', () => {
+    const inCell = { ...presenceAt('p0', 1), spot: { block: 't', part: ['r1', 'name'] } };
+
     expect(samePresence(presenceAt('p0', 1), presenceAt('p0', 1))).toBe(true);
     expect(samePresence(presenceAt('p0', 1), presenceAt('p0', 2))).toBe(false);
+    expect(samePresence(presenceAt('p0', 1), inCell)).toBe(false);
+
+    expect(samePresence(inCell, { ...inCell, spot: { block: 't', part: ['r2', 'name'] } })).toBe(
+      false,
+    );
+  });
+});
+
+describe('a spot inside a block', () => {
+  it('tells the others the cell the person works in', () => {
+    const state = spotted();
+    let entered = state;
+
+    setBlockSpot({ block: 'p1', part: ['r1', 'name'] })(state, (tr) => {
+      entered = state.apply(tr);
+    });
+
+    expect(presenceOf(state, ANN).spot).toBeUndefined();
+    expect(presenceOf(entered, ANN).spot).toEqual({ block: 'p1', part: ['r1', 'name'] });
+    expect(presenceChanged(presenceOf(state, ANN), presenceOf(entered, ANN), entered)).toBe(true);
+  });
+
+  it('hands block views the spots of others and draws no selection for them', () => {
+    const inCell = { ...presenceAt('p0', 1, 3), spot: { block: 'p1', part: ['r1', 'name'] } };
+
+    const state = withPeers(started(), [
+      ['c1', inCell],
+      ['c2', presenceAt('p0', 1)],
+    ]);
+
+    const typed = state.apply(state.tr.insertText('x', 1));
+
+    expect(peerSpotsOf(state)).toEqual([
+      { block: 'p1', part: ['r1', 'name'], peer: 'c1', name: 'Ann', colour: expect.any(Number) },
+    ]);
+
+    expect(peerSpotsOf(typed)).toBe(peerSpotsOf(state));
+    expect(decorationsOf(state)?.decorations).toHaveLength(0);
+  });
+
+  it('keeps the same list of spots while only carets move', () => {
+    const inCell = { ...presenceAt('p0', 1), spot: { block: 'p1', part: ['r1', 'name'] } };
+    const start = withPeers(started(), [['c1', inCell]]);
+
+    const moved = withPeers(start, [
+      ['c1', inCell],
+      ['c2', presenceAt('p0', 2)],
+    ]);
+
+    expect(peerSpotsOf(moved)).toBe(peerSpotsOf(start));
+  });
+
+  it('takes a new spot at once while the caret that comes with it waits for steps', () => {
+    const start = withPeers(started(), [['c1', presenceAt('p0', 1)]]);
+
+    const told = withPeers(start, [
+      ['c1', { ...presenceAt('p0', 3), version: 1, spot: { block: 'p1', part: ['r2'] } }],
+    ]);
+
+    expect(remotePeers(told)[0]).toMatchObject({ head: 2, spot: { block: 'p1', part: ['r2'] } });
   });
 });

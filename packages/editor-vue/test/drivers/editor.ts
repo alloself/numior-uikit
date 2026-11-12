@@ -1,9 +1,11 @@
 import { mount, renderToString, type VueWrapper } from '@vue/test-utils';
 import { contentSchema } from '@numior/content';
 import {
+  blockSpotOf,
   createEmptyDoc,
   textSelection,
   toJSON,
+  type BlockSpot,
   type Command,
   type DocJSON,
 } from '@numior/editor-core';
@@ -184,6 +186,12 @@ export class EditorDriver {
       throw new Error('The editor exposes no API');
     }
     return exposed;
+  }
+
+  get spot(): BlockSpot | undefined {
+    const state = this.api.state();
+
+    return state === undefined ? undefined : blockSpotOf(state);
   }
 
   get root(): HTMLElement {
@@ -910,6 +918,11 @@ export class EditorDriver {
 
   async blur(): Promise<void> {
     this.content.blur();
+    await nextTick();
+  }
+
+  async focusText(): Promise<void> {
+    this.content.focus();
     await nextTick();
   }
 

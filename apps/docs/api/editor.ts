@@ -74,8 +74,8 @@ const docs: DocsMap = {
         en: 'Highlighter for code blocks instead of the one set in `createNuiConfig`. `false` renders code in one color.',
       },
       blocks: {
-        ru: 'Свои блоки из `defineBlock`: компонент, клавиши, пункты меню «/» и меню блока. Читается один раз при монтировании.',
-        en: 'Custom blocks from `defineBlock`: a component, keys, slash menu items and block menu items. Read once on mount.',
+        ru: 'Свои блоки из `defineBlock`: компонент, клавиши, пункты меню «/» и меню блока. Читается один раз при монтировании. Контекст блока сообщает место внутри него через `setSpot(part)` и `leaveSpot()`, а `peers()` отдаёт места участников, чтобы блок их нарисовал. Так таблица документа показывает ячейки соавторов.',
+        en: 'Custom blocks from `defineBlock`: a component, keys, slash menu items and block menu items. Read once on mount. The block context reports a place inside the block with `setSpot(part)` and `leaveSpot()`, and `peers()` returns the places of other people for the block to draw. This is how the document table shows the cells of co-authors.',
       },
       blockHandles: {
         ru: 'Показывает ручку у блока под указателем: меню блока и перетаскивание. Ctrl+Shift+↑ и ↓ переносят блок с курсором.',

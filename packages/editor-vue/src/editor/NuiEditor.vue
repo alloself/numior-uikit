@@ -77,8 +77,7 @@
         :selected="selectedNode"
         :focused="overlays.focused.value"
         :editable="editable"
-        :run="run"
-        :focus="editor.focus"
+        :host="blockHost"
       />
       <NuiEditorPasteMenu
         v-if="overlaid"
@@ -187,6 +186,7 @@ import {
 } from '@numior/content';
 import {
   baseKeymap,
+  blockSpots,
   commentAnchors,
   createState,
   definePlugin,
@@ -197,6 +197,7 @@ import {
   keymap,
   markdownRules,
   pasteSchema,
+  peerSpotsOf,
   pendingUploads,
   SelectionKind,
   toJSON,
@@ -242,7 +243,12 @@ import {
 } from 'vue';
 import { useMediaQuery } from '@vueuse/core';
 import { blockContext } from '../blocks/block-context';
-import type { NuiEditorBlock, NuiEditorBlockEditor } from '../blocks/block.types';
+import { NO_PEERS, spotsInBlocks } from '../blocks/block-spots';
+import type {
+  NuiEditorBlock,
+  NuiEditorBlockEditor,
+  NuiEditorBlockHost,
+} from '../blocks/block.types';
 import { provideBlockStates } from '../blocks/define-block';
 import { editorBlocks } from '../blocks/editor-blocks';
 import { handlePlacement } from '../blocks/handle-placement';
@@ -596,6 +602,7 @@ const editorPlugins = [
   keymap(baseKeymap),
   history(),
   commentAnchors,
+  blockSpots(),
 ];
 
 const nodeViews = createNodeViewHost();
@@ -623,6 +630,8 @@ const editable = computed(() => !isDisabled.value && !isReadonly.value);
 const bounds = computed(() =>
   maxHeight === undefined ? undefined : { '--_max-height': maxHeight },
 );
+
+const spotsByBlock = computed(() => spotsInBlocks(peerSpotsOf(current.value)));
 
 const selectedNode = computed(() =>
   current.value.selection.kind === SelectionKind.Node ? current.value.selection.id : undefined,
@@ -778,6 +787,12 @@ const code = createCodeHighlighter(
 
 const run: NuiEditorApi['run'] = (command) => view !== undefined && command(view.state, dispatch);
 
+const blockHost: NuiEditorBlockHost = {
+  run,
+  focus: () => view?.focus(),
+  peers: (block) => spotsByBlock.value.get(block) ?? NO_PEERS,
+};
+
 const stuckBar = (): number => {
   const bar: unknown = docked.value ? undefined : toolbarElement.value?.$el;
 
@@ -871,7 +886,7 @@ const blockMenu = (node: ElementNode): NuiMenuEntry[] =>
     block.name === node.type
       ? (block.menu?.(
           node,
-          blockContext(node.id, run, editor.focus, () => view?.nodeDOM(node.id)),
+          blockContext(node.id, blockHost, () => view?.nodeDOM(node.id)),
           blockTexts.value,
         ) ?? [])
       : [],

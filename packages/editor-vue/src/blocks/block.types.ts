@@ -1,4 +1,4 @@
-import type { Attrs, Command, ElementNode, Keymap, NodeId } from '@numior/editor-core';
+import type { Attrs, Command, ElementNode, Keymap, NodeId, PeerSpot } from '@numior/editor-core';
 import type { NuiMenuEntry } from '@numior/vue';
 import type { Component } from 'vue';
 import type { NuiEditorMessages } from '../editor/editor.messages';
@@ -16,6 +16,15 @@ export interface NuiEditorBlockContext {
   enter(): void;
   setStyle(property: string, value: string | null): void;
   element(): HTMLElement | undefined;
+  peers(): readonly PeerSpot[];
+  setSpot(part: readonly string[]): void;
+  leaveSpot(): void;
+}
+
+export interface NuiEditorBlockHost {
+  readonly run: (command: Command) => boolean;
+  readonly focus: () => void;
+  readonly peers: (block: NodeId) => readonly PeerSpot[];
 }
 
 export interface NuiEditorBlockViewProps {

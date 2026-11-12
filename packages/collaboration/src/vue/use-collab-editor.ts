@@ -1,4 +1,5 @@
 import {
+  blockSpotOf,
   createIdSource,
   definePlugin,
   fromJSON,
@@ -48,6 +49,11 @@ const NO_PLUGINS: readonly Plugin[] = [];
 const NO_ALTERNATIVES: readonly CollabAlternative[] = [];
 
 const newClientId = (): string => Math.random().toString(36).slice(2, 10);
+
+const samePlace = (state: EditorState, before: EditorState): boolean =>
+  state.doc === before.doc &&
+  state.selection === before.selection &&
+  blockSpotOf(state) === blockSpotOf(before);
 
 export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor => {
   const { doc, user, schema, transport, editor, persistence } = options;
@@ -101,7 +107,7 @@ export const useCollabEditor = (options: UseCollabEditorOptions): CollabEditor =
           client?.sync();
           tracking?.changed();
         }
-        if (state.doc === before.doc && state.selection === before.selection) {
+        if (samePlace(state, before)) {
           return;
         }
 

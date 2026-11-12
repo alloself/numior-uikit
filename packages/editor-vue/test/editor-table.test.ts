@@ -1,5 +1,12 @@
 import { contentSchema } from '@numior/content';
-import { createDoc, toJSON, type DocJSON, type ElementNode } from '@numior/editor-core';
+import {
+  createDoc,
+  definePlugin,
+  toJSON,
+  type DocJSON,
+  type ElementNode,
+  type PeerSpot,
+} from '@numior/editor-core';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vite-plus/test';
 import { EditorDriver } from './drivers/editor';
 import { EditorTableDriver } from './drivers/editor-table';
@@ -70,6 +77,9 @@ const prices = (): DocJSON =>
     ),
   );
 
+const othersIn = (spots: readonly PeerSpot[]) =>
+  definePlugin({ name: 'others', props: { spots: () => spots } });
+
 const tableJSON = (editor: EditorDriver) =>
   editor.documents.at(-1)?.root.content?.find((block) => 'type' in block && block.type === 'table');
 
@@ -80,6 +90,48 @@ const shown = async (document = prices()) => {
   await table.show();
   return { editor, table };
 };
+
+describe('NuiEditor table block with other people', () => {
+  it('tells the others the cell someone works in while the table holds the focus', async () => {
+    const { editor, table } = await shown();
+
+    await table.focusCell('Plums');
+    const inName = editor.spot;
+
+    await table.focusCell('12');
+    const inPrice = editor.spot;
+
+    await editor.focusText();
+
+    expect(inName).toEqual({ block: 't', part: ['r2', 'name'] });
+    expect(inPrice).toEqual({ block: 't', part: ['r1', 'price'] });
+    expect(editor.spot).toBeUndefined();
+  });
+
+  it('frames the cell another person works in and follows it when the rows are sorted', async () => {
+    const editor = mounted({
+      document: prices(),
+      plugins: [
+        othersIn([
+          { peer: 'c1', name: 'Anna', colour: 1, block: 't', part: ['r2', 'price'] },
+          { peer: 'c2', name: 'Gone', colour: 2, block: 't', part: ['r9', 'price'] },
+          { peer: 'c3', name: 'Text', colour: 3, block: 'p', part: ['r2', 'price'] },
+        ]),
+      ],
+    });
+
+    const table = EditorTableDriver.of(editor);
+
+    await table.show();
+    const before = table.peerCells;
+
+    await table.sortBy(1, 'asc');
+
+    expect(before).toEqual(['Anna 1:1']);
+    expect(table.peerCells).toEqual(['Anna 0:1']);
+    expect(table.peerNames).toEqual(['Anna']);
+  });
+});
 
 describe('NuiEditor table block', () => {
   it('draws the table from the document with typed cells and option badges', async () => {

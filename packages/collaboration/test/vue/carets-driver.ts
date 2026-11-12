@@ -22,6 +22,7 @@ const BOB: RemotePeer = {
   colour: 2,
   anchor: 3,
   head: 3,
+  spot: undefined,
 };
 
 const editorOf = (scene: Scene): NuiEditorApi => ({

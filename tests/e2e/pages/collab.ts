@@ -109,6 +109,30 @@ export class CollabClient {
     return this.page.locator('.nui-editor .nui-table tbody tr').nth(row).locator('td').nth(col);
   }
 
+  tablePeer(name: string): Locator {
+    return this.page.locator('.nui-editor .nui-table__pane--body .nui-table-peers__cell', {
+      hasText: name,
+    });
+  }
+
+  async tablePeerDrift(name: string, row: number, col: number): Promise<number> {
+    const [frame, cell] = await Promise.all([
+      boxOf(this.tablePeer(name)),
+      boxOf(this.tableCell(row, col)),
+    ]);
+
+    return Math.max(
+      Math.abs(frame.x - cell.x),
+      Math.abs(frame.y - cell.y),
+      Math.abs(frame.width - cell.width),
+      Math.abs(frame.height - cell.height),
+    );
+  }
+
+  async backToText(): Promise<void> {
+    await this.editor.locator('p').last().click();
+  }
+
   async insertTable(): Promise<void> {
     await this.editor.click();
     await this.page.keyboard.type('/table');
@@ -513,18 +537,18 @@ export class CollabBook {
   }
 
   peerFrame(name: string): Locator {
-    return this.sheet.sheet.locator('.nui-spreadsheet__peer-cell', { hasText: name });
+    return this.sheet.sheet.locator('.nui-table-peers__cell', { hasText: name });
   }
 
   peerAreas(): Locator {
-    return this.sheet.sheet.locator('.nui-spreadsheet__peer-area');
+    return this.sheet.sheet.locator('.nui-table-peers__area');
   }
 
   async peerFrameStops(name: string, act: () => Promise<void>): Promise<number> {
     const stops = await this.client.page.evaluateHandle(
       ({ who, frames }) => ({
         measured: new Promise<number>((resolve) => {
-          const frame = [...document.querySelectorAll('.nui-spreadsheet__peer-cell')].find((each) =>
+          const frame = [...document.querySelectorAll('.nui-table-peers__cell')].find((each) =>
             each.textContent.includes(who),
           );
 

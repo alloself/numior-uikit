@@ -235,6 +235,8 @@ export type {
   SuggestionState,
 } from './suggest/suggest.types';
 export { createMetaKey, definePlugin } from './state/plugin';
+export { blockSpotOf, blockSpots, leaveBlockSpot, peerSpotsOf, setBlockSpot } from './spots/spots';
+export type { BlockSpot, BlockSpotState, PeerSpot } from './spots/spots.types';
 export {
   isCursor,
   followPosition,

@@ -10,6 +10,7 @@ import type {
 } from '../model/node.types';
 import type { Mapping } from '../transform/mapping.types';
 import type { Step, StepResult } from '../transform/step.types';
+import type { PeerSpot } from '../spots/spots.types';
 import type { NodeMarkup, SplitType } from '../transform/transform.types';
 import type { InputIntent, KeyInput } from './input.types';
 import type { Selection } from './selection.types';
@@ -70,6 +71,7 @@ export interface EditorProps {
     | ((parent: ElementNode, index: number, state: EditorState) => boolean)
     | undefined;
   readonly decorations?: ((state: EditorState) => DecorationSet | undefined) | undefined;
+  readonly spots?: ((state: EditorState) => readonly PeerSpot[] | undefined) | undefined;
   readonly stateChanged?: ((state: EditorState, before: EditorState) => void) | undefined;
 }
 

@@ -23,7 +23,9 @@ const { peers, editor } = defineProps<NuiCollabCaretsProps>();
 
 const layer = useTemplateRef<HTMLElement>('layer');
 
-const shown = computed(() => peers.filter((peer) => peer.head !== undefined));
+const shown = computed(() =>
+  peers.filter((peer) => peer.head !== undefined && peer.spot === undefined),
+);
 
 let frame: number | undefined;
 

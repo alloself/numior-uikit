@@ -1,5 +1,6 @@
-import type { DocJSON } from '@numior/editor-core';
+import { setBlockSpot, type BlockSpot, type DocJSON } from '@numior/editor-core';
 import type { NuiEditorApi } from '@numior/editor-vue';
+import { promiseTimeout } from '@vueuse/core';
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
 import {
   ClientMessageKind,
@@ -17,8 +18,20 @@ Element.prototype.scrollIntoView = () => undefined;
 
 const ANN = { id: 'ann', name: 'Ann' };
 
+const PRESENCE_PAUSE = 80;
+
 const isApi = (value: unknown): value is NuiEditorApi =>
   typeof value === 'object' && value !== null && 'run' in value;
+
+const isSpot = (value: unknown): value is BlockSpot =>
+  typeof value === 'object' && value !== null && 'block' in value && 'part' in value;
+
+const spotIn = (state: unknown): BlockSpot | undefined => {
+  const spot: unknown =
+    typeof state === 'object' && state !== null ? Reflect.get(state, 'spot') : undefined;
+
+  return isSpot(spot) ? spot : undefined;
+};
 
 export class SessionDriver {
   private constructor(
@@ -102,6 +115,18 @@ export class SessionDriver {
     });
 
     await flushPromises();
+  }
+
+  async workIn(block: string, part: readonly string[]): Promise<void> {
+    this.api.run(setBlockSpot({ block, part }));
+
+    await promiseTimeout(PRESENCE_PAUSE);
+  }
+
+  get toldSpots(): readonly (BlockSpot | undefined)[] {
+    return this.wire.sent.flatMap((message) =>
+      message.kind === ClientMessageKind.Presence ? [spotIn(message.state)] : [],
+    );
   }
 
   async refuseChange(version: number): Promise<void> {

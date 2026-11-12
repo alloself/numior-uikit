@@ -11,6 +11,7 @@ const peer = (clientId: string, head: number | undefined, name = clientId): Remo
   colour: 2,
   anchor: head,
   head,
+  spot: undefined,
 });
 
 const BOX = new DOMRect(0, 0, 400, 100);
@@ -41,6 +42,14 @@ describe('NuiCollabCarets', () => {
     const wrapper = mount(NuiCollabCarets, {
       props: { peers: [peer('ann', 3), peer('bob', undefined)] },
     });
+
+    expect(wrapper.findAll('.nui-collab-carets__flag').map((flag) => flag.text())).toEqual(['ann']);
+  });
+
+  it('draws no caret for a person working inside a block such as a table cell', () => {
+    const inCell = { ...peer('bob', 5), spot: { block: 'table', part: ['row', 'name'] } };
+
+    const wrapper = mount(NuiCollabCarets, { props: { peers: [peer('ann', 3), inCell] } });
 
     expect(wrapper.findAll('.nui-collab-carets__flag').map((flag) => flag.text())).toEqual(['ann']);
   });
