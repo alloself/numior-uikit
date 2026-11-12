@@ -29,10 +29,7 @@ const GUIDE: readonly NavGroup[] = [
   },
   {
     title: { ru: 'О проекте', en: 'About' },
-    pages: [
-      { link: '/guide/browsers', title: { ru: 'Браузеры', en: 'Browser support' } },
-      { link: '/guide/versions', title: { ru: 'Версии', en: 'Versioning' } },
-    ],
+    pages: [{ link: '/guide/browsers', title: { ru: 'Браузеры', en: 'Browser support' } }],
   },
 ];
 

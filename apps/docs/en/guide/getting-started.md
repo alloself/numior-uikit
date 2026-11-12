@@ -28,6 +28,7 @@ bun add @numior/vue @numior/tokens
 
 Forms and the Tailwind preset are installed separately: they are the `@numior/forms` and
 `@numior/tailwind` packages.
+All `@numior/*` packages ship under one version number, so install them at the same version.
 
 ## Styles
 
