@@ -30,7 +30,7 @@ import {
   type BandScale,
   type NiceDomain,
 } from './scales';
-import { timeGrain } from './time';
+import { timeDomain, timeGrain, timeTicks } from './time';
 import { timeZoneOf } from './zone';
 
 interface CategoryLabel {
@@ -43,6 +43,19 @@ interface ValueFacts {
   readonly log: boolean;
   readonly low: number;
   readonly high: number;
+}
+
+interface Across {
+  readonly min: number;
+  readonly max: number;
+  readonly ticks: readonly number[];
+  readonly texts: readonly string[];
+}
+
+interface ScatterPlacement {
+  readonly at: (index: number) => number;
+  readonly placed: (index: number) => boolean;
+  readonly lines: readonly SceneLine[];
 }
 
 interface FrameBase {
@@ -65,8 +78,7 @@ interface Frame {
   readonly valueTexts: readonly string[];
   readonly count: number;
   readonly labels: readonly CategoryLabel[];
-  readonly axis: NiceDomain | undefined;
-  readonly axisTexts: readonly string[];
+  readonly across: Across | undefined;
   readonly tops: StackTops | undefined;
   readonly span: readonly [number, number] | undefined;
 }
@@ -94,6 +106,10 @@ const ROUNDING = 1e-6;
 const MOST_LABELS = 2000;
 
 const EMPTY_EXTENT: readonly [number, number] = [0, 1];
+
+const NO_MOMENTS: Across = { min: 0, max: 1, ticks: [], texts: [] };
+
+const HALF_DAY = 12 * 60 * 60 * 1000;
 
 const slotsOf = (series: readonly ChartSeries[]): ChartSlot[] =>
   series.map((item, index) => item.slot ?? SLOTS[index] ?? 0);
@@ -330,6 +346,77 @@ const baseOf = (spec: ChartSpec, options: LayoutOptions): FrameBase => {
   };
 };
 
+const numberAcross = (
+  span: readonly [number, number],
+  options: LayoutOptions,
+  ticks: number,
+): Across => {
+  const axis = niceDomain(span[0], span[1], { count: ticks });
+
+  const format =
+    options.formatNumber ??
+    numberFormatter(
+      options.locale ?? 'en',
+      numberStyle(Math.max(Math.abs(axis.min), Math.abs(axis.max)), false),
+    );
+
+  return {
+    min: axis.min,
+    max: axis.max,
+    ticks: axis.ticks,
+    texts: axis.ticks.map((tick) => format(tick, axis.step)),
+  };
+};
+
+const timeAcross = (
+  span: readonly [number, number] | undefined,
+  options: LayoutOptions,
+  ticks: number,
+): Across => {
+  if (span === undefined) {
+    return NO_MOMENTS;
+  }
+
+  const zone = timeZoneOf(options.timeZone);
+  const [low, high] = span;
+
+  const found =
+    low === high
+      ? {
+          ...timeTicks(low - HALF_DAY, high + HALF_DAY, ticks, zone.name),
+          min: low - HALF_DAY,
+          max: high + HALF_DAY,
+        }
+      : timeDomain(low, high, ticks, zone.name);
+
+  const { unit, context } = timeGrain(found.values, zone);
+  const format = options.formatTime ?? timeFormatter(options.locale ?? 'en', context, zone.name);
+
+  return {
+    min: found.min,
+    max: found.max,
+    ticks: found.values,
+    texts: found.values.map((tick) => format(tick, unit)),
+  };
+};
+
+const acrossOf = (base: FrameBase, options: LayoutOptions, ticks: number): Across | undefined => {
+  const { spec, span } = base;
+
+  if (spec.kind !== ChartKind.Scatter) {
+    return undefined;
+  }
+
+  switch (spec.categories.kind) {
+    case ChartCategoriesKind.Number:
+      return numberAcross(span ?? EMPTY_EXTENT, options, ticks);
+    case ChartCategoriesKind.Time:
+      return timeAcross(span, options, ticks);
+    default:
+      return undefined;
+  }
+};
+
 const frameOf = (
   base: FrameBase,
   size: ChartSize,
@@ -337,11 +424,6 @@ const frameOf = (
   ticks: number,
 ): Frame => {
   const { spec, facts } = base;
-
-  const scatter =
-    spec.kind === ChartKind.Scatter && spec.categories.kind === ChartCategoriesKind.Number;
-
-  const across = scatter ? (base.span ?? EMPTY_EXTENT) : undefined;
   const locale = options.locale ?? 'en';
   const fontSize = options.fontSize ?? 12;
   const domain = domainOf(spec, facts, ticks);
@@ -350,16 +432,6 @@ const frameOf = (
   const format =
     options.formatNumber ??
     numberFormatter(locale, numberStyle(largest, spec.stacking === ChartStacking.Percent));
-
-  const axis =
-    across === undefined ? undefined : niceDomain(across[0], across[1], { count: ticks });
-
-  const axisFormat =
-    options.formatNumber ??
-    numberFormatter(
-      locale,
-      numberStyle(axis === undefined ? 0 : Math.max(Math.abs(axis.min), Math.abs(axis.max)), false),
-    );
 
   return {
     spec,
@@ -373,8 +445,7 @@ const frameOf = (
     valueTexts: domain.ticks.map((tick) => format(tick, facts.log ? tick : domain.step)),
     count: facts.count,
     labels: base.labels,
-    axis,
-    axisTexts: axis === undefined ? [] : axis.ticks.map((tick) => axisFormat(tick, axis.step)),
+    across: acrossOf(base, options, ticks),
     tops: base.tops,
     span: base.span,
   };
@@ -510,8 +581,20 @@ const columnScene = (frame: Frame): ChartScene => {
   );
 
   const value = valueMapper(frame, [plot.y + plot.height, plot.y]);
-  const at = pointAt(frame, band);
   const texts = verticalTicks(frame, plot, value);
+
+  categoryTicks(frame, plot, pointAt(frame, band), texts);
+  titles(frame, plot, texts, false);
+
+  return sceneOf(frame, plot, band, value, texts, false);
+};
+
+const categoryTicks = (
+  frame: Frame,
+  plot: Box,
+  at: (index: number) => number,
+  texts: SceneText[],
+): void => {
   const room = Math.min(widestLabel(frame), plot.width);
 
   spacedOut(frame.labels, at, room + TICK_GAP).forEach((label) => {
@@ -524,29 +607,24 @@ const columnScene = (frame: Frame): ChartScene => {
       baseline: 'top',
     });
   });
-
-  titles(frame, plot, texts, false);
-
-  return sceneOf(frame, plot, band, value, texts, false);
 };
 
-const scatterScene = (frame: Frame): ChartScene => {
-  const axis = frame.axis ?? niceDomain(0, 1);
-  const plot = verticalPlot(frame, frame.measure(frame.axisTexts.at(-1) ?? '', frame.fontSize) / 2);
+const scaledPlacement = (
+  frame: Frame,
+  plot: Box,
+  across: Across,
+  texts: SceneText[],
+): ScatterPlacement => {
   const right = plot.x + plot.width;
-  const x = linearScale([axis.min, axis.max], frame.rtl ? [right, plot.x] : [plot.x, right]);
-  const value = valueMapper(frame, [plot.y + plot.height, plot.y]);
-  const texts = verticalTicks(frame, plot, value);
+  const x = linearScale([across.min, across.max], frame.rtl ? [right, plot.x] : [plot.x, right]);
 
   const xs =
     frame.spec.categories.kind === ChartCategoriesKind.Text ? [] : frame.spec.categories.values;
 
-  const slots = slotsOf(frame.spec.series);
-
-  axis.ticks.forEach((tick, index) => {
+  across.ticks.forEach((tick, index) => {
     texts.push({
       role: SceneTextRole.CategoryTick,
-      text: frame.axisTexts[index] ?? '',
+      text: across.texts[index] ?? '',
       x: x(tick),
       y: plot.y + plot.height + TICK_GAP,
       anchor: 'middle',
@@ -554,11 +632,50 @@ const scatterScene = (frame: Frame): ChartScene => {
     });
   });
 
+  return {
+    at: (index) => x(xs[index] ?? 0),
+    placed: (index) => Number.isFinite(xs[index]),
+    lines: across.ticks.map((tick) => ({
+      role: SceneLineRole.Grid,
+      x1: x(tick),
+      y1: plot.y,
+      x2: x(tick),
+      y2: plot.y + plot.height,
+    })),
+  };
+};
+
+const bandPlacement = (frame: Frame, plot: Box, texts: SceneText[]): ScatterPlacement => {
+  const right = plot.x + plot.width;
+  const band = bandScale(frame.count, frame.rtl ? [right, plot.x] : [plot.x, right]);
+
+  categoryTicks(frame, plot, band.center, texts);
+
+  return { at: band.center, placed: () => true, lines: [] };
+};
+
+const scatterScene = (frame: Frame): ChartScene => {
+  const { across } = frame;
+
+  const overhang =
+    across === undefined ? 0 : frame.measure(across.texts.at(-1) ?? '', frame.fontSize) / 2;
+
+  const plot = verticalPlot(frame, overhang);
+  const value = valueMapper(frame, [plot.y + plot.height, plot.y]);
+  const texts = verticalTicks(frame, plot, value);
+
+  const placement =
+    across === undefined
+      ? bandPlacement(frame, plot, texts)
+      : scaledPlacement(frame, plot, across, texts);
+
+  const slots = slotsOf(frame.spec.series);
+
   titles(frame, plot, texts, false);
 
   const series = frame.spec.series.map((item) => ({
     ...item,
-    values: item.values.map((entry, index) => (Number.isFinite(xs[index]) ? entry : null)),
+    values: item.values.map((entry, index) => (placement.placed(index) ? entry : null)),
   }));
 
   return {
@@ -573,7 +690,7 @@ const scatterScene = (frame: Frame): ChartScene => {
     points: layoutLines(
       {
         area: false,
-        at: (index) => x(xs[index] ?? 0),
+        at: placement.at,
         value,
         baseline: baselineOf(frame, value),
         slots,
@@ -581,19 +698,10 @@ const scatterScene = (frame: Frame): ChartScene => {
         gaps: ChartGaps.Break,
       },
       series,
-      xs.length,
+      frame.count,
       undefined,
     ).points,
-    lines: [
-      ...valueLines(frame, plot, value, false),
-      ...axis.ticks.map((tick) => ({
-        role: SceneLineRole.Grid,
-        x1: x(tick),
-        y1: plot.y,
-        x2: x(tick),
-        y2: plot.y + plot.height,
-      })),
-    ],
+    lines: [...valueLines(frame, plot, value, false), ...placement.lines],
     texts,
     slots,
   };
@@ -807,8 +915,8 @@ const ticksFit = (frame: Frame): boolean => {
   }
 
   const across =
-    frame.axis === undefined ||
-    (widest(frame, frame.axisTexts) + TICK_GAP * 2) * frame.axisTexts.length <=
+    frame.across === undefined ||
+    (widest(frame, frame.across.texts) + TICK_GAP * 2) * frame.across.texts.length <=
       verticalPlot(frame, 0).width;
 
   return across && (frame.line + TICK_GAP) * count <= frame.size.height;

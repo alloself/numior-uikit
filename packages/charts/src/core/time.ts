@@ -7,6 +7,11 @@ export interface TimeTicks {
   readonly values: readonly number[];
 }
 
+export interface TimeDomain extends TimeTicks {
+  readonly min: number;
+  readonly max: number;
+}
+
 export interface TimeGrain {
   readonly unit: TimeUnit;
   readonly context: TimeContext;
@@ -101,11 +106,41 @@ const advanceWall = (wall: number, interval: Interval): number => {
 const floorTo = (value: number, interval: Interval, zone: TimeZone): number =>
   instantOf(zone, floorWall(wallTime(zone, value), interval));
 
-export const timeTicks = (min: number, max: number, count = 6, timeZone = 'UTC'): TimeTicks => {
-  const zone = timeZoneOf(timeZone);
+const intervalOf = (min: number, max: number, count: number): Interval => {
   const span = Math.max(max - min, SECOND);
 
-  const chosen = INTERVALS.find((candidate) => span / candidate.length <= count) ?? LONGEST;
+  return INTERVALS.find((candidate) => span / candidate.length <= count) ?? LONGEST;
+};
+
+export const timeDomain = (min: number, max: number, count = 6, timeZone = 'UTC'): TimeDomain => {
+  const zone = timeZoneOf(timeZone);
+  const chosen = intervalOf(min, max, count);
+  let wall = floorWall(wallTime(zone, min), chosen);
+  let tick = instantOf(zone, wall);
+  const values = [tick];
+
+  while (tick < max) {
+    wall = advanceWall(wall, chosen);
+    tick = instantOf(zone, wall);
+
+    if (tick <= (values.at(-1) ?? tick)) {
+continue;
+}
+
+values.push(tick);
+  }
+  return {
+    min: values[0] ?? min,
+    max: values.at(-1) ?? max,
+    unit: chosen.unit,
+    step: chosen.step,
+    values,
+  };
+};
+
+export const timeTicks = (min: number, max: number, count = 6, timeZone = 'UTC'): TimeTicks => {
+  const zone = timeZoneOf(timeZone);
+  const chosen = intervalOf(min, max, count);
   const values: number[] = [];
   let wall = floorWall(wallTime(zone, min), chosen);
   let tick = instantOf(zone, wall);

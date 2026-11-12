@@ -159,6 +159,24 @@ test.describe('charts', () => {
     expect([0, 6]).toContain(await charts.points(charts.bounded).count());
   });
 
+  test('places deals by their dates on the time axis of a scatter chart', async ({
+    playground,
+    charts,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await charts.deals.scrollIntoViewIfNeeded();
+    await expect(charts.points(charts.deals)).toHaveCount(11);
+
+    const ticks = await charts.ticks(charts.deals, 'category-tick');
+
+    expect(ticks.length).toBeGreaterThan(1);
+    expect(ticks.every((tick) => /(сент|окт|нояб)\./u.test(tick.text))).toBe(true);
+
+    await charts.showTable();
+    await expect(charts.rows(charts.deals).first()).toHaveText(/1 окт\. 2026 г\.\s*1,2/);
+  });
+
   test('reads the hours of a day in the time zone of the chart', async ({ playground, charts }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();

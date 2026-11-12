@@ -22,6 +22,7 @@ export class ChartsSection {
   readonly pie: Locator;
   readonly doughnut: Locator;
   readonly scatter: Locator;
+  readonly deals: Locator;
   readonly bounded: Locator;
   readonly hours: Locator;
   readonly tableSwitch: Locator;
@@ -38,6 +39,7 @@ export class ChartsSection {
     this.pie = page.getByTestId('chart-pie');
     this.doughnut = page.getByTestId('chart-doughnut');
     this.scatter = page.getByTestId('chart-scatter');
+    this.deals = page.getByTestId('chart-deals');
     this.bounded = page.getByTestId('chart-bounded');
     this.hours = page.getByTestId('chart-hours');
     this.tableSwitch = page.getByRole('switch', { name: 'Показать таблицу данных' });

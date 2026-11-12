@@ -60,6 +60,12 @@
         data-testid="chart-scatter"
       />
       <NuiChart
+        :spec="deals"
+        label="Крупные сделки октября, млн ₽"
+        :show-table="showTable"
+        data-testid="chart-deals"
+      />
+      <NuiChart
         :spec="latency"
         label="Время ответа сервиса за неделю, мс: ось от 100 до 400"
         :show-table="showTable"
@@ -181,6 +187,18 @@ const discounts: ChartSpec = {
   ],
   valueAxis: { title: 'Прирост, %' },
   categoryAxis: { title: 'Скидка, %' },
+};
+
+const DEAL_DAYS = [1, 3, 3, 6, 9, 13, 14, 20, 22, 27, 30];
+
+const DEAL_AMOUNTS = [1.2, 3.4, 0.8, 2.1, 5.6, 1.9, 4.3, 2.7, 6.1, 3.3, 4.8];
+
+const deals: ChartSpec = {
+  kind: 'scatter',
+  categories: { kind: 'time', values: DEAL_DAYS.map((day) => Date.UTC(2026, 9, day)) },
+  series: [{ id: 'deals', name: 'Сделки', values: DEAL_AMOUNTS }],
+  valueAxis: { title: 'млн ₽' },
+  categoryAxis: { title: 'Дата' },
 };
 
 const latency: ChartSpec = {
