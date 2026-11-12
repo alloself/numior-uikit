@@ -29,7 +29,6 @@ const RATIOS = new Set([
   'percentOfTotal',
   'percentOfRow',
   'percentOfCol',
-  'index',
   'percent',
   'percentDiff',
 ]);

@@ -41,11 +41,6 @@ interface Totals {
   readonly columns: number;
 }
 
-interface Run {
-  readonly sums: Float64Array;
-  readonly from: number;
-}
-
 interface Placed {
   readonly axis: Axis;
   readonly level: number;
@@ -57,6 +52,8 @@ export const VALUES_FIELD = -2;
 const NOT_AVAILABLE = errorValue('#N/A');
 
 const DIVIDE_BY_ZERO = errorValue('#DIV/0!');
+
+const NO_INTERSECTION = errorValue('#NULL!');
 
 const MANUAL: PivotField = { order: [], hidden: [], sort: 'manual', subtotal: true };
 
@@ -410,10 +407,10 @@ export const normalizedPivot = (definition: PivotDefinition): PivotDefinition =>
 const amountOf = (value: CellValue): number =>
   value.kind === CellValueKind.Number ? value.value : 0;
 
+const counted = (value: CellValue): CellValue =>
+  value.kind === CellValueKind.Empty ? numberValue(0) : value;
+
 const difference = (value: CellValue, base: CellValue): CellValue => {
-  if (value.kind === CellValueKind.Empty && base.kind === CellValueKind.Empty) {
-    return EMPTY;
-  }
   if (value.kind !== CellValueKind.Number && value.kind !== CellValueKind.Empty) {
     return value;
   }
@@ -425,16 +422,19 @@ const difference = (value: CellValue, base: CellValue): CellValue => {
 const compared = (
   show: Extract<PivotShowAs, { readonly item: unknown }>,
   value: CellValue,
-  base: CellValue | undefined,
+  base: CellValue,
 ): CellValue => {
-  if (base === undefined) {
-    return EMPTY;
-  }
   if (show.kind === PivotShowAsKind.Difference) {
     return difference(value, base);
   }
-  if (base.kind === CellValueKind.Empty || value.kind !== CellValueKind.Number) {
-    return base.kind === CellValueKind.Empty ? EMPTY : value;
+  if (value.kind === CellValueKind.Empty) {
+    return NO_INTERSECTION;
+  }
+  if (base.kind === CellValueKind.Empty) {
+    return EMPTY;
+  }
+  if (value.kind !== CellValueKind.Number) {
+    return value;
   }
 
   const share = ratio(value, base);
@@ -492,6 +492,12 @@ const createEvaluator = (
     return placed.axis === rows ? raw(data, node, other) : raw(data, other, node);
   };
 
+  const namedItem = (field: number, item: CellValue, rank: Int32Array): number | undefined => {
+    const place = placesOf(field).get(pivotKey(item));
+
+    return place !== undefined && (rank[place] ?? -1) >= 0 ? place : undefined;
+  };
+
   const baseItem = (
     show: Extract<PivotShowAs, { readonly item: unknown }>,
     rank: Int32Array,
@@ -499,33 +505,30 @@ const createEvaluator = (
   ): number | undefined => {
     const at = rank[current] ?? -1;
 
-    if (show.item === PivotBaseStep.Previous) {
-      return orderOf(show.field)[at - 1];
+    switch (show.item) {
+      case PivotBaseStep.Previous:
+        return orderOf(show.field)[at - 1] ?? current;
+      case PivotBaseStep.Next:
+        return orderOf(show.field)[at + 1] ?? current;
+      default:
+        return namedItem(show.field, show.item, rank);
     }
-    if (show.item === PivotBaseStep.Next) {
-      return orderOf(show.field)[at + 1];
-    }
-    return placesOf(show.field).get(pivotKey(show.item));
   };
 
   const runOf = memoize(
-    (data: number, field: number, placed: Placed, other: number): Run => {
+    (data: number, field: number, placed: Placed, other: number): Float64Array => {
       const order = orderOf(field);
       const sums = new Float64Array(order.length);
 
-      const { from } = order.reduce(
-        (run, item, at) => {
-          const total = shifted(data, placed, other, item);
-          const counted = total?.kind === CellValueKind.Number;
-          const sum = run.sum + (counted ? total.value : 0);
+      order.reduce((sum, item, at) => {
+        const total = shifted(data, placed, other, item);
+        const next = sum + (total?.kind === CellValueKind.Number ? total.value : 0);
 
-          sums[at] = sum;
-          return { sum, from: counted ? Math.min(run.from, at) : run.from };
-        },
-        { sum: 0, from: order.length },
-      );
+        sums[at] = next;
+        return next;
+      }, 0);
 
-      return { sums, from };
+      return sums;
     },
     (data, field, placed, other) =>
       [
@@ -548,32 +551,36 @@ const createEvaluator = (
     const rank = ranks.get(show.field);
 
     if (placed === undefined || rank === undefined) {
-      return value.kind === CellValueKind.Empty ? EMPTY : NOT_AVAILABLE;
+      return NOT_AVAILABLE;
     }
 
     const current = realItems(placed.axis, placed.line)[placed.level];
     const other = placed.axis === rows ? col.node : row.node;
 
-    if (current === undefined) {
-      return EMPTY;
-    }
     if (show.kind === PivotShowAsKind.RunTotal) {
-      const run = runOf(data, show.field, placed, other);
-      const at = rank[current] ?? -1;
-
-      return at < run.from ? EMPTY : numberValue(run.sums[at] ?? 0);
+      return current === undefined
+        ? EMPTY
+        : numberValue(runOf(data, show.field, placed, other)[rank[current] ?? -1] ?? 0);
     }
-    if (value.kind === CellValueKind.Empty && show.kind !== PivotShowAsKind.Difference) {
+    if (typeof show.item === 'object' && namedItem(show.field, show.item, rank) === undefined) {
+      return NOT_AVAILABLE;
+    }
+    if (current === undefined) {
       return EMPTY;
     }
 
     const item = baseItem(show, rank, current);
 
-    return compared(
-      show,
-      value,
-      item === undefined ? undefined : shifted(data, placed, other, item),
-    );
+    if (item === undefined) {
+      return NOT_AVAILABLE;
+    }
+    if (item === current) {
+      return show.kind === PivotShowAsKind.Percent ? ratio(value, value) : EMPTY;
+    }
+
+    const base = shifted(data, placed, other, item);
+
+    return base === undefined ? EMPTY : compared(show, value, base);
   };
 
   const shown = (data: number, row: PivotLine, col: PivotLine): CellValue => {
@@ -584,13 +591,13 @@ const createEvaluator = (
       case PivotShowAsKind.Normal:
         return value;
       case PivotShowAsKind.PercentOfTotal:
-        return ratio(value, raw(data, 0, 0));
+        return ratio(counted(value), raw(data, 0, 0));
       case PivotShowAsKind.PercentOfRow:
-        return ratio(value, raw(data, row.node, 0));
+        return ratio(counted(value), raw(data, row.node, 0));
       case PivotShowAsKind.PercentOfCol:
-        return ratio(value, raw(data, 0, col.node));
+        return ratio(counted(value), raw(data, 0, col.node));
       case PivotShowAsKind.Index: {
-        const share = ratio(value, raw(data, row.node, 0));
+        const share = ratio(counted(value), raw(data, row.node, 0));
         const whole = ratio(raw(data, 0, col.node), raw(data, 0, 0));
 
         return ratio(share, whole);
