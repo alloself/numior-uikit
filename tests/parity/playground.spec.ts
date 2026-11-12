@@ -1,5 +1,6 @@
 import { sectionScope } from '../e2e/helpers/axe';
 import { expect, test } from './fixtures';
+import { takesStillStates } from './profiles';
 
 const SECTIONS = [
   'settings',
@@ -49,13 +50,15 @@ test.beforeEach(async ({ playground, scenes }) => {
 });
 
 test('every section at rest', async ({ scenes }) => {
+  test.skip(!scenes.profile.stills);
+
   for (const section of SECTIONS) {
     await scenes.captureSection(section);
   }
 });
 
 test('button states', async ({ buttons, scenes, page }) => {
-  test.skip(!scenes.profile.states);
+  test.skip(!takesStillStates(scenes.profile));
   await buttons.primary.press('Shift');
   await scenes.captureSection('buttons', 'buttons--focus');
   await buttons.primary.hover();
@@ -69,7 +72,7 @@ test('button states', async ({ buttons, scenes, page }) => {
 });
 
 test('field states', async ({ forms, scenes }) => {
-  test.skip(!scenes.profile.states);
+  test.skip(!takesStillStates(scenes.profile));
   await forms.nameInput.press('Shift');
   await scenes.captureSection('forms', 'forms--focus');
   await forms.nameInput.hover();
@@ -282,7 +285,7 @@ test('toast states and motion', async ({ feedback, scenes }) => {
 });
 
 test('table cell editors', async ({ table, tableCells, scenes, page }) => {
-  test.skip(!scenes.profile.states);
+  test.skip(!takesStillStates(scenes.profile));
 
   await table.root.scrollIntoViewIfNeeded();
   await table.cell(1, 3).click();

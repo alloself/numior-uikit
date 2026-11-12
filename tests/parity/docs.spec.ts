@@ -1,6 +1,7 @@
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { expect, test } from './fixtures';
+import { takesStillStates } from './profiles';
 
 const DOCS = new URL('../../apps/docs/', import.meta.url);
 const PHONE_WIDTH = 600;
@@ -38,6 +39,7 @@ test.beforeEach(async ({ page, scenes }) => {
 
 for (const route of ROUTES) {
   test(`page ${route}`, async ({ docs, scenes }) => {
+    test.skip(!scenes.profile.stills);
     await docs.open(route);
     await scenes.reveal();
     await scenes.finishTimers();
@@ -47,7 +49,7 @@ for (const route of ROUTES) {
 }
 
 test('example frame options', async ({ docs, scenes }) => {
-  test.skip(!scenes.profile.states || scenes.profile.width < PHONE_WIDTH);
+  test.skip(!takesStillStates(scenes.profile) || scenes.profile.width < PHONE_WIDTH);
   await docs.open('/components/button');
   await scenes.finishTimers();
   await scenes.showCurrentLinks();
@@ -68,7 +70,7 @@ test('example frame options', async ({ docs, scenes }) => {
 });
 
 test('configurator options', async ({ docs, scenes }) => {
-  test.skip(!scenes.profile.states || scenes.profile.width < PHONE_WIDTH);
+  test.skip(!takesStillStates(scenes.profile) || scenes.profile.width < PHONE_WIDTH);
   await docs.open('/components/button');
   await scenes.finishTimers();
   await scenes.showCurrentLinks();
@@ -82,7 +84,7 @@ test('configurator options', async ({ docs, scenes }) => {
 });
 
 test('shell surfaces', async ({ docs, scenes, page }) => {
-  test.skip(!scenes.profile.states);
+  test.skip(!takesStillStates(scenes.profile));
   await docs.open('/components/input');
   await scenes.finishTimers();
   await scenes.showCurrentLinks();
@@ -99,7 +101,7 @@ test('shell surfaces', async ({ docs, scenes, page }) => {
 });
 
 test('shell drawer', async ({ docs, scenes }) => {
-  test.skip(!scenes.profile.states || scenes.profile.width >= PHONE_WIDTH);
+  test.skip(!takesStillStates(scenes.profile) || scenes.profile.width >= PHONE_WIDTH);
   await docs.open('/components/input');
   await scenes.finishTimers();
   await scenes.showCurrentLinks();
@@ -112,7 +114,7 @@ test('shell drawer', async ({ docs, scenes }) => {
 });
 
 test('missing page', async ({ docs, scenes }) => {
-  test.skip(!scenes.profile.states);
+  test.skip(!takesStillStates(scenes.profile));
   await docs.open('/components/absent');
   await scenes.finishTimers();
   await scenes.showCurrentLinks();
@@ -121,7 +123,7 @@ test('missing page', async ({ docs, scenes }) => {
 
 for (const name of OPENED_BY_BUTTON) {
   test(`opened ${name} example`, async ({ docs, scenes }) => {
-    test.skip(!scenes.profile.states);
+    test.skip(!takesStillStates(scenes.profile));
     await docs.open(`/components/${name}`);
     await scenes.finishTimers();
     await scenes.showCurrentLinks();
@@ -132,7 +134,7 @@ for (const name of OPENED_BY_BUTTON) {
 
 for (const name of OPENED_BY_COMBOBOX) {
   test(`opened ${name} example`, async ({ docs, scenes }) => {
-    test.skip(!scenes.profile.states);
+    test.skip(!takesStillStates(scenes.profile));
     await docs.open(`/components/${name}`);
     await scenes.finishTimers();
     await scenes.showCurrentLinks();
@@ -142,7 +144,7 @@ for (const name of OPENED_BY_COMBOBOX) {
 }
 
 test('focused and hovered input example', async ({ docs, scenes }) => {
-  test.skip(!scenes.profile.states);
+  test.skip(!takesStillStates(scenes.profile));
   await docs.open('/components/input');
   await scenes.finishTimers();
   await scenes.showCurrentLinks();

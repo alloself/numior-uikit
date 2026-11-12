@@ -16,6 +16,8 @@ export interface Profile {
   readonly density: Density;
   readonly accent: Accent | null;
   readonly states: boolean;
+  readonly stills: boolean;
+  readonly motion: boolean;
 }
 
 export type RawNode = readonly [parent: number, segment: string, rect: string, style: number[]];

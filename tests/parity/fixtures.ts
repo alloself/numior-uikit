@@ -122,6 +122,10 @@ export class SceneRecorder {
   }
 
   async capture(name: string, root: string, shot: Shot): Promise<void> {
+    if (!this.profile.stills) {
+      return;
+    }
+
     await this.settle();
     await this.store(name, root, () => this.shoot(shot));
   }
@@ -134,6 +138,13 @@ export class SceneRecorder {
   ): Promise<void> {
     await pointer?.hover();
     await this.settle();
+
+    if (!this.profile.motion) {
+      await act();
+      await this.settle();
+      return;
+    }
+
     const session = await this.page.context().newCDPSession(this.page);
 
     await session.send('Animation.enable');
@@ -153,12 +164,11 @@ export class SceneRecorder {
     }
 
     const frame = (): Promise<Buffer> => this.page.screenshot(LIVE_SHOT);
-    const pictured = Number.isInteger(this.profile.dpr);
 
     await this.seek(root, 0);
-    await this.store(`${name}--first-frame`, root, frame, pictured, notes);
+    await this.store(`${name}--first-frame`, root, frame, notes);
     await this.seek(root, 0.5);
-    await this.store(`${name}--half-way`, root, frame, pictured);
+    await this.store(`${name}--half-way`, root, frame);
 
     await session.send('Animation.setPlaybackRate', RUNNING);
     await session.detach();
@@ -194,14 +204,12 @@ export class SceneRecorder {
     name: string,
     root: string,
     shoot: () => Promise<Uint8Array>,
-    pictured = true,
     notes: readonly Note[] = [],
   ): Promise<void> {
     const raw = await this.page.evaluate(collect, { root, properties: PROPERTIES });
     const scene = encodeScene(`${this.profile.id}/${name}`, PROPERTIES, raw, notes);
-    const picture = await shoot();
 
-    await writeScene(OUTPUT, scene, pictured ? picture : undefined);
+    await writeScene(OUTPUT, scene, await shoot());
   }
 
   private shoot(shot: Shot): Promise<Buffer> {
