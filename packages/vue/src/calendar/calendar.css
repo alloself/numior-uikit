@@ -188,15 +188,17 @@
 }
 .nui-calendar__cell--range-middle .nui-calendar__day:hover {
   background: light-dark(
-    oklch(from var(--_range-bg) calc(l - var(--nui-state-hover-subtle)) c h),
-    oklch(from var(--_range-bg) calc(l + var(--nui-state-hover-subtle)) c h)
+    oklab(from var(--_range-bg) calc(l - var(--nui-state-hover-subtle)) a b),
+    oklab(from var(--_range-bg) calc(l + var(--nui-state-hover-subtle)) a b)
   );
 }
-.nui-calendar__day--selected,
-.nui-calendar__day--selected:hover {
+.nui-calendar__day--selected {
   background: var(--_selected-bg);
   color: var(--_selected-fg);
   box-shadow: none;
+}
+.nui-calendar__day--selected:hover {
+  background: oklab(from var(--_selected-bg) calc(l - var(--nui-state-hover)) a b);
 }
 .nui-calendar__day--disabled,
 .nui-calendar__day--disabled:hover {
@@ -230,10 +232,12 @@
 .nui-calendar__option--active {
   background: var(--nui-hover);
 }
-.nui-calendar__option--selected,
-.nui-calendar__option--selected:hover {
+.nui-calendar__option--selected {
   background: var(--_selected-bg);
   color: var(--_selected-fg);
+}
+.nui-calendar__option--selected:is(:hover, .nui-calendar__option--active) {
+  background: oklab(from var(--_selected-bg) calc(l - var(--nui-state-hover)) a b);
 }
 .nui-calendar__presets {
   box-sizing: border-box;
