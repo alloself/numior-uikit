@@ -80,12 +80,15 @@ const docs: DocsMap = {
         en: 'Renders a group of controls in a `fieldset`.',
       },
       inline: {
-        ru: 'Не выводит подпись: контрол показывает её сам в одной строке, как чекбокс.',
+        ru: 'Не выводит подпись: контрол показывает её сам в одной строке, как флажок.',
         en: 'Skips the label: the control shows it on its own line, like a checkbox.',
       },
     },
     slots: {
-      default: { ru: 'Контрол.', en: 'The control.' },
+      default: {
+        ru: 'Контрол, вокруг которого стоят подпись, подсказка и ошибка.',
+        en: 'The control that the label, hint and error surround.',
+      },
       label: { ru: 'Своя подпись вместо `label`.', en: 'Custom label instead of `label`.' },
       description: {
         ru: 'Своя подсказка вместо `description`.',

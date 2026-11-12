@@ -1,7 +1,11 @@
 <template>
-  <NuiNumberField v-model="weight" label="Вес, кг" locale="ru-RU" :step="0.1" />
-  <NuiNumberField v-model="weight" label="Weight, kg" locale="en-US" :step="0.1" />
-  <NuiNumberField v-model="weight" label="Gewicht, kg" locale="de-DE" :step="0.1" />
+  <NuiNumberField v-model="weight" label="Вес поставки, кг" :step="0.1" />
+  <NuiNumberField
+    v-model="weight"
+    label="В накладной для Германии, кг"
+    locale="de-DE"
+    :step="0.1"
+  />
 </template>
 
 <script setup lang="ts">

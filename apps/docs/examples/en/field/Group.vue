@@ -1,8 +1,14 @@
 <template>
-  <NuiField group label="First and last name" description="As in the passport">
-    <div class="grid grid-cols-2 gap-2">
-      <NuiInput v-model="firstName" placeholder="Anna" autocomplete="given-name" />
-      <NuiInput v-model="lastName" placeholder="Titova" autocomplete="family-name" />
+  <NuiField group label="Shipping address" description="The courier brings the order here">
+    <div class="grid grid-cols-[2fr_1fr] gap-3">
+      <NuiInput v-model="city" label="City" autocomplete="address-level2" />
+      <NuiInput
+        v-model="zip"
+        label="ZIP code"
+        mask="#####"
+        inputmode="numeric"
+        autocomplete="postal-code"
+      />
     </div>
   </NuiField>
 </template>
@@ -11,6 +17,6 @@
 import { ref } from 'vue';
 import { NuiField, NuiInput } from '@numior/vue';
 
-const firstName = ref('');
-const lastName = ref('');
+const city = ref('Denver');
+const zip = ref('');
 </script>

@@ -1,20 +1,12 @@
 <template>
   <NuiNumberField
-    v-model="quantity"
-    label="Количество"
-    description="От 1 до 10"
-    :min="1"
-    :max="10"
-  />
-  <NuiNumberField
     v-model="discount"
-    label="Скидка"
-    description="Проценты без степперов"
+    label="Скидка по промокоду"
+    description="От 0 до 50 % с шагом 5"
     :min="0"
-    :max="1"
-    :step="0.01"
-    :steppers="false"
-    :format-options="{ style: 'percent' }"
+    :max="50"
+    :step="5"
+    :format-options="{ style: 'unit', unit: 'percent' }"
   />
 </template>
 
@@ -22,6 +14,5 @@
 import { ref } from 'vue';
 import { NuiNumberField } from '@numior/vue';
 
-const quantity = ref<number | null>(2);
-const discount = ref<number | null>(0.15);
+const discount = ref<number | null>(10);
 </script>

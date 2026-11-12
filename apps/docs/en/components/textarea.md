@@ -1,12 +1,10 @@
 # Textarea
 
-`NuiTextarea` is a field for multi-line text such as a comment, a description or a reply to a
-customer. It renders a native `<textarea>` with a label, a hint and an error message.
+A field for text that takes several lines.
 
 <Example name="textarea/Basic" />
 
-The value is bound with `v-model`, and `rows` sets the height of the field in lines, 3 by
-default.
+Set the height in lines with `rows`.
 
 ## Installation
 
@@ -18,28 +16,33 @@ import '@numior/vue/styles/textarea.css';
 
 ## Usage
 
+Change the number of rows and the states of the field.
+
 <Configurator name="NuiTextarea" />
 
 ## Examples
 
-### Resizing
+### Let the user resize the field
 
-The `resize` prop controls whether the field can be dragged by its corner. `vertical` resizes
-only the height and is the default, `both` resizes in both directions, and `none` turns it off.
+Pick the direction in `resize`.
 
 <Example name="textarea/Resize" />
 
-### Updating after input
+By default only the height changes, and `none` fixes the size.
 
-With `v-model.lazy` the value updates when the user leaves the field instead of on every
-keystroke. The `.trim` modifier removes spaces at the start and the end of the text.
+### Update the model after typing
+
+Add the `.lazy` modifier.
 
 <Example name="textarea/Lazy" />
 
+The text reaches the model when the user leaves the field, and `.trim` drops the spaces at both
+ends.
+
 ## Accessibility
 
-Attributes, classes and event handlers land directly on the `<textarea>`. The label is linked to
-the field through `for`, the hint and the error message through `aria-describedby`.
+The field is a native `<textarea>`, and attributes and event handlers go straight to it. A screen
+reader reads the label, the hint and the error together with the field.
 
 ## API
 

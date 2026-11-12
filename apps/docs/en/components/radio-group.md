@@ -1,13 +1,11 @@
 # Radio group
 
-`NuiRadioGroup` is a group of radio buttons for picking one option out of a few: a plan, a
-delivery method, a warehouse. For a long list of options a [Select](/en/components/select)
-works better.
+A choice of one option from a few that are all in view.
 
 <Example name="radio-group/Basic" />
 
-Every `NuiRadio` gets its own `value`, and the chosen one lives in the `v-model` of the group.
-`label` and `description` give the group a label and a hint, as in other fields.
+Give every `NuiRadio` a `value`, and the `v-model` of the group holds the value of the checked
+one.
 
 ## Installation
 
@@ -19,33 +17,29 @@ import '@numior/vue/styles/radio.css';
 
 ## Usage
 
-Lay the options out in a row and change the size and the states of the group.
+Lay the radios out in a row and change the size and the states of the group.
 
 <Configurator name="NuiRadioGroup" />
 
 ## Examples
 
-### In a row
+### Keep an object in the model
 
-`orientation="horizontal"` puts the radios in one row; by default they stack in a column.
-`size` picks the size: `sm`, `md` or `lg`.
-
-<Example name="radio-group/Horizontal" />
-
-### Objects as values
-
-`value` can be an object, and the model gets that same object. A radio is checked when its
-`value` is the very object in the model, not a copy with the same fields.
+Pass an object to `value`.
 
 <Example name="radio-group/Objects" />
 
+The group matches a radio to the model by the key of its value, which is the JSON of the object
+by default. When the object comes back from the server with changed fields, return its id from
+`getKey`.
+
 ## Accessibility
 
-The radios are native: arrow keys move the choice, and a form submits the value under the shared
-`name`. The label, description and error of the group are linked to it, and a screen reader
-reads them on entering the group.
+The radios are native, so the arrow keys move the choice and a form submits the value under the
+shared `name`. A screen reader reads the label, the hint and the error of the group when the
+focus enters it.
 
-`disabled` on the group turns off every radio, and on a single `NuiRadio` only that one.
+`disabled` on the group turns off every radio, and on a `NuiRadio` only that one.
 
 <KeyboardReference name="NuiRadioGroup" />
 

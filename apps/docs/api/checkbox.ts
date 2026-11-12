@@ -15,12 +15,12 @@ const docs: DocsMap = {
         en: 'Shows a dash instead of a check: some nested items are selected. A click clears it.',
       },
       value: {
-        ru: 'Значение, которое уходит с формой, когда чекбокс отмечен.',
+        ru: 'Значение, которое уходит с формой, когда флажок отмечен.',
         en: 'Value sent with the form when the box is checked.',
       },
     },
-    models: { 'v-model': { ru: 'Отмечен ли чекбокс.', en: 'Whether the checkbox is checked.' } },
-    slots: { default: { ru: 'Подпись рядом с чекбоксом.', en: 'Label next to the checkbox.' } },
+    models: { 'v-model': { ru: 'Отмечен ли флажок.', en: 'Whether the checkbox is checked.' } },
+    slots: { default: { ru: 'Подпись рядом с флажком.', en: 'Label next to the checkbox.' } },
     keyboard: [space],
     configurator: {
       props: ['size', 'disabled', 'required', 'invalid', 'indeterminate', 'description', 'error'],
@@ -35,7 +35,7 @@ const docs: DocsMap = {
         en: 'Choices as objects with `value`, `label` and `disabled`.',
       },
       name: {
-        ru: 'Атрибут `name` всех чекбоксов группы для отправки формы.',
+        ru: 'Атрибут `name` всех флажков группы для отправки формы.',
         en: 'The `name` attribute of every checkbox in the group, for form submission.',
       },
       orientation: {

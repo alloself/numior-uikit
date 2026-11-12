@@ -1,11 +1,11 @@
 <template>
   <NuiField
-    label="Work email"
-    description="Mail arrives only at confirmed addresses"
+    label="SKU"
+    description="A category letter, a hyphen and the product number"
     :error="error"
     required
   >
-    <NuiInput v-model="email" type="email" placeholder="name@company.com" />
+    <NuiInput v-model="sku" placeholder="S-101" />
   </NuiField>
 </template>
 
@@ -13,9 +13,11 @@
 import { computed, ref } from 'vue';
 import { NuiField, NuiInput } from '@numior/vue';
 
-const email = ref('');
+const SKU_RE = /^[A-Z]-\d{3}$/;
+
+const sku = ref('');
 
 const error = computed(() =>
-  email.value !== '' && !email.value.includes('@') ? 'Enter an address with an @' : undefined,
+  sku.value !== '' && !SKU_RE.test(sku.value) ? 'Write the SKU like S-101' : undefined,
 );
 </script>

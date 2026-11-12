@@ -5,8 +5,8 @@
       :form="form"
       :name="(v) => v.code"
       :rules="codeRules"
-      label="Код из письма"
-      description="Код 000000 устарел"
+      label="Код из приложения"
+      :description="description"
       required
     >
       <NuiOtpField v-bind="field" :group-size="3" />
@@ -15,19 +15,24 @@
 </template>
 
 <script setup lang="ts">
+import { computed, ref } from 'vue';
+import { promiseTimeout } from '@vueuse/core';
 import { NuiOtpField } from '@numior/vue';
-import { NuiForm, NuiFormError, NuiFormField, min, required, useForm } from '@numior/forms';
+import { NuiForm, NuiFormField, min, required, useForm } from '@numior/forms';
 
 const codeRules = [required(), min(6)];
 
+const confirmed = ref(false);
+
+const description = computed(() =>
+  confirmed.value ? 'Вход подтверждён' : 'Шесть цифр из приложения-аутентификатора',
+);
+
 const form = useForm({
   initialValues: { code: '' },
-  onSubmit: async (values) => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
-    if (values.code === '000000') {
-      throw new NuiFormError({ code: 'Код устарел, запросите новый' });
-    }
+  onSubmit: async () => {
+    await promiseTimeout(600);
+    confirmed.value = true;
   },
 });
 </script>

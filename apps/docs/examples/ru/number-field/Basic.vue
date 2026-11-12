@@ -2,16 +2,19 @@
   <NuiNumberField
     v-model="price"
     label="Цена"
-    description="Евро, шаг 0,5"
     :min="0"
-    :step="0.5"
-    :format-options="{ style: 'currency', currency: 'EUR' }"
+    :format-options="{ style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }"
   />
+  <NuiNumberField v-model="stock" label="Остаток на складе" :min="0" />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { NuiNumberField } from '@numior/vue';
+import { products } from '#demo/products';
 
-const price = ref<number | null>(12.5);
+const [chair] = products;
+
+const price = ref<number | null>(chair?.price ?? null);
+const stock = ref<number | null>(chair?.stock ?? null);
 </script>

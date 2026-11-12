@@ -1,15 +1,19 @@
 <template>
   <NuiInput
     v-model.lazy.trim="city"
-    label="City"
-    :description="`Saved: ${city || '—'}`"
-    placeholder="Lisbon"
+    label="Delivery city"
+    :description="description"
+    placeholder="Denver"
   />
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { NuiInput } from '@numior/vue';
 
 const city = ref('');
+
+const description = computed(() =>
+  city.value === '' ? 'The order has no city yet' : `The order ships to ${city.value}`,
+);
 </script>

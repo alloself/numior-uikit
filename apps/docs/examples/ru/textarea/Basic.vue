@@ -1,8 +1,8 @@
 <template>
   <NuiTextarea
-    v-model="bio"
-    label="О себе"
-    description="Два-три предложения для профиля"
+    v-model="comment"
+    label="Комментарий к заказу"
+    description="Курьер прочитает его перед выездом"
     :rows="4"
   />
 </template>
@@ -11,5 +11,5 @@
 import { ref } from 'vue';
 import { NuiTextarea } from '@numior/vue';
 
-const bio = ref('');
+const comment = ref('Позвоните за час до доставки: домофон не работает.');
 </script>

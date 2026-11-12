@@ -1,15 +1,19 @@
 <template>
   <NuiTextarea
-    v-model.lazy.trim="answer"
-    label="Ответ клиенту"
-    :description="`Сохранено символов: ${answer.length}`"
+    v-model.lazy.trim="note"
+    label="Заметка для склада"
+    :description="description"
     :rows="3"
   />
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { NuiTextarea } from '@numior/vue';
 
-const answer = ref('');
+const note = ref('');
+
+const description = computed(() =>
+  note.value === '' ? 'Заметки в заказе пока нет' : 'Заметка сохранена, склад её увидит',
+);
 </script>

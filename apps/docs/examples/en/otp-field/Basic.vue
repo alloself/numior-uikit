@@ -1,8 +1,8 @@
 <template>
   <NuiOtpField
     v-model="code"
-    label="SMS code"
-    description="Sent to +44 7700 900123"
+    label="Code from the email"
+    description="Sent to peter.wolfe@example.com"
     :group-size="3"
   />
 </template>

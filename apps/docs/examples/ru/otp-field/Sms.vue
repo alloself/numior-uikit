@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col items-start gap-2">
+  <div class="flex flex-col gap-3">
     <NuiOtpField
       v-model="code"
       label="Код из SMS"
@@ -10,53 +10,41 @@
       web-otp
       @complete="verify"
     />
-    <NuiButton variant="ghost" size="sm" :disabled="secondsLeft > 0" @click="resend">
-      {{ secondsLeft > 0 ? `Отправить ещё раз через ${secondsLeft} с` : 'Отправить ещё раз' }}
-    </NuiButton>
+    <p class="m-0 rounded-md bg-surface-muted px-3 py-2 text-sm whitespace-pre-line">
+      {{ sms }}
+    </p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { NuiButton, NuiOtpField } from '@numior/vue';
+import { computed, ref, watch } from 'vue';
+import { promiseTimeout } from '@vueuse/core';
+import { NuiOtpField } from '@numior/vue';
 
 type Check = 'waiting' | 'checking' | 'passed' | 'failed';
 
+const SENT_CODE = '123456';
+const sms = `${SENT_CODE} — код для входа в кабинет магазина.\n@example.com #${SENT_CODE}`;
+
 const code = ref('');
 const check = ref<Check>('waiting');
-const secondsLeft = ref(30);
-const timers: { countdown?: ReturnType<typeof setInterval> } = {};
 
 const description = computed(() =>
-  check.value === 'passed' ? 'Телефон подтверждён' : 'Подойдёт код 123456',
+  check.value === 'passed' ? 'Телефон подтверждён' : 'Отправили на +7 900 000-01-01',
 );
 
 const error = computed(() =>
   check.value === 'failed' ? 'Неверный код, попробуйте ещё раз' : undefined,
 );
 
-const countDown = (): void => {
-  clearInterval(timers.countdown);
-  secondsLeft.value = 30;
-
-  timers.countdown = setInterval(() => {
-    secondsLeft.value = Math.max(0, secondsLeft.value - 1);
-  }, 1000);
-};
-
 const verify = async (value: string): Promise<void> => {
   check.value = 'checking';
-  await new Promise((resolve) => setTimeout(resolve, 600));
-  check.value = value === '123456' ? 'passed' : 'failed';
+  await promiseTimeout(600);
+  check.value = value === SENT_CODE ? 'passed' : 'failed';
+
   if (check.value === 'failed') {
     code.value = '';
   }
-};
-
-const resend = (): void => {
-  code.value = '';
-  check.value = 'waiting';
-  countDown();
 };
 
 watch(code, (value) => {
@@ -64,7 +52,4 @@ watch(code, (value) => {
     check.value = 'waiting';
   }
 });
-
-onMounted(countDown);
-onBeforeUnmount(() => clearInterval(timers.countdown));
 </script>

@@ -1,13 +1,11 @@
 # Switch
 
-`NuiSwitch` is a toggle for a setting that applies at once, without a "Save" button:
-notifications, public access, dark theme. The model holds `true` or `false`.
+A toggle for a setting that takes effect at once.
 
 <Example name="switch/Basic" />
 
-Pass the label into the default slot or `label`, and the hint under it into `description`. For
-a choice that applies only after the form is submitted, a [Checkbox](/en/components/checkbox)
-fits better.
+For a choice that applies only after the form is submitted, use a
+[Checkbox](/en/components/checkbox).
 
 ## Installation
 
@@ -19,27 +17,22 @@ import '@numior/vue/styles/switch.css';
 
 ## Usage
 
+Change the size and the states of the switch.
+
 <Configurator name="NuiSwitch" />
 
 ## Examples
 
-### A settings list
+### Build a list of settings
 
-Use `description` to explain what changes after the toggle. A `disabled` switch still shows
-whether the setting is on or off.
+Explain in `description` what the switch changes.
 
 <Example name="switch/Settings" />
 
-### Sizes
-
-`size` takes `sm`, `md` and `lg` and changes the size of the switch along with its label.
-
-<Example name="switch/Sizes" />
-
 ## Accessibility
 
-The switch is a native checkbox with the `switch` role: a screen reader announces it as "on" or
-"off" and reads the label. In right-to-left text the knob moves the other way.
+The switch is a native checkbox with the `switch` role, so a screen reader announces it as on or
+off and reads the label. In right-to-left text the knob moves the other way.
 
 <KeyboardReference name="NuiSwitch" />
 

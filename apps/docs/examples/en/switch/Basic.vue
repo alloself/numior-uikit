@@ -1,6 +1,9 @@
 <template>
-  <NuiSwitch v-model="notifications" description="One email a day, at 9:00">
-    Task notifications
+  <NuiSwitch
+    v-model="visible"
+    description="Customers see them in the catalog marked as out of stock"
+  >
+    Show out-of-stock products
   </NuiSwitch>
 </template>
 
@@ -8,5 +11,5 @@
 import { ref } from 'vue';
 import { NuiSwitch } from '@numior/vue';
 
-const notifications = ref(true);
+const visible = ref(true);
 </script>

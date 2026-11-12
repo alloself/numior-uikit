@@ -1,25 +1,24 @@
 <template>
-  <NuiCheckbox :model-value="all" :indeterminate="some" @update:model-value="toggleAll">
-    All regions
-  </NuiCheckbox>
-  <NuiCheckboxGroup v-model="selected" :options="regions" class="ms-6" />
+  <div class="flex flex-col gap-2">
+    <NuiCheckbox :model-value="all" :indeterminate="some" @update:model-value="toggleAll">
+      All categories
+    </NuiCheckbox>
+    <NuiCheckboxGroup v-model="selected" :options="options" class="ms-6" />
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiCheckbox, NuiCheckboxGroup, type NuiOption } from '@numior/vue';
+import { NuiCheckbox, NuiCheckboxGroup } from '@numior/vue';
+import { categories } from '#demo/products';
 
-const regions: NuiOption<string>[] = [
-  { value: 'lis', label: 'Lisbon' },
-  { value: 'por', label: 'Porto' },
-  { value: 'fun', label: 'Funchal' },
-];
+const options = categories.map(({ value, label }) => ({ value, label }));
 
-const selected = ref(['lis']);
-const all = computed(() => selected.value.length === regions.length);
+const selected = ref(['furniture']);
+const all = computed(() => selected.value.length === options.length);
 const some = computed(() => selected.value.length > 0 && !all.value);
 
 const toggleAll = (checked: boolean): void => {
-  selected.value = checked ? regions.map((region) => region.value) : [];
+  selected.value = checked ? options.map((option) => option.value) : [];
 };
 </script>

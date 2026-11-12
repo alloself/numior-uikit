@@ -71,7 +71,10 @@ const docs: DocsMap = {
         ru: 'Идентификатор радиокнопки. По умолчанию создаётся автоматически.',
         en: 'Id of the radio. Generated automatically by default.',
       },
-      disabled: { ru: 'Выключает только эту радиокнопку.', en: 'Disables this radio only.' },
+      disabled: {
+        ru: 'Отключает одну радиокнопку, остальные в группе работают.',
+        en: 'Disables one radio while the others in the group keep working.',
+      },
     },
     slots: { default: { ru: 'Подпись радиокнопки.', en: 'Label of the radio.' } },
   },

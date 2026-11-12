@@ -3,16 +3,23 @@
     v-model.unmasked="phone"
     type="tel"
     mask="+7 (###) ###-##-##"
-    label="Телефон"
-    :description="`В модели: ${phone || '—'}`"
+    label="Телефон покупателя"
+    placeholder="+7 (900) 000-01-01"
+    :description="description"
   />
-  <NuiInput v-model="card" mask="#### #### #### ####" label="Номер карты" inputmode="numeric" />
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { NuiInput } from '@numior/vue';
 
+const PHONE_DIGITS = 10;
+
 const phone = ref('');
-const card = ref('');
+
+const description = computed(() =>
+  phone.value.length === PHONE_DIGITS
+    ? `Курьер позвонит на +7${phone.value}`
+    : 'Десять цифр после кода страны',
+);
 </script>

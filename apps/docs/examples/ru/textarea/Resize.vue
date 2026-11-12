@@ -1,11 +1,10 @@
 <template>
-  <NuiTextarea v-model="note" label="Комментарий к заказу" resize="none" size="sm" />
-  <NuiTextarea v-model="note" label="Свободный размер" resize="both" />
+  <NuiTextarea v-model="reply" label="Ответ на отзыв" resize="both" />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { NuiTextarea } from '@numior/vue';
 
-const note = ref('Позвонить за час до доставки.');
+const reply = ref('Спасибо за отзыв! Новую подушку привезём в пятницу.');
 </script>

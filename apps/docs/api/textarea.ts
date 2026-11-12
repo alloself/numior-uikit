@@ -22,7 +22,7 @@ const docs: DocsMap = {
     models: { 'v-model': { ru: 'Текст поля.', en: 'Field text.' } },
     exposed: focusExposed,
     configurator: {
-      values: { label: { ru: 'О себе', en: 'About you' } },
+      values: { label: { ru: 'Ответ покупателю', en: 'Reply to the customer' } },
       props: [
         'rows',
         'resize',
