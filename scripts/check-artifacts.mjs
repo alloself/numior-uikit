@@ -306,7 +306,7 @@ const collaborationRoom = await import(
   pathToFileURL(resolve('packages/collaboration/dist/room/index.js')).href
 );
 
-for (const key of ['createRoom', 'editorAuthority', 'createLoopback']) {
+for (const key of ['createRoom', 'editorAuthority', 'createLoopback', 'parseClientMessage']) {
   assert.ok(collaborationRoom[key], `collaboration/room must export ${key}`);
 }
 

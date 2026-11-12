@@ -1,4 +1,5 @@
 export { editorAuthority, type EditorAuthorityOptions } from './authority.ts';
+export { parseClientMessage } from './client-messages.ts';
 export {
   createLoopback,
   type Loopback,
