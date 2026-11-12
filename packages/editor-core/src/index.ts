@@ -1,5 +1,6 @@
 export {
   blockDecoration,
+  blockDecorationSet,
   decorationSet,
   emptyDecorations,
   inlineDecoration,
@@ -19,6 +20,7 @@ export { StepFailure, StepKind } from './transform/step.types';
 export { UploadChangeKind } from './uploads/uploads.types';
 export type {
   BlockDecoration,
+  BlockDecorationGroups,
   DecorationSet,
   InlineDecoration,
   WidgetDecoration,

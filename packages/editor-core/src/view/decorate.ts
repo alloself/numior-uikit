@@ -19,6 +19,11 @@ interface PlacedDecoration {
   readonly decoration: LocalDecoration;
 }
 
+interface LaidGroup {
+  readonly node: ElementNode;
+  readonly local: readonly LocalDecoration[];
+}
+
 interface PlacedRanges {
   readonly root: ElementNode;
   readonly blocks: BlockDecorations;
@@ -39,17 +44,6 @@ export const decorationSets = (state: EditorState): readonly DecorationSet[] =>
 
     return set === undefined ? [] : [set];
   });
-
-const fitsBlock = (state: EditorState, decoration: BlockDecoration): boolean => {
-  const node = state.doc.byId(decoration.block);
-
-  return (
-    node !== undefined &&
-    state.doc.schema.nodes.get(node.type)?.inlineContent === true &&
-    decoration.from >= 0 &&
-    decoration.to <= node.size - 2
-  );
-};
 
 const piece = (
   id: NodeId,
@@ -129,6 +123,8 @@ const ranges = new WeakMap<DecorationSet, PlacedRanges>();
 
 const anchored = new WeakMap<DecorationSet, BlockDecorations>();
 
+const laidGroups = new WeakMap<readonly BlockDecoration[], LaidGroup>();
+
 const rangesOf = (state: EditorState, set: DecorationSet): BlockDecorations => {
   if (set.decorations.length === 0) {
     return NONE;
@@ -157,8 +153,36 @@ const rangesOf = (state: EditorState, set: DecorationSet): BlockDecorations => {
   return blocks;
 };
 
+const localOf = (
+  node: ElementNode,
+  group: readonly BlockDecoration[],
+): readonly LocalDecoration[] => {
+  const known = laidGroups.get(group);
+
+  if (known?.node === node) {
+    return known.local;
+  }
+
+  const limit = node.size - 2;
+
+  const local = group.reduce<LocalDecoration[]>((kept, decoration) => {
+    if (decoration.from >= 0 && decoration.to <= limit) {
+      kept.push({
+        from: decoration.from,
+        to: decoration.to,
+        class: decoration.class,
+        tag: decoration.tag,
+      });
+    }
+    return kept;
+  }, []);
+
+  laidGroups.set(group, { node, local });
+  return local;
+};
+
 const anchoredOf = (state: EditorState, set: DecorationSet): BlockDecorations => {
-  if (set.blocks.length === 0) {
+  if (set.blocks.size === 0) {
     return NONE;
   }
 
@@ -168,19 +192,21 @@ const anchoredOf = (state: EditorState, set: DecorationSet): BlockDecorations =>
     return known;
   }
 
-  const blocks = new Map<NodeId, LocalDecoration[]>();
+  const blocks = new Map<NodeId, readonly LocalDecoration[]>();
 
-  for (const decoration of set.blocks) {
-    if (!fitsBlock(state, decoration)) {
+  for (const [id, group] of set.blocks) {
+    const node = state.doc.byId(id);
+
+    const local =
+      node !== undefined && state.doc.schema.nodes.get(node.type)?.inlineContent === true
+        ? localOf(node, group)
+        : [];
+
+    if (local.length === 0) {
       continue;
     }
 
-    addTo(blocks, decoration.block, {
-      from: decoration.from,
-      to: decoration.to,
-      class: decoration.class,
-      tag: decoration.tag,
-    });
+    blocks.set(id, local);
   }
 
   anchored.set(set, blocks);

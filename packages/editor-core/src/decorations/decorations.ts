@@ -2,6 +2,7 @@ import type { Mappable } from '../transform/mapping.types';
 import type { NodeId } from '../model/node.types';
 import type {
   BlockDecoration,
+  BlockDecorationGroups,
   DecorationSet,
   DecorationTag,
   InlineDecoration,
@@ -42,25 +43,51 @@ const mapped = (decoration: InlineDecoration, mapping: Mappable): InlineDecorati
 const visible = (decoration: InlineDecoration): boolean =>
   decoration.to > decoration.from && decoration.class !== '';
 
-export const decorationSet = (
+const groupsOf = (blocks: readonly BlockDecoration[]): BlockDecorationGroups =>
+  blocks.reduce((groups, decoration) => {
+    if (visible(decoration)) {
+      groups.set(decoration.block, [...(groups.get(decoration.block) ?? []), decoration]);
+    }
+    return groups;
+  }, new Map<NodeId, BlockDecoration[]>());
+
+const keptGroups = (groups: BlockDecorationGroups): BlockDecorationGroups =>
+  [...groups].reduce((kept, [block, group]) => {
+    const shown = group.every(visible) ? group : group.filter(visible);
+
+    if (shown.length > 0) {
+      kept.set(block, shown);
+    }
+    return kept;
+  }, new Map<NodeId, readonly BlockDecoration[]>());
+
+const withGroups = (
   decorations: readonly InlineDecoration[],
-  blocks: readonly BlockDecoration[] = [],
-  widgets: readonly WidgetDecoration[] = [],
+  groups: BlockDecorationGroups,
+  widgets: readonly WidgetDecoration[],
 ): DecorationSet => {
   const sorted = decorations.filter(visible).toSorted(byStart);
-  const kept = blocks.filter(visible);
 
   return {
     decorations: sorted,
-    blocks: kept,
+    blocks: groups,
     widgets,
     map: (mapping) =>
-      decorationSet(
+      withGroups(
         sorted.map((decoration) => mapped(decoration, mapping)),
-        kept,
+        groups,
         widgets.map((widget) => ({ ...widget, pos: mapping.map(widget.pos, 1) })),
       ),
   };
 };
+
+export const decorationSet = (
+  decorations: readonly InlineDecoration[],
+  blocks: readonly BlockDecoration[] = [],
+  widgets: readonly WidgetDecoration[] = [],
+): DecorationSet => withGroups(decorations, groupsOf(blocks), widgets);
+
+export const blockDecorationSet = (groups: BlockDecorationGroups): DecorationSet =>
+  withGroups([], keptGroups(groups), []);
 
 export const emptyDecorations: DecorationSet = decorationSet([]);

@@ -1,9 +1,10 @@
 import {
   blockDecoration,
+  blockDecorationSet,
   ContentNodeKind,
   createMetaKey,
-  decorationSet,
   definePlugin,
+  type BlockDecoration,
   type DecorationSet,
   type EditorState,
   type ElementNode,
@@ -17,15 +18,9 @@ import { promiseTimeout } from '@vueuse/core';
 import { highlightCode, type NuiCodeTokens, type NuiHighlighter } from '@numior/primitives';
 import { codeTextOf } from './code-text';
 
-interface CodeRange {
-  readonly from: number;
-  readonly to: number;
-  readonly class: string;
-}
-
 interface CodePaint {
   readonly text: string;
-  readonly ranges: readonly CodeRange[];
+  readonly decorations: readonly BlockDecoration[];
 }
 
 type CodePaints = ReadonlyMap<NodeId, CodePaint>;
@@ -82,19 +77,17 @@ const SLICE_MS = 8;
 const languageOf = (node: ElementNode): string | undefined =>
   typeof node.attrs.language === 'string' ? node.attrs.language : undefined;
 
-const rangesOf = (tokens: NuiCodeTokens): CodeRange[] => {
-  const found: CodeRange[] = [];
+const decorationsOf = (id: NodeId, tokens: NuiCodeTokens): BlockDecoration[] => {
+  const found: BlockDecoration[] = [];
   let offset = 0;
 
   for (const [index, line] of (tokens ?? []).entries()) {
     offset += index === 0 ? 0 : 1;
     for (const token of line) {
       if (token.scope !== undefined) {
-        found.push({
-          from: offset,
-          to: offset + token.text.length,
-          class: SCOPE_CLASS + token.scope,
-        });
+        found.push(
+          blockDecoration(id, offset, offset + token.text.length, SCOPE_CLASS + token.scope),
+        );
       }
       offset += token.text.length;
     }
@@ -102,17 +95,17 @@ const rangesOf = (tokens: NuiCodeTokens): CodeRange[] => {
   return found;
 };
 
-const shifted = (range: CodeRange, shift: Shift): CodeRange => ({
-  from: shift.mapping.map(range.from + shift.before, 1) - shift.after,
-  to: shift.mapping.map(range.to + shift.before, -1) - shift.after,
-  class: range.class,
-});
-
 const follow = (paint: CodePaint, shift: Shift, text: string): CodePaint => ({
   text,
-  ranges: paint.ranges
-    .map((range) => shifted(range, shift))
-    .filter((range) => range.from >= 0 && range.to > range.from && range.to <= shift.size),
+  decorations: paint.decorations.reduce<BlockDecoration[]>((kept, decoration) => {
+    const from = shift.mapping.map(decoration.from + shift.before, 1) - shift.after;
+    const to = shift.mapping.map(decoration.to + shift.before, -1) - shift.after;
+
+    if (from >= 0 && to > from && to <= shift.size) {
+      kept.push(blockDecoration(decoration.block, from, to, decoration.class));
+    }
+    return kept;
+  }, []),
 });
 
 const answered = (value: CodeState, state: EditorState, answer: CodeAnswer): CodeState => {
@@ -124,7 +117,7 @@ const answered = (value: CodeState, state: EditorState, answer: CodeAnswer): Cod
     : {
         paints: new Map(value.paints).set(answer.id, {
           text: answer.text,
-          ranges: rangesOf(answer.tokens),
+          decorations: decorationsOf(answer.id, answer.tokens),
         }),
         places: new Map(value.places).set(answer.id, { node, pos }),
       };
@@ -187,11 +180,8 @@ const setOf = (paints: CodePaints): DecorationSet => {
     return known;
   }
 
-  const set = decorationSet(
-    [],
-    [...paints].flatMap(([id, paint]) =>
-      paint.ranges.map((range) => blockDecoration(id, range.from, range.to, range.class)),
-    ),
+  const set = blockDecorationSet(
+    new Map([...paints].map(([id, paint]) => [id, paint.decorations])),
   );
 
   setsByPaints.set(paints, set);

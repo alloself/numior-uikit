@@ -42,8 +42,8 @@ describe('decoration sets', () => {
       [blockDecoration('b1', 0, 3, 'kw'), blockDecoration('b1', 2, 2, 'gone')],
     );
 
-    expect(set.map(createStepMap([{ start: 0, oldSize: 5, newSize: 0 }])).blocks).toEqual([
-      blockDecoration('b1', 0, 3, 'kw'),
-    ]);
+    expect(set.map(createStepMap([{ start: 0, oldSize: 5, newSize: 0 }])).blocks).toEqual(
+      new Map([['b1', [blockDecoration('b1', 0, 3, 'kw')]]]),
+    );
   });
 });
