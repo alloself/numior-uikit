@@ -42,6 +42,8 @@ interface PageObjects {
   readonly editor: PlaygroundPage['editor'];
 }
 
+const RUN = Date.now().toString(36);
+
 export const test = base.extend<PageObjects>({
   playground: async ({ page }, use) => {
     await use(new PlaygroundPage(page));
@@ -116,7 +118,12 @@ export const test = base.extend<PageObjects>({
     await use(playground.charts);
   },
   collab: async ({ browser }, use, testInfo) => {
-    const room = new CollabRoom(browser, `${testInfo.project.name}-${testInfo.testId}`);
+    const attempt = `${testInfo.repeatEachIndex.toString()}-${testInfo.retry.toString()}`;
+
+    const room = new CollabRoom(
+      browser,
+      `${testInfo.project.name}-${testInfo.testId}-${RUN}-${attempt}`,
+    );
 
     await use(room);
     await room.close();
