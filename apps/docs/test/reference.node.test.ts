@@ -81,6 +81,20 @@ describe('docs reference', () => {
     expect(familyStyleImport(entry)).toBe('@numior/vue/styles/button.css');
   });
 
+  it('gives components of a flat entry the family and the stylesheet of that entry', () => {
+    const entry = componentEntries(
+      `${ROOT}packages/collaboration/src/vue/index.ts`,
+      '@numior/collaboration/vue',
+      { family: 'collab', styles: '@numior/collaboration/styles.css' },
+    ).find((item) => item.name === 'NuiCollabPresence');
+
+    expect(entry).toMatchObject({ package: '@numior/collaboration/vue', family: 'collab' });
+
+    expect(entry === undefined ? undefined : familyStyleImport(entry)).toBe(
+      '@numior/collaboration/styles.css',
+    );
+  });
+
   it('turns component meta into typed props, models, slots and defaults', () => {
     const variant = button.props.find((prop) => prop.name === 'variant');
     const loading = button.props.find((prop) => prop.name === 'loading');

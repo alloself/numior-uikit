@@ -13,7 +13,7 @@ const docs: DocsMap = {
       },
       size: { ru: 'Размер текста: `sm`, `md` или `lg`.', en: 'Text size: `sm`, `md` or `lg`.' },
       views: {
-        ru: 'Свои компоненты для типов блоков, которые получают свойство `node`. Таблицу с сортировкой и фильтрами даёт `{ table: NuiContentTable }` из `@numior/content/table`, подсветку кода — `{ code_block: NuiContentCode }` из `@numior/content/code`.',
+        ru: 'Свои компоненты для типов блоков, которые получают свойство `node`. Таблицу с сортировкой и фильтрами даёт `{ table: NuiContentTable }` из `@numior/content/table`, подсветку кода — `{ code_block: NuiContentCode }` из `@numior/content/code`. Картинки с просмотром, файлы и окна встраиваний даёт `contentMediaViews` из `@numior/content/media`: без него встраивание выводится ссылкой.',
         en: 'Custom components for block types. Each receives the `node` prop. `{ table: NuiContentTable }` from `@numior/content/table` adds sorting and filters, `{ code_block: NuiContentCode }` from `@numior/content/code` highlights code.',
       },
       embeds: {

@@ -22,7 +22,7 @@ const docs: DocsMap = {
         en: 'Focuses the editor once it is mounted.',
       },
       toolbar: {
-        ru: 'Панель форматирования: `fixed` — над текстом, `bubble` — над выделением, `both` — обе, `none` — без панели. Alt+F10 переводит в неё фокус, Escape возвращает в текст.',
+        ru: 'Панель форматирования: `fixed` — над текстом, `bubble` — над выделением, `both` — обе, `none` — без панели. Тип блока выбирается в панели над выделением, а в верхней — в режиме `fixed` и в `both` на сенсорных экранах. Кнопка «+» верхней панели вставляет блок под курсором.',
         en: 'Formatting bar: `fixed` above the text, `bubble` over the selection, `both`, or `none`. Alt+F10 moves the focus into it, Escape returns to the text.',
       },
       colours: {
@@ -30,7 +30,7 @@ const docs: DocsMap = {
         en: 'Text colors in the menu, such as `red` or `blue`. All nine by default. Colors already in the document stay.',
       },
       upload: {
-        ru: 'Функция загрузки `(file, { onProgress, signal }) => Promise<{ url }>`. С ней файлы и картинки можно вставить, перетащить или выбрать в меню «/». Без неё — только по ссылке.',
+        ru: 'Функция загрузки `(file, { onProgress, signal }) => Promise<{ url }>`. С ней файлы и картинки можно вставить, перетащить или выбрать в меню «/» и «+». Без неё — только по ссылке.',
         en: 'Upload function `(file, { onProgress, signal }) => Promise<{ url }>`. With it, files and images can be pasted, dropped or picked in the slash menu. Without it, only by link.',
       },
       accept: {
@@ -120,6 +120,99 @@ const docs: DocsMap = {
         en: 'A layer above the editor text, such as remote cursors in collaboration.',
       },
     },
+    keyboard: [
+      {
+        keys: 'Alt+F10',
+        description: {
+          ru: 'Переводит фокус в панель форматирования. Escape возвращает его в текст.',
+          en: 'Moves the focus into the formatting bar. Escape returns it to the text.',
+        },
+      },
+      {
+        keys: 'Ctrl+K',
+        description: {
+          ru: 'Открывает поле ссылки для выделенного текста.',
+          en: 'Opens the link field for the selected text.',
+        },
+      },
+      {
+        keys: 'Ctrl+B / Ctrl+I / Ctrl+U',
+        description: {
+          ru: 'Делает текст жирным, курсивом или подчёркнутым.',
+          en: 'Makes the text bold, italic or underlined.',
+        },
+      },
+      {
+        keys: 'Ctrl+Shift+S / Ctrl+E',
+        description: {
+          ru: 'Зачёркивает текст или делает его кодом в строке.',
+          en: 'Strikes the text through or turns it into inline code.',
+        },
+      },
+      {
+        keys: 'Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y',
+        description: {
+          ru: 'Отменяет и повторяет правку.',
+          en: 'Undoes and redoes an edit.',
+        },
+      },
+      {
+        keys: 'Ctrl+Shift+ArrowUp / Ctrl+Shift+ArrowDown',
+        description: {
+          ru: 'Переносит блок с курсором выше или ниже.',
+          en: 'Moves the block with the caret up or down.',
+        },
+      },
+      {
+        keys: 'Ctrl+Enter',
+        description: {
+          ru: 'Отмечает пункт списка задач. В блоке кода начинает строку текста после него.',
+          en: 'Checks a task list item. In a code block, starts a text line after it.',
+        },
+      },
+      {
+        keys: 'Tab / Shift+Tab',
+        description: {
+          ru: 'Сдвигает пункт списка или строку кода вправо и влево.',
+          en: 'Indents and outdents a list item or a code line.',
+        },
+      },
+      {
+        keys: '/',
+        description: {
+          ru: 'В начале строки или после пробела открывает меню блоков.',
+          en: 'At the start of a line or after a space, opens the block menu.',
+        },
+      },
+      {
+        keys: '@',
+        description: {
+          ru: 'Открывает список людей, если задан `mentions`.',
+          en: 'Opens the list of people when `mentions` is set.',
+        },
+      },
+      {
+        keys: 'ArrowUp / ArrowDown',
+        description: {
+          ru: 'Выбирает вариант в меню «/» и «@».',
+          en: 'Moves through the options of the slash and @ menus.',
+        },
+      },
+      {
+        keys: 'Enter / Tab',
+        description: {
+          ru: 'Применяет выбранный вариант меню «/» или «@».',
+          en: 'Applies the chosen option of the slash or @ menu.',
+        },
+      },
+      {
+        keys: 'Escape',
+        description: {
+          ru: 'Закрывает меню «/» и «@», набранный символ остаётся текстом.',
+          en: 'Closes the slash and @ menus and keeps the typed character as text.',
+        },
+      },
+    ],
   },
 };
 

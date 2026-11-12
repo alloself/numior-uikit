@@ -576,6 +576,18 @@ const docs: DocsMap = {
       },
     ],
   },
+  NuiTablePeers: {
+    props: {
+      peers: {
+        ru: 'Соавторы в таблице: рамка ячейки с флажком имени и заливка выделенных диапазонов. Цвет — один из восьми по номеру `colour`.',
+        en: 'Co-authors in the table: a cell frame with a name flag and a fill over the selected ranges. The color is one of eight, picked by `colour`.',
+      },
+      rectOf: {
+        ru: 'Прямоугольник диапазона в слое таблицы. Диапазон без прямоугольника, например вне отрисованных строк, не рисуется.',
+        en: 'Rectangle of a range in the table layer. A range without one, such as one outside the rendered rows, is not drawn.',
+      },
+    },
+  },
 };
 
 export default docs;

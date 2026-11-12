@@ -18,6 +18,9 @@
     "packages/spreadsheet/src/**/*.ts",
     "packages/spreadsheet/src/**/*.vue",
     "packages/charts/src/**/*.ts",
-    "packages/charts/src/**/*.vue"
+    "packages/charts/src/**/*.vue",
+    "packages/collaboration/src/**/*.ts",
+    "packages/collaboration/src/**/*.vue",
+    "packages/offline/src/**/*.ts"
   ]
 }
