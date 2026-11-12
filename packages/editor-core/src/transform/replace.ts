@@ -99,7 +99,7 @@ export const fitsEdited = (
   const inserted = after.content.slice(prefix, after.content.length - suffix);
 
   return (
-    matchesSplice(type.content, before, prefix, before.content.length - suffix, inserted) &&
+    matchesSplice(type.content, before, prefix, before.content.length - suffix, inserted, after) &&
     allowedText(schema, type, inserted)
   );
 };

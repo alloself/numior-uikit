@@ -1,4 +1,5 @@
 import type { Doc, Slice } from '../doc/doc.types';
+import { createDoc } from '../doc/doc';
 import { normalizeContent, sameMarks } from '../model/node';
 import { applyAttrs, applyDocAttrs, pickedAttrs } from './attrs';
 import { applyMarkup, markupBefore } from './markup';
@@ -29,11 +30,7 @@ const removeBetween = (slice: Slice, from: number, to: number): Slice => {
   return { content: built.content, openStart: slice.openStart, openEnd: slice.openEnd };
 };
 
-export const applyStep = (
-  doc: Doc,
-  step: Step,
-  fresh: ReadonlySet<NodeId> = NO_IDS,
-): StepResult => {
+const stepResult = (doc: Doc, step: Step, fresh: ReadonlySet<NodeId>): StepResult => {
   switch (step.kind) {
     case StepKind.Replace: {
       const plan = replacePlan(step.from, step.to, step.slice);
@@ -90,6 +87,22 @@ export const stepMapOf = (step: Step): StepMap => {
     case StepKind.DocAttrs:
       return EMPTY_MAP;
   }
+};
+
+export const applyStep = (
+  doc: Doc,
+  step: Step,
+  fresh: ReadonlySet<NodeId> = NO_IDS,
+): StepResult => {
+  const result = stepResult(doc, step, fresh);
+
+  if (!result.ok || result.doc === doc) {
+    return result;
+  }
+  return {
+    ok: true,
+    doc: createDoc(doc.schema, result.doc.root, { doc, map: stepMapOf(step) }),
+  };
 };
 
 const invertAround = (step: Extract<Step, { kind: 'replaceAround' }>, doc: Doc): Step => {
