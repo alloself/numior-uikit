@@ -119,6 +119,20 @@ describe('NuiContent media views', () => {
     ]);
   });
 
+  it('asks for full screen once, through the permissions of the frame', () => {
+    driver = ContentDriver.mount({
+      document: docOf(
+        node('embed', [], { url: 'https://youtu.be/dQw4w9WgXcQ', provider: 'youtube' }),
+      ),
+      views: contentMediaViews,
+      embeds: ['youtube'],
+    });
+
+    expect(driver.framePermissions).toEqual([
+      'fullscreen; picture-in-picture; encrypted-media; clipboard-write',
+    ]);
+  });
+
   it('shows a link in place of a player the page does not allow', () => {
     const video = docOf(
       node('embed', [], { url: 'https://youtu.be/dQw4w9WgXcQ', provider: 'youtube' }),

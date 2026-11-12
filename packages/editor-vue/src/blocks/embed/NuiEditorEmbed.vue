@@ -12,7 +12,6 @@
         sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
         allow="fullscreen; picture-in-picture; encrypted-media; clipboard-write"
         referrerpolicy="strict-origin-when-cross-origin"
-        allowfullscreen
       />
       <span v-else class="nui-content__embed-link">{{
         texts.embedUnavailable({ provider: label })

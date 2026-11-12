@@ -72,6 +72,14 @@ export class EditorLinksDriver {
     });
   }
 
+  get framePermissions(): readonly string[] {
+    return [...this.content.querySelectorAll('.nui-editor-embed iframe')].map((frame) =>
+      frame.hasAttribute('allowfullscreen')
+        ? 'allowfullscreen'
+        : (frame.getAttribute('allow') ?? ''),
+    );
+  }
+
   get bookmarks(): readonly string[] {
     return [...this.content.querySelectorAll('.nui-content__bookmark-link')].map((card) =>
       [

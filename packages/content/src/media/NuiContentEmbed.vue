@@ -10,7 +10,6 @@
       sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
       allow="fullscreen; picture-in-picture; encrypted-media; clipboard-write"
       referrerpolicy="strict-origin-when-cross-origin"
-      allowfullscreen
     />
     <a v-else class="nui-content__embed-link" :href="url">{{ label }}</a>
     <figcaption v-if="caption !== ''" class="nui-content__caption">{{ caption }}</figcaption>
