@@ -45,6 +45,8 @@ const PAGE_ATTEMPTS = 4;
 const RETRY_FRAMES = 12;
 const PAGE_SHOT_RENDERER = { rate: 4 };
 const FULL_SPEED = { rate: 1 };
+const SCRIPTS_OFF = { value: true };
+const SCRIPTS_ON = { value: false };
 const FROZEN = { playbackRate: 0 };
 const RUNNING = { playbackRate: 1 };
 
@@ -237,8 +239,10 @@ export class SceneRecorder {
 
   private async shootWholePage(session: CDPSession): Promise<Buffer> {
     await session.send('Emulation.setCPUThrottlingRate', PAGE_SHOT_RENDERER);
+    await session.send('Emulation.setScriptExecutionDisabled', SCRIPTS_OFF);
     const picture = await this.page.screenshot(PAGE_SHOT);
 
+    await session.send('Emulation.setScriptExecutionDisabled', SCRIPTS_ON);
     await session.send('Emulation.setCPUThrottlingRate', FULL_SPEED);
     return picture;
   }
