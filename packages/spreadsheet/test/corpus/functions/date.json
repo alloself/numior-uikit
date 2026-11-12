@@ -441,9 +441,29 @@
     },
     {
       "formula": "=NETWORKDAYS.INTL(DATE(2006,1,1),DATE(2006,2,1),\"1111111\")",
+      "expected": 0
+    },
+    {
+      "formula": "=NETWORKDAYS.INTL(DATE(2006,2,1),DATE(2006,1,1),\"1111111\",{38722,38723})",
+      "expected": 0
+    },
+    {
+      "formula": "=NETWORKDAYS.INTL(DATE(2006,1,1),DATE(2006,2,1),\"0000000\")",
+      "expected": 32
+    },
+    {
+      "formula": "=WORKDAY.INTL(DATE(2006,1,1),5,\"1111111\")",
       "expected": {
         "error": "#VALUE!"
       }
+    },
+    {
+      "formula": "=WORKDAY.INTL(DATE(2006,1,1),0,\"1111111\")",
+      "expected": 38718
+    },
+    {
+      "formula": "=WORKDAY.INTL(DATE(2006,1,1),5,\"0000000\")",
+      "expected": 38723
     },
     {
       "formula": "=WORKDAY(DATE(2008,10,1),151)",

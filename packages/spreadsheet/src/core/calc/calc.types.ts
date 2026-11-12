@@ -130,4 +130,4 @@ export const CriteriaToken = {
 
 export const DatedifUnit = { Y: 'Y', M: 'M', D: 'D', YM: 'YM', MD: 'MD', YD: 'YD' } as const;
 
-export const WeekendMask = { AllDays: '1111111', Weekend: '1' } as const;
+export const WeekendMask = { Weekend: '1' } as const;

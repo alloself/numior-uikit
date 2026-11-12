@@ -27,7 +27,7 @@ export const weekendMask = (value: CellValue | undefined): WeekendMask => {
     return maskOf([5, 6]);
   }
   if (value.kind === CellValueKind.String) {
-    if (!MASK.test(value.value) || value.value === WeekendMask.AllDays) {
+    if (!MASK.test(value.value)) {
       return raise('#VALUE!');
     }
     return Array.from(
@@ -95,6 +95,10 @@ export const workday = (
   const step = days < 0 ? -1 : 1;
   let left = Math.abs(Math.trunc(days));
   let serial = Math.floor(start);
+
+  if (left > 0 && mask.every(Boolean)) {
+    return raise('#VALUE!');
+  }
 
   while (left > 0) {
     serial += step;
