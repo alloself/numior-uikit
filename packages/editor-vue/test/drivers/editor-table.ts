@@ -159,6 +159,12 @@ export class EditorTableDriver {
     return textsOf(this.host.querySelectorAll('.nui-editor-table__actions button'));
   }
 
+  get neutralActions(): readonly string[] {
+    return textsOf(
+      this.host.querySelectorAll('.nui-editor-table__actions .nui-button--tone-neutral'),
+    );
+  }
+
   async edit(row: number, column: number, value: TableValue): Promise<void> {
     const target = this.rowAt(row);
     const key = this.keyAt(column);

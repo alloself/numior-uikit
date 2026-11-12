@@ -140,6 +140,7 @@ describe('NuiEditor table block', () => {
     expect(table.heads).toEqual(['Item', 'Price', 'State']);
     expect(table.rows).toEqual(['Pears|12|Open|', 'Plums|3||']);
     expect(table.actions).toEqual(['Row', 'Column']);
+    expect(table.neutralActions).toEqual(['Row', 'Column']);
   });
 
   it('writes cell edits into the document as one undo step and learns new options', async () => {
