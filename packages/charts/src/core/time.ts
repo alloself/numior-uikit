@@ -53,7 +53,7 @@ const GRAINS: readonly Interval[] = [
 
 const LONGEST: Interval = { unit: 'year', step: 1000, length: 1000 * 365 * DAY };
 
-const floorTo = (value: number, interval: Interval): number => {
+const floorToCalendar = (value: number, interval: Interval): number => {
   const date = new Date(value);
 
   switch (interval.unit) {
@@ -65,11 +65,20 @@ const floorTo = (value: number, interval: Interval): number => {
         Math.floor(date.getUTCMonth() / interval.step) * interval.step,
         1,
       );
-    case TimeUnit.Week: {
+    default: {
       const day = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
 
       return day - ((date.getUTCDay() + 6) % 7) * DAY;
     }
+  }
+};
+
+const floorTo = (value: number, interval: Interval): number => {
+  switch (interval.unit) {
+    case TimeUnit.Year:
+    case TimeUnit.Month:
+    case TimeUnit.Week:
+      return floorToCalendar(value, interval);
     default:
       return Math.floor(value / interval.length) * interval.length;
   }
@@ -104,16 +113,26 @@ export const timeTicks = (min: number, max: number, count = 6): TimeTicks => {
   return { unit: chosen.unit, step: chosen.step, values };
 };
 
-const apart = (moments: Float64Array, grain: Interval): boolean =>
-  moments.every((moment, index) => {
-    const previous = moments[index - 1];
+const apart = (moments: Float64Array, grain: Interval): boolean => {
+  let previous = Number.NaN;
+  let floor = Number.NaN;
 
-    return (
-      previous === undefined ||
-      previous === moment ||
-      floorTo(moment, grain) !== floorTo(previous, grain)
-    );
-  });
+  for (const moment of moments) {
+    const current = floorTo(moment, grain);
+    const merged = moment !== previous && current === floor;
+
+    if (merged) {
+      return false;
+    }
+
+    previous = moment;
+    floor = current;
+  }
+  return true;
+};
+
+const ordered = (moments: Float64Array): boolean =>
+  moments.every((moment, index) => (moments[index - 1] ?? moment) <= moment);
 
 const closest = (moments: Float64Array): number =>
   moments.reduce((gap, moment, index) => {
@@ -138,7 +157,8 @@ const contextOf = (unit: TimeUnit, first: number, last: number): TimeContext => 
 };
 
 export const timeGrain = (values: readonly number[]): TimeGrain => {
-  const moments = Float64Array.from(values.filter(Number.isFinite)).toSorted();
+  const finite = Float64Array.from(values.filter(Number.isFinite));
+  const moments = ordered(finite) ? finite : finite.toSorted();
   const [first = 0] = moments;
   const last = moments.at(-1) ?? first;
   const gap = closest(moments);

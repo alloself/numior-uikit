@@ -1,6 +1,5 @@
-import { max, min } from 'lodash-es';
 import { layoutBars } from './bars';
-import { layoutLines, stackedLineExtent } from './lines';
+import { layoutLines, stackedTops, topsExtent, type StackTops } from './lines';
 import { layoutSlices } from './pies';
 import {
   ChartCategoriesKind,
@@ -38,6 +37,21 @@ interface CategoryLabel {
   readonly text: string;
 }
 
+interface ValueFacts {
+  readonly count: number;
+  readonly log: boolean;
+  readonly low: number;
+  readonly high: number;
+}
+
+interface FrameBase {
+  readonly spec: ChartSpec;
+  readonly facts: ValueFacts;
+  readonly tops: StackTops | undefined;
+  readonly labels: readonly CategoryLabel[];
+  readonly span: readonly [number, number] | undefined;
+}
+
 interface Frame {
   readonly spec: ChartSpec;
   readonly size: ChartSize;
@@ -52,6 +66,8 @@ interface Frame {
   readonly labels: readonly CategoryLabel[];
   readonly axis: NiceDomain | undefined;
   readonly axisTexts: readonly string[];
+  readonly tops: StackTops | undefined;
+  readonly span: readonly [number, number] | undefined;
 }
 
 const PADDING = 4;
@@ -76,6 +92,8 @@ const ROUNDING = 1e-6;
 
 const MOST_LABELS = 2000;
 
+const EMPTY_EXTENT: readonly [number, number] = [0, 1];
+
 const slotsOf = (series: readonly ChartSeries[]): ChartSlot[] =>
   series.map((item, index) => item.slot ?? SLOTS[index] ?? 0);
 
@@ -87,25 +105,38 @@ const categoryCount = (spec: ChartSpec): number =>
     ? spec.categories.labels.length
     : spec.categories.values.length;
 
-const extent = (values: readonly number[]): readonly [number, number] => [
-  min(values) ?? 0,
-  max(values) ?? 1,
-];
+const finiteSpan = (values: readonly number[]): readonly [number, number] | undefined => {
+  let low = Infinity;
+  let high = -Infinity;
+
+  for (const value of values) {
+    if (!Number.isFinite(value)) {
+      continue;
+    }
+
+    low = Math.min(low, value);
+    high = Math.max(high, value);
+  }
+  return low > high ? undefined : [low, high];
+};
 
 const linear = (spec: ChartSpec): boolean =>
   spec.kind === ChartKind.Line || spec.kind === ChartKind.Area;
 
-const pointAt = (spec: ChartSpec, band: BandScale): ((index: number) => number) => {
+const pointAt = (frame: Frame, band: BandScale): ((index: number) => number) => {
+  const { spec, span } = frame;
+
   if (
     !linear(spec) ||
     spec.categories.kind === ChartCategoriesKind.Text ||
-    spec.categories.values.length < 2
+    spec.categories.values.length < 2 ||
+    span === undefined
   ) {
     return band.center;
   }
 
   const { values } = spec.categories;
-  const [first, last] = extent(values);
+  const [first, last] = span;
   const position = linearScale([first, last], [band.center(0), band.center(values.length - 1)]);
 
   return (index) => position(values[index] ?? first);
@@ -128,7 +159,7 @@ const stackedExtent = (spec: ChartSpec, count: number): readonly [number, number
     ),
   );
 
-  return extent(sums.flatMap((sum) => [sum.positive, sum.negative]));
+  return finiteSpan(sums.flatMap((sum) => [sum.positive, sum.negative])) ?? EMPTY_EXTENT;
 };
 
 const positiveOr = (bound: number | undefined, fallback: number): number =>
@@ -139,60 +170,75 @@ const positiveOnly = (series: ChartSeries): ChartSeries => ({
   values: series.values.map((value) => (finite(value) && value > 0 ? value : null)),
 });
 
-const valuesOf = (spec: ChartSpec): number[] =>
-  spec.series.flatMap((item) => item.values.filter(finite));
+const spanAbove = (spec: ChartSpec, floor: number): readonly [number, number] | undefined => {
+  let low = Infinity;
+  let high = -Infinity;
 
-const stackedOrPlain = (
-  spec: ChartSpec,
-  count: number,
-  lines: boolean,
-): readonly [number, number] => {
-  if ((spec.stacking ?? 'none') === ChartStacking.None) {
-    return extent(valuesOf(spec));
+  for (const item of spec.series) {
+    for (const value of item.values) {
+      if (!finite(value) || value <= floor) {
+        continue;
+      }
+
+      low = Math.min(low, value);
+      high = Math.max(high, value);
+    }
   }
-  return lines ? extent(stackedLineExtent(spec, count)) : stackedExtent(spec, count);
+  return low > high ? undefined : [low, high];
 };
 
-const domainOf = (
-  spec: ChartSpec,
-  count: number,
-  ticks: number,
-): { domain: NiceDomain; log: boolean } => {
-  const axis = spec.valueAxis ?? {};
+const topsOf = (spec: ChartSpec, count: number): StackTops | undefined => {
   const stacking = spec.stacking ?? 'none';
-  const lines = linear(spec);
+
+  if (!linear(spec) || stacking === ChartStacking.None) {
+    return undefined;
+  }
+  return stackedTops(spec.series, count, stacking === ChartStacking.Percent);
+};
+
+const valueFactsOf = (spec: ChartSpec, count: number, tops: StackTops | undefined): ValueFacts => {
+  const stacking = spec.stacking ?? 'none';
+
+  const stacked = (): readonly [number, number] =>
+    tops === undefined ? stackedExtent(spec, count) : topsExtent(tops);
 
   if (stacking === ChartStacking.Percent) {
-    const [low] = lines ? extent(stackedLineExtent(spec, count)) : stackedExtent(spec, count);
+    return { count, log: false, low: stacked()[0], high: 1 };
+  }
+  if (stacking !== ChartStacking.None) {
+    const [low, high] = stacked();
 
-    return {
-      domain: niceDomain(low < 0 ? -1 : 0, 1, { min: low < 0 ? -1 : 0, max: 1, count: ticks }),
-      log: false,
-    };
+    return { count, log: false, low, high };
   }
 
-  const positive = valuesOf(spec).filter((value) => value > 0);
+  const positive = spec.valueAxis?.scale === ChartScale.Log ? spanAbove(spec, 0) : undefined;
 
-  if (axis.scale === ChartScale.Log && stacking === ChartStacking.None && positive.length > 0) {
-    const [low, high] = extent(positive);
-
-    return {
-      domain: logDomain(positiveOr(axis.min, low), positiveOr(axis.max, high), ticks),
-      log: true,
-    };
+  if (positive !== undefined) {
+    return { count, log: true, low: positive[0], high: positive[1] };
   }
 
-  const [low, high] = stackedOrPlain(spec, count, lines);
+  const [low, high] = spanAbove(spec, -Infinity) ?? EMPTY_EXTENT;
 
-  return {
-    domain: niceDomain(low, high, {
-      zero: spec.kind !== ChartKind.Line && spec.kind !== ChartKind.Scatter,
-      min: axis.min,
-      max: axis.max,
-      count: ticks,
-    }),
-    log: false,
-  };
+  return { count, log: false, low, high };
+};
+
+const domainOf = (spec: ChartSpec, facts: ValueFacts, ticks: number): NiceDomain => {
+  const axis = spec.valueAxis ?? {};
+
+  if ((spec.stacking ?? 'none') === ChartStacking.Percent) {
+    const bottom = facts.low < 0 ? -1 : 0;
+
+    return niceDomain(bottom, 1, { min: bottom, max: 1, count: ticks });
+  }
+  if (facts.log) {
+    return logDomain(positiveOr(axis.min, facts.low), positiveOr(axis.max, facts.high), ticks);
+  }
+  return niceDomain(facts.low, facts.high, {
+    zero: spec.kind !== ChartKind.Line && spec.kind !== ChartKind.Scatter,
+    min: axis.min,
+    max: axis.max,
+    count: ticks,
+  });
 };
 
 const categoryText = (
@@ -229,33 +275,48 @@ const categoryLabels = (count: number, text: (index: number) => string): Categor
   }));
 };
 
-const scatterAxis = (spec: ChartSpec, ticks: number): NiceDomain | undefined => {
-  if (spec.kind !== ChartKind.Scatter || spec.categories.kind !== ChartCategoriesKind.Number) {
-    return undefined;
-  }
+const spanOf = (spec: ChartSpec): readonly [number, number] | undefined =>
+  spec.categories.kind === ChartCategoriesKind.Text
+    ? undefined
+    : finiteSpan(spec.categories.values);
 
-  const [low, high] = extent(spec.categories.values.filter(Number.isFinite));
+const baseOf = (spec: ChartSpec, options: LayoutOptions): FrameBase => {
+  const count = categoryCount(spec);
+  const tops = topsOf(spec, count);
+  const facts = valueFactsOf(spec, count, tops);
 
-  return niceDomain(low, high, { count: ticks });
+  return {
+    spec: facts.log ? { ...spec, series: spec.series.map(positiveOnly) } : spec,
+    facts,
+    tops,
+    labels: categoryLabels(facts.count, categoryText(spec, options, options.locale ?? 'en')),
+    span: spanOf(spec),
+  };
 };
 
 const frameOf = (
-  spec: ChartSpec,
+  base: FrameBase,
   size: ChartSize,
   options: LayoutOptions,
   ticks: number,
 ): Frame => {
+  const { spec, facts } = base;
+
+  const scatter =
+    spec.kind === ChartKind.Scatter && spec.categories.kind === ChartCategoriesKind.Number;
+
+  const across = scatter ? (base.span ?? EMPTY_EXTENT) : undefined;
   const locale = options.locale ?? 'en';
   const fontSize = options.fontSize ?? 12;
-  const count = categoryCount(spec);
-  const { domain, log } = domainOf(spec, count, ticks);
+  const domain = domainOf(spec, facts, ticks);
   const largest = Math.max(Math.abs(domain.min), Math.abs(domain.max));
 
   const format =
     options.formatNumber ??
     numberFormatter(locale, numberStyle(largest, spec.stacking === ChartStacking.Percent));
 
-  const axis = scatterAxis(spec, ticks);
+  const axis =
+    across === undefined ? undefined : niceDomain(across[0], across[1], { count: ticks });
 
   const axisFormat =
     options.formatNumber ??
@@ -265,19 +326,21 @@ const frameOf = (
     );
 
   return {
-    spec: log ? { ...spec, series: spec.series.map(positiveOnly) } : spec,
+    spec,
     size,
     rtl: options.rtl ?? false,
     fontSize,
     line: Math.ceil(fontSize * 1.25),
     measure: options.measure ?? estimateWidth,
     domain,
-    log,
-    valueTexts: domain.ticks.map((tick) => format(tick, log ? tick : domain.step)),
-    count,
-    labels: categoryLabels(count, categoryText(spec, options, locale)),
+    log: facts.log,
+    valueTexts: domain.ticks.map((tick) => format(tick, facts.log ? tick : domain.step)),
+    count: facts.count,
+    labels: base.labels,
     axis,
     axisTexts: axis === undefined ? [] : axis.ticks.map((tick) => axisFormat(tick, axis.step)),
+    tops: base.tops,
+    span: base.span,
   };
 };
 
@@ -411,7 +474,7 @@ const columnScene = (frame: Frame): ChartScene => {
   );
 
   const value = valueMapper(frame, [plot.y + plot.height, plot.y]);
-  const at = pointAt(frame.spec, band);
+  const at = pointAt(frame, band);
   const texts = verticalTicks(frame, plot, value);
   const room = Math.min(widestLabel(frame), plot.width);
 
@@ -483,7 +546,7 @@ const scatterScene = (frame: Frame): ChartScene => {
       },
       series,
       xs.length,
-      'none',
+      undefined,
     ).points,
     lines: [
       ...valueLines(frame, plot, value, false),
@@ -606,7 +669,8 @@ const sceneOf = (
   const { count } = frame;
 
   if (linear(frame.spec)) {
-    const at = pointAt(frame.spec, band);
+    const at = pointAt(frame, band);
+    const positions = Array.from({ length: count }, (_unused, index) => at(index));
 
     return {
       width: frame.size.width,
@@ -615,11 +679,11 @@ const sceneOf = (
       clip: clipOf(frame, plot),
       bars: [],
       slices: [],
-      axis: { horizontal, positions: Array.from({ length: count }, (_unused, index) => at(index)) },
+      axis: { horizontal, positions },
       ...layoutLines(
         {
           area: frame.spec.kind === ChartKind.Area,
-          at,
+          at: (index) => positions[index] ?? 0,
           value,
           baseline,
           slots,
@@ -628,7 +692,7 @@ const sceneOf = (
         },
         frame.spec.series,
         count,
-        stacking,
+        frame.tops,
       ),
       lines: valueLines(frame, plot, value, horizontal),
       texts,
@@ -715,10 +779,11 @@ const ticksFit = (frame: Frame): boolean => {
 };
 
 const fittedFrame = (spec: ChartSpec, size: ChartSize, options: LayoutOptions): Frame => {
-  let frame = frameOf(spec, size, options, MOST_TICKS);
+  const base = baseOf(spec, options);
+  let frame = frameOf(base, size, options, MOST_TICKS);
 
   for (let ticks = MOST_TICKS - 1; ticks >= FEWEST_TICKS && !ticksFit(frame); ticks -= 1) {
-    frame = frameOf(spec, size, options, ticks);
+    frame = frameOf(base, size, options, ticks);
   }
   return frame;
 };
