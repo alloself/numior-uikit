@@ -17,12 +17,12 @@
         />
       </div>
     </div>
-    <NuiTabPanel value="preview" class="mt-2">
+    <NuiTabPanel value="preview" class="mt-3">
       <PreviewFrame :texts="texts" :options="options">
         <component :is="component" />
       </PreviewFrame>
     </NuiTabPanel>
-    <NuiTabPanel value="code" class="mt-2">
+    <NuiTabPanel value="code" class="mt-3">
       <ExampleFiles v-model:name="fileName" :files="files" :texts="texts" />
     </NuiTabPanel>
   </NuiTabs>

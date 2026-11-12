@@ -1,13 +1,19 @@
 <template>
-  <NuiButton variant="outline" @click="open = true">Фильтры</NuiButton>
-  <NuiDrawer v-model:open="open" title="Фильтры" description="Настройки списка заказов">
-    <div class="flex flex-col gap-3">
-      <NuiInput v-model="query" label="Клиент" placeholder="Имя или компания" />
-      <NuiSelect v-model="status" :options="statuses" label="Статус" clearable />
-      <NuiSwitch v-model="onlyMine">Только мои заказы</NuiSwitch>
+  <NuiButton variant="outline" icon="filter" @click="open = true">Фильтры</NuiButton>
+  <NuiDrawer v-model:open="open" title="Фильтры" description="Список заказов за сентябрь">
+    <div class="flex flex-col gap-5">
+      <NuiCheckboxGroup v-model="statuses" :options="statusOptions" label="Статус" />
+      <NuiCheckboxGroup v-model="deliveries" :options="deliveryOptions" label="Доставка" />
+      <NuiSelect
+        v-model="manager"
+        :options="managers"
+        label="Менеджер"
+        placeholder="Все менеджеры"
+        clearable
+      />
     </div>
     <template #footer>
-      <NuiButton variant="ghost" tone="neutral" @click="open = false">Сбросить</NuiButton>
+      <NuiButton variant="ghost" tone="neutral" @click="reset">Сбросить</NuiButton>
       <NuiButton @click="open = false">Применить</NuiButton>
     </template>
   </NuiDrawer>
@@ -15,16 +21,26 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiButton, NuiDrawer, NuiInput, NuiSelect, NuiSwitch } from '@numior/vue';
+import { uniq } from 'lodash-es';
+import { NuiButton, NuiCheckboxGroup, NuiDrawer, NuiSelect } from '@numior/vue';
+import { DELIVERIES, ORDER_STATUSES, orders } from '#demo/orders';
 
 const open = ref(false);
-const query = ref('');
-const status = ref<string | null>(null);
-const onlyMine = ref(true);
+const statuses = ref(['pending', 'paid']);
+const deliveries = ref<string[]>([]);
+const manager = ref<string | null>(null);
 
-const statuses = [
-  { value: 'paid', label: 'Оплачен' },
-  { value: 'pending', label: 'Ждёт оплаты' },
-  { value: 'cancelled', label: 'Отменён' },
-];
+const statusOptions = Object.entries(ORDER_STATUSES).map(([value, label]) => ({ value, label }));
+const deliveryOptions = Object.entries(DELIVERIES).map(([value, label]) => ({ value, label }));
+
+const managers = uniq(orders.map((order) => order.manager)).map((name) => ({
+  value: name,
+  label: name,
+}));
+
+const reset = (): void => {
+  statuses.value = [];
+  deliveries.value = [];
+  manager.value = null;
+};
 </script>

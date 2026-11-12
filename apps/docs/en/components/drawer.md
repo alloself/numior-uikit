@@ -1,13 +1,10 @@
 # Drawer
 
-`NuiDrawer` is a panel that slides in from a screen edge over the page: list filters, a cart,
-order details. It behaves like [Dialog](/en/components/dialog): it keeps the focus inside, closes
-on Esc and returns the focus to the button.
+A panel that slides in from the edge of the screen over the page.
 
 <Example name="drawer/Filters" />
 
-Build the permanent app menu with [Sidebar](/en/components/sidebar) instead. It stands next to the
-content and moves into the same kind of panel on phones.
+For an app menu that stays on screen, use a [Sidebar](/en/components/sidebar).
 
 ## Installation
 
@@ -19,28 +16,25 @@ import '@numior/vue/styles/drawer.css';
 
 ## Usage
 
-Open the drawer and change its side, width and the ways to close it.
+Open the drawer and change its side, size and the ways to close it.
 
 <Configurator name="NuiDrawer" />
 
 ## Examples
 
-### Sides
+### Build a form in a drawer
 
-The `side` prop picks the edge: `start`, `end` (the default), `top` or `bottom`. In right-to-left
-pages `start` and `end` swap, while `top` and `bottom` panels span the full screen width.
+Put the buttons into the `footer` slot.
 
-<Example name="drawer/Sides" />
+<Example name="drawer/Form" />
 
-`size` sets the width of a side panel or the maximum height of a top or bottom one. The sizes are
-`sm` (16rem), `md` (20rem) and `lg` (28rem). The `xl` size (40rem) suits an editor that opens
-next to the page.
+The footer sits outside your `<form>`, so link the submit button to the form with the `form`
+attribute.
 
 ## Accessibility
 
-The drawer has the same props, slots and `close` event as the dialog. Screen readers announce the
-`title` and the `description` on opening, Esc and the close button close the panel, and the focus
-returns to the button.
+The drawer is a [Dialog](/en/components/dialog) at the edge of the screen. The focus, Esc, the
+screen reader announcements and the `close` event work the same way.
 
 <KeyboardReference name="NuiDialog" />
 

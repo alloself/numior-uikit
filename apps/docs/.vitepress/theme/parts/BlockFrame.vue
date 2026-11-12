@@ -49,7 +49,7 @@
         />
       </div>
     </NuiTabPanel>
-    <NuiTabPanel value="code" class="mt-2">
+    <NuiTabPanel value="code" class="mt-3">
       <ExampleFiles v-model:name="fileName" :files="files" :texts="texts" />
     </NuiTabPanel>
   </NuiTabs>

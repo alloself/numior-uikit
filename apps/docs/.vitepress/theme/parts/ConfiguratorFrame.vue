@@ -20,7 +20,7 @@
         />
       </div>
     </div>
-    <NuiTabPanel value="preview" class="mt-2 flex flex-col gap-4">
+    <NuiTabPanel value="preview" class="mt-3 flex flex-col gap-4">
       <PreviewFrame :texts="texts" :options="previewOptions">
         <component :is="scene.component" v-if="scene" v-bind="bound" />
         <component :is="component.name" v-else v-bind="bound">
@@ -60,7 +60,7 @@
         </div>
       </form>
     </NuiTabPanel>
-    <NuiTabPanel value="code" class="mt-2">
+    <NuiTabPanel value="code" class="mt-3">
       <ExampleFiles v-model:name="fileName" :files="files" :texts="texts" />
     </NuiTabPanel>
   </NuiTabs>

@@ -1,19 +1,24 @@
 <template>
-  <NuiPopover v-model:open="open" placement="bottom-start" arrow>
+  <NuiPopover placement="bottom-start" arrow>
     <template #trigger="{ attrs }">
-      <NuiButton v-bind="attrs" variant="outline">Author</NuiButton>
+      <NuiButton v-bind="attrs" variant="outline" tone="neutral" icon="user">Peter Wolfe</NuiButton>
     </template>
-    <div class="flex flex-col gap-3 p-1">
-      <NuiInput v-model="author" label="Name" placeholder="Anna Titova" />
-      <NuiButton size="sm" @click="open = false">Apply</NuiButton>
+    <div class="flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <NuiAvatar name="Peter Wolfe" />
+        <div class="flex flex-col">
+          <span class="font-medium">Peter Wolfe</span>
+          <span class="text-sm text-muted-foreground">Boston, 14 orders worth $2,480</span>
+        </div>
+      </div>
+      <div class="flex flex-col gap-1 text-sm">
+        <NuiLink href="mailto:peter.wolfe@example.com">peter.wolfe@example.com</NuiLink>
+        <span>(617) 555-0101</span>
+      </div>
     </div>
   </NuiPopover>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { NuiButton, NuiInput, NuiPopover } from '@numior/vue';
-
-const open = ref(false);
-const author = ref('');
+import { NuiAvatar, NuiButton, NuiLink, NuiPopover } from '@numior/vue';
 </script>

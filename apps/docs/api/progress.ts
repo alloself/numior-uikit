@@ -14,7 +14,7 @@ const docs: DocsMap = {
       size: { ru: 'Задаёт толщину полосы.', en: 'Changes the thickness of the bar.' },
       tone: {
         ru: 'Цвет заполнения по смыслу: `primary`, `success`, `warning`, `error` и другие.',
-        en: 'Fill colour by meaning: `primary`, `success`, `warning`, `error` and others.',
+        en: 'Fill color by meaning: `primary`, `success`, `warning`, `error` and others.',
       },
       label: {
         ru: 'Название полосы для экранных дикторов, например «Загрузка файла».',
@@ -24,7 +24,10 @@ const docs: DocsMap = {
         ru: 'Значение словами для экранных дикторов, например «3 из 10 файлов».',
         en: 'Value in words for screen readers, such as “3 of 10 files”.',
       },
-      id: { ru: 'Идентификатор элемента.', en: 'Element id.' },
+      id: {
+        ru: 'Идентификатор элемента.',
+        en: 'The `id` of the native `<progress>`, such as for a `<label for>`.',
+      },
     },
     configurator: {
       props: ['value', 'max', 'size', 'tone'],

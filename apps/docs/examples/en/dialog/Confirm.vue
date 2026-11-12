@@ -1,17 +1,16 @@
 <template>
-  <NuiButton tone="error" variant="outline" @click="open = true">Delete project</NuiButton>
-  <p class="text-sm text-muted-foreground">Result: {{ result || '—' }}</p>
+  <NuiButton tone="error" variant="outline" @click="open = true">Remove from catalog</NuiButton>
   <NuiDialog
     v-model:open="open"
-    title="Delete the “Catalogue 2026” project?"
-    description="This cannot be undone."
-    @close="result = $event"
+    title="Remove the Loft stool?"
+    description="It disappears from the storefront and from search."
+    @close="onClose"
   >
-    <p>Every project file is deleted together with the change history.</p>
+    <p>Past orders keep the item, but its product page cannot be restored.</p>
     <template #footer>
       <form method="dialog" class="flex gap-2">
         <NuiButton type="submit" value="cancel" variant="ghost" tone="neutral">Cancel</NuiButton>
-        <NuiButton type="submit" value="confirm" tone="error">Delete</NuiButton>
+        <NuiButton type="submit" value="confirm" tone="error">Remove</NuiButton>
       </form>
     </template>
   </NuiDialog>
@@ -19,8 +18,16 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useToast } from '@numior/primitives';
 import { NuiButton, NuiDialog } from '@numior/vue';
 
 const open = ref(false);
-const result = ref('');
+const toast = useToast();
+
+const onClose = (value: string): void => {
+  if (value !== 'confirm') {
+    return;
+  }
+  toast.success('Loft stool removed from the catalog');
+};
 </script>

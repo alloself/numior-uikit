@@ -165,7 +165,6 @@ test('search finds a page by text and opens it', async ({ docs, page, isMobile }
   await expect(docs.commandInput).toBeFocused();
   expect((await boxOf(docs.heading)).x).toBe(before.x);
   await expect(docs.commandOptions.first()).toBeVisible();
-  expect(await docs.commandLeadingStart()).toBeCloseTo(await docs.commandGroupTextStart(), 0);
 
   await docs.commandInput.fill('Button');
   await expect(docs.commandOptions.first()).toContainText('Button');
@@ -175,16 +174,17 @@ test('search finds a page by text and opens it', async ({ docs, page, isMobile }
   await expect(docs.commandDialog).toBeHidden();
 });
 
-test('search lists every page once by section and marks the found words in a snippet', async ({
+test('search lists every page once with its section and marks the found words in a snippet', async ({
   docs,
 }) => {
   await docs.open('/components/kbd');
   await docs.searchButton.click();
-  await expect(docs.commandGroups).toHaveText(['Документация', 'Компоненты', 'Темы']);
   await expect(docs.commandOption('Начало работы')).toHaveCount(1);
+  await expect(docs.commandOption('Button Компоненты')).toHaveCount(1);
+  await expect(docs.commandGroups).toHaveCount(0);
 
   await docs.commandInput.fill('индикатор загрузки');
-  await expect(docs.commandGroups.first()).toHaveText('Компоненты');
+  await expect(docs.commandOptions.first()).toContainText('Компоненты');
   await expect(docs.commandMarks.first()).toHaveText(/индикатор|загруз/i);
 });
 

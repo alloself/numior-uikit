@@ -72,7 +72,10 @@ const docs: DocsMap = {
         ru: 'Кнопка, которая открывает поповер. Получает `attrs` для `v-bind` и `open`.',
         en: 'Button that opens the popover. Receives `attrs` for `v-bind` and `open`.',
       },
-      default: { ru: 'Содержимое поповера.', en: 'Content of the popover.' },
+      default: {
+        ru: 'Содержимое поповера.',
+        en: 'Panel content. With `lazy`, it is created on the first open.',
+      },
     },
     keyboard: [
       {

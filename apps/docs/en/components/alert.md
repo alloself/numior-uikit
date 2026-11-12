@@ -1,9 +1,11 @@
 # Alert
 
-`NuiAlert` is a message on the page: a draft was saved, a project was published, the network is
-down. Pop-up notifications are shown by a [Toast](/en/components/toast).
+A message inside the page content.
 
 <Example name="alert/Basic" />
+
+For a short notice that appears over the page and goes away by itself, use a
+[Toast](/en/components/toast).
 
 ## Installation
 
@@ -14,27 +16,25 @@ import '@numior/vue/styles/alert.css';
 
 ## Usage
 
-The `tone` prop sets the colour and the icon: `info` (the default), `success`, `warning`, `error`
-and others. `variant` picks the fill: `soft`, `outline` or `solid`.
+Change the tone, the look and the title of the message.
 
 <Configurator name="NuiAlert" />
 
 ## Examples
 
-### A closable alert with an action
+### Let the user close the message and act on it
 
-Add `closable` to show a close button in the corner. Pressing it hides the alert, sets
-`v-model:open` to `false` and emits the `close` event.
+Add `closable` and put the buttons into the `actions` slot.
 
 <Example name="alert/Closable" />
 
-Action buttons go into the `actions` slot. Inside a `soft` alert use `outline` or `solid`
-buttons: a `soft` button of the same tone blends into the background.
+To show a closed message again, set `v-model:open` back to `true`. Inside a `soft` alert, use
+`solid` or `outline` buttons: a `soft` button of the same tone blends into the background.
 
 ## Accessibility
 
-An alert with `tone="error"` gets `role="alert"`, so a screen reader announces it as soon as it
-appears. Other alerts read as regular page text, and their icon is decorative.
+An `error` alert gets `role="alert"`, so a screen reader announces it as soon as it appears. Other
+alerts read as regular page text, and their icon is hidden from screen readers.
 
 ## API
 
