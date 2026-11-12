@@ -43,7 +43,7 @@ const PAGE_SHOT = { ...SHOT, fullPage: true, timeout: 60_000 } as const;
 const LIVE_SHOT = { ...SHOT, animations: 'allow' } as const;
 const PAGE_ATTEMPTS = 4;
 const RETRY_FRAMES = 12;
-const PAGE_SHOT_RENDERER = { rate: 4 };
+const SLOW_RENDERER = { rate: 4 };
 const FULL_SPEED = { rate: 1 };
 const SCRIPTS_OFF = { value: true };
 const SCRIPTS_ON = { value: false };
@@ -224,7 +224,17 @@ export class SceneRecorder {
     if (shot === 'viewport') {
       return this.page.screenshot(SHOT);
     }
-    return shot.screenshot(SHOT);
+    return this.shootElement(shot);
+  }
+
+  private async shootElement(element: Locator): Promise<Buffer> {
+    const session = await this.page.context().newCDPSession(this.page);
+
+    try {
+      return await this.slowed(session, () => element.screenshot(SHOT));
+    } finally {
+      await session.detach();
+    }
   }
 
   private async shootPage(): Promise<Buffer> {
@@ -237,14 +247,16 @@ export class SceneRecorder {
     }
   }
 
-  private async shootWholePage(session: CDPSession): Promise<Buffer> {
-    await session.send('Emulation.setCPUThrottlingRate', PAGE_SHOT_RENDERER);
+  private async slowed(session: CDPSession, take: () => Promise<Buffer>): Promise<Buffer> {
+    await session.send('Emulation.setCPUThrottlingRate', SLOW_RENDERER);
     await session.send('Emulation.setScriptExecutionDisabled', SCRIPTS_OFF);
-    const picture = await this.page.screenshot(PAGE_SHOT);
 
-    await session.send('Emulation.setScriptExecutionDisabled', SCRIPTS_ON);
-    await session.send('Emulation.setCPUThrottlingRate', FULL_SPEED);
-    return picture;
+    try {
+      return await take();
+    } finally {
+      await session.send('Emulation.setScriptExecutionDisabled', SCRIPTS_ON);
+      await session.send('Emulation.setCPUThrottlingRate', FULL_SPEED);
+    }
   }
 
   private async retakePage(session: CDPSession): Promise<Buffer> {
@@ -252,7 +264,7 @@ export class SceneRecorder {
 
     for (let attempt = 0; attempt < PAGE_ATTEMPTS; attempt += 1) {
       const scrolled = await this.page.evaluate(scrollState);
-      const picture = await this.shootWholePage(session);
+      const picture = await this.slowed(session, () => this.page.screenshot(PAGE_SHOT));
       const kept = (await this.page.evaluate(scrollState)) === scrolled;
 
       if (kept || previous?.equals(picture) === true) {
