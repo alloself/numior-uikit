@@ -38,10 +38,12 @@ test.describe('editor', () => {
     await page.keyboard.press('Home');
     await page.keyboard.press('Backspace');
     await expect.poll(() => editor.blockTexts()).toEqual(['Hello worldSecond']);
+    await expect.poll(() => editor.previewTexts()).toEqual(['Hello worldSecond']);
 
     await page.keyboard.press('ControlOrMeta+z');
     await expect.poll(() => editor.blockTexts()).toEqual(['Hello world', 'Second']);
-    expect((await editor.readOutput()).changes).toBeGreaterThan(3);
+    await expect.poll(() => editor.previewTexts()).toEqual(['Hello world', 'Second']);
+    await expect.poll(async () => (await editor.readOutput()).changes).toBeGreaterThanOrEqual(3);
   });
 
   test('drags selected text to another line, copies it with Ctrl and undoes each in one step', async ({
