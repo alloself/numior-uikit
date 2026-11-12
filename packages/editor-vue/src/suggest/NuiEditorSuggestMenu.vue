@@ -29,6 +29,8 @@ import { NuiList, optionElementId, optionIndexOf, type NuiListEntry } from '@num
 import { computed, ref, shallowRef, watch, type ComponentPublicInstance } from 'vue';
 import type { NuiEditorSuggestMenuProps } from './suggest.types';
 
+const MAX_BLOCK_SIZE = 320;
+
 const {
   id,
   entries,
@@ -61,7 +63,12 @@ const setList = (instance: Element | ComponentPublicInstance | null): void => {
 
 const { contentAttrs } = usePopover(list, { open: shown, mode: 'manual', id: () => id });
 
-useFloating(() => anchor, list, { placement: 'bottom-start', offset: 6, enabled: shown });
+useFloating(() => anchor, list, {
+  placement: 'bottom-start',
+  offset: 6,
+  size: { fitHeight: true, maxBlockSize: MAX_BLOCK_SIZE },
+  enabled: shown,
+});
 
 const choose = (entry: NuiListEntry<string>): void => {
   if (entry.value === undefined) {

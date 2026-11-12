@@ -12,6 +12,8 @@ const SCROLL_STEP = 150;
 
 const SELECTION_TOLERANCE = 2;
 
+const SHORT_WINDOW = 480;
+
 const openEditor = async (playground: PlaygroundPage): Promise<void> => {
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
@@ -419,6 +421,30 @@ test.describe('editor', () => {
     await editor.slashMenu().getByRole('option', { name: 'Цитата' }).click();
     await expect.poll(() => editor.blockTags()).toEqual(['h2', 'blockquote']);
     await expect.poll(() => editor.blockTexts()).toEqual(['Plan', '']);
+  });
+
+  test('keeps the slash menu inside a short window and reaches its last blocks', async ({
+    playground,
+    editor,
+    page,
+  }) => {
+    await playground.resize({ width: 1280, height: SHORT_WINDOW });
+    await openEditor(playground);
+
+    await editor.clear();
+    await page.keyboard.type('/');
+    await expect(editor.slashMenu()).toBeVisible();
+
+    await expect
+      .poll(async () => {
+        const menu = await boxOf(editor.slashMenu());
+
+        return menu.y + menu.height;
+      })
+      .toBeLessThanOrEqual(SHORT_WINDOW);
+
+    await editor.slashMenu().getByRole('option', { name: 'Разделитель' }).click();
+    await expect.poll(() => editor.blockTags()).toContain('hr');
   });
 
   test('moves blocks by keyboard and handle and duplicates one from its menu', async ({
