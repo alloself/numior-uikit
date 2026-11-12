@@ -62,6 +62,53 @@ describe('usePopover', () => {
     capture.unmount();
   });
 
+  it('returns the focus to where it was before showing when the popover being hidden held it', async () => {
+    const open = ref(false);
+    const capture = captureWithElements((_, content) => usePopover(content, { open }));
+    const inner = document.createElement('button');
+
+    capture.second.addEventListener(
+      'beforetoggle',
+      capture.value.contentAttrs.value.onBeforetoggle,
+    );
+
+    capture.second.append(inner);
+    capture.first.focus();
+    open.value = true;
+    await nextTick();
+    inner.focus();
+
+    capture.value.hide();
+
+    expect(document.activeElement).toBe(capture.first);
+
+    capture.unmount();
+  });
+
+  it('leaves the focus alone when it was outside the popover being hidden', async () => {
+    const open = ref(false);
+    const capture = captureWithElements((_, content) => usePopover(content, { open }));
+    const elsewhere = document.createElement('button');
+
+    capture.second.addEventListener(
+      'beforetoggle',
+      capture.value.contentAttrs.value.onBeforetoggle,
+    );
+
+    document.body.append(elsewhere);
+    capture.first.focus();
+    open.value = true;
+    await nextTick();
+    elsewhere.focus();
+
+    capture.value.hide();
+
+    expect(document.activeElement).toBe(elsewhere);
+
+    elsewhere.remove();
+    capture.unmount();
+  });
+
   it('raises an open popover by hiding and showing it again', async () => {
     const open = ref(false);
     const capture = captureWithElements((_, content) => usePopover(content, { open }));

@@ -339,6 +339,7 @@ test.describe('book drawings', () => {
     await book.chooseChartKind('Круговая');
 
     await expect(book.charts.first().locator('.nui-chart__bar')).toHaveCount(0);
+    await expect(book.chartKind).toBeFocused();
 
     await page.keyboard.press('Escape');
 

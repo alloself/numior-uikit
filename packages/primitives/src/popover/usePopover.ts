@@ -45,6 +45,29 @@ const canToggle = (element: HTMLElement | null | undefined): element is HTMLElem
   typeof element.showPopover === 'function' &&
   element.isConnected;
 
+const focusLeftIn = (element: HTMLElement): boolean => {
+  const active = document.activeElement;
+
+  return active === null || active === document.body || element.contains(active);
+};
+
+const canFocus = (opener: Element | null): opener is HTMLElement =>
+  opener instanceof HTMLElement && opener.isConnected;
+
+const concealed = (element: HTMLElement, opener: Element | null): void => {
+  const held = element.contains(document.activeElement);
+
+  element.hidePopover();
+
+  const orphaned = held && focusLeftIn(element);
+
+  if (!orphaned || !canFocus(opener)) {
+    return;
+  }
+
+  opener.focus({ preventScroll: true });
+};
+
 export const usePopover = (
   content: MaybeRefOrGetter<HTMLElement | null | undefined>,
   options: PopoverOptions,
@@ -52,6 +75,7 @@ export const usePopover = (
   const id = useControlId(options.id);
   const mode = computed<PopoverMode>(() => toValue(options.mode) ?? PopoverMode.Auto);
   let shown: HTMLElement | undefined;
+  let opener: Element | null = null;
 
   const setOpen = (next: boolean): void => {
     if (options.open.value === next) {
@@ -69,7 +93,7 @@ export const usePopover = (
     if (next && shown !== element) {
       element.showPopover();
     } else if (!next && shown === element) {
-      element.hidePopover();
+      concealed(element, opener);
     }
   };
 
@@ -84,7 +108,7 @@ export const usePopover = (
     const element = toValue(content);
 
     if (canToggle(element) && shown === element) {
-      element.hidePopover();
+      concealed(element, opener);
     }
     setOpen(false);
   };
@@ -101,6 +125,7 @@ export const usePopover = (
   const onBeforetoggle = (event: Event): void => {
     const next = 'newState' in event && event.newState === PopoverState.Open;
     shown = next ? (toValue(content) ?? undefined) : undefined;
+    opener = next ? document.activeElement : null;
     setOpen(next);
   };
 

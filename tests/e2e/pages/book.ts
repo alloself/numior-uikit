@@ -791,8 +791,12 @@ export class BookSection {
       .click();
   }
 
+  get chartKind(): Locator {
+    return this.chartSettings.getByRole('combobox', { name: 'Тип диаграммы' });
+  }
+
   async chooseChartKind(kind: string): Promise<void> {
-    await this.chartSettings.getByRole('combobox', { name: 'Тип диаграммы' }).click();
+    await this.chartKind.click();
     await this.page.getByRole('option', { name: kind, exact: true }).click();
   }
 
