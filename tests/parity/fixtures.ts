@@ -29,6 +29,11 @@ interface ParityFixtures {
   readonly scenes: SceneRecorder;
 }
 
+interface PagePicture {
+  readonly picture: Buffer;
+  readonly kept: boolean;
+}
+
 const OUTPUT = process.env.PARITY_OUT ?? 'test-results/parity';
 const FIXED_NOW = new Date('2026-11-11T09:00:00Z');
 const TIMED_SECONDS = 31;
@@ -41,7 +46,6 @@ const QUIET_ROUNDS = 3;
 const SHOT = { animations: 'disabled', caret: 'hide', scale: 'device' } as const;
 const PAGE_SHOT = { ...SHOT, fullPage: true } as const;
 const LIVE_SHOT = { ...SHOT, animations: 'allow' } as const;
-const PAGE_ATTEMPTS = 4;
 const RETRY_FRAMES = 12;
 const FROZEN = { playbackRate: 0 };
 const RUNNING = { playbackRate: 1 };
@@ -215,23 +219,37 @@ export class SceneRecorder {
   }
 
   private async shootPage(): Promise<Buffer> {
-    for (let attempt = 0; attempt < PAGE_ATTEMPTS; attempt += 1) {
-      const scrolled = await this.page.evaluate(scrollState);
-      const picture = await this.page.screenshot(PAGE_SHOT);
+    const first = await this.shootWhole();
 
-      if ((await this.page.evaluate(scrollState)) === scrolled) {
-        return picture;
-      }
-
-      await this.showCurrentLinks();
-      await this.settle();
-
-      for (let frame = 0; frame < RETRY_FRAMES; frame += 1) {
-        await this.page.evaluate(nextFrame);
-      }
+    if (first.kept) {
+      return first.picture;
     }
 
-    throw new Error('The page kept losing its scroll positions while its picture was taken');
+    await this.prepareAgain();
+    const second = await this.shootWhole();
+
+    if (second.kept) {
+      return second.picture;
+    }
+
+    await this.prepareAgain();
+    return first.picture;
+  }
+
+  private async shootWhole(): Promise<PagePicture> {
+    const scrolled = await this.page.evaluate(scrollState);
+    const picture = await this.page.screenshot(PAGE_SHOT);
+
+    return { picture, kept: (await this.page.evaluate(scrollState)) === scrolled };
+  }
+
+  private async prepareAgain(): Promise<void> {
+    await this.showCurrentLinks();
+    await this.settle();
+
+    for (let frame = 0; frame < RETRY_FRAMES; frame += 1) {
+      await this.page.evaluate(nextFrame);
+    }
   }
 }
 
