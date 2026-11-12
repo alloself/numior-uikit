@@ -4,6 +4,7 @@ import {
   MAX_CELL_TEXT,
   createCellEditor,
   createStepper,
+  formatCell,
   formatRange,
   numberValue,
   pivotCaptions,
@@ -356,6 +357,51 @@ describe('writing xlsx', () => {
     expect(sheet).toContain('<c r="I2"><f>SUM(B2:B4*2)</f>');
     expect(sheet).toContain('<c r="J2"><f>SUM(_xlfn.SINGLE(B2:B4))</f>');
     expect(sheet).toContain('<c r="K2"><f>SUMPRODUCT(--(B2:B4&gt;1))</f>');
+  });
+
+  it('marks a legacy reference operator with @ where Excel 16 does and writes it back unmarked', async () => {
+    const legacy = [
+      ['B2:B4 B3:C3', '=@B2:B4 B3:C3'],
+      ['A1 B1', '=A1 B1'],
+      ['(A1,B1)', '=(A1,B1)'],
+      ['A1:INDEX(A1:A5,3)', '=@A1:INDEX(A1:A5,3)'],
+      ['A1:A2:B3', '=@A1:A2:B3'],
+      ['SUM(A1:A3 A2:B2)', '=SUM(A1:A3 A2:B2)'],
+      ['INDEX(A1:A5,3):A5', '=@INDEX(A1:A5,3):A5'],
+      ['-A1 B1', '=-A1 B1'],
+      ['A1:A3 A2:B2+1', '=@A1:A3 A2:B2+1'],
+      ['(A1:A2,B1) A1', '=(A1:A2,B1) A1'],
+      ['A1:(B2)', '=@A1:B2'],
+      ['A1 (B1:B2)', '=A1 B1:B2'],
+      ['A:A 2:2', '=@A:A 2:2'],
+    ];
+
+    const cells = legacy
+      .map(
+        ([text], index) =>
+          `<c r="${formatCell({ row: 9, col: index })}"><f>${text}</f><v>0</v></c>`,
+      )
+      .join('');
+
+    const source = await xlsxPackage({
+      'xl/worksheets/sheet1.xml': SALES_SHEET.replace(
+        '</sheetData>',
+        `<row r="10">${cells}</row></sheetData>`,
+      ),
+    });
+
+    const read = await opened(source);
+    const view = viewOf(read, 'Sales');
+
+    expect(legacy.map((_entry, index) => view.input(formatCell({ row: 9, col: index })))).toEqual(
+      legacy.map(([, shown]) => shown),
+    );
+
+    const sheet = await partOf(await written(read, read.source), 'xl/worksheets/sheet1.xml');
+
+    for (const [, shown = ''] of legacy) {
+      expect(sheet).toContain(`<f>${shown.replace(/^=@?/u, '')}</f>`);
+    }
   });
 
   it('writes conditional formats from the model once they change and reads them back the same', async () => {

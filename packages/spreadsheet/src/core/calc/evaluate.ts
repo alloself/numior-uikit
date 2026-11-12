@@ -1,6 +1,7 @@
 import { MAX_COLS, MAX_ROWS } from '../address';
 import { CellValueKind, type CellRange, type CellValue } from '../cell.types';
 import {
+  AreaOperator,
   BinaryOperator,
   FormulaNodeKind,
   UnaryOperator,
@@ -34,6 +35,7 @@ import {
   type FunctionSpec,
 } from './calc.types';
 import type { NumberLocale } from '../format/format.types';
+import { AREA_ERRORS, AREA_READERS, intersectionOf, spanOf, unionOf } from './areas';
 import { CellErrorSignal, compareValues, raise, toLogical, toNumber, toText } from './coerce';
 
 export interface EvalContext {
@@ -56,6 +58,8 @@ type Binary = Extract<FormulaNode, { readonly kind: typeof FormulaNodeKind.Binar
 
 type Call = Extract<FormulaNode, { readonly kind: typeof FormulaNodeKind.Call }>;
 
+type Apply = Extract<FormulaNode, { readonly kind: typeof FormulaNodeKind.Apply }>;
+
 type NameNode = Extract<FormulaNode, { readonly kind: typeof FormulaNodeKind.Name }>;
 
 type Operand = CellValue | ArrayValue;
@@ -66,7 +70,9 @@ type Operator = Extract<
     readonly kind:
       | typeof FormulaNodeKind.Unary
       | typeof FormulaNodeKind.Percent
-      | typeof FormulaNodeKind.Binary;
+      | typeof FormulaNodeKind.Binary
+      | typeof FormulaNodeKind.Areas
+      | typeof FormulaNodeKind.Union;
   }
 >;
 
@@ -129,6 +135,8 @@ export const scalarOf = (value: EvalValue): CellValue => {
         : VALUE_ERROR;
     case EvalValueKind.Array:
       return value.rows[0]?.[0] ?? VALUE_ERROR;
+    case EvalValueKind.Areas:
+      return VALUE_ERROR;
     default:
       return value;
   }
@@ -263,6 +271,14 @@ const visitValues = (
       });
 
       return;
+    case EvalValueKind.Areas:
+      for (const range of value.ranges) {
+        value.sheet.cells.forEachInRange(range, (_row, _col, cell) => {
+          visit(cell, false);
+        });
+      }
+
+      return;
     case EvalValueKind.Array:
       value.rows.forEach((row) => {
         row.forEach((item) => {
@@ -344,9 +360,42 @@ const indirect = (text: string, a1: boolean, context: EvalContext): EvalValue =>
   return value;
 };
 
+const areaArgument = (value: EvalValue, name: string): EvalValue => {
+  if (value.kind !== EvalValueKind.Areas || AREA_READERS.has(name)) {
+    return value;
+  }
+
+  const error = AREA_ERRORS.get(name);
+
+  return error === undefined ? VALUE_ERROR : raise(error);
+};
+
+const untracked: EvalContext['track'] = () => undefined;
+
+const quietContexts = new WeakMap<EvalContext, EvalContext>();
+
+const loudContexts = new WeakMap<EvalContext, EvalContext>();
+
+const quiet = (context: EvalContext): EvalContext => {
+  const known = quietContexts.get(context);
+
+  if (known !== undefined || loudContexts.has(context)) {
+    return known ?? context;
+  }
+
+  const made: EvalContext = { ...context, track: untracked };
+
+  quietContexts.set(context, made);
+  loudContexts.set(made, context);
+  return made;
+};
+
+const loud = (context: EvalContext): EvalContext => loudContexts.get(context) ?? context;
+
 const lazyValues = (
   nodes: readonly FormulaNode[],
   context: EvalContext,
+  name: string,
 ): ((index: number) => EvalValue) => {
   const cache = new Map<number, EvalValue>();
 
@@ -357,7 +406,7 @@ const lazyValues = (
     if (known !== undefined || node === undefined) {
       return known ?? EMPTY;
     }
-    const computed = safely(node, context);
+    const computed = areaArgument(safely(node, loud(context)), name);
 
     cache.set(index, computed);
     return computed;
@@ -395,11 +444,17 @@ const call = (node: Call, context: EvalContext): EvalValue => {
   if (node.args.length < spec.min || node.args.length > spec.max) {
     return raise('#VALUE!');
   }
-  const value = lazyValues(node.args, context);
+  const value = lazyValues(node.args, context, spec.name);
 
   return spec.lift?.some((index) => isMultiCell(value(index))) === true
     ? liftCall(spec, node.args, value, context)
     : spec.evaluate(argumentsFrom(node.args, value, context));
+};
+
+const calledResult = (node: Apply, context: EvalContext): EvalValue => {
+  const callee = safely(node.callee, context);
+
+  return callee.kind === CellValueKind.Error ? callee : raise('#REF!');
 };
 
 const reference = (place: SheetPlace, range: CellRange, context: EvalContext): EvalValue => ({
@@ -460,27 +515,60 @@ const intersected = (value: EvalValue, context: EvalContext): EvalValue => {
       return { ...value, range: intersection(value.range, context.here()) ?? raise('#VALUE!') };
     case EvalValueKind.Array:
       return value.rows[0]?.[0] ?? VALUE_ERROR;
+    case EvalValueKind.Areas:
+      return VALUE_ERROR;
     default:
       return value;
   }
 };
 
-const isOperator = (node: FormulaNode): node is Operator =>
-  node.kind === FormulaNodeKind.Unary ||
-  node.kind === FormulaNodeKind.Percent ||
-  node.kind === FormulaNodeKind.Binary;
+const OPERATORS: ReadonlySet<string> = new Set([
+  FormulaNodeKind.Unary,
+  FormulaNodeKind.Percent,
+  FormulaNodeKind.Binary,
+  FormulaNodeKind.Areas,
+  FormulaNodeKind.Union,
+]);
 
-const operandsOf = (node: Operator): readonly FormulaNode[] =>
-  node.kind === FormulaNodeKind.Binary ? [node.left, node.right] : [node.operand];
+const isOperator = (node: FormulaNode): node is Operator => OPERATORS.has(node.kind);
+
+const operandsOf = (node: Operator): readonly FormulaNode[] => {
+  switch (node.kind) {
+    case FormulaNodeKind.Binary:
+    case FormulaNodeKind.Areas:
+      return [node.left, node.right];
+    case FormulaNodeKind.Union:
+      return node.areas;
+    default:
+      return [node.operand];
+  }
+};
 
 const asOperand = (value: EvalValue): Operand =>
   isMultiCell(value) ? { kind: 'array', rows: matrixOf(value) } : scalarOf(value);
 
 const intersects = (node: Operator): boolean =>
-  node.kind === FormulaNodeKind.Unary && node.op === UnaryOperator.Intersect;
+  (node.kind === FormulaNodeKind.Unary && node.op === UnaryOperator.Intersect) ||
+  node.kind === FormulaNodeKind.Areas ||
+  node.kind === FormulaNodeKind.Union;
 
 const leafValue = (parent: Operator, node: FormulaNode, context: EvalContext): EvalValue =>
-  intersects(parent) ? safely(node, context) : operandOf(node, context);
+  intersects(parent) ? safely(node, quiet(context)) : operandOf(node, context);
+
+const tracked = (value: EvalValue, context: EvalContext): EvalValue => {
+  if (value.kind === EvalValueKind.Reference) {
+    context.track(value.sheet, value.range);
+    return value;
+  }
+  if (value.kind !== EvalValueKind.Areas) {
+    return value;
+  }
+
+  for (const range of value.ranges) {
+    context.track(value.sheet, range);
+  }
+  return value;
+};
 
 const computed = (
   node: Operator,
@@ -490,9 +578,16 @@ const computed = (
   const [first = EMPTY, second = EMPTY] = values;
 
   switch (node.kind) {
+    case FormulaNodeKind.Areas:
+      return tracked(
+        node.op === AreaOperator.Range ? spanOf(first, second) : intersectionOf(first, second),
+        context,
+      );
+    case FormulaNodeKind.Union:
+      return tracked(unionOf(values), context);
     case FormulaNodeKind.Unary:
       if (node.op === UnaryOperator.Intersect) {
-        return intersected(first, context);
+        return tracked(intersected(first, context), context);
       }
       return applied([asOperand(first)], ([operand = EMPTY]) =>
         node.op === UnaryOperator.Minus ? numberValue(-toNumber(operand, context.locale)) : operand,
@@ -535,7 +630,7 @@ const operatorValue = (root: Operator, context: EvalContext): EvalValue => {
       continue;
     }
 
-    parent.values.push(settled(frame, context));
+    parent.values.push(settled(frame, intersects(parent.node) ? quiet(context) : context));
   }
   return computed(root, top.values, context);
 };
@@ -547,7 +642,11 @@ const operation = (node: FormulaNode, context: EvalContext): EvalValue => {
     case FormulaNodeKind.Unary:
     case FormulaNodeKind.Percent:
     case FormulaNodeKind.Binary:
+    case FormulaNodeKind.Areas:
+    case FormulaNodeKind.Union:
       return operatorValue(node, context);
+    case FormulaNodeKind.Apply:
+      return calledResult(node, context);
     case FormulaNodeKind.Array:
       return { kind: 'array', rows: node.rows.map((row) => row.map(constantOf)) };
     default:

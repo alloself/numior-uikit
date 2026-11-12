@@ -51,7 +51,7 @@ const intersected = (node: FormulaNode): FormulaNode => {
   return item;
 };
 
-const givesReference = (node: FormulaNode, signatureOf: SignatureOf): boolean => {
+export const givesReference = (node: FormulaNode, signatureOf: SignatureOf): boolean => {
   const item = intersected(node);
 
   switch (item.kind) {
@@ -60,6 +60,9 @@ const givesReference = (node: FormulaNode, signatureOf: SignatureOf): boolean =>
     case FormulaNodeKind.Call:
       return callGivesReference(item.name, signatureOf);
     case FormulaNodeKind.Opaque:
+    case FormulaNodeKind.Areas:
+    case FormulaNodeKind.Union:
+    case FormulaNodeKind.Apply:
       return true;
     default:
       return REFERENCE_KINDS.has(item.kind);

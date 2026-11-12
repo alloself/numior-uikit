@@ -27,16 +27,7 @@ const failureOf = (formula: string, locale?: FormulaLocale) => {
 
 const WORDS = 31;
 
-const ONLY_IN_EXCEL: Readonly<Record<string, string>> = {
-  '=SUMIF(A1:A2 A1,1)': 'the parser reads no intersection',
-  '=SUMIF(A1:A2 B1:B2,1)': 'the parser reads no intersection',
-  '=SUMIF((A1,A2),1)': 'the parser reads no union',
-  '=INDEX((A1:A2,B1:B2),1,1,2)': 'the parser reads no union',
-  '=SUMIF(A1:INDEX(A1:A2,2),1)': 'the parser reads no range ending in a call',
-  '=SUMIF(INDEX(A1:A2,1):A2,1)': 'the parser reads no range starting with a call',
-  '=SUMIF(A1:A2:B3,1)': 'the parser reads no range of ranges',
-  '=SUMIF(LAMBDA(x,x)(A1:A2),1)': 'the parser reads no call of a LAMBDA',
-};
+const ONLY_IN_EXCEL: Readonly<Record<string, string>> = {};
 
 const ONLY_HERE: Readonly<Record<string, string>> = {};
 

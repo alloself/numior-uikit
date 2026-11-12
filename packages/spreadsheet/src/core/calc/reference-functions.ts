@@ -1,6 +1,7 @@
 import { MAX_COLS, MAX_ROWS, formatCell } from '../address';
 import type { CellRange } from '../cell.types';
 import { numberValue, textValue } from '../values';
+import { areasOf } from './areas';
 import { buildArray, shapeOf } from './array';
 import { EvalValueKind, type EvalValue, type FunctionArgs, type FunctionSpec } from './calc.types';
 import { raise } from './coerce';
@@ -81,6 +82,13 @@ const offset = (args: FunctionArgs): EvalValue => {
 };
 
 export const REFERENCE_FUNCTIONS: readonly FunctionSpec[] = [
+  defineFunction({
+    name: 'AREAS',
+    min: 1,
+    max: 1,
+    referenceAt: firstArgument,
+    evaluate: (args) => numberValue(areasOf(args.value(0)).ranges.length),
+  }),
   defineFunction({
     name: 'ROW',
     min: 0,

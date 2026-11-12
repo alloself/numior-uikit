@@ -174,6 +174,7 @@ const inherits = (node: FormulaNode): boolean => {
   switch (node.kind) {
     case FormulaNodeKind.Cell:
     case FormulaNodeKind.Range:
+    case FormulaNodeKind.Areas:
     case FormulaNodeKind.Unary:
     case FormulaNodeKind.Percent:
       return true;

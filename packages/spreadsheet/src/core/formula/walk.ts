@@ -17,7 +17,12 @@ export const childrenOf: Descend = (node) => {
     case FormulaNodeKind.Percent:
       return [node.operand];
     case FormulaNodeKind.Binary:
+    case FormulaNodeKind.Areas:
       return [node.left, node.right];
+    case FormulaNodeKind.Union:
+      return node.areas;
+    case FormulaNodeKind.Apply:
+      return [node.callee, ...node.args];
     case FormulaNodeKind.Array:
       return node.rows.flat();
     default:
@@ -54,7 +59,12 @@ export const withChildren = (node: FormulaNode, children: readonly FormulaNode[]
     case FormulaNodeKind.Percent:
       return { ...node, operand: children[0] ?? node.operand };
     case FormulaNodeKind.Binary:
+    case FormulaNodeKind.Areas:
       return { ...node, left: children[0] ?? node.left, right: children[1] ?? node.right };
+    case FormulaNodeKind.Union:
+      return { ...node, areas: children };
+    case FormulaNodeKind.Apply:
+      return { ...node, callee: children[0] ?? node.callee, args: children.slice(1) };
     case FormulaNodeKind.Array:
       return { ...node, rows: arrayRows(node.rows, children) };
     default:

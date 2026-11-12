@@ -19,7 +19,7 @@ import { shiftIndex } from '../lines';
 import { ORIGIN, referenceRange } from '../formula/origin';
 import { parseFormula } from '../formula/parser';
 import { changesMeaning, shiftFormula, shiftSpan, type LineChange } from '../formula/rewrite';
-import { formulaReferences } from '../formula/references';
+import { readReferences } from '../formula/references';
 import { findNode } from '../formula/walk';
 import { EMPTY, errorValue, numberValue } from '../values';
 import { structuredRange, tableData } from '../tables';
@@ -254,7 +254,7 @@ const collectLinks = (
   links: Links,
   seen: Set<DefinedName>,
 ): void => {
-  formulaReferences(ast).forEach((found) => {
+  readReferences(ast).forEach((found) => {
     if (found.kind === FormulaReferenceKind.Structured) {
       structuredLinks(found, record, workbook, links);
       return;

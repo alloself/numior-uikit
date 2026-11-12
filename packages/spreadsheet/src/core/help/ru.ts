@@ -327,6 +327,7 @@ export const RU_FUNCTION_HELP: FunctionHelpCatalog = {
   ROW: { summary: 'Возвращает номер строки ссылки.', args: ['ссылка'] },
   COLUMN: { summary: 'Возвращает номер столбца ссылки.', args: ['ссылка'] },
   ROWS: { summary: 'Возвращает число строк диапазона.', args: ['массив'] },
+  AREAS: { summary: 'Возвращает число областей в ссылке.', args: ['ссылка'] },
   COLUMNS: { summary: 'Возвращает число столбцов диапазона.', args: ['массив'] },
   ADDRESS: {
     summary: 'Возвращает адрес ячейки текстом.',

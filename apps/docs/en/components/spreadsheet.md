@@ -136,6 +136,13 @@ References in the formula text and range frames on the sheet share a color. Drag
 or corner and the reference in the formula changes. A list of functions appears after letters, and
 a hint shows the current argument inside parentheses.
 
+References combine with the operators of Excel. A colon spans two references (`A1:INDEX(A:A,5)`),
+and a space intersects them (`A1:C3 B2:D4`). A list in parentheses joins several areas
+(`SUM((A1,C1:C3))`).
+
+Areas go to the functions Excel gives them to — `SUM`, `COUNT`, `INDEX`, `AREAS` and others; the
+rest return `#VALUE!`.
+
 A large book recalculates in parts. Values still being computed are marked, and the bottom of the
 sheet shows the progress with a stop button.
 

@@ -22,6 +22,7 @@ import {
   type CellValue,
 } from '../cell.types';
 import {
+  AreaOperator,
   BinaryOperator,
   FormulaNodeKind,
   StructuredArea,
@@ -99,6 +100,9 @@ const PLACE = { book: optional(isCount), sheet: optional(isString) };
 
 const operand = (value: unknown): value is FormulaNode => isRecord(value);
 
+const isAreaList = (value: unknown): value is FormulaNode[] =>
+  listOf(operand)(value) && value.length > 1;
+
 const isFormulaNode: Guard<FormulaNode> = byKind({
   [FormulaNodeKind.Number]: shapeOf({ kind: oneOf(FormulaNodeKind.Number), value: isNumber }),
   [FormulaNodeKind.String]: shapeOf({ kind: oneOf(FormulaNodeKind.String), value: isString }),
@@ -164,6 +168,18 @@ const isFormulaNode: Guard<FormulaNode> = byKind({
     op: oneOf(...Object.values(BinaryOperator)),
     left: operand,
     right: operand,
+  }),
+  [FormulaNodeKind.Areas]: shapeOf({
+    kind: oneOf(FormulaNodeKind.Areas),
+    op: oneOf(...Object.values(AreaOperator)),
+    left: operand,
+    right: operand,
+  }),
+  [FormulaNodeKind.Union]: shapeOf({ kind: oneOf(FormulaNodeKind.Union), areas: isAreaList }),
+  [FormulaNodeKind.Apply]: shapeOf({
+    kind: oneOf(FormulaNodeKind.Apply),
+    callee: operand,
+    args: listOf(operand),
   }),
   [FormulaNodeKind.Array]: shapeOf({
     kind: oneOf(FormulaNodeKind.Array),

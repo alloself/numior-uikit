@@ -1,5 +1,6 @@
 import type { CellRef } from '../cell.types';
 import {
+  AreaOperator,
   FormulaNodeKind,
   StructuredArea,
   UnaryOperator,
@@ -114,6 +115,11 @@ const nodeShape = (node: FormulaNode, parts: readonly Shape[], walk: Walk): Shap
 
       return { many, spreads: many || first.spreads || second.spreads };
     }
+    case FormulaNodeKind.Areas:
+      return {
+        many: node.op === AreaOperator.Range || (first.many && second.many),
+        spreads: first.spreads || second.spreads,
+      };
     default:
       return { many: referenceCells(node) ?? false, spreads: false };
   }
@@ -204,7 +210,7 @@ const intersectedNode = (node: FormulaNode, parts: readonly Rewritten[], walk: W
     case FormulaNodeKind.Binary:
       return { node: withChildren(node, parts.map(pinned)), many: false };
     default:
-      return { node, many: nodeShape(node, [], walk).many };
+      return { node, many: formulaShape(node, walk).many };
   }
 };
 

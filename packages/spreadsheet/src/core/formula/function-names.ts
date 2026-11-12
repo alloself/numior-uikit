@@ -1,6 +1,7 @@
 export const RU_FUNCTION_NAMES: Readonly<Record<string, string>> = {
   ADDRESS: 'АДРЕС',
   AND: 'И',
+  AREAS: 'ОБЛАСТИ',
   AVEDEV: 'СРОТКЛ',
   AVERAGE: 'СРЗНАЧ',
   AVERAGEA: 'СРЗНАЧА',

@@ -7,6 +7,7 @@ export interface Token {
   readonly start: number;
   readonly value: number;
   readonly book?: string | undefined;
+  readonly spaced?: boolean | undefined;
 }
 
 export interface LexFailure {
@@ -236,19 +237,26 @@ const scanAt = (source: string, at: number, locale: FormulaLocale): Scan => {
 export const tokenize = (source: string, locale: FormulaLocale): Token[] | LexFailure => {
   const tokens: Token[] = [];
   let at = 0;
+  let spaced = false;
 
   while (at < source.length) {
-    if (SPACE.test(source[at] ?? '')) {
-      at += 1;
-    } else {
-      const scanned = scanAt(source, at, locale);
+    const char = source[at] ?? '';
 
-      if (!('token' in scanned)) {
-        return scanned;
-      }
-      tokens.push(scanned.token);
-      at = scanned.next;
+    if (SPACE.test(char)) {
+      spaced ||= char === FormulaChar.Space;
+      at += 1;
+      continue;
     }
+
+    const scanned = scanAt(source, at, locale);
+
+    if (!('token' in scanned)) {
+      return scanned;
+    }
+
+    tokens.push(spaced ? { ...scanned.token, spaced } : scanned.token);
+    spaced = false;
+    at = scanned.next;
   }
   tokens.push(token('end', '', source.length));
   return tokens;
