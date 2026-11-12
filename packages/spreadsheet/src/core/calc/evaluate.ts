@@ -37,6 +37,7 @@ import {
 import type { NumberLocale } from '../format/format.types';
 import { AREA_ERRORS, AREA_READERS, intersectionOf, spanOf, unionOf } from './areas';
 import { CellErrorSignal, compareValues, raise, toLogical, toNumber, toText } from './coerce';
+import { readsArgument } from './signatures';
 
 export interface EvalContext {
   readonly workbook: Workbook;
@@ -392,10 +393,12 @@ const quiet = (context: EvalContext): EvalContext => {
 
 const loud = (context: EvalContext): EvalContext => loudContexts.get(context) ?? context;
 
+const isLoud = (context: EvalContext): boolean => !loudContexts.has(context);
+
 const lazyValues = (
   nodes: readonly FormulaNode[],
   context: EvalContext,
-  name: string,
+  spec: FunctionSpec,
 ): ((index: number) => EvalValue) => {
   const cache = new Map<number, EvalValue>();
 
@@ -406,19 +409,47 @@ const lazyValues = (
     if (known !== undefined || node === undefined) {
       return known ?? EMPTY;
     }
-    const computed = areaArgument(safely(node, loud(context)), name);
+
+    const reading = readsArgument(spec, index, nodes.length, isLoud(context))
+      ? loud(context)
+      : quiet(context);
+
+    const computed = areaArgument(safely(node, reading), spec.name);
 
     cache.set(index, computed);
     return computed;
   };
 };
 
+const readOnce = (
+  value: (index: number) => EvalValue,
+  context: EvalContext,
+): ((index: number) => EvalValue) => {
+  if (isLoud(context)) {
+    return value;
+  }
+
+  const reader = loud(context);
+  const read = new Set<number>();
+
+  return (index) => {
+    const found = value(index);
+
+    if (read.has(index)) {
+      return found;
+    }
+    read.add(index);
+    return tracked(found, reader);
+  };
+};
+
 const liftCall = (
   spec: FunctionSpec,
   nodes: readonly FormulaNode[],
-  value: (index: number) => EvalValue,
+  given: (index: number) => EvalValue,
   context: EvalContext,
 ): ArrayValue => {
+  const value = readOnce(given, context);
   const spread = (spec.broadcast ?? spec.lift ?? []).filter((index) => isMultiCell(value(index)));
   const matrices = new Map(spread.map((index) => [index, matrixOf(value(index))]));
   const shape = broadcastShape(spread.map((index) => shapeOf(value(index))));
@@ -444,7 +475,7 @@ const call = (node: Call, context: EvalContext): EvalValue => {
   if (node.args.length < spec.min || node.args.length > spec.max) {
     return raise('#VALUE!');
   }
-  const value = lazyValues(node.args, context, spec.name);
+  const value = lazyValues(node.args, context, spec);
 
   return spec.lift?.some((index) => isMultiCell(value(index))) === true
     ? liftCall(spec, node.args, value, context)
@@ -553,7 +584,7 @@ const intersects = (node: Operator): boolean =>
   node.kind === FormulaNodeKind.Union;
 
 const leafValue = (parent: Operator, node: FormulaNode, context: EvalContext): EvalValue =>
-  intersects(parent) ? safely(node, quiet(context)) : operandOf(node, context);
+  intersects(parent) ? safely(node, quiet(context)) : operandOf(node, loud(context));
 
 const tracked = (value: EvalValue, context: EvalContext): EvalValue => {
   if (value.kind === EvalValueKind.Reference) {
@@ -630,7 +661,7 @@ const operatorValue = (root: Operator, context: EvalContext): EvalValue => {
       continue;
     }
 
-    parent.values.push(settled(frame, intersects(parent.node) ? quiet(context) : context));
+    parent.values.push(settled(frame, intersects(parent.node) ? quiet(context) : loud(context)));
   }
   return computed(root, top.values, context);
 };

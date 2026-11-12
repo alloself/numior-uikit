@@ -27,6 +27,7 @@ export interface NuiTableMessages {
   readonly filterSelectAll: string;
   readonly filterSearch: string;
   readonly filterNoMatches: string;
+  readonly filterLoading: string;
   readonly blank: string;
   readonly filterTruncated: string;
   readonly filterApply: string;
@@ -138,6 +139,7 @@ export const tableMessages: NuiMessageCatalog<NuiTableMessages> = {
     filterSelectAll: 'Select all',
     filterSearch: 'Search',
     filterNoMatches: 'No matching values',
+    filterLoading: 'Loading the values…',
     blank: '(blank)',
     filterTruncated: 'Only the first values are listed. Search to find the rest.',
     filterApply: 'Apply',
@@ -245,6 +247,7 @@ export const tableMessages: NuiMessageCatalog<NuiTableMessages> = {
     filterSelectAll: 'Выбрать все',
     filterSearch: 'Поиск',
     filterNoMatches: 'Совпадений нет',
+    filterLoading: 'Загружаем значения…',
     blank: '(пусто)',
     filterTruncated: 'Показаны только первые значения. Остальные найдёт поиск.',
     filterApply: 'Применить',

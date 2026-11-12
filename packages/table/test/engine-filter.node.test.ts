@@ -272,60 +272,83 @@ describe('createTableEngine filters', () => {
     ).toEqual({ values: ['Moscow'], truncated: false });
   });
 
-  it('lists the values found in a long column within the budget of one action', async () => {
-    const harness = new EngineHarness(ACCOUNT_COLUMNS, accounts(ROWS));
+  it(
+    'lists the values found in a long column within the budget of one action',
+    { tags: ['budget'] },
+    async () => {
+      const harness = new EngineHarness(ACCOUNT_COLUMNS, accounts(ROWS));
 
-    await harness.settle(harness.engine.distinct('email', { search: 'user4999' }));
-    const started = performance.now();
-
-    const found = await harness.settle(harness.engine.distinct('email', { search: 'user49999' }));
-
-    expect(performance.now() - started).toBeLessThan(100);
-    expect(found).toEqual({ values: ['User49999@Example.com'], truncated: false });
-  });
-
-  it('lists the first values of a long column of unique text within the budget of one action', async () => {
-    const harness = new EngineHarness(ACCOUNT_COLUMNS, accounts(UNIQUE_ROWS));
-
-    await harness.runToEnd({
-      filters: [{ kind: 'set', key: 'email', values: ['User7@Example.com'] }],
-    });
-
-    const started = performance.now();
-    const found = await harness.settle(harness.engine.distinct('email', { limit: 3 }));
-
-    expect(performance.now() - started).toBeLessThan(100);
-
-    expect(found).toEqual({
-      values: ['User0@Example.com', 'User1@Example.com', 'User2@Example.com'],
-      truncated: true,
-    });
-  });
-
-  it('finds a rare value in a long sorted column of unique text within the budget of one action', async () => {
-    const rows = accounts(SORTED_ROWS);
-    const spent: number[] = [];
-    const found: unknown[] = [];
-
-    for (const seed of [7, 8]) {
-      const rankHost = recordingRankHost((size) => shuffledOrder(size, seed));
-      const harness = new EngineHarness(ACCOUNT_COLUMNS, rows, { rankHost });
-
-      await harness.runToEnd({ sort: [{ key: 'email', direction: 'asc' }] });
-
+      await harness.settle(harness.engine.distinct('email', { search: 'user4999' }));
       const started = performance.now();
 
-      found.push(await harness.settle(harness.engine.distinct('email', { search: 'user499999@' })));
-      spent.push(performance.now() - started);
-    }
+      const found = await harness.settle(harness.engine.distinct('email', { search: 'user49999' }));
 
-    expect(Math.min(spent[0] ?? 0, spent[1] ?? 0)).toBeLessThan(100);
+      expect(performance.now() - started).toBeLessThan(100);
+      expect(found).toEqual({ values: ['User49999@Example.com'], truncated: false });
+    },
+  );
 
-    expect(found).toEqual([
-      { values: ['User499999@Example.com'], truncated: false },
-      { values: ['User499999@Example.com'], truncated: false },
-    ]);
-  });
+  it(
+    'lists the first values of a long column of unique text within the budget of one action',
+    { tags: ['budget'] },
+    async () => {
+      const rows = accounts(UNIQUE_ROWS);
+      const spent: number[] = [];
+      const found: unknown[] = [];
+
+      for (const shown of ['User7@Example.com', 'User8@Example.com']) {
+        const harness = new EngineHarness(ACCOUNT_COLUMNS, rows);
+
+        await harness.runToEnd({ filters: [{ kind: 'set', key: 'email', values: [shown] }] });
+
+        const started = performance.now();
+
+        found.push(await harness.settle(harness.engine.distinct('email', { limit: 3 })));
+        spent.push(performance.now() - started);
+      }
+
+      expect(Math.min(spent[0] ?? 0, spent[1] ?? 0)).toBeLessThan(100);
+
+      expect(found[1]).toEqual(found[0]);
+
+      expect(found[0]).toEqual({
+        values: ['User0@Example.com', 'User1@Example.com', 'User2@Example.com'],
+        truncated: true,
+      });
+    },
+  );
+
+  it(
+    'finds a rare value in a long sorted column of unique text within the budget of one action',
+    { tags: ['budget'] },
+    async () => {
+      const rows = accounts(SORTED_ROWS);
+      const spent: number[] = [];
+      const found: unknown[] = [];
+
+      for (const seed of [7, 8]) {
+        const rankHost = recordingRankHost((size) => shuffledOrder(size, seed));
+        const harness = new EngineHarness(ACCOUNT_COLUMNS, rows, { rankHost });
+
+        await harness.runToEnd({ sort: [{ key: 'email', direction: 'asc' }] });
+
+        const started = performance.now();
+
+        found.push(
+          await harness.settle(harness.engine.distinct('email', { search: 'user499999@' })),
+        );
+
+        spent.push(performance.now() - started);
+      }
+
+      expect(Math.min(spent[0] ?? 0, spent[1] ?? 0)).toBeLessThan(100);
+
+      expect(found).toEqual([
+        { values: ['User499999@Example.com'], truncated: false },
+        { values: ['User499999@Example.com'], truncated: false },
+      ]);
+    },
+  );
 
   it('lists the first values of an unsorted column again without walking its values again', async () => {
     const harness = new EngineHarness(ACCOUNT_COLUMNS, accounts(ROWS), { sliceMs: 0 });

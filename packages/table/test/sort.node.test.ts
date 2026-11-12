@@ -60,7 +60,7 @@ describe('createSortJob', () => {
     expect(Array.from(indices)).toEqual([0, 1, 2, 3]);
   });
 
-  it('keeps every work slice near its budget on a large input', () => {
+  it('keeps every work slice near its budget on a large input', { tags: ['budget'] }, () => {
     const keys = keysOf(300_000, 3, 1_000_000);
     const indices = identityIndices(keys.length);
     const job = createSortJob(indices, (a, b) => (keys[a] ?? 0) - (keys[b] ?? 0));

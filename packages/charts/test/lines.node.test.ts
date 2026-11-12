@@ -227,22 +227,26 @@ describe('line and area layout', () => {
 });
 
 describe('line layout cost', () => {
-  it('lays out an area over two hundred thousand moments within the budget', () => {
-    const spec: ChartSpec = {
-      kind: 'area',
-      categories: { kind: 'time', values: moments },
-      series: [{ id: 'load', name: 'Load', values: wave(LONG) }],
-    };
+  it(
+    'lays out an area over two hundred thousand moments within the budget',
+    { tags: ['budget'] },
+    () => {
+      const spec: ChartSpec = {
+        kind: 'area',
+        categories: { kind: 'time', values: moments },
+        series: [{ id: 'load', name: 'Load', values: wave(LONG) }],
+      };
 
-    const fastest = Math.min(
-      ...Array.from({ length: 4 }, () => {
-        const started = performance.now();
+      const fastest = Math.min(
+        ...Array.from({ length: 4 }, () => {
+          const started = performance.now();
 
-        layoutChart(spec, SIZE);
-        return performance.now() - started;
-      }),
-    );
+          layoutChart(spec, SIZE);
+          return performance.now() - started;
+        }),
+      );
 
-    expect(fastest).toBeLessThan(BUDGET_MS);
-  });
+      expect(fastest).toBeLessThan(BUDGET_MS);
+    },
+  );
 });

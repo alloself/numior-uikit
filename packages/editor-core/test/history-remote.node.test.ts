@@ -220,21 +220,25 @@ describe('history over remote changes', () => {
     );
   });
 
-  it('takes a change from someone else in the same time whatever the undo history holds', () => {
-    const editor = twoLines();
+  it(
+    'takes a change from someone else in the same time whatever the undo history holds',
+    { tags: ['budget'] },
+    () => {
+      const editor = twoLines();
 
-    for (let run = 0; run < 100; run += 1) {
-      editor.type('abcdefghijklmnopqrstuvwxyz');
-      editor.pause(1000);
-    }
+      for (let run = 0; run < 100; run += 1) {
+        editor.type('abcdefghijklmnopqrstuvwxyz');
+        editor.pause(1000);
+      }
 
-    const started = performance.now();
+      const started = performance.now();
 
-    for (let change = 0; change < 50; change += 1) {
-      remote(editor, secondLine(editor.state) + 1, 'X');
-    }
+      for (let change = 0; change < 50; change += 1) {
+        remote(editor, secondLine(editor.state) + 1, 'X');
+      }
 
-    expect(performance.now() - started).toBeLessThan(REMOTE_BUDGET);
-    expect(undoDepth(editor.state)).toBe(100);
-  });
+      expect(performance.now() - started).toBeLessThan(REMOTE_BUDGET);
+      expect(undoDepth(editor.state)).toBe(100);
+    },
+  );
 });

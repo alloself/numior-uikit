@@ -1,9 +1,11 @@
 import type {
   TableChildrenRequest,
+  TableDistinct,
   TableFetchRequest,
   TableFetchResult,
   TableSource,
   TableSourceGroup,
+  TableValuesRequest,
 } from '../../src';
 import { staff, type Staff } from './staff';
 
@@ -11,6 +13,11 @@ interface RemoteCall {
   readonly request: TableFetchRequest;
   readonly resolve: (result: TableFetchResult<Staff>) => void;
   readonly reject: (error: unknown) => void;
+}
+
+interface RemoteValues {
+  readonly request: TableValuesRequest;
+  readonly resolve: (result: TableDistinct) => void;
 }
 
 interface RemoteBranch {
@@ -55,6 +62,7 @@ export class RemoteStaff {
   readonly source: TableSource<Staff>;
   private readonly calls: RemoteCall[] = [];
   private readonly branches: RemoteBranch[] = [];
+  private readonly lists: RemoteValues[] = [];
 
   constructor(count: number, totals?: Readonly<Record<string, unknown>>, tree = false) {
     this.rows = staff(count);
@@ -71,6 +79,10 @@ export class RemoteStaff {
             })
         : undefined,
       totals: totals === undefined ? undefined : () => Promise.resolve(totals),
+      values: (request) =>
+        new Promise((resolve) => {
+          this.lists.push({ request, resolve });
+        }),
     };
   }
 
@@ -125,6 +137,29 @@ export class RemoteStaff {
           );
 
     call.resolve({ rows: ordered.slice(offset, offset + limit), total: inside.length });
+  }
+
+  answerValues(index = this.lists.length - 1): void {
+    const list = this.lists[index];
+
+    if (list === undefined) {
+      return;
+    }
+
+    const { key, search, limit } = list.request;
+
+    const found = new Set(
+      this.rows.reduce<Array<string | null>>((values, row) => {
+        const value = key === 'city' ? row.city : row.name;
+
+        if ((value ?? '').toLowerCase().includes(search.toLowerCase())) {
+          values.push(value);
+        }
+        return values;
+      }, []),
+    );
+
+    list.resolve({ values: [...found].slice(0, limit), truncated: found.size > limit });
   }
 
   fail(index: number, error: unknown): void {

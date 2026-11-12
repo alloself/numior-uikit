@@ -2,6 +2,7 @@ import stylistic from '@stylistic/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import vue from 'eslint-plugin-vue';
 import { apiNames } from './scripts/eslint/api-names.mjs';
+import { budgetTags } from './scripts/eslint/budget-tags.mjs';
 import { guardFirst } from './scripts/eslint/guard-first.mjs';
 import { pageListeners } from './scripts/eslint/page-listeners.mjs';
 import { spreadArguments } from './scripts/eslint/spread-arguments.mjs';
@@ -237,6 +238,7 @@ export default [
       numior: {
         rules: {
           'api-names': apiNames,
+          'budget-tags': budgetTags,
           'guard-first': guardFirst,
           'page-listeners': pageListeners,
           'spread-arguments': spreadArguments,
@@ -260,6 +262,10 @@ export default [
   {
     files: ['tests/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
     rules: { 'numior/test-phases': 'error' },
+  },
+  {
+    files: ['**/*.test.ts', '**/*.test.mjs'],
+    rules: { 'numior/budget-tags': 'error' },
   },
   {
     files: ['packages/{primitives,vue,table,editor-vue}/{src,test}/**/*.{ts,vue}'],

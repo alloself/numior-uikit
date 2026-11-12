@@ -51,6 +51,7 @@ playground проверяет реальный `dist`, типы и внешню�
 | `vp run typecheck`                   | vue-tsc: Vue SFC и TypeScript strict, декларации `.vue.d.ts` для type-aware `vp lint`                        |
 | `pnpm analyze`                       | Fallow: dead code/deps/cycles/boundaries, дубли, сложность и CRAP по покрытию unit-тестов                    |
 | `pnpm test` / `vp run test:coverage` | `vp test` (Vitest 5); coverage V8 в формате Istanbul для Fallow в `node_modules/.cache/coverage`             |
+| `vp run test:budget`                 | Сценарии с меткой `budget` (бюджеты времени) без инструментации; coverage их не запускает                    |
 | `pnpm test:e2e`                      | Playwright по production build, темы, RTL, Tailwind, axe                                                     |
 | `pnpm arch:check`                    | Archcore CLI: структура и связи                                                                              |
 | `pnpm bench:engine`                  | Бенчмарк движка таблицы в Node на миллионе строк, запись в `packages/table/bench/results`                    |

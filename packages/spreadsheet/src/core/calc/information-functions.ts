@@ -4,6 +4,7 @@ import { isMultiCell } from './array';
 import { EvalValueKind, type FunctionSpec } from './calc.types';
 import { raise } from './coerce';
 import { defineFunction } from './registry';
+import { firstArgument } from './signatures';
 
 const REFERENCES: ReadonlySet<string> = new Set([EvalValueKind.Reference, EvalValueKind.Areas]);
 
@@ -69,6 +70,7 @@ export const INFORMATION_FUNCTIONS: readonly FunctionSpec[] = [
     name: 'ISREF',
     min: 1,
     max: 1,
+    unreadAt: firstArgument,
     evaluate: (args) => booleanValue(REFERENCES.has(args.value(0).kind)),
   }),
   defineFunction({

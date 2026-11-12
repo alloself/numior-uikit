@@ -84,6 +84,7 @@ const offset = (args: FunctionArgs): EvalValue => {
 export const REFERENCE_FUNCTIONS: readonly FunctionSpec[] = [
   defineFunction({
     name: 'AREAS',
+    unreadAt: firstArgument,
     min: 1,
     max: 1,
     referenceAt: firstArgument,
@@ -91,6 +92,7 @@ export const REFERENCE_FUNCTIONS: readonly FunctionSpec[] = [
   }),
   defineFunction({
     name: 'ROW',
+    unreadAt: firstArgument,
     min: 0,
     max: 1,
     referenceAt: firstArgument,
@@ -98,6 +100,7 @@ export const REFERENCE_FUNCTIONS: readonly FunctionSpec[] = [
   }),
   defineFunction({
     name: 'COLUMN',
+    unreadAt: firstArgument,
     min: 0,
     max: 1,
     referenceAt: firstArgument,
@@ -105,12 +108,14 @@ export const REFERENCE_FUNCTIONS: readonly FunctionSpec[] = [
   }),
   defineFunction({
     name: 'ROWS',
+    unreadAt: firstArgument,
     min: 1,
     max: 1,
     evaluate: (args) => numberValue(shapeOf(args.value(0)).rows),
   }),
   defineFunction({
     name: 'COLUMNS',
+    unreadAt: firstArgument,
     min: 1,
     max: 1,
     evaluate: (args) => numberValue(shapeOf(args.value(0)).cols),
@@ -118,6 +123,7 @@ export const REFERENCE_FUNCTIONS: readonly FunctionSpec[] = [
   defineFunction({ name: 'ADDRESS', min: 2, max: 5, lift: [0, 1], evaluate: address }),
   defineFunction({
     name: 'OFFSET',
+    unreadAt: firstArgument,
     min: 3,
     max: 5,
     volatile: true,

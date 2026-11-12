@@ -4,7 +4,7 @@ import type { EvalValue, FunctionArgs, FunctionSpec } from './calc.types';
 import { compareValues, raise, toLogical } from './coerce';
 import { defineFunction } from './registry';
 import { CellError, CellValueKind } from '../cell.types';
-import { NEWER_MANY, pairsAfter } from './signatures';
+import { NEWER_MANY, afterFirst, oddArgument, pairsAfter } from './signatures';
 
 const truths = (args: FunctionArgs): boolean[] => {
   const found: boolean[] = [];
@@ -32,6 +32,9 @@ const ifs = (args: FunctionArgs): EvalValue => {
   return raise('#N/A');
 };
 
+const switchResults = (index: number, count: number): boolean =>
+  index > 0 && (index % 2 === 0 || index === count - 1);
+
 const switched = (args: FunctionArgs): EvalValue => {
   const wanted = args.scalar(0);
   const pairs = args.count - 1;
@@ -55,6 +58,7 @@ export const LOGICAL_FUNCTIONS: readonly FunctionSpec[] = [
     min: 2,
     max: 3,
     givesReference: true,
+    passesAt: afterFirst,
     lift: [0],
     broadcast: [0, 1, 2],
     evaluate: (args) => {
@@ -70,6 +74,7 @@ export const LOGICAL_FUNCTIONS: readonly FunctionSpec[] = [
     max: NEWER_MANY,
     counts: pairsAfter(0),
     givesReference: true,
+    passesAt: oddArgument,
     evaluate: ifs,
   }),
   defineFunction({
@@ -128,6 +133,7 @@ export const LOGICAL_FUNCTIONS: readonly FunctionSpec[] = [
     max: NEWER_MANY,
     lift: [0],
     givesReference: true,
+    passesAt: switchResults,
     evaluate: switched,
   }),
 ];

@@ -19,7 +19,8 @@ import { shiftIndex } from '../lines';
 import { ORIGIN, referenceRange } from '../formula/origin';
 import { parseFormula } from '../formula/parser';
 import { changesMeaning, shiftFormula, shiftSpan, type LineChange } from '../formula/rewrite';
-import { readReferences } from '../formula/references';
+import { readReferences, type ReadsArgument } from '../formula/references';
+import { readsArgument } from './signatures';
 import { findNode } from '../formula/walk';
 import { EMPTY, errorValue, numberValue } from '../values';
 import { structuredRange, tableData } from '../tables';
@@ -168,6 +169,7 @@ interface LookupIndex {
 interface Links {
   readonly precedents: Precedent[];
   readonly names: Set<string>;
+  readonly reads: ReadsArgument;
 }
 
 interface FoundLinks {
@@ -228,6 +230,7 @@ const structuredLinks = (
   record: Placed,
   workbook: Workbook,
   links: Links,
+  read: boolean,
 ): void => {
   if (found.book !== undefined) {
     return;
@@ -240,7 +243,7 @@ const structuredLinks = (
   if (owner !== undefined) {
     links.names.add(owner.toLowerCase());
   }
-  if (table === undefined || typeof range !== 'object') {
+  if (!read || table === undefined || typeof range !== 'object') {
     return;
   }
 
@@ -252,15 +255,16 @@ const collectLinks = (
   record: Placed,
   workbook: Workbook,
   links: Links,
-  seen: Set<DefinedName>,
+  seen: Map<DefinedName, boolean>,
+  read: boolean,
 ): void => {
-  readReferences(ast).forEach((found) => {
+  readReferences(ast, links.reads, read).forEach(({ reference: found, read: used }) => {
     if (found.kind === FormulaReferenceKind.Structured) {
-      structuredLinks(found, record, workbook, links);
+      structuredLinks(found, record, workbook, links, used);
       return;
     }
     if (found.kind === FormulaReferenceKind.Name) {
-      nameLinks(found, record, workbook, links, seen);
+      nameLinks(found, record, workbook, links, seen, used);
       return;
     }
 
@@ -280,7 +284,8 @@ const nameLinks = (
   record: Placed,
   workbook: Workbook,
   links: Links,
-  seen: Set<DefinedName>,
+  seen: Map<DefinedName, boolean>,
+  read: boolean,
 ): void => {
   if (found.book !== undefined) {
     return;
@@ -290,12 +295,28 @@ const nameLinks = (
   const table = found.sheet === undefined ? workbook.tables.get(found.name) : undefined;
 
   links.names.add(found.name.toLowerCase());
-  if (defined !== undefined && !seen.has(defined)) {
-    seen.add(defined);
-    collectLinks(defined.ast, record, workbook, links, seen);
-  } else if (defined === undefined && table !== undefined) {
-    links.precedents.push({ sheet: table.sheet.id, range: tableData(table) });
+  if (defined === undefined) {
+    tableLinks(table, links, read);
+    return;
   }
+
+  const visited = seen.get(defined);
+  const covered = visited !== undefined && (visited || !read);
+
+  if (covered) {
+    return;
+  }
+
+  seen.set(defined, read);
+  collectLinks(defined.ast, record, workbook, links, seen, read);
+};
+
+const tableLinks = (table: SheetTable | undefined, links: Links, read: boolean): void => {
+  if (!read || table === undefined) {
+    return;
+  }
+
+  links.precedents.push({ sheet: table.sheet.id, range: tableData(table) });
 };
 
 const samePrecedents = (left: readonly Precedent[], right: readonly Precedent[]): boolean =>
@@ -316,10 +337,15 @@ const samePrecedents = (left: readonly Precedent[], right: readonly Precedent[])
 const sameNames = (left: ReadonlySet<string>, right: ReadonlySet<string>): boolean =>
   left.size === right.size && [...left].every((name) => right.has(name));
 
-const linksOf = (ast: FormulaNode, record: Placed, workbook: Workbook): FoundLinks => {
-  const links: Links = { precedents: [], names: new Set() };
+const linksOf = (
+  ast: FormulaNode,
+  record: Placed,
+  workbook: Workbook,
+  reads: ReadsArgument,
+): FoundLinks => {
+  const links: Links = { precedents: [], names: new Set(), reads };
 
-  collectLinks(ast, record, workbook, links, new Set());
+  collectLinks(ast, record, workbook, links, new Map(), true);
   return links.names.size === 0 ? { precedents: links.precedents, names: NO_NAMES } : links;
 };
 
@@ -447,6 +473,10 @@ export const createCalculator = (
   const graph = createDependencyGraph();
   const trees = createTreeSharing();
   const signatures = signaturesOf(functions);
+
+  const argumentReads: ReadsArgument = (name, index, count, read) =>
+    readsArgument(functions.get(name), index, count, read);
+
   const spills = createSpills();
   const formulas = new Map<number, FormulaRecord>();
   const positions = new Map<number, Map<number, number>>();
@@ -921,7 +951,7 @@ export const createCalculator = (
     const known = idAt(sheet.id, row, col);
     const key = known ?? nextId;
     const cell: FormulaCell = { ast, state: 'stale' };
-    const links = linksOf(ast, { sheet, row, col }, workbook);
+    const links = linksOf(ast, { sheet, row, col }, workbook, argumentReads);
 
     const record: FormulaRecord = {
       id: key,
@@ -972,7 +1002,7 @@ export const createCalculator = (
         record.cell = { ast, state: record.cell.state };
       }
 
-      const links = linksOf(ast, record, workbook);
+      const links = linksOf(ast, record, workbook, argumentReads);
       const unchanged = samePrecedents(links.precedents, record.precedents);
 
       if (!sameNames(links.names, record.names)) {

@@ -161,21 +161,25 @@ describe('conditional fields', () => {
     expect(form.values).toEqual({ name: 'Ann' });
   });
 
-  it('takes a thousand fields away within the budget of one action', async () => {
-    const paths = Array.from({ length: MANY_FIELDS }, (_, index) => `field${index}`);
+  it(
+    'takes a thousand fields away within the budget of one action',
+    { tags: ['budget'] },
+    async () => {
+      const paths = Array.from({ length: MANY_FIELDS }, (_, index) => `field${index}`);
 
-    const form = FormHarness.mount({
-      initialValues: Object.fromEntries(paths.map((path) => [path, ''])),
-      fields: paths,
-    });
+      const form = FormHarness.mount({
+        initialValues: Object.fromEntries(paths.map((path) => [path, ''])),
+        fields: paths,
+      });
 
-    const started = performance.now();
+      const started = performance.now();
 
-    await form.hideAll(paths);
+      await form.hideAll(paths);
 
-    expect(performance.now() - started).toBeLessThan(HIDE_BUDGET_MS);
-    expect(form.values).toEqual(Object.fromEntries(paths.map((path) => [path, ''])));
-  });
+      expect(performance.now() - started).toBeLessThan(HIDE_BUDGET_MS);
+      expect(form.values).toEqual(Object.fromEntries(paths.map((path) => [path, ''])));
+    },
+  );
 
   it('sends a disabled field without validating it', async () => {
     const form = FormHarness.mount({
