@@ -2525,6 +2525,7 @@ const editorProps = computed(() => {
         attach: cellEditor.attach,
         commit: cellEditor.commit,
         cancel: cellEditor.cancel,
+        composed: cellEditor.composed,
       };
 });
 

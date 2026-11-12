@@ -51,6 +51,32 @@ describe('NuiTable given new rows', () => {
     ]);
   });
 
+  it('keeps an editor in its cell while it composes a word and takes it to its row once the word is done', async () => {
+    const rows = staff(20);
+    const grid = mountStaff({ rows, props: KEYED });
+
+    await grid.focusCell(3, 2);
+    await grid.press('F2');
+    await grid.typeInEditor('Ту');
+    await grid.composeInEditor('Тула');
+    await grid.setSource([NEWCOMER, ...rows]);
+
+    expect(grid.editing).toEqual({ row: 3, col: 2 });
+    expect(grid.editorValue).toBe('Тула');
+
+    await grid.finishComposing('Тула');
+
+    expect(grid.editing).toEqual({ row: 4, col: 2 });
+    expect(grid.editorValue).toBe('Тула');
+    expect(grid.editorFocused).toBe(true);
+
+    await grid.press('Enter');
+
+    expect(grid.edits).toEqual([
+      { kind: 'edit', changes: [{ row: rows[3], key: 'city', value: 'Тула', previous: 'Москва' }] },
+    ]);
+  });
+
   it('finds the row of an open editor by its key among copies of every row', async () => {
     const rows = staff(20);
     const grid = mountStaff({ rows, props: KEYED });

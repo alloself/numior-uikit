@@ -487,6 +487,7 @@ export interface TableEditorLeave {
 export interface TableEditorLink {
   readonly flush: () => void;
   readonly release: () => TableEditorLeave;
+  readonly composing: () => boolean;
 }
 
 export interface TableEditSession<T> {
@@ -547,6 +548,7 @@ export interface NuiTableCellEditorProps {
   attach: (link: TableEditorLink) => () => void;
   commit: (move: NuiTableEditMove) => boolean;
   cancel: () => void;
+  composed: () => void;
 }
 
 export interface TableSpan {

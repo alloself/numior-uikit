@@ -12,6 +12,11 @@ import {
   type Ref,
   type ShallowRef,
 } from 'vue';
+import {
+  commitComposed,
+  composeInto,
+  typeInto,
+} from '../../../primitives/test/support/composition';
 import { choosePageSize } from '../../../vue/test/support/page-size';
 import { dismissPopoverNatively, TopLayerStubs } from '../../../vue/test/support/top-layer';
 import { stubRowObserver, type RowObserverStub } from '../support/row-observer';
@@ -1406,12 +1411,17 @@ export class TableDriver<T> {
   }
 
   async typeInEditor(text: string): Promise<void> {
-    const field = this.editorField;
+    typeInto(this.editorField, text);
+    await nextTick();
+  }
 
-    if (field !== null) {
-      field.value = text;
-      field.dispatchEvent(new Event('input', { bubbles: true }));
-    }
+  async composeInEditor(text: string): Promise<void> {
+    composeInto(this.editorField, text);
+    await nextTick();
+  }
+
+  async finishComposing(text: string): Promise<void> {
+    commitComposed(this.editorField, text);
     await nextTick();
   }
 

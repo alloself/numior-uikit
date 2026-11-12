@@ -311,6 +311,32 @@ describe('NuiSpreadsheet in a shared book', () => {
     expect(driver.text(1, 1)).toBe('6');
   });
 
+  it('moves a draft and its references only once the word being composed in it is done', async () => {
+    const book = shared();
+    const driver = open(book);
+
+    receive(book.session, writeAt(4, 0, { kind: 'string', value: 'A' }));
+    await driver.focus(1, 1);
+    await driver.press('F2');
+    await driver.type('=A5&"');
+    await driver.composeInEditor('=A5&"に');
+    receive(book.session, rowsAdded(0, 1));
+    await driver.settle();
+
+    expect(driver.editingCell).toEqual({ row: 1, col: 1 });
+    expect(driver.editorText).toBe('=A5&"に');
+
+    await driver.finishComposing('=A5&"日本"');
+    await driver.settle();
+
+    expect(driver.editingCell).toEqual({ row: 2, col: 1 });
+    expect(driver.editorText).toBe('=A6&"日本"');
+
+    await driver.press('Enter');
+
+    expect(driver.text(2, 1)).toBe('A日本');
+  });
+
   it('breaks a reference of a formula being typed to a row someone else removes', async () => {
     const book = shared();
     const driver = open(book);

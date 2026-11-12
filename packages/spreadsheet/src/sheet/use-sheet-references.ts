@@ -1,5 +1,6 @@
 import { Key } from '@numior/primitives';
 import type { NuiTableDraft, NuiTableRange, NuiTableCellPosition } from '@numior/table';
+import { useEventListener } from '@vueuse/core';
 import { computed, shallowRef } from 'vue';
 import {
   followLines,
@@ -33,6 +34,11 @@ interface LastPick {
   readonly text: string;
   readonly start: number;
   readonly end: number;
+}
+
+interface WaitingLines {
+  readonly lines: readonly LineChange[];
+  readonly sheet: string;
 }
 
 interface GripSession {
@@ -191,6 +197,10 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
   let lastPick: LastPick | undefined;
 
   let session: GripSession | undefined;
+
+  let composing = false;
+
+  let waiting: WaitingLines | undefined;
 
   const dragging = shallowRef(false);
 
@@ -395,6 +405,15 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
   };
 
   const follow = (lines: readonly LineChange[], sheet: string): void => {
+    if (composing) {
+      waiting = {
+        lines: waiting === undefined ? lines : waiting.lines.concat(lines),
+        sheet,
+      };
+
+      return;
+    }
+
     const draft = editing.draft.value;
     const text = draftText.value;
 
@@ -414,6 +433,23 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
     shiftField(shift, text);
     editing.setDraft({ ...draft, value: shift.text });
   };
+
+  useEventListener(options.root, 'compositionstart', () => {
+    composing = true;
+  });
+
+  useEventListener(options.root, 'compositionend', () => {
+    const held = waiting;
+
+    composing = false;
+    waiting = undefined;
+
+    if (held === undefined) {
+      return;
+    }
+
+    follow(held.lines, held.sheet);
+  });
 
   return {
     segments,

@@ -65,6 +65,7 @@ export interface TableCellEditor<T> {
   commit(move: NuiTableEditMove): boolean;
   cancel(): void;
   reset(): void;
+  composed(): void;
   onKeydown(event: KeyboardEvent): boolean;
   onFocusin(event: FocusEvent): void;
   onClick(event: MouseEvent): void;
@@ -114,6 +115,15 @@ const leaveOf = (links: ReadonlySet<TableEditorLink>): TableEditorLeave => {
   return found;
 };
 
+const composingIn = (links: ReadonlySet<TableEditorLink>): boolean => {
+  for (const link of links) {
+    if (link.composing()) {
+      return true;
+    }
+  }
+  return false;
+};
+
 const isCellTarget = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement && target.matches('.nui-table__cell');
 
@@ -160,6 +170,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
   const draft = shallowRef<unknown>();
   const error = ref<string>();
   const links = new Set<TableEditorLink>();
+  let waiting: NuiTableCellPosition | undefined;
   let tap: TableTap | undefined;
   let tapped = Number.NEGATIVE_INFINITY;
   let pointer = '';
@@ -179,6 +190,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
   };
 
   const close = (): void => {
+    waiting = undefined;
     session.value = undefined;
     error.value = undefined;
     strict = false;
@@ -280,9 +292,15 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
       return false;
     }
     if (samePlace(position, current.position)) {
+      waiting = undefined;
       session.value = row === current.row ? current : { ...current, row };
       return true;
     }
+    if (composingIn(links)) {
+      waiting = position;
+      return true;
+    }
+
     const leave = leaveOf(links);
 
     session.value = {
@@ -298,6 +316,18 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
 
     setDraft(draft.value);
     return true;
+  };
+
+  const composed = (): void => {
+    const next = waiting;
+
+    waiting = undefined;
+
+    if (next === undefined) {
+      return;
+    }
+
+    carry(next);
   };
 
   const outcomeOf = (current: TableEditSession<T>, control: unknown): TableEditOutcome => {
@@ -483,6 +513,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     commit,
     cancel,
     reset,
+    composed,
     onKeydown,
     onFocusin,
     onClick,

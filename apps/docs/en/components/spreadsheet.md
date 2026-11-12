@@ -82,6 +82,9 @@ The references of an unfinished formula follow the data too. After a row is inse
 ninth one, `=SUM(A3:A9)` becomes `=SUM(A3:A10)`, and the caret stays at the same character. A
 reference to removed cells turns into `#REF!`, as in a saved formula.
 
+While a word is being composed through an IME, the cell and the references of its formula wait.
+They move once the word is done, so the input is not broken.
+
 The screen keeps the same data: rows inserted above the window do not push away what you read. A
 sheet scrolled to its very start shows rows inserted at the start right away.
 

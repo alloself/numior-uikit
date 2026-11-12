@@ -286,6 +286,9 @@ The table finds a row by `getKey`, or by the object itself without it. When the 
 longer has the row, the editor closes without saving and the table sends `editRefused` with the
 reason `row-gone`.
 
+A word composed through an IME is finished in the editor's own cell. The editor moves to its row
+once the word is done, because a move to another cell would break the input.
+
 The draft, the focus and the caret stay in the editor while it follows its row. Equal `sort`,
 `filters`, `groupBy` and `expanded` change nothing. The editor and the selection stay, and the
 query does not run again.

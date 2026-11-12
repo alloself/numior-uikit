@@ -7,6 +7,8 @@
     @focusout="onFocusout"
     @mousedown="onMousedown"
     @beforetoggle.capture="onBeforetoggle"
+    @compositionstart="onCompositionstart"
+    @compositionend="onCompositionend"
   >
     <component
       :is="spec.component"
@@ -68,6 +70,7 @@ const {
   attach,
   commit,
   cancel,
+  composed,
 } = defineProps<NuiTableCellEditorProps>();
 
 const emit = defineEmits<{ update: [value: unknown] }>();
@@ -246,6 +249,17 @@ const caretOf = (
         direction: field.selectionDirection ?? 'none',
       };
 
+let composing = false;
+
+const onCompositionstart = (): void => {
+  composing = true;
+};
+
+const onCompositionend = (): void => {
+  composing = false;
+  composed();
+};
+
 const release = (): TableEditorLeave => {
   const field = fieldOf();
 
@@ -390,6 +404,7 @@ onMounted(() => {
       drafts.commitAll();
     },
     release,
+    composing: () => composing,
   });
 
   if (passive) {

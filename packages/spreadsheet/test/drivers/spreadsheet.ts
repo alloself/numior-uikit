@@ -10,6 +10,11 @@ import {
   type NuiSpreadsheetProps,
   type NuiSpreadsheetSelection,
 } from '../../src';
+import {
+  commitComposed,
+  composeInto,
+  typeInto,
+} from '../../../primitives/test/support/composition';
 import { PivotPanelDriver } from './pivot-panel';
 
 interface DrawingDrag {
@@ -540,12 +545,17 @@ export class SpreadsheetDriver {
   }
 
   async type(text: string): Promise<void> {
-    const field = this.editorField;
+    typeInto(this.editorField, text);
+    await nextTick();
+  }
 
-    if (field !== null) {
-      field.value = text;
-      field.dispatchEvent(new Event('input', { bubbles: true }));
-    }
+  async composeInEditor(text: string): Promise<void> {
+    composeInto(this.editorField, text);
+    await nextTick();
+  }
+
+  async finishComposing(text: string): Promise<void> {
+    commitComposed(this.editorField, text);
     await nextTick();
   }
 

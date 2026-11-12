@@ -194,6 +194,32 @@ test.describe('collaboration on a workbook', () => {
     await expect(anna.sheet.cell('3', 0)).toHaveText('');
   });
 
+  test('keeps a word being composed in a cell when someone else inserts a row above', async ({
+    collab,
+  }) => {
+    const anna = await collab.joinBook(ANNA);
+    const boris = await collab.joinBook(BORIS);
+
+    await anna.sheet.enter('1', 0, 'метка');
+    await anna.sheet.startEdit('3', 0);
+    await anna.sheet.typeAtCaret('A');
+    await anna.client.startComposing('にほ');
+    await boris.sheet.cellMenu('1', 0, 'Вставить 1 строку выше');
+
+    await expect(anna.sheet.cell('2', 0)).toHaveText('метка');
+
+    await anna.client.startComposing('にほん');
+    await anna.client.commitComposed('日本');
+
+    await expect(anna.sheet.editorIn('4', 0)).toHaveValue('A日本');
+    expect(await anna.client.compositionsStarted()).toBe(1);
+
+    await anna.client.page.keyboard.press('Enter');
+
+    await expect(boris.sheet.cell('4', 0)).toHaveText('A日本');
+    await expect(anna.sheet.cell('3', 0)).toHaveText('');
+  });
+
   test('moves the references of a formula someone types when someone else inserts a row above them', async ({
     collab,
   }) => {
