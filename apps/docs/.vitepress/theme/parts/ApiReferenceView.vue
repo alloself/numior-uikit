@@ -1,16 +1,19 @@
 <template>
-  <ApiComponent
-    v-for="entry in entries"
-    :key="entry.component.name"
-    :component="entry.component"
-    :catalog="entry.catalog"
-    :locale="locale"
-    :texts="texts"
-    :heading="entries.length > 1"
-  />
+  <div class="mb-8">
+    <ApiComponent
+      v-for="entry in entries"
+      :key="entry.component.name"
+      :component="entry.component"
+      :catalog="entry.catalog"
+      :locale="locale"
+      :texts="texts"
+      :heading="entries.length > 1"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
+import { withoutRepeats } from '../api-entries';
 import { loadCatalogReference, loadComponentReference } from '../reference';
 import type { ApiReferenceViewProps } from '../theme.types';
 import ApiComponent from './ApiComponent.vue';
@@ -31,15 +34,5 @@ const loaded = await Promise.all(
   }),
 );
 
-const shownStyles = new Set<string>();
-
-const entries = loaded.map((entry) => {
-  const styles = entry.component.styles;
-
-  if (styles === undefined || shownStyles.has(styles.import)) {
-    return { ...entry, component: { ...entry.component, styles: undefined } };
-  }
-  shownStyles.add(styles.import);
-  return entry;
-});
+const entries = withoutRepeats(loaded);
 </script>

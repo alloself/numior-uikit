@@ -229,6 +229,21 @@ export class DocsSite {
     await this.network.quiet();
   }
 
+  codeGaps(): Promise<number[]> {
+    return this.article.evaluate((article) => {
+      const boxes = [...article.querySelectorAll('.nui-code')].reduce<DOMRect[]>((shown, code) => {
+        const box = code.getBoundingClientRect();
+
+        if (box.height > 0) {
+          shown.push(box);
+        }
+        return shown;
+      }, []);
+
+      return boxes.slice(1).map((box, index) => Math.round(box.top - (boxes[index]?.bottom ?? 0)));
+    });
+  }
+
   async sectionTop(title: string): Promise<number> {
     const heading = this.article.getByRole('heading', { name: title }).first();
 

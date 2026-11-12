@@ -265,3 +265,14 @@ test('the icon page finds an icon by its Lucide name and copies the name compone
   await docs.copyIconName('warning').click();
   await expect.poll(() => docs.copiedTexts()).toEqual(['warning']);
 });
+
+test('signatures stand apart from each other and carry no import line', async ({ docs }) => {
+  await docs.open('/composables/toast');
+  await expect(docs.heading).toHaveText('useToast');
+
+  const gaps = await docs.codeGaps();
+
+  expect(gaps.length).toBeGreaterThan(2);
+  expect(gaps.filter((gap) => gap < 12)).toEqual([]);
+  await expect(docs.article.locator('.nui-code__title')).toHaveCount(0);
+});

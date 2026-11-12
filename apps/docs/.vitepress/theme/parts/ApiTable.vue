@@ -11,7 +11,15 @@
     >
       <template #cell-name="{ row }">
         <code>{{ row.name }}</code>
-        <span v-if="isRequired(row)" :title="requiredLabel" class="text-error">*</span>
+        <NuiTooltip v-if="isRequired(row)" placement="top">
+          <template #trigger="{ attrs }">
+            <span v-bind="attrs" class="text-error">
+              <span aria-hidden="true">*</span>
+              <span class="sr-only">{{ requiredLabel }}</span>
+            </span>
+          </template>
+          {{ requiredLabel }}
+        </NuiTooltip>
       </template>
       <template #cell-type="{ row }">
         <code>{{ row.type }}</code>
@@ -30,6 +38,7 @@
 
 <script setup lang="ts" generic="T extends ApiRow">
 import { NuiTable } from '@numior/table';
+import { NuiTooltip } from '@numior/vue';
 import type { ApiRow, ApiTableProps } from '../theme.types';
 import InlineText from './InlineText.vue';
 
