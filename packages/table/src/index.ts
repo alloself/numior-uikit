@@ -1,4 +1,6 @@
 export { default as NuiTable } from './table/NuiTable.vue';
+export { default as NuiTablePeers } from './table/NuiTablePeers.vue';
+export { tableRectStyle } from './table/table-rect';
 export { clipboardDataOf } from './table/table-clipboard';
 export { tableEditor } from './table/table-editors';
 export { columnIndex, columnName } from '@numior/primitives/address';
@@ -68,6 +70,9 @@ export type {
   NuiTableLastCell,
   NuiTableNextEdge,
   NuiTableOverlaySlot,
+  NuiTableCellKey,
+  NuiTablePeer,
+  NuiTablePeersProps,
   NuiTableRect,
   NuiTableSpan,
   NuiTableWindow,

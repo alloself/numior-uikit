@@ -314,6 +314,24 @@ export interface NuiTableOverlaySlot {
   readonly pane: NuiTableOverlayPane;
 }
 
+export interface NuiTableCellKey {
+  readonly row: TableNodeId;
+  readonly column: string;
+}
+
+export interface NuiTablePeer {
+  readonly key: string;
+  readonly name: string;
+  readonly colour: number;
+  readonly cell: NuiTableRange;
+  readonly areas?: readonly NuiTableRange[] | undefined;
+}
+
+export interface NuiTablePeersProps {
+  peers: readonly NuiTablePeer[];
+  rectOf: (range: NuiTableRange) => NuiTableRect | undefined;
+}
+
 export type NuiTableNextEdge = (
   from: NuiTableCellPosition,
   direction: NuiTableEdgeDirection,
@@ -762,6 +780,8 @@ export interface NuiTableExposed {
   exportCsv(options?: NuiTableCsvOptions): Promise<string>;
   refresh(): void;
   rectOf(range: NuiTableRange): NuiTableRect | undefined;
+  keyOf(position: NuiTableCellPosition): NuiTableCellKey | undefined;
+  positionOf(key: NuiTableCellKey): NuiTableCellPosition | undefined;
   cellFromPoint(x: number, y: number): NuiTableCellPosition | undefined;
   cellNear(x: number, y: number): NuiTableCellPosition | undefined;
   followEdge(x: number, y: number, onStep: () => void): void;

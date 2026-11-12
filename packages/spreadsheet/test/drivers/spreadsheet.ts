@@ -136,15 +136,15 @@ export class SpreadsheetDriver {
   }
 
   get peerNames(): string[] {
-    return this.wrapper.findAll('.nui-spreadsheet__peer-name').map((flag) => flag.text());
+    return this.wrapper.findAll('.nui-table-peers__name').map((flag) => flag.text());
   }
 
   get peerAreas(): number {
-    return this.wrapper.findAll('.nui-spreadsheet__peer-area').length;
+    return this.wrapper.findAll('.nui-table-peers__area').length;
   }
 
   get peerFlagsBelow(): number {
-    return this.wrapper.findAll('.nui-spreadsheet__peer-cell--flag-below').length;
+    return this.wrapper.findAll('.nui-table-peers__cell--flag-below').length;
   }
 
   get places(): unknown[] {

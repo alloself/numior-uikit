@@ -1,6 +1,6 @@
-import type { NuiTableRange } from '@numior/table';
+import type { NuiTablePeer, NuiTableRange } from '@numior/table';
 import type { CellAddress, CellRange, WorkbookPeer, WorkbookPlace } from '../core';
-import type { SheetCells, SheetPeerFrame } from './sheet.types';
+import type { SheetCells } from './sheet.types';
 import { selectionKey, tableRangeOf } from './use-sheet-selection';
 
 const singleCell = (range: CellRange): boolean =>
@@ -27,10 +27,10 @@ export const peerFramesOf = (
   peers: readonly WorkbookPeer[],
   sheet: string | undefined,
   cells: SheetCells | undefined,
-): readonly SheetPeerFrame[] =>
+): readonly NuiTablePeer[] =>
   cells === undefined
     ? []
-    : peers.reduce<SheetPeerFrame[]>((frames, peer) => {
+    : peers.reduce<NuiTablePeer[]>((frames, peer) => {
         if (peer.place === undefined || peer.place.sheet !== sheet) {
           return frames;
         }
@@ -40,7 +40,7 @@ export const peerFramesOf = (
         frames.push({
           key: peer.clientId,
           name: peer.user.name,
-          tone: peer.colour + 1,
+          colour: peer.colour,
           cell,
           areas: peer.place.selection.ranges.reduce<NuiTableRange[]>((areas, range) => {
             if (!singleCell(range)) {
@@ -49,7 +49,6 @@ export const peerFramesOf = (
 
             return areas;
           }, []),
-          flagBelow: Math.min(cell.from.row, cell.to.row) === 0,
         });
 
         return frames;

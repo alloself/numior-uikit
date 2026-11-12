@@ -414,6 +414,7 @@ import {
   type TableCellLayout,
   type TableCellLead,
   type TableCellPaint,
+  type NuiTableCellKey,
   type NuiTableCellPosition,
   type TableCellSpan,
   type TableCellView,
@@ -1750,6 +1751,27 @@ const rowAtPosition = (position: number): T | undefined => {
   return node?.kind === TableNodeKind.Row ? node.row : undefined;
 };
 
+const cellKeyOf = (position: NuiTableCellPosition): NuiTableCellKey | undefined => {
+  void revision.value;
+
+  const node = engine.value.nodeAt(pageStart.value + position.row);
+  const column = dataKeys.value[position.col];
+
+  return node?.kind !== TableNodeKind.Row || column === undefined
+    ? undefined
+    : { row: node.id, column };
+};
+
+const cellPositionOf = (key: NuiTableCellKey): NuiTableCellPosition | undefined => {
+  void revision.value;
+
+  const col = dataKeys.value.indexOf(key.column);
+  const [found] = col < 0 ? [] : engine.value.positionsOf((rowId) => rowId === key.row, 1);
+  const row = found === undefined ? -1 : found[1] - pageStart.value;
+
+  return row < 0 || row >= visibleRows.value ? undefined : { row, col };
+};
+
 const paintedKeys = computed(() =>
   rowCells.value.cells.flatMap((cell) => (cell.kind === TablePlacementKind.Data ? [cell.key] : [])),
 );
@@ -2992,6 +3014,8 @@ defineExpose<NuiTableExposed>({
     engine.value.refresh();
   },
   rectOf: overlay.rectOf,
+  keyOf: cellKeyOf,
+  positionOf: cellPositionOf,
   cellFromPoint: overlay.cellFromPoint,
   cellNear: overlay.cellNear,
   followEdge: overlay.followEdge,

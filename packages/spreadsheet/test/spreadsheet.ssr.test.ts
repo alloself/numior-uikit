@@ -47,7 +47,7 @@ describe('NuiSpreadsheet on the server', () => {
       },
     });
 
-    expect(html).toContain('nui-spreadsheet__peer-cell');
+    expect(html).toContain('nui-table-peers__cell');
     expect(html).toContain('Анна');
   });
 

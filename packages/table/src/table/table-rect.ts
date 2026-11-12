@@ -1,6 +1,6 @@
-import type { NuiTableRect } from '@numior/table';
+import type { NuiTableRect } from './table.types';
 
-export const rectStyle = (shown: NuiTableRect | undefined): Record<string, string> =>
+export const tableRectStyle = (shown: NuiTableRect | undefined): Record<string, string> =>
   shown === undefined
     ? { display: 'none' }
     : {

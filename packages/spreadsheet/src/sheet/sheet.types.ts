@@ -560,36 +560,6 @@ export interface ShownClip {
   readonly rect: NuiTableRect;
 }
 
-export interface SheetPeerFrame {
-  readonly key: string;
-  readonly name: string;
-  readonly tone: number;
-  readonly cell: NuiTableRange;
-  readonly areas: readonly NuiTableRange[];
-  readonly flagBelow: boolean;
-}
-
-export interface ShownPeerArea {
-  readonly key: string;
-  readonly rect: NuiTableRect;
-}
-
-export interface ShownPeerFrame {
-  readonly key: string;
-  readonly name: string;
-  readonly tone: number;
-  readonly flagBelow: boolean;
-  readonly rect: NuiTableRect | undefined;
-  readonly areas: readonly ShownPeerArea[];
-}
-
-export interface SheetPeersProps {
-  readonly peers: readonly WorkbookPeer[];
-  readonly sheet: string | undefined;
-  readonly cells: SheetCells | undefined;
-  readonly rectOf: (range: NuiTableRange) => NuiTableRect | undefined;
-}
-
 export interface SheetMarksProps {
   readonly rectOf: (range: NuiTableRange) => NuiTableRect | undefined;
   readonly handle: NuiTableRange | undefined;

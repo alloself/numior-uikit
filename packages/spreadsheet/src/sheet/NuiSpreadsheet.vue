@@ -158,12 +158,7 @@
             @grip="fill.onDown"
             @fill="fill.onDblclick"
           />
-          <NuiSpreadsheetPeers
-            :peers="peers"
-            :sheet="shownSheet?.name"
-            :cells="cells"
-            :rect-of="rectOf"
-          />
+          <NuiTablePeers :peers="peerFrames" :rect-of="rectOf" />
           <NuiSpreadsheetReference
             v-for="frame in references.frames.value"
             :key="frame.key"
@@ -179,7 +174,7 @@
             :key="anchor.key"
             :ref="anchor.hold"
             class="nui-spreadsheet__anchor"
-            :style="rectStyle(anchor.rect)"
+            :style="tableRectStyle(anchor.rect)"
           ></span>
         </template>
       </NuiTable>
@@ -274,7 +269,9 @@ import { PaintRoller } from '@lucide/vue';
 import { Direction, Key, isComposing, useLocale, useMessages } from '@numior/primitives';
 import {
   NuiTable,
+  NuiTablePeers,
   tableCells,
+  tableRectStyle,
   type NuiTableColumn,
   type NuiTableExposed,
   type NuiTableOverlaySlot,
@@ -319,9 +316,8 @@ import { useSheetLineSizes } from './use-sheet-line-sizes';
 import NuiSpreadsheetAssist from './NuiSpreadsheetAssist.vue';
 import NuiSpreadsheetMarks from './NuiSpreadsheetMarks.vue';
 import NuiSpreadsheetNote from './NuiSpreadsheetNote.vue';
-import NuiSpreadsheetPeers from './NuiSpreadsheetPeers.vue';
 import NuiSpreadsheetReference from './NuiSpreadsheetReference.vue';
-import { placeKey } from './sheet-peers';
+import { peerFramesOf, placeKey } from './sheet-peers';
 import { stepRefusalText } from './sheet-refusals';
 import { useSheetNote } from './use-sheet-note';
 import NuiSpreadsheetReport from './NuiSpreadsheetReport.vue';
@@ -372,7 +368,6 @@ import { useSheetMerges } from './use-sheet-merges';
 import { useSheetPopover } from './use-sheet-popover';
 import { useSheetRecalc } from './use-sheet-recalc';
 import { SHEET_SEGMENTS } from './sheet-segments';
-import { rectStyle } from './sheet-rect';
 import { useSheetReferences } from './use-sheet-references';
 import { useSheetPlaces } from './use-sheet-places';
 import { tableRangeOf, useSheetSelection } from './use-sheet-selection';
@@ -500,6 +495,8 @@ const cells = computed(() =>
         calculator: calculator ?? ownCalculator.value,
       }),
 );
+
+const peerFrames = computed(() => peerFramesOf(peers, shownSheet.value?.name, cells.value));
 
 const file = useSheetFile({
   book: () => book,

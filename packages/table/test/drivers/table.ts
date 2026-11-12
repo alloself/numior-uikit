@@ -56,6 +56,7 @@ import {
   type NuiTableRect,
   type NuiTableRowHeights,
   type NuiTableWindow,
+  type NuiTableCellKey,
   type NuiTableCellPosition,
   type NuiTableCellStyle,
 } from '../../src';
@@ -200,7 +201,18 @@ interface DropMark {
   readonly inset?: string | undefined;
 }
 
+export interface PeerFrame {
+  readonly name: string;
+  readonly tone: string;
+  readonly below: boolean;
+  readonly top: string;
+  readonly start: string;
+  readonly areas: number;
+}
+
 const PANE_NAME = /^nui-table__pane--(?!frozen$|cols-)/;
+
+const TONE = /^nui-table-peers__peer--tone-/;
 
 const MOUNT_DEFAULTS: MountDefaults = {
   sort: [],
@@ -1151,6 +1163,25 @@ export class TableDriver<T> {
     }));
   }
 
+  get peerFrames(): readonly PeerFrame[] {
+    return [
+      ...this.element.querySelectorAll<HTMLElement>(
+        '.nui-table__pane--body .nui-table-peers__peer',
+      ),
+    ].map((peer) => {
+      const cell = peer.querySelector<HTMLElement>('.nui-table-peers__cell');
+
+      return {
+        name: cell?.textContent.trim() ?? '',
+        tone: [...peer.classList].find((label) => TONE.test(label))?.replace(TONE, '') ?? '',
+        below: cell?.classList.contains('nui-table-peers__cell--flag-below') ?? false,
+        top: cell?.style.insetBlockStart ?? '',
+        start: cell?.style.insetInlineStart ?? '',
+        areas: peer.querySelectorAll('.nui-table-peers__area').length,
+      };
+    });
+  }
+
   get planeLead(): string {
     return (
       this.element
@@ -1182,6 +1213,14 @@ export class TableDriver<T> {
 
   rectOf(range: NuiTableRange): NuiTableRect | undefined {
     return this.exposed.value?.rectOf(range);
+  }
+
+  keyOf(position: NuiTableCellPosition): NuiTableCellKey | undefined {
+    return this.exposed.value?.keyOf(position);
+  }
+
+  positionOf(key: NuiTableCellKey): NuiTableCellPosition | undefined {
+    return this.exposed.value?.positionOf(key);
   }
 
   fitWidth(text: string, style?: NuiTableCellStyle): number | undefined {

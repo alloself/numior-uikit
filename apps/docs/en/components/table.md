@@ -218,6 +218,22 @@ because of wrapped text. Pinned rows of a table without `height` are not measure
 
 <Example name="table/Overlay" />
 
+### Peer frames
+
+`NuiTablePeers` draws frames in the `overlay` layer around the cells other people work in, with
+their names. Each person needs a `key`, a `name`, a `colour` number and a `cell`, and `areas` adds
+their selection. On the first row the name sits under the frame so the header does not cover it.
+
+Keep the cell of a person by its row key and column key: the row number changes with sorting and
+filters. `keyOf(position)` on the table ref returns such a key. `positionOf(key)` finds the cell in
+the current view, or returns `undefined` for a row hidden by a filter.
+
+A computed value over `positionOf` updates itself when the rows move.
+
+`tableRectStyle(rect)` gives the position styles for your own marks in the layer.
+
+<Example name="table/Peers" />
+
 ### Dragging rows
 
 The `rowDrag` prop adds a drag handle to the first column. Over the top half of another row the
