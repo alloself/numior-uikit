@@ -337,23 +337,26 @@ const lineIndex = (value: number, size: number): number => {
   return index < 0 || index > size ? raise('#REF!') : index;
 };
 
-const onlyArea = (args: FunctionArgs): void => {
+const tableOf = (args: FunctionArgs): EvalValue => {
   const area = Math.trunc(args.number(3, 1));
+  const table = args.value(0);
 
   if (area < 1) {
-    raise('#VALUE!');
+    return raise('#VALUE!');
   }
-  if (area === 1) {
-    return;
+  if (table.kind !== EvalValueKind.Areas) {
+    return area === 1 ? table : raise('#REF!');
   }
 
-  raise('#REF!');
+  const range = table.ranges[area - 1];
+
+  return range === undefined
+    ? raise('#REF!')
+    : { kind: EvalValueKind.Reference, sheet: table.sheet, range };
 };
 
 const indexAt = (args: FunctionArgs): EvalValue => {
-  onlyArea(args);
-
-  const table = args.value(0);
+  const table = tableOf(args);
   const grid = gridOf(table);
   const single = grid.rows === 1 && args.missing(2);
   const row = single ? 1 : lineIndex(args.number(1), grid.rows);

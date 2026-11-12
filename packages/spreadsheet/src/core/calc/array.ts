@@ -46,6 +46,8 @@ export const matrixOf = (value: EvalValue): Matrix => {
     }
     case EvalValueKind.Array:
       return value.rows;
+    case EvalValueKind.Areas:
+      return [[errorValue('#VALUE!')]];
     default:
       return [[value]];
   }

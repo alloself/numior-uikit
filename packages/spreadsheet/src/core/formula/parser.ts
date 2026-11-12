@@ -2,6 +2,7 @@ import { columnIndex, MAX_ROWS, parseCell } from '../address';
 import type { CellAddress, CellRef } from '../cell.types';
 import { isCellError } from '../values';
 import {
+  AreaOperator,
   FormulaChar,
   FormulaFailureReason,
   FormulaNodeKind,
@@ -20,6 +21,7 @@ import {
 } from './formula.types';
 import {
   callRefusal,
+  givesReference,
   literalRefusal,
   MAX_FORMULA_CALLS,
   MAX_FORMULA_DEPTH,
@@ -66,6 +68,21 @@ const ROW_WORD = /^(\$?)(\d{1,7})$/u;
 const SIGNS: ReadonlyMap<string, UnaryOperator> = new Map(
   Object.values(UnaryOperator).map((sign) => [sign, sign]),
 );
+
+const AREA_STARTS: ReadonlySet<TokenKind> = new Set([
+  TokenKind.Word,
+  TokenKind.Sheet,
+  TokenKind.Structured,
+  TokenKind.Number,
+  TokenKind.Error,
+]);
+
+const NO_SIGNATURES: SignatureOf = () => undefined;
+
+const startsArea = (token: Token): boolean =>
+  token.spaced === true &&
+  (AREA_STARTS.has(token.kind) ||
+    (token.kind === TokenKind.Punct && token.text === FormulaChar.OpenParen));
 
 const isBinary = (text: string, operators: readonly BinaryOperator[]): text is BinaryOperator =>
   operators.some((operator) => operator === text);
@@ -153,6 +170,13 @@ const createParser = (
 
   const isMark = (text: string): boolean => isPunct(text) || isOp(text);
 
+  const callsAhead = (): boolean => isPunct(FormulaChar.OpenParen) && peek().spaced !== true;
+
+  const shaped = (node: FormulaNode): boolean => givesReference(node, signatures ?? NO_SIGNATURES);
+
+  const area = (start: Token, node: FormulaNode): FormulaNode =>
+    shaped(node) ? node : fail(start, FormulaFailureReason.Reference);
+
   const expectPunct = (text: string): void => {
     if (!isPunct(text)) {
       fail(
@@ -210,8 +234,26 @@ const createParser = (
       : { kind, ...place, from, to };
   };
 
+  const cellEndAhead = (place: SheetPlace): boolean => {
+    const end = peek(1);
+
+    if (end.kind === TokenKind.Word) {
+      return parseCell(end.text) !== undefined;
+    }
+
+    const endPlace = end.kind === TokenKind.Sheet ? placeOf(end, books) : undefined;
+    const cell = peek(2);
+
+    return (
+      endPlace !== undefined &&
+      samePlace(endPlace, place) &&
+      cell.kind === TokenKind.Word &&
+      parseCell(cell.text) !== undefined
+    );
+  };
+
   const cellReference = (place: SheetPlace, ref: CellRef): FormulaNode => {
-    if (isOp(':')) {
+    if (isOp(FormulaChar.Colon) && cellEndAhead(place)) {
       return cellRange(place, ref);
     }
     if (peek().kind === TokenKind.Hash) {
@@ -313,27 +355,49 @@ const createParser = (
     return fail(blamed, refusal.reason, refusal);
   };
 
-  const word = (token: Token): FormulaNode => {
-    if (isPunct('(')) {
-      next();
+  const nestedArguments = (token: Token, starts: Token[]): FormulaNode[] => {
+    if (calls === MAX_FORMULA_CALLS) {
+      return fail(token, FormulaFailureReason.Nesting);
+    }
 
-      if (calls === MAX_FORMULA_CALLS) {
-        return fail(token, FormulaFailureReason.Nesting);
+    calls += 1;
+
+    const args = argumentsOf(starts);
+
+    calls -= 1;
+    return args;
+  };
+
+  const applied = (callee: FormulaNode): FormulaNode => {
+    let node = callee;
+
+    while (callsAhead()) {
+      const open = next();
+
+      if (!shaped(node)) {
+        return fail(open, FormulaFailureReason.Token);
       }
 
-      const name = canonicalFunction(token.text, locale);
-      const starts: Token[] = [];
+      node = { kind: 'apply', callee: node, args: nestedArguments(open, []) };
+    }
+    return node;
+  };
 
-      calls += 1;
+  const call = (token: Token): FormulaNode => {
+    const name = canonicalFunction(token.text, locale);
+    const starts: Token[] = [];
+    const args = nestedArguments(token, starts);
+    const [only] = args;
 
-      const args = argumentsOf(starts);
-      const [only] = args;
+    return name === FunctionName.Single && args.length === 1 && only !== undefined
+      ? { kind: 'unary', op: '@', operand: only }
+      : applied(checkedCall(token, { kind: 'call', name, args }, starts));
+  };
 
-      calls -= 1;
-
-      return name === FunctionName.Single && args.length === 1 && only !== undefined
-        ? { kind: 'unary', op: '@', operand: only }
-        : checkedCall(token, { kind: 'call', name, args }, starts);
+  const word = (token: Token): FormulaNode => {
+    if (callsAhead()) {
+      next();
+      return call(token);
     }
     return booleanOf(token, locale) ?? reference({}, token) ?? { kind: 'name', name: token.text };
   };
@@ -398,11 +462,63 @@ const createParser = (
 
     groups += 1;
 
+    const start = peek();
     const inner = expression();
+    const node = isPunct(locale.argument) ? union(start, inner) : inner;
 
     expectPunct(')');
     groups -= 1;
-    return inner;
+    return node;
+  };
+
+  const union = (start: Token, first: FormulaNode): FormulaNode => {
+    const areas = [area(start, first)];
+
+    while (isPunct(locale.argument)) {
+      next();
+
+      const item = peek();
+
+      areas.push(area(item, expression()));
+    }
+    return { kind: 'union', areas };
+  };
+
+  const rangeOperand = (): FormulaNode => {
+    const start = peek();
+
+    return start.kind === TokenKind.Sheet
+      ? fail(start, FormulaFailureReason.Reference)
+      : area(start, primary());
+  };
+
+  const rangeLevel = (): FormulaNode => {
+    const start = peek();
+    let node = primary();
+
+    while (isOp(FormulaChar.Colon)) {
+      const left = area(start, node);
+
+      next();
+      node = { kind: 'areas', op: AreaOperator.Range, left, right: rangeOperand() };
+    }
+    return node;
+  };
+
+  const intersectionLevel = (): FormulaNode => {
+    let node = rangeLevel();
+
+    while (startsArea(peek()) && shaped(node)) {
+      const start = peek();
+
+      node = {
+        kind: 'areas',
+        op: AreaOperator.Intersection,
+        left: node,
+        right: area(start, rangeLevel()),
+      };
+    }
+    return node;
   };
 
   const unary = (): FormulaNode => {
@@ -418,7 +534,7 @@ const createParser = (
     }
     return signs.reduceRight<FormulaNode>(
       (operand, op) => ({ kind: 'unary', op, operand }),
-      primary(),
+      intersectionLevel(),
     );
   };
 

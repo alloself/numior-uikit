@@ -350,17 +350,17 @@ describe('reading xlsx', () => {
 
     expect(read.report.items.find((item) => item.code === 'formula-kept')).toMatchObject({
       severity: 'info',
-      count: 2,
+      count: 1,
       sheets: ['Sales'],
     });
 
     expect(['C2', 'C3', 'C4'].map(sales.input)).toEqual([
       '=SUM(Sales:Rates!B1)',
-      '=B2:B4 B3:C3',
+      '=@B2:B4 B3:C3',
       '=Rates!#REF!+1',
     ]);
 
-    expect(['C2', 'C3', 'C4'].map(sales.shown)).toEqual(['75.0%', '25.0%', '#REF!']);
+    expect(['C2', 'C3', 'C4'].map(sales.shown)).toEqual(['75.0%', '100.0%', '#REF!']);
   });
 
   it('keeps the original bytes and tells parsed parts from opaque ones', async () => {

@@ -1,6 +1,7 @@
 import { columnName, formatCell } from '../address';
 import type { CellAddress, CellRef } from '../cell.types';
 import {
+  AreaOperator,
   FormulaNodeKind,
   type BinaryOperator,
   type BookLabelOf,
@@ -47,7 +48,11 @@ const PERCENT = 6;
 
 const UNARY = 7;
 
-const ATOM = 8;
+const INTERSECTION = 8;
+
+const RANGE = 9;
+
+const ATOM = 10;
 
 const PLAIN_SHEET = /^[\p{L}_][\p{L}\p{N}_.]*$/u;
 
@@ -61,6 +66,12 @@ const precedenceOf = (node: FormulaNode): number => {
       return PERCENT;
     case FormulaNodeKind.Unary:
       return UNARY;
+    case FormulaNodeKind.Areas:
+      return node.op === AreaOperator.Range ? RANGE : INTERSECTION;
+    case FormulaNodeKind.Range:
+    case FormulaNodeKind.Columns:
+    case FormulaNodeKind.Rows:
+      return RANGE;
     default:
       return ATOM;
   }
@@ -167,6 +178,9 @@ const arrayText = (
     )
     .texts.join(locale.arrayRow);
 
+const listText = (parts: readonly Printed[], locale: FormulaLocale): string =>
+  parts.map((part) => part.text).join(locale.argument);
+
 const operationText = (
   node: FormulaNode,
   parts: readonly Printed[],
@@ -174,7 +188,16 @@ const operationText = (
 ): string => {
   switch (node.kind) {
     case FormulaNodeKind.Call:
-      return `${localFunction(node.name, printing.locale)}(${parts.map((part) => part.text).join(printing.locale.argument)})`;
+      return `${localFunction(node.name, printing.locale)}(${listText(parts, printing.locale)})`;
+    case FormulaNodeKind.Areas: {
+      const level = precedenceOf(node);
+
+      return `${wrapped(parts[0], level)}${node.op}${wrapped(parts[1], level + 1)}`;
+    }
+    case FormulaNodeKind.Union:
+      return `(${listText(parts, printing.locale)})`;
+    case FormulaNodeKind.Apply:
+      return `${wrapped(parts[0], ATOM)}(${listText(parts.slice(1), printing.locale)})`;
     case FormulaNodeKind.Unary:
       return `${node.op}${wrapped(parts[0], UNARY)}`;
     case FormulaNodeKind.Percent:

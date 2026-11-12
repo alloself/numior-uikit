@@ -15,6 +15,7 @@ import {
   type Condition,
   type Reference,
 } from './aggregate';
+import { eachArea } from './areas';
 import type { EvalValue, FunctionArgs, FunctionSpec } from './calc.types';
 import { numberFromText, raise } from './coerce';
 import { defineFunction } from './registry';
@@ -255,21 +256,21 @@ const subtotal = (args: FunctionArgs): EvalValue => {
   let filled = 0;
 
   for (let index = 1; index < args.count; index += 1) {
-    const { sheet, range } = referenceOf(args.value(index));
+    eachArea(args.value(index), ({ sheet, range }) => {
+      sheet.cells.forEachInRange(range, (row, col, value) => {
+        if (args.subtotalAt(sheet, row, col)) {
+          return;
+        }
+        if (value.kind === CellValueKind.Error) {
+          raise(value.code);
+        }
+        filled += 1;
+        if (value.kind !== CellValueKind.Number) {
+          return;
+        }
 
-    sheet.cells.forEachInRange(range, (row, col, value) => {
-      if (args.subtotalAt(sheet, row, col)) {
-        return;
-      }
-      if (value.kind === CellValueKind.Error) {
-        raise(value.code);
-      }
-      filled += 1;
-      if (value.kind !== CellValueKind.Number) {
-        return;
-      }
-
-      values.push(value.value);
+        values.push(value.value);
+      });
     });
   }
   return numberValue(compute(values, filled));

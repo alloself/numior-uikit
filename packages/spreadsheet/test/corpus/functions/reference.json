@@ -10,7 +10,7 @@
     "B3": 30,
     "C1": "B2"
   },
-  "functions": ["ROW", "COLUMN", "ROWS", "COLUMNS", "ADDRESS", "OFFSET", "INDIRECT"],
+  "functions": ["ROW", "COLUMN", "ROWS", "COLUMNS", "ADDRESS", "OFFSET", "INDIRECT", "AREAS"],
   "cases": [
     {
       "formula": "=ROW()",
@@ -121,6 +121,18 @@
       "expected": {
         "error": "#REF!"
       }
+    },
+    {
+      "formula": "=AREAS(A1:B3)",
+      "expected": 1
+    },
+    {
+      "formula": "=AREAS((A1,B1:B2))",
+      "expected": 2
+    },
+    {
+      "formula": "=AREAS(A1:B3 B2:B3)",
+      "expected": 1
     }
   ]
 }

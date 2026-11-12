@@ -38,6 +38,8 @@ export type BinaryOperator = (typeof BinaryOperator)[keyof typeof BinaryOperator
 
 export type UnaryOperator = (typeof UnaryOperator)[keyof typeof UnaryOperator];
 
+export type AreaOperator = (typeof AreaOperator)[keyof typeof AreaOperator];
+
 export type FormulaFailureReason = (typeof FormulaFailureReason)[keyof typeof FormulaFailureReason];
 
 export type BookIndexOf = (name: string) => number | undefined;
@@ -123,6 +125,18 @@ export type FormulaNode =
       readonly right: FormulaNode;
     }
   | {
+      readonly kind: typeof FormulaNodeKind.Areas;
+      readonly op: AreaOperator;
+      readonly left: FormulaNode;
+      readonly right: FormulaNode;
+    }
+  | { readonly kind: typeof FormulaNodeKind.Union; readonly areas: readonly FormulaNode[] }
+  | {
+      readonly kind: typeof FormulaNodeKind.Apply;
+      readonly callee: FormulaNode;
+      readonly args: readonly FormulaNode[];
+    }
+  | {
       readonly kind: typeof FormulaNodeKind.Array;
       readonly rows: readonly (readonly FormulaNode[])[];
     }
@@ -187,6 +201,9 @@ export const FormulaNodeKind = {
   Unary: 'unary',
   Percent: 'percent',
   Binary: 'binary',
+  Areas: 'areas',
+  Union: 'union',
+  Apply: 'apply',
   Array: 'array',
   Missing: 'missing',
   Opaque: 'opaque',
@@ -224,6 +241,8 @@ export const BinaryOperator = {
 } as const;
 
 export const UnaryOperator = { Minus: '-', Plus: '+', Intersect: '@' } as const;
+
+export const AreaOperator = { Range: ':', Intersection: ' ' } as const;
 
 export const TokenKind = {
   Number: 'number',

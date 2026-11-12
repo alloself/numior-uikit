@@ -5,6 +5,8 @@ import { EvalValueKind, type FunctionSpec } from './calc.types';
 import { raise } from './coerce';
 import { defineFunction } from './registry';
 
+const REFERENCES: ReadonlySet<string> = new Set([EvalValueKind.Reference, EvalValueKind.Areas]);
+
 const ERROR_TYPES: Readonly<Record<CellError, number>> = {
   '#NULL!': 1,
   '#DIV/0!': 2,
@@ -67,7 +69,7 @@ export const INFORMATION_FUNCTIONS: readonly FunctionSpec[] = [
     name: 'ISREF',
     min: 1,
     max: 1,
-    evaluate: (args) => booleanValue(args.value(0).kind === EvalValueKind.Reference),
+    evaluate: (args) => booleanValue(REFERENCES.has(args.value(0).kind)),
   }),
   defineFunction({
     name: 'N',

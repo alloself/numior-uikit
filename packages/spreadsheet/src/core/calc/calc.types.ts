@@ -8,6 +8,12 @@ export interface ArrayValue {
   readonly rows: readonly (readonly CellValue[])[];
 }
 
+export interface AreasValue {
+  readonly kind: typeof EvalValueKind.Areas;
+  readonly sheet: Sheet;
+  readonly ranges: readonly CellRange[];
+}
+
 export type EvalValue =
   | CellValue
   | {
@@ -15,6 +21,7 @@ export type EvalValue =
       readonly sheet: Sheet;
       readonly range: CellRange;
     }
+  | AreasValue
   | ArrayValue;
 
 export type FormulaResult = CellValue | ArrayValue;
@@ -109,7 +116,12 @@ export interface RecalcOptions {
   readonly imported?: boolean | undefined;
 }
 
-export const EvalValueKind = { ...CellValueKind, Reference: 'reference', Array: 'array' } as const;
+export const EvalValueKind = {
+  ...CellValueKind,
+  Reference: 'reference',
+  Areas: 'areas',
+  Array: 'array',
+} as const;
 
 export const FormulaState = {
   Fresh: 'fresh',
