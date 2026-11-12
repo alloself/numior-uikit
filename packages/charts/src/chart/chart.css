@@ -60,6 +60,7 @@
 
 .nui-chart__svg {
   display: block;
+  max-inline-size: 100%;
   overflow: visible;
   direction: ltr;
 }

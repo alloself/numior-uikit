@@ -72,13 +72,17 @@
         data-testid="chart-bounded"
       />
       <div class="charts-cell">
-        <NuiChart
-          :spec="orders"
-          label="Заказы по часам за 15 октября"
-          time-zone="Europe/Moscow"
-          :show-table="showTable"
-          data-testid="chart-hours"
-        />
+        <NuiCard>
+          <NuiCardContent>
+            <NuiChart
+              :spec="orders"
+              label="Заказы по часам за 15 октября"
+              time-zone="Europe/Moscow"
+              :show-table="showTable"
+              data-testid="chart-hours"
+            />
+          </NuiCardContent>
+        </NuiCard>
         <p class="charts-note">Время московское: данные хранятся в UTC</p>
       </div>
     </div>
@@ -87,7 +91,7 @@
 
 <script setup lang="ts">
 import { NuiChart, type ChartHit, type ChartSpec } from '@numior/charts';
-import { NuiSwitch } from '@numior/vue';
+import { NuiCard, NuiCardContent, NuiSwitch } from '@numior/vue';
 import { computed, ref } from 'vue';
 
 const showTable = ref(false);
