@@ -435,18 +435,46 @@ export class EditorDriver {
     await nextTick();
   }
 
-  async chooseBlock(label: string): Promise<void> {
-    await this.openMenu('blocks');
+  private get blockOptions(): HTMLElement[] {
+    return [...this.root.querySelectorAll('.nui-editor-blocks [role="menuitemradio"]')].filter(
+      (item) => item instanceof HTMLElement,
+    );
+  }
 
-    const option = [
-      ...this.root.querySelectorAll('.nui-editor-blocks [role="menuitemradio"]'),
-    ].find((item) => item.getAttribute('aria-label') === label);
+  private blockOption(label: string): HTMLElement {
+    const option = this.blockOptions.find((item) => item.getAttribute('aria-label') === label);
 
-    if (!(option instanceof HTMLElement)) {
+    if (option === undefined) {
       throw new Error(`No block type option reads ${label}`);
     }
-    option.click();
+    return option;
+  }
+
+  async chooseBlock(label: string): Promise<void> {
+    await this.openMenu('blocks');
+    this.blockOption(label).click();
     await nextTick();
+  }
+
+  get blockOptionTitles(): readonly string[] {
+    return this.blockOptions.reduce<string[]>((titles, item) => {
+      const title = item.getAttribute('title');
+
+      if (title !== null) {
+        titles.push(title);
+      }
+      return titles;
+    }, []);
+  }
+
+  async blockHint(label: string): Promise<string> {
+    await this.openMenu('blocks');
+    this.blockOption(label).focus();
+    await nextTick();
+
+    const hint = this.find('.nui-editor-blocks').querySelector('[role="tooltip"]');
+
+    return isShown(hint) ? (hint?.textContent?.trim() ?? '') : '';
   }
 
   private get insertItems(): Element[] {

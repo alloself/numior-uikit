@@ -272,6 +272,16 @@ describe('NuiEditor links, colours and bubble', () => {
     expect(editor.focused).toBe(true);
   });
 
+  it('names a block type of the bubble in a tooltip of the kit, not a native one', async () => {
+    const editor = mounted({ document: page('Hello world'), toolbar: 'bubble' });
+
+    editor.focus();
+    await editor.select(1, 6);
+
+    expect(await editor.blockHint('Heading 2')).toBe('Heading 2');
+    expect(editor.blockOptionTitles).toEqual([]);
+  });
+
   it('keeps the block type out of the header while the bubble offers it', async () => {
     restoreMedia = installMouse();
 
