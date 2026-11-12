@@ -543,6 +543,7 @@ const draftEchoes = createEchoes<NuiTableDraft | undefined>(Object.is);
 const emit = defineEmits<NuiTableEvents<T>>();
 const slots = defineSlots<NuiTableSlots<T>>();
 const rawSlots = useSlots();
+const overlaid = shallowRef(rawSlots.overlay !== undefined);
 
 const root = useTemplateRef<HTMLElement>('root');
 const viewport = useTemplateRef<HTMLElement>('viewport');
@@ -835,6 +836,7 @@ const rowSizes = useTableRowSizes({
   viewport,
   engine,
   mode: () => rowMode.value,
+  measured: () => overlaid.value,
   rowSize: () => rowSize.value,
   count: () => visibleRows.value,
   pageStart: () => pageStart.value,
@@ -944,8 +946,14 @@ const bodySpan = computed(() =>
 
 const fittingRows = computed(() => Math.ceil(bodySpan.value / rowSize.value));
 
+const pagesByCount = (body: number): boolean =>
+  body < 0 ||
+  body >= visibleRows.value ||
+  !windowed.value ||
+  typeof rowSizes.itemSize.value === 'number';
+
 const pageRows = (body: number, forward: boolean): number =>
-  body < 0 || body >= visibleRows.value || typeof rowSizes.itemSize.value === 'number'
+  pagesByCount(body)
     ? pageRowsOf(rowWindow.viewport.value > 0 ? bodySpan.value : undefined, rowSize.value)
     : pageStepOf(
         { span: bodySpan.value, offsetOf: rowWindow.offsetOf, indexAt: rowWindow.indexAt },
@@ -2569,6 +2577,8 @@ const cellSlotted = computed(() => cellSlots.value.length > 0);
 
 onBeforeUpdate(() => {
   const names = cellSlotNames();
+
+  overlaid.value = rawSlots.overlay !== undefined;
 
   if (names.join() === cellSlots.value.join()) {
     return;

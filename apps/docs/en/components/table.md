@@ -212,8 +212,9 @@ The header and pinned columns cover the layer, and clicks pass through it to the
 table ref has the same `rectOf` and `cellFromPoint(x, y)`, which finds the cell under a point on
 screen.
 
-The layer takes row heights from `rowHeight` and the `rowHeights` model. It does not account for
-rows that grew because of wrapped text.
+The layer takes row heights from `rowHeight` and the `rowHeights` model. In a table without
+`height` and with `rowHeight="auto"` it places marks by the measured rows, including rows that grew
+because of wrapped text. Pinned rows of a table without `height` are not measured.
 
 <Example name="table/Overlay" />
 

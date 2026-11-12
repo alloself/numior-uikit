@@ -157,6 +157,20 @@ describe('NuiTable overlay', () => {
     });
   });
 
+  it('places the marks by the measured rows of a table that grows with its rows', async () => {
+    const grid = mountStaff({ slots: { overlay: RangeMarks }, rows: staff(20), auto: true });
+    await grid.settle();
+
+    await grid.measureRows({ 0: 64, 1: 52 });
+
+    expect(grid.overlayMarks[0]).toEqual({
+      top: '104px',
+      start: '80px',
+      width: '300px',
+      height: '92px',
+    });
+  });
+
   it('reports the rendered window and finds the data cell under a point', async () => {
     const grid = mountStaff();
     await grid.settle();

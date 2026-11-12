@@ -16,6 +16,7 @@ export interface TableRowSizesOptions<T> {
   readonly viewport: Readonly<ShallowRef<HTMLElement | null>>;
   readonly engine: Readonly<ShallowRef<TableEngine<T>>>;
   readonly mode: () => TableRowMode;
+  readonly measured: () => boolean;
   readonly rowSize: () => number;
   readonly count: () => number;
   readonly pageStart: () => number;
@@ -34,10 +35,14 @@ export interface TableRowSizes {
 const DETAIL_ROWS = 4;
 const NO_POSITIONS: ReadonlyMap<string, number> = new Map();
 
-const measuredRows = (mode: TableRowMode, details: number): string | undefined => {
+const measuredRows = (
+  mode: TableRowMode,
+  details: number,
+  measured: boolean,
+): string | undefined => {
   switch (mode) {
     case TableRowMode.Flow:
-      return undefined;
+      return measured ? OWN_BODY_ROWS : undefined;
     case TableRowMode.Fixed:
       return details === 0 ? undefined : OWN_DETAIL_ROWS;
     case TableRowMode.Fluid:
@@ -99,12 +104,20 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
       ...sizedRows(base),
     ]);
 
+  const flowSize = (base: number): ItemSize => {
+    if (options.measured()) {
+      void options.arrangement();
+      return indexOf(base);
+    }
+    return sizedPositions.value.size === 0
+      ? base
+      : createSizeIndex(options.count(), base, sizedRows(base));
+  };
+
   const sizeFor = (mode: TableRowMode, base: number): ItemSize => {
     switch (mode) {
       case TableRowMode.Flow:
-        return sizedPositions.value.size === 0
-          ? base
-          : createSizeIndex(options.count(), base, sizedRows(base));
+        return flowSize(base);
       case TableRowMode.Fixed:
         return options.spots().length === 0 && sizedPositions.value.size === 0
           ? base
@@ -177,7 +190,7 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
 
   const targets = (): Element[] => {
     const viewport = options.viewport.value;
-    const rows = measuredRows(options.mode(), options.spots().length);
+    const rows = measuredRows(options.mode(), options.spots().length, options.measured());
 
     return viewport === null || rows === undefined
       ? []
@@ -197,7 +210,7 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
       return;
     }
     observer = new ResizeObserver(onResize);
-    watch(options.rendered, observe, { immediate: true, flush: 'post' });
+    watch([options.rendered, options.measured], observe, { immediate: true, flush: 'post' });
   });
 
   onScopeDispose(() => {
