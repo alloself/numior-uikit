@@ -185,17 +185,21 @@ const finish = async (): Promise<SubmitResult> => {
 const runStep = (): Promise<SubmitResult> => (last.value ? finish() : advance());
 
 const back = (): void => {
-  if (!first.value) {
-    goTo(currentIndex.value - 1, StepFocus.Control);
+  if (first.value) {
+    return;
   }
+
+  goTo(currentIndex.value - 1, StepFocus.Control);
 };
 
 const select = (value: string): void => {
   const index = stepList.value.findIndex((item) => item.value === value);
 
-  if (index !== -1 && index !== currentIndex.value) {
-    goTo(index, StepFocus.Control);
+  if (index === -1 || index === currentIndex.value) {
+    return;
   }
+
+  goTo(index, StepFocus.Control);
 };
 
 const onReset = (): void => {
@@ -213,9 +217,11 @@ watch(
         ? null
         : stepPanels.value?.panel(currentIndex.value)?.querySelector(STEP_TARGETS[target]);
 
-    if (element instanceof HTMLElement) {
-      element.focus();
+    if (!(element instanceof HTMLElement)) {
+      return;
     }
+
+    element.focus();
   },
   { flush: 'post' },
 );

@@ -98,7 +98,12 @@
       </NuiField>
     </NuiDrawer>
     <div class="flex flex-wrap items-center gap-2 tones">
-      <NuiPopover v-model:open="popoverOpen" placement="bottom-start" arrow data-testid="popover">
+      <NuiPopover
+        v-model:open="popoverOpen"
+        placement="bottom-start"
+        :arrow="popoverArrow"
+        data-testid="popover"
+      >
         <template #trigger="{ attrs }">
           <NuiButton v-bind="attrs" variant="outline" data-testid="popover-trigger"
             >Фильтры</NuiButton
@@ -108,6 +113,7 @@
           <NuiInput placeholder="Имя" data-testid="popover-input" />
         </NuiField>
       </NuiPopover>
+      <NuiSwitch v-model="popoverArrow" data-testid="popover-arrow">Стрелка</NuiSwitch>
       <NuiTooltip v-model:open="tooltipOpen" data-testid="tooltip">
         <template #trigger="{ attrs }">
           <NuiButton v-bind="attrs" variant="ghost" tone="neutral" data-testid="tooltip-trigger"
@@ -115,6 +121,19 @@
           >
         </template>
         Сохраняет документ и историю
+      </NuiTooltip>
+      <NuiTooltip shortcut="mod+shift+c" placement="bottom" data-testid="tooltip-keys">
+        <template #trigger="{ attrs }">
+          <NuiButton
+            v-bind="attrs"
+            variant="ghost"
+            tone="neutral"
+            icon="copy"
+            aria-label="Скопировать ссылку"
+            data-testid="tooltip-keys-trigger"
+          />
+        </template>
+        Скопировать ссылку
       </NuiTooltip>
     </div>
     <pre class="output" data-testid="overlays-output">{{ output }}</pre>
@@ -130,6 +149,7 @@ import {
   NuiField,
   NuiInput,
   NuiPopover,
+  NuiSwitch,
   NuiTooltip,
   type NuiDrawerSide,
 } from '@numior/vue';
@@ -148,6 +168,7 @@ const stackedOpen = ref(false);
 const drawerOpen = ref(false);
 const side = ref<NuiDrawerSide>('end');
 const popoverOpen = ref(false);
+const popoverArrow = ref(true);
 const tooltipOpen = ref(false);
 
 const output = computed(() =>

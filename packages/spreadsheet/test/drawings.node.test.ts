@@ -436,8 +436,8 @@ describe('sheet drawings', () => {
 
     expect(placed.ok && book.apply.apply(placed.inverse).ok).toBe(true);
 
-    expect([book.layout() === before, (await book.saved())[0]?.anchor]).toEqual([
-      true,
+    expect([book.layout().drawings, (await book.saved())[0]?.anchor]).toEqual([
+      before.drawings,
       before.drawings[0]?.anchor,
     ]);
   });

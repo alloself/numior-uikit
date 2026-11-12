@@ -22,9 +22,12 @@ import {
   NuiContentAlign,
   NuiContentColour,
   NuiContentTone,
+  type NuiContentHeadingLevel,
 } from './content.types';
 
 export const CONTENT_TONES: readonly NuiContentTone[] = Object.values(NuiContentTone);
+
+export const CONTENT_HEADING_LEVELS: readonly NuiContentHeadingLevel[] = [1, 2, 3, 4, 5, 6];
 
 export const CONTENT_COLOURS: readonly NuiContentColour[] = Object.values(NuiContentColour);
 
@@ -37,6 +40,10 @@ export const IMAGE_WIDTH = { min: 0.2, max: 1 } as const;
 const SCHEME = /^([a-z][\d+.a-z-]*):/i;
 
 const LINK_SCHEMES = new Set(['http', 'https', 'mailto', 'tel']);
+
+const LAST_CONTROL = 0x1f;
+
+const DELETE = 0x7f;
 
 const IMAGE_SCHEMES = new Set(['http', 'https']);
 
@@ -78,14 +85,26 @@ const oneOf =
 const schemeOf = (value: string): string | undefined =>
   SCHEME.exec(value.trim())?.[1]?.toLowerCase();
 
-const isLink = (value: AttrValue): boolean => {
-  const scheme = typeof value === 'string' ? schemeOf(value) : undefined;
+const isControl = (char: string): boolean => {
+  const code = char.codePointAt(0) ?? 0;
 
-  return typeof value === 'string' && (scheme === undefined || LINK_SCHEMES.has(scheme));
+  return code <= LAST_CONTROL || code === DELETE;
+};
+
+const isAddress = (value: AttrValue): value is string =>
+  typeof value === 'string' && !Array.from(value).some(isControl);
+
+const isLink = (value: AttrValue): boolean => {
+  if (!isAddress(value)) {
+    return false;
+  }
+  const scheme = schemeOf(value);
+
+  return scheme === undefined || LINK_SCHEMES.has(scheme);
 };
 
 const isImageSource = (value: AttrValue): boolean => {
-  if (typeof value !== 'string' || value.trim() === '') {
+  if (!isAddress(value) || value.trim() === '') {
     return false;
   }
   const scheme = schemeOf(value);
@@ -94,7 +113,7 @@ const isImageSource = (value: AttrValue): boolean => {
 };
 
 const isFileLink = (value: AttrValue): boolean => {
-  if (typeof value !== 'string' || value.trim() === '') {
+  if (!isAddress(value) || value.trim() === '') {
     return false;
   }
   const scheme = schemeOf(value);
@@ -200,7 +219,9 @@ const captionIn = (holder: HtmlElement | undefined): string =>
     )
   )
     ?.text()
-    .trim() ?? '';
+    .trim() ??
+  holder?.attr('data-caption')?.trim() ??
+  '';
 
 const imageAttrs = (image: HtmlElement | undefined, holder?: HtmlElement): ParsedAttrs => {
   const src = image?.attr('src');
@@ -328,13 +349,15 @@ export const imageWidthStyle = (width: AttrValue | undefined): string | null =>
 
 const renderImage = (node: ElementNode) => {
   const wrap = textOf(node.attrs.wrap);
-  const caption = wrap === NuiContentWrap.Inline ? '' : textOf(node.attrs.caption);
+  const kept = textOf(node.attrs.caption);
+  const caption = wrap === NuiContentWrap.Inline ? '' : kept;
 
   return renderTag(
     'span',
     {
       class: part('image', `wrap-${wrap}`, `align-${textOf(node.attrs.align)}`),
       style: imageWidthStyle(node.attrs.width),
+      'data-caption': caption === '' && kept !== '' ? kept : null,
     },
     [
       renderTag('img', {
@@ -370,7 +393,7 @@ const renderFile = (node: ElementNode) => {
 
 const CONTENT_SPEC: SchemaSpec = {
   name: 'numior-content',
-  version: 4,
+  version: 5,
   nodes: {
     doc: { content: 'block+' },
     paragraph: {
@@ -382,14 +405,14 @@ const CONTENT_SPEC: SchemaSpec = {
     heading: {
       group: 'block',
       content: 'inline*',
-      attrs: { level: { default: 1, verify: oneOf([1, 2, 3]) } },
+      attrs: { level: { default: 1, verify: oneOf(CONTENT_HEADING_LEVELS) } },
       render: (node) =>
         renderTag(`h${String(node.attrs.level)}`, {
           class: part('heading', `level-${String(node.attrs.level)}`),
         }),
-      parse: [1, 2, 3, 4, 5, 6].map((level) => ({
+      parse: CONTENT_HEADING_LEVELS.map((level) => ({
         tag: `h${String(level)}`,
-        attrs: () => ({ level: Math.min(level, 3) }),
+        attrs: () => ({ level }),
       })),
     },
     blockquote: {
@@ -548,6 +571,7 @@ const CONTENT_SPEC: SchemaSpec = {
         size: { default: null, verify: isSize },
         type: { default: '', verify: isText },
       },
+      plainText: (node) => textOf(node.attrs.name) || textOf(node.attrs.url),
       render: renderFile,
       parse: [{ tag: 'a', priority: 1, attrs: fileAttrs }],
     },
@@ -584,6 +608,7 @@ const CONTENT_SPEC: SchemaSpec = {
     hard_break: {
       group: 'inline',
       inline: true,
+      plainText: () => '\n',
       render: () => renderTag('br'),
       parse: [{ tag: 'br' }],
     },
@@ -591,11 +616,12 @@ const CONTENT_SPEC: SchemaSpec = {
       group: 'inline',
       inline: true,
       attrs: { user: { verify: isText }, label: { verify: isText } },
+      plainText: (node) => `@${textOf(node.attrs.label)}`,
       render: (node) =>
         renderTag('span', { class: part('mention'), 'data-user': textOf(node.attrs.user) }, [
           `@${textOf(node.attrs.label)}`,
         ]),
-      parse: [{ tag: 'span', attrs: mentionAttrs }],
+      parse: [{ tag: 'span', attrs: mentionAttrs, own: true }],
     },
   },
   marks: {

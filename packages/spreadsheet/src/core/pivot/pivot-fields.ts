@@ -1,6 +1,6 @@
 import type { CellValue } from '../cell.types';
 import type { Workbook } from '../workbook';
-import { buildPivotCache, pivotKey, pivotSource } from './pivot-cache';
+import { pivotCacheOf, pivotKey } from './pivot-cache';
 import { itemOrder, pivotFieldOf } from './pivot-engine';
 import type { PivotDefinition, PivotField, PivotSort, PivotValue } from './pivot.types';
 
@@ -26,8 +26,7 @@ export const pivotFieldItems = (
   definition: PivotDefinition,
   field: number,
 ): readonly CellValue[] | undefined => {
-  const source = pivotSource(book, definition.source);
-  const items = source === undefined ? undefined : buildPivotCache(source)?.group(field)?.items;
+  const items = pivotCacheOf(book, definition.source)?.group(field)?.items;
 
   if (items === undefined) {
     return undefined;

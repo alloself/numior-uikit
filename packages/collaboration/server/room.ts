@@ -17,11 +17,15 @@ export interface RoomAuthority {
   readonly schema: SchemaStamp;
   readonly snapshot: () => unknown;
   readonly apply: (steps: readonly WireStep[]) => boolean;
+  readonly rebase?:
+    | ((steps: readonly WireStep[], behind: number) => readonly WireStep[] | undefined)
+    | undefined;
 }
 
 export interface RoomPeer {
   readonly clientId: string;
   readonly send: (message: ServerMessage) => void;
+  readonly drop?: (() => void) | undefined;
 }
 
 export interface Room {
@@ -40,9 +44,11 @@ export const createRoom = (authority: RoomAuthority): Room => {
 
   const announce = (from: RoomPeer, state: unknown): void => {
     for (const other of peers) {
-      if (other !== from) {
-        other.send({ kind: ServerMessageKind.Presence, clientId: from.clientId, state });
+      if (other === from) {
+        continue;
       }
+
+      other.send({ kind: ServerMessageKind.Presence, clientId: from.clientId, state });
     }
   };
 
@@ -63,29 +69,40 @@ export const createRoom = (authority: RoomAuthority): Room => {
     peer.send({ kind: ServerMessageKind.Rejected, seq, reason, version: log.version() });
   };
 
+  const taken = (message: SendStepsMessage, behind: number): readonly WireStep[] | undefined => {
+    if (behind === 0) {
+      return authority.apply(message.steps) ? message.steps : undefined;
+    }
+    return behind > 0 ? authority.rebase?.(message.steps, behind) : undefined;
+  };
+
   const onSteps = (peer: RoomPeer, message: SendStepsMessage): void => {
     const version = log.version();
+    const behind = version - message.version;
+    const steps = taken(message, behind);
 
-    if (message.version !== version) {
-      reject(peer, message.seq, RejectReason.Stale);
+    if (steps === undefined) {
+      reject(peer, message.seq, behind === 0 ? RejectReason.Invalid : RejectReason.Stale);
       return;
     }
-    if (!authority.apply(message.steps)) {
-      reject(peer, message.seq, RejectReason.Invalid);
+    log.append(steps, peer.clientId, message.steps.length);
+
+    peer.send({
+      kind: ServerMessageKind.Accepted,
+      seq: message.seq,
+      version: log.version(),
+      ...(behind === 0 ? {} : { steps }),
+    });
+
+    if (steps.length === 0) {
       return;
     }
-    log.append(message.steps, peer.clientId);
-    peer.send({ kind: ServerMessageKind.Accepted, seq: message.seq, version: log.version() });
-
     for (const other of peers) {
-      if (other !== peer) {
-        other.send({
-          kind: ServerMessageKind.Steps,
-          version,
-          clientId: peer.clientId,
-          steps: message.steps,
-        });
+      if (other === peer) {
+        continue;
       }
+
+      other.send({ kind: ServerMessageKind.Steps, version, clientId: peer.clientId, steps });
     }
   };
 
@@ -99,12 +116,34 @@ export const createRoom = (authority: RoomAuthority): Room => {
     }
   };
 
+  const leave = (peer: RoomPeer): void => {
+    peers.delete(peer);
+
+    if (!presence.delete(peer)) {
+      return;
+    }
+
+    announce(peer, null);
+  };
+
+  const supersede = (peer: RoomPeer): void => {
+    for (const old of peers) {
+      if (old.clientId !== peer.clientId) {
+        continue;
+      }
+
+      leave(old);
+      old.drop?.();
+    }
+  };
+
   return {
     join: (peer, hello) => {
       if (!sameStamp(hello.schema, authority.schema)) {
         peer.send({ kind: ServerMessageKind.Error, code: ServerErrorCode.Schema });
         return false;
       }
+      supersede(peer);
       peers.add(peer);
 
       peer.send({
@@ -117,6 +156,10 @@ export const createRoom = (authority: RoomAuthority): Room => {
       return true;
     },
     receive: (peer, message) => {
+      if (!peers.has(peer)) {
+        return;
+      }
+
       switch (message.kind) {
         case ClientMessageKind.Steps:
           onSteps(peer, message);
@@ -127,17 +170,14 @@ export const createRoom = (authority: RoomAuthority): Room => {
         case ClientMessageKind.Presence:
           onPresence(peer, message.state);
           break;
+        case ClientMessageKind.Ping:
+          peer.send({ kind: ServerMessageKind.Pong });
+          break;
         case ClientMessageKind.Hello:
           protocolError(peer);
           break;
       }
     },
-    leave: (peer) => {
-      peers.delete(peer);
-
-      if (presence.delete(peer) && ![...peers].some((p) => p.clientId === peer.clientId)) {
-        announce(peer, null);
-      }
-    },
+    leave,
   };
 };

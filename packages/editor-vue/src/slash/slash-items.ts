@@ -1,8 +1,5 @@
 import {
   Braces,
-  Heading1,
-  Heading2,
-  Heading3,
   List,
   ListOrdered,
   ListTodo,
@@ -11,6 +8,7 @@ import {
   TextQuote,
 } from '@lucide/vue';
 import {
+  insertBelow,
   insertDivider,
   setBlockType,
   toggleList,
@@ -18,9 +16,11 @@ import {
   type Command,
   type Schema,
 } from '@numior/editor-core';
-import type { IconSource } from '@numior/primitives';
+import { CONTENT_HEADING_LEVELS } from '@numior/content';
+import { foldText, type IconSource } from '@numior/primitives';
 import type { NuiEditorMessages } from '../editor/editor.messages';
-import { type SlashItemKind } from '../suggest/suggest.types';
+import { HEADING_ICONS } from '../editor/heading-icons';
+import { SlashItemKind } from '../suggest/suggest.types';
 
 interface SlashLabel {
   readonly key: string;
@@ -38,6 +38,11 @@ export type SlashItem =
   | SlashCommandItem
   | (SlashLabel & { readonly kind: typeof SlashItemKind.Open; readonly open: () => void });
 
+interface SlashText {
+  readonly label: string;
+  readonly keywords?: readonly string[] | undefined;
+}
+
 interface SlashEntry {
   readonly key: string;
   readonly node: string;
@@ -46,12 +51,6 @@ interface SlashEntry {
   readonly keywords: readonly string[];
   readonly command: () => Command;
 }
-
-const HEADING_ICONS: Readonly<Record<1 | 2 | 3, IconSource>> = {
-  1: Heading1,
-  2: Heading2,
-  3: Heading3,
-};
 
 const ENTRIES: readonly SlashEntry[] = [
   {
@@ -62,7 +61,7 @@ const ENTRIES: readonly SlashEntry[] = [
     keywords: ['text', 'paragraph', 'p'],
     command: () => setBlockType('paragraph'),
   },
-  ...([1, 2, 3] as const).map((level): SlashEntry => ({
+  ...CONTENT_HEADING_LEVELS.map((level): SlashEntry => ({
     key: `heading-${String(level)}`,
     node: 'heading',
     label: (texts) => texts.heading({ level }),
@@ -151,14 +150,20 @@ export const slashItems = (schema: Schema, texts: NuiEditorMessages): SlashComma
     return found;
   }, []);
 
-export const filterSlash = (items: readonly SlashItem[], query: string): SlashItem[] => {
-  const needle = query.trim().toLocaleLowerCase();
+export const matchesSlash = (item: SlashText, query: string): boolean => {
+  const needle = foldText(query.trim());
 
-  return needle === ''
-    ? [...items]
-    : items.filter(
-        (item) =>
-          item.label.toLocaleLowerCase().includes(needle) ||
-          item.keywords.some((keyword) => keyword.startsWith(needle)),
-      );
+  return (
+    needle === '' ||
+    foldText(item.label).includes(needle) ||
+    (item.keywords ?? []).some((keyword) => foldText(keyword).startsWith(needle))
+  );
 };
+
+export const filterSlash = (items: readonly SlashItem[], query: string): SlashItem[] =>
+  items.filter((item) => matchesSlash(item, query));
+
+export const belowItems = (items: readonly SlashItem[]): SlashItem[] =>
+  items.map((item) =>
+    item.kind === SlashItemKind.Command ? { ...item, command: insertBelow(item.command) } : item,
+  );

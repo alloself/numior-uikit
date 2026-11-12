@@ -1,7 +1,6 @@
 import {
   computed,
   onMounted,
-  ref,
   toValue,
   watch,
   type ComputedRef,
@@ -46,18 +45,44 @@ const canToggle = (element: HTMLElement | null | undefined): element is HTMLElem
   typeof element.showPopover === 'function' &&
   element.isConnected;
 
+const focusLeftIn = (element: HTMLElement): boolean => {
+  const active = document.activeElement;
+
+  return active === null || active === document.body || element.contains(active);
+};
+
+const canFocus = (opener: Element | null): opener is HTMLElement =>
+  opener instanceof HTMLElement && opener.isConnected;
+
+const concealed = (element: HTMLElement, opener: Element | null): void => {
+  const held = element.contains(document.activeElement);
+
+  element.hidePopover();
+
+  const orphaned = held && focusLeftIn(element);
+
+  if (!orphaned || !canFocus(opener)) {
+    return;
+  }
+
+  opener.focus({ preventScroll: true });
+};
+
 export const usePopover = (
   content: MaybeRefOrGetter<HTMLElement | null | undefined>,
   options: PopoverOptions,
 ): PopoverControl => {
   const id = useControlId(options.id);
   const mode = computed<PopoverMode>(() => toValue(options.mode) ?? PopoverMode.Auto);
-  const visible = ref(false);
+  let shown: HTMLElement | undefined;
+  let opener: Element | null = null;
 
   const setOpen = (next: boolean): void => {
-    if (options.open.value !== next) {
-      options.open.value = next;
+    if (options.open.value === next) {
+      return;
     }
+
+    options.open.value = next;
   };
 
   const sync = (next: boolean): void => {
@@ -65,20 +90,32 @@ export const usePopover = (
     if (!canToggle(element)) {
       return;
     }
-    if (next && !visible.value) {
+    if (next && shown !== element) {
       element.showPopover();
-    } else if (!next && visible.value) {
-      element.hidePopover();
+    } else if (!next && shown === element) {
+      concealed(element, opener);
     }
   };
 
   onMounted(() => {
-    watch(() => options.open.value, sync, { immediate: true, flush: 'post' });
+    watch([() => options.open.value, () => toValue(content)], ([next]) => sync(next), {
+      immediate: true,
+      flush: 'post',
+    });
   });
+
+  const hide = (): void => {
+    const element = toValue(content);
+
+    if (canToggle(element) && shown === element) {
+      concealed(element, opener);
+    }
+    setOpen(false);
+  };
 
   const raise = (): void => {
     const element = toValue(content);
-    if (!canToggle(element) || !visible.value) {
+    if (!canToggle(element) || shown !== element) {
       return;
     }
     element.hidePopover();
@@ -87,7 +124,8 @@ export const usePopover = (
 
   const onBeforetoggle = (event: Event): void => {
     const next = 'newState' in event && event.newState === PopoverState.Open;
-    visible.value = next;
+    shown = next ? (toValue(content) ?? undefined) : undefined;
+    opener = next ? document.activeElement : null;
     setOpen(next);
   };
 
@@ -101,8 +139,15 @@ export const usePopover = (
       'aria-controls': id.value,
     })),
     show: () => setOpen(true),
-    hide: () => setOpen(false),
-    toggle: () => setOpen(!options.open.value),
+    hide,
+    toggle: () => {
+      if (options.open.value) {
+        hide();
+        return;
+      }
+
+      setOpen(true);
+    },
     raise,
   };
 };

@@ -3,6 +3,8 @@ import type { CellAddress, CellRef } from '../cell.types';
 import { isCellError } from '../values';
 import {
   FormulaChar,
+  FormulaFailureReason,
+  FormulaNodeKind,
   FunctionName,
   TokenKind,
   UnaryOperator,
@@ -14,15 +16,30 @@ import {
   type FormulaParse,
   type LineRef,
   type SheetPlace,
+  type SignatureOf,
 } from './formula.types';
+import {
+  callRefusal,
+  literalRefusal,
+  MAX_FORMULA_CALLS,
+  MAX_FORMULA_DEPTH,
+  MAX_FORMULA_GROUPS,
+  MAX_FORMULA_SIGNS,
+  MAX_FORMULA_TEXT,
+  numberRefusal,
+  type FormulaRefusal,
+} from './excel-limits';
 import { tokenize, type Token } from './lexer';
 import { EN_FORMULAS } from './locale';
 import { ORIGIN, relativeFormula } from './origin';
 import { booleanFromWord, canonicalFunction } from './localization';
 import { parseStructured } from './structured';
+import { printFormula } from './printer';
+import { formulaDepth } from './walk';
 
 export interface ParseOptions {
   readonly books?: BookIndexOf | undefined;
+  readonly signatures?: SignatureOf | undefined;
 }
 
 interface Parser {
@@ -40,9 +57,15 @@ class FormulaSyntaxError extends Error {
 
 const COMPARISONS: readonly BinaryOperator[] = ['=', '<>', '<', '>', '<=', '>='];
 
+const LOST_REFERENCE = '#REF!';
+
 const COLUMN_WORD = /^(\$?)([A-Za-z]{1,3})$/u;
 
 const ROW_WORD = /^(\$?)(\d{1,7})$/u;
+
+const SIGNS: ReadonlyMap<string, UnaryOperator> = new Map(
+  Object.values(UnaryOperator).map((sign) => [sign, sign]),
+);
 
 const isBinary = (text: string, operators: readonly BinaryOperator[]): text is BinaryOperator =>
   operators.some((operator) => operator === text);
@@ -65,6 +88,9 @@ const rowLine = (text: string): LineRef | undefined => {
     : { index: row - 1, absolute: match[1] === FormulaChar.Dollar };
 };
 
+const signOf = (token: Token): UnaryOperator | undefined =>
+  token.kind === TokenKind.Op ? SIGNS.get(token.text) : undefined;
+
 const lineOf = (token: Token): LineRef | undefined =>
   token.kind === TokenKind.Number && /^\d+$/u.test(token.text) ? rowLine(token.text) : undefined;
 
@@ -72,9 +98,11 @@ const createParser = (
   tokens: readonly Token[],
   locale: FormulaLocale,
   offset: number,
-  books: ParseOptions['books'],
+  { books, signatures }: ParseOptions,
 ): Parser => {
   let at = 0;
+  let groups = 0;
+  let calls = 0;
 
   const peek = (ahead = 0): Token =>
     tokens[Math.min(at + ahead, tokens.length - 1)] ?? {
@@ -91,8 +119,30 @@ const createParser = (
     return current;
   };
 
-  const fail = (token: Token, reason: FormulaFailure['reason']): never => {
-    throw new FormulaSyntaxError({ position: token.start + offset, reason });
+  const fail = (token: Token, reason: FormulaFailureReason, detail?: FormulaRefusal): never => {
+    throw new FormulaSyntaxError({
+      position: token.start + offset,
+      reason,
+      name: detail?.name,
+      argument: detail?.argument === undefined ? undefined : detail.argument + 1,
+    });
+  };
+
+  const checked = (token: Token, node: FormulaNode): FormulaNode => {
+    const reason = signatures === undefined ? undefined : literalRefusal(node);
+
+    return reason === undefined ? node : fail(token, reason);
+  };
+
+  const numberOf = (token: Token, digits: Token, sign: number): FormulaNode => {
+    const reason =
+      signatures === undefined
+        ? undefined
+        : numberRefusal(digits.text.replace(locale.decimal, '.'));
+
+    return reason === undefined
+      ? { kind: 'number', value: sign * digits.value }
+      : fail(token, reason);
   };
 
   const isOp = (text: string, ahead = 0): boolean =>
@@ -101,9 +151,14 @@ const createParser = (
   const isPunct = (text: string, ahead = 0): boolean =>
     peek(ahead).kind === TokenKind.Punct && peek(ahead).text === text;
 
+  const isMark = (text: string): boolean => isPunct(text) || isOp(text);
+
   const expectPunct = (text: string): void => {
     if (!isPunct(text)) {
-      fail(peek(), peek().kind === TokenKind.End ? 'end' : 'token');
+      fail(
+        peek(),
+        peek().kind === TokenKind.End ? FormulaFailureReason.End : FormulaFailureReason.Token,
+      );
     }
     next();
   };
@@ -127,7 +182,9 @@ const createParser = (
     }
     const end = placeOf(token, books);
 
-    return end !== undefined && samePlace(end, place) ? next() : fail(token, 'reference');
+    return end !== undefined && samePlace(end, place)
+      ? next()
+      : fail(token, FormulaFailureReason.Reference);
   };
 
   const cellRange = (place: SheetPlace, from: CellRef): FormulaNode => {
@@ -135,7 +192,7 @@ const createParser = (
     const end = parseCell(rangeEnd(place).text);
 
     return end === undefined
-      ? fail(peek(-1), 'reference')
+      ? fail(peek(-1), FormulaFailureReason.Reference)
       : { kind: 'range', ...place, from, to: end };
   };
 
@@ -148,7 +205,9 @@ const createParser = (
     next();
     const to = read(rangeEnd(place));
 
-    return to === undefined ? fail(peek(-1), 'reference') : { kind, ...place, from, to };
+    return to === undefined
+      ? fail(peek(-1), FormulaFailureReason.Reference)
+      : { kind, ...place, from, to };
   };
 
   const cellReference = (place: SheetPlace, ref: CellRef): FormulaNode => {
@@ -182,19 +241,19 @@ const createParser = (
   const constant = (token: Token): FormulaNode => {
     switch (token.kind) {
       case TokenKind.Number:
-        return { kind: 'number', value: token.value };
+        return numberOf(token, token, 1);
       case TokenKind.String:
-        return { kind: 'string', value: token.text };
+        return checked(token, { kind: 'string', value: token.text });
       case TokenKind.Error:
         return { kind: 'error', code: isCellError(token.text) ? token.text : '#VALUE!' };
       case TokenKind.Word:
-        return booleanOf(token, locale) ?? fail(token, 'array');
+        return booleanOf(token, locale) ?? fail(token, FormulaFailureReason.Array);
       case TokenKind.Op:
         return token.text === UnaryOperator.Minus && peek().kind === TokenKind.Number
-          ? { kind: 'number', value: -next().value }
-          : fail(token, 'array');
+          ? numberOf(token, next(), -1)
+          : fail(token, FormulaFailureReason.Array);
       default:
-        return fail(token, 'array');
+        return fail(token, FormulaFailureReason.Array);
     }
   };
 
@@ -203,8 +262,8 @@ const createParser = (
 
     rows.at(-1)?.push(constant(next()));
 
-    while (isPunct(locale.arrayColumn) || isPunct(locale.arrayRow)) {
-      if (isPunct(locale.arrayRow)) {
+    while (isMark(locale.arrayColumn) || isMark(locale.arrayRow)) {
+      if (isMark(locale.arrayRow)) {
         rows.push([]);
       }
       next();
@@ -213,10 +272,10 @@ const createParser = (
     expectPunct('}');
     return rows.every((row) => row.length === rows[0]?.length)
       ? { kind: 'array', rows }
-      : fail(peek(-1), 'array');
+      : fail(peek(-1), FormulaFailureReason.Array);
   };
 
-  const argumentsOf = (): FormulaNode[] => {
+  const argumentsOf = (starts: Token[]): FormulaNode[] => {
     const args: FormulaNode[] = [];
 
     if (isPunct(')')) {
@@ -224,8 +283,10 @@ const createParser = (
       return args;
     }
 
-    const argument = (): FormulaNode =>
-      isPunct(locale.argument) || isPunct(')') ? { kind: 'missing' } : expression();
+    const argument = (): FormulaNode => {
+      starts.push(peek());
+      return isPunct(locale.argument) || isPunct(')') ? { kind: 'missing' } : expression();
+    };
 
     args.push(argument());
 
@@ -237,17 +298,42 @@ const createParser = (
     return args;
   };
 
+  const checkedCall = (token: Token, node: FormulaNode, starts: readonly Token[]): FormulaNode => {
+    const refusal =
+      signatures === undefined || node.kind !== FormulaNodeKind.Call
+        ? undefined
+        : callRefusal(node.name, node.args, signatures);
+
+    if (refusal === undefined) {
+      return node;
+    }
+
+    const blamed = refusal.argument === undefined ? token : (starts[refusal.argument] ?? token);
+
+    return fail(blamed, refusal.reason, refusal);
+  };
+
   const word = (token: Token): FormulaNode => {
     if (isPunct('(')) {
       next();
 
+      if (calls === MAX_FORMULA_CALLS) {
+        return fail(token, FormulaFailureReason.Nesting);
+      }
+
       const name = canonicalFunction(token.text, locale);
-      const args = argumentsOf();
+      const starts: Token[] = [];
+
+      calls += 1;
+
+      const args = argumentsOf(starts);
       const [only] = args;
+
+      calls -= 1;
 
       return name === FunctionName.Single && args.length === 1 && only !== undefined
         ? { kind: 'unary', op: '@', operand: only }
-        : { kind: 'call', name, args };
+        : checkedCall(token, { kind: 'call', name, args }, starts);
     }
     return booleanOf(token, locale) ?? reference({}, token) ?? { kind: 'name', name: token.text };
   };
@@ -264,16 +350,17 @@ const createParser = (
   const sheetItem = (place: SheetPlace, token: Token): FormulaNode =>
     reference(place, token) ??
     bookTable(place, token) ??
+    lostReference(place, token) ??
     (token.kind === TokenKind.Word && !isPunct('(') && booleanOf(token, locale) === undefined
       ? { kind: 'name', ...place, name: token.text }
-      : fail(token, 'reference'));
+      : fail(token, FormulaFailureReason.Reference));
 
   const primary = (): FormulaNode => {
     const token = next();
 
     switch (token.kind) {
       case TokenKind.Number:
-        return reference({}, token) ?? { kind: 'number', value: token.value };
+        return reference({}, token) ?? numberOf(token, token, 1);
       case TokenKind.String:
       case TokenKind.Error:
         return constant(token);
@@ -282,14 +369,19 @@ const createParser = (
       case TokenKind.Sheet: {
         const place = placeOf(token, books);
 
-        return place === undefined ? fail(token, 'reference') : sheetItem(place, next());
+        return place === undefined
+          ? fail(token, FormulaFailureReason.Reference)
+          : sheetItem(place, next());
       }
       case TokenKind.Structured:
-        return parseStructured(token.text, locale) ?? fail(token, 'reference');
+        return parseStructured(token.text, locale) ?? fail(token, FormulaFailureReason.Reference);
       case TokenKind.Punct:
         return group(token);
       default:
-        return fail(token, token.kind === TokenKind.End ? 'end' : 'token');
+        return fail(
+          token,
+          token.kind === TokenKind.End ? FormulaFailureReason.End : FormulaFailureReason.Token,
+        );
     }
   };
 
@@ -298,27 +390,36 @@ const createParser = (
       return array();
     }
     if (token.text !== FormulaChar.OpenParen) {
-      return fail(token, 'token');
+      return fail(token, FormulaFailureReason.Token);
     }
+    if (groups === MAX_FORMULA_GROUPS) {
+      return fail(token, FormulaFailureReason.Nesting);
+    }
+
+    groups += 1;
+
     const inner = expression();
 
     expectPunct(')');
+    groups -= 1;
     return inner;
   };
 
   const unary = (): FormulaNode => {
-    const token = peek();
+    const signs: UnaryOperator[] = [];
 
-    if (
-      token.kind === TokenKind.Op &&
-      (token.text === UnaryOperator.Minus ||
-        token.text === UnaryOperator.Plus ||
-        token.text === UnaryOperator.Intersect)
-    ) {
+    for (let sign = signOf(peek()); sign !== undefined; sign = signOf(peek())) {
+      if (signs.length === MAX_FORMULA_SIGNS) {
+        return fail(peek(), FormulaFailureReason.Nesting);
+      }
+
+      signs.push(sign);
       next();
-      return { kind: 'unary', op: token.text, operand: unary() };
     }
-    return primary();
+    return signs.reduceRight<FormulaNode>(
+      (operand, op) => ({ kind: 'unary', op, operand }),
+      primary(),
+    );
   };
 
   const percent = (): FormulaNode => {
@@ -344,12 +445,17 @@ const createParser = (
       const ast = expression();
 
       if (peek().kind !== TokenKind.End) {
-        fail(peek(), 'token');
+        fail(peek(), FormulaFailureReason.Token);
       }
       return ast;
     },
   };
 };
+
+const lostReference = (place: SheetPlace, token: Token): FormulaNode | undefined =>
+  token.kind === TokenKind.Error && token.text === LOST_REFERENCE
+    ? { kind: 'error', code: LOST_REFERENCE, ...place }
+    : undefined;
 
 const placeOf = (token: Token, books: ParseOptions['books']): SheetPlace | undefined => {
   const sheet = token.text === '' ? {} : { sheet: token.text };
@@ -372,24 +478,52 @@ const booleanOf = (token: Token, locale: FormulaLocale): FormulaNode | undefined
   return value === undefined ? undefined : { kind: 'boolean', value };
 };
 
+const depthChecked = (
+  ast: FormulaNode,
+  tokens: readonly Token[],
+  text: string,
+): FormulaParse | undefined =>
+  tokens.length > MAX_FORMULA_DEPTH && formulaDepth(ast) > MAX_FORMULA_DEPTH
+    ? { ok: false, error: { position: text.length, reason: FormulaFailureReason.Depth } }
+    : undefined;
+
+const lengthChecked = (
+  ast: FormulaNode,
+  text: string,
+  origin: CellAddress,
+  { signatures }: ParseOptions,
+): FormulaParse => {
+  const long =
+    signatures !== undefined && printFormula(ast, EN_FORMULAS, origin).length > MAX_FORMULA_TEXT;
+
+  return long
+    ? { ok: false, error: { position: text.length, reason: FormulaFailureReason.LongFormula } }
+    : { ok: true, ast };
+};
+
 export const parseFormula = (
   text: string,
   locale: FormulaLocale = EN_FORMULAS,
   origin: CellAddress = ORIGIN,
-  { books }: ParseOptions = {},
+  options: ParseOptions = {},
 ): FormulaParse => {
   const source = text.startsWith('=') ? text.slice(1) : text;
   const offset = text.length - source.length;
   const tokens = tokenize(source, locale);
 
   if (!Array.isArray(tokens)) {
-    return { ok: false, error: { position: tokens.position + offset, reason: 'token' } };
+    return {
+      ok: false,
+      error: { position: tokens.position + offset, reason: FormulaFailureReason.Token },
+    };
   }
   try {
-    return {
-      ok: true,
-      ast: relativeFormula(createParser(tokens, locale, offset, books).formula(), origin),
-    };
+    const parsed = createParser(tokens, locale, offset, options).formula();
+
+    return (
+      depthChecked(parsed, tokens, text) ??
+      lengthChecked(relativeFormula(parsed, origin), text, origin, options)
+    );
   } catch (error) {
     if (error instanceof FormulaSyntaxError) {
       return { ok: false, error: error.failure };

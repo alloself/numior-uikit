@@ -1,5 +1,12 @@
 export { default as NuiSpreadsheet } from './sheet/NuiSpreadsheet.vue';
-export { charsToPixels, defaultRowHeight, pointsToPixels, sheetCells } from './sheet/sheet-cells';
+export {
+  charsToPixels,
+  defaultRowHeight,
+  pixelsToChars,
+  pixelsToPoints,
+  pointsToPixels,
+  sheetCells,
+} from './sheet/sheet-cells';
 export { spreadsheetMessages, type NuiSpreadsheetMessages } from './sheet/spreadsheet.messages';
 export {
   spreadsheetRulesMessages,
@@ -21,12 +28,16 @@ export type {
   NuiSpreadsheetSaveAdapter,
   NuiSpreadsheetSaved,
 } from './sheet/file/file.types';
+export { NuiSpreadsheetRefusalReason } from './sheet/sheet.types';
 export type {
   NuiSpreadsheetChange,
   NuiSpreadsheetContextMenu,
   NuiSpreadsheetExposed,
   NuiSpreadsheetMenuScope,
+  NuiSpreadsheetPeer,
+  NuiSpreadsheetPlace,
   NuiSpreadsheetProps,
+  NuiSpreadsheetRefusal,
   NuiSpreadsheetSelection,
   SheetCells,
   SheetCellsOptions,

@@ -5,6 +5,7 @@
     :anchor="anchor"
     mode="manual"
     placement="top"
+    size="auto"
     :offset="8"
     padding="sm"
     @mousedown.prevent
@@ -18,7 +19,8 @@
       @focusin="navigation.onFocusin"
     >
       <NuiEditorToolbarGroup
-        v-if="group"
+        v-for="group in groups"
+        :key="group.key"
         :group="group"
         @run="(command, refocus) => emit('run', command, refocus)"
         @link="emit('link')"
@@ -42,6 +44,12 @@ import { toolbarGroups } from '../toolbar/toolbar-items';
 import { ToolbarGroupKey, type ColourMark } from '../toolbar/toolbar.types';
 import type { NuiEditorBubbleProps } from './bubble.types';
 
+const BUBBLE_GROUPS: ReadonlySet<string> = new Set([
+  ToolbarGroupKey.Blocks,
+  ToolbarGroupKey.Marks,
+  ToolbarGroupKey.Selection,
+]);
+
 const { state, options, anchor, open } = defineProps<NuiEditorBubbleProps>();
 
 const emit = defineEmits<{
@@ -56,9 +64,9 @@ const hints = provideToolbarHints();
 const shown = ref(open);
 const texts = useMessages(editorMessages);
 
-const group = computed(() =>
-  toolbarGroups(state, texts.value, options).find(
-    (candidate) => candidate.key === ToolbarGroupKey.Marks,
+const groups = computed(() =>
+  toolbarGroups(state, texts.value, { ...options, blockMenu: true }).filter((candidate) =>
+    BUBBLE_GROUPS.has(candidate.key),
   ),
 );
 

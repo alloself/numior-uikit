@@ -8,7 +8,17 @@ const BORIS = 'Борис';
 
 const CARET_TOLERANCE = 4;
 
+const FRAME_TOLERANCE = 1;
+
 const THEMES = ['light', 'dark'] as const;
+
+const TURNS = Array.from({ length: 60 }, (_, turn) => turn % 2);
+
+const HALF = '+'.repeat(TURNS.length / 2);
+
+const STREAM = 'x'.repeat(800);
+
+const TALL_TEXT = 60;
 
 test.describe('collaboration', () => {
   test('merges what was typed without a connection when it comes back', async ({ collab }) => {
@@ -47,7 +57,6 @@ test.describe('collaboration', () => {
     await expect(anna.tableCell(0, 0)).toHaveText('Anna');
 
     await anna.reload();
-    await anna.openHistory();
 
     await expect(anna.overwritten).toHaveCount(1);
     await expect(anna.overwritten).toContainText('Boris');
@@ -58,6 +67,56 @@ test.describe('collaboration', () => {
     await expect(anna.overwritten).toHaveCount(0);
     await expect(boris.tableCell(0, 0)).toHaveText('Boris');
     await expect(anna.tableCell(0, 0)).toHaveText('Boris');
+  });
+
+  test('frames the table cell someone works in instead of a caret in the text', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.insertTable();
+    await boris.tableCell(0, 0).waitFor();
+    await anna.tableCell(0, 0).click();
+
+    await expect(boris.tablePeer(ANNA)).toBeVisible();
+    await expect(boris.caretOf(ANNA)).toHaveCount(0);
+
+    await anna.page.keyboard.press('ArrowRight');
+    await anna.page.keyboard.press('ArrowDown');
+    await anna.page.keyboard.press('ArrowDown');
+
+    await expect.poll(() => boris.tablePeerDrift(ANNA, 2, 1)).toBeLessThanOrEqual(FRAME_TOLERANCE);
+
+    await anna.page.keyboard.type('Cheese');
+
+    await expect(boris.tablePeer(ANNA)).toBeVisible();
+
+    await anna.page.keyboard.press('Escape');
+    await anna.backToText();
+
+    await expect(boris.tablePeer(ANNA)).toHaveCount(0);
+    await expect(boris.caretOf(ANNA)).toHaveCSS('opacity', '1');
+  });
+
+  test('keeps a table cell open while someone else fills another cell of the table', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.insertTable();
+    await boris.tableCell(0, 0).waitFor();
+    await anna.tableCell(1, 1).click();
+    await anna.page.keyboard.type('Cheese');
+    await boris.setCell(0, 0, 'Bread');
+
+    await expect(anna.tableCell(0, 0)).toHaveText('Bread');
+
+    await anna.page.keyboard.type(' cake');
+    await anna.page.keyboard.press('Enter');
+
+    await expect(boris.tableCell(1, 1)).toHaveText('Cheese cake');
   });
 
   test('opens a copy of another version read-only and keeps its queue', async ({ collab }) => {
@@ -111,6 +170,70 @@ test.describe('collaboration', () => {
     await expect.poll(() => anna.unsentSteps(collab.name)).toBe(0);
   });
 
+  test('keeps the local copy in one tab and says so in the other', async ({ collab }) => {
+    const anna = await collab.joinOffline(ANNA);
+
+    await anna.write('Начало');
+    await expect(anna.copy).toHaveText('Копия пишется');
+
+    const second = await anna.secondTab();
+
+    await expect(second.editor).toContainText('Начало');
+    await expect(second.copy).toHaveText('Копия в другой вкладке');
+  });
+
+  test('takes a comment on a copy opened read-only and leaves its text alone', async ({
+    collab,
+  }) => {
+    const anna = await collab.joinOffline(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Начало');
+    await expect(boris.editor).toContainText('Начало');
+
+    await anna.disconnect();
+    await anna.appendTo(0, ' офлайн');
+    await expect.poll(() => anna.unsentSteps(collab.name)).toBeGreaterThan(0);
+
+    await anna.openWithPlugin(2);
+    await expect(anna.readOnlyDocument).toContainText('Начало');
+
+    await anna.selectWordInCopy(0);
+    await anna.page.keyboard.type('лишнее');
+    await anna.addComment('Заметка');
+
+    await expect(anna.threads).toContainText('Заметка');
+    await expect(anna.readOnlyDocument.locator('.nui-editor__comment')).toHaveText('Начало');
+    await expect(anna.readOnlyDocument).not.toContainText('лишнее');
+    expect(await wcagViolationsOf(anna.page)).toEqual([]);
+  });
+
+  test('closes a document that lost sync, says why and opens it again from the server', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Общая строка');
+    await expect(boris.editor).toContainText('Общая строка');
+
+    await anna.loseSync();
+
+    await expect(anna.failure).toContainText('Правки больше не отправляются');
+    await expect(anna.failure).toContainText('Сервер прислал ответ');
+    await expect(anna.readOnlyDocument).toContainText('Общая строка');
+    expect(await wcagViolationsOf(anna.page)).toEqual([]);
+
+    await boris.appendTo(0, ' и ещё');
+    await anna.openAgain();
+
+    await expect(anna.failure).toHaveCount(0);
+    await expect(anna.editor).toContainText('Общая строка и ещё');
+
+    await anna.appendTo(0, '!');
+    await expect(boris.editor).toContainText('Общая строка и ещё!');
+  });
+
   test('shows what each person types to the other', async ({ collab }) => {
     const anna = await collab.join(ANNA);
     const boris = await collab.join(BORIS);
@@ -139,6 +262,54 @@ test.describe('collaboration', () => {
     await expect(anna.editor).toContainText('Дваслева');
     await expect(anna.editor).toContainText('Один справа');
     await expect.poll(() => boris.text()).toBe(await anna.text());
+  });
+
+  test('types where a person has just clicked while the other keeps typing', async ({ collab }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Один');
+    await anna.newLine('Два');
+    await anna.newLine('Три');
+    await expect(boris.editor).toContainText('Три');
+
+    const typing = anna.keepTyping(STREAM);
+
+    await boris.appendToEach(TURNS, '+');
+    await typing;
+
+    await expect(boris.paragraph(0)).toHaveText(`Один${HALF}`);
+    await expect(boris.paragraph(1)).toHaveText(`Два${HALF}`);
+    await expect(anna.paragraph(0)).toHaveText(`Один${HALF}`);
+    await expect(anna.paragraph(1)).toHaveText(`Два${HALF}`);
+  });
+
+  test('keeps a word being composed in its place while the other person types in the same line', async ({
+    collab,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'chromium',
+      'the composition is driven through the DevTools protocol',
+    );
+
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('one two');
+    await expect(boris.editor).toContainText('one two');
+
+    await anna.startComposing('にほ');
+    await boris.prependTo(0, 'B>');
+
+    await expect(anna.paragraph(0)).toHaveText('B>one twoにほ');
+
+    await anna.commitComposed('日本');
+    await anna.keepTyping('!');
+
+    await expect(boris.paragraph(0)).toHaveText('B>one two日本!');
+    await expect(anna.paragraph(0)).toHaveText('B>one two日本!');
+    expect(await anna.compositionsStarted()).toBe(1);
   });
 
   test('loads the current document for someone who joins later', async ({ collab }) => {
@@ -225,6 +396,134 @@ test.describe('collaboration', () => {
       .toBeLessThan(CARET_TOLERANCE);
   });
 
+  test('paints a selection of someone else over every line it crosses', async ({ collab }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Первая');
+    await anna.newLine('Вторая');
+    await expect(boris.editor).toContainText('Вторая');
+
+    await anna.page.keyboard.press('Control+a');
+
+    await expect(boris.selections).toHaveCount(2);
+  });
+
+  test('keeps the caret of someone else on its text while a line is added above it', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Первая');
+    await anna.newLine('Вторая');
+    await boris.appendTo(1, '!');
+    await expect(anna.paragraph(1)).toHaveText('Вторая!');
+    await expect(anna.caretOf(BORIS)).toHaveCSS('opacity', '1');
+
+    await anna.endOf(0);
+
+    const lag = await anna.caretLag(BORIS, 'Вторая!', () => anna.page.keyboard.press('Enter'));
+
+    expect(lag).toBeLessThanOrEqual(1);
+    await expect(anna.paragraph(2)).toHaveText('Вторая!');
+  });
+
+  test('keeps the caret of someone else on its text while the grip pushes the line and lets it go', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+
+    const fine = await anna.page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    test.skip(!fine, 'the handle follows a mouse');
+
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Первая');
+    await boris.appendTo(0, '!');
+    await expect(anna.paragraph(0)).toHaveText('Первая!');
+    await expect(anna.caretOf(BORIS)).toHaveCSS('opacity', '1');
+
+    const pushed = await anna.caretDrift(BORIS, 0, () => anna.pushLine(0));
+    const released = await anna.caretDrift(BORIS, 0, () => anna.letLineGo());
+
+    expect(pushed).toBeLessThanOrEqual(1);
+    expect(released).toBeLessThanOrEqual(1);
+  });
+
+  test('keeps the other person and the sync when a line turns into a list item or a to-do item', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('Первая');
+    await anna.newLine('Вторая');
+    await anna.newLine('Третья');
+    await expect(boris.paragraph(2)).toHaveText('Третья');
+
+    await boris.endOf(2);
+    await expect(anna.caretOf(BORIS)).toHaveCSS('opacity', '1');
+
+    await anna.prependTo(0, '- ');
+    await anna.prependTo(1, '[] ');
+
+    await expect(boris.bullets).toHaveText(['Первая']);
+    await expect(boris.todos).toHaveText(['Вторая']);
+    await expect(anna.status).toHaveText('online');
+    await expect(boris.status).toHaveText('online');
+    await expect(anna.caretOf(BORIS)).toHaveCSS('opacity', '1');
+    await expect(boris.caretOf(ANNA)).toHaveCSS('opacity', '1');
+
+    await boris.appendTo(2, '!');
+
+    await expect(anna.paragraph(2)).toHaveText('Третья!');
+  });
+
+  test('keeps the caret of someone else on a list item they indent', async ({ collab }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('- Первый');
+    await anna.newLine('Второй');
+    await anna.page.keyboard.press('Tab');
+
+    const nested = boris.editor.locator('li li p');
+
+    await expect(nested).toHaveText('Второй');
+
+    await expect
+      .poll(async () => {
+        const caret = await boxOf(boris.caretOf(ANNA));
+        const line = await boxOf(nested);
+
+        return caret.y >= line.y - 2 && caret.y <= line.y + line.height;
+      })
+      .toBe(true);
+  });
+
+  test('keeps a comment on a list item that gets indented', async ({ collab }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.write('- Первый');
+    await anna.newLine('Второй');
+    await expect(boris.editor).toContainText('Второй');
+
+    await anna.page.keyboard.press('Home');
+    await anna.page.keyboard.press('Shift+End');
+    await anna.addComment('Вопрос');
+
+    await boris.editor.locator('li p').nth(1).click();
+    await boris.page.keyboard.press('Tab');
+
+    await expect(anna.editor.locator('li li p')).toHaveText('Второй');
+    await expect(anna.marks).toHaveText('Второй');
+  });
+
   test('adds a comment to the selected line and marks it', async ({ collab }) => {
     const anna = await collab.join(ANNA);
 
@@ -268,19 +567,87 @@ test.describe('collaboration', () => {
 
     await anna.pressInThread(0, 'Решить');
 
-    await expect(anna.threads).toContainText('Решён');
+    await expect(anna.comments).toBeHidden();
     await expect(anna.marks).toHaveCount(0);
 
-    await anna.pressInThread(0, 'Удалить');
+    await anna.openDiscussions();
 
-    await expect(anna.threads).toHaveCount(0);
+    await expect(anna.discussions).toContainText('Решён');
+
+    await anna.pressInDiscussion(0, 'Удалить');
+
+    await expect(anna.discussions.locator('.nui-collab-comments__thread')).toHaveCount(0);
+  });
+
+  test('opens a discussion at the commented text and closes it with a click away', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+
+    await anna.write('Спорная строка');
+    await anna.newLine('Вторая');
+    await anna.selectLine(0);
+    await anna.addComment('Вопрос');
+
+    await anna.clickAway();
+
+    await expect(anna.comments).toBeHidden();
+
+    await anna.openMark(0);
+
+    const mark = await boxOf(anna.marks.first());
+    const popover = await boxOf(anna.comments);
+
+    expect(popover.y).toBeGreaterThanOrEqual(mark.y + mark.height);
+    expect(Math.abs(popover.x - mark.x)).toBeLessThan(40);
+    await expect(anna.threads).toContainText('Вопрос');
+
+    await anna.clickAway();
+
+    await expect(anna.comments).toBeHidden();
+  });
+
+  test('gives the text back the focus when a discussion is closed from the keyboard', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+
+    await anna.write('Спорная строка');
+    await anna.selectLine(0);
+    await anna.addComment('Вопрос');
+    await anna.clickAway();
+    await anna.openMark(0);
+
+    await anna.enterDiscussion();
+
+    await expect(anna.threads.getByRole('button', { name: 'Ответить' })).toBeFocused();
+
+    await anna.leaveWithKeyboard();
+
+    await expect(anna.comments).toBeHidden();
+    await expect(anna.editor).toBeFocused();
+  });
+
+  test('keeps the actions and the comment on screen for a selection taller than the window', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+
+    await anna.writeLines(TALL_TEXT);
+    await anna.selectEverything();
+    await anna.scrollToMiddle();
+
+    await expect(await anna.selectionBar()).toBeInViewport({ ratio: 1 });
+
+    await anna.startComment();
+
+    await expect(anna.comments).toBeInViewport({ ratio: 1 });
   });
 
   test('shows what a saved version changed', async ({ collab }) => {
     const anna = await collab.join(ANNA);
 
     await anna.write('Первая версия');
-    await anna.openHistory();
     await anna.saveVersion(1);
     await anna.appendTo(0, ' правка');
     await anna.saveVersion(2);
@@ -296,7 +663,6 @@ test.describe('collaboration', () => {
     const boris = await collab.join(BORIS);
 
     await anna.write('Первая версия');
-    await anna.openHistory();
     await anna.saveVersion(1);
     await anna.appendTo(0, ' правка');
     await expect(boris.editor).toContainText('правка');

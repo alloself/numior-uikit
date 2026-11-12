@@ -41,7 +41,11 @@ remain. This depends on the width of the component itself, not of the browser wi
 
 `siblings` sets how many pages are visible on each side of the current one, `boundaries` how
 many at the start and the end. Both default to one. The component corrects a page number
-out of range by itself, for example after the page size grows.
+out of range by itself, for example when there are fewer records.
+
+When the user changes the page size, the component recalculates the page so that the first
+visible record stays on screen. From page 5 of 20 records (81–100) a switch to 50 records leads
+to page 2 (51–100).
 
 ## Accessibility
 

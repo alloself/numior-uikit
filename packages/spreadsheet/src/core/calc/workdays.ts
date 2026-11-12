@@ -27,7 +27,7 @@ export const weekendMask = (value: CellValue | undefined): WeekendMask => {
     return maskOf([5, 6]);
   }
   if (value.kind === CellValueKind.String) {
-    if (!MASK.test(value.value) || value.value === WeekendMask.AllDays) {
+    if (!MASK.test(value.value)) {
       return raise('#VALUE!');
     }
     return Array.from(
@@ -75,9 +75,11 @@ export const networkDays = (
   let count = workdaysFrom(first, last, mask);
 
   for (const holiday of holidays) {
-    if (holiday >= first && holiday <= last && isWorkday(holiday, mask)) {
-      count -= 1;
+    if (holiday < first || holiday > last || !isWorkday(holiday, mask)) {
+      continue;
     }
+
+    count -= 1;
   }
   return from > to ? -count : count;
 };
@@ -94,14 +96,20 @@ export const workday = (
   let left = Math.abs(Math.trunc(days));
   let serial = Math.floor(start);
 
+  if (left > 0 && mask.every(Boolean)) {
+    return raise('#VALUE!');
+  }
+
   while (left > 0) {
     serial += step;
     if (serial < 0 || serial > LAST_SERIAL) {
       return raise('#NUM!');
     }
-    if (isWorkday(serial, mask) && !holidays.has(serial)) {
-      left -= 1;
+    if (!isWorkday(serial, mask) || holidays.has(serial)) {
+      continue;
     }
+
+    left -= 1;
   }
   return serial;
 };

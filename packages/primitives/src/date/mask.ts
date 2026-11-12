@@ -88,9 +88,11 @@ export const dateMaskOf = (locale: string, time = false): readonly DateMaskPart[
 const placeDigit = (run: MaskRun, char: string): void => {
   run.text += char;
   run.digits += 1;
-  if (run.caret === undefined && run.digits >= run.target) {
-    run.caret = run.text.length;
+  if (run.caret !== undefined || run.digits < run.target) {
+    return;
   }
+
+  run.caret = run.text.length;
 };
 
 const fillDigits = (run: MaskRun, part: DigitsPart): boolean => {

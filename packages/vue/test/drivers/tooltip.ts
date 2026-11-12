@@ -48,6 +48,14 @@ export class TooltipDriver extends ComponentDriver {
     return this.wrapper.find<HTMLElement>('.nui-tooltip');
   }
 
+  get label(): string {
+    return this.content.find('.nui-tooltip__text').text();
+  }
+
+  get keys(): string[] {
+    return this.content.findAll('.nui-kbd__key').map((key) => key.text());
+  }
+
   get modelOpen(): boolean {
     return this.scene.vm.open;
   }
@@ -151,7 +159,13 @@ export class TooltipTargetsDriver extends ComponentDriver {
   }
 
   get text(): string {
-    return this.wrapper.find('.nui-tooltip').text();
+    const label = this.wrapper.find('.nui-tooltip__text');
+
+    return (label.exists() ? label : this.wrapper.find('.nui-tooltip')).text();
+  }
+
+  get keys(): string[] {
+    return this.wrapper.findAll('.nui-tooltip .nui-kbd__key').map((key) => key.text());
   }
 
   describedBy(label: string): string | null {

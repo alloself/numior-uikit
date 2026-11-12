@@ -28,8 +28,15 @@ import {
   UnaryOperator,
   type FormulaNode,
 } from '../formula/formula.types';
+import { MAX_FORMULA_DEPTH } from '../formula/excel-limits';
+import { childrenOf } from '../formula/walk';
 
 type KindGuards = Readonly<Record<string, Guard<unknown>>>;
+
+interface Waiting {
+  readonly value: unknown;
+  readonly depth: number;
+}
 
 export const lazy =
   <T>(get: () => Guard<T>): Guard<T> =>
@@ -90,13 +97,17 @@ const isLineRef = shapeOf({ index: isRowOffset, absolute: isBoolean });
 
 const PLACE = { book: optional(isCount), sheet: optional(isString) };
 
-const operand: Guard<FormulaNode> = lazy(() => isFormula);
+const operand = (value: unknown): value is FormulaNode => isRecord(value);
 
-export const isFormula: Guard<FormulaNode> = byKind({
+const isFormulaNode: Guard<FormulaNode> = byKind({
   [FormulaNodeKind.Number]: shapeOf({ kind: oneOf(FormulaNodeKind.Number), value: isNumber }),
   [FormulaNodeKind.String]: shapeOf({ kind: oneOf(FormulaNodeKind.String), value: isString }),
   [FormulaNodeKind.Boolean]: shapeOf({ kind: oneOf(FormulaNodeKind.Boolean), value: isBoolean }),
-  [FormulaNodeKind.Error]: shapeOf({ kind: oneOf(FormulaNodeKind.Error), code: isCellError }),
+  [FormulaNodeKind.Error]: shapeOf({
+    kind: oneOf(FormulaNodeKind.Error),
+    code: isCellError,
+    ...PLACE,
+  }),
   [FormulaNodeKind.Cell]: shapeOf({
     kind: oneOf(FormulaNodeKind.Cell),
     ...PLACE,
@@ -159,7 +170,22 @@ export const isFormula: Guard<FormulaNode> = byKind({
     rows: listOf(listOf(operand)),
   }),
   [FormulaNodeKind.Missing]: shapeOf({ kind: oneOf(FormulaNodeKind.Missing) }),
+  [FormulaNodeKind.Opaque]: shapeOf({ kind: oneOf(FormulaNodeKind.Opaque), text: isString }),
 });
+
+export const isFormula: Guard<FormulaNode> = (value): value is FormulaNode => {
+  const waiting: Waiting[] = [{ value, depth: 1 }];
+
+  for (let item = waiting.pop(); item !== undefined; item = waiting.pop()) {
+    if (item.depth > MAX_FORMULA_DEPTH || !isFormulaNode(item.value)) {
+      return false;
+    }
+    for (const child of childrenOf(item.value)) {
+      waiting.push({ value: child, depth: item.depth + 1 });
+    }
+  }
+  return true;
+};
 
 export const isCellContent: Guard<CellContent> = byKind({
   [CellInputKind.Empty]: shapeOf({ kind: oneOf(CellInputKind.Empty) }),

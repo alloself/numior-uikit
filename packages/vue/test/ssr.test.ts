@@ -33,6 +33,7 @@ import {
   NuiSeparator,
   NuiSkeleton,
   NuiSkipLink,
+  NuiSplitter,
   NuiStepper,
   NuiSwitch,
   NuiTabs,
@@ -62,6 +63,7 @@ import { RouterStub } from './support/router-stub';
 import { labelTarget, popoverTarget } from './support/ssr';
 import { FILES, manyNodes } from './support/tree-items';
 import { CATEGORIES } from './support/options';
+import { atInstant } from './support/clock';
 
 interface Scenario {
   readonly name: string;
@@ -98,6 +100,15 @@ const renderReadonlySelect = () =>
     props: {
       modelValue: 'banana',
       readonly: true,
+      options: [{ value: 'banana', label: 'Banana' }],
+    },
+  });
+
+const renderRequiredSelect = () =>
+  renderToString(NuiSelect, {
+    props: {
+      modelValue: 'banana',
+      required: true,
       options: [{ value: 'banana', label: 'Banana' }],
     },
   });
@@ -457,7 +468,7 @@ const scenarios: Scenario[] = [
   {
     name: 'NuiAlert',
     render: () =>
-      renderToString(NuiAlert, { props: { tone: 'error', title: 'Failed', dismissible: true } }),
+      renderToString(NuiAlert, { props: { tone: 'error', title: 'Failed', closable: true } }),
   },
   {
     name: 'NuiProgress determinate',
@@ -480,7 +491,7 @@ const scenarios: Scenario[] = [
             tone: 'error',
             duration: 0,
             action: undefined,
-            dismissible: true,
+            closable: true,
             leaving: false,
           },
         },
@@ -488,6 +499,11 @@ const scenarios: Scenario[] = [
   },
   { name: 'NuiTooltip', render: () => renderToString(TooltipScene) },
 ];
+
+const LATE_EVENING_UTC = '2026-10-31T22:30:00Z';
+
+const renderBareCalendar = (): Promise<string> =>
+  renderToString(NuiCalendar, { props: { locale: 'en-US' } });
 
 describe('server rendering', () => {
   for (const scenario of scenarios) {
@@ -638,7 +654,9 @@ describe('server rendering', () => {
     expect(close).toContain('nui-button--size-inline');
     expect(close).toContain('tabindex="-1"');
     expect(close).toContain('aria-hidden="true"');
-    expect(html.match(/<button/g)).toHaveLength(3);
+    expect(html.match(/<button[^>]*nui-tab__close/g)).toHaveLength(1);
+    expect(html.match(/<span[^>]*nui-tab-list__edge[^>]*aria-hidden="true"/g)).toHaveLength(2);
+    expect(html).not.toContain('nui-tab-list__edge--shown');
   });
 
   it('renders link tabs as a labelled nav of links with the current page marked', async () => {
@@ -691,6 +709,13 @@ describe('server rendering', () => {
     expect(await renderReadonlySelect()).toContain('aria-readonly="true"');
   });
 
+  it('renders a required select with aria-required and no required attribute on its button', async () => {
+    const html = await renderRequiredSelect();
+
+    expect(html).toContain('aria-required="true"');
+    expect(html).not.toMatch(/<button[^>]*\srequired/);
+  });
+
   it('renders a calendar grid with one tab stop and a deterministic today marker', async () => {
     const html = await renderToString(NuiCalendar, {
       props: { modelValue: '2026-09-24', locale: 'ru-RU', today: '2026-09-24' },
@@ -709,6 +734,14 @@ describe('server rendering', () => {
 
     expect(bare).not.toContain('aria-current');
     expect(bare).toContain('September');
+  });
+
+  it('renders the same calendar in every time zone when neither a date nor today is given', async () => {
+    const west = await atInstant(LATE_EVENING_UTC, 'Pacific/Honolulu', renderBareCalendar);
+    const east = await atInstant(LATE_EVENING_UTC, 'Asia/Tokyo', renderBareCalendar);
+
+    expect(east).toBe(west);
+    expect(west).toContain('October');
   });
 
   it('renders a date picker closed with localised text and a hidden ISO value', async () => {
@@ -785,6 +818,15 @@ describe('server rendering', () => {
     expect(html).toContain('href="#docs"');
     expect(html).not.toContain('nui-sidebar--rail');
     expect(html).not.toContain('<dialog');
+  });
+
+  it('renders a sub list that holds the current page expanded on the server', async () => {
+    const html = await renderToString(LayoutScene);
+
+    expect(html).toContain('nui-sidebar-sub--open');
+    expect(html).toContain('id="reports-items"');
+    expect(html).not.toMatch(/id="reports-items"[^>]*inert/);
+    expect(html).toContain('href="#sales"');
   });
 
   it('renders an upload zone with a labelled button and existing files without previews', async () => {
@@ -962,6 +1004,18 @@ describe('server rendering', () => {
     expect(plain).not.toContain('nui-card--interactive');
   });
 
+  it('renders a loading card busy, with skeletons in its parts and without its action', async () => {
+    const loading = await renderToString(CardScene, { props: { body: 'Body', loading: true } });
+
+    expect(loading).toContain('aria-busy="true"');
+    expect(loading).toContain('nui-card__title--loading');
+    expect(loading).toContain('nui-card__content--loading');
+    expect(loading).toContain('nui-skeleton--shape-rect');
+    expect(loading).not.toContain('nui-card__action');
+    expect(loading).not.toContain('Plans');
+    expect(loading).not.toContain('<img');
+  });
+
   it('renders a selectable list with one selected option and one tab stop', async () => {
     const items = [
       { label: 'Go', value: 'go' },
@@ -1013,6 +1067,15 @@ describe('server rendering', () => {
     expect(windowed).toContain('--_window-lead:0px');
     expect(windowed).toContain('--_window-rest:17280px');
     expect(windowed).toContain('--_window-clamp-start:-720px');
+  });
+
+  it('renders a splitter ratio outside its bounds clamped on the server', async () => {
+    const html = await renderToString(NuiSplitter, {
+      props: { id: 'panes', ratio: 0.95, min: 0.2, max: 0.8 },
+    });
+
+    expect(html).toContain('--_ratio:0.8');
+    expect(html).toContain('aria-valuenow="80"');
   });
 
   it('renders a select with nested options as a tree on the server', async () => {

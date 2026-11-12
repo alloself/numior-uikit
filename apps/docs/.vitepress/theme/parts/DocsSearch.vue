@@ -85,8 +85,10 @@ const go = (item: NuiCommandItem): void => {
 };
 
 watch(open, (isOpen) => {
-  if (isOpen) {
-    void loadIndex();
+  if (!isOpen) {
+    return;
   }
+
+  void loadIndex();
 });
 </script>

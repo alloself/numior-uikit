@@ -3,6 +3,7 @@ import {
   createHTMLWriter,
   fromHTML,
   fromJSON,
+  sameDocJSON,
   toJSON,
   type Doc,
   type DocJSON,
@@ -61,10 +62,12 @@ export const useEditorValue = <V extends NuiEditorValue | undefined>(
   };
 
   const publish = (value: NuiEditorValue): void => {
-    if (fits(value)) {
-      written = value;
-      options.model.value = value;
+    if (!fits(value)) {
+      return;
     }
+
+    written = value;
+    options.model.value = value;
   };
 
   const flush = (): void => {
@@ -79,10 +82,15 @@ export const useEditorValue = <V extends NuiEditorValue | undefined>(
     publish(options.format() === NuiEditorFormat.Json ? toJSON(doc) : write(doc));
   };
 
+  const echoes = (value: NuiEditorValue | undefined): boolean =>
+    value === written ||
+    (typeof value === 'object' && typeof written === 'object' && sameDocJSON(value, written));
+
   watch(options.model, () => {
     const value = current();
 
-    if (value === written) {
+    if (echoes(value)) {
+      written = value;
       return;
     }
     stop();
@@ -96,18 +104,22 @@ export const useEditorValue = <V extends NuiEditorValue | undefined>(
   return {
     initial: docOf(options.schema, written),
     paused: () => {
-      if (options.format() !== NuiEditorFormat.Json) {
-        stop();
-        pending = true;
-        timer = setTimeout(flush, PAUSE_MS);
+      if (options.format() === NuiEditorFormat.Json) {
+        return;
       }
+
+      stop();
+      pending = true;
+      timer = setTimeout(flush, PAUSE_MS);
     },
     changed: (json) => {
-      if (options.format() === NuiEditorFormat.Json) {
-        stop();
-        pending = false;
-        publish(json);
+      if (options.format() !== NuiEditorFormat.Json) {
+        return;
       }
+
+      stop();
+      pending = false;
+      publish(json);
     },
     flush,
   };

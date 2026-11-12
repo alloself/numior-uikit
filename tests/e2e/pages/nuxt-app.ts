@@ -25,9 +25,11 @@ export class NuxtApp {
     this.toasts = page.locator('.nui-toaster__item');
 
     page.on('console', (message) => {
-      if (message.type() === 'warning' || message.type() === 'error') {
-        this.console.push(message.text());
+      if (message.type() !== 'warning' && message.type() !== 'error') {
+        return;
       }
+
+      this.console.push(message.text());
     });
 
     page.on('pageerror', (error) => {

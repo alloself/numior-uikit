@@ -17,7 +17,7 @@ import {
   type CellRange,
 } from '../src/core';
 
-const NBSP = ' ';
+const GROUP = ' ';
 
 const range = (address: string): CellRange => {
   const found = parseRange(address);
@@ -95,6 +95,42 @@ describe('reading typed input', () => {
     });
   });
 
+  it('reads the dates of the last month a sheet can hold', () => {
+    expect(readInput('12/31/9999', EN_NUMBERS)).toEqual({
+      kind: 'value',
+      value: numberValue(2_958_465),
+      format: 'm/d/yyyy',
+    });
+
+    expect(readInput('01.12.9999', RU_NUMBERS)).toEqual({
+      kind: 'value',
+      value: numberValue(2_958_435),
+      format: 'dd.mm.yyyy',
+    });
+
+    expect(readInput('12/32/9999', EN_NUMBERS)).toEqual({
+      kind: 'value',
+      value: textValue('12/32/9999'),
+      format: undefined,
+    });
+  });
+
+  it('keeps a number too large for a cell and a repeated sign as the typed text', () => {
+    const texts = ['1e400', '--5', '+-5', '-$-5', '- -5'];
+
+    expect(texts.map((text) => readInput(text, EN_NUMBERS))).toEqual(
+      texts.map((text) => ({ kind: 'value', value: textValue(text), format: undefined })),
+    );
+
+    expect(
+      ['-5', '+5', '-$5', '$-5', '(5)', '1e300'].map((text) => {
+        const read = readInput(text, EN_NUMBERS);
+
+        return read.kind === 'value' ? read.value : undefined;
+      }),
+    ).toEqual([-5, 5, -5, -5, -5, 1e300].map(numberValue));
+  });
+
   it('keeps quoted, logical, formula and empty entries apart', () => {
     expect(readInput("'0123", EN_NUMBERS)).toEqual({
       kind: 'value',
@@ -161,7 +197,7 @@ describe('cell editor', () => {
     expect(sheet.input(0, 0)).toBe('15.03.2023');
     expect(sheet.shown(1, 0)).toBe('12,50%');
     expect(sheet.input(1, 0)).toBe('12,5%');
-    expect(sheet.shown(2, 0)).toBe(`1${NBSP}234${NBSP}567,89`);
+    expect(sheet.shown(2, 0)).toBe(`1${GROUP}234${GROUP}567,89`);
     expect(sheet.book.formats.size).toBe(4);
   });
 
@@ -194,8 +230,8 @@ describe('cell editor', () => {
     sheet.enter(2, 0, '=ROUND(A1;1)');
     sheet.setFormat('A1:A3', '#,##0.00');
 
-    expect(sheet.shown(0, 0)).toBe(`1${NBSP}234,50`);
-    expect(sheet.shown(2, 0)).toBe(`1${NBSP}234,50`);
+    expect(sheet.shown(0, 0)).toBe(`1${GROUP}234,50`);
+    expect(sheet.shown(2, 0)).toBe(`1${GROUP}234,50`);
     expect(sheet.input(2, 0)).toBe('=ОКРУГЛ(A1;1)');
 
     sheet.calculator.setLocale(EN_LOCALE);

@@ -35,6 +35,11 @@ export interface SubmitDeps<V extends object, O> {
   readonly formErrors: () => readonly FormMessage[];
 }
 
+interface Run {
+  epoch: number;
+  renewed: boolean;
+}
+
 const IGNORED: SubmitResult = { status: SubmitStatus.Ignored, invalid: [], formErrors: [] };
 
 const payloadOf = <V, O>({ submitted, baseline }: RunResult<V, O>): SubmittedValues<V> => {
@@ -68,7 +73,9 @@ export const createSubmit = <V extends object, O>(deps: SubmitDeps<V, O>) => {
 
     for (const [path, messages] of Object.entries(error.errors)) {
       if (normalizePath(path) === '') {
-        formMessages.push(...toMessages(messages));
+        for (const entry of toMessages(messages)) {
+          formMessages.push(entry);
+        }
       } else {
         deps.errors.setFieldError(path, toMessages(messages));
       }
@@ -79,49 +86,71 @@ export const createSubmit = <V extends object, O>(deps: SubmitDeps<V, O>) => {
     );
   };
 
+  const renew = (run: Run, options?: ResetOptions<V>): void => {
+    if (run.epoch !== core.session.epoch) {
+      deps.helpers.resetForm(options);
+      return;
+    }
+
+    const submission = core.submission.value;
+
+    core.submission.value = IDLE_SUBMISSION;
+    deps.helpers.resetForm(options);
+    core.submission.value = submission;
+    run.epoch = core.session.epoch;
+    run.renewed = true;
+  };
+
   const deliver = async (
-    epoch: number,
+    run: Run,
     result: RunResult<V, O>,
     signal: AbortSignal,
   ): Promise<SubmitResult> => {
     try {
-      await deps.onSubmit(payloadOf(result), { ...deps.helpers, output: result.output, signal });
+      await deps.onSubmit(payloadOf(result), {
+        ...deps.helpers,
+        resetForm: (options) => {
+          renew(run, options);
+        },
+        output: result.output,
+        signal,
+      });
     } catch (error) {
       if (!(error instanceof NuiFormError)) {
         throw error;
       }
-      if (epoch !== core.session.epoch) {
+      if (run.epoch !== core.session.epoch) {
         return outcome(SubmitStatus.Aborted);
       }
       reject(error);
       return outcome(SubmitStatus.Rejected);
     }
-    if (epoch !== core.session.epoch) {
+    if (run.epoch !== core.session.epoch) {
       return outcome(SubmitStatus.Aborted);
     }
     if (deps.errors.hasServerErrors()) {
       return outcome(SubmitStatus.Rejected);
     }
-    if (result.baseline !== undefined) {
+    if (result.baseline !== undefined && !run.renewed) {
       core.initial.value = result.baseline;
     }
     return outcome(SubmitStatus.Submitted);
   };
 
-  const attempt = async (epoch: number, signal: AbortSignal): Promise<SubmitResult> => {
+  const attempt = async (run: Run, signal: AbortSignal): Promise<SubmitResult> => {
     await deps.host.flush(core.registry.active());
 
-    if (epoch !== core.session.epoch) {
+    if (run.epoch !== core.session.epoch) {
       return outcome(SubmitStatus.Aborted);
     }
     attemptAll();
 
     const result = await deps.validation.validateFully(core.registry.active());
 
-    if (epoch !== core.session.epoch) {
+    if (run.epoch !== core.session.epoch) {
       return outcome(SubmitStatus.Aborted);
     }
-    return isClean(result) ? deliver(epoch, result, signal) : outcome(SubmitStatus.Invalid);
+    return isClean(result) ? deliver(run, result, signal) : outcome(SubmitStatus.Invalid);
   };
 
   return (event?: Event): Promise<SubmitResult> => {
@@ -132,13 +161,13 @@ export const createSubmit = <V extends object, O>(deps: SubmitDeps<V, O>) => {
     }
 
     const controller = new AbortController();
-    const { epoch } = core.session;
+    const run: Run = { epoch: core.session.epoch, renewed: false };
 
     core.submission.value = { phase: SubmissionPhase.Running, controller };
     deps.errors.clearServerErrors();
 
     const settle = (result: SubmitResult): SubmitResult => {
-      if (epoch === core.session.epoch) {
+      if (run.epoch === core.session.epoch) {
         core.submission.value =
           result.status === SubmitStatus.Submitted
             ? { phase: SubmissionPhase.Succeeded }
@@ -148,12 +177,12 @@ export const createSubmit = <V extends object, O>(deps: SubmitDeps<V, O>) => {
     };
 
     const fail = (error: unknown): never => {
-      if (epoch === core.session.epoch) {
+      if (run.epoch === core.session.epoch) {
         core.submission.value = IDLE_SUBMISSION;
       }
       throw error;
     };
 
-    return core.tracker.track(attempt(epoch, controller.signal).then(settle, fail));
+    return core.tracker.track(attempt(run, controller.signal).then(settle, fail));
   };
 };

@@ -98,8 +98,10 @@ const statusText = (view: StepView): string | undefined => {
 };
 
 const select = (view: StepView): void => {
-  if (view.clickable) {
-    model.value = view.step.value;
+  if (!view.clickable) {
+    return;
   }
+
+  model.value = view.step.value;
 };
 </script>

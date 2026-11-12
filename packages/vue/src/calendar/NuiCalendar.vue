@@ -17,6 +17,7 @@
     ]"
     :inert="disabled || undefined"
     @pointerup="onPointerup"
+    @pointercancel="onPointercancel"
     @pointerleave="selection.hovered.value = undefined"
   >
     <aside v-if="presetList.length > 0" class="nui-calendar__presets">
@@ -73,6 +74,7 @@ import {
   useDirection,
   useLocale,
   useMessages,
+  utcToday,
   weekStartOf,
 } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
@@ -134,7 +136,7 @@ const todayDate = computed(() => today ?? (mounted.value ? localToday() : undefi
 const presetList = computed(() => (mode === NuiCalendarMode.Range ? (presets ?? []) : []));
 
 const initialDate = (): string =>
-  clampIsoDate(selectedDatesOf(model.value)[0] ?? today ?? localToday(), min, max);
+  clampIsoDate(selectedDatesOf(model.value)[0] ?? today ?? utcToday(), min, max);
 
 const calendarView = useCalendarView({
   month: monthModel,
@@ -180,9 +182,11 @@ const request = (date: string, options: RequestOptions = {}): void => {
 
   focusIntent = focus === FocusRequest.None ? undefined : focus;
 
-  if (focusIntent !== undefined) {
-    focusRequests.value += 1;
+  if (focusIntent === undefined) {
+    return;
   }
+
+  focusRequests.value += 1;
 };
 
 const holdsFocus = (): boolean => {
@@ -204,16 +208,20 @@ const settle = (): void => {
 
   const button = root.value?.querySelector(`time[datetime="${focused.value}"]`)?.closest('button');
 
-  if (button instanceof HTMLButtonElement) {
-    focusIntent = undefined;
-    button.focus({ preventScroll: true });
+  if (!(button instanceof HTMLButtonElement)) {
+    return;
   }
+
+  focusIntent = undefined;
+  button.focus({ preventScroll: true });
 };
 
 const remember = (value: NuiCalendarValue | undefined): void => {
-  if (value !== undefined) {
-    picks.last = value;
+  if (value === undefined) {
+    return;
   }
+
+  picks.last = value;
 };
 
 const pick = (date: string): void => {
@@ -257,9 +265,15 @@ const goToday = (): void => {
 };
 
 const onPointerup = (event: PointerEvent): void => {
-  if (!(event.target instanceof Element && event.target.closest('.nui-calendar__day'))) {
-    selection.clearArm();
+  if (event.target instanceof Element && event.target.closest('.nui-calendar__day')) {
+    return;
   }
+
+  selection.clearArm();
+};
+
+const onPointercancel = (): void => {
+  remember(selection.disarm());
 };
 
 const applyPreset = (preset: NuiDatePreset): void => {
@@ -272,9 +286,11 @@ const applyPreset = (preset: NuiDatePreset): void => {
   model.value = range;
   picks.last = range;
 
-  if (range.start) {
-    request(range.start, { focus: FocusRequest.None });
+  if (!range.start) {
+    return;
   }
+
+  request(range.start, { focus: FocusRequest.None });
 };
 
 provideCalendar({
@@ -317,6 +333,13 @@ provideCalendar({
 
 onMounted(() => {
   mounted.value = true;
+
+  if (selectedDatesOf(model.value)[0] === undefined && today === undefined) {
+    const local = clampIsoDate(localToday(), min, max);
+
+    focused.value = local;
+    calendarView.adopt(monthKeyOf(local));
+  }
   watch([focusRequests, calendarView.month, calendarView.view], settle, { flush: 'post' });
 
   watch(model, (value) => {
@@ -327,9 +350,11 @@ onMounted(() => {
     picks.last = value;
     const first = selectedDatesOf(value)[0];
 
-    if (first) {
-      request(first, { focus: FocusRequest.None });
+    if (!first) {
+      return;
     }
+
+    request(first, { focus: FocusRequest.None });
   });
 });
 

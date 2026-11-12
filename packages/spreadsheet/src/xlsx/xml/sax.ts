@@ -308,10 +308,12 @@ export const createXmlParser = (handlers: XmlHandlers): XmlParser => {
   };
 
   const keepText = (from: number, to: number): void => {
-    if (to > from) {
-      pendingAt = pending === '' ? offset + from : pendingAt;
-      pending += buffer.slice(from, to);
+    if (to <= from) {
+      return;
     }
+
+    pendingAt = pending === '' ? offset + from : pendingAt;
+    pending += buffer.slice(from, to);
   };
 
   const consume = (): void => {
@@ -323,14 +325,16 @@ export const createXmlParser = (handlers: XmlHandlers): XmlParser => {
 
       keepText(at, textEnd);
       at = textEnd;
-      if (open >= 0) {
-        const end = markupAt(open);
-
-        if (end < 0) {
-          break;
-        }
-        at = end;
+      if (open < 0) {
+        continue;
       }
+
+      const end = markupAt(open);
+
+      if (end < 0) {
+        break;
+      }
+      at = end;
     }
     buffer = buffer.slice(at);
     offset += at;
@@ -386,10 +390,12 @@ export const parseXmlStream = async (
   const feed = async (text: string): Promise<void> => {
     for (let at = 0; at < text.length; at += PIECE) {
       parser.write(text.slice(at, at + PIECE));
-      if (options.yieldTo !== undefined && performance.now() - started > (options.budgetMs ?? 8)) {
-        await options.yieldTo();
-        started = performance.now();
+      if (options.yieldTo === undefined || performance.now() - started <= (options.budgetMs ?? 8)) {
+        continue;
       }
+
+      await options.yieldTo();
+      started = performance.now();
     }
   };
 

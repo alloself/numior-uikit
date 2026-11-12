@@ -45,6 +45,9 @@ Describe the format in `mask`.
 The field adds the other mask characters, such as brackets and dashes, as the user types. Add
 `.unmasked` to `v-model` to keep only the typed characters in the model.
 
+While a word is composed through an input method (CJK, Android keyboard suggestions), the mask
+and the model wait for the composition to end, as `v-model` on a plain `<input>` does.
+
 ### Update the model after typing
 
 Add the `.lazy` modifier.

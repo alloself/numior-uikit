@@ -11,8 +11,14 @@ import type {
 import { CollabRestoreKind } from '@numior/collaboration';
 import { toJSON } from '@numior/editor-core';
 import { fixtureSchema } from '@numior/editor-core/fixtures';
-import { IDBFactory } from 'fake-indexeddb';
-import { offlinePersistence, type OfflineLocks, type OfflinePersistenceOptions } from '../src';
+import { IDBFactory, IDBObjectStore } from 'fake-indexeddb';
+import { vi } from 'vite-plus/test';
+import {
+  offlinePersistence,
+  type OfflineCopy,
+  type OfflineLocks,
+  type OfflinePersistenceOptions,
+} from '../src';
 import { inserting, textDoc } from './support';
 
 type SessionVersions = Partial<
@@ -27,6 +33,10 @@ interface PersistenceSession {
   readonly restored: CollabRestored | undefined;
   readonly blocked: CollabBlocked | undefined;
   readonly tracking: CollabTracking | undefined;
+  readonly states: readonly OfflineCopy[];
+  readonly errors: readonly unknown[];
+  readonly refused: () => Promise<void>;
+  readonly keptAgain: () => Promise<void>;
   readonly pending: () => readonly WireStep[];
   readonly version: () => number | null;
   readonly loadFromServer: (text: string, version: number) => void;
@@ -74,24 +84,86 @@ const fakeDocument = (restored: CollabRestored | undefined): FakeDocument => {
       pending = pending.slice(count);
       version = confirmed;
     },
+    settle: (count, _steps, settled) => {
+      pending = pending.slice(count);
+      version = settled;
+      return true;
+    },
     add: (step) => {
       pending = [...pending, step];
     },
   };
 };
 
-export const createPersistenceDriver = () => {
-  const factory = new IDBFactory();
-  const locks = fakeLocks();
+const RETRY = 1000;
 
-  const persistenceOf = (versions: SessionVersions): CollabPersistence =>
-    offlinePersistence('doc', { schema: fixtureSchema, factory, locks, ...versions });
+const TURNS = 500;
+
+const turn = (): Promise<void> =>
+  new Promise((resolve) => {
+    setImmediate(resolve);
+  });
+
+const until = async (done: () => boolean, turns = TURNS): Promise<void> => {
+  if (done() || turns === 0) {
+    return;
+  }
+
+  await turn();
+  await until(done, turns - 1);
+};
+
+const refused = function (this: IDBObjectStore): never {
+  this.transaction.abort();
+  throw new DOMException('The quota has been exceeded', 'QuotaExceededError');
+};
+
+const refuseWrites = (count: number): void => {
+  vi.restoreAllMocks();
+
+  const put = vi.spyOn(IDBObjectStore.prototype, 'put');
+
+  Array.from({ length: count }, () => put.mockImplementationOnce(refused));
+};
+
+export const restoreBrowser = (): void => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+};
+
+export const createPersistenceDriver = (guard: 'locks' | 'channel' | 'none' = 'locks') => {
+  const factory = new IDBFactory();
+  const locks = guard === 'locks' ? fakeLocks() : undefined;
+
+  if (guard !== 'locks') {
+    vi.stubGlobal('navigator', {});
+  }
+
+  if (guard === 'none') {
+    vi.stubGlobal('BroadcastChannel', undefined);
+  }
 
   const session = async (
     clientId = 'me',
     versions: SessionVersions = {},
   ): Promise<PersistenceSession> => {
-    const persistence = persistenceOf(versions);
+    const states: OfflineCopy[] = [];
+    const errors: unknown[] = [];
+
+    const persistence: CollabPersistence = offlinePersistence('doc', {
+      schema: fixtureSchema,
+      factory,
+      locks,
+      onState: (state) => {
+        states.push(state);
+      },
+      onError: (error) => {
+        errors.push(error);
+      },
+      ...versions,
+    });
+
     const outcome = await persistence.restore();
     const restored = readyOf(outcome);
     const fake = fakeDocument(restored);
@@ -102,6 +174,13 @@ export const createPersistenceDriver = () => {
       restored,
       blocked: outcome?.kind === CollabRestoreKind.Blocked ? outcome : undefined,
       tracking,
+      states,
+      errors,
+      refused: () => until(() => errors.length > 0),
+      keptAgain: async () => {
+        await vi.advanceTimersByTimeAsync(RETRY);
+        await until(() => states.at(-1) === 'kept');
+      },
       pending: fake.pending,
       version: fake.version,
       loadFromServer: (text, version) => {
@@ -123,7 +202,7 @@ export const createPersistenceDriver = () => {
     };
   };
 
-  return { session };
+  return { session, refuseWrites };
 };
 
 export const insertedText = (text: string, at: number): WireStep =>

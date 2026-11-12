@@ -1,12 +1,12 @@
 import { clamp } from '@vueuse/core';
 import { Key, ListMove, listMoveFor } from '@numior/primitives';
-import { edgeDirectionOf, tableEdge, type TableEdgeOf } from './table-keys';
+import { edgeDirectionOf, tableEdge, type TableEdgeOf, type TableLastOf } from './table-keys';
 import {
   TableRangeLines,
   type CopyShapeKind,
   type NuiTableRange,
   type NuiTableRanges,
-  type TableCellPosition,
+  type NuiTableCellPosition,
   type TableRangeSegment,
   type TableRevealAxis,
   type TableSpan,
@@ -40,6 +40,7 @@ export interface CornerKey {
   readonly page: number;
   readonly rtl: boolean;
   readonly edge?: TableEdgeOf | undefined;
+  readonly last?: TableLastOf | undefined;
 }
 
 interface RangeItem {
@@ -60,7 +61,7 @@ export const boxOf = (range: NuiTableRange): RangeBox => ({
   end: Math.max(range.from.col, range.to.col),
 });
 
-export const samePosition = (a: TableCellPosition, b: TableCellPosition): boolean =>
+export const samePosition = (a: NuiTableCellPosition, b: NuiTableCellPosition): boolean =>
   a.row === b.row && a.col === b.col;
 
 export const sameRanges = (a: NuiTableRanges, b: NuiTableRanges): boolean =>
@@ -76,14 +77,14 @@ export const sameRanges = (a: NuiTableRanges, b: NuiTableRanges): boolean =>
   });
 
 export const clampPosition = (
-  position: TableCellPosition,
+  position: NuiTableCellPosition,
   bounds: RangeBounds,
-): TableCellPosition => ({
+): NuiTableCellPosition => ({
   row: clamp(position.row, 0, Math.max(0, bounds.rows - 1)),
   col: clamp(position.col, 0, Math.max(0, bounds.cols - 1)),
 });
 
-export const inRanges = (ranges: NuiTableRanges, position: TableCellPosition): boolean =>
+export const inRanges = (ranges: NuiTableRanges, position: NuiTableCellPosition): boolean =>
   ranges.some((range) => {
     const box = boxOf(range);
 
@@ -248,11 +249,11 @@ const joinAll = (items: readonly RangeItem[]): readonly RangeItem[] => {
   );
 };
 
-const isCorner = (box: RangeBox, cell: TableCellPosition): boolean =>
+const isCorner = (box: RangeBox, cell: NuiTableCellPosition): boolean =>
   (cell.row === box.top || cell.row === box.bottom) &&
   (cell.col === box.start || cell.col === box.end);
 
-const orient = (box: RangeBox, moving: TableCellPosition | undefined): NuiTableRange =>
+const orient = (box: RangeBox, moving: NuiTableCellPosition | undefined): NuiTableRange =>
   moving !== undefined && isCorner(box, moving)
     ? {
         from: { row: box.top + box.bottom - moving.row, col: box.start + box.end - moving.col },
@@ -325,9 +326,9 @@ export const columnSpansOf = (ranges: NuiTableRanges, offset: number): RangeSpan
 
 const edgeCorner = (
   input: CornerKey,
-  corner: TableCellPosition,
+  corner: NuiTableCellPosition,
   bounds: RangeBounds,
-): TableCellPosition | undefined => {
+): NuiTableCellPosition | undefined => {
   const lastRow = bounds.rows - 1;
   const lastCol = bounds.cols - 1;
 
@@ -335,13 +336,15 @@ const edgeCorner = (
     case Key.Home:
       return input.ctrl ? { row: 0, col: 0 } : { row: corner.row, col: 0 };
     case Key.End:
-      return input.ctrl ? { row: lastRow, col: lastCol } : { row: corner.row, col: lastCol };
+      return input.ctrl
+        ? (input.last?.() ?? { row: lastRow, col: lastCol })
+        : { row: corner.row, col: lastCol };
     default:
       return undefined;
   }
 };
 
-const rowStep = (input: CornerKey, corner: TableCellPosition) => {
+const rowStep = (input: CornerKey, corner: NuiTableCellPosition) => {
   switch (input.key) {
     case Key.ArrowUp:
       return corner.row - 1;
@@ -356,7 +359,7 @@ const rowStep = (input: CornerKey, corner: TableCellPosition) => {
   }
 };
 
-const colStep = (input: CornerKey, corner: TableCellPosition) => {
+const colStep = (input: CornerKey, corner: NuiTableCellPosition) => {
   switch (listMoveFor(input.key, 'horizontal', input.rtl)) {
     case ListMove.Next:
       return corner.col + 1;
@@ -368,10 +371,10 @@ const colStep = (input: CornerKey, corner: TableCellPosition) => {
 };
 
 export const stepCorner = (
-  corner: TableCellPosition,
+  corner: NuiTableCellPosition,
   input: CornerKey,
   bounds: RangeBounds,
-): TableCellPosition | undefined => {
+): NuiTableCellPosition | undefined => {
   const direction = input.ctrl ? edgeDirectionOf(input.key, input.rtl) : undefined;
 
   if (direction !== undefined) {

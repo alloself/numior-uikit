@@ -22,6 +22,7 @@
         :type="type"
         :value="draft"
         @input="onInput"
+        @compositionend="onInput"
         @change="onChange"
       />
       <span v-if="$slots.suffix" class="nui-input__suffix">
@@ -36,6 +37,7 @@ import { ref, useTemplateRef, watch } from 'vue';
 import {
   applyMask,
   InputType,
+  isComposingInput,
   maskCaret,
   useFieldControl,
   useSplitAttrs,
@@ -89,10 +91,12 @@ const state = { raw: mask ? applyMask(model.value, mask).raw : '' };
 
 watch(model, (value) => {
   const mirrored = outgoing(modifiers.trim ? draft.value.trim() : draft.value);
-  if (mirrored !== value) {
-    draft.value = display(value);
-    state.raw = mask ? applyMask(value, mask).raw : '';
+  if (mirrored === value) {
+    return;
   }
+
+  draft.value = display(value);
+  state.raw = mask ? applyMask(value, mask).raw : '';
 });
 
 const reformat = (element: HTMLInputElement, pattern: string, event: Event): void => {
@@ -112,16 +116,19 @@ const reformat = (element: HTMLInputElement, pattern: string, event: Event): voi
 
 const onInput = (event: Event): void => {
   const element = inputElement.value;
-  if (!element) {
+
+  if (!element || isComposingInput(event)) {
     return;
   }
   if (mask) {
     reformat(element, mask, event);
   }
   draft.value = element.value;
-  if (!modifiers.lazy) {
-    model.value = outgoing(element.value);
+  if (modifiers.lazy) {
+    return;
   }
+
+  model.value = outgoing(element.value);
 };
 
 const onChange = (): void => {
@@ -137,9 +144,11 @@ const onChange = (): void => {
 };
 
 const commitDraft = (): void => {
-  if (modifiers.lazy) {
-    onChange();
+  if (!modifiers.lazy) {
+    return;
   }
+
+  onChange();
 };
 
 defineExpose({ focus: () => inputElement.value?.focus() });

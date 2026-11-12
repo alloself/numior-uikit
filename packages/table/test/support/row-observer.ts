@@ -60,9 +60,11 @@ export const stubRowObserver = (): RowObserverStub => {
           return found;
         }, []);
 
-        if (entries.length > 0) {
-          notify(entries, observer);
+        if (entries.length === 0) {
+          continue;
         }
+
+        notify(entries, observer);
       }
     },
     restore: () => {

@@ -27,7 +27,7 @@ const { pasted, anchor, provider, bookmark } = defineProps<{
   bookmark: boolean;
 }>();
 
-const emit = defineEmits<{ choose: [kind: LinkKind]; dismiss: [] }>();
+const emit = defineEmits<{ select: [kind: LinkKind]; close: [] }>();
 
 const texts = useMessages(editorMessages);
 const menu = useTemplateRef<NuiMenuExposed>('menu');
@@ -36,7 +36,7 @@ let chosen = false;
 
 const choose = (kind: LinkKind): void => {
   chosen = true;
-  emit('choose', kind);
+  emit('select', kind);
 };
 
 const items = computed((): NuiMenuEntry[] => [
@@ -58,7 +58,7 @@ const items = computed((): NuiMenuEntry[] => [
     label: texts.value.pasteLink,
     icon: 'link',
     onSelect: () => {
-      emit('dismiss');
+      emit('close');
     },
   },
 ]);
@@ -76,8 +76,10 @@ watch(
 );
 
 watch(open, (value) => {
-  if (!value && !chosen && pasted !== undefined) {
-    emit('dismiss');
+  if (value || chosen || pasted === undefined) {
+    return;
   }
+
+  emit('close');
 });
 </script>

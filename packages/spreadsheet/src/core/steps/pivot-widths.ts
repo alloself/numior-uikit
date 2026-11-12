@@ -1,7 +1,7 @@
 import { formatValue } from '../format/format-value';
 import { EN_NUMBERS } from '../format/number-locale';
-import type { LineLayout, SheetLayout } from '../layout/layout.types';
-import { lineLayoutsOf } from '../layout/line-layouts';
+import type { SheetLayout } from '../layout/layout.types';
+import { withLineSizes } from '../layout/line-layouts';
 import type { Sheet, Workbook } from '../workbook';
 import type { CellEdit } from './step.types';
 
@@ -10,16 +10,6 @@ const PADDING = 2;
 const DEFAULT_WIDTH = 8.43;
 
 const MAX_WIDTH = 80;
-
-const BLANK_LINE: LineLayout = {
-  size: undefined,
-  custom: false,
-  hidden: false,
-  level: 0,
-  collapsed: false,
-  style: undefined,
-  extra: [],
-};
 
 const widthsOf = (
   book: Workbook,
@@ -48,17 +38,5 @@ export const fittedLayout = (
     return layout;
   }
 
-  const entries: [number, LineLayout][] = [];
-
-  layout.cols.forEach((col, line) => {
-    if (!widths.has(col)) {
-      entries.push([col, line]);
-    }
-  });
-
-  widths.forEach((width, col) => {
-    entries.push([col, { ...(layout.cols.get(col) ?? BLANK_LINE), size: width, custom: true }]);
-  });
-
-  return { ...layout, cols: lineLayoutsOf(entries) };
+  return { ...layout, cols: withLineSizes(layout.cols, widths) };
 };

@@ -59,8 +59,8 @@ describe('NuiTable pages', () => {
     await grid.choosePageSize(10);
 
     expect(grid.pageSize).toBe(10);
-    expect(grid.page).toBe(3);
-    expect(grid.cellText(0, 2)).toBe('Сотрудник 20');
+    expect(grid.page).toBe(5);
+    expect(grid.cellText(0, 2)).toBe('Сотрудник 40');
 
     await grid.setQuick('Сотрудник 4');
 

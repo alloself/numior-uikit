@@ -17,9 +17,9 @@ type Scan = { readonly token: Token; readonly next: number } | LexFailure;
 
 const LONGEST_ERROR = 12;
 
-const WORD_START = /[\p{L}_$]/u;
+const WORD_START = /[\p{L}_$\\]/u;
 
-const WORD_PART = /[\p{L}\p{N}_.$]/u;
+export const WORD_PART = /[\p{L}\p{N}_.$?\\]/u;
 
 const DIGIT = /\d/u;
 
@@ -31,7 +31,7 @@ const LINK = /^\d+$/u;
 
 const OPERATORS = ['<>', '<=', '>=', '+', '-', '*', '/', '^', '&', '=', '<', '>', '%', ':', '@'];
 
-const PUNCTUATION = new Set(['(', ')', '{', '}', ',', ';', '\\']);
+const PUNCTUATION = new Set(['(', ')', '{', '}', ',', ';']);
 
 const token = (kind: TokenKind, text: string, start: number, value = 0): Token => ({
   kind,
@@ -75,12 +75,14 @@ const numberAt = (source: string, at: number, locale: FormulaLocale): Token | un
 
 const quotedEnd = (source: string, at: number, quote: string): number | undefined => {
   for (let end = at + 1; end < source.length; end += 1) {
-    if (source[end] === quote) {
-      if (source[end + 1] !== quote) {
-        return end;
-      }
-      end += 1;
+    if (source[end] !== quote) {
+      continue;
     }
+
+    if (source[end + 1] !== quote) {
+      return end;
+    }
+    end += 1;
   }
   return undefined;
 };

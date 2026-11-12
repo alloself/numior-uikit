@@ -102,4 +102,8 @@ provideSidebarSub({
   },
   dismiss: () => flyout.dismiss(),
 });
+
+if (active && !open.value) {
+  open.value = true;
+}
 </script>

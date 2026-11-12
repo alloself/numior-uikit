@@ -15,7 +15,9 @@ export const focusControl = (root: HTMLElement | null): void => {
     root &&
     (labelledControl(root) ?? root.querySelector('input:checked') ?? root.querySelector(FOCUSABLE));
 
-  if (target instanceof HTMLElement) {
-    target.focus();
+  if (!(target instanceof HTMLElement)) {
+    return;
   }
+
+  target.focus();
 };

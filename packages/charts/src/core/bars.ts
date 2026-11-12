@@ -185,9 +185,11 @@ export const layoutBars = (
     segments.forEach((segment) => {
       const bar = barOf(frame, segment);
 
-      if (bar !== undefined) {
-        bars.push(bar);
+      if (bar === undefined) {
+        return;
       }
+
+      bars.push(bar);
     });
 
     return bars;

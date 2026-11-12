@@ -1,3 +1,4 @@
+import { maxBy } from 'lodash-es';
 import type { Calculator } from '../../core/calc/calculator';
 import { nextTask } from '../../core/calc/tasks';
 import type { SheetXml } from '../../core/layout/fragments.types';
@@ -9,7 +10,6 @@ import { readZip } from '../zip/read-zip';
 import { writeZip } from '../zip/write-zip';
 import type { Bytes, ZipArchive, ZipWriteEntry } from '../zip/zip.types';
 import {
-  METADATA_XML,
   OFFICE,
   TYPES,
   contentTypesXml,
@@ -21,9 +21,17 @@ import {
   type PlannedRelationship,
   type PlannedSheet,
 } from './book-parts';
+import {
+  RICH_DATA_RELATIONSHIPS,
+  RICH_STRUCTURES_XML,
+  RICH_VALUES_XML,
+  metadataXml,
+} from './value-errors';
 import { withoutConditional, withoutExtensions } from './conditional-part';
 import { createStringTable, writeSheetPart, type StringTable } from './sheet-part';
 import { fragmentXml } from './fragment-xml';
+import { textLosses } from './long-text';
+import { formulaLosses } from './refused-formulas';
 import {
   cleanHead,
   cleanTail,
@@ -40,7 +48,7 @@ import { createStyleBook, type StyleBook } from './styles-part';
 import { chartAnchorXml, chartXml, drawingXml, pictureAnchorXml } from './drawing-xml';
 import { pivotXml } from './pivot-part';
 import { DrawingKind, type SheetDrawing } from '../../core/drawings/drawing.types';
-import { buildPivotCache, pivotSource } from '../../core/pivot/pivot-cache';
+import { pivotCacheOf, pivotSourceArea } from '../../core/pivot/pivot-cache';
 import { computePivot } from '../../core/pivot/pivot-engine';
 import { renderPivot } from '../../core/pivot/pivot-render';
 import type { WriteOptions, XlsxLoss, XlsxWrite } from './write.types';
@@ -88,7 +96,13 @@ interface AnchorWriting {
   readonly planned: PlannedRelationship[];
 }
 
-type GeneratedPart = readonly [part: string, kind: string, type: string, content: string | Bytes];
+type GeneratedPart = readonly [
+  part: string,
+  kind: string,
+  type: string,
+  content: string | Bytes,
+  relationship: string,
+];
 
 interface Writing {
   readonly book: Workbook;
@@ -103,7 +117,7 @@ interface Writing {
   readonly strings: StringTable;
   readonly outdated: (sheet: Sheet, row: number, col: number) => boolean;
   readonly signal: AbortSignal | undefined;
-  readonly totals: { stale: number; spills: number };
+  readonly totals: { stale: number; spills: number; errors: number };
   readonly recalculateOnOpen: boolean;
   readonly pivots: PivotWriting;
 }
@@ -113,7 +127,16 @@ interface PivotWriting {
   readonly caches: { readonly cacheId: number; readonly relationship: string }[];
 }
 
-const REGENERATED = new Set(['worksheet', 'styles', 'sharedStrings', 'calcChain', 'sheetMetadata']);
+const REGENERATED = new Set([
+  'worksheet',
+  'styles',
+  'sharedStrings',
+  'calcChain',
+  'sheetMetadata',
+  'rdRichValue',
+  'rdRichValueStructure',
+  'rdRichValueTypes',
+]);
 
 const FIRST_TABLE_ID = 1000;
 
@@ -349,9 +372,11 @@ const copyParts = async (original: Original | undefined, output: Output): Promis
     if (raw !== undefined) {
       output.entries.push({ name: part, copy: raw });
     }
-    if (type !== undefined) {
-      output.overrides.set(part, type);
+    if (type === undefined) {
+      return;
     }
+
+    output.overrides.set(part, type);
   });
 
   return copied;
@@ -473,15 +498,17 @@ const writeNewDrawings = async (
 const writeChangedCharts = ({ output }: Writing, plan: SheetPlan): void => {
   plan.sheet.layout.drawings.forEach(({ content }) => {
     if (
-      content.kind === DrawingKind.Chart &&
-      content.rewrite === true &&
-      content.part !== undefined
+      content.kind !== DrawingKind.Chart ||
+      content.rewrite !== true ||
+      content.part === undefined
     ) {
-      output.entries.push(textEntry(content.part, chartXml(content.chart)));
-      output.overrides.set(content.part, TYPES.chart);
-      output.written.add(content.part);
-      output.rewritten.add(content.part);
+      return;
     }
+
+    output.entries.push(textEntry(content.part, chartXml(content.chart)));
+    output.overrides.set(content.part, TYPES.chart);
+    output.written.add(content.part);
+    output.rewritten.add(content.part);
   });
 };
 
@@ -499,22 +526,59 @@ const writeParts = async (
   for (const part of plan.sheet.layout.parts) {
     const extra = appended?.part === part.path ? appended.anchors : '';
 
-    if ((!known.includes(part) || extra !== '') && !output.written.has(part.path)) {
-      const text = await partText(original.archive, part.path);
-      const type = original.types.overrides.get(part.path);
-
-      output.entries.push(textEntry(part.path, splicePart(text, fragmentXml(part.root) + extra)));
-      output.written.add(part.path);
-      output.rewritten.add(part.path);
-      if (type !== undefined) {
-        output.overrides.set(part.path, type);
-      }
+    if ((known.includes(part) && extra === '') || output.written.has(part.path)) {
+      continue;
     }
+
+    const text = await partText(original.archive, part.path);
+    const type = original.types.overrides.get(part.path);
+
+    output.entries.push(textEntry(part.path, splicePart(text, fragmentXml(part.root) + extra)));
+    output.written.add(part.path);
+    output.rewritten.add(part.path);
+    if (type === undefined) {
+      continue;
+    }
+
+    output.overrides.set(part.path, type);
   }
 };
 
-const metadataParts = (spills: number, part: string): GeneratedPart[] =>
-  spills > 0 ? [[part, 'sheetMetadata', TYPES.metadata, METADATA_XML]] : [];
+const metadataParts = (writing: Writing): GeneratedPart[] => {
+  const { original, totals } = writing;
+
+  if (totals.spills === 0 && totals.errors === 0) {
+    return [];
+  }
+
+  const metadata: GeneratedPart = [
+    targetOf(original, 'sheetMetadata', 'xl/metadata.xml'),
+    'sheetMetadata',
+    TYPES.metadata,
+    metadataXml(totals.errors > 0),
+    OFFICE,
+  ];
+
+  return totals.errors === 0
+    ? [metadata]
+    : [
+        metadata,
+        [
+          targetOf(original, 'rdRichValueStructure', 'xl/richData/rdrichvaluestructure.xml'),
+          'rdRichValueStructure',
+          TYPES.richStructures,
+          RICH_STRUCTURES_XML,
+          RICH_DATA_RELATIONSHIPS,
+        ],
+        [
+          targetOf(original, 'rdRichValue', 'xl/richData/rdrichvalue.xml'),
+          'rdRichValue',
+          TYPES.richValues,
+          RICH_VALUES_XML,
+          RICH_DATA_RELATIONSHIPS,
+        ],
+      ];
+};
 
 const rootEntry = (original: Original | undefined, workbookPart: string): ZipWriteEntry => {
   const raw = original?.archive.raw('_rels/.rels');
@@ -539,9 +603,11 @@ const defaultsOf = (original: Original | undefined, output: Output): Map<string,
     const extension = entry.name.slice(entry.name.lastIndexOf('.') + 1).toLowerCase();
     const type = original?.types.defaults.get(extension);
 
-    if (type !== undefined && !defaults.has(extension)) {
-      defaults.set(extension, type);
+    if (type === undefined || defaults.has(extension)) {
+      return;
     }
+
+    defaults.set(extension, type);
   });
 
   return defaults;
@@ -564,9 +630,11 @@ const pivotLosses = (book: Workbook): XlsxLoss[] => {
   const losses: XlsxLoss[] = [];
 
   book.pivots.forEach((pivot) => {
-    if (pivotSource(book, pivot.definition.source) === undefined) {
-      losses.push({ sheet: pivot.sheet.name, reason: 'pivot-source' });
+    if (pivotSourceArea(book, pivot.definition.source) !== undefined) {
+      return;
     }
+
+    losses.push({ sheet: pivot.sheet.name, reason: 'pivot-source' });
   });
 
   return losses;
@@ -574,32 +642,50 @@ const pivotLosses = (book: Workbook): XlsxLoss[] => {
 
 const planAll = async (
   book: Workbook,
+  calculator: Calculator,
   original: Original | undefined,
   lossy: boolean,
 ): Promise<{
   readonly plans: SheetPlan[];
   readonly losses: XlsxLoss[];
   readonly keepPivots: boolean;
+  readonly refused: boolean;
 }> => {
   const taken = new Set(original?.archive.names ?? []);
   const keepPivots = samePivots(book, original);
+  const refused = formulaLosses(book, calculator);
 
   const charts = book.sheets.some((sheet) =>
     sheet.layout.parts.some((part) => part.opaque.length > 0),
   );
 
   const plans: SheetPlan[] = [];
-  const losses: XlsxLoss[] = keepPivots ? [] : pivotLosses(book);
+
+  const losses: XlsxLoss[] = [
+    ...(keepPivots ? [] : pivotLosses(book)),
+    ...textLosses(book, calculator),
+    ...refused,
+  ];
 
   for (const sheet of book.sheets) {
     const { plan, loss } = await planSheet(sheet, original, { lossy, charts, taken, keepPivots });
 
     plans.push(plan);
-    if (loss !== undefined) {
-      losses.push(loss);
+    if (loss === undefined) {
+      continue;
     }
+
+    losses.push(loss);
   }
-  return { plans, losses, keepPivots };
+  return { plans, losses, keepPivots, refused: refused.length > 0 };
+};
+
+const settleRefused = (calculator: Calculator, refused: boolean): void => {
+  if (!refused || calculator.pending === 0) {
+    return;
+  }
+
+  calculator.recalculate({ budgetMs: Number.POSITIVE_INFINITY });
 };
 
 const writePivots = (
@@ -614,8 +700,7 @@ const writePivots = (
   }
 
   return writing.book.pivots.on(plan.sheet).reduce<PlannedRelationship[]>((planned, pivot) => {
-    const table = pivotSource(writing.book, pivot.definition.source);
-    const cache = table === undefined ? undefined : buildPivotCache(table);
+    const cache = pivotCacheOf(writing.book, pivot.definition.source);
 
     if (cache === undefined) {
       return planned;
@@ -691,6 +776,7 @@ const bookRelationship = (
   kind: string,
   part: string,
   find: (item: Relationship) => boolean,
+  namespace = OFFICE,
 ): void => {
   const id = writing.original?.workbookRelationships.find(find)?.id ?? freshId(writing.workbookIds);
 
@@ -698,7 +784,7 @@ const bookRelationship = (
 
   writing.workbookRelationships.push({
     id,
-    type: officeType(kind),
+    type: `${namespace}/${kind}`,
     target: relativeTarget(writing.workbookPart, part),
   });
 };
@@ -736,10 +822,13 @@ const writeSheet = async (writing: Writing, plan: SheetPlan, firstNewId: number)
 
   writing.totals.stale += sheetOutput.stale;
   writing.totals.spills += sheetOutput.spills;
+  writing.totals.errors += sheetOutput.errors;
   output.entries.push({ name: plan.part, data: streamOfChunks(sheetOutput.chunks) });
   output.overrides.set(plan.part, TYPES.worksheet);
   output.written.add(plan.part);
-  output.roots.push(...plan.kept);
+  for (const entry of plan.kept) {
+    output.roots.push(entry);
+  }
   if (relationships.length > 0) {
     output.entries.push(textEntry(relationshipsOf(plan.part), relationshipsXml(relationships)));
     output.written.add(relationshipsOf(plan.part));
@@ -773,17 +862,19 @@ const writeBookParts = async (writing: Writing): Promise<void> => {
         tableStyles: elementSlice(stylesText, 'tableStyles'),
         colors: elementSlice(stylesText, 'colors'),
       }),
+      OFFICE,
     ],
     [
       targetOf(original, 'sharedStrings', 'xl/sharedStrings.xml'),
       'sharedStrings',
       TYPES.strings,
       await writing.strings.bytes(),
+      OFFICE,
     ],
-    ...metadataParts(writing.totals.spills, targetOf(original, 'sheetMetadata', 'xl/metadata.xml')),
+    ...metadataParts(writing),
   ];
 
-  generated.forEach(([part, kind, type, content]) => {
+  generated.forEach(([part, kind, type, content, relationship]) => {
     output.entries.push({
       name: part,
       data: typeof content === 'string' ? encoder.encode(content) : content,
@@ -791,7 +882,7 @@ const writeBookParts = async (writing: Writing): Promise<void> => {
 
     output.overrides.set(part, type);
     output.written.add(part);
-    bookRelationship(writing, kind, part, (item) => item.kind === kind);
+    bookRelationship(writing, kind, part, (item) => item.kind === kind, relationship);
   });
 };
 
@@ -843,14 +934,22 @@ const writeWorkbookPart = async (writing: Writing): Promise<void> => {
   const rootRelationships =
     original === undefined ? [] : await readRelationships(original.archive, '');
 
-  writing.workbookRelationships.push(...keptBook.map((item) => toPlanned(item, workbookPart)));
+  for (const item of keptBook) {
+    writing.workbookRelationships.push(toPlanned(item, workbookPart));
+  }
 
   const externals = writeExternals(writing);
 
-  output.roots.push(
-    ...keptBook,
-    ...rootRelationships.filter((item) => item.kind !== RelationshipKind.OfficeDocument),
-  );
+  for (const entry of keptBook) {
+    output.roots.push(entry);
+  }
+  for (const entry of rootRelationships) {
+    if (entry.kind === RelationshipKind.OfficeDocument) {
+      continue;
+    }
+
+    output.roots.push(entry);
+  }
 
   output.entries.push(
     textEntry(
@@ -890,11 +989,19 @@ export const writeWorkbook = async (
   await nextTask();
 
   const original = source === undefined ? undefined : await openOriginal(source);
-  const { plans, losses, keepPivots } = await planAll(book, original, options.lossy === true);
+
+  const { plans, losses, keepPivots, refused } = await planAll(
+    book,
+    calculator,
+    original,
+    options.lossy === true,
+  );
 
   if (losses.length > 0 && options.lossy !== true) {
     return { ok: false, report: { staleFormulas: 0, losses, copiedParts: 0 } };
   }
+
+  settleRefused(calculator, refused);
 
   const writing: Writing = {
     book,
@@ -915,12 +1022,12 @@ export const writeWorkbook = async (
     strings: createStringTable(),
     outdated: calculator.outdated(),
     signal: options.signal,
-    totals: { stale: 0, spills: 0 },
+    totals: { stale: 0, spills: 0, errors: 0 },
     recalculateOnOpen: options.recalculateOnOpen === true,
     pivots: { keep: keepPivots, caches: [] },
   };
 
-  const firstNewId = Math.max(0, ...(source?.sheets.map((entry) => entry.sheetId) ?? [])) + 1;
+  const firstNewId = Math.max(0, maxBy(source?.sheets, (entry) => entry.sheetId)?.sheetId ?? 0) + 1;
 
   for (const plan of plans) {
     await writeSheet(writing, plan, firstNewId);

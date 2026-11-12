@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+import { ToastTone } from '../src';
 import { ToasterDriver } from './drivers/toaster';
 
 describe('NuiToaster and NuiToast', () => {
@@ -29,12 +30,12 @@ describe('NuiToaster and NuiToast', () => {
     const saved = toaster.toast(1);
     expect(saved.title).toBe('Saved');
     expect(saved.description).toBe('All changes are stored');
-    expect(saved.hasTone('success')).toBe(true);
+    expect(saved.hasTone(ToastTone.Success)).toBe(true);
     expect(saved.hasIcon).toBe(true);
     expect(saved.role).toBeUndefined();
     expect(saved.closeIsIconOnly).toBe(true);
     expect(failed.role).toBe('alert');
-    expect(failed.hasTone('error')).toBe(true);
+    expect(failed.hasTone(ToastTone.Error)).toBe(true);
 
     await toaster.advance(1000);
     expect(toaster.toast(0).leaving).toBe(true);
@@ -96,6 +97,78 @@ describe('NuiToaster and NuiToast', () => {
     await toaster.leaveStack();
     await toaster.advance(1100);
     expect(toaster.toasts.map((toast) => toast.leaving)).toEqual([false]);
+
+    toaster.unmount();
+  });
+
+  it('holds a toast that comes to the front while the pointer is over the stack', async () => {
+    const toaster = ToasterDriver.mount({ storeOptions: { duration: 1000, limit: 1 } });
+
+    toaster.show({ title: 'First' });
+    await toaster.advance(0);
+    await toaster.hoverStack();
+    toaster.show({ title: 'Queued' });
+    await toaster.toast(0).clickClose();
+    await toaster.advance(200);
+    await toaster.advance(5000);
+
+    expect(toaster.toasts.map((toast) => toast.title)).toEqual(['Queued']);
+    expect(toaster.toast(0).leaving).toBe(false);
+
+    await toaster.leaveStack();
+    await toaster.advance(1000);
+
+    expect(toaster.toast(0).leaving).toBe(true);
+
+    toaster.unmount();
+  });
+
+  it('keeps the countdown held when the tab comes back while a toast is focused', async () => {
+    const toaster = ToasterDriver.mount({ storeOptions: { duration: 1000 } });
+
+    toaster.show({ title: 'Read me' });
+    await toaster.advance(0);
+    await toaster.toast(0).focus();
+    await toaster.setTabHidden(true);
+    await toaster.setTabHidden(false);
+    await toaster.advance(5000);
+
+    expect(toaster.toast(0).leaving).toBe(false);
+
+    toaster.unmount();
+  });
+
+  it('returns focus to where it came from when the last focused toast closes and counts again', async () => {
+    const toaster = ToasterDriver.mount({ storeOptions: { duration: 1000 } });
+
+    toaster.show({ title: 'Only' });
+    await toaster.advance(0);
+    await toaster.focusOutside();
+    await toaster.toast(0).focus();
+    await toaster.toast(0).pressEscape();
+
+    expect(toaster.outsideFocused).toBe(true);
+
+    await toaster.advance(200);
+    toaster.show({ title: 'Next' });
+    await toaster.advance(1000);
+
+    expect(toaster.toast(0).leaving).toBe(true);
+
+    toaster.unmount();
+  });
+
+  it('returns focus when every toast is cleared at once', async () => {
+    const toaster = ToasterDriver.mount({ storeOptions: { duration: 0 } });
+
+    toaster.show({ title: 'First' });
+    toaster.show({ title: 'Second' });
+    await toaster.advance(0);
+    await toaster.focusOutside();
+    await toaster.toast(1).focus();
+    await toaster.clear();
+
+    expect(toaster.outsideFocused).toBe(true);
 
     toaster.unmount();
   });
@@ -172,6 +245,50 @@ describe('NuiToaster and NuiToast', () => {
 
     await toaster.leaveStack();
     await toaster.advance(1000);
+    expect(toaster.toast(0).leaving).toBe(true);
+
+    toaster.unmount();
+  });
+
+  it('swaps a toast in place when its action shows another one under the same id', async () => {
+    const toaster = ToasterDriver.mount({ storeOptions: { duration: 0 } });
+
+    const id = toaster.error('Not saved', {
+      action: { label: 'Retry', onClick: () => toaster.success('Saved', { id }) },
+    });
+
+    toaster.show({ title: 'Plain' });
+    await toaster.advance(0);
+
+    await toaster.toast(1).clickAction();
+
+    expect(toaster.toasts.map((toast) => toast.title)).toEqual(['Plain', 'Saved']);
+    expect(toaster.toast(1).leaving).toBe(false);
+    expect(toaster.toast(1).hasAction).toBe(false);
+
+    toaster.unmount();
+  });
+
+  it('keeps the stack open and held when the toast under a mouse at rest closes', async () => {
+    const toaster = ToasterDriver.mount({ storeOptions: { duration: 1000 } });
+
+    toaster.show({ title: 'Stays' });
+    toaster.show({ title: 'Goes' });
+    await toaster.advance(0);
+    await toaster.restOnStack();
+
+    await toaster.toast(0).clickClose();
+    await toaster.loseWhatIsUnderThePointer();
+    await toaster.advance(5000);
+
+    expect(toaster.stackOpen).toBe(true);
+    expect(toaster.toasts.map((toast) => toast.title)).toEqual(['Stays']);
+    expect(toaster.toast(0).leaving).toBe(false);
+
+    await toaster.movePointerAway();
+    await toaster.advance(1000);
+
+    expect(toaster.stackOpen).toBe(false);
     expect(toaster.toast(0).leaving).toBe(true);
 
     toaster.unmount();

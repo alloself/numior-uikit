@@ -31,6 +31,7 @@ import { parseTree } from './tree';
 
 interface Walk {
   readonly builder: Builder;
+  readonly own: boolean;
   marks: readonly Mark[];
   pre: boolean;
 }
@@ -136,7 +137,7 @@ const childrenOf = (element: HtmlElement): readonly HtmlNode[] => {
 };
 
 const chooseCandidate = (walk: Walk, element: HtmlElement): NodeCandidate | undefined => {
-  const candidates = nodeCandidates(walk.builder.schema, element);
+  const candidates = nodeCandidates(walk.builder.schema, element, walk.own);
   const top = walk.builder.stack.at(-1);
 
   return (
@@ -164,9 +165,11 @@ const walkTransparent = (walk: Walk, element: HtmlElement): void => {
     closeTextblocks(walk.builder);
   }
   walkChildren(walk, element, withMarks(walk.marks, marksOf(walk.builder.schema, element)));
-  if (block) {
-    closeTextblocks(walk.builder);
+  if (!block) {
+    return;
   }
+
+  closeTextblocks(walk.builder);
 };
 
 const walkWhole = (walk: Walk, element: HtmlElement, candidate: NodeCandidate): boolean => {
@@ -230,11 +233,13 @@ const build = (
   nodes: readonly HtmlNode[],
   options: FromHTMLOptions,
   preserve: boolean,
+  own: boolean,
 ): Doc | undefined => {
   const ids = options.ids ?? createIdSource('h');
 
   const walk: Walk = {
     builder: createBuilder(schema, ids, preserve),
+    own,
     marks: [],
     pre: false,
   };
@@ -252,8 +257,10 @@ export const fromHTML = (schema: Schema, html: string, options: FromHTMLOptions 
   const whitespace = options.whitespace ?? (source === PasteSource.Own ? 'preserve' : 'collapse');
   const tree = normalizeSource(parseTree(html), source);
 
+  const own = options.foreign !== true || source === PasteSource.Own;
+
   return (
-    build(schema, tree.children, options, whitespace === HtmlWhitespace.Preserve) ??
+    build(schema, tree.children, options, whitespace === HtmlWhitespace.Preserve, own) ??
     createEmptyDoc(schema, options.ids)
   );
 };

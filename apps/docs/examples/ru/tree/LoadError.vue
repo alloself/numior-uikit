@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-3">
     <NuiTree
-      variant="bordered"
+      variant="outline"
       v-model:expanded="expanded"
       :items="folders"
       label="Хранилище"
@@ -14,8 +14,8 @@
       variant="soft"
       title="Не удалось загрузить папку"
       :description="error"
-      dismissible
-      @dismiss="error = undefined"
+      closable
+      @close="error = undefined"
     />
   </div>
 </template>

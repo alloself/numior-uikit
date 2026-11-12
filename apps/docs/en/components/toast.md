@@ -35,7 +35,7 @@ The `show` method takes all options at once:
 - `duration` — how long the toast stays, in milliseconds, 5000 by default; `0` keeps it until it
   is closed;
 - `action` — an action button with `label` and `onClick`;
-- `dismissible` — the close button, shown by default; `false` removes it;
+- `closable` — the close button, shown by default; `false` removes it;
 - `id` — the key used to replace the toast.
 
 A click on the action button closes the toast. If the handler calls `show` with the `id` of the
@@ -46,7 +46,15 @@ comes to the front, and the previous ones shrink and stack behind it.
 
 On hover or focus the stack expands into a list, and with `expand` it stays expanded. While the
 pointer is over the stack, the focus is inside it or the browser tab is hidden, the countdown
-pauses.
+pauses. It pauses for toasts that appear or leave the queue in the meantime too.
+
+The stack stays expanded when the toast under a resting pointer closes, and collapses when the
+pointer moves away. A toast closes after its action. When the action shows a toast with the same
+`id`, that toast takes its place.
+
+When a focused toast closes, keyboard focus moves to the neighbouring one and, after the last
+one, back to where it entered the stack from. After closing with the pointer the focus returns
+at once, and the remaining toasts keep counting.
 
 The `createNuiConfig` plugin keeps a separate toast queue for every app and every SSR request.
 Its `toasts` option sets the display time `duration`, the exit animation length `exitDuration`

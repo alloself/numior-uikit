@@ -37,10 +37,12 @@
           :reorderable="reorderable"
           :removable="canRemove"
           :grip-disabled="gripDisabled"
+          :label="rowText(row.index + 1)"
           :move-label="moveText(row.index + 1)"
           :remove-label="removeText(row.index + 1)"
           @grab="onGripPointerdown(row.index, $event)"
           @grip-keydown="onGripKeydown(row.index, $event)"
+          @grip-blur="reorder.onBlur(row.index)"
           @remove="remove(row.index)"
         >
           <slot
@@ -62,7 +64,7 @@
       <span class="nui-field-array__indicator" aria-hidden="true" />
       <div v-if="ghostRow !== undefined" class="nui-field-array__ghost" aria-hidden="true">
         <span class="nui-field-array__ghost-grip"><NuiIcon icon="grip" /></span>
-        <span>{{ localized.row({ index: ghostRow + 1 }) }}</span>
+        <span>{{ rowText(ghostRow + 1) }}</span>
       </div>
     </div>
     <p v-if="array.errorMessage.value" :id="errorId" class="nui-field-array__error">
@@ -137,6 +139,7 @@ const {
   validateOn,
   addLabel,
   emptyLabel,
+  rowLabel,
   removeLabel,
   moveLabel,
 } = defineProps<NuiFieldArrayProps<T, R>>();
@@ -169,9 +172,11 @@ const addElement = (): HTMLElement | null => {
 const focusArray = (): void => {
   const target = addElement() ?? root.value?.querySelector(FOCUSABLE);
 
-  if (target instanceof HTMLElement) {
-    target.focus();
+  if (!(target instanceof HTMLElement)) {
+    return;
   }
+
+  target.focus();
 };
 
 const array = useFieldArray(
@@ -216,6 +221,8 @@ const describedBy = computed(
 );
 
 const rowId = (key: string): string => `${baseId.value}-row-${key}`;
+
+const rowText = (index: number): string => rowLabel?.(index) ?? localized.value.row({ index });
 
 const removeText = (index: number): string =>
   removeLabel?.(index) ?? localized.value.remove({ index });
@@ -348,15 +355,19 @@ const remove = (index: number): void => {
 };
 
 const onGripPointerdown = (index: number, event: PointerEvent): void => {
-  if (!isInert.value) {
-    reorder.onPointerdown(index, event);
+  if (isInert.value) {
+    return;
   }
+
+  reorder.onPointerdown(index, event);
 };
 
 const onGripKeydown = (index: number, event: KeyboardEvent): void => {
-  if (!isInert.value && reorder.onKeydown(index, event)) {
-    event.preventDefault();
+  if (isInert.value || !reorder.onKeydown(index, event)) {
+    return;
   }
+
+  event.preventDefault();
 };
 
 watch(

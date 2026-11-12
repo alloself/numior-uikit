@@ -97,6 +97,7 @@ export const FormConfigIssueCode = {
   RejectedProps: 'rejected-props',
   NotAList: 'not-a-list',
   InvalidEntry: 'invalid-entry',
+  InvalidPattern: 'invalid-pattern',
 } as const;
 
 export const FormJsonRuleName = {

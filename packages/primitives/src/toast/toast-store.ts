@@ -1,7 +1,6 @@
 import { computed, shallowRef, type ComputedRef, type ShallowRef } from 'vue';
 import { createTimers } from './toast-timers';
-
-export type ToastTone = 'neutral' | 'info' | 'success' | 'warning' | 'error';
+import { ToastTone, type ToastHold } from './toast.types';
 
 export interface ToastAction {
   readonly label: string;
@@ -15,7 +14,7 @@ export interface ToastOptions {
   readonly tone?: ToastTone | undefined;
   readonly duration?: number | undefined;
   readonly action?: ToastAction | undefined;
-  readonly dismissible?: boolean | undefined;
+  readonly closable?: boolean | undefined;
 }
 
 export interface Toast {
@@ -25,7 +24,7 @@ export interface Toast {
   readonly tone: ToastTone;
   readonly duration: number;
   readonly action: ToastAction | undefined;
-  readonly dismissible: boolean;
+  readonly closable: boolean;
   readonly leaving: boolean;
 }
 
@@ -42,8 +41,8 @@ export interface ToastStore {
   show(options: ToastOptions): string;
   dismiss(id: string): void;
   clear(): void;
-  pause(id: string): void;
-  resume(id: string): void;
+  hold(reason: ToastHold): void;
+  release(reason: ToastHold): void;
 }
 
 const DEFAULT_DURATION = 5000;
@@ -55,10 +54,10 @@ const normalizeToast = (options: ToastOptions, id: string, fallbackDuration: num
   id,
   title: options.title,
   description: options.description,
-  tone: options.tone ?? 'neutral',
+  tone: options.tone ?? ToastTone.Neutral,
   duration: options.duration ?? fallbackDuration,
   action: options.action,
-  dismissible: options.dismissible ?? true,
+  closable: options.closable ?? true,
   leaving: false,
 });
 
@@ -80,6 +79,7 @@ export const createToastStore = (options: ToastStoreOptions = {}): ToastStore =>
   const visible = computed(() => visibleSlice(toasts.value, options.limit));
   const timers = createTimers();
   const removals = new Map<string, ReturnType<typeof setTimeout>>();
+  const holds = new Set<ToastHold>();
   let counter = 0;
 
   const settle = (): void => {
@@ -87,9 +87,17 @@ export const createToastStore = (options: ToastStoreOptions = {}): ToastStore =>
       return;
     }
     for (const toast of visible.value) {
-      if (!toast.leaving && toast.duration > 0 && !timers.has(toast.id)) {
-        timers.start(toast.id, toast.duration, () => dismiss(toast.id));
+      if (toast.leaving || toast.duration <= 0 || timers.has(toast.id)) {
+        continue;
       }
+
+      timers.start(toast.id, toast.duration, () => dismiss(toast.id));
+
+      if (holds.size === 0) {
+        continue;
+      }
+
+      timers.pause(toast.id);
     }
   };
 
@@ -125,9 +133,11 @@ export const createToastStore = (options: ToastStoreOptions = {}): ToastStore =>
   const dismiss = (id: string): void => {
     const target = toasts.value.find((toast) => toast.id === id);
 
-    if (target && !target.leaving) {
-      leave(new Set([id]));
+    if (!target || target.leaving) {
+      return;
     }
+
+    leave(new Set([id]));
   };
 
   const nextId = (): string => {
@@ -164,7 +174,23 @@ export const createToastStore = (options: ToastStoreOptions = {}): ToastStore =>
         }, new Set()),
       );
     },
-    pause: (id) => timers.pause(id),
-    resume: (id) => timers.resume(id),
+    hold: (reason) => {
+      holds.add(reason);
+
+      for (const toast of toasts.value) {
+        timers.pause(toast.id);
+      }
+    },
+    release: (reason) => {
+      holds.delete(reason);
+
+      if (holds.size !== 0) {
+        return;
+      }
+
+      for (const toast of toasts.value) {
+        timers.resume(toast.id);
+      }
+    },
   };
 };

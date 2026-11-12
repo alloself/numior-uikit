@@ -130,10 +130,12 @@ const closureOf = (automaton: Automaton, states: Iterable<number>): number[] => 
 
   for (let state = stack.pop(); state !== undefined; state = stack.pop()) {
     for (const edge of automaton.edges[state] ?? []) {
-      if (edge.type === null && !seen.has(edge.to)) {
-        seen.add(edge.to);
-        stack.push(edge.to);
+      if (edge.type !== null || seen.has(edge.to)) {
+        continue;
       }
+
+      seen.add(edge.to);
+      stack.push(edge.to);
     }
   }
   return [...seen].toSorted((left, right) => left - right);
@@ -144,9 +146,11 @@ const movesOf = (automaton: Automaton, states: readonly number[]): Map<string, n
 
   for (const state of states) {
     for (const edge of automaton.edges[state] ?? []) {
-      if (edge.type !== null) {
-        moves.set(edge.type, [...(moves.get(edge.type) ?? []), edge.to]);
+      if (edge.type === null) {
+        continue;
       }
+
+      moves.set(edge.type, [...(moves.get(edge.type) ?? []), edge.to]);
     }
   }
   return moves;
@@ -210,10 +214,12 @@ const reachable = (match: ContentMatch, follow: (type: string) => boolean): Cont
 
   for (let current = stack.pop(); current !== undefined; current = stack.pop()) {
     for (const [type, target] of current.next) {
-      if (follow(type) && !seen.has(target)) {
-        seen.add(target);
-        stack.push(target);
+      if (!follow(type) || seen.has(target)) {
+        continue;
       }
+
+      seen.add(target);
+      stack.push(target);
     }
   }
   return [...seen];
@@ -227,7 +233,7 @@ export const typesOf = (match: ContentMatch): Set<string> =>
 
 const statesByNode = new WeakMap<ElementNode, MatchStates>();
 
-const statesOf = (
+export const statesOf = (
   start: ContentMatch,
   node: ElementNode,
 ): readonly (ContentMatch | undefined)[] => {
@@ -254,24 +260,39 @@ export const matchesSplice = (
   from: number,
   to: number,
   inserted: readonly ContentNode[],
+  after?: ElementNode,
 ): boolean => {
   const states = statesOf(start, node);
   const { content } = node;
+  const walked: (ContentMatch | undefined)[] = [];
   let current = states[from];
+  let index = to;
 
   for (const child of inserted) {
     current = current?.matchType(typeOf(child));
+    walked.push(current);
   }
-  for (let index = to; index < content.length; index += 1) {
+  for (; index < content.length && current !== states[index]; index += 1) {
     const child = content[index];
 
     if (current === undefined || child === undefined) {
       return false;
     }
-    if (current === states[index]) {
-      return states[content.length]?.validEnd === true;
-    }
+
     current = current.matchType(typeOf(child));
+    walked.push(current);
   }
-  return current?.validEnd === true;
+
+  const valid = index < content.length ? states[content.length] : current;
+
+  if (valid?.validEnd !== true) {
+    return false;
+  }
+  if (after?.content.length === from + walked.length + content.length - index) {
+    statesByNode.set(after, {
+      start,
+      states: states.slice(0, from + 1).concat(walked, states.slice(index + 1)),
+    });
+  }
+  return true;
 };

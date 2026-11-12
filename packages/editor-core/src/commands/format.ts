@@ -1,6 +1,6 @@
 import type { Doc } from '../doc/doc.types';
 import { nodeSize, sameMarks } from '../model/node';
-import { ContentNodeKind, type Attrs, type Mark } from '../model/node.types';
+import { ContentNodeKind, type Attrs, type ElementNode, type Mark } from '../model/node.types';
 import { isCursor, selectionRange, textSelection } from '../state/selection';
 import type { SelectionRange } from '../state/selection.types';
 import {
@@ -107,10 +107,12 @@ export const sequence =
       ) {
         return false;
       }
-      if (produced.tr !== undefined) {
-        combined = appendTo(combined, produced.tr);
-        current = current.apply(produced.tr);
+      if (produced.tr === undefined) {
+        continue;
       }
+
+      combined = appendTo(combined, produced.tr);
+      current = current.apply(produced.tr);
     }
     if (combined !== undefined) {
       dispatch?.(combined);
@@ -191,10 +193,38 @@ const storedWith = (state: EditorState, type: string, mark: Mark | undefined): M
   ...(mark === undefined ? [] : [mark]),
 ];
 
+const holdsMark = (doc: Doc, parent: ElementNode, type: string): boolean =>
+  doc.schema.nodes.get(parent.type)?.marks.has(type) === true;
+
+export const canMark = (state: EditorState, type: string): boolean => {
+  const { doc } = state;
+  const range = selectionRange(doc, state.selection);
+  let found = false;
+
+  if (!doc.schema.marks.has(type)) {
+    return false;
+  }
+
+  if (range.from === range.to) {
+    return holdsMark(doc, doc.resolve(range.from).parent, type);
+  }
+
+  doc.nodesBetween(range.from, range.to, (node, _pos, parent) => {
+    found ||= node.kind === ContentNodeKind.Text && holdsMark(doc, parent, type);
+    return !found;
+  });
+
+  return found;
+};
+
 export const setMark =
   (type: string, attrs: Attrs | null): Command =>
   (state, dispatch) => {
     const { schema } = state.doc;
+
+    if (attrs !== null && !canMark(state, type)) {
+      return false;
+    }
     const range = selectionRange(state.doc, state.selection);
     const target = range.from === range.to ? markExtent(state.doc, range.from, type) : range;
     const mark = attrs === null ? undefined : schema.mark(type, attrs);
@@ -218,7 +248,11 @@ export const insertMarked =
     const tr = state.tr.deleteSelection();
     const head = tr.selection.kind === SelectionKind.Text ? tr.selection.head : undefined;
 
-    if (head === undefined || text === '') {
+    if (
+      head === undefined ||
+      text === '' ||
+      !holdsMark(tr.doc, tr.doc.resolve(head).parent, type)
+    ) {
       return false;
     }
     const marks = [...storedWith(state, type, undefined), schema.mark(type, attrs)];

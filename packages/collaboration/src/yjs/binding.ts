@@ -57,9 +57,11 @@ const elementAt = (
 const removeChild = (element: XmlElement): void => {
   const parent = element.parent;
 
-  if (parent instanceof XmlElement || isFragment(parent)) {
-    parent.delete(parent.toArray().indexOf(element), 1);
+  if (!(parent instanceof XmlElement) && !isFragment(parent)) {
+    return;
   }
+
+  parent.delete(parent.toArray().indexOf(element), 1);
 };
 
 const isFragment = (value: unknown): value is XmlFragment =>
@@ -75,6 +77,7 @@ export const yjsBinding = (
   const context: ReadContext = { schema, known };
   const origin = Symbol('nui-yjs');
   let applying = false;
+  let unread = false;
 
   const forget = (element: XmlElement): void => {
     let current: unknown = element;
@@ -96,10 +99,12 @@ export const yjsBinding = (
 
     ydoc.transact(() => {
       targets.forEach((target) => {
-        if (target !== undefined) {
-          forget(target);
-          removeChild(target);
+        if (target === undefined) {
+          return;
         }
+
+        forget(target);
+        removeChild(target);
       });
     }, origin);
 
@@ -124,6 +129,8 @@ export const yjsBinding = (
 
     const root = validRoot(state.doc.root);
 
+    unread = root === undefined;
+
     if (root === undefined) {
       onInvalid?.();
       return;
@@ -133,11 +140,13 @@ export const yjsBinding = (
       schema.text(text, marks),
     ).setMeta(remoteChange, true);
 
-    if (tr.changed) {
-      applying = true;
-      dispatch(tr);
-      applying = false;
+    if (!tr.changed) {
+      return;
     }
+
+    applying = true;
+    dispatch(tr);
+    applying = false;
   };
 
   const observer: Parameters<XmlFragment['observeDeep']>[0] = (events, transaction) => {
@@ -169,9 +178,11 @@ export const yjsBinding = (
       name: 'yjsBinding',
       props: {
         stateChanged: (state, before) => {
-          if (state.doc !== before.doc && !applying) {
-            write(state.doc.root);
+          if (state.doc === before.doc || applying || unread) {
+            return;
           }
+
+          write(state.doc.root);
         },
       },
     }),

@@ -42,20 +42,24 @@ export const useHoverTrigger = (options: HoverTriggerOptions): HoverTrigger => {
   };
 
   const onPointerleave = (event: PointerEvent): void => {
-    if (event.pointerType !== PointerType.Touch) {
-      delay.scheduleClose();
+    if (event.pointerType === PointerType.Touch) {
+      return;
     }
+
+    delay.scheduleClose();
   };
 
   const onPointerdown = (event: PointerEvent): void => {
     pointerPressedAt = Date.now();
 
-    if (event.pointerType === PointerType.Touch) {
-      if (options.open.value) {
-        delay.closeNow();
-      } else {
-        delay.openNow();
-      }
+    if (event.pointerType !== PointerType.Touch) {
+      return;
+    }
+
+    if (options.open.value) {
+      delay.closeNow();
+    } else {
+      delay.openNow();
     }
   };
 
@@ -68,9 +72,11 @@ export const useHoverTrigger = (options: HoverTriggerOptions): HoverTrigger => {
   };
 
   const onFocusout = (event: FocusEvent): void => {
-    if (!within(event.relatedTarget, options.content(), options.trigger())) {
-      delay.closeNow();
+    if (within(event.relatedTarget, options.content(), options.trigger())) {
+      return;
     }
+
+    delay.closeNow();
   };
 
   const onDocumentKeydown = (event: KeyboardEvent): void => {
@@ -79,17 +85,19 @@ export const useHoverTrigger = (options: HoverTriggerOptions): HoverTrigger => {
     }
     delay.closeNow();
 
-    if (within(document.activeElement, options.content())) {
-      returning = true;
-      options.trigger()?.focus();
+    if (!within(document.activeElement, options.content())) {
+      return;
     }
+
+    returning = true;
+    options.trigger()?.focus();
   };
 
-  useEventListener(pageDocument, 'keydown', (event: KeyboardEvent) => {
-    if (options.enabled()) {
-      onDocumentKeydown(event);
-    }
-  });
+  useEventListener(
+    () => (options.enabled() && options.open.value ? pageDocument() : undefined),
+    'keydown',
+    onDocumentKeydown,
+  );
 
   const triggerAttrs = computed<NuiPopoverHoverAttrs>(() =>
     options.enabled() ? { onPointerenter, onPointerleave, onPointerdown, onFocus, onFocusout } : {},

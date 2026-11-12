@@ -1,14 +1,29 @@
-import { textSelection, type Command } from '@numior/editor-core';
+import { textSelection, undo, type Command } from '@numior/editor-core';
 import type { NuiEditorApi } from '@numior/editor-vue';
 import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import type { CommentThread } from '../../src';
+import { promiseTimeout } from '@vueuse/core';
+import { vi } from 'vite-plus/test';
+import { collabProgress, confirmSteps, receiveSteps, type CommentThread } from '../../src';
 import type { NuiEditorCommentsProps } from '../../src/vue';
 import CommentsHost from './CommentsHost.vue';
 import { documentOf, fakeCommentsAdapter, type FakeCommentsAdapter } from './comments-adapter';
 
 Element.prototype.scrollIntoView = () => undefined;
 
+Range.prototype.getClientRects = () => document.createElement('div').getClientRects();
+
+Range.prototype.getBoundingClientRect = () => new DOMRect();
+
 export const ANN = { id: 'ann', name: 'Ann' };
+
+const MARK_POSITION = 2;
+
+const PRESS_X = 40;
+
+const PRESS_Y = 12;
+
+const pointer = (type: string, clientX: number): MouseEvent =>
+  new MouseEvent(type, { bubbles: true, clientX, clientY: PRESS_Y });
 
 const namedAs = (button: DOMWrapper<HTMLButtonElement>, name: string): boolean =>
   button.text() === name || button.attributes('aria-label') === name;
@@ -26,13 +41,18 @@ export class CommentsDriver {
     seed: readonly CommentThread[] = [],
     labels?: NuiEditorCommentsProps['labels'],
     adapter = fakeCommentsAdapter(seed),
+    shared = false,
   ): CommentsDriver {
     const wrapper = mount(CommentsHost, {
       attachTo: document.body,
-      props: { initial: documentOf('one', 'two'), adapter, user: ANN, labels },
+      props: { initial: documentOf('one', 'two'), adapter, user: ANN, labels, shared },
     });
 
     return new CommentsDriver(wrapper, adapter);
+  }
+
+  static mountShared(seed: readonly CommentThread[] = []): CommentsDriver {
+    return CommentsDriver.mount(seed, undefined, fakeCommentsAdapter(seed), true);
   }
 
   async loaded(): Promise<void> {
@@ -53,7 +73,7 @@ export class CommentsDriver {
 
   private buttonNamed(
     name: string,
-    scope = this.wrapper.find('.nui-collab-comments'),
+    scope: Pick<DOMWrapper<Element>, 'findAll'> = this.wrapper,
   ): DOMWrapper<HTMLButtonElement> {
     const found = scope.findAll('button').find((button) => namedAs(button, name));
 
@@ -64,7 +84,13 @@ export class CommentsDriver {
   }
 
   private threadAt(index: number): DOMWrapper<Element> {
-    return this.wrapper.findAll('.nui-collab-comments__thread')[index] ?? this.missing(index);
+    return this.listed('.nui-collab-comments__thread')[index] ?? this.missing(index);
+  }
+
+  private listed(selector: string): DOMWrapper<Element>[] {
+    return this.wrapper
+      .findAll(selector)
+      .filter((found) => found.element.closest('.nui-collab-comment-popover') === null);
   }
 
   private missing(index: number): never {
@@ -73,6 +99,19 @@ export class CommentsDriver {
 
   run(command: Command): void {
     this.api.run(command);
+  }
+
+  async pressMark(travel: number): Promise<void> {
+    const mark = this.wrapper.find('.nui-editor__comment');
+    const editor = this.wrapper.find('.nui-editor');
+
+    document.elementFromPoint = () => mark.element;
+    vi.spyOn(this.api, 'posAt').mockReturnValue(MARK_POSITION);
+
+    editor.element.dispatchEvent(pointer('pointerdown', PRESS_X));
+    editor.element.dispatchEvent(pointer('pointerup', PRESS_X + travel));
+    await promiseTimeout(0);
+    await flushPromises();
   }
 
   async select(from: number, to: number): Promise<void> {
@@ -88,6 +127,59 @@ export class CommentsDriver {
     this.run((state, dispatch) => {
       dispatch?.(state.tr.insertText(text, at));
       return true;
+    });
+
+    await flushPromises();
+  }
+
+  async measuresWhile(action: () => Promise<void>): Promise<number> {
+    const layer = this.wrapper.find('.nui-collab-comment-layer').element;
+    const measured = vi.spyOn(layer, 'getBoundingClientRect');
+
+    await action();
+
+    return measured.mock.calls.length;
+  }
+
+  async typedByOther(text: string, at: number): Promise<void> {
+    this.run((state, dispatch) => {
+      const tr = receiveSteps(state, state.tr.insertText(text, at).steps);
+
+      if (tr !== undefined) {
+        dispatch?.(tr);
+      }
+      return tr !== undefined;
+    });
+
+    await flushPromises();
+  }
+
+  async confirm(): Promise<void> {
+    this.run((state, dispatch) => {
+      const progress = collabProgress(state);
+
+      if (progress !== undefined) {
+        dispatch?.(confirmSteps(state, progress.pending, progress.version + progress.pending));
+      }
+      return progress !== undefined;
+    });
+
+    await flushPromises();
+  }
+
+  async undo(): Promise<void> {
+    this.run(undo);
+    await flushPromises();
+  }
+
+  async removedByOther(from: number, to: number): Promise<void> {
+    this.run((state, dispatch) => {
+      const tr = receiveSteps(state, state.tr.delete(from, to).steps);
+
+      if (tr !== undefined) {
+        dispatch?.(tr);
+      }
+      return tr !== undefined;
     });
 
     await flushPromises();
@@ -111,15 +203,15 @@ export class CommentsDriver {
   }
 
   get bodies(): readonly string[] {
-    return this.wrapper
-      .findAll('.nui-collab-comments__thread > .nui-collab-comments__body')
-      .map((body) => body.text());
+    return this.listed('.nui-collab-comments__thread > .nui-collab-comments__body').map((body) =>
+      body.text(),
+    );
   }
 
   get replies(): readonly string[] {
-    return this.wrapper
-      .findAll('.nui-collab-comments__replies .nui-collab-comments__body')
-      .map((body) => body.text());
+    return this.listed('.nui-collab-comments__replies .nui-collab-comments__body').map((body) =>
+      body.text(),
+    );
   }
 
   get title(): string {
@@ -132,6 +224,16 @@ export class CommentsDriver {
 
   get addDisabled(): boolean {
     return this.buttonNamed('Add comment').element.disabled;
+  }
+
+  get popoverThread(): string {
+    return this.wrapper
+      .find('.nui-collab-comment-popover .nui-collab-comments__thread > .nui-collab-comments__body')
+      .text();
+  }
+
+  get popoverOpen(): boolean {
+    return this.wrapper.find('.nui-collab-comment-popover .nui-collab-comments__thread').exists();
   }
 
   get emptyShown(): boolean {

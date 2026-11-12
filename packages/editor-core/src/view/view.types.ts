@@ -51,6 +51,8 @@ export interface EditorView {
   posAtDOM(node: Node, offset: number): number;
   domAtPos(pos: number): DomPoint;
   coordsAtPos(pos: number): CaretRect | undefined;
+  drawn(pos: number): boolean;
+  draw(pos: number): void;
   posAtCoords(x: number, y: number): number | undefined;
   nodeDOM(id: NodeId): HTMLElement | undefined;
   inWidget(target: EventTarget | null): boolean;

@@ -1,3 +1,4 @@
+import { maxBy } from 'lodash-es';
 import { CellValueKind, type CellValue } from '../cell.types';
 import { errorValue, numberValue } from '../values';
 import { EvalValueKind, type ArrayValue, type EvalValue } from './calc.types';
@@ -51,8 +52,8 @@ export const matrixOf = (value: EvalValue): Matrix => {
 };
 
 export const broadcastShape = (shapes: readonly Shape[]): Shape => ({
-  rows: Math.max(1, ...shapes.map((shape) => shape.rows)),
-  cols: Math.max(1, ...shapes.map((shape) => shape.cols)),
+  rows: Math.max(1, maxBy(shapes, (shape) => shape.rows)?.rows ?? 1),
+  cols: Math.max(1, maxBy(shapes, (shape) => shape.cols)?.cols ?? 1),
 });
 
 export const elementAt = (matrix: Matrix, row: number, col: number): CellValue => {

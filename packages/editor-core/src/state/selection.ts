@@ -6,7 +6,7 @@ import {
   type ElementNode,
   type NodeId,
 } from '../model/node.types';
-import type { Mappable } from '../transform/mapping.types';
+import type { Assoc, Mappable } from '../transform/mapping.types';
 import { GapSide, type Selection, type SelectionRange } from './selection.types';
 import { SelectionKind } from './state.types';
 
@@ -177,6 +177,44 @@ export const validSelection = (doc: Doc, selection: Selection): Selection => {
   }
 };
 
+const heldAt = (doc: Doc, pos: number, id: NodeId): number | undefined => {
+  const node = doc.nodeAt(pos);
+
+  return node?.kind === ContentNodeKind.Element && node.id === id ? pos : undefined;
+};
+
+const startAfter = (id: NodeId, start: number, mapping: Mappable, after: Doc): number | undefined =>
+  heldAt(after, mapping.map(start, -1), id) ??
+  heldAt(after, mapping.map(start, 1), id) ??
+  after.positionOf(id);
+
+export const followPosition = (
+  pos: number,
+  mapping: Mappable,
+  before: Doc,
+  after: Doc,
+  assoc: Assoc = 1,
+): number => {
+  const mapped = mapping.mapResult(pos, assoc);
+
+  if (!mapped.deleted) {
+    return mapped.pos;
+  }
+
+  const { parent, parentOffset } = before.resolve(pos);
+
+  if (parent === before.root || after.resolve(mapped.pos).parent.id === parent.id) {
+    return mapped.pos;
+  }
+
+  const start = startAfter(parent.id, pos - parentOffset - 1, mapping, after);
+  const node = start === undefined ? undefined : after.nodeAt(start);
+
+  return start === undefined || node === undefined
+    ? mapped.pos
+    : start + 1 + Math.min(parentOffset, nodeSize(node) - 2);
+};
+
 export const mapSelection = (
   selection: Selection,
   mapping: Mappable,
@@ -186,7 +224,10 @@ export const mapSelection = (
   if (selection.kind === SelectionKind.Text) {
     return validSelection(
       after,
-      textSelection(mapping.map(selection.anchor), mapping.map(selection.head)),
+      textSelection(
+        followPosition(selection.anchor, mapping, before, after),
+        followPosition(selection.head, mapping, before, after),
+      ),
     );
   }
   if (selection.kind === SelectionKind.All) {

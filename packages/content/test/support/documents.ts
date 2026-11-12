@@ -80,20 +80,21 @@ export const everyBlock = () =>
     node('columns', [node('column', [p('L')], { width: 1.5 }), node('column', [p('R')])]),
     node('table', [
       node('table_head', [
-        node('table_column', [], { name: 'Name' }),
-        node('table_column', [], { name: 'Sum', type: 'number', width: 120 }),
-        node('table_column', [], { name: 'Paid', type: 'boolean' }),
+        node('table_column', [], { key: 'name', name: 'Name' }),
+        node('table_column', [], { key: 'sum', name: 'Sum', type: 'number', width: 120 }),
+        node('table_column', [], { key: 'paid', name: 'Paid', type: 'boolean' }),
         node('table_column', [node('table_option', [], { label: 'Open' })], {
+          key: 'state',
           name: 'State',
           type: 'select',
         }),
       ]),
       node('table_body', [
         node('table_row', [
-          node('table_cell', [], { value: 'Ann' }),
-          node('table_cell', [], { value: 12.5 }),
-          node('table_cell', [], { value: true }),
-          node('table_cell', [], { value: 'Open' }),
+          node('table_cell', [], { column: 'name', value: 'Ann' }),
+          node('table_cell', [], { column: 'sum', value: 12.5 }),
+          node('table_cell', [], { column: 'paid', value: true }),
+          node('table_cell', [], { column: 'state', value: 'Open' }),
         ]),
       ]),
     ]),

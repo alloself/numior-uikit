@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-3">
     <NuiTree
-      variant="bordered"
+      variant="outline"
       v-model:values="checked"
       :items="files"
       checkable

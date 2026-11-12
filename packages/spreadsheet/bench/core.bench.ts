@@ -351,9 +351,11 @@ for (let index = 0; index < heavy.warmup + heavy.iterations; index += 1) {
   );
 
   await loading.settled;
-  if (index >= heavy.warmup) {
-    loadSlices.push(loading.longestMs);
+  if (index < heavy.warmup) {
+    continue;
   }
+
+  loadSlices.push(loading.longestMs);
 }
 
 operations.push(summarize('longest main-thread slice while loading 100,050 formulas', loadSlices));
@@ -374,9 +376,11 @@ for (let index = 0; index < heavy.warmup + heavy.iterations; index += 1) {
   const run = fresh.calculator.recalculate({ yieldTo: () => Promise.resolve() });
 
   await run.settled;
-  if (index >= heavy.warmup) {
-    recalcSlices.push(run.longestMs);
+  if (index < heavy.warmup) {
+    continue;
   }
+
+  recalcSlices.push(run.longestMs);
 }
 
 operations.push(

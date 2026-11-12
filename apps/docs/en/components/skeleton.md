@@ -24,16 +24,16 @@ import '@numior/vue/styles/skeleton.css';
 
 ### A card while loading
 
-Put placeholders where the title and the text will be, and give them a similar width. Then the
-card keeps its size after loading.
+[Card](/en/components/card) has placeholders of its own. The `loading` prop puts them where the
+title, the description, the text and the image will be, and the card header keeps its size.
 
-<Example name="skeleton/Card" />
+<Example name="card/Loading" />
 
 ## Accessibility
 
 A screen reader does not see the placeholder and learns nothing about loading from it. Mark the
 container with `aria-busy="true"` while loading, or show a [Progress](/en/components/progress)
-with a label next to it.
+with a label next to it. `NuiCard` with `loading` sets `aria-busy` itself.
 
 When reduced motion is on in the system, the shimmer stays still.
 

@@ -6,7 +6,7 @@ const docs: DocsMap = {
       scene: 'table/Example',
       props: [
         'size',
-        'bordered',
+        'gridlines',
         'striped',
         'selectable',
         'rowHeaders',
@@ -26,8 +26,8 @@ const docs: DocsMap = {
         en: 'Rows of the table. The table neither copies nor changes them. Not needed with `source`.',
       },
       source: {
-        ru: 'Загружает строки с сервера. `fetch({ offset, limit, sort, filters, groupBy, groupPath, signal })` возвращает `{ rows, total }` или `{ rows, hasMore }`, а необязательные `values` и `totals` отдают значения фильтра-списка и итоги. С `groupBy` таблица запрашивает группы по уровням: пока `groupPath` короче `groupBy`, `fetch` отвечает `{ groups }` со значением, числом строк и агрегатами, а на последнем уровне — строками группы. Таблица грузит строки блоками по мере прокрутки, хранит пятьдесят последних блоков и отменяет устаревшие запросы при смене сортировки, фильтров и групп. Без `height` источник листается страницами. `children({ row, sort, filters, signal })` загружает детей строки и включает дерево: строки с детьми отмечает `hasChildren`, группировка в дереве не работает. Перетаскивание строк с `source` недоступно.',
-        en: 'Loads rows from a server. `fetch({ offset, limit, sort, filters, groupBy, groupPath, signal })` returns `{ rows, total }` or `{ rows, hasMore }`, and the optional `values` and `totals` return the set filter values and the totals. With `groupBy` the table requests groups level by level: while `groupPath` is shorter than `groupBy`, `fetch` returns `{ groups }` with the value, row count and aggregates, and at the last level the rows of the group. The table loads rows in blocks as you scroll, keeps the last fifty blocks and cancels outdated requests when sorting, filters or groups change. Without `height` the source is paged. `children({ row, sort, filters, signal })` loads the children of a row and turns on the tree: `hasChildren` marks the rows that have children, and grouping is off in a tree. Row drag is not available with `source`.',
+        ru: 'Загружает строки с сервера. `fetch({ offset, limit, sort, filters, groupBy, groupPath, signal })` возвращает `{ rows, total }` или `{ rows, hasMore }`, а необязательные `values` и `totals` отдают значения фильтра-списка и итоги. `values({ key, filters, limit, search, signal })` получает текст поиска из фильтра и отвечает `{ values, truncated }`. С `groupBy` таблица запрашивает группы по уровням: пока `groupPath` короче `groupBy`, `fetch` отвечает `{ groups }` со значением, числом строк и агрегатами, а на последнем уровне — строками группы. Таблица грузит строки блоками по мере прокрутки, хранит пятьдесят последних блоков и отменяет устаревшие запросы при смене сортировки, фильтров и групп. Без `height` источник листается страницами. `children({ row, sort, filters, signal })` загружает детей строки и включает дерево: строки с детьми отмечает `hasChildren`, группировка в дереве не работает. Перетаскивание строк с `source` недоступно.',
+        en: 'Loads rows from a server. `fetch({ offset, limit, sort, filters, groupBy, groupPath, signal })` returns `{ rows, total }` or `{ rows, hasMore }`, and the optional `values` and `totals` return the set filter values and the totals. `values({ key, filters, limit, search, signal })` receives the search text of the filter and returns `{ values, truncated }`. With `groupBy` the table requests groups level by level: while `groupPath` is shorter than `groupBy`, `fetch` returns `{ groups }` with the value, row count and aggregates, and at the last level the rows of the group. The table loads rows in blocks as you scroll, keeps the last fifty blocks and cancels outdated requests when sorting, filters or groups change. Without `height` the source is paged. `children({ row, sort, filters, signal })` loads the children of a row and turns on the tree: `hasChildren` marks the rows that have children, and grouping is off in a tree. Row drag is not available with `source`.',
       },
       blockSize: {
         ru: 'Сколько строк запрашивать у `source` за раз. По умолчанию 100, с пагинацией — размер страницы.',
@@ -82,10 +82,10 @@ const docs: DocsMap = {
         en: 'Styles the cells of the body and of pinned rows. The function receives `{ row, column, position, pinned }` and returns `fill`, `color`, `align`, `wrap`, `overflow`, `borders`, `bar`, `icon`, `scheme`, `class` and `style`, or `undefined`. `fill` paints the cell background under the selection, `wrap` wraps the text of one cell. `overflow` lets one-line text spill over the empty cells after it (before it when end aligned) up to the first filled cell, a merge or the edge of a pinned area. Centred text, text in a pinned column and a cell with its own slot stay within the cell. `borders` draws `top`, `end`, `bottom` and `start` lines in place of the grid lines without changing the row height. `bar` draws a `{ length, color }` bar under the text (the length is a share of the width from 0 to 1), `icon` puts an `{ icon, color, filled }` icon before the text. `scheme` (`light` or `dark`) sets the colour scheme of the bar and the icon when the cell fill is lighter or darker than the theme; the grid lines, the selection and the cell itself keep the theme scheme. The function runs for each shown cell and again when the row or the data it reads changes.',
       },
       merges: {
-        ru: 'Объединяет ячейки. Прямоугольники `{ from, to }` задаются в тех же координатах, что `v-model:ranges`. Объединение показывает содержимое и оформление первой ячейки, выделяется целиком, а правка меняет первую ячейку. Объединение из нескольких строк не подсвечивается при наведении, полосами и выбором строки. Из двух пересекающихся прямоугольников остаётся первый. С группировкой, деревом и деталями объединения не работают.',
-        en: 'Merges cells. The `{ from, to }` rectangles use the same coordinates as `v-model:ranges`. A merge shows the content and style of its first cell, is selected as a whole, and an edit changes the first cell. A merge across several rows is not highlighted by hover, stripes or row selection. Of two overlapping rectangles, the first one wins. Merges do not work with grouping, a tree or details.',
+        ru: 'Объединяет ячейки. Прямоугольники `{ from, to }` задаются в тех же координатах, что `v-model:ranges`. Объединение показывает содержимое и оформление первой ячейки, выделяется целиком, а правка меняет первую ячейку. Вставка, заполнение и очистка пропускают ячейки под ним. Объединение из нескольких строк не подсвечивается при наведении, полосами и выбором строки. Из двух пересекающихся прямоугольников остаётся первый. С группировкой, деревом и деталями объединения не работают.',
+        en: 'Merges cells. The `{ from, to }` rectangles use the same coordinates as `v-model:ranges`. A merge shows the content and style of its first cell, is selected as a whole, and an edit changes the first cell. Paste, fill and clear skip the cells under it. A merge across several rows is not highlighted by hover, stripes or row selection. Of two overlapping rectangles, the first one wins. Merges do not work with grouping, a tree or details.',
       },
-      bordered: {
+      gridlines: {
         ru: 'Рисует линии между колонками. Линия после последней колонки видна, только пока колонки не заполняют всю ширину.',
         en: 'Draws lines between the columns. The line after the last column shows only while the columns do not fill the whole width.',
       },
@@ -149,13 +149,17 @@ const docs: DocsMap = {
         ru: 'Задаёт, куда ведёт Ctrl со стрелкой: `(from, direction) → позиция`, где `direction` — `up`, `down`, `previous` или `next`. Без функции курсор идёт к краю таблицы. Позиция за пределами таблицы прижимается к краю.',
         en: 'Sets where Ctrl with an arrow goes: `(from, direction) → position`, where `direction` is `up`, `down`, `previous` or `next`. Without it the cursor goes to the edge of the table. A position outside the table is clamped to its edge.',
       },
+      lastCell: {
+        ru: 'Задаёт, куда ведёт Ctrl+End и Ctrl+Shift+End: `() → позиция` в координатах данных, например последняя занятая ячейка листа. Без функции или с ответом `undefined` курсор идёт в последнюю ячейку таблицы. Позиция за пределами таблицы прижимается к краю.',
+        en: 'Sets where Ctrl+End and Ctrl+Shift+End go: `() → position` in data coordinates, such as the last used cell of a sheet. Without it, or when it answers `undefined`, the cursor goes to the last cell of the table. A position outside the table is clamped to its edge.',
+      },
       keepEditing: {
         ru: 'Отмечает элементы вне таблицы, например строку формул, фокус на которых не завершает правку: `(target) → true`. Щелчок по ним не снимает выделение ячеек. Когда фокус уходит из такого элемента, завершите правку через `commitEdit` или `cancelEdit`.',
         en: 'Marks elements outside the table, such as a formula bar, whose focus keeps a cell edit open: `(target) → true`. A click on them keeps the cell selection. When focus leaves such an element, end the edit with `commitEdit` or `cancelEdit`.',
       },
       growEditor: {
-        ru: 'Даёт текстовому редактору ячейки расти по ширине текста поверх соседних ячеек, как в Excel. Редактор растёт до края видимой области, дальше текст прокручивается внутри поля.',
-        en: 'Lets the text editor of a cell grow with its text over the neighbouring cells, as in Excel. It grows up to the edge of the visible area, then the text scrolls inside the field.',
+        ru: 'Кладёт текстовый редактор точно по границам ячейки с рамкой выделения и даёт ему расти поверх соседних ячеек целыми колонками, как в Excel: у ячеек с выравниванием по концу влево, у остальных вправо. Редактор растёт до края видимой области, дальше текст прокручивается внутри поля.',
+        en: 'Puts the text editor exactly on the bounds of its cell with the selection frame and lets it grow over the neighbouring cells by whole columns, as in Excel: towards the start for end-aligned cells and towards the end for the rest. It grows up to the edge of the visible area, then the text scrolls inside the field.',
       },
       picking: {
         ru: 'Включает выбор ссылок для формул: `(draft) → true`, пока черновик ждёт ссылку, например кончается оператором. Тогда щелчок, протяжка и стрелки в редакторе не завершают правку, а отправляют событие `pick`.',
@@ -194,8 +198,8 @@ const docs: DocsMap = {
         en: 'Maximum number of cells in one copy. 200,000 by default. Rows past the limit are dropped, and screen readers announce it.',
       },
       clipboard: {
-        ru: 'Задаёт свой формат буфера обмена. `serialize({ ranges, headers, rowAt, keyAt }) → { text, html }` заменяет копирование и вырезание, `copyLimit` на него не действует. `parse(data, target)` получает текст и HTML вставки и возвращает блок строк для вставки; `undefined` оставляет разбор таблице.',
-        en: 'Sets a custom clipboard format. `serialize({ ranges, headers, rowAt, keyAt }) → { text, html }` replaces copy and cut, and `copyLimit` does not apply to it. `parse(data, target)` receives the pasted text and HTML and returns a block of strings to paste; `undefined` leaves parsing to the table.',
+        ru: 'Задаёт свой формат буфера обмена. `serialize({ ranges, rows, cols, headers, rowAt, keyAt }) → { text, html }` заменяет копирование и вырезание. `rows` и `cols` — позиции строк и колонок копируемого блока: объединение выделенных диапазонов, обрезанное по `lastCell` и по `copyLimit`. `parse(data, target)` получает текст и HTML вставки и возвращает блок строк для вставки; `undefined` оставляет разбор таблице.',
+        en: 'Sets a custom clipboard format. `serialize({ ranges, rows, cols, headers, rowAt, keyAt }) → { text, html }` replaces copy and cut. `rows` and `cols` are the row and column positions of the copied block: the union of the selected ranges, cut to `lastCell` and to `copyLimit`. `parse(data, target)` receives the pasted text and HTML and returns a block of strings to paste; `undefined` leaves parsing to the table.',
       },
       commands: {
         ru: 'Подключает свою историю правок вместо встроенной. `push(command)` получает каждую правку, а Ctrl+Z, Ctrl+Y и методы `undo` и `redo` вызывают `undo()` и `redo()`, которые возвращают число изменённых ячеек.',
@@ -216,8 +220,8 @@ const docs: DocsMap = {
         en: 'Sorting: a list of column keys with directions. The first key comes first.',
       },
       'v-model:filters': {
-        ru: 'Фильтры колонок: условия `text`, `number`, `date` и `set` по ключам колонок. Значение можно сохранить в JSON.',
-        en: 'Column filters: `text`, `number`, `date` and `set` conditions by column key. The value can be saved as JSON.',
+        ru: 'Фильтры колонок: условия `text`, `number`, `date` и `set` по ключам колонок. Условие `set` с `exclude: true` прячет строки названных значений. Значение можно сохранить в JSON.',
+        en: 'Column filters: `text`, `number`, `date` and `set` conditions by column key. A `set` condition with `exclude: true` hides the rows of the named values. The value can be saved as JSON.',
       },
       'v-model:quick': {
         ru: 'Текст поиска по всем видимым текстовым колонкам без учёта регистра.',
@@ -248,8 +252,8 @@ const docs: DocsMap = {
         en: 'Selected rows, as the objects from `rows`. Compared by `getKey`, or by reference without it.',
       },
       'v-model:widths': {
-        ru: 'Ширины колонок в пикселях по ключу, заданные вручную. Пока таблица помещается, ручка забирает ширину у соседней колонки, при прокрутке растёт только сама колонка. Колонка из модели больше не делит свободное место через `flex`.',
-        en: 'Column widths in pixels by key, set by hand. While the table fits, the handle takes width from the neighbouring column; once it scrolls, only the column itself grows. A column in the model stops sharing free space through `flex`.',
+        ru: 'Ширины колонок в пикселях по ключу, заданные вручную. Пока таблица помещается, ручка забирает ширину у соседней колонки, при прокрутке растёт только сама колонка. Колонка из модели больше не делит свободное место через `flex`. Двойной щелчок по ручке убирает колонку из модели.',
+        en: 'Column widths in pixels by key, set by hand. While the table fits, the handle takes width from the neighbouring column; once it scrolls, only the column itself grows. A column in the model stops sharing free space through `flex`. A double click on the handle removes the column from the model.',
       },
       'v-model:rowHeights': {
         ru: 'Высоты строк в пикселях по ключу строки, заданные вручную. Ручку у нижнего края заголовка строки включает `rowHeaders.resizable`, двойной щелчок по ней возвращает высоту по умолчанию. С `height` и числовой `rowHeight` высота точная, иначе это минимум. С `source` не действует.',
@@ -301,9 +305,17 @@ const docs: DocsMap = {
         ru: 'Строку перетащили. Передаёт `row`, прежние индекс `from` и родителя `parent`, новые индекс `to` и родителя `toParent`; индексы считаются среди соседей, `undefined` — корень. Порядок в данных меняете вы.',
         en: 'A row was dragged. Carries `row`, the old index `from` and parent `parent`, and the new index `to` and parent `toParent`; indices count among siblings, `undefined` is the root. You apply the order to the data.',
       },
+      columnResize: {
+        ru: 'Ширину колонки поменяли: перетаскивание закончилось, сделан шаг с клавиатуры или ширина сброшена. Передаёт список `{ key, width }`; `width: undefined` значит сброс. Во время перетаскивания меняется только `v-model:widths`.',
+        en: 'A column width changed: a drag ended, a keyboard step was made or the width was reset. Carries a list of `{ key, width }`; `width: undefined` means a reset. During a drag only `v-model:widths` changes.',
+      },
+      rowResize: {
+        ru: 'Высоту строки поменяли: перетаскивание закончилось, сделан шаг с клавиатуры или высота сброшена. Передаёт список `{ key, height }`, где `key` — ключ строки строкой; `height: undefined` значит сброс. Во время перетаскивания меняется только `v-model:rowHeights`.',
+        en: 'A row height changed: a drag ended, a keyboard step was made or the height was reset. Carries a list of `{ key, height }` with the row key as a string; `height: undefined` means a reset. During a drag only `v-model:rowHeights` changes.',
+      },
       editRefused: {
-        ru: 'Свой редактор колонки не открылся. Передаёт `row`, `key` и `reason`: `control` — контрола нет в реестре, `props` — свойства не прошли проверку, `value` — значение не подходит контролу.',
-        en: "A column's custom editor did not open. Carries `row`, `key` and `reason`: `control` when the registry lacks the control, `props` when the props fail the check, `value` when the value does not fit the control.",
+        ru: 'Редактор ячейки не открылся или закрылся без записи. Передаёт `row`, `key` и `reason`: `control` — контрола нет в реестре, `props` — свойства не прошли проверку, `value` — значение не подходит контролу, `row-gone` — в новых `rows` нет строки открытого редактора.',
+        en: 'A cell editor did not open or closed without saving. Carries `row`, `key` and `reason`: `control` when the registry lacks the control, `props` when the props fail the check, `value` when the value does not fit the control, `row-gone` when the new `rows` no longer hold the row of the open editor.',
       },
       pick: {
         ru: 'Выбрана ссылка для формулы, пока `picking` отвечает `true`. Передаёт диапазон, расширенный до объединённых ячеек; вставляет его в черновик приложение.',
@@ -314,8 +326,8 @@ const docs: DocsMap = {
         en: 'The set of rendered rows and columns changed. `rows` and `cols` are position spans `{ start, end }`, `end` excluded.',
       },
       edit: {
-        ru: 'Ячейки изменили. Передаёт `kind` (`edit`, `clear`, `cut`, `paste`, `undo`, `redo`) и `changes` со строкой, ключом колонки, новым и прежним значением. Таблица сама строки не меняет — примените изменения к данным.',
-        en: 'Cells were changed. Carries `kind` (`edit`, `clear`, `cut`, `paste`, `undo`, `redo`) and `changes` with the row, column key, new and previous value. The table never changes rows itself, so apply the changes to your data.',
+        ru: 'Ячейки изменили. Передаёт `kind` (`edit`, `clear`, `cut`, `paste`, `undo`, `redo`) и `changes` со строкой, ключом колонки, новым и прежним значением. У вставки блока есть `area` — диапазон, который он занял; у одного значения, вставленного в выделение, его нет. Таблица сама строки не меняет — примените изменения к данным.',
+        en: 'Cells were changed. Carries `kind` (`edit`, `clear`, `cut`, `paste`, `undo`, `redo`) and `changes` with the row, column key, new and previous value. A pasted block also carries `area`, the range it took; one value pasted into a selection has none. The table never changes rows itself, so apply the changes to your data.',
       },
     },
     slots: {
@@ -537,8 +549,8 @@ const docs: DocsMap = {
       {
         keys: 'Home / End',
         description: {
-          ru: 'Переходит на первую или последнюю колонку строки.',
-          en: 'Moves to the first or the last column of the row.',
+          ru: 'Переходит на первую колонку данных или на последнюю колонку строки. Повторный Home из первой колонки данных ведёт в колонку выбора или номеров строк.',
+          en: 'Moves to the first data column or to the last column of the row. Home pressed again in the first data column leads to the selection or row number column.',
         },
       },
       {
@@ -551,15 +563,15 @@ const docs: DocsMap = {
       {
         keys: 'Ctrl+Home / Ctrl+End',
         description: {
-          ru: 'Переходит на первую ячейку данных или на последнюю ячейку, включая строку итогов.',
-          en: 'Moves to the first data cell or to the last cell, the totals row included.',
+          ru: 'Переходит на первую ячейку данных или на последнюю ячейку, включая строку итогов. С `lastCell` Ctrl+End ведёт в ячейку, которую назвала функция.',
+          en: 'Moves to the first data cell or to the last cell, the totals row included. With `lastCell`, Ctrl+End goes to the cell the function names.',
         },
       },
       {
         keys: 'PageUp / PageDown',
         description: {
-          ru: 'Переходит на экран строк вверх или вниз.',
-          en: 'Moves a screen of rows up or down.',
+          ru: 'Переходит на экран строк вверх или вниз. Экран — строки тела, которые помещаются между шапкой с закреплёнными строками и строкой итогов.',
+          en: 'Moves a screen of rows up or down. A screen is the body rows that fit between the header with its pinned rows and the totals row.',
         },
       },
     ],

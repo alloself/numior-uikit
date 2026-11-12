@@ -35,6 +35,12 @@ export type Step =
       readonly mark: Mark;
       readonly skip?: readonly StepSpan[] | undefined;
     }
+  | {
+      readonly kind: typeof StepKind.Move;
+      readonly from: number;
+      readonly to: number;
+      readonly target: number;
+    }
   | { readonly kind: typeof StepKind.Attrs; readonly pos: number; readonly attrs: Attrs }
   | { readonly kind: typeof StepKind.Markup; readonly changes: readonly MarkupChange[] }
   | { readonly kind: typeof StepKind.DocAttrs; readonly attrs: Attrs };
@@ -61,6 +67,7 @@ export const StepKind = {
   ReplaceAround: 'replaceAround',
   AddMark: 'addMark',
   RemoveMark: 'removeMark',
+  Move: 'move',
   Attrs: 'attrs',
   Markup: 'markup',
   DocAttrs: 'docAttrs',

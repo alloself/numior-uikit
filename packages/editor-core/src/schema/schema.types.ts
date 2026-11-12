@@ -31,6 +31,7 @@ export type ParsedContent = readonly ContentNode[] | false;
 export interface NodeParseRule {
   readonly tag: string;
   readonly priority?: number | undefined;
+  readonly own?: boolean | undefined;
   readonly attrs?: ((element: HtmlElement) => ParsedAttrs) | undefined;
   readonly read?: ((element: HtmlElement, make: NodeMaker) => ParsedContent) | undefined;
 }
@@ -41,6 +42,8 @@ export interface MarkParseRule {
   readonly attrs?: ((element: HtmlElement) => ParsedAttrs) | undefined;
 }
 
+export type NodePlainText = (node: ElementNode) => string;
+
 export interface NodeSpec {
   readonly content?: string | undefined;
   readonly group?: string | undefined;
@@ -50,7 +53,9 @@ export interface NodeSpec {
   readonly code?: boolean | undefined;
   readonly atom?: boolean | undefined;
   readonly slots?: NodeSlots | undefined;
+  readonly plainText?: NodePlainText | undefined;
   readonly render?: NodeRender | undefined;
+  readonly renderSubtree?: NodeRender | undefined;
   readonly parse?: readonly NodeParseRule[] | undefined;
 }
 
@@ -90,7 +95,9 @@ export interface NodeType {
   readonly attrs: AttrSpecs;
   readonly code: boolean;
   readonly slots: SlotRule;
+  readonly plainText: NodePlainText | undefined;
   readonly render: NodeRender;
+  readonly renderSubtree: NodeRender | undefined;
   readonly parse: readonly NodeParseRule[];
 }
 

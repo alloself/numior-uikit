@@ -80,9 +80,11 @@ const onBeforeinput = (event: InputEvent): void => {
     return;
   }
   event.preventDefault();
-  if (event.data) {
-    feed(event.data);
+  if (!event.data) {
+    return;
   }
+
+  feed(event.data);
 };
 
 const onInput = (): void => {

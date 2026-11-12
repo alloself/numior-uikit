@@ -3,7 +3,9 @@ import {
   createDoc,
   createState,
   inlineText,
+  selectionRange,
   textSelection,
+  type Command,
   type EditorState,
   type ElementNode,
   type NodeId,
@@ -31,6 +33,17 @@ export interface KeyOptions {
 }
 
 export type CaretApi = 'position' | 'range' | 'none';
+
+export interface DragOptions {
+  readonly copy?: boolean;
+  readonly from?: Element | undefined;
+}
+
+export interface Dragged {
+  readonly started: boolean;
+  readonly offered: boolean;
+  readonly effect: string;
+}
 
 export interface LayoutOptions {
   readonly collapsedHeight: number;
@@ -75,14 +88,29 @@ const settle = (): Promise<void> =>
 const beforeinput = (inputType: string, data: string | null = null): InputEvent =>
   new InputEvent('beforeinput', { inputType, data, bubbles: true, cancelable: true });
 
+const writeAtCaret = (text: string): void => {
+  const selection = document.getSelection();
+  const anchor = selection?.anchorNode;
+  const offset = selection?.anchorOffset ?? 0;
+
+  if (!(anchor instanceof Text)) {
+    return;
+  }
+
+  anchor.insertData(offset, text);
+  selection?.collapse(anchor, offset + text.length);
+};
+
 const textNodesOf = (root: Node): Text[] => {
   const found: Text[] = [];
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
 
   for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
-    if (node instanceof Text) {
-      found.push(node);
+    if (!(node instanceof Text)) {
+      continue;
     }
+
+    found.push(node);
   }
   return found;
 };
@@ -261,6 +289,17 @@ export class EditorViewDriver {
     document.dispatchEvent(new Event('selectionchange'));
   }
 
+  pointInDom(anchor: number, head = anchor): void {
+    const from = this.view.domAtPos(anchor);
+    const to = this.view.domAtPos(head);
+
+    document.getSelection()?.setBaseAndExtent(from.node, from.offset, to.node, to.offset);
+  }
+
+  noticeSelection(): void {
+    document.dispatchEvent(new Event('selectionchange'));
+  }
+
   selectRootChildren(from: number, to: number): void {
     document.getSelection()?.setBaseAndExtent(this.host, from, this.host, to);
     document.dispatchEvent(new Event('selectionchange'));
@@ -328,6 +367,48 @@ export class EditorViewDriver {
     return over.defaultPrevented && !(target?.dispatchEvent(drop) ?? true);
   }
 
+  run(command: Command): boolean {
+    return command(this.state, (tr) => {
+      this.view.dispatch(tr);
+    });
+  }
+
+  dragSelectionTo(text: string, offset: number, options: DragOptions = {}): Dragged {
+    const carried = new Map<string, string>();
+
+    const transfer = {
+      effectAllowed: 'uninitialized',
+      files: [],
+      types: ['text/plain', 'text/html'],
+      setData: (format: string, value: string) => {
+        carried.set(format, value);
+      },
+      getData: (format: string) => carried.get(format) ?? '',
+    };
+
+    const eventOf = (type: string): Event => {
+      const event = new Event(type, { bubbles: true, cancelable: true });
+
+      Object.defineProperty(event, 'dataTransfer', { value: transfer });
+      Object.defineProperty(event, 'ctrlKey', { value: options.copy ?? false });
+      return event;
+    };
+
+    const start = this.view.domAtPos(selectionRange(this.state.doc, this.state.selection).from);
+    const source = options.from ?? start.node.parentElement ?? this.host;
+    const over = eventOf('dragover');
+    const started = source.dispatchEvent(eventOf('dragstart'));
+
+    if (started) {
+      this.caretFrom('range', text, offset);
+      this.host.dispatchEvent(over);
+      this.host.dispatchEvent(eventOf('drop'));
+    }
+
+    source.dispatchEvent(eventOf('dragend'));
+    return { started, offered: !over.defaultPrevented, effect: transfer.effectAllowed };
+  }
+
   copy(type: 'copy' | 'cut', format = 'text/plain'): string | undefined {
     const copied = new Map<string, string>();
     const event = new Event(type, { bubbles: true, cancelable: true });
@@ -366,22 +447,50 @@ export class EditorViewDriver {
     this.host.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: '' }));
   }
 
-  async compose(text: string): Promise<boolean> {
-    const selection = document.getSelection();
-    const anchor = selection?.anchorNode;
-    const offset = selection?.anchorOffset ?? 0;
+  async composeJoining(block: number, typed = ''): Promise<void> {
+    const kept = textNodesOf(this.blocks[block - 1] ?? this.host)[0];
+    const gone = this.blocks[block];
 
-    this.host.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    this.startComposition();
+
+    if (kept !== undefined) {
+      const at = kept.data.length;
+
+      kept.appendData(`${typed}${gone?.textContent ?? ''}`);
+      document.getSelection()?.collapse(kept, at + typed.length);
+    }
+
+    gone?.remove();
+    await settle();
+    this.endComposition();
+    await settle();
+  }
+
+  async compose(text: string): Promise<boolean> {
+    this.startComposition();
     const passive = this.host.dispatchEvent(beforeinput('insertCompositionText', text));
 
-    if (anchor instanceof Text) {
-      anchor.insertData(offset, text);
-      selection?.collapse(anchor, offset + text.length);
-    }
+    writeAtCaret(text);
     await settle();
     this.host.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: text }));
     await settle();
     return passive;
+  }
+
+  async startComposing(text: string): Promise<void> {
+    this.startComposition();
+    writeAtCaret(text);
+    await settle();
+  }
+
+  async finishComposing(): Promise<void> {
+    this.endComposition();
+    await settle();
+  }
+
+  async commitUnannounced(text: string): Promise<void> {
+    this.type(text);
+    await settle();
   }
 
   async editDom(block: number, text: string): Promise<void> {
@@ -424,6 +533,20 @@ export class EditorViewDriver {
     );
   }
 
+  get mentions(): readonly string[] {
+    return this.state.doc.root.content.flatMap((block) =>
+      block.kind === 'element'
+        ? block.content.flatMap((node) =>
+            node.kind === 'element' &&
+            node.type === 'mention' &&
+            typeof node.attrs.user === 'string'
+              ? [node.attrs.user]
+              : [],
+          )
+        : [],
+    );
+  }
+
   get markup(): string {
     return withoutStyles(this.host);
   }
@@ -431,10 +554,12 @@ export class EditorViewDriver {
   setChunkInView(index: number, visible: boolean): void {
     const chunk = this.chunkElements[index];
 
-    if (chunk !== undefined) {
-      for (const callback of sights) {
-        callback([{ target: chunk, isIntersecting: visible }]);
-      }
+    if (chunk === undefined) {
+      return;
+    }
+
+    for (const callback of sights) {
+      callback([{ target: chunk, isIntersecting: visible }]);
     }
   }
 
@@ -526,10 +651,26 @@ export class EditorViewDriver {
     this.view.update(state);
   }
 
+  changeOutside(edit: (tr: Transaction) => Transaction): void {
+    this.view.update(this.state.apply(edit(this.state.tr)));
+  }
+
   get blockIds(): readonly NodeId[] {
     return this.state.doc.root.content.flatMap((block) =>
       block.kind === 'element' ? [block.id] : [],
     );
+  }
+
+  drawn(pos: number): boolean {
+    return this.view.drawn(pos);
+  }
+
+  draw(pos: number): void {
+    this.view.draw(pos);
+  }
+
+  onPage(id: NodeId): boolean {
+    return this.view.nodeDOM(id)?.isConnected ?? false;
   }
 
   positionOf(id: NodeId): number {

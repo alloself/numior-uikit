@@ -28,7 +28,7 @@
   margin: 0;
   font-size: var(--nui-font-size-sm);
   font-weight: 600;
-  line-height: var(--nui-line-height-tight, 1.25);
+  line-height: var(--nui-line-height-control);
 }
 .nui-spreadsheet-pivot__lost {
   margin: 0;
@@ -94,7 +94,7 @@
   color: var(--nui-text-muted);
   font-size: var(--nui-font-size-xs);
   font-weight: 600;
-  line-height: var(--nui-line-height-tight, 1.25);
+  line-height: var(--nui-line-height-control);
 }
 .nui-spreadsheet-pivot__chips {
   display: flex;
@@ -197,7 +197,7 @@
   background: var(--nui-surface-elevated);
   box-shadow: var(--nui-shadow-lg);
   color: var(--nui-text);
-  line-height: 1.625rem;
+  line-height: calc(1.75rem - 2px);
   text-overflow: ellipsis;
   white-space: nowrap;
   opacity: 0;
@@ -247,6 +247,11 @@
   overflow: auto;
   border: 1px solid var(--nui-border);
   border-radius: var(--nui-radius);
+}
+.nui-spreadsheet-pivot__note {
+  margin: 0;
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-xs);
 }
 .nui-spreadsheet-pivot__footer {
   display: flex;

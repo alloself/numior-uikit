@@ -3,6 +3,7 @@ import {
   activeBlock,
   activeMarks,
   ancestorTypes,
+  canMark,
   insertDivider,
   insertMarked,
   markAttrs,
@@ -144,6 +145,42 @@ describe('toolbar state and commands', () => {
 
     expect(editor.outline).toBe('paragraph("a" link:"/docs" "!b")');
     expect(insertMarked('', 'link', { href: '/x' })(editor.state)).toBe(false);
+  });
+
+  it('refuses a mark where the block takes none and keeps typing there', () => {
+    const editor = started(
+      doc(node('code_block', ['let x']), node('paragraph', ['text'])),
+      textSelection(3),
+    );
+
+    expect(canMark(editor.state, 'link')).toBe(false);
+    expect(runs(editor, insertMarked('/docs', 'link', { href: '/docs' }))).toBe(false);
+    expect(runs(editor, setMark('link', { href: '/docs' }))).toBe(false);
+    expect(runs(editor, toggleMark('bold'))).toBe(false);
+    expect(editor.state.storedMarks).toBeNull();
+
+    editor.change((tr) => tr.setStoredMarks([bold]));
+    editor.type('Z');
+
+    expect(editor.outline).toBe('code_block("leZt x") paragraph("text")');
+
+    editor.select(textSelection(1, 4));
+
+    expect(canMark(editor.state, 'bold')).toBe(false);
+    expect(runs(editor, setMark('link', { href: '/docs' }))).toBe(false);
+    expect(runs(editor, toggleMark('bold'))).toBe(false);
+  });
+
+  it('marks the text that takes the mark when the selection also covers a block that does not', () => {
+    const editor = started(
+      doc(node('code_block', ['let x']), node('paragraph', ['text'])),
+      textSelection(3, 11),
+    );
+
+    expect(canMark(editor.state, 'bold')).toBe(true);
+    expect(runs(editor, toggleMark('bold'))).toBe(true);
+    expect(editor.outline).toBe('code_block("let x") paragraph(bold:"tex" "t")');
+    expect(canMark(editor.state, 'missing')).toBe(false);
   });
 
   it('limits attribute values in a restricted schema and parses pastes with it', () => {

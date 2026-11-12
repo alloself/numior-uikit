@@ -79,10 +79,12 @@ export const useFormatList = (options: FormatListOptions): FormatList => {
   const choose = (code: unknown): void => {
     const steps = stepsFor(shownSheet(), code);
 
-    if (steps.length > 0) {
-      options.target()?.apply(steps);
-      touch();
+    if (steps.length === 0) {
+      return;
     }
+
+    options.target()?.apply(steps);
+    touch();
   };
 
   return { options: listed, current, choose, touch };

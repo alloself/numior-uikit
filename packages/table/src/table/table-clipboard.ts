@@ -7,7 +7,17 @@ interface TsvState {
   quoted: boolean;
 }
 
+interface CsvLineOptions {
+  readonly formulas?: boolean | undefined;
+}
+
 const QUOTED = /[\t\n\r"]/;
+
+const FORMULA_START = /^[=@\t\r]/;
+
+const SIGN_START = /^[+-]/;
+
+const SIGNED_NUMBER = /^[+-][\d\s.,']*\d%?$/;
 
 const ENTITIES: Readonly<Record<string, string>> = {
   '&': '&amp;',
@@ -105,10 +115,19 @@ export const parseTsv = (text: string): string[][] => {
   return state.rows;
 };
 
-const csvField = (text: string, separator: string): string =>
+const quoted = (text: string, separator: string): string =>
   text.includes(separator) || /["\r\n]/.test(text) || text.trim() !== text
     ? `"${text.replaceAll('"', '""')}"`
     : text;
 
-export const csvLine = (cells: readonly string[], separator: string): string =>
-  cells.map((cell) => csvField(cell, separator)).join(separator);
+const runsAsFormula = (text: string): boolean =>
+  FORMULA_START.test(text) || (SIGN_START.test(text) && !SIGNED_NUMBER.test(text));
+
+const csvField = (text: string, separator: string, formulas: boolean): string =>
+  quoted(!formulas && runsAsFormula(text) ? `'${text}` : text, separator);
+
+export const csvLine = (
+  cells: readonly string[],
+  separator: string,
+  { formulas = false }: CsvLineOptions = {},
+): string => cells.map((cell) => csvField(cell, separator, formulas)).join(separator);

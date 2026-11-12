@@ -21,12 +21,12 @@ and others. `variant` picks the fill: `soft`, `outline` or `solid`.
 
 ## Examples
 
-### A dismissible alert with an action
+### A closable alert with an action
 
-Add `dismissible` to show a close button in the corner. Pressing it hides the alert, sets
-`v-model:open` to `false` and emits the `dismiss` event.
+Add `closable` to show a close button in the corner. Pressing it hides the alert, sets
+`v-model:open` to `false` and emits the `close` event.
 
-<Example name="alert/Dismissible" />
+<Example name="alert/Closable" />
 
 Action buttons go into the `actions` slot. Inside a `soft` alert use `outline` or `solid`
 buttons: a `soft` button of the same tone blends into the background.

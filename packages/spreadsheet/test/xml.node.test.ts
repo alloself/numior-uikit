@@ -182,9 +182,11 @@ describe('XML reading', () => {
         inValue = false;
       },
       text: (text) => {
-        if (inValue) {
-          values.push(text);
+        if (!inValue) {
+          return;
         }
+
+        values.push(text);
       },
     });
 

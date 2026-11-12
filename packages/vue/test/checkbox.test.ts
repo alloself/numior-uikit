@@ -29,6 +29,18 @@ describe('NuiCheckbox', () => {
     expect(checkbox.markGlyphClasses).toContain('lucide-check');
   });
 
+  it('stays indeterminate after a click while the owner keeps it so', async () => {
+    const checkbox = CheckboxDriver.mount({ props: { indeterminate: true } });
+
+    await checkbox.ready();
+    await checkbox.activate();
+
+    expect(checkbox.emittedModels).toEqual([true]);
+    expect(checkbox.indeterminate).toBe(true);
+
+    checkbox.unmount();
+  });
+
   it('forwards attributes to the native control and reflects state as modifiers', async () => {
     const checkbox = CheckboxDriver.mount({
       props: { disabled: true, invalid: true, size: 'lg' },

@@ -59,9 +59,11 @@ describe('time model', () => {
 
 describe('time segments', () => {
   afterEach(() => {
-    if (displayNames) {
-      Object.defineProperty(Intl, 'DisplayNames', displayNames);
+    if (!displayNames) {
+      return;
     }
+
+    Object.defineProperty(Intl, 'DisplayNames', displayNames);
   });
 
   it('resolves the hour cycle and lays out segments from the locale', () => {

@@ -1,14 +1,10 @@
 export { default as NuiTable } from './table/NuiTable.vue';
+export { default as NuiTablePeers } from './table/NuiTablePeers.vue';
+export { tableRectStyle } from './table/table-rect';
 export { clipboardDataOf } from './table/table-clipboard';
 export { tableEditor } from './table/table-editors';
-export {
-  cellEdge,
-  cellName,
-  columnIndex,
-  columnName,
-  rangeName,
-  tableCells,
-} from './table/table-cells';
+export { columnIndex, columnName } from '@numior/primitives/address';
+export { cellEdge, cellName, rangeName, tableCells } from './table/table-cells';
 export {
   NuiTableAlign,
   NuiTableCellScheme,
@@ -39,12 +35,15 @@ export type {
   NuiTableCellStyler,
   NuiTableDetailSlot,
   NuiTableEvents,
+  NuiTableColumnResize,
+  NuiTableRowResize,
   NuiTableReorderEvent,
   NuiTableRowHeaders,
   NuiTableRowHeights,
   NuiTableExpanded,
   NuiTableExposed,
   NuiTableScrollPosition,
+  NuiTableScrollAnchor,
   NuiTableFilters,
   NuiTableFooterSlot,
   NuiTableGroupBy,
@@ -69,8 +68,12 @@ export type {
   NuiTablePagination,
   NuiTableRange,
   NuiTableRanges,
+  NuiTableLastCell,
   NuiTableNextEdge,
   NuiTableOverlaySlot,
+  NuiTableCellKey,
+  NuiTablePeer,
+  NuiTablePeersProps,
   NuiTableRect,
   NuiTableSpan,
   NuiTableWindow,
@@ -94,7 +97,7 @@ export type {
   NuiTableControlEditor,
   NuiTableColumnEditor,
   NuiTableEditRefusal,
-  TableCellPosition,
+  NuiTableCellPosition,
 } from './table/table.types';
 export type {
   TableAggregate,

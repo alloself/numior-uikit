@@ -16,6 +16,7 @@ import { raise } from './coerce';
 import { defineFunction } from './registry';
 import { roundHalfAway, scaled } from './rounding';
 import { CellValueKind } from '../cell.types';
+import { pairsAfter, rangesAfter } from './signatures';
 
 const MAX_FACTORIAL = 170;
 
@@ -196,6 +197,7 @@ export const MATH_FUNCTIONS: readonly FunctionSpec[] = [
     name: 'SUMIF',
     min: 2,
     max: 3,
+    referenceAt: (index) => index !== 1,
     evaluate: (args) => {
       const conditions = conditionsOf({ ...args, count: 2 }, 0);
       const range = args.count > 2 ? referenceOf(args.value(2)) : conditions[0]?.range;
@@ -207,6 +209,8 @@ export const MATH_FUNCTIONS: readonly FunctionSpec[] = [
     name: 'SUMIFS',
     min: 3,
     max: MANY,
+    counts: pairsAfter(1),
+    referenceAt: rangesAfter(1),
     evaluate: (args) => sumIf(conditionsOf(args, 1), referenceOf(args.value(0))),
   }),
   unary('ABS', Math.abs),

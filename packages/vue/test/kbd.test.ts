@@ -13,7 +13,7 @@ describe('NuiKbd', () => {
   it('renders a combo as one key per box with platform modifiers', async () => {
     platform('Linux x86_64');
     const kbd = KbdDriver.mount({ props: { keys: 'mod+shift+k' } });
-    expect(kbd.keys).toEqual(['Shift', 'Ctrl', 'K']);
+    expect(kbd.keys).toEqual(['Ctrl', 'Shift', 'K']);
     expect(kbd.hasModifier('size-md')).toBe(true);
     expect(kbd.hasModifier('variant-boxed')).toBe(true);
 
@@ -41,5 +41,19 @@ describe('NuiKbd', () => {
     expect(slotted.hasModifier('variant-plain')).toBe(true);
     expect(slotted.hasModifier('size-sm')).toBe(true);
     expect(KbdDriver.mount({ props: { keys: '⌘C' } }).keys).toEqual(['⌘C']);
+  });
+
+  it('puts the modifiers in the order of the platform', async () => {
+    platform('Win32');
+
+    const kbd = KbdDriver.mount({ props: { keys: 'shift+alt+meta+mod+z', variant: 'soft' } });
+
+    const windows = kbd.keys;
+
+    await kbd.update({ keys: 'shift+alt+meta+ctrl+z', platform: 'mac' });
+
+    expect(windows).toEqual(['Win', 'Ctrl', 'Alt', 'Shift', 'Z']);
+    expect(kbd.keys).toEqual(['⌃', '⌥', '⇧', '⌘', 'Z']);
+    expect(kbd.hasModifier('variant-soft')).toBe(true);
   });
 });

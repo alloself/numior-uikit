@@ -12,6 +12,7 @@
       :rows="rows"
       :value="draft"
       @input="onInput"
+      @compositionend="onInput"
       @change="onChange"
     />
   </NuiFieldFrame>
@@ -19,7 +20,7 @@
 
 <script setup lang="ts">
 import { ref, useAttrs, useTemplateRef, watch } from 'vue';
-import { useFieldControl } from '@numior/primitives';
+import { isComposingInput, useFieldControl } from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import {
   NuiTextareaResize,
@@ -62,20 +63,25 @@ const textareaElement = useTemplateRef<HTMLTextAreaElement>('textarea');
 const draft = ref(model.value);
 
 watch(model, (value) => {
-  if (!(modifiers.trim && draft.value.trim() === value)) {
-    draft.value = value;
+  if (modifiers.trim && draft.value.trim() === value) {
+    return;
   }
+
+  draft.value = value;
 });
 
-const onInput = (): void => {
+const onInput = (event: Event): void => {
   const element = textareaElement.value;
-  if (!element) {
+
+  if (!element || isComposingInput(event)) {
     return;
   }
   draft.value = element.value;
-  if (!modifiers.lazy) {
-    model.value = element.value;
+  if (modifiers.lazy) {
+    return;
   }
+
+  model.value = element.value;
 };
 
 const onChange = (): void => {
@@ -91,9 +97,11 @@ const onChange = (): void => {
 };
 
 const commitDraft = (): void => {
-  if (modifiers.lazy) {
-    onChange();
+  if (!modifiers.lazy) {
+    return;
   }
+
+  onChange();
 };
 
 defineExpose({ focus: () => textareaElement.value?.focus() });

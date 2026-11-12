@@ -32,6 +32,12 @@ export const boxOf = async (target: Locator): Promise<Box> => {
   return box;
 };
 
+export const gapBetween = async (trigger: Locator, surface: Locator): Promise<number> => {
+  const [from, to] = await Promise.all([boxOf(trigger), boxOf(surface)]);
+
+  return Math.round(Math.max(to.y - (from.y + from.height), from.y - (to.y + to.height)));
+};
+
 export const CELL_TEXT =
   ':scope > .nui-table__content--text, :scope > .nui-table__content > .nui-table__text';
 
@@ -66,6 +72,24 @@ export const rowFillInsets = (row: Locator): Promise<FillInsets> =>
 
 export const renderedWidth = async (target: Locator): Promise<number> =>
   (await target.boundingBox())?.width ?? 0;
+
+export const renderedHeight = async (target: Locator): Promise<number> =>
+  (await target.boundingBox())?.height ?? 0;
+
+export const dragBy = async (handle: Locator, dx: number, dy: number): Promise<void> => {
+  const { mouse } = handle.page();
+  const box = await boxOf(handle);
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+
+  await mouse.move(x, y);
+  await mouse.down();
+  await mouse.move(x + dx / 2, y + dy / 2);
+  await mouse.move(x + dx, y + dy, { steps: 4 });
+  await mouse.up();
+};
+
+export const dragAcross = (handle: Locator, dx: number): Promise<void> => dragBy(handle, dx, 0);
 
 export const spanBox = async (first: Locator, last: Locator): Promise<Box> => {
   const [a, b] = await Promise.all([boxOf(first), boxOf(last)]);

@@ -60,9 +60,11 @@ const formatting = (
   });
 
 export const FORMAT_FUNCTIONS: readonly FunctionSpec[] = [
-  formatting('TEXT', 2, 2, (args) =>
-    formatted(shownValue(args, 0), invariantCode(args.text(1), args.locale), args),
-  ),
+  formatting('TEXT', 2, 2, (args) => {
+    const code = invariantCode(args.text(1), args.locale);
+
+    return code === undefined ? raise('#VALUE!') : formatted(shownValue(args, 0), code, args);
+  }),
   formatting('FIXED', 1, 3, (args) => {
     const decimals = decimalsOf(args, 1);
 

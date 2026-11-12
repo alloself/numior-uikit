@@ -19,6 +19,8 @@ export type FieldRule<T = unknown, V = unknown> = (
   context: FieldRuleContext<V>,
 ) => true | string;
 
+export type CheckErrorHandler = (error: unknown, path: string) => void;
+
 export type FieldFlush<T = unknown> = (commit: (value: T) => boolean) => Promise<void> | void;
 
 export interface FormMessage {

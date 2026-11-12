@@ -1,6 +1,7 @@
 import { FloatingPlacement } from '@numior/primitives';
 import { computed, shallowRef, watch } from 'vue';
-import { DrawingKind, StepKind, changeChart, type SheetChart } from '../../core';
+import { DrawingKind, changeChart, type SheetChart } from '../../core';
+import { applyLayout } from '../sheet-layout-step';
 import { useSheetPopover } from '../use-sheet-popover';
 import type { ChartSettings, ChartSettingsOptions } from './drawings.types';
 
@@ -45,21 +46,19 @@ export const useSheetChartSettings = (options: ChartSettingsOptions): ChartSetti
     const sheet = options.sheet();
     const id = options.selected()?.drawing.id;
 
-    if (sheet !== undefined && id !== undefined) {
-      options.editing.apply([
-        {
-          kind: StepKind.SetLayout,
-          sheet: sheet.name,
-          layout: changeChart(sheet.layout, id, next),
-        },
-      ]);
+    if (sheet === undefined || id === undefined) {
+      return;
     }
+
+    applyLayout(options.editing, sheet, changeChart(sheet.layout, id, next));
   };
 
   watch(chart, (shown) => {
-    if (shown === undefined) {
-      popover.setOpen(false);
+    if (shown !== undefined) {
+      return;
     }
+
+    popover.setOpen(false);
   });
 
   return { popover, chart, placement, show, change };

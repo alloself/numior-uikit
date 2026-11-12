@@ -8,6 +8,7 @@ export default defineConfig({
     lib: {
       entry: {
         index: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
+        address: fileURLToPath(new URL('./src/address/address.ts', import.meta.url)),
         guards: fileURLToPath(new URL('./src/guards/guards.ts', import.meta.url)),
       },
       formats: ['es'],

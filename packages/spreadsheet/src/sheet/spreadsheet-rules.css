@@ -34,7 +34,7 @@
   margin: 0;
   font-size: var(--nui-font-size-sm);
   font-weight: 600;
-  line-height: var(--nui-line-height-tight, 1.25);
+  line-height: var(--nui-line-height-control);
 }
 .nui-spreadsheet-rules__list {
   position: relative;

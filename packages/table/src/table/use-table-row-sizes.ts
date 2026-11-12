@@ -9,13 +9,14 @@ import {
 } from 'vue';
 import { createSizeIndex, type ItemSize, type VirtualSize } from '@numior/primitives';
 import { TableNodeKind, type TableEngine, type TableNodeId } from '../engine';
-import { OWN_BODY_ROWS, OWN_DETAIL_ROWS } from './table-dom';
+import { OWN_BODY_ROWS, OWN_DETAIL_ROWS, rowPositionOf } from './table-dom';
 import { TableRowMode, type NuiTableRowHeights, type TableDetailSpot } from './table.types';
 
 export interface TableRowSizesOptions<T> {
   readonly viewport: Readonly<ShallowRef<HTMLElement | null>>;
   readonly engine: Readonly<ShallowRef<TableEngine<T>>>;
   readonly mode: () => TableRowMode;
+  readonly measured: () => boolean;
   readonly rowSize: () => number;
   readonly count: () => number;
   readonly pageStart: () => number;
@@ -34,10 +35,14 @@ export interface TableRowSizes {
 const DETAIL_ROWS = 4;
 const NO_POSITIONS: ReadonlyMap<string, number> = new Map();
 
-const measuredRows = (mode: TableRowMode, details: number): string | undefined => {
+const measuredRows = (
+  mode: TableRowMode,
+  details: number,
+  measured: boolean,
+): string | undefined => {
   switch (mode) {
     case TableRowMode.Flow:
-      return undefined;
+      return measured ? OWN_BODY_ROWS : undefined;
     case TableRowMode.Fixed:
       return details === 0 ? undefined : OWN_DETAIL_ROWS;
     case TableRowMode.Fluid:
@@ -49,7 +54,7 @@ const sizeOf = (entry: ResizeObserverEntry): number =>
   entry.borderBoxSize[0]?.blockSize ?? entry.target.getBoundingClientRect().height;
 
 const positionOf = (cell: Element, leading: number): number =>
-  Number(cell.parentElement?.getAttribute('aria-rowindex')) - leading - 1;
+  rowPositionOf(cell.parentElement, leading);
 
 const firstCells = (rows: Iterable<Element>): Element[] =>
   [...rows].flatMap((row) => {
@@ -99,12 +104,20 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
       ...sizedRows(base),
     ]);
 
+  const flowSize = (base: number): ItemSize => {
+    if (options.measured()) {
+      void options.arrangement();
+      return indexOf(base);
+    }
+    return sizedPositions.value.size === 0
+      ? base
+      : createSizeIndex(options.count(), base, sizedRows(base));
+  };
+
   const sizeFor = (mode: TableRowMode, base: number): ItemSize => {
     switch (mode) {
       case TableRowMode.Flow:
-        return sizedPositions.value.size === 0
-          ? base
-          : createSizeIndex(options.count(), base, sizedRows(base));
+        return flowSize(base);
       case TableRowMode.Fixed:
         return options.spots().length === 0 && sizedPositions.value.size === 0
           ? base
@@ -120,10 +133,12 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
   const remember = (position: number, size: number): void => {
     const node = options.engine.value.nodeAt(options.pageStart() + position);
 
-    if (node?.kind === TableNodeKind.Detail) {
-      detailSizes.set(node.id, size);
-      detailEstimate = size;
+    if (node?.kind !== TableNodeKind.Detail) {
+      return;
     }
+
+    detailSizes.set(node.id, size);
+    detailEstimate = size;
   };
 
   const onResize = (entries: readonly ResizeObserverEntry[]): void => {
@@ -134,14 +149,18 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
       const size = sizeOf(entry);
       const position = positionOf(entry.target, leading);
 
-      if (size > 0 && Number.isInteger(position) && position >= 0) {
-        sizes.push([position, size]);
-        remember(position, size);
+      if (size <= 0 || !Number.isInteger(position) || position < 0) {
+        continue;
       }
+
+      sizes.push([position, size]);
+      remember(position, size);
     }
-    if (sizes.length > 0) {
-      options.resize(sizes);
+    if (sizes.length === 0) {
+      return;
     }
+
+    options.resize(sizes);
   };
 
   watch(
@@ -154,20 +173,24 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
       for (const [key, position] of sizedPositions.value) {
         const size = next[key];
 
-        if (size !== undefined && previous[key] !== undefined && size !== previous[key]) {
-          changed.push([position, size]);
+        if (size === undefined || previous[key] === undefined || size === previous[key]) {
+          continue;
         }
+
+        changed.push([position, size]);
       }
-      if (changed.length > 0) {
-        options.resize(changed);
+      if (changed.length === 0) {
+        return;
       }
+
+      options.resize(changed);
     },
     { flush: 'sync' },
   );
 
   const targets = (): Element[] => {
     const viewport = options.viewport.value;
-    const rows = measuredRows(options.mode(), options.spots().length);
+    const rows = measuredRows(options.mode(), options.spots().length, options.measured());
 
     return viewport === null || rows === undefined
       ? []
@@ -187,7 +210,7 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
       return;
     }
     observer = new ResizeObserver(onResize);
-    watch(options.rendered, observe, { immediate: true, flush: 'post' });
+    watch([options.rendered, options.measured], observe, { immediate: true, flush: 'post' });
   });
 
   onScopeDispose(() => {

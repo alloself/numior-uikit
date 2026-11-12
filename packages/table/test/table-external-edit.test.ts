@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { applyStaffEdits, staff, STAFF_COLUMNS, type Staff } from './support/staff';
 
+const STAFF_WIDTHS = [80, 160, 140, 120, 100];
+
 const mounted: TableDriver<Staff>[] = [];
 const bars: HTMLInputElement[] = [];
 
@@ -104,6 +106,73 @@ describe('NuiTable external editing', () => {
     expect(grid.focusedCell).toEqual({ row: 2, col: 2 });
   });
 
+  it('carries an open editor to another row with its draft, focus and caret', async () => {
+    const rows = staff(20);
+    const grid = mountStaff({ rows });
+    await grid.focusCell(1, 2);
+    await grid.press('F2');
+    await grid.typeInEditor('Тула');
+    grid.placeEditorCaret(1, 3);
+
+    expect(await grid.moveActive({ row: 3, col: 2 })).toBe(true);
+
+    expect(grid.editing).toEqual({ row: 3, col: 2 });
+    expect(grid.editorValue).toBe('Тула');
+    expect(grid.editorFocused).toBe(true);
+    expect(grid.editorCaret).toEqual([1, 3]);
+    expect(grid.draftModel).toEqual({ row: 3, col: 2, key: 'city', value: 'Тула' });
+    expect(grid.activeModel).toEqual({ row: 3, col: 2 });
+
+    await grid.press('Enter');
+
+    expect(grid.edits).toEqual([
+      { kind: 'edit', changes: [{ row: rows[3], key: 'city', value: 'Тула', previous: 'Москва' }] },
+    ]);
+  });
+
+  it('carries an editor driven from outside without taking the focus', async () => {
+    const grid = mountStaff();
+    const bar = formulaBar();
+    await grid.focusCell(1, 2);
+    await grid.focusOutside(bar);
+    await grid.startEdit('append', { focus: false });
+    await grid.setDraft({ row: 1, col: 2, key: 'city', value: 'Тула' });
+
+    expect(await grid.moveActive({ row: 4, col: 2 })).toBe(true);
+
+    expect(grid.editing).toEqual({ row: 4, col: 2 });
+    expect(grid.editorValue).toBe('Тула');
+    expect(document.activeElement).toBe(bar);
+  });
+
+  it('moves the active cell without an editor and keeps the focus where it was', async () => {
+    const grid = mountStaff();
+    const bar = formulaBar();
+    await grid.focusCell(2, 1);
+
+    expect(await grid.moveActive({ row: 5, col: 1 })).toBe(true);
+    expect(grid.focusedCell).toEqual({ row: 5, col: 1 });
+
+    await grid.focusOutside(bar);
+
+    expect(await grid.moveActive({ row: 7, col: 1 })).toBe(true);
+    expect(grid.activeModel).toEqual({ row: 7, col: 1 });
+    expect(document.activeElement).toBe(bar);
+    expect(await grid.moveActive({ row: 40, col: 1 })).toBe(false);
+  });
+
+  it('keeps the editor where it is when the new cell cannot be edited', async () => {
+    const grid = mountStaff();
+    await grid.focusCell(1, 2);
+    await grid.press('F2');
+    await grid.typeInEditor('Тула');
+
+    expect(await grid.moveActive({ row: 3, col: 0 })).toBe(false);
+
+    expect(grid.editing).toEqual({ row: 1, col: 2 });
+    expect(grid.editorValue).toBe('Тула');
+  });
+
   it('lets the editor grow past its cell only when the table asks for it', async () => {
     const fixed = mountStaff();
     await fixed.focusCell(1, 2);
@@ -117,6 +186,64 @@ describe('NuiTable external editing', () => {
 
     expect(growing.editorGrows).toBe(true);
     expect(growing.editorValue).toBe('Казань');
+  });
+
+  it('grows the editor to the next column line once the text stops fitting and back when it fits', async () => {
+    const grid = mountStaff({ props: { growEditor: true } });
+    await grid.focusCell(1, 2);
+    await grid.press('F2');
+    grid.layEditorOut({ widths: STAFF_WIDTHS, visible: 660, glyph: 10 });
+
+    await grid.typeInEditor('Тула');
+
+    expect(grid.editorSize).toBeUndefined();
+    expect(grid.editorLifted).toBe(false);
+
+    await grid.typeInEditor('Набережные Челны');
+
+    expect(grid.editorSize).toBe(260);
+    expect(grid.editorLifted).toBe(true);
+
+    await grid.typeInEditor('Петропавловск-Камчатский, улица');
+
+    expect(grid.editorSize).toBe(360);
+
+    await grid.typeInEditor('Уфа');
+
+    expect(grid.editorSize).toBeUndefined();
+    expect(grid.editorLifted).toBe(false);
+  });
+
+  it('stops the growing editor at the edge of the visible area', async () => {
+    const grid = mountStaff({ props: { growEditor: true } });
+    await grid.focusCell(1, 2);
+    await grid.press('F2');
+    grid.layEditorOut({ widths: STAFF_WIDTHS, visible: 540, glyph: 10 });
+
+    await grid.typeInEditor('Петропавловск-Камчатский, улица Ленинская');
+
+    expect(grid.editorSize).toBe(300);
+  });
+
+  it('grows the editor of an end-aligned cell back over the columns before it', async () => {
+    const grid = mountStaff({
+      columns: STAFF_COLUMNS.map((column) =>
+        column.key === 'city' ? { ...column, align: 'end' } : column,
+      ),
+      props: { growEditor: true },
+    });
+
+    await grid.focusCell(1, 2);
+    await grid.press('F2');
+    grid.layEditorOut({ widths: STAFF_WIDTHS, visible: 660, glyph: 10 });
+
+    await grid.typeInEditor('Набережные Челны');
+
+    expect(grid.editorSize).toBe(300);
+
+    await grid.typeInEditor('Петропавловск-Камчатский, улица');
+
+    expect(grid.editorSize).toBe(380);
   });
 
   it('keeps a blank edit while focus visits the companion input and cancels back to the cell', async () => {

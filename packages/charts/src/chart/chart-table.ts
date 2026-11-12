@@ -1,9 +1,11 @@
 import type { ChartSpec, ChartValue } from '../core';
-import { ChartCategoriesKind } from '../core/chart.types';
+import { ChartCategoriesKind, TimeContext } from '../core/chart.types';
+import { timeFormatter } from '../core/format';
+import { timeGrain } from '../core/time';
+import { timeZoneOf } from '../core/zone';
+import type { CategoryName } from './chart.types';
 
 const numbers = new Map<string, Intl.NumberFormat>();
-
-const dates = new Map<string, Intl.DateTimeFormat>();
 
 const MISSING = '—';
 
@@ -14,24 +16,44 @@ const numberFormat = (locale: string): Intl.NumberFormat => {
   return known;
 };
 
-const dateFormat = (locale: string): Intl.DateTimeFormat => {
-  const known =
-    dates.get(locale) ?? new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' });
+const finiteText = (value: number | undefined, format: (value: number) => string): string =>
+  value === undefined || !Number.isFinite(value) ? MISSING : format(value);
 
-  dates.set(locale, known);
-  return known;
-};
+export const categoryName = (
+  spec: ChartSpec,
+  locale: string,
+  timeZone: string | undefined,
+): CategoryName => {
+  const { categories } = spec;
 
-export const categoryTexts = (spec: ChartSpec, locale: string): readonly string[] => {
-  switch (spec.categories.kind) {
+  switch (categories.kind) {
     case ChartCategoriesKind.Text:
-      return spec.categories.labels;
-    case ChartCategoriesKind.Number:
-      return spec.categories.values.map((value) => numberFormat(locale).format(value));
-    default:
-      return spec.categories.values.map((value) => dateFormat(locale).format(value));
+      return (index) => categories.labels[index] ?? '';
+    case ChartCategoriesKind.Number: {
+      const format = numberFormat(locale);
+
+      return (index) => finiteText(categories.values[index], (value) => format.format(value));
+    }
+    case ChartCategoriesKind.Time: {
+      const zone = timeZoneOf(timeZone);
+      const { unit } = timeGrain(categories.values, zone);
+      const format = timeFormatter(locale, TimeContext.Year, zone.name);
+
+      return (index) => finiteText(categories.values[index], (value) => format(value, unit));
+    }
   }
 };
+
+export const categoryTexts = (spec: ChartSpec, name: CategoryName): readonly string[] =>
+  Array.from(
+    {
+      length:
+        spec.categories.kind === ChartCategoriesKind.Text
+          ? spec.categories.labels.length
+          : spec.categories.values.length,
+    },
+    (_unused, index) => name(index),
+  );
 
 export const valueText = (value: ChartValue | undefined, locale: string): string =>
   value === null || value === undefined || !Number.isFinite(value)

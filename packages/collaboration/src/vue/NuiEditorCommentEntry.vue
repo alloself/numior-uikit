@@ -2,7 +2,7 @@
   <div class="nui-collab-comments__entry">
     <NuiAvatar size="sm" :name="entry.author.name" :src="entry.author.avatar" />
     <span class="nui-collab-comments__author">{{ entry.author.name }}</span>
-    <time class="nui-collab-comments__time" :datetime="entry.createdAt">{{
+    <time class="nui-collab-comments__time" dir="auto" :datetime="entry.createdAt">{{
       timeOf(entry.createdAt)
     }}</time>
   </div>

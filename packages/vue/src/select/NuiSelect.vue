@@ -24,7 +24,7 @@
         :aria-labelledby="field?.labelledBy.value"
         :aria-required="isRequired || undefined"
         v-bind="{
-          ...controlAttrs,
+          ...triggerAttrs,
           ...split.controlAttrs(),
           ...control.invokerAttrs.value,
           ...readonlyInvoker,
@@ -71,11 +71,13 @@
         :checkable="multiple"
         :get-key="getKey"
         :loop="loop"
+        :loading="loading"
+        :loading-label="loadingText"
         :empty-label="emptyText"
         v-bind="control.contentAttrs.value"
+        @toggle="shown.onToggle"
         @select="onSelect"
         @load="onLoad"
-        @toggle="onToggle"
         @keydown.capture="onTreeKeydown"
         @focusin="onFocusin"
         @focusout="onFocusout"
@@ -96,10 +98,12 @@
         :get-key="getKey"
         :keyboard="false"
         :active-id="navigation.activeId.value"
+        :loading="loading"
+        :loading-label="loadingText"
         :empty-label="emptyText"
         v-bind="control.contentAttrs.value"
+        @toggle="shown.onToggle"
         @select="onSelect"
-        @toggle="onToggle"
         @keydown="onListboxKeydown"
         @pointermove="activateHovered"
         @pointerleave="restActive"
@@ -131,6 +135,7 @@ import {
   FloatingPlacement,
   Key,
   useFieldControl,
+  useLocale,
   useMessages,
   useSplitAttrs,
 } from '@numior/primitives';
@@ -138,11 +143,12 @@ import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
+import { listMessages } from '../list/list.messages';
 import NuiTree from '../tree/NuiTree.vue';
 import { isListGroup, optionIndexOf, type NuiListGroup, type NuiOption } from '../shared/options';
-import { popoverShown } from '../shared/popover-toggle';
 import { useListboxSurface } from '../shared/use-listbox-surface';
 import { useOptionSelection } from '../shared/use-option-selection';
+import { takeFocus, useShownPopover } from '../shared/use-shown-popover';
 import { ancestorValuesOf } from '../tree/flatten';
 import type { NuiTreeItem } from '../tree/tree.types';
 import { selectMessages } from './select.messages';
@@ -171,8 +177,11 @@ const {
   name,
   getKey,
   loop = true,
+  loading = false,
+  locale: localeProp,
   placement = FloatingPlacement.BottomStart,
   emptyLabel,
+  loadingLabel,
   clearLabel,
   toggleLabel,
   countLabel,
@@ -183,7 +192,9 @@ const values = defineModel<T[]>('values', { default: () => [] });
 const emit = defineEmits<{ load: [item: NuiTreeItem<T>] }>();
 
 const split = useSplitAttrs();
-const messages = useMessages(selectMessages);
+const locale = useLocale(() => localeProp);
+const messages = useMessages(selectMessages, locale);
+const listTexts = useMessages(listMessages, locale);
 
 const {
   frame: fieldFrame,
@@ -197,6 +208,12 @@ const {
   () => ({ id, disabled, readonly, required, invalid, label, description, error }),
   { readonlyAttr: 'aria-readonly' },
 );
+
+const triggerAttrs = computed(() => {
+  const { required: _required, readonly: _readonly, ...rest } = controlAttrs.value;
+
+  return rest;
+});
 
 const listboxId = computed(() => `${controlAttrs.value.id}-listbox`);
 const entries = computed((): readonly SelectEntry<T>[] => options);
@@ -240,6 +257,7 @@ const displayLabel = computed(() => {
 });
 
 const emptyText = computed(() => emptyLabel ?? messages.value.empty);
+const loadingText = computed(() => loadingLabel ?? listTexts.value.loading);
 const clearText = computed(() => clearLabel ?? messages.value.clear);
 const toggleText = computed(() => toggleLabel ?? messages.value.toggle);
 
@@ -294,9 +312,11 @@ const revealSelected = (): void => {
     (value) => !known.has(keyOf(value)),
   );
 
-  if (added.length > 0) {
-    treeExpanded.value = [...treeExpanded.value, ...added];
+  if (added.length === 0) {
+    return;
   }
+
+  treeExpanded.value = [...treeExpanded.value, ...added];
 };
 
 watch(open, (isOpen) => {
@@ -315,9 +335,11 @@ const optionOf = (element: HTMLElement | null): NuiOption<T> | undefined =>
   element ? flat.value[optionIndexOf(element)] : undefined;
 
 const onSelect = (): void => {
-  if (!multiple) {
-    control.hide();
+  if (multiple) {
+    return;
   }
+
+  control.hide();
 };
 
 const onLoad = (item: NuiTreeItem<T>): void => {
@@ -329,35 +351,28 @@ const clear = (): void => {
   triggerElement.value?.focus({ preventScroll: true });
 };
 
-const focusListbox = (): void => {
+const enterListbox = (): boolean => {
   if (isTree.value) {
-    listboxElement.value?.focus({ preventScroll: true });
-
-    return;
+    return takeFocus(listboxElement.value);
   }
 
   navigation.reveal();
-  navigation.activeElement()?.focus({ preventScroll: true });
+
+  return takeFocus(navigation.activeElement());
 };
 
-const onToggle = (event: Event): void => {
-  const focused = listboxElement.value?.contains(document.activeElement) === true;
-
-  if (popoverShown(event) && !focused) {
-    focusListbox();
-  }
-};
+const shown = useShownPopover(open, enterListbox);
 
 onMounted(() => {
   watch(
     open,
     (isOpen) => {
-      if (isOpen) {
-        focusListbox();
-      } else if (inside) {
-        inside = false;
-        triggerElement.value?.focus({ preventScroll: true });
+      if (isOpen || !inside) {
+        return;
       }
+
+      inside = false;
+      triggerElement.value?.focus({ preventScroll: true });
     },
     { flush: 'post' },
   );
@@ -376,11 +391,13 @@ const OPENERS: Readonly<Record<string, SelectOpenFocus>> = {
 const pickByTypeahead = (event: KeyboardEvent): void => {
   const element = navigation.matchTypeahead(event.key);
   const match = optionOf(element);
-  if (match && !match.disabled) {
-    event.preventDefault();
-    navigation.setActive(element, { focus: false });
-    model.value = match.value;
+  if (!match || match.disabled) {
+    return;
   }
+
+  event.preventDefault();
+  navigation.setActive(element, { focus: false });
+  model.value = match.value;
 };
 
 const onTriggerKeydown = (event: KeyboardEvent): void => {
@@ -421,11 +438,13 @@ const onTreeKeydown = (event: KeyboardEvent): void => {
     control.hide();
     return;
   }
-  if (multiple && event.key === Key.Enter) {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    control.hide();
+  if (!multiple || event.key !== Key.Enter) {
+    return;
   }
+
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  control.hide();
 };
 
 const onFocusin = (event: FocusEvent): void => {
@@ -441,9 +460,11 @@ const onFocusout = (event: FocusEvent): void => {
     (listboxElement.value?.contains(next) === true ||
       triggerElement.value?.contains(next) === true);
 
-  if (!within) {
-    inside = false;
-    control.hide();
+  if (within) {
+    return;
   }
+
+  inside = false;
+  control.hide();
 };
 </script>

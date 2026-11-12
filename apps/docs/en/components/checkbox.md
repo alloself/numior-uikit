@@ -29,7 +29,8 @@ Pass the options to the group in `options`.
 
 <Example name="checkbox/Group" />
 
-An option with `disabled: true` cannot be changed, and a checked one stays in the model.
+The checked values come to `v-model:values` as an array. An option with `disabled: true` cannot be
+changed, and a checked one stays in the array.
 
 ### Line the checkboxes up in a row
 

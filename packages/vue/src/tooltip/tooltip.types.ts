@@ -1,6 +1,12 @@
 import type { FloatingPlacement } from '@numior/primitives';
 import type { NuiTriggerRef } from '../shared/trigger-ref';
 
+export type NuiTooltipKeys = string | readonly string[];
+
+export type NuiTooltipShortcut =
+  | NuiTooltipKeys
+  | ((target: HTMLElement | null) => NuiTooltipKeys | undefined);
+
 export interface NuiTooltipProps {
   id?: string | undefined;
   placement?: FloatingPlacement | undefined;
@@ -9,6 +15,7 @@ export interface NuiTooltipProps {
   closeDelay?: number | undefined;
   disabled?: boolean | undefined;
   anchor?: HTMLElement | NuiTooltipTargets | null | undefined;
+  shortcut?: NuiTooltipShortcut | undefined;
 }
 
 export interface NuiTooltipTargets {

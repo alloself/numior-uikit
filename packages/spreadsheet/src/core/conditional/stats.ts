@@ -48,9 +48,11 @@ const chunkNumbers = (sheet: Sheet, area: CellRange, stamp: number): ChunkNumber
   const numbers: number[] = [];
 
   sheet.cells.forEachInRange(area, (_row, _col, value) => {
-    if (value.kind === CellValueKind.Number) {
-      numbers.push(value.value);
+    if (value.kind !== CellValueKind.Number) {
+      return;
     }
+
+    numbers.push(value.value);
   });
 
   return {
@@ -124,9 +126,11 @@ const countsOf = (sheet: Sheet, ranges: readonly CellRange[]): Map<string, numbe
     sheet.cells.forEachInRange(range, (_row, _col, value) => {
       const key = lookupKey(value);
 
-      if (key !== undefined) {
-        counts.set(key, (counts.get(key) ?? 0) + 1);
+      if (key === undefined) {
+        return;
       }
+
+      counts.set(key, (counts.get(key) ?? 0) + 1);
     });
 
     return counts;

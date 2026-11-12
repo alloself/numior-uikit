@@ -1,3 +1,4 @@
+import { isEqual } from 'lodash-es';
 import { computed, ref, shallowRef, type ComputedRef, type Ref, type ShallowRef } from 'vue';
 import { filterKindOf, filterOf, withFilter } from './table-filter';
 import { headStateOf, nextSort, type HeadStateInput } from './table-sort';
@@ -28,7 +29,7 @@ export interface TableHeaderOptions<T> {
   readonly filters: Ref<NuiTableFilters>;
   readonly messages: ComputedRef<NuiTableMessages>;
   readonly announce: (text: string) => void;
-  readonly filtered: () => void;
+  readonly filtered: (changed: boolean) => void;
   readonly menu: (key: string, anchor: HTMLElement, focus?: 'first') => boolean;
   readonly resizable: (key: string) => boolean;
   readonly resizing: (key: string) => boolean;
@@ -138,12 +139,13 @@ export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T
       event.preventDefault();
       return true;
     }
-    if (head(key)?.filterable === true) {
-      event.preventDefault();
-      openFor(key, cell);
-      return true;
+    if (head(key)?.filterable !== true) {
+      return false;
     }
-    return false;
+
+    event.preventDefault();
+    openFor(key, cell);
+    return true;
   };
 
   const onKeydown = (event: KeyboardEvent): boolean => {
@@ -178,25 +180,31 @@ export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T
     onClick: (event) => {
       const key = keyOf(headerOf(event.target));
 
-      if (key !== undefined) {
-        toggleSort(key, event.shiftKey);
+      if (key === undefined) {
+        return;
       }
+
+      toggleSort(key, event.shiftKey);
     },
     onKeydown,
     openFilter: (key, event) => {
       const cell = headerOf(event.target);
 
-      if (cell !== null) {
-        openFor(key, cell);
+      if (cell === null) {
+        return;
       }
+
+      openFor(key, cell);
     },
     openFilterAt: openFor,
     openMenu: (key, event) => {
       const cell = headerOf(event.target);
 
-      if (cell !== null) {
-        options.menu(key, cell);
+      if (cell === null) {
+        return;
       }
+
+      options.menu(key, cell);
     },
     applyFilter: (next) => {
       const current = target.value;
@@ -204,8 +212,15 @@ export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T
       if (current === null) {
         return;
       }
-      options.filters.value = withFilter(options.filters.value, current.key, next);
-      options.filtered();
+      const filters = withFilter(options.filters.value, current.key, next);
+
+      if (isEqual(filters, options.filters.value)) {
+        options.filtered(false);
+        return;
+      }
+
+      options.filters.value = filters;
+      options.filtered(true);
     },
   };
 };

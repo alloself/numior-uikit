@@ -79,6 +79,9 @@
         Документ: {{ file.label }}
       </NuiTabPanel>
     </NuiTabs>
+    <div class="max-w-md">
+      <NuiTabs v-model="month" :tabs="months" label="Месяц" data-testid="nav-tabs-overflow" />
+    </div>
     <NuiTabs
       v-model="sectionPage"
       :links="sectionPages"
@@ -158,6 +161,21 @@ const periods: NuiTabDescriptor[] = [
   { value: 'month', label: 'Месяц' },
 ];
 
+const months: NuiTabDescriptor[] = [
+  { value: 'january', label: 'Январь' },
+  { value: 'february', label: 'Февраль' },
+  { value: 'march', label: 'Март' },
+  { value: 'april', label: 'Апрель' },
+  { value: 'may', label: 'Май' },
+  { value: 'june', label: 'Июнь' },
+  { value: 'july', label: 'Июль' },
+  { value: 'august', label: 'Август' },
+  { value: 'september', label: 'Сентябрь' },
+  { value: 'october', label: 'Октябрь' },
+  { value: 'november', label: 'Ноябрь' },
+  { value: 'december', label: 'Декабрь' },
+];
+
 const sectionPages: NuiTabLinkDescriptor[] = [
   { to: '#nav-page-summary', label: 'Сводка', icon: 'info' },
   { to: '#nav-page-orders', label: 'Заказы' },
@@ -193,6 +211,7 @@ const sort = ref('name');
 const lastAction = ref('');
 const tab = ref('overview');
 const manualTab = ref('day');
+const month = ref('january');
 const openDocument = ref('contract');
 const sectionPage = ref('#nav-page-summary');
 
@@ -220,18 +239,21 @@ const closeDocument = (value: string): void => {
 
   documents.value = documents.value.filter((file) => file.value !== value);
 
-  if (openDocument.value === value) {
-    openDocument.value =
-      documents.value.at(Math.min(index, documents.value.length - 1))?.value ?? '';
+  if (openDocument.value !== value) {
+    return;
   }
+
+  openDocument.value = documents.value.at(Math.min(index, documents.value.length - 1))?.value ?? '';
 };
 
 const moveSignup = (delta: number): void => {
   const target = signupSteps[signupIndex.value + delta];
 
-  if (target) {
-    signupStep.value = target.value;
+  if (!target) {
+    return;
   }
+
+  signupStep.value = target.value;
 };
 
 const output = computed(() =>

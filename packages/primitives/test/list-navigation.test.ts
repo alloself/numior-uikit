@@ -117,6 +117,62 @@ describe('useListNavigation', () => {
     list.unmount();
   });
 
+  it('hands the tab stop and the focus to a neighbour when the active item gets disabled', async () => {
+    const list = ListHarness.mount();
+
+    list.press('ArrowDown');
+    list.press('ArrowDown');
+    await list.disable(1);
+
+    expect(list.focusedText).toBe('Blueberry');
+    expect(list.tabIndexes).toEqual([-1, -1, 0, -1, -1]);
+
+    list.press('End');
+    await list.disable(4);
+
+    expect(list.focusedText).toBe('Cherry');
+    expect(list.tabIndexes).toEqual([-1, -1, -1, 0, -1]);
+
+    list.unmount();
+  });
+
+  it('takes the focus back when the browser dropped it from the item that got disabled', async () => {
+    const list = ListHarness.mount();
+
+    list.press('ArrowDown');
+    list.press('ArrowDown');
+    await list.disableAndBlur(1);
+
+    expect(list.focusedText).toBe('Blueberry');
+    expect(list.tabIndexes).toEqual([-1, -1, 0, -1, -1]);
+
+    list.unmount();
+  });
+
+  it('moves only the tab stop when the item that got disabled was not focused', async () => {
+    const list = ListHarness.mount();
+
+    list.rest(2);
+    await list.disable(2);
+
+    expect(list.focusedText).toBeUndefined();
+    expect(list.activeText).toBe('Cherry');
+    expect(list.tabIndexes).toEqual([-1, -1, -1, 0, -1]);
+
+    list.unmount();
+  });
+
+  it('leaves the tab stop where it was while every item is disabled', async () => {
+    const list = ListHarness.mount();
+
+    list.rest(1);
+    await list.disableAll();
+
+    expect(list.tabIndexes).toEqual([-1, 0, -1, -1, -1]);
+
+    list.unmount();
+  });
+
   it('walks and searches without indexing the items again while they stay the same', () => {
     const list = ListHarness.mount();
 

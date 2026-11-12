@@ -234,6 +234,37 @@ describe('NuiSmartForm', () => {
     expect(form.fields).toEqual(['contacts.0.email', 'contacts.0.phone', 'contacts.1.email']);
   });
 
+  it('keeps the messages of the rows that follow a removed row', async () => {
+    const form = SmartFormDriver.mount({
+      initialValues: {
+        ...blank,
+        contacts: [{ email: 'ann@example.com' }, { email: '' }, { email: '' }],
+      },
+      fields: [
+        array((values) => values.contacts, {
+          label: 'Contacts',
+          newRow: () => ({ email: '' }),
+          fields: [
+            contact.field(NuiInput, (row) => row.email, {
+              label: 'Email',
+              rules: [required({ message: 'Enter an email' })],
+            }),
+          ],
+        }),
+      ],
+    });
+
+    await form.submit();
+    await form.click('.nui-field-array__remove > button');
+
+    expect(form.fields).toEqual(['contacts.0.email', 'contacts.1.email']);
+
+    expect([form.error('contacts.0.email'), form.error('contacts.1.email')]).toEqual([
+      'Enter an email',
+      'Enter an email',
+    ]);
+  });
+
   it('types config rules by the field value and gives row rules their row as values', async () => {
     const form = SmartFormDriver.mount({
       initialValues: { ...blank, name: 'A' },

@@ -35,6 +35,21 @@ describe('NuiTextarea', () => {
     expect(lazy.emittedValues).toEqual(['text']);
   });
 
+  it('writes the model when an IME composition ends, not while it runs', async () => {
+    const textarea = TextareaDriver.mount({ modelValue: '' });
+
+    await textarea.compose('ni');
+
+    expect(textarea.emittedValues).toEqual([]);
+
+    await textarea.compose('你');
+    await textarea.endComposition();
+
+    expect(textarea.emittedValues).toEqual(['你']);
+
+    textarea.unmount();
+  });
+
   it('renders its own label, description and error and links them to the control', () => {
     const control = TextareaDriver.mount({
       props: { label: 'Имя', description: 'Подсказка', error: 'Ошибка' },

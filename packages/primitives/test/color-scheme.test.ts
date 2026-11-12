@@ -155,6 +155,48 @@ describe('useColorScheme', () => {
     expect(scope.getAttribute('data-nui-theme')).toBe('system');
   });
 
+  it('stores nothing on a first visit and follows the system until a scheme is picked', async () => {
+    const media = fakeMedia(true);
+    const scope = document.createElement('div');
+    const control = captureSetup(() => useColorScheme({ scope, storageKey: 'nui-theme' })).value;
+
+    await nextTick();
+    expect(localStorage.getItem('nui-theme')).toBeNull();
+    expect(control.scheme.value).toBe('system');
+    expect(control.resolved.value).toBe('dark');
+    expect(scope.getAttribute('data-nui-theme')).toBe('system');
+
+    media.change(false);
+    await nextTick();
+    expect(control.resolved.value).toBe('light');
+    expect(localStorage.getItem('nui-theme')).toBeNull();
+
+    control.set('system');
+    await nextTick();
+    expect(localStorage.getItem('nui-theme')).toBe('system');
+
+    control.scheme.value = 'dark';
+    await nextTick();
+    expect(localStorage.getItem('nui-theme')).toBe('dark');
+  });
+
+  it('keeps a configured default out of storage until the user changes it', async () => {
+    fakeMedia(false);
+
+    const control = captureSetup(() => useColorScheme(), {
+      plugins: [createNuiConfig({ colorScheme: { storageKey: 'nui-theme', initial: 'dark' } })],
+    }).value;
+
+    await nextTick();
+    expect(control.scheme.value).toBe('dark');
+    expect(document.documentElement.getAttribute('data-nui-theme')).toBe('dark');
+    expect(localStorage.getItem('nui-theme')).toBeNull();
+
+    control.toggle();
+    await nextTick();
+    expect(localStorage.getItem('nui-theme')).toBe('light');
+  });
+
   it('survives storage that throws', async () => {
     fakeMedia(true);
 

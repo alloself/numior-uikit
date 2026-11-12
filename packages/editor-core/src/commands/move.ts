@@ -11,6 +11,7 @@ import { nearestCursor, selectionRange, textSelection } from '../state/selection
 import type { Selection } from '../state/selection.types';
 import { SlotRule } from '../schema/schema.types';
 import { SelectionKind, type Command, type EditorState } from '../state/state.types';
+import { StepKind } from '../transform/step.types';
 
 export interface ChildSlot {
   readonly parent: NodeId;
@@ -75,6 +76,14 @@ export const childStart = (doc: Doc, slot: ChildSlot): number | undefined => {
     : parent.start + startOf(parent.node.content, slot.index);
 };
 
+export const slotStart = (doc: Doc, slot: ChildSlot): number | undefined => {
+  const parent = parentOf(doc, slot.parent);
+
+  return parent === undefined || slot.index > parent.node.content.length
+    ? undefined
+    : parent.start + startOf(parent.node.content, slot.index);
+};
+
 export const childNode = (doc: Doc, slot: ChildSlot): ElementNode | undefined => {
   const child = parentOf(doc, slot.parent)?.node.content[slot.index];
 
@@ -85,13 +94,6 @@ export const containerSlot = (doc: Doc, slot: ChildSlot): ChildSlot | undefined 
   const pos = slot.parent === doc.root.id ? undefined : doc.positionOf(slot.parent);
 
   return pos === undefined ? undefined : slotAt(doc, pos);
-};
-
-const moved = (content: readonly ContentNode[], from: number, to: number): ContentNode[] => {
-  const node = content[from];
-  const rest = content.filter((_, index) => index !== from);
-
-  return node === undefined ? [...content] : [...rest.slice(0, to), node, ...rest.slice(to)];
 };
 
 const followed = (state: EditorState, slot: ChildSlot, delta: number): Selection | undefined => {
@@ -119,22 +121,14 @@ export const moveChild =
     ) {
       return false;
     }
-    const low = Math.min(from, to);
-    const high = Math.max(from, to);
-    const reordered = moved(content, from, to);
-    const slice = { content: reordered.slice(low, high + 1), openStart: 0, openEnd: 0 };
-    const delta = startOf(reordered, to) - startOf(content, from);
+    const start = parent.start + startOf(content, from);
+    const end = parent.start + startOf(content, from + 1);
+    const target = parent.start + startOf(content, to > from ? to + 1 : to);
+    const delta = target < start ? target - start : target - end;
     const selection = followed(state, { parent: parentId, index: from }, delta);
     const tr = state.tr;
 
-    if (
-      !tr.maybeStep({
-        kind: 'replace',
-        from: parent.start + startOf(content, low),
-        to: parent.start + startOf(content, high + 1),
-        slice,
-      }).ok
-    ) {
+    if (!tr.maybeStep({ kind: StepKind.Move, from: start, to: end, target }).ok) {
       return false;
     }
     if (selection !== undefined) {

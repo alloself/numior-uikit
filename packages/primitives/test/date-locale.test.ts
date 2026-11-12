@@ -84,6 +84,7 @@ describe('date text', () => {
     expect(parseDateText('2026-09-24', 'ru-RU')).toBe('2026-09-24');
     expect(parseDateText('٢٤/٠٩/٢٠٢٦', 'ar-EG')).toBe('2026-09-24');
     expect(parseDateText('24.09.26', 'ru-RU')).toBeNull();
+    expect(parseDateText('22.11.20011', 'ru-RU')).toBeNull();
     expect(parseDateText('24.09', 'ru-RU')).toBeNull();
     expect(parseDateText('31.02.2026', 'ru-RU')).toBeNull();
     expect(parseDateText('', 'ru-RU')).toBeNull();

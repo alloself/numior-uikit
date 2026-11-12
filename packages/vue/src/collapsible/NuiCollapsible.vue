@@ -72,14 +72,18 @@ const settled = ref(!open.value);
 const hiddenState = computed(() => (!open.value && settled.value ? 'until-found' : undefined));
 
 const settle = (event: TransitionEvent): void => {
-  if (event.propertyName === ROW_TRACKS && !open.value) {
-    settled.value = true;
+  if (event.propertyName !== ROW_TRACKS || open.value) {
+    return;
   }
+
+  settled.value = true;
 };
 
 watch(open, (isOpen) => {
-  if (isOpen) {
-    settled.value = false;
+  if (!isOpen) {
+    return;
   }
+
+  settled.value = false;
 });
 </script>

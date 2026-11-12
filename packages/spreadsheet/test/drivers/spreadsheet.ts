@@ -1,13 +1,20 @@
 import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
+import { NuiTable, type NuiTableExposed, type NuiTableScrollAnchor } from '@numior/table';
 import { nextTick } from 'vue';
 import {
   NuiSpreadsheet,
   type NuiSpreadsheetChange,
+  type NuiSpreadsheetPeer,
   type NuiSpreadsheetFile,
   type NuiSpreadsheetProps,
   type NuiSpreadsheetSelection,
 } from '../../src';
+import {
+  commitComposed,
+  composeInto,
+  typeInto,
+} from '../../../primitives/test/support/composition';
 import { PivotPanelDriver } from './pivot-panel';
 
 interface DrawingDrag {
@@ -27,6 +34,7 @@ interface KeyOptions {
   readonly ctrl?: boolean | undefined;
   readonly shift?: boolean | undefined;
   readonly alt?: boolean | undefined;
+  readonly composing?: boolean | undefined;
 }
 
 interface SpreadsheetMount extends NuiSpreadsheetProps {
@@ -44,18 +52,24 @@ interface CellSpot {
   readonly col: number;
 }
 
-const keydown = (target: Element, key: string, options: KeyOptions): void => {
+const DRAWING_MENU = '[role="menu"][aria-label="Object actions"]';
+
+const EDGE_POINTER = 9;
+
+const EDGE_START = 100;
+
+const keydown = (target: Element, key: string, options: KeyOptions): boolean =>
   target.dispatchEvent(
     new KeyboardEvent('keydown', {
       key,
       ctrlKey: options.ctrl ?? false,
       shiftKey: options.shift ?? false,
       altKey: options.alt ?? false,
+      isComposing: options.composing ?? false,
       bubbles: true,
       cancelable: true,
     }),
   );
-};
 
 const restore = (owner: object, name: string, own: PropertyDescriptor | undefined): void => {
   if (own === undefined) {
@@ -90,14 +104,28 @@ const tokensIn = (scope: DOMWrapper<Element>): string[] =>
 const texts = (wrapper: VueWrapper, selector: string): string[] =>
   wrapper.findAll(selector).map((item) => item.text());
 
+const isTableHandle = (value: unknown): value is NuiTableExposed =>
+  typeof value === 'object' &&
+  value !== null &&
+  'scrollAnchor' in value &&
+  typeof value.scrollAnchor === 'function' &&
+  'scrollToAnchor' in value &&
+  typeof value.scrollToAnchor === 'function';
+
 export class SpreadsheetDriver {
   private constructor(
     private readonly wrapper: VueWrapper,
     readonly changes: readonly NuiSpreadsheetChange[],
+    readonly warnings: readonly string[],
   ) {}
+
+  static around(wrapper: VueWrapper): SpreadsheetDriver {
+    return new SpreadsheetDriver(wrapper, [], []);
+  }
 
   static mount(props: SpreadsheetMount): SpreadsheetDriver {
     const changes: NuiSpreadsheetChange[] = [];
+    const warnings: string[] = [];
     const mounted: Mounted = { wrapper: undefined };
 
     const wrapper = mount(NuiSpreadsheet, {
@@ -110,12 +138,53 @@ export class SpreadsheetDriver {
           void mounted.wrapper?.setProps({ sheet });
         },
       },
+      global: {
+        config: {
+          warnHandler: (message: string) => {
+            warnings.push(message);
+          },
+        },
+      },
       attachTo: document.body,
     });
 
     mounted.wrapper = wrapper;
 
-    return new SpreadsheetDriver(wrapper, changes);
+    return new SpreadsheetDriver(wrapper, changes, warnings);
+  }
+
+  get peerNames(): string[] {
+    return this.wrapper.findAll('.nui-table-peers__name').map((flag) => flag.text());
+  }
+
+  get peerAreas(): number {
+    return this.wrapper.findAll('.nui-table-peers__area').length;
+  }
+
+  get peerFlagsBelow(): number {
+    return this.wrapper.findAll('.nui-table-peers__cell--flag-below').length;
+  }
+
+  get places(): unknown[] {
+    return (this.wrapper.emitted('presence') ?? []).map(([place]) => place);
+  }
+
+  get note(): string | undefined {
+    const note = this.wrapper.find('.nui-spreadsheet__note--shown');
+
+    return note.exists() ? note.text() : undefined;
+  }
+
+  async pressNote(): Promise<void> {
+    await this.wrapper.find('.nui-spreadsheet__note').trigger('click');
+  }
+
+  get refusals(): unknown[] {
+    return (this.wrapper.emitted('refuse') ?? []).map(([refusal]) => refusal);
+  }
+
+  async setPeers(peers: readonly NuiSpreadsheetPeer[]): Promise<void> {
+    await this.wrapper.setProps({ peers });
   }
 
   get drawings(): string[] {
@@ -152,6 +221,46 @@ export class SpreadsheetDriver {
 
   async clickDrawing(index: number): Promise<void> {
     await this.wrapper.findAll('.nui-spreadsheet__drawing')[index]?.trigger('click');
+  }
+
+  get drawingMenuItems(): string[] {
+    return [...document.querySelectorAll(`${DRAWING_MENU} [role="menuitem"]`)].map(
+      (item) => item.textContent?.trim() ?? '',
+    );
+  }
+
+  get drawingMenuFocused(): boolean {
+    return (document.activeElement?.closest(DRAWING_MENU) ?? null) !== null;
+  }
+
+  async openDrawingMenu(index: number): Promise<boolean> {
+    const left =
+      this.drawingAt(index)?.dispatchEvent(
+        new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 }),
+      ) ?? true;
+
+    await nextTick();
+    return left;
+  }
+
+  async holdDrawing(index: number, ms: number): Promise<void> {
+    this.drawingAt(index)?.dispatchEvent(
+      pointer('pointerdown', { pointerType: 'touch', clientX: 100, clientY: 100 }),
+    );
+
+    await vi.advanceTimersByTimeAsync(ms);
+  }
+
+  private drawingAt(index: number): Element | undefined {
+    return this.wrapper.findAll('.nui-spreadsheet__drawing')[index]?.element;
+  }
+
+  async chooseDrawingMenuItem(label: string): Promise<void> {
+    [...document.querySelectorAll<HTMLElement>(`${DRAWING_MENU} [role="menuitem"]`)]
+      .find((item) => item.textContent?.trim() === label)
+      ?.click();
+
+    await nextTick();
   }
 
   async dragDrawing(index: number, by: DrawingDrag): Promise<void> {
@@ -229,8 +338,8 @@ export class SpreadsheetDriver {
     return this.wrapper.find('.nui-table').attributes('dir');
   }
 
-  get bordered(): boolean {
-    return this.wrapper.find('.nui-table').classes().includes('nui-table--bordered');
+  get gridlines(): boolean {
+    return this.wrapper.find('.nui-table').classes().includes('nui-table--gridlines');
   }
 
   get label(): string | undefined {
@@ -239,6 +348,128 @@ export class SpreadsheetDriver {
 
   get columnLabels(): string[] {
     return texts(this.wrapper, '.nui-table__row--head [role="columnheader"]').slice(1, 6);
+  }
+
+  private columnHeader(label: string): Element | undefined {
+    return this.wrapper
+      .findAll('.nui-table__row--head [role="columnheader"]')
+      .find((cell) => cell.text() === label)?.element;
+  }
+
+  columnWidth(label: string): string | undefined {
+    const head = this.columnHeader(label);
+    const siblings = [...(head?.parentElement?.children ?? [])];
+
+    const track =
+      head === undefined
+        ? undefined
+        : this.wrapper.element.querySelectorAll('colgroup > col')[siblings.indexOf(head)];
+
+    return track instanceof HTMLElement ? track.style.inlineSize : undefined;
+  }
+
+  async focusColumnHeader(label: string): Promise<void> {
+    const head = this.columnHeader(label);
+
+    if (head instanceof HTMLElement) {
+      head.focus();
+    }
+    await nextTick();
+  }
+
+  async resetColumnEdge(label: string): Promise<void> {
+    this.columnHeader(label)
+      ?.querySelector('.nui-table__resizer')
+      ?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+
+    await nextTick();
+  }
+
+  async dragColumnEdge(label: string, dx: number): Promise<void> {
+    const handle = this.columnHeader(label)?.querySelector('.nui-table__resizer');
+
+    if (handle === null || handle === undefined) {
+      throw new Error(`Column ${label} has no resize handle`);
+    }
+
+    handle.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        bubbles: true,
+        button: 0,
+        pointerId: EDGE_POINTER,
+        clientX: EDGE_START,
+      }),
+    );
+
+    window.dispatchEvent(
+      new PointerEvent('pointermove', { pointerId: EDGE_POINTER, clientX: EDGE_START + dx }),
+    );
+
+    await nextTick();
+
+    window.dispatchEvent(
+      new PointerEvent('pointerup', { pointerId: EDGE_POINTER, clientX: EDGE_START + dx }),
+    );
+
+    await nextTick();
+  }
+
+  private rowHeader(label: string): Element | undefined {
+    return this.wrapper
+      .findAll('.nui-table__row--body [role="rowheader"]')
+      .find((cell) => cell.text() === label)?.element;
+  }
+
+  rowHeight(label: string): string | undefined {
+    const row = this.rowHeader(label)?.closest('tr');
+
+    return row instanceof HTMLElement ? row.style.getPropertyValue('--_row') : undefined;
+  }
+
+  async focusRowHeader(label: string): Promise<void> {
+    const head = this.rowHeader(label);
+
+    if (head instanceof HTMLElement) {
+      head.focus();
+    }
+    await nextTick();
+  }
+
+  async resetRowEdge(label: string): Promise<void> {
+    this.rowHeader(label)
+      ?.querySelector('.nui-table__resizer--row')
+      ?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+
+    await nextTick();
+  }
+
+  async dragRowEdge(label: string, dy: number): Promise<void> {
+    const handle = this.rowHeader(label)?.querySelector('.nui-table__resizer--row');
+
+    if (handle === null || handle === undefined) {
+      throw new Error(`Row ${label} has no resize handle`);
+    }
+
+    handle.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        bubbles: true,
+        button: 0,
+        pointerId: EDGE_POINTER,
+        clientY: EDGE_START,
+      }),
+    );
+
+    window.dispatchEvent(
+      new PointerEvent('pointermove', { pointerId: EDGE_POINTER, clientY: EDGE_START + dy }),
+    );
+
+    await nextTick();
+
+    window.dispatchEvent(
+      new PointerEvent('pointerup', { pointerId: EDGE_POINTER, clientY: EDGE_START + dy }),
+    );
+
+    await nextTick();
   }
 
   get rowLabels(): string[] {
@@ -286,6 +517,20 @@ export class SpreadsheetDriver {
     return this.editorField !== null;
   }
 
+  get editingCell(): CellSpot | undefined {
+    const cell = this.editorField?.closest('[role="gridcell"]');
+    const label = cell?.parentElement?.querySelector('[role="rowheader"]')?.textContent?.trim();
+    const index = Number(cell?.getAttribute('aria-colindex'));
+
+    return label === undefined || Number.isNaN(index)
+      ? undefined
+      : { row: Number(label), col: index - 2 };
+  }
+
+  placeCaret(at: number): void {
+    this.editorField?.setSelectionRange(at, at);
+  }
+
   async focus(row: number, col: number): Promise<void> {
     this.cell(row, col)?.focus();
     await nextTick();
@@ -296,13 +541,25 @@ export class SpreadsheetDriver {
     await nextTick();
   }
 
-  async type(text: string): Promise<void> {
-    const field = this.editorField;
+  async leavesToBrowser(key: string, options: KeyOptions = {}): Promise<boolean> {
+    const left = keydown(document.activeElement ?? document.body, key, options);
 
-    if (field !== null) {
-      field.value = text;
-      field.dispatchEvent(new Event('input', { bubbles: true }));
-    }
+    await nextTick();
+    return left;
+  }
+
+  async type(text: string): Promise<void> {
+    typeInto(this.editorField, text);
+    await nextTick();
+  }
+
+  async composeInEditor(text: string): Promise<void> {
+    composeInto(this.editorField, text);
+    await nextTick();
+  }
+
+  async finishComposing(text: string): Promise<void> {
+    commitComposed(this.editorField, text);
     await nextTick();
   }
 
@@ -343,6 +600,10 @@ export class SpreadsheetDriver {
 
   get announcement(): string {
     return this.wrapper.find('.nui-spreadsheet__hidden').text();
+  }
+
+  get gridAnnouncement(): string {
+    return this.wrapper.find('.nui-table__hidden[aria-live]').text();
   }
 
   get focusedCell(): CellSpot | undefined {
@@ -470,6 +731,51 @@ export class SpreadsheetDriver {
     await nextTick();
   }
 
+  async scrollGrid(top: number, left: number): Promise<void> {
+    const viewport = this.wrapper.find('.nui-table__viewport').element;
+
+    Object.defineProperty(viewport, 'scrollTop', {
+      value: top,
+      configurable: true,
+      writable: true,
+    });
+
+    Object.defineProperty(viewport, 'scrollLeft', {
+      value: left,
+      configurable: true,
+      writable: true,
+    });
+
+    viewport.dispatchEvent(new Event('scroll'));
+    await nextTick();
+  }
+
+  private get table(): NuiTableExposed {
+    const handle: unknown = this.wrapper.findComponent(NuiTable).vm;
+
+    if (!isTableHandle(handle)) {
+      throw new Error('The sheet renders no table handle');
+    }
+    return handle;
+  }
+
+  async showFrom(anchor: NuiTableScrollAnchor): Promise<void> {
+    await this.scrollGrid(0, 0);
+    this.table.scrollToAnchor(anchor);
+    this.wrapper.find('.nui-table__viewport').element.dispatchEvent(new Event('scroll'));
+    await nextTick();
+  }
+
+  get shownFrom(): NuiTableScrollAnchor | undefined {
+    return this.table.scrollAnchor();
+  }
+
+  get gridScroll(): { readonly top: number; readonly left: number } {
+    const viewport = this.wrapper.find('.nui-table__viewport').element;
+
+    return { top: viewport.scrollTop, left: viewport.scrollLeft };
+  }
+
   async focusFormula(): Promise<void> {
     this.formulaField?.focus();
     await nextTick();
@@ -553,6 +859,12 @@ export class SpreadsheetDriver {
     return this.wrapper.find('.nui-spreadsheet__rename .nui-field__error').text();
   }
 
+  get focusedTab(): string | undefined {
+    const focused = document.activeElement;
+
+    return focused?.getAttribute('role') === 'tab' ? focused.textContent?.trim() : undefined;
+  }
+
   private tab(name: string): Element | undefined {
     return this.wrapper.findAll('[role="tab"]').find((tab) => tab.text() === name)?.element;
   }
@@ -596,6 +908,26 @@ export class SpreadsheetDriver {
     await nextTick();
   }
 
+  cellSpan(row: number, col: number): number[] {
+    const cell = this.cell(row, col);
+
+    return cell instanceof HTMLTableCellElement ? [cell.rowSpan, cell.colSpan] : [];
+  }
+
+  async mergeCells(): Promise<boolean> {
+    const done = this.wrapper.findComponent(NuiSpreadsheet).vm.mergeCells();
+
+    await nextTick();
+    return done;
+  }
+
+  async unmergeCells(): Promise<boolean> {
+    const done = this.wrapper.findComponent(NuiSpreadsheet).vm.unmergeCells();
+
+    await nextTick();
+    return done;
+  }
+
   get cellMenuItems(): string[] {
     return [...document.querySelectorAll('.nui-table__cell-menu [role="menuitem"]')].map(
       (item) => item.textContent?.trim() ?? '',
@@ -615,6 +947,15 @@ export class SpreadsheetDriver {
       .find((item) => item.textContent?.trim() === label)
       ?.click();
 
+    await nextTick();
+  }
+
+  async pressInCellMenu(key: string): Promise<void> {
+    const item = document.querySelector('.nui-table__cell-menu [role="menuitem"]');
+
+    if (item !== null) {
+      keydown(item, key, {});
+    }
     await nextTick();
   }
 
@@ -916,6 +1257,18 @@ export class SpreadsheetDriver {
     await nextTick();
   }
 
+  async takeRuleAndLeave(index: number): Promise<void> {
+    const grip = this.rule(index)?.find('.nui-spreadsheet-rules__grip').element;
+
+    if (grip instanceof HTMLElement) {
+      grip.focus();
+      keydown(grip, ' ', {});
+      keydown(grip, 'ArrowDown', {});
+      grip.blur();
+    }
+    await nextTick();
+  }
+
   async pressInRules(key: string): Promise<void> {
     keydown(document.activeElement ?? document.body, key, {});
     await nextTick();
@@ -942,6 +1295,27 @@ export class SpreadsheetDriver {
 
     await field.setValue(next);
     await this.wrapper.find('.nui-spreadsheet__rename').trigger('submit');
+  }
+
+  async openTabMenu(name: string): Promise<void> {
+    this.tab(name)?.dispatchEvent(
+      new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 }),
+    );
+
+    await nextTick();
+  }
+
+  async chooseTabMenuItem(label: string): Promise<void> {
+    [...document.querySelectorAll<HTMLElement>('.nui-spreadsheet__tabs [role="menuitem"]')]
+      .find((item) => item.textContent?.trim() === label)
+      ?.click();
+
+    await nextTick();
+  }
+
+  async removeTab(name: string): Promise<void> {
+    await this.openTabMenu(name);
+    await this.chooseTabMenuItem('Delete');
   }
 
   async show(props: Partial<SpreadsheetMount>): Promise<void> {

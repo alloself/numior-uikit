@@ -1,7 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
-import { boxOf, renderedWidth, type Box } from '../helpers/geometry';
+import { unlikePixels } from '../helpers/color';
+import { boxOf, dragAcross, renderedWidth, type Box } from '../helpers/geometry';
 import { sectionScope } from '../helpers/axe';
 
 export interface TableCell {
@@ -19,7 +20,42 @@ export interface TableScroll {
   readonly left?: number;
 }
 
+export interface DropLineDrift {
+  readonly scrolled: number;
+  readonly farthest: number;
+}
+
+interface TableLayer {
+  readonly scrollRects?: readonly {
+    readonly type: string;
+    readonly rect: { readonly width: number; readonly height: number };
+  }[];
+}
+
 const HEAD_ROWS = 2;
+const EDGE_REACH = 8;
+const SCROLL_REPAINT = 'RepaintsOnScroll';
+const LAYER_SLACK = 2;
+const LEAK = 2;
+const HEADER_TOP = 2;
+const HEADER_EDGE = 3;
+const FOOTER_TOP = 2;
+const FOOTER_EDGE = 4;
+const FRAME_CORNER = 12;
+
+const BODY_PAINT = `
+  [data-testid='table'] .nui-table__body .nui-table__cell {
+    background-color: blue !important;
+    background-image: none !important;
+    color: blue !important;
+  }
+`;
+
+const BODY_HIDE = `
+  [data-testid='table'] .nui-table__body {
+    visibility: hidden !important;
+  }
+`;
 
 export class TableSection {
   readonly scope = sectionScope('table');
@@ -176,6 +212,30 @@ export class TableSection {
     await this.page.mouse.up();
   }
 
+  async dragTreeRowAndReturn(from: number, over: number): Promise<void> {
+    await this.treeRow(from).hover();
+
+    await expect.poll(() => renderedWidth(this.treeGrip(from))).toBeGreaterThan(20);
+
+    const grip = await boxOf(this.treeGrip(from));
+    const own = await boxOf(this.treeRow(from));
+    const other = await boxOf(this.treeRow(over));
+    const x = grip.x + grip.width / 2;
+    const y = grip.y + grip.height / 2;
+    const mark = this.tree.locator('.nui-table__drop');
+
+    await this.page.mouse.move(x, y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(x, y + 8);
+    await this.page.mouse.move(x, other.y + other.height * 0.85, { steps: 6 });
+    await expect(mark).toBeVisible();
+
+    await this.page.mouse.move(x, own.y + own.height / 2, { steps: 6 });
+    await expect(mark).toBeHidden();
+
+    await this.page.mouse.up();
+  }
+
   treeCheckbox(position: number): Locator {
     return this.treeRow(position).getByRole('checkbox');
   }
@@ -285,6 +345,61 @@ export class TableSection {
     await this.page.mouse.up();
   }
 
+  async carryHeaderToEdge(col: number): Promise<void> {
+    await this.header(col).hover();
+
+    await expect.poll(() => renderedWidth(this.grip(col))).toBeGreaterThan(8);
+
+    const grip = await boxOf(this.grip(col));
+    const view = await boxOf(this.viewport);
+    const x = grip.x + grip.width / 2;
+    const y = grip.y + grip.height / 2;
+
+    await this.page.mouse.move(x, y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(x + 8, y);
+    await this.page.mouse.move(view.x + view.width - EDGE_REACH, y, { steps: 4 });
+  }
+
+  async dropLineDrift(frames: number): Promise<DropLineDrift> {
+    return this.root.evaluate(
+      (root, count) =>
+        new Promise<DropLineDrift>((resolve) => {
+          const viewport = root.querySelector('.nui-table__viewport');
+          const from = viewport?.scrollLeft ?? 0;
+          const seen = { frames: 0, farthest: 0 };
+
+          const watch = (): void => {
+            const line = root.querySelector('.nui-table__drop--x')?.getBoundingClientRect();
+            const heads = root.querySelectorAll('.nui-table__row--head [role="columnheader"]');
+
+            const gaps = Array.from(heads, (head) => {
+              const rect = head.getBoundingClientRect();
+              const middle = line === undefined ? Number.NaN : line.left + line.width / 2;
+
+              return Math.min(Math.abs(rect.left - middle), Math.abs(rect.right - middle));
+            });
+
+            seen.farthest = Math.max(seen.farthest, Math.min(...gaps));
+            seen.frames += 1;
+
+            if (seen.frames < count) {
+              requestAnimationFrame(watch);
+              return;
+            }
+            resolve({ scrolled: (viewport?.scrollLeft ?? 0) - from, farthest: seen.farthest });
+          };
+
+          requestAnimationFrame(watch);
+        }),
+      frames,
+    );
+  }
+
+  async releasePointer(): Promise<void> {
+    await this.page.mouse.up();
+  }
+
   resizer(col: number): Locator {
     return this.header(col).locator('.nui-table__resizer');
   }
@@ -294,23 +409,11 @@ export class TableSection {
   }
 
   async dragBandResizer(label: string, dx: number): Promise<void> {
-    await this.dragHandle(this.bandCell(label).locator('.nui-table__resizer'), dx);
+    await dragAcross(this.bandCell(label).locator('.nui-table__resizer'), dx);
   }
 
   async dragResizer(col: number, dx: number): Promise<void> {
-    await this.dragHandle(this.resizer(col), dx);
-  }
-
-  private async dragHandle(handle: Locator, dx: number): Promise<void> {
-    const box = await boxOf(handle);
-    const x = box.x + box.width / 2;
-    const y = box.y + box.height / 2;
-
-    await this.page.mouse.move(x, y);
-    await this.page.mouse.down();
-    await this.page.mouse.move(x + dx / 2, y);
-    await this.page.mouse.move(x + dx, y, { steps: 4 });
-    await this.page.mouse.up();
+    await dragAcross(this.resizer(col), dx);
   }
 
   filterButton(col: number): Locator {
@@ -324,6 +427,22 @@ export class TableSection {
 
   filterValue(label: string): Locator {
     return this.filter.getByRole('checkbox', { name: label, exact: true });
+  }
+
+  get filterSearch(): Locator {
+    return this.filter.getByRole('searchbox', { name: 'Поиск', exact: true });
+  }
+
+  get filterAll(): Locator {
+    return this.filter.getByRole('checkbox', { name: 'Выбрать все', exact: true });
+  }
+
+  get filterValues(): Locator {
+    return this.filter.locator('.nui-table-filter__values').getByRole('checkbox');
+  }
+
+  get filterNote(): Locator {
+    return this.filter.locator('.nui-table-filter__note');
   }
 
   filterField(label: string): Locator {
@@ -485,9 +604,11 @@ export class TableSection {
 
     await this.page.mouse.up();
 
-    if (modifier !== undefined) {
-      await this.page.keyboard.up(modifier);
+    if (modifier === undefined) {
+      return;
     }
+
+    await this.page.keyboard.up(modifier);
   }
 
   async longPress(position: number, col: number): Promise<void> {
@@ -507,6 +628,106 @@ export class TableSection {
     await cell.dispatchEvent('pointerdown', init);
     await expect(this.cellMenu).toBeVisible();
     await cell.dispatchEvent('pointerup', init);
+  }
+
+  async repaintsOnScroll(): Promise<boolean> {
+    const session = await this.viewport.page().context().newCDPSession(this.viewport.page());
+    const box = await boxOf(this.viewport);
+
+    const layers = await new Promise<readonly TableLayer[]>((resolve) => {
+      session.once('LayerTree.layerTreeDidChange', (event) => {
+        resolve(event.layers ?? []);
+      });
+
+      void session.send('LayerTree.enable');
+    });
+
+    await session.detach();
+
+    return layers.some((layer) =>
+      (layer.scrollRects ?? []).some(
+        (area) =>
+          area.type === SCROLL_REPAINT &&
+          Math.abs(area.rect.width - box.width) < LAYER_SLACK &&
+          Math.abs(area.rect.height - box.height) < LAYER_SLACK,
+      ),
+    );
+  }
+
+  async fadesBackgroundUnder(row: number, col: number): Promise<boolean> {
+    await this.cell(row, col).hover();
+
+    return this.row(row).evaluate((element) =>
+      element
+        .getAnimations()
+        .some(
+          (animation) =>
+            animation instanceof CSSTransition &&
+            animation.transitionProperty === 'background-color',
+        ),
+    );
+  }
+
+  private async shotWith(css: string): Promise<Buffer> {
+    const style = await this.page.addStyleTag({ content: css });
+
+    await this.viewport.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              resolve();
+            });
+          });
+        }),
+    );
+
+    const shot = await this.page.screenshot({ animations: 'disabled' });
+
+    await style.evaluate((element) => {
+      element.parentNode?.removeChild(element);
+    });
+
+    return shot;
+  }
+
+  async headerLeak(target: TableScroll): Promise<number> {
+    await this.scrollTo(target);
+
+    const [frame, last] = await Promise.all([
+      boxOf(this.root),
+      boxOf(this.root.locator('.nui-table__header > tr:last-child > .nui-table__cell').first()),
+    ]);
+
+    return this.bodyLeak({
+      x: frame.x + FRAME_CORNER,
+      y: frame.y + HEADER_TOP,
+      width: frame.width - 2 * FRAME_CORNER,
+      height: last.y + last.height - frame.y - HEADER_TOP - HEADER_EDGE,
+    });
+  }
+
+  async footerLeak(target: TableScroll): Promise<number> {
+    await this.scrollTo(target);
+
+    const [frame, first] = await Promise.all([
+      boxOf(this.root),
+      boxOf(this.root.locator('.nui-table__footer .nui-table__cell').first()),
+    ]);
+
+    return this.bodyLeak({
+      x: frame.x + FRAME_CORNER,
+      y: first.y + FOOTER_TOP,
+      width: frame.width - 2 * FRAME_CORNER,
+      height: first.height - FOOTER_TOP - FOOTER_EDGE,
+    });
+  }
+
+  private async bodyLeak(area: Box): Promise<number> {
+    const hidden = await this.shotWith(BODY_HIDE);
+    const painted = await this.shotWith(BODY_PAINT);
+
+    return unlikePixels(this.page, [hidden, painted], { ...area, delta: LEAK });
   }
 
   async scrollTo(target: TableScroll): Promise<void> {

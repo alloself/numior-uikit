@@ -45,7 +45,7 @@ test.describe('pickers', () => {
     await expect.poll(async () => (await pickers.readOutput()).country).toBeNull();
   });
 
-  test('a select opened by click or Enter moves focus into the listbox', async ({
+  test('select opened with a click, Enter or Space takes the keyboard into its list', async ({
     playground,
     pickers,
     page,
@@ -56,17 +56,25 @@ test.describe('pickers', () => {
     await playground.open();
 
     await pickers.countryTrigger.click();
-
     await expect(pickers.option('Австрия')).toBeFocused();
 
     await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
-
-    await expect(pickers.countryTrigger).toHaveText('Бельгия');
-
-    await page.keyboard.press('Enter');
-
     await expect(pickers.option('Бельгия')).toBeFocused();
+
+    for (const key of ['Enter', 'Space']) {
+      await page.keyboard.press('Escape');
+      await expect(pickers.countryTrigger).toBeFocused();
+
+      await page.keyboard.press(key);
+      await expect(pickers.option('Австрия')).toBeFocused();
+
+      await page.keyboard.press('ArrowDown');
+      await expect(pickers.option('Бельгия')).toBeFocused();
+    }
+
+    await page.keyboard.press('Escape');
+    await pickers.treeTrigger.click();
+    await expect(pickers.tree).toBeFocused();
   });
 
   test('a long value truncates with an ellipsis and keeps the clear button off the text', async ({
@@ -206,7 +214,7 @@ test.describe('pickers', () => {
 
     await pickers.pageSizeTrigger.click();
     await pickers.option('50').click();
-    await expect(pickers.rangeText).toHaveText('151–200 из 240');
+    await expect(pickers.rangeText).toHaveText('51–100 из 240');
     await expect.poll(async () => (await pickers.readOutput()).pageSize).toBe(50);
     await expect(pickers.pageLink(2)).toHaveAttribute('aria-current', 'page');
     await expect(pickers.pageLink(3)).toHaveAttribute('href', '#page-3');

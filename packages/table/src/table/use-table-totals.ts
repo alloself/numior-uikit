@@ -59,9 +59,11 @@ export const useTableTotals = <T>(options: TableTotalsOptions<T>): TableTotals<T
       computedFor = keyOf(query.filters ?? []);
     },
     sync: () => {
-      if (enabled.value) {
-        values.value = options.engine.value.totals();
+      if (!enabled.value) {
+        return;
       }
+
+      values.value = options.engine.value.totals();
     },
     reset: () => {
       computedFor = null;

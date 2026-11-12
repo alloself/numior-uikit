@@ -22,6 +22,7 @@ export interface NuiFieldArrayProps<T extends object, Row> {
   validateOn?: ValidateOn | undefined;
   addLabel?: string | undefined;
   emptyLabel?: string | undefined;
+  rowLabel?: ((index: number) => string) | undefined;
   removeLabel?: ((index: number) => string) | undefined;
   moveLabel?: ((index: number) => string) | undefined;
 }
@@ -34,6 +35,7 @@ export interface NuiFieldArrayRowProps {
   reorderable?: boolean | undefined;
   removable?: boolean | undefined;
   gripDisabled?: boolean | undefined;
+  label: string;
   moveLabel: string;
   removeLabel: string;
 }

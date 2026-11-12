@@ -1,5 +1,6 @@
 <template>
   <NuiTable
+    ref="table"
     :sort="sort"
     :filters="filters"
     :columns="columns"
@@ -7,11 +8,15 @@
     :get-key="keyOf"
     :locale="locale"
     :column-menu="editable"
-    bordered
+    gridlines
     v-bind="$attrs"
     @update:sort="onSort"
     @update:filters="onFilters"
+    @update:active="onActive"
   >
+    <template v-if="peerFrames.length > 0" #overlay="{ rectOf }">
+      <NuiTablePeers :peers="peerFrames" :rect-of="rectOf" />
+    </template>
     <template
       v-for="drawn in drawnColumns"
       :key="drawn.column.id"
@@ -31,8 +36,16 @@
 </template>
 
 <script setup lang="ts">
-import { NuiTable, type NuiTableFilters, type NuiTableSort } from '@numior/table';
-import { computed } from 'vue';
+import {
+  NuiTable,
+  NuiTablePeers,
+  type NuiTableCellPosition,
+  type NuiTableExposed,
+  type NuiTableFilters,
+  type NuiTablePeer,
+  type NuiTableSort,
+} from '@numior/table';
+import { computed, shallowRef, useTemplateRef, watch } from 'vue';
 import { contentTableData } from '../content/content-table';
 import type {
   NuiContentCellValue,
@@ -48,17 +61,21 @@ import {
   tableSortOf,
   type NuiContentColumnFilter,
 } from './content-table-view';
-import type { NuiContentTableProps } from './content-table.types';
+import type { NuiContentTableCell, NuiContentTableProps } from './content-table.types';
 
 defineOptions({ inheritAttrs: false });
 
-const { node, editable = false, locale, cells } = defineProps<NuiContentTableProps>();
+const { node, editable = false, locale, cells, peers = [] } = defineProps<NuiContentTableProps>();
 
 const emit = defineEmits<{
   change: [row: NuiContentTableRow, column: string, value: NuiContentCellValue];
   sort: [sort: readonly NuiContentTableSort[]];
   filters: [filters: readonly NuiContentColumnFilter[]];
+  cell: [cell: NuiContentTableCell | undefined];
 }>();
+
+const table = useTemplateRef<NuiTableExposed>('table');
+const active = shallowRef<NuiTableCellPosition>();
 
 const data = computed(() => contentTableData(node));
 const columns = computed(() => contentTableColumns(data.value.columns, editable));
@@ -77,6 +94,35 @@ const filters = computed(() => tableFiltersOf(data.value.columns));
 
 const keyOf = (row: NuiContentTableRow): string => row.id;
 
+const sameCell = (
+  left: NuiContentTableCell | undefined,
+  right: NuiContentTableCell | undefined,
+): boolean => left?.row === right?.row && left?.column === right?.column;
+
+const activeCell = computed<NuiContentTableCell | undefined>((previous) => {
+  const key = active.value === undefined ? undefined : table.value?.keyOf(active.value);
+  const next = key === undefined ? undefined : { row: String(key.row), column: key.column };
+
+  return sameCell(previous, next) ? previous : next;
+});
+
+const peerFrames = computed(() =>
+  peers.reduce<NuiTablePeer[]>((frames, peer) => {
+    const cell = table.value?.positionOf({ row: peer.row, column: peer.column });
+
+    if (cell !== undefined) {
+      frames.push({
+        key: peer.key,
+        name: peer.name,
+        colour: peer.colour,
+        cell: { from: cell, to: cell },
+      });
+    }
+
+    return frames;
+  }, []),
+);
+
 const labelOf = (row: NuiContentTableRow): string => {
   const [first] = row.cells;
 
@@ -90,4 +136,12 @@ const onSort = (value: NuiTableSort): void => {
 const onFilters = (value: NuiTableFilters): void => {
   emit('filters', contentFiltersOf(value));
 };
+
+const onActive = (value: NuiTableCellPosition | undefined): void => {
+  active.value = value;
+};
+
+watch(activeCell, (cell) => {
+  emit('cell', cell);
+});
 </script>

@@ -1,4 +1,4 @@
-import { computed, ref, type ComputedRef, type Ref } from 'vue';
+import { computed, ref, shallowRef, type ComputedRef, type Ref } from 'vue';
 import { normalizeRange, type DateRange } from '@numior/primitives';
 import { NuiCalendarMode, type NuiCalendarValue, type NuiDatePreset } from './calendar.types';
 import { isDateRange, selectedDatesOf } from './day-state';
@@ -19,6 +19,7 @@ export interface CalendarSelection {
   click(date: string): NuiCalendarValue | undefined;
   arm(date: string): NuiCalendarValue | undefined;
   release(date: string): NuiCalendarValue | undefined;
+  disarm(): NuiCalendarValue | undefined;
   clearArm(): void;
   resolvePreset(preset: NuiDatePreset): DateRange | null;
   isPresetActive(preset: NuiDatePreset): boolean;
@@ -30,6 +31,7 @@ const sameRange = (a: DateRange | null, b: DateRange): boolean =>
 export const useCalendarSelection = (options: CalendarSelectionOptions): CalendarSelection => {
   const hovered = ref<string>();
   const armed = ref<string>();
+  const before = shallowRef<NuiCalendarValue>(null);
   const selected = computed(() => new Set(selectedDatesOf(options.model.value)));
 
   const range = computed(() =>
@@ -92,13 +94,30 @@ export const useCalendarSelection = (options: CalendarSelectionOptions): Calenda
   };
 
   const arm = (date: string): NuiCalendarValue | undefined => {
-    if (options.mode() !== NuiCalendarMode.Range || picking.value) {
+    if (options.mode() !== NuiCalendarMode.Range) {
+      return undefined;
+    }
+    if (picking.value) {
+      armed.value = undefined;
+
       return undefined;
     }
 
     armed.value = date;
+    before.value = options.model.value;
 
     return pick(date);
+  };
+
+  const disarm = (): NuiCalendarValue | undefined => {
+    if (armed.value === undefined) {
+      return undefined;
+    }
+
+    armed.value = undefined;
+    options.model.value = before.value;
+
+    return before.value;
   };
 
   const release = (date: string): NuiCalendarValue | undefined => {
@@ -131,6 +150,7 @@ export const useCalendarSelection = (options: CalendarSelectionOptions): Calenda
     click,
     arm,
     release,
+    disarm,
     clearArm: () => {
       armed.value = undefined;
     },

@@ -1,7 +1,13 @@
 import type { AnchorJSON } from '@numior/editor-core';
 import type { PresenceUser } from '../editor/presence.types';
 
-export type CommentAnchor = AnchorJSON;
+export interface CommentPlace {
+  readonly version: number;
+  readonly from: number;
+  readonly to: number;
+}
+
+export type CommentAnchor = AnchorJSON & { readonly at?: CommentPlace | undefined };
 
 export interface CommentReply {
   readonly id: string;

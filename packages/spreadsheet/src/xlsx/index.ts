@@ -8,6 +8,7 @@ export type {
   ZipArchive,
   ZipCodec,
   ZipOptions,
+  ZipReadOptions,
   ZipRawEntry,
   ZipRead,
   ZipWriteEntry,

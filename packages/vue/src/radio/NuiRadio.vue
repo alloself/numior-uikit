@@ -52,14 +52,18 @@ const groupAttrs = computed(() =>
 const radioElement = useTemplateRef<HTMLInputElement>('radio');
 
 const onClick = (event: MouseEvent): void => {
-  if (isReadonly.value) {
-    event.preventDefault();
+  if (!isReadonly.value) {
+    return;
   }
+
+  event.preventDefault();
 };
 
 const onChange = (): void => {
-  if (radioElement.value?.checked) {
-    group?.select(value);
+  if (!radioElement.value?.checked) {
+    return;
   }
+
+  group?.select(value);
 };
 </script>

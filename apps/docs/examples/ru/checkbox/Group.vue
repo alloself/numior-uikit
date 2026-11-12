@@ -1,6 +1,6 @@
 <template>
   <NuiCheckboxGroup
-    v-model="enabled"
+    v-model:values="enabled"
     :options="methods"
     label="Способы доставки"
     description="Покупатель выберет один из них при оформлении заказа"

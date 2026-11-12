@@ -87,7 +87,7 @@
           :columns="columns"
           :labels="labels"
           :empty-text="emptyText"
-          @pick="pickWheel"
+          @select="pickWheel"
           @focus-wheel="onFocusWheel"
         />
       </div>
@@ -99,6 +99,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
 import {
+  FLOATING_OFFSET,
   createCollection,
   formatSegment,
   formatTimeModel,
@@ -280,11 +281,13 @@ const onChar = (type: TimeSegmentType, char: string): void => {
   }
   const period = periodOf(char);
   if (
-    period !== null &&
-    (target === TimeSegmentType.DayPeriod || layout.value.cycle === HourCycle.H12)
+    period === null ||
+    (target !== TimeSegmentType.DayPeriod && layout.value.cycle !== HourCycle.H12)
   ) {
-    times.setPeriod(period);
+    return;
   }
+
+  times.setPeriod(period);
 };
 
 const segmentTypeOf = (target: EventTarget | null): TimeSegmentType | undefined =>
@@ -293,9 +296,11 @@ const segmentTypeOf = (target: EventTarget | null): TimeSegmentType | undefined 
 const focusSegment = (type: TimeSegmentType): void => {
   const segment = segments.get(type);
 
-  if (segment !== undefined) {
-    navigation.setActive(segment);
+  if (segment === undefined) {
+    return;
   }
+
+  navigation.setActive(segment);
 };
 
 const clockElement = (): Element | null => {
@@ -385,10 +390,12 @@ const onGroupKeydown = (event: KeyboardEvent): void => {
 
 const onGroupFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
-  if (!(next instanceof Node && groupElement.value?.contains(next) === true)) {
-    times.settle();
-    navigation.reset();
+  if (next instanceof Node && groupElement.value?.contains(next) === true) {
+    return;
   }
+
+  times.settle();
+  navigation.reset();
 };
 
 const open = ref(false);
@@ -399,7 +406,7 @@ const control = usePopover(panelElement, { open, id: panelId, mode: PopoverMode.
 
 useFloating(rootElement, panelElement, {
   placement: () => placement,
-  offset: 4,
+  offset: FLOATING_OFFSET,
   enabled: open,
 });
 
@@ -419,17 +426,21 @@ const wheelInput = computed(() => ({
 const columns = computed(() => wheelColumns(wheelInput.value));
 
 const setWheelTime = (time: TimeValue): void => {
-  if (!isReadonly.value && formatTimeModel(time, seconds) !== model.value) {
-    times.setTime(time);
+  if (isReadonly.value || formatTimeModel(time, seconds) === model.value) {
+    return;
   }
+
+  times.setTime(time);
 };
 
 const pickWheel = (type: TimeSegmentType, index: number): void => {
   const option = columns.value.find((column) => column.type === type)?.options[index];
 
-  if (option) {
-    setWheelTime(pickedTime(wheelInput.value, type, option.value));
+  if (!option) {
+    return;
   }
+
+  setWheelTime(pickedTime(wheelInput.value, type, option.value));
 };
 
 const onFocusWheel = (type: TimeSegmentType): void => {
@@ -438,10 +449,12 @@ const onFocusWheel = (type: TimeSegmentType): void => {
 };
 
 const returnFocus = (): void => {
-  if (state.inside) {
-    state.inside = false;
-    focusSegment(state.segment);
+  if (!state.inside) {
+    return;
   }
+
+  state.inside = false;
+  focusSegment(state.segment);
 };
 
 const confirmWheels = (): void => {
@@ -479,19 +492,23 @@ const onPanelFocusout = (event: FocusEvent): void => {
     next instanceof Node &&
     (panelElement.value?.contains(next) === true || rootElement.value?.contains(next) === true);
 
-  if (!within) {
-    state.inside = false;
-    control.hide();
+  if (within) {
+    return;
   }
+
+  state.inside = false;
+  control.hide();
 };
 
 onMounted(() => {
   watch(
     open,
     (isOpen) => {
-      if (isOpen) {
-        wheels.value?.focus(state.segment);
+      if (!isOpen) {
+        return;
       }
+
+      wheels.value?.focus(state.segment);
     },
     { flush: 'post' },
   );

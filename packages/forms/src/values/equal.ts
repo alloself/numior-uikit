@@ -1,4 +1,4 @@
-import { isObject } from './kinds';
+import { isObject, isPlainRecord } from './kinds';
 
 type Entry = readonly [key: string, value: unknown];
 
@@ -8,7 +8,14 @@ const isDefined = ([, value]: Entry): boolean => value !== undefined;
 
 const definedEntries = (value: object): Entry[] => Object.entries(value).filter(isDefined);
 
+const isSealed = (value: object): boolean =>
+  Object.keys(value).length === 0 && !isPlainRecord(value);
+
 const equalRecords = (left: object, right: object): boolean => {
+  if (isSealed(left)) {
+    return false;
+  }
+
   const entries = definedEntries(left);
 
   return (
@@ -20,7 +27,17 @@ const equalRecords = (left: object, right: object): boolean => {
 };
 
 const sameDates: Comparison = (left, right) =>
-  left instanceof Date && right instanceof Date ? left.getTime() === right.getTime() : undefined;
+  left instanceof Date && right instanceof Date
+    ? Object.is(left.getTime(), right.getTime())
+    : undefined;
+
+const sameAddresses: Comparison = (left, right) =>
+  left instanceof URL && right instanceof URL ? left.href === right.href : undefined;
+
+const samePatterns: Comparison = (left, right) =>
+  left instanceof RegExp && right instanceof RegExp
+    ? left.source === right.source && left.flags === right.flags
+    : undefined;
 
 const sameFileMeta = (left: Blob, right: Blob): boolean =>
   !(left instanceof File && right instanceof File) ||
@@ -48,13 +65,25 @@ const sameSets: Comparison = (left, right) =>
     ? left.size === right.size && [...left].every((value) => right.has(value))
     : undefined;
 
-const COMPARISONS: readonly Comparison[] = [sameDates, sameBlobs, sameArrays, sameMaps, sameSets];
+const COMPARISONS: readonly Comparison[] = [
+  sameDates,
+  sameAddresses,
+  samePatterns,
+  sameBlobs,
+  sameArrays,
+  sameMaps,
+  sameSets,
+];
 
 const equalObjects = (left: object, right: object): boolean =>
   COMPARISONS.reduce<boolean | undefined>(
     (found, compare) => found ?? compare(left, right),
     undefined,
   ) ?? equalRecords(left, right);
+
+const sameKind = (left: object, right: object): boolean =>
+  Object.getPrototypeOf(left) === Object.getPrototypeOf(right) ||
+  (isPlainRecord(left) && isPlainRecord(right));
 
 export const isEqualValue = (left: unknown, right: unknown): boolean => {
   if (Object.is(left, right)) {
@@ -63,5 +92,5 @@ export const isEqualValue = (left: unknown, right: unknown): boolean => {
   if (!isObject(left) || !isObject(right)) {
     return false;
   }
-  return Object.getPrototypeOf(left) === Object.getPrototypeOf(right) && equalObjects(left, right);
+  return sameKind(left, right) && equalObjects(left, right);
 };

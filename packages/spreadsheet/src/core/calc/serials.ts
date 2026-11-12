@@ -14,6 +14,11 @@ const PHANTOM_LEAP_DAY = 60;
 
 const LAST_SERIAL = 2_958_465;
 
+const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+export const timeSerial = (hours: number, minutes: number, seconds: number): number =>
+  (hours + (minutes + seconds / 60) / 60) / 24;
+
 const utcDays = (year: number, month: number, day: number): number => {
   const date = new Date(0);
 
@@ -64,7 +69,7 @@ export const civilOf = (serial: number): CivilDate => {
 };
 
 export const daysInMonth = (year: number, month: number): number =>
-  serialOfDate(year, month + 1, 1) - serialOfDate(year, month, 1);
+  month === 2 && isLeapYear(year) ? 29 : (MONTH_DAYS[month - 1] ?? 30);
 
 export const mondayIndex = (serial: number): number => (((Math.floor(serial) - 2) % 7) + 7) % 7;
 

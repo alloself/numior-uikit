@@ -7,10 +7,23 @@ import {
   MAX_COLS,
   MAX_ROWS,
 } from '../address';
-import type { CellRange, CellRef } from '../cell.types';
+import { CellError, LineAxis, type CellRange, type CellRef } from '../cell.types';
+import { shiftRange } from '../layout/shift-ranges';
 import { EN_FORMULAS } from './locale';
 import { EndpointKind, FormulaChar, TokenKind, type FormulaLocale } from './formula.types';
 import { tokenize, type Token } from './lexer';
+import { sameName, type LineChange } from './rewrite';
+
+export interface TextEdit {
+  readonly from: number;
+  readonly to: number;
+  readonly text: string;
+}
+
+export interface TextShift {
+  readonly text: string;
+  readonly edits: readonly TextEdit[];
+}
 
 export interface ReferenceSpan {
   readonly start: number;
@@ -280,3 +293,108 @@ export const retarget = (text: string, span: ReferenceSpan, range: CellRange): A
     end: span.address + address.length,
   };
 };
+
+const acrossAxis = (endpoint: Endpoint, change: LineChange): boolean =>
+  (endpoint.kind === EndpointKind.Column && change.axis === LineAxis.Rows) ||
+  (endpoint.kind === EndpointKind.Row && change.axis === LineAxis.Cols);
+
+const sameRange = (left: CellRange, right: CellRange): boolean =>
+  left.top === right.top &&
+  left.left === right.left &&
+  left.bottom === right.bottom &&
+  left.right === right.right;
+
+const followedRange = (
+  range: CellRange,
+  first: Endpoint,
+  changes: readonly LineChange[],
+  sheet: string,
+): CellRange | undefined =>
+  changes.reduce<CellRange | undefined>(
+    (current, change) =>
+      current === undefined || !sameName(change.sheet, sheet) || acrossAxis(first, change)
+        ? current
+        : shiftRange(current, change),
+    range,
+  );
+
+const editOf = (
+  text: string,
+  span: ReferenceSpan,
+  changes: readonly LineChange[],
+  sheet: string,
+): TextEdit | undefined => {
+  const ends = text
+    .slice(span.address, span.end)
+    .split(FormulaChar.Colon)
+    .map((part) => endpointText(part));
+
+  const [first] = ends;
+  const last = ends.at(-1);
+
+  if (span.external || first === undefined || last === undefined || ends.includes(undefined)) {
+    return undefined;
+  }
+
+  const range = followedRange(span.range, first, changes, span.sheet ?? sheet);
+
+  if (range === undefined) {
+    return { from: span.address, to: span.end, text: CellError.Ref };
+  }
+
+  const head = placed(first, range.top, range.left);
+
+  const address =
+    ends.length > 1
+      ? `${head}${FormulaChar.Colon}${placed(last, range.bottom, range.right)}`
+      : head;
+
+  return sameRange(range, span.range)
+    ? undefined
+    : { from: span.address, to: span.end, text: address };
+};
+
+export const followLines = (
+  text: string,
+  changes: readonly LineChange[],
+  sheet: string,
+  locale: FormulaLocale = EN_FORMULAS,
+): TextShift | undefined => {
+  const spans = changes.length === 0 ? [] : referenceSpans(text, locale);
+
+  const edits = spans.reduce<TextEdit[]>((found, span) => {
+    const edit = editOf(text, span, changes, sheet);
+
+    if (edit !== undefined) {
+      found.push(edit);
+    }
+    return found;
+  }, []);
+
+  if (edits.length === 0) {
+    return undefined;
+  }
+
+  const built = edits.reduce(
+    (joined, edit) => ({
+      text: `${joined.text}${text.slice(joined.at, edit.from)}${edit.text}`,
+      at: edit.to,
+    }),
+    { text: '', at: 0 },
+  );
+
+  return { text: `${built.text}${text.slice(built.at)}`, edits };
+};
+
+export const shiftOffset = (shift: TextShift, offset: number): number =>
+  shift.edits.reduce((moved, edit) => {
+    if (offset <= edit.from) {
+      return moved;
+    }
+
+    const length = edit.text.length;
+
+    return offset >= edit.to
+      ? moved + length - (edit.to - edit.from)
+      : moved - (offset - edit.from) + Math.min(offset - edit.from, length);
+  }, offset);

@@ -18,15 +18,15 @@ import type { NuiEditorBlockContext } from './block.types';
 import type { NodeViewEntry } from './node-views';
 import type { NuiEditorNodeViewsProps } from './node-views.types';
 
-const { entries, selected, focused, editable, run, focus } = defineProps<NuiEditorNodeViewsProps>();
+const { entries, selected, focused, editable, host } = defineProps<NuiEditorNodeViewsProps>();
 
-const contexts = new WeakMap<NodeViewEntry, NuiEditorBlockContext>();
+const contextsByEntry = new WeakMap<NodeViewEntry, NuiEditorBlockContext>();
 
 const contextOf = (entry: NodeViewEntry): NuiEditorBlockContext => {
   const context =
-    contexts.get(entry) ?? blockContext(entry.node.value.id, run, focus, () => entry.dom);
+    contextsByEntry.get(entry) ?? blockContext(entry.node.value.id, host, () => entry.dom);
 
-  contexts.set(entry, context);
+  contextsByEntry.set(entry, context);
   return context;
 };
 </script>

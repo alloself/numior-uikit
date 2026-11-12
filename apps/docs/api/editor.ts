@@ -6,8 +6,8 @@ const docs: DocsMap = {
     props: {
       ...fieldControl,
       readonly: {
-        ru: 'Показывает документ без возможности правки. Текст можно выделить и скопировать.',
-        en: 'Shows the document without editing. The text can still be selected and copied.',
+        ru: 'Показывает документ без возможности правки. Текст можно выделить и скопировать, поле получает фокус. Кнопки из `selectionActions` остаются доступны.',
+        en: 'Shows the document without editing. The text can still be selected and copied, and the field takes focus. Buttons from `selectionActions` stay available.',
       },
       schema: {
         ru: 'Схема документа: какие блоки и стили допустимы. По умолчанию — `contentSchema` из `@numior/content`.',
@@ -74,8 +74,8 @@ const docs: DocsMap = {
         en: 'Highlighter for code blocks instead of the one set in `createNuiConfig`. `false` renders code in one color.',
       },
       blocks: {
-        ru: 'Свои блоки из `defineBlock`: компонент, клавиши, пункты меню «/» и меню блока. Читается один раз при монтировании.',
-        en: 'Custom blocks from `defineBlock`: a component, keys, slash menu items and block menu items. Read once on mount.',
+        ru: 'Свои блоки из `defineBlock`: компонент, клавиши, пункты меню «/» и меню блока. Читается один раз при монтировании. Контекст блока сообщает место внутри него через `setSpot(part)` и `leaveSpot()`, а `peers()` отдаёт места участников, чтобы блок их нарисовал. Так таблица документа показывает ячейки соавторов.',
+        en: 'Custom blocks from `defineBlock`: a component, keys, slash menu items and block menu items. Read once on mount. The block context reports a place inside the block with `setSpot(part)` and `leaveSpot()`, and `peers()` returns the places of other people for the block to draw. This is how the document table shows the cells of co-authors.',
       },
       blockHandles: {
         ru: 'Показывает ручку у блока под указателем: меню блока и перетаскивание. Ctrl+Shift+↑ и ↓ переносят блок с курсором.',
@@ -84,6 +84,10 @@ const docs: DocsMap = {
       highlights: {
         ru: 'Цвета фонового выделения в меню. По умолчанию — все девять.',
         en: 'Background highlight colors in the menu. All nine by default.',
+      },
+      selectionActions: {
+        ru: 'Свои кнопки для выделенного текста: в панели над выделением и в панели инструментов. Кнопка отключена, пока команда неприменима. В режиме `readonly` показываются только они: над выделением, а на сенсорном экране — в панели.',
+        en: 'Your own buttons for selected text, in the bar over the selection and in the toolbar. A button is disabled while its command does not apply. In `readonly` mode only these are shown: over the selection, or in the toolbar on a touch screen.',
       },
     },
     models: {

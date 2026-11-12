@@ -7,10 +7,12 @@ import {
   mergeSteps,
   stepMapOf,
   type Doc,
+  type Mark,
   type Slice,
   type Step,
 } from '../src';
 import { fixtureSchema } from '../src/fixtures';
+import type { StepSpan } from '../src/transform/step.types';
 import { buildWith, notes } from './support/notes';
 
 const { doc, node, text } = buildWith();
@@ -32,6 +34,33 @@ const imageDoc = (src: string, alt: string) =>
   });
 
 const flatSlice = (...content: Slice['content']): Slice => ({ content, openStart: 0, openEnd: 0 });
+
+const REFUSED_CONTENT = { ok: false, reason: 'content' } as const;
+
+const linked = (attrs: Mark['attrs']): Step => ({
+  kind: 'replace',
+  from: 6,
+  to: 6,
+  slice: flatSlice({ kind: 'text', text: 'x', marks: [{ type: 'link', attrs }] }),
+});
+
+const BROKEN_GAPS: readonly (readonly [string, readonly StepSpan[]])[] = [
+  ['inverted', [{ from: 5, to: 3 }]],
+  [
+    'out of order',
+    [
+      { from: 5, to: 6 },
+      { from: 2, to: 3 },
+    ],
+  ],
+  [
+    'overlapping',
+    [
+      { from: 2, to: 5 },
+      { from: 3, to: 6 },
+    ],
+  ],
+];
 
 const applied = (target: Doc, step: Step): Doc => {
   const result = applyStep(target, step);
@@ -158,6 +187,14 @@ describe('replace steps', () => {
       }).ok,
     ).toBe(true);
   });
+
+  it('refuses loose text whose mark carries attributes its type does not take', () => {
+    const start = page();
+
+    expect(applyStep(start, linked({ href: 'a' })).ok).toBe(true);
+    expect(applyStep(start, linked({ href: 'a', rel: 'b' }))).toEqual(REFUSED_CONTENT);
+    expect(applyStep(start, linked({}))).toEqual(REFUSED_CONTENT);
+  });
 });
 
 describe('replace around steps', () => {
@@ -234,6 +271,24 @@ describe('mark and attribute steps', () => {
       applyStep(start, { kind: 'addMark', from: 1, to: 4, mark: { type: 'shadow', attrs: {} } }),
     ).toEqual({ ok: false, reason: 'range' });
   });
+
+  it.each(BROKEN_GAPS)(
+    'keeps the text whole when the gaps of a mark step are %s',
+    (_name, skip) => {
+      const start = createDoc(notes, doc(node('paragraph', ['abcdef'])));
+
+      const marked = applied(start, {
+        kind: 'addMark',
+        from: 1,
+        to: 7,
+        mark: notes.mark('bold'),
+        skip,
+      });
+
+      expect(marked.size).toBe(start.size);
+      expect(marked.textBetween(0, marked.size)).toBe('abcdef');
+    },
+  );
 
   it('changes only the attributes named by the step and restores only those', () => {
     const start = createDoc(fixtureSchema, imageDoc('a.png', 'old'));
@@ -498,6 +553,14 @@ describe('mapping and merging steps', () => {
         { kind: 'replace', from: 5, to: 6, slice: flatSlice() },
       ),
     ).toMatchObject({ from: 5, to: 7 });
+
+    const restored = mergeSteps(insert(3), insert(3));
+
+    expect(
+      restored?.kind === 'replace'
+        ? [restored.from, restored.to, restored.slice.content.length]
+        : [],
+    ).toEqual([3, 3, 1]);
 
     expect(mergeSteps(insert(3), insert(9))).toBeUndefined();
 

@@ -26,11 +26,13 @@ export {
   isCellError,
   numberValue,
   sameValue,
+  MAX_CELL_TEXT,
   textValue,
 } from './values';
-export { createWorkbook, validDefinedName, validSheetName } from './workbook';
+export { createWorkbook, validDefinedName, validSheetName, validTableName } from './workbook';
 export { OFFICE_THEME, colorHex, tinted, type ThemePalette } from './theme';
-export { lineLayoutsOf } from './layout/line-layouts';
+export { lineLayoutsOf, withLineSizes } from './layout/line-layouts';
+export { layoutDelta } from './layout/merge-layout';
 export { createConditionalPainter, type ConditionalPainter } from './conditional/looks';
 export {
   CONDITIONAL_PRESETS,
@@ -159,6 +161,7 @@ export type {
 } from './pivot/pivot.types';
 export {
   EN_FORMULAS,
+  FormulaFailureReason,
   RU_FORMULAS,
   canonicalFunction,
   formulaReferences,
@@ -168,12 +171,17 @@ export {
   localFunction,
   parseFormula,
   printFormula,
+  followLines,
   referenceSpans,
   retarget,
+  shiftOffset,
   toggleAnchors,
 } from './formula';
 export type {
   AnchoredText,
+  TextEdit,
+  TextShift,
+  CallSignature,
   FunctionCall,
   FunctionPrefix,
   FormulaFailure,
@@ -183,6 +191,7 @@ export type {
   FormulaReference,
   LineRef,
   ReferenceSpan,
+  SignatureOf,
 } from './formula';
 export {
   BASE_FUNCTIONS,
@@ -230,12 +239,29 @@ export type {
   NumberFormat,
   NumberLocale,
 } from './format';
-export { createStepper, type Stepper } from './steps/apply-step';
+export { createStepper, type BookStepper, type Stepper } from './steps/apply-step';
+export { bookSteps } from './steps/book-steps';
 export { createCellClips } from './steps/clip';
+export { mergesApartStep, mergesMeeting, outsideCovered } from './steps/clip-merges';
 export { FillMode, type CellClip, type CellClips, type ClipPaste } from './steps/clip.types';
+export {
+  mergeBlocked,
+  mergeCells,
+  mergeableRanges,
+  unmergeCells,
+  type CellsMerge,
+} from './steps/merge-cells';
 export { createWorkbookHistory } from './steps/history';
 export type { HistoryOptions, WorkbookHistory } from './steps/history';
-export { mapCell } from './steps/mapping';
+export { mapCell, mapCellNear, mapRange } from './steps/mapping';
+export { workbookPeers } from './collab/presence';
+export type {
+  WorkbookPeer,
+  WorkbookPlace,
+  WorkbookPresence,
+  WorkbookSelection,
+  WorkbookUser,
+} from './collab/presence.types';
 export { WORKBOOK_SCHEMA } from './collab/schema';
 export { workbookAuthority } from './collab/workbook-authority';
 export { createWorkbookDocument } from './collab/workbook-document';
@@ -244,6 +270,7 @@ export type {
   WorkbookDocument,
   WorkbookDocumentListener,
   WorkbookDocumentOptions,
+  WorkbookSnapshot,
 } from './collab/collab.types';
 export { createStepCodec } from './wire/step-codec';
 export type { StepCodec, WireWorkbookStep } from './wire/wire.types';

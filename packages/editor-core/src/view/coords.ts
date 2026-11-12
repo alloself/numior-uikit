@@ -89,12 +89,13 @@ const caretAt = (
 
     return caret === null ? undefined : { node: caret.offsetNode, offset: caret.offset };
   }
-  if (typeof doc.caretRangeFromPoint === 'function') {
-    const range = doc.caretRangeFromPoint(x, y);
-
-    return range === null ? undefined : { node: range.startContainer, offset: range.startOffset };
+  if (typeof doc.caretRangeFromPoint !== 'function') {
+    return undefined;
   }
-  return undefined;
+
+  const range = doc.caretRangeFromPoint(x, y);
+
+  return range === null ? undefined : { node: range.startContainer, offset: range.startOffset };
 };
 
 export const posAtCoords = (host: ViewHost, x: number, y: number): number | undefined => {

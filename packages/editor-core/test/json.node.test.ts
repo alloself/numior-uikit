@@ -1,6 +1,13 @@
 import * as fc from 'fast-check';
 import { describe, expect, it } from 'vite-plus/test';
-import { createDoc, fromJSON, toJSON, type DocJSONResult } from '../src';
+import {
+  createDoc,
+  fromJSON,
+  sameDocJSON,
+  toJSON,
+  type DocJSONResult,
+  type ElementNode,
+} from '../src';
 import { fixtureSchema, generateDoc } from '../src/fixtures';
 import { buildWith, notes } from './support/notes';
 
@@ -12,6 +19,35 @@ const link = fixtureSchema.mark('link', { href: 'https://numior.test' });
 const issuesOf = (result: DocJSONResult) => (result.ok ? [] : result.issues);
 
 const stamped = (root: unknown) => ({ format: 1, schema: { name: 'fixture', version: 1 }, root });
+
+const page = (
+  label: string,
+  href: string,
+  level: number,
+  id = 'p',
+  rest: readonly ElementNode[] = [],
+) =>
+  createDoc(
+    fixtureSchema,
+    fixtureSchema.element('doc', {
+      id: 'root',
+      content: [
+        fixtureSchema.element('heading', {
+          id: 'h',
+          attrs: { level },
+          content: [fixtureSchema.text('Title')],
+        }),
+        fixtureSchema.element('paragraph', {
+          id,
+          content: [
+            fixtureSchema.text(label),
+            fixtureSchema.text('site', [bold, fixtureSchema.mark('link', { href })]),
+          ],
+        }),
+        ...rest,
+      ],
+    }),
+  );
 
 describe('document JSON', () => {
   it('writes a compact versioned tree and reads it back to an equal document', () => {
@@ -80,6 +116,42 @@ describe('document JSON', () => {
         content: [{ text: 'x', marks: [{ type: 'bold' }, { type: 'link', attrs: { href: 'a' } }] }],
       },
     ]);
+  });
+
+  it('tells a copy of a written document from a document that differs anywhere', () => {
+    const written = toJSON(page('plain ', '/a', 2));
+
+    expect(sameDocJSON(written, toJSON(page('plain ', '/a', 2)))).toBe(true);
+    expect(sameDocJSON(written, structuredClone(written))).toBe(true);
+    expect(sameDocJSON(written, toJSON(page('plain', '/a', 2)))).toBe(false);
+    expect(sameDocJSON(written, toJSON(page('plain ', '/b', 2)))).toBe(false);
+    expect(sameDocJSON(written, toJSON(page('plain ', '/a', 3)))).toBe(false);
+    expect(sameDocJSON(written, toJSON(page('plain ', '/a', 2, 'other')))).toBe(false);
+
+    expect(sameDocJSON(written, toJSON(page('plain ', '/a', 2, 'p', [node('divider')])))).toBe(
+      false,
+    );
+
+    expect(sameDocJSON(written, { ...written, schema: { name: 'fixture', version: 2 } })).toBe(
+      false,
+    );
+  });
+
+  it('compares a ten-thousand-block document with its copy within the budget of a keystroke', () => {
+    const written = toJSON(generateDoc(fixtureSchema, { blocks: 10_000, seed: 5 }));
+    const copy = structuredClone(written);
+
+    const fastest = Math.min(
+      ...Array.from({ length: 8 }, () => {
+        const started = performance.now();
+
+        sameDocJSON(written, copy);
+        return performance.now() - started;
+      }),
+    );
+
+    expect(sameDocJSON(written, copy)).toBe(true);
+    expect(fastest).toBeLessThan(50);
   });
 
   it('refuses foreign formats, schemas and malformed trees with the path of each problem', () => {

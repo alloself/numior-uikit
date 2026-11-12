@@ -102,6 +102,11 @@ export class DateRangePickerDriver extends ComponentDriver {
     await nextTick();
   }
 
+  async leave(index: number): Promise<void> {
+    await this.inputs[index]?.trigger('blur');
+    await nextTick();
+  }
+
   async clickInput(index: number): Promise<void> {
     const input = this.inputs[index];
 

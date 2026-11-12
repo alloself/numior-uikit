@@ -15,7 +15,7 @@
   color: var(--nui-text);
   font-family: var(--nui-font);
   font-size: var(--nui-font-size-sm);
-  line-height: var(--nui-line-height);
+  line-height: var(--nui-line-height-label);
   overflow: hidden;
   transition:
     inline-size var(--nui-duration-normal) var(--nui-easing),
@@ -198,8 +198,8 @@
   outline-offset: calc(var(--nui-focus-ring-offset) * -1);
 }
 .nui-sidebar-group__chevron {
-  inline-size: 1em;
-  block-size: 1em;
+  inline-size: var(--nui-icon-size-sm);
+  block-size: var(--nui-icon-size-sm);
   transition: rotate var(--nui-duration-normal) var(--nui-easing);
 }
 .nui-sidebar-group--closed .nui-sidebar-group__chevron {
@@ -275,7 +275,7 @@
   color: var(--nui-text);
   font-family: var(--nui-font);
   font-size: var(--nui-font-size-sm);
-  line-height: var(--nui-line-height);
+  line-height: var(--nui-line-height-label);
   box-shadow: var(--nui-shadow-md);
   opacity: 0;
   translate: var(--_shift);

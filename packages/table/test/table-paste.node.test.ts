@@ -5,6 +5,7 @@ import { planPaste } from '../src/table/table-paste';
 
 const BOUNDS = { rows: 10, cols: 4 };
 const TEXTS = { yes: 'Да', no: 'Нет' };
+const LONG_LINES = 150_000;
 
 const range = (top: number, start: number, bottom: number, end: number) => ({
   from: { row: top, col: start },
@@ -41,6 +42,18 @@ describe('table paste', () => {
     expect(csvLine(['a;b', 'c,d'], ';')).toBe('"a;b";c,d');
   });
 
+  it('writes fields a spreadsheet would run as formulas with a leading apostrophe', () => {
+    expect(csvLine(['=1+1', '@SUM(A1)', '+cmd|x', '-2+3', '\tx', '\rx'], ',')).toBe(
+      "'=1+1,'@SUM(A1),'+cmd|x,'-2+3,'\tx,\"'\rx\"",
+    );
+
+    expect(csvLine(['-5', '+7.5', '-1 234,5', '-12%', 'a=b', '−5'], ';')).toBe(
+      '-5;+7.5;-1 234,5;-12%;a=b;−5',
+    );
+
+    expect(csvLine(['=1+1', '-2+3'], ',', { formulas: true })).toBe('=1+1,-2+3');
+  });
+
   it('pastes at the anchor, fills the selection with one value and repeats a block over a multiple', () => {
     expect(planPaste([['a', 'b']], [], { row: 2, col: 1 }, BOUNDS, 100)).toEqual({
       kind: 'cells',
@@ -71,6 +84,14 @@ describe('table paste', () => {
       '1',
       '2',
     ]);
+  });
+
+  it('measures a block of more lines than a call takes arguments', () => {
+    const block = Array.from({ length: LONG_LINES }, (_, index) => [String(index), 'x']);
+
+    const plan = planPaste(block, [], { row: 0, col: 0 }, { rows: LONG_LINES, cols: 4 }, 100);
+
+    expect(plan).toEqual({ kind: 'limit', count: LONG_LINES * 2 });
   });
 
   it('clips the block at the table edge, keeps within the limit and ignores an empty clipboard', () => {

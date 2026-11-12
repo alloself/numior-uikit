@@ -3,6 +3,7 @@ import { createNuiConfig, type EdgePoint, type NuiConfigOptions } from '@numior/
 import { promiseTimeout } from '@vueuse/core';
 import { vi } from 'vite-plus/test';
 import {
+  markRaw,
   nextTick,
   ref,
   shallowRef,
@@ -11,6 +12,11 @@ import {
   type Ref,
   type ShallowRef,
 } from 'vue';
+import {
+  commitComposed,
+  composeInto,
+  typeInto,
+} from '../../../primitives/test/support/composition';
 import { choosePageSize } from '../../../vue/test/support/page-size';
 import { dismissPopoverNatively, TopLayerStubs } from '../../../vue/test/support/top-layer';
 import { stubRowObserver, type RowObserverStub } from '../support/row-observer';
@@ -38,6 +44,8 @@ import {
   type NuiTablePins,
   type NuiTableWidths,
   type NuiTableColumnOrder,
+  type NuiTableColumnResize,
+  type NuiTableRowResize,
   type NuiTableReorderEvent,
   type NuiTableDraft,
   type NuiTableEditEvent,
@@ -52,9 +60,18 @@ import {
   type NuiTableRanges,
   type NuiTableRect,
   type NuiTableRowHeights,
+  type NuiTableScrollAnchor,
   type NuiTableWindow,
-  type TableCellPosition,
+  type NuiTableCellKey,
+  type NuiTableCellPosition,
+  type NuiTableCellStyle,
 } from '../../src';
+
+export interface EditorLayout {
+  readonly widths: readonly number[];
+  readonly visible: number;
+  readonly glyph: number;
+}
 
 export interface TableMountOptions<T> {
   readonly columns: readonly NuiTableColumnDef<T>[];
@@ -69,7 +86,7 @@ export interface TableMountOptions<T> {
   readonly widths?: NuiTableWidths;
   readonly columnOrder?: NuiTableColumnOrder;
   readonly rowHeights?: NuiTableRowHeights;
-  readonly active?: TableCellPosition;
+  readonly active?: NuiTableCellPosition;
   readonly selected?: readonly T[];
   readonly page?: number;
   readonly pageSize?: number;
@@ -134,7 +151,7 @@ interface TableModels<T> {
   readonly pageSize: ShallowRef<number>;
   readonly ranges: Ref<NuiTableRanges>;
   readonly rowHeights: ShallowRef<NuiTableRowHeights>;
-  readonly active: ShallowRef<TableCellPosition | undefined>;
+  readonly active: ShallowRef<NuiTableCellPosition | undefined>;
   readonly draft: ShallowRef<NuiTableDraft | undefined>;
 }
 
@@ -148,6 +165,8 @@ export interface TableHostState<T> extends TableModels<T> {
 export interface TableHostListeners<T> {
   readonly onRowClick: (row: T) => void;
   readonly onReorder: (event: NuiTableReorderEvent<T>) => void;
+  readonly onColumnResize: (changes: readonly NuiTableColumnResize[]) => void;
+  readonly onRowResize: (changes: readonly NuiTableRowResize[]) => void;
   readonly onWindow: (next: NuiTableWindow) => void;
   readonly onPick: (range: NuiTableRange) => void;
   readonly onEditRefused: (event: NuiTableEditRefusal<T>) => void;
@@ -164,6 +183,8 @@ interface TableEvents<T> {
   readonly loads: T[];
   readonly clicks: T[];
   readonly reorders: NuiTableReorderEvent<T>[];
+  readonly resizes: (readonly NuiTableColumnResize[])[];
+  readonly rowResizes: (readonly NuiTableRowResize[])[];
   readonly edits: NuiTableEditEvent<T>[];
   readonly refusals: NuiTableEditRefusal<T>[];
   readonly errors: unknown[];
@@ -186,7 +207,18 @@ interface DropMark {
   readonly inset?: string | undefined;
 }
 
+export interface PeerFrame {
+  readonly name: string;
+  readonly tone: string;
+  readonly below: boolean;
+  readonly top: string;
+  readonly start: string;
+  readonly areas: number;
+}
+
 const PANE_NAME = /^nui-table__pane--(?!frozen$|cols-)/;
+
+const TONE = /^nui-table-peers__peer--tone-/;
 
 const MOUNT_DEFAULTS: MountDefaults = {
   sort: [],
@@ -347,6 +379,11 @@ const isExposed = (value: unknown): value is NuiTableExposed =>
 const DETAIL_CONTROLS = 'button, input, a[href]';
 const IDLE_WAIT = 100;
 
+const nextFrame = (): Promise<number> =>
+  new Promise((resolve) => {
+    requestAnimationFrame(resolve);
+  });
+
 const nameOf = (control: Element): string =>
   control.getAttribute('aria-label') ?? control.textContent?.trim() ?? '';
 
@@ -368,7 +405,7 @@ export class TableDriver<T> {
     const pageSize = shallowRef(settings.pageSize ?? 20);
     const ranges = ref<NuiTableRanges>([]);
     const rowHeights = shallowRef<NuiTableRowHeights>(settings.rowHeights ?? {});
-    const active = shallowRef<TableCellPosition | undefined>(settings.active);
+    const active = shallowRef<NuiTableCellPosition | undefined>(settings.active);
     const draft = shallowRef<NuiTableDraft>();
 
     const props = shallowRef<TableProps<T>>({
@@ -386,6 +423,8 @@ export class TableDriver<T> {
       loads: [],
       clicks: [],
       reorders: [],
+      resizes: [],
+      rowResizes: [],
       edits: [],
       refusals: [],
       errors: [],
@@ -404,6 +443,12 @@ export class TableDriver<T> {
       },
       onReorder: (event) => {
         events.reorders.push(event);
+      },
+      onColumnResize: (changes) => {
+        events.resizes.push(changes);
+      },
+      onRowResize: (changes) => {
+        events.rowResizes.push(changes);
       },
       onWindow: (next) => {
         events.windows.push(next);
@@ -461,7 +506,7 @@ export class TableDriver<T> {
         state: { ...models, rows: source, props },
         listeners,
         dir: settings.dir,
-        slots: settings.slots ?? {},
+        slots: markRaw({ ...settings.slots }),
         onTable: setExposed,
       },
       attachTo: document.body,
@@ -570,8 +615,8 @@ export class TableDriver<T> {
     return this.wrapper.find('.nui-table').classes('nui-table--fluid');
   }
 
-  get bordered(): boolean {
-    return this.wrapper.find('.nui-table').classes('nui-table--bordered');
+  get gridlines(): boolean {
+    return this.wrapper.find('.nui-table').classes('nui-table--gridlines');
   }
 
   get slack(): boolean {
@@ -1023,6 +1068,42 @@ export class TableDriver<T> {
     return this.filterButton(col)?.getAttribute('aria-expanded') === 'true';
   }
 
+  get filterSearchable(): boolean {
+    return this.filterInput('Поиск') !== undefined;
+  }
+
+  get filterNote(): string | undefined {
+    return this.popover?.querySelector('.nui-table-filter__note')?.textContent?.trim();
+  }
+
+  get filterChosenLabels(): string[] {
+    return [
+      ...(this.popover?.querySelectorAll<HTMLElement>('.nui-table-filter__values label') ?? []),
+    ].flatMap((entry) =>
+      entry.querySelector<HTMLInputElement>('input')?.checked === true
+        ? [entry.textContent?.trim() ?? '']
+        : [],
+    );
+  }
+
+  get filterAllState(): 'all' | 'some' | 'none' | undefined {
+    const input = this.allValuesInput;
+
+    if (input === null || input === undefined) {
+      return undefined;
+    }
+    if (input.indeterminate) {
+      return 'some';
+    }
+    return input.checked ? 'all' : 'none';
+  }
+
+  private get allValuesInput(): HTMLInputElement | null | undefined {
+    return [...(this.popover?.querySelectorAll<HTMLElement>('label') ?? [])]
+      .find((entry) => entry.textContent?.trim() === 'Выбрать все')
+      ?.querySelector<HTMLInputElement>('input');
+  }
+
   filterValue(label: string): string | undefined {
     return this.filterInput(label)?.value;
   }
@@ -1049,6 +1130,14 @@ export class TableDriver<T> {
 
   get reorders(): readonly NuiTableReorderEvent<T>[] {
     return this.events.reorders;
+  }
+
+  get resizes(): readonly (readonly NuiTableColumnResize[])[] {
+    return this.events.resizes;
+  }
+
+  get rowResizes(): readonly (readonly NuiTableRowResize[])[] {
+    return this.events.rowResizes;
   }
 
   get edits(): readonly NuiTableEditEvent<T>[] {
@@ -1080,6 +1169,25 @@ export class TableDriver<T> {
     }));
   }
 
+  get peerFrames(): readonly PeerFrame[] {
+    return [
+      ...this.element.querySelectorAll<HTMLElement>(
+        '.nui-table__pane--body .nui-table-peers__peer',
+      ),
+    ].map((peer) => {
+      const cell = peer.querySelector<HTMLElement>('.nui-table-peers__cell');
+
+      return {
+        name: cell?.textContent.trim() ?? '',
+        tone: [...peer.classList].find((label) => TONE.test(label))?.replace(TONE, '') ?? '',
+        below: cell?.classList.contains('nui-table-peers__cell--flag-below') ?? false,
+        top: cell?.style.insetBlockStart ?? '',
+        start: cell?.style.insetInlineStart ?? '',
+        areas: peer.querySelectorAll('.nui-table-peers__area').length,
+      };
+    });
+  }
+
   get planeLead(): string {
     return (
       this.element
@@ -1104,7 +1212,16 @@ export class TableDriver<T> {
     return this.exposed.value?.scrollPosition();
   }
 
-  async focusCellAt(position: TableCellPosition, scroll: boolean): Promise<void> {
+  get scrollAnchor(): NuiTableScrollAnchor | undefined {
+    return this.exposed.value?.scrollAnchor();
+  }
+
+  async scrollToAnchor(anchor: NuiTableScrollAnchor): Promise<void> {
+    this.exposed.value?.scrollToAnchor(anchor);
+    await nextTick();
+  }
+
+  async focusCellAt(position: NuiTableCellPosition, scroll: boolean): Promise<void> {
     this.exposed.value?.focusCell(position, scroll);
     await nextTick();
   }
@@ -1113,7 +1230,19 @@ export class TableDriver<T> {
     return this.exposed.value?.rectOf(range);
   }
 
-  cellAtPoint(position: number, col: number): TableCellPosition | undefined {
+  keyOf(position: NuiTableCellPosition): NuiTableCellKey | undefined {
+    return this.exposed.value?.keyOf(position);
+  }
+
+  positionOf(key: NuiTableCellKey): NuiTableCellPosition | undefined {
+    return this.exposed.value?.positionOf(key);
+  }
+
+  fitWidth(text: string, style?: NuiTableCellStyle): number | undefined {
+    return this.exposed.value?.fitWidth(text, style);
+  }
+
+  cellAtPoint(position: number, col: number): NuiTableCellPosition | undefined {
     const cell = this.cell(position, col);
 
     return withPointHits(
@@ -1141,7 +1270,10 @@ export class TableDriver<T> {
     return probed;
   }
 
-  followEdge(x: number, y: number): { readonly scrollTop: number; readonly steps: number } {
+  async followEdge(
+    x: number,
+    y: number,
+  ): Promise<{ readonly scrollTop: number; readonly steps: number }> {
     let steps = 0;
 
     defineRect(
@@ -1152,6 +1284,8 @@ export class TableDriver<T> {
     this.exposed.value?.followEdge(x, y, () => {
       steps += 1;
     });
+
+    await nextFrame();
 
     const scrolled = { scrollTop: this.element.scrollTop, steps };
 
@@ -1197,6 +1331,64 @@ export class TableDriver<T> {
     return this.editorElement?.classList.contains('nui-table__editor--grow') === true;
   }
 
+  get editorSize(): number | undefined {
+    const size = this.editorElement?.style.getPropertyValue('--_size') ?? '';
+
+    return size === '' ? undefined : Number.parseFloat(size);
+  }
+
+  get editorLifted(): boolean {
+    return (this.editorElement?.style.getPropertyValue('--_lift') ?? '') !== '';
+  }
+
+  layEditorOut(layout: EditorLayout): void {
+    const editor = this.editorElement;
+    const field = this.editorField;
+    const cell = editor?.closest<HTMLElement>('.nui-table__cell');
+    const viewport = editor?.closest<HTMLElement>('.nui-table__viewport');
+
+    if (
+      !(editor instanceof HTMLElement) ||
+      !(cell instanceof HTMLElement) ||
+      !(viewport instanceof HTMLElement) ||
+      field === null
+    ) {
+      return;
+    }
+    const cells = [...(cell.parentElement?.children ?? [])];
+    const back = cell.classList.contains('nui-table__cell--align-end');
+
+    cells.reduce((left, sibling, index) => {
+      const width = layout.widths[index] ?? 0;
+
+      defineRect(sibling, new DOMRect(left, 0, width, HEAD_HEIGHT));
+      return left + width;
+    }, 0);
+
+    defineRect(viewport, new DOMRect(0, 0, layout.visible, LAYOUT_HEIGHT));
+    defineValue(viewport, 'clientWidth', layout.visible);
+    defineValue(viewport, 'offsetWidth', layout.visible);
+
+    const laidWidth = (): number => this.editorSize ?? cell.getBoundingClientRect().width;
+
+    Object.defineProperty(editor, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => {
+        const box = cell.getBoundingClientRect();
+        const width = laidWidth();
+
+        return new DOMRect(back ? box.right - width : box.left, 0, width, HEAD_HEIGHT);
+      },
+    });
+
+    Object.defineProperty(field, 'clientWidth', { configurable: true, get: laidWidth });
+
+    Object.defineProperty(field, 'scrollWidth', {
+      configurable: true,
+      get: () => Math.max(laidWidth(), field.value.length * layout.glyph),
+    });
+  }
+
   get editorValue(): string | undefined {
     return this.editorField?.value;
   }
@@ -1219,12 +1411,17 @@ export class TableDriver<T> {
   }
 
   async typeInEditor(text: string): Promise<void> {
-    const field = this.editorField;
+    typeInto(this.editorField, text);
+    await nextTick();
+  }
 
-    if (field !== null) {
-      field.value = text;
-      field.dispatchEvent(new Event('input', { bubbles: true }));
-    }
+  async composeInEditor(text: string): Promise<void> {
+    composeInto(this.editorField, text);
+    await nextTick();
+  }
+
+  async finishComposing(text: string): Promise<void> {
+    commitComposed(this.editorField, text);
     await nextTick();
   }
 
@@ -1341,9 +1538,11 @@ export class TableDriver<T> {
 
       defineRect(row, new DOMRect(0, top, LAYOUT_WIDTH, HEAD_HEIGHT));
 
-      if (row.firstElementChild) {
-        defineRect(row.firstElementChild, new DOMRect(0, top, LAYOUT_WIDTH, HEAD_HEIGHT));
+      if (!row.firstElementChild) {
+        continue;
       }
+
+      defineRect(row.firstElementChild, new DOMRect(0, top, LAYOUT_WIDTH, HEAD_HEIGHT));
     }
   }
 
@@ -1421,9 +1620,11 @@ export class TableDriver<T> {
 
     cell?.dispatchEvent(pressed);
 
-    if (!pressed.defaultPrevented) {
-      cell?.focus();
+    if (pressed.defaultPrevented) {
+      return;
     }
+
+    cell?.focus();
   }
 
   async dragRange(from: CellPosition, to: CellPosition, options: KeyOptions = {}): Promise<void> {
@@ -1475,6 +1676,16 @@ export class TableDriver<T> {
     cell?.dispatchEvent(new PointerEvent('pointerdown', init));
     cell?.dispatchEvent(new PointerEvent('pointerup', init));
     cell?.dispatchEvent(new MouseEvent('click', init));
+    await nextTick();
+  }
+
+  async tapRowResizer(position: number): Promise<void> {
+    const handle = this.rowResizer(position);
+    const init = { bubbles: true, cancelable: true, button: 0, pointerType: 'touch', pointerId: 3 };
+
+    handle?.dispatchEvent(new PointerEvent('pointerdown', init));
+    window.dispatchEvent(new PointerEvent('pointerup', init));
+    handle?.dispatchEvent(new MouseEvent('click', init));
     await nextTick();
   }
 
@@ -1601,9 +1812,11 @@ export class TableDriver<T> {
   selectText(position: number, col: number): void {
     const cell = this.cell(position, col);
 
-    if (cell !== null) {
-      window.getSelection()?.selectAllChildren(cell);
+    if (cell === null) {
+      return;
     }
+
+    window.getSelection()?.selectAllChildren(cell);
   }
 
   get textSelection(): string {
@@ -1663,12 +1876,17 @@ export class TableDriver<T> {
   }
 
   rowDragging(position: number): boolean {
-    return this.row(position)?.classList.contains('nui-table__row--dragging') ?? false;
+    return (
+      this.row(this.pinnedShown + position)?.classList.contains('nui-table__row--dragging') ?? false
+    );
+  }
+
+  private get pinnedShown(): number {
+    return this.element.querySelectorAll('.nui-table__pinned > [role="row"]').length;
   }
 
   private rowY(position: number, side: DropSide): number {
-    const pinned = this.element.querySelectorAll('.nui-table__pinned > [role="row"]').length;
-    const top = (this.headRows + pinned + position) * HEAD_HEIGHT;
+    const top = (this.headRows + this.pinnedShown + position) * HEAD_HEIGHT;
 
     switch (side) {
       case 'before':
@@ -1681,7 +1899,7 @@ export class TableDriver<T> {
   }
 
   async grabRow(position: number): Promise<void> {
-    const grip = this.rowGrip(position);
+    const grip = this.rowGrip(this.pinnedShown + position);
 
     if (grip === null) {
       throw new Error(`Row ${position} has no drag grip`);
@@ -1946,6 +2164,11 @@ export class TableDriver<T> {
     await dragHandle(this.resizer(col), `column ${col}`, dx);
   }
 
+  async resetResizer(col: number): Promise<void> {
+    this.resizer(col)?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    await nextTick();
+  }
+
   get windowFrame(): TableWindowFrameText | undefined {
     const grid = this.element.querySelector<HTMLElement>('.nui-table__grid');
     const lead = this.element.style.getPropertyValue('--_window-lead');
@@ -1983,10 +2206,7 @@ export class TableDriver<T> {
   }
 
   async nextPaint(): Promise<void> {
-    await new Promise((resolve) => {
-      requestAnimationFrame(resolve);
-    });
-
+    await nextFrame();
     await promiseTimeout(0);
     await flushPromises();
   }
@@ -2104,6 +2324,21 @@ export class TableDriver<T> {
     await nextTick();
   }
 
+  async chooseAllValues(): Promise<void> {
+    this.allValuesInput?.click();
+    await nextTick();
+  }
+
+  async searchFilterValues(text: string): Promise<void> {
+    const input = this.filterInput('Поиск');
+
+    if (input !== undefined) {
+      input.value = text;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    await flushPromises();
+  }
+
   async applyFilter(): Promise<void> {
     const settled = this.nextSettle();
 
@@ -2149,6 +2384,14 @@ export class TableDriver<T> {
     await nextTick();
   }
 
+  async handViewAgain(): Promise<void> {
+    this.models.sort.value = this.models.sort.value.map((entry) => ({ ...entry }));
+    this.models.filters.value = this.models.filters.value.map((filter) => ({ ...filter }));
+    this.models.groupBy.value = [...this.models.groupBy.value];
+    this.models.expanded.value = [...this.models.expanded.value];
+    await nextTick();
+  }
+
   async setGroupBy(keys: readonly string[]): Promise<void> {
     const settled = this.nextSettle();
 
@@ -2165,7 +2408,7 @@ export class TableDriver<T> {
     await nextTick();
   }
 
-  get activeModel(): TableCellPosition | undefined {
+  get activeModel(): NuiTableCellPosition | undefined {
     return this.models.active.value;
   }
 
@@ -2173,7 +2416,7 @@ export class TableDriver<T> {
     return this.models.draft.value;
   }
 
-  async setActive(next: TableCellPosition): Promise<void> {
+  async setActive(next: NuiTableCellPosition): Promise<void> {
     this.models.active.value = next;
     await nextTick();
   }
@@ -2202,7 +2445,24 @@ export class TableDriver<T> {
     await nextTick();
   }
 
-  async focusCellByRef(position: TableCellPosition): Promise<boolean> {
+  async moveActive(position: NuiTableCellPosition): Promise<boolean> {
+    const moved = this.exposed.value?.moveActive(position) ?? false;
+
+    await nextTick();
+    return moved;
+  }
+
+  get editorCaret(): readonly [number | null, number | null] | undefined {
+    const field = this.editorField;
+
+    return field === null ? undefined : [field.selectionStart, field.selectionEnd];
+  }
+
+  placeEditorCaret(start: number, end: number): void {
+    this.editorField?.setSelectionRange(start, end);
+  }
+
+  async focusCellByRef(position: NuiTableCellPosition): Promise<boolean> {
     const focused = this.exposed.value?.focusCell(position) ?? false;
 
     await nextTick();
@@ -2230,6 +2490,10 @@ export class TableDriver<T> {
     this.models.sort.value = next;
     await settled;
     await nextTick();
+  }
+
+  async setSlots(slots: TableSlotViews): Promise<void> {
+    await this.wrapper.setProps({ slots: markRaw({ ...slots }) });
   }
 
   async setSource(rows: readonly T[]): Promise<void> {

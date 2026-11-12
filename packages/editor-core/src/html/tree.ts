@@ -122,9 +122,11 @@ const open = (stack: OpenElement[], token: Extract<HtmlToken, { kind: 'open' }>)
   const opened = openElement(token.tag, token.attrs);
 
   top(stack)?.children.push(opened.element);
-  if (!token.closed && !VOID.has(token.tag)) {
-    stack.push(opened);
+  if (token.closed || VOID.has(token.tag)) {
+    return;
   }
+
+  stack.push(opened);
 };
 
 const close = (stack: OpenElement[], tag: string): void => {

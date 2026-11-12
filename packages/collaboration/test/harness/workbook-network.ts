@@ -12,41 +12,43 @@ import {
   type Calculator,
   type CellEdit,
   type Workbook,
+  type WorkbookDocument,
   type WorkbookHistory,
   type WorkbookStep,
 } from '@numior/spreadsheet/core';
-import { createRoom, type RoomPeer } from '../../server/room';
-import {
-  ClientMessageKind,
-  createCollabClient,
-  type ClientMessage,
-  type CollabClient,
-  type ServerMessage,
-  type TransportListener,
-} from '../../src';
+import { createRoom } from '../../server/room';
+import { createCollabClient, type CollabClient } from '../../src';
+import { RETRY, createTraffic, createWire, mendAll, settleAll, type NetworkTraffic } from './wire';
 
 export interface BookClient {
   readonly book: Workbook;
   readonly calculator: Calculator;
   readonly history: WorkbookHistory;
+  readonly document: WorkbookDocument;
   readonly status: CollabClient['status'];
   readonly commit: (steps: readonly WorkbookStep[]) => boolean;
   readonly undo: () => void;
   readonly redo: () => void;
   readonly toServer: () => boolean;
   readonly toClient: () => boolean;
+  readonly cut: () => void;
+  readonly relink: () => void;
+  readonly late: () => boolean;
   readonly dump: () => string;
   readonly text: (sheet: string, row: number, col: number) => string;
+  readonly stop: () => void;
 }
 
 export interface BookNetwork {
   readonly clients: readonly BookClient[];
   readonly settle: () => void;
+  readonly mend: () => void;
+  readonly traffic: () => NetworkTraffic;
+  readonly newcomer: () => string;
+  readonly close: () => void;
 }
 
-const WHOLE = { top: 0, left: 0, bottom: 1_048_575, right: 16_383 };
-
-const overTheWire = (value: unknown): unknown => JSON.parse(JSON.stringify(value));
+export const WHOLE = { top: 0, left: 0, bottom: 1_048_575, right: 16_383 };
 
 export const SHEET = 'Sheet1';
 
@@ -114,9 +116,11 @@ const dumpBook = (book: Workbook, calculator: Calculator): string => {
     sheet.cells.forEachInRange(WHOLE, remember);
 
     calculator.forEachFormula((owner, row, col) => {
-      if (owner === sheet) {
-        remember(row, col);
+      if (owner !== sheet) {
+        return;
       }
+
+      remember(row, col);
     });
 
     const formats: string[] = [];
@@ -142,12 +146,10 @@ export const createBookNetwork = (
 ): BookNetwork => {
   const authority = workbookAuthority(seed);
   const room = createRoom(authority);
+  const traffic = createTraffic();
 
   const clients = names.map((name): BookClient => {
-    const toServer: ClientMessage[] = [];
-    const toClient: ServerMessage[] = [];
-    let listener: TransportListener | undefined;
-
+    const wire = createWire(room, name, traffic);
     const book = createWorkbook();
     const calculator = createCalculator(book);
     const document = createWorkbookDocument({ book, calculator });
@@ -155,40 +157,22 @@ export const createBookNetwork = (
 
     document.follow(history);
 
-    const peer: RoomPeer = {
-      clientId: name,
-      send: (message) => {
-        toClient.push(message);
-      },
-    };
-
     const client = createCollabClient({
       doc: 'book',
       clientId: name,
       schema: WORKBOOK_SCHEMA,
       document,
-      transport: {
-        open: (opened) => {
-          listener = opened;
-
-          return {
-            send: (message) => {
-              toServer.push(message);
-            },
-            close: () => {
-              listener = undefined;
-            },
-          };
-        },
-      },
+      transport: wire.transport,
+      retry: RETRY,
     });
 
-    listener?.opened();
+    wire.open();
 
     return {
       book,
       calculator,
       history,
+      document,
       status: client.status,
       commit: (steps) => {
         const outcome = history.commit(steps);
@@ -204,45 +188,40 @@ export const createBookNetwork = (
         history.redo();
         client.sync();
       },
-      toServer: () => {
-        const message = toServer.shift();
-
-        if (message === undefined) {
-          return false;
-        }
-        if (message.kind === ClientMessageKind.Hello) {
-          room.join(peer, message);
-        } else {
-          room.receive(peer, message);
-        }
-        return true;
-      },
-      toClient: () => {
-        const message = toClient.shift();
-
-        if (message === undefined) {
-          return false;
-        }
-        listener?.message(overTheWire(message));
-        return true;
-      },
+      toServer: wire.toServer,
+      toClient: wire.toClient,
+      cut: wire.cut,
+      relink: wire.relink,
+      late: wire.late,
       dump: () => dumpBook(book, calculator),
       text: (sheet, row, col) => contentText(calculator, book, sheet, row, col),
+      stop: client.stop,
     };
   });
 
   const settle = (): void => {
-    let moved = true;
-
-    while (moved) {
-      moved = clients.reduce(
-        (any, client) => [client.toServer(), client.toClient()].some(Boolean) || any,
-        false,
-      );
-    }
+    settleAll(clients);
   };
 
   settle();
 
-  return { clients, settle };
+  const close = (): void => {
+    clients.forEach((client) => {
+      client.stop();
+    });
+  };
+
+  const mend = (): void => {
+    mendAll(clients);
+  };
+
+  const newcomer = (): string => {
+    const book = createWorkbook();
+    const calculator = createCalculator(book);
+    const document = createWorkbookDocument({ book, calculator });
+
+    return document.load(authority.snapshot(), 0) ? dumpBook(book, calculator) : '';
+  };
+
+  return { clients, settle, mend, traffic: () => ({ ...traffic }), newcomer, close };
 };

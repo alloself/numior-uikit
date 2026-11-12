@@ -42,12 +42,14 @@ const usDays = (start: CivilDate, end: CivilDate): readonly [number, number] => 
 
 const febTwentyNinthBetween = (start: CivilDate, from: number, to: number): boolean => {
   for (let year = start.year; year <= civilOf(to).year; year += 1) {
-    if (isLeapYear(year)) {
-      const leapDay = serialOfDate(year, 2, 29);
+    if (!isLeapYear(year)) {
+      continue;
+    }
 
-      if (leapDay >= from && leapDay <= to) {
-        return true;
-      }
+    const leapDay = serialOfDate(year, 2, 29);
+
+    if (leapDay >= from && leapDay <= to) {
+      return true;
     }
   }
   return false;

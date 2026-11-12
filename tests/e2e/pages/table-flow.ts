@@ -57,6 +57,14 @@ export class TableFlowSection extends TableCellsSection {
     );
   }
 
+  async reachOf(position: number, from: number): Promise<number> {
+    const { cell, piece } = await this.pieceOf(position, from);
+
+    const pad = piece.x - cell.x;
+
+    return from + Math.ceil((piece.width + 2 * pad) / cell.width) - 1;
+  }
+
   spills(position: number): Promise<number[]> {
     return this.row(position).evaluate((row) =>
       [...row.querySelectorAll(':scope > .nui-table__cell--spill')].map(

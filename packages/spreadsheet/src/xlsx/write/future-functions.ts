@@ -1,9 +1,36 @@
-import { FormulaNodeKind, UnaryOperator, type FormulaNode } from '../../core/formula/formula.types';
+import { lambdaNames, letNames } from '../../core/calc/signatures';
+import type { CellAddress } from '../../core/cell.types';
+import {
+  FormulaNodeKind,
+  FormulaReferenceKind,
+  UnaryOperator,
+  type FormulaNode,
+} from '../../core/formula/formula.types';
+import { FILE_FORMULAS } from '../../core/formula/locale';
+import { printFormula } from '../../core/formula/printer';
+import { foldFormula, operandsOf, withChildren } from '../../core/formula/walk';
+
+interface Parameter {
+  readonly key: string;
+  readonly text: string;
+}
+
+type Declares = (index: number, count: number) => boolean;
+
+const PARAMETER = '_xlpm.';
+
+const DECLARING: ReadonlyMap<string, Declares> = new Map([
+  ['LET', letNames],
+  ['LAMBDA', lambdaNames],
+]);
 
 const WORKSHEET_FUNCTIONS = new Set(['FILTER', 'SORT']);
 
 const FUTURE_FUNCTIONS = new Set([
+  'ACOT',
+  'ACOTH',
   'AGGREGATE',
+  'ANCHORARRAY',
   'ARABIC',
   'ARRAYTOTEXT',
   'BASE',
@@ -40,6 +67,7 @@ const FUTURE_FUNCTIONS = new Set([
   'CSCH',
   'DAYS',
   'DECIMAL',
+  'DETECTLANGUAGE',
   'DROP',
   'ENCODEURL',
   'ERF.PRECISE',
@@ -51,6 +79,7 @@ const FUTURE_FUNCTIONS = new Set([
   'F.INV',
   'F.INV.RT',
   'F.TEST',
+  'FIELDVALUE',
   'FILTERXML',
   'FLOOR.MATH',
   'FLOOR.PRECISE',
@@ -65,6 +94,7 @@ const FUTURE_FUNCTIONS = new Set([
   'GAMMA.INV',
   'GAMMALN.PRECISE',
   'GAUSS',
+  'GROUPBY',
   'HSTACK',
   'HYPGEOM.DIST',
   'IFNA',
@@ -74,6 +104,8 @@ const FUTURE_FUNCTIONS = new Set([
   'IMCOT',
   'IMCSC',
   'IMCSCH',
+  'IMPORTCSV',
+  'IMPORTTEXT',
   'IMSEC',
   'IMSECH',
   'IMSINH',
@@ -101,10 +133,12 @@ const FUTURE_FUNCTIONS = new Set([
   'PDURATION',
   'PERCENTILE.EXC',
   'PERCENTILE.INC',
+  'PERCENTOF',
   'PERCENTRANK.EXC',
   'PERCENTRANK.INC',
   'PERMUTATIONA',
   'PHI',
+  'PIVOTBY',
   'POISSON.DIST',
   'QUARTILE.EXC',
   'QUARTILE.INC',
@@ -112,6 +146,9 @@ const FUTURE_FUNCTIONS = new Set([
   'RANK.AVG',
   'RANK.EQ',
   'REDUCE',
+  'REGEXEXTRACT',
+  'REGEXREPLACE',
+  'REGEXTEST',
   'RRI',
   'SCAN',
   'SEC',
@@ -123,6 +160,7 @@ const FUTURE_FUNCTIONS = new Set([
   'SORTBY',
   'STDEV.P',
   'STDEV.S',
+  'STOCKHISTORY',
   'SWITCH',
   'T.DIST',
   'T.DIST.2T',
@@ -137,6 +175,8 @@ const FUTURE_FUNCTIONS = new Set([
   'TEXTSPLIT',
   'TOCOL',
   'TOROW',
+  'TRANSLATE',
+  'TRIMRANGE',
   'UNICHAR',
   'UNICODE',
   'UNIQUE',
@@ -161,37 +201,99 @@ const prefixed = (name: string): string => {
   return FUTURE_FUNCTIONS.has(name) ? `_xlfn.${name}` : name;
 };
 
-const mapped = (nodes: readonly FormulaNode[]): readonly FormulaNode[] => {
-  const result = nodes.map(withFuturePrefixes);
+const parameterOf = (node: FormulaNode, place: CellAddress): Parameter | undefined => {
+  const own =
+    (node.kind === FormulaReferenceKind.Name || node.kind === FormulaReferenceKind.Cell) &&
+    node.sheet === undefined &&
+    node.book === undefined;
 
-  return result.every((node, index) => node === nodes[index]) ? nodes : result;
+  if (!own) {
+    return undefined;
+  }
+  if (node.kind === FormulaReferenceKind.Name) {
+    return { key: node.name.toUpperCase(), text: node.name };
+  }
+  if (node.ref.rowAbsolute || node.ref.colAbsolute) {
+    return undefined;
+  }
+
+  const text = printFormula(node, FILE_FORMULAS, place);
+
+  return { key: text.toUpperCase(), text };
 };
 
-export const withFuturePrefixes = (node: FormulaNode): FormulaNode => {
+const parameterNode = (text: string): FormulaNode => ({
+  kind: FormulaReferenceKind.Name,
+  name: `${PARAMETER}${text}`,
+});
+
+const renamed = (
+  node: FormulaNode,
+  visible: ReadonlyMap<string, string>,
+  place: CellAddress,
+): FormulaNode =>
+  visible.size === 0
+    ? node
+    : foldFormula<FormulaNode>(
+        node,
+        (item, parts) => {
+          const key = parameterOf(item, place)?.key;
+          const text = key === undefined ? undefined : visible.get(key);
+
+          return text === undefined ? withChildren(item, parts) : parameterNode(text);
+        },
+        operandsOf,
+      );
+
+const withParameters = (
+  name: string,
+  parts: readonly FormulaNode[],
+  place: CellAddress,
+): readonly FormulaNode[] => {
+  const declares = DECLARING.get(name.toUpperCase());
+
+  if (declares === undefined) {
+    return parts;
+  }
+
+  const visible = new Map<string, string>();
+  const named: FormulaNode[] = [];
+
+  for (const [index, part] of parts.entries()) {
+    const parameter = declares(index, parts.length) ? parameterOf(part, place) : undefined;
+
+    if (parameter === undefined) {
+      named.push(renamed(part, visible, place));
+      continue;
+    }
+
+    named.push(parameterNode(parameter.text));
+    visible.set(parameter.key, parameter.text);
+  }
+  return named;
+};
+
+const prefixedNode = (
+  node: FormulaNode,
+  parts: readonly FormulaNode[],
+  place: CellAddress,
+): FormulaNode => {
   switch (node.kind) {
     case FormulaNodeKind.Call: {
       const name = prefixed(node.name);
-      const args = mapped(node.args);
+      const args = withParameters(node.name, parts, place);
+      const rebuilt = withChildren(node, args);
 
-      return name === node.name && args === node.args ? node : { ...node, name, args };
+      return name === node.name ? rebuilt : { ...node, name, args };
     }
     case FormulaNodeKind.Unary:
-    case FormulaNodeKind.Percent: {
-      const operand = withFuturePrefixes(node.operand);
-
-      if (node.kind === FormulaNodeKind.Unary && node.op === UnaryOperator.Intersect) {
-        return { kind: 'call', name: '_xlfn.SINGLE', args: [operand] };
-      }
-
-      return operand === node.operand ? node : { ...node, operand };
-    }
-    case FormulaNodeKind.Binary: {
-      const left = withFuturePrefixes(node.left);
-      const right = withFuturePrefixes(node.right);
-
-      return left === node.left && right === node.right ? node : { ...node, left, right };
-    }
+      return node.op === UnaryOperator.Intersect
+        ? { kind: 'call', name: '_xlfn.SINGLE', args: [parts[0] ?? node.operand] }
+        : withChildren(node, parts);
     default:
-      return node;
+      return withChildren(node, parts);
   }
 };
+
+export const withFuturePrefixes = (node: FormulaNode, place: CellAddress): FormulaNode =>
+  foldFormula<FormulaNode>(node, (item, parts) => prefixedNode(item, parts, place), operandsOf);

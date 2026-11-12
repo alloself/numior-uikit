@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { RU_LOCALE, validDefinedName } from '../src/core';
+import { RU_LOCALE, validDefinedName, validTableName } from '../src/core';
 import { openBook } from './book-harness';
 
 describe('defined names', () => {
@@ -147,11 +147,19 @@ describe('defined names', () => {
   });
 
   it('refuses names that Excel refuses and reads definitions in the book locale', () => {
-    expect(['Rate', 'ставка', '_x.1', 'Tax_2024'].every(validDefinedName)).toBe(true);
+    expect(
+      ['Rate', 'ставка', '_x.1', 'Tax_2024', '\\', '\\ab', '\\1a', 'a?b', 'a\\b', '_?'].every(
+        validDefinedName,
+      ),
+    ).toBe(true);
 
-    expect(['A1', 'r1c1', 'R', 'TRUE', '1x', 'a b', 'XFD1', 'Tax2024'].some(validDefinedName)).toBe(
-      false,
-    );
+    expect(
+      ['A1', 'r1c1', 'R', 'TRUE', '1x', 'a b', 'XFD1', 'Tax2024', '?a', '\\a', '\\1', '\\_'].some(
+        validDefinedName,
+      ),
+    ).toBe(false);
+
+    expect(['\\a', '\\1', 'a?b'].every(validTableName)).toBe(true);
 
     const sheet = openBook(RU_LOCALE);
 

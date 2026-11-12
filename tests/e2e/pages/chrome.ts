@@ -95,9 +95,11 @@ export class ChromeSection {
     return this.tocArticle.evaluate((element, target) => {
       const heading = element.querySelector(`#${target}`);
 
-      if (heading instanceof HTMLElement && element instanceof HTMLElement) {
-        element.scrollTop = heading.offsetTop - element.offsetTop;
+      if (!(heading instanceof HTMLElement) || !(element instanceof HTMLElement)) {
+        return;
       }
+
+      element.scrollTop = heading.offsetTop - element.offsetTop;
     }, id);
   }
 

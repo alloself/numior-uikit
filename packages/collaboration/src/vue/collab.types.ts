@@ -1,9 +1,10 @@
 import type { Doc, DocJSON, IdSource, Plugin, Schema } from '@numior/editor-core';
-import type { NuiEditorApi } from '@numior/editor-vue';
+import type { NuiEditorApi, NuiEditorSelectionAction } from '@numior/editor-vue';
 import type { ComputedRef, Ref, ShallowRef } from 'vue';
 import type { NuiCollabMessages } from './collab.messages';
 import type {
   CollabAlternative,
+  CollabFailureView,
   CollabPersistence,
   CollabReport,
   CollabStatus,
@@ -39,6 +40,8 @@ export interface CollabEditor {
   readonly alternatives: CollabAlternatives;
   readonly readOnly: Readonly<Ref<boolean>>;
   readonly report: Readonly<ShallowRef<CollabReport | undefined>>;
+  readonly failure: Readonly<ShallowRef<CollabFailureView | undefined>>;
+  readonly rejoin: () => Promise<void>;
 }
 
 export interface NuiCollabCaretsProps {
@@ -51,8 +54,13 @@ export interface NuiCollabReportProps {
   labels?: Partial<Omit<NuiCollabMessages, 'present'>> | undefined;
 }
 
+export interface NuiCollabFailureProps {
+  failure: CollabFailureView;
+  labels?: Partial<Omit<NuiCollabMessages, 'present'>> | undefined;
+}
+
 export interface NuiCollabPresenceProps {
-  peers: readonly RemotePeer[];
+  peers: readonly Pick<RemotePeer, 'user'>[];
   max?: number | undefined;
   label?: string | undefined;
 }
@@ -68,15 +76,30 @@ export interface CommentThreadView extends CommentThread {
   readonly lost: boolean;
 }
 
+export interface CommentSpot {
+  readonly from: number;
+  readonly to: number;
+}
+
+export interface NuiEditorCommentPopoverProps {
+  comments: CollabComments;
+  editor: NuiEditorApi | undefined;
+  labels?: Partial<Omit<NuiCollabMessages, 'present'>> | undefined;
+}
+
 export interface CollabComments {
   readonly plugin: Plugin;
   readonly user: PresenceUser;
   readonly threads: ComputedRef<readonly CommentThreadView[]>;
   readonly active: Readonly<ShallowRef<string | undefined>>;
+  readonly opened: Readonly<ShallowRef<string | undefined>>;
   readonly drafting: Readonly<Ref<boolean>>;
-  readonly canAdd: Readonly<Ref<boolean>>;
   readonly failed: Readonly<Ref<boolean>>;
-  readonly start: () => void;
+  readonly revision: Readonly<Ref<number>>;
+  readonly action: ComputedRef<NuiEditorSelectionAction>;
+  readonly spot: () => CommentSpot | undefined;
+  readonly openAt: (pos: number) => void;
+  readonly close: () => void;
   readonly cancel: () => void;
   readonly submit: (body: string) => Promise<boolean>;
   readonly reply: (id: string, body: string) => Promise<boolean>;
@@ -129,6 +152,7 @@ export interface NuiEditorCommentFormProps {
   placeholder: string;
   text: NuiCollabMessages;
   submit: (body: string) => Promise<boolean>;
+  autofocus?: boolean | undefined;
 }
 
 export interface NuiEditorCommentEntryProps {
@@ -137,6 +161,7 @@ export interface NuiEditorCommentEntryProps {
 }
 
 export interface NuiEditorCommentThreadProps {
+  inline?: boolean | undefined;
   comments: CollabComments;
   thread: CommentThreadView;
   text: NuiCollabMessages;

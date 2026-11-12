@@ -20,8 +20,10 @@ import type { NuiMenuRadioGroupEntry } from './menu.types';
 const { entry } = defineProps<{ entry: NuiMenuRadioGroupEntry }>();
 
 const change = (value: string | undefined): void => {
-  if (value !== undefined) {
-    entry.onChange(value);
+  if (value === undefined) {
+    return;
   }
+
+  entry.onChange(value);
 };
 </script>

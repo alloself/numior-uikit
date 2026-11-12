@@ -59,9 +59,11 @@ const marksWhere = (
   doc.nodesBetween(from, to, (node, _pos, parent) => {
     if (node.kind === ContentNodeKind.Text) {
       for (const mark of node.marks) {
-        if (keep(mark, parent) && !holds(found, mark)) {
-          found.push(mark);
+        if (!keep(mark, parent) || holds(found, mark)) {
+          continue;
         }
+
+        found.push(mark);
       }
     }
     return true;
@@ -121,11 +123,13 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
 
   const place = (nodes: readonly ContentNode[]): void => {
     for (const node of nodes) {
-      if (node.kind === ContentNodeKind.Element) {
-        unplaced.delete(node.id);
-        seeded?.reserve(node.id);
-        place(node.content);
+      if (node.kind !== ContentNodeKind.Element) {
+        continue;
       }
+
+      unplaced.delete(node.id);
+      seeded?.reserve(node.id);
+      place(node.content);
     }
   };
 
@@ -159,9 +163,11 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
   };
 
   const markStep = (span: Span | undefined, make: (span: Span) => Step): void => {
-    if (span !== undefined) {
-      maybeStep(make(span));
+    if (span === undefined) {
+      return;
     }
+
+    maybeStep(make(span));
   };
 
   const transform: Transform = {
@@ -221,8 +227,11 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
     insert: (pos, content) => transform.replace(pos, pos, { content, openStart: 0, openEnd: 0 }),
     delete: (from, to) => transform.replace(from, to),
     insertText: (text, from, to = from, marks) => {
-      const before = doc.resolve(from).nodeBefore;
-      const kept = marks ?? (before?.kind === ContentNodeKind.Text ? before.marks : []);
+      const { nodeBefore: before, parent } = doc.resolve(from);
+
+      const kept = (marks ?? (before?.kind === ContentNodeKind.Text ? before.marks : [])).filter(
+        (mark) => allows(doc, parent, mark.type),
+      );
 
       return text === ''
         ? transform.delete(from, to)

@@ -54,6 +54,19 @@ describe('NuiTable pinned rows', () => {
     expect(grid.cellText(2, 1)).toBe('Сотрудник 79');
   });
 
+  it('pages by the body rows that fit under the header and the pinned rows', async () => {
+    const grid = mountPeople();
+    await grid.settle();
+    await grid.focusCell(2, 2);
+    await grid.press('PageDown');
+
+    expect(grid.focusedCell).toEqual({ row: 6, col: 2 });
+
+    await grid.press('PageUp');
+
+    expect(grid.focusedCell).toEqual({ row: 2, col: 2 });
+  });
+
   it('walks from the header through the pinned rows into the body and selects pinned rows', async () => {
     const grid = mountPeople({ props: { pinnedRows: PINNED, selectable: 'multiple' } });
     await grid.settle();

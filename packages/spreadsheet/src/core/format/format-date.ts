@@ -1,6 +1,6 @@
 import { civilOf, mondayIndex, type CivilDate } from '../calc/serials';
 import { DateUnit, FormatTokenKind, type FormatToken, type NumberLocale } from './format.types';
-import { createOutput, type Output } from './output';
+import { createOutput, pushFill, pushText, type Output } from './output';
 
 type DateToken = Extract<FormatToken, { kind: typeof FormatTokenKind.Date }>;
 
@@ -49,20 +49,7 @@ const momentOf = (serial: number, precision: number): Moment | undefined => {
   };
 };
 
-const dayBefore = (tokens: readonly FormatToken[], index: number): boolean =>
-  tokens
-    .slice(0, index)
-    .some(
-      (token) =>
-        token.kind === FormatTokenKind.Date && token.unit === DateUnit.Day && token.width <= 2,
-    );
-
-const monthText = (
-  width: number,
-  month: number,
-  locale: NumberLocale,
-  genitive: boolean,
-): string => {
+const monthText = (width: number, month: number, locale: NumberLocale): string => {
   const index = month - 1;
 
   switch (width) {
@@ -75,7 +62,7 @@ const monthText = (
     case 5:
       return (locale.months[index] ?? '').charAt(0);
     default:
-      return (genitive ? locale.monthsGenitive : locale.months)[index] ?? '';
+      return locale.months[index] ?? '';
   }
 };
 
@@ -150,23 +137,12 @@ const clockText = (
   }
 };
 
-const dateText = (
-  tokens: readonly FormatToken[],
-  index: number,
-  token: DateToken,
-  moment: Moment,
-  locale: NumberLocale,
-): string | undefined => {
+const dateText = (token: DateToken, moment: Moment, locale: NumberLocale): string | undefined => {
   switch (token.unit) {
     case DateUnit.Year:
       return token.width <= 2 ? two(moment.date.year % 100) : String(moment.date.year);
     case DateUnit.Month:
-      return monthText(
-        token.width > 5 ? 4 : token.width,
-        moment.date.month,
-        locale,
-        dayBefore(tokens, index),
-      );
+      return monthText(token.width > 5 ? 4 : token.width, moment.date.month, locale);
     case DateUnit.Day:
       return dayText(token.width, moment, locale);
     default:
@@ -191,15 +167,13 @@ export const formatDateSection = (
     (token) => token.kind === FormatTokenKind.Date && token.unit === DateUnit.Ampm,
   );
 
-  tokens.forEach((token, index) => {
+  tokens.forEach((token) => {
     if (token.kind === FormatTokenKind.Date) {
-      output.push(
-        dateText(tokens, index, token, moment, locale) ?? clockText(token, moment, twelve, locale),
-      );
+      pushText(output, dateText(token, moment, locale) ?? clockText(token, moment, twelve, locale));
     } else if (token.kind === FormatTokenKind.Fill) {
-      output.fill(token.char);
+      pushFill(output, token.char);
     } else if (token.kind === FormatTokenKind.Literal) {
-      output.push(token.text);
+      pushText(output, token.text);
     }
   });
 

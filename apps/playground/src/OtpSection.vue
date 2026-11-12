@@ -121,9 +121,11 @@ const verify = (code: string): void => {
 
   setTimeout(() => {
     state.value = code === RIGHT_CODE ? 'passed' : 'failed';
-    if (state.value === 'failed') {
-      sms.value = '';
+    if (state.value !== 'failed') {
+      return;
     }
+
+    sms.value = '';
   }, CHECK_DELAY);
 };
 
@@ -149,9 +151,11 @@ const output = computed(() =>
 );
 
 watch(sms, (value) => {
-  if (state.value === 'failed' && value !== '') {
-    state.value = 'waiting';
+  if (state.value !== 'failed' || value === '') {
+    return;
   }
+
+  state.value = 'waiting';
 });
 
 onMounted(startCountdown);

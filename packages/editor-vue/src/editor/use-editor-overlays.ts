@@ -1,29 +1,35 @@
 import {
+  canMark,
   insertMarked,
   markAttrs,
   markExtent,
   SelectionKind,
   selectionRange,
   setMark,
+  textPosition,
   type Command,
+  type Doc,
   type EditorState,
+  type SelectionRange,
 } from '@numior/editor-core';
 import type { EditorView } from '@numior/editor-core/view';
 import { useEventListener } from '@vueuse/core';
-import { computed, ref, watch, type ComputedRef, type Ref } from 'vue';
+import { computed, onScopeDispose, ref, watch, type ComputedRef, type Ref } from 'vue';
 import type { ColourMark } from '../toolbar/toolbar.types';
 
 export interface EditorOverlayOptions {
   readonly frame: Readonly<Ref<HTMLElement | null>>;
   readonly content: Readonly<Ref<HTMLElement | null>>;
-  readonly anchor: Readonly<Ref<HTMLElement | null>>;
+  readonly range: Readonly<Ref<HTMLElement | null>>;
+  readonly watchLayout: (listener: () => void) => () => void;
+  readonly bar: () => number;
   readonly view: () => EditorView | undefined;
   readonly state: () => EditorState;
   readonly run: (command: Command) => boolean;
   readonly focus: () => void;
   readonly bubble: () => boolean;
   readonly caret: () => boolean;
-  readonly editable: () => boolean;
+  readonly active: () => boolean;
 }
 
 export interface EditorOverlays {
@@ -42,8 +48,23 @@ export interface EditorOverlays {
   readonly onPointerdown: (event: PointerEvent) => void;
 }
 
-const isRange = (state: EditorState): boolean =>
-  state.selection.kind === SelectionKind.Text && state.selection.anchor !== state.selection.head;
+const wholeText = (doc: Doc): SelectionRange | undefined => {
+  const from = textPosition(doc, 0, 1);
+  const to = textPosition(doc, doc.size, -1);
+
+  return from === undefined || to === undefined ? undefined : { from, to };
+};
+
+const shownRange = ({ doc, selection }: EditorState): SelectionRange =>
+  (selection.kind === SelectionKind.All ? wholeText(doc) : undefined) ??
+  selectionRange(doc, selection);
+
+const isRange = (state: EditorState): boolean => {
+  const { kind } = state.selection;
+  const { from, to } = shownRange(state);
+
+  return (kind === SelectionKind.Text || kind === SelectionKind.All) && from < to;
+};
 
 const hrefOf = (state: EditorState): string | undefined => {
   const href = markAttrs(state, 'link')?.href;
@@ -61,7 +82,7 @@ export const useEditorOverlays = (options: EditorOverlayOptions): EditorOverlays
   const bubbleOpen = computed(
     () =>
       options.bubble() &&
-      options.editable() &&
+      options.active() &&
       inside.value &&
       !selecting.value &&
       !linkOpen.value &&
@@ -70,30 +91,43 @@ export const useEditorOverlays = (options: EditorOverlayOptions): EditorOverlays
 
   const place = (): void => {
     const view = bubbleOpen.value || linkOpen.value || options.caret() ? options.view() : undefined;
-    const anchor = options.anchor.value;
+    const box = options.range.value;
     const frame = options.frame.value?.getBoundingClientRect();
+    const port = options.content.value?.getBoundingClientRect();
 
-    const range =
-      view === undefined ? undefined : selectionRange(view.state.doc, view.state.selection);
+    const range = view === undefined ? undefined : shownRange(view.state);
 
     const start = range === undefined ? undefined : view?.coordsAtPos(range.from);
     const end = range === undefined ? undefined : view?.coordsAtPos(range.to);
 
-    if (anchor === null || frame === undefined || start === undefined || end === undefined) {
+    if (
+      box === null ||
+      frame === undefined ||
+      port === undefined ||
+      start === undefined ||
+      end === undefined
+    ) {
       return;
     }
     const left = Math.min(start.left, end.left);
     const right = Math.max(start.right, end.right);
+    const top = Math.min(Math.max(start.top, port.top), port.bottom);
+    const bottom = Math.max(Math.min(end.bottom, port.bottom), top);
 
-    anchor.style.left = `${String(left - frame.left)}px`;
-    anchor.style.top = `${String(start.top - frame.top)}px`;
-    anchor.style.width = `${String(Math.max(1, right - left))}px`;
-    anchor.style.height = `${String(Math.max(1, end.bottom - start.top))}px`;
+    box.style.setProperty('--_bar', `${String(options.bar())}px`);
+    box.style.left = `${String(left - frame.left)}px`;
+    box.style.top = `${String(top - frame.top)}px`;
+    box.style.width = `${String(Math.max(1, right - left))}px`;
+    box.style.height = `${String(Math.max(1, bottom - top))}px`;
   };
 
   const openLink = (): void => {
     const state = options.state();
     const href = hrefOf(state);
+
+    if (!canMark(state, 'link')) {
+      return;
+    }
 
     linkHref.value = href ?? '';
     linkRemovable.value = href !== undefined;
@@ -127,6 +161,10 @@ export const useEditorOverlays = (options: EditorOverlayOptions): EditorOverlays
   };
 
   watch([options.state, bubbleOpen, linkOpen, options.caret], place, { flush: 'post' });
+
+  useEventListener(options.content, 'scroll', place, { passive: true });
+
+  onScopeDispose(options.watchLayout(place));
 
   useEventListener('pointerup', () => {
     selecting.value = false;

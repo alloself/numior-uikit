@@ -4,7 +4,7 @@
     :rows="lines"
     :get-key="keyOf"
     :cell-style="styleOf"
-    bordered
+    gridlines
     caption="План и факт, тыс. ₽"
   />
 </template>

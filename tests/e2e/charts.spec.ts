@@ -144,6 +144,56 @@ test.describe('charts', () => {
     await expect(charts.selectedNote).toHaveText('Щёлкните по кварталу, чтобы выбрать его');
   });
 
+  test('cuts a spike off at the edge of a value axis bounded by hand', async ({
+    playground,
+    charts,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await charts.bounded.scrollIntoViewIfNeeded();
+
+    const ticks = await charts.ticks(charts.bounded, 'value-tick');
+
+    expect(ticks.map((tick) => tick.text)).toEqual(['100', '200', '300', '400']);
+    expect(await charts.inkAbovePlot(charts.bounded)).toBe(0);
+    expect([0, 6]).toContain(await charts.points(charts.bounded).count());
+  });
+
+  test('places deals by their dates on the time axis of a scatter chart', async ({
+    playground,
+    charts,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await charts.deals.scrollIntoViewIfNeeded();
+    await expect(charts.points(charts.deals)).toHaveCount(11);
+
+    const ticks = await charts.ticks(charts.deals, 'category-tick');
+
+    expect(ticks.length).toBeGreaterThan(1);
+    expect(ticks.every((tick) => /(сент|окт|нояб)\./u.test(tick.text))).toBe(true);
+
+    await charts.showTable();
+    await expect(charts.rows(charts.deals).first()).toHaveText(/1 окт\. 2026 г\.\s*1,2/);
+  });
+
+  test('reads the hours of a day in the time zone of the chart', async ({ playground, charts }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await charts.hours.scrollIntoViewIfNeeded();
+
+    const ticks = await charts.ticks(charts.hours, 'category-tick');
+
+    expect(ticks[0]?.text).toBe('00:00');
+
+    await charts.pointAt(charts.hours, '00:00');
+    await expect(charts.tooltip(charts.hours)).toContainText('15 окт. 2026 г., 00:00');
+
+    await charts.showTable();
+    await expect(charts.rows(charts.hours)).toHaveCount(24);
+    await expect(charts.rows(charts.hours).first()).toHaveText(/15 окт\. 2026 г\., 00:00\s*4/);
+  });
+
   test('keeps value labels apart on a narrow screen', async ({ playground, charts }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.resize({ width: 360, height: 800 });

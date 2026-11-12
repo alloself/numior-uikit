@@ -9,6 +9,8 @@ const { doc, node } = buildWith(fixtureSchema);
 
 let harness: EditingHarness | undefined;
 
+const REMOTE_BUDGET = 150;
+
 const twoLines = (caret = 4): EditingHarness => {
   harness?.release();
 
@@ -160,5 +162,79 @@ describe('history over remote changes', () => {
       }),
       { numRuns: 200 },
     );
+  });
+
+  it('takes back typing that a later deletion of mine covered, after someone else wrote elsewhere', () => {
+    const editor = twoLines(6);
+
+    editor.type('ab');
+    editor.pause(1000);
+    editor.change((tr) => tr.delete(6, 9));
+    editor.pause(1000);
+    remote(editor, 1, 'X');
+    editor.press('Mod-z');
+
+    expect(editor.outline).toBe('paragraph("Xone") paragraph("abtwo")');
+
+    editor.press('Mod-z');
+
+    expect(editor.outline).toBe('paragraph("Xone") paragraph("two")');
+  });
+
+  it('leaves only what others wrote after undoing any mix of my typing and deleting', () => {
+    const turn = fc.record({
+      kind: fc.constantFrom('type', 'type', 'delete', 'pause', 'remote', 'remote'),
+      offset: fc.nat(),
+      length: fc.integer({ min: 1, max: 4 }),
+    });
+
+    fc.assert(
+      fc.property(fc.array(turn, { minLength: 3, maxLength: 25 }), (turns) => {
+        const editor = twoLines();
+
+        for (const step of turns) {
+          const size = editor.state.doc.size;
+          const at = editor.nearestText(step.offset % (size + 1));
+          const end = editor.endOfTextAfter(at, step.length);
+
+          switch (step.kind) {
+            case 'type':
+              editor.select(textSelection(at));
+              editor.type('a'.repeat(step.length));
+              break;
+            case 'delete':
+              editor.change((tr) => (end > at ? tr.delete(at, end) : tr));
+              break;
+            case 'pause':
+              editor.pause(1000);
+              break;
+            default:
+              remote(editor, at, 'x'.repeat(step.length));
+          }
+        }
+        undoAll(editor);
+
+        expect(editor.outline.replaceAll('x', '')).toBe('paragraph("one") paragraph("two")');
+      }),
+      { numRuns: 400 },
+    );
+  });
+
+  it('takes a change from someone else in the same time whatever the undo history holds', () => {
+    const editor = twoLines();
+
+    for (let run = 0; run < 100; run += 1) {
+      editor.type('abcdefghijklmnopqrstuvwxyz');
+      editor.pause(1000);
+    }
+
+    const started = performance.now();
+
+    for (let change = 0; change < 50; change += 1) {
+      remote(editor, secondLine(editor.state) + 1, 'X');
+    }
+
+    expect(performance.now() - started).toBeLessThan(REMOTE_BUDGET);
+    expect(undoDepth(editor.state)).toBe(100);
   });
 });

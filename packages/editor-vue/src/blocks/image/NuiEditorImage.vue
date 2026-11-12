@@ -285,19 +285,23 @@ const setWidth = (next: number): void => {
 };
 
 const setWrap = (value: NuiContentWrap | null): void => {
-  if (value !== null) {
-    editor.setAttrs(
-      value === NuiContentWrap.Wrap && align.value === NuiContentAlign.Center
-        ? { wrap: value, align: 'start' }
-        : { wrap: value },
-    );
+  if (value === null) {
+    return;
   }
+
+  editor.setAttrs(
+    value === NuiContentWrap.Wrap && align.value === NuiContentAlign.Center
+      ? { wrap: value, align: 'start' }
+      : { wrap: value },
+  );
 };
 
 const setAlign = (value: NuiContentAlign | null): void => {
-  if (value !== null) {
-    editor.setAttrs({ align: value });
+  if (value === null) {
+    return;
   }
+
+  editor.setAttrs({ align: value });
 };
 
 const onGripDown = ({ side, lift }: Grip, event: PointerEvent): void => {
@@ -342,9 +346,11 @@ const onGripDown = ({ side, lift }: Grip, event: PointerEvent): void => {
 
   const commit = (): void => {
     finish();
-    if (next !== undefined) {
-      setWidth(next);
+    if (next === undefined) {
+      return;
     }
+
+    setWidth(next);
   };
 
   const cancel = (): void => {
@@ -384,10 +390,12 @@ const keyStep = (event: KeyboardEvent): number | undefined => {
 const onGripKeydown = (event: KeyboardEvent): void => {
   const step = keyStep(event);
 
-  if (step !== undefined) {
-    event.preventDefault();
-    setWidth(share.value + step);
+  if (step === undefined) {
+    return;
   }
+
+  event.preventDefault();
+  setWidth(share.value + step);
 };
 
 const choose = (): void => {
@@ -426,15 +434,19 @@ const onPick = (): void => {
   if (picker.value !== null) {
     picker.value.value = '';
   }
-  if (file !== undefined) {
-    uploads?.replace(node.id, file);
+  if (file === undefined) {
+    return;
   }
+
+  uploads?.replace(node.id, file);
 };
 
 watch(describing, (value) => {
-  if (value) {
-    altDraft.value = alt.value;
+  if (!value) {
+    return;
   }
+
+  altDraft.value = alt.value;
 });
 
 const saveAlt = (): void => {

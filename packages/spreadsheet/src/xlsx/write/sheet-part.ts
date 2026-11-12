@@ -1,3 +1,4 @@
+import { max } from 'lodash-es';
 import { MAX_COLS, formatCell, formatRange } from '../../core/address';
 import {
   bookArrays,
@@ -9,16 +10,19 @@ import { sameTree } from '../../core/calc/shared-trees';
 import type { Calculator } from '../../core/calc/calculator';
 import { CHUNK_ROWS } from '../../core/cell-store';
 import { nextTask } from '../../core/calc/tasks';
-import { CellValueKind, type CellRange, type CellValue } from '../../core/cell.types';
+import { CellError, CellValueKind, type CellRange, type CellValue } from '../../core/cell.types';
 import { FILE_FORMULAS } from '../../core/formula/locale';
 import type { FormulaNode } from '../../core/formula/formula.types';
 import { printFormula } from '../../core/formula/printer';
 import type { Sheet, Workbook } from '../../core/workbook';
 import { escapeAttribute, escapeText } from '../xml/writer';
 import { encodeXstring } from '../xml/xstring';
+import { cellText } from './long-text';
 import { concatBytes } from '../zip/streams';
 import type { Bytes } from '../zip/zip.types';
 import { withFuturePrefixes } from './future-functions';
+import { richErrorSlot } from './value-errors';
+import { refusedByExcel } from './refused-formulas';
 import { conditionalXml, extensionXml, withConditional, withExtensions } from './conditional-part';
 import { colsXml, mergesXml, rowAttributes } from './layout-part';
 import { placeInTail } from './tail';
@@ -49,6 +53,7 @@ export interface SheetOutput {
   readonly chunks: readonly Bytes[];
   readonly stale: number;
   readonly spills: number;
+  readonly errors: number;
 }
 
 interface Sink {
@@ -60,6 +65,7 @@ interface Sink {
 interface CellCounts {
   stale: number;
   spills: number;
+  errors: number;
 }
 
 interface FileFormula {
@@ -124,10 +130,12 @@ export const createStringTable = (): StringTable => {
           ),
         );
 
-        if (performance.now() - started > BUDGET_MS) {
-          await nextTask();
-          started = performance.now();
+        if (performance.now() - started <= BUDGET_MS) {
+          continue;
         }
+
+        await nextTask();
+        started = performance.now();
       }
       chunks.push(encoder.encode('</sst>'));
       return concatBytes(chunks);
@@ -146,13 +154,15 @@ const formulaBands = (sheet: Sheet, calculator: Calculator): Map<number, number[
   const bands = new Map<number, number[]>();
 
   calculator.forEachFormula((owner, row, col) => {
-    if (owner === sheet) {
-      const band = Math.floor(row / CHUNK_ROWS);
-      const keys = bands.get(band) ?? [];
-
-      keys.push(row * MAX_COLS + col);
-      bands.set(band, keys);
+    if (owner !== sheet) {
+      return;
     }
+
+    const band = Math.floor(row / CHUNK_ROWS);
+    const keys = bands.get(band) ?? [];
+
+    keys.push(row * MAX_COLS + col);
+    bands.set(band, keys);
   });
 
   return bands;
@@ -164,7 +174,7 @@ const lastRowOf = (sheet: Sheet, formulas: ReadonlyMap<number, number[]>): numbe
     sheet.formats.lastRow(),
     sheet.decorations.lastRow(),
     sheet.layout.rows.last(),
-    ...[...formulas.keys()].map((band) => band * CHUNK_ROWS + CHUNK_ROWS - 1),
+    (max([...formulas.keys()]) ?? -1) * CHUNK_ROWS + CHUNK_ROWS - 1,
   );
 
 const bandKeys = (
@@ -187,6 +197,9 @@ const bandKeys = (
 
 const numberText = (value: number): string => String(value);
 
+const richErrors = (value: CellValue): number =>
+  value.kind === CellValueKind.Error && richErrorSlot(value.code) !== undefined ? 1 : 0;
+
 const valueParts = (
   value: CellValue,
   formula: boolean,
@@ -200,12 +213,17 @@ const valueParts = (
       return ['', inner(numberText(value.value))];
     case CellValueKind.String:
       return formula
-        ? [' t="str"', inner(escapeText(encodeXstring(value.value)))]
-        : [' t="s"', inner(String(strings.index(value.value)))];
+        ? [' t="str"', inner(escapeText(encodeXstring(cellText(value.value))))]
+        : [' t="s"', inner(String(strings.index(cellText(value.value))))];
     case CellValueKind.Boolean:
       return [' t="b"', inner(value.value ? '1' : '0')];
-    case CellValueKind.Error:
-      return [' t="e"', inner(escapeText(value.code))];
+    case CellValueKind.Error: {
+      const slot = richErrorSlot(value.code);
+
+      return slot === undefined
+        ? [' t="e"', inner(escapeText(value.code))]
+        : [` t="e" vm="${String(slot)}"`, inner(CellError.Value)];
+    }
     default:
       return ['', ''];
   }
@@ -228,16 +246,20 @@ const createSink = (signal: AbortSignal | undefined): Sink => {
     push: (piece) => {
       pieces.push(piece);
       length += piece.length;
-      if (length >= CHUNK) {
-        flush();
+      if (length < CHUNK) {
+        return;
       }
+
+      flush();
     },
     pause: async () => {
-      if (performance.now() - started > BUDGET_MS) {
-        signal?.throwIfAborted();
-        await nextTask();
-        started = performance.now();
+      if (performance.now() - started <= BUDGET_MS) {
+        return;
       }
+
+      signal?.throwIfAborted();
+      await nextTask();
+      started = performance.now();
     },
     chunks: () => {
       flush();
@@ -287,7 +309,13 @@ const formulaCellXml = (
   }
 
   const written = fileFormula(writing, place, formula.ast);
-  const text = escapeText(printFormula(withFuturePrefixes(written.ast), FILE_FORMULAS, place));
+  const printed = printFormula(withFuturePrefixes(written.ast, place), FILE_FORMULAS, place);
+
+  if (refusedByExcel(calculator, formula.ast, place, printed)) {
+    return undefined;
+  }
+
+  const text = escapeText(printed);
   const spill = written.array;
   const fresh = formula.state === FormulaState.Fresh || formula.state === FormulaState.Imported;
   const known = fresh && !writing.outdated(sheet, place.row, place.col);
@@ -295,6 +323,7 @@ const formulaCellXml = (
   const [type, inner] = known ? valueParts(value, true, writing.strings, q) : ['', ''];
 
   counts.stale += known ? 0 : 1;
+  counts.errors += known ? richErrors(value) : 0;
   if (spill === undefined) {
     return `${place.head}${type}><${q}f>${text}</${q}f>${inner}</${q}c>`;
   }
@@ -315,8 +344,10 @@ const cellXmlOf =
       return formula;
     }
 
-    const [type, inner] = valueParts(sheet.cells.get(row, col), false, writing.strings, q);
+    const value = sheet.cells.get(row, col);
+    const [type, inner] = valueParts(value, false, writing.strings, q);
 
+    counts.errors += richErrors(value);
     if (inner === '') {
       return style === 0 ? '' : `${head}/>`;
     }
@@ -385,9 +416,11 @@ const writeRows = async (
         open(cellRow);
       }
       sink.push(cellXml(cellRow, key % MAX_COLS));
-      if (index % CHECK_EVERY === 0) {
-        await sink.pause();
+      if (index % CHECK_EVERY !== 0) {
+        continue;
       }
+
+      await sink.pause();
     }
     openBefore(range.bottom + 1);
   }
@@ -398,7 +431,7 @@ export const writeSheetPart = async (writing: SheetWriting): Promise<SheetOutput
   const { extras } = writing;
   const q = extras?.prefix ?? '';
   const sink = createSink(writing.signal);
-  const counts: CellCounts = { stale: 0, spills: 0 };
+  const counts: CellCounts = { stale: 0, spills: 0, errors: 0 };
 
   sink.push(HEADER);
   sink.push(extras?.root ?? `<worksheet xmlns="${MAIN}" xmlns:r="${RELATIONSHIPS}">`);

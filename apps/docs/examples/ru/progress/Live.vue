@@ -23,10 +23,12 @@ const start = (): void => {
   const timer = setInterval(() => {
     done.value = Math.min(100, done.value + 10);
 
-    if (done.value === 100) {
-      clearInterval(timer);
-      running.value = false;
+    if (done.value !== 100) {
+      return;
     }
+
+    clearInterval(timer);
+    running.value = false;
   }, 300);
 };
 </script>

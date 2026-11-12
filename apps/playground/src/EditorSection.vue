@@ -46,6 +46,7 @@
           :document="document"
           :schema="playgroundSchema"
           :views="views"
+          :embeds="EMBEDS"
           data-testid="editor-preview"
         />
       </div>
@@ -87,9 +88,11 @@ const anchors = ref(0);
 const editorView = useTemplateRef<{ editor: NuiEditorApi }>('editorView');
 
 const markSelection = (): void => {
-  if (editorView.value?.editor.run(setAnchor(`c${String(anchors.value + 1)}`)) === true) {
-    anchors.value += 1;
+  if (editorView.value?.editor.run(setAnchor(`c${String(anchors.value + 1)}`)) !== true) {
+    return;
   }
+
+  anchors.value += 1;
 };
 
 const output = computed(() =>

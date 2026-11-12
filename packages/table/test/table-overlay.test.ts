@@ -157,6 +157,20 @@ describe('NuiTable overlay', () => {
     });
   });
 
+  it('places the marks by the measured rows of a table that grows with its rows', async () => {
+    const grid = mountStaff({ slots: { overlay: RangeMarks }, rows: staff(20), auto: true });
+    await grid.settle();
+
+    await grid.measureRows({ 0: 64, 1: 52 });
+
+    expect(grid.overlayMarks[0]).toEqual({
+      top: '104px',
+      start: '80px',
+      width: '300px',
+      height: '92px',
+    });
+  });
+
   it('reports the rendered window and finds the data cell under a point', async () => {
     const grid = mountStaff();
     await grid.settle();
@@ -184,8 +198,8 @@ describe('NuiTable overlay', () => {
     expect(grid.pointNear(-50, 5000)).toEqual({ x: 1, y: 299 });
     expect(grid.pointNear(5000, -50)).toEqual({ x: 899, y: 41 });
 
-    expect(grid.followEdge(450, 295)).toEqual({ scrollTop: 8, steps: 1 });
-    expect(grid.followEdge(450, 150)).toEqual({ scrollTop: 8, steps: 0 });
+    expect(await grid.followEdge(450, 295)).toEqual({ scrollTop: 8, steps: 1 });
+    expect(await grid.followEdge(450, 150)).toEqual({ scrollTop: 8, steps: 0 });
   });
 
   it('reports where the viewport is scrolled', async () => {
@@ -195,6 +209,20 @@ describe('NuiTable overlay', () => {
     await grid.scroll({ top: 120, left: 30 });
 
     expect(grid.scrollPosition).toEqual({ top: 120, left: 30 });
+  });
+
+  it('names the row and column at the top edge and scrolls others to the same place', async () => {
+    const grid = mountStaff({ props: { rowHeight: 40 }, width: 300 });
+
+    await grid.settle();
+    await grid.scroll({ top: 125, left: 30 });
+
+    expect(grid.scrollAnchor).toEqual({ row: 3, rowOffset: 5, col: 0, colOffset: 30 });
+
+    await grid.scroll({ top: 0, left: 0 });
+    await grid.scrollToAnchor({ row: 5, rowOffset: 5, col: 0, colOffset: 30 });
+
+    expect(grid.scrollPosition).toEqual({ top: 205, left: 30 });
   });
 
   it('moves the focus to a cell without scrolling to it on request', async () => {

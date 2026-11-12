@@ -48,6 +48,15 @@ const gridOf = (html: string): HtmlTableGrid | undefined => {
   return grid;
 };
 
+const wordItem = (level: number, marker: string, label: string): string =>
+  `<p class=MsoListParagraph style='text-indent:-18.0pt;mso-list:l0 level${level} lfo1'>` +
+  `<![if !supportLists]><span lang=EN-US><span style='mso-list:Ignore'>${marker}` +
+  `<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp; </span></span></span><![endif]>` +
+  `<span lang=EN-US>${label}</span></p>`;
+
+const wordList = (...items: readonly (readonly [number, string, string])[]): string =>
+  items.map(([level, marker, label]) => wordItem(level, marker, label)).join('\n');
+
 describe('HTML parsing', () => {
   it('wraps loose text into paragraphs and reads marks from tags', () => {
     expect(read('Hello <b>bold</b>, <i>it</i> and <a href="/x">link</a><p>Next</p>')).toBe(
@@ -79,9 +88,12 @@ describe('HTML parsing', () => {
         '<p>before<table><tr><th>H<td colspan=2>V<tr><td>a<td rowspan=2>b<td>c<tr><td>d<td>e</table><table></table>',
       ),
     ).toBe(
-      'paragraph("before") table(table_head(table_column{name=H}() table_column{name=V}() table_column()) ' +
-        'table_body(table_row(table_cell{value=a} table_cell{value=b} table_cell{value=c}) ' +
-        'table_row(table_cell{value=d} table_cell table_cell{value=e})))',
+      'paragraph("before") table(table_head(table_column{key=c0,name=H}() ' +
+        'table_column{key=c1,name=V}() table_column{key=c2}()) ' +
+        'table_body(table_row(table_cell{column=c0,value=a} table_cell{column=c1,value=b} ' +
+        'table_cell{column=c2,value=c}) ' +
+        'table_row(table_cell{column=c0,value=d} table_cell{column=c1} ' +
+        'table_cell{column=c2,value=e})))',
     );
   });
 
@@ -119,6 +131,68 @@ describe('HTML parsing', () => {
         '<!--x--><style>p{}</style><script>alert(1)</script><div><span>keep</span></div><o:p>&amp;&nbsp;&#x41;&unknown; &lt; <</o:p><a>bare</a><img>',
       ),
     ).toBe('paragraph("keep") paragraph("& A&unknown; < <" "bare")'.replace('" "', ''));
+  });
+
+  it('ends a comment that closes at once, as a browser does', () => {
+    expect(read('<!-->one<p>two</p><!--->three<!-- four -->')).toBe(
+      'paragraph("one") paragraph("two") paragraph("three")',
+    );
+  });
+
+  it('reads numeric references of the Windows range as the characters a browser shows', () => {
+    expect(read('<p>1995&#150;2005 &#128;5 &#x99; &#147;q&#148;</p>')).toBe(
+      'paragraph("1995–2005 €5 ™ “q”")',
+    );
+  });
+
+  it('keeps a reference without a semicolon inside an attribute value when a name or = follows', () => {
+    const link = fromHTML(fixtureSchema, `<a href="/a?lt=1&lt=2&ampx=3&amp;y=4&#38;z&gt">q</a>`)
+      .root.content[0];
+
+    expect(link?.kind === 'element' ? link.content[0] : undefined).toEqual(
+      text('q', [fixtureSchema.mark('link', { href: '/a?lt=1&lt=2&ampx=3&y=4&z>' })]),
+    );
+  });
+
+  it('keeps a numbered list from Word numbered on every level', () => {
+    expect(
+      read(
+        wordList([1, '1.', 'One'], [2, '1.1.', 'Deep'], [2, '1.2.', 'Deeper'], [1, '2.', 'Two']),
+      ),
+    ).toBe(
+      'ordered_list(list_item(paragraph("One") ordered_list(list_item(paragraph("Deep")) list_item(paragraph("Deeper")))) ' +
+        'list_item(paragraph("Two")))',
+    );
+
+    expect(read(wordList([1, '1', 'One'], [2, '1.1', 'Deep'], [3, '1.1.1', 'Deepest']))).toBe(
+      'ordered_list(list_item(paragraph("One") ordered_list(list_item(paragraph("Deep") ' +
+        'ordered_list(list_item(paragraph("Deepest")))))))',
+    );
+  });
+
+  it('starts a list from Word at the number its first item shows', () => {
+    expect(read(wordList([1, '2.', 'Two'], [2, '2.3.', 'Third'], [2, '2.4.', 'Fourth']))).toBe(
+      'ordered_list{start=2}(list_item(paragraph("Two") ' +
+        'ordered_list{start=3}(list_item(paragraph("Third")) list_item(paragraph("Fourth")))))',
+    );
+
+    expect(read(wordList([1, '(4)', 'Four'], [2, 'c)', 'Third'], [3, 'iv.', 'Fourth']))).toBe(
+      'ordered_list{start=4}(list_item(paragraph("Four") ordered_list{start=3}(list_item(paragraph("Third") ' +
+        'ordered_list{start=4}(list_item(paragraph("Fourth")))))))',
+    );
+
+    expect(read(wordList([1, 'bb.', 'Twenty-eighth'], [1, 'cc.', 'Next']))).toBe(
+      'ordered_list{start=28}(list_item(paragraph("Twenty-eighth")) list_item(paragraph("Next")))',
+    );
+  });
+
+  it('keeps bullets from Word as bullets whatever glyph draws them', () => {
+    expect(
+      read(wordList([1, '·', 'Dot'], [2, 'o', 'Circle'], [3, '§', 'Square'], [1, 'v', 'Diamond'])),
+    ).toBe(
+      'bullet_list(list_item(paragraph("Dot") bullet_list(list_item(paragraph("Circle") ' +
+        'bullet_list(list_item(paragraph("Square")))))) list_item(paragraph("Diamond")))',
+    );
   });
 
   it('nests a list that follows an item and keeps spaces the markup asks to keep', () => {
@@ -184,9 +258,11 @@ describe('HTML serialization', () => {
       node('divider'),
       node('table', [
         node('table_head', [
-          node('table_column', [node('table_option', [], { label: 'x' })], { name: 'N' }),
+          node('table_column', [node('table_option', [], { label: 'x' })], { key: 'n', name: 'N' }),
         ]),
-        node('table_body', [node('table_row', [node('table_cell', [], { value: 'c' })])]),
+        node('table_body', [
+          node('table_row', [node('table_cell', [], { column: 'n', value: 'c' })]),
+        ]),
       ]),
     );
 

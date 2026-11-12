@@ -13,6 +13,11 @@ export type CollabStatus =
     }
   | { readonly kind: typeof CollabStatusKind.Failed; readonly reason: CollabFailure };
 
+export interface CollabFailureView {
+  readonly reason: CollabFailure;
+  readonly unsent: number;
+}
+
 export interface CollabBatch {
   readonly version: number;
   readonly clientId: string;
@@ -25,6 +30,7 @@ export interface CollabDocument {
   readonly load: (snapshot: unknown, version: number) => boolean;
   readonly receive: (batch: CollabBatch) => boolean;
   readonly confirm: (count: number, version: number) => void;
+  readonly settle: (count: number, steps: readonly WireStep[], version: number) => boolean;
 }
 
 export interface CollabAlternative {
@@ -103,6 +109,11 @@ export interface CollabRetry {
   readonly max?: number | undefined;
 }
 
+export interface CollabLiveness {
+  readonly interval?: number | undefined;
+  readonly timeout?: number | undefined;
+}
+
 export interface CollabClientOptions {
   readonly doc: string;
   readonly clientId: string;
@@ -110,6 +121,7 @@ export interface CollabClientOptions {
   readonly transport: CollabTransport;
   readonly document: CollabDocument;
   readonly retry?: CollabRetry | undefined;
+  readonly liveness?: CollabLiveness | undefined;
   readonly onStatus?: ((status: CollabStatus) => void) | undefined;
   readonly onPresence?: ((peers: ReadonlyMap<string, unknown>) => void) | undefined;
 }

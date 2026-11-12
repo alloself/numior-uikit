@@ -4,6 +4,7 @@ import type { EvalValue, FunctionArgs, FunctionSpec } from './calc.types';
 import { compareValues, raise, toLogical } from './coerce';
 import { defineFunction } from './registry';
 import { CellError, CellValueKind } from '../cell.types';
+import { NEWER_MANY, pairsAfter } from './signatures';
 
 const truths = (args: FunctionArgs): boolean[] => {
   const found: boolean[] = [];
@@ -12,9 +13,11 @@ const truths = (args: FunctionArgs): boolean[] => {
     if (value.kind === CellValueKind.Error) {
       raise(value.code);
     }
-    if (direct || value.kind === CellValueKind.Number || value.kind === CellValueKind.Boolean) {
-      found.push(toLogical(value, args.locale));
+    if (!direct && value.kind !== CellValueKind.Number && value.kind !== CellValueKind.Boolean) {
+      return;
     }
+
+    found.push(toLogical(value, args.locale));
   });
 
   return found.length === 0 ? raise('#VALUE!') : found;
@@ -51,6 +54,7 @@ export const LOGICAL_FUNCTIONS: readonly FunctionSpec[] = [
     name: 'IF',
     min: 2,
     max: 3,
+    givesReference: true,
     lift: [0],
     broadcast: [0, 1, 2],
     evaluate: (args) => {
@@ -60,7 +64,14 @@ export const LOGICAL_FUNCTIONS: readonly FunctionSpec[] = [
       return args.count > 2 ? args.value(2) : booleanValue(false);
     },
   }),
-  defineFunction({ name: 'IFS', min: 2, max: MANY, evaluate: ifs }),
+  defineFunction({
+    name: 'IFS',
+    min: 2,
+    max: NEWER_MANY,
+    counts: pairsAfter(0),
+    givesReference: true,
+    evaluate: ifs,
+  }),
   defineFunction({
     name: 'AND',
     min: 1,
@@ -76,7 +87,7 @@ export const LOGICAL_FUNCTIONS: readonly FunctionSpec[] = [
   defineFunction({
     name: 'XOR',
     min: 1,
-    max: MANY,
+    max: NEWER_MANY,
     evaluate: (args) => booleanValue(truths(args).reduce((odd, truth) => odd !== truth, false)),
   }),
   defineFunction({
@@ -111,5 +122,12 @@ export const LOGICAL_FUNCTIONS: readonly FunctionSpec[] = [
         : args.value(0);
     },
   }),
-  defineFunction({ name: 'SWITCH', min: 3, max: MANY, lift: [0], evaluate: switched }),
+  defineFunction({
+    name: 'SWITCH',
+    min: 3,
+    max: NEWER_MANY,
+    lift: [0],
+    givesReference: true,
+    evaluate: switched,
+  }),
 ];

@@ -38,6 +38,8 @@ export type BinaryOperator = (typeof BinaryOperator)[keyof typeof BinaryOperator
 
 export type UnaryOperator = (typeof UnaryOperator)[keyof typeof UnaryOperator];
 
+export type FormulaFailureReason = (typeof FormulaFailureReason)[keyof typeof FormulaFailureReason];
+
 export type BookIndexOf = (name: string) => number | undefined;
 
 export type BookLabelOf = (index: number) => string | undefined;
@@ -51,7 +53,12 @@ export type FormulaNode =
   | { readonly kind: typeof FormulaNodeKind.Number; readonly value: number }
   | { readonly kind: typeof FormulaNodeKind.String; readonly value: string }
   | { readonly kind: typeof FormulaNodeKind.Boolean; readonly value: boolean }
-  | { readonly kind: typeof FormulaNodeKind.Error; readonly code: CellError }
+  | {
+      readonly kind: typeof FormulaNodeKind.Error;
+      readonly code: CellError;
+      readonly book?: number | undefined;
+      readonly sheet?: string | undefined;
+    }
   | {
       readonly kind: typeof FormulaReferenceKind.Cell;
       readonly book?: number | undefined;
@@ -119,16 +126,46 @@ export type FormulaNode =
       readonly kind: typeof FormulaNodeKind.Array;
       readonly rows: readonly (readonly FormulaNode[])[];
     }
-  | { readonly kind: typeof FormulaNodeKind.Missing };
+  | { readonly kind: typeof FormulaNodeKind.Missing }
+  | { readonly kind: typeof FormulaNodeKind.Opaque; readonly text: string };
 
 export interface FormulaFailure {
   readonly position: number;
-  readonly reason: 'token' | 'end' | 'reference' | 'array';
+  readonly reason: FormulaFailureReason;
+  readonly name?: string | undefined;
+  readonly argument?: number | undefined;
 }
+
+export interface CallSignature {
+  readonly min: number;
+  readonly max: number;
+  readonly counts?: ((count: number) => boolean) | undefined;
+  readonly referenceAt?: ((index: number, count: number) => boolean) | undefined;
+  readonly namesAt?: ((index: number, count: number) => boolean) | undefined;
+  readonly givesReference?: boolean | undefined;
+}
+
+export type SignatureOf = (name: string) => CallSignature | undefined;
 
 export type FormulaParse =
   | { readonly ok: true; readonly ast: FormulaNode }
   | { readonly ok: false; readonly error: FormulaFailure };
+
+export const FormulaFailureReason = {
+  Token: 'token',
+  End: 'end',
+  Reference: 'reference',
+  Array: 'array',
+  Arguments: 'arguments',
+  ReferenceArgument: 'reference-argument',
+  LongText: 'long-text',
+  BigNumber: 'big-number',
+  SmallNumber: 'small-number',
+  LongFormula: 'long-formula',
+  Nesting: 'nesting',
+  Depth: 'depth',
+  LocalName: 'local-name',
+} as const;
 
 export const FormulaReferenceKind = {
   Cell: 'cell',
@@ -152,6 +189,7 @@ export const FormulaNodeKind = {
   Binary: 'binary',
   Array: 'array',
   Missing: 'missing',
+  Opaque: 'opaque',
 } as const;
 
 export const StructuredPartKind = { Special: 'special', Columns: 'columns' } as const;

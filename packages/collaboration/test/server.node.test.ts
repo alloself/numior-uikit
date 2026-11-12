@@ -8,6 +8,7 @@ import {
 } from '@numior/editor-core';
 import { fixtureSchema } from '@numior/editor-core/fixtures';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import { WebSocket as NodeSocket } from 'ws';
 import { editorAuthority } from '../server/authority';
 import { createRoom, type RoomPeer } from '../server/room';
 import { startCollabServer, type CollabServer } from '../server/server';
@@ -29,6 +30,7 @@ import { paragraphs } from './harness/network';
 
 interface Peer extends RoomPeer {
   readonly inbox: ServerMessage[];
+  readonly drops: () => number;
 }
 
 interface LiveEditor {
@@ -39,14 +41,30 @@ interface LiveEditor {
 
 const SCHEMA = { name: fixtureSchema.name, version: fixtureSchema.version };
 
+const hello = (doc: string, clientId = doc): string =>
+  JSON.stringify({ kind: ClientMessageKind.Hello, doc, clientId, version: 0, schema: SCHEMA });
+
+const HEARTBEAT = 150;
+
+const SUPERSEDED = 4001;
+
+const PATIENCE = { timeout: 5000 };
+
+const GONE = JSON.stringify({ kind: ServerMessageKind.Presence, clientId: 'silent', state: null });
+
 const peerOf = (clientId: string): Peer => {
   const inbox: ServerMessage[] = [];
+  let dropped = 0;
 
   return {
     clientId,
     inbox,
+    drops: () => dropped,
     send: (message) => {
       inbox.push(message);
+    },
+    drop: () => {
+      dropped += 1;
     },
   };
 };
@@ -57,8 +75,25 @@ const insertionAt = (text: string, at: number): WireStep[] => {
   return state.tr.insertText(text, at).steps.map(stepToJSON);
 };
 
+const linkedText = (attrs: Readonly<Record<string, unknown>>): WireStep[] => [
+  {
+    kind: 'replace',
+    from: 1,
+    to: 1,
+    slice: { content: [{ text: 'x', marks: [{ type: 'link', attrs }] }], openStart: 0, openEnd: 0 },
+  },
+];
+
+const BOLD_ALL = { kind: 'addMark', from: 1, to: 4, mark: { type: 'bold' } } as const;
+
+const removalOf = (from: number, to: number): WireStep[] => {
+  const state = createState({ doc: paragraphs('one') });
+
+  return state.tr.delete(from, to).steps.map(stepToJSON);
+};
+
 const joined = (...peers: readonly Peer[]): ReturnType<typeof createRoom> => {
-  const room = createRoom(editorAuthority(paragraphs('one')));
+  const room = createRoom(editorAuthority(paragraphs('one'), { window: 2 }));
 
   for (const peer of peers) {
     room.join(peer, {
@@ -101,10 +136,12 @@ const liveEditor = (server: CollabServer, name: string): LiveEditor => {
     client,
     doc: () => (state === undefined ? toJSON(initial) : toJSON(state.doc)),
     type: (text, at) => {
-      if (state !== undefined) {
-        apply(state.tr.insertText(text, at));
-        client.sync();
+      if (state === undefined) {
+        return;
       }
+
+      apply(state.tr.insertText(text, at));
+      client.sync();
     },
   };
 };
@@ -185,14 +222,99 @@ describe('reference room', () => {
     ]);
   });
 
-  it('rejects steps on an old version', () => {
+  it('moves steps written on an old version over the missed ones and tells both sides', () => {
+    const first = peerOf('first');
+    const second = peerOf('second');
+    const room = joined(first, second);
+    const moved = insertionAt('y', 4).map((step) => ({ ...step, from: 5, to: 5 }));
+
+    room.receive(first, {
+      kind: ClientMessageKind.Steps,
+      seq: 1,
+      version: 0,
+      steps: insertionAt('x', 1),
+    });
+
+    room.receive(second, {
+      kind: ClientMessageKind.Steps,
+      seq: 1,
+      version: 0,
+      steps: insertionAt('y', 4),
+    });
+
+    expect(second.inbox.at(-1)).toEqual({
+      kind: ServerMessageKind.Accepted,
+      seq: 1,
+      version: 2,
+      steps: moved,
+    });
+
+    expect(first.inbox.at(-1)).toEqual({
+      kind: ServerMessageKind.Steps,
+      version: 1,
+      clientId: 'second',
+      steps: moved,
+    });
+  });
+
+  it('acknowledges old steps that no longer change anything and tells nobody', () => {
+    const first = peerOf('first');
+    const second = peerOf('second');
+    const room = joined(first, second);
+    const steps = removalOf(1, 2);
+
+    room.receive(first, { kind: ClientMessageKind.Steps, seq: 1, version: 0, steps });
+    room.receive(second, { kind: ClientMessageKind.Steps, seq: 1, version: 0, steps });
+
+    expect(second.inbox.at(-1)).toEqual({
+      kind: ServerMessageKind.Accepted,
+      seq: 1,
+      version: 1,
+      steps: [],
+    });
+
+    expect(first.inbox).toEqual([{ kind: ServerMessageKind.Accepted, seq: 1, version: 1 }]);
+  });
+
+  it('rejects old steps it can no longer trace back to their version', () => {
     const first = peerOf('first');
     const second = peerOf('second');
     const room = joined(first, second);
     const steps = insertionAt('x', 1);
 
     room.receive(first, { kind: ClientMessageKind.Steps, seq: 1, version: 0, steps });
+    room.receive(first, { kind: ClientMessageKind.Steps, seq: 2, version: 1, steps });
+    room.receive(first, { kind: ClientMessageKind.Steps, seq: 3, version: 2, steps });
     room.receive(second, { kind: ClientMessageKind.Steps, seq: 1, version: 0, steps });
+
+    expect(second.inbox.at(-1)).toEqual({
+      kind: ServerMessageKind.Rejected,
+      seq: 1,
+      reason: RejectReason.Stale,
+      version: 3,
+    });
+  });
+
+  it.each([
+    [
+      'never fitted their own version',
+      0,
+      insertionAt('x', 1).map((step) => ({ ...step, from: 99, to: 99 })),
+    ],
+    ['claim a version from the future', 5, insertionAt('x', 1)],
+  ])('rejects old steps that %s', (_name, version, steps) => {
+    const first = peerOf('first');
+    const second = peerOf('second');
+    const room = joined(first, second);
+
+    room.receive(first, {
+      kind: ClientMessageKind.Steps,
+      seq: 1,
+      version: 0,
+      steps: insertionAt('x', 1),
+    });
+
+    room.receive(second, { kind: ClientMessageKind.Steps, seq: 1, version, steps });
 
     expect(second.inbox.at(-1)).toEqual({
       kind: ServerMessageKind.Rejected,
@@ -205,6 +327,12 @@ describe('reference room', () => {
   it.each([
     ['an unreadable step', [{ kind: 'nope' }]],
     ['a position past the end', insertionAt('x', 1).map((step) => ({ ...step, from: 99, to: 99 }))],
+    ['typed text with a link the schema refuses', linkedText({ href: 7 })],
+    [
+      'typed text with a link attribute the schema does not know',
+      linkedText({ href: 'a', on: 'b' }),
+    ],
+    ['a mark with gaps that run backwards', [{ ...BOLD_ALL, skip: [{ from: 3, to: 2 }] }]],
   ])('rejects %s and keeps the log', (_name, steps) => {
     const peer = peerOf('bad');
     const room = joined(peer);
@@ -230,8 +358,39 @@ describe('reference room', () => {
     room.receive(second, { kind: ClientMessageKind.Pull, from: 1 });
 
     expect(second.inbox).toEqual([
-      { kind: ServerMessageKind.Steps, version: 1, clientId: 'first', steps },
-      { kind: ServerMessageKind.Steps, version: 2, clientId: 'second', steps },
+      { kind: ServerMessageKind.Steps, version: 1, clientId: 'first', steps, sent: 1 },
+      { kind: ServerMessageKind.Steps, version: 2, clientId: 'second', steps, sent: 1 },
+    ]);
+  });
+
+  it('joins the batches of one author in a pull and counts what the author sent', () => {
+    const first = peerOf('first');
+    const room = joined(first);
+    const steps = insertionAt('x', 1);
+
+    room.receive(first, { kind: ClientMessageKind.Steps, seq: 1, version: 0, steps });
+
+    room.receive(first, {
+      kind: ClientMessageKind.Steps,
+      seq: 2,
+      version: 1,
+      steps: [...steps, ...steps],
+    });
+
+    first.inbox.length = 0;
+
+    room.receive(first, { kind: ClientMessageKind.Pull, from: 0 });
+    room.receive(first, { kind: ClientMessageKind.Pull, from: 2 });
+
+    expect(first.inbox).toEqual([
+      {
+        kind: ServerMessageKind.Steps,
+        version: 0,
+        clientId: 'first',
+        steps: [...steps, ...steps, ...steps],
+        sent: 3,
+      },
+      { kind: ServerMessageKind.Steps, version: 2, clientId: 'first', steps },
     ]);
   });
 
@@ -294,11 +453,12 @@ describe('reference room', () => {
     expect(bob.inbox.at(-1)).toMatchObject({ clientId: 'ann', state: null });
   });
 
-  it('keeps presence when an old socket of a reconnected client closes', () => {
+  it('takes a client that came back as its only connection', () => {
     const old = peerOf('ann');
     const bob = peerOf('bob');
     const room = joined(old, bob);
     const fresh = peerOf('ann');
+    const steps = insertionAt('x', 1);
 
     room.receive(old, { kind: ClientMessageKind.Presence, state: 'here' });
 
@@ -310,10 +470,30 @@ describe('reference room', () => {
       schema: SCHEMA,
     });
 
-    bob.inbox.length = 0;
-
+    room.receive(old, { kind: ClientMessageKind.Steps, seq: 1, version: 0, steps });
+    room.receive(fresh, { kind: ClientMessageKind.Steps, seq: 2, version: 0, steps });
     room.leave(old);
 
+    expect([old.drops(), fresh.drops()]).toEqual([1, 0]);
+    expect(old.inbox).toEqual([]);
+    expect(fresh.inbox.at(0)).toMatchObject({ kind: ServerMessageKind.Welcome, presence: [] });
+    expect(fresh.inbox.at(-1)).toEqual({ kind: ServerMessageKind.Accepted, seq: 2, version: 1 });
+
+    expect(bob.inbox).toEqual([
+      { kind: ServerMessageKind.Presence, clientId: 'ann', state: 'here' },
+      { kind: ServerMessageKind.Presence, clientId: 'ann', state: null },
+      { kind: ServerMessageKind.Steps, version: 0, clientId: 'ann', steps },
+    ]);
+  });
+
+  it('answers a ping of a client that hears nothing else', () => {
+    const ann = peerOf('ann');
+    const bob = peerOf('bob');
+    const room = joined(ann, bob);
+
+    room.receive(ann, { kind: ClientMessageKind.Ping });
+
+    expect(ann.inbox).toEqual([{ kind: ServerMessageKind.Pong }]);
     expect(bob.inbox).toEqual([]);
   });
 
@@ -360,6 +540,130 @@ describe('reference server over WebSocket', () => {
       expect(JSON.stringify(first.doc())).toContain('Aone');
       expect(JSON.stringify(first.doc())).toContain('oneB');
     });
+  });
+
+  it('closes the socket of a room that fails to open and keeps serving the others', async () => {
+    const failures: unknown[] = [];
+
+    running = await startCollabServer({
+      port: 0,
+      authorityFor: (doc) => {
+        if (doc === 'broken') {
+          throw new TypeError('no authority');
+        }
+        return editorAuthority(paragraphs('one'));
+      },
+      onError: (error) => {
+        failures.push(error);
+      },
+    });
+
+    const address = `ws://localhost:${running.port().toString()}`;
+
+    const broken = new WebSocket(address);
+    const closes: number[] = [];
+
+    broken.addEventListener('close', (event) => {
+      closes.push(event.code);
+    });
+
+    broken.addEventListener('open', () => {
+      broken.send(hello('broken'));
+    });
+
+    await vi.waitFor(() => {
+      expect(closes).toEqual([1011]);
+    });
+
+    const healthy = new WebSocket(address);
+    const answers: string[] = [];
+
+    healthy.addEventListener('message', (event) => {
+      answers.push(String(event.data));
+    });
+
+    healthy.addEventListener('open', () => {
+      healthy.send(hello('healthy'));
+    });
+
+    await vi.waitFor(() => {
+      expect(answers[0]).toContain(ServerMessageKind.Welcome);
+    });
+
+    expect(failures).toHaveLength(1);
+
+    healthy.close();
+  });
+
+  it('drops a client that stopped answering and withdraws its presence', async () => {
+    running = await startCollabServer({
+      port: 0,
+      heartbeat: HEARTBEAT,
+      authorityFor: () => editorAuthority(paragraphs('one')),
+    });
+
+    const address = `ws://localhost:${running.port().toString()}`;
+    const silent = new NodeSocket(address, { autoPong: false });
+    const watcher = new WebSocket(address);
+    const seen: string[] = [];
+    const closes: number[] = [];
+
+    silent.on('open', () => {
+      silent.send(hello('room', 'silent'));
+      silent.send(JSON.stringify({ kind: ClientMessageKind.Presence, state: 'here' }));
+    });
+
+    silent.on('close', (code) => {
+      closes.push(code);
+    });
+
+    watcher.addEventListener('message', (event) => {
+      seen.push(String(event.data));
+    });
+
+    watcher.addEventListener('open', () => {
+      watcher.send(hello('room', 'watcher'));
+    });
+
+    await vi.waitFor(() => {
+      expect(seen).toContain(GONE);
+      expect(closes).toHaveLength(1);
+    }, PATIENCE);
+
+    expect(watcher.readyState).toBe(WebSocket.OPEN);
+
+    watcher.close();
+  });
+
+  it('closes the old socket of a client that came back over a new one', async () => {
+    running = await startCollabServer({
+      port: 0,
+      authorityFor: () => editorAuthority(paragraphs('one')),
+    });
+
+    const address = `ws://localhost:${running.port().toString()}`;
+    const old = new WebSocket(address);
+    const closes: number[] = [];
+
+    old.addEventListener('close', (event) => {
+      closes.push(event.code);
+    });
+
+    old.addEventListener('open', () => {
+      old.send(hello('room', 'ann'));
+    });
+
+    old.addEventListener('message', () => {
+      const fresh = new WebSocket(address);
+
+      fresh.addEventListener('open', () => {
+        fresh.send(hello('room', 'ann'));
+      });
+    });
+
+    await vi.waitFor(() => {
+      expect(closes).toEqual([SUPERSEDED]);
+    }, PATIENCE);
   });
 
   it('answers garbage with a protocol error', async () => {

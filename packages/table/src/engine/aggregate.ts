@@ -35,13 +35,15 @@ export const accumulateRange = (
   for (let position = from; position < to; position += 1) {
     const index = indices[position] ?? 0;
 
-    if (nulls[index] !== 1) {
-      const key = keys[index] ?? 0;
-      filled += 1;
-      sum += key;
-      min = key < min ? key : min;
-      max = key > max ? key : max;
+    if (nulls[index] === 1) {
+      continue;
     }
+
+    const key = keys[index] ?? 0;
+    filled += 1;
+    sum += key;
+    min = key < min ? key : min;
+    max = key > max ? key : max;
   }
   target.filled = filled;
   target.sum = sum;

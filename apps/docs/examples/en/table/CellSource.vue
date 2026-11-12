@@ -2,7 +2,7 @@
   <NuiTable
     v-bind="cells"
     :column-menu="false"
-    bordered
+    gridlines
     size="sm"
     height="18rem"
     caption="Team costs, thousand ₽"

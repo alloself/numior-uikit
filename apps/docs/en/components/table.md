@@ -43,7 +43,7 @@ With `multiple` the header gets a checkbox that selects all rows on screen.
 
 ### Cell styles
 
-The `bordered` prop draws lines between the columns, and the `cellStyle` function styles single
+The `gridlines` prop draws lines between the columns, and the `cellStyle` function styles single
 cells. It receives the row and the column and returns a `fill`, a text `color`, an `align`,
 `borders` and text wrapping with `wrap`.
 
@@ -79,6 +79,9 @@ On the keyboard `Alt` with the up and down arrows changes the height. With `heig
 height is exact, and when rows grow with their content it is a minimum. Row heights have no
 effect with `source`.
 
+The `rowResize` event reports a finished change of a height: the end of a drag, a keyboard step
+or a reset. It is the place to save a height once per gesture.
+
 <Example name="table/RowHeaders" />
 
 ### Filters and totals
@@ -86,6 +89,10 @@ effect with `source`.
 The filter in the column menu depends on the column type: text, number or date. With
 `filter: 'set'` the filter offers a list of values to pick from. The `v-model:quick` model
 searches all text columns at once.
+
+A long list shows the first hundred values, and the search above the list finds the rest. "Select
+all" with a box unchecked afterwards gives a filter with `exclude: true`: it hides the named
+values, and values that appear later stay visible.
 
 A column with `aggregate` adds a totals row at the bottom, such as a sum or an average. The
 totals row shows the `totalsLabel` caption and the number of rows left after filtering.
@@ -116,6 +123,9 @@ When the children are not loaded yet, mark the row with `hasChildren`. On expand
 the `load` event and shows the children once they arrive. A click on the arrow expands the row
 without moving the focus or selecting a cell.
 
+The totals row of a tree counts every row left after the filters, collapsed ones included. The
+parents of found rows stay in the tree and count too.
+
 <Example name="table/Tree" />
 
 ### Row details
@@ -144,6 +154,12 @@ the position among visible data columns.
 The cursor lands on a merged cell as a whole and leaves it from its far edge. A selection extends
 to cover merged cells completely, while selections of whole rows and columns stay as they are.
 An edit changes the value of the first cell.
+
+Paste, fill and clear leave the cells under a merged cell alone: their values are not seen. A paste
+counts such cells as skipped.
+
+When your own `commands` takes the edits, a block arrives whole with its `area`. The owner of the
+data then decides what happens to the merges.
 
 When a merged cell reaches into a pinned column, it is split at the edge of that column. A cell
 spanning several rows gets no hover or row selection highlight and no stripe color. Merging does
@@ -183,7 +199,8 @@ cells and creates no objects per row or column. A sheet of 1 048 576 rows and 16
 therefore opens as fast as a small one.
 
 Ctrl with an arrow moves to the edge of the data. When the storage knows where its empty areas
-are, its `nextEdge` function finds the edge without walking over cells.
+are, its `nextEdge` function finds the edge without walking over cells. Its `lastCell` function
+names the last used cell, and Ctrl+End goes there instead of the last cell of the sheet.
 
 When data changes outside the table, for example after formulas are recalculated, call the
 `invalidate(ranges)` method on the table ref. It redraws the rows of those ranges, or every row
@@ -201,10 +218,27 @@ The header and pinned columns cover the layer, and clicks pass through it to the
 table ref has the same `rectOf` and `cellFromPoint(x, y)`, which finds the cell under a point on
 screen.
 
-The layer takes row heights from `rowHeight` and the `rowHeights` model. It does not account for
-rows that grew because of wrapped text.
+The layer takes row heights from `rowHeight` and the `rowHeights` model. In a table without
+`height` and with `rowHeight="auto"` it places marks by the measured rows, including rows that grew
+because of wrapped text. Pinned rows of a table without `height` are not measured.
 
 <Example name="table/Overlay" />
+
+### Peer frames
+
+`NuiTablePeers` draws frames in the `overlay` layer around the cells other people work in, with
+their names. Each person needs a `key`, a `name`, a `colour` number and a `cell`, and `areas` adds
+their selection. On the first row the name sits under the frame so the header does not cover it.
+
+Keep the cell of a person by its row key and column key: the row number changes with sorting and
+filters. `keyOf(position)` on the table ref returns such a key. `positionOf(key)` finds the cell in
+the current view, or returns `undefined` for a row hidden by a filter.
+
+A computed value over `positionOf` updates itself when the rows move.
+
+`tableRectStyle(rect)` gives the position styles for your own marks in the layer.
+
+<Example name="table/Peers" />
 
 ### Dragging rows
 
@@ -253,6 +287,18 @@ application applies them. Ctrl+Z undoes the last edit, Ctrl+Shift+Z and Ctrl+Y r
 After an edit the row stays in place even when the column is sorted or filtered. Totals update
 right away. Without `getKey` the edit history resets when `rows` change.
 
+When new `rows` arrive, the open editor, the active cell and the selection stay on their rows.
+The table finds a row by `getKey`, or by the object itself without it. When the new data no
+longer has the row, the editor closes without saving and the table sends `editRefused` with the
+reason `row-gone`.
+
+A word composed through an IME is finished in the editor's own cell. The editor moves to its row
+once the word is done, because a move to another cell would break the input.
+
+The draft, the focus and the caret stay in the editor while it follows its row. Equal `sort`,
+`filters`, `groupBy` and `expanded` change nothing. The editor and the selection stay, and the
+query does not run again.
+
 The `undo` and `redo` methods on the table ref undo and redo edits from code. To keep the history
 in the application, pass `commands`, and every edit arrives in its `push`. Ctrl+Z and Ctrl+Y then
 call its `undo()` and `redo()`.
@@ -280,8 +326,11 @@ clearing skip the cells that fail the rules.
 ### Custom clipboard format
 
 The `clipboard` prop defines what goes to the clipboard on copy and how a paste is parsed. The
-`serialize` function receives the ranges, the rows and the column keys and returns text and HTML.
-The `copyLimit` limit does not apply to it.
+`serialize` function receives the ranges, the block to copy, the rows and the column keys and
+returns text and HTML.
+
+The block lists row and column positions in `rows` and `cols`. It is the union of the selected
+ranges that share rows or columns, cut to `lastCell` and to `copyLimit`.
 
 The `parse` function receives the text and HTML from the clipboard and the top left target cell,
 and returns rows of cell values. The paste then goes on as usual: parsing by column type, rule
@@ -323,11 +372,34 @@ table.
 `focusCell({ row, col })` moves the focus into a cell from outside, for example from a name box.
 It returns `false` for a position outside the table.
 
+`moveActive({ row, col })` is for rows or columns of a source that shifted under the table, for
+example when someone else inserted a row above. The active cell moves to the new position, and an
+editor open in it keeps its text, focus and caret.
+
+The table does not scroll and does not take the focus from a field outside it. The method returns
+`false` when the position is outside the table or its cell cannot be edited: the editor then stays
+where it was.
+
+To keep the same data on the screen, take `scrollAnchor()` before the shift. It answers with the
+row and column at the top and start edges of the window and how far they went past the edge. After
+the shift, pass the new positions of the same row and column to
+`scrollToAnchor({ row, rowOffset, col, colOffset })`.
+
+A table without a row window (`height: 'auto'`) answers `undefined` and does not scroll.
+
+`fitWidth(text, style)` answers with the column width in pixels at which a cell shows this text on
+one line. It counts the font of the cell style, the cell paddings, the grid line and the room of an
+icon. The method returns `undefined` until the table is mounted.
+
 List in `keepEditing` the elements that can take the focus without ending the edit. Ctrl+Enter in
 the editor writes the value to every selected cell in columns of the same type.
 
-With `growEditor` the editor grows with its text over the neighbouring cells, as in Excel, so a
-whole formula stays visible. It stops at the edge of the visible area.
+With `growEditor` the editor sits exactly on the bounds of its cell and wears the selection
+frame. It keeps the fill and text colour of the cell.
+
+Once the text stops fitting, the editor grows over the neighbouring cells by whole columns, as in
+Excel. End-aligned cells grow towards the start, the rest towards the end. The editor stops at
+the edge of the visible area, and the text scrolls inside the field.
 
 <Example name="table/FormulaBar" />
 
@@ -353,6 +425,10 @@ sorting applied, in the visible columns only. Cells get the same text as on scre
 
 `separator` sets the delimiter, and `headers: false` removes the header line. A long export runs
 in chunks, shows a progress bar and stops on `signal`.
+
+Text that Excel would run as a formula is exported with a leading apostrophe. Such text starts
+with `=`, `@`, a tab, or with `+` or `-` and is not a number. `formulas: true` turns this
+protection off for files read by a program instead of a person in a spreadsheet editor.
 
 For Excel to open the file without garbled text, add a byte order mark at the start. Locales
 with a decimal comma also expect the `;` delimiter, as in the example.

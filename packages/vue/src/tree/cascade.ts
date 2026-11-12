@@ -1,5 +1,5 @@
 import type { NuiOptionKey } from '../shared/options';
-import { CheckState, type NuiTreeItem } from './tree.types';
+import { NuiCheckState, type NuiTreeItem } from './tree.types';
 
 interface EnabledTally {
   readonly any: boolean;
@@ -12,10 +12,12 @@ const pushEnabledDescendants = <T>(
   out: string[],
 ): void => {
   for (const child of item.children ?? []) {
-    if (!child.disabled) {
-      out.push(keyOf(child.value));
-      pushEnabledDescendants(child, keyOf, out);
+    if (child.disabled) {
+      continue;
     }
+
+    out.push(keyOf(child.value));
+    pushEnabledDescendants(child, keyOf, out);
   }
 };
 
@@ -29,8 +31,8 @@ export const checkStates = <T>(
   items: readonly NuiTreeItem<T>[],
   checked: ReadonlySet<string>,
   keyOf: NuiOptionKey<T>,
-): ReadonlyMap<string, CheckState> => {
-  const states = new Map<string, CheckState>();
+): ReadonlyMap<string, NuiCheckState> => {
+  const states = new Map<string, NuiCheckState>();
 
   const visit = (item: NuiTreeItem<T>): boolean => {
     const key = keyOf(item.value);
@@ -39,16 +41,18 @@ export const checkStates = <T>(
     for (const child of item.children ?? []) {
       const marked = visit(child);
 
-      if (marked && !child.disabled) {
-        below = true;
+      if (!marked || child.disabled) {
+        continue;
       }
+
+      below = true;
     }
 
     const own = checked.has(key);
 
     states.set(
       key,
-      own ? CheckState.Checked : below ? CheckState.Indeterminate : CheckState.Unchecked,
+      own ? NuiCheckState.Checked : below ? NuiCheckState.Indeterminate : NuiCheckState.Unchecked,
     );
 
     return own || below;

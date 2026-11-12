@@ -12,45 +12,35 @@ import { toJSON } from '@numior/editor-core';
 import { openOfflineStore, replayedDoc } from '../store/offline-store';
 import { isDocument } from '../store/records';
 import { GateKind, passedGate } from './gate';
-import type {
-  OfflineLocks,
-  OfflineMeta,
-  OfflineMigration,
-  OfflinePersistenceOptions,
-  OfflinePlugins,
-  OfflineState,
-  OfflineStep,
-  OfflineStore,
+import { defaultChannel, defaultLocks, ownershipOf } from './ownership';
+import { createWriteQueue } from './write-queue';
+import {
+  OfflineCopy,
+  type OfflineMeta,
+  type OfflineMigration,
+  type OfflinePersistenceOptions,
+  type OfflinePlugins,
+  type OfflineState,
+  type OfflineStep,
+  type OfflineStore,
 } from '../store/store.types';
-
-type Job = () => Promise<void>;
-
-type Release = () => void;
-
-const acquired = (locks: OfflineLocks, name: string): Promise<Release | undefined> =>
-  new Promise((resolve) => {
-    void locks.request(name, { ifAvailable: true }, (lock) => {
-      if (lock === null) {
-        resolve(undefined);
-        return undefined;
-      }
-      return new Promise<void>((release) => {
-        resolve(release);
-      });
-    });
-  });
 
 const NO_MIGRATIONS: readonly OfflineMigration[] = [];
 
 const NO_PLUGINS: OfflinePlugins = {};
 
-const defaultLocks = (): OfflineLocks | undefined => globalThis.navigator?.locks;
-
 export const offlinePersistence = (
   doc: string,
   options: OfflinePersistenceOptions,
 ): CollabPersistence => {
-  const { locks = defaultLocks(), onError, migrations = NO_MIGRATIONS, ...storeOptions } = options;
+  const {
+    locks = defaultLocks(),
+    channel = defaultChannel(),
+    onError,
+    onState,
+    migrations = NO_MIGRATIONS,
+    ...storeOptions
+  } = options;
 
   const currentMeta: OfflineMeta = {
     schema: { name: storeOptions.schema.name, version: storeOptions.schema.version },
@@ -58,9 +48,14 @@ export const offlinePersistence = (
   };
 
   let store: OfflineStore | undefined;
-  let release: Release | undefined;
+  let release: (() => void) | undefined;
   let opening: Promise<unknown> = Promise.resolve();
-  let tail: Promise<void> = Promise.resolve();
+
+  const told = (state: OfflineCopy): void => {
+    onState?.(state);
+  };
+
+  const queue = createWriteQueue({ onError, onState: told });
 
   const blockedRestore = (
     state: OfflineState,
@@ -121,32 +116,20 @@ export const offlinePersistence = (
   };
 
   const open = async (): Promise<CollabRestoration | undefined> => {
-    if (locks !== undefined) {
-      release = await acquired(locks, `nui-offline:${doc}`);
+    const ownership = await ownershipOf(`nui-offline:${doc}`, locks, channel);
 
-      if (release === undefined) {
-        return undefined;
-      }
+    told(ownership.state);
+
+    if (ownership.state !== OfflineCopy.Kept) {
+      return undefined;
     }
+
+    release = ownership.release;
     store = await openOfflineStore(doc, storeOptions);
 
     const state = await store.read();
 
     return state === undefined ? undefined : gated(store, state);
-  };
-
-  const run = async (previous: Promise<void>, job: Job): Promise<void> => {
-    await previous;
-
-    try {
-      await job();
-    } catch (error) {
-      onError?.(error);
-    }
-  };
-
-  const enqueue = (job: Job): void => {
-    tail = run(tail, job);
   };
 
   const tracked = (
@@ -167,31 +150,41 @@ export const offlinePersistence = (
       log = [];
       found = [];
 
-      await opened.appendSteps(
-        steps,
-        version === null
-          ? undefined
-          : { clientId, baseVersion: version, steps: document.pending() },
-        alternatives,
-      );
+      try {
+        await opened.appendSteps(
+          steps,
+          version === null
+            ? undefined
+            : { clientId, baseVersion: version, steps: document.pending() },
+          alternatives,
+        );
+      } catch (error) {
+        log = [...steps, ...log];
+        found = [...alternatives, ...found];
+        throw error;
+      }
     };
 
     const schedule = (): void => {
-      if (!scheduled) {
-        scheduled = true;
-        enqueue(write);
+      if (scheduled) {
+        return;
       }
+
+      scheduled = true;
+      queue.add(write);
     };
 
     return {
       changed: schedule,
       record: (alternatives) => {
-        found.push(...alternatives);
+        for (const entry of alternatives) {
+          found.push(entry);
+        }
         schedule();
       },
       forget: (alternative) => {
         found = found.filter((item) => item !== alternative);
-        enqueue(() => opened.removeAlternative(alternative));
+        queue.add(() => opened.removeAlternative(alternative));
       },
       document: {
         ...document,
@@ -199,7 +192,7 @@ export const offlinePersistence = (
           const loaded = document.load(snapshot, version);
 
           if (loaded && isDocument(snapshot)) {
-            enqueue(async () => {
+            queue.add(async () => {
               await opened.writeSnapshot({ version, document: snapshot });
               await opened.appendSteps([], { clientId, baseVersion: version, steps: [] });
             });
@@ -229,6 +222,18 @@ export const offlinePersistence = (
           document.confirm(count, version);
           schedule();
         },
+        settle: (count, steps, version) => {
+          const settled = document.settle(count, steps, version);
+
+          if (settled) {
+            steps.forEach((step, index) => {
+              log.push({ version: version - steps.length + index, step });
+            });
+
+            schedule();
+          }
+          return settled;
+        },
       },
     };
   };
@@ -244,7 +249,7 @@ export const offlinePersistence = (
       store === undefined ? undefined : tracked(store, document, clientId),
     close: async () => {
       await opening;
-      await tail;
+      await queue.drained();
       store?.close();
       store = undefined;
       release?.();

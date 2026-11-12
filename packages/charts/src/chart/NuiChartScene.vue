@@ -23,20 +23,30 @@
       :class="sliceClass(slice)"
       :d="slice.path"
     />
-    <path
-      v-for="bar in scene.bars"
-      :key="`${bar.series}-${bar.index}`"
-      class="nui-chart__bar"
-      :class="barClass(bar)"
-      :d="bar.path"
-    />
-    <path
-      v-for="(area, index) in areas"
-      :key="`area-${area.series}-${index}`"
-      class="nui-chart__area"
-      :class="`nui-chart__area--slot-${area.slot}`"
-      :d="area.d"
-    />
+    <clipPath v-if="scene.clip" :id="clipId">
+      <rect
+        :x="scene.clip.x"
+        :y="scene.clip.y"
+        :width="scene.clip.width"
+        :height="scene.clip.height"
+      />
+    </clipPath>
+    <g :clip-path="clip">
+      <path
+        v-for="bar in scene.bars"
+        :key="`${bar.series}-${bar.index}`"
+        class="nui-chart__bar"
+        :class="barClass(bar)"
+        :d="bar.path"
+      />
+      <path
+        v-for="(area, index) in areas"
+        :key="`area-${area.series}-${index}`"
+        class="nui-chart__area"
+        :class="`nui-chart__area--slot-${area.slot}`"
+        :d="area.d"
+      />
+    </g>
     <line
       v-for="(line, index) in baselines"
       :key="`baseline-${index}`"
@@ -46,20 +56,22 @@
       :x2="line.x2"
       :y2="line.y2"
     />
-    <path
-      v-for="(stroke, index) in strokes"
-      :key="`stroke-${stroke.series}-${index}`"
-      class="nui-chart__stroke"
-      :class="`nui-chart__stroke--slot-${stroke.slot}`"
-      :d="stroke.d"
-    />
-    <path
-      v-for="(bridge, index) in bridges"
-      :key="`gap-${bridge.series}-${index}`"
-      class="nui-chart__stroke nui-chart__stroke--gap"
-      :class="`nui-chart__stroke--slot-${bridge.slot}`"
-      :d="bridge.d"
-    />
+    <g :clip-path="clip">
+      <path
+        v-for="(stroke, index) in strokes"
+        :key="`stroke-${stroke.series}-${index}`"
+        class="nui-chart__stroke"
+        :class="`nui-chart__stroke--slot-${stroke.slot}`"
+        :d="stroke.d"
+      />
+      <path
+        v-for="(bridge, index) in bridges"
+        :key="`gap-${bridge.series}-${index}`"
+        class="nui-chart__stroke nui-chart__stroke--gap"
+        :class="`nui-chart__stroke--slot-${bridge.slot}`"
+        :d="bridge.d"
+      />
+    </g>
     <line
       v-if="crosshair !== undefined"
       class="nui-chart__crosshair"
@@ -94,8 +106,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import type { SceneBar, ScenePoint, SceneSlice, SceneText } from '../core';
+import { computed, useId } from 'vue';
+import type { Box, SceneBar, ScenePoint, SceneSlice, SceneText } from '../core';
 import type { NuiChartSceneProps } from './chart.types';
 import { SceneLineRole, ScenePathRole } from '../core/chart.types';
 
@@ -106,6 +118,17 @@ const BASELINES: Readonly<Record<SceneText['baseline'], string>> = {
   middle: 'central',
   bottom: 'text-after-edge',
 };
+
+const holds = (box: Box | undefined, point: ScenePoint): boolean =>
+  box === undefined ||
+  (point.x >= box.x &&
+    point.x <= box.x + box.width &&
+    point.y >= box.y &&
+    point.y <= box.y + box.height);
+
+const clipId = useId();
+
+const clip = computed(() => (scene.clip === undefined ? undefined : `url(#${clipId})`));
 
 const labels = computed(() =>
   scene.texts.map((text) => ({
@@ -125,7 +148,9 @@ const active = (point: ScenePoint): boolean =>
   point.index === focus.index &&
   (focus.series === undefined ? lined.value : point.series === focus.series);
 
-const markers = computed(() => scene.points.filter((point) => point.marker || active(point)));
+const markers = computed(() =>
+  scene.points.filter((point) => (point.marker || active(point)) && holds(scene.clip, point)),
+);
 
 const crosshair = computed(() =>
   lined.value && focus !== undefined ? scene.axis?.positions[focus.index] : undefined,

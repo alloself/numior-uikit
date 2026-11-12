@@ -3,6 +3,7 @@ import { vi } from 'vite-plus/test';
 import { nextTick } from 'vue';
 import type { NuiPopoverProps } from '../../src';
 import PopoverScene from '../fixtures/PopoverScene.vue';
+import { PageListeners } from '../support/page-listeners';
 import { dismissPopoverNatively, TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
 
@@ -18,18 +19,25 @@ export class PopoverDriver extends ComponentDriver {
 
   static mount({ props, open }: PopoverMountOptions = {}) {
     const stubs = new TopLayerStubs();
+    const listeners = new PageListeners();
 
     return new PopoverDriver(
       mount(PopoverScene, { props: { props, initiallyOpen: open }, attachTo: document.body }),
       stubs,
+      listeners,
     );
   }
 
   private constructor(
     private readonly scene: PopoverSceneWrapper,
     private readonly stubs: TopLayerStubs,
+    private readonly listeners: PageListeners,
   ) {
     super(scene);
+  }
+
+  get pageKeyListeners(): number {
+    return this.listeners.held('keydown');
   }
 
   get trigger(): DOMWrapper<HTMLButtonElement> {
@@ -42,6 +50,10 @@ export class PopoverDriver extends ComponentDriver {
 
   get modelOpen(): boolean {
     return this.scene.vm.open;
+  }
+
+  get handsOutTrigger(): boolean {
+    return this.scene.vm.trigger === this.trigger.element;
   }
 
   get popoverCalls(): { show: number; hide: number } {
@@ -125,5 +137,6 @@ export class PopoverDriver extends ComponentDriver {
   override unmount(): void {
     this.stubs.restore();
     super.unmount();
+    this.listeners.restore();
   }
 }

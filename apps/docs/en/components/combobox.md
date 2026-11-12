@@ -23,6 +23,9 @@ Change the size and the states of the field, then find a customer by name.
 
 <Configurator name="NuiCombobox" />
 
+The search ignores case, Latin accents and the difference between the Russian «е» and «ё». Your
+own function in `filter` gets the text in lower case only and compares on its own.
+
 ## Examples
 
 ### Pick several values

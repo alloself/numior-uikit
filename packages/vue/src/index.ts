@@ -167,6 +167,7 @@ export { default as NuiDrawer } from './drawer/NuiDrawer.vue';
 export { type NuiDrawerProps, NuiDrawerSide, NuiDrawerSize } from './drawer/drawer.types';
 export { default as NuiPopover } from './popover/NuiPopover.vue';
 export {
+  type NuiPopoverExposed,
   type NuiPopoverHoverAttrs,
   NuiPopoverPadding,
   type NuiPopoverProps,
@@ -177,7 +178,9 @@ export {
 } from './popover/popover.types';
 export { default as NuiTooltip } from './tooltip/NuiTooltip.vue';
 export type {
+  NuiTooltipKeys,
   NuiTooltipProps,
+  NuiTooltipShortcut,
   NuiTooltipTargets,
   NuiTooltipContentSlot,
   NuiTooltipTargetsAttrs,
@@ -269,6 +272,7 @@ export { default as NuiCardContent } from './card/NuiCardContent.vue';
 export { default as NuiCardFooter } from './card/NuiCardFooter.vue';
 export { default as NuiCardMedia } from './card/NuiCardMedia.vue';
 export {
+  type NuiCardContentProps,
   type NuiCardMediaProps,
   NuiCardPadding,
   type NuiCardProps,
@@ -294,7 +298,7 @@ export {
   NuiTreeSelectable,
   NuiTreeVariant,
 } from './tree/tree.types';
-export { CheckState } from './tree/tree.types';
+export { NuiCheckState } from './tree/tree.types';
 export { default as NuiChip } from './chip/NuiChip.vue';
 export { type NuiChipProps, NuiChipSize, NuiChipVariant } from './chip/chip.types';
 export { default as NuiCombobox } from './combobox/NuiCombobox.vue';
@@ -330,6 +334,7 @@ export type { NuiFieldControlProps } from './shared/field-control.types';
 export { NuiSize, NuiTone } from './shared/scale.types';
 export type { NuiVueMessages } from './messages.types';
 export {
+  ToastTone,
   colorSchemeScript,
   createNuiConfig,
   createToastStore,
@@ -391,7 +396,6 @@ export type {
   ToastService,
   ToastStore,
   ToastStoreOptions,
-  ToastTone,
   WebOtpControl,
   WebOtpOptions,
 } from '@numior/primitives';

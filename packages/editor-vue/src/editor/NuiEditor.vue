@@ -28,7 +28,7 @@
         :docked="docked"
         :state="current"
         :options="toolOptions"
-        :inserts="inserts"
+        :inserts="toolbarInserts"
         :disabled="isDisabled"
         :controls="controlAttrs.id"
         @run="onToolbarRun"
@@ -55,7 +55,9 @@
         @paste="onPaste"
         @keydown="onKeydown"
       />
-      <span ref="anchor" class="nui-editor__anchor" aria-hidden="true" />
+      <span ref="range" class="nui-editor__range" aria-hidden="true">
+        <span ref="anchor" class="nui-editor__anchor" />
+      </span>
       <slot name="overlay" />
       <NuiEditorBlockHandle
         v-if="handlesShown && overlaid"
@@ -75,8 +77,7 @@
         :selected="selectedNode"
         :focused="overlays.focused.value"
         :editable="editable"
-        :run="run"
-        :focus="editor.focus"
+        :host="blockHost"
       />
       <NuiEditorPasteMenu
         v-if="overlaid"
@@ -84,8 +85,8 @@
         :anchor="anchorElement"
         :provider="pastedProvider"
         :bookmark="schema.nodes.has('bookmark')"
-        @choose="onPasteChoice"
-        @dismiss="onPasteDismiss"
+        @select="onPasteChoice"
+        @close="onPasteDismiss"
       />
       <NuiEditorUploads
         v-if="overlaid"
@@ -135,7 +136,7 @@
         :anchor="anchorElement"
         :open="slash.open.value"
         :label="blockTexts.blocks"
-        @choose="onSlashChoose"
+        @select="onSlashChoose"
         @hover="slash.hover"
       />
       <NuiEditorSuggestMenu
@@ -150,7 +151,7 @@
         :loading="mention.loading.value"
         :loading-label="blockTexts.mentionsLoading"
         :empty-label="mentionsEmpty"
-        @choose="onMentionChoose"
+        @select="onMentionChoose"
         @hover="mention.hover"
       >
         <template #leading="{ item }">
@@ -185,8 +186,10 @@ import {
 } from '@numior/content';
 import {
   baseKeymap,
+  blockSpots,
   commentAnchors,
   createState,
+  definePlugin,
   detectPasteSource,
   history,
   inputRules,
@@ -194,6 +197,7 @@ import {
   keymap,
   markdownRules,
   pasteSchema,
+  peerSpotsOf,
   pendingUploads,
   SelectionKind,
   toJSON,
@@ -239,7 +243,12 @@ import {
 } from 'vue';
 import { useMediaQuery } from '@vueuse/core';
 import { blockContext } from '../blocks/block-context';
-import type { NuiEditorBlock, NuiEditorBlockEditor } from '../blocks/block.types';
+import { NO_PEERS, spotsInBlocks } from '../blocks/block-spots';
+import type {
+  NuiEditorBlock,
+  NuiEditorBlockEditor,
+  NuiEditorBlockHost,
+} from '../blocks/block.types';
 import { provideBlockStates } from '../blocks/define-block';
 import { editorBlocks } from '../blocks/editor-blocks';
 import { handlePlacement } from '../blocks/handle-placement';
@@ -255,7 +264,7 @@ import { useBlockHandle } from '../handle/use-block-handle';
 import { useMentions } from '../mentions/use-mentions';
 import NuiEditorSuggestMenu from '../suggest/NuiEditorSuggestMenu.vue';
 import { useSlash } from '../slash/use-slash';
-import { slashItems, type SlashItem } from '../slash/slash-items';
+import { belowItems, slashItems, type SlashItem } from '../slash/slash-items';
 import NuiEditorUploads from '../uploads/NuiEditorUploads.vue';
 import { provideEditorLinks } from '../links/links-context';
 import type { LinkKind } from '../links/links.types';
@@ -267,6 +276,7 @@ import { useEditorUploads } from '../uploads/use-editor-uploads';
 import { editorMessages } from './editor.messages';
 import { useEditorValue, type EditorValue } from './use-editor-value';
 import { useEditorOverlays } from './use-editor-overlays';
+import { useLayoutWatch } from './use-layout-watch';
 import {
   KeyCode,
   NuiEditorFormat,
@@ -297,6 +307,7 @@ const {
   toolbar = NuiEditorToolbarMode.Fixed,
   colours = CONTENT_COLOURS,
   highlights = CONTENT_COLOURS,
+  selectionActions = undefined,
   blockHandles = true,
   blocks = editorBlocks,
   highlighter = undefined,
@@ -353,6 +364,7 @@ const {
 
 const contentElement = useTemplateRef<HTMLElement>('content');
 const frameElement = useTemplateRef<HTMLElement>('frame');
+const rangeElement = useTemplateRef<HTMLElement>('range');
 const anchorElement = useTemplateRef<HTMLElement>('anchor');
 const toolbarElement = useTemplateRef<InstanceType<typeof NuiEditorToolbar>>('toolbar');
 const bubbleElement = useTemplateRef<InstanceType<typeof NuiEditorBubble>>('bubble');
@@ -439,6 +451,8 @@ const inserts = computed((): readonly SlashItem[] => [
   ...mediaSlash(),
 ]);
 
+const toolbarInserts = computed(() => belowItems(inserts.value));
+
 const slash = useSlash({
   state: () => current.value,
   enabled: () => editable.value && overlaid.value && overlays.focused.value,
@@ -453,9 +467,11 @@ const slashEntries = computed((): NuiListEntry<string>[] =>
 const onSlashChoose = (key: string): void => {
   const item = slash.items.value.find((candidate) => candidate.key === key);
 
-  if (item !== undefined) {
-    slash.choose(item);
+  if (item === undefined) {
+    return;
   }
+
+  slash.choose(item);
 };
 
 const mentionsId = useId();
@@ -488,9 +504,11 @@ const avatarOf = (user: string | undefined): string | undefined =>
 const onMentionChoose = (user: string): void => {
   const person = mention.people.value.find((candidate) => candidate.id === user);
 
-  if (person !== undefined) {
-    mention.choose(person);
+  if (person === undefined) {
+    return;
   }
+
+  mention.choose(person);
 };
 
 let view: EditorView | undefined;
@@ -571,9 +589,20 @@ const editorPlugins = [
   pasteSchema(limitedSchema),
   inputRules(markdownRules),
   ...blocks.flatMap((block) => (block.keymap === undefined ? [] : [keymap(keysOf(block.keymap))])),
+  ...blocks.flatMap((block) =>
+    block.conceals === undefined
+      ? []
+      : [
+          definePlugin({
+            name: `conceals-${block.name}`,
+            props: { conceals: block.conceals(blockEditor) },
+          }),
+        ],
+  ),
   keymap(baseKeymap),
   history(),
   commentAnchors,
+  blockSpots(),
 ];
 
 const nodeViews = createNodeViewHost();
@@ -602,29 +631,43 @@ const bounds = computed(() =>
   maxHeight === undefined ? undefined : { '--_max-height': maxHeight },
 );
 
+const spotsByBlock = computed(() => spotsInBlocks(peerSpotsOf(current.value)));
+
 const selectedNode = computed(() =>
   current.value.selection.kind === SelectionKind.Node ? current.value.selection.id : undefined,
-);
-
-const fixedToolbar = computed(
-  () =>
-    (toolbar === NuiEditorToolbarMode.Fixed || toolbar === NuiEditorToolbarMode.Both) &&
-    !isReadonly.value,
 );
 
 const finePointer = useMediaQuery('(hover: hover) and (pointer: fine)');
 const coarsePointer = useMediaQuery('(pointer: coarse)');
 
+const actionsOnly = computed(
+  () => isReadonly.value && !isDisabled.value && (selectionActions?.length ?? 0) > 0,
+);
+
+const fixedToolbar = computed(
+  () =>
+    (toolbar === NuiEditorToolbarMode.Fixed || toolbar === NuiEditorToolbarMode.Both) &&
+    (!isReadonly.value || (actionsOnly.value && coarsePointer.value)),
+);
+
 const docked = computed(() => fixedToolbar.value && coarsePointer.value && editable.value);
 
 const bubbleToolbar = computed(
   () =>
-    (toolbar === NuiEditorToolbarMode.Bubble || toolbar === NuiEditorToolbarMode.Both) &&
-    (finePointer.value || toolbar === NuiEditorToolbarMode.Bubble),
+    (actionsOnly.value && !coarsePointer.value) ||
+    ((toolbar === NuiEditorToolbarMode.Bubble || toolbar === NuiEditorToolbarMode.Both) &&
+      (finePointer.value || toolbar === NuiEditorToolbarMode.Bubble)),
 );
 
 const hasLinks = schema.marks.has('link');
-const toolOptions = computed(() => ({ colours, highlights }));
+
+const toolOptions = computed(() => ({
+  colours,
+  highlights,
+  selectionActions,
+  actionsOnly: actionsOnly.value,
+  blockMenu: !bubbleToolbar.value,
+}));
 
 const validLink = (href: string): boolean =>
   schema.marks.get('link')?.attrs.href?.verify?.(href) ?? true;
@@ -652,15 +695,18 @@ const contentAttrs = computed(() => ({
   'aria-required': controlAttrs.value.required || undefined,
   'aria-readonly': isReadonly.value || undefined,
   'aria-disabled': isDisabled.value || undefined,
+  tabindex: isReadonly.value && !isDisabled.value ? 0 : undefined,
   'aria-placeholder': placeholder,
   'aria-controls': suggestList.value?.id,
   'aria-activedescendant': suggestList.value?.option,
 }));
 
 const onPaste = (event: ClipboardEvent): void => {
-  if (editable.value) {
-    emit('paste', { source: detectPasteSource(event.clipboardData?.getData('text/html') ?? '') });
+  if (!editable.value) {
+    return;
   }
+
+  emit('paste', { source: detectPasteSource(event.clipboardData?.getData('text/html') ?? '') });
 };
 
 let publishing = false;
@@ -681,10 +727,12 @@ const publish = (state: EditorState): void => {
   empty.value = isEmptyDoc(state.doc);
   sync.paused();
 
-  if (!publishing) {
-    publishing = true;
-    void afterPaint().then(publishNow);
+  if (publishing) {
+    return;
   }
+
+  publishing = true;
+  void afterPaint().then(publishNow);
 };
 
 const settleValue = (): void => {
@@ -724,9 +772,11 @@ const dispatch = (tr: Transaction): void => {
   current.value = applied.state;
   links.follow(applied.state);
   code.update(applied.state);
-  if (applied.transactions.some((step) => step.changed)) {
-    publish(applied.state);
+  if (!applied.transactions.some((step) => step.changed)) {
+    return;
   }
+
+  publish(applied.state);
 };
 
 const code = createCodeHighlighter(
@@ -737,10 +787,26 @@ const code = createCodeHighlighter(
 
 const run: NuiEditorApi['run'] = (command) => view !== undefined && command(view.state, dispatch);
 
+const blockHost: NuiEditorBlockHost = {
+  run,
+  focus: () => view?.focus(),
+  peers: (block) => spotsByBlock.value.get(block) ?? NO_PEERS,
+};
+
+const stuckBar = (): number => {
+  const bar: unknown = docked.value ? undefined : toolbarElement.value?.$el;
+
+  return bar instanceof HTMLElement ? bar.offsetHeight : 0;
+};
+
+const layout = useLayoutWatch(frameElement, contentElement);
+
 const overlays = useEditorOverlays({
   frame: frameElement,
   content: contentElement,
-  anchor: anchorElement,
+  range: rangeElement,
+  watchLayout: layout.watch,
+  bar: stuckBar,
   view: () => view,
   state: () => current.value,
   run: (command) => run(command),
@@ -748,7 +814,7 @@ const overlays = useEditorOverlays({
   bubble: () => bubbleToolbar.value,
   caret: () =>
     slash.open.value || mention.open.value || mediaOpen.value || links.pasted.value !== undefined,
-  editable: () => editable.value,
+  active: () => editable.value || actionsOnly.value,
 });
 
 const editor: NuiEditorApi = {
@@ -758,15 +824,20 @@ const editor: NuiEditorApi = {
   flush: () => {
     settleValue();
   },
-  coordsAt: (pos) => view?.coordsAtPos(pos),
+  coordsAt: (pos) => (view?.drawn(pos) ? view.coordsAtPos(pos) : undefined),
+  posAt: (x, y) => view?.posAtCoords(x, y),
   contentBox: () => contentElement.value?.getBoundingClientRect(),
   revealNode: (nodeId) => {
-    const dom = view?.nodeDOM(nodeId);
+    const pos = view?.state.doc.positionOf(nodeId);
 
-    if (dom instanceof HTMLElement) {
-      dom.scrollIntoView({ block: 'nearest' });
+    if (view === undefined || pos === undefined) {
+      return;
     }
+
+    view.draw(pos);
+    view.nodeDOM(nodeId)?.scrollIntoView({ block: 'nearest' });
   },
+  watchLayout: layout.watch,
 };
 
 const toolbarShown = computed(
@@ -811,18 +882,15 @@ const onFramePointermove = (event: PointerEvent): void => {
 };
 
 const blockMenu = (node: ElementNode): NuiMenuEntry[] =>
-  blocks.reduce<NuiMenuEntry[]>((found, block) => {
-    if (block.name === node.type) {
-      found.push(
-        ...(block.menu?.(
+  blocks.flatMap((block) =>
+    block.name === node.type
+      ? (block.menu?.(
           node,
-          blockContext(node.id, run, editor.focus, () => view?.nodeDOM(node.id)),
+          blockContext(node.id, blockHost, () => view?.nodeDOM(node.id)),
           blockTexts.value,
-        ) ?? []),
-      );
-    }
-    return found;
-  }, []);
+        ) ?? [])
+      : [],
+  );
 
 const onHandleRun = (command: Command): void => {
   run(command);
@@ -830,16 +898,20 @@ const onHandleRun = (command: Command): void => {
 };
 
 const onInsertOpen = (item: SlashItem): void => {
-  if (item.kind === SlashItemKind.Open) {
-    item.open();
+  if (item.kind !== SlashItemKind.Open) {
+    return;
   }
+
+  item.open();
 };
 
 const onToolbarRun = (command: Command, refocus: boolean): void => {
   run(command);
-  if (refocus) {
-    editor.focus();
+  if (!refocus) {
+    return;
   }
+
+  editor.focus();
 };
 
 const isLinkKey = (event: KeyboardEvent): boolean =>
@@ -883,18 +955,22 @@ watch(
     const overlap =
       caret !== undefined && dock instanceof HTMLElement ? hiddenUnder(caret, dock) : 0;
 
-    if (overlap > 0 && dock instanceof HTMLElement) {
-      dock.ownerDocument.defaultView?.scrollBy({ top: overlap });
+    if (overlap <= 0 || !(dock instanceof HTMLElement)) {
+      return;
     }
+
+    dock.ownerDocument.defaultView?.scrollBy({ top: overlap });
   },
   { flush: 'post' },
 );
 
 const highlightWhenIdle = async (): Promise<void> => {
   await afterIdle();
-  if (view !== undefined) {
-    code.update(current.value);
+  if (view === undefined) {
+    return;
   }
+
+  code.update(current.value);
 };
 
 onMounted(() => {
@@ -917,9 +993,11 @@ onMounted(() => {
 
   void highlightWhenIdle();
 
-  if (autofocus) {
-    view.focus();
+  if (!autofocus) {
+    return;
   }
+
+  view.focus();
 });
 
 onBeforeUnmount(() => {

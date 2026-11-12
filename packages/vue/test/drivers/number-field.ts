@@ -146,6 +146,10 @@ export class NumberFieldDriver extends ComponentDriver {
     await nextTick();
   }
 
+  async receiveProps(props: NuiNumberFieldProps): Promise<void> {
+    await this.scene.setProps({ props });
+  }
+
   async setLocale(locale: string): Promise<void> {
     this.locale.value = locale;
     await nextTick();

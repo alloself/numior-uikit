@@ -29,9 +29,9 @@ describe('NuiEditor toolbar', () => {
     const editor = mounted({ document: page(paragraph('p', 'Hello')) });
 
     expect(editor.tools).toEqual([
+      'Insert',
       'Undo',
       'Redo',
-      'Insert',
       'Block type: Text',
       'Bold',
       'Italic',
@@ -151,5 +151,28 @@ describe('NuiEditor toolbar', () => {
     await editor.toolbarKey('Escape');
 
     expect(editor.focused).toBe(true);
+  });
+
+  it('stays reachable from the keyboard when the control under focus turns off', async () => {
+    const editor = mounted({ document: page(paragraph('p', 'Hello world')) });
+
+    await editor.select(1, 6);
+    await editor.useTool('Bold');
+    editor.focus();
+    await editor.press('F10', { alt: true });
+    await editor.toolbarKey('Home');
+    await editor.toolbarKey('ArrowRight');
+
+    expect(editor.toolbarFocus).toBe('Undo');
+
+    await editor.useTool('Undo');
+
+    expect(editor.available('Undo')).toBe(false);
+    expect(editor.toolbarFocus).toBe('Redo');
+
+    await editor.toolbarKey('Escape');
+    await editor.press('F10', { alt: true });
+
+    expect(editor.toolbarFocus).toBe('Redo');
   });
 });

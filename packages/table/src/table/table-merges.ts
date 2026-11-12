@@ -4,7 +4,7 @@ import {
   TableCellSpanKind,
   type NuiTableEditMove,
   type NuiTableRange,
-  type TableCellPosition,
+  type NuiTableCellPosition,
   type TableCellSpan,
   type TableMergeLayout,
   type TableMergePiece,
@@ -71,12 +71,14 @@ export const createMergeIndex = (
   for (const merge of merges) {
     const box = clipped(boxOf(merge), bounds);
 
-    if (spansCells(box) && !near(box.top, box.bottom).some((other) => crosses(other, box))) {
-      kept.push(box);
+    if (!spansCells(box) || near(box.top, box.bottom).some((other) => crosses(other, box))) {
+      continue;
+    }
 
-      for (let block = blockOf(box.top); block <= blockOf(box.bottom); block += 1) {
-        blocks.set(block, [...(blocks.get(block) ?? NO_MERGES), box]);
-      }
+    kept.push(box);
+
+    for (let block = blockOf(box.top); block <= blockOf(box.bottom); block += 1) {
+      blocks.set(block, [...(blocks.get(block) ?? NO_MERGES), box]);
     }
   }
 
@@ -142,8 +144,8 @@ export const expandToMerges = (
 
 export const anchorOf = (
   index: TableMergeIndex,
-  position: TableCellPosition,
-): TableCellPosition => {
+  position: NuiTableCellPosition,
+): NuiTableCellPosition => {
   const merge = index.at(position.row, position.col);
 
   return merge === undefined ? position : { row: merge.top, col: merge.start };
@@ -174,7 +176,11 @@ const sideOfKey = (key: string, rtl: boolean): MergeSide | undefined => {
   }
 };
 
-const edgeOf = (merge: RangeBox, from: TableCellPosition, side: MergeSide): TableCellPosition => {
+const edgeOf = (
+  merge: RangeBox,
+  from: NuiTableCellPosition,
+  side: MergeSide,
+): NuiTableCellPosition => {
   switch (side) {
     case MergeSide.Bottom:
       return { row: merge.bottom, col: from.col };
@@ -189,9 +195,9 @@ const edgeOf = (merge: RangeBox, from: TableCellPosition, side: MergeSide): Tabl
 
 const toEdge = (
   index: TableMergeIndex,
-  from: TableCellPosition,
+  from: NuiTableCellPosition,
   side: MergeSide | undefined,
-): TableCellPosition => {
+): NuiTableCellPosition => {
   const merge = index.at(from.row, from.col);
 
   return merge === undefined || side === undefined ? from : edgeOf(merge, from, side);
@@ -199,16 +205,16 @@ const toEdge = (
 
 export const leaveMerge = (
   index: TableMergeIndex,
-  from: TableCellPosition,
+  from: NuiTableCellPosition,
   key: string,
   rtl: boolean,
-): TableCellPosition => toEdge(index, from, sideOfKey(key, rtl));
+): NuiTableCellPosition => toEdge(index, from, sideOfKey(key, rtl));
 
 export const leaveMergeBy = (
   index: TableMergeIndex,
-  from: TableCellPosition,
+  from: NuiTableCellPosition,
   move: NuiTableEditMove,
-): TableCellPosition => toEdge(index, from, MOVE_SIDES[move]);
+): NuiTableCellPosition => toEdge(index, from, MOVE_SIDES[move]);
 
 export const consecutiveRuns = (positions: readonly number[], edge = 0): number[][] => {
   const runs: number[][] = [];
@@ -240,9 +246,11 @@ const slotSegments = (merge: RangeBox, slots: readonly TableMergeSlot[]): Segmen
   const segments = new Map<string, Segment>();
 
   slots.forEach((slot, at) => {
-    if (slot.col !== undefined && slot.col >= merge.start && slot.col <= merge.end) {
-      segments.set(slot.pane, { first: segments.get(slot.pane)?.first ?? at, last: at });
+    if (slot.col === undefined || slot.col < merge.start || slot.col > merge.end) {
+      return;
     }
+
+    segments.set(slot.pane, { first: segments.get(slot.pane)?.first ?? at, last: at });
   });
 
   return [...segments.values()];
@@ -365,7 +373,7 @@ export const keepSpans = (
 
 export const pieceOf = (
   pieces: readonly TableMergePiece[] | undefined,
-  position: TableCellPosition,
+  position: NuiTableCellPosition,
 ): TableMergePiece | undefined =>
   pieces?.find(
     (piece) =>

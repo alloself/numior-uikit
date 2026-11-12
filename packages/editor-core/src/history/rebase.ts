@@ -1,6 +1,17 @@
-import type { Assoc, MapResult, Mappable, StepMap } from '../transform/mapping.types';
+import type { Doc } from '../doc/doc.types';
+import {
+  StepMapKind,
+  type Assoc,
+  type MapResult,
+  type MapSpan,
+  type Mappable,
+  type StepMap,
+} from '../transform/mapping.types';
+import { createStepMap } from '../transform/mapping';
+import { sliceSize } from '../transform/replace';
 import { mapStep, stepMapOf } from '../transform/step';
-import { StepKind, type Step } from '../transform/step.types';
+import { StepKind, type Step, type StepSpan } from '../transform/step.types';
+import { noteRemoved, retargeted, withLatestNodes, type RemovedNodes } from './retarget';
 
 export interface MirrorMaps {
   readonly maps: readonly StepMap[];
@@ -13,15 +24,54 @@ export interface RebasedSteps {
   readonly chain: MirrorMaps;
 }
 
+export interface RebaseDocs {
+  readonly written: (index: number) => Doc;
+  readonly current: () => Doc;
+}
+
+type Removal = Extract<Step, { readonly kind: 'replace' }>;
+
+interface Carried {
+  from: number;
+  to: number;
+}
+
+interface Lifted {
+  readonly step: Step;
+  readonly chain: MirrorMaps;
+}
+
+interface Moved {
+  readonly steps: readonly Step[];
+  readonly map: StepMap | undefined;
+}
+
+interface Walk {
+  pos: number;
+  at: number;
+  mend: number;
+  deleted: boolean;
+  deletedBefore: boolean;
+  deletedAfter: boolean;
+  deletedAcross: boolean;
+}
+
 interface Hit {
   readonly index: number;
   readonly offset: number;
 }
 
-const insideOf = (map: StepMap, pos: number): Hit | undefined => {
-  const index = map.ranges.findIndex(
-    (range) => pos > range.start && pos < range.start + range.oldSize,
-  );
+const NO_MEND = -1;
+
+const onSideOf = (map: StepMap, pos: number, assoc: Assoc): Hit | undefined => {
+  const index = map.ranges.findIndex((range) => {
+    const end = range.start + range.oldSize;
+
+    return (
+      range.oldSize > 0 &&
+      (assoc > 0 ? pos >= range.start && pos < end : pos > range.start && pos <= end)
+    );
+  });
 
   const range = map.ranges[index];
 
@@ -54,11 +104,18 @@ const recovered = (
   { maps, mirrors, edges }: MirrorMaps,
   at: number,
   pos: number,
+  assoc: Assoc,
 ): { readonly pos: number; readonly at: number } | undefined => {
   const twin = mirrors.get(at);
   const map = maps[at];
-  const found = edges?.has(at) === true ? atOrInsideOf : insideOf;
-  const hit = map === undefined || twin === undefined ? undefined : found(map, pos);
+
+  const hit =
+    map === undefined || twin === undefined
+      ? undefined
+      : edges?.has(at) === true
+        ? atOrInsideOf(map, pos)
+        : onSideOf(map, pos, assoc);
+
   const twinMap = twin === undefined ? undefined : maps[twin];
 
   const start =
@@ -69,39 +126,134 @@ const recovered = (
     : { pos: start + hit.offset, at: twin };
 };
 
+const walkFrom = (pos: number): Walk => ({
+  pos,
+  at: 0,
+  mend: NO_MEND,
+  deleted: false,
+  deletedBefore: false,
+  deletedAfter: false,
+  deletedAcross: false,
+});
+
+const passed = (walk: Walk, result: MapResult): void => {
+  walk.pos = result.pos;
+  walk.deleted ||= result.deleted;
+  walk.deletedBefore ||= result.deletedBefore;
+  walk.deletedAfter ||= result.deletedAfter;
+  walk.deletedAcross ||= result.deletedAcross;
+  walk.at += 1;
+};
+
+const advance = (chain: MirrorMaps, walk: Walk, assoc: Assoc): void => {
+  const jump = recovered(chain, walk.at, walk.pos, assoc);
+  const map = chain.maps[walk.at];
+
+  if (jump !== undefined) {
+    walk.pos = jump.pos;
+    walk.at = jump.at + 1;
+  } else if (map === undefined) {
+    walk.at += 1;
+  } else {
+    passed(walk, map.mapResult(walk.pos, assoc));
+  }
+};
+
+const reached = ({
+  pos,
+  deleted,
+  deletedBefore,
+  deletedAfter,
+  deletedAcross,
+}: Walk): MapResult => ({
+  pos,
+  deleted,
+  deletedBefore,
+  deletedAfter,
+  deletedAcross,
+});
+
+const mends = (chain: MirrorMaps, left: Walk, right: Walk): boolean => {
+  const at = left.at;
+  const twin = chain.mirrors.get(at);
+  const closes = left.mend === at;
+
+  if (chain.maps[at]?.kind !== StepMapKind.Move || (!closes && left.mend !== NO_MEND)) {
+    return false;
+  }
+  if (!closes && twin === undefined) {
+    return false;
+  }
+  left.mend = closes || twin === undefined ? NO_MEND : twin;
+  right.mend = left.mend;
+  return true;
+};
+
+const together = (chain: MirrorMaps, left: Walk, right: Walk, outward: boolean): boolean => {
+  const map = chain.maps[left.at];
+
+  if (
+    map === undefined ||
+    recovered(chain, left.at, left.pos, outward ? -1 : 1) !== undefined ||
+    recovered(chain, right.at, right.pos, outward ? 1 : -1) !== undefined
+  ) {
+    advance(chain, left, outward ? -1 : 1);
+    advance(chain, right, outward ? 1 : -1);
+    return true;
+  }
+  const span = map.mapSpan(left.pos, right.pos, outward);
+
+  if (span !== undefined) {
+    passed(left, span.from);
+    passed(right, span.to);
+    return true;
+  }
+  if (!mends(chain, left, right)) {
+    return false;
+  }
+  advance(chain, left, outward ? -1 : 1);
+  advance(chain, right, outward ? 1 : -1);
+  return true;
+};
+
+const alone = (chain: MirrorMaps, left: Walk, right: Walk, outward: boolean): boolean => {
+  const behind = left.at < right.at ? left : right;
+
+  if (chain.maps[behind.at]?.kind === StepMapKind.Move) {
+    return false;
+  }
+  advance(chain, behind, (behind === left) === outward ? -1 : 1);
+  return true;
+};
+
 export const mirrored = (chain: MirrorMaps): Mappable => {
   const mapResult = (from: number, assoc: Assoc = 1): MapResult => {
-    let pos = from;
-    let at = 0;
-    let deleted = false;
-    let deletedBefore = false;
-    let deletedAfter = false;
-    let deletedAcross = false;
+    const walk = walkFrom(from);
 
-    while (at < chain.maps.length) {
-      const jump = recovered(chain, at, pos);
-      const map = chain.maps[at];
-
-      if (jump !== undefined) {
-        pos = jump.pos;
-        at = jump.at + 1;
-      } else if (map === undefined) {
-        at += 1;
-      } else {
-        const result = map.mapResult(pos, assoc);
-
-        pos = result.pos;
-        deleted ||= result.deleted;
-        deletedBefore ||= result.deletedBefore;
-        deletedAfter ||= result.deletedAfter;
-        deletedAcross ||= result.deletedAcross;
-        at += 1;
-      }
+    while (walk.at < chain.maps.length) {
+      advance(chain, walk, assoc);
     }
-    return { pos, deleted, deletedBefore, deletedAfter, deletedAcross };
+    return reached(walk);
   };
 
-  return { mapResult, map: (pos, assoc) => mapResult(pos, assoc).pos };
+  const mapSpan = (from: number, to: number, outward = false): MapSpan | undefined => {
+    const left = walkFrom(from);
+    const right = walkFrom(to);
+
+    while (left.at < chain.maps.length || right.at < chain.maps.length) {
+      const whole =
+        left.at === right.at
+          ? together(chain, left, right, outward)
+          : alone(chain, left, right, outward);
+
+      if (!whole) {
+        return undefined;
+      }
+    }
+    return { from: reached(left), to: reached(right) };
+  };
+
+  return { mapResult, mapSpan, map: (pos, assoc) => mapResult(pos, assoc).pos };
 };
 
 const shifted = (mirrors: ReadonlyMap<number, number>): Map<number, number> =>
@@ -130,33 +282,214 @@ const idle = (step: Step): boolean => {
     case StepKind.AddMark:
     case StepKind.RemoveMark:
       return step.from >= step.to;
+    case StepKind.Move:
+      return step.from >= step.to || (step.target >= step.from && step.target <= step.to);
     default:
       return false;
   }
 };
 
-const movedStep = (step: Step, chain: MirrorMaps): Step | undefined => {
-  const moved = mapStep(step, mirrored(chain));
+const placed = (
+  step: Step,
+  mapper: Mappable,
+  index: number,
+  docs: RebaseDocs | undefined,
+): Step | undefined =>
+  (docs === undefined
+    ? undefined
+    : retargeted(step, mapper, docs.written(index), docs.current())) ?? mapStep(step, mapper);
 
-  return moved === undefined || idle(moved) ? undefined : moved;
+const movedStep = (
+  step: Step,
+  chain: MirrorMaps,
+  index: number,
+  docs: RebaseDocs | undefined,
+  removed: RemovedNodes,
+): Step | undefined => {
+  const moved = placed(step, mirrored(chain), index, docs);
+
+  if (moved === undefined || idle(moved)) {
+    return undefined;
+  }
+  if (docs === undefined) {
+    return moved;
+  }
+
+  noteRemoved(moved, docs.current(), removed);
+  return withLatestNodes(moved, docs.current(), docs.written(index), removed);
 };
+
+const NOTHING: Moved = { steps: [], map: undefined };
+
+const single = (moved: Step | undefined): Moved =>
+  moved === undefined ? NOTHING : { steps: [moved], map: stepMapOf(moved) };
+
+const isRemoval = (step: Step): step is Removal =>
+  step.kind === StepKind.Replace && step.from < step.to && step.slice.content.length === 0;
+
+const sparedSpans = (from: number, to: number, mapper: Mappable): readonly StepSpan[] => {
+  const spans: StepSpan[] = [];
+  let start = mapper.map(from, 1);
+
+  for (let pos = from + 1; pos < to; pos += 1) {
+    const before = mapper.map(pos, -1);
+    const after = mapper.map(pos, 1);
+
+    if (after > before && before > start) {
+      spans.push({ from: start, to: before });
+    }
+    start = after > before ? Math.max(start, after) : start;
+  }
+  const end = mapper.map(to, -1);
+
+  if (end > start) {
+    spans.push({ from: start, to: end });
+  }
+  return spans;
+};
+
+const removalsOf = (step: Removal, mapper: Mappable): Moved => {
+  const spans = sparedSpans(step.from, step.to, mapper);
+
+  return spans.length === 0
+    ? NOTHING
+    : {
+        steps: spans.toReversed().map((span) => ({ ...step, ...span })),
+        map: createStepMap(
+          spans.map((span) => ({ start: span.from, oldSize: span.to - span.from, newSize: 0 })),
+        ),
+      };
+};
+
+const rebasedWith = (
+  steps: readonly Step[],
+  chain: MirrorMaps,
+  move: (step: Step, chain: MirrorMaps, index: number) => Moved,
+): RebasedSteps =>
+  steps.reduce<RebasedSteps>(
+    (done, step, index) => {
+      const moved = move(step, done.chain, index);
+      const back = stepMapOf(step).invert();
+
+      return moved.map === undefined
+        ? { steps: done.steps, chain: passedStep(done.chain, back) }
+        : {
+            steps: [...done.steps, ...moved.steps],
+            chain: passedStep(done.chain, back, moved.map),
+          };
+    },
+    { steps: [], chain },
+  );
 
 export const rebaseSteps = (
   steps: readonly Step[],
   chain: MirrorMaps,
   accept?: (moved: Step) => boolean,
-): RebasedSteps =>
+  docs?: RebaseDocs,
+): RebasedSteps => {
+  const removed: RemovedNodes = new Map();
+
+  return rebasedWith(steps, chain, (step, behind, index) => {
+    const moved = movedStep(step, behind, index, docs, removed);
+
+    return moved === undefined || accept?.(moved) === false ? NOTHING : single(moved);
+  });
+};
+
+const carriedMap = (map: StepMap, span: Carried, grow: number): StepMap | undefined => {
+  if (map.kind === StepMapKind.Move) {
+    return undefined;
+  }
+
+  const from = span.from;
+  const to = span.to;
+  let moved = false;
+
+  for (const range of map.ranges) {
+    if (range.start + range.oldSize < from) {
+      span.from += range.newSize - range.oldSize;
+      span.to += range.newSize - range.oldSize;
+    } else if (range.start > to) {
+      moved ||= grow !== 0;
+    } else {
+      return undefined;
+    }
+  }
+
+  return moved
+    ? createStepMap(
+        map.ranges.map((range) =>
+          range.start > to ? { ...range, start: range.start + grow } : range,
+        ),
+      )
+    : map;
+};
+
+const carriedPast = (chain: MirrorMaps, step: Removal): Lifted | undefined => {
+  const span: Carried = { from: step.from, to: step.to };
+  const grow = sliceSize(step.slice) - (step.to - step.from);
+  const maps: StepMap[] = [];
+
+  for (const map of chain.maps) {
+    const carried = carriedMap(map, span, grow);
+
+    if (carried === undefined) {
+      return undefined;
+    }
+    maps.push(carried);
+  }
+
+  return {
+    step: { ...step, from: span.from, to: span.to },
+    chain: { maps, mirrors: chain.mirrors, edges: chain.edges },
+  };
+};
+
+const isFlatReplace = (step: Step): step is Removal =>
+  step.kind === StepKind.Replace &&
+  step.slice.openStart === 0 &&
+  step.slice.openEnd === 0 &&
+  !idle(step);
+
+const leavesPositions = (step: Step): boolean =>
+  step.kind === StepKind.AddMark ||
+  step.kind === StepKind.RemoveMark ||
+  step.kind === StepKind.Attrs ||
+  step.kind === StepKind.Markup ||
+  step.kind === StepKind.DocAttrs;
+
+const historyStep = (step: Step, behind: MirrorMaps): Moved => {
+  const mapper = mirrored(behind);
+
+  if (isRemoval(step)) {
+    return removalsOf(step, mapper);
+  }
+  const moved = mapStep(step, mapper);
+
+  return moved === undefined || idle(moved) ? NOTHING : single(moved);
+};
+
+export const rebaseHistory = (steps: readonly Step[], chain: MirrorMaps): RebasedSteps =>
   steps.reduce<RebasedSteps>(
     (done, step) => {
-      const moved = movedStep(step, done.chain);
+      const lifted = isFlatReplace(step) ? carriedPast(done.chain, step) : undefined;
+
+      if (lifted !== undefined) {
+        return { steps: [...done.steps, lifted.step], chain: lifted.chain };
+      }
+
+      const moved = historyStep(step, done.chain);
+
+      if (leavesPositions(step)) {
+        return { steps: [...done.steps, ...moved.steps], chain: done.chain };
+      }
+
       const back = stepMapOf(step).invert();
 
-      return moved === undefined || accept?.(moved) === false
-        ? { steps: done.steps, chain: passedStep(done.chain, back) }
-        : {
-            steps: [...done.steps, moved],
-            chain: passedStep(done.chain, back, stepMapOf(moved)),
-          };
+      return {
+        steps: [...done.steps, ...moved.steps],
+        chain: passedStep(done.chain, back, moved.map),
+      };
     },
     { steps: [], chain },
   );

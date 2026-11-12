@@ -13,12 +13,12 @@ const listOf = (media: string, matches: boolean): MediaQueryList => {
   return list;
 };
 
-export const installTouch = (): (() => void) => {
+const installPointer = (kind: string): (() => void) => {
   const original = Object.getOwnPropertyDescriptor(window, 'matchMedia');
 
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
-    value: (query: string) => listOf(query, query.includes('coarse')),
+    value: (query: string) => listOf(query, query.includes(kind)),
   });
 
   return () => {
@@ -29,3 +29,7 @@ export const installTouch = (): (() => void) => {
     }
   };
 };
+
+export const installTouch = (): (() => void) => installPointer('coarse');
+
+export const installMouse = (): (() => void) => installPointer('fine');

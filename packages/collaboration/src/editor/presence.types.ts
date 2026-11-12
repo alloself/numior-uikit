@@ -1,4 +1,4 @@
-import type { NodeId } from '@numior/editor-core';
+import type { BlockSpot, NodeId } from '@numior/editor-core';
 
 export interface PresenceUser {
   readonly id: string;
@@ -19,6 +19,8 @@ export interface PresenceSelection {
 export interface EditorPresence {
   readonly user: PresenceUser;
   readonly selection: PresenceSelection | null;
+  readonly spot?: BlockSpot | undefined;
+  readonly version?: number | undefined;
 }
 
 export interface RemotePeer {
@@ -27,4 +29,5 @@ export interface RemotePeer {
   readonly colour: number;
   readonly anchor: number | undefined;
   readonly head: number | undefined;
+  readonly spot: BlockSpot | undefined;
 }

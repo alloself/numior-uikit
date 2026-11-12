@@ -1,3 +1,5 @@
+import { foldText } from '../intl/fold-text';
+
 export interface TypeaheadState {
   readonly query: string;
   readonly at: number;
@@ -32,7 +34,7 @@ const isRepeated = (query: string): boolean => {
 };
 
 export const lowerLabels = (labels: readonly string[]): readonly string[] =>
-  labels.map((label) => label.toLowerCase());
+  labels.map((label) => foldText(label));
 
 export const matchTypeahead = (
   lowered: readonly string[],
@@ -46,7 +48,7 @@ export const matchTypeahead = (
   }
 
   const repeated = isRepeated(query);
-  const needle = (repeated ? query.charAt(0) : query).toLowerCase();
+  const needle = foldText(repeated ? query.charAt(0) : query);
   const start = Math.max(0, query.length > 1 && !repeated ? activeIndex : activeIndex + 1) % count;
 
   for (let offset = 0; offset < count; offset += 1) {

@@ -39,7 +39,7 @@
         tone="warning"
         title="Черновик не сохранён"
         description="Изменения пропадут при выходе со страницы."
-        dismissible
+        closable
         data-testid="alert"
       >
         <template #actions>
@@ -120,12 +120,12 @@ const quick = (): void => {
 };
 
 const failure = (): void => {
-  toast.error('Не удалось сохранить', {
+  const id = toast.error('Не удалось сохранить', {
     duration: 0,
     action: {
       label: 'Повторить',
       onClick: () => {
-        toast.success('Повторили');
+        toast.success('Повторили', { id });
       },
     },
   });

@@ -4,18 +4,20 @@ import { describe, expect, it } from 'vite-plus/test';
 import { tableLayout } from '../src/table/table-layout';
 import { tableMessages } from '../src/table/table.messages';
 import { useTableResize } from '../src/table/use-table-resize';
-import type { NuiTableColumn, NuiTableWidths } from '../src';
+import type { NuiTableColumn, NuiTableColumnResize, NuiTableWidths } from '../src';
 import { PEOPLE_COLUMNS, type Person } from './support/people';
 
 interface Harness {
   readonly widths: () => NuiTableWidths;
   readonly announced: () => string[];
+  readonly resized: () => readonly (readonly NuiTableColumnResize[])[];
   drag(key: string, dx: number): void;
 }
 
 const harness = (room: number, rtl = false): Harness => {
   const widths = ref<NuiTableWidths>({});
   const announced: string[] = [];
+  const resized: (readonly NuiTableColumnResize[])[] = [];
   const columns = new Map(PEOPLE_COLUMNS.map((column) => [column.key, column]));
 
   const columnAt = (key: string): NuiTableColumn<Person> => {
@@ -49,11 +51,15 @@ const harness = (room: number, rtl = false): Harness => {
     announce: (text) => {
       announced.push(text);
     },
+    resized: (changes) => {
+      resized.push(changes);
+    },
   });
 
   return {
     widths: () => widths.value,
     announced: () => announced,
+    resized: () => resized,
     drag: (key, dx) => {
       resize.start(key, new PointerEvent('pointerdown', { button: 0, pointerId: 7, clientX: 300 }));
       window.dispatchEvent(new PointerEvent('pointermove', { pointerId: 7, clientX: 300 + dx }));
@@ -79,6 +85,20 @@ describe('useTableResize', () => {
 
     table.drag('name', 200);
     expect(table.widths()).toEqual({ name: 252, city: 48 });
+  });
+
+  it('reports both columns once a drag that traded the width ends and nothing for a drag that came back', () => {
+    const table = harness(4000);
+
+    table.drag('name', 40);
+    table.drag('name', 0);
+
+    expect(table.resized()).toEqual([
+      [
+        { key: 'name', width: 200 },
+        { key: 'city', width: 100 },
+      ],
+    ]);
   });
 
   it('drags a column pinned at the end from its start edge and mirrors the drag in RTL', () => {

@@ -1,6 +1,6 @@
 import type { NumberLocale } from '../format/format.types';
 import { type CellInputKind, type CellRange, type CellValue, CellValueKind } from '../cell.types';
-import type { FormulaNode } from '../formula/formula.types';
+import type { CallSignature, FormulaNode } from '../formula/formula.types';
 import type { Sheet } from '../workbook';
 
 export interface ArrayValue {
@@ -70,10 +70,8 @@ export interface FormulaPlace {
   readonly col: number;
 }
 
-export interface FunctionSpec {
+export interface FunctionSpec extends CallSignature {
   readonly name: string;
-  readonly min: number;
-  readonly max: number;
   readonly volatile?: boolean | undefined;
   readonly array?: boolean | undefined;
   readonly arrays?: readonly number[] | typeof ArrayScope.All | undefined;
@@ -98,6 +96,7 @@ export interface Recalculation {
   readonly busyMs: number;
   readonly longestMs: number;
   readonly finished: boolean;
+  readonly planned: boolean;
   readonly settled: Promise<void>;
   cancel(): void;
 }
@@ -131,4 +130,4 @@ export const CriteriaToken = {
 
 export const DatedifUnit = { Y: 'Y', M: 'M', D: 'D', YM: 'YM', MD: 'MD', YD: 'YD' } as const;
 
-export const WeekendMask = { AllDays: '1111111', Weekend: '1' } as const;
+export const WeekendMask = { Weekend: '1' } as const;

@@ -1,5 +1,6 @@
 import type { NuiRouteLocation } from '../shared/destination';
 import type { NuiOptionKey } from '../shared/options';
+import { NuiTone } from '../shared/scale.types';
 import type { Component } from 'vue';
 import type { FloatingPlacement, IconSource, PopoverInvokerAttrs } from '@numior/primitives';
 import type { NuiTriggerRef } from '../shared/trigger-ref';
@@ -94,7 +95,7 @@ export type NuiMenuFocus = (typeof NuiMenuFocus)[keyof typeof NuiMenuFocus];
 export type MenuFocusRequest = (typeof MenuFocusRequest)[keyof typeof MenuFocusRequest];
 
 export interface NuiMenuExposed {
-  readonly trigger: HTMLElement | null;
+  readonly triggerElement: HTMLElement | null;
   show(focus?: NuiMenuFocus): void;
 }
 
@@ -152,7 +153,7 @@ export interface NuiMenuRowProps {
   shortcut?: string | undefined;
 }
 
-export const NuiMenuItemTone = { Neutral: 'neutral', Error: 'error' } as const;
+export const NuiMenuItemTone = { Neutral: NuiTone.Neutral, Error: NuiTone.Error } as const;
 
 export const NuiMenuFocus = { First: 'first', Last: 'last' } as const;
 

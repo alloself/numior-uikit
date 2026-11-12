@@ -20,7 +20,8 @@ export const clampNumber = (value: number, min?: number, max?: number): number =
   return max === undefined ? floor : Math.min(max, floor);
 };
 
-const scaleFor = (...values: number[]): number => 10 ** Math.max(...values.map(decimalPlaces));
+const scaleFor = (...values: number[]): number =>
+  10 ** values.reduce((places, value) => Math.max(places, decimalPlaces(value)), 0);
 
 export const snapToStep = (
   value: number,

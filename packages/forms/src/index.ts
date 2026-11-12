@@ -61,6 +61,7 @@ export type { FormRules } from './core/rules';
 export type { SubmitHandler, SubmitHelpers } from './core/submit';
 export {
   type AsyncRuleContext,
+  type CheckErrorHandler,
   type FieldFlush,
   type FieldMeta,
   type FieldRule,

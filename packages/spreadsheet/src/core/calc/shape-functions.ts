@@ -1,10 +1,11 @@
+import { max } from 'lodash-es';
 import type { NumberLocale } from '../format/format.types';
 import { CellValueKind, type CellValue } from '../cell.types';
 import { EMPTY, errorValue } from '../values';
-import { MANY } from './aggregate';
 import type { EvalValue, FunctionArgs, FunctionSpec } from './calc.types';
 import { lookupKey, ordered, raise, toLogical } from './coerce';
 import { defineFunction } from './registry';
+import { NEWER_MANY, sortKeys } from './signatures';
 
 type Rows = readonly (readonly CellValue[])[];
 
@@ -156,7 +157,7 @@ const stack = (args: FunctionArgs, byCol: boolean): EvalValue => {
     byCol ? transpose(args.matrix(index)) : args.matrix(index),
   );
 
-  const width = Math.max(...parts.map(widthOf));
+  const width = max(parts.map(widthOf)) ?? 0;
 
   const rows = parts.flatMap((part) =>
     part.map((row) => Array.from({ length: width }, (_, col) => row[col] ?? MISSING_ITEM)),
@@ -168,36 +169,59 @@ const stack = (args: FunctionArgs, byCol: boolean): EvalValue => {
 export const SHAPE_FUNCTIONS: readonly FunctionSpec[] = [
   defineFunction({ name: 'FILTER', array: true, min: 2, max: 3, evaluate: filter }),
   defineFunction({ name: 'SORT', array: true, min: 1, max: 4, evaluate: sortRows }),
-  defineFunction({ name: 'SORTBY', array: true, min: 2, max: MANY, evaluate: sortBy }),
+  defineFunction({
+    name: 'SORTBY',
+    array: true,
+    min: 2,
+    max: NEWER_MANY - 1,
+    counts: sortKeys,
+    evaluate: sortBy,
+  }),
   defineFunction({ name: 'UNIQUE', array: true, min: 1, max: 3, evaluate: unique }),
-  defineFunction({ name: 'TAKE', array: true, min: 2, max: 3, evaluate: takeOrDrop(false) }),
-  defineFunction({ name: 'DROP', array: true, min: 2, max: 3, evaluate: takeOrDrop(true) }),
+  defineFunction({
+    name: 'TAKE',
+    array: true,
+    min: 2,
+    max: 3,
+    givesReference: true,
+    evaluate: takeOrDrop(false),
+  }),
+  defineFunction({
+    name: 'DROP',
+    array: true,
+    min: 2,
+    max: 3,
+    givesReference: true,
+    evaluate: takeOrDrop(true),
+  }),
   defineFunction({
     name: 'CHOOSEROWS',
     array: true,
     min: 2,
-    max: MANY,
+    max: NEWER_MANY,
+    givesReference: true,
     evaluate: (args) => arrayOf(pick(args.matrix(0), args)),
   }),
   defineFunction({
     name: 'CHOOSECOLS',
     array: true,
     min: 2,
-    max: MANY,
+    max: NEWER_MANY,
+    givesReference: true,
     evaluate: (args) => arrayOf(transpose(pick(transpose(args.matrix(0)), args))),
   }),
   defineFunction({
     name: 'VSTACK',
     array: true,
     min: 1,
-    max: MANY,
+    max: NEWER_MANY,
     evaluate: (args) => stack(args, false),
   }),
   defineFunction({
     name: 'HSTACK',
     array: true,
     min: 1,
-    max: MANY,
+    max: NEWER_MANY,
     evaluate: (args) => stack(args, true),
   }),
 ];

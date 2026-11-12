@@ -32,6 +32,25 @@ describe('NuiDrawer', () => {
     drawer.unmount();
   });
 
+  it('forwards a slot that appears after mounting and leaves absent slots out of the dialog', async () => {
+    const drawer = DrawerDriver.mountParts({ body: true });
+    expect(drawer.hasBody).toBe(true);
+    expect(drawer.hasHeader).toBe(false);
+    expect(drawer.footer.exists()).toBe(false);
+
+    await drawer.showParts({ title: true, description: true, body: true, footer: true });
+    expect(drawer.titleText).toBe('Custom title');
+    expect(drawer.descriptionText).toBe('Custom description');
+    expect(drawer.footer.text()).toBe('Apply');
+
+    await drawer.showParts({ footer: true });
+    expect(drawer.hasBody).toBe(false);
+    expect(drawer.hasHeader).toBe(false);
+    expect(drawer.footer.text()).toBe('Apply');
+
+    drawer.unmount();
+  });
+
   it('leaves the close text to the dialog dictionary', () => {
     const drawer = DrawerDriver.mount({ config: { locale: 'ru-RU' } });
     expect(drawer.closeLabel).toBe('Закрыть');

@@ -14,9 +14,11 @@ export const createCommandStack = <C>(limit: number): CommandStack<C> => {
       done.push(command);
       undone.length = 0;
 
-      if (done.length > limit) {
-        done.shift();
+      if (done.length <= limit) {
+        return;
       }
+
+      done.shift();
     },
     undo: () => {
       const command = done.pop();

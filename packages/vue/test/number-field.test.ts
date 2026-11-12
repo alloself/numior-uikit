@@ -7,9 +7,11 @@ const EUR = { style: 'currency', currency: 'EUR' } as const;
 
 describe('NuiNumberField', () => {
   afterEach(() => {
-    if (languageDescriptor) {
-      Object.defineProperty(navigator, 'language', languageDescriptor);
+    if (!languageDescriptor) {
+      return;
     }
+
+    Object.defineProperty(navigator, 'language', languageDescriptor);
   });
 
   it('formats the model for the default locale with spinbutton semantics', () => {
@@ -38,6 +40,50 @@ describe('NuiNumberField', () => {
     await field.press('Enter');
     expect(field.value).toBe(1.235);
     expect(field.text).toBe('1.235');
+
+    field.unmount();
+  });
+
+  it('leaves the model alone when focus leaves or Enter is pressed without typing', async () => {
+    const precise = NumberFieldDriver.mount({ modelValue: 1.23456 });
+
+    await precise.blur();
+
+    expect(precise.text).toBe('1.235');
+    expect(precise.value).toBe(1.23456);
+
+    precise.unmount();
+
+    const above = NumberFieldDriver.mount({ modelValue: 150, props: { max: 100 } });
+
+    await above.blur();
+    await above.press('Enter');
+
+    expect(above.value).toBe(150);
+
+    await above.type('150');
+    await above.type('151');
+    await above.blur();
+
+    expect(above.value).toBe(100);
+
+    above.unmount();
+  });
+
+  it('keeps the typed text when the parent passes equal format options again', async () => {
+    const field = NumberFieldDriver.mount({
+      modelValue: 0.26,
+      props: { formatOptions: { style: 'percent' } },
+    });
+
+    await field.type('30');
+    await field.receiveProps({ formatOptions: { style: 'percent' } });
+
+    expect(field.text).toBe('30');
+
+    await field.receiveProps({ formatOptions: { style: 'decimal' } });
+
+    expect(field.text).toBe('0.26');
 
     field.unmount();
   });

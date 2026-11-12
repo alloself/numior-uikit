@@ -25,6 +25,12 @@ interface FormatCase {
   readonly fill: FormatFill | undefined;
 }
 
+const BUDGET_MS = 100;
+
+const BUDGET_CELLS = 20_000;
+
+const BUDGET_CODES = ['General', '#,##0.00', '0.00%'];
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -63,9 +69,12 @@ const caseOf = (entry: unknown, index: number): FormatCase => {
   };
 };
 
-const corpus = (): FormatCase[] => {
+const valueName = (value: CellValue): string =>
+  'value' in value ? String(value.value) : value.kind;
+
+const corpus = (file: string): FormatCase[] => {
   const parsed: unknown = JSON.parse(
-    readFileSync(new URL('./corpus/formats/formats.json', import.meta.url), 'utf8'),
+    readFileSync(new URL(`./corpus/formats/${file}`, import.meta.url), 'utf8'),
   );
 
   const cases = isRecord(parsed) && Array.isArray(parsed.cases) ? parsed.cases : [];
@@ -74,7 +83,7 @@ const corpus = (): FormatCase[] => {
 };
 
 describe('number format corpus', () => {
-  it.each(corpus().map((entry) => [`${entry.code} · ${entry.text}`, entry] as const))(
+  it.each(corpus('formats.json').map((entry) => [`${entry.code} · ${entry.text}`, entry] as const))(
     '%s',
     (_name, entry) => {
       const shown = formatValue(
@@ -86,6 +95,16 @@ describe('number format corpus', () => {
       expect(shown).toEqual({ text: entry.text, color: entry.color, fill: entry.fill });
     },
   );
+});
+
+describe('texts Excel shows for the same numbers and codes', () => {
+  it.each(
+    corpus('excel.json').map(
+      (entry) => [`${entry.code} · ${valueName(entry.value)} · ${entry.text}`, entry] as const,
+    ),
+  )('%s', (_name, entry) => {
+    expect(formatValue(entry.value, entry.code, EN_NUMBERS).text).toBe(entry.text);
+  });
 });
 
 describe('built-in formats and colours', () => {
@@ -101,5 +120,32 @@ describe('built-in formats and colours', () => {
   it('maps palette indices to colours', () => {
     expect(formatColor(3)).toBe('#FF0000');
     expect(formatColor(57)).toBeUndefined();
+  });
+});
+
+describe('cost', () => {
+  it('formats twenty thousand numbers in three common formats within the budget', () => {
+    const values = Array.from({ length: BUDGET_CELLS }, (_, index) =>
+      numberValue(index * 37.31 - 400_000),
+    );
+
+    const formatAll = (): number =>
+      BUDGET_CODES.reduce(
+        (total, code) =>
+          values.reduce(
+            (sum, value) => sum + formatValue(value, code, RU_NUMBERS).text.length,
+            total,
+          ),
+        0,
+      );
+
+    formatAll();
+
+    const started = performance.now();
+    const length = formatAll();
+    const spent = performance.now() - started;
+
+    expect(length).toBeGreaterThan(0);
+    expect(spent).toBeLessThan(BUDGET_MS);
   });
 });

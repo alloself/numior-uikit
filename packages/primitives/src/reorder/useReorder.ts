@@ -56,6 +56,7 @@ export interface Reorder {
   readonly source: ComputedRef<number | undefined>;
   onPointerdown(index: number, event: PointerEvent): void;
   onKeydown(index: number, event: KeyboardEvent): boolean;
+  onBlur(index: number): void;
   cancel(): void;
 }
 
@@ -107,9 +108,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     }
     const target = options.indexAt(current.position, current.from);
 
-    if (target !== current.to && allowed(current.from, target)) {
-      publish({ ...current, to: target });
-    }
+    publish({ ...current, to: allowed(current.from, target) ? target : current.to });
   };
 
   const edge = useEdgeScroll({ container: options.container, onStep: retarget });
@@ -120,7 +119,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     }
     window.removeEventListener('pointermove', onPointermove);
     window.removeEventListener('pointerup', onPointerup);
-    window.removeEventListener('pointercancel', cancel);
+    window.removeEventListener('pointercancel', onPointercancel);
     window.removeEventListener('keydown', onWindowKeydown);
   };
 
@@ -138,18 +137,23 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     }
     finish();
 
-    if (current.phase === ReorderPhase.Keyboard) {
-      emit({ type: ReorderEventType.Cancelled, from: current.from });
+    if (current.phase !== ReorderPhase.Keyboard) {
+      return;
     }
+
+    emit({ type: ReorderEventType.Cancelled, from: current.from });
   };
 
   const drop = (current: KeyboardState | PointerState, to: number): void => {
     const moved = to !== current.from && allowed(current.from, to);
 
-    if (moved) {
-      options.onMove(current.from, to);
+    try {
+      if (moved) {
+        options.onMove(current.from, to);
+      }
+    } finally {
+      finish();
     }
-    finish();
 
     if (moved) {
       emit({ type: ReorderEventType.Dropped, from: current.from, to });
@@ -204,10 +208,22 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     }
   };
 
-  const onWindowKeydown = (event: KeyboardEvent): void => {
-    if (event.key === Key.Escape && isPointer(state.value)) {
-      cancel();
+  const onPointercancel = (event: PointerEvent): void => {
+    const current = state.value;
+
+    if (!isPointer(current) || event.pointerId !== current.pointerId) {
+      return;
     }
+
+    cancel();
+  };
+
+  const onWindowKeydown = (event: KeyboardEvent): void => {
+    if (event.key !== Key.Escape || !isPointer(state.value)) {
+      return;
+    }
+
+    cancel();
   };
 
   const onPointerdown = (index: number, event: PointerEvent): void => {
@@ -228,7 +244,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
 
     window.addEventListener('pointermove', onPointermove);
     window.addEventListener('pointerup', onPointerup);
-    window.addEventListener('pointercancel', cancel);
+    window.addEventListener('pointercancel', onPointercancel);
     window.addEventListener('keydown', onWindowKeydown);
   };
 
@@ -246,10 +262,12 @@ export const useReorder = (options: ReorderOptions): Reorder => {
   const nudge = (current: KeyboardState, step: number): void => {
     const to = nextAllowed(current.from, current.to, step);
 
-    if (to !== undefined) {
-      publish({ ...current, to });
-      emit({ type: ReorderEventType.Moved, from: current.from, to });
+    if (to === undefined) {
+      return;
     }
+
+    publish({ ...current, to });
+    emit({ type: ReorderEventType.Moved, from: current.from, to });
   };
 
   const handleActive = (current: KeyboardState, key: string): boolean => {
@@ -288,7 +306,17 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     }
   };
 
+  const onBlur = (index: number): void => {
+    const current = state.value;
+
+    if (current.phase !== ReorderPhase.Keyboard || current.from !== index) {
+      return;
+    }
+
+    cancel();
+  };
+
   onScopeDispose(cancel);
 
-  return { state, source, onPointerdown, onKeydown, cancel };
+  return { state, source, onPointerdown, onKeydown, onBlur, cancel };
 };

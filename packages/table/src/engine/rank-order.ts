@@ -10,6 +10,7 @@ export interface RankCollation {
 
 export type RankMessage =
   | { readonly kind: typeof RankMessageKind.Part; readonly id: number; readonly text: string }
+  | { readonly kind: typeof RankMessageKind.Drop; readonly id: number }
   | {
       readonly kind: typeof RankMessageKind.Sort;
       readonly id: number;
@@ -85,6 +86,9 @@ export const readRankMessage = (value: unknown): RankMessage | undefined => {
     return typeof value.text === 'string'
       ? { kind: 'part', id: value.id, text: value.text }
       : undefined;
+  }
+  if (value.kind === RankMessageKind.Drop) {
+    return { kind: 'drop', id: value.id };
   }
 
   const collation = readCollation(value.collation);

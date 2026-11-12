@@ -2,7 +2,6 @@ import { Key } from '@numior/primitives';
 import { computed, shallowRef } from 'vue';
 import {
   DrawingKind,
-  StepKind,
   canEditDrawing,
   placeDrawing,
   removeDrawing,
@@ -10,6 +9,8 @@ import {
   type SheetLayout,
 } from '../../core';
 import { lineSizesOf } from '../sheet-cells';
+import { inField, inGrid } from '../sheet-keys';
+import { applyLayout } from '../sheet-layout-step';
 import type { FrameGrip } from '../sheet.types';
 import { allEdges, boxOfAnchor, edgesOf, movedAnchor, spanOf } from './drawing-box';
 import {
@@ -63,6 +64,9 @@ const inSettings = (target: EventTarget | null): boolean =>
 const nameOf = (shown: ShownDrawing): string =>
   shown.drawing.name === '' ? shown.label : shown.drawing.name;
 
+const isMenuKey = (event: KeyboardEvent): boolean =>
+  event.key === Key.ContextMenu || (event.key === Key.F10 && event.shiftKey);
+
 const consume = (event: KeyboardEvent): void => {
   event.preventDefault();
   event.stopPropagation();
@@ -70,6 +74,8 @@ const consume = (event: KeyboardEvent): void => {
 
 export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit => {
   let session: Session | undefined;
+
+  let pressed: ShownDrawing | undefined;
 
   const selectedId = shallowRef<string>();
 
@@ -92,20 +98,17 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
   const write = (change: (layout: SheetLayout) => SheetLayout): boolean => {
     const sheet = options.sheet();
 
-    return (
-      sheet !== undefined &&
-      options.editing.apply([
-        { kind: StepKind.SetLayout, sheet: sheet.name, layout: change(sheet.layout) },
-      ])
-    );
+    return sheet !== undefined && applyLayout(options.editing, sheet, change(sheet.layout));
   };
 
   const select = (shown: ShownDrawing): void => {
-    if (canEdit(shown) && selectedId.value !== shown.drawing.id) {
-      selectedId.value = shown.drawing.id;
-      options.announce(options.messages().drawingSelected({ label: nameOf(shown) }));
-      options.focus();
+    if (!canEdit(shown) || selectedId.value === shown.drawing.id) {
+      return;
     }
+
+    selectedId.value = shown.drawing.id;
+    options.announce(options.messages().drawingSelected({ label: nameOf(shown) }));
+    options.focus();
   };
 
   const selectNew = (id: string, name: string): void => {
@@ -119,10 +122,12 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
   };
 
   const openSettings = (shown: ShownDrawing): void => {
-    if (shown.kind === ShownDrawingKind.Chart && canEdit(shown)) {
-      select(shown);
-      options.openSettings();
+    if (shown.kind !== ShownDrawingKind.Chart || !canEdit(shown)) {
+      return;
     }
+
+    select(shown);
+    options.openSettings();
   };
 
   const begin = (event: PointerEvent, shown: ShownDrawing, grip: FrameGrip | undefined): void => {
@@ -155,6 +160,9 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
   };
 
   const onDown = (event: PointerEvent, shown: ShownDrawing): void => {
+    event.preventDefault();
+    pressed = shown;
+
     if (
       event.button !== PRIMARY_BUTTON ||
       !canEdit(shown) ||
@@ -167,9 +175,11 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
   };
 
   const onGripDown = (event: PointerEvent, shown: ShownDrawing, grip: FrameGrip): void => {
-    if (event.button === PRIMARY_BUTTON && canEdit(shown)) {
-      begin(event, shown, grip);
+    if (event.button !== PRIMARY_BUTTON || !canEdit(shown)) {
+      return;
     }
+
+    begin(event, shown, grip);
   };
 
   const dragTo = (x: number, y: number, keepRatio: boolean): void => {
@@ -226,11 +236,13 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
   const onUp = (): void => {
     const ended = finish();
 
-    if (ended?.moved === true && ended.latest !== undefined) {
-      const { id, latest } = ended;
-
-      write((layout) => placeDrawing(layout, id, latest));
+    if (ended?.moved !== true || ended.latest === undefined) {
+      return;
     }
+
+    const { id, latest } = ended;
+
+    write((layout) => placeDrawing(layout, id, latest));
   };
 
   const onCancel = (): void => {
@@ -238,9 +250,13 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
   };
 
   const onRootDown = (event: PointerEvent): void => {
-    if (selectedId.value !== undefined && !isDrawingTarget(event.target)) {
-      deselect();
+    pressed = undefined;
+
+    if (selectedId.value === undefined || isDrawingTarget(event.target)) {
+      return;
     }
+
+    deselect();
   };
 
   const nudge = (shown: ShownDrawing, across: number, down: number, whole: boolean): void => {
@@ -266,16 +282,30 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
     const at = list.indexOf(shown);
     const next = list[(at + (backwards ? -1 : 1) + list.length) % list.length];
 
-    if (next !== undefined) {
-      select(next);
+    if (next === undefined) {
+      return;
     }
+
+    select(next);
   };
 
   const remove = (shown: ShownDrawing): void => {
-    if (write((layout) => removeDrawing(layout, shown.drawing.id))) {
-      deselect();
-      options.announce(options.messages().drawingRemoved({ label: nameOf(shown) }));
+    if (!write((layout) => removeDrawing(layout, shown.drawing.id))) {
+      return;
     }
+
+    deselect();
+    options.announce(options.messages().drawingRemoved({ label: nameOf(shown) }));
+  };
+
+  const onContextmenu = (event: MouseEvent, shown: ShownDrawing): void => {
+    if (!canEdit(shown)) {
+      return;
+    }
+
+    event.preventDefault();
+    select(shown);
+    options.openMenu(shown, event);
   };
 
   const onSelectedKey = (event: KeyboardEvent, shown: ShownDrawing): boolean => {
@@ -283,6 +313,10 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
 
     if (step !== undefined) {
       nudge(shown, step[0], step[1], event.shiftKey);
+      return true;
+    }
+    if (isMenuKey(event)) {
+      options.openMenu(shown, undefined);
       return true;
     }
 
@@ -312,6 +346,13 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
     if (inSettings(event.target)) {
       return;
     }
+    if (inField(event.target)) {
+      deselect();
+      return;
+    }
+    if (!inGrid(event.target)) {
+      return;
+    }
     if (shown === undefined) {
       const [first] = options.drawings().filter(canEdit);
 
@@ -326,7 +367,7 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
     }
     if (onSelectedKey(event, shown)) {
       consume(event);
-    } else if (event.key.length === 1) {
+    } else if (event.key.length === 1 || event.key === Key.F2) {
       deselect();
     }
   };
@@ -341,6 +382,9 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
     selectNew,
     deselect,
     openSettings,
+    remove,
+    pressed: () => pressed,
+    onContextmenu,
     onDown,
     onGripDown,
     onMove,

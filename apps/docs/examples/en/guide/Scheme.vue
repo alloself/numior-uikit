@@ -34,8 +34,10 @@ const schemes: readonly NuiToggleItem<ColorScheme>[] = [
 ];
 
 const pick = (next: ColorScheme | null): void => {
-  if (next) {
-    set(next);
+  if (!next) {
+    return;
   }
+
+  set(next);
 };
 </script>

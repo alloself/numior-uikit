@@ -16,7 +16,7 @@
         :selected="column.selected"
         :label="labels[column.type]"
         :tab-stop="index === 0"
-        @pick="emit('pick', column.type, $event)"
+        @select="emit('select', column.type, $event)"
       />
     </template>
   </div>
@@ -48,7 +48,7 @@ const isWheel = (value: unknown): value is WheelHandle =>
 const { columns, labels, emptyText } = defineProps<NuiTimeWheelsProps>();
 
 const emit = defineEmits<{
-  pick: [type: TimeSegmentType, index: number];
+  select: [type: TimeSegmentType, index: number];
   focusWheel: [type: TimeSegmentType];
 }>();
 

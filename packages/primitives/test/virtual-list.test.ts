@@ -424,6 +424,42 @@ describe('useVirtualList', () => {
     list.unmount();
   });
 
+  it('names the row at the top edge and scrolls another row to the same place', async () => {
+    const list = VirtualHarness.mount({ height: 200, itemSize: 20, frozen: 2 });
+
+    await list.settle();
+    await list.scroll(1007);
+
+    expect(list.anchor).toEqual({ index: 52, within: 7 });
+
+    await list.scrollToAnchor({ index: 55, within: 7 });
+
+    expect([list.scrollTop, list.elementScroll]).toEqual([1067, 1067]);
+
+    await list.scrollToAnchor({ index: 0, within: 7 });
+
+    expect(list.scrollTop).toBe(0);
+
+    await list.scrollToAnchor({ index: 999, within: 0 });
+
+    expect(list.scrollTop).toBe(19_800);
+
+    list.unmount();
+  });
+
+  it('keeps an anchored row on top through sizes that change in the same tick', async () => {
+    const list = VirtualHarness.mount({ height: 200, itemSize: createSizeIndex(1000, 20) });
+
+    await list.settle();
+    await list.scroll(1007);
+    await list.scrollToAnchor({ index: 52, within: 7 }, createSizeIndex(1000, 20, [[3, 100]]));
+
+    expect(list.anchor).toEqual({ index: 52, within: 7 });
+    expect(list.scrollTop).toBe(1127);
+
+    list.unmount();
+  });
+
   it('ignores measured sizes while the rows have one fixed size', async () => {
     const list = VirtualHarness.mount({ height: 200, itemSize: 20 });
 

@@ -12,19 +12,16 @@ import {
 } from '@numior/editor-core';
 import { fixtureSchema } from '@numior/editor-core/fixtures';
 import { editorAuthority } from '../../server/authority';
-import { createRoom, type RoomPeer } from '../../server/room';
+import { createRoom } from '../../server/room';
 import {
-  ClientMessageKind,
   collab,
   collabVersion,
   createCollabClient,
   editorCollabDocument,
   sendableSteps,
-  type ClientMessage,
   type CollabClient,
-  type ServerMessage,
-  type TransportListener,
 } from '../../src';
+import { RETRY, createTraffic, createWire, mendAll, settleAll, type NetworkTraffic } from './wire';
 
 export interface NetworkClient {
   readonly state: () => EditorState;
@@ -33,18 +30,23 @@ export interface NetworkClient {
   readonly run: (command: Command) => boolean;
   readonly toServer: () => boolean;
   readonly toClient: () => boolean;
+  readonly cut: () => void;
+  readonly relink: () => void;
+  readonly late: () => boolean;
   readonly pending: () => number;
   readonly version: () => number;
+  readonly stop: () => void;
 }
 
 export interface CollabNetwork {
   readonly clients: readonly NetworkClient[];
   readonly settle: () => void;
+  readonly mend: () => void;
+  readonly close: () => void;
   readonly server: () => unknown;
   readonly docs: () => readonly DocJSON[];
+  readonly traffic: () => NetworkTraffic;
 }
-
-const overTheWire = (value: unknown): unknown => JSON.parse(JSON.stringify(value));
 
 export const paragraphs = (...texts: readonly string[]): Doc =>
   createDoc(
@@ -63,11 +65,10 @@ export const paragraphs = (...texts: readonly string[]): Doc =>
 export const createNetwork = (doc: Doc, names: readonly string[]): CollabNetwork => {
   const authority = editorAuthority(doc);
   const room = createRoom(authority);
+  const traffic = createTraffic();
 
   const clients = names.map((name): NetworkClient => {
-    const toServer: ClientMessage[] = [];
-    const toClient: ServerMessage[] = [];
-    let listener: TransportListener | undefined;
+    const wire = createWire(room, name, traffic);
 
     let state = createState({
       doc,
@@ -75,33 +76,14 @@ export const createNetwork = (doc: Doc, names: readonly string[]): CollabNetwork
       ids: createIdSource(`${name}-`),
     });
 
-    const peer: RoomPeer = {
-      clientId: name,
-      send: (message) => {
-        toClient.push(message);
-      },
-    };
-
     const client = createCollabClient({
       doc: 'doc',
       clientId: name,
-      schema: { name: fixtureSchema.name, version: fixtureSchema.version },
-      transport: {
-        open: (opened) => {
-          listener = opened;
-
-          return {
-            send: (message) => {
-              toServer.push(message);
-            },
-            close: () => {
-              listener = undefined;
-            },
-          };
-        },
-      },
+      schema: { name: doc.schema.name, version: doc.schema.version },
+      transport: wire.transport,
+      retry: RETRY,
       document: editorCollabDocument({
-        schema: fixtureSchema,
+        schema: doc.schema,
         getState: () => state,
         dispatch: (tr) => {
           state = state.apply(tr);
@@ -110,7 +92,7 @@ export const createNetwork = (doc: Doc, names: readonly string[]): CollabNetwork
       }),
     });
 
-    listener?.opened();
+    wire.open();
 
     return {
       state: () => state,
@@ -130,48 +112,38 @@ export const createNetwork = (doc: Doc, names: readonly string[]): CollabNetwork
         client.sync();
         return done;
       },
-      toServer: () => {
-        const message = toServer.shift();
-
-        if (message === undefined) {
-          return false;
-        }
-        if (message.kind === ClientMessageKind.Hello) {
-          room.join(peer, message);
-        } else {
-          room.receive(peer, message);
-        }
-        return true;
-      },
-      toClient: () => {
-        const message = toClient.shift();
-
-        if (message === undefined) {
-          return false;
-        }
-        listener?.message(overTheWire(message));
-        return true;
-      },
+      toServer: wire.toServer,
+      toClient: wire.toClient,
+      cut: wire.cut,
+      relink: wire.relink,
+      late: wire.late,
       pending: () => sendableSteps(state).length,
       version: () => collabVersion(state),
+      stop: client.stop,
     };
   });
 
   const settle = (): void => {
-    let moved = true;
+    settleAll(clients);
+  };
 
-    while (moved) {
-      moved = clients.reduce(
-        (any, client) => [client.toServer(), client.toClient()].some(Boolean) || any,
-        false,
-      );
-    }
+  const mend = (): void => {
+    mendAll(clients);
+  };
+
+  const close = (): void => {
+    clients.forEach((client) => {
+      client.stop();
+    });
   };
 
   return {
     clients,
     settle,
+    mend,
+    close,
     server: authority.snapshot,
     docs: () => clients.map((client) => toJSON(client.state().doc)),
+    traffic: () => ({ ...traffic }),
   };
 };

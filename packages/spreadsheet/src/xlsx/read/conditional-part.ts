@@ -1,6 +1,7 @@
 import { parseCell, parseRange } from '../../core/address';
 import type { CellAddress, CellRange } from '../../core/cell.types';
 import {
+  ConditionalRuleKind,
   ThresholdKind,
   type CellIsOperator,
   type ConditionalEntry,
@@ -13,13 +14,12 @@ import {
 } from '../../core/conditional/conditional.types';
 import type { StyleColor } from '../../core/decorations';
 import type { FormulaNode } from '../../core/formula/formula.types';
-import { EN_FORMULAS } from '../../core/formula/locale';
-import { parseFormula } from '../../core/formula/parser';
 import { XmlBoolean, XmlPrefix, type XmlAttribute, type XmlName } from '../xml/xml.types';
 import { escapeAttribute, escapeText } from '../xml/writer';
 import { MAIN, attributeOf, numberOf } from './ooxml';
 import { colorOf } from './styles';
 import { OoxmlElement } from '../ooxml.types';
+import { parseFileFormula } from './file-formula';
 
 export interface ConditionalCollector {
   inside(): boolean;
@@ -70,13 +70,17 @@ interface Drafting {
 
 type RuleReader = (draft: RuleDraft, drafting: Drafting) => ConditionalRule | undefined;
 
-const PREFIXES = /_xl(?:fn|ws|pm)\./gu;
-
 export const X14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main';
 
 const XM = 'http://schemas.microsoft.com/office/excel/2006/main';
 
 const EXTENSION_FORMULA = /<((?:[\w.-]+:)?)f>[\s\S]*?<\/\1f>/gu;
+
+const LINKED_ID = /<(?:[\w.-]+:)?id>\s*(\{[^}]+\})\s*<\//u;
+
+const OWN_ID = /^<[^>]*\sid="(\{[^}"]+\})"/u;
+
+const LINKED_ENDS = /<(?:[\w.-]+:)?cfvo\b[^>]*\stype="([^"]+)"/gu;
 
 const OPERATORS: readonly CellIsOperator[] = [
   'between',
@@ -146,9 +150,11 @@ const createRecorder = (): Recorder => {
     const colon = name.qname.indexOf(':');
     const prefix = colon > 0 ? name.qname.slice(0, colon) : '';
 
-    if (prefix !== '' && prefix !== XmlPrefix.Xml) {
-      prefixes.set(prefix, name.uri);
+    if (prefix === '' || prefix === XmlPrefix.Xml) {
+      return;
     }
+
+    prefixes.set(prefix, name.uri);
   };
 
   return {
@@ -206,7 +212,7 @@ const rangesOf = (text: string): CellRange[] =>
   }, []);
 
 const formulaOf = (text: string, anchor: CellAddress): FormulaNode | undefined => {
-  const parsed = parseFormula(text.replaceAll(PREFIXES, ''), EN_FORMULAS, anchor);
+  const parsed = parseFileFormula(text, anchor);
 
   return parsed.ok ? parsed.ast : undefined;
 };
@@ -514,18 +520,22 @@ export const createExtensionCollector = (): ConditionalCollector => {
   const openRule = (current: ExtensionRule, name: XmlName, attributes: readonly XmlAttribute[]) => {
     current.raw.open(name, attributes);
     current.depth += 1;
-    if (name.local === OoxmlElement.F && name.uri === XM) {
-      current.formula = '';
+    if (name.local !== OoxmlElement.F || name.uri !== XM) {
+      return;
     }
+
+    current.formula = '';
   };
 
   const closeRule = (current: ExtensionRule, name: XmlName): void => {
     current.raw.close(name);
     current.depth -= 1;
-    if (name.local === OoxmlElement.F && name.uri === XM && current.formula !== undefined) {
-      current.formulas.push(current.formula);
-      current.formula = undefined;
+    if (name.local !== OoxmlElement.F || name.uri !== XM || current.formula === undefined) {
+      return;
     }
+
+    current.formulas.push(current.formula);
+    current.formula = undefined;
   };
 
   const finished = (): void => {
@@ -578,4 +588,73 @@ export const createExtensionCollector = (): ConditionalCollector => {
     formats: () => formats,
     foreign: () => 0,
   };
+};
+
+const linkedEnds = (formats: readonly ConditionalFormat[]): Map<string, (string | undefined)[]> => {
+  const ends = new Map<string, (string | undefined)[]>();
+
+  for (const format of formats) {
+    if (format.extension !== true) {
+      continue;
+    }
+
+    for (const { rule } of format.rules) {
+      if (rule.kind !== ConditionalRuleKind.Foreign) {
+        continue;
+      }
+
+      const id = OWN_ID.exec(rule.xml)?.[1];
+
+      if (id === undefined) {
+        continue;
+      }
+
+      ends.set(
+        id,
+        Array.from(rule.xml.matchAll(LINKED_ENDS), (match) => match[1]),
+      );
+    }
+  }
+  return ends;
+};
+
+const automatic = (
+  threshold: Threshold,
+  type: string | undefined,
+  kind: typeof ThresholdKind.AutoMin | typeof ThresholdKind.AutoMax,
+  plain: typeof ThresholdKind.Min | typeof ThresholdKind.Max,
+): Threshold =>
+  threshold.kind === plain && type !== undefined && THRESHOLDS[type] === kind
+    ? { kind }
+    : threshold;
+
+const withLinkedEnds = (
+  entry: ConditionalEntry,
+  ends: ReadonlyMap<string, readonly (string | undefined)[]>,
+): ConditionalEntry => {
+  const { rule } = entry;
+  const id = entry.extra === undefined ? undefined : LINKED_ID.exec(entry.extra)?.[1];
+  const found = id === undefined ? undefined : ends.get(id);
+
+  if (rule.kind !== ConditionalRuleKind.DataBar || found === undefined) {
+    return entry;
+  }
+  return {
+    ...entry,
+    rule: {
+      ...rule,
+      min: automatic(rule.min, found[0], ThresholdKind.AutoMin, ThresholdKind.Min),
+      max: automatic(rule.max, found[1], ThresholdKind.AutoMax, ThresholdKind.Max),
+    },
+  };
+};
+
+export const withAutomaticEnds = (formats: readonly ConditionalFormat[]): ConditionalFormat[] => {
+  const ends = linkedEnds(formats);
+
+  return formats.map((format) =>
+    format.extension === true || ends.size === 0
+      ? format
+      : { ...format, rules: format.rules.map((entry) => withLinkedEnds(entry, ends)) },
+  );
 };

@@ -3,6 +3,7 @@ export interface SliceJob {
   done(): number;
   work(deadline: number): boolean;
   waiting?(): Promise<unknown> | undefined;
+  cancel?(): void;
 }
 
 export interface SliceOptions {

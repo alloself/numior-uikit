@@ -10,38 +10,20 @@ import {
   type WorkbookDocumentListener,
   type WorkbookDocumentOptions,
 } from './collab.types';
-import { mergeLayouts } from './merge-layout';
-import { rebaseStep } from './rebase-step';
-import { changeOver, changesOf } from './remote-change';
+import { mergeLayouts } from '../layout/merge-layout';
+import { changesOver, stepOver } from './rebase-queue';
+import { changesOf, linesAfter } from './remote-change';
 import { flattened, settleForStep, snapshotSteps } from './schema';
+import { foreignEdits, yieldPass } from './yield-step';
 
 interface Unconfirmed {
   readonly step: WorkbookStep;
   readonly inverse: WorkbookStep;
 }
 
-const stepOver = (step: WorkbookStep, changes: readonly RemoteChange[]): WorkbookStep | undefined =>
-  changes.reduce<WorkbookStep | undefined>(
-    (current, change) => (current === undefined ? undefined : rebaseStep(current, change)),
-    step,
-  );
-
-const changesOver = (
-  changes: readonly RemoteChange[],
-  local: readonly RemoteChange[],
-): readonly RemoteChange[] =>
-  local.reduce<readonly RemoteChange[]>(
-    (moving, own) =>
-      moving.reduce<RemoteChange[]>((kept, change) => {
-        const moved = changeOver(change, own);
-
-        if (moved !== undefined) {
-          kept.push(moved);
-        }
-        return kept;
-      }, []),
-    changes,
-  );
+const sameWires = (left: readonly unknown[], right: readonly unknown[]): boolean =>
+  left.length === right.length &&
+  left.every((wire, index) => JSON.stringify(wire) === JSON.stringify(right[index]));
 
 const lineChangesOf = (changes: readonly RemoteChange[]): readonly LineChange[] =>
   changes.reduce<LineChange[]>((lines, change) => {
@@ -64,9 +46,11 @@ export const createWorkbookDocument = ({
   let unconfirmed: readonly Unconfirmed[] = [];
   let history: WorkbookHistory | undefined;
 
-  const notify = (steps: readonly WorkbookStep[]): void => {
+  const notify = (steps: readonly WorkbookStep[], moved: readonly RemoteChange[]): void => {
+    const lines = linesAfter(moved);
+
     listeners.forEach((listener) => {
-      listener(steps);
+      listener(steps, lines);
     });
   };
 
@@ -88,20 +72,26 @@ export const createWorkbookDocument = ({
     });
   };
 
+  const restore = (): void => {
+    unconfirmed.forEach(({ step }) => {
+      applied(step);
+    });
+  };
+
   const withMergedLayout = (
     step: WorkbookStep,
     inverse: WorkbookStep,
     changes: readonly RemoteChange[],
   ): WorkbookStep => {
-    if (step.kind !== StepKind.SetLayout) {
+    if (step.kind !== StepKind.SetLayout || step.base !== undefined) {
       return step;
     }
 
     const base = stepOver(inverse, changes);
     const sheet = book.sheet(step.sheet);
 
-    return base?.kind === StepKind.SetLayout && sheet !== undefined
-      ? { ...step, layout: mergeLayouts(base.layout, step.layout, sheet.layout) }
+    return base?.kind === StepKind.SetLayout && base.base !== undefined && sheet !== undefined
+      ? { ...step, layout: mergeLayouts(base.layout, base.base, sheet.layout) }
       : step;
   };
 
@@ -128,12 +118,22 @@ export const createWorkbookDocument = ({
 
   const applyRemote = (steps: readonly WorkbookStep[]): readonly RemoteChange[] | undefined => {
     const changes: RemoteChange[] = [];
+    const inverses: WorkbookStep[] = [];
 
     for (const step of steps) {
-      if (!applied(step).ok) {
+      const result = applied(step);
+
+      if (!result.ok) {
+        inverses.toReversed().forEach((inverse) => {
+          raw.apply(inverse);
+        });
+
         return undefined;
       }
-      changes.push(...changesOf(step));
+      inverses.push(result.inverse);
+      for (const entry of changesOf(step)) {
+        changes.push(entry);
+      }
     }
     return changes;
   };
@@ -145,12 +145,26 @@ export const createWorkbookDocument = ({
       const wires = snapshotSteps(snapshot);
       const steps = wires === undefined ? undefined : decodedAll(wires);
 
-      if (steps === undefined || applyRemote(steps) === undefined) {
+      if (steps === undefined) {
         return false;
       }
+
+      const before = raw.clear();
+
+      if (applyRemote(steps) === undefined) {
+        raw.clear();
+        raw.apply(before);
+        return false;
+      }
+      unconfirmed = [];
       version = at;
-      notify(steps);
+      history?.clear();
+      notify(steps, []);
       return true;
+    },
+    reset: () => {
+      unconfirmed = [];
+      version = null;
     },
     receive: (batch) => {
       const steps = decodedAll(batch.steps);
@@ -163,6 +177,7 @@ export const createWorkbookDocument = ({
       const remote = applyRemote(steps);
 
       if (remote === undefined) {
+        restore();
         return false;
       }
       version += steps.length;
@@ -170,12 +185,59 @@ export const createWorkbookDocument = ({
       const moving = replay(remote);
 
       history?.rebase((step) => stepOver(step, moving));
-      notify(steps);
+
+      history?.trace(
+        {
+          touched: foreignEdits(
+            steps,
+            unconfirmed.map(({ step }) => step),
+          ),
+          kept: [],
+        },
+        yieldPass,
+      );
+
+      notify(steps, moving);
       return true;
     },
     confirm: (count, at) => {
       unconfirmed = unconfirmed.slice(count);
       version = at;
+    },
+    settle: (count, wires, at) => {
+      const steps = decodedAll(wires);
+      const sent = unconfirmed.slice(0, count);
+
+      if (steps === undefined || version === null) {
+        return false;
+      }
+      if (
+        sameWires(
+          sent.map(({ step }) => codec.encode(step)),
+          wires,
+        )
+      ) {
+        unconfirmed = unconfirmed.slice(count);
+        version = at;
+        return true;
+      }
+      rollback();
+
+      const remote = applyRemote(steps);
+
+      if (remote === undefined) {
+        restore();
+        return false;
+      }
+      unconfirmed = unconfirmed.slice(count);
+      version = at;
+
+      const undone = sent.toReversed().map(({ inverse }) => inverse);
+      const moving = replay([...undone.flatMap(changesOf), ...remote]);
+
+      history?.rebase((step) => stepOver(step, moving));
+      notify([...undone, ...steps], moving);
+      return true;
     },
     stepper: {
       apply: (step) => {
@@ -193,7 +255,9 @@ export const createWorkbookDocument = ({
             return result;
           }
           recorded.push({ step: part, inverse: result.inverse });
-          changes.push(...changesOf(part));
+          for (const entry of changesOf(part)) {
+            changes.push(entry);
+          }
         }
         unconfirmed = [...unconfirmed, ...recorded];
 

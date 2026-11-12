@@ -13,6 +13,6 @@ export interface NuiKbdProps {
 
 export const NuiKbdSize = { Sm: 'sm', Md: 'md' } as const;
 
-export const NuiKbdVariant = { Boxed: 'boxed', Plain: 'plain' } as const;
+export const NuiKbdVariant = { Boxed: 'boxed', Plain: 'plain', Soft: 'soft' } as const;
 
 export const NuiKbdPlatform = { Mac: 'mac', Other: 'other' } as const;

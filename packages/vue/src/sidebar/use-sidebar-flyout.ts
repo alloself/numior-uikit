@@ -1,3 +1,4 @@
+import { useEventListener } from '@vueuse/core';
 import {
   computed,
   onMounted,
@@ -57,10 +58,14 @@ const OPEN_DELAY = 100;
 const CLOSE_DELAY = 300;
 const OFFSET = 4;
 
+const pageDocument = (): Document | undefined =>
+  typeof document === 'undefined' ? undefined : document;
+
 export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout => {
   const open = ref(false);
   const direction = useDirection(options.trigger);
   const landing = createIntent<typeof ListMove.First>();
+  let pinned = false;
 
   const popover = usePopover(options.content, { open, id: options.id, mode: 'manual' });
 
@@ -88,9 +93,27 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
   const forwardKey = (): string => (direction.isRtl() ? Key.ArrowLeft : Key.ArrowRight);
   const backKey = (): string => (direction.isRtl() ? Key.ArrowRight : Key.ArrowLeft);
 
+  const holds = (target: EventTarget | null): boolean =>
+    target instanceof Node &&
+    (options.content.value?.contains(target) === true ||
+      options.trigger.value?.contains(target) === true);
+
   const holdsFocus = (): boolean => {
     const content = options.content.value;
     return content !== null && content.contains(document.activeElement);
+  };
+
+  const pin = (): void => {
+    pinned = true;
+    delay.openNow();
+  };
+
+  const leave = (): void => {
+    if (pinned) {
+      return;
+    }
+
+    delay.scheduleClose();
   };
 
   const closeAndReturn = (): void => {
@@ -99,9 +122,11 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
   };
 
   const onTriggerPointerenter = (event: PointerEvent): void => {
-    if (event.pointerType !== PointerType.Touch) {
-      delay.scheduleOpen();
+    if (event.pointerType === PointerType.Touch) {
+      return;
     }
+
+    delay.scheduleOpen();
   };
 
   const onTriggerKeydown = (event: KeyboardEvent): void => {
@@ -110,11 +135,13 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
       delay.closeNow();
       return;
     }
-    if (event.key === forwardKey() || event.key === Key.Enter || event.key === Key.Space) {
-      event.preventDefault();
-      landing.set(ListMove.First);
-      delay.openNow();
+    if (event.key !== forwardKey() && event.key !== Key.Enter && event.key !== Key.Space) {
+      return;
     }
+
+    event.preventDefault();
+    landing.set(ListMove.First);
+    pin();
   };
 
   const onContentKeydown = (event: KeyboardEvent): void => {
@@ -131,22 +158,48 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
   };
 
   const onContentFocusout = (event: FocusEvent): void => {
-    const next = event.relatedTarget;
-
-    const within =
-      next instanceof Node &&
-      (options.content.value?.contains(next) === true ||
-        options.trigger.value?.contains(next) === true);
-
-    if (!within) {
-      delay.closeNow();
+    if (holds(event.relatedTarget)) {
+      return;
     }
+
+    delay.closeNow();
   };
 
-  watch(options.enabled, (isEnabled) => {
-    if (!isEnabled) {
-      delay.closeNow();
+  const onPagePointerdown = (event: PointerEvent): void => {
+    if (holds(event.target)) {
+      return;
     }
+
+    delay.closeNow();
+  };
+
+  useEventListener(
+    () => (open.value ? pageDocument() : undefined),
+    'pointerdown',
+    onPagePointerdown,
+    {
+      capture: true,
+    },
+  );
+
+  watch(
+    open,
+    (isOpen) => {
+      if (isOpen) {
+        return;
+      }
+
+      pinned = false;
+    },
+    { flush: 'sync' },
+  );
+
+  watch(options.enabled, (isEnabled) => {
+    if (isEnabled) {
+      return;
+    }
+
+    delay.closeNow();
   });
 
   onMounted(() => {
@@ -171,20 +224,20 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
     contentAttrs: popover.contentAttrs,
     triggerHandlers: {
       onPointerenter: onTriggerPointerenter,
-      onPointerleave: () => delay.scheduleClose(),
+      onPointerleave: leave,
       onKeydown: onTriggerKeydown,
     },
     contentHandlers: {
       onPointerenter: () => delay.cancel(),
-      onPointerleave: () => delay.scheduleClose(),
+      onPointerleave: leave,
       onKeydown: onContentKeydown,
       onFocusout: onContentFocusout,
     },
     toggle: () => {
-      if (open.value) {
+      if (open.value && pinned) {
         delay.closeNow();
       } else {
-        delay.openNow();
+        pin();
       }
     },
     dismiss: () => delay.closeNow(),

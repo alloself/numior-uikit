@@ -13,9 +13,11 @@ export const afterPaint = async (): Promise<void> => {
 
 export const afterIdle = async (): Promise<void> => {
   await afterPaint();
-  if (typeof requestIdleCallback === 'function') {
-    await new Promise((resolve) => {
-      requestIdleCallback(resolve, { timeout: IDLE_TIMEOUT });
-    });
+  if (typeof requestIdleCallback !== 'function') {
+    return;
   }
+
+  await new Promise((resolve) => {
+    requestIdleCallback(resolve, { timeout: IDLE_TIMEOUT });
+  });
 };

@@ -4,6 +4,21 @@ import type { XlsxLoss } from '../xlsx/write/write.types';
 
 export interface NuiSpreadsheetMessages {
   readonly formulaError: (params: { readonly position: number }) => string;
+  readonly formulaArguments: (params: { readonly name: string }) => string;
+  readonly formulaReference: (params: {
+    readonly name: string;
+    readonly argument: number;
+  }) => string;
+  readonly formulaLongText: string;
+  readonly formulaBigNumber: string;
+  readonly formulaSmallNumber: string;
+  readonly formulaTooLong: string;
+  readonly formulaNesting: string;
+  readonly formulaDepth: string;
+  readonly formulaLocalName: (params: {
+    readonly name: string;
+    readonly argument: number;
+  }) => string;
   readonly nameBox: string;
   readonly formulaBar: string;
   readonly expandFormula: string;
@@ -28,6 +43,21 @@ export interface NuiSpreadsheetMessages {
   readonly deleteRows: (params: { readonly count: number }) => string;
   readonly deleteCols: (params: { readonly count: number }) => string;
   readonly sheetFull: string;
+  readonly linesCrossPivot: string;
+  readonly linesRefused: string;
+  readonly fillMerged: string;
+  readonly mergeCells: string;
+  readonly unmergeCells: string;
+  readonly cellsMerged: string;
+  readonly cellsMergedFirst: string;
+  readonly cellsUnmerged: string;
+  readonly mergeBlocked: string;
+  readonly cellGone: string;
+  readonly linesTooMany: (params: { readonly limit: number }) => string;
+  readonly widthsFitted: string;
+  readonly widthsFittedPartly: string;
+  readonly pivotCells: string;
+  readonly actionRefused: string;
   readonly recalculating: (params: { readonly share: string }) => string;
   readonly recalcStopped: string;
   readonly recalcDone: string;
@@ -67,6 +97,8 @@ export interface NuiSpreadsheetMessages {
   readonly insertChart: string;
   readonly insertPicture: string;
   readonly chartSettings: string;
+  readonly drawingMenu: string;
+  readonly removeDrawing: string;
   readonly chartSettingsClose: string;
   readonly chartKind: string;
   readonly chartTitleField: string;
@@ -109,6 +141,10 @@ const EN_LOSSES: Readonly<Record<XlsxLoss['reason'], (sheet: string) => string>>
   'renamed-sheet': (sheet) =>
     `${sheet}: the sheet was renamed, so unsupported items that refer to it are dropped`,
   'pivot-source': (sheet) => `${sheet}: the source of a pivot table is gone, so it becomes values`,
+  'long-text': (sheet) =>
+    `${sheet}: a cell of the file holds 32,767 characters, longer texts are cut in the file`,
+  'refused-formula': (sheet) =>
+    `${sheet}: Excel does not take some formulas of the sheet, the file keeps their values`,
 };
 
 const RU_LOSSES: Readonly<Record<XlsxLoss['reason'], (sheet: string) => string>> = {
@@ -117,6 +153,10 @@ const RU_LOSSES: Readonly<Record<XlsxLoss['reason'], (sheet: string) => string>>
   'renamed-sheet': (sheet) =>
     `${sheet}: лист переименован, неподдержанные элементы со ссылкой на него будут удалены`,
   'pivot-source': (sheet) => `${sheet}: источник сводной таблицы удалён, она станет значениями`,
+  'long-text': (sheet) =>
+    `${sheet}: ячейка файла вмещает 32 767 символов, более длинный текст в файле будет обрезан`,
+  'refused-formula': (sheet) =>
+    `${sheet}: Excel не принимает часть формул листа, в файле останутся их значения`,
 };
 
 const EN_LIMITATIONS: Readonly<Record<XlsxLimitationCode, string>> = {
@@ -127,6 +167,7 @@ const EN_LIMITATIONS: Readonly<Record<XlsxLimitationCode, string>> = {
   'pivot-tables': 'Pivot tables with unsupported features',
   'data-tables': 'What-if data tables',
   'formula-syntax': 'Formulas that could not be read',
+  'formula-kept': 'Formulas in a notation the sheet does not read keep the values saved by Excel',
   'unsupported-functions': 'Unsupported functions keep the values saved by Excel',
   'cell-styles': 'Part of the cell formatting',
   'rich-text': 'Formatting inside cell text',
@@ -153,6 +194,7 @@ const RU_LIMITATIONS: Readonly<Record<XlsxLimitationCode, string>> = {
   'pivot-tables': 'Сводные таблицы с неподдерживаемыми возможностями',
   'data-tables': 'Таблицы подстановки',
   'formula-syntax': 'Формулы, которые не удалось прочитать',
+  'formula-kept': 'Формулы в записи, которую лист не читает, хранят значения, сохранённые Excel',
   'unsupported-functions': 'Неподдерживаемые функции хранят значения, сохранённые Excel',
   'cell-styles': 'Часть оформления ячеек',
   'rich-text': 'Оформление внутри текста ячеек',
@@ -175,6 +217,18 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
   namespace: 'spreadsheet',
   en: {
     formulaError: ({ position }) => `The formula has an error at character ${String(position)}`,
+    formulaArguments: ({ name }) => `${name} gets a wrong number of arguments`,
+    formulaReference: ({ name, argument }) =>
+      `Argument ${String(argument)} of ${name} must be a cell reference`,
+    formulaLongText: 'A text in a formula holds up to 255 characters',
+    formulaBigNumber: 'A number in a formula must be smaller than 1E+308',
+    formulaSmallNumber: 'A number in a formula must be zero or at least 1E-309',
+    formulaTooLong: 'A formula holds up to 8,192 characters',
+    formulaNesting:
+      'A formula holds up to 256 nested brackets, 65 nested functions and 1,024 plus or minus signs in a row',
+    formulaDepth: 'A formula holds up to 2,048 operations inside each other',
+    formulaLocalName: ({ name, argument }) =>
+      `Argument ${String(argument)} of ${name} must be a name not given before in it`,
     nameBox: 'Name box',
     formulaBar: 'Formula bar',
     expandFormula: 'Expand the formula bar',
@@ -205,6 +259,23 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     deleteCols: ({ count }) =>
       `Delete ${String(count)} ${plural('en', count, { one: 'column', other: 'columns' })}`,
     sheetFull: 'Cannot insert: the last rows or columns of the sheet hold data',
+    linesCrossPivot: 'Cannot change rows or columns that run through a pivot table',
+    linesRefused: 'These rows or columns cannot be changed',
+    fillMerged: 'Cannot fill: the range has merged cells',
+    mergeCells: 'Merge cells',
+    unmergeCells: 'Unmerge cells',
+    cellsMerged: 'Cells merged',
+    cellsMergedFirst: 'Cells merged. Only the first value was kept',
+    cellsUnmerged: 'Cells unmerged',
+    mergeBlocked: 'Cells of a table or a pivot table cannot be merged',
+    cellGone: 'Someone else removed or hid this cell. The text you typed was not saved',
+    linesTooMany: ({ limit }) =>
+      `Too many rows are selected to size them at once. Select up to ${limit.toLocaleString('en-US')} rows or the whole sheet`,
+    widthsFitted: 'The column width fits its content',
+    widthsFittedPartly:
+      'The width fits the cells on screen and the first ones from the top: there are too many cells to measure them all',
+    pivotCells: 'Cells of a pivot table cannot be changed',
+    actionRefused: 'The action was not applied',
     recalculating: ({ share }) => `Recalculating ${share}`,
     recalcStopped: 'Recalculation stopped',
     recalcDone: 'Recalculation finished',
@@ -246,6 +317,8 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     insertChart: 'Insert chart',
     insertPicture: 'Insert picture…',
     chartSettings: 'Chart settings',
+    drawingMenu: 'Object actions',
+    removeDrawing: 'Delete',
     chartSettingsClose: 'Close chart settings',
     chartKind: 'Chart type',
     chartTitleField: 'Title',
@@ -269,6 +342,18 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
   },
   ru: {
     formulaError: ({ position }) => `Ошибка в формуле: символ ${String(position)}`,
+    formulaArguments: ({ name }) => `У функции ${name} неверное число аргументов`,
+    formulaReference: ({ name, argument }) =>
+      `Аргумент ${String(argument)} функции ${name} должен быть ссылкой на ячейки`,
+    formulaLongText: 'Текст в формуле вмещает до 255 знаков',
+    formulaBigNumber: 'Число в формуле должно быть меньше 1E+308',
+    formulaSmallNumber: 'Число в формуле должно быть нулём или не меньше 1E-309',
+    formulaTooLong: 'Формула вмещает до 8 192 знаков',
+    formulaNesting:
+      'Формула вмещает до 256 вложенных скобок, 65 вложенных функций и 1 024 знаков «+» и «−» подряд',
+    formulaDepth: 'Формула вмещает до 2 048 действий друг в друге',
+    formulaLocalName: ({ name, argument }) =>
+      `Аргумент ${String(argument)} функции ${name} должен быть именем, которого в ней ещё не было`,
     nameBox: 'Поле имени',
     formulaBar: 'Строка формул',
     expandFormula: 'Развернуть строку формул',
@@ -299,6 +384,23 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     deleteCols: ({ count }) =>
       `Удалить ${String(count)} ${plural('ru', count, { one: 'столбец', few: 'столбца', many: 'столбцов', other: 'столбца' })}`,
     sheetFull: 'Нельзя вставить: в последних строках или столбцах листа есть данные',
+    linesCrossPivot: 'Нельзя изменить строки или столбцы, которые проходят через сводную таблицу',
+    linesRefused: 'Эти строки или столбцы изменить нельзя',
+    fillMerged: 'Нельзя заполнить: в диапазоне есть объединённые ячейки',
+    mergeCells: 'Объединить ячейки',
+    unmergeCells: 'Разъединить ячейки',
+    cellsMerged: 'Ячейки объединены',
+    cellsMergedFirst: 'Ячейки объединены. Осталось только первое значение',
+    cellsUnmerged: 'Ячейки разъединены',
+    mergeBlocked: 'Ячейки таблицы и сводной таблицы объединить нельзя',
+    cellGone: 'Ячейку удалил или скрыл другой участник. Набранный текст не сохранён',
+    linesTooMany: ({ limit }) =>
+      `Выделено слишком много строк, чтобы изменить их размер за раз. Выделите до ${limit.toLocaleString('ru-RU')} строк или весь лист`,
+    widthsFitted: 'Ширина колонки подобрана по содержимому',
+    widthsFittedPartly:
+      'Ширина подобрана по ячейкам на экране и первым сверху: ячеек слишком много, чтобы измерить все',
+    pivotCells: 'Ячейки сводной таблицы изменить нельзя',
+    actionRefused: 'Действие не выполнено',
     recalculating: ({ share }) => `Пересчёт ${share}`,
     recalcStopped: 'Пересчёт остановлен',
     recalcDone: 'Пересчёт завершён',
@@ -340,6 +442,8 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     insertChart: 'Вставить диаграмму',
     insertPicture: 'Вставить картинку…',
     chartSettings: 'Настройки диаграммы',
+    drawingMenu: 'Действия с объектом',
+    removeDrawing: 'Удалить',
     chartSettingsClose: 'Закрыть настройки диаграммы',
     chartKind: 'Тип диаграммы',
     chartTitleField: 'Заголовок',

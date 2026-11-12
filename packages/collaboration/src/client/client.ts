@@ -9,14 +9,17 @@ import {
   type ServerMessage,
   type StepsMessage,
   type WelcomeMessage,
+  type WireStep,
 } from '../protocol/protocol.types';
 import {
   CollabFailure,
   CollabStatusKind,
+  type CollabBatch,
   type CollabClient,
   type CollabClientOptions,
   type CollabStatus,
 } from './client.types';
+import { createLiveness } from './liveness';
 import { createPresenceChannel } from './presence-channel';
 import { createReconnecting } from './reconnecting';
 
@@ -38,8 +41,19 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
     onStatus?.(next);
   };
 
+  const liveness = createLiveness({
+    settings: options.liveness,
+    ping: () => {
+      link.send({ kind: ClientMessageKind.Ping });
+    },
+    lost: () => {
+      link.restart();
+    },
+  });
+
   const fail = (reason: CollabFailure): void => {
     setStatus({ kind: CollabStatusKind.Failed, reason });
+    liveness.stop();
     link.stop();
   };
 
@@ -71,6 +85,7 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
       seq += 1;
       inFlight = { seq, count: steps.length };
       link.send({ kind: ClientMessageKind.Steps, seq, version, steps });
+      liveness.expect();
     }
     presence.offer();
   };
@@ -78,10 +93,22 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
   const catchUp = (version: number): void => {
     const local = document.version();
 
-    if (local !== null && local < version) {
-      target = version;
-      link.send({ kind: ClientMessageKind.Pull, from: local });
+    if (local === null || local >= version) {
+      return;
     }
+
+    target = version;
+    link.send({ kind: ClientMessageKind.Pull, from: local });
+  };
+
+  const refresh = (): void => {
+    const local = document.version();
+
+    if (local === null || status.kind !== CollabStatusKind.Online) {
+      return;
+    }
+
+    link.send({ kind: ClientMessageKind.Pull, from: local });
   };
 
   const onWelcome = (message: WelcomeMessage): void => {
@@ -104,6 +131,25 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
     flush();
   };
 
+  const taken = (batch: CollabBatch, sent: number | undefined): boolean => {
+    const queued = batch.clientId === clientId ? document.pending().length : 0;
+    const end = batch.version + batch.steps.length;
+
+    if (queued > 0 && sent !== undefined) {
+      return document.settle(Math.min(sent, queued), batch.steps, end);
+    }
+
+    const own = Math.min(batch.steps.length, queued);
+
+    if (own > 0) {
+      document.confirm(own, batch.version + own);
+    }
+    return (
+      own === batch.steps.length ||
+      document.receive({ ...batch, version: batch.version + own, steps: batch.steps.slice(own) })
+    );
+  };
+
   const onSteps = (message: StepsMessage): void => {
     const local = document.version();
 
@@ -121,27 +167,43 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
       return;
     }
 
-    const own =
-      message.clientId === clientId ? Math.min(steps.length, document.pending().length) : 0;
+    const sent = message.version === local ? message.sent : undefined;
 
-    if (own > 0) {
-      document.confirm(own, local + own);
-    }
-    if (own < steps.length) {
-      const batch = { version: local + own, clientId: message.clientId, steps: steps.slice(own) };
-
-      if (!document.receive(batch)) {
-        fail(CollabFailure.Document);
-        return;
-      }
+    if (!taken({ version: local, clientId: message.clientId, steps }, sent)) {
+      fail(CollabFailure.Document);
+      return;
     }
     flush();
   };
 
+  const settled = (count: number, steps: readonly WireStep[], version: number): boolean => {
+    const local = document.version();
+
+    if (local === null || local + steps.length !== version) {
+      fail(CollabFailure.Protocol);
+      return false;
+    }
+    if (document.settle(count, steps, version)) {
+      return true;
+    }
+
+    fail(CollabFailure.Document);
+    return false;
+  };
+
   const onAccepted = (message: AcceptedMessage): void => {
-    if (message.seq === inFlight?.seq) {
-      document.confirm(inFlight.count, message.version);
-      inFlight = undefined;
+    if (message.seq !== inFlight?.seq) {
+      return;
+    }
+
+    const { count } = inFlight;
+
+    inFlight = undefined;
+
+    if (message.steps === undefined) {
+      document.confirm(count, message.version);
+      flush();
+    } else if (settled(count, message.steps, message.version)) {
       flush();
     }
   };
@@ -177,6 +239,8 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
       case ServerMessageKind.Presence:
         presence.peer(message.clientId, message.state);
         break;
+      case ServerMessageKind.Pong:
+        break;
       case ServerMessageKind.Error:
         fail(
           message.code === ServerErrorCode.Schema ? CollabFailure.Schema : CollabFailure.Protocol,
@@ -195,6 +259,8 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
         version: document.version(),
         schema,
       });
+
+      liveness.expect();
     },
     message: (value) => {
       const message = parseServerMessage(value);
@@ -202,32 +268,33 @@ export const createCollabClient = (options: CollabClientOptions): CollabClient =
       if (message === undefined) {
         fail(CollabFailure.Protocol);
       } else {
+        liveness.heard();
         onMessage(message);
       }
     },
     closed: () => {
       inFlight = undefined;
+      liveness.stop();
       presence.offline();
 
-      if (status.kind !== CollabStatusKind.Failed) {
-        setStatus({ kind: CollabStatusKind.Offline });
+      if (status.kind === CollabStatusKind.Failed) {
+        return;
       }
+
+      setStatus({ kind: CollabStatusKind.Offline });
     },
   });
+
+  link.start();
 
   return {
     status: () => status,
     sync: flush,
-    refresh: () => {
-      const local = document.version();
-
-      if (local !== null && status.kind === CollabStatusKind.Online) {
-        link.send({ kind: ClientMessageKind.Pull, from: local });
-      }
-    },
+    refresh,
     setPresence: presence.set,
     stop: () => {
       presence.stop();
+      liveness.stop();
       link.stop();
     },
   };

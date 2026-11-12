@@ -72,9 +72,11 @@ const {
 const switchElement = useTemplateRef<HTMLInputElement>('switch');
 
 const onClick = (event: MouseEvent): void => {
-  if (isReadonly.value) {
-    event.preventDefault();
+  if (!isReadonly.value) {
+    return;
   }
+
+  event.preventDefault();
 };
 
 const onChange = (): void => {
@@ -85,9 +87,11 @@ const onChange = (): void => {
   model.value = element.checked;
 
   void nextTick(() => {
-    if (switchElement.value) {
-      switchElement.value.checked = model.value;
+    if (!switchElement.value) {
+      return;
     }
+
+    switchElement.value.checked = model.value;
   });
 };
 </script>

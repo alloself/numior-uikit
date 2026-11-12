@@ -1,4 +1,5 @@
 import { Sun } from '@lucide/vue';
+import { lazyIcon } from '@numior/primitives';
 import { describe, expect, it } from 'vite-plus/test';
 import { markRaw } from 'vue';
 import { iconAliases } from '../src';
@@ -40,6 +41,31 @@ describe('NuiIcon', () => {
 
       expect(icon.glyphClasses).toContain(`lucide-${iconAliases[alias]}`);
     }
+  });
+
+  it('fades a glyph in once while it loads and leaves it alone afterwards', async () => {
+    const icon = IconDriver.mount({ icon: markRaw(lazyIcon(() => Promise.resolve(Custom))) });
+
+    await icon.ready();
+
+    expect(icon.hasModifier('appearing')).toBe(true);
+
+    await icon.finishAppearing();
+
+    expect(icon.hasModifier('appearing')).toBe(false);
+  });
+
+  it('shows a glyph that is already loaded without the fade', async () => {
+    const loaded = markRaw(lazyIcon(() => Promise.resolve(Custom)));
+    const first = IconDriver.mount({ icon: loaded });
+
+    await first.ready();
+
+    const second = IconDriver.mount({ icon: loaded });
+
+    await second.ready();
+
+    expect(second.hasModifier('appearing')).toBe(false);
   });
 
   it('fills closed shapes when asked', async () => {

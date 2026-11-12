@@ -3,7 +3,7 @@
     v-model="city"
     :items="cities"
     selectable="single"
-    variant="bordered"
+    variant="outline"
     label="Город"
     class="w-full max-w-sm"
   />

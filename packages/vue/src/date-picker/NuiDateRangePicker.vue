@@ -25,7 +25,8 @@
         :is-date-disabled="isDateDisabled"
         :placeholder="startPlaceholder"
         v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
-        @update:model-value="setStart"
+        @update:model-value="setEnd(DateRangeEnd.Start, $event)"
+        @settle="settleEnd(DateRangeEnd.Start)"
         @keydown="onInputKeydown"
         @click="onInputClick"
       />
@@ -42,7 +43,8 @@
         :label="texts.end"
         :aria-describedby="controlAttrs['aria-describedby']"
         :aria-invalid="controlAttrs['aria-invalid']"
-        @update:model-value="setEnd"
+        @update:model-value="setEnd(DateRangeEnd.End, $event)"
+        @settle="settleEnd(DateRangeEnd.End)"
         @keydown="onInputKeydown"
         @click="onInputClick"
       />
@@ -91,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, shallowRef } from 'vue';
 import { FloatingPlacement, normalizeRange } from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiCalendar from '../calendar/NuiCalendar.vue';
@@ -99,12 +101,14 @@ import type { NuiCalendarValue, NuiDateRange } from '../calendar/calendar.types'
 import { isDateRange } from '../calendar/day-state';
 import NuiDateField from './NuiDateField.vue';
 import NuiDateInput from './NuiDateInput.vue';
-import type { NuiDateRangePickerProps } from './date-picker.types';
+import { DateRangeEnd, type HeldRangeEnd, type NuiDateRangePickerProps } from './date-picker.types';
 import { useDatePickerShell } from './use-date-picker-shell';
 import { NuiSize } from '../shared/scale.types';
 
 defineOptions({ inheritAttrs: false });
 defineSlots<{ actions(): unknown }>();
+
+const isReversed = (range: NuiDateRange): boolean => normalizeRange(range) !== range;
 
 const {
   id,
@@ -147,6 +151,8 @@ const {
 
 const model = defineModel<NuiDateRange>({ default: () => ({ start: null, end: null }) });
 
+const held = shallowRef<HeldRangeEnd>();
+
 const {
   split,
   field,
@@ -186,12 +192,36 @@ const showClear = computed(
     !isReadonly.value,
 );
 
-const setStart = (date: string | null): void => {
-  model.value = normalizeRange({ start: date, end: model.value.end });
+const withEnd = (end: DateRangeEnd, date: string | null): NuiDateRange => {
+  switch (end) {
+    case DateRangeEnd.Start:
+      return { start: date, end: model.value.end };
+    case DateRangeEnd.End:
+      return { start: model.value.start, end: date };
+  }
 };
 
-const setEnd = (date: string | null): void => {
-  model.value = normalizeRange({ start: model.value.start, end: date });
+const setEnd = (end: DateRangeEnd, date: string | null): void => {
+  const next = withEnd(end, date);
+
+  if (isReversed(next)) {
+    held.value = { end, date };
+    return;
+  }
+
+  held.value = undefined;
+  model.value = next;
+};
+
+const settleEnd = (end: DateRangeEnd): void => {
+  const typed = held.value;
+
+  if (typed?.end !== end) {
+    return;
+  }
+
+  held.value = undefined;
+  model.value = normalizeRange(withEnd(end, typed.date));
 };
 
 const pickRange = (value: NuiCalendarValue): void => {
@@ -199,14 +229,18 @@ const pickRange = (value: NuiCalendarValue): void => {
     return;
   }
 
+  held.value = undefined;
   model.value = value;
 
-  if (value.start && value.end) {
-    popover.hide({ focus: true });
+  if (!value.start || !value.end) {
+    return;
   }
+
+  popover.hide({ focus: true });
 };
 
 const clear = (): void => {
+  held.value = undefined;
   model.value = { start: null, end: null };
   focusInput();
 };

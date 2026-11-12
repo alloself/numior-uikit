@@ -5,16 +5,28 @@ const SERVER = fileURLToPath(
   new URL('../../packages/collaboration/server/reference-server.ts', import.meta.url),
 );
 
-const PORT = 4175;
+const DEFAULT_PORT = 4175;
+
+const PORT = Number(process.env.COLLAB_PORT ?? DEFAULT_PORT);
 
 export const collabDevServer = (): Plugin => ({
   name: 'numior:collab-dev-server',
   apply: 'serve',
+  transformIndexHtml: () => [
+    {
+      tag: 'meta',
+      attrs: { name: 'nui-collab-port', content: String(PORT) },
+      injectTo: 'head',
+    },
+  ],
   configureServer: (server) => {
     const start = async (): Promise<void> => {
       try {
         const { startReferenceServer } = await server.ssrLoadModule(SERVER);
-        const running = await startReferenceServer(PORT);
+
+        const running = await startReferenceServer(PORT, (error: unknown) => {
+          server.config.logger.error(`  Collaboration room failed: ${String(error)}`);
+        });
 
         server.httpServer?.once('close', () => {
           void running.close();

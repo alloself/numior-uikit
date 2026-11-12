@@ -7,10 +7,12 @@ export const assignSlots = (previous: SlotMap, indices: readonly number[]): Map<
   for (const index of indices) {
     const slot = previous.get(index);
 
-    if (slot !== undefined && !taken.has(slot)) {
-      next.set(index, slot);
-      taken.add(slot);
+    if (slot === undefined || taken.has(slot)) {
+      continue;
     }
+
+    next.set(index, slot);
+    taken.add(slot);
   }
   let free = 0;
 

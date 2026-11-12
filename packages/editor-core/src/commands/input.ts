@@ -19,14 +19,8 @@ import { exitEmptyLast, liftAtStart, splitListItem } from './blocks';
 import { codeFence, codeNewline, codeToParagraph } from './code';
 import { inCode, textCursor } from './cursor';
 import { pasteCommand } from './paste';
-import {
-  chainCommands,
-  deleteSelection,
-  joinBackward,
-  joinForward,
-  splitBlock,
-  toggleMark,
-} from './commands';
+import { chainCommands, deleteSelection, splitBlock, toggleMark } from './commands';
+import { joinBackward, joinForward } from './join';
 
 export const inputSource = createMetaKey<InputSource>('input');
 

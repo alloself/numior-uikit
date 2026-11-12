@@ -12,7 +12,9 @@ export const flattened = (step: WorkbookStep): readonly WorkbookStep[] =>
   step.kind === StepKind.Batch ? step.steps.flatMap(flattened) : [step];
 
 export const settleForStep = (calculator: Calculator, step: WorkbookStep): void => {
-  if (step.kind === StepKind.SetPivot || step.kind === StepKind.RefreshPivot) {
-    calculator.recalculate({ budgetMs: Number.POSITIVE_INFINITY, volatile: false });
+  if (step.kind !== StepKind.SetPivot && step.kind !== StepKind.RefreshPivot) {
+    return;
   }
+
+  calculator.recalculate({ budgetMs: Number.POSITIVE_INFINITY, volatile: false });
 };

@@ -38,10 +38,12 @@ const draft = ref(caption.value);
 const fitsItself = typeof CSS !== 'undefined' && CSS.supports('field-sizing', 'content');
 
 const fit = (): void => {
-  if (field.value !== null && !fitsItself) {
-    field.value.style.blockSize = 'auto';
-    field.value.style.blockSize = `${String(field.value.scrollHeight)}px`;
+  if (field.value === null || fitsItself) {
+    return;
   }
+
+  field.value.style.blockSize = 'auto';
+  field.value.style.blockSize = `${String(field.value.scrollHeight)}px`;
 };
 
 const onInput = (event: Event): void => {
@@ -52,9 +54,11 @@ const onInput = (event: Event): void => {
 };
 
 const commit = (): void => {
-  if (draft.value.trim() !== caption.value) {
-    editor.setAttrs({ caption: draft.value.trim() });
+  if (draft.value.trim() === caption.value) {
+    return;
   }
+
+  editor.setAttrs({ caption: draft.value.trim() });
 };
 
 const paragraphAfter: Command = (state, dispatch) => {

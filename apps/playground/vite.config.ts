@@ -7,6 +7,10 @@ import { collabDevServer } from './collab-dev-server';
 export default defineConfig(({ command }) => ({
   plugins: [vue(), tailwindcss(), collabDevServer()],
   resolve: command === 'serve' ? { conditions: ['@numior/source'] } : {},
+  ssr:
+    command === 'serve'
+      ? { resolve: { conditions: ['@numior/source', 'module', 'node', 'development|production'] } }
+      : {},
   build: {
     cssTarget: ['chrome123', 'firefox125', 'safari17.5'],
     rolldownOptions: {

@@ -5,6 +5,7 @@ import {
   TableColumnKind,
   TablePaneName,
   type NuiTableColumn,
+  type NuiTableColumnResize,
   type NuiTableWidths,
 } from './table.types';
 import { Key } from '@numior/primitives';
@@ -17,6 +18,7 @@ export interface TableResizeOptions<T> {
   readonly isRtl: () => boolean;
   readonly messages: ComputedRef<NuiTableMessages>;
   readonly announce: (text: string) => void;
+  readonly resized: (changes: readonly NuiTableColumnResize[]) => void;
 }
 
 export interface TableResize {
@@ -42,6 +44,11 @@ interface ResizeSession {
   readonly partner: Partner | undefined;
 }
 
+interface Latest {
+  width: number;
+  partner: number | undefined;
+}
+
 const STEP = 10;
 
 const placedOf = (layout: TableLayout, key: string): PlacedColumn | undefined =>
@@ -52,13 +59,21 @@ const partnerOf = (layout: TableLayout, placed: PlacedColumn): Partner | undefin
   return next?.kind === TableColumnKind.Data ? { key: next.key, width: next.width } : undefined;
 };
 
+const changesOf = (session: ResizeSession, latest: Latest): NuiTableColumnResize[] =>
+  session.partner === undefined || latest.partner === undefined
+    ? [{ key: session.key, width: latest.width }]
+    : [
+        { key: session.key, width: latest.width },
+        { key: session.partner.key, width: latest.partner },
+      ];
+
 const withoutKey = (widths: NuiTableWidths, key: string): NuiTableWidths =>
   Object.fromEntries(Object.entries(widths).filter(([entry]) => entry !== key));
 
 export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize => {
   const session = shallowRef<ResizeSession>();
   const active = computed(() => session.value?.key);
-  const latest = { width: 0 };
+  const latest: Latest = { width: 0, partner: undefined };
 
   const resizable = (key: string): boolean => options.columnAt(key).resizable !== false;
 
@@ -68,9 +83,11 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
   const write = (patch: NuiTableWidths): void => {
     const current = options.widths.value;
 
-    if (Object.entries(patch).some(([key, value]) => current[key] !== value)) {
-      options.widths.value = { ...current, ...patch };
+    if (!Object.entries(patch).some(([key, value]) => current[key] !== value)) {
+      return;
     }
+
+    options.widths.value = { ...current, ...patch };
   };
 
   const announceWidth = (key: string, width: number): void => {
@@ -92,23 +109,28 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
     const partnerNext = clampWidth(partnerColumn, current.partner.width - (wanted - current.width));
 
     latest.width = current.width + (current.partner.width - partnerNext);
+    latest.partner = partnerNext;
     write({ [current.key]: latest.width, [current.partner.key]: partnerNext });
   };
 
   const onMove = (event: PointerEvent): void => {
     const current = session.value;
 
-    if (current !== undefined && event.pointerId === current.pointerId) {
-      apply(current, (event.clientX - current.origin) * current.sign);
+    if (current === undefined || event.pointerId !== current.pointerId) {
+      return;
     }
+
+    apply(current, (event.clientX - current.origin) * current.sign);
   };
 
   const detach = (): void => {
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', stop);
-      window.removeEventListener('pointercancel', stop);
+    if (typeof window === 'undefined') {
+      return;
     }
+
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', stop);
+    window.removeEventListener('pointercancel', stop);
   };
 
   const stop = (): void => {
@@ -117,9 +139,17 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
     detach();
     session.value = undefined;
 
-    if (current !== undefined) {
-      announceWidth(current.key, latest.width);
+    if (current === undefined) {
+      return;
     }
+
+    announceWidth(current.key, latest.width);
+
+    if (latest.width === current.width) {
+      return;
+    }
+
+    options.resized(changesOf(current, latest));
   };
 
   const start = (key: string, event: PointerEvent): void => {
@@ -134,6 +164,7 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
     const fits = layout.canvasWidth <= options.room();
 
     latest.width = placed.width;
+    latest.partner = undefined;
 
     session.value = {
       key,
@@ -161,10 +192,15 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
       return true;
     }
     const grow = (event.key === Key.ArrowRight) !== options.isRtl();
-    const next = clampWidth(options.columnAt(key), currentWidth(key) + (grow ? STEP : -STEP));
+    const before = currentWidth(key);
+    const next = clampWidth(options.columnAt(key), before + (grow ? STEP : -STEP));
 
     write({ [key]: next });
     announceWidth(key, next);
+
+    if (next !== before) {
+      options.resized([{ key, width: next }]);
+    }
     return true;
   };
 
@@ -174,6 +210,8 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
     options.announce(
       options.messages.value.columnWidthReset({ column: options.columnAt(key).label }),
     );
+
+    options.resized([{ key, width: undefined }]);
   };
 
   onScopeDispose(stop);

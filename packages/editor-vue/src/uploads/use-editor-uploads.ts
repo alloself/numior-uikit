@@ -268,19 +268,23 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
   const supersede = (spot: UploadTarget): void => {
     for (const [id, existing] of targets) {
       if (
-        spot.kind === UploadTargetKind.Replace &&
-        existing.kind === UploadTargetKind.Replace &&
-        existing.id === spot.id
+        spot.kind !== UploadTargetKind.Replace ||
+        existing.kind !== UploadTargetKind.Replace ||
+        existing.id !== spot.id
       ) {
-        cancel(id);
+        continue;
       }
+
+      cancel(id);
     }
   };
 
   const preview = (item: NuiEditorUploadItem): void => {
-    if (isImage(item.type) && typeof URL.createObjectURL === 'function' && item.file) {
-      previews.set(item.id, URL.createObjectURL(item.file));
+    if (!isImage(item.type) || typeof URL.createObjectURL !== 'function' || !item.file) {
+      return;
     }
+
+    previews.set(item.id, URL.createObjectURL(item.file));
   };
 
   const enqueue = (files: readonly File[], spot: UploadTarget): void => {
@@ -291,20 +295,22 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
     for (const item of created) {
       targets.set(item.id, spot);
     }
-    if (spot.kind === UploadTargetKind.Place) {
-      for (const item of created) {
-        preview(item);
-        elementFor(item.id);
-      }
-
-      options.run(
-        startUploads(
-          created.map((item) => item.id),
-          spot.pos,
-          spot.at,
-        ),
-      );
+    if (spot.kind !== UploadTargetKind.Place) {
+      return;
     }
+
+    for (const item of created) {
+      preview(item);
+      elementFor(item.id);
+    }
+
+    options.run(
+      startUploads(
+        created.map((item) => item.id),
+        spot.pos,
+        spot.at,
+      ),
+    );
   };
 
   const add = (files: readonly File[], target?: UploadTarget, accept?: string): void => {
@@ -318,16 +324,18 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
 
     const valid = accepted(files, target, accept);
 
-    if (valid.length > 0) {
-      enqueue(
-        valid,
-        target ?? {
-          kind: 'place',
-          pos: uploadPlace(options.state()),
-          at: uploadPoint(options.state()),
-        },
-      );
+    if (valid.length === 0) {
+      return;
     }
+
+    enqueue(
+      valid,
+      target ?? {
+        kind: 'place',
+        pos: uploadPlace(options.state()),
+        at: uploadPoint(options.state()),
+      },
+    );
   };
 
   const plugin = definePlugin({

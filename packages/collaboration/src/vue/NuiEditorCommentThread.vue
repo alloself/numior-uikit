@@ -3,6 +3,7 @@
     class="nui-collab-comments__thread"
     :class="{
       'nui-collab-comments__thread--active': comments.active.value === thread.id,
+      'nui-collab-comments__thread--inline': inline,
       'nui-collab-comments__thread--resolved': thread.resolved,
     }"
     @click="onClick"
@@ -28,7 +29,7 @@
     />
 
     <div v-else class="nui-collab-comments__actions">
-      <NuiButton size="sm" variant="ghost" tone="neutral" @click="replying = true">{{
+      <NuiButton size="sm" variant="soft" tone="primary" @click="replying = true">{{
         text.reply
       }}</NuiButton>
       <div class="nui-collab-comments__tools">
@@ -67,7 +68,13 @@ interface ThreadTool {
   readonly run: () => void;
 }
 
-const { comments, thread, text, timeOf } = defineProps<NuiEditorCommentThreadProps>();
+const {
+  comments,
+  thread,
+  text,
+  timeOf,
+  inline = false,
+} = defineProps<NuiEditorCommentThreadProps>();
 
 const replying = ref(false);
 
@@ -103,7 +110,7 @@ const tools = computed<readonly ThreadTool[]>(() => {
   };
 
   return [
-    ...(thread.lost || thread.resolved ? [] : [show]),
+    ...(thread.lost || thread.resolved || inline ? [] : [show]),
     resolve,
     ...(thread.author.id === comments.user.id ? [remove] : []),
   ];
@@ -117,8 +124,10 @@ const sendReply = async (body: string): Promise<boolean> => {
 };
 
 const onClick = (event: MouseEvent): void => {
-  if (event.target instanceof Element && event.target.closest('button, textarea, a') === null) {
-    comments.activate(thread.id);
+  if (!(event.target instanceof Element) || event.target.closest('button, textarea, a') !== null) {
+    return;
   }
+
+  comments.activate(thread.id);
 };
 </script>

@@ -16,6 +16,11 @@ export interface Copied {
   readonly html: string;
 }
 
+interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+
 export interface PastedFile {
   readonly name: string;
   readonly type: string;
@@ -141,14 +146,115 @@ export class EditorSection {
     );
   }
 
+  private textPoints(text: string, before: string): Promise<{ from: Point; to: Point }> {
+    return this.content.evaluate(
+      (root, wanted) => {
+        const rangeOf = (part: string): Range => {
+          const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+
+          for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+            const at = node.textContent?.indexOf(part) ?? -1;
+
+            if (at !== -1) {
+              const range = document.createRange();
+
+              range.setStart(node, at);
+              range.setEnd(node, at + part.length);
+              return range;
+            }
+          }
+          throw new Error(`No text reads ${part}`);
+        };
+
+        const source = rangeOf(wanted.text);
+        const from = source.getBoundingClientRect();
+        const to = rangeOf(wanted.before).getBoundingClientRect();
+
+        root.focus();
+        document.getSelection()?.removeAllRanges();
+        document.getSelection()?.addRange(source);
+
+        return {
+          from: { x: from.left + from.width / 2, y: from.top + from.height / 2 },
+          to: { x: to.left + 1, y: to.top + to.height / 2 },
+        };
+      },
+      { text, before },
+    );
+  }
+
+  async dragText(text: string, before: string, modifier?: 'Control'): Promise<void> {
+    const first = await this.textPoints(text, before);
+
+    await this.page.mouse.move(first.from.x, first.from.y);
+
+    const points = await this.textPoints(text, before);
+
+    await this.page.mouse.move(points.from.x, points.from.y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(points.to.x, points.to.y, { steps: 8 });
+
+    if (modifier !== undefined) {
+      await this.page.keyboard.down(modifier);
+    }
+
+    await this.page.mouse.move(points.to.x, points.to.y);
+    await this.page.mouse.up();
+
+    if (modifier === undefined) {
+      return;
+    }
+
+    await this.page.keyboard.up(modifier);
+  }
+
   tool(name: string): Locator {
     return this.root
       .getByRole('toolbar', { name: 'Форматирование', exact: true })
       .getByRole('button', { name, exact: true });
   }
 
+  async undoAllWith(key: string): Promise<void> {
+    const undo = this.tool('Отменить');
+
+    await undo.focus();
+
+    while (await undo.isEnabled()) {
+      await this.page.keyboard.press(key);
+    }
+  }
+
   bubble(): Locator {
     return this.root.locator('.nui-editor-bubble');
+  }
+
+  pushed(): Locator {
+    return this.content.locator('.nui-editor__pushed');
+  }
+
+  async settled(block: Locator): Promise<void> {
+    await block.evaluate(async (element) => {
+      await Promise.all(element.getAnimations().map((each) => each.finished));
+
+      await new Promise((resolve) => {
+        requestAnimationFrame(resolve);
+      });
+    });
+  }
+
+  selectionGap(): Promise<number> {
+    return this.root.evaluate((root) => {
+      const frame = root.querySelector('.nui-editor__range');
+      const selection = document.getSelection();
+
+      if (frame === null || selection === null || selection.rangeCount === 0) {
+        return Number.NaN;
+      }
+
+      return Math.abs(
+        frame.getBoundingClientRect().left - selection.getRangeAt(0).getBoundingClientRect().left,
+      );
+    });
   }
 
   codeLanguage(): Locator {
@@ -333,6 +439,24 @@ export class EditorSection {
 
   blockMenu(): Locator {
     return this.root.locator('.nui-editor-toolbar__blocks');
+  }
+
+  headerBlockMenu(): Locator {
+    return this.root
+      .getByRole('toolbar', { name: 'Форматирование', exact: true })
+      .locator('.nui-editor-toolbar__blocks');
+  }
+
+  insertSearch(): Locator {
+    return this.root.locator('.nui-editor-insert').getByRole('combobox');
+  }
+
+  insertOptions(): Locator {
+    return this.root.locator('.nui-editor-insert').getByRole('option');
+  }
+
+  insertOption(name: string): Locator {
+    return this.root.locator('.nui-editor-insert').getByRole('option', { name, exact: true });
   }
 
   anchors(): Locator {

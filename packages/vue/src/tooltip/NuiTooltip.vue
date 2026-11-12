@@ -8,7 +8,11 @@
     @pointerenter="delay.cancel()"
     @pointerleave="delay.scheduleClose()"
   >
-    <slot :target="targeted.target.value" />
+    <span v-if="keys !== undefined" class="nui-tooltip__keyed">
+      <span class="nui-tooltip__text"><slot :target="targeted.target.value" /></span>
+      <NuiKbd :keys="keys" size="sm" variant="soft" />
+    </span>
+    <slot v-else :target="targeted.target.value" />
     <span ref="arrow-node" class="nui-tooltip__arrow"></span>
   </div>
 </template>
@@ -24,6 +28,7 @@ import {
   useFloating,
   usePopover,
 } from '@numior/primitives';
+import NuiKbd from '../kbd/NuiKbd.vue';
 import { useTriggerElement } from '../shared/trigger-ref';
 import type {
   NuiTooltipContentSlot,
@@ -37,6 +42,8 @@ import { useTooltipTargets } from './use-tooltip-targets';
 
 const POINTER_FOCUS_WINDOW = 500;
 
+const ARROW_OFFSET = 6;
+
 const isTargets = (
   value: HTMLElement | NuiTooltipTargets | null | undefined,
 ): value is NuiTooltipTargets => value !== null && value !== undefined && 'selector' in value;
@@ -46,11 +53,12 @@ defineOptions({ inheritAttrs: false });
 const {
   id,
   placement = FloatingPlacement.Top,
-  offset = 6,
+  offset = ARROW_OFFSET,
   openDelay = 300,
   closeDelay = 100,
   disabled = false,
   anchor,
+  shortcut,
 } = defineProps<NuiTooltipProps>();
 
 const open = defineModel<boolean>('open', { default: false });
@@ -94,6 +102,10 @@ const targeted = useTooltipTargets({
   },
 });
 
+const keys = computed(() =>
+  typeof shortcut === 'function' ? shortcut(targeted.target.value) : shortcut,
+);
+
 const reference = (): HTMLElement | null => {
   if (targets.value !== undefined) {
     return targeted.target.value;
@@ -109,9 +121,11 @@ useFloating(reference, contentElement, {
 });
 
 const onPointerenter = (event: PointerEvent): void => {
-  if (event.pointerType !== PointerType.Touch && !disabled) {
-    delay.scheduleOpen();
+  if (event.pointerType === PointerType.Touch || disabled) {
+    return;
   }
+
+  delay.scheduleOpen();
 };
 
 const onPointerleave = (): void => delay.scheduleClose();
@@ -122,17 +136,21 @@ const onPointerdown = (): void => {
 };
 
 const onFocus = (): void => {
-  if (!disabled && !pressedRecently()) {
-    delay.openNow();
+  if (disabled || pressedRecently()) {
+    return;
   }
+
+  delay.openNow();
 };
 
 const onBlur = (): void => delay.closeNow();
 
 const onDocumentKeydown = (event: KeyboardEvent): void => {
-  if (event.key === Key.Escape) {
-    delay.closeNow();
+  if (event.key !== Key.Escape) {
+    return;
   }
+
+  delay.closeNow();
 };
 
 const openDocument = (): Document | undefined =>
@@ -141,9 +159,11 @@ const openDocument = (): Document | undefined =>
 watch(
   () => disabled,
   (isDisabled) => {
-    if (isDisabled) {
-      delay.closeNow();
+    if (!isDisabled) {
+      return;
     }
+
+    delay.closeNow();
   },
 );
 

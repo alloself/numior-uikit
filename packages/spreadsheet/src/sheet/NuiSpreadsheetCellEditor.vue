@@ -1,11 +1,5 @@
 <template>
-  <span
-    class="nui-spreadsheet__editor"
-    :class="{
-      'nui-spreadsheet__editor--invalid': invalid,
-      'nui-spreadsheet__editor--painted': painted,
-    }"
-  >
+  <span class="nui-spreadsheet__editor" :class="{ 'nui-spreadsheet__editor--painted': painted }">
     <span ref="mirror" class="nui-spreadsheet__editor-mirror" dir="auto" aria-hidden="true">
       <span v-if="painted" class="nui-spreadsheet__editor-text">
         <span
@@ -62,9 +56,11 @@ const shown = computed((): readonly FormulaSegment[] => {
 const painted = computed(() => shown.value.some(isToned));
 
 const follow = (): void => {
-  if (field.value !== null && mirror.value !== null) {
-    mirror.value.scrollLeft = field.value.scrollLeft;
+  if (field.value === null || mirror.value === null) {
+    return;
   }
+
+  mirror.value.scrollLeft = field.value.scrollLeft;
 };
 
 defineExpose({

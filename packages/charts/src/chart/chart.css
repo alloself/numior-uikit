@@ -1,5 +1,6 @@
 .nui-chart {
   --_height: 18.75rem;
+  --_text-size: var(--nui-font-size-xs);
 
   box-sizing: border-box;
   display: flex;
@@ -42,6 +43,19 @@
   inline-size: 100%;
   min-inline-size: 0;
   block-size: var(--_height);
+}
+
+.nui-chart__font-probe {
+  position: absolute;
+  inline-size: 1em;
+  block-size: 1em;
+  font-size: var(--_text-size);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.nui-chart__font-probe:dir(rtl) {
+  inline-size: calc(1em + 1px);
 }
 
 .nui-chart__svg {
@@ -301,7 +315,7 @@
 
 .nui-chart__text {
   fill: currentColor;
-  font-size: 12px;
+  font-size: var(--_text-size);
   font-variant-numeric: tabular-nums;
 }
 

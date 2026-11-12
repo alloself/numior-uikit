@@ -124,7 +124,15 @@ const isJsonArray: Guard<FormJsonArray> = shapeOf({
   addLabel: optional(isString),
 });
 
-const ruleOf = (spec: FormJsonRule): FieldRule => {
+const regExpOf = (source: string, flags: string | undefined): RegExp | undefined => {
+  try {
+    return new RegExp(source, flags);
+  } catch {
+    return undefined;
+  }
+};
+
+const ruleOf = (spec: FormJsonRule): FieldRule | undefined => {
   switch (spec.rule) {
     case FormJsonRuleName.Required:
       return required({ message: spec.message });
@@ -134,8 +142,11 @@ const ruleOf = (spec: FormJsonRule): FieldRule => {
       return min(spec.limit, { message: spec.message });
     case FormJsonRuleName.Max:
       return max(spec.limit, { message: spec.message });
-    case FormJsonRuleName.Pattern:
-      return pattern(new RegExp(spec.source, spec.flags), { message: spec.message });
+    case FormJsonRuleName.Pattern: {
+      const expression = regExpOf(spec.source, spec.flags);
+
+      return expression === undefined ? undefined : pattern(expression, { message: spec.message });
+    }
   }
 };
 
@@ -158,12 +169,27 @@ const rowsSelector = <S extends object>(
 };
 
 const fieldRules = <S extends object>(
+  builder: Builder<S>,
   path: string,
   specs: readonly FormJsonRule[] | undefined,
+  at: string,
 ): readonly AnyFieldRule<unknown, S>[] | undefined =>
-  specs?.map((spec) =>
-    adaptRule(ruleOf(spec), (_value: unknown, values: S) => [getAt(values, path), values] as const),
-  );
+  specs?.flatMap((spec, index) => {
+    const rule = ruleOf(spec);
+
+    if (rule === undefined) {
+      builder.issues.push({
+        path: `${at}.rules.${index}`,
+        code: FormConfigIssueCode.InvalidPattern,
+      });
+
+      return [];
+    }
+
+    return [
+      adaptRule(rule, (_value: unknown, values: S) => [getAt(values, path), values] as const),
+    ];
+  });
 
 const buildField = <S extends object>(
   builder: Builder<S>,
@@ -202,7 +228,7 @@ const buildField = <S extends object>(
     name: byPath(name),
     props,
     when: when === undefined ? undefined : conditionOf<S>(when),
-    rules: fieldRules<S>(name, rules),
+    rules: fieldRules<S>(builder, name, rules, at),
   };
 };
 

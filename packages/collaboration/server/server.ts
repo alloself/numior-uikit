@@ -17,6 +17,8 @@ interface Session {
 export interface CollabServerOptions {
   readonly port: number;
   readonly authorityFor: (doc: string) => RoomAuthority;
+  readonly heartbeat?: number | undefined;
+  readonly onError?: ((error: unknown) => void) | undefined;
 }
 
 export interface CollabServer {
@@ -32,6 +34,12 @@ const parsed = (data: RawData): unknown => {
   }
 };
 
+const INTERNAL_ERROR = 1011;
+
+const SUPERSEDED = 4001;
+
+const HEARTBEAT = 30_000;
+
 const sender =
   (socket: WebSocket) =>
   (message: ServerMessage): void => {
@@ -41,9 +49,24 @@ const sender =
 export const startCollabServer = async ({
   port,
   authorityFor,
+  heartbeat = HEARTBEAT,
+  onError,
 }: CollabServerOptions): Promise<CollabServer> => {
   const server = new WebSocketServer({ port });
   const rooms = new Map<string, Room>();
+  const heard = new WeakSet<WebSocket>();
+
+  const sweep = (): void => {
+    for (const client of server.clients) {
+      if (heard.delete(client)) {
+        client.ping();
+      } else {
+        client.terminate();
+      }
+    }
+  };
+
+  const beat = heartbeat > 0 ? setInterval(sweep, heartbeat) : undefined;
 
   const roomOf = (doc: string): Room => {
     const known = rooms.get(doc);
@@ -60,7 +83,14 @@ export const startCollabServer = async ({
 
   const joined = (socket: WebSocket, hello: HelloMessage): Session | undefined => {
     const room = roomOf(hello.doc);
-    const peer: RoomPeer = { clientId: hello.clientId, send: sender(socket) };
+
+    const peer: RoomPeer = {
+      clientId: hello.clientId,
+      send: sender(socket),
+      drop: () => {
+        socket.close(SUPERSEDED);
+      },
+    };
 
     return room.join(peer, hello) ? { room, peer } : undefined;
   };
@@ -68,7 +98,13 @@ export const startCollabServer = async ({
   server.on('connection', (socket) => {
     let session: Session | undefined;
 
-    socket.on('message', (data) => {
+    heard.add(socket);
+
+    socket.on('pong', () => {
+      heard.add(socket);
+    });
+
+    const receive = (data: RawData): void => {
       const message = parseClientMessage(parsed(data));
 
       if (message === undefined) {
@@ -77,6 +113,17 @@ export const startCollabServer = async ({
         session.room.receive(session.peer, message);
       } else if (message.kind === ClientMessageKind.Hello) {
         session = joined(socket, message);
+      }
+    };
+
+    socket.on('message', (data) => {
+      heard.add(socket);
+
+      try {
+        receive(data);
+      } catch (error) {
+        onError?.(error);
+        socket.close(INTERNAL_ERROR);
       }
     });
 
@@ -97,6 +144,8 @@ export const startCollabServer = async ({
       return address !== null && typeof address === 'object' ? address.port : port;
     },
     close: async () => {
+      clearInterval(beat);
+
       for (const client of server.clients) {
         client.terminate();
       }

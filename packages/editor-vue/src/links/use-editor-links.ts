@@ -220,10 +220,12 @@ export const useEditorLinks = (options: EditorLinkOptions): EditorLinks => {
       })
       .catch(() => undefined)
       .finally(() => {
-        if (controllers.get(id) === controller) {
-          controllers.delete(id);
-          loading.delete(id);
+        if (controllers.get(id) !== controller) {
+          return;
         }
+
+        controllers.delete(id);
+        loading.delete(id);
       });
   };
 
@@ -341,9 +343,11 @@ export const useEditorLinks = (options: EditorLinkOptions): EditorLinks => {
         selection.kind === SelectionKind.Text &&
         state.doc.resolve(selection.head).parent.id === block.id;
 
-      if (link !== undefined && (!inside || inlineText(block) !== link.url)) {
-        pasted.value = undefined;
+      if (link === undefined || (inside && inlineText(block) === link.url)) {
+        return;
       }
+
+      pasted.value = undefined;
     },
     dismiss: () => {
       pasted.value = undefined;

@@ -23,8 +23,8 @@ export interface CellState {
 const datetimeOf = (element: Element | null | undefined): string | undefined =>
   element?.querySelector('time')?.getAttribute('datetime') ?? undefined;
 
-const pointer = (type: string): PointerEvent =>
-  new PointerEvent(type, { bubbles: true, cancelable: true, pointerType: 'mouse' });
+const pointer = (type: string, pointerType = 'mouse'): PointerEvent =>
+  new PointerEvent(type, { bubbles: true, cancelable: true, pointerType });
 
 export class CalendarDriver extends ComponentDriver {
   protected readonly block = 'nui-calendar';
@@ -102,6 +102,10 @@ export class CalendarDriver extends ComponentDriver {
 
   get rows(): number {
     return this.months[0]?.findAll('.nui-calendar__row').length ?? 0;
+  }
+
+  async settle(): Promise<void> {
+    await nextTick();
   }
 
   get tabStop(): string | undefined {
@@ -241,6 +245,45 @@ export class CalendarDriver extends ComponentDriver {
     element.dispatchEvent(pointer('pointerdown'));
     element.dispatchEvent(pointer('pointerup'));
     await this.day(date).trigger('click');
+    await nextTick();
+  }
+
+  async tapDay(date: string): Promise<void> {
+    const element = this.day(date).element;
+
+    element.dispatchEvent(pointer('pointerdown', 'touch'));
+    element.dispatchEvent(pointer('pointerup', 'touch'));
+    await this.day(date).trigger('click');
+    await nextTick();
+  }
+
+  async scrollFromDay(date: string): Promise<void> {
+    const element = this.day(date).element;
+
+    element.dispatchEvent(pointer('pointerdown', 'touch'));
+    element.dispatchEvent(pointer('pointercancel', 'touch'));
+    await nextTick();
+  }
+
+  async pressDay(date: string): Promise<void> {
+    this.day(date).element.dispatchEvent(pointer('pointerdown'));
+    await nextTick();
+  }
+
+  async releaseDay(date: string): Promise<void> {
+    this.day(date).element.dispatchEvent(pointer('pointerup'));
+    await nextTick();
+  }
+
+  async activateDay(date: string): Promise<void> {
+    await this.day(date).trigger('click');
+  }
+
+  async cancelPress(date: string): Promise<void> {
+    const element = this.day(date).element;
+
+    element.dispatchEvent(pointer('pointerdown'));
+    element.dispatchEvent(pointer('pointercancel'));
     await nextTick();
   }
 

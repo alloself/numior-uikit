@@ -36,9 +36,11 @@ const isComponent = (value: unknown): value is Component =>
 
 const registerKit = (app: App, kit: Readonly<Record<string, unknown>>): void => {
   for (const [name, value] of Object.entries(kit)) {
-    if (name.startsWith('Nui') && isComponent(value)) {
-      app.component(name, value);
+    if (!name.startsWith('Nui') || !isComponent(value)) {
+      continue;
     }
+
+    app.component(name, value);
   }
 };
 

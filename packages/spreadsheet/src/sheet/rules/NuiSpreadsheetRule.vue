@@ -15,6 +15,7 @@
       :aria-label="texts.moveRule({ rule: row.description })"
       @pointerdown="emit('grab', $event)"
       @keydown="emit('gripKeydown', $event)"
+      @blur="emit('gripBlur')"
     >
       <NuiIcon icon="grip" />
     </button>
@@ -78,6 +79,7 @@ const { row, readonly, dragging, gripDisabled, texts } = defineProps<SheetRulePr
 const emit = defineEmits<{
   grab: [event: PointerEvent];
   gripKeydown: [event: KeyboardEvent];
+  gripBlur: [];
   remove: [];
   hover: [];
   leave: [];

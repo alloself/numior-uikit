@@ -16,9 +16,11 @@ const html = ref(initial);
 const drafts = provideDraftCommits();
 
 const keepHtml = (value: NuiEditorValue | undefined): void => {
-  if (typeof value === 'string') {
-    html.value = value;
+  if (typeof value !== 'string') {
+    return;
   }
+
+  html.value = value;
 };
 
 defineExpose({ drafts });

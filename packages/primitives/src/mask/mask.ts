@@ -107,11 +107,13 @@ export const maskCaret = (mask: string, count: number, length: number): number =
       break;
     }
     index += 1;
-    if (slot.kind === MaskSlotKind.Token) {
-      seen += 1;
-      if (seen === count) {
-        break;
-      }
+    if (slot.kind !== MaskSlotKind.Token) {
+      continue;
+    }
+
+    seen += 1;
+    if (seen === count) {
+      break;
     }
   }
   return Math.min(index, length);

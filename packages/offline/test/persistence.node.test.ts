@@ -1,6 +1,6 @@
 import type { CollabAlternative } from '@numior/collaboration';
-import { describe, expect, it } from 'vite-plus/test';
-import { createPersistenceDriver, insertedText } from './persistence-driver';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import { createPersistenceDriver, insertedText, restoreBrowser } from './persistence-driver';
 
 const LOST: CollabAlternative = {
   version: 3,
@@ -11,6 +11,8 @@ const LOST: CollabAlternative = {
   author: { id: 'boris', name: 'Борис' },
   createdAt: '2026-11-09T10:00:00.000Z',
 };
+
+afterEach(restoreBrowser);
 
 describe('offlinePersistence', () => {
   it('has nothing to restore for a new document', async () => {
@@ -135,5 +137,117 @@ describe('offlinePersistence', () => {
 
     expect(second.tracking).toBeDefined();
     expect(second.restored?.version).toBe(3);
+  });
+
+  it('stores a change the browser refused to write together with the next one', async () => {
+    const driver = createPersistenceDriver();
+    const first = await driver.session();
+
+    first.loadFromServer('', 0);
+    await first.restart();
+
+    const second = await driver.session();
+
+    driver.refuseWrites(1);
+    second.receive(insertedText('x', 1));
+    await second.refused();
+
+    second.type('a', 1);
+    await second.restart();
+
+    const third = await driver.session();
+
+    expect(third.blocked).toBeUndefined();
+    expect(third.restored?.version).toBe(1);
+    expect(third.restored?.pending).toHaveLength(1);
+  });
+
+  it('says the copy is not being written and writes it again a second later', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+
+    const driver = createPersistenceDriver();
+    const first = await driver.session();
+
+    first.loadFromServer('', 0);
+    await first.restart();
+
+    const second = await driver.session();
+
+    driver.refuseWrites(1);
+    second.receive(insertedText('x', 1));
+    await second.refused();
+
+    expect(second.states).toEqual(['kept', 'failing']);
+
+    await second.keptAgain();
+    await second.restart();
+
+    const third = await driver.session();
+
+    expect(second.states).toEqual(['kept', 'failing', 'kept']);
+    expect(third.restored?.version).toBe(1);
+  });
+
+  it('closes while the browser keeps refusing and leaves the earlier copy readable', async () => {
+    const driver = createPersistenceDriver();
+    const first = await driver.session();
+
+    first.loadFromServer('Текст', 3);
+    await first.restart();
+
+    const second = await driver.session();
+
+    driver.refuseWrites(100);
+    second.receive(insertedText('x', 1));
+    await second.refused();
+    await second.restart();
+
+    driver.refuseWrites(0);
+
+    const third = await driver.session();
+
+    expect(third.blocked).toBeUndefined();
+    expect(third.restored?.version).toBe(3);
+  });
+
+  it('keeps one writer among tabs of a browser without locks', async () => {
+    const driver = createPersistenceDriver('channel');
+    const first = await driver.session();
+
+    first.loadFromServer('Текст', 3);
+
+    const second = await driver.session();
+
+    expect(first.states).toEqual(['kept']);
+    expect(second.states).toEqual(['elsewhere']);
+    expect(second.tracking).toBeUndefined();
+
+    await first.restart();
+
+    const third = await driver.session();
+
+    expect(third.restored?.version).toBe(3);
+
+    await third.restart();
+  });
+
+  it('lets one of two tabs opened at the same moment write', async () => {
+    const driver = createPersistenceDriver('channel');
+
+    const tabs = await Promise.all([driver.session(), driver.session(), driver.session()]);
+
+    expect(tabs.filter((tab) => tab.tracking !== undefined)).toHaveLength(1);
+    expect(tabs.filter((tab) => tab.states[0] === 'elsewhere')).toHaveLength(2);
+
+    await Promise.all(tabs.map((tab) => tab.restart()));
+  });
+
+  it('keeps no copy in a browser that cannot tell its tabs apart', async () => {
+    const driver = createPersistenceDriver('none');
+
+    const first = await driver.session();
+
+    expect(first.states).toEqual(['unavailable']);
+    expect(first.tracking).toBeUndefined();
   });
 });

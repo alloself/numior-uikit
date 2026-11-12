@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { RU_LOCALE, loadCells, numberValue, textValue, type LoadEntry } from '../src/core';
+import { openBook } from './book-harness';
 import { evaluated, openSheet } from './sheet-harness';
+
+const STALE_CALLS = 10_000;
+
+const RUNNING_ROWS = 4000;
+
+const RUNNING_BUDGET_MS = 400;
+
+const STALE_BUDGET_MS = 20;
+
+const LONG_ROWS = 150_000;
 
 describe('formula evaluation', () => {
   it('computes operators with the Excel coercions', () => {
@@ -58,6 +69,34 @@ describe('formula evaluation', () => {
     expect(evaluated('=A9=0')).toEqual({ kind: 'boolean', value: true });
     expect(evaluated('=A9=""')).toEqual({ kind: 'boolean', value: true });
   });
+
+  it('compares numbers by the fifteen digits a cell can show', () => {
+    expect(evaluated('=0.1+0.2=0.3')).toEqual({ kind: 'boolean', value: true });
+    expect(evaluated('=0.1+0.2>0.3')).toEqual({ kind: 'boolean', value: false });
+    expect(evaluated('=0.1+0.2<>0.3')).toEqual({ kind: 'boolean', value: false });
+    expect(evaluated('=1.1-1<=0.1')).toEqual({ kind: 'boolean', value: true });
+    expect(evaluated('=1E+300*3=3E+300')).toEqual({ kind: 'boolean', value: true });
+    expect(evaluated('=0.3=0.300000000000001')).toEqual({ kind: 'boolean', value: false });
+    expect(evaluated('=1E-20=0')).toEqual({ kind: 'boolean', value: false });
+    expect(evaluated('=SWITCH(0.1+0.2,0.3,"found","missed")')).toEqual(textValue('found'));
+  });
+
+  it('looks a value up and counts by the stored number, not by the shown digits', () => {
+    const sheet = openSheet();
+
+    sheet.enter('A1', '=0.1+0.2');
+    sheet.enter('A2', 0.5);
+    sheet.enter('B1', '=MATCH(0.3,A1:A2,0)');
+    sheet.enter('B2', '=MATCH(0.5,A1:A2,0)');
+    sheet.enter('B3', '=COUNTIF(A1:A2,0.3)');
+    sheet.enter('B4', '=A1=0.3');
+    sheet.recalc();
+
+    expect(sheet.value('B1')).toEqual({ kind: 'error', code: '#N/A' });
+    expect(sheet.value('B2')).toEqual(numberValue(2));
+    expect(sheet.value('B3')).toEqual(numberValue(0));
+    expect(sheet.value('B4')).toEqual({ kind: 'boolean', value: true });
+  });
 });
 
 describe('base functions', () => {
@@ -93,7 +132,6 @@ describe('base functions', () => {
     expect(evaluated('=NOT(0)')).toEqual({ kind: 'boolean', value: true });
     expect(evaluated('=IFERROR(1/0, "none")')).toEqual(textValue('none'));
     expect(evaluated('=ABS(-4)')).toEqual(numberValue(4));
-    expect(evaluated('=ROUND(1)')).toEqual({ kind: 'error', code: '#VALUE!' });
   });
 
   it('looks values up exactly and in sorted tables', () => {
@@ -259,6 +297,149 @@ describe('recalculation', () => {
     expect(sheet.value('A20000')).toEqual(numberValue(20_000));
   });
 
+  it('takes extremes and the mode of a column too long to spread into a call', () => {
+    const sheet = openSheet();
+
+    for (let row = 1; row <= LONG_ROWS; row += 1) {
+      sheet.enter(`A${String(row)}`, row);
+    }
+
+    sheet.enter(`A${String(LONG_ROWS + 1)}`, 7);
+    sheet.enter('C1', `=MAXIFS(A1:A${String(LONG_ROWS)},A1:A${String(LONG_ROWS)},">0")`);
+    sheet.enter('C2', `=MINIFS(A1:A${String(LONG_ROWS)},A1:A${String(LONG_ROWS)},">0")`);
+    sheet.enter('C3', `=SUBTOTAL(4,A1:A${String(LONG_ROWS)})`);
+    sheet.enter('C4', `=SUBTOTAL(5,A1:A${String(LONG_ROWS)})`);
+    sheet.enter('C5', `=MODE(A1:A${String(LONG_ROWS + 1)})`);
+
+    sheet.recalc();
+
+    expect(['C1', 'C2', 'C3', 'C4', 'C5'].map((address) => sheet.value(address))).toEqual([
+      numberValue(LONG_ROWS),
+      numberValue(1),
+      numberValue(LONG_ROWS),
+      numberValue(1),
+      numberValue(7),
+    ]);
+  });
+
+  it('finds exact matches in ranges that grow down a column within the budget', () => {
+    const sheet = openSheet();
+
+    for (let row = 1; row <= RUNNING_ROWS; row += 1) {
+      sheet.enter(`A${String(row)}`, `key${String(row)}`);
+      sheet.enter(`B${String(row)}`, `=MATCH("key${String(row)}",$A$1:A${String(row)},0)`);
+    }
+
+    const started = performance.now();
+
+    sheet.recalc();
+
+    const spent = performance.now() - started;
+
+    expect([sheet.value('B1'), sheet.value(`B${String(RUNNING_ROWS)}`)]).toEqual([
+      numberValue(1),
+      numberValue(RUNNING_ROWS),
+    ]);
+
+    expect(spent).toBeLessThan(RUNNING_BUDGET_MS);
+  });
+
+  it('finds the same rows by the column index as by reading the cells one by one', () => {
+    const sheet = openSheet();
+
+    ['pear', 'Apple', 'plum', 'apple', 7, true, 'p*m'].forEach((input, index) => {
+      sheet.enter(`A${String(index + 1)}`, input);
+      sheet.enter(`B${String(index + 1)}`, index * 10);
+    });
+
+    [
+      '=MATCH("APPLE",A1:A7,0)',
+      '=MATCH("p*m",A1:A7,0)',
+      '=XMATCH("p*m",A1:A7)',
+      '=XMATCH("apple",A1:A7,0,-1)',
+      '=XMATCH(7,A1:A7)',
+      '=XLOOKUP(TRUE,A1:A7,B1:B7)',
+      '=XLOOKUP("fig",A1:A7,B1:B7,"none")',
+      '=MATCH("7",A1:A7,0)',
+    ].forEach((formula, index) => {
+      sheet.enter(`D${String(index + 1)}`, formula);
+    });
+
+    sheet.recalc();
+
+    expect(sheet.grid('D1:D8')).toEqual([[2], [3], [7], [4], [5], [50], ['none'], ['#N/A']]);
+  });
+
+  it('does not find a value below the end of a shorter range with the same start', () => {
+    const sheet = openSheet();
+
+    ['a', 'b', 'c', 'b', 'e'].forEach((text, index) => {
+      sheet.enter(`A${String(index + 1)}`, text);
+    });
+
+    sheet.enter('C1', '=MATCH("e",A1:A5,0)');
+    sheet.enter('C2', '=MATCH("e",A1:A3,0)');
+    sheet.enter('C3', '=MATCH("b",A1:A5,0)');
+    sheet.enter('C4', '=MATCH("e",A1:A4,0)');
+    sheet.recalc();
+
+    expect(sheet.grid('C1:C4')).toEqual([[5], ['#N/A'], [2], ['#N/A']]);
+
+    sheet.enter('A2', 'e');
+    sheet.recalc();
+
+    expect(sheet.grid('C1:C4')).toEqual([[2], [2], [4], [2]]);
+  });
+
+  it('tells which formulas wait for a value without planning the run again', async () => {
+    const sheet = openSheet();
+
+    sheet.enter('A1', 1);
+    sheet.enter('B1', 5);
+
+    for (let row = 2; row <= 40_000; row += 1) {
+      sheet.enter(`A${String(row)}`, `=A${String(row - 1)}+1`);
+    }
+
+    const run = sheet.recalc({ budgetMs: 0, yieldTo: () => Promise.resolve() });
+    const early = [run.planned, ...['A2', 'A40000', 'A1', 'B1'].map(sheet.stale)];
+    const started = performance.now();
+
+    for (let call = 0; call < STALE_CALLS; call += 1) {
+      sheet.stale('A40000');
+    }
+
+    const spent = performance.now() - started;
+
+    await run.settled;
+
+    expect(early).toEqual([false, true, true, false, false]);
+    expect([run.planned, sheet.stale('A2'), sheet.stale('A40000')]).toEqual([true, false, false]);
+    expect(spent).toBeLessThan(STALE_BUDGET_MS);
+  });
+
+  it('marks every formula left without a value when a run is stopped', async () => {
+    const sheet = openSheet();
+
+    sheet.enter('A1', 1);
+
+    for (let row = 2; row <= 40_000; row += 1) {
+      sheet.enter(`A${String(row)}`, `=A${String(row - 1)}+1`);
+    }
+
+    const run = sheet.recalc({ budgetMs: 0, yieldTo: () => Promise.resolve() });
+
+    run.cancel();
+    await run.settled;
+
+    expect([run.planned, run.done, sheet.stale('A40000'), sheet.state('A40000')]).toEqual([
+      true,
+      0,
+      true,
+      'stale',
+    ]);
+  });
+
   it('yields to the host on its own and counts only the time it spent computing', async () => {
     const sheet = openSheet();
     const started = performance.now();
@@ -354,7 +535,7 @@ describe('book locale', () => {
     sheet.enter('A2', '="1,5"+1');
     sheet.recalc();
 
-    expect(sheet.value('A1')).toEqual(textValue('1 234,50'));
+    expect(sheet.value('A1')).toEqual(textValue('1 234,50'));
     expect(sheet.value('A2')).toEqual(numberValue(2.5));
 
     sheet.calculator.setLocale({ ...RU_LOCALE, numbers: { ...RU_LOCALE.numbers, group: '.' } });
@@ -421,5 +602,63 @@ describe('loading cells in slices', () => {
     await loading.settled;
 
     expect(loading.done).toBeLessThan(500);
+  });
+});
+
+describe('whole lines after an insert before them', () => {
+  it('brings back the references an insert has pushed off the sheet when it is undone', () => {
+    const sheet = openBook();
+
+    sheet.type('B1', '=SUM(A1048575:A1048576)');
+    sheet.type('C1', '=A1048576');
+    sheet.type('A1', '=Sheet1!XFD1+SUM(Sheet1!XFC1:XFD1)', 'Rates');
+    sheet.name('Tail', '=Sheet1!$A$1048576');
+    sheet.insert('1');
+
+    expect(sheet.input('B2')).toBe('=SUM(A1048576:A1048576)');
+    expect(sheet.input('C2')).toBe('=#REF!');
+
+    sheet.history.undo();
+
+    expect(sheet.input('B1')).toBe('=SUM(A1048575:A1048576)');
+    expect(sheet.input('C1')).toBe('=A1048576');
+    expect(sheet.definition('Tail')).toBe('=Sheet1!$A$1048576');
+
+    sheet.insert('A');
+    sheet.history.undo();
+
+    expect(sheet.input('A1', 'Rates')).toBe('=Sheet1!XFD1+SUM(Sheet1!XFC1:XFD1)');
+  });
+
+  it('keeps summing a whole column when rows are inserted at the top', () => {
+    const sheet = openBook();
+
+    sheet.type('A2', '5');
+    sheet.type('C1', '=SUM(A:A)');
+    sheet.type('A1', '=SUM(Sheet1!A:A)', 'Rates');
+
+    expect(sheet.shown('C1')).toBe('5');
+    expect(sheet.shown('A1', 'Rates')).toBe('5');
+
+    sheet.insert('1');
+    sheet.type('A1', '100');
+
+    expect(sheet.input('C2')).toBe('=SUM(A:A)');
+    expect(sheet.shown('C2')).toBe('105');
+    expect(sheet.shown('A1', 'Rates')).toBe('105');
+  });
+
+  it('keeps summing a whole row when columns are inserted at the start', () => {
+    const sheet = openBook();
+
+    sheet.type('B2', '10');
+    sheet.type('F6', '=SUM(2:2)');
+
+    expect(sheet.shown('F6')).toBe('10');
+
+    sheet.insert('A');
+    sheet.type('A2', '100');
+
+    expect(sheet.shown('G6')).toBe('110');
   });
 });

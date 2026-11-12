@@ -1,6 +1,5 @@
-import { daysInMonth, serialOfDate } from '../calc/serials';
+import { daysInMonth, serialOfDate, timeSerial } from '../calc/serials';
 import { DateOrder, type NumberLocale } from './format.types';
-import { EN_NUMBERS } from './number-locale';
 
 export interface DateText {
   readonly date: number | undefined;
@@ -25,7 +24,7 @@ const DAY_NAMED = /^(\d{1,2})[-\s.]+(\p{L}+)\.?[-\s.,]+(\d{2,4})$/iu;
 
 const NAMED_DAY = /^(\p{L}+)\.?\s+(\d{1,2}),?\s+(\d{2,4})$/iu;
 
-const NAMED_FORMAT = 'd mmm yyyy';
+const MONTH_YEAR = /^(\p{L}+)\.?[-\s.]+(\d{4})$/iu;
 
 const fullYear = (text: string): number => {
   const year = Number(text);
@@ -36,25 +35,20 @@ const fullYear = (text: string): number => {
   return year < 30 ? 2000 + year : 1900 + year;
 };
 
-const formsOf = (locale: NumberLocale, index: number): string[] =>
-  [EN_NUMBERS, locale].flatMap((source) =>
-    [source.monthsShort[index], source.months[index], source.monthsGenitive[index]].flatMap(
-      (form) => (form === undefined ? [] : [form.toLowerCase()]),
-    ),
-  );
+const MONTH_PREFIX = 3;
 
 const monthOf = (name: string, locale: NumberLocale): number | undefined => {
-  const lower = name.toLowerCase();
+  const lower = name.toLocaleLowerCase(locale.name);
 
-  if (lower.length < 3) {
+  if (lower.length < MONTH_PREFIX) {
     return undefined;
   }
 
-  const index = Array.from({ length: 12 }, (_, month) => month).find((month) =>
-    formsOf(locale, month).some((form) => form.startsWith(lower) || lower.startsWith(form)),
+  const index = locale.months.findIndex((month) =>
+    month.toLocaleLowerCase(locale.name).startsWith(lower),
   );
 
-  return index === undefined ? undefined : index + 1;
+  return index < 0 ? undefined : index + 1;
 };
 
 const validDate = (year: number, month: number | undefined, day: number): number | undefined =>
@@ -84,26 +78,32 @@ const numericDate = (text: string, locale: NumberLocale): number | undefined => 
     : validDate(year, second, first);
 };
 
+const namedDay = (text: string, locale: NumberLocale): number | undefined => {
+  const found = locale.dateOrder === DateOrder.Mdy ? NAMED_DAY.exec(text) : null;
+
+  return found === null
+    ? undefined
+    : validDate(fullYear(found[3] ?? ''), monthOf(found[1] ?? '', locale), Number(found[2]));
+};
+
 const namedDate = (text: string, locale: NumberLocale): number | undefined => {
   const dayNamed = DAY_NAMED.exec(text);
 
-  if (dayNamed !== null) {
-    return validDate(
-      fullYear(dayNamed[3] ?? ''),
-      monthOf(dayNamed[2] ?? '', locale),
-      Number(dayNamed[1]),
-    );
-  }
-
-  const namedDay = NAMED_DAY.exec(text);
-
-  return namedDay === null
-    ? undefined
+  return dayNamed === null
+    ? namedDay(text, locale)
     : validDate(
-        fullYear(namedDay[3] ?? ''),
-        monthOf(namedDay[1] ?? '', locale),
-        Number(namedDay[2]),
+        fullYear(dayNamed[3] ?? ''),
+        monthOf(dayNamed[2] ?? '', locale),
+        Number(dayNamed[1]),
       );
+};
+
+const monthYear = (text: string, locale: NumberLocale): number | undefined => {
+  const found = MONTH_YEAR.exec(text);
+
+  return found === null
+    ? undefined
+    : validDate(Number(found[2]), monthOf(found[1] ?? '', locale), 1);
 };
 
 const dateOf = (text: string, locale: NumberLocale): readonly [number, string] | undefined => {
@@ -120,7 +120,13 @@ const dateOf = (text: string, locale: NumberLocale): readonly [number, string] |
 
   const named = namedDate(text, locale);
 
-  return named === undefined ? undefined : [named, NAMED_FORMAT];
+  if (named !== undefined) {
+    return [named, locale.namedDate];
+  }
+
+  const month = monthYear(text, locale);
+
+  return month === undefined ? undefined : [month, locale.monthDate];
 };
 
 const MAX_HOURS = 9999;
@@ -149,7 +155,7 @@ const timeOf = (text: string, elapsed: boolean): Clock | undefined => {
   return day > (elapsed ? MAX_HOURS : 23)
     ? undefined
     : {
-        time: (day * 3600 + minutes * 60 + seconds) / 86_400,
+        time: timeSerial(day, minutes, seconds),
         format: clockFormat(found[3] !== undefined, half !== undefined, day > 23),
       };
 };

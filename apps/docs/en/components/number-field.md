@@ -29,7 +29,8 @@ Set `min`, `max` and `step`.
 
 <Example name="number-field/Bounds" />
 
-A number outside the range turns into the nearest bound when the user leaves the field.
+A number outside the range turns into the nearest bound when the user leaves the field. A value
+that was never edited in the field stays in the model as it was.
 
 ### Show the number in another format
 

@@ -312,7 +312,7 @@ export const EN_FUNCTION_HELP: FunctionHelpCatalog = {
   },
   INDEX: {
     summary: 'Returns the value at a row and column of a range.',
-    args: ['array', 'row_num', 'column_num'],
+    args: ['array', 'row_num', 'column_num', 'area_num'],
   },
   LOOKUP: {
     summary: 'Looks up a value in one range and returns it from another.',

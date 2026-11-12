@@ -20,7 +20,7 @@ import {
   type TableShape,
 } from '../tables';
 import { textValue } from '../values';
-import { validDefinedName, type Sheet, type SheetTable, type Workbook } from '../workbook';
+import { validTableName, type Sheet, type SheetTable, type Workbook } from '../workbook';
 import type { Rewrite, Rewriter } from './rewrites';
 import {
   StepRefusal,
@@ -240,7 +240,7 @@ export const createTableSteps = (
   };
 
   const refusal = (name: string, sheet: Sheet, spec: TableShape): StepRefusal | undefined => {
-    if (!validDefinedName(name)) {
+    if (!validTableName(name)) {
       return StepRefusal.InvalidName;
     }
     if (book.names.taken(name)) {
@@ -252,6 +252,13 @@ export const createTableSteps = (
 
     const wanted = name.toLowerCase();
 
+    const overPivot = book.pivots
+      .on(sheet)
+      .some((pivot) => pivot.footprint !== undefined && rangesMeet(pivot.footprint, spec.range));
+
+    if (overPivot) {
+      return StepRefusal.PivotOverlap;
+    }
     return book.tables
       .on(sheet)
       .some((other) => other.name.toLowerCase() !== wanted && rangesMeet(other.range, spec.range))
@@ -308,7 +315,7 @@ export const createTableSteps = (
     if (table === undefined) {
       return { ok: false, reason: StepRefusal.MissingTable };
     }
-    if (!validDefinedName(to)) {
+    if (!validTableName(to)) {
       return { ok: false, reason: StepRefusal.InvalidName };
     }
 
@@ -337,12 +344,14 @@ export const createTableSteps = (
         const content = calculator.contentAt(sheet, table.range.top, col);
 
         if (
-          content.kind !== CellInputKind.Value ||
-          content.value.kind !== CellValueKind.String ||
-          content.value.value !== name
+          content.kind === CellInputKind.Value &&
+          content.value.kind === CellValueKind.String &&
+          content.value.value === name
         ) {
-          writeHeader(sheet, table.range.top, col, name);
+          return;
         }
+
+        writeHeader(sheet, table.range.top, col, name);
       });
 
       const renames = columnRenames(table.columns, columns);
@@ -412,9 +421,11 @@ export const createTableSteps = (
       shape.columns.forEach((name, index) => {
         const col = shape.range.left + index;
 
-        if (col >= change.at && col < change.at + change.count) {
-          writeHeader(sheet, shape.range.top, col, name);
+        if (col < change.at || col >= change.at + change.count) {
+          return;
         }
+
+        writeHeader(sheet, shape.range.top, col, name);
       });
     });
   };

@@ -29,9 +29,9 @@ describe('NuiAlert', () => {
     expect(bare.hasIcon).toBe(false);
   });
 
-  it('dismisses through the close button, emits and follows the open model', async () => {
+  it('closes through the close button, emits and follows the open model', async () => {
     const alert = AlertDriver.mount({
-      props: { title: 'Saved', dismissible: true, dismissLabel: 'Закрыть' },
+      props: { title: 'Saved', closable: true, closeLabel: 'Закрыть' },
       slots: { actions: AlertUndoAction },
     });
 
@@ -39,7 +39,7 @@ describe('NuiAlert', () => {
     expect(alert.closeButton.attributes('aria-label')).toBe('Закрыть');
 
     await alert.clickClose();
-    expect(alert.emittedDismiss).toBe(1);
+    expect(alert.emittedClose).toBe(1);
     expect(alert.emittedOpen).toEqual([false]);
 
     await alert.receiveOpen(false);
@@ -49,16 +49,16 @@ describe('NuiAlert', () => {
     expect(alert.hasModifier('closed')).toBe(false);
   });
 
-  it('names the dismiss button in the configured language unless dismissLabel is given', () => {
-    const english = AlertDriver.mount({ props: { dismissible: true } });
+  it('names the close button in the configured language unless closeLabel is given', () => {
+    const english = AlertDriver.mount({ props: { closable: true } });
 
     const russian = AlertDriver.mount({
-      props: { dismissible: true },
+      props: { closable: true },
       config: { locale: 'ru-RU' },
     });
 
     const labelled = AlertDriver.mount({
-      props: { dismissible: true, dismissLabel: 'Скрыть' },
+      props: { closable: true, closeLabel: 'Скрыть' },
       config: { locale: 'ru-RU' },
     });
 

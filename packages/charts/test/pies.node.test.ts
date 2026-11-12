@@ -40,6 +40,19 @@ describe('pie and doughnut layout', () => {
     expect(at(scene.slices, 2).x).toBeLessThan(150);
   });
 
+  it('draws a slice that takes nearly the whole pie as a full circle', () => {
+    const scene = layoutChart(
+      {
+        kind: 'pie',
+        categories: { kind: 'text', labels: ['Sales', 'Returns'] },
+        series: [{ id: 'sales', name: 'Sales', values: [1_250_000, 3] }],
+      },
+      SIZE,
+    );
+
+    expect(at(scene.slices, 0).path).toBe('M150,4A116,116 0 1 1 150,236A116,116 0 1 1 150,4Z');
+  });
+
   it('draws one ring per series around a hole in a doughnut', () => {
     const scene = layoutChart({ ...shares, kind: 'doughnut' }, SIZE);
     const outer = ringOf(scene.slices, 0);

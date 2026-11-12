@@ -114,13 +114,15 @@ export const useTableWarmup = <T>(options: TableWarmupOptions<T>): TableWarmup =
 
   const rankWhenIdle = async (wishes: TableStoreWish[], signal: AbortSignal): Promise<void> => {
     await nextIdle();
-    if (!signal.aborted) {
-      await options.engine.value.prepare(wishes, {
-        sliceMs: SLICE_MS,
-        yieldTo: yieldInLine,
-        signal,
-      });
+    if (signal.aborted) {
+      return;
     }
+
+    await options.engine.value.prepare(wishes, {
+      sliceMs: SLICE_MS,
+      yieldTo: yieldInLine,
+      signal,
+    });
   };
 
   const rankSoon = (keys: readonly string[]): void => {

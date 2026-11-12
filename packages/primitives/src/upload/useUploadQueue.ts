@@ -155,9 +155,11 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
       const position = state.positions.get(id);
       const current = position === undefined ? undefined : items[position];
 
-      if (position !== undefined && current?.status === UploadStatus.Uploading) {
-        items[position] = { ...current, progress };
+      if (position === undefined || current?.status !== UploadStatus.Uploading) {
+        continue;
       }
+
+      items[position] = { ...current, progress };
     }
     state.progress.clear();
     write(items, false);
@@ -207,9 +209,11 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
 
     const context = {
       onProgress: (fraction: number): void => {
-        if (!controller.signal.aborted) {
-          reportProgress(item.id, fraction);
+        if (controller.signal.aborted) {
+          return;
         }
+
+        reportProgress(item.id, fraction);
       },
       signal: controller.signal,
     };
@@ -261,9 +265,11 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
 
       const item = state.items[position];
 
-      if (item?.status === UploadStatus.Queued && item.file && !controllers.has(item.id)) {
-        void run(item, item.file);
+      if (item?.status !== UploadStatus.Queued || !item.file || controllers.has(item.id)) {
+        continue;
       }
+
+      void run(item, item.file);
     }
   };
 
@@ -298,14 +304,16 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
     const item = find(id);
 
     if (
-      item?.status === UploadStatus.Error &&
-      item.error.reason === UploadReason.Upload &&
-      item.file
+      item?.status !== UploadStatus.Error ||
+      item.error.reason !== UploadReason.Upload ||
+      !item.file
     ) {
-      replace(id, (current) => ({ ...fileOf(current), status: UploadStatus.Queued }));
-      state.cursor = Math.min(state.cursor, state.positions.get(id) ?? 0);
-      fill();
+      return;
     }
+
+    replace(id, (current) => ({ ...fileOf(current), status: UploadStatus.Queued }));
+    state.cursor = Math.min(state.cursor, state.positions.get(id) ?? 0);
+    fill();
   };
 
   const remove = (id: string): void => {
@@ -329,9 +337,11 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
     state.cursor = 0;
 
     for (const id of controllers.keys()) {
-      if (!state.positions.has(id)) {
-        abort(id);
+      if (state.positions.has(id)) {
+        continue;
       }
+
+      abort(id);
     }
     pump();
   });

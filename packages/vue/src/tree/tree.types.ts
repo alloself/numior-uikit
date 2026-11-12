@@ -11,7 +11,7 @@ export interface NuiTreeItem<T = string> extends Omit<
   readonly lazy?: boolean | undefined;
 }
 
-export type CheckState = (typeof CheckState)[keyof typeof CheckState];
+export type NuiCheckState = (typeof NuiCheckState)[keyof typeof NuiCheckState];
 
 export type NuiTreeSelectable = (typeof NuiTreeSelectable)[keyof typeof NuiTreeSelectable];
 
@@ -43,14 +43,14 @@ export interface NuiTreeItemSlot<T> {
   readonly level: number;
   readonly expanded: boolean;
   readonly selected: boolean;
-  readonly checked: CheckState;
+  readonly checked: NuiCheckState;
   readonly loading: boolean;
 }
 
 export interface NuiTreeNodeProps<T> {
   node: TreeNode<T>;
   id: string;
-  checked?: CheckState | undefined;
+  checked?: NuiCheckState | undefined;
   icon?: IconSource | undefined;
   folder: boolean;
   revealing?: boolean | undefined;
@@ -61,11 +61,11 @@ export const NuiTreeSelectable = { Single: 'single', Multiple: 'multiple' } as c
 export const NuiTreeVariant = {
   Plain: 'plain',
   Divided: 'divided',
-  Bordered: 'bordered',
+  Outline: 'outline',
   Floating: 'floating',
 } as const;
 
-export const CheckState = {
+export const NuiCheckState = {
   Checked: 'checked',
   Unchecked: 'unchecked',
   Indeterminate: 'indeterminate',

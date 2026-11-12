@@ -78,6 +78,16 @@ describe('offline store', () => {
     await expect(store.read()).resolves.toMatchObject({ steps });
   });
 
+  it('reads the log past steps a late write left under the snapshot', async () => {
+    const { store } = await open();
+    const [covered, ...steps] = logOf(['a', 'b', 'c'], 3);
+
+    await store.writeSnapshot(snapshotOf('a', 4));
+    await store.appendSteps(covered === undefined ? steps : [covered, ...steps]);
+
+    await expect(store.read()).resolves.toMatchObject({ steps });
+  });
+
   it('stops the log at a gap', async () => {
     const { store } = await open();
     const [first, , third] = logOf(['a', 'b', 'c'], 4);

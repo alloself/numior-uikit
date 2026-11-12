@@ -2,7 +2,7 @@
   <section class="panel" aria-labelledby="data-title">
     <div class="section-heading">
       <h2 id="data-title">Данные</h2>
-      <span class="tag">NuiBadge · NuiAvatar · NuiCard · NuiList · NuiEmpty</span>
+      <span class="tag">NuiBadge · NuiChip · NuiAvatar · NuiCard · NuiList · NuiEmpty</span>
     </div>
     <div class="data-row" data-testid="data-badges">
       <NuiBadge>Черновик</NuiBadge>
@@ -18,6 +18,13 @@
         </NuiButton>
         <NuiBadge tone="error" :count="3" floating data-testid="data-badge-floating" />
       </span>
+    </div>
+    <div class="data-row" data-testid="data-chips">
+      <NuiChip>Дизайн</NuiChip>
+      <NuiChip tone="primary" icon="check" removable>Фронтенд</NuiChip>
+      <NuiChip tone="success" variant="solid" removable>Готово</NuiChip>
+      <NuiChip size="sm">Аналитика</NuiChip>
+      <NuiChip size="sm" tone="warning" variant="outline" removable>Ждёт</NuiChip>
     </div>
     <div class="data-row">
       <NuiAvatar
@@ -85,13 +92,26 @@
         description="С отступом xs"
         data-testid="data-card-dense"
       />
+      <NuiCard :loading="cardLoading" href="#catalogue" data-testid="data-card-loading">
+        <NuiCardMedia :src="COVER_SRC" alt="" aspect="3 / 1" />
+        <NuiCardHeader>
+          <NuiCardTitle>Каталог 2026</NuiCardTitle>
+          <NuiCardDescription>Обновлён вчера</NuiCardDescription>
+        </NuiCardHeader>
+        <NuiCardContent :lines="2">Весенняя коллекция готова к публикации.</NuiCardContent>
+        <NuiCardFooter>
+          <NuiSwitch v-model="cardLoading" data-testid="data-card-loading-toggle">
+            Загрузка
+          </NuiSwitch>
+        </NuiCardFooter>
+      </NuiCard>
     </div>
     <div class="data-lists">
       <NuiList variant="divided" :items="linkItems" data-testid="data-list" />
       <NuiList
         v-model:values="picked"
         selectable="multiple"
-        variant="bordered"
+        variant="outline"
         label="Языки"
         :items="languageItems"
         data-testid="data-list-select"
@@ -99,7 +119,7 @@
       <NuiList
         v-model="channel"
         selectable="single"
-        variant="bordered"
+        variant="outline"
         label="Канал"
         data-testid="data-list-single"
       >
@@ -119,7 +139,7 @@
         </NuiButton>
         <NuiList
           :items="listEmpty ? [] : tasks"
-          variant="bordered"
+          variant="outline"
           size="sm"
           empty-label="Задач нет"
           data-testid="data-list-tasks"
@@ -154,10 +174,12 @@ import {
   NuiCardHeader,
   NuiCardMedia,
   NuiCardTitle,
+  NuiChip,
   NuiEmpty,
   NuiIcon,
   NuiList,
   NuiListItem,
+  NuiSwitch,
   type NuiAvatarItem,
   type NuiListEntry,
   type NuiListSource,
@@ -217,12 +239,15 @@ const picked = ref<string[]>([]);
 const channel = ref<string>();
 const cardClicks = ref(0);
 const nestedClicks = ref(0);
+const cardLoading = ref(true);
 const listEmpty = ref(false);
 
 const onCardClick = (event: MouseEvent): void => {
-  if (event.target instanceof Element && event.target.closest('.nui-card__action')) {
-    cardClicks.value += 1;
+  if (!(event.target instanceof Element) || !event.target.closest('.nui-card__action')) {
+    return;
   }
+
+  cardClicks.value += 1;
 };
 
 const output = computed(() =>

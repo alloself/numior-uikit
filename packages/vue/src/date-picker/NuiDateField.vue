@@ -95,10 +95,12 @@ const emit = defineEmits<{ clear: [] }>();
 const root = useTemplateRef<HTMLElement>('root');
 
 const onPanelKeydown = (event: KeyboardEvent): void => {
-  if (event.key === Key.Escape && !event.defaultPrevented) {
-    event.preventDefault();
-    popover.hide({ focus: true });
+  if (event.key !== Key.Escape || event.defaultPrevented) {
+    return;
   }
+
+  event.preventDefault();
+  popover.hide({ focus: true });
 };
 
 defineExpose({ root });

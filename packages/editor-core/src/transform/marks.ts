@@ -59,6 +59,10 @@ const cutsOf = (skip: readonly StepSpan[], from: number, to: number): Cut[] => {
     const start = Math.max(span.from, cursor);
     const end = Math.min(span.to, to);
 
+    if (end <= start) {
+      continue;
+    }
+
     if (start > cursor) {
       cuts.push({ from: cursor, to: start, changed: true });
     }
@@ -120,7 +124,9 @@ const markNode = (node: ElementNode, start: number, task: MarkTask): ElementNode
     const parts = markChild(child, childStart, allowed, task);
 
     changed ||= parts.length !== 1 || parts[0] !== child;
-    touched.push(...parts);
+    for (const entry of parts) {
+      touched.push(entry);
+    }
   }
   return changed ? spliceContent(node, first, last, touched) : node;
 };

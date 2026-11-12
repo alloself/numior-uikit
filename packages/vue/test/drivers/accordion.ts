@@ -16,6 +16,8 @@ const isStrings = listOf(isString);
 export class AccordionDriver extends ComponentDriver {
   protected readonly block = 'nui-accordion';
 
+  readonly consumedKeys: string[] = [];
+
   private constructor(
     private readonly scene: VueWrapper<InstanceType<typeof AccordionScene>>,
     private readonly multiple: boolean,
@@ -59,6 +61,14 @@ export class AccordionDriver extends ComponentDriver {
       .map((heading) => heading.element.tagName.toLowerCase());
   }
 
+  get field(): DOMWrapper<HTMLInputElement> {
+    return this.wrapper.find<HTMLInputElement>('.nui-collapsible__body input');
+  }
+
+  get fieldFocused(): boolean {
+    return this.field.element === document.activeElement;
+  }
+
   get focusedLabel(): string | undefined {
     return this.triggers.find((trigger) => trigger.element === document.activeElement)?.text();
   }
@@ -81,10 +91,19 @@ export class AccordionDriver extends ComponentDriver {
     await nextTick();
   }
 
+  async focusField(): Promise<void> {
+    this.field.element.focus();
+    await nextTick();
+  }
+
   async press(key: string): Promise<void> {
     const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
 
     (document.activeElement ?? document.body).dispatchEvent(event);
+
+    if (event.defaultPrevented) {
+      this.consumedKeys.push(key);
+    }
     await nextTick();
   }
 }

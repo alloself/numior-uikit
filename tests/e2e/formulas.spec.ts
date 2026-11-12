@@ -1,7 +1,7 @@
 import { expect, test } from './fixtures';
 import type { Theme } from './pages/playground';
 
-const NBSP = ' ';
+const GROUP = ' ';
 
 const today = (): string => {
   const now = new Date();
@@ -22,10 +22,10 @@ test.describe('formulas sheet', () => {
   test('computes the budget and recalculates what depends on an edited cell', async ({
     formulas,
   }) => {
-    await expect(formulas.cell('2', 3)).toHaveText(`340${NBSP}000,00 ₽`);
-    await expect(formulas.cell('2', 4)).toHaveText(`$3${NBSP}679,65`);
-    await expect(formulas.cell('8', 3)).toHaveText(`784${NBSP}800,00 ₽`);
-    await expect(formulas.cell('9', 3)).toHaveText(`156${NBSP}960,00 ₽`);
+    await expect(formulas.cell('2', 3)).toHaveText(`340${GROUP}000,00 ₽`);
+    await expect(formulas.cell('2', 4)).toHaveText(`$3${GROUP}679,65`);
+    await expect(formulas.cell('8', 3)).toHaveText(`784${GROUP}800,00 ₽`);
+    await expect(formulas.cell('9', 3)).toHaveText(`156${GROUP}960,00 ₽`);
     await expect(formulas.cell('10', 3)).toHaveText('5');
 
     await expect(formulas.cell('12', 1)).toHaveText(
@@ -43,8 +43,8 @@ test.describe('formulas sheet', () => {
 
     await formulas.enter('2', 1, '5');
 
-    await expect(formulas.cell('2', 3)).toHaveText(`425${NBSP}000,00 ₽`);
-    await expect(formulas.cell('8', 3)).toHaveText(`869${NBSP}800,00 ₽`);
+    await expect(formulas.cell('2', 3)).toHaveText(`425${GROUP}000,00 ₽`);
+    await expect(formulas.cell('8', 3)).toHaveText(`869${GROUP}800,00 ₽`);
     await expect(formulas.status).toContainText('Пересчитано формул');
   });
 
@@ -77,13 +77,13 @@ test.describe('formulas sheet', () => {
     await formulas.enter('2', 1, '100');
     await formulas.chooseSheet('Бюджет');
 
-    await expect(formulas.cell('2', 4)).toHaveText(`$3${NBSP}400,00`);
+    await expect(formulas.cell('2', 4)).toHaveText(`$3${GROUP}400,00`);
   });
 
   test('shows dates and percents through their formats', async ({ formulas }) => {
     await expect(formulas.cell('16', 1)).toHaveText(today());
     await expect(formulas.cell('18', 1)).toHaveText('43,3%');
-    await expect(formulas.cell('19', 1)).toHaveText(`-36${NBSP}943,26 ₽`);
+    await expect(formulas.cell('19', 1)).toHaveText(`-36${GROUP}943,26 ₽`);
   });
 
   test('inserts and deletes rows from the cell menu and formats the selection', async ({
@@ -93,12 +93,12 @@ test.describe('formulas sheet', () => {
 
     await expect(formulas.cell('4', 0)).toHaveText('Мониторы');
     await expect(formulas.cell('3', 0)).toHaveText('');
-    await expect(formulas.cell('9', 3)).toHaveText(`784${NBSP}800,00 ₽`);
+    await expect(formulas.cell('9', 3)).toHaveText(`784${GROUP}800,00 ₽`);
 
     await formulas.cellMenu('3', 0, 'Удалить 1 строку');
 
     await expect(formulas.cell('3', 0)).toHaveText('Мониторы');
-    await expect(formulas.cell('8', 3)).toHaveText(`784${NBSP}800,00 ₽`);
+    await expect(formulas.cell('8', 3)).toHaveText(`784${GROUP}800,00 ₽`);
 
     await formulas.cell('2', 1).click();
 

@@ -1,9 +1,12 @@
 import type { Doc, DocJSON, ElementNode, NodeId, Schema } from '@numior/editor-core';
 import type { Component } from 'vue';
+import type { NuiEmbedPresetId, NuiEmbedProvider } from './embeds';
 
 export type NuiContentFileKind = (typeof NuiContentFileKind)[keyof typeof NuiContentFileKind];
 
 export type NuiContentTone = (typeof NuiContentTone)[keyof typeof NuiContentTone];
+
+export type NuiContentHeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
 export type NuiContentColour = (typeof NuiContentColour)[keyof typeof NuiContentColour];
 
@@ -39,6 +42,7 @@ export type NuiContentTableFilter =
   | {
       readonly kind: typeof NuiContentTableFilterKind.Set;
       readonly values: readonly NuiContentCellValue[];
+      readonly exclude: boolean;
     };
 
 export type NuiContentSortDirection =
@@ -51,6 +55,7 @@ export interface NuiContentTableSort {
 
 export interface NuiContentTableColumn {
   readonly id: NodeId;
+  readonly key: string;
   readonly name: string;
   readonly type: NuiContentTableType;
   readonly width: number | undefined;
@@ -81,6 +86,7 @@ export interface NuiContentProps {
   schema?: Schema | undefined;
   size?: NuiContentSize | undefined;
   views?: NuiContentViews | undefined;
+  embeds?: readonly (NuiEmbedPresetId | NuiEmbedProvider)[] | undefined;
 }
 
 export const NuiContentTone = {

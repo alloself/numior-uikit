@@ -1,14 +1,18 @@
 import { MAX_COLS, MAX_ROWS, parseRange } from '../../core/address';
 import { bookArrays, withImplicitIntersections } from '../../core/calc/array-formula';
 import type { Calculator } from '../../core/calc/calculator';
-import { CellValueKind, type CellRange, type CellValue } from '../../core/cell.types';
+import {
+  CellValueKind,
+  type CellError,
+  type CellRange,
+  type CellValue,
+} from '../../core/cell.types';
 import {
   FormulaNodeKind,
   FormulaReferenceKind,
   type FormulaNode,
 } from '../../core/formula/formula.types';
-import { EN_FORMULAS } from '../../core/formula/locale';
-import { parseFormula } from '../../core/formula/parser';
+import { eachNode, operandsOf } from '../../core/formula/walk';
 import { formulaReferences } from '../../core/formula/references';
 import {
   EMPTY,
@@ -21,7 +25,12 @@ import {
 import type { Sheet, Workbook } from '../../core/workbook';
 import type { DifferentialStyle } from '../../core/conditional/conditional.types';
 import { XmlBoolean, type XmlAttribute } from '../xml/xml.types';
-import { X14, createConditionalCollector, createExtensionCollector } from './conditional-part';
+import {
+  X14,
+  createConditionalCollector,
+  createExtensionCollector,
+  withAutomaticEnds,
+} from './conditional-part';
 import { decodeXstring } from '../xml/xstring';
 import { createFragmentRecorder } from './fragment-part';
 import { SHEET_SPECS, opaqueInSheet } from './fragment-specs';
@@ -31,12 +40,14 @@ import { MAIN, attributeOf, numberOf, readPart, type PartOptions } from './ooxml
 import { CellCapture, FormulaKind } from './read.types';
 import { CellTypeCode, OoxmlElement } from '../ooxml.types';
 import { FormatCode } from '../../core/format/format.types';
+import { parseFileFormula } from './file-formula';
 
 export interface SheetContext {
   readonly book: Workbook;
   readonly calculator: Calculator;
   readonly sheet: Sheet;
   readonly strings: readonly string[];
+  readonly errors: readonly (CellError | undefined)[];
   readonly formats: readonly string[];
   readonly decorations: readonly number[];
   readonly differentials: readonly DifferentialStyle[];
@@ -48,6 +59,7 @@ export interface SheetCounts {
   formulas: number;
   kept: number;
   unparsed: number;
+  opaque: number;
   dataTables: number;
   merges: number;
   conditional: number;
@@ -66,14 +78,13 @@ interface Cell {
   col: number;
   type: string;
   style: number;
+  slot: number;
   value: string;
   inline: string;
   formula:
     | { kind: FormulaKind; ref: string | undefined; shared: string | undefined; text: string }
     | undefined;
 }
-
-const PREFIXES = /_xl(?:fn|ws|pm)\./gu;
 
 const SPREADSHEET = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 
@@ -100,6 +111,7 @@ const emptyCounts = (): SheetCounts => ({
   formulas: 0,
   kept: 0,
   unparsed: 0,
+  opaque: 0,
   dataTables: 0,
   merges: 0,
   conditional: 0,
@@ -115,6 +127,9 @@ const emptyCounts = (): SheetCounts => ({
 
 const upperLetter = (code: number): boolean => code >= 65 && code <= 90;
 
+const inSheet = (row: number, col: number): boolean =>
+  Number.isInteger(row) && row >= 0 && row < MAX_ROWS && col >= 0 && col < MAX_COLS;
+
 export const cellOf = (reference: string): { row: number; col: number } | undefined => {
   let col = 0;
   let index = 0;
@@ -129,6 +144,15 @@ export const cellOf = (reference: string): { row: number; col: number } | undefi
   return col === 0 || !Number.isInteger(row) || row < 1 || row > MAX_ROWS || col > MAX_COLS
     ? undefined
     : { row: row - 1, col: col - 1 };
+};
+
+const richError = (
+  cell: Cell,
+  errors: readonly (CellError | undefined)[],
+): CellValue | undefined => {
+  const code = cell.type === CellTypeCode.Error ? errors[cell.slot - 1] : undefined;
+
+  return code === undefined ? undefined : errorValue(code);
 };
 
 export const valueOf = (
@@ -157,22 +181,17 @@ export const valueOf = (
 };
 
 const callsIn = (node: FormulaNode, visit: (name: string) => void): void => {
-  switch (node.kind) {
-    case FormulaNodeKind.Call:
-      visit(node.name);
-      node.args.forEach((arg) => callsIn(arg, visit));
-      return;
-    case FormulaNodeKind.Unary:
-    case FormulaNodeKind.Percent:
-      callsIn(node.operand, visit);
-      return;
-    case FormulaNodeKind.Binary:
-      callsIn(node.left, visit);
-      callsIn(node.right, visit);
-      return;
-    default:
-      return;
-  }
+  eachNode(
+    node,
+    (item) => {
+      if (item.kind !== FormulaNodeKind.Call) {
+        return;
+      }
+
+      visit(item.name);
+    },
+    operandsOf,
+  );
 };
 
 const formulaKind = (text: string | undefined): FormulaKind => {
@@ -228,10 +247,10 @@ export const readSheetPart = async (
       return shared.get(formula.shared);
     }
 
-    const parsed = parseFormula(formula.text.replaceAll(PREFIXES, ''), EN_FORMULAS, current);
+    const parsed = parseFileFormula(formula.text, current);
 
     if (!parsed.ok) {
-      return undefined;
+      return formula.text.trim() === '' ? undefined : { kind: 'opaque', text: formula.text };
     }
 
     const ast =
@@ -257,13 +276,16 @@ export const readSheetPart = async (
       return;
     }
 
-    let known = true;
+    const opaque = ast.kind === FormulaNodeKind.Opaque;
+    let known = !opaque;
 
     callsIn(ast, (name) => {
-      if (!context.known(name)) {
-        counts.unknown.add(name);
-        known = false;
+      if (context.known(name)) {
+        return;
       }
+
+      counts.unknown.add(name);
+      known = false;
     });
 
     const external = formulaReferences(ast).some(
@@ -272,6 +294,7 @@ export const readSheetPart = async (
     );
 
     counts.formulas += 1;
+    counts.opaque += opaque ? 1 : 0;
     counts.kept += known ? 0 : 1;
     counts.externalTables += external ? 1 : 0;
 
@@ -284,7 +307,7 @@ export const readSheetPart = async (
   };
 
   const commit = (current: Cell): void => {
-    const value = valueOf(current, context.strings);
+    const value = richError(current, context.errors) ?? valueOf(current, context.strings);
     const format = context.formats[current.style];
 
     if (current.formula !== undefined) {
@@ -297,9 +320,11 @@ export const readSheetPart = async (
     if (format !== undefined && format !== FormatCode.General) {
       sheet.formats.set(current.row, current.col, context.book.formats.id(format));
     }
-    if (decoration !== 0) {
-      sheet.decorations.set(current.row, current.col, decoration);
+    if (decoration === 0) {
+      return;
     }
+
+    sheet.decorations.set(current.row, current.col, decoration);
   };
 
   const openCell = (attributes: readonly XmlAttribute[]): void => {
@@ -312,25 +337,38 @@ export const readSheetPart = async (
     }
     row = place.row;
     col = place.col;
+    if (!inSheet(row, col)) {
+      cell = undefined;
+      return;
+    }
 
     cell = {
       row,
       col,
       type: attributeOf(attributes, 't') ?? 'n',
       style: numberOf(attributeOf(attributes, 's'), 0),
+      slot: numberOf(attributeOf(attributes, 'vm'), 0),
       value: '',
       inline: '',
       formula: undefined,
     };
   };
 
+  const openRow = (attributes: readonly XmlAttribute[]): void => {
+    row = numberOf(attributeOf(attributes, 'r'), row + 2) - 1;
+    col = -1;
+    if (!inSheet(row, 0)) {
+      return;
+    }
+
+    counts.layout += attributeOf(attributes, 'customHeight') === XmlBoolean.One ? 1 : 0;
+    layout.row(row, attributes);
+  };
+
   const openMain = (local: string, attributes: readonly XmlAttribute[]): void => {
     switch (local) {
       case OoxmlElement.Row:
-        row = numberOf(attributeOf(attributes, 'r'), row + 2) - 1;
-        col = -1;
-        counts.layout += attributeOf(attributes, 'customHeight') === XmlBoolean.One ? 1 : 0;
-        layout.row(row, attributes);
+        openRow(attributes);
         return;
       case OoxmlElement.Col:
         counts.layout += 1;
@@ -473,7 +511,7 @@ export const readSheetPart = async (
     options,
   );
 
-  sheet.conditional = [...conditional.formats(), ...extensions.formats()];
+  sheet.conditional = withAutomaticEnds([...conditional.formats(), ...extensions.formats()]);
   sheet.layout = { ...layout.layout(), xml: recorder.result() };
   counts.conditional = conditional.foreign();
   return counts;

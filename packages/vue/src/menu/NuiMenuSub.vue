@@ -29,6 +29,7 @@
     role="menu"
     :tabindex="open ? 0 : -1"
     class="nui-menu nui-menu--sub"
+    :class="{ 'nui-menu--pointed': pointed }"
     :aria-labelledby="triggerId"
     v-bind="{ ...contentAttrs, ...surfaceAttrs }"
     @keydown="onContentKeydown"
@@ -79,6 +80,7 @@ const delay = useDelayedOpen(open, {
 const {
   control,
   context,
+  pointed,
   attrs: surfaceAttrs,
 } = useMenuSurface({
   open,
@@ -101,15 +103,19 @@ const forwardKey = (): string => (direction.isRtl() ? Key.ArrowLeft : Key.ArrowR
 const backKey = (): string => (direction.isRtl() ? Key.ArrowRight : Key.ArrowLeft);
 
 const onTriggerEnter = (): void => {
-  if (!disabled) {
-    delay.scheduleOpen();
+  if (disabled) {
+    return;
   }
+
+  delay.scheduleOpen();
 };
 
 const openFromPointer = (): void => {
-  if (!disabled) {
-    delay.openNow();
+  if (disabled) {
+    return;
   }
+
+  delay.openNow();
 };
 
 const onTriggerKeydown = (event: KeyboardEvent): void => {
@@ -124,9 +130,11 @@ const onTriggerKeydown = (event: KeyboardEvent): void => {
 
 const onTriggerFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
-  if (!(next instanceof Node && contentElement.value?.contains(next))) {
-    delay.scheduleClose();
+  if (next instanceof Node && contentElement.value?.contains(next)) {
+    return;
   }
+
+  delay.scheduleClose();
 };
 
 const onContentKeydown = (event: KeyboardEvent): void => {

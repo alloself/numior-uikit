@@ -66,8 +66,8 @@ describe('NuiTable frozen rows', () => {
     expect(grid.scrollTop).toBe(0);
 
     await grid.press('PageDown');
-    expect(grid.focusedCell).toEqual({ row: 6, col: 1 });
-    expect(grid.scrollTop).toBe(60);
+    expect(grid.focusedCell).toEqual({ row: 5, col: 1 });
+    expect(grid.scrollTop).toBe(20);
 
     await grid.scrollToRow(50);
     expect(grid.scrollTop).toBe(1920);

@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import {
   createDoc,
   createMetaKey,
   createState,
   definePlugin,
+  followPosition,
   mapSelection,
   nearestCursor,
   selectionRange,
@@ -92,6 +93,48 @@ describe('selections', () => {
   });
 });
 
+describe('a position followed through a deletion', () => {
+  it('stays in its block without looking the block up by id', () => {
+    const before = page();
+    const cut = createState({ doc: before }).tr.delete(2, 5);
+    const lookups = vi.spyOn(cut.doc, 'positionOf');
+
+    expect(followPosition(3, cut.mapping, before, cut.doc)).toBe(2);
+    expect(lookups).not.toHaveBeenCalled();
+  });
+
+  it('enters the block that took the place of its own under the same id', () => {
+    const before = page();
+    const first = before.root.content[0];
+    const id = first?.kind === 'element' ? first.id : '';
+    const heading = notes.element('heading', { id, content: [notes.text('Hi')] });
+    const retyped = createDoc(notes, doc(heading)).slice(0, heading.size);
+    const swapped = createState({ doc: before }).tr.replace(0, 7, retyped);
+    const lookups = vi.spyOn(swapped.doc, 'positionOf');
+
+    expect(followPosition(2, swapped.mapping, before, swapped.doc)).toBe(2);
+    expect(followPosition(5, swapped.mapping, before, swapped.doc)).toBe(3);
+    expect(lookups).not.toHaveBeenCalled();
+  });
+
+  it('finds its block by id when the block went elsewhere', () => {
+    const before = page();
+    const first = before.root.content[0];
+    const id = first?.kind === 'element' ? first.id : '';
+    const copy = notes.element('paragraph', { id, content: [notes.text('Hello')] });
+    const moved = createState({ doc: before }).tr.delete(0, 7).insert(1, [copy]);
+
+    expect(followPosition(3, moved.mapping, before, moved.doc)).toBe(4);
+  });
+
+  it('lands where the deletion closed when its block is gone', () => {
+    const before = page();
+    const gone = createState({ doc: before }).tr.delete(0, 7);
+
+    expect(followPosition(3, gone.mapping, before, gone.doc)).toBe(0);
+  });
+});
+
 describe('editor state', () => {
   it('applies transactions with their selection and stored marks', () => {
     const state = createState({ doc: page() });
@@ -127,13 +170,14 @@ describe('editor state', () => {
     const echo = definePlugin({
       name: 'echo',
       appendTransaction: (transactions, _before, after) => {
-        if (transactions.some((tr) => tr.getMeta(locked) === false)) {
-          const tr = after.tr.insertText('!', 1);
-
-          appended.push(tr);
-          return tr;
+        if (!transactions.some((tr) => tr.getMeta(locked) === false)) {
+          return undefined;
         }
-        return undefined;
+
+        const tr = after.tr.insertText('!', 1);
+
+        appended.push(tr);
+        return tr;
       },
     });
 

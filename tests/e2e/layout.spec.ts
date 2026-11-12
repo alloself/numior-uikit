@@ -124,7 +124,7 @@ test.describe('layout', () => {
     await playground.setDirection('ltr');
   });
 
-  test('a navigation item fades its icon and its hover background together with its label', async ({
+  test('a navigation item fades its icon together with its label and changes its background at once', async ({
     playground,
     layout,
     isMobile,
@@ -138,7 +138,7 @@ test.describe('layout', () => {
 
     expect(label?.duration).toBe(SLOW_MOTION);
     expect(await motionOf(layout.itemIcon('calendar'), 'color')).toEqual(label);
-    expect(await motionOf(layout.item('calendar'), 'background-color')).toEqual(label);
+    expect(await motionOf(layout.item('calendar'), 'background-color')).toBeNull();
     expect(await motionOf(layout.item('calendar'), 'color')).toBeNull();
 
     await layout.subToggle.click();
@@ -203,6 +203,58 @@ test.describe('layout', () => {
     await playground.setDirection('ltr');
     await layout.trigger.click();
     await expect.poll(() => layout.sidebarWidth()).toBeGreaterThan(200);
+  });
+
+  test('a flyout stays after a click on its hovered button and closes on a press outside', async ({
+    playground,
+    layout,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'desktop rail');
+    await playground.open();
+    await layout.root.scrollIntoViewIfNeeded();
+    await layout.trigger.click();
+    await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
+
+    await layout.subToggle.hover();
+    await expect(layout.flyout).toBeVisible();
+
+    await layout.subToggle.click();
+    await expect(layout.flyout).toBeVisible();
+
+    await layout.itemLabel('report-sales').hover();
+    await expect(layout.flyout).toBeVisible();
+
+    await layout.heading.click();
+    await expect(layout.flyout).toBeHidden();
+  });
+
+  test('a flyout opens again after the sidebar was expanded and collapsed over it', async ({
+    playground,
+    layout,
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'desktop rail');
+    await playground.open();
+    await layout.root.scrollIntoViewIfNeeded();
+    await layout.trigger.click();
+    await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
+
+    await layout.subToggle.focus();
+    await page.keyboard.press('Enter');
+    await expect(layout.flyout).toBeVisible();
+
+    await page.keyboard.press('Control+b');
+    await expect.poll(() => layout.sidebarWidth()).toBeGreaterThan(200);
+
+    await page.keyboard.press('Control+b');
+    await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
+
+    await layout.subToggle.focus();
+    await page.keyboard.press('Enter');
+    await expect(layout.flyout).toBeVisible();
+    await expect(layout.item('report-sales')).toBeFocused();
   });
 
   test('inset puts the content into a card and floating frames the sidebar', async ({

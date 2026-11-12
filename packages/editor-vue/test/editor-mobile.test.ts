@@ -72,4 +72,21 @@ describe('NuiEditor on a touch screen', () => {
 
     expect(editor.hasToolbar).toBe(false);
   });
+
+  it('keeps the actions for the selection in the toolbar of a read-only editor, the bubble stays shut', async () => {
+    const editor = EditorDriver.mount({
+      document: list(),
+      readonly: true,
+      selectionActions: [{ key: 'note', label: 'Note', icon: 'comment', command: () => true }],
+    });
+
+    driver = editor;
+
+    editor.focus();
+    await editor.select(4, 6);
+
+    expect(editor.dockedToolbar).toBe(false);
+    expect(editor.tools).toEqual(['Note']);
+    expect(editor.bubbleShown).toBe(false);
+  });
 });

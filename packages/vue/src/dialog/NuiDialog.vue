@@ -80,7 +80,7 @@ const {
 
 const control = useDialog(dialogElement, {
   open,
-  dismissible: () => closable,
+  closable: () => closable,
   closeOnBackdrop: () => closeOnBackdrop,
   onClose: (value) => emit('close', value),
 });

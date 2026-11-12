@@ -78,9 +78,11 @@ export const useFileDrop = (options: FileDropOptions): FileDrop => {
     settle();
     const files = Array.from(transferOf(event)?.files ?? []);
 
-    if (files.length > 0) {
-      options.onFiles(files);
+    if (files.length === 0) {
+      return;
     }
+
+    options.onFiles(files);
   };
 
   return { dragging, attrs: { onDragenter, onDragover, onDragleave, onDrop } };

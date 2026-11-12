@@ -145,6 +145,13 @@ describe('createSourceEngine', () => {
       truncated: false,
     });
 
+    await harness.engine.distinct('city', { search: ' мос ', limit: 20 });
+
+    expect(harness.asked.map(({ key, search, limit }) => ({ key, search, limit }))).toEqual([
+      { key: 'city', search: '', limit: 100 },
+      { key: 'city', search: 'мос', limit: 20 },
+    ]);
+
     const failing = harness.engine.run({ filters: [{ kind: 'quick', value: 'x' }] });
 
     await harness.fail(1, new Error('offline'));

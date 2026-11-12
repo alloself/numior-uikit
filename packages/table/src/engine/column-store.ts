@@ -19,6 +19,8 @@ type NumberRead<T> = (row: T) => number | null | undefined;
 
 type NumberColumn<T> = Exclude<TableEngineColumn<T>, { kind: 'string' }>;
 
+type NumberStore = Extract<ColumnStore, { kind: 'number' }>;
+
 export interface StoreRequest<T> {
   readonly column: TableEngineColumn<T>;
   readonly need: StoreNeed;
@@ -49,6 +51,33 @@ const numberReader = <T>(column: NumberColumn<T>): NumberRead<T> => {
 const dueNow = (count: number, deadline: number): boolean =>
   count % CHECK_INTERVAL === 0 && performance.now() >= deadline;
 
+const writeNumber = (
+  keys: Float64Array,
+  nulls: Uint8Array,
+  position: number,
+  value: number | null | undefined,
+): void => {
+  const missing = value === null || value === undefined || Number.isNaN(value);
+
+  nulls[position] = missing ? 1 : 0;
+  keys[position] = missing ? 0 : value;
+};
+
+export const rereadNumbers = <T>(
+  store: NumberStore,
+  column: NumberColumn<T>,
+  rows: readonly T[],
+  indices: readonly number[],
+): void => {
+  const read = numberReader(column);
+
+  for (const index of indices) {
+    const row = rows[index];
+
+    writeNumber(store.keys, store.nulls, index, row === undefined ? null : read(row));
+  }
+};
+
 const createNumberStoreJob = <T>(rows: readonly T[], read: NumberRead<T>): StoreJob => {
   const length = rows.length;
   const keys = new Float64Array(length);
@@ -61,13 +90,8 @@ const createNumberStoreJob = <T>(rows: readonly T[], read: NumberRead<T>): Store
     work: (deadline) => {
       while (position < length) {
         const row = rows[position];
-        const value = row === undefined ? null : read(row);
 
-        if (value === null || value === undefined || Number.isNaN(value)) {
-          nulls[position] = 1;
-        } else {
-          keys[position] = value;
-        }
+        writeNumber(keys, nulls, position, row === undefined ? null : read(row));
         position += 1;
 
         if (dueNow(position, deadline)) {
@@ -132,35 +156,42 @@ export const createRankJob = (
   const length = codes.length;
   const order = identityIndices(dictionary.length);
   const ranks = new Uint32Array(length);
-  let rankOf: Uint32Array | null = null;
+  const rankOf = new Uint32Array(dictionary.length);
+  let placed = 0;
+  let rank = 0;
   let ranked = 0;
 
   const sorting = createCollatedSortJob(order, dictionary, collator, host);
 
-  const rankTable = (): Uint32Array => {
-    if (rankOf === null) {
-      const table = new Uint32Array(dictionary.length);
+  const textAt = (place: number): string => dictionary[order[place] ?? 0] ?? '';
 
-      for (let place = 0; place < order.length; place += 1) {
-        table[order[place] ?? 0] = place;
+  const place = (deadline: number): boolean => {
+    while (placed < order.length) {
+      if (placed > 0 && collator.compare(textAt(placed - 1), textAt(placed)) !== 0) {
+        rank += 1;
       }
-      rankOf = table;
+      rankOf[order[placed] ?? 0] = rank;
+      placed += 1;
+
+      if (dueNow(placed, deadline)) {
+        return false;
+      }
     }
-    return rankOf;
+    return true;
   };
 
   return {
-    total: () => sorting.total() + length,
-    done: () => sorting.done() + ranked,
+    total: () => sorting.total() + order.length + length,
+    done: () => sorting.done() + placed + ranked,
     waiting: () => sorting.waiting?.(),
+    cancel: () => sorting.cancel?.(),
     work: (deadline) => {
-      if (!sorting.work(deadline)) {
+      if (!sorting.work(deadline) || !place(deadline)) {
         return false;
       }
-      const table = rankTable();
 
       while (ranked < length) {
-        ranks[ranked] = table[codes[ranked] ?? 0] ?? 0;
+        ranks[ranked] = rankOf[codes[ranked] ?? 0] ?? 0;
         ranked += 1;
 
         if (dueNow(ranked, deadline)) {
@@ -180,19 +211,24 @@ export const createRankJob = (
   };
 };
 
-const createRankedStringJob = (codes: CodesJob, collator: Intl.Collator): StoreJob => {
+const createRankedStringJob = (
+  codes: CodesJob,
+  collator: Intl.Collator,
+  host: RankHost | undefined,
+): StoreJob => {
   let ranking: StoreJob | null = null;
 
   return {
     total: () => codes.total() + (ranking?.total() ?? codes.total()),
     done: () => codes.done() + (ranking?.done() ?? 0),
     waiting: () => ranking?.waiting?.(),
+    cancel: () => ranking?.cancel?.(),
     work: (deadline) => {
       if (ranking === null) {
         if (!codes.work(deadline)) {
           return false;
         }
-        ranking = createRankJob(codes.result(), collator);
+        ranking = createRankJob(codes.result(), collator, host);
       }
       return ranking.work(deadline);
     },
@@ -205,22 +241,24 @@ export const createStoreJob = <T>(
   rows: readonly T[],
   collator: Intl.Collator,
   need: StoreNeed,
+  host: RankHost | undefined = workerRankHost,
 ): StoreJob => {
   if (column.kind !== TableEngineColumnKind.String) {
     return createNumberStoreJob(rows, numberReader(column));
   }
   const codes = createCodesJob(rows, column.value);
-  return need === StoreNeed.Codes ? codes : createRankedStringJob(codes, collator);
+  return need === StoreNeed.Codes ? codes : createRankedStringJob(codes, collator, host);
 };
 
 export const createRequestJob = <T>(
   request: StoreRequest<T>,
   rows: readonly T[],
   collator: Intl.Collator,
+  host: RankHost | undefined = workerRankHost,
 ): StoreJob =>
   request.need === StoreNeed.Ranks && request.current?.kind === ColumnStoreKind.Codes
-    ? createRankJob(request.current, collator)
-    : createStoreJob(request.column, rows, collator, request.need);
+    ? createRankJob(request.current, collator, host)
+    : createStoreJob(request.column, rows, collator, request.need, host);
 
 export const createStoresJob = <T>(
   requests: readonly StoreRequest<T>[],

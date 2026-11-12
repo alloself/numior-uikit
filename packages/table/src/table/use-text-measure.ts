@@ -7,6 +7,13 @@ interface TextMetrics {
   readonly size: number;
   readonly family: string;
   readonly padding: number;
+  readonly frame: number;
+  readonly gap: number;
+}
+
+export interface TextMeasure {
+  needOf(text: string, style?: TextStyle): number;
+  widthOf(text: string, style?: TextStyle, icon?: boolean): number | undefined;
 }
 
 type TextStyle = Readonly<Record<string, string>> | undefined;
@@ -18,6 +25,15 @@ const fontOf = (metrics: TextMetrics, style: TextStyle): string =>
   `${style?.['font-style'] ?? metrics.style} ${style?.['font-weight'] ?? metrics.weight} ${String(
     sizeOf(metrics, style?.['font-size']),
   )}px ${metrics.family}`;
+
+const ICON_EMS = 1.15;
+
+const ICON_STEP = 2;
+
+const GAP_REMS = 0.25;
+
+const iconRoom = (metrics: TextMetrics, size: string | undefined): number =>
+  Math.round((sizeOf(metrics, size) * ICON_EMS) / ICON_STEP) * ICON_STEP + metrics.gap;
 
 const BODY = '.nui-table__body';
 
@@ -31,6 +47,19 @@ const fontsOf = (): FontFaceSet | undefined =>
 
 const contextOf = (): OffscreenCanvasRenderingContext2D | null =>
   typeof OffscreenCanvas === 'undefined' ? null : new OffscreenCanvas(1, 1).getContext('2d');
+
+const frameOf = (cell: Element | null): number => {
+  if (cell === null) {
+    return 0;
+  }
+
+  const style = getComputedStyle(cell);
+
+  return (
+    (Number.parseFloat(style.borderInlineStartWidth) || 0) +
+    (Number.parseFloat(style.borderInlineEndWidth) || 0)
+  );
+};
 
 const metricsOf = (root: HTMLElement): TextMetrics | undefined => {
   const body = root.querySelector(BODY);
@@ -48,13 +77,15 @@ const metricsOf = (root: HTMLElement): TextMetrics | undefined => {
     size: Number.parseFloat(style.fontSize) || 0,
     family: style.fontFamily,
     padding: Number.parseFloat(getComputedStyle(content).paddingInlineStart) || 0,
+    frame: frameOf(content.closest('.nui-table__cell')),
+    gap: (Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 0) * GAP_REMS,
   };
 };
 
 export const useTextMeasure = (
   root: Readonly<ShallowRef<HTMLElement | null>>,
   key: () => string,
-) => {
+): TextMeasure => {
   const ready = shallowRef(0);
   const metrics = new Map<string, TextMetrics>();
   const widths = new Map<string, number>();
@@ -70,9 +101,11 @@ export const useTextMeasure = (
 
     void nextTick(() => {
       waiting = false;
-      if (root.value?.querySelector(SAMPLE) !== null) {
-        ready.value += 1;
+      if (root.value?.querySelector(SAMPLE) === null) {
+        return;
       }
+
+      ready.value += 1;
     });
   };
 
@@ -87,21 +120,33 @@ export const useTextMeasure = (
     return known;
   };
 
-  const textWidth = (font: string, text: string): number => {
-    const id = `${font}\n${text}`;
-    const known = widths.get(id);
-
-    if (known !== undefined || context === null) {
-      return known ?? Number.POSITIVE_INFINITY;
+  const measured = (font: string, text: string): number | undefined => {
+    if (context === null) {
+      return undefined;
     }
     if (contextFont !== font) {
       context.font = font;
       contextFont = font;
     }
-    const width = context.measureText(text).width;
+    return context.measureText(text).width;
+  };
 
-    widths.set(id, width);
-    return width;
+  const textWidth = (font: string, text: string): number => {
+    const id = `${font}\n${text}`;
+    const known = widths.get(id) ?? measured(font, text);
+
+    if (known === undefined) {
+      return Number.POSITIVE_INFINITY;
+    }
+
+    widths.set(id, known);
+    return known;
+  };
+
+  const metricsNow = (): TextMetrics | undefined => {
+    const element = root.value;
+
+    return ready.value > 0 && element !== null ? metricsFor(element) : undefined;
   };
 
   const remeasure = (): void => {
@@ -118,13 +163,24 @@ export const useTextMeasure = (
   useEventListener(fontsOf, 'loadingdone', remeasure);
 
   return {
-    needOf: (text: string, style?: TextStyle): number => {
-      const element = root.value;
-      const found = ready.value > 0 && element !== null ? metricsFor(element) : undefined;
+    needOf: (text, style) => {
+      const found = metricsNow();
 
       return found === undefined
         ? Number.POSITIVE_INFINITY
         : Math.ceil(textWidth(fontOf(found, style), text) + 2 * found.padding);
+    },
+    widthOf: (text, style, icon = false) => {
+      const found = metricsNow();
+      const width = found === undefined ? undefined : measured(fontOf(found, style), text);
+
+      if (found === undefined || width === undefined) {
+        return undefined;
+      }
+
+      const lead = icon ? iconRoom(found, style?.['font-size']) : 0;
+
+      return Math.ceil(width + lead + 2 * found.padding + found.frame);
     },
   };
 };

@@ -10,6 +10,10 @@
       :column-menu="editable ? columnMenu : false"
       :context-menu="editable ? contextMenu : undefined"
       :commands="commands"
+      :peers="peers"
+      @cell="onCell"
+      @focusin="onFocusin"
+      @focusout="onFocusout"
       @edit="onEdit"
       @reorder="onReorder"
       @change="onChange"
@@ -62,7 +66,11 @@ import {
   type NuiContentTableRow,
   type NuiContentTableType,
 } from '@numior/content';
-import { NuiContentTable } from '@numior/content/table';
+import {
+  NuiContentTable,
+  type NuiContentTableCell,
+  type NuiContentTablePeer,
+} from '@numior/content/table';
 import { redo, undo } from '@numior/editor-core';
 import { PopoverState, useMessages, type IconSource } from '@numior/primitives';
 import type {
@@ -77,7 +85,7 @@ import type {
 } from '@numior/table';
 import { NuiButton, NuiInput, NuiPopover } from '@numior/vue';
 import { watchDebounced } from '@vueuse/core';
-import { computed, ref, shallowRef, useTemplateRef, watch } from 'vue';
+import { computed, onScopeDispose, ref, shallowRef, useTemplateRef, watch } from 'vue';
 import type { NuiEditorBlockViewProps } from '../block.types';
 import {
   deleteTableColumn,
@@ -111,8 +119,22 @@ const renaming = ref(false);
 const rename = shallowRef<Renaming>();
 const draft = ref('');
 const cancelled = ref(false);
+const cell = shallowRef<NuiContentTableCell>();
+const inside = ref(false);
 
 const data = computed(() => contentTableData(node));
+
+const peers = computed(() =>
+  editor.peers().reduce<NuiContentTablePeer[]>((found, peer) => {
+    const [row, column] = peer.part;
+
+    if (row !== undefined && column !== undefined && peer.part.length === 2) {
+      found.push({ key: peer.peer, name: peer.name, colour: peer.colour, row, column });
+    }
+
+    return found;
+  }, []),
+);
 
 const TYPE_ICONS: Readonly<Record<NuiContentTableType, IconSource>> = {
   text: Type,
@@ -184,9 +206,11 @@ const columnMenu: NuiTableColumnMenu<NuiContentTableRow> = ({ column, anchor }) 
           key: 'types',
           value: type,
           onChange: (value) => {
-            if (isType(value)) {
-              editor.run(retypeTableColumn(node.id, column.key, value));
+            if (!isType(value)) {
+              return;
             }
+
+            editor.run(retypeTableColumn(node.id, column.key, value));
           },
           items: CONTENT_TABLE_TYPES.map((option) => ({
             value: option,
@@ -261,6 +285,45 @@ const onChange = (row: NuiContentTableRow, column: string, value: NuiContentCell
   editor.run(setTableCells(node.id, [{ row: row.id, column, value }]));
 };
 
+const shareSpot = (): void => {
+  if (!inside.value || cell.value === undefined) {
+    return;
+  }
+
+  editor.setSpot([cell.value.row, cell.value.column]);
+};
+
+const onCell = (next: NuiContentTableCell | undefined): void => {
+  cell.value = next;
+
+  if (next !== undefined) {
+    shareSpot();
+    return;
+  }
+
+  editor.leaveSpot();
+};
+
+const onFocusin = (): void => {
+  inside.value = true;
+  shareSpot();
+};
+
+const onFocusout = (event: FocusEvent): void => {
+  const { currentTarget, relatedTarget } = event;
+
+  if (
+    currentTarget instanceof Element &&
+    relatedTarget instanceof Node &&
+    currentTarget.contains(relatedTarget)
+  ) {
+    return;
+  }
+
+  inside.value = false;
+  editor.leaveSpot();
+};
+
 const onReorder = (event: NuiTableReorderEvent<NuiContentTableRow>): void => {
   editor.run(moveTableRow(node.id, event.row.id, event.to));
 };
@@ -268,18 +331,26 @@ const onReorder = (event: NuiTableReorderEvent<NuiContentTableRow>): void => {
 watchDebounced(
   widths,
   (value) => {
-    if (Object.keys(value).length > 0) {
-      editor.run(resizeTableColumns(node.id, value));
-      widths.value = {};
+    if (Object.keys(value).length === 0) {
+      return;
     }
+
+    editor.run(resizeTableColumns(node.id, value));
+    widths.value = {};
   },
   { debounce: 400 },
 );
 
 watch(order, (value) => {
-  if (value.length > 0) {
-    editor.run(orderTableColumns(node.id, value));
-    order.value = [];
+  if (value.length === 0) {
+    return;
   }
+
+  editor.run(orderTableColumns(node.id, value));
+  order.value = [];
+});
+
+onScopeDispose(() => {
+  editor.leaveSpot();
 });
 </script>

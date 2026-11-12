@@ -1,7 +1,7 @@
 import { computed, onScopeDispose, shallowRef, type ComputedRef, type Ref } from 'vue';
 import type { NuiTableMessages } from './table.messages';
-import type { NuiTableRowHeights } from './table.types';
-import { Key } from '@numior/primitives';
+import type { NuiTableRowHeights, NuiTableRowResize } from './table.types';
+import { Key, PointerType } from '@numior/primitives';
 
 export interface TableRowResizeOptions {
   readonly enabled: () => boolean;
@@ -11,6 +11,8 @@ export interface TableRowResizeOptions {
   readonly labelAt: (position: number) => string;
   readonly messages: ComputedRef<NuiTableMessages>;
   readonly announce: (text: string) => void;
+  readonly resized: (changes: readonly NuiTableRowResize[]) => void;
+  readonly tapped: (position: number) => void;
 }
 
 export interface TableRowResize {
@@ -26,6 +28,7 @@ interface RowResizeSession {
   readonly pointerId: number;
   readonly origin: number;
   readonly height: number;
+  readonly touch: boolean;
 }
 
 const STEP = 8;
@@ -54,9 +57,11 @@ export const useTableRowResize = (options: TableRowResizeOptions): TableRowResiz
   const write = (key: string, height: number): void => {
     latest.height = height;
 
-    if (options.heights.value[key] !== height) {
-      options.heights.value = { ...options.heights.value, [key]: height };
+    if (options.heights.value[key] === height) {
+      return;
     }
+
+    options.heights.value = { ...options.heights.value, [key]: height };
   };
 
   const announceHeight = (position: number, height: number): void => {
@@ -66,28 +71,52 @@ export const useTableRowResize = (options: TableRowResizeOptions): TableRowResiz
   const onMove = (event: PointerEvent): void => {
     const current = session.value;
 
-    if (current !== undefined && event.pointerId === current.pointerId) {
-      write(current.key, clampHeight(current.height + event.clientY - current.origin));
+    if (current === undefined || event.pointerId !== current.pointerId) {
+      return;
     }
+
+    write(current.key, clampHeight(current.height + event.clientY - current.origin));
   };
 
   const detach = (): void => {
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', stop);
-      window.removeEventListener('pointercancel', stop);
+    if (typeof window === 'undefined') {
+      return;
     }
+
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', release);
+    window.removeEventListener('pointercancel', stop);
   };
 
-  const stop = (): void => {
+  const end = (released: boolean): void => {
     const current = session.value;
 
     detach();
     session.value = undefined;
 
-    if (current !== undefined) {
-      announceHeight(current.position, latest.height);
+    if (current === undefined) {
+      return;
     }
+    if (released && current.touch && latest.height === current.height) {
+      options.tapped(current.position);
+      return;
+    }
+
+    announceHeight(current.position, latest.height);
+
+    if (latest.height === current.height) {
+      return;
+    }
+
+    options.resized([{ key: current.key, height: latest.height }]);
+  };
+
+  const release = (): void => {
+    end(true);
+  };
+
+  const stop = (): void => {
+    end(false);
   };
 
   const start = (position: number, event: PointerEvent): void => {
@@ -109,10 +138,11 @@ export const useTableRowResize = (options: TableRowResizeOptions): TableRowResiz
       pointerId: event.pointerId,
       origin: event.clientY,
       height,
+      touch: event.pointerType === PointerType.Touch,
     };
 
     window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', stop);
+    window.addEventListener('pointerup', release);
     window.addEventListener('pointercancel', stop);
   };
 
@@ -124,6 +154,7 @@ export const useTableRowResize = (options: TableRowResizeOptions): TableRowResiz
     }
     options.heights.value = withoutKey(options.heights.value, key);
     options.announce(options.messages.value.rowHeightReset({ row: options.labelAt(position) }));
+    options.resized([{ key, height: undefined }]);
   };
 
   const onKeydown = (event: KeyboardEvent, position: number | undefined): boolean => {
@@ -138,6 +169,10 @@ export const useTableRowResize = (options: TableRowResizeOptions): TableRowResiz
     event.preventDefault();
     write(key, next);
     announceHeight(position, next);
+
+    if (next !== current) {
+      options.resized([{ key, height: next }]);
+    }
     return true;
   };
 

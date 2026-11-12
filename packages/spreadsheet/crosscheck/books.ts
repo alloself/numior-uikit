@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import {
   EN_LOCALE,
   MAX_COLS,
@@ -52,6 +53,11 @@ export interface BookCase {
   readonly corpus: Corpus;
   readonly entry: CorpusCase;
   readonly sheet: string;
+}
+
+export interface KnownSplit {
+  readonly fresh: readonly (readonly [string, readonly Mismatch[]])[];
+  readonly stale: readonly string[];
 }
 
 export type Values = ReadonlyMap<string, CellValue>;
@@ -197,9 +203,11 @@ const compared = (
   shown: Input | undefined,
   looseErrors: boolean,
 ): void => {
-  if (shown === undefined || !matches(shown, check, looseErrors)) {
-    recorded(found, check, shown);
+  if (shown !== undefined && matches(shown, check, looseErrors)) {
+    return;
   }
+
+  recorded(found, check, shown);
 };
 
 export const mismatchesOf = async (
@@ -232,4 +240,41 @@ export const printMismatches = (
       );
     }
   }
+};
+
+export const knownDifferences = (path: string): ReadonlyMap<string, string> => {
+  const data: unknown = JSON.parse(readFileSync(path, 'utf8'));
+
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+    throw new Error(`${path} must map case keys to reasons`);
+  }
+  return new Map(
+    Object.entries(data).map(([key, reason]) => [key, typeof reason === 'string' ? reason : '']),
+  );
+};
+
+export const splitKnown = (
+  mismatches: ReadonlyMap<string, readonly Mismatch[]>,
+  known: ReadonlyMap<string, string>,
+  checks: readonly Check[],
+): KnownSplit => {
+  const keys = new Set(checks.map((check) => check.key));
+  const fresh: (readonly [string, readonly Mismatch[]])[] = [];
+  const stale: string[] = [];
+
+  for (const entry of mismatches) {
+    if (known.has(entry[0])) {
+      continue;
+    }
+
+    fresh.push(entry);
+  }
+  for (const key of known.keys()) {
+    if (!keys.has(key) || mismatches.has(key)) {
+      continue;
+    }
+
+    stale.push(key);
+  }
+  return { fresh, stale };
 };

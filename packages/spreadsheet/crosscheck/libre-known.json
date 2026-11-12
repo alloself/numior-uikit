@@ -43,7 +43,6 @@
   "reference: =ADDRESS(1,1,1,TRUE,\"My Sheet\")": "LibreOffice has no logical type: TRUE is the number 1",
   "statistics: =GEOMEAN(1,0)": "Excel returns an error here, LibreOffice a number",
   "statistics: =SUBTOTAL(2,B1:B3)": "LibreOffice has no logical type: TRUE is the number 1",
-  "statistics: =SUBTOTAL(9,{1,2})": "Excel wants references in SUBTOTAL, LibreOffice takes arrays",
   "text: =CHAR(128)": "Excel uses Windows-1252 for CHAR and CODE, LibreOffice does not",
   "text: =CODE(\"€\")": "Excel uses Windows-1252 for CHAR and CODE, LibreOffice does not",
   "text: =CONCAT(\"a\",1,TRUE)": "LibreOffice has no logical type: TRUE is the number 1",

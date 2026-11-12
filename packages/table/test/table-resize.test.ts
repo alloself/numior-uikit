@@ -89,6 +89,36 @@ describe('NuiTable column widths', () => {
     expect(grid.announcement).toBe('Ширина колонки «Имя» сброшена');
   });
 
+  it('reports a new width once the drag ends, on each keyboard step and when the width is reset', async () => {
+    const grid = mountPeople();
+
+    await grid.settle();
+    await grid.dragResizer(1, 60);
+    await grid.dragResizer(1, 0);
+    await grid.focusCell(-1, 1);
+    await grid.press('ArrowRight', { alt: true });
+    await grid.openColumnMenu(1);
+    await grid.chooseMenu('Сбросить ширину');
+
+    expect(grid.resizes).toEqual([
+      [{ key: 'name', width: 220 }],
+      [{ key: 'name', width: 230 }],
+      [{ key: 'name', width: undefined }],
+    ]);
+  });
+
+  it('resets the width by a double click on the header handle', async () => {
+    const grid = mountPeople();
+
+    await grid.settle();
+    await grid.dragResizer(1, 60);
+    await grid.resetResizer(1);
+
+    expect(grid.widths).toEqual({});
+    expect(grid.trackWidth(1)).toBe('160px');
+    expect(grid.announcement).toBe('Ширина колонки «Имя» сброшена');
+  });
+
   it('stops sharing the free width through flex once a column was resized by hand', async () => {
     const grid = mountPeople({
       columns: PEOPLE_COLUMNS.map((column) =>

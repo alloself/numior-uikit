@@ -59,6 +59,10 @@ const docs: DocsMap = {
         ru: 'Получает `{ name, bytes, report }` вместо скачивания файла браузером.',
         en: 'Receives `{ name, bytes, report }` instead of the browser downloading the file.',
       },
+      peers: {
+        ru: 'Кто ещё открыл книгу: результат `workbookPeers` из `onPresence` клиента. Выделение людей с текущего листа рисуется цветными рамками с именем.',
+        en: 'Who else has the book open: the result of `workbookPeers` from the client `onPresence`. Selections of people on the shown sheet are drawn as coloured frames with a name.',
+      },
       collaboration: {
         ru: 'Документ совместной правки из `createWorkbookDocument`. Правки других людей появляются без события `change`.',
         en: 'Shared document from `createWorkbookDocument`. Edits by other people appear without a `change` event.',
@@ -75,9 +79,17 @@ const docs: DocsMap = {
       },
     },
     events: {
+      presence: {
+        ru: 'Своё место в книге изменилось: `{ sheet, selection }` или `undefined`, пока лист не показан. Передайте в `client.setPresence({ user, place })`.',
+        en: 'Your place in the book changed: `{ sheet, selection }` or `undefined` while no sheet is shown. Pass it to `client.setPresence({ user, place })`.',
+      },
       change: {
         ru: 'Срабатывает после каждой своей правки и отмены. Передаёт `{ steps }`.',
         en: 'Fires after each local edit and undo, with `{ steps }`.',
+      },
+      refuse: {
+        ru: 'Лист не выполнил действие. Передаёт `{ reason, message }`: причину из `NuiSpreadsheetRefusalReason` и текст, который лист показал заметкой.',
+        en: 'The sheet did not apply an action. Carries `{ reason, message }`: a reason from `NuiSpreadsheetRefusalReason` and the text the sheet showed in its note.',
       },
       open: {
         ru: 'Срабатывает, когда файл открыт. Передаёт новые `book`, `calculator`, `report`, `source` и `fileName`.',
@@ -94,8 +106,16 @@ const docs: DocsMap = {
         en: 'Recalculates formulas and redraws cells after the book changed from outside.',
       },
       apply: {
-        ru: 'Применяет шаги книги как одну правку с отменой. Возвращает `false`, если шаг не применился.',
-        en: 'Applies workbook steps as one undoable edit. Returns `false` when a step fails.',
+        ru: 'Применяет шаги книги как одну правку с отменой. Возвращает `false`, если шаг не применился или список шагов пуст.',
+        en: 'Applies workbook steps as one undoable edit. Returns `false` when a step fails or the list is empty.',
+      },
+      mergeCells: {
+        ru: 'Объединяет каждый выделенный диапазон в одну ячейку, как пункт меню «Объединить ячейки». Возвращает `false`, если объединять нечего или лист отказал.',
+        en: 'Merges each selected range into one cell, as "Merge cells" of the cell menu does. Returns `false` when there is nothing to merge or the sheet refused.',
+      },
+      unmergeCells: {
+        ru: 'Разбирает объединения, которые задевает выделение. Возвращает `false`, если таких объединений нет.',
+        en: 'Takes apart the merges that the selection meets. Returns `false` when there are none.',
       },
       openRules: {
         ru: 'Открывает поповер правил условного форматирования у активной ячейки.',
@@ -172,6 +192,20 @@ const docs: DocsMap = {
         description: {
           ru: 'Очищает выделенные ячейки.',
           en: 'Clears the selected cells.',
+        },
+      },
+      {
+        keys: 'Shift+F10 / ContextMenu',
+        description: {
+          ru: 'Открывает меню ячейки или выбранного рисунка.',
+          en: 'Opens the menu of the cell or of the selected picture.',
+        },
+      },
+      {
+        keys: 'Alt+F10',
+        description: {
+          ru: 'Выбирает первый рисунок листа; `Tab` переходит к следующему, `Escape` возвращает к ячейкам.',
+          en: 'Selects the first picture of the sheet; `Tab` moves to the next one, `Escape` returns to the cells.',
         },
       },
       {

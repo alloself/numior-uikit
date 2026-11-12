@@ -38,7 +38,7 @@ test.describe('navigation', () => {
     await expect(navigation.menuTrigger).toBeFocused();
   });
 
-  test('a menu opened by click or Enter takes focus, so the arrows walk its items', async ({
+  test('menu opened with Enter, Space or a click takes the keyboard and rings only the item reached by keys', async ({
     playground,
     navigation,
     page,
@@ -49,17 +49,33 @@ test.describe('navigation', () => {
     await playground.open();
 
     await navigation.menuTrigger.click();
+    await navigation.item('Дублировать').hover();
+    await expect(navigation.item('Дублировать')).toBeFocused();
+    await expect.poll(() => navigation.itemRinged('Дублировать')).toBe(false);
 
+    await page.keyboard.press('Escape');
+    await navigation.menuTrigger.click();
     await expect(navigation.menu).toBeFocused();
 
     await page.keyboard.press('ArrowDown');
-
     await expect(navigation.item('Переименовать')).toBeFocused();
+    await expect.poll(() => navigation.itemRinged('Переименовать')).toBe(true);
 
-    await page.keyboard.press('Escape');
-    await page.keyboard.press('Enter');
+    await navigation.item('Документация').hover();
+    await expect(navigation.item('Документация')).toBeFocused();
+    await expect.poll(() => navigation.itemRinged('Документация')).toBe(false);
 
-    await expect(navigation.item('Переименовать')).toBeFocused();
+    for (const key of ['Enter', 'Space']) {
+      await page.keyboard.press('Escape');
+      await expect(navigation.menuTrigger).toBeFocused();
+
+      await page.keyboard.press(key);
+      await expect(navigation.item('Переименовать')).toBeFocused();
+
+      await page.keyboard.press('ArrowDown');
+      await expect(navigation.item('Дублировать')).toBeFocused();
+      await expect.poll(() => navigation.itemRinged('Дублировать')).toBe(true);
+    }
   });
 
   test('submenu opens on hover or ArrowRight, steps back with ArrowLeft, and light dismiss closes the chain', async ({
@@ -177,6 +193,53 @@ test.describe('navigation', () => {
     await page.keyboard.press('Enter');
     await expect(navigation.manualPanel).toHaveText('Период: Неделя');
     await expect.poll(async () => (await navigation.readOutput()).manualTab).toBe('week');
+  });
+
+  test('overflowing tabs scroll with the wheel and the edge buttons and keep the selected tab in view', async ({
+    playground,
+    navigation,
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'wheel and pointer scenario');
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await navigation.overflowTabs.scrollIntoViewIfNeeded();
+
+    await expect(navigation.tabEdge('start')).toBeHidden();
+    await expect(navigation.tabEdge('end')).toBeVisible();
+    await expect(navigation.monthTab('Декабрь')).not.toBeInViewport();
+
+    const pageScroll = await page.evaluate(() => window.scrollY);
+
+    await navigation.monthTrack.hover();
+    await page.mouse.wheel(0, 120);
+
+    await expect.poll(() => navigation.monthScroll()).toBe(120);
+    await expect(navigation.tabEdge('start')).toBeVisible();
+    expect(await page.evaluate(() => window.scrollY)).toBe(pageScroll);
+
+    await navigation.tabEdge('start').click();
+
+    await expect.poll(() => navigation.monthScroll()).toBe(0);
+    await expect(navigation.tabEdge('start')).toBeHidden();
+
+    await navigation.tabEdge('end').click();
+
+    await expect.poll(() => navigation.monthScroll()).toBe(358);
+
+    await page.mouse.wheel(0, 5000);
+
+    await expect(navigation.tabEdge('end')).toBeHidden();
+    await expect(navigation.monthTab('Декабрь')).toBeInViewport({ ratio: 1 });
+
+    await navigation.monthTab('Декабрь').click();
+    await page.keyboard.press('Home');
+
+    await expect(navigation.monthTab('Январь')).toBeFocused();
+    await expect(navigation.monthTab('Январь')).toBeInViewport({ ratio: 1 });
+    await expect.poll(() => navigation.monthScroll()).toBe(0);
+    expect(await page.evaluate(() => window.scrollY)).toBe(pageScroll);
   });
 
   test('closable tabs close from the cross, Delete and the middle button while the indicator stays under the selected tab', async ({
@@ -317,6 +380,7 @@ test.describe('navigation', () => {
 
     if (isMobile) {
       await expect(navigation.stepperSummary(navigation.stepper)).toContainText('Шаг 3 из 4');
+      expect(await navigation.summaryGrowth(navigation.stepper)).toBe(0);
 
       await navigation.step(navigation.stepper, 'Аккаунт').tap();
     } else {

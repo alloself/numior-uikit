@@ -12,6 +12,11 @@ import { sectionScope } from '../helpers/axe';
 
 export type FeedbackOutput = Guarded<typeof isFeedbackOutput>;
 
+export interface Shimmer {
+  readonly name: string;
+  readonly state: string;
+}
+
 const isFeedbackOutput = shapeOf({
   placement: isString,
   toastCount: isNumber,
@@ -102,6 +107,23 @@ export class FeedbackSection {
     return box;
   }
 
+  async painted(): Promise<void> {
+    await this.toaster.evaluate(
+      () =>
+        new Promise((resolve) => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(resolve);
+          });
+        }),
+    );
+  }
+
+  async stackOpen(): Promise<boolean> {
+    const [front, behind] = [await this.stackBox(0), await this.stackBox(1)];
+
+    return behind.y >= bottomOf(front);
+  }
+
   isSquare(target: Locator): Promise<boolean> {
     return target.evaluate((element) => {
       const rect = element.getBoundingClientRect();
@@ -109,8 +131,12 @@ export class FeedbackSection {
     });
   }
 
-  animationName(target: Locator): Promise<string> {
-    return target.evaluate((element) => getComputedStyle(element).animationName);
+  shimmerOf(line: Locator): Promise<Shimmer> {
+    return line.evaluate((element) => {
+      const style = getComputedStyle(element, '::after');
+
+      return { name: style.animationName, state: style.animationPlayState };
+    });
   }
 
   async readOutput(): Promise<FeedbackOutput> {

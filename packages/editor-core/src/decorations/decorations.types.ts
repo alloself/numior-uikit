@@ -23,9 +23,11 @@ export interface WidgetDecoration {
   readonly key: string;
 }
 
+export type BlockDecorationGroups = ReadonlyMap<NodeId, readonly BlockDecoration[]>;
+
 export interface DecorationSet {
   readonly decorations: readonly InlineDecoration[];
-  readonly blocks: readonly BlockDecoration[];
+  readonly blocks: BlockDecorationGroups;
   readonly widgets: readonly WidgetDecoration[];
   map(mapping: Mappable): DecorationSet;
 }

@@ -146,6 +146,68 @@ describe('sheet cells', () => {
     expect(cells.gridlines).toBe(true);
   });
 
+  it('finds the edges of the data and the last used cell without walking the sheet', async () => {
+    const cells = await cellsOf();
+
+    expect(cells.source.nextEdge?.({ row: 0, col: 0 }, 'down')).toEqual({ row: 4, col: 0 });
+
+    expect(cells.source.nextEdge?.({ row: 4, col: 0 }, 'down')).toEqual({
+      row: 1_048_575,
+      col: 0,
+    });
+
+    expect(cells.source.nextEdge?.({ row: 0, col: 1 }, 'next')).toEqual({ row: 0, col: 3 });
+    expect(cells.source.nextEdge?.({ row: 0, col: 3 }, 'previous')).toEqual({ row: 0, col: 0 });
+    expect(cells.source.nextEdge?.({ row: 4, col: 0 }, 'up')).toEqual({ row: 0, col: 0 });
+    expect(cells.source.lastCell?.()).toEqual({ row: 4, col: 7 });
+  });
+
+  it('answers edges and the last cell in shown positions when lines are hidden', async () => {
+    const cells = await cellsOf(
+      SALES_SHEET.replace('<row r="3" spans="1:8">', '<row r="3" spans="1:8" hidden="1">').replace(
+        '<cols><col min="1" max="1" width="14" customWidth="1"/></cols>',
+        '<cols><col min="1" max="1" width="14" customWidth="1"/><col min="2" max="2" width="9" hidden="1"/></cols>',
+      ),
+    );
+
+    expect(cells.source.nextEdge?.({ row: 0, col: 0 }, 'down')).toEqual({ row: 3, col: 0 });
+    expect(cells.source.nextEdge?.({ row: 0, col: 0 }, 'next')).toEqual({ row: 0, col: 2 });
+    expect(cells.source.lastCell?.()).toEqual({ row: 3, col: 6 });
+  });
+
+  it('shows and addresses a merge by its first cell when that cell is hidden', async () => {
+    const cells = await cellsOf(
+      SALES_SHEET.replace(
+        '<c r="E4"><v>3</v></c></row>',
+        '<c r="E4"><v>3</v></c><c r="F4"><v>7</v></c></row>',
+      ).replace(
+        '<cols><col min="1" max="1" width="14" customWidth="1"/></cols>',
+        '<cols><col min="1" max="1" width="14" customWidth="1"/><col min="6" max="6" width="9" hidden="1"/></cols>',
+      ),
+    );
+
+    expect(cells.merges).toEqual([{ from: { row: 3, col: 5 }, to: { row: 3, col: 5 } }]);
+    expect(cells.source.columnLabel?.(5)).toBe('G');
+    expect(cells.source.cellAt(3, 5)?.text).toBe('7');
+    expect(cells.textAt(3, 5)).toBe('7');
+    expect(cells.cellOf(3, 5)).toEqual({ row: 3, col: 5 });
+    expect(cells.cellOf(2, 5)).toEqual({ row: 2, col: 6 });
+
+    expect(cells.rangeOf({ from: { row: 3, col: 5 }, to: { row: 3, col: 5 } })).toEqual({
+      top: 3,
+      left: 5,
+      bottom: 3,
+      right: 6,
+    });
+
+    expect(cells.rangeOf({ from: { row: 4, col: 6 }, to: { row: 2, col: 4 } })).toEqual({
+      top: 2,
+      left: 4,
+      bottom: 4,
+      right: 7,
+    });
+  });
+
   it('leaves hidden rows and columns out and labels the rest with their sheet names', async () => {
     const cells = await cellsOf(
       SALES_SHEET.replace('<row r="3" spans="1:8">', '<row r="3" spans="1:8" hidden="1">').replace(

@@ -7,6 +7,8 @@
     @focusout="onFocusout"
     @mousedown="onMousedown"
     @beforetoggle.capture="onBeforetoggle"
+    @compositionstart="onCompositionstart"
+    @compositionend="onCompositionend"
   >
     <component
       :is="spec.component"
@@ -34,13 +36,22 @@
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { AriaValue, Direction, Key, PopoverState, provideDraftCommits } from '@numior/primitives';
 import { NuiTooltip } from '@numior/vue';
+import { grownSize, growthEdges } from './table-editor-growth';
 import { holdScrollAfterResize } from './table-scroll-hold';
-import type { NuiTableCellEditorProps, NuiTableEditMove } from './table.types';
+import type {
+  NuiTableCellEditorProps,
+  NuiTableEditMove,
+  TableEditCaret,
+  TableEditorLeave,
+} from './table.types';
 
 const FOCUSABLE = 'input, textarea, select, button, [tabindex]';
 const SIZE = '--_size';
+const LIFT = '--_lift';
+const LIFTED = 'var(--nui-shadow-md)';
+const NEIGHBOURS = 64;
+const ALIGNED_END = '.nui-table__cell--align-end';
 const CARET = 4;
-const EDGE = 2;
 const PINNED = '.nui-table__cell--pin-start, .nui-table__cell--pin-end';
 const ERROR = '.nui-table__error';
 
@@ -52,12 +63,14 @@ const {
   error,
   typed,
   passive,
+  caret,
   grow,
   keep,
   pick,
   attach,
   commit,
   cancel,
+  composed,
 } = defineProps<NuiTableCellEditorProps>();
 
 const emit = defineEmits<{ update: [value: unknown] }>();
@@ -77,9 +90,11 @@ const invalid = computed(() => error !== undefined);
 const keepOpen = (): void => undefined;
 
 const finish = (move: NuiTableEditMove): void => {
-  if (!settled) {
-    settled = commit(move);
+  if (settled) {
+    return;
   }
+
+  settled = commit(move);
 };
 
 const bound = computed(() => ({
@@ -89,9 +104,11 @@ const bound = computed(() => ({
     echoed = { value: next };
     emit('update', next);
 
-    if (popup) {
-      finish('stay');
+    if (!popup) {
+      return;
     }
+
+    finish('stay');
   },
 }));
 
@@ -147,9 +164,11 @@ const onFocusout = (event: FocusEvent): void => {
   }
 
   queueMicrotask(() => {
-    if (root.value?.contains(document.activeElement) !== true) {
-      finish('blur');
+    if (root.value?.contains(document.activeElement) === true) {
+      return;
     }
+
+    finish('blur');
   });
 };
 
@@ -167,20 +186,24 @@ const unfold = (): void => {
   const trigger = document.activeElement;
 
   if (
-    trigger instanceof HTMLButtonElement &&
-    trigger.hasAttribute('aria-haspopup') &&
-    trigger.getAttribute('aria-expanded') !== AriaValue.True
+    !(trigger instanceof HTMLButtonElement) ||
+    !trigger.hasAttribute('aria-haspopup') ||
+    trigger.getAttribute('aria-expanded') === AriaValue.True
   ) {
-    trigger.dispatchEvent(
-      new KeyboardEvent('keydown', { key: Key.ArrowDown, bubbles: true, cancelable: true }),
-    );
+    return;
   }
+
+  trigger.dispatchEvent(
+    new KeyboardEvent('keydown', { key: Key.ArrowDown, bubbles: true, cancelable: true }),
+  );
 };
 
 const onMousedown = (event: MouseEvent): void => {
-  if (event.target instanceof Element && event.target.closest(FOCUSABLE) === null) {
-    event.preventDefault();
+  if (!(event.target instanceof Element) || event.target.closest(FOCUSABLE) !== null) {
+    return;
   }
+
+  event.preventDefault();
 };
 
 const fieldOf = (): HTMLInputElement | HTMLTextAreaElement | undefined => {
@@ -202,48 +225,102 @@ const typeInto = (field: HTMLInputElement | HTMLTextAreaElement, text: string): 
     }),
   );
 
-  if (accepted) {
-    field.value = text;
-
-    field.dispatchEvent(
-      new InputEvent('input', { inputType: 'insertText', data: text, bubbles: true }),
-    );
+  if (!accepted) {
+    return;
   }
+
+  field.value = text;
+
+  field.dispatchEvent(
+    new InputEvent('input', { inputType: 'insertText', data: text, bubbles: true }),
+  );
+};
+
+const caretOf = (
+  field: HTMLInputElement | HTMLTextAreaElement | undefined,
+): TableEditCaret | undefined =>
+  field?.selectionStart === null ||
+  field?.selectionStart === undefined ||
+  field.selectionEnd === null
+    ? undefined
+    : {
+        start: field.selectionStart,
+        end: field.selectionEnd,
+        direction: field.selectionDirection ?? 'none',
+      };
+
+let composing = false;
+
+const onCompositionstart = (): void => {
+  composing = true;
+};
+
+const onCompositionend = (): void => {
+  composing = false;
+  composed();
+};
+
+const release = (): TableEditorLeave => {
+  const field = fieldOf();
+
+  settled = true;
+
+  return {
+    focused: root.value?.contains(document.activeElement) === true,
+    caret: caretOf(field),
+  };
 };
 
 const paddingOf = (length: string): number => Number.parseFloat(length) || 0;
 
-const roomOf = (editor: HTMLElement, viewport: HTMLElement): number => {
+const growsBack = (editor: HTMLElement): boolean => editor.closest(ALIGNED_END) !== null;
+
+const roomOf = (editor: HTMLElement, viewport: HTMLElement, back: boolean): number => {
   const style = getComputedStyle(viewport);
   const rtl = style.direction === Direction.Rtl;
   const box = viewport.getBoundingClientRect();
   const start = box.left + viewport.clientLeft;
   const end = box.right - (viewport.offsetWidth - viewport.clientWidth - viewport.clientLeft);
   const rect = editor.getBoundingClientRect();
-  const padding = paddingOf(style.scrollPaddingInlineEnd);
 
-  return Math.floor(rtl ? rect.right - start - padding : end - padding - rect.left) - EDGE;
+  const padding = paddingOf(back ? style.scrollPaddingInlineStart : style.scrollPaddingInlineEnd);
+
+  return Math.floor(rtl === back ? end - padding - rect.left : rect.right - start - padding);
+};
+
+const neighbourWidths = (editor: HTMLElement, back: boolean): readonly number[] => {
+  const widths: number[] = [];
+  const cell = editor.closest('.nui-table__cell');
+  let next = back ? cell?.previousElementSibling : cell?.nextElementSibling;
+
+  while (next instanceof HTMLElement && widths.length < NEIGHBOURS) {
+    widths.push(next.getBoundingClientRect().width);
+    next = back ? next.previousElementSibling : next.nextElementSibling;
+  }
+  return widths;
 };
 
 const widen = (editor: HTMLElement, field: HTMLInputElement, viewport: HTMLElement): void => {
   editor.style.removeProperty(SIZE);
+  editor.style.removeProperty(LIFT);
 
-  const natural = editor.getBoundingClientRect().width;
-  const needed = field.scrollWidth + natural - field.clientWidth + CARET;
+  const overflow = field.scrollWidth - field.clientWidth;
 
-  if (needed <= natural) {
+  if (overflow <= 0) {
     return;
   }
-  const room = roomOf(editor, viewport);
-  const grown = Math.max(natural, Math.min(needed, room));
+
+  const back = growsBack(editor);
+  const natural = editor.getBoundingClientRect().width;
+  const edges = growthEdges(natural, neighbourWidths(editor, back));
+  const grown = grownSize(edges, natural + overflow + CARET, roomOf(editor, viewport, back));
+
+  if (grown <= natural) {
+    return;
+  }
 
   editor.style.setProperty(SIZE, `${String(grown)}px`);
-
-  const short = field.scrollWidth - field.clientWidth;
-
-  if (short > 0 && grown < room) {
-    editor.style.setProperty(SIZE, `${String(Math.min(grown + short + CARET, room))}px`);
-  }
+  editor.style.setProperty(LIFT, LIFTED);
 };
 
 const fit = (hold: boolean): void => {
@@ -262,9 +339,11 @@ const fit = (hold: boolean): void => {
   unhold();
   widen(editor, field, viewport);
 
-  if (hold) {
-    unhold = holdScrollAfterResize(editor);
+  if (!hold) {
+    return;
   }
+
+  unhold = holdScrollAfterResize(editor);
 };
 
 const reveal = (): void => {
@@ -287,12 +366,14 @@ const reveal = (): void => {
   const right = inner + viewport.clientWidth - (rtl ? start : end);
   const rect = cell.getBoundingClientRect();
 
-  if (rect.left < left || rect.right > right) {
-    cell.scrollIntoView?.({
-      block: 'nearest',
-      inline: rect.width <= right - left ? 'nearest' : 'start',
-    });
+  if (rect.left >= left && rect.right <= right) {
+    return;
   }
+
+  cell.scrollIntoView?.({
+    block: 'nearest',
+    inline: rect.width <= right - left ? 'nearest' : 'start',
+  });
 };
 
 watch(
@@ -309,15 +390,21 @@ watch(
 watch(
   () => error,
   (next) => {
-    if (next !== undefined) {
-      message.value = next;
+    if (next === undefined) {
+      return;
     }
+
+    message.value = next;
   },
 );
 
 onMounted(() => {
-  detach = attach(() => {
-    drafts.commitAll();
+  detach = attach({
+    flush: () => {
+      drafts.commitAll();
+    },
+    release,
+    composing: () => composing,
   });
 
   if (passive) {
@@ -342,7 +429,13 @@ onMounted(() => {
   if (typed !== undefined) {
     typeInto(field, typed);
   }
-  field.setSelectionRange(field.value.length, field.value.length);
+
+  field.setSelectionRange(
+    caret?.start ?? field.value.length,
+    caret?.end ?? field.value.length,
+    caret?.direction,
+  );
+
   fit(false);
 });
 

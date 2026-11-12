@@ -80,6 +80,36 @@ describe('NuiMenu', () => {
     menu.unmount();
   });
 
+  it('leaves the focus where the chosen item sent it once the menu is hidden', async () => {
+    const field = document.createElement('button');
+
+    const entries: NuiMenuEntry[] = [
+      {
+        label: 'Find',
+        onSelect: () => {
+          void Promise.resolve().then(() => {
+            field.focus();
+          });
+        },
+      },
+    ];
+
+    const menu = MenuDriver.mount({ entries, anchored: true });
+
+    document.body.append(field);
+    await menu.focusAnchor();
+    await menu.show('first');
+
+    await menu.click('Find');
+    await flushPromises();
+
+    expect(menu.isOpen).toBe(false);
+    expect(document.activeElement).toBe(field);
+
+    field.remove();
+    menu.unmount();
+  });
+
   it('focuses the requested item when the entries arrive together with the opening', async () => {
     const menu = MenuDriver.mount({ anchored: true, entries: [] });
     await menu.focusAnchor();
@@ -111,6 +141,45 @@ describe('NuiMenu', () => {
     expect(menu.focusedLabel).toBe('Share');
 
     await menu.press('Home');
+    expect(menu.focusedLabel).toBe('Rename');
+
+    menu.unmount();
+  });
+
+  it('starts over from the first item when it is opened again after its last item was reached', async () => {
+    const menu = MenuDriver.mount({ parts: true });
+
+    await menu.pressTrigger('ArrowDown');
+    await menu.press('End');
+    await menu.close();
+    await menu.pressTrigger('ArrowDown');
+
+    expect(menu.focusedLabel).toBe('Rename');
+
+    await menu.press('ArrowDown');
+
+    expect(menu.focusedLabel).toBe('Docs');
+
+    menu.unmount();
+  });
+
+  it('steps from the menu itself onto the first item with ArrowDown and the last with ArrowUp, also after the pointer left', async () => {
+    const menu = MenuDriver.mount({ parts: true });
+    await menu.open();
+
+    await menu.press('ArrowDown');
+    expect(menu.focusedLabel).toBe('Rename');
+
+    await menu.close();
+    await menu.open();
+    await menu.press('ArrowUp');
+    expect(menu.focusedLabel).toBe('Delete');
+
+    await menu.hover('Bold');
+    await menu.leave();
+    expect(menu.focusedLabel).toBe('menu');
+
+    await menu.press('ArrowDown');
     expect(menu.focusedLabel).toBe('Rename');
 
     menu.unmount();

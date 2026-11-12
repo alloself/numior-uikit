@@ -8,6 +8,7 @@ import { ref, watch, type Ref } from 'vue';
 interface DemoLink {
   readonly online: Ref<boolean>;
   readonly transport: CollabTransport;
+  readonly garble: () => void;
 }
 
 export const useDemoLink = (base: CollabTransport): DemoLink => {
@@ -15,8 +16,10 @@ export const useDemoLink = (base: CollabTransport): DemoLink => {
 
   let live: TransportConnection | undefined;
   let waiting: TransportListener | undefined;
+  let heard: TransportListener | undefined;
 
   const connect = (listener: TransportListener): void => {
+    heard = listener;
     live = base.open(listener);
   };
 
@@ -38,6 +41,9 @@ export const useDemoLink = (base: CollabTransport): DemoLink => {
 
   return {
     online,
+    garble: () => {
+      heard?.message(null);
+    },
     transport: {
       open: (listener) => {
         if (online.value) {

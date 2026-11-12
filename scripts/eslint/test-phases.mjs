@@ -126,11 +126,13 @@ export const testPhases = {
 
         node.arguments.forEach((argument) => {
           if (
-            argument.type === 'ArrowFunctionExpression' ||
-            argument.type === 'FunctionExpression'
+            argument.type !== 'ArrowFunctionExpression' &&
+            argument.type !== 'FunctionExpression'
           ) {
-            checkBlock(argument.body);
+            return;
           }
+
+          checkBlock(argument.body);
         });
       },
     };

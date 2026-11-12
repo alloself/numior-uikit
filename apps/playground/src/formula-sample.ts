@@ -113,9 +113,11 @@ const place = (editor: CellEditor, sheet: Sheet, entries: Entries): void => {
   entries.forEach(([address, input]) => {
     const cell = parseCell(address);
 
-    if (cell !== undefined) {
-      editor.enter(sheet, cell.row, cell.col, String(input), EN_LOCALE);
+    if (cell === undefined) {
+      return;
     }
+
+    editor.enter(sheet, cell.row, cell.col, String(input), EN_LOCALE);
   });
 };
 
@@ -141,9 +143,11 @@ export const formulaSample = (): SampleBook => {
   FORMATS.forEach(([address, code]) => {
     const range = parseRange(address);
 
-    if (range !== undefined) {
-      editor.setFormat(budget, range, code);
+    if (range === undefined) {
+      return;
     }
+
+    editor.setFormat(budget, range, code);
   });
 
   place(editor, rates, RATES);

@@ -1,5 +1,7 @@
 import { mount } from '@vue/test-utils';
+import { nextTick } from 'vue';
 import { NuiTextarea, type NuiTextareaModifiers, type NuiTextareaProps } from '../../src';
+import { composeInto } from '../support/text-input';
 import { ComponentDriver, emittedStrings } from './component';
 
 export interface TextareaMountOptions {
@@ -40,6 +42,15 @@ export class TextareaDriver extends ComponentDriver {
   async type(text: string): Promise<void> {
     this.element.value = text;
     await this.wrapper.find('textarea').trigger('input');
+  }
+
+  async compose(text: string): Promise<void> {
+    composeInto(this.element, text);
+    await nextTick();
+  }
+
+  async endComposition(): Promise<void> {
+    await this.wrapper.find('textarea').trigger('compositionend');
   }
 
   async commit(): Promise<void> {

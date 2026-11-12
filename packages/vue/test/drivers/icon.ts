@@ -46,6 +46,10 @@ export class IconDriver extends ComponentDriver {
     await waitForGlyph(this.wrapper);
   }
 
+  async finishAppearing(): Promise<void> {
+    await this.wrapper.find(GLYPH).trigger('animationend');
+  }
+
   get decorative(): boolean {
     return this.wrapper.find('.nui-icon').attributes('aria-hidden') === 'true';
   }

@@ -87,8 +87,8 @@ export interface PivotDefinition {
 
 export interface PivotTable {
   readonly header: readonly CellValue[];
-  readonly columns: readonly (readonly CellValue[])[];
   readonly count: number;
+  column(index: number): readonly CellValue[];
 }
 
 export interface PivotGroup {
@@ -98,12 +98,12 @@ export interface PivotGroup {
 
 export interface PivotCacheField {
   readonly name: string;
-  readonly values: readonly CellValue[];
 }
 
 export interface PivotCache {
   readonly fields: readonly PivotCacheField[];
   readonly count: number;
+  values(field: number): readonly CellValue[];
   group(field: number): PivotGroup | undefined;
 }
 

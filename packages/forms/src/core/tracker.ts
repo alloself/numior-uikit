@@ -10,10 +10,12 @@ export const createTracker = (): Tracker => {
   const release = (): void => {
     inflight -= 1;
 
-    if (inflight === 0) {
-      for (const resolve of waiters.splice(0)) {
-        resolve();
-      }
+    if (inflight !== 0) {
+      return;
+    }
+
+    for (const resolve of waiters.splice(0)) {
+      resolve();
     }
   };
 

@@ -1,7 +1,14 @@
 import { fromJSON, stepFromJSON, stepToJSON, type Step } from '@numior/editor-core';
 import type { CollabDocument } from '../client/client.types';
 import type { WireStep } from '../protocol/protocol.types';
-import { collabVersion, confirmSteps, conflictsIn, receiveSteps, sendableSteps } from './collab';
+import {
+  collabVersion,
+  confirmSteps,
+  conflictsIn,
+  receiveSteps,
+  sendableSteps,
+  settleSteps,
+} from './collab';
 import type { EditorCollabOptions } from './collab.types';
 
 export const editorCollabDocument = ({
@@ -46,11 +53,13 @@ export const editorCollabDocument = ({
       const state = getState();
       const steps = parsedSteps(batch.steps);
 
-      if (state === undefined || steps === undefined) {
+      const tr =
+        state === undefined || steps === undefined ? undefined : receiveSteps(state, steps);
+
+      if (tr === undefined) {
         return false;
       }
 
-      const tr = receiveSteps(state, steps);
       const conflicts = conflictsIn(tr);
 
       dispatch(tr);
@@ -73,9 +82,25 @@ export const editorCollabDocument = ({
     confirm: (count, version) => {
       const state = getState();
 
-      if (state !== undefined) {
-        dispatch(confirmSteps(state, count, version));
+      if (state === undefined) {
+        return;
       }
+
+      dispatch(confirmSteps(state, count, version));
+    },
+    settle: (count, wires, version) => {
+      const state = getState();
+      const steps = parsedSteps(wires);
+
+      const tr =
+        state === undefined || steps === undefined
+          ? undefined
+          : settleSteps(state, count, steps, version);
+
+      if (tr !== undefined) {
+        dispatch(tr);
+      }
+      return tr !== undefined;
     },
   };
 };

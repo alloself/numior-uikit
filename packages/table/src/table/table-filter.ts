@@ -10,7 +10,9 @@ export type FilterDraft =
   | { readonly kind: typeof NuiTableFilterKind.Text; op: TableTextOp; value: string }
   | { readonly kind: typeof NuiTableFilterKind.Number; min: number | null; max: number | null }
   | { readonly kind: typeof NuiTableFilterKind.Date; from: string | null; to: string | null }
-  | { readonly kind: typeof NuiTableFilterKind.Set; values: TableFilterValue[] };
+  | { readonly kind: typeof NuiTableFilterKind.Set; values: TableFilterValue[]; exclude: boolean };
+
+export type SetFilterDraft = Extract<FilterDraft, { kind: 'set' }>;
 
 const DAY = 86_400_000;
 
@@ -74,9 +76,31 @@ export const draftOf = (
         ? { kind, from: isoDay(filter.from), to: isoDay(filter.to) }
         : { kind, from: null, to: null };
     case NuiTableFilterKind.Set:
-      return { kind, values: filter?.kind === NuiTableFilterKind.Set ? [...filter.values] : [] };
+      return filter?.kind === NuiTableFilterKind.Set
+        ? { kind, values: [...filter.values], exclude: filter.exclude === true }
+        : { kind, values: [], exclude: false };
   }
 };
+
+export const chosenIn = (draft: SetFilterDraft, value: TableFilterValue): boolean =>
+  draft.values.includes(value) !== draft.exclude;
+
+export const valuesToggled = (
+  draft: SetFilterDraft,
+  value: TableFilterValue,
+): TableFilterValue[] =>
+  draft.values.includes(value)
+    ? draft.values.filter((entry) => entry !== value)
+    : [...draft.values, value];
+
+export const valuesWith = (
+  draft: SetFilterDraft,
+  listed: readonly TableFilterValue[],
+  chosen: boolean,
+): TableFilterValue[] =>
+  chosen === draft.exclude
+    ? draft.values.filter((entry) => !listed.includes(entry))
+    : [...draft.values, ...listed.filter((entry) => !draft.values.includes(entry))];
 
 const textFilter = (
   key: string,
@@ -107,6 +131,15 @@ const dateFilter = (
   return { kind: 'date', key, from, to: end === undefined ? undefined : end + DAY - 1 };
 };
 
+const setFilter = (key: string, draft: SetFilterDraft): ColumnFilter | null => {
+  if (draft.values.length === 0) {
+    return null;
+  }
+  return draft.exclude
+    ? { kind: 'set', key, values: [...draft.values], exclude: true }
+    : { kind: 'set', key, values: [...draft.values] };
+};
+
 export const filterFromDraft = (key: string, draft: FilterDraft): ColumnFilter | null => {
   switch (draft.kind) {
     case NuiTableFilterKind.Text:
@@ -116,6 +149,6 @@ export const filterFromDraft = (key: string, draft: FilterDraft): ColumnFilter |
     case NuiTableFilterKind.Date:
       return dateFilter(key, draft);
     case NuiTableFilterKind.Set:
-      return draft.values.length === 0 ? null : { kind: 'set', key, values: [...draft.values] };
+      return setFilter(key, draft);
   }
 };

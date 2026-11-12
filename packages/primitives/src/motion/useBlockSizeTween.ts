@@ -47,14 +47,16 @@ export const useBlockSizeTween = (
 
     const { duration, easing } = motionTiming(element);
 
-    if (duration > 0) {
-      element.animate(
-        [
-          { blockSize: `${state.before}px`, clipPath: BLOCK_END_CLIP },
-          { blockSize: `${after}px`, clipPath: BLOCK_END_CLIP },
-        ],
-        { duration, easing },
-      );
+    if (duration <= 0) {
+      return;
     }
+
+    element.animate(
+      [
+        { blockSize: `${state.before}px`, clipPath: BLOCK_END_CLIP },
+        { blockSize: `${after}px`, clipPath: BLOCK_END_CLIP },
+      ],
+      { duration, easing },
+    );
   });
 };

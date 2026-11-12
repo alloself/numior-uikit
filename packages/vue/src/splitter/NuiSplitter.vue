@@ -6,7 +6,7 @@
       `nui-splitter--orientation-${orientation}`,
       { 'nui-splitter--dragging': dragging, 'nui-splitter--disabled': disabled },
     ]"
-    :style="{ '--_ratio': ratio }"
+    :style="{ '--_ratio': shown }"
   >
     <div :id="startId" class="nui-splitter__pane nui-splitter__pane--start">
       <slot name="start" />
@@ -19,7 +19,7 @@
       "
       :aria-label="labelText"
       :aria-controls="startId"
-      :aria-valuenow="Math.round(ratio * 100)"
+      :aria-valuenow="Math.round(shown * 100)"
       :aria-valuemin="Math.round(min * 100)"
       :aria-valuemax="Math.round(max * 100)"
       :aria-disabled="disabled ? 'true' : undefined"
@@ -68,6 +68,7 @@ const dragging = ref(false);
 
 const labelText = computed(() => label ?? messages.value.resize);
 const bounds = computed(() => ({ min, max }));
+const shown = computed(() => clampRatio(ratio.value, bounds.value));
 const vertical = (): boolean => orientation === NuiSplitterOrientation.Vertical;
 
 const apply = (next: number): void => {
@@ -98,9 +99,11 @@ const onPointerup = (event: PointerEvent): void => {
   }
   dragging.value = false;
 
-  if (event.currentTarget instanceof HTMLElement) {
-    event.currentTarget.releasePointerCapture(event.pointerId);
+  if (!(event.currentTarget instanceof HTMLElement)) {
+    return;
   }
+
+  event.currentTarget.releasePointerCapture(event.pointerId);
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
@@ -119,10 +122,10 @@ const onKeydown = (event: KeyboardEvent): void => {
       apply(max);
       break;
     case SplitterStep.Grow:
-      apply(ratio.value + step);
+      apply(shown.value + step);
       break;
     case SplitterStep.Shrink:
-      apply(ratio.value - step);
+      apply(shown.value - step);
       break;
   }
 };

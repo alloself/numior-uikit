@@ -92,6 +92,33 @@ describe('NuiTable row resize', () => {
     expect(grid.announcement).toBe('Высота строки 4 сброшена');
   });
 
+  it('reports a changed height once at the end of a drag, on a keyboard step and on a reset', async () => {
+    const grid = mountStaff();
+    await grid.settle();
+
+    await grid.dragRowResizer(1, 24);
+    await grid.dragRowResizer(1, 0);
+    await grid.focusCell(3, 0);
+    await grid.press('ArrowDown', { alt: true });
+    await grid.resetRowHeight(1);
+
+    expect(grid.rowResizes).toEqual([
+      [{ key: '1', height: 64 }],
+      [{ key: '3', height: 48 }],
+      [{ key: '1', height: undefined }],
+    ]);
+  });
+
+  it('selects the row on a touch tap that lands on its resize handle', async () => {
+    const grid = mountStaff({ props: { ...SIZABLE, cellSelection: true } });
+    await grid.settle();
+
+    await grid.tapRowResizer(2);
+
+    expect(grid.ranges).toEqual([{ from: { row: 2, col: 0 }, to: { row: 2, col: 4 } }]);
+    expect([grid.rowHeights, grid.rowResizes]).toEqual([{}, []]);
+  });
+
   it('treats the height as a minimum when rows size themselves', async () => {
     const grid = mountStaff({ auto: true, rowHeights: { 2: 80 } });
     await grid.settle();

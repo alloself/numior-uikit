@@ -1,5 +1,6 @@
 import { computed, onMounted, watch, type ComputedRef, type ShallowRef } from 'vue';
 import { Direction, useEdgeScroll, type VirtualList } from '@numior/primitives';
+import { ariaIndex, rowPositionOf } from './table-dom';
 import { boxOf } from './table-ranges';
 import type { PlacedColumn, TableLayout } from './table-layout';
 import {
@@ -10,7 +11,7 @@ import {
   type NuiTableRange,
   type NuiTableRect,
   type NuiTableWindow,
-  type TableCellPosition,
+  type NuiTableCellPosition,
 } from './table.types';
 
 export interface TableOverlayOptions {
@@ -40,8 +41,8 @@ export interface TableOverlay {
   readonly style: ComputedRef<Readonly<Record<string, string>>>;
   readonly planeBase: ComputedRef<number>;
   rectOf(range: NuiTableRange): NuiTableRect | undefined;
-  cellFromPoint(x: number, y: number): TableCellPosition | undefined;
-  cellNear(x: number, y: number): TableCellPosition | undefined;
+  cellFromPoint(x: number, y: number): NuiTableCellPosition | undefined;
+  cellNear(x: number, y: number): NuiTableCellPosition | undefined;
   followEdge(x: number, y: number, onStep: () => void): void;
   stopEdge(): void;
 }
@@ -132,9 +133,6 @@ const idle = (): void => undefined;
 const clamp = (value: number, low: number, high: number): number =>
   Math.min(Math.max(value, low + 1), high - 1);
 
-const ariaIndex = (element: Element | null | undefined, name: string): number =>
-  Number(element?.getAttribute(name));
-
 export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
   const placed = computed(
     () => new Map(options.layout().visual.map((column) => [column.key, column])),
@@ -209,12 +207,8 @@ export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
         : undefined;
     };
 
-  const positionOf = (cell: Element): TableCellPosition | undefined => {
-    const row =
-      ariaIndex(cell.parentElement, 'aria-rowindex') -
-      options.headRows() -
-      1 -
-      options.pinnedRows();
+  const positionOf = (cell: Element): NuiTableCellPosition | undefined => {
+    const row = rowPositionOf(cell.parentElement, options.headRows() + options.pinnedRows());
 
     const col = ariaIndex(cell, 'aria-colindex') - 1 - options.dataOffset();
 
@@ -223,7 +217,7 @@ export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
       : undefined;
   };
 
-  const cellFromPoint = (x: number, y: number): TableCellPosition | undefined => {
+  const cellFromPoint = (x: number, y: number): NuiTableCellPosition | undefined => {
     const viewport = options.viewport.value;
 
     if (viewport === null || typeof document.elementsFromPoint !== 'function') {
@@ -266,7 +260,7 @@ export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
     };
   };
 
-  const cellNear = (x: number, y: number): TableCellPosition | undefined => {
+  const cellNear = (x: number, y: number): NuiTableCellPosition | undefined => {
     const viewport = options.viewport.value;
 
     if (viewport === null) {

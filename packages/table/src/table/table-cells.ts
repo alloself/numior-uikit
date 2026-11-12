@@ -1,4 +1,4 @@
-import { graphemesOf } from '@numior/primitives';
+import { columnName } from '@numior/primitives/address';
 import { getCurrentInstance } from 'vue';
 import type {
   NuiTableCellStyle,
@@ -6,9 +6,10 @@ import type {
   NuiTableRange,
   NuiTableColumn,
   NuiTableEdgeDirection,
+  NuiTableLastCell,
   NuiTableNextEdge,
   NuiTableRowHeaders,
-  TableCellPosition,
+  NuiTableCellPosition,
 } from './table.types';
 
 export interface NuiTableSourceCell {
@@ -20,7 +21,8 @@ export interface NuiTableCellSource {
   readonly rows: number;
   readonly cols: number;
   cellAt(row: number, col: number): NuiTableSourceCell | undefined;
-  nextEdge?(from: TableCellPosition, direction: NuiTableEdgeDirection): TableCellPosition;
+  nextEdge?(from: NuiTableCellPosition, direction: NuiTableEdgeDirection): NuiTableCellPosition;
+  lastCell?(): NuiTableCellPosition | undefined;
   columnWidth?(col: number): number | undefined;
   rowLabel?(row: number): string;
   columnLabel?(col: number): string;
@@ -33,6 +35,7 @@ export interface NuiTableCells {
   readonly getKey: (row: number) => number;
   readonly cellStyle: NuiTableCellStyler<number>;
   readonly nextEdge: NuiTableNextEdge;
+  readonly lastCell: NuiTableLastCell;
   readonly rowHeaders: NuiTableRowHeaders<number>;
 }
 
@@ -47,33 +50,12 @@ interface EdgeWalk {
   readonly read: CellRead;
   readonly rows: number;
   readonly cols: number;
-  readonly step: TableCellPosition;
+  readonly step: NuiTableCellPosition;
 }
 
-const LETTERS = 26;
-const CODE_A = 65;
 const COLUMN_WIDTH = 96;
 
-export const columnName = (col: number): string => {
-  let rest = Math.max(0, Math.floor(col)) + 1;
-  let name = '';
-
-  while (rest > 0) {
-    const letter = (rest - 1) % LETTERS;
-
-    name = String.fromCodePoint(CODE_A + letter) + name;
-    rest = Math.floor((rest - 1) / LETTERS);
-  }
-  return name;
-};
-
-export const columnIndex = (name: string): number =>
-  graphemesOf(name.toUpperCase()).reduce(
-    (sum, letter) => sum * LETTERS + letter.charCodeAt(0) - CODE_A + 1,
-    0,
-  ) - 1;
-
-export const cellName = (position: TableCellPosition): string =>
+export const cellName = (position: NuiTableCellPosition): string =>
   `${columnName(position.col)}${position.row + 1}`;
 
 export const rangeName = (range: NuiTableRange): string => {
@@ -90,25 +72,25 @@ export const rangeName = (range: NuiTableRange): string => {
   return start === end ? start : `${start}:${end}`;
 };
 
-const STEPS: Readonly<Record<NuiTableEdgeDirection, TableCellPosition>> = {
+const STEPS: Readonly<Record<NuiTableEdgeDirection, NuiTableCellPosition>> = {
   up: { row: -1, col: 0 },
   down: { row: 1, col: 0 },
   previous: { row: 0, col: -1 },
   next: { row: 0, col: 1 },
 };
 
-const inside = (walk: EdgeWalk, at: TableCellPosition): boolean =>
+const inside = (walk: EdgeWalk, at: NuiTableCellPosition): boolean =>
   at.row >= 0 && at.row < walk.rows && at.col >= 0 && at.col < walk.cols;
 
-const filled = (walk: EdgeWalk, at: TableCellPosition): boolean =>
+const filled = (walk: EdgeWalk, at: NuiTableCellPosition): boolean =>
   inside(walk, at) && (walk.read(at.row, at.col)?.text ?? '') !== '';
 
-const ahead = (walk: EdgeWalk, at: TableCellPosition): TableCellPosition => ({
+const ahead = (walk: EdgeWalk, at: NuiTableCellPosition): NuiTableCellPosition => ({
   row: at.row + walk.step.row,
   col: at.col + walk.step.col,
 });
 
-const blockEnd = (walk: EdgeWalk, from: TableCellPosition): TableCellPosition => {
+const blockEnd = (walk: EdgeWalk, from: NuiTableCellPosition): NuiTableCellPosition => {
   let at = from;
 
   while (filled(walk, ahead(walk, at))) {
@@ -117,7 +99,7 @@ const blockEnd = (walk: EdgeWalk, from: TableCellPosition): TableCellPosition =>
   return at;
 };
 
-const nextFilled = (walk: EdgeWalk, from: TableCellPosition): TableCellPosition => {
+const nextFilled = (walk: EdgeWalk, from: NuiTableCellPosition): NuiTableCellPosition => {
   let at = from;
 
   while (inside(walk, ahead(walk, at))) {
@@ -133,9 +115,9 @@ const nextFilled = (walk: EdgeWalk, from: TableCellPosition): TableCellPosition 
 export const cellEdge = (
   read: CellRead,
   size: { readonly rows: number; readonly cols: number },
-  from: TableCellPosition,
+  from: NuiTableCellPosition,
   direction: NuiTableEdgeDirection,
-): TableCellPosition => {
+): NuiTableCellPosition => {
   const walk: EdgeWalk = { read, rows: size.rows, cols: size.cols, step: STEPS[direction] };
 
   return filled(walk, from) && filled(walk, ahead(walk, from))
@@ -155,9 +137,11 @@ const lineNumbers = (count: number): readonly number[] => {
 const forgetters = new WeakMap<object, () => void>();
 
 export const forgetCellReads = (nextEdge: NuiTableNextEdge | undefined): void => {
-  if (nextEdge !== undefined) {
-    forgetters.get(nextEdge)?.();
+  if (nextEdge === undefined) {
+    return;
   }
+
+  forgetters.get(nextEdge)?.();
 };
 
 const oncePerRender = (read: CellRead, cols: number): ReadCache => {
@@ -223,7 +207,9 @@ export const tableCells = (source: NuiTableCellSource): NuiTableCells => {
 
   return {
     cellSelection: true,
-    rows: lineNumbers(source.rows),
+    get rows() {
+      return lineNumbers(source.rows);
+    },
     columns,
     getKey: (row) => row,
     cellStyle: ({ row, column }) => {
@@ -232,6 +218,7 @@ export const tableCells = (source: NuiTableCellSource): NuiTableCells => {
       return col === undefined ? undefined : read(row, col)?.style;
     },
     nextEdge,
+    lastCell: () => source.lastCell?.(),
     rowHeaders: { label: (row) => source.rowLabel?.(row) ?? String(row + 1) },
   };
 };

@@ -83,6 +83,15 @@ export class CheckboxDriver extends ComponentDriver {
     await this.control.trigger('click');
   }
 
+  async activate(): Promise<void> {
+    const { element } = this.control;
+
+    element.indeterminate = false;
+    element.checked = !element.checked;
+    await this.control.trigger('change');
+    await nextTick();
+  }
+
   async receive(props: NuiCheckboxProps & { modelValue?: boolean }) {
     await this.wrapper.setProps(props);
     await this.ready();
@@ -115,7 +124,7 @@ export class CheckboxGroupDriver extends ComponentDriver {
   }
 
   get emittedModels(): string[][] {
-    return (this.scene.findComponent(NuiCheckboxGroup).emitted('update:modelValue') ?? []).flatMap(
+    return (this.scene.findComponent(NuiCheckboxGroup).emitted('update:values') ?? []).flatMap(
       ([value]) => (isStrings(value) ? [value] : []),
     );
   }

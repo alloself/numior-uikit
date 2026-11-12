@@ -111,6 +111,27 @@ describe('NuiPagination', () => {
     pagination.unmount();
   });
 
+  it('keeps the first visible row on the page when the page size changes', async () => {
+    const pagination = PaginationDriver.mount({
+      props: { total: 240, pageSizes: [10, 20, 50] },
+      page: 5,
+    });
+
+    expect(pagination.rangeText).toBe('81–100 of 240');
+
+    await pagination.choosePageSize(50);
+
+    expect(pagination.page).toBe(2);
+    expect(pagination.rangeText).toBe('51–100 of 240');
+
+    await pagination.choosePageSize(10);
+
+    expect(pagination.page).toBe(6);
+    expect(pagination.rangeText).toBe('51–60 of 240');
+
+    pagination.unmount();
+  });
+
   it('changes the page size through the select and clamps the page to the new count', async () => {
     const pagination = PaginationDriver.mount({
       props: { total: 240, pageSizes: [10, 20, 50], pageSizeLabel: 'На странице' },
@@ -126,6 +147,34 @@ describe('NuiPagination', () => {
     expect(pagination.statusText).toBe('5 / 5');
 
     pagination.unmount();
+  });
+
+  it('keeps the requested page while the total is not known yet and clamps it once it is', async () => {
+    const pagination = PaginationDriver.mount({ props: { total: 0 }, page: 5 });
+
+    expect(pagination.page).toBe(5);
+    expect(pagination.entries).toEqual(['1']);
+
+    await pagination.setTotal(240);
+
+    expect(pagination.page).toBe(5);
+    expect(pagination.currentPage).toBe('5');
+    expect(pagination.rangeText).toBe('81–100 of 240');
+
+    await pagination.setTotal(60);
+
+    expect(pagination.page).toBe(3);
+    expect(pagination.currentPage).toBe('3');
+
+    pagination.unmount();
+
+    const single = PaginationDriver.mount({ props: { total: 0 }, page: 4 });
+
+    await single.setTotal(15);
+
+    expect(single.page).toBe(1);
+
+    single.unmount();
   });
 
   it('shows a single empty page when there is nothing to paginate', () => {
@@ -156,5 +205,32 @@ describe('NuiPagination', () => {
     expect(pagination.rangeText).toBe('101–120 из 240');
 
     pagination.unmount();
+  });
+
+  it('writes the numbers of the range by its own locale', () => {
+    const pagination = PaginationDriver.mount({
+      props: { total: 12_345, locale: 'de-DE' },
+      page: 100,
+    });
+
+    expect(pagination.rangeText).toBe('1.981–2.000 of 12.345');
+
+    pagination.unmount();
+  });
+
+  it('gives the page size select the size of the pagination', () => {
+    const large = PaginationDriver.mount({
+      props: { total: 240, pageSizes: [10, 20], size: 'lg' },
+    });
+
+    expect(large.pageSizeSelectSize).toBe('lg');
+
+    large.unmount();
+
+    const usual = PaginationDriver.mount({ props: { total: 240, pageSizes: [10, 20] } });
+
+    expect(usual.pageSizeSelectSize).toBe('md');
+
+    usual.unmount();
   });
 });

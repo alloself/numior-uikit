@@ -7,6 +7,9 @@ Without arguments the composable returns the theme from `createNuiConfig({ color
 for the whole app. With arguments it creates a separate theme for the `scope` element. When
 `storageKey` is set, the choice is saved in `localStorage`.
 
+Nothing is written to the storage until the user changes the theme. The default `system` theme
+follows the system setting.
+
 <Example name="guide/Scheme" />
 
 ## Signature

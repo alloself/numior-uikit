@@ -21,14 +21,16 @@ import {
   type NuiTableDraft,
   type NuiTableEditRefusalReason,
   type TableCellEditorSpec,
-  type TableCellPosition,
+  type NuiTableCellPosition,
+  type TableEditorLeave,
+  type TableEditorLink,
   type TableEditorPlan,
   type TableEditSession,
 } from './table.types';
 
 export interface TableCellEditorOptions<T> {
   readonly enabled: () => boolean;
-  readonly cell: () => TableCellPosition | undefined;
+  readonly cell: () => NuiTableCellPosition | undefined;
   readonly rowAt: (position: number) => T | undefined;
   readonly keyAt: (col: number) => string | undefined;
   readonly labelOf: (key: string) => string;
@@ -36,15 +38,15 @@ export interface TableCellEditorOptions<T> {
   readonly valueOf: (row: T, key: string) => NuiTableCellValue;
   readonly plan: (row: T, key: string) => TableEditorPlan;
   readonly check: (row: T, key: string, value: NuiTableCellValue) => string | undefined;
-  readonly leave: (from: TableCellPosition, move: NuiTableEditMove) => TableCellPosition;
+  readonly leave: (from: NuiTableCellPosition, move: NuiTableEditMove) => NuiTableCellPosition;
   readonly invalid: () => string;
   readonly save: (row: T, key: string, value: NuiTableCellValue) => void;
   readonly fill: (key: string, value: NuiTableCellValue) => void;
   readonly share: (draft: NuiTableDraft | undefined) => void;
   readonly refuse: (row: T, key: string, reason: NuiTableEditRefusalReason) => void;
   readonly bounds: () => RangeBounds;
-  readonly locate: (target: EventTarget | null) => TableCellPosition | undefined;
-  readonly focus: (position: TableCellPosition) => void;
+  readonly locate: (target: EventTarget | null) => NuiTableCellPosition | undefined;
+  readonly focus: (position: NuiTableCellPosition) => void;
   readonly resetOn: WatchSource[];
   readonly messages: ComputedRef<NuiTableMessages>;
   readonly announce: (text: string) => void;
@@ -58,9 +60,12 @@ export interface TableCellEditor<T> {
   input(value: unknown): void;
   receive(next: NuiTableDraft | undefined): void;
   start(mode: NuiTableEditMode, focus: boolean): boolean;
-  attach(flush: () => void): () => void;
+  carry(position: NuiTableCellPosition): boolean;
+  attach(link: TableEditorLink): () => void;
   commit(move: NuiTableEditMove): boolean;
   cancel(): void;
+  reset(): void;
+  composed(): void;
   onKeydown(event: KeyboardEvent): boolean;
   onFocusin(event: FocusEvent): void;
   onClick(event: MouseEvent): void;
@@ -80,7 +85,7 @@ interface TableEditOutcome {
 }
 
 interface TableEditTarget<T> {
-  readonly position: TableCellPosition;
+  readonly position: NuiTableCellPosition;
   readonly row: T;
   readonly key: string;
 }
@@ -97,6 +102,27 @@ type TableOpening =
 const DOUBLE_TAP = 300;
 const TAP_GRACE = 500;
 const GESTURE: TableOpening = { kind: 'gesture' };
+const LEFT_ALONE: TableEditorLeave = { focused: false, caret: undefined };
+
+const leaveOf = (links: ReadonlySet<TableEditorLink>): TableEditorLeave => {
+  let found = LEFT_ALONE;
+
+  for (const link of links) {
+    const leave = link.release();
+
+    found = leave.focused ? leave : found;
+  }
+  return found;
+};
+
+const composingIn = (links: ReadonlySet<TableEditorLink>): boolean => {
+  for (const link of links) {
+    if (link.composing()) {
+      return true;
+    }
+  }
+  return false;
+};
 
 const isCellTarget = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement && target.matches('.nui-table__cell');
@@ -125,10 +151,13 @@ const openingOf = (event: KeyboardEvent): TableOpening | undefined => {
   return typed === undefined ? undefined : { kind: 'typed', text: typed };
 };
 
-const clampTo = (position: TableCellPosition, bounds: RangeBounds): TableCellPosition => ({
+const clampTo = (position: NuiTableCellPosition, bounds: RangeBounds): NuiTableCellPosition => ({
   row: Math.max(0, Math.min(position.row, bounds.rows - 1)),
   col: Math.max(0, Math.min(position.col, bounds.cols - 1)),
 });
+
+const samePlace = (left: NuiTableCellPosition, right: NuiTableCellPosition): boolean =>
+  left.row === right.row && left.col === right.col;
 
 const doubled = (last: TableTap | undefined, next: TableTap): boolean =>
   last !== undefined &&
@@ -140,7 +169,8 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
   const session = shallowRef<TableEditSession<T>>();
   const draft = shallowRef<unknown>();
   const error = ref<string>();
-  const flushers = new Set<() => void>();
+  const links = new Set<TableEditorLink>();
+  let waiting: NuiTableCellPosition | undefined;
   let tap: TableTap | undefined;
   let tapped = Number.NEGATIVE_INFINITY;
   let pointer = '';
@@ -160,6 +190,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
   };
 
   const close = (): void => {
+    waiting = undefined;
     session.value = undefined;
     error.value = undefined;
     strict = false;
@@ -192,6 +223,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
       spec,
       typed: opening.kind === TableOpeningKind.Typed ? opening.text : undefined,
       passive: opening.kind === TableOpeningKind.Start && !opening.focus,
+      caret: undefined,
     };
 
     error.value = undefined;
@@ -199,7 +231,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     setDraft(spec.toControl(blank ? null : options.valueOf(target.row, target.key)));
   };
 
-  const open = (position: TableCellPosition, opening: TableOpening): boolean => {
+  const open = (position: NuiTableCellPosition, opening: TableOpening): boolean => {
     const row = options.rowAt(position.row);
     const key = options.keyAt(position.col);
 
@@ -237,12 +269,65 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     return opened;
   };
 
-  const attach = (flush: () => void): (() => void) => {
-    flushers.add(flush);
+  const attach = (link: TableEditorLink): (() => void) => {
+    links.add(link);
 
     return () => {
-      flushers.delete(flush);
+      links.delete(link);
     };
+  };
+
+  const carry = (position: NuiTableCellPosition): boolean => {
+    const current = session.value;
+    const row = options.rowAt(position.row);
+    const key = options.keyAt(position.col);
+
+    if (
+      current === undefined ||
+      row === undefined ||
+      key === undefined ||
+      !options.editable(row, key) ||
+      options.plan(row, key).kind !== TableEditorPlanKind.Editor
+    ) {
+      return false;
+    }
+    if (samePlace(position, current.position)) {
+      waiting = undefined;
+      session.value = row === current.row ? current : { ...current, row };
+      return true;
+    }
+    if (composingIn(links)) {
+      waiting = position;
+      return true;
+    }
+
+    const leave = leaveOf(links);
+
+    session.value = {
+      ...current,
+      position,
+      row,
+      key,
+      label: options.labelOf(key),
+      typed: undefined,
+      passive: !leave.focused,
+      caret: leave.caret,
+    };
+
+    setDraft(draft.value);
+    return true;
+  };
+
+  const composed = (): void => {
+    const next = waiting;
+
+    waiting = undefined;
+
+    if (next === undefined) {
+      return;
+    }
+
+    carry(next);
   };
 
   const outcomeOf = (current: TableEditSession<T>, control: unknown): TableEditOutcome => {
@@ -266,8 +351,8 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
   };
 
   const commit = (move: NuiTableEditMove): boolean => {
-    for (const flush of flushers) {
-      flush();
+    for (const link of links) {
+      link.flush();
     }
     const current = session.value;
 
@@ -298,10 +383,12 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
   const cancel = (): void => {
     const current = session.value;
 
-    if (current !== undefined) {
-      close();
-      options.focus(current.position);
+    if (current === undefined) {
+      return;
     }
+
+    close();
+    options.focus(current.position);
   };
 
   const input = (value: unknown): void => {
@@ -309,22 +396,26 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
 
     setDraft(value);
 
-    if (current !== undefined && strict) {
-      error.value = outcomeOf(current, value).failure;
+    if (current === undefined || !strict) {
+      return;
     }
+
+    error.value = outcomeOf(current, value).failure;
   };
 
   const receive = (next: NuiTableDraft | undefined): void => {
     const at = session.value?.position;
 
     if (
-      next !== undefined &&
-      next.row === at?.row &&
-      next.col === at.col &&
-      next.value !== draft.value
+      next === undefined ||
+      next.row !== at?.row ||
+      next.col !== at.col ||
+      next.value === draft.value
     ) {
-      input(next.value);
+      return;
     }
+
+    input(next.value);
   };
 
   const onKeydown = (event: KeyboardEvent): boolean => {
@@ -348,20 +439,23 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     }
     const opening = openingOf(event);
 
-    if (opening !== undefined && open(cell, opening)) {
-      event.preventDefault();
-      return true;
+    if (opening === undefined || !open(cell, opening)) {
+      return false;
     }
-    return false;
+
+    event.preventDefault();
+    return true;
   };
 
   const onFocusin = (event: FocusEvent): void => {
-    if (session.value !== undefined && !inEditor(event.target) && !inEditor(event.relatedTarget)) {
-      commit('blur');
+    if (session.value === undefined || inEditor(event.target) || inEditor(event.relatedTarget)) {
+      return;
     }
+
+    commit('blur');
   };
 
-  const locate = (target: EventTarget | null): TableCellPosition | undefined =>
+  const locate = (target: EventTarget | null): NuiTableCellPosition | undefined =>
     options.enabled() && session.value === undefined ? options.locate(target) : undefined;
 
   const onDblclick = (event: MouseEvent): boolean => {
@@ -383,21 +477,27 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     }
   };
 
-  watch(options.resetOn, () => {
+  const reset = (): void => {
     const current = session.value;
     const bounds = options.bounds();
 
     close();
 
-    if (current !== undefined && bounds.rows > 0) {
-      options.focus(clampTo(current.position, bounds));
+    if (current === undefined || bounds.rows <= 0) {
+      return;
     }
-  });
+
+    options.focus(clampTo(current.position, bounds));
+  };
+
+  watch(options.resetOn, reset);
 
   watch(options.enabled, (on) => {
-    if (!on) {
-      close();
+    if (on) {
+      return;
     }
+
+    close();
   });
 
   return {
@@ -408,9 +508,12 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     input,
     receive,
     start,
+    carry,
     attach,
     commit,
     cancel,
+    reset,
+    composed,
     onKeydown,
     onFocusin,
     onClick,

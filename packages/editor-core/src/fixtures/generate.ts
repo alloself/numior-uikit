@@ -195,12 +195,12 @@ const table = (generator: Generator): ElementNode => {
   const head = element(
     generator,
     'table_head',
-    columns.map((column) =>
+    columns.map((column, index) =>
       element(
         generator,
         'table_column',
         column.options.map((label) => element(generator, 'table_option', [], { label })),
-        { name: word(generator), type: column.type },
+        { key: `k${String(index)}`, name: word(generator), type: column.type },
       ),
     ),
   );
@@ -209,8 +209,11 @@ const table = (generator: Generator): ElementNode => {
     element(
       generator,
       'table_row',
-      columns.map((column) =>
-        element(generator, 'table_cell', [], { value: cellValue(generator, column) }),
+      columns.map((column, index) =>
+        element(generator, 'table_cell', [], {
+          column: `k${String(index)}`,
+          value: cellValue(generator, column),
+        }),
       ),
     ),
   );
@@ -243,7 +246,7 @@ const image = (generator: Generator): ElementNode => {
 const BUILDERS: Readonly<Record<FixtureBlock, (generator: Generator) => ElementNode>> = {
   paragraph,
   heading: (generator) =>
-    element(generator, 'heading', inline(generator, 2, 6), { level: generator.random.int(1, 3) }),
+    element(generator, 'heading', inline(generator, 2, 6), { level: generator.random.int(1, 6) }),
   list: (generator) => listOf(generator, 1),
   table,
   code,

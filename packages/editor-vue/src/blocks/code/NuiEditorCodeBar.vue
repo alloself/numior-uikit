@@ -30,6 +30,7 @@
           :selected="known?.id ?? language ?? PLAIN"
           :label="texts.codeLanguage"
           :placeholder="texts.codeLanguageSearch"
+          autofocus
           embedded
           @select="choose"
         />

@@ -1,5 +1,6 @@
 import { createApp, type Component } from 'vue';
 import { createNuiConfig } from '@numior/vue';
+import { createShikiHighlighter } from '@numior/vue/shiki';
 import '@fontsource-variable/inter/index.css';
 import '@numior/tokens/theme.css';
 import '@numior/tokens/base.css';
@@ -22,5 +23,5 @@ const pageOf = (params: URLSearchParams): Component => {
 };
 
 createApp(pageOf(new URLSearchParams(location.search)))
-  .use(createNuiConfig({ locale: 'ru-RU' }))
+  .use(createNuiConfig({ locale: 'ru-RU', highlighter: createShikiHighlighter() }))
   .mount('#collab');

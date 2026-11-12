@@ -144,6 +144,22 @@ test.describe('table detail rows', () => {
     expect(await playground.hasHorizontalOverflow()).toBe(false);
   });
 
+  test('scrolls sideways no further than its columns reach', async ({
+    tableDetail: detail,
+    playground,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await detail.root.scrollIntoViewIfNeeded();
+    await expect(detail.cell(1, 1)).toBeVisible();
+
+    expect(await detail.scrollPastColumns()).toBe(0);
+
+    await playground.setDirection('rtl');
+
+    expect(await detail.scrollPastColumns()).toBe(0);
+  });
+
   test('shows details in a paged table without a row window', async ({
     tableDetail: detail,
     playground,

@@ -7,7 +7,6 @@ export interface NumberLocale {
   readonly decimal: string;
   readonly group: string;
   readonly months: readonly string[];
-  readonly monthsGenitive: readonly string[];
   readonly monthsShort: readonly string[];
   readonly days: readonly string[];
   readonly daysShort: readonly string[];
@@ -18,6 +17,8 @@ export interface NumberLocale {
   readonly errors: ErrorTexts;
   readonly dateOrder: typeof DateOrder.Mdy | typeof DateOrder.Dmy;
   readonly shortDate: string;
+  readonly namedDate: string;
+  readonly monthDate: string;
   readonly longDate: string;
   readonly shortTime: string;
   readonly longTime: string;
@@ -112,6 +113,7 @@ export const SectionKind = {
   Date: 'date',
   Text: 'text',
   Literal: 'literal',
+  Invalid: 'invalid',
 } as const;
 
 export const DateOrder = { Mdy: 'mdy', Dmy: 'dmy' } as const;

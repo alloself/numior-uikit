@@ -21,9 +21,11 @@ export class EditorBenchPage extends BenchPage {
       const first = walker.nextNode();
 
       root.focus();
-      if (first !== null) {
-        document.getSelection()?.setBaseAndExtent(first, 0, first, 0);
+      if (first === null) {
+        return;
       }
+
+      document.getSelection()?.setBaseAndExtent(first, 0, first, 0);
     });
 
     await this.nextFrame();

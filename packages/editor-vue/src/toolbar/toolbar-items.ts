@@ -1,9 +1,6 @@
 import {
   Bold,
   Braces,
-  Heading1,
-  Heading2,
-  Heading3,
   Italic,
   List,
   ListIndentDecrease,
@@ -20,6 +17,7 @@ import {
 } from '@lucide/vue';
 import {
   activeBlock,
+  canMark,
   activeMarks,
   ancestorTypes,
   insertDivider,
@@ -40,9 +38,10 @@ import {
 import type { IconSource } from '@numior/primitives';
 import type { NuiEditorMessages } from '../editor/editor.messages';
 import type { SlashItem } from '../slash/slash-items';
+import { HEADING_ICONS } from '../editor/heading-icons';
 import { onlyIf } from '../editor/only-if';
-import { type ToolbarItemKind } from './toolbar.types';
-import { NuiContentNodeType } from '@numior/content';
+import { ToolbarGroupKey, ToolbarItemKind } from './toolbar.types';
+import { CONTENT_HEADING_LEVELS, NuiContentNodeType } from '@numior/content';
 
 export interface ToolbarFace {
   readonly label: string;
@@ -74,10 +73,20 @@ export interface ToolbarColours {
   readonly disabled: boolean;
 }
 
+export interface NuiEditorSelectionAction {
+  readonly key: string;
+  readonly label: string;
+  readonly icon: IconSource;
+  readonly command: Command;
+}
+
 export interface ToolbarOptions {
   readonly colours: readonly string[];
   readonly highlights: readonly string[];
   readonly docked?: boolean | undefined;
+  readonly blockMenu?: boolean | undefined;
+  readonly selectionActions?: readonly NuiEditorSelectionAction[] | undefined;
+  readonly actionsOnly?: boolean | undefined;
 }
 
 export interface ToolbarBlock {
@@ -139,14 +148,6 @@ const LISTS: readonly (readonly [string, keyof NuiEditorMessages, IconSource])[]
   ['todo_list', 'todoList', ListTodo],
 ];
 
-const HEADINGS = [1, 2, 3] as const;
-
-const HEADING_ICONS: Readonly<Record<(typeof HEADINGS)[number], IconSource>> = {
-  1: Heading1,
-  2: Heading2,
-  3: Heading3,
-};
-
 const textOf = (texts: NuiEditorMessages, key: keyof NuiEditorMessages): string => {
   const text = texts[key];
 
@@ -179,7 +180,7 @@ const blockOptions = (facts: Facts): ToolbarBlock[] => {
   const current = activeBlock(facts.state);
 
   const headings = schema.nodes.has('heading')
-    ? HEADINGS.map((level): ToolbarBlock => ({
+    ? CONTENT_HEADING_LEVELS.map((level): ToolbarBlock => ({
         key: `heading-${String(level)}`,
         label: facts.texts.heading({ level }),
         icon: HEADING_ICONS[level],
@@ -373,30 +374,49 @@ const insertItems = (
         },
       ];
 
+const selectionItems = ({ state, options }: Facts): ToolbarItem[] =>
+  (options.selectionActions ?? []).map((action) => ({
+    kind: ToolbarItemKind.Action,
+    key: action.key,
+    label: action.label,
+    icon: action.icon,
+    command: action.command,
+    disabled: !action.command(state),
+  }));
+
+const markable = (state: EditorState): ReadonlySet<string> =>
+  new Set([...state.doc.schema.marks.keys()].filter((mark) => canMark(state, mark)));
+
 export const toolbarGroups = (
   state: EditorState,
   texts: NuiEditorMessages,
   options: ToolbarOptions,
   inserts: readonly SlashItem[] = [],
 ): ToolbarGroup[] => {
-  const block = activeBlock(state);
-  const blockType = block === undefined ? undefined : state.doc.schema.nodes.get(block.type);
-
   const facts: Facts = {
     state,
     texts,
     options,
     marks: activeMarks(state),
-    allowed: blockType?.marks ?? new Set(state.doc.schema.marks.keys()),
+    allowed: markable(state),
     ancestors: ancestorTypes(state),
   };
 
+  if (options.actionsOnly === true) {
+    return [{ key: ToolbarGroupKey.Selection, items: selectionItems(facts) }];
+  }
+
+  const blockMenu = options.docked === true || options.blockMenu === true;
+
   return [
-    { key: 'history', items: historyItems(facts) },
-    { key: 'insert', items: insertItems(state, texts, inserts) },
-    { key: 'blocks', items: blockItems(facts) },
-    { key: 'marks', items: markItems(facts) },
-    { key: 'structure', items: blockActions(facts) },
-    { key: 'nesting', items: nestingItems(facts) },
+    {
+      key: ToolbarGroupKey.Document,
+      items: [...insertItems(state, texts, inserts), ...historyItems(facts)],
+    },
+    { key: ToolbarGroupKey.Blocks, items: blockMenu ? blockItems(facts) : [] },
+    { key: ToolbarGroupKey.Marks, items: markItems(facts) },
+    { key: ToolbarGroupKey.Selection, items: selectionItems(facts) },
+    { key: ToolbarGroupKey.Structure, items: blockActions(facts) },
+    { key: ToolbarGroupKey.Nesting, items: nestingItems(facts) },
   ].filter((group) => group.items.length > 0);
 };

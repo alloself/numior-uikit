@@ -10,7 +10,7 @@ import {
   type Plugin,
   type Transaction,
 } from '../state/state.types';
-import { invertStep } from '../transform/step';
+import { invertStep, mergeSteps } from '../transform/step';
 import type { Step } from '../transform/step.types';
 import {
   HistoryAction,
@@ -18,7 +18,7 @@ import {
   type HistoryOptions,
   type HistoryState,
 } from './history.types';
-import { mirrored, rebaseSteps, type MirrorMaps } from './rebase';
+import { mirrored, rebaseHistory, type MirrorMaps } from './rebase';
 
 interface HistorySettings {
   readonly depth: number;
@@ -53,6 +53,16 @@ const eventOf = (tr: Transaction, before: EditorState): HistoryEvent => ({
   selection: before.selection,
 });
 
+const joined = (newer: readonly Step[], older: readonly Step[]): readonly Step[] => {
+  const last = newer.at(-1);
+  const first = older[0];
+  const merged = last === undefined || first === undefined ? undefined : mergeSteps(last, first);
+
+  return merged === undefined
+    ? [...newer, ...older]
+    : [...newer.slice(0, -1), merged, ...older.slice(1)];
+};
+
 const movedSelection = (selection: Selection, chain: MirrorMaps): Selection => {
   const mapping = mirrored(chain);
 
@@ -69,12 +79,14 @@ const rebaseEvents = (
   const kept: HistoryEvent[] = [];
 
   for (const event of events.toReversed()) {
-    const rebased = rebaseSteps(event.steps, chain);
+    const rebased = rebaseHistory(event.steps, chain);
 
     chain = rebased.chain;
-    if (rebased.steps.length > 0) {
-      kept.push({ steps: rebased.steps, selection: movedSelection(event.selection, chain) });
+    if (rebased.steps.length === 0) {
+      continue;
     }
+
+    kept.push({ steps: rebased.steps, selection: movedSelection(event.selection, chain) });
   }
   return kept.toReversed();
 };
@@ -119,7 +131,7 @@ const recorded = (
     last !== undefined && joins(value, tr, source, options.groupDelay)
       ? [
           ...value.done.slice(0, -1),
-          { steps: [...event.steps, ...last.steps], selection: last.selection },
+          { steps: joined(event.steps, last.steps), selection: last.selection },
         ]
       : [...value.done, event].slice(-options.depth);
 
@@ -183,6 +195,8 @@ const travel =
     }
     return true;
   };
+
+export const historyTravel = (tr: Transaction): HistoryAction | undefined => historyAction.read(tr);
 
 export const undo: Command = travel('undo');
 

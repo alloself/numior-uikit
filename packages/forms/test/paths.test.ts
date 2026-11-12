@@ -1,5 +1,5 @@
 import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
-import type { FormAfterSlotPath, FormPath, FormSlotPath } from '../src';
+import type { DeepPartial, FormAfterSlotPath, FormPath, FormPathValue, FormSlotPath } from '../src';
 import { isUnder, joinPath, matchesPattern, normalizePath, patternOf } from '../src/paths/paths';
 
 interface Team {
@@ -7,6 +7,14 @@ interface Team {
   owner: { email: string };
   members: { email: string; tags: string[] }[];
 }
+
+interface Route {
+  stops: [from: string, to: { city: string }];
+  seen: Set<string>;
+  prices: Map<string, number>;
+}
+
+type Payment = { card: { number: string } } | { iban: string };
 
 describe('paths', () => {
   it('accepts bracket indexes from servers and keeps dots as the canonical form', () => {
@@ -28,6 +36,18 @@ describe('paths', () => {
     expect(matchesPattern('items.3.name', 'items.*.name')).toBe(true);
     expect(matchesPattern('items.x.name', 'items.*.name')).toBe(false);
     expect(matchesPattern('items.3', 'items.*.name')).toBe(false);
+  });
+
+  it('types the paths and values of tuples, collections and unions without a shared key', () => {
+    expectTypeOf<FormPath<Route>>().toEqualTypeOf<
+      'stops' | 'stops.0' | 'stops.1' | 'stops.1.city' | 'seen' | 'prices'
+    >();
+
+    expectTypeOf<FormPathValue<Route, 'stops.0'>>().toEqualTypeOf<string>();
+    expectTypeOf<FormPathValue<Route, 'stops.1.city'>>().toEqualTypeOf<string>();
+    expectTypeOf<FormPath<Payment>>().toEqualTypeOf<'card' | 'card.number' | 'iban'>();
+    expectTypeOf<FormPathValue<Payment, 'iban'>>().toEqualTypeOf<string>();
+    expectTypeOf<DeepPartial<Route>['prices']>().toEqualTypeOf<Map<string, number> | undefined>();
   });
 
   it('names smart form slots by the paths of a row, without row indexes', () => {

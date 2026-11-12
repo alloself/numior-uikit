@@ -69,8 +69,27 @@ export interface OfflineLocks {
   ): Promise<unknown>;
 }
 
+export interface OfflineChannel {
+  postMessage(message: unknown): void;
+  close(): void;
+  addEventListener(type: 'message', listener: (event: { readonly data: unknown }) => void): void;
+}
+
+export type OfflineChannelFactory = (name: string) => OfflineChannel;
+
+export type OfflineCopy = (typeof OfflineCopy)[keyof typeof OfflineCopy];
+
 export interface OfflinePersistenceOptions extends OfflineStoreOptions {
   readonly locks?: OfflineLocks | undefined;
+  readonly channel?: OfflineChannelFactory | undefined;
   readonly migrations?: readonly OfflineMigration[] | undefined;
   readonly onError?: ((error: unknown) => void) | undefined;
+  readonly onState?: ((state: OfflineCopy) => void) | undefined;
 }
+
+export const OfflineCopy = {
+  Kept: 'kept',
+  Failing: 'failing',
+  Elsewhere: 'elsewhere',
+  Unavailable: 'unavailable',
+} as const;

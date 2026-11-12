@@ -70,6 +70,9 @@ The component from the registry checks its own `props`. An unknown type, rejecte
 unreadable entry give a list of `issues` instead of a form. Each issue has an error code and a
 path.
 
+A `pattern` rule whose `source` is not a regular expression is reported in `issues` too. The path
+leads to the rule itself, such as `fields.0.rules.1`.
+
 `formConfig({ controls }).control('select', (v) => v.country, { props })` takes a component from
 the registry by key, and TypeScript knows the types of its `props`. Values of JSON fields are
 typed `unknown`, because the configuration that arrives decides their shape. See

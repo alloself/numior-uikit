@@ -104,9 +104,11 @@ const onFocusout = (event: FocusEvent): void => {
   }
 
   queueMicrotask(() => {
-    if (!within(document.activeElement)) {
-      void control.handleBlur();
+    if (within(document.activeElement)) {
+      return;
     }
+
+    void control.handleBlur();
   });
 };
 </script>

@@ -3,12 +3,14 @@ import { nextTick } from 'vue';
 import type { NuiToggleGroupProps, NuiToggleItem } from '../../src';
 import ToggleGroupScene from '../fixtures/ToggleGroupScene.vue';
 import { createSelection, type Selection, type SelectionValue } from '../support/selection';
+import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
 
 export interface ToggleGroupMountOptions {
   readonly props?: Omit<NuiToggleGroupProps<unknown>, 'items'>;
   readonly items?: readonly NuiToggleItem<unknown>[];
   readonly modelValue?: SelectionValue;
+  readonly dir?: 'ltr' | 'rtl';
 }
 
 const THEME_ITEMS: readonly NuiToggleItem[] = [
@@ -24,16 +26,22 @@ export class ToggleGroupDriver extends ComponentDriver {
   private constructor(
     wrapper: VueWrapper,
     private readonly selection: Selection,
+    private readonly stubs: TopLayerStubs,
   ) {
     super(wrapper);
   }
 
-  static mount({ props = {}, items = THEME_ITEMS, modelValue }: ToggleGroupMountOptions = {}) {
+  static mount({ props = {}, items = THEME_ITEMS, modelValue, dir }: ToggleGroupMountOptions = {}) {
+    const stubs = new TopLayerStubs();
     const selection = createSelection(modelValue, props.multiple === true);
 
     return new ToggleGroupDriver(
-      mount(ToggleGroupScene, { props: { props, items, selection }, attachTo: document.body }),
+      mount(ToggleGroupScene, {
+        props: { props, items, selection, dir },
+        attachTo: document.body,
+      }),
       selection,
+      stubs,
     );
   }
 
@@ -80,6 +88,25 @@ export class ToggleGroupDriver extends ComponentDriver {
 
   get roles(): Array<string | undefined> {
     return this.items.map((item) => item.attributes('role'));
+  }
+
+  get descriptions(): Array<string | undefined> {
+    return this.items.map((item) => item.attributes('aria-describedby'));
+  }
+
+  get names(): Array<string | undefined> {
+    return this.items.map((item) => item.attributes('aria-label'));
+  }
+
+  tooltipSide(label: string): string {
+    const tooltip = this.item(label).element.nextElementSibling;
+
+    if (!(tooltip instanceof HTMLElement)) {
+      throw new Error(`No tooltip beside ${label}`);
+    }
+    const { style } = tooltip;
+
+    return `${style.getPropertyValue('--_side-x')} ${style.getPropertyValue('--_side-y')}`;
   }
 
   get tabIndexes(): number[] {
@@ -130,5 +157,10 @@ export class ToggleGroupDriver extends ComponentDriver {
   async focusOutside(): Promise<void> {
     this.wrapper.find<HTMLButtonElement>('.outside').element.focus();
     await nextTick();
+  }
+
+  override unmount(): void {
+    this.stubs.restore();
+    super.unmount();
   }
 }

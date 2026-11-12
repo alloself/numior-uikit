@@ -9,9 +9,9 @@ export interface NuiPaginationMessages {
   readonly pageSize: string;
   readonly page: (params: { readonly page: number }) => string;
   readonly range: (params: {
-    readonly from: number;
-    readonly to: number;
-    readonly total: number;
+    readonly from: string;
+    readonly to: string;
+    readonly total: string;
   }) => string;
 }
 

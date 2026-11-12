@@ -37,27 +37,34 @@ const item = (text: string): ElementNode => node('list_item', [paragraph(text)])
 
 const STATUSES = ['План', 'В работе', 'Готово'];
 
-const column = (name: string, type: string, options: readonly string[] = []): ElementNode =>
+const PLAN_KEYS = ['task', 'due', 'budget', 'done', 'status'];
+
+const column = (
+  key: string,
+  name: string,
+  type: string,
+  options: readonly string[] = [],
+): ElementNode =>
   node(
     'table_column',
     options.map((label) => node('table_option', [], { label })),
-    { name, type },
+    { key, name, type },
   );
 
 const row = (...values: readonly (string | number | boolean | null)[]): ElementNode =>
   node(
     'table_row',
-    values.map((value) => node('table_cell', [], { value })),
+    values.map((value, index) => node('table_cell', [], { column: PLAN_KEYS[index] ?? '', value })),
   );
 
 const plan = (): ElementNode =>
   node('table', [
     node('table_head', [
-      column('Задача', 'text'),
-      column('Срок', 'date'),
-      column('Бюджет', 'number'),
-      column('Готово', 'boolean'),
-      column('Статус', 'select', STATUSES),
+      column('task', 'Задача', 'text'),
+      column('due', 'Срок', 'date'),
+      column('budget', 'Бюджет', 'number'),
+      column('done', 'Готово', 'boolean'),
+      column('status', 'Статус', 'select', STATUSES),
     ]),
     node('table_body', [
       row('Лендинг', '2026-10-20', 120_000, true, 'Готово'),

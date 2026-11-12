@@ -52,9 +52,11 @@ export const createCollection = <K = unknown>(): ElementCollection<K> => {
   };
 
   const release = (key: K, element: HTMLElement | null): void => {
-    if (element !== null && members.get(key) === element) {
-      set(key, null);
+    if (element === null || members.get(key) !== element) {
+      return;
     }
+
+    set(key, null);
   };
 
   const ref = (key: K, also?: ElementRef): ElementRef => {
@@ -81,9 +83,11 @@ export const createCollection = <K = unknown>(): ElementCollection<K> => {
       release(key, current);
       current = null;
 
-      if (refs.get(key)?.bound === bound) {
-        refs.delete(key);
+      if (refs.get(key)?.bound !== bound) {
+        return;
       }
+
+      refs.delete(key);
     };
 
     refs.set(key, { also, bound });

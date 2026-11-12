@@ -7,7 +7,7 @@ import {
   type Mark,
 } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
-import { isAtom } from './atoms';
+import { canMark } from './format';
 import { isCursor, selectionRange, textSelection } from '../state/selection';
 import {
   SelectionKind,
@@ -16,19 +16,8 @@ import {
   type Transaction,
 } from '../state/state.types';
 
-interface JoinPlan {
-  readonly cursor: ResolvedPos;
-  readonly neighbour: ElementNode;
-  readonly boundary: number;
-}
-
 const isTextblock = (schema: Schema, node: ContentNode | undefined): node is ElementNode =>
   node?.kind === ContentNodeKind.Element && schema.nodes.get(node.type)?.inlineContent === true;
-
-const cursorOf = (state: EditorState): ResolvedPos | undefined =>
-  state.selection.kind === SelectionKind.Text && isCursor(state.selection)
-    ? state.doc.resolve(state.selection.head)
-    : undefined;
 
 export const chainCommands =
   (...commands: readonly Command[]): Command =>
@@ -49,72 +38,6 @@ export const selectAll: Command = (state, dispatch) => {
   dispatch?.(state.tr.setSelection({ kind: 'all' }));
   return true;
 };
-
-const sibling = (cursor: ResolvedPos, offset: -1 | 1): ElementNode | undefined => {
-  const depth = cursor.depth - 1;
-  const parent = depth >= 0 ? cursor.node(depth) : undefined;
-  const node = parent?.content[cursor.indexAt(depth) + offset];
-
-  return node?.kind === ContentNodeKind.Element ? node : undefined;
-};
-
-const atEdge = (cursor: ResolvedPos, offset: -1 | 1): boolean =>
-  offset < 0 ? cursor.parentOffset === 0 : cursor.pos === cursor.end(cursor.depth);
-
-const joinPlan = (state: EditorState, offset: -1 | 1): JoinPlan | undefined => {
-  const cursor = cursorOf(state);
-
-  if (cursor === undefined || cursor.depth === 0 || !atEdge(cursor, offset)) {
-    return undefined;
-  }
-  const neighbour = sibling(cursor, offset);
-  const boundary = offset < 0 ? cursor.before(cursor.depth) : cursor.after(cursor.depth);
-
-  return neighbour === undefined ? undefined : { cursor, neighbour, boundary };
-};
-
-const EMPTY_SLICE = { content: [], openStart: 0, openEnd: 0 } as const;
-
-const joinTowards = (
-  state: EditorState,
-  offset: -1 | 1,
-  dispatch: Parameters<Command>[1],
-): boolean => {
-  const plan = joinPlan(state, offset);
-
-  if (plan === undefined) {
-    return false;
-  }
-  const { cursor, neighbour, boundary } = plan;
-  const tr = state.tr;
-
-  if (isAtom(state.doc.schema, neighbour)) {
-    const empty = cursor.parent.content.length === 0;
-
-    if (empty) {
-      tr.delete(cursor.before(cursor.depth), cursor.after(cursor.depth));
-    }
-
-    tr.setSelection(
-      empty
-        ? { kind: 'gap', id: neighbour.id, side: offset < 0 ? 'end' : 'start' }
-        : { kind: 'node', id: neighbour.id },
-    );
-  } else if (
-    isTextblock(state.doc.schema, neighbour) &&
-    tr.maybeStep({ kind: 'replace', from: boundary - 1, to: boundary + 1, slice: EMPTY_SLICE }).ok
-  ) {
-    tr.setSelection(textSelection(offset < 0 ? boundary - 1 : cursor.pos));
-  } else {
-    return false;
-  }
-  dispatch?.(tr);
-  return true;
-};
-
-export const joinBackward: Command = (state, dispatch) => joinTowards(state, -1, dispatch);
-
-export const joinForward: Command = (state, dispatch) => joinTowards(state, 1, dispatch);
 
 const textblockAfter = (schema: Schema, cursor: ResolvedPos): string | undefined => {
   const depth = cursor.depth - 1;
@@ -192,8 +115,10 @@ const everyHas = (state: EditorState, from: number, to: number, type: string): b
 export const toggleMark =
   (type: string, attrs: Readonly<Record<string, AttrValue>> = {}): Command =>
   (state, dispatch) => {
-    if (dispatch === undefined) {
-      return state.doc.schema.marks.has(type);
+    const able = canMark(state, type);
+
+    if (dispatch === undefined || !able) {
+      return able;
     }
 
     const mark = state.doc.schema.mark(type, attrs);

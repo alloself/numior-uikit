@@ -33,7 +33,7 @@
     <section class="flex flex-col gap-2">
       <h3 :id="historyId" class="m-0 text-sm font-medium text-muted-foreground">Recent orders</h3>
       <NuiList
-        variant="bordered"
+        variant="outline"
         :labelled-by="historyId"
         empty-label="No orders in the last six months"
       >

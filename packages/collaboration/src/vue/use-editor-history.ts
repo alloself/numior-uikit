@@ -141,26 +141,32 @@ export const useEditorHistory = (options: UseEditorHistoryOptions): CollabHistor
       lifetime.signal,
     );
 
-    if (version !== undefined) {
-      stored.value = [...stored.value, version];
+    if (version === undefined) {
+      return;
     }
+
+    stored.value = [...stored.value, version];
   };
 
   const restore = (): void => {
     const version = loaded.value?.doc;
 
-    if (version !== undefined) {
-      editor()?.run(replaceDocument(version));
-      close();
+    if (version === undefined) {
+      return;
     }
+
+    editor()?.run(replaceDocument(version));
+    close();
   };
 
   onMounted(async () => {
     const listed = await attempt(() => adapter.versions(doc, lifetime.signal), lifetime.signal);
 
-    if (listed !== undefined) {
-      stored.value = listed;
+    if (listed === undefined) {
+      return;
     }
+
+    stored.value = listed;
   });
 
   onBeforeUnmount(() => {

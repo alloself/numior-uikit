@@ -53,9 +53,7 @@
   background: var(--_colour);
   border-radius: 1px;
   opacity: 0;
-  transition:
-    transform var(--nui-duration-fast) var(--nui-easing),
-    opacity var(--nui-duration-fast) var(--nui-easing);
+  transition: opacity var(--nui-duration-fast) var(--nui-easing);
 }
 
 .nui-collab-carets__flag {
@@ -68,7 +66,7 @@
   overflow: hidden;
   color: var(--nui-text);
   font-size: var(--nui-font-size-xs);
-  line-height: 1.4;
+  line-height: var(--nui-line-height-control);
   text-overflow: ellipsis;
   white-space: nowrap;
   background: color-mix(in oklab, var(--_colour) 24%, var(--nui-surface));
@@ -87,11 +85,26 @@
   font-size: var(--nui-font-size-sm);
 }
 
-.nui-collab-comments__header {
-  display: flex;
-  gap: var(--nui-space-2);
-  align-items: center;
-  justify-content: space-between;
+.nui-collab-comment-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.nui-collab-comment-layer__range {
+  position: absolute;
+}
+
+.nui-collab-comment-layer__anchor {
+  position: sticky;
+  inset-block-start: var(--nui-space-4);
+  display: block;
+  block-size: 100%;
+  max-block-size: 50dvh;
+}
+
+.nui-collab-comment-popover {
+  inline-size: min(22rem, calc(100vw - 2 * var(--nui-space-4)));
 }
 
 .nui-collab-comments__title {
@@ -153,6 +166,12 @@
 
 .nui-collab-comments__thread--active {
   border-color: var(--nui-primary);
+}
+
+.nui-collab-comments__thread--inline {
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
 }
 
 .nui-collab-comments__thread--resolved {
@@ -295,6 +314,10 @@
 .nui-collab-history__alternative-tools {
   display: flex;
   gap: var(--nui-space-1);
+}
+
+.nui-collab-failure__line {
+  margin: 0;
 }
 
 .nui-collab-report {

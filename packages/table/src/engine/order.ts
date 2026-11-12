@@ -12,6 +12,7 @@ import { ColumnStoreKind, type RankedStore } from './engine.types';
 export interface OrderKey {
   readonly store: RankedStore;
   readonly descending: boolean;
+  readonly exact: boolean;
 }
 
 const RADIX_FROM = 1024;
@@ -22,7 +23,7 @@ const radixLaneOf = (key: OrderKey): RadixLane => {
   if (store.kind !== ColumnStoreKind.Number) {
     return {
       kind: 'rank',
-      keys: store.ranks,
+      keys: key.exact ? store.codes : store.ranks,
       nulls: store.nulls,
       descending,
       size: store.dictionary.length,
@@ -58,6 +59,15 @@ const radixJob = (indices: Uint32Array, keys: readonly OrderKey[]): SliceJob => 
   }, sorting)();
 };
 
+const keysOf = (key: OrderKey): Float64Array | Uint32Array => {
+  const { store } = key;
+
+  if (store.kind === ColumnStoreKind.Number) {
+    return store.keys;
+  }
+  return key.exact ? store.codes : store.ranks;
+};
+
 const compareKey = (key: OrderKey, a: number, b: number): number => {
   const { nulls } = key.store;
   const nullA = nulls[a] === 1;
@@ -66,7 +76,7 @@ const compareKey = (key: OrderKey, a: number, b: number): number => {
   if (nullA || nullB) {
     return nullA === nullB ? 0 : nullA ? 1 : -1;
   }
-  const keys = key.store.kind === ColumnStoreKind.Number ? key.store.keys : key.store.ranks;
+  const keys = keysOf(key);
   const keyA = keys[a] ?? 0;
   const keyB = keys[b] ?? 0;
 

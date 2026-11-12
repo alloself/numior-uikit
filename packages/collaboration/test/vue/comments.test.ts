@@ -157,6 +157,59 @@ describe('NuiEditorComments', () => {
     expect(view.activeHighlights).toEqual(['one']);
   });
 
+  it('leaves the popover shut while the caret walks through commented text', async () => {
+    const view = CommentsDriver.mount([threadOf('t')]);
+
+    await view.loaded();
+
+    await view.select(2, 2);
+
+    expect(view.popoverOpen).toBe(false);
+  });
+
+  it('opens the thread when its text is pressed without moving', async () => {
+    const view = CommentsDriver.mount([threadOf('t')]);
+
+    await view.loaded();
+
+    await view.pressMark(0);
+
+    expect(view.popoverThread).toBe('Body of t');
+  });
+
+  it('leaves the popover shut when the press drags across the text', async () => {
+    const view = CommentsDriver.mount([threadOf('t')]);
+
+    await view.loaded();
+
+    await view.pressMark(30);
+
+    expect(view.popoverOpen).toBe(false);
+  });
+
+  it('opens the thread at its text from the list', async () => {
+    const view = CommentsDriver.mount([threadOf('t')]);
+
+    await view.loaded();
+
+    await view.clickThreadBody(0);
+
+    expect(view.popoverThread).toBe('Body of t');
+  });
+
+  it('shows a new comment in the popover at its text', async () => {
+    const view = CommentsDriver.mount();
+
+    await view.loaded();
+
+    await view.select(1, 4);
+    await view.press('Add comment');
+    await view.write('Please check');
+    await view.submit();
+
+    expect(view.popoverThread).toBe('Please check');
+  });
+
   it('flags a thread whose text is gone', async () => {
     const view = CommentsDriver.mount([threadOf('t')]);
 
@@ -166,6 +219,19 @@ describe('NuiEditorComments', () => {
 
     expect(view.badges(0)).toEqual(['The text was removed']);
     expect(view.hasButton(0, 'Show in text')).toBe(false);
+  });
+
+  it('takes the flag off and marks the text again when the removal is undone', async () => {
+    const view = CommentsDriver.mount([threadOf('t')]);
+
+    await view.loaded();
+
+    await view.remove(1, 4);
+    await view.undo();
+
+    expect(view.badges(0)).toEqual([]);
+    expect(view.highlights).toEqual(['one']);
+    expect(view.hasButton(0, 'Show in text')).toBe(true);
   });
 
   it('flags a thread whose anchor no longer resolves', async () => {
@@ -195,6 +261,204 @@ describe('NuiEditorComments', () => {
     expect(view.adapter.moved).toEqual([
       ['t', { kind: 'text', fromId: 'p1', fromOffset: 0, toId: 'p1', toOffset: 5 }],
     ]);
+  });
+
+  it('puts a comment made on an older version where its text is now', async () => {
+    const view = CommentsDriver.mountShared();
+
+    await view.loaded();
+    await view.typedByOther('xx', 1);
+
+    view.adapter.emit({
+      kind: CommentEventKind.Changed,
+      thread: threadOf('t', { anchor: { ...firstLine, at: { version: 0, from: 1, to: 4 } } }),
+    });
+
+    await vi.waitFor(() => {
+      expect(view.highlights).toEqual(['one']);
+    });
+  });
+
+  it('waits with a comment made on a version it has not reached', async () => {
+    const view = CommentsDriver.mountShared();
+
+    await view.loaded();
+
+    view.adapter.emit({
+      kind: CommentEventKind.Changed,
+      thread: threadOf('t', { anchor: { ...secondLine, at: { version: 1, from: 8, to: 11 } } }),
+    });
+
+    await vi.waitFor(() => {
+      expect(view.bodies).toEqual(['Body of t']);
+    });
+
+    expect(view.highlights).toEqual([]);
+
+    await view.typedByOther('xx', 1);
+
+    await vi.waitFor(() => {
+      expect(view.highlights).toEqual(['two']);
+    });
+  });
+
+  it('writes an anchor its own edit moved once the edit is confirmed, with the version it holds on', async () => {
+    const view = CommentsDriver.mountShared([threadOf('t')]);
+
+    await view.loaded();
+
+    vi.useFakeTimers();
+    await view.insert('xx', 1);
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(view.adapter.moved).toEqual([]);
+
+    await view.confirm();
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(view.adapter.moved).toEqual([
+      [
+        't',
+        {
+          kind: 'text',
+          fromId: 'p0',
+          fromOffset: 2,
+          toId: 'p0',
+          toOffset: 5,
+          at: { version: 1, from: 3, to: 6 },
+        },
+      ],
+    ]);
+  });
+
+  it('writes an anchor again when undo brings its removed text back, for the others to see', async () => {
+    const view = CommentsDriver.mountShared([threadOf('t')]);
+
+    await view.loaded();
+
+    vi.useFakeTimers();
+    await view.remove(1, 4);
+    await view.confirm();
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(view.adapter.moved).toEqual([]);
+
+    await view.undo();
+    await view.confirm();
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(view.adapter.moved).toEqual([
+      ['t', { ...firstLine, at: { version: 2, from: 1, to: 4 } }],
+    ]);
+  });
+
+  it('marks the text again when the one who removed it writes that it is back', async () => {
+    const view = CommentsDriver.mountShared([threadOf('t')]);
+
+    await view.loaded();
+    await view.removedByOther(1, 4);
+    await view.typedByOther('one', 1);
+
+    expect(view.badges(0)).toEqual(['The text was removed']);
+
+    view.adapter.emit({
+      kind: CommentEventKind.Changed,
+      thread: threadOf('t', { anchor: { ...firstLine, at: { version: 2, from: 1, to: 4 } } }),
+    });
+
+    await vi.waitFor(() => {
+      expect(view.highlights).toEqual(['one']);
+    });
+
+    expect(view.badges(0)).toEqual([]);
+  });
+
+  it('leaves an anchor moved by someone else to the one who moved it', async () => {
+    const view = CommentsDriver.mountShared([threadOf('t')]);
+
+    await view.loaded();
+
+    vi.useFakeTimers();
+    await view.typedByOther('xx', 1);
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(view.highlights).toEqual(['one']);
+    expect(view.adapter.moved).toEqual([]);
+  });
+
+  it('states a new comment with the version it was made on', async () => {
+    const view = CommentsDriver.mountShared();
+
+    await view.loaded();
+
+    await view.select(1, 4);
+    await view.press('Add comment');
+    await view.write('Please check');
+    await view.submit();
+
+    expect(view.adapter.stored().map((thread) => thread.anchor)).toEqual([
+      { ...firstLine, at: { version: 0, from: 1, to: 4 } },
+    ]);
+  });
+
+  it('states a new comment without a version while its own edits wait, and adds it once they are confirmed', async () => {
+    const view = CommentsDriver.mountShared();
+
+    await view.loaded();
+
+    vi.useFakeTimers();
+    await view.insert('x', 7);
+    await view.select(1, 4);
+    await view.press('Add comment');
+    await view.write('Please check');
+    await view.submit();
+
+    expect(view.adapter.stored().map((thread) => thread.anchor)).toEqual([firstLine]);
+
+    await view.confirm();
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(view.adapter.moved).toEqual([
+      ['new-1', { ...firstLine, at: { version: 1, from: 1, to: 4 } }],
+    ]);
+  });
+
+  it('keeps what the adapter pushed while the list of threads was loading', async () => {
+    const adapter = fakeCommentsAdapter([threadOf('t'), threadOf('gone', { anchor: secondLine })]);
+
+    adapter.holdList();
+
+    const view = CommentsDriver.mount([], undefined, adapter);
+
+    await view.loaded();
+
+    adapter.emit({
+      kind: CommentEventKind.Changed,
+      thread: threadOf('pushed', { anchor: secondLine }),
+    });
+
+    adapter.emit({ kind: CommentEventKind.Removed, id: 'gone' });
+    adapter.releaseList();
+    await view.loaded();
+
+    await vi.waitFor(() => {
+      expect(view.bodies).toEqual(['Body of t', 'Body of pushed']);
+    });
+  });
+
+  it('measures the page for the popover only while a thread or a draft is open', async () => {
+    const view = CommentsDriver.mount([threadOf('t')]);
+
+    await view.loaded();
+
+    const shut = await view.measuresWhile(() => view.insert('xx', 7));
+
+    await view.pressIn(0, 'Show in text');
+
+    const open = await view.measuresWhile(() => view.insert('yy', 7));
+
+    expect(shut).toBe(0);
+    expect(open).toBeGreaterThan(0);
   });
 
   it('applies changes pushed by the adapter', async () => {

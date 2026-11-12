@@ -66,6 +66,17 @@ describe('NuiTooltip', () => {
     tooltip.unmount();
   });
 
+  it('shows the keys of a shortcut after its text', async () => {
+    const tooltip = TooltipDriver.mount({ props: { shortcut: 'mod+s' } });
+
+    await tooltip.focus();
+
+    expect(tooltip.label).toBe('Saves the document');
+    expect(tooltip.keys).toEqual(['Ctrl', 'S']);
+
+    tooltip.unmount();
+  });
+
   it('stays silent while disabled and drops the description from its trigger', async () => {
     const tooltip = TooltipDriver.mount({ props: { disabled: true } });
     expect(tooltip.trigger.attributes('aria-describedby')).toBeUndefined();
@@ -119,12 +130,14 @@ describe('NuiTooltip', () => {
     await hint.advance(1);
     expect(hint.open).toBe(true);
     expect(hint.text).toBe('Bold');
+    expect(hint.keys).toEqual(['Ctrl', 'Shift', 'B']);
     expect(hint.describedBy('Bold')).toBe('hint');
 
     await hint.hover('Italic', 'Bold');
 
     expect(hint.open).toBe(true);
     expect(hint.text).toBe('Italic');
+    expect(hint.keys).toEqual([]);
     expect(hint.describedBy('Bold')).toBeNull();
     expect(hint.describedBy('Italic')).toBe('hint');
 

@@ -38,6 +38,10 @@ export class PivotPanel {
     return this.dialog.getByRole('searchbox');
   }
 
+  get itemsNote(): Locator {
+    return this.dialog.locator('.nui-spreadsheet-pivot__note');
+  }
+
   get items(): Locator {
     return this.dialog
       .getByRole('group', { name: 'Элементы' })
@@ -93,9 +97,11 @@ export class PivotPanel {
   }
 
   async openOptions(): Promise<void> {
-    if ((await this.options.getAttribute('aria-expanded')) !== 'true') {
-      await this.options.click();
+    if ((await this.options.getAttribute('aria-expanded')) === 'true') {
+      return;
     }
+
+    await this.options.click();
   }
 
   async chooseOption(name: string): Promise<void> {

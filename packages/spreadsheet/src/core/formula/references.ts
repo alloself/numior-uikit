@@ -1,4 +1,5 @@
 import { FormulaNodeKind, FormulaReferenceKind, type FormulaNode } from './formula.types';
+import { childrenOf, eachNode, foldFormula, withChildren } from './walk';
 
 export type FormulaReference = Extract<
   FormulaNode,
@@ -51,71 +52,30 @@ const REFERENCE_KINDS = new Set<FormulaNode['kind']>([
 
 const isReference = (node: FormulaNode): node is FormulaReference => REFERENCE_KINDS.has(node.kind);
 
-const collect = (node: FormulaNode, found: FormulaReference[]): void => {
-  if (isReference(node)) {
-    found.push(node);
-    return;
-  }
-  switch (node.kind) {
-    case FormulaNodeKind.Call:
-      node.args.forEach((arg) => collect(arg, found));
-      return;
-    case FormulaNodeKind.Unary:
-    case FormulaNodeKind.Percent:
-      collect(node.operand, found);
-      return;
-    case FormulaNodeKind.Binary:
-      collect(node.left, found);
-      collect(node.right, found);
-      return;
-    default:
-      return;
-  }
-};
+const descendPast = (node: FormulaNode): readonly FormulaNode[] =>
+  isReference(node) ? [] : childrenOf(node);
 
 export const formulaReferences = (node: FormulaNode): FormulaReference[] => {
   const found: FormulaReference[] = [];
 
-  collect(node, found);
+  eachNode(
+    node,
+    (item) => {
+      if (!isReference(item)) {
+        return;
+      }
+
+      found.push(item);
+    },
+    descendPast,
+  );
+
   return found;
 };
 
-const mapNodes = (
-  nodes: readonly FormulaNode[],
-  visit: (node: FormulaNode) => FormulaNode,
-): readonly FormulaNode[] => {
-  const mapped = nodes.map(visit);
-
-  return mapped.every((node, index) => node === nodes[index]) ? nodes : mapped;
-};
-
-const walk = (current: FormulaNode, visit: Visitor): FormulaNode => {
-  if (isReference(current)) {
-    return visit(current);
-  }
-  switch (current.kind) {
-    case FormulaNodeKind.Call: {
-      const args = mapNodes(current.args, (arg) => walk(arg, visit));
-
-      return args === current.args ? current : { ...current, args };
-    }
-    case FormulaNodeKind.Unary:
-    case FormulaNodeKind.Percent: {
-      const operand = walk(current.operand, visit);
-
-      return operand === current.operand ? current : { ...current, operand };
-    }
-    case FormulaNodeKind.Binary: {
-      const left = walk(current.left, visit);
-      const right = walk(current.right, visit);
-
-      return left === current.left && right === current.right
-        ? current
-        : { ...current, left, right };
-    }
-    default:
-      return current;
-  }
-};
-
-export const mapReferences = (node: FormulaNode, visit: Visitor): FormulaNode => walk(node, visit);
+export const mapReferences = (node: FormulaNode, visit: Visitor): FormulaNode =>
+  foldFormula<FormulaNode>(
+    node,
+    (item, children) => (isReference(item) ? visit(item) : withChildren(item, children)),
+    descendPast,
+  );

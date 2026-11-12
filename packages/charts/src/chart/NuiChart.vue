@@ -18,8 +18,10 @@
       class="nui-chart__frame"
       @pointermove="pointer.onPointermove"
       @pointerleave="pointer.onPointerleave"
+      @contextmenu="pointer.onContextmenu"
       @click="pointer.onClick"
     >
+      <span ref="probe" class="nui-chart__font-probe" aria-hidden="true"></span>
       <p v-if="empty" class="nui-chart__empty">{{ texts.empty }}</p>
       <NuiChartScene v-else :scene="scene" :focus="focus" />
       <NuiChartTooltip
@@ -41,6 +43,7 @@
       :spec="spec"
       :label="label"
       :locale="resolvedLocale"
+      :category-name="categoryNameOf"
       :category-title="spec.categoryAxis?.title ?? texts.category"
       :shown="showTable"
     />
@@ -49,7 +52,7 @@
 
 <script setup lang="ts">
 import { Direction, DIRECTION_KEY, useDirection, useLocale, useMessages } from '@numior/primitives';
-import { useMounted, useMutationObserver } from '@vueuse/core';
+import { useMounted } from '@vueuse/core';
 import { computed, inject, ref, useTemplateRef, watch } from 'vue';
 import { anchorOf, layoutChart, type ChartHit, type ChartScene, type SceneAnchor } from '../core';
 import NuiChartLegend from './NuiChartLegend.vue';
@@ -57,7 +60,7 @@ import NuiChartScene from './NuiChartScene.vue';
 import NuiChartTable from './NuiChartTable.vue';
 import NuiChartTooltip from './NuiChartTooltip.vue';
 import { tooltipContent, tooltipText } from './chart-tooltip';
-import { categoryTexts } from './chart-table';
+import { categoryName, categoryTexts } from './chart-table';
 import { chartMessages } from './chart.messages';
 import {
   ChartFocusSource,
@@ -77,6 +80,7 @@ const {
   height = 300,
   focusable = true,
   locale,
+  timeZone = 'UTC',
   showTable = false,
   legend = true,
 } = defineProps<NuiChartProps>();
@@ -89,14 +93,13 @@ defineSlots<{
 
 const FALLBACK_WIDTH = 640;
 const FALLBACK_HEIGHT = 300;
-const FONT_SIZE = 12;
 
 const frameElement = useTemplateRef<HTMLElement>('frame');
+const probeElement = useTemplateRef<HTMLElement>('probe');
 const texts = useMessages(chartMessages, () => locale);
 const resolvedLocale = useLocale(() => locale);
 const direction = useDirection(frameElement);
-const sizing = useChartFrame(frameElement);
-const directionRevision = ref(0);
+const sizing = useChartFrame(frameElement, probeElement);
 
 const filled = computed(() => height === NuiChartHeight.Fill);
 
@@ -107,19 +110,11 @@ const sceneHeight = computed((): number => {
   return sizing.height.value > 0 ? sizing.height.value : FALLBACK_HEIGHT;
 });
 
-const empty = computed(
-  () =>
-    spec.series.length === 0 ||
-    (spec.categories.kind === ChartCategoriesKind.Text
-      ? spec.categories.labels.length === 0
-      : spec.categories.values.length === 0),
-);
-
 const configuredDirection = inject(DIRECTION_KEY, null);
 const mounted = useMounted();
 
 const rtl = computed(() => {
-  void directionRevision.value;
+  void sizing.restyled.value;
   return mounted.value ? direction.isRtl() : configuredDirection?.value === Direction.Rtl;
 });
 
@@ -133,17 +128,31 @@ const scene = computed(() =>
     {
       rtl: rtl.value,
       locale: resolvedLocale.value,
-      fontSize: FONT_SIZE,
+      timeZone,
+      fontSize: sizing.fontSize.value,
       measure: sizing.measure.value,
     },
   ),
 );
 
+const categoryNameOf = computed(() => categoryName(spec, resolvedLocale.value, timeZone));
+
+const round = computed(() => spec.kind === ChartKind.Pie || spec.kind === ChartKind.Doughnut);
+
+const empty = computed(
+  () =>
+    spec.series.length === 0 ||
+    (spec.categories.kind === ChartCategoriesKind.Text
+      ? spec.categories.labels.length === 0
+      : spec.categories.values.length === 0) ||
+    (round.value && scene.value.slices.length === 0),
+);
+
 const legendItems = computed((): NuiChartLegendItem[] => {
   const { slots } = scene.value;
 
-  if (spec.kind === ChartKind.Pie || spec.kind === ChartKind.Doughnut) {
-    return categoryTexts(spec, resolvedLocale.value).map((name, index) => ({
+  if (round.value) {
+    return categoryTexts(spec, categoryNameOf.value).map((name, index) => ({
       id: `category-${String(index)}`,
       name,
       slot: slots[index] ?? 0,
@@ -155,17 +164,6 @@ const legendItems = computed((): NuiChartLegendItem[] => {
     slot: slots[index] ?? 0,
   }));
 });
-
-const documentRoot = (): HTMLElement | undefined =>
-  typeof document === 'undefined' ? undefined : document.documentElement;
-
-useMutationObserver(
-  documentRoot,
-  () => {
-    directionRevision.value += 1;
-  },
-  { attributes: true, attributeFilter: ['dir'], subtree: true },
-);
 
 const pointer = useChartPointer({
   scene: () => scene.value,
@@ -204,7 +202,7 @@ const tooltip = computed(() => {
 
   return {
     hit,
-    content: tooltipContent(spec, scene.value, hit, resolvedLocale.value),
+    content: tooltipContent(spec, scene.value, hit, resolvedLocale.value, categoryNameOf.value),
     x: anchor.x,
     y: anchor.y,
     reach: anchor.reach,

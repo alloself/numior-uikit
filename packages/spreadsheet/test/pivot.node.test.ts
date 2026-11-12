@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import { formatRange, parseRange, pivotCaptions, type CellValue } from '../src/core';
 import { buildPivotCache, pivotTableOf } from '../src/core/pivot/pivot-cache';
 import { VALUES_FIELD, computePivot } from '../src/core/pivot/pivot-engine';
+import { pivotFieldItems } from '../src/core/pivot/pivot-fields';
 import { renderPivot } from '../src/core/pivot/pivot-render';
 import type {
   PivotDefinition,
@@ -23,7 +24,28 @@ const SALES: readonly (readonly Input[])[] = [
   ['West', 'LA', 2022, 70],
 ];
 
+const GAPS: readonly (readonly Input[])[] = [
+  ['Product', 'Month', 'Sales'],
+  ['Pen', 1, 10],
+  ['Ink', 2, 7],
+  ['Pen', 3, 5],
+  ['Ink', 3, 1],
+  ['Cap', 1, 4],
+];
+
 const CAPTIONS = pivotCaptions('en');
+
+const LONG_ITEMS = 4000;
+
+const SHOW_AS_BUDGET_MS = 100;
+
+const SOURCE_ROWS = 250_000;
+
+const SOURCE_COLS = 12;
+
+const SOURCE_KEYS = 500;
+
+const CHANGE_BUDGET_MS = 100;
 
 const valueOf = (input: Input): CellValue => {
   if (typeof input === 'number') {
@@ -79,6 +101,33 @@ const shownText = (value: CellValue, format: string | undefined): string => {
   }
 };
 
+const longPivot = (showAs: PivotValue['showAs']) => {
+  const cache = buildPivotCache(
+    pivotTableOf([
+      [textValue('Key'), textValue('Side'), textValue('Value')],
+      ...Array.from({ length: LONG_ITEMS * 2 }, (_, at) => [
+        numberValue(at % LONG_ITEMS),
+        textValue(at < LONG_ITEMS ? 'a' : 'b'),
+        numberValue((at % LONG_ITEMS) + 1),
+      ]),
+    ]),
+  );
+
+  if (cache === undefined) {
+    throw new Error('the source has no header');
+  }
+
+  const definition = definitionOf(
+    { kind: 'lost' },
+    { rows: [0], columns: [1], values: [{ ...sum(2, 'Shown'), showAs }] },
+  );
+
+  const started = performance.now();
+  const { cells } = computePivot(definition, cache);
+
+  return { cells, spent: performance.now() - started };
+};
+
 const grid = (changes: Partial<PivotDefinition>, rows: readonly (readonly Input[])[] = SALES) => {
   const cache = buildPivotCache(pivotTableOf(rows.map((row) => row.map(valueOf))));
 
@@ -96,13 +145,29 @@ const grid = (changes: Partial<PivotDefinition>, rows: readonly (readonly Input[
   output.cells.forEach((cell) => {
     const line = lines[cell.row];
 
-    if (line !== undefined) {
-      line[cell.col] = shownText(cell.value, cell.format);
+    if (line === undefined) {
+      return;
     }
+
+    line[cell.col] = shownText(cell.value, cell.format);
   });
 
   return lines.map((line) => line.join(' | '));
 };
+
+const gapped = (showAs: PivotValue['showAs']) =>
+  grid({ rows: [0], columns: [1], values: [{ ...sum(2, 'Shown'), showAs }] }, GAPS).slice(2);
+
+const hiddenGap = (showAs: PivotValue['showAs']) =>
+  grid(
+    {
+      rows: [0],
+      columns: [1],
+      values: [{ ...sum(2, 'Shown'), showAs }],
+      fields: [field({}), field({ hidden: [numberValue(2)] })],
+    },
+    GAPS,
+  ).slice(2);
 
 const rangeAt = (address: string) => {
   const range = parseRange(address);
@@ -139,6 +204,41 @@ const salesBook = () => {
   };
 
   return { ...sheet, place, footprint };
+};
+
+const wideBook = () => {
+  const sheet = openBook();
+  const { cells } = sheet.first;
+
+  for (let col = 0; col < SOURCE_COLS; col += 1) {
+    cells.set(0, col, textValue(`Field ${String(col)}`));
+  }
+  for (let row = 1; row <= SOURCE_ROWS; row += 1) {
+    cells.set(row, 0, textValue(`key ${String(row % SOURCE_KEYS)}`));
+
+    for (let col = 1; col < SOURCE_COLS; col += 1) {
+      cells.set(row, col, numberValue(row * col));
+    }
+  }
+
+  const definition = definitionOf(
+    {
+      kind: 'range',
+      sheet: 'Sheet1',
+      range: { top: 0, left: 0, bottom: SOURCE_ROWS, right: SOURCE_COLS - 1 },
+    },
+    { rows: [0], columns: [], values: [sum(1, 'Total')] },
+  );
+
+  const place = (changes: Partial<PivotDefinition> = {}) =>
+    sheet.commit({
+      kind: 'setPivot',
+      sheet: 'Rates',
+      name: 'Wide',
+      pivot: { anchor: { row: 0, col: 0 }, definition: { ...definition, ...changes } },
+    });
+
+  return { ...sheet, definition, place };
 };
 
 describe('pivot engine', () => {
@@ -284,6 +384,201 @@ describe('pivot engine', () => {
     ).toEqual(['East |  | -250 | ', 'West |  | -80 | ', 'Grand Total |  | -330 | ']);
   });
 
+  it('shows a running total of zero before the first sale and counts a month without sales as zero in a difference, as Excel does', () => {
+    expect(gapped({ kind: 'runTotal', field: 1 })).toEqual([
+      'Pen | 10 | 10 | 15 | ',
+      'Ink | 0 | 7 | 8 | ',
+      'Cap | 4 | 4 | 4 | ',
+      'Grand Total | 14 | 21 | 27 | ',
+    ]);
+
+    expect(gapped({ kind: 'difference', field: 1, item: 'previous' })).toEqual([
+      'Pen |  | -10 | 5 | ',
+      'Ink |  | 7 | -6 | ',
+      'Cap |  | -4 | 0 | ',
+      'Grand Total |  | -7 | -1 | ',
+    ]);
+  });
+
+  it.each<
+    [
+      string,
+      (showAs: PivotValue['showAs']) => readonly string[],
+      PivotValue['showAs'],
+      readonly string[],
+    ]
+  >([
+    [
+      'share of the previous month',
+      gapped,
+      { kind: 'percent', field: 1, item: 'previous' },
+      [
+        'Pen | 100.00% | #NULL! |  | ',
+        'Ink |  |  | 14.29% | ',
+        'Cap | 100.00% | #NULL! | #NULL! | ',
+        'Grand Total | 100.00% | 50.00% | 85.71% | ',
+      ],
+    ],
+    [
+      'growth over the previous month',
+      gapped,
+      { kind: 'percentDiff', field: 1, item: 'previous' },
+      [
+        'Pen |  | #NULL! |  | ',
+        'Ink |  |  | -85.71% | ',
+        'Cap |  | #NULL! | #NULL! | ',
+        'Grand Total |  | -50.00% | -14.29% | ',
+      ],
+    ],
+    [
+      'share of month 1',
+      gapped,
+      { kind: 'percent', field: 1, item: numberValue(1) },
+      [
+        'Pen | 100.00% | #NULL! | 50.00% | ',
+        'Ink |  |  |  | ',
+        'Cap | 100.00% | #NULL! | #NULL! | ',
+        'Grand Total | 100.00% | 50.00% | 42.86% | ',
+      ],
+    ],
+    [
+      'share of the next month',
+      gapped,
+      { kind: 'percent', field: 1, item: 'next' },
+      [
+        'Pen |  | #NULL! | 100.00% | ',
+        'Ink | #NULL! | 700.00% | 100.00% | ',
+        'Cap |  | #NULL! |  | ',
+        'Grand Total | 200.00% | 116.67% | 100.00% | ',
+      ],
+    ],
+    [
+      'difference from the next month',
+      gapped,
+      { kind: 'difference', field: 1, item: 'next' },
+      [
+        'Pen | 10 | -5 |  | ',
+        'Ink | -7 | 6 |  | ',
+        'Cap | 4 | 0 |  | ',
+        'Grand Total | 7 | 1 |  | ',
+      ],
+    ],
+    [
+      'growth over the next month',
+      gapped,
+      { kind: 'percentDiff', field: 1, item: 'next' },
+      [
+        'Pen |  | #NULL! |  | ',
+        'Ink | #NULL! | 600.00% |  | ',
+        'Cap |  | #NULL! |  | ',
+        'Grand Total | 100.00% | 16.67% |  | ',
+      ],
+    ],
+    [
+      'share of the row',
+      gapped,
+      { kind: 'percentOfRow' },
+      [
+        'Pen | 66.67% | 0.00% | 33.33% | 100.00%',
+        'Ink | 0.00% | 87.50% | 12.50% | 100.00%',
+        'Cap | 100.00% | 0.00% | 0.00% | 100.00%',
+        'Grand Total | 51.85% | 25.93% | 22.22% | 100.00%',
+      ],
+    ],
+    [
+      'share of the column',
+      gapped,
+      { kind: 'percentOfCol' },
+      [
+        'Pen | 71.43% | 0.00% | 83.33% | 55.56%',
+        'Ink | 0.00% | 100.00% | 16.67% | 29.63%',
+        'Cap | 28.57% | 0.00% | 0.00% | 14.81%',
+        'Grand Total | 100.00% | 100.00% | 100.00% | 100.00%',
+      ],
+    ],
+    [
+      'share of the total',
+      gapped,
+      { kind: 'percentOfTotal' },
+      [
+        'Pen | 37.04% | 0.00% | 18.52% | 55.56%',
+        'Ink | 0.00% | 25.93% | 3.70% | 29.63%',
+        'Cap | 14.81% | 0.00% | 0.00% | 14.81%',
+        'Grand Total | 51.85% | 25.93% | 22.22% | 100.00%',
+      ],
+    ],
+    [
+      'index',
+      gapped,
+      { kind: 'index' },
+      [
+        'Pen | 1.2857142857142858 | 0 | 1.5 | 1',
+        'Ink | 0 | 3.375 | 0.5625 | 1',
+        'Cap | 1.9285714285714286 | 0 | 0 | 1',
+        'Grand Total | 1 | 1 | 1 | 1',
+      ],
+    ],
+    [
+      'difference from month 1',
+      gapped,
+      { kind: 'difference', field: 1, item: numberValue(1) },
+      [
+        'Pen |  | -10 | -5 | ',
+        'Ink |  | 7 | 1 | ',
+        'Cap |  | -4 | -4 | ',
+        'Grand Total |  | -7 | -8 | ',
+      ],
+    ],
+    [
+      'growth over month 1',
+      gapped,
+      { kind: 'percentDiff', field: 1, item: numberValue(1) },
+      [
+        'Pen |  | #NULL! | -50.00% | ',
+        'Ink |  |  |  | ',
+        'Cap |  | #NULL! | #NULL! | ',
+        'Grand Total |  | -50.00% | -57.14% | ',
+      ],
+    ],
+    [
+      'share of a hidden month',
+      hiddenGap,
+      { kind: 'percent', field: 1, item: numberValue(2) },
+      [
+        'Pen | #N/A | #N/A | #N/A',
+        'Ink | #N/A | #N/A | #N/A',
+        'Cap | #N/A | #N/A | #N/A',
+        'Grand Total | #N/A | #N/A | #N/A',
+      ],
+    ],
+    [
+      'difference from a hidden month',
+      hiddenGap,
+      { kind: 'difference', field: 1, item: numberValue(2) },
+      [
+        'Pen | #N/A | #N/A | #N/A',
+        'Ink | #N/A | #N/A | #N/A',
+        'Cap | #N/A | #N/A | #N/A',
+        'Grand Total | #N/A | #N/A | #N/A',
+      ],
+    ],
+  ])('shows the %s over months without sales the way Excel does', (_name, pivot, showAs, lines) => {
+    expect(pivot(showAs)).toEqual(lines);
+  });
+
+  it('shows running totals, differences and shares of an item over thousands of items within the budget', () => {
+    const running = longPivot({ kind: 'runTotal', field: 0 });
+    const change = longPivot({ kind: 'difference', field: 0, item: 'previous' });
+    const share = longPivot({ kind: 'percent', field: 0, item: numberValue(0) });
+    const last = LONG_ITEMS - 1;
+
+    expect(running.cells[last]?.[1]).toEqual(numberValue((LONG_ITEMS * (LONG_ITEMS + 1)) / 2));
+    expect(change.cells[0]?.[0]).toEqual(EMPTY);
+    expect(change.cells[last]?.[0]).toEqual(numberValue(1));
+    expect(share.cells[last]?.[0]).toEqual(numberValue(LONG_ITEMS));
+    expect(Math.max(running.spent, change.spent, share.spent)).toBeLessThan(SHOW_AS_BUDGET_MS);
+  });
+
   it('averages, spreads and counts with Excel semantics', () => {
     expect(
       grid({
@@ -343,6 +638,22 @@ describe('pivot steps', () => {
     book.history.undo();
     book.history.undo();
     expect([book.footprint(), book.shown('A3', 'Rates')]).toEqual([undefined, '']);
+  });
+
+  it('changes a pivot over a wide source and lists the items of its field within the budget', () => {
+    const book = wideBook();
+
+    expect(book.place().ok).toBe(true);
+
+    const started = performance.now();
+    const changed = book.place({ values: [{ ...sum(1, 'Largest'), aggregate: 'max' }] });
+    const items = pivotFieldItems(book.book, book.definition, 0);
+    const spent = performance.now() - started;
+
+    expect(changed.ok).toBe(true);
+    expect(items).toHaveLength(SOURCE_KEYS);
+    expect(book.rates.cells.get(SOURCE_KEYS + 1, 1)).toEqual(numberValue(SOURCE_ROWS));
+    expect(spent).toBeLessThan(CHANGE_BUDGET_MS);
   });
 
   it('moves with lines, grows its source and refuses lines that cut through it', () => {
@@ -444,6 +755,113 @@ describe('pivot steps', () => {
 
     book.type('B5', '1', 'Rates');
     expect(book.shown('B5', 'Rates')).toBe('1');
+  });
+
+  it('never covers cells that hold data, when placed and when a refresh grows it', () => {
+    const book = salesBook();
+
+    book.place();
+    book.type('A8', 'note', 'Rates');
+    book.type('A6', 'North');
+
+    expect(book.commit({ kind: 'refreshPivot', sheet: 'Rates', name: 'Sales' })).toEqual({
+      ok: false,
+      reason: 'pivot-overlap',
+    });
+
+    expect([book.footprint(), book.shown('A8', 'Rates')]).toEqual(['A3:D7', 'note']);
+
+    book.type('A8', '', 'Rates');
+
+    expect(book.commit({ kind: 'refreshPivot', sheet: 'Rates', name: 'Sales' }).ok).toBe(true);
+    expect([book.footprint(), book.shown('A7', 'Rates')]).toEqual(['A3:D8', 'North']);
+
+    book.type('G2', '=1+1', 'Rates');
+
+    expect(
+      book.commit({
+        kind: 'setPivot',
+        sheet: 'Rates',
+        name: 'Other',
+        pivot: {
+          anchor: { row: 0, col: 5 },
+          definition: definitionOf({ kind: 'range', sheet: 'Sheet1', range: rangeAt('A1:D6') }, {}),
+        },
+      }),
+    ).toEqual({ ok: false, reason: 'pivot-overlap' });
+
+    expect(book.shown('G2', 'Rates')).toBe('2');
+  });
+
+  it('covers cells that only carry a format', () => {
+    const book = salesBook();
+
+    book.place();
+    book.commit({ kind: 'setCells', sheet: 'Rates', cells: [{ row: 7, col: 0, format: '0.0' }] });
+    book.type('A6', 'North');
+
+    expect(book.commit({ kind: 'refreshPivot', sheet: 'Rates', name: 'Sales' }).ok).toBe(true);
+    expect(book.footprint()).toBe('A3:D8');
+  });
+
+  it('refuses a pivot inside its own source and a table over a pivot', () => {
+    const book = salesBook();
+
+    expect(
+      book.commit({
+        kind: 'setPivot',
+        sheet: 'Sheet1',
+        name: 'Inside',
+        pivot: {
+          anchor: { row: 9, col: 0 },
+          definition: definitionOf(
+            { kind: 'range', sheet: 'Sheet1', range: rangeAt('A1:D20') },
+            { rows: [0] },
+          ),
+        },
+      }),
+    ).toEqual({ ok: false, reason: 'pivot-overlap' });
+
+    book.place();
+
+    expect(book.table('A1:D5', undefined, 'Rates')).toEqual({
+      ok: false,
+      reason: 'pivot-overlap',
+    });
+
+    expect(book.table('F7:G9', undefined, 'Rates').ok).toBe(true);
+  });
+
+  it('follows its source table through a rename and the undo of the rename', () => {
+    const book = salesBook();
+
+    book.table('A1:D6', { name: 'Orders' });
+
+    expect(
+      book.commit({
+        kind: 'setPivot',
+        sheet: 'Rates',
+        name: 'Sales',
+        pivot: {
+          anchor: { row: 2, col: 0 },
+          definition: definitionOf({ kind: 'table', name: 'Orders' }, { rows: [0] }),
+        },
+      }).ok,
+    ).toBe(true);
+
+    expect(book.commit({ kind: 'renameTable', from: 'orders', to: 'Deals' }).ok).toBe(true);
+
+    book.type('D2', '1000');
+
+    expect(book.commit({ kind: 'refreshPivot', sheet: 'Rates', name: 'Sales' }).ok).toBe(true);
+    expect(book.shown('D7', 'Rates')).toBe('1470');
+
+    book.history.undo();
+    book.history.undo();
+    book.history.undo();
+
+    expect(book.commit({ kind: 'refreshPivot', sheet: 'Rates', name: 'Sales' }).ok).toBe(true);
+    expect(book.shown('D7', 'Rates')).toBe('570');
   });
 
   it('refuses pivots over other pivots and fields the source does not have', () => {

@@ -58,6 +58,17 @@ const linesOver = (change: LineChange, local: LineChange): LineChange | undefine
 const sheetAfterRename = (sheet: string, local: RemoteChange): string =>
   local.kind === RemoteChangeKind.RenameSheet && sameName(sheet, local.from) ? local.to : sheet;
 
+export const linesAfter = (changes: readonly RemoteChange[]): readonly LineChange[] =>
+  changes.reduce<LineChange[]>((lines, change, index) => {
+    if (change.kind === RemoteChangeKind.Lines) {
+      lines.push({
+        ...change.change,
+        sheet: changes.slice(index + 1).reduce(sheetAfterRename, change.change.sheet),
+      });
+    }
+    return lines;
+  }, []);
+
 export const changeOver = (change: RemoteChange, local: RemoteChange): RemoteChange | undefined => {
   if (change.kind !== RemoteChangeKind.Lines) {
     return change.kind === RemoteChangeKind.RenameSheet

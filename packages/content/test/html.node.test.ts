@@ -2,7 +2,7 @@ import { fromHTML, toHTML, toJSON } from '@numior/editor-core';
 import { generateDoc } from '@numior/editor-core/fixtures';
 import { describe, expect, it } from 'vite-plus/test';
 import { contentSchema } from '../src';
-import { everyBlock } from './support/documents';
+import { docOf, everyBlock, node } from './support/documents';
 
 const blocksOf = (html: string): readonly unknown[] =>
   toJSON(fromHTML(contentSchema, html)).root.content?.map((block) => stripIds(block)) ?? [];
@@ -26,13 +26,55 @@ const stripIds = (value: unknown): unknown => {
 
 const paragraph = (...content: readonly unknown[]) => ({ type: 'paragraph', content });
 
+const MENTION = '<p><span class="nui-content__mention" data-user="u1">@Ann</span></p>';
+
 describe('content HTML', () => {
+  it('reads a mention from a stored page and only its text from markup of another page', () => {
+    const pasted = toJSON(fromHTML(contentSchema, MENTION, { foreign: true })).root.content;
+
+    expect(blocksOf(MENTION)).toEqual([
+      paragraph({ type: 'mention', attrs: { user: 'u1', label: 'Ann' } }),
+    ]);
+
+    expect(stripIds(pasted)).toEqual([paragraph({ text: '@Ann' })]);
+  });
+
   it('reads its own markup of every block and mark back into the same document', () => {
     const page = everyBlock();
 
     expect(toHTML(fromHTML(contentSchema, toHTML(page), { whitespace: 'preserve' }))).toBe(
       toHTML(page),
     );
+  });
+
+  it('keeps the caption of an image set in the line through its markup', () => {
+    const page = docOf(
+      node('paragraph', [
+        'See ',
+        node('image', [], { src: 'a.png', alt: 'A', caption: 'Hidden for now', wrap: 'inline' }),
+      ]),
+    );
+
+    const markup = toHTML(page);
+
+    expect(markup).not.toContain('nui-content__caption');
+
+    expect(blocksOf(markup)).toEqual([
+      paragraph(
+        { text: 'See ' },
+        {
+          type: 'image',
+          attrs: {
+            src: 'a.png',
+            alt: 'A',
+            caption: 'Hidden for now',
+            width: null,
+            align: 'center',
+            wrap: 'inline',
+          },
+        },
+      ),
+    ]);
   });
 
   it('reads generated documents back from their markup', () => {
@@ -96,10 +138,18 @@ describe('content HTML', () => {
           },
         ],
       },
-      { type: 'heading', attrs: { level: 3 }, content: [{ text: 'Deep' }] },
+      { type: 'heading', attrs: { level: 5 }, content: [{ text: 'Deep' }] },
       { type: 'code_block', attrs: { language: 'ts' }, content: [{ text: 'let x' }] },
       paragraph({ text: 'hi', marks: [{ type: 'highlight', attrs: { name: 'yellow' } }] }),
     ]);
+  });
+
+  it('drops pasted links whose scheme is split by an encoded tab', () => {
+    expect(
+      blocksOf(
+        '<p><a href="java&#9;script:alert(1)">x</a><a class="nui-content__file" href="java&#9;script:alert(1)" download="a.pdf">a.pdf</a></p>',
+      ),
+    ).toEqual([paragraph({ text: 'xa.pdf' })]);
   });
 
   it('drops script links, foreign image sources and unknown presets', () => {

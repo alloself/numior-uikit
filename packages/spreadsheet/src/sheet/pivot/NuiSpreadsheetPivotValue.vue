@@ -174,27 +174,35 @@ const setName = (name: string): void => {
 };
 
 const setAggregate = (aggregate: PivotAggregate | null): void => {
-  if (aggregate !== null) {
-    form.value = withAggregate(form.value, aggregate, fieldName, language);
+  if (aggregate === null) {
+    return;
   }
+
+  form.value = withAggregate(form.value, aggregate, fieldName, language);
 };
 
 const setShowAs = (showAs: PivotShowAsKind | null): void => {
-  if (showAs !== null) {
-    form.value = { ...form.value, showAs };
+  if (showAs === null) {
+    return;
   }
+
+  form.value = { ...form.value, showAs };
 };
 
 const setBase = (base: number | null | undefined): void => {
-  if (base !== null && base !== undefined) {
-    form.value = { ...form.value, base, item: PivotBaseStep.Previous };
+  if (base === null || base === undefined) {
+    return;
   }
+
+  form.value = { ...form.value, base, item: PivotBaseStep.Previous };
 };
 
 const setItem = (item: string | null): void => {
-  if (item !== null) {
-    form.value = { ...form.value, item };
+  if (item === null) {
+    return;
   }
+
+  form.value = { ...form.value, item };
 };
 
 const setFormat = (code: string | null): void => {

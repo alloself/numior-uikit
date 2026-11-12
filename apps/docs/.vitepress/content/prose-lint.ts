@@ -86,10 +86,12 @@ const paragraphsOf = (markdown: string): Paragraph[] => {
   let start = 0;
 
   const flush = (): void => {
-    if (current.length > 0) {
-      paragraphs.push({ line: start, text: current.join(' '), api });
-      current = [];
+    if (current.length === 0) {
+      return;
     }
+
+    paragraphs.push({ line: start, text: current.join(' '), api });
+    current = [];
   };
 
   stripFrontmatter(markdown.split('\n')).forEach((raw, index) => {
@@ -144,9 +146,11 @@ const paragraphProblems = (paragraph: Paragraph, locale: ExampleLocale): ProsePr
     problems.push({ line: paragraph.line, rule: 'sentence', text: sentence });
   }
   for (const [phrase, pattern] of BANNED_PATTERNS[locale]) {
-    if (pattern.test(lower)) {
-      problems.push({ line: paragraph.line, rule: 'phrase', text: phrase });
+    if (!pattern.test(lower)) {
+      continue;
     }
+
+    problems.push({ line: paragraph.line, rule: 'phrase', text: phrase });
   }
   const internals = paragraph.api ? null : INTERNALS_RE.exec(paragraph.text);
 

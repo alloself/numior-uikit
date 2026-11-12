@@ -2,8 +2,8 @@
   box-sizing: border-box;
   display: inline-flex;
   flex: none;
-  inline-size: 1.25em;
-  block-size: 1.25em;
+  inline-size: var(--nui-icon-size);
+  block-size: var(--nui-icon-size);
   rotate: var(--_rotate, 0deg);
   scale: var(--_scale, 1);
   transition:

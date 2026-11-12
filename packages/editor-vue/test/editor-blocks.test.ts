@@ -112,6 +112,38 @@ describe('NuiEditor built-in blocks', () => {
     expect(editor.classesOf('.nui-content__toggle')).toContain('nui-content__toggle--open');
   });
 
+  it('joins the line after a closed toggle to its summary and to its body once it is open', async () => {
+    const editor = mounted({ document: folded() });
+
+    await editor.showBlocks();
+    editor.focus();
+    await editor.select(20);
+    await editor.erase('backward');
+
+    expect(editor.blockTexts).toEqual(['div:DetailsAfterHidden']);
+    expect(editor.markup).toContain('DetailsAfter</p>');
+
+    await editor.press('z', { ctrl: true });
+    await editor.clickControl('.nui-editor__widget button');
+    editor.focus();
+    await editor.select(20);
+    await editor.erase('backward');
+
+    expect(editor.blockTexts).toEqual(['div:DetailsHiddenAfter']);
+  });
+
+  it('pulls the next visible line into the summary of a closed toggle with Delete', async () => {
+    const editor = mounted({ document: folded() });
+
+    await editor.showBlocks();
+    editor.focus();
+    await editor.select(9);
+    await editor.erase('forward');
+
+    expect(editor.blockTexts).toEqual(['div:DetailsAfterHidden']);
+    expect(editor.markup).toContain('DetailsAfter</p>');
+  });
+
   it('changes the callout tone from its icon and from the handle menu', async () => {
     const editor = mounted({ document: callout() });
 

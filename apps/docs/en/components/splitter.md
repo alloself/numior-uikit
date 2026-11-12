@@ -8,6 +8,9 @@ a preview, a mail list and a message. The panes go into the `start` and `end` sl
 The share of the first pane lives in `v-model:ratio` as a number from 0 to 1, `0.5` by default.
 The `min` and `max` props stop a pane from shrinking further, `0.1` and `0.9` by default.
 
+A share outside these bounds is shown at the nearest bound. The value in `v-model:ratio` stays as
+it is until the user moves the boundary.
+
 ## Installation
 
 ```ts

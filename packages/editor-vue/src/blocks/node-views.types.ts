@@ -1,4 +1,5 @@
-import type { Command, NodeId } from '@numior/editor-core';
+import type { NodeId } from '@numior/editor-core';
+import type { NuiEditorBlockHost } from './block.types';
 import type { NodeViewEntry } from './node-views';
 
 export interface NuiEditorNodeViewsProps {
@@ -6,6 +7,5 @@ export interface NuiEditorNodeViewsProps {
   selected: NodeId | undefined;
   focused: boolean;
   editable: boolean;
-  run: (command: Command) => boolean;
-  focus: () => void;
+  host: NuiEditorBlockHost;
 }

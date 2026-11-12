@@ -7,12 +7,12 @@ import {
   type TableRowNode,
   type TableSiblings,
 } from '../engine';
-import { OWN_BODY_ROWS } from './table-dom';
+import { OWN_BODY_ROWS, rowPositionOf } from './table-dom';
 import type { NuiTableMessages } from './table.messages';
 import {
   RowZone,
   type NuiTableReorderEvent,
-  type TableCellPosition,
+  type NuiTableCellPosition,
   type TableDropInset,
   type TableDropMark,
   type TableGhost,
@@ -26,7 +26,7 @@ export interface TableRowDragOptions<T> {
   readonly pageStart: () => number;
   readonly rowCount: () => number;
   readonly rowSize: () => number;
-  readonly headRows: () => number;
+  readonly leading: () => number;
   readonly nestDelay: () => number;
   readonly isRtl: () => boolean;
   readonly canNest: (row: T) => boolean;
@@ -43,7 +43,7 @@ export interface TableRowDrag {
   readonly drop: Readonly<Ref<TableDropMark | undefined>>;
   readonly ghost: Readonly<Ref<TableGhost | undefined>>;
   grab(position: number, event: PointerEvent): void;
-  onKeydown(event: KeyboardEvent, body: TableCellPosition | undefined): boolean;
+  onKeydown(event: KeyboardEvent, body: NuiTableCellPosition | undefined): boolean;
 }
 
 interface RowPlace<T> {
@@ -126,9 +126,10 @@ const rowUnder = (clientY: number, rows: readonly RenderedRow[]): RowTarget | un
   if (hit !== undefined) {
     return { position: hit.position, zone: zoneOf(clientY, hit.rect) };
   }
-  return clientY < first.rect.top
-    ? { position: first.position, zone: 'before' }
-    : { position: lastRow.position, zone: 'after' };
+  if (clientY < first.rect.top) {
+    return { position: first.position, zone: 'before' };
+  }
+  return clientY >= lastRow.rect.bottom ? { position: lastRow.position, zone: 'after' } : undefined;
 };
 
 const isArrow = (key: string): boolean =>
@@ -180,7 +181,7 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
 
     return [...(options.viewport()?.querySelectorAll<HTMLElement>(OWN_BODY_ROWS) ?? [])].flatMap(
       (element) => {
-        const position = Number(element.getAttribute('aria-rowindex')) - options.headRows() - 1;
+        const position = rowPositionOf(element, options.leading());
 
         return position >= from && position < end
           ? []
@@ -386,8 +387,11 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
     const room = frame.getBoundingClientRect().height;
     const start = state.position - frame.getBoundingClientRect().top - held.offset;
 
+    const destination = at === undefined ? undefined : destinationOf(state.from, at);
+    const moves = destination !== undefined && !staysPut(state.from, destination);
+
     target = at;
-    drop.value = at === undefined ? undefined : markOf(state.from, at);
+    drop.value = at !== undefined && moves ? markOf(state.from, at) : undefined;
 
     ghost.value =
       source === undefined
@@ -406,9 +410,11 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
     indexAt: (client, from) => rowUnder(client, renderedRows(from))?.position ?? from,
     canMove: (from, to) => to !== from,
     onMove: (from) => {
-      if (target !== undefined) {
-        commit(from, destinationOf(from, target));
+      if (target === undefined) {
+        return;
       }
+
+      commit(from, destinationOf(from, target));
     },
     onChange: follow,
   });
@@ -509,11 +515,13 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
     drop,
     ghost,
     grab: (position, event) => {
-      if (options.enabled()) {
-        event.preventDefault();
-        held = grabOf(event, options.rowSize());
-        reorder.onPointerdown(position, event);
+      if (!options.enabled()) {
+        return;
       }
+
+      event.preventDefault();
+      held = grabOf(event, options.rowSize());
+      reorder.onPointerdown(position, event);
     },
     onKeydown: (event, body) => {
       if (body === undefined || !options.enabled() || !isChord(event)) {

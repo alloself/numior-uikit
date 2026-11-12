@@ -2,6 +2,7 @@
   <NuiAccordion v-bind="accordion" v-model="model" v-model:values="values">
     <NuiAccordionItem v-for="section in SECTIONS" :key="section.value" v-bind="section">
       {{ section.label }} body
+      <input v-if="section.value === FIELD_SECTION" type="text" aria-label="Package name" />
     </NuiAccordionItem>
   </NuiAccordion>
 </template>
@@ -21,6 +22,8 @@ const SECTIONS = [
   { value: 'api', label: 'API', disabled: true },
   { value: 'faq', label: 'FAQ' },
 ];
+
+const FIELD_SECTION = 'install';
 
 defineExpose({ model, values });
 </script>

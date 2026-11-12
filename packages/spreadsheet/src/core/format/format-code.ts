@@ -384,9 +384,25 @@ const dateTokens = (tokens: readonly FormatToken[]): FormatToken[] => {
   return result;
 };
 
+const strayInDate = (tokens: readonly FormatToken[]): boolean =>
+  tokens.some((token, index) => {
+    switch (token.kind) {
+      case FormatTokenKind.Digit: {
+        const before = tokens[index - 1]?.kind;
+
+        return before !== FormatTokenKind.Point && before !== FormatTokenKind.Digit;
+      }
+      case FormatTokenKind.Text:
+      case FormatTokenKind.General:
+        return true;
+      default:
+        return false;
+    }
+  });
+
 const kindOf = (tokens: readonly FormatToken[]): SectionKind => {
   if (tokens.some((token) => token.kind === FormatTokenKind.Date)) {
-    return 'date';
+    return strayInDate(tokens) ? 'invalid' : 'date';
   }
   if (
     tokens.some(

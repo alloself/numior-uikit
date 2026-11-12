@@ -1,4 +1,5 @@
 import { test as base } from '@playwright/test';
+import { BenchEditor } from './pages/bench-editor';
 import { CollabRoom } from './pages/collab';
 import { CollabLab } from './pages/collab-lab';
 import { DocsSite } from './pages/docs';
@@ -8,6 +9,7 @@ import { PlaygroundPage } from './pages/playground';
 interface PageObjects {
   readonly playground: PlaygroundPage;
   readonly collab: CollabRoom;
+  readonly benchEditor: BenchEditor;
   readonly collabLab: CollabLab;
   readonly docs: DocsSite;
   readonly app: NuxtApp;
@@ -40,12 +42,17 @@ interface PageObjects {
   readonly editor: PlaygroundPage['editor'];
 }
 
+const RUN = Date.now().toString(36);
+
 export const test = base.extend<PageObjects>({
   playground: async ({ page }, use) => {
     await use(new PlaygroundPage(page));
   },
   docs: async ({ page }, use) => {
     await use(new DocsSite(page));
+  },
+  benchEditor: async ({ page }, use) => {
+    await use(new BenchEditor(page));
   },
   collabLab: async ({ page }, use) => {
     await use(new CollabLab(page));
@@ -111,7 +118,12 @@ export const test = base.extend<PageObjects>({
     await use(playground.charts);
   },
   collab: async ({ browser }, use, testInfo) => {
-    const room = new CollabRoom(browser, `${testInfo.project.name}-${testInfo.testId}`);
+    const attempt = `${testInfo.repeatEachIndex.toString()}-${testInfo.retry.toString()}`;
+
+    const room = new CollabRoom(
+      browser,
+      `${testInfo.project.name}-${testInfo.testId}-${RUN}-${attempt}`,
+    );
 
     await use(room);
     await room.close();

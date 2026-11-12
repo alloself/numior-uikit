@@ -11,6 +11,7 @@ export interface ReorderHarnessOptions {
   readonly canMove?: (from: number, to: number) => boolean;
   readonly rtl?: boolean;
   readonly viewport?: number;
+  readonly onMove?: (from: number, to: number) => void;
 }
 
 type HostWrapper = VueWrapper<InstanceType<typeof ReorderHost>>;
@@ -48,7 +49,10 @@ export class ReorderHarness {
         size: options.size ?? 40,
         canMove: options.canMove,
         rtl: options.rtl,
-        onMove: (from: number, to: number) => moves.push([from, to]),
+        onMove: (from: number, to: number) => {
+          moves.push([from, to]);
+          options.onMove?.(from, to);
+        },
         onChange: (state: ReorderState) => changes.push(state),
         onEvent: (event: ReorderEvent) => events.push(event),
       },
@@ -120,8 +124,28 @@ export class ReorderHarness {
     await nextTick();
   }
 
-  async pointerCancel(): Promise<void> {
-    window.dispatchEvent(pointer('pointercancel', 0, this.axis));
+  async pointerCancel(pointerId = 1): Promise<void> {
+    window.dispatchEvent(pointer('pointercancel', 0, this.axis, pointerId));
+    await nextTick();
+  }
+
+  async pointerUpFailing(client: number): Promise<string[]> {
+    const failures: string[] = [];
+
+    const note = (event: ErrorEvent): void => {
+      failures.push(event.message);
+      event.preventDefault();
+    };
+
+    window.addEventListener('error', note);
+    window.dispatchEvent(pointer('pointerup', client, this.axis));
+    window.removeEventListener('error', note);
+    await nextTick();
+    return failures;
+  }
+
+  async blur(index: number): Promise<void> {
+    this.handle(index).dispatchEvent(new FocusEvent('blur'));
     await nextTick();
   }
 

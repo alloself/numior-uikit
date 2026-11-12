@@ -34,10 +34,12 @@ const searchWrapping = (
       return route.path;
     }
     for (const type of wrappers(schema, route.match)) {
-      if (!seen.has(type.content)) {
-        seen.add(type.content);
-        queue.push({ match: type.content, path: [...route.path, type] });
+      if (seen.has(type.content)) {
+        continue;
       }
+
+      seen.add(type.content);
+      queue.push({ match: type.content, path: [...route.path, type] });
     }
   }
   return null;
@@ -70,10 +72,12 @@ const searchFill = (schema: Schema, match: ContentMatch): readonly NodeType[] | 
     for (const [name, next] of route.match.next) {
       const type = schema.nodes.get(name);
 
-      if (type !== undefined && !seen.has(next) && fillable(schema, type)) {
-        seen.add(next);
-        queue.push({ match: next, path: [...route.path, type] });
+      if (type === undefined || seen.has(next) || !fillable(schema, type)) {
+        continue;
       }
+
+      seen.add(next);
+      queue.push({ match: next, path: [...route.path, type] });
     }
   }
   return null;

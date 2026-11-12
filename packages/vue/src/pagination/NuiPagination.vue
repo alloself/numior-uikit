@@ -8,7 +8,8 @@
       <NuiSelect
         :model-value="pageSize"
         :options="sizeOptions"
-        size="sm"
+        :size="size"
+        :locale="locale"
         class="nui-pagination__select"
         :aria-labelledby="`${baseId}-page-size`"
         @update:model-value="changePageSize"
@@ -78,7 +79,7 @@
 
 <script setup lang="ts">
 import { computed, watch } from 'vue';
-import { useControlId, useMessages } from '@numior/primitives';
+import { useControlId, useLocale, useMessages } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiSelect from '../select/NuiSelect.vue';
 import type { NuiOption } from '../shared/options';
@@ -98,6 +99,7 @@ const {
   pageSizes,
   showRange = true,
   size = NuiSize.Md,
+  locale: localeProp,
   label,
   previousLabel,
   nextLabel,
@@ -112,17 +114,22 @@ const pageModel = defineModel<number>('page', { default: 1 });
 const pageSize = defineModel<number>('pageSize', { default: 20 });
 
 const baseId = useControlId();
-const messages = useMessages(paginationMessages);
+const locale = useLocale(() => localeProp);
+const messages = useMessages(paginationMessages, locale);
+const numbers = computed(() => new Intl.NumberFormat(locale.value));
+const shown = (value: number): string => numbers.value.format(value);
 
 const pageCount = computed(() => pageCountOf(total, pageSize.value));
 const page = computed(() => clampPage(pageModel.value, pageCount.value));
 
 watch(
-  [page, () => pageModel.value],
-  ([clamped, requested]) => {
-    if (clamped !== requested) {
-      pageModel.value = clamped;
+  [page, () => pageModel.value, () => total],
+  ([clamped, requested, known]) => {
+    if (known <= 0 || clamped === requested) {
+      return;
     }
+
+    pageModel.value = clamped;
   },
   { immediate: true },
 );
@@ -132,7 +139,10 @@ const entries = computed(() => paginationRange(page.value, pageCount.value, sibl
 const rangeText = computed(() => {
   const from = total === 0 ? 0 : (page.value - 1) * pageSize.value + 1;
   const to = Math.min(page.value * pageSize.value, total);
-  return rangeLabel ? rangeLabel(from, to, total) : messages.value.range({ from, to, total });
+
+  return rangeLabel
+    ? rangeLabel(from, to, total)
+    : messages.value.range({ from: shown(from), to: shown(to), total: shown(total) });
 });
 
 const texts = computed(() => ({
@@ -156,9 +166,13 @@ const go = (target: number): void => {
 };
 
 const changePageSize = (value: number | null): void => {
-  if (value !== null) {
-    pageSize.value = value;
+  if (value === null || value === pageSize.value) {
+    return;
   }
+  const first = (page.value - 1) * pageSize.value;
+
+  pageSize.value = value;
+  pageModel.value = clampPage(Math.floor(first / value) + 1, pageCountOf(total, value));
 };
 
 const controlProps = (target: number, name: string, disabled: boolean) => ({

@@ -15,6 +15,7 @@
 import { useEventListener, useResizeObserver } from '@vueuse/core';
 import { computed, onBeforeUnmount, useTemplateRef, watch } from 'vue';
 import type { NuiCollabCaretsProps } from './collab.types';
+import { useEditorLayout } from './use-editor-layout';
 
 const FLAG_ROOM = 20;
 
@@ -22,7 +23,9 @@ const { peers, editor } = defineProps<NuiCollabCaretsProps>();
 
 const layer = useTemplateRef<HTMLElement>('layer');
 
-const shown = computed(() => peers.filter((peer) => peer.head !== undefined));
+const shown = computed(() =>
+  peers.filter((peer) => peer.head !== undefined && peer.spot === undefined),
+);
 
 let frame: number | undefined;
 
@@ -69,9 +72,11 @@ const measure = (): void => {
   shown.value.forEach((peer, index) => {
     const element = carets[index];
 
-    if (element instanceof HTMLElement && peer.head !== undefined) {
-      place(element, peer.head);
+    if (!(element instanceof HTMLElement) || peer.head === undefined) {
+      return;
     }
+
+    place(element, peer.head);
   });
 };
 
@@ -84,6 +89,8 @@ const schedule = (): void => {
 
 watch(shown, measure, { flush: 'post' });
 
+useEditorLayout(() => editor, measure);
+
 useResizeObserver(layer, schedule);
 
 useEventListener(() => layer.value?.ownerDocument, 'scroll', schedule, {
@@ -92,8 +99,10 @@ useEventListener(() => layer.value?.ownerDocument, 'scroll', schedule, {
 });
 
 onBeforeUnmount(() => {
-  if (frame !== undefined) {
-    cancelAnimationFrame(frame);
+  if (frame === undefined) {
+    return;
   }
+
+  cancelAnimationFrame(frame);
 });
 </script>

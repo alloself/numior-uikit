@@ -40,6 +40,10 @@ form waits for the answer. Until the answer arrives, the field slot receives `pe
 the remove button disappears, and at `max` the add button is disabled. `reorderable` lets users
 reorder the cards with the mouse and the keyboard.
 
+Each card is a group named "Row 2"; `rowLabel` sets your own name. A schema error with the path of
+a card shows below it and is read on entering the card. After a failed submit, the form puts focus
+into the first field of such a card.
+
 <Example name="form/Guests" />
 
 ## Validation
@@ -67,6 +71,10 @@ does nothing. When validation fails, the focus moves to the first field with an 
 
 `form.submit()` submits the form from code and returns `{ status, invalid, formErrors }`. A
 `type="reset"` button and a `resetForm()` call restore the initial values.
+
+To take the server answer as the new initial values after saving, call
+`helpers.resetForm({ values })` inside `onSubmit`. The submit then ends with the `submitted` status.
+A reset from outside during a submit cancels it: `signal` is aborted and the status is `aborted`.
 
 ## Hidden and disabled fields
 

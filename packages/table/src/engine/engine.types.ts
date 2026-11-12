@@ -1,3 +1,5 @@
+import type { RankHost } from './rank-host';
+
 export type SourceHolds = (typeof SourceHolds)[keyof typeof SourceHolds];
 
 export type RankCaseFirst = NonNullable<Intl.CollatorOptions['caseFirst']>;
@@ -38,6 +40,7 @@ export type TableFilter =
       readonly kind: typeof TableFilterKind.Set;
       readonly key: string;
       readonly values: readonly TableFilterValue[];
+      readonly exclude?: boolean | undefined;
     }
   | {
       readonly kind: typeof TableFilterKind.Quick;
@@ -177,6 +180,8 @@ export interface TableSiblings<T> {
 
 export interface TableDistinctOptions {
   readonly limit?: number | undefined;
+  readonly search?: string | undefined;
+  readonly text?: ((value: TableFilterValue) => string) | undefined;
   readonly signal?: AbortSignal | undefined;
 }
 
@@ -195,6 +200,7 @@ export interface TableEngineOptions<T> {
   readonly collator?: Intl.Collator | undefined;
   readonly sliceMs?: number | undefined;
   readonly yieldTo?: (() => Promise<void>) | undefined;
+  readonly rankHost?: RankHost | undefined;
 }
 
 export type TableNodePosition = readonly [id: TableNodeId, position: number];
@@ -205,7 +211,7 @@ export interface TableEngine<T> {
   setRows(rows: readonly T[]): void;
   run(query: TableQuery, options?: TableRunOptions): Promise<TableRunResult>;
   runSync(query: TableQuery): TableRunResult;
-  patch(query: TableQuery, keys: readonly string[]): void;
+  patch(query: TableQuery, keys: readonly string[], rows?: readonly T[]): void;
   visibleIndices(): Uint32Array;
   nodeAt(position: number): TableNode<T> | undefined;
   positionsOf(matches: (id: TableNodeId) => boolean, limit: number): TableNodePosition[];
@@ -262,6 +268,7 @@ export interface TableValuesRequest {
   readonly key: string;
   readonly filters: readonly TableFilter[];
   readonly limit: number;
+  readonly search: string;
   readonly signal: AbortSignal;
 }
 
@@ -350,6 +357,6 @@ export const RadixLaneKind = { Float: 'float', Rank: 'rank' } as const;
 
 export const RadixGroupKind = { Float: 'float', Packed: 'packed' } as const;
 
-export const RankMessageKind = { Part: 'part', Sort: 'sort' } as const;
+export const RankMessageKind = { Part: 'part', Sort: 'sort', Drop: 'drop' } as const;
 
 export const ErrorName = { Abort: 'AbortError' } as const;

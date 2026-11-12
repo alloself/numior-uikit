@@ -64,7 +64,8 @@ export interface LayoutOptions {
 }
 
 const DEFAULT_WIDTH = 160;
-const SMALLEST_WIDTH = 48;
+
+export const SMALLEST_WIDTH = 48;
 const UTILITY_WIDTH = 40;
 
 const ROW_HEAD_DIGIT = 8;
@@ -264,9 +265,11 @@ export const tableLayout = <T>(
   const ends: PlaceInput[] = [];
 
   for (const column of columns) {
-    if (!hiddenKeys.has(column.key)) {
-      paneOf(pinOf(column, options.pins), starts, centres, ends).push(inputOf(column, options));
+    if (hiddenKeys.has(column.key)) {
+      continue;
     }
+
+    paneOf(pinOf(column, options.pins), starts, centres, ends).push(inputOf(column, options));
   }
 
   const rowHeader = options.rowHeader ?? 0;
@@ -376,19 +379,25 @@ export const rowCellsOf = (layout: TableLayout, centre: readonly number[]): Tabl
   for (const index of centre) {
     const column = layout.centre[index];
 
-    if (column !== undefined) {
-      if (column.offset > cursor) {
-        const key = `__gap-${column.visual}`;
-
-        cells.push(gapCell(key));
-        tracks.push({ key, width: column.offset - cursor });
-      }
-      cells.push(column.cell);
-      tracks.push(trackOf(column));
-      cursor = column.offset + column.width;
+    if (column === undefined) {
+      continue;
     }
+
+    if (column.offset > cursor) {
+      const key = `__gap-${column.visual}`;
+
+      cells.push(gapCell(key));
+      tracks.push({ key, width: column.offset - cursor });
+    }
+    cells.push(column.cell);
+    tracks.push(trackOf(column));
+    cursor = column.offset + column.width;
   }
-  cells.push(gapCell(TRAIL_KEY), ...layout.end.map((column) => column.cell));
-  tracks.push({ key: TRAIL_KEY, width: undefined }, ...layout.end.map(trackOf));
+  cells.push(gapCell(TRAIL_KEY));
+  tracks.push({ key: TRAIL_KEY, width: undefined });
+  for (const column of layout.end) {
+    cells.push(column.cell);
+    tracks.push(trackOf(column));
+  }
   return { cells, tracks };
 };

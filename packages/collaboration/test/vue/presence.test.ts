@@ -11,6 +11,7 @@ const peer = (clientId: string, head: number | undefined, name = clientId): Remo
   colour: 2,
   anchor: head,
   head,
+  spot: undefined,
 });
 
 const BOX = new DOMRect(0, 0, 400, 100);
@@ -23,8 +24,10 @@ const fakeEditor = (
   focus: () => undefined,
   flush: () => undefined,
   coordsAt: coords,
+  posAt: () => undefined,
   contentBox: () => BOX,
   revealNode: () => undefined,
+  watchLayout: () => () => undefined,
 });
 
 const caretRect = (left: number, top: number) => ({
@@ -39,6 +42,14 @@ describe('NuiCollabCarets', () => {
     const wrapper = mount(NuiCollabCarets, {
       props: { peers: [peer('ann', 3), peer('bob', undefined)] },
     });
+
+    expect(wrapper.findAll('.nui-collab-carets__flag').map((flag) => flag.text())).toEqual(['ann']);
+  });
+
+  it('draws no caret for a person working inside a block such as a table cell', () => {
+    const inCell = { ...peer('bob', 5), spot: { block: 'table', part: ['row', 'name'] } };
+
+    const wrapper = mount(NuiCollabCarets, { props: { peers: [peer('ann', 3), inCell] } });
 
     expect(wrapper.findAll('.nui-collab-carets__flag').map((flag) => flag.text())).toEqual(['ann']);
   });
@@ -85,6 +96,15 @@ describe('NuiCollabCarets', () => {
 
     await wrapper.setProps({ peers: [peer('ann', 3)] });
     await nextTick();
+
+    expect(wrapper.find<HTMLElement>('.nui-collab-carets__caret').element.style.opacity).toBe('0');
+  });
+
+  it('hides a caret whose place the editor has not drawn yet', async () => {
+    const editor = fakeEditor(() => undefined);
+    const wrapper = mount(NuiCollabCarets, { props: { peers: [], editor } });
+
+    await wrapper.setProps({ peers: [peer('ann', 3)] });
 
     expect(wrapper.find<HTMLElement>('.nui-collab-carets__caret').element.style.opacity).toBe('0');
   });

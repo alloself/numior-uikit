@@ -44,11 +44,13 @@ const registerNamespace = (id: string, namespace: ModuleNamespace, what: Registr
       addComponent({ name, export: name, filePath: id });
     }
   }
-  if (what.composables) {
-    addImports(
-      composableNames(namespace).map((name) => ({ name, from: id, priority: YIELDING_PRIORITY })),
-    );
+  if (!what.composables) {
+    return;
   }
+
+  addImports(
+    composableNames(namespace).map((name) => ({ name, from: id, priority: YIELDING_PRIORITY })),
+  );
 };
 
 const colorSchemeOf = (options: NuiNuxtOptions): NuiNuxtColorScheme | undefined => {
@@ -107,7 +109,9 @@ export default defineNuxtModule<NuiNuxtOptions>({
     nuxt.options.runtimeConfig.public.numior = runtimeOptionsOf(options);
     addHead(nuxt, colorSchemeOf(options));
     if (options.css === true) {
-      nuxt.options.css.push(...KIT_CSS, ...installed.map((entry) => `${entry.id}/styles.css`));
+      for (const sheet of [...KIT_CSS, ...installed.map((entry) => `${entry.id}/styles.css`)]) {
+        nuxt.options.css.push(sheet);
+      }
     }
     registerNamespace(VUE, await import('@numior/vue'), registration);
 

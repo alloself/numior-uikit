@@ -5,8 +5,8 @@ const docs: DocsMap = {
     configurator: {
       scene: 'tree/Example',
       props: ['variant', 'size', 'checkable', 'icons', 'loop', 'label'],
-      choices: { variant: ['plain', 'divided', 'bordered'] },
-      values: { variant: 'bordered', label: { ru: 'Категории', en: 'Categories' } },
+      choices: { variant: ['plain', 'divided', 'outline'] },
+      values: { variant: 'outline', label: { ru: 'Категории', en: 'Categories' } },
     },
     props: {
       id: {
@@ -23,7 +23,7 @@ const docs: DocsMap = {
       },
       variant: {
         ru: 'Оформление: обычное, с разделителями, в рамке или всплывающее.',
-        en: 'Style: plain, divided, bordered or floating.',
+        en: 'Style: plain, divided, outline or floating.',
       },
       selectable: {
         ru: 'Выбор узлов: `single` — одного, `multiple` — нескольких, `false` — без выбора. С `checkable` не действует.',
@@ -95,7 +95,10 @@ const docs: DocsMap = {
         ru: 'Срабатывает, когда узел выбирают или меняют его отметку.',
         en: 'Fires when a node is selected or its check changes.',
       },
-      expand: { ru: 'Срабатывает, когда узел раскрывают.', en: 'Fires when a node is expanded.' },
+      expand: {
+        ru: 'Срабатывает, когда узел раскрывают. У узла с `lazy` приходит сразу, до загрузки детей.',
+        en: 'Fires when a node is expanded. For a node with `lazy` it comes at once, before its children load.',
+      },
       collapse: {
         ru: 'Срабатывает, когда узел сворачивают.',
         en: 'Fires when a node is collapsed.',
@@ -107,8 +110,8 @@ const docs: DocsMap = {
     },
     slots: {
       item: {
-        ru: 'Своя разметка строки. Получает `item`, `level`, `expanded`, `selected`, `checked` и `loading`.',
-        en: 'Custom row markup. Receives `item`, `level`, `expanded`, `selected`, `checked` and `loading`.',
+        ru: 'Своя разметка строки. Получает `item`, `level`, `expanded`, `selected`, `checked` и `loading`. `expanded` становится `true`, когда дети узла показаны.',
+        en: 'Custom row markup. Receives `item`, `level`, `expanded`, `selected`, `checked` and `loading`. `expanded` turns `true` once the children of the node are shown.',
       },
       empty: { ru: 'Что показать, когда узлов нет.', en: 'Content shown when there are no nodes.' },
     },
@@ -130,8 +133,8 @@ const docs: DocsMap = {
       {
         keys: 'ArrowRight',
         description: {
-          ru: 'Раскрывает узел или переходит к первому вложенному. При письме справа налево — наоборот.',
-          en: 'Expands the node or moves to its first child. Reversed in right-to-left layouts.',
+          ru: 'Раскрывает узел или переходит к первому доступному вложенному. При письме справа налево — наоборот.',
+          en: 'Expands the node or moves to its first enabled child. Reversed in right-to-left layouts.',
         },
       },
       {

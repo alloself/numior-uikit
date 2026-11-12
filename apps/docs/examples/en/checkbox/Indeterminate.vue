@@ -3,7 +3,7 @@
     <NuiCheckbox :model-value="all" :indeterminate="some" @update:model-value="toggleAll">
       All categories
     </NuiCheckbox>
-    <NuiCheckboxGroup v-model="selected" :options="options" class="ms-6" />
+    <NuiCheckboxGroup v-model:values="selected" :options="options" class="ms-6" />
   </div>
 </template>
 

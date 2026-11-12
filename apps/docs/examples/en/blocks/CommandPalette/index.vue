@@ -21,7 +21,7 @@
     />
     <section class="flex flex-col gap-2">
       <h2 :id="recentId" class="m-0 text-sm font-medium text-muted-foreground">Recent</h2>
-      <NuiList variant="bordered" :labelled-by="recentId">
+      <NuiList variant="outline" :labelled-by="recentId">
         <NuiListItem
           v-for="item in recent"
           :key="item.value"

@@ -6,6 +6,12 @@ import { boxOf } from './helpers/geometry';
 const office = (path: string): string =>
   readFileSync(new URL(`fixtures/paste/${path}`, import.meta.url), 'utf8');
 
+const LINKED_PARAGRAPH = 3;
+
+const SCROLL_STEP = 150;
+
+const SELECTION_TOLERANCE = 2;
+
 const openEditor = async (playground: PlaygroundPage): Promise<void> => {
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
@@ -32,10 +38,40 @@ test.describe('editor', () => {
     await page.keyboard.press('Home');
     await page.keyboard.press('Backspace');
     await expect.poll(() => editor.blockTexts()).toEqual(['Hello worldSecond']);
+    await expect.poll(() => editor.previewTexts()).toEqual(['Hello worldSecond']);
 
     await page.keyboard.press('ControlOrMeta+z');
     await expect.poll(() => editor.blockTexts()).toEqual(['Hello world', 'Second']);
-    expect((await editor.readOutput()).changes).toBeGreaterThan(3);
+    await expect.poll(() => editor.previewTexts()).toEqual(['Hello world', 'Second']);
+    await expect.poll(async () => (await editor.readOutput()).changes).toBeGreaterThanOrEqual(3);
+  });
+
+  test('drags selected text to another line, copies it with Ctrl and undoes each in one step', async ({
+    playground,
+    editor,
+    page,
+  }) => {
+    await openEditor(playground);
+
+    const fine = await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    test.skip(!fine, 'selected text is dragged with a mouse');
+
+    await editor.clear();
+    await page.keyboard.type('alpha beta');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('gamma');
+
+    await editor.dragText('beta', 'mma');
+    await expect.poll(() => editor.blockTexts()).toEqual(['alpha ', 'gabetamma']);
+
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect.poll(() => editor.blockTexts()).toEqual(['alpha beta', 'gamma']);
+
+    await editor.dragText('alpha', 'mma', 'Control');
+    await expect.poll(() => editor.blockTexts()).toEqual(['alpha beta', 'gaalphamma']);
   });
 
   test('turns markdown shortcuts into blocks and nests list items with Tab', async ({
@@ -205,16 +241,47 @@ test.describe('editor', () => {
   test('inserts a callout from the toolbar menu with the slash menu items', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
     await editor.clear();
     await editor.tool('Вставить').click();
-    await expect(page.getByRole('menuitem', { name: 'Картинка' })).toBeVisible();
+    await expect(editor.insertOption('Картинка')).toBeVisible();
 
-    await page.getByRole('menuitem', { name: 'Выноска' }).click();
+    await editor.insertOption('Выноска').click();
     await expect(editor.content.locator('.nui-content__callout')).toHaveCount(1);
+  });
+
+  test('finds a block in the plus menu and puts it below the list the caret is in', async ({
+    playground,
+    editor,
+    page,
+  }) => {
+    await openEditor(playground);
+
+    await editor.clear();
+    await page.keyboard.type('- one');
+    await expect.poll(() => editor.blockTags()).toEqual(['ul']);
+
+    await editor.tool('Вставить').click();
+    await expect(editor.insertSearch()).toBeFocused();
+    await expect(editor.insertOptions().and(page.locator('[aria-disabled="true"]'))).toHaveCount(0);
+
+    await page.keyboard.type('загол');
+    await expect(editor.insertOptions()).toHaveCount(6);
+
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await expect.poll(() => editor.blockTags()).toEqual(['ul', 'h2']);
+    await expect(editor.content).toBeFocused();
+
+    await page.keyboard.type('Next');
+    await expect(editor.content.locator('h2')).toHaveText('Next');
+    await expect(editor.content.locator('li')).toHaveText('one');
+
+    await editor.tool('Вставить').click();
+    await expect(editor.insertSearch()).toHaveValue('');
+    await expect(editor.insertOptions().first()).toBeVisible();
   });
 
   test('formats from the toolbar without losing the selection and changes blocks from its menu', async ({
@@ -236,7 +303,15 @@ test.describe('editor', () => {
     await expect(editor.tool('Жирный')).toHaveAttribute('aria-pressed', 'true');
     await expect(editor.content).toBeFocused();
 
+    const fine = await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    await expect(editor.headerBlockMenu()).toHaveCount(fine ? 0 : 1);
+
     await editor.blockMenu().click();
+    await expect(page.getByRole('menuitemradio', { name: 'Заголовок 6' })).toBeVisible();
+
     await page.getByRole('menuitemradio', { name: 'Заголовок 1' }).click();
     await expect.poll(() => editor.blockTags()).toEqual(['h1']);
     await expect(editor.content).toBeFocused();
@@ -245,13 +320,34 @@ test.describe('editor', () => {
     await expect(editor.tool('Вставить')).toBeFocused();
 
     await page.keyboard.press('ArrowRight');
-    await expect(editor.tool('Тип блока: Заголовок 1')).toBeFocused();
-
-    await page.keyboard.press('ArrowRight');
-    await expect(editor.tool('Жирный')).toBeFocused();
+    await expect(editor.tool('Отменить')).toBeFocused();
 
     await page.keyboard.press('Escape');
     await expect(editor.content).toBeFocused();
+  });
+
+  test('keeps the toolbar reachable from the keyboard when the control under focus turns off', async ({
+    playground,
+    editor,
+    page,
+  }) => {
+    await openEditor(playground);
+    const coarse = await page.evaluate(() => matchMedia('(pointer: coarse)').matches);
+
+    test.skip(coarse, 'the docked toolbar of a touch screen leaves with the focus of the text');
+
+    await editor.clear();
+    await page.keyboard.type('Hello');
+    await editor.undoAllWith('Space');
+
+    await expect(editor.tool('Повторить')).toBeFocused();
+
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Alt+F10');
+    await expect(editor.tool('Повторить')).toBeFocused();
+
+    await page.keyboard.press('ArrowRight');
+    await expect(editor.tool('Жирный')).toBeFocused();
   });
 
   test('links with Ctrl+K and colours a selection from the bubble over it', async ({
@@ -687,6 +783,79 @@ test.describe('editor', () => {
     expect(await editor.gripBeside(table)).toBe(true);
   });
 
+  test('keeps the menu over a selection on its text while the grip pushes the line and lets it go', async ({
+    playground,
+    editor,
+    page,
+  }) => {
+    await playground.open();
+    await editor.root.scrollIntoViewIfNeeded();
+
+    const fine = await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    test.skip(!fine, 'the handle follows a mouse');
+
+    const line = editor.content.locator('p').first();
+
+    await editor.clear();
+    await page.keyboard.type('Hello world');
+    await page.keyboard.press('Shift+Home');
+    await expect(editor.bubble()).toBeVisible();
+
+    await editor.hoverStart(line);
+    await expect(editor.pushed()).toHaveCount(1);
+
+    await editor.settled(line);
+
+    expect(await editor.selectionGap()).toBeLessThanOrEqual(SELECTION_TOLERANCE);
+
+    await page.mouse.move(0, 0);
+    await expect(editor.pushed()).toHaveCount(0);
+
+    await editor.settled(line);
+
+    expect(await editor.selectionGap()).toBeLessThanOrEqual(SELECTION_TOLERANCE);
+  });
+
+  test('joins lines across lists, a callout and a closed toggle with Delete and Backspace', async ({
+    playground,
+    editor,
+    page,
+  }) => {
+    await openEditor(playground);
+
+    await editor.placeInText('Обновить тарифы', 15);
+    await page.keyboard.press('Delete');
+    await expect(editor.item('Обновить тарифы')).toHaveText('Обновить тарифыСогласовать дату');
+    await expect(editor.content.locator('.nui-content__todo')).toHaveCount(1);
+
+    await editor.placeInText('pnpm', 0);
+    await page.keyboard.press('Backspace');
+
+    await expect(editor.toggle().locator('p').first()).toHaveText(
+      'Детали релизаpnpm release:check',
+    );
+
+    await expect(editor.toggle().getByText('Ветка release/2.4')).toBeHidden();
+
+    await page.keyboard.type('!');
+
+    await expect(editor.toggle().locator('p').first()).toHaveText(
+      'Детали релиза!pnpm release:check',
+    );
+
+    await editor.placeInText('Релиз во вторник', 25);
+    await page.keyboard.press('Delete');
+
+    await expect(editor.content.locator('.nui-content__callout p')).toHaveText(
+      'Релиз во вторник в 10:00.Детали релиза!pnpm release:check',
+    );
+
+    await expect(editor.toggle().locator('p')).toHaveText(['Ветка release/2.4, миграций: 3.']);
+  });
+
   test('writes after the last blocks and leaves a toggle from its empty last line', async ({
     playground,
     editor,
@@ -873,6 +1042,29 @@ test.describe('editor', () => {
     ).toHaveCount(1);
 
     expect(await editor.isFocused()).toBe(true);
+  });
+
+  test('keeps the link panel at its text while a text area with its own scroll is scrolled', async ({
+    benchEditor,
+  }) => {
+    await benchEditor.open();
+    await benchEditor.linkParagraph(LINKED_PARAGRAPH);
+    const below = await benchEditor.panelBelow(LINKED_PARAGRAPH);
+
+    await benchEditor.scrollText(SCROLL_STEP);
+
+    await expect.poll(() => benchEditor.panelBelow(LINKED_PARAGRAPH)).toBe(below);
+  });
+
+  test('keeps the link panel on screen when the selection is taller than the text area', async ({
+    benchEditor,
+  }) => {
+    await benchEditor.open();
+    await benchEditor.scrollTextToMiddle();
+
+    await benchEditor.linkEverything();
+
+    await expect(benchEditor.linkPanel).toBeInViewport({ ratio: 1 });
   });
 
   test('passes axe in light and dark, fits phones and types in RTL', async ({

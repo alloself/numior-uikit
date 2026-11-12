@@ -73,14 +73,18 @@ const onClick = (event: Event): void => {
     return;
   }
   emit('select');
-  if (closeOnSelect ?? menu.closeOnSelect.value) {
-    menu.closeAll();
+  if (!(closeOnSelect ?? menu.closeOnSelect.value)) {
+    return;
   }
+
+  menu.closeAll();
 };
 
 const onSpace = (event: KeyboardEvent): void => {
-  if (event.currentTarget instanceof HTMLElement) {
-    event.currentTarget.click();
+  if (!(event.currentTarget instanceof HTMLElement)) {
+    return;
   }
+
+  event.currentTarget.click();
 };
 </script>
