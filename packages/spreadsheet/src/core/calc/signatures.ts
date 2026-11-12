@@ -1,3 +1,5 @@
+import type { FunctionSpec } from './calc.types';
+
 export const NEWER_MANY = 254;
 
 export const pairsAfter =
@@ -20,3 +22,14 @@ export const letNames = (index: number, count: number): boolean =>
 export const lambdaNames = (index: number, count: number): boolean => index < count - 1;
 
 export const sortKeys = (count: number): boolean => count === 2 || count % 2 === 1;
+
+export const afterFirst = (index: number): boolean => index > 0;
+
+export const oddArgument = (index: number): boolean => index % 2 === 1;
+
+export const readsArgument = (
+  spec: FunctionSpec | undefined,
+  index: number,
+  count: number,
+  read: boolean,
+): boolean => spec?.unreadAt?.(index) !== true && (read || spec?.passesAt?.(index, count) !== true);

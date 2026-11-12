@@ -1,4 +1,9 @@
-import { FormulaNodeKind, FormulaReferenceKind, type FormulaNode } from './formula.types';
+import {
+  FormulaNodeKind,
+  FormulaReferenceKind,
+  UnaryOperator,
+  type FormulaNode,
+} from './formula.types';
 import { childrenOf, eachNode, foldFormula, withChildren } from './walk';
 
 export type FormulaReference = Extract<
@@ -27,7 +32,12 @@ export type SheetReference = Exclude<
 
 type Visitor = (reference: FormulaReference) => FormulaNode;
 
-export type UnreadAt = (name: string, index: number) => boolean;
+export type ReadsArgument = (name: string, index: number, count: number, read: boolean) => boolean;
+
+export interface PlacedReference {
+  readonly reference: FormulaReference;
+  readonly read: boolean;
+}
 
 interface Placed {
   readonly node: FormulaNode;
@@ -61,18 +71,26 @@ const isReference = (node: FormulaNode): node is FormulaReference => REFERENCE_K
 
 const ADDRESSES = new Set<FormulaNode['kind']>(['cell', 'range', 'columns', 'rows']);
 
-const NOTHING_UNREAD: UnreadAt = () => false;
+const EVERY_ARGUMENT: ReadsArgument = () => true;
 
 const unread = (node: FormulaNode): Placed => ({ node, read: false });
 
-const placedChildren = (node: FormulaNode, unreadAt: UnreadAt): readonly Placed[] => {
+const placedChildren = (
+  { node, read }: Placed,
+  readsArgument: ReadsArgument,
+): readonly Placed[] => {
   switch (node.kind) {
     case FormulaNodeKind.Areas:
       return [unread(node.left), unread(node.right)];
     case FormulaNodeKind.Union:
       return node.areas.map(unread);
+    case FormulaNodeKind.Unary:
+      return [{ node: node.operand, read: read || node.op !== UnaryOperator.Intersect }];
     case FormulaNodeKind.Call:
-      return node.args.map((arg, index) => ({ node: arg, read: !unreadAt(node.name, index) }));
+      return node.args.map((arg, index) => ({
+        node: arg,
+        read: readsArgument(node.name, index, node.args.length, read),
+      }));
     default:
       return childrenOf(node).map((child) => ({ node: child, read: true }));
   }
@@ -101,10 +119,11 @@ export const formulaReferences = (node: FormulaNode): FormulaReference[] => {
 
 export const readReferences = (
   root: FormulaNode,
-  unreadAt: UnreadAt = NOTHING_UNREAD,
-): FormulaReference[] => {
-  const found: FormulaReference[] = [];
-  const waiting: Placed[] = [{ node: root, read: true }];
+  readsArgument: ReadsArgument = EVERY_ARGUMENT,
+  read = true,
+): PlacedReference[] => {
+  const found: PlacedReference[] = [];
+  const waiting: Placed[] = [{ node: root, read }];
 
   for (let item = waiting.pop(); item !== undefined; item = waiting.pop()) {
     if (isReference(item.node)) {
@@ -112,11 +131,11 @@ export const readReferences = (
         continue;
       }
 
-      found.push(item.node);
+      found.push({ reference: item.node, read: item.read });
       continue;
     }
 
-    const children = placedChildren(item.node, unreadAt);
+    const children = placedChildren(item, readsArgument);
 
     for (let index = children.length - 1; index >= 0; index -= 1) {
       const child = children[index];

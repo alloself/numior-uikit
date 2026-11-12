@@ -84,6 +84,8 @@ export interface FunctionSpec extends CallSignature {
   readonly arrays?: readonly number[] | typeof ArrayScope.All | undefined;
   readonly lift?: readonly number[] | undefined;
   readonly broadcast?: readonly number[] | undefined;
+  readonly unreadAt?: ((index: number) => boolean) | undefined;
+  readonly passesAt?: ((index: number, count: number) => boolean) | undefined;
   evaluate(args: FunctionArgs): EvalValue;
 }
 
