@@ -152,13 +152,27 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
 
   const shown = useShownPopover(options.open, focusOnOpen);
 
+  const within = (node: EventTarget | null): boolean =>
+    node instanceof Node &&
+    (options.content.value?.contains(node) === true ||
+      options.trigger.value?.contains(node) === true);
+
+  const focusWentAway = (): boolean => {
+    const active = document.activeElement;
+
+    return active !== null && active !== document.body && !within(active);
+  };
+
   const onClosed = (): void => {
+    const held = inside;
+
     opening.take();
-    if (!inside) {
+    inside = false;
+
+    if (!held || focusWentAway()) {
       return;
     }
 
-    inside = false;
     focusElement(options.trigger.value);
   };
 
@@ -186,11 +200,6 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
       { flush: 'post' },
     );
   });
-
-  const within = (node: EventTarget | null): boolean =>
-    node instanceof Node &&
-    (options.content.value?.contains(node) === true ||
-      options.trigger.value?.contains(node) === true);
 
   return {
     control,

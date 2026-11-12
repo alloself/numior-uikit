@@ -72,6 +72,36 @@ describe('NuiMenu', () => {
     menu.unmount();
   });
 
+  it('leaves the focus where the chosen item sent it once the menu is hidden', async () => {
+    const field = document.createElement('button');
+
+    const entries: NuiMenuEntry[] = [
+      {
+        label: 'Find',
+        onSelect: () => {
+          void Promise.resolve().then(() => {
+            field.focus();
+          });
+        },
+      },
+    ];
+
+    const menu = MenuDriver.mount({ entries, anchored: true });
+
+    document.body.append(field);
+    await menu.focusAnchor();
+    await menu.show('first');
+
+    await menu.click('Find');
+    await flushPromises();
+
+    expect(menu.isOpen).toBe(false);
+    expect(document.activeElement).toBe(field);
+
+    field.remove();
+    menu.unmount();
+  });
+
   it('focuses the requested item when the entries arrive together with the opening', async () => {
     const menu = MenuDriver.mount({ anchored: true, entries: [] });
     await menu.focusAnchor();
