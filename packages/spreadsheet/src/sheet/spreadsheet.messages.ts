@@ -13,6 +13,8 @@ export interface NuiSpreadsheetMessages {
   readonly formulaBigNumber: string;
   readonly formulaSmallNumber: string;
   readonly formulaTooLong: string;
+  readonly formulaNesting: string;
+  readonly formulaDepth: string;
   readonly nameBox: string;
   readonly formulaBar: string;
   readonly expandFormula: string;
@@ -218,6 +220,9 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     formulaBigNumber: 'A number in a formula must be smaller than 1E+308',
     formulaSmallNumber: 'A number in a formula must be zero or at least 1E-309',
     formulaTooLong: 'A formula holds up to 8,192 characters',
+    formulaNesting:
+      'A formula holds up to 256 nested brackets, 65 nested functions and 1,024 plus or minus signs in a row',
+    formulaDepth: 'A formula holds up to 2,048 operations inside each other',
     nameBox: 'Name box',
     formulaBar: 'Formula bar',
     expandFormula: 'Expand the formula bar',
@@ -338,6 +343,9 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     formulaBigNumber: 'Число в формуле должно быть меньше 1E+308',
     formulaSmallNumber: 'Число в формуле должно быть нулём или не меньше 1E-309',
     formulaTooLong: 'Формула вмещает до 8 192 знаков',
+    formulaNesting:
+      'Формула вмещает до 256 вложенных скобок, 65 вложенных функций и 1 024 знаков «+» и «−» подряд',
+    formulaDepth: 'Формула вмещает до 2 048 действий друг в друге',
     nameBox: 'Поле имени',
     formulaBar: 'Строка формул',
     expandFormula: 'Развернуть строку формул',

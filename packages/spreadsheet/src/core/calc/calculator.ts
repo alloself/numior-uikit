@@ -19,6 +19,7 @@ import { ORIGIN, referenceRange } from '../formula/origin';
 import { parseFormula } from '../formula/parser';
 import { changesMeaning, shiftFormula, shiftSpan, type LineChange } from '../formula/rewrite';
 import { formulaReferences } from '../formula/references';
+import { findNode } from '../formula/walk';
 import { EMPTY, errorValue, numberValue } from '../values';
 import { structuredRange, tableData } from '../tables';
 import {
@@ -323,19 +324,9 @@ const SUBTOTALS = new Set(['SUBTOTAL', 'AGGREGATE']);
 
 const subtotals = new WeakMap<FormulaNode, boolean>();
 
-const subtotalIn = (node: FormulaNode): boolean => {
-  switch (node.kind) {
-    case FormulaNodeKind.Call:
-      return SUBTOTALS.has(node.name) || node.args.some(subtotalIn);
-    case FormulaNodeKind.Unary:
-    case FormulaNodeKind.Percent:
-      return subtotalIn(node.operand);
-    case FormulaNodeKind.Binary:
-      return subtotalIn(node.left) || subtotalIn(node.right);
-    default:
-      return false;
-  }
-};
+const subtotalIn = (node: FormulaNode): boolean =>
+  findNode(node, (item) => item.kind === FormulaNodeKind.Call && SUBTOTALS.has(item.name)) !==
+  undefined;
 
 const callsSubtotal = (node: FormulaNode): boolean => {
   const known = subtotals.get(node);
@@ -350,22 +341,11 @@ const callsSubtotal = (node: FormulaNode): boolean => {
   return found;
 };
 
-const usesVolatile = (node: FormulaNode, functions: FunctionRegistry): boolean => {
-  switch (node.kind) {
-    case FormulaNodeKind.Call:
-      return (
-        functions.get(node.name)?.volatile === true ||
-        node.args.some((arg) => usesVolatile(arg, functions))
-      );
-    case FormulaNodeKind.Unary:
-    case FormulaNodeKind.Percent:
-      return usesVolatile(node.operand, functions);
-    case FormulaNodeKind.Binary:
-      return usesVolatile(node.left, functions) || usesVolatile(node.right, functions);
-    default:
-      return false;
-  }
-};
+const usesVolatile = (node: FormulaNode, functions: FunctionRegistry): boolean =>
+  findNode(
+    node,
+    (item) => item.kind === FormulaNodeKind.Call && functions.get(item.name)?.volatile === true,
+  ) !== undefined;
 
 const indexDown = (sheet: Sheet, range: CellRange, index: LookupIndex): void => {
   sheet.cells.forEachInRange({ ...range, top: index.bottom + 1 }, (row, _col, value) => {

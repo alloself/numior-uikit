@@ -697,6 +697,18 @@ describe('NuiSpreadsheet', () => {
     await sheet.enter(4, 1, '=1E-400');
 
     expect(sheet.editorError).toBe('A number in a formula must be zero or at least 1E-309');
+
+    await sheet.press('Escape');
+    await sheet.enter(4, 1, `=${'('.repeat(257)}1${')'.repeat(257)}`);
+
+    expect(sheet.editorError).toBe(
+      'A formula holds up to 256 nested brackets, 65 nested functions and 1,024 plus or minus signs in a row',
+    );
+
+    await sheet.press('Escape');
+    await sheet.enter(4, 1, `=${'1+'.repeat(2048)}1`);
+
+    expect(sheet.editorError).toBe('A formula holds up to 2,048 operations inside each other');
     expect(sheet.changes).toEqual([]);
   });
 

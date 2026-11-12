@@ -26,6 +26,10 @@ export const formulaFailureText = (
       return messages.formulaSmallNumber;
     case FormulaFailureReason.LongFormula:
       return messages.formulaTooLong;
+    case FormulaFailureReason.Nesting:
+      return messages.formulaNesting;
+    case FormulaFailureReason.Depth:
+      return messages.formulaDepth;
     default:
       return messages.formulaError({ position: failure.position + 1 });
   }

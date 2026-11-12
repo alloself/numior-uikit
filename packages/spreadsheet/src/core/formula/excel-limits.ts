@@ -8,6 +8,7 @@ import {
   type FormulaNode,
   type SignatureOf,
 } from './formula.types';
+import { childrenOf } from './walk';
 
 export interface FormulaRefusal {
   readonly reason: FormulaFailureReason;
@@ -16,6 +17,14 @@ export interface FormulaRefusal {
 }
 
 export const MAX_FORMULA_TEXT = 8191;
+
+export const MAX_FORMULA_GROUPS = 256;
+
+export const MAX_FORMULA_CALLS = 65;
+
+export const MAX_FORMULA_SIGNS = 1024;
+
+export const MAX_FORMULA_DEPTH = 2048;
 
 const MAX_FORMULA_STRING = 255;
 
@@ -33,18 +42,27 @@ const callGivesReference = (name: string, signatureOf: SignatureOf): boolean => 
   return signature === undefined || signature.givesReference === true;
 };
 
+const intersected = (node: FormulaNode): FormulaNode => {
+  let item = node;
+
+  while (item.kind === FormulaNodeKind.Unary && item.op === UnaryOperator.Intersect) {
+    item = item.operand;
+  }
+  return item;
+};
+
 const givesReference = (node: FormulaNode, signatureOf: SignatureOf): boolean => {
-  switch (node.kind) {
+  const item = intersected(node);
+
+  switch (item.kind) {
     case FormulaNodeKind.Error:
-      return node.code === CellError.Ref;
-    case FormulaNodeKind.Unary:
-      return node.op === UnaryOperator.Intersect && givesReference(node.operand, signatureOf);
+      return item.code === CellError.Ref;
     case FormulaNodeKind.Call:
-      return callGivesReference(node.name, signatureOf);
+      return callGivesReference(item.name, signatureOf);
     case FormulaNodeKind.Opaque:
       return true;
     default:
-      return REFERENCE_KINDS.has(node.kind);
+      return REFERENCE_KINDS.has(item.kind);
   }
 };
 
@@ -109,22 +127,6 @@ export const literalRefusal = (node: FormulaNode): FormulaFailureReason | undefi
       return numberRefusal(String(Math.abs(node.value)));
     default:
       return undefined;
-  }
-};
-
-const childrenOf = (node: FormulaNode): readonly FormulaNode[] => {
-  switch (node.kind) {
-    case FormulaNodeKind.Call:
-      return node.args;
-    case FormulaNodeKind.Unary:
-    case FormulaNodeKind.Percent:
-      return [node.operand];
-    case FormulaNodeKind.Binary:
-      return [node.left, node.right];
-    case FormulaNodeKind.Array:
-      return node.rows.flat();
-    default:
-      return [];
   }
 };
 

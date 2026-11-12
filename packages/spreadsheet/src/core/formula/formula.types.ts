@@ -161,6 +161,8 @@ export const FormulaFailureReason = {
   BigNumber: 'big-number',
   SmallNumber: 'small-number',
   LongFormula: 'long-formula',
+  Nesting: 'nesting',
+  Depth: 'depth',
 } as const;
 
 export const FormulaReferenceKind = {

@@ -1,4 +1,5 @@
 import { FormulaNodeKind, UnaryOperator, type FormulaNode } from '../../core/formula/formula.types';
+import { foldFormula, operandsOf, withChildren } from '../../core/formula/walk';
 
 const WORKSHEET_FUNCTIONS = new Set(['FILTER', 'SORT']);
 
@@ -161,37 +162,22 @@ const prefixed = (name: string): string => {
   return FUTURE_FUNCTIONS.has(name) ? `_xlfn.${name}` : name;
 };
 
-const mapped = (nodes: readonly FormulaNode[]): readonly FormulaNode[] => {
-  const result = nodes.map(withFuturePrefixes);
-
-  return result.every((node, index) => node === nodes[index]) ? nodes : result;
-};
-
-export const withFuturePrefixes = (node: FormulaNode): FormulaNode => {
+const prefixedNode = (node: FormulaNode, parts: readonly FormulaNode[]): FormulaNode => {
   switch (node.kind) {
     case FormulaNodeKind.Call: {
       const name = prefixed(node.name);
-      const args = mapped(node.args);
+      const rebuilt = withChildren(node, parts);
 
-      return name === node.name && args === node.args ? node : { ...node, name, args };
+      return name === node.name ? rebuilt : { ...node, name, args: parts };
     }
     case FormulaNodeKind.Unary:
-    case FormulaNodeKind.Percent: {
-      const operand = withFuturePrefixes(node.operand);
-
-      if (node.kind === FormulaNodeKind.Unary && node.op === UnaryOperator.Intersect) {
-        return { kind: 'call', name: '_xlfn.SINGLE', args: [operand] };
-      }
-
-      return operand === node.operand ? node : { ...node, operand };
-    }
-    case FormulaNodeKind.Binary: {
-      const left = withFuturePrefixes(node.left);
-      const right = withFuturePrefixes(node.right);
-
-      return left === node.left && right === node.right ? node : { ...node, left, right };
-    }
+      return node.op === UnaryOperator.Intersect
+        ? { kind: 'call', name: '_xlfn.SINGLE', args: [parts[0] ?? node.operand] }
+        : withChildren(node, parts);
     default:
-      return node;
+      return withChildren(node, parts);
   }
 };
+
+export const withFuturePrefixes = (node: FormulaNode): FormulaNode =>
+  foldFormula<FormulaNode>(node, prefixedNode, operandsOf);

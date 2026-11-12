@@ -21,6 +21,10 @@ import {
 import {
   callRefusal,
   literalRefusal,
+  MAX_FORMULA_CALLS,
+  MAX_FORMULA_DEPTH,
+  MAX_FORMULA_GROUPS,
+  MAX_FORMULA_SIGNS,
   MAX_FORMULA_TEXT,
   numberRefusal,
   type FormulaRefusal,
@@ -31,6 +35,7 @@ import { ORIGIN, relativeFormula } from './origin';
 import { booleanFromWord, canonicalFunction } from './localization';
 import { parseStructured } from './structured';
 import { printFormula } from './printer';
+import { formulaDepth } from './walk';
 
 export interface ParseOptions {
   readonly books?: BookIndexOf | undefined;
@@ -58,6 +63,10 @@ const COLUMN_WORD = /^(\$?)([A-Za-z]{1,3})$/u;
 
 const ROW_WORD = /^(\$?)(\d{1,7})$/u;
 
+const SIGNS: ReadonlyMap<string, UnaryOperator> = new Map(
+  Object.values(UnaryOperator).map((sign) => [sign, sign]),
+);
+
 const isBinary = (text: string, operators: readonly BinaryOperator[]): text is BinaryOperator =>
   operators.some((operator) => operator === text);
 
@@ -79,6 +88,9 @@ const rowLine = (text: string): LineRef | undefined => {
     : { index: row - 1, absolute: match[1] === FormulaChar.Dollar };
 };
 
+const signOf = (token: Token): UnaryOperator | undefined =>
+  token.kind === TokenKind.Op ? SIGNS.get(token.text) : undefined;
+
 const lineOf = (token: Token): LineRef | undefined =>
   token.kind === TokenKind.Number && /^\d+$/u.test(token.text) ? rowLine(token.text) : undefined;
 
@@ -89,6 +101,8 @@ const createParser = (
   { books, signatures }: ParseOptions,
 ): Parser => {
   let at = 0;
+  let groups = 0;
+  let calls = 0;
 
   const peek = (ahead = 0): Token =>
     tokens[Math.min(at + ahead, tokens.length - 1)] ?? {
@@ -301,10 +315,19 @@ const createParser = (
     if (isPunct('(')) {
       next();
 
+      if (calls === MAX_FORMULA_CALLS) {
+        return fail(token, FormulaFailureReason.Nesting);
+      }
+
       const name = canonicalFunction(token.text, locale);
       const starts: Token[] = [];
+
+      calls += 1;
+
       const args = argumentsOf(starts);
       const [only] = args;
+
+      calls -= 1;
 
       return name === FunctionName.Single && args.length === 1 && only !== undefined
         ? { kind: 'unary', op: '@', operand: only }
@@ -367,25 +390,34 @@ const createParser = (
     if (token.text !== FormulaChar.OpenParen) {
       return fail(token, FormulaFailureReason.Token);
     }
+    if (groups === MAX_FORMULA_GROUPS) {
+      return fail(token, FormulaFailureReason.Nesting);
+    }
+
+    groups += 1;
+
     const inner = expression();
 
     expectPunct(')');
+    groups -= 1;
     return inner;
   };
 
   const unary = (): FormulaNode => {
-    const token = peek();
+    const signs: UnaryOperator[] = [];
 
-    if (
-      token.kind === TokenKind.Op &&
-      (token.text === UnaryOperator.Minus ||
-        token.text === UnaryOperator.Plus ||
-        token.text === UnaryOperator.Intersect)
-    ) {
+    for (let sign = signOf(peek()); sign !== undefined; sign = signOf(peek())) {
+      if (signs.length === MAX_FORMULA_SIGNS) {
+        return fail(peek(), FormulaFailureReason.Nesting);
+      }
+
+      signs.push(sign);
       next();
-      return { kind: 'unary', op: token.text, operand: unary() };
     }
-    return primary();
+    return signs.reduceRight<FormulaNode>(
+      (operand, op) => ({ kind: 'unary', op, operand }),
+      primary(),
+    );
   };
 
   const percent = (): FormulaNode => {
@@ -444,6 +476,15 @@ const booleanOf = (token: Token, locale: FormulaLocale): FormulaNode | undefined
   return value === undefined ? undefined : { kind: 'boolean', value };
 };
 
+const depthChecked = (
+  ast: FormulaNode,
+  tokens: readonly Token[],
+  text: string,
+): FormulaParse | undefined =>
+  tokens.length > MAX_FORMULA_DEPTH && formulaDepth(ast) > MAX_FORMULA_DEPTH
+    ? { ok: false, error: { position: text.length, reason: FormulaFailureReason.Depth } }
+    : undefined;
+
 const lengthChecked = (
   ast: FormulaNode,
   text: string,
@@ -475,9 +516,12 @@ export const parseFormula = (
     };
   }
   try {
-    const ast = relativeFormula(createParser(tokens, locale, offset, options).formula(), origin);
+    const parsed = createParser(tokens, locale, offset, options).formula();
 
-    return lengthChecked(ast, text, origin, options);
+    return (
+      depthChecked(parsed, tokens, text) ??
+      lengthChecked(relativeFormula(parsed, origin), text, origin, options)
+    );
   } catch (error) {
     if (error instanceof FormulaSyntaxError) {
       return { ok: false, error: error.failure };

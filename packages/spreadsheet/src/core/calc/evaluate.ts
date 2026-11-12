@@ -60,6 +60,22 @@ type NameNode = Extract<FormulaNode, { readonly kind: typeof FormulaNodeKind.Nam
 
 type Operand = CellValue | ArrayValue;
 
+type Operator = Extract<
+  FormulaNode,
+  {
+    readonly kind:
+      | typeof FormulaNodeKind.Unary
+      | typeof FormulaNodeKind.Percent
+      | typeof FormulaNodeKind.Binary;
+  }
+>;
+
+interface OperatorFrame {
+  readonly node: Operator;
+  readonly operands: readonly FormulaNode[];
+  readonly values: EvalValue[];
+}
+
 const resolving = new Set<DefinedName>();
 
 const externalNamed = (node: NameNode, book: number, context: EvalContext): EvalValue => {
@@ -217,9 +233,7 @@ const operandOf = (node: FormulaNode, context: EvalContext): Operand => {
       ? errorValue('#REF!')
       : sheetOf(node, context).cells.get(row, col);
   }
-  const value = safely(node, context);
-
-  return isMultiCell(value) ? { kind: 'array', rows: matrixOf(value) } : scalarOf(value);
+  return asOperand(safely(node, context));
 };
 
 const lifted = (operands: readonly Operand[], item: (cells: CellValue[]) => CellValue) => {
@@ -451,26 +465,89 @@ const intersected = (value: EvalValue, context: EvalContext): EvalValue => {
   }
 };
 
+const isOperator = (node: FormulaNode): node is Operator =>
+  node.kind === FormulaNodeKind.Unary ||
+  node.kind === FormulaNodeKind.Percent ||
+  node.kind === FormulaNodeKind.Binary;
+
+const operandsOf = (node: Operator): readonly FormulaNode[] =>
+  node.kind === FormulaNodeKind.Binary ? [node.left, node.right] : [node.operand];
+
+const asOperand = (value: EvalValue): Operand =>
+  isMultiCell(value) ? { kind: 'array', rows: matrixOf(value) } : scalarOf(value);
+
+const intersects = (node: Operator): boolean =>
+  node.kind === FormulaNodeKind.Unary && node.op === UnaryOperator.Intersect;
+
+const leafValue = (parent: Operator, node: FormulaNode, context: EvalContext): EvalValue =>
+  intersects(parent) ? safely(node, context) : operandOf(node, context);
+
+const computed = (
+  node: Operator,
+  values: readonly EvalValue[],
+  context: EvalContext,
+): EvalValue => {
+  const [first = EMPTY, second = EMPTY] = values;
+
+  switch (node.kind) {
+    case FormulaNodeKind.Unary:
+      if (node.op === UnaryOperator.Intersect) {
+        return intersected(first, context);
+      }
+      return applied([asOperand(first)], ([operand = EMPTY]) =>
+        node.op === UnaryOperator.Minus ? numberValue(-toNumber(operand, context.locale)) : operand,
+      );
+    case FormulaNodeKind.Percent:
+      return applied([asOperand(first)], ([operand = EMPTY]) =>
+        numberValue(toNumber(operand, context.locale) / 100),
+      );
+    default:
+      return applied([asOperand(first), asOperand(second)], ([left = EMPTY, right = EMPTY]) =>
+        operate(node.op, left, right, context.locale),
+      );
+  }
+};
+
+const settled = (frame: OperatorFrame, context: EvalContext): EvalValue =>
+  attempt(() => computed(frame.node, frame.values, context));
+
+const operatorValue = (root: Operator, context: EvalContext): EvalValue => {
+  const top: OperatorFrame = { node: root, operands: operandsOf(root), values: [] };
+  const frames: OperatorFrame[] = [top];
+
+  for (let frame = frames.at(-1); frame !== undefined; frame = frames.at(-1)) {
+    const next = frame.operands[frame.values.length];
+
+    if (next !== undefined && isOperator(next)) {
+      frames.push({ node: next, operands: operandsOf(next), values: [] });
+      continue;
+    }
+    if (next !== undefined) {
+      frame.values.push(leafValue(frame.node, next, context));
+      continue;
+    }
+
+    frames.pop();
+
+    const parent = frames.at(-1);
+
+    if (parent === undefined) {
+      continue;
+    }
+
+    parent.values.push(settled(frame, context));
+  }
+  return computed(root, top.values, context);
+};
+
 const operation = (node: FormulaNode, context: EvalContext): EvalValue => {
   switch (node.kind) {
     case FormulaNodeKind.Call:
       return call(node, context);
     case FormulaNodeKind.Unary:
-      if (node.op === UnaryOperator.Intersect) {
-        return intersected(evaluate(node.operand, context), context);
-      }
-      return applied([operandOf(node.operand, context)], ([operand = EMPTY]) =>
-        node.op === UnaryOperator.Minus ? numberValue(-toNumber(operand, context.locale)) : operand,
-      );
     case FormulaNodeKind.Percent:
-      return applied([operandOf(node.operand, context)], ([operand = EMPTY]) =>
-        numberValue(toNumber(operand, context.locale) / 100),
-      );
     case FormulaNodeKind.Binary:
-      return applied(
-        [operandOf(node.left, context), operandOf(node.right, context)],
-        ([left = EMPTY, right = EMPTY]) => operate(node.op, left, right, context.locale),
-      );
+      return operatorValue(node, context);
     case FormulaNodeKind.Array:
       return { kind: 'array', rows: node.rows.map((row) => row.map(constantOf)) };
     default:

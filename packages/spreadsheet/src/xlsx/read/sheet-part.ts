@@ -14,6 +14,7 @@ import {
 } from '../../core/formula/formula.types';
 import { EN_FORMULAS } from '../../core/formula/locale';
 import { parseFormula } from '../../core/formula/parser';
+import { eachNode, operandsOf } from '../../core/formula/walk';
 import { formulaReferences } from '../../core/formula/references';
 import {
   EMPTY,
@@ -183,22 +184,17 @@ export const valueOf = (
 };
 
 const callsIn = (node: FormulaNode, visit: (name: string) => void): void => {
-  switch (node.kind) {
-    case FormulaNodeKind.Call:
-      visit(node.name);
-      node.args.forEach((arg) => callsIn(arg, visit));
-      return;
-    case FormulaNodeKind.Unary:
-    case FormulaNodeKind.Percent:
-      callsIn(node.operand, visit);
-      return;
-    case FormulaNodeKind.Binary:
-      callsIn(node.left, visit);
-      callsIn(node.right, visit);
-      return;
-    default:
-      return;
-  }
+  eachNode(
+    node,
+    (item) => {
+      if (item.kind !== FormulaNodeKind.Call) {
+        return;
+      }
+
+      visit(item.name);
+    },
+    operandsOf,
+  );
 };
 
 const formulaKind = (text: string | undefined): FormulaKind => {
