@@ -1,5 +1,5 @@
 import { caretAtEnd } from '../commands/blocks';
-import { isAtom } from '../commands/atoms';
+import { caretNear, isAtom } from '../commands/atoms';
 import { intentCommand, selectAtom } from '../commands/input';
 import { clipboardHTML } from '../html/clipboard';
 import { nearestCursor, selectionRange } from '../state/selection';
@@ -348,6 +348,27 @@ const moveInGap = (host: ViewHost, event: KeyboardEvent): boolean => {
   return true;
 };
 
+const EDGE_BIAS: Readonly<Record<string, -1 | 1>> = { Home: 1, End: -1 };
+
+const jumpPastEdgeBlock = (host: ViewHost, event: KeyboardEvent): boolean => {
+  const bias = EDGE_BIAS[event.key];
+  const jumps = (event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey;
+
+  if (bias === undefined || !jumps) {
+    return false;
+  }
+
+  const state = host.state();
+  const target = caretNear(state.doc, bias < 0 ? state.doc.size : 0, bias);
+
+  if (target.kind !== SelectionKind.Gap) {
+    return false;
+  }
+
+  host.dispatch(state.tr.setSelection(target), 'key');
+  return true;
+};
+
 const IME_KEYS = new Set(['Process', 'Unidentified']);
 
 const isPlainInput = (event: InputEvent): boolean =>
@@ -370,6 +391,7 @@ const handleKey = (host: ViewHost, event: KeyboardEvent): boolean => {
   return (
     state.plugins.some((plugin) => plugin.props.handleKey?.(key, state, dispatch) === true) ||
     moveInGap(host, event) ||
+    jumpPastEdgeBlock(host, event) ||
     moveByArrow(host, event) ||
     deleteAll(host, event) ||
     editNode(host, event) ||

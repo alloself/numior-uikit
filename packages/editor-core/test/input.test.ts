@@ -384,6 +384,33 @@ describe('editor view input', () => {
     expect(view.modelTexts).toEqual(['ab', '', 'x']);
   });
 
+  it('jumps past a picture that ends or starts the document with Ctrl+End and Ctrl+Home', () => {
+    const first = node('image', [], { src: 'a.png' });
+    const last = node('image', [], { src: 'b.png' });
+    const view = mounted(doc(first, node('paragraph', ['ab']), last));
+
+    view.focus();
+    view.place(2);
+
+    expect(view.press('End', { ctrl: true })).toBe(true);
+    expect(view.selection).toEqual({ kind: 'gap', id: last.id, side: 'end' });
+
+    view.type('x');
+
+    expect(view.modelTexts).toEqual(['', 'ab', '', 'x']);
+    expect(view.press('Home', { ctrl: true })).toBe(true);
+    expect(view.selection).toEqual({ kind: 'gap', id: first.id, side: 'start' });
+  });
+
+  it('leaves Ctrl+End to the browser when the document ends with text', () => {
+    const view = mounted(twoParagraphs());
+
+    view.focus();
+    view.place(1);
+
+    expect(view.press('End', { ctrl: true })).toBe(false);
+  });
+
   it('selects the whole table when a click lands on one of its cells', () => {
     const cell = node('table_cell', [], { column: 'a', value: 1 });
 
