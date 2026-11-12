@@ -10,6 +10,7 @@ import type {
   NuiTableRanges,
   NuiTableRect,
   NuiTableCellPosition,
+  NuiTableScrollAnchor,
   NuiTableSourceCell,
 } from '@numior/table';
 import type { NuiListEntry, NuiMenuEntry, NuiSize, NuiTabDescriptor } from '@numior/vue';
@@ -307,11 +308,18 @@ export interface SheetHeldCell {
   readonly position: NuiTableCellPosition;
 }
 
+export interface SheetHeldView {
+  readonly anchor: NuiTableScrollAnchor;
+  readonly row: number | undefined;
+  readonly col: number | undefined;
+}
+
 export interface SheetHold {
   readonly cells: SheetCells;
   readonly active: SheetHeldCell | undefined;
   readonly draft: SheetHeldCell | undefined;
   readonly ranges: readonly SheetHeldRange[];
+  readonly view: SheetHeldView | undefined;
 }
 
 export interface SheetPlacesOptions {

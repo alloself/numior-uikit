@@ -1,5 +1,6 @@
 import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
+import { NuiTable, type NuiTableExposed, type NuiTableScrollAnchor } from '@numior/table';
 import { nextTick } from 'vue';
 import {
   NuiSpreadsheet,
@@ -97,6 +98,14 @@ const tokensIn = (scope: DOMWrapper<Element>): string[] =>
 
 const texts = (wrapper: VueWrapper, selector: string): string[] =>
   wrapper.findAll(selector).map((item) => item.text());
+
+const isTableHandle = (value: unknown): value is NuiTableExposed =>
+  typeof value === 'object' &&
+  value !== null &&
+  'scrollAnchor' in value &&
+  typeof value.scrollAnchor === 'function' &&
+  'scrollToAnchor' in value &&
+  typeof value.scrollToAnchor === 'function';
 
 export class SpreadsheetDriver {
   private constructor(
@@ -706,6 +715,51 @@ export class SpreadsheetDriver {
   async settle(): Promise<void> {
     await vi.dynamicImportSettled();
     await nextTick();
+  }
+
+  async scrollGrid(top: number, left: number): Promise<void> {
+    const viewport = this.wrapper.find('.nui-table__viewport').element;
+
+    Object.defineProperty(viewport, 'scrollTop', {
+      value: top,
+      configurable: true,
+      writable: true,
+    });
+
+    Object.defineProperty(viewport, 'scrollLeft', {
+      value: left,
+      configurable: true,
+      writable: true,
+    });
+
+    viewport.dispatchEvent(new Event('scroll'));
+    await nextTick();
+  }
+
+  private get table(): NuiTableExposed {
+    const handle: unknown = this.wrapper.findComponent(NuiTable).vm;
+
+    if (!isTableHandle(handle)) {
+      throw new Error('The sheet renders no table handle');
+    }
+    return handle;
+  }
+
+  async showFrom(anchor: NuiTableScrollAnchor): Promise<void> {
+    await this.scrollGrid(0, 0);
+    this.table.scrollToAnchor(anchor);
+    this.wrapper.find('.nui-table__viewport').element.dispatchEvent(new Event('scroll'));
+    await nextTick();
+  }
+
+  get shownFrom(): NuiTableScrollAnchor | undefined {
+    return this.table.scrollAnchor();
+  }
+
+  get gridScroll(): { readonly top: number; readonly left: number } {
+    const viewport = this.wrapper.find('.nui-table__viewport').element;
+
+    return { top: viewport.scrollTop, left: viewport.scrollLeft };
   }
 
   async focusFormula(): Promise<void> {

@@ -389,6 +389,58 @@ describe('NuiSpreadsheet in a shared book', () => {
     expect(driver.nameBox).toBe('D6');
   });
 
+  it('keeps the rows and columns on the screen in place when someone else adds or removes lines before them', async () => {
+    const book = shared();
+    const driver = open(book);
+
+    await driver.showFrom({ row: 10, rowOffset: 5, col: 4, colOffset: 10 });
+    receive(book.session, rowsAdded(2, 3));
+    await driver.settle();
+
+    expect(driver.shownFrom).toEqual({
+      row: 13,
+      rowOffset: expect.closeTo(5),
+      col: 4,
+      colOffset: 10,
+    });
+
+    receive(
+      book.session,
+      { kind: 'deleteLines', sheet: SHEET, axis: 'rows', at: 0, count: 1 },
+      { kind: 'insertLines', sheet: SHEET, axis: 'cols', at: 1, count: 2 },
+    );
+
+    await driver.settle();
+
+    expect(driver.shownFrom).toEqual({
+      row: 12,
+      rowOffset: expect.closeTo(5),
+      col: 6,
+      colOffset: 10,
+    });
+
+    receive(book.session, rowsAdded(40, 5));
+    await driver.settle();
+
+    expect(driver.shownFrom).toEqual({
+      row: 12,
+      rowOffset: expect.closeTo(5),
+      col: 6,
+      colOffset: 10,
+    });
+  });
+
+  it('shows the lines someone else adds at the start of a sheet scrolled to its start', async () => {
+    const book = shared();
+    const driver = open(book);
+
+    await driver.scrollGrid(0, 0);
+    receive(book.session, rowsAdded(0, 2));
+    await driver.settle();
+
+    expect(driver.gridScroll).toEqual({ top: 0, left: 0 });
+  });
+
   it('leaves the focus outside the sheet when the active cell moves', async () => {
     const book = shared();
     const driver = open(book);

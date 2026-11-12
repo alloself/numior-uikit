@@ -1,10 +1,11 @@
-import type { NuiTableCellPosition, NuiTableRange } from '@numior/table';
+import type { NuiTableCellPosition, NuiTableExposed, NuiTableRange } from '@numior/table';
 import { mapCell, mapCellNear, mapRange, type CellAddress, type LineChange } from '../core';
 import {
   NuiSpreadsheetRefusalReason,
   type SheetCells,
   type SheetHeldCell,
   type SheetHeldRange,
+  type SheetHeldView,
   type SheetHold,
   type SheetPlaces,
   type SheetPlacesOptions,
@@ -25,6 +26,20 @@ const heldRange = (cells: SheetCells, { from, to }: NuiTableRange): SheetHeldRan
   up: from.row > to.row,
   back: from.col > to.col,
 });
+
+const heldView = (cells: SheetCells, table: NuiTableExposed | null): SheetHeldView | undefined => {
+  const anchor = table?.scrollAnchor();
+  const scroll = table?.scrollPosition();
+
+  if (anchor === undefined || scroll === undefined) {
+    return undefined;
+  }
+
+  const row = scroll.top > 0 ? cells.rowAt(anchor.row) : undefined;
+  const col = scroll.left !== 0 && anchor.col !== undefined ? cells.colAt(anchor.col) : undefined;
+
+  return row === undefined && col === undefined ? undefined : { anchor, row, col };
+};
 
 const near = (cells: SheetCells, cell: CellAddress): NuiTableCellPosition => ({
   row: cells.rowNear(cell.row),
@@ -78,7 +93,31 @@ export const useSheetPlaces = (options: SheetPlacesOptions): SheetPlaces => {
           active: active === undefined ? undefined : heldCell(cells, active),
           draft: draft === undefined ? undefined : heldCell(cells, draft),
           ranges: options.formula.ranges.value.map((range) => heldRange(cells, range)),
+          view: heldView(cells, options.table.value),
         };
+  };
+
+  const carryView = (
+    cells: SheetCells,
+    held: SheetHeldView,
+    lines: readonly LineChange[],
+    sheet: string,
+  ): void => {
+    const { anchor } = held;
+
+    const moved = mapCellNear(lines, sheet, {
+      row: held.row ?? cells.rowAt(anchor.row),
+      col: held.col ?? (anchor.col === undefined ? 0 : cells.colAt(anchor.col)),
+    });
+
+    const row = held.row === undefined ? anchor.row : cells.rowNear(moved.row);
+    const col = held.col === undefined ? anchor.col : cells.colNear(moved.col);
+
+    if (row === anchor.row && col === anchor.col) {
+      return;
+    }
+
+    options.table.value?.scrollToAnchor({ ...anchor, row, col });
   };
 
   const lose = (): void => {
@@ -151,6 +190,9 @@ export const useSheetPlaces = (options: SheetPlacesOptions): SheetPlaces => {
 
     if (held === undefined || cells === undefined || sheet === undefined || cells === held.cells) {
       return;
+    }
+    if (held.view !== undefined) {
+      carryView(cells, held.view, lines, sheet.name);
     }
 
     const edited =

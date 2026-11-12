@@ -194,6 +194,27 @@ test.describe('collaboration on a workbook', () => {
     await expect(anna.sheet.cell('3', 0)).toHaveText('');
   });
 
+  test('keeps the rows on the screen in place when someone else inserts a row above them', async ({
+    collab,
+  }) => {
+    const anna = await collab.joinBook(ANNA);
+    const boris = await collab.joinBook(BORIS);
+
+    await anna.sheet.enter('12', 0, 'на виду');
+    await anna.sheet.scrollBody(205);
+    await expect.poll(() => anna.sheet.scrollTop()).toBe(205);
+
+    const before = await boxOf(anna.sheet.cell('12', 0));
+
+    await boris.sheet.cellMenu('1', 0, 'Вставить 1 строку выше');
+
+    await expect(anna.sheet.cell('13', 0)).toHaveText('на виду');
+
+    await expect
+      .poll(async () => Math.abs((await boxOf(anna.sheet.cell('13', 0))).y - before.y))
+      .toBeLessThan(1);
+  });
+
   test('closes a draft with a note when someone else removes its row', async ({ collab }) => {
     const anna = await collab.joinBook(ANNA);
     const boris = await collab.joinBook(BORIS);
