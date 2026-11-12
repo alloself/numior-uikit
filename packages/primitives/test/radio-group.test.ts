@@ -17,6 +17,8 @@ describe('radio group context', () => {
           provideRadioGroup<string>({
             name: computed(() => 'plan'),
             modelValue: model,
+            selectedKey: computed(() => model.value),
+            keyOf: (value) => value,
             disabled: computed(() => false),
             readonly: computed(() => false),
             invalid: computed(() => false),
@@ -29,6 +31,7 @@ describe('radio group context', () => {
 
     expect(group?.name.value).toBe('plan');
     expect(group?.modelValue.value).toBe('a');
+    expect(group?.selectedKey.value).toBe('a');
 
     group?.select('b');
     expect(model.value).toBe('b');

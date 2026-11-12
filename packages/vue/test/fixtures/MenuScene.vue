@@ -21,8 +21,9 @@
       </NuiMenuItem>
       <NuiMenuCheckboxItem v-model:checked="bold">Bold</NuiMenuCheckboxItem>
       <NuiMenuRadioGroup v-model="align">
-        <NuiMenuRadioItem value="left">Left</NuiMenuRadioItem>
-        <NuiMenuRadioItem value="center">Center</NuiMenuRadioItem>
+        <NuiMenuRadioItem v-for="alignment in ALIGNMENTS" :key="alignment.side" :value="alignment">
+          {{ alignment.label }}
+        </NuiMenuRadioItem>
       </NuiMenuRadioGroup>
       <NuiMenuSeparator />
       <NuiMenuLabel>More</NuiMenuLabel>
@@ -51,6 +52,14 @@ import {
   type NuiMenuProps,
 } from '../../src';
 
+interface Alignment {
+  readonly side: string;
+  readonly label: string;
+}
+
+const LEFT: Alignment = { side: 'left', label: 'Left' };
+const ALIGNMENTS: readonly Alignment[] = [LEFT, { side: 'center', label: 'Center' }];
+
 const {
   props = {},
   entries = undefined,
@@ -69,7 +78,7 @@ const open = ref(initiallyOpen);
 const items = shallowRef(entries);
 const log: string[] = [];
 const bold = ref(false);
-const align = ref('left');
+const align = ref(LEFT);
 const anchor = useTemplateRef<HTMLButtonElement>('anchor');
 const menu = useTemplateRef('menu');
 

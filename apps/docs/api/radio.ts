@@ -31,6 +31,10 @@ const docs: DocsMap = {
         ru: 'Варианты выбора. Радиокнопки строятся из них вместо слота.',
         en: 'Options to choose from. The radios are built from them instead of the slot.',
       },
+      getKey: {
+        ru: 'Функция, которая возвращает ключ значения-объекта: по ключу ищется выбранная радиокнопка. Без неё ключом служит JSON значения.',
+        en: 'Function that returns the key of an object value; the selected radio is found by this key. Without it the JSON of the value is the key.',
+      },
     },
     models: {
       'v-model': { ru: 'Значение выбранной радиокнопки.', en: 'Value of the selected radio.' },

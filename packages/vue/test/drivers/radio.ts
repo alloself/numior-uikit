@@ -1,6 +1,7 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { NuiRadioGroup, type NuiFieldProps, type NuiRadioGroupProps } from '../../src';
 import RadioGroupScene from '../fixtures/RadioGroupScene.vue';
+import RadioWarehousesScene from '../fixtures/RadioWarehousesScene.vue';
 import { ComponentDriver } from './component';
 
 export interface RadioGroupMountOptions {
@@ -9,6 +10,11 @@ export interface RadioGroupMountOptions {
   readonly values?: string[];
   readonly field?: NuiFieldProps;
   readonly disabledValues?: string[];
+}
+
+export interface RadioWarehousesMountOptions {
+  readonly keyed?: boolean;
+  readonly start?: 'saved' | 'restocked' | 'none';
 }
 
 export class RadioGroupDriver extends ComponentDriver {
@@ -27,6 +33,12 @@ export class RadioGroupDriver extends ComponentDriver {
     return new RadioGroupDriver(wrapper, wrapper.findComponent(NuiRadioGroup));
   }
 
+  static mountWarehouses(options: RadioWarehousesMountOptions = {}) {
+    const wrapper = mount(RadioWarehousesScene, { props: options });
+
+    return new RadioGroupDriver(wrapper, wrapper.findComponent(NuiRadioGroup));
+  }
+
   get group(): DOMWrapper<Element> {
     return this.wrapper.find('[role="radiogroup"]');
   }
@@ -41,6 +53,12 @@ export class RadioGroupDriver extends ComponentDriver {
 
   get checkedValue(): string | undefined {
     return this.radios.find((radio) => radio.element.checked)?.element.value;
+  }
+
+  get checkedLabel(): string | undefined {
+    const checked = this.wrapper.find('.nui-radio--checked');
+
+    return checked.exists() ? checked.text() : undefined;
   }
 
   get disabledValues(): string[] {
@@ -66,6 +84,18 @@ export class RadioGroupDriver extends ComponentDriver {
 
   async select(value: string): Promise<void> {
     const radio = this.radio(value);
+    radio.element.checked = true;
+    await radio.trigger('change');
+  }
+
+  async pick(label: string): Promise<void> {
+    const radio = this.radios.find(
+      (candidate) => candidate.element.closest('label')?.textContent?.trim() === label,
+    );
+
+    if (!radio) {
+      throw new Error(`No radio labelled ${label}`);
+    }
     radio.element.checked = true;
     await radio.trigger('change');
   }

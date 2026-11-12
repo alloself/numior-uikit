@@ -37,7 +37,7 @@ const emit = defineEmits<{ select: [] }>();
 const menu = useMenu();
 const itemRef = menu.items.ref(Symbol('menu-item'));
 const radio = useMenuRadio();
-const selected = computed(() => radio.modelValue.value === value);
+const selected = computed(() => radio.selectedKey.value === radio.keyOf(value));
 
 const choose = (): void => {
   if (disabled) {
