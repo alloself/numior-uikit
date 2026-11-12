@@ -12,9 +12,13 @@ export { parseFormula } from './parser';
 export { printFormula } from './printer';
 export { formulaReferences, isSymbolic, type FormulaReference } from './references';
 export {
+  followLines,
   referenceSpans,
   retarget,
+  shiftOffset,
   toggleAnchors,
   type AnchoredText,
   type ReferenceSpan,
+  type TextEdit,
+  type TextShift,
 } from './spans';

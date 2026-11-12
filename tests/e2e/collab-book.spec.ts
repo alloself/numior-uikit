@@ -194,6 +194,29 @@ test.describe('collaboration on a workbook', () => {
     await expect(anna.sheet.cell('3', 0)).toHaveText('');
   });
 
+  test('moves the references of a formula someone types when someone else inserts a row above them', async ({
+    collab,
+  }) => {
+    const anna = await collab.joinBook(ANNA);
+    const boris = await collab.joinBook(BORIS);
+
+    await anna.sheet.enter('9', 0, '5');
+    await expect(boris.sheet.cell('9', 0)).toHaveText('5');
+
+    await anna.sheet.startEdit('1', 1);
+    await anna.sheet.typeAtCaret('=A9*10');
+    await anna.sheet.typeAtCaret('', 2);
+    await boris.sheet.cellMenu('3', 0, 'Вставить 1 строку выше');
+
+    await expect(anna.sheet.editorIn('1', 1)).toHaveValue('=A10*10');
+
+    await anna.sheet.typeAtCaret('2');
+    await anna.client.page.keyboard.press('Enter');
+
+    await expect(boris.sheet.cell('1', 1)).toHaveText('1050');
+    await expect(anna.sheet.cell('1', 1)).toHaveText('1050');
+  });
+
   test('keeps the rows on the screen in place when someone else inserts a row above them', async ({
     collab,
   }) => {

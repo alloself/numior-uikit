@@ -2,12 +2,16 @@ import { Key } from '@numior/primitives';
 import type { NuiTableDraft, NuiTableRange, NuiTableCellPosition } from '@numior/table';
 import { computed, shallowRef } from 'vue';
 import {
+  followLines,
   formatRange,
   referenceSpans,
   retarget,
+  shiftOffset,
   toggleAnchors,
+  type LineChange,
   type ReferenceSpan,
   type Sheet,
+  type TextShift,
 } from '../core';
 import {
   FrameGrip,
@@ -17,7 +21,13 @@ import {
   type SheetReferences,
   type SheetReferencesOptions,
 } from './sheet.types';
-import { caretFieldIn, placeCaretIn, type CaretField } from './sheet-caret';
+import {
+  caretFieldIn,
+  placeCaretIn,
+  placeSelectionIn,
+  type CaretField,
+  type CaretSelection,
+} from './sheet-caret';
 
 interface LastPick {
   readonly text: string;
@@ -354,6 +364,57 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
     void placeCaretIn(options.root.value, options.nameField.value, caret);
   };
 
+  const shiftPick = (shift: TextShift, text: string): void => {
+    if (lastPick?.text !== text) {
+      return;
+    }
+
+    lastPick = {
+      text: shift.text,
+      start: shiftOffset(shift, lastPick.start),
+      end: shiftOffset(shift, lastPick.end),
+    };
+  };
+
+  const shiftField = (shift: TextShift, text: string): void => {
+    const field = caretField();
+
+    if (field === undefined || field.value !== text) {
+      return;
+    }
+
+    const selection: CaretSelection = {
+      start: shiftOffset(shift, field.selectionStart ?? text.length),
+      end: shiftOffset(shift, field.selectionEnd ?? text.length),
+      direction: field.selectionDirection ?? undefined,
+    };
+
+    field.value = shift.text;
+    field.setSelectionRange(selection.start, selection.end, selection.direction);
+    void placeSelectionIn(options.root.value, options.nameField.value, shift.text, selection);
+  };
+
+  const follow = (lines: readonly LineChange[], sheet: string): void => {
+    const draft = editing.draft.value;
+    const text = draftText.value;
+
+    const shift =
+      draft === undefined || !text.startsWith(FORMULA_START)
+        ? undefined
+        : followLines(text, lines, sheet, options.locale().formulas);
+
+    if (draft === undefined || shift === undefined) {
+      return;
+    }
+    if (session !== undefined) {
+      onGripUp();
+    }
+
+    shiftPick(shift, text);
+    shiftField(shift, text);
+    editing.setDraft({ ...draft, value: shift.text });
+  };
+
   return {
     segments,
     frames,
@@ -364,5 +425,6 @@ export const useSheetReferences = (options: SheetReferencesOptions): SheetRefere
     onGripDown,
     onGripMove,
     onGripUp,
+    follow,
   };
 };

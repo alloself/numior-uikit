@@ -170,6 +170,7 @@ export interface SheetReferences {
   onGripDown(event: PointerEvent, frame: ReferenceFrame, grip: FrameGrip): void;
   onGripMove(event: PointerEvent): void;
   onGripUp(): void;
+  follow(lines: readonly LineChange[], sheet: string): void;
 }
 
 export interface SheetCellsOptions {

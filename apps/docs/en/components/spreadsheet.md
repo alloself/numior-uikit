@@ -78,6 +78,10 @@ When someone else inserts or removes rows and columns, the active cell and the s
 their data. An open cell moves with its row: the typed text, the focus and the caret are kept. If
 its row or column was removed, the edit closes and the sheet says so in a note.
 
+The references of an unfinished formula follow the data too. After a row is inserted above the
+ninth one, `=SUM(A3:A9)` becomes `=SUM(A3:A10)`, and the caret stays at the same character. A
+reference to removed cells turns into `#REF!`, as in a saved formula.
+
 The screen keeps the same data: rows inserted above the window do not push away what you read. A
 sheet scrolled to its very start shows rows inserted at the start right away.
 

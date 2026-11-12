@@ -170,12 +170,16 @@ export {
   localFunction,
   parseFormula,
   printFormula,
+  followLines,
   referenceSpans,
   retarget,
+  shiftOffset,
   toggleAnchors,
 } from './formula';
 export type {
   AnchoredText,
+  TextEdit,
+  TextShift,
   FunctionCall,
   FunctionPrefix,
   FormulaFailure,

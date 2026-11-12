@@ -592,6 +592,14 @@ const onRemoteSteps = (_steps: readonly WorkbookStep[], lines: readonly LineChan
   noteStructure();
   editing.redraw();
   places.restore(held, lines);
+
+  const sheet = shownSheet.value;
+
+  if (sheet === undefined) {
+    return;
+  }
+
+  references.follow(lines, sheet.name);
 };
 
 onMounted(() => {

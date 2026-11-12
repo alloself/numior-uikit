@@ -289,6 +289,57 @@ describe('NuiSpreadsheet in a shared book', () => {
     expect(driver.refusals).toEqual([]);
   });
 
+  it('moves the references of a formula being typed with the rows someone else adds above them', async () => {
+    const book = shared();
+    const driver = open(book);
+
+    receive(book.session, writeAt(2, 0, { kind: 'number', value: 1 }));
+    receive(book.session, writeAt(8, 0, { kind: 'number', value: 5 }));
+    await driver.focus(1, 1);
+    await driver.press('F2');
+    await driver.type('=SUM(A3:A9)+A1');
+    driver.placeCaret(10);
+    receive(book.session, rowsAdded(4, 1));
+    await driver.settle();
+
+    expect(driver.editingCell).toEqual({ row: 1, col: 1 });
+    expect(driver.editorText).toBe('=SUM(A3:A10)+A1');
+    expect(driver.caret).toBe(11);
+
+    await driver.press('Enter');
+
+    expect(driver.text(1, 1)).toBe('6');
+  });
+
+  it('breaks a reference of a formula being typed to a row someone else removes', async () => {
+    const book = shared();
+    const driver = open(book);
+
+    await driver.focus(6, 1);
+    await driver.press('F2');
+    await driver.type('=A4+A2');
+    receive(book.session, { kind: 'deleteLines', sheet: SHEET, axis: 'rows', at: 3, count: 1 });
+    await driver.settle();
+
+    expect(driver.editingCell).toEqual({ row: 5, col: 1 });
+    expect(driver.editorText).toBe('=#REF!+A2');
+    expect(driver.caret).toBe(9);
+  });
+
+  it('moves the references of a formula typed in the formula bar with the rows someone else adds', async () => {
+    const book = shared();
+    const driver = open(book);
+
+    await driver.focus(2, 1);
+    await driver.focusFormula();
+    await driver.typeFormula('=A5*2');
+    receive(book.session, rowsAdded(0, 2));
+    await driver.settle();
+
+    expect(driver.formula).toBe('=A7*2');
+    expect(driver.formulaFocused).toBe(true);
+  });
+
   it('carries a draft typed in the formula bar and leaves the focus in the bar', async () => {
     const book = shared();
     const driver = open(book);
