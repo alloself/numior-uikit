@@ -1,3 +1,4 @@
+import type { CellError } from '../../core/cell.types';
 import { createCalculator, type Calculator } from '../../core/calc/calculator';
 import type { FunctionRegistry } from '../../core/calc/calc.types';
 import { BASE_FUNCTIONS } from '../../core/calc/functions';
@@ -49,6 +50,7 @@ import { pivotOf } from './pivot-model';
 import { readPositionalParts } from './positional-parts';
 import { readDrawings } from './drawing-part';
 import { readSheetPart, type SheetCounts } from './sheet-part';
+import { readValueErrors } from './value-errors';
 import { readStyles, type CellStyles } from './styles';
 import { readTheme } from './theme-part';
 import { readTablePart } from './table-part';
@@ -91,6 +93,7 @@ interface Load {
 
 interface BookContext {
   readonly strings: SharedStrings;
+  readonly errors: readonly (CellError | undefined)[];
   readonly styles: CellStyles;
   readonly decorations: readonly number[];
 }
@@ -333,6 +336,7 @@ const loadSheet = async (
       calculator: load.calculator,
       sheet,
       strings: context.strings.strings,
+      errors: context.errors,
       formats: context.styles.formats,
       decorations: context.decorations,
       differentials: context.styles.differentials,
@@ -541,8 +545,15 @@ const readBook = async (
   const strings = await readSharedStrings(archive, stringsPart, load.parts);
   const styles = await readStyles(archive, stylesPart, locale.numbers, load.parts);
 
+  const errorParts = {
+    metadata: targetOf(relationships, 'sheetMetadata'),
+    values: targetOf(relationships, 'rdRichValue'),
+    structures: targetOf(relationships, 'rdRichValueStructure'),
+  };
+
   const context: BookContext = {
     strings,
+    errors: await readValueErrors(archive, errorParts, load.parts),
     styles,
     decorations: styles.decorations.map((decoration) => book.decorations.id(decoration)),
   };
@@ -550,7 +561,9 @@ const readBook = async (
   book.decorations.defaultFont = styles.defaultFont ?? book.decorations.defaultFont;
   book.decorations.theme = await readTheme(archive, themePart, load.parts);
 
-  [stringsPart, stylesPart].forEach((part) => {
+  const richParts = [...Object.values(errorParts), targetOf(relationships, 'rdRichValueTypes')];
+
+  [stringsPart, stylesPart, ...richParts].forEach((part) => {
     if (part === undefined) {
       return;
     }

@@ -162,6 +162,55 @@ describe('writing xlsx', () => {
     expect(await partOf(bytes, 'xl/worksheets/sheet1.xml')).toContain('_xlfn.XLOOKUP(');
     expect(await partOf(bytes, 'xl/worksheets/sheet1.xml')).toContain('cm="1"');
     expect(await partOf(bytes, 'xl/metadata.xml')).toContain('XLDAPR');
+    expect(await partOf(bytes, 'xl/richData/rdrichvalue.xml')).toBe('');
+  });
+
+  it('writes the errors of dynamic arrays the way Excel does and reads them back', async () => {
+    const sheet = openBook();
+
+    [
+      ['A1', '=SEQUENCE(3)'],
+      ['A2', '5'],
+      ['C1', '=SEQUENCE(0)'],
+      ['D1', '=1/0'],
+    ].forEach(([address = '', text = '']) => {
+      sheet.type(address, text);
+    });
+
+    expect(['A1', 'C1', 'D1'].map((address) => sheet.shown(address))).toEqual([
+      '#SPILL!',
+      '#CALC!',
+      '#DIV/0!',
+    ]);
+
+    const bytes = await written({ book: sheet.book, calculator: sheet.calculator });
+    const cells = await partOf(bytes, 'xl/worksheets/sheet1.xml');
+    const view = viewOf(await opened(bytes), 'Sheet1');
+
+    expect(cells).toContain(
+      '<c r="A1" t="e" vm="1" cm="1"><f t="array" ref="A1">_xlfn.SEQUENCE(3)</f><v>#VALUE!</v></c>',
+    );
+
+    expect(cells).toContain('<c r="C1" t="e" vm="2" cm="1">');
+    expect(cells).toContain('<c r="D1" t="e"><f>1/0</f><v>#DIV/0!</v></c>');
+
+    expect(await partOf(bytes, 'xl/metadata.xml')).toContain(
+      '<valueMetadata count="2"><bk><rc t="2" v="0"/></bk><bk><rc t="2" v="1"/></bk></valueMetadata>',
+    );
+
+    expect(await partOf(bytes, 'xl/richData/rdrichvalue.xml')).toContain(
+      '<rv s="0"><v>8</v></rv><rv s="0"><v>13</v></rv>',
+    );
+
+    expect(await partOf(bytes, 'xl/_rels/workbook.xml.rels')).toContain(
+      'Type="http://schemas.microsoft.com/office/2017/06/relationships/rdRichValueStructure"',
+    );
+
+    expect(await partOf(bytes, '[Content_Types].xml')).toContain(
+      'application/vnd.ms-excel.rdrichvalue+xml',
+    );
+
+    expect(['A1', 'C1', 'D1'].map(view.shown)).toEqual(['#SPILL!', '#CALC!', '#DIV/0!']);
   });
 
   it('marks formulas that need array evaluation and writes the file syntax of this-row references', async () => {

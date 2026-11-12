@@ -9,6 +9,7 @@ import type { ExternalBook, Sheet, SheetTable, Workbook } from '../../core/workb
 import { escapeAttribute, escapeText } from '../xml/writer';
 import { encodeXstring } from '../xml/xstring';
 import { withFuturePrefixes } from './future-functions';
+import { plainErrorCode } from './value-errors';
 
 export interface PlannedSheet {
   readonly name: string;
@@ -43,6 +44,8 @@ export const TYPES = {
   drawing: 'application/vnd.openxmlformats-officedocument.drawing+xml',
   chart: 'application/vnd.openxmlformats-officedocument.drawingml.chart+xml',
   metadata: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml',
+  richValues: 'application/vnd.ms-excel.rdrichvalue+xml',
+  richStructures: 'application/vnd.ms-excel.rdrichvaluestructure+xml',
   externalLink: 'application/vnd.openxmlformats-officedocument.spreadsheetml.externalLink+xml',
   pivotTable: 'application/vnd.openxmlformats-officedocument.spreadsheetml.pivotTable+xml',
   pivotCache:
@@ -50,8 +53,6 @@ export const TYPES = {
   relationships: 'application/vnd.openxmlformats-package.relationships+xml',
   xml: 'application/xml',
 } as const;
-
-export const METADATA_XML = `${HEADER}<metadata xmlns="${MAIN}" xmlns:xda="http://schemas.microsoft.com/office/spreadsheetml/2017/dynamicarray"><metadataTypes count="1"><metadataType name="XLDAPR" minSupportedVersion="120000" copy="1" pasteAll="1" pasteValues="1" merge="1" splitFirst="1" rowColShift="1" clearFormats="1" clearComments="1" assign="1" coerce="1" cellMeta="1"/></metadataTypes><futureMetadata name="XLDAPR" count="1"><bk><extLst><ext uri="{bdbb8cdc-fa1e-496e-a857-3c3f30c029c3}"><xda:dynamicArrayProperties fDynamic="1" fCollapsed="0"/></ext></extLst></bk></futureMetadata><cellMetadata count="1"><bk><rc t="1" v="0"/></bk></cellMetadata></metadata>`;
 
 const definedNamesXml = (book: Workbook): string => {
   const names: string[] = [];
@@ -126,7 +127,7 @@ const cachedCellXml = (row: number, col: number, value: CellValue): string => {
     case CellValueKind.Boolean:
       return `<cell r="${reference}" t="b"><v>${value.value ? '1' : '0'}</v></cell>`;
     case CellValueKind.Error:
-      return `<cell r="${reference}" t="e"><v>${escapeText(value.code)}</v></cell>`;
+      return `<cell r="${reference}" t="e"><v>${escapeText(plainErrorCode(value.code))}</v></cell>`;
     default:
       return '';
   }

@@ -10,7 +10,7 @@ import { sameTree } from '../../core/calc/shared-trees';
 import type { Calculator } from '../../core/calc/calculator';
 import { CHUNK_ROWS } from '../../core/cell-store';
 import { nextTask } from '../../core/calc/tasks';
-import { CellValueKind, type CellRange, type CellValue } from '../../core/cell.types';
+import { CellError, CellValueKind, type CellRange, type CellValue } from '../../core/cell.types';
 import { FILE_FORMULAS } from '../../core/formula/locale';
 import type { FormulaNode } from '../../core/formula/formula.types';
 import { printFormula } from '../../core/formula/printer';
@@ -21,6 +21,7 @@ import { cellText } from './long-text';
 import { concatBytes } from '../zip/streams';
 import type { Bytes } from '../zip/zip.types';
 import { withFuturePrefixes } from './future-functions';
+import { richErrorSlot } from './value-errors';
 import { conditionalXml, extensionXml, withConditional, withExtensions } from './conditional-part';
 import { colsXml, mergesXml, rowAttributes } from './layout-part';
 import { placeInTail } from './tail';
@@ -51,6 +52,7 @@ export interface SheetOutput {
   readonly chunks: readonly Bytes[];
   readonly stale: number;
   readonly spills: number;
+  readonly errors: number;
 }
 
 interface Sink {
@@ -62,6 +64,7 @@ interface Sink {
 interface CellCounts {
   stale: number;
   spills: number;
+  errors: number;
 }
 
 interface FileFormula {
@@ -193,6 +196,9 @@ const bandKeys = (
 
 const numberText = (value: number): string => String(value);
 
+const richErrors = (value: CellValue): number =>
+  value.kind === CellValueKind.Error && richErrorSlot(value.code) !== undefined ? 1 : 0;
+
 const valueParts = (
   value: CellValue,
   formula: boolean,
@@ -210,8 +216,13 @@ const valueParts = (
         : [' t="s"', inner(String(strings.index(cellText(value.value))))];
     case CellValueKind.Boolean:
       return [' t="b"', inner(value.value ? '1' : '0')];
-    case CellValueKind.Error:
-      return [' t="e"', inner(escapeText(value.code))];
+    case CellValueKind.Error: {
+      const slot = richErrorSlot(value.code);
+
+      return slot === undefined
+        ? [' t="e"', inner(escapeText(value.code))]
+        : [` t="e" vm="${String(slot)}"`, inner(CellError.Value)];
+    }
     default:
       return ['', ''];
   }
@@ -305,6 +316,7 @@ const formulaCellXml = (
   const [type, inner] = known ? valueParts(value, true, writing.strings, q) : ['', ''];
 
   counts.stale += known ? 0 : 1;
+  counts.errors += known ? richErrors(value) : 0;
   if (spill === undefined) {
     return `${place.head}${type}><${q}f>${text}</${q}f>${inner}</${q}c>`;
   }
@@ -325,8 +337,10 @@ const cellXmlOf =
       return formula;
     }
 
-    const [type, inner] = valueParts(sheet.cells.get(row, col), false, writing.strings, q);
+    const value = sheet.cells.get(row, col);
+    const [type, inner] = valueParts(value, false, writing.strings, q);
 
+    counts.errors += richErrors(value);
     if (inner === '') {
       return style === 0 ? '' : `${head}/>`;
     }
@@ -410,7 +424,7 @@ export const writeSheetPart = async (writing: SheetWriting): Promise<SheetOutput
   const { extras } = writing;
   const q = extras?.prefix ?? '';
   const sink = createSink(writing.signal);
-  const counts: CellCounts = { stale: 0, spills: 0 };
+  const counts: CellCounts = { stale: 0, spills: 0, errors: 0 };
 
   sink.push(HEADER);
   sink.push(extras?.root ?? `<worksheet xmlns="${MAIN}" xmlns:r="${RELATIONSHIPS}">`);

@@ -1,7 +1,12 @@
 import { MAX_COLS, MAX_ROWS, parseRange } from '../../core/address';
 import { bookArrays, withImplicitIntersections } from '../../core/calc/array-formula';
 import type { Calculator } from '../../core/calc/calculator';
-import { CellValueKind, type CellRange, type CellValue } from '../../core/cell.types';
+import {
+  CellValueKind,
+  type CellError,
+  type CellRange,
+  type CellValue,
+} from '../../core/cell.types';
 import {
   FormulaNodeKind,
   FormulaReferenceKind,
@@ -42,6 +47,7 @@ export interface SheetContext {
   readonly calculator: Calculator;
   readonly sheet: Sheet;
   readonly strings: readonly string[];
+  readonly errors: readonly (CellError | undefined)[];
   readonly formats: readonly string[];
   readonly decorations: readonly number[];
   readonly differentials: readonly DifferentialStyle[];
@@ -72,6 +78,7 @@ interface Cell {
   col: number;
   type: string;
   style: number;
+  slot: number;
   value: string;
   inline: string;
   formula:
@@ -139,6 +146,15 @@ export const cellOf = (reference: string): { row: number; col: number } | undefi
   return col === 0 || !Number.isInteger(row) || row < 1 || row > MAX_ROWS || col > MAX_COLS
     ? undefined
     : { row: row - 1, col: col - 1 };
+};
+
+const richError = (
+  cell: Cell,
+  errors: readonly (CellError | undefined)[],
+): CellValue | undefined => {
+  const code = cell.type === CellTypeCode.Error ? errors[cell.slot - 1] : undefined;
+
+  return code === undefined ? undefined : errorValue(code);
 };
 
 export const valueOf = (
@@ -298,7 +314,7 @@ export const readSheetPart = async (
   };
 
   const commit = (current: Cell): void => {
-    const value = valueOf(current, context.strings);
+    const value = richError(current, context.errors) ?? valueOf(current, context.strings);
     const format = context.formats[current.style];
 
     if (current.formula !== undefined) {
@@ -338,6 +354,7 @@ export const readSheetPart = async (
       col,
       type: attributeOf(attributes, 't') ?? 'n',
       style: numberOf(attributeOf(attributes, 's'), 0),
+      slot: numberOf(attributeOf(attributes, 'vm'), 0),
       value: '',
       inline: '',
       formula: undefined,

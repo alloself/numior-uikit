@@ -10,7 +10,6 @@ import { readZip } from '../zip/read-zip';
 import { writeZip } from '../zip/write-zip';
 import type { Bytes, ZipArchive, ZipWriteEntry } from '../zip/zip.types';
 import {
-  METADATA_XML,
   OFFICE,
   TYPES,
   contentTypesXml,
@@ -22,6 +21,12 @@ import {
   type PlannedRelationship,
   type PlannedSheet,
 } from './book-parts';
+import {
+  RICH_DATA_RELATIONSHIPS,
+  RICH_STRUCTURES_XML,
+  RICH_VALUES_XML,
+  metadataXml,
+} from './value-errors';
 import { withoutConditional, withoutExtensions } from './conditional-part';
 import { createStringTable, writeSheetPart, type StringTable } from './sheet-part';
 import { fragmentXml } from './fragment-xml';
@@ -90,7 +95,13 @@ interface AnchorWriting {
   readonly planned: PlannedRelationship[];
 }
 
-type GeneratedPart = readonly [part: string, kind: string, type: string, content: string | Bytes];
+type GeneratedPart = readonly [
+  part: string,
+  kind: string,
+  type: string,
+  content: string | Bytes,
+  relationship: string,
+];
 
 interface Writing {
   readonly book: Workbook;
@@ -105,7 +116,7 @@ interface Writing {
   readonly strings: StringTable;
   readonly outdated: (sheet: Sheet, row: number, col: number) => boolean;
   readonly signal: AbortSignal | undefined;
-  readonly totals: { stale: number; spills: number };
+  readonly totals: { stale: number; spills: number; errors: number };
   readonly recalculateOnOpen: boolean;
   readonly pivots: PivotWriting;
 }
@@ -115,7 +126,16 @@ interface PivotWriting {
   readonly caches: { readonly cacheId: number; readonly relationship: string }[];
 }
 
-const REGENERATED = new Set(['worksheet', 'styles', 'sharedStrings', 'calcChain', 'sheetMetadata']);
+const REGENERATED = new Set([
+  'worksheet',
+  'styles',
+  'sharedStrings',
+  'calcChain',
+  'sheetMetadata',
+  'rdRichValue',
+  'rdRichValueStructure',
+  'rdRichValueTypes',
+]);
 
 const FIRST_TABLE_ID = 1000;
 
@@ -523,8 +543,41 @@ const writeParts = async (
   }
 };
 
-const metadataParts = (spills: number, part: string): GeneratedPart[] =>
-  spills > 0 ? [[part, 'sheetMetadata', TYPES.metadata, METADATA_XML]] : [];
+const metadataParts = (writing: Writing): GeneratedPart[] => {
+  const { original, totals } = writing;
+
+  if (totals.spills === 0 && totals.errors === 0) {
+    return [];
+  }
+
+  const metadata: GeneratedPart = [
+    targetOf(original, 'sheetMetadata', 'xl/metadata.xml'),
+    'sheetMetadata',
+    TYPES.metadata,
+    metadataXml(totals.errors > 0),
+    OFFICE,
+  ];
+
+  return totals.errors === 0
+    ? [metadata]
+    : [
+        metadata,
+        [
+          targetOf(original, 'rdRichValueStructure', 'xl/richData/rdrichvaluestructure.xml'),
+          'rdRichValueStructure',
+          TYPES.richStructures,
+          RICH_STRUCTURES_XML,
+          RICH_DATA_RELATIONSHIPS,
+        ],
+        [
+          targetOf(original, 'rdRichValue', 'xl/richData/rdrichvalue.xml'),
+          'rdRichValue',
+          TYPES.richValues,
+          RICH_VALUES_XML,
+          RICH_DATA_RELATIONSHIPS,
+        ],
+      ];
+};
 
 const rootEntry = (original: Original | undefined, workbookPart: string): ZipWriteEntry => {
   const raw = original?.archive.raw('_rels/.rels');
@@ -711,6 +764,7 @@ const bookRelationship = (
   kind: string,
   part: string,
   find: (item: Relationship) => boolean,
+  namespace = OFFICE,
 ): void => {
   const id = writing.original?.workbookRelationships.find(find)?.id ?? freshId(writing.workbookIds);
 
@@ -718,7 +772,7 @@ const bookRelationship = (
 
   writing.workbookRelationships.push({
     id,
-    type: officeType(kind),
+    type: `${namespace}/${kind}`,
     target: relativeTarget(writing.workbookPart, part),
   });
 };
@@ -756,6 +810,7 @@ const writeSheet = async (writing: Writing, plan: SheetPlan, firstNewId: number)
 
   writing.totals.stale += sheetOutput.stale;
   writing.totals.spills += sheetOutput.spills;
+  writing.totals.errors += sheetOutput.errors;
   output.entries.push({ name: plan.part, data: streamOfChunks(sheetOutput.chunks) });
   output.overrides.set(plan.part, TYPES.worksheet);
   output.written.add(plan.part);
@@ -795,17 +850,19 @@ const writeBookParts = async (writing: Writing): Promise<void> => {
         tableStyles: elementSlice(stylesText, 'tableStyles'),
         colors: elementSlice(stylesText, 'colors'),
       }),
+      OFFICE,
     ],
     [
       targetOf(original, 'sharedStrings', 'xl/sharedStrings.xml'),
       'sharedStrings',
       TYPES.strings,
       await writing.strings.bytes(),
+      OFFICE,
     ],
-    ...metadataParts(writing.totals.spills, targetOf(original, 'sheetMetadata', 'xl/metadata.xml')),
+    ...metadataParts(writing),
   ];
 
-  generated.forEach(([part, kind, type, content]) => {
+  generated.forEach(([part, kind, type, content, relationship]) => {
     output.entries.push({
       name: part,
       data: typeof content === 'string' ? encoder.encode(content) : content,
@@ -813,7 +870,7 @@ const writeBookParts = async (writing: Writing): Promise<void> => {
 
     output.overrides.set(part, type);
     output.written.add(part);
-    bookRelationship(writing, kind, part, (item) => item.kind === kind);
+    bookRelationship(writing, kind, part, (item) => item.kind === kind, relationship);
   });
 };
 
@@ -951,7 +1008,7 @@ export const writeWorkbook = async (
     strings: createStringTable(),
     outdated: calculator.outdated(),
     signal: options.signal,
-    totals: { stale: 0, spills: 0 },
+    totals: { stale: 0, spills: 0, errors: 0 },
     recalculateOnOpen: options.recalculateOnOpen === true,
     pivots: { keep: keepPivots, caches: [] },
   };
