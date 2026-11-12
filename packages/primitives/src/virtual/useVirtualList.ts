@@ -315,9 +315,7 @@ export const useVirtualList = (
     const within = edge - offsetAt(previous, first);
 
     settle(
-      offsetAt(next, first) +
-        Math.min(within, sizeAt(next, first)) -
-        offsetAt(next, frozen.value),
+      offsetAt(next, first) + Math.min(within, sizeAt(next, first)) - offsetAt(next, frozen.value),
     );
   });
 

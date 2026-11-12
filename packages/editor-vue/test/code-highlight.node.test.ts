@@ -27,16 +27,12 @@ const LINE = 'const value = compute(alpha, beta) + other;';
 const highlighter: NuiHighlighter = {
   languages: [{ id: 'typescript', label: 'TypeScript', aliases: ['ts'] }],
   tokens: (code) =>
-    code
-      .split('\n')
-      .map((line) =>
-        line
-          .split(/(\s+)/)
-          .map((text, index) => ({
-            text,
-            scope: index % 2 === 0 ? ('keyword' as const) : undefined,
-          })),
-      ),
+    code.split('\n').map((line) =>
+      line.split(/(\s+)/).map((text, index) => ({
+        text,
+        scope: index % 2 === 0 ? ('keyword' as const) : undefined,
+      })),
+    ),
 };
 
 const codeBlock = (index: number): ElementNode =>
