@@ -69,9 +69,12 @@ const caseOf = (entry: unknown, index: number): FormatCase => {
   };
 };
 
-const corpus = (): FormatCase[] => {
+const valueName = (value: CellValue): string =>
+  'value' in value ? String(value.value) : value.kind;
+
+const corpus = (file: string): FormatCase[] => {
   const parsed: unknown = JSON.parse(
-    readFileSync(new URL('./corpus/formats/formats.json', import.meta.url), 'utf8'),
+    readFileSync(new URL(`./corpus/formats/${file}`, import.meta.url), 'utf8'),
   );
 
   const cases = isRecord(parsed) && Array.isArray(parsed.cases) ? parsed.cases : [];
@@ -80,7 +83,7 @@ const corpus = (): FormatCase[] => {
 };
 
 describe('number format corpus', () => {
-  it.each(corpus().map((entry) => [`${entry.code} · ${entry.text}`, entry] as const))(
+  it.each(corpus('formats.json').map((entry) => [`${entry.code} · ${entry.text}`, entry] as const))(
     '%s',
     (_name, entry) => {
       const shown = formatValue(
@@ -92,6 +95,16 @@ describe('number format corpus', () => {
       expect(shown).toEqual({ text: entry.text, color: entry.color, fill: entry.fill });
     },
   );
+});
+
+describe('texts Excel shows for the same numbers and codes', () => {
+  it.each(
+    corpus('excel.json').map(
+      (entry) => [`${entry.code} · ${valueName(entry.value)} · ${entry.text}`, entry] as const,
+    ),
+  )('%s', (_name, entry) => {
+    expect(formatValue(entry.value, entry.code, EN_NUMBERS).text).toBe(entry.text);
+  });
 });
 
 describe('built-in formats and colours', () => {

@@ -51,9 +51,20 @@ interface NumberPlan {
   readonly ratio: Ratio | undefined;
 }
 
+interface PlacedNumber {
+  readonly exponentSign: string;
+  readonly zero: boolean;
+}
+
 const LEADING = -1;
 
 const FIXED_DIGIT = /^[0-9]$/u;
+
+const NONZERO_DIGIT = /[1-9]/u;
+
+const CONTINUED_STEPS = 64;
+
+const CONTINUED_REST = 1e-10;
 
 const plans = new WeakMap<readonly FormatToken[], NumberPlan>();
 
@@ -337,13 +348,23 @@ const renderTokens = (
 const scaled = (value: number, layout: Layout): number =>
   (value * 100 ** layout.percent) / 1000 ** layout.scale;
 
+const exponentSignOf = (exponent: Scientific | undefined, layout: Layout): string => {
+  if (exponent === undefined) {
+    return '';
+  }
+  if (exponent.exponent < 0) {
+    return '-';
+  }
+  return layout.plus ? '+' : '';
+};
+
 const placeNumber = (
   tokens: readonly FormatToken[],
   layout: Layout,
   value: number,
   locale: NumberLocale,
   placed: Placed,
-): string => {
+): PlacedNumber => {
   const exponent = layout.exponentAt < 0 ? undefined : exponentParts(value, layout);
   const digits = exponent?.digits ?? roundDigits(value, layout.fraction.length);
 
@@ -354,34 +375,41 @@ const placeNumber = (
   }
   placeFraction(tokens, layout.fraction, digits.fraction, placed);
 
-  if (exponent === undefined) {
-    return '';
+  if (exponent !== undefined) {
+    placeWhole(tokens, layout.exponent, String(Math.abs(exponent.exponent)), placed);
   }
-
-  placeWhole(tokens, layout.exponent, String(Math.abs(exponent.exponent)), placed);
-
-  if (exponent.exponent < 0) {
-    return '-';
-  }
-  return layout.plus ? '+' : '';
+  return {
+    exponentSign: exponentSignOf(exponent, layout),
+    zero: !NONZERO_DIGIT.test(digits.whole + digits.fraction),
+  };
 };
 
-const closest = (fraction: number, limit: number): readonly [number, number] => {
-  let best: readonly [number, number] = [Math.round(fraction), 1];
-  let error = Math.abs(fraction - best[0]);
+const convergent = (fraction: number, limit: number): readonly [number, number] => {
+  let found: readonly [number, number] = [0, 1];
+  let before: readonly [number, number] = [0, 1];
+  let current: readonly [number, number] = [1, 0];
+  let rest = fraction;
 
-  for (let denominator = 2; denominator <= limit && error > 0; denominator += 1) {
-    const numerator = Math.round(fraction * denominator);
-    const miss = Math.abs(fraction - numerator / denominator);
+  for (let step = 0; step < CONTINUED_STEPS; step += 1) {
+    const term = Math.floor(rest);
+    const next = [term * current[0] + before[0], term * current[1] + before[1]] as const;
 
-    if (miss >= error - 1e-12) {
-      continue;
+    if (next[1] > limit) {
+      return found;
     }
 
-    best = [numerator, denominator];
-    error = miss;
+    found = next;
+    before = current;
+    current = next;
+
+    const left = rest - term;
+
+    if (left < CONTINUED_REST) {
+      return found;
+    }
+    rest = 1 / left;
   }
-  return best;
+  return found;
 };
 
 const ratioParts = (value: number, ratio: Ratio): readonly [number, number, number] => {
@@ -390,7 +418,7 @@ const ratioParts = (value: number, ratio: Ratio): readonly [number, number, numb
 
   const [numerator, denominator] =
     ratio.fixed === undefined
-      ? closest(rest, 10 ** ratio.denominator.length - 1)
+      ? convergent(rest, 10 ** ratio.denominator.length - 1)
       : [Math.round(rest * ratio.fixed), ratio.fixed];
 
   return numerator === denominator && ratio.whole.length > 0
@@ -401,11 +429,20 @@ const ratioParts = (value: number, ratio: Ratio): readonly [number, number, numb
 const placeBlank = (tokens: readonly FormatToken[], ratio: Ratio, placed: Placed): boolean => {
   let anyBlank = false;
 
-  for (const slot of ratio.numerator.concat(ratio.denominator)) {
+  for (const slot of ratio.numerator) {
     const pad = padChar(tokens[slot]);
 
     anyBlank ||= pad === FormatChar.Space;
     placed.set(slot, pad === '' ? '' : ' ');
+  }
+  for (const slot of ratio.denominator) {
+    const pad =
+      ratio.fixed === undefined
+        ? padChar(tokens[slot])
+        : FormatChar.Space.repeat(plainChar(tokens[slot]).length);
+
+    anyBlank ||= pad.includes(FormatChar.Space);
+    placed.set(slot, FormatChar.Space.repeat(pad.length));
   }
   return anyBlank;
 };
@@ -431,20 +468,22 @@ const placeRatio = (
   ratio: Ratio,
   value: number,
   placed: Placed,
-): void => {
+): boolean => {
   const [whole, numerator, denominator] = ratioParts(value, ratio);
   const hidden = numerator === 0 && ratio.whole.length > 0;
+  const wholeDigits = roundDigits(whole, 0).whole;
 
-  placeWhole(tokens, ratio.whole, whole === 0 && !hidden ? '' : String(whole), placed);
+  placeWhole(tokens, ratio.whole, wholeDigits === '' && hidden ? '0' : wholeDigits, placed);
 
   if (hidden) {
     placed.set(ratio.slash, placeBlank(tokens, ratio, placed) ? ' ' : '');
-    return;
+    return false;
   }
 
   placeWhole(tokens, ratio.numerator, String(numerator), placed);
   placeDenominator(tokens, ratio, String(denominator), placed);
   placed.set(ratio.slash, '/');
+  return wholeDigits === '' && numerator === 0;
 };
 
 const generalSection = (
@@ -486,16 +525,15 @@ export const formatNumberSection = (
 
   const output = createOutput();
   const placed: Placed = new Map();
-  let sign = '';
 
-  if (ratio === undefined) {
-    sign = placeNumber(tokens, layout, shown, locale, placed);
-  } else {
-    placeRatio(tokens, ratio, shown, placed);
-  }
-  if (negative) {
+  const number =
+    ratio === undefined
+      ? placeNumber(tokens, layout, shown, locale, placed)
+      : { exponentSign: '', zero: placeRatio(tokens, ratio, shown, placed) };
+
+  if (negative && !number.zero) {
     pushText(output, '-');
   }
-  renderTokens(tokens, placed, locale, sign, output);
+  renderTokens(tokens, placed, locale, number.exponentSign, output);
   return output;
 };
