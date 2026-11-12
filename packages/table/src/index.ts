@@ -34,6 +34,7 @@ export type {
   NuiTableDetailSlot,
   NuiTableEvents,
   NuiTableColumnResize,
+  NuiTableRowResize,
   NuiTableReorderEvent,
   NuiTableRowHeaders,
   NuiTableRowHeights,

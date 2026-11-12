@@ -673,6 +673,7 @@ export interface NuiTableEvents<T> {
   window: [window: NuiTableWindow];
   pick: [range: NuiTableRange];
   columnResize: [changes: readonly NuiTableColumnResize[]];
+  rowResize: [changes: readonly NuiTableRowResize[]];
 }
 
 export type NuiTableSort = readonly TableSort[];
@@ -692,6 +693,11 @@ export type NuiTableWidths = Readonly<Record<string, number>>;
 export interface NuiTableColumnResize {
   readonly key: string;
   readonly width: number | undefined;
+}
+
+export interface NuiTableRowResize {
+  readonly key: string;
+  readonly height: number | undefined;
 }
 
 export type NuiTableColumnOrder = readonly string[];

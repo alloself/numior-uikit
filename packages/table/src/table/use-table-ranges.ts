@@ -89,6 +89,7 @@ export interface TableRanges {
   swallowClick(): void;
   clear(): void;
   replace(next: NuiTableRanges): void;
+  selectRow(row: number): void;
 }
 
 type SessionAction =
@@ -833,6 +834,13 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
       swallow = true;
     },
     clear,
+    selectRow: (row) => {
+      if (!options.enabled() || !options.lines()) {
+        return;
+      }
+
+      selectOrigin({ kind: 'lines', lines: 'rows', position: { row, col: 0 } });
+    },
     replace: (next) => {
       others = undefined;
       deselected.value = false;

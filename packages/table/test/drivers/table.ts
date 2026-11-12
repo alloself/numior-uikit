@@ -40,6 +40,7 @@ import {
   type NuiTableWidths,
   type NuiTableColumnOrder,
   type NuiTableColumnResize,
+  type NuiTableRowResize,
   type NuiTableReorderEvent,
   type NuiTableDraft,
   type NuiTableEditEvent,
@@ -157,6 +158,7 @@ export interface TableHostListeners<T> {
   readonly onRowClick: (row: T) => void;
   readonly onReorder: (event: NuiTableReorderEvent<T>) => void;
   readonly onColumnResize: (changes: readonly NuiTableColumnResize[]) => void;
+  readonly onRowResize: (changes: readonly NuiTableRowResize[]) => void;
   readonly onWindow: (next: NuiTableWindow) => void;
   readonly onPick: (range: NuiTableRange) => void;
   readonly onEditRefused: (event: NuiTableEditRefusal<T>) => void;
@@ -174,6 +176,7 @@ interface TableEvents<T> {
   readonly clicks: T[];
   readonly reorders: NuiTableReorderEvent<T>[];
   readonly resizes: (readonly NuiTableColumnResize[])[];
+  readonly rowResizes: (readonly NuiTableRowResize[])[];
   readonly edits: NuiTableEditEvent<T>[];
   readonly refusals: NuiTableEditRefusal<T>[];
   readonly errors: unknown[];
@@ -402,6 +405,7 @@ export class TableDriver<T> {
       clicks: [],
       reorders: [],
       resizes: [],
+      rowResizes: [],
       edits: [],
       refusals: [],
       errors: [],
@@ -423,6 +427,9 @@ export class TableDriver<T> {
       },
       onColumnResize: (changes) => {
         events.resizes.push(changes);
+      },
+      onRowResize: (changes) => {
+        events.rowResizes.push(changes);
       },
       onWindow: (next) => {
         events.windows.push(next);
@@ -1110,6 +1117,10 @@ export class TableDriver<T> {
     return this.events.resizes;
   }
 
+  get rowResizes(): readonly (readonly NuiTableRowResize[])[] {
+    return this.events.rowResizes;
+  }
+
   get edits(): readonly NuiTableEditEvent<T>[] {
     return this.events.edits;
   }
@@ -1601,6 +1612,16 @@ export class TableDriver<T> {
     cell?.dispatchEvent(new PointerEvent('pointerdown', init));
     cell?.dispatchEvent(new PointerEvent('pointerup', init));
     cell?.dispatchEvent(new MouseEvent('click', init));
+    await nextTick();
+  }
+
+  async tapRowResizer(position: number): Promise<void> {
+    const handle = this.rowResizer(position);
+    const init = { bubbles: true, cancelable: true, button: 0, pointerType: 'touch', pointerId: 3 };
+
+    handle?.dispatchEvent(new PointerEvent('pointerdown', init));
+    window.dispatchEvent(new PointerEvent('pointerup', init));
+    handle?.dispatchEvent(new MouseEvent('click', init));
     await nextTick();
   }
 

@@ -73,6 +73,9 @@ On the keyboard `Alt` with the up and down arrows changes the height. With `heig
 height is exact, and when rows grow with their content it is a minimum. Row heights have no
 effect with `source`.
 
+The `rowResize` event reports a finished change of a height: the end of a drag, a keyboard step
+or a reset. It is the place to save a height once per gesture.
+
 <Example name="table/RowHeaders" />
 
 ### Filters and totals

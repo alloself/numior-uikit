@@ -295,6 +295,10 @@ const docs: DocsMap = {
         ru: 'Ширину колонки поменяли: перетаскивание закончилось, сделан шаг с клавиатуры или ширина сброшена. Передаёт список `{ key, width }`; `width: undefined` значит сброс. Во время перетаскивания меняется только `v-model:widths`.',
         en: 'A column width changed: a drag ended, a keyboard step was made or the width was reset. Carries a list of `{ key, width }`; `width: undefined` means a reset. During a drag only `v-model:widths` changes.',
       },
+      rowResize: {
+        ru: 'Высоту строки поменяли: перетаскивание закончилось, сделан шаг с клавиатуры или высота сброшена. Передаёт список `{ key, height }`, где `key` — ключ строки строкой; `height: undefined` значит сброс. Во время перетаскивания меняется только `v-model:rowHeights`.',
+        en: 'A row height changed: a drag ended, a keyboard step was made or the height was reset. Carries a list of `{ key, height }` with the row key as a string; `height: undefined` means a reset. During a drag only `v-model:rowHeights` changes.',
+      },
       editRefused: {
         ru: 'Свой редактор колонки не открылся. Передаёт `row`, `key` и `reason`: `control` — контрола нет в реестре, `props` — свойства не прошли проверку, `value` — значение не подходит контролу.',
         en: "A column's custom editor did not open. Carries `row`, `key` and `reason`: `control` when the registry lacks the control, `props` when the props fail the check, `value` when the value does not fit the control.",

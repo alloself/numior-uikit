@@ -1363,6 +1363,12 @@ const rowResize = useTableRowResize({
   announce: (text) => {
     announcement.value = text;
   },
+  resized: (changes) => {
+    emit('rowResize', changes);
+  },
+  tapped: (position) => {
+    rangeSelect.selectRow(position);
+  },
 });
 
 const sizableOf = (item: TableBodyRow): boolean =>
