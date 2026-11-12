@@ -10,6 +10,7 @@ import type {
   NuiTableRanges,
   NuiTableRect,
   NuiTableCellPosition,
+  NuiTableSourceCell,
 } from '@numior/table';
 import type { NuiListEntry, NuiMenuEntry, NuiSize, NuiTabDescriptor } from '@numior/vue';
 import type { ComponentPublicInstance, ComputedRef, Ref, ShallowRef } from 'vue';
@@ -193,6 +194,7 @@ export interface SheetCells {
   readonly gridlines: boolean;
   readonly rightToLeft: boolean;
   readonly textAt: (position: number, column: number) => string;
+  readonly lookAt: (row: number, col: number) => NuiTableSourceCell | undefined;
   readonly cellOf: (position: number, column: number) => CellAddress;
   readonly rangeOf: (range: NuiTableRange) => CellRange;
   readonly rowAt: (position: number) => number;
@@ -338,6 +340,11 @@ export interface SheetLinesOptions {
   readonly tools: () => readonly NuiMenuEntry[];
 }
 
+export type CellMeasure = (
+  text: string,
+  style: NuiTableCellStyle | undefined,
+) => number | undefined;
+
 export interface SheetLineSizesOptions {
   readonly sheet: () => Sheet | undefined;
   readonly cells: () => SheetCells | undefined;
@@ -346,6 +353,9 @@ export interface SheetLineSizesOptions {
   readonly editing: Pick<SheetEditing, 'apply'>;
   readonly messages: ComputedRef<NuiSpreadsheetMessages>;
   readonly refuse: Refuse;
+  readonly measure: CellMeasure;
+  readonly notify: (text: string) => void;
+  readonly announce: (text: string) => void;
 }
 
 export interface SheetMergesOptions {

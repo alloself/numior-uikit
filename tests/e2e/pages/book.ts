@@ -87,6 +87,24 @@ export class BookSection {
     return renderedWidth(this.columnHeader(name));
   }
 
+  clippedCells(column: number): Promise<number> {
+    return this.sheet
+      .locator(
+        `.nui-table__body [aria-colindex="${String(column + 2)}"]:not([colspan], .nui-table__cell--spill) > .nui-table__content`,
+      )
+      .evaluateAll((contents) =>
+        contents.reduce(
+          (count, content) => count + Number(content.scrollWidth > content.clientWidth),
+          0,
+        ),
+      );
+  }
+
+  async fitColumn(name: string): Promise<void> {
+    await this.columnEdge(name).scrollIntoViewIfNeeded();
+    await this.columnEdge(name).dblclick();
+  }
+
   async dragColumnEdge(name: string, dx: number): Promise<void> {
     await this.columnEdge(name).scrollIntoViewIfNeeded();
     await dragAcross(this.columnEdge(name), dx);

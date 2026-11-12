@@ -321,10 +321,7 @@ export const sheetCells = ({
     }, lines);
   };
 
-  const cellAt = (position: number, column: number): NuiTableSourceCell | undefined => {
-    const anchor = anchorAt(position, column);
-    const row = anchor?.row ?? rows.lineAt(position);
-    const col = anchor?.col ?? cols.lineAt(column);
+  const lookAt = (row: number, col: number): NuiTableSourceCell | undefined => {
     const value = sheet.cells.get(row, col);
     const decoration = decorationAt(sheet, row, col);
     const look = looks(row, col);
@@ -342,6 +339,12 @@ export const sheetCells = ({
       text: look?.hideValue === true ? '' : shown.text,
       style: outdated?.(sheet, row, col) === true ? stale(style) : style,
     };
+  };
+
+  const cellAt = (position: number, column: number): NuiTableSourceCell | undefined => {
+    const anchor = anchorAt(position, column);
+
+    return lookAt(anchor?.row ?? rows.lineAt(position), anchor?.col ?? cols.lineAt(column));
   };
 
   const textAt = (position: number, column: number): string => {
@@ -402,6 +405,7 @@ export const sheetCells = ({
     gridlines: view.gridlines,
     rightToLeft: view.rightToLeft,
     textAt,
+    lookAt,
     cellOf,
     rangeOf,
     rowAt: rows.lineAt,

@@ -130,15 +130,24 @@ Your own toolbar runs the same actions with the `mergeCells()` and `unmergeCells
 ### Column widths and row heights
 
 Drag the right edge of a column header or the bottom edge of a row number. On the keyboard press
-`Alt` with an arrow on a column header or on a row number. A double click on the edge returns the
-default size.
+`Alt` with an arrow on a column header or on a row number.
+
+A double click on the edge of a column header fits the width to the longest text of its cells. An
+empty column returns to the width of the sheet. A double click on the edge of a row number returns
+the default height.
+
+The fit reads the cells on screen and the first cells from the top, up to 10,000 per gesture. When
+a column has more cells, the sheet says so in a note. Hidden rows and cells merged across several
+columns are left out.
 
 The size is stored in the book per sheet: `Ctrl+Z` undoes it, XLSX files keep it and co-authors see
 it. The book step is written once, at the end of the gesture.
 
-When several whole rows or columns are selected, the edge of one of them sizes all of them. With
-the whole sheet selected the default size changes and the sizes of single lines are dropped. The
-sheet does not size more than 20,000 rows in one gesture and answers with the `lines-too-many`
+When several whole rows or columns are selected, the edge of one of them sizes all of them. A
+double click fits the width of every selected column.
+
+With the whole sheet selected the default size changes and the sizes of single lines are dropped.
+The sheet does not size more than 20,000 rows in one gesture and answers with the `lines-too-many`
 reason.
 
 In a read-only book the size changes on screen only, while this sheet is shown.

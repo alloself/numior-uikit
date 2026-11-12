@@ -3,10 +3,20 @@ import type {
   NuiTableRanges,
   NuiTableRowHeights,
   NuiTableRowResize,
+  NuiTableSpan,
   NuiTableWidths,
+  NuiTableWindow,
 } from '@numior/table';
 import { computed, shallowRef, type ComputedRef, type ShallowRef } from 'vue';
-import { LineAxis, columnIndex, withLineSizes, type LineLayouts, type SheetLayout } from '../core';
+import {
+  LineAxis,
+  columnIndex,
+  withLineSizes,
+  type LineLayouts,
+  type Sheet,
+  type SheetLayout,
+} from '../core';
+import { autofitColumns, type Autofit } from './sheet-autofit';
 import { pixelsToChars, pixelsToPoints } from './sheet-cells';
 import { layoutStepOf } from './sheet-layout-step';
 import {
@@ -21,6 +31,7 @@ export interface SheetLineSizes {
   setHeights(next: NuiTableRowHeights): void;
   commitWidths(changes: readonly NuiTableColumnResize[]): void;
   commitHeights(changes: readonly NuiTableRowResize[]): void;
+  setWindow(window: NuiTableWindow): void;
   forget(): void;
 }
 
@@ -153,6 +164,54 @@ const sizedLayout = (
       };
 };
 
+const isReset = (changes: readonly LineSize[]): boolean =>
+  changes.length === 1 && changes[0]?.size === undefined;
+
+const usedSpan = (sheet: Sheet, cells: SheetCells): LineSpan | undefined => {
+  const used = sheet.cells.usedRange();
+
+  return used === undefined
+    ? undefined
+    : { first: cells.colNear(used.left), last: cells.colNear(used.right) };
+};
+
+const fitLines = (place: AxisPlace, spans: readonly LineSpan[], first: number): number[] => {
+  const lines = [place.lineAt(first)];
+
+  for (const span of spans) {
+    for (let position = span.first; position <= span.last; position += 1) {
+      if (position === first) {
+        continue;
+      }
+
+      lines.push(place.lineAt(position));
+    }
+  }
+  return lines;
+};
+
+const fitSpans = (
+  whole: boolean,
+  used: LineSpan | undefined,
+  spans: readonly LineSpan[],
+): readonly LineSpan[] => {
+  if (!whole) {
+    return spans;
+  }
+  return used === undefined ? [] : [used];
+};
+
+const fittedLayout = (layout: SheetLayout, whole: boolean, fit: Autofit): SheetLayout => {
+  const base = whole ? withDefault(layout, LineAxis.Cols, undefined) : layout;
+  const sizes = new Map<number, number | undefined>();
+
+  fit.widths.forEach((width, line) => {
+    sizes.set(line, width === undefined ? undefined : pixelsToChars(width));
+  });
+
+  return { ...base, cols: withLineSizes(base.cols, sizes) };
+};
+
 const widthChanges = (changes: readonly NuiTableColumnResize[]): LineSize[] =>
   changes.reduce<LineSize[]>((sizes, change) => {
     const position = columnIndex(change.key);
@@ -176,10 +235,40 @@ export const useSheetLineSizes = (options: SheetLineSizesOptions): SheetLineSize
   const widths = shallowRef<NuiTableWidths>(NO_WIDTHS);
   const draft = shallowRef<NuiTableRowHeights>();
   const heights = computed(() => draft.value ?? options.cells()?.rowHeights ?? NO_HEIGHTS);
+  let shown: NuiTableSpan | undefined;
 
   const forget = (): void => {
     widths.value = NO_WIDTHS;
     draft.value = undefined;
+  };
+
+  const fitted = (
+    sheet: Sheet,
+    cells: SheetCells,
+    place: AxisPlace,
+    spans: readonly LineSpan[],
+    first: number,
+  ): Autofit => {
+    const scope = fitSpans(coversAxis(spans, place), usedSpan(sheet, cells), spans);
+
+    return autofitColumns(
+      { sheet, cells, shown, measure: options.measure },
+      fitLines(place, scope, first),
+    );
+  };
+
+  const told = (fit: Autofit | undefined): void => {
+    const texts = options.messages.value;
+
+    if (fit === undefined || fit.fitted === 0) {
+      return;
+    }
+    if (fit.partial) {
+      options.notify(texts.widthsFittedPartly);
+      return;
+    }
+
+    options.announce(texts.widthsFitted);
   };
 
   const commit = (axis: LineAxis, changes: readonly LineSize[]): void => {
@@ -192,6 +281,7 @@ export const useSheetLineSizes = (options: SheetLineSizesOptions): SheetLineSize
 
     const place = placeOf(cells, axis);
     const spans = spansOf(wholeSpans(options.ranges(), place), changes);
+    const [only] = changes;
 
     if (!coversAxis(spans, place) && linesIn(spans) > LINES_AT_ONCE) {
       options.refuse(
@@ -203,13 +293,24 @@ export const useSheetLineSizes = (options: SheetLineSizesOptions): SheetLineSize
       return;
     }
 
-    const step = layoutStepOf(sheet, sizedLayout(sheet.layout, place, spans, changes));
+    const fit =
+      axis === LineAxis.Cols && only !== undefined && isReset(changes)
+        ? fitted(sheet, cells, place, spans, only.position)
+        : undefined;
+
+    const layout =
+      fit === undefined
+        ? sizedLayout(sheet.layout, place, spans, changes)
+        : fittedLayout(sheet.layout, coversAxis(spans, place), fit);
+
+    const step = layoutStepOf(sheet, layout);
 
     if (step !== undefined && !options.editing.apply([step])) {
       return;
     }
 
     forget();
+    told(fit);
   };
 
   return {
@@ -223,6 +324,9 @@ export const useSheetLineSizes = (options: SheetLineSizesOptions): SheetLineSize
     },
     commitHeights: (changes) => {
       commit(LineAxis.Rows, heightChanges(changes));
+    },
+    setWindow: (window) => {
+      shown = window.rows;
     },
     forget,
   };

@@ -14,8 +14,6 @@ const COLUMN_DRAG = 40;
 
 const ROW_DRAG = 24;
 
-const DEFAULT_COLUMN = 64;
-
 const LONG_FIELD = 300;
 
 const LISTED_ITEMS = 100;
@@ -373,7 +371,7 @@ test.describe('book', () => {
     await expect(book.cell('1', 0)).toHaveText('Второй лист без сетки');
   });
 
-  test('keeps the width of a dragged column on its sheet, undoes it and resets it by a double click', async ({
+  test('keeps the width of a dragged column on its sheet and undoes it', async ({
     playground,
     book,
     page,
@@ -403,8 +401,36 @@ test.describe('book', () => {
     await expect.poll(() => book.columnWidth('B')).toBe(before);
 
     await page.keyboard.press('Control+y');
-    await book.columnEdge('B').dblclick();
-    await expect.poll(() => book.columnWidth('B')).toBe(DEFAULT_COLUMN);
+    await expect.poll(() => book.columnWidth('B')).toBe(before + COLUMN_DRAG);
+  });
+
+  test('fits a column to its content by a double click on the edge of its header and takes it back on undo', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Бюджет');
+
+    const before = await book.columnWidth('C');
+
+    await expect.poll(() => book.clippedCells(2)).toBeGreaterThan(0);
+
+    await book.fitColumn('C');
+
+    await expect.poll(() => book.clippedCells(2)).toBe(0);
+    expect(await book.columnWidth('C')).toBeGreaterThan(before);
+
+    await book.fitColumn('A');
+
+    await expect.poll(() => book.clippedCells(0)).toBe(0);
+
+    await book.cell('2', 0).click();
+    await page.keyboard.press('Control+z');
+    await page.keyboard.press('Control+z');
+    await expect.poll(() => book.columnWidth('C')).toBe(before);
   });
 
   test('keeps the height of a dragged row on its sheet, undoes it and resets it by a double click', async ({

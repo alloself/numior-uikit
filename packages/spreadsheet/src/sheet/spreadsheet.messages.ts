@@ -39,6 +39,8 @@ export interface NuiSpreadsheetMessages {
   readonly mergeBlocked: string;
   readonly cellGone: string;
   readonly linesTooMany: (params: { readonly limit: number }) => string;
+  readonly widthsFitted: string;
+  readonly widthsFittedPartly: string;
   readonly pivotCells: string;
   readonly actionRefused: string;
   readonly recalculating: (params: { readonly share: string }) => string;
@@ -236,6 +238,9 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     cellGone: 'Someone else removed or hid this cell. The text you typed was not saved',
     linesTooMany: ({ limit }) =>
       `Too many rows are selected to size them at once. Select up to ${limit.toLocaleString('en-US')} rows or the whole sheet`,
+    widthsFitted: 'The column width fits its content',
+    widthsFittedPartly:
+      'The width fits the cells on screen and the first ones from the top: there are too many cells to measure them all',
     pivotCells: 'Cells of a pivot table cannot be changed',
     actionRefused: 'The action was not applied',
     recalculating: ({ share }) => `Recalculating ${share}`,
@@ -344,6 +349,9 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     cellGone: 'Ячейку удалил или скрыл другой участник. Набранный текст не сохранён',
     linesTooMany: ({ limit }) =>
       `Выделено слишком много строк, чтобы изменить их размер за раз. Выделите до ${limit.toLocaleString('ru-RU')} строк или весь лист`,
+    widthsFitted: 'Ширина колонки подобрана по содержимому',
+    widthsFittedPartly:
+      'Ширина подобрана по ячейкам на экране и первым сверху: ячеек слишком много, чтобы измерить все',
     pivotCells: 'Ячейки сводной таблицы изменить нельзя',
     actionRefused: 'Действие не выполнено',
     recalculating: ({ share }) => `Пересчёт ${share}`,

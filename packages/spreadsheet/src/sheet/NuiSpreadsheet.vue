@@ -127,6 +127,7 @@
         @update:row-heights="lineSizes.setHeights"
         @column-resize="lineSizes.commitWidths"
         @row-resize="lineSizes.commitHeights"
+        @window="lineSizes.setWindow"
       >
         <template #overlay="{ rectOf }">
           <NuiSpreadsheetDrawings
@@ -413,6 +414,15 @@ const messages = useMessages(spreadsheetMessages);
 
 const note = useSheetNote();
 
+const announce = (text: string): void => {
+  formula.announcement.value = text;
+};
+
+const notify = (text: string): void => {
+  announce(text);
+  note.show(text);
+};
+
 const refuse = (reason: NuiSpreadsheetRefusalReason, message: string): void => {
   formula.announcement.value = message;
   note.show(message);
@@ -495,9 +505,7 @@ const file = useSheetFile({
   saved: (saved) => {
     emit('saved', saved);
   },
-  announce: (text) => {
-    formula.announcement.value = text;
-  },
+  announce,
 });
 
 const noteStructure = (): boolean => {
@@ -556,6 +564,9 @@ const lineSizes = useSheetLineSizes({
   editing,
   messages,
   refuse,
+  measure: (text, style) => grid.value?.fitWidth(text, style),
+  notify,
+  announce,
 });
 
 watch([shownSheet, layoutRevision], lineSizes.forget);
@@ -695,13 +706,8 @@ const merges = useSheetMerges({
   messages,
   readonly: () => locked.value,
   refuse,
-  announce: (text) => {
-    formula.announcement.value = text;
-  },
-  notify: (text) => {
-    formula.announcement.value = text;
-    note.show(text);
-  },
+  announce,
+  notify,
 });
 
 const lines = useSheetLines({
@@ -755,9 +761,7 @@ const drawingEdit = useSheetDrawingEdit({
   readonly: () => locked.value,
   rtl: () => sheetDir.value === Direction.Rtl,
   messages: () => messages.value,
-  announce: (text) => {
-    formula.announcement.value = text;
-  },
+  announce,
   focus: () => {
     formula.holdFocus();
   },
