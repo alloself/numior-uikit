@@ -129,10 +129,14 @@ const stretch = (inputs: readonly PlaceInput[], room: number): readonly PlaceInp
   if (room <= 0 || free <= 0 || flexSum === 0) {
     return inputs;
   }
-  return inputs.map((input) =>
+  const shares = inputs.map((input) => Math.floor((free * input.flex) / flexSum));
+  const rest = shares.reduce((left, share) => left - share, free);
+  const last = inputs.findLastIndex((input) => input.flex > 0);
+
+  return inputs.map((input, index) =>
     input.flex === 0
       ? input
-      : { ...input, width: input.width + Math.floor((free * input.flex) / flexSum) },
+      : { ...input, width: input.width + (shares[index] ?? 0) + (index === last ? rest : 0) },
   );
 };
 

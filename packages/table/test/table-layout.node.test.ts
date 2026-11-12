@@ -136,6 +136,27 @@ describe('tableLayout', () => {
     expect(unknown.visual.map((placed) => placed.width)).toEqual([40, 80, 200, 140, 160]);
   });
 
+  it('gives the pixels left after an even split to the last flex column', () => {
+    const columns = [
+      { ...column('fabric', 160), flex: 1 },
+      { ...column('price', 160), flex: 1 },
+      { ...column('stock', 160), flex: 1 },
+    ];
+
+    const layout = tableLayout(columns, {
+      pins: {},
+      hidden: [],
+      widths: {},
+      sticky: false,
+      select: false,
+      room: 692,
+      wrap: false,
+    });
+
+    expect(layout.visual.map((placed) => placed.width)).toEqual([230, 230, 232]);
+    expect(layout.canvasWidth).toBe(692);
+  });
+
   it('tells when the pinned panes leave no room for a column and then scrolls every column in the same order', () => {
     const roomy = tableLayout(COLUMNS, {
       pins: {},
