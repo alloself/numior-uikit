@@ -114,7 +114,6 @@
     "api/menu.ts",
     "api/sidebar.ts",
     "api/table.ts",
-    "api/tree.ts",
     "components/date-picker.md",
     "components/date-range-picker.md",
     "components/menu.md",
