@@ -16,7 +16,9 @@ export const BLOCKS: readonly BlockEntry[] = [
   { name: 'ProductForm', height: 860 },
   { name: 'CommandPalette', height: 560 },
   { name: 'CustomersSplit', height: 720 },
-  { name: 'PriceSheet', height: 640 },
+  { name: 'PriceSheet', height: 680 },
+  { name: 'ProductDescription', height: 760 },
+  { name: 'SalesDashboard', height: 680 },
 ];
 
 export const blockExampleOf = (name: string): string => `${BLOCK_FAMILY}/${name}`;

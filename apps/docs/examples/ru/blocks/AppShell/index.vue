@@ -11,7 +11,7 @@
     <template #sidebar>
       <NuiSidebar collapsible="icon" label="Разделы кабинета">
         <NuiSidebarContent>
-          <NuiSidebarGroup label="Магазин">
+          <NuiSidebarGroup>
             <NuiSidebarItem
               v-for="section in sections"
               :key="section.key"
@@ -34,16 +34,29 @@
     <template #header>
       <NuiAppBar>
         <template #start>
-          <NuiSidebarTrigger />
+          <div class="flex items-center md:-ms-3 md:w-14 md:justify-center">
+            <NuiSidebarTrigger />
+          </div>
         </template>
-        <NuiInput
-          v-model="query"
-          type="search"
-          size="sm"
-          placeholder="Поиск по разделу"
-          aria-label="Поиск по разделу"
-          class="w-full max-w-xs"
-        />
+        <div class="flex items-center gap-2">
+          <span
+            class="flex size-7 flex-none items-center justify-center rounded-md bg-primary text-primary-foreground"
+          >
+            <NuiIcon :icon="Store" />
+          </span>
+          <span class="truncate text-sm max-sm:hidden">Кабинет магазина</span>
+        </div>
+        <div class="w-full sm:ms-auto sm:w-64">
+          <NuiInput
+            v-model="query"
+            type="search"
+            size="sm"
+            placeholder="Поиск по разделу"
+            aria-label="Поиск по разделу"
+          >
+            <template #prefix><NuiIcon icon="search" /></template>
+          </NuiInput>
+        </div>
         <template #end>
           <NuiMenu placement="bottom-end">
             <template #trigger="{ attrs }">
@@ -83,12 +96,13 @@
 
 <script setup lang="ts">
 import { computed, ref, type Component } from 'vue';
-import { LogOut, Package, Settings, ShoppingCart, UserCog, Users } from '@lucide/vue';
+import { LogOut, Package, Settings, ShoppingCart, Store, UserCog, Users } from '@lucide/vue';
 import { useToast } from '@numior/primitives';
 import {
   NuiAppBar,
   NuiAvatar,
   NuiButton,
+  NuiIcon,
   NuiInput,
   NuiLayout,
   NuiList,

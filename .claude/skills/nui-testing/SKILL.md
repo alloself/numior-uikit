@@ -149,6 +149,10 @@ that the label `for` matches the control id and that values render on the server
 - Cover keyboard and tap (`isMobile`), RTL overflow, density steps, then run in Docker.
 - An element inside `aria-hidden` has an empty accessible name (the number field steppers), so
   assert its `aria-label` attribute instead of `toHaveAccessibleName`.
+- No `waitUntil: 'networkidle'`: a frame that already fired it and then starts a request never
+  restarts Playwright's idle timer, so a page with lazy `<iframe>`s (the docs home) hangs every
+  other run. Open with `'load'` and wait for the main frame through `MainFrameNetwork.quiet()`
+  (`tests/e2e/helpers/network.ts`), which ignores requests of child frames.
 - `getByRole(..., { name })` matches substrings (`Узел 1` also finds `Узел 10`); for item
   lookups by label use `exact: true` or filter by an anchored `hasText` RegExp (`TreeSection.item`).
 - A pointer click on a stretched-link surface is refused by actionability checks because the

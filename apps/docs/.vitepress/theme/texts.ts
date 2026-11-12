@@ -46,6 +46,8 @@ export const ru: DocsTexts = {
   baseTheme: 'Базовая тема',
   invertTheme: 'Обратная тема',
   rtl: 'Справа налево',
+  homeScreen: 'Кабинет магазина на компонентах Numior UI',
+  screenOptions: 'Вид кабинета',
   copyCode: 'Скопировать код',
   copyPage: 'Скопировать страницу',
   blockViewport: 'Ширина экрана',
@@ -92,7 +94,6 @@ export const ru: DocsTexts = {
   apiRussian: 'Русский',
   apiEnglish: 'English',
   reset: 'Сбросить',
-  facts: 'Коротко о наборе',
   description: 'UI-кит для Vue 3, на котором студия Numior собирает свои продукты.',
 };
 
@@ -142,6 +143,8 @@ export const en: DocsTexts = {
   baseTheme: 'Base theme',
   invertTheme: 'Inverted theme',
   rtl: 'Right to left',
+  homeScreen: 'A shop back office built with Numior UI components',
+  screenOptions: 'Back office look',
   copyCode: 'Copy code',
   copyPage: 'Copy page',
   blockViewport: 'Screen width',
@@ -188,6 +191,5 @@ export const en: DocsTexts = {
   apiRussian: 'Russian',
   apiEnglish: 'English',
   reset: 'Reset',
-  facts: 'The kit in short',
   description: 'A UI kit for Vue 3 that the Numior studio builds its own products on.',
 };

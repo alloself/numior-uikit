@@ -53,3 +53,13 @@ The customer list sits on the left and the selected customer with their orders o
 A formula builds the price from the cost and the markup, and the stock total recalculates on every edit.
 
 <Block name="PriceSheet" />
+
+## Product description
+
+<Block name="ProductDescription" />
+
+## Sales
+
+Revenue, order count, and revenue per order come from the orders; the charts show days and statuses.
+
+<Block name="SalesDashboard" />

@@ -2,6 +2,7 @@ import type { FrameLocator, Locator, Page } from '@playwright/test';
 import { wcagViolationsOf, type AxeViolations } from '../helpers/axe';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { boxOf } from '../helpers/geometry';
+import { MainFrameNetwork } from '../helpers/network';
 
 export type DocsScheme = 'light' | 'dark' | 'system';
 
@@ -116,13 +117,44 @@ export class DocsHome {
   readonly title: Locator;
   readonly start: Locator;
   readonly copyInstall: Locator;
-  readonly facts: Locator;
+  readonly screen: FrameLocator;
+  private readonly options: Locator;
 
-  constructor(page: Page) {
+  constructor(private readonly page: Page) {
     this.title = page.getByRole('heading', { level: 1 });
     this.start = page.getByRole('link', { name: 'Начать', exact: true });
-    this.copyInstall = page.getByRole('button', { name: 'Скопировать код' });
-    this.facts = page.getByRole('region', { name: 'Коротко о наборе' });
+
+    this.copyInstall = page
+      .getByRole('region', { name: 'UI-кит для Vue 3' })
+      .getByRole('button', { name: 'Скопировать код' });
+
+    this.screen = page.frameLocator('iframe[src$="/blocks/view/AppShell"]');
+    this.options = page.getByRole('group', { name: 'Вид кабинета' });
+  }
+
+  screenAttribute(name: string): Promise<string | null> {
+    return this.screen.locator('html').getAttribute(name);
+  }
+
+  siteAttribute(name: string): Promise<string | null> {
+    return this.page.locator('html').getAttribute(name);
+  }
+
+  async pick(label: string): Promise<void> {
+    await this.options.getByRole('radio', { name: label, exact: true }).click();
+  }
+
+  async turnRightToLeft(): Promise<void> {
+    await this.options.getByRole('button', { name: 'Справа налево' }).click();
+  }
+
+  async pickAccent(label: string): Promise<void> {
+    await this.options.getByRole('combobox', { name: 'Акцент' }).click();
+    await this.page.getByRole('option', { name: label, exact: true }).click();
+  }
+
+  section(title: string): Locator {
+    return this.page.getByRole('region', { name: title });
   }
 }
 
@@ -140,8 +172,10 @@ export class DocsSite {
   readonly commandDialog: Locator;
   readonly commandInput: Locator;
   readonly copyPage: Locator;
+  readonly network: MainFrameNetwork;
 
   constructor(readonly page: Page) {
+    this.network = new MainFrameNetwork(page);
     this.header = page.locator('.nui-app-bar');
     this.copyPage = page.getByRole('button', { name: 'Скопировать страницу' });
     this.sidebar = page.locator('aside.nui-sidebar');
@@ -161,7 +195,8 @@ export class DocsSite {
     if (scheme !== undefined) {
       await this.page.addInitScript((value) => localStorage.setItem('nui-theme', value), scheme);
     }
-    await this.page.goto(path, { waitUntil: 'networkidle' });
+    await this.page.goto(path, { waitUntil: 'load' });
+    await this.network.quiet();
 
     await this.page
       .locator('.nui-layout:not(.nui-layout--pending), main#docs-content')
@@ -179,6 +214,18 @@ export class DocsSite {
 
   get inputFrame(): Locator {
     return this.article.locator('.nui-input').first();
+  }
+
+  get editorFrame(): Locator {
+    return this.page.locator('.nui-editor').first();
+  }
+
+  get sheetNameBox(): Locator {
+    return this.page.locator('.nui-spreadsheet__name').first();
+  }
+
+  get sheetEntry(): Locator {
+    return this.page.locator('.nui-spreadsheet__entry').first();
   }
 
   similarPage(name: string): Locator {

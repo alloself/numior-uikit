@@ -35,7 +35,8 @@
         />
       </div>
     </div>
-    <NuiTabPanel value="preview" class="mt-2">
+    <NuiTabPanel value="preview" class="relative mt-3">
+      <FrameCorners />
       <div class="overflow-hidden rounded-lg border bg-surface-muted bg-dots">
         <iframe
           ref="frame"
@@ -71,6 +72,7 @@ import { fileNamed } from '../example-files';
 import { mirrorAttributes } from '../mirror-attributes';
 import { BlockViewport, type BlockFrameProps } from '../theme.types';
 import ExampleFiles from './ExampleFiles.vue';
+import FrameCorners from './FrameCorners.vue';
 
 const THEME_ATTRIBUTES = ['data-nui-theme', 'data-nui-accent'];
 

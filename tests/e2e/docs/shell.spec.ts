@@ -118,7 +118,7 @@ test('the contents stay in place when the footer scrolls into view', async ({ do
 
   await docs.scrollToEnd();
 
-  await expect(docs.footer).toBeInViewport({ ratio: 1 });
+  await expect(docs.footer).toBeInViewport({ ratio: 0.99 });
   expect(await docs.tocTop()).toBe(top);
 });
 

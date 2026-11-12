@@ -1,5 +1,5 @@
 import type { NuiTableColumn } from '@numior/table';
-import type { NuiCodeProps } from '@numior/vue';
+import type { NuiCodeProps, ResolvedColorScheme } from '@numior/vue';
 import type { MarkdownRenderer } from 'vitepress';
 import type { Component } from 'vue';
 import type { ConfiguratorChange, ConfiguratorState } from './configurator-code';
@@ -120,6 +120,8 @@ export interface DocsTexts {
   readonly baseTheme: string;
   readonly invertTheme: string;
   readonly rtl: string;
+  readonly homeScreen: string;
+  readonly screenOptions: string;
   readonly copyCode: string;
   readonly copyPage: string;
   readonly blockViewport: string;
@@ -166,7 +168,6 @@ export interface DocsTexts {
   readonly apiRussian: string;
   readonly apiEnglish: string;
   readonly reset: string;
-  readonly facts: string;
   readonly description: string;
 }
 
@@ -218,6 +219,17 @@ export interface BlockFrameProps {
   src: string;
   height: number;
   files: readonly ExampleFile[];
+  texts: DocsTexts;
+}
+
+export interface ScreenState {
+  readonly scheme: ResolvedColorScheme;
+  readonly accent: string;
+  readonly rtl: boolean;
+}
+
+export interface HomeScreenProps {
+  src: string;
   texts: DocsTexts;
 }
 
