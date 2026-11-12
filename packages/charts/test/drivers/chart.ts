@@ -221,6 +221,10 @@ export class ChartDriver {
     await this.wrapper.find('.nui-chart__frame').trigger('pointerleave');
   }
 
+  async rightClick(): Promise<void> {
+    await this.wrapper.find('.nui-chart__frame').trigger('contextmenu');
+  }
+
   async clickAt(x: number, y: number): Promise<void> {
     await this.pointAt('click', x, y);
   }

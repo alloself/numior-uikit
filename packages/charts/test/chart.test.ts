@@ -140,6 +140,20 @@ describe('NuiChart', () => {
     expect(chart.tooltip?.rows).toEqual(['Online —', 'Stores 59']);
   });
 
+  it('ends the hover reading on a right click until the pointer moves again', async () => {
+    const chart = chartOf({ spec: revenue });
+    const x = chart.categoryTickX('Q2') + 6;
+
+    await chart.hover(x, MIDDLE);
+    await chart.rightClick();
+
+    expect([chart.tooltip?.shown, chart.mutedMarks]).toEqual([false, 0]);
+
+    await chart.hover(x, MIDDLE);
+
+    expect(chart.tooltip?.shown).toBe(true);
+  });
+
   it('walks categories with the arrow keys, announces them and selects with Enter', async () => {
     const chart = chartOf({ spec: revenue, config: { locale: 'en-US' } });
 

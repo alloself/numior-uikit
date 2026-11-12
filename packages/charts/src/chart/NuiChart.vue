@@ -18,6 +18,7 @@
       class="nui-chart__frame"
       @pointermove="pointer.onPointermove"
       @pointerleave="pointer.onPointerleave"
+      @contextmenu="pointer.onContextmenu"
       @click="pointer.onClick"
     >
       <span ref="probe" class="nui-chart__font-probe" aria-hidden="true"></span>
