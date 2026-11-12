@@ -1,3 +1,4 @@
+import { maxBy } from 'lodash-es';
 import { HtmlNodeKind, HtmlTag, type HtmlElement, type HtmlNode } from './html.types';
 
 export interface HtmlTableCell {
@@ -74,9 +75,11 @@ const place = (
     for (let col = column; col < column + colspan; col += 1) {
       const target = grid[row];
 
-      if (target !== undefined) {
-        target[col] = row === rowIndex && col === column ? cellOf(cell) : EMPTY;
+      if (target === undefined) {
+        continue;
       }
+
+      target[col] = row === rowIndex && col === column ? cellOf(cell) : EMPTY;
     }
   }
   return column + colspan;
@@ -93,7 +96,7 @@ export const tableGrid = (table: HtmlElement): HtmlTableGrid => {
       column = place(grid, index, cell, freeColumn(grid[index] ?? [], column));
     }
   }
-  const width = Math.max(0, ...grid.map((row) => row.length));
+  const width = maxBy(grid, (row) => row.length)?.length ?? 0;
   const body = rows.findIndex((row) => !row.head);
 
   return {

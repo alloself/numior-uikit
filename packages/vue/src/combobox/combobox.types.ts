@@ -17,6 +17,8 @@ export interface NuiComboboxProps<T> extends NuiFieldControlProps {
   getKey?: NuiOptionKey<T> | undefined;
   filter?: NuiComboboxFilter<T> | false | undefined;
   loading?: boolean | undefined;
+  loop?: boolean | undefined;
+  locale?: string | undefined;
   customValue?: ((text: string) => T) | undefined;
   placement?: FloatingPlacement | undefined;
   emptyLabel?: string | undefined;

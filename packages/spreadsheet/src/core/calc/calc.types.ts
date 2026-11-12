@@ -1,11 +1,17 @@
 import type { NumberLocale } from '../format/format.types';
 import { type CellInputKind, type CellRange, type CellValue, CellValueKind } from '../cell.types';
-import type { FormulaNode } from '../formula/formula.types';
+import type { CallSignature, FormulaNode } from '../formula/formula.types';
 import type { Sheet } from '../workbook';
 
 export interface ArrayValue {
   readonly kind: typeof EvalValueKind.Array;
   readonly rows: readonly (readonly CellValue[])[];
+}
+
+export interface AreasValue {
+  readonly kind: typeof EvalValueKind.Areas;
+  readonly sheet: Sheet;
+  readonly ranges: readonly CellRange[];
 }
 
 export type EvalValue =
@@ -15,6 +21,7 @@ export type EvalValue =
       readonly sheet: Sheet;
       readonly range: CellRange;
     }
+  | AreasValue
   | ArrayValue;
 
 export type FormulaResult = CellValue | ArrayValue;
@@ -70,10 +77,8 @@ export interface FormulaPlace {
   readonly col: number;
 }
 
-export interface FunctionSpec {
+export interface FunctionSpec extends CallSignature {
   readonly name: string;
-  readonly min: number;
-  readonly max: number;
   readonly volatile?: boolean | undefined;
   readonly array?: boolean | undefined;
   readonly arrays?: readonly number[] | typeof ArrayScope.All | undefined;
@@ -98,6 +103,7 @@ export interface Recalculation {
   readonly busyMs: number;
   readonly longestMs: number;
   readonly finished: boolean;
+  readonly planned: boolean;
   readonly settled: Promise<void>;
   cancel(): void;
 }
@@ -110,7 +116,12 @@ export interface RecalcOptions {
   readonly imported?: boolean | undefined;
 }
 
-export const EvalValueKind = { ...CellValueKind, Reference: 'reference', Array: 'array' } as const;
+export const EvalValueKind = {
+  ...CellValueKind,
+  Reference: 'reference',
+  Areas: 'areas',
+  Array: 'array',
+} as const;
 
 export const FormulaState = {
   Fresh: 'fresh',
@@ -131,4 +142,4 @@ export const CriteriaToken = {
 
 export const DatedifUnit = { Y: 'Y', M: 'M', D: 'D', YM: 'YM', MD: 'MD', YD: 'YD' } as const;
 
-export const WeekendMask = { AllDays: '1111111', Weekend: '1' } as const;
+export const WeekendMask = { Weekend: '1' } as const;

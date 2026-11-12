@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
   EN_FORMULAS,
+  MAX_CELL_TEXT,
   createCellEditor,
   createStepper,
+  formatCell,
   formatRange,
   numberValue,
   pivotCaptions,
   textValue,
+  type ConditionalFormat,
   type PivotDefinition,
   parseCell,
   parseFormula,
@@ -48,6 +51,14 @@ const written = async (
   return result.bytes;
 };
 
+const ownRules = (formats: readonly ConditionalFormat[]) =>
+  formats.flatMap((format) =>
+    format.extension === true ? [] : format.rules.map((entry) => entry.rule),
+  );
+
+const extensionsIn = (formats: readonly ConditionalFormat[]) =>
+  formats.reduce((count, format) => (format.extension === true ? count + 1 : count), 0);
+
 const partOf = async (bytes: Bytes, part: string): Promise<string> => {
   const zip = readZip(bytes);
 
@@ -55,6 +66,15 @@ const partOf = async (bytes: Bytes, part: string): Promise<string> => {
     throw new Error('not a zip');
   }
   return zip.archive.has(part) ? zip.archive.text(part) : '';
+};
+
+const formulaCell = (row: number, text: string) => {
+  const parsed = parseFormula(text, EN_FORMULAS, { row, col: 0 });
+
+  if (!parsed.ok) {
+    throw new Error(`${text} is not a formula`);
+  }
+  return { row, col: 0, content: { kind: 'formula', ast: parsed.ast } } as const;
 };
 
 const at = (address: string): { readonly row: number; readonly col: number } => {
@@ -152,6 +172,125 @@ describe('writing xlsx', () => {
     expect(await partOf(bytes, 'xl/worksheets/sheet1.xml')).toContain('_xlfn.XLOOKUP(');
     expect(await partOf(bytes, 'xl/worksheets/sheet1.xml')).toContain('cm="1"');
     expect(await partOf(bytes, 'xl/metadata.xml')).toContain('XLDAPR');
+    expect(await partOf(bytes, 'xl/richData/rdrichvalue.xml')).toBe('');
+  });
+
+  it('writes the errors of dynamic arrays the way Excel does and reads them back', async () => {
+    const sheet = openBook();
+
+    [
+      ['A1', '=SEQUENCE(3)'],
+      ['A2', '5'],
+      ['C1', '=SEQUENCE(0)'],
+      ['D1', '=1/0'],
+    ].forEach(([address = '', text = '']) => {
+      sheet.type(address, text);
+    });
+
+    expect(['A1', 'C1', 'D1'].map((address) => sheet.shown(address))).toEqual([
+      '#SPILL!',
+      '#CALC!',
+      '#DIV/0!',
+    ]);
+
+    const bytes = await written({ book: sheet.book, calculator: sheet.calculator });
+    const cells = await partOf(bytes, 'xl/worksheets/sheet1.xml');
+    const view = viewOf(await opened(bytes), 'Sheet1');
+
+    expect(cells).toContain(
+      '<c r="A1" t="e" vm="1" cm="1"><f t="array" ref="A1">_xlfn.SEQUENCE(3)</f><v>#VALUE!</v></c>',
+    );
+
+    expect(cells).toContain('<c r="C1" t="e" vm="2" cm="1">');
+    expect(cells).toContain('<c r="D1" t="e"><f>1/0</f><v>#DIV/0!</v></c>');
+
+    expect(await partOf(bytes, 'xl/metadata.xml')).toContain(
+      '<valueMetadata count="2"><bk><rc t="2" v="0"/></bk><bk><rc t="2" v="1"/></bk></valueMetadata>',
+    );
+
+    expect(await partOf(bytes, 'xl/richData/rdrichvalue.xml')).toContain(
+      '<rv s="0"><v>8</v></rv><rv s="0"><v>13</v></rv>',
+    );
+
+    expect(await partOf(bytes, 'xl/_rels/workbook.xml.rels')).toContain(
+      'Type="http://schemas.microsoft.com/office/2017/06/relationships/rdRichValueStructure"',
+    );
+
+    expect(await partOf(bytes, '[Content_Types].xml')).toContain(
+      'application/vnd.ms-excel.rdrichvalue+xml',
+    );
+
+    expect(['A1', 'C1', 'D1'].map(view.shown)).toEqual(['#SPILL!', '#CALC!', '#DIV/0!']);
+  });
+
+  it('writes the names of LET and LAMBDA and the newer functions the way Excel saves them', async () => {
+    const book = openBook();
+
+    const formulas = [
+      ['B1', '=LET(x,1,y,2,x+y)', '_xlfn.LET(_xlpm.x,1,_xlpm.y,2,_xlpm.x+_xlpm.y)'],
+      ['B2', '=LET(x,1,LET(x,2,x)+x)', '_xlfn.LET(_xlpm.x,1,_xlfn.LET(_xlpm.x,2,_xlpm.x)+_xlpm.x)'],
+      ['B3', '=LET(Ab,1,aB+1)', '_xlfn.LET(_xlpm.Ab,1,_xlpm.Ab+1)'],
+      ['B4', '=LET(A1,1,A1+1)', '_xlfn.LET(_xlpm.A1,1,_xlpm.A1+1)'],
+      [
+        'B5',
+        '=BYROW(A1:A2,LAMBDA(r,SUM(r)+x))',
+        '_xlfn.BYROW(A1:A2,_xlfn.LAMBDA(_xlpm.r,SUM(_xlpm.r)+x))',
+      ],
+      ['B6', '=ACOT(1)+ACOTH(2)', '_xlfn.ACOT(1)+_xlfn.ACOTH(2)'],
+    ] as const;
+
+    formulas.forEach(([address, text]) => {
+      book.type(address, text);
+    });
+
+    const bytes = await written({ book: book.book, calculator: book.calculator });
+    const cells = await partOf(bytes, 'xl/worksheets/sheet1.xml');
+    const view = viewOf(await opened(bytes), 'Sheet1');
+
+    formulas.forEach(([address, , file]) => {
+      expect(cells).toContain(`<c r="${address}"><f>${file}</f>`);
+    });
+
+    expect(formulas.map(([address]) => view.input(address))).toEqual([
+      '=LET(x,1,y,2,x+y)',
+      '=LET(x,1,LET(x,2,x)+x)',
+      '=LET(Ab,1,Ab+1)',
+      '=LET(A1,1,A1+1)',
+      '=BYROW(A1:A2,LAMBDA(r,SUM(r)+x))',
+      '=ACOT(1)+ACOTH(2)',
+    ]);
+  });
+
+  it('marks the functions Excel holds able to give an array as array formulas', async () => {
+    const book = openBook();
+
+    const formulas = [
+      ['B1', '=IFS(A1>1,"a",TRUE,"b")', '_xlfn.IFS(A1&gt;1,"a",TRUE,"b")'],
+      ['B2', '=SWITCH(A1,1,"a","b")', '_xlfn.SWITCH(A1,1,"a","b")'],
+      ['B3', '=MMULT(1,1)', 'MMULT(1,1)'],
+      ['B4', '=STOCKHISTORY(A1,A2)', '_xlfn.STOCKHISTORY(A1,A2)'],
+    ] as const;
+
+    formulas.forEach(([address, text]) => {
+      book.type(address, text);
+    });
+
+    book.type('B5', '=IF(A1>1,"a","b")');
+
+    const bytes = await written({ book: book.book, calculator: book.calculator });
+    const cells = await partOf(bytes, 'xl/worksheets/sheet1.xml');
+    const view = viewOf(await opened(bytes), 'Sheet1');
+
+    formulas.forEach(([address, , file]) => {
+      expect(cells).toMatch(new RegExp(`<c r="${address}"[^>]* cm="1">`, 'u'));
+      expect(cells).toContain(`<f t="array" ref="${address}">${file}</f>`);
+    });
+
+    expect(cells).toMatch(/<c r="B5"[^>]*><f>IF\(A1&gt;1,"a","b"\)<\/f>/u);
+
+    expect(formulas.map(([address]) => view.input(address))).toEqual(
+      formulas.map(([, text]) => text),
+    );
   });
 
   it('marks formulas that need array evaluation and writes the file syntax of this-row references', async () => {
@@ -220,6 +359,51 @@ describe('writing xlsx', () => {
     expect(sheet).toContain('<c r="K2"><f>SUMPRODUCT(--(B2:B4&gt;1))</f>');
   });
 
+  it('marks a legacy reference operator with @ where Excel 16 does and writes it back unmarked', async () => {
+    const legacy = [
+      ['B2:B4 B3:C3', '=@B2:B4 B3:C3'],
+      ['A1 B1', '=A1 B1'],
+      ['(A1,B1)', '=(A1,B1)'],
+      ['A1:INDEX(A1:A5,3)', '=@A1:INDEX(A1:A5,3)'],
+      ['A1:A2:B3', '=@A1:A2:B3'],
+      ['SUM(A1:A3 A2:B2)', '=SUM(A1:A3 A2:B2)'],
+      ['INDEX(A1:A5,3):A5', '=@INDEX(A1:A5,3):A5'],
+      ['-A1 B1', '=-A1 B1'],
+      ['A1:A3 A2:B2+1', '=@A1:A3 A2:B2+1'],
+      ['(A1:A2,B1) A1', '=(A1:A2,B1) A1'],
+      ['A1:(B2)', '=@A1:B2'],
+      ['A1 (B1:B2)', '=A1 B1:B2'],
+      ['A:A 2:2', '=@A:A 2:2'],
+    ];
+
+    const cells = legacy
+      .map(
+        ([text], index) =>
+          `<c r="${formatCell({ row: 9, col: index })}"><f>${text}</f><v>0</v></c>`,
+      )
+      .join('');
+
+    const source = await xlsxPackage({
+      'xl/worksheets/sheet1.xml': SALES_SHEET.replace(
+        '</sheetData>',
+        `<row r="10">${cells}</row></sheetData>`,
+      ),
+    });
+
+    const read = await opened(source);
+    const view = viewOf(read, 'Sales');
+
+    expect(legacy.map((_entry, index) => view.input(formatCell({ row: 9, col: index })))).toEqual(
+      legacy.map(([, shown]) => shown),
+    );
+
+    const sheet = await partOf(await written(read, read.source), 'xl/worksheets/sheet1.xml');
+
+    for (const [, shown = ''] of legacy) {
+      expect(sheet).toContain(`<f>${shown.replace(/^=@?/u, '')}</f>`);
+    }
+  });
+
   it('writes conditional formats from the model once they change and reads them back the same', async () => {
     const read = await opened(await corpusPackage('conditional'));
     const rules = sheetOf(read, 'Rules');
@@ -270,6 +454,50 @@ describe('writing xlsx', () => {
     expect(JSON.stringify(sheetOf(again, 'Rules').conditional)).toBe(
       JSON.stringify(sheetOf(read, 'Rules').conditional),
     );
+  });
+
+  it('writes automatic ends of a data bar the way Excel does and reads them back', async () => {
+    const read = await opened(await corpusPackage('conditional'));
+    const rules = sheetOf(read, 'Rules');
+
+    const bar = {
+      kind: 'dataBar',
+      min: { kind: 'number', value: { kind: 'number', value: 5 } },
+      max: { kind: 'autoMax' },
+      color: { kind: 'rgb', argb: 'FF638EC6' },
+      showValue: true,
+    } as const;
+
+    createStepper(read.book, read.calculator).apply({
+      kind: 'setConditional',
+      sheet: 'Rules',
+      formats: [
+        ...rules.conditional.filter((format) => format.extension !== true),
+        {
+          ranges: [{ top: 0, left: 5, bottom: 5, right: 5 }],
+          rules: [{ rule: bar, priority: 14, stopIfTrue: false }],
+        },
+        ...rules.conditional.filter((format) => format.extension === true),
+      ],
+    });
+
+    const bytes = await written(read, read.source);
+    const sheet = await partOf(bytes, 'xl/worksheets/sheet1.xml');
+    const again = sheetOf(await opened(bytes), 'Rules');
+
+    expect(sheet).not.toMatch(/<cfvo type="auto/u);
+
+    expect(sheet).toContain(
+      '<dataBar><cfvo type="num" val="5"/><cfvo type="max"/><color rgb="FF638EC6"/></dataBar><extLst><ext uri="{B025F937-C7B1-47D3-B67F-A62EFF666E3E}"',
+    );
+
+    expect(sheet).toContain(
+      '<x14:cfvo type="num"><xm:f>5</xm:f></x14:cfvo><x14:cfvo type="autoMax"/></x14:dataBar></x14:cfRule><xm:sqref>F1:F6</xm:sqref>',
+    );
+
+    expect(ownRules(again.conditional)).toEqual(ownRules(sheetOf(read, 'Rules').conditional));
+
+    expect(extensionsIn(again.conditional)).toBe(extensionsIn(rules.conditional) + 1);
   });
 
   it('moves the Excel 2010 rule extensions with inserted rows', async () => {
@@ -542,6 +770,95 @@ describe('writing xlsx', () => {
     expect(await partOf(bytes, 'xl/worksheets/sheet1.xml')).not.toContain('scenario');
   });
 
+  it('asks before it cuts a text longer than a cell of the file holds', async () => {
+    const read = await opened(await xlsxPackage({}));
+    const long = `${'a'.repeat(MAX_CELL_TEXT - 1)}\u{1F600}tail`;
+    const stepper = createStepper(read.book, read.calculator);
+
+    stepper.apply({
+      kind: 'setCells',
+      sheet: 'Sales',
+      cells: [
+        { row: 20, col: 0, content: { kind: 'value', value: { kind: 'string', value: long } } },
+        { row: 21, col: 0, content: { kind: 'value', value: { kind: 'string', value: 'short' } } },
+      ],
+    });
+
+    const refused = await writeWorkbook(read.book, read.calculator, { source: read.source });
+
+    const lossy = await writeWorkbook(read.book, read.calculator, {
+      source: read.source,
+      lossy: true,
+    });
+
+    const back = await opened(lossy.ok ? lossy.bytes : new Uint8Array());
+    const cells = back.book.sheet('Sales')?.cells;
+
+    expect(refused).toMatchObject({
+      ok: false,
+      report: { losses: [{ sheet: 'Sales', reason: 'long-text' }] },
+    });
+
+    expect(cells?.get(20, 0)).toEqual({ kind: 'string', value: 'a'.repeat(MAX_CELL_TEXT - 1) });
+    expect(cells?.get(21, 0)).toEqual({ kind: 'string', value: 'short' });
+    expect(read.book.sheet('Sales')?.cells.get(20, 0)).toEqual({ kind: 'string', value: long });
+  });
+
+  it('asks before it writes as values the formulas Excel would not open', async () => {
+    const read = await opened(await xlsxPackage({}));
+    const stepper = createStepper(read.book, read.calculator);
+    const long = 'a'.repeat(300);
+
+    stepper.apply({
+      kind: 'setCells',
+      sheet: 'Sales',
+      cells: [
+        formulaCell(20, '=SUBTOTAL(9,{1,2})'),
+        formulaCell(21, `="${long}"`),
+        formulaCell(22, '=1+1'),
+      ],
+    });
+
+    const refused = await writeWorkbook(read.book, read.calculator, { source: read.source });
+
+    const lossy = await writeWorkbook(read.book, read.calculator, {
+      source: read.source,
+      lossy: true,
+    });
+
+    const bytes = lossy.ok ? lossy.bytes : new Uint8Array();
+    const text = await partOf(bytes, 'xl/worksheets/sheet1.xml');
+    const cells = (await opened(bytes)).book.sheet('Sales')?.cells;
+
+    expect(refused).toMatchObject({
+      ok: false,
+      report: { losses: [{ sheet: 'Sales', reason: 'refused-formula' }] },
+    });
+
+    expect(text).not.toContain('SUBTOTAL');
+    expect(text).not.toContain(`<f>"${long}"</f>`);
+    expect(text).toContain('<f>1+1</f>');
+    expect(cells?.get(20, 0)).toEqual({ kind: 'error', code: '#VALUE!' });
+    expect(cells?.get(21, 0)).toEqual({ kind: 'string', value: long });
+  });
+
+  it('writes back as they were the formulas it could not read', async () => {
+    const sheet = SALES_SHEET.replace('B2*Rate', 'SUM(Sales:Rates!B1)')
+      .replace('B3*Rate', '_xlfn.XLOOKUP(1,B2:B4 B3:C3,1)')
+      .replace('B4*Rate', 'Rates!#REF!+1');
+
+    const read = await opened(await xlsxPackage({ 'xl/worksheets/sheet1.xml': sheet }));
+    const text = await partOf(await written(read, read.source), 'xl/worksheets/sheet1.xml');
+
+    [
+      '<f>SUM(Sales:Rates!B1)</f><v>0.75</v>',
+      '<f>_xlfn.XLOOKUP(1,B2:B4 B3:C3,1)</f><v>0.25</v>',
+      '<f>Rates!#REF!+1</f>',
+    ].forEach((piece) => {
+      expect(text).toContain(piece);
+    });
+  });
+
   it('moves the sheet view, validations, links, breaks and filters with lines and sheet names', async () => {
     const validations = `<dataValidations count="2"><dataValidation type="list" sqref="B2:B4"><formula1>$A$2:$A$4</formula1></dataValidation><dataValidation type="whole" sqref="H9"><formula1>B2</formula1></dataValidation></dataValidations>`;
     const links = `<hyperlinks><hyperlink ref="A2" r:id="rId2"/><hyperlink ref="A4" location="Rates!B1" display="Rate"/></hyperlinks>`;
@@ -589,7 +906,7 @@ describe('writing xlsx', () => {
       expect(result.ok && stepper.apply(result.inverse).ok).toBe(true);
     });
 
-    expect(sheetOf(read, 'Sales').layout.xml).toBe(original);
+    expect(sheetOf(read, 'Sales').layout.xml).toEqual(original);
   });
 
   it('moves pictures and comments with lines and drops the comments of deleted rows', async () => {
@@ -833,6 +1150,57 @@ describe('writing xlsx', () => {
 
     expect(definition?.filters).toEqual([{ field: 0, selected: textValue('East') }]);
     expect(definition?.values).toEqual(values);
+  });
+
+  it('writes a pivot that has no values yet without an empty list of them', async () => {
+    const sheet = openBook();
+
+    [
+      ['Region', 'Sales'],
+      ['East', '100'],
+      ['West', '150'],
+    ].forEach((row, index) => {
+      row.forEach((text, col) => {
+        sheet.type(`${'AB'.charAt(col)}${String(index + 1)}`, text);
+      });
+    });
+
+    sheet.commit({
+      kind: 'setPivot',
+      sheet: 'Rates',
+      name: 'Regions',
+      pivot: {
+        anchor: { row: 0, col: 0 },
+        definition: {
+          source: {
+            kind: 'range',
+            sheet: 'Sheet1',
+            range: { top: 0, left: 0, bottom: 2, right: 1 },
+          },
+          rows: [0],
+          columns: [],
+          filters: [],
+          values: [],
+          fields: [],
+          layout: 'compact',
+          rowTotals: true,
+          columnTotals: true,
+          autofit: false,
+          captions: pivotCaptions('en'),
+        },
+      },
+    });
+
+    const bytes = await written(sheet);
+    const part = await partOf(bytes, 'xl/pivotTables/pivotTable1.xml');
+    const again = await opened(bytes);
+
+    expect(part).toContain('<rowFields count="1">');
+    expect(part).not.toContain('<dataFields');
+
+    expect(again.book.pivots.get(sheetOf(again, 'Rates'), 'Regions')?.definition.values).toEqual(
+      [],
+    );
   });
 
   it('refreshes a pivot read from a file into the cells the file shows', async () => {

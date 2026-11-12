@@ -13,6 +13,7 @@ import {
   type NuiTableColumnDef,
 } from '../src';
 import DossierDetail from './fixtures/DossierDetail.vue';
+import PeerFrames from './fixtures/PeerFrames.vue';
 import RectProbe from './fixtures/RectProbe.vue';
 import SlottedTable from './fixtures/SlottedTable.vue';
 import { FILE_COLUMNS, FILES, type FileNode } from './support/files';
@@ -79,7 +80,7 @@ const renderPainted = (): Promise<string> =>
     props: {
       columns: PEOPLE_COLUMNS,
       rows: people(3),
-      bordered: true,
+      gridlines: true,
       cellStyle: paintName,
     },
   });
@@ -340,7 +341,7 @@ describe('NuiTable on the server', () => {
     const html = await renderPainted();
 
     expect(html).toBe(await renderPainted());
-    expect(html).toContain('nui-table--bordered');
+    expect(html).toContain('nui-table--gridlines');
     expect(html).not.toContain('nui-table--slack');
     expect(html.match(/nui-table__cell--filled/g)).toHaveLength(1);
     expect(html.match(/nui-table__cell--edged/g)).toHaveLength(1);
@@ -456,6 +457,21 @@ describe('NuiTable on the server', () => {
     expect(html).toContain(
       'data-rect="{&quot;top&quot;:120,&quot;start&quot;:80,&quot;width&quot;:300,&quot;height&quot;:80}"',
     );
+  });
+
+  it('frames the cells of the people at work in a table on the server', async () => {
+    const html = await renderToString(SlottedTable<Person>, {
+      props: {
+        table: { columns: PEOPLE_COLUMNS, rows: people(20), height: '300px' },
+        slots: { overlay: PeerFrames },
+      },
+    });
+
+    expect(html).toContain('nui-table-peers__peer--tone-3');
+    expect(html).toContain('nui-table-peers__cell--flag-below');
+    expect(html).toContain('class="nui-table-peers__area"');
+    expect(html).toContain('>Anna<');
+    expect(html).toContain('>Boris<');
   });
 
   it('renders skeleton rows for a source without asking it for rows on the server', async () => {

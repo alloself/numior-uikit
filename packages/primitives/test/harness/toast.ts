@@ -5,6 +5,7 @@ import {
   provideNuiConfig,
   useToastStore,
   type Toast,
+  type ToastHold,
   type ToastOptions,
   type ToastStore,
   type ToastStoreOptions,
@@ -74,12 +75,12 @@ export class ToastHarness {
     this.store.dismiss(id);
   }
 
-  pause(id: string): void {
-    this.store.pause(id);
+  hold(reason: ToastHold): void {
+    this.store.hold(reason);
   }
 
-  resume(id: string): void {
-    this.store.resume(id);
+  release(reason: ToastHold): void {
+    this.store.release(reason);
   }
 
   clear(): void {

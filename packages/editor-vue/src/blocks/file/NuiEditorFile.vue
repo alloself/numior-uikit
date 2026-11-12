@@ -67,9 +67,11 @@ useEventListener(
   () => element,
   'click',
   (event: MouseEvent) => {
-    if (editable && !event.ctrlKey && !event.metaKey) {
-      event.preventDefault();
+    if (!editable || event.ctrlKey || event.metaKey) {
+      return;
     }
+
+    event.preventDefault();
   },
 );
 </script>

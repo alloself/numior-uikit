@@ -29,6 +29,7 @@ export type {
   NuiEditorValue,
 } from './editor/editor.types';
 export { NuiEditorFormat, NuiEditorToolbarMode } from './editor/editor.types';
+export type { NuiEditorSelectionAction } from './toolbar/toolbar-items';
 export type { NuiEditorLinkMetadata, NuiEditorLinkPreview } from './links/links.types';
 export type { NuiEditorMention, NuiEditorMentions } from './mentions/mentions.types';
 export type {

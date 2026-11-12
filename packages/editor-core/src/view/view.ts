@@ -139,9 +139,11 @@ const nextTask = (run: () => void): (() => void) => {
     'message',
     () => {
       channel.port1.close();
-      if (live) {
-        run();
+      if (!live) {
+        return;
       }
+
+      run();
     },
     { once: true },
   );
@@ -262,23 +264,29 @@ const createCatchUp = (context: ViewContext, settle: () => void): CatchUp => {
       Math.min(SLICE_MS - (performance.now() - started), deadline?.timeRemaining() ?? SLICE_MS),
     );
 
-    if (context.stale.size > 0) {
-      cancel = idle(slice);
+    if (context.stale.size === 0) {
+      return;
     }
+
+    cancel = idle(slice);
   };
 
   return {
     schedule: () => {
-      if (cancel === undefined && context.stale.size > 0) {
-        cancel = idle(slice);
+      if (cancel !== undefined || context.stale.size === 0) {
+        return;
       }
+
+      cancel = idle(slice);
     },
     all: () => {
       cancel?.();
       cancel = undefined;
-      if (context.stale.size > 0) {
-        run(() => Number.POSITIVE_INFINITY);
+      if (context.stale.size === 0) {
+        return;
       }
+
+      run(() => Number.POSITIVE_INFINITY);
     },
     stop: () => {
       cancel?.();
@@ -300,6 +308,8 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
   let state = options.state;
   let composing = false;
   let holding = false;
+  let acting = false;
+  let editable = options.editable ?? true;
 
   let sets = decorationSets(state);
 
@@ -334,28 +344,36 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     for (const block of chunk.children) {
       const desc = context.descs.get(block);
 
-      if (desc?.kind === DescKind.Element && context.stale.has(desc)) {
-        freshen(context, desc);
-        changed = true;
+      if (desc?.kind !== DescKind.Element || !context.stale.has(desc)) {
+        continue;
       }
+
+      freshen(context, desc);
+      changed = true;
     }
-    if (changed) {
-      settle();
+    if (!changed) {
+      return;
     }
+
+    settle();
   };
 
   const catchUp = createCatchUp(context, settle);
 
   const onJump = (event: KeyboardEvent): void => {
-    if ((event.ctrlKey || event.metaKey) && JUMPS.has(event.key)) {
-      attaching.complete();
-      catchUp.all();
+    const jumps = (event.ctrlKey || event.metaKey) && JUMPS.has(event.key);
+
+    if (!jumps) {
+      return;
     }
+
+    attaching.complete();
+    catchUp.all();
   };
 
   root.addEventListener('keydown', onJump, { capture: true });
 
-  prepareRoot(root, options.editable ?? true);
+  prepareRoot(root, editable);
 
   const { desc: rootDesc, rest } = createRootDesc(context, root, state.doc.root, FIRST_BLOCKS);
   const attaching = createFilling(root, rest, settle);
@@ -363,13 +381,21 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
   placeWidgets(context, state, sets);
 
   const dispatch = (tr: Transaction, source?: InputSource): void => {
+    const nested = acting;
+
     if (source !== undefined) {
       tr.setMeta(inputSource, source);
     }
-    if (options.dispatch === undefined) {
-      update(state.apply(tr));
-    } else {
-      options.dispatch(tr);
+    acting = true;
+
+    try {
+      if (options.dispatch === undefined) {
+        update(state.apply(tr));
+      } else {
+        options.dispatch(tr);
+      }
+    } finally {
+      acting = nested;
     }
   };
 
@@ -378,7 +404,13 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     context,
     rootDesc,
     state: () => state,
-    dispatch,
+    dispatch: (tr, source) => {
+      if (!editable && tr.changed) {
+        return;
+      }
+
+      dispatch(tr, source);
+    },
     composing: () => composing,
     holding: () => holding,
     fresh: (parent, index) => {
@@ -388,10 +420,12 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
 
       const child = parent.children[index];
 
-      if (child?.kind === DescKind.Element && context.stale.has(child)) {
-        freshen(context, child);
-        watch.ignoreOwn();
+      if (child?.kind !== DescKind.Element || !context.stale.has(child)) {
+        return;
       }
+
+      freshen(context, child);
+      watch.ignoreOwn();
     },
   };
 
@@ -405,10 +439,14 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     () => {
       placeWidgets(context, state, sets);
     },
+    () => {
+      sync.write();
+    },
   );
 
   const update = (next: EditorState): void => {
     const end = next.doc.root === state.doc.root ? undefined : attaching.prefix(next.doc.root);
+    const kept = !acting && sync.unread();
 
     if (next.doc.schema !== context.schema) {
       throw new RangeError('The view renders one schema; create a new view for another');
@@ -432,10 +470,12 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     for (const id of context.redraw) {
       const desc = context.byId.get(id);
 
-      if (desc !== undefined && !context.stale.has(desc)) {
-        redrawContent(context, desc);
-        context.redraw.delete(id);
+      if (desc === undefined || context.stale.has(desc)) {
+        continue;
       }
+
+      redrawContent(context, desc);
+      context.redraw.delete(id);
     }
     const previous = state;
 
@@ -443,7 +483,10 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     placeWidgets(context, next, sets);
     watch.ignoreOwn();
     sync.mark();
-    sync.write();
+
+    if (!kept) {
+      sync.write();
+    }
     catchUp.schedule();
 
     for (const plugin of next.plugins) {
@@ -476,8 +519,9 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     dispatch: (tr) => {
       dispatch(tr);
     },
-    setEditable: (editable) => {
-      root.setAttribute('contenteditable', editable ? 'true' : 'false');
+    setEditable: (value) => {
+      editable = value;
+      root.setAttribute('contenteditable', value ? 'true' : 'false');
     },
     focus: () => {
       root.focus({ preventScroll: true });
@@ -487,6 +531,10 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     posAtDOM: (node, offset) => posAtDOM(context, node, offset),
     domAtPos: (pos) => domAtPos(rootDesc, state.doc, pos, host.fresh),
     coordsAtPos: (pos) => coordsAtPos(host, pos),
+    drawn: (pos) => attaching.covers(state.doc.resolve(pos).indexAt(0)),
+    draw: (pos) => {
+      host.fresh(rootDesc, state.doc.resolve(pos).indexAt(0));
+    },
     posAtCoords: (x, y) => posAtCoords(host, x, y),
     nodeDOM: (id) => context.byId.get(id)?.dom,
     inWidget: (target) => widgetAround(context, target),

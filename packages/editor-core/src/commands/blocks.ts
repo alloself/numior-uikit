@@ -42,13 +42,13 @@ interface LiftPlan {
 const typeOf = (schema: Schema, node: ContentNode | undefined) =>
   node?.kind === ContentNodeKind.Element ? schema.nodes.get(node.type) : undefined;
 
-const isList = (schema: Schema, node: ContentNode | undefined): boolean =>
+export const isList = (schema: Schema, node: ContentNode | undefined): boolean =>
   typeOf(schema, node)?.groups.has('list') === true;
 
-const isTextblock = (schema: Schema, node: ContentNode | undefined): boolean =>
+export const isTextblock = (schema: Schema, node: ContentNode | undefined): boolean =>
   typeOf(schema, node)?.inlineContent === true;
 
-const splices = (
+export const splices = (
   schema: Schema,
   parent: ElementNode,
   from: number,
@@ -167,9 +167,11 @@ const joinSiblings = (tr: Transaction, pos: number): void => {
   if (after?.kind === ContentNodeKind.Element && after.type === node.type) {
     tr.join(pos + node.size);
   }
-  if (before?.kind === ContentNodeKind.Element && before.type === node.type) {
-    tr.join(pos);
+  if (before?.kind !== ContentNodeKind.Element || before.type !== node.type) {
+    return;
   }
+
+  tr.join(pos);
 };
 
 const listTypesAt = (
@@ -211,7 +213,7 @@ export const wrapInList = (
   return true;
 };
 
-const PROBE_ID = 'probe';
+export const PROBE_ID = 'probe';
 
 const probeId = (): string => PROBE_ID;
 
@@ -281,35 +283,115 @@ export const insertBeforeTextblock = (tr: Transaction, pos: number, type: string
   tr.doc.schema.nodes.has(type) &&
   placeBefore(tr, pos, tr.doc.schema.element(type, { id: tr.newId() }));
 
-const liftItem = (tr: Transaction, state: EditorState, spot: ItemSpot, head: number): boolean => {
-  const { schema } = state.doc;
+const shellOf = (schema: Schema, node: ElementNode, id: string = node.id): ElementNode =>
+  schema.element(node.type, { id, attrs: node.attrs });
+
+const liftOutOfList = (tr: Transaction, spot: ItemSpot): void => {
+  const { schema } = tr.doc;
   const { $pos, depth } = spot;
   const list = $pos.node(depth - 1);
-  const item = $pos.node(depth);
   const index = $pos.indexAt(depth - 1);
   const itemStart = $pos.before(depth);
-  const listStart = $pos.before(depth - 1);
+  const itemEnd = $pos.after(depth);
+  const first = index === 0;
+  const last = index === list.content.length - 1;
+
+  tr.step({
+    kind: 'replaceAround',
+    from: first ? itemStart - 1 : itemStart,
+    to: last ? itemEnd + 1 : itemEnd,
+    gapFrom: itemStart + 1,
+    gapTo: itemEnd - 1,
+    slice: {
+      content: [
+        ...(first ? [] : [shellOf(schema, list)]),
+        ...(last ? [] : [shellOf(schema, list, tr.newId())]),
+      ],
+      openStart: first ? 0 : 1,
+      openEnd: last ? 0 : 1,
+    },
+    insert: first ? 0 : 1,
+  });
+};
+
+const tuckFollowing = (tr: Transaction, spot: ItemSpot): number => {
+  const { schema } = tr.doc;
+  const { $pos, depth } = spot;
+  const list = $pos.node(depth - 1);
+  const itemEnd = $pos.after(depth);
   const listEnd = $pos.after(depth - 1);
-  const following = list.content.slice(index + 1);
-  const nested = depth >= 3 && isList(schema, $pos.node(depth - 3));
 
-  const tail =
-    following.length === 0
-      ? []
-      : [schema.element(list.type, { id: tr.newId(), attrs: list.attrs, content: following })];
-
-  const from = index === 0 ? listStart : itemStart;
-  const removed = (index === 0 ? listEnd : listEnd - 1) - from;
-
-  if (nested) {
-    const at = $pos.after(depth - 2);
-
-    tr.insert(at, [withContent(item, [...item.content, ...tail])]).delete(from, from + removed);
-    tr.setSelection(textSelection(at - removed + head - itemStart));
-    return true;
+  if ($pos.indexAt(depth - 1) === list.content.length - 1) {
+    return 0;
   }
-  tr.insert(listEnd, [...item.content, ...tail]).delete(from, from + removed);
-  tr.setSelection(textSelection(listEnd - removed + head - itemStart - 1));
+
+  tr.step({
+    kind: 'replaceAround',
+    from: itemEnd - 1,
+    to: listEnd - 1,
+    gapFrom: itemEnd,
+    gapTo: listEnd - 1,
+    slice: {
+      content: [
+        withContent(shellOf(schema, $pos.node(depth)), [shellOf(schema, list, tr.newId())]),
+      ],
+      openStart: 1,
+      openEnd: 0,
+    },
+    insert: 1,
+  });
+
+  return 2;
+};
+
+const liftToOuterList = (tr: Transaction, spot: ItemSpot): void => {
+  const { schema } = tr.doc;
+  const { $pos, depth } = spot;
+  const list = $pos.node(depth - 1);
+  const parentItem = $pos.node(depth - 2);
+  const first = $pos.indexAt(depth - 1) === 0;
+  const itemStart = $pos.before(depth);
+  const listStart = $pos.before(depth - 1);
+  const grown = tuckFollowing(tr, spot);
+  const itemEnd = $pos.after(depth - 1) - 1 + grown;
+  const listEnd = itemEnd + 1;
+  const parentEnd = $pos.after(depth - 2) + grown;
+  const trailing = parentEnd - 1 - listEnd;
+
+  if (trailing > 0 && !first) {
+    tr.step({ kind: 'move', from: itemStart, to: itemEnd, target: parentEnd });
+    return;
+  }
+  if (trailing > 0) {
+    tr.step({ kind: 'move', from: listEnd, to: parentEnd - 1, target: listStart });
+  }
+
+  const shell = shellOf(schema, parentItem);
+
+  tr.step({
+    kind: 'replaceAround',
+    from: (first ? listStart : itemStart) + trailing,
+    to: parentEnd,
+    gapFrom: itemStart + trailing,
+    gapTo: itemEnd + trailing,
+    slice: {
+      content: [first ? shell : withContent(shell, [shellOf(schema, list)])],
+      openStart: first ? 1 : 2,
+      openEnd: 0,
+    },
+    insert: first ? 1 : 2,
+  });
+};
+
+const liftItem = (tr: Transaction, spot: ItemSpot, head: number): boolean => {
+  const { $pos, depth } = spot;
+
+  if (depth >= 3 && isList(tr.doc.schema, $pos.node(depth - 3))) {
+    liftToOuterList(tr, spot);
+  } else {
+    liftOutOfList(tr, spot);
+  }
+  tr.setSelection(textSelection(tr.mapping.map(head)));
   return true;
 };
 
@@ -420,7 +502,7 @@ export const liftListItem: Command = (state, dispatch) => {
   }
   return dispatch === undefined
     ? probe(() => liftFits(state.doc.schema, spot, liftPlanOf(state.doc.schema, spot)))
-    : attempt(state, dispatch, (tr) => liftItem(tr, state, spot, head));
+    : attempt(state, dispatch, (tr) => liftItem(tr, spot, head));
 };
 
 const sinkFits = (
@@ -462,20 +544,37 @@ export const sinkListItem: Command = (state, dispatch) => {
     return false;
   }
   const last = previous.content.at(-1);
-  const joins = last?.kind === ContentNodeKind.Element && last.type === list.type;
+
+  const inner =
+    last?.kind === ContentNodeKind.Element && last.type === list.type ? last : undefined;
 
   if (dispatch === undefined) {
     return probe(() => sinkFits(state.doc.schema, list, index, previous, item));
   }
   return attempt(state, dispatch, (tr) => {
-    tr.delete(itemStart, $pos.after(depth));
-    if (joins) {
-      tr.insert(itemStart - 2, [item]).setSelection(textSelection(head - 2));
-    } else {
-      tr.insert(itemStart - 1, [
-        state.doc.schema.element(list.type, { id: tr.newId(), content: [item] }),
-      ]).setSelection(textSelection(head));
-    }
+    const { schema } = state.doc;
+
+    tr.step({
+      kind: 'replaceAround',
+      from: itemStart - (inner === undefined ? 1 : 2),
+      to: $pos.after(depth),
+      gapFrom: itemStart,
+      gapTo: $pos.after(depth),
+      slice: {
+        content: [
+          withContent(shellOf(schema, previous), [
+            inner === undefined
+              ? schema.element(list.type, { id: tr.newId() })
+              : shellOf(schema, inner),
+          ]),
+        ],
+        openStart: inner === undefined ? 1 : 2,
+        openEnd: 0,
+      },
+      insert: inner === undefined ? 1 : 0,
+    });
+
+    tr.setSelection(textSelection(tr.mapping.map(head)));
     return true;
   });
 };
@@ -530,6 +629,20 @@ const liftsFrom = (schema: Schema, wrapper: ElementNode): boolean => {
   );
 };
 
+const unwrap = (tr: Transaction, $pos: ResolvedPos, depth: number): boolean => {
+  const result = tr.maybeStep({
+    kind: 'replaceAround',
+    from: $pos.before(depth),
+    to: $pos.after(depth),
+    gapFrom: $pos.start(depth),
+    gapTo: $pos.end(depth),
+    slice: { content: [], openStart: 0, openEnd: 0 },
+    insert: 0,
+  });
+
+  return result.ok;
+};
+
 const liftFromWrapper: Command = (state, dispatch) => {
   const head = headOf(state);
   const $pos = head === undefined ? undefined : state.doc.resolve(head);
@@ -542,18 +655,24 @@ const liftFromWrapper: Command = (state, dispatch) => {
   if ($pos.indexAt($pos.depth - 1) !== 0 || !liftsFrom(state.doc.schema, wrapper)) {
     return false;
   }
-  const child = $pos.parent;
   const childStart = $pos.before($pos.depth);
   const wrapperStart = $pos.before($pos.depth - 1);
-  const single = wrapper.content.length === 1;
-
-  const from = (single ? wrapperStart : childStart) + child.size;
-  const to = (single ? $pos.after($pos.depth - 1) : $pos.after($pos.depth)) + child.size;
 
   return attempt(state, dispatch, (tr) => {
-    tr.insert(wrapperStart, [child]).delete(from, to);
-    tr.setSelection(textSelection(wrapperStart + head - childStart));
-    return true;
+    const lifted =
+      wrapper.content.length === 1
+        ? unwrap(tr, $pos, $pos.depth - 1)
+        : tr.maybeStep({
+            kind: 'move',
+            from: childStart,
+            to: $pos.after($pos.depth),
+            target: wrapperStart,
+          }).ok;
+
+    if (lifted) {
+      tr.setSelection(textSelection(tr.mapping.map(head)));
+    }
+    return lifted;
   });
 };
 
@@ -586,7 +705,7 @@ export const exitEmptyLast: Command = (state, dispatch) => {
   const after = $pos.after($pos.depth - 1);
 
   return attempt(state, dispatch, (tr) => {
-    tr.insert(after, [$pos.parent]).delete(start, start + size);
+    tr.step({ kind: 'move', from: start, to: start + size, target: after });
     tr.setSelection(textSelection(after - size + 1));
     return true;
   });
@@ -690,20 +809,6 @@ export const toggleList = (listType: string, attrs: Attrs = {}): Command => {
   };
 };
 
-const unwrap = (tr: Transaction, $pos: ResolvedPos, depth: number): boolean => {
-  const result = tr.maybeStep({
-    kind: 'replaceAround',
-    from: $pos.before(depth),
-    to: $pos.after(depth),
-    gapFrom: $pos.start(depth),
-    gapTo: $pos.end(depth),
-    slice: { content: [], openStart: 0, openEnd: 0 },
-    insert: 0,
-  });
-
-  return result.ok;
-};
-
 export const toggleWrapper = (type: string, attrs: Attrs = {}): Command => {
   const wrap = wrapInBlock(type, attrs);
 
@@ -751,9 +856,11 @@ export const followingTextblock = (schema: Schema, parent: ElementNode): string 
 export const caretInto = (tr: Transaction, start: number): void => {
   const caret = textPosition(tr.doc, start, 1);
 
-  if (caret !== undefined) {
-    tr.setSelection(textSelection(caret));
+  if (caret === undefined) {
+    return;
   }
+
+  tr.setSelection(textSelection(caret));
 };
 
 const insertFits = (state: EditorState, build: (make: BlockMaker) => ElementNode): boolean => {

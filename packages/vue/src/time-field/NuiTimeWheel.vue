@@ -40,7 +40,7 @@ const SETTLE_DELAY = 150;
 
 const { options, selected, label, tabStop } = defineProps<NuiTimeWheelProps>();
 
-const emit = defineEmits<{ pick: [index: number] }>();
+const emit = defineEmits<{ select: [index: number] }>();
 
 const wheel = useTemplateRef<HTMLDivElement>('wheel');
 const timer: { id: ReturnType<typeof setTimeout> | undefined } = { id: undefined };
@@ -71,9 +71,11 @@ const scrollToIndex = (index: number, instant: boolean): void => {
 const springBack = (): void => {
   const element = wheel.value;
 
-  if (element) {
-    scrollToIndex(nearestEnabled(options, indexAt(element.scrollTop)), false);
+  if (!element) {
+    return;
   }
+
+  scrollToIndex(nearestEnabled(options, indexAt(element.scrollTop)), false);
 };
 
 const drag = useWheelDrag({ element: () => wheel.value, release: springBack });
@@ -84,9 +86,11 @@ const stopTimer = (): void => {
 };
 
 const choose = (index: number): void => {
-  if (options[index]?.disabled === false) {
-    emit('pick', index);
+  if (options[index]?.disabled !== false) {
+    return;
   }
+
+  emit('select', index);
 };
 
 const settle = (): void => {
@@ -116,24 +120,30 @@ const onScroll = (): void => {
 const onKeydown = (event: KeyboardEvent): void => {
   const target = wheelTarget(event.key, options, selected);
 
-  if (target !== null) {
-    event.preventDefault();
-    choose(target);
+  if (target === null) {
+    return;
   }
+
+  event.preventDefault();
+  choose(target);
 };
 
 const onItemClick = (index: number): void => {
-  if (!drag.swallowClick()) {
-    choose(index);
+  if (drag.swallowClick()) {
+    return;
   }
+
+  choose(index);
 };
 
 watch(
   () => selected,
   (index) => {
-    if (!drag.holding()) {
-      scrollToIndex(index, false);
+    if (drag.holding()) {
+      return;
     }
+
+    scrollToIndex(index, false);
   },
   { flush: 'post' },
 );

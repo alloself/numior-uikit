@@ -13,6 +13,7 @@ import {
   ContentNodeKind,
   insertBlock,
   nodeSize,
+  StepKind,
   type AttrValue,
   type Command,
   type ElementNode,
@@ -31,6 +32,25 @@ interface TableParts {
   readonly table: ElementNode;
   readonly head: ElementNode;
   readonly body: ElementNode;
+}
+
+interface Written {
+  readonly column: ElementNode;
+  readonly value: NuiContentCellValue;
+}
+
+interface CellPlan {
+  readonly marked: {
+    readonly pos: number;
+    readonly attrs: { readonly value: NuiContentCellValue };
+  }[];
+  readonly added: Map<NodeId, Map<string, NuiContentCellValue>>;
+  readonly written: Written[];
+}
+
+interface RowEnd {
+  readonly end: number;
+  readonly cells: ReadonlyMap<string, NuiContentCellValue>;
 }
 
 export interface TableColumnFilter {
@@ -59,8 +79,27 @@ const element = (
   content: readonly ElementNode[] = [],
 ): ElementNode => tr.doc.schema.element(type, { id: tr.newId(), attrs, content });
 
-const cell = (tr: BlockMaker, value: NuiContentCellValue = null): ElementNode =>
-  element(tr, 'table_cell', { value });
+const cell = (tr: BlockMaker, column: string, value: NuiContentCellValue): ElementNode =>
+  element(tr, 'table_cell', { column, value });
+
+const keyOf = (column: ElementNode | undefined): string | undefined =>
+  typeof column?.attrs.key === 'string' ? column.attrs.key : undefined;
+
+const cellOf = (row: ElementNode | undefined, key: string): ElementNode | undefined =>
+  elementsOf(row).findLast((child) => child.attrs.column === key);
+
+const freshKey = (tr: Transaction, head: ElementNode): string => {
+  const taken = new Set(elementsOf(head).map(keyOf));
+  let key = tr.newId();
+
+  while (taken.has(key)) {
+    key = tr.newId();
+  }
+  return key;
+};
+
+const newColumn = (tr: Transaction, head: ElementNode, name: string): ElementNode =>
+  element(tr, 'table_column', { key: freshKey(tr, head), name, type: 'text' });
 
 const startOf = (tr: Transaction, node: ElementNode): number | undefined =>
   tr.doc.positionOf(node.id);
@@ -87,26 +126,36 @@ const insertAt = (
   const parent = tr.doc.byId(parentId);
   const pos = parent === undefined ? undefined : childAt(tr, parent, index);
 
-  if (pos !== undefined) {
-    tr.insert(pos, nodes);
+  if (pos === undefined) {
+    return;
   }
+
+  tr.insert(pos, nodes);
 };
 
 const remove = (tr: Transaction, node: ElementNode | undefined): void => {
   const pos = node === undefined ? undefined : startOf(tr, node);
 
-  if (node !== undefined && pos !== undefined) {
-    tr.delete(pos, pos + nodeSize(node));
+  if (node === undefined || pos === undefined) {
+    return;
   }
+
+  tr.delete(pos, pos + nodeSize(node));
 };
 
 const moveChild = (tr: Transaction, parentId: NodeId, from: number, to: number): void => {
-  const node = elementsOf(tr.doc.byId(parentId))[from];
+  const parent = tr.doc.byId(parentId);
+  const node = elementsOf(parent)[from];
+  const start = node === undefined ? undefined : startOf(tr, node);
 
-  if (node !== undefined && from !== to) {
-    remove(tr, node);
-    insertAt(tr, parentId, to, [node]);
+  const target =
+    parent === undefined || from === to ? undefined : childAt(tr, parent, to > from ? to + 1 : to);
+
+  if (node === undefined || start === undefined || target === undefined) {
+    return;
   }
+
+  tr.maybeStep({ kind: StepKind.Move, from: start, to: start + nodeSize(node), target });
 };
 
 const run =
@@ -136,41 +185,87 @@ const addOption = (tr: Transaction, id: NodeId, value: NuiContentCellValue): voi
   }, []);
 
   if (
-    column?.attrs.type === NuiContentTableType.Select &&
-    typeof value === 'string' &&
-    !options.includes(value)
+    column?.attrs.type !== NuiContentTableType.Select ||
+    typeof value !== 'string' ||
+    options.includes(value)
   ) {
-    insertAt(tr, id, options.length, [element(tr, 'table_option', { label: value })]);
+    return;
   }
+
+  insertAt(tr, id, options.length, [element(tr, 'table_option', { label: value })]);
 };
+
+const planCells = (
+  tr: Transaction,
+  parts: TableParts,
+  changes: readonly TableCellChange[],
+): CellPlan => {
+  const columns = new Map(elementsOf(parts.head).map((node) => [node.id, node]));
+  const rows = new Map(elementsOf(parts.body).map((node) => [node.id, node]));
+
+  return changes.reduce<CellPlan>(
+    (plan, change) => {
+      const node = columns.get(change.column);
+      const key = keyOf(node);
+      const row = rows.get(change.row);
+
+      if (node === undefined || key === undefined || row === undefined) {
+        return plan;
+      }
+
+      const target = cellOf(row, key);
+      const pos = target === undefined ? undefined : startOf(tr, target);
+
+      if (pos === undefined) {
+        plan.added.set(row.id, (plan.added.get(row.id) ?? new Map()).set(key, change.value));
+      } else {
+        plan.marked.push({ pos, attrs: { value: change.value } });
+      }
+      plan.written.push({ column: node, value: change.value });
+      return plan;
+    },
+    { marked: [], added: new Map(), written: [] },
+  );
+};
+
+const rowEnds = (tr: Transaction, plan: CellPlan): RowEnd[] =>
+  [...plan.added]
+    .reduce<RowEnd[]>((ends, [id, cells]) => {
+      const row = tr.doc.byId(id);
+      const start = row === undefined ? undefined : startOf(tr, row);
+
+      if (row !== undefined && start !== undefined) {
+        ends.push({ end: start + nodeSize(row) - 1, cells });
+      }
+      return ends;
+    }, [])
+    .toSorted((left, right) => right.end - left.end);
 
 export const setTableCells = (id: NodeId, changes: readonly TableCellChange[]): Command =>
   run(id, (tr, parts) => {
-    const placed = changes.flatMap((change) => {
-      const index = columnIndex(parts, change.column);
-      const column = elementsOf(parts.head)[index];
-      const target = elementsOf(tr.doc.byId(change.row))[index];
-      const pos = target === undefined ? undefined : startOf(tr, target);
+    const plan = planCells(tr, parts, changes);
+    const ends = rowEnds(tr, plan);
 
-      return column === undefined || pos === undefined
-        ? []
-        : [{ pos, column, value: change.value }];
-    });
+    tr.setNodesMarkup(plan.marked);
 
-    tr.setNodesMarkup(placed.map(({ pos, value }) => ({ pos, attrs: { value } })));
-
-    for (const { column, value } of placed) {
-      addOption(tr, column.id, value);
+    for (const { end, cells } of ends) {
+      tr.insert(
+        end,
+        Array.from(cells, ([key, value]) => cell(tr, key, value)),
+      );
+    }
+    for (const { column: node, value } of plan.written) {
+      addOption(tr, node.id, value);
     }
     return true;
   });
 
-const emptyRow = (tr: Transaction, parts: TableParts): ElementNode =>
+const emptyRow = (tr: BlockMaker, keys: readonly (string | undefined)[]): ElementNode =>
   element(
     tr,
     'table_row',
     {},
-    elementsOf(parts.head).map(() => cell(tr)),
+    keys.flatMap((key) => (key === undefined ? [] : [cell(tr, key, null)])),
   );
 
 export const insertTableRows = (id: NodeId, at: number, count = 1): Command =>
@@ -179,7 +274,7 @@ export const insertTableRows = (id: NodeId, at: number, count = 1): Command =>
       tr,
       parts.body.id,
       Math.min(Math.max(0, at), elementsOf(parts.body).length),
-      Array.from({ length: count }, () => emptyRow(tr, parts)),
+      Array.from({ length: count }, () => emptyRow(tr, elementsOf(parts.head).map(keyOf))),
     );
 
     return true;
@@ -208,24 +303,16 @@ export const moveTableRow = (id: NodeId, row: NodeId, to: number): Command =>
 
 export const insertTableColumn = (id: NodeId, at: number, name: string): Command =>
   run(id, (tr, parts) => {
-    for (const row of elementsOf(parts.body)) {
-      insertAt(tr, row.id, at, [cell(tr)]);
-    }
-    insertAt(tr, parts.head.id, at, [element(tr, 'table_column', { name, type: 'text' })]);
+    insertAt(tr, parts.head.id, at, [newColumn(tr, parts.head, name)]);
     return true;
   });
 
-export const deleteTableColumn = (id: NodeId, column: NodeId): Command =>
+export const deleteTableColumn = (id: NodeId, target: NodeId): Command =>
   run(id, (tr, parts) => {
-    const index = columnIndex(parts, column);
-
-    if (index < 0 || elementsOf(parts.head).length < 2) {
+    if (columnIndex(parts, target) < 0 || elementsOf(parts.head).length < 2) {
       return false;
     }
-    for (const row of elementsOf(parts.body)) {
-      remove(tr, elementsOf(tr.doc.byId(row.id))[index]);
-    }
-    remove(tr, tr.doc.byId(column));
+    remove(tr, tr.doc.byId(target));
     return true;
   });
 
@@ -236,17 +323,22 @@ const setColumn = (
 ): void => {
   const pos = tr.doc.positionOf(column);
 
-  if (pos !== undefined) {
-    tr.setNodeAttrs(pos, attrs);
+  if (pos === undefined) {
+    return;
   }
+
+  tr.setNodeAttrs(pos, attrs);
 };
 
 export const renameTableColumn = (id: NodeId, column: NodeId, name: string): Command =>
   run(id, (tr, parts) => {
-    if (columnIndex(parts, column) < 0) {
+    const node = elementsOf(parts.head)[columnIndex(parts, column)];
+    const wanted = name.trim();
+
+    if (node === undefined || wanted === '' || wanted === node.attrs.name) {
       return false;
     }
-    setColumn(tr, column, { name });
+    setColumn(tr, column, { name: wanted });
     return true;
   });
 
@@ -267,9 +359,11 @@ export const retypeTableColumn = (id: NodeId, column: NodeId, type: NuiContentTa
       cellValueOf(row.cells[index] ?? null, type),
     );
 
+    const key = keyOf(node) ?? '';
+
     tr.setNodesMarkup(
       elementsOf(parts.body).flatMap((row, position) => {
-        const target = elementsOf(row)[index];
+        const target = cellOf(row, key);
         const pos = target === undefined ? undefined : startOf(tr, target);
 
         return pos === undefined ? [] : [{ pos, attrs: { value: values[position] ?? null } }];
@@ -304,9 +398,6 @@ export const orderTableColumns = (id: NodeId, order: readonly NodeId[]): Command
     for (const [to, key] of wanted.entries()) {
       const from = elementsOf(tr.doc.byId(parts.head.id)).findIndex((child) => child.id === key);
 
-      for (const row of elementsOf(parts.body)) {
-        moveChild(tr, row.id, from, to);
-      }
       moveChild(tr, parts.head.id, from, to);
     }
     return true;
@@ -317,9 +408,11 @@ export const resizeTableColumns = (id: NodeId, widths: Readonly<Record<NodeId, n
     for (const column of elementsOf(parts.head)) {
       const width = widths[column.id];
 
-      if (width !== undefined && width !== column.attrs.width) {
-        setColumn(tr, column.id, { width: Math.round(width) });
+      if (width === undefined || width === column.attrs.width) {
+        continue;
       }
+
+      setColumn(tr, column.id, { width: Math.round(width) });
     }
     return true;
   });
@@ -331,9 +424,11 @@ export const sortTable = (id: NodeId, sort: readonly NuiContentTableSort[]): Com
       const direction = sort[rank]?.direction ?? null;
       const sortRank = rank < 0 ? null : rank + 1;
 
-      if (column.attrs.sort !== direction || column.attrs.sortRank !== sortRank) {
-        setColumn(tr, column.id, { sort: direction, sortRank });
+      if (column.attrs.sort === direction && column.attrs.sortRank === sortRank) {
+        continue;
       }
+
+      setColumn(tr, column.id, { sort: direction, sortRank });
     }
     return true;
   });
@@ -366,36 +461,33 @@ export const filterTable = (id: NodeId, filters: readonly TableColumnFilter[]): 
       }
       remove(tr, current === undefined ? undefined : tr.doc.byId(current.id));
 
-      if (wanted !== undefined) {
-        insertAt(tr, column.id, elementsOf(tr.doc.byId(column.id)).length, [
-          filterNode(tr, wanted),
-        ]);
+      if (wanted === undefined) {
+        continue;
       }
+
+      insertAt(tr, column.id, elementsOf(tr.doc.byId(column.id)).length, [filterNode(tr, wanted)]);
     }
     return true;
   });
 
 export const insertTable = (names: readonly string[], rows: number): Command =>
-  insertBlock((tr) =>
-    element(tr, 'table', {}, [
+  insertBlock((tr) => {
+    const keys = names.map(() => tr.newId());
+
+    return element(tr, 'table', {}, [
       element(
         tr,
         'table_head',
         {},
-        names.map((name) => element(tr, 'table_column', { name, type: 'text' })),
+        names.map((name, index) =>
+          element(tr, 'table_column', { key: keys[index] ?? tr.newId(), name, type: 'text' }),
+        ),
       ),
       element(
         tr,
         'table_body',
         {},
-        Array.from({ length: rows }, () =>
-          element(
-            tr,
-            'table_row',
-            {},
-            names.map(() => cell(tr)),
-          ),
-        ),
+        Array.from({ length: rows }, () => emptyRow(tr, keys)),
       ),
-    ]),
-  );
+    ]);
+  });

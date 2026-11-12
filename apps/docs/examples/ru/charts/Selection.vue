@@ -11,7 +11,7 @@
     </p>
     <div v-else class="flex flex-col gap-2">
       <p :id="headingId" class="m-0 text-sm font-medium">Крупные заказы за {{ month.name }}</p>
-      <NuiList variant="bordered" :labelled-by="headingId">
+      <NuiList variant="outline" :labelled-by="headingId">
         <NuiListItem
           v-for="order in largest"
           :key="order.id"

@@ -1,6 +1,6 @@
 <template>
   <NuiTree
-    variant="bordered"
+    variant="outline"
     :items="folders"
     label="Storage"
     class="w-full max-w-sm"

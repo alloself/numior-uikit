@@ -6,12 +6,14 @@ import {
   mapSelection,
   textSelection,
   validSelection,
+  type ContentMatch,
   type Doc,
   type Transform,
 } from '../src';
 import { fixtureSchema, generateDoc } from '../src/fixtures';
-import { childOffsets, nodeSize, spliceContent } from '../src/model/node';
+import { childOffsets, nodeSize, spliceContent, typeOf } from '../src/model/node';
 import type { ElementNode } from '../src/model/node.types';
+import { statesOf } from '../src/schema/content-match';
 
 type Change = (transform: Transform) => void;
 
@@ -60,9 +62,11 @@ const withSpot =
   (transform) => {
     const spot = pick(textSpots(transform.doc), at);
 
-    if (spot !== undefined) {
-      act(transform, spot);
+    if (spot === undefined) {
+      return;
     }
+
+    act(transform, spot);
   };
 
 const typing = (at: number, value: string): Change =>
@@ -98,9 +102,11 @@ const unmarking = (at: number, length: number): Change =>
 
 const splitting = (at: number): Change =>
   withSpot(at, (transform, spot) => {
-    if (transform.doc.resolve(spot.pos).parent.type !== 'code_block') {
-      transform.split(spot.pos);
+    if (transform.doc.resolve(spot.pos).parent.type === 'code_block') {
+      return;
     }
+
+    transform.split(spot.pos);
   });
 
 const joining =
@@ -108,9 +114,11 @@ const joining =
   (transform) => {
     const pos = pick(boundaries(transform.doc), at);
 
-    if (pos !== undefined) {
-      transform.maybeStep({ kind: 'replace', from: pos - 1, to: pos + 1, slice: EMPTY });
+    if (pos === undefined) {
+      return;
     }
+
+    transform.maybeStep({ kind: 'replace', from: pos - 1, to: pos + 1, slice: EMPTY });
   };
 
 const topTextblocks = (doc: Doc): { readonly pos: number; readonly type: string }[] => {
@@ -199,6 +207,11 @@ const undone = (transform: Transform): Doc =>
     return result.doc;
   }, transform.doc);
 
+const sameStates = (
+  left: readonly (ContentMatch | undefined)[],
+  right: readonly (ContentMatch | undefined)[],
+): boolean => left.length === right.length && left.every((state, index) => state === right[index]);
+
 const freshOffsets = (node: ElementNode): number[] =>
   node.content.reduce<{ offsets: number[]; next: number }>(
     (state, child) => {
@@ -220,6 +233,34 @@ const staleOffsets = (doc: Doc): number => {
   });
 
   return stale + (childOffsets(doc.root).join(',') === freshOffsets(doc.root).join(',') ? 0 : 1);
+};
+
+const freshStates = (start: ContentMatch, node: ElementNode): (ContentMatch | undefined)[] =>
+  node.content.reduce<(ContentMatch | undefined)[]>(
+    (states, child) => {
+      states.push(states.at(-1)?.matchType(typeOf(child)));
+      return states;
+    },
+    [start],
+  );
+
+const staleStates = (doc: Doc): number => {
+  let stale = 0;
+
+  doc.nodesBetween(0, doc.size, (node) => {
+    const start = node.kind === 'element' ? fixtureSchema.nodes.get(node.type)?.content : undefined;
+
+    if (node.kind === 'element' && start !== undefined) {
+      stale += sameStates(statesOf(start, node), freshStates(start, node)) ? 0 : 1;
+    }
+    return true;
+  });
+
+  const top = fixtureSchema.nodes.get(doc.root.type)?.content;
+
+  return top === undefined || sameStates(statesOf(top, doc.root), freshStates(top, doc.root))
+    ? stale
+    : stale + 1;
 };
 
 describe('step properties', () => {
@@ -251,6 +292,19 @@ describe('step properties', () => {
         const transform = replay(blocks, seed, changes);
 
         expect([...transform.docs, transform.doc].map(staleOffsets)).toEqual(
+          [...transform.docs, transform.doc].map(() => 0),
+        );
+      }),
+      { numRuns: 120 },
+    );
+  });
+
+  it('keeps the content states it derives for new nodes equal to a fresh walk', () => {
+    fc.assert(
+      fc.property(wideScenario, ({ blocks, seed, changes }) => {
+        const transform = replay(blocks, seed, changes);
+
+        expect([...transform.docs, transform.doc].map(staleStates)).toEqual(
           [...transform.docs, transform.doc].map(() => 0),
         );
       }),

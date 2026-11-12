@@ -1,6 +1,8 @@
 import { expect, test } from './fixtures';
 import { boxOf } from './helpers/geometry';
 
+const SWIPE = -160;
+
 test.describe('dates', () => {
   test('calendar picks by click, moves with the keyboard and switches views', async ({
     playground,
@@ -52,6 +54,34 @@ test.describe('dates', () => {
     await expect.poll(async () => (await dates.readOutput()).month).toBe('2026-09');
   });
 
+  test('range calendar picks by taps and keeps the range when a touch on a day scrolls the page', async ({
+    playground,
+    dates,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, 'touch only');
+    await playground.open();
+    await dates.range.scrollIntoViewIfNeeded();
+
+    const fifth = await dates.dayOfThisMonth(5);
+    const ninth = await dates.dayOfThisMonth(9);
+    const twentieth = await dates.dayOfThisMonth(20);
+
+    await dates.day(dates.range, fifth).tap();
+    await dates.day(dates.range, ninth).tap();
+
+    await expect
+      .poll(async () => (await dates.readOutput()).range)
+      .toEqual({
+        start: fifth,
+        end: ninth,
+      });
+
+    await dates.swipeFromDay(dates.range, twentieth, SWIPE);
+
+    expect((await dates.readOutput()).range).toEqual({ start: fifth, end: ninth });
+  });
+
   test('date picker parses typed text, opens from the button and returns focus after a pick', async ({
     playground,
     dates,
@@ -81,6 +111,28 @@ test.describe('dates', () => {
 
     await dates.picker.getByRole('button', { name: 'Очистить' }).click();
     await expect.poll(async () => (await dates.readOutput()).picked).toBeNull();
+  });
+
+  test('date picker opens its calendar on the last day the calendar has and stops there', async ({
+    playground,
+    dates,
+    page,
+  }) => {
+    await playground.open();
+    const input = dates.input(dates.picker);
+
+    await input.scrollIntoViewIfNeeded();
+    await input.fill('31.12.9999');
+    await expect.poll(async () => (await dates.readOutput()).picked).toBe('9999-12-31');
+
+    await dates.openButton(dates.picker).click();
+    await expect(dates.day(dates.picker, '9999-12-31')).toBeFocused();
+    await expect.poll(() => dates.captionText(dates.picker)).toBe('декабрь 9999');
+
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('PageDown');
+    await expect(dates.day(dates.picker, '9999-12-31')).toBeFocused();
+    await expect(dates.grid(dates.picker).locator('td:empty')).toHaveCount(9);
   });
 
   test('date fields mask typed digits and a field opens its calendar from a click', async ({
@@ -118,6 +170,42 @@ test.describe('dates', () => {
     await page.keyboard.press('Escape');
     await expect(dates.dialog(dates.clickPicker)).toBeHidden();
     await expect(input).toBeFocused();
+  });
+
+  test('range picker keeps a typed date in its field and swaps the ends when the field is left', async ({
+    playground,
+    dates,
+    page,
+  }) => {
+    await playground.open();
+
+    const start = dates.input(dates.rangePicker, 0);
+    const end = dates.input(dates.rangePicker, 1);
+
+    await start.scrollIntoViewIfNeeded();
+    await start.fill('05.09.2026');
+    await end.fill('10.09.2026');
+
+    await expect
+      .poll(async () => (await dates.readOutput()).period)
+      .toEqual({ start: '2026-09-05', end: '2026-09-10' });
+
+    await start.focus();
+    await page.keyboard.press('ControlOrMeta+a');
+    await page.keyboard.type('20.09.2026');
+
+    await expect(start).toHaveValue('20.09.2026');
+    await expect(start).toBeFocused();
+    expect((await dates.readOutput()).period).toEqual({ start: '2026-09-05', end: '2026-09-10' });
+
+    await page.keyboard.press('Tab');
+
+    await expect
+      .poll(async () => (await dates.readOutput()).period)
+      .toEqual({ start: '2026-09-10', end: '2026-09-20' });
+
+    await expect(start).toHaveValue('10.09.2026');
+    await expect(end).toHaveValue('20.09.2026');
   });
 
   test('range picker takes two picks or a preset and the time picker keeps the time', async ({

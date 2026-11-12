@@ -123,9 +123,11 @@ const focusSwatch = (index: number): void => {
   void nextTick(() => {
     const target = grid.value?.children[index];
 
-    if (target instanceof HTMLElement) {
-      target.focus();
+    if (!(target instanceof HTMLElement)) {
+      return;
     }
+
+    target.focus();
   });
 };
 
@@ -140,10 +142,12 @@ const onKeydown = (event: KeyboardEvent): void => {
 };
 
 watch(open, (next) => {
-  if (next) {
-    const at = swatches.value.findIndex((swatch) => swatch.key === chosenKey.value);
-
-    focusSwatch(Math.max(at, 0));
+  if (!next) {
+    return;
   }
+
+  const at = swatches.value.findIndex((swatch) => swatch.key === chosenKey.value);
+
+  focusSwatch(Math.max(at, 0));
 });
 </script>

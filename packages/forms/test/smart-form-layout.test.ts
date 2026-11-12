@@ -74,6 +74,6 @@ describe('smart form layout', () => {
       'contacts.0',
     );
 
-    expect([row.key, row.area]).toEqual(['field:contacts.0.phone', 'phone']);
+    expect([row.key, row.area]).toEqual(['field:phone', 'phone']);
   });
 });

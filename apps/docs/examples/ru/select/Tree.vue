@@ -1,8 +1,8 @@
 <template>
   <NuiSelect
     v-model="category"
-    label="Категория"
     :options="categories"
+    label="Категория товара"
     placeholder="Выберите категорию"
     clearable
   />
@@ -10,27 +10,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiSelect, type NuiTreeItem } from '@numior/vue';
+import { NuiSelect } from '@numior/vue';
+import { categories } from '#demo/products';
 
-const category = ref<string | null>('laptops');
-
-const categories: NuiTreeItem<string>[] = [
-  {
-    value: 'electronics',
-    label: 'Электроника',
-    children: [
-      { value: 'phones', label: 'Телефоны' },
-      { value: 'laptops', label: 'Ноутбуки' },
-    ],
-  },
-  {
-    value: 'clothes',
-    label: 'Одежда',
-    children: [
-      { value: 'shoes', label: 'Обувь' },
-      { value: 'jackets', label: 'Куртки' },
-    ],
-  },
-  { value: 'books', label: 'Книги' },
-];
+const category = ref<string | null>('lamps');
 </script>

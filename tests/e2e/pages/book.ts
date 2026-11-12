@@ -2,7 +2,15 @@ import { readFile } from 'node:fs/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { paintedRgbAt, rgbDelta, type Rgb } from '../helpers/color';
-import { boxOf, type Box, type Point } from '../helpers/geometry';
+import {
+  boxOf,
+  dragAcross,
+  dragBy,
+  renderedHeight,
+  renderedWidth,
+  type Box,
+  type Point,
+} from '../helpers/geometry';
 import type { XlsxFile } from '../helpers/xlsx';
 import { PivotPanel } from './pivot-panel';
 
@@ -71,6 +79,58 @@ export class BookSection {
     return this.grid.getByRole('columnheader', { name, exact: true });
   }
 
+  columnEdge(name: string): Locator {
+    return this.columnHeader(name).locator('.nui-table__resizer');
+  }
+
+  columnWidth(name: string): Promise<number> {
+    return renderedWidth(this.columnHeader(name));
+  }
+
+  clippedCells(column: number): Promise<number> {
+    return this.sheet
+      .locator(
+        `.nui-table__body [aria-colindex="${String(column + 2)}"]:not([colspan], .nui-table__cell--spill) > .nui-table__content`,
+      )
+      .evaluateAll((contents) =>
+        contents.reduce(
+          (count, content) => count + Number(content.scrollWidth > content.clientWidth),
+          0,
+        ),
+      );
+  }
+
+  async fitColumn(name: string): Promise<void> {
+    await this.columnEdge(name).scrollIntoViewIfNeeded();
+    await this.columnEdge(name).dblclick();
+  }
+
+  async dragColumnEdge(name: string, dx: number): Promise<void> {
+    await this.columnEdge(name).scrollIntoViewIfNeeded();
+    await dragAcross(this.columnEdge(name), dx);
+  }
+
+  rowHeader(label: string): Locator {
+    return this.grid.getByRole('rowheader', { name: label, exact: true });
+  }
+
+  rowEdge(label: string): Locator {
+    return this.rowHeader(label).locator('.nui-table__resizer--row');
+  }
+
+  rowHeight(label: string): Promise<number> {
+    return renderedHeight(this.rowHeader(label));
+  }
+
+  rowHeights(labels: readonly string[]): Promise<number[]> {
+    return Promise.all(labels.map((label) => this.rowHeight(label)));
+  }
+
+  async dragRowEdge(label: string, dy: number): Promise<void> {
+    await this.rowEdge(label).scrollIntoViewIfNeeded();
+    await dragBy(this.rowEdge(label), 0, dy);
+  }
+
   row(label: string): Locator {
     return this.grid.getByRole('row').filter({
       has: this.page.getByRole('rowheader', { name: label, exact: true }),
@@ -103,6 +163,10 @@ export class BookSection {
 
   editorBox(): Promise<Box> {
     return boxOf(this.editor);
+  }
+
+  editorFrame(): Promise<Box> {
+    return boxOf(this.sheet.locator('.nui-table__editor'));
   }
 
   lineColor(rowLabel: string, column: number): Promise<string> {
@@ -161,6 +225,10 @@ export class BookSection {
 
   get fillGrip(): Locator {
     return this.sheet.locator('.nui-spreadsheet__fill-grip');
+  }
+
+  get note(): Locator {
+    return this.sheet.locator('.nui-spreadsheet__note--shown');
   }
 
   async leaveSheet(): Promise<void> {
@@ -274,6 +342,18 @@ export class BookSection {
     await this.page.keyboard.press('F2');
   }
 
+  editorIn(rowLabel: string, column: number): Locator {
+    return this.cell(rowLabel, column).locator('.nui-table__editor input');
+  }
+
+  async typeAtCaret(text: string, stepsBack = 0): Promise<void> {
+    for (let step = 0; step < stepsBack; step += 1) {
+      await this.page.keyboard.press('ArrowLeft');
+    }
+
+    await this.page.keyboard.type(text);
+  }
+
   async chooseSheet(name: string): Promise<void> {
     await this.sheetTab(name).click();
   }
@@ -296,8 +376,12 @@ export class BookSection {
     await this.page.keyboard.press('Enter');
   }
 
-  async sheetMenu(name: string, item: string): Promise<void> {
+  async openSheetMenu(name: string): Promise<void> {
     await this.sheetTab(name).click({ button: 'right' });
+  }
+
+  async sheetMenu(name: string, item: string): Promise<void> {
+    await this.openSheetMenu(name);
     await this.page.getByRole('menuitem', { name: item, exact: true }).click();
   }
 
@@ -377,6 +461,13 @@ export class BookSection {
     await this.rules.getByRole('button', { name: 'Добавить правило' }).click();
   }
 
+  async addValueRule(rowLabel: string, column: number, value: string): Promise<void> {
+    await this.openRules(rowLabel, column);
+    await this.addRule();
+    await this.ruleField('Значение').fill(value);
+    await this.saveRule();
+  }
+
   async editRule(index: number): Promise<void> {
     await this.ruleItems.nth(index).hover();
 
@@ -415,6 +506,10 @@ export class BookSection {
 
   async openCellMenu(rowLabel: string, column: number): Promise<void> {
     await this.cell(rowLabel, column).click({ button: 'right' });
+  }
+
+  cellMenuItem(name: string): Locator {
+    return this.page.getByRole('menuitem', { name, exact: true });
   }
 
   get cellMenuList(): Locator {
@@ -538,10 +633,10 @@ export class BookSection {
     await this.section.locator('input[type="file"]').setInputFiles(file);
   }
 
-  bordered(): Promise<boolean> {
+  gridlines(): Promise<boolean> {
     return this.sheet
       .locator('.nui-table')
-      .evaluate((table) => table.classList.contains('nui-table--bordered'));
+      .evaluate((table) => table.classList.contains('nui-table--gridlines'));
   }
 
   async tintOver(target: Locator, outside: Locator, inset: number): Promise<number> {
@@ -612,6 +707,14 @@ export class BookSection {
 
   get charts(): Locator {
     return this.sheet.locator('.nui-spreadsheet__drawing--kind-chart');
+  }
+
+  get selectedDrawing(): Locator {
+    return this.sheet.locator('.nui-spreadsheet__drawing--selected');
+  }
+
+  get focusedCell(): Locator {
+    return this.sheet.locator('[role="gridcell"]:focus');
   }
 
   get chartTitle(): Locator {
@@ -694,6 +797,45 @@ export class BookSection {
     return frame.x >= header.x + header.width;
   }
 
+  get shownMenus(): Locator {
+    return this.page.getByRole('menu');
+  }
+
+  get drawingMenu(): Locator {
+    return this.page.getByRole('menu', { name: 'Действия с объектом' });
+  }
+
+  async openDrawingMenuAt(target: Locator): Promise<{ x: number; y: number }> {
+    const box = await boxOf(target);
+    const spot = { x: box.width / 3, y: box.height / 3 };
+
+    await target.click({ button: 'right', position: spot });
+    await expect(this.drawingMenu).toBeVisible();
+    return { x: box.x + spot.x, y: box.y + spot.y };
+  }
+
+  async holdDrawing(target: Locator): Promise<void> {
+    const box = await boxOf(target);
+
+    const init = {
+      bubbles: true,
+      button: 0,
+      isPrimary: true,
+      pointerId: 12,
+      pointerType: 'touch',
+      clientX: box.x + box.width / 2,
+      clientY: box.y + box.height / 2,
+    };
+
+    await target.dispatchEvent('pointerdown', init);
+    await expect(this.drawingMenu).toBeVisible();
+    await target.dispatchEvent('pointerup', init);
+  }
+
+  async chooseDrawingMenuItem(label: string): Promise<void> {
+    await this.drawingMenu.getByRole('menuitem', { name: label, exact: true }).click();
+  }
+
   get chartSettings(): Locator {
     return this.page.getByRole('dialog', { name: 'Настройки диаграммы' });
   }
@@ -706,8 +848,12 @@ export class BookSection {
       .click();
   }
 
+  get chartKind(): Locator {
+    return this.chartSettings.getByRole('combobox', { name: 'Тип диаграммы' });
+  }
+
   async chooseChartKind(kind: string): Promise<void> {
-    await this.chartSettings.getByRole('combobox', { name: 'Тип диаграммы' }).click();
+    await this.chartKind.click();
     await this.page.getByRole('option', { name: kind, exact: true }).click();
   }
 

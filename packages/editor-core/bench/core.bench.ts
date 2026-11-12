@@ -271,9 +271,11 @@ operations.push(
         const step = typed.steps[index];
         const before = typed.docs[index];
 
-        if (step !== undefined && before !== undefined) {
-          undo.step(invertStep(step, before));
+        if (step === undefined || before === undefined) {
+          continue;
         }
+
+        undo.step(invertStep(step, before));
       }
     },
     heavy,

@@ -184,9 +184,11 @@ const pickDate = (value: NuiCalendarValue): void => {
 };
 
 const pickTime = (value: string | null): void => {
-  if (value !== null && dateValue.value !== null) {
-    model.value = joinDateTime(dateValue.value, value);
+  if (value === null || dateValue.value === null) {
+    return;
   }
+
+  model.value = joinDateTime(dateValue.value, value);
 };
 
 const clear = (): void => {
@@ -195,10 +197,12 @@ const clear = (): void => {
 };
 
 const onTimeKeydown = (event: KeyboardEvent): void => {
-  if (event.key === Key.Enter && !event.defaultPrevented) {
-    event.preventDefault();
-    popover.hide({ focus: true });
+  if (event.key !== Key.Enter || event.defaultPrevented) {
+    return;
   }
+
+  event.preventDefault();
+  popover.hide({ focus: true });
 };
 
 defineExpose(exposed);

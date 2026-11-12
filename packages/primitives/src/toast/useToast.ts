@@ -1,10 +1,6 @@
 import { inject, provide, type InjectionKey } from 'vue';
-import {
-  createToastStore,
-  type ToastOptions,
-  type ToastStore,
-  type ToastTone,
-} from './toast-store';
+import { createToastStore, type ToastOptions, type ToastStore } from './toast-store';
+import { ToastTone } from './toast.types';
 
 export type ToastMessageOptions = Omit<ToastOptions, 'title' | 'tone'>;
 
@@ -45,10 +41,10 @@ export const useToast = (): ToastService => {
   const store = useToastStore();
   return {
     show: (options) => store.show(options),
-    success: withTone(store, 'success'),
-    error: withTone(store, 'error'),
-    warning: withTone(store, 'warning'),
-    info: withTone(store, 'info'),
+    success: withTone(store, ToastTone.Success),
+    error: withTone(store, ToastTone.Error),
+    warning: withTone(store, ToastTone.Warning),
+    info: withTone(store, ToastTone.Info),
     dismiss: (id) => store.dismiss(id),
     clear: () => store.clear(),
   };

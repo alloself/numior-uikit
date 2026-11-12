@@ -5,7 +5,7 @@
     role="menu"
     :tabindex="open ? 0 : -1"
     class="nui-menu nui-layer"
-    :class="{ 'nui-menu--compact': compact }"
+    :class="{ 'nui-menu--compact': compact, 'nui-menu--pointed': pointed }"
     :aria-label="label"
     :aria-labelledby="label === undefined ? triggerId : undefined"
     v-bind="{ ...contentAttrs, ...surfaceAttrs, ...$attrs }"
@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { computed, ref, useTemplateRef, watch } from 'vue';
-import { FloatingPlacement, Key, useControlId } from '@numior/primitives';
+import { FLOATING_OFFSET, FloatingPlacement, Key, useControlId } from '@numior/primitives';
 import { useTriggerElement } from '../shared/trigger-ref';
 import NuiMenuEntries from './NuiMenuEntries.vue';
 import { provideMenu } from './menu-context';
@@ -38,7 +38,7 @@ defineOptions({ inheritAttrs: false });
 const {
   id,
   placement = FloatingPlacement.BottomStart,
-  offset = 4,
+  offset = FLOATING_OFFSET,
   items,
   closeOnSelect = true,
   loop = true,
@@ -62,6 +62,7 @@ const triggerId = useControlId(() => (id === undefined ? undefined : `${id}-trig
 const {
   control,
   context,
+  pointed,
   attrs: surfaceAttrs,
 } = useMenuSurface({
   open,
@@ -104,7 +105,7 @@ const triggerAttrs = computed<NuiMenuTriggerAttrs>(() => ({
 }));
 
 defineExpose<NuiMenuExposed>({
-  get trigger() {
+  get triggerElement() {
     return trigger.value;
   },
   show: (focus) => {

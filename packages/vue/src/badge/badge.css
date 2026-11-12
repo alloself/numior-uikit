@@ -25,7 +25,7 @@
     font-family: var(--nui-font);
     font-size: var(--_font-size);
     font-weight: 600;
-    line-height: 1;
+    line-height: var(--nui-line-height-control);
     white-space: nowrap;
     vertical-align: middle;
     transition:
@@ -110,8 +110,8 @@
     --_float-x: -50%;
   }
   .nui-badge__icon {
-    inline-size: 1em;
-    block-size: 1em;
+    inline-size: var(--nui-icon-size-sm);
+    block-size: var(--nui-icon-size-sm);
   }
   .nui-badge__label {
     overflow: hidden;

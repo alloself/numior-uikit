@@ -62,8 +62,10 @@
     border-color: var(--_hover-border);
     box-shadow: var(--_hover-shadow);
   }
-  .nui-card--interactive
-    :where(a, button, input, select, textarea, summary, [tabindex]):not(.nui-card__action) {
+  :where(.nui-card--interactive)
+    :where(a, button, input, select, textarea, summary, label, [tabindex]):where(
+      :not(.nui-card__action)
+    ) {
     position: relative;
     z-index: 1;
   }
@@ -89,7 +91,7 @@
     margin: 0;
     font-size: var(--nui-font-size-md);
     font-weight: 600;
-    line-height: var(--nui-line-height-tight);
+    line-height: var(--nui-line-height-control);
   }
   .nui-card__action {
     padding: 0;
@@ -125,6 +127,13 @@
   .nui-card__content {
     min-inline-size: 0;
   }
+  .nui-card__title--loading,
+  .nui-card__description--loading,
+  .nui-card__content--loading {
+    --_lead: round(down, calc((1lh - 1em) / 2), 1px);
+
+    padding-block: var(--_lead) calc(1lh - 1em - var(--_lead));
+  }
   .nui-card__footer {
     display: flex;
     flex-wrap: wrap;
@@ -151,6 +160,12 @@
     margin-block-end: calc(-1 * var(--_padding));
     border-end-start-radius: var(--_inner-radius);
     border-end-end-radius: var(--_inner-radius);
+  }
+  .nui-card__media--loading {
+    background: none;
+  }
+  .nui-card__media > .nui-card__skeleton {
+    border-radius: 0;
   }
   .nui-card__image {
     display: block;

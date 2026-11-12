@@ -157,6 +157,10 @@ const docs: DocsMap = {
         ru: 'Текст, когда строк нет. По умолчанию — «Строк пока нет» из словаря.',
         en: 'Text when there are no rows. Defaults to "No rows yet" from the dictionary.',
       },
+      rowLabel: {
+        ru: 'Функция имени строки по её номеру: его слышит экранный диктор при входе в строку. По умолчанию — «Строка 2».',
+        en: 'Function for the name of a row by its number, read by a screen reader on entering the row. Defaults to "Row 2".',
+      },
       removeLabel: {
         ru: 'Функция подписи кнопки удаления по номеру строки. По умолчанию — «Удалить строку 2».',
         en: 'Function for the remove button label by row number. Defaults to "Remove row 2".',

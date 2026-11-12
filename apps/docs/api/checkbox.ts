@@ -48,7 +48,7 @@ const docs: DocsMap = {
       },
     },
     models: {
-      'v-model': {
+      'v-model:values': {
         ru: 'Массив выбранных значений в том порядке, в каком их отметили.',
         en: 'Array of selected values in the order they were checked.',
       },

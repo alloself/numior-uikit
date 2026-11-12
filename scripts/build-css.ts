@@ -16,9 +16,11 @@ const dist = new URL('dist/', root);
 await mkdir(dist, { recursive: true });
 
 for (const file of await readdir(source)) {
-  if (file.endsWith('.css')) {
-    await writeFile(new URL(file, dist), await inlineCss(new URL(file, source)));
+  if (!file.endsWith('.css')) {
+    continue;
   }
+
+  await writeFile(new URL(file, dist), await inlineCss(new URL(file, source)));
 }
 
 await cp(new URL('../LICENSE', import.meta.url), new URL('LICENSE', dist));

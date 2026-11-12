@@ -13,7 +13,7 @@
     color: var(--nui-text);
     font-family: var(--nui-font);
     font-size: var(--nui-font-size-sm);
-    line-height: var(--nui-line-height);
+    line-height: var(--nui-line-height-control);
   }
   .nui-pagination--size-sm {
     --_height: var(--nui-control-height-sm);

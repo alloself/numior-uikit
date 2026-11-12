@@ -34,6 +34,21 @@ const presenceSent = (driver: ClientDriver): readonly unknown[] =>
 const sentSteps = (driver: ClientDriver): number =>
   sentOfKind(driver, ClientMessageKind.Steps).length;
 
+const sentPings = (driver: ClientDriver): number =>
+  sentOfKind(driver, ClientMessageKind.Ping).length;
+
+const QUIET = 15_000;
+
+const UNANSWERED = 10_000;
+
+const RETRY = 200;
+
+const reconnected = (driver: ClientDriver): void => {
+  vi.advanceTimersByTime(RETRY);
+  driver.open();
+  driver.welcome(driver.version() ?? 0);
+};
+
 describe('collaboration client', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -176,6 +191,72 @@ describe('collaboration client', () => {
     expect(driver.version()).toBe(3);
     expect(driver.received()).toMatchObject([{ version: 1, clientId: 'me' }]);
     expect(driver.received()[0]?.steps).toHaveLength(2);
+  });
+
+  it('replaces the batch in flight with the steps the server rebased', () => {
+    const driver = online();
+
+    driver.edit(2);
+    driver.steps(0, 'other');
+    driver.accept(1, 2, 1);
+
+    expect(driver.settled()).toMatchObject([{ count: 2, steps: [{ kind: 'replace' }] }]);
+    expect(driver.pending()).toBe(0);
+    expect(driver.version()).toBe(2);
+    expect(driver.statuses().at(-1)).toBe(CollabStatusKind.Online);
+  });
+
+  it('sends the next batch once the rebased one is settled', () => {
+    const driver = online();
+
+    driver.edit();
+    driver.steps(0, 'other');
+    driver.edit();
+    driver.accept(1, 2, 1);
+
+    expect(sentSteps(driver)).toBe(2);
+    expect(driver.pending()).toBe(1);
+  });
+
+  it('stops when rebased steps do not follow its version', () => {
+    const driver = online();
+
+    driver.edit();
+    driver.accept(1, 3, 1);
+
+    expect(driver.settled()).toHaveLength(0);
+
+    expect(driver.client.status()).toEqual({
+      kind: CollabStatusKind.Failed,
+      reason: CollabFailure.Protocol,
+    });
+  });
+
+  it('stops when the rebased steps cannot be applied', () => {
+    const driver = online({ receivable: false });
+
+    driver.edit();
+    driver.accept(1, 1, 1);
+
+    expect(driver.client.status()).toEqual({
+      kind: CollabStatusKind.Failed,
+      reason: CollabFailure.Document,
+    });
+  });
+
+  it('settles its queue with a whole batch of its own that comes back through a pull', () => {
+    const driver = online();
+
+    driver.edit(3);
+    driver.drop();
+    vi.runOnlyPendingTimers();
+    driver.open();
+    driver.welcome(1);
+    driver.steps(0, 'me', 1, 2);
+
+    expect(driver.settled()).toMatchObject([{ count: 2 }]);
+    expect(driver.pending()).toBe(1);
+    expect(driver.version()).toBe(1);
   });
 
   it('catches up and resends after a stale rejection', () => {
@@ -419,6 +500,122 @@ describe('collaboration client', () => {
 
     expect(sentOfKind(offline, ClientMessageKind.Pull)).toHaveLength(0);
     expect(lastPull(driver)).toBe(0);
+  });
+
+  it('asks a quiet server whether it is there and reconnects when nothing answers', () => {
+    const driver = online();
+
+    vi.advanceTimersByTime(QUIET - 1);
+
+    expect(sentPings(driver)).toBe(0);
+
+    vi.advanceTimersByTime(1);
+
+    expect(driver.sent().at(-1)).toEqual({ kind: ClientMessageKind.Ping });
+    expect(driver.client.status().kind).toBe(CollabStatusKind.Online);
+
+    vi.advanceTimersByTime(UNANSWERED);
+
+    expect(driver.client.status().kind).toBe(CollabStatusKind.Offline);
+
+    vi.advanceTimersByTime(RETRY);
+
+    expect(driver.opens()).toBe(2);
+  });
+
+  it('stays connected while the server answers and asks again after the next quiet interval', () => {
+    const driver = online();
+
+    vi.advanceTimersByTime(QUIET);
+    driver.pong();
+    vi.advanceTimersByTime(UNANSWERED);
+
+    expect(driver.client.status().kind).toBe(CollabStatusKind.Online);
+    expect(driver.opens()).toBe(1);
+
+    vi.advanceTimersByTime(QUIET - UNANSWERED);
+
+    expect(sentPings(driver)).toBe(2);
+  });
+
+  it('does not ask a server that keeps talking', () => {
+    const driver = online();
+
+    vi.advanceTimersByTime(QUIET - 1);
+    driver.steps(0, 'other');
+    vi.advanceTimersByTime(QUIET - 1);
+
+    expect(sentPings(driver)).toBe(0);
+  });
+
+  it('reconnects and resends when a batch gets no answer', () => {
+    const driver = online();
+
+    driver.edit();
+    vi.advanceTimersByTime(UNANSWERED - 1);
+
+    expect(driver.client.status().kind).toBe(CollabStatusKind.Online);
+
+    vi.advanceTimersByTime(1);
+
+    expect(driver.client.status().kind).toBe(CollabStatusKind.Offline);
+
+    reconnected(driver);
+
+    expect(sentSteps(driver)).toBe(2);
+    expect(driver.pending()).toBe(1);
+  });
+
+  it('reconnects when the greeting gets no answer', () => {
+    const driver = createClientDriver();
+
+    driver.open();
+    vi.advanceTimersByTime(UNANSWERED);
+
+    expect(driver.client.status().kind).toBe(CollabStatusKind.Offline);
+
+    vi.advanceTimersByTime(RETRY);
+
+    expect(driver.opens()).toBe(2);
+  });
+
+  it('ignores what a connection it gave up on still delivers', () => {
+    const driver = online();
+
+    vi.advanceTimersByTime(QUIET + UNANSWERED);
+    reconnected(driver);
+    driver.deliverLate({ kind: 'nope' });
+    driver.steps(0, 'other');
+    driver.dropLate();
+
+    expect(driver.client.status().kind).toBe(CollabStatusKind.Online);
+    expect(driver.received()).toHaveLength(1);
+    expect(driver.opens()).toBe(2);
+  });
+
+  it('never asks with the quiet interval switched off and still waits for answers', () => {
+    const driver = createClientDriver({ liveness: { interval: 0, timeout: 50 } });
+
+    driver.open();
+    driver.welcome(0);
+    vi.advanceTimersByTime(QUIET * 4);
+
+    expect(sentPings(driver)).toBe(0);
+    expect(driver.client.status().kind).toBe(CollabStatusKind.Online);
+
+    driver.edit();
+    vi.advanceTimersByTime(50);
+
+    expect(driver.client.status().kind).toBe(CollabStatusKind.Offline);
+  });
+
+  it('greets through a transport that opens before it returns the connection', () => {
+    const driver = createClientDriver({ eager: true });
+
+    driver.welcome(0);
+
+    expect(sentOfKind(driver, ClientMessageKind.Hello)).toHaveLength(1);
+    expect(driver.client.status().kind).toBe(CollabStatusKind.Online);
   });
 
   it('stays down after stop', () => {

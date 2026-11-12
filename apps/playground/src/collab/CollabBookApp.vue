@@ -2,75 +2,67 @@
   <main class="collab">
     <div class="collab__bar">
       <span>{{ clientId }}</span>
+      <NuiCollabPresence :peers="peers" data-testid="collab-peers" />
       <div class="collab__status">
         <NuiSwitch v-model="online" label="Связь" data-testid="collab-link" />
+        <NuiButton
+          variant="ghost"
+          tone="neutral"
+          size="sm"
+          data-testid="collab-garble"
+          @click="garble"
+          >Сбой</NuiButton
+        >
         <NuiBadge data-testid="collab-status">{{ status.kind }}</NuiBadge>
       </div>
     </div>
+    <NuiCollabFailure
+      v-if="failure !== undefined"
+      :failure="failure"
+      data-testid="collab-failure"
+      @rejoin="rejoin"
+    />
     <NuiSpreadsheet
       v-if="ready"
+      :readonly="readOnly"
       :book="book"
       :calculator="calculator"
-      :collaboration="session"
+      :collaboration="document"
+      :peers="peers"
       label="Книга"
       data-testid="collab-book"
       @change="sync"
+      @presence="sharePlace"
     />
   </main>
 </template>
 
 <script setup lang="ts">
-import {
-  CollabStatusKind,
-  createCollabClient,
-  webSocketTransport,
-  type CollabStatus,
-} from '@numior/collaboration';
+import { webSocketTransport } from '@numior/collaboration';
+import { useCollabWorkbook } from '@numior/collaboration/spreadsheet';
+import { NuiCollabFailure, NuiCollabPresence } from '@numior/collaboration/vue';
 import { NuiSpreadsheet } from '@numior/spreadsheet';
-import {
-  RU_LOCALE,
-  WORKBOOK_SCHEMA,
-  createCalculator,
-  createWorkbook,
-  createWorkbookDocument,
-} from '@numior/spreadsheet/core';
-import { NuiBadge, NuiSwitch } from '@numior/vue';
-import { onBeforeUnmount, ref, shallowRef } from 'vue';
+import { RU_LOCALE, createCalculator, createWorkbook } from '@numior/spreadsheet/core';
+import { NuiBadge, NuiButton, NuiSwitch } from '@numior/vue';
+import { collabServerOf } from './collab-server';
 import { useDemoLink } from './use-demo-link';
 
 const params = new URLSearchParams(location.search);
 const clientId = params.get('user') ?? 'Гость';
-const server = params.get('server') ?? `ws://${location.hostname}:4175`;
-
-const status = shallowRef<CollabStatus>({ kind: CollabStatusKind.Connecting });
-const ready = ref(false);
+const server = collabServerOf(params);
 
 const book = createWorkbook();
 const calculator = createCalculator(book, { locale: RU_LOCALE });
-const session = createWorkbookDocument({ book, calculator });
 
-session.subscribe(() => {
-  ready.value = true;
-});
+const { online, transport, garble } = useDemoLink(webSocketTransport(server));
 
-const { online, transport } = useDemoLink(webSocketTransport(server));
-
-const client = createCollabClient({
-  doc: params.get('doc') ?? 'book-demo',
-  clientId,
-  schema: WORKBOOK_SCHEMA,
-  document: session,
-  transport,
-  onStatus: (next) => {
-    status.value = next;
-  },
-});
-
-const sync = (): void => {
-  client.sync();
-};
-
-onBeforeUnmount(() => {
-  client.stop();
-});
+const { document, ready, readOnly, status, peers, failure, sync, sharePlace, rejoin } =
+  useCollabWorkbook({
+    doc: params.get('doc') ?? 'book-demo',
+    clientId,
+    user: { id: clientId, name: clientId },
+    transport,
+    book,
+    calculator,
+  });
 </script>

@@ -120,9 +120,6 @@ export const createLookKeys = (theme: ThemePalette): LookKeys => {
     }:${marksKey(look)}`;
 };
 
-const revisionOf = (book: Workbook): number =>
-  book.sheets.reduce((sum, sheet) => sum + sheet.cells.revision, 0);
-
 export const createConditionalLooks = (
   book: Workbook,
   sheet: Sheet,
@@ -138,7 +135,7 @@ export const createConditionalLooks = (
   let formats = sheet.conditional;
 
   const rowLooks = (row: number): ReadonlyMap<number, ConditionalLook> => {
-    const now = revisionOf(book);
+    const now = book.revision;
 
     if (now !== revision || formats !== sheet.conditional || rows.size >= ROW_LIMIT) {
       rows.clear();

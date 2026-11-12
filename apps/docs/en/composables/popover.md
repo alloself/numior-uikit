@@ -33,3 +33,17 @@ closes only when you change `open`. `raise()` brings an open panel above the oth
 
 [Popover](/en/components/popover) and [Tooltip](/en/components/tooltip) are built on these
 composables.
+
+## After a release and under a resting mouse
+
+The browser closes a panel shown on `contextmenu` or a long press on the `pointerup` of the same
+press. `useAfterRelease()` returns a function of the event and an action. The action runs once the
+button is released, or at once when it already is.
+
+An action still waiting is dropped when its component unmounts.
+
+`useRestingHover(target)` keeps `hovered` while the mouse stays still, even when the element under
+it is gone. This way a stack of toasts stays open when the toast under the pointer closes. The
+hover ends on the first move away from `target`, a press outside it or a call to `end()`.
+
+<SignatureReference :names="['useAfterRelease', 'AfterRelease', 'useRestingHover', 'RestingHover']" />

@@ -187,6 +187,10 @@ export class TreeDriver extends ComponentDriver {
     return this.node(label).classes().includes(`nui-list-item--${modifier}`);
   }
 
+  isOpen(label: string): boolean {
+    return this.node(label).classes().includes('nui-tree__item--expanded');
+  }
+
   trailingOf(label: string): string {
     return this.node(label).find('.nui-row__trailing').text();
   }
@@ -303,6 +307,16 @@ export class TreeDriver extends ComponentDriver {
       throw new Error(`No tree item labelled ${label}`);
     }
     Object.assign(found, { label: next });
+    await nextTick();
+  }
+
+  async disable(label: string): Promise<void> {
+    const found = findItem(this.scene.vm.items, label);
+
+    if (!found) {
+      throw new Error(`No tree item labelled ${label}`);
+    }
+    Object.assign(found, { disabled: true });
     await nextTick();
   }
 

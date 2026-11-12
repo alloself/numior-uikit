@@ -14,6 +14,9 @@ export default defineConfig({
       formats: ['es'],
       fileName: (_format, name) => `${name}.js`,
     },
+    rolldownOptions: {
+      external: [/^lodash-es(\/|$)/],
+    },
     sourcemap: true,
   },
 });

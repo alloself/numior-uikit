@@ -19,11 +19,16 @@ import {
   SALES_SHEET,
   THEME,
   WORKBOOK_RELATIONSHIPS_WITH_THEME,
+  sheetWith,
   workbookWith,
   xlsxPackage,
 } from './xlsx-package';
 
 type Opened = Extract<XlsxRead, { readonly kind: 'editable' | 'read-only' }>;
+
+const UNREAD_FORMULAS = SALES_SHEET.replace('B2*Rate', 'SUM(Sales:Rates!B1)')
+  .replace('B3*Rate', 'B2:B4 B3:C3')
+  .replace('B4*Rate', 'Rates!#REF!+1');
 
 const opened = async (
   changes: Readonly<Record<string, string | undefined>> = {},
@@ -330,9 +335,32 @@ describe('reading xlsx', () => {
 
     expect(
       (
-        await opened({ 'xl/worksheets/sheet1.xml': SALES_SHEET.replace('B2*Rate', 'B2*(') })
+        await opened({ 'xl/worksheets/sheet1.xml': SALES_SHEET.replace('B2*2', 'B2*(') })
       ).report.items.find((item) => item.code === 'formula-syntax'),
-    ).toMatchObject({ severity: 'read-only', count: 1, sheets: ['Sales'] });
+    ).toMatchObject({ severity: 'read-only', count: 2, sheets: ['Sales'] });
+  });
+
+  it('keeps a formula it cannot read with the value saved in the file', async () => {
+    const read = await opened({ 'xl/worksheets/sheet1.xml': UNREAD_FORMULAS });
+    const sales = viewOf(read);
+
+    read.calculator.recalculate({ imported: true, budgetMs: Number.POSITIVE_INFINITY });
+
+    expect(read.kind).toBe('editable');
+
+    expect(read.report.items.find((item) => item.code === 'formula-kept')).toMatchObject({
+      severity: 'info',
+      count: 1,
+      sheets: ['Sales'],
+    });
+
+    expect(['C2', 'C3', 'C4'].map(sales.input)).toEqual([
+      '=SUM(Sales:Rates!B1)',
+      '=@B2:B4 B3:C3',
+      '=Rates!#REF!+1',
+    ]);
+
+    expect(['C2', 'C3', 'C4'].map(sales.shown)).toEqual(['75.0%', '100.0%', '#REF!']);
   });
 
   it('keeps the original bytes and tells parsed parts from opaque ones', async () => {
@@ -364,6 +392,25 @@ describe('reading xlsx', () => {
 
     expect(reading.at(-1)?.done).toBe(reading.at(-1)?.total);
     expect(seen.at(-1)).toMatchObject({ phase: 'recalculate' });
+  });
+
+  it('skips cells and rows placed outside the sheet', async () => {
+    const read = await opened({
+      'xl/worksheets/sheet2.xml': sheetWith(
+        [
+          '<row r="0"><c><v>1</v></c></row>',
+          '<row r="1.5"><c><v>2</v></c></row>',
+          '<row r="2"><c r="XFD2"><v>3</v></c><c><v>4</v></c></row>',
+          '<row r="1048577"><c><v>5</v></c></row>',
+          '<row r="3"><c r="A3"><v>6</v></c><c><v>7</v></c></row>',
+        ].join(''),
+      ),
+    });
+
+    const rates = viewOf(read, 'Rates');
+
+    expect(['XFD2', 'A3', 'B3'].map(rates.shown)).toEqual(['3', '6', '7']);
+    expect(sheetOf(read, 'Rates').cells.size).toBe(3);
   });
 
   it('refuses what is not an openable workbook', async () => {

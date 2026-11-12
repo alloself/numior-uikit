@@ -1,21 +1,23 @@
 <template>
-  <NuiUpload
-    v-model="report"
-    :upload="upload"
-    variant="button"
-    label="Report"
-    description="One CSV table"
-    accept=".csv,text/csv"
-    :multiple="false"
-    browse-label="Choose a CSV"
-  />
+  <div class="w-full max-w-md">
+    <NuiUpload
+      v-model="stock"
+      :upload="upload"
+      variant="button"
+      label="Warehouse stock"
+      description="A CSV table with SKUs and quantities"
+      accept=".csv,text/csv"
+      :multiple="false"
+      browse-label="Choose a CSV"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { NuiUpload, type NuiUploadAdapter, type NuiUploadItem } from '@numior/vue';
 
-const report = ref<NuiUploadItem<string>[]>([]);
+const stock = ref<NuiUploadItem<string>[]>([]);
 
 const upload: NuiUploadAdapter<string> = async (file, { onProgress }) => {
   onProgress(1);

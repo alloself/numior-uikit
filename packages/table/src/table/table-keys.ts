@@ -1,11 +1,13 @@
 import { clamp } from '@vueuse/core';
 import { Key, ListMove, listMoveFor } from '@numior/primitives';
-import { NuiTableEdgeDirection, NuiTableEditMove, type TableCellPosition } from './table.types';
+import { NuiTableEdgeDirection, NuiTableEditMove, type NuiTableCellPosition } from './table.types';
 
 export type TableEdgeOf = (
-  from: TableCellPosition,
+  from: NuiTableCellPosition,
   direction: NuiTableEdgeDirection,
-) => TableCellPosition | undefined;
+) => NuiTableCellPosition | undefined;
+
+export type TableLastOf = () => NuiTableCellPosition | undefined;
 
 export interface TableBounds {
   readonly rows: number;
@@ -14,6 +16,7 @@ export interface TableBounds {
   readonly rtl: boolean;
   readonly first?: number | undefined;
   readonly edge?: TableEdgeOf | undefined;
+  readonly last?: TableLastOf | undefined;
 }
 
 export interface TableKey {
@@ -35,10 +38,10 @@ export interface PageScale {
 const lastRowOf = (bounds: TableBounds): number => (bounds.rows > 0 ? bounds.rows - 1 : -1);
 
 export const stepCell = (
-  from: TableCellPosition,
+  from: NuiTableCellPosition,
   move: NuiTableEditMove,
   size: TableSize,
-): TableCellPosition => {
+): NuiTableCellPosition => {
   switch (move) {
     case NuiTableEditMove.Down:
       return { row: Math.min(from.row + 1, size.rows - 1), col: from.col };
@@ -57,10 +60,8 @@ export const stepCell = (
 
 const windowHeight = (): number => (typeof window === 'undefined' ? 0 : window.innerHeight);
 
-export const pageRowsOf = (viewport: number, size: number): number => {
-  const span = viewport > 0 ? viewport : windowHeight();
-  return Math.max(1, Math.floor((span - size) / size));
-};
+export const pageRowsOf = (body: number | undefined, size: number): number =>
+  Math.max(1, Math.floor((body ?? windowHeight() - size) / size));
 
 export const edgeDirectionOf = (key: string, rtl: boolean): NuiTableEdgeDirection | undefined => {
   if (key === Key.ArrowDown || key === Key.ArrowUp) {
@@ -77,11 +78,11 @@ export const edgeDirectionOf = (key: string, rtl: boolean): NuiTableEdgeDirectio
 };
 
 export const tableEdge = (
-  from: TableCellPosition,
+  from: NuiTableCellPosition,
   direction: NuiTableEdgeDirection,
   rows: number,
   cols: number,
-): TableCellPosition => {
+): NuiTableCellPosition => {
   switch (direction) {
     case NuiTableEdgeDirection.Up:
       return { row: Math.min(from.row, 0), col: from.col };
@@ -102,7 +103,7 @@ export const pageStepOf = (scale: PageScale, from: number, forward: boolean): nu
 
 const verticalTarget = (
   key: string,
-  from: TableCellPosition,
+  from: NuiTableCellPosition,
   bounds: TableBounds,
 ): number | undefined => {
   const last = lastRowOf(bounds);
@@ -124,19 +125,20 @@ const verticalTarget = (
 
 const edgeTarget = (
   input: TableKey,
-  from: TableCellPosition,
+  from: NuiTableCellPosition,
   bounds: TableBounds,
-): TableCellPosition | undefined => {
+): NuiTableCellPosition | undefined => {
   const lastCol = Math.max(0, bounds.cols - 1);
+  const firstCol = bounds.first ?? 0;
 
   switch (input.key) {
     case Key.Home:
       return input.ctrl
-        ? { row: bounds.rows > 0 ? 0 : -1, col: bounds.first ?? 0 }
-        : { row: from.row, col: 0 };
+        ? { row: Math.min(0, lastRowOf(bounds)), col: firstCol }
+        : { row: from.row, col: from.col > firstCol ? firstCol : 0 };
     case Key.End:
       return input.ctrl
-        ? { row: lastRowOf(bounds), col: lastCol }
+        ? (bounds.last?.() ?? { row: lastRowOf(bounds), col: lastCol })
         : { row: from.row, col: lastCol };
     default:
       return undefined;
@@ -145,9 +147,9 @@ const edgeTarget = (
 
 const horizontalTarget = (
   key: string,
-  from: TableCellPosition,
+  from: NuiTableCellPosition,
   bounds: TableBounds,
-): TableCellPosition | undefined => {
+): NuiTableCellPosition | undefined => {
   const move = listMoveFor(key, 'horizontal', bounds.rtl);
   const lastCol = Math.max(0, bounds.cols - 1);
 
@@ -159,9 +161,9 @@ const horizontalTarget = (
 
 export const nextCell = (
   input: TableKey,
-  from: TableCellPosition,
+  from: NuiTableCellPosition,
   bounds: TableBounds,
-): TableCellPosition | undefined => {
+): NuiTableCellPosition | undefined => {
   const direction = input.ctrl ? edgeDirectionOf(input.key, bounds.rtl) : undefined;
 
   if (direction !== undefined) {

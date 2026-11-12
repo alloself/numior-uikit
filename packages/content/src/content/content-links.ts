@@ -27,12 +27,14 @@ const isProvider = (value: AttrValue): boolean => typeof value === 'string' && P
 
 const descendant = (element: HtmlElement, name: string): HtmlElement | undefined => {
   for (const child of element.children) {
-    if (child.kind === ContentNodeKind.Element) {
-      const found = child.hasClass(name) ? child : descendant(child, name);
+    if (child.kind !== ContentNodeKind.Element) {
+      continue;
+    }
 
-      if (found !== undefined) {
-        return found;
-      }
+    const found = child.hasClass(name) ? child : descendant(child, name);
+
+    if (found !== undefined) {
+      return found;
     }
   }
   return undefined;
@@ -129,6 +131,7 @@ export const LINK_NODES: Readonly<Record<string, NodeSpec>> = {
       provider: { verify: isProvider },
       caption: { default: '', verify: isText },
     },
+    plainText: (node) => textOf(node.attrs.url),
     render: renderEmbed,
     parse: [{ tag: 'figure', priority: 1, attrs: embedAttrs }],
   },
@@ -142,6 +145,7 @@ export const LINK_NODES: Readonly<Record<string, NodeSpec>> = {
       icon: { default: '', verify: isOptionalWeb },
       site: { default: '', verify: isText },
     },
+    plainText: (node) => textOf(node.attrs.url),
     render: renderBookmark,
     parse: [{ tag: 'div', priority: 1, attrs: bookmarkAttrs }],
   },

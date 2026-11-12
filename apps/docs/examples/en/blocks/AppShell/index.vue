@@ -80,7 +80,7 @@
         <h1 class="m-0 text-xl font-semibold tracking-tight">{{ current.label }}</h1>
         <p class="m-0 text-sm text-muted-foreground">{{ current.summary }}</p>
       </div>
-      <NuiList variant="bordered" :label="current.label" empty-label="Nothing found">
+      <NuiList variant="outline" :label="current.label" empty-label="Nothing found">
         <NuiListItem
           v-for="row in found"
           :key="row.key"

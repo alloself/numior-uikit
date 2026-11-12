@@ -15,9 +15,11 @@ export const useSplitAttrs = (rootKeys: ReadonlySet<string> = ROOT_KEYS): SplitA
   const pick = (test: (key: string) => boolean): AttrRecord => {
     const picked: Record<string, unknown> = {};
     for (const key of Object.keys(attrs)) {
-      if (test(key)) {
-        picked[key] = attrs[key];
+      if (!test(key)) {
+        continue;
       }
+
+      picked[key] = attrs[key];
     }
     return picked;
   };

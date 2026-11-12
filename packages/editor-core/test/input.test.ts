@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { definePlugin, inputSource, textSelection, type InputSource } from '../src';
+import { definePlugin, history, inputSource, textSelection, undo, type InputSource } from '../src';
 import { fixtureSchema } from '../src/fixtures';
 import { EditorViewDriver } from './drivers/view';
 import { buildWith } from './support/notes';
@@ -92,6 +92,227 @@ describe('editor view input', () => {
     expect(view.domSpan).toEqual({ anchor: 6, head: 6 });
   });
 
+  it('keeps a caret the reader has just placed when a change from outside comes before it is read', () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(1);
+    view.pointInDom(6);
+    view.changeOutside((tr) => tr.insertText('x', 3));
+    view.changeOutside((tr) => tr.insertText('y', 3));
+
+    expect(view.domSpan).toEqual({ anchor: 8, head: 8 });
+
+    view.noticeSelection();
+
+    expect(view.selection).toEqual(textSelection(8));
+  });
+
+  it('keeps a caret the reader has just placed in the text a change from outside rewrites', () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(6);
+    view.pointInDom(3);
+    view.changeOutside((tr) => tr.insertText('xy', 1));
+    view.noticeSelection();
+
+    expect(view.domTexts).toEqual(['xyab', 'cd']);
+    expect(view.selection).toEqual(textSelection(5));
+  });
+
+  it('moves the caret with a change from outside when the reader has not touched it', () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(6);
+    view.changeOutside((tr) => tr.insertText('xy', 1));
+
+    expect(view.selection).toEqual(textSelection(8));
+    expect(view.domSpan).toEqual({ anchor: 8, head: 8 });
+  });
+
+  it('leaves the document alone when keys, typing and a paste reach a view that is not editable', () => {
+    const view = mounted(twoParagraphs());
+
+    view.setEditable(false);
+    view.place(3);
+    view.type('x');
+    view.press('Backspace');
+    view.press('Enter');
+    view.paste('pasted');
+
+    expect(view.modelTexts).toEqual(['ab', 'cd']);
+    expect(view.domTexts).toEqual(['ab', 'cd']);
+  });
+
+  it('moves the selected text to where it is dropped and takes the move back in one step', () => {
+    const view = mounted(twoParagraphs(), fixtureSchema, [history()]);
+
+    view.place(1, 3);
+
+    expect(view.dragSelectionTo('cd', 1)).toEqual({
+      started: true,
+      offered: true,
+      effect: 'copyMove',
+    });
+
+    expect(view.modelTexts).toEqual(['', 'cabd']);
+    expect(view.domTexts).toEqual(['', 'cabd']);
+    expect(view.selection).toEqual(textSelection(6));
+
+    view.run(undo);
+
+    expect(view.modelTexts).toEqual(['ab', 'cd']);
+  });
+
+  it('moves text forward and backward inside one line', () => {
+    const view = mounted(doc(node('paragraph', ['abcdef'])));
+
+    view.place(1, 3);
+    view.dragSelectionTo('abcdef', 5);
+
+    expect(view.modelTexts).toEqual(['cdeabf']);
+
+    view.place(4, 6);
+    view.dragSelectionTo('cdeabf', 0);
+
+    expect(view.modelTexts).toEqual(['abcdef']);
+  });
+
+  it('leaves a copy behind when the text is dropped with Ctrl held', () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(1, 3);
+    view.dragSelectionTo('cd', 2, { copy: true });
+
+    expect(view.modelTexts).toEqual(['ab', 'cdab']);
+  });
+
+  it('changes nothing when the text is dropped onto itself', () => {
+    const view = mounted(doc(node('paragraph', ['abcdef'])));
+
+    view.place(2, 5);
+    view.dragSelectionTo('abcdef', 2);
+
+    expect(view.modelTexts).toEqual(['abcdef']);
+    expect(view.selection).toEqual(textSelection(2, 5));
+  });
+
+  it('does not start a drag without selected text or from outside the selection', () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(2);
+
+    expect(view.dragSelectionTo('cd', 1).started).toBe(false);
+
+    view.place(1, 3);
+
+    expect(view.dragSelectionTo('ab', 0, { from: view.blocks[1] }).started).toBe(false);
+    expect(view.modelTexts).toEqual(['ab', 'cd']);
+  });
+
+  it('lets a reader drag text out of a view that is not editable and keeps the text', () => {
+    const view = mounted(twoParagraphs());
+
+    view.setEditable(false);
+    view.focus();
+    view.selectInDom(1, 3);
+
+    expect(view.dragSelectionTo('cd', 1).effect).toBe('copy');
+    expect(view.modelTexts).toEqual(['ab', 'cd']);
+  });
+
+  it('still reads a selection made in a view that is not editable', () => {
+    const view = mounted(twoParagraphs());
+
+    view.setEditable(false);
+    view.focus();
+    view.selectInDom(2, 6);
+
+    expect(view.selection).toEqual(textSelection(2, 6));
+  });
+
+  it('follows the browser when it joins two lines in the middle of a composition', async () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(4);
+    await view.composeJoining(1);
+
+    expect(view.modelTexts).toEqual(['abcd']);
+    expect(view.domTexts).toEqual(['abcd']);
+    expect(view.selection).toEqual(textSelection(3));
+  });
+
+  it('keeps what a composition wrote at the place where the browser joined two lines', async () => {
+    const view = mounted(
+      doc(node('paragraph', ['ab']), node('paragraph', ['cd']), node('paragraph', ['ef'])),
+    );
+
+    view.place(4);
+    await view.composeJoining(1, 'й');
+
+    expect(view.modelTexts).toEqual(['abйcd', 'ef']);
+    expect(view.domTexts).toEqual(['abйcd', 'ef']);
+    expect(view.selection).toEqual(textSelection(4));
+  });
+
+  it('leaves the text being composed in its place when a change from outside lands earlier in the line', async () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(3);
+    await view.startComposing('й');
+    view.changeOutside((tr) => tr.insertText('xy', 1));
+
+    expect(view.domTexts).toEqual(['xyabй', 'cd']);
+    expect(view.domSpan).toEqual({ anchor: 6, head: 6 });
+
+    await view.finishComposing();
+
+    expect(view.modelTexts).toEqual(['xyabй', 'cd']);
+    expect(view.selection).toEqual(textSelection(6));
+  });
+
+  it('puts a change from outside after the text being composed at the same place', async () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(3);
+    await view.startComposing('й');
+    view.changeOutside((tr) => tr.insertText('xy', 3));
+
+    expect(view.domTexts).toEqual(['abйxy', 'cd']);
+    expect(view.domSpan).toEqual({ anchor: 4, head: 4 });
+
+    await view.finishComposing();
+
+    expect(view.modelTexts).toEqual(['abйxy', 'cd']);
+    expect(view.selection).toEqual(textSelection(4));
+  });
+
+  it('keeps the text being composed through a change from outside that deletes the letter before it', async () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(3);
+    await view.startComposing('й');
+    view.changeOutside((tr) => tr.delete(2, 3));
+
+    expect(view.domTexts).toEqual(['aй', 'cd']);
+
+    await view.finishComposing();
+
+    expect(view.modelTexts).toEqual(['aй', 'cd']);
+    expect(view.selection).toEqual(textSelection(3));
+  });
+
+  it('goes on reading what is typed when the keyboard commits without ending its composition', async () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(3);
+    await view.startComposing('й');
+    await view.commitUnannounced('z');
+
+    expect(view.view.composing).toBe(false);
+    expect(view.modelTexts).toEqual(['abйz', 'cd']);
+    expect(view.domTexts).toEqual(['abйz', 'cd']);
+  });
+
   it('lets the composition edit the DOM and catches the model up when it ends', async () => {
     const view = mounted(twoParagraphs());
 
@@ -134,11 +355,40 @@ describe('editor view input', () => {
     expect(view.press('ArrowRight')).toBe(false);
   });
 
+  it('deletes a picture from the place after it with a keyboard that names no keys', () => {
+    const image = node('image', [], { src: 'a.png' });
+    const view = mounted(doc(node('paragraph', ['ab']), image, node('paragraph', ['cd'])));
+
+    view.focus();
+    view.change((tr) => tr.setSelection({ kind: 'gap', id: image.id, side: 'end' }));
+    view.press('Unidentified');
+    view.input('deleteContentBackward');
+
+    expect(view.selection).toEqual({ kind: 'node', id: image.id });
+
+    view.press('Unidentified');
+    view.input('deleteContentBackward');
+
+    expect(view.modelTexts).toEqual(['ab', 'cd']);
+  });
+
+  it('writes in the place after a picture with a keyboard that names no keys', () => {
+    const image = node('image', [], { src: 'a.png' });
+    const view = mounted(doc(node('paragraph', ['ab']), image));
+
+    view.focus();
+    view.change((tr) => tr.setSelection({ kind: 'gap', id: image.id, side: 'end' }));
+    view.press('Unidentified');
+    view.type('x');
+
+    expect(view.modelTexts).toEqual(['ab', '', 'x']);
+  });
+
   it('selects the whole table when a click lands on one of its cells', () => {
-    const cell = node('table_cell', [], { value: 1 });
+    const cell = node('table_cell', [], { column: 'a', value: 1 });
 
     const table = node('table', [
-      node('table_head', [node('table_column', [], { name: 'A' })]),
+      node('table_head', [node('table_column', [], { key: 'a', name: 'A' })]),
       node('table_body', [node('table_row', [cell])]),
     ]);
 
@@ -246,12 +496,54 @@ describe('editor view input', () => {
 
     expect(view.copy('copy')).toBe('yb\nc');
 
-    expect(view.copy('copy', 'text/html')).toBe(
-      '<div data-numior-editor="1"><p><strong>y</strong>b</p><p>c</p></div>',
+    expect(view.copy('copy', 'text/html')).toMatch(
+      /^<div data-numior-editor="[\da-f]{32}"><p><strong>y<\/strong>b<\/p><p>c<\/p><\/div>$/u,
     );
 
     expect(view.copy('cut')).toBe('yb\nc');
     expect(view.markup).toContain('<p>a</p><ul><li><p>x</p></li></ul><p>d</p>');
+  });
+
+  it('copies line breaks and mentions into the plain text of the clipboard', () => {
+    const view = mounted(
+      doc(
+        node('paragraph', [
+          'one',
+          node('hard_break'),
+          'two ',
+          node('mention', [], { user: 'u1', label: 'Ann' }),
+        ]),
+        node('divider'),
+        node('paragraph', ['three']),
+      ),
+    );
+
+    view.focus();
+    view.selectAll();
+
+    expect(view.copy('copy')).toBe('one\ntwo @Ann\nthree');
+  });
+
+  it('pastes a mention copied here as a mention and a mention from other markup as its text', () => {
+    const view = mounted(
+      doc(node('paragraph', ['hi ', node('mention', [], { user: 'u1', label: 'Ann' })])),
+    );
+
+    view.focus();
+    view.selectAll();
+
+    const copied = view.copy('copy', 'text/html') ?? '';
+
+    view.place(1);
+    view.paste('', copied);
+    expect(view.mentions).toEqual(['u1', 'u1']);
+
+    view.place(1);
+    view.paste('', '<p><span data-user="boss">@Boss</span></p>');
+    view.paste('', '<div data-numior-editor="1"><p><span data-user="boss">@Chief</span></p></div>');
+
+    expect(view.mentions).toEqual(['u1', 'u1']);
+    expect(view.modelTexts).toEqual(['@Boss@Chiefhi \ufffchi \ufffc']);
   });
 
   it('keeps a whole-document selection in the model and copies, cuts and leaves it by itself', () => {

@@ -1,0 +1,201 @@
+import { CellError } from '../cell.types';
+import {
+  FormulaFailureReason,
+  FormulaNodeKind,
+  FormulaReferenceKind,
+  UnaryOperator,
+  type CallSignature,
+  type FormulaNode,
+  type SignatureOf,
+} from './formula.types';
+import { childrenOf } from './walk';
+
+export interface FormulaRefusal {
+  readonly reason: FormulaFailureReason;
+  readonly name?: string | undefined;
+  readonly argument?: number | undefined;
+}
+
+export const MAX_FORMULA_TEXT = 8191;
+
+export const MAX_FORMULA_GROUPS = 256;
+
+export const MAX_FORMULA_CALLS = 65;
+
+export const MAX_FORMULA_SIGNS = 1024;
+
+export const MAX_FORMULA_DEPTH = 2048;
+
+const MAX_FORMULA_STRING = 255;
+
+const LEAD_EXPONENTS = { low: -309, high: 307 } as const;
+
+const ZERO_EXPONENTS = { low: -308, high: 308 } as const;
+
+const NUMBER_PARTS = /^(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/u;
+
+const REFERENCE_KINDS: ReadonlySet<string> = new Set(Object.values(FormulaReferenceKind));
+
+const callGivesReference = (name: string, signatureOf: SignatureOf): boolean => {
+  const signature = signatureOf(name);
+
+  return signature === undefined || signature.givesReference === true;
+};
+
+const intersected = (node: FormulaNode): FormulaNode => {
+  let item = node;
+
+  while (item.kind === FormulaNodeKind.Unary && item.op === UnaryOperator.Intersect) {
+    item = item.operand;
+  }
+  return item;
+};
+
+export const givesReference = (node: FormulaNode, signatureOf: SignatureOf): boolean => {
+  const item = intersected(node);
+
+  switch (item.kind) {
+    case FormulaNodeKind.Error:
+      return item.code === CellError.Ref;
+    case FormulaNodeKind.Call:
+      return callGivesReference(item.name, signatureOf);
+    case FormulaNodeKind.Opaque:
+    case FormulaNodeKind.Areas:
+    case FormulaNodeKind.Union:
+    case FormulaNodeKind.Apply:
+      return true;
+    default:
+      return REFERENCE_KINDS.has(item.kind);
+  }
+};
+
+const localNameKey = (node: FormulaNode): string | undefined => {
+  const placed = node.kind === FormulaReferenceKind.Name || node.kind === FormulaReferenceKind.Cell;
+
+  if (!placed || node.sheet !== undefined || node.book !== undefined) {
+    return undefined;
+  }
+  if (node.kind === FormulaReferenceKind.Name) {
+    return node.name.includes('.') ? undefined : `name ${node.name.toUpperCase()}`;
+  }
+  return node.ref.rowAbsolute || node.ref.colAbsolute
+    ? undefined
+    : `cell ${String(node.ref.row)} ${String(node.ref.col)}`;
+};
+
+const misnamed = (signature: CallSignature, args: readonly FormulaNode[]): number => {
+  const seen = new Set<string>();
+
+  for (const [index, arg] of args.entries()) {
+    if (signature.namesAt?.(index, args.length) !== true) {
+      continue;
+    }
+
+    const key = localNameKey(arg);
+
+    if (key === undefined || seen.has(key)) {
+      return index;
+    }
+
+    seen.add(key);
+  }
+  return -1;
+};
+
+const fitsCount = (signature: CallSignature, count: number): boolean =>
+  count >= signature.min && count <= signature.max && (signature.counts?.(count) ?? true);
+
+export const callRefusal = (
+  name: string,
+  args: readonly FormulaNode[],
+  signatureOf: SignatureOf,
+): FormulaRefusal | undefined => {
+  const signature = signatureOf(name);
+
+  if (signature === undefined) {
+    return undefined;
+  }
+  if (!fitsCount(signature, args.length)) {
+    return { reason: FormulaFailureReason.Arguments, name };
+  }
+
+  const argument = args.findIndex(
+    (arg, index) =>
+      signature.referenceAt?.(index, args.length) === true && !givesReference(arg, signatureOf),
+  );
+
+  if (argument >= 0) {
+    return { reason: FormulaFailureReason.ReferenceArgument, name, argument };
+  }
+
+  const named = misnamed(signature, args);
+
+  return named < 0 ? undefined : { reason: FormulaFailureReason.LocalName, name, argument: named };
+};
+
+const outside = (
+  exponent: number,
+  bounds: { readonly low: number; readonly high: number },
+): FormulaFailureReason | undefined => {
+  if (exponent > bounds.high) {
+    return FormulaFailureReason.BigNumber;
+  }
+  return exponent < bounds.low ? FormulaFailureReason.SmallNumber : undefined;
+};
+
+export const numberRefusal = (text: string): FormulaFailureReason | undefined => {
+  const parts = NUMBER_PARTS.exec(text);
+
+  if (parts === null) {
+    return FormulaFailureReason.BigNumber;
+  }
+
+  const [, whole = '', fraction = '', power = '0'] = parts;
+  const digits = `${whole}${fraction}`;
+  const first = digits.search(/[1-9]/u);
+  const exponent = Number(power) - fraction.length;
+
+  return first < 0
+    ? outside(exponent, ZERO_EXPONENTS)
+    : outside(exponent + digits.length - 1 - first, LEAD_EXPONENTS);
+};
+
+export const literalRefusal = (node: FormulaNode): FormulaFailureReason | undefined => {
+  switch (node.kind) {
+    case FormulaNodeKind.String:
+      return node.value.length > MAX_FORMULA_STRING ? FormulaFailureReason.LongText : undefined;
+    case FormulaNodeKind.Number:
+      return numberRefusal(String(Math.abs(node.value)));
+    default:
+      return undefined;
+  }
+};
+
+const ownRefusal = (node: FormulaNode, signatureOf: SignatureOf): FormulaRefusal | undefined => {
+  if (node.kind === FormulaNodeKind.Call) {
+    return callRefusal(node.name, node.args, signatureOf);
+  }
+
+  const reason = literalRefusal(node);
+
+  return reason === undefined ? undefined : { reason };
+};
+
+export const formulaRefusal = (
+  ast: FormulaNode,
+  signatureOf: SignatureOf,
+): FormulaRefusal | undefined => {
+  const waiting: FormulaNode[] = [ast];
+
+  for (let node = waiting.pop(); node !== undefined; node = waiting.pop()) {
+    const refusal = ownRefusal(node, signatureOf);
+
+    if (refusal !== undefined) {
+      return refusal;
+    }
+    for (const child of childrenOf(node)) {
+      waiting.push(child);
+    }
+  }
+  return undefined;
+};

@@ -18,19 +18,21 @@ import {
   type NuiTableEdit,
   type NuiTableEditEvent,
   type NuiTablePasteScope,
+  type NuiTableRange,
   type NuiTableRanges,
   type ParsedCell,
-  type TableCellPosition,
+  type NuiTableCellPosition,
 } from './table.types';
 import { Key } from '@numior/primitives';
 
 export interface TableEditingOptions<T> {
   readonly enabled: () => boolean;
   readonly ranges: () => NuiTableRanges;
-  readonly cell: () => TableCellPosition | undefined;
+  readonly cell: () => NuiTableCellPosition | undefined;
   readonly rowAt: (position: number) => T | undefined;
   readonly keyAt: (col: number) => string | undefined;
   readonly editable: (row: T, key: string) => boolean;
+  readonly covered: (row: number, col: number) => boolean;
   readonly valueOf: (row: T, key: string) => NuiTableCellValue;
   readonly resolve: (row: T) => T | undefined;
   readonly limit: () => number;
@@ -38,11 +40,11 @@ export interface TableEditingOptions<T> {
   readonly emit: (event: NuiTableEditEvent<T>) => void;
   readonly sink: () => NuiTableCommandSink<T> | undefined;
   readonly keys: () => readonly string[];
-  readonly applied: (keys: readonly string[]) => void;
+  readonly applied: (keys: readonly string[], rows?: readonly T[]) => void;
   readonly parse: (row: T, key: string, text: string) => ParsedCell;
   readonly readBlock: (
     data: NuiTableClipboardData,
-    target: TableCellPosition,
+    target: NuiTableCellPosition,
   ) => NuiTableClipboardBlock | undefined;
   readonly pasteHook: (
     data: NuiTableClipboardData,
@@ -101,6 +103,8 @@ const keysOf = <T>(changes: readonly NuiTableEdit<T>[]): string[] => [
   ...new Set(changes.map((change) => change.key)),
 ];
 
+const rowsOf = <T>(changes: readonly NuiTableEdit<T>[]): T[] => changes.map((change) => change.row);
+
 const sameValue = (a: NuiTableCellValue, b: NuiTableCellValue): boolean =>
   a instanceof Date || b instanceof Date ? instantOf(a) === instantOf(b) : a === b;
 
@@ -143,7 +147,12 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     for (let col = box.start; col <= box.end; col += 1) {
       const key = options.keyAt(col);
 
-      if (key !== undefined && options.editable(row, key) && visit({ row, key })) {
+      if (
+        key !== undefined &&
+        !options.covered(position, col) &&
+        options.editable(row, key) &&
+        visit({ row, key })
+      ) {
         return true;
       }
     }
@@ -182,27 +191,33 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     const count = areaOf(ranges);
     const limit = options.limit();
 
-    if (count > limit) {
-      options.announce(options.messages.value.editLimit({ count, limit }));
-      return false;
+    if (count <= limit) {
+      return true;
     }
-    return true;
+
+    options.announce(options.messages.value.editLimit({ count, limit }));
+    return false;
   };
 
-  const record = (kind: EditKind, changes: readonly NuiTableEdit<T>[]): void => {
+  const record = (
+    kind: EditKind,
+    changes: readonly NuiTableEdit<T>[],
+    area?: NuiTableRange,
+  ): void => {
     if (changes.length === 0) {
       return;
     }
     const sink = options.sink();
+    const event = area === undefined ? { kind, changes } : { kind, changes, area };
 
-    options.emit({ kind, changes });
+    options.emit(event);
 
     if (sink === undefined) {
       history.push({ kind, changes });
     } else {
-      sink.push({ kind, changes });
+      sink.push(event);
     }
-    options.applied(keysOf(changes));
+    options.applied(keysOf(changes), rowsOf(changes));
   };
 
   const clearOutcome = ({ row, key }: TableEditCell<T>): CellOutcome<T> => {
@@ -296,7 +311,7 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
 
     if (resolved.length > 0) {
       options.emit({ kind, changes: resolved });
-      options.applied(keysOf(resolved));
+      options.applied(keysOf(resolved), rowsOf(resolved));
     }
     return resolved.length;
   };
@@ -379,6 +394,9 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     if (row === undefined || key === undefined || !options.editable(row, key)) {
       return 'skip';
     }
+    if (options.sink() === undefined && options.covered(cell.row, cell.col)) {
+      return 'skip';
+    }
     const parsed = options.parse(row, key, cell.text);
 
     if (
@@ -392,20 +410,20 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     return sameValue(previous, parsed.value) ? 'same' : { row, key, value: parsed.value, previous };
   };
 
-  const pasteCells = (cells: readonly PasteCell[], area: NuiTableRanges): boolean => {
+  const pasteCells = (cells: readonly PasteCell[], area: NuiTableRange | undefined): boolean => {
     const outcomes = cells.map(outcomeOf);
     const skipped = skippedOf(outcomes);
 
-    record('paste', outcomes.filter(isChange));
+    record('paste', outcomes.filter(isChange), area);
 
-    if (area.length > 0) {
-      options.select(area);
+    if (area !== undefined) {
+      options.select([area]);
     }
     options.announce(options.messages.value.pasted({ count: cells.length - skipped, skipped }));
     return true;
   };
 
-  const targetCell = (): TableCellPosition | undefined => {
+  const targetCell = (): NuiTableCellPosition | undefined => {
     const last = options.ranges().at(-1);
 
     if (last === undefined) {
@@ -462,7 +480,7 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
         options.announce(options.messages.value.editLimit({ count: plan.count, limit }));
         return false;
       case PastePlanKind.Cells:
-        return pasteCells(plan.cells, plan.area === undefined ? [] : [plan.area]);
+        return pasteCells(plan.cells, plan.area);
     }
   };
 
@@ -492,12 +510,13 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
       }
       return true;
     }
-    if (isKey(event, 'KeyY', 'y') && !event.shiftKey) {
-      event.preventDefault();
-      redo();
-      return true;
+    if (!isKey(event, 'KeyY', 'y') || event.shiftKey) {
+      return false;
     }
-    return false;
+
+    event.preventDefault();
+    redo();
+    return true;
   };
 
   return {
@@ -529,12 +548,13 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
       if (event.ctrlKey || event.metaKey) {
         return onModified(event);
       }
-      if (!event.shiftKey && (event.key === Key.Delete || event.key === Key.Backspace)) {
-        event.preventDefault();
-        clearCells('clear');
-        return true;
+      if (event.shiftKey || (event.key !== Key.Delete && event.key !== Key.Backspace)) {
+        return false;
       }
-      return false;
+
+      event.preventDefault();
+      clearCells('clear');
+      return true;
     },
     commitCell: (row, key, value) => {
       const previous = options.valueOf(row, key);

@@ -19,20 +19,6 @@ export const EN_NUMBERS: NumberLocale = {
     'November',
     'December',
   ],
-  monthsGenitive: [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ],
   monthsShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
   days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
   daysShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
@@ -43,6 +29,8 @@ export const EN_NUMBERS: NumberLocale = {
   errors: EN_ERRORS,
   dateOrder: 'mdy',
   shortDate: 'm/d/yyyy',
+  namedDate: 'd-mmm-yy',
+  monthDate: 'mmm-yy',
   longDate: 'dddd, mmmm d, yyyy',
   shortTime: 'h:mm AM/PM',
   longTime: 'h:mm:ss AM/PM',
@@ -55,7 +43,7 @@ export const EN_NUMBERS: NumberLocale = {
 export const RU_NUMBERS: NumberLocale = {
   name: 'ru',
   decimal: ',',
-  group: ' ',
+  group: ' ',
   months: [
     'Январь',
     'Февраль',
@@ -70,7 +58,30 @@ export const RU_NUMBERS: NumberLocale = {
     'Ноябрь',
     'Декабрь',
   ],
-  monthsGenitive: [
+  monthsShort: ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'],
+  days: ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'],
+  daysShort: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+  am: 'AM',
+  pm: 'PM',
+  trueText: 'ИСТИНА',
+  falseText: 'ЛОЖЬ',
+  errors: RU_ERRORS,
+  dateOrder: 'dmy',
+  shortDate: 'dd.mm.yyyy',
+  namedDate: 'dd.mmm.yy',
+  monthDate: 'mmm.yy',
+  longDate: '[$-FC19]d mmmm yyyy "г."',
+  shortTime: 'h:mm',
+  longTime: 'h:mm:ss',
+  currencyPositive: '#\\ "₽"',
+  currencyNegative: '-#\\ "₽"',
+  currencySymbols: ['₽', 'руб.', 'р.'],
+  generalName: 'Основной',
+};
+
+const RU_GENITIVE_NUMBERS: NumberLocale = {
+  ...RU_NUMBERS,
+  months: [
     'января',
     'февраля',
     'марта',
@@ -84,32 +95,27 @@ export const RU_NUMBERS: NumberLocale = {
     'ноября',
     'декабря',
   ],
-  monthsShort: ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'],
-  days: ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'],
-  daysShort: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
-  am: 'AM',
-  pm: 'PM',
-  trueText: 'ИСТИНА',
-  falseText: 'ЛОЖЬ',
-  errors: RU_ERRORS,
-  dateOrder: 'dmy',
-  shortDate: 'dd.mm.yyyy',
-  longDate: 'd mmmm yyyy "г."',
-  shortTime: 'h:mm',
-  longTime: 'h:mm:ss',
-  currencyPositive: '#\\ "₽"',
-  currencyNegative: '-#\\ "₽"',
-  currencySymbols: ['₽', 'руб.', 'р.'],
-  generalName: 'Основной',
 };
 
-const BY_LCID: Readonly<Record<number, NumberLocale>> = {
-  0x409: EN_NUMBERS,
-  0x809: EN_NUMBERS,
-  0x419: RU_NUMBERS,
+const LANGUAGE = 0x3ff;
+
+const GENITIVE = 0xfc00;
+
+const BY_LANGUAGE: Readonly<Record<number, NumberLocale>> = {
+  0x09: EN_NUMBERS,
+  0x19: RU_NUMBERS,
 };
 
-export const numberLocaleOf = (lcid: number): NumberLocale | undefined => BY_LCID[lcid & 0xffff];
+const GENITIVE_BY_LANGUAGE: Readonly<Record<number, NumberLocale>> = {
+  0x19: RU_GENITIVE_NUMBERS,
+};
+
+export const numberLocaleOf = (lcid: number): NumberLocale | undefined => {
+  const id = lcid & 0xffff;
+  const genitive = (id & GENITIVE) === GENITIVE ? GENITIVE_BY_LANGUAGE[id & LANGUAGE] : undefined;
+
+  return genitive ?? BY_LANGUAGE[id & LANGUAGE];
+};
 
 export const currencyFormat = (locale: NumberLocale, decimals: number): string => {
   const digits = decimals > 0 ? `#,##0.${'0'.repeat(decimals)}` : '#,##0';

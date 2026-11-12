@@ -1,3 +1,4 @@
+import { nextTick } from 'vue';
 import { toOutcome, type FormIssue, type SchemaOutcome } from '../schema/standard';
 import { getAt } from '../values/access';
 import { cloneValue } from '../values/clone';
@@ -29,6 +30,7 @@ export interface Validation<V extends object, O> {
     scope?: ApplyScope,
   ): Promise<RunResult<V, O>>;
   validateFully(entries: readonly Entry<V>[]): Promise<RunResult<V, O>>;
+  inspect(entries: readonly Entry<V>[]): Promise<RunResult<V, O>>;
 }
 
 export const isClean = (result: Classified): boolean =>
@@ -101,17 +103,21 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
 
   const dropStaleExternal = (): void => {
     for (const [path, error] of core.external) {
-      if (!isEqualValue(getAt(core.engine.values, path), error.snapshot)) {
-        core.external.delete(path);
+      if (isEqualValue(getAt(core.engine.values, path), error.snapshot)) {
+        continue;
       }
+
+      core.external.delete(path);
     }
   };
 
   const applyTo = (entries: readonly Entry<V>[], result: RunResult<V, O>): void => {
     for (const entry of entries) {
-      if (entry.state.attempted.value) {
-        writeErrors(entry.state, result.byOwner.get(entry.path()) ?? []);
+      if (!entry.state.attempted.value) {
+        continue;
       }
+
+      writeErrors(entry.state, result.byOwner.get(entry.path()) ?? []);
     }
   };
 
@@ -125,15 +131,18 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
   };
 
   const execute = (own?: readonly Entry<V>[], keep = false): MaybePromise<RunResult<V, O>> => {
-    const epoch = core.session.epoch;
+    const { epoch, shape } = core.session;
 
     core.session.started += 1;
 
     const order = core.session.started;
 
-    const settle = (result: RunResult<V, O>): RunResult<V, O> => {
+    const settle = (result: RunResult<V, O>): MaybePromise<RunResult<V, O>> => {
       if (epoch !== core.session.epoch) {
         return result;
+      }
+      if (shape !== core.session.shape) {
+        return nextTick().then(() => execute(own, keep));
       }
       if (own) {
         applyTo(own, result);
@@ -185,34 +194,47 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
     return result;
   };
 
+  const passingAfter = (entries: readonly Entry<V>[], outcome: RunResult<V, O>): Entry<V>[] =>
+    entries.reduce<Entry<V>[]>((passing, entry) => {
+      if (outcome.byOwner.has(entry.path())) {
+        asyncChecks.cancel(entry);
+      } else {
+        passing.push(entry);
+      }
+      return passing;
+    }, []);
+
+  const complete = async (
+    entries: readonly Entry<V>[],
+    first: MaybePromise<RunResult<V, O>>,
+    again: () => MaybePromise<RunResult<V, O>>,
+  ): Promise<RunResult<V, O>> => {
+    let result = await first;
+
+    while (await asyncChecks.settle(passingAfter(entries, result))) {
+      result = await again();
+    }
+    return result;
+  };
+
   return {
     async: asyncChecks,
     run,
     execute: () => execute(),
     validateEntries: (entries, trigger, scope) => {
+      asyncChecks.retry(entries);
+
       const outcome = attempt(entries, scope);
 
       return isPromise(outcome)
         ? outcome.then((result) => followAsync(entries, result, trigger))
         : Promise.resolve(followAsync(entries, outcome, trigger));
     },
-    validateFully: async (entries) => {
-      const passingAfter = (outcome: typeof result): Entry<V>[] =>
-        entries.reduce<Entry<V>[]>((passing, entry) => {
-          if (outcome.byOwner.has(entry.path())) {
-            asyncChecks.cancel(entry);
-          } else {
-            passing.push(entry);
-          }
-          return passing;
-        }, []);
+    validateFully: (entries) => {
+      asyncChecks.retry(entries);
 
-      let result = await attempt(entries, 'attempted', true);
-
-      while (await asyncChecks.settle(passingAfter(result))) {
-        result = await execute(undefined, true);
-      }
-      return result;
+      return complete(entries, attempt(entries, 'attempted', true), () => execute(undefined, true));
     },
+    inspect: (entries) => complete(entries, run(), () => run()),
   };
 };

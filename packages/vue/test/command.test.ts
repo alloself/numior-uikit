@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { CommandDriver } from './drivers/command';
+import type { NuiCommandSource } from '../src';
+import { CommandDialogDriver, CommandDriver } from './drivers/command';
+
+const KEYED: NuiCommandSource<unknown> = [
+  { key: 'home', value: 'home', label: 'Home' },
+  { key: 'docs', value: 'docs', label: 'Documentation', keywords: ['guides'] },
+  { key: 'theme', value: 'theme', label: 'Toggle theme' },
+];
 
 describe('NuiCommand', () => {
   it('lists grouped commands with shortcuts and activates the first one for the keyboard', async () => {
@@ -34,6 +41,57 @@ describe('NuiCommand', () => {
     expect(command.labels).toEqual([]);
     expect(command.emptyText).toBe('No results');
     expect(command.activeLabel).toBeUndefined();
+  });
+
+  it('finds a command typed without its accents or with «е» for «ё»', async () => {
+    const command = CommandDriver.mount({
+      props: {
+        items: [
+          { value: 'creme', label: 'Crème brûlée' },
+          { value: 'tree', label: 'Ёлка', keywords: ['Зелёная'] },
+          { value: 'home', label: 'Home' },
+        ],
+      },
+    });
+
+    await command.ready();
+    await command.type('creme bru');
+
+    expect(command.labels).toEqual(['Crème brûlée']);
+
+    await command.type('елка');
+
+    expect(command.labels).toEqual(['Ёлка']);
+
+    await command.type('зелен');
+
+    expect(command.labels).toEqual(['Ёлка']);
+
+    await command.type('HÖME');
+
+    expect(command.labels).toEqual(['Home']);
+  });
+
+  it('runs the highlighted command after the query is cleared when commands carry keys', async () => {
+    const command = CommandDriver.mount({ props: { items: KEYED } });
+
+    await command.ready();
+    await command.type('guides');
+    await command.type('');
+
+    expect(command.activeLabel).toBe('Home');
+
+    await command.press('Enter');
+
+    expect(command.selections.map((item) => item.value)).toEqual(['home']);
+  });
+
+  it('asks the browser for focus whenever the layer around it opens', () => {
+    const asked = CommandDriver.mount({ props: { autofocus: true } });
+    const plain = CommandDriver.mount();
+
+    expect(asked.input.attributes('autofocus')).toBeDefined();
+    expect(plain.input.attributes('autofocus')).toBeUndefined();
   });
 
   it('moves the active option with the arrows, on hover, and reports clicks', async () => {
@@ -90,5 +148,24 @@ describe('NuiCommand', () => {
     const custom = CommandDriver.mount({ props: { placeholder: 'Go to…', label: 'Jump' } });
     expect(custom.placeholder).toBe('Go to…');
     expect(custom.listLabel).toBe('Jump');
+  });
+});
+
+describe('NuiCommandDialog', () => {
+  it('starts every opening with an empty query', async () => {
+    const palette = CommandDialogDriver.mount();
+
+    await palette.open();
+    await palette.type('dark');
+
+    expect(palette.labels).toEqual(['Toggle theme']);
+
+    await palette.close();
+    await palette.open();
+
+    expect(palette.query).toBe('');
+    expect(palette.labels).toEqual(['Home', 'Documentation', 'Toggle theme', 'Locked action']);
+
+    palette.unmount();
   });
 });

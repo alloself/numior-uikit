@@ -1,14 +1,10 @@
 <template>
-  <div class="flex w-full flex-col gap-3">
-    <NuiAlert title="Draft saved" description="Sync with the server in a minute." />
-    <NuiAlert tone="success" variant="outline" title="Project published" />
-    <NuiAlert
-      tone="error"
-      variant="solid"
-      title="Could not connect"
-      description="Check the network and retry."
-    />
-  </div>
+  <NuiAlert
+    class="w-full"
+    tone="error"
+    title="Payment for order 20412 failed"
+    description="The bank declined the card. Alina Yusuf got an email with a link to pay again."
+  />
 </template>
 
 <script setup lang="ts">

@@ -40,7 +40,9 @@ export const slotContent = (slot: Slot | undefined): SlotContent => {
     const nested = childrenOf(child);
 
     if (nested) {
-      queue.push(...nested);
+      for (const entry of nested) {
+        queue.push(entry);
+      }
     } else if (isIcon(child)) {
       icons += 1;
     } else if (!isIgnorable(child)) {

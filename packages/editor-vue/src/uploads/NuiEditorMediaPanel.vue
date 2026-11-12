@@ -104,15 +104,19 @@ const onPick = (): void => {
   if (picker.value !== null) {
     picker.value.value = '';
   }
-  if (files.length > 0) {
-    emit('files', files);
+  if (files.length === 0) {
+    return;
   }
+
+  emit('files', files);
 };
 
 watch(open, (value) => {
-  if (value) {
-    tab.value = 'upload';
-    session.value += 1;
+  if (!value) {
+    return;
   }
+
+  tab.value = 'upload';
+  session.value += 1;
 });
 </script>

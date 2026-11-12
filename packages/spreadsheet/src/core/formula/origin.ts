@@ -36,17 +36,17 @@ const inRows = (row: number): boolean => row >= 0 && row < MAX_ROWS;
 const inCols = (col: number): boolean => col >= 0 && col < MAX_COLS;
 
 const cellRange = (from: CellRef, to: CellRef, origin: CellAddress): CellRange | undefined => {
-  const rows = [rowOf(from, origin), rowOf(to, origin)];
-  const cols = [colOf(from, origin), colOf(to, origin)];
+  const rows: readonly [number, number] = [rowOf(from, origin), rowOf(to, origin)];
+  const cols: readonly [number, number] = [colOf(from, origin), colOf(to, origin)];
 
   if (!rows.every(inRows) || !cols.every(inCols)) {
     return undefined;
   }
   return {
-    top: Math.min(...rows),
-    bottom: Math.max(...rows),
-    left: Math.min(...cols),
-    right: Math.max(...cols),
+    top: Math.min(rows[0], rows[1]),
+    bottom: Math.max(rows[0], rows[1]),
+    left: Math.min(cols[0], cols[1]),
+    right: Math.max(cols[0], cols[1]),
   };
 };
 

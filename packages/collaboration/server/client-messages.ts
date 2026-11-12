@@ -53,6 +53,8 @@ export const parseClientMessage = (value: unknown): ClientMessage | undefined =>
       return Object.hasOwn(value, 'state')
         ? { kind: ClientMessageKind.Presence, state: value.state }
         : undefined;
+    case ClientMessageKind.Ping:
+      return { kind: ClientMessageKind.Ping };
     default:
       return undefined;
   }

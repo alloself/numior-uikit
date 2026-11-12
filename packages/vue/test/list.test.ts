@@ -37,12 +37,12 @@ describe('NuiList', () => {
     list.unmount();
 
     const ordered = ListDriver.mount({
-      props: { as: 'ol', variant: 'bordered', size: 'sm' },
+      props: { as: 'ol', variant: 'outline', size: 'sm' },
       parts: [{ label: 'One' }],
     });
 
     expect(ordered.tag).toBe('ol');
-    expect(ordered.hasModifier('variant-bordered')).toBe(true);
+    expect(ordered.hasModifier('variant-outline')).toBe(true);
     expect(ordered.modifierOf('One', 'size-sm')).toBe(true);
 
     ordered.unmount();

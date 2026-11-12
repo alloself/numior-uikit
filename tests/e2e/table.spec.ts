@@ -1,7 +1,19 @@
 import { expect, test } from './fixtures';
 import { boxOf } from './helpers/geometry';
+import type { TableSection } from './pages/table';
 
 const TREE_HEAD_ROWS = 1;
+const PIXEL_RATIOS = [0.9, 1.1, 1.25, 1.33, 1.5, 1.75];
+
+const SEAM_SCROLLS = [{ top: 3340 }, { top: 20_007 }, { top: 3340, left: 120 }];
+const SEAM_SCROLLS_RTL = [{ top: 3340 }, { top: 20_007 }, { top: 3340, left: -120 }];
+
+const menuEndGap = async (table: TableSection, col: number): Promise<number> => {
+  const menu = await boxOf(table.menu);
+  const header = await boxOf(table.header(col));
+
+  return Math.abs(menu.x + menu.width - header.x - header.width);
+};
 
 test.describe('table', () => {
   test('windowed table keeps its rows on screen before the scroll event catches up', async ({
@@ -25,6 +37,22 @@ test.describe('table', () => {
     expect(back.rows).toBeGreaterThan(5);
     expect(back.headerGap).toBeLessThan(1);
     await expect(table.cell(0, 1)).toBeVisible();
+  });
+
+  test('scrolls its rows off the main thread and changes the row under the pointer at once', async ({
+    playground,
+    table,
+    browserName,
+  }) => {
+    test.skip(browserName !== 'chromium', 'Layers are read through the Chromium protocol');
+    await playground.emulate({ reducedMotion: 'no-preference' });
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+    await expect(table.cell(0, 1)).toBeVisible();
+
+    expect(await table.repaintsOnScroll()).toBe(false);
+    expect(await table.fadesBackgroundUnder(2, 1)).toBe(false);
+    expect(await table.fadesBackgroundUnder(3, 1)).toBe(false);
   });
 
   test('windows ten thousand rows and keeps the pinned columns in place while scrolling', async ({
@@ -135,6 +163,41 @@ test.describe('table', () => {
     await table.resetColumns.click();
     await expect(table.output).toContainText('"columnOrder":[]');
     await expect(table.header(1)).toHaveText('Клиент');
+  });
+
+  test('the drop line of a carried column stays on a column edge while the table scrolls under a still pointer', async ({
+    playground,
+    table,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'mouse scenario');
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+    await expect(table.header(1)).toHaveText('Клиент');
+
+    await table.carryHeaderToEdge(1);
+
+    const drift = await table.dropLineDrift(20);
+
+    await table.releasePointer();
+
+    expect(drift.scrolled).toBeGreaterThan(40);
+    expect(drift.farthest).toBeLessThanOrEqual(2);
+  });
+
+  test('a tree row carried away and back to its own place stays there', async ({
+    playground,
+    table,
+  }) => {
+    await playground.open();
+    await table.tree.scrollIntoViewIfNeeded();
+    await expect(table.treeRow(0)).toContainText('Продажи');
+
+    await table.dragTreeRowAndReturn(0, 1);
+
+    await expect(table.treeRow(0)).toContainText('Продажи');
+    await expect(table.treeRow(1)).toContainText('Разработка');
+    await expect(table.output).toContainText('"lastReorder":null');
   });
 
   test('drags a tree row among its siblings and moves it from the keyboard', async ({
@@ -767,8 +830,7 @@ test.describe('table', () => {
     await table.openMenu(3);
     await expect(table.menu).toBeVisible();
 
-    const menu = await boxOf(table.menu);
-    expect(Math.abs(menu.x + menu.width - header.x - header.width)).toBeLessThanOrEqual(1);
+    await expect.poll(() => menuEndGap(table, 3)).toBeLessThanOrEqual(1);
 
     await page.keyboard.press('Escape');
     await expect(table.menu).toBeHidden();
@@ -835,6 +897,60 @@ test.describe('table', () => {
     await table.resetFilter();
     await expect(table.grid).toHaveAttribute('aria-rowcount', '10003');
     await expect(table.filterButton(10)).toHaveCount(0);
+  });
+
+  test('finds a value of a long column by search and hides only the unchecked one', async ({
+    playground,
+    table,
+  }) => {
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+    await table.openFilter(2);
+
+    await expect(table.filter).toHaveAccessibleName('Фильтр: Почта');
+    await expect(table.filterSearch).toBeFocused();
+    await expect(table.filterValues).toHaveCount(100);
+
+    await expect(table.filterNote).toHaveText(
+      'Показаны только первые значения. Остальные найдёт поиск.',
+    );
+
+    await table.filterAll.check();
+    await table.filterSearch.fill('zzz');
+
+    await expect(table.filterNote).toHaveText('Совпадений нет');
+    await expect(table.filterAll).toHaveCount(0);
+
+    await table.filterSearch.fill('CLIENT9999');
+
+    await expect(table.filterValues).toHaveCount(1);
+    await expect(table.filterValue('client9999@example.com')).toBeChecked();
+    expect(await playground.wcagViolations(table.scope)).toEqual([]);
+
+    await table.filterValue('client9999@example.com').uncheck();
+    await table.applyFilter();
+
+    await expect(table.filter).toBeHidden();
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '10002');
+
+    await expect(table.output).toContainText(
+      JSON.stringify([
+        { kind: 'set', key: 'email', values: ['client9999@example.com'], exclude: true },
+      ]),
+    );
+
+    await table.openFilter(2);
+
+    await expect(table.filterValues).toHaveCount(100);
+    await expect(table.filterAll).toHaveJSProperty('indeterminate', true);
+
+    await table.filterSearch.fill('client9999');
+
+    await expect(table.filterValue('client9999@example.com')).not.toBeChecked();
+
+    await table.resetFilter();
+
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '10003');
   });
 
   test('narrows the rows with the quick filter and a number range and clears both', async ({
@@ -1262,3 +1378,48 @@ test.describe('table', () => {
     }
   });
 });
+
+for (const ratio of PIXEL_RATIOS) {
+  test.describe(`table header at a pixel ratio of ${ratio}`, () => {
+    test.use({ deviceScaleFactor: ratio });
+
+    test('keeps scrolled rows from showing between the cells of its header and footer', async ({
+      playground,
+      table,
+      isMobile,
+    }) => {
+      test.skip(isMobile, 'pixel ratios of a desktop display');
+      await playground.emulate({ reducedMotion: 'reduce' });
+      await playground.open();
+      await table.root.scrollIntoViewIfNeeded();
+      await expect(table.cell(0, 1)).toBeVisible();
+
+      for (const scroll of SEAM_SCROLLS) {
+        const at = `at a scroll of ${JSON.stringify(scroll)}`;
+
+        expect(await table.headerLeak(scroll), `the header ${at}`).toBe(0);
+        expect(await table.footerLeak(scroll), `the footer ${at}`).toBe(0);
+      }
+    });
+
+    test('keeps scrolled rows from showing between the cells of its header and footer when it reads right to left', async ({
+      playground,
+      table,
+      isMobile,
+    }) => {
+      test.skip(isMobile, 'pixel ratios of a desktop display');
+      await playground.emulate({ reducedMotion: 'reduce' });
+      await playground.open();
+      await playground.setDirection('rtl');
+      await table.root.scrollIntoViewIfNeeded();
+      await expect(table.cell(0, 1)).toBeVisible();
+
+      for (const scroll of SEAM_SCROLLS_RTL) {
+        const at = `at a scroll of ${JSON.stringify(scroll)}`;
+
+        expect(await table.headerLeak(scroll), `the header ${at}`).toBe(0);
+        expect(await table.footerLeak(scroll), `the footer ${at}`).toBe(0);
+      }
+    });
+  });
+}

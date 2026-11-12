@@ -1,8 +1,19 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { EN_FORMULAS, parseFormula, type ConditionalRule, type PlacedRule } from '../src/core';
+import {
+  BASE_FUNCTIONS,
+  EN_FORMULAS,
+  createFunctionRegistry,
+  parseFormula,
+  type ConditionalRule,
+  type PlacedRule,
+} from '../src/core';
 import { EN_LOCALE, RU_LOCALE } from '../src/core/locale';
 import { formOf, parseArea, ruleOf, withKind } from '../src/sheet/rules/rule-form';
 import type { RuleForm } from '../src/sheet/rules/rules.types';
+
+const FUNCTIONS = createFunctionRegistry(BASE_FUNCTIONS);
+
+const signatures = (name: string) => FUNCTIONS.get(name);
 
 const area = (top: number, left: number, bottom = top, right = left) => ({
   top,
@@ -17,7 +28,7 @@ const placed = (rule: ConditionalRule, ranges = [area(1, 1, 9, 1)]): PlacedRule 
 });
 
 const ruleFrom = (form: RuleForm, locale = EN_LOCALE): ConditionalRule | undefined => {
-  const result = ruleOf(form, locale);
+  const result = ruleOf(form, locale, signatures);
 
   return result.ok ? result.draft.rule : undefined;
 };
@@ -149,25 +160,34 @@ describe('conditional rule form', () => {
   it('names the field that keeps the rule from being written', () => {
     const form = formOf(undefined, [area(0, 0)], EN_LOCALE);
 
-    expect(ruleOf({ ...form, area: 'nope' }, EN_LOCALE)).toEqual({ ok: false, field: 'area' });
-    expect(ruleOf(form, EN_LOCALE)).toEqual({ ok: false, field: 'first' });
+    expect(ruleOf({ ...form, area: 'nope' }, EN_LOCALE, signatures)).toEqual({
+      ok: false,
+      field: 'area',
+    });
 
-    expect(ruleOf({ ...form, operator: 'between', first: '1' }, EN_LOCALE)).toEqual({
+    expect(ruleOf(form, EN_LOCALE, signatures)).toEqual({ ok: false, field: 'first' });
+
+    expect(ruleOf({ ...form, operator: 'between', first: '1' }, EN_LOCALE, signatures)).toEqual({
       ok: false,
       field: 'second',
     });
 
-    expect(ruleOf({ ...form, kind: 'top', rank: '0' }, EN_LOCALE)).toEqual({
+    expect(ruleOf({ ...form, kind: 'top', rank: '0' }, EN_LOCALE, signatures)).toEqual({
       ok: false,
       field: 'rank',
     });
 
-    expect(ruleOf({ ...form, kind: 'expression', formula: '=SUM(' }, EN_LOCALE)).toEqual({
+    expect(
+      ruleOf({ ...form, kind: 'expression', formula: '=SUM(' }, EN_LOCALE, signatures),
+    ).toEqual({
       ok: false,
       field: 'formula',
     });
 
-    expect(ruleOf({ ...form, kind: 'text' }, EN_LOCALE)).toEqual({ ok: false, field: 'text' });
+    expect(ruleOf({ ...form, kind: 'text' }, EN_LOCALE, signatures)).toEqual({
+      ok: false,
+      field: 'text',
+    });
   });
 
   it('builds scales, bars and icon sets with even thresholds', () => {

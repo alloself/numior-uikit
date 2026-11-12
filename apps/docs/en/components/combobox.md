@@ -1,9 +1,11 @@
 # Combobox
 
-`NuiCombobox` is a field with a dropdown list that narrows as you type. Use it when there are many
-options and the right one is easier to find by its first letters: cities, employees, tags.
+A field with a list that narrows as you type.
 
 <Example name="combobox/Basic" />
+
+Pass the options to `options`, as for a [Select](/en/components/select). The list keeps the
+options whose label contains the typed text, in any letter case.
 
 ## Installation
 
@@ -17,45 +19,43 @@ import '@numior/vue/styles/combobox.css';
 
 ## Usage
 
-Pass the options in `options` in the same shape as for a [Select](/en/components/select): `value`
-and `label`. The list keeps the options whose label contains the typed text. The `clearable` prop
-adds a clear button.
-
-Change the size, the side of the list and the field states, then find a customer by the first letters.
+Change the size and the states of the field, then find a customer by name.
 
 <Configurator name="NuiCombobox" />
 
+The search ignores case, Latin accents and the difference between the Russian «е» and «ё». Your
+own function in `filter` gets the text in lower case only and compares on its own.
+
 ## Examples
 
-### Several values
+### Pick several values
 
-With `multiple` the selected options appear in the field as chips, and `v-model:values` holds
-their array. The `customValue` prop adds the typed text as a new value on Enter when the list has
-no such option.
+Add `multiple`.
 
 <Example name="combobox/Multiple" />
 
-### Server-side search
+The picked values show as chips in the field. Pass `customValue` to turn typed text into a new
+value when the user presses Enter and no option is highlighted.
 
-With `:filter="false"` the component does not filter the list itself. The `search` event arrives
-with the text on every input: load the options and pass them to `options`.
+### Search on the server
+
+Turn off the filter and handle the `search` event.
 
 <Example name="combobox/Async" />
 
-While the options are loading, pass `loading` to show a spinner in the list. The delay before a
-request and the response cache are up to your app.
+Keep `loading` on while the request runs, and ignore answers that arrive for an older query.
 
-### Custom option markup
+### Show more data in an option
 
-The `option` slot replaces an option row with your own markup, such as a department next to a
-name. The slot receives `option`, `selected` and `active`.
+Describe the row in the `option` slot.
 
 <Example name="combobox/Option" />
 
 ## Accessibility
 
-Focus stays in the field the whole time, and the arrow keys move through the options. Tab skips
-the clear, open and chip remove buttons: these actions are done with the keyboard from the field.
+The focus stays in the field while the arrow keys move through the options, and a screen reader
+reads the highlighted one. Tab skips the clear, list and chip remove buttons: Backspace in an empty
+field removes the last chip.
 
 <KeyboardReference name="NuiCombobox" />
 

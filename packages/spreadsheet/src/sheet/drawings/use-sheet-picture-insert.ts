@@ -5,13 +5,14 @@ import { markRaw } from 'vue';
 import {
   DrawingKind,
   PICTURE_TYPES,
-  StepKind,
   fittedPictureSize,
   freshDrawingId,
   insertDrawing,
   pictureAnchorAt,
   type DrawingSize,
 } from '../../core';
+import { applyLayout } from '../sheet-layout-step';
+import { NuiSpreadsheetRefusalReason } from '../sheet.types';
 import type { DrawingInsertOptions, PictureInsert } from './drawings.types';
 import { useSheetInsertSpot } from './use-sheet-insert-spot';
 
@@ -61,16 +62,18 @@ export const useSheetPictureInsert = (options: DrawingInsertOptions): PictureIns
       content: { kind: DrawingKind.Picture, media: id, type, bytes },
     });
 
-    if (options.editing.apply([{ kind: StepKind.SetLayout, sheet: sheet.name, layout }])) {
-      options.select(id, name);
+    if (!applyLayout(options.editing, sheet, layout)) {
+      return;
     }
+
+    options.select(id, name);
   };
 
   const insert = async (file: File): Promise<void> => {
     const natural = PICTURE_TYPES.includes(file.type) ? await naturalSize(file) : undefined;
 
     if (natural === undefined) {
-      options.announce(options.messages().pictureRefused);
+      options.refuse(NuiSpreadsheetRefusalReason.PictureFile, options.messages().pictureRefused);
       return;
     }
     place(file.type, new Uint8Array(await file.arrayBuffer()), natural);
@@ -81,19 +84,23 @@ export const useSheetPictureInsert = (options: DrawingInsertOptions): PictureIns
   dialog.onChange((files) => {
     const file = files?.[0];
 
-    if (file !== undefined) {
-      void insert(file);
+    if (file === undefined) {
+      return;
     }
+
+    void insert(file);
   });
 
   const onPaste = (event: ClipboardEvent): void => {
     const file = pastedImage(event.clipboardData);
 
-    if (file !== undefined && canInsert()) {
-      event.preventDefault();
-      event.stopPropagation();
-      void insert(file);
+    if (file === undefined || !canInsert()) {
+      return;
     }
+
+    event.preventDefault();
+    event.stopPropagation();
+    void insert(file);
   };
 
   const tools = (): readonly NuiMenuEntry[] =>

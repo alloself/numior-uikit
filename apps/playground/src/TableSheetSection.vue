@@ -3,7 +3,7 @@
     <div class="section-heading">
       <h2 id="table-sheet-title">Лист</h2>
       <span class="tag"
-        >NuiTable · bordered · cellStyle · rowHeaders · rowHeights · merges · frozenRows</span
+        >NuiTable · gridlines · cellStyle · rowHeaders · rowHeights · merges · frozenRows</span
       >
     </div>
     <div class="data-row">
@@ -19,7 +19,7 @@
     </div>
     <template v-if="shown">
       <div class="data-row">
-        <NuiSwitch v-model="bordered" data-testid="table-sheet-bordered">Сетка</NuiSwitch>
+        <NuiSwitch v-model="gridlines" data-testid="table-sheet-gridlines">Сетка</NuiSwitch>
         <NuiSwitch v-model="heat" data-testid="table-sheet-heat">Тепловая карта</NuiSwitch>
         <NuiSwitch v-model="windowed" data-testid="table-sheet-window">Окно строк</NuiSwitch>
         <NuiSwitch v-model="quarter" data-testid="table-sheet-quarter">Первый квартал</NuiSwitch>
@@ -36,7 +36,7 @@
         :get-key="(row) => row.index"
         :cell-style="styleOf"
         :merges="merges"
-        :bordered="bordered"
+        :gridlines="gridlines"
         :row-headers="ROW_HEADERS"
         :frozen-rows="frozen ? FROZEN_ROWS : 0"
         :hidden="quarter ? LATER_MONTHS : NO_COLUMNS"
@@ -263,7 +263,7 @@ const PEAK = Math.max(
 );
 
 const shown = ref(false);
-const bordered = ref(true);
+const gridlines = ref(true);
 const heat = ref(false);
 const windowed = ref(false);
 const quarter = ref(false);

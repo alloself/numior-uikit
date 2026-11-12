@@ -12,9 +12,11 @@ export const createEchoes = <V>(same: (a: V, b: V) => boolean): TableEchoes<V> =
     sent: (value) => {
       pending.push(value);
 
-      if (pending.length > LIMIT) {
-        pending.shift();
+      if (pending.length <= LIMIT) {
+        return;
       }
+
+      pending.shift();
     },
     echoed: (value) => {
       const index = pending.findIndex((sent) => same(sent, value));

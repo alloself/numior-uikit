@@ -46,10 +46,12 @@ const collect = (
     if (target === undefined) {
       throw new Error(`Unknown demo data: #demo/${name} in ${file}`);
     }
-    if (!found.includes(target)) {
-      found.push(target);
-      collect(demoRoot, locale, target, found);
+    if (found.includes(target)) {
+      continue;
     }
+
+    found.push(target);
+    collect(demoRoot, locale, target, found);
   }
   return found;
 };

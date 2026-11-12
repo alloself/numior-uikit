@@ -29,9 +29,11 @@ export const flattenTree = <T>(
   for (let index = roots.length - 1; index >= 0; index -= 1) {
     const row = roots[index];
 
-    if (row !== undefined) {
-      stack.push({ row, parent: -1, depth: 0 });
+    if (row === undefined) {
+      continue;
     }
+
+    stack.push({ row, parent: -1, depth: 0 });
   }
   while (stack.length > 0) {
     const entry = stack.pop();
@@ -48,9 +50,11 @@ export const flattenTree = <T>(
     for (let position = nested.length - 1; position >= 0; position -= 1) {
       const child = nested[position];
 
-      if (child !== undefined) {
-        stack.push({ row: child, parent: index, depth: entry.depth + 1 });
+      if (child === undefined) {
+        continue;
       }
+
+      stack.push({ row: child, parent: index, depth: entry.depth + 1 });
     }
   }
   return { rows, parents: Int32Array.from(parentList), depths: Uint16Array.from(depthList) };
@@ -89,10 +93,12 @@ const countChildren = (pass: Uint8Array, parents: Int32Array, root: number): Uin
   const counts = new Uint32Array(root + 1);
 
   for (let index = 0; index < pass.length; index += 1) {
-    if (pass[index] === 1) {
-      const slot = slotOf(parents, index, root);
-      counts[slot] = (counts[slot] ?? 0) + 1;
+    if (pass[index] !== 1) {
+      continue;
     }
+
+    const slot = slotOf(parents, index, root);
+    counts[slot] = (counts[slot] ?? 0) + 1;
   }
   return counts;
 };
@@ -116,11 +122,13 @@ const fillLists = (
   const lists = new Uint32Array(starts[root + 1] ?? 0);
 
   for (let index = 0; index < pass.length; index += 1) {
-    if (pass[index] === 1) {
-      const slot = slotOf(parents, index, root);
-      lists[cursors[slot] ?? 0] = index;
-      cursors[slot] = (cursors[slot] ?? 0) + 1;
+    if (pass[index] !== 1) {
+      continue;
     }
+
+    const slot = slotOf(parents, index, root);
+    lists[cursors[slot] ?? 0] = index;
+    cursors[slot] = (cursors[slot] ?? 0) + 1;
   }
   return lists;
 };
@@ -171,32 +179,68 @@ export const createSiblingSortJob = (
   };
 };
 
-export const walkTree = (tree: TreeLists, isExpanded: (index: number) => boolean): TreeWalk => {
-  const all: number[] = [];
-  const visible: number[] = [];
-  const stack: Array<{ readonly slot: number; readonly shown: boolean }> = [];
-  const roots = childrenOf(tree, tree.root);
+export const shownUnder = (
+  tree: TreeLists,
+  slot: number,
+  isExpanded: (index: number) => boolean,
+): number[] => {
+  const shown: number[] = [];
+  const stack: number[] = [];
 
-  for (let position = roots.length - 1; position >= 0; position -= 1) {
-    stack.push({ slot: roots[position] ?? 0, shown: true });
-  }
-  while (stack.length > 0) {
-    const entry = stack.pop();
-
-    if (entry === undefined) {
-      break;
-    }
-    all.push(entry.slot);
-
-    if (entry.shown) {
-      visible.push(entry.slot);
-    }
-    const nested = childrenOf(tree, entry.slot);
-    const shown = entry.shown && isExpanded(entry.slot);
+  const open = (parent: number): void => {
+    const nested = childrenOf(tree, parent);
 
     for (let position = nested.length - 1; position >= 0; position -= 1) {
-      stack.push({ slot: nested[position] ?? 0, shown });
+      stack.push(nested[position] ?? 0);
     }
+  };
+
+  open(slot);
+
+  while (stack.length > 0) {
+    const next = stack.pop();
+
+    if (next === undefined) {
+      break;
+    }
+    shown.push(next);
+
+    if ((tree.starts[next + 1] ?? 0) <= (tree.starts[next] ?? 0) || !isExpanded(next)) {
+      continue;
+    }
+
+    open(next);
   }
-  return { all: Uint32Array.from(all), visible: Int32Array.from(visible) };
+  return shown;
+};
+
+const everyNode = (): boolean => true;
+
+export const walkTree = (tree: TreeLists, isExpanded: (index: number) => boolean): TreeWalk => ({
+  all: Uint32Array.from(shownUnder(tree, tree.root, everyNode)),
+  visible: Int32Array.from(shownUnder(tree, tree.root, isExpanded)),
+});
+
+export const subtreeEnd = (refs: Int32Array, depths: Uint16Array, position: number): number => {
+  const depth = depths[refs[position] ?? 0] ?? 0;
+  let end = position + 1;
+
+  while (end < refs.length && (depths[refs[end] ?? 0] ?? 0) > depth) {
+    end += 1;
+  }
+  return end;
+};
+
+export const splicedRefs = (
+  refs: Int32Array,
+  start: number,
+  end: number,
+  inserted: readonly number[],
+): Int32Array => {
+  const next = new Int32Array(refs.length - (end - start) + inserted.length);
+
+  next.set(refs.subarray(0, start));
+  next.set(inserted, start);
+  next.set(refs.subarray(end), start + inserted.length);
+  return next;
 };

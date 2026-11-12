@@ -166,9 +166,11 @@ export const outdentCode: Command = (state, dispatch) => {
     for (const line of lineStarts(spot.text, from, to).toReversed()) {
       const width = /^ {1,2}|^\t/.exec(spot.text.slice(line))?.[0].length ?? 0;
 
-      if (width > 0) {
-        tr.delete(spot.start + line, spot.start + line + width);
+      if (width <= 0) {
+        continue;
       }
+
+      tr.delete(spot.start + line, spot.start + line + width);
     }
     return true;
   });

@@ -91,9 +91,9 @@ import {
   completeChecked,
   sameKeys,
 } from './cascade';
-import { findTreeItem, flattenTree, siblingIndicesOf, type TreeNode } from './flatten';
+import { findTreeItem, flattenTree, restIndexOf, siblingIndicesOf, type TreeNode } from './flatten';
 import {
-  CheckState,
+  NuiCheckState,
   NuiTreeSelectable,
   NuiTreeVariant,
   type NuiTreeItem,
@@ -120,8 +120,8 @@ const afterPaint = (callback: () => void): void => {
   requestAnimationFrame(() => requestAnimationFrame(callback));
 };
 
-const ariaChecked = (state: CheckState | undefined): boolean | 'mixed' =>
-  state === CheckState.Indeterminate ? AriaValue.Mixed : state === CheckState.Checked;
+const ariaChecked = (state: NuiCheckState | undefined): boolean | 'mixed' =>
+  state === NuiCheckState.Indeterminate ? AriaValue.Mixed : state === NuiCheckState.Checked;
 
 const FOLDING = {
   tag: 'ul',
@@ -197,7 +197,7 @@ const { keyOf, selectedKeys, choose } = useOptionSelection<T>({
 const expandedKeys = computed(() => new Set(expanded.value.map(keyOf)));
 
 const checkStates = computed(() =>
-  checkable ? checkStatesOf(items, selectedKeys.value, keyOf) : new Map<string, CheckState>(),
+  checkable ? checkStatesOf(items, selectedKeys.value, keyOf) : new Map<string, NuiCheckState>(),
 );
 
 const pending = shallowReactive(new Set<string>());
@@ -271,7 +271,7 @@ const nodeOf = (value: T): TreeItemState | undefined => {
     level: node.level,
     setSize: node.setSize,
     posInSet: node.posInSet,
-    expanded: node.hasChildren ? node.expanded : undefined,
+    expanded: node.hasChildren ? node.open : undefined,
     checked: checkable ? ariaChecked(checkStates.value.get(key)) : undefined,
     loading: node.loading,
   };
@@ -327,6 +327,16 @@ watch(visible, (next, previous) => {
   revealAdded(next.flatMap((node) => (before.has(node.key) ? [] : [node.key])));
 });
 
+watch(visible, (next, previous) => {
+  const key = activeKey.value;
+
+  if (key === undefined || indexByKey.value.has(key)) {
+    return;
+  }
+
+  activeKey.value = next[restIndexOf(previous, next, indexByKey.value, key)]?.key;
+});
+
 const setChecked = (next: ReadonlySet<string>): void => {
   values.value = collectCheckedValues(items, next, keyOf);
 };
@@ -335,9 +345,11 @@ const settlePending = (): void => {
   for (const key of pending) {
     const item = findTreeItem(items, key, keyOf);
 
-    if (!item || item.children !== undefined || !expandedKeys.value.has(key)) {
-      pending.delete(key);
+    if (item && item.children === undefined && expandedKeys.value.has(key)) {
+      continue;
     }
+
+    pending.delete(key);
   }
 };
 
@@ -347,9 +359,11 @@ const completeCascade = (): void => {
   }
   const next = completeChecked(items, selectedKeys.value, keyOf);
 
-  if (!sameKeys(next, selectedKeys.value)) {
-    setChecked(next);
+  if (sameKeys(next, selectedKeys.value)) {
+    return;
   }
+
+  setChecked(next);
 };
 
 watch([() => items, expandedKeys], settlePending);
@@ -361,10 +375,12 @@ const expandItems = (targets: readonly TreeNode<T>[]): void => {
     return;
   }
   for (const node of fresh) {
-    if (node.item.lazy && node.item.children === undefined) {
-      pending.add(node.key);
-      emit('load', node.item);
+    if (!node.item.lazy || node.item.children !== undefined) {
+      continue;
     }
+
+    pending.add(node.key);
+    emit('load', node.item);
   }
   expanded.value = [...expanded.value, ...fresh.map((node) => node.item.value)];
   for (const node of fresh) {
@@ -374,9 +390,11 @@ const expandItems = (targets: readonly TreeNode<T>[]): void => {
 
 const expandNode = (index: number): void => {
   const node = visible.value[index];
-  if (node) {
-    expandItems([node]);
+  if (!node) {
+    return;
   }
+
+  expandItems([node]);
 };
 
 const collapseNode = (index: number): void => {
@@ -472,9 +490,11 @@ const partOf = (event: Event, part: string): boolean =>
 const onPointerdown = (event: PointerEvent): void => {
   pointerModality.value = true;
   const node = visible.value[hitNode(event)];
-  if (node && !node.item.disabled) {
-    activeKey.value = node.key;
+  if (!node || node.item.disabled) {
+    return;
   }
+
+  activeKey.value = node.key;
 };
 
 const onClick = (event: MouseEvent): void => {
@@ -494,28 +514,34 @@ const onClick = (event: MouseEvent): void => {
 const onDblclick = (event: MouseEvent): void => {
   const index = hitNode(event);
   const node = visible.value[index];
-  if (node && !node.item.disabled && !partOf(event, 'toggle') && !partOf(event, 'checkbox')) {
-    toggleExpand(index);
+  if (!node || node.item.disabled || partOf(event, 'toggle') || partOf(event, 'checkbox')) {
+    return;
   }
+
+  toggleExpand(index);
 };
 
 const measureRow = (): void => {
   const row = root.value?.querySelector('.nui-list-item');
   const measured = row instanceof HTMLElement ? row.getBoundingClientRect().height : 0;
 
-  if (measured > 0) {
-    rowScale.value = measured / ROW_SIZES[size];
+  if (measured <= 0) {
+    return;
   }
+
+  rowScale.value = measured / ROW_SIZES[size];
 };
 
 const measureFrame = (): void => {
   const element = root.value;
 
-  if (element) {
-    const style = getComputedStyle(element);
-
-    framePadding.value = lengthOf(style.paddingBlockStart) + lengthOf(style.paddingBlockEnd);
+  if (!element) {
+    return;
   }
+
+  const style = getComputedStyle(element);
+
+  framePadding.value = lengthOf(style.paddingBlockStart) + lengthOf(style.paddingBlockEnd);
 };
 
 onMounted(() => {
@@ -523,8 +549,10 @@ onMounted(() => {
   if (itemHeight === undefined) {
     measureRow();
   }
-  if (virtual) {
-    measureFrame();
+  if (!virtual) {
+    return;
   }
+
+  measureFrame();
 });
 </script>

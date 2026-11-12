@@ -52,6 +52,17 @@ describe('NuiTable merged cells', () => {
     expect(grid.cellMerged(0, 1)).toBe(false);
   });
 
+  it('keeps the focus in the table when the focused cell goes under a new merge', async () => {
+    const grid = mountStaff({ props: { merges: [] } });
+
+    await grid.settle();
+    await grid.focusCell(2, 2);
+    await grid.receive({ merges: [BLOCK] });
+
+    expect(grid.cell(2, 2)).toBeNull();
+    expect(grid.focusedCell).toEqual({ row: 1, col: 1 });
+  });
+
   it('moves the cursor onto a merge and leaves it from its far edge along the same row', async () => {
     const grid = mountStaff();
     await grid.settle();

@@ -5,6 +5,7 @@ import type { FormRules } from '../core/rules';
 import type { SubmitHandler } from '../core/submit';
 import type { DeepPartial, FormPath, FormPathValue } from '../paths/paths.types';
 import type {
+  CheckErrorHandler,
   FieldValidation,
   FormMessage,
   FormMeta,
@@ -25,6 +26,7 @@ export interface UseFormOptions<V extends object, O = V> {
   readonly rules?: FormRules<V> | undefined;
   readonly validateOn?: ValidateOn | undefined;
   readonly engine?: FormEngineFactory | undefined;
+  readonly onCheckError?: CheckErrorHandler | undefined;
   readonly onSubmit: SubmitHandler<V, O>;
 }
 

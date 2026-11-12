@@ -1,5 +1,6 @@
 export {
   blockDecoration,
+  blockDecorationSet,
   decorationSet,
   emptyDecorations,
   inlineDecoration,
@@ -19,6 +20,7 @@ export { StepFailure, StepKind } from './transform/step.types';
 export { UploadChangeKind } from './uploads/uploads.types';
 export type {
   BlockDecoration,
+  BlockDecorationGroups,
   DecorationSet,
   InlineDecoration,
   WidgetDecoration,
@@ -26,7 +28,7 @@ export type {
 export { createDoc } from './doc/doc';
 export type { Doc, NodeVisitor, ResolvedPos, Slice } from './doc/doc.types';
 export { createEmptyDoc, isEmptyDoc } from './doc/empty';
-export { fromJSON, toJSON } from './doc/json';
+export { fromJSON, sameDocJSON, toJSON } from './doc/json';
 export type {
   DocJSON,
   DocJSONIssue,
@@ -69,6 +71,7 @@ export { moveBlock, placeBeside } from './commands/move-across';
 export type { BlockTarget, ColumnTypes } from './commands/move-across';
 export { BesideSide, type BlockMaker } from './commands/commands.types';
 export { insertHTML, insertPlainText, pasteSchema } from './commands/paste';
+export { clipboardHTML } from './html/clipboard';
 export { fromHTML } from './html/parse';
 export { detectPasteSource } from './html/sources';
 export { contentToHTML, createHTMLWriter, toHTML } from './html/serialize';
@@ -106,6 +109,7 @@ export type {
   MarkType,
   NodeMaker,
   NodeParseRule,
+  NodePlainText,
   NodeSpec,
   NodeType,
   ParsedAttrs,
@@ -115,10 +119,12 @@ export type {
   SchemaSpec,
 } from './schema/schema.types';
 export { createMapping, createStepMap } from './transform/mapping';
+export { StepMapKind } from './transform/mapping.types';
 export type {
   Assoc,
   MapRange,
   MapResult,
+  MapSpan,
   Mappable,
   Mapping,
   StepMap,
@@ -148,19 +154,20 @@ export {
 } from './commands/input';
 export { isAtom } from './commands/atoms';
 export { setBlockType } from './commands/block-type';
+export { insertBelow } from './commands/below';
 export {
   chainCommands,
   deleteSelection,
-  joinBackward,
-  joinForward,
   selectAll,
   splitBlock,
   toggleMark,
 } from './commands/commands';
+export { joinBackward, joinForward } from './commands/join';
 export {
   activeBlock,
   activeMarks,
   ancestorTypes,
+  canMark,
   insertMarked,
   markAttrs,
   markExtent,
@@ -230,8 +237,11 @@ export type {
   SuggestionState,
 } from './suggest/suggest.types';
 export { createMetaKey, definePlugin } from './state/plugin';
+export { blockSpotOf, blockSpots, leaveBlockSpot, peerSpotsOf, setBlockSpot } from './spots/spots';
+export type { BlockSpot, BlockSpotState, PeerSpot } from './spots/spots.types';
 export {
   isCursor,
+  followPosition,
   mapSelection,
   nearestCursor,
   selectionRange,

@@ -9,9 +9,11 @@ import type {
   NuiTableRange,
   NuiTableRanges,
   NuiTableRect,
-  TableCellPosition,
+  NuiTableCellPosition,
+  NuiTableScrollAnchor,
+  NuiTableSourceCell,
 } from '@numior/table';
-import type { NuiListEntry, NuiMenuEntry, NuiTabDescriptor } from '@numior/vue';
+import type { NuiListEntry, NuiMenuEntry, NuiSize, NuiTabDescriptor } from '@numior/vue';
 import type { ComponentPublicInstance, ComputedRef, Ref, ShallowRef } from 'vue';
 import type {
   BookLocale,
@@ -23,15 +25,19 @@ import type {
   ConditionalLook,
   FontStyle,
   HelpLanguage,
+  LineChange,
   RecalcOptions,
   ReferenceSpan,
   SignaturePart,
   Sheet,
   ThemePalette,
+  WorkbookPeer,
+  WorkbookPlace,
   Workbook,
   WorkbookDocument,
   WorkbookStep,
 } from '../core';
+import { StepRefusal } from '../core';
 import type { LimitationsReport, OriginalPackage } from '../xlsx/read/read.types';
 import type { NuiSpreadsheetSaveAdapter } from './file/file.types';
 import type { NuiSpreadsheetMessages } from './spreadsheet.messages';
@@ -45,6 +51,33 @@ export interface FormulaSegment {
 export type FrameGrip = (typeof FrameGrip)[keyof typeof FrameGrip];
 
 export type RecalcPhase = (typeof RecalcPhase)[keyof typeof RecalcPhase];
+
+export type NuiSpreadsheetRefusalReason =
+  (typeof NuiSpreadsheetRefusalReason)[keyof typeof NuiSpreadsheetRefusalReason];
+
+export interface NuiSpreadsheetRefusal {
+  readonly reason: NuiSpreadsheetRefusalReason;
+  readonly message: string;
+}
+
+export type RefusalText = (refusal: StepRefusal) => string;
+
+export type Refuse = (reason: NuiSpreadsheetRefusalReason, message: string) => void;
+
+export interface SheetNote {
+  readonly text: Readonly<ShallowRef<string>>;
+  readonly shown: Readonly<ShallowRef<boolean>>;
+  show(text: string): void;
+  hide(): void;
+  hold(): void;
+  release(): void;
+}
+
+export interface SheetNoteProps {
+  readonly text: string;
+  readonly shown: boolean;
+  readonly lifted: boolean;
+}
 
 export type CellOutdated = (sheet: Sheet, row: number, col: number) => boolean;
 
@@ -105,6 +138,7 @@ export interface SheetTabsProps {
 
 export interface SheetCellEditorProps {
   invalid?: boolean | undefined;
+  size?: NuiSize | undefined;
 }
 
 export interface SheetReferenceProps {
@@ -136,6 +170,7 @@ export interface SheetReferences {
   onGripDown(event: PointerEvent, frame: ReferenceFrame, grip: FrameGrip): void;
   onGripMove(event: PointerEvent): void;
   onGripUp(): void;
+  follow(lines: readonly LineChange[], sheet: string): void;
 }
 
 export interface SheetCellsOptions {
@@ -150,14 +185,20 @@ export type ConditionalLookAt = (row: number, col: number) => ConditionalLook | 
 
 export type LookKeys = (look: ConditionalLook) => string;
 
+export type SheetSource = Required<NuiTableCellSource>;
+
 export interface SheetCells {
-  readonly source: NuiTableCellSource;
+  readonly source: SheetSource;
   readonly merges: readonly NuiTableRange[];
   readonly frozenRows: number;
   readonly frozenCols: number;
   readonly rowHeights: Readonly<Record<number, number>>;
   readonly gridlines: boolean;
   readonly rightToLeft: boolean;
+  readonly textAt: (position: number, column: number) => string;
+  readonly lookAt: (row: number, col: number) => NuiTableSourceCell | undefined;
+  readonly cellOf: (position: number, column: number) => CellAddress;
+  readonly rangeOf: (range: NuiTableRange) => CellRange;
   readonly rowAt: (position: number) => number;
   readonly colAt: (position: number) => number;
   readonly rowNear: (line: number) => number;
@@ -189,6 +230,7 @@ export interface NuiSpreadsheetProps {
   source?: OriginalPackage | undefined;
   saveFile?: NuiSpreadsheetSaveAdapter | undefined;
   collaboration?: WorkbookDocument | undefined;
+  peers?: readonly WorkbookPeer[] | undefined;
 }
 
 export interface SheetRecalcOptions {
@@ -226,10 +268,16 @@ export interface ReportLine {
 export interface NuiSpreadsheetExposed {
   refresh(): void;
   apply(steps: readonly WorkbookStep[]): boolean;
+  mergeCells(): boolean;
+  unmergeCells(): boolean;
   openRules(): void;
   save(): Promise<boolean>;
   open(file: File): Promise<boolean>;
 }
+
+export type NuiSpreadsheetPeer = WorkbookPeer;
+
+export type NuiSpreadsheetPlace = WorkbookPlace;
 
 export interface NuiSpreadsheetSelection {
   readonly active: CellAddress;
@@ -250,6 +298,46 @@ export interface SheetSelectionOptions {
   readonly model: Ref<NuiSpreadsheetSelection | undefined>;
 }
 
+export interface SheetHeldRange {
+  readonly lines: CellRange;
+  readonly up: boolean;
+  readonly back: boolean;
+}
+
+export interface SheetHeldCell {
+  readonly line: CellAddress;
+  readonly position: NuiTableCellPosition;
+}
+
+export interface SheetHeldView {
+  readonly anchor: NuiTableScrollAnchor;
+  readonly row: number | undefined;
+  readonly col: number | undefined;
+}
+
+export interface SheetHold {
+  readonly cells: SheetCells;
+  readonly active: SheetHeldCell | undefined;
+  readonly draft: SheetHeldCell | undefined;
+  readonly ranges: readonly SheetHeldRange[];
+  readonly view: SheetHeldView | undefined;
+}
+
+export interface SheetPlacesOptions {
+  readonly sheet: () => Sheet | undefined;
+  readonly cells: () => SheetCells | undefined;
+  readonly formula: FormulaBar;
+  readonly editing: SheetEditing;
+  readonly table: Readonly<ShallowRef<NuiTableExposed | null>>;
+  readonly messages: ComputedRef<NuiSpreadsheetMessages>;
+  readonly refuse: Refuse;
+}
+
+export interface SheetPlaces {
+  hold(): SheetHold | undefined;
+  restore(held: SheetHold | undefined, lines: readonly LineChange[]): void;
+}
+
 export interface SheetLinesOptions {
   readonly sheet: () => Sheet | undefined;
   readonly selection: SheetSelection;
@@ -257,8 +345,45 @@ export interface SheetLinesOptions {
   readonly messages: ComputedRef<NuiSpreadsheetMessages>;
   readonly readonly: () => boolean;
   readonly extra: () => NuiSpreadsheetContextMenu | undefined;
+  readonly cells: () => readonly NuiMenuEntry[];
   readonly tools: () => readonly NuiMenuEntry[];
+}
+
+export type CellMeasure = (
+  text: string,
+  style: NuiTableCellStyle | undefined,
+) => number | undefined;
+
+export interface SheetLineSizesOptions {
+  readonly sheet: () => Sheet | undefined;
+  readonly cells: () => SheetCells | undefined;
+  readonly ranges: () => NuiTableRanges;
+  readonly readonly: () => boolean;
+  readonly editing: Pick<SheetEditing, 'apply'>;
+  readonly messages: ComputedRef<NuiSpreadsheetMessages>;
+  readonly refuse: Refuse;
+  readonly measure: CellMeasure;
+  readonly notify: (text: string) => void;
   readonly announce: (text: string) => void;
+}
+
+export interface SheetMergesOptions {
+  readonly book: () => Workbook;
+  readonly calculator: () => Calculator;
+  readonly sheet: () => Sheet | undefined;
+  readonly selection: SheetSelection;
+  readonly editing: SheetEditing;
+  readonly messages: ComputedRef<NuiSpreadsheetMessages>;
+  readonly readonly: () => boolean;
+  readonly refuse: Refuse;
+  readonly announce: (text: string) => void;
+  readonly notify: (text: string) => void;
+}
+
+export interface SheetMerges {
+  merge(): boolean;
+  unmerge(): boolean;
+  tools(): readonly NuiMenuEntry[];
 }
 
 export interface SheetLines {
@@ -294,6 +419,7 @@ export interface SheetEditingOptions {
   readonly recalc: SheetRecalc;
   readonly collaboration: () => WorkbookDocument | undefined;
   readonly changed: (change: NuiSpreadsheetChange) => void;
+  readonly refused: (refusal: StepRefusal, message: string | undefined) => void;
 }
 
 export interface SheetEditing {
@@ -301,9 +427,11 @@ export interface SheetEditing {
   readonly revision: Readonly<Ref<number>>;
   readonly commands: NuiTableCommandSink<number>;
   setDraft(next: NuiTableDraft | undefined): void;
-  apply(steps: readonly WorkbookStep[]): boolean;
+  moveDraft(position: NuiTableCellPosition): void;
+  apply(steps: readonly WorkbookStep[], say?: RefusalText): boolean;
+  attempt(steps: readonly WorkbookStep[]): StepRefusal | undefined;
   redraw(): void;
-  inputAt(position: TableCellPosition): string;
+  inputAt(position: NuiTableCellPosition): string;
   editableColumns(columns: readonly NuiTableColumn<number>[]): NuiTableColumn<number>[];
 }
 
@@ -346,7 +474,7 @@ export interface FormulaBarOptions {
 }
 
 export interface FormulaBar {
-  readonly active: Ref<TableCellPosition | undefined>;
+  readonly active: Ref<NuiTableCellPosition | undefined>;
   readonly ranges: Ref<NuiTableRanges>;
   readonly nameText: ComputedRef<string>;
   readonly nameInvalid: Readonly<Ref<boolean>>;
@@ -406,6 +534,8 @@ export interface SheetFillOptions {
   readonly table: Readonly<ShallowRef<NuiTableExposed | null>>;
   readonly root: Readonly<ShallowRef<HTMLElement | null>>;
   readonly readonly: () => boolean;
+  readonly messages: ComputedRef<NuiSpreadsheetMessages>;
+  readonly refuse: Refuse;
 }
 
 export type SheetFillTarget =
@@ -475,3 +605,14 @@ export const FrameGrip = {
 } as const;
 
 export const RecalcPhase = { Idle: 'idle', Running: 'running', Stopped: 'stopped' } as const;
+
+export const NuiSpreadsheetRefusalReason = {
+  ...StepRefusal,
+  FillMerged: 'fill-merged',
+  MergeBlocked: 'merge-blocked',
+  CellGone: 'cell-gone',
+  LinesTooMany: 'lines-too-many',
+  PivotSource: 'pivot-source',
+  ChartData: 'chart-data',
+  PictureFile: 'picture-file',
+} as const;

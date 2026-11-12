@@ -120,4 +120,60 @@ describe('parseFormConfig', () => {
       issues: [{ path: 'fields', code: 'not-a-list' }],
     });
   });
+
+  it('reports a pattern that is not a regular expression at its rule and keeps valid patterns working', async () => {
+    const broken = parseFormConfig<Signup>(
+      [
+        {
+          kind: 'field',
+          type: 'text',
+          name: 'name',
+          rules: [{ rule: 'required' }, { rule: 'pattern', source: '(' }],
+        },
+        {
+          kind: 'section',
+          title: 'Company',
+          fields: [
+            {
+              kind: 'field',
+              type: 'text',
+              name: 'company',
+              rules: [{ rule: 'pattern', source: '^a', flags: 'zz' }],
+            },
+          ],
+        },
+      ],
+      { controls: kitControls },
+    );
+
+    expect(broken).toEqual({
+      kind: 'error',
+      issues: [
+        { path: 'fields.0.rules.1', code: 'invalid-pattern' },
+        { path: 'fields.1.fields.0.rules.0', code: 'invalid-pattern' },
+      ],
+    });
+
+    const parsed = parseFormConfig<Signup>(
+      [
+        {
+          kind: 'field',
+          type: 'text',
+          name: 'name',
+          rules: [{ rule: 'pattern', source: '^[a-z]+$', flags: 'i', message: 'Letters only' }],
+        },
+      ],
+      { controls: kitControls },
+    );
+
+    if (parsed.kind !== 'ok') {
+      throw new Error(JSON.stringify(parsed.issues));
+    }
+
+    const smart = SmartFormDriver.mount({ initialValues: blank, fields: parsed.fields });
+
+    await smart.type('name', 'R2');
+    await smart.submit();
+    expect(smart.error('name')).toBe('Letters only');
+  });
 });

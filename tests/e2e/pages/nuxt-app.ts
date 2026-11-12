@@ -35,9 +35,11 @@ export class NuxtApp {
     this.swatch = page.getByTestId('swatch');
 
     page.on('console', (message) => {
-      if (message.type() === 'warning' || message.type() === 'error') {
-        this.console.push(message.text());
+      if (message.type() !== 'warning' && message.type() !== 'error') {
+        return;
       }
+
+      this.console.push(message.text());
     });
 
     page.on('pageerror', (error) => {

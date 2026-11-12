@@ -7,7 +7,7 @@
     :merges="merges"
     :cell-style="styleOf"
     :column-menu="false"
-    bordered
+    gridlines
     caption="Программа дня"
   />
 </template>

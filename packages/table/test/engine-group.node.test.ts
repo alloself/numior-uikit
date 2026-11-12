@@ -193,4 +193,35 @@ describe('createTableEngine groups', () => {
 
     expect(found).toEqual(expected);
   });
+
+  it('keeps values the collator calls equal in groups of their own', async () => {
+    const pattern = ['1', '1', '01', '1', '1', '1', '01', '1'];
+
+    const ordersOf = (repeats: number): Order[] =>
+      Array.from({ length: pattern.length * repeats }, (_, index) => ({
+        id: index + 1,
+        city: null,
+        country: pattern[index % pattern.length] ?? '',
+        amount: 1,
+        paid: null,
+        created: null,
+        note: null,
+      }));
+
+    const few = new EngineHarness(ORDER_TOTALS, ordersOf(1), { defaultExpanded: false });
+    const many = new EngineHarness(ORDER_TOTALS, ordersOf(300), { defaultExpanded: false });
+
+    await few.runToEnd({ groupBy: ['country'] });
+    await many.runToEnd({ groupBy: ['country'] });
+
+    expect(few.render(label)).toEqual([
+      'country=1 (6) sum=6 count=6',
+      'country=01 (2) sum=2 count=2',
+    ]);
+
+    expect(many.render(label)).toEqual([
+      'country=1 (1800) sum=1800 count=1800',
+      'country=01 (600) sum=600 count=600',
+    ]);
+  });
 });

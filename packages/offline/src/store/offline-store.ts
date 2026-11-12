@@ -71,9 +71,11 @@ const dropCovered = async (steps: IDBObjectStore, version: number): Promise<void
   const keys = await requested(steps.getAllKeys());
 
   keys.forEach((key) => {
-    if (typeof key === 'number' && key < version) {
-      steps.delete(key);
+    if (typeof key !== 'number' || key >= version) {
+      return;
     }
+
+    steps.delete(key);
   });
 };
 
@@ -197,9 +199,11 @@ export const openOfflineStore = async (
     await finished(transaction);
     logged += records.length;
 
-    if (logged > compactAfter) {
-      await compact();
+    if (logged <= compactAfter) {
+      return;
     }
+
+    await compact();
   };
 
   const removeAlternative = async (alternative: CollabAlternative): Promise<void> => {

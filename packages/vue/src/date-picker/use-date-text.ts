@@ -84,9 +84,11 @@ export const useDateText = (options: DateTextOptions): DateText => {
     () => {
       const value = options.value();
 
-      if (echo.take() !== value && parse(draft.value) !== value) {
-        draft.value = display(value);
+      if (echo.take() === value || parse(draft.value) === value) {
+        return;
       }
+
+      draft.value = display(value);
     },
   );
 

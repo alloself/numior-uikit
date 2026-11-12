@@ -42,14 +42,18 @@ const verify = async (value: string): Promise<void> => {
   await promiseTimeout(600);
   check.value = value === SENT_CODE ? 'passed' : 'failed';
 
-  if (check.value === 'failed') {
-    code.value = '';
+  if (check.value !== 'failed') {
+    return;
   }
+
+  code.value = '';
 };
 
 watch(code, (value) => {
-  if (check.value === 'failed' && value !== '') {
-    check.value = 'waiting';
+  if (check.value !== 'failed' || value === '') {
+    return;
   }
+
+  check.value = 'waiting';
 });
 </script>

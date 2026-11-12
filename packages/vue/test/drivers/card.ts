@@ -10,8 +10,16 @@ export interface CardParts {
   readonly description?: string | undefined;
   readonly actions?: boolean | undefined;
   readonly content?: string | undefined;
+  readonly contentLines?: number | undefined;
   readonly footer?: string | undefined;
   readonly media?: NuiCardMediaProps | undefined;
+}
+
+export interface CardPlaceholders {
+  readonly title: number;
+  readonly description: number;
+  readonly content: number;
+  readonly media: number;
 }
 
 export interface CardMountOptions {
@@ -80,6 +88,27 @@ export class CardDriver extends ComponentDriver {
 
   get hasPlaceholder(): boolean {
     return this.wrapper.find('.nui-card__placeholder').exists();
+  }
+
+  get busy(): boolean {
+    return this.wrapper.find('.nui-card').attributes('aria-busy') === 'true';
+  }
+
+  get placeholders(): CardPlaceholders {
+    return {
+      title: this.wrapper.findAll('.nui-card__title .nui-skeleton__line').length,
+      description: this.wrapper.findAll('.nui-card__description .nui-skeleton__line').length,
+      content: this.wrapper.findAll('.nui-card__content .nui-skeleton__line').length,
+      media: this.wrapper.findAll('.nui-card__media .nui-skeleton--shape-rect').length,
+    };
+  }
+
+  get text(): string {
+    return this.wrapper.find('.nui-card').text();
+  }
+
+  async load(card: NuiCardProps): Promise<void> {
+    await this.scene.setProps({ card });
   }
 
   get clicks(): number {

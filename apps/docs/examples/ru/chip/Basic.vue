@@ -1,8 +1,7 @@
 <template>
-  <NuiChip icon="user">Анна Титова</NuiChip>
-  <NuiChip tone="primary">Дизайн-система</NuiChip>
-  <NuiChip>Vue</NuiChip>
-  <NuiChip variant="outline">Доступность</NuiChip>
+  <NuiChip tone="primary">Новинка</NuiChip>
+  <NuiChip tone="success">Скидка</NuiChip>
+  <NuiChip variant="outline">Под заказ</NuiChip>
 </template>
 
 <script setup lang="ts">

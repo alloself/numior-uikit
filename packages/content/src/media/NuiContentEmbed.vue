@@ -21,14 +21,18 @@
 import { useMessages } from '@numior/primitives';
 import { computed } from 'vue';
 import type { NuiContentViewProps } from '../content/content.types';
-import { EMBED_PRESETS, embedLabel, resolveEmbed, type NuiEmbedProvider } from '../content/embeds';
+import { useAllowedEmbeds } from '../content/embed-context';
+import { embedLabel, resolveEmbed, type NuiEmbedProvider } from '../content/embeds';
 import { contentMessages } from './media.messages';
 
-const { node, providers = Object.values(EMBED_PRESETS) } = defineProps<
+const NO_PROVIDERS: readonly NuiEmbedProvider[] = [];
+
+const { node, providers } = defineProps<
   NuiContentViewProps & { providers?: readonly NuiEmbedProvider[] | undefined }
 >();
 
 const texts = useMessages(contentMessages);
+const allowed = useAllowedEmbeds();
 
 const textOf = (value: unknown): string => (typeof value === 'string' ? value : '');
 
@@ -36,5 +40,8 @@ const url = computed(() => textOf(node.attrs.url));
 const provider = computed(() => textOf(node.attrs.provider));
 const caption = computed(() => textOf(node.attrs.caption));
 const label = computed(() => embedLabel(provider.value));
-const embed = computed(() => resolveEmbed(url.value, providers, provider.value));
+
+const embed = computed(() =>
+  resolveEmbed(url.value, providers ?? allowed?.() ?? NO_PROVIDERS, provider.value),
+);
 </script>

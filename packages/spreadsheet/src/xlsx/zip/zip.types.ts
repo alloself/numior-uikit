@@ -35,6 +35,10 @@ export type ZipWriteEntry =
     }
   | { readonly name: string; readonly copy: ZipRawEntry };
 
+export interface ZipReadOptions {
+  readonly maxSize?: number | undefined;
+}
+
 export interface ZipOptions {
   readonly codec?: ZipCodec | undefined;
   readonly signal?: AbortSignal | undefined;

@@ -11,6 +11,7 @@ export interface NuiPaginationProps {
   pageSizes?: readonly number[] | undefined;
   showRange?: boolean | undefined;
   size?: NuiSize | undefined;
+  locale?: string | undefined;
   label?: string | undefined;
   previousLabel?: string | undefined;
   nextLabel?: string | undefined;

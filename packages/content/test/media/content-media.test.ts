@@ -109,12 +109,47 @@ describe('NuiContent media views', () => {
         node('embed', [], { url: 'https://board.test/42', provider: 'board' }),
       ),
       views: contentMediaViews,
+      embeds: ['youtube'],
     });
 
     expect(driver.embeds).toEqual([
       'frame:https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ:YouTube embed:allow-scripts allow-same-origin allow-popups allow-presentation',
       'link:https://evil.test/watch?v=dQw4w9WgXcQ',
       'link:https://board.test/42',
+    ]);
+  });
+
+  it('shows a link in place of a player the page does not allow', () => {
+    const video = docOf(
+      node('embed', [], { url: 'https://youtu.be/dQw4w9WgXcQ', provider: 'youtube' }),
+    );
+
+    driver = ContentDriver.mount({ document: video, views: contentMediaViews });
+    expect(driver.embeds).toEqual(['link:https://youtu.be/dQw4w9WgXcQ']);
+
+    driver.destroy();
+    driver = ContentDriver.mount({ document: video, views: contentMediaViews, embeds: ['vimeo'] });
+
+    expect(driver.embeds).toEqual(['link:https://youtu.be/dQw4w9WgXcQ']);
+  });
+
+  it('plays an embed of a provider the page describes itself', () => {
+    driver = ContentDriver.mount({
+      document: docOf(node('embed', [], { url: 'https://board.test/42', provider: 'board' })),
+      views: contentMediaViews,
+      embeds: [
+        {
+          id: 'board',
+          label: 'Board',
+          aspect: 1,
+          source: (url) =>
+            url.hostname === 'board.test' ? `https://board.test/embed${url.pathname}` : undefined,
+        },
+      ],
+    });
+
+    expect(driver.embeds).toEqual([
+      'frame:https://board.test/embed/42:Board embed:allow-scripts allow-same-origin allow-popups allow-presentation',
     ]);
   });
 });

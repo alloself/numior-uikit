@@ -31,8 +31,8 @@ const docs: DocsMap = {
     },
     models: {
       'v-model:ratio': {
-        ru: 'Доля первой панели от 0 до 1.',
-        en: 'Share of the first pane from 0 to 1.',
+        ru: 'Доля первой панели от 0 до 1. Значение вне `min` и `max` показывается на ближайшей границе.',
+        en: 'Share of the first pane from 0 to 1. A value outside `min` and `max` is shown at the nearest bound.',
       },
     },
     slots: {

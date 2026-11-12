@@ -75,9 +75,11 @@ export const compareExamples = (root: string): string[] => {
 
   for (const locale of EXAMPLE_LOCALES) {
     for (const name of names[locale]) {
-      if (!names[otherLocale(locale)].includes(name)) {
-        problems.push(`${otherLocale(locale)}/${name} is missing`);
+      if (names[otherLocale(locale)].includes(name)) {
+        continue;
       }
+
+      problems.push(`${otherLocale(locale)}/${name} is missing`);
     }
   }
   for (const name of names.ru.filter((entry) => names.en.includes(entry))) {
@@ -90,9 +92,11 @@ export const compareExamples = (root: string): string[] => {
     for (const file of [...styledFiles(ru), ...styledFiles(en)]) {
       problems.push(`${file} has a style block`);
     }
-    if (sourcesSignature(ru) !== sourcesSignature(en)) {
-      problems.push(`ru/${name} and en/${name} differ beyond their strings`);
+    if (sourcesSignature(ru) === sourcesSignature(en)) {
+      continue;
     }
+
+    problems.push(`ru/${name} and en/${name} differ beyond their strings`);
   }
   return problems;
 };

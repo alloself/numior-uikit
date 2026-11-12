@@ -159,6 +159,7 @@
           {
             "type": "table_column",
             "attrs": {
+              "key": "c0",
               "name": "Задача",
               "type": "text",
               "width": null,
@@ -169,6 +170,7 @@
           {
             "type": "table_column",
             "attrs": {
+              "key": "c1",
               "name": "Срок",
               "type": "text",
               "width": null,
@@ -187,12 +189,14 @@
               {
                 "type": "table_cell",
                 "attrs": {
+                  "column": "c0",
                   "value": "Релиз"
                 }
               },
               {
                 "type": "table_cell",
                 "attrs": {
+                  "column": "c1",
                   "value": "15 ноября"
                 }
               }

@@ -16,7 +16,7 @@
       v-model="delivery"
       :items="deliveries"
       selectable="single"
-      variant="bordered"
+      variant="outline"
       label="Доставка"
     />
     <NuiInput v-model="comment" label="Комментарий курьеру" placeholder="Код домофона, этаж" />

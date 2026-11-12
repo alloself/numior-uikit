@@ -1,18 +1,24 @@
 import {
   SelectionKind,
+  blockSpotOf,
   createMetaKey,
   decorationSet,
   definePlugin,
+  followPosition,
   inlineDecoration,
   mirrored,
   remoteChain,
   textPosition,
+  type DecorationSet,
   type Doc,
   type EditorState,
   type Mappable,
   type Plugin,
+  type BlockSpot,
+  type PeerSpot,
   type Transaction,
 } from '@numior/editor-core';
+import { collabProgress, collabVersionAfter } from './collab';
 import type {
   BlockPoint,
   EditorPresence,
@@ -23,15 +29,36 @@ import type {
 
 type Fields = Readonly<Record<string, unknown>>;
 
+interface PresenceState {
+  readonly peers: readonly RemotePeer[];
+  readonly held: ReadonlyMap<string, EditorPresence>;
+}
+
 const COLOURS = 8;
+
+const SPOT_PARTS = 8;
+
+const SPOT_TEXT = 256;
 
 const SELECTION_CLASS = 'nui-collab-selection';
 
-const presenceUpdate = createMetaKey<readonly RemotePeer[]>('presenceUpdate');
+const presenceUpdate = createMetaKey<ReadonlyMap<string, unknown>>('presenceUpdate');
 
-const registry = new WeakMap<object, Plugin<readonly RemotePeer[]>>();
+const registry = new WeakMap<object, Plugin<PresenceState>>();
 
 const NONE: readonly RemotePeer[] = [];
+
+const NO_HELD: ReadonlyMap<string, EditorPresence> = new Map();
+
+const IDLE: PresenceState = { peers: NONE, held: NO_HELD };
+
+const NO_SELECTIONS = decorationSet([]);
+
+const drawn = new WeakMap<readonly RemotePeer[], DecorationSet>();
+
+const spotted = new WeakMap<readonly RemotePeer[], readonly PeerSpot[]>();
+
+const NO_SPOTS: readonly PeerSpot[] = [];
 
 const isFields = (value: unknown): value is Fields =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -52,11 +79,31 @@ const isPoint = (value: unknown): value is BlockPoint =>
 const isSelection = (value: unknown): value is PresenceSelection | null =>
   value === null || (isFields(value) && isPoint(value.anchor) && isPoint(value.head));
 
-const isPresence = (value: unknown): value is EditorPresence =>
-  isFields(value) && isUser(value.user) && isSelection(value.selection);
+const isPart = (value: unknown): value is string =>
+  typeof value === 'string' && value.length <= SPOT_TEXT;
 
-const colourOf = (id: string): number =>
-  (Array.from(id).reduce((sum, char) => sum * 31 + (char.codePointAt(0) ?? 0), 7) >>> 0) % COLOURS;
+const isSpot = (value: unknown): value is BlockSpot | undefined =>
+  value === undefined ||
+  (isFields(value) &&
+    typeof value.block === 'string' &&
+    Array.isArray(value.part) &&
+    value.part.length <= SPOT_PARTS &&
+    value.part.every(isPart));
+
+const isVersion = (value: unknown): value is number | undefined =>
+  value === undefined || (typeof value === 'number' && Number.isInteger(value) && value >= 0);
+
+const isPresence = (value: unknown): value is EditorPresence =>
+  isFields(value) &&
+  isUser(value.user) &&
+  isSelection(value.selection) &&
+  isSpot(value.spot) &&
+  isVersion(value.version);
+
+const hashOf = (id: string): number =>
+  Array.from(id).reduce((sum, char) => (Math.imul(sum, 31) + (char.codePointAt(0) ?? 0)) | 0, 7);
+
+const colourOf = (id: string): number => (hashOf(id) >>> 0) % COLOURS;
 
 const pointAt = (doc: Doc, pos: number): BlockPoint => {
   const $pos = doc.resolve(pos);
@@ -73,19 +120,96 @@ const positionOf = (doc: Doc, point: BlockPoint): number | undefined => {
     : start + 1 + Math.min(point.offset, Math.max(0, node.size - 2));
 };
 
-const peerOf = (doc: Doc, clientId: string, value: unknown): RemotePeer | undefined => {
-  if (!isPresence(value)) {
-    return undefined;
+const peerOf = (
+  doc: Doc,
+  clientId: string,
+  { user, selection, spot }: EditorPresence,
+): RemotePeer => ({
+  clientId,
+  user,
+  colour: colourOf(user.id),
+  anchor: selection === null ? undefined : positionOf(doc, selection.anchor),
+  head: selection === null ? undefined : positionOf(doc, selection.head),
+  spot,
+});
+
+const unplaced = (clientId: string, { user, spot }: EditorPresence): RemotePeer => ({
+  clientId,
+  user,
+  colour: colourOf(user.id),
+  anchor: undefined,
+  head: undefined,
+  spot,
+});
+
+const sameSpot = (left: BlockSpot | undefined, right: BlockSpot | undefined): boolean =>
+  JSON.stringify(left) === JSON.stringify(right);
+
+const heldPeer = (
+  known: RemotePeer | undefined,
+  clientId: string,
+  presence: EditorPresence,
+): RemotePeer => {
+  if (known === undefined) {
+    return unplaced(clientId, presence);
+  }
+  return sameSpot(known.spot, presence.spot) ? known : { ...known, spot: presence.spot };
+};
+
+const stated = (
+  values: ReadonlyMap<string, unknown>,
+  known: PresenceState,
+  doc: Doc,
+  version: number,
+): PresenceState => {
+  const held = new Map<string, EditorPresence>();
+
+  const peers = [...values].reduce<RemotePeer[]>((found, [clientId, value]) => {
+    if (!isPresence(value)) {
+      return found;
+    }
+    if ((value.version ?? 0) > version) {
+      held.set(clientId, value);
+
+      found.push(
+        heldPeer(
+          known.peers.find((peer) => peer.clientId === clientId),
+          clientId,
+          value,
+        ),
+      );
+    } else {
+      found.push(peerOf(doc, clientId, value));
+    }
+    return found;
+  }, []);
+
+  return { peers, held: held.size === 0 ? NO_HELD : held };
+};
+
+const released = (value: PresenceState, doc: Doc, version: number): PresenceState => {
+  const held = new Map<string, EditorPresence>();
+  const ready = new Map<string, EditorPresence>();
+
+  value.held.forEach((presence, clientId) => {
+    if ((presence.version ?? 0) > version) {
+      held.set(clientId, presence);
+    } else {
+      ready.set(clientId, presence);
+    }
+  });
+
+  if (ready.size === 0) {
+    return value;
   }
 
-  const { user, selection } = value;
-
   return {
-    clientId,
-    user,
-    colour: colourOf(user.id),
-    anchor: selection === null ? undefined : positionOf(doc, selection.anchor),
-    head: selection === null ? undefined : positionOf(doc, selection.head),
+    peers: value.peers.map((peer) => {
+      const presence = ready.get(peer.clientId);
+
+      return presence === undefined ? peer : peerOf(doc, peer.clientId, presence);
+    }),
+    held: held.size === 0 ? NO_HELD : held,
   };
 };
 
@@ -98,47 +222,117 @@ const mappingOf = (tr: Transaction): Mappable => {
 const moved = (peers: readonly RemotePeer[], tr: Transaction): readonly RemotePeer[] => {
   const mapping = mappingOf(tr);
 
-  return peers.map((peer) => ({
-    ...peer,
-    anchor: peer.anchor === undefined ? undefined : mapping.map(peer.anchor),
-    head: peer.head === undefined ? undefined : mapping.map(peer.head),
-  }));
+  const next = peers.map((peer) => {
+    const anchor =
+      peer.anchor === undefined
+        ? undefined
+        : followPosition(peer.anchor, mapping, tr.before, tr.doc);
+
+    const head =
+      peer.head === undefined ? undefined : followPosition(peer.head, mapping, tr.before, tr.doc);
+
+    return anchor === peer.anchor && head === peer.head ? peer : { ...peer, anchor, head };
+  });
+
+  return next.every((peer, index) => peer === peers[index]) ? peers : next;
 };
 
-const applyPeers = (tr: Transaction, value: readonly RemotePeer[]): readonly RemotePeer[] => {
+const applyPresence = (
+  tr: Transaction,
+  value: PresenceState,
+  before: EditorState,
+): PresenceState => {
   const update = presenceUpdate.read(tr);
+  const version = collabVersionAfter(tr, before) ?? Infinity;
 
   if (update !== undefined) {
-    return update;
+    return stated(update, value, tr.doc, version);
   }
-  return tr.changed && value.length > 0 ? moved(value, tr) : value;
+
+  const peers = tr.changed && value.peers.length > 0 ? moved(value.peers, tr) : value.peers;
+  const next = peers === value.peers ? value : { ...value, peers };
+
+  return next.held.size === 0 ? next : released(next, tr.doc, version);
 };
 
-const selectionDecorations = (peers: readonly RemotePeer[]) =>
-  decorationSet(
-    peers.reduce<ReturnType<typeof inlineDecoration>[]>((found, peer) => {
-      if (peer.anchor !== undefined && peer.head !== undefined && peer.anchor !== peer.head) {
-        found.push(
-          inlineDecoration(
-            Math.min(peer.anchor, peer.head),
-            Math.max(peer.anchor, peer.head),
-            `${SELECTION_CLASS} nui-collab-colour--${peer.colour.toString()}`,
-          ),
-        );
-      }
-      return found;
-    }, []),
-  );
+const selectionRanges = (peers: readonly RemotePeer[]): ReturnType<typeof inlineDecoration>[] =>
+  peers.reduce<ReturnType<typeof inlineDecoration>[]>((found, peer) => {
+    if (
+      peer.spot === undefined &&
+      peer.anchor !== undefined &&
+      peer.head !== undefined &&
+      peer.anchor !== peer.head
+    ) {
+      found.push(
+        inlineDecoration(
+          Math.min(peer.anchor, peer.head),
+          Math.max(peer.anchor, peer.head),
+          `${SELECTION_CLASS} nui-collab-colour--${peer.colour.toString()}`,
+        ),
+      );
+    }
+    return found;
+  }, []);
 
-export const remotePresence = (): Plugin<readonly RemotePeer[]> => {
-  const plugin: Plugin<readonly RemotePeer[]> = definePlugin<readonly RemotePeer[]>({
+const selectionDecorations = (peers: readonly RemotePeer[]): DecorationSet => {
+  const known = drawn.get(peers);
+
+  if (known !== undefined) {
+    return known;
+  }
+
+  const ranges = selectionRanges(peers);
+  const set = ranges.length === 0 ? NO_SELECTIONS : decorationSet(ranges);
+
+  drawn.set(peers, set);
+  return set;
+};
+
+const spotsOf = (peers: readonly RemotePeer[]): readonly PeerSpot[] =>
+  peers.reduce<PeerSpot[]>((found, peer) => {
+    if (peer.spot !== undefined) {
+      found.push({ ...peer.spot, peer: peer.clientId, name: peer.user.name, colour: peer.colour });
+    }
+    return found;
+  }, []);
+
+const sameSpots = (left: readonly PeerSpot[], right: readonly PeerSpot[]): boolean =>
+  left.length === right.length && JSON.stringify(left) === JSON.stringify(right);
+
+const shownSpots = (
+  peers: readonly RemotePeer[],
+  shown: readonly PeerSpot[],
+): readonly PeerSpot[] => {
+  const known = spotted.get(peers);
+
+  if (known !== undefined) {
+    return known;
+  }
+
+  const next = spotsOf(peers);
+  const kept = sameSpots(shown, next) ? shown : next;
+
+  spotted.set(peers, kept);
+  return kept;
+};
+
+export const remotePresence = (): Plugin<PresenceState> => {
+  let shown = NO_SPOTS;
+
+  const spotsIn = (state: EditorState): readonly PeerSpot[] => {
+    shown = shownSpots((plugin.getState(state) ?? IDLE).peers, shown);
+    return shown;
+  };
+
+  const plugin: Plugin<PresenceState> = definePlugin<PresenceState>({
     name: 'remotePresence',
     state: {
-      init: () => NONE,
-      apply: applyPeers,
+      init: () => IDLE,
+      apply: applyPresence,
     },
     props: {
-      decorations: (state) => selectionDecorations(plugin.getState(state) ?? NONE),
+      decorations: (state) => selectionDecorations((plugin.getState(state) ?? IDLE).peers),
+      spots: spotsIn,
     },
   });
 
@@ -151,7 +345,7 @@ export const remotePeers = (state: EditorState): readonly RemotePeer[] => {
     const found = registry.get(plugin);
 
     if (found !== undefined) {
-      return found.getState(state) ?? NONE;
+      return (found.getState(state) ?? IDLE).peers;
     }
   }
   return NONE;
@@ -160,18 +354,7 @@ export const remotePeers = (state: EditorState): readonly RemotePeer[] => {
 export const setRemotePresence = (
   state: EditorState,
   peers: ReadonlyMap<string, unknown>,
-): Transaction =>
-  state.tr.setMeta(
-    presenceUpdate,
-    [...peers].reduce<RemotePeer[]>((found, [clientId, value]) => {
-      const peer = peerOf(state.doc, clientId, value);
-
-      if (peer !== undefined) {
-        found.push(peer);
-      }
-      return found;
-    }, []),
-  );
+): Transaction => state.tr.setMeta(presenceUpdate, peers);
 
 const wholeDocument = (doc: Doc): PresenceSelection | null => {
   const anchor = textPosition(doc, 0, 1);
@@ -193,10 +376,32 @@ const selectionOf = ({ selection, doc }: EditorState): PresenceSelection | null 
   }
 };
 
-export const presenceOf = (state: EditorState, user: PresenceUser): EditorPresence => ({
-  user,
-  selection: selectionOf(state),
-});
+export const presenceOf = (state: EditorState, user: PresenceUser): EditorPresence => {
+  const progress = collabProgress(state);
+  const selection = selectionOf(state);
+  const spot = blockSpotOf(state);
+  const placed = spot === undefined ? { user, selection } : { user, selection, spot };
+
+  return progress === undefined
+    ? placed
+    : { ...placed, version: progress.version + progress.pending };
+};
 
 export const samePresence = (left: EditorPresence, right: EditorPresence): boolean =>
-  JSON.stringify(left.selection) === JSON.stringify(right.selection);
+  JSON.stringify(left.selection) === JSON.stringify(right.selection) &&
+  sameSpot(left.spot, right.spot);
+
+export const presenceChanged = (
+  sent: EditorPresence,
+  next: EditorPresence,
+  state: EditorState,
+): boolean => {
+  const told = sent.version ?? 0;
+  const now = next.version ?? 0;
+
+  return (
+    !samePresence(sent, next) ||
+    told > now ||
+    (told < now && (collabProgress(state)?.pending ?? 0) > 0)
+  );
+};

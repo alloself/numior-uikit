@@ -44,9 +44,11 @@ export const useVirtualFrame = (
     if (next.lead > previous.lead) {
       element.style.setProperty(LEAD, px(next.lead));
     }
-    if (next.rest > previous.rest) {
-      element.style.setProperty(REST, px(next.rest));
+    if (next.rest <= previous.rest) {
+      return;
     }
+
+    element.style.setProperty(REST, px(next.rest));
   });
 
   return { canvasStyle, windowStyle };

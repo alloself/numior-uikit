@@ -1,22 +1,18 @@
 <template>
   <NuiSelect
-    label="Country"
-    v-model="country"
-    :options="countries"
-    placeholder="Pick a country"
-    clearable
+    v-model="status"
+    :options="statuses"
+    label="Order status"
+    description="The customer gets an email about the new status"
   />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiSelect, type NuiOptionSource } from '@numior/vue';
+import { NuiSelect } from '@numior/vue';
+import { ORDER_STATUSES } from '#demo/orders';
 
-const country = ref<string | null>(null);
+const status = ref<string | null>('paid');
 
-const countries: NuiOptionSource<string> = [
-  { value: 'at', label: 'Austria' },
-  { value: 'de', label: 'Germany' },
-  { value: 'jp', label: 'Japan' },
-];
+const statuses = Object.entries(ORDER_STATUSES).map(([value, label]) => ({ value, label }));
 </script>

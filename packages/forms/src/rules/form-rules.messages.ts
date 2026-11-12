@@ -11,6 +11,7 @@ export interface NuiFormRulesMessages {
   readonly email: string;
   readonly pattern: string;
   readonly invalid: string;
+  readonly unchecked: string;
 }
 
 const characters = (count: number): string =>
@@ -36,6 +37,7 @@ export const formRulesMessages: NuiMessageCatalog<NuiFormRulesMessages> = {
     email: 'Enter a valid email address',
     pattern: 'Use the expected format',
     invalid: 'Check this value',
+    unchecked: 'Could not check this value. Try again.',
   },
   ru: {
     required: 'Заполните поле',
@@ -48,5 +50,6 @@ export const formRulesMessages: NuiMessageCatalog<NuiFormRulesMessages> = {
     email: 'Введите корректный адрес электронной почты',
     pattern: 'Значение не соответствует формату',
     invalid: 'Проверьте значение',
+    unchecked: 'Не удалось проверить значение. Попробуйте ещё раз.',
   },
 };

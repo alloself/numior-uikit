@@ -9,7 +9,7 @@ import {
   type TextNode,
   type Transaction,
 } from '@numior/editor-core';
-import { commonRun } from './common-run';
+import { commonRun, commonText } from './common-run';
 
 type Change =
   | { readonly kind: typeof ChangeKind.None }
@@ -60,15 +60,7 @@ const sameElementShell = (left: ElementNode, right: ElementNode): boolean =>
   left.id === right.id && left.type === right.type;
 
 const textChange = (left: TextNode, right: TextNode, at: number, schemaText: TextMaker): Change => {
-  const limit = Math.min(left.text.length, right.text.length);
-  const head = commonRun(limit, (index) => left.text[index] === right.text[index]);
-
-  const tail = commonRun(
-    limit - head,
-    (index) =>
-      left.text[left.text.length - 1 - index] === right.text[right.text.length - 1 - index],
-  );
-
+  const { head, tail } = commonText(left.text, right.text);
   const inserted = right.text.slice(head, right.text.length - tail);
 
   return {

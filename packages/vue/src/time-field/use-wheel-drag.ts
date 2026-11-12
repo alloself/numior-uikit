@@ -44,9 +44,11 @@ export const useWheelDrag = (options: WheelDragOptions): WheelDrag => {
     const { drag } = state;
     const element = options.element();
 
-    if (element && drag.kind !== WheelDragKind.Idle && event.pointerId === drag.pointer) {
-      state.drag = advance(drag, event.clientY, element);
+    if (!element || drag.kind === WheelDragKind.Idle || event.pointerId !== drag.pointer) {
+      return;
     }
+
+    state.drag = advance(drag, event.clientY, element);
   };
 
   const stop = (): void => {
@@ -75,9 +77,11 @@ export const useWheelDrag = (options: WheelDragOptions): WheelDrag => {
     }
     stop();
 
-    if (drag.kind === WheelDragKind.Dragging) {
-      finish();
+    if (drag.kind !== WheelDragKind.Dragging) {
+      return;
     }
+
+    finish();
   };
 
   const onPointerdown = (event: PointerEvent): void => {

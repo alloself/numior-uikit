@@ -1,5 +1,5 @@
 <template>
-  <section class="flex flex-col gap-3" :aria-label="texts.homeScreen">
+  <section class="flex flex-col gap-6" :aria-label="texts.homeScreen">
     <div role="group" :aria-label="texts.screenOptions" class="flex flex-wrap items-center gap-3">
       <div class="w-44">
         <NuiSelect v-model="accent" :options="accents" :aria-label="texts.accent" size="sm" />

@@ -1,13 +1,14 @@
 import { computed, ref, shallowRef, type ComputedRef, type Ref, type ShallowRef } from 'vue';
 import type { NuiMenuEntry, NuiMenuFocus } from '@numior/vue';
+import { rowPositionOf } from './table-dom';
 import type { NuiTableMessages } from './table.messages';
 import type {
   NuiTableContextMenu,
   NuiTableContextScope,
   NuiTableRanges,
-  TableCellPosition,
+  NuiTableCellPosition,
 } from './table.types';
-import { Key, PointerType, afterRelease } from '@numior/primitives';
+import { Key, PointerType, useAfterRelease } from '@numior/primitives';
 
 export interface TableContextMenuOptions<T> {
   readonly enabled: () => boolean;
@@ -17,10 +18,10 @@ export interface TableContextMenuOptions<T> {
   readonly viewport: () => HTMLElement | null;
   readonly headRows: () => number;
   readonly scopeOf: (
-    target: TableCellPosition,
+    target: NuiTableCellPosition,
     ranges: NuiTableRanges,
   ) => NuiTableContextScope<T> | undefined;
-  readonly select: (target: TableCellPosition) => NuiTableRanges;
+  readonly select: (target: NuiTableCellPosition) => NuiTableRanges;
   readonly copyable: () => boolean;
   readonly copy: (headers: boolean) => void;
   readonly editable: () => boolean;
@@ -57,9 +58,10 @@ export const useTableContextMenu = <T>(options: TableContextMenuOptions<T>): Tab
   const open = ref(false);
   const target = shallowRef<HTMLElement | null>(null);
   const scope = shallowRef<NuiTableContextScope<T>>();
+  const afterRelease = useAfterRelease();
 
-  const positionOf = (cell: Element): TableCellPosition => ({
-    row: Number(cell.parentElement?.getAttribute('aria-rowindex')) - options.headRows() - 1,
+  const positionOf = (cell: Element): NuiTableCellPosition => ({
+    row: rowPositionOf(cell.parentElement, options.headRows()),
     col: Number(cell.getAttribute('aria-colindex')) - 1,
   });
 

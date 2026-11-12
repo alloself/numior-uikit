@@ -512,6 +512,7 @@ const columns: NuiTableColumnDef<Order>[] = [
         label: 'Почта',
         type: 'text',
         width: 240,
+        filter: 'set',
         editable: true,
         rules: [email()],
         value: (row) => row.email,

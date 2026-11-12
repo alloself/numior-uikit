@@ -24,7 +24,7 @@ Pick a period and change the number of months in the calendar, the size and the 
 ## Behaviour
 
 Both dates are typed the same way as in [Date picker](/en/components/date-picker). When the end
-comes before the start, the field swaps them. With `openOnClick`, a click on either date opens the
+comes before the start, the field swaps them once focus leaves the date or Enter is pressed. With `openOnClick`, a click on either date opens the
 calendar.
 
 In the calendar the first click picks the start, the second picks the end and closes the

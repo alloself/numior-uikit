@@ -1,9 +1,9 @@
-import { Key } from '@numior/primitives';
+import { Key, isComposing } from '@numior/primitives';
 import {
   NuiTableEditMode,
   NuiTableEditMove,
   type NuiTableRanges,
-  type TableCellPosition,
+  type NuiTableCellPosition,
 } from '@numior/table';
 import { computed, ref, shallowRef } from 'vue';
 import { formatCell, type CellRange } from '../core';
@@ -12,7 +12,7 @@ import { targetOf } from './sheet-navigation';
 
 const LINE_BREAK = '\n';
 
-const FIRST_CELL: TableCellPosition = { row: 0, col: 0 };
+const FIRST_CELL: NuiTableCellPosition = { row: 0, col: 0 };
 
 const textOf = (value: unknown): string => {
   if (typeof value === 'string') {
@@ -37,7 +37,7 @@ const inside = (target: EventTarget | null, element: HTMLElement | null): boolea
 const positionsOf = (
   cells: SheetCells,
   range: CellRange,
-): readonly [TableCellPosition, TableCellPosition] => [
+): readonly [NuiTableCellPosition, NuiTableCellPosition] => [
   { row: cells.rowNear(range.top), col: cells.colNear(range.left) },
   { row: cells.rowNear(range.bottom), col: cells.colNear(range.right) },
 ];
@@ -45,7 +45,7 @@ const positionsOf = (
 export const useFormulaBar = (options: FormulaBarOptions): FormulaBar => {
   const { editing } = options;
 
-  const active = shallowRef<TableCellPosition>();
+  const active = shallowRef<NuiTableCellPosition>();
   const ranges = shallowRef<NuiTableRanges>([]);
   const nameDraft = ref<string>();
   const nameInvalid = ref(false);
@@ -58,7 +58,7 @@ export const useFormulaBar = (options: FormulaBarOptions): FormulaBar => {
 
     return position === undefined || cells === undefined
       ? ''
-      : formatCell({ row: cells.rowAt(position.row), col: cells.colAt(position.col) });
+      : formatCell(cells.cellOf(position.row, position.col));
   });
 
   const nameText = computed(() => nameDraft.value ?? cellName.value);
@@ -113,6 +113,9 @@ export const useFormulaBar = (options: FormulaBarOptions): FormulaBar => {
   };
 
   const onNameKeydown = (event: KeyboardEvent): void => {
+    if (isComposing(event)) {
+      return;
+    }
     if (event.key === Key.Escape) {
       event.preventDefault();
       nameDraft.value = undefined;
@@ -143,33 +146,42 @@ export const useFormulaBar = (options: FormulaBarOptions): FormulaBar => {
   };
 
   const onFormulaFocus = (): void => {
-    if (!options.readonly() && editing.draft.value === undefined) {
-      options.table.value?.startEdit(NuiTableEditMode.Append, { focus: false });
+    if (options.readonly() || editing.draft.value !== undefined) {
+      return;
     }
+
+    options.table.value?.startEdit(NuiTableEditMode.Append, { focus: false });
   };
 
   const onFormulaInput = (): void => {
     const draft = editing.draft.value;
     const field = options.formulaField.value;
 
-    if (draft !== undefined && field !== null) {
-      editing.setDraft({ ...draft, value: field.value });
+    if (draft === undefined || field === null) {
+      return;
     }
+
+    editing.setDraft({ ...draft, value: field.value });
   };
 
   const breakLine = (): void => {
     const field = options.formulaField.value;
 
-    if (field !== null) {
-      field.setRangeText(LINE_BREAK, field.selectionStart, field.selectionEnd, 'end');
-      onFormulaInput();
+    if (field === null) {
+      return;
     }
+
+    field.setRangeText(LINE_BREAK, field.selectionStart, field.selectionEnd, 'end');
+    onFormulaInput();
   };
 
   const onFormulaKeydown = (event: KeyboardEvent): void => {
     const table = options.table.value;
     const move = commitMoveOf(event);
 
+    if (isComposing(event)) {
+      return;
+    }
     if (table === null || editing.draft.value === undefined) {
       if (event.key === Key.Escape) {
         event.preventDefault();
@@ -190,9 +202,11 @@ export const useFormulaBar = (options: FormulaBarOptions): FormulaBar => {
   };
 
   const onFormulaBlur = (event: FocusEvent): void => {
-    if (editing.draft.value !== undefined && !inside(event.relatedTarget, options.root.value)) {
-      options.table.value?.commitEdit(NuiTableEditMove.Blur);
+    if (editing.draft.value === undefined || inside(event.relatedTarget, options.root.value)) {
+      return;
     }
+
+    options.table.value?.commitEdit(NuiTableEditMove.Blur);
   };
 
   return {

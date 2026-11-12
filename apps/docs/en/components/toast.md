@@ -1,66 +1,92 @@
 # Toast
 
-A toast is a short message about the result of an action: "Draft saved", "Could not send".
-Toasts are called from code through `useToast()`, and `NuiToaster` displays them.
+A short notification about the result of an action.
 
 <Example name="toast/Basic" />
 
-Put one `<NuiToaster />` in the root component, preferably at the end of the template. On this
-site it already sits in the layout, so the examples only call `useToast()`.
+Put one `<NuiToaster />` in the root component:
+
+```vue
+<template>
+  <RouterView />
+  <NuiToaster />
+</template>
+```
+
+Then call `useToast()` in any component, and its toasts appear in this toaster.
 
 ## Installation
 
 ```ts
-import { NuiToaster, useToast } from '@numior/vue';
+import { NuiToaster } from '@numior/vue';
+import { useToast } from '@numior/primitives';
 import '@numior/vue/styles/toast.css';
 ```
 
 ## Examples
 
-### Replacing a toast
+### Update a toast in place
 
-The `show` method returns the `id` of the toast. Calling `show` again with the same `id` changes
-the text and restarts the countdown. This way one toast follows an operation from "Publishing
-the report…" to "Report published".
+Call `show` with the same `id`.
 
 <Example name="toast/Update" />
 
-## Behaviour
+The toast keeps its place and takes the new title, tone and action without appearing again.
 
-The `success`, `error`, `warning` and `info` methods take a title and set the color of the toast.
-The `show` method takes all options at once:
+### Let the user undo an action
 
-- `title` and `description` — the title and the text;
-- `tone` — the color: `neutral`, `info`, `success`, `warning` or `error`;
-- `duration` — how long the toast stays, in milliseconds, 5000 by default; `0` keeps it until it
-  is closed;
-- `action` — an action button with `label` and `onClick`;
-- `dismissible` — the close button, shown by default; `false` removes it;
-- `id` — the key used to replace the toast.
+Pass a `label` and an `onClick` handler to `action`.
 
-A click on the action button closes the toast. If the handler calls `show` with the `id` of the
-toast, the toast stays in place with the new text.
+<Example name="toast/Undo" />
 
-Toasts appear in the corner of the screen set by `placement`, `top-end` by default. A new toast
-comes to the front, and the previous ones shrink and stack behind it.
+A click on the action runs the handler and closes the toast.
 
-On hover or focus the stack expands into a list, and with `expand` it stays expanded. While the
-pointer is over the stack, the focus is inside it or the browser tab is hidden, the countdown
-pauses.
+## Behavior
 
-The `createNuiConfig` plugin keeps a separate toast queue for every app and every SSR request.
-Its `toasts` option sets the display time `duration`, the exit animation length `exitDuration`
-and the number of toasts on screen `limit`.
+### Pick a tone
+
+Call the method named after the tone, or pass `tone` to `show`:
+
+```ts
+const toast = useToast();
+
+toast.error('Payment failed', { description: 'The bank declined the card' });
+toast.show({ title: 'Invoice sent', tone: 'info' });
+```
+
+Without `tone`, a toast from `show` is neutral and has no icon. All the options are listed on the
+[useToast](/en/composables/toast) page.
+
+### Set where toasts appear and how many
+
+Set `placement` and `expand` on `NuiToaster`, and the other options in `toasts` of the
+`createNuiConfig` plugin:
+
+```ts
+app.use(createNuiConfig({ toasts: { duration: 4000, limit: 3 } }));
+```
+
+| Option         | What it changes                                                              |
+| -------------- | ---------------------------------------------------------------------------- |
+| `placement`    | Where on the screen toasts appear, `top-end` by default                      |
+| `expand`       | Keeps the stack open as a list, not only on hover                            |
+| `duration`     | Display time in milliseconds, 5000 by default; `0` keeps toasts until closed |
+| `exitDuration` | Length of the exit animation in milliseconds, 200 by default                 |
+| `limit`        | How many toasts are on screen at once; the rest wait their turn              |
+
+A new toast comes to the front, and the earlier ones shrink into a stack behind it. The stack
+opens into a list on hover or focus.
+
+The countdown pauses while the pointer or the focus is on the toasts and while the browser tab is
+hidden, for new toasts too. The stack stays open under a resting pointer, even when the toast under
+it closes.
 
 ## Accessibility
 
-Screen readers announce toasts through `aria-live="polite"`, and a toast with `tone="error"` gets
-`role="alert"` and is announced at once. Toasts are shown in the browser top layer, so dialogs
-and menus never cover them.
+A screen reader announces toasts through `aria-live="polite"`, and an `error` toast at once
+through `role="alert"`. A toast does not take the focus when it appears.
 
-A toast does not take the focus when it appears. Esc closes the focused toast and moves the focus
-to its neighbour. Above an open modal dialog a toast is visible, but its buttons do not work
-until the dialog closes.
+Esc closes the focused toast and moves the focus to the next one. After the last one, the focus goes back to where it came from.
 
 ## API
 

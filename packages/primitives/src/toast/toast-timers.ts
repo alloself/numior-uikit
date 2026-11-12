@@ -71,9 +71,11 @@ export const createTimers = (): Timers => {
     resume: (id) => {
       const entry = entries.get(id);
 
-      if (entry?.state === TimerState.Paused) {
-        arm(id, entry.remaining, entry.onDone);
+      if (entry?.state !== TimerState.Paused) {
+        return;
       }
+
+      arm(id, entry.remaining, entry.onDone);
     },
     clear,
     has: (id) => entries.has(id),

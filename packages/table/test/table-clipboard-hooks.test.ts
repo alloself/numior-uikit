@@ -5,7 +5,7 @@ import type {
   NuiTableClipboard,
   NuiTableClipboardData,
   NuiTableRanges,
-  TableCellPosition,
+  NuiTableCellPosition,
 } from '../src';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { applyStaffEdits, staff, STAFF_COLUMNS, type Staff } from './support/staff';
@@ -71,12 +71,36 @@ describe('NuiTable clipboard hooks', () => {
     expect(grid.announcement).toBe('Скопированы 2 строки');
   });
 
+  it('hands serialize the rows and columns to copy, cut to the filled part and to the copy limit', async () => {
+    clipboard = installClipboard({ api: 'granted' });
+
+    const blocks: string[] = [];
+
+    const hooks: NuiTableClipboard<Staff> = {
+      serialize: ({ rows, cols }) => {
+        blocks.push(`${rows.join(',')} x ${cols.join(',')}`);
+        return { text: '' };
+      },
+    };
+
+    const grid = mountStaff({
+      props: { clipboard: hooks, copyLimit: 2, lastCell: () => ({ row: 4, col: 1 }) },
+    });
+
+    await grid.dragRange({ row: 2, col: 1 }, { row: 5, col: 2 });
+    await grid.press('c', { ctrl: true });
+    await flushPromises();
+
+    expect(blocks).toEqual(['2,3 x 1']);
+    expect(grid.announcement).toBe('Скопировано строк: 2 из 3');
+  });
+
   it('pastes the block parse reads and falls back to tab separated text', async () => {
     const rows = staff(20);
 
     const reads: Array<{
       readonly data: NuiTableClipboardData;
-      readonly target: TableCellPosition;
+      readonly target: NuiTableCellPosition;
     }> = [];
 
     const hooks: NuiTableClipboard<Staff> = {
@@ -109,6 +133,7 @@ describe('NuiTable clipboard hooks', () => {
           { row: rows[1], key: 'city', value: 'Тула', previous: 'Казань' },
           { row: rows[1], key: 'salary', value: 1500, previous: 1010 },
         ],
+        area: { from: { row: 1, col: 2 }, to: { row: 1, col: 3 } },
       },
       {
         kind: 'paste',
@@ -116,6 +141,7 @@ describe('NuiTable clipboard hooks', () => {
           { row: rows[4], key: 'city', value: 'Омск', previous: 'Казань' },
           { row: rows[5], key: 'city', value: 'Омск', previous: 'Ереван' },
         ],
+        area: { from: { row: 4, col: 2 }, to: { row: 5, col: 3 } },
       },
     ]);
   });

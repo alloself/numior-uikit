@@ -1,8 +1,10 @@
+import { at } from 'lodash-es';
 import { computed, getCurrentScope, onScopeDispose, shallowRef } from 'vue';
 import { deleteAt, getAt, mergeInto, replaceContents, setAt } from '../values/access';
 import { cloneValue } from '../values/clone';
 import { reactiveView } from '../values/view';
 import type { EngineArray, EngineKey, EntryState, FormEngine } from './engine.types';
+import { movedPlaces, swappedPlaces } from './places';
 
 interface ArrayHost {
   readonly raw: object;
@@ -44,25 +46,6 @@ const clearState = (state: EntryState): void => {
   state.setPending(false);
 };
 
-const moved = <T>(items: readonly T[], from: number, to: number): T[] => {
-  const next = [...items];
-  const [item] = next.splice(from, 1);
-
-  if (item !== undefined) {
-    next.splice(to, 0, item);
-  }
-  return next;
-};
-
-const swapped = <T>(items: readonly T[], first: number, second: number): T[] => {
-  const left = items[first];
-  const right = items[second];
-
-  return left === undefined || right === undefined
-    ? [...items]
-    : items.map((item, index) => (index === first ? right : index === second ? left : item));
-};
-
 const lengthAt = (values: object, path: string): number => {
   const list = getAt(values, path);
   return Array.isArray(list) ? list.length : 0;
@@ -74,21 +57,36 @@ const listAt = (raw: object, path: string): readonly unknown[] => {
 };
 
 const createArray = (host: ArrayHost, path: () => string): EngineArray => {
-  const order: EngineKey[] = [];
+  let order: EngineKey[] = [];
   const current = (): readonly unknown[] => listAt(host.raw, path());
 
   const write = (next: readonly unknown[]): void => {
     host.write(path(), next);
   };
 
-  const keys = computed((): readonly EngineKey[] => {
-    const length = lengthAt(host.values, path());
-
+  const sized = (length: number): void => {
     order.splice(length);
 
     while (order.length < length) {
       order.push(host.fresh());
     }
+  };
+
+  const arrange = (places: (length: number) => readonly number[] | undefined): void => {
+    const list = current();
+    const next = places(list.length);
+
+    if (next === undefined) {
+      return;
+    }
+
+    sized(list.length);
+    order = at(order, next);
+    write(at(list, next));
+  };
+
+  const keys = computed((): readonly EngineKey[] => {
+    sized(lengthAt(host.values, path()));
     return [...order];
   });
 
@@ -113,15 +111,13 @@ const createArray = (host: ArrayHost, path: () => string): EngineArray => {
       write(current().toSpliced(index, 1));
     },
     move: (from, to) => {
-      order.splice(0, order.length, ...moved(order, from, to));
-      write(moved(current(), from, to));
+      arrange((length) => movedPlaces(length, from, to));
     },
     swap: (first, second) => {
-      order.splice(0, order.length, ...swapped(order, first, second));
-      write(swapped(current(), first, second));
+      arrange((length) => swappedPlaces(length, first, second));
     },
     replace: (next) => {
-      order.splice(0, order.length, ...next.map(() => host.fresh()));
+      order = next.map(() => host.fresh());
       write(next.map(cloneValue));
     },
   };

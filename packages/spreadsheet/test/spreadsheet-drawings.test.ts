@@ -59,6 +59,7 @@ afterEach(() => {
   Reflect.deleteProperty(URL, 'revokeObjectURL');
   revoke.mockClear();
   vi.unstubAllGlobals();
+  vi.useRealTimers();
 
   for (const restore of restorers.splice(0)) {
     restore();
@@ -260,6 +261,35 @@ describe('NuiSpreadsheet drawings', () => {
     await sheet.press('ArrowLeft', { shift: true });
 
     expect(anchorsOf(book)[1]).toMatchObject({ x: 0, y: 10, width: 64, height: 40 });
+  });
+
+  it('leaves the keys of an open cell menu to the menu while a drawing is selected', async () => {
+    const book = drawnBook([PICTURE]);
+    const sheet = sheetOf(book);
+
+    await sheet.clickDrawing(0);
+    await sheet.openCellMenu(2, 0);
+    await sheet.pressInCellMenu('ArrowDown');
+    await sheet.pressInCellMenu('Delete');
+    await sheet.pressInCellMenu('Tab');
+
+    expect([sheet.drawings.length, anchorsOf(book)[0]]).toEqual([1, PICTURE.anchor]);
+  });
+
+  it('leaves the keys of a cell editor to the editor and lets the drawing go', async () => {
+    const book = drawnBook([PICTURE]);
+    const sheet = sheetOf(book);
+
+    await sheet.focus(2, 0);
+    await sheet.clickDrawing(0);
+    await sheet.press('F2');
+
+    expect([sheet.editing, sheet.selectedDrawings]).toEqual([true, []]);
+
+    await sheet.press('ArrowLeft');
+    await sheet.press('Backspace');
+
+    expect([sheet.drawings.length, anchorsOf(book)[0]]).toEqual([1, PICTURE.anchor]);
   });
 
   it('moves a picture with the pointer in one undoable step', async () => {
@@ -655,6 +685,88 @@ describe('NuiSpreadsheet drawings', () => {
     await sheet.press('z', { ctrl: true });
 
     expect(anchorsOf(book)).toEqual([PICTURE.anchor, SHAPE.anchor]);
+  });
+
+  it('opens a menu of its own on a right click and deletes the drawing from it', async () => {
+    const book = drawnBook([PICTURE, SHAPE]);
+    const sheet = sheetOf(book);
+
+    const left = await sheet.openDrawingMenu(1);
+
+    expect([left, sheet.selectedDrawings, sheet.drawingMenuItems, sheet.cellMenuItems]).toEqual([
+      false,
+      [1],
+      ['Delete'],
+      [],
+    ]);
+
+    await sheet.chooseDrawingMenuItem('Delete');
+
+    expect([anchorsOf(book), sheet.announcement]).toEqual([[PICTURE.anchor], 'Arrow removed']);
+
+    await sheet.press('z', { ctrl: true });
+
+    expect(anchorsOf(book)).toEqual([PICTURE.anchor, SHAPE.anchor]);
+  });
+
+  it('offers the settings of a chart in its menu', async () => {
+    const sheet = sheetOf(drawnBook([CHART]));
+
+    await sheet.openDrawingMenu(0);
+
+    expect(sheet.drawingMenuItems).toEqual(['Chart settings', 'Delete']);
+
+    await sheet.chooseDrawingMenuItem('Chart settings');
+
+    expect(sheet.chartSettingsOpen).toBe(true);
+  });
+
+  it('opens the menu of a selected drawing with Shift+F10 instead of the cell menu', async () => {
+    const sheet = sheetOf(drawnBook([PICTURE]));
+
+    await sheet.clickDrawing(0);
+    await sheet.press('F10', { shift: true });
+
+    expect([sheet.drawingMenuItems, sheet.drawingMenuFocused, sheet.cellMenuItems]).toEqual([
+      ['Delete'],
+      true,
+      [],
+    ]);
+  });
+
+  it('opens the menu of a selected drawing with the menu key', async () => {
+    const sheet = sheetOf(drawnBook([CHART]));
+
+    await sheet.clickDrawing(0);
+    await sheet.press('ContextMenu');
+
+    expect([sheet.drawingMenuItems, sheet.drawingMenuFocused, sheet.cellMenuItems]).toEqual([
+      ['Chart settings', 'Delete'],
+      true,
+      [],
+    ]);
+  });
+
+  it('opens the menu of a drawing held by a finger', async () => {
+    const sheet = sheetOf(drawnBook([PICTURE]));
+
+    await sheet.settle();
+    vi.useFakeTimers();
+    await sheet.holdDrawing(0, 600);
+
+    expect([sheet.selectedDrawings, sheet.drawingMenuItems]).toEqual([[0], ['Delete']]);
+  });
+
+  it('leaves a right click on a drawing of a read-only sheet to the browser', async () => {
+    const sheet = SpreadsheetDriver.mount({
+      book: drawnBook([PICTURE]),
+      label: 'Drawings',
+      readonly: true,
+    });
+
+    mounted.push(sheet);
+
+    expect([await sheet.openDrawingMenu(0), sheet.drawingMenuItems]).toEqual([true, []]);
   });
 
   it('gives the arrows back to the cells after Escape', async () => {

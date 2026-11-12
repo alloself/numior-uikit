@@ -2,7 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { applyCheck, checkStates } from '../src/tree/cascade';
 import { defaultOptionKey } from '../src/shared/options';
 import { TreeDriver } from './drivers/tree';
-import { FILES, manyNodes, withDocs, withTrailing } from './support/tree-items';
+import {
+  FILES,
+  GUARDED,
+  manyNodes,
+  withDocs,
+  withoutItems,
+  withTrailing,
+} from './support/tree-items';
 
 describe('NuiTree', () => {
   beforeEach(() => vi.useFakeTimers());
@@ -125,6 +132,130 @@ describe('NuiTree', () => {
     expect(rtl.expandedValues).toEqual([]);
 
     rtl.unmount();
+  });
+
+  it('steps into the first enabled child and stays on a node whose children are all disabled', async () => {
+    const tree = TreeDriver.mount({ items: GUARDED, expanded: ['api', 'vault'] });
+    await tree.focus();
+    await tree.press('ArrowDown');
+    expect(tree.activeLabel).toBe('api');
+
+    await tree.press('ArrowRight');
+    expect(tree.activeLabel).toBe('stable');
+
+    await tree.press('ArrowDown');
+    expect(tree.activeLabel).toBe('vault');
+
+    await tree.press('ArrowRight');
+    expect(tree.activeLabel).toBe('vault');
+
+    await tree.press('ArrowDown');
+    expect(tree.activeLabel).toBe('outro');
+
+    tree.unmount();
+  });
+
+  it('keeps moving from a node that became disabled instead of jumping to the start', async () => {
+    const tree = TreeDriver.mount({ modelValue: 'readme' });
+    await tree.focus();
+    await tree.disable('README.md');
+    expect(tree.activeLabel).toBe('README.md');
+
+    await tree.press('ArrowDown');
+    expect(tree.activeLabel).toBe('empty');
+
+    await tree.disable('empty');
+    await tree.press('ArrowUp');
+    expect(tree.activeLabel).toBe('docs');
+
+    await tree.disable('docs');
+    await tree.press('PageDown');
+    expect(tree.activeLabel).toBe('Дизайн');
+
+    await tree.disable('Дизайн');
+    await tree.press('PageUp');
+    expect(tree.activeLabel).toBe('src');
+
+    tree.unmount();
+  });
+
+  it('moves the cursor to the nearest visible ancestor when its node is collapsed from outside', async () => {
+    const tree = TreeDriver.mount({ expanded: ['src', 'components'] });
+    await tree.focus();
+    await tree.press('ArrowDown');
+    await tree.press('ArrowDown');
+    expect(tree.activeLabel).toBe('Button.vue');
+
+    await tree.setExpanded(['src']);
+    expect(tree.activeLabel).toBe('components');
+    expect(tree.activeLabels).toEqual(['components']);
+
+    await tree.press('ArrowDown');
+    expect(tree.activeLabel).toBe('index.ts');
+
+    await tree.setExpanded(['components']);
+    expect(tree.activeLabel).toBe('src');
+    expect(tree.activeLabels).toEqual(['src']);
+
+    await tree.press('ArrowDown');
+    expect(tree.activeLabel).toBe('docs');
+
+    tree.unmount();
+    const locked = TreeDriver.mount({ modelValue: 'readme', expanded: ['legacy'] });
+    await locked.focus();
+    await locked.press('ArrowDown');
+    expect(locked.activeLabel).toBe('old.js');
+
+    await locked.setExpanded([]);
+    expect(locked.activeLabel).toBe('empty');
+
+    locked.unmount();
+  });
+
+  it('moves the cursor to the node at the same position when its node disappears with a reload', async () => {
+    const tree = TreeDriver.mount({ modelValue: 'readme' });
+    await tree.focus();
+    expect(tree.activeLabel).toBe('README.md');
+
+    await tree.receiveItems(withoutItems('readme'));
+    expect(tree.activeLabel).toBe('empty');
+    expect(tree.activeLabels).toEqual(['empty']);
+
+    await tree.press('ArrowUp');
+    expect(tree.activeLabel).toBe('docs');
+
+    await tree.press('End');
+    expect(tree.activeLabel).toBe('Дизайн');
+
+    await tree.receiveItems(withoutItems('readme', 'design'));
+    expect(tree.activeLabel).toBe('empty');
+    expect(tree.activeLabels).toEqual(['empty']);
+
+    await tree.receiveItems([]);
+    expect(tree.activeLabel).toBeUndefined();
+
+    tree.unmount();
+
+    const lazy = TreeDriver.mount({
+      items: withDocs([
+        { value: 'guide', label: 'guide.md' },
+        { value: 'api', label: 'API.md' },
+      ]),
+      expanded: ['docs'],
+    });
+
+    await lazy.focus();
+    await lazy.press('ArrowDown');
+    await lazy.press('ArrowDown');
+    expect(lazy.activeLabel).toBe('guide.md');
+
+    await lazy.receiveItems(withDocs([{ value: 'api', label: 'API.md' }]));
+    expect(lazy.activeLabel).toBe('API.md');
+
+    await lazy.receiveItems(withDocs([]));
+    expect(lazy.activeLabel).toBe('docs');
+
+    lazy.unmount();
   });
 
   it('finds nodes by typeahead in Latin and Cyrillic and selects with Enter in single and multiple modes', async () => {
@@ -304,7 +435,6 @@ describe('NuiTree', () => {
     await tree.clickToggle('docs');
     expect(tree.loads).toEqual(['docs']);
     expect(tree.attr('docs', 'aria-busy')).toBe('true');
-    expect(tree.attr('docs', 'aria-expanded')).toBe('true');
     expect(tree.hasPart('docs', 'spinner')).toBe(true);
     expect(tree.value).toBeNull();
 
@@ -318,6 +448,41 @@ describe('NuiTree', () => {
     expect(tree.labels).not.toContain('guide.md');
 
     tree.unmount();
+  });
+
+  it('keeps a lazy node closed while its children load and opens it when they arrive', async () => {
+    const tree = TreeDriver.mount();
+
+    await tree.clickToggle('docs');
+    expect(tree.expandedValues).toEqual(['docs']);
+    expect(tree.isOpen('docs')).toBe(false);
+    expect(tree.attr('docs', 'aria-expanded')).toBe('false');
+
+    await tree.receiveItems(withDocs([{ value: 'guide', label: 'guide.md' }]));
+    expect(tree.isOpen('docs')).toBe(true);
+    expect(tree.attr('docs', 'aria-expanded')).toBe('true');
+
+    tree.unmount();
+    const waiting = TreeDriver.mount();
+
+    await waiting.clickToggle('docs');
+    await waiting.clickToggle('docs');
+    expect(waiting.expandedValues).toEqual([]);
+    expect(waiting.hasPart('docs', 'spinner')).toBe(false);
+
+    waiting.unmount();
+
+    const slotted = TreeDriver.mount({
+      itemSlot: ({ item, expanded }) => `${item.label}:${expanded ? 'open' : 'closed'}`,
+    });
+
+    await slotted.clickToggle('docs:closed');
+    expect(slotted.labels).toContain('docs:closed');
+
+    await slotted.receiveItems(withDocs([{ value: 'guide', label: 'guide.md' }]));
+    expect(slotted.labels).toContain('docs:open');
+
+    slotted.unmount();
   });
 
   it('selects on click, toggles on the chevron and on double click and renders the item slot', async () => {
@@ -348,10 +513,10 @@ describe('NuiTree', () => {
   it('renders on the list shell with a variant, a size, badges, shortcuts and the current node', () => {
     const tree = TreeDriver.mount({
       items: withTrailing(),
-      props: { variant: 'bordered', size: 'sm' },
+      props: { variant: 'outline', size: 'sm' },
     });
 
-    expect(tree.listModifier('variant-bordered')).toBe(true);
+    expect(tree.listModifier('variant-outline')).toBe(true);
     expect(tree.modifierOf('src', 'size-sm')).toBe(true);
     expect(tree.trailingOf('src')).toBe('3');
     expect(tree.trailingOf('docs')).not.toBe('');

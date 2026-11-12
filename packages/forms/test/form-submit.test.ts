@@ -24,6 +24,17 @@ const keepHelpers =
     return gate?.promise;
   };
 
+const saved: Values = { email: 'saved@example.com', password: 'long enough' };
+
+const resetToSaved =
+  (sink: SubmitHelpers<Values, unknown>[], gate: Deferred, entered: Deferred) =>
+  (_values: SubmittedValues<Values>, helpers: SubmitHelpers<Values, unknown>) => {
+    helpers.resetForm({ values: saved });
+    sink.push(helpers);
+    entered.resolve();
+    return gate.promise;
+  };
+
 const commitNow =
   (value: string): FieldFlush =>
   (commit) => {
@@ -238,6 +249,51 @@ describe('submit', () => {
     expect(helpers[0]?.signal.aborted).toBe(true);
     expect((await pending).status).toBe('aborted');
     expect(form.meta.pending).toBe(false);
+  });
+
+  it('finishes as submitted when the handler resets the form to the saved values', async () => {
+    const gate = new Deferred();
+    const entered = new Deferred();
+    const helpers: SubmitHelpers<Values, unknown>[] = [];
+
+    const form = FormHarness.mount({
+      initialValues: filled,
+      fields: ['email', 'password'],
+      onSubmit: resetToSaved(helpers, gate, entered),
+    });
+
+    const pending = form.startSubmit();
+
+    await entered.promise;
+    expect(form.meta.pending).toBe(true);
+    expect(helpers[0]?.signal.aborted).toBe(false);
+
+    gate.resolve();
+    expect((await pending).status).toBe('submitted');
+    expect(form.values).toEqual(saved);
+    expect(form.meta).toMatchObject({ dirty: false, submitted: true, pending: false });
+  });
+
+  it('still aborts a submit whose handler reset the form when the form is reset from outside', async () => {
+    const gate = new Deferred();
+    const entered = new Deferred();
+    const helpers: SubmitHelpers<Values, unknown>[] = [];
+
+    const form = FormHarness.mount({
+      initialValues: filled,
+      fields: ['email', 'password'],
+      onSubmit: resetToSaved(helpers, gate, entered),
+    });
+
+    const pending = form.startSubmit();
+
+    await entered.promise;
+    await form.reset({ values: filled });
+    gate.resolve();
+    expect(helpers[0]?.signal.aborted).toBe(true);
+    expect((await pending).status).toBe('aborted');
+    expect(form.values).toEqual(filled);
+    expect(form.meta).toMatchObject({ submitted: false, pending: false });
   });
 
   it('moves focus to a field by its path', async () => {

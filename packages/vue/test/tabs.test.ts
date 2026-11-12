@@ -177,6 +177,105 @@ describe('NuiTabs', () => {
     tabs.unmount();
   });
 
+  it('shows an edge button only where tabs are hidden and pages the list with it', async () => {
+    const tabs = TabsDriver.mount({ modelValue: 'general' });
+
+    await tabs.ready();
+
+    expect(tabs.edges).toEqual({ start: false, end: false });
+
+    await tabs.scrollTrack({ scrollWidth: 600, clientWidth: 200, scrollLeft: 0 });
+
+    expect(tabs.edges).toEqual({ start: false, end: true });
+    expect(tabs.fades).toEqual({ start: false, end: true });
+
+    await tabs.clickEdge('end');
+
+    expect(tabs.scrolled).toBe(160);
+    expect(tabs.edges).toEqual({ start: true, end: true });
+
+    await tabs.clickEdge('end');
+    await tabs.clickEdge('end');
+
+    expect(tabs.scrolled).toBe(400);
+    expect(tabs.edges).toEqual({ start: true, end: false });
+
+    await tabs.clickEdge('start');
+
+    expect(tabs.scrolled).toBe(240);
+
+    tabs.unmount();
+  });
+
+  it('pages towards the visual end in RTL and shows no edges on a vertical list', async () => {
+    const rtl = TabsDriver.mount({ modelValue: 'general', dir: 'rtl' });
+
+    await rtl.ready();
+    await rtl.scrollTrack({ scrollWidth: 600, clientWidth: 200, scrollLeft: 0, rtl: true });
+    await rtl.clickEdge('end');
+
+    expect(rtl.scrolled).toBe(-160);
+    expect(rtl.edges).toEqual({ start: true, end: true });
+
+    rtl.unmount();
+
+    const vertical = TabsDriver.mount({
+      modelValue: 'general',
+      props: { orientation: 'vertical' },
+    });
+
+    await vertical.ready();
+    await vertical.scrollTrack({ scrollWidth: 600, clientWidth: 200, scrollLeft: 0 });
+
+    expect(vertical.edges).toEqual({ start: false, end: false });
+    expect(await vertical.wheel(100)).toBe(false);
+
+    vertical.unmount();
+  });
+
+  it('scrolls an overflowing list with a vertical wheel and leaves the wheel to the page otherwise', async () => {
+    const tabs = TabsDriver.mount({ modelValue: 'general' });
+
+    await tabs.ready();
+
+    expect(await tabs.wheel(100)).toBe(false);
+
+    await tabs.scrollTrack({ scrollWidth: 600, clientWidth: 200, scrollLeft: 0 });
+
+    expect(await tabs.wheel(-100)).toBe(false);
+    expect(await tabs.wheel(100, { shiftKey: true })).toBe(false);
+    expect(await tabs.wheel(100, { deltaX: 40 })).toBe(false);
+    expect(await tabs.wheel(100)).toBe(true);
+    expect(tabs.scrolled).toBe(100);
+
+    expect(await tabs.wheel(3, { deltaMode: WheelEvent.DOM_DELTA_LINE })).toBe(true);
+    expect(tabs.scrolled).toBe(148);
+
+    expect(await tabs.wheel(1000)).toBe(true);
+    expect(await tabs.wheel(1000)).toBe(false);
+    expect(tabs.scrolled).toBe(400);
+
+    tabs.unmount();
+  });
+
+  it('brings a tab selected from outside into view without scrolling the page', async () => {
+    const tabs = TabsDriver.mount({ modelValue: 'general' });
+
+    await tabs.ready();
+    await tabs.scrollTrack({ scrollWidth: 600, clientWidth: 200, scrollLeft: 0 });
+    tabs.placeTab('Danger', { start: 300, size: 80 });
+    await tabs.receive('danger');
+
+    expect(tabs.scrolled).toBe(180);
+
+    tabs.placeTab('General', { start: -180, size: 60 });
+    await tabs.receive('general');
+
+    expect(tabs.scrolled).toBe(0);
+
+    tabs.unmount();
+  });
+
   it('closes a closable tab from its cross, the middle button and Delete', async () => {
     const tabs = TabsDriver.mount({
       modelValue: 'general',

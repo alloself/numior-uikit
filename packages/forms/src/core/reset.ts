@@ -41,10 +41,12 @@ export const createReset =
       entry.state.setAttempted(errors.length > 0);
       writeErrors(entry.state, errors);
     }
-    if (!options.keepErrors) {
-      core.session.formAttempted = false;
-      core.external.clear();
-      core.schemaFormErrors.value = [];
-      core.serverFormErrors.value = [];
+    if (options.keepErrors) {
+      return;
     }
+
+    core.session.formAttempted = false;
+    core.external.clear();
+    core.schemaFormErrors.value = [];
+    core.serverFormErrors.value = [];
   };

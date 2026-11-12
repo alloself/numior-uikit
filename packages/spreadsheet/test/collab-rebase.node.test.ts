@@ -9,7 +9,7 @@ import {
   type WorkbookStep,
 } from '../src/core';
 import { RemoteChangeKind, type RemoteChange } from '../src/core/collab/collab.types';
-import { mergeLayouts } from '../src/core/collab/merge-layout';
+import { layoutDelta, mergeLayouts, patchLayout } from '../src/core/layout/merge-layout';
 import { rebaseStep } from '../src/core/collab/rebase-step';
 import { changeOver, changesOf } from '../src/core/collab/remote-change';
 import type { SheetDrawing } from '../src/core/drawings/drawing.types';
@@ -430,6 +430,8 @@ const picture = (id: string, media: string): SheetDrawing => ({
 
 const layoutWith = (patch: Partial<SheetLayout>): SheetLayout => ({ ...EMPTY_LAYOUT, ...patch });
 
+const wide = (size: number): LineLayout => ({ ...LINE, size });
+
 const namesOf = (layout: SheetLayout): readonly string[] =>
   layout.drawings.map((item) => item.name);
 
@@ -610,5 +612,155 @@ describe('merging layouts', () => {
     const merged = mergeLayouts(base, base, layoutWith({ drawings: [picture('a', 'two.png')] }));
 
     expect(merged.drawings[0]?.content).toMatchObject({ media: 'two.png' });
+  });
+});
+
+describe('patching layouts', () => {
+  it('puts the own lines back and leaves the lines set since', () => {
+    const patched = patchLayout(
+      layoutWith({ cols: lineLayoutsOf([[1, wide(40)]]) }),
+      layoutWith({ cols: lineLayoutsOf([[1, LINE]]) }),
+      layoutWith({
+        cols: lineLayoutsOf([
+          [1, wide(40)],
+          [2, wide(60)],
+        ]),
+      }),
+    );
+
+    expect([patched.cols.get(1)?.size, patched.cols.get(2)?.size]).toEqual([20, 60]);
+  });
+
+  it('leaves a line, a view key and a drawing someone else has changed again', () => {
+    const view = EMPTY_LAYOUT.view;
+
+    const patched = patchLayout(
+      layoutWith({
+        cols: lineLayoutsOf([[1, wide(40)]]),
+        view: { ...view, frozenRows: 2, zoom: 150 },
+        drawings: [drawing('a', 'placed'), drawing('b', 'placed')],
+      }),
+      layoutWith({ drawings: [drawing('a', 'a'), drawing('b', 'b')] }),
+      layoutWith({
+        cols: lineLayoutsOf([[1, wide(70)]]),
+        view: { ...view, frozenRows: 2, zoom: 80 },
+        drawings: [drawing('a', 'placed'), drawing('b', 'theirs')],
+      }),
+    );
+
+    expect(patched.cols.get(1)?.size).toBe(70);
+    expect(patched.view).toEqual({ ...view, frozenRows: 0, zoom: 80 });
+    expect(namesOf(patched)).toEqual(['a', 'theirs']);
+  });
+
+  it('finds no difference between layouts that hold the same', () => {
+    const layout = layoutWith({ cols: lineLayoutsOf([[1, LINE]]), merges: [RANGE] });
+
+    const delta = layoutDelta(
+      layout,
+      layoutWith({ cols: lineLayoutsOf([[1, { ...LINE }]]), merges: [{ ...RANGE }] }),
+    );
+
+    expect(delta).toBeUndefined();
+  });
+
+  it.each<readonly [string, Partial<LineLayout>]>([
+    ['size', { size: 40 }],
+    ['custom flag', { custom: false }],
+    ['hidden flag', { hidden: true }],
+    ['level', { level: 2 }],
+    ['collapsed flag', { collapsed: true }],
+    ['style', { style: { format: 1, decoration: 0 } }],
+    ['extra attributes', { extra: [['ph', '1']] }],
+  ])('tells lines apart by their %s', (_what, change) => {
+    const delta = layoutDelta(
+      layoutWith({ rows: lineLayoutsOf([[1, LINE]]) }),
+      layoutWith({ rows: lineLayoutsOf([[1, { ...LINE, ...change }]]) }),
+    );
+
+    expect(delta?.layout.rows.get(1)).toMatchObject(change);
+  });
+
+  it('keeps in a difference only the lines and the parts that differ', () => {
+    const rows = lineLayoutsOf([
+      [1, LINE],
+      [2, LINE],
+    ]);
+
+    const delta = layoutDelta(
+      layoutWith({
+        rows,
+        cols: lineLayoutsOf([[3, wide(40)]]),
+        merges: [RANGE],
+        drawings: [drawing('a', 'a'), drawing('b', 'placed')],
+      }),
+      layoutWith({
+        rows,
+        cols: lineLayoutsOf([[4, wide(60)]]),
+        merges: [RANGE],
+        drawings: [drawing('a', 'a'), drawing('b', 'b')],
+      }),
+    );
+
+    expect([delta?.base.rows.size, delta?.layout.rows.size]).toEqual([0, 0]);
+    expect([delta?.base.cols.get(3)?.size, delta?.layout.cols.get(4)?.size]).toEqual([40, 60]);
+    expect([delta?.base.merges, delta?.layout.merges]).toEqual([[], []]);
+
+    expect([delta?.base.drawings, delta?.layout.drawings].map((list) => list?.length)).toEqual([
+      1, 1,
+    ]);
+  });
+
+  it('gives the same layout from a difference as from the whole layouts', () => {
+    const base = layoutWith({
+      cols: lineLayoutsOf([
+        [1, wide(40)],
+        [5, LINE],
+      ]),
+      merges: [RANGE],
+    });
+
+    const mine = layoutWith({ cols: lineLayoutsOf([[5, LINE]]), merges: [MOVED_RANGE] });
+
+    const theirs = layoutWith({
+      cols: lineLayoutsOf([
+        [1, wide(40)],
+        [5, wide(90)],
+      ]),
+      merges: [RANGE],
+    });
+
+    const delta = layoutDelta(base, mine) ?? { base, layout: mine };
+    const patched = patchLayout(delta.base, delta.layout, theirs);
+    const whole = patchLayout(base, mine, theirs);
+
+    expect([patched.cols.get(1), patched.cols.get(5)?.size, patched.merges]).toEqual([
+      undefined,
+      90,
+      [MOVED_RANGE],
+    ]);
+
+    expect(layoutDelta(patched, whole)).toBeUndefined();
+  });
+
+  it('keeps the last of two layouts given for one line', () => {
+    const kept = lineLayoutsOf([
+      [3, wide(60)],
+      [1, wide(40)],
+      [1, wide(50)],
+    ]);
+
+    expect([kept.size, kept.get(1)?.size, kept.get(3)?.size]).toEqual([2, 50, 60]);
+  });
+
+  it('moves the base of a step with its layout', () => {
+    const frozen = layoutWith({ view: { ...EMPTY_LAYOUT.view, frozenRows: 3 } });
+
+    const moved = rebaseStep(
+      { kind: 'setLayout', sheet: 'S', layout: EMPTY_LAYOUT, base: frozen },
+      INSERTED,
+    );
+
+    expect(moved).toMatchObject({ base: { view: { frozenRows: 5 } } });
   });
 });

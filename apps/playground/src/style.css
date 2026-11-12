@@ -171,6 +171,7 @@ label:has(> input[type='checkbox']) {
 .layout-controls {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-end;
   gap: var(--nui-space-3);
 }
 .layout-controls {

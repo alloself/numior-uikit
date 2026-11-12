@@ -59,6 +59,28 @@
         :show-table="showTable"
         data-testid="chart-scatter"
       />
+      <NuiChart
+        :spec="deals"
+        label="Крупные сделки октября, млн ₽"
+        :show-table="showTable"
+        data-testid="chart-deals"
+      />
+      <NuiChart
+        :spec="latency"
+        label="Время ответа сервиса за неделю, мс: ось от 100 до 400"
+        :show-table="showTable"
+        data-testid="chart-bounded"
+      />
+      <div class="charts-cell">
+        <NuiChart
+          :spec="orders"
+          label="Заказы по часам за 15 октября"
+          time-zone="Europe/Moscow"
+          :show-table="showTable"
+          data-testid="chart-hours"
+        />
+        <p class="charts-note">Время московское: данные хранятся в UTC</p>
+      </div>
     </div>
   </section>
 </template>
@@ -165,5 +187,41 @@ const discounts: ChartSpec = {
   ],
   valueAxis: { title: 'Прирост, %' },
   categoryAxis: { title: 'Скидка, %' },
+};
+
+const DEAL_DAYS = [1, 3, 3, 6, 9, 13, 14, 20, 22, 27, 30];
+
+const DEAL_AMOUNTS = [1.2, 3.4, 0.8, 2.1, 5.6, 1.9, 4.3, 2.7, 6.1, 3.3, 4.8];
+
+const deals: ChartSpec = {
+  kind: 'scatter',
+  categories: { kind: 'time', values: DEAL_DAYS.map((day) => Date.UTC(2026, 9, day)) },
+  series: [{ id: 'deals', name: 'Сделки', values: DEAL_AMOUNTS }],
+  valueAxis: { title: 'млн ₽' },
+  categoryAxis: { title: 'Дата' },
+};
+
+const latency: ChartSpec = {
+  kind: 'line',
+  categories: { kind: 'text', labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'] },
+  series: [{ id: 'p95', name: 'p95', values: [180, 210, 195, 1240, 230, 170, 160] }],
+  valueAxis: { title: 'мс', min: 100, max: 400 },
+};
+
+const HOUR = 3_600_000;
+
+const MOSCOW_MIDNIGHT = Date.UTC(2026, 9, 14, 21);
+
+const ORDERS = [
+  4, 2, 1, 1, 2, 5, 11, 19, 27, 31, 34, 36, 38, 35, 33, 32, 34, 39, 44, 41, 33, 24, 15, 8,
+];
+
+const orders: ChartSpec = {
+  kind: 'column',
+  categories: {
+    kind: 'time',
+    values: ORDERS.map((_count, index) => MOSCOW_MIDNIGHT + index * HOUR),
+  },
+  series: [{ id: 'orders', name: 'Заказы', values: ORDERS }],
 };
 </script>

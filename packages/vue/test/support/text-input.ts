@@ -9,12 +9,14 @@ export const typeInto = (element: HTMLInputElement, keys: string): void => {
       cancelable: true,
     });
 
-    if (element.dispatchEvent(before)) {
-      const at = element.selectionStart ?? element.value.length;
-
-      element.setRangeText(key, at, element.selectionEnd ?? at, 'end');
-      element.dispatchEvent(new InputEvent('input', { inputType: 'insertText', data: key }));
+    if (!element.dispatchEvent(before)) {
+      continue;
     }
+
+    const at = element.selectionStart ?? element.value.length;
+
+    element.setRangeText(key, at, element.selectionEnd ?? at, 'end');
+    element.dispatchEvent(new InputEvent('input', { inputType: 'insertText', data: key }));
   }
 };
 
@@ -26,4 +28,20 @@ export const eraseBefore = (element: HTMLInputElement): void => {
     element.setRangeText('', at - 1, at, 'end');
   }
   element.dispatchEvent(new InputEvent('input', { inputType: 'deleteContentBackward' }));
+};
+
+export const composeInto = (
+  element: HTMLInputElement | HTMLTextAreaElement,
+  text: string,
+): void => {
+  element.value = text;
+
+  element.dispatchEvent(
+    new InputEvent('input', {
+      inputType: 'insertCompositionText',
+      data: text,
+      isComposing: true,
+      bubbles: true,
+    }),
+  );
 };

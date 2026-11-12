@@ -215,18 +215,22 @@ const hide = useTimeoutFn(
 const reveal = (index: number | null): void => {
   hide.stop();
   revealed.value = index;
-  if (index !== null) {
-    hide.start();
+  if (index === null) {
+    return;
   }
+
+  hide.start();
 };
 
 const select = (element: HTMLInputElement, next: OtpSelection): void => {
   if (element.selectionStart !== next.start || element.selectionEnd !== next.end) {
     element.setSelectionRange(next.start, next.end);
   }
-  if (!sameSelection(selection.value, next)) {
-    selection.value = next;
+  if (sameSelection(selection.value, next)) {
+    return;
   }
+
+  selection.value = next;
 };
 
 const selectSlot = (element: HTMLInputElement, index: number): void => {
@@ -241,9 +245,11 @@ const store = (element: HTMLInputElement, value: string): void => {
     return;
   }
   model.value = value;
-  if (value.length === count.value) {
-    emit('complete', value);
+  if (value.length !== count.value) {
+    return;
   }
+
+  emit('complete', value);
 };
 
 const apply = (element: HTMLInputElement, edit: OtpEdit, direction: OtpDirection): void => {
@@ -253,9 +259,11 @@ const apply = (element: HTMLInputElement, edit: OtpEdit, direction: OtpDirection
 
 const restore = (element: HTMLInputElement): void => {
   element.value = code.value;
-  if (selection.value !== null) {
-    element.setSelectionRange(selection.value.start, selection.value.end);
+  if (selection.value === null) {
+    return;
   }
+
+  element.setSelectionRange(selection.value.start, selection.value.end);
 };
 
 const isRefused = (event: Event): boolean =>
@@ -266,9 +274,11 @@ const isRefused = (event: Event): boolean =>
 
 const onBeforeinput = (event: InputEvent): void => {
   pointed.set(undefined);
-  if (!event.isComposing && isRefused(event)) {
-    event.preventDefault();
+  if (event.isComposing || !isRefused(event)) {
+    return;
   }
+
+  event.preventDefault();
 };
 
 const onInput = (event: Event): void => {
@@ -291,13 +301,15 @@ const onInput = (event: Event): void => {
 
 const onCompositionend = (): void => {
   const element = inputElement.value;
-  if (element) {
-    apply(
-      element,
-      reconcileOtp(element.value, selectionOf(element).start, count.value, charset),
-      'forward',
-    );
+  if (!element) {
+    return;
   }
+
+  apply(
+    element,
+    reconcileOtp(element.value, selectionOf(element).start, count.value, charset),
+    'forward',
+  );
 };
 
 const onPaste = (event: ClipboardEvent): void => {
@@ -360,16 +372,20 @@ const onClick = (event: MouseEvent): void => {
   const index = event.detail < 2 ? slotIndexAt(event.clientX) : undefined;
 
   pointed.set(index);
-  if (element && index !== undefined) {
-    selectSlot(element, index);
+  if (!element || index === undefined) {
+    return;
   }
+
+  selectSlot(element, index);
 };
 
 const onFocus = (): void => {
   const element = inputElement.value;
-  if (element) {
-    selectSlot(element, pointed.peek() ?? count.value);
+  if (!element) {
+    return;
   }
+
+  selectSlot(element, pointed.peek() ?? count.value);
 };
 
 const onBlur = (): void => {
@@ -404,9 +420,11 @@ const receive = (text: string): void => {
 
   reveal(null);
   store(element, value);
-  if (selection.value !== null) {
-    select(element, selectOtpSlot(value, count.value, count.value));
+  if (selection.value === null) {
+    return;
   }
+
+  select(element, selectOtpSlot(value, count.value, count.value));
 };
 
 watch(code, (value) => {
@@ -423,9 +441,11 @@ onMounted(() => {
     selection,
     (next) => {
       const element = inputElement.value;
-      if (next !== null && element && element.ownerDocument.activeElement === element) {
-        select(element, next);
+      if (next === null || !element || element.ownerDocument.activeElement !== element) {
+        return;
       }
+
+      select(element, next);
     },
     { flush: 'post' },
   );

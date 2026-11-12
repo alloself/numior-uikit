@@ -5,7 +5,7 @@
     :get-key="keyOf"
     :cell-style="styleOf"
     :column-menu="false"
-    bordered
+    gridlines
     caption="Plans, ₽"
   />
 </template>

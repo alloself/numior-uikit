@@ -72,6 +72,9 @@ const PARTS: Readonly<Record<string, string>> = {
 
 export const workbookWith = (extra: string): string => WORKBOOK(extra);
 
+export const sheetWith = (rows: string): string =>
+  `${HEADER}<worksheet xmlns="${MAIN}"><sheetData>${rows}</sheetData></worksheet>`;
+
 export const xlsxPackage = (
   changes: Readonly<Record<string, string | undefined>> = {},
 ): Promise<Bytes> => {

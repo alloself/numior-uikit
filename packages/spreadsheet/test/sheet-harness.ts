@@ -95,6 +95,11 @@ export const openSheet = (options: CalculatorOptions = {}) => {
 
       return range === undefined ? undefined : formatRange(range);
     },
+    stale: (address: string): boolean => {
+      const { row, col } = at(address);
+
+      return calculator.staleAt(sheet, row, col);
+    },
     state: (address: string): FormulaState | undefined => {
       const { row, col } = at(address);
 

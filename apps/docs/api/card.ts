@@ -37,6 +37,10 @@ const docs: DocsMap = {
         ru: 'Описание под заголовком без `NuiCardHeader`.',
         en: 'Description under the title without `NuiCardHeader`.',
       },
+      loading: {
+        ru: 'Показывает заглушки в частях карточки, ставит `aria-busy` и выключает ссылку или кнопку карточки.',
+        en: 'Shows placeholders in the card parts, sets `aria-busy` and turns the card link or button off.',
+      },
     },
     slots: {
       default: {
@@ -58,7 +62,7 @@ const docs: DocsMap = {
       },
     ],
     configurator: {
-      props: ['variant', 'padding', 'interactive', 'title', 'description'],
+      props: ['variant', 'padding', 'interactive', 'loading', 'title', 'description'],
       content: { ru: 'Содержимое карточки', en: 'Card content' },
     },
   },
@@ -81,7 +85,15 @@ const docs: DocsMap = {
     },
   },
   NuiCardDescription: { slots: { default: content } },
-  NuiCardContent: { slots: { default: content } },
+  NuiCardContent: {
+    props: {
+      lines: {
+        ru: 'Число строк заглушки, пока карточка загружается.',
+        en: 'Number of placeholder lines while the card is loading.',
+      },
+    },
+    slots: { default: content },
+  },
   NuiCardFooter: {
     slots: {
       default: {

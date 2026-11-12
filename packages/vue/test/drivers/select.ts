@@ -158,6 +158,12 @@ export class SelectDriver extends ComponentDriver {
     return empty.exists() ? empty.text() : '';
   }
 
+  get statusText(): string {
+    const status = this.wrapper.find('.nui-list__status');
+
+    return status.exists() ? status.text() : '';
+  }
+
   get clearButton(): DOMWrapper<Element> {
     return this.wrapper.find('.nui-select__clear');
   }

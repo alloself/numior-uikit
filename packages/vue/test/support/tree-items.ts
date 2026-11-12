@@ -28,6 +28,27 @@ export const FILES: readonly NuiTreeItem[] = [
   { value: 'design', label: 'Дизайн', children: [{ value: 'logo', label: 'logo.svg' }] },
 ];
 
+export const GUARDED: readonly NuiTreeItem[] = [
+  { value: 'intro', label: 'intro' },
+  {
+    value: 'api',
+    label: 'api',
+    children: [
+      { value: 'draft', label: 'draft', disabled: true },
+      { value: 'stable', label: 'stable' },
+    ],
+  },
+  {
+    value: 'vault',
+    label: 'vault',
+    children: [{ value: 'secret', label: 'secret', disabled: true }],
+  },
+  { value: 'outro', label: 'outro' },
+];
+
+export const withoutItems = (...values: readonly string[]): NuiTreeItem[] =>
+  FILES.filter((item) => !values.includes(item.value));
+
 export const withTrailing = (): NuiTreeItem[] =>
   FILES.map((item) => {
     switch (item.value) {

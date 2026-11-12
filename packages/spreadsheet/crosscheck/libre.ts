@@ -9,9 +9,11 @@ import { corpusFixtures, corpusSource } from '../test/corpus-files.ts';
 import { functionCorpora, type Corpus } from '../test/function-corpus.ts';
 import {
   caseBook,
+  knownDifferences,
   mismatchesOf,
   printMismatches,
   shownInput,
+  splitKnown,
   valuesOf,
   type BookCase,
   type Check,
@@ -121,17 +123,6 @@ const libreValues = async (folder: string, file: string): Promise<Values> => {
   return read === undefined || read.kind === 'rejected' ? new Map() : valuesOf(read);
 };
 
-const knownDifferences = (): Map<string, string> => {
-  const data: unknown = JSON.parse(readFileSync(join(HERE, 'libre-known.json'), 'utf8'));
-
-  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
-    throw new Error('libre-known.json must map case keys to reasons');
-  }
-  return new Map(
-    Object.entries(data).map(([key, reason]) => [key, typeof reason === 'string' ? reason : '']),
-  );
-};
-
 const run = async (): Promise<void> => {
   const folder = mkdtempSync(join(tmpdir(), 'numior-libre-'));
 
@@ -159,10 +150,13 @@ const run = async (): Promise<void> => {
   const checks = [...functionChecks.flat(), ...fixtureChecks.flat()];
   const version = convert(folder);
   const mismatches = await mismatchesOf(checks, (file) => libreValues(folder, file), true);
-  const known = knownDifferences();
   const keys = new Set(checks.map((check) => check.key));
-  const fresh = [...mismatches].filter(([key]) => !known.has(key));
-  const stale = [...known.keys()].filter((key) => keys.has(key) && !mismatches.has(key));
+
+  const { fresh, stale } = splitKnown(
+    mismatches,
+    knownDifferences(join(HERE, 'libre-known.json')),
+    checks,
+  );
 
   console.log(
     `${version}: ${String(keys.size)} cases, ${String(checks.length)} cells; ${String(keys.size - mismatches.size)} agree, ${String(mismatches.size - fresh.length)} known, ${String(fresh.length)} new; ${String(skipped)} skipped (Russian locale, clock and random)`,

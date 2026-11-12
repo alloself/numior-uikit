@@ -103,17 +103,21 @@ export const placeWidgets = (
     const slot = keys.has(widget.key) ? undefined : slotOf(context, state, widget);
     const dom = slot === undefined ? undefined : context.widget(widget.key);
 
-    if (slot !== undefined && dom !== undefined) {
-      keys.add(widget.key);
-      context.placed.set(widget.key, dom);
-      placed.push({ dom: prepare(context, dom), slot });
+    if (slot === undefined || dom === undefined) {
+      continue;
     }
+
+    keys.add(widget.key);
+    context.placed.set(widget.key, dom);
+    placed.push({ dom: prepare(context, dom), slot });
   }
   for (const [key, dom] of context.placed) {
-    if (!keys.has(key)) {
-      dom.remove();
-      context.placed.delete(key);
+    if (keys.has(key)) {
+      continue;
     }
+
+    dom.remove();
+    context.placed.delete(key);
   }
   for (const group of groupsOf(placed)) {
     placeGroup(group);

@@ -56,9 +56,11 @@ const cellsOf = (read: Opened, sheet: Sheet): Record<string, unknown> => {
   sheet.decorations.forEachInRange(WHOLE, add);
 
   read.calculator.forEachFormula((owner, row, col) => {
-    if (owner === sheet) {
-      add(row, col);
+    if (owner !== sheet) {
+      return;
     }
+
+    add(row, col);
   });
 
   return Object.fromEntries(

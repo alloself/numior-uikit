@@ -38,7 +38,7 @@
       v-else-if="shown && cells"
       v-bind="cells"
       :column-menu="false"
-      bordered
+      gridlines
       size="sm"
       height="calc(100dvh - 5rem)"
       label="Бенчмарк листа"

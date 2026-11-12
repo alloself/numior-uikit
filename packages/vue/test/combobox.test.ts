@@ -52,6 +52,67 @@ describe('NuiCombobox', () => {
     combobox.unmount();
   });
 
+  it('stops at the first and the last option when loop is off', async () => {
+    const combobox = ComboboxDriver.mount({ props: { loop: false } });
+
+    await combobox.press('ArrowDown');
+    await combobox.press('ArrowUp');
+
+    expect(combobox.activeLabel).toBe('Apple');
+
+    await combobox.press('ArrowDown');
+    await combobox.press('ArrowDown');
+    await combobox.press('ArrowDown');
+    await combobox.press('ArrowDown');
+
+    expect(combobox.activeLabel).toBe('Lime');
+
+    combobox.unmount();
+  });
+
+  it('matches what is typed by the letter rules of its own locale', async () => {
+    const combobox = ComboboxDriver.mount({
+      props: {
+        locale: 'tr-TR',
+        options: [
+          { value: 'igdir', label: 'IĞDIR' },
+          { value: 'izmir', label: 'İZMİR' },
+        ],
+      },
+    });
+
+    await combobox.type('ığ');
+
+    expect(combobox.optionLabels).toEqual(['IĞDIR']);
+
+    await combobox.type('iz');
+
+    expect(combobox.optionLabels).toEqual(['İZMİR']);
+
+    combobox.unmount();
+  });
+
+  it('finds an option typed without its accents or with «е» for «ё»', async () => {
+    const combobox = ComboboxDriver.mount({
+      props: {
+        options: [
+          { value: 'creme', label: 'Crème brûlée' },
+          { value: 'tree', label: 'Ёлка' },
+        ],
+      },
+    });
+
+    await combobox.type('brul');
+
+    expect(combobox.optionLabels).toEqual(['Crème brûlée']);
+
+    await combobox.type('елк');
+
+    expect(combobox.optionLabels).toEqual(['Ёлка']);
+
+    combobox.unmount();
+  });
+
   it('shows loading and empty states and clears the active option when nothing matches', async () => {
     const combobox = ComboboxDriver.mount();
     await combobox.receive({ loading: true });

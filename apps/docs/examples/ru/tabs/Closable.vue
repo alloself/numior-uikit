@@ -34,8 +34,10 @@ const close = (value: string): void => {
 
   files.value = files.value.filter((file) => file.value !== value);
 
-  if (tab.value === value) {
-    tab.value = files.value.at(Math.min(index, files.value.length - 1))?.value ?? '';
+  if (tab.value !== value) {
+    return;
   }
+
+  tab.value = files.value.at(Math.min(index, files.value.length - 1))?.value ?? '';
 };
 </script>

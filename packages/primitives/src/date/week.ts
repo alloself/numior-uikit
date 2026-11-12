@@ -17,11 +17,14 @@ export const weekdayOf = (date: string): Weekday => {
   return WEEKDAYS[new Date(toUtc(parts)).getUTCDay()] ?? 1;
 };
 
+const daysInto = (date: string, weekStart: Weekday): number =>
+  (weekdayOf(date) - weekStart + 7) % 7;
+
 export const startOfWeek = (date: string, weekStart: Weekday): string =>
-  addDays(date, -((weekdayOf(date) - weekStart + 7) % 7));
+  addDays(date, -daysInto(date, weekStart));
 
 export const endOfWeek = (date: string, weekStart: Weekday): string =>
-  addDays(startOfWeek(date, weekStart), 6);
+  addDays(date, 6 - daysInto(date, weekStart));
 
 export const isoWeekOf = (date: string): number => {
   const thursday = addDays(date, 4 - weekdayOf(date));

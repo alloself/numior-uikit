@@ -1,8 +1,12 @@
 <template>
-  <NuiButton variant="outline" @click="open = true">New task</NuiButton>
-  <NuiDialog v-model:open="open" placement="top" size="lg" title="New task">
-    <NuiInput v-model="title" label="Title" placeholder="Update the catalogue" />
-    <NuiTextarea v-model="details" label="Details" :rows="3" class="mt-3" />
+  <NuiButton variant="outline" @click="open = true">New product</NuiButton>
+  <NuiDialog v-model:open="open" placement="top" size="lg" title="New product">
+    <div class="flex flex-col gap-3">
+      <NuiInput v-model="name" label="Name" placeholder="Bergen chair" />
+      <NuiTextarea v-model="details" label="Description" :rows="3" />
+      <NuiSwitch v-model="custom">Made to order</NuiSwitch>
+      <NuiNumberField v-if="custom" v-model="days" label="Lead time, days" :min="1" />
+    </div>
     <template #footer>
       <NuiButton variant="ghost" tone="neutral" @click="open = false">Cancel</NuiButton>
       <NuiButton @click="open = false">Create</NuiButton>
@@ -12,9 +16,18 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiButton, NuiDialog, NuiInput, NuiTextarea } from '@numior/vue';
+import {
+  NuiButton,
+  NuiDialog,
+  NuiInput,
+  NuiNumberField,
+  NuiSwitch,
+  NuiTextarea,
+} from '@numior/vue';
 
 const open = ref(false);
-const title = ref('');
+const name = ref('');
 const details = ref('');
+const custom = ref(false);
+const days = ref<number | null>(14);
 </script>

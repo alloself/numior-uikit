@@ -253,6 +253,36 @@ test.describe('book drawings', () => {
     await expect(book.charts).toHaveCount(1);
   });
 
+  test('leaves the keys of the chart menu to the menu and the focus in the sheet', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.insertChart('3', 1, 'График');
+    await expect(book.selectedDrawing).toHaveCount(1);
+
+    const placed = await boxOf(book.selectedDrawing);
+
+    await page.keyboard.press('Shift+F10');
+    await page.keyboard.press('ArrowDown');
+    await expect(book.drawingMenu.getByRole('menuitem', { name: 'Удалить' })).toBeFocused();
+
+    await page.keyboard.press('Escape');
+    await expect(book.drawingMenu).toBeHidden();
+    await expect(book.selectedDrawing).toHaveCount(1);
+    await expect(book.focusedCell).toHaveCount(1);
+
+    expect(await boxOf(book.selectedDrawing)).toEqual(placed);
+
+    await page.keyboard.press('F2');
+    await page.keyboard.press('Backspace');
+    await expect(book.charts).toHaveCount(2);
+    await expect(book.selectedDrawing).toHaveCount(0);
+  });
+
   test('inserts a picture from a file and from the clipboard, undo takes them back', async ({
     playground,
     book,
@@ -307,6 +337,7 @@ test.describe('book drawings', () => {
     await book.chooseChartKind('Круговая');
 
     await expect(book.charts.first().locator('.nui-chart__bar')).toHaveCount(0);
+    await expect(book.chartKind).toBeFocused();
 
     await page.keyboard.press('Escape');
 
@@ -318,6 +349,86 @@ test.describe('book drawings', () => {
 
     await expect(book.chartLegend.first()).toBeVisible();
     await expect(book.chartTitle).not.toHaveText('Итоги квартала');
+  });
+
+  test('removes a chart from its own menu at the pointer and undo brings it back', async ({
+    playground,
+    book,
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'a right click');
+
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.scrollBody(160);
+
+    const pressed = await book.openDrawingMenuAt(book.charts);
+    const menu = await boxOf(book.drawingMenu);
+
+    await expect(book.selectionFrame).toBeVisible();
+
+    await expect(book.drawingMenu.getByRole('menuitem')).toHaveText([
+      'Настройки диаграммы',
+      'Удалить',
+    ]);
+
+    expect([near(menu.x, pressed.x), Math.abs(menu.y - pressed.y) <= 8]).toEqual([true, true]);
+
+    await book.chooseDrawingMenuItem('Удалить');
+
+    await expect(book.charts).toHaveCount(0);
+    await expect(book.focusedCell).toBeFocused();
+
+    await page.keyboard.press('Control+z');
+
+    await expect(book.charts).toHaveCount(1);
+  });
+
+  test('opens the menu of a selected chart from the keyboard and its settings from the menu', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.scrollBody(160);
+    await book.charts.click();
+    await page.keyboard.press('Shift+F10');
+
+    await expect(book.drawingMenu.getByRole('menuitem').first()).toBeFocused();
+    await expect(book.shownMenus).toHaveCount(1);
+
+    await page.keyboard.press('Enter');
+
+    await expect(book.chartSettings).toBeVisible();
+  });
+
+  test('opens the menu of a picture held by a finger and removes it', async ({
+    playground,
+    book,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, 'touch only');
+
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Заметки');
+
+    const picture = book.picture('Логотип Numior');
+
+    await expect(picture).toBeVisible();
+
+    await book.holdDrawing(book.pictures);
+
+    await expect(book.drawingMenu.getByRole('menuitem')).toHaveText(['Удалить']);
+
+    await book.drawingMenu.getByRole('menuitem', { name: 'Удалить', exact: true }).tap();
+
+    await expect(picture).toHaveCount(0);
   });
 
   test('drops the selection when a cell is clicked', async ({ playground, book }) => {
@@ -376,6 +487,10 @@ test.describe('book drawings', () => {
       await book.chooseSheet('Заметки');
 
       await expect(book.picture('Логотип Numior')).toBeVisible();
+      expect(await playground.wcagViolations('section[aria-labelledby="book-title"]')).toEqual([]);
+
+      await book.openDrawingMenuAt(book.pictures);
+
       expect(await playground.wcagViolations('section[aria-labelledby="book-title"]')).toEqual([]);
     });
   }

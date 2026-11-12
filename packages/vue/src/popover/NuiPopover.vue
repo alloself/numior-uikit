@@ -17,24 +17,33 @@
 
 <script setup lang="ts">
 import { computed, ref, useTemplateRef, watch } from 'vue';
-import { FloatingPlacement, PopoverMode, useFloating, usePopover } from '@numior/primitives';
+import {
+  FLOATING_OFFSET,
+  FloatingPlacement,
+  PopoverMode,
+  useFloating,
+  usePopover,
+} from '@numior/primitives';
 import { useTriggerElement } from '../shared/trigger-ref';
 import { useHoverTrigger } from './use-hover-trigger';
 import {
   NuiPopoverPadding,
   NuiPopoverSize,
   NuiPopoverTrigger,
+  type NuiPopoverExposed,
   type NuiPopoverProps,
   type NuiPopoverTriggerAttrs,
   type NuiPopoverTriggerSlot,
 } from './popover.types';
+
+const ARROW_OFFSET = 8;
 
 defineOptions({ inheritAttrs: false });
 
 const {
   id,
   placement = FloatingPlacement.Bottom,
-  offset = 8,
+  offset,
   arrow = false,
   padding = NuiPopoverPadding.Md,
   size = NuiPopoverSize.Md,
@@ -74,7 +83,7 @@ const hover = useHoverTrigger({
 
 useFloating(reference, contentElement, {
   placement: () => placement,
-  offset: () => offset,
+  offset: () => offset ?? (arrow ? ARROW_OFFSET : FLOATING_OFFSET),
   arrow: arrowNode,
   size: () => (fit ? { fitHeight: true } : undefined),
   enabled: open,
@@ -90,5 +99,11 @@ const triggerAttrs = computed<NuiPopoverTriggerAttrs>(() => {
 
 watch(open, (value) => {
   opened.value ||= value;
+});
+
+defineExpose<NuiPopoverExposed>({
+  get triggerElement() {
+    return trigger.value;
+  },
 });
 </script>

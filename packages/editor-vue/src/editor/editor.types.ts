@@ -14,6 +14,7 @@ import type { NuiFieldControlProps } from '@numior/vue';
 import type { NuiEditorBlock } from '../blocks/block.types';
 import type { NuiEditorLinkMetadata } from '../links/links.types';
 import type { NuiEditorMentions } from '../mentions/mentions.types';
+import type { NuiEditorSelectionAction } from '../toolbar/toolbar-items';
 import type { NuiEditorUploadAdapter } from '../uploads/uploads.types';
 
 export type NuiEditorFormat = (typeof NuiEditorFormat)[keyof typeof NuiEditorFormat];
@@ -26,6 +27,7 @@ export interface NuiEditorProps extends NuiFieldControlProps {
   placeholder?: string | undefined;
   autofocus?: boolean | undefined;
   toolbar?: NuiEditorToolbarMode | undefined;
+  selectionActions?: readonly NuiEditorSelectionAction[] | undefined;
   colours?: readonly string[] | undefined;
   highlights?: readonly string[] | undefined;
   blockHandles?: boolean | undefined;
@@ -50,8 +52,10 @@ export interface NuiEditorApi {
   focus(): void;
   flush(): void;
   coordsAt(pos: number): CaretRect | undefined;
+  posAt(x: number, y: number): number | undefined;
   contentBox(): DOMRect | undefined;
   revealNode(id: string): void;
+  watchLayout(listener: () => void): () => void;
 }
 
 export interface NuiEditorPaste {
@@ -72,3 +76,5 @@ export const KeyCode = { K: 'KeyK' } as const;
 export const CssDisplay = { ListItem: 'list-item' } as const;
 
 export const DomAttr = { Class: 'class', ContentEditable: 'contenteditable' } as const;
+
+export const PlayState = { Running: 'running' } as const;

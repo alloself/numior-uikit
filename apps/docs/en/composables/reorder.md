@@ -26,7 +26,7 @@ const reorder = useReorder({
 
 Put `onPointerdown(index, event)` and `onKeydown(index, event)` on the item handle. With the
 keyboard, Enter or Space picks the item up, the arrow keys move it, and Enter or Space again
-drops it.
+drops it. `onBlur(index)` on the handle's `blur` event cancels the move when focus leaves it.
 
 `state.phase` shows the stage: `idle`, `pending`, `dragging` or `keyboard`. `onEvent` receives
 the `grabbed`, `moved`, `dropped` and `cancelled` events, which are handy for announcing the move
@@ -37,6 +37,9 @@ to a screen reader. `NuiFieldArray` reorders field groups this way.
 `useEdgeScroll(options)` is the same edge scrolling without the drag. `follow({ x, y })` scrolls
 the container while the point is within 24 pixels of its edge and calls `onStep` after every
 step. `stop()` stops the scrolling.
+
+`follow` only records the point, and one step is made per frame. So the speed does not depend on
+how often the pointer moves.
 
 This is how [Table](/en/components/table) scrolls when a cell selection is dragged past the
 edge.

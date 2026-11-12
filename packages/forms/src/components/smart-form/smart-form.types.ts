@@ -64,6 +64,7 @@ export interface NuiSmartFormArray<S> {
   readonly newRow: () => unknown;
   readonly rows: (row: () => SmartRow | undefined) => readonly NuiSmartFormEntry<S>[];
   readonly addLabel?: string | undefined;
+  readonly rowLabel?: ((index: number) => string) | undefined;
   readonly removeLabel?: ((index: number) => string) | undefined;
   readonly moveLabel?: ((index: number) => string) | undefined;
 }

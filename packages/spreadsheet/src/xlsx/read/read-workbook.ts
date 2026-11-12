@@ -1,11 +1,9 @@
+import type { CellError } from '../../core/cell.types';
 import { createCalculator, type Calculator } from '../../core/calc/calculator';
 import type { FunctionRegistry } from '../../core/calc/calc.types';
 import { BASE_FUNCTIONS } from '../../core/calc/functions';
 import { createFunctionRegistry } from '../../core/calc/registry';
 import { nextTask } from '../../core/calc/tasks';
-import { ORIGIN } from '../../core/formula/origin';
-import { EN_FORMULAS } from '../../core/formula/locale';
-import { parseFormula } from '../../core/formula/parser';
 import { mapReferences } from '../../core/formula/references';
 import { FormulaReferenceKind, type FormulaNode } from '../../core/formula/formula.types';
 import { EN_LOCALE } from '../../core/locale';
@@ -14,6 +12,7 @@ import {
   createWorkbook,
   validDefinedName,
   validSheetName,
+  validTableName,
   type ExternalName,
   type Sheet,
   type SheetPivot,
@@ -49,11 +48,13 @@ import { pivotOf } from './pivot-model';
 import { readPositionalParts } from './positional-parts';
 import { readDrawings } from './drawing-part';
 import { readSheetPart, type SheetCounts } from './sheet-part';
+import { readValueErrors } from './value-errors';
 import { readStyles, type CellStyles } from './styles';
 import { readTheme } from './theme-part';
 import { readTablePart } from './table-part';
 import { readWorkbookPart, type SheetEntry, type WorkbookPart } from './workbook-part';
 import { RelationshipKind } from '../ooxml.types';
+import { parseFileFormula } from './file-formula';
 
 interface Found {
   count: number;
@@ -91,6 +92,7 @@ interface Load {
 
 interface BookContext {
   readonly strings: SharedStrings;
+  readonly errors: readonly (CellError | undefined)[];
   readonly styles: CellStyles;
   readonly decorations: readonly number[];
 }
@@ -121,6 +123,7 @@ const READ_ONLY = new Set<XlsxLimitationCode>([
 const SHEET_COUNTS: readonly (readonly [keyof Omit<SheetCounts, 'unknown'>, XlsxLimitationCode])[] =
   [
     ['unparsed', 'formula-syntax'],
+    ['opaque', 'formula-kept'],
     ['dataTables', 'data-tables'],
     ['merges', 'merged-cells'],
     ['conditional', 'conditional-formats'],
@@ -186,12 +189,15 @@ const targetOf = (relationships: readonly Relationship[], kind: string): string 
 
 const setNames = (calculator: Calculator, part: WorkbookPart, sheets: readonly Sheet[]): void => {
   part.names.forEach((entry) => {
-    const parsed = parseFormula(entry.text.replaceAll(/_xl(?:fn|ws)\./gu, ''), EN_FORMULAS, ORIGIN);
+    const parsed = parseFileFormula(entry.text);
+
     const scope = entry.sheet === undefined ? undefined : sheets[entry.sheet];
 
-    if (parsed.ok && validDefinedName(entry.name)) {
-      calculator.setName(entry.name, scope, parsed.ast);
+    if (!parsed.ok || !validDefinedName(entry.name)) {
+      return;
     }
+
+    calculator.setName(entry.name, scope, parsed.ast);
   });
 };
 
@@ -212,7 +218,7 @@ const setTables = async (
         ? await readTablePart(archive, relationship.target, options)
         : undefined;
 
-    if (table !== undefined && validColumns(table) && validDefinedName(table.name)) {
+    if (table !== undefined && validColumns(table) && validTableName(table.name)) {
       calculator.setTable(table.name, { ...table, sheet });
     } else if (relationship.kind === RelationshipKind.Table) {
       refused += 1;
@@ -237,7 +243,7 @@ const externalNames = (
   book: number,
 ): ExternalName[] =>
   entries.map((entry) => {
-    const parsed = parseFormula(entry.text, EN_FORMULAS, ORIGIN);
+    const parsed = parseFileFormula(entry.text);
 
     return {
       name: entry.name,
@@ -330,6 +336,7 @@ const loadSheet = async (
       calculator: load.calculator,
       sheet,
       strings: context.strings.strings,
+      errors: context.errors,
       formats: context.styles.formats,
       decorations: context.decorations,
       differentials: context.styles.differentials,
@@ -457,9 +464,11 @@ const loadPivots = async (
           ? await loadPivot(pivots, sheet, relationship.target)
           : undefined;
 
-      if (failed !== undefined) {
-        refused.push(failed);
+      if (failed === undefined) {
+        continue;
       }
+
+      refused.push(failed);
     }
   }
   return refused;
@@ -536,8 +545,15 @@ const readBook = async (
   const strings = await readSharedStrings(archive, stringsPart, load.parts);
   const styles = await readStyles(archive, stylesPart, locale.numbers, load.parts);
 
+  const errorParts = {
+    metadata: targetOf(relationships, 'sheetMetadata'),
+    values: targetOf(relationships, 'rdRichValue'),
+    structures: targetOf(relationships, 'rdRichValueStructure'),
+  };
+
   const context: BookContext = {
     strings,
+    errors: await readValueErrors(archive, errorParts, load.parts),
     styles,
     decorations: styles.decorations.map((decoration) => book.decorations.id(decoration)),
   };
@@ -545,10 +561,14 @@ const readBook = async (
   book.decorations.defaultFont = styles.defaultFont ?? book.decorations.defaultFont;
   book.decorations.theme = await readTheme(archive, themePart, load.parts);
 
-  [stringsPart, stylesPart].forEach((part) => {
-    if (part !== undefined) {
-      load.parsed.add(part);
+  const richParts = [...Object.values(errorParts), targetOf(relationships, 'rdRichValueTypes')];
+
+  [stringsPart, stylesPart, ...richParts].forEach((part) => {
+    if (part === undefined) {
+      return;
     }
+
+    load.parsed.add(part);
   });
 
   await loadExternals(load, workbook.externalLinks, relationships, strings.strings);

@@ -1,9 +1,13 @@
 <template>
-  <NuiButton variant="outline" @click="open = true">Принять условия</NuiButton>
-  <NuiDialog v-model:open="open" :closable="false" title="Новые условия использования">
-    <p>Продолжить работу можно только после подтверждения.</p>
+  <NuiButton variant="outline" @click="open = true">Вернуть товар</NuiButton>
+  <NuiDialog v-model:open="open" :closable="false" title="Примите условия возврата">
+    <p>
+      Товар принимается в заводской упаковке и без следов использования. Деньги вернутся на карту за
+      десять дней после того, как склад его примет.
+    </p>
     <template #footer>
-      <NuiButton @click="open = false">Подтверждаю</NuiButton>
+      <NuiButton variant="ghost" tone="neutral" @click="open = false">Отказаться</NuiButton>
+      <NuiButton @click="open = false">Принимаю</NuiButton>
     </template>
   </NuiDialog>
 </template>

@@ -6,7 +6,7 @@ import { EVERY_BLOCK_MARKUP, docOf, everyBlock, node } from './support/documents
 
 const stamped = (blocks: readonly unknown[]) => ({
   format: 1,
-  schema: { name: 'numior-content', version: 4 },
+  schema: { name: 'numior-content', version: 5 },
   root: { id: 'r', type: 'doc', content: blocks },
 });
 
@@ -48,12 +48,60 @@ const bookmark = (url: string, picture: string) => ({
   attrs: { url, image: picture },
 });
 
+const PLAIN_LINES: readonly string[] = [
+  'Title',
+  'plain both@Ann',
+  '',
+  'one',
+  'two',
+  'done',
+  'let x',
+  'Note',
+  'Head',
+  'Body',
+  'Text  around',
+  'See Report.pdf now',
+  'https://youtu.be/dQw4w9WgXcQ',
+  'https://numior.test/blog',
+  'L',
+  'R',
+  'Name\tSum\tPaid\tState',
+  'Ann\t12.5\tTRUE\tOpen',
+  'hi',
+];
+
 describe('content schema', () => {
   it('holds the generated ten-thousand-block mix of the editor fixtures', () => {
     const doc = generateDoc(contentSchema, { blocks: 10_000, seed: 3 });
 
     expect(contentSchema.check(doc.root)).toEqual({ ok: true });
     expect(fromJSON(contentSchema, toJSON(doc)).ok).toBe(true);
+  });
+
+  it('gives the clipboard a plain text with breaks, mentions, files, links and table cells', () => {
+    const page = everyBlock();
+
+    expect(page.textBetween(0, page.size).split('\n')).toEqual(PLAIN_LINES);
+  });
+
+  it('keeps a table cell on its own line and in its own column whatever its text holds', () => {
+    const page = docOf(
+      node('table', [
+        node('table_head', [
+          node('table_column', [], { key: 'a', name: 'A\tB' }),
+          node('table_column', [], { key: 'b' }),
+        ]),
+        node('table_body', [
+          node('table_row', [
+            node('table_cell', [], { column: 'b', value: false }),
+            node('table_cell', [], { column: 'a', value: 'two\nlines' }),
+          ]),
+          node('table_row', [node('table_cell', [], { column: 'b', value: 7 })]),
+        ]),
+      ]),
+    );
+
+    expect(page.textBetween(0, page.size)).toBe('A B\t\ntwo lines\tFALSE\n\t7');
   });
 
   it('renders every block and mark into classed markup with a break in empty lines', () => {
@@ -89,6 +137,20 @@ describe('content schema', () => {
         image(''),
       ]),
     ).toEqual(['href', 'href', 'src', 'src', 'src', 'src']);
+  });
+
+  it('refuses addresses that hide a scheme behind tabs, line breaks or control characters', () => {
+    expect(
+      attrIssues([
+        linked('java\tscript:alert(1)'),
+        linked('java\nscript:alert(1)'),
+        linked('java\rscript:alert(1)'),
+        linked('\u0001javascript:alert(1)'),
+        linked('javascript\u007F:alert(1)'),
+        image('java\tscript:alert(2)'),
+        file('java\tscript:alert(3)'),
+      ]),
+    ).toEqual(['href', 'href', 'href', 'href', 'href', 'src', 'url']);
   });
 
   it('keeps files on web or relative links and image widths inside a fifth to the whole line', () => {

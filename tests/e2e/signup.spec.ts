@@ -138,9 +138,11 @@ test.describe('signup form', () => {
     await page.keyboard.type('!');
 
     await signup.form.evaluate((form) => {
-      if (form instanceof HTMLFormElement) {
-        form.requestSubmit();
+      if (!(form instanceof HTMLFormElement)) {
+        return;
       }
+
+      form.requestSubmit();
     });
 
     await expect.poll(async () => (await signup.readOutput()).about).toContain('интерфейсы!</');

@@ -82,7 +82,7 @@
         :keyboard="false"
         :active-id="navigation.activeId.value"
         :loading="loading"
-        :loading-label="loadingLabel"
+        :loading-label="texts.loading"
         :empty-label="texts.empty"
         v-bind="control.contentAttrs.value"
         @select="onSelect"
@@ -116,18 +116,21 @@ import {
   Key,
   ListMove,
   useFieldControl,
+  useLocale,
   useMessages,
   useSplitAttrs,
+  foldText,
+  isComposing,
 } from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiButton from '../button/NuiButton.vue';
 import NuiChip from '../chip/NuiChip.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
-import { isComposing } from '../shared/composition';
 import { filterOptions, flattenEntries, optionElementId, type NuiOption } from '../shared/options';
 import { useListboxSurface } from '../shared/use-listbox-surface';
 import { useOptionSelection } from '../shared/use-option-selection';
+import { listMessages } from '../list/list.messages';
 import { comboboxMessages } from './combobox.messages';
 import { ComboboxDraftKind, type ComboboxDraft, type NuiComboboxProps } from './combobox.types';
 import { NuiSize } from '../shared/scale.types';
@@ -153,6 +156,8 @@ const {
   getKey,
   filter = undefined,
   loading = false,
+  loop = true,
+  locale: localeProp,
   customValue,
   placement = FloatingPlacement.BottomStart,
   emptyLabel,
@@ -167,7 +172,9 @@ const values = defineModel<T[]>('values', { default: () => [] });
 const emit = defineEmits<{ search: [query: string] }>();
 
 const split = useSplitAttrs();
-const messages = useMessages(comboboxMessages);
+const locale = useLocale(() => localeProp);
+const messages = useMessages(comboboxMessages, locale);
+const listTexts = useMessages(listMessages, locale);
 
 const {
   frame: fieldFrame,
@@ -184,6 +191,7 @@ const listboxId = computed(() => `${controlAttrs.value.id}-listbox`);
 
 const texts = computed(() => ({
   empty: emptyLabel ?? messages.value.empty,
+  loading: loadingLabel ?? listTexts.value.loading,
   clear: clearLabel ?? messages.value.clear,
   remove: removeLabel ?? messages.value.remove,
   toggle: toggleLabel ?? messages.value.toggle,
@@ -223,21 +231,33 @@ const query = computed(() =>
   draft.value.kind === ComboboxDraftKind.Typed ? draft.value.text : singleLabel.value,
 );
 
-const lowered = computed(
-  () => new Map(flattenEntries(options).map((option) => [option, option.label.toLowerCase()])),
+const lower = (text: string): string => text.toLocaleLowerCase(locale.value);
+
+const fold = (text: string): string => foldText(text, locale.value);
+
+const folded = computed(
+  () => new Map(flattenEntries(options).map((option) => [option, fold(option.label)])),
 );
 
-const defaultFilter = (option: NuiOption<T>, needle: string): boolean =>
-  (lowered.value.get(option) ?? option.label.toLowerCase()).includes(needle);
+const labelFilter = (needle: string): ((option: NuiOption<T>) => boolean) => {
+  const wanted = fold(needle);
+
+  return (option) => (folded.value.get(option) ?? fold(option.label)).includes(wanted);
+};
 
 const isEnabled = (option: NuiOption<T>): boolean => !option.disabled;
 
 const filtered = computed(() => {
-  const needle = query.value.trim().toLowerCase();
+  const needle = lower(query.value.trim());
   if (filter === false || !typing.value || needle === '') {
     return options;
   }
-  return filterOptions(options, (option) => (filter ?? defaultFilter)(option, needle));
+  const custom = filter;
+
+  return filterOptions(
+    options,
+    custom === undefined ? labelFilter(needle) : (option) => custom(option, needle),
+  );
 });
 
 const showClear = computed(
@@ -256,7 +276,7 @@ const { listboxElement, setListbox, control, navigation, activateHovered, restAc
     mode: 'manual',
     placement: () => placement,
     focus: 'virtual',
-    loop: true,
+    loop: () => loop,
     typeahead: false,
   });
 
@@ -285,9 +305,11 @@ watch(open, (isOpen) => {
 });
 
 watch(filtered, () => {
-  if (open.value) {
-    activate(ListMove.First);
+  if (!open.value) {
+    return;
   }
+
+  activate(ListMove.First);
 });
 
 const focusInput = (): void => inputElement.value?.focus({ preventScroll: true });
@@ -306,9 +328,11 @@ const onSelect = (): void => {
 };
 
 const commitDraft = (): void => {
-  if (typing.value && !commitCustom()) {
-    settleQuery();
+  if (!typing.value || commitCustom()) {
+    return;
   }
+
+  settleQuery();
 };
 
 const commitCustom = (): boolean => {
@@ -337,9 +361,11 @@ onMounted(() => {
   watch(
     [open, filtered],
     () => {
-      if (open.value) {
-        navigation.reveal();
+      if (!open.value) {
+        return;
       }
+
+      navigation.reveal();
     },
     { flush: 'post' },
   );
@@ -387,23 +413,29 @@ const onEnter = (event: KeyboardEvent): void => {
     return;
   }
 
-  if (typing.value) {
-    settleQuery();
+  if (!typing.value) {
+    return;
   }
+
+  settleQuery();
 };
 
 const onEscape = (event: KeyboardEvent): void => {
-  if (open.value) {
-    event.preventDefault();
-    open.value = false;
+  if (!open.value) {
+    return;
   }
+
+  event.preventDefault();
+  open.value = false;
 };
 
 const onBackspace = (): void => {
   const last = chips.value.at(-1);
-  if (multiple && query.value === '' && last) {
-    choose(last.value);
+  if (!multiple || query.value !== '' || !last) {
+    return;
   }
+
+  choose(last.value);
 };
 
 const KEY_HANDLERS: Record<string, (event: KeyboardEvent) => void> = {
@@ -420,9 +452,11 @@ const onKeydown = (event: KeyboardEvent): void => {
     return;
   }
 
-  if (!openFromKey(event)) {
-    KEY_HANDLERS[event.key]?.(event);
+  if (openFromKey(event)) {
+    return;
   }
+
+  KEY_HANDLERS[event.key]?.(event);
 };
 
 const onFieldClick = (event: MouseEvent): void => {
@@ -431,10 +465,12 @@ const onFieldClick = (event: MouseEvent): void => {
     return;
   }
   focusInput();
-  if (!open.value) {
-    opening.set('first');
-    open.value = true;
+  if (open.value) {
+    return;
   }
+
+  opening.set('first');
+  open.value = true;
 };
 
 const onFocusout = (event: FocusEvent): void => {

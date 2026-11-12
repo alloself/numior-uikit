@@ -25,6 +25,7 @@ export default defineConfig({
         /^@numior\/(charts|primitives|table|vue)$/,
         /^@lucide\/vue$/,
         /^@vueuse\/core$/,
+        /^lodash-es(\/|$)/,
       ],
     },
   },

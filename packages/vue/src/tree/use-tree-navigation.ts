@@ -10,7 +10,7 @@ import {
   type ListMove,
   type TypeaheadState,
 } from '@numior/primitives';
-import { firstChildIndexOf, parentIndexOf, type TreeNode } from './flatten';
+import { firstEnabledChildIndexOf, parentIndexOf, type TreeNode } from './flatten';
 
 export interface TreeNavigationOptions<T> {
   readonly nodes: () => readonly TreeNode<T>[];
@@ -76,10 +76,12 @@ const walk = <T>(
   let seen = 0;
 
   for (let index = from; index >= 0 && index < nodes.length && seen < count; index += direction) {
-    if (isEnabled(nodes, index)) {
-      found = index;
-      seen += 1;
+    if (!isEnabled(nodes, index)) {
+      continue;
     }
+
+    found = index;
+    seen += 1;
   }
   return found;
 };
@@ -103,14 +105,17 @@ const stepFrom = <T>({ nodes, current, loop }: Cursor<T>, direction: 1 | -1): nu
   return loop ? edge : current;
 };
 
+const pageFrom = <T>({ nodes, current, page }: Cursor<T>, direction: 1 | -1): number =>
+  walk(nodes, current, direction, isEnabled(nodes, current) ? page + 1 : page);
+
 const MOVES: Readonly<Record<ListMove, <T>(cursor: Cursor<T>) => number>> = {
   first: ({ nodes }) => firstOf(nodes),
   last: ({ nodes }) => lastOf(nodes),
   next: (cursor) => stepFrom(cursor, 1),
   prev: (cursor) => stepFrom(cursor, -1),
-  'page-next': ({ nodes, current, page }) => walk(nodes, Math.max(0, current), 1, page + 1),
-  'page-prev': ({ nodes, current, page }) =>
-    current < 0 ? firstOf(nodes) : walk(nodes, current, -1, page + 1),
+  'page-next': (cursor) =>
+    cursor.current < 0 ? walk(cursor.nodes, 0, 1, cursor.page + 1) : pageFrom(cursor, 1),
+  'page-prev': (cursor) => (cursor.current < 0 ? firstOf(cursor.nodes) : pageFrom(cursor, -1)),
 };
 
 export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNavigation => {
@@ -118,9 +123,11 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
   const typeaheadIndex = computed(() => typeaheadIndexOf(options.nodes()));
 
   const moveTo = (index: number): void => {
-    if (index >= 0) {
-      options.onMove(index);
+    if (index < 0) {
+      return;
     }
+
+    options.onMove(index);
   };
 
   const stepInto = (): void => {
@@ -131,7 +138,7 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
       return;
     }
     if (node.expanded) {
-      moveTo(firstChildIndexOf(nodes, index));
+      moveTo(firstEnabledChildIndexOf(nodes, index));
     } else {
       options.onExpand(index);
     }
@@ -149,9 +156,11 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
       return;
     }
     const parent = parentIndexOf(nodes, index);
-    if (parent >= 0 && !nodes[parent]?.item.disabled) {
-      moveTo(parent);
+    if (parent < 0 || nodes[parent]?.item.disabled) {
+      return;
     }
+
+    moveTo(parent);
   };
 
   const moveBy = (key: string): boolean => {
@@ -160,13 +169,10 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
       return false;
     }
 
-    const nodes = options.nodes();
-    const active = options.activeIndex();
-
     moveTo(
       MOVES[move]({
-        nodes,
-        current: isEnabled(nodes, active) ? active : -1,
+        nodes: options.nodes(),
+        current: options.activeIndex(),
         loop: options.loop(),
         page: options.pageSize(),
       }),
@@ -186,9 +192,11 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
       slots.get(options.activeIndex()) ?? -1,
     );
 
-    if (found >= 0) {
-      moveTo(enabled[found] ?? -1);
+    if (found < 0) {
+      return;
     }
+
+    moveTo(enabled[found] ?? -1);
   };
 
   const horizontal = (key: string): boolean => {
@@ -198,11 +206,12 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
       stepInto();
       return true;
     }
-    if (key === backward) {
-      stepOut();
-      return true;
+    if (key !== backward) {
+      return false;
     }
-    return false;
+
+    stepOut();
+    return true;
   };
 
   const handle = (event: KeyboardEvent): boolean => {
@@ -221,19 +230,22 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
       options.onActivate(options.activeIndex());
       return true;
     }
-    if (options.typeahead() && isPrintable(event)) {
-      type(event.key);
-      return true;
+    if (!options.typeahead() || !isPrintable(event)) {
+      return false;
     }
-    return false;
+
+    type(event.key);
+    return true;
   };
 
   return {
     typeaheadQuery: computed(() => typeahead.value.query),
     onKeydown: (event) => {
-      if (!event.defaultPrevented && handle(event)) {
-        event.preventDefault();
+      if (event.defaultPrevented || !handle(event)) {
+        return;
       }
+
+      event.preventDefault();
     },
     reset: () => {
       typeahead.value = emptyTypeahead;

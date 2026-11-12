@@ -40,16 +40,20 @@ useToolbarControl(elementOf);
 onMounted(() => {
   const element = elementOf();
 
-  if (element !== undefined) {
-    hints?.register(element, () => action);
+  if (element === undefined) {
+    return;
   }
+
+  hints?.register(element, () => action);
 });
 
 onBeforeUnmount(() => {
   const element = elementOf();
 
-  if (element !== undefined) {
-    hints?.release(element);
+  if (element === undefined) {
+    return;
   }
+
+  hints?.release(element);
 });
 </script>

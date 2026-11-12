@@ -7,9 +7,17 @@ export interface WorkbookHistory {
   redo(): StepOutcome | undefined;
   clear(): void;
   rebase(map: (step: WorkbookStep) => WorkbookStep | undefined): void;
+  trace<T>(start: T, pass: HistoryPass<T>): void;
   readonly canUndo: boolean;
   readonly canRedo: boolean;
 }
+
+export interface HistoryTrace<T> {
+  readonly step: WorkbookStep | undefined;
+  readonly state: T;
+}
+
+export type HistoryPass<T> = (state: T, step: WorkbookStep) => HistoryTrace<T>;
 
 export interface HistoryOptions {
   readonly limit?: number | undefined;
@@ -41,12 +49,36 @@ const rebased = (
     return kept;
   }, []);
 
+const traced = <T>(entries: readonly Entry[], start: T, pass: HistoryPass<T>): Entry[] => {
+  let state = start;
+
+  return entries
+    .toReversed()
+    .reduce<Entry[]>((kept, entry) => {
+      const steps = entry.steps.reduce<WorkbookStep[]>((left, step) => {
+        const next = pass(state, step);
+
+        state = next.state;
+        if (next.step !== undefined) {
+          left.push(next.step);
+        }
+        return left;
+      }, []);
+
+      if (steps.length > 0) {
+        kept.push({ steps });
+      }
+      return kept;
+    }, [])
+    .toReversed();
+};
+
 export const createWorkbookHistory = (
   stepper: Stepper,
   { limit = DEFAULT_LIMIT }: HistoryOptions = {},
 ): WorkbookHistory => {
-  const done: Entry[] = [];
-  const undone: Entry[] = [];
+  let done: Entry[] = [];
+  let undone: Entry[] = [];
 
   const run = (steps: readonly WorkbookStep[]): { outcome: StepOutcome; inverse: Entry } => {
     const result = stepper.apply({ kind: 'batch', steps });
@@ -93,8 +125,12 @@ export const createWorkbookHistory = (
       undone.length = 0;
     },
     rebase: (map) => {
-      done.splice(0, done.length, ...rebased(done, map));
-      undone.splice(0, undone.length, ...rebased(undone, map));
+      done = rebased(done, map);
+      undone = rebased(undone, map);
+    },
+    trace: (start, pass) => {
+      done = traced(done, start, pass);
+      undone = traced(undone, start, pass);
     },
     get canUndo() {
       return done.length > 0;

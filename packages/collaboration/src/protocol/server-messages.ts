@@ -36,21 +36,27 @@ const readRejected = (value: Fields): ServerMessage | undefined =>
       }
     : undefined;
 
+const isWireSteps = (value: unknown): value is readonly WireStep[] =>
+  Array.isArray(value) && value.every(isWireStep);
+
 const readSteps = (value: Fields): ServerMessage | undefined => {
-  const { version, clientId, steps } = value;
+  const { version, clientId, steps, sent } = value;
 
   return isCount(version) &&
     typeof clientId === 'string' &&
-    Array.isArray(steps) &&
-    steps.every(isWireStep)
-    ? { kind: ServerMessageKind.Steps, version, clientId, steps }
+    isWireSteps(steps) &&
+    (sent === undefined || isCount(sent))
+    ? { kind: ServerMessageKind.Steps, version, clientId, steps, sent }
     : undefined;
 };
 
-const readAccepted = (value: Fields): ServerMessage | undefined =>
-  isCount(value.seq) && isCount(value.version)
-    ? { kind: ServerMessageKind.Accepted, seq: value.seq, version: value.version }
+const readAccepted = (value: Fields): ServerMessage | undefined => {
+  const { seq, version, steps } = value;
+
+  return isCount(seq) && isCount(version) && (steps === undefined || isWireSteps(steps))
+    ? { kind: ServerMessageKind.Accepted, seq, version, steps }
     : undefined;
+};
 
 const isPeerPresence = (value: unknown): value is PeerPresence =>
   isFields(value) && typeof value.clientId === 'string' && Object.hasOwn(value, 'state');
@@ -86,6 +92,8 @@ export const parseServerMessage = (value: unknown): ServerMessage | undefined =>
       return readSteps(value);
     case ServerMessageKind.Presence:
       return readPresence(value);
+    case ServerMessageKind.Pong:
+      return { kind: ServerMessageKind.Pong };
     case ServerMessageKind.Error:
       return readError(value);
     default:

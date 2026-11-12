@@ -1,16 +1,9 @@
 import { useRafFn, useTimeoutFn } from '@vueuse/core';
 import { ref } from 'vue';
 import type { RecalcOptions, Recalculation } from '../core';
-import {
-  RecalcPhase,
-  type CellOutdated,
-  type SheetRecalc,
-  type SheetRecalcOptions,
-} from './sheet.types';
+import { RecalcPhase, type SheetRecalc, type SheetRecalcOptions } from './sheet.types';
 
 const SHOW_AFTER_MS = 300;
-
-const NOTHING_OUTDATED: CellOutdated = () => false;
 
 const shareOf = (run: Recalculation): number => (run.total === 0 ? 0 : run.done / run.total);
 
@@ -25,7 +18,9 @@ export const useSheetRecalc = (options: SheetRecalcOptions): SheetRecalc => {
 
   let stopped = false;
 
-  let outdated = NOTHING_OUTDATED;
+  let marking = false;
+
+  let exact = true;
 
   const redraw = (): void => {
     revision.value += 1;
@@ -34,9 +29,16 @@ export const useSheetRecalc = (options: SheetRecalcOptions): SheetRecalc => {
 
   const tracking = useRafFn(
     () => {
-      if (current !== undefined) {
-        progress.value = shareOf(current);
+      if (current === undefined) {
+        return;
       }
+      progress.value = shareOf(current);
+      if (exact || !current.planned) {
+        return;
+      }
+
+      exact = true;
+      redraw();
     },
     { immediate: false },
   );
@@ -46,7 +48,8 @@ export const useSheetRecalc = (options: SheetRecalcOptions): SheetRecalc => {
       if (current === undefined || current.finished) {
         return;
       }
-      outdated = options.calculator().outdated();
+      marking = true;
+      exact = current.planned;
       progress.value = shareOf(current);
       phase.value = RecalcPhase.Running;
       tracking.resume();
@@ -66,7 +69,7 @@ export const useSheetRecalc = (options: SheetRecalcOptions): SheetRecalc => {
     reveal.stop();
     tracking.pause();
 
-    outdated = stopped ? options.calculator().outdated() : NOTHING_OUTDATED;
+    marking = stopped;
     phase.value = stopped ? RecalcPhase.Stopped : RecalcPhase.Idle;
     redraw();
   };
@@ -81,7 +84,7 @@ export const useSheetRecalc = (options: SheetRecalcOptions): SheetRecalc => {
       current = undefined;
       reveal.stop();
       tracking.pause();
-      outdated = NOTHING_OUTDATED;
+      marking = false;
       phase.value = RecalcPhase.Idle;
       return;
     }
@@ -90,7 +93,8 @@ export const useSheetRecalc = (options: SheetRecalcOptions): SheetRecalc => {
     if (phase.value === RecalcPhase.Idle) {
       reveal.start();
     } else {
-      outdated = options.calculator().outdated();
+      marking = true;
+      exact = started.planned;
       progress.value = shareOf(started);
       phase.value = RecalcPhase.Running;
       tracking.resume();
@@ -111,7 +115,7 @@ export const useSheetRecalc = (options: SheetRecalcOptions): SheetRecalc => {
     phase,
     progress,
     revision,
-    outdated: (sheet, row, col) => outdated(sheet, row, col),
+    outdated: (sheet, row, col) => marking && options.calculator().staleAt(sheet, row, col),
     run,
     stop,
     resume,

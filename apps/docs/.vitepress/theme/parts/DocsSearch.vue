@@ -12,7 +12,11 @@
     @select="go"
   >
     <template #item="{ item }">
-      <SearchSnippet :label="item.label" :parts="snippets.get(item.value)" />
+      <SearchSnippet
+        :label="item.label"
+        :parts="snippets.get(item.value)"
+        :section="sectionOf(item.value, sections)"
+      />
     </template>
   </NuiCommandDialog>
 </template>
@@ -21,13 +25,15 @@
 import { computed, ref, shallowRef, watch } from 'vue';
 import { useData, useRouter } from 'vitepress';
 import localSearchIndex from '@localSearchIndex';
-import { NuiCommandDialog, type NuiCommandItem, type NuiCommandSource } from '@numior/vue';
+import { NuiCommandDialog, type NuiCommandItem } from '@numior/vue';
 import { useDocs } from '../composables/use-docs';
 import {
   loadSearchIndex,
-  pageGroups,
-  searchGroups,
+  namedSections,
+  pageItems,
   searchHits,
+  searchItems,
+  sectionOf,
   snippetsOf,
   type SearchHit,
   type SearchIndex,
@@ -58,13 +64,8 @@ const loadIndex = async (): Promise<void> => {
   loading.value = false;
 };
 
-const sections = computed<SearchSection[]>(() =>
-  theme.value.nav.map((item) => ({ label: item.text, prefixes: item.sections })),
-);
-
-const pages = computed<NuiCommandSource>(() =>
-  pageGroups(allLinks.value, sections.value, texts.value.searchPages),
-);
+const sections = computed<SearchSection[]>(() => namedSections(theme.value.nav));
+const pages = computed<NuiCommandItem[]>(() => pageItems(allLinks.value));
 
 const hits = computed<SearchHit[]>(() => {
   const needle = query.value.trim();
@@ -76,8 +77,8 @@ const hits = computed<SearchHit[]>(() => {
 const searching = computed(() => query.value.trim() !== '' && index.value !== null);
 const snippets = computed(() => snippetsOf(hits.value));
 
-const items = computed<NuiCommandSource>(() =>
-  searching.value ? searchGroups(hits.value, sections.value, texts.value.searchPages) : pages.value,
+const items = computed<NuiCommandItem[]>(() =>
+  searching.value ? searchItems(hits.value) : pages.value,
 );
 
 const go = (item: NuiCommandItem): void => {
@@ -85,8 +86,10 @@ const go = (item: NuiCommandItem): void => {
 };
 
 watch(open, (isOpen) => {
-  if (isOpen) {
-    void loadIndex();
+  if (!isOpen) {
+    return;
   }
+
+  void loadIndex();
 });
 </script>

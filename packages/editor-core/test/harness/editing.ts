@@ -9,6 +9,7 @@ import {
   intentCommand,
   keymap,
   markdownRules,
+  nearestCursor,
   textSelection,
   type Command,
   type EditorState,
@@ -56,6 +57,8 @@ const defaultPlugins = (): readonly Plugin[] => [
 ];
 
 export class EditingHarness {
+  private applied = 0;
+
   private constructor(private current: EditorState) {}
 
   static of(
@@ -78,6 +81,10 @@ export class EditingHarness {
     return this.current.selection;
   }
 
+  get lastSteps(): number {
+    return this.applied;
+  }
+
   get outline(): string {
     return outlineOf(this.current.doc.root);
   }
@@ -87,6 +94,7 @@ export class EditingHarness {
       if (source !== undefined) {
         tr.setMeta(inputSource, source);
       }
+      this.applied = tr.steps.length;
       this.current = this.current.apply(tr);
     };
   }
@@ -120,6 +128,10 @@ export class EditingHarness {
     return this.intent({ kind: 'delete', direction: 'backward', unit: 'character' });
   }
 
+  deleteForward(): boolean {
+    return this.intent({ kind: 'delete', direction: 'forward', unit: 'character' });
+  }
+
   enter(): boolean {
     return this.intent({ kind: 'insertParagraph' });
   }
@@ -132,12 +144,24 @@ export class EditingHarness {
     return state.plugins.some((plugin) => plugin.props.handleKey?.(key, state, dispatch) === true);
   }
 
-  placeIn(text: string, offset = 0): void {
+  nearestText(pos: number): number {
+    const cursor = nearestCursor(this.current.doc, pos);
+
+    return cursor.kind === 'text' ? cursor.head : pos;
+  }
+
+  endOfTextAfter(pos: number, length: number): number {
+    const { parent, parentOffset } = this.current.doc.resolve(pos);
+
+    return pos + Math.min(length, parent.size - 2 - parentOffset);
+  }
+
+  private textAt(text: string): number {
     let found: number | undefined;
 
     this.current.doc.nodesBetween(0, this.current.doc.size, (node, pos) => {
       if (found === undefined && node.kind === 'text' && node.text === text) {
-        found = pos + offset;
+        found = pos;
       }
       return found === undefined;
     });
@@ -145,7 +169,15 @@ export class EditingHarness {
     if (found === undefined) {
       throw new Error(`No text node reads ${text}`);
     }
-    this.select(textSelection(found));
+    return found;
+  }
+
+  placeIn(text: string, offset = 0): void {
+    this.select(textSelection(this.textAt(text) + offset));
+  }
+
+  blockOf(text: string): string {
+    return this.current.doc.resolve(this.textAt(text)).parent.id;
   }
 
   select(selection: Selection): void {

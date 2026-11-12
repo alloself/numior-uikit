@@ -110,6 +110,14 @@ describe('createStoreJob', () => {
     expect(Array.from(ranked.ranks)).toEqual([2, 0, 1, 0, 2, 4, 3]);
   });
 
+  it('gives strings the collator holds equal one rank so the next sort key decides', () => {
+    const store = stringStore(build(fruit, ['2', '01', '1', '001', null, '10']));
+
+    expect(store.dictionary).toEqual(['2', '01', '1', '001', '10']);
+    expect(Array.from(store.ranks)).toEqual([1, 0, 0, 0, 1, 2]);
+    expect(Array.from(store.nulls)).toEqual([0, 0, 0, 0, 1, 0]);
+  });
+
   it('sorts a large dictionary in the rank host and falls back to the page when the host fails', async () => {
     const dictionary = Array.from(
       { length: 12_000 },
@@ -135,6 +143,7 @@ describe('createStoreJob', () => {
           send: (text) => {
             sent.push(text);
           },
+          cancel: () => undefined,
           finish: async (lengths) => {
             await Promise.resolve();
 

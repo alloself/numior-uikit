@@ -2,6 +2,12 @@ import { nextTick } from 'vue';
 
 export type CaretField = HTMLInputElement | HTMLTextAreaElement;
 
+export interface CaretSelection {
+  readonly start: number;
+  readonly end: number;
+  readonly direction: 'forward' | 'backward' | 'none' | undefined;
+}
+
 export const caretFieldIn = (
   root: HTMLElement | null,
   nameField: HTMLInputElement | null,
@@ -22,4 +28,21 @@ export const placeCaretIn = async (
 ): Promise<void> => {
   await nextTick();
   caretFieldIn(root, nameField)?.setSelectionRange(at, at);
+};
+
+export const placeSelectionIn = async (
+  root: HTMLElement | null,
+  nameField: HTMLInputElement | null,
+  text: string,
+  selection: CaretSelection,
+): Promise<void> => {
+  await nextTick();
+
+  const field = caretFieldIn(root, nameField);
+
+  if (field?.value !== text) {
+    return;
+  }
+
+  field.setSelectionRange(selection.start, selection.end, selection.direction);
 };

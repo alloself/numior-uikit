@@ -8,7 +8,7 @@
       :rows="readings"
       :get-key="keyOf"
       :row-headers="ROW_HEADERS"
-      bordered
+      gridlines
       height="18rem"
       :column-menu="false"
       caption="Показания датчиков, °C"

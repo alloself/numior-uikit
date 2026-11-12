@@ -66,9 +66,11 @@ export const createPresenceChannel = ({
       publish(next);
     },
     offline: () => {
-      if (peers.size > 0) {
-        publish(new Map());
+      if (peers.size === 0) {
+        return;
       }
+
+      publish(new Map());
     },
     stop: () => {
       clearTimeout(timer);

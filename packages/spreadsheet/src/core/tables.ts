@@ -164,17 +164,18 @@ const grownColumns = (
   width: number,
   prefix: string,
 ): string[] => {
-  const columns = shape.columns.slice();
+  const columns = shape.columns;
 
-  if (change.at > shape.range.left) {
-    const fresh: string[] = [];
-
-    while (columns.length + fresh.length < width) {
-      fresh.push(freeColumnName([...columns, ...fresh], prefix));
-    }
-    columns.splice(change.at - shape.range.left, 0, ...fresh);
+  if (change.at <= shape.range.left) {
+    return columns.slice(0, width);
   }
-  return columns.slice(0, width);
+  const fresh: string[] = [];
+  const at = change.at - shape.range.left;
+
+  while (columns.length + fresh.length < width) {
+    fresh.push(freeColumnName([...columns, ...fresh], prefix));
+  }
+  return [...columns.slice(0, at), ...fresh, ...columns.slice(at)].slice(0, width);
 };
 
 const shiftedColumns = (

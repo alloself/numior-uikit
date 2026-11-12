@@ -1,4 +1,5 @@
 import { FormulaNodeKind, FormulaReferenceKind, type FormulaNode } from './formula.types';
+import { childrenOf, eachNode, foldFormula, withChildren } from './walk';
 
 export type FormulaReference = Extract<
   FormulaNode,
@@ -26,6 +27,13 @@ export type SheetReference = Exclude<
 
 type Visitor = (reference: FormulaReference) => FormulaNode;
 
+export type UnreadAt = (name: string, index: number) => boolean;
+
+interface Placed {
+  readonly node: FormulaNode;
+  readonly read: boolean;
+}
+
 export const onSheetNamed = (
   reference: FormulaReference,
   name: string,
@@ -51,71 +59,81 @@ const REFERENCE_KINDS = new Set<FormulaNode['kind']>([
 
 const isReference = (node: FormulaNode): node is FormulaReference => REFERENCE_KINDS.has(node.kind);
 
-const collect = (node: FormulaNode, found: FormulaReference[]): void => {
-  if (isReference(node)) {
-    found.push(node);
-    return;
-  }
+const ADDRESSES = new Set<FormulaNode['kind']>(['cell', 'range', 'columns', 'rows']);
+
+const NOTHING_UNREAD: UnreadAt = () => false;
+
+const unread = (node: FormulaNode): Placed => ({ node, read: false });
+
+const placedChildren = (node: FormulaNode, unreadAt: UnreadAt): readonly Placed[] => {
   switch (node.kind) {
+    case FormulaNodeKind.Areas:
+      return [unread(node.left), unread(node.right)];
+    case FormulaNodeKind.Union:
+      return node.areas.map(unread);
     case FormulaNodeKind.Call:
-      node.args.forEach((arg) => collect(arg, found));
-      return;
-    case FormulaNodeKind.Unary:
-    case FormulaNodeKind.Percent:
-      collect(node.operand, found);
-      return;
-    case FormulaNodeKind.Binary:
-      collect(node.left, found);
-      collect(node.right, found);
-      return;
+      return node.args.map((arg, index) => ({ node: arg, read: !unreadAt(node.name, index) }));
     default:
-      return;
+      return childrenOf(node).map((child) => ({ node: child, read: true }));
   }
 };
+
+const descendPast = (node: FormulaNode): readonly FormulaNode[] =>
+  isReference(node) ? [] : childrenOf(node);
 
 export const formulaReferences = (node: FormulaNode): FormulaReference[] => {
   const found: FormulaReference[] = [];
 
-  collect(node, found);
+  eachNode(
+    node,
+    (item) => {
+      if (!isReference(item)) {
+        return;
+      }
+
+      found.push(item);
+    },
+    descendPast,
+  );
+
   return found;
 };
 
-const mapNodes = (
-  nodes: readonly FormulaNode[],
-  visit: (node: FormulaNode) => FormulaNode,
-): readonly FormulaNode[] => {
-  const mapped = nodes.map(visit);
+export const readReferences = (
+  root: FormulaNode,
+  unreadAt: UnreadAt = NOTHING_UNREAD,
+): FormulaReference[] => {
+  const found: FormulaReference[] = [];
+  const waiting: Placed[] = [{ node: root, read: true }];
 
-  return mapped.every((node, index) => node === nodes[index]) ? nodes : mapped;
+  for (let item = waiting.pop(); item !== undefined; item = waiting.pop()) {
+    if (isReference(item.node)) {
+      if (!item.read && ADDRESSES.has(item.node.kind)) {
+        continue;
+      }
+
+      found.push(item.node);
+      continue;
+    }
+
+    const children = placedChildren(item.node, unreadAt);
+
+    for (let index = children.length - 1; index >= 0; index -= 1) {
+      const child = children[index];
+
+      if (child === undefined) {
+        continue;
+      }
+
+      waiting.push(child);
+    }
+  }
+  return found;
 };
 
-const walk = (current: FormulaNode, visit: Visitor): FormulaNode => {
-  if (isReference(current)) {
-    return visit(current);
-  }
-  switch (current.kind) {
-    case FormulaNodeKind.Call: {
-      const args = mapNodes(current.args, (arg) => walk(arg, visit));
-
-      return args === current.args ? current : { ...current, args };
-    }
-    case FormulaNodeKind.Unary:
-    case FormulaNodeKind.Percent: {
-      const operand = walk(current.operand, visit);
-
-      return operand === current.operand ? current : { ...current, operand };
-    }
-    case FormulaNodeKind.Binary: {
-      const left = walk(current.left, visit);
-      const right = walk(current.right, visit);
-
-      return left === current.left && right === current.right
-        ? current
-        : { ...current, left, right };
-    }
-    default:
-      return current;
-  }
-};
-
-export const mapReferences = (node: FormulaNode, visit: Visitor): FormulaNode => walk(node, visit);
+export const mapReferences = (node: FormulaNode, visit: Visitor): FormulaNode =>
+  foldFormula<FormulaNode>(
+    node,
+    (item, children) => (isReference(item) ? visit(item) : withChildren(item, children)),
+    descendPast,
+  );

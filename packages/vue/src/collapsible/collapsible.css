@@ -35,6 +35,7 @@
     color: inherit;
     font: inherit;
     font-weight: var(--nui-font-weight-medium);
+    line-height: var(--nui-line-height-label);
     text-align: start;
     cursor: pointer;
     transition:
@@ -60,8 +61,8 @@
   }
   .nui-collapsible__chevron {
     flex-shrink: 0;
-    inline-size: 1em;
-    block-size: 1em;
+    inline-size: var(--nui-icon-size-sm);
+    block-size: var(--nui-icon-size-sm);
     color: var(--nui-text-muted);
     transition: rotate var(--nui-duration-normal) var(--nui-easing);
   }

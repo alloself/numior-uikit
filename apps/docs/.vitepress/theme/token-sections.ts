@@ -24,7 +24,7 @@ const SECTION_RULES: readonly SectionRule[] = [
     pattern: /^(?:focus|field-ring|disabled|state-|hover$|pressed$)/,
   },
   { section: TokenSection.Shape, pattern: /^radius/ },
-  { section: TokenSection.Sizes, pattern: /^(?:space-|control-|field-padding)/ },
+  { section: TokenSection.Sizes, pattern: /^(?:space-|control-|field-padding|icon-size)/ },
   {
     section: TokenSection.Type,
     pattern: /^(?:font|line-height|tracking|caption|prose|measure)/,
@@ -38,7 +38,10 @@ const SAMPLE_RULES: readonly SampleRule[] = [
   { sample: TokenSample.FontWeight, pattern: /^font-weight/ },
   { sample: TokenSample.FontSize, pattern: /font-size/ },
   { sample: TokenSample.Font, pattern: /^font/ },
-  { sample: TokenSample.Size, pattern: /^(?:space-|control-(?:height|padding)|field-padding)/ },
+  {
+    sample: TokenSample.Size,
+    pattern: /^(?:space-|control-(?:height|padding)|field-padding|icon-size)/,
+  },
 ];
 
 const TONE_RE =

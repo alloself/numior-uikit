@@ -372,12 +372,6 @@
       }
     },
     {
-      "formula": "=SUBTOTAL(9,{1,2})",
-      "expected": {
-        "error": "#VALUE!"
-      }
-    },
-    {
       "formula": "=SUBTOTAL(9,E1:E4)",
       "cells": {
         "E1": 1,

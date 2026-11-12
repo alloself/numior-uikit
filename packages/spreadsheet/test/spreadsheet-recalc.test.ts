@@ -41,7 +41,7 @@ const slowRuns = (book: Workbook): SlowRuns => {
   const state: SlowRuns = {
     calculator: {
       ...real,
-      outdated: () => (_sheet, row, col) => row === 1 && col === 2,
+      staleAt: (_sheet, row, col) => row === 1 && col === 2,
       recalculate: (options: RecalcOptions = {}): Recalculation => {
         const run = { done: 0, finished: false, resolve: (): void => undefined };
 
@@ -62,6 +62,7 @@ const slowRuns = (book: Workbook): SlowRuns => {
           get finished() {
             return run.finished;
           },
+          planned: true,
           settled,
           cancel: () => {
             state.cancels += 1;
@@ -76,17 +77,21 @@ const slowRuns = (book: Workbook): SlowRuns => {
     advance: (done) => {
       const run = runs.at(-1);
 
-      if (run !== undefined) {
-        run.done = done;
+      if (run === undefined) {
+        return;
       }
+
+      run.done = done;
     },
     finish: () => {
       const run = runs.at(-1);
 
-      if (run !== undefined) {
-        run.finished = true;
-        run.resolve();
+      if (run === undefined) {
+        return;
       }
+
+      run.finished = true;
+      run.resolve();
     },
   };
 

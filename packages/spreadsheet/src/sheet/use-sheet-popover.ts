@@ -9,9 +9,11 @@ export const useSheetPopover = (options: SheetPopoverOptions): SheetPopover => {
   const anchor = shallowRef<HTMLElement>();
 
   const holdAnchor = (element: Element | ComponentPublicInstance | null): void => {
-    if (element instanceof HTMLElement) {
-      anchor.value = element;
+    if (!(element instanceof HTMLElement)) {
+      return;
     }
+
+    anchor.value = element;
   };
 
   const show = (): void => {

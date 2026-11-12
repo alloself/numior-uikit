@@ -52,9 +52,11 @@ const rewriteEach = (
   each((sheet, row, col, before) => {
     const after = rewrite(sheet, before, row, col);
 
-    if (after !== before) {
-      found.push({ sheet, row, col, before, after });
+    if (after === before) {
+      return;
     }
+
+    found.push({ sheet, row, col, before, after });
   });
 
   found.forEach((change) => {
@@ -78,10 +80,12 @@ export const createRewriter = (book: Workbook, calculator: Calculator): Rewriter
     book.names.forEach((defined) => {
       const after = rewrite(defined);
 
-      if (after !== defined.ast) {
-        changed.push({ name: defined.name, scope: defined.scope, before: defined.ast });
-        calculator.setName(defined.name, defined.scope, after);
+      if (after === defined.ast) {
+        return;
       }
+
+      changed.push({ name: defined.name, scope: defined.scope, before: defined.ast });
+      calculator.setName(defined.name, defined.scope, after);
     });
 
     return changed;

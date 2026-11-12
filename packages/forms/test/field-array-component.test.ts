@@ -98,12 +98,48 @@ describe('NuiFieldArray', () => {
     expect(list.focused).toBe('grip:1');
   });
 
+  it('keeps the grip focused after a row moves up with the keyboard', async () => {
+    const list = FieldArrayDriver.mount({ names: ['Ann', 'Bob', 'Cid'], reorderable: true });
+
+    await list.press(2, ' ');
+    await list.press(2, 'ArrowUp');
+    await list.press(2, 'Enter');
+    expect(list.names).toEqual(['Ann', 'Cid', 'Bob']);
+    expect(list.focused).toBe('grip:1');
+  });
+
+  it('takes the focus to a row whose only error belongs to the whole row and ties the message to it', async () => {
+    const list = FieldArrayDriver.mount({
+      names: ['Ann', 'dup'],
+      schema: probeSchema(contactIssues),
+    });
+
+    await list.submit();
+    expect(list.rowError(1)).toBe('This contact is listed twice');
+    expect(list.focused).toBe('name:1');
+    expect(list.rowName(1)).toBe('Row 2');
+    expect(list.rowDescription(1)).toBe('This contact is listed twice');
+    expect(list.rowDescription(0)).toBeUndefined();
+  });
+
   it('cancels a keyboard move with Escape', async () => {
     const list = FieldArrayDriver.mount({ names: ['Ann', 'Bob'], reorderable: true });
 
     await list.press(0, ' ');
     await list.press(0, 'ArrowDown');
     await list.press(0, 'Escape');
+    expect(list.names).toEqual(['Ann', 'Bob']);
+    expect(list.live).toBe('Row 1, move cancelled.');
+    expect(list.reordering).toBe(false);
+  });
+
+  it('lets go of a row taken from the keyboard when the focus leaves its grip', async () => {
+    const list = FieldArrayDriver.mount({ names: ['Ann', 'Bob'], reorderable: true });
+
+    await list.press(0, ' ');
+    await list.press(0, 'ArrowDown');
+    await list.leaveGrip(0);
+
     expect(list.names).toEqual(['Ann', 'Bob']);
     expect(list.live).toBe('Row 1, move cancelled.');
     expect(list.reordering).toBe(false);

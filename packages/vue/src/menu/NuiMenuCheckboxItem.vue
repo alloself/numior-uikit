@@ -37,8 +37,10 @@ const toggle = (): void => {
   }
   checked.value = !checked.value;
   emit('select');
-  if (closeOnSelect) {
-    menu.closeAll();
+  if (!closeOnSelect) {
+    return;
   }
+
+  menu.closeAll();
 };
 </script>

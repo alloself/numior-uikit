@@ -7,7 +7,7 @@
     color: var(--nui-text);
     font-family: var(--nui-font);
     font-size: var(--nui-font-size-sm);
-    line-height: var(--nui-line-height);
+    line-height: var(--nui-line-height-label);
   }
   .nui-stepper--orientation-horizontal {
     inline-size: 100%;
@@ -109,7 +109,7 @@
     font-size: var(--nui-font-size-xs);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-    line-height: 1;
+    line-height: var(--nui-line-height-control);
     transition:
       background-color var(--nui-duration-normal) var(--nui-easing),
       border-color var(--nui-duration-normal) var(--nui-easing),
@@ -164,6 +164,7 @@
   .nui-stepper__summary-count {
     color: var(--nui-text-muted);
     font-size: var(--nui-font-size-xs);
+    line-height: var(--nui-line-height-control);
     font-variant-numeric: tabular-nums;
   }
   .nui-stepper--orientation-vertical .nui-stepper__list {

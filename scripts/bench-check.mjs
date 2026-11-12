@@ -56,11 +56,13 @@ for (const [suite, limits] of Object.entries(thresholds)) {
         `${suite} / ${name}: ${((operation.missedShare ?? 1) * 100).toFixed(1)} % missed frames exceeds ${limit.missedShare * 100} %`,
       );
     }
-    if (typeof limit.maxMs === 'number' && operation.maxMs > limit.maxMs) {
-      failures.push(
-        `${suite} / ${name}: max ${operation.maxMs.toFixed(1)} ms exceeds ${limit.maxMs} ms`,
-      );
+    if (typeof limit.maxMs !== 'number' || operation.maxMs <= limit.maxMs) {
+      continue;
     }
+
+    failures.push(
+      `${suite} / ${name}: max ${operation.maxMs.toFixed(1)} ms exceeds ${limit.maxMs} ms`,
+    );
   }
 }
 

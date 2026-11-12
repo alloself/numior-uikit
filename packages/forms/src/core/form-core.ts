@@ -8,7 +8,7 @@ import { cloneValue } from '../values/clone';
 import { createRegistry, type Registry } from './registry';
 import { createRuleLookup, type FormRules, type PathRules } from './rules';
 import { createTracker, type Tracker } from './tracker';
-import { ValidateOn, type FormMessage } from './form.types';
+import { ValidateOn, type CheckErrorHandler, type FormMessage } from './form.types';
 import { SubmissionPhase } from './core.types';
 
 export interface ExternalError {
@@ -20,12 +20,14 @@ export interface RetainedState {
   readonly touched: boolean;
   readonly attempted: boolean;
   readonly errors: readonly string[];
+  readonly value: unknown;
 }
 
 export interface Session {
   epoch: number;
   started: number;
   applied: number;
+  shape: number;
   formAttempted: boolean;
 }
 
@@ -40,6 +42,7 @@ export interface FormCoreOptions<V extends object, O> {
   readonly rules?: FormRules<V> | undefined;
   readonly validateOn?: ValidateOn | undefined;
   readonly engine?: FormEngineFactory | undefined;
+  readonly onCheckError?: CheckErrorHandler | undefined;
 }
 
 export interface FormCore<V extends object, O> {
@@ -49,6 +52,7 @@ export interface FormCore<V extends object, O> {
   readonly schema: StandardSchema<unknown, O> | undefined;
   readonly rulesAt: (path: string) => PathRules<V>;
   readonly validateOn: ValidateOn;
+  readonly onCheckError: CheckErrorHandler | undefined;
   readonly messages: ComputedRef<NuiFormRulesMessages>;
   readonly initial: ShallowRef<V>;
   readonly schemaFormErrors: ShallowRef<readonly FormMessage[]>;
@@ -70,6 +74,7 @@ export const createFormCore = <V extends object, O>(
   schema: options.schema,
   rulesAt: createRuleLookup(options.rules ?? {}),
   validateOn: options.validateOn ?? ValidateOn.Submit,
+  onCheckError: options.onCheckError,
   messages: useMessages(formRulesMessages),
   initial: shallowRef(cloneValue(options.initialValues)),
   schemaFormErrors: shallowRef<readonly FormMessage[]>([]),
@@ -77,5 +82,5 @@ export const createFormCore = <V extends object, O>(
   submission: shallowRef<Submission>(IDLE_SUBMISSION),
   external: new Map(),
   retained: new Map(),
-  session: { epoch: 0, started: 0, applied: 0, formAttempted: false },
+  session: { epoch: 0, started: 0, applied: 0, shape: 0, formAttempted: false },
 });

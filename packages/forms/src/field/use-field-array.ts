@@ -8,6 +8,16 @@ import {
   type MaybeRefOrGetter,
 } from 'vue';
 import { createOwnerState } from '../core/owner-state';
+import {
+  arranged,
+  droppedPlaces,
+  insertedAt,
+  keptPlaces,
+  movedPlaces,
+  removedAt,
+  swappedPlaces,
+  type Relocation,
+} from '../engine/places';
 import type { ValidateOn } from '../core/form.types';
 import { FORM_HOST, type FormContext } from '../form/form-context';
 import { joinPath } from '../paths/paths';
@@ -91,8 +101,14 @@ export const useFieldArray = <V extends object, Row>(
     void host.rulesChanged(entry);
   });
 
-  const mutate = (change: () => void): Promise<void> => {
+  const mutate = (
+    relocation: (length: number) => Relocation,
+    change: () => void,
+  ): Promise<void> => {
+    const relocate = relocation(items(engine.raw).length);
+
     change();
+    host.reshape(path.value, relocate);
     return host.revalidate([entry], 'own');
   };
 
@@ -117,13 +133,41 @@ export const useFieldArray = <V extends object, Row>(
     }),
     errorMessage: computed(() => state.errors.value[0]),
     errors: computed(() => state.errors.value),
-    push: (value) => mutate(() => array.push(value)),
-    prepend: (value) => mutate(() => array.prepend(value)),
-    insert: (index, value) => mutate(() => array.insert(index, value)),
-    remove: (index) => mutate(() => array.remove(index)),
-    move: (from, to) => mutate(() => array.move(from, to)),
-    swap: (first, second) => mutate(() => array.swap(first, second)),
-    replace: (values) => mutate(() => array.replace(values)),
+    push: (value) =>
+      mutate(
+        () => keptPlaces,
+        () => array.push(value),
+      ),
+    prepend: (value) =>
+      mutate(
+        (length) => insertedAt(length, 0),
+        () => array.prepend(value),
+      ),
+    insert: (index, value) =>
+      mutate(
+        (length) => insertedAt(length, index),
+        () => array.insert(index, value),
+      ),
+    remove: (index) =>
+      mutate(
+        (length) => removedAt(length, index),
+        () => array.remove(index),
+      ),
+    move: (from, to) =>
+      mutate(
+        (length) => arranged(movedPlaces(length, from, to)),
+        () => array.move(from, to),
+      ),
+    swap: (first, second) =>
+      mutate(
+        (length) => arranged(swappedPlaces(length, first, second)),
+        () => array.swap(first, second),
+      ),
+    replace: (values) =>
+      mutate(
+        () => droppedPlaces,
+        () => array.replace(values),
+      ),
     update: (index, value) => host.write(joinPath(path.value, index), value),
   };
 };

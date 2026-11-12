@@ -70,15 +70,61 @@ test.describe('data display', () => {
     await data.clickSurface(data.cardButton.locator('.nui-card__content'));
     await expect.poll(async () => (await data.readOutput()).cardClicks).toBe(1);
 
-    if (!isMobile) {
-      await data.cardLink.getByRole('link').focus();
-      await page.keyboard.press('Tab');
-      await expect(data.cardButton.getByRole('button', { name: 'Проект Numior' })).toBeFocused();
-      await expect.poll(() => data.focusRingOf(data.cardButton)).toBe('solid');
-
-      await page.keyboard.press('Enter');
-      await expect.poll(async () => (await data.readOutput()).cardClicks).toBe(2);
+    if (isMobile) {
+      return;
     }
+
+    await data.cardLink.getByRole('link').focus();
+    await page.keyboard.press('Tab');
+    await expect(data.cardButton.getByRole('button', { name: 'Проект Numior' })).toBeFocused();
+    await expect.poll(() => data.focusRingOf(data.cardButton)).toBe('solid');
+
+    await page.keyboard.press('Enter');
+    await expect.poll(async () => (await data.readOutput()).cardClicks).toBe(2);
+  });
+
+  test('a loading card is busy, keeps a skeleton in the line box of each text and gives its link back when loaded', async ({
+    playground,
+    data,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await data.cardLoading.scrollIntoViewIfNeeded();
+    await expect(data.cardLoading).toHaveAttribute('aria-busy', 'true');
+    await expect(data.cardLoading.getByRole('link')).toHaveCount(0);
+    await expect(data.skeletonsOf(data.cardLoading)).toHaveCount(4);
+    await expect(data.cardLoading).not.toContainText('Каталог 2026');
+
+    const loading = await data.textBoxesOf(data.cardLoading);
+
+    expect(await data.mediaCoverOf(data.cardLoading)).toBe(1);
+
+    await data.cardLoadingToggle.click();
+    await expect(data.cardLoading).not.toHaveAttribute('aria-busy');
+    await expect(data.cardLoading.getByRole('link')).toHaveAccessibleName('Каталог 2026');
+    await expect(data.skeletonsOf(data.cardLoading)).toHaveCount(0);
+    expect(await data.textBoxesOf(data.cardLoading)).toEqual(loading);
+    expect(await playground.wcagViolations(data.scope)).toEqual([]);
+  });
+
+  test('a switch in the footer of a linked card keeps its place and toggles without opening the link', async ({
+    playground,
+    data,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await data.cardLoading.scrollIntoViewIfNeeded();
+
+    const loading = await boxOf(data.switchTrackOf(data.cardLoading));
+
+    await data.cardLoadingToggle.click();
+    await expect(data.cardLoading.getByRole('link')).toHaveCount(1);
+    expect((await boxOf(data.switchTrackOf(data.cardLoading))).x).toBe(loading.x);
+
+    await data.cardLoadingToggle.click();
+    await expect(data.cardLoading).toHaveAttribute('aria-busy', 'true');
+    expect(page.url()).not.toContain('#catalogue');
   });
 
   test('a card steps its padding and the gap between its parts down together', async ({
@@ -164,7 +210,7 @@ test.describe('data display', () => {
     expect(await motionOf(data.titleOf(option), 'color')).toBeNull();
   });
 
-  test('a linked list item fades its hover background and leaves the text colour to its row', async ({
+  test('a list row changes its hover background at once and leaves the text colour of a link to its row', async ({
     playground,
     data,
     isMobile,
@@ -176,8 +222,15 @@ test.describe('data display', () => {
     await slowMotion(data.list);
     await link.hover();
 
-    expect((await motionOf(link, 'background-color'))?.duration).toBe(SLOW_MOTION);
-    await expect(link).toHaveCSS('transition-property', 'background-color');
+    expect(await motionOf(link, 'background-color')).toBeNull();
+    expect(await motionOf(link, 'color')).toBeNull();
+
+    const option = data.option(data.singleList, 'Почта');
+
+    await slowMotion(data.singleList);
+    await option.hover();
+
+    expect(await motionOf(option, 'background-color')).toBeNull();
   });
 
   test('list items render as links or buttons and an emptied list shows the empty state', async ({

@@ -1,6 +1,7 @@
 import {
   computed,
   onMounted,
+  shallowRef,
   toValue,
   watch,
   type MaybeRefOrGetter,
@@ -20,7 +21,7 @@ import {
   type ListNavigation,
   type PopoverControl,
 } from '@numior/primitives';
-import { popoverShown } from '../shared/popover-toggle';
+import { takeFocus, useShownPopover } from '../shared/use-shown-popover';
 import type { MenuContext } from './menu-context';
 import { MenuFocusRequest, NuiMenuFocus } from './menu.types';
 
@@ -40,10 +41,10 @@ export interface MenuSurfaceOptions {
 }
 
 export interface MenuSurfaceAttrs {
-  readonly onToggle: (event: Event) => void;
   readonly onKeydown: (event: KeyboardEvent) => void;
   readonly onFocusin: (event: FocusEvent) => void;
   readonly onFocusout: (event: FocusEvent) => void;
+  readonly onToggle: (event: Event) => void;
   readonly onPointermove: (event: PointerEvent) => void;
   readonly onPointerleave: () => void;
 }
@@ -52,22 +53,12 @@ export interface MenuSurface {
   readonly control: PopoverControl;
   readonly navigation: ListNavigation;
   readonly context: MenuContext;
+  readonly pointed: Readonly<Ref<boolean>>;
   readonly attrs: MenuSurfaceAttrs;
 }
 
 const focusElement = (element: HTMLElement | null | undefined): void => {
   element?.focus({ preventScroll: true });
-};
-
-const entryOf = (key: string): NuiMenuFocus | undefined => {
-  switch (key) {
-    case Key.ArrowDown:
-      return NuiMenuFocus.First;
-    case Key.ArrowUp:
-      return NuiMenuFocus.Last;
-    default:
-      return undefined;
-  }
 };
 
 const holdsOpenSubmenu = (element: HTMLElement | null): boolean =>
@@ -92,8 +83,8 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
   });
 
   const opening = createIntent<NuiMenuFocus>();
+  const pointed = shallowRef(false);
   let inside = false;
-  let pointer = false;
 
   const close = (): void => {
     if (options.close === undefined) {
@@ -117,17 +108,23 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     },
   };
 
-  const activateOnOpen = (): void => {
+  const rest = (): void => {
     navigation.reset();
+    navigation.setActive(null, { focus: false });
+  };
 
+  const activateOnOpen = (): void => {
     switch (opening.peek()) {
       case NuiMenuFocus.First:
+        navigation.reset();
         navigation.setActive(0, { focus: false });
         break;
       case NuiMenuFocus.Last:
+        navigation.reset();
         navigation.setActive(navigation.items().length - 1, { focus: false });
         break;
       case undefined:
+        rest();
         break;
     }
   };
@@ -137,35 +134,56 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     return (request === NuiMenuFocus.First ? items[0] : items.at(-1)) ?? null;
   };
 
-  const holdsFocus = (): boolean =>
-    options.content.value?.contains(document.activeElement) === true;
-
-  const focusOnOpen = (): void => {
+  const focusOnOpen = (): boolean => {
     const request = opening.peek();
 
-    focusElement(
+    const focused = takeFocus(
       request === undefined
         ? options.content.value
         : (navigation.activeElement() ?? requestedItem(request)),
     );
+
+    if (focused) {
+      opening.take();
+    }
+
+    return focused;
+  };
+
+  const shown = useShownPopover(options.open, focusOnOpen);
+
+  const within = (node: EventTarget | null): boolean =>
+    node instanceof Node &&
+    (options.content.value?.contains(node) === true ||
+      options.trigger.value?.contains(node) === true);
+
+  const focusWentAway = (): boolean => {
+    const active = document.activeElement;
+
+    return active !== null && active !== document.body && !within(active);
   };
 
   const onClosed = (): void => {
-    if (inside) {
-      inside = false;
-      focusElement(options.trigger.value);
+    const held = inside;
+
+    opening.take();
+    inside = false;
+
+    if (!held || focusWentAway()) {
+      return;
     }
+
+    focusElement(options.trigger.value);
   };
 
   watch(
     () => options.open.value,
     (isOpen) => {
-      if (isOpen) {
-        activateOnOpen();
-      } else {
-        opening.take();
-        navigation.reset();
+      if (!isOpen) {
+        return;
       }
+
+      activateOnOpen();
     },
   );
 
@@ -174,45 +192,27 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
       () => options.open.value,
       (isOpen) => {
         if (isOpen) {
-          focusOnOpen();
-        } else {
-          onClosed();
+          return;
         }
+
+        onClosed();
       },
       { flush: 'post' },
     );
   });
 
-  const within = (node: EventTarget | null): boolean =>
-    node instanceof Node &&
-    (options.content.value?.contains(node) === true ||
-      options.trigger.value?.contains(node) === true);
-
   return {
     control,
     navigation,
     context,
+    pointed,
     attrs: {
-      onToggle: (event) => {
-        if (popoverShown(event) && !holdsFocus()) {
-          focusOnOpen();
-        }
-      },
       onKeydown: (event) => {
-        pointer = false;
+        pointed.value = false;
         if (event.key === Key.Tab) {
           context.closeAll();
           return;
         }
-
-        const entry = event.target === options.content.value ? entryOf(event.key) : undefined;
-
-        if (entry !== undefined) {
-          event.preventDefault();
-          navigation.setActive(requestedItem(entry));
-          return;
-        }
-
         navigation.onKeydown(event);
       },
       onFocusin: (event) => {
@@ -224,23 +224,28 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
           return;
         }
         inside = false;
-        if (options.open.value) {
-          close();
-        }
-      },
-      onPointermove: (event) => {
-        const item = navigation.itemFrom(event.target);
-        if (item && item !== navigation.activeElement()) {
-          pointer = true;
-          navigation.setActive(item);
-        }
-      },
-      onPointerleave: () => {
-        if (!pointer || holdsOpenSubmenu(navigation.activeElement())) {
+        if (!options.open.value) {
           return;
         }
-        pointer = false;
-        navigation.reset();
+
+        close();
+      },
+      onToggle: shown.onToggle,
+      onPointermove: (event) => {
+        const item = navigation.itemFrom(event.target);
+        if (!item || item === navigation.activeElement()) {
+          return;
+        }
+
+        pointed.value = true;
+        navigation.setActive(item);
+      },
+      onPointerleave: () => {
+        if (!pointed.value || holdsOpenSubmenu(navigation.activeElement())) {
+          return;
+        }
+        pointed.value = false;
+        rest();
         focusElement(options.content.value);
       },
     },

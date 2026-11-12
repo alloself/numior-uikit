@@ -59,8 +59,10 @@ describe('editor view', () => {
           node('hard_break'),
         ]),
         node('table', [
-          node('table_head', [node('table_column', [], { name: 'H' })]),
-          node('table_body', [node('table_row', [node('table_cell', [], { value: 1 })])]),
+          node('table_head', [node('table_column', [], { key: 'h', name: 'H' })]),
+          node('table_body', [
+            node('table_row', [node('table_cell', [], { column: 'h', value: 1 })]),
+          ]),
         ]),
       ),
     );
@@ -74,7 +76,7 @@ describe('editor view', () => {
         '<pre><code>let x</code></pre>',
         '<hr contenteditable="false">',
         '<img src="a.png" alt="A" contenteditable="false">',
-        '<p><span contenteditable="false">@Ann</span>end<br><br></p>',
+        '<p><span data-user="u1" contenteditable="false">@Ann</span>end<br><br></p>',
         '<table contenteditable="false"><thead><tr><th><span contenteditable="false">H</span><datalist></datalist></th></tr></thead><tbody><tr><td contenteditable="false">1</td></tr></tbody></table>',
       ].join(''),
     );
@@ -170,6 +172,21 @@ describe('editor view', () => {
     );
   });
 
+  it('tells whether a place is drawn without drawing the rest and draws it when asked', () => {
+    const paragraphs = Array.from({ length: 300 }, (_, index) => node('paragraph', [`p${index}`]));
+    const view = mounted(doc(...paragraphs));
+    const far = view.positionOf(paragraphs[250]?.id ?? '') + 1;
+
+    expect(view.drawn(1)).toBe(true);
+    expect(view.drawn(far)).toBe(false);
+    expect(view.blocks).toHaveLength(128);
+
+    view.draw(far);
+
+    expect(view.drawn(far)).toBe(true);
+    expect(view.blocks).toHaveLength(300);
+  });
+
   it('draws edited blocks of the part not drawn yet from the new document', async () => {
     const paragraphs = Array.from({ length: 300 }, (_, index) => node('paragraph', [`p${index}`]));
     const view = mounted(doc(...paragraphs));
@@ -231,6 +248,30 @@ describe('editor view', () => {
     await view.finishFilling();
 
     expect(html(69)).toBe('p69');
+  });
+
+  it('keeps the nodes of a hidden block on the page when the block is replaced before it caught up', async () => {
+    const first = node('list_item', [node('paragraph', ['one'])]);
+    const second = node('list_item', [node('paragraph', ['two'])]);
+    const list = node('ordered_list', [first]);
+
+    const view = mounted(
+      doc(node('paragraph', ['top']), list),
+      fixtureSchema,
+      [],
+      {},
+      undefined,
+      true,
+    );
+
+    view.setChunkInView(0, false);
+    view.change((tr) => tr.insert(view.positionOf(first.id) + first.size, [second]));
+    view.change((tr) => tr.setNodeAttrs(view.positionOf(list.id), { start: 5 }));
+    await view.finishFilling();
+
+    expect(view.onPage(second.id)).toBe(true);
+    expect(view.onPage(first.id)).toBe(true);
+    expect(view.texts).toEqual(['top', 'one', 'two']);
   });
 
   it('types into the same text node and leaves every other block alone', () => {

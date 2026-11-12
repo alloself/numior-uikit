@@ -52,6 +52,10 @@ export class TreeSection {
     return item.locator('.nui-tree__toggle');
   }
 
+  openFolderOf(item: Locator): Locator {
+    return item.locator('.nui-tree__glyph--open');
+  }
+
   checkboxOf(item: Locator): Locator {
     return item.locator('.nui-tree__checkbox');
   }

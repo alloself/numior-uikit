@@ -5,6 +5,7 @@ import {
   type AttrValue,
   type ElementNode,
   type NodeSpec,
+  type RenderElement,
 } from '@numior/editor-core';
 import {
   NuiContentNodeType,
@@ -53,6 +54,14 @@ export const SORT_ATTRS = {
   },
 } as const;
 
+const FILTER_CLASS = 'nui-content__table-filter';
+
+const renderValue = (node: ElementNode): RenderElement =>
+  renderTag('span', {}, [cellText(node.attrs.value)]);
+
+export const renderFilter = (node: ElementNode): RenderElement =>
+  renderTag('span', { class: FILTER_CLASS, hidden: true }, elementsOf(node).map(renderValue));
+
 export const VIEW_NODES: Readonly<Record<string, NodeSpec>> = {
   table_filter: {
     content: 'table_value*',
@@ -64,13 +73,13 @@ export const VIEW_NODES: Readonly<Record<string, NodeSpec>> = {
       max: { default: null, verify: orNull(isNumber) },
       from: { default: null, verify: orNull(isText) },
       to: { default: null, verify: orNull(isText) },
+      exclude: { default: false, verify: (value) => typeof value === 'boolean' },
     },
-    render: () =>
-      renderTag('span', { class: 'nui-content__table-filter', hidden: true }, [contentHole]),
+    render: () => renderTag('span', { class: FILTER_CLASS, hidden: true }, [contentHole]),
   },
   table_value: {
     attrs: { value: { default: null } },
-    render: (node) => renderTag('span', {}, [cellText(node.attrs.value)]),
+    render: renderValue,
   },
 };
 
@@ -90,7 +99,7 @@ const readFilter = (node: ElementNode): NuiContentTableFilter | undefined => {
     case NuiContentTableFilterKind.Date:
       return { kind: 'date', from: textOf(attrs.from), to: textOf(attrs.to) };
     case NuiContentTableFilterKind.Set:
-      return { kind: 'set', values: valuesOf(node) };
+      return { kind: 'set', values: valuesOf(node), exclude: attrs.exclude === true };
     default:
       return undefined;
   }
@@ -129,6 +138,6 @@ export const filterAttrs = (filter: NuiContentTableFilter): Readonly<Record<stri
     case NuiContentTableFilterKind.Date:
       return { kind: 'date', from: filter.from, to: filter.to };
     case NuiContentTableFilterKind.Set:
-      return { kind: 'set' };
+      return { kind: 'set', exclude: filter.exclude };
   }
 };

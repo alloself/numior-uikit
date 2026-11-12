@@ -31,6 +31,23 @@ const empty = () =>
     ),
   );
 
+const titled = () =>
+  toJSON(
+    createDoc(
+      contentSchema,
+      contentSchema.element('doc', {
+        id: 'root',
+        content: [
+          contentSchema.element('heading', {
+            id: 'h',
+            attrs: { level: 2 },
+            content: [contentSchema.text('Title')],
+          }),
+        ],
+      }),
+    ),
+  );
+
 const typedSlash = async (): Promise<EditorDriver> => {
   const editor = mounted({ document: empty() });
 
@@ -51,6 +68,9 @@ describe('NuiEditor slash menu', () => {
       'Heading 1',
       'Heading 2',
       'Heading 3',
+      'Heading 4',
+      'Heading 5',
+      'Heading 6',
       'Bulleted list',
       'Numbered list',
       'To-do list',
@@ -135,5 +155,56 @@ describe('NuiEditor slash menu', () => {
     await editor.chooseInsert('Callout');
 
     expect(editor.markup).toContain('nui-content__callout');
+  });
+
+  it('inserts a block from the toolbar below the block under the caret, whatever that block is', async () => {
+    const editor = mounted({ document: titled() });
+
+    editor.focus();
+    await editor.select(3);
+    await editor.openMenu('insert');
+
+    expect(editor.insertShown).toBe(true);
+    expect(editor.insertSearchFocused).toBe(true);
+    expect(editor.insertUnavailable).toEqual([]);
+
+    await editor.chooseInsert('Bulleted list');
+
+    expect(editor.markup).toContain(
+      '<h2 class="nui-content__heading nui-content__heading--level-2">Title</h2><ul class="nui-content__list nui-content__list--bullet">',
+    );
+
+    expect(editor.insertShown).toBe(false);
+    expect(editor.focused).toBe(true);
+
+    await editor.type('x');
+    await editor.chooseInsert('Heading 4');
+
+    expect(editor.markup).toContain(
+      '</ul><h4 class="nui-content__heading nui-content__heading--level-4">',
+    );
+  });
+
+  it('finds a block of the toolbar menu by a part of its name or by a keyword', async () => {
+    const editor = mounted({ document: titled() });
+
+    editor.focus();
+    await editor.select(3);
+    await editor.searchInsert('quo');
+
+    expect(editor.insertOptions).toEqual(['Quote']);
+
+    await editor.searchInsert('h5');
+
+    expect(editor.insertOptions).toEqual(['Heading 5']);
+
+    await editor.searchInsert('zz');
+
+    expect(editor.insertOptions).toEqual([]);
+
+    await editor.closeInsert();
+    await editor.openMenu('insert');
+
+    expect(editor.insertOptions).toContain('Quote');
   });
 });

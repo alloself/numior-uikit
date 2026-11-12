@@ -10,9 +10,12 @@ export interface NuiChartProps {
   height?: number | NuiChartHeight | undefined;
   focusable?: boolean | undefined;
   locale?: string | undefined;
+  timeZone?: string | undefined;
   showTable?: boolean | undefined;
   legend?: boolean | undefined;
 }
+
+export type CategoryName = (index: number) => string;
 
 export interface NuiChartLegendItem {
   readonly id: string;
@@ -62,6 +65,7 @@ export interface NuiChartTableProps {
   spec: ChartSpec;
   label: string;
   locale: string;
+  categoryName: CategoryName;
   categoryTitle: string;
   shown: boolean;
 }

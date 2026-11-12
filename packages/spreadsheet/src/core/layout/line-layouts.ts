@@ -44,9 +44,11 @@ const createLineLayouts = (lines: Int32Array, layouts: readonly LineLayout[]): L
     for (let index = from; index < to; index += 1) {
       const layout = layouts[index];
 
-      if (layout !== undefined) {
-        visit(lines[index] ?? 0, layout);
+      if (layout === undefined) {
+        continue;
       }
+
+      visit(lines[index] ?? 0, layout);
     }
   };
 
@@ -97,6 +99,16 @@ const createLineLayouts = (lines: Int32Array, layouts: readonly LineLayout[]): L
 
 const EMPTY_LINES = createLineLayouts(new Int32Array(0), []);
 
+const BLANK_LINE: LineLayout = {
+  size: undefined,
+  custom: false,
+  hidden: false,
+  level: 0,
+  collapsed: false,
+  style: undefined,
+  extra: [],
+};
+
 export const DEFAULT_VIEW: SheetView = {
   frozenRows: 0,
   frozenCols: 0,
@@ -125,7 +137,8 @@ export const EMPTY_LAYOUT: SheetLayout = {
 export const lineLayoutsOf = (
   entries: readonly (readonly [line: number, layout: LineLayout])[],
 ): LineLayouts => {
-  const sorted = entries.toSorted(([left], [right]) => left - right);
+  const ordered = entries.toSorted(([left], [right]) => left - right);
+  const sorted = ordered.filter(([line], index) => ordered[index + 1]?.[0] !== line);
 
   return sorted.length === 0
     ? EMPTY_LINES
@@ -133,6 +146,41 @@ export const lineLayoutsOf = (
         Int32Array.from(sorted, ([line]) => line),
         sorted.map(([, layout]) => layout),
       );
+};
+
+const isBlank = (layout: LineLayout): boolean =>
+  layout.size === undefined &&
+  !layout.hidden &&
+  layout.level === 0 &&
+  !layout.collapsed &&
+  layout.style === undefined &&
+  layout.extra.length === 0;
+
+export const withLineSizes = (
+  lines: LineLayouts,
+  sizes: ReadonlyMap<number, number | undefined>,
+): LineLayouts => {
+  const entries: [number, LineLayout][] = [];
+
+  lines.forEach((line, layout) => {
+    if (sizes.has(line)) {
+      return;
+    }
+
+    entries.push([line, layout]);
+  });
+
+  sizes.forEach((size, line) => {
+    const sized = { ...(lines.get(line) ?? BLANK_LINE), size, custom: size !== undefined };
+
+    if (isBlank(sized)) {
+      return;
+    }
+
+    entries.push([line, sized]);
+  });
+
+  return lineLayoutsOf(entries);
 };
 
 const shiftView = (view: SheetView, change: LineChange): SheetView => {

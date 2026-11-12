@@ -39,8 +39,14 @@
       translate: var(--_shift);
     }
   }
+  .nui-tooltip__keyed {
+    display: flex;
+    align-items: center;
+    gap: var(--nui-space-2);
+  }
   .nui-tooltip__arrow {
     position: absolute;
+    z-index: -1;
     inline-size: var(--_arrow);
     block-size: var(--_arrow);
     background: inherit;

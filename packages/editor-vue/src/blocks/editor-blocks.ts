@@ -1,5 +1,5 @@
 import { defineAsyncComponent } from 'vue';
-import { leaveClosedToggle, toggleTodo } from './block-commands';
+import { closedToggleBody, leaveClosedToggle, toggleTodo } from './block-commands';
 import type { ElementNode } from '@numior/editor-core';
 import type { NuiMenuEntry } from '@numior/vue';
 import type { NuiEditorMessages } from '../editor/editor.messages';
@@ -30,6 +30,7 @@ export const toggleBlock = defineBlock({
   name: 'toggle',
   view: NuiEditorToggleButton,
   keymap: (editor) => ({ Enter: leaveClosedToggle(editor) }),
+  conceals: closedToggleBody,
   menu: (node, editor, texts) => [
     {
       type: 'checkbox',

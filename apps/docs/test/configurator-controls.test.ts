@@ -11,6 +11,6 @@ describe('configurator enum control', () => {
   it('leaves many values or long names to a select so the group fits its cell', () => {
     expect(fitsSegments(['xs', 'sm', 'md', 'lg', 'xl'])).toBe(false);
     expect(fitsSegments(['start', 'end', 'top', 'bottom'])).toBe(false);
-    expect(fitsSegments(['plain', 'divided', 'bordered'])).toBe(false);
+    expect(fitsSegments(['plain', 'divided', 'outline'])).toBe(false);
   });
 });

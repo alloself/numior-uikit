@@ -1,18 +1,18 @@
 import { onScopeDispose } from 'vue';
 import { edgeDirectionOf, stepCell, type TableSize } from './table-keys';
-import type { NuiTableEditMove, NuiTableRange, TableCellPosition } from './table.types';
+import type { NuiTableEditMove, NuiTableRange, NuiTableCellPosition } from './table.types';
 import { PointerType } from '@numior/primitives';
 
 export interface TablePickingOptions {
   readonly active: () => boolean;
-  readonly origin: () => TableCellPosition | undefined;
-  readonly locate: (target: EventTarget | null) => TableCellPosition | undefined;
-  readonly cellAt: (x: number, y: number) => TableCellPosition | undefined;
+  readonly origin: () => NuiTableCellPosition | undefined;
+  readonly locate: (target: EventTarget | null) => NuiTableCellPosition | undefined;
+  readonly cellAt: (x: number, y: number) => NuiTableCellPosition | undefined;
   readonly whole: (range: NuiTableRange) => NuiTableRange;
-  readonly leave: (from: TableCellPosition, move: NuiTableEditMove) => TableCellPosition;
+  readonly leave: (from: NuiTableCellPosition, move: NuiTableEditMove) => NuiTableCellPosition;
   readonly bounds: () => TableSize;
   readonly isRtl: () => boolean;
-  readonly reveal: (position: TableCellPosition) => void;
+  readonly reveal: (position: NuiTableCellPosition) => void;
   readonly pick: (range: NuiTableRange) => void;
 }
 
@@ -25,11 +25,11 @@ export interface TablePicking {
 }
 
 interface PickCursor {
-  readonly anchor: TableCellPosition;
-  readonly focus: TableCellPosition;
+  readonly anchor: NuiTableCellPosition;
+  readonly focus: NuiTableCellPosition;
 }
 
-const samePosition = (a: TableCellPosition, b: TableCellPosition): boolean =>
+const samePosition = (a: NuiTableCellPosition, b: NuiTableCellPosition): boolean =>
   a.row === b.row && a.col === b.col;
 
 const isPlain = (event: KeyboardEvent): boolean =>
@@ -44,15 +44,17 @@ export const useTablePicking = (options: TablePickingOptions): TablePicking => {
     options.pick(options.whole({ from: next.anchor, to: next.focus }));
   };
 
-  const targetOf = (event: Event): TableCellPosition | undefined =>
+  const targetOf = (event: Event): NuiTableCellPosition | undefined =>
     options.active() ? options.locate(event.target) : undefined;
 
   const onMove = (event: PointerEvent): void => {
     const cell = options.cellAt(event.clientX, event.clientY);
 
-    if (cell !== undefined && cursor !== undefined && !samePosition(cell, cursor.focus)) {
-      send({ anchor: cursor.anchor, focus: cell });
+    if (cell === undefined || cursor === undefined || samePosition(cell, cursor.focus)) {
+      return;
     }
+
+    send({ anchor: cursor.anchor, focus: cell });
   };
 
   const stop = (): void => {

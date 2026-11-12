@@ -1,41 +1,44 @@
 <template>
   <NuiCombobox
-    v-model="employee"
+    v-model="sku"
     :options="found"
     :filter="false"
     :loading="loading"
-    label="Employee"
-    placeholder="Name or team"
+    label="Product"
+    placeholder="Name or SKU"
     @search="search"
   />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { promiseTimeout } from '@vueuse/core';
 import { NuiCombobox, type NuiOption } from '@numior/vue';
+import { products } from '#demo/products';
 
-const directory: NuiOption<string>[] = [
-  { value: 'titova', label: 'Anna Titova', description: 'Design' },
-  { value: 'belov', label: 'Igor Belov', description: 'Engineering' },
-  { value: 'kim', label: 'Maria Kim', description: 'Support' },
-  { value: 'smirnov', label: 'Oleg Smirnov', description: 'Engineering' },
-];
+const catalog: NuiOption<string>[] = products.map((product) => ({
+  value: product.sku,
+  label: product.name,
+  description: product.sku,
+}));
 
-const employee = ref<string | null>(null);
-const found = ref(directory);
+const sku = ref<string | null>(null);
+const found = ref(catalog);
 const loading = ref(false);
-let timer: ReturnType<typeof setTimeout> | undefined;
+const latest = ref('');
 
 const matches = (option: NuiOption<string>, query: string): boolean =>
-  `${option.label} ${option.description ?? ''}`.toLowerCase().includes(query.toLowerCase());
+  `${option.label} ${option.value}`.toLowerCase().includes(query.toLowerCase());
 
-const search = (query: string): void => {
-  clearTimeout(timer);
+const search = async (query: string): Promise<void> => {
+  latest.value = query;
   loading.value = true;
+  await promiseTimeout(400);
 
-  timer = setTimeout(() => {
-    found.value = directory.filter((option) => matches(option, query));
-    loading.value = false;
-  }, 400);
+  if (query !== latest.value) {
+    return;
+  }
+  found.value = catalog.filter((option) => matches(option, query));
+  loading.value = false;
 };
 </script>

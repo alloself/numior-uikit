@@ -38,6 +38,12 @@ export type StepJSON =
       readonly mark: MarkJSON;
       readonly skip?: readonly StepSpan[] | undefined;
     }
+  | {
+      readonly kind: typeof StepKind.Move;
+      readonly from: number;
+      readonly to: number;
+      readonly target: number;
+    }
   | { readonly kind: typeof StepKind.Attrs; readonly pos: number; readonly attrs: Attrs }
   | { readonly kind: typeof StepKind.Markup; readonly changes: readonly MarkupChange[] }
   | { readonly kind: typeof StepKind.DocAttrs; readonly attrs: Attrs };
@@ -65,7 +71,10 @@ const isSpan = (value: unknown): value is StepSpan =>
   isFields(value) && isPosition(value.from) && isPosition(value.to);
 
 const isSkip = (value: unknown): value is readonly StepSpan[] | undefined =>
-  value === undefined || (Array.isArray(value) && value.every(isSpan));
+  value === undefined ||
+  (Array.isArray(value) &&
+    value.every(isSpan) &&
+    value.every((span, index) => span.from < span.to && span.from >= (value[index - 1]?.to ?? 0)));
 
 const isMarkupChange = (value: unknown): value is MarkupChange =>
   isFields(value) &&
@@ -82,10 +91,7 @@ const readReplace = (schema: Schema, value: Fields): Step | undefined => {
 };
 
 const readAround = (schema: Schema, value: Fields): Step | undefined => {
-  const slice = sliceFromJSON(schema, value.slice);
-
   if (
-    slice === undefined ||
     !isPosition(value.from) ||
     !isPosition(value.to) ||
     !isPosition(value.gapFrom) ||
@@ -94,6 +100,13 @@ const readAround = (schema: Schema, value: Fields): Step | undefined => {
   ) {
     return undefined;
   }
+
+  const slice = sliceFromJSON(schema, value.slice, value.insert);
+
+  if (slice === undefined) {
+    return undefined;
+  }
+
   return {
     kind: StepKind.ReplaceAround,
     from: value.from,
@@ -115,6 +128,15 @@ const readMarkStep = (schema: Schema, value: Fields, kind: MarkStepKind): Step |
     ? undefined
     : { kind, from: value.from, to: value.to, mark, skip: value.skip };
 };
+
+const readMove = (value: Fields): Step | undefined =>
+  isPosition(value.from) &&
+  isPosition(value.to) &&
+  isPosition(value.target) &&
+  value.from < value.to &&
+  (value.target <= value.from || value.target >= value.to)
+    ? { kind: StepKind.Move, from: value.from, to: value.to, target: value.target }
+    : undefined;
 
 const readAttrs = (value: Fields): Step | undefined =>
   isPosition(value.pos) && isAttrs(value.attrs)
@@ -145,6 +167,8 @@ export const stepFromJSON = (schema: Schema, value: unknown): Step | undefined =
       return readMarkStep(schema, value, StepKind.AddMark);
     case StepKind.RemoveMark:
       return readMarkStep(schema, value, StepKind.RemoveMark);
+    case StepKind.Move:
+      return readMove(value);
     case StepKind.Attrs:
       return readAttrs(value);
     case StepKind.Markup:

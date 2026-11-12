@@ -1,40 +1,39 @@
 <template>
-  <NuiUpload
-    ref="uploader"
-    v-model="attachments"
-    :upload="upload"
-    :auto="false"
-    label="Вложения"
-    :description="`В очереди: ${queued}`"
-  />
-  <NuiButton :disabled="queued === 0" @click="uploader?.start()">Загрузить</NuiButton>
+  <div class="flex w-full max-w-md flex-col gap-3">
+    <NuiUpload
+      ref="uploader"
+      v-model="invoices"
+      :upload="upload"
+      :auto="false"
+      label="Накладные поставщика"
+      description="Проверьте список и нажмите «Загрузить»"
+      accept=".pdf"
+    />
+    <NuiButton class="self-start" :disabled="queued === 0" @click="uploader?.start()">
+      Загрузить
+    </NuiButton>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from 'vue';
+import { promiseTimeout } from '@vueuse/core';
 import { NuiButton, NuiUpload, type NuiUploadAdapter, type NuiUploadItem } from '@numior/vue';
 
+const STEPS = [0.2, 0.4, 0.6, 0.8, 1];
+
 const uploader = useTemplateRef<{ start: () => void }>('uploader');
-const attachments = ref<NuiUploadItem<string>[]>([]);
+const invoices = ref<NuiUploadItem<string>[]>([]);
 
 const queued = computed(() =>
-  attachments.value.reduce((count, item) => count + Number(item.status === 'queued'), 0),
+  invoices.value.reduce((count, item) => count + Number(item.status === 'queued'), 0),
 );
 
-const wait = (ms: number, signal: AbortSignal): Promise<void> =>
-  new Promise((resolve, reject) => {
-    const timer = setTimeout(resolve, ms);
-
-    signal.addEventListener('abort', () => {
-      clearTimeout(timer);
-      reject(new Error('Загрузка отменена'));
-    });
-  });
-
 const upload: NuiUploadAdapter<string> = async (file, { onProgress, signal }) => {
-  for (let step = 1; step <= 5; step += 1) {
-    await wait(300, signal);
-    onProgress(step / 5);
+  for (const share of STEPS) {
+    await promiseTimeout(300);
+    signal.throwIfAborted();
+    onProgress(share);
   }
   return `https://files.example/${encodeURIComponent(file.name)}`;
 };

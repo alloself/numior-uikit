@@ -1,26 +1,22 @@
 <template>
   <div class="flex flex-col gap-3">
-    <NuiToggleGroup
-      v-model:values="panels"
-      :items="items"
-      multiple
-      icon-only
-      size="sm"
-      label="Panels"
-    />
-    <p class="m-0 text-sm text-muted-foreground">Open: {{ panels.join(', ') || 'nothing' }}</p>
+    <NuiToggleGroup v-model:values="deliveries" :items="methods" multiple label="Delivery method" />
+    <p class="m-0 text-sm text-muted-foreground">{{ summary }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { NuiToggleGroup, type NuiToggleItem } from '@numior/vue';
+import { computed, ref } from 'vue';
+import { NuiToggleGroup } from '@numior/vue';
+import { DELIVERIES, orders } from '#demo/orders';
 
-const panels = ref(['preview']);
+const deliveries = ref(['courier', 'pickup']);
 
-const items: readonly NuiToggleItem[] = [
-  { value: 'preview', label: 'Preview', icon: 'eye' },
-  { value: 'code', label: 'Code', icon: 'code' },
-  { value: 'terminal', label: 'Terminal', icon: 'terminal', disabled: true },
-];
+const methods = Object.entries(DELIVERIES).map(([value, label]) => ({ value, label }));
+
+const shown = computed(() =>
+  orders.reduce((count, order) => count + Number(deliveries.value.includes(order.delivery)), 0),
+);
+
+const summary = computed(() => `Showing ${shown.value} of ${orders.length} orders`);
 </script>

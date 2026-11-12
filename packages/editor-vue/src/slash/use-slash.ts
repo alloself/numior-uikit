@@ -100,9 +100,11 @@ export const useSlash = (options: SlashOptions): Slash => {
     choose: (item) => {
       const found = match.value;
 
-      if (found !== undefined) {
-        apply(item, found);
+      if (found === undefined) {
+        return;
       }
+
+      apply(item, found);
     },
   };
 };

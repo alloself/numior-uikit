@@ -13,6 +13,7 @@ interface AsyncResult {
   readonly value: unknown;
   readonly reads: ReadonlyMap<string, unknown>;
   readonly message: string | undefined;
+  readonly failed: boolean;
 }
 
 type AsyncPhase =
@@ -31,6 +32,7 @@ export interface AsyncChecks<V extends object> {
   schedule(entry: Entry<V>, delay: number): void;
   settle(entries: readonly Entry<V>[]): Promise<boolean>;
   refresh(changed: readonly Entry<V>[]): void;
+  retry(entries: readonly Entry<V>[]): void;
   cancel(entry: Entry<V>): void;
   forget(entry: Entry<V>): void;
   reset(): void;
@@ -146,11 +148,19 @@ export const createAsyncChecks = <V extends object, O>(
         (await entry.checkAsync(context));
 
       if (token === state.token) {
-        state.result = { value, reads: log.reads(), message };
+        state.result = { value, reads: log.reads(), message, failed: false };
       }
     } catch (error) {
-      if (!controller.signal.aborted) {
-        throw error;
+      if (controller.signal.aborted) {
+        return;
+      }
+
+      core.onCheckError?.(error, entry.path());
+
+      if (token === state.token) {
+        const message = core.messages.value.unchecked;
+
+        state.result = { value, reads: log.reads(), message, failed: true };
       }
     }
   };
@@ -173,16 +183,27 @@ export const createAsyncChecks = <V extends object, O>(
     }
     await run(entry, state, token, core.engine.snapshot());
 
-    if (token === state.token) {
-      revalidate();
+    if (token !== state.token) {
+      return;
     }
+
+    revalidate();
   };
 
   const finish = (entry: Entry<V>, state: AsyncState, token: number): void => {
-    if (token === state.token) {
-      settleAt(entry, state, IDLE);
+    if (token !== state.token) {
+      return;
     }
+
+    settleAt(entry, state, IDLE);
   };
+
+  const outdated = (entry: Entry<V>, state: AsyncState): boolean =>
+    state.result !== undefined &&
+    state.phase.kind === AsyncPhaseKind.Idle &&
+    entry.active() &&
+    validatesOnChange(entry.validateOn(), entry.state.attempted.value) &&
+    freshResult(entry) === undefined;
 
   const schedule = (entry: Entry<V>, delay: number): void => {
     if (!needsCheck(entry)) {
@@ -195,16 +216,15 @@ export const createAsyncChecks = <V extends object, O>(
     void core.tracker.track(
       delayed(entry, state, token, delay).finally(() => {
         finish(entry, state, token);
+
+        if (token !== state.token || !outdated(entry, state)) {
+          return;
+        }
+
+        schedule(entry, entry.debounce());
       }),
     );
   };
-
-  const outdated = (entry: Entry<V>, state: AsyncState): boolean =>
-    state.result !== undefined &&
-    state.phase.kind === AsyncPhaseKind.Idle &&
-    entry.active() &&
-    validatesOnChange(entry.validateOn(), entry.state.attempted.value) &&
-    freshResult(entry) === undefined;
 
   return {
     issues: (active) =>
@@ -215,9 +235,22 @@ export const createAsyncChecks = <V extends object, O>(
     schedule,
     refresh: (changed) => {
       for (const [entry, state] of states) {
-        if (!changed.includes(entry) && outdated(entry, state)) {
-          schedule(entry, entry.debounce());
+        if (changed.includes(entry) || !outdated(entry, state)) {
+          continue;
         }
+
+        schedule(entry, entry.debounce());
+      }
+    },
+    retry: (entries) => {
+      for (const entry of entries) {
+        const state = states.get(entry);
+
+        if (state?.result?.failed !== true) {
+          continue;
+        }
+
+        state.result = undefined;
       }
     },
     settle: async (entries) => {

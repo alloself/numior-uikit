@@ -16,7 +16,7 @@
       v-model="delivery"
       :items="deliveries"
       selectable="single"
-      variant="bordered"
+      variant="outline"
       label="Delivery"
     />
     <NuiInput v-model="comment" label="Note for the courier" placeholder="Door code, floor" />

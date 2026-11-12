@@ -3,23 +3,30 @@
     v-for="frame in shownClips"
     :key="frame.key"
     class="nui-spreadsheet__clip"
-    :style="rectStyle(frame.rect)"
-  ></span>
+    :style="tableRectStyle(frame.rect)"
+  >
+    <span
+      v-for="edge in CLIP_EDGES"
+      :key="edge"
+      class="nui-spreadsheet__clip-edge"
+      :class="`nui-spreadsheet__clip-edge--${edge}`"
+    ></span>
+  </span>
   <span
     v-for="frame in shownLit"
     :key="frame.key"
     class="nui-spreadsheet__lit"
-    :style="rectStyle(frame.rect)"
+    :style="tableRectStyle(frame.rect)"
   ></span>
   <span
     v-if="clearingRect"
     class="nui-spreadsheet__fill-clear"
-    :style="rectStyle(clearingRect)"
+    :style="tableRectStyle(clearingRect)"
   ></span>
   <span
     v-if="previewRect"
     class="nui-spreadsheet__fill-preview"
-    :style="rectStyle(previewRect)"
+    :style="tableRectStyle(previewRect)"
   ></span>
   <span
     v-if="handleRect"
@@ -28,7 +35,7 @@
       'nui-spreadsheet__fill--frozen-row': handleEdge.row,
       'nui-spreadsheet__fill--frozen-col': handleEdge.col,
     }"
-    :style="rectStyle(handleRect)"
+    :style="tableRectStyle(handleRect)"
   >
     <span
       class="nui-spreadsheet__fill-grip"
@@ -40,9 +47,11 @@
 </template>
 
 <script setup lang="ts">
+import { tableRectStyle } from '@numior/table';
 import { computed } from 'vue';
-import { rectStyle } from './sheet-rect';
 import type { SheetClipFrame, SheetMarksProps, ShownClip } from './sheet.types';
+
+const CLIP_EDGES = ['top', 'right', 'bottom', 'left'] as const;
 
 const {
   rectOf,

@@ -7,7 +7,7 @@ import {
 } from '@numior/editor-core';
 import type { EditorView } from '@numior/editor-core/view';
 import { Key, useEdgeScroll } from '@numior/primitives';
-import { computed, shallowRef, type ComputedRef, type Ref } from 'vue';
+import { computed, onScopeDispose, shallowRef, type ComputedRef, type Ref } from 'vue';
 import { COLUMN_TYPES } from '../blocks/columns/columns';
 import {
   elementOf,
@@ -62,11 +62,13 @@ export const useBlockDrag = (options: BlockDragOptions): BlockDrag => {
   let ghostHeight = 0;
 
   const lift = (element: Element | undefined): void => {
-    if (element !== lifted) {
-      lifted?.classList.remove(LIFTED);
-      element?.classList.add(LIFTED);
-      lifted = element;
+    if (element === lifted) {
+      return;
     }
+
+    lifted?.classList.remove(LIFTED);
+    element?.classList.add(LIFTED);
+    lifted = element;
   };
 
   const placeSide = (line: HTMLElement, frame: DOMRect, rect: DOMRect, side: BesideSide): void => {
@@ -150,9 +152,11 @@ export const useBlockDrag = (options: BlockDragOptions): BlockDrag => {
   const edge = useEdgeScroll({
     container: options.frame,
     onStep: () => {
-      if (session.value?.moving === true) {
-        show(retarget(session.value));
+      if (session.value?.moving !== true) {
+        return;
       }
+
+      show(retarget(session.value));
     },
   });
 
@@ -192,22 +196,28 @@ export const useBlockDrag = (options: BlockDragOptions): BlockDrag => {
     const target = current.moving ? current.target : undefined;
 
     finish();
-    if (target !== undefined) {
-      options.run(
-        target.kind === DropTargetKind.Between
-          ? moveBlock(current.slot, target.to)
-          : placeBeside(current.slot, target.id, target.side, COLUMN_TYPES),
-      );
-
-      options.onDone();
+    if (target === undefined) {
+      return;
     }
+
+    options.run(
+      target.kind === DropTargetKind.Between
+        ? moveBlock(current.slot, target.to)
+        : placeBeside(current.slot, target.id, target.side, COLUMN_TYPES),
+    );
+
+    options.onDone();
   };
 
   const onKeydown = (event: KeyboardEvent): void => {
-    if (event.key === Key.Escape) {
-      finish();
+    if (event.key !== Key.Escape) {
+      return;
     }
+
+    finish();
   };
+
+  onScopeDispose(finish);
 
   return {
     source: computed(() => session.value?.slot),

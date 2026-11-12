@@ -179,34 +179,9 @@
       }
     },
     {
-      "formula": "=TEXT(1234,567;\"# ##0,00\")",
-      "locale": "ru",
-      "expected": "1 234,57"
-    },
-    {
-      "formula": "=TEXT(1234,567;\"#,##0.00\")",
-      "locale": "ru",
-      "expected": "1 234,57"
-    },
-    {
       "formula": "=TEXT(DATE(2023;3;15);\"ДД.ММ.ГГГГ\")",
       "locale": "ru",
       "expected": "15.03.2023"
-    },
-    {
-      "formula": "=TEXT(DATE(2023;3;15);\"dd.mm.yyyy\")",
-      "locale": "ru",
-      "expected": "15.03.2023"
-    },
-    {
-      "formula": "=TEXT(DATE(2023;3;15);\"Д ММММ ГГГГ\")",
-      "locale": "ru",
-      "expected": "15 марта 2023"
-    },
-    {
-      "formula": "=TEXT(DATE(2023;3;15);\"ДДДД\")",
-      "locale": "ru",
-      "expected": "среда"
     },
     {
       "formula": "=TEXT(TIME(18;30;5);\"чч:мм:сс\")",
@@ -226,17 +201,17 @@
     {
       "formula": "=FIXED(1234,567;1)",
       "locale": "ru",
-      "expected": "1 234,6"
+      "expected": "1 234,6"
     },
     {
       "formula": "=DOLLAR(1234,567)",
       "locale": "ru",
-      "expected": "1 234,57 ₽"
+      "expected": "1 234,57 ₽"
     },
     {
       "formula": "=DOLLAR(-1234,567;0)",
       "locale": "ru",
-      "expected": "-1 235 ₽"
+      "expected": "-1 235 ₽"
     },
     {
       "formula": "=\"1,5\"+1",
@@ -257,11 +232,6 @@
       "formula": "=DATEVALUE(\"21.10.2026\")",
       "locale": "ru",
       "expected": 46316
-    },
-    {
-      "formula": "=DATEVALUE(\"15 марта 2023\")",
-      "locale": "ru",
-      "expected": 45000
     },
     {
       "formula": "=DATEVALUE(\"10/21/2026\")",
@@ -309,6 +279,963 @@
       "formula": "=\"1 000 ₽\"*2",
       "locale": "ru",
       "expected": 2000
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"Д ММММ ГГГГ\")",
+      "locale": "ru",
+      "expected": "15 Март 2023"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"[$-FC19]Д ММММ ГГГГ\")",
+      "locale": "ru",
+      "expected": "15 марта 2023"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"ДД.ММ.ГГ\")",
+      "locale": "ru",
+      "expected": "15.03.23"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"дддд\")",
+      "locale": "ru",
+      "expected": "среда"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"ДДДД\")",
+      "locale": "ru",
+      "expected": "среда"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"МММ\")",
+      "locale": "ru",
+      "expected": "мар"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"dd.mm.yyyy\")",
+      "locale": "ru",
+      "expected": "dd.mm.yyyy"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"d\")",
+      "locale": "ru",
+      "expected": "d"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"y\")",
+      "locale": "ru",
+      "expected": "y"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"m\")",
+      "locale": "ru",
+      "expected": "m"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15)+0,5;\"чч:мм:сс\")",
+      "locale": "ru",
+      "expected": "12:00:00"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15)+0,5;\"hh:mm:ss\")",
+      "locale": "ru",
+      "expected": "hh:mm:ss"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15)+0,5;\"ч:мм AM/PM\")",
+      "locale": "ru",
+      "expected": "12:00 PM"
+    },
+    {
+      "formula": "=TEXT(1234,567;\"# ##0,00\")",
+      "locale": "ru",
+      "expected": "1 234,57"
+    },
+    {
+      "formula": "=TEXT(1234,567;\"#,##0.00\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(1234,567;\"0,0\")",
+      "locale": "ru",
+      "expected": "1234,6"
+    },
+    {
+      "formula": "=TEXT(1234,567;\"0.0\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(1234,567;\"0,0%\")",
+      "locale": "ru",
+      "expected": "123456,7%"
+    },
+    {
+      "formula": "=TEXT(1234,567;\"0,00E+00\")",
+      "locale": "ru",
+      "expected": "1,23E+03"
+    },
+    {
+      "formula": "=TEXT(1234567;\"# ##0\")",
+      "locale": "ru",
+      "expected": "1 234 567"
+    },
+    {
+      "formula": "=TEXT(1234567;\"#\\ ##0\")",
+      "locale": "ru",
+      "expected": "1234 567"
+    },
+    {
+      "formula": "=TEXT(1234567;\"# ##0 \")",
+      "locale": "ru",
+      "expected": "1 235"
+    },
+    {
+      "formula": "=TEXT(1234567;\"0 \")",
+      "locale": "ru",
+      "expected": "1235"
+    },
+    {
+      "formula": "=TEXT(1234567;\"#,##0\")",
+      "locale": "ru",
+      "expected": "1234567,0"
+    },
+    {
+      "formula": "=TEXT(1234,5;\"Основной\")",
+      "locale": "ru",
+      "expected": "1234,5"
+    },
+    {
+      "formula": "=TEXT(1234,5;\"General\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(1,5;\"[ч]:мм\")",
+      "locale": "ru",
+      "expected": "36:00"
+    },
+    {
+      "formula": "=TEXT(1,5;\"[h]:mm\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(5,25;\"# ?/?\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(1234,5;\"₽# ##0,00\")",
+      "locale": "ru",
+      "expected": "₽1 234,50"
+    },
+    {
+      "formula": "=DATEVALUE(\"15 марта 2023\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=DATEVALUE(\"15 март 2023\")",
+      "locale": "ru",
+      "expected": 45000
+    },
+    {
+      "formula": "=DATEVALUE(\"15 Март 2023\")",
+      "locale": "ru",
+      "expected": 45000
+    },
+    {
+      "formula": "=DATEVALUE(\"15 мар 2023\")",
+      "locale": "ru",
+      "expected": 45000
+    },
+    {
+      "formula": "=DATEVALUE(\"15.03.2023\")",
+      "locale": "ru",
+      "expected": 45000
+    },
+    {
+      "formula": "=DATEVALUE(\"15/03/2023\")",
+      "locale": "ru",
+      "expected": 45000
+    },
+    {
+      "formula": "=DATEVALUE(\"15-03-2023\")",
+      "locale": "ru",
+      "expected": 45000
+    },
+    {
+      "formula": "=DATEVALUE(\"2023-03-15\")",
+      "locale": "ru",
+      "expected": 45000
+    },
+    {
+      "formula": "=DATEVALUE(\"15 марта 2023 г.\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=DATEVALUE(\"март 2023\")",
+      "locale": "ru",
+      "expected": 44986
+    },
+    {
+      "formula": "=DATEVALUE(\"15-мар-2023\")",
+      "locale": "ru",
+      "expected": 45000
+    },
+    {
+      "formula": "=DATEVALUE(\"15 мая 2023\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=DATEVALUE(\"15 май 2023\")",
+      "locale": "ru",
+      "expected": 45061
+    },
+    {
+      "formula": "=DATEVALUE(\"15 сен 2023\")",
+      "locale": "ru",
+      "expected": 45184
+    },
+    {
+      "formula": "=DATEVALUE(\"15 сент 2023\")",
+      "locale": "ru",
+      "expected": 45184
+    },
+    {
+      "formula": "=DATEVALUE(\"15 сентября 2023\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=VALUE(\"1 234,5\")",
+      "locale": "ru",
+      "expected": 1234.5
+    },
+    {
+      "formula": "=FIXED(1234567,891;2)",
+      "locale": "ru",
+      "expected": "1 234 567,89"
+    },
+    {
+      "formula": "=DOLLAR(1234567,891;2)",
+      "locale": "ru",
+      "expected": "1 234 567,89 ₽"
+    },
+    {
+      "formula": "=TEXT(-1234,5;\"# ##0,00\")",
+      "locale": "ru",
+      "expected": "-1 234,50"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"[$-FC19]ММММ ГГГГ\")",
+      "locale": "ru",
+      "expected": "марта 2023"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"[$-FC19]ММММ\")",
+      "locale": "ru",
+      "expected": "марта"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"[$-FC19]ДД ММММ\")",
+      "locale": "ru",
+      "expected": "15 марта"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"[$-FC19]МММ\")",
+      "locale": "ru",
+      "expected": "мар"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"[$-FC19]МММММ\")",
+      "locale": "ru",
+      "expected": "м"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"[$-FC19]ДДДД\")",
+      "locale": "ru",
+      "expected": "среда"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"[$-419]Д ММММ ГГГГ\")",
+      "locale": "ru",
+      "expected": "15 Март 2023"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"[$-409]Д ММММ ГГГГ\")",
+      "locale": "ru",
+      "expected": "15 March 2023"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"[$-409]d mmmm yyyy\")",
+      "locale": "ru",
+      "expected": "d mmmm yyyy"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"[$-F800]\")",
+      "locale": "ru",
+      "expected": "15 марта 2023 г."
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"ММММ\")",
+      "locale": "ru",
+      "expected": "Март"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"МММММ\")",
+      "locale": "ru",
+      "expected": "М"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"Д.М.Г\")",
+      "locale": "ru",
+      "expected": "15.3.23"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"Д/М/ГГГГ\")",
+      "locale": "ru",
+      "expected": "15/3/2023"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15)+0,75;\"ч:мм A/P\")",
+      "locale": "ru",
+      "expected": "6:00 P"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15)+0,75;\"ч:мм AM/PM\")",
+      "locale": "ru",
+      "expected": "6:00 PM"
+    },
+    {
+      "formula": "=TEXT(1234567;\"# ##0 ₽\")",
+      "locale": "ru",
+      "expected": "1 234 567 ₽"
+    },
+    {
+      "formula": "=TEXT(1234567;\"# ##0\\ ₽\")",
+      "locale": "ru",
+      "expected": "1 234 567 ₽"
+    },
+    {
+      "formula": "=TEXT(1234567;\"# ##0 \"\"₽\"\"\")",
+      "locale": "ru",
+      "expected": "1 234 567 ₽"
+    },
+    {
+      "formula": "=TEXT(1234567;\"# ##0  \")",
+      "locale": "ru",
+      "expected": "1"
+    },
+    {
+      "formula": "=TEXT(1234,5;\"0,0 \")",
+      "locale": "ru",
+      "expected": "1,2"
+    },
+    {
+      "formula": "=TEXT(1234,5;\"0 0\")",
+      "locale": "ru",
+      "expected": "1 235"
+    },
+    {
+      "formula": "=TEXT(1234,5;\"# ##0,00 \"\"р.\"\"\")",
+      "locale": "ru",
+      "expected": "1,23р."
+    },
+    {
+      "formula": "=TEXT(1234,5;\"0,0 x\")",
+      "locale": "ru",
+      "expected": "1,2x"
+    },
+    {
+      "formula": "=TEXT(0,5;\"0,0.0\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(1234,5;\"0.\")",
+      "locale": "ru",
+      "expected": "1235."
+    },
+    {
+      "formula": "=TEXT(1234,5;\".0\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(1234,5;\"0\"\".\"\"0\")",
+      "locale": "ru",
+      "expected": "123.5"
+    },
+    {
+      "formula": "=TEXT(1234,5;\"0\\.0\")",
+      "locale": "ru",
+      "expected": "123.5"
+    },
+    {
+      "formula": "=TEXT(1234,5;\"ГГГГ\")",
+      "locale": "ru",
+      "expected": "1903"
+    },
+    {
+      "formula": "=TEXT(1234,5;\"0 e\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(1234,5;\"0 x\")",
+      "locale": "ru",
+      "expected": "1x"
+    },
+    {
+      "formula": "=TEXT(1234,5;\"0 д\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(1234,5;\"0 ж\")",
+      "locale": "ru",
+      "expected": "1ж"
+    },
+    {
+      "formula": "=TEXT(1234,5;\"0 \"\"Д\"\"\")",
+      "locale": "ru",
+      "expected": "1Д"
+    },
+    {
+      "formula": "=TEXT(-5;\"0;(0)\")",
+      "locale": "ru",
+      "expected": "(5)"
+    },
+    {
+      "formula": "=TEXT(1234,5;\"[Красный]0\")",
+      "locale": "ru",
+      "expected": "1235"
+    },
+    {
+      "formula": "=TEXT(1234,5;\"[Red]0\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(1234,5;\"[<1000]0;0,0\")",
+      "locale": "ru",
+      "expected": "1234,5"
+    },
+    {
+      "formula": "=TEXT(1234,5;\"0,00E+00\")",
+      "locale": "ru",
+      "expected": "1,23E+03"
+    },
+    {
+      "formula": "=TEXT(1234,5;\"0,00e+00\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=DATEVALUE(\"15 сентя 2023\")",
+      "locale": "ru",
+      "expected": 45184
+    },
+    {
+      "formula": "=DATEVALUE(\"15 ма 2023\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=DATEVALUE(\"15 февр 2023\")",
+      "locale": "ru",
+      "expected": 44972
+    },
+    {
+      "formula": "=DATEVALUE(\"15 февраль 2023\")",
+      "locale": "ru",
+      "expected": 44972
+    },
+    {
+      "formula": "=DATEVALUE(\"15 ФЕВРАЛЬ 2023\")",
+      "locale": "ru",
+      "expected": 44972
+    },
+    {
+      "formula": "=DATEVALUE(\"15 янв. 2023\")",
+      "locale": "ru",
+      "expected": 44941
+    },
+    {
+      "formula": "=DATEVALUE(\"15 мартх 2023\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=DATEVALUE(\"15 Mar 2023\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=DATEVALUE(\"15 March 2023\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=DATEVALUE(\"Март 15, 2023\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=DATEVALUE(\"15 марта\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TIMEVALUE(\"15 марта 2023 10:00\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TIMEVALUE(\"15 март 2023 10:00\")",
+      "locale": "ru",
+      "expected": 0.41666666666424135
+    },
+    {
+      "formula": "=\"15 март 2023\"+0",
+      "locale": "ru",
+      "expected": 45000
+    },
+    {
+      "formula": "=\"15 марта 2023\"+0",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=VALUE(\"15 марта 2023\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(1;\"[Зеленый]0\")",
+      "locale": "ru",
+      "expected": "1"
+    },
+    {
+      "formula": "=TEXT(1;\"[Зелёный]0\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(1;\"[Черный]0\")",
+      "locale": "ru",
+      "expected": "1"
+    },
+    {
+      "formula": "=TEXT(1;\"[Чёрный]0\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(1;\"[Синий]0\")",
+      "locale": "ru",
+      "expected": "1"
+    },
+    {
+      "formula": "=TEXT(1;\"[Голубой]0\")",
+      "locale": "ru",
+      "expected": "1"
+    },
+    {
+      "formula": "=TEXT(1;\"[Фиолетовый]0\")",
+      "locale": "ru",
+      "expected": "1"
+    },
+    {
+      "formula": "=TEXT(1;\"[Белый]0\")",
+      "locale": "ru",
+      "expected": "1"
+    },
+    {
+      "formula": "=TEXT(1;\"[Желтый]0\")",
+      "locale": "ru",
+      "expected": "1"
+    },
+    {
+      "formula": "=TEXT(1;\"[красный]0\")",
+      "locale": "ru",
+      "expected": "1"
+    },
+    {
+      "formula": "=TEXT(1;\"[Цвет10]0\")",
+      "locale": "ru",
+      "expected": "1"
+    },
+    {
+      "formula": "=TEXT(1;\"[Color10]0\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(1;\"[$₽-419]# ##0\")",
+      "locale": "ru",
+      "expected": "₽1"
+    },
+    {
+      "formula": "=TEXT(1;\"[$-419]0\")",
+      "locale": "ru",
+      "expected": "1"
+    },
+    {
+      "formula": "=TEXT(0,5;\"[ч]:мм\")",
+      "locale": "ru",
+      "expected": "12:00"
+    },
+    {
+      "formula": "=TEXT(0,5;\"[мм]:сс\")",
+      "locale": "ru",
+      "expected": "720:00"
+    },
+    {
+      "formula": "=TEXT(0,5;\"[сс]\")",
+      "locale": "ru",
+      "expected": "43200"
+    },
+    {
+      "formula": "=TEXT(0,5;\"[s]\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(1234;\"0_)\")",
+      "locale": "ru",
+      "expected": "1234 "
+    },
+    {
+      "formula": "=TEXT(1234;\"0*д\")",
+      "locale": "ru",
+      "expected": "1234"
+    },
+    {
+      "formula": "=TEXT(1234;\"0\\д\")",
+      "locale": "ru",
+      "expected": "1234д"
+    },
+    {
+      "formula": "=TEXT(1234;\"0_д\")",
+      "locale": "ru",
+      "expected": "1234 "
+    },
+    {
+      "formula": "=TEXT(1234;\"@\")",
+      "locale": "ru",
+      "expected": "1234"
+    },
+    {
+      "formula": "=TEXT(\"abc\";\"@ д\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(\"abc\";\"@ x\")",
+      "locale": "ru",
+      "expected": "abc x"
+    },
+    {
+      "formula": "=TEXT(1234;\"0 0 0\")",
+      "locale": "ru",
+      "expected": "1 234"
+    },
+    {
+      "formula": "=TEXT(1234;\"#\")",
+      "locale": "ru",
+      "expected": "1234"
+    },
+    {
+      "formula": "=TEXT(1234,5;\"0,\")",
+      "locale": "ru",
+      "expected": "1235,"
+    },
+    {
+      "formula": "=TEXT(1234,5;\",0\")",
+      "locale": "ru",
+      "expected": "1234,5"
+    },
+    {
+      "formula": "=TEXT(0,25;\"# ?/?\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(0,25;\"?/?\")",
+      "locale": "ru",
+      "expected": "1/4"
+    },
+    {
+      "formula": "=TEXT(1,25;\"0 ?/?\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(1234;\"основной\")",
+      "locale": "ru",
+      "expected": "1234"
+    },
+    {
+      "formula": "=TEXT(1234;\"ОСНОВНОЙ\")",
+      "locale": "ru",
+      "expected": "1234"
+    },
+    {
+      "formula": "=TEXT(1234;\"Основной \"\"x\"\"\")",
+      "locale": "ru",
+      "expected": "1234 x"
+    },
+    {
+      "formula": "=TEXT(1234;\"0 ₽\")",
+      "locale": "ru",
+      "expected": "1234 ₽"
+    },
+    {
+      "formula": "=TEXT(1234;\"0 р.\")",
+      "locale": "ru",
+      "expected": "1р."
+    },
+    {
+      "formula": "=TEXT(1234;\"0 $\")",
+      "locale": "ru",
+      "expected": "1$"
+    },
+    {
+      "formula": "=TEXT(1234;\"0 \"\"руб.\"\"\")",
+      "locale": "ru",
+      "expected": "1руб."
+    },
+    {
+      "formula": "=TEXT(1234;\"0 \"\"₽\"\"\")",
+      "locale": "ru",
+      "expected": "1234 ₽"
+    },
+    {
+      "formula": "=TEXT(45000,5;\"ДД.ММ.ГГГГ ч:мм\")",
+      "locale": "ru",
+      "expected": "15.03.2023 12:00"
+    },
+    {
+      "formula": "=TEXT(45000,5;\"ДД.ММ.ГГГГ чч:мм:сс,000\")",
+      "locale": "ru",
+      "expected": "15.03.2023 12:00:00,000"
+    },
+    {
+      "formula": "=TEXT(45000,5;\"мм:сс\")",
+      "locale": "ru",
+      "expected": "00:00"
+    },
+    {
+      "formula": "=TEXT(45000,5;\"ч:м\")",
+      "locale": "ru",
+      "expected": "12:0"
+    },
+    {
+      "formula": "=TEXT(45000;\"Д\")",
+      "locale": "ru",
+      "expected": "15"
+    },
+    {
+      "formula": "=TEXT(45000;\"ДДД\")",
+      "locale": "ru",
+      "expected": "Ср"
+    },
+    {
+      "formula": "=TEXT(45000;\"ГГ\")",
+      "locale": "ru",
+      "expected": "23"
+    },
+    {
+      "formula": "=TEXT(45000;\"Г\")",
+      "locale": "ru",
+      "expected": "23"
+    },
+    {
+      "formula": "=TEXT(45000;\"ГГГ\")",
+      "locale": "ru",
+      "expected": "2023"
+    },
+    {
+      "formula": "=TIMEVALUE(\"22.08.2011 6:35\")",
+      "locale": "ru",
+      "expected": 0.2743055555547471
+    },
+    {
+      "formula": "=TIMEVALUE(\"6:35\")",
+      "locale": "ru",
+      "expected": 0.2743055555555555
+    },
+    {
+      "formula": "=TIMEVALUE(\"02.01.1900 6:35\")",
+      "locale": "ru",
+      "expected": 0.27430555555555536
+    },
+    {
+      "formula": "=TIMEVALUE(\"31.12.9999 23:59:59\")",
+      "locale": "ru",
+      "expected": 0.999988425988704
+    },
+    {
+      "formula": "=DATEVALUE(\"22.08.2011 6:35\")",
+      "locale": "ru",
+      "expected": 40777
+    },
+    {
+      "formula": "=VALUE(\"22.08.2011 6:35\")",
+      "locale": "ru",
+      "expected": 40777.274305555555
+    },
+    {
+      "formula": "=TIMEVALUE(\"6:35:17\")",
+      "locale": "ru",
+      "expected": 0.27450231481481485
+    },
+    {
+      "formula": "=TIMEVALUE(\"18:35:17\")",
+      "locale": "ru",
+      "expected": 0.7745023148148148
+    },
+    {
+      "formula": "=TIMEVALUE(\"6:35:17,5\")",
+      "locale": "ru",
+      "expected": 0.27450810185185187
+    },
+    {
+      "formula": "=TIMEVALUE(\"18:35\")",
+      "locale": "ru",
+      "expected": 0.7743055555555555
+    },
+    {
+      "formula": "=TIMEVALUE(\"23:59:59\")",
+      "locale": "ru",
+      "expected": 0.9999884259259259
+    },
+    {
+      "formula": "=TIMEVALUE(\"6:35 PM\")",
+      "locale": "ru",
+      "expected": 0.7743055555555555
+    },
+    {
+      "formula": "=\"6:35\"+0",
+      "locale": "ru",
+      "expected": 0.2743055555555555
+    },
+    {
+      "formula": "=\"18:35:17\"+0",
+      "locale": "ru",
+      "expected": 0.7745023148148148
+    },
+    {
+      "formula": "=TIMEVALUE(\"1:2:3\")",
+      "locale": "ru",
+      "expected": 0.043090277777777776
+    },
+    {
+      "formula": "=TIMEVALUE(\"12:00\")",
+      "locale": "ru",
+      "expected": 0.5
+    },
+    {
+      "formula": "=TIMEVALUE(\"0:00:01\")",
+      "locale": "ru",
+      "expected": 1.1574074074074073e-5
+    },
+    {
+      "formula": "=VALUE(\"22.08.2011 18:35:17\")",
+      "locale": "ru",
+      "expected": 40777.774502314816
+    },
+    {
+      "formula": "=TIMEVALUE(\"5:43:11\")",
+      "locale": "ru",
+      "expected": 0.23832175925925925
+    },
+    {
+      "formula": "=TIMEVALUE(\"13:07:59\")",
+      "locale": "ru",
+      "expected": 0.5472106481481481
+    },
+    {
+      "formula": "=TIMEVALUE(\"0:00:07\")",
+      "locale": "ru",
+      "expected": 8.101851851851852e-5
+    },
+    {
+      "formula": "=TIMEVALUE(\"0:01\")",
+      "locale": "ru",
+      "expected": 0.0006944444444444445
+    },
+    {
+      "formula": "=TIMEVALUE(\"30:35\")",
+      "locale": "ru",
+      "expected": 0.2743055555555556
     }
   ]
 }

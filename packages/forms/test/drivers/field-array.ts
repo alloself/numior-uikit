@@ -169,6 +169,19 @@ export class FieldArrayDriver {
     return error.exists() ? error.text() : undefined;
   }
 
+  rowName(index: number): string | undefined {
+    return this.row(index).find('[role="group"]').attributes('aria-label');
+  }
+
+  rowDescription(index: number): string | undefined {
+    const ids = this.row(index).find('[role="group"]').attributes('aria-describedby');
+
+    return ids
+      ?.split(' ')
+      .map((id) => document.getElementById(id)?.textContent.trim() ?? '')
+      .join(' ');
+  }
+
   fieldError(index: number): string | undefined {
     const error = this.row(index).find('.nui-field__error');
     return error.exists() ? error.text() : undefined;
@@ -197,6 +210,11 @@ export class FieldArrayDriver {
 
     grip.focus();
     grip.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    await this.settle();
+  }
+
+  async leaveGrip(index: number): Promise<void> {
+    this.grip(index).element.blur();
     await this.settle();
   }
 

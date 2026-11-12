@@ -54,6 +54,61 @@ describe('NuiToggleGroup', () => {
     expect(group.selectedLabels).toEqual(['Dark']);
   });
 
+  it('keeps the last pressed item of a required multiple group', async () => {
+    const group = ToggleGroupDriver.mount({
+      props: { multiple: true, required: true },
+      modelValue: ['light', 'dark'],
+    });
+
+    await group.click('Light');
+    expect(group.selected).toEqual(['dark']);
+
+    await group.click('Dark');
+    expect(group.selected).toEqual(['dark']);
+    expect(group.pressedStates).toEqual(['false', 'true', 'false', 'false']);
+
+    await group.click('Auto');
+    expect(group.selected).toEqual(['dark', 'auto']);
+
+    group.unmount();
+  });
+
+  it('puts the tooltip of a vertical group on the inline-end side in both directions', async () => {
+    const ltr = ToggleGroupDriver.mount({ props: { iconOnly: true, orientation: 'vertical' } });
+    await ltr.focus('Light');
+    expect(ltr.tooltipSide('Light')).toBe('1 0');
+
+    ltr.unmount();
+
+    const rtl = ToggleGroupDriver.mount({
+      props: { iconOnly: true, orientation: 'vertical' },
+      dir: 'rtl',
+    });
+
+    await rtl.focus('Light');
+    expect(rtl.tooltipSide('Light')).toBe('-1 0');
+
+    rtl.unmount();
+    const row = ToggleGroupDriver.mount({ props: { iconOnly: true }, dir: 'rtl' });
+    await row.focus('Light');
+    expect(row.tooltipSide('Light')).toBe('0 1');
+
+    row.unmount();
+  });
+
+  it('names an icon-only item once and does not describe it with the same text', () => {
+    const icons = ToggleGroupDriver.mount({ props: { iconOnly: true } });
+    expect(icons.names).toEqual(['Light', 'Dark', 'System', 'Auto']);
+    expect(icons.descriptions).toEqual([undefined, undefined, undefined, undefined]);
+
+    icons.unmount();
+    const labelled = ToggleGroupDriver.mount();
+    expect(labelled.names).toEqual([undefined, undefined, undefined, undefined]);
+    expect(labelled.descriptions).toEqual([undefined, undefined, undefined, undefined]);
+
+    labelled.unmount();
+  });
+
   it('roves focus with the arrows without selecting and rests on the selected item', async () => {
     const group = ToggleGroupDriver.mount({ modelValue: 'dark' });
     await group.ready();

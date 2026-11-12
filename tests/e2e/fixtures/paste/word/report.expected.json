@@ -179,6 +179,7 @@
           {
             "type": "table_column",
             "attrs": {
+              "key": "c0",
               "name": "Город",
               "type": "text",
               "width": null,
@@ -189,6 +190,7 @@
           {
             "type": "table_column",
             "attrs": {
+              "key": "c1",
               "name": "Клиенты",
               "type": "number",
               "width": null,
@@ -207,12 +209,14 @@
               {
                 "type": "table_cell",
                 "attrs": {
+                  "column": "c0",
                   "value": "Москва"
                 }
               },
               {
                 "type": "table_cell",
                 "attrs": {
+                  "column": "c1",
                   "value": 120
                 }
               }

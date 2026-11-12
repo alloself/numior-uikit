@@ -10,16 +10,18 @@ import {
   type MaybeRefOrGetter,
   type Ref,
 } from 'vue';
+import { Key } from '../keyboard/key.types';
 
 export interface DialogOptions {
   readonly open: Ref<boolean>;
-  readonly dismissible?: MaybeRefOrGetter<boolean | undefined>;
+  readonly closable?: MaybeRefOrGetter<boolean | undefined>;
   readonly closeOnBackdrop?: MaybeRefOrGetter<boolean | undefined>;
   readonly onClose?: ((returnValue: string) => void) | undefined;
 }
 
 export interface DialogAttrs {
   readonly onCancel: (event: Event) => void;
+  readonly onKeydown: (event: KeyboardEvent) => void;
   readonly onClose: () => void;
   readonly onPointerdown: (event: PointerEvent) => void;
   readonly onClick: (event: MouseEvent) => void;
@@ -40,6 +42,8 @@ interface RootLock {
   readonly overflow: string;
   readonly padding: string;
 }
+
+const OPEN_POPOVER = ':popover-open';
 
 const modalCapable = (
   element: HTMLDialogElement | null | undefined,
@@ -67,9 +71,11 @@ const lockRoot = (): void => {
 
   const scrollbar = rootWidth(root) - narrow;
 
-  if (scrollbar > 0) {
-    root.style.paddingInlineEnd = `${scrollbar}px`;
+  if (scrollbar <= 0) {
+    return;
   }
+
+  root.style.paddingInlineEnd = `${scrollbar}px`;
 };
 
 const unlockRoot = (): void => {
@@ -99,9 +105,11 @@ const track = (dialog: HTMLDialogElement, isOpen: boolean): void => {
   const others = openModals.value.filter((entry) => entry !== dialog);
 
   openModals.value = isOpen ? [...others, dialog] : others;
-  if (isOpen) {
-    lockRoot();
+  if (!isOpen) {
+    return;
   }
+
+  lockRoot();
 };
 
 const outside = (element: HTMLDialogElement, point: { clientX: number; clientY: number }) => {
@@ -114,10 +122,23 @@ const outside = (element: HTMLDialogElement, point: { clientX: number; clientY: 
   );
 };
 
+const holdsOpenPopover = (dialog: HTMLElement): boolean => {
+  try {
+    return dialog.querySelector(OPEN_POPOVER) !== null;
+  } catch {
+    return false;
+  }
+};
+
+const ownsKey = (dialog: HTMLElement, event: KeyboardEvent): boolean =>
+  event.target instanceof Element &&
+  event.target.closest('dialog') === dialog &&
+  !holdsOpenPopover(dialog);
+
 export const useDialog = (element: DialogRef, options: DialogOptions): DialogControl => {
   const returnValue = ref('');
   const pressedOutside = ref(false);
-  const dismissible = (): boolean => toValue(options.dismissible) !== false;
+  const closable = (): boolean => toValue(options.closable) !== false;
   const closeOnBackdrop = (): boolean => toValue(options.closeOnBackdrop) !== false;
 
   const sync = (next: boolean): void => {
@@ -139,10 +160,12 @@ export const useDialog = (element: DialogRef, options: DialogOptions): DialogCon
 
   onScopeDispose(() => {
     const dialog = toValue(element);
-    if (dialog) {
-      track(dialog, false);
-      unlockRoot();
+    if (!dialog) {
+      return;
     }
+
+    track(dialog, false);
+    unlockRoot();
   });
 
   const close = (value?: string): void => {
@@ -157,9 +180,20 @@ export const useDialog = (element: DialogRef, options: DialogOptions): DialogCon
 
   const attrs: DialogAttrs = {
     onCancel: (event) => {
-      if (!dismissible()) {
-        event.preventDefault();
+      if (closable()) {
+        return;
       }
+
+      event.preventDefault();
+    },
+    onKeydown: (event) => {
+      const dialog = toValue(element);
+
+      if (event.key !== Key.Escape || closable() || !dialog || !ownsKey(dialog, event)) {
+        return;
+      }
+
+      event.preventDefault();
     },
     onClose: () => {
       const dialog = toValue(element);
@@ -181,9 +215,11 @@ export const useDialog = (element: DialogRef, options: DialogOptions): DialogCon
         return;
       }
       pressedOutside.value = false;
-      if (dismissible() && closeOnBackdrop()) {
-        close();
+      if (!closable() || !closeOnBackdrop()) {
+        return;
       }
+
+      close();
     },
   };
 

@@ -7,7 +7,7 @@ description.
 <Example name="list/Basic" />
 
 A row with `href` or `to` works as a link, a row with `interactive` as a button. `variant` picks
-the look: `plain`, `divided` with lines between rows, `bordered` in a frame, `floating` for a
+the look: `plain`, `divided` with lines between rows, `outline` in a frame, `floating` for a
 dropdown panel and `nav` for a menu.
 
 ## Installation

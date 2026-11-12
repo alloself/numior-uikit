@@ -87,8 +87,10 @@ export const createFrameRecorder = (frames: number[]): ((active: boolean) => voi
       frames.length = 0;
       requestAnimationFrame(tick);
     }
-    if (!active) {
-      running = false;
+    if (active) {
+      return;
     }
+
+    running = false;
   };
 };

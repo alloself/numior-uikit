@@ -12,13 +12,15 @@ import {
   type FormulaLocale,
   type FormulaNode,
   type FormulaParse,
+  type SignatureOf,
 } from '../formula/formula.types';
 import { EN_LOCALE, type BookLocale } from '../locale';
 import { shiftIndex } from '../lines';
 import { ORIGIN, referenceRange } from '../formula/origin';
 import { parseFormula } from '../formula/parser';
 import { changesMeaning, shiftFormula, shiftSpan, type LineChange } from '../formula/rewrite';
-import { formulaReferences } from '../formula/references';
+import { readReferences } from '../formula/references';
+import { findNode } from '../formula/walk';
 import { EMPTY, errorValue, numberValue } from '../values';
 import { structuredRange, tableData } from '../tables';
 import {
@@ -56,6 +58,7 @@ import {
   type Precedent,
   type RecalcPlanner,
 } from './graph';
+import { signaturesOf } from './excel-signatures';
 import { createFunctionRegistry } from './registry';
 import { createTreeSharing } from './shared-trees';
 import { nextTask } from './tasks';
@@ -81,6 +84,7 @@ export interface Calculator {
   setValue(sheet: Sheet, row: number, col: number, value: CellValue): void;
   importValue(sheet: Sheet, row: number, col: number, value: CellValue): void;
   outdated(): (sheet: Sheet, row: number, col: number) => boolean;
+  staleAt(sheet: Sheet, row: number, col: number): boolean;
   importFormula(
     sheet: Sheet,
     row: number,
@@ -107,6 +111,7 @@ export interface Calculator {
   setLocale(locale: BookLocale): void;
   readonly locale: BookLocale;
   readonly functions: FunctionRegistry;
+  readonly signatures: SignatureOf;
   readonly pending: number;
   readonly limitations: readonly Limitation[];
 }
@@ -151,11 +156,13 @@ interface Run {
   longest: number;
   finished: boolean;
   cancelled: boolean;
+  dropped: boolean;
 }
 
 interface LookupIndex {
   readonly version: number;
   readonly rows: Map<string, number>;
+  bottom: number;
 }
 
 interface Links {
@@ -233,9 +240,11 @@ const structuredLinks = (
   if (owner !== undefined) {
     links.names.add(owner.toLowerCase());
   }
-  if (table !== undefined && typeof range === 'object') {
-    links.precedents.push({ sheet: table.sheet.id, range });
+  if (table === undefined || typeof range !== 'object') {
+    return;
   }
+
+  links.precedents.push({ sheet: table.sheet.id, range });
 };
 
 const collectLinks = (
@@ -245,7 +254,7 @@ const collectLinks = (
   links: Links,
   seen: Set<DefinedName>,
 ): void => {
-  formulaReferences(ast).forEach((found) => {
+  readReferences(ast).forEach((found) => {
     if (found.kind === FormulaReferenceKind.Structured) {
       structuredLinks(found, record, workbook, links);
       return;
@@ -258,9 +267,11 @@ const collectLinks = (
     const target = localSheet(workbook, found, record.sheet);
     const range = referenceRange(found, record);
 
-    if (target !== undefined && range !== undefined) {
-      links.precedents.push({ sheet: target.id, range });
+    if (target === undefined || range === undefined) {
+      return;
     }
+
+    links.precedents.push({ sheet: target.id, range });
   });
 };
 
@@ -316,19 +327,9 @@ const SUBTOTALS = new Set(['SUBTOTAL', 'AGGREGATE']);
 
 const subtotals = new WeakMap<FormulaNode, boolean>();
 
-const subtotalIn = (node: FormulaNode): boolean => {
-  switch (node.kind) {
-    case FormulaNodeKind.Call:
-      return SUBTOTALS.has(node.name) || node.args.some(subtotalIn);
-    case FormulaNodeKind.Unary:
-    case FormulaNodeKind.Percent:
-      return subtotalIn(node.operand);
-    case FormulaNodeKind.Binary:
-      return subtotalIn(node.left) || subtotalIn(node.right);
-    default:
-      return false;
-  }
-};
+const subtotalIn = (node: FormulaNode): boolean =>
+  findNode(node, (item) => item.kind === FormulaNodeKind.Call && SUBTOTALS.has(item.name)) !==
+  undefined;
 
 const callsSubtotal = (node: FormulaNode): boolean => {
   const known = subtotals.get(node);
@@ -343,35 +344,24 @@ const callsSubtotal = (node: FormulaNode): boolean => {
   return found;
 };
 
-const usesVolatile = (node: FormulaNode, functions: FunctionRegistry): boolean => {
-  switch (node.kind) {
-    case FormulaNodeKind.Call:
-      return (
-        functions.get(node.name)?.volatile === true ||
-        node.args.some((arg) => usesVolatile(arg, functions))
-      );
-    case FormulaNodeKind.Unary:
-    case FormulaNodeKind.Percent:
-      return usesVolatile(node.operand, functions);
-    case FormulaNodeKind.Binary:
-      return usesVolatile(node.left, functions) || usesVolatile(node.right, functions);
-    default:
-      return false;
-  }
-};
+const usesVolatile = (node: FormulaNode, functions: FunctionRegistry): boolean =>
+  findNode(
+    node,
+    (item) => item.kind === FormulaNodeKind.Call && functions.get(item.name)?.volatile === true,
+  ) !== undefined;
 
-const indexColumn = (sheet: Sheet, range: CellRange, version: number): LookupIndex => {
-  const rows = new Map<string, number>();
-
-  sheet.cells.forEachInRange(range, (row, _col, value) => {
+const indexDown = (sheet: Sheet, range: CellRange, index: LookupIndex): void => {
+  sheet.cells.forEachInRange({ ...range, top: index.bottom + 1 }, (row, _col, value) => {
     const key = lookupKey(value);
 
-    if (key !== undefined && !rows.has(key)) {
-      rows.set(key, row - range.top);
+    if (key === undefined || index.rows.has(key)) {
+      return;
     }
+
+    index.rows.set(key, row - range.top);
   });
 
-  return { version, rows };
+  index.bottom = range.bottom;
 };
 
 const spillArea = (record: FormulaRecord, result: ArrayValue): SpillArea => ({
@@ -442,6 +432,9 @@ const applyShift = (move: ShiftPlan, axis: LineChange['axis']): void => {
 const insideSheet = (range: CellRange): boolean =>
   range.bottom < MAX_ROWS && range.right < MAX_COLS;
 
+const plannedRun = (run: Run): boolean =>
+  run.planner === undefined && run.marked >= run.queue.length;
+
 export const createCalculator = (
   workbook: Workbook,
   {
@@ -453,6 +446,7 @@ export const createCalculator = (
 ): Calculator => {
   const graph = createDependencyGraph();
   const trees = createTreeSharing();
+  const signatures = signaturesOf(functions);
   const spills = createSpills();
   const formulas = new Map<number, FormulaRecord>();
   const positions = new Map<number, Map<number, number>>();
@@ -511,13 +505,21 @@ export const createCalculator = (
 
   const lookup = (sheet: Sheet, range: CellRange, wanted: CellValue): number | undefined => {
     const key = lookupKey(wanted);
-    const id = `${String(sheet.id)}:${String(range.top)}:${String(range.bottom)}:${String(range.left)}`;
+    const id = `${String(sheet.id)}:${String(range.top)}:${String(range.left)}`;
     const version = columnVersion(sheet, range.left);
     const known = lookups.get(id);
-    const index = known?.version === version ? known : indexColumn(sheet, range, version);
 
+    const index =
+      known?.version === version ? known : { version, rows: new Map(), bottom: range.top - 1 };
+
+    if (index.bottom < range.bottom) {
+      indexDown(sheet, range, index);
+    }
     lookups.set(id, index);
-    return key === undefined ? undefined : index.rows.get(key);
+
+    const found = key === undefined ? undefined : index.rows.get(key);
+
+    return found === undefined || found > range.bottom - range.top ? undefined : found;
   };
 
   const contextFor = (sheet: Sheet): EvalContext => {
@@ -560,9 +562,12 @@ export const createCalculator = (
   };
 
   const interrupt = (): void => {
-    if (current !== undefined) {
-      current.cancelled = true;
+    if (current === undefined) {
+      return;
     }
+
+    current.cancelled = true;
+    current.dropped = true;
   };
 
   const touch = (cell: SpillCell): void => {
@@ -674,9 +679,11 @@ export const createCalculator = (
     }
     record.dynamic = found.length > 0;
     graph.set(key, [...record.precedents, ...found]);
-    if (found.some(pendingInside)) {
-      pending.add(key);
+    if (!found.some(pendingInside)) {
+      return;
     }
+
+    pending.add(key);
   };
 
   const compute = (key: number, cycles: ReadonlySet<number>): void => {
@@ -721,21 +728,29 @@ export const createCalculator = (
       });
 
     for (let key = seeds.pop(); key !== undefined; key = seeds.pop()) {
-      if (!needed.has(key)) {
-        needed.add(key);
-
-        graph.precedentsOf(key).forEach((precedent) => {
-          const direct = idAt(precedent.sheet, precedent.range.top, precedent.range.left);
-
-          const found = oneCell(precedent.range)
-            ? direct === undefined
-              ? []
-              : [direct]
-            : inside(precedent);
-
-          seeds.push(...found.filter((candidate) => planned.has(candidate)));
-        });
+      if (needed.has(key)) {
+        continue;
       }
+
+      needed.add(key);
+
+      graph.precedentsOf(key).forEach((precedent) => {
+        const direct = idAt(precedent.sheet, precedent.range.top, precedent.range.left);
+
+        const found = oneCell(precedent.range)
+          ? direct === undefined
+            ? []
+            : [direct]
+          : inside(precedent);
+
+        for (const candidate of found) {
+          if (!planned.has(candidate)) {
+            continue;
+          }
+
+          seeds.push(candidate);
+        }
+      });
     }
     return needed;
   };
@@ -757,9 +772,11 @@ export const createCalculator = (
     const record = formulas.get(key);
 
     pending.add(key);
-    if (record !== undefined && !kept.has(key)) {
-      record.cell.state = 'stale';
+    if (record === undefined || kept.has(key)) {
+      return;
     }
+
+    record.cell.state = 'stale';
   };
 
   const plan = (viewport: RecalcOptions['viewport']) => {
@@ -845,7 +862,7 @@ export const createCalculator = (
   };
 
   const proceed = (run: Run, yieldTo: () => Promise<void>): Promise<void> =>
-    yieldTo().then(() => (step(run) || run.cancelled ? undefined : proceed(run, yieldTo)));
+    yieldTo().then(() => (run.dropped || step(run) ? undefined : proceed(run, yieldTo)));
 
   const usersOf = (name: string): Set<number> => {
     const known = nameUsers.get(name);
@@ -875,24 +892,28 @@ export const createCalculator = (
   const forget = (sheet: Sheet, row: number, col: number): void => {
     const id = idAt(sheet.id, row, col);
 
-    if (id !== undefined) {
-      kept.delete(id);
-      unregister(id, formulas.get(id)?.names ?? NO_NAMES);
-      formulas.delete(id);
-      positions.get(sheet.id)?.delete(cellIndex(row, col));
-      graph.remove(id);
-      pending.delete(id);
-      volatiles.delete(id);
-      release(id);
+    if (id === undefined) {
+      return;
     }
+
+    kept.delete(id);
+    unregister(id, formulas.get(id)?.names ?? NO_NAMES);
+    formulas.delete(id);
+    positions.get(sheet.id)?.delete(cellIndex(row, col));
+    graph.remove(id);
+    pending.delete(id);
+    volatiles.delete(id);
+    release(id);
   };
 
   const claim = (key: number): void => {
     const owner = spills.claim(key);
 
-    if (owner !== undefined) {
-      pending.add(owner);
+    if (owner === undefined) {
+      return;
     }
+
+    pending.add(owner);
   };
 
   const setParsed = (sheet: Sheet, row: number, col: number, parsed: FormulaNode): void => {
@@ -963,10 +984,12 @@ export const createCalculator = (
         record.precedents = links.precedents;
         graph.set(key, links.precedents);
       }
-      if (rewrite === undefined || !unchanged) {
-        record.cell.state = 'stale';
-        pending.add(key);
+      if (rewrite !== undefined && unchanged) {
+        return;
       }
+
+      record.cell.state = 'stale';
+      pending.add(key);
     });
   };
 
@@ -996,10 +1019,12 @@ export const createCalculator = (
     workbook.names.forEach((defined) => {
       const ast = shiftFormula(defined.ast, change, false, ORIGIN);
 
-      if (ast !== defined.ast) {
-        shifted.push({ name: defined.name, scope: defined.scope, before: defined.ast });
-        setName(defined.name, defined.scope, ast);
+      if (ast === defined.ast) {
+        return;
       }
+
+      shifted.push({ name: defined.name, scope: defined.scope, before: defined.ast });
+      setName(defined.name, defined.scope, ast);
     });
 
     return shifted;
@@ -1009,9 +1034,11 @@ export const createCalculator = (
     const crossing: number[] = [];
 
     spills.forEachArea((anchor, area) => {
-      if (area.sheet === sheet && lastLine(area.range, change.axis) >= change.at) {
-        crossing.push(anchor);
+      if (area.sheet !== sheet || lastLine(area.range, change.axis) < change.at) {
+        return;
       }
+
+      crossing.push(anchor);
     });
 
     crossing.forEach((anchor) => {
@@ -1028,9 +1055,11 @@ export const createCalculator = (
     const moved: number[] = [];
 
     local?.forEach((id, cell) => {
-      if ((rows ? Math.floor(cell / MAX_COLS) : cell % MAX_COLS) >= start) {
-        moved.push(cell, id);
+      if ((rows ? Math.floor(cell / MAX_COLS) : cell % MAX_COLS) < start) {
+        return;
       }
+
+      moved.push(cell, id);
     });
 
     for (let index = 0; index < moved.length; index += 2) {
@@ -1118,7 +1147,15 @@ export const createCalculator = (
 
   return {
     setFormula: (sheet, row, col, text, syntax = locale.formulas) => {
-      const parsed = parseFormula(text, syntax, { row, col }, bookNames(workbook));
+      const parsed = parseFormula(
+        text,
+        syntax,
+        { row, col },
+        {
+          ...bookNames(workbook),
+          signatures,
+        },
+      );
 
       if (parsed.ok) {
         setParsed(sheet, row, col, parsed.ast);
@@ -1135,6 +1172,19 @@ export const createCalculator = (
 
         return id !== undefined && planned.has(id);
       };
+    },
+    staleAt: (sheet, row, col) => {
+      const id = idAt(sheet.id, row, col);
+      const record = id === undefined ? undefined : formulas.get(id);
+
+      if (id === undefined || record === undefined || kept.has(id)) {
+        return false;
+      }
+      return (
+        record.cell.state === FormulaState.Stale ||
+        pending.has(id) ||
+        (current !== undefined && !current.dropped && !plannedRun(current))
+      );
     },
     importFormula: (sheet, row, col, ast, imported) => {
       setParsed(sheet, row, col, ast);
@@ -1153,9 +1203,11 @@ export const createCalculator = (
       }
       record.cell.state = 'imported';
       write(sheet, row, col, imported.value);
-      if (imported.spill !== undefined && !oneCell(imported.spill)) {
-        spills.occupy(key, { sheet, range: imported.spill });
+      if (imported.spill === undefined || oneCell(imported.spill)) {
+        return;
       }
+
+      spills.occupy(key, { sheet, range: imported.spill });
     },
     setContent: (sheet, row, col, content) => {
       switch (content.kind) {
@@ -1193,9 +1245,11 @@ export const createCalculator = (
       snapshot.forEach((key) => {
         const record = formulas.get(key);
 
-        if (record !== undefined) {
-          visit(record.sheet, record.row, record.col, record.cell.ast);
+        if (record === undefined) {
+          return;
         }
+
+        visit(record.sheet, record.row, record.col, record.cell.ast);
       });
     },
     hasFormulaIn: (sheet, range) => {
@@ -1230,6 +1284,7 @@ export const createCalculator = (
       formulas.forEach((_record, key) => pending.add(key));
     },
     functions,
+    signatures,
     get locale() {
       return locale;
     },
@@ -1247,9 +1302,11 @@ export const createCalculator = (
       }
       if (options.imported === true) {
         formulas.forEach((record, key) => {
-          if (record.cell.state === FormulaState.Imported && !kept.has(key)) {
-            pending.add(key);
+          if (record.cell.state !== FormulaState.Imported || kept.has(key)) {
+            return;
           }
+
+          pending.add(key);
         });
       }
 
@@ -1268,6 +1325,7 @@ export const createCalculator = (
         longest: 0,
         finished: false,
         cancelled: false,
+        dropped: false,
       };
 
       current = run;
@@ -1288,6 +1346,9 @@ export const createCalculator = (
         },
         get finished() {
           return run.finished || run.cancelled;
+        },
+        get planned() {
+          return plannedRun(run);
         },
         settled,
         cancel: () => {

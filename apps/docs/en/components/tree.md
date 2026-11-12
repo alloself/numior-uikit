@@ -32,7 +32,7 @@ Tree rows look like [List](/en/components/list) items and take the same fields: 
 `shortcut` sit at the end of the row. The `current` field marks the node that is open right now,
 independently of the selection.
 
-The `variant` prop changes the look: `plain`, `divided`, `bordered` or `floating`. The `size`
+The `variant` prop changes the look: `plain`, `divided`, `outline` or `floating`. The `size`
 prop changes the row height.
 
 <Example name="tree/Variants" />
@@ -51,6 +51,10 @@ A folder is checked when all its children are checked, and partly checked when o
 A node with `lazy` and without `children` can be expanded even though it has no children yet. On
 expand the tree emits the `load` event and shows a loading indicator until the application adds
 the children to `items`.
+
+The value of the node enters `v-model:expanded` at once. The folder stays closed and
+`aria-expanded` is `false` until the children arrive: a node looks expanded when it has rows
+under it.
 
 If the folder was checked, the children that arrive are checked too.
 
@@ -95,6 +99,11 @@ listen to the `select` event.
 The whole tree is one Tab stop, and the arrows move between the nodes. The focused node is
 referenced through `aria-activedescendant`, so the focus is not lost when rows leave the DOM
 while scrolling.
+
+When the focused node is hidden from outside (its parent is collapsed through
+`v-model:expanded`), the focus moves to the nearest visible ancestor. When the node is gone from
+`items`, the node that took its place gets the focus. The arrows continue from there, not from
+the start of the tree.
 
 The tree is built on a `ul` list with the `tree` and `treeitem` roles. `aria-level`,
 `aria-setsize` and `aria-posinset` carry the level and position of a node, and `aria-expanded`,

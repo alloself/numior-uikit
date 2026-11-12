@@ -1,17 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { SpreadsheetDriver } from './drivers/spreadsheet';
-import { salesBook } from './support/pivot-book';
+import type { Workbook } from '../src/core';
+import { citiesBook, salesBook } from './support/pivot-book';
 import { stubPopovers } from './support/top-layer';
 
 const mounted: SpreadsheetDriver[] = [];
 
 const restorers: Array<() => void> = [];
 
-const pivotWith = async (...fields: string[]): Promise<SpreadsheetDriver> => {
-  const sheet: SpreadsheetDriver = SpreadsheetDriver.mount({
-    book: salesBook(),
-    label: 'Pivot book',
-  });
+const LISTED = 100;
+
+const CITIES = 1000;
+
+const pivotOver = async (book: Workbook, ...fields: string[]): Promise<SpreadsheetDriver> => {
+  const sheet: SpreadsheetDriver = SpreadsheetDriver.mount({ book, label: 'Pivot book' });
 
   mounted.push(sheet);
   await sheet.focus(1, 0);
@@ -23,6 +25,9 @@ const pivotWith = async (...fields: string[]): Promise<SpreadsheetDriver> => {
 
   return sheet;
 };
+
+const pivotWith = (...fields: string[]): Promise<SpreadsheetDriver> =>
+  pivotOver(salesBook(), ...fields);
 
 const column = (
   sheet: SpreadsheetDriver,
@@ -118,6 +123,34 @@ describe('NuiSpreadsheet pivot field settings', () => {
     await sheet.pivot.fill('Search', 'zzz');
 
     expect(sheet.pivot.items).toEqual([]);
+  });
+
+  it('lists the first items of a long field, says how many there are and checks the unlisted ones too', async () => {
+    const sheet = await pivotOver(citiesBook(CITIES), 'City', 'Amount');
+
+    await sheet.pivot.chooseAction('City', 'Filter and sort…');
+
+    expect(sheet.pivot.items).toHaveLength(LISTED);
+
+    expect(sheet.pivot.itemsNote).toBe(
+      'The first 100 of 1,000 items are listed. Search to find the rest.',
+    );
+
+    await sheet.pivot.fill('Search', 'City 99');
+
+    expect(sheet.pivot.items).toHaveLength(11);
+    expect(sheet.pivot.itemsNote).toBe(undefined);
+
+    await sheet.pivot.fill('Search', '');
+    await sheet.pivot.toggleItem('(Select all)');
+
+    expect(sheet.pivot.canApply).toBe(false);
+
+    await sheet.pivot.fill('Search', 'City 999');
+    await sheet.pivot.toggleItem('City 999');
+    await sheet.pivot.applyEditor();
+
+    expect(column(sheet, 0, 4, 5)).toEqual(['City 999', 'Grand Total']);
   });
 
   it('picks a single item of a filter field without sort options', async () => {

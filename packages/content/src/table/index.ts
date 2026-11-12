@@ -4,6 +4,8 @@ export { contentCellViews } from './content-cell-views';
 export type {
   NuiContentCellViewProps,
   NuiContentCellViews,
+  NuiContentTableCell,
+  NuiContentTablePeer,
   NuiContentTableProps,
 } from './content-table.types';
 export type { NuiContentColumnFilter } from './content-table-view';

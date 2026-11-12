@@ -1,3 +1,12 @@
+export interface TextSpan {
+  readonly head: number;
+  readonly tail: number;
+}
+
+const isHighSurrogate = (unit: number): boolean => unit >= 0xd800 && unit <= 0xdbff;
+
+const isLowSurrogate = (unit: number): boolean => unit >= 0xdc00 && unit <= 0xdfff;
+
 export const commonRun = (limit: number, same: (index: number) => boolean): number => {
   let count = 0;
 
@@ -5,4 +14,19 @@ export const commonRun = (limit: number, same: (index: number) => boolean): numb
     count += 1;
   }
   return count;
+};
+
+export const commonText = (before: string, after: string): TextSpan => {
+  const limit = Math.min(before.length, after.length);
+  const start = commonRun(limit, (index) => before[index] === after[index]);
+  const head = start > 0 && isHighSurrogate(before.charCodeAt(start - 1)) ? start - 1 : start;
+
+  const end = commonRun(
+    limit - head,
+    (index) => before[before.length - 1 - index] === after[after.length - 1 - index],
+  );
+
+  const tail = end > 0 && isLowSurrogate(before.charCodeAt(before.length - end)) ? end - 1 : end;
+
+  return { head, tail };
 };

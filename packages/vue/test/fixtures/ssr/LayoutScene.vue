@@ -7,6 +7,11 @@
             <NuiSidebarItem label="Inbox" icon="inbox" current />
             <NuiSidebarItem label="Docs" href="#docs" />
           </NuiSidebarGroup>
+          <NuiSidebarGroup label="Data">
+            <NuiSidebarSub id="reports" label="Reports" icon="folder" active>
+              <NuiSidebarItem label="Sales" href="#sales" />
+            </NuiSidebarSub>
+          </NuiSidebarGroup>
         </NuiSidebarContent>
       </NuiSidebar>
     </template>
@@ -31,6 +36,7 @@ import {
   NuiSidebarContent,
   NuiSidebarGroup,
   NuiSidebarItem,
+  NuiSidebarSub,
   NuiSidebarTrigger,
   type NuiLayoutHeader,
   type NuiSidebarMarker,

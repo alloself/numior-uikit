@@ -30,6 +30,14 @@ describe('chart scales', () => {
     expect(niceDomain(3, 97, { min: 10, max: 50 })).toMatchObject({ min: 10, max: 50, step: 10 });
   });
 
+  it('puts ticks on whole steps inside bounds set by hand', () => {
+    expect(niceDomain(5, 10, { min: 3, max: 17 })).toMatchObject({ min: 3, max: 17 });
+    expect(niceDomain(5, 10, { min: 3, max: 17 }).ticks).toEqual([5, 10, 15]);
+    expect(niceDomain(50, 90, { max: 95 }).ticks).toEqual([0, 20, 40, 60, 80]);
+    expect(niceDomain(5, 12, { min: -3, max: 17 }).ticks).toEqual([0, 5, 10, 15]);
+    expect(niceDomain(12, 47, { min: 12 }).ticks).toEqual([20, 30, 40, 50]);
+  });
+
   it('covers every value with ticks on whole steps', () => {
     fc.assert(
       fc.property(value, value, (left, right) => {
@@ -47,6 +55,20 @@ describe('chart scales', () => {
 
   it('spans powers of ten on a log axis', () => {
     expect(logDomain(3, 4200).ticks).toEqual([1, 10, 100, 1000, 10_000]);
+  });
+
+  it('keeps a log axis on positive powers of ten whatever bounds it is given', () => {
+    expect(logDomain(0, 100).ticks).toEqual([10, 100]);
+    expect(logDomain(-5, 0).ticks).toEqual([0.1, 1]);
+    expect(logDomain(5, 5).ticks).toEqual([1, 10]);
+    expect(logDomain(Number.NaN, Number.POSITIVE_INFINITY).ticks).toEqual([0.1, 1]);
+  });
+
+  it('thins the ticks of a long log axis to the asked count', () => {
+    expect(logDomain(1e-3, 1e9, 4).ticks).toEqual([0.001, 1, 1000, 1e6, 1e9]);
+    expect(logDomain(1, 1e13, 5)).toMatchObject({ min: 1, max: 1e13 });
+    expect(logDomain(1, 1e13, 5).ticks).toEqual([1, 1000, 1e6, 1e9, 1e12]);
+    expect(logDomain(1e-300, 1e300, 5).ticks.length).toBeLessThanOrEqual(6);
   });
 
   it('maps values and lays out bands in either direction', () => {
@@ -80,5 +102,84 @@ describe('chart scales', () => {
     expect(iso(timeTicks(utc('2026-10-14T00:00'), utc('2026-11-20T00:00')).values)[0]).toBe(
       '2026-10-19T00:00',
     );
+  });
+
+  it('places time ticks on the calendar of a time zone', () => {
+    expect(
+      iso(timeTicks(utc('2026-01-15T00:00'), utc('2026-06-20T00:00'), 6, 'Europe/Moscow').values),
+    ).toEqual([
+      '2026-01-31T21:00',
+      '2026-02-28T21:00',
+      '2026-03-31T21:00',
+      '2026-04-30T21:00',
+      '2026-05-31T21:00',
+    ]);
+
+    expect(
+      iso(timeTicks(utc('2026-03-02T00:00'), utc('2026-03-02T12:00'), 6, 'Asia/Kolkata').values),
+    ).toEqual(['2026-03-02T00:30', '2026-03-02T03:30', '2026-03-02T06:30', '2026-03-02T09:30']);
+  });
+
+  it('keeps time ticks on local midnights and hours when the clocks change', () => {
+    expect(
+      iso(
+        timeTicks(utc('2026-03-05T05:00'), utc('2026-03-11T04:00'), 7, 'America/New_York').values,
+      ),
+    ).toEqual([
+      '2026-03-05T05:00',
+      '2026-03-06T05:00',
+      '2026-03-07T05:00',
+      '2026-03-08T05:00',
+      '2026-03-09T04:00',
+      '2026-03-10T04:00',
+      '2026-03-11T04:00',
+    ]);
+
+    expect(
+      iso(
+        timeTicks(utc('2026-03-08T05:00'), utc('2026-03-08T10:00'), 6, 'America/New_York').values,
+      ),
+    ).toEqual([
+      '2026-03-08T05:00',
+      '2026-03-08T06:00',
+      '2026-03-08T07:00',
+      '2026-03-08T08:00',
+      '2026-03-08T09:00',
+      '2026-03-08T10:00',
+    ]);
+
+    expect(
+      iso(
+        timeTicks(utc('2026-11-01T04:00'), utc('2026-11-01T09:00'), 6, 'America/New_York').values,
+      ),
+    ).toEqual([
+      '2026-11-01T04:00',
+      '2026-11-01T05:00',
+      '2026-11-01T07:00',
+      '2026-11-01T08:00',
+      '2026-11-01T09:00',
+    ]);
+
+    expect(
+      iso(timeTicks(utc('2026-10-24T22:00'), utc('2026-10-25T03:00'), 6, 'Europe/Berlin').values),
+    ).toEqual([
+      '2026-10-24T22:00',
+      '2026-10-24T23:00',
+      '2026-10-25T00:00',
+      '2026-10-25T02:00',
+      '2026-10-25T03:00',
+    ]);
+
+    expect(
+      iso(
+        timeTicks(utc('2026-09-04T04:00'), utc('2026-09-08T03:00'), 6, 'America/Santiago').values,
+      ),
+    ).toEqual([
+      '2026-09-04T04:00',
+      '2026-09-05T04:00',
+      '2026-09-06T04:00',
+      '2026-09-07T03:00',
+      '2026-09-08T03:00',
+    ]);
   });
 });

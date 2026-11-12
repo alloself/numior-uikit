@@ -23,6 +23,10 @@ const docs: DocsMap = {
         ru: 'Локаль чисел, дат и встроенных текстов, если она отличается от локали конфигурации.',
         en: 'Locale for numbers, dates, and built-in texts when it differs from the configuration.',
       },
+      timeZone: {
+        ru: 'Часовой пояс IANA для делений и подписей оси времени, например `Europe/Moscow`. По умолчанию `UTC`.',
+        en: 'IANA time zone for the ticks and labels of a time axis, such as `America/New_York`. Defaults to `UTC`.',
+      },
       showTable: {
         ru: 'Показывает таблицу данных под графиком. Скрытую таблицу экранный диктор читает и так.',
         en: 'Shows the data table under the chart. A hidden table stays available to screen readers.',

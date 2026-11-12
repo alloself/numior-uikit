@@ -1,6 +1,6 @@
 import { flushPromises, type VueWrapper } from '@vue/test-utils';
 import type { NuiContentTableRow } from '@numior/content';
-import { NuiTable, type NuiTableColumnDef } from '@numior/table';
+import { NuiTable, NuiTablePeers, type NuiTableColumnDef, type NuiTablePeer } from '@numior/table';
 import type { NuiMenuEntry } from '@numior/vue';
 import { vi } from 'vite-plus/test';
 import { nextTick } from 'vue';
@@ -24,6 +24,12 @@ const isSink = (value: unknown): value is { undo(): number } =>
   value !== null &&
   'undo' in value &&
   typeof value.undo === 'function';
+
+const isPeer = (value: unknown): value is NuiTablePeer =>
+  typeof value === 'object' && value !== null && 'name' in value && 'cell' in value;
+
+const cellName = ({ cell }: NuiTablePeer): string =>
+  `${String(cell.from.row)}:${String(cell.from.col)}`;
 
 const labelled = (entries: readonly NuiMenuEntry[], label: string): NuiMenuEntry | undefined =>
   entries.find((entry) => 'label' in entry && entry.label === label);
@@ -125,6 +131,30 @@ export class EditorTableDriver {
     return Array.isArray(rows) ? rows.length : 0;
   }
 
+  get peerNames(): readonly string[] {
+    return textsOf(this.element.querySelectorAll('.nui-table__pane--body .nui-table-peers__name'));
+  }
+
+  get peerCells(): readonly string[] {
+    const peers: unknown = this.wrapper.findComponent(NuiTablePeers).props('peers');
+
+    return Array.isArray(peers)
+      ? peers.flatMap((peer: unknown) => (isPeer(peer) ? [`${peer.name} ${cellName(peer)}`] : []))
+      : [];
+  }
+
+  async focusCell(text: string): Promise<void> {
+    const cell = [...this.element.querySelectorAll<HTMLElement>('tbody td')].find(
+      (candidate) => candidate.textContent.trim() === text,
+    );
+
+    if (cell === undefined) {
+      throw new Error(`No table cell reads ${text}`);
+    }
+    cell.focus();
+    await nextTick();
+  }
+
   get actions(): readonly string[] {
     return textsOf(this.host.querySelectorAll('.nui-editor-table__actions button'));
   }
@@ -166,6 +196,14 @@ export class EditorTableDriver {
   async filterBy(column: number, value: string): Promise<void> {
     this.table.vm.$emit('update:filters', [
       { kind: 'text', key: this.keyAt(column), op: 'contains', value },
+    ]);
+
+    await nextTick();
+  }
+
+  async hideValues(column: number, values: readonly string[]): Promise<void> {
+    this.table.vm.$emit('update:filters', [
+      { kind: 'set', key: this.keyAt(column), values, exclude: true },
     ]);
 
     await nextTick();

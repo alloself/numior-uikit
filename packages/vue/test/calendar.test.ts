@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { CalendarDriver } from './drivers/calendar';
+import { atInstant } from './support/clock';
 
 describe('NuiCalendar', () => {
   it('renders the month from the locale week start with outside days, today and one tab stop', () => {
@@ -244,6 +245,60 @@ describe('NuiCalendar', () => {
     calendar.unmount();
   });
 
+  it('keeps the range when a touch on a day turns into a scroll and picks by taps', async () => {
+    const calendar = CalendarDriver.mount({
+      props: { mode: 'range' },
+      modelValue: { start: '2026-09-10', end: '2026-09-12' },
+    });
+
+    await calendar.scrollFromDay('2026-09-20');
+
+    expect(calendar.value).toEqual({ start: '2026-09-10', end: '2026-09-12' });
+
+    await calendar.tapDay('2026-09-20');
+
+    expect(calendar.value).toEqual({ start: '2026-09-20', end: null });
+
+    await calendar.tapDay('2026-09-22');
+
+    expect(calendar.value).toEqual({ start: '2026-09-20', end: '2026-09-22' });
+
+    calendar.unmount();
+  });
+
+  it('gives the range back when a press on a day is cancelled', async () => {
+    const calendar = CalendarDriver.mount({
+      props: { mode: 'range' },
+      modelValue: { start: '2026-09-10', end: '2026-09-12' },
+    });
+
+    await calendar.cancelPress('2026-09-20');
+
+    expect(calendar.value).toEqual({ start: '2026-09-10', end: '2026-09-12' });
+
+    await calendar.clickDay('2026-09-20');
+
+    expect(calendar.value).toEqual({ start: '2026-09-20', end: null });
+
+    calendar.unmount();
+  });
+
+  it('ends the range with a click after a press that was let go outside the calendar', async () => {
+    const calendar = CalendarDriver.mount({ props: { mode: 'range' } });
+
+    await calendar.pressDay('2026-09-05');
+
+    expect(calendar.value).toEqual({ start: '2026-09-05', end: null });
+
+    await calendar.pressDay('2026-09-09');
+    await calendar.releaseDay('2026-09-09');
+    await calendar.activateDay('2026-09-09');
+
+    expect(calendar.value).toEqual({ start: '2026-09-05', end: '2026-09-09' });
+
+    calendar.unmount();
+  });
+
   it('shows presets in range mode and marks the matching one as pressed', async () => {
     const calendar = CalendarDriver.mount({
       props: {
@@ -274,6 +329,21 @@ describe('NuiCalendar', () => {
 
     await calendar.clickNav('next', 1);
     expect(calendar.captions).toEqual(['сентябрь 2026', 'октябрь 2026']);
+
+    calendar.unmount();
+  });
+
+  it('moves to the local today after mount without touching the month model', async () => {
+    const calendar = await atInstant('2026-10-31T22:30:00Z', 'Asia/Tokyo', async () => {
+      const mounted = CalendarDriver.mount({ clock: true });
+
+      await mounted.settle();
+      return mounted;
+    });
+
+    expect(calendar.tabStop).toBe('2026-11-01');
+    expect(calendar.captions).toEqual(['ноябрь 2026']);
+    expect(calendar.monthValue).toBeUndefined();
 
     calendar.unmount();
   });
@@ -322,6 +392,56 @@ describe('NuiCalendar', () => {
     const english = CalendarDriver.mount({ props: { locale: 'en-GB', todayLabel: 'Now' } });
     expect(english.navLabel('previous')).toBe('Previous month');
     expect(english.todayButton.text()).toBe('Now');
+  });
+
+  it('shows the last month of the calendar and stops at its last day', async () => {
+    const calendar = CalendarDriver.mount({ modelValue: '9999-12-31', props: { months: 2 } });
+
+    expect(calendar.captions).toEqual(['ноябрь 9999', 'декабрь 9999']);
+    expect(calendar.days.at(-1)).toBe('9999-12-31');
+
+    await calendar.focusDay('9999-12-31');
+    await calendar.press('ArrowRight');
+    await calendar.press('PageDown');
+
+    expect(calendar.focusedDate).toBe('9999-12-31');
+
+    await calendar.clickNav('next', 1);
+
+    expect(calendar.captions).toEqual(['ноябрь 9999', 'декабрь 9999']);
+
+    calendar.unmount();
+  });
+
+  it('offers only the years and months the calendar has', async () => {
+    const calendar = CalendarDriver.mount({ modelValue: '9999-12-31' });
+
+    await calendar.clickTitle('year');
+
+    expect(calendar.options).toEqual(['9996', '9997', '9998', '9999']);
+
+    await calendar.press('PageDown');
+
+    expect(calendar.options).toEqual(['9996', '9997', '9998', '9999']);
+
+    await calendar.clickOption('9998');
+    await calendar.clickNav('next');
+    await calendar.clickNav('next');
+
+    expect(calendar.captions).toEqual(['декабрь 9999']);
+
+    calendar.unmount();
+  });
+
+  it('keeps a year below a thousand whole in the month picker', async () => {
+    const calendar = CalendarDriver.mount({ modelValue: '0201-05-05' });
+
+    await calendar.clickTitle('month');
+    await calendar.clickOption('июнь');
+
+    expect(calendar.focusedDate).toBe('0201-06-05');
+
+    calendar.unmount();
   });
 
   it('gives every month its own picker id so two-month calendars keep their controls unambiguous', async () => {

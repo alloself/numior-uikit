@@ -475,17 +475,21 @@ export const createConditionalPainter = (calculator: Calculator): ConditionalPai
 
         merged(look, outcome);
         found.set(key, look);
-        if (entry.stopIfTrue) {
-          stopped.add(key);
+        if (!entry.stopIfTrue) {
+          return;
         }
+
+        stopped.add(key);
       };
 
       format.ranges.forEach((target) => {
         const area = overlap(target, range);
 
-        if (area !== undefined) {
-          cellsOf(area, visit);
+        if (area === undefined) {
+          return;
         }
+
+        cellsOf(area, visit);
       });
     };
 

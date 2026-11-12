@@ -54,9 +54,11 @@ const action = computed(() => item.value?.action ?? null);
 watch(
   () => current,
   (isCurrent) => {
-    if (isCurrent) {
-      sub?.reveal();
+    if (!isCurrent) {
+      return;
     }
+
+    sub?.reveal();
   },
   { immediate: true },
 );
@@ -67,8 +69,10 @@ const onClick = (): void => {
   }
   sub?.dismiss();
 
-  if (sidebar.mobile.value) {
-    sidebar.closeMobile();
+  if (!sidebar.mobile.value) {
+    return;
   }
+
+  sidebar.closeMobile();
 };
 </script>

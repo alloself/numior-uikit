@@ -6,6 +6,7 @@ import {
   type NodeId,
 } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
+import type { StepMap } from '../transform/mapping.types';
 import type { Doc, NodeVisitor, Slice } from './doc.types';
 import { resolveIn, sharedDepth } from './resolve';
 
@@ -14,23 +15,39 @@ interface Placed {
   readonly pos: number;
 }
 
+interface Traced {
+  readonly placed: Placed | undefined;
+}
+
+interface Line {
+  depth: number;
+}
+
+export interface DocLineage {
+  readonly doc: Doc;
+  readonly map: StepMap;
+}
+
+const LINEAGE_LIMIT = 64;
+
+const lines = new WeakMap<Doc, Line>();
+
+const indexInto = (index: Map<NodeId, Placed>, node: ElementNode, start: number): void => {
+  let pos = start;
+
+  for (const child of node.content) {
+    if (child.kind === ContentNodeKind.Element) {
+      index.set(child.id, { node: child, pos });
+      indexInto(index, child, pos + 1);
+    }
+    pos += nodeSize(child);
+  }
+};
+
 const indexTree = (root: ElementNode): Map<NodeId, Placed> => {
   const index = new Map<NodeId, Placed>();
 
-  const walk = (node: ElementNode, start: number): void => {
-    const offsets = childOffsets(node);
-
-    node.content.forEach((child, position) => {
-      if (child.kind === ContentNodeKind.Element) {
-        const pos = start + (offsets[position] ?? 0);
-
-        index.set(child.id, { node: child, pos });
-        walk(child, pos + 1);
-      }
-    });
-  };
-
-  walk(root, 0);
+  indexInto(index, root, 0);
   return index;
 };
 
@@ -92,7 +109,9 @@ const cutContent = (node: ElementNode, start: number, from: number, to: number):
     const child = content[index];
 
     if (child !== undefined) {
-      cut.push(...cutChild(child, childStart, from, to));
+      for (const entry of cutChild(child, childStart, from, to)) {
+        cut.push(entry);
+      }
     }
     index += 1;
     childStart = start + (offsets[index] ?? 0);
@@ -100,13 +119,103 @@ const cutContent = (node: ElementNode, start: number, from: number, to: number):
   return cut;
 };
 
-export const createDoc = (schema: Schema, root: ElementNode): Doc => {
+const insertedIn = (root: ElementNode, map: StepMap, id: NodeId): Placed | undefined => {
+  let shift = 0;
+  let found: Placed | undefined;
+
+  const visit: NodeVisitor = (node, pos) => {
+    if (found !== undefined || node.kind !== ContentNodeKind.Element) {
+      return false;
+    }
+    if (node.id !== id) {
+      return true;
+    }
+
+    found = { node, pos };
+    return false;
+  };
+
+  for (const range of map.ranges) {
+    const from = range.start + shift;
+
+    shift += range.newSize - range.oldSize;
+
+    if (range.newSize === 0) {
+      continue;
+    }
+
+    visitRange(root, 0, from, from + range.newSize, visit);
+
+    if (found !== undefined) {
+      return found;
+    }
+  }
+  return undefined;
+};
+
+const traceIn = (
+  root: ElementNode,
+  size: number,
+  lineage: DocLineage,
+  id: NodeId,
+): Traced | undefined => {
+  const before = lineage.doc.positionOf(id);
+
+  if (before !== undefined) {
+    const mapped = lineage.map.mapResult(before, 1);
+
+    if (mapped.pos < 0 || mapped.pos > size) {
+      return undefined;
+    }
+
+    const node = resolveIn(root, size, mapped.pos).nodeAfter;
+
+    if (node?.kind === ContentNodeKind.Element && node.id === id) {
+      return { placed: { node, pos: mapped.pos } };
+    }
+    if (!mapped.deletedAfter) {
+      return undefined;
+    }
+  }
+  return { placed: insertedIn(root, lineage.map, id) };
+};
+
+const lineOf = (lineage: DocLineage | undefined): Line => ({
+  depth: lineage === undefined ? 0 : (lines.get(lineage.doc)?.depth ?? 0) + 1,
+});
+
+export const createDoc = (schema: Schema, root: ElementNode, lineage?: DocLineage): Doc => {
   if (root.type !== schema.top.name) {
     throw new RangeError(`A document needs a "${schema.top.name}" root, not "${root.type}"`);
   }
   const size = root.size - 2;
+  const line = lineOf(lineage);
+  const known = new Map<NodeId, Traced>();
   let index: Map<NodeId, Placed> | undefined;
-  const placed = (id: NodeId): Placed | undefined => (index ??= indexTree(root)).get(id);
+  let source = line.depth > LINEAGE_LIMIT ? undefined : lineage;
+
+  const indexed = (): Map<NodeId, Placed> => {
+    index ??= indexTree(root);
+    source = undefined;
+    line.depth = 0;
+    known.clear();
+    return index;
+  };
+
+  const placed = (id: NodeId): Placed | undefined => {
+    if (index !== undefined || source === undefined) {
+      return indexed().get(id);
+    }
+
+    const cached = known.get(id) ?? traceIn(root, size, source, id);
+
+    if (cached === undefined) {
+      return indexed().get(id);
+    }
+
+    known.set(id, cached);
+    return cached.placed;
+  };
 
   const doc: Doc = {
     schema,
@@ -125,8 +234,20 @@ export const createDoc = (schema: Schema, root: ElementNode): Doc => {
 
       visitRange(root, 0, from, to, (node, pos) => {
         if (node.kind === ContentNodeKind.Element) {
-          pending ||= text !== '' && schema.nodes.get(node.type)?.inline !== true;
-          return true;
+          const type = schema.nodes.get(node.type);
+          const own = type?.plainText?.(node);
+
+          pending ||= text !== '' && type?.inline !== true;
+
+          if (own === undefined) {
+            return true;
+          }
+
+          if (own !== '') {
+            text += `${pending ? separator : ''}${own}`;
+            pending = false;
+          }
+          return false;
         }
         text += `${pending ? separator : ''}${node.text.slice(Math.max(from, pos) - pos, to - pos)}`;
         pending = false;
@@ -151,5 +272,6 @@ export const createDoc = (schema: Schema, root: ElementNode): Doc => {
     },
   };
 
+  lines.set(doc, line);
   return doc;
 };

@@ -21,27 +21,30 @@ const lowerBound = (sorted: Int32Array, value: number): number => {
   return low;
 };
 
+const hiddenUpTo = (sorted: Int32Array, position: number): number => {
+  let low = 0;
+  let high = sorted.length;
+
+  while (low < high) {
+    const middle = (low + high) >> 1;
+
+    if ((sorted[middle] ?? 0) - middle <= position) {
+      low = middle + 1;
+    } else {
+      high = middle;
+    }
+  }
+  return low;
+};
+
 export const createLineIndex = (total: number, hidden: readonly number[]): LineIndex => {
   const sorted = Int32Array.from(
     new Set(hidden.filter((line) => line >= 0 && line < total)),
   ).toSorted();
 
-  const lineAt = (position: number): number => {
-    let line = position;
-    let before = 0;
-    let next = lowerBound(sorted, line + 1);
-
-    while (next !== before) {
-      line = position + next;
-      before = next;
-      next = lowerBound(sorted, line + 1);
-    }
-    return line;
-  };
-
   return {
     count: total - sorted.length,
-    lineAt,
+    lineAt: (position) => position + hiddenUpTo(sorted, position),
     positionOf: (line) => {
       const at = lowerBound(sorted, line);
 

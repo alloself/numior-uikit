@@ -35,7 +35,7 @@
   .nui-tree--virtual::after {
     block-size: var(--_window-rest);
   }
-  .nui-tree.nui-list--variant-bordered {
+  .nui-tree.nui-list--variant-outline {
     --_divider: transparent;
     --_divider-size: 0px;
 
@@ -71,13 +71,13 @@
     border-radius: var(--nui-radius-sm);
     overflow: hidden;
     transition:
-      background-color var(--nui-duration-fast) var(--nui-easing),
       color var(--nui-duration-fast) var(--nui-easing),
       opacity var(--nui-duration-normal) var(--nui-easing),
       block-size var(--nui-duration-normal) var(--nui-easing);
   }
   .nui-tree .nui-list-item__inner {
     min-block-size: 0;
+    padding-block: 0 var(--_divider-size);
   }
   .nui-tree .nui-tree__item--folded {
     block-size: 0;

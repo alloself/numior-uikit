@@ -45,10 +45,12 @@ const blockAt = (chunk: Element, descs: WeakMap<Node, Desc>, y: number): BlockHi
 
     const gap = Math.max(box.top - y, y - box.bottom);
 
-    if (gap < nearGap) {
-      near = child;
-      nearGap = gap;
+    if (gap >= nearGap) {
+      continue;
     }
+
+    near = child;
+    nearGap = gap;
   }
 
   return { block: near, row: false };

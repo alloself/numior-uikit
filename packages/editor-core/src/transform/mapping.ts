@@ -1,4 +1,12 @@
-import type { Assoc, MapRange, MapResult, Mapping, StepMap } from './mapping.types';
+import {
+  StepMapKind,
+  type Assoc,
+  type MapRange,
+  type MapResult,
+  type MapSpan,
+  type Mapping,
+  type StepMap,
+} from './mapping.types';
 
 const untouched = (pos: number): MapResult => ({
   pos,
@@ -75,9 +83,14 @@ export const createStepMap = (ranges: readonly MapRange[]): StepMap => {
   const kept = ranges.filter((range) => range.oldSize > 0 || range.newSize > 0);
 
   const map: StepMap = {
+    kind: StepMapKind.Ranges,
     ranges: kept,
     map: (pos, assoc = 1) => mapPosition(kept, pos, assoc),
     mapResult: (pos, assoc = 1) => mapRanges(kept, pos, assoc),
+    mapSpan: (from, to, outward = false) => ({
+      from: mapRanges(kept, from, outward ? -1 : 1),
+      to: mapRanges(kept, to, outward ? 1 : -1),
+    }),
     invert: () => createStepMap(invertRanges(kept)),
   };
 
@@ -98,19 +111,31 @@ export const createMapping = (maps: readonly StepMap[] = []): Mapping => {
   const mapResult = (pos: number, assoc: Assoc = 1): MapResult =>
     maps.reduce((result, map) => merge(result, map.mapResult(result.pos, assoc)), untouched(pos));
 
+  const mapSpan = (from: number, to: number, outward = false): MapSpan | undefined =>
+    maps.reduce<MapSpan | undefined>(
+      (span, map) => {
+        const next =
+          span === undefined ? undefined : map.mapSpan(span.from.pos, span.to.pos, outward);
+
+        return span === undefined || next === undefined
+          ? undefined
+          : { from: merge(span.from, next.from), to: merge(span.to, next.to) };
+      },
+      { from: untouched(from), to: untouched(to) },
+    );
+
   return {
     maps,
     map: (pos, assoc = 1) => {
       let current = pos;
 
       for (let index = 0; index < maps.length; index += 1) {
-        const ranges = maps[index]?.ranges;
-
-        current = ranges === undefined ? current : mapPosition(ranges, current, assoc);
+        current = maps[index]?.map(current, assoc) ?? current;
       }
       return current;
     },
     mapResult,
+    mapSpan,
     append: (map) => createMapping([...maps, map]),
     concat: (other) => createMapping([...maps, ...other.maps]),
     invert: () => createMapping(maps.map((map) => map.invert()).toReversed()),

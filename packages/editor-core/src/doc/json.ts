@@ -42,6 +42,12 @@ interface Reader {
   readonly check: CheckContext;
 }
 
+const NO_ATTRS: Attrs = {};
+
+const NO_MARKS: readonly MarkJSON[] = [];
+
+const NO_NODES: readonly NodeJSON[] = [];
+
 export const isFields = (value: unknown): value is Fields =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -106,9 +112,11 @@ const readAttrs = (reader: Reader, value: unknown, specs: AttrSpecs): Attrs => {
     return {};
   }
   for (const [key, spec] of specEntries(specs)) {
-    if (spec.default !== undefined) {
-      attrs[key] = spec.default;
+    if (spec.default === undefined) {
+      continue;
     }
+
+    attrs[key] = spec.default;
   }
   if (!isFields(value)) {
     return attrs;
@@ -219,8 +227,15 @@ const checkOwnAt = (
 
   checkBuilt(context, node, type);
 
-  if (context.issues.length > before && before > mark) {
-    context.issues.splice(mark, 0, ...context.issues.splice(before));
+  if (context.issues.length <= before || before <= mark) {
+    return;
+  }
+
+  const own = context.issues.splice(before);
+  const nested = context.issues.splice(mark);
+
+  for (const issue of [...own, ...nested]) {
+    context.issues.push(issue);
   }
 };
 
@@ -334,7 +349,11 @@ export const sliceToJSON = (slice: Slice): SliceJSON => ({
   openEnd: slice.openEnd,
 });
 
-export const sliceFromJSON = (schema: Schema, value: unknown): Slice | undefined => {
+export const sliceFromJSON = (
+  schema: Schema,
+  value: unknown,
+  insert?: number,
+): Slice | undefined => {
   if (!isFields(value) || !isDepth(value.openStart) || !isDepth(value.openEnd)) {
     return undefined;
   }
@@ -347,7 +366,7 @@ export const sliceFromJSON = (schema: Schema, value: unknown): Slice | undefined
     openEnd: value.openEnd,
   };
 
-  return reader.issues.length === 0 && checkSlice(schema, slice).ok ? slice : undefined;
+  return reader.issues.length === 0 && checkSlice(schema, slice, insert).ok ? slice : undefined;
 };
 
 export const markFromJSON = (schema: Schema, value: unknown): Mark | undefined => {
@@ -358,3 +377,56 @@ export const markFromJSON = (schema: Schema, value: unknown): Mark | undefined =
     ? mark
     : undefined;
 };
+
+const sameAttrs = (one: Attrs = NO_ATTRS, other: Attrs = NO_ATTRS): boolean => {
+  const keys = Object.keys(one);
+
+  return keys.length === Object.keys(other).length && keys.every((key) => one[key] === other[key]);
+};
+
+const sameMarkList = (
+  one: readonly MarkJSON[] = NO_MARKS,
+  other: readonly MarkJSON[] = NO_MARKS,
+): boolean =>
+  one.length === other.length &&
+  one.every((mark, index) => {
+    const peer = other[index];
+
+    return peer !== undefined && mark.type === peer.type && sameAttrs(mark.attrs, peer.attrs);
+  });
+
+const sameNodeJSON = (one: NodeJSON, other: NodeJSON): boolean => {
+  if (one === other) {
+    return true;
+  }
+
+  if ('text' in one || 'text' in other) {
+    return (
+      'text' in one &&
+      'text' in other &&
+      one.text === other.text &&
+      sameMarkList(one.marks, other.marks)
+    );
+  }
+  const left = one.content ?? NO_NODES;
+  const right = other.content ?? NO_NODES;
+
+  return (
+    one.id === other.id &&
+    one.type === other.type &&
+    left.length === right.length &&
+    sameAttrs(one.attrs, other.attrs) &&
+    left.every((node, index) => {
+      const peer = right[index];
+
+      return peer !== undefined && sameNodeJSON(node, peer);
+    })
+  );
+};
+
+export const sameDocJSON = (one: DocJSON, other: DocJSON): boolean =>
+  one === other ||
+  (one.format === other.format &&
+    one.schema.name === other.schema.name &&
+    one.schema.version === other.schema.version &&
+    sameNodeJSON(one.root, other.root));

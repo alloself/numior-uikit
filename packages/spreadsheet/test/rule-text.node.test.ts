@@ -1,11 +1,23 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { OFFICE_THEME, type ConditionalRule } from '../src/core';
+import {
+  BASE_FUNCTIONS,
+  OFFICE_THEME,
+  createFunctionRegistry,
+  type ConditionalRule,
+} from '../src/core';
 import { EN_LOCALE } from '../src/core/locale';
 import { describeRule } from '../src/sheet/rules/rule-text';
 import { rulePreview } from '../src/sheet/rules/rule-preview';
 import { spreadsheetRulesMessages } from '../src/sheet/rules/rules.messages';
 
-const LOOKS = { theme: OFFICE_THEME, font: { size: 11 }, locale: EN_LOCALE };
+const FUNCTIONS = createFunctionRegistry(BASE_FUNCTIONS);
+
+const LOOKS = {
+  theme: OFFICE_THEME,
+  font: { size: 11 },
+  locale: EN_LOCALE,
+  signatures: (name: string) => FUNCTIONS.get(name),
+};
 
 const BOLD = { font: { bold: true } };
 

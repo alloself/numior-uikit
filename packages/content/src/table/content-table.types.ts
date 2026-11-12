@@ -17,9 +17,21 @@ export interface NuiContentCellViewProps {
 
 export type NuiContentCellViews = Readonly<Partial<Record<NuiContentTableType, Component>>>;
 
+export interface NuiContentTableCell {
+  readonly row: string;
+  readonly column: string;
+}
+
+export interface NuiContentTablePeer extends NuiContentTableCell {
+  readonly key: string;
+  readonly name: string;
+  readonly colour: number;
+}
+
 export interface NuiContentTableProps {
   node: ElementNode;
   editable?: boolean | undefined;
   locale?: string | undefined;
   cells?: NuiContentCellViews | undefined;
+  peers?: readonly NuiContentTablePeer[] | undefined;
 }

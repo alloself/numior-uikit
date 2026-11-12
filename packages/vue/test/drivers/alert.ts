@@ -51,8 +51,8 @@ export class AlertDriver extends ComponentDriver {
     return this.closeButton.attributes('aria-label');
   }
 
-  get emittedDismiss(): number {
-    return (this.wrapper.emitted('dismiss') ?? []).length;
+  get emittedClose(): number {
+    return (this.wrapper.emitted('close') ?? []).length;
   }
 
   get emittedOpen(): boolean[] {

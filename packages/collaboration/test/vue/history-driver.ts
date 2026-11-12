@@ -51,7 +51,9 @@ export class HistoryDriver {
   }
 
   get versions(): readonly string[] {
-    return this.wrapper.findAll('[role="option"]').map((option) => option.text());
+    return this.wrapper
+      .findAll('.nui-collab-history [role="option"]')
+      .map((option) => option.text());
   }
 
   get title(): string {
@@ -99,12 +101,12 @@ export class HistoryDriver {
   }
 
   async pick(index: number): Promise<void> {
-    await this.wrapper.findAll('[role="option"]')[index]?.trigger('click');
+    await this.wrapper.findAll('.nui-collab-history [role="option"]')[index]?.trigger('click');
     await flushPromises();
   }
 
   async pickWithoutWaiting(index: number): Promise<void> {
-    await this.wrapper.findAll('[role="option"]')[index]?.trigger('click');
+    await this.wrapper.findAll('.nui-collab-history [role="option"]')[index]?.trigger('click');
   }
 
   async press(name: string): Promise<void> {

@@ -86,7 +86,7 @@ const markRule = (match: RegExp, mark: string, size: number): InputRule => ({
 
 export const markdownRules: readonly InputRule[] = [
   blockRule(
-    /^(#{1,3})\s$/,
+    /^(#{1,6})\s$/,
     retype('heading', (match) => ({ level: match[1]?.length ?? 1 })),
   ),
   blockRule(

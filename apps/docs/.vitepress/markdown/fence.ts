@@ -84,9 +84,11 @@ const trackSnippet = (env: unknown, path: string): void => {
   const includes: unknown =
     typeof env === 'object' && env !== null ? Reflect.get(env, 'includes') : undefined;
 
-  if (Array.isArray(includes)) {
-    includes.push(path);
+  if (!Array.isArray(includes)) {
+    return;
   }
+
+  includes.push(path);
 };
 
 const fenceContent = (token: FenceToken, env: unknown): string => {

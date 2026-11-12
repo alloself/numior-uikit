@@ -1,6 +1,6 @@
 <template>
   <NuiCheckboxGroup
-    v-model="enabled"
+    v-model:values="enabled"
     :options="methods"
     label="Delivery methods"
     description="The customer picks one of them at checkout"

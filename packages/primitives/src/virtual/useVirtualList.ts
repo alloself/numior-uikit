@@ -59,6 +59,11 @@ export interface VirtualScrollOptions {
   readonly align?: VirtualAlign | undefined;
 }
 
+export interface VirtualAnchor {
+  readonly index: number;
+  readonly within: number;
+}
+
 export interface VirtualList {
   readonly range: ComputedRef<VirtualRange>;
   readonly items: ComputedRef<readonly VirtualItem[]>;
@@ -75,6 +80,8 @@ export interface VirtualList {
   offsetOf(index: number): number;
   indexAt(position: number): number;
   scrollTo(index: number, options?: VirtualScrollOptions): void;
+  anchor(): VirtualAnchor;
+  scrollToAnchor(anchor: VirtualAnchor): void;
   resize(sizes: Iterable<VirtualSize>): boolean;
   onScroll(): void;
   measure(): void;
@@ -209,10 +216,12 @@ export const useVirtualList = (
   const measure = (): void => {
     const element = toValue(container);
 
-    if (element) {
-      viewport.value = axis() === VirtualAxis.X ? element.clientWidth : element.clientHeight;
-      physical.value = readScroll(element);
+    if (!element) {
+      return;
     }
+
+    viewport.value = axis() === VirtualAxis.X ? element.clientWidth : element.clientHeight;
+    physical.value = readScroll(element);
   };
 
   const scrollTo = (
@@ -245,10 +254,27 @@ export const useVirtualList = (
     const element = toValue(container);
     const next = logical / scale.value.factor;
 
-    if (element && next !== physical.value) {
-      writeScroll(element, next);
-      physical.value = next;
+    if (!element || next === physical.value) {
+      return;
     }
+
+    writeScroll(element, next);
+    physical.value = next;
+  };
+
+  const anchor = (): VirtualAnchor => {
+    const edge = scrollTop.value + frozenSize.value;
+    const index = indexAt(model.value, edge);
+
+    return { index, within: edge - offsetAt(model.value, index) };
+  };
+
+  const scrollToAnchor = ({ index, within }: VirtualAnchor): void => {
+    const top = Math.max(index, frozen.value);
+    const into = top === index ? Math.min(within, sizeAt(model.value, top)) : 0;
+    const end = Math.max(0, totalSize.value - span.value);
+
+    settle(clamp(offsetAt(model.value, top) + into - frozenSize.value, 0, end));
   };
 
   const resize = (sizes: Iterable<VirtualSize>): boolean => {
@@ -260,8 +286,8 @@ export const useVirtualList = (
     const top = scrollTop.value;
     const end = totalSize.value - span.value;
     const edge = top + frozenSize.value;
-    const anchor = indexAt(model.value, edge);
-    const within = edge - offsetAt(model.value, anchor);
+    const first = indexAt(model.value, edge);
+    const within = edge - offsetAt(model.value, first);
     let changed = false;
 
     for (const [position, size] of sizes) {
@@ -271,8 +297,8 @@ export const useVirtualList = (
       settle(
         end > 0 && top >= end - 1
           ? index.total() - span.value
-          : index.offsetAt(anchor) +
-              Math.min(within, index.sizeAt(anchor)) -
+          : index.offsetAt(first) +
+              Math.min(within, index.sizeAt(first)) -
               index.offsetAt(frozen.value),
       );
     }
@@ -285,13 +311,11 @@ export const useVirtualList = (
     }
     const before = canvasScaleFor(totalSizeOf(previous), span.value, toValue(options.maxSize));
     const edge = physical.value * before.factor + offsetAt(previous, frozen.value);
-    const anchor = indexAt(previous, edge);
-    const within = edge - offsetAt(previous, anchor);
+    const first = indexAt(previous, edge);
+    const within = edge - offsetAt(previous, first);
 
     settle(
-      offsetAt(next, anchor) +
-        Math.min(within, sizeAt(next, anchor)) -
-        offsetAt(next, frozen.value),
+      offsetAt(next, first) + Math.min(within, sizeAt(next, first)) - offsetAt(next, frozen.value),
     );
   });
 
@@ -307,9 +331,11 @@ export const useVirtualList = (
     watch(
       [() => toValue(container), enabled, axis],
       ([element, on]) => {
-        if (element && on) {
-          measure();
+        if (!element || !on) {
+          return;
         }
+
+        measure();
       },
       { immediate: true, flush: 'post' },
     );
@@ -331,6 +357,8 @@ export const useVirtualList = (
     offsetOf: (index) => offsetAt(model.value, index),
     indexAt: (position) => indexAt(model.value, position),
     scrollTo,
+    anchor,
+    scrollToAnchor,
     resize,
     onScroll: measure,
     measure,

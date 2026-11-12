@@ -11,6 +11,7 @@ import {
   type DifferentialStyle,
   type FormulaNode,
   type PlacedRule,
+  type SignatureOf,
 } from '../../core';
 import { FillPattern, StyleColorKind } from '../../core/cell.types';
 import {
@@ -29,6 +30,7 @@ import {
   RuleFormKind,
   type CustomLook,
   type ParsedValue,
+  type RuleReading,
   type RuleForm,
   type RuleFormResult,
 } from './rules.types';
@@ -294,14 +296,16 @@ const scaleStops = (colors: readonly StyleColor[]) =>
     color,
   }));
 
-const parsedValue = (text: string, locale: BookLocale, origin: CellAddress): ParsedValue => {
+const parsedValue = (text: string, reading: RuleReading): ParsedValue => {
   const trimmed = text.trim();
 
   if (trimmed === '') {
     return { ok: false };
   }
 
-  const parsed = parseFormula(trimmed, locale.formulas, origin);
+  const parsed = parseFormula(trimmed, reading.locale.formulas, reading.origin, {
+    signatures: reading.signatures,
+  });
 
   return parsed.ok ? { ok: true, ast: parsed.ast } : { ok: false };
 };
@@ -311,13 +315,9 @@ const refused = (field: RuleField): RuleFormResult => ({ ok: false, field });
 const twoValues = (operator: CellIsOperator): boolean =>
   operator === CellIsOperator.Between || operator === CellIsOperator.NotBetween;
 
-const cellIsRule = (
-  form: RuleForm,
-  locale: BookLocale,
-  origin: CellAddress,
-): ConditionalRule | RuleField => {
-  const first = parsedValue(form.first, locale, origin);
-  const second = twoValues(form.operator) ? parsedValue(form.second, locale, origin) : undefined;
+const cellIsRule = (form: RuleForm, reading: RuleReading): ConditionalRule | RuleField => {
+  const first = parsedValue(form.first, reading);
+  const second = twoValues(form.operator) ? parsedValue(form.second, reading) : undefined;
 
   if (!first.ok) {
     return RuleField.First;
@@ -348,12 +348,8 @@ const rankRule = (form: RuleForm): ConditionalRule | RuleField => {
   };
 };
 
-const expressionRule = (
-  form: RuleForm,
-  locale: BookLocale,
-  origin: CellAddress,
-): ConditionalRule | RuleField => {
-  const parsed = parsedValue(form.formula, locale, origin);
+const expressionRule = (form: RuleForm, reading: RuleReading): ConditionalRule | RuleField => {
+  const parsed = parsedValue(form.formula, reading);
 
   return parsed.ok
     ? { kind: ConditionalRuleKind.Expression, formula: parsed.ast, style: formStyle(form) }
@@ -435,16 +431,12 @@ const markRule = (form: RuleForm): ConditionalRule => {
   }
 };
 
-const formRule = (
-  form: RuleForm,
-  locale: BookLocale,
-  origin: CellAddress,
-): ConditionalRule | RuleField => {
+const formRule = (form: RuleForm, reading: RuleReading): ConditionalRule | RuleField => {
   switch (form.kind) {
     case RuleFormKind.CellIs:
-      return cellIsRule(form, locale, origin);
+      return cellIsRule(form, reading);
     case RuleFormKind.Expression:
-      return expressionRule(form, locale, origin);
+      return expressionRule(form, reading);
     case RuleFormKind.Text:
       return textRule(form);
     case RuleFormKind.TimePeriod:
@@ -461,14 +453,18 @@ const formRule = (
 const isField = (value: ConditionalRule | RuleField): value is RuleField =>
   typeof value === 'string';
 
-export const ruleOf = (form: RuleForm, locale: BookLocale): RuleFormResult => {
+export const ruleOf = (
+  form: RuleForm,
+  locale: BookLocale,
+  signatures: SignatureOf,
+): RuleFormResult => {
   const ranges = parseArea(form.area);
 
   if (ranges === undefined) {
     return refused(RuleField.Area);
   }
 
-  const rule = formRule(form, locale, originOf(ranges));
+  const rule = formRule(form, { locale, origin: originOf(ranges), signatures });
 
   return isField(rule)
     ? refused(rule)

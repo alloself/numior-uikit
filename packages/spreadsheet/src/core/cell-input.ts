@@ -26,7 +26,7 @@ import {
   type FormulaNode,
 } from './formula/formula.types';
 import { ORIGIN, referenceRange } from './formula/origin';
-import { parseFormula } from './formula/parser';
+import { parseFormula, type ParseOptions } from './formula/parser';
 import { printFormula } from './formula/printer';
 import {
   formulaReferences,
@@ -174,6 +174,7 @@ const inherits = (node: FormulaNode): boolean => {
   switch (node.kind) {
     case FormulaNodeKind.Cell:
     case FormulaNodeKind.Range:
+    case FormulaNodeKind.Areas:
     case FormulaNodeKind.Unary:
     case FormulaNodeKind.Percent:
       return true;
@@ -346,6 +347,11 @@ const formatStep = (sheet: Sheet, range: CellRange, code: string): WorkbookStep 
 export const createCellEditor = (book: Workbook, calculator: Calculator): CellEditor => {
   const stepper = createStepper(book, calculator);
 
+  const typedOptions = (): ParseOptions => ({
+    ...bookNames(book),
+    signatures: calculator.signatures,
+  });
+
   const formatAt = (sheet: Sheet, row: number, col: number): string =>
     book.formats.code(sheet.formats.get(row, col));
 
@@ -355,7 +361,7 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
     text: string,
     locale: BookLocale,
   ): EntryResult => {
-    const parsed = parseFormula(text, locale.formulas, position, bookNames(book));
+    const parsed = parseFormula(text, locale.formulas, position, typedOptions());
 
     if (!parsed.ok) {
       return parsed;
@@ -424,7 +430,7 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
       text,
       (options.locale ?? calculator.locale).formulas,
       options.anchor ?? ORIGIN,
-      bookNames(book),
+      typedOptions(),
     );
 
     return parsed.ok

@@ -34,7 +34,7 @@
         v-model:ranges="ranges"
         v-bind="cells"
         :column-menu="false"
-        bordered
+        gridlines
         size="sm"
         height="20rem"
         :clipboard="SHEET_CLIPBOARD"
@@ -65,13 +65,11 @@ import {
   type NuiTableExposed,
   type NuiTableRange,
   type NuiTableRanges,
-  type TableCellPosition,
+  type NuiTableCellPosition,
 } from '@numior/table';
 import { bigSheet, SHEET_COLS } from './sheet-source';
 
-const COPY_ROWS = 5000;
 const RECALC: NuiTableRange = { from: { row: 1, col: 1 }, to: { row: 3, col: 3 } };
-const COPY_COLS = 100;
 
 const cells = shallowRef<NuiTableCells>();
 const ranges = ref<NuiTableRanges>([]);
@@ -95,7 +93,7 @@ const editableSheet: NuiTableCellSource = {
   },
 };
 
-const textAt = (position: TableCellPosition): string =>
+const textAt = (position: NuiTableCellPosition): string =>
   editableSheet.cellAt(position.row, position.col)?.text ?? '';
 
 const recalculateRow = (row: number): void => {
@@ -113,22 +111,10 @@ const recalculate = (): void => {
   sheet.value?.invalidate([RECALC]);
 };
 
-const spanOf = (from: number, to: number, limit: number): number[] =>
-  Array.from(
-    { length: Math.min(Math.abs(to - from) + 1, limit) },
-    (_, index) => Math.min(from, to) + index,
-  );
-
 const SHEET_CLIPBOARD: NuiTableClipboard<number> = {
-  serialize: (scope) => {
-    const last = scope.ranges.at(-1);
-    const rows = last === undefined ? [] : spanOf(last.from.row, last.to.row, COPY_ROWS);
-    const cols = last === undefined ? [] : spanOf(last.from.col, last.to.col, COPY_COLS);
-
-    return {
-      text: rows.map((row) => cols.map((col) => textAt({ row, col })).join(';')).join('\n'),
-    };
-  },
+  serialize: ({ rows, cols }) => ({
+    text: rows.map((row) => cols.map((col) => textAt({ row, col })).join(';')).join('\n'),
+  }),
   parse: ({ text }) =>
     text.includes(';') && !text.includes('\t')
       ? text.split(/\r?\n/).map((line) => line.split(';'))
@@ -153,10 +139,13 @@ const writeAll = (changes: readonly NuiTableEdit<number>[], back: boolean): void
   const next = new Map(entries.value);
 
   for (const change of changes) {
-    next.set(
-      indexOf(change.row, columnIndex(change.key)),
-      textOf(back ? change.previous : change.value),
-    );
+    const col = columnIndex(change.key);
+
+    if (col === undefined) {
+      continue;
+    }
+
+    next.set(indexOf(change.row, col), textOf(back ? change.previous : change.value));
   }
   entries.value = next;
 };

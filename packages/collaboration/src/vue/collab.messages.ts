@@ -19,6 +19,15 @@ export interface NuiCollabMessages {
   readonly reportStep: (context: { readonly subject: string }) => string;
   readonly reportDamaged: string;
   readonly reportUnsent: (context: { readonly count: number }) => string;
+  readonly failureTitle: string;
+  readonly failureSchema: string;
+  readonly failureInvalid: string;
+  readonly failureProtocol: string;
+  readonly failureDiverged: string;
+  readonly failureDocument: string;
+  readonly failureUnsent: (context: { readonly count: number }) => string;
+  readonly failureReadOnly: string;
+  readonly failureRejoin: string;
   readonly alternatives: string;
   readonly alternativeRestore: string;
   readonly alternativeShow: string;
@@ -63,6 +72,17 @@ export const collabMessages: NuiMessageCatalog<NuiCollabMessages> = {
     reportDamaged: 'The copy saved on this device cannot be read',
     reportUnsent: ({ count }) =>
       `${count} unsent ${plural('en', count, { one: 'change is', other: 'changes are' })} kept on this device`,
+    failureTitle: 'Your changes are no longer sent',
+    failureSchema:
+      'This page runs an older version of the application than the document needs. Reload the page.',
+    failureInvalid: 'The server did not accept one of your changes.',
+    failureProtocol: 'The server sent a reply this page could not read.',
+    failureDiverged: 'Your copy is ahead of the document kept on the server.',
+    failureDocument: 'A change made by someone else did not fit your copy.',
+    failureUnsent: ({ count }) =>
+      `${count} ${plural('en', count, { one: 'change of yours was', other: 'changes of yours were' })} not sent. Copy what you need before you open the document again.`,
+    failureReadOnly: 'The document is read-only until you open it again.',
+    failureRejoin: 'Open again',
     alternatives: 'Overwritten values',
     alternativeRestore: 'Put back',
     alternativeShow: 'Show in the document',
@@ -103,6 +123,17 @@ export const collabMessages: NuiMessageCatalog<NuiCollabMessages> = {
     reportStep: ({ subject }) => `${subject}: сохранённые правки нельзя перевести на новую версию`,
     reportDamaged: 'Копию на этом устройстве не удалось прочитать',
     reportUnsent: ({ count }) => `Неотправленные правки сохранены на этом устройстве: ${count}`,
+    failureTitle: 'Правки больше не отправляются',
+    failureSchema:
+      'Страница работает на версии приложения старее той, что нужна документу. Обновите страницу.',
+    failureInvalid: 'Сервер не принял одну из ваших правок.',
+    failureProtocol: 'Сервер прислал ответ, который страница не смогла прочитать.',
+    failureDiverged: 'Ваша копия новее документа на сервере.',
+    failureDocument: 'Правка другого участника не подошла к вашей копии.',
+    failureUnsent: ({ count }) =>
+      `Не отправлено правок: ${count}. Скопируйте нужное, прежде чем открыть документ заново.`,
+    failureReadOnly: 'Документ открыт только для чтения, пока вы не откроете его заново.',
+    failureRejoin: 'Открыть заново',
     alternatives: 'Перезаписанные значения',
     alternativeRestore: 'Вернуть',
     alternativeShow: 'Показать в документе',

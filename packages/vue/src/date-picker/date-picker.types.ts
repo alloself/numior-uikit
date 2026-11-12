@@ -54,3 +54,12 @@ export interface NuiDateInputProps {
   readonly?: boolean | undefined;
   label?: string | undefined;
 }
+
+export type DateRangeEnd = (typeof DateRangeEnd)[keyof typeof DateRangeEnd];
+
+export interface HeldRangeEnd {
+  readonly end: DateRangeEnd;
+  readonly date: string | null;
+}
+
+export const DateRangeEnd = { Start: 'start', End: 'end' } as const;

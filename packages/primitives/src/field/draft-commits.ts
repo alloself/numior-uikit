@@ -31,7 +31,9 @@ export const provideDraftCommits = (): DraftCommits => {
 export const useDraftCommit = (commit: (() => void) | undefined): void => {
   const drafts = inject(DRAFT_COMMITS_KEY, null);
 
-  if (commit && drafts) {
-    onScopeDispose(drafts.register(commit));
+  if (!commit || !drafts) {
+    return;
   }
+
+  onScopeDispose(drafts.register(commit));
 };

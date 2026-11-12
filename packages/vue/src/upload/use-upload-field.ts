@@ -114,18 +114,22 @@ export const useUploadPreviews = <R>(): UploadPreviews<R> => {
   return {
     remember: (items) => {
       for (const item of items) {
-        if (item.file && canPreview(item) && !previews.has(item.id)) {
-          previews.set(item.id, URL.createObjectURL(item.file));
+        if (!item.file || !canPreview(item) || previews.has(item.id)) {
+          continue;
         }
+
+        previews.set(item.id, URL.createObjectURL(item.file));
       }
     },
     forget: (itemId) => {
       const url = previews.get(itemId);
 
-      if (url !== undefined) {
-        URL.revokeObjectURL(url);
-        previews.delete(itemId);
+      if (url === undefined) {
+        return;
       }
+
+      URL.revokeObjectURL(url);
+      previews.delete(itemId);
     },
     previewOf: (item) =>
       previews.get(item.id) ?? (item.type.startsWith('image/') ? item.url : undefined),
@@ -134,16 +138,20 @@ export const useUploadPreviews = <R>(): UploadPreviews<R> => {
 
 export const useUploadPicker = (options: UploadPickerOptions): UploadPicker => ({
   open: () => {
-    if (!options.inert.value) {
-      options.input.value?.click();
+    if (options.inert.value) {
+      return;
     }
+
+    options.input.value?.click();
   },
   onChange: () => {
     const input = options.input.value;
 
-    if (input) {
-      options.onFiles(Array.from(input.files ?? []));
-      input.value = '';
+    if (!input) {
+      return;
     }
+
+    options.onFiles(Array.from(input.files ?? []));
+    input.value = '';
   },
 });

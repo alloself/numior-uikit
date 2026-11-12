@@ -1,5 +1,5 @@
 <template>
-  <NuiSelect label="Город" v-model="city" :options="cities" placeholder="Выберите город" />
+  <NuiSelect v-model="city" :options="cities" label="Город доставки" placeholder="Выберите город" />
 </template>
 
 <script setup lang="ts">
@@ -9,18 +9,25 @@ import { NuiSelect, type NuiOptionSource } from '@numior/vue';
 const city = ref<string | null>(null);
 
 const cities: NuiOptionSource<string> = [
+  { label: 'Центр', items: [{ value: 'msk', label: 'Москва' }] },
+  { label: 'Северо-Запад', items: [{ value: 'spb', label: 'Санкт-Петербург' }] },
   {
-    label: 'Европа',
+    label: 'Поволжье',
     items: [
-      { value: 'vie', label: 'Вена' },
-      { value: 'ber', label: 'Берлин' },
+      { value: 'kzn', label: 'Казань' },
+      { value: 'smr', label: 'Самара' },
     ],
   },
+  { label: 'Урал', items: [{ value: 'ekb', label: 'Екатеринбург' }] },
   {
-    label: 'Азия',
+    label: 'Сибирь',
     items: [
-      { value: 'tyo', label: 'Токио' },
-      { value: 'sel', label: 'Сеул', disabled: true },
+      {
+        value: 'nsk',
+        label: 'Новосибирск',
+        description: 'Доставка приостановлена до понедельника',
+        disabled: true,
+      },
     ],
   },
 ];

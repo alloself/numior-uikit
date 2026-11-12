@@ -2,10 +2,13 @@ import {
   expect,
   type Browser,
   type BrowserContext,
+  type CDPSession,
+  type JSHandle,
   type Locator,
   type Page,
   type WebSocketRoute,
 } from '@playwright/test';
+import { boxOf } from '../helpers/geometry';
 import { BookSection } from './book';
 
 export interface TextEdges {
@@ -13,9 +16,21 @@ export interface TextEdges {
   readonly right: number;
 }
 
-const COLLAB_SERVER = /:4175/;
+const COLLAB_PORT = process.env.COLLAB_PORT ?? '4175';
 
 const RECONNECT_TIMEOUT = 20_000;
+
+const TYPING_PAUSE = 8;
+
+const FIRST_WORD = { x: 12, y: 10 };
+
+const LAG_FRAMES = 12;
+
+const DRIFT_FRAMES = 30;
+
+const LINE_START = 4;
+
+const isCollabServer = (url: URL): boolean => url.port === COLLAB_PORT;
 
 export const unsentStepsOf = (name: string): Promise<number> =>
   new Promise<number>((resolve) => {
@@ -36,21 +51,29 @@ export const unsentStepsOf = (name: string): Promise<number> =>
 export class CollabClient {
   private readonly sockets = new Set<WebSocketRoute>();
   private reachable = true;
+  private keyboard: CDPSession | undefined;
+  private compositions: JSHandle<string[]> | undefined;
 
   readonly editor: Locator;
   readonly status: Locator;
   readonly avatars: Locator;
   readonly carets: Locator;
   readonly selections: Locator;
+  readonly copy: Locator;
   readonly comments: Locator;
   readonly threads: Locator;
+  readonly discussions: Locator;
   readonly marks: Locator;
   readonly history: Locator;
   readonly versions: Locator;
   readonly additions: Locator;
   readonly overwritten: Locator;
   readonly report: Locator;
+  readonly failure: Locator;
   readonly readOnlyDocument: Locator;
+  readonly pushedLines: Locator;
+  readonly bullets: Locator;
+  readonly todos: Locator;
 
   constructor(
     readonly page: Page,
@@ -58,18 +81,24 @@ export class CollabClient {
   ) {
     this.editor = page.locator('.nui-editor [contenteditable="true"]');
     this.status = page.getByTestId('collab-status');
+    this.copy = page.getByTestId('collab-copy');
     this.avatars = page.locator('.nui-avatar');
     this.carets = page.locator('.nui-collab-carets__caret');
     this.selections = page.locator('.nui-collab-selection');
-    this.comments = page.locator('.nui-collab-comments');
-    this.threads = page.locator('.nui-collab-comments__thread');
+    this.comments = page.locator('.nui-collab-comment-popover');
+    this.threads = this.comments.locator('.nui-collab-comments__thread');
+    this.discussions = page.locator('.collab__discussions');
     this.marks = page.locator('.nui-editor__comment');
     this.history = page.locator('.nui-collab-history');
     this.versions = this.history.getByRole('option');
     this.additions = this.history.locator('.nui-diff--added');
     this.overwritten = this.history.locator('.nui-collab-history__alternative');
     this.report = page.locator('.nui-collab-report');
+    this.failure = page.getByTestId('collab-failure');
     this.readOnlyDocument = page.locator('.nui-editor--readonly');
+    this.pushedLines = this.editor.locator('.nui-editor__pushed');
+    this.bullets = this.editor.locator('.nui-content__item');
+    this.todos = this.editor.locator('.nui-content__todo');
   }
 
   paragraph(index: number): Locator {
@@ -78,6 +107,30 @@ export class CollabClient {
 
   tableCell(row: number, col: number): Locator {
     return this.page.locator('.nui-editor .nui-table tbody tr').nth(row).locator('td').nth(col);
+  }
+
+  tablePeer(name: string): Locator {
+    return this.page.locator('.nui-editor .nui-table__pane--body .nui-table-peers__cell', {
+      hasText: name,
+    });
+  }
+
+  async tablePeerDrift(name: string, row: number, col: number): Promise<number> {
+    const [frame, cell] = await Promise.all([
+      boxOf(this.tablePeer(name)),
+      boxOf(this.tableCell(row, col)),
+    ]);
+
+    return Math.max(
+      Math.abs(frame.x - cell.x),
+      Math.abs(frame.y - cell.y),
+      Math.abs(frame.width - cell.width),
+      Math.abs(frame.height - cell.height),
+    );
+  }
+
+  async backToText(): Promise<void> {
+    await this.editor.locator('p').last().click();
   }
 
   async insertTable(): Promise<void> {
@@ -111,10 +164,167 @@ export class CollabClient {
     await this.page.keyboard.type(text);
   }
 
-  async appendTo(index: number, text: string): Promise<void> {
+  async endOf(index: number): Promise<void> {
     await this.paragraph(index).click();
     await this.page.keyboard.press('End');
+  }
+
+  async appendTo(index: number, text: string): Promise<void> {
+    await this.endOf(index);
     await this.page.keyboard.type(text);
+  }
+
+  async caretLag(name: string, line: string, act: () => Promise<void>): Promise<number> {
+    const lag = await this.page.evaluateHandle(
+      ({ who, text, frames }) => ({
+        measured: new Promise<number>((resolve) => {
+          const offsets: number[] = [];
+
+          const sample = (): void => {
+            const caret = [...document.querySelectorAll('.nui-collab-carets__caret')].find((each) =>
+              each.textContent.includes(who),
+            );
+
+            const paragraph = [...document.querySelectorAll('.nui-editor p')].find(
+              (each) => each.textContent === text,
+            );
+
+            if (caret !== undefined && paragraph !== undefined) {
+              offsets.push(
+                caret.getBoundingClientRect().top - paragraph.getBoundingClientRect().top,
+              );
+            }
+
+            if (offsets.length < frames) {
+              requestAnimationFrame(sample);
+              return;
+            }
+
+            const settled = offsets.at(-1) ?? 0;
+
+            resolve(Math.max(...offsets.map((offset) => Math.abs(offset - settled))));
+          };
+
+          document.addEventListener(
+            'keydown',
+            () => {
+              requestAnimationFrame(sample);
+            },
+            { capture: true, once: true },
+          );
+        }),
+      }),
+      { who: name, text: line, frames: LAG_FRAMES },
+    );
+
+    await act();
+
+    return lag.evaluate((held) => held.measured);
+  }
+
+  async pushLine(index: number): Promise<void> {
+    const box = await boxOf(this.paragraph(index));
+
+    await this.page.mouse.move(box.x + LINE_START, box.y + box.height / 2);
+    await expect(this.pushedLines).toHaveCount(1);
+  }
+
+  async letLineGo(): Promise<void> {
+    await this.page.mouse.move(0, 0);
+    await expect(this.pushedLines).toHaveCount(0);
+  }
+
+  async caretDrift(name: string, index: number, act: () => Promise<void>): Promise<number> {
+    const drift = await this.paragraph(index).evaluateHandle((line, who) => {
+      const offsets: number[] = [];
+      let rest = Number.POSITIVE_INFINITY;
+      let finish: ((worst: number) => void) | undefined;
+
+      const sample = (): void => {
+        const caret = [...document.querySelectorAll('.nui-collab-carets__caret')].find((each) =>
+          each.textContent.includes(who),
+        );
+
+        const range = document.createRange();
+
+        range.selectNodeContents(line);
+
+        if (caret !== undefined) {
+          offsets.push(caret.getBoundingClientRect().left - range.getBoundingClientRect().right);
+        }
+
+        rest -= 1;
+
+        if (rest <= 0) {
+          const [base = 0] = offsets;
+
+          finish?.(offsets.reduce((worst, offset) => Math.max(worst, Math.abs(offset - base)), 0));
+          return;
+        }
+
+        requestAnimationFrame(() => {
+          setTimeout(sample);
+        });
+      };
+
+      sample();
+
+      return {
+        settled: (frames: number) =>
+          new Promise<number>((resolve) => {
+            rest = frames;
+            finish = resolve;
+          }),
+      };
+    }, name);
+
+    await act();
+
+    return drift.evaluate((held, frames) => held.settled(frames), DRIFT_FRAMES);
+  }
+
+  async prependTo(index: number, text: string): Promise<void> {
+    await this.paragraph(index).click();
+    await this.page.keyboard.press('Home');
+    await this.page.keyboard.type(text);
+  }
+
+  async startComposing(text: string): Promise<void> {
+    this.compositions ??= await this.page.evaluateHandle(() => {
+      const started: string[] = [];
+
+      document.addEventListener('compositionstart', (event) => {
+        started.push(event.type);
+      });
+
+      return started;
+    });
+
+    this.keyboard ??= await this.page.context().newCDPSession(this.page);
+
+    await this.keyboard.send('Input.imeSetComposition', {
+      text,
+      selectionStart: text.length,
+      selectionEnd: text.length,
+    });
+  }
+
+  async commitComposed(text: string): Promise<void> {
+    await this.keyboard?.send('Input.insertText', { text });
+  }
+
+  async compositionsStarted(): Promise<number> {
+    return (await this.compositions?.evaluate((started) => started.length)) ?? 0;
+  }
+
+  async appendToEach(indices: readonly number[], text: string): Promise<void> {
+    for (const index of indices) {
+      await this.appendTo(index, text);
+    }
+  }
+
+  async keepTyping(text: string): Promise<void> {
+    await this.page.keyboard.type(text, { delay: TYPING_PAUSE });
   }
 
   async selectLine(index: number): Promise<void> {
@@ -123,10 +333,71 @@ export class CollabClient {
     await this.page.keyboard.press('Shift+End');
   }
 
+  async writeLines(count: number): Promise<void> {
+    await this.editor.click();
+
+    for (const line of Array.from({ length: count }, (_, index) => `Строка ${String(index)}`)) {
+      await this.page.keyboard.insertText(line);
+      await this.page.keyboard.press('Enter');
+    }
+  }
+
+  async selectEverything(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+a');
+  }
+
+  async scrollToMiddle(): Promise<void> {
+    await this.page.evaluate(() => {
+      scrollTo({ top: (document.documentElement.scrollHeight - innerHeight) / 2 });
+    });
+  }
+
+  async selectionBar(): Promise<Locator> {
+    const fine = await this.page.evaluate(() => matchMedia('(pointer: fine)').matches);
+
+    return this.page.locator(fine ? '.nui-editor-bubble' : '.nui-editor__toolbar');
+  }
+
+  async startComment(): Promise<void> {
+    const bar = await this.selectionBar();
+
+    await bar.getByRole('button', { name: 'Добавить комментарий' }).click();
+    await this.comments.getByRole('textbox').waitFor();
+  }
+
   async addComment(body: string): Promise<void> {
-    await this.comments.getByRole('button', { name: 'Добавить комментарий' }).click();
+    await this.startComment();
     await this.comments.getByRole('textbox').fill(body);
     await this.comments.getByRole('button', { name: 'Отправить' }).click();
+  }
+
+  async enterDiscussion(): Promise<void> {
+    await this.page.keyboard.press('Tab');
+  }
+
+  async leaveWithKeyboard(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+  }
+
+  async clickAway(): Promise<void> {
+    await this.status.click();
+  }
+
+  async openMark(index: number): Promise<void> {
+    await this.marks.nth(index).click();
+    await this.threads.waitFor();
+  }
+
+  async openDiscussions(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Обсуждения' }).click();
+  }
+
+  async pressInDiscussion(index: number, name: string): Promise<void> {
+    await this.discussions
+      .locator('.nui-collab-comments__thread')
+      .nth(index)
+      .getByRole('button', { name })
+      .click();
   }
 
   async replyTo(index: number, body: string): Promise<void> {
@@ -139,10 +410,6 @@ export class CollabClient {
 
   async pressInThread(index: number, name: string): Promise<void> {
     await this.threads.nth(index).getByRole('button', { name }).click();
-  }
-
-  async openHistory(): Promise<void> {
-    await this.page.getByRole('tab', { name: 'История' }).click();
   }
 
   async saveVersion(count: number): Promise<void> {
@@ -187,7 +454,7 @@ export class CollabClient {
   }
 
   async routeServer(): Promise<void> {
-    await this.page.routeWebSocket(COLLAB_SERVER, (socket) => {
+    await this.page.routeWebSocket(isCollabServer, (socket) => {
       if (this.reachable) {
         this.sockets.add(socket);
         socket.connectToServer();
@@ -212,6 +479,30 @@ export class CollabClient {
   async reload(): Promise<void> {
     await this.page.reload();
     await this.editor.waitFor();
+  }
+
+  async secondTab(): Promise<CollabClient> {
+    const page = await this.context.newPage();
+    const tab = new CollabClient(page, this.context);
+
+    await page.goto(this.page.url());
+    await tab.editor.waitFor();
+
+    return tab;
+  }
+
+  async loseSync(): Promise<void> {
+    await this.page.getByTestId('collab-garble').click();
+    await expect(this.status).toHaveText('failed');
+  }
+
+  async openAgain(): Promise<void> {
+    await this.failure.getByRole('button', { name: 'Открыть заново' }).click();
+    await expect(this.status).toHaveText('online', { timeout: RECONNECT_TIMEOUT });
+  }
+
+  async selectWordInCopy(index: number): Promise<void> {
+    await this.readOnlyDocument.locator('p').nth(index).dblclick({ position: FIRST_WORD });
   }
 
   async openWithPlugin(version: number): Promise<void> {
@@ -239,6 +530,62 @@ export class CollabBook {
 
   get tabs(): Locator {
     return this.sheet.sheet.getByRole('tab');
+  }
+
+  get peers(): Locator {
+    return this.client.page.getByTestId('collab-peers').locator('.nui-avatar');
+  }
+
+  peerFrame(name: string): Locator {
+    return this.sheet.sheet.locator('.nui-table-peers__cell', { hasText: name });
+  }
+
+  peerAreas(): Locator {
+    return this.sheet.sheet.locator('.nui-table-peers__area');
+  }
+
+  async peerFrameStops(name: string, act: () => Promise<void>): Promise<number> {
+    const stops = await this.client.page.evaluateHandle(
+      ({ who, frames }) => ({
+        measured: new Promise<number>((resolve) => {
+          const frame = [...document.querySelectorAll('.nui-table-peers__cell')].find((each) =>
+            each.textContent.includes(who),
+          );
+
+          if (frame === undefined) {
+            resolve(0);
+            return;
+          }
+
+          const seen = new Set<number>();
+          let left = frames;
+
+          const sample = (): void => {
+            seen.add(Math.round(frame.getBoundingClientRect().left));
+            left -= 1;
+
+            if (left > 0) {
+              requestAnimationFrame(sample);
+              return;
+            }
+
+            resolve(seen.size);
+          };
+
+          const observer = new MutationObserver(() => {
+            observer.disconnect();
+            requestAnimationFrame(sample);
+          });
+
+          observer.observe(frame, { attributes: true, attributeFilter: ['style'] });
+        }),
+      }),
+      { who: name, frames: LAG_FRAMES },
+    );
+
+    await act();
+
+    return stops.evaluate((held) => held.measured);
   }
 
   async undo(): Promise<void> {

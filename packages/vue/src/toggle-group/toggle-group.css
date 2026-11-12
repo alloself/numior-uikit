@@ -124,11 +124,6 @@
     inline-size: var(--_height);
     padding-inline: 0;
   }
-  .nui-toggle-group__icon {
-    inline-size: 1.125em;
-    block-size: 1.125em;
-    flex-shrink: 0;
-  }
   .nui-toggle-group--variant-segmented {
     --_gap: 2px;
 

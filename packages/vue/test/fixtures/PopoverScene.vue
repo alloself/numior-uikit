@@ -1,6 +1,6 @@
 <template>
   <div>
-    <NuiPopover v-bind="props" v-model:open="open">
+    <NuiPopover ref="popover" v-bind="props" v-model:open="open">
       <template #trigger="{ attrs }">
         <button v-bind="attrs" class="opener">Open</button>
       </template>
@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, useTemplateRef } from 'vue';
 import { NuiPopover, type NuiPopoverProps } from '../../src';
 
 const { props = {}, initiallyOpen = false } = defineProps<{
@@ -20,6 +20,12 @@ const { props = {}, initiallyOpen = false } = defineProps<{
 }>();
 
 const open = ref(initiallyOpen);
+const popover = useTemplateRef<InstanceType<typeof NuiPopover>>('popover');
 
-defineExpose({ open });
+defineExpose({
+  open,
+  get trigger() {
+    return popover.value?.triggerElement ?? null;
+  },
+});
 </script>

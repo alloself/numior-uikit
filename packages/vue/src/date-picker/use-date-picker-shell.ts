@@ -89,18 +89,22 @@ export const useDatePickerShell = (options: DatePickerShellOptions): DatePickerS
   };
 
   const onInputClick = (): void => {
-    if (options.openOnClick() && canOpen()) {
-      keepFocus.set(true);
-      popover.show();
+    if (!options.openOnClick() || !canOpen()) {
+      return;
     }
+
+    keepFocus.set(true);
+    popover.show();
   };
 
   watch(popover.open, (isOpen) => {
     const quiet = keepFocus.take() === true;
 
-    if (isOpen && !quiet) {
-      focusCalendar();
+    if (!isOpen || quiet) {
+      return;
     }
+
+    focusCalendar();
   });
 
   return {

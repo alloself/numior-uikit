@@ -9,8 +9,8 @@ const docs: DocsMap = {
       },
       size: { ru: 'Размер клавиш: `sm` или `md`.', en: 'Key size: `sm` or `md`.' },
       variant: {
-        ru: 'Оформление: клавиши в рамках (`boxed`) или простым текстом (`plain`).',
-        en: 'Style: keys in boxes (`boxed`) or plain text (`plain`).',
+        ru: 'Оформление: клавиши в рамках (`boxed`), простым текстом (`plain`) или на полупрозрачной подложке цвета текста (`soft`).',
+        en: 'Style: keys in boxes (`boxed`), plain text (`plain`) or on a translucent tint of the text color (`soft`).',
       },
       platform: {
         ru: 'Как показывать модификаторы: `mac` — значками ⌘ и ⌥, `other` — словами. Без него система определяется после монтирования.',

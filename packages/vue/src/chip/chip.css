@@ -4,10 +4,10 @@
     --_tone-foreground: var(--nui-neutral-foreground);
     --_tone-soft: var(--nui-neutral-soft);
     --_tone-soft-foreground: var(--nui-neutral-soft-foreground);
-    --_height: 1.75rem;
+    --_height: var(--nui-control-height-xs);
     --_padding: var(--nui-space-3);
     --_font-size: var(--nui-font-size-sm);
-    --_remove: calc(var(--_font-size) * 1.53125);
+    --_remove: round(calc(round(var(--_font-size) * 0.875, 1px) * 1.75), 2px);
 
     box-sizing: border-box;
     display: inline-flex;
@@ -86,8 +86,8 @@
     opacity: var(--nui-disabled-opacity);
   }
   .nui-chip__icon {
-    inline-size: 1em;
-    block-size: 1em;
+    inline-size: var(--nui-icon-size-sm);
+    block-size: var(--nui-icon-size-sm);
   }
   .nui-chip__label {
     overflow: hidden;

@@ -8,6 +8,7 @@
           {
             "type": "table_column",
             "attrs": {
+              "key": "c0",
               "name": "Статья",
               "type": "text",
               "width": null,
@@ -18,6 +19,7 @@
           {
             "type": "table_column",
             "attrs": {
+              "key": "c1",
               "name": "Сумма",
               "type": "number",
               "width": null,
@@ -36,12 +38,14 @@
               {
                 "type": "table_cell",
                 "attrs": {
+                  "column": "c0",
                   "value": "Аренда"
                 }
               },
               {
                 "type": "table_cell",
                 "attrs": {
+                  "column": "c1",
                   "value": 50000
                 }
               }
@@ -53,12 +57,14 @@
               {
                 "type": "table_cell",
                 "attrs": {
+                  "column": "c0",
                   "value": "Связь"
                 }
               },
               {
                 "type": "table_cell",
                 "attrs": {
+                  "column": "c1",
                   "value": 1200
                 }
               }

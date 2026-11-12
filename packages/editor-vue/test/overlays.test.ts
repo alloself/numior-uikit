@@ -2,9 +2,11 @@ import { contentSchema } from '@numior/content';
 import { createDoc, toJSON, type ElementNode } from '@numior/editor-core';
 import { afterEach, beforeAll, describe, expect, it } from 'vite-plus/test';
 import { EditorDriver } from './drivers/editor';
+import { installMouse } from './support/media';
 import { installPopovers } from './support/popovers';
 
 let driver: EditorDriver | undefined;
+let restoreMedia: (() => void) | undefined;
 
 const mounted = (...args: Parameters<typeof EditorDriver.mount>): EditorDriver => {
   driver = EditorDriver.mount(...args);
@@ -18,7 +20,11 @@ beforeAll(() => {
 afterEach(() => {
   driver?.destroy();
   driver = undefined;
+  restoreMedia?.();
+  restoreMedia = undefined;
 });
+
+const NOTE = { key: 'note', label: 'Note', icon: 'comment', command: () => true } as const;
 
 const paragraph = (text: string): ElementNode =>
   contentSchema.element('paragraph', { id: 'p', content: [contentSchema.text(text)] });
@@ -28,6 +34,19 @@ const page = (text: string) =>
     createDoc(
       contentSchema,
       contentSchema.element('doc', { id: 'root', content: [paragraph(text)] }),
+    ),
+  );
+
+const codePage = (text: string) =>
+  toJSON(
+    createDoc(
+      contentSchema,
+      contentSchema.element('doc', {
+        id: 'root',
+        content: [
+          contentSchema.element('code_block', { id: 'c', content: [contentSchema.text(text)] }),
+        ],
+      }),
     ),
   );
 
@@ -81,6 +100,33 @@ describe('NuiEditor links, colours and bubble', () => {
     expect(editor.markup).toContain('See <a class="nui-content__link" href="/docs">/docs</a>');
   });
 
+  it('pastes an address into code as text and keeps the link panel out of code', async () => {
+    const editor = mounted({ document: codePage('let x') });
+
+    editor.focus();
+    await editor.select(3);
+    await editor.pasteHTML('', 'https://numior.test');
+
+    expect(editor.blockTexts).toEqual(['pre:lehttps://numior.testt x']);
+    expect(editor.markup).not.toContain('<a ');
+
+    await editor.select(1, 3);
+    await editor.pasteHTML('', 'https://numior.test');
+
+    expect(editor.blockTexts).toEqual(['pre:https://numior.testhttps://numior.testt x']);
+    expect(editor.available('Link')).toBe(false);
+    expect(editor.available('Bold')).toBe(false);
+
+    await editor.press('k', { ctrl: true });
+
+    expect(editor.linkShown).toBe(false);
+
+    await editor.press('b', { ctrl: true });
+    await editor.type('!');
+
+    expect(editor.blockTexts).toEqual(['pre:https://numior.test!https://numior.testt x']);
+  });
+
   it('colours the selection from the author palette and drops other colours on paste', async () => {
     const editor = mounted({
       document: page('Hello world'),
@@ -118,6 +164,67 @@ describe('NuiEditor links, colours and bubble', () => {
     );
   });
 
+  it('opens the bubble when the whole text is selected', async () => {
+    const editor = mounted({ document: page('Hello world'), toolbar: 'bubble' });
+
+    editor.focus();
+    await editor.press('a', { ctrl: true });
+
+    expect(editor.bubbleShown).toBe(true);
+  });
+
+  it('puts actions for the selection into the bubble', async () => {
+    const editor = mounted({
+      document: page('Hello world'),
+      toolbar: 'bubble',
+      selectionActions: [NOTE],
+    });
+
+    editor.focus();
+    await editor.select(1, 6);
+
+    expect(editor.bubbleTools).toContain('Note');
+  });
+
+  it('offers only the actions for the selection over a selection in a read-only editor', async () => {
+    const editor = mounted({
+      document: page('Hello world'),
+      readonly: true,
+      selectionActions: [NOTE],
+    });
+
+    editor.focus();
+    await editor.select(1, 6);
+
+    expect(editor.focused).toBe(true);
+    expect(editor.tools).toEqual(['Note']);
+    expect(editor.bubbleShown).toBe(true);
+    expect(editor.bubbleTools).toEqual(['Note']);
+  });
+
+  it('opens nothing over a selection in a read-only editor that has no actions for it', async () => {
+    const editor = mounted({ document: page('Hello world'), readonly: true, toolbar: 'both' });
+
+    editor.focus();
+    await editor.select(1, 6);
+
+    expect(editor.bubbleShown).toBe(false);
+    expect(editor.tools).toEqual([]);
+  });
+
+  it('keeps a read-only document when text is typed or pasted into it', async () => {
+    const editor = mounted({ document: page('Hello world'), readonly: true });
+
+    editor.focus();
+    await editor.select(1, 6);
+    await editor.type('x');
+    await editor.press('Backspace');
+    await editor.pasteHTML('<p>pasted</p>', 'pasted');
+
+    expect(editor.text).toBe('Hello world');
+    expect(editor.changes).toBe(0);
+  });
+
   it('opens the bubble over a selected range and closes it when the range collapses', async () => {
     const editor = mounted({ document: page('Hello world'), toolbar: 'bubble' });
 
@@ -129,6 +236,7 @@ describe('NuiEditor links, colours and bubble', () => {
     expect(editor.bubbleShown).toBe(true);
 
     expect(editor.bubbleTools).toEqual([
+      'Block type: Text',
       'Bold',
       'Italic',
       'Underline',
@@ -140,11 +248,40 @@ describe('NuiEditor links, colours and bubble', () => {
 
     await editor.press('F10', { alt: true });
 
-    expect(editor.toolbarFocus).toBe('Bold');
+    expect(editor.toolbarFocus).toBe('Block type: Text');
 
     await editor.toolbarKey('Escape');
     await editor.select(3);
 
     expect(editor.bubbleShown).toBe(false);
+  });
+
+  it('turns the block of the selection into a heading from the bubble', async () => {
+    const editor = mounted({ document: page('Hello world'), toolbar: 'bubble' });
+
+    editor.focus();
+    await editor.select(1, 6);
+    await editor.chooseBlock('Heading 5');
+
+    expect(editor.markup).toContain(
+      '<h5 class="nui-content__heading nui-content__heading--level-5">Hello world</h5>',
+    );
+
+    expect(editor.blockType).toBe('Heading 5');
+    expect(editor.bubbleShown).toBe(true);
+    expect(editor.focused).toBe(true);
+  });
+
+  it('keeps the block type out of the header while the bubble offers it', async () => {
+    restoreMedia = installMouse();
+
+    const editor = mounted({ document: page('Hello world'), toolbar: 'both' });
+
+    expect(editor.headerTools.slice(0, 4)).toEqual(['Insert', 'Undo', 'Redo', 'Bold']);
+
+    editor.focus();
+    await editor.select(1, 6);
+
+    expect(editor.bubbleTools[0]).toBe('Block type: Text');
   });
 });

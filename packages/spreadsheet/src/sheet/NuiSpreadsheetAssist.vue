@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { useFloating, usePopover } from '@numior/primitives';
+import { FLOATING_OFFSET, useFloating, usePopover } from '@numior/primitives';
 import { NuiList, optionElementId, optionIndexOf, type NuiListEntry } from '@numior/vue';
 import { computed, ref, shallowRef, watch, type ComponentPublicInstance } from 'vue';
 import type { SheetAssistProps } from './sheet.types';
@@ -51,7 +51,7 @@ const { listId, hintId, entries, active, anchor, open, hint, summary, typed, lab
   defineProps<SheetAssistProps>();
 
 const emit = defineEmits<{
-  choose: [key: string];
+  select: [key: string];
   hover: [index: number];
 }>();
 
@@ -101,30 +101,34 @@ const { contentAttrs: hintAttrs } = usePopover(hintPanel, {
 
 useFloating(() => anchor, list, {
   placement: 'bottom-start',
-  offset: 4,
+  offset: FLOATING_OFFSET,
   enabled: listShown,
   size: { fitHeight: true, maxBlockSize: 256, fitWidth: true, maxInlineSize: 384 },
 });
 
 useFloating(() => anchor, hintPanel, {
   placement: 'bottom-start',
-  offset: 4,
+  offset: FLOATING_OFFSET,
   enabled: hintShown,
   size: { fitWidth: true, maxInlineSize: 384 },
 });
 
 const choose = (entry: NuiListEntry): void => {
-  if (entry.value !== undefined) {
-    emit('choose', entry.value);
+  if (entry.value === undefined) {
+    return;
   }
+
+  emit('select', entry.value);
 };
 
 const hover = (event: PointerEvent): void => {
   const option = event.target instanceof Element ? event.target.closest('[role="option"]') : null;
 
-  if (option !== null) {
-    emit('hover', optionIndexOf(option));
+  if (option === null) {
+    return;
   }
+
+  emit('hover', optionIndexOf(option));
 };
 
 watch(

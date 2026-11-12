@@ -30,7 +30,7 @@
         @update:model-value="checkAll"
       />
       <NuiCheckbox
-        v-for="item in matches"
+        v-for="item in listed"
         :key="item.key"
         :model-value="kept.has(item.key)"
         :label="item.label"
@@ -38,6 +38,7 @@
       />
       <p v-if="matches.length === 0" class="nui-spreadsheet-pivot__hint">{{ texts.noMatches }}</p>
     </div>
+    <p v-if="note !== undefined" class="nui-spreadsheet-pivot__note">{{ note }}</p>
     <div class="nui-spreadsheet-pivot__footer">
       <NuiButton variant="ghost" tone="neutral" size="sm" @click="emit('cancel')">
         {{ texts.cancel }}
@@ -48,12 +49,14 @@
 </template>
 
 <script setup lang="ts">
-import { useMessages } from '@numior/primitives';
+import { foldText, useLocale, useMessages } from '@numior/primitives';
 import { NuiButton, NuiCheckbox, NuiInput, NuiRadioGroup, type NuiOption } from '@numior/vue';
 import { computed, onMounted, ref, shallowRef, useTemplateRef } from 'vue';
 import { PivotSort, pivotKey, type CellValue } from '../../core';
 import { spreadsheetPivotMessages } from './pivot-panel.messages';
 import type { PivotItemView, SheetPivotItemsProps } from './pivot-panel.types';
+
+const LISTED_ITEMS = 100;
 
 const { name, items, shown, sort } = defineProps<SheetPivotItemsProps>();
 
@@ -64,7 +67,11 @@ const emit = defineEmits<{
 
 const root = useTemplateRef<HTMLFormElement>('root');
 
+const locale = useLocale();
+
 const texts = useMessages(spreadsheetPivotMessages);
+
+const numbers = computed(() => new Intl.NumberFormat(locale.value));
 
 const query = ref('');
 
@@ -78,13 +85,26 @@ const sorts = computed((): NuiOption<PivotSort>[] => [
   { value: PivotSort.Manual, label: texts.value.sortManual },
 ]);
 
+const folded = computed(() => items.map((item) => foldText(item.label)));
+
 const matches = computed((): readonly PivotItemView[] => {
-  const needle = query.value.trim().toLocaleLowerCase();
+  const needle = foldText(query.value.trim());
 
   return needle === ''
     ? items
-    : items.filter((item) => item.label.toLocaleLowerCase().includes(needle));
+    : items.filter((_item, index) => folded.value[index]?.includes(needle) === true);
 });
+
+const listed = computed(() => matches.value.slice(0, LISTED_ITEMS));
+
+const note = computed(() =>
+  matches.value.length > LISTED_ITEMS
+    ? texts.value.itemsListed({
+        listed: numbers.value.format(LISTED_ITEMS),
+        total: numbers.value.format(matches.value.length),
+      })
+    : undefined,
+);
 
 const checkedCount = computed(() =>
   matches.value.reduce((count, item) => (kept.value.has(item.key) ? count + 1 : count), 0),
@@ -104,9 +124,11 @@ const keptValues = computed((): readonly CellValue[] =>
 );
 
 const setOrder = (next: PivotSort | null): void => {
-  if (next !== null) {
-    order.value = next;
+  if (next === null) {
+    return;
   }
+
+  order.value = next;
 };
 
 const checkItem = (item: PivotItemView, on: boolean): void => {

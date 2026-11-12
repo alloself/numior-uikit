@@ -45,8 +45,12 @@ export type WireWorkbookStep =
       readonly kind: typeof StepKind.SetLayout;
       readonly sheet: string;
       readonly layout: WireLayout;
+      readonly base?: WireLayout | undefined;
     }
-  | (Omit<PutPivotStep, 'layout'> & { readonly layout?: WireLayout | undefined })
+  | (Omit<PutPivotStep, 'layout' | 'base'> & {
+      readonly layout?: WireLayout | undefined;
+      readonly base?: WireLayout | undefined;
+    })
   | { readonly kind: typeof StepKind.Batch; readonly steps: readonly WireWorkbookStep[] };
 
 export interface StepCodec {

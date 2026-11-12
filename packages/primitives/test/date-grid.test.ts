@@ -35,6 +35,29 @@ describe('month grid', () => {
     expect(fixed[5]?.[6]).toBe('2027-03-14');
   });
 
+  it('leaves the cells past either end of the calendar empty', () => {
+    const last = monthGrid({ month: '9999-12', weekStart: 1, fixedWeeks: false });
+
+    expect(last).toHaveLength(5);
+
+    expect(last[4]).toEqual([
+      '9999-12-27',
+      '9999-12-28',
+      '9999-12-29',
+      '9999-12-30',
+      '9999-12-31',
+      null,
+      null,
+    ]);
+
+    expect(weekNumberOfRow(last[4] ?? [])).toBe(52);
+
+    const first = monthGrid({ month: '0100-01', weekStart: 1, fixedWeeks: true });
+
+    expect(first).toHaveLength(6);
+    expect(first[0]).toEqual([null, null, null, null, '0100-01-01', '0100-01-02', '0100-01-03']);
+  });
+
   it('numbers rows by the ISO week of their Thursday', () => {
     const rows = monthGrid({ month: '2027-01', weekStart: 1, fixedWeeks: false });
 

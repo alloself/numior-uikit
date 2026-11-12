@@ -6,6 +6,7 @@ import {
   onScopeDispose,
   ref,
   toValue,
+  watch,
   watchEffect,
   type ComputedRef,
   type InjectionKey,
@@ -108,7 +109,10 @@ const createColorScheme = (options: ColorSchemeOptions, run: StartRunner): Color
 
     watchEffect(() => {
       scopeElement()?.setAttribute('data-nui-theme', scheme.value);
-      writeStored(options.storageKey, scheme.value);
+    });
+
+    watch(scheme, (next) => {
+      writeStored(options.storageKey, next);
     });
   };
 
@@ -127,6 +131,10 @@ const createColorScheme = (options: ColorSchemeOptions, run: StartRunner): Color
     start,
     set: (next) => {
       start();
+
+      if (next === scheme.value) {
+        writeStored(options.storageKey, next);
+      }
       scheme.value = next;
     },
     toggle: () => {

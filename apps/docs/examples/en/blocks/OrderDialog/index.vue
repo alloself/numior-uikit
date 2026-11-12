@@ -6,7 +6,7 @@
         Open an order to change its status or refund it
       </p>
     </div>
-    <NuiList variant="bordered" label="This week's orders">
+    <NuiList variant="outline" label="This week's orders">
       <NuiListItem
         v-for="order in list"
         :key="order.id"
@@ -30,7 +30,7 @@
             <dd class="m-0 font-medium">{{ fact.value }}</dd>
           </div>
         </dl>
-        <NuiList variant="bordered" label="Order items">
+        <NuiList variant="outline" label="Order items">
           <NuiListItem
             v-for="line in current.lines"
             :key="line.sku"

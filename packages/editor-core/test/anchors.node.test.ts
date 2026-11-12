@@ -71,7 +71,7 @@ describe('comment anchors', () => {
     expect(editor.outline).toBe('paragraph("hello <woXrld>") divider paragraph("end")');
   });
 
-  it('shrinks with deleted text, keeps a lost anchor and follows remote edits and undo', () => {
+  it('shrinks with deleted text, grows back on undo, keeps a lost anchor and follows remote edits', () => {
     const editor = editing();
 
     editor.run(setAnchor('c1'));
@@ -87,7 +87,7 @@ describe('comment anchors', () => {
     editor.press('Mod-z');
 
     expect(editor.outline).toBe('paragraph("Hey, hello world") divider paragraph("end")');
-    expect(rangeOf(editor.state, 'c1')).toBe('rld');
+    expect(rangeOf(editor.state, 'c1')).toBe('world');
 
     editor.select(textSelection(10, 17));
     editor.backspace();

@@ -54,30 +54,33 @@
     transition: inline-size var(--nui-duration-normal) var(--nui-easing);
   }
   .nui-progress:indeterminate {
-    background-color: var(--_track);
-    background-image: linear-gradient(var(--_tone), var(--_tone));
-    background-repeat: no-repeat;
-    background-size: 40% 100%;
-    background-position: -67% 0;
+    direction: ltr;
+  }
+  .nui-progress:indeterminate::-webkit-progress-value {
+    min-inline-size: 40%;
+    border-radius: 0;
     animation: nui-progress-slide 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
     animation-play-state: var(--nui-animation-play-state, running);
   }
-  .nui-progress:indeterminate::-webkit-progress-bar {
-    background: transparent;
-  }
   .nui-progress:indeterminate::-moz-progress-bar {
-    background: transparent;
+    inline-size: 40%;
+    border-radius: 0;
+    animation: nui-progress-slide 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+    animation-play-state: var(--nui-animation-play-state, running);
   }
   @keyframes nui-progress-slide {
     from {
-      background-position: -67% 0;
+      translate: -100% 0;
     }
     to {
-      background-position: 167% 0;
+      translate: 250% 0;
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .nui-progress:indeterminate {
+    .nui-progress:indeterminate::-webkit-progress-value {
+      animation-duration: 3.2s;
+    }
+    .nui-progress:indeterminate::-moz-progress-bar {
       animation-duration: 3.2s;
     }
   }

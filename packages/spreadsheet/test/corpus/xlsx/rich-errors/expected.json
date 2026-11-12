@@ -1,0 +1,96 @@
+{
+  "kind": "editable",
+  "report": {
+    "staleFormulas": 4,
+    "items": []
+  },
+  "defaultFont": {
+    "size": 11,
+    "color": {
+      "kind": "theme",
+      "theme": 1,
+      "tint": 0
+    },
+    "name": "Calibri",
+    "family": 2,
+    "scheme": "minor"
+  },
+  "sheets": [
+    {
+      "name": "Лист1",
+      "cells": {
+        "A1": {
+          "value": {
+            "kind": "error",
+            "code": "#CALC!"
+          },
+          "formula": "SEQUENCE(0)",
+          "state": "imported"
+        },
+        "B1": {
+          "value": {
+            "kind": "error",
+            "code": "#CALC!"
+          },
+          "formula": "FILTER({1;2},{FALSE;FALSE})",
+          "state": "imported"
+        },
+        "C1": {
+          "value": {
+            "kind": "error",
+            "code": "#SPILL!"
+          },
+          "formula": "SEQUENCE(3)",
+          "state": "imported"
+        },
+        "D1": {
+          "value": {
+            "kind": "error",
+            "code": "#DIV/0!"
+          },
+          "formula": "1/0",
+          "state": "imported"
+        },
+        "C2": {
+          "value": {
+            "kind": "number",
+            "value": 5
+          }
+        }
+      },
+      "layout": {
+        "rows": {
+          "1": {
+            "custom": false,
+            "hidden": false,
+            "level": 0,
+            "collapsed": false,
+            "extra": [
+              [
+                "x14ac:dyDescent",
+                "0.25"
+              ]
+            ]
+          },
+          "2": {
+            "custom": false,
+            "hidden": false,
+            "level": 0,
+            "collapsed": false,
+            "extra": [
+              [
+                "x14ac:dyDescent",
+                "0.25"
+              ]
+            ]
+          }
+        },
+        "cols": {},
+        "merges": []
+      }
+    }
+  ],
+  "names": [],
+  "tables": [],
+  "externals": []
+}

@@ -17,8 +17,8 @@ const docs: DocsMap = {
         en: 'Lets several buttons be pressed. The values come in `v-model:values`.',
       },
       required: {
-        ru: 'Без `multiple` не даёт отжать нажатую кнопку, чтобы значение не стало пустым.',
-        en: 'Without `multiple`, keeps the pressed button from being released so the value never empties.',
+        ru: 'Не даёт отжать последнюю нажатую кнопку, чтобы значение не стало пустым. Работает и с `multiple`.',
+        en: 'Keeps the last pressed button from being released so the value never empties. Works with `multiple` too.',
       },
       variant: {
         ru: 'Оформление: `outline` — отдельные кнопки в рамке, `segmented` — кнопки одной полосой.',
@@ -32,7 +32,10 @@ const docs: DocsMap = {
         ru: 'Располагает кнопки в ряд или столбцом. В столбце работают стрелки вверх и вниз.',
         en: 'Lays out the buttons in a row or a column. A column uses the up and down arrows.',
       },
-      disabled: { ru: 'Отключает всю группу.', en: 'Disables the whole group.' },
+      disabled: {
+        ru: 'Отключает все кнопки группы: их нельзя нажать, и Tab их пропускает.',
+        en: 'Turns off every button of the group, so none can be pressed or reached with Tab.',
+      },
       iconOnly: {
         ru: 'Показывает только иконки. Подпись видна в подсказке при наведении и читается экранными дикторами.',
         en: 'Shows icons only. The label appears in a tooltip on hover and is read by screen readers.',

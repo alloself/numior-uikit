@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures';
 import { rgbDelta, type Rgb } from './helpers/color';
-import { boxOf, textBoxOf } from './helpers/geometry';
+import { boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
 const INCOME = 2;
@@ -55,7 +55,7 @@ test.describe('table cell styles', () => {
     expect(await sheet.lineAfter(SALES, 1)).toBe('1px');
     expect(await sheet.lineAfter(SALES, 0)).toBe('1px');
 
-    await sheet.borderedSwitch.click();
+    await sheet.gridlinesSwitch.click();
     await expect.poll(() => sheet.lineAfter(SALES, 1)).toBe('0px');
     expect(await sheet.lineAfter(SALES, 0)).toBe('1px');
   });
@@ -288,7 +288,7 @@ test.describe('table cell styles', () => {
     expect((await boxOf(sheet.cell(SALES, LAST_COLUMN))).height).toBeCloseTo(3 * ROW, 3);
     expect(await sheet.middleGap(SALES, LAST_COLUMN)).toBeLessThan(1.5);
     expect(await sheet.middleGap(COSTS, LAST_COLUMN)).toBeLessThan(1.5);
-    expect((await textBoxOf(sheet.text(COSTS, LAST_COLUMN))).height).toBeGreaterThan(ROW);
+    expect(await sheet.textLines(COSTS, LAST_COLUMN)).toBeGreaterThan(1);
     expect(await sheet.boxHeights()).toEqual([44, ROW]);
   });
 

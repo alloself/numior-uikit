@@ -1,4 +1,10 @@
-import type { NuiTableCellStyle, NuiTableRange, NuiTableSourceCell } from '@numior/table';
+import type {
+  NuiTableCellStyle,
+  NuiTableEdgeDirection,
+  NuiTableRange,
+  NuiTableSourceCell,
+  NuiTableCellPosition,
+} from '@numior/table';
 import {
   EN_LOCALE,
   MAX_COLS,
@@ -6,6 +12,8 @@ import {
   columnName,
   formatValue,
   type BookLocale,
+  type CellAddress,
+  type CellRange,
   type CellValue,
   type LineLayouts,
   type Sheet,
@@ -23,7 +31,26 @@ import type { LineSizes } from './drawings/drawings.types';
 import type { SheetCells, SheetCellsOptions, StyleCache, ValueShape } from './sheet.types';
 import { CellValueKind } from '../core/cell.types';
 
+interface EdgeStep {
+  readonly row: -1 | 0 | 1;
+  readonly col: -1 | 0 | 1;
+}
+
+interface ShownMerges {
+  readonly ranges: NuiTableRange[];
+  readonly anchors: Map<number, CellAddress>;
+}
+
+const EDGE_STEPS: Readonly<Record<NuiTableEdgeDirection, EdgeStep>> = {
+  up: { row: -1, col: 0 },
+  down: { row: 1, col: 0 },
+  previous: { row: 0, col: -1 },
+  next: { row: 0, col: 1 },
+};
+
 const MDW = 7;
+
+const WIDTH_STEPS = 256;
 
 const DEFAULT_COLUMN = 64;
 
@@ -42,15 +69,22 @@ const SHAPES: Readonly<Record<CellValue['kind'], ValueShape>> = {
 export const charsToPixels = (chars: number): number =>
   Math.trunc(((256 * chars + Math.trunc(128 / MDW)) / 256) * MDW);
 
+export const pixelsToChars = (pixels: number): number =>
+  Math.round((pixels / MDW) * WIDTH_STEPS) / WIDTH_STEPS;
+
 export const pointsToPixels = (points: number): number => Math.round(points * POINT);
+
+export const pixelsToPoints = (pixels: number): number => (pixels * 72) / 96;
 
 const hiddenLines = (lines: LineLayouts): number[] => {
   const hidden: number[] = [];
 
   lines.forEach((line, layout) => {
-    if (layout.hidden) {
-      hidden.push(line);
+    if (!layout.hidden) {
+      return;
     }
+
+    hidden.push(line);
   });
 
   return hidden;
@@ -100,18 +134,28 @@ const lastShown = (index: LineIndex, from: number, to: number): number | undefin
   return undefined;
 };
 
-const mergesOf = (sheet: Sheet, rows: LineIndex, cols: LineIndex): NuiTableRange[] =>
-  sheet.layout.merges.reduce<NuiTableRange[]>((found, merge) => {
-    const top = firstShown(rows, merge.top, merge.bottom);
-    const left = firstShown(cols, merge.left, merge.right);
-    const bottom = lastShown(rows, merge.top, merge.bottom);
-    const right = lastShown(cols, merge.left, merge.right);
+const shownKey = (position: number, column: number): number => position * MAX_COLS + column;
 
-    if (top !== undefined && left !== undefined && bottom !== undefined && right !== undefined) {
-      found.push({ from: { row: top, col: left }, to: { row: bottom, col: right } });
-    }
-    return found;
-  }, []);
+const mergesOf = (sheet: Sheet, rows: LineIndex, cols: LineIndex): ShownMerges =>
+  sheet.layout.merges.reduce<ShownMerges>(
+    (found, merge) => {
+      const top = firstShown(rows, merge.top, merge.bottom);
+      const left = firstShown(cols, merge.left, merge.right);
+      const bottom = lastShown(rows, merge.top, merge.bottom);
+      const right = lastShown(cols, merge.left, merge.right);
+
+      if (top === undefined || left === undefined || bottom === undefined || right === undefined) {
+        return found;
+      }
+      found.ranges.push({ from: { row: top, col: left }, to: { row: bottom, col: right } });
+
+      if (rows.lineAt(top) !== merge.top || cols.lineAt(left) !== merge.left) {
+        found.anchors.set(shownKey(top, left), { row: merge.top, col: merge.left });
+      }
+      return found;
+    },
+    { ranges: [], anchors: new Map() },
+  );
 
 const frozenOf = (index: LineIndex, count: number): number =>
   count <= 0 ? 0 : (index.positionOf(count - 1) ?? firstShown(index, 0, count - 1) ?? -1) + 1;
@@ -122,9 +166,11 @@ const rowHeightsOf = (sheet: Sheet, rows: LineIndex): Record<number, number> => 
   sheet.layout.rows.forEach((row, layout) => {
     const position = rows.positionOf(row);
 
-    if (position !== undefined && layout.size !== undefined) {
-      heights[position] = pointsToPixels(layout.size);
+    if (position === undefined || layout.size === undefined) {
+      return;
     }
+
+    heights[position] = pointsToPixels(layout.size);
   });
 
   return heights;
@@ -235,10 +281,47 @@ export const sheetCells = ({
   const stale = createStale();
   const looks = createConditionalLooks(book, sheet, calculator);
   const { view } = sheet.layout;
+  const merges = mergesOf(sheet, rows, cols);
 
-  const cellAt = (position: number, column: number): NuiTableSourceCell | undefined => {
-    const row = rows.lineAt(position);
-    const col = cols.lineAt(column);
+  const anchorAt = (position: number, column: number): CellAddress | undefined =>
+    merges.anchors.size === 0 ? undefined : merges.anchors.get(shownKey(position, column));
+
+  const cellOf = (position: number, column: number): CellAddress =>
+    anchorAt(position, column) ?? { row: rows.lineAt(position), col: cols.lineAt(column) };
+
+  const rangeOf = (range: NuiTableRange): CellRange => {
+    const top = Math.min(range.from.row, range.to.row);
+    const bottom = Math.max(range.from.row, range.to.row);
+    const left = Math.min(range.from.col, range.to.col);
+    const right = Math.max(range.from.col, range.to.col);
+
+    const lines: CellRange = {
+      top: rows.lineAt(top),
+      left: cols.lineAt(left),
+      bottom: rows.lineAt(bottom),
+      right: cols.lineAt(right),
+    };
+
+    return merges.ranges.reduce((grown, merge) => {
+      const anchor = anchorAt(merge.from.row, merge.from.col);
+
+      const inside =
+        merge.from.row >= top &&
+        merge.from.row <= bottom &&
+        merge.from.col >= left &&
+        merge.from.col <= right;
+
+      return anchor === undefined || !inside
+        ? grown
+        : {
+            ...grown,
+            top: Math.min(grown.top, anchor.row),
+            left: Math.min(grown.left, anchor.col),
+          };
+    }, lines);
+  };
+
+  const lookAt = (row: number, col: number): NuiTableSourceCell | undefined => {
     const value = sheet.cells.get(row, col);
     const decoration = decorationAt(sheet, row, col);
     const look = looks(row, col);
@@ -258,21 +341,73 @@ export const sheetCells = ({
     };
   };
 
+  const cellAt = (position: number, column: number): NuiTableSourceCell | undefined => {
+    const anchor = anchorAt(position, column);
+
+    return lookAt(anchor?.row ?? rows.lineAt(position), anchor?.col ?? cols.lineAt(column));
+  };
+
+  const textAt = (position: number, column: number): string => {
+    const { row, col } = cellOf(position, column);
+    const value = sheet.cells.get(row, col);
+    const look = looks(row, col);
+
+    if (value.kind === CellValueKind.Empty || look?.hideValue === true) {
+      return '';
+    }
+
+    const code = look?.style?.format ?? book.formats.code(formatAt(sheet, row, col));
+
+    return formatValue(value, code, locale.numbers).text;
+  };
+
+  const nextEdge = (
+    from: NuiTableCellPosition,
+    direction: NuiTableEdgeDirection,
+  ): NuiTableCellPosition => {
+    const step = EDGE_STEPS[direction];
+
+    const edge = sheet.cells.nextEdge(
+      rows.lineAt(from.row),
+      cols.lineAt(from.col),
+      step.row,
+      step.col,
+    );
+
+    return step.row === 0
+      ? { row: from.row, col: cols.positionNear(edge) }
+      : { row: rows.positionNear(edge), col: from.col };
+  };
+
+  const lastCell = (): NuiTableCellPosition | undefined => {
+    const used = sheet.cells.usedRange();
+
+    return used === undefined
+      ? undefined
+      : { row: rows.positionNear(used.bottom), col: cols.positionNear(used.right) };
+  };
+
   return {
     source: {
       rows: rows.count,
       cols: cols.count,
       cellAt,
+      nextEdge,
+      lastCell,
       columnWidth: (column) => columnWidthOf(sheet, cols.lineAt(column)),
       rowLabel: (position) => String(rows.lineAt(position) + 1),
       columnLabel: (column) => columnName(cols.lineAt(column)),
     },
-    merges: mergesOf(sheet, rows, cols),
+    merges: merges.ranges,
     frozenRows: frozenOf(rows, view.frozenRows),
     frozenCols: frozenOf(cols, view.frozenCols),
     rowHeights: rowHeightsOf(sheet, rows),
     gridlines: view.gridlines,
     rightToLeft: view.rightToLeft,
+    textAt,
+    lookAt,
+    cellOf,
+    rangeOf,
     rowAt: rows.lineAt,
     colAt: cols.lineAt,
     rowNear: rows.positionNear,

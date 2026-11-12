@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures';
 import { expectRgb } from './helpers/color';
-import { boxOf } from './helpers/geometry';
+import { boxOf, gapBetween } from './helpers/geometry';
 
 test.describe('layers', () => {
   test('dialog opens modally, traps focus, closes on Escape and restores focus', async ({
@@ -117,6 +117,12 @@ test.describe('layers', () => {
     await overlays.clickBackdrop();
     await expect(overlays.persistentDialog).toBeVisible();
 
+    await overlays.pressEscape();
+    await overlays.pressEscape();
+    await overlays.pressEscape();
+
+    await expect(overlays.persistentDialog).toBeVisible();
+
     await overlays.persistentClose.click();
     await expect(overlays.persistentDialog).toBeHidden();
   });
@@ -216,6 +222,28 @@ test.describe('layers', () => {
     await expect.poll(async () => (await overlays.readOutput()).popoverOpen).toBe(false);
   });
 
+  test('a popover stands as far from its trigger as a menu and steps back for its arrow', async ({
+    playground,
+    overlays,
+    navigation,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+
+    const arrowed = await overlays.popoverGap();
+
+    await overlays.popoverArrow.click();
+
+    const plain = await overlays.popoverGap();
+
+    await navigation.menuTrigger.click();
+    await expect(navigation.menu).toBeVisible();
+
+    expect(plain).toBe(await gapBetween(navigation.menuTrigger, navigation.menu));
+    expect(plain).toBe(4);
+    expect(arrowed).toBe(8);
+  });
+
   test('popover content follows the trigger in the tab order', async ({
     playground,
     overlays,
@@ -231,6 +259,33 @@ test.describe('layers', () => {
 
     await page.keyboard.press('Tab');
     await expect(overlays.popoverInput).toBeFocused();
+  });
+
+  test('tooltip shows the keys of its action level with the text and as tall as a plain one', async ({
+    playground,
+    overlays,
+    chrome,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'tooltips stay hidden on touch');
+
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await overlays.tooltipTrigger.focus();
+
+    const plain = await boxOf(overlays.tooltip);
+
+    await overlays.keysTooltipTrigger.focus();
+
+    await expect(overlays.keysTooltip).toBeVisible();
+
+    expect(await overlays.tooltipKeys()).toEqual(
+      (await chrome.isApplePlatform()) ? ['⇧', '⌘', 'C'] : ['Ctrl', 'Shift', 'C'],
+    );
+
+    expect(await overlays.tooltipKeysSkew()).toBeLessThanOrEqual(1);
+    expect((await boxOf(overlays.keysTooltip)).height).toBe(plain.height);
+    await expect(overlays.keysTooltipTrigger).toHaveAccessibleDescription(/^Скопировать ссылку/);
   });
 
   test('tooltip appears on hover and focus, hides on leave and Escape, ignores touch', async ({

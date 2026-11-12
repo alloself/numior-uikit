@@ -92,15 +92,19 @@ const groupName = computed(() => {
 const checkboxElement = useTemplateRef<HTMLInputElement>('checkbox');
 
 watchPostEffect(() => {
-  if (checkboxElement.value) {
-    checkboxElement.value.indeterminate = indeterminate;
+  if (!checkboxElement.value) {
+    return;
   }
+
+  checkboxElement.value.indeterminate = indeterminate;
 });
 
 const onClick = (event: MouseEvent): void => {
-  if (isReadonly.value) {
-    event.preventDefault();
+  if (!isReadonly.value) {
+    return;
   }
+
+  event.preventDefault();
 };
 
 const onChange = (): void => {
@@ -111,9 +115,12 @@ const onChange = (): void => {
   model.value = element.checked;
 
   void nextTick(() => {
-    if (checkboxElement.value) {
-      checkboxElement.value.checked = model.value;
+    if (!checkboxElement.value) {
+      return;
     }
+
+    checkboxElement.value.checked = model.value;
+    checkboxElement.value.indeterminate = indeterminate;
   });
 };
 </script>

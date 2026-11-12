@@ -1,4 +1,5 @@
 import type { NodeId } from '../model/node.types';
+import type { Ghost } from './ghosts';
 
 export type AnchorRange =
   | { readonly kind: typeof AnchorRangeKind.Text; readonly from: number; readonly to: number }
@@ -13,6 +14,8 @@ export interface Anchor {
 export interface AnchorsState {
   readonly anchors: ReadonlyMap<string, Anchor>;
   readonly active: string | undefined;
+  readonly ghosts: readonly Ghost[];
+  readonly cuts: number;
 }
 
 export type AnchorJSON =

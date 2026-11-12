@@ -139,6 +139,7 @@ const messages = useMessages(numberFieldMessages, locale);
 const incrementText = computed(() => incrementLabel ?? messages.value.increment);
 const decrementText = computed(() => decrementLabel ?? messages.value.decrement);
 const options = computed(() => withStepPrecision(formatOptions, step));
+const formatKey = computed(() => JSON.stringify([locale.value, options.value]));
 const symbols = computed(() => numberSymbols(locale.value, options.value));
 const format = (value: number | null): string => formatNumber(value, locale.value, options.value);
 const parse = (text: string): number | null => parseNumber(text, locale.value, options.value);
@@ -160,12 +161,14 @@ const canDecrement = computed(
 );
 
 watch(model, (value) => {
-  if (parse(draft.value) !== value) {
-    draft.value = format(value);
+  if (parse(draft.value) === value) {
+    return;
   }
+
+  draft.value = format(value);
 });
 
-watch([locale, options], () => {
+watch(formatKey, () => {
   draft.value = format(model.value);
 });
 
@@ -175,6 +178,9 @@ const apply = (value: number | null): void => {
 };
 
 const commit = (): void => {
+  if (draft.value === valueText.value) {
+    return;
+  }
   const parsed = parse(draft.value);
   if (parsed === null) {
     apply(null);
@@ -195,18 +201,22 @@ const stepBy = (steps: number): void => {
 
 const onInput = (): void => {
   const element = inputElement.value;
-  if (element) {
-    draft.value = element.value;
+  if (!element) {
+    return;
   }
+
+  draft.value = element.value;
 };
 
 const onBeforeinput = (event: InputEvent): void => {
   const inserting =
     event.inputType.startsWith('insert') && !event.inputType.includes('Composition');
 
-  if (inserting && event.data !== null && !isPartialNumber(event.data, symbols.value)) {
-    event.preventDefault();
+  if (!inserting || event.data === null || isPartialNumber(event.data, symbols.value)) {
+    return;
   }
+
+  event.preventDefault();
 };
 
 const onKeydown = (event: KeyboardEvent): void => {

@@ -32,6 +32,10 @@ export interface StackItemView {
 
 type ToasterSceneWrapper = VueWrapper<InstanceType<typeof ToasterScene>>;
 
+const REST: PointerEventInit = { clientX: 40, clientY: 40, pointerType: 'mouse' };
+
+const AWAY: PointerEventInit = { clientX: 400, clientY: 300, pointerType: 'mouse' };
+
 const readItem = (item: DOMWrapper<HTMLElement>): StackItemView => ({
   index: Number(item.element.style.getPropertyValue('--_index')),
   behind: item.classes().includes('nui-toaster__item--behind'),
@@ -175,6 +179,10 @@ export class ToasterDriver extends ComponentDriver {
     return this.stubs.popoverCalls;
   }
 
+  get outsideFocused(): boolean {
+    return document.activeElement === this.wrapper.find('.outside').element;
+  }
+
   get customToasts(): string[] {
     return this.wrapper.findAll('.custom-toast').map((toast) => toast.text());
   }
@@ -191,12 +199,44 @@ export class ToasterDriver extends ComponentDriver {
     return this.service.error(title, options);
   }
 
+  async focusOutside(): Promise<void> {
+    this.wrapper.find<HTMLElement>('.outside').element.focus();
+    await nextTick();
+  }
+
+  async clear(): Promise<void> {
+    this.service.clear();
+    await nextTick();
+  }
+
   async hoverStack(): Promise<void> {
     await this.region.trigger('pointerenter');
   }
 
   async leaveStack(): Promise<void> {
     await this.region.trigger('pointerleave');
+  }
+
+  get stackOpen(): boolean {
+    return this.region.classes().includes('nui-toaster--hovered');
+  }
+
+  async restOnStack(): Promise<void> {
+    this.region.element.dispatchEvent(new PointerEvent('pointerenter', REST));
+    await nextTick();
+  }
+
+  async loseWhatIsUnderThePointer(): Promise<void> {
+    this.region.element.dispatchEvent(new PointerEvent('pointerleave', REST));
+    await nextTick();
+  }
+
+  async movePointerAway(): Promise<void> {
+    this.wrapper
+      .find('.outside')
+      .element.dispatchEvent(new PointerEvent('pointermove', { ...AWAY, bubbles: true }));
+
+    await nextTick();
   }
 
   async dismissCustom(index: number): Promise<void> {

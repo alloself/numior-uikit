@@ -312,7 +312,7 @@ export const EN_FUNCTION_HELP: FunctionHelpCatalog = {
   },
   INDEX: {
     summary: 'Returns the value at a row and column of a range.',
-    args: ['array', 'row_num', 'column_num'],
+    args: ['array', 'row_num', 'column_num', 'area_num'],
   },
   LOOKUP: {
     summary: 'Looks up a value in one range and returns it from another.',
@@ -325,6 +325,7 @@ export const EN_FUNCTION_HELP: FunctionHelpCatalog = {
   ROW: { summary: 'Returns the row number of a reference.', args: ['reference'] },
   COLUMN: { summary: 'Returns the column number of a reference.', args: ['reference'] },
   ROWS: { summary: 'Returns the number of rows in a range.', args: ['array'] },
+  AREAS: { summary: 'Returns the number of areas in a reference.', args: ['reference'] },
   COLUMNS: { summary: 'Returns the number of columns in a range.', args: ['array'] },
   ADDRESS: {
     summary: 'Returns a cell address as text.',

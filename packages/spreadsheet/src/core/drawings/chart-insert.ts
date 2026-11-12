@@ -59,14 +59,16 @@ const filledPart = (cells: CellStore, range: CellRange): CellRange | undefined =
   let filled: CellRange | undefined;
 
   cells.forEachInRange(range, (row, col, value) => {
-    if (value.kind !== CellValueKind.Empty) {
-      filled = {
-        top: Math.min(filled?.top ?? row, row),
-        left: Math.min(filled?.left ?? col, col),
-        bottom: Math.max(filled?.bottom ?? row, row),
-        right: Math.max(filled?.right ?? col, col),
-      };
+    if (value.kind === CellValueKind.Empty) {
+      return;
     }
+
+    filled = {
+      top: Math.min(filled?.top ?? row, row),
+      left: Math.min(filled?.left ?? col, col),
+      bottom: Math.max(filled?.bottom ?? row, row),
+      right: Math.max(filled?.right ?? col, col),
+    };
   });
 
   return filled;
@@ -77,10 +79,12 @@ const gridOf = (cells: CellStore, sheet: string, range: CellRange): ChartGrid | 
   let left = Number.POSITIVE_INFINITY;
 
   cells.forEachInRange(range, (row, col, value) => {
-    if (value.kind === CellValueKind.Number) {
-      top = Math.min(top, row);
-      left = Math.min(left, col);
+    if (value.kind !== CellValueKind.Number) {
+      return;
     }
+
+    top = Math.min(top, row);
+    left = Math.min(left, col);
   });
 
   return top === Number.POSITIVE_INFINITY

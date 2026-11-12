@@ -1,14 +1,24 @@
-import { MAX_COLS, MAX_ROWS } from '../address';
+import { maxBy } from 'lodash-es';
+import { MAX_COLS, MAX_ROWS, containsCell } from '../address';
 import type { Calculator } from '../calc/calculator';
 import type { CellContent } from '../calc/calc.types';
 import { CellInputKind, CellValueKind, type CellAddress, type CellRange } from '../cell.types';
 import type { CellDecoration } from '../decorations';
 import { parseNumberFormat } from '../format/format-code';
 import { SectionKind } from '../format/format.types';
-import { absoluteFormula, relativeFormula } from '../formula/origin';
+import { followMove, type BlockMove, type FormulaSite } from '../formula/follow-move';
 import { numberValue, textValue } from '../values';
 import type { Sheet, Workbook } from '../workbook';
 import { FillMode, type CellClip, type CellClips, type ClipPaste } from './clip.types';
+import {
+  batched,
+  mergesMeeting,
+  mergesStep,
+  outsideCovered,
+  rangeHolds,
+  rangesMeet,
+  shiftedRange,
+} from './clip-merges';
 import { cellContentsIn, cellKey } from './contents';
 import type { CellEdit, WorkbookStep } from './step.types';
 
@@ -137,7 +147,7 @@ const textSeries = (lane: Lane): Series | undefined => {
     return undefined;
   }
 
-  const width = Math.max(...parts.map((part) => part.digits.length));
+  const width = maxBy(parts, (part) => part.digits.length)?.digits.length ?? 0;
   const numbers = parts.map((part) => Number(part.digits));
   const trend = numbers.length === 1 ? { base: numbers[0] ?? 0, step: 1 } : trendOf(numbers);
 
@@ -212,10 +222,54 @@ const tiledArea = (clip: CellClip, target: CellRange): CellRange => {
   };
 };
 
-const placedContent = (content: CellContent | undefined, from: CellAddress, to: CellAddress) =>
+const isOneCell = (clip: CellClip): boolean =>
+  clip.rows === 1 && clip.cols === 1 && clip.merges.length === 0;
+
+const stepsOf = (step: WorkbookStep | undefined): WorkbookStep[] =>
+  step === undefined ? [] : [step];
+
+const placedContent = (
+  content: CellContent | undefined,
+  move: BlockMove,
+  from: FormulaSite,
+  to: FormulaSite,
+) =>
   content?.kind === CellInputKind.Formula
-    ? { kind: content.kind, ast: relativeFormula(absoluteFormula(content.ast, from), to) }
+    ? { kind: content.kind, ast: followMove(content.ast, move, from, to) }
     : content;
+
+const tiledMerges = (clip: CellClip, area: CellRange): CellRange[] => {
+  const placed: CellRange[] = [];
+
+  for (let top = area.top; top <= area.bottom; top += clip.rows) {
+    for (let left = area.left; left <= area.right; left += clip.cols) {
+      for (const merge of clip.merges) {
+        placed.push(shiftedRange(merge, top, left));
+      }
+    }
+  }
+  return placed;
+};
+
+const movedMerges = (
+  from: Sheet,
+  sourceArea: CellRange,
+  sheet: Sheet,
+  area: CellRange,
+  clip: CellClip,
+): WorkbookStep[] => {
+  const left = from.layout.merges.filter((merge) => !rangeHolds(sourceArea, merge));
+  const carried = clip.merges.map((merge) => shiftedRange(merge, area.top, area.left));
+
+  const kept = (from === sheet ? left : sheet.layout.merges).filter(
+    (merge) => !rangesMeet(merge, area),
+  );
+
+  return [
+    ...(from === sheet ? [] : stepsOf(mergesStep(from, left))),
+    ...stepsOf(mergesStep(sheet, [...kept, ...carried])),
+  ];
+};
 
 export const createCellClips = (book: Workbook, calculator: Calculator): CellClips => {
   const blank = book.decorations.get(0);
@@ -264,6 +318,12 @@ export const createCellClips = (book: Workbook, calculator: Calculator): CellCli
       rows: heightOf(range),
       cols: widthOf(range),
       cells,
+      merges: sheet.layout.merges.reduce<CellRange[]>((carried, merge) => {
+        if (rangeHolds(range, merge)) {
+          carried.push(shiftedRange(merge, -range.top, -range.left));
+        }
+        return carried;
+      }, []),
     };
   };
 
@@ -293,10 +353,28 @@ export const createCellClips = (book: Workbook, calculator: Calculator): CellCli
     if (sheet === undefined || !inSheet(area)) {
       return undefined;
     }
-    return {
-      step: { kind: 'setCells', sheet: name, cells: [...pasteEdits(sheet, clip, area).values()] },
-      area,
-    };
+
+    const met = mergesMeeting(sheet, area);
+    const edits = [...pasteEdits(sheet, clip, area).values()];
+
+    if (isOneCell(clip)) {
+      return {
+        step: { kind: 'setCells', sheet: name, cells: outsideCovered(met, edits) },
+        area,
+      };
+    }
+
+    const merges = [
+      ...sheet.layout.merges.filter((merge) => !met.includes(merge)),
+      ...tiledMerges(clip, area),
+    ];
+
+    const step = batched([
+      ...stepsOf(mergesStep(sheet, merges)),
+      { kind: 'setCells', sheet: name, cells: edits },
+    ]);
+
+    return step === undefined ? undefined : { step, area };
   };
 
   const move = (name: string, clip: CellClip, at: CellAddress): ClipPaste | undefined => {
@@ -314,18 +392,6 @@ export const createCellClips = (book: Workbook, calculator: Calculator): CellCli
       return undefined;
     }
 
-    const placed: CellClip = {
-      ...clip,
-      cells: clip.cells.map((cell) => ({
-        ...cell,
-        content: placedContent(
-          cell.content,
-          { row: clip.origin.row + cell.row, col: clip.origin.col + cell.col },
-          { row: at.row + cell.row, col: at.col + cell.col },
-        ),
-      })),
-    };
-
     const sourceArea: CellRange = {
       top: clip.origin.row,
       left: clip.origin.col,
@@ -333,24 +399,71 @@ export const createCellClips = (book: Workbook, calculator: Calculator): CellCli
       right: clip.origin.col + clip.cols - 1,
     };
 
+    const carried: BlockMove = {
+      from: from.name,
+      area: sourceArea,
+      to: sheet.name,
+      rows: at.row - clip.origin.row,
+      cols: at.col - clip.origin.col,
+    };
+
+    const placed: CellClip = {
+      ...clip,
+      cells: clip.cells.map((cell) => ({
+        ...cell,
+        content: placedContent(
+          cell.content,
+          carried,
+          {
+            sheet: from.name,
+            origin: { row: clip.origin.row + cell.row, col: clip.origin.col + cell.col },
+          },
+          { sheet: sheet.name, origin: { row: at.row + cell.row, col: at.col + cell.col } },
+        ),
+      })),
+    };
+
     const sources = [...cellContentsIn(book, calculator, from, sourceArea).values()].map((cell) =>
       cleared(cell.row, cell.col),
     );
 
-    const targets = [...pasteEdits(sheet, placed, area).values()];
+    const edits = new Map<Sheet, CellEdit[]>([
+      [from, sources],
+      [sheet, [...(from === sheet ? sources : []), ...pasteEdits(sheet, placed, area).values()]],
+    ]);
 
-    const step: WorkbookStep =
-      from === sheet
-        ? { kind: 'setCells', sheet: name, cells: [...sources, ...targets] }
-        : {
-            kind: 'batch',
-            steps: [
-              { kind: 'setCells', sheet: from.name, cells: sources },
-              { kind: 'setCells', sheet: name, cells: targets },
-            ],
-          };
+    calculator.forEachFormula((owner, row, col, ast) => {
+      if (
+        (owner === from && containsCell(sourceArea, row, col)) ||
+        (owner === sheet && containsCell(area, row, col))
+      ) {
+        return;
+      }
+      const followed = followMove(ast, carried, { sheet: owner.name, origin: { row, col } });
 
-    return { step, area };
+      if (followed === ast) {
+        return;
+      }
+
+      const known = edits.get(owner) ?? [];
+
+      known.push({ row, col, content: { kind: 'formula', ast: followed } });
+      edits.set(owner, known);
+    });
+
+    const step = batched(
+      [...edits].reduce<WorkbookStep[]>(
+        (found, [owner, cells]) => {
+          if (cells.length > 0) {
+            found.push({ kind: 'setCells', sheet: owner.name, cells });
+          }
+          return found;
+        },
+        movedMerges(from, sourceArea, sheet, area, clip),
+      ),
+    );
+
+    return step === undefined ? undefined : { step, area };
   };
 
   const laneOf = (sheet: Sheet, cells: readonly CellAddress[]): Lane => ({
@@ -391,7 +504,12 @@ export const createCellClips = (book: Workbook, calculator: Calculator): CellCli
     const sheet = sheetNamed(name);
     const plan = fillPlan(source, target);
 
-    if (sheet === undefined || plan === undefined || !inSheet(target)) {
+    if (
+      sheet === undefined ||
+      plan === undefined ||
+      !inSheet(target) ||
+      mergesMeeting(sheet, target).length > 0
+    ) {
       return undefined;
     }
     return {
@@ -414,9 +532,11 @@ export const createCellClips = (book: Workbook, calculator: Calculator): CellCli
 
     for (const range of ranges) {
       for (const cell of cellContentsIn(book, calculator, sheet, range).values()) {
-        if (cell.content?.kind !== CellInputKind.Empty) {
-          edits.set(cellKey(cell.row, cell.col), { row: cell.row, col: cell.col, content: EMPTY });
+        if (cell.content?.kind === CellInputKind.Empty) {
+          continue;
         }
+
+        edits.set(cellKey(cell.row, cell.col), { row: cell.row, col: cell.col, content: EMPTY });
       }
     }
     return edits.size === 0

@@ -22,6 +22,7 @@ const mountDialog = (options: DialogOptions) => {
 
   const { attrs } = capture.value;
   capture.second.addEventListener('cancel', attrs.onCancel);
+  capture.second.addEventListener('keydown', attrs.onKeydown);
   capture.second.addEventListener('close', attrs.onClose);
   capture.second.addEventListener('pointerdown', attrs.onPointerdown);
   capture.second.addEventListener('click', attrs.onClick);
@@ -31,6 +32,13 @@ const mountDialog = (options: DialogOptions) => {
 const press = (dialog: HTMLElement, clientX: number) => {
   dialog.dispatchEvent(new PointerEvent('pointerdown', { clientX, clientY: 0, bubbles: true }));
   dialog.dispatchEvent(new MouseEvent('click', { clientX, clientY: 0, bubbles: true }));
+};
+
+const pressKey = (target: HTMLElement, key: string): boolean => {
+  const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+
+  target.dispatchEvent(event);
+  return event.defaultPrevented;
 };
 
 const ROOT_METRICS = ['scrollHeight', 'clientHeight', 'getBoundingClientRect'] as const;
@@ -218,9 +226,9 @@ describe('useDialog', () => {
     capture.unmount();
   });
 
-  it('blocks Escape only when not dismissible', () => {
-    const dismissible = ref(true);
-    const capture = mountDialog({ open: ref(true), dismissible });
+  it('blocks Escape only when not closable', () => {
+    const closable = ref(true);
+    const capture = mountDialog({ open: ref(true), closable });
 
     const cancel = () => {
       const event = new Event('cancel', { cancelable: true });
@@ -230,8 +238,26 @@ describe('useDialog', () => {
 
     expect(cancel()).toBe(false);
 
-    dismissible.value = false;
+    closable.value = false;
     expect(cancel()).toBe(true);
+
+    capture.unmount();
+  });
+
+  it('keeps the Escape key from reaching the browser while not closable', () => {
+    const closable = ref(false);
+    const capture = mountDialog({ open: ref(true), closable });
+    const inner = document.createElement('dialog');
+
+    capture.second.append(inner);
+
+    expect(pressKey(capture.second, 'Escape')).toBe(true);
+    expect(pressKey(capture.second, 'Enter')).toBe(false);
+    expect(pressKey(inner, 'Escape')).toBe(false);
+
+    closable.value = true;
+
+    expect(pressKey(capture.second, 'Escape')).toBe(false);
 
     capture.unmount();
   });

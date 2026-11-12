@@ -36,9 +36,11 @@ export const parseBlocks = (css: string): ReferenceBlock[] => {
     if (part !== undefined) {
       draft.parts.add(part.slice(2));
     }
-    if (modifier !== undefined) {
-      draft.modifiers.add(`${part === undefined ? '' : part}${modifier}`.replace(/^--/, ''));
+    if (modifier === undefined) {
+      continue;
     }
+
+    draft.modifiers.add(`${part === undefined ? '' : part}${modifier}`.replace(/^--/, ''));
   }
   return [...drafts.entries()]
     .toSorted(([a], [b]) => a.localeCompare(b))

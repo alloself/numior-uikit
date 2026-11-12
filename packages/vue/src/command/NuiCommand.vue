@@ -20,6 +20,7 @@
         :aria-activedescendant="navigation.activeId.value"
         :aria-label="texts.label"
         :placeholder="texts.placeholder"
+        :autofocus="autofocus"
         :value="query"
         @input="onInput"
         @keydown="onKeydown"
@@ -56,12 +57,11 @@
 
 <script setup lang="ts" generic="T">
 import { computed, onMounted, shallowRef, useTemplateRef, watch } from 'vue';
-import { Key, useControlId, useListNavigation, useMessages } from '@numior/primitives';
+import { Key, useControlId, useListNavigation, useMessages, isComposing } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
 import { provideListItems } from '../list/list-context';
 import { createListItems } from '../list/list-items';
-import { isComposing } from '../shared/composition';
 import {
   defaultOptionKey,
   filterOptions,
@@ -150,10 +150,12 @@ const activateFirst = (): void => {
 };
 
 const onInput = (event: Event): void => {
-  if (event.target instanceof HTMLInputElement) {
-    query.value = event.target.value;
-    emit('search', event.target.value);
+  if (!(event.target instanceof HTMLInputElement)) {
+    return;
   }
+
+  query.value = event.target.value;
+  emit('search', event.target.value);
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
@@ -162,18 +164,22 @@ const onKeydown = (event: KeyboardEvent): void => {
   }
   navigation.onKeydown(event);
 
-  if (event.key === Key.Enter && !event.defaultPrevented) {
-    event.preventDefault();
-    navigation.activeElement()?.click();
+  if (event.key !== Key.Enter || event.defaultPrevented) {
+    return;
   }
+
+  event.preventDefault();
+  navigation.activeElement()?.click();
 };
 
 const activateHovered = (event: PointerEvent): void => {
   const option = navigation.itemFrom(event.target);
 
-  if (option !== null && option !== navigation.activeElement()) {
-    navigation.setActive(option, { focus: false });
+  if (option === null || option === navigation.activeElement()) {
+    return;
   }
+
+  navigation.setActive(option, { focus: false });
 };
 
 const onSelect = (item: NuiCommandItem<T>): void => {
@@ -184,9 +190,11 @@ const onSelect = (item: NuiCommandItem<T>): void => {
 const onFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
 
-  if (!(next instanceof HTMLInputElement && next === input.value)) {
-    navigation.reveal();
+  if (next instanceof HTMLInputElement && next === input.value) {
+    return;
   }
+
+  navigation.reveal();
 };
 
 watch([() => items, query], () => activateFirst(), { flush: 'pre' });
@@ -203,9 +211,11 @@ watch(
 onMounted(() => {
   activateFirst();
 
-  if (autofocus) {
-    input.value?.focus();
+  if (!autofocus) {
+    return;
   }
+
+  input.value?.focus();
 });
 
 defineExpose({

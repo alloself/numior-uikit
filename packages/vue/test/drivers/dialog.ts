@@ -7,6 +7,7 @@ import {
   type NuiDialogProps,
   type NuiDrawerProps,
 } from '../../src';
+import DrawerScene from '../fixtures/DrawerScene.vue';
 import { configPlugins } from '../support/config';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver, emittedStrings } from './component';
@@ -18,6 +19,20 @@ export interface SurfaceMountOptions<P> {
   readonly body?: boolean;
   readonly config?: NuiConfigOptions;
 }
+
+export interface DrawerParts {
+  readonly title?: boolean;
+  readonly description?: boolean;
+  readonly body?: boolean;
+  readonly footer?: boolean;
+}
+
+const NO_PARTS: Required<DrawerParts> = {
+  title: false,
+  description: false,
+  body: false,
+  footer: false,
+};
 
 const mountSurface = <P extends object>(
   component: Component,
@@ -82,6 +97,10 @@ abstract class SurfaceDriver extends ComponentDriver {
 
   get footer(): DOMWrapper<Element> {
     return this.wrapper.find('.nui-dialog__footer');
+  }
+
+  get hasHeader(): boolean {
+    return this.wrapper.find('.nui-dialog__header').exists();
   }
 
   get hasBody(): boolean {
@@ -160,5 +179,18 @@ export class DrawerDriver extends SurfaceDriver {
 
   static mount(options: SurfaceMountOptions<NuiDrawerProps> = {}) {
     return new DrawerDriver(...mountSurface(NuiDrawer, options));
+  }
+
+  static mountParts(parts: DrawerParts) {
+    const stubs = new TopLayerStubs();
+
+    return new DrawerDriver(
+      mount(DrawerScene, { props: { ...parts }, attachTo: document.body }),
+      stubs,
+    );
+  }
+
+  async showParts(parts: DrawerParts): Promise<void> {
+    await this.wrapper.setProps({ ...NO_PARTS, ...parts });
   }
 }

@@ -16,6 +16,7 @@ import {
   onSheetNamed,
   type FormulaReference,
 } from './references';
+import { findNode } from './walk';
 
 export interface LineChange extends LineMove {
   readonly sheet: string;
@@ -204,7 +205,7 @@ const movedOrigin = (origin: CellAddress, change: LineChange): CellAddress | und
   return rows ? { row: line, col: origin.col } : { row: origin.row, col: line };
 };
 
-const keepsNode = (
+const breaks = (
   node: FormulaNode,
   change: LineChange,
   onSheet: boolean,
@@ -217,26 +218,20 @@ const keepsNode = (
     case FormulaNodeKind.Columns:
     case FormulaNodeKind.Rows:
     case FormulaNodeKind.Spill:
-      return keeps(node, change, onChangedSheet(node, change, onSheet), origin, originDelta);
-    case FormulaNodeKind.Call:
-      for (const arg of node.args) {
-        if (!keepsNode(arg, change, onSheet, origin, originDelta)) {
-          return false;
-        }
-      }
-      return true;
-    case FormulaNodeKind.Unary:
-    case FormulaNodeKind.Percent:
-      return keepsNode(node.operand, change, onSheet, origin, originDelta);
-    case FormulaNodeKind.Binary:
-      return (
-        keepsNode(node.left, change, onSheet, origin, originDelta) &&
-        keepsNode(node.right, change, onSheet, origin, originDelta)
-      );
+      return !keeps(node, change, onChangedSheet(node, change, onSheet), origin, originDelta);
     default:
-      return true;
+      return false;
   }
 };
+
+const keepsNode = (
+  node: FormulaNode,
+  change: LineChange,
+  onSheet: boolean,
+  origin: CellAddress,
+  originDelta: number,
+): boolean =>
+  findNode(node, (item) => breaks(item, change, onSheet, origin, originDelta)) === undefined;
 
 export const shiftFormula = (
   node: FormulaNode,

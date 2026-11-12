@@ -37,9 +37,11 @@ probes.fields.set(path, field);
 onBeforeUnmount(() => probes.fields.delete(path));
 
 const onInput = (event: Event): void => {
-  if (event.target instanceof HTMLInputElement) {
-    probes.work.set(path, field.setValue(event.target.value));
+  if (!(event.target instanceof HTMLInputElement)) {
+    return;
   }
+
+  probes.work.set(path, field.setValue(event.target.value));
 };
 
 const onBlur = (): void => {

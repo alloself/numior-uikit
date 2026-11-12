@@ -55,7 +55,7 @@
     flex: 0 1 auto;
     inline-size: var(--_height);
     min-inline-size: 0;
-    aspect-ratio: 1;
+    block-size: var(--_height);
     border: 1px solid var(--_border);
     background: var(--nui-surface);
     outline: var(--nui-focus-ring-width) solid transparent;
@@ -115,7 +115,7 @@
   }
   .nui-otp-field__caret {
     inline-size: 1px;
-    block-size: 1.25em;
+    block-size: round(1.25em, 2px);
     background: currentColor;
     animation: nui-otp-field-blink 1.2s var(--nui-easing) infinite;
     animation-play-state: var(--nui-animation-play-state, running);

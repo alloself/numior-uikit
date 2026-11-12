@@ -4,6 +4,7 @@
     --_side-y: 1;
     --_shift: calc(-1 * var(--_side-x) * var(--nui-space-1))
       calc(-1 * var(--_side-y) * var(--nui-space-1));
+    --_ring: var(--nui-focus-ring-width);
 
     box-sizing: border-box;
     position: fixed;
@@ -18,7 +19,7 @@
     color: var(--nui-text);
     font-family: var(--nui-font);
     font-size: var(--nui-font-size-sm);
-    line-height: var(--nui-line-height);
+    line-height: var(--nui-line-height-label);
     box-shadow: var(--nui-shadow-md);
     overflow-y: auto;
     outline: none;
@@ -46,7 +47,7 @@
 
   .nui-menu-item {
     --_tone: var(--nui-text);
-    --_indicator: 1.25em;
+    --_indicator: var(--nui-icon-size);
 
     box-sizing: border-box;
     position: relative;
@@ -54,7 +55,7 @@
     align-items: center;
     gap: var(--nui-space-2);
     inline-size: 100%;
-    min-block-size: 2rem;
+    min-block-size: var(--nui-control-height-sm);
     margin: 0;
     padding: var(--nui-space-1) var(--nui-space-2);
     border: 0;
@@ -78,6 +79,13 @@
   .nui-menu-item:focus,
   .nui-menu-item--open {
     background: var(--nui-hover);
+  }
+  .nui-menu--pointed {
+    --_ring: 0px;
+  }
+  .nui-menu-item:focus-visible {
+    outline: var(--_ring) solid var(--nui-focus);
+    outline-offset: calc(-1 * var(--_ring));
   }
   .nui-menu-item--tone-error:hover,
   .nui-menu-item--tone-error:focus {

@@ -3,8 +3,8 @@
     v-model:values="tags"
     :options="options"
     :custom-value="(text) => text"
-    label="Task tags"
-    description="Enter adds your own tag"
+    label="Product tags"
+    description="Type a tag and press Enter to add it"
     multiple
   />
 </template>
@@ -13,12 +13,12 @@
 import { ref } from 'vue';
 import { NuiCombobox, type NuiOptionSource } from '@numior/vue';
 
-const tags = ref(['frontend']);
+const tags = ref(['new', 'sale']);
 
 const options: NuiOptionSource<string> = [
-  { value: 'frontend', label: 'Frontend' },
-  { value: 'backend', label: 'Backend' },
-  { value: 'design', label: 'Design' },
-  { value: 'urgent', label: 'Urgent' },
+  { value: 'new', label: 'New' },
+  { value: 'sale', label: 'On sale' },
+  { value: 'preorder', label: 'Made to order' },
+  { value: 'bestseller', label: 'Bestseller' },
 ];
 </script>

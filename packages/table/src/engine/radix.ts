@@ -1,3 +1,4 @@
+import { maxBy } from 'lodash-es';
 import { CHECK_INTERVAL, type SliceJob } from './slicer';
 import { RadixGroupKind, RadixLaneKind } from './engine.types';
 
@@ -107,22 +108,24 @@ const groupsOf = (lanes: readonly RadixLane[]): Group[] =>
   lanes.reduce<{ groups: Group[]; open: RankLane[] }>(
     (state, lane, index) => {
       const close = (): void => {
-        if (state.open.length > 0) {
-          const bits = state.open.map((item) => bitsFor(item.size));
-          let shift = bits.reduce((sum, item) => sum + item, 0);
-          const total = shift;
-
-          state.groups.push({
-            kind: 'packed',
-            bits: total,
-            lanes: state.open.map((item, at) => {
-              shift -= bits[at] ?? 0;
-              return { lane: item, shift };
-            }),
-          });
-
-          state.open = [];
+        if (state.open.length === 0) {
+          return;
         }
+
+        const bits = state.open.map((item) => bitsFor(item.size));
+        let shift = bits.reduce((sum, item) => sum + item, 0);
+        const total = shift;
+
+        state.groups.push({
+          kind: 'packed',
+          bits: total,
+          lanes: state.open.map((item, at) => {
+            shift -= bits[at] ?? 0;
+            return { lane: item, shift };
+          }),
+        });
+
+        state.open = [];
       };
 
       if (lane.kind === RadixLaneKind.Float) {
@@ -236,8 +239,12 @@ export const createKeptRadixJob = (
   const length = indices.length;
   const groups = groupsOf(lanes);
   const layouts = groups.map(layoutOf);
-  const buckets = 1 << Math.max(...layouts.map((layout) => layout.width), 1);
-  const counts = new Uint32Array(buckets * Math.max(...layouts.map((layout) => layout.digits), 1));
+  const buckets = 1 << Math.max(maxBy(layouts, (layout) => layout.width)?.width ?? 1, 1);
+
+  const counts = new Uint32Array(
+    buckets * Math.max(maxBy(layouts, (layout) => layout.digits)?.digits ?? 1, 1),
+  );
+
   const total = Math.max(1, layouts.reduce((sum, layout) => sum + 1 + layout.digits, 0) * length);
   const buffers = buffersFor(length);
 
@@ -317,9 +324,11 @@ export const createKeptRadixJob = (
       state.done += length;
       state.digit += 1;
     }
-    if (state.digit < layout.digits) {
-      offsetsFrom(counts, state.digit * buckets, buckets);
+    if (state.digit >= layout.digits) {
+      return;
     }
+
+    offsetsFrom(counts, state.digit * buckets, buckets);
   };
 
   const step = (group: Group, layout: Layout, deadline: number): boolean => {

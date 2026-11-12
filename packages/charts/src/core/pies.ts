@@ -20,8 +20,9 @@ const pointAt = (frame: PieFrame, radius: number, angle: number): string =>
 const wedge = (frame: PieFrame, outer: number, inner: number, from: number, to: number): string => {
   const large = to - from > Math.PI ? 1 : 0;
   const o = fixed(outer);
+  const closed = large === 1 && pointAt(frame, outer, from) === pointAt(frame, outer, to);
 
-  if (to - from >= FULL - 1e-9) {
+  if (closed || to - from >= FULL - 1e-9) {
     const half = from + Math.PI;
     const ring = `M${pointAt(frame, outer, from)}A${o},${o} 0 1 1 ${pointAt(frame, outer, half)}A${o},${o} 0 1 1 ${pointAt(frame, outer, from)}Z`;
 

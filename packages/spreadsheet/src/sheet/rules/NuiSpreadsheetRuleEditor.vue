@@ -74,9 +74,11 @@ const setArea = (area: string): void => {
 };
 
 const setKind = (kind: RuleFormKind | null): void => {
-  if (kind !== null) {
-    form.value = withKind(form.value, kind);
+  if (kind === null) {
+    return;
   }
+
+  form.value = withKind(form.value, kind);
 };
 
 const setStop = (stopIfTrue: boolean): void => {
@@ -92,9 +94,11 @@ const focusFirst = (): void => {
 const focusInvalid = (): void => {
   const field = root.value?.querySelector('[aria-invalid="true"]');
 
-  if (field instanceof HTMLElement) {
-    field.focus();
+  if (!(field instanceof HTMLElement)) {
+    return;
   }
+
+  field.focus();
 };
 
 onMounted(focusFirst);

@@ -102,14 +102,16 @@
         :dir="sheetDir"
         v-model:active="formula.active.value"
         v-model:ranges="formula.ranges.value"
+        v-model:widths="lineSizes.widths.value"
         v-bind="table.grid"
+        :row-headers="table.rowHeaders"
         :draft="editing.draft.value"
         :columns="table.columns"
         :merges="table.cells.merges"
         :frozen-rows="table.cells.frozenRows"
-        :row-heights="table.cells.rowHeights"
+        :row-heights="lineSizes.heights.value"
         :row-height="table.rowHeight"
-        :bordered="table.cells.gridlines"
+        :gridlines="table.cells.gridlines"
         :height="height"
         :column-menu="false"
         :commands="clipboard.commands"
@@ -122,6 +124,10 @@
         size="sm"
         @update:draft="editing.setDraft"
         @pick="references.onPick"
+        @update:row-heights="lineSizes.setHeights"
+        @column-resize="lineSizes.commitWidths"
+        @row-resize="lineSizes.commitHeights"
+        @window="lineSizes.setWindow"
       >
         <template #overlay="{ rectOf }">
           <NuiSpreadsheetDrawings
@@ -138,6 +144,7 @@
             @grip="drawingEdit.onGripDown"
             @select="drawingEdit.select"
             @settings="drawingEdit.openSettings"
+            @menu="drawingEdit.onContextmenu"
           />
           <NuiSpreadsheetMarks
             :rect-of="rectOf"
@@ -151,6 +158,7 @@
             @grip="fill.onDown"
             @fill="fill.onDblclick"
           />
+          <NuiTablePeers :peers="peerFrames" :rect-of="rectOf" />
           <NuiSpreadsheetReference
             v-for="frame in references.frames.value"
             :key="frame.key"
@@ -166,7 +174,7 @@
             :key="anchor.key"
             :ref="anchor.hold"
             class="nui-spreadsheet__anchor"
-            :style="rectStyle(anchor.rect)"
+            :style="tableRectStyle(anchor.rect)"
           ></span>
         </template>
       </NuiTable>
@@ -178,6 +186,15 @@
         @resume="recalc.resume"
         @leave="formula.backToGrid"
       />
+      <NuiSpreadsheetNote
+        :text="note.text.value"
+        :shown="note.shown.value"
+        :lifted="recalc.phase.value !== RecalcPhase.Idle"
+        @hold="note.hold"
+        @release="note.release"
+        @close="note.hide"
+      />
+      <span ref="drawingSpot" class="nui-spreadsheet__anchor" aria-hidden="true"></span>
     </div>
     <NuiPopover
       v-model:open="rules.open.value"
@@ -205,6 +222,14 @@
     </NuiPopover>
     <NuiSpreadsheetPivotPopover ref="pivotPanel" :pivots="pivots" :readonly="locked" />
     <NuiSpreadsheetChartPopover ref="chartPanel" :settings="chartSettings" :texts="messages" />
+    <NuiMenu
+      ref="drawingMenuList"
+      v-model:open="drawingMenu.open.value"
+      :anchor="drawingMenu.anchor.value"
+      :items="drawingMenu.items.value"
+      :label="messages.drawingMenu"
+      placement="bottom-start"
+    />
     <div class="nui-spreadsheet__hidden" role="status" aria-live="polite">
       {{ formula.announcement.value }}
     </div>
@@ -220,13 +245,13 @@
       :typed="assist.typed.value"
       :label="messages.functions"
       :hint-label="messages.arguments"
-      @choose="assist.choose"
+      @select="assist.choose"
       @hover="assist.hover"
     />
     <NuiSpreadsheetTabs
       :shown="sheetTabs"
       :tabs="tabs"
-      :current="String(sheetIndex)"
+      :current="String(shownSheet?.id)"
       :readonly="locked"
       :messages="messages"
       @select="selectSheet"
@@ -241,17 +266,26 @@
 
 <script setup lang="ts">
 import { PaintRoller } from '@lucide/vue';
-import { Direction, Key, useLocale, useMessages } from '@numior/primitives';
+import { Direction, Key, isComposing, useLocale, useMessages } from '@numior/primitives';
 import {
   NuiTable,
+  NuiTablePeers,
   tableCells,
+  tableRectStyle,
   type NuiTableColumn,
   type NuiTableExposed,
   type NuiTableOverlaySlot,
   type NuiTableRect,
-  type TableCellPosition,
+  type NuiTableCellPosition,
 } from '@numior/table';
-import { NuiButton, NuiIcon, NuiPopover, type NuiTabDescriptor } from '@numior/vue';
+import {
+  NuiButton,
+  NuiIcon,
+  NuiMenu,
+  NuiPopover,
+  type NuiMenuExposed,
+  type NuiTabDescriptor,
+} from '@numior/vue';
 import { useFocusWithin } from '@vueuse/core';
 import {
   computed,
@@ -273,11 +307,19 @@ import {
   type BookLocale,
   type CellRange,
   type ConditionalFormat,
+  type LineChange,
+  type WorkbookStep,
 } from '../core';
 import { defaultRowHeight, sheetCells } from './sheet-cells';
+import { liveSource, sameColumns, type ColumnShape } from './sheet-table';
+import { useSheetLineSizes } from './use-sheet-line-sizes';
 import NuiSpreadsheetAssist from './NuiSpreadsheetAssist.vue';
 import NuiSpreadsheetMarks from './NuiSpreadsheetMarks.vue';
+import NuiSpreadsheetNote from './NuiSpreadsheetNote.vue';
 import NuiSpreadsheetReference from './NuiSpreadsheetReference.vue';
+import { peerFramesOf, placeKey } from './sheet-peers';
+import { stepRefusalText } from './sheet-refusals';
+import { useSheetNote } from './use-sheet-note';
 import NuiSpreadsheetReport from './NuiSpreadsheetReport.vue';
 import NuiSpreadsheetStatus from './NuiSpreadsheetStatus.vue';
 import NuiSpreadsheetTabs from './NuiSpreadsheetTabs.vue';
@@ -287,6 +329,7 @@ import type { LineNear } from './drawings/drawings.types';
 import { useSheetChartInsert } from './drawings/use-sheet-chart-insert';
 import { useSheetChartSettings } from './drawings/use-sheet-chart-settings';
 import { useSheetDrawingEdit } from './drawings/use-sheet-drawing-edit';
+import { useSheetDrawingMenu } from './drawings/use-sheet-drawing-menu';
 import { useSheetDrawings } from './drawings/use-sheet-drawings';
 import { useSheetPictureInsert } from './drawings/use-sheet-picture-insert';
 import NuiSpreadsheetFile from './file/NuiSpreadsheetFile.vue';
@@ -305,8 +348,11 @@ import {
   RecalcPhase,
   type FormulaSegment,
   type NuiSpreadsheetChange,
+  type NuiSpreadsheetRefusal,
+  type NuiSpreadsheetRefusalReason,
   type NuiSpreadsheetExposed,
   type NuiSpreadsheetProps,
+  type NuiSpreadsheetPlace,
   type NuiSpreadsheetSelection,
   type SheetAnchor,
   type SheetClipFrame,
@@ -318,11 +364,12 @@ import { useSheetClipboard } from './use-sheet-clipboard';
 import { useSheetEditing } from './use-sheet-editing';
 import { useSheetFill } from './use-sheet-fill';
 import { useSheetLines } from './use-sheet-lines';
+import { useSheetMerges } from './use-sheet-merges';
 import { useSheetPopover } from './use-sheet-popover';
 import { useSheetRecalc } from './use-sheet-recalc';
 import { SHEET_SEGMENTS } from './sheet-segments';
-import { rectStyle } from './sheet-rect';
 import { useSheetReferences } from './use-sheet-references';
+import { useSheetPlaces } from './use-sheet-places';
 import { tableRangeOf, useSheetSelection } from './use-sheet-selection';
 
 const RULES_ICON = markRaw(PaintRoller);
@@ -348,6 +395,7 @@ const {
   source,
   saveFile,
   collaboration,
+  peers = [],
 } = defineProps<NuiSpreadsheetProps>();
 
 const sheetIndex = defineModel<number>('sheet', { default: 0 });
@@ -358,6 +406,8 @@ const emit = defineEmits<{
   change: [change: NuiSpreadsheetChange];
   open: [file: OpenedFile];
   saved: [saved: NuiSpreadsheetSaved];
+  presence: [place: NuiSpreadsheetPlace | undefined];
+  refuse: [refusal: NuiSpreadsheetRefusal];
 }>();
 
 const root = useTemplateRef<HTMLElement>('root');
@@ -374,6 +424,23 @@ const formulaId = useId();
 const kitLocale = useLocale(() => undefined);
 
 const messages = useMessages(spreadsheetMessages);
+
+const note = useSheetNote();
+
+const announce = (text: string): void => {
+  formula.announcement.value = text;
+};
+
+const notify = (text: string): void => {
+  announce(text);
+  note.show(text);
+};
+
+const refuse = (reason: NuiSpreadsheetRefusalReason, message: string): void => {
+  formula.announcement.value = message;
+  note.show(message);
+  emit('refuse', { reason, message });
+};
 
 const ruleTexts = useMessages(spreadsheetRulesMessages);
 
@@ -397,10 +464,12 @@ const shownIndex = computed(() =>
 const shownSheet = computed(() => sheetList.value[shownIndex.value]);
 
 const tabs = computed((): NuiTabDescriptor[] =>
-  sheetList.value.map((each, index) => ({ value: String(index), label: each.name })),
+  sheetList.value.map((each) => ({ value: String(each.id), label: each.name })),
 );
 
-const ownCalculator = computed(() => createCalculator(book, { locale: bookLocale.value }));
+let ownLocale = bookLocale.value;
+
+const ownCalculator = computed(() => createCalculator(book, { locale: ownLocale }));
 
 const locked = computed(() => readonly || report?.readOnly === true);
 
@@ -427,6 +496,8 @@ const cells = computed(() =>
       }),
 );
 
+const peerFrames = computed(() => peerFramesOf(peers, shownSheet.value?.name, cells.value));
+
 const file = useSheetFile({
   book: () => book,
   calculator: () => calculator ?? ownCalculator.value,
@@ -449,17 +520,15 @@ const file = useSheetFile({
   saved: (saved) => {
     emit('saved', saved);
   },
-  announce: (text) => {
-    formula.announcement.value = text;
-  },
+  announce,
 });
 
-const noteStructure = (): void => {
+const noteStructure = (): boolean => {
   const next = sheetsKey();
 
   if (next !== knownSheets) {
     const before = shownSheet.value;
-    const kept = before === undefined ? -1 : book.sheets.indexOf(before);
+    const kept = before === undefined ? -1 : book.sheets.indexOf(book.sheet(before.name) ?? before);
 
     knownSheets = next;
     sheetsRevision.value += 1;
@@ -468,11 +537,14 @@ const noteStructure = (): void => {
       sheetIndex.value = kept;
     }
   }
-  if (shownSheet.value?.layout !== knownLayout) {
+  const laidOut = shownSheet.value?.layout !== knownLayout;
+
+  if (laidOut) {
     knownLayout = shownSheet.value?.layout;
     layoutRevision.value += 1;
   }
   file.noteEdit();
+  return laidOut;
 };
 
 const editing = useSheetEditing({
@@ -487,23 +559,70 @@ const editing = useSheetEditing({
   recalc,
   collaboration: () => collaboration,
   changed: (change) => {
-    noteStructure();
+    note.hide();
+
+    if (noteStructure()) {
+      grid.value?.cancelEdit();
+    }
     emit('change', change);
+  },
+  refused: (refusal, message) => {
+    refuse(refusal, message ?? stepRefusalText(refusal, messages.value));
   },
 });
 
-const onRemoteSteps = (): void => {
+const lineSizes = useSheetLineSizes({
+  sheet: () => shownSheet.value,
+  cells: () => cells.value,
+  ranges: () => formula.ranges.value,
+  readonly: () => locked.value,
+  editing,
+  messages,
+  refuse,
+  measure: (text, style) => grid.value?.fitWidth(text, style),
+  notify,
+  announce,
+});
+
+watch([shownSheet, layoutRevision], lineSizes.forget);
+
+const onRemoteSteps = (_steps: readonly WorkbookStep[], lines: readonly LineChange[]): void => {
+  const held = places.hold();
+
   noteStructure();
   editing.redraw();
+  places.restore(held, lines);
+
+  const sheet = shownSheet.value;
+
+  if (sheet === undefined) {
+    return;
+  }
+
+  references.follow(lines, sheet.name);
 };
 
 onMounted(() => {
   watch(
     () => collaboration,
     (session, _previous, onCleanup) => {
-      if (session !== undefined) {
-        onCleanup(session.subscribe(onRemoteSteps));
+      if (session === undefined) {
+        return;
       }
+
+      onCleanup(session.subscribe(onRemoteSteps));
+    },
+    { immediate: true },
+  );
+
+  watch(
+    () => calculator ?? ownCalculator.value,
+    (used) => {
+      if (used.pending === 0) {
+        return;
+      }
+
+      recalc.run({ volatile: false });
     },
     { immediate: true },
   );
@@ -544,12 +663,38 @@ const formula = useFormulaBar({
   formulaField,
 });
 
+const places = useSheetPlaces({
+  sheet: () => shownSheet.value,
+  cells: () => cells.value,
+  formula,
+  editing,
+  table: grid,
+  messages,
+  refuse,
+});
+
 const selection = useSheetSelection({
   cells: () => cells.value,
   formula,
   table: grid,
   model: selectionModel,
 });
+
+const place = computed((): NuiSpreadsheetPlace | undefined => {
+  const chosen = selection.current.value;
+  const name = tabs.value[shownIndex.value]?.label;
+
+  return chosen === undefined || name === undefined
+    ? undefined
+    : { sheet: name, selection: chosen };
+});
+
+watch(
+  () => placeKey(place.value),
+  () => {
+    emit('presence', place.value);
+  },
+);
 
 const fill = useSheetFill({
   book: () => book,
@@ -561,6 +706,10 @@ const fill = useSheetFill({
   table: grid,
   root,
   readonly: () => locked.value,
+  messages,
+  refuse: (reason, message) => {
+    refuse(reason, message);
+  },
 });
 
 const pivotPanel = useTemplateRef<{ focusStart(): void }>('pivotPanel');
@@ -574,10 +723,26 @@ const pivots = useSheetPivots({
   selection,
   editing,
   formula,
+  refuse: (reason, message) => {
+    refuse(reason, message);
+  },
   sheetIndex,
   readonly: () => locked.value,
   locale: () => bookLocale.value,
   focusPanel: () => pivotPanel.value?.focusStart(),
+});
+
+const merges = useSheetMerges({
+  book: () => book,
+  calculator: () => calculator ?? ownCalculator.value,
+  sheet: () => shownSheet.value,
+  selection,
+  editing,
+  messages,
+  readonly: () => locked.value,
+  refuse,
+  announce,
+  notify,
 });
 
 const lines = useSheetLines({
@@ -587,6 +752,7 @@ const lines = useSheetLines({
   messages,
   readonly: () => locked.value,
   extra: () => contextMenu,
+  cells: merges.tools,
   tools: () => [
     {
       key: 'rules',
@@ -598,9 +764,6 @@ const lines = useSheetLines({
     ...chartInsert.tools(),
     ...pictureInsert.tools(),
   ],
-  announce: (text) => {
-    formula.announcement.value = text;
-  },
 });
 
 const references = useSheetReferences({
@@ -633,18 +796,37 @@ const drawingEdit = useSheetDrawingEdit({
   readonly: () => locked.value,
   rtl: () => sheetDir.value === Direction.Rtl,
   messages: () => messages.value,
-  announce: (text) => {
-    formula.announcement.value = text;
-  },
+  announce,
   focus: () => {
     formula.holdFocus();
   },
   openSettings: () => {
     chartSettings.show();
   },
+  openMenu: (shown, event) => {
+    drawingMenu.show(shown, event);
+  },
   editing,
   table: grid,
   root,
+});
+
+const drawingMenuList = useTemplateRef<NuiMenuExposed>('drawingMenuList');
+
+const drawingSpot = useTemplateRef<HTMLElement>('drawingSpot');
+
+const drawingMenu = useSheetDrawingMenu({
+  root,
+  body,
+  spot: drawingSpot,
+  messages: () => messages.value,
+  pressed: drawingEdit.pressed,
+  request: drawingEdit.onContextmenu,
+  remove: drawingEdit.remove,
+  openSettings: drawingEdit.openSettings,
+  show: (focus) => {
+    drawingMenuList.value?.show(focus);
+  },
 });
 
 const chartSettings = useSheetChartSettings({
@@ -666,8 +848,8 @@ const chartInsert = useSheetChartInsert({
   readonly: () => locked.value,
   rtl: () => sheetDir.value === Direction.Rtl,
   messages: () => messages.value,
-  announce: (text) => {
-    formula.announcement.value = text;
+  refuse: (reason, message) => {
+    refuse(reason, message);
   },
   select: (id, name) => {
     drawingEdit.selectNew(id, name);
@@ -684,8 +866,8 @@ const pictureInsert = useSheetPictureInsert({
   readonly: () => locked.value,
   rtl: () => sheetDir.value === Direction.Rtl,
   messages: () => messages.value,
-  announce: (text) => {
-    formula.announcement.value = text;
+  refuse: (reason, message) => {
+    refuse(reason, message);
   },
   select: (id, name) => {
     drawingEdit.selectNew(id, name);
@@ -706,6 +888,9 @@ const assist = useFormulaAssist({
 const isToned = (segment: FormulaSegment): boolean => segment.tone !== undefined;
 
 const onKeydown = (event: KeyboardEvent): void => {
+  if (isComposing(event)) {
+    return;
+  }
   file.onKeydown(event);
   drawingEdit.onKeydown(event);
 
@@ -719,9 +904,11 @@ const onKeydown = (event: KeyboardEvent): void => {
   fill.onKeydown(event);
   assist.onKeydown(event);
 
-  if (!event.defaultPrevented) {
-    references.onKeydown(event);
+  if (event.defaultPrevented) {
+    return;
   }
+
+  references.onKeydown(event);
 };
 
 const onPointermove = (event: PointerEvent): void => {
@@ -750,10 +937,12 @@ const painted = computed(
 const followScroll = (): void => {
   const field = formulaField.value;
 
-  if (field !== null && mirror.value !== null) {
-    mirror.value.scrollTop = field.scrollTop;
-    mirror.value.scrollLeft = field.scrollLeft;
+  if (field === null || mirror.value === null) {
+    return;
   }
+
+  mirror.value.scrollTop = field.scrollTop;
+  mirror.value.scrollLeft = field.scrollLeft;
 };
 
 const pinned = (
@@ -762,7 +951,7 @@ const pinned = (
 ): NuiTableColumn<number>[] =>
   columns.map((column, index) => (index < count ? { ...column, pin: 'start' } : column));
 
-const table = computed(() => {
+const columnShape = computed<ColumnShape | undefined>((previous) => {
   const shown = shownSheet.value;
   const current = cells.value;
 
@@ -770,12 +959,48 @@ const table = computed(() => {
     return undefined;
   }
 
-  const { columns, ...rest } = tableCells(current.source);
+  const next: ColumnShape = {
+    sheet: shown,
+    lines: shown.layout.cols,
+    width: shown.layout.defaults.colWidth,
+    frozen: current.frozenCols,
+    source: current.source,
+  };
+
+  return previous !== undefined && sameColumns(previous, next) ? previous : next;
+});
+
+const tableParts = computed(() => {
+  const shape = columnShape.value;
+
+  if (shape === undefined) {
+    return undefined;
+  }
+
+  const built = tableCells(liveSource(shape.source, () => cells.value?.source));
+
+  return {
+    built,
+    columns: editing.editableColumns(pinned(built.columns, shape.frozen)),
+  };
+});
+
+const table = computed(() => {
+  const shown = shownSheet.value;
+  const current = cells.value;
+  const parts = tableParts.value;
+
+  if (shown === undefined || current === undefined || parts === undefined) {
+    return undefined;
+  }
+
+  const { columns: _columns, rowHeaders, ...rest } = parts.built;
 
   return {
     cells: current,
     grid: rest,
-    columns: editing.editableColumns(pinned(columns, current.frozenCols)),
+    rowHeaders: { ...rowHeaders, resizable: true },
+    columns: parts.columns,
     rowHeight: defaultRowHeight(shown),
   };
 });
@@ -795,28 +1020,34 @@ const selectSheet = (index: number): void => {
 };
 
 const addSheet = (index: number): void => {
-  if (editing.apply([{ kind: 'addSheet', name: freeSheetName(), index }])) {
-    sheetIndex.value = index;
+  if (!editing.apply([{ kind: 'addSheet', name: freeSheetName(), index }])) {
+    return;
   }
+
+  sheetIndex.value = index;
 };
 
 const renameSheet = (index: number, name: string): void => {
   const from = book.sheets[index]?.name;
 
-  if (from !== undefined && from !== name) {
-    editing.apply([{ kind: 'renameSheet', from, to: name }]);
+  if (from === undefined || from === name) {
+    return;
   }
+
+  editing.apply([{ kind: 'renameSheet', from, to: name }]);
 };
 
 const removeSheet = (index: number): void => {
   const name = book.sheets[index]?.name;
 
-  if (name !== undefined && editing.apply([{ kind: 'removeSheet', name }])) {
-    sheetIndex.value = Math.min(index, book.sheets.length - 1);
+  if (name === undefined || !editing.apply([{ kind: 'removeSheet', name }])) {
+    return;
   }
+
+  sheetIndex.value = Math.min(index, book.sheets.length - 1);
 };
 
-const rulesCell = shallowRef<TableCellPosition>();
+const rulesCell = shallowRef<NuiTableCellPosition>();
 
 const rulesPanel = useTemplateRef<{ focusStart(): void }>('rulesPanel');
 
@@ -836,11 +1067,16 @@ const sheetFormats = computed((): readonly ConditionalFormat[] =>
 
 const selectedRanges = computed((): readonly CellRange[] => selection.current.value?.ranges ?? []);
 
-const ruleLooks = computed((): RuleLooks => ({
-  theme: book.decorations.theme,
-  font: book.decorations.defaultFont,
-  locale: bookLocale.value,
-}));
+const ruleLooks = computed((): RuleLooks => {
+  const { signatures } = calculator ?? ownCalculator.value;
+
+  return {
+    theme: book.decorations.theme,
+    font: book.decorations.defaultFont,
+    locale: bookLocale.value,
+    signatures,
+  };
+});
 
 const litFrames = computed((): readonly SheetClipFrame[] => {
   const current = cells.value;
@@ -882,9 +1118,13 @@ const lightUp = (ranges: readonly CellRange[] | undefined): void => {
 const setFormats = (formats: readonly ConditionalFormat[]): void => {
   const sheet = shownSheet.value;
 
-  if (sheet !== undefined) {
-    editing.apply([{ kind: StepKind.SetConditional, sheet: sheet.name, formats }]);
+  if (sheet === undefined) {
+    return;
   }
+
+  editing.apply([
+    { kind: StepKind.SetConditional, sheet: sheet.name, formats, base: sheet.conditional },
+  ]);
 };
 
 watch(shownSheet, () => {
@@ -910,14 +1150,29 @@ watch(
 );
 
 watch(recalc.phase, (next, before) => {
-  if (next === RecalcPhase.Idle && before === RecalcPhase.Running) {
-    formula.announcement.value = messages.value.recalcDone;
+  if (next !== RecalcPhase.Idle || before !== RecalcPhase.Running) {
+    return;
   }
+
+  formula.announcement.value = messages.value.recalcDone;
+});
+
+watch(bookLocale, (next) => {
+  ownLocale = next;
+
+  if (calculator !== undefined) {
+    return;
+  }
+
+  ownCalculator.value.setLocale(next);
+  recalc.run();
 });
 
 defineExpose<NuiSpreadsheetExposed>({
   refresh,
   apply: editing.apply,
+  mergeCells: merges.merge,
+  unmergeCells: merges.unmerge,
   openRules,
   save: file.save,
   open: file.open,

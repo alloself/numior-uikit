@@ -1,8 +1,16 @@
 import type { DecorationSet } from '../decorations/decorations.types';
 import type { Doc, Slice } from '../doc/doc.types';
-import type { AttrValue, ContentNode, IdSource, Mark, NodeId } from '../model/node.types';
+import type {
+  AttrValue,
+  ContentNode,
+  ElementNode,
+  IdSource,
+  Mark,
+  NodeId,
+} from '../model/node.types';
 import type { Mapping } from '../transform/mapping.types';
 import type { Step, StepResult } from '../transform/step.types';
+import type { PeerSpot } from '../spots/spots.types';
 import type { NodeMarkup, SplitType } from '../transform/transform.types';
 import type { InputIntent, KeyInput } from './input.types';
 import type { Selection } from './selection.types';
@@ -59,7 +67,11 @@ export interface EditorProps {
   readonly handleIntent?:
     | ((intent: InputIntent, state: EditorState, dispatch: Dispatch) => boolean)
     | undefined;
+  readonly conceals?:
+    | ((parent: ElementNode, index: number, state: EditorState) => boolean)
+    | undefined;
   readonly decorations?: ((state: EditorState) => DecorationSet | undefined) | undefined;
+  readonly spots?: ((state: EditorState) => readonly PeerSpot[] | undefined) | undefined;
   readonly stateChanged?: ((state: EditorState, before: EditorState) => void) | undefined;
 }
 

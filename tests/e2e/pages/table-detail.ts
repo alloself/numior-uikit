@@ -121,6 +121,15 @@ export class TableDetailSection {
     });
   }
 
+  scrollPastColumns(): Promise<number> {
+    return this.viewport.evaluate((element) => {
+      const grid = element.querySelector('.nui-table__grid');
+      const columns = grid?.getBoundingClientRect().width ?? 0;
+
+      return Math.round(element.scrollWidth - Math.max(columns, element.clientWidth));
+    });
+  }
+
   largestRowGap(): Promise<number> {
     return this.grid.evaluate((grid, selector) => {
       const rects = [...grid.querySelectorAll(selector)].map((row) => row.getBoundingClientRect());

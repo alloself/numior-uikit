@@ -3,7 +3,7 @@
     --_height: var(--spacing-control-md);
     --_padding: var(--spacing-field-pad-md);
     --_font-size: var(--text-control-md);
-    --_chevron: calc(1.25 * var(--_font-size));
+    --_chevron: round(calc(1.15 * var(--text-control-xs)), 2px);
     --_clear-inset: calc(var(--_padding) + var(--_chevron) + calc(var(--spacing) * 2));
 
     @apply box-border relative inline-flex inline-full min-inline-0 font-sans;

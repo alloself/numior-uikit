@@ -86,9 +86,11 @@ const applySize = (floating: HTMLElement, size: FloatingSize, room: SizeRoom): v
     floating.style.maxBlockSize = `${capped(room.availableHeight, size.maxBlockSize)}px`;
   }
 
-  if (size.fitWidth) {
-    floating.style.maxInlineSize = `${capped(room.availableWidth, size.maxInlineSize)}px`;
+  if (!size.fitWidth) {
+    return;
   }
+
+  floating.style.maxInlineSize = `${capped(room.availableWidth, size.maxInlineSize)}px`;
 };
 
 const middleware = (options: FloatingOptions, floating: HTMLElement): Middleware[] => {
@@ -188,9 +190,11 @@ export const useFloating = (
     applyPosition(pair.floating, strategy, result.x, result.y);
     applySide(pair.floating, side);
 
-    if (arrow) {
-      applyArrow(arrow, side, result.middlewareData.arrow);
+    if (!arrow) {
+      return;
     }
+
+    applyArrow(arrow, side, result.middlewareData.arrow);
   };
 
   onMounted(() => {

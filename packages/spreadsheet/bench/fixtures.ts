@@ -147,9 +147,11 @@ export const styledSheet = (rows: number, cols: number, seed = 1): FilledSheet =
       if (roll < 0.3) {
         sheet.decorations.set(row, col, looks[Math.floor((roll / 0.3) * looks.length)] ?? 0);
       }
-      if (sheet.cells.get(row, col).kind === 'number' && roll > 0.5) {
-        sheet.formats.set(row, col, money);
+      if (sheet.cells.get(row, col).kind !== 'number' || roll <= 0.5) {
+        continue;
       }
+
+      sheet.formats.set(row, col, money);
     }
   }
 

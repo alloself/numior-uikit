@@ -1,4 +1,4 @@
-import { decodeEntities } from './entities';
+import { decodeAttribute, decodeEntities } from './entities';
 import { HtmlChar, type HtmlTokenKind } from './html.types';
 
 export type HtmlToken =
@@ -16,6 +16,10 @@ interface Cursor {
   readonly tokens: HtmlToken[];
   at: number;
 }
+
+const COMMENT_OPEN = '<!--';
+
+const ABRUPT_ENDS = ['>', '->'] as const;
 
 const RAW = new Set([
   'script',
@@ -35,15 +39,28 @@ const SPACE = /\s*/y;
 const ATTRIBUTE = /([^\s"'/=>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/y;
 
 const pushText = (cursor: Cursor, text: string): void => {
-  if (text !== '') {
-    cursor.tokens.push({ kind: 'text', text: decodeEntities(text) });
+  if (text === '') {
+    return;
   }
+
+  cursor.tokens.push({ kind: 'text', text: decodeEntities(text) });
 };
 
 const skipTo = (cursor: Cursor, marker: string, from: number): void => {
   const end = cursor.html.indexOf(marker, from);
 
   cursor.at = end === -1 ? cursor.html.length : end + marker.length;
+};
+
+const skipComment = (cursor: Cursor): void => {
+  const body = cursor.at + COMMENT_OPEN.length;
+  const abrupt = ABRUPT_ENDS.find((end) => cursor.html.startsWith(end, body));
+
+  if (abrupt === undefined) {
+    skipTo(cursor, '-->', body);
+  } else {
+    cursor.at = body + abrupt.length;
+  }
 };
 
 const nameAt = (cursor: Cursor, at: number): string | undefined => {
@@ -68,7 +85,7 @@ const readAttribute = (cursor: Cursor, attrs: Map<string, string>): void => {
   const name = (match[1] ?? '').toLowerCase();
 
   if (!attrs.has(name)) {
-    attrs.set(name, decodeEntities(match[2] ?? match[3] ?? match[4] ?? ''));
+    attrs.set(name, decodeAttribute(match[2] ?? match[3] ?? match[4] ?? ''));
   }
   cursor.at = ATTRIBUTE.lastIndex;
 };
@@ -117,9 +134,11 @@ const readOpen = (cursor: Cursor, name: string): void => {
   const closed = readAttributes(cursor, attrs);
 
   cursor.tokens.push({ kind: 'open', tag, attrs, closed });
-  if (!closed && RAW.has(tag)) {
-    readRaw(cursor, tag);
+  if (closed || !RAW.has(tag)) {
+    return;
   }
+
+  readRaw(cursor, tag);
 };
 
 const readClose = (cursor: Cursor): void => {
@@ -135,8 +154,8 @@ const readMarkup = (cursor: Cursor): void => {
   const { html, at } = cursor;
   const next = html[at + 1];
 
-  if (html.startsWith('<!--', at)) {
-    skipTo(cursor, '-->', at + 4);
+  if (html.startsWith(COMMENT_OPEN, at)) {
+    skipComment(cursor);
   } else if (next === HtmlChar.Bang || next === HtmlChar.Question) {
     skipTo(cursor, '>', at + 1);
   } else if (next === HtmlChar.Slash) {
@@ -162,9 +181,11 @@ export const tokenize = (html: string): HtmlToken[] => {
 
     pushText(cursor, html.slice(cursor.at, stop));
     cursor.at = stop;
-    if (open !== -1) {
-      readMarkup(cursor);
+    if (open === -1) {
+      continue;
     }
+
+    readMarkup(cursor);
   }
   return cursor.tokens;
 };

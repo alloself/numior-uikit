@@ -5,6 +5,8 @@ import type { ChartMeasure } from './chart.types';
 export interface ChartFrame {
   readonly width: Readonly<ShallowRef<number>>;
   readonly height: Readonly<ShallowRef<number>>;
+  readonly fontSize: Readonly<ShallowRef<number | undefined>>;
+  readonly restyled: Readonly<ShallowRef<number>>;
   readonly measure: ComputedRef<ChartMeasure | undefined>;
 }
 
@@ -48,15 +50,29 @@ const canvasMeasure = (family: string, revision: number): ChartMeasure | undefin
   return measure;
 };
 
-export const useChartFrame = (frame: Readonly<ShallowRef<HTMLElement | null>>): ChartFrame => {
+export const useChartFrame = (
+  frame: Readonly<ShallowRef<HTMLElement | null>>,
+  probe: Readonly<ShallowRef<HTMLElement | null>>,
+): ChartFrame => {
   const width = shallowRef(0);
   const height = shallowRef(0);
   const family = shallowRef<string | undefined>(undefined);
+  const fontSize = shallowRef<number | undefined>(undefined);
   const fonts = shallowRef(0);
+  const restyled = shallowRef(0);
 
   const read = (): void => {
     width.value = frame.value?.clientWidth ?? 0;
     height.value = frame.value?.clientHeight ?? 0;
+  };
+
+  const readStyle = (): void => {
+    const style = probe.value === null ? undefined : getComputedStyle(probe.value);
+    const size = Number.parseFloat(style?.fontSize ?? '');
+
+    family.value = style?.fontFamily;
+    fontSize.value = size > 0 ? size : undefined;
+    restyled.value += 1;
   };
 
   const remeasure = (): void => {
@@ -65,17 +81,20 @@ export const useChartFrame = (frame: Readonly<ShallowRef<HTMLElement | null>>): 
   };
 
   useResizeObserver(frame, read);
+  useResizeObserver(probe, readStyle);
 
   useEventListener(fontsOf, 'loadingdone', remeasure);
 
   onMounted(() => {
     read();
-    family.value = frame.value === null ? undefined : getComputedStyle(frame.value).fontFamily;
+    readStyle();
   });
 
   return {
     width,
     height,
+    fontSize,
+    restyled,
     measure: computed(() =>
       family.value === undefined ? undefined : canvasMeasure(family.value, fonts.value),
     ),

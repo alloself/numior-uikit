@@ -42,7 +42,7 @@ const {
 } = defineProps<NuiEditorSuggestMenuProps>();
 
 const emit = defineEmits<{
-  choose: [key: string];
+  select: [key: string];
   hover: [index: number];
 }>();
 
@@ -64,17 +64,21 @@ const { contentAttrs } = usePopover(list, { open: shown, mode: 'manual', id: () 
 useFloating(() => anchor, list, { placement: 'bottom-start', offset: 6, enabled: shown });
 
 const choose = (entry: NuiListEntry<string>): void => {
-  if (entry.value !== undefined) {
-    emit('choose', entry.value);
+  if (entry.value === undefined) {
+    return;
   }
+
+  emit('select', entry.value);
 };
 
 const hover = (event: PointerEvent): void => {
   const option = event.target instanceof Element ? event.target.closest('[role="option"]') : null;
 
-  if (option !== null) {
-    emit('hover', optionIndexOf(option));
+  if (option === null) {
+    return;
   }
+
+  emit('hover', optionIndexOf(option));
 };
 
 watch(

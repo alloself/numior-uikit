@@ -239,9 +239,11 @@ export const readStyles = async (
   const borderPart = (element: string, attributes: readonly XmlAttribute[]): void => {
     const border = borders.at(-1);
 
-    if (border !== undefined) {
-      borderSide(border, element, attributes);
+    if (border === undefined) {
+      return;
     }
+
+    borderSide(border, element, attributes);
   };
 
   const fillPart = (element: string, attributes: readonly XmlAttribute[]): void => {
@@ -353,9 +355,11 @@ export const readStyles = async (
 
     const current = edge === undefined ? undefined : border[edge];
 
-    if (element === OoxmlElement.Color && edge !== undefined && current !== undefined) {
-      border[edge] = { ...current, color: colorOf(attributes) };
+    if (element !== OoxmlElement.Color || edge === undefined || current === undefined) {
+      return;
     }
+
+    border[edge] = { ...current, color: colorOf(attributes) };
   };
 
   const sectionPart = (element: string, attributes: readonly XmlAttribute[]): void => {
@@ -421,9 +425,11 @@ export const readStyles = async (
         }
       },
       close: (element) => {
-        if (SECTIONS.has(element.local)) {
-          section = 'other';
+        if (!SECTIONS.has(element.local)) {
+          return;
         }
+
+        section = 'other';
       },
     },
     options,

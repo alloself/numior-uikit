@@ -58,6 +58,9 @@ const started = (...args: Parameters<typeof EditingHarness.of>): EditingHarness 
   return harness;
 };
 
+const nestedWithTail = () =>
+  started(doc(bullets(li('one', bullets(li('two'), li('three')), p('tail')))), textSelection(1));
+
 const threeItems = () => started(doc(bullets(li('one'), li('two'), li('three'))), textSelection(1));
 
 afterEach(() => {
@@ -168,6 +171,52 @@ describe('list and quote commands', () => {
     toggle.backspace();
 
     expect(toggle.outline).toBe('toggle(paragraph("t") paragraph("b"))');
+  });
+
+  it('lifts, nests and takes out of a quote the blocks themselves, not copies of them', () => {
+    const editor = threeItems();
+    const ids = [editor.blockOf('two'), editor.blockOf('three')];
+
+    editor.placeIn('two', 1);
+    editor.press('Shift-Tab');
+
+    expect([editor.blockOf('two'), editor.blockOf('three')]).toEqual(ids);
+
+    const quote = started(doc(node('blockquote', [p('a'), p('b')])), textSelection(2));
+    const quoted = quote.blockOf('a');
+
+    quote.backspace();
+
+    expect(quote.blockOf('a')).toBe(quoted);
+  });
+
+  it('lifts a nested item past the paragraphs that follow the nested list in its parent', () => {
+    const first = nestedWithTail();
+    const before = first.outline;
+
+    first.placeIn('two', 1);
+    first.press('Shift-Tab');
+
+    expect(first.outline).toBe(
+      'bullet_list(list_item(paragraph("one") paragraph("tail")) list_item(paragraph("two") bullet_list(list_item(paragraph("three")))))',
+    );
+
+    first.press('Mod-z');
+
+    expect(first.outline).toBe(before);
+
+    const last = nestedWithTail();
+
+    last.placeIn('three', 1);
+    last.press('Shift-Tab');
+
+    expect(last.outline).toBe(
+      'bullet_list(list_item(paragraph("one") bullet_list(list_item(paragraph("two"))) paragraph("tail")) list_item(paragraph("three")))',
+    );
+
+    last.press('Mod-z');
+
+    expect(last.outline).toBe(before);
   });
 
   it('wraps a paragraph into a list or a quote through commands', () => {

@@ -22,14 +22,18 @@ export const createSelection = (
       modelValue: single.value,
       values: many.value,
       'onUpdate:modelValue': (value: unknown) => {
-        if (typeof value === 'string' || value === null) {
-          single.value = value;
+        if (typeof value !== 'string' && value !== null) {
+          return;
         }
+
+        single.value = value;
       },
       'onUpdate:values': (value: unknown) => {
-        if (isStrings(value)) {
-          many.value = value;
+        if (!isStrings(value)) {
+          return;
         }
+
+        many.value = value;
       },
     }),
     value: () => (multiple ? many.value : single.value),

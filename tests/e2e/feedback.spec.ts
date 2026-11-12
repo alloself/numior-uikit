@@ -2,6 +2,10 @@ import { expect, test } from './fixtures';
 import { paintedRgb, rgbDelta } from './helpers/color';
 import { bottomOf } from './pages/feedback';
 import { boxOf } from './helpers/geometry';
+import { paintsOver } from './helpers/motion';
+
+const IDLE_WINDOW = 600;
+const IDLE_PAINTS = 6;
 
 test.describe('feedback', () => {
   test('a toast fired from an open dialog paints above it and outlives it', async ({
@@ -49,15 +53,17 @@ test.describe('feedback', () => {
     expect(bottomOf(behindBox)).toBeGreaterThan(bottomOf(frontBox));
     expect(behindBox.width).toBeLessThan(frontBox.width);
 
-    if (!isMobile) {
-      await front.hover();
-
-      await expect
-        .poll(async () => (await feedback.stackBox(1)).y)
-        .toBeGreaterThanOrEqual(bottomOf(await feedback.stackBox(0)));
-
-      expect(Math.round((await feedback.stackBox(1)).width)).toBe(Math.round(frontBox.width));
+    if (isMobile) {
+      return;
     }
+
+    await front.hover();
+
+    await expect
+      .poll(async () => (await feedback.stackBox(1)).y)
+      .toBeGreaterThanOrEqual(bottomOf(await feedback.stackBox(0)));
+
+    expect(Math.round((await feedback.stackBox(1)).width)).toBe(Math.round(frontBox.width));
   });
 
   test('toasts auto-dismiss after their duration and pause while hovered', async ({
@@ -84,6 +90,74 @@ test.describe('feedback', () => {
     await expect.poll(async () => (await feedback.readOutput()).toastCount).toBe(0);
   });
 
+  test('closing a toast with the pointer hands focus back and the rest keep counting', async ({
+    playground,
+    feedback,
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'pointer scenario');
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await feedback.toastError.click();
+    await feedback.toastShow.click();
+    await feedback.toastShow.focus();
+    const rest = feedback.toastByText('Уведомление №');
+
+    await rest.hover();
+    await feedback.closeButtonOf(feedback.toastByText('Не удалось сохранить')).click();
+
+    await expect(feedback.toastShow).toBeFocused();
+    await expect(rest).toBeVisible();
+
+    await page.mouse.move(0, 0);
+
+    await expect(rest).toBeHidden({ timeout: 7000 });
+  });
+
+  test('the stack stays open when the toast under a pointer at rest closes or is swapped by its action', async ({
+    playground,
+    feedback,
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'pointer scenario');
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await feedback.toastShow.click();
+    await feedback.toastError.click();
+    await feedback.toastShow.click();
+    await expect(feedback.stackItems).toHaveCount(3);
+
+    const failed = feedback.toastByText('Не удалось сохранить');
+
+    await feedback.stackItems.first().hover();
+    await expect.poll(() => feedback.stackOpen()).toBe(true);
+
+    const place = await boxOf(failed);
+
+    await feedback.actionOf(failed).click();
+
+    const saved = feedback.toastByText('Повторили');
+
+    await expect(saved).toBeVisible();
+    await expect(feedback.stackItems).toHaveCount(3);
+    expect((await boxOf(saved)).y).toBe(place.y);
+    expect(await feedback.stackOpen()).toBe(true);
+
+    await feedback.closeButtonOf(feedback.toastByText('Уведомление №1')).click();
+
+    await expect(feedback.stackItems).toHaveCount(2);
+
+    await feedback.painted();
+
+    expect(await feedback.stackOpen()).toBe(true);
+
+    await page.mouse.move(0, 0);
+
+    await expect.poll(() => feedback.stackOpen()).toBe(false);
+  });
+
   test('error toasts are alerts, keep focusable actions and close on Escape', async ({
     playground,
     feedback,
@@ -104,8 +178,10 @@ test.describe('feedback', () => {
     await expect(toast).toBeHidden();
 
     await feedback.toastError.click();
-    await feedback.actionOf(feedback.toastByText('Не удалось сохранить')).click();
-    await expect(feedback.toastByText('Повторили')).toBeVisible();
+    await feedback.actionOf(feedback.toastByText('Не удалось сохранить')).focus();
+    await page.keyboard.press('Enter');
+
+    await expect(feedback.toastByText('Повторили')).toBeFocused();
     await expect(feedback.toastByText('Не удалось сохранить')).toBeHidden();
   });
 
@@ -126,10 +202,12 @@ test.describe('feedback', () => {
     await feedback.setPlacement('top-start');
     expect((await overlays.edges(feedback.toaster)).right).toBe(width - inset);
 
-    if (isMobile) {
-      const box = await boxOf(feedback.toaster);
-      expect(Math.round(box.width)).toBe(width - inset * 2);
+    if (!isMobile) {
+      return;
     }
+
+    const box = await boxOf(feedback.toaster);
+    expect(Math.round(box.width)).toBe(width - inset * 2);
   });
 
   test('alert dismisses through its close button and progress exposes native semantics', async ({
@@ -159,7 +237,23 @@ test.describe('feedback', () => {
       'true',
     );
 
-    expect(await feedback.animationName(feedback.skeletonLine)).toBe('none');
+    expect((await feedback.shimmerOf(feedback.skeletonLine)).name).toBe('none');
+  });
+
+  test('a skeleton and an endless progress bar animate without waking the main thread', async ({
+    playground,
+    feedback,
+    page,
+  }) => {
+    await playground.open();
+    await feedback.skeleton.scrollIntoViewIfNeeded();
+    await expect(feedback.progressIndeterminate).toBeInViewport();
+
+    await expect
+      .poll(() => feedback.shimmerOf(feedback.skeletonLine))
+      .toEqual({ name: 'nui-skeleton-shimmer', state: 'running' });
+
+    expect(await paintsOver(page, IDLE_WINDOW)).toBeLessThanOrEqual(IDLE_PAINTS);
   });
 
   test('visible feedback has no automatically detectable WCAG AA violations', async ({

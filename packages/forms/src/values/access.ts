@@ -37,9 +37,11 @@ export const mergeInto = (target: object, source: object): void => {
 
 export const replaceContents = (target: object, source: object): void => {
   for (const key of Object.keys(target)) {
-    if (!Object.hasOwn(source, key)) {
-      Reflect.deleteProperty(target, key);
+    if (Object.hasOwn(source, key)) {
+      continue;
     }
+
+    Reflect.deleteProperty(target, key);
   }
   for (const [key, value] of Object.entries(source)) {
     Reflect.set(target, key, value);
@@ -58,9 +60,11 @@ export const deleteAt = (target: object, path: string): void => {
     Reflect.deleteProperty(parent, last);
     return;
   }
-  if (isIndexSegment(last) && Number(last) < parent.length) {
-    Reflect.set(parent, last, undefined);
+  if (!isIndexSegment(last) || Number(last) >= parent.length) {
+    return;
   }
+
+  Reflect.set(parent, last, undefined);
 };
 
 const childrenOf = (value: unknown, segment: string): Branch[] => {

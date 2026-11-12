@@ -9,10 +9,11 @@
           'nui-spreadsheet__drawing--selected': placed.shown.drawing.id === selected,
         },
       ]"
-      :style="rectStyle(placed.rect)"
+      :style="tableRectStyle(placed.rect)"
       @pointerdown="emit('down', $event, placed.shown)"
       @click="emit('select', placed.shown)"
       @dblclick="emit('settings', placed.shown)"
+      @contextmenu="emit('menu', $event, placed.shown)"
     >
       <NuiSpreadsheetDrawingBody :shown="placed.shown" />
     </div>
@@ -21,7 +22,7 @@
       :class="{
         'nui-spreadsheet__drawing-frame--selected': placed.shown.drawing.id === selected,
       }"
-      :style="rectStyle(placed.frame)"
+      :style="tableRectStyle(placed.frame)"
     >
       <span
         v-for="grip in GRIPS"
@@ -58,9 +59,9 @@
 
 <script setup lang="ts">
 import { Settings2 } from '@lucide/vue';
+import { tableRectStyle } from '@numior/table';
 import { NuiButton, NuiIcon } from '@numior/vue';
 import { computed, markRaw } from 'vue';
-import { rectStyle } from '../sheet-rect';
 import { FrameGrip } from '../sheet.types';
 import { boxOf } from './drawing-box';
 import NuiSpreadsheetDrawingBody from './NuiSpreadsheetDrawingBody.vue';
@@ -94,6 +95,7 @@ const emit = defineEmits<{
   grip: [event: PointerEvent, shown: ShownDrawing, grip: FrameGrip];
   select: [shown: ShownDrawing];
   settings: [shown: ShownDrawing];
+  menu: [event: MouseEvent, shown: ShownDrawing];
 }>();
 
 const placedDrawings = computed(() =>

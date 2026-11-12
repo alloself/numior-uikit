@@ -33,6 +33,7 @@
             :texts="texts"
             @grab="onGrab(at, $event)"
             @grip-keydown="onGripKeydown(at, $event)"
+            @grip-blur="reorder.onBlur(at)"
             @remove="remove(at)"
             @edit="startEdit(row.placed)"
             @hover="emit('hover', row.placed.ranges)"
@@ -87,6 +88,7 @@ import {
   ReorderAxis,
   ReorderEventType,
   ReorderPhase,
+  isComposing,
   useMessages,
   useReorder,
   type ReorderEvent,
@@ -255,15 +257,19 @@ const ghosts = computed((): RuleRow[] => {
 });
 
 const onGrab = (at: number, event: PointerEvent): void => {
-  if (!readonly) {
-    reorder.onPointerdown(at, event);
+  if (readonly) {
+    return;
   }
+
+  reorder.onPointerdown(at, event);
 };
 
 const onGripKeydown = (at: number, event: KeyboardEvent): void => {
-  if (!readonly && reorder.onKeydown(at, event)) {
-    event.preventDefault();
+  if (readonly || !reorder.onKeydown(at, event)) {
+    return;
   }
+
+  event.preventDefault();
 };
 
 const remove = (at: number): void => {
@@ -291,9 +297,11 @@ const editingForm = computed({
   set: (form: RuleForm) => {
     const current = editing.value;
 
-    if (current !== undefined) {
-      editing.value = { ...current, form };
+    if (current === undefined) {
+      return;
     }
+
+    editing.value = { ...current, form };
   },
 });
 
@@ -322,7 +330,7 @@ const save = (): void => {
     return;
   }
 
-  const result = ruleOf(current.form, looks.locale);
+  const result = ruleOf(current.form, looks.locale, looks.signatures);
 
   if (!result.ok) {
     editing.value = { ...current, error: result.field };
@@ -339,7 +347,9 @@ const popupOpen = (): boolean =>
   (panel.value?.querySelector('[aria-expanded="true"]') ?? null) !== null;
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (event.key !== Key.Escape || event.defaultPrevented || reordering.value || popupOpen()) {
+  const busy = isComposing(event) || event.defaultPrevented || reordering.value || popupOpen();
+
+  if (event.key !== Key.Escape || busy) {
     return;
   }
   event.preventDefault();
@@ -381,10 +391,14 @@ watch(
   () => {
     const key = focusAfter.value;
 
-    if (key !== undefined || shown.value.length === 0) {
-      focusAfter.value = undefined;
-      focusRule(key);
+    const due = key !== undefined || shown.value.length === 0;
+
+    if (!due) {
+      return;
     }
+
+    focusAfter.value = undefined;
+    focusRule(key);
   },
   { flush: 'post' },
 );
@@ -396,10 +410,12 @@ const focusStart = (): void => {
 watch(
   editing,
   (next, before) => {
-    if (next === undefined && before !== undefined) {
-      focusBack(backTo.value);
-      backTo.value = undefined;
+    if (next !== undefined || before === undefined) {
+      return;
     }
+
+    focusBack(backTo.value);
+    backTo.value = undefined;
   },
   { flush: 'post' },
 );

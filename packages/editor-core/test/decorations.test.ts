@@ -66,6 +66,14 @@ describe('editor view decorations', () => {
     expect(view.positionAt('.var', 1)).toBe(10);
   });
 
+  it('paints a range over every text block it crosses', () => {
+    const view = mounted([inlineDecoration(2, 18, 'sel')]);
+
+    expect(view.markup).toBe(
+      '<p><span>l<span class="sel">et value = 1</span></span></p><p><span><span class="sel">pl</span>ain</span></p>',
+    );
+  });
+
   it('keeps typed text inside a decoration and maps it through the change', () => {
     const view = mounted(TOKENS);
 

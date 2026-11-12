@@ -1,6 +1,17 @@
+import { sortBy } from 'lodash-es';
 import { MAX_COLS, MAX_ROWS } from './address';
-import { CellValueKind, LineAxis, type CellRange, type CellValue } from './cell.types';
-import { shiftIndex, type LineMove } from './lines';
+import { CellValueKind, type LineAxis, type CellRange, type CellValue } from './cell.types';
+import {
+  CHUNKS_PER_ROW,
+  CHUNK_COLS,
+  CHUNK_ROWS,
+  CHUNK_SIZE,
+  chunkKey,
+  copyPlane,
+  filledSlots,
+  shiftChunkLines,
+  slotOf,
+} from './chunks';
 import type { SharedStrings } from './strings';
 import { CELL_ERRORS, EMPTY } from './values';
 
@@ -15,6 +26,10 @@ interface Chunk {
 export type CellVisitor = (row: number, col: number, value: CellValue) => void;
 
 export type ChunkVisitor = (stamp: number, area: CellRange) => void;
+
+export interface WriteCount {
+  writes: number;
+}
 
 export interface CellStore {
   get(row: number, col: number): CellValue;
@@ -31,12 +46,11 @@ export interface CellStore {
   readonly chunks: number;
 }
 
-interface RawCells {
-  readonly rows: number[];
-  readonly cols: number[];
-  readonly kinds: number[];
-  readonly numbers: number[];
-  readonly refs: number[];
+interface ChunkLines {
+  readonly count: number;
+  readonly span: number;
+  readonly stride: number;
+  readonly step: number;
 }
 
 interface Point {
@@ -44,21 +58,18 @@ interface Point {
   readonly col: number;
 }
 
-export const CHUNK_ROWS = 512;
+interface BandChunk {
+  readonly chunk: Chunk;
+  readonly col: number;
+}
 
-export const CHUNK_COLS = 32;
-
-const CHUNK_SIZE = CHUNK_ROWS * CHUNK_COLS;
-
-const CHUNKS_PER_ROW = MAX_COLS / CHUNK_COLS;
+export { CHUNK_COLS, CHUNK_ROWS };
 
 const Kind = { Empty: 0, Number: 1, String: 2, Boolean: 3, Error: 4 } as const;
 
-const chunkKey = (row: number, col: number): number =>
-  Math.floor(row / CHUNK_ROWS) * CHUNKS_PER_ROW + Math.floor(col / CHUNK_COLS);
+const ROW_LINES: ChunkLines = { count: CHUNK_ROWS, span: CHUNK_COLS, stride: CHUNK_COLS, step: 1 };
 
-const slotOf = (row: number, col: number): number =>
-  (row % CHUNK_ROWS) * CHUNK_COLS + (col % CHUNK_COLS);
+const COL_LINES: ChunkLines = { count: CHUNK_COLS, span: CHUNK_ROWS, stride: 1, step: CHUNK_COLS };
 
 const newChunk = (): Chunk => ({
   kinds: new Uint8Array(CHUNK_SIZE),
@@ -117,8 +128,21 @@ const write = (chunk: Chunk, slot: number, value: CellValue, strings: SharedStri
   }
 };
 
-const lineOf = (axis: LineAxis, row: number, col: number): number =>
-  axis === LineAxis.Rows ? row : col;
+const moveSlots = (source: Chunk, from: number, to: number, target: Chunk, at: number): void => {
+  copyPlane(source.kinds, from, to, target.kinds, at);
+  if (source.numbers !== undefined) {
+    copyPlane(source.numbers, from, to, numbersOf(target), at);
+  }
+  if (source.refs === undefined) {
+    return;
+  }
+
+  copyPlane(source.refs, from, to, refsOf(target), at);
+};
+
+const clearSlots = (chunk: Chunk, from: number, to: number): void => {
+  chunk.kinds.fill(Kind.Empty, from, to);
+};
 
 const clamp = (value: number, max: number): number => Math.min(Math.max(value, 0), max);
 
@@ -129,6 +153,42 @@ const bandsOf = (from: number, to: number, size: number): number[] => {
     bands.push(band);
   }
   return bands;
+};
+
+const bandCount = (from: number, to: number, size: number): number =>
+  Math.floor(to / size) - Math.floor(from / size) + 1;
+
+const filledBands = (
+  chunks: ReadonlyMap<number, Chunk>,
+  range: CellRange,
+): [number, BandChunk[]][] => {
+  const top = Math.floor(range.top / CHUNK_ROWS);
+  const bottom = Math.floor(range.bottom / CHUNK_ROWS);
+  const left = Math.floor(range.left / CHUNK_COLS);
+  const right = Math.floor(range.right / CHUNK_COLS);
+  const bands = new Map<number, BandChunk[]>();
+
+  chunks.forEach((chunk, key) => {
+    const band = Math.floor(key / CHUNKS_PER_ROW);
+    const col = key % CHUNKS_PER_ROW;
+
+    if (band < top || band > bottom || col < left || col > right) {
+      return;
+    }
+
+    const present = bands.get(band);
+
+    if (present === undefined) {
+      bands.set(band, [{ chunk, col }]);
+    } else {
+      present.push({ chunk, col });
+    }
+  });
+
+  return sortBy([...bands], ([band]) => band).map(([band, present]) => [
+    band,
+    sortBy(present, (each) => each.col),
+  ]);
 };
 
 const inside = (row: number, col: number): boolean =>
@@ -156,37 +216,69 @@ const pastChunk = (next: Point, step: Point): Point => {
   };
 };
 
-export const createCellStore = (strings: SharedStrings): CellStore => {
+const holds = (kinds: Uint8Array, lines: ChunkLines, line: number): boolean => {
+  const from = line * lines.stride;
+
+  for (let offset = 0; offset < lines.span; offset += 1) {
+    if (kinds[from + offset * lines.step] !== Kind.Empty) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+const firstLine = (kinds: Uint8Array, lines: ChunkLines, before: number): number => {
+  for (let line = 0; line < before; line += 1) {
+    if (holds(kinds, lines, line)) {
+      return line;
+    }
+  }
+
+  return before;
+};
+
+const lastLine = (kinds: Uint8Array, lines: ChunkLines, after: number): number => {
+  for (let line = lines.count - 1; line > after; line -= 1) {
+    if (holds(kinds, lines, line)) {
+      return line;
+    }
+  }
+
+  return after;
+};
+
+const bandExtent = (chunks: ReadonlyMap<number, Chunk>): CellRange | undefined => {
+  if (chunks.size === 0) {
+    return undefined;
+  }
+  const extent = { top: MAX_ROWS, left: MAX_COLS, bottom: -1, right: -1 };
+
+  for (const key of chunks.keys()) {
+    const row = Math.floor(key / CHUNKS_PER_ROW);
+    const col = key % CHUNKS_PER_ROW;
+
+    extent.top = Math.min(extent.top, row);
+    extent.left = Math.min(extent.left, col);
+    extent.bottom = Math.max(extent.bottom, row);
+    extent.right = Math.max(extent.right, col);
+  }
+
+  return extent;
+};
+
+export const createCellStore = (
+  strings: SharedStrings,
+  book: WriteCount = { writes: 0 },
+): CellStore => {
   const chunks = new Map<number, Chunk>();
   let size = 0;
 
   const filled = (row: number, col: number): boolean =>
     (chunks.get(chunkKey(row, col))?.kinds[slotOf(row, col)] ?? Kind.Empty) !== Kind.Empty;
 
-  const visitChunk = (
-    chunk: Chunk,
-    band: { readonly row: number; readonly col: number },
-    range: CellRange,
-    visit: CellVisitor,
-  ): void => {
-    const top = Math.max(range.top, band.row * CHUNK_ROWS);
-    const bottom = Math.min(range.bottom, band.row * CHUNK_ROWS + CHUNK_ROWS - 1);
-    const left = Math.max(range.left, band.col * CHUNK_COLS);
-    const right = Math.min(range.right, band.col * CHUNK_COLS + CHUNK_COLS - 1);
-
-    for (let row = top; row <= bottom; row += 1) {
-      for (let col = left; col <= right; col += 1) {
-        const slot = slotOf(row, col);
-
-        if (chunk.kinds[slot] !== Kind.Empty) {
-          visit(row, col, read(chunk, slot, strings));
-        }
-      }
-    }
-  };
-
   const visitBand = (
-    present: readonly { readonly chunk: Chunk; readonly col: number }[],
+    present: readonly BandChunk[],
     band: number,
     range: CellRange,
     visit: CellVisitor,
@@ -202,9 +294,11 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
         for (let col = left; col <= right; col += 1) {
           const slot = slotOf(row, col);
 
-          if (chunk.kinds[slot] !== Kind.Empty) {
-            visit(row, col, read(chunk, slot, strings));
+          if (chunk.kinds[slot] === Kind.Empty) {
+            continue;
           }
+
+          visit(row, col, read(chunk, slot, strings));
         }
       }
     }
@@ -227,80 +321,36 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
     return along(point, step);
   };
 
-  const takeLines = (axis: LineAxis, from: number): RawCells => {
-    const taken: RawCells = { rows: [], cols: [], kinds: [], numbers: [], refs: [] };
-
-    chunks.forEach((chunk, key) => {
-      const top = Math.floor(key / CHUNKS_PER_ROW) * CHUNK_ROWS;
-      const left = (key % CHUNKS_PER_ROW) * CHUNK_COLS;
-
-      if (lineOf(axis, top + CHUNK_ROWS - 1, left + CHUNK_COLS - 1) < from) {
-        return;
-      }
-      for (let slot = 0; slot < CHUNK_SIZE; slot += 1) {
-        const kind = chunk.kinds[slot] ?? Kind.Empty;
-        const row = top + Math.floor(slot / CHUNK_COLS);
-        const col = left + (slot % CHUNK_COLS);
-
-        if (kind !== Kind.Empty && lineOf(axis, row, col) >= from) {
-          taken.rows.push(row);
-          taken.cols.push(col);
-          taken.kinds.push(kind);
-          taken.numbers.push(chunk.numbers?.[slot] ?? 0);
-          taken.refs.push(chunk.refs?.[slot] ?? 0);
-          chunk.kinds[slot] = Kind.Empty;
-          chunk.count -= 1;
-          size -= 1;
-        }
-      }
-      if (chunk.count === 0) {
-        chunks.delete(key);
-      }
-    });
-
-    return taken;
-  };
-
   let revision = 0;
-
-  const putRaw = (row: number, col: number, kind: number, number: number, ref: number): void => {
-    const key = chunkKey(row, col);
-    const chunk = chunks.get(key) ?? newChunk();
-    const slot = slotOf(row, col);
-
-    chunk.kinds[slot] = kind;
-    if (kind === Kind.Number || kind === Kind.Boolean) {
-      numbersOf(chunk)[slot] = number;
-    } else {
-      refsOf(chunk)[slot] = ref;
-    }
-    chunk.count += 1;
-    chunk.stamp = revision;
-    size += 1;
-    chunks.set(key, chunk);
-  };
 
   return {
     shiftLines: (axis, at, count) => {
-      const change: LineMove = { axis, at, count };
-
       revision += 1;
-      const taken = takeLines(axis, at);
+      book.writes += 1;
 
-      taken.rows.forEach((row, index) => {
-        const col = taken.cols[index] ?? 0;
-        const line = shiftIndex(lineOf(axis, row, col), change);
+      shiftChunkLines(
+        {
+          chunks,
+          create: newChunk,
+          move: moveSlots,
+          clear: clearSlots,
+          settle: (key, chunk) => {
+            const held = filledSlots(chunk.kinds);
 
-        if (line !== undefined) {
-          putRaw(
-            axis === LineAxis.Rows ? line : row,
-            axis === LineAxis.Rows ? col : line,
-            taken.kinds[index] ?? Kind.Empty,
-            taken.numbers[index] ?? 0,
-            taken.refs[index] ?? 0,
-          );
-        }
-      });
+            size += held - chunk.count;
+            chunk.count = held;
+            chunk.stamp = revision;
+            if (held !== 0) {
+              return;
+            }
+
+            chunks.delete(key);
+          },
+        },
+        axis,
+        at,
+        count,
+      );
     },
     get: (row, col) => {
       const chunk = chunks.get(chunkKey(row, col));
@@ -312,6 +362,7 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
       const key = chunkKey(row, col);
 
       revision += 1;
+      book.writes += 1;
       const slot = slotOf(row, col);
 
       const chunk =
@@ -335,6 +386,18 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
       }
     },
     forEachInRange: (range, visit) => {
+      const spanned =
+        bandCount(range.top, range.bottom, CHUNK_ROWS) *
+        bandCount(range.left, range.right, CHUNK_COLS);
+
+      if (spanned > chunks.size) {
+        filledBands(chunks, range).forEach(([band, present]) => {
+          visitBand(present, band, range, visit);
+        });
+
+        return;
+      }
+
       const columns = bandsOf(range.left, range.right, CHUNK_COLS);
 
       for (const band of bandsOf(range.top, range.bottom, CHUNK_ROWS)) {
@@ -344,9 +407,11 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
           return chunk === undefined ? [] : [{ chunk, col }];
         });
 
-        if (present.length > 0) {
-          visitBand(present, band, range, visit);
+        if (present.length === 0) {
+          continue;
         }
+
+        visitBand(present, band, range, visit);
       }
     },
     forEachChunk: (range, visit) => {
@@ -356,43 +421,53 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
         for (const col of columns) {
           const chunk = chunks.get(band * CHUNKS_PER_ROW + col);
 
-          if (chunk !== undefined) {
-            visit(chunk.stamp, {
-              top: Math.max(range.top, band * CHUNK_ROWS),
-              left: Math.max(range.left, col * CHUNK_COLS),
-              bottom: Math.min(range.bottom, band * CHUNK_ROWS + CHUNK_ROWS - 1),
-              right: Math.min(range.right, col * CHUNK_COLS + CHUNK_COLS - 1),
-            });
+          if (chunk === undefined) {
+            continue;
           }
+
+          visit(chunk.stamp, {
+            top: Math.max(range.top, band * CHUNK_ROWS),
+            left: Math.max(range.left, col * CHUNK_COLS),
+            bottom: Math.min(range.bottom, band * CHUNK_ROWS + CHUNK_ROWS - 1),
+            right: Math.min(range.right, col * CHUNK_COLS + CHUNK_COLS - 1),
+          });
         }
       }
     },
     usedRange: () => {
-      const bounds = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, -1, -1];
+      const bands = bandExtent(chunks);
 
-      const widen = (row: number, col: number): void => {
-        bounds[0] = Math.min(bounds[0] ?? row, row);
-        bounds[1] = Math.min(bounds[1] ?? col, col);
-        bounds[2] = Math.max(bounds[2] ?? row, row);
-        bounds[3] = Math.max(bounds[3] ?? col, col);
-      };
+      if (bands === undefined) {
+        return undefined;
+      }
+      const edge = { top: CHUNK_ROWS, left: CHUNK_COLS, bottom: -1, right: -1 };
 
       for (const [key, chunk] of chunks) {
-        const band = { row: Math.floor(key / CHUNKS_PER_ROW), col: key % CHUNKS_PER_ROW };
+        const row = Math.floor(key / CHUNKS_PER_ROW);
+        const col = key % CHUNKS_PER_ROW;
 
-        const whole = {
-          top: band.row * CHUNK_ROWS,
-          left: band.col * CHUNK_COLS,
-          bottom: band.row * CHUNK_ROWS + CHUNK_ROWS - 1,
-          right: band.col * CHUNK_COLS + CHUNK_COLS - 1,
-        };
+        if (row === bands.top) {
+          edge.top = firstLine(chunk.kinds, ROW_LINES, edge.top);
+        }
+        if (row === bands.bottom) {
+          edge.bottom = lastLine(chunk.kinds, ROW_LINES, edge.bottom);
+        }
+        if (col === bands.left) {
+          edge.left = firstLine(chunk.kinds, COL_LINES, edge.left);
+        }
+        if (col !== bands.right) {
+          continue;
+        }
 
-        visitChunk(chunk, band, whole, widen);
+        edge.right = lastLine(chunk.kinds, COL_LINES, edge.right);
       }
 
-      const [top = 0, left = 0, bottom = -1, right = -1] = bounds;
-
-      return bottom < 0 ? undefined : { top, left, bottom, right };
+      return {
+        top: bands.top * CHUNK_ROWS + edge.top,
+        left: bands.left * CHUNK_COLS + edge.left,
+        bottom: bands.bottom * CHUNK_ROWS + edge.bottom,
+        right: bands.right * CHUNK_COLS + edge.right,
+      };
     },
     lastRow: () =>
       [...chunks.keys()].reduce(

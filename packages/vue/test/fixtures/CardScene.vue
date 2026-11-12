@@ -12,7 +12,9 @@
         <button type="button" class="nested" @click="nested += 1">More</button>
       </template>
     </NuiCardHeader>
-    <NuiCardContent v-if="parts.content !== undefined">{{ parts.content }}</NuiCardContent>
+    <NuiCardContent v-if="parts.content !== undefined" :lines="parts.contentLines">
+      {{ parts.content }}
+    </NuiCardContent>
     <NuiCardFooter v-if="parts.footer !== undefined">{{ parts.footer }}</NuiCardFooter>
   </NuiCard>
 </template>
@@ -38,9 +40,11 @@ const clicks = ref(0);
 const nested = ref(0);
 
 const countAction = (event: MouseEvent): void => {
-  if (event.target instanceof Element && event.target.closest('.nui-card__action') !== null) {
-    clicks.value += 1;
+  if (!(event.target instanceof Element) || event.target.closest('.nui-card__action') === null) {
+    return;
   }
+
+  clicks.value += 1;
 };
 
 defineExpose({ clicks, nested });

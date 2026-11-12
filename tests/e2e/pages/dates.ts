@@ -101,6 +101,20 @@ export class DatesSection {
     await this.page.mouse.up();
   }
 
+  async swipeFromDay(scope: Locator, date: string, distance: number): Promise<void> {
+    const box = await boxOf(this.day(scope, date));
+    const session = await this.page.context().newCDPSession(this.page);
+
+    await session.send('Input.synthesizeScrollGesture', {
+      x: Math.round(box.x + box.width / 2),
+      y: Math.round(box.y + box.height / 2),
+      yDistance: distance,
+      gestureSourceType: 'touch',
+    });
+
+    await session.detach();
+  }
+
   async readOutput(): Promise<DatesOutput> {
     return parseDatesOutput(await this.output.innerText());
   }

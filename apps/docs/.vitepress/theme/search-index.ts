@@ -1,6 +1,7 @@
 import MiniSearch, { type Options, type SearchResult } from 'minisearch';
 import { escapeRegExp } from 'lodash-es';
-import type { NuiCommandItem, NuiCommandSource } from '@numior/vue';
+import type { NuiCommandItem } from '@numior/vue';
+import type { DocsNavItem } from './theme.types';
 
 export interface SearchRecord {
   readonly title: string;
@@ -151,41 +152,16 @@ export const searchHits = (index: SearchIndex, query: string, limit = 12): Searc
 
 const itemOf = (hit: SearchHit): NuiCommandItem => ({ value: hit.link, label: hit.label });
 
-const sectionOf = (link: string, sections: readonly SearchSection[], fallback: string): string =>
-  sections.find((section) => section.prefixes.some((prefix) => link.startsWith(prefix)))?.label ??
-  fallback;
+export const searchItems = (hits: readonly SearchHit[]): NuiCommandItem[] => hits.map(itemOf);
 
-const grouped = (
-  items: readonly NuiCommandItem[],
-  sections: readonly SearchSection[],
-  fallback: string,
-): NuiCommandSource => {
-  const groups = items.reduce((found, item) => {
-    const label = sectionOf(item.value, sections, fallback);
+export const pageItems = (pages: readonly SearchPage[]): NuiCommandItem[] =>
+  pages.map((page) => ({ value: page.link, label: page.text, icon: 'file' }));
 
-    found.set(label, [...(found.get(label) ?? []), item]);
-    return found;
-  }, new Map<string, NuiCommandItem[]>());
+export const namedSections = (nav: readonly DocsNavItem[]): SearchSection[] =>
+  nav.slice(1).map((item) => ({ label: item.text, prefixes: item.sections }));
 
-  return [...groups].map(([label, entries]) => ({ label, items: entries }));
-};
-
-export const searchGroups = (
-  hits: readonly SearchHit[],
-  sections: readonly SearchSection[],
-  fallback: string,
-): NuiCommandSource => grouped(hits.map(itemOf), sections, fallback);
-
-export const pageGroups = (
-  pages: readonly SearchPage[],
-  sections: readonly SearchSection[],
-  fallback: string,
-): NuiCommandSource =>
-  grouped(
-    pages.map((page) => ({ value: page.link, label: page.text, icon: 'file' })),
-    sections,
-    fallback,
-  );
+export const sectionOf = (link: string, sections: readonly SearchSection[]): string | undefined =>
+  sections.find((section) => section.prefixes.some((prefix) => link.startsWith(prefix)))?.label;
 
 export const snippetsOf = (
   hits: readonly SearchHit[],

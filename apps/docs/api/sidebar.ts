@@ -142,8 +142,8 @@ const docs: DocsMap = {
       },
       icon: { ru: 'Иконка кнопки подсписка.', en: 'Icon of the sub list button.' },
       active: {
-        ru: 'Подсвечивает кнопку, когда в подсписке есть текущая страница.',
-        en: 'Highlights the button when the sub list holds the current page.',
+        ru: 'Подсвечивает кнопку, когда в подсписке есть текущая страница, и раскрывает подсписок при первом показе.',
+        en: 'Highlights the button when the sub list holds the current page and expands the sub list on first render.',
       },
       id: {
         ru: 'Идентификатор подсписка. По умолчанию создаётся автоматически.',

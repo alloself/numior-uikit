@@ -14,9 +14,11 @@ export const docsExamples = (root: string, highlighter: Highlighter): Plugin => 
         return;
       }
       for (const [id, module] of server.moduleGraph.idToModuleMap) {
-        if (isRegistryId(id)) {
-          server.moduleGraph.invalidateModule(module);
+        if (!isRegistryId(id)) {
+          continue;
         }
+
+        server.moduleGraph.invalidateModule(module);
       }
       server.ws.send({ type: 'full-reload' });
     };

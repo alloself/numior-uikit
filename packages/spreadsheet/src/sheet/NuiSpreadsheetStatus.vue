@@ -58,8 +58,10 @@ const onAction = (): void => {
 };
 
 watch(shown, (now) => {
-  if (!now && root.value?.contains(document.activeElement) === true) {
-    emit('leave');
+  if (now || root.value?.contains(document.activeElement) !== true) {
+    return;
   }
+
+  emit('leave');
 });
 </script>

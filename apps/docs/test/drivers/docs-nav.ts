@@ -64,8 +64,10 @@ export class DocsNavDriver {
   unmount(): void {
     this.wrapper.unmount();
 
-    if (original !== undefined) {
-      Object.defineProperty(HTMLElement.prototype, 'offsetTop', original);
+    if (original === undefined) {
+      return;
     }
+
+    Object.defineProperty(HTMLElement.prototype, 'offsetTop', original);
   }
 }

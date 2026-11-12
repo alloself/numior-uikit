@@ -1,9 +1,11 @@
 import { mount, renderToString, type VueWrapper } from '@vue/test-utils';
 import { contentSchema } from '@numior/content';
 import {
+  blockSpotOf,
   createEmptyDoc,
   textSelection,
   toJSON,
+  type BlockSpot,
   type Command,
   type DocJSON,
 } from '@numior/editor-core';
@@ -41,6 +43,8 @@ const MENU_SELECTORS: Readonly<Record<EditorMenu, string>> = {
   colours: '.nui-editor-colours',
   handle: '.nui-editor-handle [role="menu"]',
 };
+
+const DRAG_POINTER = { bubbles: true, cancelable: true, pointerId: 1, button: 0 };
 
 const withoutComments = (html: string): string => html.replaceAll(/<!--[\s\S]*?-->/g, '');
 
@@ -184,6 +188,12 @@ export class EditorDriver {
     return exposed;
   }
 
+  get spot(): BlockSpot | undefined {
+    const state = this.api.state();
+
+    return state === undefined ? undefined : blockSpotOf(state);
+  }
+
   get root(): HTMLElement {
     const element = this.wrapper.element.ownerDocument.querySelector('.nui-editor');
 
@@ -284,6 +294,18 @@ export class EditorDriver {
     await nextTick();
   }
 
+  async erase(direction: 'backward' | 'forward'): Promise<void> {
+    this.content.dispatchEvent(
+      new InputEvent('beforeinput', {
+        inputType: direction === 'backward' ? 'deleteContentBackward' : 'deleteContentForward',
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+
+    await nextTick();
+  }
+
   async press(key: string, options: KeyOptions = {}): Promise<void> {
     this.content.dispatchEvent(
       new KeyboardEvent('keydown', {
@@ -325,6 +347,12 @@ export class EditorDriver {
     );
   }
 
+  get headerTools(): readonly string[] {
+    return [...this.root.querySelectorAll('.nui-editor-toolbar .nui-editor-toolbar__control')].map(
+      (button) => button.getAttribute('aria-label') ?? '',
+    );
+  }
+
   pressed(label: string): boolean {
     return this.tool(label).getAttribute('aria-pressed') === 'true';
   }
@@ -358,20 +386,53 @@ export class EditorDriver {
     await nextTick();
   }
 
+  private get insertSurface(): HTMLElement {
+    const surface = this.find(MENU_SELECTORS.insert).closest('[popover]');
+
+    if (!(surface instanceof HTMLElement)) {
+      throw new Error('The insert menu has no popover');
+    }
+    return surface;
+  }
+
+  private async openInsert(): Promise<void> {
+    if (isShown(this.insertSurface)) {
+      return;
+    }
+
+    this.insertSurface.showPopover();
+    await nextTick();
+  }
+
+  async closeInsert(): Promise<void> {
+    if (!isShown(this.insertSurface)) {
+      return;
+    }
+
+    this.insertSurface.hidePopover();
+    await nextTick();
+  }
+
   async openMenu(menu: EditorMenu): Promise<void> {
+    if (menu === 'insert') {
+      await this.openInsert();
+      return;
+    }
     const content = this.find(MENU_SELECTORS[menu]);
     const trigger = this.root.querySelector(`[aria-controls="${content.id}"]`);
 
     if (!(trigger instanceof HTMLElement)) {
       throw new Error(`The ${menu} menu has no trigger`);
     }
-    if (trigger.getAttribute('aria-expanded') !== 'true') {
-      trigger.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
-      );
-
-      await nextTick();
+    if (trigger.getAttribute('aria-expanded') === 'true') {
+      return;
     }
+
+    trigger.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
+    );
+
+    await nextTick();
   }
 
   async chooseBlock(label: string): Promise<void> {
@@ -388,18 +449,50 @@ export class EditorDriver {
     await nextTick();
   }
 
+  private get insertItems(): Element[] {
+    return [...this.root.querySelectorAll('.nui-editor-insert [role="option"]')];
+  }
+
   get insertOptions(): readonly string[] {
-    return [...this.root.querySelectorAll('.nui-editor-insert [role^="menuitem"]')].map(
-      (item) => item.textContent?.trim() ?? '',
-    );
+    return this.insertItems.map((item) => item.textContent?.trim() ?? '');
+  }
+
+  get insertUnavailable(): readonly string[] {
+    return this.insertItems.reduce<string[]>((found, item) => {
+      if (item.getAttribute('aria-disabled') === 'true') {
+        found.push(item.textContent?.trim() ?? '');
+      }
+      return found;
+    }, []);
+  }
+
+  get insertShown(): boolean {
+    return isShown(this.insertSurface);
+  }
+
+  get insertSearchFocused(): boolean {
+    const active = this.wrapper.element.ownerDocument.activeElement;
+
+    return active !== null && active === this.root.querySelector('.nui-editor-insert input');
+  }
+
+  async searchInsert(text: string): Promise<void> {
+    await this.openMenu('insert');
+
+    const input = this.root.querySelector('.nui-editor-insert input');
+
+    if (!(input instanceof HTMLInputElement)) {
+      throw new Error('The insert menu has no search field');
+    }
+    input.value = text;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await nextTick();
   }
 
   async chooseInsert(label: string): Promise<void> {
     await this.openMenu('insert');
 
-    const option = [...this.root.querySelectorAll('.nui-editor-insert [role^="menuitem"]')].find(
-      (item) => item.textContent?.trim() === label,
-    );
+    const option = this.insertItems.find((item) => item.textContent?.trim() === label);
 
     if (!(option instanceof HTMLElement)) {
       throw new Error(`No insert option reads ${label}`);
@@ -464,7 +557,7 @@ export class EditorDriver {
 
   dropShown = false;
 
-  async dragBlockTo(text: string, x: number, y: number): Promise<void> {
+  async liftBlock(text: string, x: number, y: number): Promise<void> {
     const block = [...this.content.querySelectorAll('p')].find(
       (candidate) => candidate.textContent === text,
     );
@@ -474,15 +567,28 @@ export class EditorDriver {
     await nextTick();
 
     const grip = this.root.querySelector('.nui-editor-handle__grip');
-    const pointer = { bubbles: true, pointerId: 1, button: 0 };
 
-    grip?.dispatchEvent(new PointerEvent('pointerdown', { ...pointer, clientX: x, clientY: 0 }));
-
-    globalThis.dispatchEvent(
-      new PointerEvent('pointermove', { ...pointer, clientX: x, clientY: y }),
+    grip?.dispatchEvent(
+      new PointerEvent('pointerdown', { ...DRAG_POINTER, clientX: x, clientY: 0 }),
     );
 
-    globalThis.dispatchEvent(new PointerEvent('pointerup', { ...pointer, clientX: x, clientY: y }));
+    this.movePointer(x, y);
+  }
+
+  movePointer(x: number, y: number): boolean {
+    const event = new PointerEvent('pointermove', { ...DRAG_POINTER, clientX: x, clientY: y });
+
+    globalThis.dispatchEvent(event);
+    return event.defaultPrevented;
+  }
+
+  async dragBlockTo(text: string, x: number, y: number): Promise<void> {
+    await this.liftBlock(text, x, y);
+
+    globalThis.dispatchEvent(
+      new PointerEvent('pointerup', { ...DRAG_POINTER, clientX: x, clientY: y }),
+    );
+
     await nextTick();
   }
 
@@ -671,6 +777,20 @@ export class EditorDriver {
     }
   }
 
+  get blockCount(): number {
+    return this.content.querySelectorAll('.nui-editor__chunk > *').length;
+  }
+
+  measured(id: string): boolean {
+    const pos = this.api.state()?.doc.positionOf(id);
+
+    return pos !== undefined && this.api.coordsAt(pos + 1) !== undefined;
+  }
+
+  reveal(id: string): void {
+    this.api.revealNode(id);
+  }
+
   get blockTexts(): readonly string[] {
     return [...this.content.querySelectorAll('.nui-editor__chunk > *')].map(
       (block) => `${block.tagName.toLowerCase()}:${textWithoutWidgets(block)}`,
@@ -798,6 +918,11 @@ export class EditorDriver {
 
   async blur(): Promise<void> {
     this.content.blur();
+    await nextTick();
+  }
+
+  async focusText(): Promise<void> {
+    this.content.focus();
     await nextTick();
   }
 

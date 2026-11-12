@@ -163,7 +163,9 @@ export const readPivotCache = async (
           return;
         }
 
-        unsupported.push(...cacheProblems(element.local, attributes));
+        for (const entry of cacheProblems(element.local, attributes)) {
+          unsupported.push(entry);
+        }
 
         if (element.local === OoxmlElement.WorksheetSource) {
           source = cacheSourceOf(attributes);
@@ -175,9 +177,11 @@ export const readPivotCache = async (
         }
       },
       close: (element) => {
-        if (element.local === OoxmlElement.CacheField) {
-          shared = undefined;
+        if (element.local !== OoxmlElement.CacheField) {
+          return;
         }
+
+        shared = undefined;
       },
     },
     options,
@@ -339,9 +343,11 @@ export const readPivotTable = async (
         collect(table, element.local, attributes, list);
       },
       close: (element) => {
-        if (LISTS[element.local] !== undefined) {
-          list = undefined;
+        if (LISTS[element.local] === undefined) {
+          return;
         }
+
+        list = undefined;
       },
     },
     options,

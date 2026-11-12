@@ -97,7 +97,7 @@ export class TableSheetSection {
   readonly root: Locator;
   readonly viewport: Locator;
   readonly grid: Locator;
-  readonly borderedSwitch: Locator;
+  readonly gridlinesSwitch: Locator;
   readonly heatSwitch: Locator;
   readonly windowSwitch: Locator;
   readonly quarterSwitch: Locator;
@@ -114,7 +114,7 @@ export class TableSheetSection {
     this.viewport = this.root.locator(':scope > .nui-table__frame > .nui-table__viewport');
     this.grid = this.viewport.locator(':scope > .nui-table__grid');
 
-    this.borderedSwitch = page.getByTestId('table-sheet-bordered');
+    this.gridlinesSwitch = page.getByTestId('table-sheet-gridlines');
     this.heatSwitch = page.getByTestId('table-sheet-heat');
     this.windowSwitch = page.getByTestId('table-sheet-window');
     this.quarterSwitch = page.getByTestId('table-sheet-quarter');
@@ -146,6 +146,17 @@ export class TableSheetSection {
 
   content(cell: Locator): Locator {
     return cell.locator(':scope > .nui-table__content');
+  }
+
+  async textLines(position: number, col: number): Promise<number> {
+    const text = this.text(position, col);
+
+    const [box, line] = await Promise.all([
+      textBoxOf(text),
+      text.evaluate((element) => Number.parseFloat(getComputedStyle(element).lineHeight)),
+    ]);
+
+    return Math.round(box.height / line);
   }
 
   async canvasTop(target: Locator): Promise<number> {
@@ -419,9 +430,11 @@ export class TableSheetSection {
 
   async focusNatively(target: Locator): Promise<void> {
     await target.evaluate((element) => {
-      if (element instanceof HTMLElement) {
-        element.focus();
+      if (!(element instanceof HTMLElement)) {
+        return;
       }
+
+      element.focus();
     });
 
     await this.painted();

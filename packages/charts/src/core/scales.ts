@@ -51,10 +51,14 @@ const rounded = (value: number, step: number): number => {
   return Number(value.toPrecision(Math.min(Math.max(digits, 1), 17)));
 };
 
-const ticksBetween = (min: number, max: number, step: number): number[] =>
-  Array.from({ length: Math.round((max - min) / step) + 1 }, (_unused, index) =>
-    rounded(min + index * step, step),
+const ticksWithin = (min: number, max: number, step: number): number[] => {
+  const first = Math.ceil(min / step - 1e-9);
+  const last = Math.floor(max / step + 1e-9);
+
+  return Array.from({ length: Math.max(last - first + 1, 0) }, (_unused, index) =>
+    rounded((first + index) * step, step),
   );
+};
 
 const withZero = (min: number, max: number, zero: boolean): readonly [number, number] => {
   if (min >= 0) {
@@ -88,20 +92,35 @@ export const niceDomain = (low: number, high: number, options: DomainOptions = {
   const max = options.max ?? rounded(Math.ceil(upper / step - 1e-9) * step, step);
   const top = max > min ? max : rounded(min + step, step);
 
-  return { min, max: top, step, ticks: ticksBetween(min, top, step) };
+  return { min, max: top, step, ticks: ticksWithin(min, top, step) };
 };
 
-export const logDomain = (low: number, high: number): NiceDomain => {
-  const min = 10 ** Math.floor(Math.log10(Math.max(low, Number.MIN_VALUE)));
-  const max = Math.max(10 ** Math.ceil(Math.log10(Math.max(high, low))), min * 10);
+const isPositive = (value: number): boolean => Number.isFinite(value) && value > 0;
+
+const powerOfTen = (exponent: number): number => Number(`1e${String(exponent)}`);
+
+const logBounds = (low: number, high: number): readonly [number, number] => {
+  if (isPositive(low) && isPositive(high)) {
+    return [Math.min(low, high), Math.max(low, high)];
+  }
+
+  const [top = 1] = [high, low].filter(isPositive);
+
+  return [top / 10, top];
+};
+
+export const logDomain = (low: number, high: number, count = 5): NiceDomain => {
+  const [bottom, top] = logBounds(low, high);
+  const from = Math.floor(Math.log10(bottom));
+  const to = Math.max(Math.ceil(Math.log10(top)), from + 1);
+  const stride = Math.max(Math.ceil((to - from) / Math.max(count, 1)), 1);
 
   return {
-    min,
-    max,
+    min: powerOfTen(from),
+    max: powerOfTen(to),
     step: 10,
-    ticks: Array.from(
-      { length: Math.round(Math.log10(max / min)) + 1 },
-      (_unused, index) => min * 10 ** index,
+    ticks: Array.from({ length: Math.floor((to - from) / stride) + 1 }, (_unused, index) =>
+      powerOfTen(from + index * stride),
     ),
   };
 };

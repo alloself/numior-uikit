@@ -34,7 +34,7 @@
       <h3 :id="historyId" class="m-0 text-sm font-medium text-muted-foreground">
         Последние заказы
       </h3>
-      <NuiList variant="bordered" :labelled-by="historyId" empty-label="Заказов за полгода не было">
+      <NuiList variant="outline" :labelled-by="historyId" empty-label="Заказов за полгода не было">
         <NuiListItem
           v-for="order in orders"
           :key="order.id"

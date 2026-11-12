@@ -1,9 +1,10 @@
+import { maxBy } from 'lodash-es';
 import { boxOf, type RangeBounds, type RangeBox } from './table-ranges';
 import {
   type NuiTableRange,
   type NuiTableRanges,
   type PastePlanKind,
-  type TableCellPosition,
+  type NuiTableCellPosition,
 } from './table.types';
 
 export interface PasteCell {
@@ -61,7 +62,7 @@ const fillOf = (ranges: NuiTableRanges, text: string, limit: number): PastePlan 
 
 const targetOf = (
   ranges: NuiTableRanges,
-  anchor: TableCellPosition | undefined,
+  anchor: NuiTableCellPosition | undefined,
 ): RangeBox | undefined => {
   const last = ranges.at(-1);
 
@@ -86,7 +87,7 @@ const clipped = (size: BlockSize, box: RangeBox, bounds: RangeBounds): BlockSize
 export const planPaste = (
   block: readonly (readonly string[])[],
   ranges: NuiTableRanges,
-  anchor: TableCellPosition | undefined,
+  anchor: NuiTableCellPosition | undefined,
   bounds: RangeBounds,
   limit: number,
 ): PastePlan => {
@@ -99,7 +100,7 @@ export const planPaste = (
   if (block.length === 1 && first.length === 1 && ranges.length > 0) {
     return fillOf(ranges, first[0] ?? '', limit);
   }
-  const size = { rows: block.length, cols: Math.max(...block.map((line) => line.length)) };
+  const size = { rows: block.length, cols: maxBy(block, (line) => line.length)?.length ?? 0 };
   const target = sizeOf(box);
   const area = clipped(ranges.length === 1 && tiles(size, target) ? target : size, box, bounds);
   const count = area.rows * area.cols;

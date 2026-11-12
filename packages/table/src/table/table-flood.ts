@@ -121,17 +121,21 @@ const originsOf = (line: TableFloodLine, runs: readonly TableFloodRun[]): number
 
   for (const run of runs) {
     for (let col = run.first; col <= run.last; col += 1) {
-      if (line.alignAt(col) !== undefined && filled(line, col)) {
-        origins.add(col);
+      if (line.alignAt(col) === undefined || !filled(line, col)) {
+        continue;
       }
+
+      origins.add(col);
     }
     for (const found of [
       beyond(line, run, -1, NuiTableAlign.Start),
       beyond(line, run, 1, NuiTableAlign.End),
     ]) {
-      if (found !== undefined) {
-        origins.add(found);
+      if (found === undefined) {
+        continue;
       }
+
+      origins.add(found);
     }
   }
   return [...origins].toSorted((left, right) => left - right);
@@ -236,9 +240,11 @@ export const spillsOf = (
 
     const flood = align === undefined ? undefined : floodOf(line, free, origin, align);
 
-    if (align !== undefined && flood !== undefined && flood.first < flood.last) {
-      spill(line, spills, origin, align, flood);
+    if (align === undefined || flood === undefined || flood.first >= flood.last) {
+      continue;
     }
+
+    spill(line, spills, origin, align, flood);
   }
   return spills;
 };

@@ -6,15 +6,29 @@ import {
   createStepper,
   createWorkbook,
   createWorkbookHistory,
+  lineLayoutsOf,
   mapCell,
+  mapCellNear,
+  mapRange,
   parseCell,
   parseFormula,
   parseRange,
   printFormula,
   type LineChange,
+  type LineLayout,
   type WorkbookStep,
 } from '../src/core';
 import { dropSheetFromFormula, renameInFormula, shiftFormula } from '../src/core/formula/rewrite';
+
+const CUSTOM_LINE: LineLayout = {
+  size: 40,
+  custom: true,
+  hidden: false,
+  level: 0,
+  collapsed: false,
+  style: undefined,
+  extra: [],
+};
 
 const rewritten = (
   formula: string,
@@ -150,6 +164,22 @@ describe('reference rewriting', () => {
     expect(mapCell(changes, 'Sheet1', at('B1'))).toBeUndefined();
     expect(mapCell(changes, 'Rates', at('B5'))).toEqual(at('B5'));
   });
+
+  it('leaves a cell on the line that took the place of a removed one and cuts a range', () => {
+    const changes = [rowsAt(2, -3)];
+
+    expect(mapCellNear(changes, 'Sheet1', at('B3'))).toEqual(at('B2'));
+    expect(mapCellNear(changes, 'Sheet1', at('B7'))).toEqual(at('B4'));
+
+    expect(mapRange(changes, 'Sheet1', { top: 0, left: 0, bottom: 5, right: 1 })).toEqual({
+      top: 0,
+      left: 0,
+      bottom: 2,
+      right: 1,
+    });
+
+    expect(mapRange(changes, 'Sheet1', { top: 1, left: 0, bottom: 2, right: 1 })).toBeUndefined();
+  });
 });
 
 describe('workbook steps and history', () => {
@@ -171,6 +201,41 @@ describe('workbook steps and history', () => {
     expect(book.first.layout.view).toMatchObject({ frozenRows: 4, frozenCols: 0 });
     expect(book.history.undo()).toMatchObject({ ok: true });
     expect(book.first.layout.view).toMatchObject({ frozenRows: 4, frozenCols: 1 });
+  });
+
+  it('saves in the opposite of moved lines only what the lines do not bring back', () => {
+    const book = openBook();
+    const stepper = createStepper(book.book, book.calculator);
+    const widths = lineLayoutsOf([[2, CUSTOM_LINE]]);
+
+    book.first.layout = { ...book.first.layout, rows: widths };
+    book.second.layout = { ...book.second.layout, cols: widths };
+
+    const kindsOf = (step: WorkbookStep): readonly string[] => {
+      const result = stepper.apply(step);
+
+      if (!result.ok || result.inverse.kind !== 'batch') {
+        throw new Error('the lines did not move');
+      }
+      stepper.apply(result.inverse);
+      return result.inverse.steps.map((part) =>
+        'sheet' in part ? `${part.kind} ${part.sheet}` : part.kind,
+      );
+    };
+
+    const kinds = [
+      kindsOf({ kind: 'insertLines', sheet: 'Sheet1', axis: 'rows', at: 1, count: 2 }),
+      kindsOf({ kind: 'deleteLines', sheet: 'Sheet1', axis: 'rows', at: 5, count: 1 }),
+      kindsOf({ kind: 'deleteLines', sheet: 'Sheet1', axis: 'rows', at: 2, count: 1 }),
+    ];
+
+    expect(kinds).toEqual([
+      ['deleteLines Sheet1'],
+      ['insertLines Sheet1', 'setCells Sheet1'],
+      ['insertLines Sheet1', 'setCells Sheet1', 'setLayout Sheet1'],
+    ]);
+
+    expect(book.first.layout.rows.get(2)).toEqual(CUSTOM_LINE);
   });
 
   it('inserts rows with values, formulas and formats, and undoes and redoes them', () => {

@@ -25,7 +25,7 @@
       :aria-disabled="state.disabled || undefined"
       :aria-current="state.today ? 'date' : undefined"
       @click="act(calendar.click)"
-      @pointerdown="act(calendar.arm)"
+      @pointerdown="arm"
       @pointerup="act(calendar.release)"
       @pointerenter="calendar.hover(date)"
     >
@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { formatDateLabel, formatDayNumber } from '@numior/primitives';
+import { PointerType, formatDateLabel, formatDayNumber } from '@numior/primitives';
 import { useCalendar } from './calendar-context';
 
 const dayOf = (date: string): number => Number(date.slice(8, 10));
@@ -47,8 +47,18 @@ const calendar = useCalendar();
 const state = computed(() => calendar.dayState(date, month));
 
 const act = (action: (date: string) => void): void => {
-  if (!state.value.disabled) {
-    action(date);
+  if (state.value.disabled) {
+    return;
   }
+
+  action(date);
+};
+
+const arm = (event: PointerEvent): void => {
+  if (event.pointerType === PointerType.Touch) {
+    return;
+  }
+
+  act(calendar.arm);
 };
 </script>

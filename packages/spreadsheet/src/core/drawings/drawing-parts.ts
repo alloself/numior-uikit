@@ -94,12 +94,13 @@ const placeFragment = (fragment: Fragment, anchor: DrawingAnchor): Fragment => {
 
       return line === undefined || line === slot.line ? slot : { ...slot, line };
     }
-    if (slot.kind === FragmentSlotKind.Measure) {
-      const value = values.measures.get(slot.name)?.[next(slot.name)];
-
-      return value === undefined || value === slot.value ? slot : { ...slot, value };
+    if (slot.kind !== FragmentSlotKind.Measure) {
+      return slot;
     }
-    return slot;
+
+    const value = values.measures.get(slot.name)?.[next(slot.name)];
+
+    return value === undefined || value === slot.value ? slot : { ...slot, value };
   };
 
   return {

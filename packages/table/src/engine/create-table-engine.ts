@@ -1,10 +1,18 @@
 import {
   createRequestJob,
   createStoresJob,
+  rereadNumbers,
   type StoreJob,
   type StoreRequest,
 } from './column-store';
-import { createDistinctNumbersJob, distinctStrings } from './distinct';
+import {
+  createDistinctCodesJob,
+  createDistinctNumbersJob,
+  createDistinctStringsJob,
+  distinctSearch,
+  type DistinctJob,
+  type DistinctSearch,
+} from './distinct';
 import { compactPass, createFilterJob, createFilterSetup, createLoweringJob } from './filter';
 import { createGroupJob, type AggregateColumn, type GroupLevel, type GroupTable } from './group';
 import { createPipeline, type Pipeline, type PipelineStage } from './pipeline';
@@ -18,6 +26,9 @@ import {
   createPropagateJob,
   createSiblingSortJob,
   flattenTree,
+  shownUnder,
+  splicedRefs,
+  subtreeEnd,
   walkTree,
   type TreeLists,
   type TreeTable,
@@ -70,6 +81,7 @@ const DEFAULT_SLICE_MS = 12;
 const DEFAULT_DISTINCT_LIMIT = 100;
 const DETAIL_REF = 2 ** 30;
 const NO_DETAILS: readonly number[] = [];
+const FEW_TOGGLES = 8;
 
 const hasCodes = (
   store: ColumnStore | undefined,
@@ -100,12 +112,32 @@ const detailPositions = (refs: Int32Array): readonly number[] => {
   const positions: number[] = [];
 
   refs.forEach((ref, position) => {
-    if (ref >= DETAIL_REF) {
-      positions.push(position);
+    if (ref < DETAIL_REF) {
+      return;
     }
+
+    positions.push(position);
   });
 
   return positions;
+};
+
+const distinctStage = (
+  job: DistinctJob | undefined,
+  finish: (found: TableDistinct) => void,
+): PipelineStage | null => {
+  if (job === undefined) {
+    finish({ values: [], truncated: false });
+    return null;
+  }
+  return {
+    phase: 'keys',
+    job,
+    next: () => {
+      finish(job.result());
+      return null;
+    },
+  };
 };
 
 export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngine<T> => {
@@ -166,7 +198,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       return known.job;
     }
 
-    const job = createRequestJob(request, table.rows, collator);
+    const job = createRequestJob(request, table.rows, collator, options.rankHost);
 
     building.set(key, { need: request.need, job });
     return job;
@@ -179,7 +211,15 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
 
   const forget = (key: string): void => {
     stores.delete(key);
+    building.get(key)?.job.cancel?.();
     building.delete(key);
+  };
+
+  const dropBuilding = (): void => {
+    for (const { job } of building.values()) {
+      job.cancel?.();
+    }
+    building = new Map();
   };
 
   const storesJob = (needs: Iterable<readonly [string, StoreNeed]>): SliceJob | null => {
@@ -245,9 +285,11 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     const want = (key: string, need: StoreNeed): void => {
       const resolved = columnOf(key).key;
 
-      if (needs.get(resolved) !== StoreNeed.Ranks) {
-        needs.set(resolved, need);
+      if (needs.get(resolved) === StoreNeed.Ranks) {
+        return;
       }
+
+      needs.set(resolved, need);
     };
 
     for (const entry of sort) {
@@ -272,15 +314,29 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
   };
 
   const orderKeysOf = (plan: Plan<T>): OrderKey[] => {
-    const leading = plan.groupBy.map((key): TableSort => ({ key, direction: 'asc' }));
+    const grouping = plan.groupBy.flatMap((key): OrderKey[] => {
+      const store = stores.get(key);
 
-    return [...leading, ...plan.sort].flatMap((sort) => {
+      if (store === undefined || store.kind === ColumnStoreKind.Codes) {
+        return [];
+      }
+
+      const collated = { store, descending: false, exact: false };
+
+      return store.kind === ColumnStoreKind.String
+        ? [collated, { store, descending: false, exact: true }]
+        : [collated];
+    });
+
+    const sorting = plan.sort.flatMap((sort): OrderKey[] => {
       const store = stores.get(sort.key);
 
       return store === undefined || store.kind === ColumnStoreKind.Codes
         ? []
-        : [{ store, descending: sort.direction === TableSortDirection.Desc }];
+        : [{ store, descending: sort.direction === TableSortDirection.Desc, exact: false }];
     });
+
+    return [...grouping, ...sorting];
   };
 
   const filterStage = (
@@ -311,6 +367,15 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     return { phase: 'filter', job: setup, next: passStage };
   };
 
+  const aggregatesOf = (plan: Plan<T>): AggregateColumn<T>[] =>
+    plan.aggregates.flatMap((column): AggregateColumn<T>[] => {
+      const store = stores.get(column.key);
+
+      return store === undefined || column.aggregate === undefined
+        ? []
+        : [{ key: column.key, store, aggregate: column.aggregate }];
+    });
+
   const groupStage = (
     plan: Plan<T>,
     filtered: Uint32Array,
@@ -326,15 +391,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       return store === undefined ? [] : [{ column: columnOf(key), store }];
     });
 
-    const aggregates = plan.aggregates.flatMap((column): AggregateColumn<T>[] => {
-      const store = stores.get(column.key);
-
-      return store === undefined || column.aggregate === undefined
-        ? []
-        : [{ key: column.key, store, aggregate: column.aggregate }];
-    });
-
-    const job = createGroupJob(table.rows, filtered, levels, aggregates);
+    const job = createGroupJob(table.rows, filtered, levels, aggregatesOf(plan));
 
     return {
       phase: 'group',
@@ -372,19 +429,29 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
   ): PipelineStage | null => {
     const tree = buildTreeLists(pass, table.parents);
 
-    const complete = (): null => {
-      finish({ filtered: new Uint32Array(0), groups: null, tree, groupDepth: 0 });
+    const complete = (groups: GroupTable | null): null => {
+      finish({ filtered: new Uint32Array(0), groups, tree, groupDepth: 0 });
       return null;
+    };
+
+    const totalStage = (): PipelineStage | null => {
+      if (plan.aggregates.length === 0) {
+        return complete(null);
+      }
+
+      const job = createGroupJob(table.rows, compactPass(pass), [], aggregatesOf(plan));
+
+      return { phase: 'group', job, next: () => complete(job.result()) };
     };
 
     const keys = orderKeysOf(plan);
 
     return keys.length === 0
-      ? complete()
+      ? totalStage()
       : {
           phase: 'sort',
           job: createSiblingSortJob(tree, (indices) => createOrderJob(indices, keys)),
-          next: complete,
+          next: totalStage,
         };
   };
 
@@ -448,11 +515,13 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       refs[target] = position;
       target += 1;
 
-      if (open[next] === position) {
-        refs[target] = DETAIL_REF + position;
-        target += 1;
-        next += 1;
+      if (open[next] !== position) {
+        continue;
       }
+
+      refs[target] = DETAIL_REF + position;
+      target += 1;
+      next += 1;
     }
     return refs;
   };
@@ -481,16 +550,20 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       refs[size] = -(index + 1);
       size += 1;
 
-      if (expanded && group.level === prepared.groupDepth - 1) {
-        for (let position = group.start; position < group.end; position += 1) {
-          refs[size] = position;
-          size += 1;
+      if (!expanded || group.level !== prepared.groupDepth - 1) {
+        return;
+      }
 
-          if (detailing && detailed(position)) {
-            refs[size] = DETAIL_REF + position;
-            size += 1;
-          }
+      for (let position = group.start; position < group.end; position += 1) {
+        refs[size] = position;
+        size += 1;
+
+        if (!detailing || !detailed(position)) {
+          continue;
         }
+
+        refs[size] = DETAIL_REF + position;
+        size += 1;
       }
     });
 
@@ -625,50 +698,95 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       const index = sourceIndexAt(position);
       const id = index === undefined ? undefined : idOf(index);
 
-      if (id !== undefined && matches(id)) {
-        found.push([id, position]);
+      if (id === undefined || !matches(id)) {
+        continue;
       }
+
+      found.push([id, position]);
     }
     return found;
   };
 
+  const positionOf = (id: TableNodeId): number =>
+    options.keyOf === undefined
+      ? visible.indexOf(Number(id))
+      : visible.findIndex((index) => idOf(index) === id);
+
+  const redrawUnder = (tree: TreeLists, id: TableNodeId): void => {
+    const position = positionOf(id);
+    const index = visible[position];
+
+    if (index === undefined) {
+      return;
+    }
+
+    visible = splicedRefs(
+      visible,
+      position + 1,
+      subtreeEnd(visible, table.depths, position),
+      isExpanded(id) ? shownUnder(tree, index, (child) => isExpanded(idOf(child))) : [],
+    );
+  };
+
+  const retoggle = (changed: readonly TableNodeId[]): void => {
+    const { tree } = prepared;
+
+    if (changed.length === 0) {
+      return;
+    }
+    if (tree === null || changed.length > FEW_TOGGLES) {
+      refresh();
+      return;
+    }
+    for (const id of changed) {
+      redrawUnder(tree, id);
+    }
+  };
+
   const setExpanded = (id: TableNodeId, expanded: boolean): void => {
+    if (expanded === isExpanded(id)) {
+      return;
+    }
     if (expanded === defaultExpanded) {
       toggled.delete(id);
     } else {
       toggled.add(id);
     }
-    refresh();
+    retoggle([id]);
   };
 
-  const distinctStage = (
+  const setToggled = (ids: Iterable<TableNodeId>): void => {
+    const next = new Set(ids);
+
+    const changed = [
+      ...Array.from(toggled).filter((id) => !next.has(id)),
+      ...Array.from(next).filter((id) => !toggled.has(id)),
+    ];
+
+    toggled.clear();
+
+    for (const id of next) {
+      toggled.add(id);
+    }
+    retoggle(changed);
+  };
+
+  const distinctJob = (
     column: TableEngineColumn<T>,
     limit: number,
-    finish: (found: TableDistinct) => void,
-  ): PipelineStage | null => {
+    search: DistinctSearch,
+  ): DistinctJob | undefined => {
     const store = stores.get(column.key);
 
     switch (store?.kind) {
       case undefined:
-        finish({ values: [], truncated: false });
-        return null;
+        return undefined;
       case ColumnStoreKind.Codes:
-        throw new Error(`Table engine lists values of "${column.key}" only from a ranked store`);
+        return createDistinctCodesJob(store, limit, search, collator);
       case ColumnStoreKind.String:
-        finish(distinctStrings(store, limit));
-        return null;
-      case ColumnStoreKind.Number: {
-        const job = createDistinctNumbersJob(column, store, limit);
-
-        return {
-          phase: 'keys',
-          job,
-          next: () => {
-            finish(job.result());
-            return null;
-          },
-        };
-      }
+        return createDistinctStringsJob(store, limit, search);
+      case ColumnStoreKind.Number:
+        return createDistinctNumbersJob(column, store, limit, search);
     }
   };
 
@@ -698,30 +816,109 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
 
     pipeline?.work(Number.POSITIVE_INFINITY);
 
-    if (outcome.prepared !== null) {
-      commit(outcome.prepared);
+    if (outcome.prepared === null) {
+      return;
+    }
+
+    commit(outcome.prepared);
+  };
+
+  const retotal = (plan: Plan<T>): void => {
+    const rows = prepared.filtered;
+    const outcome: { groups: GroupTable | null } = { groups: null };
+
+    const pipeline = createPipeline(
+      storesStage(plan.needs, () => {
+        const job = createGroupJob(table.rows, rows, [], aggregatesOf(plan));
+
+        return {
+          phase: 'group',
+          job,
+          next: () => {
+            outcome.groups = job.result();
+            return null;
+          },
+        };
+      }),
+    );
+
+    pipeline?.work(Number.POSITIVE_INFINITY);
+
+    if (outcome.groups === null) {
+      return;
+    }
+
+    prepared = { ...prepared, groups: outcome.groups };
+  };
+
+  const indicesOf = (rows: readonly T[]): number[] | undefined => {
+    const wanted = new Set(rows);
+    const found: number[] = [];
+
+    for (let index = 0; index < table.rows.length && found.length < wanted.size; index += 1) {
+      const row = table.rows[index];
+
+      if (row === undefined || !wanted.has(row)) {
+        continue;
+      }
+
+      found.push(index);
+    }
+    return found.length === wanted.size ? found : undefined;
+  };
+
+  const reread = (key: string, at: readonly number[]): boolean => {
+    const store = stores.get(key);
+    const column = columnOf(key);
+
+    if (store?.kind !== ColumnStoreKind.Number || column.kind === TableEngineColumnKind.String) {
+      return false;
+    }
+    rereadNumbers(store, column, table.rows, at);
+    return true;
+  };
+
+  const refreshStores = (
+    plan: Plan<T> | undefined,
+    changed: ReadonlySet<string>,
+    at: readonly number[] | undefined,
+  ): void => {
+    for (const key of changed) {
+      if (at !== undefined && reread(key, at)) {
+        continue;
+      }
+
+      forget(key);
+    }
+    for (const { key } of plan?.aggregates ?? []) {
+      if (changed.has(key)) {
+        continue;
+      }
+      if (at === undefined) {
+        forget(key);
+      } else {
+        reread(key, at);
+      }
     }
   };
 
-  const patch = (query: TableQuery, keys: readonly string[]): void => {
+  const patch = (query: TableQuery, keys: readonly string[], rows?: readonly T[]): void => {
     const changed = new Set(keys);
+    const plan = prepared.groups === null ? undefined : planOf(query);
 
-    for (const key of changed) {
-      forget(key);
-    }
+    refreshStores(plan, changed, rows === undefined ? undefined : indicesOf(rows));
     rowsVersion += 1;
 
-    if (options.children !== undefined || prepared.groups === null) {
+    if (plan === undefined) {
       return;
     }
-    const plan = planOf(query);
-
+    if (prepared.tree !== null) {
+      retotal(plan);
+      return;
+    }
     if (plan.groupBy.some((key) => changed.has(key))) {
       runSync(query);
       return;
-    }
-    for (const column of plan.aggregates) {
-      forget(column.key);
     }
     regroup(plan);
   };
@@ -736,7 +933,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
           : flattenTree(next, options.children);
 
       stores = new Map();
-      building = new Map();
+      dropBuilding();
       generation += 1;
       rowsVersion += 1;
       toggled.clear();
@@ -753,32 +950,41 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
 
       refresh();
     },
-    run: async (query, runOptions = {}) => {
+    run: (query, runOptions = {}) => {
       generation += 1;
       const mine = generation;
-      const outcome: { prepared: Prepared | null } = { prepared: null };
 
-      const pipeline = pipelineFor(
-        planOf(query),
-        (next) => {
-          outcome.prepared = next;
-        },
-        runOptions,
-      );
+      const attempt = async (): Promise<TableRunResult> => {
+        const version = rowsVersion;
+        const outcome: { prepared: Prepared | null } = { prepared: null };
 
-      const completed =
-        pipeline === null ||
-        (await runSliced(pipeline, {
-          sliceMs,
-          yieldTo: runOptions.yieldTo ?? yieldTo,
-          signal: runOptions.signal,
-          isStale: () => mine !== generation,
-          onProgress: (done, total) => {
-            runOptions.onProgress?.({ phase: pipeline.phase(), done, total });
+        const pipeline = pipelineFor(
+          planOf(query),
+          (next) => {
+            outcome.prepared = next;
           },
-        }));
+          runOptions,
+        );
 
-      return commit(completed && mine === generation ? outcome.prepared : null);
+        const completed =
+          pipeline === null ||
+          (await runSliced(pipeline, {
+            sliceMs,
+            yieldTo: runOptions.yieldTo ?? yieldTo,
+            signal: runOptions.signal,
+            isStale: () => mine !== generation || version !== rowsVersion,
+            onProgress: (done, total) => {
+              runOptions.onProgress?.({ phase: pipeline.phase(), done, total });
+            },
+          }));
+
+        if (mine === generation && version !== rowsVersion && runOptions.signal?.aborted !== true) {
+          return attempt();
+        }
+        return commit(completed && mine === generation ? outcome.prepared : null);
+      };
+
+      return attempt();
     },
     runSync,
     patch,
@@ -826,20 +1032,14 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       setExpanded(node.id, !node.expanded);
     },
     setExpanded,
-    setToggled: (ids) => {
-      toggled.clear();
-
-      for (const id of ids) {
-        toggled.add(id);
-      }
-      refresh();
-    },
+    setToggled,
     isExpanded,
     totals: () => prepared.groups?.totals ?? {},
     distinct: async (key, distinctOptions = {}) => {
       const version = rowsVersion;
       const limit = distinctOptions.limit ?? DEFAULT_DISTINCT_LIMIT;
       const column = columnOf(key);
+      const search = distinctSearch(distinctOptions.search, distinctOptions.text);
       const outcome: { found: TableDistinct | null } = { found: null };
 
       if (distinctOptions.signal?.aborted === true) {
@@ -847,8 +1047,8 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       }
 
       const pipeline = createPipeline(
-        storesStage(new Map([[column.key, 'ranks']]), () =>
-          distinctStage(column, limit, (found) => {
+        storesStage(new Map([[column.key, 'codes']]), () =>
+          distinctStage(distinctJob(column, limit, search), (found) => {
             outcome.found = found;
           }),
         ),
@@ -881,6 +1081,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       rowsVersion += 1;
       table = { rows: [], parents: new Int32Array(0), depths: new Uint16Array(0) };
       stores = new Map();
+      dropBuilding();
       prepared = emptyPrepared();
       visible = new Int32Array(0);
       toggled.clear();

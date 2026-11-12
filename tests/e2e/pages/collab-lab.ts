@@ -107,6 +107,10 @@ export class CollabLab {
     await this.right.editor.waitFor();
   }
 
+  async newRoom(): Promise<void> {
+    await this.page.getByTestId('collab-lab-room').click();
+  }
+
   async showBook(): Promise<void> {
     await this.page.getByRole('tab', { name: 'Книга' }).click();
     await this.left.grid.waitFor();

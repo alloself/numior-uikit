@@ -151,7 +151,7 @@ const cacheXml = (pivot: SheetPivot, cache: PivotCache): string => {
     ...cache.fields.map(
       (field, index) =>
         `<cacheField${attribute('name', field.name)} numFmtId="0">${sharedItemsXml(
-          field.values,
+          cache.values(index),
           groups.has(index) ? cache.group(index)?.items : undefined,
         )}</cacheField>`,
     ),
@@ -329,9 +329,11 @@ const tableXml = (
               } hier="-1"/>`,
           )
           .join('')}</pageFields>`,
-    `<dataFields${attribute('count', definition.values.length)}>${definition.values
-      .map((value) => dataFieldXml(definition, cache, value, context.styles))
-      .join('')}</dataFields>`,
+    definition.values.length === 0
+      ? ''
+      : `<dataFields${attribute('count', definition.values.length)}>${definition.values
+          .map((value) => dataFieldXml(definition, cache, value, context.styles))
+          .join('')}</dataFields>`,
     '<pivotTableStyleInfo name="PivotStyleLight16" showRowHeaders="1" showColHeaders="1" showRowStripes="0" showColStripes="0" showLastColumn="1"/>',
     '</pivotTableDefinition>',
   ].join('');

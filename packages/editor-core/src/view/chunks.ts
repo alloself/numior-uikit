@@ -23,9 +23,11 @@ const createChunk = (document: Document, chunks: ChunkSet): HTMLElement => {
 
 const dropChunks = (root: HTMLElement, chunks: ChunkSet): void => {
   for (const child of root.children) {
-    if (child instanceof HTMLElement && chunks.has(child)) {
-      chunks.drop(child);
+    if (!(child instanceof HTMLElement) || !chunks.has(child)) {
+      continue;
     }
+
+    chunks.drop(child);
   }
 };
 

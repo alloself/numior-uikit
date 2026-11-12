@@ -27,40 +27,119 @@
     --_font-size: var(--nui-control-font-size-lg);
   }
 
+  @property --_tab-fade-start {
+    syntax: '<length>';
+    inherits: false;
+    initial-value: 0px;
+  }
+  @property --_tab-fade-end {
+    syntax: '<length>';
+    inherits: false;
+    initial-value: 0px;
+  }
+
   .nui-tab-list {
-    --_indicator-start: 0px;
-    --_indicator-size: 0px;
-    --_indicator-thickness: 2px;
+    --_edge: 3rem;
 
     box-sizing: border-box;
     position: relative;
     display: flex;
-    gap: var(--nui-space-1);
     max-inline-size: 100%;
-    border-block-end: 1px solid var(--nui-border);
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
+    box-shadow: inset 0 -1px var(--nui-border);
   }
   .nui-tab-list--orientation-vertical {
-    flex-direction: column;
-    border-block-end: 0;
     border-inline-end: 1px solid var(--nui-border);
+    box-shadow: none;
+  }
+  .nui-tab-list__track {
+    --_indicator-start: 0px;
+    --_indicator-size: 0px;
+    --_indicator-thickness: 2px;
+    --_fade-left: var(--_tab-fade-start);
+    --_fade-right: var(--_tab-fade-end);
+
+    box-sizing: border-box;
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    gap: var(--nui-space-1);
+    min-inline-size: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: var(--_edge);
+    scrollbar-width: none;
+    mask-image: linear-gradient(
+      to right,
+      transparent calc(var(--_fade-left) * 0.4),
+      #000 var(--_fade-left),
+      #000 calc(100% - var(--_fade-right)),
+      transparent calc(100% - var(--_fade-right) * 0.4)
+    );
+    transition:
+      --_tab-fade-start var(--nui-duration-fast) var(--nui-easing),
+      --_tab-fade-end var(--nui-duration-fast) var(--nui-easing);
+  }
+  .nui-tab-list__track:dir(rtl) {
+    --_fade-left: var(--_tab-fade-end);
+    --_fade-right: var(--_tab-fade-start);
+  }
+  .nui-tab-list__track--clipped-start {
+    --_tab-fade-start: var(--_edge);
+  }
+  .nui-tab-list__track--clipped-end {
+    --_tab-fade-end: var(--_edge);
+  }
+  .nui-tab-list--orientation-vertical .nui-tab-list__track {
+    flex-direction: column;
     overflow-x: visible;
+    mask-image: none;
+  }
+  .nui-tab-list__edge {
+    position: absolute;
+    inset-block: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--nui-duration-fast) var(--nui-easing),
+      visibility var(--nui-duration-fast) var(--nui-easing);
+  }
+  .nui-tab-list__edge--start {
+    inset-inline-start: 0;
+  }
+  .nui-tab-list__edge--end {
+    inset-inline-end: 0;
+  }
+  .nui-tab-list__edge--shown {
+    opacity: 1;
+    visibility: visible;
+  }
+  .nui-tab-list__scroll:dir(rtl) {
+    scale: -1 1;
   }
   .nui-tabs--variant-soft .nui-tab-list {
     padding: var(--nui-space-1);
     border: 0;
     border-radius: var(--nui-radius);
     background: var(--nui-surface-muted);
+    box-shadow: none;
+  }
+  .nui-tabs--variant-soft .nui-tab-list__edge--start {
+    inset-inline-start: var(--nui-space-1);
+  }
+  .nui-tabs--variant-soft .nui-tab-list__edge--end {
+    inset-inline-end: var(--nui-space-1);
   }
 
   .nui-tab-item {
-    --_close-size: calc(var(--_font-size) * 1.53125);
+    --_close-size: round(calc(round(var(--_font-size) * 0.875, 1px) * 1.75), 2px);
     --_close-gap: calc(var(--_padding) / 2);
 
     display: inline-grid;
     flex: none;
+    font-size: var(--_font-size);
   }
   .nui-tab-list--orientation-vertical .nui-tab-item {
     display: grid;
@@ -150,7 +229,7 @@
     block-size: var(--_indicator-size);
   }
   .nui-tabs--variant-soft .nui-tab-list__indicator {
-    inset-block: var(--nui-space-1);
+    inset-block: 0;
     block-size: auto;
     border-radius: var(--nui-radius-sm);
     background: var(--nui-surface);
@@ -158,7 +237,7 @@
   }
   .nui-tabs--variant-soft .nui-tab-list--orientation-vertical .nui-tab-list__indicator {
     inset-block: auto;
-    inset-inline: var(--nui-space-1);
+    inset-inline: 0;
     top: var(--_indicator-start);
     inline-size: auto;
     block-size: var(--_indicator-size);

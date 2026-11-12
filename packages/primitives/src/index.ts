@@ -1,7 +1,10 @@
 export { useControlId } from './id/useControlId';
 export { Key } from './keyboard/key.types';
+export { isComposing, isComposingInput } from './keyboard/composition';
 export { InputType } from './input/input.types';
 export { PointerType } from './pointer/pointer.types';
+export { useRestingHover } from './pointer/useRestingHover';
+export type { RestingHover } from './pointer/useRestingHover';
 export {
   FIELD_KEY,
   createFieldContext,
@@ -64,8 +67,11 @@ export {
   isIsoDate,
   isWithin,
   localToday,
+  MAX_ISO_DATE,
+  MIN_ISO_DATE,
   normalizeRange,
   parseIsoDate,
+  utcToday,
 } from './date/iso';
 export type { DateParts, DateRange } from './date/iso';
 export {
@@ -90,7 +96,7 @@ export {
   monthGrid,
   weekNumberOfRow,
 } from './date/grid';
-export type { MonthGridOptions } from './date/grid';
+export type { MonthGridCell, MonthGridOptions } from './date/grid';
 export { CellMove, DateField, DateMaskField, DateMaskPartKind, GridMove } from './date/date.types';
 export {
   formatDateLabel,
@@ -117,6 +123,7 @@ export {
   withStepPrecision,
 } from './intl/number-format';
 export { graphemesOf } from './intl/graphemes';
+export { foldText } from './intl/fold-text';
 export type { NumberSymbols } from './intl/number-format';
 export { clampNumber, decimalPlaces, snapToStep, stepNumber } from './intl/number-step';
 export type { NumberBounds, SnapMode } from './intl/number-step';
@@ -179,8 +186,14 @@ export { useSplitAttrs } from './attrs/useSplitAttrs';
 export type { AttrRecord, SplitAttrs } from './attrs/useSplitAttrs';
 export { useFloating } from './floating/useFloating';
 export type { FloatingOptions, FloatingSize } from './floating/useFloating';
-export { FloatingPlacement, FloatingSide, FloatingStrategy } from './floating/floating.types';
-export { afterRelease } from './popover/after-release';
+export {
+  FLOATING_OFFSET,
+  FloatingPlacement,
+  FloatingSide,
+  FloatingStrategy,
+} from './floating/floating.types';
+export { useAfterRelease } from './popover/useAfterRelease';
+export type { AfterRelease } from './popover/useAfterRelease';
 export { usePopover } from './popover/usePopover';
 export type {
   PopoverContentAttrs,
@@ -239,6 +252,7 @@ export type { SizeIndex } from './virtual/size-index';
 export { VirtualAlign, VirtualAxis } from './virtual/virtual.types';
 export type {
   ItemSize,
+  VirtualAnchor,
   VirtualFrame,
   VirtualItem,
   VirtualList,
@@ -312,13 +326,13 @@ export { useDelayedOpen } from './timing/useDelayedOpen';
 export { useMediaQuery } from './media/useMediaQuery';
 export type { DelayedOpen, DelayedOpenOptions } from './timing/useDelayedOpen';
 export { createToastStore } from './toast/toast-store';
+export { ToastHold, ToastTone } from './toast/toast.types';
 export type {
   Toast,
   ToastAction,
   ToastOptions,
   ToastStore,
   ToastStoreOptions,
-  ToastTone,
 } from './toast/toast-store';
 export { TOASTS_KEY, provideToasts, useToast, useToastStore } from './toast/useToast';
 export type { ToastMessageOptions, ToastService } from './toast/useToast';

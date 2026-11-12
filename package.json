@@ -25,7 +25,7 @@
     "test:ticks": "node scripts/check-tests.mjs",
     "check:styles": "node scripts/check-kit-styles.mjs",
     "arch:check": "archcore status",
-    "check": "vp run --cache build && vp run --cache format:check && vp run --cache typecheck && vp run lint && vp run --cache test:ticks && vp run --cache check:styles && vp run --cache analyze && vp run --cache release:check && vp run --cache test:artifacts && vp run test:nuxt && vp run --cache docs:check && vp run docs:build",
+    "check": "vp run --cache build && vp run --cache format:check && vp run --cache typecheck && vp run lint && vp run --cache test:ticks && vp run --cache check:styles && vp run docs:reference && vp run --cache analyze && vp run --cache release:check && vp run --cache test:artifacts && vp run test:nuxt && vp run --cache docs:check && vp run docs:build",
     "build:css": "node scripts/build-css.ts",
     "release": "semantic-release",
     "release:dry-run": "semantic-release --dry-run",

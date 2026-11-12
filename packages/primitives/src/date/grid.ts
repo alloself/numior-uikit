@@ -1,5 +1,13 @@
 import { clamp } from '@vueuse/core';
-import { addDays, addMonths, addYears, differenceInDays, firstOfMonth } from './arithmetic';
+import {
+  addDays,
+  addMonths,
+  addYears,
+  dateAfter,
+  differenceInDays,
+  endOfMonth,
+  firstOfMonth,
+} from './arithmetic';
 import { Key } from '../keyboard/key.types';
 import { CellMove, GridMove } from './date.types';
 import { endOfWeek, isoWeekOf, startOfWeek, weekdayOf, type Weekday } from './week';
@@ -9,6 +17,8 @@ export interface MonthGridOptions {
   readonly weekStart: Weekday;
   readonly fixedWeeks: boolean;
 }
+
+export type MonthGridCell = string | null;
 
 const FIXED_ROWS = 6;
 
@@ -28,21 +38,25 @@ const CELL_KEYS: Record<string, CellMove> = {
   [Key.PageDown]: CellMove.PageNext,
 };
 
-export const monthGrid = ({ month, weekStart, fixedWeeks }: MonthGridOptions): string[][] => {
+export const monthGrid = ({
+  month,
+  weekStart,
+  fixedWeeks,
+}: MonthGridOptions): MonthGridCell[][] => {
   const first = firstOfMonth(month);
-  const last = addDays(addMonths(first, 1), -1);
-  const start = startOfWeek(first, weekStart);
-  const end = endOfWeek(last, weekStart);
-  const weeks = (differenceInDays(start, end) + 1) / 7;
+  const lead = (weekdayOf(first) - weekStart + 7) % 7;
+  const days = differenceInDays(first, endOfMonth(first)) + 1;
+  const weeks = Math.ceil((lead + days) / 7);
   const rows = fixedWeeks ? Math.max(weeks, FIXED_ROWS) : weeks;
 
   return Array.from({ length: rows }, (_row, week) =>
-    Array.from({ length: 7 }, (_cell, offset) => addDays(start, week * 7 + offset)),
+    Array.from({ length: 7 }, (_cell, offset) => dateAfter(first, week * 7 + offset - lead)),
   );
 };
 
-export const weekNumberOfRow = (row: readonly string[]): number => {
-  const thursday = row.find((date) => weekdayOf(date) === 4) ?? row[0];
+export const weekNumberOfRow = (row: readonly MonthGridCell[]): number => {
+  const dates = row.filter((date) => date !== null);
+  const thursday = dates.find((date) => weekdayOf(date) === 4) ?? dates[0];
 
   return thursday === undefined ? 1 : isoWeekOf(thursday);
 };

@@ -94,7 +94,7 @@
     {
       "code": "0",
       "value": -0.4,
-      "text": "-0"
+      "text": "0"
     },
     {
       "code": "0",
@@ -317,7 +317,7 @@
     {
       "code": "General",
       "value": -1234567.891,
-      "text": "-1234567.89"
+      "text": "-1234567.891"
     },
     {
       "code": "General",
@@ -501,7 +501,19 @@
     {
       "code": "d mmmm yyyy",
       "value": 45000,
+      "text": "15 Март 2023",
+      "locale": "ru"
+    },
+    {
+      "code": "[$-FC19]d mmmm yyyy",
+      "value": 45000,
       "text": "15 марта 2023",
+      "locale": "ru"
+    },
+    {
+      "code": "[$-F800]dddd, mmmm dd, yyyy",
+      "value": 45000,
+      "text": "15 марта 2023 г.",
       "locale": "ru"
     },
     {
@@ -536,7 +548,7 @@
     {
       "code": "#,##0.00",
       "value": 1234567.891,
-      "text": "1 234 567,89",
+      "text": "1 234 567,89",
       "locale": "ru"
     },
     {
@@ -548,7 +560,7 @@
     {
       "code": "#,##0.00\\ \"₽\"",
       "value": 1234.5,
-      "text": "1 234,50 ₽",
+      "text": "1 234,50 ₽",
       "locale": "ru"
     },
     {
@@ -562,6 +574,56 @@
       "value": 1.5,
       "text": "1,5",
       "locale": "ru"
+    },
+    {
+      "code": "General",
+      "value": -99999999999,
+      "text": "-99999999999"
+    },
+    {
+      "code": "General",
+      "value": -123456.7891234,
+      "text": "-123456.7891"
+    },
+    {
+      "code": "General",
+      "value": 1.5e-9,
+      "text": "1.5E-09"
+    },
+    {
+      "code": "General",
+      "value": 1.26e-9,
+      "text": "1.26E-09"
+    },
+    {
+      "code": "General",
+      "value": 1.23456789e-7,
+      "text": "1.23457E-07"
+    },
+    {
+      "code": "General",
+      "value": 1.234567890123e-5,
+      "text": "1.23457E-05"
+    },
+    {
+      "code": "General",
+      "value": 1e-5,
+      "text": "0.00001"
+    },
+    {
+      "code": "General",
+      "value": 1.2345e-5,
+      "text": "0.000012345"
+    },
+    {
+      "code": "General",
+      "value": 5e-324,
+      "text": "4.9407E-324"
+    },
+    {
+      "code": "General",
+      "value": -1.7976931348623157e308,
+      "text": "-1.7977E+308"
     },
     {
       "code": "ss.00",
@@ -591,6 +653,28 @@
       "code": "0.00",
       "value": null,
       "text": ""
+    },
+    {
+      "code": "0.00E+00",
+      "value": 5e-324,
+      "text": "4.94E-324"
+    },
+    {
+      "code": "0.00E+00",
+      "value": 1e-323,
+      "text": "9.88E-324"
+    },
+    {
+      "code": "0%",
+      "value": 1e307,
+      "text": "#",
+      "fill": { "char": "#", "at": 0 }
+    },
+    {
+      "code": "0.00%",
+      "value": -1.7976931348623157e308,
+      "text": "#",
+      "fill": { "char": "#", "at": 0 }
     }
   ]
 }

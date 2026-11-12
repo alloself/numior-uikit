@@ -119,9 +119,11 @@ const shiftOffsets = (
 ): void => {
   const known = node.content.length < WIDE ? undefined : offsetCache.get(node);
 
-  if (known !== undefined) {
-    offsetShifts.set(next, { ...splice, base: known, start: startOf(node, known, splice.from) });
+  if (known === undefined) {
+    return;
   }
+
+  offsetShifts.set(next, { ...splice, base: known, start: startOf(node, known, splice.from) });
 };
 
 export const spliceContent = (
@@ -248,9 +250,11 @@ const highestCount = (root: ElementNode, prefix: string): number => {
   for (let node = pending.pop(); node !== undefined; node = pending.pop()) {
     highest = Math.max(highest, countOf(node.id, prefix));
     for (const child of node.content) {
-      if (child.kind === ContentNodeKind.Element) {
-        pending.push(child);
+      if (child.kind !== ContentNodeKind.Element) {
+        continue;
       }
+
+      pending.push(child);
     }
   }
   return highest;

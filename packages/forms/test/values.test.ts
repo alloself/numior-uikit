@@ -17,6 +17,22 @@ class Money {
   }
 }
 
+class Sealed {
+  readonly #secret: string;
+
+  constructor(secret: string) {
+    this.#secret = secret;
+  }
+
+  reveal(): string {
+    return this.#secret;
+  }
+}
+
+class Draft {
+  title: string | undefined = undefined;
+}
+
 const format = (): string => 'x';
 
 const file = (name: string, lastModified = 1): File =>
@@ -114,6 +130,31 @@ describe('value equality', () => {
     expect(isEqualValue(new Set([1]), new Set([2]))).toBe(false);
     expect(isEqualValue(new Money(5, 'EUR'), new Money(5, 'EUR'))).toBe(true);
     expect(isEqualValue(new Money(5, 'EUR'), { amount: 5, currency: 'EUR' })).toBe(false);
+  });
+});
+
+describe('unusual values', () => {
+  it('copies a date that holds no time and a record without a prototype', () => {
+    const bare = { odd: [1, 3] };
+
+    Object.setPrototypeOf(bare, null);
+
+    const copy = cloneValue({ due: new Date(Number.NaN), bare });
+
+    expect(Number.isNaN(copy.due.getTime())).toBe(true);
+    expect(copy.bare).not.toBe(bare);
+    expect(copy.bare.odd).toEqual([1, 3]);
+    expect(isEqualValue(copy.bare, { odd: [1, 3] })).toBe(true);
+  });
+
+  it('tells apart addresses and patterns that differ and never calls two sealed objects equal', () => {
+    expect(isEqualValue(new URL('https://a.example'), new URL('https://b.example'))).toBe(false);
+    expect(isEqualValue(new URL('https://a.example'), new URL('https://a.example'))).toBe(true);
+    expect(isEqualValue(/a/, /b/)).toBe(false);
+    expect(isEqualValue(/a/g, /a/i)).toBe(false);
+    expect(isEqualValue(/a/g, /a/g)).toBe(true);
+    expect(isEqualValue(new Sealed('a'), new Sealed('b'))).toBe(false);
+    expect(isEqualValue(new Draft(), new Draft())).toBe(true);
   });
 });
 

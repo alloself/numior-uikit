@@ -84,7 +84,7 @@
     @apply m-0;
     font-size: var(--text-lg);
     font-weight: 600;
-    line-height: var(--leading-tight);
+    line-height: var(--leading-control);
   }
   .nui-dialog__description {
     @apply m-0 text-muted-foreground;

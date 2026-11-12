@@ -30,10 +30,12 @@ export const createBlockCache = <T>(limit: number): BlockCache<T> => {
     touch: (key) => {
       const rows = blocks.get(key);
 
-      if (rows !== undefined) {
-        blocks.delete(key);
-        blocks.set(key, rows);
+      if (rows === undefined) {
+        return;
       }
+
+      blocks.delete(key);
+      blocks.set(key, rows);
     },
     entries: () => [...blocks],
     clear: () => {

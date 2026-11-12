@@ -15,7 +15,10 @@ const docs: DocsMap = {
         ru: 'С какой стороны триггера появляется подсказка, например `top` или `bottom-start`.',
         en: 'Side of the trigger the tooltip appears on, such as `top` or `bottom-start`.',
       },
-      offset: { ru: 'Отступ от триггера в пикселях.', en: 'Distance from the trigger in pixels.' },
+      offset: {
+        ru: 'Отступ от триггера в пикселях. По умолчанию 6: стрелка касается триггера.',
+        en: 'Distance from the trigger in pixels. Defaults to 6, so the arrow touches the trigger.',
+      },
       openDelay: {
         ru: 'Через сколько миллисекунд после наведения появляется подсказка.',
         en: 'Delay in milliseconds before the tooltip shows on hover.',
@@ -24,10 +27,17 @@ const docs: DocsMap = {
         ru: 'Через сколько миллисекунд после ухода курсора подсказка скрывается.',
         en: 'Delay in milliseconds before the tooltip hides after the pointer leaves.',
       },
-      disabled: { ru: 'Отключает подсказку.', en: 'Disables the tooltip.' },
+      disabled: {
+        ru: 'Отключает подсказку: она не появляется ни при наведении, ни при фокусе.',
+        en: 'Keeps the tooltip from showing on hover and on focus, and drops `aria-describedby` from the trigger.',
+      },
       anchor: {
         ru: 'Элемент-триггер вместо слота `trigger`. Объект `{ within, selector }` даёт одну подсказку всем элементам по селектору внутри `within` или слота. Между соседними она переходит без задержки.',
-        en: 'Trigger element in place of the `trigger` slot. An object `{ within, selector }` gives one tooltip to every match inside `within` or the slot. It moves between neighbours without a delay.',
+        en: 'Trigger element in place of the `trigger` slot. An object `{ within, selector }` gives one tooltip to every match inside `within` or the slot. It moves between neighbors without a delay.',
+      },
+      shortcut: {
+        ru: 'Сочетание клавиш после текста, например `mod+s`. Функция получает элемент-цель из `anchor` и возвращает его сочетание.',
+        en: 'Key combination after the text, such as `mod+s`. A function receives the target element from `anchor` and returns its combination.',
       },
     },
     models: {

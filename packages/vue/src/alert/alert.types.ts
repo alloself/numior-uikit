@@ -10,8 +10,8 @@ export interface NuiAlertProps {
   description?: string | undefined;
   icon?: IconSource | undefined;
   hideIcon?: boolean | undefined;
-  dismissible?: boolean | undefined;
-  dismissLabel?: string | undefined;
+  closable?: boolean | undefined;
+  closeLabel?: string | undefined;
 }
 
 export const NuiAlertVariant = { Soft: 'soft', Outline: 'outline', Solid: 'solid' } as const;

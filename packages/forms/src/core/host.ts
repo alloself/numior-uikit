@@ -1,10 +1,14 @@
-import { getCurrentScope, watch } from 'vue';
+import { getCurrentScope, nextTick, watch } from 'vue';
 import type { EntryState, FormEngine } from '../engine/engine.types';
+import type { Relocation } from '../engine/places';
 import { isUnder } from '../paths/paths';
 import { getAt } from '../values/access';
+import { cloneValue } from '../values/clone';
+import { isEqualValue } from '../values/equal';
 import { isPathDirty } from './dirty';
 import type { FormCore } from './form-core';
 import { writeErrors } from './messages';
+import { forgetInside, isInside, relocateInside } from './relocate';
 import { Trigger, type ApplyScope, type EntryKind } from './core.types';
 import type { Entry } from './registry';
 import { validatesOnBlur, validatesOnChange } from './timing';
@@ -45,6 +49,7 @@ export interface FormHost<V extends object> {
   blur(entry: Entry<V>): Promise<void>;
   validateEntry(entry: Entry<V>): Promise<FieldValidation>;
   revalidate(entries: readonly Entry<V>[], scope?: ApplyScope): Promise<void>;
+  reshape(path: string, relocate: Relocation): void;
   rulesChanged(entry: Entry<V>): Promise<void>;
   flush(entries: readonly Entry<V>[]): Promise<void>;
   guard(entry: Entry<V>): (value: unknown) => boolean;
@@ -60,7 +65,18 @@ export const createHost = <V extends object, O>(
   core: FormCore<V, O>,
   validation: Validation<V, O>,
 ): FormHost<V> => {
+  const reshaping = new Set<string>();
+
   const claimed = (path: string, except: Entry<V>): boolean => core.registry.claimed(path, except);
+
+  const isReshaping = (path: string): boolean => {
+    for (const list of reshaping) {
+      if (isInside(path, list)) {
+        return true;
+      }
+    }
+    return false;
+  };
 
   const containerExists = (path: string): boolean =>
     getAt(core.engine.values, path.split('.').slice(0, -1).join('.')) !== undefined;
@@ -68,30 +84,42 @@ export const createHost = <V extends object, O>(
   const restore = (entry: Entry<V>): void => {
     const saved = core.retained.get(entry.path());
 
-    if (saved) {
-      core.retained.delete(entry.path());
-      entry.state.setTouched(saved.touched);
-      entry.state.setAttempted(saved.attempted);
-      writeErrors(entry.state, saved.errors);
+    if (!saved) {
+      return;
     }
+
+    core.retained.delete(entry.path());
+
+    if (!isEqualValue(entry.value(), saved.value)) {
+      return;
+    }
+
+    entry.state.setTouched(saved.touched);
+    entry.state.setAttempted(saved.attempted);
+    writeErrors(entry.state, saved.errors);
   };
 
   const retain = (entry: Entry<V>): void => {
     const { touched, attempted, errors } = entry.state;
 
-    if (touched.value || attempted.value || errors.value.length > 0) {
-      core.retained.set(entry.path(), {
-        touched: touched.value,
-        attempted: attempted.value,
-        errors: errors.value,
-      });
+    if (!touched.value && !attempted.value && errors.value.length === 0) {
+      return;
     }
+
+    core.retained.set(entry.path(), {
+      touched: touched.value,
+      attempted: attempted.value,
+      errors: errors.value,
+      value: cloneValue(entry.value()),
+    });
   };
 
   const release = (entry: Entry<V>): void => {
-    if (!entry.keepValue()) {
-      core.engine.unsetValue(entry.path());
+    if (entry.keepValue()) {
+      return;
     }
+
+    core.engine.unsetValue(entry.path());
   };
 
   const commitFor = (entry: Entry<V>): ((value: unknown) => boolean) => {
@@ -137,9 +165,11 @@ export const createHost = <V extends object, O>(
 
       if (getCurrentScope()) {
         watch(entry.active, (active) => {
-          if (!active && !entry.keepValue() && !claimed(entry.path(), entry)) {
-            release(entry);
+          if (active || entry.keepValue() || claimed(entry.path(), entry)) {
+            return;
           }
+
+          release(entry);
         });
       }
       return entry;
@@ -148,10 +178,17 @@ export const createHost = <V extends object, O>(
       core.registry.remove(entry);
       validation.async.forget(entry);
 
-      if (!claimed(entry.path(), entry) && containerExists(entry.path())) {
-        retain(entry);
-        release(entry);
+      const path = entry.path();
+
+      if (claimed(path, entry) || !containerExists(path) || isReshaping(path)) {
+        return;
       }
+      if (entry.keepValue()) {
+        retain(entry);
+        return;
+      }
+
+      release(entry);
     },
     change: (entry, value) => {
       core.engine.setValue(entry.path(), value);
@@ -183,6 +220,16 @@ export const createHost = <V extends object, O>(
       return { valid: errors.length === 0, errors };
     },
     revalidate,
+    reshape: (path, relocate) => {
+      core.session.shape += 1;
+      relocateInside(core.external, path, relocate);
+      forgetInside(core.retained, path);
+      reshaping.add(path);
+
+      void nextTick(() => {
+        reshaping.delete(path);
+      });
+    },
     rulesChanged: (entry) => {
       validation.async.forget(entry);
 

@@ -1,6 +1,6 @@
 import { parseCell } from './address';
 import { createCellFormats, type CellFormats } from './cell-formats';
-import { createCellStore, type CellStore } from './cell-store';
+import { createCellStore, type CellStore, type WriteCount } from './cell-store';
 import type { CellAddress, CellRange } from './cell.types';
 import type { ConditionalFormat } from './conditional/conditional.types';
 import type { PivotDefinition } from './pivot/pivot.types';
@@ -97,6 +97,7 @@ export interface Workbook {
   readonly pivots: SheetPivots;
   readonly sheets: readonly Sheet[];
   readonly externals: readonly ExternalBook[];
+  readonly revision: number;
   addSheet(name?: string, index?: number): Sheet;
   addExternal(init: ExternalBookInit): ExternalBook;
   removeSheet(sheet: Sheet): void;
@@ -114,7 +115,9 @@ export interface BookLabels {
 
 const FORBIDDEN = /[[\]:*?/\\]/u;
 
-const DEFINED_NAME = /^[\p{L}_][\p{L}\p{N}_.]*$/u;
+const NAME = /^[\p{L}_\\][\p{L}\p{N}_.?\\]*$/u;
+
+const MACRO_NAME = /^\\.$/u;
 
 const R1C1_NAME = /^(?:[RrCc]|[Rr]\d*[Cc]\d*|[Rr]\d+|[Cc]\d+)$/u;
 
@@ -129,12 +132,15 @@ export const validSheetName = (name: string): boolean =>
   !name.startsWith("'") &&
   !name.endsWith("'");
 
-export const validDefinedName = (name: string): boolean =>
+export const validTableName = (name: string): boolean =>
   name.length <= MAX_DEFINED_NAME &&
-  DEFINED_NAME.test(name) &&
+  NAME.test(name) &&
   !R1C1_NAME.test(name) &&
   parseCell(name) === undefined &&
   !['true', 'false'].includes(name.toLowerCase());
+
+export const validDefinedName = (name: string): boolean =>
+  validTableName(name) && !MACRO_NAME.test(name);
 
 const nameKey = (name: string, scope: Sheet | undefined): string =>
   `${String(scope?.id ?? 0)}:${name.toLowerCase()}`;
@@ -292,10 +298,15 @@ const named = (sheets: readonly Sheet[], name: string): Sheet | undefined => {
   return sheets.find((candidate) => candidate.name.toLowerCase() === wanted);
 };
 
-const blankSheet = (id: number, name: string, strings: SharedStrings): Sheet => ({
+const blankSheet = (
+  id: number,
+  name: string,
+  strings: SharedStrings,
+  count?: WriteCount,
+): Sheet => ({
   id,
   name,
-  cells: createCellStore(strings),
+  cells: createCellStore(strings, count),
   formats: createCellFormats(),
   decorations: createCellFormats(),
   shifts: 0,
@@ -324,6 +335,7 @@ export const createWorkbook = (): Workbook => {
   const formats = createNumberFormats();
   const sheets: Sheet[] = [];
   const externals: ExternalBook[] = [];
+  const count: WriteCount = { writes: 0 };
   let next = 1;
 
   const sheet = (name: string): Sheet | undefined => named(sheets, name);
@@ -347,6 +359,9 @@ export const createWorkbook = (): Workbook => {
     sheets,
     externals,
     sheet,
+    get revision() {
+      return count.writes;
+    },
     addSheet: (name, index = sheets.length) => {
       const title = name ?? freeName();
 
@@ -354,7 +369,7 @@ export const createWorkbook = (): Workbook => {
         throw new RangeError(`The sheet name ${title} is taken or not allowed`);
       }
 
-      const created = blankSheet(next, title, strings);
+      const created = blankSheet(next, title, strings, count);
 
       next += 1;
       sheets.splice(Math.min(Math.max(index, 0), sheets.length), 0, created);
@@ -371,9 +386,12 @@ export const createWorkbook = (): Workbook => {
     removeSheet: (target) => {
       const index = sheets.indexOf(target);
 
-      if (index >= 0) {
-        sheets.splice(index, 1);
+      if (index < 0) {
+        return;
       }
+
+      sheets.splice(index, 1);
+      count.writes += 1;
     },
     renameSheet: (target, name) => {
       const taken = sheet(name);

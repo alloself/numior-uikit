@@ -337,10 +337,38 @@ assert.equal(
 for (const file of await localImports(resolve('packages/collaboration/dist/index.js'))) {
   assert.doesNotMatch(
     await readFile(file, 'utf8'),
-    /from ['"](?:vue|yjs|ws|@vueuse\/[\w-]+)['"]/,
-    `collaboration must stay free of Vue, Yjs and the server socket: ${file}`,
+    /from ['"](?:(?:vue|yjs|ws|@vueuse\/[\w-]+)['"]|@numior\/(?!editor-core['"/]))/,
+    `collaboration must reach nothing but the editor core from its root entry: ${file}`,
   );
 }
+
+const collaborationPackage = JSON.parse(
+  await readFile(resolve('packages/collaboration/package.json'), 'utf8'),
+);
+
+assert.deepEqual(
+  Object.keys(collaborationPackage.dependencies),
+  ['@numior/editor-core'],
+  'collaboration must install nothing but the editor core; its Vue side lives on optional peers',
+);
+
+assert.deepEqual(
+  Object.keys(collaborationPackage.peerDependencies).filter(
+    (name) => collaborationPackage.peerDependenciesMeta?.[name]?.optional !== true,
+  ),
+  [],
+  'every peer of collaboration must be optional: the root entry runs on a server without Vue',
+);
+
+const collaborationSpreadsheet = await import(
+  pathToFileURL(resolve('packages/collaboration/dist/spreadsheet/index.js')).href
+);
+
+assert.equal(
+  typeof collaborationSpreadsheet.useCollabWorkbook,
+  'function',
+  'collaboration/spreadsheet must export useCollabWorkbook',
+);
 
 const collaborationYjs = await import(
   pathToFileURL(resolve('packages/collaboration/dist/yjs/index.js')).href

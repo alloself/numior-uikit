@@ -43,11 +43,18 @@ side by side.
 Dates are passed as `YYYY-MM-DD` strings, such as `2026-09-27`. Month and weekday names and the
 first day of the week come from the app language; `locale` and `weekStart` override them.
 
+The calendar runs from 1 January 100 to 31 December 9999. Neither the arrow keys nor the month
+buttons lead past these ends, and the day cells beyond them stay empty.
+
 Dates before `min`, after `max` and those for which `isDateDisabled` returns `true` cannot be
 picked. A click on the month name or the year opens a list of months or years.
 
 The calendar takes today's date from the browser clock. With server rendering pass it in
 `today`, otherwise today is highlighted only after the page loads.
+
+Without `today` and a selected date both server and browser draw the month of the UTC date. The
+markup then matches in every time zone, and after loading the calendar moves to the local date.
+When a page is served from a cache for longer than a day, pass `today` or `month`.
 
 ## Accessibility
 

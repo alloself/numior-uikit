@@ -3,15 +3,17 @@ import {
   CellValueKind,
   FillMode,
   createCellClips,
+  mergesMeeting,
   type CellAddress,
   type CellRange,
   type Sheet,
   type WorkbookStep,
 } from '../core';
-import { isKey } from './sheet-keys';
+import { inGrid, isKey } from './sheet-keys';
 import {
   FillKey,
   FillTargetKind,
+  NuiSpreadsheetRefusalReason,
   type SheetFill,
   type SheetFillOptions,
   type SheetFillSession,
@@ -139,9 +141,6 @@ const fillKey = (event: KeyboardEvent): FillKey | undefined => {
 
 const withCtrl = (event: MouseEvent): boolean => event.ctrlKey || event.metaKey;
 
-const inGrid = (target: EventTarget | null): boolean =>
-  target instanceof Element && target.closest('[role="grid"]') !== null;
-
 const activeWithin = (kept: CellRange, active: CellAddress | undefined): CellAddress =>
   active !== undefined && inside(kept, active) ? active : { row: kept.top, col: kept.left };
 
@@ -187,15 +186,22 @@ export const useSheetFill = (options: SheetFillOptions): SheetFill => {
     const sheet = options.sheet();
     const active = options.selection.current.value?.active;
 
+    if (sheet !== undefined && mergesMeeting(sheet, unionOf(from, to)).length > 0) {
+      options.refuse(NuiSpreadsheetRefusalReason.FillMerged, options.messages.value.fillMerged);
+      return;
+    }
+
     const step =
       sheet === undefined ? undefined : clips.value.fill(sheet.name, from, unionOf(from, to), mode);
 
-    if (step !== undefined && options.editing.apply([step])) {
-      options.selection.select({
-        active: active ?? { row: shown.top, col: shown.left },
-        ranges: [shown],
-      });
+    if (step === undefined || !options.editing.apply([step])) {
+      return;
     }
+
+    options.selection.select({
+      active: active ?? { row: shown.top, col: shown.left },
+      ranges: [shown],
+    });
   };
 
   const onDown = (event: PointerEvent): void => {
@@ -303,28 +309,38 @@ export const useSheetFill = (options: SheetFillOptions): SheetFill => {
     const target =
       sheet === undefined || range === undefined ? undefined : downTarget(sheet, range);
 
-    if (range !== undefined && target !== undefined) {
-      fillWith(range, target, FillMode.Series, unionOf(range, target));
+    if (range === undefined || target === undefined) {
+      return;
     }
+
+    fillWith(range, target, FillMode.Series, unionOf(range, target));
   };
 
   const onKeydown = (event: KeyboardEvent): void => {
-    const key = idle() || !inGrid(event.target) ? undefined : fillKey(event);
-    const range = source();
+    const editing = options.editing.draft.value !== undefined;
+    const owned = !options.readonly() && (editing || inGrid(event.target));
+    const key = owned ? fillKey(event) : undefined;
 
-    const plan =
-      key === undefined || range === undefined ? undefined : keyFill(range, key === FillKey.Down);
+    if (key === undefined) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const range = editing ? undefined : source();
+    const plan = range === undefined ? undefined : keyFill(range, key === FillKey.Down);
 
     if (plan === undefined || range === undefined) {
       return;
     }
 
-    event.preventDefault();
     event.stopPropagation();
 
-    if (Math.min(plan.from.top, plan.from.left) >= 0) {
-      fillWith(plan.from, plan.to, FillMode.Copy, range);
+    if (Math.min(plan.from.top, plan.from.left) < 0) {
+      return;
     }
+
+    fillWith(plan.from, plan.to, FillMode.Copy, range);
   };
 
   const onCancel = (): void => {

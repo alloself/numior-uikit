@@ -20,8 +20,8 @@ const docs: DocsMap = {
     configurator: {
       scene: 'list/Example',
       props: ['variant', 'size', 'selectable', 'loading', 'loop', 'label'],
-      choices: { variant: ['plain', 'divided', 'bordered'] },
-      values: { variant: 'bordered', label: { ru: 'Команда магазина', en: 'Store team' } },
+      choices: { variant: ['plain', 'divided', 'outline'] },
+      values: { variant: 'outline', label: { ru: 'Команда магазина', en: 'Store team' } },
     },
     props: {
       id: {
@@ -34,7 +34,7 @@ const docs: DocsMap = {
       },
       variant: {
         ru: 'Оформление списка: обычный, с разделителями, в рамке, всплывающий или навигация.',
-        en: 'Style of the list: plain, divided, bordered, floating or nav.',
+        en: 'Style of the list: plain, divided, outline, floating or nav.',
       },
       size: {
         ru: 'Высота строк: `sm`, `md` или `lg`.',
@@ -65,8 +65,8 @@ const docs: DocsMap = {
         en: 'The list handles arrow keys itself. Turn it off when an outer field, such as a select, drives the keyboard.',
       },
       activeId: {
-        ru: '`id` подсвеченного пункта, когда клавиатурой управляет поле снаружи.',
-        en: '`id` of the highlighted item while an outer field drives the keyboard.',
+        ru: '`id` подсвеченного пункта, когда клавиатурой управляет поле снаружи. Его даёт `optionElementId(listId, index)`; обратно номер пункта возвращает `optionIndexOf(element)`.',
+        en: '`id` of the highlighted item while an outer field drives the keyboard. `optionElementId(listId, index)` builds it; `optionIndexOf(element)` gives the index back.',
       },
       loading: {
         ru: 'Показывает индикатор загрузки вместо пунктов.',

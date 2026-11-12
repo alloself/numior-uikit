@@ -1,6 +1,7 @@
 import { columnName, formatCell } from '../address';
 import type { CellAddress, CellRef } from '../cell.types';
 import {
+  AreaOperator,
   FormulaNodeKind,
   type BinaryOperator,
   type BookLabelOf,
@@ -13,6 +14,7 @@ import { EN_FORMULAS } from './locale';
 import { ORIGIN, absoluteFormula } from './origin';
 import { localFunction } from './localization';
 import { printStructured } from './structured';
+import { foldFormula } from './walk';
 
 export interface PrintOptions {
   readonly books?: BookLabelOf | undefined;
@@ -20,6 +22,11 @@ export interface PrintOptions {
 
 interface Printing extends PrintOptions {
   readonly locale: FormulaLocale;
+}
+
+interface Printed {
+  readonly text: string;
+  readonly level: number;
 }
 
 const PRECEDENCE: Readonly<Record<BinaryOperator, number>> = {
@@ -41,7 +48,11 @@ const PERCENT = 6;
 
 const UNARY = 7;
 
-const ATOM = 8;
+const INTERSECTION = 8;
+
+const RANGE = 9;
+
+const ATOM = 10;
 
 const PLAIN_SHEET = /^[\p{L}_][\p{L}\p{N}_.]*$/u;
 
@@ -55,6 +66,12 @@ const precedenceOf = (node: FormulaNode): number => {
       return PERCENT;
     case FormulaNodeKind.Unary:
       return UNARY;
+    case FormulaNodeKind.Areas:
+      return node.op === AreaOperator.Range ? RANGE : INTERSECTION;
+    case FormulaNodeKind.Range:
+    case FormulaNodeKind.Columns:
+    case FormulaNodeKind.Rows:
+      return RANGE;
     default:
       return ATOM;
   }
@@ -93,13 +110,16 @@ const columnText = (line: LineRef): string =>
 
 const rowText = (line: LineRef): string => `${line.absolute ? '$' : ''}${String(line.index + 1)}`;
 
-const wrapped = (node: FormulaNode, printing: Printing, above: number): string => {
-  const text = printNode(node, printing);
-
-  return precedenceOf(node) < above ? `(${text})` : text;
+const wrapped = (printed: Printed | undefined, above: number): string => {
+  if (printed === undefined) {
+    return '';
+  }
+  return printed.level < above ? `(${printed.text})` : printed.text;
 };
 
-const constantText = (node: FormulaNode, locale: FormulaLocale): string | undefined => {
+const constantText = (node: FormulaNode, printing: Printing): string | undefined => {
+  const { locale } = printing;
+
   switch (node.kind) {
     case FormulaNodeKind.Number:
       return numberText(node.value, locale);
@@ -108,9 +128,11 @@ const constantText = (node: FormulaNode, locale: FormulaLocale): string | undefi
     case FormulaNodeKind.Boolean:
       return node.value ? locale.trueText : locale.falseText;
     case FormulaNodeKind.Error:
-      return locale.errors[node.code];
+      return `${sheetPrefix(node, printing)}${locale.errors[node.code]}`;
     case FormulaNodeKind.Missing:
       return '';
+    case FormulaNodeKind.Opaque:
+      return node.text;
     default:
       return undefined;
   }
@@ -135,40 +157,80 @@ const referenceText = (node: FormulaNode, printing: Printing): string | undefine
   }
 };
 
-const operationText = (node: FormulaNode, printing: Printing): string => {
+const arrayText = (
+  rows: readonly (readonly FormulaNode[])[],
+  items: readonly Printed[],
+  locale: FormulaLocale,
+): string =>
+  rows
+    .reduce<{ texts: string[]; at: number }>(
+      (built, row) => {
+        built.texts.push(
+          items
+            .slice(built.at, built.at + row.length)
+            .map((item) => item.text)
+            .join(locale.arrayColumn),
+        );
+
+        return { texts: built.texts, at: built.at + row.length };
+      },
+      { texts: [], at: 0 },
+    )
+    .texts.join(locale.arrayRow);
+
+const listText = (parts: readonly Printed[], locale: FormulaLocale): string =>
+  parts.map((part) => part.text).join(locale.argument);
+
+const operationText = (
+  node: FormulaNode,
+  parts: readonly Printed[],
+  printing: Printing,
+): string => {
   switch (node.kind) {
     case FormulaNodeKind.Call:
-      return `${localFunction(node.name, printing.locale)}(${node.args.map((arg) => printNode(arg, printing)).join(printing.locale.argument)})`;
+      return `${localFunction(node.name, printing.locale)}(${listText(parts, printing.locale)})`;
+    case FormulaNodeKind.Areas: {
+      const level = precedenceOf(node);
+
+      return `${wrapped(parts[0], level)}${node.op}${wrapped(parts[1], level + 1)}`;
+    }
+    case FormulaNodeKind.Union:
+      return `(${listText(parts, printing.locale)})`;
+    case FormulaNodeKind.Apply:
+      return `${wrapped(parts[0], ATOM)}(${listText(parts.slice(1), printing.locale)})`;
     case FormulaNodeKind.Unary:
-      return `${node.op}${wrapped(node.operand, printing, UNARY)}`;
+      return `${node.op}${wrapped(parts[0], UNARY)}`;
     case FormulaNodeKind.Percent:
-      return `${wrapped(node.operand, printing, PERCENT)}%`;
+      return `${wrapped(parts[0], PERCENT)}%`;
     case FormulaNodeKind.Binary: {
       const level = PRECEDENCE[node.op];
 
-      return `${wrapped(node.left, printing, level)}${node.op}${wrapped(node.right, printing, level + 1)}`;
+      return `${wrapped(parts[0], level)}${node.op}${wrapped(parts[1], level + 1)}`;
     }
     case FormulaNodeKind.Array:
-      return `{${node.rows
-        .map((row) =>
-          row.map((item) => printNode(item, printing)).join(printing.locale.arrayColumn),
-        )
-        .join(printing.locale.arrayRow)}}`;
+      return `{${arrayText(node.rows, parts, printing.locale)}}`;
     default:
       return '';
   }
 };
 
-const printNode = (node: FormulaNode, printing: Printing): string =>
+const nodeText = (node: FormulaNode, parts: readonly Printed[], printing: Printing): string =>
   node.kind === FormulaNodeKind.Structured
     ? `${sheetPrefix({ book: node.book }, printing)}${printStructured(node, printing.locale)}`
-    : (constantText(node, printing.locale) ??
+    : (constantText(node, printing) ??
       referenceText(node, printing) ??
-      operationText(node, printing));
+      operationText(node, parts, printing));
 
 export const printFormula = (
   node: FormulaNode,
   locale: FormulaLocale = EN_FORMULAS,
   origin: CellAddress = ORIGIN,
   { books }: PrintOptions = {},
-): string => printNode(absoluteFormula(node, origin), { locale, books });
+): string => {
+  const printing: Printing = { locale, books };
+
+  return foldFormula<Printed>(absoluteFormula(node, origin), (item, parts) => ({
+    text: nodeText(item, parts, printing),
+    level: precedenceOf(item),
+  })).text;
+};

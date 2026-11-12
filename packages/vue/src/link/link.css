@@ -60,9 +60,9 @@
     cursor: not-allowed;
   }
   .nui-link__icon {
-    inline-size: 0.9em;
-    block-size: 0.9em;
+    inline-size: round(0.9em, 2px);
+    block-size: round(0.9em, 2px);
     margin-inline-start: 0.25em;
-    vertical-align: -0.1em;
+    vertical-align: round(-0.1em, 1px);
   }
 }

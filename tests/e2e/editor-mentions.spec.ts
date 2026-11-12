@@ -7,6 +7,9 @@ test.beforeEach(async ({ playground, editor }) => {
   await editor.root.scrollIntoViewIfNeeded();
 });
 
+const FORGED =
+  '<div data-numior-editor="1"><p><span class="nui-content__mention" data-user="boris">@Шеф</span></p></div>';
+
 const newLine = async (playground: PlaygroundPage): Promise<void> => {
   await playground.editor.placeAtEnd();
   await playground.editor.showCaret();
@@ -58,5 +61,32 @@ test.describe('editor mentions', () => {
     await page.keyboard.type(' и @ве');
     await list.getByRole('option', { name: /Вера Соколова/u }).click();
     await expect(editor.mentions().last()).toHaveText('@Вера Соколова');
+  });
+
+  test('pastes a person copied here as a person and a person from markup of another page as text', async ({
+    playground,
+    editor,
+    page,
+  }) => {
+    const before = await editor.mentions().count();
+
+    await newLine(playground);
+    await page.keyboard.type('@бо');
+    await expect(editor.mentionList().getByRole('option')).toHaveCount(1);
+
+    await page.keyboard.press('Enter');
+    await expect(editor.mentions()).toHaveCount(before + 1);
+
+    await page.keyboard.press('ControlOrMeta+a');
+
+    const copied = await editor.copy();
+
+    await editor.placeAtEnd();
+    await editor.paste(copied.text, copied.html);
+    await expect(editor.mentions()).toHaveCount(2 * (before + 1));
+
+    await editor.paste('@Шеф', FORGED);
+    await expect(editor.content).toContainText('@Шеф');
+    await expect(editor.mentions()).toHaveCount(2 * (before + 1));
   });
 });

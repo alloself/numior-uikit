@@ -10,7 +10,7 @@
     gap: var(--_gap);
     font-family: var(--nui-font);
     font-size: var(--_font-size);
-    line-height: 1;
+    line-height: var(--nui-line-height-control);
     vertical-align: middle;
     white-space: nowrap;
   }
@@ -26,6 +26,7 @@
     justify-content: center;
     min-inline-size: var(--_height);
     block-size: var(--_height);
+    padding-block-end: 1px;
     padding-inline: var(--_padding);
     border: 1px solid var(--nui-border);
     border-block-end-width: 2px;
@@ -50,5 +51,11 @@
     background: none;
     color: inherit;
     letter-spacing: 0.05em;
+  }
+  .nui-kbd--variant-soft .nui-kbd__key {
+    padding-block-end: 0;
+    border: 0;
+    background: color-mix(in oklab, currentColor 16%, transparent);
+    color: inherit;
   }
 }

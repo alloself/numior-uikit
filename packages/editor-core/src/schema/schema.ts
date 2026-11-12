@@ -85,13 +85,17 @@ const nodeResolver =
     const members: string[] = [];
 
     for (const [member, node] of Object.entries(spec.nodes)) {
-      if (groupsOf(node.group).has(name)) {
-        known = true;
-
-        if (allowed.nodes.has(member)) {
-          members.push(member);
-        }
+      if (!groupsOf(node.group).has(name)) {
+        continue;
       }
+
+      known = true;
+
+      if (!allowed.nodes.has(member)) {
+        continue;
+      }
+
+      members.push(member);
     }
 
     if (!known) {
@@ -108,13 +112,17 @@ const markNames = (spec: SchemaSpec, allowed: Allowed, expression: string): Set<
     let known = false;
 
     for (const [mark, markSpec] of marks) {
-      if (mark === name || groupsOf(markSpec.group).has(name)) {
-        known = true;
-
-        if (allowed.marks.has(mark)) {
-          names.add(mark);
-        }
+      if (mark !== name && !groupsOf(markSpec.group).has(name)) {
+        continue;
       }
+
+      known = true;
+
+      if (!allowed.marks.has(mark)) {
+        continue;
+      }
+
+      names.add(mark);
     }
 
     if (!known) {
@@ -165,7 +173,9 @@ const compileNode = (
     attrs: limitedAttrs(node.attrs ?? {}, allowed.values[name]),
     code: node.code === true,
     slots: node.slots ?? (groupsOf(node.group).has('list') ? 'all' : 'none'),
+    plainText: node.plainText,
     render: node.render ?? defaultRender(inline, leaf),
+    renderSubtree: node.renderSubtree,
     parse: node.parse ?? [],
   };
 };
@@ -186,10 +196,12 @@ const usableTypes = (types: ReadonlyMap<string, NodeType>): Set<string> => {
     grown = false;
 
     for (const type of types.values()) {
-      if (!usable.has(type.name) && reachesEnd(type.content, (name) => usable.has(name))) {
-        usable.add(type.name);
-        grown = true;
+      if (usable.has(type.name) || !reachesEnd(type.content, (name) => usable.has(name))) {
+        continue;
       }
+
+      usable.add(type.name);
+      grown = true;
     }
   }
   return usable;

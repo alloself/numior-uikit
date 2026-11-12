@@ -252,6 +252,7 @@ const putPivotOver = (
           },
     cells: step.cells === undefined ? undefined : cellsOver(step.cells, change, step.sheet),
     layout: step.layout === undefined ? undefined : layoutOver(step.layout, change, step.sheet),
+    base: step.base === undefined ? undefined : layoutOver(step.base, change, step.sheet),
   };
 };
 
@@ -276,9 +277,19 @@ const sheetStepOver = (step: SheetStep, change: RemoteChange): WorkbookStep | un
     case StepKind.DeleteLines:
       return linesStepOver(step, change, sheet);
     case StepKind.SetConditional:
-      return { ...step, sheet, formats: formatsOver(step.formats, change, step.sheet) };
+      return {
+        ...step,
+        sheet,
+        formats: formatsOver(step.formats, change, step.sheet),
+        base: step.base === undefined ? undefined : formatsOver(step.base, change, step.sheet),
+      };
     case StepKind.SetLayout:
-      return { ...step, sheet, layout: layoutOver(step.layout, change, step.sheet) };
+      return {
+        ...step,
+        sheet,
+        layout: layoutOver(step.layout, change, step.sheet),
+        base: step.base === undefined ? undefined : layoutOver(step.base, change, step.sheet),
+      };
     case StepKind.SetPivot: {
       if (step.pivot === undefined) {
         return { ...step, sheet };

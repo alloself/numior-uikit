@@ -11,7 +11,12 @@ import {
   type TextDirection,
   type TextUnit,
 } from '../state/input.types';
-import { InputIntentKind, SelectionKind, type Transaction } from '../state/state.types';
+import {
+  InputIntentKind,
+  SelectionKind,
+  type EditorState,
+  type Transaction,
+} from '../state/state.types';
 import { posAtCoords } from './coords';
 import { descAround, widgetAround, widgetOwner } from './desc';
 import type { DomWatch } from './dom-change';
@@ -43,6 +48,13 @@ interface Arrow {
   readonly forward: boolean;
   readonly vertical: boolean;
 }
+
+interface Carried {
+  readonly text: string;
+  readonly html: string;
+}
+
+type Extend = (tr: Transaction) => Transaction;
 
 const DELETES: Readonly<Record<string, readonly [TextDirection, TextUnit]>> = {
   deleteContentBackward: ['backward', 'character'],
@@ -184,12 +196,12 @@ const sourceOf = (intent: InputIntent): InputSource => {
   }
 };
 
-export const runIntent = (host: ViewHost, intent: InputIntent): boolean => {
+export const runIntent = (host: ViewHost, intent: InputIntent, extend?: Extend): boolean => {
   const state = host.state();
   const source = sourceOf(intent);
 
   const dispatch = (tr: Transaction): void => {
-    host.dispatch(tr, source);
+    host.dispatch(extend?.(tr) ?? tr, source);
   };
 
   return (
@@ -338,6 +350,15 @@ const moveInGap = (host: ViewHost, event: KeyboardEvent): boolean => {
 
 const IME_KEYS = new Set(['Process', 'Unidentified']);
 
+const isPlainInput = (event: InputEvent): boolean =>
+  !event.isComposing && !event.inputType.includes('Composition');
+
+const sameGap = (selection: Selection, gap: Selection | undefined): boolean =>
+  selection.kind === SelectionKind.Gap &&
+  gap?.kind === SelectionKind.Gap &&
+  selection.id === gap.id &&
+  selection.side === gap.side;
+
 const handleKey = (host: ViewHost, event: KeyboardEvent): boolean => {
   const key = keyOf(event);
   const state = host.state();
@@ -365,9 +386,11 @@ const atomAt = (host: ViewHost, target: EventTarget | null): string | undefined 
     current !== null;
     current = current.parent
   ) {
-    if (isAtom(host.context.schema, current.node)) {
-      found = current.node.id;
+    if (!isAtom(host.context.schema, current.node)) {
+      continue;
     }
+
+    found = current.node.id;
   }
   return found;
 };
@@ -390,35 +413,85 @@ const interactive = (target: EventTarget | null, owner: Element): boolean => {
 const carriesFiles = (event: DragEvent): boolean =>
   [...(event.dataTransfer?.types ?? [])].includes('Files');
 
-const onDrag = (event: DragEvent): void => {
+const onDragover = (event: DragEvent): void => {
+  if (!carriesFiles(event)) {
+    return;
+  }
+
   event.preventDefault();
 };
+
+const carried = (state: EditorState, range: SelectionRange): Carried => ({
+  text: state.doc.textBetween(range.from, range.to, '\n'),
+  html: clipboardHTML(state.doc.schema, state.doc.slice(range.from, range.to).content),
+});
+
+const withinSelection = (doc: Document, target: EventTarget | null): boolean => {
+  const selection = doc.getSelection();
+
+  return (
+    target instanceof Node &&
+    selection !== null &&
+    selection.rangeCount > 0 &&
+    selection.getRangeAt(0).intersectsNode(target)
+  );
+};
+
+const without =
+  (moved: SelectionRange): Extend =>
+  (tr) =>
+    tr.delete(tr.mapping.map(moved.from, 1), tr.mapping.map(moved.to, -1));
 
 export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => {
   const { root } = host;
   const doc = root.ownerDocument;
+  let dragging = false;
+  let opened: Selection | undefined;
 
-  const openGap = (): void => {
-    if (host.state().selection.kind === SelectionKind.Gap) {
-      runIntent(host, { kind: 'insertText', text: '' });
-      parts.sync.write();
+  const openGap = (): Selection | undefined => {
+    const gap = host.state().selection;
+
+    if (gap.kind !== SelectionKind.Gap) {
+      return undefined;
     }
+
+    runIntent(host, { kind: 'insertText', text: '' });
+    parts.sync.write();
+    return gap;
+  };
+
+  const onCompositionstart = (): void => {
+    openGap();
+    parts.setComposing(true);
+    parts.watch.startComposition();
+  };
+
+  const onCompositionend = (): void => {
+    parts.setComposing(false);
+    parts.watch.endComposition();
   };
 
   const onKeydown = (event: KeyboardEvent): void => {
-    if (IME_KEYS.has(event.key)) {
-      openGap();
-    }
+    opened = IME_KEYS.has(event.key) ? openGap() : undefined;
+
     if (host.composing() || event.isComposing || event.key === Key.Process) {
       return;
     }
     parts.sync.read();
-    if (handleKey(host, event)) {
-      event.preventDefault();
+    if (!handleKey(host, event)) {
+      return;
     }
+
+    event.preventDefault();
   };
 
   const onBeforeinput = (event: InputEvent): void => {
+    const gap = opened;
+
+    opened = undefined;
+    if (host.composing() && isPlainInput(event)) {
+      onCompositionend();
+    }
     if (PASSIVE.has(event.inputType) || event.isComposing || host.composing()) {
       return;
     }
@@ -426,9 +499,17 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     event.preventDefault();
     const intent = readIntent(event, host);
 
-    if (intent !== undefined) {
-      runIntent(host, intent);
+    if (intent === undefined) {
+      return;
     }
+
+    runIntent(host, intent);
+
+    if (intent.kind !== InputIntentKind.Delete || !sameGap(host.state().selection, gap)) {
+      return;
+    }
+
+    runIntent(host, intent);
   };
 
   const onPaste = (event: ClipboardEvent): void => {
@@ -436,9 +517,11 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
 
     event.preventDefault();
     parts.sync.read();
-    if (intent !== undefined) {
-      runIntent(host, intent);
+    if (intent === undefined) {
+      return;
     }
+
+    runIntent(host, intent);
   };
 
   const onCopy = (event: ClipboardEvent): void => {
@@ -449,17 +532,46 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     if (range.from === range.to || event.clipboardData === null) {
       return;
     }
-    const slice = state.doc.slice(range.from, range.to);
+    const { text, html } = carried(state, range);
 
     event.preventDefault();
-    event.clipboardData.setData('text/plain', state.doc.textBetween(range.from, range.to, '\n'));
-    event.clipboardData.setData('text/html', clipboardHTML(state.doc.schema, slice.content));
+    event.clipboardData.setData('text/plain', text);
+    event.clipboardData.setData('text/html', html);
     if (
-      event.type === DomEventType.Cut &&
-      root.getAttribute('contenteditable') === AttrToken.True
+      event.type !== DomEventType.Cut ||
+      root.getAttribute('contenteditable') !== AttrToken.True
     ) {
-      runIntent(host, { kind: 'delete', direction: 'backward', unit: 'character' });
+      return;
     }
+
+    runIntent(host, { kind: 'delete', direction: 'backward', unit: 'character' });
+  };
+
+  const onDragstart = (event: DragEvent): void => {
+    const transfer = event.dataTransfer;
+
+    parts.sync.read();
+    const state = host.state();
+    const range = selectionRange(state.doc, state.selection);
+
+    if (transfer === null || range.from === range.to || !withinSelection(doc, event.target)) {
+      event.preventDefault();
+      return;
+    }
+
+    const { text, html } = carried(state, range);
+
+    transfer.setData('text/plain', text);
+    transfer.setData('text/html', html);
+
+    transfer.effectAllowed =
+      root.getAttribute('contenteditable') === AttrToken.True ? 'copyMove' : 'copy';
+
+    dragging = true;
+  };
+
+  const onDragend = (): void => {
+    dragging = false;
   };
 
   const onDrop = (event: DragEvent): void => {
@@ -467,19 +579,27 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
 
     const pos = posAtCoords(host, event.clientX, event.clientY);
     const state = host.state();
+    const source = dragging ? selectionRange(state.doc, state.selection) : undefined;
+    const copies = event.ctrlKey || event.altKey;
+
+    const ontoItself =
+      source !== undefined && pos !== undefined && pos >= source.from && pos <= source.to;
 
     event.preventDefault();
-    if (intent === undefined || pos === undefined) {
+    dragging = false;
+    if (intent === undefined || pos === undefined || ontoItself) {
       return;
     }
     host.dispatch(state.tr.setSelection(nearestCursor(state.doc, pos)), 'pointer');
-    runIntent(host, intent);
+    runIntent(host, intent, source === undefined || copies ? undefined : without(source));
   };
 
   const onWidgetDrag = (event: DragEvent): void => {
-    if (widgetAround(host.context, event.target) && carriesFiles(event)) {
-      event.preventDefault();
+    if (!widgetAround(host.context, event.target) || !carriesFiles(event)) {
+      return;
     }
+
+    event.preventDefault();
   };
 
   const onWidgetDrop = (event: DragEvent): void => {
@@ -550,10 +670,12 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   const onWidgetMousedown = (event: MouseEvent): void => {
     const owner = widgetOwner(host.context, event.target);
 
-    if (owner?.contentDOM === null && event.button === 0 && !interactive(event.target, owner.dom)) {
-      parts.setHolding(true);
-      place(event, pointAt(event, owner.node.id));
+    if (owner?.contentDOM !== null || event.button !== 0 || interactive(event.target, owner.dom)) {
+      return;
     }
+
+    parts.setHolding(true);
+    place(event, pointAt(event, owner.node.id));
   };
 
   const onWidgetKeydown = (event: KeyboardEvent): void => {
@@ -574,35 +696,30 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   };
 
   const onMouseup = (): void => {
-    if (host.holding()) {
-      parts.setHolding(false);
-      parts.sync.write();
+    if (!host.holding()) {
+      return;
     }
-  };
 
-  const onCompositionstart = (): void => {
-    openGap();
-    parts.setComposing(true);
-    parts.watch.startComposition();
-  };
-
-  const onCompositionend = (): void => {
-    parts.setComposing(false);
-    parts.watch.endComposition();
+    parts.setHolding(false);
+    parts.sync.write();
   };
 
   const onSelectionchange = (): void => {
-    if (!host.holding() && !widgetAround(host.context, doc.getSelection()?.focusNode ?? null)) {
-      parts.sync.read();
+    if (host.holding() || widgetAround(host.context, doc.getSelection()?.focusNode ?? null)) {
+      return;
     }
+
+    parts.sync.read();
   };
 
   const own =
     <E extends Event>(handler: (event: E) => void) =>
     (event: E): void => {
-      if (!widgetAround(host.context, event.target)) {
-        handler(event);
+      if (widgetAround(host.context, event.target)) {
+        return;
       }
+
+      handler(event);
     };
 
   const selectedOwner = (target: EventTarget | null): boolean => {
@@ -619,9 +736,11 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   const clipboard =
     <E extends Event>(handler: (event: E) => void) =>
     (event: E): void => {
-      if (!widgetAround(host.context, event.target) || selectedOwner(event.target)) {
-        handler(event);
+      if (widgetAround(host.context, event.target) && !selectedOwner(event.target)) {
+        return;
       }
+
+      handler(event);
     };
 
   const keydown = own(onKeydown);
@@ -629,7 +748,8 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   const paste = clipboard(onPaste);
   const copy = clipboard(onCopy);
   const drop = own(onDrop);
-  const drag = own(onDrag);
+  const dragover = own(onDragover);
+  const dragstart = own(onDragstart);
   const mousedown = own(onMousedown);
   const compositionstart = own(onCompositionstart);
   const compositionend = own(onCompositionend);
@@ -643,8 +763,9 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   root.addEventListener('drop', drop);
   root.addEventListener('drop', onWidgetDrop);
   root.addEventListener('dragover', onWidgetDrag);
-  root.addEventListener('dragover', drag);
-  root.addEventListener('dragstart', drag);
+  root.addEventListener('dragover', dragover);
+  root.addEventListener('dragstart', dragstart);
+  root.addEventListener('dragend', onDragend);
   root.addEventListener('mousedown', mousedown);
   root.addEventListener('mousedown', onWidgetMousedown);
   doc.addEventListener('mouseup', onMouseup);
@@ -662,8 +783,9 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     root.removeEventListener('drop', drop);
     root.removeEventListener('drop', onWidgetDrop);
     root.removeEventListener('dragover', onWidgetDrag);
-    root.removeEventListener('dragover', drag);
-    root.removeEventListener('dragstart', drag);
+    root.removeEventListener('dragover', dragover);
+    root.removeEventListener('dragstart', dragstart);
+    root.removeEventListener('dragend', onDragend);
     root.removeEventListener('mousedown', mousedown);
     root.removeEventListener('mousedown', onWidgetMousedown);
     doc.removeEventListener('mouseup', onMouseup);

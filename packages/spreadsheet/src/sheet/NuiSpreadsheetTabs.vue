@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { Key, PopoverState, afterRelease } from '@numior/primitives';
+import { Key, PopoverState, isComposing, useAfterRelease } from '@numior/primitives';
 import {
   NuiButton,
   NuiIcon,
@@ -66,7 +66,7 @@ import {
   type NuiMenuEntry,
   type NuiMenuExposed,
 } from '@numior/vue';
-import { computed, ref, shallowRef, useTemplateRef } from 'vue';
+import { computed, nextTick, ref, shallowRef, useTemplateRef } from 'vue';
 import { validSheetName } from '../core';
 import { isKey } from './sheet-keys';
 import type { SheetTabsProps } from './sheet.types';
@@ -92,6 +92,7 @@ const renameForm = useTemplateRef<HTMLFormElement>('renameForm');
 const target = shallowRef<HTMLElement | null>(null);
 const targetIndex = ref(-1);
 const menuOpen = ref(false);
+const afterRelease = useAfterRelease();
 const renaming = ref(false);
 const draftName = ref('');
 const tried = ref(false);
@@ -104,14 +105,16 @@ const takenNames = computed(() =>
   ),
 );
 
+const nextName = computed(() => draftName.value.trim());
+
 const nameError = computed((): string | undefined => {
   if (!tried.value) {
     return undefined;
   }
-  if (!validSheetName(draftName.value)) {
+  if (!validSheetName(nextName.value)) {
     return messages.sheetNameInvalid;
   }
-  return takenNames.value.has(draftName.value.toLowerCase()) ? messages.sheetNameTaken : undefined;
+  return takenNames.value.has(nextName.value.toLowerCase()) ? messages.sheetNameTaken : undefined;
 });
 
 const startRename = (): void => {
@@ -120,15 +123,32 @@ const startRename = (): void => {
   renaming.value = true;
 };
 
+const focusShown = (): void => {
+  root.value
+    ?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
+    ?.focus({ preventScroll: true });
+};
+
+const restructure = async (change: () => void): Promise<void> => {
+  target.value?.focus({ preventScroll: true });
+  change();
+  await nextTick();
+  focusShown();
+};
+
 const menuItems = computed((): readonly NuiMenuEntry[] => [
-  { key: 'insert', label: messages.insertSheet, onSelect: () => emit('add', targetIndex.value) },
+  {
+    key: 'insert',
+    label: messages.insertSheet,
+    onSelect: () => restructure(() => emit('add', targetIndex.value)),
+  },
   { key: 'rename', label: messages.renameSheet, onSelect: startRename },
   {
     key: 'delete',
     label: messages.deleteSheet,
     tone: 'error',
     disabled: tabs.length < 2,
-    onSelect: () => emit('remove', targetIndex.value),
+    onSelect: () => restructure(() => emit('remove', targetIndex.value)),
   },
 ]);
 
@@ -149,15 +169,18 @@ const aim = (node: EventTarget | null): boolean => {
   }
   target.value = tab;
   targetIndex.value = indexOf(tab);
+  emit('select', targetIndex.value);
   return true;
 };
 
 const onSelect = (value: string | undefined): void => {
-  const index = Number(value);
+  const index = tabs.findIndex((tab) => tab.value === value);
 
-  if (Number.isInteger(index)) {
-    emit('select', index);
+  if (index < 0) {
+    return;
   }
+
+  emit('select', index);
 };
 
 const onContextmenu = (event: MouseEvent): void => {
@@ -186,6 +209,10 @@ const historyAction = (event: KeyboardEvent): (() => void) | undefined => {
 const onKeydown = (event: KeyboardEvent): void => {
   const action = tabOf(event.target) === undefined ? undefined : historyAction(event);
 
+  if (isComposing(event)) {
+    return;
+  }
+
   if (action !== undefined) {
     event.preventDefault();
     action();
@@ -194,21 +221,27 @@ const onKeydown = (event: KeyboardEvent): void => {
 
   const menuKey = event.key === Key.ContextMenu || (event.key === Key.F10 && event.shiftKey);
 
-  if ((menuKey || event.key === Key.F2) && aim(event.target)) {
-    event.preventDefault();
+  const acts = menuKey || event.key === Key.F2;
 
-    if (menuKey) {
-      menu.value?.show('first');
-    } else {
-      startRename();
-    }
+  if (!acts || !aim(event.target)) {
+    return;
+  }
+
+  event.preventDefault();
+
+  if (menuKey) {
+    menu.value?.show('first');
+  } else {
+    startRename();
   }
 };
 
 const onDblclick = (event: MouseEvent): void => {
-  if (aim(event.target)) {
-    startRename();
+  if (!aim(event.target)) {
+    return;
   }
+
+  startRename();
 };
 
 const onRenameToggle = (event: Event): void => {
@@ -225,10 +258,12 @@ const onRenameToggle = (event: Event): void => {
 const commitRename = (): void => {
   tried.value = true;
 
-  if (nameError.value === undefined) {
-    renaming.value = false;
-    emit('rename', targetIndex.value, draftName.value.trim());
-    target.value?.focus();
+  if (nameError.value !== undefined) {
+    return;
   }
+
+  renaming.value = false;
+  emit('rename', targetIndex.value, nextName.value);
+  target.value?.focus();
 };
 </script>

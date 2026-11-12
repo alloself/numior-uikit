@@ -1,7 +1,7 @@
-import { fromHTML, toJSON } from '@numior/editor-core';
+import { fromHTML, toHTML, toJSON } from '@numior/editor-core';
 import { describe, expect, it } from 'vite-plus/test';
 import { cellValueOf, columnLetter, contentSchema, contentTableData, parseCellText } from '../src';
-import { node } from './support/documents';
+import { docOf, node } from './support/documents';
 
 const tableOf = (html: string) => {
   const [table] = fromHTML(contentSchema, html).root.content;
@@ -70,10 +70,12 @@ describe('content tables', () => {
   it('keeps the read rows while their nodes stay and pads short rows with empty cells', () => {
     const table = node('table', [
       node('table_head', [
-        node('table_column', [], { name: 'A', type: 'number' }),
-        node('table_column', [], { name: 'B' }),
+        node('table_column', [], { key: 'a', name: 'A', type: 'number' }),
+        node('table_column', [], { key: 'b', name: 'B' }),
       ]),
-      node('table_body', [node('table_row', [node('table_cell', [], { value: '3' })])]),
+      node('table_body', [
+        node('table_row', [node('table_cell', [], { column: 'a', value: '3' })]),
+      ]),
     ]);
 
     const data = contentTableData(table);
@@ -81,5 +83,48 @@ describe('content tables', () => {
     expect(data.rows).toEqual([{ id: data.rows[0]?.id, cells: [3, null] }]);
     expect(contentTableData(table)).toBe(data);
     expect(toJSON(fromHTML(contentSchema, '<table></table>')).root.content).toHaveLength(1);
+  });
+
+  it('puts every cell under its column wherever the row keeps it', () => {
+    const table = node('table', [
+      node('table_head', [
+        node('table_column', [], { key: 'a', name: 'A' }),
+        node('table_column', [], { key: 'b', name: 'B' }),
+        node('table_column', [], { key: 'c', name: 'C' }),
+      ]),
+      node('table_body', [
+        node('table_row', [
+          node('table_cell', [], { column: 'c', value: 'third' }),
+          node('table_cell', [], { column: 'gone', value: 'orphan' }),
+          node('table_cell', [], { column: 'a', value: 'old' }),
+          node('table_cell', [], { column: 'a', value: 'first' }),
+        ]),
+        node('table_row'),
+      ]),
+    ]);
+
+    const page = docOf(table);
+    const html = toHTML(page);
+
+    expect(contentTableData(table).rows.map((row) => row.cells)).toEqual([
+      ['first', null, 'third'],
+      [null, null, null],
+    ]);
+
+    expect(html.match(/<td[^>]*>[^<]*/gu)?.map((cell) => cell.replace(/<td[^>]*>/u, ''))).toEqual([
+      'first',
+      '',
+      'third',
+      '',
+      '',
+      '',
+    ]);
+
+    expect(page.textBetween(0, page.size)).toBe('A\tB\tC\nfirst\t\tthird\n\t\t');
+
+    expect(tableOf(html)?.rows.map((row) => row.cells)).toEqual([
+      ['first', null, 'third'],
+      [null, null, null],
+    ]);
   });
 });

@@ -13,7 +13,7 @@ import { aggregateTextOf, cellTextOf, cellValueFrom, valueTextOf } from './table
 import {
   TableBodyRowViewKind,
   type NuiTableColumn,
-  type TableCellPosition,
+  type NuiTableCellPosition,
   type TableGroupCell,
   type TableGroupRow,
 } from './table.types';
@@ -38,7 +38,7 @@ export interface TableExpansion {
   rowAt(position: number): TableGroupRow | undefined;
   toggle(position: number): void;
   settle(): void;
-  onKeydown(event: KeyboardEvent, active: TableCellPosition): boolean;
+  onKeydown(event: KeyboardEvent, active: NuiTableCellPosition): boolean;
 }
 
 interface GroupContext {
@@ -116,9 +116,11 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
     for (const key of current.keys) {
       const cell = cellOf(node, key, current);
 
-      if (cell !== undefined) {
-        cells[key] = cell;
+      if (cell === undefined) {
+        continue;
       }
+
+      cells[key] = cell;
     }
     return { id: node.id, cells };
   };
@@ -201,9 +203,11 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
     rowAt,
     toggle,
     settle: () => {
-      if (loading.value.size > 0) {
-        loading.value = new Set();
+      if (loading.value.size === 0) {
+        return;
       }
+
+      loading.value = new Set();
     },
     onKeydown: (event, active) => {
       const node = options.engine.value.nodeAt(options.offset() + active.row);

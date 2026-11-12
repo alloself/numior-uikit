@@ -142,6 +142,19 @@ export class FormHarness<V extends object> {
     await nextTick();
   }
 
+  hold(path: Parameters<FormContext<V>['register']>[0]): () => void {
+    const owner = this.form.register(path);
+
+    return () => {
+      owner.unregister();
+    };
+  }
+
+  async setValues(values: Parameters<FormContext<V>['setValues']>[0]): Promise<void> {
+    await this.form.setValues(values);
+    await nextTick();
+  }
+
   async blur(path: string): Promise<void> {
     await this.input(path).trigger('blur');
     await this.probes.work.get(path);
@@ -159,6 +172,10 @@ export class FormHarness<V extends object> {
     return this.form.submit();
   }
 
+  startValidate(options?: ValidateOptions): Promise<ValidationSummary> {
+    return this.form.validate(options);
+  }
+
   async validate(options?: ValidateOptions): Promise<ValidationSummary> {
     const summary = await this.form.validate(options);
 
@@ -173,6 +190,13 @@ export class FormHarness<V extends object> {
 
   async hide(path: string): Promise<void> {
     this.view.hidden.add(path);
+    await nextTick();
+  }
+
+  async hideAll(paths: readonly string[]): Promise<void> {
+    for (const path of paths) {
+      this.view.hidden.add(path);
+    }
     await nextTick();
   }
 

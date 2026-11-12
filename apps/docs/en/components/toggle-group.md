@@ -1,14 +1,10 @@
 # Toggle group
 
-`NuiToggleGroup` is a row of buttons where one or several are pressed. Use it to pick a view
-(list or grid), a color theme or the panels that are shown.
+A row of buttons where one or several stay pressed.
 
 <Example name="toggle-group/Basic" />
 
-The buttons are set in `items`, and the pressed one comes through `v-model`. The `required` prop
-keeps the last pressed button from being released, so the value never becomes empty. The
-`segmented` variant puts the buttons on one shared background, the default `outline` variant
-outlines each of them.
+Describe the buttons in `items`, and `v-model` gets the value of the pressed one.
 
 ## Installation
 
@@ -19,28 +15,31 @@ import '@numior/vue/styles/toggle-group.css';
 
 ## Usage
 
-Change the look, size and direction of the group or keep only the icons on the buttons.
+Change the style and the size of the group, stack the buttons in a column or leave only their
+icons.
 
 <Configurator name="NuiToggleGroup" />
 
 ## Examples
 
-### Several pressed buttons
+### Press several buttons
 
-With `multiple` several buttons can be pressed, and their values come as an array through
-`v-model:values`. The `icon-only` prop leaves only icons on the buttons, and the label shows in a
-tooltip and names the button. A button with `disabled` in `items` cannot be pressed.
+Add `multiple`.
 
 <Example name="toggle-group/Multiple" />
 
+The pressed values come to `v-model:values` as an array, and the user can release every button:
+`required` works only for a single value.
+
 ## Accessibility
 
-Without `multiple` the group behaves like a set of radio buttons: the root is a
-`role="radiogroup"` and the buttons are `role="radio"` with `aria-checked`. With `multiple` the
-root is a `role="group"`, and the buttons get `aria-pressed`. The `label` prop names the group.
+| Mode            | Group        | Buttons                     |
+| --------------- | ------------ | --------------------------- |
+| One value       | `radiogroup` | `radio` with `aria-checked` |
+| With `multiple` | `group`      | Buttons with `aria-pressed` |
 
-Tab stops on one button of the group, and the arrows move between the rest. In a vertical group
-these are the up and down arrows, and in right-to-left text the left and right arrows swap.
+Name the group in `label`. Tab stops on the pressed button, and the arrow keys move between the
+others; in right-to-left text the left and right arrows swap.
 
 <KeyboardReference name="NuiToggleGroup" />
 

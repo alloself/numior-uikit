@@ -149,10 +149,12 @@ const register = (): void => {
   registered = element === null ? undefined : key;
   registeredElement = element;
 
-  if (element !== null) {
-    list.items.elements.set(key, element);
-    list.items.titles.set(element, titleText);
+  if (element === null) {
+    return;
   }
+
+  list.items.elements.set(key, element);
+  list.items.titles.set(element, titleText);
 };
 
 const setRoot = (element: Element | ComponentPublicInstance | null): void => {
@@ -269,13 +271,15 @@ const innerAttrs = (): AttrRecord => {
 
 const onClick = (): void => {
   if (
-    list?.kind === ListContextKind.List &&
-    mode() === ListItemMode.Option &&
-    !disabled &&
-    value !== undefined
+    list?.kind !== ListContextKind.List ||
+    mode() !== ListItemMode.Option ||
+    disabled ||
+    value === undefined
   ) {
-    list.select(value);
+    return;
   }
+
+  list.select(value);
 };
 
 onUpdated(register);

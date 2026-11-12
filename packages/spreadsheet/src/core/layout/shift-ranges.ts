@@ -1,7 +1,7 @@
 import { LineAxis, type CellAddress, type CellRange } from '../cell.types';
 import { shiftSpan, type LineChange } from '../formula/rewrite';
 
-const shiftRange = (range: CellRange, change: LineChange): CellRange | undefined => {
+export const shiftRange = (range: CellRange, change: LineChange): CellRange | undefined => {
   const rows = change.axis === LineAxis.Rows;
   const span = shiftSpan(rows ? [range.top, range.bottom] : [range.left, range.right], change);
 

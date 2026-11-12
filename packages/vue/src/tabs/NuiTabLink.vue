@@ -44,13 +44,15 @@ const onClick = (event: MouseEvent): void => {
     return;
   }
   if (
-    event.button === PRIMARY_BUTTON &&
-    !event.metaKey &&
-    !event.ctrlKey &&
-    !event.shiftKey &&
-    !event.altKey
+    event.button !== PRIMARY_BUTTON ||
+    event.metaKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    event.altKey
   ) {
-    tabs.select(linkKey);
+    return;
   }
+
+  tabs.select(linkKey);
 };
 </script>

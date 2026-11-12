@@ -4,7 +4,7 @@
     :rows="regions"
     :get-key="keyOf"
     :column-menu="false"
-    bordered
+    gridlines
     caption="Продажи по кварталам, млн ₽"
   >
     <template #overlay="{ rectOf }">

@@ -29,9 +29,11 @@ const tokensOf = (element: HTMLElement): string[] =>
 const describe = (element: HTMLElement, id: string): void => {
   const tokens = tokensOf(element);
 
-  if (!tokens.includes(id)) {
-    element.setAttribute(DESCRIBED_BY, [...tokens, id].join(' '));
+  if (tokens.includes(id)) {
+    return;
   }
+
+  element.setAttribute(DESCRIBED_BY, [...tokens, id].join(' '));
 };
 
 const undescribe = (element: HTMLElement, id: string): void => {
@@ -74,9 +76,11 @@ export const useTooltipTargets = (options: TooltipTargetsOptions): TooltipTarget
   };
 
   watch(options.disabled, (disabled) => {
-    if (disabled) {
-      take(null);
+    if (!disabled) {
+      return;
     }
+
+    take(null);
   });
 
   return {
@@ -101,23 +105,29 @@ export const useTooltipTargets = (options: TooltipTargetsOptions): TooltipTarget
       }
     },
     onPointerout: (event) => {
-      if (targetOf(event.target) !== null && targetOf(event.relatedTarget) === null) {
-        hovered = null;
-        options.delay.scheduleClose();
+      if (targetOf(event.target) === null || targetOf(event.relatedTarget) !== null) {
+        return;
       }
+
+      hovered = null;
+      options.delay.scheduleClose();
     },
     onFocusin: (event) => {
       const next = targetOf(event.target);
 
-      if (next !== null && !options.disabled() && !options.pressedRecently()) {
-        take(next);
-        options.delay.openNow();
+      if (next === null || options.disabled() || options.pressedRecently()) {
+        return;
       }
+
+      take(next);
+      options.delay.openNow();
     },
     onFocusout: (event) => {
-      if (targetOf(event.relatedTarget) === null) {
-        options.delay.closeNow();
+      if (targetOf(event.relatedTarget) !== null) {
+        return;
       }
+
+      options.delay.closeNow();
     },
     onPointerdown: () => {
       options.onPress();

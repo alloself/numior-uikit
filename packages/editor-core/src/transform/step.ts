@@ -1,13 +1,15 @@
 import type { Doc, Slice } from '../doc/doc.types';
+import { createDoc } from '../doc/doc';
 import { normalizeContent, sameMarks } from '../model/node';
 import { applyAttrs, applyDocAttrs, pickedAttrs } from './attrs';
 import { applyMarkup, markupBefore } from './markup';
 import { createStepMap, EMPTY_MAP } from './mapping';
 import type { Mappable, StepMap } from './mapping.types';
 import { applyMark, heldSpans } from './marks';
+import { applyMove, createMoveMap, swapOf } from './move';
 import { applyPlan, aroundPlan, replacePlan, sliceSize } from './replace';
 import { ContentNodeKind, type NodeId } from '../model/node.types';
-import { StepKind, type Step, type StepResult } from './step.types';
+import { StepKind, type Step, type StepResult, type StepSpan } from './step.types';
 import { cutTokens, rebuild, sliceFrame } from './tokens';
 
 const NO_IDS: ReadonlySet<NodeId> = new Set();
@@ -28,11 +30,7 @@ const removeBetween = (slice: Slice, from: number, to: number): Slice => {
   return { content: built.content, openStart: slice.openStart, openEnd: slice.openEnd };
 };
 
-export const applyStep = (
-  doc: Doc,
-  step: Step,
-  fresh: ReadonlySet<NodeId> = NO_IDS,
-): StepResult => {
+const stepResult = (doc: Doc, step: Step, fresh: ReadonlySet<NodeId>): StepResult => {
   switch (step.kind) {
     case StepKind.Replace: {
       const plan = replacePlan(step.from, step.to, step.slice);
@@ -54,6 +52,8 @@ export const applyStep = (
         step.kind === StepKind.AddMark,
         step.skip,
       );
+    case StepKind.Move:
+      return applyMove(doc, step.from, step.to, step.target);
     case StepKind.Attrs:
       return applyAttrs(doc, step.pos, step.attrs);
     case StepKind.Markup:
@@ -78,6 +78,8 @@ export const stepMapOf = (step: Step): StepMap => {
           newSize: sliceSize(step.slice) - step.insert,
         },
       ]);
+    case StepKind.Move:
+      return createMoveMap(swapOf(step.from, step.to, step.target));
     case StepKind.AddMark:
     case StepKind.RemoveMark:
     case StepKind.Attrs:
@@ -85,6 +87,22 @@ export const stepMapOf = (step: Step): StepMap => {
     case StepKind.DocAttrs:
       return EMPTY_MAP;
   }
+};
+
+export const applyStep = (
+  doc: Doc,
+  step: Step,
+  fresh: ReadonlySet<NodeId> = NO_IDS,
+): StepResult => {
+  const result = stepResult(doc, step, fresh);
+
+  if (!result.ok || result.doc === doc) {
+    return result;
+  }
+  return {
+    ok: true,
+    doc: createDoc(doc.schema, result.doc.root, { doc, map: stepMapOf(step) }),
+  };
 };
 
 const invertAround = (step: Extract<Step, { kind: 'replaceAround' }>, doc: Doc): Step => {
@@ -119,8 +137,18 @@ const invertMark = (step: Extract<Step, { kind: 'addMark' | 'removeMark' }>, doc
   };
 };
 
+const invertMove = (step: Extract<Step, { kind: 'move' }>): Step => {
+  const size = step.to - step.from;
+
+  return step.target < step.from
+    ? { kind: 'move', from: step.target, to: step.target + size, target: step.to }
+    : { kind: 'move', from: step.target - size, to: step.target, target: step.from };
+};
+
 export const invertStep = (step: Step, doc: Doc): Step => {
   switch (step.kind) {
+    case StepKind.Move:
+      return invertMove(step);
     case StepKind.Replace:
       return {
         kind: 'replace',
@@ -152,13 +180,29 @@ export const invertStep = (step: Step, doc: Doc): Step => {
 const mapRangeStep = (
   step: Step & { readonly from: number; readonly to: number },
   mapping: Mappable,
-) => {
-  const from = mapping.mapResult(step.from, 1);
-  const to = mapping.mapResult(step.to, -1);
+): StepSpan | undefined => {
+  if (step.from === step.to) {
+    const at = mapping.mapResult(step.from, 1);
 
-  return from.deletedAcross && to.deletedAcross
+    return at.deletedAcross ? undefined : { from: at.pos, to: at.pos };
+  }
+  const span = mapping.mapSpan(step.from, step.to);
+
+  return span === undefined || (span.from.deletedAcross && span.to.deletedAcross)
     ? undefined
-    : { from: from.pos, to: Math.max(from.pos, to.pos) };
+    : { from: span.from.pos, to: Math.max(span.from.pos, span.to.pos) };
+};
+
+const mapMove = (step: Extract<Step, { kind: 'move' }>, mapping: Mappable): Step | undefined => {
+  const range = mapRangeStep(step, mapping);
+  const target = mapping.mapResult(step.target, step.target < step.from ? -1 : 1);
+
+  return range === undefined ||
+    range.from >= range.to ||
+    target.deletedAcross ||
+    (target.pos >= range.from && target.pos <= range.to)
+    ? undefined
+    : { kind: 'move', from: range.from, to: range.to, target: target.pos };
 };
 
 const mapAround = (
@@ -166,12 +210,13 @@ const mapAround = (
   mapping: Mappable,
 ): Step | undefined => {
   const range = mapRangeStep(step, mapping);
+  const gap = mapping.mapSpan(step.gapFrom, step.gapTo, true);
 
-  if (range === undefined) {
+  if (range === undefined || gap === undefined) {
     return undefined;
   }
-  const gapFrom = step.gapFrom === step.from ? range.from : mapping.map(step.gapFrom, -1);
-  const gapTo = step.gapTo === step.to ? range.to : mapping.map(step.gapTo, 1);
+  const gapFrom = step.gapFrom === step.from ? range.from : gap.from.pos;
+  const gapTo = step.gapTo === step.to ? range.to : gap.to.pos;
 
   return range.from > gapFrom || range.to < gapTo
     ? undefined
@@ -182,15 +227,19 @@ const mapMarkStep = (
   step: Extract<Step, { kind: 'addMark' | 'removeMark' }>,
   mapping: Mappable,
 ): Step | undefined => {
-  const from = mapping.map(step.from, 1);
-  const to = mapping.map(step.to, -1);
+  const range = mapping.mapSpan(step.from, step.to);
+  const from = range?.from.pos ?? 0;
+  const to = range?.to.pos ?? 0;
 
-  const skip = (step.skip ?? []).flatMap((span) => {
-    const start = mapping.map(span.from, 1);
-    const end = mapping.map(span.to, -1);
+  const skip = (step.skip ?? [])
+    .flatMap((span) => {
+      const held = mapping.mapSpan(span.from, span.to);
 
-    return start < end ? [{ from: start, to: end }] : [];
-  });
+      return held !== undefined && held.from.pos < held.to.pos
+        ? [{ from: held.from.pos, to: held.to.pos }]
+        : [];
+    })
+    .toSorted((left, right) => left.from - right.from);
 
   if (from >= to) {
     return undefined;
@@ -220,6 +269,8 @@ export const mapStep = (step: Step, mapping: Mappable): Step | undefined => {
     }
     case StepKind.ReplaceAround:
       return mapAround(step, mapping);
+    case StepKind.Move:
+      return mapMove(step, mapping);
     case StepKind.AddMark:
     case StepKind.RemoveMark:
       return mapMarkStep(step, mapping);
@@ -252,6 +303,17 @@ const mergeReplace = (
       },
     };
   }
+  if (second.from === second.to && second.from === first.from) {
+    return {
+      ...first,
+      slice: {
+        content: normalizeContent([...second.slice.content, ...first.slice.content]),
+        openStart: 0,
+        openEnd: 0,
+      },
+    };
+  }
+
   const emptied = first.slice.content.length === 0 && second.slice.content.length === 0;
 
   if (emptied && second.to === first.from) {

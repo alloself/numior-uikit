@@ -4,8 +4,8 @@ const docs: DocsMap = {
   NuiPagination: {
     props: {
       total: {
-        ru: 'Сколько всего записей. Число страниц считается из него и `pageSize`.',
-        en: 'Total number of records. The page count follows from it and `pageSize`.',
+        ru: 'Сколько всего записей; число страниц считается из него и `pageSize`. Пока `total` равен 0, например пока данные грузятся, модель `page` не меняется. Страница из адреса сохраняется и прижимается к числу страниц, когда `total` известен.',
+        en: 'Total number of records; the page count follows from it and `pageSize`. While `total` is 0, for example while data loads, the `page` model stays as it is. A page taken from the address is kept and clamped to the page count once `total` is known.',
       },
       siblings: {
         ru: 'Сколько страниц видно по обе стороны от текущей.',
@@ -35,9 +35,13 @@ const docs: DocsMap = {
         ru: 'Показывает строку вида «1–20 из 240».',
         en: 'Shows a line such as "1–20 of 240".',
       },
+      locale: {
+        ru: 'Язык чисел диапазона и встроенных текстов, например `de-DE`. По умолчанию — язык из `createNuiConfig`.',
+        en: 'Locale of the range numbers and the built-in texts, such as `de-DE`. Defaults to the locale from `createNuiConfig`.',
+      },
       size: {
-        ru: 'Размер кнопок: `sm`, `md` или `lg`.',
-        en: 'Size of the buttons: `sm`, `md` or `lg`.',
+        ru: 'Размер кнопок и селекта размера страницы: `sm`, `md` или `lg`.',
+        en: 'Size of the buttons and of the page size select: `sm`, `md` or `lg`.',
       },
       label: {
         ru: 'Подпись навигации для экранных дикторов. По умолчанию — «Постраничная навигация».',

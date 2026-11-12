@@ -8,8 +8,6 @@ import {
   type FragmentSlot,
   type SheetXml,
 } from '../../core/layout/fragments.types';
-import { EN_FORMULAS } from '../../core/formula/locale';
-import { parseFormula } from '../../core/formula/parser';
 import { XmlPrefix, type XmlAttribute, type XmlName } from '../xml/xml.types';
 import { escapeAttribute, escapeText } from '../xml/writer';
 import {
@@ -23,6 +21,7 @@ import {
 import { spaceOf } from './fragment-specs';
 import { PivotLineKind } from '../../core/pivot/pivot.types';
 import { OoxmlAttribute, OoxmlElement } from '../ooxml.types';
+import { parseFileFormula } from './file-formula';
 
 export interface FragmentRecorder {
   open(name: XmlName, attributes: readonly XmlAttribute[]): void;
@@ -61,8 +60,6 @@ interface Top {
   readonly opening: string;
   readonly prefixes: Map<string, string>;
 }
-
-const PREFIXES = /_xl(?:fn|ws|pm)\./gu;
 
 const FROZEN = new Set(['frozen', 'frozenSplit']);
 
@@ -213,7 +210,7 @@ const settled = (frame: Frame, opaque: string[]): Fragment => {
         return piece;
       }
 
-      const parsed = parseFormula(piece.text.replaceAll(PREFIXES, ''), EN_FORMULAS, anchor);
+      const parsed = parseFileFormula(piece.text, anchor);
 
       if (!parsed.ok) {
         opaque.push('formula');
@@ -243,9 +240,11 @@ export const createFragmentRecorder = (options: RecorderOptions): FragmentRecord
     const colon = name.qname.indexOf(':');
     const prefix = colon > 0 ? name.qname.slice(0, colon) : '';
 
-    if (top !== undefined && prefix !== '' && prefix !== XmlPrefix.Xml) {
-      top.prefixes.set(prefix, name.uri);
+    if (top === undefined || prefix === '' || prefix === XmlPrefix.Xml) {
+      return;
     }
+
+    top.prefixes.set(prefix, name.uri);
   };
 
   const attributeXml = (
@@ -283,14 +282,16 @@ export const createFragmentRecorder = (options: RecorderOptions): FragmentRecord
     if (spec?.fragment !== undefined) {
       frames.push({ pieces: [], group: spec.fragment === PivotLineKind.Group });
     }
-    if (stack.length === 0) {
-      top = {
-        frame: current(),
-        index: current().pieces.length,
-        opening: `<${name.qname}`,
-        prefixes: new Map(),
-      };
+    if (stack.length !== 0) {
+      return;
     }
+
+    top = {
+      frame: current(),
+      index: current().pieces.length,
+      opening: `<${name.qname}`,
+      prefixes: new Map(),
+    };
   };
 
   const openingXml = (
@@ -399,10 +400,12 @@ export const createFragmentRecorder = (options: RecorderOptions): FragmentRecord
         top.frame.pieces[top.index] = `${top.opening}${declarations}`;
         top = undefined;
       }
-      if (open?.frame !== undefined) {
-        frames.pop();
-        push(settled(open.frame, opaque));
+      if (open?.frame === undefined) {
+        return;
       }
+
+      frames.pop();
+      push(settled(open.frame, opaque));
     },
     tail: () => {
       frames.splice(0, frames.length, tail);

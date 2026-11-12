@@ -109,6 +109,34 @@ describe('NuiSelect', () => {
     labelled.unmount();
   });
 
+  it('shows the loading state inside the listbox while its options load', () => {
+    const select = SelectDriver.mount({ props: { options: [], loading: true } });
+
+    expect(select.statusText).toBe('Loading');
+
+    select.unmount();
+
+    const labelled = SelectDriver.mount({
+      props: { options: [], loading: true, loadingLabel: 'Ищем…' },
+    });
+
+    expect(labelled.statusText).toBe('Ищем…');
+
+    labelled.unmount();
+  });
+
+  it('speaks the language of its own locale over the configured one', () => {
+    const select = SelectDriver.mount({
+      props: { options: [], loading: true, locale: 'ru-RU' },
+      config: { locale: 'en-US' },
+    });
+
+    expect(select.statusText).toBe('Загрузка');
+    expect(select.toggleLabel).toBe('Показать варианты');
+
+    select.unmount();
+  });
+
   it('shows the placeholder without a value and picks options by typeahead while closed', async () => {
     const select = SelectDriver.mount({ props: { placeholder: 'Pick a fruit' } });
     expect(select.valueText).toBe('Pick a fruit');
@@ -258,6 +286,20 @@ describe('NuiSelect', () => {
     expect(off.hiddenDisabled).toEqual([true]);
 
     off.unmount();
+  });
+
+  it('marks a required select with aria-required and keeps form attributes off its button', () => {
+    const required = SelectDriver.mount({ props: { required: true } });
+    expect(required.trigger.attributes('aria-required')).toBe('true');
+    expect(required.trigger.attributes('required')).toBeUndefined();
+
+    required.unmount();
+    const optional = SelectDriver.mount();
+    expect(optional.trigger.attributes('aria-required')).toBeUndefined();
+    expect(optional.trigger.attributes('required')).toBeUndefined();
+    expect(optional.trigger.attributes('readonly')).toBeUndefined();
+
+    optional.unmount();
   });
 
   it('keeps a readonly select closed while its value stays readable', async () => {

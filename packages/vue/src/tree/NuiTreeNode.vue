@@ -10,7 +10,7 @@
     :disabled="node.item.disabled"
     class="nui-tree__item"
     :class="{
-      'nui-tree__item--expanded': node.expanded,
+      'nui-tree__item--expanded': node.open,
       'nui-tree__item--loading': node.loading,
       'nui-tree__item--revealing': revealing,
     }"
@@ -26,15 +26,15 @@
           v-if="checked"
           class="nui-tree__checkbox"
           :class="{
-            'nui-tree__checkbox--checked': checked === CheckState.Checked,
-            'nui-tree__checkbox--indeterminate': checked === CheckState.Indeterminate,
+            'nui-tree__checkbox--checked': checked === NuiCheckState.Checked,
+            'nui-tree__checkbox--indeterminate': checked === NuiCheckState.Indeterminate,
           }"
         >
           <NuiCheckbox
             size="sm"
             class="nui-tree__box"
-            :model-value="checked === CheckState.Checked"
-            :indeterminate="checked === CheckState.Indeterminate"
+            :model-value="checked === NuiCheckState.Checked"
+            :indeterminate="checked === NuiCheckState.Indeterminate"
             :disabled="node.item.disabled"
             tabindex="-1"
             aria-hidden="true"
@@ -51,9 +51,9 @@
       <slot
         :item="node.item"
         :level="node.level"
-        :expanded="node.expanded"
+        :expanded="node.open"
         :selected="selected"
-        :checked="checked ?? CheckState.Unchecked"
+        :checked="checked ?? NuiCheckState.Unchecked"
         :loading="node.loading"
       />
     </template>
@@ -65,7 +65,7 @@ import { computed } from 'vue';
 import NuiCheckbox from '../checkbox/NuiCheckbox.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiListItem from '../list/NuiListItem.vue';
-import { CheckState, type NuiTreeNodeProps } from './tree.types';
+import { NuiCheckState, type NuiTreeNodeProps } from './tree.types';
 
 const { node, id, checked, icon, folder, revealing } = defineProps<NuiTreeNodeProps<T>>();
 

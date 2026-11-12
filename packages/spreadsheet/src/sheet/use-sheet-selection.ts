@@ -1,4 +1,4 @@
-import type { NuiTableRange, TableCellPosition } from '@numior/table';
+import type { NuiTableRange, NuiTableCellPosition } from '@numior/table';
 import { computed, watch } from 'vue';
 import type { CellAddress, CellRange } from '../core';
 import type {
@@ -11,7 +11,7 @@ import type {
 const rangeKey = (range: CellRange): string =>
   [range.top, range.left, range.bottom, range.right].map(String).join(':');
 
-const keyOf = (selection: NuiSpreadsheetSelection | undefined): string =>
+export const selectionKey = (selection: NuiSpreadsheetSelection | undefined): string =>
   selection === undefined
     ? ''
     : [
@@ -19,19 +19,8 @@ const keyOf = (selection: NuiSpreadsheetSelection | undefined): string =>
         ...selection.ranges.map(rangeKey),
       ].join('/');
 
-export const lineRange = (cells: SheetCells, range: NuiTableRange): CellRange => {
-  const top = Math.min(range.from.row, range.to.row);
-  const bottom = Math.max(range.from.row, range.to.row);
-  const left = Math.min(range.from.col, range.to.col);
-  const right = Math.max(range.from.col, range.to.col);
-
-  return {
-    top: cells.rowAt(top),
-    left: cells.colAt(left),
-    bottom: cells.rowAt(bottom),
-    right: cells.colAt(right),
-  };
-};
+export const lineRange = (cells: SheetCells, range: NuiTableRange): CellRange =>
+  cells.rangeOf(range);
 
 const cellRange = (cell: CellAddress): CellRange => ({
   top: cell.row,
@@ -40,7 +29,7 @@ const cellRange = (cell: CellAddress): CellRange => ({
   right: cell.col,
 });
 
-const positionOf = (cells: SheetCells, cell: CellAddress): TableCellPosition => ({
+const positionOf = (cells: SheetCells, cell: CellAddress): NuiTableCellPosition => ({
   row: cells.rowNear(cell.row),
   col: cells.colNear(cell.col),
 });
@@ -59,7 +48,7 @@ export const useSheetSelection = (options: SheetSelectionOptions): SheetSelectio
       return undefined;
     }
 
-    const active = { row: cells.rowAt(position.row), col: cells.colAt(position.col) };
+    const active = cells.cellOf(position.row, position.col);
     const ranges = options.formula.ranges.value.map((range) => lineRange(cells, range));
 
     return { active, ranges: ranges.length === 0 ? [cellRange(active)] : ranges };
@@ -87,15 +76,19 @@ export const useSheetSelection = (options: SheetSelectionOptions): SheetSelectio
   };
 
   watch(current, (value) => {
-    if (keyOf(value) !== keyOf(options.model.value)) {
-      options.model.value = value;
+    if (selectionKey(value) === selectionKey(options.model.value)) {
+      return;
     }
+
+    options.model.value = value;
   });
 
   watch(options.model, (value) => {
-    if (value !== undefined && keyOf(value) !== keyOf(current.value)) {
-      select(value);
+    if (value === undefined || selectionKey(value) === selectionKey(current.value)) {
+      return;
     }
+
+    select(value);
   });
 
   return { current, select };

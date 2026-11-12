@@ -1,13 +1,10 @@
 # Tooltip
 
-`NuiTooltip` is a popup with a short hint for a button or another element. It appears on hover
-and on keyboard focus.
+A short hint for a button or an icon.
 
 <Example name="tooltip/Basic" />
 
-The element the tooltip belongs to goes into the `trigger` slot and receives `attrs` from it: the
-handlers and `aria-describedby`. The tooltip appears 300 ms after hover, and at once on focus.
-`openDelay` changes the delay, and `placement` sets the side, `top` by default.
+Put the element into the `trigger` slot the same way as in a [Popover](/en/components/popover).
 
 ## Installation
 
@@ -18,27 +15,38 @@ import '@numior/vue/styles/tooltip.css';
 
 ## Usage
 
-Hover over the button and change the side of the tooltip, its offset and the delays.
+Hover over the button and change the side of the tooltip, its offset and its delays.
 
 <Configurator name="NuiTooltip" />
 
 ## Examples
 
-### Icon button
+### Label an icon button
 
-A tooltip adds to the name of a button but does not stand in for it, so an icon-only button still
-needs an `aria-label`.
+Keep `aria-label` on the button: the tooltip becomes its description, not its name.
 
 <Example name="tooltip/IconButton" />
 
+### Show a keyboard shortcut
+
+Set `shortcut` and import `@numior/vue/styles/kbd.css`.
+
+<Example name="tooltip/Shortcut" />
+
+A combination uses the notation of [Kbd](/en/components/kbd): `mod+shift+c` reads ⇧ ⌘ C on a Mac
+and Ctrl Shift C on Windows. For a tooltip with targets in `anchor`, pass a function: it receives
+the element under the pointer and returns its combination.
+
 ## Accessibility
 
-The tooltip follows WCAG 1.4.13: Esc closes it, the pointer can move onto it, and it never
-disappears on a timer. It hides when the pointer leaves or the element loses focus.
+The tooltip follows WCAG 1.4.13:
 
-Screen readers read the tooltip text as the description of the element through
-`aria-describedby`. Touch screens never show the tooltip, so do not put anything in it that the
-interface cannot be understood without.
+- Esc hides it.
+- The pointer can move onto the tooltip, and it stays open.
+- It does not disappear on a timer, only when the pointer or the focus leaves.
+
+A screen reader reads the tooltip as the description of the element through `aria-describedby`.
+Touch screens do not show tooltips, so keep anything the user needs out of them.
 
 <KeyboardReference name="NuiTooltip" />
 

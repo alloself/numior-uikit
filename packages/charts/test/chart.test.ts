@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import type { ChartSpec } from '../src';
-import { ChartDriver } from './drivers/chart';
+import { ChartDriver, ChartTheme } from './drivers/chart';
 
 const mounted: ChartDriver[] = [];
 
@@ -27,6 +27,7 @@ afterEach(() => {
   }
 
   document.documentElement.removeAttribute('dir');
+  ChartTheme.reset();
 });
 
 const MIDDLE = 150;
@@ -74,6 +75,21 @@ describe('NuiChart', () => {
     expect(chart.strokeSlots).toEqual([1]);
     expect(chart.gapSlots).toEqual([1]);
     expect(chart.markerCount).toBe(3);
+  });
+
+  it('clips the marks that leave a value axis bounded by hand and hides their markers', async () => {
+    const chart = chartOf({ spec: { ...revenue, valueAxis: { max: 100 } } });
+
+    expect(chart.clippedMarks).toBe(5);
+    expect(chart.valueTicks.at(-1)).toBe('100');
+
+    await chart.show({ ...revenue, kind: 'line', valueAxis: { max: 100 } });
+    expect(chart.clippedMarks).toBe(2);
+    expect(chart.markerCount).toBe(4);
+
+    await chart.show({ ...revenue, kind: 'line' });
+    expect(chart.clippedMarks).toBe(0);
+    expect(chart.markerCount).toBe(5);
   });
 
   it('leaves the legend out on request', () => {
@@ -137,6 +153,20 @@ describe('NuiChart', () => {
     expect(chart.crosshairX).toBeCloseTo(x);
     expect(chart.activePoints).toBe(1);
     expect(chart.tooltip?.rows).toEqual(['Online —', 'Stores 59']);
+  });
+
+  it('ends the hover reading on a right click until the pointer moves again', async () => {
+    const chart = chartOf({ spec: revenue });
+    const x = chart.categoryTickX('Q2') + 6;
+
+    await chart.hover(x, MIDDLE);
+    await chart.rightClick();
+
+    expect([chart.tooltip?.shown, chart.mutedMarks]).toEqual([false, 0]);
+
+    await chart.hover(x, MIDDLE);
+
+    expect(chart.tooltip?.shown).toBe(true);
   });
 
   it('walks categories with the arrow keys, announces them and selects with Enter', async () => {
@@ -251,7 +281,7 @@ describe('NuiChart', () => {
     expect(shown.tableHeaders[0]).toBe('Category');
   });
 
-  it('formats time categories as dates in the table', () => {
+  it('names time categories in the table by the grain of their values', async () => {
     const chart = chartOf({
       spec: {
         kind: 'column',
@@ -261,7 +291,44 @@ describe('NuiChart', () => {
       config: { locale: 'en-US' },
     });
 
-    expect(chart.tableRows.map(([date]) => date)).toEqual(['Jan 1, 2026', 'Feb 1, 2026']);
+    expect(chart.tableRows.map(([date]) => date)).toEqual(['Jan 2026', 'Feb 2026']);
+
+    await chart.show({
+      kind: 'line',
+      categories: {
+        kind: 'time',
+        values: [Date.UTC(2026, 2, 2, 9), Date.UTC(2026, 2, 2, 15), Number.NaN],
+      },
+      series: [{ id: 'sales', name: 'Sales', values: [3, 4, 5] }],
+    });
+
+    expect(chart.tableRows.map(([date]) => date)).toEqual([
+      'Mar 2, 2026, 09:00 AM',
+      'Mar 2, 2026, 03:00 PM',
+      '—',
+    ]);
+  });
+
+  it('reads times in the time zone it is given', async () => {
+    const chart = chartOf({
+      spec: {
+        kind: 'column',
+        categories: {
+          kind: 'time',
+          values: [Date.UTC(2026, 2, 1, 21), Date.UTC(2026, 2, 2, 21)],
+        },
+        series: [{ id: 'sales', name: 'Sales', values: [3, 4] }],
+      },
+      props: { timeZone: 'Europe/Moscow' },
+      config: { locale: 'en-US' },
+    });
+
+    expect(chart.categoryTicks).toEqual(['Mar 2', 'Mar 3']);
+    expect(chart.tableRows.map(([date]) => date)).toEqual(['Mar 2, 2026', 'Mar 3, 2026']);
+
+    await chart.press('ArrowRight');
+
+    expect(chart.announcement).toBe('Mar 2, 2026: Sales 3');
   });
 
   it('says there is nothing to show when the chart has no series or categories', () => {
@@ -269,6 +336,20 @@ describe('NuiChart', () => {
 
     expect(chart.drawn).toBe(false);
     expect(chart.empty).toBe('Нет данных для графика');
+  });
+
+  it('says there is nothing to show when a pie has no positive value to cut', () => {
+    const chart = chartOf({
+      spec: {
+        kind: 'pie',
+        categories: { kind: 'text', labels: ['Web', 'Stores', 'Other'] },
+        series: [{ id: 'sales', name: 'Sales', values: [0, -4, null] }],
+      },
+    });
+
+    expect(chart.empty).toBe('No data to show');
+    expect(chart.drawn).toBe(false);
+    expect(chart.focusable).toBe(false);
   });
 
   it('mirrors the category axis in right-to-left layouts', () => {
@@ -287,11 +368,55 @@ describe('NuiChart', () => {
     }
   });
 
-  it('follows a direction set on the page after mounting', async () => {
+  it('follows a direction switched in the config after mounting', async () => {
+    const chart = chartOf({ spec: revenue, config: { dir: 'ltr' } });
+    expect(chart.categoryTickX('Q1')).toBeLessThan(chart.categoryTickX('Q3'));
+
+    await chart.setDirection('rtl');
+    expect(chart.categoryTickX('Q1')).toBeGreaterThan(chart.categoryTickX('Q3'));
+  });
+
+  it('takes the direction of the page it is mounted on without watching the document', async () => {
+    const theme = ChartTheme.install();
+
+    document.documentElement.dir = 'rtl';
+
     const chart = chartOf({ spec: revenue });
 
-    await chart.setDocumentDirection('rtl');
-
+    await chart.settle();
     expect(chart.categoryTickX('Q1')).toBeGreaterThan(chart.categoryTickX('Q3'));
+    expect(theme.observed).toEqual([]);
+  });
+
+  it('follows a direction set on the page after mounting', async () => {
+    const theme = ChartTheme.install();
+    const chart = chartOf({ spec: revenue });
+
+    await chart.settle();
+    expect(chart.categoryTickX('Q1')).toBeLessThan(chart.categoryTickX('Q3'));
+
+    await theme.setPageDirection('rtl');
+    expect(chart.categoryTickX('Q1')).toBeGreaterThan(chart.categoryTickX('Q3'));
+    expect(theme.observed).toEqual([]);
+  });
+
+  it('lays the labels out with the font size of the theme and follows a theme change', async () => {
+    const theme = ChartTheme.install();
+    const chart = chartOf({ spec: revenue });
+
+    await chart.settle();
+
+    const tick = chart.categoryTickX('Q1');
+
+    await theme.setFontSize(24);
+    expect(chart.categoryTickX('Q1')).toBeGreaterThan(tick);
+
+    const late = chartOf({ spec: revenue });
+
+    await late.settle();
+    expect(late.categoryTickX('Q1')).toBe(chart.categoryTickX('Q1'));
+
+    await theme.setFontSize(12);
+    expect(chart.categoryTickX('Q1')).toBe(tick);
   });
 });

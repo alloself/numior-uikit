@@ -27,11 +27,14 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in rows" :key="row[0]" class="nui-calendar__row">
+        <tr v-for="(row, week) in rows" :key="week" class="nui-calendar__row">
           <th v-if="calendar.weekNumbers()" scope="row" class="nui-calendar__week">
             {{ formatDayNumber(weekNumberOfRow(row), calendar.locale.value) }}
           </th>
-          <NuiCalendarDay v-for="date in row" :key="date" :date="date" :month="month" />
+          <template v-for="(date, weekday) in row" :key="weekday">
+            <NuiCalendarDay v-if="date !== null" :date="date" :month="month" />
+            <td v-else class="nui-calendar__cell" />
+          </template>
         </tr>
       </tbody>
     </table>

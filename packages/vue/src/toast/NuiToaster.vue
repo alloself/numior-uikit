@@ -3,13 +3,14 @@
     ref="region"
     role="region"
     class="nui-toaster"
-    :class="[`nui-toaster--placement-${placement}`, { 'nui-toaster--expanded': expand }]"
+    :class="[
+      `nui-toaster--placement-${placement}`,
+      { 'nui-toaster--expanded': expand, 'nui-toaster--hovered': hover.hovered.value },
+    ]"
     :style="regionStyle"
     aria-live="polite"
     :aria-label="labelText"
     v-bind="{ ...contentAttrs, ...$attrs }"
-    @pointerenter="onPointerenter"
-    @pointerleave="onPointerleave"
     @focusin="onFocusin"
     @focusout="onFocusout"
   >
@@ -32,10 +33,26 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, shallowReactive, shallowRef, useTemplateRef, watch } from 'vue';
+import {
+  computed,
+  onBeforeUnmount,
+  ref,
+  shallowReactive,
+  shallowRef,
+  useTemplateRef,
+  watch,
+} from 'vue';
 import { useEventListener, useResizeObserver } from '@vueuse/core';
-import { useMessages, usePopover, useToastStore } from '@numior/primitives';
+import {
+  ToastHold,
+  useMessages,
+  usePopover,
+  useRestingHover,
+  useToastStore,
+  type Toast,
+} from '@numior/primitives';
 import NuiToast from './NuiToast.vue';
+import { focusTargetIn, keyboardFocused, stayingNear } from './toast-focus';
 import { frontSize, itemStyle, layoutStack } from './toast-stack';
 import { toastMessages } from './toast.messages';
 import { NuiToasterPlacement, type NuiToasterProps, type NuiToasterSlot } from './toast.types';
@@ -58,6 +75,7 @@ const visible = store.visible;
 const open = ref(true);
 const regionElement = useTemplateRef<HTMLElement>('region');
 const { contentAttrs, raise } = usePopover(regionElement, { open, id: () => id, mode: 'manual' });
+const hover = useRestingHover(regionElement);
 
 const sizes = shallowReactive(new Map<string, number>());
 const labelText = computed(() => label ?? messages.value.label);
@@ -72,17 +90,22 @@ const pageDocument = (): Document | undefined =>
   typeof document === 'undefined' ? undefined : document;
 
 const observed = new Map<HTMLElement, string>();
+const wrappers = new Map<string, HTMLElement>();
 const observedElements = shallowRef<HTMLElement[]>([]);
 
 const measure = (entries: readonly ResizeObserverEntry[]): void => {
   for (const entry of entries) {
-    if (entry.target instanceof HTMLElement) {
-      const toastId = observed.get(entry.target);
-
-      if (toastId !== undefined) {
-        sizes.set(toastId, entry.target.offsetHeight);
-      }
+    if (!(entry.target instanceof HTMLElement)) {
+      continue;
     }
+
+    const toastId = observed.get(entry.target);
+
+    if (toastId === undefined) {
+      continue;
+    }
+
+    sizes.set(toastId, entry.target.offsetHeight);
   }
 };
 
@@ -90,6 +113,12 @@ useResizeObserver(observedElements, measure);
 
 const track = (toastId: string, element: unknown): void => {
   const target = element instanceof HTMLElement ? element.firstElementChild : null;
+
+  if (element instanceof HTMLElement) {
+    wrappers.set(toastId, element);
+  } else {
+    wrappers.delete(toastId);
+  }
   if (target instanceof HTMLElement) {
     if (!observed.has(target)) {
       observed.set(target, toastId);
@@ -98,9 +127,11 @@ const track = (toastId: string, element: unknown): void => {
     return;
   }
   for (const [node, ownerId] of observed) {
-    if (ownerId === toastId) {
-      observed.delete(node);
+    if (ownerId !== toastId) {
+      continue;
     }
+
+    observed.delete(node);
   }
   observedElements.value = [...observed.keys()];
   sizes.delete(toastId);
@@ -111,67 +142,95 @@ const modalOpen = (): boolean => document.querySelector('dialog[open]') !== null
 watch(
   () => store.toasts.value.length,
   (next, previous) => {
-    if (next > previous && modalOpen()) {
-      raise();
+    if (next <= previous || !modalOpen()) {
+      return;
     }
+
+    raise();
   },
 );
 
-const applyToVisible = (apply: (toastId: string) => void): void => {
-  for (const toast of visible.value) {
-    apply(toast.id);
+let origin: HTMLElement | undefined;
+
+const focusedLeaving = (toasts: readonly Toast[]): number =>
+  toasts.findIndex(
+    (toast) => toast.leaving && wrappers.get(toast.id)?.contains(document.activeElement) === true,
+  );
+
+watch(visible, (toasts) => {
+  const leaving = focusedLeaving(toasts);
+
+  if (leaving === -1) {
+    return;
   }
-};
+  const staying = keyboardFocused() ? stayingNear(toasts, leaving) : undefined;
+  const wrapper = staying === undefined ? undefined : wrappers.get(staying.id);
+  const target = (wrapper === undefined ? undefined : focusTargetIn(wrapper)) ?? origin;
 
-const pauseAll = (): void => applyToVisible(store.pause);
-const resumeAll = (): void => applyToVisible(store.resume);
-
-const holds = { hover: false, focus: false };
-
-const release = (): void => {
-  if (!holds.hover && !holds.focus) {
-    resumeAll();
+  if (target?.isConnected === true) {
+    target.focus();
+  } else if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur();
   }
-};
+});
 
 watch(
-  () => store.toasts.value,
-  () => {
-    if (holds.hover || holds.focus) {
-      pauseAll();
+  visible,
+  (toasts) => {
+    if (toasts.length === 0) {
+      hover.end();
     }
+    if (regionElement.value?.contains(document.activeElement) === true) {
+      return;
+    }
+
+    store.release(ToastHold.Focus);
   },
+  { flush: 'post' },
 );
 
-const onPointerenter = (): void => {
-  holds.hover = true;
-  pauseAll();
-};
+watch(
+  hover.hovered,
+  (hovered) => {
+    if (hovered) {
+      store.hold(ToastHold.Hover);
+    } else {
+      store.release(ToastHold.Hover);
+    }
+  },
+  { flush: 'sync' },
+);
 
-const onPointerleave = (): void => {
-  holds.hover = false;
-  release();
-};
+const onFocusin = (event: FocusEvent): void => {
+  const previous = event.relatedTarget;
 
-const onFocusin = (): void => {
-  holds.focus = true;
-  pauseAll();
+  if (previous instanceof HTMLElement && regionElement.value?.contains(previous) !== true) {
+    origin = previous;
+  }
+  store.hold(ToastHold.Focus);
 };
 
 const onFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
 
-  holds.focus = next instanceof Node && regionElement.value?.contains(next) === true;
-  release();
+  if (next instanceof Node && regionElement.value?.contains(next) === true) {
+    return;
+  }
+
+  store.release(ToastHold.Focus);
 };
 
 const onVisibilityChange = (): void => {
   if (document.hidden) {
-    pauseAll();
+    store.hold(ToastHold.Hidden);
   } else {
-    resumeAll();
+    store.release(ToastHold.Hidden);
   }
 };
 
 useEventListener(pageDocument, 'visibilitychange', onVisibilityChange);
+
+onBeforeUnmount(() => {
+  Object.values(ToastHold).forEach(store.release);
+});
 </script>

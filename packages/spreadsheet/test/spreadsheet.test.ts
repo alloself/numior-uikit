@@ -1,16 +1,37 @@
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { flushPromises } from '@vue/test-utils';
 import {
   RU_LOCALE,
   createCalculator,
   createWorkbook,
+  lineLayoutsOf,
   numberValue,
   textValue,
+  type LineLayout,
   type SheetView,
   type Workbook,
 } from '../src/core';
+import { NuiSpreadsheetRefusalReason } from '../src';
 import { installClipboard, type ClipboardStub } from '../../primitives/test/support/clipboard';
 import { SpreadsheetDriver } from './drivers/spreadsheet';
+
+const WHOLE_COLUMN = 1_048_575;
+
+const NOTE_MS = 6000;
+
+const TALL_ROWS = 2500;
+
+const TALL_COLS = 10;
+
+const HIDDEN_LINE: LineLayout = {
+  size: undefined,
+  custom: false,
+  hidden: true,
+  level: 0,
+  collapsed: false,
+  style: undefined,
+  extra: [],
+};
 
 const mounted: SpreadsheetDriver[] = [];
 
@@ -36,6 +57,29 @@ const sheetOf = (...args: Parameters<typeof SpreadsheetDriver.mount>): Spreadshe
   return driver;
 };
 
+const gappedBook = (): Workbook => {
+  const book = createWorkbook();
+  const sheet = book.addSheet('Rows');
+
+  ['one', 'two', 'three', 'four', 'five'].forEach((text, row) => {
+    sheet.cells.set(row, 0, textValue(text));
+  });
+
+  return book;
+};
+
+const tallBook = (): Workbook => {
+  const book = createWorkbook();
+  const sheet = book.addSheet('Tall');
+
+  for (let row = 0; row < TALL_ROWS; row += 1) {
+    for (let col = 0; col < TALL_COLS; col += 1) {
+      sheet.cells.set(row, col, numberValue(row + 1));
+    }
+  }
+  return book;
+};
+
 let clipboard: ClipboardStub | undefined;
 
 afterEach(() => {
@@ -45,6 +89,7 @@ afterEach(() => {
 
   clipboard?.restore();
   clipboard = undefined;
+  vi.useRealTimers();
 });
 
 describe('NuiSpreadsheet', () => {
@@ -57,7 +102,7 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.text(1, 0)).toBe('Item');
     expect(sheet.text(2, 2)).toBe('75.0%');
     expect(sheet.frozenRows).toBe(1);
-    expect(sheet.bordered).toBe(true);
+    expect(sheet.gridlines).toBe(true);
     expect(sheet.direction).toBe('ltr');
   });
 
@@ -67,7 +112,7 @@ describe('NuiSpreadsheet', () => {
     const sheet = sheetOf({ book, label: 'Sales book' });
 
     expect(sheet.direction).toBe('rtl');
-    expect(sheet.bordered).toBe(false);
+    expect(sheet.gridlines).toBe(false);
     expect(sheet.pinnedColumns).toBe(1);
     expect(sheet.frozenRows).toBe(0);
 
@@ -101,6 +146,10 @@ describe('NuiSpreadsheet', () => {
 
     expect(sheet.renameError).toBe('This name is already taken');
 
+    await sheet.renameTab('Rates', 'Sales ');
+
+    expect(sheet.renameError).toBe('This name is already taken');
+
     await sheet.renameTab('Rates', 'Курсы');
 
     expect(sheet.tabs).toEqual(['Sales', 'Курсы', 'Sheet3']);
@@ -112,6 +161,172 @@ describe('NuiSpreadsheet', () => {
     expect(book.sheets.map((each) => each.name)).toEqual(['Sales', 'Rates', 'Sheet3']);
     expect(sheet.tabs).toEqual(['Sales', 'Rates', 'Sheet3']);
     expect(sheet.changes).toHaveLength(3);
+  });
+
+  it('shows the sheet whose menu is opened and its neighbour once it is deleted', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.addSheet();
+    await sheet.openTabMenu('Sales');
+
+    expect(sheet.selectedTab).toBe('Sales');
+
+    await sheet.chooseTabMenuItem('Delete');
+
+    expect(sheet.tabs).toEqual(['Rates', 'Sheet3']);
+    expect(sheet.selectedTab).toBe('Rates');
+    expect(sheet.focusedTab).toBe('Rates');
+
+    await sheet.removeTab('Sheet3');
+
+    expect(sheet.tabs).toEqual(['Rates']);
+    expect(sheet.selectedTab).toBe('Rates');
+    expect(sheet.focusedTab).toBe('Rates');
+
+    await sheet.press('z', { ctrl: true });
+
+    expect(sheet.tabs).toEqual(['Rates', 'Sheet3']);
+    expect(sheet.selectedTab).toBe('Rates');
+  });
+
+  it('reads and writes a merge through its first cell when the first row is hidden', async () => {
+    const book = createWorkbook();
+    const merged = book.addSheet('Merged');
+
+    merged.cells.set(0, 0, textValue('Total'));
+
+    merged.layout = {
+      ...merged.layout,
+      merges: [{ top: 0, left: 0, bottom: 2, right: 1 }],
+      rows: lineLayoutsOf([[0, HIDDEN_LINE]]),
+    };
+
+    const sheet = sheetOf({ book, label: 'Merged book' });
+
+    await sheet.focus(2, 0);
+
+    expect(sheet.text(2, 0)).toBe('Total');
+    expect(sheet.nameBox).toBe('A1');
+
+    await sheet.enter(2, 0, 'Sum');
+
+    expect(merged.cells.get(0, 0)).toEqual(textValue('Sum'));
+    expect(merged.cells.get(1, 0).kind).toBe('empty');
+    expect(sheet.text(2, 0)).toBe('Sum');
+  });
+
+  it('takes merged cells apart under a pasted block of text and merges them back on one undo', async () => {
+    const book = createWorkbook();
+    const merged = book.addSheet('Merged');
+    const merge = { top: 0, left: 0, bottom: 1, right: 1 };
+
+    merged.cells.set(0, 0, textValue('Total'));
+    merged.layout = { ...merged.layout, merges: [merge] };
+
+    const sheet = sheetOf({ book, label: 'Merged book' });
+
+    await sheet.focus(1, 0);
+    await sheet.paste('1\t2\n3\t4');
+
+    expect(merged.layout.merges).toEqual([]);
+
+    expect([sheet.text(1, 0), sheet.text(1, 1), sheet.text(2, 0), sheet.text(2, 1)]).toEqual([
+      '1',
+      '2',
+      '3',
+      '4',
+    ]);
+
+    await sheet.press('z', { ctrl: true });
+
+    expect(merged.layout.merges).toEqual([merge]);
+    expect(sheet.text(1, 0)).toBe('Total');
+    expect(merged.cells.get(1, 1).kind).toBe('empty');
+  });
+
+  it('writes one pasted value into the first cell of a merge in the selection and keeps it merged', async () => {
+    const book = createWorkbook();
+    const merged = book.addSheet('Merged');
+    const merge = { top: 0, left: 0, bottom: 1, right: 1 };
+
+    merged.cells.set(0, 0, textValue('Total'));
+    merged.layout = { ...merged.layout, merges: [merge] };
+
+    const sheet = sheetOf({ book, label: 'Merged book' });
+
+    await sheet.select({
+      active: { row: 0, col: 0 },
+      ranges: [{ top: 0, left: 0, bottom: 2, right: 1 }],
+    });
+
+    await sheet.focus(1, 0);
+    await sheet.paste('New');
+
+    expect(merged.layout.merges).toEqual([merge]);
+    expect([sheet.text(1, 0), sheet.text(3, 0), sheet.text(3, 1)]).toEqual(['New', 'New', 'New']);
+    expect([merged.cells.get(0, 1).kind, merged.cells.get(1, 0).kind]).toEqual(['empty', 'empty']);
+  });
+
+  it('refuses to fill down over merged cells and says why', async () => {
+    const book = createWorkbook();
+    const merged = book.addSheet('Merged');
+
+    merged.cells.set(0, 0, textValue('Top'));
+    merged.layout = { ...merged.layout, merges: [{ top: 1, left: 0, bottom: 2, right: 0 }] };
+
+    const sheet = sheetOf({ book, label: 'Merged book' });
+
+    await sheet.select({
+      active: { row: 0, col: 0 },
+      ranges: [{ top: 0, left: 0, bottom: 3, right: 0 }],
+    });
+
+    await sheet.press('d', { ctrl: true });
+
+    expect(sheet.announcement).toBe('Cannot fill: the range has merged cells');
+    expect([merged.cells.get(1, 0).kind, merged.cells.get(2, 0).kind]).toEqual(['empty', 'empty']);
+  });
+
+  it('shows a refusal for a while and takes it away on a press or once an edit goes through', async () => {
+    const book = createWorkbook();
+    const merged = book.addSheet('Merged');
+    const message = 'Cannot fill: the range has merged cells';
+
+    merged.cells.set(0, 0, textValue('Top'));
+    merged.layout = { ...merged.layout, merges: [{ top: 1, left: 0, bottom: 2, right: 0 }] };
+
+    const sheet = sheetOf({ book, label: 'Merged book' });
+
+    vi.useFakeTimers();
+
+    await sheet.select({
+      active: { row: 0, col: 0 },
+      ranges: [{ top: 0, left: 0, bottom: 3, right: 0 }],
+    });
+
+    await sheet.press('d', { ctrl: true });
+
+    const said = [sheet.note, sheet.refusals];
+
+    await vi.advanceTimersByTimeAsync(NOTE_MS);
+
+    const faded = sheet.note;
+
+    await sheet.press('d', { ctrl: true });
+
+    const again = sheet.note;
+
+    await sheet.pressNote();
+
+    const pressed = sheet.note;
+
+    await sheet.press('d', { ctrl: true });
+    vi.useRealTimers();
+    await sheet.enter(6, 2, 'Fine');
+
+    expect(said).toEqual([message, [{ reason: NuiSpreadsheetRefusalReason.FillMerged, message }]]);
+    expect([faded, again, pressed, sheet.note]).toEqual([undefined, message, undefined, undefined]);
+    expect(sheet.refusals).toHaveLength(3);
   });
 
   it('reports the selection in sheet addresses and follows a selection set from outside', async () => {
@@ -215,6 +430,162 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.text(2, 2)).toBe('100.0%');
   });
 
+  it('copies ranges that share rows side by side and a whole column down to its last filled cell', async () => {
+    clipboard = installClipboard({ api: 'granted' });
+
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.select({
+      active: { row: 0, col: 0 },
+      ranges: [
+        { top: 0, left: 0, bottom: 1, right: 0 },
+        { top: 0, left: 2, bottom: 1, right: 2 },
+      ],
+    });
+
+    await sheet.press('c', { ctrl: true });
+    await flushPromises();
+
+    expect(clipboard.copies.at(-1)).toBe('Item\t\nPen\t75.0%');
+
+    await sheet.select({
+      active: { row: 0, col: 0 },
+      ranges: [{ top: 0, left: 0, bottom: WHOLE_COLUMN, right: 0 }],
+    });
+
+    await sheet.press('c', { ctrl: true });
+    await flushPromises();
+
+    expect(clipboard.copies.at(-1)).toBe('Item\nPen');
+    expect(sheet.gridAnnouncement).toBe('Copied 2 rows');
+  });
+
+  it('copies a block too big for one slice in full', async () => {
+    const stub = installClipboard({ api: 'granted' });
+
+    clipboard = stub;
+
+    const sheet = sheetOf({ book: tallBook(), label: 'Tall book' });
+
+    await sheet.select({
+      active: { row: 0, col: 0 },
+      ranges: [{ top: 0, left: 0, bottom: TALL_ROWS - 1, right: TALL_COLS - 1 }],
+    });
+
+    await sheet.press('c', { ctrl: true });
+
+    await expect.poll(() => stub.copies.length).toBe(1);
+
+    const lines = stub.copies[0]?.split('\n') ?? [];
+
+    expect(lines).toHaveLength(TALL_ROWS);
+
+    expect(lines.at(-1)).toBe(
+      Array.from({ length: TALL_COLS }, () => String(TALL_ROWS)).join('\t'),
+    );
+  });
+
+  it('pastes copied formulas from a clipboard that turned line feeds into CRLF', async () => {
+    clipboard = installClipboard({ api: 'granted' });
+
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.enter(2, 3, '=C2*2');
+    await sheet.enter(3, 3, '=C3*2');
+
+    await sheet.focus(2, 3);
+    await sheet.press('ArrowDown', { shift: true });
+    await sheet.press('c', { ctrl: true });
+    await flushPromises();
+    await sheet.press('ArrowDown');
+    await sheet.press('ArrowDown');
+    await sheet.paste((clipboard.copies.at(-1) ?? '').replaceAll('\n', '\r\n'));
+    await sheet.press('ArrowDown');
+
+    expect(sheet.formula).toBe('=C5*2');
+  });
+
+  it('deletes two rows picked apart as two rows and takes them back in one step', async () => {
+    const sheet = sheetOf({ book: gappedBook(), label: 'Gapped book' });
+
+    await sheet.select({
+      active: { row: 1, col: 0 },
+      ranges: [
+        { top: 1, left: 0, bottom: 1, right: 0 },
+        { top: 3, left: 0, bottom: 3, right: 0 },
+      ],
+    });
+
+    await sheet.openCellMenu(2, 0);
+
+    expect(sheet.cellMenuItems).toEqual(
+      expect.arrayContaining(['Insert 2 rows above', 'Delete 2 rows']),
+    );
+
+    await sheet.chooseCellMenuItem('Delete 2 rows');
+
+    expect([sheet.text(1, 0), sheet.text(2, 0), sheet.text(3, 0)]).toEqual([
+      'one',
+      'three',
+      'five',
+    ]);
+
+    await sheet.press('z', { ctrl: true });
+
+    expect([sheet.text(2, 0), sheet.text(4, 0)]).toEqual(['two', 'four']);
+  });
+
+  it('says that the sheet is full when a row cannot be inserted', async () => {
+    const book = gappedBook();
+
+    book.sheets[0]?.cells.set(WHOLE_COLUMN, 0, textValue('last'));
+
+    const sheet = sheetOf({ book, label: 'Gapped book' });
+
+    await sheet.focus(2, 0);
+    await sheet.openCellMenu(2, 0);
+    await sheet.chooseCellMenuItem('Insert 1 row above');
+
+    expect(sheet.announcement).toBe(
+      'Cannot insert: the last rows or columns of the sheet hold data',
+    );
+
+    expect(sheet.text(2, 0)).toBe('two');
+  });
+
+  it('keeps Ctrl+R and Ctrl+D from the browser while a cell is edited or several ranges are selected', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.focus(2, 1);
+    await sheet.press('F2');
+    await sheet.type('unsaved');
+
+    expect(await sheet.leavesToBrowser('r', { ctrl: true })).toBe(false);
+    expect(await sheet.leavesToBrowser('d', { ctrl: true })).toBe(false);
+    expect(sheet.editing).toBe(true);
+
+    await sheet.press('Escape');
+
+    await sheet.select({
+      active: { row: 2, col: 0 },
+      ranges: [
+        { top: 2, left: 0, bottom: 2, right: 0 },
+        { top: 4, left: 1, bottom: 4, right: 1 },
+      ],
+    });
+
+    expect(await sheet.leavesToBrowser('r', { ctrl: true })).toBe(false);
+    expect(sheet.changes).toEqual([]);
+  });
+
+  it('leaves Ctrl+R to the browser in a read-only book', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book', readonly: true });
+
+    await sheet.focus(2, 1);
+
+    expect(await sheet.leavesToBrowser('r', { ctrl: true })).toBe(true);
+  });
+
   it('fills down and right with Ctrl+D and Ctrl+R and continues a series to the neighbour data', async () => {
     const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
 
@@ -286,6 +657,7 @@ describe('NuiSpreadsheet', () => {
     await sheet.press('F2');
 
     expect(sheet.editorText).toBe('=C2*2+C3');
+    expect(sheet.warnings).toEqual([]);
 
     await sheet.press('Escape');
     await sheet.press('9');
@@ -306,6 +678,63 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.editing).toBe(true);
     expect(sheet.editorError).toBe('The formula has an error at character 8');
     expect(sheet.changes).toEqual([]);
+  });
+
+  it('keeps a formula Excel would not take in the editor and says why', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.enter(4, 1, '=SUBTOTAL(9,{1,2})');
+
+    expect(sheet.editing).toBe(true);
+    expect(sheet.editorError).toBe('Argument 2 of SUBTOTAL must be a cell reference');
+
+    await sheet.press('Escape');
+    await sheet.enter(4, 1, '=ROUND(1)');
+
+    expect(sheet.editorError).toBe('ROUND gets a wrong number of arguments');
+
+    await sheet.press('Escape');
+    await sheet.enter(4, 1, '=1E-400');
+
+    expect(sheet.editorError).toBe('A number in a formula must be zero or at least 1E-309');
+
+    await sheet.press('Escape');
+    await sheet.enter(4, 1, `=${'('.repeat(257)}1${')'.repeat(257)}`);
+
+    expect(sheet.editorError).toBe(
+      'A formula holds up to 256 nested brackets, 65 nested functions and 1,024 plus or minus signs in a row',
+    );
+
+    await sheet.press('Escape');
+    await sheet.enter(4, 1, `=${'1+'.repeat(2048)}1`);
+
+    expect(sheet.editorError).toBe('A formula holds up to 2,048 operations inside each other');
+
+    await sheet.press('Escape');
+    await sheet.enter(4, 1, '=CELL("row",1)');
+
+    expect(sheet.editorError).toBe('Argument 2 of CELL must be a cell reference');
+
+    await sheet.press('Escape');
+    await sheet.enter(4, 1, '=LET(rate,0.2,Rate,0.3,rate)');
+
+    expect(sheet.editorError).toBe('Argument 3 of LET must be a name not given before in it');
+    expect(sheet.changes).toEqual([]);
+  });
+
+  it('names the refusing function in the language of the sheet', async () => {
+    const book = salesBook();
+
+    const sheet = sheetOf({
+      book,
+      calculator: createCalculator(book),
+      locale: RU_LOCALE,
+      label: 'Продажи',
+    });
+
+    await sheet.enter(4, 1, '=СУММЕСЛИ({1;2};1)');
+
+    expect(sheet.editorError).toBe('Argument 1 of СУММЕСЛИ must be a cell reference');
   });
 
   it('undoes and redoes edits through the workbook history', async () => {
@@ -342,6 +771,25 @@ describe('NuiSpreadsheet', () => {
     expect(sheet.editorText).toBe('=СУММ(C2;0,25)');
   });
 
+  it('keeps formulas and the undo history when the locale changes', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.enter(3, 1, '=SUM(C2,0.25)');
+    await sheet.show({ locale: RU_LOCALE });
+
+    expect(sheet.text(3, 1)).toBe('100,0%');
+
+    await sheet.focus(3, 1);
+    await sheet.press('F2');
+
+    expect(sheet.editorText).toBe('=СУММ(C2;0,25)');
+
+    await sheet.press('Escape');
+    await sheet.press('z', { ctrl: true });
+
+    expect(sheet.text(3, 1)).toBe('');
+  });
+
   it('leaves a read-only sheet untouched', async () => {
     const sheet = sheetOf({ book: salesBook(), label: 'Sales book', readonly: true });
 
@@ -365,6 +813,32 @@ describe('NuiSpreadsheet', () => {
 
     expect(sheet.nameBox).toBe('C2');
     expect(sheet.formula).toBe('75%');
+  });
+
+  it('leaves Enter, Escape and the arrows to the IME while a composition runs', async () => {
+    const sheet = sheetOf({ book: salesBook(), label: 'Sales book' });
+
+    await sheet.focus(3, 1);
+    await sheet.focusFormula();
+    await sheet.typeFormula('にほん');
+    await sheet.pressInFormula('Enter', { composing: true });
+    await sheet.pressInFormula('Escape', { composing: true });
+
+    expect(sheet.editing).toBe(true);
+    expect(sheet.editorText).toBe('にほん');
+    expect(sheet.changes).toHaveLength(0);
+
+    await sheet.pressInFormula('Escape');
+    await sheet.focus(3, 1);
+    await sheet.press('F2');
+    await sheet.type('=SU');
+    await sheet.press('Enter', { composing: true });
+    await sheet.press('Tab', { composing: true });
+
+    expect(sheet.editing).toBe(true);
+    expect(sheet.editorText).toBe('=SU');
+
+    sheet.unmount();
   });
 
   it('edits the active cell from the formula bar and shares the draft with the cell editor', async () => {

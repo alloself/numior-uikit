@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import {
   EN_FORMULAS,
+  createCalculator,
+  createStepCodec,
   createWorkbook,
+  createWorkbookDocument,
   numberValue,
   parseFormula,
   textValue,
@@ -139,6 +142,18 @@ describe('NuiSpreadsheet conditional formatting panel', () => {
     expect(sheet.rulesEmpty).toBe('No rules touch the selection');
   });
 
+  it('lets go of a rule taken from the keyboard when the focus leaves its grip', async () => {
+    const sheet = sheetOf(rulesBook());
+
+    await sheet.focus(1, 0);
+    await sheet.openRules(1, 0);
+    await sheet.takeRuleAndLeave(0);
+
+    expect(sheet.rulesAnnouncement).toBe('Move cancelled');
+    expect(sheet.ruleTexts).toEqual(['Value is greater than 10', 'Blank cells']);
+    expect(sheet.changes).toHaveLength(0);
+  });
+
   it('moves and deletes rules as undoable steps', async () => {
     const book = rulesBook();
     const sheet = sheetOf(book);
@@ -162,6 +177,51 @@ describe('NuiSpreadsheet conditional formatting panel', () => {
     await sheet.openRules(1, 0);
 
     expect(sheet.ruleTexts).toEqual(['Blank cells', 'Value is greater than 10']);
+  });
+
+  it('keeps a rule from someone else that arrives before the rule added here is sent', async () => {
+    const book = rulesBook();
+    const calculator = createCalculator(book);
+    const session = createWorkbookDocument({ book, calculator, version: 1 });
+    const known = book.sheets[0]?.conditional ?? [];
+
+    const theirs = createStepCodec(book).encode({
+      kind: 'setConditional',
+      sheet: 'Sales',
+      formats: [
+        ...known,
+        { ranges: [column(2)], rules: [{ rule: blanks, priority: 3, stopIfTrue: false }] },
+      ],
+      base: known,
+    });
+
+    const sheet = SpreadsheetDriver.mount({
+      book,
+      calculator,
+      collaboration: session,
+      label: 'Rules book',
+    });
+
+    mounted.push(sheet);
+
+    await sheet.focus(2, 1);
+    await sheet.openRules(2, 1);
+    await sheet.addRule();
+    await sheet.fillRuleField('Apply to', 'B2:B9');
+    await sheet.chooseRuleOption('Format cells when', 'Data bars');
+    await sheet.saveRule();
+
+    session.receive({ version: 1, clientId: 'bob', steps: [theirs] });
+    await sheet.settle();
+
+    expect(sheet.ruleTexts).toEqual([
+      'Data bars',
+      'Value is greater than 10',
+      'Blank cells',
+      'Blank cells',
+    ]);
+
+    expect(session.pending()).toHaveLength(1);
   });
 
   it('adds a rule on the selection through the editor', async () => {

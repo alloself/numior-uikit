@@ -88,6 +88,9 @@
   --leading-normal: 1.5;
   --leading-tight: 1.25;
   --leading-control: round(up, 1.25em, 0.25rem);
+  --leading-label: round(down, calc(1em * var(--leading-normal)), 0.25rem);
+  --spacing-icon: round(1.15em, 2px);
+  --spacing-icon-sm: round(1em, 2px);
   --leading-relaxed: 1.7;
   --tracking-tight: -0.02em;
   --font-heading: var(--font-sans);
@@ -272,6 +275,9 @@
   --leading-normal: --theme(--leading-normal inline);
   --leading-tight: --theme(--leading-tight inline);
   --leading-control: --theme(--leading-control inline);
+  --leading-label: --theme(--leading-label inline);
+  --spacing-icon: --theme(--spacing-icon inline);
+  --spacing-icon-sm: --theme(--spacing-icon-sm inline);
   --leading-relaxed: --theme(--leading-relaxed inline);
   --tracking-tight: --theme(--tracking-tight inline);
   --font-heading: --theme(--font-heading inline);
@@ -502,6 +508,9 @@
   --nui-line-height: var(--leading-normal);
   --nui-line-height-tight: var(--leading-tight);
   --nui-line-height-control: var(--leading-control);
+  --nui-line-height-label: var(--leading-label);
+  --nui-icon-size: var(--spacing-icon);
+  --nui-icon-size-sm: var(--spacing-icon-sm);
   --nui-line-height-relaxed: var(--leading-relaxed);
   --nui-tracking-tight: var(--tracking-tight);
   --nui-font-heading: var(--font-heading);

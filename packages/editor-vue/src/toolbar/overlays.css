@@ -1,6 +1,18 @@
-.nui-editor__anchor {
+.nui-editor__range {
   position: absolute;
   pointer-events: none;
+}
+.nui-editor__anchor {
+  position: sticky;
+  inset-block-start: calc(var(--_bar, 0px) + var(--nui-control-height-sm) + var(--nui-space-6));
+  display: block;
+  block-size: 100%;
+  max-block-size: 50dvh;
+}
+.nui-editor-bubble__bar {
+  display: flex;
+  gap: 2px;
+  align-items: center;
 }
 .nui-editor-bubble .nui-editor-toolbar__group {
   padding: 0;
@@ -153,4 +165,11 @@
 }
 .nui-editor .nui-editor__ghost--shown {
   opacity: 1;
+}
+.nui-editor-insert {
+  display: flex;
+  flex-direction: column;
+  inline-size: 16rem;
+  max-block-size: 22rem;
+  border-radius: inherit;
 }

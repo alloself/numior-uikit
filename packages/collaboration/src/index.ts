@@ -14,6 +14,7 @@ export type {
   CollabClient,
   CollabClientOptions,
   CollabDocument,
+  CollabLiveness,
   CollabPersistence,
   CollabReport,
   CollabRestoration,
@@ -28,15 +29,19 @@ export type {
 export { webSocketTransport } from './client/web-socket-transport';
 export {
   collab,
+  collabProgress,
   collabVersion,
   confirmSteps,
   conflictsIn,
+  positionsSince,
   receiveSteps,
   sendableSteps,
+  settleSteps,
 } from './editor/collab';
 export type {
   AttrConflict,
   CollabOptions,
+  CollabProgress,
   CollabState,
   EditorCollabOptions,
   RestoredDocument,
@@ -46,6 +51,7 @@ export { restoredDocument } from './editor/restored';
 export { CommentEventKind } from './comments/comments.types';
 export type {
   CommentAnchor,
+  CommentPlace,
   CommentEvent,
   CommentReply,
   CommentThread,
@@ -55,6 +61,7 @@ export type {
 } from './comments/comments.types';
 export { editorCollabDocument } from './editor/editor-document';
 export {
+  presenceChanged,
   presenceOf,
   remotePeers,
   remotePresence,

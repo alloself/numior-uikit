@@ -93,12 +93,14 @@ export const createSourceLayouts = <T>(
     let before = 0;
 
     for (const [index, branch] of [...store.open].toSorted((a, b) => a[0] - b[0])) {
-      if (index < own) {
-        const size = layoutOf(branch.store).size;
-
-        branches.push({ index, before, size, store: branch.store });
-        before += size;
+      if (index >= own) {
+        continue;
       }
+
+      const size = layoutOf(branch.store).size;
+
+      branches.push({ index, before, size, store: branch.store });
+      before += size;
     }
     const layout = { own, size: own + before, branches };
 
@@ -134,9 +136,11 @@ export const createSourceLayouts = <T>(
       const first = Math.max(start, from - before);
       const last = Math.min(until, to - before);
 
-      if (first < last) {
-        found.push({ store, from: first, to: last, base: base + before });
+      if (first >= last) {
+        return;
       }
+
+      found.push({ store, from: first, to: last, base: base + before });
     };
 
     for (const branch of layout.branches) {
@@ -145,8 +149,12 @@ export const createSourceLayouts = <T>(
 
       const child = branch.index + branch.before + 1;
 
-      if (from < child + branch.size && to > child) {
-        found.push(...spans(branch.store, from - child, to - child, base + child));
+      if (from >= child + branch.size || to <= child) {
+        continue;
+      }
+
+      for (const entry of spans(branch.store, from - child, to - child, base + child)) {
+        found.push(entry);
       }
     }
     own(layout.own, layout.size - layout.own);

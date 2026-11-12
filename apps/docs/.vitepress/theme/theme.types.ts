@@ -89,7 +89,6 @@ export interface DocsTexts {
   readonly search: string;
   readonly searchPlaceholder: string;
   readonly searchEmpty: string;
-  readonly searchPages: string;
   readonly theme: string;
   readonly light: string;
   readonly dark: string;

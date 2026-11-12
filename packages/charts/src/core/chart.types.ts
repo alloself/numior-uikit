@@ -10,6 +10,8 @@ export type ChartScale = (typeof ChartScale)[keyof typeof ChartScale];
 
 export type NumberStyle = (typeof NumberStyle)[keyof typeof NumberStyle];
 
+export type TimeContext = (typeof TimeContext)[keyof typeof TimeContext];
+
 export type BarEnd = (typeof BarEnd)[keyof typeof BarEnd];
 
 export type ChartKind = (typeof ChartKind)[keyof typeof ChartKind];
@@ -62,9 +64,15 @@ export interface ChartSize {
   readonly height: number;
 }
 
+export interface TimeZone {
+  readonly name: string;
+  readonly offsetAt: (instant: number) => number;
+}
+
 export interface LayoutOptions {
   readonly rtl?: boolean | undefined;
   readonly locale?: string | undefined;
+  readonly timeZone?: string | undefined;
   readonly fontSize?: number | undefined;
   readonly measure?: ((text: string, fontSize: number) => number) | undefined;
   readonly formatNumber?: ((value: number, step: number) => string) | undefined;
@@ -152,6 +160,7 @@ export interface ChartScene {
   readonly width: number;
   readonly height: number;
   readonly plot: Box;
+  readonly clip: Box | undefined;
   readonly bars: readonly SceneBar[];
   readonly paths: readonly ScenePath[];
   readonly points: readonly ScenePoint[];
@@ -188,7 +197,14 @@ export const TimeUnit = {
 
 export const BarEnd = { Top: 'top', Bottom: 'bottom', Left: 'left', Right: 'right' } as const;
 
-export const NumberStyle = { Plain: 'plain', Compact: 'compact', Percent: 'percent' } as const;
+export const TimeContext = { None: 'none', Date: 'date', Year: 'year' } as const;
+
+export const NumberStyle = {
+  Plain: 'plain',
+  Compact: 'compact',
+  Percent: 'percent',
+  Scientific: 'scientific',
+} as const;
 
 export const ChartCategoriesKind = { Text: 'text', Time: 'time', Number: 'number' } as const;
 

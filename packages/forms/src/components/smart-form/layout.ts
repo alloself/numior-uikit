@@ -1,3 +1,5 @@
+import { maxBy } from 'lodash-es';
+
 export interface LayoutPlan {
   readonly areas: string | undefined;
   readonly columns: number;
@@ -44,7 +46,7 @@ export const planLayout = (
     return NO_LAYOUT;
   }
 
-  const columns = Math.max(...rows.map((cells) => cells.length));
+  const columns = maxBy(rows, (cells) => cells.length)?.length ?? 0;
 
   return {
     areas: rows

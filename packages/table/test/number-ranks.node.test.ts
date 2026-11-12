@@ -79,14 +79,14 @@ describe('number ranks', () => {
     const all = identityIndices(LENGTH);
     const half = all.filter((row) => row % 2 === 0);
 
-    expect(ordered(half, [{ store, descending: false }])).toEqual(
-      expected(half, [{ store, descending: false }]),
+    expect(ordered(half, [{ store, descending: false, exact: false }])).toEqual(
+      expected(half, [{ store, descending: false, exact: false }]),
     );
 
     expect(hasPendingRanks(store)).toBe(false);
 
-    expect(ordered(all, [{ store, descending: true }])).toEqual(
-      expected(all, [{ store, descending: true }]),
+    expect(ordered(all, [{ store, descending: true, exact: false }])).toEqual(
+      expected(all, [{ store, descending: true, exact: false }]),
     );
 
     expect(numberRanksOf(store)).toBeUndefined();
@@ -100,8 +100,8 @@ describe('number ranks', () => {
       new Set(store.keys.filter((_, row) => store.nulls[row] !== 1)).size,
     );
 
-    expect(ordered(half, [{ store, descending: false }])).toEqual(
-      expected(half, [{ store, descending: false }]),
+    expect(ordered(half, [{ store, descending: false, exact: false }])).toEqual(
+      expected(half, [{ store, descending: false, exact: false }]),
     );
   });
 
@@ -110,8 +110,8 @@ describe('number ranks', () => {
     const words = texts();
 
     const keys: OrderKey[] = [
-      { store: words, descending: true },
-      { store, descending: false },
+      { store: words, descending: true, exact: false },
+      { store, descending: false, exact: false },
     ];
 
     const all = identityIndices(LENGTH);

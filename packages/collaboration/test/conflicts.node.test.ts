@@ -16,11 +16,11 @@ import {
   collab,
   conflictsIn,
   editorCollabDocument,
-  receiveSteps,
   sendableSteps,
   type CollabAlternative,
   type CollabDocument,
 } from '../src';
+import { received } from './harness/received';
 
 const base = (): Doc =>
   createDoc(
@@ -91,7 +91,7 @@ describe('single value conflicts', () => {
   it('reports the remote value when both sides changed the same attribute', () => {
     const local = editing(fresh(), 'title', { level: 2 });
 
-    const tr = receiveSteps(local, remoteSteps(['title', { level: 3 }]));
+    const tr = received(local, remoteSteps(['title', { level: 3 }]));
 
     expect(conflictsIn(tr)).toEqual([{ index: 0, nodeId: 'title', attr: 'level', value: 3 }]);
     expect(attrsOf(tr.doc, 'title')).toEqual({ level: 2 });
@@ -100,13 +100,13 @@ describe('single value conflicts', () => {
   it('sees no conflict when both sides chose the same value', () => {
     const local = editing(fresh(), 'title', { level: 3 });
 
-    const tr = receiveSteps(local, remoteSteps(['title', { level: 3 }]));
+    const tr = received(local, remoteSteps(['title', { level: 3 }]));
 
     expect(conflictsIn(tr)).toEqual([]);
   });
 
   it('sees no conflict without local changes', () => {
-    const tr = receiveSteps(fresh(), remoteSteps(['title', { level: 3 }]));
+    const tr = received(fresh(), remoteSteps(['title', { level: 3 }]));
 
     expect(conflictsIn(tr)).toEqual([]);
   });
@@ -114,7 +114,7 @@ describe('single value conflicts', () => {
   it('reports only the last value one batch wrote', () => {
     const local = editing(fresh(), 'title', { level: 2 });
 
-    const tr = receiveSteps(local, remoteSteps(['title', { level: 3 }], ['title', { level: 1 }]));
+    const tr = received(local, remoteSteps(['title', { level: 3 }], ['title', { level: 1 }]));
 
     expect(conflictsIn(tr)).toEqual([{ index: 1, nodeId: 'title', attr: 'level', value: 1 }]);
   });
@@ -122,7 +122,7 @@ describe('single value conflicts', () => {
   it('compares the remote value with the last local one', () => {
     const local = editing(editing(fresh(), 'title', { level: 3 }), 'title', { level: 2 });
 
-    const tr = receiveSteps(local, remoteSteps(['title', { level: 3 }]));
+    const tr = received(local, remoteSteps(['title', { level: 3 }]));
 
     expect(conflictsIn(tr)).toEqual([{ index: 0, nodeId: 'title', attr: 'level', value: 3 }]);
   });
@@ -131,7 +131,7 @@ describe('single value conflicts', () => {
     const local = editing(fresh(), 'picture', { alt: 'new' });
     const remote = remoteSteps(['picture', { src: 'b.png' }]);
 
-    const tr = receiveSteps(local, remote);
+    const tr = received(local, remote);
 
     expect(conflictsIn(tr)).toEqual([]);
     expect(attrsOf(tr.doc, 'picture')).toMatchObject({ src: 'b.png', alt: 'new' });
@@ -141,7 +141,7 @@ describe('single value conflicts', () => {
     const local = editing(fresh(), 'picture', { alt: 'new' });
     const remote = remoteSteps(['picture', { src: 'b.png' }]);
 
-    const rebased = local.apply(receiveSteps(local, remote));
+    const rebased = local.apply(received(local, remote));
 
     expect(applied(applied(base(), remote), sendableSteps(rebased)).root).toEqual(rebased.doc.root);
   });
@@ -154,7 +154,7 @@ describe('single value conflicts', () => {
       { pos: positionOf(start, 'title'), attrs: { level: 3 } },
     ]).steps;
 
-    expect(conflictsIn(receiveSteps(local, remote))).toMatchObject([{ attr: 'level', value: 3 }]);
+    expect(conflictsIn(received(local, remote))).toMatchObject([{ attr: 'level', value: 3 }]);
   });
 });
 

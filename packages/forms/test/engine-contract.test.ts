@@ -109,6 +109,48 @@ describe('form engine contract', () => {
     expect(row.errors.value).toEqual(marked);
   });
 
+  it('moves and swaps rows that hold no value and leaves the list alone for a place outside it', async () => {
+    const harness = EngineHarness.mount(factory, { amounts: [1, undefined, 3] }, [], ['amounts']);
+    const list = harness.array('amounts');
+    const values = () => harness.valueAt('amounts');
+    const keys = () => list.keys.value;
+    const [a, b, c] = keys();
+
+    list.move(1, 2);
+    await harness.tick();
+
+    expect([values(), keys()]).toEqual([
+      [1, 3, undefined],
+      [a, c, b],
+    ]);
+
+    list.swap(0, 2);
+    await harness.tick();
+
+    expect([values(), keys()]).toEqual([
+      [undefined, 3, 1],
+      [b, c, a],
+    ]);
+
+    list.move(5, 0);
+    list.move(-1, 0);
+    list.swap(0, 7);
+    await harness.tick();
+
+    expect([values(), keys()]).toEqual([
+      [undefined, 3, 1],
+      [b, c, a],
+    ]);
+
+    list.move(0, 9);
+    await harness.tick();
+
+    expect([values(), keys()]).toEqual([
+      [3, 1, undefined],
+      [c, a, b],
+    ]);
+  });
+
   it('keeps row keys through inserts, moves, swaps and removals and copies new rows', async () => {
     const harness = EngineHarness.mount(factory, { rows: ['a', 'b', 'c'] }, [], ['rows']);
     const list = harness.array('rows');

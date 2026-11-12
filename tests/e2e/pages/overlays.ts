@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { boxOf } from '../helpers/geometry';
+import { boxOf, gapBetween, textBoxOf } from '../helpers/geometry';
 import {
   isBoolean,
   isString,
@@ -51,8 +51,11 @@ export class OverlaysSection {
   readonly popoverTrigger: Locator;
   readonly popover: Locator;
   readonly popoverInput: Locator;
+  readonly popoverArrow: Locator;
   readonly tooltipTrigger: Locator;
   readonly tooltip: Locator;
+  readonly keysTooltipTrigger: Locator;
+  readonly keysTooltip: Locator;
   readonly output: Locator;
 
   constructor(private readonly page: Page) {
@@ -77,13 +80,41 @@ export class OverlaysSection {
     this.popoverTrigger = page.getByTestId('popover-trigger');
     this.popover = page.getByTestId('popover');
     this.popoverInput = page.getByTestId('popover-input');
+    this.popoverArrow = page.getByTestId('popover-arrow');
     this.tooltipTrigger = page.getByTestId('tooltip-trigger');
     this.tooltip = page.getByTestId('tooltip');
+    this.keysTooltipTrigger = page.getByTestId('tooltip-keys-trigger');
+    this.keysTooltip = page.getByTestId('tooltip-keys');
     this.output = page.getByTestId('overlays-output');
   }
 
   async setDrawerSide(side: DrawerSide): Promise<void> {
     await this.drawerSide.selectOption(side);
+  }
+
+  async popoverGap(): Promise<number> {
+    await this.popoverTrigger.click();
+    await this.popover.waitFor({ state: 'visible' });
+
+    const gap = await gapBetween(this.popoverTrigger, this.popover);
+
+    await this.pressEscape();
+    await this.popover.waitFor({ state: 'hidden' });
+
+    return gap;
+  }
+
+  tooltipKeys(): Promise<string[]> {
+    return this.keysTooltip.locator('.nui-kbd__key').allInnerTexts();
+  }
+
+  async tooltipKeysSkew(): Promise<number> {
+    const [text, key] = await Promise.all([
+      textBoxOf(this.keysTooltip.locator('.nui-tooltip__text')),
+      boxOf(this.keysTooltip.locator('.nui-kbd__key').first()),
+    ]);
+
+    return Math.abs(text.y + text.height / 2 - (key.y + key.height / 2));
   }
 
   async clickBackdrop(): Promise<void> {

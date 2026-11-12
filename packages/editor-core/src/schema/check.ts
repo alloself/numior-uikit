@@ -1,5 +1,5 @@
 import type { Slice } from '../doc/doc.types';
-import { contentSize, sameMarks } from '../model/node';
+import { contentSize, nodeSize, sameMarks } from '../model/node';
 import {
   ContentNodeKind,
   type Attrs,
@@ -45,9 +45,11 @@ const checkAttrs = (
   attrs: Attrs,
 ): void => {
   for (const attr of Object.keys(attrs)) {
-    if (!Object.hasOwn(specs, attr)) {
-      context.issues.push({ kind: 'attr', path: [...path], attr, reason: 'unknown' });
+    if (Object.hasOwn(specs, attr)) {
+      continue;
     }
+
+    context.issues.push({ kind: 'attr', path: [...path], attr, reason: 'unknown' });
   }
   for (const [attr, spec] of specEntries(specs)) {
     const value = attrs[attr];
@@ -56,6 +58,23 @@ const checkAttrs = (
       context.issues.push({ kind: 'attr', path: [...path], attr, reason: 'missing' });
     } else if (spec.verify !== undefined && !spec.verify(value)) {
       context.issues.push({ kind: 'attr', path: [...path], attr, reason: 'invalid' });
+    }
+  }
+};
+
+const checkMarks = (
+  context: CheckContext,
+  path: readonly number[],
+  node: TextNode,
+  parent: NodeType | undefined,
+): void => {
+  for (const mark of node.marks) {
+    const type = context.schema.marks.get(mark.type);
+
+    if (type === undefined || parent?.marks.has(mark.type) === false) {
+      context.issues.push({ kind: 'mark', path: [...path], mark: mark.type });
+    } else {
+      checkAttrs(context, path, type.attrs, mark.attrs);
     }
   }
 };
@@ -75,15 +94,7 @@ export const checkText = (
   if (previous !== undefined && sameMarks(previous.marks, node.marks)) {
     context.issues.push({ kind: 'text', path: at(), reason: 'unmerged' });
   }
-  for (const mark of node.marks) {
-    const type = context.schema.marks.get(mark.type);
-
-    if (type === undefined || !parent.marks.has(mark.type)) {
-      context.issues.push({ kind: 'mark', path: at(), mark: mark.type });
-    } else {
-      checkAttrs(context, at(), type.attrs, mark.attrs);
-    }
-  }
+  checkMarks(context, at(), node, parent);
 };
 
 export const checkIdentity = (context: CheckContext, id: string): void => {
@@ -102,9 +113,11 @@ export const elementTypeOf = (context: CheckContext, type: string): NodeType | u
   type === NodeName.Text ? undefined : context.schema.nodes.get(type);
 
 const checkContent = (context: CheckContext, node: ElementNode, type: NodeType): void => {
-  if (type.content.matchContent(node.content)?.validEnd !== true) {
-    context.issues.push({ kind: 'content', path: [...context.path], type: node.type });
+  if (type.content.matchContent(node.content)?.validEnd === true) {
+    return;
   }
+
+  context.issues.push({ kind: 'content', path: [...context.path], type: node.type });
 };
 
 const checkOwn = (context: CheckContext, node: ElementNode, type: NodeType | undefined): void => {
@@ -140,9 +153,11 @@ export const checkBuilt = (
 };
 
 export const checkTop = (context: CheckContext, root: ElementNode): void => {
-  if (root.type !== context.schema.top.name) {
-    context.issues.unshift({ kind: 'type', path: [], type: root.type });
+  if (root.type === context.schema.top.name) {
+    return;
   }
+
+  context.issues.unshift({ kind: 'type', path: [], type: root.type });
 };
 
 const checkElement = (context: CheckContext, node: ElementNode): void => {
@@ -174,18 +189,35 @@ const checkElement = (context: CheckContext, node: ElementNode): void => {
   });
 };
 
+const holeWithin = (
+  hole: number | undefined,
+  start: number,
+  child: ElementNode,
+): number | undefined =>
+  hole !== undefined && start < hole && hole < start + nodeSize(child)
+    ? hole - start - 1
+    : undefined;
+
 const checkSiblings = (
   context: CheckContext,
   nodes: readonly ContentNode[],
   parent: NodeType | undefined,
   openStart: number,
   openEnd: number,
+  hole: number | undefined,
 ): void => {
+  let offset = 0;
+
   nodes.forEach((child, index) => {
     const previous = nodes[index - 1];
+    const childStart = offset;
+
+    offset += nodeSize(child);
 
     if (child.kind === ContentNodeKind.Text) {
-      if (parent !== undefined) {
+      if (parent === undefined) {
+        checkMarks(context, [...context.path, index], child, undefined);
+      } else {
         checkText(
           context,
           index,
@@ -200,10 +232,12 @@ const checkSiblings = (
     const start = index === 0 ? openStart : 0;
     const end = index === nodes.length - 1 ? openEnd : 0;
 
+    const inner = holeWithin(hole, childStart, child);
+
     context.path.push(index);
 
-    if (start > 0 || end > 0) {
-      checkOpen(context, child, start, end);
+    if (start > 0 || end > 0 || inner !== undefined) {
+      checkOpen(context, child, start, end, inner);
     } else {
       checkElement(context, child);
     }
@@ -216,6 +250,7 @@ const checkOpen = (
   node: ElementNode,
   openStart: number,
   openEnd: number,
+  hole: number | undefined,
 ): void => {
   const type = elementTypeOf(context, node.type);
 
@@ -224,7 +259,7 @@ const checkOpen = (
     return;
   }
   checkAttrs(context, context.path, type.attrs, node.attrs);
-  checkSiblings(context, node.content, type, openStart - 1, openEnd - 1);
+  checkSiblings(context, node.content, type, openStart - 1, openEnd - 1, hole);
 };
 
 export const checkResult = (context: CheckContext): DocCheck =>
@@ -250,10 +285,11 @@ export const checkNodes = (schema: SchemaShape, nodes: readonly ElementNode[]): 
   return checkResult(context);
 };
 
-export const checkSlice = (schema: SchemaShape, slice: Slice): DocCheck => {
+export const checkSlice = (schema: SchemaShape, slice: Slice, insert?: number): DocCheck => {
   const context = createCheckContext(schema);
+  const hole = insert === undefined ? undefined : insert + slice.openStart;
 
-  checkSiblings(context, slice.content, undefined, slice.openStart, slice.openEnd);
+  checkSiblings(context, slice.content, undefined, slice.openStart, slice.openEnd, hole);
   return checkResult(context);
 };
 

@@ -219,21 +219,27 @@ export const reachableParts = async (
   }, []);
 
   for (let part = queue.pop(); part !== undefined; part = queue.pop()) {
-    if (!found.has(part) && !skip.has(part) && archive.has(part)) {
-      found.add(part);
-
-      const rels = relationshipsOf(part);
-
-      if (archive.has(rels)) {
-        found.add(rels);
-
-        (await readRelationships(archive, part)).forEach((relationship) => {
-          if (!relationship.external) {
-            queue.push(relationship.target);
-          }
-        });
-      }
+    if (found.has(part) || skip.has(part) || !archive.has(part)) {
+      continue;
     }
+
+    found.add(part);
+
+    const rels = relationshipsOf(part);
+
+    if (!archive.has(rels)) {
+      continue;
+    }
+
+    found.add(rels);
+
+    (await readRelationships(archive, part)).forEach((relationship) => {
+      if (relationship.external) {
+        return;
+      }
+
+      queue.push(relationship.target);
+    });
   }
   return found;
 };

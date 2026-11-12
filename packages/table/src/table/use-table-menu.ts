@@ -160,10 +160,12 @@ export const useTableMenu = <T>(options: TableMenuOptions<T>): TableMenu => {
 
         options.announce(shown ? texts.columnShown({ column }) : texts.columnHidden({ column }));
 
-        if (place !== undefined) {
-          open.value = false;
-          options.refocus(place);
+        if (place === undefined) {
+          return;
         }
+
+        open.value = false;
+        options.refocus(place);
       },
     };
   };

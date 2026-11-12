@@ -1,4 +1,10 @@
-import { SelectionKind, selectionRange, textSelection, type Command } from '@numior/editor-core';
+import {
+  SelectionKind,
+  selectionRange,
+  textSelection,
+  type Command,
+  type ElementNode,
+} from '@numior/editor-core';
 import type { NuiEditorBlockEditor } from './block.types';
 import { OPEN_CLASS } from './toggle/toggle-state';
 import { NuiContentNodeType } from '@numior/content';
@@ -19,6 +25,13 @@ export const toggleTodo: Command = (state, dispatch) => {
   }
   return false;
 };
+
+export const closedToggleBody =
+  (editor: NuiEditorBlockEditor) =>
+  (parent: ElementNode, index: number): boolean =>
+    index > 0 &&
+    parent.type === NuiContentNodeType.Toggle &&
+    editor.element(parent.id)?.classList.contains(OPEN_CLASS) === false;
 
 export const leaveClosedToggle =
   (editor: NuiEditorBlockEditor): Command =>

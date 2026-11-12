@@ -60,6 +60,12 @@ for (const theme of THEMES) {
       await clean(playground);
       await page.keyboard.press('Escape');
 
+      await editor.tool('Вставить').click();
+      await expect(editor.insertSearch()).toBeFocused();
+
+      await clean(playground);
+      await page.keyboard.press('Escape');
+
       await editor.placeAtEnd();
       await page.keyboard.press('Enter');
       await page.keyboard.type('/');
@@ -152,13 +158,15 @@ for (const theme of THEMES) {
 
       await clean(playground);
 
-      if (!(await finePointer(page))) {
-        await editor.placeAtEnd();
-        await editor.showCaret();
-        await expect(editor.dock()).toBeVisible();
-
-        await clean(playground);
+      if (await finePointer(page)) {
+        return;
       }
+
+      await editor.placeAtEnd();
+      await editor.showCaret();
+      await expect(editor.dock()).toBeVisible();
+
+      await clean(playground);
     });
   });
 }

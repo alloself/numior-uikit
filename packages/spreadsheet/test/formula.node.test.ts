@@ -253,13 +253,42 @@ describe('formula parser', () => {
       args: [num(1.5), cell(0, 0)],
     });
 
-    expect(astOf('={1\\2;3\\4}', RU_FORMULAS)).toEqual({
+    expect(astOf('={1;2:3;4}', RU_FORMULAS)).toEqual({
       kind: 'array',
       rows: [
         [num(1), num(2)],
         [num(3), num(4)],
       ],
     });
+
+    expect(astOf('=СУММ({1;-2:3;4};1)', RU_FORMULAS)).toMatchObject({
+      args: [
+        {
+          rows: [
+            [num(1), num(-2)],
+            [num(3), num(4)],
+          ],
+        },
+        num(1),
+      ],
+    });
+
+    expect(parseFormula('={1\\2}', RU_FORMULAS).ok).toBe(false);
+  });
+
+  it('reads the names Excel takes with a backslash and a question mark', () => {
+    ['\\abc', 'a?b', 'a\\b', '\\', '\\1', '_x?'].forEach((name) => {
+      expect(astOf(`=${name}+1`)).toEqual({
+        kind: 'binary',
+        op: '+',
+        left: { kind: 'name', name },
+        right: num(1),
+      });
+
+      expect(printFormula(astOf(`=${name}+1`))).toBe(`${name}+1`);
+    });
+
+    expect(parseFormula('=?a+1').ok).toBe(false);
   });
 
   it('reads Russian and English function names, logical words and errors', () => {
@@ -327,6 +356,20 @@ describe('formula parser', () => {
     expect(printFormula(astOf('=-@A1:A3+SINGLE(B1:B2)'))).toBe('-@A1:A3+@B1:B2');
   });
 
+  it('reads and prints a lost reference that still names its sheet', () => {
+    expect(astOf('=Rates!#REF!+1')).toMatchObject({
+      kind: 'binary',
+      left: { kind: 'error', code: '#REF!', sheet: 'Rates' },
+    });
+
+    expect(printFormula(astOf("='My sheet'!#REF!*Rates!#REF!"))).toBe(
+      "'My sheet'!#REF!*Rates!#REF!",
+    );
+
+    expect(printFormula(astOf('=Лист1!#ССЫЛКА!', RU_FORMULAS), RU_FORMULAS)).toBe('Лист1!#ССЫЛКА!');
+    expect(failureOf('=Rates!#N/A')).toMatchObject({ reason: 'reference' });
+  });
+
   it('points at the place where a formula breaks', () => {
     expect(failureOf('=1+')).toEqual({ position: 3, reason: 'end' });
     expect(failureOf('=1+)')).toEqual({ position: 3, reason: 'token' });
@@ -351,7 +394,7 @@ describe('formula printer', () => {
   });
 
   it('prints with the separators of the locale', () => {
-    expect(printFormula(astOf('=SUM(1.5,{1,2;3,4})'), RU_FORMULAS)).toBe('СУММ(1,5;{1\\2;3\\4})');
+    expect(printFormula(astOf('=SUM(1.5,{1,2;3,4})'), RU_FORMULAS)).toBe('СУММ(1,5;{1;2:3;4})');
 
     expect(printFormula(astOf("=[1]Other!$A$1+'[2]Q1 data'!B2+[1]!Rate"))).toBe(
       "[1]Other!$A$1+'[2]Q1 data'!B2+[1]!Rate",

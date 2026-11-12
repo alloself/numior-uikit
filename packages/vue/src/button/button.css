@@ -74,9 +74,9 @@
   }
 
   .nui-button--size-inline {
-    --_height: 1.75em;
+    --_height: round(1.75em, 2px);
     --_padding: 0.25em;
-    --_font-size: 0.875em;
+    --_font-size: round(0.875em, 1px);
 
     @apply py-0;
   }
@@ -194,8 +194,8 @@
   }
 
   .nui-button__icon-end {
-    inline-size: 1em;
-    block-size: 1em;
+    inline-size: var(--spacing-icon-sm);
+    block-size: var(--spacing-icon-sm);
     margin-inline-start: calc(var(--spacing) - calc(var(--spacing) * 2));
     opacity: 0.72;
   }

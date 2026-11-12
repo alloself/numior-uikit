@@ -23,7 +23,7 @@
       {{ toast.action.label }}
     </NuiButton>
     <NuiButton
-      v-if="toast.dismissible"
+      v-if="toast.closable"
       variant="ghost"
       tone="neutral"
       size="sm"
@@ -41,51 +41,48 @@ import { useMessages, useToastStore } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { toneIcon } from '../shared/tone-icon';
-import { focusNeighbour } from './focus-neighbour';
+import { keyboardFocused } from './toast-focus';
 import { toastMessages } from './toast.messages';
 import type { NuiToastProps } from './toast.types';
 import { NuiTone } from '../shared/scale.types';
 
 const { toast, closeLabel } = defineProps<NuiToastProps>();
 
+const root = useTemplateRef<HTMLElement>('root');
 const store = useToastStore();
 const messages = useMessages(toastMessages);
-const rootElement = useTemplateRef<HTMLElement>('root');
 
 const icon = computed(() => toneIcon(toast.tone));
 const closeText = computed(() => closeLabel ?? messages.value.close);
 
 const dismiss = (): void => {
-  const element = rootElement.value;
-  if (element && element.contains(document.activeElement)) {
-    focusNeighbour(element);
-  }
   store.dismiss(toast.id);
 };
 
-const releaseFocus = (): void => {
-  const focused = document.activeElement;
-
-  if (focused instanceof HTMLElement && rootElement.value?.contains(focused) === true) {
-    focused.blur();
-  }
-};
-
 const runAction = (): void => {
-  const shown = toast;
+  const active = document.activeElement;
+  const focused = active instanceof HTMLElement && root.value?.contains(active) === true;
+  const byKeyboard = keyboardFocused();
 
-  shown.action?.onClick();
+  toast.action?.onClick();
 
-  if (store.toasts.value.some((entry) => entry.id === shown.id && entry !== shown)) {
-    releaseFocus();
+  if (store.toasts.value.includes(toast)) {
+    dismiss();
     return;
   }
-  dismiss();
+
+  if (focused && byKeyboard) {
+    root.value?.focus();
+  } else if (focused) {
+    active.blur();
+  }
 };
 
 const onEscape = (): void => {
-  if (toast.dismissible) {
-    dismiss();
+  if (!toast.closable) {
+    return;
   }
+
+  dismiss();
 };
 </script>

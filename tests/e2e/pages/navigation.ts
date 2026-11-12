@@ -37,6 +37,7 @@ export class NavigationSection {
   readonly manualTabs: Locator;
   readonly closableTabs: Locator;
   readonly linkTabs: Locator;
+  readonly overflowTabs: Locator;
   readonly crumbs: Locator;
   readonly shortCrumbs: Locator;
   readonly stepper: Locator;
@@ -55,6 +56,7 @@ export class NavigationSection {
     this.manualTabs = page.getByTestId('nav-tabs-manual');
     this.closableTabs = page.getByTestId('nav-tabs-closable');
     this.linkTabs = page.getByTestId('nav-tabs-links');
+    this.overflowTabs = page.getByTestId('nav-tabs-overflow');
     this.crumbs = page.getByTestId('nav-crumbs');
     this.shortCrumbs = page.getByTestId('nav-crumbs-short');
     this.stepper = page.getByTestId('nav-stepper');
@@ -67,6 +69,14 @@ export class NavigationSection {
   item(label: string): Locator {
     return this.menu.locator('.nui-menu-item:not(.nui-menu--sub .nui-menu-item)', {
       hasText: label,
+    });
+  }
+
+  async itemRinged(label: string): Promise<boolean> {
+    return this.item(label).evaluate((element) => {
+      const style = getComputedStyle(element);
+
+      return style.outlineStyle !== 'none' && Number.parseFloat(style.outlineWidth) > 0;
     });
   }
 
@@ -116,6 +126,22 @@ export class NavigationSection {
     };
   }
 
+  monthTab(label: string): Locator {
+    return this.overflowTabs.getByRole('tab', { name: label });
+  }
+
+  get monthTrack(): Locator {
+    return this.overflowTabs.locator('.nui-tab-list__track');
+  }
+
+  tabEdge(side: 'start' | 'end'): Locator {
+    return this.overflowTabs.locator(`.nui-tab-list__edge--${side} button`);
+  }
+
+  monthScroll(): Promise<number> {
+    return this.monthTrack.evaluate((track) => Math.round(Math.abs(track.scrollLeft)));
+  }
+
   get activePanel(): Locator {
     return this.tabs.getByRole('tabpanel');
   }
@@ -162,6 +188,15 @@ export class NavigationSection {
 
   stepperSummary(stepper: Locator): Locator {
     return stepper.locator('.nui-stepper__summary');
+  }
+
+  async summaryGrowth(stepper: Locator): Promise<number> {
+    const [summary, label] = await Promise.all([
+      boxOf(this.stepperSummary(stepper)),
+      boxOf(stepper.locator('.nui-stepper__summary-label')),
+    ]);
+
+    return summary.height - label.height;
   }
 
   async typeInMenu(character: string): Promise<void> {

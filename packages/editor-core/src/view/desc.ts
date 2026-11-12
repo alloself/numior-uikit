@@ -10,6 +10,7 @@ import type { NodeType, Schema } from '../schema/schema.types';
 import { appendChunk, fillChunks, placeInChunks, tidyChunks, type ChunkSet } from './chunks';
 import { segmentsOf, type BlockDecorations, type LocalDecoration } from './decorate';
 import { renderLeaf, renderParent, type RenderedDom } from './render-dom';
+import { changeBetween, shiftAround } from './text-diff';
 import { DescKind, DomName, type NodeView, type NodeViewFactory } from './view.types';
 
 export interface ElementDesc {
@@ -150,9 +151,11 @@ const syncHack = (context: ViewContext, desc: ElementDesc): void => {
   const hack = desc.hack ?? context.document.createElement('br');
 
   desc.hack = hack;
-  if (content.lastChild !== hack) {
-    content.append(hack);
+  if (content.lastChild === hack) {
+    return;
   }
+
+  content.append(hack);
 };
 
 const plainBody = (context: ViewContext, text: string): TextBody => {
@@ -474,6 +477,7 @@ const forget = (context: ViewContext, desc: Desc): void => {
     return;
   }
   desc.view?.destroy();
+  context.stale.delete(desc);
   if (context.byId.get(desc.node.id) === desc) {
     context.byId.delete(desc.node.id);
   }
@@ -486,9 +490,11 @@ const elementsById = (children: readonly Desc[]): Map<NodeId, ElementDesc> => {
   const found = new Map<NodeId, ElementDesc>();
 
   for (const child of children) {
-    if (child.kind === DescKind.Element) {
-      found.set(child.node.id, child);
+    if (child.kind !== DescKind.Element) {
+      continue;
     }
+
+    found.set(child.node.id, child);
   }
   return found;
 };
@@ -514,14 +520,25 @@ const findText = (matching: Matching, node: TextNode): TextMatch | undefined => 
   return undefined;
 };
 
+const rewriteText = (dom: Text, known: string, text: string): void => {
+  const change = changeBetween(known, text);
+  const shift = shiftAround(known, dom.data, change);
+  const { from, to, text: put } = shift === undefined ? changeBetween(dom.data, text) : change;
+
+  dom.replaceData(from + (shift ?? 0), to - from, put);
+};
+
 const syncText = (desc: TextDesc, node: TextNode, index: number): void => {
   const part = desc.parts[0];
+  const known = desc.node.text;
 
   desc.node = node;
   desc.index = index;
-  if (part !== undefined && part.dom.data !== node.text) {
-    part.dom.data = node.text;
+  if (part === undefined || known === node.text || part.dom.data === node.text) {
+    return;
   }
+
+  rewriteText(part.dom, known, node.text);
 };
 
 const matchText = (
@@ -568,10 +585,12 @@ const matchElement = (
 export const freshen = (context: ViewContext, desc: ElementDesc): void => {
   const node = context.stale.get(desc);
 
-  if (node !== undefined) {
-    context.stale.delete(desc);
-    syncElement(context, desc, node);
+  if (node === undefined) {
+    return;
   }
+
+  context.stale.delete(desc);
+  syncElement(context, desc, node);
 };
 
 const sharedPrefix = (previous: readonly Desc[], next: readonly ContentNode[]): number => {
@@ -619,10 +638,12 @@ const reconcile = (
   );
 
   for (const child of previous) {
-    if (!matching.used.has(child)) {
-      outerOf(child).remove();
-      forget(context, child);
+    if (matching.used.has(child)) {
+      continue;
     }
+
+    outerOf(child).remove();
+    forget(context, child);
   }
   return next;
 };
@@ -690,9 +711,11 @@ export const syncElement = (context: ViewContext, desc: ElementDesc, node: Eleme
     redrawContent(context, desc);
     return;
   }
-  if (content !== null) {
-    syncContent(context, desc, content, node.content);
+  if (content === null) {
+    return;
   }
+
+  syncContent(context, desc, content, node.content);
 };
 
 export const syncRootPrefix = (
@@ -701,8 +724,10 @@ export const syncRootPrefix = (
   node: ElementNode,
   end: number,
 ): void => {
-  if (desc.node !== node) {
-    desc.node = node;
-    syncContent(context, desc, desc.dom, node.content.slice(0, end));
+  if (desc.node === node) {
+    return;
   }
+
+  desc.node = node;
+  syncContent(context, desc, desc.dom, node.content.slice(0, end));
 };

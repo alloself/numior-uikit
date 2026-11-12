@@ -14,6 +14,8 @@ import {
 
 const VARIADIC = 255;
 
+const SHORTEST_TAIL = 253;
+
 const shown = (parts: readonly SignaturePart[]): string =>
   parts.map((part) => (part.current ? `<${part.text}>` : part.text)).join('');
 
@@ -21,7 +23,7 @@ const fits = (help: FunctionHelp | undefined, min: number, max: number): boolean
   help !== undefined &&
   help.summary.length > 0 &&
   help.args.length >= min &&
-  (help.args.length === max || (max === VARIADIC && help.args.length < max));
+  (help.args.length === max || (max >= SHORTEST_TAIL && help.args.length < max));
 
 const misfits = (catalog: FunctionHelpCatalog): string[] =>
   BASE_FUNCTIONS.flatMap((spec) =>

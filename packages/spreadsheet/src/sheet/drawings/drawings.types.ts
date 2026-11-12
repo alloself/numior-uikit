@@ -1,8 +1,8 @@
 import type { ChartSpec } from '@numior/charts';
 import type { FloatingPlacement } from '@numior/primitives';
 import type { NuiTableExposed, NuiTableOverlaySlot, NuiTableRect } from '@numior/table';
-import type { NuiMenuEntry } from '@numior/vue';
-import type { ComputedRef, ShallowRef } from 'vue';
+import type { NuiMenuEntry, NuiMenuFocus } from '@numior/vue';
+import type { ComputedRef, Ref, ShallowRef } from 'vue';
 import type {
   BookLocale,
   CellAddress,
@@ -15,6 +15,7 @@ import type {
 } from '../../core';
 import type {
   FrameGrip,
+  Refuse,
   SheetCells,
   SheetEditing,
   SheetPopover,
@@ -144,9 +145,29 @@ export interface DrawingEditOptions {
   readonly announce: (text: string) => void;
   readonly focus: () => void;
   readonly openSettings: () => void;
+  readonly openMenu: (shown: ShownDrawing, event: MouseEvent | undefined) => void;
   readonly editing: SheetEditing;
   readonly table: Readonly<ShallowRef<NuiTableExposed | null>>;
   readonly root: Readonly<ShallowRef<HTMLElement | null>>;
+}
+
+export interface DrawingMenuOptions {
+  readonly root: Readonly<ShallowRef<HTMLElement | null>>;
+  readonly body: Readonly<ShallowRef<HTMLElement | null>>;
+  readonly spot: Readonly<ShallowRef<HTMLElement | null>>;
+  readonly messages: () => NuiSpreadsheetMessages;
+  readonly pressed: () => ShownDrawing | undefined;
+  readonly request: (event: MouseEvent, shown: ShownDrawing) => void;
+  readonly remove: (shown: ShownDrawing) => void;
+  readonly openSettings: (shown: ShownDrawing) => void;
+  readonly show: (focus: NuiMenuFocus | undefined) => void;
+}
+
+export interface DrawingMenu {
+  readonly open: Ref<boolean>;
+  readonly anchor: Readonly<ShallowRef<HTMLElement | null>>;
+  readonly items: ComputedRef<readonly NuiMenuEntry[]>;
+  show(shown: ShownDrawing, event: MouseEvent | undefined): void;
 }
 
 export interface InsertSpotOptions {
@@ -166,7 +187,7 @@ export interface DrawingInsertOptions extends InsertSpotOptions {
   readonly sheet: () => Sheet | undefined;
   readonly readonly: () => boolean;
   readonly messages: () => NuiSpreadsheetMessages;
-  readonly announce: (text: string) => void;
+  readonly refuse: Refuse;
   readonly select: (id: string, name: string) => void;
   readonly editing: SheetEditing;
 }
@@ -190,6 +211,9 @@ export interface DrawingEdit {
   selectNew(id: string, name: string): void;
   deselect(): void;
   openSettings(shown: ShownDrawing): void;
+  remove(shown: ShownDrawing): void;
+  pressed(): ShownDrawing | undefined;
+  onContextmenu(event: MouseEvent, shown: ShownDrawing): void;
   onDown(event: PointerEvent, shown: ShownDrawing): void;
   onGripDown(event: PointerEvent, shown: ShownDrawing, grip: FrameGrip): void;
   onMove(event: PointerEvent): void;

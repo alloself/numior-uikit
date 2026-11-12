@@ -7,9 +7,15 @@ import type {
 } from './client.types';
 
 interface Reconnecting {
+  readonly start: () => void;
   readonly send: (message: ClientMessage) => void;
   readonly settle: () => void;
+  readonly restart: () => void;
   readonly stop: () => void;
+}
+
+interface Held {
+  own?: TransportConnection;
 }
 
 const BASE_DELAY = 200;
@@ -33,29 +39,67 @@ export const createReconnecting = (
   let stopped = false;
 
   const open = (): void => {
-    connection = transport.open({
-      opened: listener.opened,
-      message: listener.message,
-      closed: () => {
-        connection = undefined;
-        listener.closed();
+    const held: Held = {};
+    const early: (() => void)[] = [];
 
-        if (!stopped) {
-          timer = setTimeout(open, backoffDelay(retry, attempts));
-          attempts += 1;
+    const own =
+      <Args extends readonly unknown[]>(act: (...args: Args) => void) =>
+      (...args: Args): void => {
+        if (held.own === undefined) {
+          early.push(() => {
+            act(...args);
+          });
+        } else if (connection === held.own) {
+          act(...args);
         }
-      },
+      };
+
+    held.own = transport.open({
+      opened: own(listener.opened),
+      message: own(listener.message),
+      closed: own(lost),
     });
+
+    connection = held.own;
+
+    for (const act of early) {
+      if (connection !== held.own) {
+        continue;
+      }
+
+      act();
+    }
   };
 
-  open();
+  const lost = (): void => {
+    connection = undefined;
+    listener.closed();
+
+    if (stopped) {
+      return;
+    }
+
+    timer = setTimeout(open, backoffDelay(retry, attempts));
+    attempts += 1;
+  };
 
   return {
+    start: open,
     send: (message) => {
       connection?.send(message);
     },
     settle: () => {
       attempts = 0;
+    },
+    restart: () => {
+      const stale = connection;
+
+      if (stale === undefined) {
+        return;
+      }
+
+      lost();
+      stale.close();
     },
     stop: () => {
       stopped = true;

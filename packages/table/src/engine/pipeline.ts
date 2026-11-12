@@ -34,12 +34,14 @@ export const createPipeline = (
         onStageDone?.(stage);
         stage = stage.next();
 
-        if (stage !== null) {
-          last = stage;
+        if (stage === null) {
+          continue;
+        }
 
-          if (performance.now() >= deadline) {
-            return false;
-          }
+        last = stage;
+
+        if (performance.now() >= deadline) {
+          return false;
         }
       }
       return true;

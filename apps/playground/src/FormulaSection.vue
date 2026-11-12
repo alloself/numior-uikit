@@ -110,12 +110,14 @@ const loader = useSheetLoad(sample, () => {
 });
 
 const switchLocale = (value: unknown): void => {
-  if (value === 'ru' || value === 'en') {
-    localeName.value = value;
-    sample.calculator.setLocale(locale.value);
-    formats.touch();
-    void loader.recalculate();
+  if (value !== 'ru' && value !== 'en') {
+    return;
   }
+
+  localeName.value = value;
+  sample.calculator.setLocale(locale.value);
+  formats.touch();
+  void loader.recalculate();
 };
 
 const recalculate = (): void => {
@@ -126,11 +128,13 @@ const fillLoad = (): void => {
   const index = sample.book.sheets.findIndex((item) => item.name === LOAD_SHEET);
   const target = sample.book.sheets[index];
 
-  if (target !== undefined) {
-    loaded.value = true;
-    sheetIndex.value = index;
-    void loader.load(target);
+  if (target === undefined) {
+    return;
   }
+
+  loaded.value = true;
+  sheetIndex.value = index;
+  void loader.load(target);
 };
 
 const onChange = (): void => {

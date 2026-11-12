@@ -3,6 +3,12 @@ import { layoutChart, type ChartScene, type ChartSpec, type ScenePoint } from '.
 
 const SIZE = { width: 480, height: 300 };
 
+const LONG = 200_000;
+
+const SPIKE = 123_457;
+
+const BUDGET_MS = 100;
+
 const visits: ChartSpec = {
   kind: 'line',
   categories: { kind: 'text', labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
@@ -41,6 +47,18 @@ const at = <T>(items: readonly T[], index: number): T => {
 };
 
 const startOf = (d: string): number[] => (/^M([\d.]+),([\d.]+)/.exec(d) ?? []).slice(1).map(Number);
+
+const verticesOf = (d: string): number => d.split(/[ML]/u).length - 1;
+
+const shown = (value: number): string => String(Math.round(value * 100) / 100);
+
+const moments = Array.from(
+  { length: LONG },
+  (_unused, index) => Date.UTC(2026, 0, 1) + index * 60_000,
+);
+
+const wave = (count: number): number[] =>
+  Array.from({ length: count }, (_unused, index) => Math.sin(index / 500) * 100 + (index % 7));
 
 describe('line and area layout', () => {
   it('joins values with lines, breaks them at gaps and marks lonely points', () => {
@@ -160,5 +178,71 @@ describe('line and area layout', () => {
 
     expect(at(pointsOf(rtl, 0), 0).x).toBeGreaterThan(at(pointsOf(rtl, 0), 1).x);
     expect(at(startOf(first ?? ''), 0)).toBeGreaterThan(SIZE.width / 2);
+  });
+
+  it('draws a long series with a few vertices per pixel and keeps its peak and every point to point at', () => {
+    const values = Array.from({ length: LONG }, (_unused, index) =>
+      index === SPIKE ? 1000 : index % 3,
+    );
+
+    const scene = layoutChart(
+      {
+        kind: 'line',
+        categories: { kind: 'time', values: moments },
+        series: [{ id: 'load', name: 'Load', values }],
+      },
+      SIZE,
+    );
+
+    const [line = ''] = pathsOf(scene, 'line', 0);
+
+    expect(verticesOf(line)).toBeLessThanOrEqual(SIZE.width * 2 * 4);
+    expect(line).toContain(`,${shown(at(scene.points, SPIKE).y)}`);
+    expect(scene.points).toHaveLength(LONG);
+    expect(at(scene.points, SPIKE).value).toBe(1000);
+  });
+
+  it('closes a thinned stacked area on the thinned top of the series below', () => {
+    const scene = layoutChart(
+      {
+        kind: 'area',
+        stacking: 'stacked',
+        categories: { kind: 'time', values: moments },
+        series: [
+          { id: 'web', name: 'Web', values: wave(LONG) },
+          { id: 'app', name: 'App', values: wave(LONG).map((value) => value / 2 + 60) },
+        ],
+      },
+      SIZE,
+    );
+
+    const [lower = ''] = pathsOf(scene, 'line', 0);
+    const [upper = ''] = pathsOf(scene, 'area', 1);
+
+    const lowerTop = lower.replace(/^M/u, 'L').split('L').filter(Boolean).toReversed().join('L');
+
+    expect(upper.endsWith(`L${lowerTop}Z`)).toBe(true);
+    expect(verticesOf(upper)).toBeLessThanOrEqual(SIZE.width * 2 * 4 * 2);
+  });
+});
+
+describe('line layout cost', () => {
+  it('lays out an area over two hundred thousand moments within the budget', () => {
+    const spec: ChartSpec = {
+      kind: 'area',
+      categories: { kind: 'time', values: moments },
+      series: [{ id: 'load', name: 'Load', values: wave(LONG) }],
+    };
+
+    const fastest = Math.min(
+      ...Array.from({ length: 4 }, () => {
+        const started = performance.now();
+
+        layoutChart(spec, SIZE);
+        return performance.now() - started;
+      }),
+    );
+
+    expect(fastest).toBeLessThan(BUDGET_MS);
   });
 });

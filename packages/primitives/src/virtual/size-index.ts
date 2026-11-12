@@ -27,9 +27,11 @@ export const createSizeIndex = (
   const version = shallowRef(0);
 
   for (const [index, size] of known) {
-    if (index >= 0 && index < length) {
-      sizes[index] = size;
+    if (index < 0 || index >= length) {
+      continue;
     }
+
+    sizes[index] = size;
   }
 
   const rebuild = (): void => {
@@ -40,9 +42,11 @@ export const createSizeIndex = (
       tree[node] = (tree[node] ?? 0) + (sizes[index] ?? 0);
       const parent = node + lowestBit(node);
 
-      if (parent <= length) {
-        tree[parent] = (tree[parent] ?? 0) + (tree[node] ?? 0);
+      if (parent > length) {
+        continue;
       }
+
+      tree[parent] = (tree[parent] ?? 0) + (tree[node] ?? 0);
     }
   };
 
@@ -90,10 +94,12 @@ export const createSizeIndex = (
       for (let step = highestPower(); step > 0; step = Math.floor(step / 2)) {
         const candidate = node + step;
 
-        if (candidate <= length && (tree[candidate] ?? 0) <= remaining) {
-          node = candidate;
-          remaining -= tree[candidate] ?? 0;
+        if (candidate > length || (tree[candidate] ?? 0) > remaining) {
+          continue;
         }
+
+        node = candidate;
+        remaining -= tree[candidate] ?? 0;
       }
       return Math.min(node, length - 1);
     },

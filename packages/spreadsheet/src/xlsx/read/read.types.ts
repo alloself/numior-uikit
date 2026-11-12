@@ -98,6 +98,7 @@ export const XlsxLimitationCode = {
   PivotTables: 'pivot-tables',
   DataTables: 'data-tables',
   FormulaSyntax: 'formula-syntax',
+  FormulaKept: 'formula-kept',
   UnsupportedFunctions: 'unsupported-functions',
   CellStyles: 'cell-styles',
   RichText: 'rich-text',

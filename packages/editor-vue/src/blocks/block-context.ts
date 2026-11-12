@@ -1,12 +1,14 @@
 import {
   isAtom,
+  leaveBlockSpot,
   nearestCursor,
   nodeSize,
   selectionRange,
+  setBlockSpot,
   type Command,
   type NodeId,
 } from '@numior/editor-core';
-import type { NuiEditorBlockContext } from './block.types';
+import type { NuiEditorBlockContext, NuiEditorBlockHost } from './block.types';
 
 const atNode =
   (id: NodeId, change: (from: number, to: number) => Command): Command =>
@@ -45,8 +47,7 @@ const enter =
 
 export const blockContext = (
   id: NodeId,
-  run: (command: Command) => boolean,
-  focus: () => void,
+  { run, focus, peers }: NuiEditorBlockHost,
   element: () => HTMLElement | undefined,
 ): NuiEditorBlockContext => ({
   setAttrs: (attrs) =>
@@ -70,6 +71,13 @@ export const blockContext = (
     focus();
   },
   element,
+  peers: () => peers(id),
+  setSpot: (part) => {
+    run(setBlockSpot({ block: id, part }));
+  },
+  leaveSpot: () => {
+    run(leaveBlockSpot(id));
+  },
   setStyle: (property, value) => {
     if (value === null) {
       element()?.style.removeProperty(property);

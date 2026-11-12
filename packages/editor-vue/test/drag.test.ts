@@ -86,6 +86,18 @@ describe('NuiEditor block drag across containers', () => {
     expect(editor.blockTexts).toEqual(['div:notemore', 'ul:onetwo', 'div:za']);
   });
 
+  it('lets go of the pointer when the editor goes away in the middle of a drag', async () => {
+    const editor = mounted();
+
+    await editor.liftBlock('a', 50, 61);
+    expect(editor.movePointer(50, 70)).toBe(true);
+
+    editor.destroy();
+    driver = undefined;
+
+    expect(editor.movePointer(50, 80)).toBe(false);
+  });
+
   it('keeps a block where it is when it lands on its own place', async () => {
     const editor = mounted();
 
