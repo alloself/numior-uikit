@@ -21,7 +21,12 @@ import {
 import type { Sheet, Workbook } from '../../core/workbook';
 import type { DifferentialStyle } from '../../core/conditional/conditional.types';
 import { XmlBoolean, type XmlAttribute } from '../xml/xml.types';
-import { X14, createConditionalCollector, createExtensionCollector } from './conditional-part';
+import {
+  X14,
+  createConditionalCollector,
+  createExtensionCollector,
+  withAutomaticEnds,
+} from './conditional-part';
 import { decodeXstring } from '../xml/xstring';
 import { createFragmentRecorder } from './fragment-part';
 import { SHEET_SPECS, opaqueInSheet } from './fragment-specs';
@@ -496,7 +501,7 @@ export const readSheetPart = async (
     options,
   );
 
-  sheet.conditional = [...conditional.formats(), ...extensions.formats()];
+  sheet.conditional = withAutomaticEnds([...conditional.formats(), ...extensions.formats()]);
   sheet.layout = { ...layout.layout(), xml: recorder.result() };
   counts.conditional = conditional.foreign();
   return counts;

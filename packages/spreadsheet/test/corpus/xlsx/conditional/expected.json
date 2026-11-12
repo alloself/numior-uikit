@@ -281,10 +281,10 @@
               "rule": {
                 "kind": "dataBar",
                 "min": {
-                  "kind": "min"
+                  "kind": "autoMin"
                 },
                 "max": {
-                  "kind": "max"
+                  "kind": "autoMax"
                 },
                 "color": {
                   "kind": "rgb",

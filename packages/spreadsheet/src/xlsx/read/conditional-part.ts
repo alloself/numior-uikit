@@ -1,6 +1,7 @@
 import { parseCell, parseRange } from '../../core/address';
 import type { CellAddress, CellRange } from '../../core/cell.types';
 import {
+  ConditionalRuleKind,
   ThresholdKind,
   type CellIsOperator,
   type ConditionalEntry,
@@ -77,6 +78,12 @@ export const X14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/mai
 const XM = 'http://schemas.microsoft.com/office/excel/2006/main';
 
 const EXTENSION_FORMULA = /<((?:[\w.-]+:)?)f>[\s\S]*?<\/\1f>/gu;
+
+const LINKED_ID = /<(?:[\w.-]+:)?id>\s*(\{[^}]+\})\s*<\//u;
+
+const OWN_ID = /^<[^>]*\sid="(\{[^}"]+\})"/u;
+
+const LINKED_ENDS = /<(?:[\w.-]+:)?cfvo\b[^>]*\stype="([^"]+)"/gu;
 
 const OPERATORS: readonly CellIsOperator[] = [
   'between',
@@ -584,4 +591,73 @@ export const createExtensionCollector = (): ConditionalCollector => {
     formats: () => formats,
     foreign: () => 0,
   };
+};
+
+const linkedEnds = (formats: readonly ConditionalFormat[]): Map<string, (string | undefined)[]> => {
+  const ends = new Map<string, (string | undefined)[]>();
+
+  for (const format of formats) {
+    if (format.extension !== true) {
+      continue;
+    }
+
+    for (const { rule } of format.rules) {
+      if (rule.kind !== ConditionalRuleKind.Foreign) {
+        continue;
+      }
+
+      const id = OWN_ID.exec(rule.xml)?.[1];
+
+      if (id === undefined) {
+        continue;
+      }
+
+      ends.set(
+        id,
+        Array.from(rule.xml.matchAll(LINKED_ENDS), (match) => match[1]),
+      );
+    }
+  }
+  return ends;
+};
+
+const automatic = (
+  threshold: Threshold,
+  type: string | undefined,
+  kind: typeof ThresholdKind.AutoMin | typeof ThresholdKind.AutoMax,
+  plain: typeof ThresholdKind.Min | typeof ThresholdKind.Max,
+): Threshold =>
+  threshold.kind === plain && type !== undefined && THRESHOLDS[type] === kind
+    ? { kind }
+    : threshold;
+
+const withLinkedEnds = (
+  entry: ConditionalEntry,
+  ends: ReadonlyMap<string, readonly (string | undefined)[]>,
+): ConditionalEntry => {
+  const { rule } = entry;
+  const id = entry.extra === undefined ? undefined : LINKED_ID.exec(entry.extra)?.[1];
+  const found = id === undefined ? undefined : ends.get(id);
+
+  if (rule.kind !== ConditionalRuleKind.DataBar || found === undefined) {
+    return entry;
+  }
+  return {
+    ...entry,
+    rule: {
+      ...rule,
+      min: automatic(rule.min, found[0], ThresholdKind.AutoMin, ThresholdKind.Min),
+      max: automatic(rule.max, found[1], ThresholdKind.AutoMax, ThresholdKind.Max),
+    },
+  };
+};
+
+export const withAutomaticEnds = (formats: readonly ConditionalFormat[]): ConditionalFormat[] => {
+  const ends = linkedEnds(formats);
+
+  return formats.map((format) =>
+    format.extension === true || ends.size === 0
+      ? format
+      : { ...format, rules: format.rules.map((entry) => withLinkedEnds(entry, ends)) },
+  );
 };

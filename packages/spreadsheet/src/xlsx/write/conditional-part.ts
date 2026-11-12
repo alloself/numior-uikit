@@ -2,6 +2,7 @@ import { formatCell, formatRange } from '../../core/address';
 import type { CellAddress } from '../../core/cell.types';
 import {
   ConditionalRuleKind,
+  ThresholdKind,
   type ConditionalEntry,
   type ConditionalFormat,
   type ConditionalRule,
@@ -28,6 +29,8 @@ interface Writing {
   readonly q: string;
 }
 
+type DataBarRule = Extract<ConditionalRule, { readonly kind: typeof ConditionalRuleKind.DataBar }>;
+
 const NAME = '(?:[\\w.-]+:)?';
 
 const BLOCK = new RegExp(
@@ -36,6 +39,8 @@ const BLOCK = new RegExp(
 );
 
 const EXTENSION_URI = '{78C0D931-6437-407d-A8EE-F0AAD7539E65}';
+
+const DATA_BAR_URI = '{B025F937-C7B1-47D3-B67F-A62EFF666E3E}';
 
 const X14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main';
 
@@ -80,12 +85,18 @@ const VALUE_TYPES: Readonly<Record<string, string>> = {
 const THRESHOLD_TYPES: Readonly<Record<Threshold['kind'], string>> = {
   min: 'min',
   max: 'max',
-  autoMin: 'autoMin',
-  autoMax: 'autoMax',
+  autoMin: 'min',
+  autoMax: 'max',
   number: 'num',
   percent: 'percent',
   percentile: 'percentile',
   formula: 'formula',
+};
+
+const LINKED_THRESHOLD_TYPES: Readonly<Record<Threshold['kind'], string>> = {
+  ...THRESHOLD_TYPES,
+  autoMin: 'autoMin',
+  autoMax: 'autoMax',
 };
 
 const PERIOD_FORMULAS: Readonly<Record<TimePeriod, (cell: string) => string>> = {
@@ -130,6 +141,41 @@ const formulaXml = (text: string, q: string): string =>
 
 const cfvoXml = (threshold: Threshold, writing: Writing): string =>
   `<${writing.q}cfvo type="${THRESHOLD_TYPES[threshold.kind]}"${'value' in threshold ? ` val="${escapeAttribute(formulaText(threshold.value, writing.anchor))}"` : ''}/>`;
+
+const linkedCfvoXml = (threshold: Threshold, anchor: CellAddress): string => {
+  const type = LINKED_THRESHOLD_TYPES[threshold.kind];
+
+  return 'value' in threshold
+    ? `<x14:cfvo type="${type}"><xm:f>${escapeText(formulaText(threshold.value, anchor))}</xm:f></x14:cfvo>`
+    : `<x14:cfvo type="${type}"/>`;
+};
+
+const automatic = (threshold: Threshold): boolean =>
+  threshold.kind === ThresholdKind.AutoMin || threshold.kind === ThresholdKind.AutoMax;
+
+const linkedBar = (entry: ConditionalEntry): DataBarRule | undefined => {
+  const { rule } = entry;
+
+  return entry.extra === undefined &&
+    rule.kind === ConditionalRuleKind.DataBar &&
+    (automatic(rule.min) || automatic(rule.max))
+    ? rule
+    : undefined;
+};
+
+const linkId = (format: number, rule: number): string =>
+  `{4E554931-0000-4000-8000-${(format * 0x1_00_00 + rule).toString(16).toUpperCase().padStart(12, '0')}}`;
+
+const linkXml = (entry: ConditionalEntry, id: string, q: string): string =>
+  linkedBar(entry) === undefined
+    ? ''
+    : `<${q}extLst><${q}ext uri="${DATA_BAR_URI}" xmlns:x14="${X14}"><x14:id>${id}</x14:id></${q}ext></${q}extLst>`;
+
+const linkedXml = (bar: DataBarRule, id: string, format: ConditionalFormat): string => {
+  const anchor = { row: format.ranges[0]?.top ?? 0, col: format.ranges[0]?.left ?? 0 };
+
+  return `<x14:conditionalFormatting xmlns:xm="${XM}"><x14:cfRule type="dataBar" id="${id}"><x14:dataBar negativeBarColorSameAsPositive="1" axisPosition="none">${linkedCfvoXml(bar.min, anchor)}${linkedCfvoXml(bar.max, anchor)}</x14:dataBar></x14:cfRule><xm:sqref>${format.ranges.map(formatRange).join(' ')}</xm:sqref></x14:conditionalFormatting>`;
+};
 
 const flagAttribute = (name: string, value: boolean, written: boolean): string =>
   value === written ? ` ${name}="${written ? '1' : '0'}"` : '';
@@ -243,7 +289,12 @@ const valueXml = (rule: ConditionalRule, writing: Writing): RuleXml | undefined 
       };
 };
 
-const ruleXml = (entry: ConditionalEntry, writing: Writing, styles: StyleBook): string => {
+const ruleXml = (
+  entry: ConditionalEntry,
+  writing: Writing,
+  styles: StyleBook,
+  link: string,
+): string => {
   const { rule } = entry;
 
   if (rule.kind === ConditionalRuleKind.Foreign) {
@@ -266,7 +317,7 @@ const ruleXml = (entry: ConditionalEntry, writing: Writing, styles: StyleBook): 
 
   return shape === undefined
     ? ''
-    : `<${q}cfRule type="${shape.type}"${style} priority="${String(entry.priority)}"${stop}${shape.attributes}>${shape.body}${entry.extra ?? ''}</${q}cfRule>`;
+    : `<${q}cfRule type="${shape.type}"${style} priority="${String(entry.priority)}"${stop}${shape.attributes}>${shape.body}${entry.extra ?? linkXml(entry, link, q)}</${q}cfRule>`;
 };
 
 const extensionRuleXml = (entry: ConditionalEntry, anchor: CellAddress): string => {
@@ -291,7 +342,7 @@ const extensionRuleXml = (entry: ConditionalEntry, anchor: CellAddress): string 
 };
 
 export const extensionXml = (formats: readonly ConditionalFormat[]): string => {
-  const blocks = formats.reduce<string[]>((found, format) => {
+  const blocks = formats.reduce<string[]>((found, format, index) => {
     const anchor = { row: format.ranges[0]?.top ?? 0, col: format.ranges[0]?.left ?? 0 };
 
     if (format.extension === true) {
@@ -302,7 +353,20 @@ export const extensionXml = (formats: readonly ConditionalFormat[]): string => {
             '',
           )}<xm:sqref>${format.ranges.map(formatRange).join(' ')}</xm:sqref></x14:conditionalFormatting>`,
       );
+
+      return found;
     }
+
+    format.rules.forEach((entry, rule) => {
+      const bar = linkedBar(entry);
+
+      if (bar === undefined) {
+        return;
+      }
+
+      found.push(linkedXml(bar, linkId(index, rule), format));
+    });
+
     return found;
   }, []);
 
@@ -348,7 +412,7 @@ export const conditionalXml = (
   styles: StyleBook,
   q: string,
 ): string =>
-  formats.reduce((xml, format) => {
+  formats.reduce((xml, format, index) => {
     if (format.extension === true) {
       return xml;
     }
@@ -356,7 +420,7 @@ export const conditionalXml = (
     const anchor = { row: format.ranges[0]?.top ?? 0, col: format.ranges[0]?.left ?? 0 };
 
     return `${xml}<${q}conditionalFormatting sqref="${format.ranges.map(formatRange).join(' ')}">${format.rules
-      .map((entry) => ruleXml(entry, { anchor, q }, styles))
+      .map((entry, rule) => ruleXml(entry, { anchor, q }, styles, linkId(index, rule)))
       .join('')}</${q}conditionalFormatting>`;
   }, '');
 

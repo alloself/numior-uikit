@@ -8,6 +8,7 @@ import {
   numberValue,
   pivotCaptions,
   textValue,
+  type ConditionalFormat,
   type PivotDefinition,
   parseCell,
   parseFormula,
@@ -48,6 +49,14 @@ const written = async (
   }
   return result.bytes;
 };
+
+const ownRules = (formats: readonly ConditionalFormat[]) =>
+  formats.flatMap((format) =>
+    format.extension === true ? [] : format.rules.map((entry) => entry.rule),
+  );
+
+const extensionsIn = (formats: readonly ConditionalFormat[]) =>
+  formats.reduce((count, format) => (format.extension === true ? count + 1 : count), 0);
 
 const partOf = async (bytes: Bytes, part: string): Promise<string> => {
   const zip = readZip(bytes);
@@ -271,6 +280,50 @@ describe('writing xlsx', () => {
     expect(JSON.stringify(sheetOf(again, 'Rules').conditional)).toBe(
       JSON.stringify(sheetOf(read, 'Rules').conditional),
     );
+  });
+
+  it('writes automatic ends of a data bar the way Excel does and reads them back', async () => {
+    const read = await opened(await corpusPackage('conditional'));
+    const rules = sheetOf(read, 'Rules');
+
+    const bar = {
+      kind: 'dataBar',
+      min: { kind: 'number', value: { kind: 'number', value: 5 } },
+      max: { kind: 'autoMax' },
+      color: { kind: 'rgb', argb: 'FF638EC6' },
+      showValue: true,
+    } as const;
+
+    createStepper(read.book, read.calculator).apply({
+      kind: 'setConditional',
+      sheet: 'Rules',
+      formats: [
+        ...rules.conditional.filter((format) => format.extension !== true),
+        {
+          ranges: [{ top: 0, left: 5, bottom: 5, right: 5 }],
+          rules: [{ rule: bar, priority: 14, stopIfTrue: false }],
+        },
+        ...rules.conditional.filter((format) => format.extension === true),
+      ],
+    });
+
+    const bytes = await written(read, read.source);
+    const sheet = await partOf(bytes, 'xl/worksheets/sheet1.xml');
+    const again = sheetOf(await opened(bytes), 'Rules');
+
+    expect(sheet).not.toMatch(/<cfvo type="auto/u);
+
+    expect(sheet).toContain(
+      '<dataBar><cfvo type="num" val="5"/><cfvo type="max"/><color rgb="FF638EC6"/></dataBar><extLst><ext uri="{B025F937-C7B1-47D3-B67F-A62EFF666E3E}"',
+    );
+
+    expect(sheet).toContain(
+      '<x14:cfvo type="num"><xm:f>5</xm:f></x14:cfvo><x14:cfvo type="autoMax"/></x14:dataBar></x14:cfRule><xm:sqref>F1:F6</xm:sqref>',
+    );
+
+    expect(ownRules(again.conditional)).toEqual(ownRules(sheetOf(read, 'Rules').conditional));
+
+    expect(extensionsIn(again.conditional)).toBe(extensionsIn(rules.conditional) + 1);
   });
 
   it('moves the Excel 2010 rule extensions with inserted rows', async () => {
