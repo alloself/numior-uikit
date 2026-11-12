@@ -606,6 +606,18 @@ onMounted(() => {
     },
     { immediate: true },
   );
+
+  watch(
+    () => calculator ?? ownCalculator.value,
+    (used) => {
+      if (used.pending === 0) {
+        return;
+      }
+
+      recalc.run({ volatile: false });
+    },
+    { immediate: true },
+  );
 });
 
 const drawings = useSheetDrawings({

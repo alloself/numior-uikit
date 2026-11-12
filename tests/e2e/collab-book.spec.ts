@@ -23,6 +23,19 @@ test.describe('collaboration on a workbook', () => {
     await expect(boris.sheet.cell('1', 1)).toHaveText('15');
   });
 
+  test('shows the values of formulas to someone who joins later', async ({ collab }) => {
+    const anna = await collab.joinBook(ANNA);
+
+    await anna.sheet.enter('1', 0, '2');
+    await anna.sheet.enter('1', 1, '=A1*3');
+    await expect(anna.sheet.cell('1', 1)).toHaveText('6');
+
+    const boris = await collab.joinBook(BORIS);
+
+    await expect(boris.sheet.cell('1', 0)).toHaveText('2');
+    await expect(boris.sheet.cell('1', 1)).toHaveText('6');
+  });
+
   test('shows where someone else stands and who is here', async ({ collab }) => {
     const anna = await collab.joinBook(ANNA);
     const boris = await collab.joinBook(BORIS);

@@ -3,7 +3,9 @@ import {
   createCalculator,
   createWorkbook,
   createWorkbookDocument,
+  EN_FORMULAS,
   lineLayoutsOf,
+  parseFormula,
   withLineSizes,
   type Calculator,
   type LineLayout,
@@ -36,6 +38,15 @@ const writeAt = (row: number, col: number, value: unknown, sheet = SHEET): unkno
 });
 
 const text = (value: string): unknown => writeAt(0, 0, { kind: 'string', value });
+
+const astOf = (formula: string, row: number, col: number): unknown => {
+  const parsed = parseFormula(formula, EN_FORMULAS, { row, col });
+
+  if (!parsed.ok) {
+    throw new Error(`${formula} does not parse`);
+  }
+  return parsed.ast;
+};
 
 const shared = (): SharedBook => {
   const book = createWorkbook();
@@ -169,6 +180,33 @@ describe('NuiSpreadsheet in a shared book', () => {
     await driver.press('z', { ctrl: true });
 
     expect(driver.text(3, 0)).toBe('');
+  });
+
+  it('shows the values of formulas in a book that came from the server before the sheet', async () => {
+    const book = createWorkbook();
+    const calculator = createCalculator(book);
+    const session = createWorkbookDocument({ book, calculator });
+
+    session.load(
+      {
+        steps: [
+          { kind: 'addSheet', name: SHEET, index: 0 },
+          writeAt(0, 0, { kind: 'number', value: 2 }),
+          {
+            kind: 'setCells',
+            sheet: SHEET,
+            cells: [{ row: 0, col: 1, content: { kind: 'formula', ast: astOf('=A1*3', 0, 1) } }],
+          },
+        ],
+      },
+      3,
+    );
+
+    const driver = open({ book, calculator, session });
+    await driver.settle();
+
+    expect(driver.text(1, 1)).toBe('6');
+    expect(driver.changes).toEqual([]);
   });
 
   it('shows the book of the server on the sheet it was on after the book is opened again', async () => {
