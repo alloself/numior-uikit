@@ -23,6 +23,7 @@ export class ChartsSection {
   readonly doughnut: Locator;
   readonly scatter: Locator;
   readonly bounded: Locator;
+  readonly hours: Locator;
   readonly tableSwitch: Locator;
   readonly selectedNote: Locator;
   readonly gapsSwitch: Locator;
@@ -38,6 +39,7 @@ export class ChartsSection {
     this.doughnut = page.getByTestId('chart-doughnut');
     this.scatter = page.getByTestId('chart-scatter');
     this.bounded = page.getByTestId('chart-bounded');
+    this.hours = page.getByTestId('chart-hours');
     this.tableSwitch = page.getByRole('switch', { name: 'Показать таблицу данных' });
     this.selectedNote = page.getByTestId('charts-selected');
     this.gapsSwitch = page.getByRole('switch', { name: 'Соединять пропуски' });

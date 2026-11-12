@@ -27,7 +27,7 @@ const drawn = (scene: ChartScene): string =>
     ...scene.points.map((point) => `${String(point.x)},${String(point.y)}`),
   ].join(' ');
 
-const timeLabels = (values: readonly number[]): string[] =>
+const timeLabels = (values: readonly number[], timeZone?: string): string[] =>
   texts(
     layoutChart(
       {
@@ -36,6 +36,7 @@ const timeLabels = (values: readonly number[]): string[] =>
         series: [{ id: 'a', name: 'A', values: values.map((_value, index) => index) }],
       },
       { width: 800, height: 300 },
+      { timeZone },
     ),
     'category-tick',
   );
@@ -327,6 +328,48 @@ describe('chart layout', () => {
       '09:00 AM',
       '03:00 PM',
     ]);
+  });
+
+  it('labels time categories in the time zone it is given', () => {
+    const moscowDays = [Date.UTC(2026, 2, 1, 21), Date.UTC(2026, 2, 2, 21)];
+
+    expect(timeLabels(moscowDays, 'Europe/Moscow')).toEqual(['Mar 2', 'Mar 3']);
+
+    expect(timeLabels([Date.UTC(2026, 1, 28, 21)], 'Europe/Moscow')).toEqual(['Mar 2026']);
+
+    expect(timeLabels([Date.UTC(2026, 2, 1, 21)], 'Europe/Moscow')).toEqual(['Mar 2']);
+
+    expect(
+      timeLabels([Date.UTC(2026, 2, 2, 3, 30), Date.UTC(2026, 2, 2, 9, 30)], 'Asia/Kolkata'),
+    ).toEqual(['09:00 AM', '03:00 PM']);
+
+    expect(timeLabels(moscowDays)).toEqual(['Mar 1', 'Mar 2']);
+  });
+
+  it('leaves a category without a time or a number out of the picture', () => {
+    const scenes = (['line', 'area', 'column'] as const).flatMap((kind) =>
+      (['time', 'number'] as const).map((categories) =>
+        layoutChart(
+          {
+            kind,
+            categories: {
+              kind: categories,
+              values: [Date.UTC(2026, 2, 2, 9), Number.NaN, Date.UTC(2026, 2, 2, 15)],
+            },
+            series: [{ id: 'a', name: 'A', values: [3, 4, 5] }],
+          },
+          SIZE,
+        ),
+      ),
+    );
+
+    expect(scenes.map((scene) => drawn(scene).includes('NaN'))).toEqual(scenes.map(() => false));
+
+    expect(scenes.map((scene) => texts(scene, 'category-tick').includes(''))).toEqual(
+      scenes.map(() => false),
+    );
+
+    expect(scenes.slice(0, 4).map((scene) => scene.points.length)).toEqual([2, 2, 2, 2]);
   });
 
   it('keeps the fixed palette order and folds series past the eighth into other', () => {

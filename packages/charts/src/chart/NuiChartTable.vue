@@ -29,7 +29,8 @@ import { computed } from 'vue';
 import { categoryTexts, valueText } from './chart-table';
 import type { NuiChartTableProps } from './chart.types';
 
-const { spec, label, locale, categoryTitle, shown } = defineProps<NuiChartTableProps>();
+const { spec, label, locale, categoryName, categoryTitle, shown } =
+  defineProps<NuiChartTableProps>();
 
-const categories = computed(() => categoryTexts(spec, locale));
+const categories = computed(() => categoryTexts(spec, categoryName));
 </script>

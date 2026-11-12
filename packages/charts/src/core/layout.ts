@@ -31,6 +31,7 @@ import {
   type NiceDomain,
 } from './scales';
 import { timeGrain } from './time';
+import { timeZoneOf } from './zone';
 
 interface CategoryLabel {
   readonly index: number;
@@ -138,8 +139,32 @@ const pointAt = (frame: Frame, band: BandScale): ((index: number) => number) => 
   const { values } = spec.categories;
   const [first, last] = span;
   const position = linearScale([first, last], [band.center(0), band.center(values.length - 1)]);
+  const start = position(first);
 
-  return (index) => position(values[index] ?? first);
+  if (values.every(Number.isFinite)) {
+    return (index) => position(values[index] ?? first);
+  }
+
+  const placed = values.reduce<number[]>((found, value, index) => {
+    found.push(Number.isFinite(value) ? position(value) : (found[index - 1] ?? start));
+    return found;
+  }, []);
+
+  return (index) => placed[index] ?? start;
+};
+
+const placedSeries = (spec: ChartSpec): readonly ChartSeries[] => {
+  const { categories } = spec;
+
+  if (categories.kind === ChartCategoriesKind.Text || categories.values.every(Number.isFinite)) {
+    return spec.series;
+  }
+  return spec.series.map((item) => ({
+    ...item,
+    values: item.values.map((entry, index) =>
+      Number.isFinite(categories.values[index]) ? entry : null,
+    ),
+  }));
 };
 
 const stackedExtent = (spec: ChartSpec, count: number): readonly [number, number] => {
@@ -241,6 +266,9 @@ const domainOf = (spec: ChartSpec, facts: ValueFacts, ticks: number): NiceDomain
   });
 };
 
+const finiteLabel = (value: number | undefined, format: (value: number) => string): string =>
+  value === undefined || !Number.isFinite(value) ? '' : format(value);
+
 const categoryText = (
   spec: ChartSpec,
   options: LayoutOptions,
@@ -257,22 +285,30 @@ const categoryText = (
   if (spec.categories.kind === ChartCategoriesKind.Number) {
     const plain = numberFormatter(locale, NumberStyle.Plain);
 
-    return (index) => plain(values[index] ?? Number.NaN, 0);
+    return (index) => finiteLabel(values[index], (value) => plain(value, 0));
   }
 
-  const { unit, context } = timeGrain(values);
-  const format = options.formatTime ?? timeFormatter(locale, context);
+  const zone = timeZoneOf(options.timeZone);
+  const { unit, context } = timeGrain(values, zone);
+  const format = options.formatTime ?? timeFormatter(locale, context, zone.name);
 
-  return (index) => format(values[index] ?? Number.NaN, unit);
+  return (index) => finiteLabel(values[index], (value) => format(value, unit));
 };
 
 const categoryLabels = (count: number, text: (index: number) => string): CategoryLabel[] => {
   const stride = Math.max(1, Math.ceil(count / MOST_LABELS));
 
-  return Array.from({ length: Math.ceil(count / stride) }, (_unused, place) => ({
-    index: place * stride,
-    text: text(place * stride),
-  }));
+  return Array.from({ length: Math.ceil(count / stride) }).reduce<CategoryLabel[]>(
+    (labels, _unused, place) => {
+      const label = { index: place * stride, text: text(place * stride) };
+
+      if (label.text !== '') {
+        labels.push(label);
+      }
+      return labels;
+    },
+    [],
+  );
 };
 
 const spanOf = (spec: ChartSpec): readonly [number, number] | undefined =>
@@ -690,7 +726,7 @@ const sceneOf = (
           markers: plot.width / Math.max(count, 1) >= MARKER_ROOM,
           gaps: frame.spec.gaps ?? ChartGaps.Break,
         },
-        frame.spec.series,
+        placedSeries(frame.spec),
         count,
         frame.tops,
       ),

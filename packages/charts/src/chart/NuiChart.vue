@@ -43,6 +43,7 @@
       :spec="spec"
       :label="label"
       :locale="resolvedLocale"
+      :category-name="categoryNameOf"
       :category-title="spec.categoryAxis?.title ?? texts.category"
       :shown="showTable"
     />
@@ -59,7 +60,7 @@ import NuiChartScene from './NuiChartScene.vue';
 import NuiChartTable from './NuiChartTable.vue';
 import NuiChartTooltip from './NuiChartTooltip.vue';
 import { tooltipContent, tooltipText } from './chart-tooltip';
-import { categoryTexts } from './chart-table';
+import { categoryName, categoryTexts } from './chart-table';
 import { chartMessages } from './chart.messages';
 import {
   ChartFocusSource,
@@ -79,6 +80,7 @@ const {
   height = 300,
   focusable = true,
   locale,
+  timeZone = 'UTC',
   showTable = false,
   legend = true,
 } = defineProps<NuiChartProps>();
@@ -126,11 +128,14 @@ const scene = computed(() =>
     {
       rtl: rtl.value,
       locale: resolvedLocale.value,
+      timeZone,
       fontSize: sizing.fontSize.value,
       measure: sizing.measure.value,
     },
   ),
 );
+
+const categoryNameOf = computed(() => categoryName(spec, resolvedLocale.value, timeZone));
 
 const round = computed(() => spec.kind === ChartKind.Pie || spec.kind === ChartKind.Doughnut);
 
@@ -147,7 +152,7 @@ const legendItems = computed((): NuiChartLegendItem[] => {
   const { slots } = scene.value;
 
   if (round.value) {
-    return categoryTexts(spec, resolvedLocale.value).map((name, index) => ({
+    return categoryTexts(spec, categoryNameOf.value).map((name, index) => ({
       id: `category-${String(index)}`,
       name,
       slot: slots[index] ?? 0,
@@ -197,7 +202,7 @@ const tooltip = computed(() => {
 
   return {
     hit,
-    content: tooltipContent(spec, scene.value, hit, resolvedLocale.value),
+    content: tooltipContent(spec, scene.value, hit, resolvedLocale.value, categoryNameOf.value),
     x: anchor.x,
     y: anchor.y,
     reach: anchor.reach,

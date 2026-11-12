@@ -64,9 +64,15 @@ export interface ChartSize {
   readonly height: number;
 }
 
+export interface TimeZone {
+  readonly name: string;
+  readonly offsetAt: (instant: number) => number;
+}
+
 export interface LayoutOptions {
   readonly rtl?: boolean | undefined;
   readonly locale?: string | undefined;
+  readonly timeZone?: string | undefined;
   readonly fontSize?: number | undefined;
   readonly measure?: ((text: string, fontSize: number) => number) | undefined;
   readonly formatNumber?: ((value: number, step: number) => string) | undefined;

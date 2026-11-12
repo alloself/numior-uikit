@@ -266,7 +266,7 @@ describe('NuiChart', () => {
     expect(shown.tableHeaders[0]).toBe('Category');
   });
 
-  it('formats time categories as dates in the table', () => {
+  it('names time categories in the table by the grain of their values', async () => {
     const chart = chartOf({
       spec: {
         kind: 'column',
@@ -276,7 +276,44 @@ describe('NuiChart', () => {
       config: { locale: 'en-US' },
     });
 
-    expect(chart.tableRows.map(([date]) => date)).toEqual(['Jan 1, 2026', 'Feb 1, 2026']);
+    expect(chart.tableRows.map(([date]) => date)).toEqual(['Jan 2026', 'Feb 2026']);
+
+    await chart.show({
+      kind: 'line',
+      categories: {
+        kind: 'time',
+        values: [Date.UTC(2026, 2, 2, 9), Date.UTC(2026, 2, 2, 15), Number.NaN],
+      },
+      series: [{ id: 'sales', name: 'Sales', values: [3, 4, 5] }],
+    });
+
+    expect(chart.tableRows.map(([date]) => date)).toEqual([
+      'Mar 2, 2026, 09:00 AM',
+      'Mar 2, 2026, 03:00 PM',
+      '—',
+    ]);
+  });
+
+  it('reads times in the time zone it is given', async () => {
+    const chart = chartOf({
+      spec: {
+        kind: 'column',
+        categories: {
+          kind: 'time',
+          values: [Date.UTC(2026, 2, 1, 21), Date.UTC(2026, 2, 2, 21)],
+        },
+        series: [{ id: 'sales', name: 'Sales', values: [3, 4] }],
+      },
+      props: { timeZone: 'Europe/Moscow' },
+      config: { locale: 'en-US' },
+    });
+
+    expect(chart.categoryTicks).toEqual(['Mar 2', 'Mar 3']);
+    expect(chart.tableRows.map(([date]) => date)).toEqual(['Mar 2, 2026', 'Mar 3, 2026']);
+
+    await chart.press('ArrowRight');
+
+    expect(chart.announcement).toBe('Mar 2, 2026: Sales 3');
   });
 
   it('says there is nothing to show when the chart has no series or categories', () => {

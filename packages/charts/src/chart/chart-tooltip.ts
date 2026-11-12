@@ -1,6 +1,6 @@
 import type { ChartHit, ChartScene, ChartSpec } from '../core';
-import { categoryTexts, valueText } from './chart-table';
-import type { NuiChartTooltipContent } from './chart.types';
+import { valueText } from './chart-table';
+import type { CategoryName, NuiChartTooltipContent } from './chart.types';
 
 const percents = new Map<string, Intl.NumberFormat>();
 
@@ -18,8 +18,9 @@ export const tooltipContent = (
   scene: ChartScene,
   hit: ChartHit,
   locale: string,
+  name: CategoryName,
 ): NuiChartTooltipContent => {
-  const category = categoryTexts(spec, locale)[hit.index] ?? '';
+  const category = name(hit.index);
   const series = hit.series === undefined ? undefined : spec.series[hit.series];
   const slice = scene.slices.find((item) => item.index === hit.index && item.series === hit.series);
 

@@ -159,6 +159,23 @@ test.describe('charts', () => {
     expect([0, 6]).toContain(await charts.points(charts.bounded).count());
   });
 
+  test('reads the hours of a day in the time zone of the chart', async ({ playground, charts }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await charts.hours.scrollIntoViewIfNeeded();
+
+    const ticks = await charts.ticks(charts.hours, 'category-tick');
+
+    expect(ticks[0]?.text).toBe('00:00');
+
+    await charts.pointAt(charts.hours, '00:00');
+    await expect(charts.tooltip(charts.hours)).toContainText('15 окт. 2026 г., 00:00');
+
+    await charts.showTable();
+    await expect(charts.rows(charts.hours)).toHaveCount(24);
+    await expect(charts.rows(charts.hours).first()).toHaveText(/15 окт\. 2026 г\., 00:00\s*4/);
+  });
+
   test('keeps value labels apart on a narrow screen', async ({ playground, charts }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.resize({ width: 360, height: 800 });

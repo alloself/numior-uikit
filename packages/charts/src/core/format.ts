@@ -132,12 +132,12 @@ const timeParts = (unit: TimeUnit, context: TimeContext): Intl.DateTimeFormatOpt
 };
 
 export const timeFormatter =
-  (locale: string, context: TimeContext = TimeContext.None) =>
+  (locale: string, context: TimeContext = TimeContext.None, timeZone = 'UTC') =>
   (value: number, unit: TimeUnit): string =>
     cached(
       dateFormats,
-      `${locale}|${unit}|${context}`,
-      () => new Intl.DateTimeFormat(locale, { ...timeParts(unit, context), timeZone: 'UTC' }),
+      `${locale}|${unit}|${context}|${timeZone}`,
+      () => new Intl.DateTimeFormat(locale, { ...timeParts(unit, context), timeZone }),
     ).format(value);
 
 export const truncated = (
