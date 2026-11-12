@@ -2,6 +2,12 @@ import type { TokenReference } from './reference.types.ts';
 
 const DECLARATION_RE = /--nui-([a-z0-9-]+):\s*([^;]+);/g;
 const LIGHT_DARK_RE = /^light-dark\((.*)\)$/s;
+const SPACE_RE = /\s+/g;
+const OPEN_SPACE_RE = /\(\s+/g;
+const CLOSE_SPACE_RE = /\s+\)/g;
+
+const compact = (value: string): string =>
+  value.replace(SPACE_RE, ' ').replace(OPEN_SPACE_RE, '(').replace(CLOSE_SPACE_RE, ')').trim();
 
 const splitTopLevel = (value: string): string[] => {
   const parts: string[] = [];
@@ -42,7 +48,7 @@ export const parseThemeTokens = (css: string): TokenReference[] => {
       continue;
     }
 
-    tokens.set(name, tokenOf(name, value));
+    tokens.set(name, tokenOf(name, compact(value)));
   }
   return [...tokens.values()];
 };
