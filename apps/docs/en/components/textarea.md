@@ -34,10 +34,10 @@ By default only the height changes, and `none` fixes the size.
 
 Add the `.lazy` modifier.
 
+<Example name="textarea/Lazy" />
+
 While text is typed through an input method editor, the model does not change: the value reaches
 it when the composition ends.
-
-<Example name="textarea/Lazy" />
 
 The text reaches the model when the user leaves the field, and `.trim` drops the spaces at both
 ends.

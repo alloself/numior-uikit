@@ -26,7 +26,9 @@ export const revealCurrent = (root: Element | null | undefined): void => {
   const item = current.getBoundingClientRect();
   const frame = scroller.getBoundingClientRect();
 
-  if (isOutside(item, frame)) {
-    scroller.scrollTop += item.top - frame.top - (frame.height - item.height) / 2;
+  if (!isOutside(item, frame)) {
+    return;
   }
+
+  scroller.scrollTop += item.top - frame.top - (frame.height - item.height) / 2;
 };

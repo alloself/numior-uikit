@@ -105,9 +105,11 @@ const track = (dialog: HTMLDialogElement, isOpen: boolean): void => {
   const others = openModals.value.filter((entry) => entry !== dialog);
 
   openModals.value = isOpen ? [...others, dialog] : others;
-  if (isOpen) {
-    lockRoot();
+  if (!isOpen) {
+    return;
   }
+
+  lockRoot();
 };
 
 const outside = (element: HTMLDialogElement, point: { clientX: number; clientY: number }) => {
