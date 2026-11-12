@@ -199,6 +199,12 @@
   font-size: var(--nui-font-size-xs);
 }
 
+.nui-collab-comments__marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nui-space-1);
+}
+
 .nui-collab-comments__body {
   margin: 0;
   overflow-wrap: anywhere;
@@ -215,6 +221,7 @@
 
 .nui-collab-history__header {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--nui-space-2);
   align-items: center;
   justify-content: space-between;

@@ -39,11 +39,10 @@
 </template>
 
 <script setup lang="ts">
-import { useLocale, useMessages } from '@numior/primitives';
 import { NuiAlert, NuiPopover } from '@numior/vue';
 import { promiseTimeout, useEventListener } from '@vueuse/core';
 import { computed, useTemplateRef, watch } from 'vue';
-import { collabMessages } from './collab.messages';
+import { useCollabTexts } from './use-collab-texts';
 import type { NuiEditorCommentPopoverProps } from './collab.types';
 import NuiEditorCommentForm from './NuiEditorCommentForm.vue';
 import NuiEditorCommentThread from './NuiEditorCommentThread.vue';
@@ -64,14 +63,7 @@ const panel = useTemplateRef<HTMLElement>('panel');
 
 let pressed: { readonly x: number; readonly y: number } | undefined;
 
-const messages = useMessages(collabMessages);
-const locale = useLocale();
-
-const text = computed(() => ({ ...messages.value, ...labels }));
-
-const formatter = computed(
-  () => new Intl.DateTimeFormat(locale.value, { dateStyle: 'short', timeStyle: 'short' }),
-);
+const { text, timeOf } = useCollabTexts(() => labels);
 
 const thread = computed(() =>
   comments.threads.value.find((item) => item.id === comments.opened.value),
@@ -87,8 +79,6 @@ const shown = computed({
     comments.close();
   },
 });
-
-const timeOf = (value: string): string => formatter.value.format(new Date(value));
 
 const place = (): void => {
   const spot = shown.value ? comments.spot() : undefined;

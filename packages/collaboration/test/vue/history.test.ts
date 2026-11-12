@@ -6,6 +6,8 @@ import { fakeAlternatives, fakeHistoryAdapter, type StoredVersion } from './hist
 import { ANN, HistoryDriver } from './history-driver';
 import HistoryHost from './HistoryHost.vue';
 
+const SECONDS = /\d:\d\d:\d\d/u;
+
 const OLD: StoredVersion = {
   id: 'old',
   at: '2026-11-08T10:00:00.000Z',
@@ -31,6 +33,14 @@ describe('NuiEditorHistory', () => {
     await view.loaded();
 
     expect(view.versions.map((text) => text.split('Ann')[0])).toEqual(['Review', 'Draft']);
+  });
+
+  it('dates versions to the minute, as comments are', async () => {
+    const view = HistoryDriver.mount(fakeHistoryAdapter([OLD, NEW]));
+
+    await view.loaded();
+
+    expect(view.versions.filter((text) => SECONDS.test(text))).toEqual([]);
   });
 
   it('says that there are no versions yet', async () => {

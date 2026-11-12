@@ -236,6 +236,15 @@ export class CommentsDriver {
     return this.wrapper.find('.nui-collab-comment-popover .nui-collab-comments__thread').exists();
   }
 
+  get focusedName(): string {
+    const focused = document.activeElement;
+
+    if (focused === null || focused === document.body) {
+      return '';
+    }
+    return focused.getAttribute('aria-label') ?? focused.textContent.trim();
+  }
+
   get emptyShown(): boolean {
     return this.wrapper.find('.nui-empty').exists();
   }
@@ -244,6 +253,14 @@ export class CommentsDriver {
     return this.threadAt(index)
       .findAll('.nui-badge')
       .map((badge) => badge.text());
+  }
+
+  badgesInRow(index: number): boolean {
+    return this.threadAt(index)
+      .findAll('.nui-badge')
+      .every((badge) =>
+        badge.element.parentElement?.classList.contains('nui-collab-comments__marks'),
+      );
   }
 
   hasButton(index: number, name: string): boolean {
