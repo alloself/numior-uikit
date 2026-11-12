@@ -30,7 +30,8 @@
           ref="frame"
           :src="src"
           :title="texts.homeScreen"
-          class="block h-[36rem] w-full border-0 md:h-[42rem]"
+          class="block w-full border-0"
+          :style="{ blockSize: `${blockSize}px` }"
           @load="sync"
         />
       </div>
@@ -49,13 +50,14 @@ import {
   type ResolvedColorScheme,
 } from '@numior/vue';
 import { NUMIOR_PALETTE, useAccent } from '../composables/use-accent';
+import { useFramedHeight } from '../block-height';
 import { applyAttributes, screenAttributes } from '../frame-attributes';
 import { DocsAccent, type HomeScreenProps } from '../theme.types';
 import FrameCorners from './FrameCorners.vue';
 
 const RTL = 'rtl';
 
-const { src, texts } = defineProps<HomeScreenProps>();
+const { src, height, texts } = defineProps<HomeScreenProps>();
 
 const site = useColorScheme();
 const palette = useAccent();
@@ -64,6 +66,8 @@ const frame = useTemplateRef<HTMLIFrameElement>('frame');
 const pickedScheme = ref<ResolvedColorScheme>();
 const pickedAccent = ref<string>();
 const directions = ref<string[]>([]);
+
+const blockSize = useFramedHeight(frame, () => height);
 
 const scheme = computed<ResolvedColorScheme>({
   get: () => pickedScheme.value ?? site.resolved.value,

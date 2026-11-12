@@ -15,6 +15,23 @@ test('a block runs in its own screen and narrows to a phone', async ({ docs, isM
   await expect(block.code).toContainText("import { ordersOf } from './many-orders';");
 });
 
+test('a block screen grows with its content instead of scrolling', async ({ docs, isMobile }) => {
+  test.skip(isMobile, 'the screen width switch is hidden on phones');
+  await docs.open('/blocks/');
+  const block = docs.block('SalesDashboard');
+  await block.screen.scrollIntoViewIfNeeded();
+  await expect(block.content.getByRole('heading', { name: 'Продажи' })).toBeVisible();
+  await expect.poll(() => block.hiddenHeight()).toBe(0);
+
+  const wide = await block.height();
+
+  await block.resize('Телефон');
+
+  await expect.poll(() => block.height()).toBeGreaterThan(wide);
+  await expect.poll(() => block.hiddenHeight()).toBe(0);
+  await expect.poll(() => block.hiddenWidth()).toBe(0);
+});
+
 test('a block page has no site chrome and follows the theme of the site', async ({
   docs,
   page,

@@ -1,5 +1,7 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
+import { nextTick } from 'vue';
 import type { ExampleFile } from '../../.vitepress/examples/example.types';
+import { blockHeightMessage } from '../../.vitepress/theme/block-height';
 import BlockFrame from '../../.vitepress/theme/parts/BlockFrame.vue';
 import { ru } from '../../.vitepress/theme/texts';
 import { installClipboard } from '../../../../packages/primitives/test/support/clipboard';
@@ -30,6 +32,10 @@ export class BlockFrameDriver {
     return this.screen.element.style.maxInlineSize;
   }
 
+  get screenHeight(): string {
+    return this.screen.element.style.blockSize;
+  }
+
   get openLink(): string | undefined {
     return this.wrapper.find(`a[aria-label="${ru.blockOpen}"]`).attributes('href');
   }
@@ -42,6 +48,21 @@ export class BlockFrameDriver {
 
   async resize(label: string): Promise<void> {
     await this.wrapper.find(`[role="radio"][aria-label="${label}"]`).trigger('click');
+  }
+
+  async report(
+    height: number,
+    source: Window | null = this.screen.element.contentWindow,
+  ): Promise<void> {
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: blockHeightMessage(height),
+        origin: location.origin,
+        source,
+      }),
+    );
+
+    await nextTick();
   }
 
   async showCode(): Promise<void> {

@@ -108,6 +108,22 @@ export class DocsBlock {
     return (await boxOf(this.screen)).width;
   }
 
+  async height(): Promise<number> {
+    return (await boxOf(this.screen)).height;
+  }
+
+  async hiddenHeight(): Promise<number> {
+    const content = await this.content.locator('html').evaluate((root) => root.scrollHeight);
+
+    return content - Math.round(await this.height());
+  }
+
+  async hiddenWidth(): Promise<number> {
+    const content = await this.content.locator('html').evaluate((root) => root.scrollWidth);
+
+    return content - Math.round(await this.width());
+  }
+
   theme(): Promise<string | null> {
     return this.content.locator('html').getAttribute('data-nui-theme');
   }

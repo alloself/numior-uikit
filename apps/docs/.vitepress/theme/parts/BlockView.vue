@@ -2,7 +2,7 @@
   <BlockFrame
     :name="name"
     :src="withBase(blockRouteOf(name, locale))"
-    :height="blockNamed(name)?.height ?? DEFAULT_HEIGHT"
+    :height="blockHeightOf(name)"
     :files="example.files"
     :texts="texts"
   />
@@ -10,12 +10,10 @@
 
 <script setup lang="ts">
 import { withBase } from 'vitepress';
-import { blockExampleOf, blockNamed, blockRouteOf } from '../../blocks';
+import { blockExampleOf, blockHeightOf, blockRouteOf } from '../../blocks';
 import { loadExample } from '../examples';
 import type { ExampleViewProps } from '../theme.types';
 import BlockFrame from './BlockFrame.vue';
-
-const DEFAULT_HEIGHT = 640;
 
 const { name, locale, texts } = defineProps<ExampleViewProps>();
 

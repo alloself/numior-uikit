@@ -44,7 +44,7 @@
           :title="`${texts.preview}: ${name}`"
           loading="lazy"
           class="mx-auto block w-full border-0 bg-surface transition-[max-inline-size] duration-(--nui-duration-normal) ease-nui"
-          :style="{ maxInlineSize: VIEWPORT_WIDTHS[viewport], blockSize: `${height}px` }"
+          :style="{ maxInlineSize: VIEWPORT_WIDTHS[viewport], blockSize: `${blockSize}px` }"
           @load="syncTheme"
         />
       </div>
@@ -68,6 +68,7 @@ import {
   NuiToggleGroup,
   type NuiToggleItem,
 } from '@numior/vue';
+import { useFramedHeight } from '../block-height';
 import { fileNamed } from '../example-files';
 import { mirrorAttributes } from '../mirror-attributes';
 import { BlockViewport, type BlockFrameProps } from '../theme.types';
@@ -89,6 +90,8 @@ const viewport = ref<BlockViewport>(BlockViewport.Desktop);
 const fileName = ref(files[0]?.name ?? '');
 const frame = useTemplateRef<HTMLIFrameElement>('frame');
 const clipboard = useClipboard();
+
+const blockSize = useFramedHeight(frame, () => height);
 
 const viewports = computed<readonly NuiToggleItem<BlockViewport>[]>(() => [
   { value: BlockViewport.Desktop, label: texts.viewportDesktop, icon: 'monitor' },

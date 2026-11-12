@@ -7,6 +7,7 @@ export interface BlockEntry {
 
 const BLOCK_FAMILY = 'blocks';
 const VIEW_ROUTE = '/blocks/view/';
+const DEFAULT_HEIGHT = 640;
 
 export const BLOCKS: readonly BlockEntry[] = [
   { name: 'AppShell', height: 720 },
@@ -28,6 +29,8 @@ export const blockRouteOf = (name: string, locale: ExampleLocale): string =>
 
 export const blockNamed = (name: string): BlockEntry | undefined =>
   BLOCKS.find((block) => block.name === name);
+
+export const blockHeightOf = (name: string): number => blockNamed(name)?.height ?? DEFAULT_HEIGHT;
 
 export const isBlockView = (url: string): boolean => url.includes(VIEW_ROUTE.slice(1));
 
