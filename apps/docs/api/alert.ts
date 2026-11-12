@@ -11,13 +11,19 @@ const docs: DocsMap = {
         ru: 'Цвет и иконка по смыслу: `info`, `success`, `warning`, `error` и другие. Сообщение с `error` диктор зачитывает сразу.',
         en: 'Color and icon by meaning: `info`, `success`, `warning`, `error` and others. Screen readers announce an `error` alert right away.',
       },
-      title: { ru: 'Заголовок сообщения.', en: 'Message title.' },
+      title: {
+        ru: 'Заголовок сообщения.',
+        en: 'First line of the message, above the `description`.',
+      },
       description: { ru: 'Текст под заголовком.', en: 'Text under the title.' },
       icon: {
         ru: 'Своя иконка вместо стандартной для `tone`.',
         en: 'Icon to display instead of the `tone` icon.',
       },
-      hideIcon: { ru: 'Скрывает иконку.', en: 'Hides the icon.' },
+      hideIcon: {
+        ru: 'Убирает иконку тона и свою из `icon`, текст начинается от края сообщения.',
+        en: 'Removes the tone icon and the one from `icon`, so the text starts at the edge of the alert.',
+      },
       dismissible: {
         ru: 'Показывает кнопку закрытия. Закрытое сообщение скрывается, но остаётся в DOM.',
         en: 'Shows a close button. A closed alert is hidden but stays in the DOM.',

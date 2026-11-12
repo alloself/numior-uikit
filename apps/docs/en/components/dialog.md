@@ -1,14 +1,11 @@
 # Dialog
 
-`NuiDialog` is a modal window over the page for a confirmation, a short form or a message that
-must not be missed. While it is open, the focus stays inside and the page underneath is
-unavailable.
+A modal window over the page.
 
 <Example name="dialog/Confirm" />
 
-Buttons in a `method="dialog"` form close the window without handlers. The `close` event
-receives the `value` of the pressed button: `cancel` or `confirm` in the example. The window stays
-in the markup where you wrote it, so it takes the theme and the reading direction of its parent.
+Put the buttons into a form with `method="dialog"`, and the `close` event receives the `value` of
+the pressed one.
 
 ## Installation
 
@@ -25,40 +22,47 @@ Open the dialog and change its size, placement and the ways to close it.
 
 ## Examples
 
-### A required dialog
+### Require an answer
 
-With `:closable="false"` the window has no close button, and neither Esc nor a click on the
-backdrop closes it. Only your own button, such as "I confirm", can close it.
+Turn off `closable`.
 
 <Example name="dialog/Required" />
 
-### Several levels
+The dialog loses its close button, and neither Esc nor a click on the backdrop closes it until the
+user picks one of your buttons.
 
-A dialog opened from another dialog appears on top of it, with a single backdrop under the top
-window. Esc closes only the top dialog and returns the focus to the button that opened it.
+### Open a dialog from a dialog
 
 <Example name="dialog/Stacked" />
 
-### At the top edge
+The page dims only once, under the top dialog, and Esc closes the top dialog first.
 
-`placement="top"` puts the window at the top edge of the screen. A form window then stays in
-place when fields appear or disappear.
+### Move a form dialog to the top edge
+
+Set `placement="top"`.
 
 <Example name="dialog/Placement" />
 
-### Long content
+When a field appears in the form, the dialog grows downward and its title stays in place.
 
-Long text scrolls inside the window, while the title and the buttons at the bottom stay in place.
+### Scroll long text
 
 <Example name="dialog/Long" />
 
+The text scrolls inside the dialog, while the title and the buttons stay in view.
+
+## Behavior
+
+The dialog stays in the markup where you put it, so it takes the theme and the text direction of
+its parent.
+
 ## Accessibility
 
-Screen readers announce the `title` and the `description` when the window opens. The focus goes to
-the first interactive element in the body, and the close button comes last in the tab order. Esc
-closes the window and returns the focus to the button that opened it.
-
-While the window is open, the page underneath neither scrolls nor shifts sideways.
+- A screen reader announces the `title` and the `description` when the dialog opens.
+- The focus moves into the dialog on opening and returns to the button that opened it on
+  closing.
+- The page under the dialog ignores the pointer and the keyboard, and it neither scrolls nor
+  shifts sideways.
 
 <KeyboardReference name="NuiDialog" />
 

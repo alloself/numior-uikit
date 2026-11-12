@@ -1,15 +1,16 @@
 <template>
-  <NuiButton @click="toast.info('Draft saved', { description: 'Sync in a minute' })">
+  <NuiButton @click="toast.info('Invoice sent', { description: 'Alina Yusuf gets it by email' })">
     Info
   </NuiButton>
-  <NuiButton variant="soft" tone="success" @click="toast.success('Project published')">
+  <NuiButton variant="soft" tone="success" @click="toast.success('Order 20409 paid')">
     Success
   </NuiButton>
   <NuiButton variant="outline" tone="error" @click="fail">Error with an action</NuiButton>
 </template>
 
 <script setup lang="ts">
-import { NuiButton, useToast } from '@numior/vue';
+import { useToast } from '@numior/primitives';
+import { NuiButton } from '@numior/vue';
 
 const toast = useToast();
 

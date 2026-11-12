@@ -1,13 +1,12 @@
 <template>
-  <NuiButton tone="error" variant="outline" @click="open = true">Удалить проект</NuiButton>
-  <p class="text-sm text-muted-foreground">Результат: {{ result || '—' }}</p>
+  <NuiButton tone="error" variant="outline" @click="open = true">Удалить из каталога</NuiButton>
   <NuiDialog
     v-model:open="open"
-    title="Удалить проект «Каталог 2026»?"
-    description="Действие нельзя отменить."
-    @close="result = $event"
+    title="Удалить табурет «Лофт»?"
+    description="Товар пропадёт с витрины и из поиска."
+    @close="onClose"
   >
-    <p>Все данные проекта будут удалены вместе с историей изменений.</p>
+    <p>Прошлые заказы с ним сохранятся, а карточку товара вернуть уже не получится.</p>
     <template #footer>
       <form method="dialog" class="flex gap-2">
         <NuiButton type="submit" value="cancel" variant="ghost" tone="neutral">Отмена</NuiButton>
@@ -19,8 +18,16 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useToast } from '@numior/primitives';
 import { NuiButton, NuiDialog } from '@numior/vue';
 
 const open = ref(false);
-const result = ref('');
+const toast = useToast();
+
+const onClose = (value: string): void => {
+  if (value !== 'confirm') {
+    return;
+  }
+  toast.success('Табурет «Лофт» удалён из каталога');
+};
 </script>

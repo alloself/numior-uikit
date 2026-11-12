@@ -1,14 +1,10 @@
 <template>
-  <div class="flex w-full flex-col gap-3">
-    <NuiAlert title="Черновик сохранён" description="Синхронизация с сервером через минуту." />
-    <NuiAlert tone="success" variant="outline" title="Проект опубликован" />
-    <NuiAlert
-      tone="error"
-      variant="solid"
-      title="Не удалось подключиться"
-      description="Проверьте сеть и повторите."
-    />
-  </div>
+  <NuiAlert
+    class="w-full"
+    tone="error"
+    title="Оплата по заказу 20412 не прошла"
+    description="Банк отклонил карту. Алина Юсупова получила письмо со ссылкой на повторную оплату."
+  />
 </template>
 
 <script setup lang="ts">

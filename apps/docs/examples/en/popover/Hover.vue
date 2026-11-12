@@ -1,19 +1,19 @@
 <template>
   <div class="text-sm">
-    The review is led by
+    Order 20401 is handled by
     <NuiPopover trigger="hover" placement="bottom-start">
       <template #trigger="{ attrs }">
-        <NuiLink v-bind="attrs" href="#reviewer">@anna</NuiLink>
+        <NuiLink v-bind="attrs" href="mailto:anna@example.com">Anna Turner</NuiLink>
       </template>
-      <div class="flex gap-3 w-64">
-        <NuiAvatar name="Anna Titova" />
-        <div class="flex flex-col gap-1">
-          <span class="font-medium">Anna Titova</span>
-          <span class="text-muted-foreground">Interface designer, runs forms and tables.</span>
+      <div class="flex items-center gap-3">
+        <NuiAvatar name="Anna Turner" />
+        <div class="flex flex-col">
+          <span class="font-medium">Anna Turner</span>
+          <span class="text-muted-foreground">Order manager</span>
+          <span class="text-muted-foreground">anna@example.com</span>
         </div>
       </div>
     </NuiPopover>
-    until Friday.
   </div>
 </template>
 

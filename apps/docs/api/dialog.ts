@@ -64,7 +64,10 @@ const docs: DocsMap = {
         ru: 'Своё описание вместо `description`.',
         en: 'Custom description instead of `description`.',
       },
-      default: { ru: 'Содержимое диалога.', en: 'Dialog content.' },
+      default: {
+        ru: 'Содержимое диалога.',
+        en: 'Body between the header and the footer. It scrolls when it is taller than the screen.',
+      },
       footer: {
         ru: 'Кнопки внизу диалога. Кнопка в форме с `method="dialog"` закрывает его без кода.',
         en: 'Buttons at the bottom. A button in a `method="dialog"` form closes it without code.',

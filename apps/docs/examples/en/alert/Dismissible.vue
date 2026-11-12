@@ -1,9 +1,12 @@
 <template>
   <div class="flex w-full flex-col gap-3">
-    <NuiAlert v-model:open="open" tone="warning" title="Draft not saved" dismissible>
-      Your changes are lost when you leave the page.
+    <NuiAlert v-model:open="open" tone="warning" title="Loft stool out of stock" dismissible>
+      Customers see it in the catalog but cannot order it.
       <template #actions>
-        <NuiButton size="sm" variant="outline" tone="warning" @click="open = false">Save</NuiButton>
+        <NuiButton size="sm" tone="warning" @click="open = false">Order from supplier</NuiButton>
+        <NuiButton size="sm" variant="outline" tone="warning" @click="open = false">
+          Hide from storefront
+        </NuiButton>
       </template>
     </NuiAlert>
     <NuiButton

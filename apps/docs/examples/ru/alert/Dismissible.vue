@@ -1,11 +1,12 @@
 <template>
   <div class="flex w-full flex-col gap-3">
-    <NuiAlert v-model:open="open" tone="warning" title="Черновик не сохранён" dismissible>
-      Изменения пропадут при выходе со страницы.
+    <NuiAlert v-model:open="open" tone="warning" title="Табурет «Лофт» закончился" dismissible>
+      Покупатели видят его в каталоге, но заказать не могут.
       <template #actions>
-        <NuiButton size="sm" variant="outline" tone="warning" @click="open = false"
-          >Сохранить</NuiButton
-        >
+        <NuiButton size="sm" tone="warning" @click="open = false">Заказать у поставщика</NuiButton>
+        <NuiButton size="sm" variant="outline" tone="warning" @click="open = false">
+          Снять с витрины
+        </NuiButton>
       </template>
     </NuiAlert>
     <NuiButton

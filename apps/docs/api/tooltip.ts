@@ -24,10 +24,13 @@ const docs: DocsMap = {
         ru: 'Через сколько миллисекунд после ухода курсора подсказка скрывается.',
         en: 'Delay in milliseconds before the tooltip hides after the pointer leaves.',
       },
-      disabled: { ru: 'Отключает подсказку.', en: 'Disables the tooltip.' },
+      disabled: {
+        ru: 'Отключает подсказку: она не появляется ни при наведении, ни при фокусе.',
+        en: 'Keeps the tooltip from showing on hover and on focus, and drops `aria-describedby` from the trigger.',
+      },
       anchor: {
         ru: 'Элемент-триггер вместо слота `trigger`. Объект `{ within, selector }` даёт одну подсказку всем элементам по селектору внутри `within` или слота. Между соседними она переходит без задержки.',
-        en: 'Trigger element in place of the `trigger` slot. An object `{ within, selector }` gives one tooltip to every match inside `within` or the slot. It moves between neighbours without a delay.',
+        en: 'Trigger element in place of the `trigger` slot. An object `{ within, selector }` gives one tooltip to every match inside `within` or the slot. It moves between neighbors without a delay.',
       },
     },
     models: {

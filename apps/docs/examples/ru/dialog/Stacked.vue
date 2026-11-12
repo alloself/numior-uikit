@@ -1,17 +1,17 @@
 <template>
-  <NuiButton variant="outline" @click="settings = true">Настройки проекта</NuiButton>
-  <NuiDialog v-model:open="settings" title="Настройки проекта">
-    <p>Название, команда и доступ.</p>
+  <NuiButton variant="outline" @click="details = true">Заказ 20411</NuiButton>
+  <NuiDialog v-model:open="details" title="Заказ 20411" description="Нина Зайцева, Екатеринбург">
+    <p>Два кресла «Осло» на 37 800 ₽ ждут оплаты переводом.</p>
     <template #footer>
-      <NuiButton variant="ghost" tone="error" @click="confirm = true">Удалить проект</NuiButton>
-      <NuiButton @click="settings = false">Готово</NuiButton>
+      <NuiButton variant="ghost" tone="error" @click="cancelling = true">Отменить заказ</NuiButton>
+      <NuiButton @click="details = false">Готово</NuiButton>
     </template>
   </NuiDialog>
-  <NuiDialog v-model:open="confirm" title="Удалить проект?" size="sm">
-    <p>Второй диалог встаёт выше первого, Esc закрывает только его.</p>
+  <NuiDialog v-model:open="cancelling" title="Отменить заказ 20411?" size="sm">
+    <p>Нина Зайцева получит письмо, а кресла вернутся на склад.</p>
     <template #footer>
-      <NuiButton variant="ghost" tone="neutral" @click="confirm = false">Отмена</NuiButton>
-      <NuiButton tone="error" @click="closeAll">Удалить</NuiButton>
+      <NuiButton variant="ghost" tone="neutral" @click="cancelling = false">Назад</NuiButton>
+      <NuiButton tone="error" @click="closeAll">Отменить заказ</NuiButton>
     </template>
   </NuiDialog>
 </template>
@@ -20,11 +20,11 @@
 import { ref } from 'vue';
 import { NuiButton, NuiDialog } from '@numior/vue';
 
-const settings = ref(false);
-const confirm = ref(false);
+const details = ref(false);
+const cancelling = ref(false);
 
 const closeAll = (): void => {
-  confirm.value = false;
-  settings.value = false;
+  cancelling.value = false;
+  details.value = false;
 };
 </script>
