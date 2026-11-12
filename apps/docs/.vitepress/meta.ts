@@ -12,6 +12,21 @@ export interface PageMeta {
   readonly twin?: string | undefined;
 }
 
+export interface PageSource {
+  readonly relativePath: string;
+  readonly title: string;
+  readonly markdown: string;
+  readonly head: unknown;
+  readonly pages: readonly string[];
+  readonly twins: ReadonlySet<string>;
+  readonly descriptions: Readonly<Record<ExampleLocale, string>>;
+}
+
+export interface PageDescription {
+  readonly description: string;
+  readonly head: HeadConfig[];
+}
+
 const SITE_NAME = 'Numior UI';
 const EN_PREFIX = 'en/';
 const DEFAULT_LOCALE: ExampleLocale = 'ru';
@@ -19,7 +34,7 @@ const OG_LOCALES = { ru: 'ru_RU', en: 'en_US' } as const;
 const LINK_RE = /\[([^\]]*)\]\([^)]*\)/g;
 const MARKUP_RE = /<[^>]+>|[`*_]/g;
 
-export const localeOfPage = (relativePath: string): ExampleLocale =>
+const localeOfPage = (relativePath: string): ExampleLocale =>
   relativePath.startsWith(EN_PREFIX) ? 'en' : 'ru';
 
 const otherLocale = (locale: ExampleLocale): ExampleLocale => (locale === 'ru' ? 'en' : 'ru');
@@ -103,4 +118,27 @@ export const pageHead = (site: DocsSite, meta: PageMeta): HeadConfig[] => {
     ...twinHead(meta),
     ...addressHead(site, meta),
   ];
+};
+
+const ownHead = (head: unknown): HeadConfig[] => (Array.isArray(head) ? head : []);
+
+export const describePage = (site: DocsSite, source: PageSource): PageDescription => {
+  const description = descriptionOf(
+    source.markdown,
+    source.descriptions[localeOfPage(source.relativePath)],
+  );
+
+  return {
+    description,
+    head: [
+      ...ownHead(source.head),
+      ...pageHead(site, {
+        relativePath: source.relativePath,
+        title: source.title,
+        description,
+        pages: source.pages,
+        twin: source.twins.has(source.relativePath) ? `/${source.relativePath}` : undefined,
+      }),
+    ],
+  };
 };

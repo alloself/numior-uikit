@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { descriptionOf, pageHead, routeOf, type PageMeta } from '../.vitepress/meta';
+import {
+  describePage,
+  descriptionOf,
+  pageHead,
+  routeOf,
+  type PageMeta,
+  type PageSource,
+} from '../.vitepress/meta';
 import { site } from '../.vitepress/theme/site';
 
 const PAGES = ['index.md', 'en/index.md', 'components/button.md', 'en/components/button.md'];
@@ -10,6 +17,16 @@ const button: PageMeta = {
   title: 'Button',
   description: 'Starts an action.',
   pages: [...PAGES, 'guide/only-russian.md'],
+};
+
+const select: PageSource = {
+  relativePath: 'components/select.md',
+  title: 'Select',
+  markdown: '# Select\n\nВыбор из списка.\n\n## API\n',
+  head: undefined,
+  pages: PAGES,
+  twins: new Set(['components/select.md']),
+  descriptions: { ru: 'Сайт', en: 'Site' },
 };
 
 const contentOf = (head: ReturnType<typeof pageHead>, property: string): string | undefined =>
@@ -85,5 +102,31 @@ describe('page meta', () => {
     expect(hrefsOf(head, 'alternate')).toEqual([]);
     expect(contentOf(head, 'og:locale:alternate')).toBeUndefined();
     expect(contentOf(pageHead(site, { ...button, title: '' }), 'og:title')).toBe('Numior UI');
+  });
+
+  it('describes a page from its lead and adds the Markdown copy after the head of the page', () => {
+    const robots: ReturnType<typeof pageHead>[number] = [
+      'meta',
+      { name: 'robots', content: 'noindex' },
+    ];
+
+    const page = describePage(site, { ...select, head: [robots] });
+
+    expect(page.description).toBe('Выбор из списка.');
+    expect(page.head[0]).toEqual(robots);
+    expect(contentOf(page.head, 'og:description')).toBe('Выбор из списка.');
+    expect(hrefsOf(page.head, 'alternate')).toEqual(['/components/select.md']);
+  });
+
+  it('falls back to the site text of the page language and names no copy for a page without one', () => {
+    const page = describePage(site, {
+      ...select,
+      relativePath: 'en/index.md',
+      markdown: '---\nlayout: home\n---\n',
+    });
+
+    expect(page.description).toBe('Site');
+    expect(hrefsOf(page.head, 'alternate')).toEqual([]);
+    expect(page.head[0]).toEqual(['meta', { property: 'og:type', content: 'website' }]);
   });
 });

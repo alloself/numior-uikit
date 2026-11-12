@@ -14,7 +14,7 @@ import { writeLlms } from './llms/files';
 import { twinPaths } from './llms/paths';
 import { docsLlms } from './llms/plugin';
 import { isEnglishPage } from './markdown/env';
-import { descriptionOf, localeOfPage, pageHead } from './meta';
+import { describePage } from './meta';
 import { navOf, sidebarOf } from './navigation';
 import { parseBundle } from './reference/bundle';
 import { docsReference } from './reference/plugin';
@@ -78,26 +78,19 @@ export default defineConfigWithTheme<DocsThemeConfig>({
       return undefined;
     }
 
-    const description = descriptionOf(
-      readFileSync(file, 'utf8'),
-      descriptions[localeOfPage(pageData.relativePath)],
-    );
+    const page = describePage(site, {
+      relativePath: pageData.relativePath,
+      title: pageData.title,
+      markdown: readFileSync(file, 'utf8'),
+      head: pageData.frontmatter.head,
+      pages: siteConfig.pages,
+      twins,
+      descriptions,
+    });
 
     return {
-      description,
-      frontmatter: {
-        ...pageData.frontmatter,
-        head: [
-          ...(Array.isArray(pageData.frontmatter.head) ? pageData.frontmatter.head : []),
-          ...pageHead(site, {
-            relativePath: pageData.relativePath,
-            title: pageData.title,
-            description,
-            pages: siteConfig.pages,
-            twin: twins.has(pageData.relativePath) ? `/${pageData.relativePath}` : undefined,
-          }),
-        ],
-      },
+      description: page.description,
+      frontmatter: { ...pageData.frontmatter, head: page.head },
     };
   },
   buildEnd: (siteConfig) => {
