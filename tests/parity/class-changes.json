@@ -15,7 +15,7 @@
     "reason": "cf3472f9 the splitter example lost a height utility that never took effect"
   },
   {
-    "element": "^div\\.nui-field\\..*\\.mt-3$",
+    "element": "^div\\.nui-field(\\.[\\w-]+)*\\.mt-3$",
     "dropped": ["mt-3"],
     "reason": "cf8a9461 the field of the controls example lost a margin utility that never took effect"
   }
