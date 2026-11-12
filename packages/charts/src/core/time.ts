@@ -124,10 +124,10 @@ export const timeDomain = (min: number, max: number, count = 6, timeZone = 'UTC'
     tick = instantOf(zone, wall);
 
     if (tick <= (values.at(-1) ?? tick)) {
-continue;
-}
+      continue;
+    }
 
-values.push(tick);
+    values.push(tick);
   }
   return {
     min: values[0] ?? min,
