@@ -1,7 +1,7 @@
 import { contentSchema } from '@numior/content';
 import { createEmptyDoc } from '@numior/editor-core';
 import { workbookAuthority } from '@numior/spreadsheet/core';
-import { editorAuthority } from './authority.ts';
+import { editorAuthority } from '../src/room/authority.ts';
 import { startCollabServer, type CollabServer } from './server.ts';
 
 const BOOK_PREFIX = 'book';

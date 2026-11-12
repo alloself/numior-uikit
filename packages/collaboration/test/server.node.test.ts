@@ -9,8 +9,7 @@ import {
 import { fixtureSchema } from '@numior/editor-core/fixtures';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { WebSocket as NodeSocket } from 'ws';
-import { editorAuthority } from '../server/authority';
-import { createRoom, type RoomPeer } from '../server/room';
+import { createRoom, editorAuthority, type RoomPeer } from '../src/room';
 import { startCollabServer, type CollabServer } from '../server/server';
 import {
   ClientMessageKind,

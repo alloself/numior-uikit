@@ -9,7 +9,7 @@ import {
   type Doc,
   type Step,
 } from '@numior/editor-core';
-import type { WireStep } from '../src/protocol/protocol.types.ts';
+import type { WireStep } from '../protocol/protocol.types.ts';
 import type { RoomAuthority } from './room.ts';
 
 interface Applied {

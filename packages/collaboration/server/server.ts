@@ -6,8 +6,8 @@ import {
   type HelloMessage,
   type ServerMessage,
 } from '../src/protocol/protocol.types.ts';
-import { parseClientMessage } from './client-messages.ts';
-import { createRoom, type Room, type RoomAuthority, type RoomPeer } from './room.ts';
+import { parseClientMessage } from '../src/room/client-messages.ts';
+import { createRoom, type Room, type RoomAuthority, type RoomPeer } from '../src/room/room.ts';
 
 interface Session {
   readonly room: Room;

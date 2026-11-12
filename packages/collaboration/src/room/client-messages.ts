@@ -3,7 +3,7 @@ import {
   ClientMessageKind,
   type ClientMessage,
   type WireStep,
-} from '../src/protocol/protocol.types.ts';
+} from '../protocol/protocol.types.ts';
 
 type Fields = Readonly<Record<string, unknown>>;
 

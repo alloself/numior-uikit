@@ -19,8 +19,8 @@ SaleHub сможет реализовать у себя. Yjs — необяза�
   `@numior/vue`, `@numior/primitives`, `@numior/editor-vue`, `@numior/content`, `@numior/tokens`, `yjs`), —
   необязательные peer. `check-artifacts.mjs` проверяет, что сборка корневого входа не импортирует ничего,
   кроме `@numior/editor-core`, что в `dependencies` нет других пакетов и что обязательных peer нет. Зоны fallow:
-  `collaboration` (только ядро редактора), `collaboration-vue`, `collaboration-spreadsheet`, `collaboration-server`
-  (`server/`) и `collaboration-test` (`test/`, им можно команды `@numior/editor-vue` для сценариев сети).
+  `collaboration` (только ядро редактора, в том числе `src/room/`), `collaboration-vue`, `collaboration-spreadsheet`,
+  `collaboration-server` (`server/`) и `collaboration-test` (`test/`, им можно команды `@numior/editor-vue` для сценариев сети).
 - Под-вход `./spreadsheet` (2026-11-12): `useCollabWorkbook({ doc, user, transport, book, calculator, clientId? })`
   для `NuiSpreadsheet` — документ книги, клиент, `status`, `peers`, `ready`, `readOnly`, `failure`, `sync`,
   `sharePlace`, `rejoin`. `@numior/spreadsheet` — необязательный peer, как `vue` у `./vue`; корень пакета книгу не
@@ -353,6 +353,19 @@ JSON), подряд идущий текст — один `Y.XmlText`, помет
 Найдено по ходу: мост `useCollabEditor` отправлял присутствие, только если сменились документ или
 выделение, и смена места метой транзакции не уходила вовсе. Теперь сравнивается и место
 (`samePlace`).
+
+### Комната в странице: вход `./room` (2026-11-12)
+
+Комната (`createRoom`), власть над документом редактора (`editorAuthority`), журнал шагов и разбор
+сообщений клиента переехали из `server/` в `src/room/` и открыты под-входом `./room`: свой сервер на
+любом WebSocket-фреймворке собирается из них без копирования эталона. Там же `createLoopback({
+authorityFor, latency? })` — комнаты в памяти страницы для демо и тестов без сервера. `link()` даёт
+транспорт клиента (`CollabTransport`) с `online()` и `setOnline(online)`: сообщения в обе стороны идут
+через JSON и таймер, как по сети; без связи открытие соединения ждёт её возвращения, поэтому клиент
+входит снова сразу, без отсрочки повтора. Вход без Vue и DOM, `server/` импортирует его файлы с
+расширением `.ts` и по-прежнему запускается Node без сборки. Причина — живое демо совместной правки в
+документации (две панели одного документа); тестовая обвязка `test/harness/wire.ts` остаётся для
+пошаговой доставки в фаззерах.
 
 ## Rejected
 

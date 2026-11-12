@@ -24,6 +24,7 @@
     "packages/collaboration/src/vue/index.ts",
     "packages/collaboration/src/spreadsheet/index.ts",
     "packages/collaboration/src/yjs/index.ts",
+    "packages/collaboration/src/room/index.ts",
     "packages/collaboration/server/main.ts",
     "packages/offline/src/index.ts",
     "apps/playground/src/tailwind.css",
