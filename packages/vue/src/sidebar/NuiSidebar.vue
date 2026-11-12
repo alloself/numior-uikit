@@ -25,7 +25,7 @@
     v-else
     :id="layout.sidebarId.value"
     ref="root"
-    class="nui-sidebar"
+    class="nui-sidebar nui-surface nui-surface--muted"
     :class="[
       `nui-sidebar--side-${side}`,
       `nui-sidebar--variant-${variant}`,

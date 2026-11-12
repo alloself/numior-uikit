@@ -49,6 +49,7 @@
   --nui-state-pressed-overlay: 10%;
   --nui-state-hover-tint: 6%;
   --nui-state-pressed-tint: 12%;
+  --nui-soft-min-lightness: 0.26;
   --nui-hover: color-mix(in oklab, var(--nui-text) var(--nui-state-hover-overlay), transparent);
   --nui-pressed: color-mix(in oklab, var(--nui-text) var(--nui-state-pressed-overlay), transparent);
 
@@ -157,14 +158,36 @@
 
 :root,
 [data-nui-theme],
-.nui-layer {
-  --nui-primary-soft: color-mix(in oklab, var(--nui-primary) 14%, var(--nui-layer-surface));
-  --nui-secondary-soft: color-mix(in oklab, var(--nui-secondary) 60%, var(--nui-layer-surface));
-  --nui-success-soft: color-mix(in oklab, var(--nui-success) 14%, var(--nui-layer-surface));
-  --nui-warning-soft: color-mix(in oklab, var(--nui-warning) 14%, var(--nui-layer-surface));
-  --nui-error-soft: color-mix(in oklab, var(--nui-error) 14%, var(--nui-layer-surface));
-  --nui-info-soft: color-mix(in oklab, var(--nui-info) 14%, var(--nui-layer-surface));
-  --nui-neutral-soft: color-mix(in oklab, var(--nui-neutral) 10%, var(--nui-layer-surface));
+.nui-layer,
+.nui-surface {
+  --nui-primary-soft: oklab(
+    from color-mix(in oklab, var(--nui-primary) 14%, var(--nui-layer-surface))
+      max(l, var(--nui-soft-min-lightness)) a b
+  );
+  --nui-secondary-soft: oklab(
+    from color-mix(in oklab, var(--nui-secondary) 60%, var(--nui-layer-surface))
+      max(l, var(--nui-soft-min-lightness)) a b
+  );
+  --nui-success-soft: oklab(
+    from color-mix(in oklab, var(--nui-success) 14%, var(--nui-layer-surface))
+      max(l, var(--nui-soft-min-lightness)) a b
+  );
+  --nui-warning-soft: oklab(
+    from color-mix(in oklab, var(--nui-warning) 14%, var(--nui-layer-surface))
+      max(l, var(--nui-soft-min-lightness)) a b
+  );
+  --nui-error-soft: oklab(
+    from color-mix(in oklab, var(--nui-error) 14%, var(--nui-layer-surface))
+      max(l, var(--nui-soft-min-lightness)) a b
+  );
+  --nui-info-soft: oklab(
+    from color-mix(in oklab, var(--nui-info) 14%, var(--nui-layer-surface))
+      max(l, var(--nui-soft-min-lightness)) a b
+  );
+  --nui-neutral-soft: oklab(
+    from color-mix(in oklab, var(--nui-neutral) 10%, var(--nui-layer-surface))
+      max(l, var(--nui-soft-min-lightness)) a b
+  );
 }
 
 :root,
@@ -178,6 +201,10 @@
 
 .nui-layer--elevated {
   --nui-layer-surface: var(--nui-surface-elevated);
+}
+
+.nui-surface--muted {
+  --nui-layer-surface: light-dark(var(--nui-surface), var(--nui-surface-muted));
 }
 
 :root,
