@@ -119,6 +119,10 @@ export class SpreadsheetDriver {
     readonly warnings: readonly string[],
   ) {}
 
+  static around(wrapper: VueWrapper): SpreadsheetDriver {
+    return new SpreadsheetDriver(wrapper, [], []);
+  }
+
   static mount(props: SpreadsheetMount): SpreadsheetDriver {
     const changes: NuiSpreadsheetChange[] = [];
     const warnings: string[] = [];

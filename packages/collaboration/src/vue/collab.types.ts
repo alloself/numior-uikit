@@ -4,7 +4,7 @@ import type { ComputedRef, Ref, ShallowRef } from 'vue';
 import type { NuiCollabMessages } from './collab.messages';
 import type {
   CollabAlternative,
-  CollabFailure,
+  CollabFailureView,
   CollabPersistence,
   CollabReport,
   CollabStatus,
@@ -28,11 +28,6 @@ export interface CollabAlternatives {
   readonly apply: (alternative: CollabAlternative) => void;
   readonly dismiss: (alternative: CollabAlternative) => void;
   readonly reveal: (alternative: CollabAlternative) => void;
-}
-
-export interface CollabFailureView {
-  readonly reason: CollabFailure;
-  readonly unsent: number;
 }
 
 export interface CollabEditor {

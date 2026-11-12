@@ -22,6 +22,7 @@
     "packages/charts/src/core/index.ts",
     "packages/collaboration/src/index.ts",
     "packages/collaboration/src/vue/index.ts",
+    "packages/collaboration/src/spreadsheet/index.ts",
     "packages/collaboration/src/yjs/index.ts",
     "packages/collaboration/server/main.ts",
     "packages/offline/src/index.ts",
@@ -143,6 +144,13 @@
         ]
       },
       {
+        "name": "collaboration-spreadsheet",
+        "patterns": [
+          "packages/collaboration/src/spreadsheet/**",
+          "packages/collaboration/test/spreadsheet/**"
+        ]
+      },
+      {
         "name": "collaboration-server",
         "patterns": ["packages/collaboration/server/**"]
       },
@@ -260,6 +268,10 @@
         "allow": ["editor-core", "collaboration", "offline"]
       },
       {
+        "from": "collaboration-spreadsheet",
+        "allow": ["spreadsheet", "collaboration", "collaboration-vue", "collaboration-spreadsheet"]
+      },
+      {
         "from": "collaboration-server",
         "allow": ["editor-core", "content", "spreadsheet", "collaboration", "collaboration-server"]
       },
@@ -299,6 +311,7 @@
           "charts",
           "collaboration",
           "collaboration-vue",
+          "collaboration-spreadsheet",
           "offline",
           "nuxt",
           "apps"

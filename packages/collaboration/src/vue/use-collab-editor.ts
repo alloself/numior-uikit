@@ -19,6 +19,7 @@ import {
   CollabStatusKind,
   type CollabAlternative,
   type CollabClient,
+  type CollabFailureView,
   type CollabReport,
   type CollabStatus,
   type CollabTracking,
@@ -35,12 +36,7 @@ import {
 } from '../editor/presence';
 import type { EditorPresence, RemotePeer } from '../editor/presence.types';
 import { restoredDocument } from '../editor/restored';
-import type {
-  CollabAlternatives,
-  CollabEditor,
-  CollabFailureView,
-  UseCollabEditorOptions,
-} from './collab.types';
+import type { CollabAlternatives, CollabEditor, UseCollabEditorOptions } from './collab.types';
 
 const NO_PEERS: readonly RemotePeer[] = [];
 

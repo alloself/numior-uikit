@@ -360,6 +360,16 @@ assert.deepEqual(
   'every peer of collaboration must be optional: the root entry runs on a server without Vue',
 );
 
+const collaborationSpreadsheet = await import(
+  pathToFileURL(resolve('packages/collaboration/dist/spreadsheet/index.js')).href
+);
+
+assert.equal(
+  typeof collaborationSpreadsheet.useCollabWorkbook,
+  'function',
+  'collaboration/spreadsheet must export useCollabWorkbook',
+);
+
 const collaborationYjs = await import(
   pathToFileURL(resolve('packages/collaboration/dist/yjs/index.js')).href
 );

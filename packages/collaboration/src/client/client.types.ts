@@ -13,6 +13,11 @@ export type CollabStatus =
     }
   | { readonly kind: typeof CollabStatusKind.Failed; readonly reason: CollabFailure };
 
+export interface CollabFailureView {
+  readonly reason: CollabFailure;
+  readonly unsent: number;
+}
+
 export interface CollabBatch {
   readonly version: number;
   readonly clientId: string;

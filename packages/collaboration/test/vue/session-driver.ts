@@ -7,11 +7,9 @@ import {
   RejectReason,
   ServerErrorCode,
   ServerMessageKind,
-  type ClientMessage,
-  type CollabTransport,
   type ServerMessage,
-  type TransportListener,
 } from '../../src';
+import { FakeWire } from './fake-wire';
 import SessionHost from './SessionHost.vue';
 
 Element.prototype.scrollIntoView = () => undefined;
@@ -36,33 +34,15 @@ const spotIn = (state: unknown): BlockSpot | undefined => {
 export class SessionDriver {
   private constructor(
     private readonly wrapper: VueWrapper,
-    private readonly wire: { listener: TransportListener | undefined; sent: ClientMessage[] },
+    private readonly wire: FakeWire,
   ) {}
 
   static async mount(): Promise<SessionDriver> {
-    const wire: { listener: TransportListener | undefined; sent: ClientMessage[] } = {
-      listener: undefined,
-      sent: [],
-    };
-
-    const transport: CollabTransport = {
-      open: (listener) => {
-        wire.listener = listener;
-
-        return {
-          send: (message) => {
-            wire.sent.push(message);
-          },
-          close: () => {
-            listener.closed();
-          },
-        };
-      },
-    };
+    const wire = new FakeWire();
 
     const wrapper = mount(SessionHost, {
       attachTo: document.body,
-      props: { transport, user: ANN },
+      props: { transport: wire.transport, user: ANN },
     });
 
     await flushPromises();
@@ -83,7 +63,7 @@ export class SessionDriver {
   }
 
   private async hear(message: ServerMessage): Promise<void> {
-    this.wire.listener?.message(message);
+    this.wire.hear(message);
     await flushPromises();
   }
 
@@ -97,13 +77,13 @@ export class SessionDriver {
   }
 
   async welcome(snapshot: DocJSON, version: number): Promise<void> {
-    this.wire.listener?.opened();
+    this.wire.open();
 
     await this.hear({ kind: ServerMessageKind.Welcome, version, snapshot, presence: [] });
   }
 
   async refuseAsOutdated(): Promise<void> {
-    this.wire.listener?.opened();
+    this.wire.open();
 
     await this.hear({ kind: ServerMessageKind.Error, code: ServerErrorCode.Schema });
   }

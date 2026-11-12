@@ -5,13 +5,13 @@ export { default as NuiCollabReport } from './NuiCollabReport.vue';
 export { default as NuiEditorCommentPopover } from './NuiEditorCommentPopover.vue';
 export { default as NuiEditorComments } from './NuiEditorComments.vue';
 export { default as NuiEditorHistory } from './NuiEditorHistory.vue';
+export type { CollabFailureView } from '../client/client.types';
 export { collabMessages } from './collab.messages';
 export type { NuiCollabMessages } from './collab.messages';
 export type {
   CollabAlternatives,
   CollabComments,
   CollabEditor,
-  CollabFailureView,
   CollabHistory,
   CommentThreadView,
   NuiCollabCaretsProps,

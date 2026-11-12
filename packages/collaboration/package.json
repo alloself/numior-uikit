@@ -21,6 +21,11 @@
       "types": "./dist/vue/index.d.ts",
       "import": "./dist/vue/index.js"
     },
+    "./spreadsheet": {
+      "@numior/source": "./src/spreadsheet/index.ts",
+      "types": "./dist/spreadsheet/index.d.ts",
+      "import": "./dist/spreadsheet/index.js"
+    },
     "./yjs": {
       "@numior/source": "./src/yjs/index.ts",
       "types": "./dist/yjs/index.d.ts",
@@ -56,6 +61,7 @@
     "@numior/content": "workspace:*",
     "@numior/editor-vue": "workspace:*",
     "@numior/primitives": "workspace:*",
+    "@numior/spreadsheet": "workspace:*",
     "@numior/tokens": "workspace:*",
     "@numior/vue": "workspace:*",
     "@vueuse/core": "^15.0.0",
@@ -70,6 +76,9 @@
       "optional": true
     },
     "@numior/primitives": {
+      "optional": true
+    },
+    "@numior/spreadsheet": {
       "optional": true
     },
     "@numior/tokens": {

@@ -13,6 +13,7 @@ export default defineConfig({
       entry: {
         index: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
         'vue/index': fileURLToPath(new URL('./src/vue/index.ts', import.meta.url)),
+        'spreadsheet/index': fileURLToPath(new URL('./src/spreadsheet/index.ts', import.meta.url)),
         'yjs/index': fileURLToPath(new URL('./src/yjs/index.ts', import.meta.url)),
       },
       formats: ['es'],

@@ -56,24 +56,47 @@ import '@numior/spreadsheet/styles.css';
 
 ### Совместная правка
 
-Создайте документ через `createWorkbookDocument` и передайте его в `collaboration`. Клиент
-`createCollabClient` из `@numior/collaboration` связывает документ с сервером.
+`useCollabWorkbook` из `@numior/collaboration/spreadsheet` связывает книгу с сервером. Для него рядом с
+`@numior/collaboration` должен стоять `@numior/spreadsheet`.
 
 ```vue
 <template>
+  <NuiCollabFailure v-if="failure !== undefined" :failure="failure" @rejoin="rejoin" />
   <NuiSpreadsheet
     v-if="ready"
     :book="book"
     :calculator="calculator"
     :collaboration="document"
+    :readonly="readOnly"
+    :peers="peers"
     label="Общая книга"
-    @change="client.sync()"
+    @change="sync"
+    @presence="sharePlace"
   />
 </template>
+
+<script setup lang="ts">
+import { webSocketTransport } from '@numior/collaboration';
+import { useCollabWorkbook } from '@numior/collaboration/spreadsheet';
+import { NuiCollabFailure } from '@numior/collaboration/vue';
+import { NuiSpreadsheet } from '@numior/spreadsheet';
+import { createCalculator, createWorkbook } from '@numior/spreadsheet/core';
+
+const book = createWorkbook();
+const calculator = createCalculator(book);
+
+const { document, ready, readOnly, peers, failure, sync, sharePlace, rejoin } = useCollabWorkbook({
+  doc: 'budget',
+  user: { id: 'anna', name: 'Анна' },
+  transport: webSocketTransport('wss://example.com/collab'),
+  book,
+  calculator,
+});
+</script>
 ```
 
-Вызывайте `client.sync()` из `change`, чтобы отправить свои правки. Правки других людей появляются
-сами и не вызывают `change`. Показывайте таблицу после загрузки книги с сервера.
+`sync` из `change` отправляет ваши правки. Правки других людей появляются сами и не вызывают `change`.
+`ready` включается, когда книга пришла с сервера, а `sharePlace` показывает остальным, в какой вы ячейке.
 
 Когда другой человек вставляет или удаляет строки и столбцы, активная ячейка и выделение остаются на
 своих данных. Открытая ячейка переезжает вместе со строкой: набранный текст, фокус и каретка
@@ -93,12 +116,12 @@ import '@numior/spreadsheet/styles.css';
 Правила условного форматирования, которые разные люди добавили одновременно, остаются все. Порядок
 правил задаёт тот, кто его менял.
 
-Когда клиент перешёл в `failed`, правки больше не отправляются: поставьте листу `readonly` и
-предложите открыть книгу заново. Для этого остановите клиента, вызовите `document.reset()` и
-создайте нового клиента.
+Когда связь ломается, правки больше не отправляются: `readOnly` включается, а `failure` несёт
+причину. `NuiCollabFailure` объясняет её и предлагает открыть книгу заново — это вызов `rejoin`.
+Страница не перезагружается.
 
 Сервер пришлёт книгу целиком. Она заменит локальную вместе с неотправленными правками, а лист
-останется на той же вкладке.
+останется на той же вкладке. Пока книга не пришла, лист открыт только для чтения.
 
 Панель `fileBar` в общей книге не показывайте: открытие файла заменяет книгу, и участники перестанут
 её видеть. Запрет правок задаёт свойство `readonly`.

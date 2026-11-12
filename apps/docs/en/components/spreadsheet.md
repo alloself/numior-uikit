@@ -55,24 +55,48 @@ The `contextMenu` function receives the sheet and the selection and returns item
 
 ### Editing together
 
-Create a document with `createWorkbookDocument` and pass it to `collaboration`. The
-`createCollabClient` client from `@numior/collaboration` connects the document to a server.
+`useCollabWorkbook` from `@numior/collaboration/spreadsheet` connects a book to a server. It needs
+`@numior/spreadsheet` installed next to `@numior/collaboration`.
 
 ```vue
 <template>
+  <NuiCollabFailure v-if="failure !== undefined" :failure="failure" @rejoin="rejoin" />
   <NuiSpreadsheet
     v-if="ready"
     :book="book"
     :calculator="calculator"
     :collaboration="document"
+    :readonly="readOnly"
+    :peers="peers"
     label="Shared book"
-    @change="client.sync()"
+    @change="sync"
+    @presence="sharePlace"
   />
 </template>
+
+<script setup lang="ts">
+import { webSocketTransport } from '@numior/collaboration';
+import { useCollabWorkbook } from '@numior/collaboration/spreadsheet';
+import { NuiCollabFailure } from '@numior/collaboration/vue';
+import { NuiSpreadsheet } from '@numior/spreadsheet';
+import { createCalculator, createWorkbook } from '@numior/spreadsheet/core';
+
+const book = createWorkbook();
+const calculator = createCalculator(book);
+
+const { document, ready, readOnly, peers, failure, sync, sharePlace, rejoin } = useCollabWorkbook({
+  doc: 'budget',
+  user: { id: 'ann', name: 'Ann' },
+  transport: webSocketTransport('wss://example.com/collab'),
+  book,
+  calculator,
+});
+</script>
 ```
 
-Call `client.sync()` from `change` to send your edits. Edits by other people appear on their own and
-do not fire `change`. Show the sheet after the book has loaded from the server.
+`sync` from `change` sends your edits. Edits by other people appear on their own and do not fire
+`change`. `ready` turns on once the book has loaded from the server, and `sharePlace` shows the
+others the cell you are in.
 
 When someone else inserts or removes rows and columns, the active cell and the selection stay on
 their data. An open cell moves with its row: the typed text, the focus and the caret are kept. If
@@ -91,11 +115,12 @@ sheet scrolled to its very start shows rows inserted at the start right away.
 Conditional formatting rules that different people add at the same time are all kept. The order of
 the rules follows the person who changed it.
 
-Once the client is `failed`, edits are no longer sent: set `readonly` on the sheet and offer to
-open the book again. To do that, stop the client, call `document.reset()` and create a new client.
+Once the connection fails, edits are no longer sent: `readOnly` turns on and `failure` holds the
+reason. `NuiCollabFailure` explains it and offers to open the book again, which calls `rejoin`. The
+page is not reloaded.
 
-The server sends the whole book. It replaces the local one together with the unsent edits, and the
-sheet stays on the same tab.
+The server then sends the whole book. It replaces the local one together with the unsent edits, and
+the sheet stays on the same tab. Until the book arrives, the sheet stays read-only.
 
 Do not show `fileBar` in a shared book: opening a file replaces the book, and the others stop seeing
 it. The `readonly` prop turns editing off.
