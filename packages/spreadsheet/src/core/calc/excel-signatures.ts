@@ -1,6 +1,6 @@
 import type { CallSignature, SignatureOf } from '../formula/formula.types';
 import type { FunctionRegistry } from './calc.types';
-import { firstArgument, secondArgument } from './signatures';
+import { firstArgument, letNames, secondArgument } from './signatures';
 
 const COUNTED: readonly (readonly [number, number, readonly string[]])[] = [
   [0, 1, ['SHEET', 'SHEETS']],
@@ -289,6 +289,25 @@ const COUNTED: readonly (readonly [number, number, readonly string[]])[] = [
   [8, 9, ['ODDFPRICE', 'ODDFYIELD']],
 ];
 
+export const ARRAY_RESULTS: ReadonlySet<string> = new Set([
+  'CELL',
+  'FIELDVALUE',
+  'FILTERXML',
+  'FREQUENCY',
+  'GROWTH',
+  'IFS',
+  'INDIRECT',
+  'LINEST',
+  'LOGEST',
+  'MINVERSE',
+  'MMULT',
+  'MODE.MULT',
+  'MUNIT',
+  'STOCKHISTORY',
+  'SWITCH',
+  'TREND',
+]);
+
 const DATABASE = [
   'DAVERAGE',
   'DCOUNT',
@@ -306,8 +325,6 @@ const DATABASE = [
 
 const fromFifth = (index: number): boolean => index >= 4;
 
-const letName = (index: number, count: number): boolean => index % 2 === 0 && index < count - 1;
-
 const pivotPairs = (count: number): boolean => count === 3 || count % 2 === 0;
 
 const odd = (count: number): boolean => count % 2 === 1;
@@ -319,7 +336,7 @@ const SHAPED: readonly (readonly [string, CallSignature])[] = [
   ['FORMULATEXT', { min: 1, max: 1, referenceAt: firstArgument }],
   ['GETPIVOTDATA', { min: 2, max: 254, counts: pivotPairs }],
   ['ISFORMULA', { min: 1, max: 1, referenceAt: firstArgument }],
-  ['LET', { min: 3, max: 253, counts: odd, namesAt: letName, givesReference: true }],
+  ['LET', { min: 3, max: 253, counts: odd, namesAt: letNames, givesReference: true }],
   ['PHONETIC', { min: 1, max: 1, referenceAt: firstArgument }],
   ['RANK.AVG', { min: 2, max: 3, referenceAt: secondArgument }],
 ];

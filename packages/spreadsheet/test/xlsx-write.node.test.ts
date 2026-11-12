@@ -222,6 +222,76 @@ describe('writing xlsx', () => {
     expect(['A1', 'C1', 'D1'].map(view.shown)).toEqual(['#SPILL!', '#CALC!', '#DIV/0!']);
   });
 
+  it('writes the names of LET and LAMBDA and the newer functions the way Excel saves them', async () => {
+    const book = openBook();
+
+    const formulas = [
+      ['B1', '=LET(x,1,y,2,x+y)', '_xlfn.LET(_xlpm.x,1,_xlpm.y,2,_xlpm.x+_xlpm.y)'],
+      ['B2', '=LET(x,1,LET(x,2,x)+x)', '_xlfn.LET(_xlpm.x,1,_xlfn.LET(_xlpm.x,2,_xlpm.x)+_xlpm.x)'],
+      ['B3', '=LET(Ab,1,aB+1)', '_xlfn.LET(_xlpm.Ab,1,_xlpm.Ab+1)'],
+      ['B4', '=LET(A1,1,A1+1)', '_xlfn.LET(_xlpm.A1,1,_xlpm.A1+1)'],
+      [
+        'B5',
+        '=BYROW(A1:A2,LAMBDA(r,SUM(r)+x))',
+        '_xlfn.BYROW(A1:A2,_xlfn.LAMBDA(_xlpm.r,SUM(_xlpm.r)+x))',
+      ],
+      ['B6', '=ACOT(1)+ACOTH(2)', '_xlfn.ACOT(1)+_xlfn.ACOTH(2)'],
+    ] as const;
+
+    formulas.forEach(([address, text]) => {
+      book.type(address, text);
+    });
+
+    const bytes = await written({ book: book.book, calculator: book.calculator });
+    const cells = await partOf(bytes, 'xl/worksheets/sheet1.xml');
+    const view = viewOf(await opened(bytes), 'Sheet1');
+
+    formulas.forEach(([address, , file]) => {
+      expect(cells).toContain(`<c r="${address}"><f>${file}</f>`);
+    });
+
+    expect(formulas.map(([address]) => view.input(address))).toEqual([
+      '=LET(x,1,y,2,x+y)',
+      '=LET(x,1,LET(x,2,x)+x)',
+      '=LET(Ab,1,Ab+1)',
+      '=LET(A1,1,A1+1)',
+      '=BYROW(A1:A2,LAMBDA(r,SUM(r)+x))',
+      '=ACOT(1)+ACOTH(2)',
+    ]);
+  });
+
+  it('marks the functions Excel holds able to give an array as array formulas', async () => {
+    const book = openBook();
+
+    const formulas = [
+      ['B1', '=IFS(A1>1,"a",TRUE,"b")', '_xlfn.IFS(A1&gt;1,"a",TRUE,"b")'],
+      ['B2', '=SWITCH(A1,1,"a","b")', '_xlfn.SWITCH(A1,1,"a","b")'],
+      ['B3', '=MMULT(1,1)', 'MMULT(1,1)'],
+      ['B4', '=STOCKHISTORY(A1,A2)', '_xlfn.STOCKHISTORY(A1,A2)'],
+    ] as const;
+
+    formulas.forEach(([address, text]) => {
+      book.type(address, text);
+    });
+
+    book.type('B5', '=IF(A1>1,"a","b")');
+
+    const bytes = await written({ book: book.book, calculator: book.calculator });
+    const cells = await partOf(bytes, 'xl/worksheets/sheet1.xml');
+    const view = viewOf(await opened(bytes), 'Sheet1');
+
+    formulas.forEach(([address, , file]) => {
+      expect(cells).toMatch(new RegExp(`<c r="${address}"[^>]* cm="1">`, 'u'));
+      expect(cells).toContain(`<f t="array" ref="${address}">${file}</f>`);
+    });
+
+    expect(cells).toMatch(/<c r="B5"[^>]*><f>IF\(A1&gt;1,"a","b"\)<\/f>/u);
+
+    expect(formulas.map(([address]) => view.input(address))).toEqual(
+      formulas.map(([, text]) => text),
+    );
+  });
+
   it('marks formulas that need array evaluation and writes the file syntax of this-row references', async () => {
     const book = openBook();
 

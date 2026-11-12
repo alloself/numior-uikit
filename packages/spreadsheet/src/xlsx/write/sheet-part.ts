@@ -309,7 +309,7 @@ const formulaCellXml = (
   }
 
   const written = fileFormula(writing, place, formula.ast);
-  const printed = printFormula(withFuturePrefixes(written.ast), FILE_FORMULAS, place);
+  const printed = printFormula(withFuturePrefixes(written.ast, place), FILE_FORMULAS, place);
 
   if (refusedByExcel(calculator, formula.ast, place, printed)) {
     return undefined;

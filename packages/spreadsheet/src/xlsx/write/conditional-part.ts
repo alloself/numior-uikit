@@ -134,7 +134,7 @@ const TEXT_FORMULAS: Readonly<Record<string, (cell: string, text: string) => str
 };
 
 const formulaText = (ast: FormulaNode, anchor: CellAddress): string =>
-  printFormula(withFuturePrefixes(ast), FILE_FORMULAS, anchor);
+  printFormula(withFuturePrefixes(ast, anchor), FILE_FORMULAS, anchor);
 
 const formulaXml = (text: string, q: string): string =>
   `<${q}formula>${escapeText(text)}</${q}formula>`;

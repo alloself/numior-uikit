@@ -8,8 +8,6 @@ import {
   type FragmentSlot,
   type SheetXml,
 } from '../../core/layout/fragments.types';
-import { EN_FORMULAS } from '../../core/formula/locale';
-import { parseFormula } from '../../core/formula/parser';
 import { XmlPrefix, type XmlAttribute, type XmlName } from '../xml/xml.types';
 import { escapeAttribute, escapeText } from '../xml/writer';
 import {
@@ -23,6 +21,7 @@ import {
 import { spaceOf } from './fragment-specs';
 import { PivotLineKind } from '../../core/pivot/pivot.types';
 import { OoxmlAttribute, OoxmlElement } from '../ooxml.types';
+import { parseFileFormula } from './file-formula';
 
 export interface FragmentRecorder {
   open(name: XmlName, attributes: readonly XmlAttribute[]): void;
@@ -61,8 +60,6 @@ interface Top {
   readonly opening: string;
   readonly prefixes: Map<string, string>;
 }
-
-const PREFIXES = /_xl(?:fn|ws|pm)\./gu;
 
 const FROZEN = new Set(['frozen', 'frozenSplit']);
 
@@ -213,7 +210,7 @@ const settled = (frame: Frame, opaque: string[]): Fragment => {
         return piece;
       }
 
-      const parsed = parseFormula(piece.text.replaceAll(PREFIXES, ''), EN_FORMULAS, anchor);
+      const parsed = parseFileFormula(piece.text, anchor);
 
       if (!parsed.ok) {
         opaque.push('formula');

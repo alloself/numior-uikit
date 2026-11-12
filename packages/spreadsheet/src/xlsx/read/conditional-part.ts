@@ -14,13 +14,12 @@ import {
 } from '../../core/conditional/conditional.types';
 import type { StyleColor } from '../../core/decorations';
 import type { FormulaNode } from '../../core/formula/formula.types';
-import { EN_FORMULAS } from '../../core/formula/locale';
-import { parseFormula } from '../../core/formula/parser';
 import { XmlBoolean, XmlPrefix, type XmlAttribute, type XmlName } from '../xml/xml.types';
 import { escapeAttribute, escapeText } from '../xml/writer';
 import { MAIN, attributeOf, numberOf } from './ooxml';
 import { colorOf } from './styles';
 import { OoxmlElement } from '../ooxml.types';
+import { parseFileFormula } from './file-formula';
 
 export interface ConditionalCollector {
   inside(): boolean;
@@ -70,8 +69,6 @@ interface Drafting {
 }
 
 type RuleReader = (draft: RuleDraft, drafting: Drafting) => ConditionalRule | undefined;
-
-const PREFIXES = /_xl(?:fn|ws|pm)\./gu;
 
 export const X14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main';
 
@@ -215,7 +212,7 @@ const rangesOf = (text: string): CellRange[] =>
   }, []);
 
 const formulaOf = (text: string, anchor: CellAddress): FormulaNode | undefined => {
-  const parsed = parseFormula(text.replaceAll(PREFIXES, ''), EN_FORMULAS, anchor);
+  const parsed = parseFileFormula(text, anchor);
 
   return parsed.ok ? parsed.ast : undefined;
 };

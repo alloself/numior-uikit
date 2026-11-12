@@ -8,6 +8,7 @@ import {
 import type { Sheet, Workbook } from '../workbook';
 import { foldFormula, operandsOf, withChildren } from '../formula/walk';
 import { ArrayScope, type FunctionRegistry, type FunctionSpec } from './calc.types';
+import { ARRAY_RESULTS } from './excel-signatures';
 
 type NameNode = Extract<FormulaNode, { readonly kind: typeof FormulaNodeKind.Name }>;
 
@@ -80,12 +81,15 @@ const referenceCells = (node: FormulaNode): boolean | undefined => {
   }
 };
 
+const returnsMany = (spec: FunctionSpec | undefined, name: string): boolean =>
+  spec?.array === true || ARRAY_RESULTS.has(name.toUpperCase());
+
 const callShape = (node: Call, parts: readonly Shape[], walk: Walk): Shape => {
   const spec = walk.functions.get(node.name);
   const lifted = scalarIndexes(spec).some((index) => parts[index]?.many === true);
 
   return {
-    many: spec?.array === true || lifted,
+    many: returnsMany(spec, node.name) || lifted,
     spreads: lifted || parts.some((part) => part.spreads),
   };
 };
@@ -178,7 +182,7 @@ const intersectedCall = (node: Call, parts: readonly Rewritten[], walk: Walk): R
   });
 
   const many =
-    spec?.array === true ||
+    returnsMany(spec, node.name) ||
     scalarIndexes(spec).some((index) => {
       const arg = node.args[index];
 

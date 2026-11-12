@@ -59,7 +59,7 @@ const definedNamesXml = (book: Workbook): string => {
 
   book.names.forEach((defined) => {
     const local = defined.scope === undefined ? -1 : book.sheets.indexOf(defined.scope);
-    const formula = printFormula(withFuturePrefixes(defined.ast), FILE_FORMULAS, ORIGIN);
+    const formula = printFormula(withFuturePrefixes(defined.ast, ORIGIN), FILE_FORMULAS, ORIGIN);
 
     names.push(
       `<definedName name="${escapeAttribute(defined.name)}"${local < 0 ? '' : ` localSheetId="${String(local)}"`}>${escapeText(formula)}</definedName>`,

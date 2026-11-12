@@ -4,9 +4,6 @@ import type { FunctionRegistry } from '../../core/calc/calc.types';
 import { BASE_FUNCTIONS } from '../../core/calc/functions';
 import { createFunctionRegistry } from '../../core/calc/registry';
 import { nextTask } from '../../core/calc/tasks';
-import { ORIGIN } from '../../core/formula/origin';
-import { EN_FORMULAS } from '../../core/formula/locale';
-import { parseFormula } from '../../core/formula/parser';
 import { mapReferences } from '../../core/formula/references';
 import { FormulaReferenceKind, type FormulaNode } from '../../core/formula/formula.types';
 import { EN_LOCALE } from '../../core/locale';
@@ -56,6 +53,7 @@ import { readTheme } from './theme-part';
 import { readTablePart } from './table-part';
 import { readWorkbookPart, type SheetEntry, type WorkbookPart } from './workbook-part';
 import { RelationshipKind } from '../ooxml.types';
+import { parseFileFormula } from './file-formula';
 
 interface Found {
   count: number;
@@ -190,7 +188,8 @@ const targetOf = (relationships: readonly Relationship[], kind: string): string 
 
 const setNames = (calculator: Calculator, part: WorkbookPart, sheets: readonly Sheet[]): void => {
   part.names.forEach((entry) => {
-    const parsed = parseFormula(entry.text.replaceAll(/_xl(?:fn|ws)\./gu, ''), EN_FORMULAS, ORIGIN);
+    const parsed = parseFileFormula(entry.text);
+
     const scope = entry.sheet === undefined ? undefined : sheets[entry.sheet];
 
     if (!parsed.ok || !validDefinedName(entry.name)) {
@@ -243,7 +242,7 @@ const externalNames = (
   book: number,
 ): ExternalName[] =>
   entries.map((entry) => {
-    const parsed = parseFormula(entry.text, EN_FORMULAS, ORIGIN);
+    const parsed = parseFileFormula(entry.text);
 
     return {
       name: entry.name,

@@ -6,12 +6,11 @@ import {
   type SheetChartSeries,
 } from '../../core/drawings/drawing.types';
 import type { FormulaNode } from '../../core/formula/formula.types';
-import { EN_FORMULAS } from '../../core/formula/locale';
-import { parseFormula } from '../../core/formula/parser';
 import { OoxmlAttribute, OoxmlElement } from '../ooxml.types';
 import type { XmlAttribute, XmlName } from '../xml/xml.types';
 import type { ZipArchive } from '../zip/zip.types';
 import { XlsxPartError, attributeOf, numberOf, readPart, type PartOptions } from './ooxml';
+import { parseFileFormula } from './file-formula';
 
 export type ChartReading =
   | { readonly ok: true; readonly chart: SheetChart }
@@ -90,10 +89,8 @@ const STACKINGS: ReadonlyMap<string | undefined, SheetChartStacking> = new Map([
 
 const TRUE_VALUES = new Set(['1', 'true']);
 
-const PREFIXES = /_xl(?:fn|ws|pm)\./gu;
-
 const formulaOf = (text: string): FormulaNode | undefined => {
-  const parsed = parseFormula(text.trim().replaceAll(PREFIXES, ''), EN_FORMULAS);
+  const parsed = parseFileFormula(text.trim());
 
   return parsed.ok ? parsed.ast : undefined;
 };

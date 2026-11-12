@@ -226,7 +226,7 @@
             "kind": "string",
             "value": "big"
           },
-          "formula": "IFS(B2>2,\"big\",TRUE,\"small\")",
+          "formula": "@IFS(B2>2,\"big\",TRUE,\"small\")",
           "state": "imported"
         },
         "E7": {

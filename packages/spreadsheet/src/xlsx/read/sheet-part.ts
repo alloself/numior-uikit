@@ -12,8 +12,6 @@ import {
   FormulaReferenceKind,
   type FormulaNode,
 } from '../../core/formula/formula.types';
-import { EN_FORMULAS } from '../../core/formula/locale';
-import { parseFormula } from '../../core/formula/parser';
 import { eachNode, operandsOf } from '../../core/formula/walk';
 import { formulaReferences } from '../../core/formula/references';
 import {
@@ -42,6 +40,7 @@ import { MAIN, attributeOf, numberOf, readPart, type PartOptions } from './ooxml
 import { CellCapture, FormulaKind } from './read.types';
 import { CellTypeCode, OoxmlElement } from '../ooxml.types';
 import { FormatCode } from '../../core/format/format.types';
+import { parseFileFormula } from './file-formula';
 
 export interface SheetContext {
   readonly book: Workbook;
@@ -86,8 +85,6 @@ interface Cell {
     | { kind: FormulaKind; ref: string | undefined; shared: string | undefined; text: string }
     | undefined;
 }
-
-const PREFIXES = /_xl(?:fn|ws|pm)\./gu;
 
 const SPREADSHEET = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 
@@ -250,7 +247,7 @@ export const readSheetPart = async (
       return shared.get(formula.shared);
     }
 
-    const parsed = parseFormula(formula.text.replaceAll(PREFIXES, ''), EN_FORMULAS, current);
+    const parsed = parseFileFormula(formula.text, current);
 
     if (!parsed.ok) {
       return formula.text.trim() === '' ? undefined : { kind: 'opaque', text: formula.text };

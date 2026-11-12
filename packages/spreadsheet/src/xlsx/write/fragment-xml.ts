@@ -26,7 +26,9 @@ const slotText = (slot: FragmentSlot, anchor: CellAddress, children: number): st
     case FragmentSlotKind.Measure:
       return String(slot.value);
     case FragmentSlotKind.Formula:
-      return escapeAttribute(printFormula(withFuturePrefixes(slot.ast), FILE_FORMULAS, anchor));
+      return escapeAttribute(
+        printFormula(withFuturePrefixes(slot.ast, anchor), FILE_FORMULAS, anchor),
+      );
     case FragmentSlotKind.Count:
       return String(children);
   }
