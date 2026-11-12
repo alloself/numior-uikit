@@ -37,12 +37,12 @@
 .nui-toggle-group__item {
   --_rest: var(--nui-surface);
   --_hover: light-dark(
-    oklch(from var(--_rest) calc(l - var(--nui-state-hover-subtle)) c h),
-    oklch(from var(--_rest) calc(l + var(--nui-state-hover-subtle)) c h)
+    oklab(from var(--_rest) calc(l - var(--nui-state-hover-subtle)) a b),
+    oklab(from var(--_rest) calc(l + var(--nui-state-hover-subtle)) a b)
   );
   --_pressed: light-dark(
-    oklch(from var(--_rest) calc(l - var(--nui-state-pressed-subtle)) c h),
-    oklch(from var(--_rest) calc(l + var(--nui-state-pressed-subtle)) c h)
+    oklab(from var(--_rest) calc(l - var(--nui-state-pressed-subtle)) a b),
+    oklab(from var(--_rest) calc(l + var(--nui-state-pressed-subtle)) a b)
   );
 
   box-sizing: border-box;

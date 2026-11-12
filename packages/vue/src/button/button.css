@@ -3,15 +3,15 @@
   --_tone-foreground: var(--nui-primary-foreground);
   --_tone-soft: var(--nui-primary-soft);
   --_tone-soft-foreground: var(--nui-primary-soft-foreground);
-  --_hover: oklch(from var(--_tone) calc(l - var(--nui-state-hover)) c h);
-  --_pressed: oklch(from var(--_tone) calc(l - var(--nui-state-pressed)) c h);
+  --_hover: oklab(from var(--_tone) calc(l - var(--nui-state-hover)) a b);
+  --_pressed: oklab(from var(--_tone) calc(l - var(--nui-state-pressed)) a b);
   --_soft-hover: light-dark(
-    oklch(from var(--_tone-soft) calc(l - var(--nui-state-hover-subtle)) c h),
-    oklch(from var(--_tone-soft) calc(l + var(--nui-state-hover-subtle)) c h)
+    oklab(from var(--_tone-soft) calc(l - var(--nui-state-hover-subtle)) a b),
+    oklab(from var(--_tone-soft) calc(l + var(--nui-state-hover-subtle)) a b)
   );
   --_soft-pressed: light-dark(
-    oklch(from var(--_tone-soft) calc(l - var(--nui-state-pressed-subtle)) c h),
-    oklch(from var(--_tone-soft) calc(l + var(--nui-state-pressed-subtle)) c h)
+    oklab(from var(--_tone-soft) calc(l - var(--nui-state-pressed-subtle)) a b),
+    oklab(from var(--_tone-soft) calc(l + var(--nui-state-pressed-subtle)) a b)
   );
   --_tint-hover: color-mix(in oklab, var(--_tone) var(--nui-state-hover-tint), transparent);
   --_tint-pressed: color-mix(in oklab, var(--_tone) var(--nui-state-pressed-tint), transparent);

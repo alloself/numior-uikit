@@ -21,7 +21,7 @@ Dialogs, popovers and themes are built on browser features, not on replacements 
 
 - `<dialog>` and the Popover API open windows and menus in the top layer of the page.
 - `@starting-style` and `transition-behavior: allow-discrete` animate opening and closing.
-- `light-dark()`, `color-mix()` and relative colors `oklch(from …)` compute theme colors.
+- `light-dark()`, `color-mix()` and relative colors `oklab(from …)` compute theme colors.
 - `:dir()` and logical properties mirror the interface for right-to-left text.
 - `:has()` and container queries change the layout without JavaScript.
 
