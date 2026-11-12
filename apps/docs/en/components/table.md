@@ -88,6 +88,9 @@ A long list shows the first hundred values, and the search above the list finds 
 all" with a box unchecked afterwards gives a filter with `exclude: true`: it hides the named
 values, and values that appear later stay visible.
 
+The list is marked busy while its values are gathered. After 120 ms "Loading the values…"
+stands in its place.
+
 A column with `aggregate` adds a totals row at the bottom, such as a sum or an average. The
 totals row shows the `totalsLabel` caption and the number of rows left after filtering.
 

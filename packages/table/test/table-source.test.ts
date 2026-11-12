@@ -30,6 +30,35 @@ afterEach(() => {
 });
 
 describe('NuiTable with a source', () => {
+  it('says that the values of a column are on their way and lists them when they come', async () => {
+    const remote = new RemoteStaff(30);
+
+    const grid = mountRemote(remote, {
+      columns: STAFF_COLUMNS.map((column) =>
+        column.key === 'city' ? { ...column, filter: 'set' } : column,
+      ),
+    });
+
+    remote.answer();
+    await grid.settle();
+
+    await grid.startFilter(2);
+
+    expect(grid.filterLoading).toBe(true);
+    expect(grid.filterNote).toBeUndefined();
+
+    await grid.waitForSlowValues();
+
+    expect(grid.filterNote).toBe('Загружаем значения…');
+
+    remote.answerValues();
+    await grid.valuesArrive();
+
+    expect(grid.filterLoading).toBe(false);
+    expect(grid.filterNote).toBeUndefined();
+    expect(grid.filterValueLabels.length).toBeGreaterThan(1);
+  });
+
   it('shows skeleton rows until the first block arrives and loads blocks while scrolling', async () => {
     const remote = new RemoteStaff(1000);
     const grid = mountRemote(remote, { props: { blockSize: 50 } });

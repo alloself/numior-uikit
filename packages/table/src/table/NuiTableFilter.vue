@@ -2,6 +2,7 @@
   <div
     ref="content"
     class="nui-popover nui-table-filter"
+    :class="{ 'nui-table-filter--loading': loading }"
     role="dialog"
     :aria-label="title"
     v-bind="contentAttrs"
@@ -38,6 +39,9 @@
           spellcheck="false"
         />
         <p v-if="nothingFound" class="nui-table-filter__note">{{ texts.noMatches }}</p>
+        <p v-else-if="waiting" class="nui-table-filter__note" role="status">
+          {{ texts.loading }}
+        </p>
         <template v-else>
           <NuiCheckbox
             :model-value="allChosen"
@@ -47,7 +51,12 @@
           >
             {{ texts.selectAll }}
           </NuiCheckbox>
-          <div class="nui-table-filter__values" role="group" :aria-label="title">
+          <div
+            class="nui-table-filter__values"
+            role="group"
+            :aria-label="title"
+            :aria-busy="loading || undefined"
+          >
             <NuiCheckbox
               v-for="option in options"
               :key="option.key"
@@ -72,6 +81,7 @@
 </template>
 
 <script setup lang="ts">
+import { useTimeoutFn } from '@vueuse/core';
 import { computed, ref, shallowRef, useTemplateRef, watch } from 'vue';
 import {
   FLOATING_OFFSET,
@@ -114,6 +124,8 @@ interface ValueOption {
 
 const SEARCH_FROM = 8;
 
+const SLOW_VALUES = 120;
+
 const { title, kind, columnKey, filter, anchor, locale, loadValues, valueLabel } =
   defineProps<NuiTableFilterProps>();
 
@@ -129,7 +141,17 @@ const truncated = ref(false);
 const query = ref('');
 const searchable = ref(false);
 const blankListed = ref(false);
+const loading = ref(false);
+const slow = ref(false);
 let asking: AbortController | undefined;
+
+const { start: watchSlow, stop: forgetSlow } = useTimeoutFn(
+  () => {
+    slow.value = true;
+  },
+  SLOW_VALUES,
+  { immediate: false },
+);
 
 const { contentAttrs } = usePopover(content, { open, mode: PopoverMode.Auto });
 
@@ -149,6 +171,7 @@ const texts = computed(() => ({
   selectAll: messages.value.filterSelectAll,
   search: messages.value.filterSearch,
   noMatches: messages.value.filterNoMatches,
+  loading: messages.value.filterLoading,
   truncated: messages.value.filterTruncated,
   apply: messages.value.filterApply,
   reset: messages.value.filterReset,
@@ -210,7 +233,11 @@ const someChosen = computed(() => {
     : someListed.value;
 });
 
-const nothingFound = computed(() => needle.value !== '' && options.value.length === 0);
+const nothingFound = computed(
+  () => !loading.value && needle.value !== '' && options.value.length === 0,
+);
+
+const waiting = computed(() => slow.value && options.value.length === 0);
 
 const toggle = (value: TableFilterValue): void => {
   const current = setDraft.value;
@@ -252,10 +279,20 @@ const load = async (search: string): Promise<void> => {
 
   asking?.abort();
   asking = controller;
+  loading.value = true;
+  watchSlow();
 
   const result = await loadValues(search, controller.signal);
 
-  if (result === null || controller.signal.aborted) {
+  if (controller.signal.aborted) {
+    return;
+  }
+
+  loading.value = false;
+  slow.value = false;
+  forgetSlow();
+
+  if (result === null) {
     return;
   }
   if (search === '') {
