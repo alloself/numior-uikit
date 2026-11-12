@@ -79,7 +79,7 @@ describe('NuiMenu', () => {
       {
         label: 'Find',
         onSelect: () => {
-          void Promise.resolve().then(() => {
+          queueMicrotask(() => {
             field.focus();
           });
         },
