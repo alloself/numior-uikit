@@ -64,6 +64,7 @@ export interface TableCellEditor<T> {
   attach(link: TableEditorLink): () => void;
   commit(move: NuiTableEditMove): boolean;
   cancel(): void;
+  reset(): void;
   onKeydown(event: KeyboardEvent): boolean;
   onFocusin(event: FocusEvent): void;
   onClick(event: MouseEvent): void;
@@ -144,6 +145,9 @@ const clampTo = (position: NuiTableCellPosition, bounds: RangeBounds): NuiTableC
   row: Math.max(0, Math.min(position.row, bounds.rows - 1)),
   col: Math.max(0, Math.min(position.col, bounds.cols - 1)),
 });
+
+const samePlace = (left: NuiTableCellPosition, right: NuiTableCellPosition): boolean =>
+  left.row === right.row && left.col === right.col;
 
 const doubled = (last: TableTap | undefined, next: TableTap): boolean =>
   last !== undefined &&
@@ -274,6 +278,10 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
       options.plan(row, key).kind !== TableEditorPlanKind.Editor
     ) {
       return false;
+    }
+    if (samePlace(position, current.position)) {
+      session.value = row === current.row ? current : { ...current, row };
+      return true;
     }
     const leave = leaveOf(links);
 
@@ -439,7 +447,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     }
   };
 
-  watch(options.resetOn, () => {
+  const reset = (): void => {
     const current = session.value;
     const bounds = options.bounds();
 
@@ -450,7 +458,9 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     }
 
     options.focus(clampTo(current.position, bounds));
-  });
+  };
+
+  watch(options.resetOn, reset);
 
   watch(options.enabled, (on) => {
     if (on) {
@@ -472,6 +482,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     attach,
     commit,
     cancel,
+    reset,
     onKeydown,
     onFocusin,
     onClick,

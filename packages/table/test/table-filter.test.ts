@@ -124,6 +124,7 @@ describe('NuiTable filters', () => {
 
     expect(grid.filters).toEqual([]);
     expect(grid.rowCount).toBe(1001);
+    expect(grid.announcement).toBe(`Показано ${(1000).toLocaleString('ru-RU')} строк`);
   });
 
   it('hides only the unchecked value of a long column and shows the same choice when the filter opens again', async () => {

@@ -99,6 +99,26 @@ test.describe('collaboration', () => {
     await expect(boris.caretOf(ANNA)).toHaveCSS('opacity', '1');
   });
 
+  test('keeps a table cell open while someone else fills another cell of the table', async ({
+    collab,
+  }) => {
+    const anna = await collab.join(ANNA);
+    const boris = await collab.join(BORIS);
+
+    await anna.insertTable();
+    await boris.tableCell(0, 0).waitFor();
+    await anna.tableCell(1, 1).click();
+    await anna.page.keyboard.type('Cheese');
+    await boris.setCell(0, 0, 'Bread');
+
+    await expect(anna.tableCell(0, 0)).toHaveText('Bread');
+
+    await anna.page.keyboard.type(' cake');
+    await anna.page.keyboard.press('Enter');
+
+    await expect(boris.tableCell(1, 1)).toHaveText('Cheese cake');
+  });
+
   test('opens a copy of another version read-only and keeps its queue', async ({ collab }) => {
     const anna = await collab.joinOffline(ANNA);
     const boris = await collab.join(BORIS);

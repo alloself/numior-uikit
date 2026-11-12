@@ -500,6 +500,38 @@ export interface TableEditSession<T> {
   readonly caret: TableEditCaret | undefined;
 }
 
+export interface TableHeldCell<T> {
+  readonly row: T;
+  readonly col: number;
+}
+
+export interface TableHeldRange<T> {
+  readonly from: TableHeldCell<T>;
+  readonly to: TableHeldCell<T>;
+}
+
+export interface TableHeldPlaces<T> {
+  readonly active: TableHeldCell<T> | undefined;
+  readonly editing: TableHeldCell<T> | undefined;
+  readonly ranges: readonly TableHeldRange<T>[];
+}
+
+export interface TableRowPlacesOptions<T> {
+  readonly active: () => NuiTableCellPosition | undefined;
+  readonly editing: () => TableHeldCell<T> | undefined;
+  readonly ranges: () => NuiTableRanges;
+  readonly rowAt: (position: number) => T | undefined;
+  readonly locate: (rows: readonly T[]) => ReadonlyMap<T, number>;
+  readonly move: (position: NuiTableCellPosition) => boolean;
+  readonly drop: (held: TableHeldCell<T>) => void;
+  readonly select: (ranges: NuiTableRanges) => void;
+}
+
+export interface TableRowPlaces<T> {
+  hold(): TableHeldPlaces<T>;
+  restore(held: TableHeldPlaces<T>): void;
+}
+
 export interface NuiTableCellEditorProps {
   spec: TableCellEditorSpec;
   value: unknown;
@@ -1064,6 +1096,7 @@ export const NuiTableEditRefusalReason = {
   Control: 'control',
   Props: 'props',
   Value: 'value',
+  RowGone: 'row-gone',
 } as const;
 
 export const NuiTableEditMove = {

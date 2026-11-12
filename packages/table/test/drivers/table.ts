@@ -2374,6 +2374,14 @@ export class TableDriver<T> {
     await nextTick();
   }
 
+  async handViewAgain(): Promise<void> {
+    this.models.sort.value = this.models.sort.value.map((entry) => ({ ...entry }));
+    this.models.filters.value = this.models.filters.value.map((filter) => ({ ...filter }));
+    this.models.groupBy.value = [...this.models.groupBy.value];
+    this.models.expanded.value = [...this.models.expanded.value];
+    await nextTick();
+  }
+
   async setGroupBy(keys: readonly string[]): Promise<void> {
     const settled = this.nextSettle();
 

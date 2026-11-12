@@ -300,8 +300,8 @@ const docs: DocsMap = {
         en: 'A row height changed: a drag ended, a keyboard step was made or the height was reset. Carries a list of `{ key, height }` with the row key as a string; `height: undefined` means a reset. During a drag only `v-model:rowHeights` changes.',
       },
       editRefused: {
-        ru: 'Свой редактор колонки не открылся. Передаёт `row`, `key` и `reason`: `control` — контрола нет в реестре, `props` — свойства не прошли проверку, `value` — значение не подходит контролу.',
-        en: "A column's custom editor did not open. Carries `row`, `key` and `reason`: `control` when the registry lacks the control, `props` when the props fail the check, `value` when the value does not fit the control.",
+        ru: 'Редактор ячейки не открылся или закрылся без записи. Передаёт `row`, `key` и `reason`: `control` — контрола нет в реестре, `props` — свойства не прошли проверку, `value` — значение не подходит контролу, `row-gone` — в новых `rows` нет строки открытого редактора.',
+        en: 'A cell editor did not open or closed without saving. Carries `row`, `key` and `reason`: `control` when the registry lacks the control, `props` when the props fail the check, `value` when the value does not fit the control, `row-gone` when the new `rows` no longer hold the row of the open editor.',
       },
       pick: {
         ru: 'Выбрана ссылка для формулы, пока `picking` отвечает `true`. Передаёт диапазон, расширенный до объединённых ячеек; вставляет его в черновик приложение.',

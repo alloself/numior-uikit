@@ -281,6 +281,15 @@ application applies them. Ctrl+Z undoes the last edit, Ctrl+Shift+Z and Ctrl+Y r
 After an edit the row stays in place even when the column is sorted or filtered. Totals update
 right away. Without `getKey` the edit history resets when `rows` change.
 
+When new `rows` arrive, the open editor, the active cell and the selection stay on their rows.
+The table finds a row by `getKey`, or by the object itself without it. When the new data no
+longer has the row, the editor closes without saving and the table sends `editRefused` with the
+reason `row-gone`.
+
+The draft, the focus and the caret stay in the editor while it follows its row. Equal `sort`,
+`filters`, `groupBy` and `expanded` change nothing. The editor and the selection stay, and the
+query does not run again.
+
 The `undo` and `redo` methods on the table ref undo and redo edits from code. To keep the history
 in the application, pass `commands`, and every edit arrives in its `push`. Ctrl+Z and Ctrl+Y then
 call its `undo()` and `redo()`.

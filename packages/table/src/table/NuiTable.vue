@@ -367,12 +367,15 @@ import { useTableQuery } from './use-table-query';
 import { useTableWarmup } from './use-table-warmup';
 import { useTableResize } from './use-table-resize';
 import { useTableRowDrag } from './use-table-row-drag';
+import { nodeIdsOf, useTableRowPlaces } from './use-table-row-places';
+import { keepEqual } from './table-values';
 import { useTableRowResize } from './use-table-row-resize';
 import { useTableRowSizes } from './use-table-row-sizes';
 import { useTableTotals } from './use-table-totals';
 import { useTableSelection, type TableSelectionKey } from './use-table-selection';
 import {
   NuiTableColumnType,
+  NuiTableEditRefusalReason,
   NuiTableRowHeight,
   NuiTableSize,
   TableBodyPart,
@@ -551,6 +554,10 @@ const root = useTemplateRef<HTMLElement>('root');
 const viewport = useTemplateRef<HTMLElement>('viewport');
 const frame = useTemplateRef<HTMLElement>('frame');
 const textMeasure = useTextMeasure(root, () => `${size}:${String(gridlines)}`);
+const sortNow = computed<NuiTableSort>((previous) => keepEqual(sort.value, previous));
+const filtersNow = computed<NuiTableFilters>((previous) => keepEqual(filters.value, previous));
+const groupByNow = computed<NuiTableGroupBy>((previous) => keepEqual(groupBy.value, previous));
+const expandedNow = computed<NuiTableExpanded>((previous) => keepEqual(expanded.value, previous));
 const tree = computed(() => columnTreeOf(columns));
 const orderedLeaves = computed(() => orderLeaves(tree.value.leaves, columnOrder.value));
 const gridId = useControlId(() => id);
@@ -615,7 +622,7 @@ const treeOn = computed(() =>
 );
 
 const detailOn = computed(() => slots.detail !== undefined && !treeOn.value);
-const grouping = computed(() => (treeOn.value ? NO_GROUPS : groupBy.value));
+const grouping = computed(() => (treeOn.value ? NO_GROUPS : groupByNow.value));
 
 const detailPositions = computed(() => {
   void revision.value;
@@ -674,8 +681,8 @@ const queryFilters = (): readonly TableFilter[] => {
   const text = quick.value.trim();
 
   return text === ''
-    ? filters.value
-    : [...filters.value, { kind: 'quick', value: text, keys: quickKeys.value }];
+    ? filtersNow.value
+    : [...filtersNow.value, { kind: 'quick', value: text, keys: quickKeys.value }];
 };
 
 const totals = useTableTotals({
@@ -691,7 +698,7 @@ const totals = useTableTotals({
 
 const currentQuery = (): TableQuery => {
   const list = queryFilters();
-  const sorting = sort.value;
+  const sorting = sortNow.value;
 
   return remote
     ? {}
@@ -1157,8 +1164,16 @@ const header: TableHeader<T> = useTableHeader({
   announce: (text) => {
     announcement.value = text;
   },
-  filtered: () => {
-    rowsIntent.set(true);
+  filtered: (changed) => {
+    if (changed) {
+      rowsIntent.set(true);
+      return;
+    }
+
+    const count = engine.value.rowCount();
+
+    announcement.value = messages.value.rowsShown({ count });
+    emit('settle', { rows: count });
   },
   menu: (key, anchor, focusOn) => menu.openAt(key, anchor, focusOn),
   resizable: resize.resizable,
@@ -1757,13 +1772,12 @@ const rangeSelect = useTableRanges({
   },
   reveal: revealCorner,
   resetOn: [
-    sort,
-    filters,
+    sortNow,
+    filtersNow,
     quick,
-    groupBy,
-    expanded,
+    groupByNow,
+    expandedNow,
     pageStart,
-    () => rows,
     () => dataKeys.value.join('\u0000'),
   ],
   messages,
@@ -2160,13 +2174,12 @@ const cellEditor = useTableCellEditor<T>({
     focus.focusCell(stays ? active.value : visualCellOf(position));
   },
   resetOn: [
-    sort,
-    filters,
+    sortNow,
+    filtersNow,
     quick,
-    groupBy,
-    expanded,
+    groupByNow,
+    expandedNow,
     pageStart,
-    () => rows,
     () => dataKeys.value.join('\u0000'),
   ],
   messages,
@@ -2897,6 +2910,47 @@ const moveActiveCell = (position: NuiTableCellPosition): boolean => {
   return true;
 };
 
+const bodyPositionsOf = (wanted: readonly T[]): ReadonlyMap<T, number> => {
+  const ids = nodeIdsOf(wanted, rows, getKey);
+
+  return engine.value
+    .positionsOf((node) => ids.has(node), ids.size)
+    .reduce((found, [node, position]) => {
+      const row = ids.get(node);
+      const body = position - pageStart.value;
+
+      if (row !== undefined && body >= 0 && body < visibleRows.value) {
+        found.set(row, body);
+      }
+      return found;
+    }, new Map<T, number>());
+};
+
+const rowPlaces = useTableRowPlaces<T>({
+  active: activeData,
+  editing: () => {
+    const current = cellEditor.session.value;
+
+    return current === undefined ? undefined : { row: current.row, col: current.position.col };
+  },
+  ranges: () => ranges.value,
+  rowAt: rowAtPosition,
+  locate: bodyPositionsOf,
+  move: moveActiveCell,
+  drop: (held) => {
+    const key = dataKeys.value[held.col];
+
+    if (key !== undefined) {
+      emit('editRefused', { row: held.row, key, reason: NuiTableEditRefusalReason.RowGone });
+    }
+
+    cellEditor.reset();
+  },
+  select: (next) => {
+    ranges.value = next;
+  },
+});
+
 const shareActive = (next: NuiTableCellPosition | undefined): void => {
   activeEchoes.sent(next);
   activeCell.value = next;
@@ -2960,7 +3014,7 @@ watch(
   { flush: 'sync' },
 );
 
-watch(expanded, (ids) => {
+watch(expandedNow, (ids) => {
   engine.value.setToggled(ids);
   rearrange();
   clampActive();
@@ -2969,6 +3023,8 @@ watch(expanded, (ids) => {
 watch(
   () => rows,
   (next) => {
+    const held = rowPlaces.hold();
+
     engine.value.setRows(next);
     engine.value.setToggled(expanded.value);
     expansion.settle();
@@ -2979,6 +3035,7 @@ watch(
     }
     runNow();
     rearrange();
+    rowPlaces.restore(held);
     clampActive();
     refocusMoved();
     warming.restart();
