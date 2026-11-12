@@ -333,6 +333,7 @@ import {
   rowCellsOf,
   rowHeadWidth,
   SELECT_KEY,
+  SMALLEST_WIDTH,
   sizedRowStyle,
   mergeIndices,
   sameIndices,
@@ -546,7 +547,7 @@ const rawSlots = useSlots();
 const root = useTemplateRef<HTMLElement>('root');
 const viewport = useTemplateRef<HTMLElement>('viewport');
 const frame = useTemplateRef<HTMLElement>('frame');
-const textMeasure = useTextMeasure(root, () => size);
+const textMeasure = useTextMeasure(root, () => `${size}:${String(gridlines)}`);
 const tree = computed(() => columnTreeOf(columns));
 const orderedLeaves = computed(() => orderLeaves(tree.value.leaves, columnOrder.value));
 const gridId = useControlId(() => id);
@@ -2997,5 +2998,10 @@ defineExpose<NuiTableExposed>({
   focusCell: focusCellAt,
   moveActive: moveActiveCell,
   invalidate,
+  fitWidth: (text, style) => {
+    const need = textMeasure.widthOf(text, style?.style, style?.icon !== undefined);
+
+    return need === undefined ? undefined : Math.max(SMALLEST_WIDTH, need);
+  },
 });
 </script>

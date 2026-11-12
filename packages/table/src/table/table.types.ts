@@ -773,6 +773,7 @@ export interface NuiTableExposed {
   focusCell(position: NuiTableCellPosition, scroll?: boolean): boolean;
   moveActive(position: NuiTableCellPosition): boolean;
   invalidate(ranges?: NuiTableRanges): void;
+  fitWidth(text: string, style?: NuiTableCellStyle): number | undefined;
 }
 
 export type TablePaneName = (typeof TablePaneName)[keyof typeof TablePaneName];

@@ -64,7 +64,8 @@ export interface LayoutOptions {
 }
 
 const DEFAULT_WIDTH = 160;
-const SMALLEST_WIDTH = 48;
+
+export const SMALLEST_WIDTH = 48;
 const UTILITY_WIDTH = 40;
 
 const ROW_HEAD_DIGIT = 8;

@@ -57,6 +57,7 @@ import {
   type NuiTableRowHeights,
   type NuiTableWindow,
   type NuiTableCellPosition,
+  type NuiTableCellStyle,
 } from '../../src';
 
 export interface EditorLayout {
@@ -1181,6 +1182,10 @@ export class TableDriver<T> {
 
   rectOf(range: NuiTableRange): NuiTableRect | undefined {
     return this.exposed.value?.rectOf(range);
+  }
+
+  fitWidth(text: string, style?: NuiTableCellStyle): number | undefined {
+    return this.exposed.value?.fitWidth(text, style);
   }
 
   cellAtPoint(position: number, col: number): NuiTableCellPosition | undefined {

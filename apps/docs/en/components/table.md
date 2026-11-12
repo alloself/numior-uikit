@@ -345,6 +345,10 @@ The table does not scroll and does not take the focus from a field outside it. T
 `false` when the position is outside the table or its cell cannot be edited: the editor then stays
 where it was.
 
+`fitWidth(text, style)` answers with the column width in pixels at which a cell shows this text on
+one line. It counts the font of the cell style, the cell paddings, the grid line and the room of an
+icon. The method returns `undefined` until the table is mounted.
+
 List in `keepEditing` the elements that can take the focus without ending the edit. Ctrl+Enter in
 the editor writes the value to every selected cell in columns of the same type.
 
