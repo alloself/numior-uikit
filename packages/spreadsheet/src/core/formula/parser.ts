@@ -151,6 +151,8 @@ const createParser = (
   const isPunct = (text: string, ahead = 0): boolean =>
     peek(ahead).kind === TokenKind.Punct && peek(ahead).text === text;
 
+  const isMark = (text: string): boolean => isPunct(text) || isOp(text);
+
   const expectPunct = (text: string): void => {
     if (!isPunct(text)) {
       fail(
@@ -260,8 +262,8 @@ const createParser = (
 
     rows.at(-1)?.push(constant(next()));
 
-    while (isPunct(locale.arrayColumn) || isPunct(locale.arrayRow)) {
-      if (isPunct(locale.arrayRow)) {
+    while (isMark(locale.arrayColumn) || isMark(locale.arrayRow)) {
+      if (isMark(locale.arrayRow)) {
         rows.push([]);
       }
       next();

@@ -115,7 +115,9 @@ export interface BookLabels {
 
 const FORBIDDEN = /[[\]:*?/\\]/u;
 
-const DEFINED_NAME = /^[\p{L}_][\p{L}\p{N}_.]*$/u;
+const NAME = /^[\p{L}_\\][\p{L}\p{N}_.?\\]*$/u;
+
+const MACRO_NAME = /^\\.$/u;
 
 const R1C1_NAME = /^(?:[RrCc]|[Rr]\d*[Cc]\d*|[Rr]\d+|[Cc]\d+)$/u;
 
@@ -130,12 +132,15 @@ export const validSheetName = (name: string): boolean =>
   !name.startsWith("'") &&
   !name.endsWith("'");
 
-export const validDefinedName = (name: string): boolean =>
+export const validTableName = (name: string): boolean =>
   name.length <= MAX_DEFINED_NAME &&
-  DEFINED_NAME.test(name) &&
+  NAME.test(name) &&
   !R1C1_NAME.test(name) &&
   parseCell(name) === undefined &&
   !['true', 'false'].includes(name.toLowerCase());
+
+export const validDefinedName = (name: string): boolean =>
+  validTableName(name) && !MACRO_NAME.test(name);
 
 const nameKey = (name: string, scope: Sheet | undefined): string =>
   `${String(scope?.id ?? 0)}:${name.toLowerCase()}`;

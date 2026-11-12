@@ -20,7 +20,7 @@ import {
   type TableShape,
 } from '../tables';
 import { textValue } from '../values';
-import { validDefinedName, type Sheet, type SheetTable, type Workbook } from '../workbook';
+import { validTableName, type Sheet, type SheetTable, type Workbook } from '../workbook';
 import type { Rewrite, Rewriter } from './rewrites';
 import {
   StepRefusal,
@@ -240,7 +240,7 @@ export const createTableSteps = (
   };
 
   const refusal = (name: string, sheet: Sheet, spec: TableShape): StepRefusal | undefined => {
-    if (!validDefinedName(name)) {
+    if (!validTableName(name)) {
       return StepRefusal.InvalidName;
     }
     if (book.names.taken(name)) {
@@ -315,7 +315,7 @@ export const createTableSteps = (
     if (table === undefined) {
       return { ok: false, reason: StepRefusal.MissingTable };
     }
-    if (!validDefinedName(to)) {
+    if (!validTableName(to)) {
       return { ok: false, reason: StepRefusal.InvalidName };
     }
 

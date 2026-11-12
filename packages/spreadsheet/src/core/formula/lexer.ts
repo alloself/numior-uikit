@@ -17,9 +17,9 @@ type Scan = { readonly token: Token; readonly next: number } | LexFailure;
 
 const LONGEST_ERROR = 12;
 
-const WORD_START = /[\p{L}_$]/u;
+const WORD_START = /[\p{L}_$\\]/u;
 
-const WORD_PART = /[\p{L}\p{N}_.$]/u;
+export const WORD_PART = /[\p{L}\p{N}_.$?\\]/u;
 
 const DIGIT = /\d/u;
 
@@ -31,7 +31,7 @@ const LINK = /^\d+$/u;
 
 const OPERATORS = ['<>', '<=', '>=', '+', '-', '*', '/', '^', '&', '=', '<', '>', '%', ':', '@'];
 
-const PUNCTUATION = new Set(['(', ')', '{', '}', ',', ';', '\\']);
+const PUNCTUATION = new Set(['(', ')', '{', '}', ',', ';']);
 
 const token = (kind: TokenKind, text: string, start: number, value = 0): Token => ({
   kind,

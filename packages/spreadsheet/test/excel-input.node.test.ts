@@ -36,8 +36,6 @@ const ONLY_IN_EXCEL: Readonly<Record<string, string>> = {
   '=SUMIF(INDEX(A1:A2,1):A2,1)': 'the parser reads no range starting with a call',
   '=SUMIF(A1:A2:B3,1)': 'the parser reads no range of ranges',
   '=SUMIF(LAMBDA(x,x)(A1:A2),1)': 'the parser reads no call of a LAMBDA',
-  '=LET(\\a,1,\\a)': 'the parser reads no name starting with a backslash',
-  '=LET(a?,1,2)': 'the parser reads no question mark in a name',
 };
 
 const ONLY_HERE: Readonly<Record<string, string>> = {};

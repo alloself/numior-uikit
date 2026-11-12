@@ -12,6 +12,7 @@ import {
   createWorkbook,
   validDefinedName,
   validSheetName,
+  validTableName,
   type ExternalName,
   type Sheet,
   type SheetPivot,
@@ -217,7 +218,7 @@ const setTables = async (
         ? await readTablePart(archive, relationship.target, options)
         : undefined;
 
-    if (table !== undefined && validColumns(table) && validDefinedName(table.name)) {
+    if (table !== undefined && validColumns(table) && validTableName(table.name)) {
       calculator.setTable(table.name, { ...table, sheet });
     } else if (relationship.kind === RelationshipKind.Table) {
       refused += 1;

@@ -28,8 +28,8 @@ export const FILE_FORMULAS: FormulaLocale = { ...EN_FORMULAS, rowShorthand: fals
 export const RU_FORMULAS: FormulaLocale = {
   argument: ';',
   decimal: ',',
-  arrayColumn: '\\',
-  arrayRow: ';',
+  arrayColumn: ';',
+  arrayRow: ':',
   defaultTable: 'Таблица',
   defaultColumn: 'Столбец',
   specials: {

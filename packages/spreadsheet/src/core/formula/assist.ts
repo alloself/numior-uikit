@@ -1,5 +1,5 @@
 import { FormulaChar, TokenKind, type FormulaLocale } from './formula.types';
-import { tokenize, type Token } from './lexer';
+import { tokenize, WORD_PART, type Token } from './lexer';
 import { EN_FORMULAS } from './locale';
 
 export interface FunctionPrefix {
@@ -18,8 +18,6 @@ interface CallFrame {
 }
 
 const FUNCTION_NAME = /^[\p{L}_][\p{L}\p{N}_.]*$/u;
-
-const WORD_PART = /[\p{L}\p{N}_.$]/u;
 
 const tokensBefore = (text: string, caret: number, locale: FormulaLocale): Token[] | undefined => {
   if (!text.startsWith(FormulaChar.Equals)) {

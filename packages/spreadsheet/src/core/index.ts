@@ -29,7 +29,7 @@ export {
   MAX_CELL_TEXT,
   textValue,
 } from './values';
-export { createWorkbook, validDefinedName, validSheetName } from './workbook';
+export { createWorkbook, validDefinedName, validSheetName, validTableName } from './workbook';
 export { OFFICE_THEME, colorHex, tinted, type ThemePalette } from './theme';
 export { lineLayoutsOf, withLineSizes } from './layout/line-layouts';
 export { layoutDelta } from './layout/merge-layout';
