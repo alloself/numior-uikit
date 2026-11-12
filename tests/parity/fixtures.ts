@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import type { CDPSession, Locator, Page } from '@playwright/test';
 import { test as base } from '../e2e/fixtures';
 import { sectionScope } from '../e2e/helpers/axe';
 import {
@@ -43,6 +43,8 @@ const PAGE_SHOT = { ...SHOT, fullPage: true, timeout: 60_000 } as const;
 const LIVE_SHOT = { ...SHOT, animations: 'allow' } as const;
 const PAGE_ATTEMPTS = 4;
 const RETRY_FRAMES = 12;
+const PAGE_SHOT_RENDERER = { rate: 4 };
+const FULL_SPEED = { rate: 1 };
 const FROZEN = { playbackRate: 0 };
 const RUNNING = { playbackRate: 1 };
 
@@ -224,11 +226,29 @@ export class SceneRecorder {
   }
 
   private async shootPage(): Promise<Buffer> {
+    const session = await this.page.context().newCDPSession(this.page);
+
+    try {
+      return await this.retakePage(session);
+    } finally {
+      await session.detach();
+    }
+  }
+
+  private async shootWholePage(session: CDPSession): Promise<Buffer> {
+    await session.send('Emulation.setCPUThrottlingRate', PAGE_SHOT_RENDERER);
+    const picture = await this.page.screenshot(PAGE_SHOT);
+
+    await session.send('Emulation.setCPUThrottlingRate', FULL_SPEED);
+    return picture;
+  }
+
+  private async retakePage(session: CDPSession): Promise<Buffer> {
     let previous: Buffer | undefined;
 
     for (let attempt = 0; attempt < PAGE_ATTEMPTS; attempt += 1) {
       const scrolled = await this.page.evaluate(scrollState);
-      const picture = await this.page.screenshot(PAGE_SHOT);
+      const picture = await this.shootWholePage(session);
       const kept = (await this.page.evaluate(scrollState)) === scrolled;
 
       if (kept || previous?.equals(picture) === true) {
