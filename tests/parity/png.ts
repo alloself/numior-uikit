@@ -122,22 +122,24 @@ export const describePixelDiff = (base: Image, next: Image): string | null => {
   let [minX, minY, maxX, maxY] = [base.width, base.height, -1, -1];
 
   for (let at = 0; at < base.pixels.length; at += 1) {
-    if (base.pixels[at] !== next.pixels[at]) {
-      const pixel = Math.floor(at / base.channels);
-      const x = pixel % base.width;
-      const y = Math.floor(pixel / base.width);
-
-      count += 1;
-
-      [minX, minY, maxX, maxY] = [
-        Math.min(minX, x),
-        Math.min(minY, y),
-        Math.max(maxX, x),
-        Math.max(maxY, y),
-      ];
-
-      at = (pixel + 1) * base.channels - 1;
+    if (base.pixels[at] === next.pixels[at]) {
+      continue;
     }
+
+    const pixel = Math.floor(at / base.channels);
+    const x = pixel % base.width;
+    const y = Math.floor(pixel / base.width);
+
+    count += 1;
+
+    [minX, minY, maxX, maxY] = [
+      Math.min(minX, x),
+      Math.min(minY, y),
+      Math.max(maxX, x),
+      Math.max(maxY, y),
+    ];
+
+    at = (pixel + 1) * base.channels - 1;
   }
 
   return count === 0 ? null : `${count} px differ within x ${minX}..${maxX}, y ${minY}..${maxY}`;

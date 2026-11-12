@@ -55,15 +55,19 @@ export const collect = ({ root, properties }: CollectOptions): RawScene => {
     ];
 
     ['::before', '::after'].forEach((pseudo) => {
-      if (getComputedStyle(element, pseudo).content !== 'none') {
-        nodes.push([owner, pseudo, '', styleOf(element, pseudo)]);
+      if (getComputedStyle(element, pseudo).content === 'none') {
+        return;
       }
+
+      nodes.push([owner, pseudo, '', styleOf(element, pseudo)]);
     });
 
     conditional.forEach(([pseudo, selector]) => {
-      if (element.matches(selector)) {
-        nodes.push([owner, pseudo, '', styleOf(element, pseudo)]);
+      if (!element.matches(selector)) {
+        return;
       }
+
+      nodes.push([owner, pseudo, '', styleOf(element, pseudo)]);
     });
   };
 
@@ -200,10 +204,14 @@ export const seekMotion = ({ root, progress }: SeekOptions): void => {
     .forEach((animation) => {
       const end = animation.effect?.getComputedTiming().endTime;
 
-      if (typeof end === 'number' && end !== Infinity) {
-        animation.pause();
-        animation.currentTime = end * progress;
+      const finite = typeof end === 'number' && end !== Infinity;
+
+      if (!finite) {
+        return;
       }
+
+      animation.pause();
+      animation.currentTime = end * progress;
     });
 };
 
@@ -234,9 +242,13 @@ export const showCurrentLinks = (): void => {
     const item = current.getBoundingClientRect();
     const frame = scroller.getBoundingClientRect();
 
-    if (item.top < frame.top || item.bottom > frame.bottom) {
-      scroller.scrollTop = item.top - frame.top - (frame.height - item.height) / 2;
+    const inside = item.top >= frame.top && item.bottom <= frame.bottom;
+
+    if (inside) {
+      return;
     }
+
+    scroller.scrollTop = item.top - frame.top - (frame.height - item.height) / 2;
   });
 };
 

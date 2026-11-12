@@ -54,9 +54,11 @@ const isVitePlugins = (value: unknown): value is VitePlugins =>
 const addTailwind = (): void => {
   const plugins: unknown = tailwindcss();
 
-  if (isVitePlugins(plugins)) {
-    addVitePlugin(plugins);
+  if (!isVitePlugins(plugins)) {
+    return;
   }
+
+  addVitePlugin(plugins);
 };
 
 const addKitCss = (nuxt: Nuxt, packages: readonly string[]): void => {

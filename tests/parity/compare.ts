@@ -96,9 +96,11 @@ const nodeFindings = (
   base.properties.forEach((property, index) => {
     const [was = '', now = ''] = [beforeStyle[index], afterStyle[index]];
 
-    if (was !== now) {
-      findings.push({ scene: base.name, element: path, property, before: was, after: now });
+    if (was === now) {
+      return;
     }
+
+    findings.push({ scene: base.name, element: path, property, before: was, after: now });
   });
 
   return findings;
@@ -157,9 +159,11 @@ export const diffScenes = (
   before.forEach((node, path) => {
     const pair = after.get(path);
 
-    if (pair !== undefined) {
-      findings.push(...nodeFindings(base, next, path, [node, pair]));
+    if (pair === undefined) {
+      return;
     }
+
+    findings.push(...nodeFindings(base, next, path, [node, pair]));
   });
 
   return findings;

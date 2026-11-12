@@ -93,9 +93,13 @@ const compare = async (base: string, next: string, filter: RegExp): Promise<Comp
   const totals = { scenes: 0, elements: 0, values: 0, images: 0 };
 
   nextNames.forEach((name) => {
-    if (pick(name) && !known.has(name)) {
-      findings.push(missingScene(name, 'missing', 'present'));
+    const added = pick(name) && !known.has(name);
+
+    if (!added) {
+      return;
     }
+
+    findings.push(missingScene(name, 'missing', 'present'));
   });
 
   for (const name of baseNames.filter(pick)) {

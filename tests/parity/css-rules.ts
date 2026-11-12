@@ -20,10 +20,14 @@ const splitTop = (source: string): string[] => {
       depth -= 1;
     }
 
-    if (parens === 0 && ((char === ';' && depth === 0) || (char === '}' && depth === 0))) {
-      parts.push(source.slice(start, at + 1));
-      start = at + 1;
+    const closes = parens === 0 && depth === 0 && (char === ';' || char === '}');
+
+    if (!closes) {
+      return;
     }
+
+    parts.push(source.slice(start, at + 1));
+    start = at + 1;
   });
 
   return [...parts, source.slice(start)].map((part) => part.trim()).filter(Boolean);
@@ -117,9 +121,11 @@ export const foldColorMixFallbacks = (rules: readonly CssRule[]): FoldedRules =>
 export const parseAliases = (source: string): Map<string, string> => {
   return parseRules(source).reduce((aliases, rule) => {
     rule.declarations.forEach(({ property, value }) => {
-      if (property.startsWith('--nui-')) {
-        aliases.set(property, value);
+      if (!property.startsWith('--nui-')) {
+        return;
       }
+
+      aliases.set(property, value);
     });
 
     return aliases;

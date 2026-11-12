@@ -23,10 +23,12 @@ const modeOf = (counts: ReadonlyMap<number, number>): number => {
   let bestCount = -1;
 
   counts.forEach((count, value) => {
-    if (count > bestCount) {
-      best = value;
-      bestCount = count;
+    if (count <= bestCount) {
+      return;
     }
+
+    best = value;
+    bestCount = count;
   });
 
   return best;
@@ -95,9 +97,11 @@ export const writeScene = async (
   await mkdir(dirname(file), { recursive: true });
   await writeFile(file, gzipSync(JSON.stringify(scene)));
 
-  if (image !== undefined) {
-    await writeFile(imageFile(directory, scene.name), image);
+  if (image === undefined) {
+    return;
   }
+
+  await writeFile(imageFile(directory, scene.name), image);
 };
 
 export const readImage = async (

@@ -30,9 +30,11 @@ test.beforeEach(async ({ page, scenes }) => {
     ([scheme, accent]) => {
       localStorage.setItem('nui-theme', scheme);
 
-      if (accent !== null) {
-        localStorage.setItem('nui-accent', accent);
+      if (accent === null) {
+        return;
       }
+
+      localStorage.setItem('nui-accent', accent);
     },
     [scenes.profile.scheme, scenes.profile.accent] as const,
   );
