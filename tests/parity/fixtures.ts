@@ -15,6 +15,7 @@ import {
   seedRandom,
   seekMotion,
   showCurrentLinks,
+  stillShadowParts,
 } from './page-scripts';
 import { DEFAULT_PROFILE } from './profiles';
 import { PROPERTIES } from './properties';
@@ -75,6 +76,7 @@ export class SceneRecorder {
     let quiet = 0;
 
     await this.page.evaluate(fontsReady);
+    await this.page.evaluate(stillShadowParts);
 
     for (let round = 0; round < SETTLE_ROUNDS && quiet < QUIET_ROUNDS; round += 1) {
       const running = await this.page.evaluate(freezeMotion);

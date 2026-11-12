@@ -113,6 +113,18 @@ export const freezeMotion = (): number => {
   }, 0);
 };
 
+export const stillShadowParts = (): void => {
+  if (document.getElementById('parity-still-shadow-parts') !== null) {
+    return;
+  }
+
+  const style = document.createElement('style');
+
+  style.id = 'parity-still-shadow-parts';
+  style.textContent = '::-webkit-progress-value { animation: none !important; }';
+  document.head.append(style);
+};
+
 export const dropMountMarkers = (): void => {
   document.querySelectorAll('.nui-icon--appearing').forEach((icon) => {
     icon.classList.remove('nui-icon--appearing');
