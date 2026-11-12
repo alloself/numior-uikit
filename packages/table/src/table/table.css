@@ -684,9 +684,16 @@
   ):hover {
   --_row-bg: var(--_hover);
 }
-.nui-table .nui-table__body > .nui-table__row--selected,
-.nui-table .nui-table__body > .nui-table__row--selected:hover {
+.nui-table .nui-table__body > .nui-table__row--selected {
   --_row-bg: var(--nui-primary-soft);
+}
+.nui-table
+  .nui-table__body
+  > .nui-table__row--selected:where(:not(:has(> .nui-table__cell--tall:hover))):hover {
+  --_row-bg: light-dark(
+    oklab(from var(--nui-primary-soft) calc(l - var(--nui-state-hover-subtle)) a b),
+    oklab(from var(--nui-primary-soft) calc(l + var(--nui-state-hover-subtle)) a b)
+  );
 }
 .nui-table--loading .nui-table__body {
   pointer-events: none;
