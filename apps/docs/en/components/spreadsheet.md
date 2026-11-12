@@ -127,13 +127,21 @@ the `merge-blocked` reason.
 
 Your own toolbar runs the same actions with the `mergeCells()` and `unmergeCells()` methods.
 
-### Column widths
+### Column widths and row heights
 
-Drag the right edge of a column header, or press `Alt` with an arrow on the header. The width is
-stored in the book per sheet: `Ctrl+Z` undoes it, XLSX files keep it and co-authors see it. A double
-click on the edge returns the default width.
+Drag the right edge of a column header or the bottom edge of a row number. On the keyboard press
+`Alt` with an arrow on a column header or on a row number. A double click on the edge returns the
+default size.
 
-In a read-only book the width changes on screen only, while this sheet is shown.
+The size is stored in the book per sheet: `Ctrl+Z` undoes it, XLSX files keep it and co-authors see
+it. The book step is written once, at the end of the gesture.
+
+When several whole rows or columns are selected, the edge of one of them sizes all of them. With
+the whole sheet selected the default size changes and the sizes of single lines are dropped. The
+sheet does not size more than 20,000 rows in one gesture and answers with the `lines-too-many`
+reason.
+
+In a read-only book the size changes on screen only, while this sheet is shown.
 
 ### Refused actions
 

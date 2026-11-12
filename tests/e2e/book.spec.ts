@@ -12,6 +12,8 @@ const WHITE: Rgb = [255, 255, 255];
 
 const COLUMN_DRAG = 40;
 
+const ROW_DRAG = 24;
+
 const DEFAULT_COLUMN = 64;
 
 const LONG_FIELD = 300;
@@ -403,6 +405,87 @@ test.describe('book', () => {
     await page.keyboard.press('Control+y');
     await book.columnEdge('B').dblclick();
     await expect.poll(() => book.columnWidth('B')).toBe(DEFAULT_COLUMN);
+  });
+
+  test('keeps the height of a dragged row on its sheet, undoes it and resets it by a double click', async ({
+    playground,
+    book,
+    page,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Продажи');
+
+    const before = await book.rowHeight('3');
+
+    await book.dragRowEdge('3', ROW_DRAG);
+    await expect.poll(() => book.rowHeight('3')).toBe(before + ROW_DRAG);
+
+    await book.chooseSheet('Заметки');
+    await expect.poll(() => book.rowHeight('3')).toBe(before);
+
+    await book.chooseSheet('Продажи');
+    await expect.poll(() => book.rowHeight('3')).toBe(before + ROW_DRAG);
+
+    await book.cell('2', 0).click();
+    await page.keyboard.press('Control+z');
+    await expect.poll(() => book.rowHeight('3')).toBe(before);
+
+    await page.keyboard.press('Control+y');
+    await book.rowEdge('3').dblclick();
+    await expect.poll(() => book.rowHeight('3')).toBe(before);
+  });
+
+  test('selects a row by a press in the middle of its number, where a touch screen has the height handle', async ({
+    playground,
+    book,
+    isMobile,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Продажи');
+
+    const before = await book.rowHeight('4');
+
+    await (isMobile ? book.rowHeader('4').tap() : book.rowHeader('4').click());
+
+    await expect(book.rowHeader('4')).toHaveClass(/nui-table__cell--marked/);
+    expect(await book.rowHeight('4')).toBe(before);
+  });
+
+  test('gives the height of a dragged row to every selected row and takes it back in one step', async ({
+    playground,
+    book,
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'a range of rows is selected with Shift or by a mouse drag');
+
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await book.sheet.scrollIntoViewIfNeeded();
+    await book.chooseSheet('Продажи');
+
+    const before = await book.rowHeights(['2', '3', '4', '5']);
+
+    await book.rowHeader('2').click();
+    await book.rowHeader('4').click({ modifiers: ['Shift'] });
+    await book.dragRowEdge('3', ROW_DRAG);
+
+    await expect
+      .poll(() => book.rowHeights(['2', '3', '4', '5']))
+      .toEqual([
+        (before[0] ?? 0) + ROW_DRAG,
+        (before[1] ?? 0) + ROW_DRAG,
+        (before[2] ?? 0) + ROW_DRAG,
+        before[3],
+      ]);
+
+    await book.cell('2', 0).click();
+    await page.keyboard.press('Control+z');
+    await expect.poll(() => book.rowHeights(['2', '3', '4', '5'])).toEqual(before);
   });
 
   test('shows the sheet under the tab menu and leaves the focus on the shown sheet', async ({

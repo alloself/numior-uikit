@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { createWorkbook, textValue, type Workbook } from '../src/core';
+import { MAX_COLS, MAX_ROWS, createWorkbook, textValue, type Workbook } from '../src/core';
 import { charsToPixels } from '../src';
 import { SpreadsheetDriver } from './drivers/spreadsheet';
 
@@ -25,6 +25,16 @@ const widthInBook = (book: Workbook, sheet: string, col: number): number | undef
 
   return size === undefined ? undefined : charsToPixels(size);
 };
+
+const widthsInBook = (book: Workbook, sheet: string, cols: readonly number[]) =>
+  cols.map((col) => widthInBook(book, sheet, col));
+
+const wholeCols = (left: number, right: number) => ({
+  top: 0,
+  left,
+  bottom: MAX_ROWS - 1,
+  right,
+});
 
 afterEach(() => {
   for (const driver of mounted.splice(0)) {
@@ -108,5 +118,52 @@ describe('NuiSpreadsheet column widths', () => {
     expect(driver.columnWidth('B')).toBe('100px');
     expect(widthInBook(book, 'Sales', 1)).toBeUndefined();
     expect(driver.changes).toEqual([]);
+  });
+
+  it('gives the dragged width to every selected column as one change', async () => {
+    const book = twoSheets();
+    const driver = open(book);
+
+    await driver.settle();
+    await driver.select({ active: { row: 0, col: 1 }, ranges: [wholeCols(1, 2), wholeCols(4, 4)] });
+    await driver.dragColumnEdge('C', 36);
+
+    expect(widthsInBook(book, 'Sales', [0, 1, 2, 3, 4, 5])).toEqual([
+      undefined,
+      100,
+      100,
+      undefined,
+      100,
+      undefined,
+    ]);
+
+    expect(driver.changes).toHaveLength(1);
+  });
+
+  it('changes only the dragged column when it is outside the selected columns', async () => {
+    const book = twoSheets();
+    const driver = open(book);
+
+    await driver.settle();
+    await driver.select({ active: { row: 0, col: 1 }, ranges: [wholeCols(1, 2)] });
+    await driver.dragColumnEdge('D', 36);
+
+    expect(widthsInBook(book, 'Sales', [1, 2, 3])).toEqual([undefined, undefined, 100]);
+  });
+
+  it('makes the dragged width the width of the sheet when every column is selected', async () => {
+    const book = twoSheets();
+    const driver = open(book);
+
+    await driver.settle();
+    await driver.dragColumnEdge('B', 12);
+    await driver.select({ active: { row: 0, col: 0 }, ranges: [wholeCols(0, MAX_COLS - 1)] });
+    await driver.dragColumnEdge('D', 36);
+
+    const layout = book.sheet('Sales')?.layout;
+
+    expect(charsToPixels(layout?.defaults.colWidth ?? 0)).toBe(100);
+    expect(layout?.cols.get(1)?.size).toBeUndefined();
+    expect([driver.columnWidth('B'), driver.columnWidth('D')]).toEqual(['100px', '100px']);
   });
 });

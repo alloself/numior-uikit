@@ -3,6 +3,7 @@ export {
   charsToPixels,
   defaultRowHeight,
   pixelsToChars,
+  pixelsToPoints,
   pointsToPixels,
   sheetCells,
 } from './sheet/sheet-cells';

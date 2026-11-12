@@ -38,6 +38,7 @@ export interface NuiSpreadsheetMessages {
   readonly cellsUnmerged: string;
   readonly mergeBlocked: string;
   readonly cellGone: string;
+  readonly linesTooMany: (params: { readonly limit: number }) => string;
   readonly pivotCells: string;
   readonly actionRefused: string;
   readonly recalculating: (params: { readonly share: string }) => string;
@@ -233,6 +234,8 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     cellsUnmerged: 'Cells unmerged',
     mergeBlocked: 'Cells of a table or a pivot table cannot be merged',
     cellGone: 'Someone else removed or hid this cell. The text you typed was not saved',
+    linesTooMany: ({ limit }) =>
+      `Too many rows are selected to size them at once. Select up to ${limit.toLocaleString('en-US')} rows or the whole sheet`,
     pivotCells: 'Cells of a pivot table cannot be changed',
     actionRefused: 'The action was not applied',
     recalculating: ({ share }) => `Recalculating ${share}`,
@@ -339,6 +342,8 @@ export const spreadsheetMessages: NuiMessageCatalog<NuiSpreadsheetMessages> = {
     cellsUnmerged: 'Ячейки разъединены',
     mergeBlocked: 'Ячейки таблицы и сводной таблицы объединить нельзя',
     cellGone: 'Ячейку удалил или скрыл другой участник. Набранный текст не сохранён',
+    linesTooMany: ({ limit }) =>
+      `Выделено слишком много строк, чтобы изменить их размер за раз. Выделите до ${limit.toLocaleString('ru-RU')} строк или весь лист`,
     pivotCells: 'Ячейки сводной таблицы изменить нельзя',
     actionRefused: 'Действие не выполнено',
     recalculating: ({ share }) => `Пересчёт ${share}`,

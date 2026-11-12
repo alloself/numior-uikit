@@ -102,13 +102,14 @@
         :dir="sheetDir"
         v-model:active="formula.active.value"
         v-model:ranges="formula.ranges.value"
-        v-model:widths="columnSizes.widths.value"
+        v-model:widths="lineSizes.widths.value"
         v-bind="table.grid"
+        :row-headers="table.rowHeaders"
         :draft="editing.draft.value"
         :columns="table.columns"
         :merges="table.cells.merges"
         :frozen-rows="table.cells.frozenRows"
-        :row-heights="table.cells.rowHeights"
+        :row-heights="lineSizes.heights.value"
         :row-height="table.rowHeight"
         :gridlines="table.cells.gridlines"
         :height="height"
@@ -123,7 +124,9 @@
         size="sm"
         @update:draft="editing.setDraft"
         @pick="references.onPick"
-        @column-resize="columnSizes.commit"
+        @update:row-heights="lineSizes.setHeights"
+        @column-resize="lineSizes.commitWidths"
+        @row-resize="lineSizes.commitHeights"
       >
         <template #overlay="{ rectOf }">
           <NuiSpreadsheetDrawings
@@ -294,7 +297,7 @@ import {
 } from '../core';
 import { defaultRowHeight, sheetCells } from './sheet-cells';
 import { liveSource, sameColumns, type ColumnShape } from './sheet-table';
-import { useSheetColumnSizes } from './use-sheet-column-sizes';
+import { useSheetLineSizes } from './use-sheet-line-sizes';
 import NuiSpreadsheetAssist from './NuiSpreadsheetAssist.vue';
 import NuiSpreadsheetMarks from './NuiSpreadsheetMarks.vue';
 import NuiSpreadsheetNote from './NuiSpreadsheetNote.vue';
@@ -545,14 +548,17 @@ const editing = useSheetEditing({
   },
 });
 
-const columnSizes = useSheetColumnSizes({
+const lineSizes = useSheetLineSizes({
   sheet: () => shownSheet.value,
   cells: () => cells.value,
+  ranges: () => formula.ranges.value,
   readonly: () => locked.value,
   editing,
+  messages,
+  refuse,
 });
 
-watch([shownSheet, layoutRevision], columnSizes.forget);
+watch([shownSheet, layoutRevision], lineSizes.forget);
 
 const onRemoteSteps = (_steps: readonly WorkbookStep[], lines: readonly LineChange[]): void => {
   const held = places.hold();
@@ -928,11 +934,12 @@ const table = computed(() => {
     return undefined;
   }
 
-  const { columns: _columns, ...rest } = parts.built;
+  const { columns: _columns, rowHeaders, ...rest } = parts.built;
 
   return {
     cells: current,
     grid: rest,
+    rowHeaders: { ...rowHeaders, resizable: true },
     columns: parts.columns,
     rowHeight: defaultRowHeight(shown),
   };

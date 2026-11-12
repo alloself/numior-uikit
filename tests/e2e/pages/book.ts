@@ -2,7 +2,15 @@ import { readFile } from 'node:fs/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { paintedRgbAt, rgbDelta, type Rgb } from '../helpers/color';
-import { boxOf, dragAcross, renderedWidth, type Box, type Point } from '../helpers/geometry';
+import {
+  boxOf,
+  dragAcross,
+  dragBy,
+  renderedHeight,
+  renderedWidth,
+  type Box,
+  type Point,
+} from '../helpers/geometry';
 import type { XlsxFile } from '../helpers/xlsx';
 import { PivotPanel } from './pivot-panel';
 
@@ -82,6 +90,27 @@ export class BookSection {
   async dragColumnEdge(name: string, dx: number): Promise<void> {
     await this.columnEdge(name).scrollIntoViewIfNeeded();
     await dragAcross(this.columnEdge(name), dx);
+  }
+
+  rowHeader(label: string): Locator {
+    return this.grid.getByRole('rowheader', { name: label, exact: true });
+  }
+
+  rowEdge(label: string): Locator {
+    return this.rowHeader(label).locator('.nui-table__resizer--row');
+  }
+
+  rowHeight(label: string): Promise<number> {
+    return renderedHeight(this.rowHeader(label));
+  }
+
+  rowHeights(labels: readonly string[]): Promise<number[]> {
+    return Promise.all(labels.map((label) => this.rowHeight(label)));
+  }
+
+  async dragRowEdge(label: string, dy: number): Promise<void> {
+    await this.rowEdge(label).scrollIntoViewIfNeeded();
+    await dragBy(this.rowEdge(label), 0, dy);
   }
 
   row(label: string): Locator {

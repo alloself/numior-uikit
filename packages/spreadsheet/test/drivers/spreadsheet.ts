@@ -354,6 +354,64 @@ export class SpreadsheetDriver {
     await nextTick();
   }
 
+  private rowHeader(label: string): Element | undefined {
+    return this.wrapper
+      .findAll('.nui-table__row--body [role="rowheader"]')
+      .find((cell) => cell.text() === label)?.element;
+  }
+
+  rowHeight(label: string): string | undefined {
+    const row = this.rowHeader(label)?.closest('tr');
+
+    return row instanceof HTMLElement ? row.style.getPropertyValue('--_row') : undefined;
+  }
+
+  async focusRowHeader(label: string): Promise<void> {
+    const head = this.rowHeader(label);
+
+    if (head instanceof HTMLElement) {
+      head.focus();
+    }
+    await nextTick();
+  }
+
+  async resetRowEdge(label: string): Promise<void> {
+    this.rowHeader(label)
+      ?.querySelector('.nui-table__resizer--row')
+      ?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+
+    await nextTick();
+  }
+
+  async dragRowEdge(label: string, dy: number): Promise<void> {
+    const handle = this.rowHeader(label)?.querySelector('.nui-table__resizer--row');
+
+    if (handle === null || handle === undefined) {
+      throw new Error(`Row ${label} has no resize handle`);
+    }
+
+    handle.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        bubbles: true,
+        button: 0,
+        pointerId: EDGE_POINTER,
+        clientY: EDGE_START,
+      }),
+    );
+
+    window.dispatchEvent(
+      new PointerEvent('pointermove', { pointerId: EDGE_POINTER, clientY: EDGE_START + dy }),
+    );
+
+    await nextTick();
+
+    window.dispatchEvent(
+      new PointerEvent('pointerup', { pointerId: EDGE_POINTER, clientY: EDGE_START + dy }),
+    );
+
+    await nextTick();
+  }
+
   get rowLabels(): string[] {
     return texts(this.wrapper, '.nui-table__row--body [role="rowheader"]').slice(0, 5);
   }

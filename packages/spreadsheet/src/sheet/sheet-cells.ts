@@ -74,6 +74,8 @@ export const pixelsToChars = (pixels: number): number =>
 
 export const pointsToPixels = (points: number): number => Math.round(points * POINT);
 
+export const pixelsToPoints = (pixels: number): number => (pixels * 72) / 96;
+
 const hiddenLines = (lines: LineLayouts): number[] => {
   const hidden: number[] = [];
 

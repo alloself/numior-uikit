@@ -338,6 +338,16 @@ export interface SheetLinesOptions {
   readonly tools: () => readonly NuiMenuEntry[];
 }
 
+export interface SheetLineSizesOptions {
+  readonly sheet: () => Sheet | undefined;
+  readonly cells: () => SheetCells | undefined;
+  readonly ranges: () => NuiTableRanges;
+  readonly readonly: () => boolean;
+  readonly editing: Pick<SheetEditing, 'apply'>;
+  readonly messages: ComputedRef<NuiSpreadsheetMessages>;
+  readonly refuse: Refuse;
+}
+
 export interface SheetMergesOptions {
   readonly book: () => Workbook;
   readonly calculator: () => Calculator;
@@ -612,6 +622,7 @@ export const NuiSpreadsheetRefusalReason = {
   FillMerged: 'fill-merged',
   MergeBlocked: 'merge-blocked',
   CellGone: 'cell-gone',
+  LinesTooMany: 'lines-too-many',
   PivotSource: 'pivot-source',
   ChartData: 'chart-data',
   PictureFile: 'picture-file',
