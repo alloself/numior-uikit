@@ -1,4 +1,5 @@
 import type { NuiRouteLocation } from '../shared/destination';
+import type { NuiOptionKey } from '../shared/options';
 import type { Component } from 'vue';
 import type { FloatingPlacement, IconSource, PopoverInvokerAttrs } from '@numior/primitives';
 import type { NuiTriggerRef } from '../shared/trigger-ref';
@@ -124,6 +125,10 @@ export interface NuiMenuCheckboxItemProps {
   icon?: IconSource | undefined;
   disabled?: boolean | undefined;
   closeOnSelect?: boolean | undefined;
+}
+
+export interface NuiMenuRadioGroupProps<T> {
+  getKey?: NuiOptionKey<NonNullable<T>> | undefined;
 }
 
 export interface NuiMenuRadioItemProps<T> {

@@ -13,6 +13,12 @@ import '@numior/vue/styles/link.css';
 import '@numior/vue/styles/breadcrumbs.css';
 ```
 
+## Usage
+
+Collapse a long path to the number of steps you need and pick a separator.
+
+<Configurator name="NuiBreadcrumbs" />
+
 ## Examples
 
 ### A long path

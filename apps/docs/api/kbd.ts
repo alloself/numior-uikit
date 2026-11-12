@@ -24,8 +24,8 @@ const docs: DocsMap = {
       },
     },
     configurator: {
-      props: ['size', 'variant', 'platform'],
-      content: { ru: 'Esc', en: 'Esc' },
+      props: ['keys', 'size', 'variant', 'platform'],
+      values: { keys: 'mod+k' },
     },
   },
 };

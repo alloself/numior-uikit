@@ -24,7 +24,7 @@
       <slot>
         <NuiRadio
           v-for="option in options"
-          :key="defaultOptionKey(option.value)"
+          :key="keyOf(option.value)"
           :value="option.value"
           :disabled="option.disabled || undefined"
         >
@@ -58,6 +58,7 @@ const {
   name,
   orientation = NuiRadioGroupOrientation.Vertical,
   options,
+  getKey,
 } = defineProps<NuiRadioGroupProps<T>>();
 
 defineOptions({ inheritAttrs: false });
@@ -80,9 +81,21 @@ const {
 
 const labelledBy = computed(() => field.value?.labelledBy.value);
 
+const keyOf = (value: T): string => {
+  if (getKey === undefined || value === undefined || value === null) {
+    return defaultOptionKey(value);
+  }
+
+  return getKey(value);
+};
+
+const selectedKey = computed(() => (model.value === undefined ? undefined : keyOf(model.value)));
+
 provideRadioGroup<T>({
   name: computed(() => name ?? attrs.value.id),
   modelValue: model,
+  selectedKey,
+  keyOf,
   disabled: isDisabled,
   readonly: isReadonly,
   invalid: isInvalid,

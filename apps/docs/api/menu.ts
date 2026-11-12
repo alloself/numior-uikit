@@ -19,6 +19,10 @@ const label = { ru: 'Текст пункта.', en: 'Text of the item.' };
 
 const docs: DocsMap = {
   NuiMenu: {
+    configurator: {
+      scene: 'menu/Example',
+      props: ['placement', 'offset', 'closeOnSelect', 'loop'],
+    },
     props: {
       id: {
         ru: 'Идентификатор меню. По умолчанию создаётся автоматически.',
@@ -196,6 +200,12 @@ const docs: DocsMap = {
     slots: { default: label },
   },
   NuiMenuRadioGroup: {
+    props: {
+      getKey: {
+        ru: 'Функция, которая возвращает ключ значения-объекта: по ключу ищется выбранный пункт. Без неё ключом служит JSON значения.',
+        en: 'Function that returns the key of an object value; the selected item is found by this key. Without it the JSON of the value is the key.',
+      },
+    },
     models: { 'v-model': { ru: 'Значение выбранного пункта.', en: 'Value of the selected item.' } },
     slots: { default: { ru: 'Пункты `NuiMenuRadioItem`.', en: '`NuiMenuRadioItem` items.' } },
   },

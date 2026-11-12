@@ -1,14 +1,11 @@
 # Number field
 
-`NuiNumberField` is a field for numbers: prices, quantities, percent discounts. The number is
-shown with the separators and the currency sign of the locale, and the model gets a `number`
-or `null`.
+A number input formatted for the locale, with a currency and a step.
 
 <Example name="number-field/Basic" />
 
-The format comes from `formatOptions`, the same options as in `Intl.NumberFormat`: currency,
-percent, the number of fraction digits. While the field is focused, the text stays as the user
-typed it.
+Describe the format in `formatOptions`, as for `Intl.NumberFormat`. A typed number reaches the
+model when the user leaves the field or presses Enter.
 
 ## Installation
 
@@ -20,37 +17,35 @@ import '@numior/vue/styles/number-field.css';
 
 ## Usage
 
+Change the bounds, the step and the buttons of the field.
+
 <Configurator name="NuiNumberField" />
 
 ## Examples
 
-### Bounds and step
+### Limit the range
 
-The `min` and `max` props set the allowed range. `step` sets how much the arrow keys and the
-plus and minus buttons change the number. On blur or Enter the number is brought back into
-the range and rounded to the precision of `step`.
-
-`:steppers="false"` removes the buttons. In a `readonly` field neither the buttons nor the keys
-change the value.
+Set `min`, `max` and `step`.
 
 <Example name="number-field/Bounds" />
 
-### Locale
+A number outside the range turns into the nearest bound when the user leaves the field.
 
-The number format follows the app language, and the `locale` prop sets it for a single field.
-Typing accepts plain digits and the digits of the locale, its decimal separator and a minus
-sign in any form.
+### Show the number in another format
+
+Pass `locale` to the field.
 
 <Example name="number-field/Locale" />
 
+A field without `locale` follows the [app language](/en/guide/localization).
+
 ## Accessibility
 
-The field has the `spinbutton` role: a screen reader announces the value, the minimum and the
-maximum in the locale format. The plus and minus buttons are hidden from screen readers and
-never take focus; on the keyboard the arrow keys do their job.
+The field has the `spinbutton` role, so a screen reader announces the value with the minimum and
+the maximum. The plus and minus buttons are hidden from it and never take focus: the arrow keys do
+the same.
 
-On iOS the `inputmode="decimal"` keypad has no minus sign. Pass `inputmode="text"` for negative
-numbers.
+On iOS the decimal keypad has no minus sign, so pass `inputmode="text"` for negative numbers.
 
 <KeyboardReference name="NuiNumberField" />
 

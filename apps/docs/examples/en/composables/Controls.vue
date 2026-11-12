@@ -4,7 +4,9 @@
     <NuiField label="Value">
       <component :is="entry.component" v-model="value" v-bind="entry.props(props) ? props : {}" />
     </NuiField>
-    <p class="m-0 text-sm text-muted-foreground">Value: {{ String(value) }}</p>
+    <p class="m-0 text-sm text-muted-foreground">
+      The control returned {{ JSON.stringify(value) }}.
+    </p>
   </div>
 </template>
 

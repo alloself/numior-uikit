@@ -7,6 +7,11 @@ const dictionary = (ru: string, en: string, ruDefault: string, enDefault: string
 
 const docs: DocsMap = {
   NuiCode: {
+    configurator: {
+      scene: 'code/Example',
+      props: ['title', 'lineNumbers', 'copyable', 'wrap', 'maxLines'],
+      values: { title: 'orders.jsonl' },
+    },
     props: {
       code: {
         ru: 'Текст кода. Каждый перевод строки начинает новую строку.',
@@ -28,12 +33,18 @@ const docs: DocsMap = {
         ru: 'Имя файла в шапке вместо языка.',
         en: 'File name in the header instead of the language.',
       },
-      lineNumbers: { ru: 'Показывает номера строк.', en: 'Shows line numbers.' },
+      lineNumbers: {
+        ru: 'Нумерует строки слева. Номера не попадают в скопированный текст.',
+        en: 'Numbers the lines on the left. The numbers stay out of the copied text.',
+      },
       highlight: {
         ru: 'Номера строк, которые выделяются фоном. Счёт идёт с единицы.',
         en: 'Numbers of the lines to highlight with a background, starting at one.',
       },
-      copyable: { ru: 'Показывает кнопку копирования.', en: 'Shows a copy button.' },
+      copyable: {
+        ru: 'Кнопка копирования: в шапке, а без шапки — в углу блока.',
+        en: 'Copy button: in the header, or in the corner of the block when there is no header.',
+      },
       maxLines: {
         ru: 'Сворачивает код длиннее этого числа строк и добавляет кнопку «Показать всё».',
         en: 'Collapses code longer than this many lines and adds a "Show more" button.',

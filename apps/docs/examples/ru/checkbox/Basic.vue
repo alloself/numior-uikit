@@ -1,6 +1,6 @@
 <template>
-  <NuiCheckbox v-model="terms" description="Без согласия заказ не оформить" required>
-    Принимаю условия использования
+  <NuiCheckbox v-model="agreed" description="Без согласия заказ не оформить" required>
+    Согласен с условиями доставки
   </NuiCheckbox>
 </template>
 
@@ -8,5 +8,5 @@
 import { ref } from 'vue';
 import { NuiCheckbox } from '@numior/vue';
 
-const terms = ref(false);
+const agreed = ref(false);
 </script>

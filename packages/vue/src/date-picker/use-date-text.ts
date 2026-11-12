@@ -8,6 +8,7 @@ import {
   parseTime,
   splitDateTime,
 } from '@numior/primitives';
+import { dateTimeParts } from './date-time-model';
 
 export interface DateTextOptions {
   readonly value: () => string | null;
@@ -25,10 +26,13 @@ export interface DateText {
 }
 
 const displayDateTime = (value: string, locale: string): string => {
-  const parts = splitDateTime(value);
+  const parts = dateTimeParts(value);
 
   return parts ? `${formatDateText(parts.date, locale)} ${parts.time}` : '';
 };
+
+const displayDate = (value: string, locale: string): string =>
+  formatDateText(dateTimeParts(value)?.date ?? value, locale);
 
 const parseDateTimeText = (text: string, locale: string, fallback: string): string | null => {
   const trimmed = text.trim();
@@ -49,7 +53,7 @@ export const useDateText = (options: DateTextOptions): DateText => {
 
     return options.time()
       ? displayDateTime(value, options.locale.value)
-      : formatDateText(value, options.locale.value);
+      : displayDate(value, options.locale.value);
   };
 
   const parseAny = (text: string): string | null => {
@@ -57,7 +61,7 @@ export const useDateText = (options: DateTextOptions): DateText => {
       return parseDateText(text, options.locale.value);
     }
 
-    const current = splitDateTime(options.value())?.time ?? '00:00';
+    const current = dateTimeParts(options.value())?.time ?? '00:00';
 
     return parseDateTimeText(text, options.locale.value, current);
   };

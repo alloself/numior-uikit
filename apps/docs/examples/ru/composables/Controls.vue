@@ -4,7 +4,7 @@
     <NuiField label="Значение">
       <component :is="entry.component" v-model="value" v-bind="entry.props(props) ? props : {}" />
     </NuiField>
-    <p class="m-0 text-sm text-muted-foreground">Значение: {{ String(value) }}</p>
+    <p class="m-0 text-sm text-muted-foreground">Контрол вернул {{ JSON.stringify(value) }}.</p>
   </div>
 </template>
 

@@ -13,7 +13,7 @@ export interface ClipboardPayload {
 export interface ClipboardControl {
   readonly supported: Readonly<Ref<boolean>>;
   readonly copied: Readonly<Ref<boolean>>;
-  copy(text: string): Promise<boolean>;
+  copy(text: string | Promise<string>): Promise<boolean>;
   copyRich(payload: ClipboardPayload): Promise<boolean>;
 }
 
@@ -59,6 +59,21 @@ const write = async (text: string): Promise<boolean> => {
   return hasCommand() && legacyCopy(text);
 };
 
+const plainBlob = (text: string): Blob => new Blob([text], { type: 'text/plain' });
+
+const writeDeferred = async (text: Promise<string>): Promise<boolean> => {
+  if (!hasRichApi()) {
+    return write(await text);
+  }
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'text/plain': text.then(plainBlob) })]);
+
+    return true;
+  } catch {
+    return write(await text);
+  }
+};
+
 const writeRich = async (payload: ClipboardPayload): Promise<boolean> => {
   if (payload.html === undefined || !hasRichApi()) {
     return write(payload.text);
@@ -66,7 +81,7 @@ const writeRich = async (payload: ClipboardPayload): Promise<boolean> => {
   try {
     await navigator.clipboard.write([
       new ClipboardItem({
-        'text/plain': new Blob([payload.text], { type: 'text/plain' }),
+        'text/plain': plainBlob(payload.text),
         'text/html': new Blob([payload.html], { type: 'text/html' }),
       }),
     ]);
@@ -108,7 +123,7 @@ export const useClipboard = (options: ClipboardOptions = {}): ClipboardControl =
   return {
     supported,
     copied,
-    copy: (text) => settle(write(text)),
+    copy: (text) => settle(typeof text === 'string' ? write(text) : writeDeferred(text)),
     copyRich: (payload) => settle(writeRich(payload)),
   };
 };

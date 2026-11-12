@@ -105,8 +105,14 @@ export const stateValues = (state: ConfiguratorState): ConfiguratorValues => ({
   ...state.enums,
 });
 
+const isUnset = (prop: ReferenceProp, value: ConfiguratorValue): boolean =>
+  value === undefined ||
+  value === null ||
+  value === '' ||
+  (value === false && prop.default === undefined);
+
 const isDefault = (prop: ReferenceProp, value: ConfiguratorValue): boolean =>
-  value === undefined || value === null || value === '' || value === literalOf(prop.default);
+  isUnset(prop, value) || value === literalOf(prop.default);
 
 const attributeOf = (name: string, value: ConfiguratorValue): string => {
   if (typeof value === 'boolean') {
@@ -115,19 +121,65 @@ const attributeOf = (name: string, value: ConfiguratorValue): string => {
   return typeof value === 'number' ? `:${name}="${value}"` : `${name}="${String(value)}"`;
 };
 
+const attributesOf = (props: readonly ReferenceProp[], values: ConfiguratorValues): string[] =>
+  props.reduce<string[]>((found, prop) => {
+    if (!isDefault(prop, values[prop.name])) {
+      found.push(attributeOf(prop.name, values[prop.name]));
+    }
+    return found;
+  }, []);
+
+const SCENE_OPTIONS = /\ndefineOptions\(\{ inheritAttrs: false \}\);\n/g;
+const ATTRIBUTE = /[^\s"=>/]+(?:="[^"]*")?/g;
+const PASSED_ATTRS = 'v-bind="$attrs"';
+const LINE_WIDTH = 100;
+const STEP = '  ';
+
+const openingTag = (component: string): RegExp =>
+  new RegExp(`^([ \\t]*)<${component}((?:\\s+[^\\s"=>/]+(?:="[^"]*")?)*)\\s*(/?>)`, 'm');
+
+export const sceneCode = (
+  source: string,
+  component: string,
+  props: readonly ReferenceProp[],
+  values: ConfiguratorValues,
+): string => {
+  const clean = source.replace(SCENE_OPTIONS, '');
+  const tag = openingTag(component).exec(clean);
+
+  if (tag === null) {
+    return clean.trimEnd();
+  }
+  const [whole, indent = '', own = '', close = '>'] = tag;
+
+  const attributes = [
+    ...attributesOf(props, values),
+    ...(own.match(ATTRIBUTE) ?? []).filter((attribute) => attribute !== PASSED_ATTRS),
+  ];
+
+  const name = `${indent}<${component}`;
+  const inline = `${[name, ...attributes].join(' ')}${close === '>' ? '>' : ' />'}`;
+
+  const printed =
+    inline.length <= LINE_WIDTH
+      ? inline
+      : [
+          name,
+          ...attributes.map((attribute) => `${indent}${STEP}${attribute}`),
+          `${indent}${close}`,
+        ].join('\n');
+
+  return `${clean.slice(0, tag.index)}${printed}${clean.slice(tag.index + whole.length)}`.trimEnd();
+};
+
 export const configuratorCode = (
   component: string,
   props: readonly ReferenceProp[],
   values: ConfiguratorValues,
   content: string | undefined,
 ): string => {
-  const attributes = props
-    .reduce<string[]>((found, prop) => {
-      if (!isDefault(prop, values[prop.name])) {
-        found.push(` ${attributeOf(prop.name, values[prop.name])}`);
-      }
-      return found;
-    }, [])
+  const attributes = attributesOf(props, values)
+    .map((attribute) => ` ${attribute}`)
     .join('');
 
   const tag =

@@ -94,6 +94,8 @@
     min-block-size: 0;
   }
   .nui-layout--sticky .nui-layout__end {
+    block-size: auto;
+    max-block-size: calc(100dvh - var(--_sticky-top));
     overflow-y: auto;
     scrollbar-width: thin;
   }

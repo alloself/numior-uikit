@@ -121,7 +121,7 @@ export class PickersSection {
   }
 
   pageButton(page: number): Locator {
-    return this.pagination.getByRole('button', { name: `Страница ${page}` });
+    return this.pagination.getByRole('button', { name: `Страница ${page}`, exact: true });
   }
 
   get nextButton(): Locator {

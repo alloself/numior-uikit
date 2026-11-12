@@ -1,8 +1,12 @@
 <template>
-  <NuiRadioGroup v-model="plan" label="Тариф" description="Можно изменить позже">
-    <NuiRadio value="free">Бесплатный</NuiRadio>
-    <NuiRadio value="team">Команда</NuiRadio>
-    <NuiRadio value="business" disabled>Бизнес</NuiRadio>
+  <NuiRadioGroup
+    v-model="payment"
+    label="Способ оплаты"
+    description="Изменить его можно до отправки"
+  >
+    <NuiRadio value="card">Картой</NuiRadio>
+    <NuiRadio value="transfer">Переводом</NuiRadio>
+    <NuiRadio value="cash">При получении</NuiRadio>
   </NuiRadioGroup>
 </template>
 
@@ -10,5 +14,5 @@
 import { ref } from 'vue';
 import { NuiRadio, NuiRadioGroup } from '@numior/vue';
 
-const plan = ref('team');
+const payment = ref('card');
 </script>

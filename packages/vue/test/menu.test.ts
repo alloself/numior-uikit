@@ -69,6 +69,14 @@ describe('NuiMenu', () => {
     await menu.show();
     expect(menu.focusedLabel).toBe('menu');
 
+    await menu.press('ArrowDown');
+    expect(menu.focusedLabel).toBe('Rename');
+
+    await menu.close();
+    await menu.show();
+    await menu.press('ArrowUp');
+    expect(menu.focusedLabel).toBe('Delete');
+
     menu.unmount();
   });
 

@@ -16,6 +16,8 @@
     "packages/editor-vue/src/**/*.ts",
     "packages/editor-vue/src/**/*.vue",
     "packages/spreadsheet/src/**/*.ts",
-    "packages/spreadsheet/src/**/*.vue"
+    "packages/spreadsheet/src/**/*.vue",
+    "packages/charts/src/**/*.ts",
+    "packages/charts/src/**/*.vue"
   ]
 }

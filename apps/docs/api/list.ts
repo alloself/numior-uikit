@@ -17,6 +17,12 @@ const route = {
 
 const docs: DocsMap = {
   NuiList: {
+    configurator: {
+      scene: 'list/Example',
+      props: ['variant', 'size', 'selectable', 'loading', 'loop', 'label'],
+      choices: { variant: ['plain', 'divided', 'bordered'] },
+      values: { variant: 'bordered', label: { ru: 'Команда магазина', en: 'Store team' } },
+    },
     props: {
       id: {
         ru: 'Идентификатор списка. По умолчанию создаётся автоматически.',

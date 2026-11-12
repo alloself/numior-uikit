@@ -35,6 +35,8 @@ describe('token sections', () => {
       '--nui-primary-soft-foreground',
       '--nui-secondary',
     ]);
+
+    expect(namesOf(TokenSection.Tones).at(-1)).toBe('--nui-soft-min-lightness');
   });
 
   it('keeps code colours out of the surfaces and the field ring with the states', () => {

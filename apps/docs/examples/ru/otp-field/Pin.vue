@@ -1,8 +1,8 @@
 <template>
   <NuiOtpField
     v-model="pin"
-    label="PIN-код карты"
-    description="Четыре цифры с конверта"
+    label="PIN-код подарочной карты"
+    description="Четыре цифры под защитным слоем"
     :length="4"
     secret
   />

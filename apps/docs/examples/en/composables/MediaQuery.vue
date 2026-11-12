@@ -1,8 +1,8 @@
 <template>
   <ul class="m-0 text-sm">
-    <li>Narrow screen (up to 48rem): {{ narrow ? 'yes' : 'no' }}</li>
-    <li>System dark scheme: {{ dark ? 'yes' : 'no' }}</li>
-    <li>Reduced motion: {{ reduced ? 'yes' : 'no' }}</li>
+    <li>{{ narrow ? 'The screen is 48rem wide or less.' : 'The screen is wider than 48rem.' }}</li>
+    <li>{{ dark ? 'The system uses the dark theme.' : 'The system uses the light theme.' }}</li>
+    <li>{{ reduced ? 'The system reduces motion.' : 'The system keeps motion on.' }}</li>
   </ul>
 </template>
 

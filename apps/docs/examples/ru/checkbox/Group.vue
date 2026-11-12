@@ -1,21 +1,24 @@
 <template>
   <NuiCheckboxGroup
-    v-model="channels"
-    :options="options"
-    label="Каналы уведомлений"
-    :description="`Выбрано: ${channels.length}`"
+    v-model="enabled"
+    :options="methods"
+    label="Способы доставки"
+    description="Покупатель выберет один из них при оформлении заказа"
   />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiCheckboxGroup, type NuiOption } from '@numior/vue';
+import { NuiCheckboxGroup } from '@numior/vue';
+import { DELIVERIES } from '#demo/orders';
 
-const channels = ref(['email']);
+const REQUIRED = 'courier';
 
-const options: NuiOption<string>[] = [
-  { value: 'email', label: 'Почта' },
-  { value: 'sms', label: 'SMS' },
-  { value: 'push', label: 'Push', disabled: true },
-];
+const enabled = ref([REQUIRED, 'pickup']);
+
+const methods = Object.entries(DELIVERIES).map(([value, label]) => ({
+  value,
+  label,
+  disabled: value === REQUIRED,
+}));
 </script>

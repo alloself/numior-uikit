@@ -118,6 +118,18 @@ importers:
       '@lucide/vue':
         specifier: 1.50.0
         version: 1.50.0(vue@3.5.43(typescript@5.9.3))
+      '@numior/charts':
+        specifier: workspace:*
+        version: link:../../packages/charts
+      '@numior/content':
+        specifier: workspace:*
+        version: link:../../packages/content
+      '@numior/editor-core':
+        specifier: workspace:*
+        version: link:../../packages/editor-core
+      '@numior/editor-vue':
+        specifier: workspace:*
+        version: link:../../packages/editor-vue
       '@numior/forms':
         specifier: workspace:*
         version: link:../../packages/forms

@@ -4,7 +4,6 @@
     :options="weekdays"
     label="Дни доставки"
     orientation="horizontal"
-    size="sm"
   />
 </template>
 
@@ -14,7 +13,7 @@ import { NuiCheckboxGroup, type NuiOption } from '@numior/vue';
 
 const days = ref(['mon', 'wed']);
 
-const weekdays: NuiOption<string>[] = [
+const weekdays: NuiOption[] = [
   { value: 'mon', label: 'Пн' },
   { value: 'tue', label: 'Вт' },
   { value: 'wed', label: 'Ср' },

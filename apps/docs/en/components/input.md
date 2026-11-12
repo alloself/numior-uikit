@@ -1,9 +1,10 @@
 # Input
 
-`NuiInput` is a single-line text field for a name, an email, a phone number or a search. It
-renders its label, hint and error from `label`, `description` and `error`.
+A single-line text field.
 
 <Example name="input/Basic" />
+
+The label, the hint and the error work as described on the [Field](/en/components/field) page.
 
 ## Installation
 
@@ -15,44 +16,49 @@ import '@numior/vue/styles/input.css';
 
 ## Usage
 
+Change the type, the size and the states of the field.
+
 <Configurator name="NuiInput" />
 
 ## Examples
 
-### Prefix and suffix
+### Add an icon or a unit
 
-The `prefix` and `suffix` slots put text or an icon inside the frame around the value. Examples are
-`@` before a login or `.com` after a domain. They are not part of the field value.
+Put text or an icon into the `prefix` and `suffix` slots.
 
 <Example name="input/Affixes" />
 
-### Mask
+The slot content stays out of the model.
 
-The `mask` prop formats the text while typing: `#` is a digit, `A` a letter, `*` a letter or a
-digit. The field inserts the other mask characters, such as the brackets and dashes in
-`+1 (###) ###-####`, by itself. With `v-model.unmasked` the model gets only the typed characters.
+### Enter a phone number with a mask
+
+Describe the format in `mask`.
 
 <Example name="input/Mask" />
 
-### Lazy update
+| Mask character | Accepts             |
+| -------------- | ------------------- |
+| `#`            | A digit             |
+| `A`            | A letter            |
+| `*`            | A letter or a digit |
 
-With `v-model.lazy` the value reaches the model when the user leaves the field or presses Enter,
-not on every keystroke. `.trim` removes spaces at the start and the end.
+The field adds the other mask characters, such as brackets and dashes, as the user types. Add
+`.unmasked` to `v-model` to keep only the typed characters in the model.
+
+### Update the model after typing
+
+Add the `.lazy` modifier.
 
 <Example name="input/Lazy" />
 
-### States
-
-With `readonly` the text cannot be changed but can be selected and copied, while `disabled` turns
-the field off completely. `error` highlights the frame and shows the error text under the field.
-
-<Example name="input/States" />
+The value reaches the model when the user leaves the field or presses Enter. Add `.trim` to drop
+the spaces at both ends.
 
 ## Accessibility
 
-The `placeholder`, `name`, `autocomplete`, `inputmode` attributes and event handlers go to the
-`<input>` itself, while `class` and `style` go to the frame around it. Screen readers read the
-label, the hint and the error together with the field.
+A screen reader reads the label, the hint and the error together with the field. Attributes such
+as `autocomplete` and `inputmode` go to the `<input>` itself, and `class` and `style` go to the
+frame around it.
 
 ## API
 

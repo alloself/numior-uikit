@@ -13,6 +13,12 @@ import '@numior/vue/styles/collapsible.css';
 import '@numior/vue/styles/accordion.css';
 ```
 
+## Usage
+
+Change the look and see how the sections open one at a time or several at once.
+
+<Configurator name="NuiAccordion" />
+
 ## Examples
 
 ### Several sections

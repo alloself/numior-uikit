@@ -13,6 +13,12 @@ import '@numior/vue/styles/link.css';
 import '@numior/vue/styles/breadcrumbs.css';
 ```
 
+## Использование
+
+Сверните длинный путь до нужного числа шагов и подберите разделитель.
+
+<Configurator name="NuiBreadcrumbs" />
+
 ## Примеры
 
 ### Длинный путь

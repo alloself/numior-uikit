@@ -58,6 +58,7 @@ export const contentTableColumns = (
       key: column.id,
       label: column.name,
       width: column.width,
+      flex: column.width === undefined ? 1 : 0,
       minWidth: MIN_WIDTH,
       editable,
       sortable: editable,

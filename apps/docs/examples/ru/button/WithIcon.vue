@@ -1,6 +1,6 @@
 <template>
-  <NuiButton icon="plus">Добавить</NuiButton>
-  <NuiButton variant="outline" tone="error" icon="trash">Удалить</NuiButton>
+  <NuiButton icon="plus">Добавить товар</NuiButton>
+  <NuiButton variant="outline" tone="neutral" icon-end="chevron-down">Экспорт</NuiButton>
 </template>
 
 <script setup lang="ts">

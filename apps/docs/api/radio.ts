@@ -3,6 +3,20 @@ import { fieldControl } from './shared/field.ts';
 
 const docs: DocsMap = {
   NuiRadioGroup: {
+    configurator: {
+      scene: 'radio-group/Example',
+      props: [
+        'orientation',
+        'size',
+        'disabled',
+        'readonly',
+        'invalid',
+        'label',
+        'description',
+        'error',
+      ],
+      values: { label: { ru: 'Способ доставки', en: 'Delivery method' } },
+    },
     props: {
       ...fieldControl,
       name: {
@@ -16,6 +30,10 @@ const docs: DocsMap = {
       options: {
         ru: 'Варианты выбора. Радиокнопки строятся из них вместо слота.',
         en: 'Options to choose from. The radios are built from them instead of the slot.',
+      },
+      getKey: {
+        ru: 'Функция, которая возвращает ключ значения-объекта: по ключу ищется выбранная радиокнопка. Без неё ключом служит JSON значения.',
+        en: 'Function that returns the key of an object value; the selected radio is found by this key. Without it the JSON of the value is the key.',
       },
     },
     models: {
@@ -53,7 +71,10 @@ const docs: DocsMap = {
         ru: 'Идентификатор радиокнопки. По умолчанию создаётся автоматически.',
         en: 'Id of the radio. Generated automatically by default.',
       },
-      disabled: { ru: 'Выключает только эту радиокнопку.', en: 'Disables this radio only.' },
+      disabled: {
+        ru: 'Отключает одну радиокнопку, остальные в группе работают.',
+        en: 'Disables one radio while the others in the group keep working.',
+      },
     },
     slots: { default: { ru: 'Подпись радиокнопки.', en: 'Label of the radio.' } },
   },

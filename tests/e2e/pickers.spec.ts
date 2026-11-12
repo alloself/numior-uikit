@@ -1,4 +1,5 @@
 import { expect, test } from './fixtures';
+import { paintedRgb, rgbDelta } from './helpers/color';
 
 test.describe('pickers', () => {
   test('select opens a listbox as wide as its trigger, picks by keyboard and clears', async ({
@@ -42,6 +43,30 @@ test.describe('pickers', () => {
     await pickers.clearButton(trigger).click();
     await expect(trigger).toHaveText('Выберите страну');
     await expect.poll(async () => (await pickers.readOutput()).country).toBeNull();
+  });
+
+  test('a select opened by click or Enter moves focus into the listbox', async ({
+    playground,
+    pickers,
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'keyboard scenario');
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+
+    await pickers.countryTrigger.click();
+
+    await expect(pickers.option('Австрия')).toBeFocused();
+
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+
+    await expect(pickers.countryTrigger).toHaveText('Бельгия');
+
+    await page.keyboard.press('Enter');
+
+    await expect(pickers.option('Бельгия')).toBeFocused();
   });
 
   test('a long value truncates with an ellipsis and keeps the clear button off the text', async ({
@@ -189,6 +214,28 @@ test.describe('pickers', () => {
     await pickers.pageLink(3).click();
     expect(page.url()).toContain('#page-3');
     await expect.poll(async () => (await pickers.readOutput()).linkPage).toBe(3);
+  });
+
+  test('the current page keeps its tone under the pointer in the dark theme', async ({
+    playground,
+    pickers,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'page buttons collapse on narrow containers');
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await playground.setTheme('dark');
+    await expect(pickers.pageButton(1)).toHaveAttribute('aria-current', 'page');
+
+    const rest = await paintedRgb(pickers.pageButton(1));
+
+    await pickers.pageButton(2).hover();
+    const idleHover = await paintedRgb(pickers.pageButton(2));
+    await pickers.pageButton(1).hover();
+    const currentHover = await paintedRgb(pickers.pageButton(1));
+
+    expect(rgbDelta(currentHover, rest)).toBeGreaterThan(3);
+    expect(rgbDelta(currentHover, idleHover)).toBeGreaterThan(10);
   });
 
   test('pagination collapses into a status on narrow containers', async ({

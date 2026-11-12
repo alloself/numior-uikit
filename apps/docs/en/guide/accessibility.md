@@ -8,7 +8,7 @@ What Numior UI components do for accessibility on their own and what is left to 
   move focus between items. Home and End move focus to the first and last item.
 - The keys of every component are listed in the Accessibility section of its page.
 - The focus ring appears when the user works with the keyboard (`:focus-visible`). The
-  `--nui-focus`, `--nui-focus-ring-width` and `--nui-focus-ring-offset` tokens set its colour,
+  `--nui-focus`, `--nui-focus-ring-width` and `--nui-focus-ring-offset` tokens set its color,
   width and offset.
 - A focused input field changes its border color and gets the same ring. The
   `--nui-field-ring-width` token sets the ring width on fields: with `0px` only the border stays.
@@ -52,5 +52,5 @@ skeleton and indeterminate progress only slow down.
   page. `NuiLayout` adds this link on its own.
 - Give every page an `h1` heading and do not skip heading levels. The `headingLevel` prop sets
   the heading level of sections in Collapsible and Accordion.
-- If you change the `--nui-<role>` and `--nui-<role>-foreground` colours, check the text
+- If you change the `--nui-<role>` and `--nui-<role>-foreground` colors, check the text
   contrast on the new background.

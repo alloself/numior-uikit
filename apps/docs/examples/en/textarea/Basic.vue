@@ -1,8 +1,8 @@
 <template>
   <NuiTextarea
-    v-model="bio"
-    label="About you"
-    description="Two or three sentences for the profile"
+    v-model="comment"
+    label="Order note"
+    description="The courier reads it before leaving"
     :rows="4"
   />
 </template>
@@ -11,5 +11,5 @@
 import { ref } from 'vue';
 import { NuiTextarea } from '@numior/vue';
 
-const bio = ref('');
+const comment = ref('Please call an hour before delivery: the intercom is broken.');
 </script>

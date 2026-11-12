@@ -2,6 +2,10 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 
 const docs: DocsMap = {
   NuiPopover: {
+    configurator: {
+      scene: 'popover/Example',
+      props: ['placement', 'offset', 'arrow', 'padding', 'size', 'trigger'],
+    },
     props: {
       id: {
         ru: 'Идентификатор поповера. По умолчанию создаётся автоматически.',

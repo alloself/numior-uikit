@@ -111,6 +111,17 @@ test('the footer closes a page with the license and the sections of the site', a
   await expect(docs.footer).toBeAttached();
 });
 
+test('the contents stay in place when the footer scrolls into view', async ({ docs, isMobile }) => {
+  test.skip(isMobile, 'phones have no contents column');
+  await docs.open('/blocks/');
+  const top = await docs.tocTop();
+
+  await docs.scrollToEnd();
+
+  await expect(docs.footer).toBeInViewport({ ratio: 0.99 });
+  expect(await docs.tocTop()).toBe(top);
+});
+
 test('the sidebar scrolls to the page that is open', async ({ docs, isMobile }) => {
   test.skip(isMobile, 'the sidebar lives in a drawer on phones');
   await docs.open('/composables/block-size-tween');

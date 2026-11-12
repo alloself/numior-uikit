@@ -15,7 +15,7 @@ shortcut stops working when the component unmounts.
 ## Behaviour
 
 `enabled: false` turns the shortcut off, and `target` listens for keys on a given element
-instead of the window. By default the browser action for the combination is cancelled;
+instead of the window. By default the browser action for the combination is canceled;
 `preventDefault: false` keeps it.
 
 Shortcuts without Ctrl or ⌘ do not fire while the user types in an input. `inEditable: true`

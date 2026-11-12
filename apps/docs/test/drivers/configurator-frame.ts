@@ -1,9 +1,25 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
+import { markRaw } from 'vue';
 import { NuiButton, NuiSeparator } from '@numior/vue';
+import type { ExampleModule } from '../../.vitepress/examples/example.types';
 import type { ComponentReference } from '../../.vitepress/reference/reference.types';
 import ConfiguratorFrame from '../../.vitepress/theme/parts/ConfiguratorFrame.vue';
 import { ru } from '../../.vitepress/theme/texts';
+import SendScene from '../fixtures/SendScene.vue';
 import { referenceOf } from './api-component';
+import { exampleFile } from './example-frame';
+
+const SEND_SOURCE = `<template>
+  <NuiButton @click="sent = true">{{ sent ? 'Отправлено' : 'Отправить' }}</NuiButton>
+</template>`;
+
+export const sendScene = (): ExampleModule => ({
+  component: markRaw(SendScene),
+  files: [
+    exampleFile('Example.vue', SEND_SOURCE),
+    exampleFile('team.ts', 'export const team = [];'),
+  ],
+});
 
 export const configurableButton = (): ComponentReference =>
   referenceOf({
@@ -40,6 +56,19 @@ export const configurableButton = (): ComponentReference =>
     configurator: { props: ['variant', 'disabled'], content: { ru: 'Сохранить', en: 'Save' } },
   });
 
+export const configurableScene = (): ComponentReference => {
+  const button = configurableButton();
+
+  return {
+    ...button,
+    configurator: {
+      props: ['variant', 'disabled'],
+      choices: { variant: ['solid', 'soft'] },
+      scene: 'button/Example',
+    },
+  };
+};
+
 export const configurableSeparator = (): ComponentReference =>
   referenceOf({
     name: 'NuiSeparator',
@@ -60,10 +89,10 @@ export const configurableSeparator = (): ComponentReference =>
 export class ConfiguratorFrameDriver {
   constructor(readonly wrapper: VueWrapper) {}
 
-  static mount(component: ComponentReference): ConfiguratorFrameDriver {
+  static mount(component: ComponentReference, scene?: ExampleModule): ConfiguratorFrameDriver {
     return new ConfiguratorFrameDriver(
       mount(ConfiguratorFrame, {
-        props: { component, locale: 'ru', texts: ru },
+        props: { component, locale: 'ru', texts: ru, scene },
         global: { components: { NuiButton, NuiSeparator } },
         attachTo: document.body,
       }),
@@ -80,6 +109,19 @@ export class ConfiguratorFrameDriver {
 
   get separatorLabel(): string {
     return this.preview.find('.nui-separator__label').text();
+  }
+
+  get fileNames(): string[] {
+    return this.wrapper
+      .findAll(`[role="tablist"][aria-label="${ru.exampleFiles}"] [role="tab"]`)
+      .map((tab) => tab.text());
+  }
+
+  choicesOf(name: string): string[] {
+    return this.wrapper
+      .find(`.nui-toggle-group[aria-label="${name}"]`)
+      .findAll('button')
+      .map((item) => item.text());
   }
 
   get code(): string {

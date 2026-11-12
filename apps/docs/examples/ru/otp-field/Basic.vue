@@ -1,8 +1,8 @@
 <template>
   <NuiOtpField
     v-model="code"
-    label="Код из SMS"
-    description="Отправили на +7 912 345-67-89"
+    label="Код из письма"
+    description="Отправили на volkov@example.com"
     :group-size="3"
   />
 </template>

@@ -177,3 +177,5 @@ export const paintedColumn = async (
 
 export const rgbDelta = (a: Rgb, b: Rgb): number =>
   a.reduce((max, channel, i) => Math.max(max, Math.abs(channel - (b[i] ?? 0))), 0);
+
+export const channelSumOf = (rgb: Rgb): number => rgb.reduce((sum, channel) => sum + channel, 0);

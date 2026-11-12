@@ -3,6 +3,23 @@ import { fieldControl } from './shared/field.ts';
 
 const docs: DocsMap = {
   NuiCombobox: {
+    configurator: {
+      scene: 'combobox/Example',
+      props: [
+        'size',
+        'placement',
+        'clearable',
+        'disabled',
+        'invalid',
+        'label',
+        'placeholder',
+        'error',
+      ],
+      values: {
+        label: { ru: 'Покупатель', en: 'Customer' },
+        placeholder: { ru: 'Начните вводить имя', en: 'Start typing a name' },
+      },
+    },
     props: {
       ...fieldControl,
       options: {

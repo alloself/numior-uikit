@@ -21,6 +21,10 @@ Pass the options in `options` in the same shape as for a [Select](/en/components
 and `label`. The list keeps the options whose label contains the typed text. The `clearable` prop
 adds a clear button.
 
+Change the size, the side of the list and the field states, then find a customer by the first letters.
+
+<Configurator name="NuiCombobox" />
+
 ## Examples
 
 ### Several values

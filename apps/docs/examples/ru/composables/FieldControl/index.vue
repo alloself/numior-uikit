@@ -1,7 +1,7 @@
 <template>
   <NuiField label="Оценка" description="От 1 до 5" class="max-w-sm">
     <RatingControl v-model="rating" />
-    <p class="m-0 text-sm text-muted-foreground">Оценка: {{ rating }} из 5</p>
+    <p class="m-0 text-sm text-muted-foreground">Поставлена оценка {{ rating }} из 5.</p>
   </NuiField>
 </template>
 

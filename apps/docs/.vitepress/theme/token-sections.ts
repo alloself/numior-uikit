@@ -17,7 +17,7 @@ const SECTION_RULES: readonly SectionRule[] = [
   { section: TokenSection.Surfaces, pattern: /^(?:surface|ring$|backdrop|layer-|text|border)/ },
   {
     section: TokenSection.Tones,
-    pattern: /^(?:primary|secondary|success|warning|error|info|neutral)/,
+    pattern: /^(?:primary|secondary|success|warning|error|info|neutral|soft-)/,
   },
   {
     section: TokenSection.States,
@@ -86,7 +86,13 @@ export const tokenSectionOf = (token: TokenReference): TokenSection | undefined 
 };
 
 const toneRank = (token: TokenReference): number => {
-  const [, tone = '', part = ''] = TONE_RE.exec(shortName(token)) ?? [];
+  const match = TONE_RE.exec(shortName(token));
+
+  if (match === null) {
+    return TONE_ORDER.length * TONE_PARTS.length;
+  }
+
+  const [, tone = '', part = ''] = match;
 
   return TONE_ORDER.indexOf(tone) * TONE_PARTS.length + TONE_PARTS.indexOf(part);
 };

@@ -2,6 +2,15 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 
 const docs: DocsMap = {
   NuiDrawer: {
+    configurator: {
+      scene: 'drawer/Example',
+      props: ['side', 'size', 'title', 'description', 'closable', 'closeOnBackdrop'],
+      choices: { side: ['start', 'end', 'top', 'bottom'] },
+      values: {
+        title: { ru: 'Заказ 20403', en: 'Order 20403' },
+        description: { ru: 'Тимур Саидов, Казань', en: 'Tim Sayed, Denver' },
+      },
+    },
     props: {
       side: {
         ru: 'Край экрана: `start`, `end`, `top` или `bottom`. При письме справа налево `start` и `end` меняются местами.',

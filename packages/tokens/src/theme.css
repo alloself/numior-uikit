@@ -44,6 +44,7 @@
   --state-pressed-overlay: 10%;
   --state-hover-tint: 6%;
   --state-pressed-tint: 12%;
+  --soft-min-lightness: 0.26;
   --color-hover: color-mix(
     in oklab,
     var(--color-foreground) var(--state-hover-overlay),
@@ -139,13 +140,34 @@
   --z-index-toast: 1200;
   --default-transition-timing-function: var(--ease-nui);
 
-  --color-primary-soft: color-mix(in oklab, var(--color-primary) 14%, var(--color-layer));
-  --color-secondary-soft: color-mix(in oklab, var(--color-secondary) 60%, var(--color-layer));
-  --color-success-soft: color-mix(in oklab, var(--color-success) 14%, var(--color-layer));
-  --color-warning-soft: color-mix(in oklab, var(--color-warning) 14%, var(--color-layer));
-  --color-error-soft: color-mix(in oklab, var(--color-error) 14%, var(--color-layer));
-  --color-info-soft: color-mix(in oklab, var(--color-info) 14%, var(--color-layer));
-  --color-neutral-soft: color-mix(in oklab, var(--color-neutral) 10%, var(--color-layer));
+  --color-primary-soft: oklab(
+    from color-mix(in oklab, var(--color-primary) 14%, var(--color-layer))
+      max(l, var(--soft-min-lightness)) a b
+  );
+  --color-secondary-soft: oklab(
+    from color-mix(in oklab, var(--color-secondary) 60%, var(--color-layer))
+      max(l, var(--soft-min-lightness)) a b
+  );
+  --color-success-soft: oklab(
+    from color-mix(in oklab, var(--color-success) 14%, var(--color-layer))
+      max(l, var(--soft-min-lightness)) a b
+  );
+  --color-warning-soft: oklab(
+    from color-mix(in oklab, var(--color-warning) 14%, var(--color-layer))
+      max(l, var(--soft-min-lightness)) a b
+  );
+  --color-error-soft: oklab(
+    from color-mix(in oklab, var(--color-error) 14%, var(--color-layer))
+      max(l, var(--soft-min-lightness)) a b
+  );
+  --color-info-soft: oklab(
+    from color-mix(in oklab, var(--color-info) 14%, var(--color-layer))
+      max(l, var(--soft-min-lightness)) a b
+  );
+  --color-neutral-soft: oklab(
+    from color-mix(in oklab, var(--color-neutral) 10%, var(--color-layer))
+      max(l, var(--soft-min-lightness)) a b
+  );
   --color-layer: var(--color-surface);
 
   --spacing-control-xs: 1.75rem;
@@ -214,6 +236,7 @@
   --state-pressed-overlay: --theme(--state-pressed-overlay inline);
   --state-hover-tint: --theme(--state-hover-tint inline);
   --state-pressed-tint: --theme(--state-pressed-tint inline);
+  --soft-min-lightness: --theme(--soft-min-lightness inline);
   --color-hover: --theme(--color-hover inline);
   --color-pressed: --theme(--color-pressed inline);
   --radius-base: --theme(--radius-base inline);
@@ -323,7 +346,8 @@
   color-scheme: dark;
 }
 
-.nui-layer {
+.nui-layer,
+.nui-surface {
   --color-primary-soft: --theme(--color-primary-soft inline);
   --color-secondary-soft: --theme(--color-secondary-soft inline);
   --color-success-soft: --theme(--color-success-soft inline);
@@ -331,11 +355,18 @@
   --color-error-soft: --theme(--color-error-soft inline);
   --color-info-soft: --theme(--color-info-soft inline);
   --color-neutral-soft: --theme(--color-neutral-soft inline);
+}
+
+.nui-layer {
   --color-layer: var(--color-surface-overlay);
 }
 
 .nui-layer--elevated {
   --color-layer: var(--color-surface-elevated);
+}
+
+.nui-surface--muted {
+  --color-layer: light-dark(var(--color-surface), var(--color-surface-muted));
 }
 
 [data-nui-density='comfortable'] {
@@ -437,6 +468,7 @@
   --nui-state-pressed-overlay: var(--state-pressed-overlay);
   --nui-state-hover-tint: var(--state-hover-tint);
   --nui-state-pressed-tint: var(--state-pressed-tint);
+  --nui-soft-min-lightness: var(--soft-min-lightness);
   --nui-hover: var(--color-hover);
   --nui-pressed: var(--color-pressed);
   --nui-radius-base: var(--radius-base);
@@ -524,7 +556,8 @@
 
 :root,
 [data-nui-theme],
-.nui-layer {
+.nui-layer,
+.nui-surface {
   --nui-primary-soft: var(--color-primary-soft);
   --nui-secondary-soft: var(--color-secondary-soft);
   --nui-success-soft: var(--color-success-soft);
@@ -537,7 +570,8 @@
 :root,
 [data-nui-theme],
 .nui-layer,
-.nui-layer--elevated {
+.nui-layer--elevated,
+.nui-surface--muted {
   --nui-layer-surface: var(--color-layer);
 }
 

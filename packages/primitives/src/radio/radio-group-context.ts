@@ -3,9 +3,11 @@ import { inject, provide, type ComputedRef, type InjectionKey, type Ref } from '
 export interface RadioGroupContext<T = unknown> {
   readonly name: ComputedRef<string>;
   readonly modelValue: Ref<T | undefined>;
+  readonly selectedKey: ComputedRef<string | undefined>;
   readonly disabled: ComputedRef<boolean>;
   readonly readonly: ComputedRef<boolean>;
   readonly invalid: ComputedRef<boolean>;
+  keyOf(value: T): string;
   select(value: T): void;
 }
 

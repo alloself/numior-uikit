@@ -3,6 +3,7 @@ import type {
   DocsNavItem,
   DocsSidebarGroup,
   DocsSidebarSections,
+  NavEntry,
   NavGroup,
   NavSection,
   NavTitle,
@@ -22,7 +23,13 @@ const GUIDE: readonly NavGroup[] = [
       { link: '/guide/tailwind', title: 'Tailwind' },
       { link: '/guide/forms-validation', title: { ru: 'Валидация форм', en: 'Forms validation' } },
       { link: '/guide/accessibility', title: { ru: 'Доступность', en: 'Accessibility' } },
+      { link: '/guide/typescript', title: 'TypeScript' },
+      { link: '/guide/ai', title: { ru: 'ИИ-ассистенты', en: 'AI assistants' } },
     ],
+  },
+  {
+    title: { ru: 'О проекте', en: 'About' },
+    pages: [{ link: '/guide/browsers', title: { ru: 'Браузеры', en: 'Browser support' } }],
   },
 ];
 
@@ -203,6 +210,18 @@ export const NAVIGATION: readonly NavSection[] = [
     groups: COMPONENTS,
   },
   {
+    title: { ru: 'Графики', en: 'Charts' },
+    link: '/charts/',
+    prefixes: ['/charts/'],
+    groups: [],
+  },
+  {
+    title: { ru: 'Блоки', en: 'Blocks' },
+    link: '/blocks/',
+    prefixes: ['/blocks/'],
+    groups: [],
+  },
+  {
     title: { ru: 'Темы', en: 'Themes' },
     prefixes: ['/theme/'],
     groups: THEME,
@@ -229,12 +248,12 @@ export const navOf = (
   sections: readonly NavSection[] = NAVIGATION,
 ): DocsNavItem[] =>
   sections.reduce<DocsNavItem[]>((items, section) => {
-    const first = section.groups[0]?.pages[0];
+    const link = section.link ?? section.groups[0]?.pages[0]?.link;
 
-    if (first !== undefined) {
+    if (link !== undefined) {
       items.push({
         text: textOf(section.title, locale),
-        link: localized(first.link, locale),
+        link: localized(link, locale),
         sections: section.prefixes.map((prefix) => localized(prefix, locale)),
       });
     }
@@ -262,6 +281,21 @@ export const navigationTexts = (
       ...group.pages.map((page) => textOf(page.title, locale)),
     ]),
   ]);
+
+export const navigationPages = (
+  locale: ExampleLocale,
+  sections: readonly NavSection[] = NAVIGATION,
+): NavEntry[] =>
+  sections.flatMap((section) =>
+    section.groups.flatMap((group) =>
+      group.pages.map((page) => ({
+        link: localized(page.link, locale),
+        title: textOf(page.title, locale),
+        group: textOf(group.title, locale),
+        section: textOf(section.title, locale),
+      })),
+    ),
+  );
 
 export const navigationLinks = (sections: readonly NavSection[] = NAVIGATION): string[] =>
   sections.flatMap((section) =>

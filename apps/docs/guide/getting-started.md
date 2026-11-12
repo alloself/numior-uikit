@@ -27,6 +27,7 @@ bun add @numior/vue @numior/tokens
 :::
 
 Формы и пресет для Tailwind ставятся отдельно: это пакеты `@numior/forms` и `@numior/tailwind`.
+Все пакеты `@numior/*` выходят под одним номером версии, ставьте их одной версии.
 
 ## Стили
 

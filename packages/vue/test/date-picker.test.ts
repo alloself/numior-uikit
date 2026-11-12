@@ -228,6 +228,39 @@ describe('NuiDatePicker', () => {
     picker.unmount();
   });
 
+  it('reads a date without a time as midnight when time is on', async () => {
+    const picker = DatePickerDriver.mount({ modelValue: '2026-09-30', props: { time: true } });
+
+    expect(picker.text).toBe('30.09.2026 00:00');
+
+    await picker.clickOpen();
+
+    expect(picker.selectedDate).toBe('2026-09-30');
+    expect(picker.timeSegments).toEqual(['00', '00']);
+
+    await picker.clickDay('2026-09-28');
+
+    expect(picker.value).toBe('2026-09-28T00:00');
+
+    picker.unmount();
+  });
+
+  it('reads the date of a model with a time when time is off', async () => {
+    const picker = DatePickerDriver.mount({ modelValue: '2026-09-30T10:15' });
+
+    expect(picker.text).toBe('30.09.2026');
+
+    await picker.clickOpen();
+
+    expect(picker.selectedDate).toBe('2026-09-30');
+
+    await picker.clickDay('2026-09-28');
+
+    expect(picker.value).toBe('2026-09-28');
+
+    picker.unmount();
+  });
+
   it('follows external model changes in the text and the calendar', async () => {
     const picker = DatePickerDriver.mount({ modelValue: '2026-09-24' });
 

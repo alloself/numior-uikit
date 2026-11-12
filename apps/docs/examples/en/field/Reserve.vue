@@ -1,20 +1,24 @@
 <template>
   <div class="flex w-full max-w-sm flex-col gap-4">
-    <NuiSwitch v-model="failed">Show the error</NuiSwitch>
-    <NuiInput
-      v-model="promo"
-      label="Promo code"
-      :error="failed ? 'Promo code not found' : undefined"
-      reserve-error
-    />
-    <NuiButton class="self-start">Apply</NuiButton>
+    <NuiField label="Tracking number" :error="error" reserve-error>
+      <NuiInput v-model="track" />
+    </NuiField>
+    <NuiButton class="self-start" @click="save">Save</NuiButton>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { NuiButton, NuiInput, NuiSwitch } from '@numior/vue';
+import { computed, ref } from 'vue';
+import { NuiButton, NuiField, NuiInput } from '@numior/vue';
 
-const failed = ref(false);
-const promo = ref('SPRING');
+const track = ref('');
+const saved = ref(false);
+
+const error = computed(() =>
+  saved.value && track.value === '' ? 'Enter the tracking number from the waybill' : undefined,
+);
+
+const save = (): void => {
+  saved.value = true;
+};
 </script>

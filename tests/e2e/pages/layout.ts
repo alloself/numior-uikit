@@ -8,6 +8,7 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 import { sectionScope } from '../helpers/axe';
+import { paintedRgb, type Rgb } from '../helpers/color';
 
 export type LayoutOutput = Guarded<typeof isLayoutOutput>;
 
@@ -74,6 +75,10 @@ export class LayoutSection {
 
   markerOf(key: string): Promise<PseudoBox> {
     return beforeBoxOf(this.item(key), '.nui-list-item');
+  }
+
+  paintOf(key: string): Promise<Rgb> {
+    return paintedRgb(this.item(key));
   }
 
   itemLabel(key: string): Locator {

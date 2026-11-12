@@ -16,6 +16,12 @@ import { NuiStepper } from '@numior/vue';
 import '@numior/vue/styles/stepper.css';
 ```
 
+## Usage
+
+Stack the steps in a column and let the user jump to any stage of the order.
+
+<Configurator name="NuiStepper" />
+
 ## Examples
 
 ### A column with statuses

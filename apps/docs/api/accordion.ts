@@ -2,6 +2,10 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 
 const docs: DocsMap = {
   NuiAccordion: {
+    configurator: {
+      scene: 'accordion/Example',
+      props: ['variant', 'multiple', 'collapsible', 'disabled'],
+    },
     props: {
       id: { ru: 'Атрибут id корневого элемента.', en: 'Id attribute of the root element.' },
       multiple: {

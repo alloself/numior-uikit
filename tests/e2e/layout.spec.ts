@@ -1,4 +1,5 @@
 import { expect, test } from './fixtures';
+import { channelSumOf, rgbDelta } from './helpers/color';
 import { boxOf } from './helpers/geometry';
 import { motionOf, SLOW_MOTION, slowMotion } from './helpers/motion';
 
@@ -297,6 +298,23 @@ test.describe('layout', () => {
 
     await layout.marker.selectOption('line');
     await layout.variant.selectOption('panel');
+  });
+
+  test('the current item lights up above the sidebar in the dark theme', async ({
+    playground,
+    layout,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'desktop sidebar');
+    await playground.open();
+    await playground.setTheme('dark');
+    await layout.root.scrollIntoViewIfNeeded();
+
+    const current = await layout.paintOf('overview');
+    const idle = await layout.paintOf('calendar');
+
+    expect(channelSumOf(current)).toBeGreaterThan(channelSumOf(idle));
+    expect(rgbDelta(current, idle)).toBeGreaterThan(20);
   });
 
   test('sidebar becomes a drawer on small screens and closes after navigation', async ({

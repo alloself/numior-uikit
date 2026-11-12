@@ -207,7 +207,10 @@ export default [
     languageOptions: { parser: tsParser },
     rules: {
       ...spacing,
-      'vue/multi-word-component-names': ['error', { ignores: ['Example', 'Configurator'] }],
+      'vue/multi-word-component-names': [
+        'error',
+        { ignores: ['Block', 'Example', 'Configurator'] },
+      ],
     },
   },
   {

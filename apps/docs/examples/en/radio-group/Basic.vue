@@ -1,8 +1,12 @@
 <template>
-  <NuiRadioGroup v-model="plan" label="Plan" description="You can change it later">
-    <NuiRadio value="free">Free</NuiRadio>
-    <NuiRadio value="team">Team</NuiRadio>
-    <NuiRadio value="business" disabled>Business</NuiRadio>
+  <NuiRadioGroup
+    v-model="payment"
+    label="Payment method"
+    description="You can change it until the order ships"
+  >
+    <NuiRadio value="card">Card</NuiRadio>
+    <NuiRadio value="transfer">Bank transfer</NuiRadio>
+    <NuiRadio value="cash">On delivery</NuiRadio>
   </NuiRadioGroup>
 </template>
 
@@ -10,5 +14,5 @@
 import { ref } from 'vue';
 import { NuiRadio, NuiRadioGroup } from '@numior/vue';
 
-const plan = ref('team');
+const payment = ref('card');
 </script>

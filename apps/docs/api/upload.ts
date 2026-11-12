@@ -3,6 +3,17 @@ import { fieldControl } from './shared/field.ts';
 
 const docs: DocsMap = {
   NuiUpload: {
+    configurator: {
+      scene: 'upload/Example',
+      props: ['variant', 'layout', 'size', 'multiple', 'disabled', 'label', 'description', 'error'],
+      values: {
+        label: { ru: 'Фото товара', en: 'Product photos' },
+        description: {
+          ru: 'Первое фото попадёт на карточку товара',
+          en: 'The first photo goes on the product card',
+        },
+      },
+    },
     props: {
       ...fieldControl,
       upload: {

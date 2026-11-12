@@ -2,6 +2,12 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 
 const docs: DocsMap = {
   NuiBreadcrumbs: {
+    configurator: {
+      scene: 'breadcrumbs/Example',
+      props: ['maxItems', 'separator', 'label'],
+      choices: { separator: ['chevron-right', 'arrow-right'] },
+      values: { label: { ru: 'Путь в каталоге', en: 'Catalog path' } },
+    },
     props: {
       items: {
         ru: 'Шаги пути: подпись (`label`), ссылка (`href` или `to`) и иконка (`icon`).',

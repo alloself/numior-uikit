@@ -16,6 +16,12 @@ import { NuiToggleGroup } from '@numior/vue';
 import '@numior/vue/styles/toggle-group.css';
 ```
 
+## Использование
+
+Поменяйте вид, размер и направление группы или оставьте в кнопках одни иконки.
+
+<Configurator name="NuiToggleGroup" />
+
 ## Примеры
 
 ### Несколько нажатых кнопок

@@ -89,4 +89,32 @@ describe('NuiRadioGroup and NuiRadio', () => {
 
     group.unmount();
   });
+
+  it('checks the radio of an object kept in a deep ref and follows a new pick', async () => {
+    const group = RadioGroupDriver.mountWarehouses();
+
+    expect(group.checkedLabel).toBe('Yekaterinburg');
+
+    await group.pick('Moscow');
+
+    expect(group.checkedLabel).toBe('Moscow');
+  });
+
+  it('matches a fresh copy of the selected object by the key from getKey', () => {
+    const copy = RadioGroupDriver.mountWarehouses({ start: 'restocked' });
+    const keyed = RadioGroupDriver.mountWarehouses({ start: 'restocked', keyed: true });
+
+    expect(copy.checkedLabel).toBeUndefined();
+    expect(keyed.checkedLabel).toBe('Yekaterinburg');
+  });
+
+  it('starts with no pick under a key function and checks the first pick by its key', async () => {
+    const group = RadioGroupDriver.mountWarehouses({ start: 'none', keyed: true });
+
+    expect(group.checkedLabel).toBeUndefined();
+
+    await group.pick('Moscow');
+
+    expect(group.checkedLabel).toBe('Moscow');
+  });
 });

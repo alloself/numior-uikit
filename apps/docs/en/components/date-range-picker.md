@@ -15,6 +15,12 @@ import '@numior/vue/styles/calendar.css';
 import '@numior/vue/styles/date-picker.css';
 ```
 
+## Usage
+
+Pick a period and change the number of months in the calendar, the size and the field states.
+
+<Configurator name="NuiDateRangePicker" />
+
 ## Behaviour
 
 Both dates are typed the same way as in [Date picker](/en/components/date-picker). When the end

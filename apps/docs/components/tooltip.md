@@ -16,6 +16,12 @@ import { NuiTooltip } from '@numior/vue';
 import '@numior/vue/styles/tooltip.css';
 ```
 
+## Использование
+
+Наведите курсор на кнопку и поменяйте сторону подсказки, отступ и задержки.
+
+<Configurator name="NuiTooltip" />
+
 ## Примеры
 
 ### Кнопка с иконкой

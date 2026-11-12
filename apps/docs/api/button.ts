@@ -32,8 +32,8 @@ const docs: DocsMap = {
         en: 'Disables the button: it cannot be pressed or reached with Tab.',
       },
       loading: {
-        ru: 'Показывает спиннер и блокирует нажатия. Ширина кнопки и фокус не меняются.',
-        en: 'Shows a spinner and blocks presses. The width and the focus stay the same.',
+        ru: 'Показывает индикатор загрузки и блокирует нажатия. Ширина кнопки и фокус не меняются.',
+        en: 'Shows a loading indicator and blocks presses. The width and the focus stay the same.',
       },
       iconOnly: {
         ru: 'Делает кнопку квадратной. Если внутри только иконка, включается сам.',

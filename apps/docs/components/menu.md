@@ -17,6 +17,12 @@ import '@numior/vue/styles/list.css';
 import '@numior/vue/styles/menu.css';
 ```
 
+## Использование
+
+Откройте меню и поменяйте сторону, отступ от кнопки и закрытие после выбора.
+
+<Configurator name="NuiMenu" />
+
 ## Примеры
 
 ### Меню из массива

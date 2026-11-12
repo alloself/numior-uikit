@@ -126,6 +126,20 @@ const actions = {
 
 const docs: DocsMap = {
   NuiDatePicker: {
+    configurator: {
+      scene: 'date-picker/Example',
+      props: [
+        'size',
+        'placement',
+        'clearable',
+        'openOnClick',
+        'disabled',
+        'label',
+        'description',
+        'error',
+      ],
+      values: { label: { ru: 'Дата отгрузки', en: 'Ship date' } },
+    },
     props: {
       ...fieldControl,
       ...calendar,
@@ -135,8 +149,8 @@ const docs: DocsMap = {
         en: 'The `name` of a hidden input that sends the date with the form in ISO format.',
       },
       time: {
-        ru: 'Добавляет поле времени под календарём. Значение становится `YYYY-MM-DDTHH:mm`.',
-        en: 'Adds a time field under the calendar. The value becomes `YYYY-MM-DDTHH:mm`.',
+        ru: 'Добавляет поле времени под календарём. Значение становится `YYYY-MM-DDTHH:mm`; дата без времени читается как полночь.',
+        en: 'Adds a time field under the calendar. The value becomes `YYYY-MM-DDTHH:mm`; a date without a time reads as midnight.',
       },
       timeStep: {
         ru: 'Шаг минут при выборе времени, например 15.',
@@ -176,6 +190,20 @@ const docs: DocsMap = {
     ],
   },
   NuiDateRangePicker: {
+    configurator: {
+      scene: 'date-range-picker/Example',
+      props: [
+        'size',
+        'placement',
+        'months',
+        'clearable',
+        'openOnClick',
+        'disabled',
+        'label',
+        'error',
+      ],
+      values: { label: { ru: 'Период продаж', en: 'Sales period' } },
+    },
     props: {
       ...fieldControl,
       ...calendar,

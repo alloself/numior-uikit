@@ -206,6 +206,7 @@ export {
   type NuiMenuLabelEntry,
   type NuiMenuProps,
   type NuiMenuRadioGroupEntry,
+  type NuiMenuRadioGroupProps,
   type NuiMenuRadioItemProps,
   type NuiMenuRadioOption,
   type NuiMenuSeparatorEntry,

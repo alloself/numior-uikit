@@ -1,10 +1,10 @@
 import type { NuiTableColumn } from '@numior/table';
-import type { NuiCodeProps } from '@numior/vue';
+import type { NuiCodeProps, ResolvedColorScheme } from '@numior/vue';
 import type { MarkdownRenderer } from 'vitepress';
 import type { Component } from 'vue';
 import type { ConfiguratorChange, ConfiguratorState } from './configurator-code';
 import type { SearchFields } from './search-index';
-import type { ExampleFile, ExampleLocale } from '../examples/example.types';
+import type { ExampleFile, ExampleLocale, ExampleModule } from '../examples/example.types';
 import type {
   CatalogReference,
   ComponentReference,
@@ -46,8 +46,16 @@ export interface NavGroup {
   readonly pages: readonly NavPage[];
 }
 
+export interface NavEntry {
+  readonly link: string;
+  readonly title: string;
+  readonly group: string;
+  readonly section: string;
+}
+
 export interface NavSection {
   readonly title: NavTitle;
+  readonly link?: string | undefined;
   readonly prefixes: readonly string[];
   readonly groups: readonly NavGroup[];
 }
@@ -67,6 +75,7 @@ export type DocsSidebarSections = Readonly<Record<string, readonly DocsSidebarGr
 export type TokenSample = (typeof TokenSample)[keyof typeof TokenSample];
 
 export type TokenSection = (typeof TokenSection)[keyof typeof TokenSection];
+export type BlockViewport = (typeof BlockViewport)[keyof typeof BlockViewport];
 
 export interface TokenRow extends TokenReference {
   readonly sample: TokenSample;
@@ -111,7 +120,15 @@ export interface DocsTexts {
   readonly baseTheme: string;
   readonly invertTheme: string;
   readonly rtl: string;
+  readonly homeScreen: string;
+  readonly screenOptions: string;
   readonly copyCode: string;
+  readonly copyPage: string;
+  readonly blockViewport: string;
+  readonly viewportDesktop: string;
+  readonly viewportTablet: string;
+  readonly viewportPhone: string;
+  readonly blockOpen: string;
   readonly copied: string;
   readonly exampleFiles: string;
   readonly codeVariants: string;
@@ -151,7 +168,6 @@ export interface DocsTexts {
   readonly apiRussian: string;
   readonly apiEnglish: string;
   readonly reset: string;
-  readonly facts: string;
   readonly description: string;
 }
 
@@ -189,6 +205,40 @@ export interface ExampleViewProps {
 
 export interface ExampleFrameProps {
   component: Component;
+  files: readonly ExampleFile[];
+  texts: DocsTexts;
+}
+
+export interface BlockStageProps {
+  name: string;
+  locale: ExampleLocale;
+}
+
+export interface BlockFrameProps {
+  name: string;
+  src: string;
+  height: number;
+  files: readonly ExampleFile[];
+  texts: DocsTexts;
+}
+
+export interface ScreenState {
+  readonly scheme: ResolvedColorScheme;
+  readonly accent: string;
+  readonly rtl: boolean;
+}
+
+export interface HomeScreenProps {
+  src: string;
+  texts: DocsTexts;
+}
+
+export interface CopyPageProps {
+  path: string;
+  texts: DocsTexts;
+}
+
+export interface ExampleFilesProps {
   files: readonly ExampleFile[];
   texts: DocsTexts;
 }
@@ -314,6 +364,7 @@ export interface ConfiguratorFrameProps {
   component: ComponentReference;
   locale: ExampleLocale;
   texts: DocsTexts;
+  scene?: ExampleModule | undefined;
 }
 
 export interface InlineSegment {
@@ -355,6 +406,12 @@ export const TokenSample = {
   FontSize: 'font-size',
   FontWeight: 'font-weight',
   None: 'none',
+} as const;
+
+export const BlockViewport = {
+  Desktop: 'desktop',
+  Tablet: 'tablet',
+  Phone: 'phone',
 } as const;
 
 export const TokenSection = {

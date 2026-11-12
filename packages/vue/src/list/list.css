@@ -238,8 +238,8 @@
     --_row-icon: var(--nui-primary-soft-foreground);
     --_row-weight: 500;
     --_hover: light-dark(
-      oklch(from var(--nui-primary-soft) calc(l - var(--nui-state-hover-subtle)) c h),
-      oklch(from var(--nui-primary-soft) calc(l + var(--nui-state-hover-subtle)) c h)
+      oklab(from var(--nui-primary-soft) calc(l - var(--nui-state-hover-subtle)) a b),
+      oklab(from var(--nui-primary-soft) calc(l + var(--nui-state-hover-subtle)) a b)
     );
 
     background-color: var(--nui-primary-soft);
@@ -249,8 +249,8 @@
     --_row-icon: var(--nui-primary-soft-foreground);
     --_row-muted: color-mix(
       in oklab,
-      var(--nui-primary-soft-foreground) 90%,
-      var(--nui-primary-soft)
+      var(--nui-primary-soft-foreground) 75%,
+      var(--nui-text-muted)
     );
 
     background-color: var(--nui-primary-soft);
@@ -260,8 +260,8 @@
   .nui-list-item--selected:focus-visible,
   .nui-list-item--selected.nui-list-item--active {
     background-color: light-dark(
-      oklch(from var(--nui-primary-soft) calc(l - var(--nui-state-hover-subtle)) c h),
-      oklch(from var(--nui-primary-soft) calc(l + var(--nui-state-hover-subtle)) c h)
+      oklab(from var(--nui-primary-soft) calc(l - var(--nui-state-hover-subtle)) a b),
+      oklab(from var(--nui-primary-soft) calc(l + var(--nui-state-hover-subtle)) a b)
     );
   }
   .nui-list--variant-floating .nui-list-item--selected {

@@ -1,14 +1,20 @@
 <template>
-  <NuiSwitch v-model="settings.public" description="The project is visible to the whole company"
-    >Public</NuiSwitch
-  >
-  <NuiSwitch v-model="settings.comments" description="Comments inside tasks">Discussions</NuiSwitch>
-  <NuiSwitch v-model="settings.archive" description="Owner only" disabled> Archive </NuiSwitch>
+  <div class="flex flex-col gap-4">
+    <NuiSwitch v-model="notify.order" description="An email to the manager once the order is paid">
+      New order
+    </NuiSwitch>
+    <NuiSwitch v-model="notify.cancel" description="An email and a notice in the dashboard">
+      Canceled order
+    </NuiSwitch>
+    <NuiSwitch v-model="notify.review" description="A digest of reviews once a day, at 9 a.m.">
+      New review
+    </NuiSwitch>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { reactive } from 'vue';
 import { NuiSwitch } from '@numior/vue';
 
-const settings = reactive({ public: true, comments: false, archive: false });
+const notify = reactive({ order: true, cancel: true, review: false });
 </script>

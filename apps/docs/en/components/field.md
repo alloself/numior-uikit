@@ -1,13 +1,11 @@
 # Field
 
-`NuiField` shows a label, a hint and an error around a control and connects them to it for screen
-readers. Kit inputs show these texts on their own, so `NuiField` is for a label with markup or a
-field with several controls.
+A label, a hint and an error around any control.
 
 <Example name="field/Basic" />
 
-The `required` prop adds an asterisk to the label, and `error` puts the control into the error
-state and shows the text under it.
+Numior UI inputs take `label`, `description` and `error` themselves, so wrap a control in
+`NuiField` for a label with markup or for several controls.
 
 ## Installation
 
@@ -16,38 +14,50 @@ import { NuiField } from '@numior/vue';
 import '@numior/vue/styles/field.css';
 ```
 
+## Usage
+
+Add a hint and an error, or mark the field as required, disabled or read-only.
+
+<Configurator name="NuiField" />
+
 ## Examples
 
-### Label with markup
+### Add a link to the label
 
-The `label`, `description` and `error` slots take markup instead of text: a link next to the
-label, a bold word in the hint.
+Pass markup into the `label`, `description` and `error` slots.
 
 <Example name="field/Slots" />
 
-### A group of controls
+### Group several controls
 
-With `group`, the field puts several controls under one label, such as first and last name.
-Screen readers name the group by its label, and `disabled` turns off all the controls at once.
+Add `group` to put the controls under one label.
 
 <Example name="field/Group" />
 
-### Room for the error
+A screen reader names the group by its label, and `disabled` turns off every control in it.
 
-`reserveError` keeps a line under the control for the error in advance. When a message appears
-after a submit, the fields and buttons nearby stay in place. The `reserveError` prop of `NuiForm`
-turns this on for every field of the form.
+### Stop an error from shifting the form
+
+Turn on `reserveError`.
 
 <Example name="field/Reserve" />
 
+The line under the control stays empty until the error comes. Set `reserveError` on `NuiForm`
+to keep this room under every field of the form.
+
+## Custom control
+
+Link your own input to the field with [useFieldControl](/en/composables/field-control), and it
+gets the label, the hint and the error.
+
+Place the label, the hint and the error in your own markup with `NuiFieldLabel`,
+`NuiFieldDescription` and `NuiFieldError`. They read the field from the nearest `NuiField` or
+from one you create with `provideField` from `@numior/primitives`.
+
 ## Accessibility
 
-A click on the label focuses the control, and screen readers read the hint and the error together
-with the field. The connections are already in the server-rendered markup, before scripts load.
-
-The `NuiFieldLabel`, `NuiFieldDescription` and `NuiFieldError` parts show the label, the hint and
-the error in your own markup. They take their data from the nearest `NuiField` or from a field
-created with `provideField` from `@numior/primitives`.
+A click on the label focuses the control, and a screen reader reads the hint and the error
+together with the field.
 
 ## API
 

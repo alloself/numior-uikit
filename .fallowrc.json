@@ -33,6 +33,7 @@
     "apps/docs/examples/**/*.vue",
     "apps/docs/guide/snippets/*.css",
     "apps/docs/demo/**/*.ts",
+    "apps/docs/**/*.paths.ts",
     "apps/docs/scripts/reference.ts",
     "apps/docs/api/*.ts",
     "apps/docs/scripts/check-content.ts",

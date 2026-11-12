@@ -13,6 +13,8 @@ export interface MenuContext {
 
 export interface MenuRadioContext<T = unknown> {
   readonly modelValue: Ref<T | undefined>;
+  readonly selectedKey: ComputedRef<string | undefined>;
+  keyOf(value: T): string;
   select(value: T): void;
 }
 

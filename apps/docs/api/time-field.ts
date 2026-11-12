@@ -3,6 +3,11 @@ import { fieldControl, focusExposed } from './shared/field.ts';
 
 const docs: DocsMap = {
   NuiTimeField: {
+    configurator: {
+      scene: 'time-field/Example',
+      props: ['size', 'seconds', 'hourCycle', 'step', 'disabled', 'label', 'description', 'error'],
+      values: { label: { ru: 'Время доставки', en: 'Delivery time' } },
+    },
     props: {
       ...fieldControl,
       seconds: {

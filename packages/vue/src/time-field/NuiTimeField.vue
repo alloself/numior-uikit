@@ -120,11 +120,11 @@ import {
   Key,
   ListOrientation,
   PopoverMode,
-  PopoverState,
   TimeSegmentType,
   type TimeValue,
 } from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame.vue';
+import { popoverShown } from '../shared/popover-toggle';
 import { NuiSize } from '../shared/scale.types';
 import NuiButton from '../button/NuiButton.vue';
 import { useTriggerElement } from '../shared/trigger-ref';
@@ -453,7 +453,7 @@ const confirmWheels = (): void => {
 };
 
 const onPanelToggle = (event: Event): void => {
-  if ('newState' in event && event.newState === PopoverState.Open) {
+  if (popoverShown(event)) {
     rendered.value = true;
     wheels.value?.reveal();
     wheels.value?.focus(state.segment);

@@ -1,11 +1,11 @@
 <template>
   <NuiField>
     <template #label>
-      Пароль
-      <NuiLink href="#" class="ms-2 text-sm">Почему нужен?</NuiLink>
+      Промокод
+      <NuiLink href="#" class="ms-2 text-sm">Где взять?</NuiLink>
     </template>
-    <NuiInput v-model="password" type="password" autocomplete="new-password" />
-    <template #description> Не меньше <strong>8 символов</strong>, хотя бы одна цифра. </template>
+    <NuiInput v-model="promo" placeholder="OSLO10" />
+    <template #description>Скидка действует на заказы <strong>от 5 000 ₽</strong>.</template>
   </NuiField>
 </template>
 
@@ -13,5 +13,5 @@
 import { ref } from 'vue';
 import { NuiField, NuiInput, NuiLink } from '@numior/vue';
 
-const password = ref('');
+const promo = ref('');
 </script>

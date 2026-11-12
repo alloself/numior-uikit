@@ -1,12 +1,13 @@
 <template>
-  <div class="flex flex-col gap-3">
-    <NuiRadioGroup v-model="warehouse" label="Склад отгрузки">
-      <NuiRadio v-for="item in warehouses" :key="item.code" :value="item">
-        {{ item.city }} · {{ item.code }}
-      </NuiRadio>
-    </NuiRadioGroup>
-    <p class="text-sm text-muted-foreground">Выбран: {{ warehouse?.city ?? '—' }}</p>
-  </div>
+  <NuiRadioGroup
+    v-model="warehouse"
+    label="Склад отгрузки"
+    :description="`Заказ соберут на складе ${warehouse.code}, ${warehouse.city}`"
+  >
+    <NuiRadio v-for="item in warehouses" :key="item.code" :value="item">
+      {{ item.city }}
+    </NuiRadio>
+  </NuiRadioGroup>
 </template>
 
 <script setup lang="ts">
@@ -18,10 +19,8 @@ interface Warehouse {
   readonly city: string;
 }
 
-const warehouses: Warehouse[] = [
-  { code: 'MSK-1', city: 'Москва' },
-  { code: 'EKB-2', city: 'Екатеринбург' },
-];
+const main: Warehouse = { code: 'MSK-1', city: 'Москва' };
+const warehouses: Warehouse[] = [main, { code: 'EKB-2', city: 'Екатеринбург' }];
 
-const warehouse = ref<Warehouse | null>(warehouses[0] ?? null);
+const warehouse = ref(main);
 </script>

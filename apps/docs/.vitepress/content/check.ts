@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { llmsPaths } from '../llms/paths.ts';
 import { lintProse } from './prose-lint.ts';
 import { PENDING_PAGES } from './pending.ts';
 import type { DocsSite } from '../theme/theme.types.ts';
@@ -79,7 +80,7 @@ export const checkContent = (root: string): string[] => {
 };
 
 const UNRESOLVED_RE =
-  /<(?:Nui[A-Za-z]*|Example|ApiReference|Configurator|SignatureReference|KeyboardReference)\b/;
+  /<(?:Nui[A-Za-z]*|Example|Block|ApiReference|Configurator|SignatureReference|KeyboardReference)\b/;
 
 const NOT_FOUND_PAGE = '404.html';
 const SITEMAP = 'sitemap.xml';
@@ -136,6 +137,14 @@ const sitemapProblems = (dist: string, site: DocsSite): string[] => {
   ];
 };
 
+export const llmsDistProblems = (dist: string, paths: readonly string[]): string[] =>
+  paths.reduce<string[]>((found, path) => {
+    if (!existsSync(join(dist, path))) {
+      found.push(`${path}: the Markdown copy for language models is missing`);
+    }
+    return found;
+  }, []);
+
 export const checkDist = (dist: string, site: DocsSite): string[] =>
   walk(dist).reduce<string[]>(
     (found, file) => {
@@ -150,5 +159,5 @@ export const checkDist = (dist: string, site: DocsSite): string[] =>
       }
       return found;
     },
-    sitemapProblems(dist, site),
+    [...sitemapProblems(dist, site), ...llmsDistProblems(dist, llmsPaths())],
   );

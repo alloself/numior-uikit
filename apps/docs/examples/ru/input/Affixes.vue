@@ -1,16 +1,16 @@
 <template>
-  <NuiInput v-model="login" label="Логин" autocomplete="username">
-    <template #prefix>@</template>
+  <NuiInput v-model="query" label="Поиск заказа" placeholder="Номер или покупатель">
+    <template #prefix><NuiIcon icon="search" /></template>
   </NuiInput>
-  <NuiInput v-model="site" label="Сайт" description="Домен без протокола">
-    <template #suffix>.ru</template>
+  <NuiInput v-model="size" label="Габариты упаковки">
+    <template #suffix>см</template>
   </NuiInput>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiInput } from '@numior/vue';
+import { NuiIcon, NuiInput } from '@numior/vue';
 
-const login = ref('titova');
-const site = ref('numior');
+const query = ref('');
+const size = ref('60 × 40 × 30');
 </script>

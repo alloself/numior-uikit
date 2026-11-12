@@ -71,7 +71,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { FloatingPlacement, joinDateTime, Key, splitDateTime } from '@numior/primitives';
+import { FloatingPlacement, joinDateTime, Key } from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiCalendar from '../calendar/NuiCalendar.vue';
 import type { NuiCalendarValue } from '../calendar/calendar.types';
@@ -79,6 +79,7 @@ import NuiTimeField from '../time-field/NuiTimeField.vue';
 import NuiDateField from './NuiDateField.vue';
 import NuiDateInput from './NuiDateInput.vue';
 import type { NuiDatePickerProps } from './date-picker.types';
+import { dateTimeParts } from './date-time-model';
 import { useDatePickerShell } from './use-date-picker-shell';
 import { NuiSize } from '../shared/scale.types';
 
@@ -125,8 +126,9 @@ const {
 
 const model = defineModel<string | null>({ default: null });
 
-const dateValue = computed(() => (time ? (splitDateTime(model.value)?.date ?? null) : model.value));
-const timeValue = computed(() => splitDateTime(model.value)?.time ?? null);
+const parts = computed(() => dateTimeParts(model.value));
+const dateValue = computed(() => parts.value?.date ?? null);
+const timeValue = computed(() => parts.value?.time ?? null);
 
 const {
   split,

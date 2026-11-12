@@ -1,6 +1,7 @@
 import { vi } from 'vite-plus/test';
 
-type ClipboardPart = string | Blob;
+type ClipboardValue = string | Blob;
+type ClipboardPart = ClipboardValue | Promise<ClipboardValue>;
 
 export interface ClipboardStub {
   readonly copies: string[];
@@ -19,8 +20,11 @@ class FakeClipboardItem {
   constructor(readonly parts: Readonly<Record<string, ClipboardPart>>) {}
 }
 
-const textOf = (part: ClipboardPart): Promise<string> =>
-  typeof part === 'string' ? Promise.resolve(part) : part.text();
+const textOf = async (part: ClipboardPart): Promise<string> => {
+  const value = await part;
+
+  return typeof value === 'string' ? value : value.text();
+};
 
 const grantedStatus = (): PermissionStatus =>
   Object.assign(new EventTarget(), {

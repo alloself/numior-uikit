@@ -50,6 +50,7 @@
   }
   .nui-pagination__control {
     --_tone: var(--nui-text);
+    --_hover: var(--nui-hover);
 
     box-sizing: border-box;
     display: inline-flex;
@@ -72,16 +73,17 @@
       background-color var(--nui-duration-fast) var(--nui-easing),
       color var(--nui-duration-fast) var(--nui-easing);
   }
-  .nui-pagination__control:hover:not(:disabled):not(.nui-link--disabled) {
-    background: var(--nui-hover);
+  .nui-pagination__control:hover:not(:disabled, .nui-link--disabled) {
+    background: var(--_hover);
     color: var(--_tone);
   }
   .nui-pagination__control--current {
     --_tone: var(--nui-primary-soft-foreground);
+    --_hover: light-dark(
+      oklab(from var(--nui-primary-soft) calc(l - var(--nui-state-hover-subtle)) a b),
+      oklab(from var(--nui-primary-soft) calc(l + var(--nui-state-hover-subtle)) a b)
+    );
 
-    background: var(--nui-primary-soft);
-  }
-  .nui-pagination__control--current:hover:not(:disabled) {
     background: var(--nui-primary-soft);
   }
   .nui-pagination__control:focus-visible {

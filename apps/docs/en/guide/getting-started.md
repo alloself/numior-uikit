@@ -28,6 +28,7 @@ bun add @numior/vue @numior/tokens
 
 Forms and the Tailwind preset are installed separately: they are the `@numior/forms` and
 `@numior/tailwind` packages.
+All `@numior/*` packages ship under one version number, so install them at the same version.
 
 ## Styles
 
@@ -47,8 +48,8 @@ If your app builds its styles from a CSS file, load them there:
 @import '@numior/vue/styles.css';
 ```
 
-`theme.css` holds the colours, spacing and radii of the light and dark themes. `base.css` sets the
-page background, font and text colour. `styles.css` contains the styles of every component.
+`theme.css` holds the colors, spacing and radii of the light and dark themes. `base.css` sets the
+page background, font and text color. `styles.css` contains the styles of every component.
 
 To load less, use the files of the components you need instead of `styles.css`, for example
 `@numior/vue/styles/button.css`. Each component page shows the path to its file. Composite
@@ -60,7 +61,7 @@ Import components from `@numior/vue` and use them in a template:
 
 <Example name="guide/First" />
 
-The `variant` prop changes the style of a component, `tone` its colour and `size` its size.
+The `variant` prop changes the style of a component, `tone` its color and `size` its size.
 Attributes and event listeners you pass to a component land on its root element.
 
 Inputs render the label, hint and error text from the `label`, `description` and `error` props.

@@ -16,6 +16,12 @@ import { NuiStepper } from '@numior/vue';
 import '@numior/vue/styles/stepper.css';
 ```
 
+## Использование
+
+Поставьте шаги столбцом и разрешите переход на любой этап заказа.
+
+<Configurator name="NuiStepper" />
+
 ## Примеры
 
 ### Колонка со статусами

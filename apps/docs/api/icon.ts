@@ -13,7 +13,7 @@ const docs: DocsMap = {
       },
       filled: {
         ru: 'Заливает контур иконки цветом текста: из обводки круга получается точка, из флажка — сплошной флажок.',
-        en: 'Fills the icon outline with the text colour: a circle outline becomes a dot, a flag outline a solid flag.',
+        en: 'Fills the icon outline with the text color: a circle outline becomes a dot, a flag outline a solid flag.',
       },
     },
     configurator: { props: ['icon'], values: { icon: 'search' } },

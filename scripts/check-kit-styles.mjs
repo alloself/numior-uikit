@@ -245,6 +245,17 @@ const endless = sources.flatMap((file) =>
   ),
 );
 
+const POLAR_RELATIVE = /\b(?:oklch|lch|hsl|hwb)\(\s*from\b/gu;
+
+const polar = sources.flatMap((file) =>
+  stylesOf(file.path, file.source).flatMap((style) =>
+    [...style.text.matchAll(POLAR_RELATIVE)].map(
+      (match) =>
+        `${relative(ROOT, file.path)}:${lineOf(file.source, style.offset + (match.index ?? 0))}`,
+    ),
+  ),
+);
+
 if (findings.length > 0) {
   console.error(
     `Kit components are styled from outside their package (use props, own wrappers or a kit API):\n${findings.join('\n')}`,
@@ -263,4 +274,14 @@ if (endless.length > 0) {
   process.exitCode = 1;
 } else {
   console.log('kit styles: every infinite animation can be paused');
+}
+
+if (polar.length > 0) {
+  console.error(
+    `Relative colours change lightness through oklab(from … l a b): Chrome 157 drops the hue of oklch(from color-mix(…)):\n${polar.join('\n')}`,
+  );
+
+  process.exitCode = 1;
+} else {
+  console.log('kit styles: relative colours keep their hue');
 }

@@ -1,6 +1,15 @@
 <template>
-  <NuiButton href="https://vuejs.org" target="_blank" rel="noreferrer">Vue documentation</NuiButton>
-  <NuiButton variant="link" href="#api">To the API section</NuiButton>
+  <NuiButton
+    href="https://example.com/track/20407"
+    target="_blank"
+    rel="noreferrer"
+    icon-end="external-link"
+  >
+    Track order
+  </NuiButton>
+  <NuiButton variant="outline" tone="neutral" href="mailto:maria@example.com">
+    Email the manager
+  </NuiButton>
 </template>
 
 <script setup lang="ts">

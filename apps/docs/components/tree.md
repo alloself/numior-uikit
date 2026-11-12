@@ -17,6 +17,12 @@ import '@numior/vue/styles/list.css';
 import '@numior/vue/styles/tree.css';
 ```
 
+## Использование
+
+Поменяйте оформление, размер строк и флажки на дереве категорий магазина.
+
+<Configurator name="NuiTree" />
+
 ## Примеры
 
 ### Оформление и метки в строках

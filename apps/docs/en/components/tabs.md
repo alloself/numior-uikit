@@ -15,6 +15,12 @@ import { NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/vue';
 import '@numior/vue/styles/tabs.css';
 ```
 
+## Usage
+
+Change the look, size and direction of the tabs on a list of orders.
+
+<Configurator name="NuiTabs" />
+
 ## Examples
 
 ### Tabs from data

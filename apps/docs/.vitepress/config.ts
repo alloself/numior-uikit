@@ -1,16 +1,20 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createHighlighter } from 'shiki';
+import { getSingletonHighlighter } from 'shiki';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfigWithTheme } from 'vitepress';
 import { colorSchemeScript } from '@numior/primitives';
+import { isBlockView } from './blocks';
 import { CODE_LANGUAGES, docsMarkdown } from './markdown';
 import { headingPermalink } from './markdown/anchors';
 import { docsDemo, demoRootOf } from './examples/demo';
 import { docsExamples } from './examples/plugin';
+import { writeLlms } from './llms/files';
+import { twinPaths } from './llms/paths';
+import { docsLlms } from './llms/plugin';
 import { isEnglishPage } from './markdown/env';
-import { descriptionOf, localeOfPage, pageHead } from './meta';
+import { describePage } from './meta';
 import { navOf, sidebarOf } from './navigation';
 import { parseBundle } from './reference/bundle';
 import { docsReference } from './reference/plugin';
@@ -39,9 +43,10 @@ const searchOptions: DocsSearchOptions = {
 };
 
 const origin = absoluteUrl(site, '');
+const twins = twinPaths();
 const descriptions = { ru: ru.description, en: en.description } as const;
 
-const highlighter = await createHighlighter({
+const highlighter = await getSingletonHighlighter({
   themes: ['github-light'],
   langs: [...CODE_LANGUAGES],
 });
@@ -59,7 +64,14 @@ export default defineConfigWithTheme<DocsThemeConfig>({
     ['script', {}, colorSchemeScript('nui-theme')],
     ['script', {}, accentScript(ACCENT_STORAGE_KEY)],
   ],
-  ...(origin === undefined ? {} : { sitemap: { hostname: origin } }),
+  ...(origin === undefined
+    ? {}
+    : {
+        sitemap: {
+          hostname: origin,
+          transformItems: (items) => items.filter((item) => !isBlockView(item.url)),
+        },
+      }),
   transformPageData: (pageData, { siteConfig }) => {
     const file = join(siteConfig.srcDir, pageData.filePath);
 
@@ -67,26 +79,23 @@ export default defineConfigWithTheme<DocsThemeConfig>({
       return undefined;
     }
 
-    const description = descriptionOf(
-      readFileSync(file, 'utf8'),
-      descriptions[localeOfPage(pageData.relativePath)],
-    );
+    const page = describePage(site, {
+      relativePath: pageData.relativePath,
+      title: pageData.title,
+      markdown: readFileSync(file, 'utf8'),
+      head: pageData.frontmatter.head,
+      pages: siteConfig.pages,
+      twins,
+      descriptions,
+    });
 
     return {
-      description,
-      frontmatter: {
-        ...pageData.frontmatter,
-        head: [
-          ...(Array.isArray(pageData.frontmatter.head) ? pageData.frontmatter.head : []),
-          ...pageHead(site, {
-            relativePath: pageData.relativePath,
-            title: pageData.title,
-            description,
-            pages: siteConfig.pages,
-          }),
-        ],
-      },
+      description: page.description,
+      frontmatter: { ...pageData.frontmatter, head: page.head },
     };
+  },
+  buildEnd: (siteConfig) => {
+    writeLlms(siteConfig.outDir, { srcDir: siteConfig.srcDir, examplesRoot, bundle, site });
   },
   markdown: {
     headers: { level: [2, 3] },
@@ -103,6 +112,7 @@ export default defineConfigWithTheme<DocsThemeConfig>({
       docsDemo(demoRootOf(examplesRoot)),
       docsExamples(examplesRoot, highlighter),
       docsReference(bundleFile, highlighter),
+      docsLlms({ examplesRoot, bundle, site }),
     ],
   },
   themeConfig: {

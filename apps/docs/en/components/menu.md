@@ -17,6 +17,12 @@ import '@numior/vue/styles/list.css';
 import '@numior/vue/styles/menu.css';
 ```
 
+## Usage
+
+Open the menu and change its side, the gap from the button and closing after a choice.
+
+<Configurator name="NuiMenu" />
+
 ## Examples
 
 ### Menu from an array

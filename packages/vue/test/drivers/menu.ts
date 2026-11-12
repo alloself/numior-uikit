@@ -113,7 +113,7 @@ export class MenuDriver extends ComponentDriver {
   }
 
   get align(): string {
-    return this.scene.vm.align;
+    return this.scene.vm.align.side;
   }
 
   private item(label: string): DOMWrapper<HTMLElement> {

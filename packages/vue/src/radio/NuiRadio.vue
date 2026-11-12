@@ -15,7 +15,7 @@
       type="radio"
       class="nui-radio__control"
       v-bind="{ ...split.controlAttrs(), ...groupAttrs }"
-      :value="String(value)"
+      :value="key"
       :disabled="isDisabled"
       :aria-invalid="isInvalid ? 'true' : undefined"
       @click="onClick"
@@ -31,6 +31,7 @@
 <script setup lang="ts" generic="T">
 import { computed, useTemplateRef } from 'vue';
 import { useControlId, useRadioGroup, useSplitAttrs } from '@numior/primitives';
+import { defaultOptionKey } from '../shared/options';
 import type { NuiRadioProps } from './radio.types';
 
 defineOptions({ inheritAttrs: false });
@@ -38,7 +39,8 @@ const { value, id, disabled = undefined } = defineProps<NuiRadioProps<T>>();
 const group = useRadioGroup();
 const split = useSplitAttrs();
 const controlId = useControlId(() => id);
-const checked = computed(() => group !== null && group.modelValue.value === value);
+const key = computed(() => (group ? group.keyOf(value) : defaultOptionKey(value)));
+const checked = computed(() => group !== null && group.selectedKey.value === key.value);
 const isDisabled = computed(() => disabled ?? group?.disabled.value ?? false);
 const isInvalid = computed(() => group?.invalid.value ?? false);
 const isReadonly = computed(() => group?.readonly.value ?? false);
