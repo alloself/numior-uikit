@@ -266,22 +266,19 @@ const placeGrouped = (layout: Layout, digits: string, separator: string, placed:
   });
 };
 
+const TRAILING_ZEROS = /0+$/u;
+
 const placeFraction = (
   tokens: readonly FormatToken[],
   slots: readonly number[],
   digits: string,
   placed: Placed,
 ): void => {
-  let trimming = true;
+  const significant = digits.replace(TRAILING_ZEROS, '').length;
 
-  for (let index = slots.length - 1; index >= 0; index -= 1) {
-    const slot = slots[index] ?? -1;
-    const digit = digits.charAt(index);
-    const pad = padChar(tokens[slot]);
-
-    trimming &&= digit === FormatChar.Zero && pad !== FormatChar.Zero;
-    placed.set(slot, trimming ? pad : digit);
-  }
+  slots.forEach((slot, index) => {
+    placed.set(slot, index < significant ? digits.charAt(index) : padChar(tokens[slot]));
+  });
 };
 
 const exponentParts = (value: number, layout: Layout): Scientific => {

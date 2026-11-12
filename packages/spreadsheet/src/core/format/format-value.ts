@@ -107,6 +107,16 @@ const systemSection = (section: FormatSection, locale: NumberLocale): FormatSect
   return parseNumberFormat(code).sections[0] ?? section;
 };
 
+const dateOutput = (
+  section: FormatSection,
+  value: number,
+  locale: NumberLocale,
+): Output | undefined => {
+  const shown = section.system === undefined ? section : systemSection(section, locale);
+
+  return formatDateSection(shown.tokens, value, shown.locale ?? section.locale ?? locale);
+};
+
 const sectionOutput = (choice: Choice, value: number, locale: NumberLocale): Output | undefined => {
   const { section } = choice;
   const magnitude = Math.abs(value);
@@ -115,15 +125,13 @@ const sectionOutput = (choice: Choice, value: number, locale: NumberLocale): Out
     case SectionKind.Number:
       return formatNumberSection(section.tokens, magnitude, locale, choice.negative);
     case SectionKind.Date:
-      return formatDateSection(
-        section.system === undefined ? section.tokens : systemSection(section, locale).tokens,
-        value,
-        section.locale ?? locale,
-      );
+      return dateOutput(section, value, locale);
     case SectionKind.Text:
       return textOutput(section, generalNumber(value, locale.decimal));
     case SectionKind.Literal:
       return textOutput(section, '');
+    case SectionKind.Invalid:
+      return undefined;
   }
 };
 
@@ -155,6 +163,9 @@ const formatString = (format: NumberFormat, text: string): FormattedValue => {
   return section === undefined ? plain(text) : result(textOutput(section, text), section.color);
 };
 
+const valid = (format: NumberFormat): boolean =>
+  format.sections.every((section) => section.kind !== SectionKind.Invalid);
+
 export const renderValue = (
   value: CellValue,
   code: string,
@@ -164,9 +175,9 @@ export const renderValue = (
 
   switch (value.kind) {
     case CellValueKind.Number:
-      return formatNumber(format, value.value, locale);
+      return valid(format) ? formatNumber(format, value.value, locale) : undefined;
     case CellValueKind.String:
-      return formatString(format, value.value);
+      return valid(format) ? formatString(format, value.value) : undefined;
     case CellValueKind.Boolean:
       return plain(value.value ? locale.trueText : locale.falseText);
     case CellValueKind.Error:

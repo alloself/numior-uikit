@@ -11,6 +11,7 @@ import {
   mondayIndex,
   secondsOfDay,
   serialOfDate,
+  timeSerial,
 } from './serials';
 import { networkDays, weekendMask, workday } from './workdays';
 import { CellValueKind } from '../cell.types';
@@ -184,10 +185,19 @@ const dateDifference = (first: number, second: number, unit: string): number => 
   }
 };
 
-const timeOfParts = (hours: number, minutes: number, seconds: number): number => {
-  const total = Math.trunc(hours) * 3600 + Math.trunc(minutes) * 60 + Math.trunc(seconds);
+const TIME_PART_LIMIT = 32_767;
 
-  return total < 0 ? raise('#NUM!') : (total % 86_400) / 86_400;
+const timeOfParts = (hours: number, minutes: number, seconds: number): number => {
+  const parts = [hours, minutes, seconds].map(Math.floor);
+  const [hour = 0, minute = 0, second = 0] = parts;
+
+  if (parts.some((part) => part > TIME_PART_LIMIT) || hour * 3600 + minute * 60 + second < 0) {
+    return raise('#NUM!');
+  }
+
+  const serial = timeSerial(hour, minute, second);
+
+  return serial - Math.floor(serial);
 };
 
 const textDate = (args: FunctionArgs): number => {
@@ -199,7 +209,13 @@ const textDate = (args: FunctionArgs): number => {
 const textTime = (args: FunctionArgs): number => {
   const read = readDateText(args.text(0), args.locale);
 
-  return read === undefined ? raise('#VALUE!') : (read.time ?? 0) % 1;
+  if (read === undefined) {
+    return raise('#VALUE!');
+  }
+
+  const time = read.time ?? 0;
+
+  return (read.date === undefined ? time : read.date + time - read.date) % 1;
 };
 
 export const DATE_FUNCTIONS: readonly FunctionSpec[] = [

@@ -16,6 +16,9 @@ const LAST_SERIAL = 2_958_465;
 
 const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
+export const timeSerial = (hours: number, minutes: number, seconds: number): number =>
+  (hours + (minutes + seconds / 60) / 60) / 24;
+
 const utcDays = (year: number, month: number, day: number): number => {
   const date = new Date(0);
 

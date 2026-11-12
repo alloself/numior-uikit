@@ -1,15 +1,21 @@
 import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { readWorkbook, writeWorkbook } from '@numior/spreadsheet/xlsx';
 import { functionCorpora } from '../test/function-corpus.ts';
 import {
   caseBook,
+  knownDifferences,
   localeOf,
   mismatchesOf,
   printMismatches,
+  splitKnown,
   valuesOf,
   type BookCase,
   type CaseBook,
 } from './books.ts';
+
+const HERE = fileURLToPath(new URL('.', import.meta.url));
 
 const FILE = 'functions';
 
@@ -19,6 +25,8 @@ const SKIPPED_FAMILIES = new Set(['volatile']);
 
 const USAGE =
   'usage: corpus:excel export <file.xlsx> <en|ru> | check <file.xlsx> <en|ru> — the language of your Excel';
+
+const knownFile = (language: 'en' | 'ru'): string => `excel-known-${language}.json`;
 
 const casesIn = (language: 'en' | 'ru'): BookCase[] =>
   functionCorpora().flatMap((corpus) =>
@@ -64,13 +72,20 @@ const checked = async (path: string, language: 'en' | 'ru'): Promise<void> => {
   const values = valuesOf(read);
   const mismatches = await mismatchesOf(checks, () => Promise.resolve(values), false);
   const keys = new Set(checks.map((check) => check.key));
+  const file = knownFile(language);
+  const { fresh, stale } = splitKnown(mismatches, knownDifferences(join(HERE, file)), checks);
 
   console.log(
-    `Excel values: ${String(keys.size)} cases; ${String(keys.size - mismatches.size)} agree with the corpus, ${String(mismatches.size)} differ`,
+    `Excel values: ${String(keys.size)} cases; ${String(keys.size - mismatches.size)} agree with the corpus, ${String(mismatches.size - fresh.length)} known, ${String(fresh.length)} new`,
   );
 
-  printMismatches(mismatches, 'Excel');
-  process.exitCode = mismatches.size > 0 ? 1 : 0;
+  printMismatches(fresh, 'Excel');
+
+  stale.forEach((key) => {
+    console.log(`agrees now, drop from ${file}: ${key}`);
+  });
+
+  process.exitCode = fresh.length > 0 || stale.length > 0 ? 1 : 0;
 };
 
 const [command, path, language] = process.argv.slice(2);

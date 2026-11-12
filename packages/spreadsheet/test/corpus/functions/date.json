@@ -519,6 +519,124 @@
     {
       "formula": "=EDATE(DATE(9999,11,30),1)",
       "expected": 2958464
+    },
+    {
+      "formula": "=TIME(6,35,0)",
+      "expected": 0.2743055555555555
+    },
+    {
+      "formula": "=TIME(6,35,17)",
+      "expected": 0.27450231481481485
+    },
+    {
+      "formula": "=TIME(18,35,17)",
+      "expected": 0.7745023148148148
+    },
+    {
+      "formula": "=TIME(0,395,0)",
+      "expected": 0.2743055555555555
+    },
+    {
+      "formula": "=TIME(0,0,23700)",
+      "expected": 0.2743055555555555
+    },
+    {
+      "formula": "=TIME(30,35,0)",
+      "expected": 0.2743055555555556
+    },
+    {
+      "formula": "=TIME(6,35,17.9)",
+      "expected": 0.27450231481481485
+    },
+    {
+      "formula": "=TIME(6,36,-43)",
+      "expected": 0.27450231481481485
+    },
+    {
+      "formula": "=TIME(0,0,86399)",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=TIME(0,0,20591)",
+      "expected": 0.23832175925925925
+    },
+    {
+      "formula": "=TIME(5,43,11)",
+      "expected": 0.23832175925925925
+    },
+    {
+      "formula": "=TIME(13,7,59)",
+      "expected": 0.5472106481481481
+    },
+    {
+      "formula": "=TIME(0,1,0)",
+      "expected": 0.0006944444444444445
+    },
+    {
+      "formula": "=TIME(0,0,7)",
+      "expected": 8.101851851851852e-5
+    },
+    {
+      "formula": "=TIME(32767,0,0)",
+      "expected": 0.29166666666674246
+    },
+    {
+      "formula": "=TIME(32768,0,0)",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=TIME(0,32767,0)",
+      "expected": 0.7548611111111114
+    },
+    {
+      "formula": "=TIME(0,32768,0)",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=TIME(0,0,32767)",
+      "expected": 0.3792476851851852
+    },
+    {
+      "formula": "=TIME(0,0,32768)",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=TIME(0,-1,0)",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=TIME(1,-60,0)",
+      "expected": 0
+    },
+    {
+      "formula": "=TIME(1,-32768,0)",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=TIME(-1,120,0)",
+      "expected": 0.041666666666666664
+    },
+    {
+      "formula": "=TIME(24,0,0)",
+      "expected": 0
+    },
+    {
+      "formula": "=TIME(0,0,-0.5)",
+      "expected": {
+        "error": "#NUM!"
+      }
     }
   ]
 }

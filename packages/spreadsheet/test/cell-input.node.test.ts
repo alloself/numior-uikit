@@ -17,7 +17,7 @@ import {
   type CellRange,
 } from '../src/core';
 
-const NBSP = ' ';
+const GROUP = ' ';
 
 const range = (address: string): CellRange => {
   const found = parseRange(address);
@@ -197,7 +197,7 @@ describe('cell editor', () => {
     expect(sheet.input(0, 0)).toBe('15.03.2023');
     expect(sheet.shown(1, 0)).toBe('12,50%');
     expect(sheet.input(1, 0)).toBe('12,5%');
-    expect(sheet.shown(2, 0)).toBe(`1${NBSP}234${NBSP}567,89`);
+    expect(sheet.shown(2, 0)).toBe(`1${GROUP}234${GROUP}567,89`);
     expect(sheet.book.formats.size).toBe(4);
   });
 
@@ -230,8 +230,8 @@ describe('cell editor', () => {
     sheet.enter(2, 0, '=ROUND(A1;1)');
     sheet.setFormat('A1:A3', '#,##0.00');
 
-    expect(sheet.shown(0, 0)).toBe(`1${NBSP}234,50`);
-    expect(sheet.shown(2, 0)).toBe(`1${NBSP}234,50`);
+    expect(sheet.shown(0, 0)).toBe(`1${GROUP}234,50`);
+    expect(sheet.shown(2, 0)).toBe(`1${GROUP}234,50`);
     expect(sheet.input(2, 0)).toBe('=ОКРУГЛ(A1;1)');
 
     sheet.calculator.setLocale(EN_LOCALE);

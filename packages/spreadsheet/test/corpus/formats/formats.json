@@ -501,7 +501,19 @@
     {
       "code": "d mmmm yyyy",
       "value": 45000,
+      "text": "15 Март 2023",
+      "locale": "ru"
+    },
+    {
+      "code": "[$-FC19]d mmmm yyyy",
+      "value": 45000,
       "text": "15 марта 2023",
+      "locale": "ru"
+    },
+    {
+      "code": "[$-F800]dddd, mmmm dd, yyyy",
+      "value": 45000,
+      "text": "15 марта 2023 г.",
       "locale": "ru"
     },
     {
@@ -536,7 +548,7 @@
     {
       "code": "#,##0.00",
       "value": 1234567.891,
-      "text": "1 234 567,89",
+      "text": "1 234 567,89",
       "locale": "ru"
     },
     {
@@ -548,7 +560,7 @@
     {
       "code": "#,##0.00\\ \"₽\"",
       "value": 1234.5,
-      "text": "1 234,50 ₽",
+      "text": "1 234,50 ₽",
       "locale": "ru"
     },
     {

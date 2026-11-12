@@ -535,7 +535,7 @@ describe('book locale', () => {
     sheet.enter('A2', '="1,5"+1');
     sheet.recalc();
 
-    expect(sheet.value('A1')).toEqual(textValue('1 234,50'));
+    expect(sheet.value('A1')).toEqual(textValue('1 234,50'));
     expect(sheet.value('A2')).toEqual(numberValue(2.5));
 
     sheet.calculator.setLocale({ ...RU_LOCALE, numbers: { ...RU_LOCALE.numbers, group: '.' } });
