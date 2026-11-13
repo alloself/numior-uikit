@@ -1,7 +1,7 @@
 import { createDoc } from '../doc/doc';
 import type { Doc } from '../doc/doc.types';
 import { emptyTextblock } from '../doc/empty';
-import { contentSize, sameAttrs } from '../model/node';
+import { sameAttrs } from '../model/node';
 import {
   ContentNodeKind,
   type ContentNode,
@@ -60,11 +60,6 @@ interface Beside {
   readonly column: ElementNode;
   readonly side: BesideSide;
   readonly types: ColumnTypes;
-}
-
-interface Placed {
-  readonly tree: ElementNode;
-  readonly path: Path;
 }
 
 interface Landing {
@@ -306,61 +301,6 @@ const anchoredIndex = (node: ElementNode, anchor: Anchor): number => {
   return before >= 0 || anchor.before === undefined ? before + 1 : node.content.length;
 };
 
-const commonDepth = (left: Path, right: Path): number => {
-  let depth = 0;
-
-  while (left[depth + 1] !== undefined && left[depth + 1] === right[depth + 1]) {
-    depth += 1;
-  }
-  return depth;
-};
-
-const sharedEnds = (
-  before: readonly ContentNode[],
-  after: readonly ContentNode[],
-): readonly [number, number] => {
-  let start = 0;
-  let end = 0;
-
-  while (start < before.length && start < after.length && before[start] === after[start]) {
-    start += 1;
-  }
-  while (
-    end < before.length - start &&
-    end < after.length - start &&
-    before[before.length - 1 - end] === after[after.length - 1 - end]
-  ) {
-    end += 1;
-  }
-  return [start, end];
-};
-
-const replaceWithin = (
-  doc: Doc,
-  tr: Transaction,
-  before: ElementNode,
-  after: ElementNode,
-): boolean => {
-  const [start, end] = sharedEnds(before.content, after.content);
-  const base = before.id === doc.root.id ? 0 : (doc.positionOf(before.id) ?? -1) + 1;
-  const from = base + contentSize(before.content.slice(0, start));
-  const to = from + contentSize(before.content.slice(start, before.content.length - end));
-
-  return (
-    base >= 0 &&
-    tr.maybeStep({
-      kind: 'replace',
-      from,
-      to,
-      slice: {
-        content: after.content.slice(start, after.content.length - end),
-        openStart: 0,
-        openEnd: 0,
-      },
-    }).ok
-  );
-};
-
 const inside = (doc: Doc, node: ElementNode, id: NodeId): boolean =>
   (pathTo(doc, id) ?? []).includes(node.id);
 
@@ -443,22 +383,8 @@ const settled = (work: Transform, tr: Transaction, tree: ElementNode): boolean =
   return true;
 };
 
-const replaced = (doc: Doc, tr: Transaction, sourcePath: Path, placed: Placed): boolean => {
-  const common = sourcePath.slice(0, commonDepth(sourcePath, placed.path) + 1);
-  const before = atPath(doc.root, common);
-  const after = atPath(placed.tree, common);
-
-  return before !== undefined && after !== undefined && replaceWithin(doc, tr, before, after);
-};
-
-const committed = (
-  doc: Doc,
-  tr: Transaction,
-  sourcePath: Path,
-  placed: Placed | undefined,
-): boolean =>
-  placed !== undefined &&
-  (settled(createTransform(doc), tr, placed.tree) || replaced(doc, tr, sourcePath, placed));
+const committed = (doc: Doc, tr: Transaction, tree: ElementNode | undefined): boolean =>
+  tree !== undefined && settled(createTransform(doc), tr, tree);
 
 const fillerOf = (
   schema: Schema,
@@ -674,7 +600,7 @@ const carriedRebuilt = (doc: Doc, tr: Transaction, plan: Plan, to: BlockTarget):
   return (
     tree !== undefined &&
     ((carriedAlong(work, tr, plan.node, tree) && settled(work, tr, tree)) ||
-      committed(doc, tr, plan.sourcePath, { tree, path: plan.targetPath }))
+      committed(doc, tr, tree))
   );
 };
 
@@ -704,7 +630,11 @@ export const moveBlock =
     return true;
   };
 
-const addColumn = (schema: Schema, beside: Beside, parent: ElementNode): Placed | undefined => {
+const addColumn = (
+  schema: Schema,
+  beside: Beside,
+  parent: ElementNode,
+): ElementNode | undefined => {
   const path = beside.path.slice(0, -2);
   const columns = atPath(beside.tree, path);
   const index = columns === undefined ? -1 : childWith(columns, parent.id);
@@ -716,7 +646,7 @@ const addColumn = (schema: Schema, beside: Beside, parent: ElementNode): Placed 
 
   content.splice(index + (beside.side === BesideSide.End ? 1 : 0), 0, beside.column);
   return fits(schema, columns, content)
-    ? { tree: editAt(schema, beside.tree, path, () => content), path }
+    ? editAt(schema, beside.tree, path, () => content)
     : undefined;
 };
 
@@ -725,7 +655,7 @@ const wrapColumns = (
   beside: Beside,
   parent: ElementNode,
   id: NodeId,
-): Placed | undefined => {
+): ElementNode | undefined => {
   const index = childWith(parent, id);
   const neighbour = parent.content[index];
 
@@ -743,7 +673,7 @@ const wrapColumns = (
   const path = beside.path.slice(0, -1);
 
   return fits(schema, parent, content)
-    ? { tree: editAt(schema, beside.tree, path, () => content), path }
+    ? editAt(schema, beside.tree, path, () => content)
     : undefined;
 };
 
@@ -780,7 +710,7 @@ const placedBeside = (
   plan: BesidePlan,
   side: BesideSide,
   types: ColumnTypes,
-): Placed | undefined => {
+): ElementNode | undefined => {
   const { schema } = doc;
   const tree = lifted(doc, tr, plan.node, plan.sourcePath);
   const parent = atPath(tree, plan.path.slice(0, -1));
@@ -804,7 +734,7 @@ export const placeBeside =
     const plan = besidePlanOf(doc, tr, from, id, types);
     const placed = plan === undefined ? undefined : placedBeside(doc, tr, plan, side, types);
 
-    if (plan === undefined || !committed(doc, tr, plan.sourcePath, placed)) {
+    if (plan === undefined || !committed(doc, tr, placed)) {
       return false;
     }
     follow(tr, doc, plan.node, state.selection);

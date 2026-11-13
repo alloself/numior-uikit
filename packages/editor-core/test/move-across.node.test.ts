@@ -149,6 +149,22 @@ describe('moving blocks across containers', () => {
     expect(editor.outline).toBe('paragraph("right") paragraph("after") paragraph("left")');
   });
 
+  it('carries the only line of a column right after its columns and unwraps the one left', () => {
+    const editor = started(
+      node('columns', [node('column', [p('left')]), node('column', [p('right')])]),
+      p('after'),
+    );
+
+    const before = editor.outline;
+
+    expect(moves(editor, slot(editor, 0, 0, 0), slot(editor, 1))).toBe(true);
+    expect(editor.outline).toBe('paragraph("right") paragraph("left") paragraph("after")');
+
+    editor.press('Mod-z');
+
+    expect(editor.outline).toBe(before);
+  });
+
   it('keeps the caret in the moved text', () => {
     const editor = started(p('a'), node('callout', [p('note')]), p('carried'));
 
