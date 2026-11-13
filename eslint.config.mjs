@@ -5,6 +5,7 @@ import { apiNames } from './scripts/eslint/api-names.mjs';
 import { budgetTags } from './scripts/eslint/budget-tags.mjs';
 import { guardFirst } from './scripts/eslint/guard-first.mjs';
 import { pageListeners } from './scripts/eslint/page-listeners.mjs';
+import { pointerListeners } from './scripts/eslint/pointer-listeners.mjs';
 import { spreadArguments } from './scripts/eslint/spread-arguments.mjs';
 import { testPhases } from './scripts/eslint/test-phases.mjs';
 
@@ -241,6 +242,7 @@ export default [
           'budget-tags': budgetTags,
           'guard-first': guardFirst,
           'page-listeners': pageListeners,
+          'pointer-listeners': pointerListeners,
           'spread-arguments': spreadArguments,
           'test-phases': testPhases,
         },
@@ -254,6 +256,11 @@ export default [
   {
     files: ['packages/*/src/**/*.ts', 'packages/*/src/**/*.vue'],
     rules: { 'numior/api-names': 'error', 'numior/page-listeners': 'error' },
+  },
+  {
+    files: ['packages/*/src/**/*.ts', 'packages/*/src/**/*.vue'],
+    ignores: ['packages/primitives/src/pointer/usePointerSession.ts'],
+    rules: { 'numior/pointer-listeners': 'error' },
   },
   {
     files: ['packages/*/{src,server}/**/*.ts', 'packages/*/{src,server}/**/*.vue'],
