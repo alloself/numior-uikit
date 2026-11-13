@@ -1034,6 +1034,13 @@ export interface NuiTableGroupCellProps {
   cell: TableGroupCell | undefined;
 }
 
+export type TableHandleGrab = (event: PointerEvent) => void;
+
+export interface TableHandles {
+  attach(element: Element, grab: TableHandleGrab): void;
+  onPointerdown(event: PointerEvent): void;
+}
+
 export interface NuiTableResizerProps {
   axis?: ReorderAxis | undefined;
   start?: boolean | undefined;

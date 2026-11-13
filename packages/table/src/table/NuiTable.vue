@@ -9,6 +9,7 @@
         class="nui-table__viewport"
         :style="windowFrame.canvasStyle.value"
         @scroll.passive="onViewportScroll"
+        @pointerdown.capture="handles.onPointerdown"
         v-on="viewportEvents"
       >
         <table
@@ -366,6 +367,7 @@ import { useTableColumnOrder } from './use-table-column-order';
 import { useTableQuery } from './use-table-query';
 import { useTableWarmup } from './use-table-warmup';
 import { useTableResize } from './use-table-resize';
+import { provideTableHandles } from './table-handles';
 import { useTableRowDrag } from './use-table-row-drag';
 import { nodeIdsOf, useTableRowPlaces } from './use-table-row-places';
 import { keepEqual } from './table-values';
@@ -553,6 +555,8 @@ const overlaid = shallowRef(rawSlots.overlay !== undefined);
 const root = useTemplateRef<HTMLElement>('root');
 const viewport = useTemplateRef<HTMLElement>('viewport');
 const frame = useTemplateRef<HTMLElement>('frame');
+
+const handles = provideTableHandles();
 const textMeasure = useTextMeasure(root, () => `${size}:${String(gridlines)}`);
 const sortNow = computed<NuiTableSort>((previous) => keepEqual(sort.value, previous));
 const filtersNow = computed<NuiTableFilters>((previous) => keepEqual(filters.value, previous));
