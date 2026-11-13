@@ -8,6 +8,7 @@ import {
   type Ref,
 } from 'vue';
 import { Key } from '../keyboard/key.types';
+import { usePointerSession } from '../pointer/usePointerSession';
 import { useEdgeScroll } from './useEdgeScroll';
 import { ReorderAxis, ReorderEventType, ReorderPhase } from './reorder.types';
 
@@ -113,13 +114,14 @@ export const useReorder = (options: ReorderOptions): Reorder => {
 
   const edge = useEdgeScroll({ container: options.container, onStep: retarget });
 
+  const pointer = usePointerSession();
+
   const detach = (): void => {
+    pointer.end();
+
     if (typeof window === 'undefined') {
       return;
     }
-    window.removeEventListener('pointermove', onPointermove);
-    window.removeEventListener('pointerup', onPointerup);
-    window.removeEventListener('pointercancel', onPointercancel);
     window.removeEventListener('keydown', onWindowKeydown);
   };
 
@@ -242,9 +244,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
       origin: clientOf(event, options.axis),
     });
 
-    window.addEventListener('pointermove', onPointermove);
-    window.addEventListener('pointerup', onPointerup);
-    window.addEventListener('pointercancel', onPointercancel);
+    pointer.begin({ move: onPointermove, up: onPointerup, cancel: onPointercancel });
     window.addEventListener('keydown', onWindowKeydown);
   };
 
