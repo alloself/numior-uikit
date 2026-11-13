@@ -224,6 +224,15 @@ export class SpreadsheetDriver {
     await this.wrapper.findAll('.nui-spreadsheet__drawing')[index]?.trigger('click');
   }
 
+  async touchDrawing(index: number): Promise<boolean> {
+    const kept =
+      this.drawingAt(index)?.dispatchEvent(pointer('pointerdown', { pointerType: 'touch' })) ??
+      false;
+
+    await nextTick();
+    return kept;
+  }
+
   get drawingMenuItems(): string[] {
     return [...document.querySelectorAll(`${DRAWING_MENU} [role="menuitem"]`)].map(
       (item) => item.textContent?.trim() ?? '',

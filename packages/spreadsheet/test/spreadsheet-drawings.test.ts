@@ -318,6 +318,15 @@ describe('NuiSpreadsheet drawings', () => {
     expect(anchorsOf(book)).toEqual([PICTURE.anchor]);
   });
 
+  it('leaves the touch on an unselected drawing to the browser, so the tap becomes a click', async () => {
+    const book = drawnBook([PICTURE]);
+    const sheet = sheetOf(book);
+
+    const kept = await sheet.touchDrawing(0);
+
+    expect(kept).toBe(true);
+  });
+
   it('leaves an unselected drawing to the finger and drags a selected one', async () => {
     const book = drawnBook([PICTURE]);
     const sheet = sheetOf(book);
