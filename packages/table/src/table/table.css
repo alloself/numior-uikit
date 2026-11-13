@@ -210,6 +210,10 @@
   position: sticky;
   inset-block: calc(var(--_window-clamp-start) - var(--_head-lap)) var(--_window-clamp-end);
 }
+.nui-table:not(.nui-table--auto) > .nui-table__frame > .nui-table__viewport > .nui-table__grid > * {
+  --_window-clamp-start: initial;
+  --_window-clamp-end: initial;
+}
 .nui-table__body
   > .nui-table__row
   > .nui-table__cell:not(.nui-table__cell--pin-start, .nui-table__cell--pin-end) {
@@ -671,15 +675,15 @@
   --_seam-start: 0px;
   --_seam-end: var(--_seam-lap);
   --_seam-drop: 0px;
-  --_seam-turn: -1;
-  --_seam-rise: -1px;
+  --_seam-x: 100%;
+  --_seam-y: 100%;
 }
 .nui-table__header:dir(rtl),
 .nui-table__footer:dir(rtl) {
-  --_seam-turn: 1;
+  --_seam-x: 0%;
 }
 .nui-table__footer {
-  --_seam-rise: 1px;
+  --_seam-y: 0%;
 }
 .nui-table__row--band {
   --_seam-drop: var(--_head-lap);
@@ -706,10 +710,12 @@
   border: 0 solid transparent;
   border-inline-width: var(--_seam-start) var(--_seam-end);
   border-block-end-width: var(--_seam-drop);
+  background:
+    linear-gradient(var(--_line), var(--_line)) padding-box var(--_seam-x) 0 / var(--_grid-x) 100%
+      no-repeat,
+    linear-gradient(var(--_line), var(--_line)) padding-box 0 var(--_seam-y) / 100% 1px no-repeat,
+    none border-box;
   background-color: inherit;
-  box-shadow:
-    inset calc(var(--_seam-turn) * var(--_grid-x)) 0 0 0 var(--_line),
-    inset 0 var(--_seam-rise) 0 0 var(--_line);
   pointer-events: none;
 }
 .nui-table__footer .nui-table__cell::before {

@@ -63,6 +63,10 @@
   position: sticky;
   inset-block: var(--_window-clamp-start) var(--_window-clamp-end);
 }
+.nui-tree--virtual .nui-tree__list > * {
+  --_window-clamp-start: initial;
+  --_window-clamp-end: initial;
+}
 .nui-tree .nui-list-item {
   --_min-size: var(--_row);
 
