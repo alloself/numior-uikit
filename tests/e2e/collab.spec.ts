@@ -199,12 +199,12 @@ test.describe('collaboration', () => {
     await expect(anna.readOnlyDocument).toContainText('Начало');
 
     await anna.selectWordInCopy(0);
-    await anna.page.keyboard.type('лишнее');
+    await anna.pressKeys('extra');
     await anna.addComment('Заметка');
 
     await expect(anna.threads).toContainText('Заметка');
     await expect(anna.readOnlyDocument.locator('.nui-editor__comment')).toHaveText('Начало');
-    await expect(anna.readOnlyDocument).not.toContainText('лишнее');
+    await expect(anna.readOnlyDocument).not.toContainText('extra');
     expect(await wcagViolationsOf(anna.page)).toEqual([]);
   });
 
