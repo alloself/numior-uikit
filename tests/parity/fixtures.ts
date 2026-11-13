@@ -224,16 +224,16 @@ export class SceneRecorder {
     }
 
     if (shot === 'viewport') {
-      return this.page.screenshot(SHOT);
+      return this.shootSlowed(() => this.page.screenshot(SHOT));
     }
-    return this.shootElement(shot);
+    return this.shootSlowed(() => shot.screenshot(SHOT));
   }
 
-  private async shootElement(element: Locator): Promise<Buffer> {
+  private async shootSlowed(take: () => Promise<Buffer>): Promise<Buffer> {
     const session = await this.page.context().newCDPSession(this.page);
 
     try {
-      return await this.slowed(session, () => element.screenshot(SHOT));
+      return await this.slowed(session, take);
     } finally {
       await session.detach();
     }
