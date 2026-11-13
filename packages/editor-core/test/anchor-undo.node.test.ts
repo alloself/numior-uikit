@@ -67,6 +67,31 @@ const undoAll = (editor: EditingHarness): void => {
   }
 };
 
+const PLAIN = {
+  undo: (editor: EditingHarness): void => {
+    editor.run(undo);
+  },
+  redo: (editor: EditingHarness): void => {
+    editor.run(redo);
+  },
+  pause: (editor: EditingHarness): void => {
+    editor.pause(5000);
+  },
+} as const;
+
+const erase = (editor: EditingHarness, from: number, size: number, line: number): void => {
+  editor.select(textSelection(from, Math.min(line + 1, from + size)));
+  editor.backspace();
+};
+
+const backspaceAt = (editor: EditingHarness, at: number, times: number): void => {
+  editor.select(textSelection(at));
+
+  for (let time = 0; time < times; time += 1) {
+    editor.backspace();
+  }
+};
+
 const play = (editor: EditingHarness, edit: Edit): void => {
   const size = lineSize(editor.state);
 
@@ -74,40 +99,24 @@ const play = (editor: EditingHarness, edit: Edit): void => {
     return;
   }
 
+  const placeOf = (offset: number): number => 1 + (offset % (size + 1));
+
   switch (edit.kind) {
     case 'type':
-      editor.select(textSelection(1 + (edit.at % (size + 1))));
+      editor.select(textSelection(placeOf(edit.at)));
       editor.type(edit.text);
       break;
-    case 'erase': {
-      const from = 1 + (edit.from % (size + 1));
-
-      editor.select(textSelection(from, Math.min(size + 1, from + edit.size)));
-      editor.backspace();
+    case 'erase':
+      erase(editor, placeOf(edit.from), edit.size, size);
       break;
-    }
     case 'backspace':
-      editor.select(textSelection(1 + (edit.at % (size + 1))));
-
-      for (let time = 0; time < edit.times; time += 1) {
-        editor.backspace();
-      }
+      backspaceAt(editor, placeOf(edit.at), edit.times);
       break;
     case 'peer':
-      editor.change((tr) =>
-        tr.insertText(edit.text, 1 + (edit.at % (size + 1))).setMeta(remoteChange, true),
-      );
-
+      editor.change((tr) => tr.insertText(edit.text, placeOf(edit.at)).setMeta(remoteChange, true));
       break;
-    case 'undo':
-      editor.run(undo);
-      break;
-    case 'redo':
-      editor.run(redo);
-      break;
-    case 'pause':
-      editor.pause(5000);
-      break;
+    default:
+      PLAIN[edit.kind](editor);
   }
 };
 

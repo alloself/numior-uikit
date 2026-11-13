@@ -30,13 +30,23 @@ const TOLERANCE = 0.02;
 
 const offGrid = (value: number): boolean => Math.abs(value - Math.round(value)) > TOLERANCE;
 
-const boxFaults = (box: KitBox): string[] => [
+const placeFaults = (box: KitBox): string[] => [
   ...(offGrid(box.height) ? [`height ${box.height.toFixed(2)}`] : []),
   ...(offGrid(box.dy) ? [`top ${box.dy.toFixed(2)}`] : []),
-  ...(box.icon && offGrid(box.width) ? [`width ${box.width.toFixed(2)}`] : []),
-  ...(box.icon && offGrid(box.dx) ? [`start ${box.dx.toFixed(2)}`] : []),
-  ...(box.icon && !offGrid(box.width) && Math.round(box.width) % 2 === 1 ? ['odd size'] : []),
 ];
+
+const iconFaults = (box: KitBox): string[] => {
+  if (!box.icon) {
+    return [];
+  }
+  return [
+    ...(offGrid(box.width) ? [`width ${box.width.toFixed(2)}`] : []),
+    ...(offGrid(box.dx) ? [`start ${box.dx.toFixed(2)}`] : []),
+    ...(!offGrid(box.width) && Math.round(box.width) % 2 === 1 ? ['odd size'] : []),
+  ];
+};
+
+const boxFaults = (box: KitBox): string[] => [...placeFaults(box), ...iconFaults(box)];
 
 const lineFaults = (line: KitLine): string[] => [
   ...(offGrid(line.height) ? [`line ${line.height.toFixed(2)}`] : []),
@@ -57,55 +67,97 @@ export const offPixel = (pixels: KitPixels): string[] => {
   return [...found].toSorted();
 };
 
-export const kitPixelsOf = (scope: Locator): Promise<KitPixels> =>
+const kitBoxesOf = (scope: Locator): Promise<KitBox[]> =>
   scope.evaluate(
     (root, { kit, running }) => {
       const boxes: KitBox[] = [];
-      const lines: KitLine[] = [];
 
-      root.querySelectorAll<HTMLElement>(kit).forEach((element) => {
-        const rect = element.getBoundingClientRect();
-        const style = getComputedStyle(element);
+      const holderOf = (element: HTMLElement): HTMLElement | null => {
         let outer = element.parentElement?.closest<HTMLElement>(kit) ?? null;
 
         while (outer !== null && outer.getBoundingClientRect().height === 0) {
           outer = outer.parentElement?.closest<HTMLElement>(kit) ?? null;
         }
+        return outer;
+      };
 
-        if (
-          outer === null ||
-          rect.width <= 1 ||
-          rect.height <= 1 ||
-          element.closest(running) !== null ||
-          style.display === 'inline' ||
-          style.display === 'contents' ||
-          !element.checkVisibility({ opacityProperty: true, visibilityProperty: true })
-        ) {
-          return;
+      const measurable = (element: HTMLElement, style: CSSStyleDeclaration): boolean => {
+        const rect = element.getBoundingClientRect();
+
+        return (
+          rect.width > 1 &&
+          rect.height > 1 &&
+          style.display !== 'inline' &&
+          style.display !== 'contents' &&
+          element.closest(running) === null &&
+          element.checkVisibility({ opacityProperty: true, visibilityProperty: true })
+        );
+      };
+
+      const boxOf = (element: HTMLElement): KitBox | undefined => {
+        const style = getComputedStyle(element);
+        const outer = holderOf(element);
+
+        if (outer === null || !measurable(element, style)) {
+          return undefined;
         }
 
+        const rect = element.getBoundingClientRect();
         const from = outer.getBoundingClientRect();
 
         const still = [style.scale, style.rotate, style.translate, style.transform].every(
           (value) => value === 'none',
         );
 
-        boxes.push({
+        return {
           name: `${outer.classList[0] ?? outer.tagName} > ${element.classList[0] ?? element.tagName}`,
           icon: element.classList.contains('nui-icon'),
           width: Number.parseFloat(style.width),
           height: Number.parseFloat(style.height),
           dx: still ? rect.left - from.left : 0,
           dy: still ? rect.top - from.top : 0,
-        });
+        };
+      };
+
+      root.querySelectorAll<HTMLElement>(kit).forEach((element) => {
+        const box = boxOf(element);
+
+        if (box === undefined) {
+          return;
+        }
+
+        boxes.push(box);
       });
 
+      return boxes;
+    },
+    { kit: KIT_BOXES, running: RUNNING_TEXT },
+  );
+
+const kitLinesOf = (scope: Locator): Promise<KitLine[]> =>
+  scope.evaluate(
+    (root, { kit, running }) => {
+      const lines: KitLine[] = [];
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
 
-      while (walker.nextNode() !== null) {
-        const node = walker.currentNode;
+      const holderOf = (parent: HTMLElement): HTMLElement | undefined => {
+        const holder = parent.closest<HTMLElement>(kit);
+
+        if (
+          holder === null ||
+          holder.getBoundingClientRect().height <= 0 ||
+          parent.closest(running) !== null
+        ) {
+          return undefined;
+        }
+        return parent.checkVisibility({ opacityProperty: true, visibilityProperty: true })
+          ? holder
+          : undefined;
+      };
+
+      const lineOf = (node: Node): KitLine | undefined => {
         const parent = node.parentElement;
-        const holder = parent?.closest<HTMLElement>(kit) ?? null;
+        const holder = parent === null ? undefined : holderOf(parent);
         const range = document.createRange();
 
         range.selectNodeContents(node);
@@ -115,28 +167,41 @@ export const kitPixelsOf = (scope: Locator): Promise<KitPixels> =>
 
         if (
           parent === null ||
-          holder === null ||
+          holder === undefined ||
           first === undefined ||
           rects.length !== 1 ||
-          first.width <= 0 ||
-          holder.getBoundingClientRect().height <= 0 ||
-          parent.closest(running) !== null ||
-          !parent.checkVisibility({ opacityProperty: true, visibilityProperty: true })
+          first.width <= 0
         ) {
-          continue;
+          return undefined;
         }
 
-        lines.push({
+        return {
           name: `${holder.classList[0] ?? holder.tagName} text`,
           height: Number.parseFloat(getComputedStyle(parent).lineHeight),
           top: first.top - holder.getBoundingClientRect().top,
-        });
+        };
+      };
+
+      while (walker.nextNode() !== null) {
+        const line = lineOf(walker.currentNode);
+
+        if (line === undefined) {
+          continue;
+        }
+
+        lines.push(line);
       }
 
-      return { boxes, lines };
+      return lines;
     },
     { kit: KIT_BOXES, running: RUNNING_TEXT },
   );
+
+export const kitPixelsOf = async (scope: Locator): Promise<KitPixels> => {
+  const [boxes, lines] = await Promise.all([kitBoxesOf(scope), kitLinesOf(scope)]);
+
+  return { boxes, lines };
+};
 
 export const motionSettled = (page: Page): Promise<void> =>
   page.evaluate(async (settle) => {

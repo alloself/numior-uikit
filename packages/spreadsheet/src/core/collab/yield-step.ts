@@ -59,27 +59,43 @@ const touchesOf = (touched: readonly WorkbookStep[]): Touches => {
   return built;
 };
 
+const formattedBy = (
+  edit: CellEdit,
+  theirs: CellEdit | undefined,
+  ranges: readonly CellRange[],
+): boolean =>
+  theirs?.format !== undefined || ranges.some((range) => containsCell(range, edit.row, edit.col));
+
+const keptOf = (edit: CellEdit, theirs: CellEdit | undefined, formatted: boolean): CellEdit => ({
+  row: edit.row,
+  col: edit.col,
+  content: theirs?.content === undefined ? edit.content : undefined,
+  format: formatted ? undefined : edit.format,
+  decoration: theirs?.decoration === undefined ? edit.decoration : undefined,
+});
+
+const sameEdit = (left: CellEdit, right: CellEdit): boolean =>
+  left.content === right.content &&
+  left.format === right.format &&
+  left.decoration === right.decoration;
+
 const yieldedEdit = (
   edit: CellEdit,
   theirs: CellEdit | undefined,
   ranges: readonly CellRange[],
 ): CellEdit | undefined => {
-  const formatted =
-    theirs?.format !== undefined || ranges.some((range) => containsCell(range, edit.row, edit.col));
+  const formatted = formattedBy(edit, theirs, ranges);
 
   if (theirs === undefined && !formatted) {
     return edit;
   }
-  const content = theirs?.content === undefined ? edit.content : undefined;
-  const format = formatted ? undefined : edit.format;
-  const decoration = theirs?.decoration === undefined ? edit.decoration : undefined;
 
-  if (content === undefined && format === undefined && decoration === undefined) {
+  const kept = keptOf(edit, theirs, formatted);
+
+  if (kept.content === undefined && kept.format === undefined && kept.decoration === undefined) {
     return undefined;
   }
-  return content === edit.content && format === edit.format && decoration === edit.decoration
-    ? edit
-    : { row: edit.row, col: edit.col, content, format, decoration };
+  return sameEdit(kept, edit) ? edit : kept;
 };
 
 export const foreignEdits = (

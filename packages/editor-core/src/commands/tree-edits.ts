@@ -17,6 +17,12 @@ interface Edit {
 
 type Pair = readonly [ElementNode, ElementNode];
 
+interface Cursor {
+  pos: number;
+  old: number;
+  next: number;
+}
+
 export const EMPTY_SLICE = { content: [], openStart: 0, openEnd: 0 } as const;
 
 const childIds = (content: readonly ContentNode[]): Set<NodeId> =>
@@ -58,40 +64,47 @@ const editAt = (edits: Edit[], pos: number): Edit => {
   return edit;
 };
 
+const unmatched = (
+  left: ContentNode | undefined,
+  right: ContentNode | undefined,
+  kept: ReadonlySet<NodeId>,
+  cursor: Cursor,
+  edits: Edit[],
+): void => {
+  const edit = editAt(edits, cursor.pos);
+
+  if (left !== undefined && !stays(left, right, kept)) {
+    edit.removed.push(left);
+    edit.to += nodeSize(left);
+    cursor.pos += nodeSize(left);
+    cursor.old += 1;
+    return;
+  }
+  if (right !== undefined) {
+    edit.inserted.push(right);
+  }
+  cursor.next += 1;
+};
+
 const collect = (before: ElementNode, after: ElementNode, start: number, edits: Edit[]): void => {
   const kept = childIds(after.content);
-  let pos = start;
-  let old = 0;
-  let next = 0;
+  const cursor: Cursor = { pos: start, old: 0, next: 0 };
 
-  while (old < before.content.length || next < after.content.length) {
-    const left = before.content[old];
-    const right = after.content[next];
+  while (cursor.old < before.content.length || cursor.next < after.content.length) {
+    const left = before.content[cursor.old];
+    const right = after.content[cursor.next];
     const pair = left === right ? undefined : pairOf(left, right);
 
-    if (left !== undefined && (left === right || pair !== undefined)) {
-      if (pair !== undefined) {
-        collect(pair[0], pair[1], pos + 1, edits);
-      }
-      pos += nodeSize(left);
-      old += 1;
-      next += 1;
+    if (left === undefined || (left !== right && pair === undefined)) {
+      unmatched(left, right, kept, cursor, edits);
       continue;
     }
-
-    const edit = editAt(edits, pos);
-
-    if (left !== undefined && !stays(left, right, kept)) {
-      edit.removed.push(left);
-      edit.to += nodeSize(left);
-      pos += nodeSize(left);
-      old += 1;
-      continue;
+    if (pair !== undefined) {
+      collect(pair[0], pair[1], cursor.pos + 1, edits);
     }
-    if (right !== undefined) {
-      edit.inserted.push(right);
-    }
-    next += 1;
+    cursor.pos += nodeSize(left);
+    cursor.old += 1;
+    cursor.next += 1;
   }
 };
 

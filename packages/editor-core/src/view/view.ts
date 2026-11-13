@@ -444,29 +444,22 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     },
   );
 
-  const update = (next: EditorState): void => {
-    const end = next.doc.root === state.doc.root ? undefined : attaching.prefix(next.doc.root);
-    const kept = !acting && sync.unread();
-
-    if (next.doc.schema !== context.schema) {
-      throw new RangeError('The view renders one schema; create a new view for another');
-    }
+  const redecorate = (next: EditorState): void => {
     const before = context.decorations;
     const nextSets = composing ? sets : decorationSets(next);
     const after = sameSets(nextSets, sets) ? before : blockDecorations(next, nextSets);
 
     sets = nextSets;
     context.decorations = after;
-    if (after !== before) {
-      for (const id of changedBlocks(before, after)) {
-        context.redraw.add(id);
-      }
+    if (after === before) {
+      return;
     }
-    if (end === undefined) {
-      syncElement(context, rootDesc, next.doc.root);
-    } else {
-      syncRootPrefix(context, rootDesc, next.doc.root, end);
+    for (const id of changedBlocks(before, after)) {
+      context.redraw.add(id);
     }
+  };
+
+  const redrawMarked = (): void => {
     for (const id of context.redraw) {
       const desc = context.byId.get(id);
 
@@ -477,6 +470,23 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
       redrawContent(context, desc);
       context.redraw.delete(id);
     }
+  };
+
+  const update = (next: EditorState): void => {
+    const end = next.doc.root === state.doc.root ? undefined : attaching.prefix(next.doc.root);
+    const kept = !acting && sync.unread();
+
+    if (next.doc.schema !== context.schema) {
+      throw new RangeError('The view renders one schema; create a new view for another');
+    }
+    redecorate(next);
+    if (end === undefined) {
+      syncElement(context, rootDesc, next.doc.root);
+    } else {
+      syncRootPrefix(context, rootDesc, next.doc.root, end);
+    }
+    redrawMarked();
+
     const previous = state;
 
     state = next;

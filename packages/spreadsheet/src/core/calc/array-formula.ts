@@ -95,6 +95,16 @@ const callShape = (node: Call, parts: readonly Shape[], walk: Walk): Shape => {
   };
 };
 
+const spreadShape = (many: boolean, parts: readonly Shape[]): Shape => ({
+  many,
+  spreads: many || parts.some((part) => part.spreads),
+});
+
+const areasShape = (op: AreaOperator, first: Shape, second: Shape): Shape => ({
+  many: op === AreaOperator.Range || (first.many && second.many),
+  spreads: first.spreads || second.spreads,
+});
+
 const nodeShape = (node: FormulaNode, parts: readonly Shape[], walk: Walk): Shape => {
   const [first = NO_SHAPE, second = NO_SHAPE] = parts;
 
@@ -103,23 +113,14 @@ const nodeShape = (node: FormulaNode, parts: readonly Shape[], walk: Walk): Shap
       return { many: node.book === undefined && namedCells(node, walk), spreads: false };
     case FormulaNodeKind.Call:
       return callShape(node, parts, walk);
-    case FormulaNodeKind.Unary: {
-      const many = node.op !== UnaryOperator.Intersect && first.many;
-
-      return { many, spreads: many || first.spreads };
-    }
+    case FormulaNodeKind.Unary:
+      return spreadShape(node.op !== UnaryOperator.Intersect && first.many, parts);
     case FormulaNodeKind.Percent:
-      return { many: first.many, spreads: first.many || first.spreads };
-    case FormulaNodeKind.Binary: {
-      const many = first.many || second.many;
-
-      return { many, spreads: many || first.spreads || second.spreads };
-    }
+      return spreadShape(first.many, parts);
+    case FormulaNodeKind.Binary:
+      return spreadShape(first.many || second.many, parts);
     case FormulaNodeKind.Areas:
-      return {
-        many: node.op === AreaOperator.Range || (first.many && second.many),
-        spreads: first.spreads || second.spreads,
-      };
+      return areasShape(node.op, first, second);
     default:
       return { many: referenceCells(node) ?? false, spreads: false };
   }
