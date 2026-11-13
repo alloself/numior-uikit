@@ -31,6 +31,7 @@ export interface NuiChartLegendProps {
 export interface NuiChartSceneProps {
   readonly scene: ChartScene;
   readonly focus: ChartHit | undefined;
+  readonly fontSize: number;
 }
 
 export interface NuiChartTooltipRow {

@@ -57,13 +57,13 @@ export class ChartsSection {
   }
 
   async categoryPoint(chart: Locator, label: string): Promise<{ x: number; y: number }> {
-    const x = await chart
-      .locator('.nui-chart__text--category-tick', { hasText: exactly(label) })
-      .getAttribute('x');
+    const tick = await boxOf(
+      chart.locator('.nui-chart__text--category-tick', { hasText: exactly(label) }),
+    );
 
     const frame = await boxOf(chart.locator('.nui-chart__frame'));
 
-    return { x: Number(x), y: frame.height / 2 };
+    return { x: tick.x + tick.width / 2 - frame.x, y: frame.height / 2 };
   }
 
   async pointAt(chart: Locator, label: string): Promise<void> {

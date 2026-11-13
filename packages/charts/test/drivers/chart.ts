@@ -296,9 +296,9 @@ export class ChartDriver {
   categoryTickX(text: string): number {
     const tick = this.wrapper
       .findAll('.nui-chart__text--category-tick')
-      .find((item) => item.text() === text);
+      .find((item) => item.text() === text)?.element;
 
-    return Number(tick?.attributes('x') ?? Number.NaN);
+    return tick instanceof HTMLElement ? Number(tick.style.getPropertyValue('--_x')) : Number.NaN;
   }
 
   get caption(): string {

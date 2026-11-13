@@ -23,7 +23,7 @@
     >
       <span ref="probe" class="nui-chart__font-probe" aria-hidden="true"></span>
       <p v-if="empty" class="nui-chart__empty">{{ texts.empty }}</p>
-      <NuiChartScene v-else :scene="scene" :focus="focus" />
+      <NuiChartScene v-else :scene="scene" :focus="focus" :font-size="fontSize" />
       <NuiChartTooltip
         v-if="tooltip !== undefined"
         :content="tooltip.content"
@@ -73,6 +73,7 @@ import {
 import { useChartFrame } from './use-chart-frame';
 import { useChartPointer } from './use-chart-pointer';
 import { ChartAxis, ChartCategoriesKind, ChartKind } from '../core/chart.types';
+import { CHART_FONT_SIZE } from '../core/layout';
 
 const {
   spec,
@@ -118,6 +119,8 @@ const rtl = computed(() => {
   return mounted.value ? direction.isRtl() : configuredDirection?.value === Direction.Rtl;
 });
 
+const fontSize = computed(() => sizing.fontSize.value ?? CHART_FONT_SIZE);
+
 const scene = computed(() =>
   layoutChart(
     spec,
@@ -129,7 +132,7 @@ const scene = computed(() =>
       rtl: rtl.value,
       locale: resolvedLocale.value,
       timeZone,
-      fontSize: sizing.fontSize.value,
+      fontSize: fontSize.value,
       measure: sizing.measure.value,
     },
   ),
