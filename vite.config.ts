@@ -141,10 +141,14 @@ export default defineConfig({
       },
       'test:budget': {
         command: 'vp test run --tags-filter=budget',
+        cache: {
+          untrackedEnv: ['VITEST_MAX_WORKERS'],
+        },
       },
       'test:coverage': {
         command: 'vp test run --coverage --tags-filter=!budget',
         cache: {
+          untrackedEnv: ['VITEST_MAX_WORKERS'],
           input: [{ auto: true }, '!node_modules/.cache/coverage/**'],
           output: ['node_modules/.cache/coverage/coverage-final.json'],
         },
