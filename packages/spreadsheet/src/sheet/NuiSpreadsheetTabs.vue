@@ -170,6 +170,7 @@ const aim = (node: EventTarget | null): boolean => {
   target.value = tab;
   targetIndex.value = indexOf(tab);
   emit('select', targetIndex.value);
+  tab.focus({ preventScroll: true });
   return true;
 };
 
