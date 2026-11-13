@@ -12,7 +12,12 @@ const mountStaff = (): TableDriver<Staff> => {
     rows: staff(100),
     config: { locale: 'ru-RU' },
     width: 900,
-    props: { rowHeaders: { resizable: true }, rowDrag: true, getKey: (row: Staff) => row.id },
+    props: {
+      rowHeaders: { resizable: true },
+      rowDrag: true,
+      cellSelection: true,
+      getKey: (row: Staff) => row.id,
+    },
   });
 
   mounted.push(grid);
@@ -54,5 +59,22 @@ describe('NuiTable handles', () => {
     await grid.dragRowResizer(80, 24);
 
     expect(grid.rowHeights).toEqual({ 80: 64 });
+  });
+
+  it('selects, drags a range and resizes without adding pointer listeners', async () => {
+    const grid = mountStaff();
+    await grid.settle();
+    const adds = watchPointerListenerAdds();
+    watched.push(adds);
+
+    await grid.pressCell(2, 1);
+    await grid.dragRange({ row: 1, col: 1 }, { row: 3, col: 2 });
+    await grid.dragResizer(1, 40);
+    await grid.dragRowResizer(2, 24);
+
+    expect(grid.ranges).toEqual([{ from: { row: 1, col: 0 }, to: { row: 3, col: 1 } }]);
+    expect(grid.widths).toEqual({ id: 120 });
+    expect(grid.rowHeights).toEqual({ 2: 64 });
+    expect(adds.types()).toEqual([]);
   });
 });

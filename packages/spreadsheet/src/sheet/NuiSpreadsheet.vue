@@ -6,7 +6,7 @@
     :class="rootClasses"
     @keydown.capture="onKeydown"
     @paste.capture="pictureInsert.onPaste"
-    @pointerdown.capture="drawingEdit.onRootDown"
+    @pointerdown.capture="onRootDown"
     @input="assist.syncCaret"
     @keyup="assist.syncCaret"
     @focusin="assist.syncCaret"
@@ -317,6 +317,7 @@ import NuiSpreadsheetAssist from './NuiSpreadsheetAssist.vue';
 import NuiSpreadsheetMarks from './NuiSpreadsheetMarks.vue';
 import NuiSpreadsheetNote from './NuiSpreadsheetNote.vue';
 import NuiSpreadsheetReference from './NuiSpreadsheetReference.vue';
+import { provideSheetPresses } from './sheet-presses';
 import { peerFramesOf, placeKey } from './sheet-peers';
 import { stepRefusalText } from './sheet-refusals';
 import { useSheetNote } from './use-sheet-note';
@@ -418,6 +419,8 @@ const mirror = useTemplateRef<HTMLElement>('mirror');
 const grid = useTemplateRef<NuiTableExposed>('grid');
 const fileView = useTemplateRef<SheetFileViewExposed>('fileView');
 const body = useTemplateRef<HTMLElement>('body');
+
+const presses = provideSheetPresses();
 
 const formulaId = useId();
 
@@ -909,6 +912,11 @@ const onKeydown = (event: KeyboardEvent): void => {
   }
 
   references.onKeydown(event);
+};
+
+const onRootDown = (event: PointerEvent): void => {
+  drawingEdit.onRootDown(event);
+  presses.onPointerdown(event);
 };
 
 const onPointermove = (event: PointerEvent): void => {

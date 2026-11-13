@@ -1,7 +1,6 @@
-import { onScopeDispose } from 'vue';
 import { edgeDirectionOf, stepCell, type TableSize } from './table-keys';
 import type { NuiTableEditMove, NuiTableRange, NuiTableCellPosition } from './table.types';
-import { PointerType } from '@numior/primitives';
+import { PointerType, usePointerSession } from '@numior/primitives';
 
 export interface TablePickingOptions {
   readonly active: () => boolean;
@@ -39,6 +38,8 @@ export const useTablePicking = (options: TablePickingOptions): TablePicking => {
   let cursor: PickCursor | undefined;
   let touched = false;
 
+  const pointer = usePointerSession();
+
   const send = (next: PickCursor): void => {
     cursor = next;
     options.pick(options.whole({ from: next.anchor, to: next.focus }));
@@ -57,12 +58,6 @@ export const useTablePicking = (options: TablePickingOptions): TablePicking => {
     send({ anchor: cursor.anchor, focus: cell });
   };
 
-  const stop = (): void => {
-    window.removeEventListener('pointermove', onMove);
-    window.removeEventListener('pointerup', stop);
-    window.removeEventListener('pointercancel', stop);
-  };
-
   const onPointerdown = (event: PointerEvent): boolean => {
     touched = event.pointerType === PointerType.Touch;
     const cell = touched || event.button !== 0 ? undefined : targetOf(event);
@@ -72,9 +67,7 @@ export const useTablePicking = (options: TablePickingOptions): TablePicking => {
     }
     event.preventDefault();
     send({ anchor: cell, focus: cell });
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', stop);
-    window.addEventListener('pointercancel', stop);
+    pointer.begin({ move: onMove, up: pointer.end, cancel: pointer.end });
     return true;
   };
 
@@ -113,8 +106,6 @@ export const useTablePicking = (options: TablePickingOptions): TablePicking => {
     options.reveal(next);
     return true;
   };
-
-  onScopeDispose(stop);
 
   return {
     onPointerdown,

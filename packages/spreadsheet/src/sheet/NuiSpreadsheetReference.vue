@@ -14,7 +14,7 @@
         :key="grip"
         class="nui-spreadsheet__grip"
         :class="`nui-spreadsheet__grip--${grip}`"
-        @pointerdown="emit('grip', $event, grip)"
+        :ref="press((event) => emit('grip', event, grip))"
       ></span>
     </template>
   </span>
@@ -23,6 +23,7 @@
 <script setup lang="ts">
 import { tableRectStyle } from '@numior/table';
 import { computed } from 'vue';
+import { useSheetPress } from './sheet-presses';
 import { FrameGrip, type SheetReferenceProps } from './sheet.types';
 
 const { tone, rect, passive, firstRow, firstCol } = defineProps<SheetReferenceProps>();
@@ -30,6 +31,8 @@ const { tone, rect, passive, firstRow, firstCol } = defineProps<SheetReferencePr
 const emit = defineEmits<{
   grip: [event: PointerEvent, grip: FrameGrip];
 }>();
+
+const press = useSheetPress();
 
 const grips = Object.values(FrameGrip);
 

@@ -1,7 +1,7 @@
 import { computed, onScopeDispose, shallowRef, type ComputedRef, type Ref } from 'vue';
 import type { NuiTableMessages } from './table.messages';
 import type { NuiTableRowHeights, NuiTableRowResize } from './table.types';
-import { Key, PointerType } from '@numior/primitives';
+import { Key, PointerType, usePointerSession } from '@numior/primitives';
 
 export interface TableRowResizeOptions {
   readonly enabled: () => boolean;
@@ -53,6 +53,7 @@ export const useTableRowResize = (options: TableRowResizeOptions): TableRowResiz
   const session = shallowRef<RowResizeSession>();
   const active = computed(() => session.value?.position);
   const latest = { height: 0 };
+  const pointer = usePointerSession();
 
   const write = (key: string, height: number): void => {
     latest.height = height;
@@ -78,20 +79,10 @@ export const useTableRowResize = (options: TableRowResizeOptions): TableRowResiz
     write(current.key, clampHeight(current.height + event.clientY - current.origin));
   };
 
-  const detach = (): void => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    window.removeEventListener('pointermove', onMove);
-    window.removeEventListener('pointerup', release);
-    window.removeEventListener('pointercancel', stop);
-  };
-
   const end = (released: boolean): void => {
     const current = session.value;
 
-    detach();
+    pointer.end();
     session.value = undefined;
 
     if (current === undefined) {
@@ -141,9 +132,7 @@ export const useTableRowResize = (options: TableRowResizeOptions): TableRowResiz
       touch: event.pointerType === PointerType.Touch,
     };
 
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', release);
-    window.addEventListener('pointercancel', stop);
+    pointer.begin({ move: onMove, up: release, cancel: stop });
   };
 
   const reset = (position: number): void => {
