@@ -169,4 +169,28 @@ describe('NuiTooltip', () => {
 
     hint.unmount();
   });
+
+  it('passes over the targets its filter turns down and closes when the pointer or focus lands on one', async () => {
+    const hint = TooltipTargetsDriver.mount();
+
+    await hint.ready();
+    await hint.hover('Bold');
+    await hint.advance(300);
+    await hint.hover('Strike', 'Bold');
+
+    expect(hint.open).toBe(false);
+    expect(hint.describedBy('Strike')).toBeNull();
+
+    await hint.hover('Italic', 'Strike');
+    await hint.advance(300);
+
+    expect(hint.open).toBe(true);
+    expect(hint.text).toBe('Italic');
+
+    await hint.focus('Strike', 'Italic');
+
+    expect(hint.open).toBe(false);
+
+    hint.unmount();
+  });
 });

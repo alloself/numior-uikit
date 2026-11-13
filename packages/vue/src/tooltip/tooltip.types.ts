@@ -21,6 +21,7 @@ export interface NuiTooltipProps {
 export interface NuiTooltipTargets {
   readonly within?: HTMLElement | null | undefined;
   readonly selector: string;
+  readonly when?: ((target: HTMLElement) => boolean) | undefined;
 }
 
 export interface NuiTooltipTriggerAttrs {
