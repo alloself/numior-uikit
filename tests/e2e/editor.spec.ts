@@ -12,6 +12,13 @@ const SCROLL_STEP = 150;
 
 const SELECTION_TOLERANCE = 2;
 
+const CENTRE_TOLERANCE = 2;
+
+const WRAPPED_LINE =
+  'The armchair ships flat in one box and takes ten minutes to put together with the key that comes inside. '.repeat(
+    2,
+  );
+
 const SHORT_WINDOW = 480;
 
 const openEditor = async (playground: PlaygroundPage): Promise<void> => {
@@ -350,6 +357,35 @@ test.describe('editor', () => {
 
     await page.keyboard.press('ArrowRight');
     await expect(editor.tool('Жирный')).toBeFocused();
+  });
+
+  test('centres the bubble over a wrapped paragraph picked with a triple click', async ({
+    playground,
+    editor,
+    page,
+  }) => {
+    await openEditor(playground);
+
+    const fine = await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    test.skip(!fine, 'the bubble follows a mouse');
+
+    const line = editor.content.locator('p').first();
+
+    await editor.clear();
+    await page.keyboard.type(WRAPPED_LINE);
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('Next');
+    await line.click({ clickCount: 3 });
+    await expect(editor.bubble()).toBeVisible();
+
+    const [text, bubble] = await Promise.all([boxOf(line), boxOf(editor.bubble())]);
+
+    expect(Math.abs(bubble.x + bubble.width / 2 - (text.x + text.width / 2))).toBeLessThanOrEqual(
+      CENTRE_TOLERANCE,
+    );
   });
 
   test('links with Ctrl+K and colours a selection from the bubble over it', async ({
