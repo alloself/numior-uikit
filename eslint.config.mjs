@@ -145,6 +145,12 @@ const SECTIONS = {
   message: 'Take sections and groups as fixtures destructured in the test parameters.',
 };
 
+const SVG_TEXT = {
+  selector: 'VElement[name=/^(?:text|tspan|textpath)$/i]',
+  message:
+    'Laid-out SVG text makes WebKit restyle the whole page on every popover and pointer listener; place labels as HTML over the drawing.',
+};
+
 const TIMERS = {
   selector: "NewExpression[callee.name='Promise'] CallExpression[callee.name='setTimeout']",
   message: 'Wait with promiseTimeout, until or useIdle from @vueuse/core.',
@@ -327,9 +333,13 @@ export default [
     },
   },
   {
+    files: ['packages/*/src/**/*.vue'],
+    rules: { 'vue/no-restricted-syntax': ['error', SVG_TEXT] },
+  },
+  {
     files: [
       'packages/{primitives,vue,forms,table,content,editor-vue,charts,spreadsheet}/src/**/*.vue',
     ],
-    rules: { 'vue/no-restricted-syntax': ['error', ...NAMED_ENUMERATIONS] },
+    rules: { 'vue/no-restricted-syntax': ['error', ...NAMED_ENUMERATIONS, SVG_TEXT] },
   },
 ];

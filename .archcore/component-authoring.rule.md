@@ -304,6 +304,10 @@ status: accepted
   `usePointerSession`, а не через `addEventListener` на `window` в начале нажатия, слушатель не
   включается и не выключается состоянием (ESLint `numior/pointer-listeners`, раздел «Слушатели
   нажатий» в @.archcore/component-conventions.adr.md).
+  Текст на рисунке — HTML поверх SVG, не `<text>`/`<tspan>`/`<textPath>`: пока на странице есть
+  разложенный SVG-текст, WebKit пересчитывает стили всего документа на каждый показ поповера и
+  каждую смену слушателей указателя (ESLint `vue/no-restricted-syntax`, `SVG_TEXT`; образец —
+  слой `nui-chart__labels`).
   Сторона плавающего элемента приходит в CSS числовыми переменными `--_side-x`/`--_side-y`
   (вектор от опоры к элементу), а не классами-модификаторами.
 - Направление письма читается через `useDirection(anchor)` (конфиг → ближайший `dir` →
