@@ -147,7 +147,7 @@ describe('NuiEditor uploads', () => {
     ]);
   });
 
-  it('refuses files that do not fit and says why', async () => {
+  it('shows a card with the reason in place of a file that does not fit until it is removed', async () => {
     const server = new FakeUploads();
 
     const editor = await editing(paragraphs('Intro'), {
@@ -163,12 +163,46 @@ describe('NuiEditor uploads', () => {
       fileOf('huge.png', 'image/png', 4096),
     ]);
 
-    expect(uploads.cards).toEqual([]);
+    expect(uploads.cards).toEqual([
+      'tool.exe|This file type is not accepted|icon',
+      'huge.png|The file is larger than 1 kB|icon',
+    ]);
+
+    expect(uploads.actions(0)).toEqual(['Remove']);
     expect(server.started).toEqual([]);
 
     expect(uploads.announcement).toBe(
       'tool.exe: this file type is not accepted huge.png is larger than 1 kB',
     );
+
+    await uploads.act('Remove', 0);
+    await uploads.act('Remove', 0);
+
+    expect(uploads.cards).toEqual([]);
+    expect(editor.documents).toEqual([]);
+  });
+
+  it('places a refused pick from the slash menu as a card beside the accepted one', async () => {
+    const server = new FakeUploads();
+
+    const editor = await editing(paragraphs('Intro', ''), {
+      upload: server.adapter,
+      maxSize: 1024,
+    });
+
+    const uploads = EditorUploadDriver.of(editor);
+
+    await editor.select(8);
+    await editor.type('/ima');
+    await editor.clickSlash('Image');
+    await uploads.pick([fileOf('cat.jpg', 'image/jpeg'), fileOf('huge.png', 'image/png', 4096)]);
+
+    expect(uploads.cards).toEqual([
+      'cat.jpg|Uploading… 0%|preview',
+      'huge.png|The file is larger than 1 kB|icon',
+    ]);
+
+    expect(server.started.map((upload) => upload.file.name)).toEqual(['cat.jpg']);
   });
 
   it('keeps text pastes as text even when the clipboard also carries a picture', async () => {
