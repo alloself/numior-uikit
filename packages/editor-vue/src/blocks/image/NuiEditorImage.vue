@@ -125,7 +125,14 @@ import {
   TextWrap,
 } from '@lucide/vue';
 import { onlyIf } from '../../editor/only-if';
-import { Direction, Key, UploadStatus, useMessages, type IconSource } from '@numior/primitives';
+import {
+  Direction,
+  Key,
+  UploadStatus,
+  useMessages,
+  usePointerSession,
+  type IconSource,
+} from '@numior/primitives';
 import {
   NuiButton,
   NuiField,
@@ -187,6 +194,7 @@ const { node, element, selected, focused, editable, editor } =
 
 const texts = useMessages(editorMessages);
 const uploads = useEditorUploadContext();
+const gripDrag = usePointerSession({ capture: true });
 const picker = useTemplateRef<HTMLInputElement>('picker');
 const bar = useTemplateRef<HTMLElement>('bar');
 const frame = useTemplateRef<HTMLElement>('frame');
@@ -338,9 +346,7 @@ const onGripDown = ({ side, lift }: Grip, event: PointerEvent): void => {
   };
 
   const finish = (): void => {
-    grip.removeEventListener('pointermove', move);
-    grip.removeEventListener('pointerup', commit);
-    grip.removeEventListener('pointercancel', cancel);
+    gripDrag.end();
     resizing.value = false;
   };
 
@@ -358,9 +364,7 @@ const onGripDown = ({ side, lift }: Grip, event: PointerEvent): void => {
     editor.setStyle('inline-size', before === '' ? null : before);
   };
 
-  grip.addEventListener('pointermove', move);
-  grip.addEventListener('pointerup', commit);
-  grip.addEventListener('pointercancel', cancel);
+  gripDrag.begin({ move, up: commit, cancel });
 };
 
 const keyStep = (event: KeyboardEvent): number | undefined => {

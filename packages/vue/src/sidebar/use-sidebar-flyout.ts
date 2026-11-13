@@ -1,4 +1,3 @@
-import { useEventListener } from '@vueuse/core';
 import {
   computed,
   onMounted,
@@ -18,6 +17,7 @@ import {
   useDirection,
   useFloating,
   useListNavigation,
+  usePointerSession,
   usePopover,
   type PopoverContentAttrs,
 } from '@numior/primitives';
@@ -57,9 +57,6 @@ export interface SidebarFlyout {
 const OPEN_DELAY = 100;
 const CLOSE_DELAY = 300;
 const OFFSET = 4;
-
-const pageDocument = (): Document | undefined =>
-  typeof document === 'undefined' ? undefined : document;
 
 export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout => {
   const open = ref(false);
@@ -166,21 +163,14 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
   };
 
   const onPagePointerdown = (event: PointerEvent): void => {
-    if (holds(event.target)) {
+    if (!open.value || holds(event.target)) {
       return;
     }
 
     delay.closeNow();
   };
 
-  useEventListener(
-    () => (open.value ? pageDocument() : undefined),
-    'pointerdown',
-    onPagePointerdown,
-    {
-      capture: true,
-    },
-  );
+  usePointerSession({ capture: true }).begin({ down: onPagePointerdown });
 
   watch(
     open,
