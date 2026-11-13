@@ -23,7 +23,7 @@ const docs: DocsMap = {
       },
       toolbar: {
         ru: 'Панель форматирования: `fixed` — над текстом, `bubble` — над выделением, `both` — обе, `none` — без панели. Тип блока выбирается в панели над выделением, а в верхней — в режиме `fixed` и в `both` на сенсорных экранах. Кнопка «+» верхней панели вставляет блок под курсором.',
-        en: 'Formatting bar: `fixed` above the text, `bubble` over the selection, `both`, or `none`. Alt+F10 moves the focus into it, Escape returns to the text.',
+        en: 'Formatting bar: `fixed` above the text, `bubble` over the selection, `both`, or `none`. The block type is picked in the bar over the selection, and in the top bar with `fixed` and with `both` on touch screens. The + button in the top bar inserts a block below the caret.',
       },
       colours: {
         ru: 'Цвета текста в меню, например `red` или `blue`. По умолчанию — все девять. Цвета, которые уже есть в документе, сохраняются.',
@@ -31,7 +31,7 @@ const docs: DocsMap = {
       },
       upload: {
         ru: 'Функция загрузки `(file, { onProgress, signal }) => Promise<{ url }>`. С ней файлы и картинки можно вставить, перетащить или выбрать в меню «/» и «+». Без неё — только по ссылке.',
-        en: 'Upload function `(file, { onProgress, signal }) => Promise<{ url }>`. With it, files and images can be pasted, dropped or picked in the slash menu. Without it, only by link.',
+        en: 'Upload function `(file, { onProgress, signal }) => Promise<{ url }>`. With it, files and images can be pasted, dropped or picked in the slash menu and the + menu. Without it, only by link.',
       },
       accept: {
         ru: 'Какие файлы можно загрузить, в формате атрибута `accept`, например `image/*`.',
