@@ -15,6 +15,7 @@ import {
   composeInto,
   typeInto,
 } from '../../../primitives/test/support/composition';
+import { describedText, layOutText, nativeTitles } from '../support/clipped-text';
 import { PivotPanelDriver } from './pivot-panel';
 
 interface DrawingDrag {
@@ -1345,6 +1346,32 @@ export class SpreadsheetDriver {
 
   get fileName(): string {
     return this.wrapper.find('.nui-spreadsheet__file-text').text();
+  }
+
+  get fileTitles(): string[] {
+    return nativeTitles(this.wrapper.find('.nui-spreadsheet__file').element);
+  }
+
+  async fileNameHint(clipped: boolean): Promise<string> {
+    const name = this.wrapper.find('.nui-spreadsheet__file-name').element;
+
+    layOutText(this.wrapper.find('.nui-spreadsheet__file-text').element, clipped);
+    name.dispatchEvent(new PointerEvent('pointerover', { bubbles: true, pointerType: 'mouse' }));
+    await nextTick();
+
+    const hint = describedText(name);
+
+    name.dispatchEvent(
+      new PointerEvent('pointerout', {
+        bubbles: true,
+        pointerType: 'mouse',
+        relatedTarget: document.body,
+      }),
+    );
+
+    await nextTick();
+
+    return hint;
   }
 
   get fileEdited(): boolean {

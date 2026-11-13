@@ -1,5 +1,6 @@
 import type { DOMWrapper, VueWrapper } from '@vue/test-utils';
 import { nextTick } from 'vue';
+import { describedText, layOutText, nativeTitles } from '../support/clipped-text';
 import { centreOf, layOutPivot } from '../support/pivot-geometry';
 
 interface PointerAt {
@@ -15,6 +16,8 @@ const EDITOR = '.nui-spreadsheet-pivot__editor';
 const ITEMS = '.nui-spreadsheet-pivot__items';
 
 const OPTION = '[role="menuitemradio"], [role="menuitemcheckbox"]';
+
+const CHIP_TEXT = '.nui-spreadsheet-pivot__chip-text';
 
 const trimmed = (element: Element): string => element.textContent?.trim() ?? '';
 
@@ -62,6 +65,25 @@ export class PivotPanelDriver {
 
       return input instanceof HTMLInputElement && input.checked ? [...names, field.text()] : names;
     }, []);
+  }
+
+  get titles(): string[] {
+    return nativeTitles(this.panel.element);
+  }
+
+  async hintOf(chip: string, clipped: boolean): Promise<string> {
+    const element = this.chip(chip);
+    const text = element?.querySelector(CHIP_TEXT);
+
+    if (element === undefined || text === null || text === undefined) {
+      throw new Error(`No chip reads ${chip}`);
+    }
+
+    layOutText(text, clipped);
+    element.focus();
+    await nextTick();
+
+    return describedText(element);
   }
 
   get announcement(): string {
