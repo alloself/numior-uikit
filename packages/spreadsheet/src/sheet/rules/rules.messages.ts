@@ -148,7 +148,7 @@ export const spreadsheetRulesMessages: NuiMessageCatalog<NuiSpreadsheetRulesMess
     ruleDeleted: 'Rule deleted',
     cellIs: ({ operator, first, second }) => filled(EN_OPERATORS[operator], first, second),
     expression: ({ formula }) => `Formula =${formula}`,
-    colorScale: ({ count }) => `${String(count)}-colour scale`,
+    colorScale: ({ count }) => `${String(count)}-color scale`,
     dataBar: 'Data bars',
     iconSet: 'Icon set',
     top: ({ bottom, rank, percent }) =>

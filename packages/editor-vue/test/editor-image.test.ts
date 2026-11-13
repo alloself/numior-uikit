@@ -104,7 +104,7 @@ describe('NuiEditor image', () => {
       'Wrap text',
       'Break text',
       'Align to the line start',
-      'Centre',
+      'Center',
       'Align to the line end',
       'Download',
       'Alt text',
@@ -118,7 +118,7 @@ describe('NuiEditor image', () => {
     await image.align('Wrap text');
 
     expect(imageAttrs(editor)?.wrap).toBe('wrap');
-    expect(image.barControls).not.toContain('Centre');
+    expect(image.barControls).not.toContain('Center');
 
     await image.align('In line with text');
 

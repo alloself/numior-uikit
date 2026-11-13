@@ -243,7 +243,7 @@ describe('NuiEditor links, colours and bubble', () => {
       'Strikethrough',
       'Inline code',
       'Link',
-      'Colour',
+      'Color',
     ]);
 
     await editor.press('F10', { alt: true });
