@@ -2,7 +2,6 @@
   <div class="w-full">
     <NuiEditor
       v-model="document"
-      toolbar="both"
       :embeds="['youtube', 'vimeo']"
       label="Видеообзор кресла «Осло»"
       description="Вставьте ссылку на ролик YouTube или Vimeo в пустую строку"

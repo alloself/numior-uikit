@@ -1,11 +1,6 @@
 <template>
   <div class="w-full">
-    <NuiEditor
-      v-model="document"
-      toolbar="both"
-      aria-label="Описание товара"
-      placeholder="Расскажите о товаре"
-    />
+    <NuiEditor v-model="document" aria-label="Описание товара" placeholder="Расскажите о товаре" />
   </div>
 </template>
 

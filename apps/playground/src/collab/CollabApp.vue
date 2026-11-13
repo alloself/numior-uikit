@@ -38,7 +38,6 @@
         v-model="document"
         format="json"
         label="Документ"
-        toolbar="both"
         :plugins="editorPlugins"
         :selection-actions="[comments.action.value]"
         :ids="ids"

@@ -1,6 +1,6 @@
 <template>
   <div class="w-full">
-    <NuiEditor v-model="document" toolbar="both" aria-label="Обивка кресла «Осло»" />
+    <NuiEditor v-model="document" aria-label="Обивка кресла «Осло»" />
   </div>
 </template>
 

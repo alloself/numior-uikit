@@ -2,7 +2,6 @@
   <div class="w-full">
     <NuiEditor
       v-model="note"
-      toolbar="both"
       :mentions="mentions"
       label="Note on order 20411"
       placeholder="Type @ to bring in a teammate"

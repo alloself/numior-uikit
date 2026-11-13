@@ -35,7 +35,6 @@
         :link-metadata="liveLinks ? liveLinkMetadata : fakeLinkMetadata"
         :mentions="fakeMentions"
         :max-size="MAX_SIZE"
-        toolbar="both"
         data-testid="editor"
         @change="changes++"
         @paste="pasted = $event.source"

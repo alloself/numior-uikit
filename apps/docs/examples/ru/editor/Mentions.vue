@@ -2,7 +2,6 @@
   <div class="w-full">
     <NuiEditor
       v-model="note"
-      toolbar="both"
       :mentions="mentions"
       label="Заметка к заказу 20411"
       placeholder="Наберите @, чтобы позвать коллегу"

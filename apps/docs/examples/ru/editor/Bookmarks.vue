@@ -2,7 +2,6 @@
   <div class="w-full">
     <NuiEditor
       v-model="document"
-      toolbar="both"
       format="json"
       :link-metadata="linkMetadata"
       label="С этим товаром берут"

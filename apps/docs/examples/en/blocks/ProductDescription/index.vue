@@ -7,7 +7,6 @@
     <NuiEditor
       v-model="document"
       format="json"
-      toolbar="both"
       aria-label="Product description"
       placeholder="Describe the product"
     />

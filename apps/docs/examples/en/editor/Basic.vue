@@ -2,7 +2,6 @@
   <div class="w-full">
     <NuiEditor
       v-model="document"
-      toolbar="both"
       aria-label="Product description"
       placeholder="Describe the product"
     />

@@ -9,7 +9,6 @@
     <NuiEditor
       v-model="document"
       format="json"
-      toolbar="both"
       aria-label="Описание товара"
       placeholder="Расскажите о товаре"
     />

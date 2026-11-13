@@ -294,4 +294,17 @@ describe('NuiEditor links, colours and bubble', () => {
 
     expect(editor.bubbleTools[0]).toBe('Block type: Text');
   });
+
+  it('shows both bars with the block type over the selection when no mode is given', async () => {
+    restoreMedia = installMouse();
+
+    const editor = mounted({ document: page('Hello world') });
+
+    expect(editor.headerTools.slice(0, 4)).toEqual(['Insert', 'Undo', 'Redo', 'Bold']);
+
+    editor.focus();
+    await editor.select(1, 6);
+
+    expect(editor.bubbleTools[0]).toBe('Block type: Text');
+  });
 });

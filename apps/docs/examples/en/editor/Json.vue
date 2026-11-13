@@ -2,7 +2,6 @@
   <div class="flex w-full flex-col gap-3">
     <NuiEditor
       v-model="document"
-      toolbar="both"
       format="json"
       label="Product description"
       placeholder="Describe the product"

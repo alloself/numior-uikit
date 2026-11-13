@@ -2,7 +2,6 @@
   <div class="w-full">
     <NuiEditor
       v-model="document"
-      toolbar="both"
       :schema="schema"
       :blocks="blocks"
       aria-label="Living room picks"

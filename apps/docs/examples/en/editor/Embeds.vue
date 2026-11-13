@@ -2,7 +2,6 @@
   <div class="w-full">
     <NuiEditor
       v-model="document"
-      toolbar="both"
       :embeds="['youtube', 'vimeo']"
       label="Oslo armchair video review"
       description="Paste a YouTube or Vimeo link on an empty line"

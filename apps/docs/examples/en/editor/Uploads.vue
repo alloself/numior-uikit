@@ -5,7 +5,6 @@
       :upload="upload"
       accept="image/png,image/jpeg,application/pdf"
       :max-size="5 * 1024 * 1024"
-      toolbar="both"
       label="Fjord dresser manual"
       description="PNG and JPEG images, PDF files up to 5 MB"
     />
