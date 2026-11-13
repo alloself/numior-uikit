@@ -220,45 +220,47 @@ export class SceneRecorder {
 
   private shoot(shot: Shot): Promise<Buffer> {
     if (shot === 'page') {
-      return this.shootPage();
+      return this.withSession((session) => this.retakePage(session));
     }
 
     if (shot === 'viewport') {
-      return this.shootSlowed(() => this.page.screenshot(SHOT));
+      return this.withSession((session) =>
+        this.throttled(session, () => this.page.screenshot(SHOT)),
+      );
     }
-    return this.shootSlowed(() => shot.screenshot(SHOT));
+    return this.withSession((session) => this.slowed(session, () => shot.screenshot(SHOT)));
   }
 
-  private async shootSlowed(take: () => Promise<Buffer>): Promise<Buffer> {
+  private async withSession(use: (session: CDPSession) => Promise<Buffer>): Promise<Buffer> {
     const session = await this.page.context().newCDPSession(this.page);
 
     try {
-      return await this.slowed(session, take);
+      return await use(session);
     } finally {
       await session.detach();
     }
   }
 
-  private async shootPage(): Promise<Buffer> {
-    const session = await this.page.context().newCDPSession(this.page);
-
-    try {
-      return await this.retakePage(session);
-    } finally {
-      await session.detach();
-    }
-  }
-
-  private async slowed(session: CDPSession, take: () => Promise<Buffer>): Promise<Buffer> {
+  private async throttled(session: CDPSession, take: () => Promise<Buffer>): Promise<Buffer> {
     await session.send('Emulation.setCPUThrottlingRate', SLOW_RENDERER);
-    await session.send('Emulation.setScriptExecutionDisabled', SCRIPTS_OFF);
 
     try {
       return await take();
     } finally {
-      await session.send('Emulation.setScriptExecutionDisabled', SCRIPTS_ON);
       await session.send('Emulation.setCPUThrottlingRate', FULL_SPEED);
     }
+  }
+
+  private slowed(session: CDPSession, take: () => Promise<Buffer>): Promise<Buffer> {
+    return this.throttled(session, async () => {
+      await session.send('Emulation.setScriptExecutionDisabled', SCRIPTS_OFF);
+
+      try {
+        return await take();
+      } finally {
+        await session.send('Emulation.setScriptExecutionDisabled', SCRIPTS_ON);
+      }
+    });
   }
 
   private async retakePage(session: CDPSession): Promise<Buffer> {
