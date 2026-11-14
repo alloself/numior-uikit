@@ -18,18 +18,22 @@ export const SITE_THEME_CLASS = 'docs-theme--numior';
 
 export const ACCENT_CLASS_PREFIX = 'nui-theme--accent-';
 
+const isPaletteClass = (name: string): boolean =>
+  name === SITE_THEME_CLASS || name.startsWith(ACCENT_CLASS_PREFIX);
+
+const paletteOf = (accent: DocsAccent | undefined): string =>
+  accent === undefined ? SITE_THEME_CLASS : `${ACCENT_CLASS_PREFIX}${accent}`;
+
 const applyAccent = (accent: DocsAccent | undefined): void => {
   if (typeof document === 'undefined') {
     return;
   }
 
   const classes = document.documentElement.classList;
-  const wanted = accent === undefined ? SITE_THEME_CLASS : `${ACCENT_CLASS_PREFIX}${accent}`;
+  const wanted = paletteOf(accent);
 
-  for (const name of Array.from(classes)) {
-    const palette = name === SITE_THEME_CLASS || name.startsWith(ACCENT_CLASS_PREFIX);
-
-    classes.toggle(name, !palette || name === wanted);
+  for (const name of Array.from(classes).filter(isPaletteClass)) {
+    classes.toggle(name, name === wanted);
   }
 
   classes.add(wanted);
