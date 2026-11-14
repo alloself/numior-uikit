@@ -13,6 +13,9 @@ a {
   cursor: pointer;
 }
 .workspace {
+  --demo-neutral-fill: --theme(--color-neutral-soft inline);
+  --demo-warning-fill: --theme(--color-warning-soft inline);
+
   box-sizing: border-box;
   min-block-size: 100dvh;
   padding: clamp(1.25rem, 5vw, 4rem);

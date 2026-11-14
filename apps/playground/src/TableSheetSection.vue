@@ -125,7 +125,7 @@ const COSTS: readonly SheetLine[] = [
 
 const BOLD = { 'font-weight': 'var(--font-weight-semibold)' } as const;
 const TITLE: NuiTableCellStyle = { style: BOLD };
-const SECTION: NuiTableCellStyle = { class: 'bg-neutral-soft', style: BOLD };
+const SECTION: NuiTableCellStyle = { fill: 'var(--demo-neutral-fill)', style: BOLD };
 const HEAD_LABEL: NuiTableCellStyle = { fill: 'var(--color-surface-muted)', style: BOLD };
 const HEAD_MONTH: NuiTableCellStyle = { ...HEAD_LABEL, align: 'center' };
 
