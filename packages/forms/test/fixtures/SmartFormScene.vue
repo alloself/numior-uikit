@@ -54,7 +54,7 @@ const {
   fields?: readonly NuiSmartFormEntry<V>[] | undefined;
   steps?: readonly NuiSmartFormStep<V>[] | undefined;
   layout?: string | undefined;
-  inline?: NuiSmartFormInline | undefined;
+  inline?: boolean | NuiSmartFormInline | undefined;
   readonly?: boolean | undefined;
   reserveError?: boolean | undefined;
   parts?: readonly SmartFormPart[] | undefined;

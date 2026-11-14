@@ -26,8 +26,8 @@ const docs: DocsMap = {
         en: 'Style: plain, divided, outline or floating.',
       },
       selectable: {
-        ru: 'Выбор узлов: `single` — одного, `multiple` — нескольких, `none` — без выбора. С `checkable` не действует.',
-        en: 'Node selection: `single` for one node, `multiple` for several, `none` to turn it off. Ignored with `checkable`.',
+        ru: 'Выбор узлов: `single` — одного, `multiple` — нескольких, `false` — без выбора. С `checkable` не действует.',
+        en: 'Node selection: `single` for one node, `multiple` for several, `false` to turn it off. Ignored with `checkable`.',
       },
       checkable: {
         ru: 'Выбор с вложенными узлами: у узлов появляются флажки, выбор родителя выбирает всех потомков.',

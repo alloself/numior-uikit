@@ -19,7 +19,7 @@ export interface SmartFormDriverOptions<V extends object> {
   readonly step?: string;
   readonly onSubmit?: SubmitHandler<V, unknown>;
   readonly layout?: string;
-  readonly inline?: NuiSmartFormInline;
+  readonly inline?: boolean | NuiSmartFormInline;
   readonly readonly?: boolean;
   readonly reserveError?: boolean;
   readonly parts?: readonly SmartFormPart[];

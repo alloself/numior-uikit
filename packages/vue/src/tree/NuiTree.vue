@@ -174,7 +174,7 @@ const pointerModality = ref(false);
 const rowScale = ref(1);
 const framePadding = ref(0);
 
-const mode = computed((): NuiTreeSelectable => {
+const mode = computed((): NuiTreeSelectable | false => {
   if (checkable) {
     return NuiTreeSelectable.Multiple;
   }
@@ -283,7 +283,7 @@ const nodeOf = (value: T): TreeItemState | undefined => {
 
 provideList<T>({
   kind: ListContextKind.Tree,
-  selectable: computed(() => (mode.value === NuiTreeSelectable.None ? undefined : mode.value)),
+  selectable: computed(() => (mode.value === false ? undefined : mode.value)),
   variant: computed(() => variant),
   size: computed(() => size),
   activeId: computed(() =>
@@ -425,7 +425,7 @@ const expandSiblings = (index: number): void => {
 
 const activate = (index: number): void => {
   const node = visible.value[index];
-  if (!node || node.item.disabled || mode.value === NuiTreeSelectable.None) {
+  if (!node || node.item.disabled || mode.value === false) {
     return;
   }
   if (checkable) {

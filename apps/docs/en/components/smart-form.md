@@ -33,7 +33,7 @@ step opens. A screen reader announces each new step, such as "Step 2 of 3: Deliv
 
 ### Line up filters in a row
 
-Set `inline="fit"`.
+Add `inline`.
 
 <Example name="smart-form/Inline" />
 

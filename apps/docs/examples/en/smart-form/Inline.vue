@@ -1,5 +1,5 @@
 <template>
-  <NuiSmartForm :form="form" :fields="fields" inline="fit" submit-label="Show" />
+  <NuiSmartForm :form="form" :fields="fields" inline submit-label="Show" />
 </template>
 
 <script setup lang="ts">

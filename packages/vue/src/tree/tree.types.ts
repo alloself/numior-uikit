@@ -13,7 +13,7 @@ export interface NuiTreeItem<T = string> extends Omit<
 
 export type NuiCheckState = (typeof NuiCheckState)[keyof typeof NuiCheckState];
 
-export type NuiTreeSelectable = (typeof NuiTreeSelectable)[keyof typeof NuiTreeSelectable];
+export type NuiTreeSelectable = 'single' | 'multiple';
 
 export type NuiTreeVariant = (typeof NuiTreeVariant)[keyof typeof NuiTreeVariant];
 
@@ -23,7 +23,7 @@ export interface NuiTreeProps<T> {
   getKey?: NuiOptionKey<T> | undefined;
   variant?: NuiTreeVariant | undefined;
   size?: NuiSize | undefined;
-  selectable?: NuiTreeSelectable | undefined;
+  selectable?: NuiTreeSelectable | false | undefined;
   checkable?: boolean | undefined;
   icons?: boolean | undefined;
   virtual?: boolean | undefined;
@@ -56,7 +56,10 @@ export interface NuiTreeNodeProps<T> {
   revealing?: boolean | undefined;
 }
 
-export const NuiTreeSelectable = { Single: 'single', Multiple: 'multiple', None: 'none' } as const;
+export const NuiTreeSelectable = {
+  Single: 'single',
+  Multiple: 'multiple',
+} as const satisfies Record<string, NuiTreeSelectable>;
 
 export const NuiTreeVariant = {
   Plain: 'plain',

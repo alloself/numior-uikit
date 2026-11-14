@@ -307,7 +307,7 @@ describe('NuiSmartForm', () => {
   });
 
   it.each([
-    ['fit', [true, false]],
+    [true, [true, false]],
     ['grow', [true, true]],
   ] as const)('marks a form put in one row with %s', (inline, modifiers) => {
     const form = SmartFormDriver.mount({

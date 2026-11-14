@@ -33,7 +33,7 @@ import '@numior/forms/styles/smart-form.css';
 
 ### Выстроить фильтры в строку
 
-Задайте `inline="fit"`.
+Добавьте `inline`.
 
 <Example name="smart-form/Inline" />
 
