@@ -16,6 +16,9 @@
   border-end-start-radius: var(--nui-radius-lg);
   translate: var(--_shift);
 }
+.nui-drawer > .nui-dialog__body {
+  flex-grow: 1;
+}
 .nui-drawer--size-sm {
   --_size: 16rem;
 }

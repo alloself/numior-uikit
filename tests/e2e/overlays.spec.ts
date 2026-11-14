@@ -151,13 +151,17 @@ test.describe('layers', () => {
     await expect(overlays.longDialog).toBeHidden();
   });
 
-  test('drawer docks to the end edge and shows its content', async ({ playground, overlays }) => {
+  test('drawer docks to the end edge, shows its content and keeps the footer at the bottom', async ({
+    playground,
+    overlays,
+  }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await overlays.drawerOpen.click();
     await expect(overlays.drawer).toBeVisible();
     expect((await overlays.edges(overlays.drawer)).right).toBe(await overlays.fixedViewportWidth());
     await expect(overlays.drawerInput).toBeVisible();
+    expect(await overlays.footerLift(overlays.drawer)).toBe(0);
 
     await overlays.pressEscape();
     await expect(overlays.drawer).toBeHidden();

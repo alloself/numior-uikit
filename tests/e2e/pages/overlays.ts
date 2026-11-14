@@ -213,6 +213,19 @@ export class OverlaysSection {
     return { right: Math.round(box.x + box.width), top: Math.round(box.y) };
   }
 
+  footerLift(surface: Locator): Promise<number> {
+    return surface.evaluate((element) => {
+      const footer = element.querySelector('.nui-dialog__footer');
+
+      if (footer === null) {
+        return Number.NaN;
+      }
+      const inner = element.getBoundingClientRect().top + element.clientTop + element.clientHeight;
+
+      return Math.round(inner - footer.getBoundingClientRect().bottom);
+    });
+  }
+
   scrollers(dialog: Locator): Promise<{ readonly frame: boolean; readonly body: boolean }> {
     return dialog.evaluate((element) => {
       const body = element.querySelector('.nui-dialog__body');
