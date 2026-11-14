@@ -145,6 +145,12 @@ const SECTIONS = {
   message: 'Take sections and groups as fixtures destructured in the test parameters.',
 };
 
+const RAW_PAGE = {
+  selector:
+    "MemberExpression[property.name=/^(?:keyboard|mouse|touchscreen|evaluate|evaluateHandle|locator|getBy[A-Z][A-Za-z]*|waitForTimeout|frameLocator|\\$|\\$\\$|\\$eval|\\$\\$eval)$/]:matches([object.type='Identifier'][object.name='page'], [object.type='MemberExpression'][object.property.name='page'])",
+  message: 'Drive the page through page objects in tests/e2e/pages; a spec reads as a scenario.',
+};
+
 const SVG_TEXT = {
   selector: 'VElement[name=/^(?:text|tspan|textpath)$/i]',
   message:
@@ -238,6 +244,10 @@ export default [
     files: ['tests/**/*.ts'],
     ignores: ['tests/e2e/helpers/geometry.ts'],
     rules: { 'no-restricted-syntax': ['error', ...CODE_SHAPE, BOXES, SECTIONS] },
+  },
+  {
+    files: ['tests/e2e/**/*.spec.ts'],
+    rules: { 'no-restricted-syntax': ['error', ...CODE_SHAPE, BOXES, SECTIONS, RAW_PAGE] },
   },
   {
     files: ['**/*.ts', '**/*.mts', '**/*.js', '**/*.mjs', '**/*.vue'],
