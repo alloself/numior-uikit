@@ -29,7 +29,11 @@ const GUIDE: readonly NavGroup[] = [
   },
   {
     title: { ru: 'О проекте', en: 'About' },
-    pages: [{ link: '/guide/browsers', title: { ru: 'Браузеры', en: 'Browser support' } }],
+    pages: [
+      { link: '/guide/why', title: { ru: 'Почему Numior', en: 'Why Numior' } },
+      { link: '/guide/faq', title: { ru: 'Вопросы и ответы', en: 'FAQ' } },
+      { link: '/guide/browsers', title: { ru: 'Браузеры', en: 'Browser support' } },
+    ],
   },
 ];
 
