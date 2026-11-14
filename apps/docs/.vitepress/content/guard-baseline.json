@@ -1,15 +1,12 @@
 {
   "glossary": [
-    "api/table.ts",
-    "en/table/data.md",
-    "en/table/editing.md",
-    "spreadsheet/index.md",
-    "table/cells.md",
-    "table/data.md",
-    "table/editing.md",
-    "table/index.md"
+    "api/table.ts"
   ],
-  "catalog": [".vitepress/theme/home-content.ts", ".vitepress/theme/texts.ts", "api/table.ts"],
+  "catalog": [
+    ".vitepress/theme/home-content.ts",
+    ".vitepress/theme/texts.ts",
+    "api/table.ts"
+  ],
   "demo-filler": [
     "examples/en/table/Tree.vue",
     "examples/ru/table/FormulaBar.vue",

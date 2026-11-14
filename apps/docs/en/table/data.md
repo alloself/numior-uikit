@@ -100,7 +100,7 @@ function returns `{ rows, total }`, or `{ rows, hasMore }` when the total is unk
 The table requests rows in blocks of `blockSize` as the user scrolls and keeps the last fifty
 blocks. While a block is loading, placeholders stand in for its rows.
 
-Sorting, filters and search run on the server, and outdated requests are cancelled through
+Sorting, filters and search run on the server, and outdated requests are canceled through
 `signal`. The `values` function returns the values for a list filter, and `totals` the totals
 row.
 

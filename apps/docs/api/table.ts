@@ -90,7 +90,7 @@ const docs: DocsMap = {
         en: 'Draws lines between the columns. The line after the last column shows only while the columns do not fill the whole width.',
       },
       rowHeaders: {
-        ru: 'Добавляет закреплённую колонку заголовков строк, как в электронных таблицах. `true` нумерует строки, а `{ label, width, resizable }` задаёт текст `label(row, position)`, ширину в пикселях и ручку высоты строки. Щелчок по заголовку выделяет строку, по угловой ячейке — все ячейки, по заголовку колонки с `sortable: false` — колонку. Shift продолжает выделение, Ctrl добавляет строку или колонку, протяжка берёт несколько подряд. Выделение работает только с `cellSelection`.',
+        ru: 'Добавляет закреплённую колонку заголовков строк, как в электронных таблицах. `true` нумерует строки, а `{ label, width, resizable }` задаёт текст `label(row, position)`, ширину в пикселях и ручку высоты строки. Клик по заголовку выделяет строку, по угловой ячейке — все ячейки, по заголовку колонки с `sortable: false` — колонку. Shift продолжает выделение, Ctrl добавляет строку или колонку, протяжка берёт несколько подряд. Выделение работает только с `cellSelection`.',
         en: 'Adds a pinned column of row headers, as in spreadsheets. `true` numbers the rows, and `{ label, width, resizable }` sets the `label(row, position)` text, the width in pixels and a row height handle. A click on a header selects the row, on the corner cell every cell, and on the header of a column with `sortable: false` the column. Shift extends the selection, Ctrl adds a row or a column, and dragging takes several in a row. Selection works only with `cellSelection`.',
       },
       treeColumn: {
@@ -154,7 +154,7 @@ const docs: DocsMap = {
         en: 'Sets where Ctrl+End and Ctrl+Shift+End go: `() → position` in data coordinates, such as the last used cell of a sheet. Without it, or when it answers `undefined`, the cursor goes to the last cell of the table. A position outside the table is clamped to its edge.',
       },
       keepEditing: {
-        ru: 'Отмечает элементы вне таблицы, например строку формул, фокус на которых не завершает правку: `(target) → true`. Щелчок по ним не снимает выделение ячеек. Когда фокус уходит из такого элемента, завершите правку через `commitEdit` или `cancelEdit`.',
+        ru: 'Отмечает элементы вне таблицы, например строку формул, фокус на которых не завершает правку: `(target) → true`. Клик по ним не снимает выделение ячеек. Когда фокус уходит из такого элемента, завершите правку через `commitEdit` или `cancelEdit`.',
         en: 'Marks elements outside the table, such as a formula bar, whose focus keeps a cell edit open: `(target) → true`. A click on them keeps the cell selection. When focus leaves such an element, end the edit with `commitEdit` or `cancelEdit`.',
       },
       growEditor: {
@@ -162,7 +162,7 @@ const docs: DocsMap = {
         en: 'Puts the text editor exactly on the bounds of its cell with the selection frame and lets it grow over the neighbouring cells by whole columns, as in Excel: towards the start for end-aligned cells and towards the end for the rest. It grows up to the edge of the visible area, then the text scrolls inside the field.',
       },
       picking: {
-        ru: 'Включает выбор ссылок для формул: `(draft) → true`, пока черновик ждёт ссылку, например кончается оператором. Тогда щелчок, протяжка и стрелки в редакторе не завершают правку, а отправляют событие `pick`.',
+        ru: 'Включает выбор ссылок для формул: `(draft) → true`, пока черновик ждёт ссылку, например кончается оператором. Тогда клик, протяжка и стрелки в редакторе не завершают правку, а отправляют событие `pick`.',
         en: 'Turns on reference picking for formulas: `(draft) → true` while the draft waits for a reference, for example ends with an operator. Clicks, drags and arrows in the editor then keep the edit open and emit `pick`.',
       },
       frozenRows: {
@@ -186,7 +186,7 @@ const docs: DocsMap = {
         en: 'Returns the row label for the drag preview and screen reader announcements. Defaults to the first text column, or the first column without one.',
       },
       cellSelection: {
-        ru: 'Включает выделение ячеек мышью и клавиатурой и меню ячейки. Без него в таблице выделяется обычный текст, а с ним текст ячейки выделяется после двойного щелчка по ней. Правка колонок с `editable` работает и без него.',
+        ru: 'Включает выделение ячеек мышью и клавиатурой и меню ячейки. Без него в таблице выделяется обычный текст, а с ним текст ячейки выделяется после двойного клика по ней. Правка колонок с `editable` работает и без него.',
         en: 'Enables selecting cells with the mouse and the keyboard, and the cell menu. Without it the table keeps plain text selection; with it the text of a cell can be selected after a double click on it. Editing `editable` columns works without it.',
       },
       contextMenu: {
@@ -252,11 +252,11 @@ const docs: DocsMap = {
         en: 'Selected rows, as the objects from `rows`. Compared by `getKey`, or by reference without it.',
       },
       'v-model:widths': {
-        ru: 'Ширины колонок в пикселях по ключу, заданные вручную. Пока таблица помещается, ручка забирает ширину у соседней колонки, при прокрутке растёт только сама колонка. Колонка из модели больше не делит свободное место через `flex`. Двойной щелчок по ручке убирает колонку из модели.',
+        ru: 'Ширины колонок в пикселях по ключу, заданные вручную. Пока таблица помещается, ручка забирает ширину у соседней колонки, при прокрутке растёт только сама колонка. Колонка из модели больше не делит свободное место через `flex`. Двойной клик по ручке убирает колонку из модели.',
         en: 'Column widths in pixels by key, set by hand. While the table fits, the handle takes width from the neighbouring column; once it scrolls, only the column itself grows. A column in the model stops sharing free space through `flex`. A double click on the handle removes the column from the model.',
       },
       'v-model:rowHeights': {
-        ru: 'Высоты строк в пикселях по ключу строки, заданные вручную. Ручку у нижнего края заголовка строки включает `rowHeaders.resizable`, двойной щелчок по ней возвращает высоту по умолчанию. С `height` и числовой `rowHeight` высота точная, иначе это минимум. С `source` не действует.',
+        ru: 'Высоты строк в пикселях по ключу строки, заданные вручную. Ручку у нижнего края заголовка строки включает `rowHeaders.resizable`, двойной клик по ней возвращает высоту по умолчанию. С `height` и числовой `rowHeight` высота точная, иначе это минимум. С `source` не действует.',
         en: 'Row heights in pixels by row key, set by hand. `rowHeaders.resizable` adds the handle at the bottom edge of a row header, and a double click on it restores the default height. With `height` and a numeric `rowHeight` the height is exact, otherwise it is a minimum. No effect with `source`.',
       },
       'v-model:columnOrder': {
@@ -264,7 +264,7 @@ const docs: DocsMap = {
         en: 'Column order after a move. Keys in the model come first, the rest follow the declaration order. A column moves by the grip at the start of its header, within its pinned or scrolling part.',
       },
       'v-model:ranges': {
-        ru: 'Выделенные прямоугольники ячеек `{ from, to }`: `row` — позиция строки на странице, `col` — позиция среди видимых колонок. Новый прямоугольник вырезается из прежних, а Ctrl+щелчок по выделенной ячейке снимает с неё выделение. Сбрасывается при сортировке, фильтрах, группировке и смене страницы, колонок или строк.',
+        ru: 'Выделенные прямоугольники ячеек `{ from, to }`: `row` — позиция строки на странице, `col` — позиция среди видимых колонок. Новый прямоугольник вырезается из прежних, а Ctrl+клик по выделенной ячейке снимает с неё выделение. Сбрасывается при сортировке, фильтрах, группировке и смене страницы, колонок или строк.',
         en: 'Selected cell rectangles `{ from, to }`: `row` is the row position on the page, `col` the position among visible columns. A new rectangle is cut out of the earlier ones, and Ctrl+click on a selected cell deselects it. Resets on sorting, filters, grouping and changes of the page, columns or rows.',
       },
       'v-model:active': {
@@ -298,7 +298,7 @@ const docs: DocsMap = {
         en: 'A row with unloaded children expanded. The row waits for them until `rows` update.',
       },
       rowClick: {
-        ru: 'Щелчок по строке данных, кроме флажка, ручки, подписи группы и переключателя дерева. Передаёт строку и событие мыши.',
+        ru: 'Клик по строке данных, кроме флажка, ручки, подписи группы и переключателя дерева. Передаёт строку и событие мыши.',
         en: 'Click on a data row outside the checkbox, the grip, the group label and the tree toggle. Carries the row and the mouse event.',
       },
       reorder: {
@@ -341,7 +341,7 @@ const docs: DocsMap = {
         en: 'Caption above the table in place of the `caption` prop.',
       },
       overlay: {
-        ru: 'Свой слой поверх ячеек, который прокручивается вместе с ними. Слот получает `rectOf(range) → { top, start, width, height }` и `window` с отрисованными строками и колонками. Шапка и закреплённые колонки лежат над слоем. Щелчки проходят сквозь него, пока элементу не задан `pointer-events: auto`.',
+        ru: 'Свой слой поверх ячеек, который прокручивается вместе с ними. Слот получает `rectOf(range) → { top, start, width, height }` и `window` с отрисованными строками и колонками. Шапка и закреплённые колонки лежат над слоем. Клики проходят сквозь него, пока элементу не задан `pointer-events: auto`.',
         en: 'A custom layer over the cells that scrolls with them. The slot receives `rectOf(range) → { top, start, width, height }` and `window` with the rendered rows and columns. The header and pinned columns sit above the layer. Clicks pass through it until an element sets `pointer-events: auto`.',
       },
       detail: {

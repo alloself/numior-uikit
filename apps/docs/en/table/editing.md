@@ -146,7 +146,7 @@ List in `keepEditing` the elements that can take the focus without ending the ed
 the editor writes the value to every selected cell in columns of the same type.
 
 With `growEditor` the editor sits exactly on the bounds of its cell and wears the selection
-frame. It keeps the fill and text colour of the cell.
+frame. It keeps the fill and text color of the cell.
 
 Once the text stops fitting, the editor grows over the neighbouring cells by whole columns, as in
 Excel. End-aligned cells grow towards the start, the rest towards the end. The editor stops at
