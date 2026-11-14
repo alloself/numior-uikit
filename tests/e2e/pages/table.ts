@@ -4,6 +4,8 @@ import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { unlikePixels } from '../helpers/color';
 import { boxOf, dragAcross, renderedWidth, type Box } from '../helpers/geometry';
 import { sectionScope } from '../helpers/axe';
+import { ARROWS, type ArrowDirection } from '../helpers/keyboard';
+import { GridKeys } from './grid-keys';
 
 export interface TableCell {
   readonly row: number;
@@ -98,7 +100,7 @@ const BODY_HIDE = `
   }
 `;
 
-export class TableSection {
+export class TableSection extends GridKeys {
   readonly scope = sectionScope('table');
 
   readonly root: Locator;
@@ -132,7 +134,8 @@ export class TableSection {
   readonly treeSelectAll: Locator;
   readonly treeSkeletons: Locator;
 
-  constructor(private readonly page: Page) {
+  constructor(page: Page) {
+    super(page);
     this.root = page.getByTestId('table');
     this.viewport = this.root.locator('.nui-table__viewport');
     this.grid = this.root.locator('.nui-table__grid');
@@ -163,6 +166,86 @@ export class TableSection {
     this.remoteQuick = page.getByTestId('table-remote-quick');
     this.remoteOutput = page.getByTestId('table-remote-output');
     this.remoteToggle = page.getByTestId('table-remote-toggle');
+  }
+
+  async widenFocusedColumn(): Promise<void> {
+    await this.page.keyboard.press('Alt+ArrowRight');
+  }
+
+  async narrowFocusedColumn(): Promise<void> {
+    await this.page.keyboard.press('Alt+ArrowLeft');
+  }
+
+  async reorderFocused(direction: ArrowDirection): Promise<void> {
+    await this.page.keyboard.press(`Alt+Shift+${ARROWS[direction]}`);
+  }
+
+  async openFocusedHeaderMenu(): Promise<void> {
+    await this.page.keyboard.press('Alt+ArrowDown');
+  }
+
+  async openCellMenuFromKeyboard(): Promise<void> {
+    await this.page.keyboard.press('Shift+F10');
+  }
+
+  async pressEnter(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async pressEscape(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+  }
+
+  async pressTab(): Promise<void> {
+    await this.page.keyboard.press('Tab');
+  }
+
+  async typeText(text: string): Promise<void> {
+    await this.page.keyboard.type(text);
+  }
+
+  async focusFirstOption(): Promise<void> {
+    await this.page.keyboard.press('Home');
+  }
+
+  async jumpToRowEnd(): Promise<void> {
+    await this.page.keyboard.press('End');
+  }
+
+  async toggleFocusedSelection(): Promise<void> {
+    await this.page.keyboard.press(' ');
+  }
+
+  async selectAll(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+A');
+  }
+
+  async clearSelection(): Promise<void> {
+    await this.page.keyboard.press('Delete');
+  }
+
+  async copySelection(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+C');
+  }
+
+  async cutSelection(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+X');
+  }
+
+  async pasteClipboard(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+V');
+  }
+
+  async undo(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+Z');
+  }
+
+  async redo(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+Shift+Z');
+  }
+
+  pageSizeOption(size: string): Locator {
+    return this.page.locator('.nui-select__listbox').getByRole('option', { name: size });
   }
 
   remoteRow(position: number): Locator {

@@ -1,5 +1,14 @@
 import type { Locator } from '@playwright/test';
 
+export type ArrowDirection = 'up' | 'down' | 'left' | 'right';
+
+export const ARROWS = {
+  up: 'ArrowUp',
+  down: 'ArrowDown',
+  left: 'ArrowLeft',
+  right: 'ArrowRight',
+} as const satisfies Record<ArrowDirection, string>;
+
 const TAB_LIMIT = 30;
 
 const isFocused = (target: Locator): Promise<boolean> =>

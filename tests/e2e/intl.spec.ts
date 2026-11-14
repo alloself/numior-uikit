@@ -5,7 +5,6 @@ test.describe('numbers and time', () => {
   test('number field formats on blur, steps with keys and steppers and follows the locale', async ({
     playground,
     intl,
-    page,
     isMobile,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
@@ -19,10 +18,10 @@ test.describe('numbers and time', () => {
 
     if (!isMobile) {
       await intl.price.focus();
-      await page.keyboard.press('ArrowUp');
+      await intl.stepFocusedUp();
       await expect.poll(async () => (await intl.readOutput()).price).toBe(100);
 
-      await page.keyboard.press('Shift+ArrowDown');
+      await intl.leapFocusedDown();
       await expect.poll(async () => (await intl.readOutput()).price).toBe(95);
     }
 
@@ -45,7 +44,6 @@ test.describe('numbers and time', () => {
   test('time field types with auto-advance, steps and picks on the wheels', async ({
     playground,
     intl,
-    page,
     isMobile,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
@@ -53,11 +51,11 @@ test.describe('numbers and time', () => {
     await expect(intl.segments(intl.start)).toHaveCount(2);
 
     await intl.segment(intl.start, 'час').click();
-    await page.keyboard.type('0930');
+    await intl.typeIntoSegments('0930');
     await expect.poll(async () => (await intl.readOutput()).start).toBe('09:30');
     await expect(intl.segment(intl.start, 'минута')).toBeFocused();
 
-    await page.keyboard.press('ArrowUp');
+    await intl.stepFocusedUp();
     await expect.poll(async () => (await intl.readOutput()).start).toBe('09:31');
 
     await intl.clockOf(intl.start, 'Выбрать время').click();
@@ -65,7 +63,7 @@ test.describe('numbers and time', () => {
     await expect(intl.wheelOf(intl.start, 'минута')).toBeFocused();
     await expect(intl.wheelOf(intl.start, 'минута')).toHaveAttribute('aria-valuetext', '31');
 
-    await page.keyboard.press('ArrowUp');
+    await intl.stepFocusedUp();
     await expect.poll(async () => (await intl.readOutput()).start).toBe('09:30');
 
     if (!isMobile) {
@@ -73,17 +71,17 @@ test.describe('numbers and time', () => {
       await expect.poll(async () => (await intl.readOutput()).start).toBe('09:00');
     }
 
-    await page.keyboard.press('Home');
+    await intl.jumpToFirstValue();
     await intl.wheelItem(intl.start, 'час', '10').click();
     await expect.poll(async () => (await intl.readOutput()).start).toBe('10:00');
 
     await intl.wheelOf(intl.start, 'час').focus();
-    await page.keyboard.press('End');
+    await intl.jumpToLastValue();
     await expect.poll(async () => (await intl.readOutput()).start).toBe('18:00');
     await expect(intl.wheelItem(intl.start, 'минута', '30')).toHaveClass(/--disabled/);
 
-    await page.keyboard.press('Home');
-    await page.keyboard.press('Enter');
+    await intl.jumpToFirstValue();
+    await intl.confirmPanel();
     await expect.poll(async () => (await intl.readOutput()).start).toBe('09:00');
     await expect(intl.panelOf(intl.start)).toBeHidden();
     await expect(intl.segment(intl.start, 'час')).toBeFocused();
@@ -92,7 +90,7 @@ test.describe('numbers and time', () => {
     await intl.wheelItem(intl.start, 'час', '10').click();
     await expect.poll(async () => (await intl.readOutput()).start).toBe('10:00');
 
-    await page.keyboard.press('Escape');
+    await intl.closePanel();
     await expect(intl.panelOf(intl.start)).toBeHidden();
 
     await intl.setLocale('en-US');
@@ -102,10 +100,10 @@ test.describe('numbers and time', () => {
 
     if (!isMobile) {
       await intl.segment(intl.start, 'AM/PM').click();
-      await page.keyboard.type('p');
+      await intl.typeIntoSegments('p');
       await expect.poll(async () => (await intl.readOutput()).start).toBe('22:00');
 
-      await page.keyboard.press('Tab');
+      await intl.leaveSegmentWithTab();
       await expect.poll(async () => (await intl.readOutput()).start).toBe('18:00');
     }
 

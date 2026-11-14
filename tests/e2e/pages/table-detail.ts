@@ -8,6 +8,7 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 import { sectionScope } from '../helpers/axe';
+import { ARROWS, type ArrowDirection } from '../helpers/keyboard';
 
 export type TableDetailOutput = Guarded<typeof isDetailOutput>;
 
@@ -29,6 +30,8 @@ const isDetailOutput = shapeOf({
 
 const HEAD_ROWS = 1;
 const BODY_ROWS = ':scope > .nui-table__body > [role="row"]';
+
+const LATE_LAYOUT_MS = 200;
 
 export class TableDetailSection {
   readonly scope = sectionScope('table-detail');
@@ -83,6 +86,26 @@ export class TableDetailSection {
 
   openButton(id: number): Locator {
     return this.panel(id).getByRole('button', { name: 'Открыть поставку' });
+  }
+
+  async expandFocusedRow(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async moveFocus(direction: ArrowDirection): Promise<void> {
+    await this.page.keyboard.press(ARROWS[direction]);
+  }
+
+  async tabIntoDetail(): Promise<void> {
+    await this.page.keyboard.press('Tab');
+  }
+
+  async tabOutOfDetail(): Promise<void> {
+    await this.page.keyboard.press('Shift+Tab');
+  }
+
+  async waitForLateLayout(): Promise<void> {
+    await this.page.waitForTimeout(LATE_LAYOUT_MS);
   }
 
   async readOutput(): Promise<TableDetailOutput> {

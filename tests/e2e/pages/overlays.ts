@@ -27,6 +27,8 @@ const isOverlaysOutput = shapeOf({
 const parseOverlaysOutput = (text: string): OverlaysOutput =>
   parseAs(text, isOverlaysOutput, 'overlays output');
 
+const TOOLTIP_DELAY_MS = 500;
+
 export class OverlaysSection {
   readonly scope = sectionScope('overlays');
 
@@ -123,6 +125,23 @@ export class OverlaysSection {
 
   async pressEscape(): Promise<void> {
     await this.page.keyboard.press('Escape');
+  }
+
+  async openPopoverFromKeyboard(): Promise<void> {
+    await this.popoverTrigger.focus();
+    await this.page.keyboard.press('Enter');
+  }
+
+  async tabForward(): Promise<void> {
+    await this.page.keyboard.press('Tab');
+  }
+
+  async outwaitTooltipDelay(): Promise<void> {
+    await this.page.waitForTimeout(TOOLTIP_DELAY_MS);
+  }
+
+  async movePointerAway(): Promise<void> {
+    await this.page.mouse.move(0, 0);
   }
 
   focusIsInside(surface: Locator): Promise<boolean> {

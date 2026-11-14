@@ -88,6 +88,38 @@ export class IntlSection {
     return control.locator('..');
   }
 
+  async stepFocusedUp(): Promise<void> {
+    await this.page.keyboard.press('ArrowUp');
+  }
+
+  async leapFocusedDown(): Promise<void> {
+    await this.page.keyboard.press('Shift+ArrowDown');
+  }
+
+  async typeIntoSegments(text: string): Promise<void> {
+    await this.page.keyboard.type(text);
+  }
+
+  async jumpToFirstValue(): Promise<void> {
+    await this.page.keyboard.press('Home');
+  }
+
+  async jumpToLastValue(): Promise<void> {
+    await this.page.keyboard.press('End');
+  }
+
+  async confirmPanel(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async closePanel(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+  }
+
+  async leaveSegmentWithTab(): Promise<void> {
+    await this.page.keyboard.press('Tab');
+  }
+
   async setLocale(locale: string): Promise<void> {
     await this.localeSelect.click();
 

@@ -8,6 +8,7 @@ import {
 } from '../../../packages/primitives/test/support/guards';
 import { boxOf, type Box } from '../helpers/geometry';
 import { sectionScope } from '../helpers/axe';
+import { ARROWS } from '../helpers/keyboard';
 
 export type NavigationOutput = Guarded<typeof isNavigationOutput>;
 
@@ -46,7 +47,7 @@ export class NavigationSection {
   readonly stepperNext: Locator;
   readonly output: Locator;
 
-  constructor(page: Page) {
+  constructor(private readonly page: Page) {
     this.menuTrigger = page.getByTestId('nav-menu-trigger');
     this.menu = page.getByTestId('nav-menu');
     this.subTrigger = this.menu.locator('.nui-menu-item--sub');
@@ -197,6 +198,70 @@ export class NavigationSection {
     ]);
 
     return summary.height - label.height;
+  }
+
+  async closeMenu(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+  }
+
+  async focusNextItem(): Promise<void> {
+    await this.page.keyboard.press('ArrowDown');
+  }
+
+  async focusPreviousItem(): Promise<void> {
+    await this.page.keyboard.press('ArrowUp');
+  }
+
+  async focusLastItem(): Promise<void> {
+    await this.page.keyboard.press('End');
+  }
+
+  async openFocusedTriggerWith(key: 'Enter' | 'Space'): Promise<void> {
+    await this.page.keyboard.press(key);
+  }
+
+  async openSubmenu(): Promise<void> {
+    await this.page.keyboard.press('ArrowRight');
+  }
+
+  async closeSubmenu(): Promise<void> {
+    await this.page.keyboard.press('ArrowLeft');
+  }
+
+  async movePointerAway(): Promise<void> {
+    await this.page.mouse.move(0, 0);
+  }
+
+  async clickOutside(): Promise<void> {
+    await this.page.mouse.click(4, 4);
+  }
+
+  async moveTabFocus(direction: 'left' | 'right'): Promise<void> {
+    await this.page.keyboard.press(ARROWS[direction]);
+  }
+
+  async focusFirstTab(): Promise<void> {
+    await this.page.keyboard.press('Home');
+  }
+
+  async activateFocused(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async closeFocusedTab(): Promise<void> {
+    await this.page.keyboard.press('Delete');
+  }
+
+  async tabForward(): Promise<void> {
+    await this.page.keyboard.press('Tab');
+  }
+
+  async turnWheel(deltaY: number): Promise<void> {
+    await this.page.mouse.wheel(0, deltaY);
+  }
+
+  pageScrollY(): Promise<number> {
+    return this.page.evaluate(() => window.scrollY);
   }
 
   async typeInMenu(character: string): Promise<void> {

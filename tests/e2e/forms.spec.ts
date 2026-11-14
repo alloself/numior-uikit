@@ -6,7 +6,6 @@ test.describe('form controls', () => {
   test('field wiring: labels focus controls, output follows input, errors are announced', async ({
     playground,
     forms,
-    page,
   }) => {
     await playground.open();
     await forms.label('Имя').click();
@@ -20,7 +19,7 @@ test.describe('form controls', () => {
 
     const describedBy = await forms.emailInput.getAttribute('aria-describedby');
     expect(describedBy?.split(' ')).toHaveLength(2);
-    await expect(page.getByText('Укажите адрес с символом @')).toBeVisible();
+    await expect(forms.message('Укажите адрес с символом @')).toBeVisible();
 
     await forms.emailInput.fill('a@b.co');
     await expect(forms.emailInput).not.toHaveAttribute('aria-invalid', 'true');
@@ -30,7 +29,6 @@ test.describe('form controls', () => {
   test('masked input formats while typing and keeps the raw digits in the model', async ({
     playground,
     forms,
-    page,
   }) => {
     await playground.open();
     await forms.phoneInput.click();
@@ -38,7 +36,7 @@ test.describe('form controls', () => {
     await expect(forms.phoneInput).toHaveValue('+7 (999) 123');
     await expect.poll(async () => (await forms.readOutput()).phone).toBe('999123');
 
-    await page.keyboard.press('Backspace');
+    await forms.pressBackspace();
     await expect(forms.phoneInput).toHaveValue('+7 (999) 12');
 
     await forms.phoneInput.pressSequentially('x34567');
@@ -49,7 +47,6 @@ test.describe('form controls', () => {
   test('checkboxes toggle boolean and array models and expose indeterminate', async ({
     playground,
     forms,
-    page,
     isMobile,
   }) => {
     await playground.open();
@@ -57,8 +54,7 @@ test.describe('form controls', () => {
     if (isMobile) {
       await forms.terms.tap();
     } else {
-      await forms.terms.focus();
-      await page.keyboard.press('Space');
+      await forms.toggleFromKeyboard(forms.terms);
     }
 
     await expect(forms.terms).toBeChecked();
@@ -81,7 +77,6 @@ test.describe('form controls', () => {
   test('radio group is a labelled native group with arrow-key navigation', async ({
     playground,
     forms,
-    page,
     isMobile,
   }) => {
     await playground.open();
@@ -92,8 +87,7 @@ test.describe('form controls', () => {
     if (isMobile) {
       await forms.radios.team.tap();
     } else {
-      await forms.radios.free.focus();
-      await page.keyboard.press('ArrowDown');
+      await forms.selectNextRadioFrom(forms.radios.free);
     }
 
     await expect(forms.radios.team).toBeChecked();
@@ -131,14 +125,10 @@ test.describe('form controls', () => {
     await expectRgb(forms.wrapperOf(forms.nameInput), 'border-top-color', [67, 56, 202]);
   });
 
-  test('double-clicking a toggle label does not select its text', async ({
-    playground,
-    forms,
-    page,
-  }) => {
+  test('double-clicking a toggle label does not select its text', async ({ playground, forms }) => {
     await playground.open();
     await forms.label('Принимаю условия').dblclick();
-    expect(await page.evaluate(() => document.getSelection()?.isCollapsed ?? true)).toBe(true);
+    expect(await playground.textSelectionCollapsed()).toBe(true);
   });
 
   test('controls follow density and size steps', async ({ playground, forms }) => {

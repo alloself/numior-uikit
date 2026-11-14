@@ -186,7 +186,7 @@ test.describe('collaboration on a workbook', () => {
     await expect(anna.sheet.editorIn('4', 0)).toBeFocused();
 
     await anna.sheet.typeAtCaret('X');
-    await anna.client.page.keyboard.press('Enter');
+    await anna.sheet.commitEdit();
 
     await expect(boris.sheet.cell('4', 0)).toHaveText('draXft');
     await expect(anna.sheet.cell('4', 0)).toHaveText('draXft');
@@ -215,7 +215,7 @@ test.describe('collaboration on a workbook', () => {
     await expect(anna.sheet.editorIn('4', 0)).toHaveValue('A日本');
     expect(await anna.client.compositionsStarted()).toBe(1);
 
-    await anna.client.page.keyboard.press('Enter');
+    await anna.sheet.commitEdit();
 
     await expect(boris.sheet.cell('4', 0)).toHaveText('A日本');
     await expect(anna.sheet.cell('3', 0)).toHaveText('');
@@ -238,7 +238,7 @@ test.describe('collaboration on a workbook', () => {
     await expect(anna.sheet.editorIn('1', 1)).toHaveValue('=A10*10');
 
     await anna.sheet.typeAtCaret('2');
-    await anna.client.page.keyboard.press('Enter');
+    await anna.sheet.commitEdit();
 
     await expect(boris.sheet.cell('1', 1)).toHaveText('1050');
     await expect(anna.sheet.cell('1', 1)).toHaveText('1050');

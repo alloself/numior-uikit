@@ -30,9 +30,7 @@ test.describe('collaboration', () => {
 
     await anna.disconnect();
     await anna.appendTo(0, ' от Анны');
-    await boris.paragraph(0).click();
-    await boris.page.keyboard.press('Home');
-    await boris.page.keyboard.type('Борис: ');
+    await boris.prependTo(0, 'Борис: ');
     await anna.reconnect();
 
     await expect(boris.editor).toContainText('Борис: Общая строка от Анны');
@@ -82,17 +80,17 @@ test.describe('collaboration', () => {
     await expect(boris.tablePeer(ANNA)).toBeVisible();
     await expect(boris.caretOf(ANNA)).toHaveCount(0);
 
-    await anna.page.keyboard.press('ArrowRight');
-    await anna.page.keyboard.press('ArrowDown');
-    await anna.page.keyboard.press('ArrowDown');
+    await anna.moveCaret('right');
+    await anna.moveCaret('down');
+    await anna.moveCaret('down');
 
     await expect.poll(() => boris.tablePeerDrift(ANNA, 2, 1)).toBeLessThanOrEqual(FRAME_TOLERANCE);
 
-    await anna.page.keyboard.type('Cheese');
+    await anna.typeText('Cheese');
 
     await expect(boris.tablePeer(ANNA)).toBeVisible();
 
-    await anna.page.keyboard.press('Escape');
+    await anna.pressEscape();
     await anna.backToText();
 
     await expect(boris.tablePeer(ANNA)).toHaveCount(0);
@@ -108,13 +106,13 @@ test.describe('collaboration', () => {
     await anna.insertTable();
     await boris.tableCell(0, 0).waitFor();
     await anna.tableCell(1, 1).click();
-    await anna.page.keyboard.type('Cheese');
+    await anna.typeText('Cheese');
     await boris.setCell(0, 0, 'Bread');
 
     await expect(anna.tableCell(0, 0)).toHaveText('Bread');
 
-    await anna.page.keyboard.type(' cake');
-    await anna.page.keyboard.press('Enter');
+    await anna.typeText(' cake');
+    await anna.pressEnter();
 
     await expect(boris.tableCell(1, 1)).toHaveText('Cheese cake');
   });
@@ -257,7 +255,7 @@ test.describe('collaboration', () => {
 
     await boris.appendTo(0, ' ');
 
-    await Promise.all([anna.page.keyboard.type('слева'), boris.page.keyboard.type('справа')]);
+    await Promise.all([anna.typeText('слева'), boris.typeText('справа')]);
 
     await expect(anna.editor).toContainText('Дваслева');
     await expect(anna.editor).toContainText('Один справа');
@@ -318,7 +316,7 @@ test.describe('collaboration', () => {
     await anna.write('Уже написано');
     await expect(anna.status).toHaveText('online');
 
-    await anna.page.waitForTimeout(300);
+    await anna.pauseBeforeOthersJoin();
 
     const boris = await collab.join(BORIS);
 
@@ -404,7 +402,7 @@ test.describe('collaboration', () => {
     await anna.newLine('Вторая');
     await expect(boris.editor).toContainText('Вторая');
 
-    await anna.page.keyboard.press('Control+a');
+    await anna.selectEverything();
 
     await expect(boris.selections).toHaveCount(2);
   });
@@ -423,7 +421,7 @@ test.describe('collaboration', () => {
 
     await anna.endOf(0);
 
-    const lag = await anna.caretLag(BORIS, 'Вторая!', () => anna.page.keyboard.press('Enter'));
+    const lag = await anna.caretLag(BORIS, 'Вторая!', () => anna.pressEnter());
 
     expect(lag).toBeLessThanOrEqual(1);
     await expect(anna.paragraph(2)).toHaveText('Вторая!');
@@ -434,9 +432,7 @@ test.describe('collaboration', () => {
   }) => {
     const anna = await collab.join(ANNA);
 
-    const fine = await anna.page.evaluate(
-      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
-    );
+    const fine = await anna.hasFinePointer();
 
     test.skip(!fine, 'the handle follows a mouse');
 
@@ -489,7 +485,7 @@ test.describe('collaboration', () => {
 
     await anna.write('- Первый');
     await anna.newLine('Второй');
-    await anna.page.keyboard.press('Tab');
+    await anna.indentItem();
 
     const nested = boris.editor.locator('li li p');
 
@@ -513,12 +509,11 @@ test.describe('collaboration', () => {
     await anna.newLine('Второй');
     await expect(boris.editor).toContainText('Второй');
 
-    await anna.page.keyboard.press('Home');
-    await anna.page.keyboard.press('Shift+End');
+    await anna.selectCurrentLine();
     await anna.addComment('Вопрос');
 
     await boris.editor.locator('li p').nth(1).click();
-    await boris.page.keyboard.press('Tab');
+    await boris.indentItem();
 
     await expect(anna.editor.locator('li li p')).toHaveText('Второй');
     await expect(anna.marks).toHaveText('Второй');
@@ -546,9 +541,7 @@ test.describe('collaboration', () => {
     await anna.selectLine(0);
     await anna.addComment('Проверить');
 
-    await boris.paragraph(0).click();
-    await boris.page.keyboard.press('Home');
-    await boris.page.keyboard.type('Вначале ');
+    await boris.prependTo(0, 'Вначале ');
 
     await expect(anna.editor).toContainText('Вначале Спорная строка');
     await expect(anna.marks).toHaveText('Спорная строка');

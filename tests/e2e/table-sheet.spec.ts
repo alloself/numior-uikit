@@ -167,7 +167,6 @@ test.describe('table cell styles', () => {
   test('extends rows from their headers with Shift, a drag and the keyboard', async ({
     tableSheet: sheet,
     playground,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'mouse and keyboard scenario');
@@ -183,16 +182,13 @@ test.describe('table cell styles', () => {
 
     await expect(sheet.cell(SALES + 2, 0)).toBeFocused();
 
-    await page.keyboard.press('Shift+ArrowDown');
+    await sheet.extendSelection('down');
 
     await expect
       .poll(() => sheet.ranges())
       .toEqual([{ from: { row: SALES, col: 0 }, to: { row: SALES + 3, col: LAST_COLUMN } }]);
 
-    await sheet.rowHeader(INCOME_TOTAL + 2).hover();
-    await page.mouse.down();
-    await sheet.rowHeader(INCOME_TOTAL + 4).hover();
-    await page.mouse.up();
+    await sheet.selectRowsByDrag(INCOME_TOTAL + 2, INCOME_TOTAL + 4);
 
     await expect
       .poll(() => sheet.ranges())
@@ -203,11 +199,11 @@ test.describe('table cell styles', () => {
         },
       ]);
 
-    await page.keyboard.press('Home');
+    await sheet.focusRowHeader();
     await expect(sheet.rowHeader(INCOME_TOTAL + 2)).toBeFocused();
 
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Space');
+    await sheet.moveActive('down');
+    await sheet.selectFocusedRow();
 
     await expect
       .poll(() => sheet.ranges())
@@ -222,7 +218,6 @@ test.describe('table cell styles', () => {
   test('resizes a row by the edge of its header and counts the height in the scroll', async ({
     tableSheet: sheet,
     playground,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'mouse and keyboard scenario');
@@ -236,12 +231,8 @@ test.describe('table cell styles', () => {
 
     const before = await sheet.scrollHeight();
     const below = await boxOf(sheet.row(SALES + 1));
-    const handle = await boxOf(sheet.rowResizer(SALES));
 
-    await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2 + 20);
-    await page.mouse.up();
+    await sheet.dragRowEdge(SALES, 20);
 
     await expect.poll(() => sheet.rowHeights()).toEqual({ 0: 44, [SALES]: 52 });
     expect((await boxOf(sheet.row(SALES))).height).toBeCloseTo(52, 3);
@@ -250,10 +241,10 @@ test.describe('table cell styles', () => {
     expect(await sheet.ranges()).toEqual([]);
 
     await sheet.rowHeader(SALES).click();
-    await page.keyboard.press('Home');
+    await sheet.focusRowHeader();
     await expect(sheet.rowHeader(SALES)).toBeFocused();
 
-    await page.keyboard.press('Alt+ArrowDown');
+    await sheet.growFocusedRow();
 
     await expect.poll(() => sheet.rowHeights()).toEqual({ 0: 44, [SALES]: 60 });
 
@@ -295,7 +286,6 @@ test.describe('table cell styles', () => {
   test('moves the cursor through a merged cell and selects it whole', async ({
     tableSheet: sheet,
     playground,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'mouse and keyboard scenario');
@@ -304,16 +294,16 @@ test.describe('table cell styles', () => {
     await sheet.show();
     await sheet.scrollTo(0, CENTRE_WIDTH);
     await sheet.cell(SALES, LAST_COLUMN - 1).click();
-    await page.keyboard.press('ArrowRight');
+    await sheet.moveActive('right');
     await expect(sheet.cell(SALES, LAST_COLUMN)).toBeFocused();
 
-    await page.keyboard.press('ArrowDown');
+    await sheet.moveActive('down');
     await expect(sheet.cell(INCOME_TOTAL, LAST_COLUMN)).toBeFocused();
 
-    await page.keyboard.press('ArrowUp');
+    await sheet.moveActive('up');
     await expect(sheet.cell(SALES, LAST_COLUMN)).toBeFocused();
 
-    await page.keyboard.press('Shift+ArrowLeft');
+    await sheet.extendSelection('left');
 
     await expect
       .poll(() => sheet.ranges())
@@ -444,7 +434,6 @@ test.describe('table cell styles', () => {
   test('reveals the cursor below the frozen rows and leaves them where they are', async ({
     tableSheet: sheet,
     playground,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -465,22 +454,22 @@ test.describe('table cell styles', () => {
     expect(await sheet.scrollTop()).toBe(12 * ROW);
 
     await sheet.focusNatively(sheet.cell(HEAD, 2));
-    await page.keyboard.press('ArrowDown');
+    await sheet.moveActive('down');
     await expect(sheet.cell(INCOME, 1)).toBeFocused();
     expect(await sheet.scrollTop()).toBe(0);
 
-    await page.keyboard.press('PageDown');
-    await page.keyboard.press('PageDown');
+    await sheet.pageDown();
+    await sheet.pageDown();
     await expect.poll(() => sheet.scrollTop()).toBeGreaterThan(0);
 
     const focused = sheet.grid.locator('.nui-table__cell--active');
 
     expect((await sheet.bandOf(focused)).top).toBeGreaterThanOrEqual(FROZEN_BOTTOM);
 
-    await page.keyboard.press('PageUp');
+    await sheet.pageUp();
     expect((await sheet.bandOf(focused)).top).toBeGreaterThanOrEqual(FROZEN_BOTTOM);
 
-    await page.keyboard.press('Control+Home');
+    await sheet.jumpToFirstCell();
     await expect(sheet.cell(TITLE, 0)).toBeFocused();
     expect(await sheet.scrollTop()).toBeGreaterThan(0);
   });
@@ -511,24 +500,23 @@ test.describe('table cell styles', () => {
   test('jumps to the edges of the sheet with Ctrl and the arrows', async ({
     tableSheet: sheet,
     playground,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await sheet.show();
     await sheet.cell(SALES, 1).click();
-    await page.keyboard.press('Control+ArrowDown');
+    await sheet.jumpToDataEdge('down');
 
     await expect(sheet.cell(LAST_ROW, 1)).toBeFocused();
 
-    await page.keyboard.press('Control+Shift+ArrowRight');
+    await sheet.extendToDataEdge('right');
 
     await expect
       .poll(() => sheet.ranges())
       .toEqual([{ from: { row: LAST_ROW, col: 1 }, to: { row: LAST_ROW, col: LAST_COLUMN } }]);
 
-    await page.keyboard.press('Escape');
-    await page.keyboard.press('Control+ArrowUp');
+    await sheet.collapseSelection();
+    await sheet.jumpToDataEdge('up');
     await expect(sheet.cell(TITLE, 1)).toBeFocused();
   });
 

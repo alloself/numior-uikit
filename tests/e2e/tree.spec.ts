@@ -40,7 +40,6 @@ test.describe('tree', () => {
   test('keyboard walks the tree with arrows, asterisk, typeahead and Enter', async ({
     playground,
     tree,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard scenario');
@@ -49,39 +48,39 @@ test.describe('tree', () => {
     await tree.tree.focus();
     expect(await tree.activeLabel(tree.tree)).toBe('Исходники');
 
-    await page.keyboard.press('ArrowRight');
+    await tree.moveFocus('right');
     await expect(tree.item(tree.tree, 'Исходники')).toHaveAttribute('aria-expanded', 'true');
 
-    await page.keyboard.press('ArrowRight');
+    await tree.moveFocus('right');
     expect(await tree.activeLabel(tree.tree)).toBe('Компоненты');
 
-    await page.keyboard.press('ArrowRight');
-    await page.keyboard.press('ArrowRight');
+    await tree.moveFocus('right');
+    await tree.moveFocus('right');
     expect(await tree.activeLabel(tree.tree)).toBe('Кнопка.vue');
 
-    await page.keyboard.press('ArrowDown');
+    await tree.moveFocus('down');
     expect(await tree.activeLabel(tree.tree)).toBe('index.ts');
 
-    await page.keyboard.press('ArrowLeft');
+    await tree.moveFocus('left');
     expect(await tree.activeLabel(tree.tree)).toBe('Исходники');
 
-    await page.keyboard.press('ArrowLeft');
+    await tree.moveFocus('left');
     await expect(tree.item(tree.tree, 'Исходники')).toHaveAttribute('aria-expanded', 'false');
 
-    await page.keyboard.press('*');
+    await tree.expandSiblings();
     await expect(tree.item(tree.tree, 'logo.svg')).toBeVisible();
     await expect(tree.item(tree.tree, 'Руководство.md')).toBeVisible();
 
-    await page.keyboard.press('End');
+    await tree.focusLastItem();
     expect(await tree.activeLabel(tree.tree)).toBe('logo.svg');
 
     await tree.typeIn(tree.tree, 'д');
     expect(await tree.activeLabel(tree.tree)).toBe('Документация');
 
-    await page.keyboard.press('Enter');
+    await tree.selectFocusedItem();
     await expect.poll(async () => (await tree.readOutput()).selected).toBe('docs');
 
-    await page.keyboard.press('Home');
+    await tree.focusFirstItem();
     expect(await tree.activeLabel(tree.tree)).toBe('Исходники');
     await expect(tree.item(tree.tree, 'Исходники')).toHaveCSS('outline-style', 'solid');
   });
@@ -130,7 +129,6 @@ test.describe('tree', () => {
   test('virtual tree renders a window of ten thousand nodes and keeps the active node rendered', async ({
     playground,
     tree,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard scenario');
@@ -140,22 +138,22 @@ test.describe('tree', () => {
     expect(await tree.renderedCount(tree.virtualTree)).toBeLessThan(100);
 
     await tree.virtualTree.focus();
-    await page.keyboard.press('End');
+    await tree.focusLastItem();
     expect(await tree.activeLabel(tree.virtualTree)).toBe('Узел 10000');
     await expect(tree.item(tree.virtualTree, 'Узел 10000')).toBeVisible();
 
-    await page.keyboard.press('ArrowUp');
+    await tree.moveFocus('up');
     expect(await tree.activeLabel(tree.virtualTree)).toBe('Узел 9999');
 
-    await page.keyboard.press('Enter');
+    await tree.selectFocusedItem();
     await expect.poll(async () => (await tree.readOutput()).virtualSelected).toBe('n9999');
 
-    await page.keyboard.press('Home');
+    await tree.focusFirstItem();
     await expect(tree.item(tree.virtualTree, 'Узел 1')).toBeVisible();
     expect(await tree.renderedCount(tree.virtualTree)).toBeLessThan(100);
 
-    await page.keyboard.press('PageDown');
-    await page.keyboard.press('PageDown');
+    await tree.pageDown();
+    await tree.pageDown();
     await expect(tree.item(tree.virtualTree, 'Узел 11')).toBeVisible();
 
     const gaps = await tree.activeRowGaps(tree.virtualTree);
@@ -182,7 +180,6 @@ test.describe('tree', () => {
   test('tree mirrors the chevron in RTL and swaps the horizontal arrows', async ({
     playground,
     tree,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard scenario');
@@ -195,10 +192,10 @@ test.describe('tree', () => {
     expect(toggle.x).toBeGreaterThan(label.x);
 
     await tree.tree.focus();
-    await page.keyboard.press('ArrowLeft');
+    await tree.moveFocus('left');
     await expect(sources).toHaveAttribute('aria-expanded', 'true');
 
-    await page.keyboard.press('ArrowRight');
+    await tree.moveFocus('right');
     await expect(sources).toHaveAttribute('aria-expanded', 'false');
   });
 

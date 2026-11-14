@@ -45,7 +45,7 @@ test.describe('book on a right-to-left page', () => {
     await expect(book.cellMenuList).toBeVisible();
     expect(await book.insideScreen(book.cellMenuList)).toBe(true);
 
-    await book.page.keyboard.press('Escape');
+    await book.pressEscape();
     await book.openRules('4', 1);
 
     await expect(book.rules).toBeVisible();
@@ -65,7 +65,6 @@ test.describe('book with a right-to-left sheet', () => {
   test('runs the columns from the right and the arrows follow them', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -80,11 +79,11 @@ test.describe('book with a right-to-left sheet', () => {
     expect(first.x).toBeGreaterThan(second.x);
 
     await book.cell('2', 0).click();
-    await page.keyboard.press('ArrowLeft');
+    await book.moveActive('left');
 
     await expect(book.nameBox).toHaveValue('B2');
 
-    await page.keyboard.press('ArrowRight');
+    await book.moveActive('right');
 
     await expect(book.nameBox).toHaveValue('A2');
 
@@ -96,7 +95,6 @@ test.describe('book with a right-to-left sheet', () => {
   test('keeps an inserted chart on its cells and drags it with the pointer', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -127,7 +125,7 @@ test.describe('book with a right-to-left sheet', () => {
     expect(near(moved.x, placed.x - 24)).toBe(true);
     expect(near(moved.y, placed.y + 16)).toBe(true);
 
-    await page.keyboard.press('Control+z');
+    await book.undo();
 
     await expect.poll(async () => near((await boxOf(book.charts)).x, placed.x)).toBe(true);
   });
@@ -172,7 +170,6 @@ test.describe('book accessibility', () => {
     test(`passes axe with the cell menu and the formula hints in the ${theme} theme`, async ({
       playground,
       book,
-      page,
     }) => {
       await playground.emulate({ reducedMotion: 'reduce' });
       await playground.open();
@@ -183,14 +180,14 @@ test.describe('book accessibility', () => {
       await expect(book.cellMenuList).toBeVisible();
       expect(await playground.wcagViolations(BOOK)).toEqual([]);
 
-      await page.keyboard.press('Escape');
+      await book.pressEscape();
       await book.cell('9', 1).click();
-      await page.keyboard.type('=СУ');
+      await book.typeAtCaret('=СУ');
 
       await expect(book.functions).toBeVisible();
       expect(await playground.wcagViolations(ASSIST_LISTS)).toEqual([]);
 
-      await page.keyboard.press('Tab');
+      await book.acceptSuggestion();
 
       await expect(book.hint).toBeVisible();
       expect(await playground.wcagViolations(ASSIST_LISTS)).toEqual([]);

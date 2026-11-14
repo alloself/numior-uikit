@@ -148,6 +148,14 @@ that the label `for` matches the control id and that values render on the server
   `page`, so console listeners and state do not leak between tests. A helper that opens a
   section takes the fixture (`openEditor(playground)`), not `page`. A new root page object is
   added to the fixtures module.
+- Specs never touch the page directly: `keyboard`, `mouse`, `touchscreen`, `evaluate`,
+  `locator`, `getBy*`, `waitForTimeout`, `frameLocator` and `$` on `page` or `<x>.page` are
+  rejected by ESLint `no-restricted-syntax` in `tests/e2e/**/*.spec.ts`. Page object methods
+  say what the user does or what the test reads (`closeMenu()`, `jumpToDataEdge('down')`,
+  `selectionGap()`), never forward an arbitrary key (`press(key)`). Grids share their keys
+  through `GridKeys`/`SheetKeys` (`tests/e2e/pages/grid-keys.ts`). A fixed pause is allowed
+  only as a named page object step where the pause is the scenario (a hover dwell); otherwise
+  wait through `expect.poll`, `toBeVisible` or a settled helper.
 - Colors through `expectRgb` (`tests/e2e/helpers/color.ts`); axe through
   `playground.wcagViolations(section.scope)` after `playground.emulate({ reducedMotion: 'reduce' })`.
   Every section page object has `readonly scope = sectionScope('<name>')`; layers in the top layer

@@ -125,6 +125,36 @@ export class SignupSection {
     await this.terms.check();
   }
 
+  async submitWithEnter(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async addTypedTag(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async typeText(text: string): Promise<void> {
+    await this.page.keyboard.type(text);
+  }
+
+  async toggleBold(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+b');
+  }
+
+  async moveCaretToEnd(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+End');
+  }
+
+  async submitProgrammatically(): Promise<void> {
+    await this.form.evaluate((form) => {
+      if (!(form instanceof HTMLFormElement)) {
+        return;
+      }
+
+      form.requestSubmit();
+    });
+  }
+
   isFocusVisible(target: Locator): Promise<boolean> {
     return target.evaluate((element) => element.matches(':focus-visible'));
   }

@@ -325,7 +325,13 @@ status: accepted
 - Одно действие драйвера ждёт ровно один `await nextTick()`. Два тика подряд означают
   цепочку рендеров в компоненте, которую нужно убрать, а не спрятать в хелпер;
   `scripts/check-tests.mjs` (`pnpm test:ticks`) падает на таком паттерне.
-- E2E: page objects в `tests/e2e/pages`; спеки не обращаются к `page.getByTestId` напрямую.
+- E2E: page objects в `tests/e2e/pages`; спеки не обращаются к `page` напрямую: `keyboard`,
+  `mouse`, `touchscreen`, `evaluate`, `locator`, `getBy*`, `waitForTimeout`, `frameLocator` и
+  `$` у `page` и `<x>.page` отклоняет `no-restricted-syntax` в ESLint для `tests/e2e/**/*.spec.ts`.
+  Методы page object названы по действию пользователя или по тому, что читает тест
+  (`closeMenu`, `jumpToDataEdge('down')`), а не пересылают произвольную клавишу. Фиксированная
+  пауза — только именованный шаг page object там, где пауза и есть сценарий (задержка под
+  курсором); иначе ждут через `expect.poll`, `toBeVisible` или хелперы `settled`.
 - Тайпгарды во всех наборах тестов берутся из `packages/primitives/test/support/guards.ts`
   (базовые проверки и комбинаторы `nullable`, `optional`, `listOf`, `recordOf`, `oneOf`,
   `anyOf`, `shapeOf`, `parseAs`); тип вывода выводится из гарда (`Guarded<typeof guard>`), а

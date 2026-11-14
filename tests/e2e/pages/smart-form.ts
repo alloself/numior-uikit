@@ -9,6 +9,7 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 import { boxOf, type Point } from '../helpers/geometry';
+import { ARROWS } from '../helpers/keyboard';
 import { sectionScope } from '../helpers/axe';
 
 export type SmartFormOutput = Guarded<typeof isSmartFormOutput>;
@@ -232,6 +233,22 @@ export class SmartFormSection {
     await this.page.mouse.move(x, y + 6);
     await this.page.mouse.move(pointer.x, pointer.y, { steps: 8 });
     return pointer;
+  }
+
+  async typeIntoFocusedField(text: string): Promise<void> {
+    await this.page.keyboard.type(text);
+  }
+
+  async grabFocusedRow(): Promise<void> {
+    await this.page.keyboard.press('Space');
+  }
+
+  async dropGrabbedRow(): Promise<void> {
+    await this.page.keyboard.press('Space');
+  }
+
+  async moveGrabbedRow(direction: 'up' | 'down'): Promise<void> {
+    await this.page.keyboard.press(ARROWS[direction]);
   }
 
   async drop(): Promise<void> {

@@ -11,7 +11,6 @@ test.describe('feedback', () => {
   test('a toast fired from an open dialog paints above it and outlives it', async ({
     playground,
     feedback,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -23,7 +22,7 @@ test.describe('feedback', () => {
     await expect(toast).toBeVisible();
 
     const aboveDialog = await paintedRgb(toast);
-    await page.keyboard.press('Escape');
+    await feedback.closeDialogWithEscape();
     await expect(feedback.toastDialog).toBeHidden();
     await expect(toast).toBeVisible();
     expect(rgbDelta(aboveDialog, await paintedRgb(toast))).toBeLessThanOrEqual(2);
@@ -69,7 +68,6 @@ test.describe('feedback', () => {
   test('toasts auto-dismiss after their duration and pause while hovered', async ({
     playground,
     feedback,
-    page,
     isMobile,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
@@ -79,11 +77,10 @@ test.describe('feedback', () => {
     await expect(toast).toBeVisible();
 
     if (!isMobile) {
-      await toast.hover();
-      await page.waitForTimeout(2000);
+      await feedback.hoverPastTimeout(toast);
       await expect(toast).toBeVisible();
 
-      await page.mouse.move(0, 0);
+      await feedback.movePointerAway();
     }
 
     await expect(toast).toBeHidden({ timeout: 3000 });
@@ -93,7 +90,6 @@ test.describe('feedback', () => {
   test('closing a toast with the pointer hands focus back and the rest keep counting', async ({
     playground,
     feedback,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'pointer scenario');
@@ -110,7 +106,7 @@ test.describe('feedback', () => {
     await expect(feedback.toastShow).toBeFocused();
     await expect(rest).toBeVisible();
 
-    await page.mouse.move(0, 0);
+    await feedback.movePointerAway();
 
     await expect(rest).toBeHidden({ timeout: 7000 });
   });
@@ -118,7 +114,6 @@ test.describe('feedback', () => {
   test('the stack stays open when the toast under a pointer at rest closes or is swapped by its action', async ({
     playground,
     feedback,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'pointer scenario');
@@ -153,7 +148,7 @@ test.describe('feedback', () => {
 
     expect(await feedback.stackOpen()).toBe(true);
 
-    await page.mouse.move(0, 0);
+    await feedback.movePointerAway();
 
     await expect.poll(() => feedback.stackOpen()).toBe(false);
   });

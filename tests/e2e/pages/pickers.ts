@@ -150,6 +150,34 @@ export class PickersSection {
     return box.width;
   }
 
+  async focusNextOption(): Promise<void> {
+    await this.page.keyboard.press('ArrowDown');
+  }
+
+  async focusPreviousOption(): Promise<void> {
+    await this.page.keyboard.press('ArrowUp');
+  }
+
+  async chooseFocusedOption(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async openFocusedTriggerWith(key: 'Enter' | 'Space'): Promise<void> {
+    await this.page.keyboard.press(key);
+  }
+
+  async closeList(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+  }
+
+  async addTypedKeyword(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async removeLastChip(): Promise<void> {
+    await this.page.keyboard.press('Backspace');
+  }
+
   async readOutput(): Promise<PickersOutput> {
     return parsePickersOutput(await this.output.innerText());
   }
