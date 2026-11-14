@@ -256,6 +256,16 @@
       "source": "otp-field.adr.md",
       "target": "component-authoring.rule.md",
       "type": "related"
+    },
+    {
+      "source": "mcp.adr.md",
+      "target": "docs-site.adr.md",
+      "type": "depends_on"
+    },
+    {
+      "source": "mcp.adr.md",
+      "target": "nuxt-module.adr.md",
+      "type": "related"
     }
   ]
 }
