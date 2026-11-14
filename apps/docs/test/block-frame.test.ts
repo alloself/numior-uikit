@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
+import { blockHeightRequest } from '../.vitepress/theme/block-height';
 import { applyThemeClasses, themeClassesOf } from '../.vitepress/theme/frame-theme';
 import { ru } from '../.vitepress/theme/texts';
 import { BlockFrameDriver } from './drivers/block-frame';
@@ -54,6 +55,14 @@ describe('BlockFrame', () => {
 
     await block.report(1200, window);
     expect(block.screenHeight).toBe('600px');
+
+    block.unmount();
+  });
+
+  it('asks a block page that reported its height before the page came alive to report again', async () => {
+    const block = BlockFrameDriver.mount(FILES);
+
+    expect(await block.nextScreenMessage()).toEqual(blockHeightRequest());
 
     block.unmount();
   });

@@ -56,6 +56,20 @@ export class BlockFrameDriver {
       .map((tab) => tab.text());
   }
 
+  nextScreenMessage(): Promise<unknown> {
+    const screen = this.screen.element.contentWindow;
+
+    return new Promise((resolve) => {
+      screen?.addEventListener(
+        'message',
+        (event) => {
+          resolve(event.data);
+        },
+        { once: true },
+      );
+    });
+  }
+
   async resize(label: string): Promise<void> {
     await this.wrapper.find(`[role="radio"][aria-label="${label}"]`).trigger('click');
   }
