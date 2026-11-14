@@ -163,7 +163,7 @@ test.describe('table', () => {
     await expect(table.header(1)).toHaveText('Клиент');
   });
 
-  test('a column header keeps its grip as far from the edge as its menu and lifts a ghost that repeats it', async ({
+  test('a column header keeps its grip, sort mark and menu one gap apart and from its edges and lifts a ghost that repeats it', async ({
     playground,
     table,
     isMobile,
@@ -173,8 +173,10 @@ test.describe('table', () => {
     await table.root.scrollIntoViewIfNeeded();
 
     const header = await table.headerHandles(1);
+    const spacing = await table.headerSpacing(1);
 
-    expect(header.grip).toBe(await table.menuInset(1));
+    expect([spacing.edge, spacing.toResize]).toEqual([spacing.gap, spacing.gap]);
+    expect(await table.sortMenuGap(0)).toBe(spacing.gap);
 
     await table.liftHeader(1);
 

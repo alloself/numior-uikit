@@ -35,6 +35,12 @@ export interface HandleLayout {
   readonly font: string;
 }
 
+export interface HeaderSpacing {
+  readonly gap: number;
+  readonly edge: number;
+  readonly toResize: number;
+}
+
 interface HandleParts {
   readonly grip: string;
   readonly label: string;
@@ -84,6 +90,39 @@ const handleLayoutOf = (frame: Element, parts: HandleParts): HandleLayout => {
     label: Math.round(label.getBoundingClientRect().left - edge),
     font: `${style.fontSize} ${style.fontWeight} ${style.color}`,
   };
+};
+
+const headerSpacingOf = (cell: Element): HeaderSpacing => {
+  const content = cell.querySelector('.nui-table__content');
+  const grip = cell.querySelector('.nui-table__grip');
+  const menu = cell.querySelector('.nui-table__menu');
+  const resizer = cell.querySelector(':scope > .nui-table__resizer');
+
+  if (content === null || grip === null || menu === null || resizer === null) {
+    throw new Error('The header has no grip, menu or resizer');
+  }
+  const line = getComputedStyle(resizer, '::after');
+
+  const lineStart =
+    resizer.getBoundingClientRect().right -
+    (Number.parseFloat(line.insetInlineEnd) || 0) -
+    (Number.parseFloat(line.inlineSize) || 0);
+
+  return {
+    gap: Math.round(Number.parseFloat(getComputedStyle(content).columnGap) || 0),
+    edge: Math.round(grip.getBoundingClientRect().left - cell.getBoundingClientRect().left),
+    toResize: Math.round(lineStart - menu.getBoundingClientRect().right),
+  };
+};
+
+const sortMenuGapOf = (cell: Element): number => {
+  const sort = cell.querySelector('.nui-table__sort-button');
+  const menu = cell.querySelector('.nui-table__menu');
+
+  if (sort === null || menu === null) {
+    throw new Error('The header has no sort mark or menu');
+  }
+  return Math.round(menu.getBoundingClientRect().left - sort.getBoundingClientRect().right);
 };
 
 const BODY_PAINT = `
@@ -477,11 +516,20 @@ export class TableSection extends GridKeys {
     return this.header(col).evaluate(handleLayoutOf, HEADER_PARTS);
   }
 
-  async menuInset(col: number): Promise<number> {
-    const cell = await boxOf(this.header(col));
-    const menu = await boxOf(this.menuButton(col));
+  async headerSpacing(col: number): Promise<HeaderSpacing> {
+    await this.header(col).hover();
 
-    return Math.round(cell.x + cell.width - (menu.x + menu.width));
+    await expect.poll(() => this.headerSettled(col)).toBe(true);
+
+    return this.header(col).evaluate(headerSpacingOf);
+  }
+
+  async sortMenuGap(col: number): Promise<number> {
+    await this.header(col).hover();
+
+    await expect.poll(() => this.headerSettled(col)).toBe(true);
+
+    return this.header(col).evaluate(sortMenuGapOf);
   }
 
   async liftHeader(col: number): Promise<void> {
