@@ -61,6 +61,8 @@ const STATIC_SIDES: Record<FloatingSide, FloatingSide> = {
 
 const SIDES: ReadonlySet<string> = new Set(Object.values(FloatingSide));
 
+const INLINE_SIDES: ReadonlySet<FloatingSide> = new Set([FloatingSide.Left, FloatingSide.Right]);
+
 const isSide = (value: string | undefined): value is FloatingSide =>
   value !== undefined && SIDES.has(value);
 
@@ -93,11 +95,15 @@ const applySize = (floating: HTMLElement, size: FloatingSize, room: SizeRoom): v
   floating.style.maxInlineSize = `${capped(room.availableWidth, size.maxInlineSize)}px`;
 };
 
-const middleware = (options: FloatingOptions, floating: HTMLElement): Middleware[] => {
+const middleware = (
+  options: FloatingOptions,
+  floating: HTMLElement,
+  placement: FloatingPlacement,
+): Middleware[] => {
   const list: Middleware[] = [
     offsetMiddleware(toValue(options.offset) ?? 0),
     flip(),
-    shift({ padding: 8 }),
+    shift({ padding: 8, crossAxis: INLINE_SIDES.has(sideOf(placement)) }),
   ];
 
   const size = toValue(options.size);
@@ -178,10 +184,12 @@ export const useFloating = (
       return;
     }
 
+    const placement = requested();
+
     const result = await computePosition(pair.reference, pair.floating, {
-      placement: requested(),
+      placement,
       strategy,
-      middleware: middleware(options, pair.floating),
+      middleware: middleware(options, pair.floating, placement),
     });
 
     const side = sideOf(result.placement);
