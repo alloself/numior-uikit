@@ -47,7 +47,6 @@ test.describe('layout', () => {
   test('sidebar collapses to a rail with tooltips, toggles with Ctrl+B and hides offcanvas', async ({
     playground,
     layout,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'desktop sidebar');
@@ -74,7 +73,7 @@ test.describe('layout', () => {
     await expect(layout.heading).toHaveText('Календарь');
     await expect(layout.item('calendar')).toHaveAttribute('aria-current', 'page');
 
-    await page.keyboard.press('Control+b');
+    await layout.toggleSidebarWithShortcut();
     await expect.poll(() => layout.sidebarWidth()).toBeGreaterThan(200);
     await expect.poll(async () => (await layout.readOutput()).open).toBe(true);
 
@@ -83,7 +82,7 @@ test.describe('layout', () => {
     await expect(layout.sidebar).toBeHidden();
     await expect.poll(() => layout.sidebarWidth()).toBeLessThan(1);
 
-    await page.keyboard.press('Control+b');
+    await layout.toggleSidebarWithShortcut();
     await expect(layout.sidebar).toBeVisible();
   });
 
@@ -151,7 +150,6 @@ test.describe('layout', () => {
   test('the icon rail opens sub lists as flyouts by hover, click and keyboard', async ({
     playground,
     layout,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'desktop rail');
@@ -177,14 +175,14 @@ test.describe('layout', () => {
     expect(await layout.sidebarWidth()).toBeLessThan(80);
 
     await layout.subToggle.focus();
-    await page.keyboard.press('ArrowRight');
+    await layout.expandFocusedGroup();
     await expect(layout.flyout).toBeVisible();
     await expect(layout.item('report-sales')).toBeFocused();
 
-    await page.keyboard.press('ArrowDown');
+    await layout.focusNextItem();
     await expect(layout.item('report-team')).toBeFocused();
 
-    await page.keyboard.press('Escape');
+    await layout.closeFlyout();
     await expect(layout.flyout).toBeHidden();
     await expect(layout.subToggle).toBeFocused();
 
@@ -199,7 +197,7 @@ test.describe('layout', () => {
 
     expect(rtlFlyout.x + rtlFlyout.width).toBeLessThanOrEqual(rtlToggle.x + 1);
 
-    await page.keyboard.press('Escape');
+    await layout.closeFlyout();
     await playground.setDirection('ltr');
     await layout.trigger.click();
     await expect.poll(() => layout.sidebarWidth()).toBeGreaterThan(200);
@@ -232,7 +230,6 @@ test.describe('layout', () => {
   test('a flyout opens again after the sidebar was expanded and collapsed over it', async ({
     playground,
     layout,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'desktop rail');
@@ -242,17 +239,17 @@ test.describe('layout', () => {
     await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
 
     await layout.subToggle.focus();
-    await page.keyboard.press('Enter');
+    await layout.activateFocused();
     await expect(layout.flyout).toBeVisible();
 
-    await page.keyboard.press('Control+b');
+    await layout.toggleSidebarWithShortcut();
     await expect.poll(() => layout.sidebarWidth()).toBeGreaterThan(200);
 
-    await page.keyboard.press('Control+b');
+    await layout.toggleSidebarWithShortcut();
     await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
 
     await layout.subToggle.focus();
-    await page.keyboard.press('Enter');
+    await layout.activateFocused();
     await expect(layout.flyout).toBeVisible();
     await expect(layout.item('report-sales')).toBeFocused();
   });

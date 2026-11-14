@@ -179,6 +179,26 @@ export class LayoutSection {
     });
   }
 
+  async toggleSidebarWithShortcut(): Promise<void> {
+    await this.page.keyboard.press('Control+b');
+  }
+
+  async expandFocusedGroup(): Promise<void> {
+    await this.page.keyboard.press('ArrowRight');
+  }
+
+  async activateFocused(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async focusNextItem(): Promise<void> {
+    await this.page.keyboard.press('ArrowDown');
+  }
+
+  async closeFlyout(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+  }
+
   async readOutput(): Promise<LayoutOutput> {
     return parseLayoutOutput(await this.output.innerText());
   }

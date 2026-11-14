@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import type { FileChooser, Locator, Page } from '@playwright/test';
 import { boxOf } from '../helpers/geometry';
 import {
   isNumber,
@@ -122,6 +122,32 @@ export class UploadSection {
 
   browse(scope: Locator): Locator {
     return scope.locator('.nui-upload__browse');
+  }
+
+  async chooserFromZoneClick(scope: Locator): Promise<FileChooser> {
+    const chooser = this.page.waitForEvent('filechooser');
+
+    await this.zone(scope).click({ position: { x: 10, y: 10 } });
+
+    return chooser;
+  }
+
+  async chooserFromBrowseClick(scope: Locator): Promise<FileChooser> {
+    const chooser = this.page.waitForEvent('filechooser');
+
+    await this.browse(scope).click();
+
+    return chooser;
+  }
+
+  async chooserFromKeyboard(scope: Locator): Promise<FileChooser> {
+    await this.browse(scope).focus();
+
+    const chooser = this.page.waitForEvent('filechooser');
+
+    await this.page.keyboard.press('Enter');
+
+    return chooser;
   }
 
   row(scope: Locator, name: string): Locator {

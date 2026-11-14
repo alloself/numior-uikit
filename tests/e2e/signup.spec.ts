@@ -12,10 +12,9 @@ test.describe('signup form', () => {
   test('Enter in an empty form focuses the first invalid field and keeps errors red under focus and hover', async ({
     playground,
     signup,
-    page,
   }) => {
     await signup.email.focus();
-    await page.keyboard.press('Enter');
+    await signup.submitWithEnter();
     await expect(signup.login).toBeFocused();
     await expect(signup.login).toHaveAttribute('aria-invalid', 'true');
     await expect(signup.errorOf(signup.login)).toHaveText('Заполните поле');
@@ -33,10 +32,9 @@ test.describe('signup form', () => {
 
   test('a keyboard submit with only the terms left moves a visible error ring to the checkbox', async ({
     signup,
-    page,
   }) => {
     await signup.fillAccount();
-    await page.keyboard.press('Enter');
+    await signup.submitWithEnter();
     await expect(signup.terms).toBeFocused();
     expect(await signup.isFocusVisible(signup.terms)).toBe(true);
 
@@ -98,19 +96,18 @@ test.describe('signup form', () => {
 
   test('a slow submit keeps the pressed button focused and as wide as before and ignores a second press', async ({
     signup,
-    page,
   }) => {
     await signup.answer('Медленный ответ');
     await signup.fillValid();
     const { width } = await boxOf(signup.submit);
     await signup.submit.focus();
-    await page.keyboard.press('Enter');
+    await signup.submitWithEnter();
     await expect(signup.form).toHaveAttribute('aria-busy', 'true');
     await expect(signup.submit).toBeFocused();
     await expect(signup.reset).toBeDisabled();
     expect((await boxOf(signup.submit)).width).toBeCloseTo(width, 0);
 
-    await page.keyboard.press('Enter');
+    await signup.submitWithEnter();
     await expect(signup.form).not.toHaveAttribute('aria-busy', 'true');
     await expect.poll(async () => (await signup.readOutput()).submitted).toBe(1);
     expect((await signup.readOutput()).submitCount).toBe(1);
@@ -118,13 +115,12 @@ test.describe('signup form', () => {
 
   test('the about field sends its formatted text as HTML, also when the form is sent by script while typing', async ({
     signup,
-    page,
   }) => {
     await signup.fillValid();
     await signup.about.click();
-    await page.keyboard.type('Люблю ');
-    await page.keyboard.press('ControlOrMeta+b');
-    await page.keyboard.type('интерфейсы');
+    await signup.typeText('Люблю ');
+    await signup.toggleBold();
+    await signup.typeText('интерфейсы');
     await signup.submit.click();
 
     await expect
@@ -134,16 +130,9 @@ test.describe('signup form', () => {
       );
 
     await signup.about.click();
-    await page.keyboard.press('ControlOrMeta+End');
-    await page.keyboard.type('!');
-
-    await signup.form.evaluate((form) => {
-      if (!(form instanceof HTMLFormElement)) {
-        return;
-      }
-
-      form.requestSubmit();
-    });
+    await signup.moveCaretToEnd();
+    await signup.typeText('!');
+    await signup.submitProgrammatically();
 
     await expect.poll(async () => (await signup.readOutput()).about).toContain('интерфейсы!</');
   });
@@ -160,20 +149,19 @@ test.describe('signup form', () => {
 
   test('Enter picks and adds tags without sending, and Enter in the number field sends the typed value', async ({
     signup,
-    page,
   }) => {
     await signup.fillValid();
     await signup.tags.click();
     await signup.tags.pressSequentially('Диз');
-    await page.keyboard.press('Enter');
+    await signup.addTypedTag();
     await signup.tags.pressSequentially('vue');
-    await page.keyboard.press('Enter');
+    await signup.addTypedTag();
     await expect(signup.chipsOf(signup.tags)).toHaveText(['Дизайн', 'vue']);
     await expect(signup.listbox).toBeHidden();
     expect((await signup.readOutput()).submitCount).toBe(0);
 
     await signup.seats.fill('7');
-    await page.keyboard.press('Enter');
+    await signup.submitWithEnter();
     await expect.poll(async () => (await signup.readOutput()).submitted).toBe(1);
 
     const output = await signup.readOutput();

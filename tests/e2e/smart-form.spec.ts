@@ -91,7 +91,6 @@ test.describe('smart form', () => {
   test('contacts grow to the limit, keep the last row and move by keyboard with announcements', async ({
     playground,
     smartForm,
-    page,
   }) => {
     await openSmartForm(playground);
     await expect(smartForm.contacts).toHaveCount(1);
@@ -102,11 +101,11 @@ test.describe('smart form', () => {
     await smartForm.addContact.click();
     await expect(smartForm.control('contacts.1.name')).toBeFocused();
 
-    await page.keyboard.type('Анна');
+    await smartForm.typeIntoFocusedField('Анна');
     await smartForm.addContact.click();
     await expect(smartForm.control('contacts.2.name')).toBeFocused();
 
-    await page.keyboard.type('Борис');
+    await smartForm.typeIntoFocusedField('Борис');
     await expect(smartForm.addContact).toBeDisabled();
     await expect(smartForm.limit).toHaveText('Достигнут предел строк: 3');
 
@@ -116,21 +115,21 @@ test.describe('smart form', () => {
     expect(remove.y).toBeCloseTo(name.y, 0);
 
     await smartForm.grip(2).focus();
-    await page.keyboard.press('Space');
+    await smartForm.grabFocusedRow();
     await expect(smartForm.live).toContainText('Строка 2 захвачена, позиция 2 из 3.');
 
-    await page.keyboard.press('ArrowDown');
+    await smartForm.moveGrabbedRow('down');
     await expect(smartForm.live).toHaveText('Строка 2, позиция 3 из 3.');
 
-    await page.keyboard.press('Space');
+    await smartForm.dropGrabbedRow();
     await expect(smartForm.live).toHaveText('Строка 2 перемещена на позицию 3 из 3.');
     await expect.poll(() => smartForm.names()).toEqual(['Вера', 'Борис', 'Анна']);
     await expect(smartForm.grip(3)).toBeFocused();
 
-    await page.keyboard.press('Space');
-    await page.keyboard.press('ArrowUp');
-    await page.keyboard.press('ArrowUp');
-    await page.keyboard.press('Space');
+    await smartForm.grabFocusedRow();
+    await smartForm.moveGrabbedRow('up');
+    await smartForm.moveGrabbedRow('up');
+    await smartForm.dropGrabbedRow();
     await expect.poll(() => smartForm.names()).toEqual(['Анна', 'Вера', 'Борис']);
     await expect(smartForm.grip(1)).toBeFocused();
 

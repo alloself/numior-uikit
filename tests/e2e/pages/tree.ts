@@ -8,6 +8,7 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 import { sectionScope } from '../helpers/axe';
+import { ARROWS, type ArrowDirection } from '../helpers/keyboard';
 
 export type TreeOutput = Guarded<typeof isTreeOutput>;
 
@@ -34,7 +35,7 @@ export class TreeSection {
   readonly virtualTree: Locator;
   readonly output: Locator;
 
-  constructor(page: Page) {
+  constructor(private readonly page: Page) {
     this.tree = page.getByTestId('data-tree');
     this.checkTree = page.getByTestId('data-tree-check');
     this.virtualTree = page.getByTestId('data-tree-virtual');
@@ -85,6 +86,30 @@ export class TreeSection {
       const active = id === null ? null : document.getElementById(id);
       return active?.querySelector('.nui-row__title')?.textContent?.trim() ?? null;
     });
+  }
+
+  async moveFocus(direction: ArrowDirection): Promise<void> {
+    await this.page.keyboard.press(ARROWS[direction]);
+  }
+
+  async expandSiblings(): Promise<void> {
+    await this.page.keyboard.press('*');
+  }
+
+  async focusFirstItem(): Promise<void> {
+    await this.page.keyboard.press('Home');
+  }
+
+  async focusLastItem(): Promise<void> {
+    await this.page.keyboard.press('End');
+  }
+
+  async pageDown(): Promise<void> {
+    await this.page.keyboard.press('PageDown');
+  }
+
+  async selectFocusedItem(): Promise<void> {
+    await this.page.keyboard.press('Enter');
   }
 
   async typeIn(tree: Locator, key: string): Promise<void> {

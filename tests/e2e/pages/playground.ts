@@ -95,7 +95,7 @@ export class FormsSection {
   readonly submit: Locator;
   readonly output: Locator;
 
-  constructor(page: Page) {
+  constructor(private readonly page: Page) {
     this.root = page.locator('section[aria-labelledby="forms-title"]');
     this.nameInput = page.getByTestId('input-name');
     this.emailInput = page.getByTestId('input-email');
@@ -125,6 +125,24 @@ export class FormsSection {
 
   label(text: string): Locator {
     return this.root.locator('label', { hasText: text });
+  }
+
+  message(text: string): Locator {
+    return this.page.getByText(text);
+  }
+
+  async pressBackspace(): Promise<void> {
+    await this.page.keyboard.press('Backspace');
+  }
+
+  async toggleFromKeyboard(control: Locator): Promise<void> {
+    await control.focus();
+    await this.page.keyboard.press('Space');
+  }
+
+  async selectNextRadioFrom(radio: Locator): Promise<void> {
+    await radio.focus();
+    await this.page.keyboard.press('ArrowDown');
   }
 
   wrapperOf(control: Locator): Locator {
@@ -183,6 +201,8 @@ export class PlaygroundPage {
   };
 
   readonly tailwindSwatch: Locator;
+  readonly skipLink: Locator;
+  readonly formsTitle: Locator;
   readonly typography: TypographySection;
   readonly chrome: ChromeSection;
   readonly forms: FormsSection;
@@ -232,6 +252,8 @@ export class PlaygroundPage {
     };
 
     this.tailwindSwatch = page.getByTestId('tailwind');
+    this.skipLink = page.getByTestId('skip-link');
+    this.formsTitle = page.locator('#forms-title');
 
     this.typography = new TypographySection(page);
     this.chrome = new ChromeSection(page);
@@ -290,6 +312,18 @@ export class PlaygroundPage {
 
   async setDirection(direction: Direction): Promise<void> {
     await this.settings.direction.selectOption(direction);
+  }
+
+  async tabForward(): Promise<void> {
+    await this.page.keyboard.press('Tab');
+  }
+
+  async activateFocusedControl(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  textSelectionCollapsed(): Promise<boolean> {
+    return this.page.evaluate(() => document.getSelection()?.isCollapsed ?? true);
   }
 
   controlsWithoutPointer(): Promise<string[]> {

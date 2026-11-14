@@ -30,7 +30,7 @@ export class ChartsSection {
   readonly gapsSwitch: Locator;
   readonly gapNote: Locator;
 
-  constructor(page: Page) {
+  constructor(private readonly page: Page) {
     this.section = page.locator('section[aria-labelledby="charts-title"]');
     this.columns = page.getByTestId('chart-columns');
     this.bars = page.getByTestId('chart-bars');
@@ -161,5 +161,18 @@ export class ChartsSection {
         return { text: text.textContent?.trim() ?? '', left: box.left, right: box.right };
       }),
     );
+  }
+
+  async focusNextPoint(chart: Locator): Promise<void> {
+    await chart.focus();
+    await this.page.keyboard.press('ArrowRight');
+  }
+
+  async stepToLastPoint(): Promise<void> {
+    await this.page.keyboard.press('End');
+  }
+
+  async toggleFocusedPoint(): Promise<void> {
+    await this.page.keyboard.press('Enter');
   }
 }

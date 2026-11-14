@@ -146,6 +146,26 @@ export class DataSection {
     });
   }
 
+  async tabToNextControl(): Promise<void> {
+    await this.page.keyboard.press('Tab');
+  }
+
+  async activateFocused(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async focusNextOption(): Promise<void> {
+    await this.page.keyboard.press('ArrowDown');
+  }
+
+  async focusFirstOption(): Promise<void> {
+    await this.page.keyboard.press('Home');
+  }
+
+  async toggleFocusedOption(): Promise<void> {
+    await this.page.keyboard.press('Space');
+  }
+
   async typeIn(list: Locator, key: string): Promise<void> {
     await list.locator(':focus').dispatchEvent('keydown', { key });
   }

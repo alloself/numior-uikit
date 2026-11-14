@@ -75,11 +75,11 @@ test.describe('data display', () => {
     }
 
     await data.cardLink.getByRole('link').focus();
-    await page.keyboard.press('Tab');
+    await data.tabToNextControl();
     await expect(data.cardButton.getByRole('button', { name: 'Проект Numior' })).toBeFocused();
     await expect.poll(() => data.focusRingOf(data.cardButton)).toBe('solid');
 
-    await page.keyboard.press('Enter');
+    await data.activateFocused();
     await expect.poll(async () => (await data.readOutput()).cardClicks).toBe(2);
   });
 
@@ -139,7 +139,6 @@ test.describe('data display', () => {
   test('selectable list moves with arrows, toggles with Space and click and finds Cyrillic titles by typeahead', async ({
     playground,
     data,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard scenario');
@@ -154,22 +153,22 @@ test.describe('data display', () => {
     await expect.poll(async () => (await data.readOutput()).picked).toEqual(['go']);
 
     await data.option(list, 'Go').focus();
-    await page.keyboard.press('ArrowDown');
+    await data.focusNextOption();
     await expect(data.option(list, 'Rust')).toBeFocused();
 
-    await page.keyboard.press('ArrowDown');
+    await data.focusNextOption();
     await expect(data.option(list, 'Котлин')).toBeFocused();
 
-    await page.keyboard.press('Space');
+    await data.toggleFocusedOption();
     await expect.poll(async () => (await data.readOutput()).picked).toEqual(['go', 'kotlin']);
 
     await data.typeIn(list, 'к');
     await expect(data.option(list, 'Котлин')).toBeFocused();
 
-    await page.keyboard.press('Home');
+    await data.focusFirstOption();
     await expect(data.option(list, 'Go')).toBeFocused();
 
-    await page.keyboard.press('Tab');
+    await data.tabToNextControl();
     await expect(data.option(list, 'Go')).toHaveAttribute('tabindex', '0');
     await expect(data.option(list, 'Котлин')).toHaveAttribute('tabindex', '-1');
 

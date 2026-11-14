@@ -3,6 +3,8 @@ import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { paintedRgbAt, rgbDelta } from '../helpers/color';
 import { beforeBoxOf, boxOf, type PseudoBox } from '../helpers/geometry';
 
+const TOC_SCROLL_MS = 300;
+
 export class ChromeSection {
   readonly root: Locator;
   readonly toolbar: Locator;
@@ -71,6 +73,54 @@ export class ChromeSection {
     await this.page.mouse.move(x + offset / 2, y);
     await this.page.mouse.move(x + offset, y);
     await this.page.mouse.up();
+  }
+
+  async moveSplitterToMin(): Promise<void> {
+    await this.page.keyboard.press('Home');
+  }
+
+  async moveSplitterToMax(): Promise<void> {
+    await this.page.keyboard.press('End');
+  }
+
+  async nudgeSplitterForward(): Promise<void> {
+    await this.page.keyboard.press('ArrowRight');
+  }
+
+  async focusNextToggleItem(): Promise<void> {
+    await this.page.keyboard.press('ArrowRight');
+  }
+
+  async pressFocusedToggleItem(): Promise<void> {
+    await this.page.keyboard.press('Space');
+  }
+
+  async focusNextTrigger(): Promise<void> {
+    await this.page.keyboard.press('ArrowDown');
+  }
+
+  async focusFirstTrigger(): Promise<void> {
+    await this.page.keyboard.press('Home');
+  }
+
+  async highlightNextCommand(): Promise<void> {
+    await this.page.keyboard.press('ArrowDown');
+  }
+
+  async runHighlightedCommand(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async closeCommandPalette(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+  }
+
+  async openCommandPaletteWithShortcut(): Promise<void> {
+    await this.page.keyboard.press('Control+k');
+  }
+
+  async outwaitTocScroll(): Promise<void> {
+    await this.page.waitForTimeout(TOC_SCROLL_MS);
   }
 
   splitterValue(): Promise<number> {

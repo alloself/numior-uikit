@@ -36,6 +36,8 @@ const readBoxes = (elements: readonly Element[]): Box[] =>
 
 export const bottomOf = (box: Box): number => box.y + box.height;
 
+const HOVER_HOLD_MS = 2000;
+
 export class FeedbackSection {
   readonly scope = sectionScope('feedback');
 
@@ -95,6 +97,19 @@ export class FeedbackSection {
   async dismissFromAction(toast: Locator): Promise<void> {
     await this.actionOf(toast).focus();
     await this.page.keyboard.press('Escape');
+  }
+
+  async closeDialogWithEscape(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+  }
+
+  async hoverPastTimeout(toast: Locator): Promise<void> {
+    await toast.hover();
+    await this.page.waitForTimeout(HOVER_HOLD_MS);
+  }
+
+  async movePointerAway(): Promise<void> {
+    await this.page.mouse.move(0, 0);
   }
 
   async runActionByKeyboard(toast: Locator): Promise<void> {
