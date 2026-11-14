@@ -10,6 +10,8 @@ import type { AnyFieldRule } from '../../rules/async-rule';
 export type NuiSmartFormEntryKind =
   (typeof NuiSmartFormEntryKind)[keyof typeof NuiSmartFormEntryKind];
 
+export type NuiSmartFormInline = (typeof NuiSmartFormInline)[keyof typeof NuiSmartFormInline];
+
 export type StepDirection = (typeof StepDirection)[keyof typeof StepDirection];
 
 export type StepFocus = (typeof StepFocus)[keyof typeof StepFocus];
@@ -119,7 +121,7 @@ export interface NuiSmartFormProps<T extends object> {
   fields?: readonly NuiSmartFormEntry<T>[] | undefined;
   steps?: readonly NuiSmartFormStep<T>[] | undefined;
   layout?: string | undefined;
-  inline?: boolean | typeof NuiSmartFormInline.Grow | undefined;
+  inline?: NuiSmartFormInline | undefined;
   disabled?: boolean | undefined;
   readonly?: boolean | undefined;
   reserveError?: boolean | undefined;
@@ -162,7 +164,7 @@ export const NuiSmartFormEntryKind = {
   Array: 'array',
 } as const;
 
-export const NuiSmartFormInline = { Grow: 'grow' } as const;
+export const NuiSmartFormInline = { Fit: 'fit', Grow: 'grow' } as const;
 
 export const StepDirection = { Forward: 'forward', Back: 'back' } as const;
 

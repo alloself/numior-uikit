@@ -45,7 +45,7 @@ export interface NuiListItemProps {
   id?: string | undefined;
   label?: string | undefined;
   description?: string | undefined;
-  icon?: IconSource | false | undefined;
+  icon?: IconSource | undefined;
   href?: string | undefined;
   to?: NuiRouteLocation | undefined;
   as?: string | Component | undefined;

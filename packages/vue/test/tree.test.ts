@@ -288,7 +288,7 @@ describe('NuiTree', () => {
     expect(multiple.value).toEqual(['src']);
 
     multiple.unmount();
-    const passive = TreeDriver.mount({ props: { selectable: false } });
+    const passive = TreeDriver.mount({ props: { selectable: 'none' } });
     expect(passive.attr('src', 'aria-selected')).toBeUndefined();
 
     await passive.focus();
@@ -367,7 +367,7 @@ describe('NuiTree', () => {
     expect(tree.value).toEqual(['src', 'components', 'button', 'index']);
 
     tree.unmount();
-    const only = TreeDriver.mount({ props: { checkable: true, selectable: false } });
+    const only = TreeDriver.mount({ props: { checkable: true, selectable: 'none' } });
     await only.focus();
     await only.press('Enter');
     expect(only.value).toEqual(['src', 'components', 'button', 'index']);

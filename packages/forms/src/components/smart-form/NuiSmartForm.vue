@@ -138,7 +138,7 @@ const statuses = computed(() =>
 );
 
 const classes = computed(() => ({
-  'nui-smart-form--inline': inline === true || inline === NuiSmartFormInline.Grow,
+  'nui-smart-form--inline': inline !== undefined,
   'nui-smart-form--grow': inline === NuiSmartFormInline.Grow,
   'nui-smart-form--steps': steps !== undefined,
   'nui-smart-form--back': direction.value === StepDirection.Back,

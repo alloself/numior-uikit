@@ -42,7 +42,12 @@ status: accepted
   destructure для дефолтов: `const { size = 'md', disabled = undefined } = defineProps<Props>()`.
   Интерфейс props лежит в `<name>.types.ts`, необязательные поля объявлены с `| undefined`.
   Boolean, который должен наследоваться из контекста поля, получает дефолт `= undefined`
-  (тристейт). `withDefaults`, runtime-объекты props и `PropType` запрещены. v-model только
+  (тристейт). Тип свойства не смешивает `boolean`, `false` или функцию с типом, который
+  компилятор SFC не разбирает (константа-перечисление `(typeof X)[keyof typeof X]`, алиасы
+  иконок): в собранном пакете у такого свойства остаётся только `Boolean` или `Function`, и
+  приложение в режиме разработки предупреждает на его допустимых значениях. «Выключено» —
+  значение перечисления (`NuiTreeSelectable.None`), а не `false`; проверка в `test:artifacts`
+  (2026-11-14). `withDefaults`, runtime-объекты props и `PropType` запрещены. v-model только
   через `defineModel`. Композаблы получают destructured props через getter:
   `useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }))`;
   корень контрола оборачивается в `NuiFieldFrame v-bind="fieldFrame"`, так что `label`,

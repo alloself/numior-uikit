@@ -17,8 +17,8 @@ const docs: DocsMap = {
         en: 'Grid of the fields in `grid-template-areas` syntax, such as `"city zip"`.',
       },
       inline: {
-        ru: 'Ставит поля и кнопку в одну строку. С `grow` поля растягиваются на всю ширину.',
-        en: 'Puts the fields and the button in one row. With `grow`, the fields stretch to the full width.',
+        ru: 'Ставит поля и кнопку в одну строку: `fit` — поля по содержимому, `grow` — на всю ширину.',
+        en: 'Puts the fields and the button in one row: `fit` sizes the fields to their content, `grow` stretches them to the full width.',
       },
       disabled: {
         ru: 'Отключает все поля и кнопки формы.',

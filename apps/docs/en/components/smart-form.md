@@ -31,8 +31,8 @@ button on the last step submits the form.
 
 ### Filters in a row
 
-With `inline` the fields line up in one row, like filters above a table. When there is not
-enough room, the fields wrap to the next line.
+With `inline="fit"` the fields line up in one row, like filters above a table. When there is
+not enough room, the fields wrap to the next line; `inline="grow"` stretches them to the full width.
 
 <Example name="smart-form/Inline" />
 

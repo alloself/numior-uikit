@@ -23,7 +23,7 @@ export interface NuiTreeProps<T> {
   getKey?: NuiOptionKey<T> | undefined;
   variant?: NuiTreeVariant | undefined;
   size?: NuiSize | undefined;
-  selectable?: NuiTreeSelectable | false | undefined;
+  selectable?: NuiTreeSelectable | undefined;
   checkable?: boolean | undefined;
   icons?: boolean | undefined;
   virtual?: boolean | undefined;
@@ -56,7 +56,7 @@ export interface NuiTreeNodeProps<T> {
   revealing?: boolean | undefined;
 }
 
-export const NuiTreeSelectable = { Single: 'single', Multiple: 'multiple' } as const;
+export const NuiTreeSelectable = { Single: 'single', Multiple: 'multiple', None: 'none' } as const;
 
 export const NuiTreeVariant = {
   Plain: 'plain',

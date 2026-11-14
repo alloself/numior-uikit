@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
-import { readFile, readdir } from 'node:fs/promises';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
+import { glob, readFile, readdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { build } from 'vite';
+import { compileScript, parse as parseSfc } from 'vue/compiler-sfc';
 
 const artifactPaths = async (root, target) => {
   if (!target.includes('*')) {
@@ -624,4 +625,45 @@ assert.doesNotMatch(
   'NuiDialog pulled other catalogs',
 );
 
-console.log('Package exports, CSS artifacts, DOM-free ESM imports and text tree-shaking verified.');
+const withoutUndefined = (text) =>
+  text
+    .replace(/\s*(?<!\|)\|\s*undefined\b(?!\s*\|)/g, '')
+    .replace(/\bundefined\s*\|(?!\|)\s*/g, '');
+
+const typeSources = {
+  fileExists: (file) => existsSync(file),
+  readFile: (file) => (existsSync(file) ? withoutUndefined(readFileSync(file, 'utf8')) : undefined),
+  realpath: (file) => realpathSync(file),
+};
+
+const NARROWED_PROP = /(\w+): \{ type: ([^}]*?), (?:required: \w+, )?skipCheck: true/g;
+
+const narrowedProps = async () => {
+  const found = [];
+
+  for await (const file of glob('packages/*/src/**/*.vue')) {
+    const source = withoutUndefined(await readFile(file, 'utf8'));
+    const { descriptor } = parseSfc(source, { filename: resolve(file) });
+
+    if (!descriptor.scriptSetup) {
+      continue;
+    }
+
+    const { content } = compileScript(descriptor, { id: file, isProd: false, fs: typeSources });
+
+    for (const [, prop, type] of content.matchAll(NARROWED_PROP)) {
+      found.push(`${file} ${prop}: ${type}`);
+    }
+  }
+  return found;
+};
+
+assert.deepEqual(
+  await narrowedProps(),
+  [],
+  'A prop that mixes a boolean or a function with a type the SFC compiler cannot resolve keeps only Boolean or Function in the build, so a development runtime warns on its valid values',
+);
+
+console.log(
+  'Package exports, CSS artifacts, DOM-free ESM imports, text tree-shaking and prop runtime types verified.',
+);

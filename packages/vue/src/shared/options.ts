@@ -6,7 +6,7 @@ export interface NuiListEntry<T = string> {
   readonly value?: T | undefined;
   readonly label: string;
   readonly description?: string | undefined;
-  readonly icon?: IconSource | false | undefined;
+  readonly icon?: IconSource | undefined;
   readonly disabled?: boolean | undefined;
   readonly href?: string | undefined;
   readonly to?: NuiRouteLocation | undefined;

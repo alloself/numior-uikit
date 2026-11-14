@@ -326,8 +326,9 @@ status: accepted
   `--mode-treeitem`); `expanded`/`loading`/`folded`/`revealing` — микс `nui-tree__item--*`;
   `activeId` контекст отдаёт только пока корень в фокусе, кольцо —
   `.nui-tree:focus-visible .nui-list-item--active`. Модель узла — `NuiTreeItem extends
-  Omit<NuiOption, 'key' | 'href' | 'to' | 'onClick' | 'icon'>` плюс `icon: IconAlias | false`,
-  `children`, `lazy`: узел получает `badge`, `shortcut`, `current`, `description`; ссылок в
+  Omit<NuiOption, 'key' | 'href' | 'to' | 'onClick' | 'children'>` плюс `children`, `lazy`
+  (`icon: false` у узла убран 2026-11-14: иконку по умолчанию выключает только `icons`, а
+  `false` в типе свойства сужал рантайм-тип `icon` у NuiRow до `Boolean`): узел получает `badge`, `shortcut`, `current`, `description`; ссылок в
   узлах нет, переход делает приложение по `select` (дерево ссылок с Tab по ним —
   `NuiSidebarSub`). Слот `item` стал слотом заголовка, как у списка. Плотность — как у
   `nav` (`--_row` 2 / 2.25 / 2.5rem по `size`, паддинги `space-1`, gap `space-2`), а не

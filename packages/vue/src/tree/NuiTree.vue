@@ -174,11 +174,11 @@ const pointerModality = ref(false);
 const rowScale = ref(1);
 const framePadding = ref(0);
 
-const mode = computed(() => {
+const mode = computed((): NuiTreeSelectable => {
   if (checkable) {
-    return 'multiple';
+    return NuiTreeSelectable.Multiple;
   }
-  return selectable === undefined ? 'single' : selectable;
+  return selectable ?? NuiTreeSelectable.Single;
 });
 
 const loadingText = computed(() => loadingLabel ?? messages.value.loading);
@@ -249,7 +249,7 @@ const folderFor = (node: TreeNode<T>): boolean =>
   icons && node.item.icon === undefined && node.hasChildren;
 
 const iconFor = (node: TreeNode<T>): IconSource | undefined => {
-  if (!icons || node.item.icon === false) {
+  if (!icons) {
     return undefined;
   }
   if (node.item.icon) {
@@ -279,7 +279,7 @@ const nodeOf = (value: T): TreeItemState | undefined => {
 
 provideList<T>({
   kind: ListContextKind.Tree,
-  selectable: computed(() => (mode.value === false ? undefined : mode.value)),
+  selectable: computed(() => (mode.value === NuiTreeSelectable.None ? undefined : mode.value)),
   variant: computed(() => variant),
   size: computed(() => size),
   activeId: computed(() =>
@@ -421,7 +421,7 @@ const expandSiblings = (index: number): void => {
 
 const activate = (index: number): void => {
   const node = visible.value[index];
-  if (!node || node.item.disabled || mode.value === false) {
+  if (!node || node.item.disabled || mode.value === NuiTreeSelectable.None) {
     return;
   }
   if (checkable) {

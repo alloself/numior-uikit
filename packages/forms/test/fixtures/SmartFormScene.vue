@@ -34,6 +34,7 @@ import {
   NuiSmartForm,
   useForm,
   type NuiSmartFormEntry,
+  type NuiSmartFormInline,
   type NuiSmartFormStep,
   type UseFormOptions,
 } from '../../src';
@@ -53,7 +54,7 @@ const {
   fields?: readonly NuiSmartFormEntry<V>[] | undefined;
   steps?: readonly NuiSmartFormStep<V>[] | undefined;
   layout?: string | undefined;
-  inline?: boolean | 'grow' | undefined;
+  inline?: NuiSmartFormInline | undefined;
   readonly?: boolean | undefined;
   reserveError?: boolean | undefined;
   parts?: readonly SmartFormPart[] | undefined;
