@@ -192,6 +192,14 @@ export class VirtualHarness {
     await nextTick();
   }
 
+  async wheel(delta: number, steps: number): Promise<void> {
+    const end = Math.max(0, this.list.canvasSize.value - this.list.viewport.value);
+
+    for (let step = 0; step < steps; step += 1) {
+      await this.scroll(Math.min(end, Math.max(0, this.elementScroll + delta)));
+    }
+  }
+
   async scrollToIndex(index: number, align?: VirtualAlign): Promise<void> {
     this.list.scrollTo(index, { align });
     await nextTick();

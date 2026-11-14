@@ -61,6 +61,17 @@ export class TableCellsSection extends SheetKeys {
     return this.row(position).locator(`:scope > [aria-colindex="${col + ROW_HEADERS + 1}"]`);
   }
 
+  async cellTop(position: number, col: number): Promise<number> {
+    return (await boxOf(this.cell(position, col))).y;
+  }
+
+  async wheelBy(delta: number): Promise<void> {
+    const frame = await boxOf(this.viewport);
+
+    await this.page.mouse.move(frame.x + frame.width / 2, frame.y + frame.height / 2);
+    await this.page.mouse.wheel(0, delta);
+  }
+
   async dragAcross(from: Locator, to: Locator): Promise<void> {
     const [start, end] = await Promise.all([boxOf(from), boxOf(to)]);
 

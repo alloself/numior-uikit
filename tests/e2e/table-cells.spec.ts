@@ -42,6 +42,23 @@ test.describe('table cell source', () => {
     await expect.poll(() => cells.spot()).toEqual({ row: '1', col: 'A' });
   });
 
+  test('the wheel moves a million rows as far as it turns', async ({
+    tableCells: cells,
+    playground,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'a touch screen has no wheel');
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await cells.show();
+
+    const before = await cells.cellTop(8, 1);
+
+    await cells.wheelBy(100);
+
+    await expect.poll(() => cells.cellTop(8, 1)).toBeCloseTo(before - 100, 0);
+  });
+
   test('jumps to the edges of the data with Ctrl and the arrows', async ({
     tableCells: cells,
     playground,

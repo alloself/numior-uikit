@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { createSizeIndex } from '../src';
-import { canvasScaleFor } from '../src/virtual/offsets';
+import { canvasPlaceFor, canvasScaleFor, canvasShiftFor } from '../src/virtual/offsets';
 import { VirtualHarness } from './harness/virtual';
 
 const range = (from: number, to: number): number[] =>
@@ -85,6 +85,66 @@ describe('useVirtualList on the x axis, under a canvas ceiling and with measured
     expect(canvasScaleFor(1000, 100, 2000)).toEqual({ canvas: 1000, factor: 1 });
     expect(canvasScaleFor(1000, 600, 500)).toEqual({ canvas: 1000, factor: 1 });
     expect(canvasScaleFor(1900, 100, 1000)).toEqual({ canvas: 1000, factor: 2 });
+  });
+
+  it('moves a scaled list one to one between jumps and still reaches its first and last rows', async () => {
+    const list = VirtualHarness.mount({
+      count: 1_000_000,
+      itemSize: 40,
+      height: 400,
+      overscan: 0,
+      maxSize: 10_000_000,
+    });
+
+    await list.settle();
+    await list.scroll(2000);
+
+    const landed = list.scrollTop;
+
+    await list.wheel(100, 1);
+
+    expect(list.scrollTop - landed).toBeCloseTo(100, 3);
+
+    await list.wheel(-100, 21);
+
+    expect([list.elementScroll, list.scrollTop, list.renderedIndices[0]]).toEqual([0, 0, 0]);
+
+    await list.scroll(10_000_000 - 400 - 2000);
+    await list.wheel(100, 21);
+
+    expect(list.elementScroll).toBe(10_000_000 - 400);
+    expect(list.scrollTop).toBeCloseTo(40_000_000 - 400, 3);
+    expect(list.renderedIndices.at(-1)).toBe(999_999);
+
+    list.unmount();
+  });
+
+  it('keeps the canvas shift between jumps and pulls it in toward the ends', () => {
+    const move = { factor: 4, end: 1000, jump: 800 };
+
+    expect(canvasShiftFor({ ...move, shift: 1500, from: 500, to: 520 })).toBe(1500);
+    expect(canvasShiftFor({ ...move, shift: 1500, from: 0, to: 900 })).toBe(2700);
+    expect(canvasShiftFor({ ...move, shift: 1500, from: 300, to: 200 })).toBe(1200);
+    expect(canvasShiftFor({ ...move, shift: 1500, from: 20, to: 0 })).toBe(0);
+    expect(canvasShiftFor({ ...move, shift: 1500, from: 980, to: 1000 })).toBe(3000);
+    expect(canvasShiftFor({ ...move, factor: 1, shift: 1500, from: 0, to: 10 })).toBe(0);
+  });
+
+  it('places a scroll from code on the kept shift when it fits and on the plain scale otherwise', () => {
+    expect(canvasPlaceFor(2000, { shift: 1500, factor: 4, end: 1000 })).toEqual({
+      physical: 500,
+      shift: 1500,
+    });
+
+    expect(canvasPlaceFor(3900, { shift: 1500, factor: 4, end: 1000 })).toEqual({
+      physical: 975,
+      shift: 2925,
+    });
+
+    expect(canvasPlaceFor(300, { shift: 0, factor: 1, end: 1000 })).toEqual({
+      physical: 300,
+      shift: 0,
+    });
   });
 
   it('leaves the space under a sticky inset out of the window and the scroll targets', async () => {
