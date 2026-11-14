@@ -19,6 +19,16 @@ export class ThemeCompareDriver {
     );
   }
 
+  static mountOnSite(
+    siteClasses: string,
+    files: readonly ExampleFile[],
+    src = 'about:blank',
+  ): ThemeCompareDriver {
+    document.documentElement.className = siteClasses;
+
+    return ThemeCompareDriver.mount(files, src);
+  }
+
   get captions(): string[] {
     return this.wrapper.findAll('figcaption').map((caption) => caption.text());
   }

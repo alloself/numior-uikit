@@ -36,6 +36,15 @@ describe('ThemeCompare', () => {
     compare.unmount();
   });
 
+  it('themes screens that loaded before the page came alive', () => {
+    const compare = ThemeCompareDriver.mountOnSite('nui-theme--dark docs-theme--numior', FILES);
+
+    expect(compare.themeOf(ru.baseTheme)).toEqual(['nui-theme--dark']);
+    expect(compare.themeOf(ru.siteTheme)).toEqual(['docs-theme--numior', 'nui-theme--dark']);
+
+    compare.unmount();
+  });
+
   it('copies the source of the example', async () => {
     const compare = ThemeCompareDriver.mount(FILES);
 

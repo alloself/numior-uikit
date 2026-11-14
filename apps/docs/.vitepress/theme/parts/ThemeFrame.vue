@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { useTemplateRef } from 'vue';
+import { onMounted, useTemplateRef } from 'vue';
 import { useMutationObserver } from '@vueuse/core';
 import { useFramedHeight } from '../block-height';
 import { applyThemeClasses, schemeClassesOf } from '../frame-theme';
@@ -46,4 +46,6 @@ useMutationObserver(() => globalThis.document?.documentElement, syncTheme, {
   attributes: true,
   attributeFilter: ['class'],
 });
+
+onMounted(syncTheme);
 </script>
