@@ -12,8 +12,8 @@ While the upload runs, the file shows as a card with its progress and a cancel b
 upload offers Retry. Without `upload`, images and files can only be inserted by link.
 
 A file that fails `accept` or `maxSize` still takes its place as a card with the reason and a
-Remove button. Screen readers hear the file name and the reason. When such a file replaces an
-image, the refusal is only announced.
+Remove button. Screen readers hear the file name and the reason. When such a file is picked to
+replace an image, the image stays and a toast gives the reason, so the app needs a `NuiToaster`.
 
 <SignatureReference :names="['NuiEditorUploadAdapter', 'UploadContext', 'NuiEditorUploaded']" />
 

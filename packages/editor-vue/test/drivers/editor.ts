@@ -9,7 +9,12 @@ import {
   type Command,
   type DocJSON,
 } from '@numior/editor-core';
-import type { DraftCommits } from '@numior/primitives';
+import {
+  createToastStore,
+  TOASTS_KEY,
+  type DraftCommits,
+  type ToastStore,
+} from '@numior/primitives';
 import { promiseTimeout } from '@vueuse/core';
 import { createSSRApp, nextTick } from 'vue';
 import { renderToString as renderAppToString } from 'vue/server-renderer';
@@ -96,9 +101,12 @@ export class EditorDriver {
     private readonly wrapper: VueWrapper,
     private readonly mounted: VueWrapper = wrapper,
     private readonly drafts?: DraftCommits,
+    private readonly toastStore?: ToastStore,
   ) {}
 
   static mount(props: EditorMountProps = {}): EditorDriver {
+    const toasts = createToastStore();
+
     const wrapper: VueWrapper = mount(NuiEditor, {
       props: {
         ...withoutModel(props),
@@ -108,9 +116,10 @@ export class EditorDriver {
         },
       },
       attachTo: document.body,
+      global: { provide: { [TOASTS_KEY]: toasts } },
     });
 
-    return new EditorDriver(wrapper);
+    return new EditorDriver(wrapper, wrapper, undefined, toasts);
   }
 
   static mountInField(props: EditorMountProps = {}): EditorDriver {
@@ -120,6 +129,10 @@ export class EditorDriver {
     });
 
     return new EditorDriver(root.findComponent(NuiEditor), root, root.vm.drafts);
+  }
+
+  get toasts(): readonly string[] {
+    return (this.toastStore?.toasts.value ?? []).map((toast) => `${toast.tone}|${toast.title}`);
   }
 
   commitDrafts(): void {

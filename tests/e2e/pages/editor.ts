@@ -798,6 +798,23 @@ export class EditorSection {
     return this.content.locator('.nui-content__file', { hasText: name });
   }
 
+  announcement(): Locator {
+    return this.root.locator('.nui-editor__live');
+  }
+
+  async replaceImage(
+    image: Locator,
+    file: { readonly name: string; readonly type: string },
+  ): Promise<void> {
+    await image.locator('img').click();
+
+    await image.locator('.nui-editor-image__picker').setInputFiles({
+      name: file.name,
+      mimeType: file.type,
+      buffer: Buffer.from('x'.repeat(256)),
+    });
+  }
+
   publishedImage(source: string): Locator {
     return this.preview
       .locator('.nui-content__image')

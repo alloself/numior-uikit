@@ -64,6 +64,22 @@ test.describe('editor media', () => {
     await expect(editor.file('broken.txt')).toBeVisible();
   });
 
+  test('keeps the picture and says why in a toast when the replacement does not fit', async ({
+    editor,
+    feedback,
+  }) => {
+    const image = editor.image(SAMPLE);
+
+    await image.scrollIntoViewIfNeeded();
+    await editor.replaceImage(image, { name: 'scan.pdf', type: 'application/pdf' });
+
+    await expect(feedback.toastByText('scan.pdf: такой тип файла не принимается')).toBeVisible();
+    await expect(feedback.toaster).toHaveAttribute('aria-live', 'polite');
+    await expect(editor.announcement()).toHaveText('');
+    await expect(image).toBeVisible();
+    await expect(image.locator('.nui-editor-image__busy')).toHaveCount(0);
+  });
+
   test('picks an image from the slash menu and inserts files by link', async ({ editor }) => {
     const hint = editor.content.locator('p', { hasText: 'Наберите' });
 
