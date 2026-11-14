@@ -1083,6 +1083,7 @@
   flex: none;
   order: -3;
   place-items: center;
+  --_grip-shift: calc(var(--nui-icon-size) / -6);
   inline-size: 0;
   block-size: 1.5rem;
   margin-inline: 0 calc(-1 * var(--nui-space-1));
@@ -1104,7 +1105,7 @@
 .nui-table__cell:hover > .nui-table__content > .nui-table__grip,
 .nui-table__grip--active {
   inline-size: 1.5rem;
-  margin-inline: 0;
+  margin-inline: var(--_grip-shift) 0;
   opacity: 1;
 }
 .nui-table__grip:hover {
@@ -1114,7 +1115,7 @@
 @media (hover: none) {
   .nui-table__grip {
     inline-size: 1.5rem;
-    margin-inline: 0;
+    margin-inline: var(--_grip-shift) 0;
     opacity: 1;
   }
 }
@@ -1278,6 +1279,9 @@
   block-size: 1.5rem;
   color: var(--nui-text-muted);
   font-size: 0.875rem;
+}
+.nui-table__ghost--x .nui-table__ghost-grip {
+  margin-inline-start: calc(var(--nui-icon-size) / -6);
 }
 .nui-table__ghost-label {
   min-inline-size: 0;
