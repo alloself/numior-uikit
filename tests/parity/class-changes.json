@@ -18,5 +18,25 @@
     "element": "^div\\.nui-field(\\.[\\w-]+)*\\.mt-3$",
     "dropped": ["mt-3"],
     "reason": "cf8a9461 the field of the controls example lost a margin utility that never took effect"
+  },
+  {
+    "element": "nui-theme--|docs-theme--",
+    "dropped": [
+      "nui-theme--light",
+      "nui-theme--dark",
+      "nui-theme--system",
+      "nui-theme--density-compact",
+      "nui-theme--accent-amber",
+      "nui-theme--accent-blue",
+      "nui-theme--accent-emerald",
+      "nui-theme--accent-indigo",
+      "nui-theme--accent-orange",
+      "nui-theme--accent-rose",
+      "nui-theme--accent-slate",
+      "nui-theme--accent-teal",
+      "nui-theme--accent-violet",
+      "docs-theme--numior"
+    ],
+    "reason": "9a98a5ce theme, accent and density scopes and the Numior palette of the docs moved from data attributes to classes"
   }
 ]
