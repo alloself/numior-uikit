@@ -4,6 +4,8 @@ export type ChartFocusSource = (typeof ChartFocusSource)[keyof typeof ChartFocus
 
 export type NuiChartHeight = (typeof NuiChartHeight)[keyof typeof NuiChartHeight];
 
+export type FontSetStatus = (typeof FontSetStatus)[keyof typeof FontSetStatus];
+
 export interface NuiChartProps {
   spec: ChartSpec;
   label: string;
@@ -83,3 +85,8 @@ export const NuiChartTooltipSide = {
 export const NuiChartHeight = { Fill: 'fill' } as const;
 
 export const ChartFocusSource = { Pointer: 'pointer', Keyboard: 'keyboard' } as const;
+
+export const FontSetStatus = {
+  Loading: 'loading',
+  Loaded: 'loaded',
+} as const satisfies Record<string, FontFaceSetLoadStatus>;

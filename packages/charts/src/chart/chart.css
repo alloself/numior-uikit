@@ -338,7 +338,6 @@
   inset-block-start: calc(var(--_y) * var(--_unit));
   inset-inline-start: calc(var(--_x) * var(--_unit));
   font-size: calc(var(--_font-size) * var(--_unit));
-  font-variant-numeric: tabular-nums;
   line-height: 1;
   white-space: pre;
   transform: rotate(var(--_rotate)) translate(var(--_shift-x), var(--_shift-y));
