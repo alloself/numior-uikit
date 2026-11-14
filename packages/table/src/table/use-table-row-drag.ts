@@ -68,6 +68,7 @@ interface RowDestination<T> {
 interface Grab {
   readonly offset: number;
   readonly size: number;
+  readonly across: number;
 }
 
 interface RenderedRow {
@@ -84,22 +85,43 @@ interface Hold {
 const BODY_ROW = '.nui-table__body > [role="row"]';
 const BEFORE_EDGE = 0.3;
 const AFTER_EDGE = 0.7;
-const NO_GRAB: Grab = { offset: 0, size: 0 };
+const NO_GRAB: Grab = { offset: 0, size: 0, across: 0 };
+const GRIP_CELL = '.nui-table__cell';
 
 const rowRect = (row: Element): DOMRect => (row.firstElementChild ?? row).getBoundingClientRect();
 
 const belongsTo = (node: TableNode<unknown> | undefined, level: number): boolean =>
   node?.kind === TableNodeKind.Detail || (node?.kind === TableNodeKind.Row && node.level > level);
 
-const grabOf = (event: PointerEvent, fallback: number): Grab => {
-  const row = event.target instanceof Element ? event.target.closest(BODY_ROW) : null;
+const acrossOf = (cell: Element | null, frame: HTMLElement | null, rtl: boolean): number => {
+  if (cell === null || frame === null) {
+    return 0;
+  }
+  const box = cell.getBoundingClientRect();
+  const edge = frame.getBoundingClientRect();
+
+  return Math.max(0, rtl ? edge.right - box.right : box.left - edge.left);
+};
+
+const grabOf = (
+  event: PointerEvent,
+  fallback: number,
+  frame: HTMLElement | null,
+  rtl: boolean,
+): Grab => {
+  const target = event.target instanceof Element ? event.target : null;
+  const row = target?.closest(BODY_ROW) ?? null;
 
   if (row === null) {
-    return { offset: 0, size: fallback };
+    return { offset: 0, size: fallback, across: 0 };
   }
   const rect = rowRect(row);
 
-  return { offset: event.clientY - rect.top, size: rect.height || fallback };
+  return {
+    offset: event.clientY - rect.top,
+    size: rect.height || fallback,
+    across: acrossOf(target?.closest(GRIP_CELL) ?? null, frame, rtl),
+  };
 };
 
 const zoneOf = (clientY: number, rect: DOMRect): RowZone => {
@@ -399,6 +421,7 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
         : {
             start: Math.max(0, Math.min(room - held.size, start)),
             size: held.size,
+            across: held.across,
             label: options.labelOf(source.node.row),
           };
   };
@@ -520,7 +543,7 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
       }
 
       event.preventDefault();
-      held = grabOf(event, options.rowSize());
+      held = grabOf(event, options.rowSize(), options.frame(), options.isRtl());
       reorder.onPointerdown(position, event);
     },
     onKeydown: (event, body) => {

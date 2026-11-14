@@ -25,6 +25,19 @@ export interface DropLineDrift {
   readonly farthest: number;
 }
 
+export interface HandleLayout {
+  readonly grip: number;
+  readonly gripSize: number;
+  readonly icon: number;
+  readonly label: number;
+  readonly font: string;
+}
+
+interface HandleParts {
+  readonly grip: string;
+  readonly label: string;
+}
+
 interface TableLayer {
   readonly scrollRects?: readonly {
     readonly type: string;
@@ -42,6 +55,34 @@ const HEADER_EDGE = 3;
 const FOOTER_TOP = 2;
 const FOOTER_EDGE = 4;
 const FRAME_CORNER = 12;
+
+const HEADER_PARTS: HandleParts = { grip: '.nui-table__grip', label: '.nui-table__text' };
+
+const GHOST_PARTS: HandleParts = {
+  grip: '.nui-table__ghost-grip',
+  label: '.nui-table__ghost-label',
+};
+
+const handleLayoutOf = (frame: Element, parts: HandleParts): HandleLayout => {
+  const edge = frame.getBoundingClientRect().left;
+  const grip = frame.querySelector(parts.grip);
+  const label = frame.querySelector(parts.label);
+
+  if (grip === null || label === null) {
+    throw new Error('The frame has no grip or label');
+  }
+  const gripBox = grip.getBoundingClientRect();
+  const icon = grip.querySelector('svg')?.getBoundingClientRect().width ?? 0;
+  const style = getComputedStyle(label);
+
+  return {
+    grip: Math.round(gripBox.left - edge),
+    gripSize: Math.round(gripBox.width),
+    icon: Math.round(icon),
+    label: Math.round(label.getBoundingClientRect().left - edge),
+    font: `${style.fontSize} ${style.fontWeight} ${style.color}`,
+  };
+};
 
 const BODY_PAINT = `
   [data-testid='table'] .nui-table__body .nui-table__cell {
@@ -342,6 +383,69 @@ export class TableSection {
     await this.page.mouse.down();
     await this.page.mouse.move(x + 8, y);
     await this.page.mouse.move(destination.x + destination.width * 0.75, y, { steps: 6 });
+    await this.page.mouse.up();
+  }
+
+  async headerHandles(col: number): Promise<HandleLayout> {
+    await this.header(col).hover();
+
+    await expect.poll(() => this.headerSettled(col)).toBe(true);
+
+    return this.header(col).evaluate(handleLayoutOf, HEADER_PARTS);
+  }
+
+  async menuInset(col: number): Promise<number> {
+    const cell = await boxOf(this.header(col));
+    const menu = await boxOf(this.menuButton(col));
+
+    return Math.round(cell.x + cell.width - (menu.x + menu.width));
+  }
+
+  async liftHeader(col: number): Promise<void> {
+    await this.header(col).hover();
+
+    await expect.poll(() => renderedWidth(this.grip(col))).toBeGreaterThan(8);
+
+    const grip = await boxOf(this.grip(col));
+    const x = grip.x + grip.width / 2;
+    const y = grip.y + grip.height / 2;
+
+    await this.page.mouse.move(x, y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(x + 24, y, { steps: 4 });
+    await expect(this.columnGhost).toBeVisible();
+  }
+
+  get columnGhost(): Locator {
+    return this.root.locator('.nui-table__ghost--x .nui-table__ghost-body');
+  }
+
+  ghostHandles(): Promise<HandleLayout> {
+    return this.columnGhost.evaluate(handleLayoutOf, GHOST_PARTS);
+  }
+
+  async liftTreeRow(position: number): Promise<Box> {
+    await this.treeRow(position).hover();
+
+    await expect.poll(() => renderedWidth(this.treeGrip(position))).toBeGreaterThan(20);
+
+    const grip = await boxOf(this.treeGrip(position));
+    const x = grip.x + grip.width / 2;
+    const y = grip.y + grip.height / 2;
+
+    await this.page.mouse.move(x, y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(x, y + 24, { steps: 4 });
+    await expect(this.treeGhostGrip).toBeVisible();
+
+    return grip;
+  }
+
+  get treeGhostGrip(): Locator {
+    return this.tree.locator('.nui-table__ghost--y .nui-table__ghost-grip');
+  }
+
+  async release(): Promise<void> {
     await this.page.mouse.up();
   }
 

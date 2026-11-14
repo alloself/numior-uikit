@@ -248,6 +248,8 @@ const LAYOUT_HEIGHT = 300;
 const HEAD_HEIGHT = 40;
 const GRAB_NUDGE = 10;
 
+const GRIP_CELL_START = 48;
+
 const dragHandle = async (handle: HTMLElement | null, name: string, dx: number): Promise<void> => {
   if (handle === null) {
     throw new Error(`${name} has no resize handle`);
@@ -1533,6 +1535,12 @@ export class TableDriver<T> {
     return ghost.exists() ? ghost.element.style.getPropertyValue('--_size') : undefined;
   }
 
+  get ghostAcross(): string | undefined {
+    const ghost = this.wrapper.find<HTMLElement>('.nui-table__ghost--y');
+
+    return ghost.exists() ? ghost.element.style.getPropertyValue('--_ghost-across') : undefined;
+  }
+
   get ghostText(): string | undefined {
     const ghost = this.wrapper.find('.nui-table__ghost--y');
     return ghost.exists() ? ghost.text() : undefined;
@@ -1561,11 +1569,20 @@ export class TableDriver<T> {
 
       defineRect(row, new DOMRect(0, top, LAYOUT_WIDTH, HEAD_HEIGHT));
 
-      if (!row.firstElementChild) {
+      if (row.firstElementChild) {
+        defineRect(row.firstElementChild, new DOMRect(0, top, LAYOUT_WIDTH, HEAD_HEIGHT));
+      }
+
+      const gripCell = row.querySelector('.nui-table__row-grip')?.closest('.nui-table__cell');
+
+      if (!gripCell) {
         continue;
       }
 
-      defineRect(row.firstElementChild, new DOMRect(0, top, LAYOUT_WIDTH, HEAD_HEIGHT));
+      defineRect(
+        gripCell,
+        new DOMRect(GRIP_CELL_START, top, LAYOUT_WIDTH - GRIP_CELL_START, HEAD_HEIGHT),
+      );
     }
   }
 

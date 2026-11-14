@@ -165,6 +165,44 @@ test.describe('table', () => {
     await expect(table.header(1)).toHaveText('Клиент');
   });
 
+  test('a column header keeps its grip as far from the edge as its menu and lifts a ghost that repeats it', async ({
+    playground,
+    table,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'mouse scenario');
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+
+    const header = await table.headerHandles(1);
+
+    expect(header.grip).toBe(await table.menuInset(1));
+
+    await table.liftHeader(1);
+
+    expect(await table.ghostHandles()).toEqual(header);
+
+    await table.release();
+  });
+
+  test('a lifted tree row keeps its grip where it was picked up', async ({
+    playground,
+    table,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'mouse scenario');
+    await playground.open();
+    await table.tree.scrollIntoViewIfNeeded();
+
+    const grip = await table.liftTreeRow(1);
+    const lifted = await boxOf(table.treeGhostGrip);
+
+    expect(Math.round(lifted.x)).toBe(Math.round(grip.x));
+    expect(Math.round(lifted.width)).toBe(Math.round(grip.width));
+
+    await table.release();
+  });
+
   test('the drop line of a carried column stays on a column edge while the table scrolls under a still pointer', async ({
     playground,
     table,

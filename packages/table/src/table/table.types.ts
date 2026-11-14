@@ -757,6 +757,7 @@ export type NuiTableColumnOrder = readonly string[];
 export interface TableGhost {
   readonly start: number;
   readonly size: number;
+  readonly across?: number | undefined;
   readonly label: string;
 }
 
