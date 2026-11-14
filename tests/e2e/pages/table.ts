@@ -29,7 +29,6 @@ export interface DropLineDrift {
 
 export interface HandleLayout {
   readonly grip: number;
-  readonly dots: number;
   readonly gripSize: number;
   readonly icon: number;
   readonly label: number;
@@ -76,17 +75,10 @@ const handleLayoutOf = (frame: Element, parts: HandleParts): HandleLayout => {
   }
   const gripBox = grip.getBoundingClientRect();
   const icon = grip.querySelector('svg')?.getBoundingClientRect().width ?? 0;
-
-  const dots = Array.from(grip.querySelectorAll('circle')).reduce(
-    (left, dot) => Math.min(left, dot.getBoundingClientRect().left),
-    Number.POSITIVE_INFINITY,
-  );
-
   const style = getComputedStyle(label);
 
   return {
     grip: Math.round(gripBox.left - edge),
-    dots: Math.round(dots - edge),
     gripSize: Math.round(gripBox.width),
     icon: Math.round(icon),
     label: Math.round(label.getBoundingClientRect().left - edge),
@@ -485,15 +477,11 @@ export class TableSection extends GridKeys {
     return this.header(col).evaluate(handleLayoutOf, HEADER_PARTS);
   }
 
-  menuDotsInset(col: number): Promise<number> {
-    return this.header(col).evaluate((cell) => {
-      const dots = Array.from(cell.querySelectorAll('.nui-table__menu circle')).reduce(
-        (right, dot) => Math.max(right, dot.getBoundingClientRect().right),
-        Number.NEGATIVE_INFINITY,
-      );
+  async menuInset(col: number): Promise<number> {
+    const cell = await boxOf(this.header(col));
+    const menu = await boxOf(this.menuButton(col));
 
-      return Math.round(cell.getBoundingClientRect().right - dots);
-    });
+    return Math.round(cell.x + cell.width - (menu.x + menu.width));
   }
 
   async liftHeader(col: number): Promise<void> {

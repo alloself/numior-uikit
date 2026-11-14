@@ -163,7 +163,7 @@ test.describe('table', () => {
     await expect(table.header(1)).toHaveText('Клиент');
   });
 
-  test('a column header shows its grip dots as far from the edge as its menu dots and lifts a ghost that repeats it', async ({
+  test('a column header keeps its grip as far from the edge as its menu and lifts a ghost that repeats it', async ({
     playground,
     table,
     isMobile,
@@ -174,7 +174,7 @@ test.describe('table', () => {
 
     const header = await table.headerHandles(1);
 
-    expect(header.dots).toBe(await table.menuDotsInset(1));
+    expect(header.grip).toBe(await table.menuInset(1));
 
     await table.liftHeader(1);
 
