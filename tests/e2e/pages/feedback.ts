@@ -8,6 +8,7 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 import { type Box } from '../helpers/geometry';
+import { tabTo } from '../helpers/keyboard';
 import { sectionScope } from '../helpers/axe';
 
 export type FeedbackOutput = Guarded<typeof isFeedbackOutput>;
@@ -55,7 +56,7 @@ export class FeedbackSection {
   readonly skeleton: Locator;
   readonly output: Locator;
 
-  constructor(page: Page) {
+  constructor(private readonly page: Page) {
     this.toaster = page.getByTestId('toaster');
     this.stackItems = this.toaster.locator('.nui-toaster__item');
     this.toastShow = page.getByTestId('toast-show');
@@ -84,6 +85,21 @@ export class FeedbackSection {
 
   actionOf(toast: Locator): Locator {
     return toast.locator('.nui-toast__action');
+  }
+
+  async raiseErrorByKeyboard(): Promise<void> {
+    await this.toastError.focus();
+    await this.page.keyboard.press('Enter');
+  }
+
+  async dismissFromAction(toast: Locator): Promise<void> {
+    await this.actionOf(toast).focus();
+    await this.page.keyboard.press('Escape');
+  }
+
+  async runActionByKeyboard(toast: Locator): Promise<void> {
+    await tabTo(this.actionOf(toast));
+    await this.page.keyboard.press('Enter');
   }
 
   get skeletonLine(): Locator {

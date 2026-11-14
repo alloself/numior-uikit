@@ -54,12 +54,38 @@ test.describe('dates', () => {
     await expect.poll(async () => (await dates.readOutput()).month).toBe('2026-09');
   });
 
-  test('range calendar picks by taps and keeps the range when a touch on a day scrolls the page', async ({
+  test('range calendar picks by taps', async ({ playground, dates, isMobile }) => {
+    test.skip(!isMobile, 'touch only');
+    await playground.open();
+    await dates.range.scrollIntoViewIfNeeded();
+
+    const fifth = await dates.dayOfThisMonth(5);
+    const ninth = await dates.dayOfThisMonth(9);
+
+    await dates.day(dates.range, fifth).tap();
+    await dates.day(dates.range, ninth).tap();
+
+    await expect
+      .poll(async () => (await dates.readOutput()).range)
+      .toEqual({
+        start: fifth,
+        end: ninth,
+      });
+  });
+
+  test('range calendar keeps the range when a touch on a day scrolls the page', async ({
     playground,
     dates,
     isMobile,
+    browserName,
   }) => {
     test.skip(!isMobile, 'touch only');
+
+    test.skip(
+      browserName !== 'chromium',
+      'Touch scrolling is driven through the Chromium protocol',
+    );
+
     await playground.open();
     await dates.range.scrollIntoViewIfNeeded();
 

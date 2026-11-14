@@ -137,7 +137,6 @@ test.describe('collaboration on a workbook', () => {
     await expect(boris.sheet.ruleTitles).toHaveCount(1);
 
     await anna.client.reconnect();
-    await anna.sheet.openRules('5', 3);
 
     await expect(anna.sheet.ruleTitles).toHaveCount(2);
     await expect(boris.sheet.ruleTitles).toHaveCount(2);
@@ -196,7 +195,9 @@ test.describe('collaboration on a workbook', () => {
 
   test('keeps a word being composed in a cell when someone else inserts a row above', async ({
     collab,
+    browserName,
   }) => {
+    test.skip(browserName !== 'chromium', 'The IME protocol exists only in Chromium');
     const anna = await collab.joinBook(ANNA);
     const boris = await collab.joinBook(BORIS);
 

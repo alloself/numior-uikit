@@ -161,7 +161,6 @@ test.describe('feedback', () => {
   test('error toasts are alerts, keep focusable actions and close on Escape', async ({
     playground,
     feedback,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard scenario');
@@ -173,13 +172,11 @@ test.describe('feedback', () => {
     const toast = feedback.toastByText('Не удалось сохранить');
     await expect(toast).toHaveRole('alert');
 
-    await feedback.actionOf(toast).focus();
-    await page.keyboard.press('Escape');
+    await feedback.dismissFromAction(toast);
     await expect(toast).toBeHidden();
 
-    await feedback.toastError.click();
-    await feedback.actionOf(feedback.toastByText('Не удалось сохранить')).focus();
-    await page.keyboard.press('Enter');
+    await feedback.raiseErrorByKeyboard();
+    await feedback.runActionByKeyboard(feedback.toastByText('Не удалось сохранить'));
 
     await expect(feedback.toastByText('Повторили')).toBeFocused();
     await expect(feedback.toastByText('Не удалось сохранить')).toBeHidden();
@@ -240,11 +237,26 @@ test.describe('feedback', () => {
     expect((await feedback.shimmerOf(feedback.skeletonLine)).name).toBe('none');
   });
 
+  test('a skeleton shimmers while an endless progress bar runs beside it', async ({
+    playground,
+    feedback,
+  }) => {
+    await playground.open();
+    await feedback.skeleton.scrollIntoViewIfNeeded();
+    await expect(feedback.progressIndeterminate).toBeInViewport();
+
+    await expect
+      .poll(() => feedback.shimmerOf(feedback.skeletonLine))
+      .toEqual({ name: 'nui-skeleton-shimmer', state: 'running' });
+  });
+
   test('a skeleton and an endless progress bar animate without waking the main thread', async ({
     playground,
     feedback,
     page,
+    browserName,
   }) => {
+    test.skip(browserName !== 'chromium', 'Paints are counted through the Chromium protocol');
     await playground.open();
     await feedback.skeleton.scrollIntoViewIfNeeded();
     await expect(feedback.progressIndeterminate).toBeInViewport();
