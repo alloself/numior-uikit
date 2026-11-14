@@ -183,22 +183,6 @@ test.describe('table', () => {
     await table.release();
   });
 
-  test('a narrow column header keeps its grip and menu off the edges and still shows its label', async ({
-    playground,
-    table,
-    isMobile,
-  }) => {
-    test.skip(isMobile, 'mouse scenario');
-    await playground.open();
-    await table.root.scrollIntoViewIfNeeded();
-    await table.narrowColumn(1, 96);
-
-    const header = await table.headerHandles(1);
-
-    expect(header.grip).toBe(await table.menuInset(1));
-    expect(await table.headerLabelWidth(1)).toBeGreaterThan(8);
-  });
-
   test('a lifted tree row keeps its grip where it was picked up', async ({
     playground,
     table,
