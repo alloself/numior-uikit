@@ -31,6 +31,15 @@ Add `multiple`.
 The pressed values come to `v-model:values` as an array, and the user can release every button:
 `required` works only for a single value.
 
+## Behavior
+
+When the buttons do not fit, the group scrolls with a swipe, the mouse wheel and the arrow buttons.
+An arrow shows up only at the edge that hides buttons, and the pressed button is fully in view on
+load.
+
+While the group can still scroll in the direction of the wheel, the page does not scroll. A
+vertical group does not scroll.
+
 ## Accessibility
 
 | Mode            | Group        | Buttons                     |

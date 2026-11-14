@@ -64,11 +64,6 @@ export interface TabPlace {
   readonly size: number;
 }
 
-export interface TabOverflow {
-  readonly start: boolean;
-  readonly end: boolean;
-}
-
 export interface NuiTabPanelProps {
   value: string;
   lazy?: boolean | undefined;

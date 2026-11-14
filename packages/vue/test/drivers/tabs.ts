@@ -3,6 +3,15 @@ import { nextTick, type Component } from 'vue';
 import type { NuiTabDescriptor, NuiTabLinkDescriptor, NuiTabsProps } from '../../src';
 import TabsScene from '../fixtures/TabsScene.vue';
 import { ResizeObservers } from '../support/resize-observers';
+import {
+  dispatchWheel,
+  placeBox,
+  stubTrackScroll,
+  type EdgeSide,
+  type EdgeState,
+  type TrackBox,
+  type TrackScroll,
+} from '../support/track-scroll';
 import { ComponentDriver } from './component';
 
 export interface TabsMountOptions {
@@ -18,25 +27,6 @@ export interface TabsMountOptions {
   readonly links?: readonly NuiTabLinkDescriptor[];
   readonly routerComponent?: Component;
 }
-
-interface TabBox {
-  readonly start: number;
-  readonly size: number;
-}
-
-export interface TrackScroll {
-  readonly scrollWidth: number;
-  readonly clientWidth: number;
-  readonly scrollLeft: number;
-  readonly rtl?: boolean;
-}
-
-export interface TabEdges {
-  readonly start: boolean;
-  readonly end: boolean;
-}
-
-type TabEdge = keyof TabEdges;
 
 type TabsSceneWrapper = VueWrapper<InstanceType<typeof TabsScene>>;
 
@@ -108,11 +98,11 @@ export class TabsDriver extends ComponentDriver {
     return this.wrapper.find<HTMLElement>('.nui-tab-list__track');
   }
 
-  get edges(): TabEdges {
+  get edges(): EdgeState {
     return { start: this.edgeShown('start'), end: this.edgeShown('end') };
   }
 
-  get fades(): TabEdges {
+  get fades(): EdgeState {
     const classes = this.track.classes();
 
     return {
@@ -125,11 +115,11 @@ export class TabsDriver extends ComponentDriver {
     return this.track.element.scrollLeft;
   }
 
-  private edge(side: TabEdge): DOMWrapper<HTMLElement> {
+  private edge(side: EdgeSide): DOMWrapper<HTMLElement> {
     return this.wrapper.find<HTMLElement>(`.nui-tab-list__edge--${side}`);
   }
 
-  private edgeShown(side: TabEdge): boolean {
+  private edgeShown(side: EdgeSide): boolean {
     return this.edge(side).classes().includes('nui-tab-list__edge--shown');
   }
 
@@ -291,67 +281,30 @@ export class TabsDriver extends ComponentDriver {
     await this.tab(label).trigger('auxclick', { button: 1 });
   }
 
-  async scrollTrack({
-    scrollWidth,
-    clientWidth,
-    scrollLeft,
-    rtl = false,
-  }: TrackScroll): Promise<void> {
-    const { element } = this.track;
-    const low = rtl ? clientWidth - scrollWidth : 0;
-
-    Object.defineProperties(element, {
-      scrollWidth: { configurable: true, value: scrollWidth },
-      clientWidth: { configurable: true, value: clientWidth },
-      scrollBy: {
-        configurable: true,
-        value: ({ left = 0 }: ScrollToOptions) => {
-          element.scrollLeft = Math.min(
-            low + scrollWidth - clientWidth,
-            Math.max(low, element.scrollLeft + left),
-          );
-
-          element.dispatchEvent(new Event('scroll'));
-        },
-      },
-    });
-
-    Object.defineProperty(element, 'getBoundingClientRect', {
-      configurable: true,
-      value: () => new DOMRect(0, 0, clientWidth, 0),
-    });
-
-    element.scrollLeft = scrollLeft;
+  async scrollTrack(scroll: TrackScroll): Promise<void> {
+    stubTrackScroll(this.track.element, scroll);
     await this.track.trigger('scroll');
   }
 
   async wheel(deltaY: number, init: WheelEventInit = {}): Promise<boolean> {
-    const event = new WheelEvent('wheel', { deltaY, bubbles: true, cancelable: true, ...init });
+    const prevented = dispatchWheel(this.track.element, deltaY, init);
 
-    this.track.element.dispatchEvent(event);
     await nextTick();
-    return event.defaultPrevented;
+    return prevented;
   }
 
-  async clickEdge(side: TabEdge): Promise<void> {
+  async clickEdge(side: EdgeSide): Promise<void> {
     await this.edge(side).find('button').trigger('click');
   }
 
-  placeTab(label: string, { start, size }: TabBox): void {
-    Object.defineProperty(this.tab(label).element, 'getBoundingClientRect', {
-      configurable: true,
-      value: () => new DOMRect(start, 0, size, 0),
-    });
+  placeTab(label: string, box: TrackBox): void {
+    placeBox(this.tab(label).element, box);
   }
 
-  async resizeTab(label: string, { start, size }: TabBox): Promise<void> {
+  async resizeTab(label: string, box: TrackBox): Promise<void> {
     const { element } = this.tab(label);
 
-    Object.defineProperty(element, 'getBoundingClientRect', {
-      configurable: true,
-      value: () => new DOMRect(start, 0, size, 0),
-    });
-
+    placeBox(element, box);
     this.observers?.resize(element);
     await nextTick();
   }

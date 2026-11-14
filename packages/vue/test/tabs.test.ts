@@ -177,6 +177,23 @@ describe('NuiTabs', () => {
     tabs.unmount();
   });
 
+  it('keeps the selected tab in view while tabs change their size until the user pages the list', async () => {
+    const tabs = TabsDriver.mount({ modelValue: 'danger', observed: true });
+
+    await tabs.ready();
+    await tabs.scrollTrack({ scrollWidth: 600, clientWidth: 200, scrollLeft: 0 });
+    await tabs.resizeTab('Danger', { start: 230, size: 80 });
+
+    expect(tabs.scrolled).toBe(110);
+
+    await tabs.clickEdge('start');
+    await tabs.resizeTab('Danger', { start: 260, size: 80 });
+
+    expect(tabs.scrolled).toBe(0);
+
+    tabs.unmount();
+  });
+
   it('shows an edge button only where tabs are hidden and pages the list with it', async () => {
     const tabs = TabsDriver.mount({ modelValue: 'general' });
 

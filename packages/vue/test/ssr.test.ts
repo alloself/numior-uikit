@@ -659,6 +659,28 @@ describe('server rendering', () => {
     expect(html).not.toContain('nui-tab-list__edge--shown');
   });
 
+  it('renders a toggle group with its items on a track between two hidden edge buttons', async () => {
+    const html = await renderToString(NuiToggleGroup, {
+      props: {
+        modelValue: 'week',
+        label: 'Period',
+        items: [
+          { value: 'day', label: 'Day' },
+          { value: 'week', label: 'Week' },
+        ],
+      },
+    });
+
+    const track = html.indexOf('nui-toggle-group__track');
+
+    expect(html).toMatch(/^<div[^>]*role="radiogroup"[^>]*aria-label="Period"/);
+    expect(html.match(/<span[^>]*nui-toggle-group__edge[^>]*aria-hidden="true"/g)).toHaveLength(2);
+    expect(html).not.toContain('nui-toggle-group__edge--shown');
+    expect(html).not.toContain('nui-toggle-group__track--clipped');
+    expect(track).toBeGreaterThan(0);
+    expect(track).toBeLessThan(html.indexOf('role="radio"'));
+  });
+
   it('renders link tabs as a labelled nav of links with the current page marked', async () => {
     const html = await renderToString(NuiTabs, {
       props: {

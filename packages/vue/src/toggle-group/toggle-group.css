@@ -1,25 +1,101 @@
+@property --_toggle-fade-start {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+@property --_toggle-fade-end {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
 .nui-toggle-group {
   --_height: var(--nui-control-height-md);
   --_padding: var(--nui-control-padding-md);
   --_font-size: var(--nui-control-font-size-md);
   --_gap: 0px;
+  --_inset: 0px;
+  --_edge: 3rem;
 
   box-sizing: border-box;
+  position: relative;
   display: inline-flex;
-  align-items: stretch;
-  gap: var(--_gap);
   inline-size: fit-content;
+  min-inline-size: 0;
   max-inline-size: 100%;
   border-radius: var(--nui-radius);
   font-family: var(--nui-font);
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scrollbar-width: none;
   isolation: isolate;
 }
-.nui-toggle-group--orientation-vertical {
-  flex-direction: column;
+.nui-toggle-group__track {
+  --_fade-left: var(--_toggle-fade-start);
+  --_fade-right: var(--_toggle-fade-end);
+
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
   align-items: stretch;
+  gap: var(--_gap);
+  min-inline-size: 0;
+  padding: var(--_inset);
+  border-radius: inherit;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: var(--_edge);
+  scrollbar-width: none;
+  transition:
+    --_toggle-fade-start var(--nui-duration-fast) var(--nui-easing),
+    --_toggle-fade-end var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-toggle-group__track:dir(rtl) {
+  --_fade-left: var(--_toggle-fade-end);
+  --_fade-right: var(--_toggle-fade-start);
+}
+.nui-toggle-group__track:is(
+  .nui-toggle-group__track--clipped-start,
+  .nui-toggle-group__track--clipped-end
+) {
+  mask-image: linear-gradient(
+    to right,
+    transparent calc(var(--_fade-left) * 0.4),
+    #000 var(--_fade-left),
+    #000 calc(100% - var(--_fade-right)),
+    transparent calc(100% - var(--_fade-right) * 0.4)
+  );
+}
+.nui-toggle-group__track--clipped-start {
+  --_toggle-fade-start: var(--_edge);
+}
+.nui-toggle-group__track--clipped-end {
+  --_toggle-fade-end: var(--_edge);
+}
+.nui-toggle-group--orientation-vertical .nui-toggle-group__track {
+  flex-direction: column;
+}
+.nui-toggle-group__edge {
+  position: absolute;
+  inset-block: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--nui-duration-fast) var(--nui-easing),
+    visibility var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-toggle-group__edge--start {
+  inset-inline-start: var(--_inset);
+}
+.nui-toggle-group__edge--end {
+  inset-inline-end: var(--_inset);
+}
+.nui-toggle-group__edge--shown {
+  opacity: 1;
+  visibility: visible;
+}
+.nui-toggle-group__scroll:dir(rtl) {
+  scale: -1 1;
 }
 .nui-toggle-group--size-sm {
   --_height: var(--nui-control-height-sm);
@@ -125,9 +201,8 @@
 }
 .nui-toggle-group--variant-segmented {
   --_gap: 2px;
+  --_inset: 2px;
 
-  padding: 2px;
-  border-radius: var(--nui-radius);
   background: var(--nui-surface-muted);
 }
 .nui-toggle-group--variant-segmented .nui-toggle-group__item {

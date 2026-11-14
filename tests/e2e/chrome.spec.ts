@@ -2,6 +2,8 @@ import { expect, test } from './fixtures';
 import { rgbOf } from './helpers/color';
 import { boxOf } from './helpers/geometry';
 
+const SCROLL_RANGE_STEP = 1;
+
 test('separators carry semantics, stretch across their axis and take a label', async ({
   playground,
   chrome,
@@ -108,6 +110,43 @@ test('toggle groups pick one scheme or several panels and rove focus', async ({
 
   await chrome.pressFocusedToggleItem();
   await expect(chrome.toggleOutput).toHaveText('system · preview, code');
+});
+
+test('an overflowing toggle group shows the chosen item and scrolls with its edge buttons and the wheel', async ({
+  playground,
+  chrome,
+  isMobile,
+}) => {
+  await playground.emulate({ reducedMotion: 'reduce' });
+  await playground.open();
+  await chrome.periodToggle.scrollIntoViewIfNeeded();
+
+  await expect(chrome.toggleItem(chrome.periodToggle, 'Квартал')).toBeInViewport({ ratio: 1 });
+  await expect(chrome.periodEdge('end')).toBeVisible();
+
+  await chrome.pagePeriodTo('end');
+
+  await expect(chrome.periodEdge('end')).toBeHidden();
+  await expect(chrome.periodEdge('start')).toBeVisible();
+  await expect.poll(() => chrome.periodItemHiddenPart('Всё время')).toBeLessThan(SCROLL_RANGE_STEP);
+
+  await chrome.pagePeriodTo('start');
+
+  await expect(chrome.periodEdge('start')).toBeHidden();
+  await expect.poll(() => chrome.periodScroll()).toBe(0);
+  await expect(chrome.toggleItem(chrome.periodToggle, 'День')).toBeInViewport({ ratio: 1 });
+
+  if (isMobile) {
+    return;
+  }
+
+  const pageScroll = await chrome.pageScrollY();
+
+  await chrome.wheelOverPeriod(120);
+
+  await expect.poll(() => chrome.periodScroll()).toBe(120);
+  await expect(chrome.periodEdge('start')).toBeVisible();
+  expect(await chrome.pageScrollY()).toBe(pageScroll);
 });
 
 test('collapsible and accordion reveal content with motion and hide it until found', async ({
