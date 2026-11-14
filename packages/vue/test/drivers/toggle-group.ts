@@ -5,16 +5,8 @@ import ToggleGroupScene from '../fixtures/ToggleGroupScene.vue';
 import { ResizeObservers } from '../support/resize-observers';
 import { createSelection, type Selection, type SelectionValue } from '../support/selection';
 import { TopLayerStubs } from '../support/top-layer';
-import {
-  dispatchWheel,
-  placeBox,
-  stubTrackScroll,
-  type EdgeSide,
-  type EdgeState,
-  type TrackBox,
-  type TrackScroll,
-} from '../support/track-scroll';
-import { ComponentDriver } from './component';
+import { placeBox, type TrackBox } from '../support/track-scroll';
+import { EdgeScrollDriver } from './edge-scroll';
 
 export interface ToggleGroupMountOptions {
   readonly props?: Omit<NuiToggleGroupProps<unknown>, 'items'>;
@@ -31,8 +23,10 @@ const THEME_ITEMS: readonly NuiToggleItem[] = [
   { value: 'auto', label: 'Auto' },
 ];
 
-export class ToggleGroupDriver extends ComponentDriver {
+export class ToggleGroupDriver extends EdgeScrollDriver {
   protected readonly block = 'nui-toggle-group';
+
+  protected readonly trackBlock = 'nui-toggle-group';
 
   private constructor(
     wrapper: VueWrapper,
@@ -81,37 +75,8 @@ export class ToggleGroupDriver extends ComponentDriver {
     return this.root.attributes(name);
   }
 
-  get track(): DOMWrapper<HTMLElement> {
-    return this.wrapper.find<HTMLElement>('.nui-toggle-group__track');
-  }
-
-  get edges(): EdgeState {
-    return { start: this.edgeShown('start'), end: this.edgeShown('end') };
-  }
-
-  get fades(): EdgeState {
-    const classes = this.track.classes();
-
-    return {
-      start: classes.includes('nui-toggle-group__track--clipped-start'),
-      end: classes.includes('nui-toggle-group__track--clipped-end'),
-    };
-  }
-
-  get scrolled(): number {
-    return this.track.element.scrollLeft;
-  }
-
   get edgeButtons(): DOMWrapper<HTMLElement>[] {
     return this.wrapper.findAll<HTMLElement>('.nui-toggle-group__edge');
-  }
-
-  private edge(side: EdgeSide): DOMWrapper<HTMLElement> {
-    return this.wrapper.find<HTMLElement>(`.nui-toggle-group__edge--${side}`);
-  }
-
-  private edgeShown(side: EdgeSide): boolean {
-    return this.edge(side).classes().includes('nui-toggle-group__edge--shown');
   }
 
   get items(): DOMWrapper<HTMLButtonElement>[] {
@@ -205,22 +170,6 @@ export class ToggleGroupDriver extends ComponentDriver {
 
     (document.activeElement ?? document.body).dispatchEvent(event);
     await nextTick();
-  }
-
-  async scrollTrack(scroll: TrackScroll): Promise<void> {
-    stubTrackScroll(this.track.element, scroll);
-    await this.track.trigger('scroll');
-  }
-
-  async wheel(deltaY: number, init: WheelEventInit = {}): Promise<boolean> {
-    const prevented = dispatchWheel(this.track.element, deltaY, init);
-
-    await nextTick();
-    return prevented;
-  }
-
-  async clickEdge(side: EdgeSide): Promise<void> {
-    await this.edge(side).find('button').trigger('click');
   }
 
   placeItem(label: string, box: TrackBox): void {

@@ -3,16 +3,8 @@ import { nextTick, type Component } from 'vue';
 import type { NuiTabDescriptor, NuiTabLinkDescriptor, NuiTabsProps } from '../../src';
 import TabsScene from '../fixtures/TabsScene.vue';
 import { ResizeObservers } from '../support/resize-observers';
-import {
-  dispatchWheel,
-  placeBox,
-  stubTrackScroll,
-  type EdgeSide,
-  type EdgeState,
-  type TrackBox,
-  type TrackScroll,
-} from '../support/track-scroll';
-import { ComponentDriver } from './component';
+import { placeBox, type TrackBox } from '../support/track-scroll';
+import { EdgeScrollDriver } from './edge-scroll';
 
 export interface TabsMountOptions {
   readonly props?: NuiTabsProps;
@@ -37,8 +29,10 @@ const DESCRIPTORS: readonly NuiTabDescriptor[] = [
   { value: 'danger', label: 'Danger' },
 ];
 
-export class TabsDriver extends ComponentDriver {
+export class TabsDriver extends EdgeScrollDriver {
   protected readonly block = 'nui-tabs';
+
+  protected readonly trackBlock = 'nui-tab-list';
 
   static mount({
     props,
@@ -92,35 +86,6 @@ export class TabsDriver extends ComponentDriver {
 
   get list(): DOMWrapper<HTMLElement> {
     return this.wrapper.find<HTMLElement>('[role="tablist"]');
-  }
-
-  get track(): DOMWrapper<HTMLElement> {
-    return this.wrapper.find<HTMLElement>('.nui-tab-list__track');
-  }
-
-  get edges(): EdgeState {
-    return { start: this.edgeShown('start'), end: this.edgeShown('end') };
-  }
-
-  get fades(): EdgeState {
-    const classes = this.track.classes();
-
-    return {
-      start: classes.includes('nui-tab-list__track--clipped-start'),
-      end: classes.includes('nui-tab-list__track--clipped-end'),
-    };
-  }
-
-  get scrolled(): number {
-    return this.track.element.scrollLeft;
-  }
-
-  private edge(side: EdgeSide): DOMWrapper<HTMLElement> {
-    return this.wrapper.find<HTMLElement>(`.nui-tab-list__edge--${side}`);
-  }
-
-  private edgeShown(side: EdgeSide): boolean {
-    return this.edge(side).classes().includes('nui-tab-list__edge--shown');
   }
 
   get tabs(): DOMWrapper<HTMLButtonElement>[] {
@@ -279,22 +244,6 @@ export class TabsDriver extends ComponentDriver {
 
   async middleClickTab(label: string): Promise<void> {
     await this.tab(label).trigger('auxclick', { button: 1 });
-  }
-
-  async scrollTrack(scroll: TrackScroll): Promise<void> {
-    stubTrackScroll(this.track.element, scroll);
-    await this.track.trigger('scroll');
-  }
-
-  async wheel(deltaY: number, init: WheelEventInit = {}): Promise<boolean> {
-    const prevented = dispatchWheel(this.track.element, deltaY, init);
-
-    await nextTick();
-    return prevented;
-  }
-
-  async clickEdge(side: EdgeSide): Promise<void> {
-    await this.edge(side).find('button').trigger('click');
   }
 
   placeTab(label: string, box: TrackBox): void {
