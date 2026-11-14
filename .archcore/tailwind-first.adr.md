@@ -245,13 +245,16 @@ status: accepted
     схемы; остальное — `@container style(--nui-scheme: dark)`, где `--nui-scheme` ставят классы
     схемы, а `:root` и `nui-theme--system` — по `prefers-color-scheme`. Правило
     `:root, .nui-theme--system` стоит в `theme.css` до `.nui-theme--light` и `.nui-theme--dark`:
-    специфичность равна, решает порядок. Проверено в Chromium, Firefox и WebKit (Docker,
-    Playwright 1.63) на 64 сочетаниях вложенных областей light/dark/system и системной схемы.
-    Форма на классе с потомками (`&:where(.nui-theme--dark, .nui-theme--dark *)` плюс системная
-    схема) ошибалась в 24 из них: светлая область внутри тёмной, системная внутри тёмной,
-    элемент со своим светлым классом. `@scope` Tailwind выводит вложенным, и такое правило не
-    срабатывает ни в одном движке; верхнеуровневый `@scope` работает, но Tailwind его не
-    выводит. E2e: `foundation.spec.ts`, «the dark variant follows the nearest scheme».
+    специфичность равна, решает порядок. Матрица в `tests/e2e/theme.spec.ts` собирает CSS кита
+    из исходников (`ThemeLab`) и сверяет `dark:` с `light-dark()` на 64 сочетаниях вложенных
+    областей light/dark/system и своего класса элемента, для четырёх вариантов `:root` и двух
+    схем устройства: 512 проверок на движок, Chromium, Firefox и WebKit (Docker, Playwright
+    1.63) проходят. Форма на классе с потомками (`&:where(.nui-theme--dark, .nui-theme--dark *)`
+    плюс системная схема) даёт в той же матрице 200 расхождений в Chromium: светлая область
+    внутри тёмной, системная внутри тёмной, элемент со своим светлым классом. `@scope` Tailwind
+    выводит вложенным, и такое правило не срабатывает ни в одном движке; верхнеуровневый
+    `@scope` работает, но Tailwind его не выводит. Связку с переключателем темы в playground
+    держит `foundation.spec.ts`, «the dark variant follows the nearest scheme».
 13. **Схема из кода.** `useColorScheme` берёт начальную схему из хранилища, затем из класса
     области, пишет `nui-theme--<схема>` и снимает два других класса; `colorSchemeScript`
     делает то же на `<html>` до гидратации, не трогая чужие классы. Vue переписывает `class`

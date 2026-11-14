@@ -5,6 +5,7 @@ import { CollabLab } from './pages/collab-lab';
 import { DocsSite } from './pages/docs';
 import { NuxtApp } from './pages/nuxt-app';
 import { PlaygroundPage } from './pages/playground';
+import { ThemeLab } from './pages/theme-lab';
 
 export interface PageObjects {
   readonly playground: PlaygroundPage;
@@ -13,6 +14,7 @@ export interface PageObjects {
   readonly collabLab: CollabLab;
   readonly docs: DocsSite;
   readonly app: NuxtApp;
+  readonly themeLab: ThemeLab;
   readonly buttons: PlaygroundPage['buttons'];
   readonly typography: PlaygroundPage['typography'];
   readonly chrome: PlaygroundPage['chrome'];
@@ -59,6 +61,9 @@ export const test = base.extend<PageObjects>({
   },
   app: async ({ page }, use) => {
     await use(new NuxtApp(page));
+  },
+  themeLab: async ({ page }, use) => {
+    await use(new ThemeLab(page));
   },
   buttons: async ({ playground }, use) => {
     await use(playground.buttons);
