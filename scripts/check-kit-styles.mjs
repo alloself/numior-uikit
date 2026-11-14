@@ -1,5 +1,6 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
+import { themeFindings } from './styles/theme-guards.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 
@@ -14,20 +15,36 @@ const SKIPPED = new Set(['node_modules', 'dist', 'test', 'bench', '.output', '.n
 
 const SHARED = new Map([['nui-content', new Set(['editor-vue'])]]);
 
-const isSource = (name) => /\.(?:css|vue)$/u.test(name);
+const THEME_ROOTS = [
+  'packages',
+  'apps/docs/.vitepress',
+  'apps/docs/examples',
+  'apps/docs/test',
+  'apps/playground',
+  'tests/e2e',
+];
 
-const pathsOf = (dir, entry) => {
+const THEME_SKIPPED = new Set(['node_modules', 'dist', '.output', '.nuxt', 'cache']);
+
+const STYLES = { accepts: (name) => /\.(?:css|vue)$/u.test(name), skipped: SKIPPED };
+
+const THEMED = {
+  accepts: (name) => /\.(?:css|vue|ts|mjs|js|html)$/u.test(name),
+  skipped: THEME_SKIPPED,
+};
+
+const pathsOf = (dir, entry, filter) => {
   const path = join(dir, entry.name);
 
   if (!entry.isDirectory()) {
-    return isSource(entry.name) ? [path] : [];
+    return filter.accepts(entry.name) ? [path] : [];
   }
-  return SKIPPED.has(entry.name) ? [] : walk(path);
+  return filter.skipped.has(entry.name) ? [] : walk(path, filter);
 };
 
-const walk = async (dir) => {
+const walk = async (dir, filter = STYLES) => {
   const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
-  const nested = await Promise.all(entries.map((entry) => pathsOf(dir, entry)));
+  const nested = await Promise.all(entries.map((entry) => pathsOf(dir, entry, filter)));
 
   return nested.flat();
 };
@@ -303,6 +320,17 @@ const offCompositor = sources.flatMap((file) =>
   ),
 );
 
+const themeSources = await Promise.all(
+  (await Promise.all(THEME_ROOTS.map((dir) => walk(join(ROOT, dir), THEMED))))
+    .flat()
+    .map(async (path) => ({ path: relative(ROOT, path), source: await readFile(path, 'utf8') })),
+);
+
+const themed = themeFindings(
+  themeSources,
+  await readFile(join(ROOT, 'packages/tokens/src/theme.css'), 'utf8'),
+);
+
 if (findings.length > 0) {
   console.error(
     `Kit components are styled from outside their package (use props, own wrappers or a kit API):\n${findings.join('\n')}`,
@@ -341,4 +369,12 @@ if (offCompositor.length > 0) {
   process.exitCode = 1;
 } else {
   console.log('kit styles: every infinite animation runs off the main thread');
+}
+
+if (themed.length > 0) {
+  console.error(`Themes are BEM classes over theme keys:\n${themed.join('\n')}`);
+
+  process.exitCode = 1;
+} else {
+  console.log('kit styles: themes on classes and theme keys');
 }
