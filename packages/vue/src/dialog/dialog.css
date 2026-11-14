@@ -1,18 +1,15 @@
 @layer components {
   .nui-dialog {
     --_width: 32rem;
-    --_padding: calc(var(--spacing) * 6);
-    --_seam: calc(var(--spacing) * 3);
+    --_padding: --spacing(6);
+    --_seam: --spacing(3);
 
     @apply box-border fixed inset-0 flex-col block-fit max-inline-none m-auto p-0;
-    @apply overflow-hidden rounded-lg text-foreground font-sans;
-    inline-size: min(var(--_width), calc(100% - calc(var(--spacing) * 8)));
-    max-block-size: calc(100dvh - calc(var(--spacing) * 8));
-    border: 1px solid var(--color-border);
-    background: var(--color-surface-overlay);
+    @apply overflow-hidden border border-border rounded-lg bg-surface-overlay;
+    @apply text-foreground font-sans opacity-0 translate-y-2;
+    inline-size: min(var(--_width), calc(100% - --spacing(8)));
+    max-block-size: calc(100dvh - --spacing(8));
     box-shadow: var(--shadow-lg);
-    opacity: 0;
-    translate: 0 calc(var(--spacing) * 2);
     transition:
       opacity var(--transition-duration-normal) var(--ease-nui),
       translate var(--transition-duration-normal) var(--ease-nui),
@@ -27,37 +24,32 @@
   }
   .nui-dialog--size-auto {
     @apply inline-fit;
-    max-inline-size: calc(100% - calc(var(--spacing) * 8));
+    max-inline-size: calc(100% - --spacing(8));
   }
   .nui-dialog--placement-top {
-    margin-block-start: min(15dvh, calc(var(--spacing) * 8) * 4);
-    translate: 0 calc(calc(var(--spacing) * 2) * -1);
+    @apply -translate-y-2;
+    margin-block-start: min(15dvh, --spacing(8) * 4);
   }
   .nui-dialog--bare .nui-dialog__header {
-    @apply absolute inline-px block-px p-0 overflow-hidden whitespace-nowrap;
-    margin: -1px;
+    @apply absolute inline-px block-px -m-px p-0 overflow-hidden whitespace-nowrap;
     clip-path: inset(50%);
   }
   .nui-dialog--bare .nui-dialog__body {
     @apply p-0;
   }
   .nui-dialog[open] {
-    @apply flex;
-    opacity: 1;
-    translate: 0 0;
+    @apply flex opacity-100 translate-y-0;
   }
   @starting-style {
     .nui-dialog[open] {
-      opacity: 0;
-      translate: 0 calc(var(--spacing) * 2);
+      @apply opacity-0 translate-y-2;
     }
     .nui-dialog--placement-top[open] {
-      translate: 0 calc(calc(var(--spacing) * 2) * -1);
+      @apply -translate-y-2;
     }
   }
   .nui-dialog::backdrop {
-    background: var(--color-backdrop);
-    opacity: 0;
+    @apply bg-backdrop opacity-0;
     transition:
       opacity var(--transition-duration-normal) var(--ease-nui),
       background-color var(--transition-duration-normal) var(--ease-nui),
@@ -65,38 +57,29 @@
       overlay var(--transition-duration-normal) allow-discrete;
   }
   .nui-dialog[open]::backdrop {
-    opacity: 1;
+    @apply opacity-100;
   }
   .nui-dialog--covered::backdrop {
-    background: transparent;
+    @apply bg-transparent;
   }
   @starting-style {
     .nui-dialog[open]::backdrop {
-      opacity: 0;
+      @apply opacity-0;
     }
   }
   .nui-dialog__header {
     @apply box-border flex-none grid gap-1;
-    padding: var(--_padding) calc(var(--_padding) + calc(var(--spacing) * 8)) var(--_seam)
-      var(--_padding);
+    padding: var(--_padding) calc(var(--_padding) + --spacing(8)) var(--_seam) var(--_padding);
   }
   .nui-dialog__title {
-    @apply m-0;
-    font-size: var(--text-lg);
-    font-weight: 600;
-    line-height: var(--leading-control);
+    @apply m-0 text-lg/control font-semibold;
   }
   .nui-dialog__description {
-    @apply m-0 text-muted-foreground;
-    font-size: var(--text-sm);
-    line-height: var(--leading-normal);
+    @apply m-0 text-sm/normal text-muted-foreground;
   }
   .nui-dialog__body {
-    @apply box-border min-block-0 overflow-y-auto overscroll-contain;
-    flex: 0 1 auto;
+    @apply box-border flex-initial min-block-0 overflow-y-auto overscroll-contain text-sm/normal;
     padding: calc(var(--_padding) - var(--_seam)) var(--_padding);
-    font-size: var(--text-sm);
-    line-height: var(--leading-normal);
   }
   .nui-dialog__body > :first-child {
     @apply mbs-0;
@@ -106,7 +89,7 @@
   }
   .nui-dialog__footer {
     @apply box-border flex-none flex flex-wrap justify-end gap-2;
-    padding: var(--_seam) var(--_padding) var(--_padding);
+    @apply pbs-(--_seam) px-(--_padding) pbe-(--_padding);
   }
   .nui-dialog:not(.nui-dialog--bare, :has(> .nui-dialog__header)) > .nui-dialog__body {
     @apply pbs-(--_padding);

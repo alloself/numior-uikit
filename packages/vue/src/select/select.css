@@ -4,7 +4,7 @@
     --_padding: var(--spacing-field-pad-md);
     --_font-size: var(--text-control-md);
     --_chevron: round(calc(1.15 * var(--text-control-xs)), 2px);
-    --_clear-inset: calc(var(--_padding) + var(--_chevron) + calc(var(--spacing) * 2));
+    --_clear-inset: calc(var(--_padding) + var(--_chevron) + --spacing(2));
 
     @apply box-border relative inline-flex inline-full min-inline-0 font-sans;
   }
@@ -20,29 +20,25 @@
   }
   .nui-select__trigger {
     @apply box-border inline-flex items-center gap-2 inline-full min-inline-0;
-    @apply min-block-(--_height) py-0 rounded text-foreground text-start cursor-pointer;
-    padding-inline: var(--_padding)
-      calc(var(--_padding) + var(--_chevron) + calc(var(--spacing) * 2));
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
+    @apply min-block-(--_height) py-0 border border-border rounded bg-surface;
+    @apply text-foreground text-start cursor-pointer;
+    padding-inline: var(--_padding) calc(var(--_padding) + var(--_chevron) + --spacing(2));
     font: inherit;
-    font-size: var(--_font-size);
-    line-height: var(--leading-control);
+    @apply text-(length:--_font-size) leading-control;
     transition:
       border-color var(--transition-duration-fast) var(--ease-nui),
       outline-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-select--clearable .nui-select__value {
-    padding-inline-end: calc(var(--spacing-control-xs) + calc(var(--spacing) * 2));
+    padding-inline-end: calc(var(--spacing-control-xs) + --spacing(2));
   }
   .nui-select:not(.nui-select--invalid) .nui-select__trigger:hover:not(:disabled, :focus-visible) {
     @apply border-border-strong;
   }
   .nui-select__trigger:focus-visible,
   .nui-select--open .nui-select__trigger {
-    @apply border-ring;
-    outline: var(--field-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply border-ring outline-(length:--field-ring-width) outline-ring;
+    @apply outline-offset-(--focus-ring-offset);
   }
   .nui-select--invalid .nui-select__trigger {
     @apply border-error;
@@ -58,8 +54,7 @@
     @apply opacity-disabled cursor-not-allowed;
   }
   .nui-select__value {
-    @apply box-border min-inline-0 overflow-hidden text-ellipsis whitespace-nowrap;
-    flex: 1 1 auto;
+    @apply box-border flex-auto min-inline-0 overflow-hidden text-ellipsis whitespace-nowrap;
   }
   .nui-select--empty .nui-select__value {
     @apply text-muted-foreground;
@@ -69,17 +64,13 @@
     transition: rotate var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-select--open .nui-select__chevron {
-    rotate: 180deg;
+    @apply rotate-180;
   }
   .nui-select__toggle {
-    @apply absolute;
-    inset-block-start: 50%;
+    @apply absolute inset-bs-1/2 -translate-y-1/2;
     inset-inline-end: calc(var(--_padding) - (var(--spacing-control-xs) - var(--_chevron)) / 2);
-    translate: 0 -50%;
   }
   .nui-select__clear {
-    @apply absolute end-(--_clear-inset);
-    inset-block-start: 50%;
-    translate: 0 -50%;
+    @apply absolute inset-bs-1/2 end-(--_clear-inset) -translate-y-1/2;
   }
 }

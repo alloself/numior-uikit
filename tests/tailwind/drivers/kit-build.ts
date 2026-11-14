@@ -12,7 +12,7 @@ export interface KitBuildOptions {
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const ALIASES = sourceCssAliases();
 const LAYER = /@layer ([a-z-]+)/;
-const LAYER_ORDER = /@layer ([a-z, -]+);/;
+const LAYER_ORDER = /@layer ([a-z, -]+);/g;
 
 const PACKAGES = [
   'forms',
@@ -57,10 +57,10 @@ export class KitBuild {
   readonly layerOrder: readonly string[];
 
   constructor(css: string) {
-    const [, order = ''] = LAYER_ORDER.exec(css) ?? [];
+    const names = Array.from(css.matchAll(LAYER_ORDER), ([, order = '']) => order.split(','));
 
     this.rules = parseRules(css);
-    this.layerOrder = order.split(',').map((name) => name.trim());
+    this.layerOrder = Array.from(new Set(names.flat().map((name) => name.trim())));
   }
 
   layersOf(selector: string): string[] {

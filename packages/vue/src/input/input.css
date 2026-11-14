@@ -5,10 +5,8 @@
     --_font-size: var(--text-control-md);
 
     @apply box-border inline-flex items-center gap-2 inline-full min-block-(--_height);
-    @apply px-(--_padding) rounded text-foreground font-sans text-(length:--_font-size);
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    line-height: var(--leading-control);
+    @apply px-(--_padding) border border-border rounded bg-surface text-foreground;
+    @apply font-sans text-(length:--_font-size) leading-control;
     transition:
       border-color var(--transition-duration-fast) var(--ease-nui),
       outline-color var(--transition-duration-fast) var(--ease-nui);
@@ -24,17 +22,14 @@
     --_font-size: var(--text-control-lg);
   }
   .nui-input__control {
-    @apply min-inline-0 inline-full p-0 text-inherit appearance-none;
-    flex: 1 1 auto;
+    @apply flex-auto min-inline-0 inline-full p-0 bg-transparent text-inherit appearance-none;
     min-block-size: calc(var(--_height) - 2px);
     border: 0;
-    background: transparent;
     font: inherit;
     outline: none;
   }
   .nui-input__control::placeholder {
-    @apply text-muted-foreground;
-    opacity: 1;
+    @apply text-muted-foreground opacity-100;
   }
   .nui-input__control::-webkit-search-decoration,
   .nui-input__control::-webkit-search-cancel-button {
@@ -53,9 +48,8 @@
     @apply border-border-strong;
   }
   .nui-input:focus-within {
-    @apply border-ring;
-    outline: var(--field-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply border-ring outline-(length:--field-ring-width) outline-ring;
+    @apply outline-offset-(--focus-ring-offset);
   }
   .nui-input--invalid {
     @apply border-error;

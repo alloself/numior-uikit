@@ -21,14 +21,9 @@
     --_font-size: var(--text-control-md);
 
     @apply box-border relative inline-flex items-center justify-center min-block-(--_height);
-    @apply px-(--_padding) rounded text-(--_tone-foreground) font-sans;
-    @apply text-(length:--_font-size) cursor-pointer;
-    padding-block: 0.25rem;
-    border: 1px solid transparent;
-    background: var(--_tone);
-    font-weight: 500;
-    line-height: var(--leading-control);
-    text-decoration: none;
+    @apply py-1 px-(--_padding) border border-transparent rounded bg-(--_tone);
+    @apply font-sans text-(length:--_font-size) leading-control font-medium no-underline;
+    @apply text-(--_tone-foreground) cursor-pointer;
     transition:
       background-color var(--transition-duration-fast) var(--ease-nui),
       border-color var(--transition-duration-fast) var(--ease-nui),
@@ -106,68 +101,57 @@
   }
 
   .nui-button--variant-soft {
-    @apply text-(--_tone-soft-foreground);
-    background: var(--_tone-soft);
+    @apply bg-(--_tone-soft) text-(--_tone-soft-foreground);
   }
   .nui-button--variant-outline {
-    @apply text-(--_tone-soft-foreground);
+    @apply bg-transparent text-(--_tone-soft-foreground);
     border-color: color-mix(in oklab, var(--_tone) 50%, var(--color-border));
-    background: transparent;
   }
   .nui-button--variant-ghost {
-    @apply text-(--_tone-soft-foreground);
-    background: transparent;
+    @apply bg-transparent text-(--_tone-soft-foreground);
   }
   .nui-button--variant-plain {
-    @apply text-muted-foreground;
-    background: transparent;
+    @apply bg-transparent text-muted-foreground;
   }
   .nui-button--variant-link {
-    @apply min-block-auto p-0 rounded-sm text-(--_tone-soft-foreground);
-    background: transparent;
-    text-decoration: underline;
+    @apply min-block-auto p-0 rounded-sm bg-transparent text-(--_tone-soft-foreground) underline;
     text-underline-offset: 0.2em;
   }
 
   .nui-button:hover:not(:disabled, .nui-button--disabled, .nui-button--loading) {
-    background: var(--_hover);
+    @apply bg-(--_hover);
   }
   .nui-button:active:not(:disabled, .nui-button--disabled, .nui-button--loading) {
-    background: var(--_pressed);
-    transition-duration: var(--transition-duration-instant);
+    @apply bg-(--_pressed) duration-instant;
   }
   .nui-button--variant-soft:hover:not(:disabled, .nui-button--disabled, .nui-button--loading) {
-    background: var(--_soft-hover);
+    @apply bg-(--_soft-hover);
   }
   .nui-button--variant-soft:active:not(:disabled, .nui-button--disabled, .nui-button--loading) {
-    background: var(--_soft-pressed);
+    @apply bg-(--_soft-pressed);
   }
   .nui-button--variant-outline:hover:not(:disabled, .nui-button--disabled, .nui-button--loading),
   .nui-button--variant-ghost:hover:not(:disabled, .nui-button--disabled, .nui-button--loading) {
-    background: var(--_tint-hover);
+    @apply bg-(--_tint-hover);
   }
   .nui-button--variant-outline:active:not(:disabled, .nui-button--disabled, .nui-button--loading),
   .nui-button--variant-ghost:active:not(:disabled, .nui-button--disabled, .nui-button--loading) {
-    background: var(--_tint-pressed);
+    @apply bg-(--_tint-pressed);
   }
   .nui-button--variant-plain[aria-expanded='true'],
   .nui-button--variant-plain:hover:not(:disabled, .nui-button--disabled, .nui-button--loading) {
-    @apply text-foreground;
-    background: transparent;
+    @apply bg-transparent text-foreground;
   }
   .nui-button--variant-plain:active:not(:disabled, .nui-button--disabled, .nui-button--loading) {
-    @apply text-primary;
-    background: transparent;
+    @apply bg-transparent text-primary;
   }
   .nui-button--variant-link:hover:not(:disabled, .nui-button--disabled, .nui-button--loading),
   .nui-button--variant-link:active:not(:disabled, .nui-button--disabled, .nui-button--loading) {
-    background: transparent;
-    text-decoration-thickness: 2px;
+    @apply bg-transparent decoration-2;
   }
 
   .nui-button:focus-visible {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-button:disabled,
   .nui-button--disabled,
@@ -189,18 +173,14 @@
   }
 
   .nui-button__content {
-    @apply inline-flex items-center gap-2;
-    transition: opacity var(--transition-duration-fast) var(--ease-nui);
+    @apply inline-flex items-center gap-2 transition-opacity duration-fast;
   }
 
   .nui-button__icon-end {
-    inline-size: var(--spacing-icon-sm);
-    block-size: var(--spacing-icon-sm);
-    margin-inline-start: calc(var(--spacing) - calc(var(--spacing) * 2));
-    opacity: 0.72;
+    @apply inline-icon-sm block-icon-sm -ms-1 opacity-72;
   }
   .nui-button--loading .nui-button__content {
-    opacity: 0;
+    @apply opacity-0;
   }
   .nui-button__loader {
     @apply absolute inset-0 grid place-items-center;

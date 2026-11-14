@@ -11,7 +11,7 @@ describe('@numior/tailwind', () => {
       await kitCss({ classes: ['bg-surface-muted', 'rounded-none', 'w-full'] }),
     );
 
-    expect(kit.layerOrder).toEqual(['theme', 'base', 'components', 'utilities']);
+    expect(kit.layerOrder).toEqual(['properties', 'theme', 'base', 'components', 'utilities']);
     expect(kit.layersOf('.nui-button')).toEqual(['components']);
     expect(kit.layersOf('.nui-dialog')).toEqual(['components']);
     expect(kit.layersOf('.nui-table')).toEqual(['components']);

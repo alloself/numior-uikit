@@ -7,18 +7,12 @@
     --_gap: --spacing(3);
     --_indent: --spacing(4);
 
-    box-sizing: border-box;
-    color: var(--color-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--text-sm);
-    line-height: --theme(--leading-label inline);
+    @apply box-border text-foreground font-sans text-sm/label;
     outline: none;
   }
   .nui-list__items,
   .nui-list__group-items {
-    margin: 0;
-    padding: 0;
-    list-style: none;
+    @apply m-0 p-0 list-none;
     outline: none;
   }
   .nui-list--variant-divided {
@@ -29,26 +23,21 @@
     --_divider: var(--color-border);
     --_divider-size: 1px;
 
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    border-radius: --theme(--radius-md inline);
-    overflow: hidden;
+    @apply overflow-hidden border border-border rounded-md bg-surface;
   }
   .nui-list--variant-floating {
     --_side-x: 0;
     --_side-y: 1;
     --_shift: calc(-1 * var(--_side-x) * var(--spacing)) calc(-1 * var(--_side-y) * var(--spacing));
-    --_padding-inline: calc(var(--spacing) * 2);
+    --_padding-inline: --spacing(2);
     --_padding-block: var(--spacing);
     --_row-padding: var(--spacing);
-    --_gap: calc(var(--spacing) * 2);
-    --_indent: calc(var(--spacing) * 3);
+    --_gap: --spacing(2);
+    --_indent: --spacing(3);
 
-    @apply fixed inset-auto flex-col m-0 p-0 rounded overflow-hidden;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface-overlay);
+    @apply fixed inset-auto flex-col m-0 p-0 overflow-hidden border border-border rounded;
+    @apply bg-surface-overlay opacity-0;
     box-shadow: var(--shadow-md);
-    opacity: 0;
     translate: var(--_shift);
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),
@@ -57,13 +46,12 @@
       overlay var(--transition-duration-fast) allow-discrete;
   }
   .nui-list--variant-floating:popover-open {
-    @apply flex;
-    opacity: 1;
+    @apply flex opacity-100;
     translate: 0 0;
   }
   @starting-style {
     .nui-list--variant-floating:popover-open {
-      opacity: 0;
+      @apply opacity-0;
       translate: var(--_shift);
     }
   }
@@ -76,38 +64,30 @@
   }
   .nui-list--variant-nav .nui-list__items,
   .nui-list--variant-nav .nui-list__group-items {
-    display: grid;
+    @apply grid;
     gap: 2px;
   }
   .nui-list--variant-nav .nui-list-item {
     --_min-size: 2.25rem;
     --_divider-size: 0px;
 
-    border-radius: --theme(--radius-sm inline);
+    @apply rounded-sm;
   }
   .nui-list--variant-nav .nui-list-item__inner {
     border-radius: inherit;
   }
   .nui-list--variant-floating .nui-list__items {
-    @apply box-border min-block-0 p-1 overflow-y-auto;
-    flex: 1 1 auto;
-    scrollbar-width: thin;
+    @apply box-border flex-auto min-block-0 p-1 overflow-y-auto scrollbar-thin;
   }
   .nui-list__group + .nui-list__group {
-    margin-block-start: var(--_padding-block);
-    padding-block-start: var(--_padding-block);
-    border-block-start: 1px solid var(--_divider);
+    @apply mbs-(--_padding-block) pbs-(--_padding-block) border-bs border-bs-(--_divider);
   }
   .nui-list--variant-floating .nui-list__group + .nui-list__group {
-    border-block-start-color: var(--color-border);
+    @apply border-bs-border;
   }
   .nui-list__group-label {
-    box-sizing: border-box;
-    padding: var(--_padding-block) var(--_padding-inline) var(--spacing);
-    color: var(--color-muted-foreground);
-    font-size: var(--text-xs);
-    font-weight: var(--font-weight-caption);
-    letter-spacing: var(--tracking-caption);
+    @apply box-border pbs-(--_padding-block) px-(--_padding-inline) pbe-1 text-muted-foreground;
+    @apply text-(length:--text-xs) font-caption tracking-caption;
     text-transform: var(--caption-transform);
   }
   .nui-list__group-label::before {
@@ -120,20 +100,14 @@
     padding-inline-start: calc(var(--_padding-inline) + var(--_indent));
   }
   .nui-list__group .nui-list-item:first-child {
-    border-block-start-color: transparent;
+    @apply border-bs-transparent;
   }
   .nui-list__status {
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    gap: --spacing(2);
-    padding: var(--_padding-block) var(--_padding-inline);
-    color: var(--color-muted-foreground);
+    @apply box-border flex items-center gap-2 py-(--_padding-block) px-(--_padding-inline);
+    @apply text-muted-foreground;
   }
   .nui-list__empty {
-    box-sizing: border-box;
-    padding: --spacing(2);
-    color: var(--color-muted-foreground);
+    @apply box-border p-2 text-muted-foreground;
   }
   .nui-list--variant-floating .nui-list__empty {
     @apply p-0;
@@ -144,9 +118,8 @@
     @apply justify-items-start text-start;
   }
   .nui-list--variant-floating .nui-list__empty .nui-empty__title {
-    @apply text-muted-foreground;
+    @apply font-normal text-muted-foreground;
     font-size: inherit;
-    font-weight: 400;
   }
   .nui-list__spinner {
     animation: nui-list-spin 0.8s linear infinite;
@@ -158,27 +131,24 @@
     --_row-weight: 500;
     --_row-description-size: var(--text-sm);
 
-    box-sizing: border-box;
-    position: relative;
-    display: grid;
+    @apply box-border relative grid border-bs-(length:--_divider-size) border-bs-(--_divider);
+    @apply bg-clip-padding;
     grid-template-columns: minmax(0, 1fr);
-    border-block-start: var(--_divider-size) solid var(--_divider);
-    background-clip: padding-box;
     transition: color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-list-item:first-child {
-    border-block-start-color: transparent;
+    @apply border-bs-transparent;
   }
   .nui-list-item--size-sm {
     --_min-size: var(--spacing-control-sm);
     --_row-description-size: var(--text-xs);
 
-    font-size: var(--text-xs);
+    @apply text-(length:--text-xs);
   }
   .nui-list-item--size-lg {
     --_min-size: var(--spacing-control-lg);
 
-    font-size: var(--text-base);
+    @apply text-(length:--text-base);
   }
   .nui-list--variant-floating .nui-list-item {
     --_min-size: 2rem;
@@ -189,47 +159,37 @@
     @apply rounded-sm;
   }
   .nui-list-item__inner {
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    gap: var(--_gap);
-    min-inline-size: 0;
-    min-block-size: var(--_min-size);
+    @apply box-border flex items-center gap-(--_gap) min-inline-0 min-block-(--_min-size);
     padding: var(--_row-padding, max(var(--spacing), calc((var(--_min-size) - 1lh) / 2)))
       var(--_padding-inline);
   }
   .nui-list-item__action {
+    @apply rounded-none text-inherit text-start cursor-pointer;
     border: 0;
-    border-radius: 0;
     background: none;
-    color: inherit;
     font: inherit;
-    text-align: start;
-    cursor: pointer;
   }
   .nui-list .nui-list-item__action:hover {
+    @apply text-inherit;
     background: var(--_hover);
-    color: inherit;
   }
   .nui-list .nui-list-item__action:focus-visible {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: calc(-1 * var(--focus-ring-width));
+    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-width);
   }
   .nui-list-item__action:disabled,
   .nui-list-item--disabled .nui-list-item__action {
-    cursor: not-allowed;
+    @apply cursor-not-allowed;
   }
   .nui-list-item--mode-option,
   .nui-list-item--mode-treeitem {
-    cursor: pointer;
-    user-select: none;
+    @apply cursor-pointer select-none;
     outline: none;
   }
   .nui-list-item--mode-option:not(.nui-list-item--disabled, .nui-list-item--selected):hover,
   .nui-list-item--mode-treeitem:not(.nui-list-item--disabled, .nui-list-item--selected):hover,
   .nui-list-item--mode-option:not(.nui-list-item--selected):focus-visible,
   .nui-list-item--active:not(.nui-list-item--selected) {
-    background-color: var(--_hover);
+    @apply bg-(--_hover);
   }
   .nui-list-item--current {
     --_row-icon: --theme(--color-primary-soft-foreground inline);
@@ -239,8 +199,7 @@
       oklab(from --theme(--color-primary-soft inline) calc(l + var(--state-hover-subtle)) a b)
     );
 
-    background-color: --theme(--color-primary-soft inline);
-    color: --theme(--color-primary-soft-foreground inline);
+    @apply bg-primary-soft text-primary-soft-foreground;
   }
   .nui-list-item--selected {
     --_row-icon: --theme(--color-primary-soft-foreground inline);
@@ -250,8 +209,7 @@
       var(--color-muted-foreground)
     );
 
-    background-color: --theme(--color-primary-soft inline);
-    color: --theme(--color-primary-soft-foreground inline);
+    @apply bg-primary-soft text-primary-soft-foreground;
   }
   .nui-list-item--selected:hover,
   .nui-list-item--selected:focus-visible,
@@ -273,15 +231,14 @@
     @apply bg-(--_hover);
   }
   .nui-list-item--mode-option:focus-visible {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: calc(-1 * var(--focus-ring-width));
+    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-width);
   }
   .nui-list-item--disabled {
-    opacity: var(--opacity-disabled);
+    @apply opacity-disabled;
   }
   .nui-list-item--disabled.nui-list-item--mode-option,
   .nui-list-item--disabled.nui-list-item--mode-treeitem {
-    cursor: not-allowed;
+    @apply cursor-not-allowed;
   }
   @keyframes nui-list-spin {
     to {
