@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { TableDriver } from './drivers/table';
-import { watchPointerListenerAdds, type ListenerAdds } from './support/listener-adds';
+import {
+  watchPointerListenerAdds,
+  type ListenerAdds,
+} from '../../primitives/test/support/listener-adds';
 import { staff, STAFF_COLUMNS, type Staff } from './support/staff';
 
 const mounted: TableDriver<Staff>[] = [];
