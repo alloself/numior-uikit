@@ -1069,6 +1069,21 @@ describe('server rendering', () => {
     expect(windowed).toContain('--_window-clamp-start:-720px');
   });
 
+  it('renders a checkable parent checked on the server when the model holds all its children', async () => {
+    const html = await renderToString(NuiTree, {
+      props: {
+        id: 'files',
+        items: FILES,
+        checkable: true,
+        expanded: ['src', 'components'],
+        values: ['button', 'index'],
+      },
+    });
+
+    expect(html).toMatch(/<li id="files-node-src"[^>]*aria-checked="true"/);
+    expect(html).not.toContain('aria-checked="mixed"');
+  });
+
   it('renders a splitter ratio outside its bounds clamped on the server', async () => {
     const html = await renderToString(NuiSplitter, {
       props: { id: 'panes', ratio: 0.95, min: 0.2, max: 0.8 },

@@ -295,6 +295,11 @@ export class TreeDriver extends ComponentDriver {
     await nextTick();
   }
 
+  async setValues(values: readonly string[]): Promise<void> {
+    this.selection.setValues(values);
+    await nextTick();
+  }
+
   async setExpanded(values: readonly string[]): Promise<void> {
     this.scene.vm.expanded = [...values];
     await nextTick();
