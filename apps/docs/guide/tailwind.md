@@ -29,24 +29,38 @@ export default defineConfig({ plugins: [tailwindcss()] });
 @import '@numior/tailwind/theme.css';
 ```
 
-Пресету нужны токены из `@numior/tokens/theme.css`, подключите их тоже. Классы ссылаются на
-переменные `--nui-*`. Поэтому при смене темы, акцента или значения токена меняются и классы, и
-компоненты.
+Пресет подключает тему из `@numior/tokens/theme.css`. Классы и компоненты читают одни ключи
+темы, например `--color-primary` и `--radius-md`. Поэтому при смене темы, акцента или значения
+ключа меняются и классы, и компоненты.
 
 ## Классы пресета
 
 | Группа      | Классы                                                                                                                                                                                                                                                                                                |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Цвета       | `bg-surface`, `bg-surface-muted`, `bg-surface-elevated`, `bg-<role>`, `bg-<role>-soft`, `text-foreground`, `text-muted-foreground`, `text-subtle-foreground`, `text-<role>`, `text-<role>-foreground`, `border-border`, `border-border-strong`, `ring-ring`, `bg-surface-code`, `text-syntax-<scope>` |
-| Скругления  | `rounded-sm`, `rounded-md`, `rounded-lg`, `rounded-xl` из `--nui-radius-*`                                                                                                                                                                                                                            |
-| Отступы     | шкала `p-*`, `m-*`, `gap-*` от `--nui-space-1`, то есть 0.25rem за единицу                                                                                                                                                                                                                            |
+| Скругления  | `rounded-sm`, `rounded-md`, `rounded-lg`, `rounded-xl` из `--radius-*`                                                                                                                                                                                                                                |
+| Отступы     | шкала `p-*`, `m-*`, `gap-*` от `--spacing`, то есть 0.25rem за единицу                                                                                                                                                                                                                                |
 | Шрифты      | `font-sans`, `font-mono`, `font-heading`, `text-xs` … `text-4xl` с высотой строки из токенов, `font-normal` … `font-bold`, `leading-tight`, `leading-relaxed`, `tracking-tight`, `tracking-heading`, `max-w-prose`                                                                                    |
 | Тени        | `shadow-sm`, `shadow-md`, `shadow-lg`                                                                                                                                                                                                                                                                 |
-| Движение    | `ease-nui`; переходы Tailwind по умолчанию используют кривую `--nui-easing`                                                                                                                                                                                                                           |
+| Движение    | `ease-nui`; переходы Tailwind по умолчанию используют кривую `--ease-nui`                                                                                                                                                                                                                             |
 | Сетка и фон | `grid-auto`, `grid-auto-sm`, `grid-auto-lg` — сетка, где колонки не уже 16, 12 и 20rem и сами переносятся на новую строку; `bg-dots` — фон в точку                                                                                                                                                    |
 
 Вместо `<role>` подставьте `primary`, `secondary`, `success`, `warning`, `error`, `info` или
-`neutral`. Класс `border` без цвета рисует рамку цвета `--nui-border`, как у компонентов.
+`neutral`. Класс `border` без цвета рисует рамку цвета `--color-border`, как у компонентов.
+
+## Тёмная тема в классах
+
+Вариант `dark:` срабатывает, когда тёмная тема действует там, где стоит элемент. Он следует за
+ближайшим классом темы: `nui-theme--dark` внутри светлой страницы включает его, `nui-theme--light`
+внутри тёмной выключает.
+
+```html
+<section class="nui-theme--dark">
+  <p class="text-muted-foreground dark:text-foreground">Заказ № 1042 собран</p>
+</section>
+```
+
+Страница без класса темы и элемент с `nui-theme--system` следуют за настройкой системы.
 
 ## Классы на компонентах
 

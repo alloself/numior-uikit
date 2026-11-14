@@ -40,7 +40,7 @@ Load the styles in the entry point of your app:
 import '@numior/charts/styles.css';
 ```
 
-Series colors come from the theme tokens `--nui-chart-1`…`--nui-chart-8`, so they follow the light and dark theme.
+Series colors come from the theme tokens `--color-chart-1`…`--color-chart-8`, so they follow the light and dark theme.
 
 ## Describe a chart
 

@@ -9,9 +9,9 @@ mismatches. For that, pass from the server what a component cannot find out on i
 
 - The language and writing direction. Pass `locale` and `dir` to `createNuiConfig` on every
   request: components read neither `navigator.language` nor `Accept-Language`.
-- The theme. Set the `data-nui-theme` attribute on `<html>` from a cookie or to `system`. Add
-  the `colorSchemeScript(storageKey)` script to `<head>` so the saved theme applies before the
-  page paints.
+- The theme. Put the `nui-theme--light` or `nui-theme--dark` class on `<html>` from a cookie;
+  without a class the page follows the system. Add the `colorSchemeScript(storageKey)` script to
+  `<head>` so the saved theme applies before the page paints.
 - Today's date. Pass `today` to the calendar, date picker and time field. Without `today` the
   date comes from the browser clock after mounting, so the server time zone does not affect the
   markup.

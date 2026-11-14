@@ -1,7 +1,7 @@
 # useColorScheme
 
-`useColorScheme` keeps the theme the user picked and sets it in the `data-nui-theme`
-attribute. Use it for a theme switcher.
+`useColorScheme` keeps the theme the user picked and sets it as the `nui-theme--light`,
+`nui-theme--dark` or `nui-theme--system` class. Use it for a theme switcher.
 
 Without arguments the composable returns the theme from `createNuiConfig({ colorScheme })`, one
 for the whole app. With arguments it creates a separate theme for the `scope` element. When
@@ -22,9 +22,10 @@ follows the system setting.
 `systemDark` tells whether the system uses the dark theme. `set`, `toggle` and `cycle` change the
 choice.
 
-The composable starts after the component mounts, so you do not call `start()`. On the server
-the attribute is not changed.
+The composable starts after the component mounts, so you do not call `start()`. It removes the
+other two theme classes and leaves the rest of the element's classes alone. On the server the
+class is not changed.
 
-Add `colorSchemeScript(storageKey, initial?)` to `<head>` so the saved theme applies before the
-first paint. `initial` is the theme for a first visit, when nothing is saved yet, see
+Add `colorSchemeScript(storageKey, initial?)` to `<head>` so the class of the saved theme lands on
+`<html>` before the first paint. `initial` is the theme for a first visit, when nothing is saved yet, see
 [Theming](/en/guide/theming).

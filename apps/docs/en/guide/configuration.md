@@ -75,9 +75,9 @@ dialog and the `dir` attribute on an element override the plugin.
 
 ## Without the plugin
 
-Components also work without the plugin. Labels are then in English, and numbers and dates use
-the `en-US` format. The theme comes from the `data-nui-theme` attribute, the direction from the
-document's `dir` attribute.
+Components also work without the plugin. Labels are then in English, numbers and dates use the
+`en-US` format, and the direction comes from the document's `dir` attribute. A `nui-theme--*`
+class on `<html>` picks the theme, and without the class it follows the system.
 
 The browser language from `navigator.language` is ignored, so the server markup matches the
 markup in the browser.

@@ -4,9 +4,9 @@ description: Every Numior UI theme token with a sample and its value in the ligh
 
 # Tokens
 
-A Numior UI theme is a set of custom properties prefixed with `--nui-`. Here they all are, each with a sample, its name and its value from `@numior/tokens/theme.css`.
+A Numior UI theme is a set of Tailwind theme keys from `@numior/tokens/theme.css`. Here they all are, each with a sample, its name and its value.
 
-To change the theme, declare a token again in your own CSS. The [Custom theme](/en/guide/custom-theme) guide walks through it.
+To change the theme, set a key again in the `@theme` block of your Tailwind CSS file. The [Custom theme](/en/guide/custom-theme) guide walks through it.
 
 ## Surfaces and text
 
@@ -28,7 +28,7 @@ The focus ring, the opacity of disabled elements, and the hover and press steps.
 
 ## Radius
 
-The whole scale is derived from `--nui-radius-base`. Change it and the other steps follow.
+The whole scale is derived from `--radius-base`. Change it and the other steps follow.
 
 <TokenReference section="shape" />
 
