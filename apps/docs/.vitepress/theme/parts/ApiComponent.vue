@@ -7,6 +7,8 @@
       :columns="propColumns"
       :rows="component.props"
       :locale="locale"
+      :stacked="narrow"
+      :default-label="texts.apiDefault"
       :required-label="texts.apiRequired"
     />
     <ApiTable
@@ -15,6 +17,8 @@
       :columns="modelColumns"
       :rows="component.models"
       :locale="locale"
+      :stacked="narrow"
+      :default-label="texts.apiDefault"
     />
     <ApiTable
       v-if="component.events.length > 0"
@@ -22,6 +26,8 @@
       :columns="memberColumns(texts.apiPayload)"
       :rows="component.events"
       :locale="locale"
+      :stacked="narrow"
+      :default-label="texts.apiDefault"
     />
     <ApiTable
       v-if="component.slots.length > 0"
@@ -29,6 +35,8 @@
       :columns="memberColumns(texts.apiSlotProps)"
       :rows="component.slots"
       :locale="locale"
+      :stacked="narrow"
+      :default-label="texts.apiDefault"
     />
     <ApiTable
       v-if="component.exposed.length > 0"
@@ -36,6 +44,8 @@
       :columns="memberColumns(texts.apiType)"
       :rows="component.exposed"
       :locale="locale"
+      :stacked="narrow"
+      :default-label="texts.apiDefault"
     />
     <ApiStyles v-if="component.styles" :styles="component.styles" :texts="texts" />
     <ApiTexts v-if="catalog" :catalog="catalog" :texts="texts" />
@@ -43,7 +53,9 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { NuiTableColumn } from '@numior/table';
+import { useMediaQuery } from '@numior/vue';
 import type {
   LocalizedText,
   ReferenceMember,
@@ -57,6 +69,10 @@ import ApiTexts from './ApiTexts.vue';
 
 const { component, catalog, locale, texts, heading } = defineProps<ApiComponentProps>();
 
+const NARROW_QUERY = '(max-width: 40rem)';
+
+const narrow = useMediaQuery(NARROW_QUERY);
+
 const anchorOf = (name: string): string => `api-${name.toLowerCase()}`;
 
 const localized = (text: LocalizedText | undefined): string => text?.[locale] ?? '';
@@ -66,7 +82,8 @@ const nameColumn = <T extends ApiRow>(): NuiTableColumn<T> => ({
   label: texts.apiName,
   type: 'text',
   filter: false,
-  width: 150,
+  width: narrow.value ? 128 : 150,
+  wrap: narrow.value,
   value: (row) => row.name,
 });
 
@@ -94,29 +111,27 @@ const descriptionColumn = <T extends ApiRow>(): NuiTableColumn<T> => ({
   label: texts.apiDescription,
   type: 'text',
   filter: false,
-  width: 200,
+  width: narrow.value ? 140 : 200,
   flex: 1,
   wrap: true,
   value: (row) => localized(row.description),
 });
 
-const propColumns: readonly NuiTableColumn<ReferenceProp>[] = [
-  nameColumn(),
-  typeColumn(texts.apiType),
-  defaultColumn(),
-  descriptionColumn(),
-];
+const tableColumns = <T extends ApiRow>(
+  middle: readonly NuiTableColumn<T>[],
+): readonly NuiTableColumn<T>[] =>
+  narrow.value
+    ? [nameColumn(), descriptionColumn()]
+    : [nameColumn(), ...middle, descriptionColumn()];
 
-const modelColumns: readonly NuiTableColumn<ReferenceModel>[] = [
-  nameColumn(),
-  typeColumn(texts.apiType),
-  defaultColumn(),
-  descriptionColumn(),
-];
+const propColumns = computed(() =>
+  tableColumns<ReferenceProp>([typeColumn(texts.apiType), defaultColumn()]),
+);
 
-const memberColumns = (typeLabel: string): readonly NuiTableColumn<ReferenceMember>[] => [
-  nameColumn(),
-  typeColumn(typeLabel),
-  descriptionColumn(),
-];
+const modelColumns = computed(() =>
+  tableColumns<ReferenceModel>([typeColumn(texts.apiType), defaultColumn()]),
+);
+
+const memberColumns = (typeLabel: string): readonly NuiTableColumn<ReferenceMember>[] =>
+  tableColumns([typeColumn(typeLabel)]);
 </script>

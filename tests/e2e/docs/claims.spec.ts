@@ -85,6 +85,20 @@ test('a submenu with no room on either side stays on a phone screen', async ({ d
     .toBeLessThanOrEqual(390);
 });
 
+test('a props table fits a phone screen with the type under the name', async ({ docs, page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await docs.open('/components/button');
+
+  const props = docs.apiTable('Свойства');
+
+  await props.scrollIntoViewIfNeeded();
+  await expect.poll(() => docs.sidewaysOverflow(props)).toBe(0);
+
+  await expect(props.getByRole('row').filter({ hasText: 'variant' }).first()).toContainText(
+    'NuiButtonVariant',
+  );
+});
+
 test('the action of a toast replaces its text in place', async ({ docs }) => {
   await docs.open('/components/toast');
   await docs.article.getByRole('button', { name: 'Ошибка с действием' }).click();

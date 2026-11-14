@@ -440,6 +440,18 @@ export class DocsSite {
     return target.evaluate((element) => element.scrollLeft);
   }
 
+  apiTable(title: string): Locator {
+    return this.article.getByRole('grid', { name: title, exact: true }).first();
+  }
+
+  sidewaysOverflow(table: Locator): Promise<number> {
+    return table.evaluate((element) => {
+      const viewport = element.closest('.nui-table__viewport') ?? element;
+
+      return viewport.scrollWidth - viewport.clientWidth;
+    });
+  }
+
   get iconSearch(): Locator {
     return this.article.getByRole('searchbox', { name: /Найти иконку|Find an icon/ });
   }

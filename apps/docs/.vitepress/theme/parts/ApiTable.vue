@@ -10,16 +10,24 @@
       size="sm"
     >
       <template #cell-name="{ row }">
-        <code>{{ row.name }}</code>
-        <NuiTooltip v-if="isRequired(row)" placement="top">
-          <template #trigger="{ attrs }">
-            <span v-bind="attrs" class="text-error">
-              <span aria-hidden="true">*</span>
-              <span class="sr-only">{{ requiredLabel }}</span>
-            </span>
-          </template>
-          {{ requiredLabel }}
-        </NuiTooltip>
+        <span :class="{ 'flex flex-col items-start gap-1': stacked }">
+          <span>
+            <code>{{ row.name }}</code>
+            <NuiTooltip v-if="isRequired(row)" placement="top">
+              <template #trigger="{ attrs }">
+                <span v-bind="attrs" class="text-error">
+                  <span aria-hidden="true">*</span>
+                  <span class="sr-only">{{ requiredLabel }}</span>
+                </span>
+              </template>
+              {{ requiredLabel }}
+            </NuiTooltip>
+          </span>
+          <code v-if="stacked">{{ row.type }}</code>
+          <span v-if="stacked && defaultOf(row) !== undefined" class="text-subtle-foreground">
+            {{ defaultLabel }}: <code>{{ defaultOf(row) }}</code>
+          </span>
+        </span>
       </template>
       <template #cell-type="{ row }">
         <code>{{ row.type }}</code>
@@ -42,7 +50,15 @@ import { NuiTooltip } from '@numior/vue';
 import type { ApiRow, ApiTableProps } from '../theme.types';
 import InlineText from './InlineText.vue';
 
-const { title, columns, rows, locale, requiredLabel } = defineProps<ApiTableProps<T>>();
+const {
+  title,
+  columns,
+  rows,
+  locale,
+  requiredLabel,
+  stacked = false,
+  defaultLabel,
+} = defineProps<ApiTableProps<T>>();
 
 const keyOf = (row: ApiRow): string => row.name;
 const isRequired = (row: ApiRow): boolean => row.required === true && requiredLabel !== undefined;
