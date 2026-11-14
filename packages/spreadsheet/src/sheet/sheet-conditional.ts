@@ -23,7 +23,7 @@ const NO_LOOK: ConditionalLookAt = () => undefined;
 
 const BAR_STEPS = 200;
 
-const BAR_COLOR = 'var(--nui-primary)';
+const BAR_COLOR = 'var(--color-primary)';
 
 const channelsOf = (hex: string): number[] =>
   [0, 2, 4].map((at) => Number.parseInt(hex.slice(at, at + 2), 16));

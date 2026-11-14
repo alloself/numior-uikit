@@ -14,10 +14,21 @@ const ALIASES = sourceCssAliases();
 const LAYER = /@layer ([a-z-]+)/;
 const LAYER_ORDER = /@layer ([a-z, -]+);/;
 
+const PACKAGES = [
+  'forms',
+  'table',
+  'spreadsheet',
+  'charts',
+  'content',
+  'editor-vue',
+  'collaboration',
+];
+
 const ENTRY = [
   "@import 'tailwindcss';",
   "@import '@numior/tailwind';",
   "@import '@numior/vue/styles.css';",
+  ...PACKAGES.map((name) => `@import '@numior/${name}/styles.css' layer(components);`),
 ];
 
 const sourceOf = async (id: string): Promise<string | undefined> => {
@@ -58,6 +69,15 @@ export class KitBuild {
     }, new Set<string>());
 
     return Array.from(layers);
+  }
+
+  selectorsDeclaring(property: string): string[] {
+    return this.rules.reduce<string[]>((found, rule) => {
+      if (rule.declarations.some((declaration) => declaration.property === property)) {
+        found.push(rule.selector);
+      }
+      return found;
+    }, []);
   }
 
   valueOf(selector: string, property: string): string | undefined {

@@ -4,44 +4,44 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--nui-space-1);
+  gap: var(--spacing);
   min-inline-size: 0;
 }
 .nui-spreadsheet__file-name {
   display: flex;
   flex: 1 1 8rem;
   align-items: baseline;
-  gap: var(--nui-space-2);
+  gap: --spacing(2);
   min-inline-size: 0;
   margin: 0;
-  font-size: var(--nui-font-size-sm);
-  line-height: var(--nui-line-height-control);
+  font-size: var(--text-sm);
+  line-height: var(--leading-control);
 }
 .nui-spreadsheet__file-text {
   overflow: hidden;
-  font-weight: var(--nui-font-weight-medium);
+  font-weight: var(--font-weight-medium);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .nui-spreadsheet__file-edited {
   flex: none;
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-xs);
-  line-height: var(--nui-line-height-control);
+  color: var(--color-muted-foreground);
+  font-size: var(--text-xs);
+  line-height: var(--leading-control);
 }
 .nui-spreadsheet__file-progress {
   display: flex;
   flex: 0 1 12rem;
   align-items: center;
-  gap: var(--nui-space-2);
+  gap: --spacing(2);
   min-inline-size: 0;
-  animation: nui-spreadsheet-file-in var(--nui-duration-normal) var(--nui-easing)
-    var(--nui-duration-slow) both;
+  animation: nui-spreadsheet-file-in var(--transition-duration-normal) var(--ease-nui)
+    var(--transition-duration-slow) both;
 }
 .nui-spreadsheet__file-actions {
   display: flex;
   flex: none;
-  gap: var(--nui-space-1);
+  gap: var(--spacing);
 }
 .nui-spreadsheet__file-input {
   display: none;

@@ -1,6 +1,6 @@
 <template>
   <p
-    class="m-0 text-xs text-muted-foreground font-(--nui-caption-weight) tracking-(--nui-caption-tracking) [text-transform:var(--nui-caption-transform)] before:[content:var(--nui-caption-open)/''] after:[content:var(--nui-caption-close)/'']"
+    class="m-0 text-xs text-muted-foreground font-(--font-weight-caption) tracking-(--tracking-caption) [text-transform:var(--caption-transform)] before:[content:var(--caption-open)/''] after:[content:var(--caption-close)/'']"
   >
     <slot />
   </p>

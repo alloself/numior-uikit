@@ -1,56 +1,56 @@
 @layer components {
   .nui-upload {
-    --_zone-padding: var(--nui-space-6);
-    --_gap: var(--nui-space-3);
+    --_zone-padding: --spacing(6);
+    --_gap: --spacing(3);
     --_thumb: 2.5rem;
     --_icon: 2rem;
 
     box-sizing: border-box;
     display: grid;
     gap: var(--_gap);
-    color: var(--nui-text);
-    font-family: var(--nui-font);
-    font-size: var(--nui-font-size-sm);
-    line-height: var(--nui-line-height);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
   }
   .nui-upload--size-sm {
-    --_zone-padding: var(--nui-space-4);
-    --_gap: var(--nui-space-2);
+    --_zone-padding: --spacing(4);
+    --_gap: --spacing(2);
     --_thumb: 2rem;
     --_icon: 1.5rem;
 
-    font-size: var(--nui-font-size-xs);
+    font-size: var(--text-xs);
   }
   .nui-upload--size-lg {
-    --_zone-padding: var(--nui-space-8);
+    --_zone-padding: --spacing(8);
     --_thumb: 3rem;
     --_icon: 2.5rem;
 
-    font-size: var(--nui-font-size-md);
+    font-size: var(--text-base);
   }
   .nui-upload__zone {
     box-sizing: border-box;
     position: relative;
     display: grid;
     justify-items: center;
-    gap: var(--nui-space-2);
+    gap: --spacing(2);
     padding: var(--_zone-padding);
-    border: 1px dashed var(--nui-border-strong);
-    border-radius: var(--nui-radius);
-    background: var(--nui-surface);
+    border: 1px dashed var(--color-border-strong);
+    border-radius: --theme(--radius inline);
+    background: var(--color-surface);
     text-align: center;
     cursor: pointer;
     transition:
-      border-color var(--nui-duration-fast) var(--nui-easing),
-      background-color var(--nui-duration-fast) var(--nui-easing),
-      color var(--nui-duration-fast) var(--nui-easing);
+      border-color var(--transition-duration-fast) var(--ease-nui),
+      background-color var(--transition-duration-fast) var(--ease-nui),
+      color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-upload__zone:hover {
-    border-color: var(--nui-primary);
+    border-color: var(--color-primary);
     background: color-mix(
       in oklab,
-      var(--nui-text) var(--nui-state-hover-overlay),
-      var(--nui-surface)
+      var(--color-foreground) var(--state-hover-overlay),
+      var(--color-surface)
     );
   }
   .nui-upload--readonly .nui-upload__zone,
@@ -65,16 +65,16 @@
     justify-self: stretch;
   }
   .nui-upload--dragging .nui-upload__zone {
-    border-color: var(--nui-primary);
+    border-color: var(--color-primary);
     border-style: solid;
-    background: var(--nui-primary-soft);
-    color: var(--nui-primary-soft-foreground);
+    background: --theme(--color-primary-soft inline);
+    color: --theme(--color-primary-soft-foreground inline);
   }
   .nui-upload--invalid .nui-upload__zone {
-    border-color: var(--nui-error);
+    border-color: var(--color-error);
   }
   .nui-upload--disabled .nui-upload__zone {
-    opacity: var(--nui-disabled-opacity);
+    opacity: var(--opacity-disabled);
     cursor: not-allowed;
     pointer-events: none;
   }
@@ -89,18 +89,18 @@
   .nui-upload__icon {
     inline-size: var(--_icon);
     block-size: var(--_icon);
-    color: var(--nui-text-subtle);
-    transition: color var(--nui-duration-fast) var(--nui-easing);
+    color: var(--color-subtle-foreground);
+    transition: color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-upload--dragging .nui-upload__icon {
-    color: var(--nui-primary);
+    color: var(--color-primary);
   }
   .nui-upload__text {
     font-weight: 500;
   }
   .nui-upload__items {
     display: grid;
-    gap: var(--nui-space-2);
+    gap: --spacing(2);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -125,21 +125,21 @@
     grid-template-columns: auto minmax(0, 1fr) auto;
     column-gap: var(--_gap);
     align-items: center;
-    padding: var(--nui-space-2) var(--nui-space-3);
-    border: 1px solid var(--nui-border);
-    border-radius: var(--nui-radius);
-    background: var(--nui-surface);
+    padding: --spacing(2) --spacing(3);
+    border: 1px solid var(--color-border);
+    border-radius: --theme(--radius inline);
+    background: var(--color-surface);
     transition:
-      border-color var(--nui-duration-fast) var(--nui-easing),
-      opacity var(--nui-duration-fast) var(--nui-easing);
-    animation: nui-upload-appear var(--nui-duration-normal) var(--nui-easing);
+      border-color var(--transition-duration-fast) var(--ease-nui),
+      opacity var(--transition-duration-fast) var(--ease-nui);
+    animation: nui-upload-appear var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-upload-item .nui-row__leading {
     grid-area: leading;
     inline-size: var(--_thumb);
     block-size: var(--_thumb);
-    border-radius: var(--nui-radius-sm);
-    background: var(--nui-surface-muted);
+    border-radius: --theme(--radius-sm inline);
+    background: var(--color-surface-muted);
     overflow: hidden;
   }
   .nui-upload-item .nui-row__body {
@@ -160,20 +160,20 @@
   }
   .nui-upload-item__actions {
     display: inline-flex;
-    gap: var(--nui-space-1);
+    gap: var(--spacing);
   }
   .nui-upload-item__progress {
     grid-area: progress;
-    margin-block-start: var(--nui-space-2);
+    margin-block-start: --spacing(2);
   }
   .nui-upload-item--status-queued {
     opacity: 0.72;
   }
   .nui-upload-item--status-error {
-    --_row-muted: var(--nui-error);
-    --_row-icon: var(--nui-error);
+    --_row-muted: var(--color-error);
+    --_row-icon: var(--color-error);
 
-    border-color: color-mix(in oklab, var(--nui-error) 40%, var(--nui-border));
+    border-color: color-mix(in oklab, var(--color-error) 40%, var(--color-border));
   }
   .nui-upload--layout-grid .nui-upload__items {
     grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
@@ -185,9 +185,9 @@
       'body'
       'progress';
     grid-template-columns: minmax(0, 1fr);
-    row-gap: var(--nui-space-2);
+    row-gap: --spacing(2);
     align-items: start;
-    padding: var(--nui-space-2);
+    padding: --spacing(2);
   }
   .nui-upload--layout-grid .nui-upload-item .nui-row__leading {
     inline-size: 100%;
@@ -201,14 +201,14 @@
   }
   .nui-upload--layout-grid .nui-upload-item .nui-row__trailing {
     position: absolute;
-    inset-block-start: var(--nui-space-3);
-    inset-inline-end: var(--nui-space-3);
+    inset-block-start: --spacing(3);
+    inset-inline-end: --spacing(3);
     padding: 2px;
-    border-radius: var(--nui-radius-sm);
-    background: var(--nui-surface-overlay);
-    box-shadow: var(--nui-shadow-sm);
+    border-radius: --theme(--radius-sm inline);
+    background: var(--color-surface-overlay);
+    box-shadow: var(--shadow-sm);
     opacity: 0;
-    transition: opacity var(--nui-duration-fast) var(--nui-easing);
+    transition: opacity var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-upload--layout-grid .nui-upload-item:hover .nui-row__trailing,
   .nui-upload--layout-grid .nui-upload-item:focus-within .nui-row__trailing,
@@ -222,7 +222,7 @@
   @keyframes nui-upload-appear {
     from {
       opacity: 0;
-      translate: 0 calc(var(--nui-space-1) * -1);
+      translate: 0 calc(var(--spacing) * -1);
     }
   }
   .nui-avatar-upload {
@@ -236,11 +236,11 @@
     position: relative;
     display: flex;
     align-items: center;
-    gap: var(--nui-space-3);
-    color: var(--nui-text);
-    font-family: var(--nui-font);
-    font-size: var(--nui-font-size-sm);
-    line-height: var(--nui-line-height);
+    gap: --spacing(3);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
   }
   .nui-avatar-upload--size-sm {
     --_badge: 0.75rem;
@@ -270,7 +270,7 @@
     pointer-events: none;
   }
   .nui-avatar-upload__trigger {
-    --_radius: var(--nui-radius-full);
+    --_radius: var(--radius-full);
 
     position: relative;
     display: inline-grid;
@@ -283,21 +283,21 @@
     color: inherit;
     cursor: pointer;
     transition:
-      opacity var(--nui-duration-fast) var(--nui-easing),
-      outline-color var(--nui-duration-fast) var(--nui-easing);
+      opacity var(--transition-duration-fast) var(--ease-nui),
+      outline-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-avatar-upload--shape-square .nui-avatar-upload__trigger {
-    --_radius: var(--nui-radius-md);
+    --_radius: --theme(--radius-md inline);
   }
   .nui-avatar-upload__trigger:hover .nui-avatar-upload__avatar {
     opacity: 0.85;
   }
   .nui-avatar-upload__trigger:focus-visible {
-    outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-    outline-offset: calc(var(--nui-focus-ring-offset) + var(--_ring) + var(--_ring-gap));
+    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+    outline-offset: calc(var(--focus-ring-offset) + var(--_ring) + var(--_ring-gap));
   }
   .nui-avatar-upload__avatar {
-    transition: opacity var(--nui-duration-fast) var(--nui-easing);
+    transition: opacity var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-avatar-upload__ring {
     position: absolute;
@@ -305,15 +305,15 @@
     padding: var(--_ring);
     border-radius: calc(var(--_radius) + var(--_ring) + var(--_ring-gap));
     background: conic-gradient(
-      var(--nui-primary) calc(var(--_progress, 0) * 1turn),
-      var(--nui-border) 0
+      var(--color-primary) calc(var(--_progress, 0) * 1turn),
+      var(--color-border) 0
     );
     mask:
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
     mask-composite: exclude;
     pointer-events: none;
-    animation: nui-avatar-upload-ring var(--nui-duration-normal) var(--nui-easing);
+    animation: nui-avatar-upload-ring var(--transition-duration-normal) var(--ease-nui);
   }
   @keyframes nui-avatar-upload-ring {
     from {
@@ -330,14 +330,14 @@
     place-items: center;
     inline-size: var(--_badge);
     block-size: var(--_badge);
-    border-radius: var(--nui-radius-full);
-    background: var(--nui-primary);
-    box-shadow: 0 0 0 2px var(--nui-ring);
-    color: var(--nui-primary-foreground);
+    border-radius: var(--radius-full);
+    background: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-surface-ring);
+    color: var(--color-primary-foreground);
     transition:
-      background-color var(--nui-duration-fast) var(--nui-easing),
-      color var(--nui-duration-fast) var(--nui-easing),
-      opacity var(--nui-duration-fast) var(--nui-easing);
+      background-color var(--transition-duration-fast) var(--ease-nui),
+      color var(--transition-duration-fast) var(--ease-nui),
+      opacity var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-avatar-upload__badge > .nui-icon {
     inline-size: var(--_glyph);
@@ -350,15 +350,15 @@
     opacity: 0;
   }
   .nui-avatar-upload--dragging .nui-avatar-upload__trigger {
-    outline: var(--nui-focus-ring-width) solid var(--nui-primary);
-    outline-offset: calc(var(--nui-focus-ring-offset) + var(--_ring) + var(--_ring-gap));
+    outline: var(--focus-ring-width) solid var(--color-primary);
+    outline-offset: calc(var(--focus-ring-offset) + var(--_ring) + var(--_ring-gap));
   }
   .nui-avatar-upload--invalid .nui-avatar-upload__badge {
-    background: var(--nui-error);
-    color: var(--nui-error-foreground);
+    background: var(--color-error);
+    color: var(--color-error-foreground);
   }
   .nui-avatar-upload--disabled .nui-avatar-upload__trigger {
-    opacity: var(--nui-disabled-opacity);
+    opacity: var(--opacity-disabled);
     cursor: not-allowed;
   }
   .nui-avatar-upload--readonly .nui-avatar-upload__trigger {
@@ -372,12 +372,12 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--nui-space-1);
+    gap: var(--spacing);
     min-inline-size: 0;
   }
   .nui-avatar-upload__actions {
     display: inline-flex;
-    gap: var(--nui-space-1);
+    gap: var(--spacing);
   }
   .nui-avatar-upload__progress,
   .nui-avatar-upload__status {
@@ -394,8 +394,8 @@
     block-size: auto;
     overflow: visible;
     clip-path: none;
-    color: var(--nui-error);
-    font-size: var(--nui-font-size-xs);
+    color: var(--color-error);
+    font-size: var(--text-xs);
     white-space: normal;
   }
 }

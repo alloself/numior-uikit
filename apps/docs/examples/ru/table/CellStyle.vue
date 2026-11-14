@@ -41,19 +41,17 @@ const columns: NuiTableColumn<Line>[] = [
 ];
 
 const TOTAL: NuiTableCellStyle = {
-  fill: 'var(--nui-surface-muted)',
-  borders: { top: '1px solid var(--nui-border-strong)' },
+  fill: 'var(--color-surface-muted)',
+  borders: { top: '1px solid var(--color-border-strong)' },
   style: { 'font-weight': '600' },
 };
 
 const BEHIND: NuiTableCellStyle = {
-  fill: 'var(--nui-error-soft)',
-  color: 'var(--nui-error-soft-foreground)',
+  class: 'bg-error-soft text-error-soft-foreground',
 };
 
 const AHEAD: NuiTableCellStyle = {
-  fill: 'var(--nui-success-soft)',
-  color: 'var(--nui-success-soft-foreground)',
+  class: 'bg-success-soft text-success-soft-foreground',
 };
 
 const styleOf = ({ row, column }: NuiTableCellRef<Line>): NuiTableCellStyle | undefined => {

@@ -2,3 +2,11 @@
 @import '@numior/tailwind/theme.css';
 @import '@numior/tokens/base.css' layer(components);
 @import '@numior/vue/styles.css';
+@import '@numior/forms/styles.css' layer(components);
+@import '@numior/table/styles.css' layer(components);
+@import '@numior/charts/styles.css' layer(components);
+@import '@numior/spreadsheet/styles.css' layer(components);
+@import '@numior/content/styles.css' layer(components);
+@import '@numior/editor-vue/styles.css' layer(components);
+@import '@numior/tokens/prose.css' layer(components);
+@import './style.css' layer(components);

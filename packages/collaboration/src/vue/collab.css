@@ -1,33 +1,33 @@
 .nui-collab-colour--0 {
-  --_colour: var(--nui-chart-1);
+  --_colour: var(--color-chart-1);
 }
 
 .nui-collab-colour--1 {
-  --_colour: var(--nui-chart-2);
+  --_colour: var(--color-chart-2);
 }
 
 .nui-collab-colour--2 {
-  --_colour: var(--nui-chart-3);
+  --_colour: var(--color-chart-3);
 }
 
 .nui-collab-colour--3 {
-  --_colour: var(--nui-chart-4);
+  --_colour: var(--color-chart-4);
 }
 
 .nui-collab-colour--4 {
-  --_colour: var(--nui-chart-5);
+  --_colour: var(--color-chart-5);
 }
 
 .nui-collab-colour--5 {
-  --_colour: var(--nui-chart-6);
+  --_colour: var(--color-chart-6);
 }
 
 .nui-collab-colour--6 {
-  --_colour: var(--nui-chart-7);
+  --_colour: var(--color-chart-7);
 }
 
 .nui-collab-colour--7 {
-  --_colour: var(--nui-chart-8);
+  --_colour: var(--color-chart-8);
 }
 
 .nui-collab-selection {
@@ -53,7 +53,7 @@
   background: var(--_colour);
   border-radius: 1px;
   opacity: 0;
-  transition: opacity var(--nui-duration-fast) var(--nui-easing);
+  transition: opacity var(--transition-duration-fast) var(--ease-nui);
 }
 
 .nui-collab-carets__flag {
@@ -62,27 +62,27 @@
   inset-inline-start: 0;
   box-sizing: border-box;
   max-inline-size: 12rem;
-  padding: 0 var(--nui-space-1);
+  padding: 0 var(--spacing);
   overflow: hidden;
-  color: var(--nui-text);
-  font-size: var(--nui-font-size-xs);
-  line-height: var(--nui-line-height-control);
+  color: var(--color-foreground);
+  font-size: var(--text-xs);
+  line-height: var(--leading-control);
   text-overflow: ellipsis;
   white-space: nowrap;
-  background: color-mix(in oklab, var(--_colour) 24%, var(--nui-surface));
-  border-radius: var(--nui-radius-sm);
+  background: color-mix(in oklab, var(--_colour) 24%, var(--color-surface));
+  border-radius: --theme(--radius-sm inline);
   transform: translate(var(--_flag-x, 0), var(--_flag-shift, 0));
-  transition: transform var(--nui-duration-fast) var(--nui-easing);
+  transition: transform var(--transition-duration-fast) var(--ease-nui);
 }
 
 .nui-collab-comments {
   display: flex;
   flex-direction: column;
-  gap: var(--nui-space-3);
+  gap: --spacing(3);
   box-sizing: border-box;
   min-inline-size: 0;
-  color: var(--nui-text);
-  font-size: var(--nui-font-size-sm);
+  color: var(--color-foreground);
+  font-size: var(--text-sm);
 }
 
 .nui-collab-comment-layer {
@@ -97,37 +97,37 @@
 
 .nui-collab-comment-layer__anchor {
   position: sticky;
-  inset-block-start: var(--nui-space-4);
+  inset-block-start: --spacing(4);
   display: block;
   block-size: 100%;
   max-block-size: 50dvh;
 }
 
 .nui-collab-comment-popover {
-  inline-size: min(22rem, calc(100vw - 2 * var(--nui-space-4)));
+  inline-size: min(22rem, calc(100vw - 2 * --spacing(4)));
 }
 
 .nui-collab-comments__title {
   margin: 0;
-  font-size: var(--nui-font-size-md);
+  font-size: var(--text-base);
   font-weight: 600;
 }
 
 .nui-collab-comments__form {
   display: flex;
   flex-direction: column;
-  gap: var(--nui-space-2);
+  gap: --spacing(2);
 }
 
 .nui-collab-comments__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--nui-space-1);
+  gap: var(--spacing);
 }
 
 .nui-collab-comments__tools {
   display: flex;
-  gap: var(--nui-space-1);
+  gap: var(--spacing);
   margin-inline-start: auto;
 }
 
@@ -141,31 +141,31 @@
 }
 
 .nui-collab-comments__list {
-  gap: var(--nui-space-2);
+  gap: --spacing(2);
 }
 
 .nui-collab-comments__replies {
-  gap: var(--nui-space-2);
-  padding-inline-start: var(--nui-space-3);
-  border-inline-start: 2px solid var(--nui-border);
+  gap: --spacing(2);
+  padding-inline-start: --spacing(3);
+  border-inline-start: 2px solid var(--color-border);
 }
 
 .nui-collab-comments__thread {
   display: flex;
   flex-direction: column;
-  gap: var(--nui-space-2);
+  gap: --spacing(2);
   box-sizing: border-box;
-  padding: var(--nui-space-3);
-  background: var(--nui-surface);
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius);
+  padding: --spacing(3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: --theme(--radius inline);
   transition:
-    border-color var(--nui-duration-fast) var(--nui-easing),
-    opacity var(--nui-duration-fast) var(--nui-easing);
+    border-color var(--transition-duration-fast) var(--ease-nui),
+    opacity var(--transition-duration-fast) var(--ease-nui);
 }
 
 .nui-collab-comments__thread--active {
-  border-color: var(--nui-primary);
+  border-color: var(--color-primary);
 }
 
 .nui-collab-comments__thread--inline {
@@ -180,7 +180,7 @@
 
 .nui-collab-comments__entry {
   display: flex;
-  gap: var(--nui-space-2);
+  gap: --spacing(2);
   align-items: center;
   min-inline-size: 0;
 }
@@ -195,14 +195,14 @@
 .nui-collab-comments__time {
   flex: none;
   margin-inline-start: auto;
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-xs);
+  color: var(--color-muted-foreground);
+  font-size: var(--text-xs);
 }
 
 .nui-collab-comments__marks {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--nui-space-1);
+  gap: var(--spacing);
 }
 
 .nui-collab-comments__body {
@@ -214,7 +214,7 @@
 .nui-collab-history {
   display: flex;
   flex-direction: column;
-  gap: var(--nui-space-3);
+  gap: --spacing(3);
   box-sizing: border-box;
   min-inline-size: 0;
 }
@@ -222,54 +222,54 @@
 .nui-collab-history__header {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--nui-space-2);
+  gap: --spacing(2);
   align-items: center;
   justify-content: space-between;
 }
 
 .nui-collab-history__title {
   margin: 0;
-  font-size: var(--nui-font-size-md);
+  font-size: var(--text-base);
   font-weight: 600;
 }
 
 .nui-collab-history__preview {
   display: flex;
   flex-direction: column;
-  gap: var(--nui-space-3);
+  gap: --spacing(3);
   box-sizing: border-box;
-  padding: var(--nui-space-3);
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius-md);
+  padding: --spacing(3);
+  border: 1px solid var(--color-border);
+  border-radius: --theme(--radius-md inline);
 }
 
 .nui-collab-history__note {
   margin: 0;
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-sm);
+  color: var(--color-muted-foreground);
+  font-size: var(--text-sm);
 }
 
 .nui-collab-history__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--nui-space-1);
+  gap: var(--spacing);
 }
 
 .nui-diff {
-  border-radius: var(--nui-radius-sm);
+  border-radius: --theme(--radius-sm inline);
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
 }
 
 .nui-diff--added {
-  background: var(--nui-success-soft);
-  color: var(--nui-text);
+  background: --theme(--color-success-soft inline);
+  color: var(--color-foreground);
   text-decoration-line: underline;
 }
 
 .nui-diff--removed {
-  background: var(--nui-error-soft);
-  color: var(--nui-text-muted);
+  background: --theme(--color-error-soft inline);
+  color: var(--color-muted-foreground);
   text-decoration-line: line-through;
 }
 
@@ -277,7 +277,7 @@
 .nui-collab-history__alternative-list {
   display: flex;
   flex-direction: column;
-  gap: var(--nui-space-2);
+  gap: --spacing(2);
 }
 
 .nui-collab-history__alternative-list {
@@ -288,18 +288,18 @@
 
 .nui-collab-history__subtitle {
   margin: 0;
-  font-size: var(--nui-font-size-sm);
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 
 .nui-collab-history__alternative {
   display: flex;
   flex-direction: column;
-  gap: var(--nui-space-1);
+  gap: var(--spacing);
   box-sizing: border-box;
-  padding: var(--nui-space-3);
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius);
+  padding: --spacing(3);
+  border: 1px solid var(--color-border);
+  border-radius: --theme(--radius inline);
 }
 
 .nui-collab-history__value {
@@ -307,20 +307,20 @@
 }
 
 .nui-collab-history__source {
-  font-size: var(--nui-font-size-sm);
-  color: var(--nui-text-muted);
+  font-size: var(--text-sm);
+  color: var(--color-muted-foreground);
 }
 
 .nui-collab-history__alternative-actions {
   display: flex;
-  gap: var(--nui-space-2);
+  gap: --spacing(2);
   align-items: center;
   justify-content: space-between;
 }
 
 .nui-collab-history__alternative-tools {
   display: flex;
-  gap: var(--nui-space-1);
+  gap: var(--spacing);
 }
 
 .nui-collab-failure__line {
@@ -329,5 +329,5 @@
 
 .nui-collab-report {
   margin: 0;
-  padding-inline-start: var(--nui-space-4);
+  padding-inline-start: --spacing(4);
 }

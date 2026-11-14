@@ -39,6 +39,12 @@ export class HomeScreenDriver {
     return this.screen.element.contentDocument?.documentElement?.getAttribute(name) ?? null;
   }
 
+  get themeClasses(): string[] {
+    const page = this.screen.element.contentDocument?.documentElement;
+
+    return [...(page?.classList ?? [])].filter((name) => name.includes('-theme--'));
+  }
+
   async choose(group: string, label: string): Promise<void> {
     const item = this.wrapper
       .find(`.nui-toggle-group[aria-label="${group}"]`)

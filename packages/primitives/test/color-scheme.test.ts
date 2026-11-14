@@ -9,17 +9,22 @@ import {
 } from '../src';
 import { captureSetup } from './harness/capture';
 
+type MediaListener = (event: { readonly matches: boolean }) => void;
+
+const schemeClasses = (element: Element): string[] =>
+  [...element.classList].filter((name) => name.startsWith('nui-theme--'));
+
 const fakeMedia = (matches: boolean) => {
-  const listeners = new Set<() => void>();
+  const listeners = new Set<MediaListener>();
 
   const media = {
     matches,
-    addEventListener: (_type: string, listener: () => void) => listeners.add(listener),
-    removeEventListener: (_type: string, listener: () => void) => listeners.delete(listener),
+    addEventListener: (_type: string, listener: MediaListener) => listeners.add(listener),
+    removeEventListener: (_type: string, listener: MediaListener) => listeners.delete(listener),
     change(next: boolean) {
       media.matches = next;
       for (const listener of listeners) {
-        listener();
+        listener({ matches: next });
       }
     },
     get listeners() {
@@ -36,7 +41,7 @@ describe('useColorScheme', () => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
     localStorage.clear();
-    document.documentElement.removeAttribute('data-nui-theme');
+    document.documentElement.className = '';
   });
 
   it('shares one control through the config and cycles light, dark, system', async () => {
@@ -60,7 +65,7 @@ describe('useColorScheme', () => {
     expect(inner.scheme.value).toBe('light');
 
     await nextTick();
-    expect(document.documentElement.getAttribute('data-nui-theme')).toBe('light');
+    expect(schemeClasses(document.documentElement)).toEqual(['nui-theme--light']);
     expect(localStorage.getItem('nui-theme')).toBe('light');
 
     inner.cycle();
@@ -108,25 +113,29 @@ describe('useColorScheme', () => {
   it('applies the stored scheme before paint through the head script', () => {
     localStorage.setItem('nui-theme', 'dark');
     runInThisContext(colorSchemeScript('nui-theme'));
-    expect(document.documentElement.getAttribute('data-nui-theme')).toBe('dark');
+    expect(schemeClasses(document.documentElement)).toEqual(['nui-theme--dark']);
 
     localStorage.setItem('nui-theme', 'bogus');
-    document.documentElement.removeAttribute('data-nui-theme');
+    document.documentElement.className = '';
     runInThisContext(colorSchemeScript('nui-theme'));
-    expect(document.documentElement.hasAttribute('data-nui-theme')).toBe(false);
+    expect(schemeClasses(document.documentElement)).toEqual([]);
 
     runInThisContext(colorSchemeScript('nui-theme', 'light'));
-    expect(document.documentElement.getAttribute('data-nui-theme')).toBe('light');
+    expect(schemeClasses(document.documentElement)).toEqual(['nui-theme--light']);
 
     localStorage.setItem('nui-theme', 'dark');
     runInThisContext(colorSchemeScript('nui-theme', 'light'));
-    expect(document.documentElement.getAttribute('data-nui-theme')).toBe('dark');
+    expect(schemeClasses(document.documentElement)).toEqual(['nui-theme--dark']);
+
+    document.documentElement.className = 'site nui-theme--light';
+    runInThisContext(colorSchemeScript('nui-theme'));
+    expect(document.documentElement.className).toBe('site nui-theme--dark');
   });
 
-  it('reads the scope attribute, follows the system and writes changes back', async () => {
+  it('reads the scope class, follows the system and writes changes back', async () => {
     const media = fakeMedia(false);
     const scope = document.createElement('div');
-    scope.setAttribute('data-nui-theme', 'system');
+    scope.className = 'panel nui-theme--system';
     const control = captureSetup(() => useColorScheme({ scope })).value;
     expect(control.scheme.value).toBe('system');
     expect(control.resolved.value).toBe('light');
@@ -136,7 +145,7 @@ describe('useColorScheme', () => {
 
     control.set('light');
     await nextTick();
-    expect(scope.getAttribute('data-nui-theme')).toBe('light');
+    expect(scope.className).toBe('panel nui-theme--light');
 
     control.toggle();
     expect(control.scheme.value).toBe('dark');
@@ -152,7 +161,7 @@ describe('useColorScheme', () => {
     control.set('system');
     await nextTick();
     expect(localStorage.getItem('nui-theme')).toBe('system');
-    expect(scope.getAttribute('data-nui-theme')).toBe('system');
+    expect(schemeClasses(scope)).toEqual(['nui-theme--system']);
   });
 
   it('stores nothing on a first visit and follows the system until a scheme is picked', async () => {
@@ -164,7 +173,7 @@ describe('useColorScheme', () => {
     expect(localStorage.getItem('nui-theme')).toBeNull();
     expect(control.scheme.value).toBe('system');
     expect(control.resolved.value).toBe('dark');
-    expect(scope.getAttribute('data-nui-theme')).toBe('system');
+    expect(schemeClasses(scope)).toEqual(['nui-theme--system']);
 
     media.change(false);
     await nextTick();
@@ -189,7 +198,7 @@ describe('useColorScheme', () => {
 
     await nextTick();
     expect(control.scheme.value).toBe('dark');
-    expect(document.documentElement.getAttribute('data-nui-theme')).toBe('dark');
+    expect(schemeClasses(document.documentElement)).toEqual(['nui-theme--dark']);
     expect(localStorage.getItem('nui-theme')).toBeNull();
 
     control.toggle();
@@ -218,6 +227,6 @@ describe('useColorScheme', () => {
 
     control.set('light');
     await nextTick();
-    expect(scope.getAttribute('data-nui-theme')).toBe('light');
+    expect(schemeClasses(scope)).toEqual(['nui-theme--light']);
   });
 });

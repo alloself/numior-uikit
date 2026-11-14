@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { mirrorAttributes } from '../.vitepress/theme/mirror-attributes';
+import { applyThemeClasses, themeClassesOf } from '../.vitepress/theme/frame-theme';
 import { ru } from '../.vitepress/theme/texts';
 import { BlockFrameDriver } from './drivers/block-frame';
 import { exampleFile } from './drivers/example-frame';
@@ -10,17 +10,16 @@ const FILES = [
 ];
 
 describe('theme of a block page', () => {
-  it('follows the attributes of the site and drops the ones the site has dropped', () => {
+  it('follows the theme classes of the site and drops the ones the site has dropped', () => {
     const site = document.createElement('html');
     const screen = document.createElement('html');
 
-    site.setAttribute('data-nui-theme', 'dark');
-    screen.setAttribute('data-nui-accent', 'indigo');
-    mirrorAttributes(site, screen, ['data-nui-theme', 'data-nui-accent']);
+    site.className = 'site nui-theme--dark docs-theme--numior';
+    screen.className = 'nui-theme--light nui-theme--accent-indigo';
+    applyThemeClasses(screen, themeClassesOf(site));
 
-    expect(screen.getAttribute('data-nui-theme')).toBe('dark');
-    expect(screen.hasAttribute('data-nui-accent')).toBe(false);
-    expect(() => mirrorAttributes(site, null, ['data-nui-theme'])).not.toThrow();
+    expect(screen.className).toBe('nui-theme--dark docs-theme--numior');
+    expect(() => applyThemeClasses(null, ['nui-theme--dark'])).not.toThrow();
   });
 });
 

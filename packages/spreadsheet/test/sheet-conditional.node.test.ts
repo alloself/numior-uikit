@@ -174,8 +174,8 @@ describe('conditional formats in sheet cells', () => {
     ]);
 
     expect(cells.map((cell) => cell?.style?.icon?.color)).toEqual([
-      'var(--nui-error)',
-      'var(--nui-success)',
+      'var(--color-error)',
+      'var(--color-success)',
     ]);
 
     expect(cells.map((cell) => cell?.text)).toEqual(['', '']);

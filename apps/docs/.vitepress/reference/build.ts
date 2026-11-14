@@ -9,7 +9,6 @@ import { applyDocs, checkDocs } from './docs.ts';
 import { exampleSources } from '../examples/modules.ts';
 import { parseIconAliases } from './icons.ts';
 import { compiledKitCss, isLayered, THEME_FILE } from './kit-css.ts';
-import { legacyTokenCss, legacyTokensOf } from './legacy-tokens.ts';
 import { componentReference } from './meta.ts';
 import { sceneProblems, type SceneSource } from './scenes.ts';
 import { componentEntries, familyFile, familyStyleImport } from './sources.ts';
@@ -85,10 +84,15 @@ const CHECKER_OPTIONS: MetaCheckerOptions = {
 export const createReferenceChecker = (root: string): ReferenceChecker =>
   createChecker(join(root, 'tsconfig.reference.json'), CHECKER_OPTIONS);
 
-const tokensOf = async (css: string): Promise<string[]> =>
-  isLayered(css)
-    ? legacyTokensOf(await compiledKitCss(css), readFileSync(THEME_FILE, 'utf8'))
-    : parseTokens(css);
+const THEME_NAMES: ReadonlySet<string> = new Set(
+  parseThemeTokens(readFileSync(THEME_FILE, 'utf8')).map((token) => token.name),
+);
+
+const tokensOf = async (css: string): Promise<string[]> => {
+  const compiled = isLayered(css) ? await compiledKitCss(css) : '';
+
+  return parseTokens(`${css}\n${compiled}`, THEME_NAMES);
+};
 
 const stylesOf = async (entry: ComponentEntry): Promise<ReferenceStyles | undefined> => {
   const file = familyFile(entry, '.css');
@@ -197,7 +201,7 @@ export const buildReference = async (
       declarations: [PRIMITIVES, ...ENTRIES].flatMap((entry) =>
         exportedDeclarations(join(root, entry.types), entry.name, componentNames),
       ),
-      tokens: parseThemeTokens(legacyTokenCss(readFileSync(THEME_FILE, 'utf8'))),
+      tokens: parseThemeTokens(readFileSync(THEME_FILE, 'utf8')),
       icons: parseIconAliases(
         readFileSync(join(root, 'packages/primitives/src/icons/icon-aliases.ts'), 'utf8'),
       ),

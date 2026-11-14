@@ -90,8 +90,8 @@ const BUNDLE: ReferenceBundle = {
     },
   ],
   tokens: [
-    { name: '--nui-radius-md', group: 'radius', light: '0.5rem', dark: undefined },
-    { name: '--nui-surface', group: 'color', light: '#fff', dark: '#111' },
+    { name: '--radius-md', group: 'radius', light: '0.5rem', dark: undefined },
+    { name: '--color-surface', group: 'color', light: '#fff', dark: '#111' },
   ],
   icons: [{ alias: 'copy', icon: 'Copy' }],
 };
@@ -191,7 +191,7 @@ describe('markdown twin of a page', () => {
     expect(signatures).toContain("import type { HotkeyOptions } from '@numior/primitives';");
 
     expect(pageTwin('<TokenReference section="shape" />\n', contextOf())).toContain(
-      '| `--nui-radius-md` | `0.5rem` |  |',
+      '| `--radius-md` | `0.5rem` |  |',
     );
 
     expect(pageTwin('<IconReference />\n', contextOf())).toContain('| `copy` | `Copy` |');

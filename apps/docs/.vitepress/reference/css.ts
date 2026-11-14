@@ -8,7 +8,9 @@ interface BlockDraft {
 const CLASS_RE =
   /\.nui-([a-z0-9]+(?:-[a-z0-9]+)*?)(__[a-z0-9]+(?:-[a-z0-9]+)*)?(--[a-z0-9]+(?:-[a-z0-9]+)*)?(?![a-z0-9_-])/g;
 
-const TOKEN_RE = /var\(--nui-([a-z0-9-]+)/g;
+const TOKEN_RE = /(?:var|--theme)\((--[a-z0-9-]*[a-z0-9])\b/g;
+const SPACING_RE = /--spacing\(/;
+const SPACING = '--spacing';
 
 const draftOf = (drafts: Map<string, BlockDraft>, name: string): BlockDraft => {
   const existing = drafts.get(name);
@@ -51,5 +53,15 @@ export const parseBlocks = (css: string): ReferenceBlock[] => {
     }));
 };
 
-export const parseTokens = (css: string): string[] =>
-  [...new Set([...css.matchAll(TOKEN_RE)].map((match) => `--nui-${match[1] ?? ''}`))].toSorted();
+export const parseTokens = (css: string, names: ReadonlySet<string>): string[] => {
+  const found = new Set(SPACING_RE.test(css) ? [SPACING] : []);
+
+  for (const [, name = ''] of css.matchAll(TOKEN_RE)) {
+    if (!names.has(name)) {
+      continue;
+    }
+
+    found.add(name);
+  }
+  return [...found].toSorted();
+};

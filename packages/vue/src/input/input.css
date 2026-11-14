@@ -54,7 +54,7 @@
   }
   .nui-input:focus-within {
     @apply border-ring;
-    outline: var(--field-ring-width) solid var(--color-ring);
+    outline: var(--field-ring-width) solid --theme(--color-ring inline);
     outline-offset: var(--focus-ring-offset);
   }
   .nui-input--invalid {

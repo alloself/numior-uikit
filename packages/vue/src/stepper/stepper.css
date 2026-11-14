@@ -1,13 +1,13 @@
 @layer components {
   .nui-stepper {
-    --_indicator: var(--nui-control-height-sm);
-    --_pad: var(--nui-space-1);
+    --_indicator: var(--spacing-control-sm);
+    --_pad: var(--spacing);
 
     box-sizing: border-box;
-    color: var(--nui-text);
-    font-family: var(--nui-font);
-    font-size: var(--nui-font-size-sm);
-    line-height: var(--nui-line-height-label);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    line-height: --theme(--leading-label inline);
   }
   .nui-stepper--orientation-horizontal {
     inline-size: 100%;
@@ -15,16 +15,16 @@
   }
   .nui-stepper__list {
     display: flex;
-    gap: var(--nui-space-3);
+    gap: --spacing(3);
     margin: 0;
     padding: 0;
     list-style: none;
   }
   .nui-stepper__item {
-    --_ring: var(--nui-border-strong);
-    --_fill: var(--nui-surface);
-    --_ink: var(--nui-text-muted);
-    --_label: var(--nui-text-muted);
+    --_ring: var(--color-border-strong);
+    --_fill: var(--color-surface);
+    --_ink: var(--color-muted-foreground);
+    --_label: var(--color-muted-foreground);
     --_halo: transparent;
     --_connector-fill: 0;
     --_row-weight: 400;
@@ -33,66 +33,66 @@
     display: flex;
     flex: 1 1 0;
     align-items: flex-start;
-    gap: var(--nui-space-3);
+    gap: --spacing(3);
     min-inline-size: 0;
   }
   .nui-stepper__item:last-child {
     flex: 0 1 auto;
   }
   .nui-stepper__item--complete {
-    --_ring: var(--nui-primary-soft);
-    --_fill: var(--nui-primary-soft);
-    --_ink: var(--nui-primary-soft-foreground);
-    --_label: var(--nui-text);
+    --_ring: --theme(--color-primary-soft inline);
+    --_fill: --theme(--color-primary-soft inline);
+    --_ink: --theme(--color-primary-soft-foreground inline);
+    --_label: var(--color-foreground);
     --_connector-fill: 1;
   }
   .nui-stepper__item--current {
-    --_ring: var(--nui-primary);
-    --_fill: var(--nui-primary);
-    --_ink: var(--nui-primary-foreground);
-    --_label: var(--nui-text);
-    --_halo: var(--nui-primary-soft);
+    --_ring: var(--color-primary);
+    --_fill: var(--color-primary);
+    --_ink: var(--color-primary-foreground);
+    --_label: var(--color-foreground);
+    --_halo: --theme(--color-primary-soft inline);
     --_row-weight: 500;
   }
   .nui-stepper__item--error {
-    --_ring: var(--nui-error);
-    --_fill: var(--nui-error-soft);
-    --_ink: var(--nui-error-soft-foreground);
-    --_label: var(--nui-error);
+    --_ring: var(--color-error);
+    --_fill: --theme(--color-error-soft inline);
+    --_ink: --theme(--color-error-soft-foreground inline);
+    --_label: var(--color-error);
   }
   .nui-stepper__item--current.nui-stepper__item--error {
-    --_halo: var(--nui-error-soft);
+    --_halo: --theme(--color-error-soft inline);
   }
   .nui-stepper__item--disabled {
-    opacity: var(--nui-disabled-opacity);
+    opacity: var(--opacity-disabled);
   }
   .nui-stepper__step {
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    gap: var(--nui-space-2);
+    gap: --spacing(2);
     min-inline-size: 0;
     margin: calc(-1 * var(--_pad));
     padding: var(--_pad);
     border: 0;
-    border-radius: var(--nui-radius);
+    border-radius: --theme(--radius inline);
     background: transparent;
     color: var(--_label);
     font: inherit;
     text-align: start;
     transition:
-      background-color var(--nui-duration-fast) var(--nui-easing),
-      color var(--nui-duration-normal) var(--nui-easing);
+      background-color var(--transition-duration-fast) var(--ease-nui),
+      color var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-stepper__item--clickable .nui-stepper__step {
     cursor: pointer;
   }
   .nui-stepper__item--clickable .nui-stepper__step:hover {
-    background: var(--nui-hover);
+    background: --theme(--color-hover inline);
   }
   .nui-stepper__step:focus-visible {
-    outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-    outline-offset: calc(-1 * var(--nui-focus-ring-width));
+    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+    outline-offset: calc(-1 * var(--focus-ring-width));
   }
   .nui-stepper__indicator {
     box-sizing: border-box;
@@ -102,24 +102,24 @@
     inline-size: var(--_indicator);
     block-size: var(--_indicator);
     border: 1px solid var(--_ring);
-    border-radius: var(--nui-radius-full);
+    border-radius: var(--radius-full);
     background: var(--_fill);
     box-shadow: 0 0 0 3px var(--_halo);
     color: var(--_ink);
-    font-size: var(--nui-font-size-xs);
+    font-size: var(--text-xs);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-    line-height: var(--nui-line-height-control);
+    line-height: var(--leading-control);
     transition:
-      background-color var(--nui-duration-normal) var(--nui-easing),
-      border-color var(--nui-duration-normal) var(--nui-easing),
-      box-shadow var(--nui-duration-normal) var(--nui-easing),
-      color var(--nui-duration-normal) var(--nui-easing);
+      background-color var(--transition-duration-normal) var(--ease-nui),
+      border-color var(--transition-duration-normal) var(--ease-nui),
+      box-shadow var(--transition-duration-normal) var(--ease-nui),
+      color var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-stepper__mark {
     inline-size: 1rem;
     block-size: 1rem;
-    animation: nui-stepper-mark var(--nui-duration-normal) var(--nui-easing);
+    animation: nui-stepper-mark var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-stepper__status {
     position: absolute;
@@ -132,21 +132,21 @@
   .nui-stepper__connector {
     position: relative;
     flex: 1 1 auto;
-    min-inline-size: var(--nui-space-4);
+    min-inline-size: --spacing(4);
     block-size: 2px;
     margin-block-start: calc(var(--_indicator) / 2 - 1px);
-    border-radius: var(--nui-radius-full);
-    background: var(--nui-border);
+    border-radius: var(--radius-full);
+    background: var(--color-border);
     overflow: hidden;
   }
   .nui-stepper__connector::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: var(--nui-primary);
+    background: var(--color-primary);
     transform-origin: left;
     scale: var(--_connector-fill) 1;
-    transition: scale var(--nui-duration-slow) var(--nui-easing);
+    transition: scale var(--transition-duration-slow) var(--ease-nui);
   }
   .nui-stepper__connector:dir(rtl)::after {
     transform-origin: right;
@@ -155,16 +155,16 @@
     display: none;
     align-items: baseline;
     justify-content: space-between;
-    gap: var(--nui-space-3);
-    margin: var(--nui-space-3) 0 0;
+    gap: --spacing(3);
+    margin: --spacing(3) 0 0;
   }
   .nui-stepper__summary-label {
     font-weight: 500;
   }
   .nui-stepper__summary-count {
-    color: var(--nui-text-muted);
-    font-size: var(--nui-font-size-xs);
-    line-height: var(--nui-line-height-control);
+    color: var(--color-muted-foreground);
+    font-size: var(--text-xs);
+    line-height: var(--leading-control);
     font-variant-numeric: tabular-nums;
   }
   .nui-stepper--orientation-vertical .nui-stepper__list {
@@ -176,7 +176,7 @@
     flex: none;
     flex-direction: column;
     gap: 0;
-    padding-block-end: var(--nui-space-5);
+    padding-block-end: --spacing(5);
   }
   .nui-stepper--orientation-vertical .nui-stepper__item:last-child {
     padding-block-end: 0;
@@ -189,7 +189,7 @@
   }
   .nui-stepper--orientation-vertical .nui-stepper__connector {
     position: absolute;
-    inset-block: calc(var(--_indicator) + var(--nui-space-1)) var(--nui-space-1);
+    inset-block: calc(var(--_indicator) + var(--spacing)) var(--spacing);
     inset-inline-start: calc(var(--_indicator) / 2 - 1px);
     inline-size: 2px;
     min-inline-size: 0;

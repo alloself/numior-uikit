@@ -1,16 +1,16 @@
 @layer components {
   .nui-breadcrumbs {
     box-sizing: border-box;
-    color: var(--nui-text-muted);
-    font-family: var(--nui-font);
-    font-size: var(--nui-font-size-sm);
-    line-height: var(--nui-line-height-control);
+    color: var(--color-muted-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    line-height: var(--leading-control);
   }
   .nui-breadcrumbs__list {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--nui-space-2);
+    gap: --spacing(2);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -18,37 +18,37 @@
   .nui-breadcrumbs__item {
     display: inline-flex;
     align-items: center;
-    gap: var(--nui-space-2);
+    gap: --spacing(2);
   }
   .nui-breadcrumbs__link {
-    --_tone: var(--nui-text-muted);
+    --_tone: var(--color-muted-foreground);
 
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;
-    gap: var(--nui-space-1);
+    gap: var(--spacing);
     min-block-size: 1.5rem;
-    padding-inline: var(--nui-space-1);
-    margin-inline: calc(-1 * var(--nui-space-1));
+    padding-inline: var(--spacing);
+    margin-inline: calc(-1 * var(--spacing));
   }
   .nui-breadcrumbs__link:hover {
-    color: var(--nui-text);
+    color: var(--color-foreground);
   }
   .nui-breadcrumbs__current {
     display: inline-flex;
     align-items: center;
-    gap: var(--nui-space-1);
+    gap: var(--spacing);
     min-block-size: 1.5rem;
-    color: var(--nui-text);
+    color: var(--color-foreground);
     font-weight: 500;
   }
   .nui-breadcrumbs__icon {
-    inline-size: var(--nui-icon-size-sm);
-    block-size: var(--nui-icon-size-sm);
+    inline-size: var(--spacing-icon-sm);
+    block-size: var(--spacing-icon-sm);
   }
   .nui-breadcrumbs__separator {
-    inline-size: var(--nui-icon-size-sm);
-    block-size: var(--nui-icon-size-sm);
+    inline-size: var(--spacing-icon-sm);
+    block-size: var(--spacing-icon-sm);
     opacity: 0.6;
   }
   .nui-breadcrumbs__separator:dir(rtl) {

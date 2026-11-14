@@ -43,7 +43,7 @@ describe('ApiComponent', () => {
     expect(api.requiredMarks).toEqual(['обязательно']);
     expect(api.nativeTitles).toEqual([]);
     expect(api.text).not.toContain('nui-sample');
-    expect(api.text).not.toContain('--nui-primary');
+    expect(api.text).not.toContain('--color-primary');
   });
 
   it('hides sections without members', () => {

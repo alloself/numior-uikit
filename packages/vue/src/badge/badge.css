@@ -1,12 +1,12 @@
 @layer components {
   .nui-badge {
-    --_tone: var(--nui-neutral);
-    --_tone-foreground: var(--nui-neutral-foreground);
-    --_tone-soft: var(--nui-neutral-soft);
-    --_tone-soft-foreground: var(--nui-neutral-soft-foreground);
+    --_tone: var(--color-neutral);
+    --_tone-foreground: var(--color-neutral-foreground);
+    --_tone-soft: --theme(--color-neutral-soft inline);
+    --_tone-soft-foreground: --theme(--color-neutral-soft-foreground inline);
     --_height: 1.25rem;
-    --_padding: var(--nui-space-2);
-    --_font-size: var(--nui-font-size-xs);
+    --_padding: --spacing(2);
+    --_font-size: var(--text-xs);
     --_dot-size: 0.625rem;
     --_float-x: 50%;
 
@@ -14,69 +14,69 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--nui-space-1);
+    gap: var(--spacing);
     min-inline-size: var(--_height);
     block-size: var(--_height);
     padding-inline: var(--_padding);
     border: 1px solid transparent;
-    border-radius: var(--nui-radius-sm);
+    border-radius: --theme(--radius-sm inline);
     background: var(--_tone-soft);
     color: var(--_tone-soft-foreground);
-    font-family: var(--nui-font);
+    font-family: var(--font-sans);
     font-size: var(--_font-size);
     font-weight: 600;
-    line-height: var(--nui-line-height-control);
+    line-height: var(--leading-control);
     white-space: nowrap;
     vertical-align: middle;
     transition:
-      background-color var(--nui-duration-fast) var(--nui-easing),
-      border-color var(--nui-duration-fast) var(--nui-easing),
-      color var(--nui-duration-fast) var(--nui-easing);
+      background-color var(--transition-duration-fast) var(--ease-nui),
+      border-color var(--transition-duration-fast) var(--ease-nui),
+      color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-badge--size-sm {
     --_height: 1rem;
-    --_padding: calc(var(--nui-space-1) + 1px);
+    --_padding: calc(var(--spacing) + 1px);
     --_font-size: 0.6875rem;
     --_dot-size: 0.5rem;
   }
   .nui-badge--tone-primary {
-    --_tone: var(--nui-primary);
-    --_tone-foreground: var(--nui-primary-foreground);
-    --_tone-soft: var(--nui-primary-soft);
-    --_tone-soft-foreground: var(--nui-primary-soft-foreground);
+    --_tone: var(--color-primary);
+    --_tone-foreground: var(--color-primary-foreground);
+    --_tone-soft: --theme(--color-primary-soft inline);
+    --_tone-soft-foreground: --theme(--color-primary-soft-foreground inline);
   }
   .nui-badge--tone-secondary {
-    --_tone: var(--nui-secondary);
-    --_tone-foreground: var(--nui-secondary-foreground);
-    --_tone-soft: var(--nui-secondary-soft);
-    --_tone-soft-foreground: var(--nui-secondary-soft-foreground);
+    --_tone: var(--color-secondary);
+    --_tone-foreground: var(--color-secondary-foreground);
+    --_tone-soft: --theme(--color-secondary-soft inline);
+    --_tone-soft-foreground: --theme(--color-secondary-soft-foreground inline);
   }
   .nui-badge--tone-success {
-    --_tone: var(--nui-success);
-    --_tone-foreground: var(--nui-success-foreground);
-    --_tone-soft: var(--nui-success-soft);
-    --_tone-soft-foreground: var(--nui-success-soft-foreground);
+    --_tone: var(--color-success);
+    --_tone-foreground: var(--color-success-foreground);
+    --_tone-soft: --theme(--color-success-soft inline);
+    --_tone-soft-foreground: --theme(--color-success-soft-foreground inline);
   }
   .nui-badge--tone-warning {
-    --_tone: var(--nui-warning);
-    --_tone-foreground: var(--nui-warning-foreground);
-    --_tone-soft: var(--nui-warning-soft);
-    --_tone-soft-foreground: var(--nui-warning-soft-foreground);
+    --_tone: var(--color-warning);
+    --_tone-foreground: var(--color-warning-foreground);
+    --_tone-soft: --theme(--color-warning-soft inline);
+    --_tone-soft-foreground: --theme(--color-warning-soft-foreground inline);
   }
   .nui-badge--tone-error {
-    --_tone: var(--nui-error);
-    --_tone-foreground: var(--nui-error-foreground);
-    --_tone-soft: var(--nui-error-soft);
-    --_tone-soft-foreground: var(--nui-error-soft-foreground);
+    --_tone: var(--color-error);
+    --_tone-foreground: var(--color-error-foreground);
+    --_tone-soft: --theme(--color-error-soft inline);
+    --_tone-soft-foreground: --theme(--color-error-soft-foreground inline);
   }
   .nui-badge--tone-info {
-    --_tone: var(--nui-info);
-    --_tone-foreground: var(--nui-info-foreground);
-    --_tone-soft: var(--nui-info-soft);
-    --_tone-soft-foreground: var(--nui-info-soft-foreground);
+    --_tone: var(--color-info);
+    --_tone-foreground: var(--color-info-foreground);
+    --_tone-soft: --theme(--color-info-soft inline);
+    --_tone-soft-foreground: --theme(--color-info-soft-foreground inline);
   }
   .nui-badge--variant-outline {
-    border-color: color-mix(in oklab, var(--_tone) 50%, var(--nui-border));
+    border-color: color-mix(in oklab, var(--_tone) 50%, var(--color-border));
     background: transparent;
   }
   .nui-badge--variant-solid {
@@ -84,9 +84,9 @@
     color: var(--_tone-foreground);
   }
   .nui-badge--count {
-    --_padding: var(--nui-space-1);
+    --_padding: var(--spacing);
 
-    border-radius: var(--nui-radius-full);
+    border-radius: var(--radius-full);
     font-variant-numeric: tabular-nums;
   }
   .nui-badge--dot {
@@ -104,14 +104,14 @@
     inset-inline-end: 0;
     z-index: 1;
     translate: var(--_float-x) -50%;
-    box-shadow: 0 0 0 2px var(--nui-surface);
+    box-shadow: 0 0 0 2px var(--color-surface);
   }
   .nui-badge--floating:dir(rtl) {
     --_float-x: -50%;
   }
   .nui-badge__icon {
-    inline-size: var(--nui-icon-size-sm);
-    block-size: var(--nui-icon-size-sm);
+    inline-size: var(--spacing-icon-sm);
+    block-size: var(--spacing-icon-sm);
   }
   .nui-badge__label {
     overflow: hidden;

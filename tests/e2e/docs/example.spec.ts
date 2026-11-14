@@ -19,13 +19,13 @@ test('the inverted theme and the reading direction apply to the preview frame', 
   await docs.open('/components/button', 'light');
   const example = docs.example();
   await example.invertTheme.click();
-  await expect(example.preview).toHaveAttribute('data-nui-theme', 'dark');
+  await expect(example.preview).toHaveClass(/(?:^|\s)nui-theme--dark(?:\s|$)/u);
 
   await example.rtl.click();
   await expect(example.preview).toHaveAttribute('dir', 'rtl');
 
   await example.invertTheme.click();
-  await expect(example.preview).not.toHaveAttribute('data-nui-theme', /./);
+  await expect(example.preview).not.toHaveClass(/(?:^|\s)nui-theme--/u);
 });
 
 test('copying puts the example source on the clipboard', async ({ docs }) => {

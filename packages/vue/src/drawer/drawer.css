@@ -13,8 +13,8 @@
     block-size: 100dvh;
     max-block-size: none;
     border-radius: 0;
-    border-start-start-radius: var(--nui-radius-lg);
-    border-end-start-radius: var(--nui-radius-lg);
+    border-start-start-radius: --theme(--radius-lg inline);
+    border-end-start-radius: --theme(--radius-lg inline);
     translate: var(--_shift);
   }
   .nui-drawer--size-sm {
@@ -31,8 +31,8 @@
 
     inset-inline: 0 auto;
     border-radius: 0;
-    border-start-end-radius: var(--nui-radius-lg);
-    border-end-end-radius: var(--nui-radius-lg);
+    border-start-end-radius: --theme(--radius-lg inline);
+    border-end-end-radius: --theme(--radius-lg inline);
   }
   .nui-drawer--side-top,
   .nui-drawer--side-bottom {
@@ -45,13 +45,13 @@
     --_shift: 0 -100%;
 
     inset-block: 0 auto;
-    border-radius: 0 0 var(--nui-radius-lg) var(--nui-radius-lg);
+    border-radius: 0 0 --theme(--radius-lg inline) --theme(--radius-lg inline);
   }
   .nui-drawer--side-bottom {
     --_shift: 0 100%;
 
     inset-block: auto 0;
-    border-radius: var(--nui-radius-lg) var(--nui-radius-lg) 0 0;
+    border-radius: --theme(--radius-lg inline) --theme(--radius-lg inline) 0 0;
   }
   .nui-drawer--side-start:dir(rtl) {
     --_shift: 100% 0;

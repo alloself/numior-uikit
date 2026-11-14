@@ -1,58 +1,58 @@
 @layer components {
   .nui-combobox {
-    --_height: var(--nui-control-height-md);
-    --_padding: var(--nui-field-padding-md);
-    --_font-size: var(--nui-control-font-size-md);
+    --_height: var(--spacing-control-md);
+    --_padding: var(--spacing-field-pad-md);
+    --_font-size: var(--text-control-md);
 
     box-sizing: border-box;
     position: relative;
     inline-size: 100%;
-    font-family: var(--nui-font);
+    font-family: var(--font-sans);
   }
   .nui-combobox--size-sm {
-    --_height: var(--nui-control-height-sm);
-    --_padding: var(--nui-field-padding-sm);
-    --_font-size: var(--nui-control-font-size-sm);
+    --_height: var(--spacing-control-sm);
+    --_padding: var(--spacing-field-pad-sm);
+    --_font-size: var(--text-control-sm);
   }
   .nui-combobox--size-lg {
-    --_height: var(--nui-control-height-lg);
-    --_padding: var(--nui-field-padding-lg);
-    --_font-size: var(--nui-control-font-size-lg);
+    --_height: var(--spacing-control-lg);
+    --_padding: var(--spacing-field-pad-lg);
+    --_font-size: var(--text-control-lg);
   }
   .nui-combobox__field {
     box-sizing: border-box;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--nui-space-1);
+    gap: var(--spacing);
     min-block-size: var(--_height);
-    padding-block: var(--nui-space-1);
-    padding-inline: var(--_padding) var(--nui-space-1);
-    border: 1px solid var(--nui-border);
-    border-radius: var(--nui-radius);
-    background: var(--nui-surface);
-    color: var(--nui-text);
+    padding-block: var(--spacing);
+    padding-inline: var(--_padding) var(--spacing);
+    border: 1px solid var(--color-border);
+    border-radius: --theme(--radius inline);
+    background: var(--color-surface);
+    color: var(--color-foreground);
     font-size: var(--_font-size);
-    line-height: var(--nui-line-height-control);
+    line-height: var(--leading-control);
     cursor: text;
     transition:
-      border-color var(--nui-duration-fast) var(--nui-easing),
-      outline-color var(--nui-duration-fast) var(--nui-easing);
+      border-color var(--transition-duration-fast) var(--ease-nui),
+      outline-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-combobox:not(.nui-combobox--invalid) .nui-combobox__field:hover:not(:focus-within) {
-    border-color: var(--nui-border-strong);
+    border-color: var(--color-border-strong);
   }
   .nui-combobox__field:focus-within {
-    border-color: var(--nui-focus);
-    outline: var(--nui-field-ring-width) solid var(--nui-focus);
-    outline-offset: var(--nui-focus-ring-offset);
+    border-color: --theme(--color-ring inline);
+    outline: var(--field-ring-width) solid --theme(--color-ring inline);
+    outline-offset: var(--focus-ring-offset);
   }
   .nui-combobox--invalid .nui-combobox__field {
-    border-color: var(--nui-error);
+    border-color: var(--color-error);
   }
   .nui-combobox--invalid .nui-combobox__field:focus-within {
-    border-color: var(--nui-error);
-    outline-color: var(--nui-error);
+    border-color: var(--color-error);
+    outline-color: var(--color-error);
   }
   .nui-combobox--readonly .nui-combobox__field,
   .nui-combobox--readonly .nui-combobox__input {
@@ -62,14 +62,14 @@
     display: none;
   }
   .nui-combobox--disabled .nui-combobox__field {
-    opacity: var(--nui-disabled-opacity);
+    opacity: var(--opacity-disabled);
     cursor: not-allowed;
   }
   .nui-combobox__input {
     flex: 1 1 4rem;
     min-inline-size: 4rem;
     text-overflow: ellipsis;
-    min-block-size: calc(var(--_height) - var(--nui-space-2) - 2px);
+    min-block-size: calc(var(--_height) - --spacing(2) - 2px);
     padding: 0;
     border: 0;
     background: transparent;
@@ -79,7 +79,7 @@
     outline: none;
   }
   .nui-combobox__input::placeholder {
-    color: var(--nui-text-muted);
+    color: var(--color-muted-foreground);
     opacity: 1;
   }
   .nui-combobox--disabled .nui-combobox__input {
@@ -100,7 +100,7 @@
     margin-inline-start: 0;
   }
   .nui-combobox__chevron {
-    transition: rotate var(--nui-duration-fast) var(--nui-easing);
+    transition: rotate var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-combobox--open .nui-combobox__chevron {
     rotate: 180deg;

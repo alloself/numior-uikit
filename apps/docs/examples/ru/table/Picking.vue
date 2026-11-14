@@ -44,7 +44,7 @@ interface LastPick {
 const CAPTION = 'Бюджет, тыс. ₽: начните формулу со знака =';
 const OPERATOR = /[=(+\-*/,;:]$/;
 const REFERENCE = /([A-Z]+)(\d+)(?::([A-Z]+)(\d+))?/g;
-const TONES = ['var(--nui-primary)', 'var(--nui-success)', 'var(--nui-warning)'];
+const TONES = ['var(--color-primary)', 'var(--color-success)', 'var(--color-warning)'];
 
 const START: readonly (readonly string[])[] = [
   ['Статья', 'Янв', 'Фев', 'Мар'],
@@ -124,7 +124,7 @@ const boxesOf = (rectOf: (range: NuiTableRange) => NuiTableRect | undefined) => 
   return found.flatMap((match, index) => {
     const from = cellOf(match[1], match[2]);
     const rect = rectOf({ from, to: match[3] === undefined ? from : cellOf(match[3], match[4]) });
-    const tone = TONES[index % TONES.length] ?? 'var(--nui-primary)';
+    const tone = TONES[index % TONES.length] ?? 'var(--color-primary)';
 
     return rect === undefined
       ? []

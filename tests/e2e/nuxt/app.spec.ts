@@ -7,6 +7,7 @@ test('the nuxt app hydrates cleanly, applies the stored scheme and shows a toast
   await app.open('/', 'dark');
   await expect(app.home).toBeVisible();
   expect(await app.theme()).toBe('dark');
+  expect(await app.rootClasses()).toEqual(['app', 'nui-theme--dark']);
   await expect(app.install).toContainText('pnpm add @numior/nuxt');
 
   await app.notify.click();

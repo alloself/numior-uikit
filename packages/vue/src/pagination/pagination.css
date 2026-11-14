@@ -1,7 +1,7 @@
 @layer components {
   .nui-pagination {
-    --_height: var(--nui-control-height-md);
-    --_font-size: var(--nui-control-font-size-md);
+    --_height: var(--spacing-control-md);
+    --_font-size: var(--text-control-md);
 
     box-sizing: border-box;
     inline-size: 100%;
@@ -9,31 +9,31 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--nui-space-3);
-    color: var(--nui-text);
-    font-family: var(--nui-font);
-    font-size: var(--nui-font-size-sm);
-    line-height: var(--nui-line-height-control);
+    gap: --spacing(3);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    line-height: var(--leading-control);
   }
   .nui-pagination--size-sm {
-    --_height: var(--nui-control-height-sm);
-    --_font-size: var(--nui-control-font-size-sm);
+    --_height: var(--spacing-control-sm);
+    --_font-size: var(--text-control-sm);
   }
   .nui-pagination--size-lg {
-    --_height: var(--nui-control-height-lg);
-    --_font-size: var(--nui-control-font-size-lg);
+    --_height: var(--spacing-control-lg);
+    --_font-size: var(--text-control-lg);
   }
   .nui-pagination__range {
-    color: var(--nui-text-muted);
+    color: var(--color-muted-foreground);
     unicode-bidi: plaintext;
   }
   .nui-pagination__page-size {
     display: inline-flex;
     align-items: center;
-    gap: var(--nui-space-2);
+    gap: --spacing(2);
   }
   .nui-pagination__page-size-label {
-    color: var(--nui-text-muted);
+    color: var(--color-muted-foreground);
   }
   .nui-pagination__select {
     inline-size: auto;
@@ -42,15 +42,15 @@
   .nui-pagination__list {
     display: flex;
     align-items: center;
-    gap: var(--nui-space-1);
+    gap: var(--spacing);
     margin: 0;
     margin-inline-start: auto;
     padding: 0;
     list-style: none;
   }
   .nui-pagination__control {
-    --_tone: var(--nui-text);
-    --_hover: var(--nui-hover);
+    --_tone: var(--color-foreground);
+    --_hover: --theme(--color-hover inline);
 
     box-sizing: border-box;
     display: inline-flex;
@@ -58,42 +58,42 @@
     justify-content: center;
     min-inline-size: var(--_height);
     min-block-size: var(--_height);
-    padding: 0 var(--nui-space-2);
+    padding: 0 --spacing(2);
     border: 1px solid transparent;
-    border-radius: var(--nui-radius);
+    border-radius: --theme(--radius inline);
     background: transparent;
     color: var(--_tone);
     font: inherit;
     font-size: var(--_font-size);
     font-weight: 500;
-    line-height: var(--nui-line-height-control);
+    line-height: var(--leading-control);
     text-decoration: none;
     cursor: pointer;
     transition:
-      background-color var(--nui-duration-fast) var(--nui-easing),
-      color var(--nui-duration-fast) var(--nui-easing);
+      background-color var(--transition-duration-fast) var(--ease-nui),
+      color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-pagination__control:hover:not(:disabled, .nui-link--disabled) {
     background: var(--_hover);
     color: var(--_tone);
   }
   .nui-pagination__control--current {
-    --_tone: var(--nui-primary-soft-foreground);
+    --_tone: --theme(--color-primary-soft-foreground inline);
     --_hover: light-dark(
-      oklab(from var(--nui-primary-soft) calc(l - var(--nui-state-hover-subtle)) a b),
-      oklab(from var(--nui-primary-soft) calc(l + var(--nui-state-hover-subtle)) a b)
+      oklab(from --theme(--color-primary-soft inline) calc(l - var(--state-hover-subtle)) a b),
+      oklab(from --theme(--color-primary-soft inline) calc(l + var(--state-hover-subtle)) a b)
     );
 
-    background: var(--nui-primary-soft);
+    background: --theme(--color-primary-soft inline);
   }
   .nui-pagination__control:focus-visible {
-    outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-    outline-offset: var(--nui-focus-ring-offset);
+    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+    outline-offset: var(--focus-ring-offset);
   }
   .nui-pagination__control:disabled,
   .nui-pagination__control.nui-link--disabled {
-    color: var(--nui-text-muted);
-    opacity: var(--nui-disabled-opacity);
+    color: var(--color-muted-foreground);
+    opacity: var(--opacity-disabled);
     cursor: not-allowed;
   }
   .nui-pagination__arrow:dir(rtl) {
@@ -105,7 +105,7 @@
     justify-content: center;
     min-inline-size: var(--_height);
     min-block-size: var(--_height);
-    color: var(--nui-text-muted);
+    color: var(--color-muted-foreground);
   }
   .nui-pagination__item--status {
     display: none;

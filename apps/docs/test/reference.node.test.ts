@@ -21,20 +21,23 @@ const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 const VUE_INDEX = `${ROOT}packages/vue/src/index.ts`;
 
 const BUTTON_CSS = `
-.nui-button { --_tone: var(--nui-primary); color: var(--nui-text); }
-.nui-button--tone-secondary { --_tone: var(--nui-secondary); }
+.nui-button { --_tone: var(--color-primary); color: var(--color-foreground); gap: --spacing(2); }
+.nui-button--tone-secondary { --_tone: var(--color-secondary); outline-color: --theme(--color-ring inline); }
 .nui-button__content { display: inline-flex; }
-.nui-button__loader--visible { opacity: 1; }
-.nui-toggle-group__item--selected { color: var(--nui-primary); }
+.nui-button__loader--visible { opacity: 1; --_own: var(--_tone); }
+.nui-toggle-group__item--selected { color: var(--color-primary); }
 `;
 
 const THEME_CSS = `
-:root, [data-nui-theme] {
-  --nui-surface: light-dark(oklch(1 0 0), oklch(0.21 0.006 285.89));
-  --nui-primary-soft: color-mix(in oklab, var(--nui-primary) 14%, var(--nui-surface));
-  --nui-space-1: 0.25rem;
+@theme static {
+  --color-surface: light-dark(oklch(1 0 0), oklch(0.21 0.006 285.89));
+  --spacing: 0.25rem;
 }
-[data-nui-theme='dark'] { --nui-surface: oklch(0 0 0); }
+@theme inline {
+  --color-primary-soft: color-mix(in oklab, var(--color-primary) 14%, var(--color-surface));
+  --color-surface: oklch(0 0 0);
+}
+.nui-theme--dark { --color-surface: oklch(0 0 0); }
 `;
 
 const ICONS_SOURCE = `
@@ -158,24 +161,35 @@ describe('docs reference', () => {
       { name: 'nui-toggle-group', parts: ['item'], modifiers: ['__item--selected'] },
     ]);
 
-    expect(parseTokens(BUTTON_CSS)).toEqual(['--nui-primary', '--nui-secondary', '--nui-text']);
+    expect(
+      parseTokens(
+        BUTTON_CSS,
+        new Set(['--color-primary', '--color-secondary', '--color-foreground', '--color-ring']),
+      ),
+    ).toEqual([
+      '--color-foreground',
+      '--color-primary',
+      '--color-ring',
+      '--color-secondary',
+      '--spacing',
+    ]);
   });
 
   it('parses theme tokens with light and dark values and icon aliases', () => {
     expect(parseThemeTokens(THEME_CSS)).toEqual([
       {
-        name: '--nui-surface',
-        group: 'surface',
+        name: '--color-surface',
+        group: 'color',
         light: 'oklch(1 0 0)',
         dark: 'oklch(0.21 0.006 285.89)',
       },
+      { name: '--spacing', group: 'spacing', light: '0.25rem', dark: undefined },
       {
-        name: '--nui-primary-soft',
-        group: 'primary',
-        light: 'color-mix(in oklab, var(--nui-primary) 14%, var(--nui-surface))',
+        name: '--color-primary-soft',
+        group: 'color',
+        light: 'color-mix(in oklab, var(--color-primary) 14%, var(--color-surface))',
         dark: undefined,
       },
-      { name: '--nui-space-1', group: 'space', light: '0.25rem', dark: undefined },
     ]);
 
     expect(parseIconAliases(ICONS_SOURCE)).toEqual([
@@ -267,7 +281,7 @@ describe('docs reference', () => {
     expect(bundle.catalogs.select?.texts.empty?.ru).toBeTypeOf('string');
     expect(bundle.components.NuiForm?.package).toBe('@numior/forms');
     expect(bundle.declarations.some((entry) => entry.name === 'useClipboard')).toBe(true);
-    expect(bundle.tokens.some((token) => token.name === '--nui-primary')).toBe(true);
+    expect(bundle.tokens.some((token) => token.name === '--color-primary')).toBe(true);
     expect(bundle.icons.some((icon) => icon.alias === 'direction')).toBe(true);
     expect(problems).toEqual([]);
     expect(undocumented).not.toContain('NuiInput');

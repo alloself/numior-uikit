@@ -4,17 +4,17 @@
     --_track-block: 1.5rem;
     --_thumb: 1.125rem;
     --_inset: 0.1875rem;
-    --_font-size: var(--nui-font-size-sm);
+    --_font-size: var(--text-sm);
 
     box-sizing: border-box;
     position: relative;
     display: inline-flex;
     align-items: flex-start;
-    gap: var(--nui-space-2);
-    color: var(--nui-text);
-    font-family: var(--nui-font);
+    gap: --spacing(2);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
     font-size: var(--_font-size);
-    line-height: var(--nui-line-height-label);
+    line-height: --theme(--leading-label inline);
     cursor: pointer;
     -webkit-user-select: none;
     user-select: none;
@@ -24,13 +24,13 @@
     --_track-inline: 2rem;
     --_track-block: 1.25rem;
     --_thumb: 0.875rem;
-    --_font-size: var(--nui-font-size-xs);
+    --_font-size: var(--text-xs);
   }
   .nui-switch--size-lg {
     --_track-inline: 3rem;
     --_track-block: 1.75rem;
     --_thumb: 1.375rem;
-    --_font-size: var(--nui-font-size-md);
+    --_font-size: var(--text-base);
   }
   .nui-switch__control {
     position: absolute;
@@ -51,9 +51,9 @@
     inline-size: var(--_track-inline);
     block-size: var(--_track-block);
     margin-block-start: calc((1lh - var(--_track-block)) / 2);
-    border-radius: var(--nui-radius-full);
-    background: var(--nui-border-strong);
-    transition: background-color var(--nui-duration-normal) var(--nui-easing);
+    border-radius: var(--radius-full);
+    background: var(--color-border-strong);
+    transition: background-color var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-switch__thumb {
     --_travel: calc(var(--_track-inline) - var(--_thumb) - 2 * var(--_inset));
@@ -64,16 +64,16 @@
     inset-inline-start: var(--_inset);
     inline-size: var(--_thumb);
     block-size: var(--_thumb);
-    border-radius: var(--nui-radius-full);
-    background: var(--nui-surface);
-    box-shadow: var(--nui-shadow-sm);
+    border-radius: var(--radius-full);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
     translate: var(--_shift) 0;
     transition:
-      translate var(--nui-duration-normal) var(--nui-easing),
-      scale var(--nui-duration-fast) var(--nui-easing);
+      translate var(--transition-duration-normal) var(--ease-nui),
+      scale var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-switch__control:checked + .nui-switch__track {
-    background: var(--nui-primary);
+    background: var(--color-primary);
   }
   .nui-switch__control:checked + .nui-switch__track .nui-switch__thumb {
     --_shift: var(--_travel);
@@ -85,20 +85,20 @@
     scale: 1.15 0.9;
   }
   .nui-switch__control:focus-visible + .nui-switch__track {
-    outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-    outline-offset: var(--nui-focus-ring-offset);
+    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+    outline-offset: var(--focus-ring-offset);
   }
   .nui-switch--invalid .nui-switch__track {
-    background: var(--nui-error);
+    background: var(--color-error);
   }
   .nui-switch--invalid .nui-switch__control:focus-visible + .nui-switch__track {
-    outline-color: var(--nui-error);
+    outline-color: var(--color-error);
   }
   .nui-switch--readonly {
     cursor: default;
   }
   .nui-switch--disabled {
-    opacity: var(--nui-disabled-opacity);
+    opacity: var(--opacity-disabled);
     cursor: not-allowed;
   }
 }

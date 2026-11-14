@@ -4,7 +4,9 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vite-plus/test';
 import {
   BLOCKS,
+  FRAMED_EXAMPLES,
   blockExampleOf,
+  blockHeightOf,
   blockNamed,
   blockPaths,
   blockRouteOf,
@@ -44,5 +46,19 @@ describe('docs blocks', () => {
     expect(isBlockView('blocks/')).toBe(false);
     expect(blockNamed('Unknown')).toBeUndefined();
     expect(blockNamed('SignIn')?.height).toBeGreaterThan(0);
+  });
+
+  it('serves a guide example on a bare page without adding it to the gallery', () => {
+    const names = FRAMED_EXAMPLES.map((entry) => entry.name);
+
+    expect(blockPaths()).toContainEqual({ params: { name: 'GuideTheme' } });
+    expect(blockExampleOf('GuideTheme')).toBe('guide/Theme');
+    expect(blockHeightOf('GuideTheme')).toBeGreaterThan(0);
+    expect(blockNamed('GuideTheme')).toBeUndefined();
+    expect(galleryBlocks('blocks/index.md')).not.toContain('GuideTheme');
+
+    expect(
+      names.filter((name) => exampleSources(EXAMPLES, `en/${blockExampleOf(name)}`) === undefined),
+    ).toEqual([]);
   });
 });

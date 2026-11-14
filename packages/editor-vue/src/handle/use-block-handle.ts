@@ -57,7 +57,7 @@ const PUSHED = 'nui-editor__pushed';
 
 const ZONE = 48;
 
-const BESIDE_GAP = 'var(--nui-space-2)';
+const BESIDE_GAP = 'calc(var(--spacing) * 2)';
 
 const CONTROL = 'button, input, select, textarea, a, label, [role], [tabindex]';
 
@@ -90,8 +90,8 @@ const glide = (element: Element | undefined, before: number | undefined): void =
   const style = getComputedStyle(element);
 
   element.animate([{ translate: `${String(shift)}px 0` }, { translate: '0 0' }], {
-    duration: Number.parseFloat(style.getPropertyValue('--nui-duration-fast')) || 0,
-    easing: style.getPropertyValue('--nui-easing').trim() || 'ease',
+    duration: Number.parseFloat(style.getPropertyValue('--transition-duration-fast')) || 0,
+    easing: style.getPropertyValue('--ease-nui').trim() || 'ease',
   });
 };
 

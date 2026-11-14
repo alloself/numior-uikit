@@ -1,39 +1,39 @@
 @layer components {
   .nui-number-field {
-    --_height: var(--nui-control-height-md);
-    --_padding: var(--nui-field-padding-md);
-    --_font-size: var(--nui-control-font-size-md);
+    --_height: var(--spacing-control-md);
+    --_padding: var(--spacing-field-pad-md);
+    --_font-size: var(--text-control-md);
     --_stepper: 2rem;
 
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;
-    gap: var(--nui-space-2);
+    gap: --spacing(2);
     inline-size: 100%;
     min-block-size: var(--_height);
     padding-inline: var(--_padding);
     overflow: clip;
-    border: 1px solid var(--nui-border);
-    border-radius: var(--nui-radius);
-    background: var(--nui-surface);
-    color: var(--nui-text);
-    font-family: var(--nui-font);
+    border: 1px solid var(--color-border);
+    border-radius: --theme(--radius inline);
+    background: var(--color-surface);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
     font-size: var(--_font-size);
-    line-height: var(--nui-line-height-control);
+    line-height: var(--leading-control);
     transition:
-      border-color var(--nui-duration-fast) var(--nui-easing),
-      outline-color var(--nui-duration-fast) var(--nui-easing);
+      border-color var(--transition-duration-fast) var(--ease-nui),
+      outline-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-number-field--size-sm {
-    --_height: var(--nui-control-height-sm);
-    --_padding: var(--nui-field-padding-sm);
-    --_font-size: var(--nui-control-font-size-sm);
+    --_height: var(--spacing-control-sm);
+    --_padding: var(--spacing-field-pad-sm);
+    --_font-size: var(--text-control-sm);
     --_stepper: 1.75rem;
   }
   .nui-number-field--size-lg {
-    --_height: var(--nui-control-height-lg);
-    --_padding: var(--nui-field-padding-lg);
-    --_font-size: var(--nui-control-font-size-lg);
+    --_height: var(--spacing-control-lg);
+    --_padding: var(--spacing-field-pad-lg);
+    --_font-size: var(--text-control-lg);
     --_stepper: 2.25rem;
   }
   .nui-number-field--steppers {
@@ -54,7 +54,7 @@
     outline: none;
   }
   .nui-number-field__control::placeholder {
-    color: var(--nui-text-muted);
+    color: var(--color-muted-foreground);
     opacity: 1;
   }
   .nui-number-field__prefix,
@@ -62,14 +62,14 @@
     display: inline-flex;
     flex: none;
     align-items: center;
-    color: var(--nui-text-muted);
+    color: var(--color-muted-foreground);
   }
   .nui-number-field__steppers {
     box-sizing: border-box;
     display: inline-flex;
     flex: none;
     align-self: stretch;
-    border-inline-start: 1px solid var(--nui-border);
+    border-inline-start: 1px solid var(--color-border);
   }
   .nui-number-field__stepper {
     box-sizing: border-box;
@@ -80,26 +80,26 @@
     border-radius: 0;
   }
   .nui-number-field__stepper + .nui-number-field__stepper {
-    border-inline-start: 1px solid var(--nui-border);
+    border-inline-start: 1px solid var(--color-border);
   }
   .nui-number-field:hover:not(
       .nui-number-field--disabled,
       .nui-number-field--invalid,
       :focus-within
     ) {
-    border-color: var(--nui-border-strong);
+    border-color: var(--color-border-strong);
   }
   .nui-number-field:focus-within {
-    border-color: var(--nui-focus);
-    outline: var(--nui-field-ring-width) solid var(--nui-focus);
-    outline-offset: var(--nui-focus-ring-offset);
+    border-color: --theme(--color-ring inline);
+    outline: var(--field-ring-width) solid --theme(--color-ring inline);
+    outline-offset: var(--focus-ring-offset);
   }
   .nui-number-field--invalid {
-    border-color: var(--nui-error);
+    border-color: var(--color-error);
   }
   .nui-number-field--invalid:focus-within {
-    border-color: var(--nui-error);
-    outline-color: var(--nui-error);
+    border-color: var(--color-error);
+    outline-color: var(--color-error);
   }
   .nui-number-field--readonly .nui-number-field__steppers {
     display: none;
@@ -108,7 +108,7 @@
     cursor: default;
   }
   .nui-number-field--disabled {
-    opacity: var(--nui-disabled-opacity);
+    opacity: var(--opacity-disabled);
     cursor: not-allowed;
   }
   .nui-number-field--disabled .nui-number-field__control {

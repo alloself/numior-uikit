@@ -9,7 +9,7 @@
   white-space: nowrap;
 }
 .nui-editor__upload {
-  font-family: var(--nui-font);
+  font-family: var(--font-sans);
   white-space: normal;
   user-select: none;
 }
@@ -17,18 +17,18 @@
   display: flex;
   box-sizing: border-box;
   align-items: center;
-  gap: var(--nui-space-3);
-  padding: var(--nui-space-2) var(--nui-space-3);
-  border: 1px solid var(--nui-border);
-  border-radius: var(--nui-radius);
-  background: var(--nui-surface-muted);
+  gap: --spacing(3);
+  padding: --spacing(2) --spacing(3);
+  border: 1px solid var(--color-border);
+  border-radius: --theme(--radius inline);
+  background: var(--color-surface-muted);
   transition:
-    border-color var(--nui-duration-fast) var(--nui-easing),
-    background-color var(--nui-duration-fast) var(--nui-easing);
+    border-color var(--transition-duration-fast) var(--ease-nui),
+    background-color var(--transition-duration-fast) var(--ease-nui);
 }
 .nui-editor-upload--status-error {
-  border-color: color-mix(in oklab, var(--nui-error) 45%, transparent);
-  background: var(--nui-error-soft);
+  border-color: color-mix(in oklab, var(--color-error) 45%, transparent);
+  background: --theme(--color-error-soft inline);
 }
 .nui-editor-upload__preview,
 .nui-editor-upload__icon {
@@ -36,7 +36,7 @@
   box-sizing: border-box;
   inline-size: 3rem;
   block-size: 3rem;
-  border-radius: var(--nui-radius-sm);
+  border-radius: --theme(--radius-sm inline);
 }
 .nui-editor-upload__preview {
   object-fit: cover;
@@ -45,61 +45,61 @@
 .nui-editor-upload__icon {
   display: grid;
   place-items: center;
-  background: var(--nui-surface);
-  color: var(--nui-text-muted);
+  background: var(--color-surface);
+  color: var(--color-muted-foreground);
   font-size: 1.25rem;
 }
 .nui-editor-upload__body {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: var(--nui-space-1);
+  gap: var(--spacing);
   min-inline-size: 0;
 }
 .nui-editor-upload__name {
   overflow: hidden;
-  color: var(--nui-text);
-  font-size: var(--nui-font-size-sm);
-  font-weight: var(--nui-font-weight-medium);
-  line-height: var(--nui-line-height);
+  color: var(--color-foreground);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--leading-normal);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .nui-editor-upload__status {
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-xs);
-  line-height: var(--nui-line-height);
+  color: var(--color-muted-foreground);
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
 }
 .nui-editor-upload--status-error .nui-editor-upload__status {
-  color: var(--nui-error-soft-foreground);
+  color: --theme(--color-error-soft-foreground inline);
 }
 .nui-editor-upload__actions {
   display: flex;
   flex: none;
-  gap: var(--nui-space-1);
+  gap: var(--spacing);
 }
 .nui-editor-media {
-  inline-size: calc(min(20rem, calc(100vw - var(--nui-space-8))) - 2 * var(--nui-space-3) - 2px);
+  inline-size: calc(min(20rem, calc(100vw - --spacing(8))) - 2 * --spacing(3) - 2px);
 }
 .nui-editor-media__upload {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--nui-space-2);
-  padding-block-start: var(--nui-space-3);
+  gap: --spacing(2);
+  padding-block-start: --spacing(3);
 }
 .nui-editor-media__hint {
   margin: 0;
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-xs);
-  line-height: var(--nui-line-height);
+  color: var(--color-muted-foreground);
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
 }
 .nui-editor-media__form {
   display: grid;
-  gap: var(--nui-space-2);
+  gap: --spacing(2);
 }
 .nui-editor-media__form--tabbed {
-  padding-block-start: var(--nui-space-3);
+  padding-block-start: --spacing(3);
 }
 .nui-editor-media__actions {
   display: flex;

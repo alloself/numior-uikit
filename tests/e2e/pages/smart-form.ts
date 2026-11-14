@@ -110,7 +110,7 @@ export class SmartFormSection {
 
   async slowDownMotion(): Promise<void> {
     await this.profile.evaluate((root) => {
-      root.style.setProperty('--nui-duration-normal', '1s');
+      root.style.setProperty('--transition-duration-normal', '1s');
     });
   }
 

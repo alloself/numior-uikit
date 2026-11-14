@@ -5,8 +5,10 @@ import { ru } from '../../.vitepress/theme/texts';
 import type { TokenSection } from '../../.vitepress/theme/theme.types';
 import { tokenRowsOf } from '../../.vitepress/theme/token-sections';
 
+const SCHEME_CLASS = 'nui-theme--';
+
 export const themeToken = (name: string, light: string, dark?: string): TokenReference => ({
-  name: `--nui-${name}`,
+  name: `--${name}`,
   group: name.split('-')[0] ?? name,
   light,
   dark,
@@ -37,7 +39,7 @@ export class TokenTableDriver {
   private sampleCell(name: string): DOMWrapper<Element> {
     const row = this.wrapper
       .findAll('.nui-table__body [role="row"]')
-      .find((candidate) => candidate.find('code').text() === `--nui-${name}`);
+      .find((candidate) => candidate.find('code').text() === `--${name}`);
 
     const cell = row?.find('[role="gridcell"]');
 
@@ -49,8 +51,9 @@ export class TokenTableDriver {
 
   swatchSchemes(name: string): string[] {
     return this.sampleCell(name)
-      .findAll('[data-nui-theme]')
-      .map((swatch) => swatch.attributes('data-nui-theme') ?? '');
+      .findAll('[class*="nui-theme--"]')
+      .flatMap((swatch) => swatch.classes().filter((value) => value.startsWith(SCHEME_CLASS)))
+      .map((value) => value.slice(SCHEME_CLASS.length));
   }
 
   sampleStyle(name: string): string {

@@ -1,6 +1,6 @@
 @layer components {
   .nui-separator {
-    --_line: var(--nui-border);
+    --_line: var(--color-border);
 
     box-sizing: border-box;
     display: block;
@@ -20,13 +20,13 @@
   .nui-separator--labelled {
     display: flex;
     align-items: center;
-    gap: var(--nui-space-3);
+    gap: --spacing(3);
     block-size: auto;
     background: none;
-    color: var(--nui-text-muted);
-    font-family: var(--nui-font);
-    font-size: var(--nui-font-size-sm);
-    line-height: var(--nui-line-height);
+    color: var(--color-muted-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
   }
   .nui-separator--labelled::before,
   .nui-separator--labelled::after {

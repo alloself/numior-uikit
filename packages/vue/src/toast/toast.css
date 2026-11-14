@@ -1,8 +1,8 @@
 @layer components {
   .nui-toaster {
-    --_inset: var(--nui-space-4);
+    --_inset: --spacing(4);
     --_width: 22rem;
-    --_gap: var(--nui-space-2);
+    --_gap: --spacing(2);
     --_peek: 0.875rem;
     --_direction: 1;
 
@@ -44,7 +44,7 @@
   }
   @media (max-width: 40rem) {
     .nui-toaster {
-      --_inset: var(--nui-space-2);
+      --_inset: --spacing(2);
       --_width: 100%;
     }
   }
@@ -64,7 +64,7 @@
     align-items: start;
     box-sizing: border-box;
     block-size: var(--_size);
-    border-radius: var(--nui-radius);
+    border-radius: --theme(--radius inline);
     outline: 1px solid transparent;
     outline-offset: -1px;
     background: transparent;
@@ -74,13 +74,13 @@
     scale: var(--_scale);
     pointer-events: auto;
     transition:
-      translate var(--nui-duration-slow) var(--nui-easing),
-      scale var(--nui-duration-slow) var(--nui-easing),
-      block-size var(--nui-duration-slow) var(--nui-easing),
-      opacity var(--nui-duration-normal) var(--nui-easing),
-      outline-color var(--nui-duration-normal) var(--nui-easing),
-      background-color var(--nui-duration-normal) var(--nui-easing),
-      box-shadow var(--nui-duration-normal) var(--nui-easing);
+      translate var(--transition-duration-slow) var(--ease-nui),
+      scale var(--transition-duration-slow) var(--ease-nui),
+      block-size var(--transition-duration-slow) var(--ease-nui),
+      opacity var(--transition-duration-normal) var(--ease-nui),
+      outline-color var(--transition-duration-normal) var(--ease-nui),
+      background-color var(--transition-duration-normal) var(--ease-nui),
+      box-shadow var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-toaster__item::after {
     content: '';
@@ -118,9 +118,9 @@
     --_scale: calc(1 - min(var(--_index), 2) * 0.05);
 
     block-size: var(--_front-size, var(--_size));
-    outline-color: var(--nui-border);
-    background: var(--nui-surface-overlay);
-    box-shadow: var(--nui-shadow-md);
+    outline-color: var(--color-border);
+    background: var(--color-surface-overlay);
+    box-shadow: var(--shadow-md);
     opacity: clamp(0, 3 - var(--_index), 1);
   }
   .nui-toaster:not(.nui-toaster--hovered, :focus-within, .nui-toaster--expanded)
@@ -130,57 +130,57 @@
   }
 
   .nui-toast {
-    --_tone: var(--nui-neutral);
-    --_line: round(down, calc(var(--nui-font-size-sm) * var(--nui-line-height)), 0.25rem);
+    --_tone: var(--color-neutral);
+    --_line: round(down, calc(var(--text-sm) * var(--leading-normal)), 0.25rem);
 
     box-sizing: border-box;
     display: flex;
     align-items: flex-start;
-    gap: var(--nui-space-3);
-    padding: var(--nui-space-3);
-    padding-inline-start: var(--nui-space-4);
-    border: 1px solid var(--nui-border);
+    gap: --spacing(3);
+    padding: --spacing(3);
+    padding-inline-start: --spacing(4);
+    border: 1px solid var(--color-border);
     border-inline-start: 3px solid var(--_tone);
-    border-radius: var(--nui-radius);
-    background: var(--nui-surface-overlay);
-    color: var(--nui-text);
-    font-family: var(--nui-font);
-    font-size: var(--nui-font-size-sm);
+    border-radius: --theme(--radius inline);
+    background: var(--color-surface-overlay);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
     line-height: var(--_line);
-    box-shadow: var(--nui-shadow-md);
+    box-shadow: var(--shadow-md);
     opacity: 1;
     transition:
-      opacity var(--nui-duration-normal) var(--nui-easing),
-      visibility var(--nui-duration-normal);
+      opacity var(--transition-duration-normal) var(--ease-nui),
+      visibility var(--transition-duration-normal);
   }
   .nui-toast--leaving {
     visibility: hidden;
     pointer-events: none;
   }
   .nui-toast--tone-info {
-    --_tone: var(--nui-info);
+    --_tone: var(--color-info);
   }
   .nui-toast--tone-success {
-    --_tone: var(--nui-success);
+    --_tone: var(--color-success);
   }
   .nui-toast--tone-warning {
-    --_tone: var(--nui-warning);
+    --_tone: var(--color-warning);
   }
   .nui-toast--tone-error {
-    --_tone: var(--nui-error);
+    --_tone: var(--color-error);
   }
   .nui-toast:focus-visible {
-    outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-    outline-offset: var(--nui-focus-ring-offset);
+    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+    outline-offset: var(--focus-ring-offset);
   }
   .nui-toast__icon {
-    margin-block-start: calc((var(--_line) - var(--nui-icon-size)) / 2);
+    margin-block-start: calc((var(--_line) - var(--spacing-icon)) / 2);
     color: var(--_tone);
   }
   .nui-toast__body {
     display: grid;
     flex: 1 1 auto;
-    gap: var(--nui-space-1);
+    gap: var(--spacing);
     min-inline-size: 0;
   }
   .nui-toast__title {
@@ -189,21 +189,21 @@
   }
   .nui-toast__description {
     margin: 0;
-    color: var(--nui-text-muted);
+    color: var(--color-muted-foreground);
   }
   .nui-toast__action {
     --_height: 1.5rem;
-    --_padding: var(--nui-space-2);
-    --_font-size: var(--nui-font-size-xs);
+    --_padding: --spacing(2);
+    --_font-size: var(--text-xs);
 
     flex: none;
     align-self: center;
     padding-block: 0;
-    border-radius: var(--nui-radius-sm);
+    border-radius: --theme(--radius-sm inline);
   }
   .nui-toast__close {
     flex: none;
     margin-block-start: calc((var(--_line) - var(--_height)) / 2);
-    margin-inline-end: calc(-1 * var(--nui-space-1));
+    margin-inline-end: calc(-1 * var(--spacing));
   }
 }

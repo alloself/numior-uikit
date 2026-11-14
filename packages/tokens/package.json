@@ -15,6 +15,10 @@
       "@numior/source": "./src/theme.css",
       "default": "./dist/theme.css"
     },
+    "./variants.css": {
+      "@numior/source": "./src/variants.css",
+      "default": "./dist/variants.css"
+    },
     "./accents.css": {
       "@numior/source": "./src/accents.css",
       "default": "./dist/accents.css"

@@ -1,16 +1,16 @@
 .nui-editor-toolbar {
-  --_separator: calc(var(--nui-space-2) * 2 + 1px);
+  --_separator: calc(--spacing(2) * 2 + 1px);
 
   position: sticky;
   inset-block-start: 0;
   z-index: 1;
   overflow: clip;
   box-sizing: border-box;
-  padding: var(--nui-space-1);
-  border-block-end: 1px solid var(--nui-border);
+  padding: var(--spacing);
+  border-block-end: 1px solid var(--color-border);
   border-start-start-radius: inherit;
   border-start-end-radius: inherit;
-  background: var(--nui-surface);
+  background: var(--color-surface);
 }
 .nui-editor-toolbar__groups {
   display: flex;
@@ -29,11 +29,11 @@
   content: '';
   position: absolute;
   inset-block: 0;
-  inset-inline-start: var(--nui-space-2);
+  inset-inline-start: --spacing(2);
   inline-size: 1px;
   margin-block: auto;
   block-size: 1.25rem;
-  background: var(--nui-border);
+  background: var(--color-border);
 }
 .nui-editor-toolbar--docked {
   position: fixed;
@@ -41,13 +41,13 @@
   inset-inline: 0;
   z-index: 10;
   overflow: visible;
-  padding-block-end: max(var(--nui-space-1), env(safe-area-inset-bottom));
-  border-block-start: 1px solid var(--nui-border);
+  padding-block-end: max(var(--spacing), env(safe-area-inset-bottom));
+  border-block-start: 1px solid var(--color-border);
   border-block-end: 0;
   border-radius: 0;
-  box-shadow: var(--nui-shadow-md);
+  box-shadow: var(--shadow-md);
   translate: 0 0;
-  transition: translate var(--nui-duration-normal) var(--nui-easing);
+  transition: translate var(--transition-duration-normal) var(--ease-nui);
 }
 @starting-style {
   .nui-editor-toolbar--docked {

@@ -62,10 +62,7 @@ test('example frame options', async ({ docs, scenes }) => {
   await scenes.capture('states/example--inverted', 'html', 'viewport');
   await example.rtl.click();
   await scenes.capture('states/example--inverted-rtl', 'html', 'viewport');
-  await example.baseTheme.click();
-  await scenes.capture('states/example--base-inverted-rtl', 'html', 'viewport');
   await example.invertTheme.click();
-  await scenes.capture('states/example--base-rtl', 'html', 'viewport');
   await example.codeToggle.click();
   await expect(example.code).toBeVisible();
 

@@ -70,9 +70,9 @@ const TITLE: NuiTableCellStyle = {
   style: { 'font-weight': '700', 'font-size': '1.25em' },
 };
 
-const FILL: NuiTableCellStyle = { fill: 'var(--nui-warning-soft)' };
+const FILL: NuiTableCellStyle = { class: 'bg-warning-soft' };
 
-const RED_LINE = '2px solid var(--nui-error)';
+const RED_LINE = '2px solid var(--color-error)';
 
 const EDGE: NuiTableCellStyle = {
   borders: { start: RED_LINE, top: RED_LINE, end: RED_LINE, bottom: RED_LINE },

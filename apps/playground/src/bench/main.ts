@@ -1,8 +1,7 @@
 import { createApp } from 'vue';
 import { createNuiConfig } from '@numior/vue';
 import { createShikiHighlighter } from '@numior/vue/shiki';
-import '../kit.css';
-import './layers.css';
+import './kit.css';
 import BenchApp from './BenchApp.vue';
 
 createApp(BenchApp)

@@ -2,9 +2,9 @@
   .nui-skeleton {
     --_inline-size: 100%;
     --_block-size: 1em;
-    --_radius: var(--nui-radius-sm);
-    --_tint: color-mix(in oklab, var(--nui-text) 8%, transparent);
-    --_shine: color-mix(in oklab, var(--nui-text) 13%, transparent);
+    --_radius: --theme(--radius-sm inline);
+    --_tint: color-mix(in oklab, var(--color-foreground) 8%, transparent);
+    --_shine: color-mix(in oklab, var(--color-foreground) 13%, transparent);
     --_sweep: 48rem;
 
     box-sizing: border-box;
@@ -42,12 +42,12 @@
   }
   .nui-skeleton--shape-rect {
     --_block-size: 6rem;
-    --_radius: var(--nui-radius);
+    --_radius: --theme(--radius inline);
   }
   .nui-skeleton--shape-circle {
     --_inline-size: 2.5rem;
     --_block-size: 2.5rem;
-    --_radius: var(--nui-radius-full);
+    --_radius: var(--radius-full);
   }
   .nui-skeleton--static .nui-skeleton__line::after,
   .nui-skeleton--static.nui-skeleton--shape-rect::after,

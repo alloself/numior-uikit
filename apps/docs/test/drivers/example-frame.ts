@@ -8,6 +8,8 @@ import SampleButton from '../fixtures/SampleButton.vue';
 
 const SampleComponent = markRaw(SampleButton);
 
+const SCHEME_CLASS = 'nui-theme--';
+
 export const exampleFile = (name: string, source: string): ExampleFile => ({
   name,
   language: name.endsWith('.vue') ? 'vue' : 'ts',
@@ -45,7 +47,15 @@ export class ExampleFrameDriver {
   }
 
   get previewTheme(): string | undefined {
-    return this.preview.attributes('data-nui-theme');
+    const scheme = this.preview.classes().find((name) => name.startsWith(SCHEME_CLASS));
+
+    return scheme?.slice(SCHEME_CLASS.length);
+  }
+
+  get previewOptions(): string[] {
+    return this.wrapper
+      .findAll('.nui-toggle-group button')
+      .map((button) => button.attributes('aria-label') ?? button.text());
   }
 
   get previewDirection(): string | undefined {
@@ -92,14 +102,6 @@ export class ExampleFrameDriver {
 
   async showPreview(): Promise<void> {
     await this.button(ru.preview).trigger('click');
-  }
-
-  get previewAccent(): string | undefined {
-    return this.preview.attributes('data-nui-accent');
-  }
-
-  async toggleBase(): Promise<void> {
-    await this.button(ru.baseTheme).trigger('click');
   }
 
   async toggleTheme(): Promise<void> {

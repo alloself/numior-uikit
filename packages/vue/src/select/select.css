@@ -41,7 +41,7 @@
   .nui-select__trigger:focus-visible,
   .nui-select--open .nui-select__trigger {
     @apply border-ring;
-    outline: var(--field-ring-width) solid var(--color-ring);
+    outline: var(--field-ring-width) solid --theme(--color-ring inline);
     outline-offset: var(--focus-ring-offset);
   }
   .nui-select--invalid .nui-select__trigger {

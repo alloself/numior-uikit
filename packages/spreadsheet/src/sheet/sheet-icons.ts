@@ -31,19 +31,19 @@ import type { NuiTableCellIcon } from '@numior/table';
 import { markRaw, type Component } from 'vue';
 import type { IconLook } from '../core';
 
-const ERROR = 'var(--nui-error)';
+const ERROR = 'var(--color-error)';
 
-const WARNING = 'var(--nui-warning)';
+const WARNING = 'var(--color-warning)';
 
-const SUCCESS = 'var(--nui-success)';
+const SUCCESS = 'var(--color-success)';
 
-const SUBTLE = 'var(--nui-text-subtle)';
+const SUBTLE = 'var(--color-subtle-foreground)';
 
-const INK = 'var(--nui-text)';
+const INK = 'var(--color-foreground)';
 
-const INFO = 'var(--nui-info)';
+const INFO = 'var(--color-info)';
 
-const PINK = 'color-mix(in oklab, var(--nui-error) 55%, var(--nui-surface))';
+const PINK = 'color-mix(in oklab, var(--color-error) 55%, var(--color-surface))';
 
 const icon = (glyph: Component, color: string, filled = false): NuiTableCellIcon => ({
   icon: markRaw(glyph),

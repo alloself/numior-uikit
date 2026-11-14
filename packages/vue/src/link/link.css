@@ -1,9 +1,9 @@
 @layer components {
   .nui-link {
-    --_tone: var(--nui-primary);
+    --_tone: var(--color-primary);
 
     box-sizing: border-box;
-    border-radius: var(--nui-radius-sm);
+    border-radius: --theme(--radius-sm inline);
     color: var(--_tone);
     font: inherit;
     text-decoration: underline;
@@ -12,29 +12,29 @@
     text-underline-offset: 0.2em;
     cursor: pointer;
     transition:
-      color var(--nui-duration-fast) var(--nui-easing),
-      text-decoration-color var(--nui-duration-fast) var(--nui-easing);
+      color var(--transition-duration-fast) var(--ease-nui),
+      text-decoration-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-link--tone-secondary {
-    --_tone: var(--nui-secondary);
+    --_tone: var(--color-secondary);
   }
   .nui-link--tone-success {
-    --_tone: var(--nui-success);
+    --_tone: var(--color-success);
   }
   .nui-link--tone-warning {
-    --_tone: var(--nui-warning);
+    --_tone: var(--color-warning);
   }
   .nui-link--tone-error {
-    --_tone: var(--nui-error);
+    --_tone: var(--color-error);
   }
   .nui-link--tone-info {
-    --_tone: var(--nui-info);
+    --_tone: var(--color-info);
   }
   .nui-link--tone-neutral {
-    --_tone: var(--nui-text);
+    --_tone: var(--color-foreground);
   }
   .nui-link:hover {
-    color: color-mix(in oklab, var(--_tone), var(--nui-text) 15%);
+    color: color-mix(in oklab, var(--_tone), var(--color-foreground) 15%);
     text-decoration-color: currentColor;
   }
   .nui-link--underline-hover {
@@ -49,13 +49,13 @@
     text-decoration: none;
   }
   .nui-link:focus-visible {
-    outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-    outline-offset: var(--nui-focus-ring-offset);
+    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+    outline-offset: var(--focus-ring-offset);
   }
   .nui-link--disabled,
   .nui-link--disabled:hover {
-    color: var(--nui-text-muted);
-    opacity: var(--nui-disabled-opacity);
+    color: var(--color-muted-foreground);
+    opacity: var(--opacity-disabled);
     text-decoration: none;
     cursor: not-allowed;
   }

@@ -1,47 +1,33 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { NUMIOR_PALETTE } from '../.vitepress/theme/composables/use-accent';
-import { applyAttributes, screenAttributes } from '../.vitepress/theme/frame-attributes';
+import { applyFrameTheme, screenTheme } from '../.vitepress/theme/frame-theme';
 import { ru } from '../.vitepress/theme/texts';
 import { HomeScreenDriver } from './drivers/home-screen';
 
-describe('attributes of a framed screen', () => {
-  it('names the scheme and the direction and leaves out the palette of the site', () => {
-    const plain = screenAttributes({
-      scheme: 'dark',
-      accent: NUMIOR_PALETTE,
-      rtl: false,
-    });
-
-    expect(plain).toEqual({
-      'data-nui-theme': 'dark',
-      'data-nui-accent': null,
+describe('theme of a framed screen', () => {
+  it('names the scheme, the site palette and the direction', () => {
+    expect(screenTheme({ scheme: 'dark', accent: NUMIOR_PALETTE, rtl: false })).toEqual({
+      classes: ['nui-theme--dark', 'docs-theme--numior'],
       dir: 'ltr',
     });
   });
 
   it('names a picked accent and turns the screen right to left', () => {
-    const picked = screenAttributes({
-      scheme: 'light',
-      accent: 'violet',
-      rtl: true,
-    });
-
-    expect(picked).toEqual({
-      'data-nui-theme': 'light',
-      'data-nui-accent': 'violet',
+    expect(screenTheme({ scheme: 'light', accent: 'violet', rtl: true })).toEqual({
+      classes: ['nui-theme--light', 'nui-theme--accent-violet'],
       dir: 'rtl',
     });
   });
 
-  it('sets the named attributes on a page and removes the ones that are dropped', () => {
+  it('replaces the theme classes of a page and keeps its own classes', () => {
     const page = document.createElement('html');
 
-    page.setAttribute('data-nui-accent', 'indigo');
-    applyAttributes(page, { 'data-nui-theme': 'dark', 'data-nui-accent': null });
+    page.className = 'page nui-theme--light nui-theme--accent-indigo';
+    applyFrameTheme(page, { classes: ['nui-theme--dark', 'docs-theme--numior'], dir: 'rtl' });
 
-    expect(page.getAttribute('data-nui-theme')).toBe('dark');
-    expect(page.hasAttribute('data-nui-accent')).toBe(false);
-    expect(() => applyAttributes(null, { dir: 'rtl' })).not.toThrow();
+    expect(page.className).toBe('page nui-theme--dark docs-theme--numior');
+    expect(page.getAttribute('dir')).toBe('rtl');
+    expect(() => applyFrameTheme(null, { classes: [], dir: 'rtl' })).not.toThrow();
   });
 });
 
@@ -60,11 +46,11 @@ describe('HomeScreen', () => {
     const home = HomeScreenDriver.mount();
 
     await home.choose(ru.theme, ru.dark);
-    expect(home.attribute('data-nui-theme')).toBe('dark');
+    expect(home.themeClasses).toContain('nui-theme--dark');
 
     await home.choose(ru.rtl, ru.rtl);
     expect(home.attribute('dir')).toBe('rtl');
-    expect(document.documentElement.getAttribute('data-nui-theme')).not.toBe('dark');
+    expect(document.documentElement.classList.contains('nui-theme--dark')).toBe(false);
     expect(document.documentElement.getAttribute('dir')).not.toBe('rtl');
 
     home.unmount();
@@ -74,11 +60,11 @@ describe('HomeScreen', () => {
     const home = HomeScreenDriver.mount();
 
     await home.pickAccent(ru.accents.violet);
-    expect(home.attribute('data-nui-accent')).toBe('violet');
+    expect(home.themeClasses).toEqual(['nui-theme--light', 'nui-theme--accent-violet']);
     expect(home.accent).toBe(ru.accents.violet);
 
     await home.pickAccent('Numior');
-    expect(home.attribute('data-nui-accent')).toBeNull();
+    expect(home.themeClasses).toEqual(['nui-theme--light', 'docs-theme--numior']);
 
     home.unmount();
   });

@@ -3,29 +3,29 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: var(--nui-space-2);
+    gap: --spacing(2);
     min-inline-size: 0;
   }
   .nui-radio-group--orientation-horizontal {
     flex-direction: row;
     flex-wrap: wrap;
-    gap: var(--nui-space-4);
+    gap: --spacing(4);
   }
 
   .nui-radio {
     --_size: 1.25rem;
     --_dot: 0.5rem;
-    --_font-size: var(--nui-font-size-sm);
+    --_font-size: var(--text-sm);
 
     box-sizing: border-box;
     position: relative;
     display: inline-flex;
     align-items: flex-start;
-    gap: var(--nui-space-2);
-    color: var(--nui-text);
-    font-family: var(--nui-font);
+    gap: --spacing(2);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
     font-size: var(--_font-size);
-    line-height: var(--nui-line-height-label);
+    line-height: --theme(--leading-label inline);
     cursor: pointer;
     -webkit-user-select: none;
     user-select: none;
@@ -34,12 +34,12 @@
   .nui-radio-group--size-sm .nui-radio {
     --_size: 1rem;
     --_dot: 0.375rem;
-    --_font-size: var(--nui-font-size-xs);
+    --_font-size: var(--text-xs);
   }
   .nui-radio-group--size-lg .nui-radio {
     --_size: 1.5rem;
     --_dot: 0.625rem;
-    --_font-size: var(--nui-font-size-md);
+    --_font-size: var(--text-base);
   }
   .nui-radio__control {
     position: absolute;
@@ -62,24 +62,24 @@
     inline-size: var(--_size);
     block-size: var(--_size);
     margin-block-start: calc((1lh - var(--_size)) / 2);
-    border: 1px solid var(--nui-border-strong);
-    border-radius: var(--nui-radius-full);
-    background: var(--nui-surface);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-full);
+    background: var(--color-surface);
     transition:
-      border-color var(--nui-duration-fast) var(--nui-easing),
-      scale var(--nui-duration-fast) var(--nui-easing);
+      border-color var(--transition-duration-fast) var(--ease-nui),
+      scale var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-radio__dot::after {
     content: '';
     inline-size: var(--_dot);
     block-size: var(--_dot);
     border-radius: inherit;
-    background: var(--nui-primary);
+    background: var(--color-primary);
     scale: 0;
-    transition: scale var(--nui-duration-normal) var(--nui-easing);
+    transition: scale var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-radio__control:checked + .nui-radio__dot {
-    border-color: var(--nui-primary);
+    border-color: var(--color-primary);
   }
   .nui-radio__control:checked + .nui-radio__dot::after {
     scale: 1;
@@ -89,23 +89,23 @@
   }
   .nui-radio:hover:not(.nui-radio--disabled, .nui-radio--readonly, .nui-radio--invalid)
     .nui-radio__dot {
-    border-color: var(--nui-primary);
+    border-color: var(--color-primary);
   }
   .nui-radio__control:focus-visible + .nui-radio__dot {
-    outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-    outline-offset: var(--nui-focus-ring-offset);
+    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+    outline-offset: var(--focus-ring-offset);
   }
   .nui-radio--invalid .nui-radio__dot {
-    border-color: var(--nui-error);
+    border-color: var(--color-error);
   }
   .nui-radio--invalid .nui-radio__control:focus-visible + .nui-radio__dot {
-    outline-color: var(--nui-error);
+    outline-color: var(--color-error);
   }
   .nui-radio--readonly {
     cursor: default;
   }
   .nui-radio--disabled {
-    opacity: var(--nui-disabled-opacity);
+    opacity: var(--opacity-disabled);
     cursor: not-allowed;
   }
 }

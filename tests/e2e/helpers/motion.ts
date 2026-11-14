@@ -9,7 +9,7 @@ export const SLOW_MOTION = 10_000;
 
 const PAINT = 'Paint';
 
-export const slowMotion = (scope: Locator, token = '--nui-duration-fast'): Promise<void> =>
+export const slowMotion = (scope: Locator, token = '--transition-duration-fast'): Promise<void> =>
   scope.evaluate(
     (element, { name, value }) => {
       if (!(element instanceof HTMLElement)) {

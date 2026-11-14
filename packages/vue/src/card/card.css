@@ -1,11 +1,11 @@
 @layer components {
   .nui-card {
-    --_padding: var(--nui-space-6);
-    --_gap: var(--nui-space-6);
-    --_radius: var(--nui-radius-lg);
+    --_padding: --spacing(6);
+    --_gap: --spacing(6);
+    --_radius: --theme(--radius-lg inline);
     --_inner-radius: calc(var(--_radius) - 1px);
-    --_surface: var(--nui-surface);
-    --_border: var(--nui-border);
+    --_surface: var(--color-surface);
+    --_border: var(--color-border);
     --_shadow: none;
     --_hover-border: var(--_border);
     --_hover-shadow: var(--_shadow);
@@ -19,44 +19,44 @@
     border: 1px solid var(--_border);
     border-radius: var(--_radius);
     background: var(--_surface);
-    color: var(--nui-text);
-    font-family: var(--nui-font);
-    font-size: var(--nui-font-size-sm);
-    line-height: var(--nui-line-height);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
     box-shadow: var(--_shadow);
     transition:
-      border-color var(--nui-duration-fast) var(--nui-easing),
-      box-shadow var(--nui-duration-fast) var(--nui-easing),
-      background-color var(--nui-duration-fast) var(--nui-easing);
+      border-color var(--transition-duration-fast) var(--ease-nui),
+      box-shadow var(--transition-duration-fast) var(--ease-nui),
+      background-color var(--transition-duration-fast) var(--ease-nui);
     isolation: isolate;
   }
   .nui-card--padding-xs {
-    --_padding: var(--nui-space-3);
-    --_gap: var(--nui-space-3);
+    --_padding: --spacing(3);
+    --_gap: --spacing(3);
   }
   .nui-card--padding-sm {
-    --_padding: var(--nui-space-4);
-    --_gap: var(--nui-space-4);
+    --_padding: --spacing(4);
+    --_gap: --spacing(4);
   }
   .nui-card--padding-lg {
-    --_padding: var(--nui-space-8);
-    --_gap: var(--nui-space-8);
+    --_padding: --spacing(8);
+    --_gap: --spacing(8);
   }
   .nui-card--variant-outline {
-    --_shadow: var(--nui-shadow-sm);
-    --_hover-border: var(--nui-border-strong);
-    --_hover-shadow: var(--nui-shadow-md);
+    --_shadow: var(--shadow-sm);
+    --_hover-border: var(--color-border-strong);
+    --_hover-shadow: var(--shadow-md);
   }
   .nui-card--variant-elevated {
-    --_surface: var(--nui-surface-elevated);
+    --_surface: var(--color-surface-elevated);
     --_border: transparent;
-    --_shadow: var(--nui-shadow-md);
-    --_hover-shadow: var(--nui-shadow-lg);
+    --_shadow: var(--shadow-md);
+    --_hover-shadow: var(--shadow-lg);
   }
   .nui-card--variant-soft {
-    --_surface: var(--nui-surface-muted);
+    --_surface: var(--color-surface-muted);
     --_border: transparent;
-    --_hover-border: var(--nui-border);
+    --_hover-border: var(--color-border);
   }
   .nui-card--interactive:hover {
     border-color: var(--_hover-border);
@@ -73,25 +73,25 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: var(--nui-space-3);
+    gap: --spacing(3);
   }
   .nui-card__heading {
     display: grid;
     flex: 1 1 auto;
-    gap: var(--nui-space-2);
+    gap: --spacing(2);
     min-inline-size: 0;
   }
   .nui-card__actions {
     display: flex;
     flex: none;
     align-items: center;
-    gap: var(--nui-space-1);
+    gap: var(--spacing);
   }
   .nui-card__title {
     margin: 0;
-    font-size: var(--nui-font-size-md);
+    font-size: var(--text-base);
     font-weight: 600;
-    line-height: var(--nui-line-height-control);
+    line-height: var(--leading-control);
   }
   .nui-card__action {
     padding: 0;
@@ -113,16 +113,16 @@
     outline: none;
   }
   .nui-card .nui-card__action:focus-visible::after {
-    outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-    outline-offset: calc(var(--nui-focus-ring-offset) + 1px);
+    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+    outline-offset: calc(var(--focus-ring-offset) + 1px);
   }
   .nui-card .nui-card__action:hover {
     color: inherit;
   }
   .nui-card__description {
     margin: 0;
-    color: var(--nui-text-muted);
-    font-size: var(--nui-font-size-sm);
+    color: var(--color-muted-foreground);
+    font-size: var(--text-sm);
   }
   .nui-card__content {
     min-inline-size: 0;
@@ -138,7 +138,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--nui-space-2);
+    gap: --spacing(2);
   }
   .nui-card__media {
     --_aspect: 16 / 9;
@@ -148,8 +148,8 @@
     margin-inline: calc(-1 * var(--_padding));
     aspect-ratio: var(--_aspect);
     overflow: hidden;
-    background: var(--nui-surface-muted);
-    color: var(--nui-text-subtle);
+    background: var(--color-surface-muted);
+    color: var(--color-subtle-foreground);
   }
   .nui-card__media:first-child {
     margin-block-start: calc(-1 * var(--_padding));

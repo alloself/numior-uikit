@@ -2,11 +2,11 @@
   display: flex;
   flex: none;
   align-items: center;
-  block-size: calc(var(--nui-line-height-relaxed) * 1em);
+  block-size: calc(var(--leading-relaxed) * 1em);
 }
 .nui-editor__content .nui-content__toggle > .nui-editor__widget {
   position: absolute;
-  inset-block-start: calc((var(--nui-line-height-relaxed) * 1em - var(--_mark)) / 2);
+  inset-block-start: calc((var(--leading-relaxed) * 1em - var(--_mark)) / 2);
   inset-inline-start: 0;
   display: flex;
 }
@@ -19,12 +19,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  block-size: calc(var(--nui-line-height-relaxed) * 1em);
+  block-size: calc(var(--leading-relaxed) * 1em);
 }
 .nui-editor-callout__mark {
   display: inline-flex;
   color: var(--_mark);
-  font-size: var(--nui-control-font-size-sm);
+  font-size: var(--text-control-sm);
 }
 .nui-editor__content .nui-content__columns {
   position: relative;
@@ -51,9 +51,9 @@
   inset-inline-start: calc(50% - 1px);
   inline-size: 2px;
   border-radius: 1px;
-  background: var(--nui-primary);
+  background: var(--color-primary);
   opacity: 0;
-  transition: opacity var(--nui-duration-fast) var(--nui-easing);
+  transition: opacity var(--transition-duration-fast) var(--ease-nui);
 }
 .nui-editor-columns__separator:hover::after,
 .nui-editor-columns__separator:focus-visible::after,
@@ -62,8 +62,8 @@
 }
 .nui-editor-table__actions {
   display: flex;
-  gap: var(--nui-space-1);
-  margin-block-start: var(--nui-space-1);
+  gap: var(--spacing);
+  margin-block-start: var(--spacing);
 }
 .nui-editor-table__rename {
   inline-size: 16rem;
@@ -73,19 +73,19 @@
 }
 .nui-editor__content .nui-content__code > .nui-editor__widget {
   display: block;
-  margin-block-end: var(--nui-space-2);
+  margin-block-end: --spacing(2);
 }
 .nui-editor-code {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--nui-space-2);
-  font-family: var(--nui-font);
+  gap: --spacing(2);
+  font-family: var(--font-sans);
   white-space: normal;
 }
 .nui-editor-code__language {
   display: inline-flex;
-  margin-inline-start: calc(-1 * var(--nui-space-2));
+  margin-inline-start: calc(-1 * --spacing(2));
 }
 .nui-editor-code__languages {
   display: flex;
@@ -95,14 +95,14 @@
   border-radius: inherit;
 }
 .nui-editor-code__label {
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-xs);
+  color: var(--color-muted-foreground);
+  font-size: var(--text-xs);
 }
 .nui-editor__content .nui-content__image > .nui-editor__widget {
   display: block;
 }
 .nui-editor__content .nui-content__image.nui-editor__pushed {
-  max-inline-size: calc(100% - var(--_grip) - var(--nui-space-2));
+  max-inline-size: calc(100% - var(--_grip) - --spacing(2));
 }
 .nui-editor__content .nui-content__file > .nui-editor__widget {
   display: contents;
@@ -110,12 +110,12 @@
 .nui-editor-image {
   --_grip-opacity: 0;
 
-  font-family: var(--nui-font);
+  font-family: var(--font-sans);
   white-space: normal;
 }
 .nui-editor-image__frame {
   position: relative;
-  border-radius: var(--nui-radius);
+  border-radius: --theme(--radius inline);
 }
 .nui-editor-image__frame:hover,
 .nui-editor-image--selected,
@@ -130,21 +130,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  inline-size: var(--nui-space-6);
-  block-size: var(--nui-space-6);
+  inline-size: --spacing(6);
+  block-size: --spacing(6);
   cursor: var(--_cursor);
   opacity: var(--_grip-opacity);
   touch-action: none;
   outline: none;
-  transition: opacity var(--nui-duration-fast) var(--nui-easing);
+  transition: opacity var(--transition-duration-fast) var(--ease-nui);
 }
 .nui-editor-image__grip::before {
   content: '';
   box-sizing: border-box;
   inline-size: 12px;
   block-size: 12px;
-  border: 3px solid color-mix(in oklab, var(--nui-text) 75%, transparent);
-  filter: drop-shadow(0 0 1px var(--nui-surface)) drop-shadow(0 0 1px var(--nui-surface));
+  border: 3px solid color-mix(in oklab, var(--color-foreground) 75%, transparent);
+  filter: drop-shadow(0 0 1px var(--color-surface)) drop-shadow(0 0 1px var(--color-surface));
 }
 .nui-editor-image__grip:focus-visible {
   --_grip-opacity: 1;
@@ -152,8 +152,8 @@
   opacity: 1;
 }
 .nui-editor-image__grip:focus-visible::before {
-  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-  outline-offset: var(--nui-focus-ring-offset);
+  outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+  outline-offset: var(--focus-ring-offset);
 }
 .nui-editor-image__grip--at-top-start::before {
   border-block-end-width: 0;
@@ -206,20 +206,20 @@
 .nui-editor-image__bar {
   display: flex;
   align-items: center;
-  gap: var(--nui-space-1);
+  gap: var(--spacing);
 }
 .nui-editor-image__busy {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: flex-end;
-  padding: var(--nui-space-3);
+  padding: --spacing(3);
   border-radius: inherit;
-  background: color-mix(in oklab, var(--nui-surface) 45%, transparent);
+  background: color-mix(in oklab, var(--color-surface) 45%, transparent);
 }
 .nui-editor-image__alt {
   display: grid;
-  gap: var(--nui-space-2);
+  gap: --spacing(2);
   inline-size: 16rem;
 }
 .nui-editor-image__actions {
@@ -243,7 +243,7 @@
   outline: none;
 }
 .nui-editor-caption::placeholder {
-  color: var(--nui-text-muted);
+  color: var(--color-muted-foreground);
   opacity: 0.6;
 }
 .nui-editor-caption--quiet:not(:focus) {
@@ -254,7 +254,7 @@
   display: block;
 }
 .nui-editor-embed {
-  font-family: var(--nui-font);
+  font-family: var(--font-sans);
   white-space: normal;
 }
 .nui-editor-embed__frame {
@@ -263,25 +263,25 @@
 .nui-editor-embed__cover {
   position: absolute;
   inset: 0;
-  border-radius: var(--nui-radius);
+  border-radius: --theme(--radius inline);
   cursor: pointer;
 }
 .nui-editor__corner {
   position: absolute;
-  inset-block-start: var(--nui-space-2);
-  inset-inline: var(--nui-space-2);
+  inset-block-start: --spacing(2);
+  inset-inline: --spacing(2);
   block-size: 0;
   pointer-events: none;
 }
 .nui-editor-image__frame > .nui-editor__corner {
-  inset-inline-end: var(--nui-space-8);
+  inset-inline-end: --spacing(8);
 }
 .nui-editor-link-bar__edit {
-  inline-size: min(18rem, calc(100vw - var(--nui-space-8)));
+  inline-size: min(18rem, calc(100vw - --spacing(8)));
 }
 .nui-editor-link-form {
   display: grid;
-  gap: var(--nui-space-2);
+  gap: --spacing(2);
 }
 .nui-editor-link-form__actions {
   display: flex;
@@ -290,7 +290,7 @@
 .nui-editor-link-bar__actions {
   display: flex;
   align-items: center;
-  gap: var(--nui-space-1);
+  gap: var(--spacing);
 }
 .nui-editor__content .nui-content__bookmark-link {
   cursor: pointer;

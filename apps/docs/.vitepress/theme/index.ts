@@ -10,10 +10,10 @@ import '@fontsource-variable/manrope/index.css';
 import '@fontsource-variable/jetbrains-mono/index.css';
 import './numior.css';
 import './tailwind.css';
-import './layers.css';
 import Layout from './Layout.vue';
 import ApiReference from './parts/ApiReference.vue';
 import DocsBlock from './parts/DocsBlock.vue';
+import DocsThemeCompare from './parts/DocsThemeCompare.vue';
 import DocsCodeGroup from './parts/DocsCodeGroup.vue';
 import DocsConfigurator from './parts/DocsConfigurator.vue';
 import DocsExample from './parts/DocsExample.vue';
@@ -57,6 +57,7 @@ export default {
     app.component('IconReference', DocsIcons);
     app.component('KeyboardReference', DocsKeyboard);
     app.component('SignatureReference', DocsSignature);
+    app.component('ThemeCompare', DocsThemeCompare);
     app.component('TokenReference', DocsTokens);
   },
 } satisfies Theme;

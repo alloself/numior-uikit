@@ -8,7 +8,7 @@ import {
 } from './css-rules';
 
 const ALIASES = parseAliases(`
-  :root, [data-nui-theme] {
+  :root {
     --nui-primary: var(--color-primary);
     --nui-space-2: calc(var(--spacing) * 2);
     --nui-radius: var(--radius-md);

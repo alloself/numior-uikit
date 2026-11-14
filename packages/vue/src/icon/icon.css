@@ -3,13 +3,13 @@
     box-sizing: border-box;
     display: inline-flex;
     flex: none;
-    inline-size: var(--nui-icon-size);
-    block-size: var(--nui-icon-size);
+    inline-size: var(--spacing-icon);
+    block-size: var(--spacing-icon);
     rotate: var(--_rotate, 0deg);
     scale: var(--_scale, 1);
     transition:
-      rotate var(--nui-duration-fast) var(--nui-easing),
-      scale var(--nui-duration-fast) var(--nui-easing);
+      rotate var(--transition-duration-fast) var(--ease-nui),
+      scale var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-icon__glyph {
     inline-size: 100%;
@@ -19,7 +19,7 @@
     fill: currentColor;
   }
   .nui-icon--appearing .nui-icon__glyph {
-    animation: nui-icon-appear var(--nui-duration-fast) var(--nui-easing);
+    animation: nui-icon-appear var(--transition-duration-fast) var(--ease-nui);
   }
   @keyframes nui-icon-appear {
     from {

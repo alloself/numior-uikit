@@ -1,27 +1,27 @@
 @layer components {
   .nui-empty {
-    --_padding: var(--nui-space-6);
-    --_gap: var(--nui-space-2);
+    --_padding: --spacing(6);
+    --_gap: --spacing(2);
     --_media-size: 2.5rem;
-    --_title-size: var(--nui-font-size-md);
+    --_title-size: var(--text-base);
 
     box-sizing: border-box;
     display: grid;
     justify-items: center;
     gap: var(--_gap);
     padding: var(--_padding);
-    color: var(--nui-text);
-    font-family: var(--nui-font);
-    font-size: var(--nui-font-size-sm);
-    line-height: var(--nui-line-height);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
     text-align: center;
-    animation: nui-empty-appear var(--nui-duration-normal) var(--nui-easing);
+    animation: nui-empty-appear var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-empty--size-sm {
-    --_padding: var(--nui-space-3);
-    --_gap: var(--nui-space-1);
+    --_padding: --spacing(3);
+    --_gap: var(--spacing);
     --_media-size: 1.5rem;
-    --_title-size: var(--nui-font-size-sm);
+    --_title-size: var(--text-sm);
   }
   .nui-empty__media {
     display: inline-flex;
@@ -29,7 +29,7 @@
     justify-content: center;
     inline-size: var(--_media-size);
     block-size: var(--_media-size);
-    color: var(--nui-text-subtle);
+    color: var(--color-subtle-foreground);
   }
   .nui-empty__icon {
     inline-size: 100%;
@@ -39,23 +39,23 @@
     margin: 0;
     font-size: var(--_title-size);
     font-weight: 600;
-    line-height: var(--nui-line-height-control);
+    line-height: var(--leading-control);
   }
   .nui-empty__description {
     max-inline-size: 36ch;
-    color: var(--nui-text-muted);
+    color: var(--color-muted-foreground);
   }
   .nui-empty__actions {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: var(--nui-space-2);
-    margin-block-start: var(--nui-space-1);
+    gap: --spacing(2);
+    margin-block-start: var(--spacing);
   }
   @keyframes nui-empty-appear {
     from {
       opacity: 0;
-      translate: 0 calc(var(--nui-space-1) * -1);
+      translate: 0 calc(var(--spacing) * -1);
     }
   }
 }

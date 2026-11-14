@@ -7,7 +7,7 @@
     display: flex;
     min-inline-size: 0;
     min-block-size: 0;
-    font-family: var(--nui-font);
+    font-family: var(--font-sans);
     isolation: isolate;
   }
   .nui-splitter--orientation-vertical {
@@ -45,8 +45,8 @@
     inset: 0 auto;
     inline-size: 1px;
     justify-self: center;
-    background: var(--nui-border);
-    transition: background-color var(--nui-duration-fast) var(--nui-easing);
+    background: var(--color-border);
+    transition: background-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-splitter--orientation-vertical .nui-splitter__divider::before {
     inset: auto 0;
@@ -60,9 +60,9 @@
     z-index: 1;
     inline-size: 5px;
     block-size: 2rem;
-    border-radius: var(--nui-radius-full);
-    background: var(--nui-border-strong);
-    transition: background-color var(--nui-duration-fast) var(--nui-easing);
+    border-radius: var(--radius-full);
+    background: var(--color-border-strong);
+    transition: background-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-splitter--orientation-vertical .nui-splitter__grip {
     inline-size: 2rem;
@@ -70,21 +70,21 @@
   }
   .nui-splitter__divider:hover .nui-splitter__grip,
   .nui-splitter--dragging .nui-splitter__grip {
-    background: var(--nui-primary);
+    background: var(--color-primary);
   }
   .nui-splitter__divider:hover::before,
   .nui-splitter--dragging .nui-splitter__divider::before {
-    background: var(--nui-primary);
+    background: var(--color-primary);
   }
   .nui-splitter__divider:focus-visible {
-    outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-    border-radius: var(--nui-radius-sm);
+    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+    border-radius: --theme(--radius-sm inline);
   }
   .nui-splitter--dragging .nui-splitter__pane {
     pointer-events: none;
   }
   .nui-splitter--disabled .nui-splitter__divider {
     cursor: default;
-    opacity: var(--nui-disabled-opacity);
+    opacity: var(--opacity-disabled);
   }
 }

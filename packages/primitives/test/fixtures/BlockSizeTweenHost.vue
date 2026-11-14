@@ -1,5 +1,5 @@
 <template>
-  <div :ref="setBox" :style="{ '--nui-duration-normal': duration, '--nui-easing': 'linear' }">
+  <div :ref="setBox" :style="{ '--transition-duration-normal': duration, '--ease-nui': 'linear' }">
     <p v-for="row in rows" :key="row">Row {{ row }}</p>
   </div>
 </template>

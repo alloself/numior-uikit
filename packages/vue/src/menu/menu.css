@@ -2,34 +2,33 @@
   .nui-menu {
     --_side-x: 0;
     --_side-y: 1;
-    --_shift: calc(-1 * var(--_side-x) * var(--nui-space-1))
-      calc(-1 * var(--_side-y) * var(--nui-space-1));
-    --_ring: var(--nui-focus-ring-width);
+    --_shift: calc(-1 * var(--_side-x) * var(--spacing)) calc(-1 * var(--_side-y) * var(--spacing));
+    --_ring: var(--focus-ring-width);
 
     box-sizing: border-box;
     position: fixed;
     inset: auto;
     min-inline-size: 10rem;
-    max-inline-size: min(20rem, calc(100vw - var(--nui-space-4)));
+    max-inline-size: min(20rem, calc(100vw - --spacing(4)));
     margin: 0;
-    padding: var(--nui-space-1);
-    border: 1px solid var(--nui-border);
-    border-radius: var(--nui-radius);
-    background: var(--nui-surface-overlay);
-    color: var(--nui-text);
-    font-family: var(--nui-font);
-    font-size: var(--nui-font-size-sm);
-    line-height: var(--nui-line-height-label);
-    box-shadow: var(--nui-shadow-md);
+    padding: var(--spacing);
+    border: 1px solid var(--color-border);
+    border-radius: --theme(--radius inline);
+    background: var(--color-surface-overlay);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    line-height: --theme(--leading-label inline);
+    box-shadow: var(--shadow-md);
     overflow-y: auto;
     outline: none;
     opacity: 0;
     translate: var(--_shift);
     transition:
-      opacity var(--nui-duration-fast) var(--nui-easing),
-      translate var(--nui-duration-normal) var(--nui-easing),
-      display var(--nui-duration-fast) allow-discrete,
-      overlay var(--nui-duration-fast) allow-discrete;
+      opacity var(--transition-duration-fast) var(--ease-nui),
+      translate var(--transition-duration-normal) var(--ease-nui),
+      display var(--transition-duration-fast) allow-discrete,
+      overlay var(--transition-duration-fast) allow-discrete;
   }
   .nui-menu--compact {
     min-inline-size: 0;
@@ -46,20 +45,20 @@
   }
 
   .nui-menu-item {
-    --_tone: var(--nui-text);
-    --_indicator: var(--nui-icon-size);
+    --_tone: var(--color-foreground);
+    --_indicator: var(--spacing-icon);
 
     box-sizing: border-box;
     position: relative;
     display: flex;
     align-items: center;
-    gap: var(--nui-space-2);
+    gap: --spacing(2);
     inline-size: 100%;
-    min-block-size: var(--nui-control-height-sm);
+    min-block-size: var(--spacing-control-sm);
     margin: 0;
-    padding: var(--nui-space-1) var(--nui-space-2);
+    padding: var(--spacing) --spacing(2);
     border: 0;
-    border-radius: var(--nui-radius-sm);
+    border-radius: --theme(--radius-sm inline);
     background: transparent;
     color: var(--_tone);
     font: inherit;
@@ -69,34 +68,34 @@
     user-select: none;
     outline: none;
     transition:
-      background-color var(--nui-duration-fast) var(--nui-easing),
-      color var(--nui-duration-fast) var(--nui-easing);
+      background-color var(--transition-duration-fast) var(--ease-nui),
+      color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-menu-item--tone-error {
-    --_tone: var(--nui-error);
+    --_tone: var(--color-error);
   }
   .nui-menu-item:hover,
   .nui-menu-item:focus,
   .nui-menu-item--open {
-    background: var(--nui-hover);
+    background: --theme(--color-hover inline);
   }
   .nui-menu--pointed {
     --_ring: 0px;
   }
   .nui-menu-item:focus-visible {
-    outline: var(--_ring) solid var(--nui-focus);
+    outline: var(--_ring) solid --theme(--color-ring inline);
     outline-offset: calc(-1 * var(--_ring));
   }
   .nui-menu-item--tone-error:hover,
   .nui-menu-item--tone-error:focus {
-    background: color-mix(in oklab, var(--nui-error) var(--nui-state-hover-tint), transparent);
+    background: color-mix(in oklab, var(--color-error) var(--state-hover-tint), transparent);
   }
   .nui-menu-item--disabled,
   .nui-menu-item--disabled:hover,
   .nui-menu-item--disabled:focus {
     background: transparent;
-    color: var(--nui-text-muted);
-    opacity: var(--nui-disabled-opacity);
+    color: var(--color-muted-foreground);
+    opacity: var(--opacity-disabled);
     cursor: not-allowed;
   }
   .nui-menu-item__check {
@@ -107,10 +106,10 @@
     inline-size: var(--_indicator);
     block-size: var(--_indicator);
     margin-inline-start: auto;
-    color: var(--nui-primary);
+    color: var(--color-primary);
   }
   .nui-menu-item__icon {
-    color: var(--nui-text-muted);
+    color: var(--color-muted-foreground);
   }
   .nui-menu-item--tone-error .nui-menu-item__icon {
     color: inherit;
@@ -127,7 +126,7 @@
   }
   .nui-menu-item__chevron {
     margin-inline-start: auto;
-    color: var(--nui-text-muted);
+    color: var(--color-muted-foreground);
   }
   .nui-menu-item__chevron:dir(rtl) {
     rotate: 180deg;
@@ -135,14 +134,14 @@
   .nui-menu-separator {
     box-sizing: border-box;
     block-size: 1px;
-    margin: var(--nui-space-1) calc(-1 * var(--nui-space-1));
-    background: var(--nui-border);
+    margin: var(--spacing) calc(-1 * var(--spacing));
+    background: var(--color-border);
   }
   .nui-menu-label {
     box-sizing: border-box;
-    padding: var(--nui-space-1) var(--nui-space-2);
-    color: var(--nui-text-muted);
-    font-size: var(--nui-font-size-xs);
+    padding: var(--spacing) --spacing(2);
+    color: var(--color-muted-foreground);
+    font-size: var(--text-xs);
     font-weight: 600;
   }
 }

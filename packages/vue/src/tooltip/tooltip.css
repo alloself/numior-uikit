@@ -2,32 +2,31 @@
   .nui-tooltip {
     --_side-x: 0;
     --_side-y: -1;
-    --_shift: calc(-1 * var(--_side-x) * var(--nui-space-1))
-      calc(-1 * var(--_side-y) * var(--nui-space-1));
+    --_shift: calc(-1 * var(--_side-x) * var(--spacing)) calc(-1 * var(--_side-y) * var(--spacing));
     --_arrow: 0.5rem;
 
     box-sizing: border-box;
     position: fixed;
     inset: auto;
-    max-inline-size: min(18rem, calc(100vw - var(--nui-space-4)));
+    max-inline-size: min(18rem, calc(100vw - --spacing(4)));
     margin: 0;
-    padding: var(--nui-space-1) var(--nui-space-2);
+    padding: var(--spacing) --spacing(2);
     border: 0;
-    border-radius: var(--nui-radius-sm);
-    background: var(--nui-neutral);
-    color: var(--nui-neutral-foreground);
-    font-family: var(--nui-font);
-    font-size: var(--nui-font-size-xs);
-    line-height: var(--nui-line-height);
-    box-shadow: var(--nui-shadow-sm);
+    border-radius: --theme(--radius-sm inline);
+    background: var(--color-neutral);
+    color: var(--color-neutral-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+    box-shadow: var(--shadow-sm);
     overflow: visible;
     opacity: 0;
     translate: var(--_shift);
     transition:
-      opacity var(--nui-duration-fast) var(--nui-easing),
-      translate var(--nui-duration-fast) var(--nui-easing),
-      display var(--nui-duration-fast) allow-discrete,
-      overlay var(--nui-duration-fast) allow-discrete;
+      opacity var(--transition-duration-fast) var(--ease-nui),
+      translate var(--transition-duration-fast) var(--ease-nui),
+      display var(--transition-duration-fast) allow-discrete,
+      overlay var(--transition-duration-fast) allow-discrete;
   }
   .nui-tooltip:popover-open {
     opacity: 1;
@@ -42,7 +41,7 @@
   .nui-tooltip__keyed {
     display: flex;
     align-items: center;
-    gap: var(--nui-space-2);
+    gap: --spacing(2);
   }
   .nui-tooltip__arrow {
     position: absolute;

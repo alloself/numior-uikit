@@ -5,6 +5,10 @@ export interface BlockEntry {
   readonly height: number;
 }
 
+export interface FramedExample extends BlockEntry {
+  readonly example: string;
+}
+
 const BLOCK_FAMILY = 'blocks';
 const VIEW_ROUTE = '/blocks/view/';
 const DEFAULT_HEIGHT = 640;
@@ -23,7 +27,17 @@ export const BLOCKS: readonly BlockEntry[] = [
   { name: 'SalesDashboard', height: 680 },
 ];
 
-export const blockExampleOf = (name: string): string => `${BLOCK_FAMILY}/${name}`;
+export const FRAMED_EXAMPLES: readonly FramedExample[] = [
+  { name: 'GuideTheme', example: 'guide/Theme', height: 480 },
+];
+
+const framedNamed = (name: string): FramedExample | undefined =>
+  FRAMED_EXAMPLES.find((entry) => entry.name === name);
+
+export const isFramedExample = (name: string): boolean => framedNamed(name) !== undefined;
+
+export const blockExampleOf = (name: string): string =>
+  framedNamed(name)?.example ?? `${BLOCK_FAMILY}/${name}`;
 
 export const blockRouteOf = (name: string, locale: ExampleLocale): string =>
   `${locale === 'ru' ? '' : `/${locale}`}${VIEW_ROUTE}${name}`;
@@ -31,9 +45,12 @@ export const blockRouteOf = (name: string, locale: ExampleLocale): string =>
 export const blockNamed = (name: string): BlockEntry | undefined =>
   BLOCKS.find((block) => block.name === name);
 
-export const blockHeightOf = (name: string): number => blockNamed(name)?.height ?? DEFAULT_HEIGHT;
+export const screenNamed = (name: string): BlockEntry | undefined =>
+  blockNamed(name) ?? framedNamed(name);
+
+export const blockHeightOf = (name: string): number => screenNamed(name)?.height ?? DEFAULT_HEIGHT;
 
 export const isBlockView = (url: string): boolean => url.includes(VIEW_ROUTE.slice(1));
 
 export const blockPaths = (): { readonly params: { readonly name: string } }[] =>
-  BLOCKS.map((block) => ({ params: { name: block.name } }));
+  [...BLOCKS, ...FRAMED_EXAMPLES].map((block) => ({ params: { name: block.name } }));

@@ -2,5 +2,21 @@
 @import '@numior/tailwind/theme.css';
 @import '@numior/tokens/base.css' layer(components);
 @import '@numior/vue/styles.css';
+@import '@numior/forms/styles.css' layer(components);
+@import '@numior/table/styles.css' layer(components);
+@import '@numior/spreadsheet/styles.css' layer(components);
+@import '@numior/charts/styles.css' layer(components);
+@import '@numior/content/styles.css' layer(components);
+@import '@numior/editor-vue/styles.css' layer(components);
+@import '@numior/collaboration/styles.css' layer(components);
+@import '@numior/tokens/prose.css' layer(components);
+@theme inline {
+  --color-primary-soft-foreground: var(--docs-primary-soft-foreground, var(--color-primary));
+  --color-syntax-highlight: var(
+    --docs-syntax-highlight,
+    color-mix(in oklab, var(--color-primary) 6%, var(--color-surface-code))
+  );
+}
+
 @source './';
 @source '../../examples';

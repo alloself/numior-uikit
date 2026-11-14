@@ -70,7 +70,7 @@ test('theme, scoped overrides, density and RTL work without Tailwind', async ({
   await playground.setAccent('emerald');
   await expectRgb(primary, 'background-color', [11, 118, 77]);
   await expectRgb(playground.tailwindSwatch, 'background-color', [11, 118, 77]);
-  await expectRgb(nested, 'background-color', [165, 180, 252]);
+  await expectRgb(nested, 'background-color', [94, 217, 158]);
   await expect(large).toHaveCSS('min-block-size', '48px');
 
   await playground.setDensity('compact');
@@ -80,6 +80,48 @@ test('theme, scoped overrides, density and RTL work without Tailwind', async ({
   await playground.setDirection('rtl');
   await expect(playground.workspace).toHaveCSS('direction', 'rtl');
   expect(await playground.hasHorizontalOverflow()).toBe(false);
+});
+
+test('a nested scheme keeps the accent and the density of the page', async ({
+  playground,
+  buttons: { primary, nested },
+}) => {
+  await playground.open();
+  await playground.setTheme('light');
+  await playground.setAccent('emerald');
+  await playground.setDensity('compact');
+
+  await expectRgb(primary, 'background-color', [11, 118, 77]);
+  await expectRgb(nested, 'background-color', [94, 217, 158]);
+  await expectRgb(playground.nestedLightButton, 'background-color', [11, 118, 77]);
+  await expect(nested).toHaveCSS('min-block-size', '32px');
+  await expect(playground.nestedLightButton).toHaveCSS('min-block-size', '32px');
+  await expectRgb(playground.nestedScope, 'background-color', [24, 24, 27]);
+  await expectRgb(playground.nestedLight, 'background-color', [255, 255, 255]);
+});
+
+test('the dark variant follows the nearest scheme and the system one follows the device', async ({
+  playground,
+}) => {
+  await playground.emulate({ colorScheme: 'dark' });
+  await playground.open();
+
+  const darkPrimary = await tokenRgbIn(playground.nestedScope, '--color-primary');
+  const lightMuted = await tokenRgbIn(playground.nestedLight, '--color-surface-muted');
+
+  await expectRgb(playground.variantSwatch, 'background-color', darkPrimary);
+  await expectRgb(playground.nestedVariant, 'background-color', darkPrimary);
+  await expectRgb(playground.nestedLightVariant, 'background-color', lightMuted);
+
+  await playground.setTheme('light');
+  await expectRgb(playground.variantSwatch, 'background-color', lightMuted);
+  await expectRgb(playground.nestedVariant, 'background-color', darkPrimary);
+  await expectRgb(playground.nestedLightVariant, 'background-color', lightMuted);
+
+  await playground.setTheme('system');
+  await playground.emulate({ colorScheme: 'light' });
+  await expectRgb(playground.variantSwatch, 'background-color', lightMuted);
+  await expectRgb(playground.nestedVariant, 'background-color', darkPrimary);
 });
 
 test('soft fills inside an overlay mix with the overlay surface, not the page', async ({
@@ -92,8 +134,8 @@ test('soft fills inside an overlay mix with the overlay surface, not the page', 
 
   await expect(navigation.menu).toBeVisible();
 
-  const onPage = await tokenRgbIn(playground.workspace, '--nui-neutral-soft');
-  const inMenu = await tokenRgbIn(navigation.menu, '--nui-neutral-soft');
+  const onPage = await tokenRgbIn(playground.workspace, '--color-neutral-soft');
+  const inMenu = await tokenRgbIn(navigation.menu, '--color-neutral-soft');
   const menuSurface = await rgbOf(navigation.menu, 'background-color');
 
   expect(inMenu[0]).toBeGreaterThan(onPage[0]);

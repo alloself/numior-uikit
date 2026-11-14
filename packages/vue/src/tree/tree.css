@@ -4,10 +4,10 @@
     --_indent: 1.25rem;
     --_control: 1.25rem;
     --_height: auto;
-    --_padding-inline: var(--nui-space-2);
-    --_padding-block: var(--nui-space-1);
-    --_row-padding: var(--nui-space-1);
-    --_gap: var(--nui-space-2);
+    --_padding-inline: --spacing(2);
+    --_padding-block: var(--spacing);
+    --_row-padding: var(--spacing);
+    --_gap: --spacing(2);
 
     position: relative;
     block-size: var(--_height);
@@ -39,13 +39,13 @@
     --_divider: transparent;
     --_divider-size: 0px;
 
-    padding: var(--nui-space-1);
+    padding: var(--spacing);
   }
   .nui-tree.nui-list--variant-floating {
     --_row: 2rem;
 
     position: fixed;
-    padding: var(--nui-space-1);
+    padding: var(--spacing);
     overflow: auto;
     scrollbar-width: thin;
   }
@@ -72,12 +72,12 @@
     --_min-size: var(--_row);
 
     block-size: var(--_row);
-    border-radius: var(--nui-radius-sm);
+    border-radius: --theme(--radius-sm inline);
     overflow: hidden;
     transition:
-      color var(--nui-duration-fast) var(--nui-easing),
-      opacity var(--nui-duration-normal) var(--nui-easing),
-      block-size var(--nui-duration-normal) var(--nui-easing);
+      color var(--transition-duration-fast) var(--ease-nui),
+      opacity var(--transition-duration-normal) var(--ease-nui),
+      block-size var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-tree .nui-list-item__inner {
     min-block-size: 0;
@@ -96,14 +96,14 @@
     }
   }
   .nui-tree:focus-visible .nui-list-item--active {
-    outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-    outline-offset: calc(-1 * var(--nui-focus-ring-width));
+    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+    outline-offset: calc(-1 * var(--focus-ring-width));
   }
   .nui-tree__controls {
     display: inline-flex;
     flex: none;
     align-items: center;
-    gap: var(--nui-space-2);
+    gap: --spacing(2);
     margin-inline-start: calc(var(--_indent) * (var(--_level) - 1));
   }
   .nui-tree__toggle {
@@ -120,7 +120,7 @@
   .nui-tree__chevron {
     inline-size: 1rem;
     block-size: 1rem;
-    transition: rotate var(--nui-duration-normal) var(--nui-easing);
+    transition: rotate var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-tree__item--expanded .nui-tree__chevron {
     rotate: 90deg;

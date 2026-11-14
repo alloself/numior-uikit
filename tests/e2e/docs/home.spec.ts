@@ -28,14 +28,14 @@ test('the back office on the home page changes its look and leaves the site as i
   await home.turnRightToLeft();
   await home.pickAccent('Фиолетовый');
 
-  await expect.poll(() => home.screenAttribute('data-nui-theme')).toBe('dark');
-  await expect.poll(() => home.screenAttribute('dir')).toBe('rtl');
-  await expect.poll(() => home.screenAttribute('data-nui-accent')).toBe('violet');
-  expect(await home.siteAttribute('dir')).not.toBe('rtl');
-  expect(await home.siteAttribute('data-nui-accent')).toBeNull();
+  await expect.poll(() => home.screenScheme()).toBe('dark');
+  await expect.poll(() => home.screenDirection()).toBe('rtl');
+  await expect.poll(() => home.screenAccent()).toBe('violet');
+  expect(await home.siteDirection()).not.toBe('rtl');
+  expect(await home.siteAccent()).toBeNull();
 
   await home.pickAccent('Numior');
-  await expect.poll(() => home.screenAttribute('data-nui-accent')).toBeNull();
+  await expect.poll(() => home.screenAccent()).toBeNull();
 });
 
 test('a section of the home page shows a live block and leads to its page', async ({

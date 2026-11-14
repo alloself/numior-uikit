@@ -8,8 +8,8 @@
     flex: none;
     align-items: center;
     justify-content: center;
-    color: var(--_row-icon, var(--nui-text-muted));
-    transition: color var(--nui-duration-fast) var(--nui-easing);
+    color: var(--_row-icon, var(--color-muted-foreground));
+    transition: color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-row:not(.nui-row--inline):has(.nui-row__description) .nui-row__leading {
     align-self: flex-start;
@@ -18,18 +18,18 @@
   .nui-row__body {
     display: grid;
     flex: 1 1 auto;
-    gap: var(--nui-space-1);
+    gap: var(--spacing);
     min-inline-size: 0;
   }
   .nui-row--inline .nui-row__body {
     display: flex;
     align-items: baseline;
-    gap: var(--nui-space-2);
+    gap: --spacing(2);
   }
   .nui-row__title {
     overflow: hidden;
     font-weight: var(--_row-weight, 400);
-    line-height: var(--nui-line-height-control);
+    line-height: var(--leading-control);
     text-overflow: ellipsis;
   }
   .nui-row--nowrap .nui-row__title,
@@ -41,18 +41,18 @@
     text-overflow: ellipsis;
   }
   .nui-row__description {
-    color: var(--_row-muted, var(--nui-text-muted));
-    font-size: var(--_row-description-size, var(--nui-font-size-xs));
-    line-height: var(--nui-line-height-control);
-    transition: color var(--nui-duration-fast) var(--nui-easing);
+    color: var(--_row-muted, var(--color-muted-foreground));
+    font-size: var(--_row-description-size, var(--text-xs));
+    line-height: var(--leading-control);
+    transition: color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-row__trailing {
     display: inline-flex;
     flex: none;
     align-items: center;
-    gap: var(--nui-space-2);
-    color: var(--_row-icon, var(--nui-text-muted));
-    transition: color var(--nui-duration-fast) var(--nui-easing);
+    gap: --spacing(2);
+    color: var(--_row-icon, var(--color-muted-foreground));
+    transition: color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-row__check {
     display: inline-flex;
@@ -62,6 +62,6 @@
     inline-size: 1.25rem;
     block-size: 1.25rem;
     margin-inline-start: auto;
-    color: var(--_row-check, var(--nui-primary));
+    color: var(--_row-check, var(--color-primary));
   }
 }

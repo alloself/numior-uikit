@@ -91,7 +91,7 @@ test.describe('table cell styles', () => {
     await playground.open();
     await sheet.show();
 
-    await expect(sheet.cell(RESULT, 1)).toHaveCSS('color', await sheet.tokenColor('--nui-error'));
+    await expect(sheet.cell(RESULT, 1)).toHaveCSS('color', await sheet.tokenColor('--color-error'));
     await expect(sheet.cell(SALES, 1)).toHaveClass(/nui-table__cell--align-end/);
     await expect(sheet.cell(1, 1)).toHaveClass(/nui-table__cell--align-center/);
     expect(await sheet.fillLayers(1, 1)).toBe(1);

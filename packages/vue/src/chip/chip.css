@@ -1,78 +1,78 @@
 @layer components {
   .nui-chip {
-    --_tone: var(--nui-neutral);
-    --_tone-foreground: var(--nui-neutral-foreground);
-    --_tone-soft: var(--nui-neutral-soft);
-    --_tone-soft-foreground: var(--nui-neutral-soft-foreground);
-    --_height: var(--nui-control-height-xs);
-    --_padding: var(--nui-space-3);
-    --_font-size: var(--nui-font-size-sm);
+    --_tone: var(--color-neutral);
+    --_tone-foreground: var(--color-neutral-foreground);
+    --_tone-soft: --theme(--color-neutral-soft inline);
+    --_tone-soft-foreground: --theme(--color-neutral-soft-foreground inline);
+    --_height: var(--spacing-control-xs);
+    --_padding: --spacing(3);
+    --_font-size: var(--text-sm);
     --_remove: round(calc(round(var(--_font-size) * 0.875, 1px) * 1.75), 2px);
 
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;
-    gap: var(--nui-space-1);
+    gap: var(--spacing);
     max-inline-size: 100%;
     block-size: var(--_height);
     padding-inline: var(--_padding);
     border: 1px solid transparent;
-    border-radius: var(--nui-radius-full);
+    border-radius: var(--radius-full);
     background: var(--_tone-soft);
     color: var(--_tone-soft-foreground);
-    font-family: var(--nui-font);
+    font-family: var(--font-sans);
     font-size: var(--_font-size);
     font-weight: 500;
-    line-height: var(--nui-line-height-control);
+    line-height: var(--leading-control);
     white-space: nowrap;
     transition:
-      background-color var(--nui-duration-fast) var(--nui-easing),
-      border-color var(--nui-duration-fast) var(--nui-easing),
-      color var(--nui-duration-fast) var(--nui-easing);
+      background-color var(--transition-duration-fast) var(--ease-nui),
+      border-color var(--transition-duration-fast) var(--ease-nui),
+      color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-chip--size-sm {
     --_height: 1.5rem;
-    --_padding: var(--nui-space-2);
-    --_font-size: var(--nui-font-size-xs);
+    --_padding: --spacing(2);
+    --_font-size: var(--text-xs);
   }
   .nui-chip--tone-primary {
-    --_tone: var(--nui-primary);
-    --_tone-foreground: var(--nui-primary-foreground);
-    --_tone-soft: var(--nui-primary-soft);
-    --_tone-soft-foreground: var(--nui-primary-soft-foreground);
+    --_tone: var(--color-primary);
+    --_tone-foreground: var(--color-primary-foreground);
+    --_tone-soft: --theme(--color-primary-soft inline);
+    --_tone-soft-foreground: --theme(--color-primary-soft-foreground inline);
   }
   .nui-chip--tone-secondary {
-    --_tone: var(--nui-secondary);
-    --_tone-foreground: var(--nui-secondary-foreground);
-    --_tone-soft: var(--nui-secondary-soft);
-    --_tone-soft-foreground: var(--nui-secondary-soft-foreground);
+    --_tone: var(--color-secondary);
+    --_tone-foreground: var(--color-secondary-foreground);
+    --_tone-soft: --theme(--color-secondary-soft inline);
+    --_tone-soft-foreground: --theme(--color-secondary-soft-foreground inline);
   }
   .nui-chip--tone-success {
-    --_tone: var(--nui-success);
-    --_tone-foreground: var(--nui-success-foreground);
-    --_tone-soft: var(--nui-success-soft);
-    --_tone-soft-foreground: var(--nui-success-soft-foreground);
+    --_tone: var(--color-success);
+    --_tone-foreground: var(--color-success-foreground);
+    --_tone-soft: --theme(--color-success-soft inline);
+    --_tone-soft-foreground: --theme(--color-success-soft-foreground inline);
   }
   .nui-chip--tone-warning {
-    --_tone: var(--nui-warning);
-    --_tone-foreground: var(--nui-warning-foreground);
-    --_tone-soft: var(--nui-warning-soft);
-    --_tone-soft-foreground: var(--nui-warning-soft-foreground);
+    --_tone: var(--color-warning);
+    --_tone-foreground: var(--color-warning-foreground);
+    --_tone-soft: --theme(--color-warning-soft inline);
+    --_tone-soft-foreground: --theme(--color-warning-soft-foreground inline);
   }
   .nui-chip--tone-error {
-    --_tone: var(--nui-error);
-    --_tone-foreground: var(--nui-error-foreground);
-    --_tone-soft: var(--nui-error-soft);
-    --_tone-soft-foreground: var(--nui-error-soft-foreground);
+    --_tone: var(--color-error);
+    --_tone-foreground: var(--color-error-foreground);
+    --_tone-soft: --theme(--color-error-soft inline);
+    --_tone-soft-foreground: --theme(--color-error-soft-foreground inline);
   }
   .nui-chip--tone-info {
-    --_tone: var(--nui-info);
-    --_tone-foreground: var(--nui-info-foreground);
-    --_tone-soft: var(--nui-info-soft);
-    --_tone-soft-foreground: var(--nui-info-soft-foreground);
+    --_tone: var(--color-info);
+    --_tone-foreground: var(--color-info-foreground);
+    --_tone-soft: --theme(--color-info-soft inline);
+    --_tone-soft-foreground: --theme(--color-info-soft-foreground inline);
   }
   .nui-chip--variant-outline {
-    border-color: color-mix(in oklab, var(--_tone) 50%, var(--nui-border));
+    border-color: color-mix(in oklab, var(--_tone) 50%, var(--color-border));
     background: transparent;
   }
   .nui-chip--variant-solid {
@@ -83,11 +83,11 @@
     padding-inline-end: calc((var(--_height) - var(--_remove)) / 2 - 1px);
   }
   .nui-chip--disabled {
-    opacity: var(--nui-disabled-opacity);
+    opacity: var(--opacity-disabled);
   }
   .nui-chip__icon {
-    inline-size: var(--nui-icon-size-sm);
-    block-size: var(--nui-icon-size-sm);
+    inline-size: var(--spacing-icon-sm);
+    block-size: var(--spacing-icon-sm);
   }
   .nui-chip__label {
     overflow: hidden;

@@ -1,9 +1,9 @@
+import { syncRef, usePreferredDark } from '@vueuse/core';
 import {
   computed,
   effectScope,
   inject,
   onMounted,
-  onScopeDispose,
   ref,
   toValue,
   watch,
@@ -48,7 +48,26 @@ const OPPOSITE: Record<ResolvedColorScheme, ResolvedColorScheme> = {
   [ColorScheme.Dark]: ColorScheme.Light,
 };
 
+const SCHEME_CLASS = 'nui-theme--';
+
 const isColorScheme = (value: unknown): value is ColorScheme => SCHEMES.has(value);
+
+const schemeClassOf = (scheme: ColorScheme): string => `${SCHEME_CLASS}${scheme}`;
+
+const SCHEME_CLASSES: readonly string[] = CYCLE.map(schemeClassOf);
+
+const schemeOfElement = (element: HTMLElement | null): ColorScheme | undefined =>
+  CYCLE.find((scheme) => element?.classList.contains(schemeClassOf(scheme)) === true);
+
+const writeScheme = (element: HTMLElement | null, scheme: ColorScheme): void => {
+  if (element === null) {
+    return;
+  }
+
+  for (const name of SCHEME_CLASSES) {
+    element.classList.toggle(name, name === schemeClassOf(scheme));
+  }
+};
 
 const readStored = (key: string | undefined): ColorScheme | undefined => {
   if (!key) {
@@ -90,25 +109,13 @@ const createColorScheme = (options: ColorSchemeOptions, run: StartRunner): Color
     toValue(options.scope) ?? (typeof document === 'undefined' ? null : document.documentElement);
 
   const begin = (): void => {
-    const attribute = scopeElement()?.getAttribute('data-nui-theme');
-
     scheme.value =
-      readStored(options.storageKey) ?? (isColorScheme(attribute) ? attribute : scheme.value);
+      readStored(options.storageKey) ?? schemeOfElement(scopeElement()) ?? scheme.value;
 
-    if (typeof window.matchMedia === 'function') {
-      const media = window.matchMedia('(prefers-color-scheme: dark)');
-
-      const follow = (): void => {
-        systemDark.value = media.matches;
-      };
-
-      follow();
-      media.addEventListener('change', follow);
-      onScopeDispose(() => media.removeEventListener('change', follow));
-    }
+    syncRef(usePreferredDark(), systemDark, { direction: 'ltr' });
 
     watchEffect(() => {
-      scopeElement()?.setAttribute('data-nui-theme', scheme.value);
+      writeScheme(scopeElement(), scheme.value);
     });
 
     watch(scheme, (next) => {
@@ -174,4 +181,4 @@ export const useColorScheme = (options?: ColorSchemeOptions): ColorSchemeControl
 };
 
 export const colorSchemeScript = (storageKey: string, initial?: ColorScheme): string =>
-  `(function(){var s=${JSON.stringify(initial ?? null)};try{var v=localStorage.getItem(${JSON.stringify(storageKey)});if(${JSON.stringify(CYCLE)}.indexOf(v)>=0){s=v}}catch(e){}if(s){document.documentElement.setAttribute('data-nui-theme',s)}})()`;
+  `(function(){var s=${JSON.stringify(initial ?? null)};try{var v=localStorage.getItem(${JSON.stringify(storageKey)});if(${JSON.stringify(CYCLE)}.indexOf(v)>=0){s=v}}catch(e){}if(s){var c=document.documentElement.classList;c.remove(${SCHEME_CLASSES.map((name) => JSON.stringify(name)).join(',')});c.add(${JSON.stringify(SCHEME_CLASS)}+s)}})()`;

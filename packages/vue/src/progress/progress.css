@@ -1,15 +1,15 @@
 @layer components {
   .nui-progress {
     --_height: 0.5rem;
-    --_tone: var(--nui-primary);
-    --_track: var(--nui-surface-muted);
+    --_tone: var(--color-primary);
+    --_track: var(--color-surface-muted);
 
     box-sizing: border-box;
     display: block;
     inline-size: 100%;
     block-size: var(--_height);
     border: 0;
-    border-radius: var(--nui-radius-full);
+    border-radius: var(--radius-full);
     background: var(--_track);
     color: var(--_tone);
     appearance: none;
@@ -22,22 +22,22 @@
     --_height: 0.75rem;
   }
   .nui-progress--tone-secondary {
-    --_tone: var(--nui-secondary);
+    --_tone: var(--color-secondary);
   }
   .nui-progress--tone-success {
-    --_tone: var(--nui-success);
+    --_tone: var(--color-success);
   }
   .nui-progress--tone-warning {
-    --_tone: var(--nui-warning);
+    --_tone: var(--color-warning);
   }
   .nui-progress--tone-error {
-    --_tone: var(--nui-error);
+    --_tone: var(--color-error);
   }
   .nui-progress--tone-info {
-    --_tone: var(--nui-info);
+    --_tone: var(--color-info);
   }
   .nui-progress--tone-neutral {
-    --_tone: var(--nui-neutral);
+    --_tone: var(--color-neutral);
   }
   .nui-progress::-webkit-progress-bar {
     border-radius: inherit;
@@ -46,12 +46,12 @@
   .nui-progress::-webkit-progress-value {
     border-radius: inherit;
     background: var(--_tone);
-    transition: inline-size var(--nui-duration-normal) var(--nui-easing);
+    transition: inline-size var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-progress::-moz-progress-bar {
     border-radius: inherit;
     background: var(--_tone);
-    transition: inline-size var(--nui-duration-normal) var(--nui-easing);
+    transition: inline-size var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-progress:indeterminate {
     direction: ltr;

@@ -64,11 +64,10 @@ const merges: NuiTableRange[] = [
   { from: { row: 3, col: 1 }, to: { row: 3, col: 3 } },
 ];
 
-const COMMON: NuiTableCellStyle = { fill: 'var(--nui-surface-muted)' };
+const COMMON: NuiTableCellStyle = { fill: 'var(--color-surface-muted)' };
 
 const WORKSHOP: NuiTableCellStyle = {
-  fill: 'var(--nui-primary-soft)',
-  color: 'var(--nui-primary-soft-foreground)',
+  class: 'bg-primary-soft text-primary-soft-foreground',
   align: 'center',
   wrap: true,
 };

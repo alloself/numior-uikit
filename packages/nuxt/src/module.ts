@@ -12,7 +12,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { colorSchemeScript } from '@numior/vue';
 import type { Nuxt } from '@nuxt/schema';
 import { componentNames, composableNames, type ModuleNamespace } from './exports';
-import { kitEntry, layersEntry } from './kit-css';
+import { kitEntry } from './kit-css';
 import type { NuiNuxtColorScheme, NuiNuxtOptions, NuiRuntimeOptions } from './module.types';
 
 export type {
@@ -32,7 +32,7 @@ interface Registration {
   readonly composables: boolean;
 }
 
-interface LayerOptions {
+interface KitOptions {
   readonly packages: readonly string[];
 }
 
@@ -64,16 +64,14 @@ const addTailwind = (): void => {
 const addKitCss = (nuxt: Nuxt, packages: readonly string[]): void => {
   addTailwind();
 
-  const kit = addTemplate({ filename: 'numior/kit.css', write: true, getContents: kitEntry });
-
-  const layers = addTemplate<LayerOptions>({
-    filename: 'numior/layers.css',
+  const kit = addTemplate<KitOptions>({
+    filename: 'numior/kit.css',
     write: true,
     options: { packages },
-    getContents: ({ options }) => layersEntry(options.packages),
+    getContents: ({ options }) => kitEntry(options.packages),
   });
 
-  nuxt.options.css.unshift(kit.dst, layers.dst);
+  nuxt.options.css.unshift(kit.dst);
 };
 
 const registerNamespace = (id: string, namespace: ModuleNamespace, what: Registration): void => {

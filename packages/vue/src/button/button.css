@@ -2,8 +2,8 @@
   .nui-button {
     --_tone: var(--color-primary);
     --_tone-foreground: var(--color-primary-foreground);
-    --_tone-soft: var(--color-primary-soft);
-    --_tone-soft-foreground: var(--color-primary-soft-foreground);
+    --_tone-soft: --theme(--color-primary-soft inline);
+    --_tone-soft-foreground: --theme(--color-primary-soft-foreground inline);
     --_hover: oklab(from var(--_tone) calc(l - var(--state-hover)) a b);
     --_pressed: oklab(from var(--_tone) calc(l - var(--state-pressed)) a b);
     --_soft-hover: light-dark(
@@ -39,38 +39,38 @@
   .nui-button--tone-secondary {
     --_tone: var(--color-secondary);
     --_tone-foreground: var(--color-secondary-foreground);
-    --_tone-soft: var(--color-secondary-soft);
-    --_tone-soft-foreground: var(--color-secondary-soft-foreground);
+    --_tone-soft: --theme(--color-secondary-soft inline);
+    --_tone-soft-foreground: --theme(--color-secondary-soft-foreground inline);
   }
   .nui-button--tone-success {
     --_tone: var(--color-success);
     --_tone-foreground: var(--color-success-foreground);
-    --_tone-soft: var(--color-success-soft);
-    --_tone-soft-foreground: var(--color-success-soft-foreground);
+    --_tone-soft: --theme(--color-success-soft inline);
+    --_tone-soft-foreground: --theme(--color-success-soft-foreground inline);
   }
   .nui-button--tone-warning {
     --_tone: var(--color-warning);
     --_tone-foreground: var(--color-warning-foreground);
-    --_tone-soft: var(--color-warning-soft);
-    --_tone-soft-foreground: var(--color-warning-soft-foreground);
+    --_tone-soft: --theme(--color-warning-soft inline);
+    --_tone-soft-foreground: --theme(--color-warning-soft-foreground inline);
   }
   .nui-button--tone-error {
     --_tone: var(--color-error);
     --_tone-foreground: var(--color-error-foreground);
-    --_tone-soft: var(--color-error-soft);
-    --_tone-soft-foreground: var(--color-error-soft-foreground);
+    --_tone-soft: --theme(--color-error-soft inline);
+    --_tone-soft-foreground: --theme(--color-error-soft-foreground inline);
   }
   .nui-button--tone-info {
     --_tone: var(--color-info);
     --_tone-foreground: var(--color-info-foreground);
-    --_tone-soft: var(--color-info-soft);
-    --_tone-soft-foreground: var(--color-info-soft-foreground);
+    --_tone-soft: --theme(--color-info-soft inline);
+    --_tone-soft-foreground: --theme(--color-info-soft-foreground inline);
   }
   .nui-button--tone-neutral {
     --_tone: var(--color-neutral);
     --_tone-foreground: var(--color-neutral-foreground);
-    --_tone-soft: var(--color-neutral-soft);
-    --_tone-soft-foreground: var(--color-neutral-soft-foreground);
+    --_tone-soft: --theme(--color-neutral-soft inline);
+    --_tone-soft-foreground: --theme(--color-neutral-soft-foreground inline);
   }
 
   .nui-button--size-inline {
@@ -166,7 +166,7 @@
   }
 
   .nui-button:focus-visible {
-    outline: var(--focus-ring-width) solid var(--color-ring);
+    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
     outline-offset: var(--focus-ring-offset);
   }
   .nui-button:disabled,

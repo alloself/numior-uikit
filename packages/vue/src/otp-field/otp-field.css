@@ -1,43 +1,43 @@
 @layer components {
   .nui-otp-field {
-    --_height: var(--nui-control-height-md);
-    --_font-size: var(--nui-control-font-size-md);
-    --_border: var(--nui-border);
-    --_active: var(--nui-focus);
+    --_height: var(--spacing-control-md);
+    --_font-size: var(--text-control-md);
+    --_border: var(--color-border);
+    --_active: --theme(--color-ring inline);
 
     box-sizing: border-box;
     position: relative;
     display: inline-flex;
     max-inline-size: 100%;
-    color: var(--nui-text);
-    font-family: var(--nui-font);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
     font-size: var(--_font-size);
-    line-height: var(--nui-line-height-control);
+    line-height: var(--leading-control);
     isolation: isolate;
   }
   .nui-otp-field--size-sm {
-    --_height: var(--nui-control-height-sm);
-    --_font-size: var(--nui-control-font-size-sm);
+    --_height: var(--spacing-control-sm);
+    --_font-size: var(--text-control-sm);
   }
   .nui-otp-field--size-lg {
-    --_height: var(--nui-control-height-lg);
-    --_font-size: var(--nui-control-font-size-lg);
+    --_height: var(--spacing-control-lg);
+    --_font-size: var(--text-control-lg);
   }
   .nui-otp-field--invalid {
-    --_border: var(--nui-error);
-    --_active: var(--nui-error);
+    --_border: var(--color-error);
+    --_active: var(--color-error);
   }
   .nui-otp-field:hover:not(
       .nui-otp-field--disabled,
       .nui-otp-field--readonly,
       .nui-otp-field--invalid
     ) {
-    --_border: var(--nui-border-strong);
+    --_border: var(--color-border-strong);
   }
   .nui-otp-field__slots {
     display: flex;
     align-items: center;
-    gap: var(--nui-space-2);
+    gap: --spacing(2);
     min-inline-size: 0;
     direction: ltr;
     unicode-bidi: isolate;
@@ -57,25 +57,25 @@
     min-inline-size: 0;
     block-size: var(--_height);
     border: 1px solid var(--_border);
-    background: var(--nui-surface);
-    outline: var(--nui-focus-ring-width) solid transparent;
+    background: var(--color-surface);
+    outline: var(--focus-ring-width) solid transparent;
     outline-offset: 0;
     font-variant-numeric: tabular-nums;
     font-weight: 500;
     transition:
-      border-color var(--nui-duration-fast) var(--nui-easing),
-      outline-color var(--nui-duration-fast) var(--nui-easing);
+      border-color var(--transition-duration-fast) var(--ease-nui),
+      outline-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-otp-field__slot:not(:first-child) {
     margin-inline-start: -1px;
   }
   .nui-otp-field__slot:first-child {
-    border-start-start-radius: var(--nui-radius);
-    border-end-start-radius: var(--nui-radius);
+    border-start-start-radius: --theme(--radius inline);
+    border-end-start-radius: --theme(--radius inline);
   }
   .nui-otp-field__slot:last-child {
-    border-start-end-radius: var(--nui-radius);
-    border-end-end-radius: var(--nui-radius);
+    border-start-end-radius: --theme(--radius inline);
+    border-end-end-radius: --theme(--radius inline);
   }
   .nui-otp-field__slot--active {
     z-index: 1;
@@ -90,21 +90,21 @@
   }
   .nui-otp-field__char,
   .nui-otp-field__dot {
-    animation: nui-otp-field-enter var(--nui-duration-fast) var(--nui-easing);
+    animation: nui-otp-field-enter var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-otp-field__dot {
     inline-size: 0.5em;
     block-size: 0.5em;
     border-radius: 50%;
     background: currentColor;
-    transition: scale var(--nui-duration-normal) var(--nui-easing);
+    transition: scale var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-otp-field--secret .nui-otp-field__char {
     scale: 0;
     opacity: 0;
     transition:
-      scale var(--nui-duration-normal) var(--nui-easing),
-      opacity var(--nui-duration-normal) var(--nui-easing);
+      scale var(--transition-duration-normal) var(--ease-nui),
+      opacity var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-otp-field--secret .nui-otp-field__slot--revealed .nui-otp-field__char {
     scale: 1;
@@ -117,16 +117,16 @@
     inline-size: 1px;
     block-size: round(1.25em, 2px);
     background: currentColor;
-    animation: nui-otp-field-blink 1.2s var(--nui-easing) infinite;
+    animation: nui-otp-field-blink 1.2s var(--ease-nui) infinite;
     animation-play-state: var(--nui-animation-play-state, running);
   }
   .nui-otp-field__placeholder {
-    color: var(--nui-text-muted);
+    color: var(--color-muted-foreground);
   }
   .nui-otp-field__separator {
     display: inline-flex;
     flex: none;
-    color: var(--nui-text-muted);
+    color: var(--color-muted-foreground);
   }
   .nui-otp-field__overlay {
     position: absolute;
@@ -162,7 +162,7 @@
     cursor: default;
   }
   .nui-otp-field--disabled {
-    opacity: var(--nui-disabled-opacity);
+    opacity: var(--opacity-disabled);
   }
   .nui-otp-field--disabled .nui-otp-field__control {
     cursor: not-allowed;

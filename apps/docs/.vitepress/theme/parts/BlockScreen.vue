@@ -13,7 +13,7 @@
 import { computed, useTemplateRef } from 'vue';
 import { useData } from 'vitepress';
 import { NuiToaster } from '@numior/vue';
-import { blockNamed } from '../../blocks';
+import { screenNamed } from '../../blocks';
 import { useBlockHeightReport } from '../block-height';
 import { exampleLocaleOf } from '../examples';
 import BlockStage from './BlockStage.vue';
@@ -27,7 +27,7 @@ const locale = computed(() => exampleLocaleOf(localeIndex.value));
 const name = computed(() => {
   const value: unknown = params.value?.name;
 
-  return typeof value === 'string' ? blockNamed(value)?.name : undefined;
+  return typeof value === 'string' ? screenNamed(value)?.name : undefined;
 });
 
 useBlockHeightReport(stage);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { kitEntry, layersEntry } from '../src/kit-css';
+import { kitEntry } from '../src/kit-css';
 import { installModule, NuxtHost } from './harness/nuxt-host';
 
 describe('@numior/nuxt', () => {
@@ -8,11 +8,10 @@ describe('@numior/nuxt', () => {
 
     expect(host.css).toEqual([
       expect.stringMatching(/\/numior\/kit\.css$/),
-      expect.stringMatching(/\/numior\/layers\.css$/),
       expect.stringMatching(/\/assets\/theme\.css$/),
     ]);
 
-    expect(host.templateOptions('numior/layers.css')).toEqual({
+    expect(host.templateOptions('numior/kit.css')).toEqual({
       packages: ['@numior/forms', '@numior/table'],
     });
 
@@ -65,17 +64,12 @@ describe('@numior/nuxt', () => {
     await host.close();
   });
 
-  it('writes one Tailwind entry for the kit theme and the styles that use it', () => {
-    expect(kitEntry().split('\n')).toEqual([
+  it('writes one Tailwind entry for the kit theme and the styles of every installed package', () => {
+    expect(kitEntry(['@numior/forms', '@numior/table']).split('\n')).toEqual([
       '@layer theme, base, components, utilities;',
       "@import '@numior/tokens/theme.css' layer(theme);",
       "@import '@numior/tokens/base.css' layer(components);",
       "@import '@numior/vue/styles.css';",
-    ]);
-  });
-
-  it('imports the styles of the other installed packages into the components layer', () => {
-    expect(layersEntry(['@numior/forms', '@numior/table']).split('\n')).toEqual([
       "@import '@numior/forms/styles.css' layer(components);",
       "@import '@numior/table/styles.css' layer(components);",
     ]);

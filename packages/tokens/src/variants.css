@@ -1,0 +1,17 @@
+@custom-variant dark {
+  &:where(.nui-theme--dark) {
+    @slot;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    &:where(.nui-theme--system, :root:not(.nui-theme--light, .nui-theme--dark)) {
+      @slot;
+    }
+  }
+
+  &:not(:where(:root, .nui-theme--light, .nui-theme--dark, .nui-theme--system)) {
+    @container style(--nui-scheme: dark) {
+      @slot;
+    }
+  }
+}

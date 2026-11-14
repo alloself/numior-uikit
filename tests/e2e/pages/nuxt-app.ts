@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { wcagViolationsOf, type AxeViolations } from '../helpers/axe';
+import { schemeOf } from '../helpers/theme';
 
 export type NuxtScheme = 'light' | 'dark' | 'system';
 
@@ -65,17 +66,21 @@ export class NuxtApp {
   }
 
   theme(): Promise<string | null> {
-    return this.page.locator('html').getAttribute('data-nui-theme');
+    return schemeOf(this.page.locator('html'));
+  }
+
+  async rootClasses(): Promise<string[]> {
+    return ((await this.page.locator('html').getAttribute('class')) ?? '').split(/\s+/u).toSorted();
   }
 
   async mark(): Promise<void> {
     await this.page.evaluate(() => {
-      document.documentElement.dataset.nuiMark = 'kept';
+      document.documentElement.dataset.reloadMark = 'kept';
     });
   }
 
   marked(): Promise<string | null> {
-    return this.page.locator('html').getAttribute('data-nui-mark');
+    return this.page.locator('html').getAttribute('data-reload-mark');
   }
 
   styleOf(target: Locator, property: string): Promise<string> {

@@ -4,7 +4,6 @@ import { createShikiHighlighter } from '@numior/vue/shiki';
 import '@fontsource-variable/inter/index.css';
 import '@numior/tokens/accents.css';
 import './tailwind.css';
-import './layers.css';
 import App from './App.vue';
 
 const messages: NuiLocaleMessages<NuiVueMessages> = {

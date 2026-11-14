@@ -18,8 +18,8 @@ const motionTiming = (element: Element): MotionTiming => {
   const style = getComputedStyle(element);
 
   return {
-    duration: toMilliseconds(style.getPropertyValue('--nui-duration-normal')),
-    easing: style.getPropertyValue('--nui-easing').trim() || 'ease',
+    duration: toMilliseconds(style.getPropertyValue('--transition-duration-normal')),
+    easing: style.getPropertyValue('--ease-nui').trim() || 'ease',
   };
 };
 

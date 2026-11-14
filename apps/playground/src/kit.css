@@ -1,4 +1,0 @@
-@layer theme, base, components, utilities;
-@import '@numior/tokens/theme.css' layer(theme);
-@import '@numior/tokens/base.css' layer(components);
-@import '@numior/vue/styles.css';

@@ -64,7 +64,7 @@ const columns: NuiTableColumn<Line>[] = [
   },
 ];
 
-const NOTE: NuiTableCellStyle = { color: 'var(--nui-text-muted)', overflow: true };
+const NOTE: NuiTableCellStyle = { color: 'var(--color-muted-foreground)', overflow: true };
 
 const styleOf = ({ row, column }: NuiTableCellRef<Line>): NuiTableCellStyle | undefined =>
   column.key === 'name' && row.month === null ? NOTE : undefined;

@@ -1,15 +1,15 @@
 @layer components {
   .nui-tabs {
-    --_height: var(--nui-control-height-md);
-    --_padding: var(--nui-control-padding-md);
-    --_font-size: var(--nui-control-font-size-md);
+    --_height: var(--spacing-control-md);
+    --_padding: var(--spacing-control-pad-md);
+    --_font-size: var(--text-control-md);
 
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: var(--nui-space-3);
-    font-family: var(--nui-font);
-    color: var(--nui-text);
+    gap: --spacing(3);
+    font-family: var(--font-sans);
+    color: var(--color-foreground);
     isolation: isolate;
   }
   .nui-tabs--orientation-vertical {
@@ -17,14 +17,14 @@
     align-items: flex-start;
   }
   .nui-tabs--size-sm {
-    --_height: var(--nui-control-height-sm);
-    --_padding: var(--nui-control-padding-sm);
-    --_font-size: var(--nui-control-font-size-sm);
+    --_height: var(--spacing-control-sm);
+    --_padding: var(--spacing-control-pad-sm);
+    --_font-size: var(--text-control-sm);
   }
   .nui-tabs--size-lg {
-    --_height: var(--nui-control-height-lg);
-    --_padding: var(--nui-control-padding-lg);
-    --_font-size: var(--nui-control-font-size-lg);
+    --_height: var(--spacing-control-lg);
+    --_padding: var(--spacing-control-pad-lg);
+    --_font-size: var(--text-control-lg);
   }
 
   @property --_tab-fade-start {
@@ -45,10 +45,10 @@
     position: relative;
     display: flex;
     max-inline-size: 100%;
-    box-shadow: inset 0 -1px var(--nui-border);
+    box-shadow: inset 0 -1px var(--color-border);
   }
   .nui-tab-list--orientation-vertical {
-    border-inline-end: 1px solid var(--nui-border);
+    border-inline-end: 1px solid var(--color-border);
     box-shadow: none;
   }
   .nui-tab-list__track {
@@ -62,7 +62,7 @@
     position: relative;
     display: flex;
     flex: 1 1 auto;
-    gap: var(--nui-space-1);
+    gap: var(--spacing);
     min-inline-size: 0;
     overflow-x: auto;
     overscroll-behavior-x: contain;
@@ -76,8 +76,8 @@
       transparent calc(100% - var(--_fade-right) * 0.4)
     );
     transition:
-      --_tab-fade-start var(--nui-duration-fast) var(--nui-easing),
-      --_tab-fade-end var(--nui-duration-fast) var(--nui-easing);
+      --_tab-fade-start var(--transition-duration-fast) var(--ease-nui),
+      --_tab-fade-end var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-tab-list__track:dir(rtl) {
     --_fade-left: var(--_tab-fade-end);
@@ -103,8 +103,8 @@
     opacity: 0;
     visibility: hidden;
     transition:
-      opacity var(--nui-duration-fast) var(--nui-easing),
-      visibility var(--nui-duration-fast) var(--nui-easing);
+      opacity var(--transition-duration-fast) var(--ease-nui),
+      visibility var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-tab-list__edge--start {
     inset-inline-start: 0;
@@ -120,17 +120,17 @@
     scale: -1 1;
   }
   .nui-tabs--variant-soft .nui-tab-list {
-    padding: var(--nui-space-1);
+    padding: var(--spacing);
     border: 0;
-    border-radius: var(--nui-radius);
-    background: var(--nui-surface-muted);
+    border-radius: --theme(--radius inline);
+    background: var(--color-surface-muted);
     box-shadow: none;
   }
   .nui-tabs--variant-soft .nui-tab-list__edge--start {
-    inset-inline-start: var(--nui-space-1);
+    inset-inline-start: var(--spacing);
   }
   .nui-tabs--variant-soft .nui-tab-list__edge--end {
-    inset-inline-end: var(--nui-space-1);
+    inset-inline-end: var(--spacing);
   }
 
   .nui-tab-item {
@@ -154,49 +154,49 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--nui-space-2);
+    gap: --spacing(2);
     min-block-size: var(--_height);
     padding: 0 var(--_padding);
     border: 0;
-    border-radius: var(--nui-radius-sm);
+    border-radius: --theme(--radius-sm inline);
     background: transparent;
-    color: var(--nui-text-muted);
+    color: var(--color-muted-foreground);
     font: inherit;
     font-size: var(--_font-size);
     font-weight: 500;
-    line-height: var(--nui-line-height-control);
+    line-height: var(--leading-control);
     text-decoration: none;
     white-space: nowrap;
     cursor: pointer;
     transition:
-      color var(--nui-duration-fast) var(--nui-easing),
-      background-color var(--nui-duration-fast) var(--nui-easing);
+      color var(--transition-duration-fast) var(--ease-nui),
+      background-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-tab-list--orientation-vertical .nui-tab {
     justify-content: flex-start;
   }
   .nui-tab:hover,
   .nui-tab-item:hover > .nui-tab {
-    color: var(--nui-text);
+    color: var(--color-foreground);
   }
   .nui-tab--selected {
-    color: var(--nui-text);
+    color: var(--color-foreground);
   }
   .nui-tab--disabled,
   .nui-tab--disabled:hover {
-    color: var(--nui-text-muted);
-    opacity: var(--nui-disabled-opacity);
+    color: var(--color-muted-foreground);
+    opacity: var(--opacity-disabled);
     cursor: not-allowed;
   }
   .nui-tab:focus-visible {
-    outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-    outline-offset: calc(-1 * var(--nui-focus-ring-width));
+    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+    outline-offset: calc(-1 * var(--focus-ring-width));
   }
   .nui-tab__icon {
     color: inherit;
   }
   .nui-tab--closable {
-    padding-inline-end: calc(var(--_close-gap) + var(--_close-size) + var(--nui-space-1));
+    padding-inline-end: calc(var(--_close-gap) + var(--_close-size) + var(--spacing));
   }
   .nui-tab-item > .nui-tab__close {
     z-index: 2;
@@ -211,14 +211,14 @@
     inset-inline-start: var(--_indicator-start);
     inline-size: var(--_indicator-size);
     block-size: var(--_indicator-thickness);
-    border-radius: var(--nui-radius-full);
-    background: var(--nui-primary);
+    border-radius: var(--radius-full);
+    background: var(--color-primary);
     pointer-events: none;
     transition:
-      inset-inline-start var(--nui-duration-slow) var(--nui-easing),
-      top var(--nui-duration-slow) var(--nui-easing),
-      inline-size var(--nui-duration-slow) var(--nui-easing),
-      block-size var(--nui-duration-slow) var(--nui-easing);
+      inset-inline-start var(--transition-duration-slow) var(--ease-nui),
+      top var(--transition-duration-slow) var(--ease-nui),
+      inline-size var(--transition-duration-slow) var(--ease-nui),
+      block-size var(--transition-duration-slow) var(--ease-nui);
   }
   .nui-tab-list--orientation-vertical .nui-tab-list__indicator {
     inset-block-end: auto;
@@ -231,9 +231,9 @@
   .nui-tabs--variant-soft .nui-tab-list__indicator {
     inset-block: 0;
     block-size: auto;
-    border-radius: var(--nui-radius-sm);
-    background: var(--nui-surface);
-    box-shadow: var(--nui-shadow-sm);
+    border-radius: --theme(--radius-sm inline);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
   }
   .nui-tabs--variant-soft .nui-tab-list--orientation-vertical .nui-tab-list__indicator {
     inset-block: auto;
@@ -247,11 +247,11 @@
     box-sizing: border-box;
     min-inline-size: 0;
     flex: 1 1 auto;
-    border-radius: var(--nui-radius-sm);
+    border-radius: --theme(--radius-sm inline);
     outline: none;
   }
   .nui-tab-panel:focus-visible {
-    outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-    outline-offset: var(--nui-focus-ring-offset);
+    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+    outline-offset: var(--focus-ring-offset);
   }
 }

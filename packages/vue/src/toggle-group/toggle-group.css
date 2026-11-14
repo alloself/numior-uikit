@@ -1,8 +1,8 @@
 @layer components {
   .nui-toggle-group {
-    --_height: var(--nui-control-height-md);
-    --_padding: var(--nui-control-padding-md);
-    --_font-size: var(--nui-control-font-size-md);
+    --_height: var(--spacing-control-md);
+    --_padding: var(--spacing-control-pad-md);
+    --_font-size: var(--text-control-md);
     --_gap: 0px;
 
     box-sizing: border-box;
@@ -11,8 +11,8 @@
     gap: var(--_gap);
     inline-size: fit-content;
     max-inline-size: 100%;
-    border-radius: var(--nui-radius);
-    font-family: var(--nui-font);
+    border-radius: --theme(--radius inline);
+    font-family: var(--font-sans);
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scrollbar-width: none;
@@ -23,27 +23,27 @@
     align-items: stretch;
   }
   .nui-toggle-group--size-sm {
-    --_height: var(--nui-control-height-sm);
-    --_padding: var(--nui-control-padding-sm);
-    --_font-size: var(--nui-control-font-size-sm);
+    --_height: var(--spacing-control-sm);
+    --_padding: var(--spacing-control-pad-sm);
+    --_font-size: var(--text-control-sm);
   }
   .nui-toggle-group--size-lg {
-    --_height: var(--nui-control-height-lg);
-    --_padding: var(--nui-control-padding-lg);
-    --_font-size: var(--nui-control-font-size-lg);
+    --_height: var(--spacing-control-lg);
+    --_padding: var(--spacing-control-pad-lg);
+    --_font-size: var(--text-control-lg);
   }
   .nui-toggle-group--disabled {
-    opacity: var(--nui-disabled-opacity);
+    opacity: var(--opacity-disabled);
   }
   .nui-toggle-group__item {
-    --_rest: var(--nui-surface);
+    --_rest: var(--color-surface);
     --_hover: light-dark(
-      oklab(from var(--_rest) calc(l - var(--nui-state-hover-subtle)) a b),
-      oklab(from var(--_rest) calc(l + var(--nui-state-hover-subtle)) a b)
+      oklab(from var(--_rest) calc(l - var(--state-hover-subtle)) a b),
+      oklab(from var(--_rest) calc(l + var(--state-hover-subtle)) a b)
     );
     --_pressed: light-dark(
-      oklab(from var(--_rest) calc(l - var(--nui-state-pressed-subtle)) a b),
-      oklab(from var(--_rest) calc(l + var(--nui-state-pressed-subtle)) a b)
+      oklab(from var(--_rest) calc(l - var(--state-pressed-subtle)) a b),
+      oklab(from var(--_rest) calc(l + var(--state-pressed-subtle)) a b)
     );
 
     box-sizing: border-box;
@@ -52,24 +52,24 @@
     flex: 1 1 auto;
     align-items: center;
     justify-content: center;
-    gap: var(--nui-space-2);
+    gap: --spacing(2);
     min-block-size: var(--_height);
     padding-inline: var(--_padding);
-    border: 1px solid var(--nui-border);
+    border: 1px solid var(--color-border);
     border-radius: 0;
     background: var(--_rest);
-    color: var(--nui-text-muted);
+    color: var(--color-muted-foreground);
     font: inherit;
     font-size: var(--_font-size);
-    font-weight: var(--nui-font-weight-medium);
-    line-height: var(--nui-line-height-control);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--leading-control);
     white-space: nowrap;
     cursor: pointer;
     transition:
-      background-color var(--nui-duration-fast) var(--nui-easing),
-      border-color var(--nui-duration-fast) var(--nui-easing),
-      color var(--nui-duration-fast) var(--nui-easing),
-      box-shadow var(--nui-duration-fast) var(--nui-easing);
+      background-color var(--transition-duration-fast) var(--ease-nui),
+      border-color var(--transition-duration-fast) var(--ease-nui),
+      color var(--transition-duration-fast) var(--ease-nui),
+      box-shadow var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-toggle-group--orientation-horizontal .nui-toggle-group__item ~ .nui-toggle-group__item {
     margin-inline-start: -1px;
@@ -78,43 +78,43 @@
     margin-block-start: -1px;
   }
   .nui-toggle-group--orientation-horizontal .nui-toggle-group__item:first-of-type {
-    border-start-start-radius: var(--nui-radius);
-    border-end-start-radius: var(--nui-radius);
+    border-start-start-radius: --theme(--radius inline);
+    border-end-start-radius: --theme(--radius inline);
   }
   .nui-toggle-group--orientation-horizontal .nui-toggle-group__item:last-of-type {
-    border-start-end-radius: var(--nui-radius);
-    border-end-end-radius: var(--nui-radius);
+    border-start-end-radius: --theme(--radius inline);
+    border-end-end-radius: --theme(--radius inline);
   }
   .nui-toggle-group--orientation-vertical .nui-toggle-group__item:first-of-type {
-    border-start-start-radius: var(--nui-radius);
-    border-start-end-radius: var(--nui-radius);
+    border-start-start-radius: --theme(--radius inline);
+    border-start-end-radius: --theme(--radius inline);
   }
   .nui-toggle-group--orientation-vertical .nui-toggle-group__item:last-of-type {
-    border-end-start-radius: var(--nui-radius);
-    border-end-end-radius: var(--nui-radius);
+    border-end-start-radius: --theme(--radius inline);
+    border-end-end-radius: --theme(--radius inline);
   }
   .nui-toggle-group__item--selected {
-    --_rest: var(--nui-primary-soft);
+    --_rest: --theme(--color-primary-soft inline);
 
     z-index: 1;
-    border-color: color-mix(in oklab, var(--nui-primary) 50%, var(--nui-border));
-    color: var(--nui-primary-soft-foreground);
+    border-color: color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
+    color: --theme(--color-primary-soft-foreground inline);
   }
   .nui-toggle-group__item:hover:not(:disabled) {
     background: var(--_hover);
-    color: var(--nui-text);
+    color: var(--color-foreground);
   }
   .nui-toggle-group__item--selected:hover:not(:disabled) {
-    color: var(--nui-primary-soft-foreground);
+    color: --theme(--color-primary-soft-foreground inline);
   }
   .nui-toggle-group__item:active:not(:disabled) {
     background: var(--_pressed);
-    transition-duration: var(--nui-duration-instant);
+    transition-duration: var(--transition-duration-instant);
   }
   .nui-toggle-group__item:focus-visible {
     z-index: 2;
-    outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-    outline-offset: calc(var(--nui-focus-ring-offset) * -1);
+    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+    outline-offset: calc(var(--focus-ring-offset) * -1);
   }
   .nui-toggle-group__item:disabled {
     cursor: not-allowed;
@@ -128,27 +128,27 @@
     --_gap: 2px;
 
     padding: 2px;
-    border-radius: var(--nui-radius);
-    background: var(--nui-surface-muted);
+    border-radius: --theme(--radius inline);
+    background: var(--color-surface-muted);
   }
   .nui-toggle-group--variant-segmented .nui-toggle-group__item {
-    --_rest: var(--nui-surface-muted);
+    --_rest: var(--color-surface-muted);
 
     min-block-size: calc(var(--_height) - 4px);
     margin: 0;
     border-color: transparent;
-    border-radius: var(--nui-radius-sm);
+    border-radius: --theme(--radius-sm inline);
     background: transparent;
   }
   .nui-toggle-group--variant-segmented .nui-toggle-group__item--selected {
-    --_rest: var(--nui-surface-elevated);
+    --_rest: var(--color-surface-elevated);
 
     border-color: transparent;
     background: var(--_rest);
-    color: var(--nui-text);
-    box-shadow: var(--nui-shadow-sm);
+    color: var(--color-foreground);
+    box-shadow: var(--shadow-sm);
   }
   .nui-toggle-group--variant-segmented .nui-toggle-group__item--selected:hover:not(:disabled) {
-    color: var(--nui-text);
+    color: var(--color-foreground);
   }
 }
