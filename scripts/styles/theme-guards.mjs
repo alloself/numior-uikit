@@ -14,7 +14,7 @@ const INNER_RULE = /([^{}]+)\{([^{}]*)\}/gu;
 const CSS_FILE = /\.css$/u;
 const VUE_FILE = /\.vue$/u;
 
-export const ThemeGuard = Object.freeze({
+const ThemeGuard = Object.freeze({
   AttributeSelector: 'attribute-selector',
   AttributeWrite: 'attribute-write',
   SelfDeclaration: 'self-declaration',

@@ -356,7 +356,12 @@
   "duplicates": {
     "minTokens": 100,
     "threshold": 0.001,
-    "ignore": ["**/*.messages.ts", "apps/docs/examples/**", "apps/docs/demo/**"]
+    "ignore": [
+      "**/*.messages.ts",
+      "apps/docs/examples/**",
+      "apps/docs/demo/**",
+      "apps/docs/guide/snippets/**"
+    ]
   },
   "health": {
     "maxCyclomatic": 15,
