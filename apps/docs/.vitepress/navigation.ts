@@ -180,8 +180,6 @@ const COMPONENTS: readonly NavGroup[] = [
       { link: '/components/list', title: 'List' },
       { link: '/components/empty', title: 'Empty' },
       { link: '/components/tree', title: 'Tree' },
-      { link: '/components/table', title: 'Table' },
-      { link: '/components/spreadsheet', title: 'Spreadsheet' },
     ],
   },
   {
@@ -191,6 +189,19 @@ const COMPONENTS: readonly NavGroup[] = [
       { link: '/components/calendar', title: 'Calendar' },
       { link: '/components/date-picker', title: 'Date picker' },
       { link: '/components/date-range-picker', title: 'Date range picker' },
+    ],
+  },
+];
+
+const TABLE: readonly NavGroup[] = [
+  {
+    title: { ru: 'Таблица', en: 'Table' },
+    pages: [
+      { link: '/table/', title: { ru: 'Таблица', en: 'Table' } },
+      { link: '/table/data', title: { ru: 'Данные', en: 'Data' } },
+      { link: '/table/cells', title: { ru: 'Ячейки', en: 'Cells' } },
+      { link: '/table/editing', title: { ru: 'Правка', en: 'Editing' } },
+      { link: '/table/columns', title: { ru: 'Колонки и строки', en: 'Columns and rows' } },
     ],
   },
 ];
@@ -234,6 +245,17 @@ export const NAVIGATION: readonly NavSection[] = [
     title: { ru: 'Компоненты', en: 'Components' },
     prefixes: ['/components/'],
     groups: COMPONENTS,
+  },
+  {
+    title: { ru: 'Таблица', en: 'Table' },
+    prefixes: ['/table/'],
+    groups: TABLE,
+  },
+  {
+    title: { ru: 'Книга', en: 'Spreadsheet' },
+    link: '/spreadsheet/',
+    prefixes: ['/spreadsheet/'],
+    groups: [],
   },
   {
     title: { ru: 'Редактор', en: 'Editor' },

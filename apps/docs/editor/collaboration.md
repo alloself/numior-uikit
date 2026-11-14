@@ -179,7 +179,7 @@ const state = computed(() => STATES[status.value.kind]);
   клиент получает обратно, догоняет журнал и отправляет снова.
 
 Книгу правят вместе так же, её подключение описано на странице
-[Spreadsheet](/components/spreadsheet#совместная-работа).
+«[Книга](/spreadsheet/#совместная-работа)».
 
 ## API
 

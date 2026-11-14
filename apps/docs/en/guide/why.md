@@ -10,7 +10,7 @@ missing, we added it here, not to the product. Now it is open.
 ## What is inside
 
 - [Components](/en/components/button): fields, lists, overlays, navigation and feedback.
-- A [table](/en/components/table) and a [spreadsheet](/en/components/spreadsheet) with formulas
+- A [table](/en/table/) and a [spreadsheet](/en/spreadsheet/) with formulas
   and XLSX files.
 - An [editor](/en/editor/) for documents made of blocks, and
   [collaboration](/en/editor/collaboration) on them.

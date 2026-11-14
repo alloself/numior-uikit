@@ -127,7 +127,7 @@ test('a link to a section of another page keeps the section at the top while the
 }) => {
   await docs.open('/editor/collaboration');
 
-  await docs.follow('Spreadsheet');
+  await docs.follow('Книга');
 
   await expect.poll(() => docs.sectionTop('Совместная работа')).toBe(SECTION_TOP);
 });

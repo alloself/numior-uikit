@@ -42,7 +42,7 @@ const reorder = useReorder({
 `follow` только запоминает точку, а шаг делается один раз за кадр. Поэтому скорость не зависит
 от того, как часто двигается указатель.
 
-Так [Table](/components/table) прокручивается, когда выделение ячеек тянут за край.
+Так [Table](/table/editing) прокручивается, когда выделение ячеек тянут за край.
 
 <SignatureReference :names="['useEdgeScroll', 'EdgeScrollOptions', 'EdgeScroll', 'EdgePoint']" />
 
@@ -60,7 +60,7 @@ const reorder = useReorder({
 `usePressTarget(targets, element, press)` или ref-функцию `pressRefOf(targets, press)`.
 
 Нажатие идёт от элемента под указателем вверх до контейнера, `stopPropagation()` останавливает
-обход. Так устроены ручки колонок и строк в [Table](/components/table).
+обход. Так устроены ручки колонок и строк в [Table](/table/columns).
 
 ```ts
 import { createPressTargets, usePointerSession, usePressTarget } from '@numior/primitives';

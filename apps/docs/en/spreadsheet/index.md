@@ -1,7 +1,10 @@
+---
+layout: wide
+---
+
 # Spreadsheet
 
-`NuiSpreadsheet` is a spreadsheet with formulas, sheet tabs and XLSX files. Use it when people need
-to calculate right on the page.
+A spreadsheet that computes formulas on the page and opens and saves XLSX files.
 
 <Example name="spreadsheet/Basic" />
 

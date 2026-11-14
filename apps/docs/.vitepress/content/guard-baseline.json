@@ -1,21 +1,13 @@
 {
-  "lead": [
-    "components/spreadsheet.md",
-    "components/table.md",
-    "en/components/spreadsheet.md",
-    "en/components/table.md"
-  ],
-  "caption": [
-    "components/spreadsheet.md",
-    "components/table.md",
-    "en/components/spreadsheet.md",
-    "en/components/table.md"
-  ],
   "glossary": [
     "api/table.ts",
-    "components/spreadsheet.md",
-    "components/table.md",
-    "en/components/table.md"
+    "en/table/data.md",
+    "en/table/editing.md",
+    "spreadsheet/index.md",
+    "table/cells.md",
+    "table/data.md",
+    "table/editing.md",
+    "table/index.md"
   ],
   "catalog": [".vitepress/theme/home-content.ts", ".vitepress/theme/texts.ts", "api/table.ts"],
   "demo-filler": [
