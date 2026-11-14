@@ -7,7 +7,7 @@ rules and the submit handler. Use it with `NuiForm` or with your own markup.
 groups, both without `NuiFormField`. `useFormContext` returns the form passed with
 `provideForm`.
 
-<Example name="form/Guests" />
+<Example name="form/Lines" />
 
 ## Signature
 

@@ -1,21 +1,13 @@
 {
   "lead": [
-    "components/form.md",
-    "components/smart-form.md",
     "components/spreadsheet.md",
     "components/table.md",
-    "en/components/form.md",
-    "en/components/smart-form.md",
     "en/components/spreadsheet.md",
     "en/components/table.md"
   ],
   "caption": [
-    "components/form.md",
-    "components/smart-form.md",
     "components/spreadsheet.md",
     "components/table.md",
-    "en/components/form.md",
-    "en/components/smart-form.md",
     "en/components/spreadsheet.md",
     "en/components/table.md"
   ],
@@ -23,11 +15,9 @@
     "api/table.ts",
     "components/spreadsheet.md",
     "components/table.md",
-    "en/components/form.md",
     "en/components/table.md"
   ],
   "catalog": [".vitepress/theme/home-content.ts", ".vitepress/theme/texts.ts", "api/table.ts"],
-  "api-tautology": ["api/form.ts"],
   "demo-filler": [
     "examples/en/table/Tree.vue",
     "examples/ru/table/FormulaBar.vue",
@@ -52,8 +42,6 @@
     "examples/ru/table/SourceGroups.vue"
   ],
   "demo-names": [
-    "examples/en/form/Guests.vue",
-    "examples/en/smart-form/Profile.vue",
     "examples/en/table/Cells.vue",
     "examples/en/table/Detail.vue",
     "examples/en/table/Editors.vue",

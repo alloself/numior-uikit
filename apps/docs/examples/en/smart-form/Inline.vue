@@ -16,7 +16,7 @@ const { field } = formConfig<Filters>();
 const statuses = [
   { value: 'paid', label: 'Paid' },
   { value: 'pending', label: 'Awaiting payment' },
-  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'cancelled', label: 'Canceled' },
 ];
 
 const fields = [
@@ -26,7 +26,7 @@ const fields = [
   }),
   field(NuiSelect, (v) => v.status, {
     label: 'Status',
-    props: { options: statuses, clearable: true },
+    props: { options: statuses, clearable: true, placeholder: 'All statuses' },
   }),
 ];
 

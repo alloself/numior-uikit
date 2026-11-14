@@ -26,7 +26,7 @@ const fields = [
   }),
   field(NuiSelect, (v) => v.status, {
     label: 'Статус',
-    props: { options: statuses, clearable: true },
+    props: { options: statuses, clearable: true, placeholder: 'Все статусы' },
   }),
 ];
 

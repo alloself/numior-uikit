@@ -38,7 +38,7 @@ To replace an error text, pass `{ message }` to the rule. The default texts live
 `formRules` dictionary.
 
 Form rules are set by field path. For list rows, write `*` in place of the index:
-`'guests.*.email'`. You can also pass the rules of one field to the `rules` prop of
+`'lines.*.quantity'`. You can also pass the rules of one field to the `rules` prop of
 `NuiFormField`.
 
 To check a value without a form, call `runRules(rules, value, context)`. It returns the text of
@@ -62,7 +62,7 @@ async checks as well, but shows no errors.
 
 ## When to validate
 
-The `validateOn` prop on the form or a field sets when the value is checked:
+The `validateOn` option of `useForm` or the `validate-on` prop of a field sets when the value is checked:
 
 - `submit` — when the form is submitted, the default;
 - `blur` — when the field loses focus;

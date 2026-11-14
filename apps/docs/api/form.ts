@@ -44,8 +44,8 @@ const docs: DocsMap = {
       },
       default: { ru: 'Поля формы.', en: 'Form fields.' },
       actions: {
-        ru: 'Свои кнопки вместо кнопки отправки. Получает `submit`, `pending` и `dirty`.',
-        en: 'Custom buttons instead of the submit button. Receives `submit`, `pending` and `dirty`.',
+        ru: 'Свои кнопки вместо кнопки отправки. Получает `submit`, `reset`, `pending`, `dirty` и `readonly`.',
+        en: 'Custom buttons instead of the submit button. Receives `submit`, `reset`, `pending`, `dirty` and `readonly`.',
       },
     },
   },
@@ -60,7 +60,10 @@ const docs: DocsMap = {
         ru: 'Атрибут `id` контрола. Без него создаётся автоматически.',
         en: 'The `id` attribute of the control. Generated when omitted.',
       },
-      label: { ru: 'Подпись поля.', en: 'Field label.' },
+      label: {
+        ru: 'Подпись над контролом. Экранный диктор читает её вместе с полем.',
+        en: 'Text above the control. A screen reader reads it together with the field.',
+      },
       description: { ru: 'Подсказка под контролом.', en: 'Hint under the control.' },
       required: {
         ru: 'Ставит звёздочку у подписи. Проверку задают `rules`.',
@@ -91,12 +94,12 @@ const docs: DocsMap = {
         en: 'Validation rules of the field. They can change at runtime.',
       },
       validateOn: {
-        ru: 'Когда начинать проверку: при отправке (`submit`), уходе из поля (`blur`) или изменении (`change`).',
-        en: 'When validation starts: on submit (`submit`), on leaving the field (`blur`) or on change (`change`).',
+        ru: 'Когда начинать проверку: при отправке (`submit`), уходе из поля (`blur`) или изменении (`change`). По умолчанию берётся из `useForm`, там — `submit`.',
+        en: 'When validation starts: on submit (`submit`), on leaving the field (`blur`) or on change (`change`). Defaults to the `validateOn` of `useForm`, which is `submit`.',
       },
       debounce: {
-        ru: 'Задержка асинхронной проверки после изменения, в миллисекундах.',
-        en: 'Delay of the async check after a change, in milliseconds.',
+        ru: 'Задержка асинхронной проверки после изменения, в миллисекундах. По умолчанию 300.',
+        en: 'Delay of the async check after a change, in milliseconds. Defaults to 300.',
       },
     },
     slots: {
@@ -136,7 +139,10 @@ const docs: DocsMap = {
         ru: 'Разрешает переставлять строки мышью и с клавиатуры.',
         en: 'Lets rows be reordered with the mouse and the keyboard.',
       },
-      disabled: { ru: 'Отключает строки и кнопки.', en: 'Disables the rows and the buttons.' },
+      disabled: {
+        ru: 'Отключает поля строк, ручки и кнопку добавления, а кнопки удаления прячет. Строки отправляются без проверки.',
+        en: 'Disables the row fields, the grips and the add button, and hides the remove buttons. The rows are submitted without validation.',
+      },
       readonly: {
         ru: 'Показывает строки без возможности добавить, удалить или переставить их.',
         en: 'Shows the rows without adding, removing or reordering.',

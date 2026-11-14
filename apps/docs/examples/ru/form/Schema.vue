@@ -1,37 +1,41 @@
 <template>
-  <NuiForm :form="form" submit-label="Создать аккаунт" class="max-w-sm">
-    <NuiFormField v-slot="{ field }" :form="form" :name="(v) => v.email" label="Почта" required>
-      <NuiInput v-bind="field" type="email" autocomplete="email" />
-    </NuiFormField>
-    <NuiFormField v-slot="{ field }" :form="form" :name="(v) => v.age" label="Возраст" required>
-      <NuiInput v-bind="field" inputmode="numeric" />
-    </NuiFormField>
-    <NuiFormField v-slot="{ field }" :form="form" :name="(v) => v.newsletter">
-      <NuiCheckbox v-bind="field">Присылать новости раз в месяц</NuiCheckbox>
-    </NuiFormField>
-  </NuiForm>
-  <p v-if="created" class="text-sm text-muted-foreground">Создан аккаунт для {{ created }}</p>
+  <div class="flex w-full max-w-sm flex-col gap-3">
+    <NuiForm :form="form" submit-label="Добавить клиента">
+      <NuiFormField v-slot="{ field }" :form="form" :name="(v) => v.name" label="Имя" required>
+        <NuiInput v-bind="field" autocomplete="name" />
+      </NuiFormField>
+      <NuiFormField v-slot="{ field }" :form="form" :name="(v) => v.email" label="Почта">
+        <NuiInput v-bind="field" type="email" autocomplete="email" />
+      </NuiFormField>
+      <NuiFormField v-slot="{ field }" :form="form" :name="(v) => v.phone" label="Телефон">
+        <NuiInput v-bind="field" type="tel" mask="+7 ### ###-##-##" autocomplete="tel" />
+      </NuiFormField>
+    </NuiForm>
+    <p v-if="added" class="m-0 text-sm text-muted-foreground">Клиент {{ added }} добавлен</p>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { z } from 'zod';
-import { NuiCheckbox, NuiInput } from '@numior/vue';
+import { NuiInput } from '@numior/vue';
 import { NuiForm, NuiFormField, useForm } from '@numior/forms';
 
-const signup = z.object({
-  email: z.email('Укажите адрес почты'),
-  age: z.coerce.number().min(18, 'Только для совершеннолетних'),
-  newsletter: z.boolean(),
-});
+const customer = z
+  .object({
+    name: z.string().trim().min(1, 'Укажите имя'),
+    email: z.email('Проверьте адрес почты').or(z.literal('')),
+    phone: z.string(),
+  })
+  .refine((value) => value.email !== '' || value.phone !== '', 'Укажите почту или телефон');
 
-const created = ref('');
+const added = ref('');
 
 const form = useForm({
-  initialValues: { email: '', age: '', newsletter: true },
-  schema: signup,
+  initialValues: { name: '', email: '', phone: '' },
+  schema: customer,
   onSubmit: (_values, { output }) => {
-    created.value = output?.email ?? '';
+    added.value = output?.name ?? '';
   },
 });
 </script>

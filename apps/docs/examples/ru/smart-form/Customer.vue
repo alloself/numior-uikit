@@ -1,5 +1,5 @@
 <template>
-  <NuiSmartForm :form="form" :fields="fields" submit-label="Сохранить" class="max-w-lg">
+  <NuiSmartForm :form="form" :fields="fields" submit-label="Сохранить" class="w-full max-w-2xl">
     <template #kind>
       <NuiRadio value="person">Частное лицо</NuiRadio>
       <NuiRadio value="company">Компания</NuiRadio>
@@ -16,7 +16,7 @@ interface Contact {
   phone: string;
 }
 
-interface Profile {
+interface Customer {
   kind: 'person' | 'company';
   name: string;
   email: string;
@@ -24,17 +24,18 @@ interface Profile {
   contacts: Contact[];
 }
 
-const { field, section, array } = formConfig<Profile>();
+const { field, section, array } = formConfig<Customer>();
 const row = formConfig<Contact>();
-const isCompany = (values: Profile): boolean => values.kind === 'company';
+const isCompany = (values: Customer): boolean => values.kind === 'company';
+const contactLabel = (index: number): string => `Контакт ${index}`;
 
 const fields = [
   section({
-    title: 'Профиль',
+    title: 'Клиент',
     layout: '"kind kind" "name email" "company company"',
     fields: [
       field(NuiRadioGroup, (v) => v.kind, {
-        label: 'Тип аккаунта',
+        label: 'Тип клиента',
         group: true,
         props: { orientation: 'horizontal' },
       }),
@@ -55,18 +56,22 @@ const fields = [
   }),
   section({
     title: 'Контакты',
+    description: 'Кому звонить, когда курьер в пути',
     fields: [
       array((v) => v.contacts, {
         min: 1,
         max: 3,
         reorderable: true,
         layout: '"name phone"',
+        addLabel: 'Добавить контакт',
+        rowLabel: contactLabel,
         newRow: () => ({ name: '', phone: '' }),
         fields: [
           row.field(NuiInput, (r) => r.name, { label: 'Имя', rules: [required()] }),
           row.field(NuiInput, (r) => r.phone, {
             label: 'Телефон',
-            props: { type: 'tel', mask: '+7 (###) ###-##-##' },
+            rules: [required()],
+            props: { type: 'tel', mask: '+7 ### ###-##-##' },
           }),
         ],
       }),
@@ -74,12 +79,12 @@ const fields = [
   }),
 ];
 
-const form = useForm<Profile>({
+const form = useForm<Customer>({
   initialValues: {
     kind: 'person',
-    name: 'Анна Титова',
-    email: 'anna@example.com',
-    contacts: [{ name: 'Игорь Белов', phone: '' }],
+    name: 'Пётр Волков',
+    email: 'volkov@example.com',
+    contacts: [{ name: 'Пётр Волков', phone: '+7 900 000-01-01' }],
   },
   onSubmit: () => undefined,
 });
