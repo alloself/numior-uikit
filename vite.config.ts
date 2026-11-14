@@ -53,7 +53,7 @@ export default defineConfig({
         'apps/docs/.vitepress/{content,examples,markdown,reference,theme}/**/*.{ts,vue}',
         'scripts/eslint/*.mjs',
         'scripts/styles/*.mjs',
-        'tests/parity/{compare,css-rules,png,store}.ts',
+        'tests/parity/{compare,css-rules,css-specificity,css-values,png,store}.ts',
       ],
       exclude: ['**/*.types.ts', '**/*.d.ts', '**/*.test.mjs'],
     },

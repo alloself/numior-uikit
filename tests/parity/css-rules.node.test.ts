@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
-  canonical,
   compareRules,
   foldColorMixFallbacks,
   parseAliases,
+  parseFixedKeys,
+  parseHelpers,
   parseRules,
 } from './css-rules';
+import type { CssEnvironment } from './css-rules.types';
 
 const ALIASES = parseAliases(`
   :root {
@@ -14,6 +16,16 @@ const ALIASES = parseAliases(`
     --nui-radius: var(--radius-md);
   }
 `);
+
+const ENVIRONMENT: CssEnvironment = {
+  aliases: ALIASES,
+  fixed: parseFixedKeys(['@theme static { --spacing: 0.25rem; --font-weight-medium: 500; }'], []),
+  helpers: parseHelpers(`
+    @property --tw-border-style { syntax: "*"; inherits: false; initial-value: solid; }
+    @property --tw-translate-x { syntax: "*"; inherits: false; initial-value: 0; }
+    @property --tw-leading { syntax: "*"; inherits: false; }
+  `),
+};
 
 const OLD = `
   .nui-button {
@@ -56,6 +68,9 @@ const NEW = `
 const kit = (source: string): ReturnType<typeof parseRules> =>
   parseRules(source).filter((rule) => !rule.context.startsWith('@layer theme'));
 
+const compare = (before: string, after: string): ReturnType<typeof compareRules> =>
+  compareRules(parseRules(before), kit(after), ENVIRONMENT);
+
 describe('rule comparison of a rewritten stylesheet', () => {
   it('reads rules with their at-rule context in source order', () => {
     expect(parseRules(OLD).map((rule) => [rule.context, rule.selector])).toEqual([
@@ -67,50 +82,123 @@ describe('rule comparison of a rewritten stylesheet', () => {
   });
 
   it('accepts renamed tokens, reordered unrelated declarations and equal zero lengths', () => {
-    expect(compareRules(parseRules(OLD), kit(NEW), ALIASES)).toEqual([]);
+    expect(compare(OLD, NEW)).toEqual({ issues: [], resets: [] });
   });
 
   it('names a lost, a gained and a changed declaration', () => {
     const changed = NEW.replace('gap: calc(var(--spacing) * 2);', 'gap: 8px; cursor: pointer;');
 
-    expect(compareRules(parseRules(OLD), kit(changed), ALIASES)).toEqual([
-      '| .nui-button: lost gap: calc(var(--spacing) * 2)',
+    expect(compare(OLD, changed).issues).toEqual([
+      '| .nui-button: lost gap: 0.5rem',
       '| .nui-button: gained gap: 8px',
       '| .nui-button: gained cursor: pointer',
     ]);
   });
 
   it('keeps a shorthand before the longhand that refines it', () => {
-    const old = '.a { font: inherit; line-height: 1; border: 0; border-color: red; }';
-    const next = '.a { line-height: 1; font: inherit; border-color: red; border: 0; }';
+    const old = '.a { font: inherit; line-height: 1; }';
+    const next = '.a { line-height: 1; font: inherit; }';
 
-    expect(compareRules(parseRules(old), parseRules(next), ALIASES)).toEqual([
-      '| .a: font must stay before line-height',
-      '| .a: border must stay before border-color',
-    ]);
+    expect(compare(old, next).issues).toEqual(['| .a: font must stay before line-height']);
   });
 
   it('rejects a moved, a merged and an added rule', () => {
     const moved = NEW.replace('@starting-style {', '@media (hover: hover) {');
     const extra = `${NEW} .nui-button--round { border-radius: 9999px; }`;
 
-    expect(compareRules(parseRules(OLD), kit(moved), ALIASES)).toEqual([
+    expect(compare(OLD, moved).issues).toEqual([
       'rule 3: expected @starting-style | .nui-button[open], found @media (hover: hover) | .nui-button[open]',
     ]);
 
-    expect(compareRules(parseRules(OLD), kit(extra), ALIASES)).toEqual([
-      'extra rule | .nui-button--round',
-    ]);
+    expect(compare(OLD, extra).issues).toEqual(['extra rule | .nui-button--round']);
 
-    expect(compareRules(parseRules(OLD), [], ALIASES)[0]).toBe(
+    expect(compareRules(parseRules(OLD), [], ENVIRONMENT).issues[0]).toBe(
       'rule 1: expected | .nui-button, found nothing',
     );
   });
 
-  it('writes values in one form', () => {
-    expect(canonical("var(--nui-radius) .5rem 0px 'x'", ALIASES)).toBe(
-      'var(--radius-md) 0.5rem 0 "x"',
+  it('reads a utility through its helper variables and the spacing scale', () => {
+    const old = `.a {
+      padding-block: 0.25rem;
+      border: 1px solid transparent;
+      translate: 0 calc(var(--spacing) * 2);
+      margin-inline-start: calc(var(--spacing) - calc(var(--spacing) * 2));
+      font-weight: 500;
+    }`;
+
+    const next = `.a {
+      padding-block: var(--spacing);
+      border-style: var(--tw-border-style);
+      border-width: 1px;
+      border-color: transparent;
+      --tw-translate-y: calc(var(--spacing) * 2);
+      translate: var(--tw-translate-x) var(--tw-translate-y);
+      margin-inline-start: calc(var(--spacing) * -1);
+      --tw-font-weight: var(--font-weight-medium);
+      font-weight: var(--font-weight-medium);
+    }`;
+
+    expect(compare(old, next)).toEqual({ issues: [], resets: [] });
+  });
+
+  it('lists the resets a longhand utility drops', () => {
+    expect(compare('.a { background: var(--x); }', '.a { background-color: var(--x); }')).toEqual({
+      issues: [],
+      resets: [
+        {
+          rule: '| .a',
+          index: 0,
+          properties: [
+            'background-image',
+            'background-position-x',
+            'background-position-y',
+            'background-size',
+            'background-repeat',
+            'background-origin',
+            'background-clip',
+            'background-attachment',
+          ],
+        },
+      ],
+    });
+  });
+
+  it('refuses a dropped reset that an earlier rule needs', () => {
+    const old = '.a { background-clip: padding-box; } .b { background: red; }';
+    const next = '.a { background-clip: padding-box; } .b { background-color: red; }';
+
+    expect(compare(old, next).issues).toEqual([
+      '| .b: drops the reset of background-clip, which | .a sets',
+    ]);
+  });
+
+  it('accepts a dropped reset that a later rule of equal weight overrides', () => {
+    const old = '.a { text-decoration: none; } .a:hover { text-decoration-thickness: 2px; }';
+    const next = '.a { text-decoration-line: none; } .a:hover { text-decoration-thickness: 2px; }';
+
+    expect(compare(old, next).issues).toEqual([]);
+  });
+
+  it('refuses a helper variable that another rule sets', () => {
+    const old = '.a { line-height: 1; } .b { line-height: 1.5; }';
+    const setter = '.a { --tw-leading: 1; line-height: 1; }';
+    const next = `${setter} .b { line-height: var(--tw-leading, 1.5); }`;
+
+    expect(compare(old, next).issues).toEqual([
+      '| .b: reads --tw-leading, which another rule sets',
+    ]);
+  });
+
+  it('resolves only theme keys that no scope sets again', () => {
+    const fixed = parseFixedKeys(
+      [
+        '@theme default { --radius-base: 0.5rem; --spacing: 1px; @keyframes x { to { opacity: 0; } } }',
+        '@theme static { --spacing: 0.25rem; } @theme inline { --radius: var(--radius-base); }',
+      ],
+      ['.docs-theme { --radius-base: 0.25rem; }'],
     );
+
+    expect(Array.from(fixed)).toEqual([['--spacing', '0.25rem']]);
   });
 
   it('folds the color-mix fallback of the compiler back into its rule', () => {

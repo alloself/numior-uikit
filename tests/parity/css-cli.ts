@@ -2,11 +2,27 @@ import { execFileSync } from 'node:child_process';
 import { posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compile } from '@tailwindcss/node';
-import { compareRules, foldColorMixFallbacks, parseAliases, parseRules } from './css-rules.ts';
-import type { CssRule } from './css-rules.types.ts';
+import { readFileSync } from 'node:fs';
+import {
+  compareRules,
+  foldColorMixFallbacks,
+  parseAliases,
+  parseFixedKeys,
+  parseHelpers,
+  parseRules,
+} from './css-rules.ts';
+import type { CssEnvironment, CssRule } from './css-rules.types.ts';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const THEME_FILE = 'packages/tokens/src/theme.css';
+const TAILWIND_THEME = 'node_modules/tailwindcss/theme.css';
+
+const SCOPE_FILES = [
+  THEME_FILE,
+  'packages/tokens/src/accents.css',
+  'apps/docs/.vitepress/theme/numior.css',
+];
+
 const LAYER = '@layer components';
 const FOREIGN_LAYER = /^@layer (?:theme|base|utilities|properties)\b/;
 const RELATIVE_IMPORT = /^@import\s+['"](\.{1,2}\/[^'"]+\.css)['"]\s*;\s*$/gm;
@@ -49,29 +65,35 @@ const kitRules = (output: string): CssRule[] => {
   }, []);
 };
 
-const helperIssues = (output: string): string[] => {
-  const helpers = new Set(output.match(/--tw-[a-z-]+/g));
+const read = (file: string): string => readFileSync(`${ROOT}${file}`, 'utf8');
 
-  return helpers.size === 0
-    ? []
-    : [`helper variables introduced: ${Array.from(helpers).join(', ')}`];
+const environmentOf = (ref: string, outputs: readonly string[]): CssEnvironment => {
+  return {
+    aliases: parseAliases(sourceAt(ref, THEME_FILE)),
+    fixed: parseFixedKeys([read(TAILWIND_THEME), read(THEME_FILE)], SCOPE_FILES.map(read)),
+    helpers: new Map(outputs.flatMap((output) => Array.from(parseHelpers(output)))),
+  };
 };
 
-const check = async (ref: string, file: string, aliases: Map<string, string>): Promise<number> => {
-  const { rules: before } = foldColorMixFallbacks(kitRules(await compiled(sourceAt(ref, file))));
-
+const check = async (ref: string, file: string): Promise<number> => {
+  const previous = await compiled(sourceAt(ref, file));
   const output = await compiled(`@import '${ROOT}${file}';`);
+  const { rules: before } = foldColorMixFallbacks(kitRules(previous));
   const { rules: after, fallbacks } = foldColorMixFallbacks(kitRules(output));
-  const issues = [...compareRules(before, after, aliases), ...helperIssues(output)];
+  const { issues, resets } = compareRules(before, after, environmentOf(ref, [previous, output]));
   const count = after.reduce((total, rule) => total + rule.declarations.length, 0);
 
   console.log(
-    `${file}: ${after.length} rules, ${count} declarations, ${fallbacks} color-mix fallbacks, ${issues.length} issues`,
+    `${file}: ${after.length} rules, ${count} declarations, ${fallbacks} color-mix fallbacks, ${issues.length} issues, ${resets.length} dropped resets`,
   );
 
-  issues.forEach((issue) => {
+  for (const issue of issues) {
     console.log(`  ${issue}`);
-  });
+  }
+
+  for (const { rule, properties } of resets) {
+    console.log(`  resets dropped by ${rule}: ${properties.join(', ')}`);
+  }
 
   return issues.length;
 };
@@ -82,11 +104,10 @@ if (ref === undefined || files.length === 0) {
   throw new Error('Usage: node tests/parity/css-cli.ts <git ref> <css file> [more files]');
 }
 
-const aliases = parseAliases(sourceAt(ref, THEME_FILE));
 let total = 0;
 
 for (const file of files) {
-  total += await check(ref, file, aliases);
+  total += await check(ref, file);
 }
 
 process.exitCode = total === 0 ? 0 : 1;

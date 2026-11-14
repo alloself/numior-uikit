@@ -1,4 +1,15 @@
-import type { Aliases, CssBlock, CssDeclaration, CssRule, FoldedRules } from './css-rules.types.ts';
+import { compareSpecificity, listSpecificity } from './css-specificity.ts';
+import { RESET, helperReads, longhands, normalized, substituteHelpers } from './css-values.ts';
+import type {
+  CssBlock,
+  CssDeclaration,
+  CssEnvironment,
+  CssRule,
+  DroppedReset,
+  FoldedRules,
+  LonghandOwner,
+  RuleComparison,
+} from './css-rules.types.ts';
 
 const OPENERS = new Map([
   ['(', 1],
@@ -132,24 +143,76 @@ export const parseAliases = (source: string): Map<string, string> => {
   }, new Map<string, string>());
 };
 
-const resolve = (value: string, aliases: Aliases, depth = 0): string => {
-  const next = value.replace(/var\((--nui-[a-z0-9-]+)\)/g, (whole, name: string) => {
-    return aliases.get(name) ?? whole;
-  });
+const PROPERTY_RULE = /@property\s+(--tw-[a-z-]+)\s*\{([^}]*)\}/g;
+const THEME_BLOCK = /^@theme(?:\s+(?:static|default))*$/;
+const HELPER_PREFIX = '--tw-';
 
-  return next === value || depth > 8 ? next : resolve(next, aliases, depth + 1);
+export const parseHelpers = (output: string): Map<string, string> => {
+  return Array.from(output.matchAll(PROPERTY_RULE)).reduce((helpers, [, name = '', body = '']) => {
+    const initial = /initial-value:\s*([^;]+);/.exec(body)?.[1];
+
+    if (initial === undefined) {
+      return helpers;
+    }
+
+    helpers.set(name, initial.trim());
+
+    return helpers;
+  }, new Map<string, string>());
 };
 
-export const canonical = (value: string, aliases: Aliases): string => {
-  return squash(resolve(value, aliases))
-    .replace(/(^|[\s(,])0px(?=$|[\s),])/g, '$10')
-    .replace(/(^|[\s(,])0?\.(\d)/g, '$10.$2')
-    .replace(/\(\s+/g, '(')
-    .replace(/\s+\)/g, ')')
-    .replace(/'/g, '"');
+const themeDeclarations = (source: string): CssDeclaration[] => {
+  return splitTop(withoutComments(source)).reduce<CssDeclaration[]>((declarations, part) => {
+    const block = blockOf(part);
+
+    if (block === null || !THEME_BLOCK.test(block.prelude)) {
+      return declarations;
+    }
+
+    for (const entry of splitTop(block.body)) {
+      if (blockOf(entry) !== null) {
+        continue;
+      }
+
+      declarations.push(declarationOf(entry));
+    }
+
+    return declarations;
+  }, []);
+};
+
+const scopedKeys = (sources: readonly string[]): Set<string> => {
+  return sources.reduce((keys, source) => {
+    for (const rule of parseRules(source)) {
+      for (const { property } of rule.declarations) {
+        keys.add(property);
+      }
+    }
+
+    return keys;
+  }, new Set<string>());
+};
+
+export const parseFixedKeys = (
+  themes: readonly string[],
+  scopes: readonly string[],
+): Map<string, string> => {
+  const scoped = scopedKeys(scopes);
+
+  return themes.flatMap(themeDeclarations).reduce((fixed, { property, value }) => {
+    if (!property.startsWith('--') || scoped.has(property)) {
+      return fixed;
+    }
+
+    fixed.set(property, value);
+
+    return fixed;
+  }, new Map<string, string>());
 };
 
 const keyOf = (rule: CssRule): string => `${rule.context} | ${rule.selector}`.trim();
+
+const isHelper = (property: string): boolean => property.startsWith(HELPER_PREFIX);
 
 const UNRELATED = /^border-(?:radius|collapse|spacing|image)|^border-.+-radius$/;
 
@@ -186,33 +249,172 @@ const orderIssues = (base: CssRule, next: CssRule): string[] => {
   );
 };
 
-const declarationIssues = (base: CssRule, next: CssRule, aliases: Aliases): string[] => {
-  const before = base.declarations.map(
-    ({ property, value }) => `${property}: ${canonical(value, aliases)}`,
+const helperValues = (rule: CssRule): Map<string, string> => {
+  return rule.declarations.reduce((values, { property, value }) => {
+    if (!isHelper(property)) {
+      return values;
+    }
+
+    values.set(property, value);
+
+    return values;
+  }, new Map<string, string>());
+};
+
+export const effective = (rule: CssRule, environment: CssEnvironment): Map<string, string> => {
+  const local = helperValues(rule);
+
+  return rule.declarations.reduce((values, { property, value }) => {
+    if (isHelper(property)) {
+      return values;
+    }
+
+    const plain = normalized(substituteHelpers(value, local, environment.helpers), environment);
+
+    for (const [name, part] of longhands(property, plain)) {
+      values.delete(name);
+      values.set(name, part);
+    }
+
+    return values;
+  }, new Map<string, string>());
+};
+
+const declarationIssues = (
+  base: CssRule,
+  next: CssRule,
+  index: number,
+  environment: CssEnvironment,
+): RuleComparison => {
+  const [before, after] = [effective(base, environment), effective(next, environment)];
+  const issues: string[] = [];
+  const dropped: string[] = [];
+
+  for (const [property, value] of before) {
+    const pair = after.get(property);
+
+    if (pair === value) {
+      continue;
+    }
+
+    if (pair === undefined && value === RESET) {
+      dropped.push(property);
+      continue;
+    }
+
+    issues.push(`${keyOf(base)}: lost ${property}: ${value}`);
+  }
+
+  for (const [property, value] of after) {
+    if (before.get(property) === value) {
+      continue;
+    }
+
+    issues.push(`${keyOf(base)}: gained ${property}: ${value}`);
+  }
+
+  const resets = dropped.length === 0 ? [] : [{ rule: keyOf(base), index, properties: dropped }];
+
+  return { issues: [...issues, ...orderIssues(base, next)], resets };
+};
+
+const setLonghands = (
+  rules: readonly CssRule[],
+  environment: CssEnvironment,
+): Map<string, LonghandOwner[]> => {
+  return rules.reduce((owners, rule, index) => {
+    for (const [property, value] of effective(rule, environment)) {
+      if (value === RESET) {
+        continue;
+      }
+
+      const list = owners.get(property) ?? [];
+
+      list.push({ rule: keyOf(rule), index, selector: rule.selector });
+      owners.set(property, list);
+    }
+
+    return owners;
+  }, new Map<string, LonghandOwner[]>());
+};
+
+const overrides = (
+  owner: LonghandOwner,
+  reset: DroppedReset,
+  rules: readonly CssRule[],
+): boolean => {
+  const weakest = listSpecificity(owner.selector);
+  const strongest = listSpecificity(rules[reset.index]?.selector ?? '');
+  const later = owner.index > reset.index;
+
+  return (
+    later && weakest.every((own) => strongest.every((other) => compareSpecificity(own, other) >= 0))
   );
+};
 
-  const after = next.declarations.map(
-    ({ property, value }) => `${property}: ${canonical(value, aliases)}`,
+const resetIssues = (
+  resets: readonly DroppedReset[],
+  rules: readonly CssRule[],
+  environment: CssEnvironment,
+): string[] => {
+  const owners = setLonghands(rules, environment);
+
+  return resets.flatMap((reset) =>
+    reset.properties.reduce<string[]>((issues, property) => {
+      const owner = owners.get(property)?.find((candidate) => !overrides(candidate, reset, rules));
+
+      if (owner === undefined) {
+        return issues;
+      }
+
+      issues.push(`${reset.rule}: drops the reset of ${property}, which ${owner.rule} sets`);
+
+      return issues;
+    }, []),
   );
+};
 
-  const lost = before.filter((line) => !after.includes(line));
-  const added = after.filter((line) => !before.includes(line));
+const helperSetters = (rules: readonly CssRule[]): Set<string> => {
+  return rules.reduce((names, rule) => {
+    for (const name of helperValues(rule).keys()) {
+      names.add(name);
+    }
 
-  return [
-    ...lost.map((line) => `${keyOf(base)}: lost ${line}`),
-    ...added.map((line) => `${keyOf(base)}: gained ${line}`),
-    ...orderIssues(base, next),
-  ];
+    return names;
+  }, new Set<string>());
+};
+
+const foreignReads = (rule: CssRule, setters: ReadonlySet<string>): string[] => {
+  const own = helperValues(rule);
+
+  return rule.declarations.reduce<string[]>((issues, { value }) => {
+    for (const name of helperReads(value)) {
+      if (own.has(name) || !setters.has(name)) {
+        continue;
+      }
+
+      issues.push(`${keyOf(rule)}: reads ${name}, which another rule sets`);
+    }
+
+    return issues;
+  }, []);
+};
+
+export const helperIssues = (rules: readonly CssRule[]): string[] => {
+  const setters = helperSetters(rules);
+
+  return rules.flatMap((rule) => foreignReads(rule, setters));
 };
 
 export const compareRules = (
   base: readonly CssRule[],
   next: readonly CssRule[],
-  aliases: Aliases,
-): string[] => {
+  environment: CssEnvironment,
+): RuleComparison => {
   const issues: string[] = [];
+  const resets: DroppedReset[] = [];
 
-  base.forEach((rule, at) => {
+  for (const [at, rule] of base.entries()) {
     const pair = next[at];
 
     if (pair === undefined || keyOf(pair) !== keyOf(rule)) {
@@ -220,14 +422,27 @@ export const compareRules = (
         `rule ${at + 1}: expected ${keyOf(rule)}, found ${pair ? keyOf(pair) : 'nothing'}`,
       );
 
-      return;
+      continue;
     }
-    issues.push(...declarationIssues(rule, pair, aliases));
-  });
 
-  next.slice(base.length).forEach((rule) => {
+    const result = declarationIssues(rule, pair, at, environment);
+
+    for (const issue of result.issues) {
+      issues.push(issue);
+    }
+
+    for (const reset of result.resets) {
+      resets.push(reset);
+    }
+  }
+
+  for (const rule of next.slice(base.length)) {
     issues.push(`extra rule ${keyOf(rule)}`);
-  });
+  }
 
-  return issues;
+  for (const issue of [...helperIssues(next), ...resetIssues(resets, next, environment)]) {
+    issues.push(issue);
+  }
+
+  return { issues, resets };
 };
