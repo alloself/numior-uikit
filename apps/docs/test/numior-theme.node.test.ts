@@ -35,8 +35,9 @@ const SURFACES = [
 
 const CODE_SURFACES = ['color-surface-code', 'color-syntax-highlight'];
 const SITE_SCOPE = '.docs-theme--numior';
-const HOOK_PREFIX = '--docs-';
+const HOOK_PREFIX = '--color-accent-';
 const DEFAULT_LAYER = 'color-surface';
+const UNSET = 'initial';
 const DECLARATION_RE = /(--[a-z0-9-]+|[a-z-]+):\s*([^;{}]+);/gu;
 const LIGHT_DARK_RE = /^light-dark\((.+)\)$/su;
 const VAR_RE = /^var\(--([a-z0-9-]+)(?:,\s*(.+))?\)$/su;
@@ -48,14 +49,13 @@ const MIX_RE = /^color-mix\(in oklab, var\(--([a-z-]+)\) (\d+)%, var\(--([a-z-]+
 const BLOCK_RE = /([^{}]+)\{([^{}]*)\}/gu;
 const THEME_BLOCK_RE = /@theme(?:\s+[a-z]+)*\s*\{([^}]*)\}/gu;
 const LAYER_RE = /--color-layer:\s*([^;]+);/gu;
-const HOOK_RE = /^(--[a-z0-9-]+):\s*var\((--docs-[a-z0-9-]+),/u;
+const HOOK_RE = /^(--[a-z0-9-]+):\s*var\((--color-accent-[a-z0-9-]+),/u;
 
 const read = (path: string): string =>
   readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8');
 
 const kitTheme = read('../../../packages/tokens/src/theme.css');
 const builtInAccents = read('../../../packages/tokens/src/accents.css');
-const docsRoot = read('../.vitepress/theme/tailwind.css');
 const numior = read('../.vitepress/theme/numior.css');
 const printed = read('../guide/snippets/numior-theme.css');
 
@@ -68,10 +68,8 @@ const declared = (css: string): string[] =>
 const themeBlocksOf = (css: string): string =>
   [...css.matchAll(THEME_BLOCK_RE)].map(([, body = '']) => body).join('\n');
 
-const docsTheme = themeBlocksOf(docsRoot);
-
 const hookedKeys: ReadonlyMap<string, string> = new Map(
-  declared(docsTheme).reduce<[string, string][]>((pairs, line) => {
+  declared(themeBlocksOf(kitTheme)).reduce<[string, string][]>((pairs, line) => {
     const [, key, hook] = HOOK_RE.exec(line) ?? [];
 
     if (key !== undefined && hook !== undefined) {
@@ -110,7 +108,7 @@ const tokensOf = (css: string, scheme: Scheme, into = new Map<string, string>())
   }, into);
 
 const kitTokens = (scheme: Scheme): Map<string, string> =>
-  new Map(tokensOf(docsTheme, scheme, new Map(tokensOf(themeBlocksOf(kitTheme), scheme))));
+  new Map(tokensOf(themeBlocksOf(kitTheme), scheme));
 
 const accentCss = (accent: DocsAccent): string =>
   [...builtInAccents.matchAll(BLOCK_RE)].reduce(
@@ -127,9 +125,10 @@ const colorOf = (tokens: Tokens, name: string): Oklab => {
   }
 
   const [, reference, fallback] = VAR_RE.exec(value) ?? [];
+  const set = reference !== undefined && ![undefined, UNSET].includes(tokens.get(reference));
 
   if (reference !== undefined) {
-    return tokens.has(reference) || fallback === undefined
+    return set || fallback === undefined
       ? colorOf(tokens, reference)
       : colorOf(new Map([...tokens, [reference, fallback]]), reference);
   }
@@ -233,6 +232,15 @@ describe('Numior theme of the docs site', () => {
 
     expect(selectors).toEqual([SITE_SCOPE]);
     expect(properties.filter((name) => !name.startsWith('--'))).toEqual([]);
+  });
+
+  it('lets every built-in accent drop the own soft text and highlight of a theme', () => {
+    const accents = [...builtInAccents.matchAll(BLOCK_RE)].map(([, , body = '']) => declared(body));
+
+    const resets = [...hookedKeys.keys()].map((hook) => `${hook}: ${UNSET}`);
+
+    expect(hookedKeys.size).toBe(2);
+    expect(accents.filter((lines) => resets.some((line) => !lines.includes(line)))).toEqual([]);
   });
 
   it('prints in the guide the same values under the theme keys', () => {

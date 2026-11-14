@@ -63,10 +63,17 @@ status: accepted
    Области — BEM-классы (T2a, решение владельца 2026-11-13/14: «я запрещаю делать костыли
    через атрибуты»). `:root` и `nui-theme--system` ставят `color-scheme: light dark`,
    `nui-theme--light` и `nui-theme--dark` — свою схему; значения на `light-dark()` разрешаются
-   по месту. `nui-theme--accent-<имя>` (`accents.css`) ставит только `--color-primary` и
-   `--color-primary-foreground`. `nui-theme--density-compact` ставит свои значения базовых
-   ключей плотности; обычная плотность — отсутствие класса, класса сброса нет. Мягкие цвета
-   смешиваются с `--color-layer` (без него — с `--color-surface`); `nui-layer`,
+   по месту. `nui-theme--accent-<имя>` (`accents.css`) ставит `--color-primary` и
+   `--color-primary-foreground` и сбрасывает (`initial`) два крючка темы (решение владельца
+   2026-11-14, ночь): `--color-accent-soft-foreground` и `--color-accent-syntax-highlight`.
+   Производные `--color-primary-soft-foreground` и `--color-syntax-highlight` читают крючок с
+   расчётом кита как запасным значением (`var(--color-accent-soft-foreground,
+   var(--color-primary))`), поэтому тема, которой рассчитанный мягкий текст акцента или подсветка
+   строки кода не подходят, задаёт свой цвет крючком на своём классе, а вложенный акцент кита
+   возвращает расчёт от своего акцента. Крючки, как и `--color-layer`, в `@theme` не объявлены:
+   значение на `:root` перекрыло бы запасное. `nui-theme--density-compact` ставит свои
+   значения базовых ключей плотности; обычная плотность — отсутствие класса, класса сброса
+   нет. Мягкие цвета смешиваются с `--color-layer` (без него — с `--color-surface`); `nui-layer`,
    `nui-layer--elevated` и `nui-surface--muted` задают только его. Удалены: блок повтора
    `[data-nui-theme] { --x: --theme(--x inline) … }`, сброс `[data-nui-density='comfortable']`,
    списки `-soft` на `.nui-layer, .nui-surface`, все селекторы `[data-…]` в CSS кита, доки и
@@ -257,12 +264,11 @@ status: accepted
     время смены; синхронизирует хранилище между вкладками сверх нужного. Композабл остаётся
     своим на `usePreferredDark` и `syncRef`.
 14. **Дока.** Тема Numior — класс доки `docs-theme--numior` на `<html>` с базовыми ключами;
-    выбранный в шапке встроенный акцент снимает его и ставит `nui-theme--accent-<имя>`. Два
-    производных ключа, которые Numior меняет ради контраста (`--color-primary-soft-foreground`
-    и `--color-syntax-highlight`), вход доки объявляет в `@theme inline` через крючки
-    `--docs-primary-soft-foreground` и `--docs-syntax-highlight` с запасным значением кита;
-    крючки задаёт класс сайта. Акцент кита внутри области Numior наследует крючки; на сайте так
-    вложен только пример акцентов, и в нём сплошные кнопки. Переключатель «Базовая тема» у
+    выбранный в шапке встроенный акцент снимает его и ставит `nui-theme--accent-<имя>`. Мягкий
+    текст акцента и подсветку строки кода, которые Numior меняет ради контраста, класс сайта
+    задаёт крючками кита `--color-accent-soft-foreground` и `--color-accent-syntax-highlight`
+    (пункт 3); своего `@theme inline` у входа доки больше нет. Акцент кита внутри области Numior
+    сбрасывает крючки и берёт мягкий текст от своего акцента. Переключатель «Базовая тема» у
     примеров удалён. «Своя тема» показывает пример `guide/Theme` в двух `<iframe>` рядом
     (`ThemeCompare`, страница `/blocks/view/GuideTheme`): базовая тема и Numior. Рамки блоков
     и домашний экран переносят в `<iframe>` классы схемы и палитры, образцы токенов в двух
