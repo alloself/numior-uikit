@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createChecker, type MetaCheckerOptions } from 'vue-component-meta';
 import { catalogReference } from './catalogs.ts';
@@ -172,7 +172,7 @@ export const buildReference = async (
   for (const entry of allEntries(root)) {
     const collected = await collectComponent(checker, entry, docs, members, sceneOf);
 
-    components[entry.name] = collected.component;
+    components[entry.name] = { ...collected.component, file: relative(root, entry.file) };
     problems.push(...collected.problems, ...unresolvedDefaults(collected.component));
     if (collected.catalog === undefined) {
       continue;

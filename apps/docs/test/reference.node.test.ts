@@ -266,6 +266,8 @@ describe('docs reference', () => {
     expect(bundle.components.NuiSelect?.messages).toBe('select');
     expect(bundle.catalogs.select?.texts.empty?.ru).toBeTypeOf('string');
     expect(bundle.components.NuiForm?.package).toBe('@numior/forms');
+    expect(bundle.components.NuiButton?.file).toBe('packages/vue/src/button/NuiButton.vue');
+    expect(JSON.stringify(bundle)).not.toContain(ROOT);
     expect(bundle.declarations.some((entry) => entry.name === 'useClipboard')).toBe(true);
     expect(bundle.tokens.some((token) => token.name === '--nui-primary')).toBe(true);
     expect(bundle.icons.some((icon) => icon.alias === 'direction')).toBe(true);
