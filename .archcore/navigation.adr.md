@@ -104,6 +104,9 @@ status: accepted
 - `NuiLink` — `<a>` или компонент через `as`; `to` побеждает `href`, чтобы роутер владел
   адресом; тот же контракт у пунктов меню и крошек. Реестр иконок получает `chevron-right`,
   `chevron-left`, `chevrons-left`, `chevrons-right`, `ellipsis`, `external-link`.
+- Отключённая `NuiLink` теряет `href` и место в порядке Tab, но получает `role="link"` вместе с
+  `aria-disabled`: `<a>` без адреса — не ссылка, и без роли диктор не объявлял ни ссылку, ни
+  недоступность (2026-11-14).
 - Тесты: Playwright `keyboard.type` вставляет не-латинские символы как текст без `keydown`,
   поэтому typeahead в e2e идёт через `dispatchEvent('keydown')`; под fake timers Vue
   пропускает всплывшее событие с меткой времени, равной времени подписки, — драйверы

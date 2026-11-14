@@ -26,10 +26,12 @@ describe('NuiLink', () => {
     expect(link.hasModifier('tone-neutral')).toBe(true);
   });
 
-  it('drops navigation and focus when disabled', () => {
+  it('drops navigation and focus when disabled and stays a link for assistive technology', () => {
     const link = LinkDriver.mount({ props: { href: '/docs', external: true, disabled: true } });
+
     expect(link.href).toBeUndefined();
     expect(link.target).toBeUndefined();
+    expect(link.role).toBe('link');
     expect(link.ariaDisabled).toBe('true');
     expect(link.tabindex).toBe('-1');
     expect(link.hasModifier('disabled')).toBe(true);

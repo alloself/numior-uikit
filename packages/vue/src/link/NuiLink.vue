@@ -35,7 +35,7 @@ const tag = useLinkTag(() => ({ as, to }));
 
 const linkAttrs = computed(() => {
   if (disabled) {
-    return { 'aria-disabled': 'true', tabindex: -1 };
+    return { role: 'link', 'aria-disabled': 'true', tabindex: -1 };
   }
   return {
     ...destinationAttrs(href, to, tag.value),
