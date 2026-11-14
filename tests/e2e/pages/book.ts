@@ -13,13 +13,15 @@ import {
 } from '../helpers/geometry';
 import type { XlsxFile } from '../helpers/xlsx';
 import { PivotPanel } from './pivot-panel';
+import { ARROWS, type ArrowDirection } from '../helpers/keyboard';
+import { SheetKeys } from './grid-keys';
 
 interface CellLabel {
   readonly row: string;
   readonly col: number;
 }
 
-export class BookSection {
+export class BookSection extends SheetKeys {
   readonly section: Locator;
   readonly sheet: Locator;
   readonly open: Locator;
@@ -42,10 +44,8 @@ export class BookSection {
   readonly summary: Locator;
   readonly currentArgument: Locator;
 
-  constructor(
-    readonly page: Page,
-    id = 'book',
-  ) {
+  constructor(page: Page, id = 'book') {
+    super(page);
     this.section = page.locator(`section[aria-labelledby="${id}-title"]`);
     this.sheet = page.getByTestId(id);
     this.open = page.getByTestId(`${id}-open`);
@@ -352,6 +352,64 @@ export class BookSection {
     }
 
     await this.page.keyboard.type(text);
+  }
+
+  async pressEscape(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+  }
+
+  async cutSelection(): Promise<void> {
+    await this.page.keyboard.press('Control+x');
+  }
+
+  async fillDown(): Promise<void> {
+    await this.page.keyboard.press('Control+d');
+  }
+
+  async toggleAbsoluteReference(): Promise<void> {
+    await this.page.keyboard.press('F4');
+  }
+
+  async acceptSuggestion(): Promise<void> {
+    await this.page.keyboard.press('Tab');
+  }
+
+  async deleteBackward(): Promise<void> {
+    await this.page.keyboard.press('Backspace');
+  }
+
+  async caretToEnd(): Promise<void> {
+    await this.page.keyboard.press('End');
+  }
+
+  async selectDrawingsFromKeyboard(): Promise<void> {
+    await this.page.keyboard.press('Alt+F10');
+  }
+
+  async nudgeSelectedDrawing(direction: ArrowDirection): Promise<void> {
+    await this.page.keyboard.press(ARROWS[direction]);
+  }
+
+  async deleteSelectedDrawing(): Promise<void> {
+    await this.page.keyboard.press('Delete');
+  }
+
+  async openContextMenuFromKeyboard(): Promise<void> {
+    await this.page.keyboard.press('Shift+F10');
+  }
+
+  async focusNextMenuItem(): Promise<void> {
+    await this.page.keyboard.press('ArrowDown');
+  }
+
+  async chooseFocusedMenuItem(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async dragByKeepingRatio(handle: Locator, dx: number, dy: number): Promise<void> {
+    await this.page.keyboard.down('Shift');
+    await this.dragBy(handle, dx, dy);
+    await this.page.keyboard.up('Shift');
   }
 
   async chooseSheet(name: string): Promise<void> {

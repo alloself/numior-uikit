@@ -166,7 +166,7 @@ test.describe('book', () => {
     await expect(book.ruleItems).toHaveCount(3);
     await expect.poll(async () => rgbDelta(await book.fillAt('3', 3), WHITE)).toBeLessThan(8);
 
-    await book.page.keyboard.press('Escape');
+    await book.pressEscape();
 
     await expect(book.rules).toBeHidden();
     await expect(book.litFrames).toHaveCount(0);
@@ -215,7 +215,7 @@ test.describe('book', () => {
     await expect(book.ruleItems.first().getByRole('button', { name: /^Изменить/ })).toBeFocused();
     await expect(book.litFrames).toHaveCount(1);
 
-    await book.page.keyboard.press('Escape');
+    await book.pressEscape();
 
     await expect(book.litFrames).toHaveCount(0);
     await expect.poll(async () => rgbDelta(await book.fillAt('6', 2), PINK)).toBeLessThan(8);
@@ -226,17 +226,17 @@ test.describe('book', () => {
     await expect(book.ruleField('Значение')).toHaveValue('-100');
 
     await book.ruleEditor.getByRole('combobox', { name: 'Условие' }).click();
-    await book.page.keyboard.press('Escape');
+    await book.pressEscape();
 
     await expect(book.ruleEditor.getByRole('listbox')).toBeHidden();
     await expect(book.ruleEditor).toBeVisible();
 
     await book.ruleField('Значение').fill('-90');
-    await book.page.keyboard.press('Enter');
+    await book.commitEdit();
 
     await expect(book.ruleTitles.first()).toHaveText('Значение больше -90');
 
-    await book.page.keyboard.press('Escape');
+    await book.pressEscape();
 
     await expect(book.rules).toBeHidden();
     await expect(book.litFrames).toHaveCount(0);
@@ -345,7 +345,6 @@ test.describe('book', () => {
   test('adds, renames and deletes sheets from the tabs and undoes it', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -357,7 +356,7 @@ test.describe('book', () => {
     await book.renameSheet('Лист4', 'Заметки');
     await expect(book.sheetNameField).toHaveAccessibleDescription('Это имя уже занято');
 
-    await page.keyboard.press('Escape');
+    await book.pressEscape();
     await book.renameSheet('Лист4', 'План');
     await expect(book.sheetTab('План')).toBeVisible();
 
@@ -374,7 +373,6 @@ test.describe('book', () => {
   test('keeps the width of a dragged column on its sheet and undoes it', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -397,17 +395,16 @@ test.describe('book', () => {
     await expect.poll(() => book.columnWidth('B')).toBe(before + COLUMN_DRAG);
 
     await book.cell('2', 0).click();
-    await page.keyboard.press('Control+z');
+    await book.undo();
     await expect.poll(() => book.columnWidth('B')).toBe(before);
 
-    await page.keyboard.press('Control+y');
+    await book.redo();
     await expect.poll(() => book.columnWidth('B')).toBe(before + COLUMN_DRAG);
   });
 
   test('fits a column to its content by a double click on the edge of its header and takes it back on undo', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -428,15 +425,14 @@ test.describe('book', () => {
     await expect.poll(() => book.clippedCells(0)).toBe(0);
 
     await book.cell('2', 0).click();
-    await page.keyboard.press('Control+z');
-    await page.keyboard.press('Control+z');
+    await book.undo();
+    await book.undo();
     await expect.poll(() => book.columnWidth('C')).toBe(before);
   });
 
   test('keeps the height of a dragged row on its sheet, undoes it and resets it by a double click', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -455,10 +451,10 @@ test.describe('book', () => {
     await expect.poll(() => book.rowHeight('3')).toBe(before + ROW_DRAG);
 
     await book.cell('2', 0).click();
-    await page.keyboard.press('Control+z');
+    await book.undo();
     await expect.poll(() => book.rowHeight('3')).toBe(before);
 
-    await page.keyboard.press('Control+y');
+    await book.redo();
     await book.rowEdge('3').dblclick();
     await expect.poll(() => book.rowHeight('3')).toBe(before);
   });
@@ -484,7 +480,6 @@ test.describe('book', () => {
   test('gives the height of a dragged row to every selected row and takes it back in one step', async ({
     playground,
     book,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'a range of rows is selected with Shift or by a mouse drag');
@@ -510,14 +505,13 @@ test.describe('book', () => {
       ]);
 
     await book.cell('2', 0).click();
-    await page.keyboard.press('Control+z');
+    await book.undo();
     await expect.poll(() => book.rowHeights(['2', '3', '4', '5'])).toEqual(before);
   });
 
   test('shows the sheet under the tab menu and leaves the focus on the shown sheet', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -529,7 +523,7 @@ test.describe('book', () => {
     await expect(book.sheetTab('Заметки')).toHaveAttribute('aria-selected', 'true');
     await expect(book.sheetTab('Заметки')).toBeFocused();
 
-    await page.keyboard.press('Control+z');
+    await book.undo();
     await expect(book.sheetTab('Бюджет')).toBeVisible();
     await expect(book.sheetTab('Заметки')).toHaveAttribute('aria-selected', 'true');
     await expect(book.sheetTab('Заметки')).toBeFocused();
@@ -539,7 +533,7 @@ test.describe('book', () => {
     await expect(book.sheetTab('Лист4')).toBeFocused();
 
     await book.openSheetMenu('Продажи');
-    await page.keyboard.press('Escape');
+    await book.pressEscape();
     await expect(book.sheetTab('Продажи')).toHaveAttribute('aria-selected', 'true');
     await expect(book.sheetTab('Продажи')).toBeFocused();
   });
@@ -547,7 +541,6 @@ test.describe('book', () => {
   test('edits a cell, recalculates the formula totals and undoes the edit', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -564,8 +557,8 @@ test.describe('book', () => {
 
     await expect(book.editor).toHaveValue('=СУММ(B3:B7)');
 
-    await page.keyboard.press('Escape');
-    await page.keyboard.press('Control+z');
+    await book.pressEscape();
+    await book.undo();
 
     await expect(book.cell('3', 1)).toHaveText(/^1\s240$/u);
     await expect(book.cell('8', 1)).toHaveText('85');
@@ -575,14 +568,13 @@ test.describe('book', () => {
   test('copies a formula with shifted references, moves a cut cell and undoes the move', async ({
     playground,
     book,
-    page,
   }) => {
     await book.stubClipboard();
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await book.sheet.scrollIntoViewIfNeeded();
     await book.cell('8', 1).click();
-    await page.keyboard.press('Control+c');
+    await book.copySelection();
 
     await expect(book.clipFrame).toBeVisible();
 
@@ -592,12 +584,12 @@ test.describe('book', () => {
     await expect(book.formula).toHaveValue('=СУММ(H3:H7)');
     await expect(book.cell('8', 7)).toHaveText('0');
 
-    await page.keyboard.press('Escape');
+    await book.pressEscape();
 
     await expect(book.clipFrame).toHaveCount(0);
 
     await book.goTo('A10');
-    await page.keyboard.press('Control+x');
+    await book.cutSelection();
     await expect.poll(() => book.lastCopy()).toContain('Цифры условные');
 
     await book.goTo('A12');
@@ -606,7 +598,7 @@ test.describe('book', () => {
     await expect(book.cell('12', 0)).toContainText('Цифры условные');
     await expect(book.cell('10', 0)).toHaveText('');
 
-    await page.keyboard.press('Control+z');
+    await book.undo();
 
     await expect(book.cell('10', 0)).toContainText('Цифры условные');
     await expect(book.cell('12', 0)).toHaveText('');
@@ -615,7 +607,6 @@ test.describe('book', () => {
   test('takes the merged title apart under a pasted block and merges it back on undo', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -627,7 +618,7 @@ test.describe('book', () => {
     await expect(book.cell('1', 1)).toHaveText('Два');
     await expect.poll(() => book.merged('1', 0)).toBe(false);
 
-    await page.keyboard.press('Control+z');
+    await book.undo();
 
     await expect(book.cell('1', 0)).toHaveText('Бюджет на первое полугодие, тыс. ₽');
     await expect.poll(() => book.merged('1', 0)).toBe(true);
@@ -636,7 +627,6 @@ test.describe('book', () => {
   test('merges the selected cells from the cell menu, takes them apart and returns the values on undo', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -660,8 +650,8 @@ test.describe('book', () => {
     await expect.poll(() => book.merged('3', 0)).toBe(false);
     await expect(book.cell('4', 0)).toHaveText('');
 
-    await page.keyboard.press('Control+z');
-    await page.keyboard.press('Control+z');
+    await book.undo();
+    await book.undo();
 
     await expect(book.cell('4', 0)).toHaveText('Себестоимость');
     await expect.poll(() => book.merged('3', 0)).toBe(false);
@@ -670,7 +660,6 @@ test.describe('book', () => {
   test('keeps the keyboard in the sheet after merging a selection dragged upwards', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -681,11 +670,11 @@ test.describe('book', () => {
     await expect.poll(() => book.merged('3', 0)).toBe(true);
     await expect(book.cell('3', 0)).toBeFocused();
 
-    await page.keyboard.press('ArrowDown');
+    await book.moveActive('down');
 
     await expect(book.cell('6', 0)).toBeFocused();
 
-    await page.keyboard.press('Control+z');
+    await book.undo();
 
     await expect(book.cell('5', 0)).toHaveText('Маркетинг');
   });
@@ -694,14 +683,13 @@ test.describe('book', () => {
     test(`shows why a fill over the merged title did nothing in the ${theme} theme`, async ({
       playground,
       book,
-      page,
     }) => {
       await playground.emulate({ reducedMotion: 'reduce' });
       await playground.open();
       await playground.setTheme(theme);
       await book.sheet.scrollIntoViewIfNeeded();
       await book.dragAcross({ row: '3', col: 0 }, { row: '1', col: 0 });
-      await page.keyboard.press('Control+d');
+      await book.fillDown();
 
       await expect(book.note).toHaveText('Нельзя заполнить: в диапазоне есть объединённые ячейки');
       await expect(book.cell('1', 0)).toHaveText('Бюджет на первое полугодие, тыс. ₽');
@@ -716,13 +704,12 @@ test.describe('book', () => {
   test('scrolls the sheet while a reference frame or the fill handle is held at its edge', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await book.sheet.scrollIntoViewIfNeeded();
     await book.cell('9', 1).click();
-    await page.keyboard.type('=СУММ(B4:B5');
+    await book.typeAtCaret('=СУММ(B4:B5');
 
     await expect(book.cellReferences).toHaveText(['B4:B5']);
 
@@ -733,7 +720,7 @@ test.describe('book', () => {
 
     expect(firstRowOf(await book.formula.inputValue())).toBeGreaterThan(40);
 
-    await page.keyboard.press('Escape');
+    await book.pressEscape();
     await book.scrollBody(0);
     await book.enter('12', 0, '1');
     await book.enter('13', 0, '2');
@@ -747,20 +734,19 @@ test.describe('book', () => {
   test('keeps the grips of a frame on the first row and column within reach', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await book.sheet.scrollIntoViewIfNeeded();
     await book.cell('9', 1).click();
-    await page.keyboard.type('=A1+1');
+    await book.typeAtCaret('=A1+1');
 
     await expect(book.referenceFrames).toHaveCount(1);
     expect(await book.gripReachable('top-start')).toBe(true);
     expect(await book.gripReachable('top')).toBe(true);
     expect(await book.gripReachable('bottom-end')).toBe(true);
 
-    await page.keyboard.press('Escape');
+    await book.pressEscape();
   });
 
   test('lays the formula bar out by the page direction and the grid by the sheet', async ({
@@ -783,7 +769,6 @@ test.describe('book', () => {
   test('continues a series with the fill handle, copies with Ctrl+D and undoes the fill', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -796,12 +781,12 @@ test.describe('book', () => {
     await expect(book.cell('14', 0)).toHaveText('3');
     await expect(book.cell('16', 0)).toHaveText('5');
 
-    await page.keyboard.press('Control+z');
+    await book.undo();
 
     await expect(book.cell('14', 0)).toHaveText('');
 
     await book.dragAcross({ row: '12', col: 0 }, { row: '15', col: 0 });
-    await page.keyboard.press('Control+d');
+    await book.fillDown();
 
     await expect(book.cell('15', 0)).toHaveText('1');
   });
@@ -881,27 +866,26 @@ test.describe('book', () => {
   test('picks references with clicks and drags, paints them like their frames and anchors them with F4', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await book.sheet.scrollIntoViewIfNeeded();
     await book.cell('9', 1).click();
-    await page.keyboard.type('=СУММ(');
+    await book.typeAtCaret('=СУММ(');
     await book.cell('3', 1).click();
 
     await expect(book.editor).toHaveValue('=СУММ(B3');
     await expect(book.referenceFrames).toHaveCount(1);
 
     await book.dragAcross({ row: '3', col: 1 }, { row: '5', col: 1 });
-    await page.keyboard.press('F4');
+    await book.toggleAbsoluteReference();
 
     await expect(book.editor).toHaveValue('=СУММ($B$3:$B$5');
     await expect(book.formula).toHaveValue('=СУММ($B$3:$B$5');
     await expect(book.paintedReferences).toHaveText(['$B$3:$B$5']);
 
-    await page.keyboard.type(')');
-    await page.keyboard.press('Enter');
+    await book.typeAtCaret(')');
+    await book.commitEdit();
 
     await expect(book.cell('9', 1)).toHaveText('490');
     await expect(book.referenceFrames).toHaveCount(0);
@@ -910,13 +894,12 @@ test.describe('book', () => {
   test('moves a reference by the edge of its frame and resizes it by a corner', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await book.sheet.scrollIntoViewIfNeeded();
     await book.cell('9', 1).click();
-    await page.keyboard.type('=СУММ(B3:B4');
+    await book.typeAtCaret('=СУММ(B3:B4');
     await book.dragGrip('top', { row: '4', col: 0 });
 
     await expect(book.editor).toHaveValue('=СУММ(A4:A5');
@@ -927,7 +910,7 @@ test.describe('book', () => {
     await expect(book.editor).toHaveValue('=СУММ(A4:B6');
     await expect(book.editor).toBeFocused();
 
-    await page.keyboard.press('Escape');
+    await book.pressEscape();
 
     await expect(book.referenceFrames).toHaveCount(0);
     await expect(book.changes).toHaveText('Правок: 0');
@@ -936,13 +919,12 @@ test.describe('book', () => {
   test('suggests functions for a typed name and hints the argument being typed', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await book.sheet.scrollIntoViewIfNeeded();
     await book.cell('9', 1).click();
-    await page.keyboard.type('=СУ');
+    await book.typeAtCaret('=СУ');
 
     await expect(book.functions).toBeVisible();
     await expect(book.functions.getByRole('option').first()).toContainText('СУММ');
@@ -951,7 +933,7 @@ test.describe('book', () => {
       'Суммирует числа и диапазоны.',
     );
 
-    await page.keyboard.press('Tab');
+    await book.acceptSuggestion();
 
     await expect(book.editor).toHaveValue('=СУММ(');
     await expect(book.functions).toBeHidden();
@@ -959,13 +941,13 @@ test.describe('book', () => {
     await expect(book.summary).toHaveText('Суммирует числа и диапазоны.');
     await expect(book.currentArgument).toHaveText('число1');
 
-    await page.keyboard.type('B3:B7;');
+    await book.typeAtCaret('B3:B7;');
 
     await expect(book.currentArgument).toHaveText('[число2]');
 
-    await page.keyboard.press('Backspace');
-    await page.keyboard.type(')');
-    await page.keyboard.press('Enter');
+    await book.deleteBackward();
+    await book.typeAtCaret(')');
+    await book.commitEdit();
 
     await expect(book.hint).toBeHidden();
     await expect(book.cell('9', 1)).toHaveText('85');
@@ -974,7 +956,6 @@ test.describe('book', () => {
   test('frames the ranges of a selected formula and lets them be moved once it is edited', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -992,14 +973,14 @@ test.describe('book', () => {
     await expect(book.referenceFrames).toHaveCount(1);
 
     await book.cell('8', 1).click();
-    await page.keyboard.press('F2');
+    await book.editActiveCell();
 
     await expect(book.editor).toHaveValue('=СУММ(B3:B7)');
     await expect(book.referenceFrames).toHaveCount(1);
     await expect(book.frameGrips).toHaveCount(8);
     expect(await book.editorCutsTextShort()).toBe(false);
 
-    await page.keyboard.press('Escape');
+    await book.pressEscape();
 
     await expect(book.frameGrips).toHaveCount(0);
 
@@ -1009,14 +990,14 @@ test.describe('book', () => {
     await expect(book.frameGrips).toHaveCount(8);
     expect(await book.editorCutsTextShort()).toBe(false);
 
-    await page.keyboard.press('Escape');
+    await book.pressEscape();
     await book.formula.click();
-    await page.keyboard.press('End');
+    await book.caretToEnd();
 
     await expect(book.frameGrips).toHaveCount(8);
     await expect(book.paintedReferences).toHaveText(['B3:B7']);
 
-    await page.keyboard.press('Escape');
+    await book.pressEscape();
     await book.cell('3', 0).click();
 
     await expect(book.referenceFrames).toHaveCount(0);
@@ -1026,20 +1007,19 @@ test.describe('book', () => {
   test('grows the cell editor with its text up to the edge of the sheet', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await book.sheet.scrollIntoViewIfNeeded();
     await book.cell('9', 1).click();
-    await page.keyboard.type('=B3');
+    await book.typeAtCaret('=B3');
 
     const cell = await boxOf(book.cell('9', 1));
     const short = await book.editorBox();
 
     expect(short.width).toBeLessThanOrEqual(cell.width);
 
-    await page.keyboard.type('+B4+B5+B6+B7+C3+C4+C5+C6+C7+D3+D4+D5+D6+D7+E3+E4+E5+E6+E7+F3+F4+F5');
+    await book.typeAtCaret('+B4+B5+B6+B7+C3+C4+C5+C6+C7+D3+D4+D5+D6+D7+E3+E4+E5+E6+E7+F3+F4+F5');
 
     const visible = await book.viewportBox();
     const long = await book.editorBox();
@@ -1048,7 +1028,7 @@ test.describe('book', () => {
     expect(long.x).toBeCloseTo(short.x, 0);
     expect(long.x + long.width).toBeLessThanOrEqual(visible.x + visible.width);
 
-    await page.keyboard.press('Escape');
+    await book.pressEscape();
 
     await expect(book.changes).toHaveText('Правок: 0');
   });
@@ -1056,7 +1036,6 @@ test.describe('book', () => {
   test('draws the cell editor as the selected cell and grows it by whole columns', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -1075,7 +1054,7 @@ test.describe('book', () => {
     expect(framed.height).toBeCloseTo(head.height - 1, 0);
     expect(rgbDelta(await book.fillAt('2', 0), fill)).toBeLessThan(4);
 
-    await page.keyboard.press('Escape');
+    await book.pressEscape();
     await book.cell('3', 1).click();
     await book.formula.click();
 
@@ -1085,7 +1064,7 @@ test.describe('book', () => {
     expect(idle.x).toBeCloseTo(cell.x, 0);
     expect(idle.width).toBeCloseTo(cell.width - 1, 0);
 
-    await page.keyboard.type('23456');
+    await book.typeAtCaret('23456');
 
     const before = await boxOf(book.cell('3', 0));
     const grown = await book.editorFrame();
@@ -1093,7 +1072,7 @@ test.describe('book', () => {
     expect(grown.x).toBeCloseTo(before.x, 0);
     expect(grown.x + grown.width).toBeCloseTo(idle.x + idle.width, 0);
 
-    await page.keyboard.press('Escape');
+    await book.pressEscape();
 
     await expect(book.changes).toHaveText('Правок: 0');
   });
@@ -1101,38 +1080,37 @@ test.describe('book', () => {
   test('picks references with the arrows in the cell editor and starts again after an operator', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await book.sheet.scrollIntoViewIfNeeded();
     await book.cell('9', 2).click();
-    await page.keyboard.type('=');
-    await page.keyboard.press('ArrowUp');
+    await book.typeAtCaret('=');
+    await book.moveActive('up');
 
     await expect(book.editor).toHaveValue('=C8');
 
-    await page.keyboard.press('ArrowLeft');
+    await book.moveActive('left');
 
     await expect(book.editor).toHaveValue('=B8');
 
-    await page.keyboard.press('Shift+ArrowUp');
+    await book.extendSelection('up');
 
     await expect(book.editor).toHaveValue('=B7:B8');
 
-    await page.keyboard.type('+');
-    await page.keyboard.press('ArrowLeft');
+    await book.typeAtCaret('+');
+    await book.moveActive('left');
 
     await expect(book.editor).toHaveValue('=B7:B8+B9');
     await expect(book.referenceFrames).toHaveCount(2);
 
-    await page.keyboard.press('Escape');
+    await book.pressEscape();
 
     await expect(book.cell('9', 2)).toHaveText('');
     await expect(book.referenceFrames).toHaveCount(0);
   });
 
-  test('picks a reference with a tap on a phone', async ({ playground, book, page, isMobile }) => {
+  test('picks a reference with a tap on a phone', async ({ playground, book, isMobile }) => {
     test.skip(!isMobile, 'touch only');
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -1146,7 +1124,7 @@ test.describe('book', () => {
     await expect(book.formula).toBeFocused();
     await expect(book.referenceFrames).toHaveCount(1);
 
-    await page.keyboard.press('Escape');
+    await book.pressEscape();
 
     await expect(book.cell('9', 1)).toHaveText('');
     await expect(book.changes).toHaveText('Правок: 0');
@@ -1181,7 +1159,6 @@ test.describe('book', () => {
   test('inserts a pivot table from the sales sheet and builds it from checked fields', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -1206,7 +1183,7 @@ test.describe('book', () => {
     await expect(book.cell('7', 0)).toHaveText('Общий итог');
     await expect(book.cell('7', 1)).toHaveText(/^13\s?980$/u);
 
-    await page.keyboard.press('Escape');
+    await book.pressEscape();
     await expect(book.pivot.dialog).toBeHidden();
     await expect(book.cell('3', 0)).toBeFocused();
   });
@@ -1249,7 +1226,7 @@ test.describe('book', () => {
     await book.cellMenu('2', 0, 'Вставить сводную таблицу');
     await book.pivot.check('Регион');
     await book.pivot.check('Сумма');
-    await book.page.keyboard.press('Escape');
+    await book.pressEscape();
     await book.chooseSheet('Продажи');
     await book.enterAt('E2', '1320');
     await book.goTo('A1');
@@ -1277,7 +1254,7 @@ test.describe('book', () => {
     await book.cellMenu('2', 0, 'Вставить сводную таблицу');
     await book.pivot.check('Регион');
     await book.pivot.check('Сумма');
-    await book.page.keyboard.press('Escape');
+    await book.pressEscape();
 
     await expect(book.cell('6', 1)).toHaveText(/^4\s?495$/u);
 
@@ -1286,7 +1263,7 @@ test.describe('book', () => {
     await expect(book.cell('6', 1)).toHaveText('');
     await expect(book.cell('3', 0)).toHaveText('');
 
-    await book.page.keyboard.press('Control+z');
+    await book.undo();
 
     await expect(book.cell('6', 1)).toHaveText(/^4\s?495$/u);
   });
@@ -1450,7 +1427,7 @@ test.describe('book', () => {
 
     expect(await playground.wcagViolations('.nui-spreadsheet-pivot')).toEqual([]);
 
-    await book.page.keyboard.press('Escape');
+    await book.pressEscape();
     await book.pivot.chooseAction('Значения', 'Сумма по полю Сумма', 'Параметры полей значений…');
 
     expect(await playground.wcagViolations('.nui-spreadsheet-pivot')).toEqual([]);
