@@ -39,11 +39,7 @@ const clicks = ref(0);
 
 const nested = ref(0);
 
-const countAction = (event: MouseEvent): void => {
-  if (!(event.target instanceof Element) || event.target.closest('.nui-card__action') === null) {
-    return;
-  }
-
+const countAction = (): void => {
   clicks.value += 1;
 };
 

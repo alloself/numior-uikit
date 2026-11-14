@@ -42,6 +42,12 @@ const docs: DocsMap = {
         en: 'Shows placeholders in the card parts, sets `aria-busy` and turns the card link or button off.',
       },
     },
+    events: {
+      click: {
+        ru: 'Клик по карточке-кнопке или карточке-ссылке. Клики по кнопкам и ссылкам внутри карточки сюда не приходят.',
+        en: 'A click on a button card or a link card. Clicks on buttons and links inside the card do not reach it.',
+      },
+    },
     slots: {
       default: {
         ru: 'Блоки карточки: `NuiCardHeader`, `NuiCardContent`, `NuiCardFooter` и другие.',

@@ -242,11 +242,7 @@ const nestedClicks = ref(0);
 const cardLoading = ref(true);
 const listEmpty = ref(false);
 
-const onCardClick = (event: MouseEvent): void => {
-  if (!(event.target instanceof Element) || !event.target.closest('.nui-card__action')) {
-    return;
-  }
-
+const onCardClick = (): void => {
   cardClicks.value += 1;
 };
 
