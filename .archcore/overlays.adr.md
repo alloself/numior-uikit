@@ -77,7 +77,7 @@ status: accepted
   `showPopover`/`hidePopover` вызываются из post-flush watcher после монтирования и
   только при наличии API. Атрибут `open` у `<dialog>` не биндится.
 - Движение: `@starting-style` и `transition-behavior: allow-discrete`; выход в top layer
-  анимируется там, где есть `overlay`-transition (Chromium). Токен `--nui-backdrop`
+  анимируется там, где есть `overlay`-transition (Chromium). Токен `--color-backdrop`
   окрашивает `::backdrop`. Пока открыт хотя бы один модальный диалог, `useDialog` держит
   прокручиваемый корень: `overflow: hidden` на `<html>` и `padding-inline-end` на измеренную
   ширину скроллбара, чтобы контент не сдвигался; при нулевой ширине (overlay или скрытые
@@ -92,7 +92,7 @@ status: accepted
   на кнопку (тот же замер: 56 тысяч изменённых пикселей в кадре компоновщика, без `scale` — ноль). Правило `html:has(.nui-dialog:modal)`
   с `scrollbar-gutter: stable` убрано 2026-09-28: оно резервировало жёлоб там, где скроллбар
   места не занимал, и центрированный контент прыгал.
-- `useColorScheme` — минимальный композабл: чтение/запись `data-nui-theme` на scope,
+- `useColorScheme` — минимальный композабл: чтение/запись класса `nui-theme--<схема>` на scope,
   `prefers-color-scheme`, опциональный `storageKey`; playground переключает тему через него.
 - Стопка модальных диалогов: `useDialog` ведёт модульный стек открытых `<dialog>`; все,
   кроме верхнего, получают `covered` и модификатор `nui-dialog--covered` с прозрачным

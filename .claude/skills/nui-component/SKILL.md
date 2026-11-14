@@ -125,9 +125,9 @@ const {
   nui-layer--elevated`: the `*-soft` tokens re-derive from that surface instead of the page,
   so soft fills inside stay visible in the dark theme.
 - Action buttons inside fields (clear, open, toggle) are `NuiButton size="xs"` ghost neutral
-  with `--nui-text-muted` icons that brighten on hover.
-- Every state change has `transition`/`animation` via `--nui-duration-fast|normal|slow` and
-  `--nui-easing` (`slow` for layout moves such as stacks and layers); infinite animations
+  with `--color-muted-foreground` icons that brighten on hover.
+- Every state change has `transition`/`animation` via `--transition-duration-fast|normal|slow` and
+  `--ease-nui` (`slow` for layout moves such as stacks and layers); infinite animations
   only slow down under reduced motion, and a sweep (skeleton, indeterminate progress)
   leaves the box fully before it re-enters so the loop has no visible seam.
 - A prop typed as `Function | false` (or any union with `boolean`) gets a destructure default
@@ -147,15 +147,15 @@ const {
   the cursor of every enabled control in the playground.
 - A drag starts only from its handle, never from the whole row or cell: otherwise it fights the
   click (sorting, selection) and text selection.
-- An entrance offset starts on the block-start side (`translate: 0 calc(var(--nui-space-1) * -1)`)
+- An entrance offset starts on the block-start side (`translate: 0 calc(var(--spacing) * -1)`)
   or a `scale` below 1, never below: a box shifted past the end edge of an `overflow: auto`
   container counts as its scrollable overflow and flashes a scrollbar for the whole animation
   (the table's empty state did). Horizontal slides stay within the padding of their scroller.
 - A drag ghost never covers its insertion line: it spans only part of the cross axis (a column
   ghost the header band, a row ghost a compact chip at the row start) while the line runs the
   full width or height beside it. The ghost's grip stays under the pointer.
-- Focus ring: `outline: var(--nui-focus-ring-width) solid var(--nui-focus); outline-offset:
-  var(--nui-focus-ring-offset)`. Disabled: `opacity: var(--nui-disabled-opacity)`.
+- Focus ring: `outline: var(--focus-ring-width) solid var(--color-ring); outline-offset:
+  var(--focus-ring-offset)`. Disabled: `opacity: var(--opacity-disabled)`.
 - Logical properties only (`inline-size`, `inset-inline-start`, `padding-inline`).
 - Icons through `<NuiIcon icon="check" />` (`icon` also takes a component); a new kit alias is a
   new entry in `primitives/src/icons/icon-aliases.ts` (alias → Lucide file name) plus that file
