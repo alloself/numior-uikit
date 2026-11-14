@@ -525,6 +525,14 @@ describe('server rendering', () => {
     expect(html).toContain('value="a"');
   });
 
+  it('names a labelled separator by its label on the server', async () => {
+    const html = await renderToString(NuiSeparator, { props: { label: 'or' } });
+    const labelledBy = /aria-labelledby="([^"]+)"/.exec(html)?.[1];
+
+    expect(labelledBy).toBeTruthy();
+    expect(html).toContain(`id="${labelledBy}"`);
+  });
+
   it('renders the room kept for an error as a hidden line on the server', async () => {
     const html = await renderToString(FieldScene, { props: { scene: 'reserved-error' } });
 

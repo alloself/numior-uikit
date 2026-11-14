@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { sectionScope } from '../helpers/axe';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { paintedRgbAt, rgbDelta } from '../helpers/color';
 import { beforeBoxOf, boxOf, type PseudoBox } from '../helpers/geometry';
@@ -18,6 +19,8 @@ const afterFrames = (): Promise<void> =>
   });
 
 export class ChromeSection {
+  readonly scope = sectionScope('chrome');
+
   readonly root: Locator;
   readonly toolbar: Locator;
   readonly verticalSeparator: Locator;

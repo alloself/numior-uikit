@@ -19,7 +19,9 @@ test('separators carry semantics, stretch across their axis and take a label', a
   await expect(chrome.verticalSeparator).toHaveAttribute('aria-orientation', 'vertical');
   await expect(chrome.decorativeSeparator).toHaveAttribute('role', 'none');
   await expect(chrome.labelledSeparator).toHaveText('или');
+  await expect(chrome.labelledSeparator).toHaveAccessibleName('или');
   expect(await chrome.labelLineWidth()).toBeGreaterThan(40);
+  expect(await playground.wcagViolations(chrome.scope)).toEqual([]);
 });
 
 test('kbd renders combos per platform, boxed or plain', async ({ playground, chrome }) => {
