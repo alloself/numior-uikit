@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 @import '@numior/tailwind/theme.css';
+@import '@numior/tokens/accents.css' layer(theme);
+@import './numior.css' layer(theme);
 @import '@numior/tokens/base.css' layer(components);
 @import '@numior/vue/styles.css';
 @import '@numior/forms/styles.css' layer(components);
