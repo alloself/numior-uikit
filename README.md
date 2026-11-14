@@ -27,14 +27,14 @@ Playground: `http://localhost:5173`, раскладка страницы на Ta
 
 ## Структура
 
-| Каталог           | Содержимое                                                                            |
-| ----------------- | ------------------------------------------------------------------------------------- |
-| `.archcore`       | Согласованный roadmap, архитектурные решения и стандарты                              |
-| `packages`        | Tokens, примитивы, Vue-компоненты, формы, Tailwind, Nuxt; [карта](packages/README.md) |
-| `apps/playground` | Исполняемые примеры и browser fixtures                                                |
-| `apps/docs`       | VitePress, RU/EN, локальный поиск, живой Vue-пример                                   |
-| `tests/e2e`       | Chromium/Firefox/WebKit и мобильные профили                                           |
-| `scripts`         | Сборка CSS и проверка выходных artifacts                                              |
+| Каталог           | Содержимое                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------- |
+| `.archcore`       | Согласованный roadmap, архитектурные решения и стандарты                                          |
+| `packages`        | Tokens, примитивы, Vue-компоненты, формы, Tailwind, Nuxt, сервер MCP; [карта](packages/README.md) |
+| `apps/playground` | Исполняемые примеры и browser fixtures                                                            |
+| `apps/docs`       | VitePress, RU/EN, локальный поиск, живой Vue-пример                                               |
+| `tests/e2e`       | Chromium/Firefox/WebKit и мобильные профили                                                       |
+| `scripts`         | Сборка CSS и проверка выходных artifacts                                                          |
 
 Импорт `@numior/vue` не включает CSS автоматически. Подключайте
 `@numior/tokens/theme.css` и `@numior/vue/styles.css`. Tailwind и `nui-*` утилиты

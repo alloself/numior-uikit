@@ -1,0 +1,34 @@
+{
+  "name": "@numior/mcp",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "bin": {
+    "numior-mcp": "./dist/main.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@numior/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@vue/compiler-core": "3.5.43",
+    "@vue/compiler-sfc": "3.5.43",
+    "lodash-es": "4.18.1",
+    "minisearch": "7.2.0",
+    "postcss": "8.5.30",
+    "postcss-selector-parser": "7.1.6",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/lodash-es": "4.17.12"
+  }
+}

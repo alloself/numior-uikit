@@ -557,6 +557,54 @@ assert.match(
 
 assert.doesNotMatch(nuxtPlugin, /\.css['"]/, 'the nuxt plugin must not import css');
 
+const mcpModule = await import(pathToFileURL(resolve('packages/mcp/dist/index.js')).href);
+
+for (const key of ['createNumiorServer', 'checkUsage', 'parseData']) {
+  assert.equal(typeof mcpModule[key], 'function', `mcp must export ${key}`);
+}
+
+const mcpMain = await readFile('packages/mcp/dist/main.js', 'utf8');
+
+assert.match(mcpMain, /^#!\/usr\/bin\/env node\n/, 'the mcp binary must start with a node shebang');
+
+const mcpData = mcpModule.parseData(await readFile('packages/mcp/dist/data.json', 'utf8'));
+
+assert.ok(
+  Object.keys(mcpData.components).length > 50,
+  'the mcp data must hold the component reference',
+);
+
+assert.equal(
+  mcpData.pages.en.length,
+  mcpData.pages.ru.length,
+  'the mcp data must hold both page copies',
+);
+
+assert.ok(
+  Object.keys(mcpData.examples.en).length > 100,
+  'the mcp data must hold the example sources',
+);
+
+const mcpChunks = [];
+
+for await (const file of glob('packages/mcp/dist/*.js')) {
+  mcpChunks.push(await readFile(file, 'utf8'));
+}
+
+for (const external of [
+  '@modelcontextprotocol/sdk/server/mcp.js',
+  '@vue/compiler-sfc',
+  'postcss',
+  'postcss-selector-parser',
+  'minisearch',
+  'zod',
+]) {
+  assert.ok(
+    mcpChunks.some((chunk) => chunk.includes(`from "${external}"`)),
+    `the mcp build must keep ${external} external`,
+  );
+}
+
 const PROBE = '\0nui-probe';
 
 const bundleOf = async (source) => {
