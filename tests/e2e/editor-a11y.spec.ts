@@ -1,4 +1,3 @@
-import { type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { PlaygroundPage, type Theme } from './pages/playground';
 
@@ -13,9 +12,6 @@ const openEditor = async (playground: PlaygroundPage, theme: Theme): Promise<voi
   await playground.editor.root.scrollIntoViewIfNeeded();
 };
 
-const finePointer = (page: Page): Promise<boolean> =>
-  page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
-
 const clean = async (playground: PlaygroundPage): Promise<void> => {
   expect(await playground.wcagViolations(SECTION)).toEqual([]);
 };
@@ -25,17 +21,16 @@ for (const theme of THEMES) {
     test('passes axe with the bubble, the link form, the colours and the slash menu open', async ({
       playground,
       editor,
-      page,
     }) => {
       test.slow();
       await openEditor(playground, theme);
-      const fine = await finePointer(page);
+      const fine = await editor.hasFinePointer();
 
       await editor.clear();
-      await page.keyboard.type('Hello world');
+      await editor.typeText('Hello world');
 
       for (let step = 0; step < 'world'.length; step += 1) {
-        await page.keyboard.press('Shift+ArrowLeft');
+        await editor.extendSelection('left');
       }
 
       if (fine) {
@@ -44,31 +39,31 @@ for (const theme of THEMES) {
         await clean(playground);
       }
 
-      await page.keyboard.press('ControlOrMeta+k');
+      await editor.openLinkField();
       await expect(editor.linkField()).toBeFocused();
 
       await clean(playground);
-      await page.keyboard.press('Escape');
+      await editor.pressEscape();
 
       const colours = fine
         ? editor.bubble()
         : editor.root.getByRole('toolbar', { name: 'Форматирование' });
 
       await colours.getByRole('button', { name: 'Цвет' }).click();
-      await expect(page.getByRole('menuitemradio', { name: /Красный/u }).first()).toBeVisible();
+      await expect(editor.menuItemRadio(/Красный/u).first()).toBeVisible();
 
       await clean(playground);
-      await page.keyboard.press('Escape');
+      await editor.pressEscape();
 
       await editor.tool('Вставить').click();
       await expect(editor.insertSearch()).toBeFocused();
 
       await clean(playground);
-      await page.keyboard.press('Escape');
+      await editor.pressEscape();
 
       await editor.placeAtEnd();
-      await page.keyboard.press('Enter');
-      await page.keyboard.type('/');
+      await editor.pressEnter();
+      await editor.typeText('/');
       await expect(editor.slashMenu()).toBeVisible();
 
       await clean(playground);
@@ -77,32 +72,31 @@ for (const theme of THEMES) {
     test('passes axe with the block menu, the callout tones and the code languages open', async ({
       playground,
       editor,
-      page,
     }) => {
       test.slow();
       await openEditor(playground, theme);
       await editor.block(0).scrollIntoViewIfNeeded();
 
-      if (await finePointer(page)) {
+      if (await editor.hasFinePointer()) {
         await editor.hoverStart(editor.block(0));
       } else {
         await editor.block(0).click();
       }
 
       await editor.grip().click();
-      await expect(page.getByRole('menuitem', { name: 'Дублировать' })).toBeVisible();
+      await expect(editor.menuItem('Дублировать')).toBeVisible();
 
       await clean(playground);
-      await page.keyboard.press('Escape');
+      await editor.pressEscape();
 
       await editor.calloutTone().click();
-      await expect(page.getByRole('menuitemradio').first()).toBeVisible();
+      await expect(editor.menuItemRadio().first()).toBeVisible();
 
       await clean(playground);
-      await page.keyboard.press('Escape');
+      await editor.pressEscape();
 
       await editor.codeLanguage().click();
-      await expect(page.getByRole('option', { name: 'TypeScript' })).toBeVisible();
+      await expect(editor.option('TypeScript')).toBeVisible();
 
       await clean(playground);
     });
@@ -110,16 +104,15 @@ for (const theme of THEMES) {
     test('passes axe with the column menu, the file bar, a caret beside a block and a marked comment', async ({
       playground,
       editor,
-      page,
     }) => {
       test.slow();
       await openEditor(playground, theme);
       await editor.showTable();
       await editor.openColumnMenu(0);
-      await expect(page.getByRole('menuitem', { name: 'Переименовать' })).toBeVisible();
+      await expect(editor.menuItem('Переименовать')).toBeVisible();
 
       await clean(playground);
-      await page.keyboard.press('Escape');
+      await editor.pressEscape();
 
       await editor.file('Заметки к релизу').click();
       await expect(editor.linkBar()).toBeVisible();
@@ -134,7 +127,7 @@ for (const theme of THEMES) {
       await editor.placeInText('Наберите', 0);
 
       for (let step = 0; step < 8; step += 1) {
-        await page.keyboard.press('Shift+ArrowRight');
+        await editor.extendSelection('right');
       }
 
       await editor.markSelection();
@@ -147,18 +140,17 @@ for (const theme of THEMES) {
     test('passes axe with an upload that failed and with the toolbar docked on a phone', async ({
       playground,
       editor,
-      page,
     }) => {
       test.slow();
       await openEditor(playground, theme);
-      await page.getByTestId('editor-upload-fail').click();
+      await editor.uploadFailSwitch.click();
       await editor.placeAtEnd();
       await editor.pasteFiles([{ name: 'broken.txt', type: 'text/plain' }]);
       await expect(editor.uploadCards()).toContainText('Сервер не ответил', { timeout: 10_000 });
 
       await clean(playground);
 
-      if (await finePointer(page)) {
+      if (await editor.hasFinePointer()) {
         return;
       }
 
