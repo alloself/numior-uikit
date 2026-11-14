@@ -53,7 +53,11 @@ export class EditorImageDriver {
     return [...this.figure.querySelectorAll('.nui-editor-image__bar :is(button, a)')].reduce<
       string[]
     >((found, control) => {
-      if (control.closest('.nui-editor-image__alt') === null) {
+      const reachable =
+        control.closest('.nui-editor-image__alt') === null &&
+        control.closest('[aria-hidden="true"]') === null;
+
+      if (reachable) {
         found.push(control.getAttribute('aria-label') ?? control.textContent?.trim() ?? '');
       }
       return found;

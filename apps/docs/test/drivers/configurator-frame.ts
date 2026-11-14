@@ -120,7 +120,7 @@ export class ConfiguratorFrameDriver {
   choicesOf(name: string): string[] {
     return this.wrapper
       .find(`.nui-toggle-group[aria-label="${name}"]`)
-      .findAll('button')
+      .findAll('.nui-toggle-group__item')
       .map((item) => item.text());
   }
 
