@@ -191,7 +191,7 @@ describe('NuiEditor image', () => {
     expect(image.progress).toBeUndefined();
     expect(server.started).toEqual([]);
 
-    expect(editor.toasts).toEqual([
+    expect(uploads.toasts).toEqual([
       'error|scan.pdf: this file type is not accepted',
       'error|huge.png is larger than 1 kB',
     ]);

@@ -101,7 +101,7 @@ export class EditorDriver {
     private readonly wrapper: VueWrapper,
     private readonly mounted: VueWrapper = wrapper,
     private readonly drafts?: DraftCommits,
-    private readonly toastStore?: ToastStore,
+    readonly toastStore?: ToastStore,
   ) {}
 
   static mount(props: EditorMountProps = {}): EditorDriver {
@@ -129,10 +129,6 @@ export class EditorDriver {
     });
 
     return new EditorDriver(root.findComponent(NuiEditor), root, root.vm.drafts);
-  }
-
-  get toasts(): readonly string[] {
-    return (this.toastStore?.toasts.value ?? []).map((toast) => `${toast.tone}|${toast.title}`);
   }
 
   commitDrafts(): void {
