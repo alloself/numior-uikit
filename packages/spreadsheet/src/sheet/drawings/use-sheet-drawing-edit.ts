@@ -160,14 +160,16 @@ export const useSheetDrawingEdit = (options: DrawingEditOptions): DrawingEdit =>
   };
 
   const onDown = (event: PointerEvent, shown: ShownDrawing): void => {
-    event.preventDefault();
     pressed = shown;
 
-    if (
-      event.button !== PRIMARY_BUTTON ||
-      !canEdit(shown) ||
-      (event.pointerType === TOUCH && selectedId.value !== shown.drawing.id)
-    ) {
+    const tapToSelect = event.pointerType === TOUCH && selectedId.value !== shown.drawing.id;
+
+    if (tapToSelect) {
+      return;
+    }
+    event.preventDefault();
+
+    if (event.button !== PRIMARY_BUTTON || !canEdit(shown)) {
       return;
     }
     select(shown);

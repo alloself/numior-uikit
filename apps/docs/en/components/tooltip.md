@@ -37,6 +37,12 @@ A combination uses the notation of [Kbd](/en/components/kbd): `mod+shift+c` read
 and Ctrl Shift C on Windows. For a tooltip with targets in `anchor`, pass a function: it receives
 the element under the pointer and returns its combination.
 
+### Reveal clipped text
+
+Add a `when` function to `anchor`: the tooltip opens only over the targets it returns `true` for.
+
+<Example name="tooltip/Clipped" />
+
 ## Accessibility
 
 The tooltip follows WCAG 1.4.13:

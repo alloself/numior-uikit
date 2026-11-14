@@ -42,6 +42,23 @@ describe('BlockFrame', () => {
     block.unmount();
   });
 
+  it('grows the screen to the height its page reports and keeps the least height', async () => {
+    const block = BlockFrameDriver.mount(FILES);
+
+    expect(block.screenHeight).toBe('600px');
+
+    await block.report(900);
+    expect(block.screenHeight).toBe('900px');
+
+    await block.report(420);
+    expect(block.screenHeight).toBe('600px');
+
+    await block.report(1200, window);
+    expect(block.screenHeight).toBe('600px');
+
+    block.unmount();
+  });
+
   it('lists the files of the block and copies the one on screen', async () => {
     const block = BlockFrameDriver.mount(FILES);
 

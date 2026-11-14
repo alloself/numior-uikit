@@ -94,6 +94,7 @@ const targeted = useTooltipTargets({
   root: computed(() => container.value ?? trigger.value),
   open,
   disabled: () => disabled,
+  accepts: (target) => targets.value?.when?.(target) ?? true,
   delay,
   describedBy: tooltipId,
   pressedRecently,

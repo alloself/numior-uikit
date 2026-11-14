@@ -16,7 +16,7 @@ export class HomeScreenDriver {
     const stubs = new TopLayerStubs();
 
     const wrapper = mount(HomeScreen, {
-      props: { src: SCREEN_SRC, texts: ru },
+      props: { src: SCREEN_SRC, height: 720, texts: ru },
       attachTo: document.body,
     });
 

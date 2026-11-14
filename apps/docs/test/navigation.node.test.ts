@@ -13,7 +13,8 @@ import {
 import type { NavSection } from '../.vitepress/theme/theme.types';
 
 const DOCS = fileURLToPath(new URL('..', import.meta.url));
-const SECTION_DIRS = ['guide', 'components', 'composables', 'theme'];
+const SECTION_DIRS = ['guide', 'components', 'composables', 'theme', 'editor'];
+const INDEX_PAGE = 'index';
 
 const SHOP: readonly NavSection[] = [
   {
@@ -32,11 +33,15 @@ const SHOP: readonly NavSection[] = [
 
 const pagesOf = (dir: string): string[] =>
   readdirSync(`${DOCS}${dir}`).reduce<string[]>((links, name) => {
-    if (name.endsWith('.md') && name !== 'index.md') {
-      links.push(`/${dir}/${name.slice(0, -'.md'.length)}`);
+    const page = name.slice(0, -'.md'.length);
+
+    if (name.endsWith('.md')) {
+      links.push(`/${dir}/${page === INDEX_PAGE ? '' : page}`);
     }
     return links;
   }, []);
+
+const fileOf = (link: string): string => (link.endsWith('/') ? `${link}${INDEX_PAGE}` : link);
 
 describe('docs navigation', () => {
   it('builds the header items and the sidebar of each locale from one record', () => {
@@ -99,7 +104,9 @@ describe('docs navigation', () => {
 
     expect(
       links.filter(
-        (link) => !existsSync(`${DOCS}${link.slice(1)}.md`) || !existsSync(`${DOCS}en${link}.md`),
+        (link) =>
+          !existsSync(`${DOCS}${fileOf(link).slice(1)}.md`) ||
+          !existsSync(`${DOCS}en${fileOf(link)}.md`),
       ),
     ).toEqual([]);
 

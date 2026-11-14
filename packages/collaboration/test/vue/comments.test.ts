@@ -107,6 +107,27 @@ describe('NuiEditorComments', () => {
     expect(view.replies).toEqual(['Agreed']);
   });
 
+  it('moves the focus into the reply field and back to the reply button', async () => {
+    const view = CommentsDriver.mount([threadOf('t')]);
+
+    await view.loaded();
+
+    await view.pressIn(0, 'Reply');
+
+    expect(view.focusedName).toBe('Write a reply');
+
+    await view.pressIn(0, 'Cancel');
+
+    expect(view.focusedName).toBe('Reply');
+
+    await view.pressIn(0, 'Reply');
+    await view.write('Agreed');
+    await view.submit();
+
+    expect(view.replies).toEqual(['Agreed']);
+    expect(view.focusedName).toBe('Reply');
+  });
+
   it('resolves a thread and opens it again', async () => {
     const view = CommentsDriver.mount([threadOf('t')]);
 
@@ -115,6 +136,7 @@ describe('NuiEditorComments', () => {
     await view.pressIn(0, 'Resolve');
 
     expect(view.badges(0)).toEqual(['Resolved']);
+    expect(view.badgesInRow(0)).toBe(true);
     expect(view.highlights).toEqual([]);
 
     await view.pressIn(0, 'Reopen');

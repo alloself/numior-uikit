@@ -10,8 +10,10 @@
   >
     <NuiEditorCommentEntry :entry="thread" :time-of="timeOf" />
     <p class="nui-collab-comments__body">{{ thread.body }}</p>
-    <NuiBadge v-if="thread.lost" size="sm" tone="warning">{{ text.lost }}</NuiBadge>
-    <NuiBadge v-if="thread.resolved" size="sm" tone="success">{{ text.resolved }}</NuiBadge>
+    <div v-if="thread.lost || thread.resolved" class="nui-collab-comments__marks">
+      <NuiBadge v-if="thread.lost" size="sm" tone="warning">{{ text.lost }}</NuiBadge>
+      <NuiBadge v-if="thread.resolved" size="sm" tone="success">{{ text.resolved }}</NuiBadge>
+    </div>
 
     <ul v-if="thread.replies.length > 0" class="nui-collab-comments__replies">
       <li v-for="item in thread.replies" :key="item.id">
@@ -22,13 +24,14 @@
 
     <NuiEditorCommentForm
       v-if="replying"
+      autofocus
       :placeholder="text.replyPlaceholder"
       :text="text"
       :submit="sendReply"
       @cancel="replying = false"
     />
 
-    <div v-else class="nui-collab-comments__actions">
+    <div v-else ref="actions" class="nui-collab-comments__actions">
       <NuiButton size="sm" variant="soft" tone="primary" @click="replying = true">{{
         text.reply
       }}</NuiButton>
@@ -55,7 +58,7 @@
 <script setup lang="ts">
 import type { IconAlias } from '@numior/primitives';
 import { NuiBadge, NuiButton, NuiTooltip } from '@numior/vue';
-import { computed, ref } from 'vue';
+import { computed, ref, useTemplateRef, watch } from 'vue';
 import type { NuiEditorCommentThreadProps } from './collab.types';
 import NuiEditorCommentEntry from './NuiEditorCommentEntry.vue';
 import NuiEditorCommentForm from './NuiEditorCommentForm.vue';
@@ -77,6 +80,8 @@ const {
 } = defineProps<NuiEditorCommentThreadProps>();
 
 const replying = ref(false);
+
+const actions = useTemplateRef<HTMLElement>('actions');
 
 const tools = computed<readonly ThreadTool[]>(() => {
   const show: ThreadTool = {
@@ -123,6 +128,13 @@ const sendReply = async (body: string): Promise<boolean> => {
   return sent;
 };
 
+const returnFocus = (open: boolean): void => {
+  if (open) {
+    return;
+  }
+  actions.value?.querySelector('button')?.focus();
+};
+
 const onClick = (event: MouseEvent): void => {
   if (!(event.target instanceof Element) || event.target.closest('button, textarea, a') !== null) {
     return;
@@ -130,4 +142,6 @@ const onClick = (event: MouseEvent): void => {
 
   comments.activate(thread.id);
 };
+
+watch(replying, returnFocus, { flush: 'post' });
 </script>

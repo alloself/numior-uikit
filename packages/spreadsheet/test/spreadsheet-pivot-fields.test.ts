@@ -52,6 +52,14 @@ afterEach(() => {
 });
 
 describe('NuiSpreadsheet pivot field settings', () => {
+  it('names a clipped field chip in a tooltip of the kit and keeps a whole one quiet', async () => {
+    const sheet = await pivotWith('Region', 'Amount');
+
+    expect(sheet.pivot.titles).toEqual([]);
+    expect(await sheet.pivot.hintOf('Region', false)).toBe('');
+    expect(await sheet.pivot.hintOf('Sum of Amount', true)).toBe('Sum of Amount');
+  });
+
   it('sorts a row field descending and hides an unchecked item', async () => {
     const sheet = await pivotWith('Region', 'Amount');
 

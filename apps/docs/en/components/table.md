@@ -1,7 +1,7 @@
 # Table
 
 `NuiTable` is a table for large data sets with sorting, filters, groups, row selection and cell
-editing like in spreadsheets. It stays fast even with a million rows.
+editing like in spreadsheets.
 
 <Example name="table/Basic" />
 
@@ -93,6 +93,9 @@ searches all text columns at once.
 A long list shows the first hundred values, and the search above the list finds the rest. "Select
 all" with a box unchecked afterwards gives a filter with `exclude: true`: it hides the named
 values, and values that appear later stay visible.
+
+The list is marked busy while its values are gathered. After 120 ms "Loading the values…"
+stands in its place.
 
 A column with `aggregate` adds a totals row at the bottom, such as a sum or an average. The
 totals row shows the `totalsLabel` caption and the number of rows left after filtering.
@@ -195,8 +198,7 @@ the row count `rows`, the column count `cols` and the `cellAt(row, col)` functio
 returns the text and style of a cell.
 
 Sheet rows get numbers, and columns get letters from A to XFD. The table asks only for visible
-cells and creates no objects per row or column. A sheet of 1 048 576 rows and 16 384 columns
-therefore opens as fast as a small one.
+cells and creates no objects per row or column.
 
 Ctrl with an arrow moves to the edge of the data. When the storage knows where its empty areas
 are, its `nextEdge` function finds the edge without walking over cells. Its `lastCell` function
@@ -438,7 +440,7 @@ with a decimal comma also expect the `;` delimiter, as in the example.
 ### Ten thousand rows
 
 With `height` the table scrolls inside itself and renders only the visible rows of `rowHeight`
-height and the visible columns. The table does not go blank on fast scrolling.
+height and the visible columns.
 
 A column with `pin` stays in place on horizontal scroll, and rows from `pinnedRows` stay under
 the header. A column can also be pinned or hidden from its menu.

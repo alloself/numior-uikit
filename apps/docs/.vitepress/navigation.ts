@@ -191,6 +191,28 @@ const COMPONENTS: readonly NavGroup[] = [
   },
 ];
 
+const EDITOR: readonly NavGroup[] = [
+  {
+    title: { ru: 'Редактор', en: 'Editor' },
+    pages: [
+      { link: '/editor/', title: { ru: 'Редактор', en: 'Editor' } },
+      { link: '/editor/blocks', title: { ru: 'Блоки', en: 'Blocks' } },
+      { link: '/editor/media', title: { ru: 'Файлы и ссылки', en: 'Files and links' } },
+      { link: '/editor/content', title: { ru: 'Вывод документа', en: 'Rendering a document' } },
+    ],
+  },
+  {
+    title: { ru: 'Совместная работа', en: 'Collaboration' },
+    pages: [
+      { link: '/editor/collaboration', title: { ru: 'Совместная работа', en: 'Collaboration' } },
+      { link: '/editor/server', title: { ru: 'Сервер', en: 'Server' } },
+      { link: '/editor/comments', title: { ru: 'Комментарии', en: 'Comments' } },
+      { link: '/editor/history', title: { ru: 'Версии', en: 'Versions' } },
+      { link: '/editor/offline', title: { ru: 'Офлайн', en: 'Offline' } },
+    ],
+  },
+];
+
 const THEME: readonly NavGroup[] = [
   {
     title: { ru: 'Справочники', en: 'Reference' },
@@ -208,6 +230,11 @@ export const NAVIGATION: readonly NavSection[] = [
     title: { ru: 'Компоненты', en: 'Components' },
     prefixes: ['/components/'],
     groups: COMPONENTS,
+  },
+  {
+    title: { ru: 'Редактор', en: 'Editor' },
+    prefixes: ['/editor/'],
+    groups: EDITOR,
   },
   {
     title: { ru: 'Графики', en: 'Charts' },

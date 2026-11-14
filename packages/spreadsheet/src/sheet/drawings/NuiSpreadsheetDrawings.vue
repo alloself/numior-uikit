@@ -10,7 +10,7 @@
         },
       ]"
       :style="tableRectStyle(placed.rect)"
-      @pointerdown="emit('down', $event, placed.shown)"
+      :ref="press((event) => emit('down', event, placed.shown))"
       @click="emit('select', placed.shown)"
       @dblclick="emit('settings', placed.shown)"
       @contextmenu="emit('menu', $event, placed.shown)"
@@ -29,7 +29,7 @@
         :key="grip"
         class="nui-spreadsheet__handle"
         :class="`nui-spreadsheet__handle--${grip}`"
-        @pointerdown="emit('grip', $event, placed.shown, grip)"
+        :ref="press((event) => emit('grip', event, placed.shown, grip))"
       ></span>
       <span
         v-if="
@@ -38,7 +38,7 @@
           placed.shown.drawing.id === selected
         "
         class="nui-spreadsheet__drawing-tools"
-        @pointerdown.stop
+        :ref="press(stop)"
         @mousedown.prevent
       >
         <NuiButton
@@ -62,6 +62,7 @@ import { Settings2 } from '@lucide/vue';
 import { tableRectStyle } from '@numior/table';
 import { NuiButton, NuiIcon } from '@numior/vue';
 import { computed, markRaw } from 'vue';
+import { useSheetPress } from '../sheet-presses';
 import { FrameGrip } from '../sheet.types';
 import { boxOf } from './drawing-box';
 import NuiSpreadsheetDrawingBody from './NuiSpreadsheetDrawingBody.vue';
@@ -77,6 +78,10 @@ const GRIPS = Object.values(FrameGrip);
 const SETTINGS_ICON = markRaw(Settings2);
 
 const kindClass = (kind: ShownDrawingKind): string => `nui-spreadsheet__drawing--kind-${kind}`;
+
+const stop = (event: PointerEvent): void => {
+  event.stopPropagation();
+};
 
 const {
   drawings,
@@ -97,6 +102,8 @@ const emit = defineEmits<{
   settings: [shown: ShownDrawing];
   menu: [event: MouseEvent, shown: ShownDrawing];
 }>();
+
+const press = useSheetPress();
 
 const placedDrawings = computed(() =>
   drawings.reduce<PlacedDrawing[]>((placed, shown) => {

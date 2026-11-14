@@ -1,4 +1,4 @@
-import type { WireStep } from '../src/protocol/protocol.types.ts';
+import type { WireStep } from '../protocol/protocol.types.ts';
 
 export interface LoggedBatch {
   readonly version: number;

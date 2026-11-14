@@ -24,6 +24,7 @@ import {
   useUploadQueue,
   validateFiles,
   type FileRejection,
+  type UploadEntry,
 } from '@numior/primitives';
 import { computed, onScopeDispose, ref, shallowReactive, type ComputedRef, type Ref } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
@@ -232,6 +233,19 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
     }
   };
 
+  const reasonOf = (rejection: FileRejection): string => {
+    switch (rejection.error.reason) {
+      case UploadReason.Type:
+        return texts.value.uploadTypeReason;
+      case UploadReason.Size:
+        return texts.value.uploadSizeReason({
+          size: formatFileSize(options.maxSize() ?? rejection.file.size, locale.value),
+        });
+      default:
+        return texts.value.uploadFailed({ name: rejection.file.name });
+    }
+  };
+
   const elementFor = (id: string): HTMLElement | undefined => {
     const element = options.document()?.createElement('div');
 
@@ -248,21 +262,38 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
     forget(id);
   };
 
-  const accepted = (
+  const entriesOf = (
     files: readonly File[],
     target: UploadTarget | undefined,
     accept: string | undefined,
-  ): readonly File[] => {
+  ): readonly UploadEntry[] => {
+    const replacing = target?.kind === UploadTargetKind.Replace;
+
     const checked = validateFiles(files, {
       accept: accept ?? options.accept(),
       maxSize: options.maxSize(),
-      maxFiles: target?.kind === UploadTargetKind.Replace ? 1 : undefined,
+      maxFiles: replacing ? 1 : undefined,
     });
+
+    const reasons = new Map(
+      checked.rejected.map((rejection) => [
+        rejection.file,
+        { reason: rejection.error.reason, message: reasonOf(rejection) },
+      ]),
+    );
 
     if (checked.rejected.length > 0) {
       announce(checked.rejected.map(refusal).join(' '));
     }
-    return checked.accepted;
+
+    return files.reduce<UploadEntry[]>((entries, file) => {
+      const error = reasons.get(file);
+
+      if (error === undefined || !replacing) {
+        entries.push({ file, error });
+      }
+      return entries;
+    }, []);
   };
 
   const supersede = (spot: UploadTarget): void => {
@@ -280,17 +311,23 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
   };
 
   const preview = (item: NuiEditorUploadItem): void => {
-    if (!isImage(item.type) || typeof URL.createObjectURL !== 'function' || !item.file) {
+    const shown =
+      item.status !== UploadStatus.Error &&
+      isImage(item.type) &&
+      typeof URL.createObjectURL === 'function' &&
+      item.file !== undefined;
+
+    if (!shown) {
       return;
     }
 
     previews.set(item.id, URL.createObjectURL(item.file));
   };
 
-  const enqueue = (files: readonly File[], spot: UploadTarget): void => {
+  const enqueue = (entries: readonly UploadEntry[], spot: UploadTarget): void => {
     supersede(spot);
 
-    const created = queue.add(files.map((file) => ({ file })));
+    const created = queue.add(entries);
 
     for (const item of created) {
       targets.set(item.id, spot);
@@ -322,14 +359,14 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
       return;
     }
 
-    const valid = accepted(files, target, accept);
+    const entries = entriesOf(files, target, accept);
 
-    if (valid.length === 0) {
+    if (entries.length === 0) {
       return;
     }
 
     enqueue(
-      valid,
+      entries,
       target ?? {
         kind: 'place',
         pos: uploadPlace(options.state()),

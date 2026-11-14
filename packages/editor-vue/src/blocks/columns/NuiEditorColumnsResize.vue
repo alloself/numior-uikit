@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { Direction, useMessages } from '@numior/primitives';
+import { Direction, useMessages, usePointerSession } from '@numior/primitives';
 import { useResizeObserver } from '@vueuse/core';
 import { computed, ref, useTemplateRef, watch } from 'vue';
 import { editorMessages } from '../../editor/editor.messages';
@@ -34,6 +34,7 @@ const { node, element, editable, editor } = defineProps<NuiEditorBlockViewProps>
 const texts = useMessages(editorMessages);
 
 const separators = useTemplateRef<HTMLElement[]>('separators');
+const drag = usePointerSession({ capture: true });
 
 const active = ref<number | undefined>();
 
@@ -120,9 +121,7 @@ const onPointerdown = (index: number, event: PointerEvent): void => {
   };
 
   const end = (): void => {
-    separator.removeEventListener('pointermove', move);
-    separator.removeEventListener('pointerup', end);
-    separator.removeEventListener('pointercancel', end);
+    drag.end();
     active.value = undefined;
     if (ratio === undefined) {
       return;
@@ -131,9 +130,7 @@ const onPointerdown = (index: number, event: PointerEvent): void => {
     commit(index, ratio);
   };
 
-  separator.addEventListener('pointermove', move);
-  separator.addEventListener('pointerup', end);
-  separator.addEventListener('pointercancel', end);
+  drag.begin({ move, up: end, cancel: end });
 };
 
 const onKeydown = (index: number, event: KeyboardEvent): void => {

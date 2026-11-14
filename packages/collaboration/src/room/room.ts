@@ -10,7 +10,7 @@ import {
   type SendStepsMessage,
   type ServerMessage,
   type WireStep,
-} from '../src/protocol/protocol.types.ts';
+} from '../protocol/protocol.types.ts';
 import { createStepLog } from './log.ts';
 
 export interface RoomAuthority {

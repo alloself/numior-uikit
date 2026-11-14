@@ -135,4 +135,17 @@ export interface ComponentEntry {
   readonly family: string;
   readonly file: string;
   readonly dir: string;
+  readonly styles?: string | undefined;
+}
+
+export interface FlatFamily {
+  readonly family: string;
+  readonly styles: string;
+}
+
+export interface ReferenceEntry {
+  readonly name: string;
+  readonly source: string;
+  readonly types: string;
+  readonly flat?: FlatFamily | undefined;
 }

@@ -42,26 +42,16 @@
 </template>
 
 <script setup lang="ts">
-import { useLocale, useMessages } from '@numior/primitives';
 import { NuiAlert, NuiButton, NuiEmpty, NuiList, type NuiListEntry } from '@numior/vue';
 import { computed } from 'vue';
-import { collabMessages } from './collab.messages';
+import { useCollabTexts } from './use-collab-texts';
 import type { NuiEditorHistoryProps } from './collab.types';
 import NuiEditorAlternatives from './NuiEditorAlternatives.vue';
 import NuiEditorVersionPreview from './NuiEditorVersionPreview.vue';
 
 const { history, alternatives, labels } = defineProps<NuiEditorHistoryProps>();
 
-const messages = useMessages(collabMessages);
-const locale = useLocale();
-
-const text = computed(() => ({ ...messages.value, ...labels }));
-
-const formatter = computed(
-  () => new Intl.DateTimeFormat(locale.value, { dateStyle: 'short', timeStyle: 'medium' }),
-);
-
-const timeOf = (value: string): string => formatter.value.format(new Date(value));
+const { text, timeOf } = useCollabTexts(() => labels);
 
 const entries = computed<readonly NuiListEntry<string>[]>(() =>
   history.versions.value.map((version) => {

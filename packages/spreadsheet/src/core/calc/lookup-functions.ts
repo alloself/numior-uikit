@@ -7,6 +7,7 @@ import { compareExact, raise } from './coerce';
 import { wildcardSource } from './criteria';
 import { scalarOf } from './evaluate';
 import { defineFunction } from './registry';
+import { afterFirst, firstArgument } from './signatures';
 
 interface Grid {
   readonly rows: number;
@@ -307,6 +308,8 @@ const slice = (value: EvalValue, index: number, horizontal: boolean): EvalValue 
     : buildArray({ rows: 1, cols: grid.cols }, (_row, col) => grid.at(index, col));
 };
 
+const lookupResults = (index: number): boolean => index === 2 || index === 3;
+
 const xlookup = (args: FunctionArgs): EvalValue => {
   const source = args.value(1);
   const vector = vectorOf(source);
@@ -355,7 +358,10 @@ const tableOf = (args: FunctionArgs): EvalValue => {
     : { kind: EvalValueKind.Reference, sheet: table.sheet, range };
 };
 
-const indexAt = (args: FunctionArgs): EvalValue => {
+const referred = (args: FunctionArgs, value: EvalValue): EvalValue =>
+  value.kind === EvalValueKind.Reference ? args.refer(value.sheet, value.range) : value;
+
+const indexed = (args: FunctionArgs): EvalValue => {
   const table = tableOf(args);
   const grid = gridOf(table);
   const single = grid.rows === 1 && args.missing(2);
@@ -376,6 +382,8 @@ const indexAt = (args: FunctionArgs): EvalValue => {
   }
   return slice(slice(table, row - 1, false), col - 1, true);
 };
+
+const indexAt = (args: FunctionArgs): EvalValue => referred(args, indexed(args));
 
 const lookup = (args: FunctionArgs): EvalValue => {
   const wanted = wantedOf(args);
@@ -398,6 +406,7 @@ export const LOOKUP_FUNCTIONS: readonly FunctionSpec[] = [
     lift: [0],
     arrays: [1, 2],
     givesReference: true,
+    passesAt: lookupResults,
     evaluate: xlookup,
   }),
   defineFunction({
@@ -405,6 +414,7 @@ export const LOOKUP_FUNCTIONS: readonly FunctionSpec[] = [
     min: 2,
     max: 4,
     arrays: [0],
+    unreadAt: firstArgument,
     givesReference: true,
     evaluate: indexAt,
   }),
@@ -414,6 +424,7 @@ export const LOOKUP_FUNCTIONS: readonly FunctionSpec[] = [
     min: 2,
     max: MANY,
     givesReference: true,
+    passesAt: afterFirst,
     lift: [0],
     evaluate: (args) => {
       const index = Math.trunc(args.number(0));

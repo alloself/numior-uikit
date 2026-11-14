@@ -1,0 +1,76 @@
+# Вывод документа
+
+Готовый документ выводится без редактора, теми же стилями.
+
+<Example name="content/Basic" />
+
+На сервере `NuiContent` отдаёт готовый HTML, и страница показывает документ ещё до загрузки
+скриптов.
+
+## Установка
+
+Установите пакет:
+
+::: code-group
+
+```sh [pnpm]
+pnpm add @numior/content
+```
+
+```sh [npm]
+npm install @numior/content
+```
+
+```sh [yarn]
+yarn add @numior/content
+```
+
+```sh [bun]
+bun add @numior/content
+```
+
+:::
+
+Подключите стили в точке входа приложения:
+
+```ts
+import '@numior/content/styles.css';
+```
+
+Документ принимается в том виде, в каком его хранит редактор с `format="json"`. Перед выводом JSON
+проверяется по схеме, а ошибки приходят в событии `invalid`.
+
+## Показать таблицы, код и медиа
+
+Передайте в `views` компоненты для таблиц, блоков кода и медиа.
+
+<Example name="content/Views" />
+
+Таблица выводится так же, как в редакторе, с сортировкой и фильтрами автора. Для неё поставьте
+`@numior/table` и подключите `@numior/table/styles.css`.
+
+Вид картинки открывает её на весь экран по клику. Видео выводится окном, если его сервис
+перечислен в `embeds`, а без вида встраивания остаётся ссылкой.
+
+Виды лежат в отдельных точках входа: `@numior/content/table`, `@numior/content/code` и
+`@numior/content/media`. Импортируйте только нужные, и код остальных на страницу не попадёт.
+
+## Из HTML в документ
+
+Прочитайте старые описания в HTML через `fromHTML`:
+
+```ts
+import { contentSchema } from '@numior/content';
+import { fromHTML, toJSON } from '@numior/editor-core';
+
+const document = toJSON(fromHTML(contentSchema, product.descriptionHtml));
+```
+
+Теги, которых нет в схеме, снимаются, а их текст остаётся. Скрипты, обработчики событий и ссылки
+`javascript:` в документ не попадают.
+
+`renderContent(doc)` собирает из документа строку HTML без Vue, например для письма или RSS.
+
+## API
+
+<ApiReference name="NuiContent" />

@@ -30,16 +30,16 @@ const docs: DocsMap = {
         en: 'Node selection: `single` for one, `multiple` for several, `false` for none. Ignored with `checkable`.',
       },
       checkable: {
-        ru: 'Показывает чекбоксы. Отметка родителя отмечает всех потомков.',
-        en: 'Shows checkboxes. Checking a parent checks all its descendants.',
+        ru: 'Выбор с вложенными узлами: у узлов появляются флажки, выбор родителя выбирает всех потомков.',
+        en: 'Cascading selection: nodes get checkboxes, and selecting a parent selects all its descendants.',
       },
       icons: {
         ru: 'Показывает иконки папок и файлов у узлов без своей иконки.',
         en: 'Shows folder and file icons on nodes without their own icon.',
       },
       virtual: {
-        ru: 'Рисует только видимые строки, чтобы большое дерево не тормозило. Нужна `height`.',
-        en: 'Renders only the visible rows so a large tree stays fast. Needs `height`.',
+        ru: 'Рисует только видимые строки. Нужна `height`.',
+        en: 'Renders only the visible rows. Needs `height`.',
       },
       height: {
         ru: 'Высота дерева с прокруткой, например `20rem`.',
@@ -173,14 +173,14 @@ const docs: DocsMap = {
       {
         keys: 'Enter',
         description: {
-          ru: 'Выбирает узел. С выбором нескольких или `checkable` ставит или снимает отметку.',
+          ru: 'Выбирает узел. С выбором нескольких или `checkable` переключает его выбор.',
           en: 'Selects the node. With multiple selection or `checkable`, toggles it.',
         },
       },
       {
         keys: 'Space',
         description: {
-          ru: 'Выбирает узел. С выбором нескольких или `checkable` ставит или снимает отметку.',
+          ru: 'Выбирает узел. С выбором нескольких или `checkable` переключает его выбор.',
           en: 'Selects the node. With multiple selection or `checkable`, toggles it.',
         },
       },

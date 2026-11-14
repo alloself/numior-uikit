@@ -302,6 +302,14 @@ for (const file of await localImports(resolve('packages/spreadsheet/dist/xlsx/in
 
 await importBuild('collaboration', ['collab', 'createCollabClient', 'webSocketTransport']);
 
+const collaborationRoom = await import(
+  pathToFileURL(resolve('packages/collaboration/dist/room/index.js')).href
+);
+
+for (const key of ['createRoom', 'editorAuthority', 'createLoopback', 'parseClientMessage']) {
+  assert.ok(collaborationRoom[key], `collaboration/room must export ${key}`);
+}
+
 await importBuild('offline', ['openOfflineStore', 'deleteOfflineDocument']);
 
 for (const file of await localImports(resolve('packages/offline/dist/index.js'))) {

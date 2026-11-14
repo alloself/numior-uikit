@@ -70,11 +70,11 @@ export const rowFillInsets = (row: Locator): Promise<FillInsets> =>
     return { top: content.top - fill.top - divider, bottom: fill.bottom - content.bottom };
   });
 
-export const renderedWidth = async (target: Locator): Promise<number> =>
-  (await target.boundingBox())?.width ?? 0;
+export const renderedWidth = (target: Locator): Promise<number> =>
+  target.evaluate((element) => element.getBoundingClientRect().width);
 
-export const renderedHeight = async (target: Locator): Promise<number> =>
-  (await target.boundingBox())?.height ?? 0;
+export const renderedHeight = (target: Locator): Promise<number> =>
+  target.evaluate((element) => element.getBoundingClientRect().height);
 
 export const dragBy = async (handle: Locator, dx: number, dy: number): Promise<void> => {
   const { mouse } = handle.page();

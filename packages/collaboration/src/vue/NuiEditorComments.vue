@@ -20,23 +20,12 @@
 </template>
 
 <script setup lang="ts">
-import { useLocale, useMessages } from '@numior/primitives';
 import { NuiAlert, NuiEmpty } from '@numior/vue';
-import { computed } from 'vue';
-import { collabMessages } from './collab.messages';
+import { useCollabTexts } from './use-collab-texts';
 import type { NuiEditorCommentsProps } from './collab.types';
 import NuiEditorCommentThread from './NuiEditorCommentThread.vue';
 
 const { comments, labels } = defineProps<NuiEditorCommentsProps>();
 
-const messages = useMessages(collabMessages);
-const locale = useLocale();
-
-const text = computed(() => ({ ...messages.value, ...labels }));
-
-const formatter = computed(
-  () => new Intl.DateTimeFormat(locale.value, { dateStyle: 'short', timeStyle: 'short' }),
-);
-
-const timeOf = (value: string): string => formatter.value.format(new Date(value));
+const { text, timeOf } = useCollabTexts(() => labels);
 </script>

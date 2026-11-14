@@ -40,7 +40,7 @@
     <span
       class="nui-spreadsheet__fill-grip"
       aria-hidden="true"
-      @pointerdown="emit('grip', $event)"
+      :ref="press((event) => emit('grip', event))"
       @dblclick="emit('fill')"
     ></span>
   </span>
@@ -49,6 +49,7 @@
 <script setup lang="ts">
 import { tableRectStyle } from '@numior/table';
 import { computed } from 'vue';
+import { useSheetPress } from './sheet-presses';
 import type { SheetClipFrame, SheetMarksProps, ShownClip } from './sheet.types';
 
 const CLIP_EDGES = ['top', 'right', 'bottom', 'left'] as const;
@@ -68,6 +69,8 @@ const emit = defineEmits<{
   grip: [event: PointerEvent];
   fill: [];
 }>();
+
+const press = useSheetPress();
 
 const handleRect = computed(() => (handle === undefined ? undefined : rectOf(handle)));
 

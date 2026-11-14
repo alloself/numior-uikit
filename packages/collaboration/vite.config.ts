@@ -15,6 +15,7 @@ export default defineConfig({
         'vue/index': fileURLToPath(new URL('./src/vue/index.ts', import.meta.url)),
         'spreadsheet/index': fileURLToPath(new URL('./src/spreadsheet/index.ts', import.meta.url)),
         'yjs/index': fileURLToPath(new URL('./src/yjs/index.ts', import.meta.url)),
+        'room/index': fileURLToPath(new URL('./src/room/index.ts', import.meta.url)),
       },
       formats: ['es'],
       fileName: (_format, name) => `${name}.js`,

@@ -2,6 +2,8 @@ import { expect, test } from '../fixtures';
 import { expectRgb } from '../helpers/color';
 import { boxOf } from '../helpers/geometry';
 
+const SECTION_TOP = 80;
+
 test('the sidebar navigates, marks the current page and the contents follow the scroll', async ({
   docs,
   page,
@@ -120,6 +122,16 @@ test('the contents stay in place when the footer scrolls into view', async ({ do
 
   await expect(docs.footer).toBeInViewport({ ratio: 0.99 });
   expect(await docs.tocTop()).toBe(top);
+});
+
+test('a link to a section of another page keeps the section at the top while the page loads', async ({
+  docs,
+}) => {
+  await docs.open('/editor/collaboration');
+
+  await docs.follow('Spreadsheet');
+
+  await expect.poll(() => docs.sectionTop('Совместная работа')).toBe(SECTION_TOP);
 });
 
 test('the sidebar scrolls to the page that is open', async ({ docs, isMobile }) => {
@@ -252,4 +264,15 @@ test('the icon page finds an icon by its Lucide name and copies the name compone
 
   await docs.copyIconName('warning').click();
   await expect.poll(() => docs.copiedTexts()).toEqual(['warning']);
+});
+
+test('signatures stand apart from each other and carry no import line', async ({ docs }) => {
+  await docs.open('/composables/toast');
+  await expect(docs.heading).toHaveText('useToast');
+
+  const gaps = await docs.codeGaps();
+
+  expect(gaps.length).toBeGreaterThan(2);
+  expect(gaps.filter((gap) => gap < 12)).toEqual([]);
+  await expect(docs.article.locator('.nui-code__title')).toHaveCount(0);
 });

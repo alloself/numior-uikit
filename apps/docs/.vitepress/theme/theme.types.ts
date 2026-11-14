@@ -229,6 +229,7 @@ export interface ScreenState {
 
 export interface HomeScreenProps {
   src: string;
+  height: number;
   texts: DocsTexts;
 }
 

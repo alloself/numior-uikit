@@ -32,8 +32,8 @@ const docs: DocsMap = {
         en: 'Keeps the tooltip from showing on hover and on focus, and drops `aria-describedby` from the trigger.',
       },
       anchor: {
-        ru: 'Элемент-триггер вместо слота `trigger`. Объект `{ within, selector }` даёт одну подсказку всем элементам по селектору внутри `within` или слота. Между соседними она переходит без задержки.',
-        en: 'Trigger element in place of the `trigger` slot. An object `{ within, selector }` gives one tooltip to every match inside `within` or the slot. It moves between neighbors without a delay.',
+        ru: 'Элемент-триггер вместо слота `trigger`. Объект `{ within, selector, when }` даёт одну подсказку всем элементам по селектору внутри `within` или слота. Между соседними она переходит без задержки, а цели, для которых `when` вернёт `false`, пропускает.',
+        en: 'Trigger element in place of the `trigger` slot. An object `{ within, selector, when }` gives one tooltip to every match inside `within` or the slot. It moves between neighbors without a delay and passes over the targets `when` returns `false` for.',
       },
       shortcut: {
         ru: 'Сочетание клавиш после текста, например `mod+s`. Функция получает элемент-цель из `anchor` и возвращает его сочетание.',

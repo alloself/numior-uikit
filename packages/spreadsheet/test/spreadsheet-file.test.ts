@@ -97,6 +97,14 @@ describe('NuiSpreadsheet file', () => {
     expect(back.text(1, 1)).toBe('7');
   });
 
+  it('names a clipped file in a tooltip of the kit and stays quiet over a whole name', async () => {
+    const { sheet } = await salesSheet({ fileName: 'Quarterly sales by region and store.xlsx' });
+
+    expect(sheet.fileTitles).toEqual([]);
+    expect(await sheet.fileNameHint(false)).toBe('');
+    expect(await sheet.fileNameHint(true)).toBe('Quarterly sales by region and store.xlsx');
+  });
+
   it('marks unsaved edits and clears the mark after a save', async () => {
     const saved: NuiSpreadsheetSaved[] = [];
     const { sheet } = await salesSheet({ saveFile: savedInto(saved) });

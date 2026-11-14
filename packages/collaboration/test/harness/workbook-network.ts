@@ -16,7 +16,7 @@ import {
   type WorkbookHistory,
   type WorkbookStep,
 } from '@numior/spreadsheet/core';
-import { createRoom } from '../../server/room';
+import { createRoom } from '../../src/room';
 import { createCollabClient, type CollabClient } from '../../src';
 import { RETRY, createTraffic, createWire, mendAll, settleAll, type NetworkTraffic } from './wire';
 

@@ -58,10 +58,26 @@
   inline-size: calc(1em + 1px);
 }
 
+.nui-chart__scene {
+  position: relative;
+  inline-size: fit-content;
+  direction: ltr;
+}
+
 .nui-chart__svg {
   display: block;
+  max-inline-size: 100%;
+  block-size: auto;
   overflow: visible;
-  direction: ltr;
+}
+
+.nui-chart__labels {
+  --_unit: calc(100cqi / var(--_scene-width));
+
+  position: absolute;
+  inset: 0;
+  container-type: inline-size;
+  pointer-events: none;
 }
 
 .nui-chart__line {
@@ -314,14 +330,39 @@
 }
 
 .nui-chart__text {
-  fill: currentColor;
-  font-size: var(--_text-size);
-  font-variant-numeric: tabular-nums;
+  --_shift-x: 0%;
+  --_shift-y: 0%;
+  --_rotate: 0deg;
+
+  position: absolute;
+  inset-block-start: calc(var(--_y) * var(--_unit));
+  inset-inline-start: calc(var(--_x) * var(--_unit));
+  font-size: calc(var(--_font-size) * var(--_unit));
+  line-height: 1;
+  white-space: pre;
+  transform: rotate(var(--_rotate)) translate(var(--_shift-x), var(--_shift-y));
+  transform-origin: 0 0;
+}
+
+.nui-chart__text--anchor-middle {
+  --_shift-x: -50%;
+}
+
+.nui-chart__text--anchor-end {
+  --_shift-x: -100%;
+}
+
+.nui-chart__text--baseline-middle {
+  --_shift-y: -50%;
+}
+
+.nui-chart__text--baseline-bottom {
+  --_shift-y: -100%;
 }
 
 .nui-chart__text--value-title,
 .nui-chart__text--category-title {
-  fill: var(--nui-text);
+  color: var(--nui-text);
   font-weight: 500;
 }
 

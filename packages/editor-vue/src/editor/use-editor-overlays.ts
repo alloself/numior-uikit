@@ -55,9 +55,32 @@ const wholeText = (doc: Doc): SelectionRange | undefined => {
   return from === undefined || to === undefined ? undefined : { from, to };
 };
 
-const shownRange = ({ doc, selection }: EditorState): SelectionRange =>
-  (selection.kind === SelectionKind.All ? wholeText(doc) : undefined) ??
-  selectionRange(doc, selection);
+const visibleText = (doc: Doc, { from, to }: SelectionRange): SelectionRange => {
+  if (from >= to) {
+    return { from, to };
+  }
+
+  const start = doc.resolve(from);
+  const end = doc.resolve(to);
+  const startsAtLineEnd = from === start.end(start.depth);
+  const endsAtLineStart = to === end.start(end.depth);
+
+  return {
+    from: startsAtLineEnd ? (textPosition(doc, from + 1, 1) ?? from) : from,
+    to: endsAtLineStart ? (textPosition(doc, to - 1, -1) ?? to) : to,
+  };
+};
+
+const shownRange = ({ doc, selection }: EditorState): SelectionRange => {
+  switch (selection.kind) {
+    case SelectionKind.All:
+      return wholeText(doc) ?? selectionRange(doc, selection);
+    case SelectionKind.Text:
+      return visibleText(doc, selectionRange(doc, selection));
+    default:
+      return selectionRange(doc, selection);
+  }
+};
 
 const isRange = (state: EditorState): boolean => {
   const { kind } = state.selection;
@@ -109,8 +132,9 @@ export const useEditorOverlays = (options: EditorOverlayOptions): EditorOverlays
     ) {
       return;
     }
-    const left = Math.min(start.left, end.left);
-    const right = Math.max(start.right, end.right);
+    const wrapped = end.top > (start.top + start.bottom) / 2;
+    const left = wrapped ? port.left : Math.min(start.left, end.left);
+    const right = wrapped ? port.right : Math.max(start.right, end.right);
     const top = Math.min(Math.max(start.top, port.top), port.bottom);
     const bottom = Math.max(Math.min(end.bottom, port.bottom), top);
 

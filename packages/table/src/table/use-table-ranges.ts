@@ -7,8 +7,13 @@ import {
   type Ref,
   type WatchSource,
 } from 'vue';
-import { useEventListener } from '@vueuse/core';
-import { Key, PointerType, useEdgeScroll, type EdgePoint } from '@numior/primitives';
+import {
+  Key,
+  PointerType,
+  useEdgeScroll,
+  usePointerSession,
+  type EdgePoint,
+} from '@numior/primitives';
 import {
   allOf,
   boxOf,
@@ -212,6 +217,8 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   let cache = new Map<number, TableRowRanges | undefined>();
   let cachedFor: NuiTableRanges = options.ranges.value;
   let cachedOffset = options.offset();
+
+  const pointer = usePointerSession();
 
   const latest = (): NuiTableRanges => pending ?? options.ranges.value;
 
@@ -452,21 +459,11 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     edge.follow(edgePoint(current.lines));
   };
 
-  const detach = (): void => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    window.removeEventListener('pointermove', onMove);
-    window.removeEventListener('pointerup', onUp);
-    window.removeEventListener('pointercancel', finish);
-  };
-
   const finish = (): void => {
     session = undefined;
     dragging.value = false;
     edge.stop();
-    detach();
+    pointer.end();
   };
 
   const onUp = (event: PointerEvent): void => {
@@ -608,9 +605,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     }
     session = { ...begun, pointerId: event.pointerId, x: event.clientX, y: event.clientY };
     point = { x: event.clientX, y: event.clientY };
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', onUp);
-    window.addEventListener('pointercancel', finish);
+    pointer.begin({ move: onMove, up: onUp, cancel: finish });
   };
 
   const onDblclick = (event: MouseEvent): void => {
@@ -708,7 +703,9 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   };
 
   const onOutside = (event: PointerEvent): void => {
-    if (!(event.target instanceof Node) || options.inside(event.target)) {
+    const target = options.ranges.value.length > 0 ? event.target : null;
+
+    if (!(target instanceof Node) || options.inside(target)) {
       return;
     }
 
@@ -791,12 +788,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
 
   onScopeDispose(finish);
 
-  useEventListener(
-    () => (options.ranges.value.length > 0 ? document : undefined),
-    'pointerdown',
-    onOutside,
-    { capture: true, passive: true },
-  );
+  usePointerSession({ capture: true }).begin({ down: onOutside });
 
   const keepsMenuFocus = (event: MouseEvent): boolean => {
     const start = event.button === 2 && options.enabled() ? startOf(event.target) : undefined;

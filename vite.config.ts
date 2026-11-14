@@ -9,6 +9,13 @@ export default defineConfig({
   ssr: { resolve: { conditions: ['@numior/source'] } },
   test: {
     server: { deps: { inline: [/^@numior\//] } },
+    tags: [
+      {
+        name: 'budget',
+        description:
+          'Holds a time budget: runs uninstrumented in test:budget, left out of coverage.',
+      },
+    ],
     projects: [
       {
         extends: true,
@@ -137,8 +144,11 @@ export default defineConfig({
           output: ['node_modules/.cache/vue-dts/**'],
         },
       },
+      'test:budget': {
+        command: 'vp test run --tags-filter=budget',
+      },
       'test:coverage': {
-        command: 'vp test run --coverage',
+        command: 'vp test run --coverage --tags-filter=!budget',
         cache: {
           input: [{ auto: true }, '!node_modules/.cache/coverage/**'],
           output: ['node_modules/.cache/coverage/coverage-final.json'],

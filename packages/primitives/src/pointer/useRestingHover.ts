@@ -1,6 +1,7 @@
 import { useEventListener } from '@vueuse/core';
 import { shallowRef, toValue, type MaybeRefOrGetter, type ShallowRef } from 'vue';
 import { PointerType } from './pointer.types';
+import { usePointerSession } from './usePointerSession';
 
 export interface RestingHover {
   readonly hovered: Readonly<ShallowRef<boolean>>;
@@ -21,15 +22,12 @@ export const useRestingHover = (
   target: MaybeRefOrGetter<HTMLElement | null | undefined>,
 ): RestingHover => {
   const hovered = shallowRef(false);
-  const resting = shallowRef(false);
+  const page = usePointerSession({ capture: true });
 
   let last: Spot | undefined;
 
-  const page = (): HTMLElement | undefined =>
-    resting.value ? toValue(target)?.ownerDocument.documentElement : undefined;
-
   const end = (): void => {
-    resting.value = false;
+    page.end();
     last = undefined;
     hovered.value = false;
   };
@@ -37,7 +35,7 @@ export const useRestingHover = (
   const settle = (event: PointerEvent): void => {
     const over = event.target;
 
-    resting.value = false;
+    page.end();
 
     if (over instanceof Node && toValue(target)?.contains(over) === true) {
       return;
@@ -46,11 +44,19 @@ export const useRestingHover = (
     end();
   };
 
+  const onPageMove = (event: PointerEvent): void => {
+    if (isAt(event, last)) {
+      return;
+    }
+
+    settle(event);
+  };
+
   useEventListener(
     target,
     'pointerenter',
     (event) => {
-      resting.value = false;
+      page.end();
       last = spotOf(event);
       hovered.value = true;
     },
@@ -71,7 +77,7 @@ export const useRestingHover = (
     'pointerleave',
     (event) => {
       if (event.pointerType === PointerType.Mouse && isAt(event, last)) {
-        resting.value = true;
+        page.begin({ move: onPageMove, down: settle });
         return;
       }
 
@@ -79,21 +85,6 @@ export const useRestingHover = (
     },
     { passive: true },
   );
-
-  useEventListener(
-    page,
-    'pointermove',
-    (event) => {
-      if (isAt(event, last)) {
-        return;
-      }
-
-      settle(event);
-    },
-    { capture: true, passive: true },
-  );
-
-  useEventListener(page, 'pointerdown', settle, { capture: true, passive: true });
 
   return { hovered, end };
 };

@@ -5,6 +5,16 @@ export { InputType } from './input/input.types';
 export { PointerType } from './pointer/pointer.types';
 export { useRestingHover } from './pointer/useRestingHover';
 export type { RestingHover } from './pointer/useRestingHover';
+export { usePointerSession } from './pointer/usePointerSession';
+export { createPressTargets, pressRefOf, usePressTarget } from './pointer/usePressTargets';
+export type {
+  PointerHandler,
+  PointerSession,
+  PointerSessionHandlers,
+  PointerSessionOptions,
+  PressRef,
+  PressTargets,
+} from './pointer/pointer.types';
 export {
   FIELD_KEY,
   createFieldContext,

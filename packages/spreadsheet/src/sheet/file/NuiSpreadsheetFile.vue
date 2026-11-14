@@ -1,11 +1,16 @@
 <template>
   <div v-if="bar" class="nui-spreadsheet__file">
-    <p class="nui-spreadsheet__file-name" :title="file.name.value">
-      <span class="nui-spreadsheet__file-text">{{ file.name.value }}</span>
-      <span v-if="file.edited.value" class="nui-spreadsheet__file-edited">
-        {{ messages.fileEdited }}
-      </span>
-    </p>
+    <NuiTooltip :anchor="CLIPPED_NAME">
+      <template #trigger="{ attrs }">
+        <p v-bind="attrs" class="nui-spreadsheet__file-name">
+          <span class="nui-spreadsheet__file-text">{{ file.name.value }}</span>
+          <span v-if="file.edited.value" class="nui-spreadsheet__file-edited">
+            {{ messages.fileEdited }}
+          </span>
+        </p>
+      </template>
+      {{ file.name.value }}
+    </NuiTooltip>
     <span v-if="reading" class="nui-spreadsheet__file-progress">
       <NuiProgress size="sm" :value="percent" :max="100" :label="messages.fileReading" />
       <NuiButton size="xs" variant="ghost" tone="neutral" @click="file.cancel">
@@ -69,8 +74,17 @@
 
 <script setup lang="ts">
 import { FolderOpen, Save } from '@lucide/vue';
-import { NuiAlert, NuiButton, NuiDialog, NuiIcon, NuiProgress } from '@numior/vue';
+import {
+  NuiAlert,
+  NuiButton,
+  NuiDialog,
+  NuiIcon,
+  NuiProgress,
+  NuiTooltip,
+  type NuiTooltipTargets,
+} from '@numior/vue';
 import { computed, markRaw, useTemplateRef } from 'vue';
+import { hasClippedText } from '../clipped-text';
 import type { NuiSpreadsheetMessages } from '../spreadsheet.messages';
 import {
   FileAskKind,
@@ -86,6 +100,11 @@ interface FileDialog {
   readonly confirm: string;
   readonly lines: readonly string[];
 }
+
+const CLIPPED_NAME: NuiTooltipTargets = {
+  selector: '.nui-spreadsheet__file-name',
+  when: (name) => hasClippedText(name, '.nui-spreadsheet__file-text'),
+};
 
 const OPEN_ICON = markRaw(FolderOpen);
 

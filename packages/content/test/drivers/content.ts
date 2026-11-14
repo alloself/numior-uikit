@@ -182,6 +182,16 @@ export class ContentDriver {
     });
   }
 
+  get framePermissions(): readonly string[] {
+    return this.wrapper
+      .findAll('.nui-content__embed iframe')
+      .map((frame) =>
+        frame.attributes('allowfullscreen') === undefined
+          ? (frame.attributes('allow') ?? '')
+          : 'allowfullscreen',
+      );
+  }
+
   get captions(): readonly string[] {
     return this.wrapper
       .findAll('.nui-content__image .nui-content__caption')

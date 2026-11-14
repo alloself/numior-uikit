@@ -243,7 +243,7 @@ describe('NuiEditor links, colours and bubble', () => {
       'Strikethrough',
       'Inline code',
       'Link',
-      'Colour',
+      'Color',
     ]);
 
     await editor.press('F10', { alt: true });
@@ -272,10 +272,33 @@ describe('NuiEditor links, colours and bubble', () => {
     expect(editor.focused).toBe(true);
   });
 
+  it('names a block type of the bubble in a tooltip of the kit, not a native one', async () => {
+    const editor = mounted({ document: page('Hello world'), toolbar: 'bubble' });
+
+    editor.focus();
+    await editor.select(1, 6);
+
+    expect(await editor.blockHint('Heading 2')).toBe('Heading 2');
+    expect(editor.blockOptionTitles).toEqual([]);
+  });
+
   it('keeps the block type out of the header while the bubble offers it', async () => {
     restoreMedia = installMouse();
 
     const editor = mounted({ document: page('Hello world'), toolbar: 'both' });
+
+    expect(editor.headerTools.slice(0, 4)).toEqual(['Insert', 'Undo', 'Redo', 'Bold']);
+
+    editor.focus();
+    await editor.select(1, 6);
+
+    expect(editor.bubbleTools[0]).toBe('Block type: Text');
+  });
+
+  it('shows both bars with the block type over the selection when no mode is given', async () => {
+    restoreMedia = installMouse();
+
+    const editor = mounted({ document: page('Hello world') });
 
     expect(editor.headerTools.slice(0, 4)).toEqual(['Insert', 'Undo', 'Redo', 'Bold']);
 

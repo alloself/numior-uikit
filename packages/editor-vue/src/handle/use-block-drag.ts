@@ -6,7 +6,7 @@ import {
   type Command,
 } from '@numior/editor-core';
 import type { EditorView } from '@numior/editor-core/view';
-import { Key, useEdgeScroll } from '@numior/primitives';
+import { Key, useEdgeScroll, usePointerSession } from '@numior/primitives';
 import { computed, onScopeDispose, shallowRef, type ComputedRef, type Ref } from 'vue';
 import { COLUMN_TYPES } from '../blocks/columns/columns';
 import {
@@ -160,11 +160,11 @@ export const useBlockDrag = (options: BlockDragOptions): BlockDrag => {
     },
   });
 
+  const pointer = usePointerSession();
+
   const finish = (): void => {
     edge.stop();
-    window.removeEventListener('pointermove', onPointermove);
-    window.removeEventListener('pointerup', onPointerup);
-    window.removeEventListener('pointercancel', finish);
+    pointer.end();
     window.removeEventListener('keydown', onKeydown);
     lift(undefined);
     placeLine(undefined);
@@ -256,9 +256,7 @@ export const useBlockDrag = (options: BlockDragOptions): BlockDrag => {
         target: undefined,
       };
 
-      window.addEventListener('pointermove', onPointermove);
-      window.addEventListener('pointerup', onPointerup);
-      window.addEventListener('pointercancel', finish);
+      pointer.begin({ move: onPointermove, up: onPointerup, cancel: finish });
       window.addEventListener('keydown', onKeydown);
     },
   };

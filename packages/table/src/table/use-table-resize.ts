@@ -8,7 +8,7 @@ import {
   type NuiTableColumnResize,
   type NuiTableWidths,
 } from './table.types';
-import { Key } from '@numior/primitives';
+import { Key, usePointerSession } from '@numior/primitives';
 
 export interface TableResizeOptions<T> {
   readonly widths: Ref<NuiTableWidths>;
@@ -74,6 +74,7 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
   const session = shallowRef<ResizeSession>();
   const active = computed(() => session.value?.key);
   const latest: Latest = { width: 0, partner: undefined };
+  const pointer = usePointerSession();
 
   const resizable = (key: string): boolean => options.columnAt(key).resizable !== false;
 
@@ -123,20 +124,10 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
     apply(current, (event.clientX - current.origin) * current.sign);
   };
 
-  const detach = (): void => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    window.removeEventListener('pointermove', onMove);
-    window.removeEventListener('pointerup', stop);
-    window.removeEventListener('pointercancel', stop);
-  };
-
   const stop = (): void => {
     const current = session.value;
 
-    detach();
+    pointer.end();
     session.value = undefined;
 
     if (current === undefined) {
@@ -156,7 +147,7 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
     const layout = options.layout();
     const placed = placedOf(layout, key);
 
-    if (event.button !== 0 || typeof window === 'undefined' || placed === undefined) {
+    if (event.button !== 0 || placed === undefined) {
       return;
     }
     event.preventDefault();
@@ -175,9 +166,7 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
       partner: fits ? partnerOf(layout, placed) : undefined,
     };
 
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', stop);
-    window.addEventListener('pointercancel', stop);
+    pointer.begin({ move: onMove, up: stop, cancel: stop });
   };
 
   const onKeydown = (key: string, event: KeyboardEvent): boolean => {

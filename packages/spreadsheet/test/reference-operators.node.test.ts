@@ -27,8 +27,35 @@ const filled = (): Book => {
   }
 
   book.name('Rate', '=Sheet1!$B$2');
+  book.name('Here', '=Sheet1!$C$3');
+  book.name('HereValue', '=Sheet1!$C$3+0');
+  book.name('HereBox', '=Sheet1!$B$1:$C$5 Sheet1!$C$3');
   return book;
 };
+
+const tabled = (): Book => {
+  const book = openBook();
+
+  book.type('A1', 'Key');
+  book.type('B1', 'Num');
+  book.type('C1', 'Val');
+  for (let row = 2; row <= 5; row += 1) {
+    book.type(`A${String(row)}`, `k${String(row)}`);
+    book.type(`B${String(row)}`, String(row));
+  }
+  book.table('A1:C5', { name: 'Table1' });
+  return book;
+};
+
+const settledIn = (book: Book, text: string): string => {
+  book.type('C3', text);
+  book.shown('C3');
+  book.calculator.setLocale(book.calculator.locale);
+  return book.shown('C3');
+};
+
+const stateOf = (book: Book): string | undefined =>
+  book.calculator.formulaAt(book.first, 2, 2)?.state;
 
 const shownFor = (book: Book, text: string): string => {
   book.type('H1', text);
@@ -165,6 +192,10 @@ describe('reference operators in a formula', () => {
     ['=SUM((A1:C5 C1:C5) B2:C2)', '23'],
     ['=SUM(OFFSET(A1,0,0,5,3) A2:B2)', '43'],
     ['=@B1:INDEX(B1:B5,2)', '#VALUE!'],
+    ['=AREAS((B3,C3))', '2'],
+    ['=SUM(INDEX((B2:B4,C1:C5),1,1,1))', '22'],
+    ['=ISREF(B1:C5 C3)', 'TRUE'],
+    ['=ROWS(A1:C2:C5)', '5'],
   ])('reads %s inside its own operands without a circular reference', (text, value) => {
     const book = filled();
 
@@ -173,6 +204,160 @@ describe('reference operators in a formula', () => {
     book.calculator.setLocale(book.calculator.locale);
 
     expect(book.shown('C3')).toBe(value);
+  });
+
+  it.each([
+    ['=ROWS($C$1:C3)', '3'],
+    ['=ROW(C3)', '3'],
+    ['=COLUMN(C1:C5)', '3'],
+    ['=COLUMNS(A3:C3)', '3'],
+    ['=ISREF(C3)', 'TRUE'],
+    ['=AREAS(C3)', '1'],
+    ['=INDEX(B1:C5,3,1)', '32'],
+    ['=SUM(INDEX(B1:C5,0,1))', '160'],
+    ['=MATCH(32,INDEX(B1:C5,0,1),0)', '3'],
+    ['=INDEX(B1:C5,ROWS($C$1:C3),1)', '32'],
+    ['=OFFSET(C3,0,-1)', '32'],
+    ['=OFFSET(C3,-1,0)+1', '24'],
+    ['=SUM(OFFSET(B1,0,0,ROWS($C$1:C3)))', '66'],
+    ['=ISREF(INDEX(C1:C5,3))', 'TRUE'],
+    ['=ROWS((B1:C5 C3,B1))', '#REF!'],
+    ['=ROWS(IF(TRUE,C3,B1))', '1'],
+    ['=ROWS(IFS(TRUE,C3))', '1'],
+    ['=ROWS(SWITCH(1,1,C3))', '1'],
+    ['=ROWS(SWITCH(2,1,B1,C3))', '1'],
+    ['=ROWS(CHOOSE(1,C3,B1))', '1'],
+    ['=ROWS(XLOOKUP(32,B3,C3))', '1'],
+    ['=INDEX(IF(TRUE,B1:C5),3,1)', '32'],
+    ['=AREAS(CHOOSE(1,(B3,C3)))', '2'],
+    ['=ROWS(C3:C3)', '1'],
+    ['=ROWS(@C3)', '1'],
+    ['=ROWS(Here)', '1'],
+    ['=ROW(Here)', '3'],
+    ['=ISREF(Here)', 'TRUE'],
+    ['=ROWS(HereBox)', '1'],
+    ['=ROWS(INDEX(Here,1))', '1'],
+    ['=OFFSET(Here,0,-1)', '32'],
+    ['=ISREF(IF(TRUE,Here))', 'TRUE'],
+    ['=ROWS(IF(TRUE,INDEX(C1:C5,3)))', '1'],
+    ['=ROWS(CHOOSE(1,OFFSET(C3,0,0)))', '1'],
+  ])('computes %s in a cell it names but does not read', (text, value) => {
+    const book = filled();
+
+    expect(settledIn(book, text)).toBe(value);
+    expect(stateOf(book)).not.toBe('cycle');
+  });
+
+  it.each([
+    '=INDEX(C1:C5,3)',
+    '=COUNT(INDEX(A1:C5,3,0))',
+    '=SUM(OFFSET(A1,2,2))',
+    '=SUM(OFFSET(A1,0,0,5,3))',
+    '=ROWS(INDEX(C1:C5,3)+1)',
+    '=ROWS((INDEX(C1:C5,3)+1)*2)',
+    '=ROWS((B1:C5 C3)+1)',
+    '=ROWS(OFFSET(C3,0,0)+1)',
+    '=ROWS(IF(C3>0,B1))',
+    '=ROWS(SWITCH(C3,1,B1,B2))',
+    '=ROWS(SWITCH(1,C3,B1,B2))',
+    '=ROWS(IFS(C3>0,B1))',
+    '=ROWS(IFS(FALSE,B1,C3,B2))',
+    '=ROWS(IF(C3,B1))',
+    '=ROWS(CHOOSE(C3,B1,B2))',
+    '=ROWS(XLOOKUP(1,C3,B1))',
+    '=ROWS(IFERROR(C3,1))',
+    '=ROWS(IFNA(C3,1))',
+    '=ROWS(TRANSPOSE(C3))',
+    '=ROWS(-C3)',
+    '=ROWS(HereValue)',
+    '=ROWS(IF(TRUE,Here)+1)',
+    '=ROWS(CHOOSE({1;2},C3,B1))',
+    '=INDEX(IF({TRUE;FALSE},C3:C4,B1:B2),1)',
+    '=ROWS(Here)+Here',
+    '=Here+ROWS(Here)',
+  ])('keeps %s a circular reference since it reads its own cell', (text) => {
+    const book = filled();
+
+    settledIn(book, text);
+
+    expect(stateOf(book)).toBe('cycle');
+  });
+
+  it.each([
+    ['=ROW([@Val])', '3'],
+    ['=ROWS(Table1[[#Headers],[Val]]:[@Val])', '3'],
+    ['=ROWS(Table1[Val])', '4'],
+    ['=ISREF([@Val])', 'TRUE'],
+    ['=COLUMNS(Table1[@])', '3'],
+    ['=ROWS(INDEX(Table1[Val],2))', '1'],
+    ['=ROWS(IF(TRUE,Table1[Val]))', '4'],
+    ['=SUM(Table1[Num])', '14'],
+  ])('computes %s in its own table column without a circular reference', (text, value) => {
+    const book = tabled();
+
+    expect(settledIn(book, text)).toBe(value);
+    expect(stateOf(book)).not.toBe('cycle');
+  });
+
+  it('keeps a sum of its own table column a circular reference', () => {
+    const book = tabled();
+
+    settledIn(book, '=SUM(Table1[Val])');
+
+    expect(stateOf(book)).toBe('cycle');
+  });
+
+  it('counts the rows of its own table column again when the table grows', () => {
+    const book = tabled();
+
+    book.type('C3', '=ROWS(Table1[Val])');
+
+    expect(book.shown('C3')).toBe('4');
+
+    book.insert('4');
+
+    expect(book.shown('C3')).toBe('5');
+  });
+
+  it('recalculates a value an array condition picks from the cells IF passes on', () => {
+    const book = filled();
+
+    book.type('H1', '=INDEX(IF({TRUE;FALSE},C1:C2,B1:B2),1)');
+
+    expect(book.shown('H1')).toBe('13');
+
+    book.type('C1', '5');
+
+    expect(book.shown('H1')).toBe('5');
+  });
+
+  it('recalculates the cell INDEX gives back when that cell changes', () => {
+    const book = filled();
+
+    book.type('G1', '2');
+    book.type('H1', '=INDEX(B1:C5,G1,1)');
+
+    expect(book.shown('H1')).toBe('22');
+
+    book.type('G1', '4');
+
+    expect(book.shown('H1')).toBe('42');
+
+    book.type('B4', '7');
+
+    expect(book.shown('H1')).toBe('7');
+  });
+
+  it('recalculates the cell OFFSET gives back when that cell changes', () => {
+    const book = filled();
+
+    book.type('H1', '=OFFSET(C3,0,-1)');
+
+    expect(book.shown('H1')).toBe('32');
+
+    book.type('B3', '5');
+
+    expect(book.shown('H1')).toBe('5');
   });
 
   it('recalculates an intersection and a union when a cell they give changes', () => {

@@ -44,6 +44,14 @@ const ru: HomeContent = {
       title: 'Документ собирается из блоков',
       text: 'Наберите «/», и в текст встанет таблица, выноска или колонки.',
       block: 'ProductDescription',
+      more: { text: 'Открыть редактор', link: '/editor/' },
+    },
+    {
+      label: 'Совместная работа',
+      title: 'Документ правят несколько человек',
+      text: 'Каждый видит курсоры соавторов. Правки, сделанные без связи, уходят на сервер, когда она вернётся.',
+      block: 'CoEditing',
+      more: { text: 'Открыть совместную работу', link: '/editor/collaboration' },
     },
     {
       label: 'Книга',
@@ -99,6 +107,14 @@ const en: HomeContent = {
       title: 'A document is built from blocks',
       text: 'Type "/" and a table, a callout, or columns drop into the text.',
       block: 'ProductDescription',
+      more: { text: 'Open the editor', link: '/en/editor/' },
+    },
+    {
+      label: 'Collaboration',
+      title: 'Several people edit one document',
+      text: 'Everyone sees the carets of the others. Edits made offline go to the server once the connection is back.',
+      block: 'CoEditing',
+      more: { text: 'Open collaboration', link: '/en/editor/collaboration' },
     },
     {
       label: 'Spreadsheet',

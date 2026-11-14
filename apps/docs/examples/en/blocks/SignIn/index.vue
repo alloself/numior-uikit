@@ -62,7 +62,7 @@ const passwordRules = [required(), min(8)];
 const toast = useToast();
 
 const form = useForm({
-  initialValues: { email: team[0]?.email ?? '', password: '', remember: true },
+  initialValues: { email: team[0].email, password: '', remember: true },
   onSubmit: async (values) => {
     await promiseTimeout(600);
 

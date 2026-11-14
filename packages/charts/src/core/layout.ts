@@ -83,6 +83,8 @@ interface Frame {
   readonly span: readonly [number, number] | undefined;
 }
 
+export const CHART_FONT_SIZE = 12;
+
 const PADDING = 4;
 
 const TICK_GAP = 8;
@@ -425,7 +427,7 @@ const frameOf = (
 ): Frame => {
   const { spec, facts } = base;
   const locale = options.locale ?? 'en';
-  const fontSize = options.fontSize ?? 12;
+  const fontSize = options.fontSize ?? CHART_FONT_SIZE;
   const domain = domainOf(spec, facts, ticks);
   const largest = Math.max(Math.abs(domain.min), Math.abs(domain.max));
 

@@ -1,10 +1,14 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import type { ComponentEntry } from './reference.types.ts';
+import type { ComponentEntry, FlatFamily } from './reference.types.ts';
 
 const COMPONENT_EXPORT_RE = /export \{ default as (Nui\w+) \} from '(\.\/[^']+\.vue)';/g;
 
-export const componentEntries = (indexFile: string, pkg: string): ComponentEntry[] => {
+export const componentEntries = (
+  indexFile: string,
+  pkg: string,
+  flat?: FlatFamily,
+): ComponentEntry[] => {
   const source = readFileSync(indexFile, 'utf8');
 
   return [...source.matchAll(COMPONENT_EXPORT_RE)].flatMap((match) => {
@@ -16,7 +20,11 @@ export const componentEntries = (indexFile: string, pkg: string): ComponentEntry
     const file = resolve(dirname(indexFile), path);
     const dir = dirname(file);
 
-    return [{ name, package: pkg, family: dirname(path).split('/').at(-1) ?? '', file, dir }];
+    return [
+      flat === undefined
+        ? { name, package: pkg, family: dirname(path).split('/').at(-1) ?? '', file, dir }
+        : { name, package: pkg, family: flat.family, file, dir, styles: flat.styles },
+    ];
   });
 };
 
@@ -29,4 +37,4 @@ export const familyFile = (entry: ComponentEntry, suffix: string): string | unde
 export const familyStyleImport = (entry: ComponentEntry): string | undefined =>
   familyFile(entry, '.css') === undefined
     ? undefined
-    : `${entry.package}/styles/${entry.family}.css`;
+    : (entry.styles ?? `${entry.package}/styles/${entry.family}.css`);

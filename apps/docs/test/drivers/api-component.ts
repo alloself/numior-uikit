@@ -56,6 +56,20 @@ export const referenceOf = (overrides: Partial<ComponentReference> = {}): Compon
   ...overrides,
 });
 
+const UNSEEN = '[role="tooltip"], .sr-only';
+
+const seenText = (cell: Element): string => {
+  const copy = cell.cloneNode(true);
+
+  if (!(copy instanceof Element)) {
+    return '';
+  }
+  for (const hidden of copy.querySelectorAll(UNSEEN)) {
+    hidden.remove();
+  }
+  return copy.textContent?.replaceAll(/\s+/gu, ' ').trim() ?? '';
+};
+
 export class ApiComponentDriver {
   constructor(readonly wrapper: VueWrapper) {}
 
@@ -93,10 +107,14 @@ export class ApiComponentDriver {
   rows(title: string): string[][] {
     return this.table(title)
       .findAll('.nui-table__body [role="row"]')
-      .map((row) => row.findAll('[role="gridcell"]').map((cell) => cell.text()));
+      .map((row) => row.findAll('[role="gridcell"]').map((cell) => seenText(cell.element)));
   }
 
   get requiredMarks(): string[] {
+    return this.wrapper.findAll('[role="gridcell"] [role="tooltip"]').map((mark) => mark.text());
+  }
+
+  get nativeTitles(): string[] {
     return this.wrapper
       .findAll('[role="gridcell"] [title]')
       .map((mark) => mark.attributes('title') ?? '');

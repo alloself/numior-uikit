@@ -1,0 +1,14 @@
+AddDefaultCharset utf-8
+AddCharset utf-8 .md .txt .xml
+AddType text/markdown .md
+AddType application/manifest+json .webmanifest
+
+ErrorDocument 404 /404.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME}.html -f
+  RewriteRule ^(.+)$ $1.html [L]
+</IfModule>

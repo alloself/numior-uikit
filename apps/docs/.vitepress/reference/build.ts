@@ -20,6 +20,7 @@ import type {
   ComponentReference,
   DocsMap,
   ReferenceBundle,
+  ReferenceEntry,
   ReferenceStyles,
 } from './reference.types.ts';
 
@@ -37,17 +38,43 @@ interface CollectedComponent {
   readonly problems: readonly string[];
 }
 
-const PACKAGES = [
-  { name: '@numior/vue', dir: 'packages/vue' },
-  { name: '@numior/forms', dir: 'packages/forms' },
-  { name: '@numior/table', dir: 'packages/table' },
-  { name: '@numior/content', dir: 'packages/content' },
-  { name: '@numior/editor-vue', dir: 'packages/editor-vue' },
-  { name: '@numior/spreadsheet', dir: 'packages/spreadsheet' },
-  { name: '@numior/charts', dir: 'packages/charts' },
-] as const;
+const packageEntry = (name: string, dir: string): ReferenceEntry => ({
+  name,
+  source: `${dir}/src/index.ts`,
+  types: `${dir}/dist/index.d.ts`,
+});
 
-const PRIMITIVES = { name: '@numior/primitives', dir: 'packages/primitives' } as const;
+const COLLABORATION = 'packages/collaboration';
+
+const ENTRIES: readonly ReferenceEntry[] = [
+  packageEntry('@numior/vue', 'packages/vue'),
+  packageEntry('@numior/forms', 'packages/forms'),
+  packageEntry('@numior/table', 'packages/table'),
+  packageEntry('@numior/content', 'packages/content'),
+  packageEntry('@numior/editor-vue', 'packages/editor-vue'),
+  packageEntry('@numior/spreadsheet', 'packages/spreadsheet'),
+  packageEntry('@numior/charts', 'packages/charts'),
+  packageEntry('@numior/collaboration', COLLABORATION),
+  {
+    name: '@numior/collaboration/vue',
+    source: `${COLLABORATION}/src/vue/index.ts`,
+    types: `${COLLABORATION}/dist/vue/index.d.ts`,
+    flat: { family: 'collab', styles: '@numior/collaboration/styles.css' },
+  },
+  {
+    name: '@numior/collaboration/room',
+    source: `${COLLABORATION}/src/room/index.ts`,
+    types: `${COLLABORATION}/dist/room/index.d.ts`,
+  },
+  {
+    name: '@numior/collaboration/yjs',
+    source: `${COLLABORATION}/src/yjs/index.ts`,
+    types: `${COLLABORATION}/dist/yjs/index.d.ts`,
+  },
+  packageEntry('@numior/offline', 'packages/offline'),
+];
+
+const PRIMITIVES = packageEntry('@numior/primitives', 'packages/primitives');
 
 const CHECKER_OPTIONS: MetaCheckerOptions = {
   forceUseTs: true,
@@ -133,7 +160,7 @@ const sceneSourceOf =
   };
 
 const allEntries = (root: string): ComponentEntry[] =>
-  PACKAGES.flatMap((pkg) => componentEntries(join(root, pkg.dir, 'src/index.ts'), pkg.name));
+  ENTRIES.flatMap((entry) => componentEntries(join(root, entry.source), entry.name, entry.flat));
 
 export const buildReference = async (
   root: string,
@@ -141,9 +168,7 @@ export const buildReference = async (
   checker: ReferenceChecker = createReferenceChecker(root),
 ): Promise<ReferenceBuild> => {
   const members = new Map(
-    [PRIMITIVES, ...PACKAGES].flatMap((pkg) => [
-      ...enumerationMembers(join(root, pkg.dir, 'dist/index.d.ts')),
-    ]),
+    [PRIMITIVES, ...ENTRIES].flatMap((entry) => [...enumerationMembers(join(root, entry.types))]),
   );
 
   const components: Record<string, ComponentReference> = {};
@@ -169,8 +194,8 @@ export const buildReference = async (
       version: 1,
       components,
       catalogs,
-      declarations: [PRIMITIVES, ...PACKAGES].flatMap((pkg) =>
-        exportedDeclarations(join(root, pkg.dir, 'dist/index.d.ts'), pkg.name, componentNames),
+      declarations: [PRIMITIVES, ...ENTRIES].flatMap((entry) =>
+        exportedDeclarations(join(root, entry.types), entry.name, componentNames),
       ),
       tokens: parseThemeTokens(legacyTokenCss(readFileSync(THEME_FILE, 'utf8'))),
       icons: parseIconAliases(

@@ -108,6 +108,22 @@ export class DocsBlock {
     return (await boxOf(this.screen)).width;
   }
 
+  async height(): Promise<number> {
+    return (await boxOf(this.screen)).height;
+  }
+
+  async hiddenHeight(): Promise<number> {
+    const content = await this.content.locator('html').evaluate((root) => root.scrollHeight);
+
+    return content - Math.round(await this.height());
+  }
+
+  async hiddenWidth(): Promise<number> {
+    const content = await this.content.locator('html').evaluate((root) => root.scrollWidth);
+
+    return content - Math.round(await this.width());
+  }
+
   theme(): Promise<string | null> {
     return this.content.locator('html').getAttribute('data-nui-theme');
   }
@@ -208,6 +224,32 @@ export class DocsSite {
 
   get heading(): Locator {
     return this.article.getByRole('heading', { level: 1 });
+  }
+
+  async follow(link: string): Promise<void> {
+    await this.article.getByRole('link', { name: link, exact: true }).click();
+    await this.network.quiet();
+  }
+
+  codeGaps(): Promise<number[]> {
+    return this.article.evaluate((article) => {
+      const boxes = [...article.querySelectorAll('.nui-code')].reduce<DOMRect[]>((shown, code) => {
+        const box = code.getBoundingClientRect();
+
+        if (box.height > 0) {
+          shown.push(box);
+        }
+        return shown;
+      }, []);
+
+      return boxes.slice(1).map((box, index) => Math.round(box.top - (boxes[index]?.bottom ?? 0)));
+    });
+  }
+
+  async sectionTop(title: string): Promise<number> {
+    const heading = this.article.getByRole('heading', { name: title }).first();
+
+    return Math.round((await boxOf(heading)).y);
   }
 
   get toasts(): Locator {

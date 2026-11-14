@@ -394,7 +394,7 @@ describe('snapshot of a shared workbook', () => {
     expect(shared.authority.snapshot()).not.toEqual(first);
   });
 
-  it('opens a book of many rows within the budget of one action', () => {
+  it('opens a book of many rows within the budget of one action', { tags: ['budget'] }, () => {
     const shared = openShared();
 
     shared.take({ kind: 'addSheet', name: 'Data', index: 0 });

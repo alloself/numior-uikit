@@ -1,5 +1,4 @@
-import { PointerType } from '@numior/primitives';
-import { onScopeDispose } from 'vue';
+import { PointerType, usePointerSession } from '@numior/primitives';
 import { WheelDragKind } from './time-field.types';
 
 export interface WheelDragOptions {
@@ -39,6 +38,7 @@ const advance = (drag: HeldDrag, y: number, element: HTMLElement): HeldDrag => {
 
 export const useWheelDrag = (options: WheelDragOptions): WheelDrag => {
   const state: { drag: DragState; dragged: boolean } = { drag: IDLE, dragged: false };
+  const pointer = usePointerSession();
 
   const onMove = (event: PointerEvent): void => {
     const { drag } = state;
@@ -53,9 +53,7 @@ export const useWheelDrag = (options: WheelDragOptions): WheelDrag => {
 
   const stop = (): void => {
     state.drag = IDLE;
-    window.removeEventListener('pointermove', onMove);
-    window.removeEventListener('pointerup', onUp);
-    window.removeEventListener('pointercancel', onUp);
+    pointer.end();
   };
 
   const finish = (): void => {
@@ -100,12 +98,8 @@ export const useWheelDrag = (options: WheelDragOptions): WheelDrag => {
       top: element.scrollTop,
     };
 
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', onUp);
-    window.addEventListener('pointercancel', onUp);
+    pointer.begin({ move: onMove, up: onUp, cancel: onUp });
   };
-
-  onScopeDispose(stop);
 
   return {
     holding: () => state.drag.kind !== WheelDragKind.Idle,

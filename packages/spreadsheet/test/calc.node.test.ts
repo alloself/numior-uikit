@@ -322,27 +322,31 @@ describe('recalculation', () => {
     ]);
   });
 
-  it('finds exact matches in ranges that grow down a column within the budget', () => {
-    const sheet = openSheet();
+  it(
+    'finds exact matches in ranges that grow down a column within the budget',
+    { tags: ['budget'] },
+    () => {
+      const sheet = openSheet();
 
-    for (let row = 1; row <= RUNNING_ROWS; row += 1) {
-      sheet.enter(`A${String(row)}`, `key${String(row)}`);
-      sheet.enter(`B${String(row)}`, `=MATCH("key${String(row)}",$A$1:A${String(row)},0)`);
-    }
+      for (let row = 1; row <= RUNNING_ROWS; row += 1) {
+        sheet.enter(`A${String(row)}`, `key${String(row)}`);
+        sheet.enter(`B${String(row)}`, `=MATCH("key${String(row)}",$A$1:A${String(row)},0)`);
+      }
 
-    const started = performance.now();
+      const started = performance.now();
 
-    sheet.recalc();
+      sheet.recalc();
 
-    const spent = performance.now() - started;
+      const spent = performance.now() - started;
 
-    expect([sheet.value('B1'), sheet.value(`B${String(RUNNING_ROWS)}`)]).toEqual([
-      numberValue(1),
-      numberValue(RUNNING_ROWS),
-    ]);
+      expect([sheet.value('B1'), sheet.value(`B${String(RUNNING_ROWS)}`)]).toEqual([
+        numberValue(1),
+        numberValue(RUNNING_ROWS),
+      ]);
 
-    expect(spent).toBeLessThan(RUNNING_BUDGET_MS);
-  });
+      expect(spent).toBeLessThan(RUNNING_BUDGET_MS);
+    },
+  );
 
   it('finds the same rows by the column index as by reading the cells one by one', () => {
     const sheet = openSheet();
@@ -391,32 +395,36 @@ describe('recalculation', () => {
     expect(sheet.grid('C1:C4')).toEqual([[2], [2], [4], [2]]);
   });
 
-  it('tells which formulas wait for a value without planning the run again', async () => {
-    const sheet = openSheet();
+  it(
+    'tells which formulas wait for a value without planning the run again',
+    { tags: ['budget'] },
+    async () => {
+      const sheet = openSheet();
 
-    sheet.enter('A1', 1);
-    sheet.enter('B1', 5);
+      sheet.enter('A1', 1);
+      sheet.enter('B1', 5);
 
-    for (let row = 2; row <= 40_000; row += 1) {
-      sheet.enter(`A${String(row)}`, `=A${String(row - 1)}+1`);
-    }
+      for (let row = 2; row <= 40_000; row += 1) {
+        sheet.enter(`A${String(row)}`, `=A${String(row - 1)}+1`);
+      }
 
-    const run = sheet.recalc({ budgetMs: 0, yieldTo: () => Promise.resolve() });
-    const early = [run.planned, ...['A2', 'A40000', 'A1', 'B1'].map(sheet.stale)];
-    const started = performance.now();
+      const run = sheet.recalc({ budgetMs: 0, yieldTo: () => Promise.resolve() });
+      const early = [run.planned, ...['A2', 'A40000', 'A1', 'B1'].map(sheet.stale)];
+      const started = performance.now();
 
-    for (let call = 0; call < STALE_CALLS; call += 1) {
-      sheet.stale('A40000');
-    }
+      for (let call = 0; call < STALE_CALLS; call += 1) {
+        sheet.stale('A40000');
+      }
 
-    const spent = performance.now() - started;
+      const spent = performance.now() - started;
 
-    await run.settled;
+      await run.settled;
 
-    expect(early).toEqual([false, true, true, false, false]);
-    expect([run.planned, sheet.stale('A2'), sheet.stale('A40000')]).toEqual([true, false, false]);
-    expect(spent).toBeLessThan(STALE_BUDGET_MS);
-  });
+      expect(early).toEqual([false, true, true, false, false]);
+      expect([run.planned, sheet.stale('A2'), sheet.stale('A40000')]).toEqual([true, false, false]);
+      expect(spent).toBeLessThan(STALE_BUDGET_MS);
+    },
+  );
 
   it('marks every formula left without a value when a run is stopped', async () => {
     const sheet = openSheet();
@@ -440,25 +448,29 @@ describe('recalculation', () => {
     ]);
   });
 
-  it('yields to the host on its own and counts only the time it spent computing', async () => {
-    const sheet = openSheet();
-    const started = performance.now();
+  it(
+    'yields to the host on its own and counts only the time it spent computing',
+    { tags: ['budget'] },
+    async () => {
+      const sheet = openSheet();
+      const started = performance.now();
 
-    sheet.enter('A1', 1);
+      sheet.enter('A1', 1);
 
-    for (let row = 2; row <= 2000; row += 1) {
-      sheet.enter(`A${String(row)}`, `=A${String(row - 1)}+1`);
-    }
+      for (let row = 2; row <= 2000; row += 1) {
+        sheet.enter(`A${String(row)}`, `=A${String(row - 1)}+1`);
+      }
 
-    const run = sheet.recalc({ budgetMs: 0 });
+      const run = sheet.recalc({ budgetMs: 0 });
 
-    await run.settled;
+      await run.settled;
 
-    expect(run.done).toBe(run.total);
-    expect(sheet.value('A2000')).toEqual(numberValue(2000));
-    expect(run.busyMs).toBeGreaterThan(0);
-    expect(run.busyMs).toBeLessThanOrEqual(performance.now() - started);
-  });
+      expect(run.done).toBe(run.total);
+      expect(sheet.value('A2000')).toEqual(numberValue(2000));
+      expect(run.busyMs).toBeGreaterThan(0);
+      expect(run.busyMs).toBeLessThanOrEqual(performance.now() - started);
+    },
+  );
 
   it('orders formulas by the references INDIRECT and OFFSET find while computing', () => {
     const sheet = openSheet();

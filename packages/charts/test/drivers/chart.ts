@@ -12,6 +12,11 @@ export interface ChartMountOptions {
   readonly config?: NuiConfigOptions;
 }
 
+export interface PageFontWidths {
+  readonly fallback: number;
+  readonly font: number;
+}
+
 export interface ChartTooltipView {
   readonly title: string;
   readonly rows: readonly string[];
@@ -30,8 +35,20 @@ const THEME_STYLE_ID = 'chart-theme';
 
 const DEFAULT_FONT_SIZE = 12;
 
-const fontRule = (size: number): string =>
-  `.nui-chart__font-probe { font-size: ${String(size)}px; }`;
+const fontRule = (size: number, family = 'serif'): string =>
+  `.nui-chart__font-probe { font-size: ${String(size)}px; font-family: ${family}; }`;
+
+let heldFonts = 0;
+
+let nativeContext: PropertyDescriptor | undefined;
+
+const restoreContext = (): void => {
+  if (nativeContext === undefined) {
+    return;
+  }
+  Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', nativeContext);
+  nativeContext = undefined;
+};
 
 const themeStyle = (): HTMLStyleElement => {
   const existing = document.getElementById(THEME_STYLE_ID);
@@ -53,6 +70,8 @@ const textsOf = (wrapper: VueWrapper, selector: string): string[] =>
 
 export class ChartTheme {
   private readonly resized = new Set<ResizeObserverCallback>();
+
+  private deliver: ((arrives: boolean) => void) | undefined;
 
   readonly observed: Node[] = [];
 
@@ -94,6 +113,60 @@ export class ChartTheme {
     );
   }
 
+  holdPageFont(widths: PageFontWidths): void {
+    let arrived = false;
+
+    heldFonts += 1;
+    themeStyle().textContent = fontRule(DEFAULT_FONT_SIZE, `held-${String(heldFonts)}`);
+
+    const loaded = new Promise<void>((resolve, reject) => {
+      this.deliver = (arrives) => {
+        arrived = arrives;
+
+        if (arrives) {
+          resolve();
+          return;
+        }
+        reject(new Error('The font did not load'));
+      };
+    });
+
+    nativeContext ??= Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, 'getContext');
+
+    Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+      configurable: true,
+      writable: true,
+      value: () => ({
+        font: '',
+        measureText: (text: string) => ({
+          width: text.length * (arrived ? widths.font : widths.fallback),
+        }),
+      }),
+    });
+
+    Object.defineProperty(document, 'fonts', {
+      configurable: true,
+      value: {
+        get status() {
+          return arrived ? 'loaded' : 'loading';
+        },
+        ready: Promise.allSettled([loaded]),
+        check: () => true,
+        load: () => loaded.then(() => []),
+      },
+    });
+  }
+
+  async deliverPageFont(): Promise<void> {
+    this.deliver?.(true);
+    await flushPromises();
+  }
+
+  async losePageFont(): Promise<void> {
+    this.deliver?.(false);
+    await flushPromises();
+  }
+
   async setFontSize(size: number): Promise<void> {
     themeStyle().textContent = fontRule(size);
     await this.restyle();
@@ -115,6 +188,8 @@ export class ChartTheme {
   static reset(): void {
     themeStyle().textContent = fontRule(DEFAULT_FONT_SIZE);
     vi.unstubAllGlobals();
+    restoreContext();
+    Reflect.deleteProperty(document, 'fonts');
   }
 }
 
@@ -296,9 +371,9 @@ export class ChartDriver {
   categoryTickX(text: string): number {
     const tick = this.wrapper
       .findAll('.nui-chart__text--category-tick')
-      .find((item) => item.text() === text);
+      .find((item) => item.text() === text)?.element;
 
-    return Number(tick?.attributes('x') ?? Number.NaN);
+    return tick instanceof HTMLElement ? Number(tick.style.getPropertyValue('--_x')) : Number.NaN;
   }
 
   get caption(): string {

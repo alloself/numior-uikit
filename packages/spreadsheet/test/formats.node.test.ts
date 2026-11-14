@@ -124,28 +124,32 @@ describe('built-in formats and colours', () => {
 });
 
 describe('cost', () => {
-  it('formats twenty thousand numbers in three common formats within the budget', () => {
-    const values = Array.from({ length: BUDGET_CELLS }, (_, index) =>
-      numberValue(index * 37.31 - 400_000),
-    );
-
-    const formatAll = (): number =>
-      BUDGET_CODES.reduce(
-        (total, code) =>
-          values.reduce(
-            (sum, value) => sum + formatValue(value, code, RU_NUMBERS).text.length,
-            total,
-          ),
-        0,
+  it(
+    'formats twenty thousand numbers in three common formats within the budget',
+    { tags: ['budget'] },
+    () => {
+      const values = Array.from({ length: BUDGET_CELLS }, (_, index) =>
+        numberValue(index * 37.31 - 400_000),
       );
 
-    formatAll();
+      const formatAll = (): number =>
+        BUDGET_CODES.reduce(
+          (total, code) =>
+            values.reduce(
+              (sum, value) => sum + formatValue(value, code, RU_NUMBERS).text.length,
+              total,
+            ),
+          0,
+        );
 
-    const started = performance.now();
-    const length = formatAll();
-    const spent = performance.now() - started;
+      formatAll();
 
-    expect(length).toBeGreaterThan(0);
-    expect(spent).toBeLessThan(BUDGET_MS);
-  });
+      const started = performance.now();
+      const length = formatAll();
+      const spent = performance.now() - started;
+
+      expect(length).toBeGreaterThan(0);
+      expect(spent).toBeLessThan(BUDGET_MS);
+    },
+  );
 });

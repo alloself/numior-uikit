@@ -6,6 +6,7 @@ export interface TooltipTargetsOptions {
   readonly root: Readonly<Ref<HTMLElement | null | undefined>>;
   readonly open: Readonly<Ref<boolean>>;
   readonly disabled: () => boolean;
+  readonly accepts: (target: HTMLElement) => boolean;
   readonly delay: DelayedOpen;
   readonly describedBy: MaybeRefOrGetter<string>;
   readonly pressedRecently: () => boolean;
@@ -97,6 +98,10 @@ export const useTooltipTargets = (options: TooltipTargetsOptions): TooltipTarget
         return;
       }
       hovered = next;
+      if (!options.accepts(next)) {
+        options.delay.closeNow();
+        return;
+      }
       take(next);
       if (options.open.value) {
         options.delay.openNow();
@@ -116,6 +121,10 @@ export const useTooltipTargets = (options: TooltipTargetsOptions): TooltipTarget
       const next = targetOf(event.target);
 
       if (next === null || options.disabled() || options.pressedRecently()) {
+        return;
+      }
+      if (!options.accepts(next)) {
+        options.delay.closeNow();
         return;
       }
 

@@ -304,7 +304,7 @@ const {
   schema = contentSchema,
   placeholder,
   autofocus = false,
-  toolbar = NuiEditorToolbarMode.Fixed,
+  toolbar = NuiEditorToolbarMode.Both,
   colours = CONTENT_COLOURS,
   highlights = CONTENT_COLOURS,
   selectionActions = undefined,

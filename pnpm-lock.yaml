@@ -121,6 +121,9 @@ importers:
       '@numior/charts':
         specifier: workspace:*
         version: link:../../packages/charts
+      '@numior/collaboration':
+        specifier: workspace:*
+        version: link:../../packages/collaboration
       '@numior/content':
         specifier: workspace:*
         version: link:../../packages/content

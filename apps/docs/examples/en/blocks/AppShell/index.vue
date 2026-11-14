@@ -196,7 +196,7 @@ const sections: readonly Section[] = [
 ];
 
 const fallback: Section = { key: '', label: '', summary: '', icon: Settings, rows: [] };
-const manager = team[0] ?? { id: '', name: '', role: '', email: '' };
+const [manager] = team;
 const toast = useToast();
 
 const open = ref(true);

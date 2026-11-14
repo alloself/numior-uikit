@@ -5,7 +5,7 @@ export interface Employee {
   readonly email: string;
 }
 
-export const team: readonly Employee[] = [
+export const team: readonly [Employee, Employee, Employee, Employee, Employee] = [
   { id: 'anna', name: 'Анна Титова', role: 'Менеджер заказов', email: 'anna@example.com' },
   { id: 'igor', name: 'Игорь Белов', role: 'Кладовщик', email: 'igor@example.com' },
   { id: 'maria', name: 'Мария Ким', role: 'Поддержка', email: 'maria@example.com' },

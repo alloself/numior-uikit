@@ -22,6 +22,8 @@ interface Typed {
   readonly shown: number;
 }
 
+const FRAME_BUDGET_MS = 16;
+
 const LINE = 'const value = compute(alpha, beta) + other;';
 
 const highlighter: NuiHighlighter = {
@@ -104,22 +106,26 @@ const paintedBook = async (blocks: number) => {
 };
 
 describe('code highlight', () => {
-  it('follows typing and repainting in one of many painted code blocks within a frame', async () => {
-    const book = await paintedBook(300);
-    const typed: Typed[] = [];
+  it(
+    'follows typing and repainting in one of many painted code blocks within a frame',
+    { tags: ['budget'] },
+    async () => {
+      const book = await paintedBook(300);
+      const typed: Typed[] = [];
 
-    expect(book.laid.size).toBe(300);
+      expect(book.laid.size).toBe(300);
 
-    for (let key = 0; key < 20; key += 1) {
-      typed.push(await book.typeInto('c150'));
-    }
+      for (let key = 0; key < 20; key += 1) {
+        typed.push(await book.typeInto('c150'));
+      }
 
-    book.stop();
+      book.stop();
 
-    expect(typed.map(({ shown }) => shown)).toEqual(typed.map(() => 2));
+      expect(typed.map(({ shown }) => shown)).toEqual(typed.map(() => 2));
 
-    expect(
-      typed.map(({ spent }) => spent).toSorted((left, right) => left - right)[10],
-    ).toBeLessThan(16);
-  });
+      expect(
+        typed.map(({ spent }) => spent).toSorted((left, right) => left - right)[10],
+      ).toBeLessThan(FRAME_BUDGET_MS);
+    },
+  );
 });

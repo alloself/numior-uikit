@@ -20,16 +20,20 @@
         :disabled="disabled"
       />
     </template>
-    <NuiMenuRadioGroup :model-value="current" @update:model-value="choose">
-      <NuiMenuRadioItem
-        v-for="option in blocks.options"
-        :key="option.key"
-        :value="option.key"
-        :icon="option.icon"
-        :aria-label="option.label"
-        :title="option.label"
-      />
-    </NuiMenuRadioGroup>
+    <NuiTooltip :anchor="BLOCK_OPTIONS" placement="right">
+      <template #trigger="{ attrs }">
+        <NuiMenuRadioGroup v-bind="attrs" :model-value="current" @update:model-value="choose">
+          <NuiMenuRadioItem
+            v-for="option in blocks.options"
+            :key="option.key"
+            :value="option.key"
+            :icon="option.icon"
+            :aria-label="option.label"
+          />
+        </NuiMenuRadioGroup>
+      </template>
+      <template #default="{ target }">{{ target?.getAttribute('aria-label') }}</template>
+    </NuiTooltip>
   </NuiMenu>
 </template>
 
@@ -38,12 +42,21 @@ import { useTemplateRef } from 'vue';
 import { useToolbarControl } from './toolbar-hints';
 import type { Command } from '@numior/editor-core';
 import { useMessages } from '@numior/primitives';
-import { NuiButton, NuiMenu, NuiMenuRadioGroup, NuiMenuRadioItem } from '@numior/vue';
+import {
+  NuiButton,
+  NuiMenu,
+  NuiMenuRadioGroup,
+  NuiMenuRadioItem,
+  NuiTooltip,
+  type NuiTooltipTargets,
+} from '@numior/vue';
 import { computed } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
 import type { NuiEditorBlockMenuProps } from './toolbar.types';
 
 const { blocks, disabled = false } = defineProps<NuiEditorBlockMenuProps>();
+
+const BLOCK_OPTIONS: NuiTooltipTargets = { selector: '[role="menuitemradio"]' };
 
 const emit = defineEmits<{
   run: [command: Command];

@@ -116,6 +116,17 @@ Use `captureSetup(() => useThing(), { layers: [() => provideThing(...)] })` from
 composable runs in the innermost one, since inject only sees ancestors), or a harness class with named getters (`FieldHarness`,
 `ControlHarness`). Read state from the captured context, not from attributes.
 
+## Time budgets
+
+A scenario that measures time against a limit (`performance.now()` with `toBeLessThan`, or a
+`*_BUDGET*` constant) carries the tag: `it('…', { tags: ['budget'] }, () => …)`, or its
+`describe` does. Coverage instrumentation slows such code several times, so `test:coverage`
+leaves tagged scenarios out and `vp run test:budget` runs them uninstrumented inside
+`pnpm check`. Name the limit (`FRAME_BUDGET_MS`), never a bare number. Budget scenarios run side by side, and the first call
+carries the JIT warm-up: hold the fastest of a few runs (or a median), not one cold call. The ESLint rule
+`numior/budget-tags` checks the tag. A slow scenario without a budget (a corpus of Excel
+verdicts) gets an explicit `{ timeout: CORPUS_TIMEOUT_MS }`, not a tag.
+
 ## SSR
 
 Render with `renderToString` from `@vue/test-utils` (same `props`/`slots`/`global` options as

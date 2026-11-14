@@ -1,5 +1,5 @@
 import { vi } from 'vite-plus/test';
-import type { Room, RoomPeer } from '../../server/room';
+import type { Room, RoomPeer } from '../../src/room';
 import {
   ClientMessageKind,
   ServerMessageKind,

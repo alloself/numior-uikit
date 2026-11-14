@@ -280,6 +280,12 @@ const ROW_EARLY = 10;
 const ROW_MIDDLE = 20;
 const ROW_LATE = 30;
 
+const VALUES_TIMEOUT_MS = 10_000;
+
+const VALUES_POLL_MS = 10;
+
+const SLOW_VALUES_MS = 150;
+
 const withPointHits = <R>(hits: (x: number, y: number) => Element[], run: () => R): R => {
   const own = Object.getOwnPropertyDescriptor(document, 'elementsFromPoint');
 
@@ -922,6 +928,23 @@ export class TableDriver<T> {
 
   private get popover(): HTMLElement | null {
     return document.querySelector<HTMLElement>('.nui-table-filter');
+  }
+
+  get filterLoading(): boolean {
+    return this.popover?.classList.contains('nui-table-filter--loading') ?? false;
+  }
+
+  private async filterValuesLoaded(): Promise<void> {
+    await flushPromises();
+
+    await vi.waitFor(
+      () => {
+        if (this.filterLoading) {
+          throw new Error('The values of the filter are still loading');
+        }
+      },
+      { timeout: VALUES_TIMEOUT_MS, interval: VALUES_POLL_MS },
+    );
   }
 
   get filterTitle(): string | undefined {
@@ -2284,6 +2307,11 @@ export class TableDriver<T> {
   }
 
   async openFilter(col: number): Promise<void> {
+    await this.startFilter(col);
+    await this.filterValuesLoaded();
+  }
+
+  async startFilter(col: number): Promise<void> {
     const funnel = this.filterButton(col);
 
     if (funnel === null) {
@@ -2293,6 +2321,14 @@ export class TableDriver<T> {
       funnel.click();
     }
     await flushPromises();
+  }
+
+  async waitForSlowValues(): Promise<void> {
+    await promiseTimeout(SLOW_VALUES_MS);
+  }
+
+  async valuesArrive(): Promise<void> {
+    await this.filterValuesLoaded();
   }
 
   async dismissFilter(): Promise<void> {
@@ -2336,7 +2372,7 @@ export class TableDriver<T> {
       input.value = text;
       input.dispatchEvent(new Event('input', { bubbles: true }));
     }
-    await flushPromises();
+    await this.filterValuesLoaded();
   }
 
   async applyFilter(): Promise<void> {

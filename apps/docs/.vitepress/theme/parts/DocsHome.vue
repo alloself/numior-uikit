@@ -26,7 +26,11 @@
         :copied-label="texts.copied"
       />
     </section>
-    <HomeScreen :src="withBase(blockRouteOf(home.screen, locale))" :texts="texts" />
+    <HomeScreen
+      :src="withBase(blockRouteOf(home.screen, locale))"
+      :height="blockHeightOf(home.screen)"
+      :texts="texts"
+    />
     <section
       v-for="(section, index) in home.sections"
       :key="section.block"
@@ -50,7 +54,7 @@
 import { computed, useId } from 'vue';
 import { useData, withBase } from 'vitepress';
 import { NuiButton, NuiCode, NuiLink } from '@numior/vue';
-import { blockRouteOf } from '../../blocks';
+import { blockHeightOf, blockRouteOf } from '../../blocks';
 import { useDocs } from '../composables/use-docs';
 import { exampleLocaleOf } from '../examples';
 import { homeOf } from '../home-content';

@@ -1,4 +1,5 @@
 import { tryOnScopeDispose, useTimeoutFn } from '@vueuse/core';
+import { usePointerSession } from '../pointer/usePointerSession';
 
 export type AfterRelease = (event: MouseEvent, action: () => void) => void;
 
@@ -16,15 +17,15 @@ export const useAfterRelease = (): AfterRelease => {
     { immediate: false },
   );
 
+  const session = usePointerSession({ capture: true });
+
   const released = (): void => {
-    window.removeEventListener('pointerup', released, true);
-    window.removeEventListener('pointercancel', released, true);
+    session.end();
     timer.start();
   };
 
   const drop = (): void => {
-    window.removeEventListener('pointerup', released, true);
-    window.removeEventListener('pointercancel', released, true);
+    session.end();
     timer.stop();
     pending = undefined;
   };
@@ -40,7 +41,6 @@ export const useAfterRelease = (): AfterRelease => {
     }
 
     pending = action;
-    window.addEventListener('pointerup', released, true);
-    window.addEventListener('pointercancel', released, true);
+    session.begin({ up: released, cancel: released });
   };
 };

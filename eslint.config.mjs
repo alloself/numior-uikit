@@ -2,8 +2,10 @@ import stylistic from '@stylistic/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import vue from 'eslint-plugin-vue';
 import { apiNames } from './scripts/eslint/api-names.mjs';
+import { budgetTags } from './scripts/eslint/budget-tags.mjs';
 import { guardFirst } from './scripts/eslint/guard-first.mjs';
 import { pageListeners } from './scripts/eslint/page-listeners.mjs';
+import { pointerListeners } from './scripts/eslint/pointer-listeners.mjs';
 import { spreadArguments } from './scripts/eslint/spread-arguments.mjs';
 import { testPhases } from './scripts/eslint/test-phases.mjs';
 
@@ -143,6 +145,12 @@ const SECTIONS = {
   message: 'Take sections and groups as fixtures destructured in the test parameters.',
 };
 
+const SVG_TEXT = {
+  selector: 'VElement[name=/^(?:text|tspan|textpath)$/i]',
+  message:
+    'Laid-out SVG text makes WebKit restyle the whole page on every popover and pointer listener; place labels as HTML over the drawing.',
+};
+
 const TIMERS = {
   selector: "NewExpression[callee.name='Promise'] CallExpression[callee.name='setTimeout']",
   message: 'Wait with promiseTimeout, until or useIdle from @vueuse/core.',
@@ -237,8 +245,10 @@ export default [
       numior: {
         rules: {
           'api-names': apiNames,
+          'budget-tags': budgetTags,
           'guard-first': guardFirst,
           'page-listeners': pageListeners,
+          'pointer-listeners': pointerListeners,
           'spread-arguments': spreadArguments,
           'test-phases': testPhases,
         },
@@ -254,12 +264,21 @@ export default [
     rules: { 'numior/api-names': 'error', 'numior/page-listeners': 'error' },
   },
   {
+    files: ['packages/*/src/**/*.ts', 'packages/*/src/**/*.vue'],
+    ignores: ['packages/primitives/src/pointer/usePointerSession.ts'],
+    rules: { 'numior/pointer-listeners': 'error' },
+  },
+  {
     files: ['packages/*/{src,server}/**/*.ts', 'packages/*/{src,server}/**/*.vue'],
     rules: { 'numior/spread-arguments': 'error' },
   },
   {
     files: ['tests/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
     rules: { 'numior/test-phases': 'error' },
+  },
+  {
+    files: ['**/*.test.ts', '**/*.test.mjs'],
+    rules: { 'numior/budget-tags': 'error' },
   },
   {
     files: ['packages/{primitives,vue,table,editor-vue}/{src,test}/**/*.{ts,vue}'],
@@ -314,9 +333,13 @@ export default [
     },
   },
   {
+    files: ['packages/*/src/**/*.vue'],
+    rules: { 'vue/no-restricted-syntax': ['error', SVG_TEXT] },
+  },
+  {
     files: [
       'packages/{primitives,vue,forms,table,content,editor-vue,charts,spreadsheet}/src/**/*.vue',
     ],
-    rules: { 'vue/no-restricted-syntax': ['error', ...NAMED_ENUMERATIONS] },
+    rules: { 'vue/no-restricted-syntax': ['error', ...NAMED_ENUMERATIONS, SVG_TEXT] },
   },
 ];

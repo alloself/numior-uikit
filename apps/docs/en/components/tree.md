@@ -1,8 +1,8 @@
 # Tree
 
 `NuiTree` displays nested data such as folders and files, catalog sections or company
-departments. Nodes expand and collapse, and they can be selected one at a time or checked with
-checkboxes.
+departments. Nodes expand and collapse, and they can be selected one at a time or together with
+the nodes inside.
 
 <Example name="tree/Basic" />
 
@@ -20,7 +20,7 @@ import '@numior/vue/styles/tree.css';
 
 ## Usage
 
-Change the look, the row size and the checkboxes on a tree of shop categories.
+Change the look, the row size and the selection on a tree of shop categories.
 
 <Configurator name="NuiTree" />
 
@@ -37,12 +37,12 @@ prop changes the row height.
 
 <Example name="tree/Variants" />
 
-### Checkboxes
+### Cascading selection
 
-The `checkable` prop adds checkboxes to the nodes, and the values of checked nodes come through
-`v-model:values` in the order of the tree. Checking a folder checks everything inside it.
+With the `checkable` prop every node gets a checkbox, and the values of selected nodes come through
+`v-model:values` in the order of the tree. Selecting a folder selects everything inside it.
 
-A folder is checked when all its children are checked, and partly checked when only some are.
+A folder is selected when all its children are selected, and partly selected when only some are.
 
 <Example name="tree/Checkable" />
 
@@ -56,7 +56,7 @@ The value of the node enters `v-model:expanded` at once. The folder stays closed
 `aria-expanded` is `false` until the children arrive: a node looks expanded when it has rows
 under it.
 
-If the folder was checked, the children that arrive are checked too.
+If the folder was selected, the children that arrive are selected too.
 
 <Example name="tree/Lazy" />
 
@@ -89,7 +89,7 @@ The `loading` prop shows a "Loading" row instead of the nodes. A tree without no
 ## Behaviour
 
 A click on the arrow expands the node, a click on the row selects it, and a double click expands
-or collapses it. In a tree with checkboxes a click on the row, Enter and Space toggle the check.
+or collapses it. In a `checkable` tree a click on the row, Enter and Space select the node or clear the selection.
 
 A node with `children: []` is a leaf and does not expand. Rows are never links: to open a page,
 listen to the `select` event.

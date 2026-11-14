@@ -21,10 +21,16 @@
       @filters="(filters) => editor.run(filterTable(node.id, filters))"
     />
     <div v-if="editable" class="nui-editor-table__actions">
-      <NuiButton variant="ghost" size="sm" icon="plus" @click="addRow">
+      <NuiButton variant="ghost" tone="neutral" size="sm" icon="plus" @click="addRow">
         {{ texts.tableAddRow }}
       </NuiButton>
-      <NuiButton variant="ghost" size="sm" icon="plus" @click="addColumn(data.columns.length)">
+      <NuiButton
+        variant="ghost"
+        tone="neutral"
+        size="sm"
+        icon="plus"
+        @click="addColumn(data.columns.length)"
+      >
         {{ texts.tableAddColumn }}
       </NuiButton>
     </div>

@@ -11,8 +11,7 @@ import {
   type Transaction,
 } from '@numior/editor-core';
 import { fixtureSchema } from '@numior/editor-core/fixtures';
-import { editorAuthority } from '../../server/authority';
-import { createRoom } from '../../server/room';
+import { createRoom, editorAuthority } from '../../src/room';
 import {
   collab,
   collabVersion,

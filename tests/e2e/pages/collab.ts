@@ -323,6 +323,12 @@ export class CollabClient {
     }
   }
 
+  async pressKeys(latin: string): Promise<void> {
+    for (const key of latin) {
+      await this.page.keyboard.press(key);
+    }
+  }
+
   async keepTyping(text: string): Promise<void> {
     await this.page.keyboard.type(text, { delay: TYPING_PAUSE });
   }

@@ -320,15 +320,19 @@ describe('yjsBinding', () => {
     expect(left.text().split('|')).toHaveLength(5);
   });
 
-  it('carries the first of ten thousand blocks to the end within the latency budget', () => {
-    const [left] = pair(numbered(10_000));
-    const started = performance.now();
+  it(
+    'carries the first of ten thousand blocks to the end within the latency budget',
+    { tags: ['budget'] },
+    () => {
+      const [left] = pair(numbered(10_000));
+      const started = performance.now();
 
-    carry(left, 'p0', undefined);
+      carry(left, 'p0', undefined);
 
-    expect(performance.now() - started).toBeLessThan(100);
-    expect(left.text().endsWith('Paragraph 9999|Paragraph 0')).toBe(true);
-  });
+      expect(performance.now() - started).toBeLessThan(100);
+      expect(left.text().endsWith('Paragraph 9999|Paragraph 0')).toBe(true);
+    },
+  );
 
   it('keeps the caret of the receiver in place across a remote insert', () => {
     const [left, right] = pair(docOf(paragraph('a', 'Hello')));

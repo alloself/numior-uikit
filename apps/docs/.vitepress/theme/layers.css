@@ -4,4 +4,5 @@
 @import '@numior/charts/styles.css' layer(components);
 @import '@numior/content/styles.css' layer(components);
 @import '@numior/editor-vue/styles.css' layer(components);
+@import '@numior/collaboration/styles.css' layer(components);
 @import '@numior/tokens/prose.css' layer(components);

@@ -114,6 +114,8 @@ export interface NuiEditorMessages {
   readonly uploadFailed: (params: { readonly name: string }) => string;
   readonly uploadType: (params: { readonly name: string }) => string;
   readonly uploadSize: (params: { readonly name: string; readonly size: string }) => string;
+  readonly uploadTypeReason: string;
+  readonly uploadSizeReason: (params: { readonly size: string }) => string;
   readonly uploadUnavailable: string;
   readonly uploadLost: (params: { readonly name: string }) => string;
   readonly imageWidth: string;
@@ -239,8 +241,8 @@ export const editorMessages: NuiMessageCatalog<NuiEditorMessages> = {
     linkApply: 'Apply',
     linkRemove: 'Remove link',
     linkInvalid: 'This address cannot be linked',
-    colour: 'Colour',
-    textColour: 'Text colour',
+    colour: 'Color',
+    textColour: 'Text color',
     defaultColour: 'Default',
     highlight: 'Highlight',
     noHighlight: 'None',
@@ -327,12 +329,14 @@ export const editorMessages: NuiMessageCatalog<NuiEditorMessages> = {
     uploadFailed: ({ name }) => `Could not upload ${name}`,
     uploadType: ({ name }) => `${name}: this file type is not accepted`,
     uploadSize: ({ name, size }) => `${name} is larger than ${size}`,
+    uploadTypeReason: 'This file type is not accepted',
+    uploadSizeReason: ({ size }) => `The file is larger than ${size}`,
     uploadUnavailable: 'Files cannot be uploaded here; insert them by link',
     uploadLost: ({ name }) => `${name} is uploaded, but there is no place left for it`,
     imageWidth: 'Image width',
     imageAlign: 'Alignment',
     imageAlignStart: 'Align to the line start',
-    imageAlignCenter: 'Centre',
+    imageAlignCenter: 'Center',
     imageAlignEnd: 'Align to the line end',
     imageWrap: 'Text wrapping',
     imageWrapInline: 'In line with text',
@@ -459,6 +463,8 @@ export const editorMessages: NuiMessageCatalog<NuiEditorMessages> = {
     uploadFailed: ({ name }) => `Не удалось загрузить ${name}`,
     uploadType: ({ name }) => `${name}: такой тип файла не принимается`,
     uploadSize: ({ name, size }) => `${name} больше ${size}`,
+    uploadTypeReason: 'Такой тип файла не принимается',
+    uploadSizeReason: ({ size }) => `Файл больше ${size}`,
     uploadUnavailable: 'Сюда нельзя загрузить файлы — вставьте их по ссылке',
     uploadLost: ({ name }) => `${name} загружен, но вставить его некуда`,
     imageWidth: 'Ширина картинки',

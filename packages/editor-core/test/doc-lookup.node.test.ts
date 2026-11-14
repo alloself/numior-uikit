@@ -247,56 +247,64 @@ describe('finding nodes by id', () => {
     );
   });
 
-  it('finds blocks by id between the steps of a long transform within the budget of an action', () => {
-    const start = generateDoc(fixtureSchema, { blocks: 10_000, seed: 5 });
-    const ids = blocksOf(start).map(({ node }) => node.id);
+  it(
+    'finds blocks by id between the steps of a long transform within the budget of an action',
+    { tags: ['budget'] },
+    () => {
+      const start = generateDoc(fixtureSchema, { blocks: 10_000, seed: 5 });
+      const ids = blocksOf(start).map(({ node }) => node.id);
 
-    start.positionOf(ids[0] ?? '');
+      start.positionOf(ids[0] ?? '');
 
-    const fastest = Math.min(
-      ...Array.from({ length: 3 }, () => {
-        const transform = createTransform(start);
-        const started = performance.now();
+      const fastest = Math.min(
+        ...Array.from({ length: 3 }, () => {
+          const transform = createTransform(start);
+          const started = performance.now();
 
-        ids.slice(0, 20).forEach((first, index) => {
-          const id = ids[(index * 37) % ids.length] ?? first;
+          ids.slice(0, 20).forEach((first, index) => {
+            const id = ids[(index * 37) % ids.length] ?? first;
 
-          const paragraph = (): ElementNode =>
-            fixtureSchema.element('paragraph', { id: transform.newId(), content: [] });
+            const paragraph = (): ElementNode =>
+              fixtureSchema.element('paragraph', { id: transform.newId(), content: [] });
 
-          transform.insert(transform.doc.positionOf(id) ?? 0, [paragraph()]);
-          transform.insert(transform.doc.positionOf(id) ?? 0, [paragraph()]);
-        });
+            transform.insert(transform.doc.positionOf(id) ?? 0, [paragraph()]);
+            transform.insert(transform.doc.positionOf(id) ?? 0, [paragraph()]);
+          });
 
-        return performance.now() - started;
-      }),
-    );
+          return performance.now() - started;
+        }),
+      );
 
-    expect(fastest).toBeLessThan(100);
-  });
+      expect(fastest).toBeLessThan(100);
+    },
+  );
 
-  it('finds a far block after each keystroke in a large document within the budget of an action', () => {
-    const start = generateDoc(fixtureSchema, { blocks: 10_000, seed: 5 });
-    const blocks = blocksOf(start);
-    const far = blocks.at(-1)?.node.id ?? '';
-    const typed = blocks.find(({ node }) => node.type === 'paragraph');
-    const at = (typed?.pos ?? 0) + 1;
+  it(
+    'finds a far block after each keystroke in a large document within the budget of an action',
+    { tags: ['budget'] },
+    () => {
+      const start = generateDoc(fixtureSchema, { blocks: 10_000, seed: 5 });
+      const blocks = blocksOf(start);
+      const far = blocks.at(-1)?.node.id ?? '';
+      const typed = blocks.find(({ node }) => node.type === 'paragraph');
+      const at = (typed?.pos ?? 0) + 1;
 
-    start.positionOf(far);
+      start.positionOf(far);
 
-    const fastest = Math.min(
-      ...Array.from({ length: 3 }, () => {
-        const started = performance.now();
-        let doc = start;
+      const fastest = Math.min(
+        ...Array.from({ length: 3 }, () => {
+          const started = performance.now();
+          let doc = start;
 
-        for (let key = 0; key < 100; key += 1) {
-          doc = createTransform(doc).insertText('a', at).doc;
-          doc.positionOf(far);
-        }
-        return performance.now() - started;
-      }),
-    );
+          for (let key = 0; key < 100; key += 1) {
+            doc = createTransform(doc).insertText('a', at).doc;
+            doc.positionOf(far);
+          }
+          return performance.now() - started;
+        }),
+      );
 
-    expect(fastest).toBeLessThan(100);
-  });
+      expect(fastest).toBeLessThan(100);
+    },
+  );
 });

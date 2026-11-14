@@ -99,6 +99,10 @@ describe('NuiEditor embeds and bookmarks', () => {
     await editor.showBlocks();
 
     expect(links.frames).toEqual(['frame:https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ']);
+
+    expect(links.framePermissions).toEqual([
+      'fullscreen; picture-in-picture; encrypted-media; clipboard-write',
+    ]);
   });
 
   it('bookmarks a link with a snapshot of its metadata that one undo removes', async () => {

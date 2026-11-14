@@ -60,7 +60,7 @@ describe('conditional rule descriptions and previews', () => {
       'Text begins with “Pen”',
       'Duplicate values',
       'Date is last week',
-      '2-colour scale',
+      '2-color scale',
       'Data bars',
       'Icon set',
       'Rule kept from the file',

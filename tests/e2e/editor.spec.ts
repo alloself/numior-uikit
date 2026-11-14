@@ -12,6 +12,15 @@ const SCROLL_STEP = 150;
 
 const SELECTION_TOLERANCE = 2;
 
+const CENTRE_TOLERANCE = 2;
+
+const WRAPPED_LINE =
+  'The armchair ships flat in one box and takes ten minutes to put together with the key that comes inside. '.repeat(
+    2,
+  );
+
+const SHORT_WINDOW = 480;
+
 const openEditor = async (playground: PlaygroundPage): Promise<void> => {
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
@@ -350,6 +359,35 @@ test.describe('editor', () => {
     await expect(editor.tool('Жирный')).toBeFocused();
   });
 
+  test('centres the bubble over a wrapped paragraph picked with a triple click', async ({
+    playground,
+    editor,
+    page,
+  }) => {
+    await openEditor(playground);
+
+    const fine = await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    test.skip(!fine, 'the bubble follows a mouse');
+
+    const line = editor.content.locator('p').first();
+
+    await editor.clear();
+    await page.keyboard.type(WRAPPED_LINE);
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('Next');
+    await line.click({ clickCount: 3 });
+    await expect(editor.bubble()).toBeVisible();
+
+    const [text, bubble] = await Promise.all([boxOf(line), boxOf(editor.bubble())]);
+
+    expect(Math.abs(bubble.x + bubble.width / 2 - (text.x + text.width / 2))).toBeLessThanOrEqual(
+      CENTRE_TOLERANCE,
+    );
+  });
+
   test('links with Ctrl+K and colours a selection from the bubble over it', async ({
     playground,
     editor,
@@ -419,6 +457,30 @@ test.describe('editor', () => {
     await editor.slashMenu().getByRole('option', { name: 'Цитата' }).click();
     await expect.poll(() => editor.blockTags()).toEqual(['h2', 'blockquote']);
     await expect.poll(() => editor.blockTexts()).toEqual(['Plan', '']);
+  });
+
+  test('keeps the slash menu inside a short window and reaches its last blocks', async ({
+    playground,
+    editor,
+    page,
+  }) => {
+    await playground.resize({ width: 1280, height: SHORT_WINDOW });
+    await openEditor(playground);
+
+    await editor.clear();
+    await page.keyboard.type('/');
+    await expect(editor.slashMenu()).toBeVisible();
+
+    await expect
+      .poll(async () => {
+        const menu = await boxOf(editor.slashMenu());
+
+        return menu.y + menu.height;
+      })
+      .toBeLessThanOrEqual(SHORT_WINDOW);
+
+    await editor.slashMenu().getByRole('option', { name: 'Разделитель' }).click();
+    await expect.poll(() => editor.blockTags()).toContain('hr');
   });
 
   test('moves blocks by keyboard and handle and duplicates one from its menu', async ({
