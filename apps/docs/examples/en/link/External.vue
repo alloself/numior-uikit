@@ -1,6 +1,8 @@
 <template>
-  <NuiLink href="https://lucide.dev" external>Lucide icons</NuiLink>
-  <NuiLink href="https://vuejs.org" external tone="neutral" underline="hover">Vue</NuiLink>
+  <p>
+    Order 20406 is with the courier service:
+    <NuiLink href="https://example.com/track/20406" external>track the parcel</NuiLink>
+  </p>
 </template>
 
 <script setup lang="ts">

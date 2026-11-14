@@ -8,6 +8,6 @@ import { NuiBreadcrumbs, type NuiBreadcrumbItem } from '@numior/vue';
 const path: NuiBreadcrumbItem[] = [
   { label: 'Каталог', href: '#', icon: 'folder' },
   { label: 'Мебель', href: '#' },
-  { label: 'Стулья' },
+  { label: 'Кресла и стулья' },
 ];
 </script>

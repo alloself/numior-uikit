@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-4 w-full max-w-2xl">
-    <NuiStepper v-model="step" :steps="steps" label="Регистрация" />
+    <NuiStepper v-model="step" :steps="steps" label="Оформление заказа" />
     <div class="flex justify-end gap-2">
       <NuiButton variant="ghost" tone="neutral" :disabled="index === 0" @click="move(-1)"
         >Назад</NuiButton
@@ -15,13 +15,13 @@ import { computed, ref } from 'vue';
 import { NuiButton, NuiStepper, type NuiStepperStep } from '@numior/vue';
 
 const steps: NuiStepperStep[] = [
-  { value: 'account', label: 'Аккаунт', description: 'Почта и пароль' },
-  { value: 'profile', label: 'Профиль', description: 'Имя и компания' },
-  { value: 'team', label: 'Команда' },
+  { value: 'cart', label: 'Корзина', description: 'Комод и лампа' },
+  { value: 'delivery', label: 'Доставка', description: 'Курьер или самовывоз' },
+  { value: 'payment', label: 'Оплата', description: 'Картой или переводом' },
   { value: 'done', label: 'Готово' },
 ];
 
-const step = ref('profile');
+const step = ref('delivery');
 const index = computed(() => steps.findIndex((item) => item.value === step.value));
 
 const move = (delta: number): void => {

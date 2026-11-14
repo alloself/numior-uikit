@@ -1,13 +1,11 @@
 # Pagination
 
-`NuiPagination` switches pages of long tables and lists. It shows the first and last pages,
-the neighbours of the current one, ellipses between them, and "previous" and "next" buttons.
+A page switcher for long lists and tables.
 
 <Example name="pagination/Basic" />
 
-`total` is the number of records, and the page and its size live in `v-model:page` and
-`v-model:page-size`. Next to the buttons sits the "21–40 of 240" line, and `pageSizes` adds a
-choice of rows per page.
+Pass the number of records in `total`; `v-model:page` and `v-model:page-size` hold the page and
+its size.
 
 ## Installation
 
@@ -18,40 +16,40 @@ import '@numior/vue/styles/pagination.css';
 
 ## Usage
 
+Change the number of neighbor pages, the edge buttons and the size.
+
 <Configurator name="NuiPagination" />
 
 ## Examples
 
-### Links instead of buttons
+### Make pages links
 
-Pass an `href(page)` function, and the pages become links: they open in a new tab and search
-engines can follow them. The `as` prop plugs in `RouterLink` or another link component. `edges`
-adds buttons that jump to the first and last pages.
+Pass an `href(page)` function.
 
 <Example name="pagination/Links" />
 
-### A narrow container
+The pages become links that users open in a new tab and search engines follow. Pass `RouterLink`
+or another link component in `as`.
 
-When the component runs out of room, the page numbers hide and "previous", "4 / 12" and "next"
-remain. This depends on the width of the component itself, not of the browser window.
+### Fit a narrow container
 
 <Example name="pagination/Compact" />
 
-## Behaviour
+In a narrow container the page numbers hide, and the arrows stay with "4 / 6" between them. The
+component reacts to its own width, not to the width of the window.
 
-`siblings` sets how many pages are visible on each side of the current one, `boundaries` how
-many at the start and the end. Both default to one. The component corrects a page number
-out of range by itself, for example when there are fewer records.
+## Behavior
 
-When the user changes the page size, the component recalculates the page so that the first
-visible record stays on screen. From page 5 of 20 records (81–100) a switch to 50 records leads
-to page 2 (51–100).
+A page number out of range moves to the nearest page, for example when the list gets shorter.
+
+When the user changes the page size, the page changes so that the first visible record stays on
+screen. From page 5 at 20 rows (81–100) a switch to 50 rows leads to page 2 (51–100).
 
 ## Accessibility
 
-The component is a `<nav>` landmark with a list of pages, and the current page carries
-`aria-current="page"`. A screen reader names the buttons "Page 4" and "Next page"; change these
-labels through `pageLabel` and the dictionary. Unavailable arrows are disabled, and in
+The component is a `nav` landmark with a list of pages, and the current page carries
+`aria-current="page"`. A screen reader names the buttons "Page 4" and "Next page", and the label
+props and the dictionary change these texts. Arrows that lead nowhere are disabled, and in
 right-to-left text they point the other way.
 
 <KeyboardReference name="NuiPagination" />

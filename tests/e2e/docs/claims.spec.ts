@@ -1,4 +1,5 @@
 import { expect, test } from '../fixtures';
+import { boxOf } from '../helpers/geometry';
 
 test('a click on the calendar month or year opens the list of months or years', async ({
   docs,
@@ -36,7 +37,7 @@ test('the command dialog example opens on Ctrl+J and Ctrl+K opens the docs searc
 
   await docs.open('/components/command');
   await docs.openExamplePalette();
-  await expect(palette.getByRole('option', { name: 'Темизация' })).toBeVisible();
+  await expect(palette.getByRole('option', { name: 'Новый заказ' })).toBeVisible();
 
   await docs.pressEscape();
   await expect(palette).toBeHidden();
@@ -57,9 +58,31 @@ test('an empty date field shows the date pattern of the page language', async ({
 
 test('a menu opened with ArrowUp focuses its last item', async ({ docs }) => {
   await docs.open('/components/menu');
-  await docs.article.getByRole('button', { name: 'Файл' }).first().focus();
+  await docs.article.getByRole('button', { name: 'Действия' }).first().focus();
   await docs.openMenuFromItsEnd();
-  await expect(docs.article.getByRole('menuitem', { name: 'Удалить' }).first()).toBeFocused();
+
+  await expect(
+    docs.article.getByRole('menuitem', { name: 'Отменить заказ' }).first(),
+  ).toBeFocused();
+});
+
+test('a submenu with no room on either side stays on a phone screen', async ({ docs, page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await docs.open('/components/menu');
+  await docs.article.getByRole('button', { name: 'Действия' }).first().click();
+  await docs.article.getByRole('menuitem', { name: 'Отправить покупателю' }).first().click();
+
+  const submenu = docs.article.getByRole('menu', { name: 'Отправить покупателю' }).first();
+
+  await expect.poll(async () => (await boxOf(submenu)).x).toBeGreaterThanOrEqual(0);
+
+  await expect
+    .poll(async () => {
+      const box = await boxOf(submenu);
+
+      return box.x + box.width;
+    })
+    .toBeLessThanOrEqual(390);
 });
 
 test('the action of a toast replaces its text in place', async ({ docs }) => {

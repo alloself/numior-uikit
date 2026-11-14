@@ -1,6 +1,8 @@
 <template>
-  <NuiLink href="https://lucide.dev" external>Иконки Lucide</NuiLink>
-  <NuiLink href="https://vuejs.org" external tone="neutral" underline="hover">Vue</NuiLink>
+  <p>
+    Заказ 20406 передан курьерской службе:
+    <NuiLink href="https://example.com/track/20406" external>отследить посылку</NuiLink>
+  </p>
 </template>
 
 <script setup lang="ts">

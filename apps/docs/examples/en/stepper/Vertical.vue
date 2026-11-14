@@ -4,7 +4,7 @@
     :steps="steps"
     orientation="vertical"
     :linear="false"
-    label="Project settings"
+    label="New product"
   />
 </template>
 
@@ -13,11 +13,11 @@ import { ref } from 'vue';
 import { NuiStepper, type NuiStepperStep } from '@numior/vue';
 
 const steps: NuiStepperStep[] = [
-  { value: 'general', label: 'General', description: 'Name and description', status: 'complete' },
-  { value: 'access', label: 'Access', description: 'Roles and invitations', status: 'error' },
-  { value: 'integrations', label: 'Integrations' },
-  { value: 'billing', label: 'Billing', disabled: true },
+  { value: 'details', label: 'Details', description: 'Name and category', status: 'complete' },
+  { value: 'price', label: 'Price', description: 'The sale price is missing', status: 'error' },
+  { value: 'photos', label: 'Photos', description: 'Up to ten pictures' },
+  { value: 'publish', label: 'Publishing', disabled: true },
 ];
 
-const step = ref('integrations');
+const step = ref('photos');
 </script>

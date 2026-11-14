@@ -1,43 +1,42 @@
 <template>
   <div class="w-full grid-auto gap-6">
     <div ref="article" class="h-80 overflow-auto border rounded-md p-4" tabindex="0">
-      <h2 id="toc-demo-install" class="mt-0 text-lg font-semibold">Installation</h2>
-      <p>The package installs from the workspace, styles are imported per file.</p>
-      <p>Theme tokens come from base.css.</p>
-      <h2 id="toc-demo-usage" class="text-lg font-semibold">Usage</h2>
-      <p>The component takes list items and a scroll root.</p>
-      <h3 id="toc-demo-basic" class="font-semibold">Basic example</h3>
-      <p>Headings with ids are enough.</p>
-      <p>Nested children give a second level.</p>
-      <h3 id="toc-demo-advanced" class="font-semibold">Advanced example</h3>
-      <p>The active item follows the scroll.</p>
-      <p>The root can change on the fly.</p>
-      <h2 id="toc-demo-api" class="text-lg font-semibold">API</h2>
-      <p>The line sets the height share where the active item changes.</p>
-      <p>Props, events and slots are listed in the tables.</p>
-      <p>The select event fires on click.</p>
+      <h2 id="toc-returns-terms" class="mt-0 text-lg font-semibold">Return terms</h2>
+      <p>A customer can return an item within 14 days after the order arrives.</p>
+      <p>The packaging and the tags have to stay in place.</p>
+      <h2 id="toc-returns-request" class="text-lg font-semibold">How to file a return</h2>
+      <p>A request is created on the order card with the “File a return” button.</p>
+      <h3 id="toc-returns-courier" class="font-semibold">By courier</h3>
+      <p>A courier collects the parcel at the delivery address of the order.</p>
+      <p>The customer picks the time in the confirmation email.</p>
+      <h3 id="toc-returns-pickup" class="font-semibold">At a pickup point</h3>
+      <p>The customer brings the parcel to any pickup point and gives the request number.</p>
+      <p>The point hands it over to the warehouse within two days.</p>
+      <h2 id="toc-returns-refund" class="text-lg font-semibold">Refund</h2>
+      <p>The money goes back to the card that paid for the order.</p>
+      <p>The bank credits it in three to five business days.</p>
+      <p>The refund status shows in the Payments section.</p>
     </div>
-    <NuiToc :items="items" :root="article" @select="last = $event" />
+    <NuiToc :items="items" :root="article" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, useTemplateRef } from 'vue';
+import { useTemplateRef } from 'vue';
 import { NuiToc, type NuiTocItem } from '@numior/vue';
 
 const article = useTemplateRef<HTMLElement>('article');
-const last = ref('');
 
 const items: readonly NuiTocItem[] = [
-  { id: 'toc-demo-install', label: 'Installation' },
+  { id: 'toc-returns-terms', label: 'Return terms' },
   {
-    id: 'toc-demo-usage',
-    label: 'Usage',
+    id: 'toc-returns-request',
+    label: 'How to file a return',
     children: [
-      { id: 'toc-demo-basic', label: 'Basic example' },
-      { id: 'toc-demo-advanced', label: 'Advanced example' },
+      { id: 'toc-returns-courier', label: 'By courier' },
+      { id: 'toc-returns-pickup', label: 'At a pickup point' },
     ],
   },
-  { id: 'toc-demo-api', label: 'API' },
+  { id: 'toc-returns-refund', label: 'Refund' },
 ];
 </script>
