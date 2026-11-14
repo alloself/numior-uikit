@@ -477,6 +477,20 @@ export class TableSection extends GridKeys {
     return this.header(col).evaluate(handleLayoutOf, HEADER_PARTS);
   }
 
+  async narrowColumn(col: number, width: number): Promise<void> {
+    const cell = await boxOf(this.header(col));
+
+    await this.dragResizer(col, width - cell.width);
+
+    await expect
+      .poll(async () => Math.abs((await renderedWidth(this.header(col))) - width))
+      .toBeLessThanOrEqual(1);
+  }
+
+  headerLabelWidth(col: number): Promise<number> {
+    return renderedWidth(this.header(col).locator('.nui-table__text'));
+  }
+
   async menuInset(col: number): Promise<number> {
     const cell = await boxOf(this.header(col));
     const menu = await boxOf(this.menuButton(col));

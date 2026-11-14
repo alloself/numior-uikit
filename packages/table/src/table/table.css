@@ -1076,6 +1076,30 @@
 }
 .nui-table__row--head .nui-table__content {
   gap: var(--nui-space-1);
+  container-type: inline-size;
+}
+.nui-table__row--head > .nui-table__cell--align-end > .nui-table__content {
+  justify-content: safe flex-end;
+}
+.nui-table__row--head > .nui-table__cell--align-center > .nui-table__content {
+  justify-content: safe center;
+}
+@container (inline-size < 6.5rem) {
+  .nui-table__cell:hover > .nui-table__content > .nui-table__grip ~ .nui-table__sort {
+    display: none;
+  }
+}
+@container (inline-size < 3.5rem) {
+  .nui-table__menu:not([aria-expanded='true']) {
+    display: none;
+  }
+}
+@media (hover: none) {
+  @container (inline-size < 6.5rem) {
+    .nui-table__grip ~ .nui-table__sort {
+      display: none;
+    }
+  }
 }
 .nui-table__grip {
   box-sizing: border-box;
