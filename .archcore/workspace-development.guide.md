@@ -62,6 +62,7 @@ lightningcss не переписывал `light-dark()`, `oklch()` и `color-mix
 
 - `Unsupported engine`: активировать Node из .node-version и Corepack pnpm; не выключать engine-strict.
 - `spawn EBUSY` под `vp run --cache`: шаг запускает esbuild-сервис, который не стартует под отслеживанием файлов Vite Task; такой шаг запускается через `vp run` без `--cache`.
+- Тесты под `pnpm check` упираются в таймаут, хотя отдельно зелёные: задача с кешем Vite Task идёт в чистом окружении, и переменная, которой задано число воркеров, до Vitest не доходит. Тогда Vitest поднимает воркер на каждое ядро и упирается в предел памяти. Переменная, которая меняет только ход прогона, а не результат, указывается в `cache.untrackedEnv` задачи (`VITEST_MAX_WORKERS` у `test:coverage` и `test:budget`).
 - Vue compileScript «No fs option»: не удалять TypeScript 5.9.3 override; optional peer TS 7 не совместим с используемым JS compiler API.
 - Fallow unresolved CSS до build: сохранить resolve.conditions @numior/source и exports каждого пакета.
 - Нет браузеров/старый Linux: install на поддерживаемой ОС или version-matched официальный Playwright image. Не подменять тестовый браузер произвольным установленным Chrome ради отчёта.

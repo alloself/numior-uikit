@@ -259,22 +259,9 @@ export const splitKnown = (
   checks: readonly Check[],
 ): KnownSplit => {
   const keys = new Set(checks.map((check) => check.key));
-  const fresh: (readonly [string, readonly Mismatch[]])[] = [];
-  const stale: string[] = [];
 
-  for (const entry of mismatches) {
-    if (known.has(entry[0])) {
-      continue;
-    }
-
-    fresh.push(entry);
-  }
-  for (const key of known.keys()) {
-    if (!keys.has(key) || mismatches.has(key)) {
-      continue;
-    }
-
-    stale.push(key);
-  }
-  return { fresh, stale };
+  return {
+    fresh: Array.from(mismatches).filter(([key]) => !known.has(key)),
+    stale: Array.from(known.keys()).filter((key) => keys.has(key) && !mismatches.has(key)),
+  };
 };

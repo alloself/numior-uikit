@@ -18,22 +18,27 @@ const preferred: Choice = (base, mine, theirs, same) => (same(mine, base) ? thei
 
 const yielded: Choice = (base, mine, theirs, same) => (same(theirs, base) ? mine : theirs);
 
+const sameExtra = (left: LineLayout['extra'], right: LineLayout['extra']): boolean =>
+  left.length === right.length &&
+  left.every(([name, value], index) => name === right[index]?.[0] && value === right[index]?.[1]);
+
+const sameSize = (left: LineLayout, right: LineLayout): boolean =>
+  left.size === right.size && left.custom === right.custom && left.hidden === right.hidden;
+
+const sameOutline = (left: LineLayout, right: LineLayout): boolean =>
+  left.level === right.level && left.collapsed === right.collapsed;
+
+const sameStyle = (left: LineLayout, right: LineLayout): boolean =>
+  left.style?.format === right.style?.format && left.style?.decoration === right.style?.decoration;
+
 const sameLine = (left: LineLayout | undefined, right: LineLayout | undefined): boolean =>
   left === right ||
   (left !== undefined &&
     right !== undefined &&
-    left.size === right.size &&
-    left.custom === right.custom &&
-    left.hidden === right.hidden &&
-    left.level === right.level &&
-    left.collapsed === right.collapsed &&
-    left.style?.format === right.style?.format &&
-    left.style?.decoration === right.style?.decoration &&
-    left.extra.length === right.extra.length &&
-    left.extra.every(
-      ([name, value], index) =>
-        name === right.extra[index]?.[0] && value === right.extra[index]?.[1],
-    ));
+    sameSize(left, right) &&
+    sameOutline(left, right) &&
+    sameStyle(left, right) &&
+    sameExtra(left.extra, right.extra));
 
 const sameLines = (left: LineLayouts, right: LineLayouts): boolean => {
   if (left === right) {

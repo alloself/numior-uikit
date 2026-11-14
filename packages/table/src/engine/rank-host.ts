@@ -67,6 +67,15 @@ const post = (target: Worker, message: RankMessage, transfer: Transferable[] = [
   target.postMessage(message, transfer);
 };
 
+const release = (target: Worker, id: number, busy: boolean): void => {
+  if (!busy || live.size > 0) {
+    post(target, { kind: 'drop', id });
+    return;
+  }
+  target.terminate();
+  worker = undefined;
+};
+
 export const workerRankHost: RankHost = {
   open: (collator) => {
     const target = workerOf();
@@ -105,13 +114,7 @@ export const workerRankHost: RankHost = {
 
         answers.delete(id);
         waiting?.(undefined);
-
-        if (waiting !== undefined && live.size === 0) {
-          target.terminate();
-          worker = undefined;
-        } else {
-          post(target, { kind: 'drop', id });
-        }
+        release(target, id, waiting !== undefined);
       },
     };
   },

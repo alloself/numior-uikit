@@ -787,6 +787,34 @@ export interface NuiTableFilterProps {
   valueLabel: (value: TableFilterValue) => string;
 }
 
+export interface NuiTableFilterValueOption {
+  readonly key: string;
+  readonly value: TableFilterValue;
+  readonly label: string;
+}
+
+export interface NuiTableFilterValueTexts {
+  readonly search: string;
+  readonly noMatches: string;
+  readonly loading: string;
+  readonly selectAll: string;
+  readonly truncated: string;
+}
+
+export interface NuiTableFilterValuesProps {
+  title: string;
+  options: readonly NuiTableFilterValueOption[];
+  texts: NuiTableFilterValueTexts;
+  searchable: boolean;
+  nothingFound: boolean;
+  waiting: boolean;
+  loading: boolean;
+  truncated: boolean;
+  allChosen: boolean;
+  someChosen: boolean;
+  chosen: (value: TableFilterValue) => boolean;
+}
+
 export type NuiTableSlots<T> = {
   empty?: () => unknown;
   loading?: () => unknown;

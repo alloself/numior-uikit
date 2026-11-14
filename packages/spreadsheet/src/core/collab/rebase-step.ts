@@ -256,6 +256,42 @@ const putPivotOver = (
   };
 };
 
+const conditionalStepOver = (
+  step: StepOf<typeof StepKind.SetConditional>,
+  change: RemoteChange,
+  sheet: string,
+): WorkbookStep => ({
+  ...step,
+  sheet,
+  formats: formatsOver(step.formats, change, step.sheet),
+  base: step.base === undefined ? undefined : formatsOver(step.base, change, step.sheet),
+});
+
+const layoutStepOver = (
+  step: StepOf<typeof StepKind.SetLayout>,
+  change: RemoteChange,
+  sheet: string,
+): WorkbookStep => ({
+  ...step,
+  sheet,
+  layout: layoutOver(step.layout, change, step.sheet),
+  base: step.base === undefined ? undefined : layoutOver(step.base, change, step.sheet),
+});
+
+const setPivotOver = (
+  step: StepOf<typeof StepKind.SetPivot>,
+  change: RemoteChange,
+  sheet: string,
+): WorkbookStep | undefined => {
+  if (step.pivot === undefined) {
+    return { ...step, sheet };
+  }
+
+  const pivot = pivotOver(step.pivot, change, step.sheet);
+
+  return pivot === undefined ? undefined : { ...step, sheet, pivot };
+};
+
 const sheetStepOver = (step: SheetStep, change: RemoteChange): WorkbookStep | undefined => {
   const sheet = homeOver(step.sheet, change);
 
@@ -277,28 +313,11 @@ const sheetStepOver = (step: SheetStep, change: RemoteChange): WorkbookStep | un
     case StepKind.DeleteLines:
       return linesStepOver(step, change, sheet);
     case StepKind.SetConditional:
-      return {
-        ...step,
-        sheet,
-        formats: formatsOver(step.formats, change, step.sheet),
-        base: step.base === undefined ? undefined : formatsOver(step.base, change, step.sheet),
-      };
+      return conditionalStepOver(step, change, sheet);
     case StepKind.SetLayout:
-      return {
-        ...step,
-        sheet,
-        layout: layoutOver(step.layout, change, step.sheet),
-        base: step.base === undefined ? undefined : layoutOver(step.base, change, step.sheet),
-      };
-    case StepKind.SetPivot: {
-      if (step.pivot === undefined) {
-        return { ...step, sheet };
-      }
-
-      const pivot = pivotOver(step.pivot, change, step.sheet);
-
-      return pivot === undefined ? undefined : { ...step, sheet, pivot };
-    }
+      return layoutStepOver(step, change, sheet);
+    case StepKind.SetPivot:
+      return setPivotOver(step, change, sheet);
     case StepKind.RefreshPivot:
       return { ...step, sheet };
     case StepKind.PutPivot:

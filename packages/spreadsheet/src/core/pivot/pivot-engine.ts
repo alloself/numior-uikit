@@ -47,6 +47,14 @@ interface Placed {
   readonly line: PivotLine;
 }
 
+interface ShownSpot {
+  readonly data: number;
+  readonly placed: Placed;
+  readonly other: number;
+  readonly rank: Int32Array;
+  readonly current: number | undefined;
+}
+
 export const VALUES_FIELD = -2;
 
 const NOT_AVAILABLE = errorValue('#N/A');
@@ -540,6 +548,57 @@ const createEvaluator = (
       ].join(' '),
   );
 
+  const againstBase = (
+    show: Extract<PivotShowAs, { readonly item: unknown }>,
+    value: CellValue,
+    spot: ShownSpot,
+  ): CellValue => {
+    if (
+      typeof show.item === 'object' &&
+      namedItem(show.field, show.item, spot.rank) === undefined
+    ) {
+      return NOT_AVAILABLE;
+    }
+    if (spot.current === undefined) {
+      return EMPTY;
+    }
+
+    const item = baseItem(show, spot.rank, spot.current);
+
+    if (item === undefined) {
+      return NOT_AVAILABLE;
+    }
+    if (item === spot.current) {
+      return show.kind === PivotShowAsKind.Percent ? ratio(value, value) : EMPTY;
+    }
+
+    const base = shifted(spot.data, spot.placed, spot.other, item);
+
+    return base === undefined ? EMPTY : compared(show, value, base);
+  };
+
+  const spotOf = (
+    field: number,
+    data: number,
+    row: PivotLine,
+    col: PivotLine,
+  ): ShownSpot | undefined => {
+    const placed = placedOf(field, row, col);
+    const rank = ranks.get(field);
+
+    if (placed === undefined || rank === undefined) {
+      return undefined;
+    }
+
+    return {
+      data,
+      placed,
+      rank,
+      current: realItems(placed.axis, placed.line)[placed.level],
+      other: placed.axis === rows ? col.node : row.node,
+    };
+  };
+
   const relative = (data: number, value: CellValue, row: PivotLine, col: PivotLine): CellValue => {
     const show = definition.values[data]?.showAs;
 
@@ -547,40 +606,21 @@ const createEvaluator = (
       return value;
     }
 
-    const placed = placedOf(show.field, row, col);
-    const rank = ranks.get(show.field);
+    const spot = spotOf(show.field, data, row, col);
 
-    if (placed === undefined || rank === undefined) {
+    if (spot === undefined) {
       return NOT_AVAILABLE;
     }
-
-    const current = realItems(placed.axis, placed.line)[placed.level];
-    const other = placed.axis === rows ? col.node : row.node;
-
-    if (show.kind === PivotShowAsKind.RunTotal) {
-      return current === undefined
-        ? EMPTY
-        : numberValue(runOf(data, show.field, placed, other)[rank[current] ?? -1] ?? 0);
+    if (show.kind !== PivotShowAsKind.RunTotal) {
+      return againstBase(show, value, spot);
     }
-    if (typeof show.item === 'object' && namedItem(show.field, show.item, rank) === undefined) {
-      return NOT_AVAILABLE;
-    }
-    if (current === undefined) {
+    if (spot.current === undefined) {
       return EMPTY;
     }
 
-    const item = baseItem(show, rank, current);
-
-    if (item === undefined) {
-      return NOT_AVAILABLE;
-    }
-    if (item === current) {
-      return show.kind === PivotShowAsKind.Percent ? ratio(value, value) : EMPTY;
-    }
-
-    const base = shifted(data, placed, other, item);
-
-    return base === undefined ? EMPTY : compared(show, value, base);
+    return numberValue(
+      runOf(data, show.field, spot.placed, spot.other)[spot.rank[spot.current] ?? -1] ?? 0,
+    );
   };
 
   const shown = (data: number, row: PivotLine, col: PivotLine): CellValue => {

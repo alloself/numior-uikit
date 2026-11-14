@@ -35,6 +35,9 @@ const isLeaf = (schema: Schema, node: ElementNode): boolean =>
 export const concealed = (state: EditorState, parent: ElementNode, index: number): boolean =>
   state.plugins.some((plugin) => plugin.props.conceals?.(parent, index, state) === true);
 
+const innerEdge = (child: ElementNode, pos: number, size: number, side: Side): [number, number] =>
+  side > 0 ? [0, pos + 1] : [child.content.length - 1, pos + size - 1];
+
 const leafFrom = (
   state: EditorState,
   parent: ElementNode,
@@ -50,28 +53,23 @@ const leafFrom = (
     if (child?.kind !== ContentNodeKind.Element) {
       return undefined;
     }
+
     const size = nodeSize(child);
     const pos = side > 0 ? at : at - size;
-    const shown = !concealed(state, parent, index);
 
-    if (shown && isLeaf(state.doc.schema, child)) {
+    at += side * size;
+    if (concealed(state, parent, index)) {
+      continue;
+    }
+    if (isLeaf(state.doc.schema, child)) {
       return { node: child, pos };
     }
 
-    const leaf = shown
-      ? leafFrom(
-          state,
-          child,
-          side > 0 ? 0 : child.content.length - 1,
-          side > 0 ? pos + 1 : pos + size - 1,
-          side,
-        )
-      : undefined;
+    const leaf = leafFrom(state, child, ...innerEdge(child, pos, size, side), side);
 
     if (leaf !== undefined) {
       return leaf;
     }
-    at += side * size;
   }
   return undefined;
 };

@@ -28,48 +28,23 @@
         <NuiDatePicker v-model="draft.from" :label="texts.from" :locale="locale" size="sm" />
         <NuiDatePicker v-model="draft.to" :label="texts.to" :locale="locale" size="sm" />
       </template>
-      <template v-else>
-        <NuiInput
-          v-if="searchable"
-          v-model="query"
-          type="search"
-          :label="texts.search"
-          size="sm"
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <p v-if="nothingFound" class="nui-table-filter__note">{{ texts.noMatches }}</p>
-        <p v-else-if="waiting" class="nui-table-filter__note" role="status">
-          {{ texts.loading }}
-        </p>
-        <template v-else>
-          <NuiCheckbox
-            :model-value="allChosen"
-            :indeterminate="someChosen"
-            size="sm"
-            @update:model-value="chooseAll"
-          >
-            {{ texts.selectAll }}
-          </NuiCheckbox>
-          <div
-            class="nui-table-filter__values"
-            role="group"
-            :aria-label="title"
-            :aria-busy="loading || undefined"
-          >
-            <NuiCheckbox
-              v-for="option in options"
-              :key="option.key"
-              :model-value="chosen(option.value)"
-              size="sm"
-              @update:model-value="toggle(option.value)"
-            >
-              {{ option.label }}
-            </NuiCheckbox>
-          </div>
-        </template>
-        <p v-if="truncated" class="nui-table-filter__note">{{ texts.truncated }}</p>
-      </template>
+      <NuiTableFilterValues
+        v-else
+        v-model:query="query"
+        :title="title"
+        :options="options"
+        :texts="texts"
+        :searchable="searchable"
+        :nothing-found="nothingFound"
+        :waiting="waiting"
+        :loading="loading"
+        :truncated="truncated"
+        :all-chosen="allChosen"
+        :some-chosen="someChosen"
+        :chosen="chosen"
+        @choose-all="chooseAll"
+        @toggle="toggle"
+      />
       <div class="nui-table-filter__actions">
         <NuiButton type="button" variant="ghost" tone="neutral" size="sm" @click="reset">
           {{ texts.reset }}
@@ -91,14 +66,7 @@ import {
   useMessages,
   usePopover,
 } from '@numior/primitives';
-import {
-  NuiButton,
-  NuiCheckbox,
-  NuiDatePicker,
-  NuiInput,
-  NuiNumberField,
-  NuiSelect,
-} from '@numior/vue';
+import { NuiButton, NuiDatePicker, NuiInput, NuiNumberField, NuiSelect } from '@numior/vue';
 import { TableTextOp, type TableFilterValue } from '../engine';
 import { tableMessages } from './table.messages';
 import {
@@ -114,13 +82,9 @@ import {
   NuiTableFilterKind,
   type NuiTableColumnFilter,
   type NuiTableFilterProps,
+  type NuiTableFilterValueOption,
 } from './table.types';
-
-interface ValueOption {
-  readonly key: string;
-  readonly value: TableFilterValue;
-  readonly label: string;
-}
+import NuiTableFilterValues from './NuiTableFilterValues.vue';
 
 const SEARCH_FROM = 8;
 
@@ -193,7 +157,7 @@ const operators = computed(() => {
 
 const needle = computed(() => query.value.trim());
 
-const options = computed<readonly ValueOption[]>(() =>
+const options = computed<readonly NuiTableFilterValueOption[]>(() =>
   values.value.map((value) => ({
     key: `${typeof value}:${String(value)}`,
     value,

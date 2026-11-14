@@ -7,6 +7,12 @@ export interface ExcelInputCase {
 
 type Run = readonly number[];
 
+interface ExcelInputCorpus {
+  readonly arity: Record<string, unknown>;
+  readonly references: Record<string, unknown>;
+  readonly formulas: readonly unknown[];
+}
+
 const SOURCE = new URL('./corpus/excel-input.json', import.meta.url);
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -77,9 +83,7 @@ const formulaCase = (entry: unknown): ExcelInputCase => {
   return { formula: entry[0], taken: entry[1] };
 };
 
-export const excelInputCases = (): ExcelInputCase[] => {
-  const data: unknown = JSON.parse(readFileSync(SOURCE, 'utf8'));
-
+const corpusOf = (data: unknown): ExcelInputCorpus => {
   if (
     !isRecord(data) ||
     !isRecord(data.arity) ||
@@ -88,21 +92,15 @@ export const excelInputCases = (): ExcelInputCase[] => {
   ) {
     throw new Error('excel-input.json is not readable');
   }
+  return { arity: data.arity, references: data.references, formulas: data.formulas };
+};
 
-  const cases: ExcelInputCase[] = [];
+export const excelInputCases = (): ExcelInputCase[] => {
+  const corpus = corpusOf(JSON.parse(readFileSync(SOURCE, 'utf8')));
 
-  for (const [name, entry] of Object.entries(data.arity)) {
-    for (const item of arityCases(name, entry)) {
-      cases.push(item);
-    }
-  }
-  for (const [name, entry] of Object.entries(data.references)) {
-    for (const item of referenceCases(name, entry)) {
-      cases.push(item);
-    }
-  }
-  for (const entry of data.formulas) {
-    cases.push(formulaCase(entry));
-  }
-  return cases;
+  return [
+    ...Object.entries(corpus.arity).flatMap(([name, entry]) => arityCases(name, entry)),
+    ...Object.entries(corpus.references).flatMap(([name, entry]) => referenceCases(name, entry)),
+    ...corpus.formulas.map(formulaCase),
+  ];
 };

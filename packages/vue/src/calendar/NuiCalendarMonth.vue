@@ -27,15 +27,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(row, week) in rows" :key="week" class="nui-calendar__row">
-          <th v-if="calendar.weekNumbers()" scope="row" class="nui-calendar__week">
-            {{ formatDayNumber(weekNumberOfRow(row), calendar.locale.value) }}
-          </th>
-          <template v-for="(date, weekday) in row" :key="weekday">
-            <NuiCalendarDay v-if="date !== null" :date="date" :month="month" />
-            <td v-else class="nui-calendar__cell" />
-          </template>
-        </tr>
+        <NuiCalendarWeek v-for="(row, week) in rows" :key="week" :row="row" :month="month" />
       </tbody>
     </table>
     <NuiCalendarPicker v-else :kind="calendar.view.value" :month="month" />
@@ -44,17 +36,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import {
-  formatDayNumber,
-  gridMoveFor,
-  gridTargetDate,
-  monthGrid,
-  weekNumberOfRow,
-  weekdayLabels,
-} from '@numior/primitives';
+import { gridMoveFor, gridTargetDate, monthGrid, weekdayLabels } from '@numior/primitives';
 import NuiCalendarCaption from './NuiCalendarCaption.vue';
-import NuiCalendarDay from './NuiCalendarDay.vue';
 import NuiCalendarPicker from './NuiCalendarPicker.vue';
+import NuiCalendarWeek from './NuiCalendarWeek.vue';
 import { useCalendar } from './calendar-context';
 import { NuiCalendarMode, NuiCalendarView } from './calendar.types';
 

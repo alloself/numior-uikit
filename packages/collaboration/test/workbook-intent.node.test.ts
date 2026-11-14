@@ -73,6 +73,11 @@ type Move =
   | { readonly kind: typeof MoveKind.Relink }
   | { readonly kind: typeof MoveKind.Late };
 
+type PlainKind = Exclude<
+  MoveKind,
+  typeof MoveKind.Formula | typeof MoveKind.Lines | typeof MoveKind.Room
+>;
+
 const DeedKind = { Token: 'token', Formula: 'formula', Lines: 'lines' } as const;
 
 const MoveKind = {
@@ -218,11 +223,48 @@ const makeRoom = (author: Author, count: number): void => {
   addLines(author, 'rows', bottomOf(places, head.col) + 1, count);
 };
 
+const settled = (net: BookNetwork, act: () => void): void => {
+  net.settle();
+  act();
+  net.settle();
+};
+
+const PLAIN: Readonly<Record<PlainKind, (author: Author, net: BookNetwork) => void>> = {
+  [MoveKind.Token]: (author) => {
+    writeToken(author);
+  },
+  [MoveKind.Undo]: (author, net) => {
+    settled(net, () => {
+      author.client.undo();
+    });
+  },
+  [MoveKind.Redo]: (author, net) => {
+    settled(net, () => {
+      author.client.redo();
+    });
+  },
+  [MoveKind.Send]: (author) => {
+    author.client.toServer();
+  },
+  [MoveKind.Receive]: (author) => {
+    author.client.toClient();
+  },
+  [MoveKind.Settle]: (_author, net) => {
+    net.settle();
+  },
+  [MoveKind.Cut]: (author) => {
+    author.client.cut();
+  },
+  [MoveKind.Relink]: (author) => {
+    author.client.relink();
+  },
+  [MoveKind.Late]: (author) => {
+    author.client.late();
+  },
+};
+
 const play = (move: Move, author: Author, net: BookNetwork): void => {
   switch (move.kind) {
-    case MoveKind.Token:
-      writeToken(author);
-      break;
     case MoveKind.Formula:
       writeFormula(author, move.pick);
       break;
@@ -232,34 +274,8 @@ const play = (move: Move, author: Author, net: BookNetwork): void => {
     case MoveKind.Room:
       makeRoom(author, move.count);
       break;
-    case MoveKind.Undo:
-      net.settle();
-      author.client.undo();
-      net.settle();
-      break;
-    case MoveKind.Redo:
-      net.settle();
-      author.client.redo();
-      net.settle();
-      break;
-    case MoveKind.Send:
-      author.client.toServer();
-      break;
-    case MoveKind.Receive:
-      author.client.toClient();
-      break;
-    case MoveKind.Settle:
-      net.settle();
-      break;
-    case MoveKind.Cut:
-      author.client.cut();
-      break;
-    case MoveKind.Relink:
-      author.client.relink();
-      break;
-    case MoveKind.Late:
-      author.client.late();
-      break;
+    default:
+      PLAIN[move.kind](author, net);
   }
 };
 
