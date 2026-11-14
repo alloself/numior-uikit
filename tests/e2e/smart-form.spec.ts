@@ -138,6 +138,37 @@ test.describe('smart form', () => {
     await expect(smartForm.addContact).toBeEnabled();
   });
 
+  test('a contact row keeps its fields at the row padding until the pointer slides its grip in', async ({
+    playground,
+    smartForm,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'a touch screen shows the grip all the time');
+    await openSmartForm(playground);
+
+    const rest = await smartForm.contactRowLayout(1);
+
+    await smartForm.hoverContact(1);
+
+    const hovered = await smartForm.contactRowLayout(1);
+
+    expect(rest.content).toBe(0);
+    expect([hovered.grip, hovered.gap]).toEqual([0, hovered.rowGap]);
+  });
+
+  test('a touch screen shows the contact grip before the fields all the time', async ({
+    playground,
+    smartForm,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, 'a pointer reveals the grip on hover');
+    await openSmartForm(playground);
+
+    const rest = await smartForm.contactRowLayout(1);
+
+    expect([rest.grip, rest.gap]).toEqual([0, rest.rowGap]);
+  });
+
   test('dragging a grip moves a contact with a ghost under the pointer beside the insertion line', async ({
     playground,
     smartForm,

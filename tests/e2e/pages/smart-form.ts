@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import {
   isRecord,
   isString,
@@ -26,6 +26,13 @@ export interface KindSwitchMotion {
   readonly companyAfter: boolean;
 }
 
+export interface ContactRowLayout {
+  readonly content: number;
+  readonly grip: number;
+  readonly gap: number;
+  readonly rowGap: number;
+}
+
 const isSmartFormOutput = shapeOf({
   filter: shapeOf({ query: isString, status: nullable(isString) }),
   profile: nullable(isRecord),
@@ -37,6 +44,31 @@ const parseSmartFormOutput = (text: string): SmartFormOutput =>
   parseAs(text, isSmartFormOutput, 'smart form output');
 
 const FIELD = 'xpath=ancestor::*[contains(concat(" ", @class, " "), " nui-field ")][1]';
+
+const contactRowLayoutOf = (row: Element): ContactRowLayout => {
+  const style = getComputedStyle(row);
+  const grip = row.querySelector('.nui-field-array__grip');
+  const content = row.querySelector('.nui-field-array__content');
+
+  if (grip === null || content === null) {
+    throw new Error('The contact row has no grip or content');
+  }
+
+  const start =
+    row.getBoundingClientRect().left +
+    (Number.parseFloat(style.borderInlineStartWidth) || 0) +
+    (Number.parseFloat(style.paddingInlineStart) || 0);
+
+  const gripBox = grip.getBoundingClientRect();
+  const contentBox = content.getBoundingClientRect();
+
+  return {
+    content: Math.round(contentBox.left - start),
+    grip: Math.round(gripBox.left - start),
+    gap: Math.round(contentBox.left - gripBox.right),
+    rowGap: Math.round(Number.parseFloat(style.columnGap) || 0),
+  };
+};
 
 export class SmartFormSection {
   readonly scope = sectionScope('smart');
@@ -218,6 +250,20 @@ export class SmartFormSection {
     await this.control('name').fill('Анна');
     await this.control('email').fill('ann@example.com');
     await this.control('contacts.0.name').fill('Борис');
+  }
+
+  async contactRowLayout(row: number): Promise<ContactRowLayout> {
+    const element = this.contacts.nth(row - 1);
+
+    await expect
+      .poll(() => element.evaluate((node) => node.getAnimations({ subtree: true }).length))
+      .toBe(0);
+
+    return element.evaluate(contactRowLayoutOf);
+  }
+
+  async hoverContact(row: number): Promise<void> {
+    await this.contacts.nth(row - 1).hover();
   }
 
   async dragContact(from: number, to: number): Promise<Point> {
