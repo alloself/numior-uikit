@@ -61,6 +61,18 @@ components and `use*` composables. It puts the theme script in `<head>` and rend
 the `to` prop through `NuxtLink`. When `@numior/forms` or `@numior/table` is installed, their
 components and styles are added the same way.
 
+The module builds the kit CSS in its own Tailwind entry. Set the theme of the app with base keys
+in `@theme static`; the derived keys follow them:
+
+```css
+@import 'tailwindcss';
+@import '@numior/tailwind';
+
+@theme static {
+  --radius-base: 1rem;
+}
+```
+
 In `nuxt.config.ts` you can set `locale`, `dir`, `colorScheme` (`storageKey`, `initial` or
 `false`) and `toasts`. The `css`, `components` and `composables` flags turn off the styles and
 auto-imports; they are on by default.

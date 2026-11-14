@@ -60,6 +60,18 @@ export default defineNuxtConfig({
 `use*`. Скрипт темы он добавляет в `<head>`, а ссылки со свойством `to` выводит через `NuxtLink`.
 Если установлены `@numior/forms` или `@numior/table`, их компоненты и стили подключаются так же.
 
+Модуль собирает CSS кита в своём входе Tailwind. Тему приложения задайте базовыми ключами в
+`@theme static`, производные ключи следуют за ними:
+
+```css
+@import 'tailwindcss';
+@import '@numior/tailwind';
+
+@theme static {
+  --radius-base: 1rem;
+}
+```
+
 В `nuxt.config.ts` можно задать `locale`, `dir`, `colorScheme` (`storageKey`, `initial` или
 `false`) и `toasts`. Флаги `css`, `components` и `composables` выключают стили и автоимпорт, по
 умолчанию они включены.

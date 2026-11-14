@@ -247,7 +247,8 @@ status: accepted
   (`tests/tailwind/kit.node.test.ts`, `tests/e2e/nuxt/app.spec.ts`). Производный ключ
   следует переопределению только в том же входе Tailwind, что и CSS кита; у модуля Nuxt кит
   собирается в своём шаблоне `numior/kit.css`, поэтому приложение на Nuxt меняет базовые
-  ключи (`--radius-base`, `--color-primary`), а производные следуют за ними.
+  ключи (`--radius-base`, `--color-primary`) в `@theme static`: без `static` Tailwind не выводит
+  ключ, который во входе приложения ничем не прочитан. Производные ключи следуют за базовыми.
 - Псевдонимов `--nui-*` нет: снаружи переопределяют ключ темы. Редактор ячейки таблицы
   ставит на своей области базовые ключи (`--spacing-control-sm`, `--spacing-field-pad-sm`,
   `--text-control-sm`, `--focus-ring-width`, `--focus-ring-offset`), растущий редактор —
