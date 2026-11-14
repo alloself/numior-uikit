@@ -4,8 +4,6 @@ export type ChartFocusSource = (typeof ChartFocusSource)[keyof typeof ChartFocus
 
 export type NuiChartHeight = (typeof NuiChartHeight)[keyof typeof NuiChartHeight];
 
-export type FontSetStatus = (typeof FontSetStatus)[keyof typeof FontSetStatus];
-
 export interface NuiChartProps {
   spec: ChartSpec;
   label: string;
