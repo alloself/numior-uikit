@@ -84,6 +84,16 @@ const SIMPLE: Readonly<Record<string, InputIntent>> = {
   historyRedo: { kind: 'history', action: 'redo' },
 };
 
+const focusFromPress = (root: HTMLElement): void => {
+  const page = root.ownerDocument;
+
+  if (!page.hasFocus()) {
+    page.defaultView?.focus();
+  }
+
+  root.focus({ preventScroll: true });
+};
+
 const PASTES = new Set(['insertFromPaste', 'insertFromDrop', 'insertFromYank']);
 const PASSIVE = new Set(['insertCompositionText', 'deleteCompositionText']);
 
@@ -640,7 +650,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
 
   const place = (event: MouseEvent, selection: Selection): void => {
     event.preventDefault();
-    root.focus({ preventScroll: true });
+    focusFromPress(root);
     host.dispatch(host.state().tr.setSelection(selection), 'pointer');
   };
 
@@ -681,7 +691,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
       place(event, beside);
     } else if (belowContent(event)) {
       event.preventDefault();
-      root.focus({ preventScroll: true });
+      focusFromPress(root);
 
       caretAtEnd(host.state(), (tr) => {
         host.dispatch(tr, 'pointer');

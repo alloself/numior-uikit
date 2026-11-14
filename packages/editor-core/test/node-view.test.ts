@@ -166,6 +166,41 @@ describe('node views', () => {
     expect(driver.modelTexts).toEqual(['before', '', 'x']);
   });
 
+  it('brings an unfocused frame into focus before taking a press below the last block', () => {
+    driver = EditorViewDriver.mount(
+      doc(node('paragraph', ['before']), node('divider')),
+      fixtureSchema,
+      [],
+      boxViews({ updates: [], destroyed: [] }),
+    );
+
+    const frameFocusRequests = driver.leavePageUnfocused();
+
+    expect(driver.clickBelow()).toBe(true);
+
+    expect(frameFocusRequests()).toBe(1);
+    expect(driver.editorFocused).toBe(true);
+  });
+
+  it('brings an unfocused frame into focus before selecting a leaf by a press', () => {
+    driver = EditorViewDriver.mount(
+      doc(node('paragraph', ['before']), node('divider')),
+      fixtureSchema,
+      [],
+      boxViews({ updates: [], destroyed: [] }),
+    );
+
+    const frameFocusRequests = driver.leavePageUnfocused();
+    const rule = driver.view.state.doc.root.content[1];
+    const id = rule?.kind === 'element' ? rule.id : '';
+
+    driver.pressInWidget(id, '.box__label');
+    driver.releaseMouse();
+
+    expect(frameFocusRequests()).toBe(1);
+    expect(driver.editorFocused).toBe(true);
+  });
+
   it('puts the caret beside a leaf between text lines with the vertical arrows and leaves the same way', () => {
     driver = EditorViewDriver.mount(
       doc(node('paragraph', ['a']), node('divider'), node('paragraph', ['b'])),

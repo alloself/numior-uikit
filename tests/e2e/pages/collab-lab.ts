@@ -111,6 +111,10 @@ export class CollabLab {
     await this.page.getByTestId('collab-lab-room').click();
   }
 
+  async focusPageAround(): Promise<void> {
+    await this.page.getByTestId('collab-lab-room').focus();
+  }
+
   async showBook(): Promise<void> {
     await this.page.getByRole('tab', { name: 'Книга' }).click();
     await this.left.grid.waitFor();

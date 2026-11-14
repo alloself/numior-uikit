@@ -272,6 +272,22 @@ export class EditorViewDriver {
     this.view.focus();
   }
 
+  leavePageUnfocused(): () => number {
+    const hasFocus = vi.spyOn(document, 'hasFocus').mockReturnValue(false);
+    const focusWindow = vi.spyOn(window, 'focus').mockImplementation(() => undefined);
+
+    this.restores.push(() => {
+      hasFocus.mockRestore();
+      focusWindow.mockRestore();
+    });
+
+    return () => focusWindow.mock.calls.length;
+  }
+
+  get editorFocused(): boolean {
+    return this.view.hasFocus();
+  }
+
   place(anchor: number, head = anchor): void {
     this.view.focus();
     this.view.dispatch(this.state.tr.setSelection(textSelection(anchor, head)));
