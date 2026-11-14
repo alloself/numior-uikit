@@ -288,13 +288,12 @@
   }
 
   .nui-calendar__presets {
-    grid-auto-flow: column;
-    grid-auto-columns: max-content;
+    display: flex;
+    flex-wrap: wrap;
     padding-inline-end: 0;
     padding-block-end: var(--nui-space-2);
     border-inline-end: 0;
     border-block-end: 1px solid var(--nui-border);
-    overflow-x: auto;
   }
 }
 @media (prefers-reduced-motion: reduce) {

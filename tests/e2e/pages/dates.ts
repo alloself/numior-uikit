@@ -88,6 +88,19 @@ export class DatesSection {
     return scope.locator('.nui-date-picker__open');
   }
 
+  hiddenPresets(scope: Locator): Promise<number> {
+    return scope.evaluate((calendar) => {
+      const frame = calendar.getBoundingClientRect();
+
+      return [...calendar.querySelectorAll('.nui-calendar__preset')].reduce((hidden, preset) => {
+        const box = preset.getBoundingClientRect();
+        const outside = box.left < frame.left - 0.5 || box.right > frame.right + 0.5;
+
+        return outside ? hidden + 1 : hidden;
+      }, 0);
+    });
+  }
+
   preset(scope: Locator, label: string): Locator {
     return scope.getByRole('button', { name: label, exact: true });
   }

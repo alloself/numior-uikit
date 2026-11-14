@@ -229,6 +229,16 @@ test.describe('dates', () => {
     await expect(end).toHaveValue('20.09.2026');
   });
 
+  test('a range calendar shows every preset inside its frame on any screen', async ({
+    playground,
+    dates,
+  }) => {
+    await playground.open();
+    await dates.range.scrollIntoViewIfNeeded();
+
+    expect(await dates.hiddenPresets(dates.range)).toBe(0);
+  });
+
   test('range picker takes two picks or a preset and the time picker keeps the time', async ({
     playground,
     dates,
