@@ -11,13 +11,19 @@ export class BlockFrameDriver {
 
   constructor(private readonly wrapper: VueWrapper) {}
 
-  static mount(files: readonly ExampleFile[]): BlockFrameDriver {
+  static mount(files: readonly ExampleFile[], src = '/blocks/view/SignIn'): BlockFrameDriver {
     return new BlockFrameDriver(
       mount(BlockFrame, {
-        props: { name: 'SignIn', src: '/blocks/view/SignIn', height: 600, files, texts: ru },
+        props: { name: 'SignIn', src, height: 600, files, texts: ru },
         attachTo: document.body,
       }),
     );
+  }
+
+  static mountOnSite(siteClasses: string, files: readonly ExampleFile[]): BlockFrameDriver {
+    document.documentElement.className = siteClasses;
+
+    return BlockFrameDriver.mount(files, 'about:blank');
   }
 
   get copied(): readonly string[] {
@@ -34,6 +40,10 @@ export class BlockFrameDriver {
 
   get screenHeight(): string {
     return this.screen.element.style.blockSize;
+  }
+
+  get themeClasses(): string[] {
+    return [...(this.screen.element.contentDocument?.documentElement?.classList ?? [])].toSorted();
   }
 
   get openLink(): string | undefined {
@@ -83,5 +93,6 @@ export class BlockFrameDriver {
   unmount(): void {
     this.wrapper.unmount();
     this.clipboard.restore();
+    document.documentElement.className = '';
   }
 }

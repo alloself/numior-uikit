@@ -58,6 +58,14 @@ describe('BlockFrame', () => {
     block.unmount();
   });
 
+  it('themes a block page that loaded before the page came alive', () => {
+    const block = BlockFrameDriver.mountOnSite('nui-theme--dark docs-theme--numior', FILES);
+
+    expect(block.themeClasses).toEqual(['docs-theme--numior', 'nui-theme--dark']);
+
+    block.unmount();
+  });
+
   it('lists the files of the block and copies the one on screen', async () => {
     const block = BlockFrameDriver.mount(FILES);
 

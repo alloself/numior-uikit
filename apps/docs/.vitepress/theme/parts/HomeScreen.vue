@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useTemplateRef, watch } from 'vue';
+import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
 import {
   NuiSelect,
   NuiToggleGroup,
@@ -110,4 +110,6 @@ const sync = (): void => {
 };
 
 watch(theme, sync, { flush: 'post' });
+
+onMounted(sync);
 </script>

@@ -56,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from 'vue';
+import { computed, onMounted, ref, useTemplateRef } from 'vue';
 import { useMutationObserver } from '@vueuse/core';
 import { useClipboard } from '@numior/primitives';
 import {
@@ -112,4 +112,6 @@ useMutationObserver(() => globalThis.document?.documentElement, syncTheme, {
   attributes: true,
   attributeFilter: ['class'],
 });
+
+onMounted(syncTheme);
 </script>

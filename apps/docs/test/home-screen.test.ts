@@ -42,6 +42,15 @@ describe('HomeScreen', () => {
     home.unmount();
   });
 
+  it('themes a screen that loaded before the page came alive', () => {
+    const home = HomeScreenDriver.mountOnSite('nui-theme--dark docs-theme--numior');
+
+    expect(home.themeClasses).toEqual(['nui-theme--dark', 'docs-theme--numior']);
+    expect(home.attribute('dir')).toBe('ltr');
+
+    home.unmount();
+  });
+
   it('changes the scheme and the direction of the screen and leaves the site alone', async () => {
     const home = HomeScreenDriver.mount();
 
