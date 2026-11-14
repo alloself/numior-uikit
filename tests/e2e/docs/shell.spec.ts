@@ -50,7 +50,6 @@ test('header sections switch the sidebar and mark the current section', async ({
 
 test('a focused field shows its frame without an outer ring and a button keeps the ring', async ({
   docs,
-  page,
   isMobile,
 }) => {
   test.skip(isMobile, 'focus rings follow the keyboard');
@@ -58,14 +57,13 @@ test('a focused field shows its frame without an outer ring and a button keeps t
   await docs.inputFrame.getByRole('textbox').focus();
   await expect(docs.inputFrame).toHaveCSS('outline-width', '0px');
 
-  await page.keyboard.press('Tab');
+  await docs.tabForward();
   await docs.searchButton.focus();
   await expect(docs.searchButton).toHaveCSS('outline-width', '2px');
 });
 
 test('an example leaves the site theme for the base one and the guide shows the theme file', async ({
   docs,
-  page,
 }) => {
   await docs.open('/guide/custom-theme');
   const example = docs.example();
@@ -81,7 +79,7 @@ test('an example leaves the site theme for the base one and the guide shows the 
   expect(await example.radiusOf('Подтвердить заказ')).toBe('4px');
 
   await expect(
-    page.getByText('--nui-primary: light-dark(#b04010, #e0561a);').last(),
+    docs.printedText('--nui-primary: light-dark(#b04010, #e0561a);').last(),
   ).toBeAttached();
 });
 
@@ -96,7 +94,7 @@ test('a missing address offers the search and the page with a similar address', 
   await docs.article.getByRole('button', { name: 'Открыть поиск' }).click();
   await expect(docs.commandInput).toBeFocused();
 
-  await page.keyboard.press('Escape');
+  await docs.pressEscape();
   await docs.similarPage('Button').click();
   await expect(page).toHaveURL(/\/components\/button$/);
 });
@@ -217,13 +215,13 @@ test('the sidebar lives in a drawer on phones and closes after navigation', asyn
   await expect(docs.drawer).toBeHidden();
 });
 
-test('the skip link moves focus to the content', async ({ docs, page, isMobile }) => {
+test('the skip link moves focus to the content', async ({ docs, isMobile }) => {
   test.skip(isMobile, 'keyboard only');
   await docs.open('/components/button');
-  await page.keyboard.press('Tab');
-  await expect(page.getByRole('link', { name: 'К содержимому' })).toBeFocused();
+  await docs.tabForward();
+  await expect(docs.skipLink).toBeFocused();
 
-  await page.keyboard.press('Enter');
+  await docs.followFocusedLink();
   await expect(docs.main).toBeFocused();
 });
 

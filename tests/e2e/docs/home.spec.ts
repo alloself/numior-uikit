@@ -51,12 +51,12 @@ test('a section of the home page shows a live block and leads to its page', asyn
   await expect(page).toHaveURL(/\/components\/table$/);
 });
 
-test('the skip link moves focus to the home content', async ({ docs, page, isMobile }) => {
+test('the skip link moves focus to the home content', async ({ docs, isMobile }) => {
   test.skip(isMobile, 'keyboard only');
   await docs.open('/');
-  await page.keyboard.press('Tab');
-  await expect(page.getByRole('link', { name: 'К содержимому' })).toBeFocused();
+  await docs.tabForward();
+  await expect(docs.skipLink).toBeFocused();
 
-  await page.keyboard.press('Enter');
+  await docs.followFocusedLink();
   await expect(docs.main).toBeFocused();
 });
