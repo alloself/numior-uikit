@@ -106,6 +106,24 @@ describe('NuiTable selection', () => {
     expect(grid.selected).toEqual([]);
   });
 
+  it('keeps the first chosen row when multiple selection turns into single', async () => {
+    const grid = mountPeople();
+    await grid.settle();
+    await grid.checkRow(4);
+    await grid.checkRow(1);
+    await grid.checkRow(7);
+
+    await grid.receive({ selectable: 'single' });
+
+    expect(idsOf(grid.selected)).toEqual([4]);
+    expect(grid.rowSelected(4)).toBe(true);
+    expect(grid.rowSelected(1)).toBe(false);
+
+    await grid.receive({ selectable: 'multiple' });
+
+    expect(idsOf(grid.selected)).toEqual([4]);
+  });
+
   it('shows skeleton rows or the loading slot while loading and disables the header checkbox', async () => {
     const grid = mountPeople({ props: { selectable: 'multiple', loading: true } });
     await grid.settle();

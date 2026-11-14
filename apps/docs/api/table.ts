@@ -102,8 +102,8 @@ const docs: DocsMap = {
         en: 'Label of the totals row, shown next to the count of filtered rows in the first column without `aggregate`. Defaults to "Total" from the dictionary.',
       },
       selectable: {
-        ru: 'Включает выбор строк: `single` — одной, `multiple` — нескольких. Добавляет колонку флажков, а в `multiple` — флажок «Выбрать все» в шапке для показанных строк.',
-        en: 'Enables row selection: `single` for one row, `multiple` for several. Adds a checkbox column and, with `multiple`, a select-all checkbox in the header for the shown rows.',
+        ru: 'Включает выбор строк: `single` — одной, `multiple` — нескольких. Добавляет колонку флажков, а в `multiple` — флажок «Выбрать все» в шапке для показанных строк. При переходе с `multiple` на `single` в `v-model:selected` остаётся первая выбранная строка.',
+        en: 'Enables row selection: `single` for one row, `multiple` for several. Adds a checkbox column and, with `multiple`, a select-all checkbox in the header for the shown rows. Switching from `multiple` to `single` keeps the first selected row in `v-model:selected`.',
       },
       striped: {
         ru: 'Закрашивает каждую вторую строку. Узор не сбивается при прокрутке и с закреплёнными строками.',

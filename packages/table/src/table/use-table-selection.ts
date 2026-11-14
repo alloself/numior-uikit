@@ -1,4 +1,4 @@
-import { computed, type ComputedRef, type Ref, type ShallowRef } from 'vue';
+import { computed, watch, type ComputedRef, type Ref, type ShallowRef } from 'vue';
 import type { NuiCheckState } from '@numior/vue';
 import { TableNodeKind, type TableEngine, type TableNodeId } from '../engine';
 import { NuiTableSelection, type NuiTableCellPosition, type TablePageWindow } from './table.types';
@@ -125,6 +125,17 @@ export const useTableSelection = <T>(options: TableSelectionOptions<T>): TableSe
 
   const has = (row: T): boolean => keys.value.has(options.keyOf(row));
 
+  const keepFirst = (single: boolean, wasMultiple: boolean): void => {
+    const [first] = options.selected.value;
+    const narrowed = single && wasMultiple && options.selected.value.length > 1;
+
+    if (!narrowed || first === undefined) {
+      return;
+    }
+
+    options.selected.value = [first];
+  };
+
   const without = (rows: readonly T[], dropped: ReadonlySet<TableSelectionKey<T>>): T[] =>
     rows.filter((row) => !dropped.has(options.keyOf(row)));
 
@@ -180,6 +191,13 @@ export const useTableSelection = <T>(options: TableSelectionOptions<T>): TableSe
     toggle(row);
     return true;
   };
+
+  watch(
+    () => options.mode(),
+    (mode, before) => {
+      keepFirst(mode === NuiTableSelection.Single, before === NuiTableSelection.Multiple);
+    },
+  );
 
   return { enabled, multiple, headerState, headerDisabled, has, toggle, toggleAll, onKeydown };
 };
