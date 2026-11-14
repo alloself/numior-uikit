@@ -13,6 +13,7 @@ const EXAMPLES: Readonly<Record<string, readonly TwinFile[]>> = {
     { name: 'team.ts', source: "export const team = ['Анна'];\n" },
   ],
   'code/Fenced': [{ name: 'Fenced.vue', source: '<template>\n  ```\n</template>\n' }],
+  'blocks/SignIn': [{ name: 'index.vue', source: '<template>\n  <NuiForm />\n</template>\n' }],
 };
 
 const BUNDLE: ReferenceBundle = {
@@ -122,6 +123,12 @@ describe('markdown twin of a page', () => {
 
     expect(scene).toContain('`Example.vue`\n\n```vue\n<template>');
     expect(scene).toContain("`team.ts`\n\n```ts\nexport const team = ['Анна'];\n```");
+  });
+
+  it('prints a block of the gallery as the code of its files', () => {
+    const twin = pageTwin('## Вход\n\n<Block name="SignIn" />\n', contextOf());
+
+    expect(twin).toBe('## Вход\n\n```vue\n<template>\n  <NuiForm />\n</template>\n```\n');
   });
 
   it('leaves out a configurator without a scene and an example that does not exist', () => {

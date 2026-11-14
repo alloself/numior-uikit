@@ -335,12 +335,23 @@ export const navigationTexts = (
     ]),
   ]);
 
+const sectionPage = (section: NavSection, locale: ExampleLocale): NavEntry[] => {
+  if (section.link === undefined) {
+    return [];
+  }
+
+  const title = textOf(section.title, locale);
+
+  return [{ link: localized(section.link, locale), title, group: title, section: title }];
+};
+
 export const navigationPages = (
   locale: ExampleLocale,
   sections: readonly NavSection[] = NAVIGATION,
 ): NavEntry[] =>
-  sections.flatMap((section) =>
-    section.groups.flatMap((group) =>
+  sections.flatMap((section) => [
+    ...sectionPage(section, locale),
+    ...section.groups.flatMap((group) =>
       group.pages.map((page) => ({
         link: localized(page.link, locale),
         title: textOf(page.title, locale),
@@ -348,7 +359,7 @@ export const navigationPages = (
         section: textOf(section.title, locale),
       })),
     ),
-  );
+  ]);
 
 export const navigationLinks = (sections: readonly NavSection[] = NAVIGATION): string[] =>
   sections.flatMap((section) =>

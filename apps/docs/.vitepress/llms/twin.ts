@@ -1,4 +1,5 @@
 import { extname } from 'node:path';
+import { blockExampleOf } from '../blocks.ts';
 import type { ComponentReference, DeclarationReference } from '../reference/reference.types.ts';
 import { tokenRowsOf } from '../theme/token-sections.ts';
 import { TokenSection } from '../theme/theme.types.ts';
@@ -72,6 +73,12 @@ const exampleNamed = (name: string | undefined, context: TwinContext): string[] 
 const exampleBlocks: TagRenderer = (attributes, context) =>
   exampleNamed(NAME_RE.exec(attributes)?.[1], context);
 
+const blockBlocks: TagRenderer = (attributes, context) => {
+  const name = NAME_RE.exec(attributes)?.[1];
+
+  return exampleNamed(name === undefined ? undefined : blockExampleOf(name), context);
+};
+
 const sceneBlocks: TagRenderer = (attributes, context) =>
   exampleNamed(
     context.bundle?.components[NAME_RE.exec(attributes)?.[1] ?? '']?.configurator?.scene,
@@ -128,6 +135,7 @@ const iconBlocks: TagRenderer = (_attributes, context) =>
 
 const RENDERERS: Readonly<Record<string, TagRenderer>> = {
   Example: exampleBlocks,
+  Block: blockBlocks,
   Configurator: sceneBlocks,
   ApiReference: apiBlocks,
   KeyboardReference: keyboardBlocks,
