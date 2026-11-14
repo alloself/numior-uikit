@@ -1,4 +1,13 @@
-import type { CollectOptions, Note, RawNode, RawScene, SeekOptions } from './parity.types';
+import type {
+  CollectOptions,
+  FrameReport,
+  FrameReports,
+  FrameWatch,
+  Note,
+  RawNode,
+  RawScene,
+  SeekOptions,
+} from './parity.types';
 
 export const collect = ({ root, properties }: CollectOptions): RawScene => {
   const skipped = new Set(['SCRIPT', 'STYLE', 'LINK', 'META', 'TITLE', 'HEAD', 'TEMPLATE']);
@@ -300,6 +309,57 @@ export const scrollPageTo = (top: number): void => {
 };
 
 export const pageHeight = (): number => document.documentElement.scrollHeight;
+
+export const watchFrameReports = ({ store, type }: FrameWatch): void => {
+  if (window.top !== window) {
+    return;
+  }
+
+  const reports = new WeakMap<MessageEventSource, FrameReport>();
+
+  Object.defineProperty(window, store, { value: reports });
+
+  window.addEventListener('message', (event: MessageEvent<unknown>) => {
+    const { data, source } = event;
+    const report = typeof data === 'object' && data !== null && 'type' in data && 'height' in data;
+
+    if (!report || data.type !== type || typeof data.height !== 'number' || source === null) {
+      return;
+    }
+    reports.set(source, { count: (reports.get(source)?.count ?? 0) + 1, height: data.height });
+  });
+};
+
+export const frameReports = (store: string): FrameReports => {
+  const reports: unknown = Reflect.get(window, store);
+
+  return Array.from(document.querySelectorAll('iframe')).reduce<FrameReports>(
+    (frames, frame) => {
+      const view = frame.contentWindow;
+      const own = new URL(frame.src, location.href).origin === location.origin;
+
+      if (!own || view === null) {
+        return frames;
+      }
+
+      const report: unknown = reports instanceof WeakMap ? reports.get(view) : undefined;
+      const size = Number.parseFloat(getComputedStyle(frame).blockSize);
+
+      const height: unknown =
+        typeof report === 'object' && report !== null && 'height' in report
+          ? report.height
+          : undefined;
+
+      const applied = typeof height === 'number' && size >= height;
+
+      return {
+        waiting: applied ? frames.waiting : frames.waiting + 1,
+        signature: `${frames.signature} ${JSON.stringify(report ?? null)}:${size}`,
+      };
+    },
+    { waiting: 0, signature: '' },
+  );
+};
 
 export const seedRandom = (): void => {
   let state = 0x2f6e2b1;

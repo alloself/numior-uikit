@@ -22,10 +22,13 @@ const OPENED_BY_COMBOBOX = ['select', 'combobox'];
 
 const POPOVER_TRIGGERS = ['Пётр Волков'];
 const TOOLTIP_TRIGGERS = ['Отправить счёт', 'Скопировать ссылку'];
+const FRAME_HEIGHT_REPORT = 'nui-docs-block-height';
 
 const sceneOf = (route: string): string => (route === '/' ? 'home' : route.slice(1));
 
 test.beforeEach(async ({ page, scenes }) => {
+  await scenes.watchFrameReports(FRAME_HEIGHT_REPORT);
+
   await page.addInitScript(
     ([scheme, accent]) => {
       localStorage.setItem('nui-theme', scheme);

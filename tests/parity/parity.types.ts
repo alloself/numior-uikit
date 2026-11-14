@@ -39,6 +39,21 @@ export interface SeekOptions {
   readonly progress: number;
 }
 
+export interface FrameWatch {
+  readonly store: string;
+  readonly type: string;
+}
+
+export interface FrameReport {
+  readonly count: number;
+  readonly height: number;
+}
+
+export interface FrameReports {
+  readonly waiting: number;
+  readonly signature: string;
+}
+
 export type StoredNode = readonly [parent: number, segment: string, rect: string, own: number[]];
 
 export interface StoredScene {

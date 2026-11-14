@@ -6,6 +6,7 @@ import {
   collect,
   dropMountMarkers,
   fontsReady,
+  frameReports,
   freezeMotion,
   nextFrame,
   pageHeight,
@@ -16,11 +17,12 @@ import {
   seekMotion,
   showCurrentLinks,
   stillShadowParts,
+  watchFrameReports,
 } from './page-scripts';
 import { DEFAULT_PROFILE } from './profiles';
 import { PROPERTIES } from './properties';
 import { encodeScene, writeScene } from './store';
-import type { Note, Profile, Shot } from './parity.types';
+import type { FrameReports, Note, Profile, Shot } from './parity.types';
 
 export interface ParityOptions {
   readonly profile: Profile;
@@ -50,10 +52,13 @@ const SCRIPTS_OFF = { value: true };
 const SCRIPTS_ON = { value: false };
 const FROZEN = { playbackRate: 0 };
 const RUNNING = { playbackRate: 1 };
+const FRAME_STORE = '__parityFrameReports';
+const UNWATCHED: FrameReports = { waiting: 0, signature: '' };
 
 export class SceneRecorder {
   private pending = 0;
   private held = false;
+  private framesWatched = false;
 
   constructor(
     private readonly page: Page,
@@ -72,8 +77,14 @@ export class SceneRecorder {
     });
   }
 
+  async watchFrameReports(type: string): Promise<void> {
+    await this.page.addInitScript(watchFrameReports, { store: FRAME_STORE, type });
+    this.framesWatched = true;
+  }
+
   async settle(): Promise<void> {
     let quiet = 0;
+    let frames = await this.frames();
 
     await this.page.evaluate(fontsReady);
     await this.page.evaluate(stillShadowParts);
@@ -82,11 +93,15 @@ export class SceneRecorder {
       const running = await this.page.evaluate(freezeMotion);
 
       await this.page.evaluate(nextFrame);
-      quiet = running === 0 && this.pending <= 0 ? quiet + 1 : 0;
+      const reports = await this.frames();
+      const framed = reports.waiting === 0 && reports.signature === frames.signature;
+
+      frames = reports;
+      quiet = running === 0 && this.pending <= 0 && framed ? quiet + 1 : 0;
     }
 
     if (quiet < QUIET_ROUNDS) {
-      throw new Error('The page never came to rest');
+      throw new Error(`The page never came to rest, ${frames.waiting} frames without their height`);
     }
 
     await this.page.evaluate(dropMountMarkers);
@@ -190,6 +205,13 @@ export class SceneRecorder {
 
     await target.and(this.page.locator(':not(.panel--away)')).waitFor();
     await this.capture(name, sectionScope(section), target);
+  }
+
+  private frames(): Promise<FrameReports> {
+    if (!this.framesWatched) {
+      return Promise.resolve(UNWATCHED);
+    }
+    return this.page.evaluate(frameReports, FRAME_STORE);
   }
 
   private async seek(root: string, progress: number): Promise<void> {
