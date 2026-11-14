@@ -1,10 +1,15 @@
 <template>
-  <NuiTimeField v-model="lap" label="Лучший круг" seconds hour-cycle="h23" :step="1" />
+  <NuiTimeField
+    v-model="shipped"
+    label="Отгрузка со склада"
+    description="Заказ 20408 передан курьеру"
+    seconds
+  />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { NuiTimeField } from '@numior/vue';
 
-const lap = ref<string | null>('01:32:48');
+const shipped = ref<string | null>('14:05:37');
 </script>

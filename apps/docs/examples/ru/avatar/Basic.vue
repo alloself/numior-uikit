@@ -1,8 +1,7 @@
 <template>
-  <NuiAvatar name="Анна Титова" status="online" />
-  <NuiAvatar name="Игорь Белов" status="busy" size="lg" />
-  <NuiAvatar name="Мария Ким" status="away" status-label="Отошла" size="xl" shape="square" />
-  <NuiAvatar shape="square" />
+  <NuiAvatar name="Анна Титова" />
+  <NuiAvatar name="Игорь Белов" />
+  <NuiAvatar name="Мария Ким" status="online" />
 </template>
 
 <script setup lang="ts">

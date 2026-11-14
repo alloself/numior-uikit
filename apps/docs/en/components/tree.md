@@ -1,14 +1,11 @@
 # Tree
 
-`NuiTree` displays nested data such as folders and files, catalog sections or company
-departments. Nodes expand and collapse, and they can be selected one at a time or together with
-the nodes inside.
+Nested data that opens level by level.
 
 <Example name="tree/Basic" />
 
-Nodes are set in `items`, nested nodes in `children`. The selected node comes through `v-model`,
-and the keys of expanded nodes through `v-model:expanded`. Nodes with children get a folder icon
-and the rest a file icon; `:icons="false"` removes the icons.
+Pass the nodes in `items` and the nested ones in `children`. The selected node comes through
+`v-model`, and the expanded ones through `v-model:expanded`.
 
 ## Installation
 
@@ -20,97 +17,84 @@ import '@numior/vue/styles/tree.css';
 
 ## Usage
 
-Change the look, the row size and the selection on a tree of shop categories.
+Change the look and the row size, or add checkboxes, on a tree of store categories.
 
 <Configurator name="NuiTree" />
 
 ## Examples
 
-### Styling and row labels
+### Mark rows with labels
 
-Tree rows look like [List](/en/components/list) items and take the same fields: `badge` and
-`shortcut` sit at the end of the row. The `current` field marks the node that is open right now,
-independently of the selection.
+Add `badge`, `shortcut` and `current` to a node.
 
-The `variant` prop changes the look: `plain`, `divided`, `outline` or `floating`. The `size`
-prop changes the row height.
+<Example name="tree/Marks" />
 
-<Example name="tree/Variants" />
+A node with `current` is the one open right now, whatever the selection.
 
 ### Cascading selection
 
-With the `checkable` prop every node gets a checkbox, and the values of selected nodes come through
-`v-model:values` in the order of the tree. Selecting a folder selects everything inside it.
-
-A folder is selected when all its children are selected, and partly selected when only some are.
+Add `checkable`.
 
 <Example name="tree/Checkable" />
 
+Checked values come through `v-model:values` in tree order. Checking a category checks everything
+inside it, and a category with only some children checked shows as partly checked.
+
 ### Lazy loading
 
-A node with `lazy` and without `children` can be expanded even though it has no children yet. On
-expand the tree emits the `load` event and shows a loading indicator until the application adds
-the children to `items`.
-
-The value of the node enters `v-model:expanded` at once. The folder stays closed and
-`aria-expanded` is `false` until the children arrive: a node looks expanded when it has rows
-under it.
-
-If the folder was selected, the children that arrive are selected too.
+Mark a node with `lazy` and add its `children` when the tree emits `load`.
 
 <Example name="tree/Lazy" />
 
-### Load failure
+Until the children arrive, the node shows a loading indicator. In a `checkable` tree, the children
+of a checked node arrive checked.
 
-When the children fail to load, remove the node from `v-model:expanded`: the indicator goes
-away, and the next expand emits `load` again. The application shows the error message, in the
-example with an [Alert](/en/components/alert).
+### Handle a load failure
+
+Remove the node from `v-model:expanded` when its children fail to load.
 
 <Example name="tree/LoadError" />
 
-### Large trees
+The loading indicator goes away, and the next expand emits `load` again. Tell the user what went
+wrong, for example with an [Alert](/en/components/alert).
 
-With `virtual` and `height` the tree renders only the rows visible in the scroll area instead of
-all the thousands of nodes at once. The row height follows `size`, and `itemHeight` sets it in
-pixels.
+### Show a large tree
 
-Server rendering puts the first 20 rows into the HTML. The focused row stays in the DOM even when
-it is scrolled out of view.
+Add `virtual` and `height`.
 
 <Example name="tree/Virtual" />
 
-### Loading and empty tree
+The row height follows `size`, or `itemHeight` sets it in pixels. Server rendering puts the first
+20 rows into the HTML.
 
-The `loading` prop shows a "Loading" row instead of the nodes. A tree without nodes shows
-`emptyLabel` or the `empty` slot.
+### Show loading and an empty tree
+
+Add `loading` while the nodes are on their way; a tree without nodes shows `emptyLabel`.
 
 <Example name="tree/States" />
 
-## Behaviour
+## Behavior
 
-A click on the arrow expands the node, a click on the row selects it, and a double click expands
-or collapses it. In a `checkable` tree a click on the row, Enter and Space select the node or clear the selection.
+A click on the arrow or a double click on the row expands or collapses a node. A single click on
+the row selects it, and in a `checkable` tree checks it or clears the check.
 
 A node with `children: []` is a leaf and does not expand. Rows are never links: to open a page,
 listen to the `select` event.
 
 ## Accessibility
 
-The whole tree is one Tab stop, and the arrows move between the nodes. The focused node is
-referenced through `aria-activedescendant`, so the focus is not lost when rows leave the DOM
-while scrolling.
+The whole tree is one Tab stop, and the arrows move between the nodes. The focus stays on the tree
+while you scroll, even when the focused row goes out of view.
 
-When the focused node is hidden from outside (its parent is collapsed through
-`v-model:expanded`), the focus moves to the nearest visible ancestor. When the node is gone from
-`items`, the node that took its place gets the focus. The arrows continue from there, not from
-the start of the tree.
+When the parent of the focused node collapses through `v-model:expanded`, the focus moves to the
+nearest visible ancestor. When the node leaves `items`, the node that took its place gets the
+focus, and the arrows continue from there.
 
-The tree is built on a `ul` list with the `tree` and `treeitem` roles. `aria-level`,
-`aria-setsize` and `aria-posinset` carry the level and position of a node, and `aria-expanded`,
-`aria-selected`, `aria-checked` and `aria-current` carry its state.
+A screen reader announces the level, the position and the state of a node. A lazy node enters
+`v-model:expanded` at once, yet a screen reader announces it as collapsed until its children arrive.
 
-While `loading`, the tree gets `aria-busy`. An empty tree is a plain block without a role or
-focus.
+While `loading`, the tree tells a screen reader that it is busy. An empty tree is a plain block
+without a role or focus.
 
 <KeyboardReference name="NuiTree" />
 

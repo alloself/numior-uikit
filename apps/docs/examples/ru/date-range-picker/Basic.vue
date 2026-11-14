@@ -1,8 +1,9 @@
 <template>
   <NuiDateRangePicker
     v-model="period"
-    label="Период отчёта"
+    label="Период отчёта по продажам"
     :presets="presets"
+    max="2026-09-27"
     today="2026-09-27"
     clearable
   />
@@ -10,7 +11,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiDateRangePicker, addDays, type NuiDatePreset, type NuiDateRange } from '@numior/vue';
+import { addDays } from '@numior/primitives';
+import { NuiDateRangePicker, type NuiDatePreset, type NuiDateRange } from '@numior/vue';
 
 const presets: NuiDatePreset[] = [
   { label: 'Последние 7 дней', range: (today) => ({ start: addDays(today, -6), end: today }) },

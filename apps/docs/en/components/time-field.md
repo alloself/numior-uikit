@@ -1,13 +1,11 @@
 # Time field
 
-`NuiTimeField` is a field for entering time: hours and minutes, and seconds when needed. The
-time can be typed on the keyboard or picked on the wheels that the clock button opens.
+A field for the time of day.
 
 <Example name="time-field/Basic" />
 
-The model value is a string like `09:30` without a time zone. The order of the parts, the
-separator and the hour format (24-hour or 12-hour with AM/PM) follow the app locale. The `locale`
-prop sets another one.
+The value is a string such as `09:30`, with no time zone. The hour format and the order of the
+parts follow the app language.
 
 ## Installation
 
@@ -19,43 +17,36 @@ import '@numior/vue/styles/time-field.css';
 
 ## Usage
 
-Add seconds and change the hour format and the step of the time list.
+Add seconds and change the hour format, the minute step and the states of the field.
 
 <Configurator name="NuiTimeField" />
 
 ## Examples
 
-### Time in different languages
+### Show the time in another language
 
-The same value is shown in three locales: `ru-RU` with the 24-hour format, `en-US` with AM/PM
-and `ar-EG` with Arabic digits. The `hourCycle` prop sets the hour format regardless of the
-language.
+Set `locale`.
 
 <Example name="time-field/Locales" />
 
-### Seconds
+### Add seconds
 
-The `seconds` prop adds seconds, and the value takes the form `09:30:15`. The minute wheel uses
-a 15-minute step by default, and `:step="1"` shows every minute on it.
+Add `seconds`.
 
 <Example name="time-field/Seconds" />
 
-## Behaviour
+## Behavior
 
-Digits are typed part by part: when the hours or minutes cannot take another digit, the cursor
-moves on by itself. While any part is empty, the model value is `null`.
+Digits fill the parts one by one, and the caret moves to the next part once the current one is
+full. While any part is empty, the model is `null`.
 
-A time before `min` or after `max` is replaced with the nearest limit when the user leaves the
-field. On the wheels such times are dimmed.
+A time before `min` or after `max` turns into the nearest limit when the focus leaves the field.
 
 ## Accessibility
 
-Each part of the time is an `<input role="spinbutton">` with `aria-valuenow` and
-`aria-valuetext`, and the part names ("hour", "minute") come from `Intl.DisplayNames`. Tab stops
-on one part only, and the left and right arrows move between the parts.
-
-The parts run left to right even in right-to-left text. The wheels are a `role="group"`, and
-each wheel column is a `role="spinbutton"`.
+A screen reader names each part of the time, such as "hour" or "minute". Tab stops on one part
+only, and the left and right arrows move between the parts. The parts run left to right in
+right-to-left text too.
 
 <KeyboardReference name="NuiTimeField" />
 

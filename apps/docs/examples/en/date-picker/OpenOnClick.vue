@@ -1,8 +1,9 @@
 <template>
   <NuiDatePicker
-    v-model="delivery"
-    label="Delivery date"
-    description="A click in the field opens the calendar"
+    v-model="pickup"
+    label="Pickup date"
+    description="The order waits at the pickup point for three days"
+    min="2026-09-27"
     today="2026-09-27"
     open-on-click
   />
@@ -12,5 +13,5 @@
 import { ref } from 'vue';
 import { NuiDatePicker } from '@numior/vue';
 
-const delivery = ref<string | null>(null);
+const pickup = ref<string | null>(null);
 </script>

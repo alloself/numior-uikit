@@ -1,7 +1,10 @@
 <template>
-  <NuiEmpty title="Пока пусто" description="Создайте первый проект, чтобы увидеть его здесь.">
+  <NuiEmpty
+    title="Заказов пока нет"
+    description="Заказы с сайта появятся здесь сами, а заказ по телефону создайте вручную."
+  >
     <template #actions>
-      <NuiButton size="sm">Создать проект</NuiButton>
+      <NuiButton size="sm" icon="plus">Создать заказ</NuiButton>
     </template>
   </NuiEmpty>
 </template>

@@ -22,7 +22,7 @@ const docs: DocsMap = {
       },
       status: {
         ru: 'Показывает точку статуса: `online`, `offline`, `busy` или `away`. Подпись берётся из словаря.',
-        en: 'Shows a status dot: `online`, `offline`, `busy` or `away`, labelled from the dictionary.',
+        en: 'Shows a status dot: `online`, `offline`, `busy` or `away`, with a label from the dictionary.',
       },
       statusLabel: {
         ru: 'Своя подпись точки статуса вместо словарной.',
@@ -39,7 +39,7 @@ const docs: DocsMap = {
     },
     configurator: {
       props: ['size', 'shape', 'status', 'name'],
-      values: { name: { ru: 'Анна Титова', en: 'Anna Titova' } },
+      values: { name: { ru: 'Анна Титова', en: 'Anna Turner' } },
     },
   },
   NuiAvatarGroup: {

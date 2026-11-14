@@ -1,14 +1,11 @@
 # List
 
-`NuiList` is a vertical list of rows: files, contacts, settings, menu entries. Rows come from
-`NuiListItem` components or from the `items` array, and each can hold an icon, a label and a
-description.
+Rows with an icon, a label and a short description.
 
 <Example name="list/Basic" />
 
-A row with `href` or `to` works as a link, a row with `interactive` as a button. `variant` picks
-the look: `plain`, `divided` with lines between rows, `outline` in a frame, `floating` for a
-dropdown panel and `nav` for a menu.
+Describe the rows with `NuiListItem` parts or pass them in `items`. A row with `href` or `to`
+becomes a link, and a row with `interactive` a button.
 
 ## Installation
 
@@ -25,37 +22,39 @@ Change the look and the row size, then turn on picking one or several teammates.
 
 ## Examples
 
-### Selecting values
+### Pick one or several values
 
-With `selectable="single"` the user picks one value, kept in `v-model`. With
-`selectable="multiple"` several can be checked, and they are kept in `v-model:values`. Disabled
-options stay visible but cannot be selected.
+Set `selectable` to `single` or `multiple`.
 
 <Example name="list/Selectable" />
 
-### Navigation
+One value comes through `v-model`, several through `v-model:values`. A disabled row stays in view
+but cannot be picked.
 
-`variant="nav"` renders compact rows without lines, the ones the [Sidebar](/en/components/sidebar)
-menu is built from. The `current` prop marks the open section, while `badge` and `shortcut` show a
-counter and a key combination at the end of the row.
+### Build a section menu
+
+Set `variant="nav"` and mark the open section with `current`.
 
 <Example name="list/Nav" />
 
-### Groups
+The [Sidebar](/en/components/sidebar) menu is made of the same rows. A row shows a counter in
+`badge` and a key combination in `shortcut`.
 
-`items` also takes groups shaped as `{ label, items }`: each group gets a heading, such as "Europe"
-and "Asia". The arrow keys move through the options of all groups in a row.
+### Split into groups
+
+Pass groups shaped as `{ label, items }` in `items`.
 
 <Example name="list/Groups" />
 
-## Behaviour
+The arrow keys move through the rows of every group as through one list.
 
-In a regular list, links and buttons take the focus with Tab like anywhere on the page. In a
-selectable list Tab stops on a single row. From there, the arrow keys or the first letters of a
-label move the focus.
+## Behavior
 
-The same list with the `floating` variant opens in the dropdowns of `NuiSelect` and
-`NuiCombobox`.
+In a regular list, Tab moves through the links and buttons as anywhere on the page. A selectable
+list is a single Tab stop, and the arrow keys or the first letters of a label move between rows.
+
+[Select](/en/components/select) and [Combobox](/en/components/combobox) open the same list with
+the `floating` variant.
 
 <KeyboardReference name="NuiList" />
 

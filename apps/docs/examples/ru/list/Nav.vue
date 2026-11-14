@@ -1,34 +1,42 @@
 <template>
-  <NuiList variant="nav" label="Разделы" class="w-full max-w-sm">
+  <NuiList variant="nav" label="Разделы кабинета" class="w-full max-w-60">
     <NuiListItem
-      icon="inbox"
-      label="Входящие"
-      :badge="12"
-      :current="section === 'inbox'"
+      :icon="ShoppingCart"
+      label="Заказы"
+      :badge="2"
+      :current="section === 'orders'"
       interactive
-      @click="section = 'inbox'"
+      @click="section = 'orders'"
     />
     <NuiListItem
-      icon="calendar"
-      label="Календарь"
-      :current="section === 'calendar'"
+      :icon="Package"
+      label="Товары"
+      :current="section === 'products'"
       interactive
-      @click="section = 'calendar'"
+      @click="section = 'products'"
     />
     <NuiListItem
-      icon="folder"
-      label="Файлы"
-      shortcut="mod+f"
-      :current="section === 'files'"
+      :icon="Users"
+      label="Клиенты"
+      :current="section === 'customers'"
       interactive
-      @click="section = 'files'"
+      @click="section = 'customers'"
+    />
+    <NuiListItem
+      :icon="Warehouse"
+      label="Склад"
+      shortcut="mod+shift+s"
+      :current="section === 'stock'"
+      interactive
+      @click="section = 'stock'"
     />
   </NuiList>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { Package, ShoppingCart, Users, Warehouse } from '@lucide/vue';
 import { NuiList, NuiListItem } from '@numior/vue';
 
-const section = ref('inbox');
+const section = ref('orders');
 </script>

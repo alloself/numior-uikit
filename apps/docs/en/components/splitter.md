@@ -1,15 +1,11 @@
 # Splitter
 
-`NuiSplitter` splits an area into two panes with a boundary the user can move: an editor and
-a preview, a mail list and a message. The panes go into the `start` and `end` slots.
+Two panes with a movable boundary.
 
 <Example name="splitter/Basic" />
 
-The share of the first pane lives in `v-model:ratio` as a number from 0 to 1, `0.5` by default.
-The `min` and `max` props stop a pane from shrinking further, `0.1` and `0.9` by default.
-
-A share outside these bounds is shown at the nearest bound. The value in `v-model:ratio` stays as
-it is until the user moves the boundary.
+Put the panes into the `start` and `end` slots. The share of the first pane lives in
+`v-model:ratio`, and its limits in `min` and `max`.
 
 ## Installation
 
@@ -20,22 +16,21 @@ import '@numior/vue/styles/splitter.css';
 
 ## Examples
 
-### Vertical
+### Stack the panes one above the other
 
-`orientation="vertical"` stacks the panes one above the other. `step` sets how far the arrow
-keys move the boundary, `0.05` by default.
+Set `orientation="vertical"`.
 
 <Example name="splitter/Vertical" />
 
-## Behaviour
+## Behavior
 
-The boundary is dragged with a mouse, a pen or a finger. Set the height on `NuiSplitter` itself
-or on its parent: the panes fill it, and extra content scrolls inside a pane.
+The splitter does not stretch to its parent by itself: give it a height, such as `h-full` inside
+a parent with a height. Content taller than a pane scrolls inside it.
 
 ## Accessibility
 
-The boundary takes focus with Tab, and a screen reader announces its position in percent. The
-default label is "Resize panes"; pass your own in `label`.
+The boundary takes the focus with Tab, and a screen reader announces its position in percent.
+The default label is "Resize panes"; pass your own in `label`.
 
 <KeyboardReference name="NuiSplitter" />
 

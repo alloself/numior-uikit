@@ -16,8 +16,8 @@ const docs: DocsMap = {
         en: 'Style: `plain` without a frame, `card` inside a card.',
       },
       headingLevel: {
-        ru: 'Оборачивает заголовок в `h2`–`h6`. Без него заголовок — `div`.',
-        en: 'Wraps the heading in `h2`–`h6`. Without it the heading is a `div`.',
+        ru: 'Оборачивает заголовок в `h2`–`h6`, чтобы секция попала в структуру страницы. Без него заголовок — `div`.',
+        en: 'Wraps the heading in `h2`–`h6`, so the section appears in the page outline. Without it the heading is a `div`.',
       },
       disabled: {
         ru: 'Отключает заголовок: содержимое нельзя открыть или закрыть.',

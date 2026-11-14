@@ -1,40 +1,45 @@
 <template>
-  <div class="flex flex-col gap-3">
+  <div class="flex w-full max-w-sm flex-col gap-3">
     <NuiTree
-      variant="outline"
       v-model:values="checked"
-      :items="files"
+      v-model:expanded="expanded"
+      :items="categories"
       checkable
-      label="Экспорт"
-      class="w-full max-w-sm"
+      variant="outline"
+      label="Категории для скидки"
+      class="w-full"
     />
-    <p class="text-sm text-muted-foreground">Отмечено: {{ checked.length }}</p>
+    <p class="m-0 text-sm text-muted-foreground">{{ summary }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { NuiTree, type NuiTreeItem } from '@numior/vue';
+import { computed, ref } from 'vue';
+import { NuiTree } from '@numior/vue';
+import { categories } from '#demo/products';
 
-const files: NuiTreeItem<string>[] = [
-  {
-    value: 'src',
-    label: 'src',
-    children: [
-      {
-        value: 'components',
-        label: 'components',
-        children: [
-          { value: 'button', label: 'Button.vue' },
-          { value: 'input', label: 'Input.vue' },
-        ],
-      },
-      { value: 'main', label: 'main.ts' },
-    ],
-  },
-  { value: 'docs', label: 'docs', children: [{ value: 'guide', label: 'guide.md' }] },
-  { value: 'readme', label: 'README.md' },
-];
+const leaves = categories.flatMap((category) => category.children ?? []);
+const list = new Intl.ListFormat('ru', { type: 'conjunction' });
 
-const checked = ref(['button']);
+const checked = ref(['throws']);
+const expanded = ref(['textile']);
+
+const chosen = computed(() =>
+  leaves.reduce<string[]>((labels, leaf) => {
+    if (checked.value.includes(leaf.value)) {
+      labels.push(`«${leaf.label}»`);
+    }
+    return labels;
+  }, []),
+);
+
+const summary = computed(() => {
+  if (chosen.value.length === 0) {
+    return 'Выберите категории, на которые действует скидка.';
+  }
+
+  const where = chosen.value.length === 1 ? 'в категории' : 'в категориях';
+
+  return `Скидка действует ${where} ${list.format(chosen.value)}.`;
+});
 </script>

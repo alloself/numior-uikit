@@ -1,7 +1,7 @@
 <template>
-  <NuiAvatar name="Anna Titova" size="lg">
+  <NuiAvatar name="Maria Kim" size="lg">
     <template #badge>
-      <NuiBadge tone="error" :count="3" size="sm" label="New messages" />
+      <NuiBadge tone="error" :count="3" size="sm" />
     </template>
   </NuiAvatar>
 </template>

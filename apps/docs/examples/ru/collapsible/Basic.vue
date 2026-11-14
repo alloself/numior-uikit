@@ -1,11 +1,22 @@
 <template>
-  <NuiCollapsible label="Условия доставки" variant="card" :heading-level="3">
-    <p class="m-0">
-      Курьер привозит заказ на следующий день после оплаты. Самовывоз — из 12 пунктов.
-    </p>
+  <NuiCollapsible label="Состав заказа 20408" variant="card" class="w-full max-w-sm">
+    <ul class="m-0 flex list-none flex-col gap-1 p-0">
+      <li v-for="line in lines" :key="line.sku">
+        {{ line.name }} × {{ line.quantity }}, {{ money.format(line.price * line.quantity) }}
+      </li>
+    </ul>
   </NuiCollapsible>
 </template>
 
 <script setup lang="ts">
 import { NuiCollapsible } from '@numior/vue';
+import { orders } from '#demo/orders';
+
+const money = new Intl.NumberFormat('ru-RU', {
+  style: 'currency',
+  currency: 'RUB',
+  maximumFractionDigits: 0,
+});
+
+const lines = orders.find((order) => order.id === 20408)?.lines ?? [];
 </script>

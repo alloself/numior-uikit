@@ -37,12 +37,12 @@ const docs: DocsMap = {
         en: 'First day of the week, from 1 (Monday) to 7 (Sunday). Defaults to the locale.',
       },
       min: {
-        ru: 'Самая ранняя дата, которую можно выбрать.',
-        en: 'Earliest date that can be selected.',
+        ru: 'Самая ранняя дата, которую можно выбрать. Без неё — 1 января 100 года.',
+        en: 'Earliest date that can be selected, January 1, 100 by default.',
       },
       max: {
-        ru: 'Самая поздняя дата, которую можно выбрать.',
-        en: 'Latest date that can be selected.',
+        ru: 'Самая поздняя дата, которую можно выбрать. Без неё — 31 декабря 9999 года.',
+        en: 'Latest date that can be selected, December 31, 9999 by default.',
       },
       isDateDisabled: {
         ru: 'Функция, которая отключает отдельные даты, например выходные.',
@@ -62,7 +62,7 @@ const docs: DocsMap = {
       },
       showOutsideDays: {
         ru: 'Показывает в сетке дни соседних месяцев.',
-        en: 'Shows days of the neighbouring months in the grid.',
+        en: 'Shows days of the neighboring months in the grid.',
       },
       showToday: {
         ru: 'Показывает кнопку «Сегодня» под сеткой.',
@@ -77,7 +77,10 @@ const docs: DocsMap = {
         en: 'Ready-made periods beside the grid, such as "Last 7 days". Work in `range` mode.',
       },
       size: { ru: 'Размер ячеек: `sm`, `md` или `lg`.', en: 'Cell size: `sm`, `md` or `lg`.' },
-      disabled: { ru: 'Отключает весь календарь.', en: 'Disables the whole calendar.' },
+      disabled: {
+        ru: 'Отключает календарь целиком: дни, стрелки и готовые периоды не отвечают на клик и клавиатуру.',
+        en: 'Disables the whole calendar: the days, the arrows and the presets ignore clicks and keys.',
+      },
       previousLabel: dictionary(
         'Подпись кнопки предыдущего месяца для экранных дикторов',
         'Previous month button label for screen readers',

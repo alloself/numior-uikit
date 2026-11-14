@@ -1,46 +1,51 @@
 <template>
-  <div class="w-full h-96 border rounded-lg bg-surface">
+  <div class="w-full h-96 overflow-hidden rounded-lg border">
     <NuiLayout v-model:open="open" content-as="div" :shortcut="false" class="h-full">
       <template #sidebar>
-        <NuiSidebar collapsible="icon" label="Project">
+        <NuiSidebar collapsible="icon" label="Store sections">
           <NuiSidebarContent>
-            <NuiSidebarGroup label="Work" collapsible>
-              <NuiSidebarItem
-                label="Tasks"
-                icon="inbox"
-                :badge="12"
-                :current="active === 'tasks'"
-                @click="active = 'tasks'"
-              />
-              <NuiSidebarItem
-                label="Calendar"
-                icon="calendar"
-                :current="active === 'calendar'"
-                @click="active = 'calendar'"
-              />
+            <NuiSidebarGroup label="Sales">
               <NuiSidebarSub
-                v-model:open="reports"
-                label="Reports"
-                icon="folder"
-                :active="active.startsWith('report')"
+                label="Orders"
+                :icon="ShoppingCart"
+                :active="active.startsWith('orders')"
               >
                 <NuiSidebarItem
-                  label="Sales"
-                  :current="active === 'report-sales'"
-                  @click="active = 'report-sales'"
-                />
-                <NuiSidebarItem
-                  label="Team"
-                  :current="active === 'report-team'"
-                  @click="active = 'report-team'"
+                  v-for="key in orderPages"
+                  :key="key"
+                  :label="pages[key].label"
+                  :badge="pages[key].badge"
+                  :current="active === key"
+                  @click="active = key"
                 />
               </NuiSidebarSub>
+              <NuiSidebarItem
+                label="Customers"
+                :icon="Users"
+                :current="active === 'customers'"
+                @click="active = 'customers'"
+              />
             </NuiSidebarGroup>
-            <NuiSidebarGroup label="Help">
-              <NuiSidebarItem label="Documentation" icon="file" href="#docs" />
-              <NuiSidebarItem label="Archive" icon="folder-open" disabled />
+            <NuiSidebarGroup label="Catalog">
+              <NuiSidebarItem
+                label="Products"
+                :icon="Package"
+                :current="active === 'products'"
+                @click="active = 'products'"
+              />
+              <NuiSidebarItem
+                label="Warehouse"
+                :icon="Warehouse"
+                :current="active === 'warehouse'"
+                @click="active = 'warehouse'"
+              />
             </NuiSidebarGroup>
           </NuiSidebarContent>
+          <NuiSidebarFooter>
+            <NuiSidebarGroup>
+              <NuiSidebarItem :label="manager.name" icon="user" />
+            </NuiSidebarGroup>
+          </NuiSidebarFooter>
         </NuiSidebar>
       </template>
       <template #header>
@@ -48,30 +53,76 @@
           <template #start>
             <NuiSidebarTrigger />
           </template>
-          {{ active }}
+          {{ pages[active].label }}
         </NuiAppBar>
       </template>
-      <div class="p-6">
-        <p>Current item: {{ active }}</p>
-      </div>
+      <p class="m-0 p-6">{{ pages[active].summary }}</p>
     </NuiLayout>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { Package, ShoppingCart, Users, Warehouse } from '@lucide/vue';
 import {
   NuiAppBar,
   NuiLayout,
   NuiSidebar,
   NuiSidebarContent,
+  NuiSidebarFooter,
   NuiSidebarGroup,
   NuiSidebarItem,
   NuiSidebarSub,
   NuiSidebarTrigger,
 } from '@numior/vue';
+import { team } from '#demo/team';
+
+type PageKey =
+  | 'orders-new'
+  | 'orders-ship'
+  | 'orders-returns'
+  | 'customers'
+  | 'products'
+  | 'warehouse';
+
+interface Page {
+  readonly label: string;
+  readonly summary: string;
+  readonly badge?: number;
+}
+
+const pages: Readonly<Record<PageKey, Page>> = {
+  'orders-new': {
+    label: 'New',
+    summary: 'Orders 20411 and 20412 await payment.',
+    badge: 2,
+  },
+  'orders-ship': {
+    label: 'To ship',
+    summary: 'Orders 20409 and 20410 are paid and wait to be packed.',
+    badge: 2,
+  },
+  'orders-returns': {
+    label: 'Returns',
+    summary: 'There are no return requests.',
+  },
+  customers: {
+    label: 'Customers',
+    summary: 'Peter Wolfe has placed 14 orders, more than anyone else.',
+  },
+  products: {
+    label: 'Products',
+    summary: 'Loft stools are sold out, and only four Fjord dressers are left.',
+  },
+  warehouse: {
+    label: 'Warehouse',
+    summary: 'Ian Bell is packing orders 20409 and 20410.',
+  },
+};
+
+const orderPages: readonly PageKey[] = ['orders-new', 'orders-ship', 'orders-returns'];
+const [manager] = team;
 
 const open = ref(true);
-const reports = ref(true);
-const active = ref('tasks');
+const active = ref<PageKey>('orders-new');
 </script>

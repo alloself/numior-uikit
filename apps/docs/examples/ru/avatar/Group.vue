@@ -1,15 +1,10 @@
 <template>
-  <NuiAvatarGroup :items="team" :max="3" size="lg" label="Команда проекта" />
+  <NuiAvatarGroup :items="people" :max="3" size="lg" label="Сотрудники на заказе 20408" />
 </template>
 
 <script setup lang="ts">
 import { NuiAvatarGroup, type NuiAvatarItem } from '@numior/vue';
+import { team } from '#demo/team';
 
-const team: NuiAvatarItem[] = [
-  { name: 'Анна Титова' },
-  { name: 'Игорь Белов' },
-  { name: 'Мария Ким' },
-  { name: 'Олег Смирнов' },
-  { name: 'Дина Ахметова' },
-];
+const people: NuiAvatarItem[] = team.map(({ id, name }) => ({ key: id, name }));
 </script>

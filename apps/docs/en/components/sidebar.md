@@ -1,17 +1,17 @@
 # Sidebar
 
-`NuiSidebar` is the navigation side panel of an app inside a [Layout](/en/components/layout). It
-holds a header, groups of items with nested lists, and a footer.
+The side menu of an app.
 
-A sidebar is always on screen and shares it with the content. For a panel that opens over the
-page for a single task, use a [Drawer](/en/components/drawer). On a phone the sidebar turns into
-one.
+It stays beside the content in a [Layout](/en/components/layout), while a
+[Drawer](/en/components/drawer) opens over the page.
 
 <Example name="sidebar/Basic" />
 
-The `collapsible` prop decides what collapsing does. With `icon` a narrow rail of icons
-remains, with `offcanvas` the panel slides off the screen edge, and with `none` it does not
-collapse.
+Choose what collapsing does in `collapsible`:
+
+- `offcanvas`, the default, slides the panel off the screen edge.
+- `icon` leaves a narrow rail of icons.
+- `none` keeps the panel open.
 
 ## Installation
 
@@ -23,55 +23,40 @@ import '@numior/vue/styles/sidebar.css';
 
 ## Examples
 
-### Without a background
+### Remove the background
 
-`variant="plain"` removes the background and the border, and the current item stands out by
-colour. The sidebar of this documentation looks like this.
+Set `variant="plain"`.
 
 <Example name="sidebar/Plain" />
 
-### Mark the item with a square
+The side menu of this documentation is a plain sidebar.
 
-Add `marker="square"` to a plain sidebar: a square marks the current item and the group rules go
-away.
+### Put the page on a backdrop
 
-<Example name="sidebar/SquareMarker" />
-
-### On a backdrop
-
-`variant="inset"` puts the panel on a muted background and the page content into a raised card
-with rounded corners. Collapsing into the icon rail or off the edge works the same way.
+Set `variant="inset"`.
 
 <Example name="sidebar/Inset" />
 
-### Floating
+### Show the sidebar as a separate card
 
-`variant="floating"` shows the panel as a separate card with a border and a shadow, set off from
-the screen edges.
+Set `variant="floating"`.
 
 <Example name="sidebar/Floating" />
 
-## Behaviour
+## Behavior
 
-In the collapsed icon rail an item label shows in a tooltip. A nested list opens as a panel
-next to the rail on hover, on click or on an arrow key.
-
-A panel opened by hover closes once the pointer leaves. A click on the button pins the panel.
-A pinned panel closes on a press outside it, on a second click on the button or on Escape.
-
-`NuiSidebarSub` with `active` is expanded from the first frame, on the server too. With
-`v-model:open`, the owner of the model sets the initial value.
-
-`side="end"` puts the panel on the right, and on the left in right-to-left text. A group with
-`collapsible` collapses through a button in its label, and `NuiSidebarSub` through a button in
-the item row.
+- In the icon rail, an item label shows in a tooltip.
+- A nested list opens next to the rail on hover. A click pins it, and Escape closes it.
+- `NuiSidebarSub` with `active` is expanded from the first frame, on the server too.
+- `side="end"` puts the panel on the right, and on the left in right-to-left text.
+- A group with `collapsible` gets a button in its heading that collapses the group.
 
 ## Accessibility
 
-The panel is an `aside` landmark labelled by `label`, with a `nav` of item lists inside. The
-current item carries `aria-current="page"`, and a screen reader calls it the current page.
+The panel is an `aside` landmark named by `label`, with a `nav` of item lists inside. A screen
+reader announces the current item as the current page.
 
-An item with `href` or `to` becomes a link, the others become buttons. In the icon rail the
+An item with `href` or `to` becomes a link, and the others become buttons. In the icon rail the
 labels are hidden from view, but a screen reader still reads them.
 
 <KeyboardReference name="NuiSidebarSub" />

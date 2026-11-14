@@ -1,28 +1,26 @@
 <template>
-  <div class="flex flex-col gap-3 w-full max-w-sm">
-    <NuiList variant="outline" class="w-full max-w-sm">
-      <NuiListItem
-        icon="file"
-        label="Contract.pdf"
-        description="348 KB · yesterday"
-        href="#contract"
-      />
-      <NuiListItem icon="image" label="Mockup.png" description="1.2 MB · today" href="#layout" />
-      <NuiListItem
-        icon="folder"
-        label="Archive"
-        description="12 files"
-        interactive
-        @click="opened = 'Archive'"
-      />
-    </NuiList>
-    <p class="text-sm text-muted-foreground">Opened: {{ opened || '—' }}</p>
-  </div>
+  <NuiList variant="outline" label="Latest orders" class="w-full max-w-sm">
+    <NuiListItem
+      v-for="order in latest"
+      :key="order.id"
+      :icon="Package"
+      :label="`Order ${order.id}`"
+      :description="`${order.customer}, ${money.format(order.total)}`"
+      :href="`#order-${order.id}`"
+    />
+  </NuiList>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { Package } from '@lucide/vue';
 import { NuiList, NuiListItem } from '@numior/vue';
+import { orders } from '#demo/orders';
 
-const opened = ref('');
+const money = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+});
+
+const latest = orders.slice(-3).toReversed();
 </script>

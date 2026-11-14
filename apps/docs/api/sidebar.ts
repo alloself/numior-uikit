@@ -19,7 +19,7 @@ const docs: DocsMap = {
       },
       marker: {
         ru: 'Чем отмечен текущий пункт при `variant="plain"`: `line` — цветом текста у линии группы, `square` — квадратом перед пунктом. По умолчанию `line`.',
-        en: 'How the current item is marked with `variant="plain"`: `line` by text colour next to the group rule, `square` by a square before the item. Defaults to `line`.',
+        en: 'How the current item is marked with `variant="plain"`: `line` by text color next to the group rule, `square` by a square before the item. Defaults to `line`.',
       },
       label: {
         ru: 'Подпись панели для экранных дикторов. По умолчанию — «Навигация» из словаря.',

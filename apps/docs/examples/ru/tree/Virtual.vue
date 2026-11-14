@@ -1,20 +1,24 @@
 <template>
   <NuiTree
-    variant="outline"
     :items="nodes"
     virtual
     height="14rem"
-    label="Большое дерево"
+    variant="outline"
+    label="Заказы за полгода"
     class="w-full max-w-sm"
   />
 </template>
 
 <script setup lang="ts">
 import { NuiTree, type NuiTreeItem } from '@numior/vue';
+import { ordersOf } from '#demo/many-orders';
 
-const nodes: NuiTreeItem<string>[] = Array.from({ length: 5000 }, (_, index) => ({
-  value: `order-${index + 1}`,
-  label: `Заказ ${index + 1}`,
-  children: [{ value: `order-${index + 1}-items`, label: 'Состав заказа' }],
+const nodes: NuiTreeItem<string>[] = ordersOf(2000).map((order) => ({
+  value: String(order.id),
+  label: `Заказ ${order.id}, ${order.customer}`,
+  children: order.lines.map((line, index) => ({
+    value: `${order.id}-${index}`,
+    label: `${line.name} × ${line.quantity}`,
+  })),
 }));
 </script>

@@ -1,10 +1,10 @@
 <template>
   <NuiTimeField
-    v-model="start"
-    label="Начало смены"
-    description="С 09:00 до 18:00, шаг 30 минут"
-    min="09:00"
-    max="18:00"
+    v-model="pickup"
+    label="Время самовывоза"
+    description="Пункт выдачи открыт с 10:00 до 20:00"
+    min="10:00"
+    max="20:00"
     :step="30"
   />
 </template>
@@ -13,5 +13,5 @@
 import { ref } from 'vue';
 import { NuiTimeField } from '@numior/vue';
 
-const start = ref<string | null>('09:30');
+const pickup = ref<string | null>('12:30');
 </script>

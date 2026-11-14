@@ -1,7 +1,10 @@
 <template>
-  <NuiEmpty title="Nothing here yet" description="Create the first project to see it here.">
+  <NuiEmpty
+    title="No orders yet"
+    description="Orders from the store show up here on their own. Create phone orders by hand."
+  >
     <template #actions>
-      <NuiButton size="sm">Create project</NuiButton>
+      <NuiButton size="sm" icon="plus">Create order</NuiButton>
     </template>
   </NuiEmpty>
 </template>

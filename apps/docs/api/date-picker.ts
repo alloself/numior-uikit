@@ -16,12 +16,12 @@ const calendar = {
     en: 'First day of the week, from 1 (Monday) to 7 (Sunday). Defaults to the locale.',
   },
   min: {
-    ru: 'Самая ранняя дата, которую можно выбрать.',
-    en: 'Earliest date that can be selected.',
+    ru: 'Самая ранняя дата, которую можно выбрать. Без неё — 1 января 100 года.',
+    en: 'Earliest date that can be selected, January 1, 100 by default.',
   },
   max: {
-    ru: 'Самая поздняя дата, которую можно выбрать.',
-    en: 'Latest date that can be selected.',
+    ru: 'Самая поздняя дата, которую можно выбрать. Без неё — 31 декабря 9999 года.',
+    en: 'Latest date that can be selected, December 31, 9999 by default.',
   },
   isDateDisabled: {
     ru: 'Функция, которая отключает отдельные даты, например выходные.',
@@ -69,7 +69,7 @@ const calendar = {
   ),
   dialogLabel: dictionary(
     'Подпись окна с календарём для экранных дикторов',
-    'Calendar popup label for screen readers',
+    'Calendar popover label for screen readers',
     'Календарь',
     'Calendar',
   ),
@@ -113,8 +113,14 @@ const calendar = {
 
 const exposed = {
   focus: { ru: 'Переводит фокус в поле.', en: 'Moves the focus into the field.' },
-  open: { ru: 'Открывает календарь.', en: 'Opens the calendar.' },
-  close: { ru: 'Закрывает календарь.', en: 'Closes the calendar.' },
+  open: {
+    ru: 'Открывает календарь и переводит в него фокус.',
+    en: 'Opens the calendar and moves the focus into it.',
+  },
+  close: {
+    ru: 'Закрывает календарь, не возвращая фокус в поле.',
+    en: 'Closes the calendar without returning the focus to the field.',
+  },
 };
 
 const actions = {

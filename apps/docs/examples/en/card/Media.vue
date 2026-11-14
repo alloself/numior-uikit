@@ -1,9 +1,9 @@
 <template>
-  <NuiCard class="max-w-sm">
-    <NuiCardMedia :src="cover" alt="" aspect="3 / 1" />
+  <NuiCard class="w-full max-w-sm">
+    <NuiCardMedia :src="cover" alt="" aspect="2 / 1" />
     <NuiCardHeader>
-      <NuiCardTitle>Cover</NuiCardTitle>
-      <NuiCardDescription>The image is cropped at the card edge.</NuiCardDescription>
+      <NuiCardTitle>Oslo armchair</NuiCardTitle>
+      <NuiCardDescription>$249, 12 in stock</NuiCardDescription>
     </NuiCardHeader>
   </NuiCard>
 </template>

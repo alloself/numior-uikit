@@ -1,24 +1,26 @@
 <template>
-  <div class="w-full h-96 border rounded-lg overflow-hidden">
+  <div class="w-full h-96 overflow-hidden rounded-lg border">
     <NuiLayout v-model:open="open" content-as="div" :shortcut="false" class="h-full">
       <template #sidebar>
-        <NuiSidebar collapsible="icon" variant="inset" label="Project">
-          <NuiSidebarHeader>
-            <strong class="px-2">Numior</strong>
-          </NuiSidebarHeader>
+        <NuiSidebar collapsible="icon" variant="inset" label="Store sections">
           <NuiSidebarContent>
-            <NuiSidebarGroup label="Work">
+            <NuiSidebarGroup>
               <NuiSidebarItem
-                v-for="item in items"
-                :key="item.key"
-                :label="item.label"
-                :icon="item.icon"
-                :badge="item.badge"
-                :current="active === item.key"
-                @click="active = item.key"
+                v-for="section in sections"
+                :key="section.key"
+                :label="section.label"
+                :icon="section.icon"
+                :badge="section.badge"
+                :current="active === section.key"
+                @click="active = section.key"
               />
             </NuiSidebarGroup>
           </NuiSidebarContent>
+          <NuiSidebarFooter>
+            <NuiSidebarGroup>
+              <NuiSidebarItem :label="manager.name" icon="user" />
+            </NuiSidebarGroup>
+          </NuiSidebarFooter>
         </NuiSidebar>
       </template>
       <template #header>
@@ -26,49 +28,77 @@
           <template #start>
             <NuiSidebarTrigger />
           </template>
-          {{ titles[active] }}
+          {{ current.label }}
         </NuiAppBar>
       </template>
-      <div class="p-6">
-        <p>The content sits in a raised card on a muted background.</p>
-      </div>
+      <p class="m-0 p-6">{{ current.summary }}</p>
     </NuiLayout>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref, type Component } from 'vue';
+import { ChartColumn, Package, ShoppingCart, Users, Warehouse } from '@lucide/vue';
 import {
   NuiAppBar,
   NuiLayout,
   NuiSidebar,
   NuiSidebarContent,
+  NuiSidebarFooter,
   NuiSidebarGroup,
-  NuiSidebarHeader,
   NuiSidebarItem,
   NuiSidebarTrigger,
-  type IconAlias,
 } from '@numior/vue';
+import { team } from '#demo/team';
 
-interface Item {
+interface Section {
   readonly key: string;
   readonly label: string;
-  readonly icon: IconAlias;
+  readonly icon: Component;
+  readonly summary: string;
   readonly badge?: number;
 }
 
-const items: Item[] = [
-  { key: 'tasks', label: 'Tasks', icon: 'inbox', badge: 12 },
-  { key: 'calendar', label: 'Calendar', icon: 'calendar' },
-  { key: 'files', label: 'Files', icon: 'folder' },
+const sections: readonly [Section, ...Section[]] = [
+  {
+    key: 'orders',
+    label: 'Orders',
+    icon: ShoppingCart,
+    summary: 'Two orders await payment, and three are on their way.',
+    badge: 2,
+  },
+  {
+    key: 'products',
+    label: 'Products',
+    icon: Package,
+    summary: 'Loft stools are sold out, and only four Fjord dressers are left.',
+  },
+  {
+    key: 'customers',
+    label: 'Customers',
+    icon: Users,
+    summary: 'Peter Wolfe has placed 14 orders, more than anyone else.',
+  },
+  {
+    key: 'warehouse',
+    label: 'Warehouse',
+    icon: Warehouse,
+    summary: 'Ian Bell is packing orders 20409 and 20410.',
+  },
+  {
+    key: 'reports',
+    label: 'Reports',
+    icon: ChartColumn,
+    summary: 'The sales report for September is ready.',
+  },
 ];
 
-const titles: Record<string, string> = {
-  tasks: 'Tasks',
-  calendar: 'Calendar',
-  files: 'Files',
-};
+const [manager] = team;
 
 const open = ref(true);
-const active = ref('tasks');
+const active = ref('orders');
+
+const current = computed(
+  () => sections.find((section) => section.key === active.value) ?? sections[0],
+);
 </script>

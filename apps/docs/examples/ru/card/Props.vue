@@ -1,6 +1,6 @@
 <template>
-  <NuiCard title="Уведомления" description="Сводка по проекту раз в день." class="max-w-sm">
-    <NuiCardContent>Письмо приходит в 9:00 по времени команды.</NuiCardContent>
+  <NuiCard title="Сентябрь" description="12 заказов на 288 900 ₽" class="w-full max-w-sm">
+    <NuiCardContent>Два заказа ждут оплаты, три едут к покупателям.</NuiCardContent>
   </NuiCard>
 </template>
 

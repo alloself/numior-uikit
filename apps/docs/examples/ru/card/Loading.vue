@@ -1,13 +1,18 @@
 <template>
-  <NuiSwitch v-model="loading" class="mb-4">Загрузка</NuiSwitch>
-  <NuiCard class="w-full max-w-sm" :loading="loading">
-    <NuiCardMedia :src="cover" alt="" aspect="3 / 1" />
-    <NuiCardHeader>
-      <NuiCardTitle>Каталог 2026</NuiCardTitle>
-      <NuiCardDescription>Обновлён вчера, 14 позиций</NuiCardDescription>
-    </NuiCardHeader>
-    <NuiCardContent :lines="2">Весенняя коллекция готова к публикации.</NuiCardContent>
-  </NuiCard>
+  <div class="flex w-full max-w-sm flex-col gap-4">
+    <NuiSwitch v-model="loading">Загрузка</NuiSwitch>
+    <NuiCard :loading="loading">
+      <NuiCardMedia :src="cover" alt="" aspect="3 / 1" />
+      <NuiCardHeader>
+        <NuiCardTitle>Кресло «Осло»</NuiCardTitle>
+        <NuiCardDescription>18 900 ₽, на складе 12 шт.</NuiCardDescription>
+      </NuiCardHeader>
+      <NuiCardContent :lines="2"
+        >Мягкое кресло на каркасе из массива дуба. Чехол снимается и стирается при 30
+        °C.</NuiCardContent
+      >
+    </NuiCard>
+  </div>
 </template>
 
 <script setup lang="ts">

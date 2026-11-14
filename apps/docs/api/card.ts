@@ -10,8 +10,8 @@ const docs: DocsMap = {
         en: 'Style: `outline` border, shadow (`elevated`) or `soft` fill.',
       },
       padding: {
-        ru: 'Внутренние отступы карточки: `xs`, `sm`, `md` или `lg`.',
-        en: 'Inner padding of the card: `xs`, `sm`, `md` or `lg`.',
+        ru: 'Внутренние отступы карточки: `xs`, `sm`, `md` или `lg`. Отступ `xs` подходит для плотной сетки из многих карточек.',
+        en: 'Inner padding of the card: `xs`, `sm`, `md` or `lg`. The `xs` padding suits a dense grid of many cards.',
       },
       href: {
         ru: 'Адрес ссылки. Вся карточка открывает его по клику.',
@@ -69,7 +69,10 @@ const docs: DocsMap = {
     ],
     configurator: {
       props: ['variant', 'padding', 'interactive', 'loading', 'title', 'description'],
-      content: { ru: 'Содержимое карточки', en: 'Card content' },
+      content: {
+        ru: 'Комод «Фьорд» и лампа «Нурд» на 26 800 ₽.',
+        en: 'Fjord dresser and Nord table lamp, $368.',
+      },
     },
   },
   NuiCardHeader: {

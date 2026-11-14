@@ -1,13 +1,16 @@
 <template>
-  <NuiBadge tone="error" :count="120" label="Непрочитанных" />
-  <NuiBadge tone="info" :count="7" :max="5" label="Черновиков" />
-  <NuiBadge tone="success" dot label="В сети" />
-  <NuiButton variant="outline" tone="neutral" class="relative">
-    Уведомления
-    <NuiBadge tone="error" :count="3" floating label="Новых уведомлений" />
-  </NuiButton>
+  <div class="flex flex-col gap-3 text-sm">
+    <p class="m-0 flex items-center gap-2">
+      Новые заказы
+      <NuiBadge tone="primary" :count="3" />
+    </p>
+    <p class="m-0 flex items-center gap-2">
+      Сообщения поддержки
+      <NuiBadge tone="error" :count="120" />
+    </p>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { NuiBadge, NuiButton } from '@numior/vue';
+import { NuiBadge } from '@numior/vue';
 </script>

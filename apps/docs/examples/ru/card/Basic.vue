@@ -1,18 +1,22 @@
 <template>
-  <NuiCard class="max-w-sm">
+  <NuiCard class="w-full max-w-sm">
     <NuiCardHeader>
-      <NuiCardTitle>Тариф Team</NuiCardTitle>
-      <NuiCardDescription>Для команд до десяти человек.</NuiCardDescription>
+      <NuiCardTitle>Заказ 20408</NuiCardTitle>
+      <NuiCardDescription>Павел Соколов, Москва</NuiCardDescription>
+      <template #actions>
+        <NuiBadge tone="info">В доставке</NuiBadge>
+      </template>
     </NuiCardHeader>
-    <NuiCardContent>Общие проекты, роли и история изменений.</NuiCardContent>
+    <NuiCardContent>Комод «Фьорд» и лампа «Нурд» на 26 800 ₽.</NuiCardContent>
     <NuiCardFooter>
-      <NuiButton size="sm">Выбрать</NuiButton>
+      <NuiButton size="sm">Открыть заказ</NuiButton>
     </NuiCardFooter>
   </NuiCard>
 </template>
 
 <script setup lang="ts">
 import {
+  NuiBadge,
   NuiButton,
   NuiCard,
   NuiCardContent,
