@@ -41,6 +41,11 @@ const withButton = (segment: string, color: number): StoredScene =>
     [4, 'span:0', '0 60 5 5', [color, 1, 0]],
   ]);
 
+const fadeOf = (button: string): Note => [
+  `section.panel:0 > ${button} | motion transition opacity`,
+  '{"duration":200}',
+];
+
 const chunk = (type: string, data: Buffer): Buffer => {
   const head = Buffer.alloc(8);
 
@@ -167,6 +172,19 @@ describe('scene comparison', () => {
       '(absent)',
       '(absent)',
     ]);
+  });
+
+  it('keys a motion record by its element without the dropped classes', () => {
+    const change = { element: '^button\\.nui-button\\.mt-3$', dropped: ['mt-3'], reason: 'dead' };
+    const base = scene('red', [], [fadeOf(UTILITY_BUTTON)]);
+    const next = scene('red', [], [fadeOf('button.nui-button:2')]);
+
+    expect(diffScenes(base, next).map((finding) => finding.after)).toEqual([
+      '(absent)',
+      '{"duration":200}',
+    ]);
+
+    expect(diffScenes(base, next, [change])).toEqual([]);
   });
 
   it('refuses to compare takes made with different property lists', () => {

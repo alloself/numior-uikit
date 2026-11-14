@@ -20,6 +20,7 @@ const RECT = '(rect)';
 const PIXELS = '(pixels)';
 const ABSENT = '(absent)';
 const NOTE_SEPARATOR = ' | ';
+const PATH_SEPARATOR = ' > ';
 
 const withoutDropped = (segment: string, ignored: readonly IgnoredClasses[]): string => {
   const cut = segment.lastIndexOf(':');
@@ -45,7 +46,7 @@ const pathsOf = (
   scene.nodes.forEach((node) => {
     const [parent, own] = node;
     const segment = ignored.length === 0 ? own : withoutDropped(own, ignored);
-    const path = parent < 0 ? segment : `${paths[parent] ?? ''} > ${segment}`;
+    const path = parent < 0 ? segment : `${paths[parent] ?? ''}${PATH_SEPARATOR}${segment}`;
 
     paths.push(path);
     byPath.set(path, node);
@@ -54,7 +55,8 @@ const pathsOf = (
   return byPath;
 };
 
-const parentOf = (path: string): string => path.slice(0, Math.max(0, path.lastIndexOf(' > ')));
+const parentOf = (path: string): string =>
+  path.slice(0, Math.max(0, path.lastIndexOf(PATH_SEPARATOR)));
 
 const orphans = (
   scene: string,
@@ -118,9 +120,31 @@ const noteFinding = (scene: string, subject: string, before: string, after: stri
   };
 };
 
-const noteFindings = (scene: string, base: readonly Note[], next: readonly Note[]): Finding[] => {
-  const before = new Map(base);
-  const after = new Map(next);
+const subjectWithoutDropped = (subject: string, ignored: readonly IgnoredClasses[]): string => {
+  const cut = subject.lastIndexOf(NOTE_SEPARATOR);
+
+  const element = subject
+    .slice(0, cut)
+    .split(PATH_SEPARATOR)
+    .map((segment) => withoutDropped(segment, ignored))
+    .join(PATH_SEPARATOR);
+
+  return `${element}${subject.slice(cut)}`;
+};
+
+const notesBySubject = (
+  notes: readonly Note[],
+  ignored: readonly IgnoredClasses[],
+): Map<string, string> =>
+  new Map(notes.map(([subject, value]) => [subjectWithoutDropped(subject, ignored), value]));
+
+const noteFindings = (
+  scene: string,
+  [base, next]: readonly [readonly Note[], readonly Note[]],
+  ignored: readonly IgnoredClasses[],
+): Finding[] => {
+  const before = notesBySubject(base, ignored);
+  const after = notesBySubject(next, ignored);
   const subjects = new Set([...before.keys(), ...after.keys()]);
 
   return Array.from(subjects).reduce<Finding[]>((findings, subject) => {
@@ -153,7 +177,7 @@ export const diffScenes = (
   const findings = [
     ...orphans(base.name, before, after, ['present', 'missing']),
     ...orphans(base.name, after, before, ['missing', 'present']),
-    ...noteFindings(base.name, base.notes, next.notes),
+    ...noteFindings(base.name, [base.notes, next.notes], ignored),
   ];
 
   before.forEach((node, path) => {
