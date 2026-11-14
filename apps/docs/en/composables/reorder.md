@@ -45,3 +45,36 @@ This is how [Table](/en/components/table) scrolls when a cell selection is dragg
 edge.
 
 <SignatureReference :names="['useEdgeScroll', 'EdgeScrollOptions', 'EdgeScroll', 'EdgePoint']" />
+
+## Presses and drags
+
+`usePointerSession()` runs a drag from press to release. `begin({ move, up, cancel })` attaches
+the handlers and `end()` detaches them. With `{ capture: true }` they get events in the capture
+phase.
+
+The listeners sit on the window, one set for the whole page. A drag never adds or removes its
+own: WebKit restyles the whole document on each such change.
+
+`createPressTargets()` hands presses to the parts of a container through one `pointerdown`
+listener. Put `onPointerdown` on the container and register the parts with
+`usePressTarget(targets, element, press)` or the ref function `pressRefOf(targets, press)`.
+
+A press travels from the element under the pointer up to the container, and `stopPropagation()`
+stops it. The column and row grips of [Table](/en/components/table) work this way.
+
+```ts
+import { createPressTargets, usePointerSession, usePressTarget } from '@numior/primitives';
+
+const targets = createPressTargets();
+const session = usePointerSession();
+
+usePressTarget(targets, grip, () => {
+  session.begin({
+    move: (event) => follow(event.clientX),
+    up: session.end,
+    cancel: session.end,
+  });
+});
+```
+
+<SignatureReference :names="['usePointerSession', 'PointerSessionOptions', 'PointerSession', 'PointerSessionHandlers', 'createPressTargets', 'usePressTarget', 'pressRefOf', 'PressTargets']" />
