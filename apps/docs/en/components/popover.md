@@ -8,9 +8,8 @@ Put the button into the `trigger` slot and pass it the slot's `attrs` with `v-bi
 
 ## Installation
 
-```ts
+```ts install
 import { NuiPopover } from '@numior/vue';
-import '@numior/vue/styles/popover.css';
 ```
 
 ## Usage

@@ -1,5 +1,6 @@
 import { extname } from 'node:path';
 import { blockExampleOf } from '../blocks.ts';
+import { expandInstallFences } from '../markdown/install.ts';
 import type { ComponentReference, DeclarationReference } from '../reference/reference.types.ts';
 import { tokenRowsOf } from '../theme/token-sections.ts';
 import { TokenSection } from '../theme/theme.types.ts';
@@ -195,7 +196,9 @@ const joinTags = (lines: readonly string[]): string[] => {
 export const pageTwin = (source: string, context: TwinContext): string => {
   const state: TwinState = { fence: undefined, open: undefined };
 
-  const lines = joinTags(source.replace(FRONTMATTER_RE, '').split('\n')).flatMap((line) =>
+  const markdown = expandInstallFences(source.replace(FRONTMATTER_RE, ''), context.bundle);
+
+  const lines = joinTags(markdown.split('\n')).flatMap((line) =>
     isCode(state, line) ? [line] : renderLine(line, context),
   );
 

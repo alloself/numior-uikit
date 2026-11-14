@@ -16,11 +16,8 @@ layout: wide
 
 ## Установка
 
-```ts
+```ts install:packages
 import { NuiSpreadsheet } from '@numior/spreadsheet';
-import '@numior/vue/styles.css';
-import '@numior/table/styles.css';
-import '@numior/spreadsheet/styles.css';
 ```
 
 Модель книги и формулы лежат в `@numior/spreadsheet/core`. Эта точка входа работает без Vue, в

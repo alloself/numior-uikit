@@ -9,9 +9,8 @@ nothing itself: your app or a [Smart form](/en/components/smart-form) decides wh
 
 ## Installation
 
-```ts
+```ts install
 import { NuiStepper } from '@numior/vue';
-import '@numior/vue/styles/stepper.css';
 ```
 
 ## Usage

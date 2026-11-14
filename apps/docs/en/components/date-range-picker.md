@@ -9,11 +9,8 @@ The model holds the period as a `{ start, end }` object, with each date a `YYYY-
 
 ## Installation
 
-```ts
+```ts install
 import { NuiDateRangePicker } from '@numior/vue';
-import '@numior/vue/styles/field.css';
-import '@numior/vue/styles/calendar.css';
-import '@numior/vue/styles/date-picker.css';
 ```
 
 ## Usage

@@ -8,11 +8,8 @@ The model holds the date as a `YYYY-MM-DD` string.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiDatePicker } from '@numior/vue';
-import '@numior/vue/styles/field.css';
-import '@numior/vue/styles/calendar.css';
-import '@numior/vue/styles/date-picker.css';
 ```
 
 ## Usage

@@ -6,9 +6,8 @@ A placeholder that holds the place of content while it loads.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiSkeleton } from '@numior/vue';
-import '@numior/vue/styles/skeleton.css';
 ```
 
 ## Usage

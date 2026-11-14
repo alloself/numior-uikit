@@ -8,10 +8,8 @@ For an app menu that stays on screen, use a [Sidebar](/en/components/sidebar).
 
 ## Installation
 
-```ts
+```ts install
 import { NuiDrawer } from '@numior/vue';
-import '@numior/vue/styles/dialog.css';
-import '@numior/vue/styles/drawer.css';
 ```
 
 ## Usage

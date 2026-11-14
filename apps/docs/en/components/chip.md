@@ -8,9 +8,8 @@ For a status or a count, use a [Badge](/en/components/badge).
 
 ## Installation
 
-```ts
+```ts install
 import { NuiChip } from '@numior/vue';
-import '@numior/vue/styles/chip.css';
 ```
 
 ## Usage

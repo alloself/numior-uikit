@@ -9,9 +9,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiStepper } from '@numior/vue';
-import '@numior/vue/styles/stepper.css';
 ```
 
 ## Использование

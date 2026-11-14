@@ -8,9 +8,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiPopover } from '@numior/vue';
-import '@numior/vue/styles/popover.css';
 ```
 
 ## Использование

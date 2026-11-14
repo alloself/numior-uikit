@@ -8,9 +8,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiBadge } from '@numior/vue';
-import '@numior/vue/styles/badge.css';
 ```
 
 ## Использование

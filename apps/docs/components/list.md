@@ -9,9 +9,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiList, NuiListItem } from '@numior/vue';
-import '@numior/vue/styles/list.css';
 ```
 
 ## Использование

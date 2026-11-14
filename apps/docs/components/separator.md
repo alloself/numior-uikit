@@ -6,9 +6,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiSeparator } from '@numior/vue';
-import '@numior/vue/styles/separator.css';
 ```
 
 ## Использование

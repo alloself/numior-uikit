@@ -8,9 +8,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiCalendar } from '@numior/vue';
-import '@numior/vue/styles/calendar.css';
 ```
 
 ## Использование

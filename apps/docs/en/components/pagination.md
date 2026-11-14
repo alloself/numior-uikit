@@ -9,9 +9,8 @@ its size.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiPagination } from '@numior/vue';
-import '@numior/vue/styles/pagination.css';
 ```
 
 ## Usage

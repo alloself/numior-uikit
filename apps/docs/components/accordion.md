@@ -6,10 +6,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiAccordion, NuiAccordionItem } from '@numior/vue';
-import '@numior/vue/styles/collapsible.css';
-import '@numior/vue/styles/accordion.css';
 ```
 
 ## Использование

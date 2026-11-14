@@ -22,6 +22,7 @@ import {
   parseBaseline,
   settle,
 } from '../.vitepress/content/guards';
+import { installGuards } from '../.vitepress/content/install-guards';
 import { openingGuards, pageGuards } from '../.vitepress/content/page-guards';
 import type { DocsMap } from '../.vitepress/reference/reference.types';
 
@@ -65,6 +66,9 @@ const SELECT_DOCS: DocsMap = {
     ],
   },
 };
+
+const fence = (info: string, lines: readonly string[]): string =>
+  [`\`\`\`${info}`, ...lines, '```'].join('\n');
 
 const SHOP = ["{ name: 'Пётр Волков', city: 'Москва' }", "{ name: 'Анна Титова' }"];
 
@@ -234,6 +238,47 @@ describe('guards of the component pages', () => {
     expect(textsOf(en, GuardRule.Glossary)).toEqual(['«colour» → US spelling']);
     expect(textsOf(en, GuardRule.Meta)).toEqual(['This example']);
     expect(textsOf(en, GuardRule.Speed)).toEqual(['3x faster']);
+  });
+});
+
+describe('guards of the install blocks', () => {
+  const IMPORT = "import { NuiSelect } from '@numior/vue';";
+  const STYLE = "import '@numior/vue/styles/select.css';";
+
+  it('accept a printed install block and a block of package styles alone', () => {
+    const source = page('Выбор из списка.', [
+      '## Установка',
+      '',
+      fence('ts install', [IMPORT]),
+      '',
+      '## Стили',
+      '',
+      fence('ts', ["import '@numior/vue/styles.css';"]),
+    ]);
+
+    expect(installGuards('components/select.md', source)).toEqual([]);
+  });
+
+  it('report stylesheets listed by hand and an install block that the build does not print', () => {
+    const source = page('Выбор из списка.', [
+      '## Установка',
+      '',
+      fence('ts install', [IMPORT, STYLE]),
+      '',
+      fence('ts', [IMPORT]),
+      '',
+      '## Примеры',
+      '',
+      fence('ts', [IMPORT, STYLE]),
+      '',
+      fence('ts', [IMPORT]),
+    ]);
+
+    expect(textsOf(installGuards('components/select.md', source), GuardRule.Install)).toEqual([
+      'an install block lists stylesheets by hand; the build prints them',
+      'an install block imports kit components without `ts install`',
+      'stylesheets of kit components are listed by hand; mark the block `ts install`',
+    ]);
   });
 });
 

@@ -9,10 +9,8 @@ Pass the text in the default slot or in `label`. The hint and the error work as 
 
 ## Installation
 
-```ts
+```ts install
 import { NuiCheckbox, NuiCheckboxGroup } from '@numior/vue';
-import '@numior/vue/styles/field.css';
-import '@numior/vue/styles/checkbox.css';
 ```
 
 ## Usage

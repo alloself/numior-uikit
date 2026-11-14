@@ -8,9 +8,8 @@ Bind the open tab with `v-model`: it holds the `value` of that tab.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/vue';
-import '@numior/vue/styles/tabs.css';
 ```
 
 ## Usage

@@ -25,6 +25,7 @@ const BUNDLE: ReferenceBundle = {
       family: 'button',
       file: 'packages/vue/src/button/NuiButton.vue',
       styles: { import: '@numior/vue/button.css', blocks: [], tokens: [] },
+      stylesheets: ['@numior/vue/styles/icon.css', '@numior/vue/button.css'],
       messages: 'button',
       props: [
         {
@@ -63,6 +64,7 @@ const BUNDLE: ReferenceBundle = {
       family: 'select',
       file: 'packages/vue/src/select/NuiSelect.vue',
       styles: undefined,
+      stylesheets: [],
       messages: undefined,
       props: [],
       models: [],
@@ -95,6 +97,7 @@ const BUNDLE: ReferenceBundle = {
     { name: '--nui-surface', group: 'color', light: '#fff', dark: '#111' },
   ],
   icons: [{ alias: 'copy', icon: 'Copy' }],
+  stylesheets: ['@numior/vue/styles.css', '@numior/vue/styles/icon.css', '@numior/vue/button.css'],
 };
 
 const contextOf = (locale: 'ru' | 'en' = 'ru'): TwinContext => ({
@@ -136,6 +139,23 @@ describe('markdown twin of a page', () => {
       'До.\n\n<Configurator name="NuiButton" />\n\n<Example name="button/None" />\n\nПосле.\n';
 
     expect(pageTwin(page, contextOf())).toBe('До.\n\nПосле.\n');
+  });
+
+  it('prints the stylesheets of an install block the way the page shows them', () => {
+    const page = "## Установка\n\n```ts install\nimport { NuiButton } from '@numior/vue';\n```\n";
+
+    expect(pageTwin(page, contextOf())).toBe(
+      [
+        '## Установка',
+        '',
+        '```ts',
+        "import { NuiButton } from '@numior/vue';",
+        "import '@numior/vue/styles/icon.css';",
+        "import '@numior/vue/button.css';",
+        '```',
+        '',
+      ].join('\n'),
+    );
   });
 
   it('fences a source that holds a fence itself with a longer fence', () => {

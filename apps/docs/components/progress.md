@@ -8,9 +8,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiProgress } from '@numior/vue';
-import '@numior/vue/styles/progress.css';
 ```
 
 ## Использование

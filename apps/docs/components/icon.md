@@ -9,9 +9,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiIcon } from '@numior/vue';
-import '@numior/vue/styles/icon.css';
 ```
 
 ## Использование

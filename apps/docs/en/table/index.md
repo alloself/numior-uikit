@@ -14,10 +14,8 @@ and with `height` it scrolls and renders only the visible rows and columns.
 
 ## Installation
 
-```ts
+```ts install:packages
 import { NuiTable } from '@numior/table';
-import '@numior/vue/styles.css';
-import '@numior/table/styles.css';
 ```
 
 The filters, column menus, checkboxes and pagination of the table are `@numior/vue` components,

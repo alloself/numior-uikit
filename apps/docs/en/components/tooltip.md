@@ -8,9 +8,8 @@ Put the element into the `trigger` slot the same way as in a [Popover](/en/compo
 
 ## Installation
 
-```ts
+```ts install
 import { NuiTooltip } from '@numior/vue';
-import '@numior/vue/styles/tooltip.css';
 ```
 
 ## Usage

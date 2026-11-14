@@ -8,9 +8,8 @@ Each icon loads separately, the first time it is needed.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiIcon } from '@numior/vue';
-import '@numior/vue/styles/icon.css';
 ```
 
 ## Usage

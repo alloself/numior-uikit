@@ -15,10 +15,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiMenu, NuiMenuItem } from '@numior/vue';
-import '@numior/vue/styles/list.css';
-import '@numior/vue/styles/menu.css';
 ```
 
 ## Использование

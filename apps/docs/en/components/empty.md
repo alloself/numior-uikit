@@ -8,9 +8,8 @@ Put the reason in `title` and `description`, and the next step in the `actions` 
 
 ## Installation
 
-```ts
+```ts install
 import { NuiEmpty } from '@numior/vue';
-import '@numior/vue/styles/empty.css';
 ```
 
 ## Usage

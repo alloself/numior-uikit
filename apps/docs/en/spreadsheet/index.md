@@ -16,11 +16,8 @@ the sheet is shown. Otherwise the component creates its own.
 
 ## Installation
 
-```ts
+```ts install:packages
 import { NuiSpreadsheet } from '@numior/spreadsheet';
-import '@numior/vue/styles.css';
-import '@numior/table/styles.css';
-import '@numior/spreadsheet/styles.css';
 ```
 
 The book model and formulas live in `@numior/spreadsheet/core`. That entry works without Vue,

@@ -8,9 +8,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiAvatar, NuiAvatarGroup } from '@numior/vue';
-import '@numior/vue/styles/avatar.css';
 ```
 
 ## Использование

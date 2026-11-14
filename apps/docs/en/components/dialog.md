@@ -9,9 +9,8 @@ the pressed one.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiDialog } from '@numior/vue';
-import '@numior/vue/styles/dialog.css';
 ```
 
 ## Usage

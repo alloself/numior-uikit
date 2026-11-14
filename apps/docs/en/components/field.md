@@ -9,9 +9,8 @@ Numior UI inputs take `label`, `description` and `error` themselves, so wrap a c
 
 ## Installation
 
-```ts
+```ts install
 import { NuiField } from '@numior/vue';
-import '@numior/vue/styles/field.css';
 ```
 
 ## Usage

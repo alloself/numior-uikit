@@ -8,9 +8,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiCollapsible } from '@numior/vue';
-import '@numior/vue/styles/collapsible.css';
 ```
 
 ## Использование

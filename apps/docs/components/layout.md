@@ -10,10 +10,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiAppBar, NuiLayout } from '@numior/vue';
-import '@numior/vue/styles/layout.css';
-import '@numior/vue/styles/skip-link.css';
 ```
 
 ## Примеры

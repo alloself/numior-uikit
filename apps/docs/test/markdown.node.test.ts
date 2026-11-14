@@ -4,6 +4,7 @@ import { createMarkdownRenderer, type MarkdownRenderer } from 'vitepress';
 import { createHighlighter } from 'shiki';
 import { docsMarkdown } from '../.vitepress/markdown';
 import { headingPermalink } from '../.vitepress/markdown/anchors';
+import type { InstallSource } from '../.vitepress/markdown/markdown.types';
 import {
   isBoolean,
   isNumber,
@@ -54,6 +55,27 @@ const codeGroup = (html: string) => {
 
 const pageEnv = (relativePath: string) => ({ path: relativePath, relativePath, cleanUrls: true });
 
+const INSTALL: InstallSource = {
+  components: {
+    NuiSelect: {
+      stylesheets: [
+        '@numior/vue/styles/icon.css',
+        '@numior/vue/styles/field.css',
+        '@numior/vue/styles/select.css',
+      ],
+    },
+    NuiTable: { stylesheets: ['@numior/vue/styles/icon.css', '@numior/table/styles/table.css'] },
+  },
+  stylesheets: [
+    '@numior/vue/styles.css',
+    '@numior/vue/styles/icon.css',
+    '@numior/vue/styles/field.css',
+    '@numior/vue/styles/select.css',
+    '@numior/table/styles.css',
+    '@numior/table/styles/table.css',
+  ],
+};
+
 const RU = pageEnv('components/button.md');
 const EN = pageEnv('en/components/button.md');
 
@@ -68,7 +90,7 @@ describe('docs markdown', () => {
       {
         headers: { level: [2, 3] },
         anchor: { permalink: headingPermalink },
-        config: (renderer) => docsMarkdown(renderer, highlighter),
+        config: (renderer) => docsMarkdown(renderer, highlighter, INSTALL),
       },
       '/',
     );
@@ -112,6 +134,42 @@ describe('docs markdown', () => {
     expect(variants[1]?.code.highlight).toEqual([1]);
     expect(codeProps(html).code).toBe('const c = 3;');
     expect(html.match(/<NuiCode /g)).toHaveLength(1);
+  });
+
+  it('prints every stylesheet that the components of an install block render', () => {
+    const files = codeProps(
+      md.render("```ts install\nimport { NuiTable, NuiSelect } from '@numior/vue';\n```\n", RU),
+    );
+
+    expect(files.language).toBe('ts');
+
+    expect(files.code).toBe(
+      [
+        "import { NuiTable, NuiSelect } from '@numior/vue';",
+        "import '@numior/vue/styles/icon.css';",
+        "import '@numior/vue/styles/field.css';",
+        "import '@numior/vue/styles/select.css';",
+        "import '@numior/table/styles/table.css';",
+      ].join('\n'),
+    );
+
+    const packages = codeProps(
+      md.render("```ts install:packages\nimport { NuiTable } from '@numior/table';\n```\n", RU),
+    );
+
+    expect(packages.code).toBe(
+      [
+        "import { NuiTable } from '@numior/table';",
+        "import '@numior/vue/styles.css';",
+        "import '@numior/table/styles.css';",
+      ].join('\n'),
+    );
+  });
+
+  it('refuses an install block that imports no component with styles', () => {
+    expect(() =>
+      md.render("```ts install\nimport { useToast } from '@numior/primitives';\n```\n", RU),
+    ).toThrow('imports no kit component with styles');
   });
 
   it('keeps plain fences without a language or tokens', () => {

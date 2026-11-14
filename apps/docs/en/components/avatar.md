@@ -8,9 +8,8 @@ Pass the photo in `src` and the name in `name`: without a photo the avatar shows
 
 ## Installation
 
-```ts
+```ts install
 import { NuiAvatar, NuiAvatarGroup } from '@numior/vue';
-import '@numior/vue/styles/avatar.css';
 ```
 
 ## Usage

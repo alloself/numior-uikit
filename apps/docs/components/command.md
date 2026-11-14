@@ -6,11 +6,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiCommand, NuiCommandDialog } from '@numior/vue';
-import '@numior/vue/styles/list.css';
-import '@numior/vue/styles/dialog.css';
-import '@numior/vue/styles/command.css';
 ```
 
 ## Использование

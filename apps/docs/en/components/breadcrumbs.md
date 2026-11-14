@@ -14,10 +14,8 @@ The last step names the current page and does not link anywhere.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiBreadcrumbs } from '@numior/vue';
-import '@numior/vue/styles/link.css';
-import '@numior/vue/styles/breadcrumbs.css';
 ```
 
 ## Usage

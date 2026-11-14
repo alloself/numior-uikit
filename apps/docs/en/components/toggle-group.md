@@ -8,9 +8,8 @@ Describe the buttons in `items`, and `v-model` gets the value of the pressed one
 
 ## Installation
 
-```ts
+```ts install
 import { NuiToggleGroup } from '@numior/vue';
-import '@numior/vue/styles/toggle-group.css';
 ```
 
 ## Usage

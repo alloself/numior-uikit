@@ -9,10 +9,8 @@ Pass the nodes in `items` and the nested ones in `children`. The selected node c
 
 ## Installation
 
-```ts
+```ts install
 import { NuiTree } from '@numior/vue';
-import '@numior/vue/styles/list.css';
-import '@numior/vue/styles/tree.css';
 ```
 
 ## Usage

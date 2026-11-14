@@ -11,6 +11,7 @@ import { parseIconAliases } from './icons.ts';
 import { componentReference } from './meta.ts';
 import { sceneProblems, type SceneSource } from './scenes.ts';
 import { componentEntries, familyFile, familyStyleImport } from './sources.ts';
+import { kitStylesheets, type KitStylesheets } from './stylesheets.ts';
 import { parseThemeTokens } from './tokens.ts';
 import type {
   CatalogReference,
@@ -104,6 +105,7 @@ const collectComponent = async (
   docs: DocsMap,
   members: ReadonlyMap<string, string>,
   sceneOf: SceneSource,
+  sheets: KitStylesheets,
 ): Promise<CollectedComponent> => {
   const messagesFile = familyFile(entry, '.messages.ts');
   const catalog = messagesFile === undefined ? undefined : await loadCatalog(messagesFile);
@@ -112,6 +114,7 @@ const collectComponent = async (
     entry,
     checker.getComponentMeta(entry.file),
     stylesOf(entry),
+    sheets.of(entry.file),
     catalog?.namespace,
     members,
   );
@@ -168,9 +171,10 @@ export const buildReference = async (
   const catalogs: Record<string, CatalogReference> = {};
   const problems: string[] = [];
   const sceneOf = sceneSourceOf(root);
+  const sheets = kitStylesheets(root);
 
   for (const entry of allEntries(root)) {
-    const collected = await collectComponent(checker, entry, docs, members, sceneOf);
+    const collected = await collectComponent(checker, entry, docs, members, sceneOf, sheets);
 
     components[entry.name] = { ...collected.component, file: relative(root, entry.file) };
     problems.push(...collected.problems, ...unresolvedDefaults(collected.component));
@@ -194,6 +198,7 @@ export const buildReference = async (
       icons: parseIconAliases(
         readFileSync(join(root, 'packages/primitives/src/icons/icon-aliases.ts'), 'utf8'),
       ),
+      stylesheets: sheets.order,
     },
     problems,
     undocumented: Object.keys(components).filter((name) => docs[name] === undefined),

@@ -9,10 +9,8 @@ parts follow the app language.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiTimeField } from '@numior/vue';
-import '@numior/vue/styles/field.css';
-import '@numior/vue/styles/time-field.css';
 ```
 
 ## Usage

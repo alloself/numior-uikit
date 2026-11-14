@@ -6,9 +6,8 @@ A frame around one thing on the screen, such as an order or a product.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiCard, NuiCardContent, NuiCardHeader, NuiCardTitle } from '@numior/vue';
-import '@numior/vue/styles/card.css';
 ```
 
 ## Usage

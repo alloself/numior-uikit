@@ -8,9 +8,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/vue';
-import '@numior/vue/styles/tabs.css';
 ```
 
 ## Использование

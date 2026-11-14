@@ -14,10 +14,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiBreadcrumbs } from '@numior/vue';
-import '@numior/vue/styles/link.css';
-import '@numior/vue/styles/breadcrumbs.css';
 ```
 
 ## Использование

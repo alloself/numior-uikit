@@ -9,9 +9,8 @@ For a short notice that appears over the page and goes away by itself, use a
 
 ## Installation
 
-```ts
+```ts install
 import { NuiAlert } from '@numior/vue';
-import '@numior/vue/styles/alert.css';
 ```
 
 ## Usage

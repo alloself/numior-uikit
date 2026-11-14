@@ -6,9 +6,8 @@ A line between blocks of a page or between buttons of a toolbar.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiSeparator } from '@numior/vue';
-import '@numior/vue/styles/separator.css';
 ```
 
 ## Usage

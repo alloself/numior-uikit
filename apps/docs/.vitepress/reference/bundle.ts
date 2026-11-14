@@ -10,7 +10,8 @@ const isReferenceBundle = (value: unknown): value is ReferenceBundle =>
   isRecord(value.catalogs) &&
   Array.isArray(value.declarations) &&
   Array.isArray(value.tokens) &&
-  Array.isArray(value.icons);
+  Array.isArray(value.icons) &&
+  Array.isArray(value.stylesheets);
 
 export const parseBundle = (json: string): ReferenceBundle => {
   const value: unknown = JSON.parse(json);

@@ -8,9 +8,8 @@ For a label the user can remove, use a [Chip](/en/components/chip).
 
 ## Installation
 
-```ts
+```ts install
 import { NuiBadge } from '@numior/vue';
-import '@numior/vue/styles/badge.css';
 ```
 
 ## Usage

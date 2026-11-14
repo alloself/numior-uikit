@@ -15,10 +15,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiFieldArray, NuiForm, NuiFormField, useForm } from '@numior/forms';
-import '@numior/forms/styles/form.css';
-import '@numior/forms/styles/field-array.css';
 ```
 
 ## Примеры

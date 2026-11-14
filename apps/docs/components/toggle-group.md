@@ -8,9 +8,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiToggleGroup } from '@numior/vue';
-import '@numior/vue/styles/toggle-group.css';
 ```
 
 ## Использование

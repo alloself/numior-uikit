@@ -8,9 +8,8 @@ To stack several sections, use an [Accordion](/en/components/accordion).
 
 ## Installation
 
-```ts
+```ts install
 import { NuiCollapsible } from '@numior/vue';
-import '@numior/vue/styles/collapsible.css';
 ```
 
 ## Usage

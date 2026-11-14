@@ -68,6 +68,7 @@ describe('docs reference', () => {
       entry,
       checker.getComponentMeta(entry.file),
       { import: familyStyleImport(entry) ?? '', blocks: [], tokens: [] },
+      [],
       undefined,
       enumerationMembers(`${ROOT}packages/vue/dist/index.d.ts`),
     );
@@ -125,6 +126,7 @@ describe('docs reference', () => {
       entry,
       checker.getComponentMeta(entry.file),
       undefined,
+      [],
       undefined,
     );
 
@@ -291,6 +293,7 @@ describe('docs reference', () => {
       ],
       tokens: [],
       icons: [],
+      stylesheets: [],
     };
 
     const current = (): ReferenceBundle => bundle;

@@ -9,10 +9,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiOtpField } from '@numior/vue';
-import '@numior/vue/styles/field.css';
-import '@numior/vue/styles/otp-field.css';
 ```
 
 ## Использование

@@ -18,10 +18,8 @@ file stops its request. The returned value becomes the `result` of the file in t
 
 ## Installation
 
-```ts
+```ts install
 import { NuiUpload } from '@numior/vue';
-import '@numior/vue/styles/field.css';
-import '@numior/vue/styles/upload.css';
 ```
 
 ## Usage

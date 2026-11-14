@@ -6,10 +6,8 @@ Sections stacked under each other, with one or several open at a time.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiAccordion, NuiAccordionItem } from '@numior/vue';
-import '@numior/vue/styles/collapsible.css';
-import '@numior/vue/styles/accordion.css';
 ```
 
 ## Usage

@@ -9,10 +9,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiInput } from '@numior/vue';
-import '@numior/vue/styles/field.css';
-import '@numior/vue/styles/input.css';
 ```
 
 ## Использование

@@ -12,10 +12,8 @@ The checks come from a Zod, Valibot or ArkType schema or from the rules of the p
 
 ## Installation
 
-```ts
+```ts install
 import { NuiFieldArray, NuiForm, NuiFormField, useForm } from '@numior/forms';
-import '@numior/forms/styles/form.css';
-import '@numior/forms/styles/field-array.css';
 ```
 
 ## Examples

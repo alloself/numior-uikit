@@ -8,9 +8,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiAlert } from '@numior/vue';
-import '@numior/vue/styles/alert.css';
 ```
 
 ## Использование

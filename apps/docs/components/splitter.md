@@ -9,9 +9,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiSplitter } from '@numior/vue';
-import '@numior/vue/styles/splitter.css';
 ```
 
 ## Примеры

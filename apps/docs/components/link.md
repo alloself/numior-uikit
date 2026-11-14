@@ -8,9 +8,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiLink } from '@numior/vue';
-import '@numior/vue/styles/link.css';
 ```
 
 ## Использование

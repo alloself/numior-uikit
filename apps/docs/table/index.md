@@ -13,10 +13,8 @@
 
 ## Установка
 
-```ts
+```ts install:packages
 import { NuiTable } from '@numior/table';
-import '@numior/vue/styles.css';
-import '@numior/table/styles.css';
 ```
 
 Фильтры, меню колонок, флажки и пагинация таблицы — компоненты `@numior/vue`, поэтому нужны и их

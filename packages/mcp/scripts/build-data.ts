@@ -33,9 +33,6 @@ const OUT_FILE = fileURLToPath(new URL('../dist/data.json', import.meta.url));
 const LOCALE_PREFIX = /^\/en(?=\/|$)/u;
 const TRAILING_SLASH = /(?<=.)\/$/u;
 const API_HEADING = /^### (Nui\w+)$/gmu;
-const CODE_BLOCK = /^```(?:ts|js)\n([\s\S]*?)^```$/gmu;
-const NAMED_IMPORT = /import\s*\{([^}]*)\}\s*from\s*'@numior\/[^']+'/gu;
-const STYLE_IMPORT = /import\s+'([^']+\.css)'/gu;
 const STYLES_EXPORT = './styles.css';
 
 const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
@@ -74,50 +71,7 @@ const pagesByComponent = (pages: readonly McpPage[]): ReadonlyMap<string, readon
     return found;
   }, new Map<string, readonly string[]>());
 
-const namesIn = (list: string): string[] =>
-  list
-    .split(',')
-    .map((name) => name.trim())
-    .filter((name) => name !== '');
-
-const installedStylesheets = (markdown: string, component: string): string[] =>
-  [...markdown.matchAll(CODE_BLOCK)].reduce<string[]>((found, [, code = '']) => {
-    const imported = [...code.matchAll(NAMED_IMPORT)].some(([, list = '']) =>
-      namesIn(list).includes(component),
-    );
-
-    if (!imported) {
-      return found;
-    }
-    for (const [, sheet = ''] of code.matchAll(STYLE_IMPORT)) {
-      if (found.includes(sheet)) {
-        continue;
-      }
-
-      found.push(sheet);
-    }
-    return found;
-  }, []);
-
-const stylesheetsOf = (
-  component: ComponentReference,
-  paths: readonly string[],
-  pages: readonly McpPage[],
-): string[] => {
-  const sheets = pages.flatMap((page) =>
-    paths.includes(page.path) ? installedStylesheets(page.markdown, component.name) : [],
-  );
-
-  const own = component.styles?.import;
-
-  return [...new Set(own === undefined || sheets.length > 0 ? sheets : [own])];
-};
-
-const componentOf = (
-  component: ComponentReference,
-  paths: readonly string[],
-  pages: readonly McpPage[],
-): McpComponent => ({
+const componentOf = (component: ComponentReference, paths: readonly string[]): McpComponent => ({
   name: component.name,
   package: component.package,
   styles:
@@ -128,7 +82,7 @@ const componentOf = (
           blocks: component.styles.blocks,
           tokens: component.styles.tokens,
         },
-  stylesheets: stylesheetsOf(component, paths, pages),
+  stylesheets: component.stylesheets,
   messages: component.messages,
   props: component.props,
   models: component.models,
@@ -194,7 +148,7 @@ const collectData = (): McpData => {
     components: Object.fromEntries(
       Object.values(bundle.components).map((component) => [
         component.name,
-        componentOf(component, componentPages.get(component.name) ?? [], pages.en),
+        componentOf(component, componentPages.get(component.name) ?? []),
       ]),
     ),
     catalogs: catalogsOf(bundle),

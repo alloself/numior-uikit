@@ -10,10 +10,8 @@ Put a [Sidebar](/en/components/sidebar) into the `sidebar` slot and a `NuiAppBar
 
 ## Installation
 
-```ts
+```ts install
 import { NuiAppBar, NuiLayout } from '@numior/vue';
-import '@numior/vue/styles/layout.css';
-import '@numior/vue/styles/skip-link.css';
 ```
 
 ## Examples

@@ -8,9 +8,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiToc } from '@numior/vue';
-import '@numior/vue/styles/toc.css';
 ```
 
 ## Поведение

@@ -20,6 +20,7 @@ import {
   type GuardVerdict,
 } from './guard.types.ts';
 import { navigationTexts } from '../navigation.ts';
+import { installGuards } from './install-guards.ts';
 import { openingGuards, pageGuards } from './page-guards.ts';
 
 const LOCALES: readonly ExampleLocale[] = ['ru', 'en'];
@@ -214,7 +215,10 @@ export const collectGuardProblems = async (
   const pages = pagesOf(docsRoot);
 
   return [
-    ...Object.entries(pages).flatMap(([page, source]) => pageGuards(page, source)),
+    ...Object.entries(pages).flatMap(([page, source]) => [
+      ...pageGuards(page, source),
+      ...installGuards(page, source),
+    ]),
     ...openingGuards(pages),
     ...(await apiGuards(docsRoot)),
     ...(await themeGuards(docsRoot)),

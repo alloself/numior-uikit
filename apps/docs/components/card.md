@@ -6,9 +6,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiCard, NuiCardContent, NuiCardHeader, NuiCardTitle } from '@numior/vue';
-import '@numior/vue/styles/card.css';
 ```
 
 ## Использование

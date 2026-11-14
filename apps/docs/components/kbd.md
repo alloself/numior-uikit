@@ -9,9 +9,8 @@ Windows и Linux.
 
 ## Установка
 
-```ts
+```ts install
 import { NuiKbd } from '@numior/vue';
-import '@numior/vue/styles/kbd.css';
 ```
 
 ## Использование

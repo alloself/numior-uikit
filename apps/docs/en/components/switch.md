@@ -9,10 +9,8 @@ For a choice that applies only after the form is submitted, use a
 
 ## Installation
 
-```ts
+```ts install
 import { NuiSwitch } from '@numior/vue';
-import '@numior/vue/styles/field.css';
-import '@numior/vue/styles/switch.css';
 ```
 
 ## Usage
