@@ -224,9 +224,7 @@ export class SceneRecorder {
     }
 
     if (shot === 'viewport') {
-      return this.withSession((session) =>
-        this.throttled(session, () => this.page.screenshot(SHOT)),
-      );
+      return this.page.screenshot(SHOT);
     }
     return this.withSession((session) => this.slowed(session, () => shot.screenshot(SHOT)));
   }
