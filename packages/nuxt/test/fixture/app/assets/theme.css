@@ -2,5 +2,5 @@
 @import '@numior/tailwind';
 
 @theme {
-  --radius: 1rem;
+  --radius-base: 1rem;
 }
