@@ -33,6 +33,10 @@ export class DocsExample {
       .getByRole('button', { name })
       .evaluate((element) => getComputedStyle(element).borderRadius);
   }
+
+  surface(): Promise<string> {
+    return this.preview.evaluate((element) => getComputedStyle(element).backgroundColor);
+  }
 }
 
 export class DocsThemeCompare {

@@ -18,8 +18,11 @@ test('the inverted theme and the reading direction apply to the preview frame', 
 }) => {
   await docs.open('/components/button', 'light');
   const example = docs.example();
+  const pageSurface = await example.surface();
+
   await example.invertTheme.click();
   await expect(example.preview).toHaveClass(/(?:^|\s)nui-theme--dark(?:\s|$)/u);
+  await expect.poll(() => example.surface()).not.toBe(pageSurface);
 
   await example.rtl.click();
   await expect(example.preview).toHaveAttribute('dir', 'rtl');

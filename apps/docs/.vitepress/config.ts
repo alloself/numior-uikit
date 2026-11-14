@@ -107,6 +107,7 @@ export default defineConfigWithTheme<DocsThemeConfig>({
       process.env.NODE_ENV === 'production'
         ? {}
         : { conditions: ['@numior/source'], alias: sourceCssAliases() },
+    build: { cssTarget: ['chrome123', 'firefox125', 'safari17.5'] },
     plugins: [
       tailwindcss(),
       docsDemo(demoRootOf(examplesRoot)),

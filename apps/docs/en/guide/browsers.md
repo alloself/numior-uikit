@@ -28,6 +28,16 @@ Dialogs, popovers and themes are built on browser features, not on replacements 
 The packages ship no polyfills. If your audience needs older versions, test the components you
 use in them.
 
+The build must not replace these functions either. Vite with its default targets rewrites
+`light-dark()` while it minifies CSS, and a nested scheme scope stops changing colors. Set
+targets that support the functions:
+
+```ts
+export default defineConfig({
+  build: { cssTarget: ['chrome123', 'firefox125', 'safari17.5'] },
+});
+```
+
 ## Server
 
 The components render on the server without a DOM and hydrate without markup mismatches. The
