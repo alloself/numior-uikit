@@ -845,6 +845,19 @@ test.describe('editor', () => {
     expect(await editor.gripBeside(table)).toBe(true);
   });
 
+  test('slides a line inside an open toggle aside for its grip like a top-level line', async ({
+    playground,
+    editor,
+  }) => {
+    await playground.open();
+    await editor.root.scrollIntoViewIfNeeded();
+    test.skip(!(await editor.followsMouse()), 'the handle follows a mouse');
+    await editor.openToggle();
+
+    expect(await editor.slidesAsideOnHover(editor.block(0))).toBe(true);
+    expect(await editor.slidesAsideOnHover(editor.toggleLine('Ветка release/2.4'))).toBe(true);
+  });
+
   test('keeps the menu over a selection on its text while the grip pushes the line and lets it go', async ({
     playground,
     editor,

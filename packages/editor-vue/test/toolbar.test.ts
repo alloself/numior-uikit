@@ -108,12 +108,16 @@ describe('NuiEditor toolbar', () => {
     await editor.select(2);
     await editor.useTool('Bulleted list');
 
-    expect(editor.markup).toContain('<ul class="nui-content__list nui-content__list--bullet">');
+    expect(editor.markup).toContain(
+      '<ul class="nui-content__list nui-content__list--bullet nui-editor__slots">',
+    );
     expect(editor.pressed('Bulleted list')).toBe(true);
 
     await editor.useTool('Numbered list');
 
-    expect(editor.markup).toContain('<ol class="nui-content__list nui-content__list--ordered">');
+    expect(editor.markup).toContain(
+      '<ol class="nui-content__list nui-content__list--ordered nui-editor__slots">',
+    );
     expect(editor.pressed('Bulleted list')).toBe(false);
 
     await editor.useTool('Numbered list');

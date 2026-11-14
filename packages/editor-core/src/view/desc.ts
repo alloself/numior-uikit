@@ -6,7 +6,7 @@ import {
   type NodeId,
   type TextNode,
 } from '../model/node.types';
-import type { NodeType, Schema } from '../schema/schema.types';
+import { SlotRule, type NodeType, type Schema } from '../schema/schema.types';
 import { appendChunk, fillChunks, placeInChunks, tidyChunks, type ChunkSet } from './chunks';
 import { segmentsOf, type BlockDecorations, type LocalDecoration } from './decorate';
 import { renderLeaf, renderParent, type RenderedDom } from './render-dom';
@@ -242,6 +242,8 @@ const createText = (
   return desc;
 };
 
+const SLOTS_CLASS = 'nui-editor__slots';
+
 const LINE_HEIGHT = 24;
 
 const LINE_LENGTH = 80;
@@ -257,6 +259,15 @@ const estimateOf = (context: ViewContext, block: Element): number => {
 const chunked = (context: ViewContext, desc: ElementDesc): boolean =>
   desc.parent === null && context.schema.nodes.get(desc.node.type)?.inlineContent !== true;
 
+const markSlots = (context: ViewContext, node: ElementNode, content: HTMLElement | null): void => {
+  const rule = context.schema.nodes.get(node.type)?.slots ?? SlotRule.None;
+
+  if (content === null || rule === SlotRule.None) {
+    return;
+  }
+  content.classList.add(SLOTS_CLASS);
+};
+
 const createElement = (
   context: ViewContext,
   node: ElementNode,
@@ -264,6 +275,8 @@ const createElement = (
   index: number,
 ): ElementDesc => {
   const { dom, contentDOM, view } = renderNode(context, node);
+
+  markSlots(context, node, contentDOM);
 
   const desc: ElementDesc = {
     kind: 'element',

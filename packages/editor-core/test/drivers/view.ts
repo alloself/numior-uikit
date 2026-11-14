@@ -55,6 +55,8 @@ const GRAPHEMES = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
 
 const CHUNK = '.nui-editor__chunk';
 
+const SLOTS = 'nui-editor__slots';
+
 const CHAR = 10;
 const LINE = 20;
 
@@ -126,6 +128,15 @@ const withoutStyles = (root: HTMLElement): string => {
   }
   for (const chunk of copy.querySelectorAll(CHUNK)) {
     chunk.replaceWith(...chunk.childNodes);
+  }
+  for (const holder of copy.querySelectorAll(`.${SLOTS}`)) {
+    holder.classList.remove(SLOTS);
+
+    if (holder.classList.length > 0) {
+      continue;
+    }
+
+    holder.removeAttribute('class');
   }
   return copy.innerHTML;
 };
@@ -588,6 +599,12 @@ export class EditorViewDriver {
   get blocks(): readonly Element[] {
     return [...this.host.children].flatMap((child) =>
       child.matches(CHUNK) ? [...child.children] : [child],
+    );
+  }
+
+  get slotHolders(): readonly string[] {
+    return Array.from(this.host.querySelectorAll(`.${SLOTS}`), (holder) =>
+      holder.tagName.toLowerCase(),
     );
   }
 

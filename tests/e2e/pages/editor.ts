@@ -1,5 +1,6 @@
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { boxOf } from '../helpers/geometry';
+import { motionOf, slowMotion } from '../helpers/motion';
 import {
   isNumber,
   isString,
@@ -286,6 +287,29 @@ export class EditorSection {
 
   toggle(): Locator {
     return this.content.locator('.nui-content__toggle');
+  }
+
+  toggleLine(text: string): Locator {
+    return this.toggle().locator('p', { hasText: text });
+  }
+
+  async openToggle(): Promise<void> {
+    await this.toggleButton().click();
+    await expect(this.toggle()).toHaveClass(/nui-content__toggle--open/);
+  }
+
+  followsMouse(): Promise<boolean> {
+    return this.page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
+  }
+
+  async slidesAsideOnHover(block: Locator): Promise<boolean> {
+    await slowMotion(this.root);
+    await this.hoverStart(block);
+    await expect(block).toHaveClass(/nui-editor__pushed/);
+
+    const motions = [await motionOf(block, 'margin-left'), await motionOf(block, 'margin-right')];
+
+    return motions.some((motion) => motion !== null);
   }
 
   calloutTone(): Locator {

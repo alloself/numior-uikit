@@ -112,6 +112,24 @@ describe('editor view', () => {
     );
   });
 
+  it('marks every element that holds movable child blocks and nothing else', () => {
+    const view = mounted(
+      doc(
+        node('blockquote', [node('paragraph', ['Quote'])]),
+        node('callout', [node('paragraph', ['Note'])], { tone: 'info' }),
+        node('toggle', [node('paragraph', ['Title']), node('paragraph', ['Body'])]),
+        node('bullet_list', [node('list_item', [node('paragraph', ['one'])])]),
+        node('columns', [
+          node('column', [node('paragraph', ['a'])]),
+          node('column', [node('paragraph', ['b'])]),
+        ]),
+        node('paragraph', ['After']),
+      ),
+    );
+
+    expect(view.slotHolders).toEqual(['blockquote', 'div', 'div', 'ul', 'div', 'div']);
+  });
+
   it('groups top-level blocks into chunks that skip rendering off screen together', () => {
     const paragraphs = Array.from({ length: 70 }, (_, index) => node('paragraph', [`p${index}`]));
     const view = mounted(doc(...paragraphs));
