@@ -183,7 +183,7 @@ export class TableSection extends GridKeys {
     this.quick = page.getByTestId('table-quick');
     this.clearFilters = page.getByTestId('table-clear-filters');
     this.output = page.getByTestId('table-output');
-    this.filter = page.locator('.nui-table-filter');
+    this.filter = page.getByRole('dialog').filter({ has: page.locator('form.nui-table-filter') });
     this.menu = this.root.locator(':scope > .nui-menu:not(.nui-table__cell-menu)');
     this.cellMenu = this.root.locator(':scope > .nui-table__cell-menu');
     this.resetColumns = page.getByTestId('table-reset-columns');

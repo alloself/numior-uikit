@@ -928,12 +928,12 @@ export class TableDriver<T> {
       .join(' ');
   }
 
-  private get popover(): HTMLElement | null {
-    return document.querySelector<HTMLElement>('.nui-table-filter');
+  private get filterForm(): HTMLFormElement | null {
+    return document.querySelector<HTMLFormElement>('form.nui-table-filter');
   }
 
   get filterLoading(): boolean {
-    return this.popover?.classList.contains('nui-table-filter--loading') ?? false;
+    return this.filterForm?.classList.contains('nui-table-filter--loading') ?? false;
   }
 
   private async filterValuesLoaded(): Promise<void> {
@@ -950,15 +950,15 @@ export class TableDriver<T> {
   }
 
   get filterTitle(): string | undefined {
-    return this.popover?.querySelector('.nui-table-filter__title')?.textContent?.trim();
+    return this.filterForm?.querySelector('.nui-table-filter__title')?.textContent?.trim();
   }
 
   get filterFocused(): boolean {
-    return this.popover?.contains(document.activeElement) ?? false;
+    return this.filterForm?.contains(document.activeElement) ?? false;
   }
 
   get filterValueLabels(): string[] {
-    return [...(this.popover?.querySelectorAll('.nui-table-filter__values label') ?? [])].map(
+    return [...(this.filterForm?.querySelectorAll('.nui-table-filter__values label') ?? [])].map(
       (label) => label.textContent?.trim() ?? '',
     );
   }
@@ -1098,12 +1098,12 @@ export class TableDriver<T> {
   }
 
   get filterNote(): string | undefined {
-    return this.popover?.querySelector('.nui-table-filter__note')?.textContent?.trim();
+    return this.filterForm?.querySelector('.nui-table-filter__note')?.textContent?.trim();
   }
 
   get filterChosenLabels(): string[] {
     return [
-      ...(this.popover?.querySelectorAll<HTMLElement>('.nui-table-filter__values label') ?? []),
+      ...(this.filterForm?.querySelectorAll<HTMLElement>('.nui-table-filter__values label') ?? []),
     ].flatMap((entry) =>
       entry.querySelector<HTMLInputElement>('input')?.checked === true
         ? [entry.textContent?.trim() ?? '']
@@ -1124,7 +1124,7 @@ export class TableDriver<T> {
   }
 
   private get allValuesInput(): HTMLInputElement | null | undefined {
-    return [...(this.popover?.querySelectorAll<HTMLElement>('label') ?? [])]
+    return [...(this.filterForm?.querySelectorAll<HTMLElement>('label') ?? [])]
       .find((entry) => entry.textContent?.trim() === 'Выбрать все')
       ?.querySelector<HTMLInputElement>('input');
   }
@@ -1134,7 +1134,7 @@ export class TableDriver<T> {
   }
 
   private filterInput(label: string): HTMLInputElement | undefined {
-    const inputs = this.popover?.querySelectorAll<HTMLInputElement>('input') ?? [];
+    const inputs = this.filterForm?.querySelectorAll<HTMLInputElement>('input') ?? [];
 
     return [...inputs].find((input) =>
       [...(input.labels ?? [])].some((entry) => entry.textContent?.trim() === label),
@@ -2349,7 +2349,7 @@ export class TableDriver<T> {
   }
 
   async dismissFilter(): Promise<void> {
-    const popover = this.popover;
+    const popover = this.filterForm?.closest<HTMLElement>('[popover]') ?? null;
 
     if (popover !== null) {
       dismissPopoverNatively(popover);
@@ -2370,7 +2370,7 @@ export class TableDriver<T> {
 
   async chooseValue(label: string): Promise<void> {
     const option = [
-      ...(this.popover?.querySelectorAll<HTMLElement>('.nui-table-filter__values label') ?? []),
+      ...(this.filterForm?.querySelectorAll<HTMLElement>('.nui-table-filter__values label') ?? []),
     ].find((entry) => entry.textContent?.trim() === label);
 
     option?.querySelector<HTMLInputElement>('input')?.click();
@@ -2395,9 +2395,7 @@ export class TableDriver<T> {
   async applyFilter(): Promise<void> {
     const settled = this.nextSettle();
 
-    this.popover
-      ?.querySelector('form')
-      ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    this.filterForm?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
     await settled;
     await nextTick();
@@ -2406,7 +2404,7 @@ export class TableDriver<T> {
   async resetFilter(): Promise<void> {
     const settled = this.nextSettle();
 
-    const buttons = this.popover?.querySelectorAll<HTMLButtonElement>(
+    const buttons = this.filterForm?.querySelectorAll<HTMLButtonElement>(
       '.nui-table-filter__actions button',
     );
 

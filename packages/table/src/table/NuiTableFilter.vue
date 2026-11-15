@@ -1,15 +1,20 @@
 <template>
-  <div
-    ref="content"
-    class="nui-popover nui-table-filter"
-    :class="{ 'nui-table-filter--loading': loading }"
+  <NuiPopover
+    v-model:open="open"
+    :anchor="anchor"
+    :placement="FloatingPlacement.BottomStart"
+    :padding="NuiPopoverPadding.None"
     role="dialog"
     :aria-label="title"
-    v-bind="contentAttrs"
     @toggle="onToggle"
     @keydown.esc.stop
   >
-    <form class="nui-table-filter__form" @submit.prevent="apply">
+    <form
+      ref="content"
+      class="nui-table-filter"
+      :class="{ 'nui-table-filter--loading': loading }"
+      @submit.prevent="apply"
+    >
       <p class="nui-table-filter__title">{{ title }}</p>
       <template v-if="draft.kind === NuiTableFilterKind.Text">
         <NuiSelect v-model="draft.op" :options="operators" :label="texts.operator" size="sm" />
@@ -52,21 +57,22 @@
         <NuiButton type="submit" size="sm">{{ texts.apply }}</NuiButton>
       </div>
     </form>
-  </div>
+  </NuiPopover>
 </template>
 
 <script setup lang="ts">
 import { useTimeoutFn } from '@vueuse/core';
 import { computed, ref, shallowRef, useTemplateRef, watch } from 'vue';
+import { FloatingPlacement, PopoverState, useMessages } from '@numior/primitives';
 import {
-  FLOATING_OFFSET,
-  PopoverMode,
-  PopoverState,
-  useFloating,
-  useMessages,
-  usePopover,
-} from '@numior/primitives';
-import { NuiButton, NuiDatePicker, NuiInput, NuiNumberField, NuiSelect } from '@numior/vue';
+  NuiButton,
+  NuiDatePicker,
+  NuiInput,
+  NuiNumberField,
+  NuiPopover,
+  NuiPopoverPadding,
+  NuiSelect,
+} from '@numior/vue';
 import { TableTextOp, type TableFilterValue } from '../engine';
 import { tableMessages } from './table.messages';
 import {
@@ -116,14 +122,6 @@ const { start: watchSlow, stop: forgetSlow } = useTimeoutFn(
   SLOW_VALUES,
   { immediate: false },
 );
-
-const { contentAttrs } = usePopover(content, { open, mode: PopoverMode.Auto });
-
-useFloating(() => anchor, content, {
-  placement: 'bottom-start',
-  offset: FLOATING_OFFSET,
-  enabled: open,
-});
 
 const texts = computed(() => ({
   operator: messages.value.filterOperator,

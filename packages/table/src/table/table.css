@@ -1589,11 +1589,12 @@
   color: var(--nui-primary);
 }
 .nui-table-filter {
-  inline-size: min(18rem, calc(100vw - var(--nui-space-4)));
-}
-.nui-table-filter__form {
+  box-sizing: border-box;
   display: grid;
   gap: var(--nui-space-3);
+  inline-size: 18rem;
+  max-inline-size: 100%;
+  padding: var(--nui-space-3);
 }
 .nui-table-filter__title {
   margin: 0;
