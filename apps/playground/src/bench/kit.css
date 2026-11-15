@@ -3,7 +3,7 @@
 @import '@numior/tokens/base.css' layer(components);
 @import '@numior/vue/styles.css';
 @import '@numior/table/styles.css' layer(components);
-@import '@numior/content/styles.css' layer(components);
+@import '@numior/content/styles.css';
 @import '@numior/editor-vue/styles.css' layer(components);
 @import '@numior/spreadsheet/styles.css' layer(components);
 @import './bench.css' layer(components);

@@ -1,4 +1,4 @@
-const LAYERED = new Set(['@numior/vue', '@numior/forms', '@numior/charts']);
+const LAYERED = new Set(['@numior/vue', '@numior/forms', '@numior/charts', '@numior/content']);
 
 const importOf = (id: string): string =>
   LAYERED.has(id) ? `@import '${id}/styles.css';` : `@import '${id}/styles.css' layer(components);`;
