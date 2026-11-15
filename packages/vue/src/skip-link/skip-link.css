@@ -1,31 +1,16 @@
 @layer components {
   .nui-skip-link {
-    box-sizing: border-box;
-    position: fixed;
-    inset-block-start: --spacing(2);
-    inset-inline-start: --spacing(2);
-    z-index: var(--z-index-toast);
-    padding-block: --spacing(2);
-    padding-inline: --spacing(4);
-    border-radius: --theme(--radius inline);
-    background: var(--color-primary);
-    color: var(--color-primary-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--text-sm);
-    font-weight: var(--font-weight-medium);
-    line-height: var(--leading-control);
-    text-decoration: none;
+    @apply box-border fixed inset-bs-2 inset-s-2 z-(--z-index-toast) py-2 px-4 rounded bg-primary;
+    @apply text-primary-foreground font-sans text-(length:--text-sm) font-medium leading-control;
+    @apply no-underline opacity-0;
     box-shadow: var(--shadow-md);
     translate: 0 calc(-100% - --spacing(4));
-    opacity: 0;
     transition:
       translate var(--transition-duration-normal) var(--ease-nui),
       opacity var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-skip-link:focus-visible {
-    translate: 0 0;
-    opacity: 1;
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply translate-0 opacity-100 outline-(length:--focus-ring-width) outline-ring;
+    @apply outline-offset-(--focus-ring-offset);
   }
 }

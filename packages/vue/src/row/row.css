@@ -1,67 +1,48 @@
 @layer components {
   .nui-row {
-    box-sizing: border-box;
-    display: contents;
+    @apply box-border contents;
   }
   .nui-row__leading {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    justify-content: center;
+    @apply inline-flex flex-none items-center justify-center;
     color: var(--_row-icon, var(--color-muted-foreground));
     transition: color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-row:not(.nui-row--inline):has(.nui-row__description) .nui-row__leading {
-    align-self: flex-start;
+    @apply self-start;
     margin-block-start: 0.125rem;
   }
   .nui-row__body {
-    display: grid;
-    flex: 1 1 auto;
-    gap: var(--spacing);
-    min-inline-size: 0;
+    @apply grid flex-auto gap-1 min-inline-0;
   }
   .nui-row--inline .nui-row__body {
-    display: flex;
-    align-items: baseline;
-    gap: --spacing(2);
+    @apply flex items-baseline gap-2;
   }
   .nui-row__title {
-    overflow: hidden;
+    @apply overflow-hidden leading-control text-ellipsis;
     font-weight: var(--_row-weight, 400);
-    line-height: var(--leading-control);
-    text-overflow: ellipsis;
   }
   .nui-row--nowrap .nui-row__title,
   .nui-row--nowrap .nui-row__description {
-    white-space: nowrap;
+    @apply whitespace-nowrap;
   }
   .nui-row--nowrap .nui-row__description {
-    overflow: hidden;
-    text-overflow: ellipsis;
+    @apply overflow-hidden text-ellipsis;
   }
   .nui-row__description {
+    @apply leading-control;
     color: var(--_row-muted, var(--color-muted-foreground));
     font-size: var(--_row-description-size, var(--text-xs));
-    line-height: var(--leading-control);
     transition: color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-row__trailing {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    gap: --spacing(2);
+    @apply inline-flex flex-none items-center gap-2;
     color: var(--_row-icon, var(--color-muted-foreground));
     transition: color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-row__check {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    justify-content: center;
+    @apply inline-flex flex-none items-center justify-center ms-auto;
     inline-size: 1.25rem;
     block-size: 1.25rem;
-    margin-inline-start: auto;
     color: var(--_row-check, var(--color-primary));
   }
 }

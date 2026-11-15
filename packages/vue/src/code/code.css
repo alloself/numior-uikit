@@ -5,67 +5,44 @@
     --_font-size: var(--text-sm);
     --_gutter: 0px;
 
-    box-sizing: border-box;
-    position: relative;
-    display: grid;
-    margin: 0;
-    border: 1px solid var(--color-border);
-    border-radius: --theme(--radius-lg inline);
-    background: var(--color-surface-code);
-    color: var(--color-foreground);
-    font-family: var(--font-mono);
-    font-size: var(--_font-size);
-    line-height: var(--_line-height);
-    overflow: hidden;
+    @apply box-border relative grid m-0 border border-border rounded-lg bg-surface-code;
+    @apply text-foreground font-mono text-(length:--_font-size) leading-(--_line-height);
+    @apply overflow-hidden;
   }
   .nui-code--line-numbers {
     --_gutter: 3ch;
   }
   .nui-code__header {
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    gap: --spacing(2);
+    @apply box-border flex items-center gap-2 py-1 ps-(--_padding) pe-2 border-be border-be-border;
+    @apply text-muted-foreground font-sans text-(length:--text-sm);
     min-block-size: 2.5rem;
-    padding-block: var(--spacing);
-    padding-inline: var(--_padding) --spacing(2);
-    border-block-end: 1px solid var(--color-border);
-    color: var(--color-muted-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--text-sm);
   }
   .nui-code__title {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
+    @apply font-mono text-(length:--text-xs);
   }
   .nui-code__language {
-    font-size: var(--text-xs);
-    text-transform: uppercase;
+    @apply text-(length:--text-xs) uppercase;
     letter-spacing: 0.05em;
   }
   .nui-code__copy {
-    margin-inline-start: auto;
+    @apply ms-auto;
   }
   .nui-code__copy--floating {
-    position: absolute;
-    inset-block-start: --spacing(2);
-    inset-inline-end: --spacing(2);
-    opacity: 0;
+    @apply absolute inset-bs-2 inset-e-2 opacity-0;
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),
       background-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-code--single .nui-code__copy--floating {
-    inset-block-start: 50%;
-    translate: 0 -50%;
+    @apply inset-bs-1/2 -translate-y-1/2;
   }
   .nui-code:hover .nui-code__copy--floating,
   .nui-code:focus-within .nui-code__copy--floating,
   .nui-code--copied .nui-code__copy--floating {
-    opacity: 1;
+    @apply opacity-100;
   }
   .nui-code__copy .nui-button__content {
-    display: grid;
+    @apply grid;
   }
   .nui-code__glyph {
     grid-area: 1 / 1;
@@ -74,21 +51,19 @@
       scale var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-code__glyph--done {
-    opacity: 0;
+    @apply opacity-0 text-success;
     scale: 0.5;
-    color: var(--color-success);
   }
   .nui-code--copied .nui-code__glyph--copy {
-    opacity: 0;
+    @apply opacity-0;
     scale: 0.5;
   }
   .nui-code--copied .nui-code__glyph--done {
-    opacity: 1;
+    @apply opacity-100;
     scale: 1;
   }
   .nui-code__body {
-    position: relative;
-    overflow: hidden;
+    @apply relative overflow-hidden;
   }
   .nui-code--collapsed .nui-code__body {
     max-block-size: calc(
@@ -96,139 +71,105 @@
     );
   }
   .nui-code--collapsed .nui-code__body::after {
+    @apply absolute pointer-events-none;
     content: '';
-    position: absolute;
     inset: auto 0 0;
     block-size: 4rem;
     background: linear-gradient(to bottom, transparent, var(--color-surface-code));
-    pointer-events: none;
   }
   .nui-code__pre {
-    box-sizing: border-box;
-    margin: 0;
-    padding-block: var(--_padding);
-    overflow-x: auto;
-    white-space: pre;
-    scrollbar-width: thin;
+    @apply box-border m-0 py-(--_padding) overflow-x-auto whitespace-pre scrollbar-thin;
     tab-size: 2;
   }
   .nui-code__pre:focus-visible {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: calc(var(--focus-ring-offset) * -1);
+    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-offset);
   }
   .nui-code--wrap .nui-code__pre {
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
+    @apply whitespace-pre-wrap wrap-anywhere;
   }
   .nui-code__code {
-    display: block;
-    min-inline-size: max-content;
+    @apply block min-inline-max;
     font: inherit;
     counter-reset: line;
   }
   .nui-code--wrap .nui-code__code {
-    min-inline-size: 0;
+    @apply min-inline-0;
   }
   .nui-code__line {
-    display: block;
+    @apply block px-(--_padding);
     min-block-size: 1lh;
-    padding-inline: var(--_padding);
     padding-inline-start: calc(var(--_padding) + var(--_gutter));
     border-inline-start: 2px solid transparent;
     counter-increment: line;
     transition: background-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-code--line-numbers .nui-code__line::before {
+    @apply inline-block inline-(--_gutter) box-border text-subtle-foreground text-end select-none;
     content: counter(line);
-    display: inline-block;
-    inline-size: var(--_gutter);
     margin-inline-start: calc(var(--_gutter) * -1);
     padding-inline-end: 1ch;
-    box-sizing: border-box;
-    color: var(--color-subtle-foreground);
-    text-align: end;
-    user-select: none;
   }
   .nui-code__line--highlighted {
-    border-inline-start-color: var(--color-primary);
-    background: --theme(--color-syntax-highlight inline);
+    @apply border-s-primary bg-syntax-highlight;
   }
   .nui-code__token--scope-keyword {
-    color: var(--color-syntax-keyword);
+    @apply text-syntax-keyword;
   }
   .nui-code__token--scope-string {
-    color: var(--color-syntax-string);
+    @apply text-syntax-string;
   }
   .nui-code__token--scope-number {
-    color: var(--color-syntax-number);
+    @apply text-syntax-number;
   }
   .nui-code__token--scope-function {
-    color: var(--color-syntax-function);
+    @apply text-syntax-function;
   }
   .nui-code__token--scope-type {
-    color: var(--color-syntax-type);
+    @apply text-syntax-type;
   }
   .nui-code__token--scope-tag {
-    color: var(--color-syntax-tag);
+    @apply text-syntax-tag;
   }
   .nui-code__token--scope-attribute {
-    color: var(--color-syntax-attribute);
+    @apply text-syntax-attribute;
   }
   .nui-code__token--scope-property {
-    color: var(--color-syntax-property);
+    @apply text-syntax-property;
   }
   .nui-code__token--scope-comment {
-    color: var(--color-syntax-comment);
-    font-style: italic;
+    @apply text-syntax-comment italic;
   }
   .nui-code__token--scope-punctuation {
-    color: --theme(--color-syntax-punctuation inline);
+    @apply text-syntax-punctuation;
   }
   .nui-code__token--scope-variable {
-    color: var(--color-syntax-variable);
+    @apply text-syntax-variable;
   }
   .nui-code__expand {
-    box-sizing: border-box;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing);
+    @apply box-border inline-flex items-center justify-center gap-1 px-(--_padding) bg-transparent;
+    @apply text-muted-foreground font-sans text-(length:--text-sm) cursor-pointer;
     min-block-size: 2.25rem;
-    padding-inline: var(--_padding);
     border: 0;
     border-block-start: 1px solid var(--color-border);
-    background: transparent;
-    color: var(--color-muted-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--text-sm);
-    cursor: pointer;
     transition:
       background-color var(--transition-duration-fast) var(--ease-nui),
       color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-code__expand:hover {
-    background: --theme(--color-hover inline);
-    color: var(--color-foreground);
+    @apply bg-hover text-foreground;
   }
   .nui-code__expand:focus-visible {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: calc(var(--focus-ring-offset) * -1);
+    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-offset);
   }
   .nui-code__expand-icon {
-    inline-size: var(--spacing-icon-sm);
-    block-size: var(--spacing-icon-sm);
+    @apply inline-icon-sm block-icon-sm;
     transition: rotate var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-code__expand[aria-expanded='true'] .nui-code__expand-icon {
-    rotate: 180deg;
+    @apply rotate-180;
   }
   .nui-code__status {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    margin: -1px;
-    overflow: hidden;
+    @apply absolute inline-px block-px -m-px overflow-hidden whitespace-nowrap;
     clip-path: inset(50%);
-    white-space: nowrap;
   }
 }
