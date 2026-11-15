@@ -5,24 +5,13 @@
     --_shift: calc(-1 * var(--_side-x) * var(--spacing)) calc(-1 * var(--_side-y) * var(--spacing));
     --_ring: var(--focus-ring-width);
 
-    box-sizing: border-box;
-    position: fixed;
-    inset: auto;
+    @apply box-border fixed inset-auto m-0 p-1 border border-border rounded bg-surface-overlay;
+    @apply text-foreground font-sans text-(length:--text-sm) overflow-y-auto opacity-0;
     min-inline-size: 10rem;
     max-inline-size: min(20rem, calc(100vw - --spacing(4)));
-    margin: 0;
-    padding: var(--spacing);
-    border: 1px solid var(--color-border);
-    border-radius: --theme(--radius inline);
-    background: var(--color-surface-overlay);
-    color: var(--color-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--text-sm);
     line-height: --theme(--leading-label inline);
     box-shadow: var(--shadow-md);
-    overflow-y: auto;
     outline: none;
-    opacity: 0;
     translate: var(--_shift);
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),
@@ -31,15 +20,14 @@
       overlay var(--transition-duration-fast) allow-discrete;
   }
   .nui-menu--compact {
-    min-inline-size: 0;
+    @apply min-inline-0;
   }
   .nui-menu:popover-open {
-    opacity: 1;
-    translate: 0 0;
+    @apply opacity-100 translate-0;
   }
   @starting-style {
     .nui-menu:popover-open {
-      opacity: 0;
+      @apply opacity-0;
       translate: var(--_shift);
     }
   }
@@ -48,24 +36,11 @@
     --_tone: var(--color-foreground);
     --_indicator: var(--spacing-icon);
 
-    box-sizing: border-box;
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: --spacing(2);
-    inline-size: 100%;
-    min-block-size: var(--spacing-control-sm);
-    margin: 0;
-    padding: var(--spacing) --spacing(2);
+    @apply box-border relative flex items-center gap-2 inline-full min-block-control-sm m-0;
+    @apply py-1 px-2 rounded-sm bg-transparent text-(--_tone) text-start no-underline;
+    @apply cursor-pointer select-none;
     border: 0;
-    border-radius: --theme(--radius-sm inline);
-    background: transparent;
-    color: var(--_tone);
     font: inherit;
-    text-align: start;
-    text-decoration: none;
-    cursor: pointer;
-    user-select: none;
     outline: none;
     transition:
       background-color var(--transition-duration-fast) var(--ease-nui),
@@ -77,13 +52,13 @@
   .nui-menu-item:hover,
   .nui-menu-item:focus,
   .nui-menu-item--open {
-    background: --theme(--color-hover inline);
+    @apply bg-hover;
   }
   .nui-menu--pointed {
     --_ring: 0px;
   }
   .nui-menu-item:focus-visible {
-    outline: var(--_ring) solid --theme(--color-ring inline);
+    @apply outline-(length:--_ring) outline-ring;
     outline-offset: calc(-1 * var(--_ring));
   }
   .nui-menu-item--tone-error:hover,
@@ -93,55 +68,35 @@
   .nui-menu-item--disabled,
   .nui-menu-item--disabled:hover,
   .nui-menu-item--disabled:focus {
-    background: transparent;
-    color: var(--color-muted-foreground);
-    opacity: var(--opacity-disabled);
-    cursor: not-allowed;
+    @apply bg-transparent text-muted-foreground opacity-disabled cursor-not-allowed;
   }
   .nui-menu-item__check {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-    inline-size: var(--_indicator);
-    block-size: var(--_indicator);
-    margin-inline-start: auto;
-    color: var(--color-primary);
+    @apply inline-flex flex-none items-center justify-center inline-(--_indicator);
+    @apply block-(--_indicator) ms-auto text-primary;
   }
   .nui-menu-item__icon {
-    color: var(--color-muted-foreground);
+    @apply text-muted-foreground;
   }
   .nui-menu-item--tone-error .nui-menu-item__icon {
-    color: inherit;
+    @apply text-inherit;
   }
   .nui-menu-item__label {
-    flex: 1 1 auto;
-    min-inline-size: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    @apply flex-auto min-inline-0 overflow-hidden text-ellipsis whitespace-nowrap;
   }
   .nui-menu-item__shortcut {
-    margin-inline-start: auto;
+    @apply ms-auto;
   }
   .nui-menu-item__chevron {
-    margin-inline-start: auto;
-    color: var(--color-muted-foreground);
+    @apply ms-auto text-muted-foreground;
   }
   .nui-menu-item__chevron:dir(rtl) {
-    rotate: 180deg;
+    @apply rotate-180;
   }
   .nui-menu-separator {
-    box-sizing: border-box;
-    block-size: 1px;
-    margin: var(--spacing) calc(-1 * var(--spacing));
-    background: var(--color-border);
+    @apply box-border block-px my-1 -mx-1 bg-border;
   }
   .nui-menu-label {
-    box-sizing: border-box;
-    padding: var(--spacing) --spacing(2);
-    color: var(--color-muted-foreground);
-    font-size: var(--text-xs);
+    @apply box-border py-1 px-2 text-muted-foreground text-(length:--text-xs);
     font-weight: 600;
   }
 }

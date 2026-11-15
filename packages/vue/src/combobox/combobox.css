@@ -4,10 +4,7 @@
     --_padding: var(--spacing-field-pad-md);
     --_font-size: var(--text-control-md);
 
-    box-sizing: border-box;
-    position: relative;
-    inline-size: 100%;
-    font-family: var(--font-sans);
+    @apply box-border relative inline-full font-sans;
   }
   .nui-combobox--size-sm {
     --_height: var(--spacing-control-sm);
@@ -20,89 +17,68 @@
     --_font-size: var(--text-control-lg);
   }
   .nui-combobox__field {
-    box-sizing: border-box;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--spacing);
-    min-block-size: var(--_height);
-    padding-block: var(--spacing);
-    padding-inline: var(--_padding) var(--spacing);
-    border: 1px solid var(--color-border);
-    border-radius: --theme(--radius inline);
-    background: var(--color-surface);
-    color: var(--color-foreground);
-    font-size: var(--_font-size);
-    line-height: var(--leading-control);
-    cursor: text;
+    @apply box-border flex flex-wrap items-center gap-1 min-block-(--_height) py-1;
+    @apply ps-(--_padding) pe-1 border border-border rounded bg-surface text-foreground;
+    @apply text-(length:--_font-size) leading-control cursor-text;
     transition:
       border-color var(--transition-duration-fast) var(--ease-nui),
       outline-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-combobox:not(.nui-combobox--invalid) .nui-combobox__field:hover:not(:focus-within) {
-    border-color: var(--color-border-strong);
+    @apply border-border-strong;
   }
   .nui-combobox__field:focus-within {
-    border-color: --theme(--color-ring inline);
-    outline: var(--field-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply border-ring outline-(length:--field-ring-width) outline-ring;
+    @apply outline-offset-(--focus-ring-offset);
   }
   .nui-combobox--invalid .nui-combobox__field {
-    border-color: var(--color-error);
+    @apply border-error;
   }
   .nui-combobox--invalid .nui-combobox__field:focus-within {
-    border-color: var(--color-error);
-    outline-color: var(--color-error);
+    @apply border-error outline-error;
   }
   .nui-combobox--readonly .nui-combobox__field,
   .nui-combobox--readonly .nui-combobox__input {
-    cursor: default;
+    @apply cursor-default;
   }
   .nui-combobox--readonly .nui-combobox__toggle {
-    display: none;
+    @apply hidden;
   }
   .nui-combobox--disabled .nui-combobox__field {
-    opacity: var(--opacity-disabled);
-    cursor: not-allowed;
+    @apply opacity-disabled cursor-not-allowed;
   }
   .nui-combobox__input {
+    @apply text-ellipsis p-0 bg-transparent text-inherit appearance-none;
     flex: 1 1 4rem;
     min-inline-size: 4rem;
-    text-overflow: ellipsis;
     min-block-size: calc(var(--_height) - --spacing(2) - 2px);
-    padding: 0;
     border: 0;
-    background: transparent;
-    color: inherit;
     font: inherit;
-    appearance: none;
     outline: none;
   }
   .nui-combobox__input::placeholder {
-    color: var(--color-muted-foreground);
-    opacity: 1;
+    @apply text-muted-foreground opacity-100;
   }
   .nui-combobox--disabled .nui-combobox__input {
-    cursor: not-allowed;
+    @apply cursor-not-allowed;
   }
   .nui-combobox__chip {
-    flex: none;
+    @apply flex-none;
   }
   .nui-combobox__clear,
   .nui-combobox__toggle {
-    flex: none;
-    margin-inline-start: auto;
+    @apply flex-none ms-auto;
   }
   .nui-combobox__clear {
-    margin-inline-start: auto;
+    @apply ms-auto;
   }
   .nui-combobox__clear + .nui-combobox__toggle {
-    margin-inline-start: 0;
+    @apply ms-0;
   }
   .nui-combobox__chevron {
     transition: rotate var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-combobox--open .nui-combobox__chevron {
-    rotate: 180deg;
+    @apply rotate-180;
   }
 }

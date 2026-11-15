@@ -3,18 +3,11 @@
     --_size: 20rem;
     --_shift: 100% 0;
 
-    box-sizing: border-box;
-    inset: auto;
-    inset-block: 0;
-    inset-inline-end: 0;
-    margin: 0;
+    @apply box-border inset-auto inset-y-0 inset-e-0 m-0 rounded-none rounded-ss-lg rounded-es-lg;
     inline-size: min(var(--_size), 100%);
     max-inline-size: none;
     block-size: 100dvh;
     max-block-size: none;
-    border-radius: 0;
-    border-start-start-radius: --theme(--radius-lg inline);
-    border-end-start-radius: --theme(--radius-lg inline);
     translate: var(--_shift);
   }
   .nui-drawer--size-sm {
@@ -29,16 +22,12 @@
   .nui-drawer--side-start {
     --_shift: -100% 0;
 
+    @apply rounded-none rounded-se-lg rounded-ee-lg;
     inset-inline: 0 auto;
-    border-radius: 0;
-    border-start-end-radius: --theme(--radius-lg inline);
-    border-end-end-radius: --theme(--radius-lg inline);
   }
   .nui-drawer--side-top,
   .nui-drawer--side-bottom {
-    inset-inline: 0;
-    inline-size: 100%;
-    block-size: auto;
+    @apply inset-x-0 inline-full block-auto;
     max-block-size: min(var(--_size), 100dvh);
   }
   .nui-drawer--side-top {
@@ -60,7 +49,7 @@
     --_shift: -100% 0;
   }
   .nui-drawer[open] {
-    translate: 0 0;
+    @apply translate-0;
   }
   @starting-style {
     .nui-drawer[open] {
