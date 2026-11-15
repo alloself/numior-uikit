@@ -21,6 +21,18 @@ const PIXELS = '(pixels)';
 const ABSENT = '(absent)';
 const NOTE_SEPARATOR = ' | ';
 const PATH_SEPARATOR = ' > ';
+const LAYER_SEPARATOR = ', ';
+const ZERO_OFFSET = /^0(?:px|%)$/;
+const ORIGIN_OFFSETS = new Set(['background-position-x', 'background-position-y']);
+
+const zeroed = (value: string): string =>
+  value
+    .split(LAYER_SEPARATOR)
+    .map((offset) => (ZERO_OFFSET.test(offset) ? '0' : offset))
+    .join(LAYER_SEPARATOR);
+
+const sameValue = (property: string, was: string, now: string): boolean =>
+  was === now || (ORIGIN_OFFSETS.has(property) && zeroed(was) === zeroed(now));
 
 const withoutDropped = (segment: string, ignored: readonly IgnoredClasses[]): string => {
   const cut = segment.lastIndexOf(':');
@@ -98,7 +110,7 @@ const nodeFindings = (
   base.properties.forEach((property, index) => {
     const [was = '', now = ''] = [beforeStyle[index], afterStyle[index]];
 
-    if (was === now) {
+    if (sameValue(property, was, now)) {
       return;
     }
 

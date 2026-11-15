@@ -35,6 +35,12 @@ const scene = (
   );
 };
 
+const positioned = (offset: string, padding: string): StoredScene =>
+  encodeScene('pg-light-1440/buttons', ['background-position-x', 'padding-left'], {
+    values: [offset, padding],
+    nodes: [[-1, 'button.nui-button:0', '0 0 96 32', [0, 1]]],
+  });
+
 const withButton = (segment: string, color: number): StoredScene =>
   scene('red', [
     [0, segment, '0 60 96 32', [5, 3, 4]],
@@ -191,6 +197,20 @@ describe('scene comparison', () => {
     const other = encodeScene('pg-light-1440/buttons', ['color'], { values: ['red'], nodes: [] });
 
     expect(() => diffScenes(scene('red'), other)).toThrow('retake the baseline');
+  });
+
+  it('takes a zero background offset in pixels and in percent for the same position', () => {
+    const before = positioned('0px, 10px', '0px');
+
+    const findings = [
+      ...diffScenes(before, positioned('0%, 10px', '0px')),
+      ...diffScenes(before, positioned('0%, 10%', '0%')),
+    ];
+
+    expect(findings.map(({ property, after }) => `${property} ${after}`)).toEqual([
+      'background-position-x 0%, 10%',
+      'padding-left 0%',
+    ]);
   });
 
   it('restores every value of a stored node and counts what was compared', () => {
