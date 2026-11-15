@@ -23,12 +23,8 @@
     --_size: var(--text-base);
     --_flow: 0.75em;
 
-    box-sizing: border-box;
-    color: var(--color-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--_size);
-    line-height: var(--leading-relaxed);
-    overflow-wrap: break-word;
+    @apply box-border text-foreground font-sans text-(length:--_size) leading-relaxed;
+    @apply wrap-break-word;
   }
   .nui-content--size-sm {
     --_size: var(--text-sm);
@@ -37,7 +33,7 @@
     --_size: var(--text-lg);
   }
   .nui-content :where(p, h1, h2, h3, h4, h5, h6, blockquote, ul, ol, li, pre, hr, figure) {
-    margin: 0;
+    @apply m-0;
   }
   .nui-content > *,
   .nui-content__quote > *,
@@ -46,14 +42,12 @@
   .nui-content__column > *,
   .nui-content__item > *,
   .nui-content__todo-body > * {
-    margin-block-start: var(--_flow);
+    @apply mbs-(--_flow);
   }
   .nui-content__heading {
-    color: var(--color-foreground);
+    @apply text-foreground leading-tight tracking-heading;
     font-family: --theme(--font-heading inline);
     font-weight: var(--font-weight-heading);
-    line-height: var(--leading-tight);
-    letter-spacing: var(--tracking-heading);
   }
   .nui-content > .nui-content__heading {
     margin-block-start: 1.4em;
@@ -65,32 +59,30 @@
   .nui-content__column > :first-child,
   .nui-content__item > :first-child,
   .nui-content__todo-body > :first-child {
-    margin-block-start: 0;
+    @apply mbs-0;
   }
   .nui-content__heading--level-1 {
-    font-size: var(--text-3xl);
-    font-weight: var(--font-weight-title);
+    @apply text-(length:--text-3xl) font-title;
   }
   .nui-content__heading--level-2 {
-    font-size: var(--text-2xl);
+    @apply text-(length:--text-2xl);
   }
   .nui-content__heading--level-3 {
-    font-size: var(--text-xl);
+    @apply text-(length:--text-xl);
   }
   .nui-content__heading--level-4 {
-    font-size: var(--text-lg);
+    @apply text-(length:--text-lg);
   }
   .nui-content__heading--level-5 {
-    font-size: var(--text-base);
+    @apply text-(length:--text-base);
   }
   .nui-content__heading--level-6 {
-    color: var(--color-muted-foreground);
-    font-size: var(--text-sm);
+    @apply text-muted-foreground text-(length:--text-sm);
   }
   .nui-content__quote {
+    @apply text-muted-foreground;
     padding-inline-start: 1em;
     border-inline-start: 3px solid var(--color-border-strong);
-    color: var(--color-muted-foreground);
   }
   .nui-content__list {
     padding-inline-start: 1.5em;
@@ -102,8 +94,7 @@
     list-style: decimal;
   }
   .nui-content__list--todo {
-    padding-inline-start: 0;
-    list-style: none;
+    @apply ps-0 list-none;
   }
   .nui-content__list > * {
     margin-block-start: 0.375em;
@@ -113,123 +104,101 @@
     margin-block-start: 0.375em;
   }
   .nui-content__list > :first-child {
-    margin-block-start: 0;
+    @apply mbs-0;
   }
   .nui-content__item {
     padding-inline-start: 0.25em;
   }
   .nui-content__item::marker {
-    color: var(--color-muted-foreground);
+    @apply text-muted-foreground;
   }
   .nui-content__todo {
-    display: flex;
+    @apply flex items-start;
     gap: 0.5em;
-    align-items: flex-start;
   }
   .nui-content__check {
     --_box: 1rem;
 
-    position: relative;
-    flex: none;
-    box-sizing: border-box;
-    inline-size: var(--_box);
-    block-size: var(--_box);
+    @apply relative flex-none box-border inline-(--_box) block-(--_box) rounded-sm bg-surface;
     margin-block-start: calc((var(--leading-relaxed) * 1em - var(--_box)) / 2);
     border: 1px solid var(--color-border-strong);
-    border-radius: --theme(--radius-sm inline);
-    background: var(--color-surface);
     transition:
       background-color var(--transition-duration-fast) var(--ease-nui),
       border-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-content__check::before {
+    @apply absolute inset-0 opacity-0;
     content: '';
-    position: absolute;
-    inset: 0;
     background: var(--color-primary-foreground);
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
       center / 75% no-repeat;
-    opacity: 0;
     scale: 0.5;
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),
       scale var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-content__todo--checked > .nui-content__check {
-    border-color: var(--color-primary);
+    @apply border-primary;
     background: var(--color-primary);
   }
   .nui-content__todo--checked > .nui-content__check::before {
-    opacity: 1;
+    @apply opacity-100;
     scale: 1;
   }
   .nui-content__todo-body {
-    flex: 1;
-    min-inline-size: 0;
+    @apply flex-1 min-inline-0;
     transition: color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-content__todo--checked > .nui-content__todo-body {
-    color: var(--color-muted-foreground);
+    @apply text-muted-foreground;
     text-decoration: line-through;
   }
   .nui-content__code {
-    box-sizing: border-box;
-    padding: --spacing(4);
-    border-radius: --theme(--radius-lg inline);
-    background: var(--color-surface-code);
-    color: var(--color-foreground);
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    line-height: var(--leading-normal);
-    white-space: pre;
+    @apply box-border p-4 rounded-lg bg-surface-code text-foreground font-mono;
+    @apply text-(length:--text-sm) leading-normal whitespace-pre text-start overflow-x-auto;
     tab-size: 2;
     direction: ltr;
-    text-align: start;
     unicode-bidi: isolate;
-    overflow-x: auto;
   }
   .nui-content__code > code {
     font: inherit;
   }
   .nui-content__token--scope-keyword {
-    color: var(--color-syntax-keyword);
+    @apply text-syntax-keyword;
   }
   .nui-content__token--scope-string {
-    color: var(--color-syntax-string);
+    @apply text-syntax-string;
   }
   .nui-content__token--scope-number {
-    color: var(--color-syntax-number);
+    @apply text-syntax-number;
   }
   .nui-content__token--scope-function {
-    color: var(--color-syntax-function);
+    @apply text-syntax-function;
   }
   .nui-content__token--scope-type {
-    color: var(--color-syntax-type);
+    @apply text-syntax-type;
   }
   .nui-content__token--scope-tag {
-    color: var(--color-syntax-tag);
+    @apply text-syntax-tag;
   }
   .nui-content__token--scope-attribute {
-    color: var(--color-syntax-attribute);
+    @apply text-syntax-attribute;
   }
   .nui-content__token--scope-property {
-    color: var(--color-syntax-property);
+    @apply text-syntax-property;
   }
   .nui-content__token--scope-comment {
-    color: var(--color-syntax-comment);
-    font-style: italic;
+    @apply text-syntax-comment italic;
   }
   .nui-content__token--scope-punctuation {
-    color: --theme(--color-syntax-punctuation inline);
+    @apply text-syntax-punctuation;
   }
   .nui-content__token--scope-variable {
-    color: var(--color-syntax-variable);
+    @apply text-syntax-variable;
   }
   .nui-content__divider {
-    box-sizing: content-box;
-    block-size: 1px;
+    @apply box-content block-px bg-border;
     border: 0;
-    background: var(--color-border);
     background-clip: content-box;
     padding-block: 0.75em;
   }
@@ -239,14 +208,11 @@
     --_mark: --theme(--color-info-soft-foreground inline);
     --_icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E");
 
-    box-sizing: border-box;
-    display: grid;
+    @apply box-border grid items-start rounded-lg;
     grid-template-columns: var(--spacing-control-sm) minmax(0, 1fr);
     column-gap: 0.5em;
-    align-items: start;
     padding: 0.75em 1em;
     border: 1px solid color-mix(in oklab, var(--_tone) 35%, transparent);
-    border-radius: --theme(--radius-lg inline);
     background: var(--_soft);
     transition:
       background-color var(--transition-duration-fast) var(--ease-nui),
@@ -285,7 +251,7 @@
     --_turn: 0deg;
     --_mark: var(--spacing-control-sm);
 
-    position: relative;
+    @apply relative;
     padding-inline-start: calc(var(--_mark) + 0.5em);
   }
   .nui-content__toggle--open {
@@ -294,22 +260,15 @@
   .nui-content__toggle:not(.nui-content__toggle--open)
     > .nui-content__toggle-body
     > :not(:first-child) {
-    display: none;
+    @apply hidden;
   }
   .nui-content__toggle-button {
-    position: absolute;
+    @apply absolute inset-s-0 box-border inline-(--_mark) block-(--_mark) p-0 rounded text-inherit;
+    @apply cursor-pointer;
     inset-block-start: calc((var(--leading-relaxed) * 1em - var(--_mark)) / 2);
-    inset-inline-start: 0;
-    box-sizing: border-box;
-    inline-size: var(--_mark);
-    block-size: var(--_mark);
-    padding: 0;
     border: 0;
-    border-radius: --theme(--radius inline);
     background: transparent;
-    color: inherit;
     font: inherit;
-    cursor: pointer;
     transition:
       background-color var(--transition-duration-fast) var(--ease-nui),
       scale var(--transition-duration-fast) var(--ease-nui);
@@ -322,13 +281,11 @@
     scale: 0.97;
   }
   .nui-content__toggle-button:focus-visible {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-content__toggle-button::before {
+    @apply absolute inset-0;
     content: '';
-    position: absolute;
-    inset: 0;
     background: --theme(--color-neutral-soft-foreground inline);
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E")
       center / round(calc(var(--text-control-sm) * 1.15), 2px) no-repeat;
@@ -346,10 +303,7 @@
     --_gutter-start: 0;
     --_gutter-end: --spacing(4);
 
-    display: inline-block;
-    box-sizing: border-box;
-    max-inline-size: 100%;
-    vertical-align: bottom;
+    @apply inline-block box-border max-inline-full align-bottom;
   }
   .nui-content__image--align-start {
     --_inline-start: 0;
@@ -361,84 +315,56 @@
     --_gutter-end: 0;
   }
   .nui-content__image--wrap-break {
-    display: block;
-    inline-size: fit-content;
-    margin-inline: var(--_inline-start) var(--_inline-end);
+    @apply block inline-fit ms-(--_inline-start) me-(--_inline-end);
   }
   .nui-content__image--wrap-wrap {
+    @apply mbs-1 mbe-2 ms-(--_gutter-start) me-(--_gutter-end);
     float: var(--_float);
-    margin-block: var(--spacing) --spacing(2);
-    margin-inline: var(--_gutter-start) var(--_gutter-end);
   }
   .nui-content__picture {
-    display: block;
-    inline-size: 100%;
-    max-inline-size: 100%;
-    block-size: auto;
-    border-radius: --theme(--radius inline);
+    @apply block inline-full max-inline-full block-auto rounded;
   }
   .nui-content__caption {
-    display: block;
+    @apply block text-muted-foreground leading-normal text-center;
     contain: inline-size;
     margin-block-start: 0.5em;
-    color: var(--color-muted-foreground);
     font-size: 0.875em;
-    line-height: var(--leading-normal);
-    text-align: center;
   }
   .nui-content__zoom {
-    display: block;
-    box-sizing: border-box;
-    inline-size: 100%;
-    padding: 0;
+    @apply block box-border inline-full p-0 rounded cursor-zoom-in;
     border: 0;
-    border-radius: --theme(--radius inline);
     background: none;
-    cursor: zoom-in;
     transition: opacity var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-content__zoom:hover {
-    opacity: 0.92;
+    @apply opacity-92;
   }
   .nui-content__zoom:focus-visible {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-content__lightbox {
-    display: block;
+    @apply block object-contain;
     max-inline-size: calc(100vw - --spacing(8));
     max-block-size: calc(100dvh - --spacing(8));
-    object-fit: contain;
   }
   .nui-content__viewer-close {
-    position: absolute;
-    display: flex;
-    inset-block-start: --spacing(2);
-    inset-inline-end: --spacing(2);
+    @apply absolute flex inset-bs-2 inset-e-2;
   }
   .nui-content__file {
     --_file-icon: none;
 
-    display: inline-flex;
-    box-sizing: border-box;
-    align-items: center;
-    gap: var(--spacing);
-    max-inline-size: 100%;
+    @apply inline-flex box-border items-center gap-1 max-inline-full py-0 px-2 rounded-sm;
+    @apply text-foreground leading-normal no-underline;
     margin-inline: 0.125em;
-    padding: 0 --spacing(2);
     border: 1px solid var(--color-border);
-    border-radius: --theme(--radius-sm inline);
     background: var(--color-surface);
-    color: var(--color-foreground);
     font-size: 0.875em;
-    line-height: var(--leading-normal);
-    text-decoration: none;
     transition:
       background-color var(--transition-duration-fast) var(--ease-nui),
       border-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-content__file:hover {
-    border-color: var(--color-border-strong);
+    @apply border-border-strong;
     background: color-mix(
       in oklab,
       var(--color-foreground) var(--state-hover-overlay),
@@ -446,27 +372,18 @@
     );
   }
   .nui-content__file:focus-visible {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-content__file-icon {
-    flex: none;
-    inline-size: var(--spacing-icon-sm);
-    block-size: var(--spacing-icon-sm);
+    @apply flex-none inline-icon-sm block-icon-sm;
     background: var(--color-muted-foreground);
     mask: var(--_file-icon) center / contain no-repeat;
   }
   .nui-content__file-name {
-    overflow: hidden;
-    min-inline-size: 0;
-    font-weight: var(--font-weight-medium);
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    @apply overflow-hidden min-inline-0 font-medium text-ellipsis whitespace-nowrap;
   }
   .nui-content__file-size {
-    flex: none;
-    color: var(--color-muted-foreground);
-    font-variant-numeric: tabular-nums;
+    @apply flex-none text-muted-foreground tabular-nums;
   }
   .nui-content__file--kind-file {
     --_file-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z'/%3E%3Cpath d='M14 2v5a1 1 0 0 0 1 1h5'/%3E%3C/svg%3E");
@@ -496,7 +413,7 @@
     container-type: inline-size;
   }
   .nui-content__columns-track {
-    display: flex;
+    @apply flex;
     gap: 1.5em;
   }
   .nui-content__column {
@@ -505,54 +422,41 @@
   }
   @container (inline-size < 24rem) {
     .nui-content__columns-track {
-      flex-direction: column;
+      @apply flex-col;
     }
     .nui-content__column {
-      flex: none;
+      @apply flex-none;
     }
   }
   .nui-content__grid {
-    display: block;
-    overflow-x: auto;
-    max-inline-size: 100%;
-    margin: 0;
-    border-collapse: collapse;
+    @apply block overflow-x-auto max-inline-full m-0 border-collapse leading-normal;
     font-size: 0.9em;
-    line-height: var(--leading-normal);
   }
   .nui-content__table-column,
   .nui-content__table-cell {
-    box-sizing: border-box;
+    @apply box-border text-start align-top;
     min-inline-size: 6em;
     padding: 0.5em 0.75em;
     border: 1px solid var(--color-border);
-    text-align: start;
-    vertical-align: top;
   }
   .nui-content__table-column {
+    @apply font-semibold;
     background: var(--color-surface-muted);
-    font-weight: var(--font-weight-semibold);
   }
   .nui-content__table-column--type-number,
   .nui-content__table-cell--number {
-    font-variant-numeric: tabular-nums;
-    text-align: end;
+    @apply tabular-nums text-end;
   }
   .nui-content__mention {
+    @apply rounded-sm text-primary-soft-foreground font-medium whitespace-nowrap;
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
     margin-inline-end: 0.15em;
     padding: 0.05em 0.35em;
-    border-radius: --theme(--radius-sm inline);
     background: --theme(--color-primary-soft inline);
-    color: --theme(--color-primary-soft-foreground inline);
-    font-weight: var(--font-weight-medium);
-    white-space: nowrap;
   }
   .nui-content__link {
-    border-radius: --theme(--radius-sm inline);
-    color: var(--color-primary);
-    text-decoration: underline;
+    @apply rounded-sm text-primary underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 0.2em;
     transition: text-decoration-thickness var(--transition-duration-fast) var(--ease-nui);
@@ -561,30 +465,26 @@
     text-decoration-thickness: 2px;
   }
   .nui-content__link:focus-visible {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-content__bold {
-    font-weight: var(--font-weight-semibold);
+    @apply font-semibold;
   }
   .nui-content__code-inline {
+    @apply rounded-sm text-code-inline font-mono;
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
     padding: 0.15em 0.4em;
-    border-radius: --theme(--radius-sm inline);
     background: var(--color-surface-muted);
-    color: var(--color-code-inline);
-    font-family: var(--font-mono);
     font-size: 0.875em;
   }
   .nui-content__colour {
-    color: var(--_colour);
+    @apply text-(--_colour);
   }
   .nui-content__highlight {
+    @apply rounded-sm text-inherit;
     padding-block: 0.1em;
-    border-radius: --theme(--radius-sm inline);
     background: var(--_highlight);
-    color: inherit;
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
   }
@@ -644,53 +544,39 @@
   }
   @media (width < 40rem) {
     .nui-content__columns {
-      grid-auto-flow: row;
+      @apply grid-flow-row;
     }
   }
   .nui-content__embed {
-    box-sizing: border-box;
+    @apply box-border;
   }
   .nui-content__embed-link {
-    display: flex;
-    box-sizing: border-box;
-    align-items: center;
-    justify-content: center;
+    @apply flex box-border items-center justify-center border border-dashed border-border-strong;
+    @apply rounded text-muted-foreground;
     aspect-ratio: 16 / 9;
-    border: 1px dashed var(--color-border-strong);
-    border-radius: --theme(--radius inline);
     background: var(--color-surface-muted);
-    color: var(--color-muted-foreground);
     font-size: 0.875em;
     text-decoration: none;
   }
   .nui-content__embed-frame {
-    display: block;
-    box-sizing: border-box;
-    inline-size: 100%;
-    block-size: auto;
+    @apply block box-border inline-full block-auto rounded;
     border: 0;
-    border-radius: --theme(--radius inline);
     background: var(--color-surface-muted);
   }
   .nui-content__bookmark {
-    position: relative;
+    @apply relative;
   }
   .nui-content__bookmark-link {
-    display: flex;
-    box-sizing: border-box;
-    align-items: stretch;
-    overflow: hidden;
+    @apply flex box-border items-stretch overflow-hidden rounded text-foreground;
     border: 1px solid var(--color-border);
-    border-radius: --theme(--radius inline);
     background: var(--color-surface);
-    color: var(--color-foreground);
     text-decoration: none;
     transition:
       background-color var(--transition-duration-fast) var(--ease-nui),
       border-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-content__bookmark-link:hover {
-    border-color: var(--color-border-strong);
+    @apply border-border-strong;
     background: color-mix(
       in oklab,
       var(--color-foreground) var(--state-hover-overlay),
@@ -698,50 +584,31 @@
     );
   }
   .nui-content__bookmark-link:focus-visible {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-content__bookmark-body {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: var(--spacing);
-    min-inline-size: 0;
-    padding: --spacing(3);
+    @apply flex flex-1 flex-col gap-1 min-inline-0 p-3 leading-normal;
     font-size: 0.875em;
-    line-height: var(--leading-normal);
   }
   .nui-content__bookmark-title {
-    overflow: hidden;
-    font-weight: var(--font-weight-medium);
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    @apply overflow-hidden font-medium text-ellipsis whitespace-nowrap;
   }
   .nui-content__bookmark-description {
+    @apply overflow-hidden text-muted-foreground;
     display: -webkit-box;
-    overflow: hidden;
-    color: var(--color-muted-foreground);
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
   .nui-content__bookmark-site {
-    display: flex;
-    align-items: center;
-    gap: --spacing(2);
-    overflow: hidden;
-    color: var(--color-muted-foreground);
+    @apply flex items-center gap-2 overflow-hidden text-muted-foreground whitespace-nowrap;
     font-size: 0.875em;
-    white-space: nowrap;
   }
   .nui-content__bookmark-icon {
-    flex: none;
-    inline-size: var(--spacing-icon-sm);
-    block-size: var(--spacing-icon-sm);
+    @apply flex-none inline-icon-sm block-icon-sm;
   }
   .nui-content__bookmark-image {
-    flex: none;
+    @apply flex-none object-cover;
     inline-size: 30%;
     max-inline-size: 12rem;
-    object-fit: cover;
   }
 }
