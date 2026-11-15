@@ -1,62 +1,62 @@
 .nui-theme--accent-indigo {
   --color-primary: light-dark(oklch(0.457 0.215 277.02), oklch(0.785 0.104 274.71));
   --color-primary-foreground: light-dark(oklch(1 0 0), oklch(0.257 0.086 281.29));
-  --color-accent-soft-foreground: initial;
-  --color-accent-syntax-highlight: initial;
+  --color-theme-soft-foreground: initial;
+  --color-theme-syntax-highlight: initial;
 }
 
 .nui-theme--accent-blue {
   --color-primary: light-dark(oklch(0.5 0.16 255), oklch(0.78 0.11 245));
   --color-primary-foreground: light-dark(oklch(1 0 0), oklch(0.26 0.088 245));
-  --color-accent-soft-foreground: initial;
-  --color-accent-syntax-highlight: initial;
+  --color-theme-soft-foreground: initial;
+  --color-theme-syntax-highlight: initial;
 }
 
 .nui-theme--accent-violet {
   --color-primary: light-dark(oklch(0.48 0.22 295), oklch(0.79 0.12 300));
   --color-primary-foreground: light-dark(oklch(1 0 0), oklch(0.26 0.09 300));
-  --color-accent-soft-foreground: initial;
-  --color-accent-syntax-highlight: initial;
+  --color-theme-soft-foreground: initial;
+  --color-theme-syntax-highlight: initial;
 }
 
 .nui-theme--accent-emerald {
   --color-primary: light-dark(oklch(0.5 0.11 160), oklch(0.8 0.14 160));
   --color-primary-foreground: light-dark(oklch(1 0 0), oklch(0.26 0.09 160));
-  --color-accent-soft-foreground: initial;
-  --color-accent-syntax-highlight: initial;
+  --color-theme-soft-foreground: initial;
+  --color-theme-syntax-highlight: initial;
 }
 
 .nui-theme--accent-teal {
   --color-primary: light-dark(oklch(0.5 0.085 190), oklch(0.8 0.11 195));
   --color-primary-foreground: light-dark(oklch(1 0 0), oklch(0.26 0.088 195));
-  --color-accent-soft-foreground: initial;
-  --color-accent-syntax-highlight: initial;
+  --color-theme-soft-foreground: initial;
+  --color-theme-syntax-highlight: initial;
 }
 
 .nui-theme--accent-rose {
   --color-primary: light-dark(oklch(0.52 0.2 10), oklch(0.79 0.12 5));
   --color-primary-foreground: light-dark(oklch(1 0 0), oklch(0.26 0.09 5));
-  --color-accent-soft-foreground: initial;
-  --color-accent-syntax-highlight: initial;
+  --color-theme-soft-foreground: initial;
+  --color-theme-syntax-highlight: initial;
 }
 
 .nui-theme--accent-orange {
   --color-primary: light-dark(oklch(0.56 0.15 45), oklch(0.8 0.13 60));
   --color-primary-foreground: light-dark(oklch(1 0 0), oklch(0.26 0.09 60));
-  --color-accent-soft-foreground: initial;
-  --color-accent-syntax-highlight: initial;
+  --color-theme-soft-foreground: initial;
+  --color-theme-syntax-highlight: initial;
 }
 
 .nui-theme--accent-amber {
   --color-primary: light-dark(oklch(0.52 0.11 70), oklch(0.85 0.14 85));
   --color-primary-foreground: light-dark(oklch(1 0 0), oklch(0.26 0.09 85));
-  --color-accent-soft-foreground: initial;
-  --color-accent-syntax-highlight: initial;
+  --color-theme-soft-foreground: initial;
+  --color-theme-syntax-highlight: initial;
 }
 
 .nui-theme--accent-slate {
   --color-primary: light-dark(oklch(0.35 0.03 260), oklch(0.85 0.02 260));
   --color-primary-foreground: light-dark(oklch(1 0 0), oklch(0.26 0.016 260));
-  --color-accent-soft-foreground: initial;
-  --color-accent-syntax-highlight: initial;
+  --color-theme-soft-foreground: initial;
+  --color-theme-syntax-highlight: initial;
 }

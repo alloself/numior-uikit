@@ -65,9 +65,10 @@ status: accepted
    `nui-theme--light` и `nui-theme--dark` — свою схему; значения на `light-dark()` разрешаются
    по месту. `nui-theme--accent-<имя>` (`accents.css`) ставит `--color-primary` и
    `--color-primary-foreground` и сбрасывает (`initial`) два крючка темы (решение владельца
-   2026-11-14, ночь): `--color-accent-soft-foreground` и `--color-accent-syntax-highlight`.
+   2026-11-14, ночь; имена — решение 2026-11-15): `--color-theme-soft-foreground` и
+   `--color-theme-syntax-highlight`.
    Производные `--color-primary-soft-foreground` и `--color-syntax-highlight` читают крючок с
-   расчётом кита как запасным значением (`var(--color-accent-soft-foreground,
+   расчётом кита как запасным значением (`var(--color-theme-soft-foreground,
    var(--color-primary))`), поэтому тема, которой рассчитанный мягкий текст акцента или подсветка
    строки кода не подходят, задаёт свой цвет крючком на своём классе, а вложенный акцент кита
    возвращает расчёт от своего акцента. Крючки, как и `--color-layer`, в `@theme` не объявлены:
@@ -276,7 +277,7 @@ status: accepted
 14. **Дока.** Тема Numior — класс доки `docs-theme--numior` на `<html>` с базовыми ключами;
     выбранный в шапке встроенный акцент снимает его и ставит `nui-theme--accent-<имя>`. Мягкий
     текст акцента и подсветку строки кода, которые Numior меняет ради контраста, класс сайта
-    задаёт крючками кита `--color-accent-soft-foreground` и `--color-accent-syntax-highlight`
+    задаёт крючками кита `--color-theme-soft-foreground` и `--color-theme-syntax-highlight`
     (пункт 3); своего `@theme inline` у входа доки больше нет. Акцент кита внутри области Numior
     сбрасывает крючки и берёт мягкий текст от своего акцента. `numior.css` и `accents.css`
     подключаются из CSS-входа доки в слой `theme`, а не JS-импортом. Переключатель «Базовая

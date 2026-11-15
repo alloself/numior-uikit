@@ -35,7 +35,7 @@ const SURFACES = [
 
 const CODE_SURFACES = ['color-surface-code', 'color-syntax-highlight'];
 const SITE_SCOPE = '.docs-theme--numior';
-const HOOK_PREFIX = '--color-accent-';
+const HOOK_PREFIX = '--color-theme-';
 const DEFAULT_LAYER = 'color-surface';
 const UNSET = 'initial';
 const DECLARATION_RE = /(--[a-z0-9-]+|[a-z-]+):\s*([^;{}]+);/gu;
@@ -49,7 +49,7 @@ const MIX_RE = /^color-mix\(in oklab, var\(--([a-z-]+)\) (\d+)%, var\(--([a-z-]+
 const BLOCK_RE = /([^{}]+)\{([^{}]*)\}/gu;
 const THEME_BLOCK_RE = /@theme(?:\s+[a-z]+)*\s*\{([^}]*)\}/gu;
 const LAYER_RE = /--color-layer:\s*([^;]+);/gu;
-const HOOK_RE = /^(--[a-z0-9-]+):\s*var\((--color-accent-[a-z0-9-]+),/u;
+const HOOK_RE = /^(--[a-z0-9-]+):\s*var\((--color-theme-[a-z0-9-]+),/u;
 
 const read = (path: string): string =>
   readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8');

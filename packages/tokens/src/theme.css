@@ -120,7 +120,7 @@
 }
 
 @theme inline {
-  --color-primary-soft-foreground: var(--color-accent-soft-foreground, var(--color-primary));
+  --color-primary-soft-foreground: var(--color-theme-soft-foreground, var(--color-primary));
   --color-secondary-soft-foreground: var(--color-foreground);
   --color-success-soft-foreground: var(--color-success);
   --color-warning-soft-foreground: var(--color-warning);
@@ -156,7 +156,7 @@
   --color-prose-marker: var(--color-muted-foreground);
   --color-syntax-punctuation: var(--color-muted-foreground);
   --color-syntax-highlight: var(
-    --color-accent-syntax-highlight,
+    --color-theme-syntax-highlight,
     color-mix(in oklab, var(--color-primary) 6%, var(--color-surface-code))
   );
   --color-chart-other: var(--color-subtle-foreground);

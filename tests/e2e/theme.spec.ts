@@ -70,7 +70,7 @@ test('the dark variant picks the same scheme as light-dark() in every nesting of
 test('an accent inside a theme with its own soft text and highlight takes those of the accent', async ({
   themeLab,
 }) => {
-  const ownTheme = `.own-theme { --color-accent-soft-foreground: ${OWN_SOFT}; --color-accent-syntax-highlight: ${OWN_HIGHLIGHT}; }`;
+  const ownTheme = `.own-theme { --color-theme-soft-foreground: ${OWN_SOFT}; --color-theme-syntax-highlight: ${OWN_HIGHLIGHT}; }`;
 
   await themeLab.open(`${accentScopes('own-theme')}${accentScopes('kit-theme')}`, {
     css: ownTheme,

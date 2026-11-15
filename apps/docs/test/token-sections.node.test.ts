@@ -59,10 +59,10 @@ describe('token sections', () => {
     const soft = rowOf(TokenSection.Tones, '--color-primary-soft-foreground');
     const highlight = rowOf(TokenSection.Code, '--color-syntax-highlight');
 
-    expect(soft?.light).toContain('var(--color-accent-soft-foreground,');
+    expect(soft?.light).toContain('var(--color-theme-soft-foreground,');
     expect(soft?.sample).toBe(TokenSample.Color);
     expect(soft?.value).toBe(rowOf(TokenSection.Tones, '--color-primary')?.value);
-    expect(highlight?.light).toContain('var(--color-accent-syntax-highlight,');
+    expect(highlight?.light).toContain('var(--color-theme-syntax-highlight,');
     expect(highlight?.sample).toBe(TokenSample.Color);
   });
 
