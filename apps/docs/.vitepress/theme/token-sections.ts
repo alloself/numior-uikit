@@ -14,7 +14,7 @@ interface SampleRule {
 
 const SECTION_RULES: readonly SectionRule[] = [
   { section: TokenSection.Code, pattern: /^(?:surface-code|syntax-|code-|chart-)/ },
-  { section: TokenSection.Surfaces, pattern: /^(?:surface|ring$|backdrop|layer-|text|border)/ },
+  { section: TokenSection.Surfaces, pattern: /^(?:surface|ring$|backdrop|text|border)/ },
   {
     section: TokenSection.Tones,
     pattern: /^(?:primary|secondary|success|warning|error|info|neutral|soft-)/,
@@ -24,7 +24,10 @@ const SECTION_RULES: readonly SectionRule[] = [
     pattern: /^(?:focus|field-ring|disabled|state-|hover$|pressed$)/,
   },
   { section: TokenSection.Shape, pattern: /^radius/ },
-  { section: TokenSection.Sizes, pattern: /^(?:space-|control-|field-padding|icon-size)/ },
+  {
+    section: TokenSection.Sizes,
+    pattern: /^(?:space-|control-|field-padding|icon-size|layout-)/,
+  },
   {
     section: TokenSection.Type,
     pattern: /^(?:font|line-height|tracking|caption|prose|measure)/,
@@ -40,7 +43,7 @@ const SAMPLE_RULES: readonly SampleRule[] = [
   { sample: TokenSample.Font, pattern: /^font/ },
   {
     sample: TokenSample.Size,
-    pattern: /^(?:space-|control-(?:height|padding)|field-padding|icon-size)/,
+    pattern: /^(?:space-|control-(?:height|padding)|field-padding|icon-size|layout-)/,
   },
 ];
 

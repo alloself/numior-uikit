@@ -4,7 +4,7 @@ import { themeToken, TokenTableDriver } from './drivers/token-table';
 
 const TOKENS = [
   themeToken('surface', 'oklch(1 0 0)', 'oklch(0.21 0.006 285.89)'),
-  themeToken('layer-surface', 'var(--nui-surface)'),
+  themeToken('surface-elevated', 'var(--nui-surface)'),
   themeToken('radius-base', '0.5rem'),
   themeToken('radius', 'var(--nui-radius-base)'),
   themeToken('space-2', '0.5rem'),
@@ -20,12 +20,12 @@ describe('TokenTable', () => {
 
     expect(table.rows).toEqual([
       ['', '--nui-surface', 'oklch(1 0 0)', 'oklch(0.21 0.006 285.89)'],
-      ['', '--nui-layer-surface', 'var(--nui-surface)', '—'],
+      ['', '--nui-surface-elevated', 'var(--nui-surface)', '—'],
     ]);
 
     expect(table.swatchSchemes('surface')).toEqual(['light', 'dark']);
-    expect(table.swatchSchemes('layer-surface')).toEqual(['light', 'dark']);
-    expect(table.sampleStyle('layer-surface')).toContain('var(--nui-layer-surface)');
+    expect(table.swatchSchemes('surface-elevated')).toEqual(['light', 'dark']);
+    expect(table.sampleStyle('surface-elevated')).toContain('var(--nui-surface-elevated)');
 
     table.unmount();
   });
