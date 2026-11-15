@@ -1,8 +1,5 @@
 [data-nui-accent] {
-  --nui-primary-soft: oklab(
-    from color-mix(in oklab, var(--nui-primary) 14%, var(--nui-surface))
-      max(l, var(--nui-soft-min-lightness)) a b
-  );
+  --nui-primary-soft: color-mix(in oklab, var(--nui-primary) 14%, var(--nui-surface));
   --nui-primary-soft-foreground: var(--nui-primary);
   --nui-focus: var(--nui-primary);
 }

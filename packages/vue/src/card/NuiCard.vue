@@ -7,6 +7,7 @@
       `nui-card--padding-${padding}`,
       {
         'nui-card--interactive': action !== undefined,
+        'nui-layer nui-layer--elevated': variant === NuiCardVariant.Elevated,
       },
     ]"
     :aria-busy="loading || undefined"

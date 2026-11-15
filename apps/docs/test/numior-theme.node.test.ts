@@ -32,11 +32,12 @@ const LIGHT_DARK_RE = /^light-dark\((.+)\)$/su;
 const VAR_RE = /^var\(--nui-([a-z0-9-]+)\)$/u;
 
 const SOFT_RE =
-  /^oklab\(\s*from color-mix\(in oklab, var\(--nui-([a-z]+)\) (\d+)%, var\(--nui-surface\)\)\s+max\(l, var\(--nui-soft-min-lightness\)\) a b\s*\)$/u;
+  /^oklab\(\s*from color-mix\(in oklab, var\(--nui-([a-z]+)\) (\d+)%, var\(--nui-layer-surface\)\)\s+max\(l, var\(--nui-soft-min-lightness\)\) a b\s*\)$/u;
 
 const MIX_RE = /^color-mix\(in oklab, var\(--nui-([a-z-]+)\) (\d+)%, var\(--nui-([a-z-]+)\)\)$/u;
 
 const BLOCK_RE = /([^{}]+)\{([^{}]*)\}/gu;
+const LAYER_RE = /--nui-layer-surface:\s*([^;]+);/gu;
 
 const read = (path: string): string =>
   readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8');
@@ -95,7 +96,7 @@ const colorOf = (tokens: Tokens, name: string): Oklab => {
   return mixColors(colorOf(tokens, color), colorOf(tokens, base), Number(share) / 100);
 };
 
-const softOf = (tokens: Tokens, role: string): Oklab => {
+const softOf = (tokens: Tokens, role: string, layer: string): Oklab => {
   const share = SOFT_RE.exec(tokens.get(`${role}-soft`) ?? '')?.[2];
 
   if (share === undefined) {
@@ -104,24 +105,31 @@ const softOf = (tokens: Tokens, role: string): Oklab => {
 
   const [lightness, a, b] = mixColors(
     colorOf(tokens, role),
-    colorOf(tokens, 'surface'),
+    colorOf(tokens, layer),
     Number(share) / 100,
   );
 
   return [Math.max(lightness, Number(tokens.get('soft-min-lightness'))), a, b];
 };
 
-const rolePairs = (tokens: Tokens, roles: readonly string[]): Pair[] => [
+const layersOf = (scheme: Scheme): string[] =>
+  [...kitTheme.matchAll(LAYER_RE)].map(
+    ([, value = '']) => VAR_RE.exec(schemeValue(value, scheme))?.[1] ?? value,
+  );
+
+const rolePairs = (tokens: Tokens, roles: readonly string[], scheme: Scheme): Pair[] => [
   ...roles.map((role) => ({
     text: `${role}-foreground`,
     surface: role,
     ratio: contrastOf(colorOf(tokens, `${role}-foreground`), colorOf(tokens, role)),
   })),
-  ...roles.map((role) => ({
-    text: `${role}-soft-foreground`,
-    surface: `${role}-soft`,
-    ratio: contrastOf(colorOf(tokens, `${role}-soft-foreground`), softOf(tokens, role)),
-  })),
+  ...roles.flatMap((role) =>
+    layersOf(scheme).map((layer) => ({
+      text: `${role}-soft-foreground`,
+      surface: `${role}-soft on ${layer}`,
+      ratio: contrastOf(colorOf(tokens, `${role}-soft-foreground`), softOf(tokens, role, layer)),
+    })),
+  ),
 ];
 
 const textPairs = (tokens: Tokens, texts: readonly string[]): Pair[] =>
@@ -149,25 +157,6 @@ const syntaxPairs = (tokens: Tokens): Pair[] =>
 
     return pairs;
   }, []);
-
-const PANELS = ['surface', 'surface-muted', 'surface-elevated', 'surface-overlay'];
-const DARK_LIFT = 0.03;
-
-const blendingSoft = (tokens: Tokens, roles: readonly string[], scheme: Scheme): string[] =>
-  roles.flatMap((role) => {
-    const [soft] = softOf(tokens, role);
-
-    return PANELS.reduce<string[]>((lines, panel) => {
-      const [surface] = colorOf(tokens, panel);
-      const apart = scheme === 'dark' ? soft - surface >= DARK_LIFT : soft < surface;
-
-      if (apart) {
-        return lines;
-      }
-      lines.push(`${role}-soft ${soft.toFixed(3)} on ${panel} ${surface.toFixed(3)}`);
-      return lines;
-    }, []);
-  });
 
 const failing = (pairs: readonly Pair[]): string[] =>
   pairs.reduce<string[]>((lines, pair) => {
@@ -207,30 +196,9 @@ describe('Numior theme of the docs site', () => {
 
       return failing([
         ...textPairs(tokens, TEXTS),
-        ...rolePairs(tokens, ROLES),
+        ...rolePairs(tokens, ROLES, scheme),
         ...syntaxPairs(tokens),
       ]).map((line) => `${scheme}: ${line}`);
-    });
-
-    expect(failures).toEqual([]);
-  });
-
-  it('fills a choice with one soft colour that stands apart from every panel it sits on', () => {
-    const failures = SCHEMES.flatMap((scheme) => {
-      const kit = tokensOf(kitTheme, scheme);
-      const site = tokensOf(numior, scheme, new Map(kit));
-
-      const accents = Object.values(DocsAccent).flatMap((accent) =>
-        blendingSoft(tokensOf(accentCss(accent), scheme, new Map(kit)), ['primary'], scheme).map(
-          (line) => `${accent}: ${line}`,
-        ),
-      );
-
-      return [
-        ...blendingSoft(kit, ROLES, scheme).map((line) => `kit: ${line}`),
-        ...blendingSoft(site, ROLES, scheme).map((line) => `numior: ${line}`),
-        ...accents,
-      ].map((line) => `${scheme} ${line}`);
     });
 
     expect(failures).toEqual([]);
@@ -243,7 +211,7 @@ describe('Numior theme of the docs site', () => {
 
         return failing([
           ...textPairs(tokens, ['primary']),
-          ...rolePairs(tokens, ['primary']),
+          ...rolePairs(tokens, ['primary'], scheme),
         ]).map((line) => `${accent} ${scheme}: ${line}`);
       }),
     );

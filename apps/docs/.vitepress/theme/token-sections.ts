@@ -14,7 +14,7 @@ interface SampleRule {
 
 const SECTION_RULES: readonly SectionRule[] = [
   { section: TokenSection.Code, pattern: /^(?:surface-code|syntax-|code-|chart-)/ },
-  { section: TokenSection.Surfaces, pattern: /^(?:surface|ring$|backdrop|text|border)/ },
+  { section: TokenSection.Surfaces, pattern: /^(?:surface|ring$|backdrop|layer-|text|border)/ },
   {
     section: TokenSection.Tones,
     pattern: /^(?:primary|secondary|success|warning|error|info|neutral|soft-)/,
