@@ -9,22 +9,11 @@
     --_font-size: var(--text-sm);
     --_remove: round(calc(round(var(--_font-size) * 0.875, 1px) * 1.75), 2px);
 
-    box-sizing: border-box;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing);
-    max-inline-size: 100%;
-    block-size: var(--_height);
-    padding-inline: var(--_padding);
-    border: 1px solid transparent;
-    border-radius: var(--radius-full);
-    background: var(--_tone-soft);
-    color: var(--_tone-soft-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--_font-size);
+    @apply box-border inline-flex items-center gap-1 max-inline-full block-(--_height);
+    @apply px-(--_padding) border border-transparent rounded-full bg-(--_tone-soft);
+    @apply text-(--_tone-soft-foreground) font-sans text-(length:--_font-size) leading-control;
+    @apply whitespace-nowrap;
     font-weight: 500;
-    line-height: var(--leading-control);
-    white-space: nowrap;
     transition:
       background-color var(--transition-duration-fast) var(--ease-nui),
       border-color var(--transition-duration-fast) var(--ease-nui),
@@ -72,25 +61,22 @@
     --_tone-soft-foreground: --theme(--color-info-soft-foreground inline);
   }
   .nui-chip--variant-outline {
+    @apply bg-transparent;
     border-color: color-mix(in oklab, var(--_tone) 50%, var(--color-border));
-    background: transparent;
   }
   .nui-chip--variant-solid {
-    background: var(--_tone);
-    color: var(--_tone-foreground);
+    @apply bg-(--_tone) text-(--_tone-foreground);
   }
   .nui-chip--removable {
     padding-inline-end: calc((var(--_height) - var(--_remove)) / 2 - 1px);
   }
   .nui-chip--disabled {
-    opacity: var(--opacity-disabled);
+    @apply opacity-disabled;
   }
   .nui-chip__icon {
-    inline-size: var(--spacing-icon-sm);
-    block-size: var(--spacing-icon-sm);
+    @apply inline-icon-sm block-icon-sm;
   }
   .nui-chip__label {
-    overflow: hidden;
-    text-overflow: ellipsis;
+    @apply overflow-hidden text-ellipsis;
   }
 }

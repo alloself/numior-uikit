@@ -5,21 +5,9 @@
     --_font-size: var(--text-control-md);
     --_stepper: 2rem;
 
-    box-sizing: border-box;
-    display: inline-flex;
-    align-items: center;
-    gap: --spacing(2);
-    inline-size: 100%;
-    min-block-size: var(--_height);
-    padding-inline: var(--_padding);
-    overflow: clip;
-    border: 1px solid var(--color-border);
-    border-radius: --theme(--radius inline);
-    background: var(--color-surface);
-    color: var(--color-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--_font-size);
-    line-height: var(--leading-control);
+    @apply box-border inline-flex items-center gap-2 inline-full min-block-(--_height);
+    @apply px-(--_padding) overflow-clip border border-border rounded bg-surface text-foreground;
+    @apply font-sans text-(length:--_font-size) leading-control;
     transition:
       border-color var(--transition-duration-fast) var(--ease-nui),
       outline-color var(--transition-duration-fast) var(--ease-nui);
@@ -37,81 +25,59 @@
     --_stepper: 2.25rem;
   }
   .nui-number-field--steppers {
-    padding-inline-end: 0;
+    @apply pe-0;
   }
   .nui-number-field__control {
-    flex: 1 1 auto;
-    min-inline-size: 0;
-    inline-size: 100%;
+    @apply flex-auto min-inline-0 inline-full p-0 bg-transparent text-inherit appearance-none;
     min-block-size: calc(var(--_height) - 2px);
-    padding: 0;
     border: 0;
-    background: transparent;
-    color: inherit;
     font: inherit;
     font-variant-numeric: tabular-nums;
-    appearance: none;
     outline: none;
   }
   .nui-number-field__control::placeholder {
-    color: var(--color-muted-foreground);
-    opacity: 1;
+    @apply text-muted-foreground opacity-100;
   }
   .nui-number-field__prefix,
   .nui-number-field__suffix {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    color: var(--color-muted-foreground);
+    @apply inline-flex flex-none items-center text-muted-foreground;
   }
   .nui-number-field__steppers {
-    box-sizing: border-box;
-    display: inline-flex;
-    flex: none;
-    align-self: stretch;
-    border-inline-start: 1px solid var(--color-border);
+    @apply box-border inline-flex flex-none self-stretch border-s border-s-border;
   }
   .nui-number-field__stepper {
-    box-sizing: border-box;
-    min-block-size: 0;
-    block-size: 100%;
-    inline-size: var(--_stepper);
-    padding: 0;
-    border-radius: 0;
+    @apply box-border min-block-0 block-full inline-(--_stepper) p-0 rounded-none;
   }
   .nui-number-field__stepper + .nui-number-field__stepper {
-    border-inline-start: 1px solid var(--color-border);
+    @apply border-s border-s-border;
   }
   .nui-number-field:hover:not(
       .nui-number-field--disabled,
       .nui-number-field--invalid,
       :focus-within
     ) {
-    border-color: var(--color-border-strong);
+    @apply border-border-strong;
   }
   .nui-number-field:focus-within {
-    border-color: --theme(--color-ring inline);
-    outline: var(--field-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply border-ring outline-(length:--field-ring-width) outline-ring;
+    @apply outline-offset-(--focus-ring-offset);
   }
   .nui-number-field--invalid {
-    border-color: var(--color-error);
+    @apply border-error;
   }
   .nui-number-field--invalid:focus-within {
-    border-color: var(--color-error);
-    outline-color: var(--color-error);
+    @apply border-error outline-error;
   }
   .nui-number-field--readonly .nui-number-field__steppers {
-    display: none;
+    @apply hidden;
   }
   .nui-number-field--readonly .nui-number-field__control {
-    cursor: default;
+    @apply cursor-default;
   }
   .nui-number-field--disabled {
-    opacity: var(--opacity-disabled);
-    cursor: not-allowed;
+    @apply opacity-disabled cursor-not-allowed;
   }
   .nui-number-field--disabled .nui-number-field__control {
-    cursor: not-allowed;
+    @apply cursor-not-allowed;
   }
 }

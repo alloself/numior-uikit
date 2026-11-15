@@ -3,19 +3,9 @@
     --_padding: var(--spacing-field-pad-md);
     --_font-size: var(--text-control-md);
 
-    box-sizing: border-box;
-    display: block;
-    inline-size: 100%;
-    padding: --spacing(2) var(--_padding);
-    border: 1px solid var(--color-border);
-    border-radius: --theme(--radius inline);
-    background: var(--color-surface);
-    color: var(--color-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--_font-size);
-    line-height: var(--leading-normal);
-    resize: vertical;
-    appearance: none;
+    @apply box-border block inline-full py-2 px-(--_padding) border border-border rounded;
+    @apply bg-surface text-foreground font-sans text-(length:--_font-size) leading-normal resize-y;
+    @apply appearance-none;
     transition:
       border-color var(--transition-duration-fast) var(--ease-nui),
       outline-color var(--transition-duration-fast) var(--ease-nui);
@@ -29,14 +19,13 @@
     --_font-size: var(--text-control-lg);
   }
   .nui-textarea--resize-none {
-    resize: none;
+    @apply resize-none;
   }
   .nui-textarea--resize-both {
-    resize: both;
+    @apply resize;
   }
   .nui-textarea::placeholder {
-    color: var(--color-muted-foreground);
-    opacity: 1;
+    @apply text-muted-foreground opacity-100;
   }
   .nui-textarea:hover:not(
       :disabled,
@@ -44,25 +33,22 @@
       .nui-textarea--invalid,
       :focus-visible
     ) {
-    border-color: var(--color-border-strong);
+    @apply border-border-strong;
   }
   .nui-textarea:focus-visible {
-    border-color: --theme(--color-ring inline);
-    outline: var(--field-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply border-ring outline-(length:--field-ring-width) outline-ring;
+    @apply outline-offset-(--focus-ring-offset);
   }
   .nui-textarea--invalid {
-    border-color: var(--color-error);
+    @apply border-error;
   }
   .nui-textarea--invalid:focus-visible {
-    border-color: var(--color-error);
-    outline-color: var(--color-error);
+    @apply border-error outline-error;
   }
   .nui-textarea--readonly {
-    cursor: default;
+    @apply cursor-default;
   }
   .nui-textarea:disabled {
-    opacity: var(--opacity-disabled);
-    cursor: not-allowed;
+    @apply opacity-disabled cursor-not-allowed;
   }
 }

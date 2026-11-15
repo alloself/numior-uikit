@@ -6,19 +6,9 @@
     --_inset: 0.1875rem;
     --_font-size: var(--text-sm);
 
-    box-sizing: border-box;
-    position: relative;
-    display: inline-flex;
-    align-items: flex-start;
-    gap: --spacing(2);
-    color: var(--color-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--_font-size);
+    @apply box-border relative inline-flex items-start gap-2 text-foreground font-sans;
+    @apply text-(length:--_font-size) cursor-pointer select-none select-none isolate;
     line-height: --theme(--leading-label inline);
-    cursor: pointer;
-    -webkit-user-select: none;
-    user-select: none;
-    isolation: isolate;
   }
   .nui-switch--size-sm {
     --_track-inline: 2rem;
@@ -33,47 +23,31 @@
     --_font-size: var(--text-base);
   }
   .nui-switch__control {
-    position: absolute;
-    z-index: 1;
+    @apply absolute z-1 inset-s-0 inline-(--_track-inline) block-(--_track-block) m-0 opacity-0;
+    @apply appearance-none;
     inset-block-start: calc((1lh - var(--_track-block)) / 2);
-    inset-inline-start: 0;
-    inline-size: var(--_track-inline);
-    block-size: var(--_track-block);
-    margin: 0;
-    opacity: 0;
-    appearance: none;
     cursor: inherit;
   }
   .nui-switch__track {
-    pointer-events: none;
-    position: relative;
-    flex: none;
-    inline-size: var(--_track-inline);
-    block-size: var(--_track-block);
+    @apply pointer-events-none relative flex-none inline-(--_track-inline) block-(--_track-block);
+    @apply rounded-full bg-border-strong;
     margin-block-start: calc((1lh - var(--_track-block)) / 2);
-    border-radius: var(--radius-full);
-    background: var(--color-border-strong);
     transition: background-color var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-switch__thumb {
     --_travel: calc(var(--_track-inline) - var(--_thumb) - 2 * var(--_inset));
     --_shift: 0px;
 
-    position: absolute;
+    @apply absolute inset-s-(--_inset) inline-(--_thumb) block-(--_thumb) rounded-full bg-surface;
+    @apply translate-x-(--_shift);
     inset-block-start: calc((var(--_track-block) - var(--_thumb)) / 2);
-    inset-inline-start: var(--_inset);
-    inline-size: var(--_thumb);
-    block-size: var(--_thumb);
-    border-radius: var(--radius-full);
-    background: var(--color-surface);
     box-shadow: var(--shadow-sm);
-    translate: var(--_shift) 0;
     transition:
       translate var(--transition-duration-normal) var(--ease-nui),
       scale var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-switch__control:checked + .nui-switch__track {
-    background: var(--color-primary);
+    @apply bg-primary;
   }
   .nui-switch__control:checked + .nui-switch__track .nui-switch__thumb {
     --_shift: var(--_travel);
@@ -85,20 +59,18 @@
     scale: 1.15 0.9;
   }
   .nui-switch__control:focus-visible + .nui-switch__track {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-switch--invalid .nui-switch__track {
-    background: var(--color-error);
+    @apply bg-error;
   }
   .nui-switch--invalid .nui-switch__control:focus-visible + .nui-switch__track {
-    outline-color: var(--color-error);
+    @apply outline-error;
   }
   .nui-switch--readonly {
-    cursor: default;
+    @apply cursor-default;
   }
   .nui-switch--disabled {
-    opacity: var(--opacity-disabled);
-    cursor: not-allowed;
+    @apply opacity-disabled cursor-not-allowed;
   }
 }

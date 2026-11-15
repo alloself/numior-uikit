@@ -5,13 +5,8 @@
     --_thumb: 2.5rem;
     --_icon: 2rem;
 
-    box-sizing: border-box;
-    display: grid;
-    gap: var(--_gap);
-    color: var(--color-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--text-sm);
-    line-height: var(--leading-normal);
+    @apply box-border grid gap-(--_gap) text-foreground font-sans text-(length:--text-sm);
+    @apply leading-normal;
   }
   .nui-upload--size-sm {
     --_zone-padding: --spacing(4);
@@ -19,34 +14,25 @@
     --_thumb: 2rem;
     --_icon: 1.5rem;
 
-    font-size: var(--text-xs);
+    @apply text-(length:--text-xs);
   }
   .nui-upload--size-lg {
     --_zone-padding: --spacing(8);
     --_thumb: 3rem;
     --_icon: 2.5rem;
 
-    font-size: var(--text-base);
+    @apply text-(length:--text-base);
   }
   .nui-upload__zone {
-    box-sizing: border-box;
-    position: relative;
-    display: grid;
-    justify-items: center;
-    gap: --spacing(2);
-    padding: var(--_zone-padding);
-    border: 1px dashed var(--color-border-strong);
-    border-radius: --theme(--radius inline);
-    background: var(--color-surface);
-    text-align: center;
-    cursor: pointer;
+    @apply box-border relative grid justify-items-center gap-2 p-(--_zone-padding);
+    @apply border border-dashed border-border-strong rounded bg-surface text-center cursor-pointer;
     transition:
       border-color var(--transition-duration-fast) var(--ease-nui),
       background-color var(--transition-duration-fast) var(--ease-nui),
       color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-upload__zone:hover {
-    border-color: var(--color-primary);
+    @apply border-primary;
     background: color-mix(
       in oklab,
       var(--color-foreground) var(--state-hover-overlay),
@@ -56,91 +42,62 @@
   .nui-upload--readonly .nui-upload__zone,
   .nui-upload--readonly .nui-upload__browse,
   .nui-upload--readonly .nui-upload-item__actions {
-    display: none;
+    @apply hidden;
   }
   .nui-upload--variant-button {
-    justify-items: start;
+    @apply justify-items-start;
   }
   .nui-upload--variant-button .nui-upload__items {
-    justify-self: stretch;
+    @apply justify-self-stretch;
   }
   .nui-upload--dragging .nui-upload__zone {
-    border-color: var(--color-primary);
-    border-style: solid;
+    @apply border-primary border-solid text-primary-soft-foreground;
     background: --theme(--color-primary-soft inline);
-    color: --theme(--color-primary-soft-foreground inline);
   }
   .nui-upload--invalid .nui-upload__zone {
-    border-color: var(--color-error);
+    @apply border-error;
   }
   .nui-upload--disabled .nui-upload__zone {
-    opacity: var(--opacity-disabled);
-    cursor: not-allowed;
-    pointer-events: none;
+    @apply opacity-disabled cursor-not-allowed pointer-events-none;
   }
   .nui-upload__input {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    margin: -1px;
-    opacity: 0;
-    pointer-events: none;
+    @apply absolute inline-px block-px -m-px opacity-0 pointer-events-none;
   }
   .nui-upload__icon {
-    inline-size: var(--_icon);
-    block-size: var(--_icon);
-    color: var(--color-subtle-foreground);
+    @apply inline-(--_icon) block-(--_icon) text-subtle-foreground;
     transition: color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-upload--dragging .nui-upload__icon {
-    color: var(--color-primary);
+    @apply text-primary;
   }
   .nui-upload__text {
     font-weight: 500;
   }
   .nui-upload__items {
-    display: grid;
-    gap: --spacing(2);
-    margin: 0;
-    padding: 0;
-    list-style: none;
+    @apply grid gap-2 m-0 p-0 list-none;
   }
   .nui-upload__live {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
+    @apply absolute inline-px block-px overflow-hidden whitespace-nowrap;
     clip-path: inset(50%);
-    white-space: nowrap;
   }
   .nui-upload-item {
     --_row-weight: 500;
 
-    box-sizing: border-box;
-    position: relative;
-    display: grid;
+    @apply box-border relative grid gap-x-(--_gap) items-center py-2 px-3 rounded bg-surface;
     grid-template-areas:
       'leading body trailing'
       'progress progress progress';
     grid-template-columns: auto minmax(0, 1fr) auto;
-    column-gap: var(--_gap);
-    align-items: center;
-    padding: --spacing(2) --spacing(3);
     border: 1px solid var(--color-border);
-    border-radius: --theme(--radius inline);
-    background: var(--color-surface);
     transition:
       border-color var(--transition-duration-fast) var(--ease-nui),
       opacity var(--transition-duration-fast) var(--ease-nui);
     animation: nui-upload-appear var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-upload-item .nui-row__leading {
+    @apply inline-(--_thumb) block-(--_thumb) rounded-sm overflow-hidden;
     grid-area: leading;
-    inline-size: var(--_thumb);
-    block-size: var(--_thumb);
-    border-radius: --theme(--radius-sm inline);
     background: var(--color-surface-muted);
-    overflow: hidden;
   }
   .nui-upload-item .nui-row__body {
     grid-area: body;
@@ -149,25 +106,21 @@
     grid-area: trailing;
   }
   .nui-upload-item__thumb {
-    display: block;
-    inline-size: 100%;
-    block-size: 100%;
-    object-fit: cover;
+    @apply block inline-full block-full object-cover;
   }
   .nui-upload-item__icon {
     inline-size: 1.25rem;
     block-size: 1.25rem;
   }
   .nui-upload-item__actions {
-    display: inline-flex;
-    gap: var(--spacing);
+    @apply inline-flex gap-1;
   }
   .nui-upload-item__progress {
+    @apply mbs-2;
     grid-area: progress;
-    margin-block-start: --spacing(2);
   }
   .nui-upload-item--status-queued {
-    opacity: 0.72;
+    @apply opacity-72;
   }
   .nui-upload-item--status-error {
     --_row-muted: var(--color-error);
@@ -176,53 +129,42 @@
     border-color: color-mix(in oklab, var(--color-error) 40%, var(--color-border));
   }
   .nui-upload--layout-grid .nui-upload__items {
+    @apply gap-(--_gap);
     grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
-    gap: var(--_gap);
   }
   .nui-upload--layout-grid .nui-upload-item {
+    @apply grid-cols-1 gap-y-2 items-start p-2;
     grid-template-areas:
       'leading'
       'body'
       'progress';
-    grid-template-columns: minmax(0, 1fr);
-    row-gap: --spacing(2);
-    align-items: start;
-    padding: --spacing(2);
   }
   .nui-upload--layout-grid .nui-upload-item .nui-row__leading {
-    inline-size: 100%;
-    block-size: auto;
-    aspect-ratio: 1;
-    margin: 0;
+    @apply inline-full block-auto aspect-square m-0;
   }
   .nui-upload--layout-grid .nui-upload-item__icon {
-    inline-size: var(--_icon);
-    block-size: var(--_icon);
+    @apply inline-(--_icon) block-(--_icon);
   }
   .nui-upload--layout-grid .nui-upload-item .nui-row__trailing {
-    position: absolute;
-    inset-block-start: --spacing(3);
-    inset-inline-end: --spacing(3);
+    @apply absolute inset-bs-3 inset-e-3 rounded-sm opacity-0;
     padding: 2px;
-    border-radius: --theme(--radius-sm inline);
     background: var(--color-surface-overlay);
     box-shadow: var(--shadow-sm);
-    opacity: 0;
     transition: opacity var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-upload--layout-grid .nui-upload-item:hover .nui-row__trailing,
   .nui-upload--layout-grid .nui-upload-item:focus-within .nui-row__trailing,
   .nui-upload--layout-grid .nui-upload-item--status-uploading .nui-row__trailing,
   .nui-upload--layout-grid .nui-upload-item--status-error .nui-row__trailing {
-    opacity: 1;
+    @apply opacity-100;
   }
   .nui-upload--layout-grid .nui-upload-item__progress {
-    margin-block-start: 0;
+    @apply mbs-0;
   }
   @keyframes nui-upload-appear {
     from {
       opacity: 0;
-      translate: 0 calc(var(--spacing) * -1);
+      translate: 0 --spacing(-1);
     }
   }
   .nui-avatar-upload {
@@ -232,15 +174,8 @@
     --_ring: 3px;
     --_ring-gap: 2px;
 
-    box-sizing: border-box;
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: --spacing(3);
-    color: var(--color-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--text-sm);
-    line-height: var(--leading-normal);
+    @apply box-border relative flex items-center gap-3 text-foreground font-sans;
+    @apply text-(length:--text-sm) leading-normal;
   }
   .nui-avatar-upload--size-sm {
     --_badge: 0.75rem;
@@ -262,26 +197,14 @@
     --_badge-offset: -0.125rem;
   }
   .nui-avatar-upload__input {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    margin: -1px;
-    opacity: 0;
-    pointer-events: none;
+    @apply absolute inline-px block-px -m-px opacity-0 pointer-events-none;
   }
   .nui-avatar-upload__trigger {
     --_radius: var(--radius-full);
 
-    position: relative;
-    display: inline-grid;
-    flex: none;
-    margin: 0;
-    padding: 0;
+    @apply relative inline-grid flex-none m-0 p-0 rounded-(--_radius) text-inherit cursor-pointer;
     border: 0;
-    border-radius: var(--_radius);
     background: none;
-    color: inherit;
-    cursor: pointer;
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),
       outline-color var(--transition-duration-fast) var(--ease-nui);
@@ -290,19 +213,18 @@
     --_radius: --theme(--radius-md inline);
   }
   .nui-avatar-upload__trigger:hover .nui-avatar-upload__avatar {
-    opacity: 0.85;
+    @apply opacity-85;
   }
   .nui-avatar-upload__trigger:focus-visible {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+    @apply outline-(length:--focus-ring-width) outline-ring;
     outline-offset: calc(var(--focus-ring-offset) + var(--_ring) + var(--_ring-gap));
   }
   .nui-avatar-upload__avatar {
     transition: opacity var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-avatar-upload__ring {
-    position: absolute;
+    @apply absolute p-(--_ring) pointer-events-none;
     inset: calc(-1 * (var(--_ring) + var(--_ring-gap)));
-    padding: var(--_ring);
     border-radius: calc(var(--_radius) + var(--_ring) + var(--_ring-gap));
     background: conic-gradient(
       var(--color-primary) calc(var(--_progress, 0) * 1turn),
@@ -312,7 +234,6 @@
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
     mask-composite: exclude;
-    pointer-events: none;
     animation: nui-avatar-upload-ring var(--transition-duration-normal) var(--ease-nui);
   }
   @keyframes nui-avatar-upload-ring {
@@ -322,80 +243,57 @@
     }
   }
   .nui-avatar-upload__badge {
-    box-sizing: border-box;
-    position: absolute;
-    inset-block-end: var(--_badge-offset);
-    inset-inline-end: var(--_badge-offset);
-    display: grid;
-    place-items: center;
-    inline-size: var(--_badge);
-    block-size: var(--_badge);
-    border-radius: var(--radius-full);
+    @apply box-border absolute inset-be-(--_badge-offset) inset-e-(--_badge-offset) grid;
+    @apply place-items-center inline-(--_badge) block-(--_badge) rounded-full;
+    @apply text-primary-foreground;
     background: var(--color-primary);
     box-shadow: 0 0 0 2px var(--color-surface-ring);
-    color: var(--color-primary-foreground);
     transition:
       background-color var(--transition-duration-fast) var(--ease-nui),
       color var(--transition-duration-fast) var(--ease-nui),
       opacity var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-avatar-upload__badge > .nui-icon {
-    inline-size: var(--_glyph);
-    block-size: var(--_glyph);
+    @apply inline-(--_glyph) block-(--_glyph);
   }
   .nui-avatar-upload__badge .nui-icon__glyph {
     stroke-width: 2.5;
   }
   .nui-avatar-upload--busy .nui-avatar-upload__badge {
-    opacity: 0;
+    @apply opacity-0;
   }
   .nui-avatar-upload--dragging .nui-avatar-upload__trigger {
-    outline: var(--focus-ring-width) solid var(--color-primary);
+    @apply outline-(length:--focus-ring-width) outline-primary;
     outline-offset: calc(var(--focus-ring-offset) + var(--_ring) + var(--_ring-gap));
   }
   .nui-avatar-upload--invalid .nui-avatar-upload__badge {
+    @apply text-error-foreground;
     background: var(--color-error);
-    color: var(--color-error-foreground);
   }
   .nui-avatar-upload--disabled .nui-avatar-upload__trigger {
-    opacity: var(--opacity-disabled);
-    cursor: not-allowed;
+    @apply opacity-disabled cursor-not-allowed;
   }
   .nui-avatar-upload--readonly .nui-avatar-upload__trigger {
-    cursor: default;
+    @apply cursor-default;
   }
   .nui-avatar-upload--readonly .nui-avatar-upload__badge,
   .nui-avatar-upload--readonly .nui-avatar-upload__actions {
-    display: none;
+    @apply hidden;
   }
   .nui-avatar-upload__aside {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing);
-    min-inline-size: 0;
+    @apply flex flex-col items-start gap-1 min-inline-0;
   }
   .nui-avatar-upload__actions {
-    display: inline-flex;
-    gap: var(--spacing);
+    @apply inline-flex gap-1;
   }
   .nui-avatar-upload__progress,
   .nui-avatar-upload__status {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
+    @apply absolute inline-px block-px overflow-hidden whitespace-nowrap;
     clip-path: inset(50%);
-    white-space: nowrap;
   }
   .nui-avatar-upload__status--failure {
-    position: static;
-    inline-size: auto;
-    block-size: auto;
-    overflow: visible;
+    @apply static inline-auto block-auto overflow-visible text-error text-(length:--text-xs);
+    @apply whitespace-normal;
     clip-path: none;
-    color: var(--color-error);
-    font-size: var(--text-xs);
-    white-space: normal;
   }
 }

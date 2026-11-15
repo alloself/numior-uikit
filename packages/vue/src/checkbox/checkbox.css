@@ -1,34 +1,18 @@
 @layer components {
   .nui-checkbox-group {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: --spacing(2);
-    min-inline-size: 0;
+    @apply box-border flex flex-col gap-2 min-inline-0;
   }
   .nui-checkbox-group--orientation-horizontal {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: --spacing(4);
+    @apply flex-row flex-wrap gap-4;
   }
 
   .nui-checkbox {
     --_size: 1.25rem;
     --_font-size: var(--text-sm);
 
-    box-sizing: border-box;
-    position: relative;
-    display: inline-flex;
-    align-items: flex-start;
-    gap: --spacing(2);
-    color: var(--color-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--_font-size);
+    @apply box-border relative inline-flex items-start gap-2 text-foreground font-sans;
+    @apply text-(length:--_font-size) cursor-pointer select-none select-none isolate;
     line-height: --theme(--leading-label inline);
-    cursor: pointer;
-    -webkit-user-select: none;
-    user-select: none;
-    isolation: isolate;
   }
   .nui-checkbox--size-sm {
     --_size: 1rem;
@@ -39,39 +23,24 @@
     --_font-size: var(--text-base);
   }
   .nui-checkbox__control {
-    position: absolute;
-    z-index: 1;
+    @apply absolute z-1 inset-s-0 inline-(--_size) block-(--_size) m-0 opacity-0 appearance-none;
     inset-block-start: calc((1lh - var(--_size)) / 2);
-    inset-inline-start: 0;
-    inline-size: var(--_size);
-    block-size: var(--_size);
-    margin: 0;
-    opacity: 0;
-    appearance: none;
     cursor: inherit;
   }
   .nui-checkbox__box {
-    box-sizing: border-box;
-    pointer-events: none;
-    display: inline-grid;
-    flex: none;
-    place-items: center;
-    inline-size: var(--_size);
-    block-size: var(--_size);
+    @apply box-border pointer-events-none inline-grid flex-none place-items-center inline-(--_size);
+    @apply block-(--_size) border border-border-strong rounded-sm bg-surface;
+    @apply text-primary-foreground;
     margin-block-start: calc((1lh - var(--_size)) / 2);
-    border: 1px solid var(--color-border-strong);
-    border-radius: --theme(--radius-sm inline);
-    background: var(--color-surface);
-    color: var(--color-primary-foreground);
     transition:
       background-color var(--transition-duration-fast) var(--ease-nui),
       border-color var(--transition-duration-fast) var(--ease-nui),
       scale var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-checkbox__mark {
+    @apply opacity-0;
     inline-size: round(75%, 2px);
     block-size: round(75%, 2px);
-    opacity: 0;
     scale: 0.5;
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),
@@ -79,12 +48,11 @@
   }
   .nui-checkbox__control:checked + .nui-checkbox__box,
   .nui-checkbox__control:indeterminate + .nui-checkbox__box {
-    border-color: var(--color-primary);
-    background: var(--color-primary);
+    @apply border-primary bg-primary;
   }
   .nui-checkbox__control:checked + .nui-checkbox__box .nui-checkbox__mark,
   .nui-checkbox__control:indeterminate + .nui-checkbox__box .nui-checkbox__mark {
-    opacity: 1;
+    @apply opacity-100;
     scale: 1;
   }
   .nui-checkbox__control:active:not(:disabled) + .nui-checkbox__box {
@@ -92,23 +60,21 @@
   }
   .nui-checkbox:hover:not(.nui-checkbox--disabled, .nui-checkbox--readonly, .nui-checkbox--invalid)
     .nui-checkbox__box {
-    border-color: var(--color-primary);
+    @apply border-primary;
   }
   .nui-checkbox__control:focus-visible + .nui-checkbox__box {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-checkbox--invalid .nui-checkbox__box {
-    border-color: var(--color-error);
+    @apply border-error;
   }
   .nui-checkbox--invalid .nui-checkbox__control:focus-visible + .nui-checkbox__box {
-    outline-color: var(--color-error);
+    @apply outline-error;
   }
   .nui-checkbox--readonly {
-    cursor: default;
+    @apply cursor-default;
   }
   .nui-checkbox--disabled {
-    opacity: var(--opacity-disabled);
-    cursor: not-allowed;
+    @apply opacity-disabled cursor-not-allowed;
   }
 }

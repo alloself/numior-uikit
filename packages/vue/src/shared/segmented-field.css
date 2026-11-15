@@ -5,20 +5,9 @@
     --_padding: var(--spacing-field-pad-md);
     --_font-size: var(--text-control-md);
 
-    box-sizing: border-box;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing);
-    inline-size: 100%;
-    min-block-size: var(--_height);
-    padding-inline: var(--_padding) var(--spacing);
-    border: 1px solid var(--color-border);
-    border-radius: --theme(--radius inline);
-    background: var(--color-surface);
-    color: var(--color-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--_font-size);
-    line-height: var(--leading-control);
+    @apply box-border inline-flex items-center gap-1 inline-full min-block-(--_height);
+    @apply ps-(--_padding) pe-1 border border-border rounded bg-surface text-foreground font-sans;
+    @apply text-(length:--_font-size) leading-control;
     transition:
       border-color var(--transition-duration-fast) var(--ease-nui),
       outline-color var(--transition-duration-fast) var(--ease-nui);
@@ -47,30 +36,27 @@
       .nui-time-field--invalid,
       :focus-within
     ) {
-    border-color: var(--color-border-strong);
+    @apply border-border-strong;
   }
   .nui-date-picker:focus-within,
   .nui-time-field:focus-within {
-    border-color: --theme(--color-ring inline);
-    outline: var(--field-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply border-ring outline-(length:--field-ring-width) outline-ring;
+    @apply outline-offset-(--focus-ring-offset);
   }
   .nui-date-picker--invalid,
   .nui-time-field--invalid {
-    border-color: var(--color-error);
+    @apply border-error;
   }
   .nui-date-picker--invalid:focus-within,
   .nui-time-field--invalid:focus-within {
-    border-color: var(--color-error);
-    outline-color: var(--color-error);
+    @apply border-error outline-error;
   }
   .nui-date-picker--readonly,
   .nui-time-field--readonly {
-    cursor: default;
+    @apply cursor-default;
   }
   .nui-date-picker--disabled,
   .nui-time-field--disabled {
-    opacity: var(--opacity-disabled);
-    cursor: not-allowed;
+    @apply opacity-disabled cursor-not-allowed;
   }
 }
