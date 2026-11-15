@@ -244,6 +244,7 @@ describe('guards of the component pages', () => {
 describe('guards of the install blocks', () => {
   const IMPORT = "import { NuiSelect } from '@numior/vue';";
   const STYLE = "import '@numior/vue/styles/select.css';";
+  const STYLED: ReadonlySet<string> = new Set(['@numior/vue', '@numior/table', '@numior/charts']);
 
   it('accept a printed install block and a block of package styles alone', () => {
     const source = page('Выбор из списка.', [
@@ -256,7 +257,7 @@ describe('guards of the install blocks', () => {
       fence('ts', ["import '@numior/vue/styles.css';"]),
     ]);
 
-    expect(installGuards('components/select.md', source)).toEqual([]);
+    expect(installGuards('components/select.md', source, STYLED)).toEqual([]);
   });
 
   it('report stylesheets listed by hand and an install block that the build does not print', () => {
@@ -274,10 +275,31 @@ describe('guards of the install blocks', () => {
       fence('ts', [IMPORT]),
     ]);
 
-    expect(textsOf(installGuards('components/select.md', source), GuardRule.Install)).toEqual([
+    expect(
+      textsOf(installGuards('components/select.md', source, STYLED), GuardRule.Install),
+    ).toEqual([
       'an install block lists stylesheets by hand; the build prints them',
       'an install block imports kit components without `ts install`',
       'stylesheets of kit components are listed by hand; mark the block `ts install`',
+    ]);
+  });
+
+  it('report an install command and stylesheets of a module written by hand', () => {
+    const source = page('Таблица.', [
+      '## Установка',
+      '',
+      fence('sh', ['pnpm add @numior/vue @numior/tokens']),
+      '',
+      fence('sh', ['pnpm add @numior/table']),
+      '',
+      fence('ts', ["import '@numior/vue/styles.css';", "import '@numior/charts/styles.css';"]),
+      '',
+      fence('sh', ['npm install @numior/primitives']),
+    ]);
+
+    expect(textsOf(installGuards('table/index.md', source, STYLED), GuardRule.Install)).toEqual([
+      'an install command of a kit module is written by hand; the `ts install:packages` block prints it',
+      'stylesheets of a kit module are listed by hand; mark the block `ts install:packages`',
     ]);
   });
 });

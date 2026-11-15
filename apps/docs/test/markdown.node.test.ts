@@ -166,6 +166,30 @@ describe('docs markdown', () => {
     );
   });
 
+  it('prints the install command of a module before its install block', () => {
+    const html = md.render(
+      "```ts install:packages\nimport { NuiTable } from '@numior/table';\n```\n",
+      RU,
+    );
+
+    const commands = codeGroup(html).map(({ label, code }) => [label, code.code]);
+
+    expect(commands).toEqual([
+      ['pnpm', 'pnpm add @numior/table'],
+      ['npm', 'npm install @numior/table'],
+      ['yarn', 'yarn add @numior/table'],
+      ['bun', 'bun add @numior/table'],
+    ]);
+
+    expect(html.indexOf('<CodeGroup')).toBeLessThan(html.indexOf('<NuiCode'));
+  });
+
+  it('prints no install command for components of the base packages', () => {
+    const html = md.render("```ts install\nimport { NuiSelect } from '@numior/vue';\n```\n", RU);
+
+    expect(html).not.toContain('<CodeGroup');
+  });
+
   it('refuses an install block that imports no component with styles', () => {
     expect(() =>
       md.render("```ts install\nimport { useToast } from '@numior/primitives';\n```\n", RU),

@@ -2,8 +2,8 @@ import type { MarkdownRenderer } from 'vitepress';
 import type { Highlighter } from 'shiki';
 import { attributeJson, fenceCode, fenceLabel } from './fence.ts';
 
-const GROUP_OPEN = 'container_code-group_open';
-const GROUP_CLOSE = 'container_code-group_close';
+export const GROUP_OPEN = 'container_code-group_open';
+export const GROUP_CLOSE = 'container_code-group_close';
 const GROUP = 'code_group';
 
 export const codeGroups = (md: MarkdownRenderer, highlighter: Highlighter): void => {

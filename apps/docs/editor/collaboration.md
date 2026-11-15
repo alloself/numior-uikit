@@ -8,35 +8,11 @@
 
 ## Установка
 
-Установите пакет:
-
-::: code-group
-
-```sh [pnpm]
-pnpm add @numior/collaboration
+```ts install:packages
+import { NuiCollabPresence } from '@numior/collaboration/vue';
 ```
 
-```sh [npm]
-npm install @numior/collaboration
-```
-
-```sh [yarn]
-yarn add @numior/collaboration
-```
-
-```sh [bun]
-bun add @numior/collaboration
-```
-
-:::
-
-Подключите стили в точке входа приложения:
-
-```ts
-import '@numior/collaboration/styles.css';
-```
-
-В них курсоры соавторов, отметки комментариев и панель версий.
+Стили `@numior/collaboration` рисуют курсоры соавторов, отметки комментариев и панель версий.
 
 ## Подключение
 

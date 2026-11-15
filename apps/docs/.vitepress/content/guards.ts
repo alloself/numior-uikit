@@ -21,6 +21,7 @@ import {
 } from './guard.types.ts';
 import { navigationTexts } from '../navigation.ts';
 import { installGuards } from './install-guards.ts';
+import { styledPackages } from '../reference/kit-packages.ts';
 import { openingGuards, pageGuards } from './page-guards.ts';
 
 const LOCALES: readonly ExampleLocale[] = ['ru', 'en'];
@@ -213,11 +214,12 @@ export const collectGuardProblems = async (
   repoRoot: string,
 ): Promise<GuardProblem[]> => {
   const pages = pagesOf(docsRoot);
+  const styled = styledPackages(repoRoot);
 
   return [
     ...Object.entries(pages).flatMap(([page, source]) => [
       ...pageGuards(page, source),
-      ...installGuards(page, source),
+      ...installGuards(page, source, styled),
     ]),
     ...openingGuards(pages),
     ...(await apiGuards(docsRoot)),

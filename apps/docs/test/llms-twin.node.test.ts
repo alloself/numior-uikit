@@ -158,6 +158,39 @@ describe('markdown twin of a page', () => {
     );
   });
 
+  it('prints the install command of a module before its install block', () => {
+    const page = "## Установка\n\n```ts install\nimport { NuiButton } from '@numior/forms';\n```\n";
+
+    expect(pageTwin(page, contextOf())).toBe(
+      [
+        '## Установка',
+        '',
+        '```sh [pnpm]',
+        'pnpm add @numior/forms',
+        '```',
+        '',
+        '```sh [npm]',
+        'npm install @numior/forms',
+        '```',
+        '',
+        '```sh [yarn]',
+        'yarn add @numior/forms',
+        '```',
+        '',
+        '```sh [bun]',
+        'bun add @numior/forms',
+        '```',
+        '',
+        '```ts',
+        "import { NuiButton } from '@numior/forms';",
+        "import '@numior/vue/styles/icon.css';",
+        "import '@numior/vue/button.css';",
+        '```',
+        '',
+      ].join('\n'),
+    );
+  });
+
   it('fences a source that holds a fence itself with a longer fence', () => {
     const twin = pageTwin('<Example name="code/Fenced" />\n', contextOf());
 

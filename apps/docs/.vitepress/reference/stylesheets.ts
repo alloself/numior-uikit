@@ -3,15 +3,8 @@ import { basename, dirname, join, relative, sep } from 'node:path';
 import { parse } from '@vue/compiler-sfc';
 import { escapeRegExp, groupBy, kebabCase, sortBy, uniq } from 'lodash-es';
 import ts from 'typescript';
+import { STYLES_KEY, kitPackages, recordOf, type KitPackage } from './kit-packages.ts';
 import { orderedStylesheets } from './stylesheet-paths.ts';
-
-interface KitPackage {
-  readonly name: string;
-  readonly dir: string;
-  readonly src: string;
-  readonly exports: Readonly<Record<string, unknown>>;
-  readonly dependencies: readonly string[];
-}
 
 interface KitSheet {
   readonly file: string;
@@ -56,55 +49,10 @@ const MODULE_SUFFIXES = ['', '.ts', '.vue', '/index.ts'];
 const CSS_IMPORT_RE = /@import\s+'([^']+)';/g;
 const BLOCK_RE = /(?<![\w-])nui-([a-z0-9]+(?:-[a-z0-9]+)*)/g;
 const SOURCE_CONDITION = '@numior/source';
-const STYLES_KEY = './styles.css';
 const SHEETS_KEY = './styles/*.css';
-const SCOPE = '@numior/';
 const NAME_PREFIX = 'Nui';
 
 const posix = (path: string): string => path.split(sep).join('/');
-
-const readJson = (file: string): unknown => JSON.parse(readFileSync(file, 'utf8'));
-
-const recordOf = (value: unknown): Readonly<Record<string, unknown>> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value)
-    ? Object.fromEntries(Object.entries(value))
-    : {};
-
-const kitDependencies = (manifest: Readonly<Record<string, unknown>>): string[] =>
-  uniq(
-    [
-      ...Object.keys(recordOf(manifest.dependencies)),
-      ...Object.keys(recordOf(manifest.peerDependencies)),
-    ].filter((name) => name.startsWith(SCOPE)),
-  );
-
-const kitPackage = (dir: string): KitPackage[] => {
-  const file = join(dir, 'package.json');
-
-  if (!existsSync(file)) {
-    return [];
-  }
-  const manifest = recordOf(readJson(file));
-  const name = typeof manifest.name === 'string' ? manifest.name : '';
-
-  return name.startsWith(SCOPE)
-    ? [
-        {
-          name,
-          dir,
-          src: join(dir, 'src'),
-          exports: recordOf(manifest.exports),
-          dependencies: kitDependencies(manifest),
-        },
-      ]
-    : [];
-};
-
-const kitPackages = (root: string): KitPackage[] => {
-  const packagesDir = join(root, 'packages');
-
-  return readdirSync(packagesDir).flatMap((name) => kitPackage(join(packagesDir, name)));
-};
 
 const dependencyOrder = (packages: readonly KitPackage[]): KitPackage[] => {
   const byName = new Map(packages.map((entry) => [entry.name, entry]));

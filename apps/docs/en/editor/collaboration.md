@@ -8,33 +8,13 @@ Type in one pane, and the text and the caret show up in the other.
 
 ## Installation
 
-Install the package next to the [editor packages](/en/editor/#installation):
+Install it next to the [editor packages](/en/editor/#installation):
 
-::: code-group
-
-```sh [pnpm]
-pnpm add @numior/collaboration
+```ts install:packages
+import { NuiCollabPresence } from '@numior/collaboration/vue';
 ```
 
-```sh [npm]
-npm install @numior/collaboration
-```
-
-```sh [yarn]
-yarn add @numior/collaboration
-```
-
-```sh [bun]
-bun add @numior/collaboration
-```
-
-:::
-
-Load the styles of the carets, avatars and panels after the editor styles:
-
-```ts
-import '@numior/collaboration/styles.css';
-```
+The `@numior/collaboration` styles draw the carets, avatars and panels of collaborators.
 
 ## Connecting
 
