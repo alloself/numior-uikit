@@ -60,6 +60,7 @@ const GRID_ALIGNMENTS = new Set([
 export const RESET = 'initial';
 
 const CURRENT_COLOR = /\bcurrentcolor\b/gi;
+const RATIO_NUMBER = /^[\d.]+$/;
 
 const closingOf = (value: string, open: number): number => {
   let depth = 0;
@@ -448,6 +449,10 @@ const single = (property: string, value: string): Longhand[] => {
 
   if (property === '-webkit-user-select') {
     return [['user-select', value]];
+  }
+
+  if (property === 'aspect-ratio' && RATIO_NUMBER.test(value)) {
+    return [[property, `${value} / 1`]];
   }
 
   return [[property, property === 'flex' ? (FLEX.get(value) ?? value) : value]];

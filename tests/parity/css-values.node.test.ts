@@ -199,6 +199,8 @@ describe('longhands of a declaration', () => {
     expect(longhands('opacity', '72%')).toEqual([['opacity', '0.72']]);
     expect(longhands('opacity', 'var(--x)')).toEqual([['opacity', 'var(--x)']]);
     expect(longhands('-webkit-user-select', 'none')).toEqual([['user-select', 'none']]);
+    expect(longhands('aspect-ratio', '1')).toEqual([['aspect-ratio', '1 / 1']]);
+    expect(longhands('aspect-ratio', '16 / 9')).toEqual([['aspect-ratio', '16 / 9']]);
 
     expect(longhands('overflow', 'hidden auto')).toEqual([
       ['overflow-x', 'hidden'],
