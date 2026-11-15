@@ -123,7 +123,7 @@ test('the dark variant follows the nearest scheme and the system one follows the
   await expectRgb(playground.nestedVariant, 'background-color', darkPrimary);
 });
 
-test('a soft fill keeps one colour on the page and in an overlay and stands above the overlay', async ({
+test('soft fills inside an overlay mix with the overlay surface, not the page', async ({
   playground,
   navigation,
 }) => {
@@ -137,7 +137,7 @@ test('a soft fill keeps one colour on the page and in an overlay and stands abov
   const inMenu = await tokenRgbIn(navigation.menu, '--color-neutral-soft');
   const menuSurface = await rgbOf(navigation.menu, 'background-color');
 
-  expect(inMenu).toEqual(onPage);
+  expect(inMenu[0]).toBeGreaterThan(onPage[0]);
   expect(inMenu[0]).toBeGreaterThan(menuSurface[0] + 8);
 });
 
