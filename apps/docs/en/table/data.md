@@ -44,6 +44,10 @@ A number column computes `sum`, `count`, `avg`, `min` and `max`, a date column `
 The `v-model:groupBy` model groups rows by column values, and totals are computed for each group.
 Columns can share a common header when you describe a column group as `{ key, label, children }`.
 
+A group row starts with its label: the arrow, the value and the row count in parentheses. The
+label spreads over the empty cells up to the first total and stays in view while scrolling when
+the first column is pinned.
+
 <Example name="table/Groups" />
 
 ## Pages

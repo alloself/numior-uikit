@@ -63,6 +63,8 @@ const HEADER_EDGE = 3;
 const FOOTER_TOP = 2;
 const FOOTER_EDGE = 4;
 const FRAME_CORNER = 12;
+const GROUP_LABEL = '.nui-table__group-room:not([aria-hidden="true"]) > .nui-table__group';
+const GROUP_COPY = '.nui-table__group-room[aria-hidden="true"] > .nui-table__group';
 
 const HEADER_PARTS: HandleParts = { grip: '.nui-table__grip', label: '.nui-table__text' };
 
@@ -70,6 +72,11 @@ const GHOST_PARTS: HandleParts = {
   grip: '.nui-table__ghost-grip',
   label: '.nui-table__ghost-label',
 };
+
+const columnOfLabel = (label: Locator): Promise<number> =>
+  label.evaluate(
+    (element) => Number(element.closest('[aria-colindex]')?.getAttribute('aria-colindex')) - 1,
+  );
 
 const handleLayoutOf = (frame: Element, parts: HandleParts): HandleLayout => {
   const edge = frame.getBoundingClientRect().left;
@@ -309,7 +316,41 @@ export class TableSection extends GridKeys {
   }
 
   remoteGroupLabel(position: number): Locator {
-    return this.remoteRow(position).locator('.nui-table__group');
+    return this.remoteRow(position).locator(GROUP_LABEL);
+  }
+
+  remoteGroupCopy(position: number, col: number): Locator {
+    return this.remoteCell(position, col).locator(GROUP_COPY);
+  }
+
+  remoteGroupLabelColumn(position: number): Promise<number> {
+    return columnOfLabel(this.remoteGroupLabel(position));
+  }
+
+  remoteGroupInset(position: number): Promise<number> {
+    return this.remoteGroupLabel(position).evaluate((label) => {
+      const cell = label.closest('[aria-colindex]');
+
+      if (cell === null) {
+        throw new Error('The group label stands outside a cell');
+      }
+
+      const own = label.getBoundingClientRect();
+      const edge = cell.getBoundingClientRect();
+
+      return Math.round(
+        getComputedStyle(cell).direction === 'rtl' ? edge.right - own.right : own.left - edge.left,
+      );
+    });
+  }
+
+  async toggleRemoteGroupAt(position: number, col: number): Promise<void> {
+    const cell = this.remoteCell(position, col);
+    const [own, copy] = await Promise.all([boxOf(cell), boxOf(cell.locator(GROUP_COPY))]);
+    const start = Math.max(own.x, copy.x);
+    const end = Math.min(own.x + own.width, copy.x + copy.width);
+
+    await cell.click({ position: { x: (start + end) / 2 - own.x, y: own.height / 2 } });
   }
 
   async remoteGroupBy(label: string): Promise<void> {
@@ -462,7 +503,20 @@ export class TableSection extends GridKeys {
   }
 
   groupLabel(position: number): Locator {
-    return this.row(position).locator('.nui-table__group');
+    return this.row(position).locator(GROUP_LABEL);
+  }
+
+  groupLabelColumn(position: number): Promise<number> {
+    return columnOfLabel(this.groupLabel(position));
+  }
+
+  async groupLabelInView(position: number): Promise<boolean> {
+    const [label, frame] = await Promise.all([
+      boxOf(this.groupLabel(position)),
+      boxOf(this.viewport),
+    ]);
+
+    return label.x >= frame.x && label.x + label.width <= frame.x + frame.width;
   }
 
   async groupBy(label: string): Promise<void> {

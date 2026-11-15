@@ -853,16 +853,38 @@
 
   font-weight: 500;
 }
-.nui-table__row--group .nui-table__content {
-  container-type: inline-size;
+.nui-table__row--group > .nui-table__cell > .nui-table__content {
+  overflow: clip;
+}
+.nui-table__group-room {
+  box-sizing: border-box;
+  display: flex;
+  flex: none;
+  align-items: center;
+  inline-size: 100%;
+  padding-inline-start: calc(var(--_level, 0) * var(--_indent));
+}
+.nui-table__cell--spill > .nui-table__content > .nui-table__group-room {
+  inline-size: calc(var(--_group-room) - 2 * var(--_pad-x));
+  margin-inline-start: var(--_spill);
 }
 .nui-table__group {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: flex-start;
+  column-gap: var(--nui-space-1);
+  min-inline-size: 0;
+  max-block-size: 1lh;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+}
+.nui-table__group-head {
+  display: flex;
   align-items: center;
   gap: var(--nui-space-1);
   min-inline-size: 0;
-  cursor: pointer;
-  user-select: none;
 }
 .nui-table__toggle {
   --_turn: 90deg;
@@ -920,16 +942,6 @@
   font-weight: 400;
   font-variant-numeric: tabular-nums;
   unicode-bidi: plaintext;
-}
-@container (inline-size < 8rem) {
-  .nui-table__count {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
 }
 .nui-table__text {
   min-inline-size: 0;

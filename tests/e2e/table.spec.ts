@@ -662,6 +662,44 @@ test.describe('table', () => {
     await expect(table.remoteGroupLabel(1)).toHaveText(/^Белград/);
   });
 
+  test('starts a server group label at the row start, runs it over empty cells and opens it from there', async ({
+    playground,
+    table,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await table.remoteToggle.click();
+    await table.remote.scrollIntoViewIfNeeded();
+    await table.remoteGroupBy('По городу и клиенту');
+
+    await expect(table.remoteGroupLabel(0)).toHaveText(/^Алматы/);
+    await expect(table.remoteGroupCopy(0, 1)).toHaveText(/^Алматы/);
+    await expect(table.remoteCell(0, 2)).toHaveText('');
+    await expect(table.remoteCell(0, 3)).not.toHaveText('');
+    expect(await table.remoteGroupLabelColumn(0)).toBe(0);
+
+    await table.toggleRemoteGroupAt(0, 1);
+
+    await expect(table.remoteRow(0)).toHaveAttribute('aria-expanded', 'true');
+    await expect(table.remoteRow(1)).toHaveAttribute('aria-level', '2');
+    expect(await table.remoteGroupLabelColumn(1)).toBe(0);
+
+    const start = await table.remoteGroupInset(0);
+    const nested = await table.remoteGroupInset(1);
+
+    expect(nested).toBeGreaterThan(start);
+    expect(await playground.wcagViolations(table.scope)).toEqual([]);
+
+    await playground.setDirection('rtl');
+
+    expect((await boxOf(table.remoteCell(0, 0))).x).toBeGreaterThan(
+      (await boxOf(table.remoteCell(0, 1))).x,
+    );
+
+    expect(await table.remoteGroupInset(0)).toBe(start);
+    expect(await table.remoteGroupInset(1)).toBe(nested);
+  });
+
   test('loads the children of a server tree row when it opens', async ({ playground, table }) => {
     await playground.open();
     await table.remoteToggle.click();
@@ -1150,6 +1188,12 @@ test.describe('table', () => {
     await expect(table.groupLabel(0)).toHaveText(/^Возврат/);
     await expect(table.row(0)).toHaveAttribute('aria-expanded', 'false');
     await expect(table.footerCell(5)).toHaveText(total);
+    await expect(table.cell(0, 10)).toHaveText('');
+    expect(await table.groupLabelColumn(0)).toBe(0);
+
+    await table.scrollTo({ left: 600 });
+
+    expect(await table.groupLabelInView(0)).toBe(true);
 
     await table.groupLabel(0).click();
 
@@ -1162,7 +1206,9 @@ test.describe('table', () => {
       return;
     }
 
-    await table.cell(0, 0).click();
+    await table.cell(0, 10).click();
+    await expect(table.row(0)).toHaveAttribute('aria-expanded', 'true');
+
     await table.pressEnter();
     await expect(table.row(0)).toHaveAttribute('aria-expanded', 'false');
 
