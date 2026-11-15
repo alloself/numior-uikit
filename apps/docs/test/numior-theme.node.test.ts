@@ -117,6 +117,13 @@ const accentCss = (accent: DocsAccent): string =>
     '',
   );
 
+const withFallback = (tokens: Tokens, name: string, fallback: string | undefined): Tokens => {
+  const value = tokens.get(name);
+  const unset = value === undefined || value === UNSET;
+
+  return unset && fallback !== undefined ? new Map([...tokens, [name, fallback]]) : tokens;
+};
+
 const colorOf = (tokens: Tokens, name: string): Oklab => {
   const value = tokens.get(name);
 
@@ -125,12 +132,9 @@ const colorOf = (tokens: Tokens, name: string): Oklab => {
   }
 
   const [, reference, fallback] = VAR_RE.exec(value) ?? [];
-  const set = reference !== undefined && ![undefined, UNSET].includes(tokens.get(reference));
 
   if (reference !== undefined) {
-    return set || fallback === undefined
-      ? colorOf(tokens, reference)
-      : colorOf(new Map([...tokens, [reference, fallback]]), reference);
+    return colorOf(withFallback(tokens, reference, fallback), reference);
   }
 
   const [, color, share, base] = MIX_RE.exec(value) ?? [];
