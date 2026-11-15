@@ -152,6 +152,9 @@
   padding-inline: var(--_body-padding-start) var(--_body-padding-end);
   font-weight: 600;
 }
+.nui-layout__body > .nui-app-bar {
+  padding-inline: var(--nui-layout-gutter);
+}
 .nui-layout--header-full:has(
     > .nui-layout__row
       .nui-sidebar--collapsible-icon.nui-sidebar--side-start:is(

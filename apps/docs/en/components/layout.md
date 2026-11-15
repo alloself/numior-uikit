@@ -33,10 +33,10 @@ and that column in place while the page scrolls.
   [Drawer](/en/components/drawer). `NuiSidebarTrigger` opens it, and picking an item closes it.
 - `mobileQuery` sets the screen width at which the menu moves into the drawer.
 - Ctrl+B, or Cmd+B on a Mac, collapses and expands the menu unless the focus is in a text field.
-- Over a sidebar with `collapsible="icon"`, a top bar with `header="full"` follows the page grid.
-  Its menu button sits in the middle of the icon column, and the rest starts on the
-  `--nui-layout-gutter` line, on a phone as well. Give your content the same gutter, for example
-  with `px-(--nui-layout-gutter)`.
+- A top bar beside the menu starts on the `--nui-layout-gutter` line of the content. Over a sidebar
+  with `collapsible="icon"`, a full top bar centers its button in the icon column and starts the
+  rest on the same line. Give your content the same gutter, for example with
+  `px-(--nui-layout-gutter)`.
 
 The server renders the layout of a wide screen, and on a phone the menu stays hidden until
 scripts load.

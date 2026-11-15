@@ -31,7 +31,7 @@
           {{ current.label }}
         </NuiAppBar>
       </template>
-      <p class="m-0 p-6">{{ current.summary }}</p>
+      <p class="m-0 px-(--nui-layout-gutter) py-6">{{ current.summary }}</p>
     </NuiLayout>
   </div>
 </template>

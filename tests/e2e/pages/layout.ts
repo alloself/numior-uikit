@@ -141,6 +141,15 @@ export class LayoutSection {
     return Math.abs(trigger.x + trigger.width / 2 - (rail.x + rail.width / 2));
   }
 
+  async textStart(): Promise<number> {
+    const [frame, text] = await Promise.all([
+      boxOf(this.root),
+      boxOf(this.root.locator('.layout-page p')),
+    ]);
+
+    return text.x - frame.x;
+  }
+
   async headingStart(): Promise<number> {
     const [frame, heading] = await Promise.all([boxOf(this.root), boxOf(this.heading)]);
 

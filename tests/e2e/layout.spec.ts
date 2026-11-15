@@ -46,21 +46,22 @@ test.describe('layout', () => {
     await expect(layout.heading).toHaveText('Отчёт: команда');
   });
 
-  test('a full header over an icon rail puts the trigger in the rail column and the title on the content gutter', async ({
+  test('the top bar stands on the content gutter and puts its trigger in the rail column over an icon rail', async ({
     playground,
     layout,
     isMobile,
   }) => {
     await playground.open();
     await layout.root.scrollIntoViewIfNeeded();
-    expect(await layout.appBarPadding()).toBe(12);
+    expect(await layout.appBarPadding()).toBe(GUTTER);
+    expect(await layout.triggerStart()).toBeCloseTo(await layout.textStart(), 0);
 
     await layout.header.selectOption('full');
 
     await expect.poll(() => layout.appBarPadding()).toBe(GUTTER);
 
     if (isMobile) {
-      expect(await layout.triggerStart()).toBeCloseTo(GUTTER, 0);
+      expect(await layout.triggerStart()).toBeCloseTo(await layout.textStart(), 0);
       return;
     }
 
@@ -71,6 +72,7 @@ test.describe('layout', () => {
 
     await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
     await expect.poll(() => layout.triggerOffset()).toBeLessThan(1);
+    expect(await layout.headingStart()).toBeCloseTo(await layout.textStart(), 0);
     expect(await layout.headingStart()).toBeCloseTo((await layout.sidebarWidth()) + GUTTER, 0);
     expect(await layout.headingStart()).toBeCloseTo(heading, 0);
     expect(await layout.triggerStart()).toBeCloseTo(trigger, 0);

@@ -56,7 +56,7 @@
           {{ pages[active].label }}
         </NuiAppBar>
       </template>
-      <p class="m-0 p-6">{{ pages[active].summary }}</p>
+      <p class="m-0 px-(--nui-layout-gutter) py-6">{{ pages[active].summary }}</p>
     </NuiLayout>
   </div>
 </template>
