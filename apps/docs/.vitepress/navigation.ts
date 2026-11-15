@@ -49,6 +49,7 @@ const COMPOSABLES: readonly NavGroup[] = [
     pages: [
       { link: '/composables/hotkey', title: 'useHotkey' },
       { link: '/composables/clipboard', title: 'useClipboard' },
+      { link: '/composables/pointer-session', title: 'usePointerSession' },
       { link: '/composables/scroll-spy', title: 'useScrollSpy' },
       { link: '/composables/toast', title: 'useToast' },
     ],
