@@ -11,6 +11,7 @@
 
 <script setup lang="ts">
 import { NuiTable, type NuiTableColumn } from '@numior/table';
+import { customers } from '#demo/customers';
 
 interface Request {
   readonly id: number;
@@ -19,7 +20,6 @@ interface Request {
   readonly text: string;
 }
 
-const AUTHORS = ['Анна Смирнова', 'Иван Попов', 'Мария Кузнецова', 'Павел Соколов'];
 const TOPICS = ['Доставка', 'Оплата', 'Возврат', 'Гарантия'];
 
 const TEXTS = [
@@ -30,7 +30,7 @@ const TEXTS = [
 
 const requests: Request[] = Array.from({ length: 2000 }, (_, index) => ({
   id: index + 1,
-  author: AUTHORS[index % AUTHORS.length] ?? '',
+  author: customers[index % customers.length]?.name ?? '',
   topic: TOPICS[(index * 3) % TOPICS.length] ?? '',
   text: TEXTS[(index * 5) % TEXTS.length] ?? '',
 }));

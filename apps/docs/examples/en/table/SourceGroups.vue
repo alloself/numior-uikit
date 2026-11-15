@@ -1,16 +1,13 @@
 <template>
-  <div class="flex flex-col gap-3">
-    <NuiTable
-      v-model:group-by="groupBy"
-      v-model:expanded="expanded"
-      :columns="columns"
-      :source="source"
-      :get-key="keyOf"
-      caption="Orders by city"
-      height="20rem"
-    />
-    <p class="text-sm text-muted-foreground">Server requests: {{ requests }}</p>
-  </div>
+  <NuiTable
+    v-model:group-by="groupBy"
+    v-model:expanded="expanded"
+    :columns="columns"
+    :source="source"
+    :get-key="keyOf"
+    caption="Orders by city"
+    height="20rem"
+  />
 </template>
 
 <script setup lang="ts">
@@ -22,23 +19,10 @@ import {
   type TableSource,
   type TableSourceGroup,
 } from '@numior/table';
+import { ordersOf } from '#demo/many-orders';
+import type { Order } from '#demo/orders';
 
-interface Order {
-  readonly id: number;
-  readonly customer: string;
-  readonly city: string;
-  readonly amount: number;
-}
-
-const CITIES = ['London', 'Berlin', 'Madrid', 'Oslo'];
-const NAMES = ['Anna Titova', 'Igor Belov', 'Maria Kim', 'Oleg Smirnov', 'Vera Orlova'];
-
-const orders: readonly Order[] = Array.from({ length: 20_000 }, (_, index) => ({
-  id: index + 1,
-  customer: NAMES[index % NAMES.length] ?? '',
-  city: CITIES[(index * 3) % CITIES.length] ?? '',
-  amount: ((index * 7919) % 50_000) + 500,
-}));
+const orders = ordersOf(20_000);
 
 const VALUES: Readonly<Record<string, (order: Order) => string>> = {
   city: (order) => order.city,
@@ -48,18 +32,18 @@ const VALUES: Readonly<Record<string, (order: Order) => string>> = {
 const valueOf = (order: Order, key: string | undefined): string => VALUES[key ?? '']?.(order) ?? '';
 
 const groupsOf = (rows: readonly Order[], key: string): TableSourceGroup[] => {
-  const groups = new Map<string, { count: number; amount: number }>();
+  const groups = new Map<string, { count: number; total: number }>();
 
   for (const row of rows) {
     const value = valueOf(row, key);
-    const group = groups.get(value) ?? { count: 0, amount: 0 };
+    const group = groups.get(value) ?? { count: 0, total: 0 };
 
-    groups.set(value, { count: group.count + 1, amount: group.amount + row.amount });
+    groups.set(value, { count: group.count + 1, total: group.total + row.total });
   }
-  return [...groups].map(([value, { count, amount }]) => ({
+  return [...groups].map(([value, { count, total }]) => ({
     value,
     count,
-    aggregates: { amount },
+    aggregates: { total },
   }));
 };
 
@@ -77,14 +61,12 @@ const wait = (signal: AbortSignal): Promise<void> =>
     );
   });
 
-const total = orders.reduce((sum, order) => sum + order.amount, 0);
-const requests = ref(0);
+const sum = orders.reduce((total, order) => total + order.total, 0);
 const groupBy = ref<readonly string[]>(['city']);
 const expanded = ref<readonly TableNodeId[]>([]);
 
 const source: TableSource<Order> = {
   fetch: async ({ offset, limit, groupBy: keys, groupPath, signal }) => {
-    requests.value += 1;
     await wait(signal);
 
     const inside = orders.filter((order) =>
@@ -99,14 +81,14 @@ const source: TableSource<Order> = {
   },
   totals: async ({ signal }) => {
     await wait(signal);
-    return { amount: total };
+    return { total: sum };
   },
 };
 
 const columns: NuiTableColumn<Order>[] = [
   {
     key: 'id',
-    label: '№',
+    label: '#',
     type: 'number',
     width: 96,
     sortable: false,
@@ -134,14 +116,14 @@ const columns: NuiTableColumn<Order>[] = [
     value: (row) => row.city,
   },
   {
-    key: 'amount',
+    key: 'total',
     label: 'Amount',
     type: 'number',
     width: 140,
     sortable: false,
     filter: false,
     aggregate: 'sum',
-    value: (row) => row.amount,
+    value: (row) => row.total,
   },
 ];
 

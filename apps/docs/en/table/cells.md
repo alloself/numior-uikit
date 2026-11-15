@@ -26,13 +26,16 @@ not work with grouping, in a tree or with row details.
 
 <Example name="table/Merges" />
 
-## Text over neighbouring cells
+## Text over neighboring cells
 
 With `overflow` in `cellStyle` long text continues over the following empty cells, as in
 spreadsheets. The text runs up to the first filled cell, a merged cell or the edge of the
 pinned columns. Text aligned to the end of the line runs the other way.
 
-The cells under the text stay separate: a click on the text over a neighbouring cell lands in
+Centered text spreads to both sides, and `wrap` wraps the text inside its cell. A cell with its
+own slot, a tree, detail or drag grip, or an open editor keeps its text inside.
+
+The cells under the text stay separate: a click on the text over a neighboring cell lands in
 that cell. Grid lines under the text are not drawn.
 
 <Example name="table/Overflow" />
@@ -72,9 +75,10 @@ The `overlay` slot draws content over the cells that scrolls with them: referenc
 images, charts. The slot receives the `rectOf(range)` function, which returns the position of a
 range, and `window` with the rendered rows and columns.
 
-The header and pinned columns cover the layer, and clicks pass through it to the cells. The
-table ref has the same `rectOf` and `cellFromPoint(x, y)`, which finds the cell under a point on
-screen.
+The slot renders in the scrolling part of the table and again in the pinned columns and the
+`frozenRows` rows, and `pane` names the part. The header covers the layer, and clicks pass through
+it to the cells. The table ref has the same `rectOf` and `cellFromPoint(x, y)`, which finds the
+cell under a point on screen.
 
 The layer takes row heights from `rowHeight` and the `rowHeights` model. In a table without
 `height` and with `rowHeight="auto"` it places marks by the measured rows, including rows that grew

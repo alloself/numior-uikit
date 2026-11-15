@@ -8,7 +8,7 @@
     <NuiTable
       ref="export-table"
       :columns="columns"
-      :rows="orders"
+      :rows="latest"
       :get-key="keyOf"
       caption="Orders this week"
     />
@@ -19,24 +19,14 @@
 import { useTemplateRef } from 'vue';
 import { NuiButton } from '@numior/vue';
 import { NuiTable, type NuiTableColumn, type NuiTableExposed } from '@numior/table';
+import { orders, type Order } from '#demo/orders';
 
-interface Order {
-  readonly id: number;
-  readonly customer: string;
-  readonly city: string;
-  readonly total: number;
-}
-
-const orders: Order[] = [
-  { id: 20419, customer: 'Anna Titova', city: 'Moscow', total: 12400 },
-  { id: 20420, customer: 'Igor Belov', city: 'Kazan', total: 3150 },
-  { id: 20421, customer: 'Maria Kim', city: 'Moscow', total: 48900 },
-];
+const latest = orders.slice(0, 5);
 
 const columns: NuiTableColumn<Order>[] = [
   {
     key: 'id',
-    label: '№',
+    label: '#',
     type: 'number',
     width: 96,
     value: (row) => row.id,

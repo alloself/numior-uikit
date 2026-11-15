@@ -29,8 +29,8 @@ adds its own items after the copy item.
 
 ## Editing cells
 
-A column with `editable` can be edited. Delete and Backspace clear the selected cells, and Ctrl+X
-cuts them to the clipboard.
+A column with `editable: true` can be edited, and an `editable(row)` function decides it for each
+row. Delete and Backspace clear the selected cells, and Ctrl+X cuts them to the clipboard.
 
 The table never changes `rows` itself: it emits an `edit` event with the list of changes, and the
 application applies them. Ctrl+Z undoes the last edit, Ctrl+Shift+Z and Ctrl+Y redo it.
@@ -59,7 +59,8 @@ selection. A single value fills the whole selection, and whatever does not fit i
 dropped.
 
 When the selection is a whole multiple of the pasted block, the block repeats over it. Numbers,
-dates and booleans are parsed by the column type, and `parse` sets custom parsing.
+dates and booleans are parsed by the column type. `parse(text, row)` sets custom parsing, and
+returning `undefined` skips the cell.
 
 Enter, F2 or a double click opens the editor in the active cell, and typing starts the edit right
 away. The editor depends on the column type: a text input, a number field or a date picker. A
@@ -148,8 +149,8 @@ the editor writes the value to every selected cell in columns of the same type.
 With `growEditor` the editor sits exactly on the bounds of its cell and wears the selection
 frame. It keeps the fill and text color of the cell.
 
-Once the text stops fitting, the editor grows over the neighbouring cells by whole columns, as in
-Excel. End-aligned cells grow towards the start, the rest towards the end. The editor stops at
+Once the text stops fitting, the editor grows over the neighboring cells by whole columns, as in
+Excel. End-aligned cells grow toward the start, the rest toward the end. The editor stops at
 the edge of the visible area, and the text scrolls inside the field.
 
 <Example name="table/FormulaBar" />

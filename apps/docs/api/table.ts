@@ -18,16 +18,16 @@ const docs: DocsMap = {
     },
     props: {
       columns: {
-        ru: "Колонки таблицы. Обязательны `key`, `label`, `type` (`text`, `number`, `date`, `boolean`) и `value` — функция, которая берёт значение из строки. `format` превращает значение в текст; в группах и в списке фильтра строка приходит как `undefined`. Ширину задают `width`, `minWidth`, `maxWidth` и `flex`: колонки с `flex` делят свободное место, пока их не растянули вручную. `resizable: false` убирает ручку ширины и клавиши Alt+стрелки, `reorderable: false` — ручку перестановки и Alt+Shift+стрелки, `hideable: false` не даёт скрыть колонку из меню. `pin` закрепляет колонку в начале или в конце, `align` выравнивает текст, `wrap` переносит его, и без `height` строка растёт по тексту. `sortable` включает сортировку, `filter` выбирает фильтр (`text`, `number`, `date`, `set`) или убирает его значением `false`. `aggregate` считает итог для групп и строки итогов: у `number` — `sum`, `count`, `avg`, `min`, `max`, у `date` — `min`, `max`, `count`, у `text` и `boolean` — `count`; везде подходит и своя функция. `editable` (`true` или функция строки) открывает ячейки для правки, вставки и очистки, изменения приходят в событии `edit`. `parse(text, row)` разбирает вставленный текст и отклоняет ячейку ответом `undefined`; без него число, дата и `boolean` разбираются по типу колонки. `rules` — правила `@numior/forms`, они проверяют значение перед сохранением. `editor` подключает свой редактор: `tableEditor(Компонент, проверка, { props })` или ключ реестра контролов (`'select'` или `{ control, props }`); редактор даты работает со строкой ISO. Группа `{ key, label, children }` рисует общую подпись над заголовками своих колонок.",
-        en: "Columns of the table. Each needs `key`, `label`, `type` (`text`, `number`, `date`, `boolean`) and `value`, a function that reads the value from a row. `format` turns the value into text; in groups and in the filter list the row comes as `undefined`. `width`, `minWidth`, `maxWidth` and `flex` set the width: columns with `flex` share the free space until they are resized by hand. `resizable: false` removes the width handle and the Alt+arrow keys, `reorderable: false` the move grip and Alt+Shift+arrows, and `hideable: false` keeps the column from being hidden in the menu. `pin` pins the column at the start or the end, `align` aligns the text, `wrap` wraps it, and without `height` the row grows with the text. `sortable` enables sorting, and `filter` picks the filter (`text`, `number`, `date`, `set`) or removes it with `false`. `aggregate` computes a value for groups and the totals row: `sum`, `count`, `avg`, `min`, `max` for `number`, `min`, `max`, `count` for `date`, `count` for `text` and `boolean`; a custom function works for every type. `editable` (`true` or a function of the row) opens the cells to editing, pasting and clearing, and the changes arrive in the `edit` event. `parse(text, row)` reads pasted text and refuses the cell by returning `undefined`; without it numbers, dates and booleans are read by the column type. `rules` are `@numior/forms` rules that check the value before it is saved. `editor` sets a custom editor: `tableEditor(Component, guard, { props })` or a control registry key (`'select'` or `{ control, props }`); a date editor works with an ISO string. A group `{ key, label, children }` draws a shared label above the headers of its columns.",
+        ru: 'Колонки таблицы: у каждой обязательны `key`, `label`, `type` (`text`, `number`, `date`, `boolean`) и функция `value`, которая берёт значение из строки. Необязательные поля — `format`, `width`, `minWidth`, `maxWidth`, `flex`, `resizable`, `reorderable`, `hideable`, `pin`, `align`, `wrap`, `sortable`, `filter`, `aggregate`, `editable`, `parse`, `rules` и `editor`. Группа `{ key, label, children }` ставит общую подпись над заголовками своих колонок.',
+        en: 'Columns of the table: each needs `key`, `label`, `type` (`text`, `number`, `date`, `boolean`) and a `value` function that reads the value from a row. The optional fields are `format`, `width`, `minWidth`, `maxWidth`, `flex`, `resizable`, `reorderable`, `hideable`, `pin`, `align`, `wrap`, `sortable`, `filter`, `aggregate`, `editable`, `parse`, `rules` and `editor`. A group `{ key, label, children }` draws a shared label above the headers of its columns.',
       },
       rows: {
         ru: 'Строки таблицы. Таблица их не копирует и не меняет. С `source` не нужны.',
         en: 'Rows of the table. The table neither copies nor changes them. Not needed with `source`.',
       },
       source: {
-        ru: 'Загружает строки с сервера. `fetch({ offset, limit, sort, filters, groupBy, groupPath, signal })` возвращает `{ rows, total }` или `{ rows, hasMore }`, а необязательные `values` и `totals` отдают значения фильтра-списка и итоги. `values({ key, filters, limit, search, signal })` получает текст поиска из фильтра и отвечает `{ values, truncated }`. С `groupBy` таблица запрашивает группы по уровням: пока `groupPath` короче `groupBy`, `fetch` отвечает `{ groups }` со значением, числом строк и агрегатами, а на последнем уровне — строками группы. Таблица грузит строки блоками по мере прокрутки, хранит пятьдесят последних блоков и отменяет устаревшие запросы при смене сортировки, фильтров и групп. Без `height` источник листается страницами. `children({ row, sort, filters, signal })` загружает детей строки и включает дерево: строки с детьми отмечает `hasChildren`, группировка в дереве не работает. Перетаскивание строк с `source` недоступно.',
-        en: 'Loads rows from a server. `fetch({ offset, limit, sort, filters, groupBy, groupPath, signal })` returns `{ rows, total }` or `{ rows, hasMore }`, and the optional `values` and `totals` return the set filter values and the totals. `values({ key, filters, limit, search, signal })` receives the search text of the filter and returns `{ values, truncated }`. With `groupBy` the table requests groups level by level: while `groupPath` is shorter than `groupBy`, `fetch` returns `{ groups }` with the value, row count and aggregates, and at the last level the rows of the group. The table loads rows in blocks as you scroll, keeps the last fifty blocks and cancels outdated requests when sorting, filters or groups change. Without `height` the source is paged. `children({ row, sort, filters, signal })` loads the children of a row and turns on the tree: `hasChildren` marks the rows that have children, and grouping is off in a tree. Row drag is not available with `source`.',
+        ru: 'Загружает строки с сервера. `fetch` отвечает `{ rows, total }` или `{ rows, hasMore }`, а необязательные `values`, `totals` и `children` отдают значения фильтра-списка, итоги и детей строки. Таблица запрашивает строки блоками по мере прокрутки, а без `height` — по страницам.',
+        en: 'Loads rows from a server. `fetch` returns `{ rows, total }` or `{ rows, hasMore }`, and the optional `values`, `totals` and `children` return set filter values, totals and row children. The table requests rows in blocks as you scroll, or page by page without `height`.',
       },
       blockSize: {
         ru: 'Сколько строк запрашивать у `source` за раз. По умолчанию 100, с пагинацией — размер страницы.',
@@ -46,7 +46,7 @@ const docs: DocsMap = {
         en: 'Changes the size of the table: `sm`, `md` or `lg`. Affects paddings, font and row height.',
       },
       rowHeight: {
-        ru: 'Высота строки в пикселях. По умолчанию 32, 40 или 48 в зависимости от `size`. Без `height` это минимум, и строка растёт по содержимому. `auto` вместе с `height` измеряет каждую строку, а колонки с `wrap` переносят текст.',
+        ru: 'Высота строки в пикселях, по умолчанию 32, 40 или 48 в зависимости от `size`. Без `height` это минимум, и строка растёт по содержимому. `auto` вместе с `height` измеряет каждую строку, а колонки с `wrap` переносят текст.',
         en: 'Row height in pixels. 32, 40 or 48 by default, depending on `size`. Without `height` it is a minimum and the row grows with its content. `auto` with `height` measures each row, and columns with `wrap` wrap their text.',
       },
       height: {
@@ -78,20 +78,20 @@ const docs: DocsMap = {
         en: 'Marks the rows that have a detail; the others get no toggle. Without it every row has a detail when the `detail` slot is set.',
       },
       cellStyle: {
-        ru: 'Оформляет ячейки тела и закреплённых строк. Функция получает `{ row, column, position, pinned }` и возвращает `fill`, `color`, `align`, `wrap`, `overflow`, `borders`, `bar`, `icon`, `scheme`, `class` и `style` или `undefined`. `fill` красит фон ячейки под выделением, `wrap` переносит текст одной ячейки. `overflow` выводит однострочный текст на соседние пустые ячейки (при выравнивании к концу — на ячейки перед ней) до первой заполненной, объединения или края закреплённой части. Текст по центру, в закреплённой колонке и в ячейке со своим слотом не выходит за границы. `borders` рисует линии `top`, `end`, `bottom` и `start` вместо линий сетки и не меняет высоту строки. `bar` рисует полосу `{ length, color }` под текстом (длина — доля ширины от 0 до 1), `icon` ставит значок `{ icon, color, filled }` перед текстом. `scheme` (`light` или `dark`) задаёт цветовую схему полосы и значка, когда заливка ячейки светлее или темнее темы; линии сетки, выделение и сама ячейка остаются в схеме темы. Функция вызывается для каждой показанной ячейки и снова, когда меняется строка или данные, которые она читает.',
-        en: 'Styles the cells of the body and of pinned rows. The function receives `{ row, column, position, pinned }` and returns `fill`, `color`, `align`, `wrap`, `overflow`, `borders`, `bar`, `icon`, `scheme`, `class` and `style`, or `undefined`. `fill` paints the cell background under the selection, `wrap` wraps the text of one cell. `overflow` lets one-line text spill over the empty cells after it (before it when end aligned) up to the first filled cell, a merge or the edge of a pinned area. Centred text, text in a pinned column and a cell with its own slot stay within the cell. `borders` draws `top`, `end`, `bottom` and `start` lines in place of the grid lines without changing the row height. `bar` draws a `{ length, color }` bar under the text (the length is a share of the width from 0 to 1), `icon` puts an `{ icon, color, filled }` icon before the text. `scheme` (`light` or `dark`) sets the colour scheme of the bar and the icon when the cell fill is lighter or darker than the theme; the grid lines, the selection and the cell itself keep the theme scheme. The function runs for each shown cell and again when the row or the data it reads changes.',
+        ru: 'Оформляет ячейки тела и закреплённых строк: функция получает `{ row, column, position, pinned }` и возвращает стиль ячейки или `undefined`. В стиле бывают `fill`, `color`, `align`, `wrap`, `overflow`, `borders`, `bar`, `icon`, `scheme`, `class` и `style`. Функция вызывается для каждой показанной ячейки и снова, когда меняется строка или данные, которые она читает.',
+        en: 'Styles the cells of the body and of pinned rows: the function receives `{ row, column, position, pinned }` and returns a cell style or `undefined`. The style can hold `fill`, `color`, `align`, `wrap`, `overflow`, `borders`, `bar`, `icon`, `scheme`, `class` and `style`. The function runs for each shown cell and again when the row or the data it reads changes.',
       },
       merges: {
-        ru: 'Объединяет ячейки. Прямоугольники `{ from, to }` задаются в тех же координатах, что `v-model:ranges`. Объединение показывает содержимое и оформление первой ячейки, выделяется целиком, а правка меняет первую ячейку. Вставка, заполнение и очистка пропускают ячейки под ним. Объединение из нескольких строк не подсвечивается при наведении, полосами и выбором строки. Из двух пересекающихся прямоугольников остаётся первый. С группировкой, деревом и деталями объединения не работают.',
-        en: 'Merges cells. The `{ from, to }` rectangles use the same coordinates as `v-model:ranges`. A merge shows the content and style of its first cell, is selected as a whole, and an edit changes the first cell. Paste, fill and clear skip the cells under it. A merge across several rows is not highlighted by hover, stripes or row selection. Of two overlapping rectangles, the first one wins. Merges do not work with grouping, a tree or details.',
+        ru: 'Объединяет ячейки: каждый прямоугольник `{ from, to }` в координатах `v-model:ranges` становится одной ячейкой с содержимым и оформлением первой. Из двух пересекающихся прямоугольников остаётся первый. С группировкой, деревом и деталями объединения не работают.',
+        en: 'Merges cells: each `{ from, to }` rectangle in `v-model:ranges` coordinates becomes one cell with the content and style of its first cell. Of two overlapping rectangles, the first one wins. Merges do not work with grouping, a tree or details.',
       },
       gridlines: {
         ru: 'Рисует линии между колонками. Линия после последней колонки видна, только пока колонки не заполняют всю ширину.',
         en: 'Draws lines between the columns. The line after the last column shows only while the columns do not fill the whole width.',
       },
       rowHeaders: {
-        ru: 'Добавляет закреплённую колонку заголовков строк, как в электронных таблицах. `true` нумерует строки, а `{ label, width, resizable }` задаёт текст `label(row, position)`, ширину в пикселях и ручку высоты строки. Клик по заголовку выделяет строку, по угловой ячейке — все ячейки, по заголовку колонки с `sortable: false` — колонку. Shift продолжает выделение, Ctrl добавляет строку или колонку, протяжка берёт несколько подряд. Выделение работает только с `cellSelection`.',
-        en: 'Adds a pinned column of row headers, as in spreadsheets. `true` numbers the rows, and `{ label, width, resizable }` sets the `label(row, position)` text, the width in pixels and a row height handle. A click on a header selects the row, on the corner cell every cell, and on the header of a column with `sortable: false` the column. Shift extends the selection, Ctrl adds a row or a column, and dragging takes several in a row. Selection works only with `cellSelection`.',
+        ru: 'Добавляет закреплённую колонку заголовков строк, как в электронных таблицах. `true` нумерует строки, а `{ label, width, resizable }` задаёт текст `label(row, position)`, ширину в пикселях и ручку высоты строки. Выделение строк и колонок по заголовкам работает только с `cellSelection`.',
+        en: 'Adds a pinned column of row headers, as in spreadsheets. `true` numbers the rows, and `{ label, width, resizable }` sets the `label(row, position)` text, the width in pixels and a row height handle. Selecting rows and columns from the headers works only with `cellSelection`.',
       },
       treeColumn: {
         ru: 'Ключ колонки с отступами дерева и переключателем детали. По умолчанию — первая колонка.',
@@ -158,8 +158,8 @@ const docs: DocsMap = {
         en: 'Marks elements outside the table, such as a formula bar, whose focus keeps a cell edit open: `(target) → true`. A click on them keeps the cell selection. When focus leaves such an element, end the edit with `commitEdit` or `cancelEdit`.',
       },
       growEditor: {
-        ru: 'Кладёт текстовый редактор точно по границам ячейки с рамкой выделения и даёт ему расти поверх соседних ячеек целыми колонками, как в Excel: у ячеек с выравниванием по концу влево, у остальных вправо. Редактор растёт до края видимой области, дальше текст прокручивается внутри поля.',
-        en: 'Puts the text editor exactly on the bounds of its cell with the selection frame and lets it grow over the neighbouring cells by whole columns, as in Excel: towards the start for end-aligned cells and towards the end for the rest. It grows up to the edge of the visible area, then the text scrolls inside the field.',
+        ru: 'Кладёт текстовый редактор точно по границам ячейки с рамкой выделения. Длинный текст растит редактор поверх соседних ячеек целыми колонками, как в Excel: у ячеек с выравниванием по концу влево, у остальных вправо. Дальше края видимой области редактор не растёт, и текст прокручивается внутри поля.',
+        en: 'Puts the text editor exactly on the bounds of its cell with the selection frame. Long text grows it over the neighboring cells by whole columns, as in Excel, toward the start in end-aligned cells. It stops at the edge of the visible area, where the text starts to scroll inside the field.',
       },
       picking: {
         ru: 'Включает выбор ссылок для формул: `(draft) → true`, пока черновик ждёт ссылку, например кончается оператором. Тогда клик, протяжка и стрелки в редакторе не завершают правку, а отправляют событие `pick`.',
@@ -170,8 +170,8 @@ const docs: DocsMap = {
         en: 'Number of first rows that stay under the header while scrolling. Selection, editing and copying treat them like other rows. Needs `height`; does not work with groups, a tree, details or `source`.',
       },
       rowDrag: {
-        ru: 'Добавляет ручку перетаскивания в начало каждой строки. Строку можно поставить перед другой, после неё или вложить, задержав над серединой. Таблица сама строки не переставляет: новый порядок приходит в событии `reorder`. Ручки отключены при сортировке, фильтрах, группировке, `remote` и загрузке.',
-        en: 'Adds a drag grip at the start of every row. A row drops before another, after it, or inside it when held over the middle. The table never reorders rows itself: the new order arrives in the `reorder` event. The grips are off while sorting, filters, grouping, `remote` or loading are active.',
+        ru: 'Добавляет ручку перетаскивания в начало каждой строки: строку ставят перед другой, после неё или вкладывают, задержав над серединой. Новый порядок приходит в событии `reorder`, а переставляет строки приложение. Ручки не работают с `source` и `remote`, при загрузке, сортировке, фильтрах, поиске и группировке.',
+        en: 'Adds a drag grip at the start of every row: a row drops before another, after it, or inside it when held over the middle. The new order arrives in the `reorder` event, and the app moves the rows. The grips are off with `source` or `remote` and while the table loads, sorts, filters, searches or groups.',
       },
       nestDelay: {
         ru: 'Сколько миллисекунд держать строку над серединой другой, чтобы вложить в неё. По умолчанию 600.',
@@ -198,12 +198,12 @@ const docs: DocsMap = {
         en: 'Maximum number of cells in one copy. 200,000 by default. Rows past the limit are dropped, and screen readers announce it.',
       },
       clipboard: {
-        ru: 'Задаёт свой формат буфера обмена. `serialize({ ranges, rows, cols, headers, rowAt, keyAt }) → { text, html }` заменяет копирование и вырезание. `rows` и `cols` — позиции строк и колонок копируемого блока: объединение выделенных диапазонов, обрезанное по `lastCell` и по `copyLimit`. `parse(data, target)` получает текст и HTML вставки и возвращает блок строк для вставки; `undefined` оставляет разбор таблице.',
-        en: 'Sets a custom clipboard format. `serialize({ ranges, rows, cols, headers, rowAt, keyAt }) → { text, html }` replaces copy and cut. `rows` and `cols` are the row and column positions of the copied block: the union of the selected ranges, cut to `lastCell` and to `copyLimit`. `parse(data, target)` receives the pasted text and HTML and returns a block of strings to paste; `undefined` leaves parsing to the table.',
+        ru: 'Задаёт свой формат буфера обмена. `serialize({ ranges, rows, cols, headers, rowAt, keyAt }) → { text, html }` заменяет копирование и вырезание. `parse(data, target)` получает текст и HTML вставки и возвращает блок строк, а ответ `undefined` оставляет разбор таблице.',
+        en: 'Sets a custom clipboard format. `serialize({ ranges, rows, cols, headers, rowAt, keyAt }) → { text, html }` replaces copy and cut. `parse(data, target)` receives the pasted text and HTML and returns a block of strings, and `undefined` leaves parsing to the table.',
       },
       commands: {
         ru: 'Подключает свою историю правок вместо встроенной. `push(command)` получает каждую правку, а Ctrl+Z, Ctrl+Y и методы `undo` и `redo` вызывают `undo()` и `redo()`, которые возвращают число изменённых ячеек.',
-        en: 'Replaces the built-in edit history with your own. `push(command)` receives every edit, and Ctrl+Z, Ctrl+Y and the `undo` and `redo` methods call `undo()` and `redo()`, which return the number of changed cells.',
+        en: 'Replaces the built-in edit history with your own. `push(command)` receives every edit. Ctrl+Z, Ctrl+Y and the `undo` and `redo` methods call its `undo()` and `redo()`, which return the number of changed cells.',
       },
       controls: {
         ru: 'Реестр контролов для ключей `editor` в колонках. По умолчанию берётся из `createNuiConfig({ controls })`.',
@@ -252,12 +252,12 @@ const docs: DocsMap = {
         en: 'Selected rows, as the objects from `rows`. Compared by `getKey`, or by reference without it.',
       },
       'v-model:widths': {
-        ru: 'Ширины колонок в пикселях по ключу, заданные вручную. Пока таблица помещается, ручка забирает ширину у соседней колонки, при прокрутке растёт только сама колонка. Колонка из модели больше не делит свободное место через `flex`. Двойной клик по ручке убирает колонку из модели.',
-        en: 'Column widths in pixels by key, set by hand. While the table fits, the handle takes width from the neighbouring column; once it scrolls, only the column itself grows. A column in the model stops sharing free space through `flex`. A double click on the handle removes the column from the model.',
+        ru: 'Ширины колонок в пикселях по ключу, заданные вручную. Колонка из модели больше не делит свободное место через `flex`, а двойной клик по ручке убирает её из модели.',
+        en: 'Column widths in pixels by key, set by hand. A column in the model stops sharing free space through `flex`, and a double click on the handle removes it from the model.',
       },
       'v-model:rowHeights': {
-        ru: 'Высоты строк в пикселях по ключу строки, заданные вручную. Ручку у нижнего края заголовка строки включает `rowHeaders.resizable`, двойной клик по ней возвращает высоту по умолчанию. С `height` и числовой `rowHeight` высота точная, иначе это минимум. С `source` не действует.',
-        en: 'Row heights in pixels by row key, set by hand. `rowHeaders.resizable` adds the handle at the bottom edge of a row header, and a double click on it restores the default height. With `height` and a numeric `rowHeight` the height is exact, otherwise it is a minimum. No effect with `source`.',
+        ru: 'Высоты строк в пикселях по ключу строки, заданные вручную; ручку включает `rowHeaders.resizable`. С `height` и числовой `rowHeight` высота точная, иначе это минимум. С `source` не действует.',
+        en: 'Row heights in pixels by row key, set by hand; `rowHeaders.resizable` adds the handle. With `height` and a numeric `rowHeight` the height is exact, otherwise it is a minimum. No effect with `source`.',
       },
       'v-model:columnOrder': {
         ru: 'Порядок колонок после перестановки. Ключи из модели идут первыми, остальные — в порядке объявления. Колонку переставляют за ручку в начале заголовка внутри её закреплённой или прокручиваемой части.',
@@ -314,8 +314,8 @@ const docs: DocsMap = {
         en: 'A row height changed: a drag ended, a keyboard step was made or the height was reset. Carries a list of `{ key, height }` with the row key as a string; `height: undefined` means a reset. During a drag only `v-model:rowHeights` changes.',
       },
       editRefused: {
-        ru: 'Редактор ячейки не открылся или закрылся без записи. Передаёт `row`, `key` и `reason`: `control` — контрола нет в реестре, `props` — свойства не прошли проверку, `value` — значение не подходит контролу, `row-gone` — в новых `rows` нет строки открытого редактора.',
-        en: 'A cell editor did not open or closed without saving. Carries `row`, `key` and `reason`: `control` when the registry lacks the control, `props` when the props fail the check, `value` when the value does not fit the control, `row-gone` when the new `rows` no longer hold the row of the open editor.',
+        ru: 'Редактор ячейки не открылся или закрылся без записи; передаёт `row`, `key` и `reason`. Причина `control` — контрола нет в реестре, `props` — свойства не прошли проверку, `value` — значение не подходит контролу. `row-gone` значит, что в новых `rows` нет строки открытого редактора.',
+        en: 'A cell editor did not open or closed without saving; it carries `row`, `key` and `reason`. `control` means the registry lacks the control, `props` that the props fail the check, `value` that the value does not fit. `row-gone` means the new `rows` no longer hold the row of the open editor.',
       },
       pick: {
         ru: 'Выбрана ссылка для формулы, пока `picking` отвечает `true`. Передаёт диапазон, расширенный до объединённых ячеек; вставляет его в черновик приложение.',
@@ -326,8 +326,8 @@ const docs: DocsMap = {
         en: 'The set of rendered rows and columns changed. `rows` and `cols` are position spans `{ start, end }`, `end` excluded.',
       },
       edit: {
-        ru: 'Ячейки изменили. Передаёт `kind` (`edit`, `clear`, `cut`, `paste`, `undo`, `redo`) и `changes` со строкой, ключом колонки, новым и прежним значением. У вставки блока есть `area` — диапазон, который он занял; у одного значения, вставленного в выделение, его нет. Таблица сама строки не меняет — примените изменения к данным.',
-        en: 'Cells were changed. Carries `kind` (`edit`, `clear`, `cut`, `paste`, `undo`, `redo`) and `changes` with the row, column key, new and previous value. A pasted block also carries `area`, the range it took; one value pasted into a selection has none. The table never changes rows itself, so apply the changes to your data.',
+        ru: 'Ячейки изменили: передаёт `kind` (`edit`, `clear`, `cut`, `paste`, `undo`, `redo`) и `changes` со строкой, ключом колонки, новым и прежним значением. У вставки блока есть `area` — диапазон, который он занял; у одного значения, вставленного в выделение, его нет. Таблица сама строки не меняет — примените изменения к данным.',
+        en: 'Fires when cells change and carries `kind` (`edit`, `clear`, `cut`, `paste`, `undo`, `redo`) and `changes` with the row, column key, new and previous value. A pasted block also carries `area`, the range it took; one value pasted into a selection has none. The table never changes rows itself, so apply the changes to your data.',
       },
     },
     slots: {
@@ -341,8 +341,8 @@ const docs: DocsMap = {
         en: 'Caption above the table in place of the `caption` prop.',
       },
       overlay: {
-        ru: 'Свой слой поверх ячеек, который прокручивается вместе с ними. Слот получает `rectOf(range) → { top, start, width, height }` и `window` с отрисованными строками и колонками. Шапка и закреплённые колонки лежат над слоем. Клики проходят сквозь него, пока элементу не задан `pointer-events: auto`.',
-        en: 'A custom layer over the cells that scrolls with them. The slot receives `rectOf(range) → { top, start, width, height }` and `window` with the rendered rows and columns. The header and pinned columns sit above the layer. Clicks pass through it until an element sets `pointer-events: auto`.',
+        ru: 'Свой слой поверх ячеек, который прокручивается вместе с ними. Слот рисуется в прокручиваемой части и в каждой закреплённой и получает её имя `pane`, `rectOf(range) → { top, start, width, height }` и `window`. Клики проходят сквозь слой, пока элементу не задан `pointer-events: auto`.',
+        en: 'A custom layer over the cells that scrolls with them. The slot renders in the scrolling part and in each pinned one with its `pane` name, `rectOf(range) → { top, start, width, height }` and `window`. Clicks pass through the layer until an element sets `pointer-events: auto`.',
       },
       detail: {
         ru: 'Деталь раскрытой строки на всю ширину таблицы. Получает строку и её позицию. В дереве строк не работает.',
@@ -543,7 +543,7 @@ const docs: DocsMap = {
         keys: 'ArrowLeft / ArrowRight',
         description: {
           ru: 'Переходит в соседнюю колонку. В RTL стрелки меняются местами.',
-          en: 'Moves to the neighbouring column. In RTL the arrows swap.',
+          en: 'Moves to the neighboring column. In RTL the arrows swap.',
         },
       },
       {

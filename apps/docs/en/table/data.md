@@ -3,7 +3,11 @@
 The table sorts and filters rows in the browser, and with `source` it hands that work to your server.
 
 `column.value(row)` returns the cell value. Numbers and dates sort by size, strings
-alphabetically in the current language, and empty `null` values go last.
+alphabetically in the current language, and empty `null` values go last. `sortable: false` turns
+sorting off for a column.
+
+`format(value, row)` turns the value into the cell text. Group labels, totals and the filter list
+have no row, so `undefined` comes in its place.
 
 On large data sorting, filters and grouping run in parts and show progress. When the work is
 done, the `settle` event arrives with the row count.
@@ -14,9 +18,11 @@ slot.
 
 ## Filters and totals
 
-The filter in the column menu depends on the column type: text, number or date. With
-`filter: 'set'` the filter offers a list of values to pick from. The `v-model:quick` model
-searches all text columns at once.
+The filter in the column menu depends on the column type: text, number, date, or a list of values
+for `boolean`. The `filter` field picks another filter (`text`, `number`, `date` or `set`), and
+`false` removes it. With `filter: 'set'` the filter offers a list of values to pick from.
+
+The `v-model:quick` model searches all text columns at once.
 
 A long list shows the first hundred values, and the search above the list finds the rest. "Select
 all" with a box unchecked afterwards gives a filter with `exclude: true`: it hides the named
@@ -27,6 +33,9 @@ values…" stands in its place.
 
 A column with `aggregate` adds a totals row at the bottom, such as a sum or an average. The
 totals row shows the `totalsLabel` caption and the number of rows left after filtering.
+
+A number column computes `sum`, `count`, `avg`, `min` and `max`, a date column `min`, `max` and
+`count`, and text and boolean columns `count`. A custom function works for a column of any type.
 
 <Example name="table/Filters" />
 
@@ -79,8 +88,9 @@ tree.
 With `height` the table scrolls inside itself and renders only the visible rows of `rowHeight`
 height and the visible columns.
 
-A column with `pin` stays in place on horizontal scroll, and rows from `pinnedRows` stay under
-the header. A column can also be pinned or hidden from its menu.
+A column with `pin: 'start'` or `pin: 'end'` stays in place on horizontal scroll, and rows from
+`pinnedRows` stay under the header. A column can also be pinned or hidden from its menu, and
+`hideable: false` keeps it from being hidden.
 
 <Example name="table/Windowed" />
 
@@ -101,8 +111,11 @@ The table requests rows in blocks of `blockSize` as the user scrolls and keeps t
 blocks. While a block is loading, placeholders stand in for its rows.
 
 Sorting, filters and search run on the server, and outdated requests are canceled through
-`signal`. The `values` function returns the values for a list filter, and `totals` the totals
-row.
+`signal`. The `totals` function returns the totals row.
+
+The `values` function feeds a list filter: it receives the column key, the filters, a `limit` and
+the `search` text and returns `{ values, truncated }`. With
+`truncated: true` the filter says that not every value is listed and offers search.
 
 Without `height` the table shows data page by page, one request per page. The `refresh()` method
 on the table ref clears the cache, and a failed request arrives as the `error` event. CSV export
@@ -120,9 +133,9 @@ rows of an expanded group are loading, placeholders stand in for them.
 
 <Example name="table/SourceGroups" />
 
-To load a tree from the server, set `source.children`: the function receives a row and returns
-its children. Mark rows with children with `hasChildren`, and the children load when the row is
-expanded.
+To load a tree from the server, set `source.children`: it gets a row, the sorting, filters and a
+`signal` and returns the row's children. Mark rows with children with
+`hasChildren`, and the children load when the row is expanded. Grouping does not work in a tree.
 
 While the children are loading, a placeholder shows under the row. CSV export of a tree takes
 only the top-level rows.

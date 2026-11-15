@@ -38,16 +38,28 @@ With `multiple` the header gets a checkbox that selects all rows on screen.
 
 ## Cell styles
 
-The `gridlines` prop draws lines between the columns, and the `cellStyle` function styles single
-cells. It receives the row and the column and returns a `fill`, a text `color`, an `align`,
-`borders` and text wrapping with `wrap`.
+A column aligns its text by `align`: without it numbers sit at the end of the cell and the rest at
+the start. `wrap` wraps the text of a column when the table has no `height` or has
+`rowHeight="auto"`, and the row grows with the text.
 
-The fill lies over the row background, so a translucent color keeps the stripes and the hover
-highlight visible. The `top`, `end`, `bottom` and `start` borders are drawn over the grid lines
-and do not change the row height.
+The `gridlines` prop draws lines between the columns, and the `cellStyle` function styles single
+cells. It receives `{ row, column, position, pinned }` and returns a `fill`, a text `color`, an
+`align`, `borders` and text wrapping with `wrap`. It styles the cells of pinned rows too and gets
+`pinned: true` for them.
+
+The fill lies over the row background but under the selection, so a translucent color keeps the
+stripes and the hover highlight visible. The `top`, `end`, `bottom` and `start` borders are drawn
+over the grid lines and do not change the row height.
 
 A border takes the place of a grid line, so the `top` of a cell and the `bottom` of the cell
 above share one spot. In a merged cell the `top` and `start` borders are drawn inside it.
+
+A `bar` `{ length, color }` is drawn under the text, and its `length` is a share of the cell width
+from 0 to 1. An `icon` `{ icon, color, filled }` sits before the text, and `class` and `style` add
+your own class and styles to the cell.
+
+When the fill is much lighter or darker than the theme, set `scheme`: `light` or `dark` fits the
+bar and the icon to it. The grid lines, the selection and the cell itself keep the table theme.
 
 The `cellStyle` function is called once for every visible cell. It is called again when the row
 changes or when reactive data that the function reads changes.

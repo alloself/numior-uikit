@@ -12,12 +12,11 @@
       cell-selection
       ref="edits-table"
       :columns="columns"
-      :rows="orders"
+      :rows="rows"
       :get-key="keyOf"
       caption="Заказы за неделю"
       @edit="onEdit"
     />
-    <p class="text-sm text-muted-foreground">Последняя правка: {{ last }}</p>
   </div>
 </template>
 
@@ -32,6 +31,7 @@ import {
   type NuiTableEditEvent,
   type NuiTableExposed,
 } from '@numior/table';
+import { orders } from '#demo/orders';
 
 interface Order {
   readonly id: number;
@@ -40,12 +40,9 @@ interface Order {
   total: number | null;
 }
 
-const orders = ref<Order[]>([
-  { id: 20419, customer: 'Анна Титова', city: 'Москва', total: 12400 },
-  { id: 20420, customer: 'Игорь Белов', city: 'Казань', total: 3150 },
-  { id: 20421, customer: 'Мария Ким', city: 'Москва', total: 48900 },
-  { id: 20422, customer: 'Олег Смирнов', city: 'Тверь', total: 990 },
-]);
+const rows = ref<Order[]>(
+  orders.slice(0, 4).map(({ id, customer, city, total }) => ({ id, customer, city, total })),
+);
 
 const money = new Intl.NumberFormat('ru-RU', {
   style: 'currency',
@@ -95,7 +92,6 @@ const columns: NuiTableColumn<Order>[] = [
 
 const keyOf = (order: Order): number => order.id;
 const editsTable = useTemplateRef<NuiTableExposed>('edits-table');
-const last = ref('—');
 
 const setters: Readonly<Record<string, (row: Order, value: NuiTableCellValue) => void>> = {
   customer: (row, value) => {
@@ -113,6 +109,5 @@ const onEdit = (event: NuiTableEditEvent<Order>): void => {
   for (const { row, key, value } of event.changes) {
     setters[key]?.(row, value);
   }
-  last.value = `${event.kind}, ${event.changes.length}`;
 };
 </script>

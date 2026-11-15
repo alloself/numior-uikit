@@ -16,12 +16,13 @@
       caption="Orders on the server"
       height="20rem"
     />
-    <p class="text-sm text-muted-foreground">Server requests: {{ requests }}</p>
+    <p class="m-0 text-sm text-muted-foreground">{{ summary }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { plural } from '@numior/primitives';
 import { NuiInput } from '@numior/vue';
 import {
   NuiTable,
@@ -75,15 +76,17 @@ const wait = (signal: AbortSignal): Promise<void> =>
     );
   });
 
-const requests = ref(0);
+const numbers = new Intl.NumberFormat('en-US');
+const total = ref<number>();
 const quick = ref('');
 
 const source: TableSource<Order> = {
   fetch: async ({ offset, limit, sort, filters, signal }) => {
-    requests.value += 1;
     await wait(signal);
 
     const rows = sorted(found(filters), sort);
+
+    total.value = rows.length;
 
     return { rows: rows.slice(offset, offset + limit), total: rows.length };
   },
@@ -92,7 +95,7 @@ const source: TableSource<Order> = {
 const columns: NuiTableColumn<Order>[] = [
   {
     key: 'id',
-    label: '№',
+    label: '#',
     type: 'number',
     width: 96,
     filter: false,
@@ -117,6 +120,12 @@ const columns: NuiTableColumn<Order>[] = [
     value: (row) => row.total,
   },
 ];
+
+const summary = computed(() =>
+  total.value === undefined
+    ? 'Loading orders…'
+    : `Found ${numbers.format(total.value)} ${plural('en', total.value, { one: 'order', other: 'orders' })}.`,
+);
 
 const keyOf = (order: Order): number => order.id;
 </script>
