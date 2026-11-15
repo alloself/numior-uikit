@@ -456,6 +456,26 @@ describe('blocks moved by someone else', () => {
     expect(left).toEqual(right);
   });
 
+  it('keeps text typed by someone else while a block carried as a copy waited to be sent', () => {
+    const network = connected(paragraphs('one', 'two', 'three'));
+    const { ann, bob } = peers(network);
+    const last = bob.state().doc.size - 5;
+
+    ann.edit((tr) => {
+      tr.insertText('X', last);
+    });
+
+    ann.toServer();
+    moveLastToTop(network);
+    network.settle();
+
+    expect(textOf(bob.state().doc)).toBe('tXhree|one|two');
+
+    const [left, right] = network.docs();
+
+    expect(left).toEqual(right);
+  });
+
   it('keeps a comment on a list item that was indented', () => {
     const initial = createState({ doc: bullets('one', 'two'), plugins: [commentAnchors] });
 

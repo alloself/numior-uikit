@@ -186,6 +186,39 @@ const grown = (
   return next;
 };
 
+const movedPast = (ghosts: readonly Ghost[], start: number, size: number): Ghost[] =>
+  ghosts.map((ghost) => (ghost.pos >= start ? { ...ghost, pos: ghost.pos + size } : ghost));
+
+const returns = (ghost: Ghost, travel: HistoryAction | undefined, back: Return): boolean =>
+  ghost.by === travel && ghost.cut >= back.oldest && ghost.cut <= back.newest;
+
+const reviveHolds = (
+  ghost: Ghost,
+  spans: Map<string, Span>,
+  revived: Set<string>,
+  at: number,
+): void => {
+  for (const hold of ghost.holds) {
+    const span = spans.get(hold.id);
+
+    if (span === undefined) {
+      continue;
+    }
+
+    const from = at + hold.from;
+    const to = at + hold.to;
+
+    revived.add(hold.id);
+
+    spans.set(
+      hold.id,
+      span.from === span.to
+        ? { from, to }
+        : { from: Math.min(span.from, from), to: Math.max(span.to, to) },
+    );
+  }
+};
+
 const putIn = (trace: Trace, change: Change): Trace => {
   const { start, newSize, travel } = change;
   const spans = grown(trace.spans, start, newSize);
@@ -193,13 +226,7 @@ const putIn = (trace: Trace, change: Change): Trace => {
   const back = here.length === 0 ? undefined : returning(here, newSize, change.inserted);
 
   if (back === undefined) {
-    return {
-      ...trace,
-      spans,
-      ghosts: trace.ghosts.map((ghost) =>
-        ghost.pos >= start ? { ...ghost, pos: ghost.pos + newSize } : ghost,
-      ),
-    };
+    return { ...trace, spans, ghosts: movedPast(trace.ghosts, start, newSize) };
   }
 
   const ghosts: Ghost[] = [];
@@ -209,30 +236,15 @@ const putIn = (trace: Trace, change: Change): Trace => {
   for (const ghost of trace.ghosts) {
     if (ghost.pos !== start) {
       ghosts.push(ghost.pos > start ? { ...ghost, pos: ghost.pos + newSize } : ghost);
-    } else if (ghost.by !== travel || ghost.cut < back.oldest || ghost.cut > back.newest) {
-      ghosts.push({ ...ghost, pos: start + offset });
-    } else {
-      for (const hold of ghost.holds) {
-        const span = spans.get(hold.id);
-        const from = start + offset + hold.from;
-        const to = start + offset + hold.to;
-
-        if (span === undefined) {
-          continue;
-        }
-
-        revived.add(hold.id);
-
-        spans.set(
-          hold.id,
-          span.from === span.to
-            ? { from, to }
-            : { from: Math.min(span.from, from), to: Math.max(span.to, to) },
-        );
-      }
-
-      offset += ghost.size;
+      continue;
     }
+    if (!returns(ghost, travel, back)) {
+      ghosts.push({ ...ghost, pos: start + offset });
+      continue;
+    }
+
+    reviveHolds(ghost, spans, revived, start + offset);
+    offset += ghost.size;
   }
 
   return { spans, ghosts, revived };

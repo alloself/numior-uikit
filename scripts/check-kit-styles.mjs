@@ -276,12 +276,17 @@ const polar = sources.flatMap((file) =>
 const COMPOSITED = new Set(['transform', 'translate', 'rotate', 'scale', 'opacity']);
 const STEPPED = /\bstep-(?:start|end)\b|\bsteps\(/u;
 
+const BRACES = new Map([
+  ['{', 1],
+  ['}', -1],
+]);
+
 const blockEnd = (text, open) => {
   let depth = 0;
   let end = open;
 
   do {
-    depth += text[end] === '{' ? 1 : text[end] === '}' ? -1 : 0;
+    depth += BRACES.get(text[end]) ?? 0;
     end += 1;
   } while (depth > 0 && end < text.length);
 
@@ -302,16 +307,17 @@ const keyframes = new Map(
   ),
 );
 
+const paintedOf = (name) =>
+  [...(keyframes.get(name) ?? [])].filter((property) => !COMPOSITED.has(property));
+
 const offCompositor = sources.flatMap((file) =>
   stylesOf(file.path, file.source).flatMap((style) =>
     [...style.text.matchAll(/animation:[^;{}]*\binfinite\b[^;{}]*;/gu)].flatMap((match) => {
       const name = match[0].split(/[\s:;]+/u).find((word) => keyframes.has(word));
+      const painted = paintedOf(name);
+      const composited = painted.length === 0 || STEPPED.test(match[0]);
 
-      const painted = [...(keyframes.get(name) ?? [])].filter(
-        (property) => !COMPOSITED.has(property),
-      );
-
-      return painted.length === 0 || STEPPED.test(match[0])
+      return composited
         ? []
         : [
             `${relative(ROOT, file.path)}:${lineOf(file.source, style.offset + (match.index ?? 0))}: ${name} animates ${painted.join(', ')}`,
