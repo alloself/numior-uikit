@@ -1,6 +1,6 @@
 .nui-layout {
   --_sidebar-size: 16rem;
-  --_rail-size: 3.5rem;
+  --_rail-size: var(--nui-layout-rail);
   --_bar-size: 3.5rem;
   --_end-size: 14rem;
   --_sticky-top: 0px;
@@ -104,6 +104,10 @@
   }
 }
 .nui-app-bar {
+  --_start-justify: normal;
+  --_body-padding-start: 0px;
+  --_body-padding-end: 0px;
+
   box-sizing: border-box;
   display: flex;
   flex: none;
@@ -131,11 +135,47 @@
   align-items: center;
   gap: var(--nui-space-2);
 }
+.nui-app-bar__start {
+  grid-column: 1;
+  justify-content: var(--_start-justify);
+}
+.nui-app-bar__end {
+  grid-column: 3;
+}
 .nui-app-bar__body {
   display: flex;
   flex: 1 1 auto;
+  grid-column: 2;
   align-items: center;
   gap: var(--nui-space-2);
   min-inline-size: 0;
+  padding-inline: var(--_body-padding-start) var(--_body-padding-end);
   font-weight: 600;
+}
+.nui-layout--header-full:has(
+    > .nui-layout__row
+      .nui-sidebar--collapsible-icon.nui-sidebar--side-start:is(
+        .nui-sidebar--variant-panel,
+        .nui-sidebar--variant-plain
+      )
+  )
+  > .nui-app-bar {
+  padding-inline: var(--nui-layout-gutter);
+}
+.nui-layout--header-full:not(.nui-layout--mobile):has(
+    > .nui-layout__row
+      .nui-sidebar--collapsible-icon.nui-sidebar--side-start:is(
+        .nui-sidebar--variant-panel,
+        .nui-sidebar--variant-plain
+      )
+  )
+  > .nui-app-bar {
+  --_start-justify: center;
+  --_body-padding-start: var(--nui-layout-gutter);
+  --_body-padding-end: var(--nui-space-2);
+
+  display: grid;
+  grid-template-columns: var(--_rail-size) minmax(0, 1fr) auto;
+  column-gap: 0;
+  padding-inline-start: 0;
 }

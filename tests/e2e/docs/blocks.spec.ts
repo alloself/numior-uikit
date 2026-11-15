@@ -32,6 +32,22 @@ test('a block screen grows with its content instead of scrolling', async ({ docs
   await expect.poll(() => block.hiddenWidth()).toBe(0);
 });
 
+test('the shop brand stands on the content line and stays put when the sidebar opens', async ({
+  docs,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'phones show the sidebar as a drawer without a rail');
+  await docs.open('/blocks/');
+  const block = docs.block('AppShell');
+  await block.screen.scrollIntoViewIfNeeded();
+  const open = await block.brandStart();
+
+  await block.toggleSidebar();
+
+  await expect.poll(() => block.headingStart()).toBe(open);
+  await expect.poll(() => block.brandStart()).toBe(open);
+});
+
 test('a block page has no site chrome and follows the theme of the site', async ({
   docs,
   page,

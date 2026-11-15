@@ -129,6 +129,30 @@ export class LayoutSection {
     return bar.x - frame.x;
   }
 
+  async triggerStart(): Promise<number> {
+    const [frame, trigger] = await Promise.all([boxOf(this.root), boxOf(this.trigger)]);
+
+    return trigger.x - frame.x;
+  }
+
+  async triggerOffset(): Promise<number> {
+    const [rail, trigger] = await Promise.all([boxOf(this.sidebar), boxOf(this.trigger)]);
+
+    return Math.abs(trigger.x + trigger.width / 2 - (rail.x + rail.width / 2));
+  }
+
+  async headingStart(): Promise<number> {
+    const [frame, heading] = await Promise.all([boxOf(this.root), boxOf(this.heading)]);
+
+    return heading.x - frame.x;
+  }
+
+  appBarPadding(): Promise<number> {
+    return this.appBar.evaluate((element) =>
+      Number.parseFloat(getComputedStyle(element).paddingInlineEnd),
+    );
+  }
+
   async appBarWidthGap(): Promise<number> {
     const [frame, bar] = await Promise.all([boxOf(this.root), boxOf(this.appBar)]);
 

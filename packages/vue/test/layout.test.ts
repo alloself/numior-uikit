@@ -242,6 +242,20 @@ describe('NuiLayout with NuiSidebar', () => {
     layout.unmount();
   });
 
+  it('takes the rail width from the theme unless railWidth sets it and keeps the collapse mode in the drawer', async () => {
+    const themed = LayoutDriver.mount();
+    expect(themed.railSize).toBe('');
+
+    themed.unmount();
+    const narrow = LayoutDriver.mount({ railWidth: '3rem' });
+    expect(narrow.railSize).toBe('3rem');
+
+    await narrow.setMobile(true);
+    expect(narrow.drawerSidebarModifier('collapsible-icon')).toBe(true);
+
+    narrow.unmount();
+  });
+
   it('places a full header above the sidebar, offers an end column and sticks both columns', async () => {
     const layout = LayoutDriver.mount({ header: 'full', end: true, sticky: true });
     expect(layout.hasModifier('pending')).toBe(true);

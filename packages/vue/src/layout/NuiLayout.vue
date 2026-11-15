@@ -43,7 +43,7 @@ const {
   id,
   header = NuiLayoutHeader.Inset,
   sidebarWidth = '16rem',
-  railWidth = '3.5rem',
+  railWidth,
   endWidth = '14rem',
   mobileQuery = '(max-width: 48rem)',
   shortcut = true,

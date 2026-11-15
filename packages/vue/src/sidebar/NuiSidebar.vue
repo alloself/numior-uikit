@@ -16,6 +16,7 @@
         `nui-sidebar--side-${side}`,
         `nui-sidebar--variant-${variant}`,
         `nui-sidebar--marker-${marker}`,
+        `nui-sidebar--collapsible-${collapsible}`,
       ]"
     >
       <slot />

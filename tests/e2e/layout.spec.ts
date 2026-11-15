@@ -3,6 +3,8 @@ import { channelSumOf, rgbDelta } from './helpers/color';
 import { boxOf } from './helpers/geometry';
 import { motionOf, SLOW_MOTION, slowMotion } from './helpers/motion';
 
+const GUTTER = 24;
+
 test.describe('layout', () => {
   test('a full header spans the frame, an end column docks beside the content and groups collapse', async ({
     playground,
@@ -42,6 +44,36 @@ test.describe('layout', () => {
     await layout.gotoReport.click();
     await expect(layout.subToggle).toHaveAttribute('aria-expanded', 'true');
     await expect(layout.heading).toHaveText('Отчёт: команда');
+  });
+
+  test('a full header over an icon rail puts the trigger in the rail column and the title on the content gutter', async ({
+    playground,
+    layout,
+    isMobile,
+  }) => {
+    await playground.open();
+    await layout.root.scrollIntoViewIfNeeded();
+    expect(await layout.appBarPadding()).toBe(12);
+
+    await layout.header.selectOption('full');
+
+    await expect.poll(() => layout.appBarPadding()).toBe(GUTTER);
+
+    if (isMobile) {
+      expect(await layout.triggerStart()).toBeCloseTo(GUTTER, 0);
+      return;
+    }
+
+    const trigger = await layout.triggerStart();
+    const heading = await layout.headingStart();
+
+    await layout.trigger.click();
+
+    await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
+    await expect.poll(() => layout.triggerOffset()).toBeLessThan(1);
+    expect(await layout.headingStart()).toBeCloseTo((await layout.sidebarWidth()) + GUTTER, 0);
+    expect(await layout.headingStart()).toBeCloseTo(heading, 0);
+    expect(await layout.triggerStart()).toBeCloseTo(trigger, 0);
   });
 
   test('sidebar collapses to a rail with tooltips, toggles with Ctrl+B and hides offcanvas', async ({

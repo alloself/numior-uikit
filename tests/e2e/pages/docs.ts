@@ -112,6 +112,22 @@ export class DocsBlock {
     return (await boxOf(this.screen)).height;
   }
 
+  async toggleSidebar(): Promise<void> {
+    await this.content.getByRole('button', { name: 'Переключить боковую панель' }).click();
+  }
+
+  async brandStart(): Promise<number> {
+    const brand = this.content
+      .locator('.nui-app-bar')
+      .getByText('Кабинет магазина', { exact: true });
+
+    return Math.round((await boxOf(brand.locator('..'))).x);
+  }
+
+  async headingStart(): Promise<number> {
+    return Math.round((await boxOf(this.content.getByRole('heading', { level: 1 }))).x);
+  }
+
   async hiddenHeight(): Promise<number> {
     const content = await this.content.locator('html').evaluate((root) => root.scrollHeight);
 

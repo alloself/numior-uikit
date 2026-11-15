@@ -9,6 +9,7 @@
     content-as="div"
     :skip-link="skipLink"
     :skip-label="skipLabel"
+    :rail-width="railWidth"
   >
     <template #sidebar>
       <NuiSidebar
@@ -119,6 +120,7 @@ const {
   marker,
   skipLink = undefined,
   skipLabel,
+  railWidth,
 } = defineProps<{
   collapsible: NuiSidebarCollapsible;
   side: NuiSidebarSide;
@@ -133,6 +135,7 @@ const {
   marker?: NuiSidebarMarker | undefined;
   skipLink?: boolean | undefined;
   skipLabel?: string | undefined;
+  railWidth?: string | undefined;
 }>();
 
 const open = defineModel<boolean>('open', { required: true });

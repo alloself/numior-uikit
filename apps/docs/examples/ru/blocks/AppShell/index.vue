@@ -34,9 +34,7 @@
     <template #header>
       <NuiAppBar>
         <template #start>
-          <div class="flex items-center md:-ms-3 md:w-14 md:justify-center">
-            <NuiSidebarTrigger />
-          </div>
+          <NuiSidebarTrigger />
         </template>
         <div class="flex items-center gap-2">
           <span
@@ -75,7 +73,7 @@
         </template>
       </NuiAppBar>
     </template>
-    <div class="flex flex-col gap-4 p-6">
+    <div class="flex flex-col gap-4 px-(--nui-layout-gutter) py-6">
       <div class="flex flex-col gap-1">
         <h1 class="m-0 text-xl font-semibold tracking-tight">{{ current.label }}</h1>
         <p class="m-0 text-sm text-muted-foreground">{{ current.summary }}</p>
