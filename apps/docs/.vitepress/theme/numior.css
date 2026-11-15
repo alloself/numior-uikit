@@ -14,6 +14,7 @@
   --nui-prose-marker: square;
   --nui-radius-base: 0.25rem;
   --nui-field-ring-width: 0px;
+  --nui-soft-min-lightness: 0.26;
 
   --nui-surface: light-dark(#f3f2ef, #030304);
   --nui-surface-muted: light-dark(#e9e8e5, #151414);

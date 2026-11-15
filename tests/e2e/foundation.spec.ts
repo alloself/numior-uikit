@@ -81,7 +81,7 @@ test('theme, scoped overrides, density and RTL work without Tailwind', async ({
   expect(await playground.hasHorizontalOverflow()).toBe(false);
 });
 
-test('soft fills inside an overlay mix with the overlay surface, not the page', async ({
+test('a soft fill keeps one colour on the page and in an overlay and stands above the overlay', async ({
   playground,
   navigation,
 }) => {
@@ -95,7 +95,7 @@ test('soft fills inside an overlay mix with the overlay surface, not the page', 
   const inMenu = await tokenRgbIn(navigation.menu, '--nui-neutral-soft');
   const menuSurface = await rgbOf(navigation.menu, 'background-color');
 
-  expect(inMenu[0]).toBeGreaterThan(onPage[0]);
+  expect(inMenu).toEqual(onPage);
   expect(inMenu[0]).toBeGreaterThan(menuSurface[0] + 8);
 });
 
