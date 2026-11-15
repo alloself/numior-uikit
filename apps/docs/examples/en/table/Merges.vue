@@ -8,7 +8,7 @@
     :cell-style="styleOf"
     :column-menu="false"
     gridlines
-    caption="Programme of the day"
+    caption="Program of the day"
   />
 </template>
 

@@ -23,6 +23,7 @@ import {
   settle,
 } from '../.vitepress/content/guards';
 import { installGuards } from '../.vitepress/content/install-guards';
+import { kitCatalogGuards } from '../.vitepress/content/kit-catalog-guards';
 import { openingGuards, pageGuards } from '../.vitepress/content/page-guards';
 import type { DocsMap } from '../.vitepress/reference/reference.types';
 
@@ -464,6 +465,54 @@ describe('guards of the examples', () => {
         GuardRule.Names,
       ),
     ).toEqual(['John Smith is not in the shop data']);
+  });
+
+  it('report British spellings in the visible text of an English example, not in its keys', () => {
+    const source = [
+      '<template>',
+      '  <NuiTable caption="Programme of the day" />',
+      '  <p>Moves to the neighbouring column.</p>',
+      '</template>',
+      '',
+      '<script setup lang="ts">',
+      "const status = 'cancelled';",
+      '</script>',
+    ].join('\n');
+
+    const problems = exampleGuards('examples/en/table/Merges.vue', 'en', source, {
+      vocabulary: new Set(),
+      misplaced: new Set(),
+    });
+
+    expect(textsOf(problems, GuardRule.Glossary)).toEqual([
+      '«Programme» → US spelling',
+      '«neighbouring» → US spelling',
+    ]);
+  });
+});
+
+describe('guards of the kit catalogs', () => {
+  it('report British spellings in the texts of a catalog, not in its keys and values', () => {
+    const source = [
+      "import type { Messages } from './list.types';",
+      '',
+      'export const listMessages = {',
+      "  namespace: 'list',",
+      '  en: {',
+      '    cancelled: ({ index }) => `Row ${index}, move cancelled.`,',
+      "    status: 'cancelled',",
+      "    empty: 'No rows yet',",
+      '  },',
+      '  ru: { cancelled: ({ index }) => `Строка ${index}: перемещение отменено.` },',
+      '};',
+    ].join('\n');
+
+    expect(
+      textsOf(
+        kitCatalogGuards('packages/vue/src/list/list.messages.ts', source),
+        GuardRule.Glossary,
+      ),
+    ).toEqual(['«cancelled» → US spelling']);
   });
 });
 

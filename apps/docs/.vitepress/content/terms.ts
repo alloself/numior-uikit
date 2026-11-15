@@ -24,7 +24,7 @@ export const GLOSSARY: TermList = {
     [word('colou?r schemes?'), 'theme'],
     [
       word(
-        'colours?|behaviours?|centred?|centres?|grey|dialogues?|catalogues?|licences?|favourites?|whilst|cancell(?:ed|ing)|labell(?:ed|ing)|analys(?:e|es|ed|ing)|(?:custom|organ|initial|normal|optim|recogn|serial|synchron|visual|final|local)is(?:e|es|ed|ing|ation)',
+        'colour(?:s|ed|ing|ful)?|behaviours?|neighbour(?:s|ing|hood)?|favour(?:s|ed|ite|ites)?|honours?|centred?|centres?|metres?|litres?|fibres?|theatres?|programmes?|defence|offence|practis(?:e|es|ed|ing)|towards|grey|dialogues?|catalogues?|licences?|whilst|cancell(?:ed|ing)|labell(?:ed|ing)|travell(?:ed|ing|er)|modell(?:ed|ing)|signall(?:ed|ing)|analys(?:e|es|ed|ing)|(?:custom|organ|initial|normal|optim|recogn|serial|synchron|visual|final|local)is(?:e|es|ed|ing|ation)',
       ),
       'US spelling',
     ],

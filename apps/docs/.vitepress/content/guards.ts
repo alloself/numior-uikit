@@ -21,6 +21,7 @@ import {
 } from './guard.types.ts';
 import { navigationTexts } from '../navigation.ts';
 import { installGuards } from './install-guards.ts';
+import { kitCatalogGuards } from './kit-catalog-guards.ts';
 import { styledPackages } from '../reference/kit-packages.ts';
 import { openingGuards, pageGuards } from './page-guards.ts';
 
@@ -41,6 +42,16 @@ const NAVIGATION_FILE = '.vitepress/navigation.ts';
 const TEXTS_FILE = '.vitepress/theme/texts.ts';
 const HOME_FILE = '.vitepress/theme/home-content.ts';
 const VUE_INDEX = 'packages/vue/src/index.ts';
+const PACKAGES_DIR = 'packages';
+const MESSAGES_SUFFIX = '.messages.ts';
+
+const KIT_SKIPPED: ReadonlySet<string> = new Set([
+  'node_modules',
+  'dist',
+  'test',
+  'bench',
+  'coverage',
+]);
 
 const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -209,6 +220,13 @@ const examplesGuards = (docsRoot: string, repoRoot: string): GuardProblem[] =>
     );
   });
 
+const kitGuards = (repoRoot: string): GuardProblem[] =>
+  walk(join(repoRoot, PACKAGES_DIR), KIT_SKIPPED).flatMap((file) =>
+    file.endsWith(MESSAGES_SUFFIX)
+      ? kitCatalogGuards(slashed(relative(repoRoot, file)), readFileSync(file, 'utf8'))
+      : [],
+  );
+
 export const collectGuardProblems = async (
   docsRoot: string,
   repoRoot: string,
@@ -225,5 +243,6 @@ export const collectGuardProblems = async (
     ...(await apiGuards(docsRoot)),
     ...(await themeGuards(docsRoot)),
     ...examplesGuards(docsRoot, repoRoot),
+    ...kitGuards(repoRoot),
   ];
 };

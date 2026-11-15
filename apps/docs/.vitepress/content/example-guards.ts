@@ -2,8 +2,8 @@ import { NodeTypes, type TemplateChildNode } from '@vue/compiler-core';
 import { parse } from '@vue/compiler-sfc';
 import type { ExampleLocale } from '../examples/example.types.ts';
 import { GuardRule, type ExampleContext, type GuardProblem } from './guard.types.ts';
-import { patternProblems } from './page-guards.ts';
-import { FILLERS, META, NAME, NOT_NAMES } from './terms.ts';
+import { patternProblems, termProblems } from './page-guards.ts';
+import { FILLERS, GLOSSARY, META, NAME, NOT_NAMES } from './terms.ts';
 
 const STRING_RE = /'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\]|\\.)*)`/g;
 const IMPORT_RE = /import\s[^;]*?from\s+'[^']+';/g;
@@ -11,6 +11,7 @@ const VUE_IMPORT_RE = /import\s+(?:type\s+)?\{([^}]*)\}\s+from\s+'@numior\/vue'/
 const REEXPORT_RE = /export\s+\{([^}]*)\}\s+from\s+'@numior\/primitives'/g;
 const DUMP_RE = />\s*([\p{Lu}][\p{L} ]{0,40}:)\s*\{\{/gu;
 const VALUE_NAME_RE = /^[a-z]/;
+const IDENTIFIER_RE = /^[a-z][\w-]*$/;
 
 const namesIn = (list: string): string[] =>
   list.split(',').reduce<string[]>((names, raw) => {
@@ -90,6 +91,9 @@ export const exampleGuards = (
     ...texts
       .flatMap((text) => patternProblems(text, locale, META))
       .map((text) => ({ rule: GuardRule.Meta, file, text })),
+    ...texts
+      .flatMap((text) => (IDENTIFIER_RE.test(text) ? [] : termProblems(text, locale, GLOSSARY)))
+      .map((text) => ({ rule: GuardRule.Glossary, file, text })),
     ...[...source.matchAll(DUMP_RE)].map(([, label = '']) => ({
       rule: GuardRule.Dump,
       file,

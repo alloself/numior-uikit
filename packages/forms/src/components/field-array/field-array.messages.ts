@@ -37,7 +37,7 @@ export const fieldArrayMessages: NuiMessageCatalog<NuiFieldArrayMessages> = {
     moved: ({ index, position, count }) => `Row ${index}, position ${position} of ${count}.`,
     dropped: ({ index, position, count }) =>
       `Row ${index} dropped at position ${position} of ${count}.`,
-    cancelled: ({ index }) => `Row ${index}, move cancelled.`,
+    cancelled: ({ index }) => `Row ${index}, move canceled.`,
   },
   ru: {
     add: 'Добавить строку',
