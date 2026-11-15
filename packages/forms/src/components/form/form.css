@@ -1,46 +1,48 @@
-.nui-form {
-  --_gap: calc(--theme(--spacing-control inline) / 2);
+@layer components {
+  .nui-form {
+    --_gap: calc(--theme(--spacing-control inline) / 2);
 
-  box-sizing: border-box;
-  display: grid;
-  gap: var(--_gap);
-  min-inline-size: 0;
-}
+    box-sizing: border-box;
+    display: grid;
+    gap: var(--_gap);
+    min-inline-size: 0;
+  }
 
-.nui-form--pending {
-  cursor: progress;
-}
+  .nui-form--pending {
+    cursor: progress;
+  }
 
-.nui-form__errors {
-  border-radius: --theme(--radius inline);
-  animation: nui-form-reveal var(--transition-duration-normal) var(--ease-nui);
-}
+  .nui-form__errors {
+    border-radius: --theme(--radius inline);
+    animation: nui-form-reveal var(--transition-duration-normal) var(--ease-nui);
+  }
 
-.nui-form__errors:focus-visible {
-  outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-  outline-offset: var(--focus-ring-offset);
-}
+  .nui-form__errors:focus-visible {
+    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+    outline-offset: var(--focus-ring-offset);
+  }
 
-.nui-form__error-list {
-  box-sizing: border-box;
-  margin: 0;
-  padding-inline-start: --spacing(4);
-}
+  .nui-form__error-list {
+    box-sizing: border-box;
+    margin: 0;
+    padding-inline-start: --spacing(4);
+  }
 
-.nui-form__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: --spacing(2);
-}
+  .nui-form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: --spacing(2);
+  }
 
-.nui-form__actions:empty {
-  display: none;
-}
+  .nui-form__actions:empty {
+    display: none;
+  }
 
-@keyframes nui-form-reveal {
-  from {
-    opacity: 0;
-    translate: 0 calc(var(--spacing) * -1);
+  @keyframes nui-form-reveal {
+    from {
+      opacity: 0;
+      translate: 0 calc(var(--spacing) * -1);
+    }
   }
 }

@@ -1,190 +1,192 @@
-.nui-smart-form {
-  box-sizing: border-box;
-  inline-size: 100%;
-  container-type: inline-size;
-}
-
-.nui-smart-form__grid {
-  --_columns: 1;
-
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(var(--_columns), minmax(0, 1fr));
-  gap: calc(--theme(--spacing-control inline) / 2) --spacing(4);
-  align-content: start;
-  align-items: start;
-  min-inline-size: 0;
-}
-
-.nui-smart-form__grid--layout {
-  --_columns: var(--_layout-columns, 2);
-
-  grid-template-areas: var(--_areas);
-}
-
-.nui-smart-form__cell {
-  display: grid;
-  gap: --spacing(2);
-  min-inline-size: 0;
-  grid-area: var(--_area, auto);
-}
-
-.nui-smart-form__cell--entering {
-  transition:
-    opacity var(--transition-duration-normal) var(--ease-nui),
-    translate var(--transition-duration-normal) var(--ease-nui);
-}
-
-.nui-smart-form__cell--appearing {
-  opacity: 0;
-  translate: 0 calc(var(--spacing) * -1);
-}
-
-.nui-smart-form__cell--leaving {
-  position: absolute;
-  grid-area: auto;
-  margin: 0;
-  transition:
-    opacity var(--transition-duration-normal) var(--ease-nui),
-    translate var(--transition-duration-normal) var(--ease-nui);
-}
-
-.nui-smart-form__grid:has(> .nui-smart-form__cell--leaving) {
-  clip-path: inset(-100vmax -100vmax 0);
-}
-
-.nui-smart-form__cell--moving {
-  transition: transform var(--transition-duration-normal) var(--ease-nui);
-}
-
-.nui-smart-form__section {
-  box-sizing: border-box;
-  gap: --spacing(3);
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.nui-smart-form__section:has(+ .nui-smart-form__section) {
-  padding-block-end: calc(--theme(--spacing-control inline) / 2);
-  border-block-end: 1px solid var(--color-border);
-}
-
-.nui-smart-form__legend {
-  box-sizing: border-box;
-  padding: 0 0 --spacing(3);
-  color: var(--color-foreground);
-  font-size: var(--text-base);
-  font-weight: 600;
-  line-height: var(--leading-control);
-}
-
-.nui-smart-form__section-description {
-  margin: calc(--spacing(2) * -1) 0 0;
-  color: var(--color-muted-foreground);
-  font-size: var(--text-sm);
-  line-height: var(--leading-normal);
-}
-
-.nui-smart-form--inline {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  column-gap: --spacing(3);
-}
-
-.nui-smart-form--inline .nui-smart-form__grid {
-  display: contents;
-}
-
-.nui-smart-form--inline .nui-smart-form__cell {
-  flex: 0 1 auto;
-  min-inline-size: min(100%, 12rem);
-}
-
-.nui-smart-form--grow .nui-smart-form__cell {
-  flex: 1 1 12rem;
-}
-
-.nui-smart-form--inline .nui-form__errors {
-  flex: 1 0 100%;
-}
-
-.nui-smart-form--inline:has(.nui-field__label) .nui-form__actions {
-  padding-block-start: calc(var(--text-sm) * var(--leading-normal) + var(--spacing));
-}
-
-.nui-smart-form__stepper {
-  margin-block-end: --spacing(2);
-}
-
-.nui-smart-form__step {
-  --_slide: 1;
-}
-
-.nui-smart-form__step:dir(rtl) {
-  --_slide: -1;
-}
-
-.nui-smart-form--back .nui-smart-form__step {
-  --_slide: -1;
-}
-
-.nui-smart-form--back .nui-smart-form__step:dir(rtl) {
-  --_slide: 1;
-}
-
-.nui-smart-form--navigated .nui-smart-form__step {
-  animation: nui-smart-form-step var(--transition-duration-normal) var(--ease-nui);
-}
-
-.nui-smart-form__back,
-.nui-smart-form__next {
-  display: grid;
-}
-
-.nui-smart-form--steps .nui-smart-form__next {
-  margin-inline-start: auto;
-}
-
-.nui-smart-form__live {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-@keyframes nui-smart-form-step {
-  from {
-    opacity: 0;
-    translate: calc(var(--_slide) * --spacing(4)) 0;
+@layer components {
+  .nui-smart-form {
+    box-sizing: border-box;
+    inline-size: 100%;
+    container-type: inline-size;
   }
-}
 
-@container (width < 36rem) {
-  .nui-smart-form__grid--layout {
+  .nui-smart-form__grid {
     --_columns: 1;
 
-    grid-template-areas: none;
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--_columns), minmax(0, 1fr));
+    gap: calc(--theme(--spacing-control inline) / 2) --spacing(4);
+    align-content: start;
+    align-items: start;
+    min-inline-size: 0;
+  }
+
+  .nui-smart-form__grid--layout {
+    --_columns: var(--_layout-columns, 2);
+
+    grid-template-areas: var(--_areas);
   }
 
   .nui-smart-form__cell {
+    display: grid;
+    gap: --spacing(2);
+    min-inline-size: 0;
+    grid-area: var(--_area, auto);
+  }
+
+  .nui-smart-form__cell--entering {
+    transition:
+      opacity var(--transition-duration-normal) var(--ease-nui),
+      translate var(--transition-duration-normal) var(--ease-nui);
+  }
+
+  .nui-smart-form__cell--appearing {
+    opacity: 0;
+    translate: 0 calc(var(--spacing) * -1);
+  }
+
+  .nui-smart-form__cell--leaving {
+    position: absolute;
     grid-area: auto;
+    margin: 0;
+    transition:
+      opacity var(--transition-duration-normal) var(--ease-nui),
+      translate var(--transition-duration-normal) var(--ease-nui);
+  }
+
+  .nui-smart-form__grid:has(> .nui-smart-form__cell--leaving) {
+    clip-path: inset(-100vmax -100vmax 0);
+  }
+
+  .nui-smart-form__cell--moving {
+    transition: transform var(--transition-duration-normal) var(--ease-nui);
+  }
+
+  .nui-smart-form__section {
+    box-sizing: border-box;
+    gap: --spacing(3);
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .nui-smart-form__section:has(+ .nui-smart-form__section) {
+    padding-block-end: calc(--theme(--spacing-control inline) / 2);
+    border-block-end: 1px solid var(--color-border);
+  }
+
+  .nui-smart-form__legend {
+    box-sizing: border-box;
+    padding: 0 0 --spacing(3);
+    color: var(--color-foreground);
+    font-size: var(--text-base);
+    font-weight: 600;
+    line-height: var(--leading-control);
+  }
+
+  .nui-smart-form__section-description {
+    margin: calc(--spacing(2) * -1) 0 0;
+    color: var(--color-muted-foreground);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+  }
+
+  .nui-smart-form--inline {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    column-gap: --spacing(3);
+  }
+
+  .nui-smart-form--inline .nui-smart-form__grid {
+    display: contents;
   }
 
   .nui-smart-form--inline .nui-smart-form__cell {
-    flex-basis: 100%;
+    flex: 0 1 auto;
+    min-inline-size: min(100%, 12rem);
+  }
+
+  .nui-smart-form--grow .nui-smart-form__cell {
+    flex: 1 1 12rem;
+  }
+
+  .nui-smart-form--inline .nui-form__errors {
+    flex: 1 0 100%;
   }
 
   .nui-smart-form--inline:has(.nui-field__label) .nui-form__actions {
-    padding-block-start: 0;
+    padding-block-start: calc(var(--text-sm) * var(--leading-normal) + var(--spacing));
   }
 
-  .nui-smart-form--steps .nui-smart-form__back,
+  .nui-smart-form__stepper {
+    margin-block-end: --spacing(2);
+  }
+
+  .nui-smart-form__step {
+    --_slide: 1;
+  }
+
+  .nui-smart-form__step:dir(rtl) {
+    --_slide: -1;
+  }
+
+  .nui-smart-form--back .nui-smart-form__step {
+    --_slide: -1;
+  }
+
+  .nui-smart-form--back .nui-smart-form__step:dir(rtl) {
+    --_slide: 1;
+  }
+
+  .nui-smart-form--navigated .nui-smart-form__step {
+    animation: nui-smart-form-step var(--transition-duration-normal) var(--ease-nui);
+  }
+
+  .nui-smart-form__back,
+  .nui-smart-form__next {
+    display: grid;
+  }
+
   .nui-smart-form--steps .nui-smart-form__next {
-    flex: 1 1 0;
+    margin-inline-start: auto;
+  }
+
+  .nui-smart-form__live {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  @keyframes nui-smart-form-step {
+    from {
+      opacity: 0;
+      translate: calc(var(--_slide) * --spacing(4)) 0;
+    }
+  }
+
+  @container (width < 36rem) {
+    .nui-smart-form__grid--layout {
+      --_columns: 1;
+
+      grid-template-areas: none;
+    }
+
+    .nui-smart-form__cell {
+      grid-area: auto;
+    }
+
+    .nui-smart-form--inline .nui-smart-form__cell {
+      flex-basis: 100%;
+    }
+
+    .nui-smart-form--inline:has(.nui-field__label) .nui-form__actions {
+      padding-block-start: 0;
+    }
+
+    .nui-smart-form--steps .nui-smart-form__back,
+    .nui-smart-form--steps .nui-smart-form__next {
+      flex: 1 1 0;
+    }
   }
 }

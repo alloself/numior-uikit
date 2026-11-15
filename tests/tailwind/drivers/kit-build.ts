@@ -24,11 +24,18 @@ const PACKAGES = [
   'collaboration',
 ];
 
+const LAYERED = new Set(['forms']);
+
+const importOf = (name: string): string =>
+  LAYERED.has(name)
+    ? `@import '@numior/${name}/styles.css';`
+    : `@import '@numior/${name}/styles.css' layer(components);`;
+
 const ENTRY = [
   "@import 'tailwindcss';",
   "@import '@numior/tailwind';",
   "@import '@numior/vue/styles.css';",
-  ...PACKAGES.map((name) => `@import '@numior/${name}/styles.css' layer(components);`),
+  ...PACKAGES.map(importOf),
 ];
 
 const sourceOf = async (id: string): Promise<string | undefined> => {
