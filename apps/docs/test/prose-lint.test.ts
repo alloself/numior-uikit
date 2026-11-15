@@ -43,6 +43,14 @@ describe('prose lint', () => {
     ]);
   });
 
+  it('reads a hyphenated compound as a word of its own', () => {
+    expect(lintProse('UI-кит для Vue 3.', 'ru')).toEqual([]);
+
+    expect(lintProse('Этот кит собран из пакетов.', 'ru').map((problem) => problem.text)).toEqual([
+      'кит',
+    ]);
+  });
+
   it('reports long sentences, long paragraphs, banned phrases and internals in prose', () => {
     const page = `# Кнопка
 

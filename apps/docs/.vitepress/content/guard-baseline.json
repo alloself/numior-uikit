@@ -3,8 +3,6 @@
     "api/table.ts"
   ],
   "catalog": [
-    ".vitepress/theme/home-content.ts",
-    ".vitepress/theme/texts.ts",
     "api/table.ts"
   ],
   "demo-filler": [
