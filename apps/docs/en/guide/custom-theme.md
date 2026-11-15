@@ -24,7 +24,7 @@ A theme is a set of values for the `--nui-*` tokens. Set them on `:root` and on 
 ```css
 :root,
 [data-nui-theme] {
-  --nui-primary: light-dark(#b04010, #e0561a);
+  --nui-primary: light-dark(#ae3f10, #e0561a);
   --nui-primary-foreground: light-dark(#f3f2ef, #030304);
 }
 ```

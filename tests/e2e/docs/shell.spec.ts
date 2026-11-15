@@ -79,7 +79,7 @@ test('an example leaves the site theme for the base one and the guide shows the 
   expect(await example.radiusOf('Подтвердить заказ')).toBe('4px');
 
   await expect(
-    docs.printedText('--nui-primary: light-dark(#b04010, #e0561a);').last(),
+    docs.printedText('--nui-primary: light-dark(#ae3f10, #e0561a);').last(),
   ).toBeAttached();
 });
 
