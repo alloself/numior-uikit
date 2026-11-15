@@ -59,6 +59,8 @@ const GRID_ALIGNMENTS = new Set([
 
 export const RESET = 'initial';
 
+const CURRENT_COLOR = /\bcurrentcolor\b/gi;
+
 const closingOf = (value: string, open: number): number => {
   let depth = 0;
 
@@ -187,7 +189,8 @@ export const canonical = (value: string, aliases: Aliases): string => {
     .replace(/\(\s+/g, '(')
     .replace(/\s+\)/g, ')')
     .replace(/'/g, '"')
-    .replace(/\s*,\s*/g, ', ');
+    .replace(/\s*,\s*/g, ', ')
+    .replace(CURRENT_COLOR, 'currentcolor');
 };
 
 export const normalized = (value: string, environment: CssEnvironment): string => {

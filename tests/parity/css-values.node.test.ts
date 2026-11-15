@@ -21,6 +21,10 @@ describe('values of a compiled declaration', () => {
     expect(canonical("var(--nui-radius) .5rem 'x' a ,b", ENVIRONMENT.aliases)).toBe(
       'var(--radius-md) 0.5rem "x" a, b',
     );
+
+    expect(canonical('currentColor CurrentColor currentcolor', ENVIRONMENT.aliases)).toBe(
+      'currentcolor currentcolor currentcolor',
+    );
   });
 
   it('works out the arithmetic of the spacing scale and leaves the rest alone', () => {
