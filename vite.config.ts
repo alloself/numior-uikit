@@ -59,7 +59,6 @@ export default defineConfig({
     printWidth: 100,
     ignorePatterns: [
       'pnpm-lock.yaml',
-      'apps/docs/.vitepress/content/guard-baseline.json',
       '.archcore/**',
       '**/dist/**',
       '**/coverage/**',

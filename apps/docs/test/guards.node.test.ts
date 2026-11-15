@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vite-plus/test';
 import {
@@ -16,12 +15,7 @@ import {
   vocabularyOf,
 } from '../.vitepress/content/example-guards';
 import { GuardRule, type GuardProblem } from '../.vitepress/content/guard.types';
-import {
-  baselineOf,
-  collectGuardProblems,
-  parseBaseline,
-  settle,
-} from '../.vitepress/content/guards';
+import { collectGuardProblems } from '../.vitepress/content/guards';
 import { installGuards } from '../.vitepress/content/install-guards';
 import { kitCatalogGuards } from '../.vitepress/content/kit-catalog-guards';
 import { openingGuards, pageGuards } from '../.vitepress/content/page-guards';
@@ -29,10 +23,6 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 
 const DOCS = fileURLToPath(new URL('..', import.meta.url));
 const REPO = fileURLToPath(new URL('../../..', import.meta.url));
-
-const BASELINE = fileURLToPath(
-  new URL('../.vitepress/content/guard-baseline.json', import.meta.url),
-);
 
 const page = (lead: string, body: readonly string[] = []): string =>
   ['---', 'title: Select', '---', '', '# Select', '', lead, '', ...body].join('\n');
@@ -516,45 +506,10 @@ describe('guards of the kit catalogs', () => {
   });
 });
 
-describe('guard baseline', () => {
-  const problems: GuardProblem[] = [
-    { rule: GuardRule.Lead, file: 'components/select.md', text: '2 sentences' },
-    { rule: GuardRule.Lead, file: 'components/input.md', text: '2 sentences' },
-    { rule: GuardRule.Caption, file: 'components/select.md', text: '2 sentences: …' },
-  ];
-
-  it('excuses the listed files and asks to drop an entry once its file is clean', () => {
-    const baseline = parseBaseline(
-      JSON.stringify({ lead: ['components/select.md', 'components/tabs.md'] }),
-    );
-
-    expect(settle(problems, baseline)).toEqual({
-      fresh: [problems[1], problems[2]],
-      stale: ['lead: components/tabs.md'],
-    });
-
-    expect(settle(problems, baselineOf(problems))).toEqual({ fresh: [], stale: [] });
-
-    expect(baselineOf(problems)).toEqual({
-      lead: ['components/input.md', 'components/select.md'],
-      caption: ['components/select.md'],
-    });
-  });
-
-  it('covers every finding of the docs and holds no entry that is already clean', async () => {
+describe('guards on the docs', () => {
+  it('find nothing in the pages, examples, catalogs and kit texts', async () => {
     const findings = await collectGuardProblems(DOCS, REPO);
 
-    expect(settle(findings, parseBaseline(readFileSync(BASELINE, 'utf8')))).toEqual({
-      fresh: [],
-      stale: [],
-    });
-
-    expect(findings.filter((finding) => finding.file.includes('node_modules'))).toEqual([]);
-  });
-
-  it('refuses a baseline with an unknown rule or a malformed list', () => {
-    expect(() => parseBaseline('[]')).toThrow('must be an object');
-    expect(() => parseBaseline('{"typo": []}')).toThrow('Unknown guard rule');
-    expect(() => parseBaseline('{"lead": [1]}')).toThrow('malformed file list: lead');
+    expect(findings).toEqual([]);
   });
 });

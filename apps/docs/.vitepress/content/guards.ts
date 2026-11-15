@@ -12,13 +12,7 @@ import {
   textEntriesOf,
 } from './catalog-guards.ts';
 import { exampleGuards, misplacedExports, vocabularyOf } from './example-guards.ts';
-import {
-  GuardRule,
-  type ExampleContext,
-  type GuardBaseline,
-  type GuardProblem,
-  type GuardVerdict,
-} from './guard.types.ts';
+import type { ExampleContext, GuardProblem } from './guard.types.ts';
 import { navigationTexts } from '../navigation.ts';
 import { installGuards } from './install-guards.ts';
 import { kitCatalogGuards } from './kit-catalog-guards.ts';
@@ -36,7 +30,6 @@ const PAGE_SKIPPED = new Set([
   'demo',
 ]);
 
-const RULES: ReadonlySet<string> = new Set(Object.values(GuardRule));
 const API_DIR = 'api';
 const NAVIGATION_FILE = '.vitepress/navigation.ts';
 const TEXTS_FILE = '.vitepress/theme/texts.ts';
@@ -55,63 +48,6 @@ const KIT_SKIPPED: ReadonlySet<string> = new Set([
 
 const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
-
-const isRule = (value: string): value is GuardRule => RULES.has(value);
-
-const isFileList = (value: unknown): value is readonly string[] =>
-  Array.isArray(value) && value.every((entry) => typeof entry === 'string');
-
-export const parseBaseline = (json: string): GuardBaseline => {
-  const parsed: unknown = JSON.parse(json);
-
-  if (!isRecord(parsed)) {
-    throw new TypeError('The guard baseline must be an object of rule → files');
-  }
-  return Object.entries(parsed).reduce<Partial<Record<GuardRule, readonly string[]>>>(
-    (baseline, [rule, files]) => {
-      if (!isRule(rule) || !isFileList(files)) {
-        throw new TypeError(`Unknown guard rule or malformed file list: ${rule}`);
-      }
-      baseline[rule] = files;
-      return baseline;
-    },
-    {},
-  );
-};
-
-const keyOf = (rule: string, file: string): string => `${rule}: ${file}`;
-
-export const settle = (
-  problems: readonly GuardProblem[],
-  baseline: GuardBaseline,
-): GuardVerdict => {
-  const excused = new Set(
-    Object.entries(baseline).flatMap(([rule, files]) => files.map((file) => keyOf(rule, file))),
-  );
-
-  const found = new Set(problems.map((problem) => keyOf(problem.rule, problem.file)));
-
-  return {
-    fresh: problems.filter((problem) => !excused.has(keyOf(problem.rule, problem.file))),
-    stale: [...excused].filter((key) => !found.has(key)).toSorted(),
-  };
-};
-
-export const baselineOf = (problems: readonly GuardProblem[]): GuardBaseline =>
-  Object.values(GuardRule).reduce<Partial<Record<GuardRule, readonly string[]>>>(
-    (baseline, rule) => {
-      const files = problems.reduce<Set<string>>(
-        (found, problem) => (problem.rule === rule ? found.add(problem.file) : found),
-        new Set(),
-      );
-
-      if (files.size > 0) {
-        baseline[rule] = [...files].toSorted();
-      }
-      return baseline;
-    },
-    {},
-  );
 
 const walk = (dir: string, skipped: ReadonlySet<string>): string[] =>
   existsSync(dir)
