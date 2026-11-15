@@ -6,54 +6,36 @@
     --_side-y: 1;
     --_shift: calc(-1 * var(--_side-x) * var(--spacing)) calc(-1 * var(--_side-y) * var(--spacing));
 
-    position: relative;
+    @apply relative;
   }
   .nui-date-picker__input {
-    flex: 1 1 auto;
-    min-inline-size: 0;
-    inline-size: 100%;
+    @apply flex-auto min-inline-0 inline-full p-0 bg-transparent text-inherit;
     min-block-size: calc(var(--_height) - 2px);
-    padding: 0;
     border: 0;
-    background: transparent;
-    color: inherit;
     font: inherit;
     font-variant-numeric: tabular-nums;
     outline: none;
   }
   .nui-date-picker__input::placeholder {
-    color: var(--color-muted-foreground);
-    opacity: 1;
+    @apply text-muted-foreground opacity-100;
   }
   .nui-date-picker__separator {
-    margin-inline: var(--spacing);
-    color: var(--color-muted-foreground);
+    @apply mx-1 text-muted-foreground;
   }
   .nui-date-picker__clear,
   .nui-date-picker__open {
-    flex: none;
-    margin-inline-start: auto;
+    @apply flex-none ms-auto;
   }
   .nui-date-picker__clear + .nui-date-picker__open {
-    margin-inline-start: 0;
+    @apply ms-0;
   }
   .nui-date-picker--disabled .nui-date-picker__input {
-    cursor: not-allowed;
+    @apply cursor-not-allowed;
   }
   .nui-date-picker__panel {
-    box-sizing: border-box;
-    position: fixed;
-    inset: auto;
-    margin: 0;
-    padding: 0;
-    border: 1px solid var(--color-border);
-    border-radius: --theme(--radius inline);
-    background: var(--color-surface-overlay);
-    color: var(--color-foreground);
+    @apply box-border fixed inset-auto m-0 p-0 border border-border rounded bg-surface-overlay;
+    @apply text-foreground overflow-auto overscroll-contain opacity-0;
     box-shadow: var(--shadow-md);
-    overflow: auto;
-    overscroll-behavior: contain;
-    opacity: 0;
     translate: var(--_shift);
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),
@@ -62,22 +44,18 @@
       overlay var(--transition-duration-fast) allow-discrete;
   }
   .nui-date-picker__panel:popover-open {
-    opacity: 1;
-    translate: 0 0;
+    @apply opacity-100 translate-0;
   }
   @starting-style {
     .nui-date-picker__panel:popover-open {
-      opacity: 0;
+      @apply opacity-0;
       translate: var(--_shift);
     }
   }
   .nui-date-picker__time {
-    margin: 0 --spacing(3) --spacing(3);
-    inline-size: auto;
+    @apply mbs-0 mbe-3 mx-3 inline-auto;
   }
   .nui-date-picker--range .nui-date-picker__input {
-    flex: 0 1 auto;
-    inline-size: auto;
-    field-sizing: content;
+    @apply flex-initial inline-auto field-sizing-content;
   }
 }

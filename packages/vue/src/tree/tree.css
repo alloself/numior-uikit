@@ -9,10 +9,7 @@
     --_row-padding: var(--spacing);
     --_gap: --spacing(2);
 
-    position: relative;
-    block-size: var(--_height);
-    overflow: auto;
-    user-select: none;
+    @apply relative block-(--_height) overflow-auto select-none;
   }
   .nui-tree--size-sm {
     --_row: 2rem;
@@ -25,43 +22,37 @@
   }
   .nui-tree--virtual::before,
   .nui-tree--virtual::after {
+    @apply block flex-none;
     content: '';
-    display: block;
-    flex: none;
   }
   .nui-tree--virtual::before {
-    block-size: var(--_window-lead);
+    @apply block-(--_window-lead);
   }
   .nui-tree--virtual::after {
-    block-size: var(--_window-rest);
+    @apply block-(--_window-rest);
   }
   .nui-tree.nui-list--variant-outline {
     --_divider: transparent;
     --_divider-size: 0px;
 
-    padding: var(--spacing);
+    @apply p-1;
   }
   .nui-tree.nui-list--variant-floating {
     --_row: 2rem;
 
-    position: fixed;
-    padding: var(--spacing);
-    overflow: auto;
-    scrollbar-width: thin;
+    @apply fixed p-1 overflow-auto scrollbar-thin;
   }
   .nui-tree.nui-list--variant-floating .nui-list__items {
-    flex: none;
-    padding: 0;
-    overflow: visible;
+    @apply flex-none p-0 overflow-visible;
   }
   .nui-tree__list {
-    position: relative;
+    @apply relative;
   }
   .nui-tree--virtual .nui-tree__list {
     --_window-lead: initial;
     --_window-rest: initial;
 
-    position: sticky;
+    @apply sticky;
     inset-block: var(--_window-clamp-start) var(--_window-clamp-end);
   }
   .nui-tree--virtual .nui-tree__list > * {
@@ -71,48 +62,35 @@
   .nui-tree .nui-list-item {
     --_min-size: var(--_row);
 
-    block-size: var(--_row);
-    border-radius: --theme(--radius-sm inline);
-    overflow: hidden;
+    @apply block-(--_row) rounded-sm overflow-hidden;
     transition:
       color var(--transition-duration-fast) var(--ease-nui),
       opacity var(--transition-duration-normal) var(--ease-nui),
       block-size var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-tree .nui-list-item__inner {
-    min-block-size: 0;
-    padding-block: 0 var(--_divider-size);
+    @apply min-block-0 pbs-0 pbe-(--_divider-size);
   }
   .nui-tree .nui-tree__item--folded {
-    block-size: 0;
-    opacity: 0;
+    @apply block-0 opacity-0;
   }
   .nui-tree .nui-tree__item--leaving {
-    pointer-events: none;
+    @apply pointer-events-none;
   }
   @starting-style {
     .nui-tree--virtual .nui-tree__item--revealing {
-      opacity: 0;
+      @apply opacity-0;
     }
   }
   .nui-tree:focus-visible .nui-list-item--active {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: calc(-1 * var(--focus-ring-width));
+    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-width);
   }
   .nui-tree__controls {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    gap: --spacing(2);
+    @apply inline-flex flex-none items-center gap-2;
     margin-inline-start: calc(var(--_indent) * (var(--_level) - 1));
   }
   .nui-tree__toggle {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-    inline-size: var(--_control);
-    block-size: var(--_control);
+    @apply inline-flex flex-none items-center justify-center inline-(--_control) block-(--_control);
   }
   .nui-tree__toggle:dir(rtl) {
     scale: -1 1;
@@ -123,7 +101,7 @@
     transition: rotate var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-tree__item--expanded .nui-tree__chevron {
-    rotate: 90deg;
+    @apply rotate-90;
   }
   .nui-tree__spinner {
     inline-size: 1rem;
@@ -132,33 +110,29 @@
     animation-play-state: var(--nui-animation-play-state, running);
   }
   .nui-tree__checkbox {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
+    @apply inline-flex flex-none items-center;
   }
   .nui-tree__box {
-    line-height: var(--_size);
-    pointer-events: none;
+    @apply leading-(--_size) pointer-events-none;
   }
   .nui-tree__icon {
-    flex: none;
+    @apply flex-none;
     inline-size: 1rem;
     block-size: 1rem;
   }
   .nui-tree__icon--folder {
-    display: inline-grid;
+    @apply inline-grid;
   }
   .nui-tree__glyph {
+    @apply inline-full block-full;
     grid-area: 1 / 1;
-    inline-size: 100%;
-    block-size: 100%;
   }
   .nui-tree__glyph--open,
   .nui-tree__item--expanded .nui-tree__glyph--closed {
-    opacity: 0;
+    @apply opacity-0;
   }
   .nui-tree__item--expanded .nui-tree__glyph--open {
-    opacity: 1;
+    @apply opacity-100;
   }
   @keyframes nui-tree-spin {
     to {

@@ -10,24 +10,11 @@
     --_dot-size: 0.625rem;
     --_float-x: 50%;
 
-    box-sizing: border-box;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing);
-    min-inline-size: var(--_height);
-    block-size: var(--_height);
-    padding-inline: var(--_padding);
-    border: 1px solid transparent;
-    border-radius: --theme(--radius-sm inline);
-    background: var(--_tone-soft);
-    color: var(--_tone-soft-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--_font-size);
+    @apply box-border inline-flex items-center justify-center gap-1 min-inline-(--_height);
+    @apply block-(--_height) px-(--_padding) border border-transparent rounded-sm bg-(--_tone-soft);
+    @apply text-(--_tone-soft-foreground) font-sans text-(length:--_font-size) leading-control;
+    @apply whitespace-nowrap align-middle;
     font-weight: 600;
-    line-height: var(--leading-control);
-    white-space: nowrap;
-    vertical-align: middle;
     transition:
       background-color var(--transition-duration-fast) var(--ease-nui),
       border-color var(--transition-duration-fast) var(--ease-nui),
@@ -76,45 +63,33 @@
     --_tone-soft-foreground: --theme(--color-info-soft-foreground inline);
   }
   .nui-badge--variant-outline {
+    @apply bg-transparent;
     border-color: color-mix(in oklab, var(--_tone) 50%, var(--color-border));
-    background: transparent;
   }
   .nui-badge--variant-solid {
-    background: var(--_tone);
-    color: var(--_tone-foreground);
+    @apply bg-(--_tone) text-(--_tone-foreground);
   }
   .nui-badge--count {
     --_padding: var(--spacing);
 
-    border-radius: var(--radius-full);
-    font-variant-numeric: tabular-nums;
+    @apply rounded-full tabular-nums;
   }
   .nui-badge--dot {
-    inline-size: var(--_dot-size);
-    min-inline-size: 0;
-    block-size: var(--_dot-size);
-    padding: 0;
-    border-color: transparent;
+    @apply inline-(--_dot-size) min-inline-0 block-(--_dot-size) p-0 border-transparent;
+    @apply bg-(--_tone);
     border-radius: 50%;
-    background: var(--_tone);
   }
   .nui-badge--floating {
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline-end: 0;
-    z-index: 1;
-    translate: var(--_float-x) -50%;
+    @apply absolute inset-bs-0 inset-e-0 z-1 translate-x-(--_float-x) -translate-y-1/2;
     box-shadow: 0 0 0 2px var(--color-surface);
   }
   .nui-badge--floating:dir(rtl) {
     --_float-x: -50%;
   }
   .nui-badge__icon {
-    inline-size: var(--spacing-icon-sm);
-    block-size: var(--spacing-icon-sm);
+    @apply inline-icon-sm block-icon-sm;
   }
   .nui-badge__label {
-    overflow: hidden;
-    text-overflow: ellipsis;
+    @apply overflow-hidden text-ellipsis;
   }
 }

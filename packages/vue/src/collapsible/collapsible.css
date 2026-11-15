@@ -2,42 +2,25 @@
   .nui-collapsible {
     --_padding: 0px;
 
-    box-sizing: border-box;
-    display: block;
-    font-family: var(--font-sans);
-    color: var(--color-foreground);
+    @apply box-border block font-sans text-foreground;
   }
   .nui-collapsible--variant-card {
     --_padding: --spacing(4);
 
-    border: 1px solid var(--color-border);
-    border-radius: --theme(--radius-lg inline);
-    background: var(--color-surface);
+    @apply border border-border rounded-lg bg-surface;
     transition: border-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-collapsible__heading {
-    margin: 0;
+    @apply m-0;
     font: inherit;
   }
   .nui-collapsible__trigger {
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: --spacing(3);
-    inline-size: 100%;
-    min-block-size: var(--spacing-control-md);
-    padding-block: --spacing(2);
-    padding-inline: var(--_padding);
+    @apply box-border flex items-center justify-between gap-3 inline-full min-block-control-md py-2;
+    @apply px-(--_padding) rounded bg-transparent text-inherit text-start cursor-pointer;
     border: 0;
-    border-radius: --theme(--radius inline);
-    background: transparent;
-    color: inherit;
     font: inherit;
     font-weight: var(--font-weight-medium);
     line-height: --theme(--leading-label inline);
-    text-align: start;
-    cursor: pointer;
     transition:
       color var(--transition-duration-fast) var(--ease-nui),
       background-color var(--transition-duration-fast) var(--ease-nui);
@@ -46,31 +29,26 @@
     border-radius: calc(--theme(--radius-lg inline) - 1px);
   }
   .nui-collapsible__trigger:hover:not(:disabled) {
-    color: var(--color-primary);
+    @apply text-primary;
   }
   .nui-collapsible__trigger:focus-visible {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: calc(var(--focus-ring-offset) * -1);
+    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-offset);
   }
   .nui-collapsible__trigger:disabled {
-    opacity: var(--opacity-disabled);
-    cursor: not-allowed;
+    @apply opacity-disabled cursor-not-allowed;
   }
   .nui-collapsible__label {
-    flex: 1 1 auto;
+    @apply flex-auto;
   }
   .nui-collapsible__chevron {
-    flex-shrink: 0;
-    inline-size: var(--spacing-icon-sm);
-    block-size: var(--spacing-icon-sm);
-    color: var(--color-muted-foreground);
+    @apply shrink-0 inline-icon-sm block-icon-sm text-muted-foreground;
     transition: rotate var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-collapsible--open .nui-collapsible__chevron {
-    rotate: 180deg;
+    @apply rotate-180;
   }
   .nui-collapsible__panel {
-    display: grid;
+    @apply grid;
     grid-template-rows: 0fr;
     transition: grid-template-rows var(--transition-duration-normal) var(--ease-nui);
   }
@@ -78,21 +56,16 @@
     grid-template-rows: 1fr;
   }
   .nui-collapsible__content {
-    min-block-size: 0;
-    overflow: hidden;
+    @apply min-block-0 overflow-hidden;
   }
   .nui-collapsible__content[hidden] {
-    display: block;
+    @apply block;
     content-visibility: hidden;
   }
   .nui-collapsible__body {
-    padding-block: var(--spacing) --spacing(3);
-    padding-inline: var(--_padding);
-    color: var(--color-muted-foreground);
-    font-size: var(--text-sm);
-    line-height: var(--leading-normal);
+    @apply pbs-1 pbe-3 px-(--_padding) text-muted-foreground text-(length:--text-sm) leading-normal;
   }
   .nui-collapsible--variant-card .nui-collapsible__body {
-    padding-block: 0 --spacing(4);
+    @apply pbs-0 pbe-4;
   }
 }

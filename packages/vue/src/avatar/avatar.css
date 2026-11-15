@@ -5,14 +5,8 @@
     --_font-size: round(calc(var(--_size) * 0.4), 1px);
     --_status-tone: var(--color-subtle-foreground);
 
-    box-sizing: border-box;
-    position: relative;
-    display: inline-flex;
-    flex: none;
-    inline-size: var(--_size);
-    block-size: var(--_size);
-    font-family: var(--font-sans);
-    vertical-align: middle;
+    @apply box-border relative inline-flex flex-none inline-(--_size) block-(--_size) font-sans;
+    @apply align-middle;
   }
   .nui-avatar--size-sm {
     --_size: 1.5rem;
@@ -36,50 +30,32 @@
     --_status-tone: var(--color-warning);
   }
   .nui-avatar__figure {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    inline-size: 100%;
-    block-size: 100%;
-    overflow: hidden;
-    border-radius: var(--_radius);
-    background: --theme(--color-neutral-soft inline);
-    color: var(--color-foreground);
-    font-size: var(--_font-size);
+    @apply inline-flex items-center justify-center inline-full block-full overflow-hidden;
+    @apply rounded-(--_radius) bg-neutral-soft text-foreground text-(length:--_font-size);
+    @apply leading-control select-none;
     font-weight: 600;
-    line-height: var(--leading-control);
-    user-select: none;
     transition:
       background-color var(--transition-duration-fast) var(--ease-nui),
       box-shadow var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-avatar__image {
-    display: block;
-    inline-size: 100%;
-    block-size: 100%;
-    object-fit: cover;
+    @apply block inline-full block-full object-cover;
   }
   .nui-avatar__icon {
+    @apply text-muted-foreground;
     inline-size: round(55%, 2px);
     block-size: round(55%, 2px);
-    color: var(--color-muted-foreground);
   }
   .nui-avatar__status {
-    position: absolute;
-    inset-block-end: 0;
-    inset-inline-end: 0;
+    @apply absolute inset-be-0 inset-e-0 bg-(--_status-tone);
     inline-size: round(calc(var(--_size) * 0.28), 2px);
     block-size: round(calc(var(--_size) * 0.28), 2px);
     border-radius: 50%;
-    background: var(--_status-tone);
     box-shadow: 0 0 0 2px var(--color-surface-ring);
     transition: background-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-avatar__badge {
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline-end: 0;
-    display: inline-flex;
+    @apply absolute inset-bs-0 inset-e-0 inline-flex;
     translate: round(30%, 1px) round(-30%, 1px);
   }
   .nui-avatar__badge:dir(rtl) {
@@ -94,9 +70,7 @@
   .nui-avatar-group {
     --_overlap: 0.375rem;
 
-    box-sizing: border-box;
-    display: inline-flex;
-    align-items: center;
+    @apply box-border inline-flex items-center;
   }
   .nui-avatar-group--size-sm {
     --_overlap: 0.25rem;
@@ -107,7 +81,6 @@
   .nui-avatar-group__overflow .nui-avatar__figure {
     --_font-size: round(calc(var(--_size) * 0.34), 1px);
 
-    background: var(--color-surface-muted);
-    color: var(--color-foreground);
+    @apply bg-surface-muted text-foreground;
   }
 }

@@ -10,25 +10,14 @@
     --_hover-border: var(--_border);
     --_hover-shadow: var(--_shadow);
 
-    box-sizing: border-box;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: var(--_gap);
-    padding: var(--_padding);
-    border: 1px solid var(--_border);
-    border-radius: var(--_radius);
-    background: var(--_surface);
-    color: var(--color-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--text-sm);
-    line-height: var(--leading-normal);
+    @apply box-border relative flex flex-col gap-(--_gap) p-(--_padding) border border-(--_border);
+    @apply rounded-(--_radius) bg-(--_surface) text-foreground font-sans text-(length:--text-sm);
+    @apply leading-normal isolate;
     box-shadow: var(--_shadow);
     transition:
       border-color var(--transition-duration-fast) var(--ease-nui),
       box-shadow var(--transition-duration-fast) var(--ease-nui),
       background-color var(--transition-duration-fast) var(--ease-nui);
-    isolation: isolate;
   }
   .nui-card--padding-xs {
     --_padding: --spacing(3);
@@ -59,73 +48,53 @@
     --_hover-border: var(--color-border);
   }
   .nui-card--interactive:hover {
-    border-color: var(--_hover-border);
+    @apply border-(--_hover-border);
     box-shadow: var(--_hover-shadow);
   }
   :where(.nui-card--interactive)
     :where(a, button, input, select, textarea, summary, label, [tabindex]):where(
       :not(.nui-card__action)
     ) {
-    position: relative;
-    z-index: 1;
+    @apply relative z-1;
   }
   .nui-card__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: --spacing(3);
+    @apply flex items-start justify-between gap-3;
   }
   .nui-card__heading {
-    display: grid;
-    flex: 1 1 auto;
-    gap: --spacing(2);
-    min-inline-size: 0;
+    @apply grid flex-auto gap-2 min-inline-0;
   }
   .nui-card__actions {
-    display: flex;
-    flex: none;
-    align-items: center;
-    gap: var(--spacing);
+    @apply flex flex-none items-center gap-1;
   }
   .nui-card__title {
-    margin: 0;
-    font-size: var(--text-base);
+    @apply m-0 text-(length:--text-base) leading-control;
     font-weight: 600;
-    line-height: var(--leading-control);
   }
   .nui-card__action {
-    padding: 0;
+    @apply p-0 rounded-none text-inherit text-start cursor-pointer;
     border: 0;
-    border-radius: 0;
     background: none;
-    color: inherit;
     font: inherit;
-    text-align: start;
-    cursor: pointer;
   }
   .nui-card__action::after {
+    @apply absolute inset-0 rounded-(--_radius);
     content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: var(--_radius);
   }
   .nui-card .nui-card__action:focus-visible {
     outline: none;
   }
   .nui-card .nui-card__action:focus-visible::after {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
+    @apply outline-(length:--focus-ring-width) outline-ring;
     outline-offset: calc(var(--focus-ring-offset) + 1px);
   }
   .nui-card .nui-card__action:hover {
-    color: inherit;
+    @apply text-inherit;
   }
   .nui-card__description {
-    margin: 0;
-    color: var(--color-muted-foreground);
-    font-size: var(--text-sm);
+    @apply m-0 text-muted-foreground text-(length:--text-sm);
   }
   .nui-card__content {
-    min-inline-size: 0;
+    @apply min-inline-0;
   }
   .nui-card__title--loading,
   .nui-card__description--loading,
@@ -135,43 +104,32 @@
     padding-block: var(--_lead) calc(1lh - 1em - var(--_lead));
   }
   .nui-card__footer {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: --spacing(2);
+    @apply flex flex-wrap items-center gap-2;
   }
   .nui-card__media {
     --_aspect: 16 / 9;
 
-    display: grid;
-    place-items: center;
+    @apply grid place-items-center overflow-hidden text-subtle-foreground;
     margin-inline: calc(-1 * var(--_padding));
     aspect-ratio: var(--_aspect);
-    overflow: hidden;
     background: var(--color-surface-muted);
-    color: var(--color-subtle-foreground);
   }
   .nui-card__media:first-child {
+    @apply rounded-ss-(--_inner-radius) rounded-se-(--_inner-radius);
     margin-block-start: calc(-1 * var(--_padding));
-    border-start-start-radius: var(--_inner-radius);
-    border-start-end-radius: var(--_inner-radius);
   }
   .nui-card__media:last-child {
+    @apply rounded-es-(--_inner-radius) rounded-ee-(--_inner-radius);
     margin-block-end: calc(-1 * var(--_padding));
-    border-end-start-radius: var(--_inner-radius);
-    border-end-end-radius: var(--_inner-radius);
   }
   .nui-card__media--loading {
     background: none;
   }
   .nui-card__media > .nui-card__skeleton {
-    border-radius: 0;
+    @apply rounded-none;
   }
   .nui-card__image {
-    display: block;
-    inline-size: 100%;
-    block-size: 100%;
-    object-fit: cover;
+    @apply block inline-full block-full object-cover;
   }
   .nui-card__placeholder {
     inline-size: 2rem;

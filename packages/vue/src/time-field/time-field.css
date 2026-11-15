@@ -7,55 +7,41 @@
   .nui-time-field__segments {
     --_segment-padding: 0.125rem;
 
-    display: inline-flex;
-    flex: 0 1 auto;
-    align-items: center;
-    min-inline-size: 0;
+    @apply inline-flex flex-initial items-center min-inline-0 tabular-nums;
     margin-inline: calc(var(--_segment-padding) * -1);
     min-block-size: calc(var(--_height) - 2px);
     direction: ltr;
     unicode-bidi: isolate;
-    font-variant-numeric: tabular-nums;
   }
   .nui-time-field__segment {
-    box-sizing: content-box;
+    @apply box-content p-(--_segment-padding) rounded-(--_segment-radius) bg-transparent;
+    @apply text-inherit text-center caret-transparent appearance-none;
     inline-size: 2ch;
-    padding: var(--_segment-padding);
     border: 0;
-    border-radius: var(--_segment-radius);
-    background: transparent;
-    color: inherit;
     font: inherit;
-    text-align: center;
-    caret-color: transparent;
-    appearance: none;
     outline: none;
     transition:
       background-color var(--transition-duration-fast) var(--ease-nui),
       color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-time-field__segment::placeholder {
-    color: var(--color-muted-foreground);
-    opacity: 1;
+    @apply text-muted-foreground opacity-100;
   }
   .nui-time-field__segment::selection {
-    background: transparent;
+    @apply bg-transparent;
   }
   .nui-time-field__segment:focus {
-    background: --theme(--color-primary-soft inline);
-    color: --theme(--color-primary-soft-foreground inline);
+    @apply bg-primary-soft text-primary-soft-foreground;
   }
   .nui-time-field__segment--type-dayPeriod {
-    inline-size: auto;
+    @apply inline-auto field-sizing-content;
     min-inline-size: 2.5ch;
-    field-sizing: content;
   }
   .nui-time-field__literal {
-    color: var(--color-muted-foreground);
+    @apply text-muted-foreground;
   }
   .nui-time-field__clock {
-    flex: none;
-    margin-inline-start: auto;
+    @apply flex-none ms-auto;
   }
   .nui-time-field .nui-time-field__clock {
     --_tone-soft-foreground: var(--color-muted-foreground);
@@ -67,7 +53,7 @@
     --_tone-soft-foreground: var(--color-primary);
   }
   .nui-time-field--disabled .nui-time-field__segment {
-    cursor: not-allowed;
+    @apply cursor-not-allowed;
   }
   .nui-time-field__panel {
     --_side-x: 0;
@@ -76,18 +62,9 @@
     --_row: 2.25rem;
     --_rows: 5;
 
-    box-sizing: border-box;
-    position: fixed;
-    inset: auto;
-    margin: 0;
-    padding: --spacing(2);
-    border: 1px solid var(--color-border);
-    border-radius: --theme(--radius inline);
-    background: var(--color-surface-overlay);
-    color: var(--color-foreground);
+    @apply box-border fixed inset-auto m-0 p-2 border border-border rounded bg-surface-overlay;
+    @apply text-foreground font-sans opacity-0;
     box-shadow: var(--shadow-md);
-    font-family: var(--font-sans);
-    opacity: 0;
     translate: var(--_shift);
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),
@@ -96,98 +73,67 @@
       overlay var(--transition-duration-fast) allow-discrete;
   }
   .nui-time-field__panel:popover-open {
-    opacity: 1;
-    translate: 0 0;
+    @apply opacity-100 translate-0;
   }
   @starting-style {
     .nui-time-field__panel:popover-open {
-      opacity: 0;
+      @apply opacity-0;
       translate: var(--_shift);
     }
   }
   .nui-time-field__wheels {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing);
+    @apply relative flex items-center gap-1 text-(length:--text-base) tabular-nums;
     direction: ltr;
-    font-size: var(--text-base);
-    font-variant-numeric: tabular-nums;
   }
   .nui-time-field__wheels::before {
-    position: absolute;
-    inset-inline: 0;
-    inset-block-start: 50%;
-    block-size: var(--_row);
+    @apply absolute inset-x-0 inset-bs-1/2 block-(--_row) pointer-events-none;
     border-radius: calc(--theme(--radius inline) - 2px);
     background: color-mix(in oklab, var(--color-foreground) 8%, transparent);
     translate: 0 -50%;
     content: '';
-    pointer-events: none;
   }
   .nui-time-field__wheel {
-    box-sizing: border-box;
-    position: relative;
+    @apply box-border relative overflow-y-auto overscroll-contain scroll-smooth scrollbar-none;
+    @apply touch-pan-y cursor-grab;
     block-size: calc(var(--_row) * var(--_rows));
     min-inline-size: 3.25rem;
     padding-block: calc(var(--_row) * (var(--_rows) - 1) / 2);
-    overflow-y: auto;
-    overscroll-behavior: contain;
     overflow-anchor: none;
     scroll-snap-type: y mandatory;
-    scroll-behavior: smooth;
-    scrollbar-width: none;
     outline: none;
-    touch-action: pan-y;
     mask-image: linear-gradient(to bottom, transparent, #000 38%, #000 62%, transparent);
-    cursor: grab;
   }
   .nui-time-field__wheel::-webkit-scrollbar {
-    display: none;
+    @apply hidden;
   }
   .nui-time-field__wheel-item {
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    block-size: var(--_row);
-    padding-inline: --spacing(3);
+    @apply box-border flex items-center justify-center block-(--_row) px-3 text-muted-foreground;
+    @apply whitespace-nowrap snap-center cursor-pointer select-none;
     border-radius: calc(--theme(--radius inline) - 2px);
-    color: var(--color-muted-foreground);
-    white-space: nowrap;
-    scroll-snap-align: center;
-    cursor: pointer;
-    user-select: none;
     transition:
       color var(--transition-duration-fast) var(--ease-nui),
       outline-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-time-field__wheel-item--selected {
-    color: var(--color-foreground);
+    @apply text-foreground;
     font-weight: 500;
   }
   .nui-time-field__wheel:focus-visible .nui-time-field__wheel-item--selected {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: calc(var(--focus-ring-width) * -1);
+    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-width);
   }
   .nui-time-field__wheel-item--disabled {
-    opacity: var(--opacity-disabled);
-    cursor: not-allowed;
+    @apply opacity-disabled cursor-not-allowed;
   }
   .nui-time-field__wheel-separator {
-    position: relative;
-    color: var(--color-foreground);
+    @apply relative text-foreground;
     font-weight: 500;
   }
   .nui-time-field__empty {
-    margin: 0;
-    padding: --spacing(2) --spacing(3);
-    color: var(--color-muted-foreground);
-    font-size: var(--text-sm);
+    @apply m-0 py-2 px-3 text-muted-foreground text-(length:--text-sm);
   }
   @media (prefers-reduced-motion: reduce) {
     .nui-time-field__wheel {
-      scroll-behavior: auto;
+      @apply scroll-auto;
     }
   }
 }

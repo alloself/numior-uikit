@@ -5,16 +5,8 @@
     --_media-size: 2.5rem;
     --_title-size: var(--text-base);
 
-    box-sizing: border-box;
-    display: grid;
-    justify-items: center;
-    gap: var(--_gap);
-    padding: var(--_padding);
-    color: var(--color-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--text-sm);
-    line-height: var(--leading-normal);
-    text-align: center;
+    @apply box-border grid justify-items-center gap-(--_gap) p-(--_padding) text-foreground;
+    @apply font-sans text-(length:--text-sm) leading-normal text-center;
     animation: nui-empty-appear var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-empty--size-sm {
@@ -24,33 +16,22 @@
     --_title-size: var(--text-sm);
   }
   .nui-empty__media {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    inline-size: var(--_media-size);
-    block-size: var(--_media-size);
-    color: var(--color-subtle-foreground);
+    @apply inline-flex items-center justify-center inline-(--_media-size) block-(--_media-size);
+    @apply text-subtle-foreground;
   }
   .nui-empty__icon {
-    inline-size: 100%;
-    block-size: 100%;
+    @apply inline-full block-full;
   }
   .nui-empty__title {
-    margin: 0;
-    font-size: var(--_title-size);
+    @apply m-0 text-(length:--_title-size) leading-control;
     font-weight: 600;
-    line-height: var(--leading-control);
   }
   .nui-empty__description {
+    @apply text-muted-foreground;
     max-inline-size: 36ch;
-    color: var(--color-muted-foreground);
   }
   .nui-empty__actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: --spacing(2);
-    margin-block-start: var(--spacing);
+    @apply flex flex-wrap justify-center gap-2 mbs-1;
   }
   @keyframes nui-empty-appear {
     from {

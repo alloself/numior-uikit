@@ -1,17 +1,14 @@
 @layer components {
   .nui-accordion {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    font-family: var(--font-sans);
+    @apply box-border flex flex-col font-sans;
   }
   .nui-accordion--variant-plain .nui-accordion__item {
-    border-block-end: 1px solid var(--color-border);
+    @apply border-be border-be-border;
   }
   .nui-accordion--variant-plain .nui-accordion__item:first-child {
-    border-block-start: 1px solid var(--color-border);
+    @apply border-bs border-bs-border;
   }
   .nui-accordion--variant-card {
-    gap: --spacing(2);
+    @apply gap-2;
   }
 }
