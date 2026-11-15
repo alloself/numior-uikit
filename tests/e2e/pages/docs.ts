@@ -34,6 +34,13 @@ export class DocsExample {
       .getByRole('button', { name })
       .evaluate((element) => getComputedStyle(element).borderRadius);
   }
+
+  pageArrowRotation(): Promise<string> {
+    return this.preview
+      .locator('.nui-pagination__arrow')
+      .first()
+      .evaluate((element) => getComputedStyle(element).rotate);
+  }
 }
 
 export class DocsConfigurator {

@@ -103,6 +103,7 @@ export default defineConfigWithTheme<DocsThemeConfig>({
   },
   vite: {
     resolve: process.env.NODE_ENV === 'production' ? {} : { conditions: ['@numior/source'] },
+    build: { cssTarget: ['chrome123', 'firefox125', 'safari17.5'] },
     plugins: [
       tailwindcss(),
       docsDemo(demoRootOf(examplesRoot)),
