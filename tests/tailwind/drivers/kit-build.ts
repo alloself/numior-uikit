@@ -24,7 +24,7 @@ const PACKAGES = [
   'collaboration',
 ];
 
-const LAYERED = new Set(['forms']);
+const LAYERED = new Set(['forms', 'charts']);
 
 const importOf = (name: string): string =>
   LAYERED.has(name)
