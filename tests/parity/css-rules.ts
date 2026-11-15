@@ -296,7 +296,20 @@ const subjectBlock = (selector: string): string => {
   return name === undefined ? '' : `.${name.replace(/--.*$/, '')}`;
 };
 
-const CLASS_SELECTOR = /^\.[\w-]+$/;
+const ARGUMENTS = /\([^()]*\)/g;
+const CLASS_NAME = /\.[\w-]+/g;
+
+const withoutArguments = (compound: string): string => {
+  const bare = compound.replace(ARGUMENTS, '');
+
+  return bare === compound ? bare : withoutArguments(bare);
+};
+
+const subjectClasses = (selector: string): string[] => {
+  const compound = withoutArguments(splitTokens(selector).at(-1) ?? '');
+
+  return compound.includes('::') ? [] : (compound.match(CLASS_NAME) ?? []);
+};
 
 const displaysOf = (rules: readonly CssRule[], environment: CssEnvironment): Displays =>
   rules.reduce((displays, rule) => {
@@ -306,12 +319,8 @@ const displaysOf = (rules: readonly CssRule[], environment: CssEnvironment): Dis
       return displays;
     }
 
-    for (const selector of splitSelectors(rule.selector)) {
-      if (!CLASS_SELECTOR.test(selector)) {
-        continue;
-      }
-
-      displays.set(selector, [...(displays.get(selector) ?? []), display]);
+    for (const name of splitSelectors(rule.selector).flatMap(subjectClasses)) {
+      displays.set(name, [...(displays.get(name) ?? []), display]);
     }
 
     return displays;
@@ -320,16 +329,22 @@ const displaysOf = (rules: readonly CssRule[], environment: CssEnvironment): Dis
 const alwaysGrid = (displays: readonly string[] | undefined): boolean =>
   displays !== undefined && displays.every(isGridDisplay);
 
+const neverOffGrid = (selector: string, displays: Displays): boolean =>
+  subjectClasses(selector).every((name) => (displays.get(name) ?? []).every(isGridDisplay));
+
 const onGrid = (rule: CssRule, displays: Displays, environment: CssEnvironment): boolean => {
   const own = effective(rule, environment).get('display');
+  const selectors = splitSelectors(rule.selector);
 
-  if (own !== undefined) {
-    return isGridDisplay(own) && alwaysGrid(displays.get(rule.selector) ?? [own]);
+  if (!selectors.every((selector) => neverOffGrid(selector, displays))) {
+    return false;
   }
 
-  return splitSelectors(rule.selector).every((selector) => {
-    return alwaysGrid(displays.get(subjectBlock(selector)));
-  });
+  if (own !== undefined) {
+    return isGridDisplay(own);
+  }
+
+  return selectors.every((selector) => alwaysGrid(displays.get(subjectBlock(selector))));
 };
 
 const sameLonghand = (property: string, values: readonly string[], grid: boolean): boolean => {

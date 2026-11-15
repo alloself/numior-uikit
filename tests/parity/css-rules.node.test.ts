@@ -219,6 +219,25 @@ describe('rule comparison of a rewritten stylesheet', () => {
     ]);
   });
 
+  it('keeps start apart from flex-start where a rule on the same subject drops the grid', () => {
+    const old = `.a { display: grid; align-items: start; }
+      .p .a { display: contents; }
+      .b { display: grid; align-items: start; }
+      .b::before { display: block; }
+      .b:has(> .a) { align-content: start; }`;
+
+    const next = `.a { display: grid; align-items: flex-start; }
+      .p .a { display: contents; }
+      .b { display: grid; align-items: flex-start; }
+      .b::before { display: block; }
+      .b:has(> .a) { align-content: flex-start; }`;
+
+    expect(compare(old, next).issues).toEqual([
+      '| .a: lost align-items: start',
+      '| .a: gained align-items: flex-start',
+    ]);
+  });
+
   it('refuses a helper variable that another rule sets', () => {
     const old = '.a { line-height: 1; } .b { line-height: 1.5; }';
     const setter = '.a { --tw-leading: 1; line-height: 1; }';
