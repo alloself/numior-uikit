@@ -34,21 +34,28 @@ const SURFACES = [
 ];
 
 const CODE_SURFACES = ['color-surface-code', 'color-syntax-highlight'];
+
+const PANELS = [
+  'color-surface',
+  'color-surface-muted',
+  'color-surface-elevated',
+  'color-surface-overlay',
+];
+
+const DARK_LIFT = 0.03;
 const SITE_SCOPE = '.docs-theme--numior';
 const HOOK_PREFIX = '--color-theme-';
-const DEFAULT_LAYER = 'color-surface';
 const UNSET = 'initial';
 const DECLARATION_RE = /(--[a-z0-9-]+|[a-z-]+):\s*([^;{}]+);/gu;
 const LIGHT_DARK_RE = /^light-dark\((.+)\)$/su;
 const VAR_RE = /^var\(--([a-z0-9-]+)(?:,\s*(.+))?\)$/su;
 
 const SOFT_RE =
-  /^oklab\(\s*from color-mix\(in oklab, var\(--color-([a-z]+)\) (\d+)%, var\(--color-layer, var\(--color-surface\)\)\)\s+max\(l, var\(--soft-min-lightness\)\) a b\s*\)$/u;
+  /^oklab\(\s*from color-mix\(in oklab, var\(--color-([a-z]+)\) (\d+)%, var\(--color-surface\)\)\s+max\(l, var\(--soft-min-lightness\)\) a b\s*\)$/u;
 
 const MIX_RE = /^color-mix\(in oklab, var\(--([a-z-]+)\) (\d+)%, var\(--([a-z-]+)\)\)$/u;
 const BLOCK_RE = /([^{}]+)\{([^{}]*)\}/gu;
 const THEME_BLOCK_RE = /@theme(?:\s+[a-z]+)*\s*\{([^}]*)\}/gu;
-const LAYER_RE = /--color-layer:\s*([^;]+);/gu;
 const HOOK_RE = /^(--[a-z0-9-]+):\s*var\((--color-theme-[a-z0-9-]+),/u;
 
 const read = (path: string): string =>
@@ -146,7 +153,7 @@ const colorOf = (tokens: Tokens, name: string): Oklab => {
   return mixColors(colorOf(tokens, color), colorOf(tokens, base), Number(share) / 100);
 };
 
-const softOf = (tokens: Tokens, role: string, layer: string): Oklab => {
+const softOf = (tokens: Tokens, role: string): Oklab => {
   const share = SOFT_RE.exec(tokens.get(`color-${role}-soft`) ?? '')?.[2];
 
   if (share === undefined) {
@@ -155,21 +162,14 @@ const softOf = (tokens: Tokens, role: string, layer: string): Oklab => {
 
   const [lightness, a, b] = mixColors(
     colorOf(tokens, `color-${role}`),
-    colorOf(tokens, layer),
+    colorOf(tokens, 'color-surface'),
     Number(share) / 100,
   );
 
   return [Math.max(lightness, Number(tokens.get('soft-min-lightness'))), a, b];
 };
 
-const layersOf = (scheme: Scheme): string[] => [
-  DEFAULT_LAYER,
-  ...[...kitTheme.matchAll(LAYER_RE)].map(
-    ([, value = '']) => VAR_RE.exec(schemeValue(value, scheme))?.[1] ?? value,
-  ),
-];
-
-const rolePairs = (tokens: Tokens, roles: readonly string[], scheme: Scheme): Pair[] => [
+const rolePairs = (tokens: Tokens, roles: readonly string[]): Pair[] => [
   ...roles.map((role) => ({
     text: `color-${role}-foreground`,
     surface: `color-${role}`,
@@ -178,16 +178,11 @@ const rolePairs = (tokens: Tokens, roles: readonly string[], scheme: Scheme): Pa
       colorOf(tokens, `color-${role}`),
     ),
   })),
-  ...roles.flatMap((role) =>
-    layersOf(scheme).map((layer) => ({
-      text: `color-${role}-soft-foreground`,
-      surface: `color-${role}-soft on ${layer}`,
-      ratio: contrastOf(
-        colorOf(tokens, `color-${role}-soft-foreground`),
-        softOf(tokens, role, layer),
-      ),
-    })),
-  ),
+  ...roles.map((role) => ({
+    text: `color-${role}-soft-foreground`,
+    surface: `color-${role}-soft`,
+    ratio: contrastOf(colorOf(tokens, `color-${role}-soft-foreground`), softOf(tokens, role)),
+  })),
 ];
 
 const textPairs = (tokens: Tokens, texts: readonly string[]): Pair[] =>
@@ -215,6 +210,22 @@ const syntaxPairs = (tokens: Tokens): Pair[] =>
 
     return pairs;
   }, []);
+
+const blendingSoft = (tokens: Tokens, roles: readonly string[], scheme: Scheme): string[] =>
+  roles.flatMap((role) => {
+    const [soft] = softOf(tokens, role);
+
+    return PANELS.reduce<string[]>((lines, panel) => {
+      const [surface] = colorOf(tokens, panel);
+      const apart = scheme === 'dark' ? soft - surface >= DARK_LIFT : soft < surface;
+
+      if (apart) {
+        return lines;
+      }
+      lines.push(`${role}-soft ${soft.toFixed(3)} on ${panel} ${surface.toFixed(3)}`);
+      return lines;
+    }, []);
+  });
 
 const failing = (pairs: readonly Pair[]): string[] =>
   pairs.reduce<string[]>((lines, pair) => {
@@ -268,9 +279,32 @@ describe('Numior theme of the docs site', () => {
 
       return failing([
         ...textPairs(tokens, TEXTS),
-        ...rolePairs(tokens, ROLES, scheme),
+        ...rolePairs(tokens, ROLES),
         ...syntaxPairs(tokens),
       ]).map((line) => `${scheme}: ${line}`);
+    });
+
+    expect(failures).toEqual([]);
+  });
+
+  it('fills a choice with one soft colour that stands apart from every panel it sits on', () => {
+    const failures = SCHEMES.flatMap((scheme) => {
+      const kit = kitTokens(scheme);
+      const site = tokensOf(numior, scheme, kitTokens(scheme));
+
+      const accents = Object.values(DocsAccent).flatMap((accent) =>
+        blendingSoft(
+          tokensOf(accentCss(accent), scheme, kitTokens(scheme)),
+          ['primary'],
+          scheme,
+        ).map((line) => `${accent}: ${line}`),
+      );
+
+      return [
+        ...blendingSoft(kit, ROLES, scheme).map((line) => `kit: ${line}`),
+        ...blendingSoft(site, ROLES, scheme).map((line) => `numior: ${line}`),
+        ...accents,
+      ].map((line) => `${scheme} ${line}`);
     });
 
     expect(failures).toEqual([]);
@@ -283,7 +317,7 @@ describe('Numior theme of the docs site', () => {
 
         return failing([
           ...textPairs(tokens, ['color-primary']),
-          ...rolePairs(tokens, ['primary'], scheme),
+          ...rolePairs(tokens, ['primary']),
         ]).map((line) => `${accent} ${scheme}: ${line}`);
       }),
     );

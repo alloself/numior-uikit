@@ -12,6 +12,7 @@
   --prose-marker: square;
   --radius-base: 0.25rem;
   --field-ring-width: 0px;
+  --soft-min-lightness: 0.26;
 
   --color-surface: light-dark(#f3f2ef, #030304);
   --color-surface-muted: light-dark(#e9e8e5, #151414);

@@ -36,7 +36,7 @@
   --state-pressed-overlay: 10%;
   --state-hover-tint: 6%;
   --state-pressed-tint: 12%;
-  --soft-min-lightness: 0.26;
+  --soft-min-lightness: 0.34;
   --radius-base: 0.5rem;
   --radius-full: 9999px;
   --spacing: 0.25rem;
@@ -166,31 +166,31 @@
   --color-chart-axis: var(--color-border-strong);
   --default-transition-timing-function: var(--ease-nui);
   --color-primary-soft: oklab(
-    from color-mix(in oklab, var(--color-primary) 14%, var(--color-layer, var(--color-surface)))
+    from color-mix(in oklab, var(--color-primary) 14%, var(--color-surface))
       max(l, var(--soft-min-lightness)) a b
   );
   --color-secondary-soft: oklab(
-    from color-mix(in oklab, var(--color-secondary) 60%, var(--color-layer, var(--color-surface)))
+    from color-mix(in oklab, var(--color-secondary) 60%, var(--color-surface))
       max(l, var(--soft-min-lightness)) a b
   );
   --color-success-soft: oklab(
-    from color-mix(in oklab, var(--color-success) 14%, var(--color-layer, var(--color-surface)))
+    from color-mix(in oklab, var(--color-success) 14%, var(--color-surface))
       max(l, var(--soft-min-lightness)) a b
   );
   --color-warning-soft: oklab(
-    from color-mix(in oklab, var(--color-warning) 14%, var(--color-layer, var(--color-surface)))
+    from color-mix(in oklab, var(--color-warning) 14%, var(--color-surface))
       max(l, var(--soft-min-lightness)) a b
   );
   --color-error-soft: oklab(
-    from color-mix(in oklab, var(--color-error) 14%, var(--color-layer, var(--color-surface)))
+    from color-mix(in oklab, var(--color-error) 14%, var(--color-surface))
       max(l, var(--soft-min-lightness)) a b
   );
   --color-info-soft: oklab(
-    from color-mix(in oklab, var(--color-info) 14%, var(--color-layer, var(--color-surface)))
+    from color-mix(in oklab, var(--color-info) 14%, var(--color-surface))
       max(l, var(--soft-min-lightness)) a b
   );
   --color-neutral-soft: oklab(
-    from color-mix(in oklab, var(--color-neutral) 10%, var(--color-layer, var(--color-surface)))
+    from color-mix(in oklab, var(--color-neutral) 10%, var(--color-surface))
       max(l, var(--soft-min-lightness)) a b
   );
   --spacing-control: var(--spacing-control-md);
@@ -222,18 +222,6 @@
   --nui-scheme: dark;
 
   color-scheme: dark;
-}
-
-.nui-layer {
-  --color-layer: var(--color-surface-overlay);
-}
-
-.nui-layer--elevated {
-  --color-layer: var(--color-surface-elevated);
-}
-
-.nui-surface--muted {
-  --color-layer: light-dark(var(--color-surface), var(--color-surface-muted));
 }
 
 .nui-theme--density-compact {

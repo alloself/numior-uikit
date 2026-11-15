@@ -35,7 +35,7 @@ describe('@numior/tailwind', () => {
     expect(kit.valueOf('.nui-button', 'border-radius')).toBe('var(--radius-base)');
 
     expect(kit.valueOf('.nui-button', '--_tone-soft')).toContain(
-      'var(--color-layer, var(--color-surface))',
+      'var(--color-primary) 14%, var(--color-surface)',
     );
   });
 
@@ -57,7 +57,6 @@ describe('@numior/tailwind', () => {
 
     expect(kit.valueOf(COMPACT, '--spacing-control-md')).toBe('2rem');
     expect(kit.valueOf(COMPACT, '--spacing-control')).toBeUndefined();
-    expect(kit.valueOf('.nui-layer', '--color-layer')).toBe('var(--color-surface-overlay)');
     expect(kit.selectorsDeclaring('--color-primary-soft')).toEqual([]);
     expect(css).not.toMatch(/\[data-/);
     expect(css).not.toMatch(/--([a-z0-9-]+):\s*var\(--\1\)/);
