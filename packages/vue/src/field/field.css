@@ -1,8 +1,7 @@
 @layer components {
   .nui-field {
-    @apply box-border grid gap-1 min-inline-0 m-0 p-0 text-foreground font-sans;
-    grid-template-columns: minmax(0, 1fr);
-    align-content: start;
+    @apply box-border grid grid-cols-1 content-start gap-1 min-inline-0 m-0 p-0 text-foreground;
+    @apply font-sans;
     border: 0;
   }
   .nui-field--inline {

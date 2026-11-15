@@ -131,9 +131,8 @@
     --_row-weight: 500;
     --_row-description-size: var(--text-sm);
 
-    @apply box-border relative grid border-bs-(length:--_divider-size) border-bs-(--_divider);
-    @apply bg-clip-padding;
-    grid-template-columns: minmax(0, 1fr);
+    @apply box-border relative grid grid-cols-1 border-bs-(length:--_divider-size);
+    @apply border-bs-(--_divider) bg-clip-padding;
     transition: color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-list-item:first-child {
