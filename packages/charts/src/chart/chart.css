@@ -3,15 +3,7 @@
     --_height: 18.75rem;
     --_text-size: var(--text-xs);
 
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: --spacing(3);
-    min-inline-size: 0;
-    margin: 0;
-    color: var(--color-muted-foreground);
-    font-family: var(--font-sans);
-    isolation: isolate;
+    @apply box-border flex flex-col gap-3 min-inline-0 m-0 text-muted-foreground font-sans isolate;
   }
 
   .nui-chart--interactive {
@@ -19,40 +11,31 @@
   }
 
   .nui-chart--fill {
-    block-size: 100%;
+    @apply block-full;
   }
 
   .nui-chart--fill .nui-chart__frame {
+    @apply block-auto min-block-0;
     flex: 1 1 0;
-    block-size: auto;
-    min-block-size: 0;
   }
 
   .nui-chart--interactive .nui-chart__svg {
-    cursor: pointer;
+    @apply cursor-pointer;
   }
 
   .nui-chart--interactive:focus-visible {
-    border-radius: --theme(--radius-md inline);
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply rounded-md outline-(length:--focus-ring-width) outline-ring;
+    @apply outline-offset-(--focus-ring-offset);
   }
 
   .nui-chart__frame {
-    position: relative;
-    box-sizing: border-box;
-    inline-size: 100%;
-    min-inline-size: 0;
-    block-size: var(--_height);
+    @apply relative box-border inline-full min-inline-0 block-(--_height);
   }
 
   .nui-chart__font-probe {
-    position: absolute;
+    @apply absolute text-(length:--_text-size) invisible pointer-events-none;
     inline-size: 1em;
     block-size: 1em;
-    font-size: var(--_text-size);
-    visibility: hidden;
-    pointer-events: none;
   }
 
   .nui-chart__font-probe:dir(rtl) {
@@ -60,43 +43,37 @@
   }
 
   .nui-chart__scene {
-    position: relative;
-    inline-size: fit-content;
+    @apply relative inline-fit;
     direction: ltr;
   }
 
   .nui-chart__svg {
-    display: block;
-    max-inline-size: 100%;
-    block-size: auto;
-    overflow: visible;
+    @apply block max-inline-full block-auto overflow-visible;
   }
 
   .nui-chart__labels {
     --_unit: calc(100cqi / var(--_scene-width));
 
-    position: absolute;
-    inset: 0;
+    @apply absolute inset-0 pointer-events-none;
     container-type: inline-size;
-    pointer-events: none;
   }
 
   .nui-chart__line {
-    stroke-width: 1;
+    @apply stroke-1;
     shape-rendering: crispEdges;
     transition: stroke var(--transition-duration-fast) var(--ease-nui);
   }
 
   .nui-chart__line--grid {
-    stroke: --theme(--color-chart-grid inline);
+    @apply stroke-chart-grid;
   }
 
   .nui-chart__line--baseline {
-    stroke: --theme(--color-chart-axis inline);
+    @apply stroke-chart-axis;
   }
 
   .nui-chart__bar {
-    fill: var(--_fill);
+    @apply fill-(--_fill);
     transition:
       fill var(--transition-duration-fast) var(--ease-nui),
       opacity var(--transition-duration-fast) var(--ease-nui),
@@ -185,9 +162,7 @@
   }
 
   .nui-chart__slice {
-    fill: var(--_fill);
-    stroke: var(--color-surface);
-    stroke-width: 2;
+    @apply fill-(--_fill) stroke-surface stroke-2;
     stroke-linejoin: round;
     transition:
       fill var(--transition-duration-fast) var(--ease-nui),
@@ -196,7 +171,7 @@
   }
 
   .nui-chart__area {
-    fill: var(--_fill);
+    @apply fill-(--_fill);
     fill-opacity: 0.24;
     transition:
       fill var(--transition-duration-fast) var(--ease-nui),
@@ -204,9 +179,8 @@
   }
 
   .nui-chart__stroke {
+    @apply stroke-(--_fill) stroke-2;
     fill: none;
-    stroke: var(--_fill);
-    stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
     transition:
@@ -220,9 +194,7 @@
   }
 
   .nui-chart__point {
-    fill: var(--_fill);
-    stroke: var(--color-surface);
-    stroke-width: 2;
+    @apply fill-(--_fill) stroke-surface stroke-2;
     transition:
       fill var(--transition-duration-fast) var(--ease-nui),
       opacity var(--transition-duration-fast) var(--ease-nui),
@@ -234,14 +206,12 @@
   .nui-chart__bar--muted,
   .nui-chart__slice--muted,
   .nui-chart__point--muted {
-    opacity: 0.35;
+    @apply opacity-35;
   }
 
   .nui-chart__crosshair {
-    stroke: --theme(--color-chart-axis inline);
-    stroke-width: 1;
+    @apply stroke-chart-axis stroke-1 pointer-events-none;
     shape-rendering: crispEdges;
-    pointer-events: none;
   }
 
   .nui-chart__tooltip {
@@ -249,22 +219,12 @@
     --_dx: var(--_shift);
     --_dy: -50%;
 
-    box-sizing: border-box;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1;
+    @apply box-border absolute top-0 left-0 z-1 py-2 px-3 border border-border rounded-md;
+    @apply bg-surface-elevated text-foreground text-(length:--text-sm) pointer-events-none;
+    @apply opacity-0;
     min-inline-size: 8rem;
     max-inline-size: min(16rem, 50%);
-    padding: --spacing(2) --spacing(3);
-    border: 1px solid var(--color-border);
-    border-radius: --theme(--radius-md inline);
-    background: var(--color-surface-elevated);
     box-shadow: var(--shadow-md);
-    color: var(--color-foreground);
-    font-size: var(--text-sm);
-    pointer-events: none;
-    opacity: 0;
     translate: calc(var(--_x) + var(--_dx)) calc(var(--_y) + var(--_dy));
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),
@@ -286,48 +246,34 @@
   }
 
   .nui-chart__tooltip--shown {
-    opacity: 1;
+    @apply opacity-100;
   }
 
   .nui-chart__tooltip-title {
-    margin: 0 0 var(--spacing);
+    @apply mbs-0 mbe-1 mx-0;
     font-weight: 500;
   }
 
   .nui-chart__tooltip-rows {
-    display: grid;
-    gap: var(--spacing);
-    margin: 0;
-    padding: 0;
-    list-style: none;
+    @apply grid gap-1 m-0 p-0 list-none;
   }
 
   .nui-chart__tooltip-row {
-    display: flex;
-    align-items: center;
-    gap: --spacing(2);
+    @apply flex items-center gap-2;
   }
 
   .nui-chart__tooltip-name {
-    flex: 1;
-    color: var(--color-muted-foreground);
+    @apply flex-1 text-muted-foreground;
   }
 
   .nui-chart__tooltip-value {
-    margin-inline-start: auto;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
+    @apply ms-auto tabular-nums whitespace-nowrap;
     font-weight: 500;
   }
 
   .nui-chart__live {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    margin: 0;
-    overflow: hidden;
+    @apply absolute inline-px block-px m-0 overflow-hidden whitespace-nowrap;
     clip-path: inset(50%);
-    white-space: nowrap;
   }
 
   .nui-chart__text {
@@ -335,12 +281,10 @@
     --_shift-y: 0%;
     --_rotate: 0deg;
 
-    position: absolute;
+    @apply absolute leading-none whitespace-pre;
     inset-block-start: calc(var(--_y) * var(--_unit));
     inset-inline-start: calc(var(--_x) * var(--_unit));
     font-size: calc(var(--_font-size) * var(--_unit));
-    line-height: 1;
-    white-space: pre;
     transform: rotate(var(--_rotate)) translate(var(--_shift-x), var(--_shift-y));
     transform-origin: 0 0;
   }
@@ -363,71 +307,46 @@
 
   .nui-chart__text--value-title,
   .nui-chart__text--category-title {
-    color: var(--color-foreground);
+    @apply text-foreground;
     font-weight: 500;
   }
 
   .nui-chart__legend {
-    display: flex;
-    flex-wrap: wrap;
+    @apply flex flex-wrap m-0 p-0 text-foreground text-(length:--text-sm) list-none;
     gap: --spacing(2) --spacing(4);
-    margin: 0;
-    padding: 0;
-    color: var(--color-foreground);
-    font-size: var(--text-sm);
-    list-style: none;
   }
 
   .nui-chart__legend-item {
-    display: inline-flex;
-    align-items: center;
-    gap: --spacing(2);
+    @apply inline-flex items-center gap-2;
   }
 
   .nui-chart__swatch {
-    box-sizing: border-box;
+    @apply box-border bg-(--_fill);
     inline-size: 0.625rem;
     block-size: 0.625rem;
     border-radius: 2px;
-    background: var(--_fill);
   }
 
   .nui-chart__empty {
-    display: grid;
-    place-items: center;
-    block-size: 100%;
-    margin: 0;
-    font-size: var(--text-sm);
+    @apply grid place-items-center block-full m-0 text-(length:--text-sm);
   }
 
   .nui-chart__data:not(.nui-chart__data--shown) {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
+    @apply absolute inline-px block-px overflow-hidden whitespace-nowrap;
     clip-path: inset(50%);
-    white-space: nowrap;
   }
 
   .nui-chart__table {
-    box-sizing: border-box;
-    inline-size: 100%;
-    border-collapse: collapse;
-    color: var(--color-foreground);
-    font-size: var(--text-sm);
-    font-variant-numeric: tabular-nums;
+    @apply box-border inline-full border-collapse text-foreground text-(length:--text-sm);
+    @apply tabular-nums;
   }
 
   .nui-chart__caption {
-    padding-block-end: --spacing(2);
-    color: var(--color-muted-foreground);
-    text-align: start;
+    @apply pbe-2 text-muted-foreground text-start;
   }
 
   .nui-chart__table :is(th, td) {
-    padding: var(--spacing) --spacing(2);
-    border-block-end: 1px solid var(--color-border);
-    text-align: end;
+    @apply py-1 px-2 border-be border-be-border text-end;
   }
 
   .nui-chart__table :is(thead th, tbody th) {
@@ -435,6 +354,6 @@
   }
 
   .nui-chart__table :is(thead th:first-child, tbody th) {
-    text-align: start;
+    @apply text-start;
   }
 }
