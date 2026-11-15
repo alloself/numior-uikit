@@ -28,9 +28,11 @@ const TEXTS = [
   'The payment went through twice. Refund the extra charge and send the receipt to my email.',
 ];
 
+const NAMES = customers.map((customer) => customer.name);
+
 const requests: Request[] = Array.from({ length: 2000 }, (_, index) => ({
   id: index + 1,
-  author: customers[index % customers.length]?.name ?? '',
+  author: NAMES[index % NAMES.length] ?? '',
   topic: TOPICS[(index * 3) % TOPICS.length] ?? '',
   text: TEXTS[(index * 5) % TEXTS.length] ?? '',
 }));
