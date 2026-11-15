@@ -55,6 +55,17 @@ describe('token sections', () => {
     expect(samplesOf(TokenSection.Type)['--color-prose-marker']).toBe(TokenSample.Color);
   });
 
+  it('takes the fallback of a theme hook to know that a token is a colour', () => {
+    const soft = rowOf(TokenSection.Tones, '--color-primary-soft-foreground');
+    const highlight = rowOf(TokenSection.Code, '--color-syntax-highlight');
+
+    expect(soft?.light).toContain('var(--color-accent-soft-foreground,');
+    expect(soft?.sample).toBe(TokenSample.Color);
+    expect(soft?.value).toBe(rowOf(TokenSection.Tones, '--color-primary')?.value);
+    expect(highlight?.light).toContain('var(--color-accent-syntax-highlight,');
+    expect(highlight?.sample).toBe(TokenSample.Color);
+  });
+
   it('picks the sample of shape, size, shadow and type tokens by their names', () => {
     const type = samplesOf(TokenSection.Type);
     const sizes = samplesOf(TokenSection.Sizes);

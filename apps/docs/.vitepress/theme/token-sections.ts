@@ -58,30 +58,12 @@ const TONE_ORDER = ['primary', 'secondary', 'success', 'warning', 'error', 'info
 const TONE_PARTS = ['', '-foreground', '-soft', '-soft-foreground'];
 
 const COLOR_VALUE_RE = /^(?:oklch|oklab|rgb|hsl|color-mix|light-dark|#)/;
-const REFERENCE_RE = /^var\((--[a-z0-9-]+)\)$/;
 const PREFIX = '--';
 
 const shortName = (token: TokenReference): string => token.name.slice(PREFIX.length);
 
-const isColor = (
-  token: TokenReference | undefined,
-  byName: ReadonlyMap<string, TokenReference>,
-): boolean => {
-  if (token === undefined) {
-    return false;
-  }
-  const target = REFERENCE_RE.exec(token.light)?.[1];
-
-  return target === undefined
-    ? token.dark !== undefined || COLOR_VALUE_RE.test(token.light)
-    : isColor(byName.get(target), byName);
-};
-
-const sampleOf = (
-  token: TokenReference,
-  byName: ReadonlyMap<string, TokenReference>,
-): TokenSample => {
-  if (isColor(token, byName)) {
+const sampleOf = (token: TokenReference, value: string): TokenSample => {
+  if (COLOR_VALUE_RE.test(value)) {
     return TokenSample.Color;
   }
   const name = shortName(token);
@@ -159,13 +141,14 @@ export const tokenRowsOf = (
   const byName = new Map(tokens.map((token) => [token.name, token]));
 
   const rows = tokens.reduce<TokenRow[]>((found, token) => {
-    if (tokenSectionOf(token) === section) {
-      found.push({
-        ...token,
-        sample: sampleOf(token, byName),
-        value: expanded(fullValueOf(token), byName, EXPANSION_DEPTH),
-      });
+    if (tokenSectionOf(token) !== section) {
+      return found;
     }
+
+    const value = expanded(fullValueOf(token), byName, EXPANSION_DEPTH);
+
+    found.push({ ...token, sample: sampleOf(token, value), value });
+
     return found;
   }, []);
 
