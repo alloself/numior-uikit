@@ -13,12 +13,13 @@
       :column-menu="false"
       caption="Sensor readings, °C"
     />
-    <p class="text-sm text-muted-foreground">Selected cells: {{ selectedCells }}</p>
+    <p class="m-0 text-sm text-muted-foreground">{{ summary }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { plural } from '@numior/primitives';
 import {
   NuiTable,
   type NuiTableColumn,
@@ -63,6 +64,14 @@ const selectedCells = computed(() =>
     0,
   ),
 );
+
+const summary = computed(() => {
+  const count = selectedCells.value;
+
+  return count === 0
+    ? 'No cells selected.'
+    : `${count} ${plural('en', count, { one: 'cell', other: 'cells' })} selected.`;
+});
 
 const keyOf = (reading: Reading): number => reading.hour;
 </script>

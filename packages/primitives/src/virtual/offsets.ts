@@ -23,6 +23,20 @@ export interface CanvasScale {
   readonly factor: number;
 }
 
+export interface CanvasMove {
+  readonly shift: number;
+  readonly from: number;
+  readonly to: number;
+  readonly factor: number;
+  readonly end: number;
+  readonly jump: number;
+}
+
+export interface CanvasPlace {
+  readonly physical: number;
+  readonly shift: number;
+}
+
 const isSizeIndex = (value: ItemSize): value is SizeIndex => typeof value === 'object';
 
 export const buildSizeModel = (count: number, itemSize: ItemSize): SizeModel => {
@@ -181,4 +195,39 @@ export const canvasScaleFor = (
     return { canvas: total, factor: 1 };
   }
   return { canvas: maxSize, factor: (total - viewport) / (maxSize - viewport) };
+};
+
+const SHIFT_SLOPE = 2;
+
+export const canvasShiftFor = ({ shift, from, to, factor, end, jump }: CanvasMove): number => {
+  if (factor === 1) {
+    return 0;
+  }
+  if (Math.abs(to - from) > jump) {
+    return to * (factor - 1);
+  }
+  const slope = SHIFT_SLOPE * (factor - 1);
+  const high = Math.min(to * slope, end * factor - to);
+  const low = Math.max(end * (factor - 1) - (end - to) * slope, -to);
+
+  return clamp(shift, low, high);
+};
+
+export const canvasPlaceFor = (
+  logical: number,
+  { shift, factor, end }: Pick<CanvasMove, 'shift' | 'factor' | 'end'>,
+): CanvasPlace => {
+  if (factor === 1) {
+    return { physical: logical, shift: 0 };
+  }
+  const kept = logical - shift;
+  const move = { shift, from: kept, to: kept, factor, end, jump: Number.POSITIVE_INFINITY };
+  const fits = kept >= 0 && kept <= end && canvasShiftFor(move) === shift;
+
+  if (fits) {
+    return { physical: kept, shift };
+  }
+  const physical = logical / factor;
+
+  return { physical, shift: logical - physical };
 };

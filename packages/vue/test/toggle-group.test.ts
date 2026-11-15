@@ -148,4 +148,120 @@ describe('NuiToggleGroup', () => {
     expect(off.hasModifier('disabled')).toBe(true);
     expect(off.items.every((item) => item.element.disabled)).toBe(true);
   });
+
+  it('shows an edge button only where items are hidden and pages the group with it', async () => {
+    const group = ToggleGroupDriver.mount({ modelValue: 'light', props: { label: 'Theme' } });
+
+    await group.ready();
+
+    expect(group.edges).toEqual({ start: false, end: false });
+
+    expect(group.edgeButtons.map((edge) => edge.attributes('aria-hidden'))).toEqual([
+      'true',
+      'true',
+    ]);
+
+    await group.scrollTrack({ scrollWidth: 600, clientWidth: 200, scrollLeft: 0 });
+
+    expect(group.edges).toEqual({ start: false, end: true });
+    expect(group.fades).toEqual({ start: false, end: true });
+
+    await group.clickEdge('end');
+
+    expect(group.scrolled).toBe(160);
+    expect(group.edges).toEqual({ start: true, end: true });
+
+    await group.clickEdge('end');
+    await group.clickEdge('end');
+
+    expect(group.scrolled).toBe(400);
+    expect(group.edges).toEqual({ start: true, end: false });
+
+    await group.clickEdge('start');
+
+    expect(group.scrolled).toBe(240);
+    expect(group.tabIndexes).toEqual([0, -1, -1, -1]);
+
+    group.unmount();
+  });
+
+  it('scrolls an overflowing group with a vertical wheel and leaves the wheel to the page otherwise', async () => {
+    const group = ToggleGroupDriver.mount({ modelValue: 'light' });
+
+    await group.ready();
+
+    expect(await group.wheel(100)).toBe(false);
+
+    await group.scrollTrack({ scrollWidth: 600, clientWidth: 200, scrollLeft: 0 });
+
+    expect(await group.wheel(-100)).toBe(false);
+    expect(await group.wheel(100, { shiftKey: true })).toBe(false);
+    expect(await group.wheel(100)).toBe(true);
+    expect(group.scrolled).toBe(100);
+
+    expect(await group.wheel(1000)).toBe(true);
+    expect(await group.wheel(1000)).toBe(false);
+    expect(group.scrolled).toBe(400);
+
+    group.unmount();
+  });
+
+  it('pages towards the visual end in RTL and shows no edges in a vertical group', async () => {
+    const rtl = ToggleGroupDriver.mount({ modelValue: 'light', dir: 'rtl' });
+
+    await rtl.ready();
+    await rtl.scrollTrack({ scrollWidth: 600, clientWidth: 200, scrollLeft: 0, rtl: true });
+    await rtl.clickEdge('end');
+
+    expect(rtl.scrolled).toBe(-160);
+    expect(rtl.edges).toEqual({ start: true, end: true });
+
+    rtl.unmount();
+
+    const vertical = ToggleGroupDriver.mount({
+      modelValue: 'light',
+      props: { orientation: 'vertical' },
+    });
+
+    await vertical.ready();
+    await vertical.scrollTrack({ scrollWidth: 600, clientWidth: 200, scrollLeft: 0 });
+
+    expect(vertical.edges).toEqual({ start: false, end: false });
+    expect(await vertical.wheel(100)).toBe(false);
+
+    vertical.unmount();
+  });
+
+  it('keeps the pressed item in view while sizes change until the user scrolls', async () => {
+    const group = ToggleGroupDriver.mount({ modelValue: 'auto', observed: true });
+
+    await group.ready();
+    await group.scrollTrack({ scrollWidth: 600, clientWidth: 200, scrollLeft: 0 });
+    await group.resizeItem('Auto', { start: 230, size: 80 });
+
+    expect(group.scrolled).toBe(110);
+
+    expect(await group.wheel(40)).toBe(true);
+
+    await group.resizeItem('Auto', { start: 260, size: 80 });
+
+    expect(group.scrolled).toBe(150);
+
+    group.unmount();
+  });
+
+  it('scrolls a chosen item that hides behind the edge into view', async () => {
+    const group = ToggleGroupDriver.mount({ modelValue: 'light' });
+
+    await group.ready();
+    await group.scrollTrack({ scrollWidth: 600, clientWidth: 200, scrollLeft: 0 });
+    group.placeItem('Auto', { start: 170, size: 80 });
+
+    await group.click('Auto');
+
+    expect(group.selected).toBe('auto');
+    expect(group.scrolled).toBe(50);
+
+    group.unmount();
+  });
 });

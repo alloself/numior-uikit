@@ -13,7 +13,9 @@ import { useDirection } from '../direction/direction-context';
 import { sameFrame, virtualFrameOf, type VirtualFrame } from './frame';
 import {
   buildSizeModel,
+  canvasPlaceFor,
   canvasScaleFor,
+  canvasShiftFor,
   countOf,
   indexAt,
   offsetAt,
@@ -89,6 +91,7 @@ export interface VirtualList {
 
 const DEFAULT_OVERSCAN = 4;
 const DEFAULT_INITIAL = 20;
+const JUMP_VIEWPORTS = 2;
 
 const indicesOf = (range: VirtualRange, frozen: number, pinned: number | undefined): number[] => {
   const held = Array.from({ length: frozen }, (_, index) => index);
@@ -112,6 +115,7 @@ export const useVirtualList = (
 ): VirtualList => {
   const viewport = ref(0);
   const physical = ref(0);
+  const canvasShift = ref(0);
   const direction = useDirection(container);
   const model = computed(() => buildSizeModel(toValue(options.count), toValue(options.itemSize)));
   const enabled = (): boolean => toValue(options.enabled) ?? true;
@@ -123,7 +127,12 @@ export const useVirtualList = (
     canvasScaleFor(totalSize.value, span.value, toValue(options.maxSize)),
   );
 
-  const scrollTop = computed(() => physical.value * scale.value.factor);
+  const physicalEnd = computed(() => Math.max(0, scale.value.canvas - span.value));
+
+  const scrollTop = computed(() =>
+    scale.value.factor === 1 ? physical.value : physical.value + canvasShift.value,
+  );
+
   const shift = computed(() => scrollTop.value - physical.value);
 
   const frozen = computed(() =>
@@ -221,7 +230,30 @@ export const useVirtualList = (
     }
 
     viewport.value = axis() === VirtualAxis.X ? element.clientWidth : element.clientHeight;
-    physical.value = readScroll(element);
+    const next = readScroll(element);
+
+    canvasShift.value = canvasShiftFor({
+      shift: canvasShift.value,
+      from: physical.value,
+      to: next,
+      factor: scale.value.factor,
+      end: physicalEnd.value,
+      jump: span.value * JUMP_VIEWPORTS,
+    });
+
+    physical.value = next;
+  };
+
+  const place = (logical: number): number => {
+    const next = canvasPlaceFor(logical, {
+      shift: canvasShift.value,
+      factor: scale.value.factor,
+      end: physicalEnd.value,
+    });
+
+    canvasShift.value = next.shift;
+
+    return next.physical;
   };
 
   const scrollTo = (
@@ -239,7 +271,7 @@ export const useVirtualList = (
     if (target === undefined) {
       return;
     }
-    const next = Math.max(0, target - held) / scale.value.factor;
+    const next = place(Math.max(0, target - held));
 
     writeScroll(element, next);
     physical.value = next;
@@ -252,9 +284,13 @@ export const useVirtualList = (
 
   const settle = (logical: number): void => {
     const element = toValue(container);
-    const next = logical / scale.value.factor;
 
-    if (!element || next === physical.value) {
+    if (!element) {
+      return;
+    }
+    const next = place(logical);
+
+    if (next === physical.value) {
       return;
     }
 
@@ -310,7 +346,8 @@ export const useVirtualList = (
       return;
     }
     const before = canvasScaleFor(totalSizeOf(previous), span.value, toValue(options.maxSize));
-    const edge = physical.value * before.factor + offsetAt(previous, frozen.value);
+    const top = before.factor === 1 ? physical.value : physical.value + canvasShift.value;
+    const edge = top + offsetAt(previous, frozen.value);
     const first = indexAt(previous, edge);
     const within = edge - offsetAt(previous, first);
 

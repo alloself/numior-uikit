@@ -1,34 +1,23 @@
 <template>
   <NuiList
-    v-model="city"
-    :items="cities"
+    v-model="category"
+    :items="groups"
     selectable="single"
     variant="outline"
-    label="City"
+    label="Product category"
     class="w-full max-w-sm"
   />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiList, type NuiListSource, type NuiOption } from '@numior/vue';
+import { NuiList, type NuiOptionSource } from '@numior/vue';
+import { categories } from '#demo/products';
 
-const city = ref<string | null>('ber');
+const groups: NuiOptionSource = categories.map((category) => ({
+  label: category.label,
+  items: (category.children ?? []).map(({ value, label }) => ({ value, label })),
+}));
 
-const cities: NuiListSource<NuiOption<string>> = [
-  {
-    label: 'Europe',
-    items: [
-      { value: 'vie', label: 'Vienna' },
-      { value: 'ber', label: 'Berlin' },
-    ],
-  },
-  {
-    label: 'Asia',
-    items: [
-      { value: 'tyo', label: 'Tokyo' },
-      { value: 'sel', label: 'Seoul' },
-    ],
-  },
-];
+const category = ref<string | null>('tables');
 </script>

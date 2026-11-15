@@ -5,7 +5,6 @@ test.describe('one-time code field', () => {
   test('types a code slot by slot, skips letters and verifies it once complete', async ({
     playground,
     otp,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -14,11 +13,11 @@ test.describe('one-time code field', () => {
     await expect(otp.caretOf(otp.sms)).toHaveCount(1);
     expect(await otp.activeSlots(otp.sms)).toEqual([0]);
 
-    await page.keyboard.type('12a3');
+    await otp.typeCode('12a3');
     expect(await otp.slotTexts(otp.sms)).toEqual(['1', '2', '3', '', '', '']);
     expect(await otp.activeSlots(otp.sms)).toEqual([3]);
 
-    await page.keyboard.type('456');
+    await otp.typeCode('456');
     await expect.poll(async () => (await otp.readOutput()).state).toBe('passed');
     expect((await otp.readOutput()).completed).toEqual(['123456']);
     await expect(otp.caretOf(otp.sms)).toHaveCount(0);
@@ -28,45 +27,43 @@ test.describe('one-time code field', () => {
   test('clears a wrong code, shows the error and keeps the focus for another try', async ({
     playground,
     otp,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await otp.clickSlot(otp.sms, 0);
-    await page.keyboard.type('000000');
+    await otp.typeCode('000000');
     await expect(otp.errorOf(otp.sms)).toHaveText('Неверный код, попробуйте ещё раз');
     await expect.poll(async () => (await otp.readOutput()).sms).toBe('');
     await expect(otp.sms).toBeFocused();
     expect(await otp.activeSlots(otp.sms)).toEqual([0]);
 
-    await page.keyboard.type('1');
+    await otp.typeCode('1');
     await expect(otp.errorOf(otp.sms)).toHaveCount(0);
   });
 
   test('overwrites a clicked slot, deletes to the left and moves with the arrows', async ({
     playground,
     otp,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await otp.clickSlot(otp.spare, 0);
-    await page.keyboard.type('482913');
+    await otp.typeCode('482913');
     await otp.clickSlot(otp.spare, 2);
     expect(await otp.activeSlots(otp.spare)).toEqual([2]);
 
-    await page.keyboard.type('7');
+    await otp.typeCode('7');
     await expect.poll(async () => (await otp.readOutput()).spare).toBe('487913');
     expect(await otp.activeSlots(otp.spare)).toEqual([3]);
 
-    await page.keyboard.press('Backspace');
+    await otp.eraseBackward();
     await expect.poll(async () => (await otp.readOutput()).spare).toBe('48713');
     expect(await otp.activeSlots(otp.spare)).toEqual([2]);
 
-    await page.keyboard.press('ArrowLeft');
+    await otp.stepBack();
     expect(await otp.activeSlots(otp.spare)).toEqual([1]);
 
-    await page.keyboard.press('End');
+    await otp.jumpToLastSlot();
     expect(await otp.activeSlots(otp.spare)).toEqual([5]);
     await expect(otp.caretOf(otp.spare)).toHaveCount(1);
   });
@@ -74,13 +71,12 @@ test.describe('one-time code field', () => {
   test('activates the clicked slot without passing through the end of the code', async ({
     playground,
     otp,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await otp.clickSlot(otp.spare, 0);
-    await page.keyboard.type('482913');
-    await page.keyboard.press('Tab');
+    await otp.typeCode('482913');
+    await otp.leaveWithTab();
     await otp.recordActiveSlots(otp.spare);
     await otp.clickSlot(otp.spare, 1);
     await expect.poll(() => otp.activeSlots(otp.spare)).toEqual([1]);
@@ -93,7 +89,6 @@ test.describe('one-time code field', () => {
   test('pastes a whole code with its separators and upper-cases access codes', async ({
     playground,
     otp,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -102,7 +97,7 @@ test.describe('one-time code field', () => {
     await expect.poll(async () => (await otp.readOutput()).spare).toBe('482913');
 
     await otp.clickSlot(otp.access, 0);
-    await page.keyboard.type('k7qx-9m2a');
+    await otp.typeCode('k7qx-9m2a');
     await expect.poll(async () => (await otp.readOutput()).access).toBe('K7QX9M2A');
     expect(await otp.slotTexts(otp.access)).toEqual(['K', '7', 'Q', 'X', '9', 'M', '2', 'A']);
   });
@@ -117,7 +112,7 @@ test.describe('one-time code field', () => {
     await expect(otp.pin).toHaveAttribute('type', 'password');
 
     await otp.clickSlot(otp.pin, 0);
-    await page.keyboard.type('48');
+    await otp.typeCode('48');
     await expect(otp.dots(otp.pin)).toHaveCount(2);
     expect(await otp.revealedSlots(otp.pin)).toEqual([1]);
 
@@ -180,13 +175,12 @@ test.describe('one-time code field', () => {
   test('one-time code fields have no automatically detectable WCAG AA violations', async ({
     playground,
     otp,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await otp.clickSlot(otp.spare, 0);
-    await page.keyboard.type('48');
-    await page.keyboard.press('Tab');
+    await otp.typeCode('48');
+    await otp.leaveWithTab();
 
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);

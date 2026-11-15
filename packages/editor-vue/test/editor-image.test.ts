@@ -176,6 +176,29 @@ describe('NuiEditor image', () => {
     expect(image.progress).toBeUndefined();
   });
 
+  it('keeps the picture and says why in a toast when the replacement file does not fit', async () => {
+    const server = new FakeUploads();
+    const editor = await mounted({ upload: server.adapter, maxSize: 1024 });
+    const image = EditorImageDriver.of(editor);
+    const uploads = EditorUploadDriver.of(editor);
+
+    await image.select();
+    await image.replaceWith(fileOf('scan.pdf', 'application/pdf'));
+    await image.replaceWith(fileOf('huge.png', 'image/png', 4096));
+    await uploads.settle();
+
+    expect(editor.documents).toEqual([]);
+    expect(image.progress).toBeUndefined();
+    expect(server.started).toEqual([]);
+
+    expect(uploads.toasts).toEqual([
+      'error|scan.pdf: this file type is not accepted',
+      'error|huge.png is larger than 1 kB',
+    ]);
+
+    expect(uploads.announcement).toBe('');
+  });
+
   it('keeps the latest replacement when two uploads race for one image', async () => {
     const server = new FakeUploads();
     const editor = await mounted({ upload: server.adapter });

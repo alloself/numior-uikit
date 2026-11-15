@@ -16,8 +16,8 @@ const docs: DocsMap = {
         en: 'Width of the expanded sidebar, such as `16rem`.',
       },
       railWidth: {
-        ru: 'Ширина свёрнутой боковой панели, где видны только иконки.',
-        en: 'Width of the collapsed sidebar that shows only icons.',
+        ru: 'Ширина свёрнутой боковой панели, где видны только иконки. По умолчанию — токен `--spacing-layout-rail`.',
+        en: 'Width of the collapsed sidebar that shows only icons. Defaults to the `--spacing-layout-rail` token.',
       },
       endWidth: {
         ru: 'Ширина колонки из слота `end`.',

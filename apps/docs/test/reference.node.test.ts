@@ -71,6 +71,7 @@ describe('docs reference', () => {
       entry,
       checker.getComponentMeta(entry.file),
       { import: familyStyleImport(entry) ?? '', blocks: [], tokens: [] },
+      [],
       undefined,
       enumerationMembers(`${ROOT}packages/vue/dist/index.d.ts`),
     );
@@ -128,6 +129,7 @@ describe('docs reference', () => {
       entry,
       checker.getComponentMeta(entry.file),
       undefined,
+      [],
       undefined,
     );
 
@@ -280,6 +282,8 @@ describe('docs reference', () => {
     expect(bundle.components.NuiSelect?.messages).toBe('select');
     expect(bundle.catalogs.select?.texts.empty?.ru).toBeTypeOf('string');
     expect(bundle.components.NuiForm?.package).toBe('@numior/forms');
+    expect(bundle.components.NuiButton?.file).toBe('packages/vue/src/button/NuiButton.vue');
+    expect(JSON.stringify(bundle)).not.toContain(ROOT);
     expect(bundle.declarations.some((entry) => entry.name === 'useClipboard')).toBe(true);
     expect(bundle.tokens.some((token) => token.name === '--color-primary')).toBe(true);
     expect(bundle.icons.some((icon) => icon.alias === 'direction')).toBe(true);
@@ -303,6 +307,7 @@ describe('docs reference', () => {
       ],
       tokens: [],
       icons: [],
+      stylesheets: [],
     };
 
     const current = (): ReferenceBundle => bundle;

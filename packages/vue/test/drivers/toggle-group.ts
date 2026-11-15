@@ -2,15 +2,18 @@ import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { nextTick } from 'vue';
 import type { NuiToggleGroupProps, NuiToggleItem } from '../../src';
 import ToggleGroupScene from '../fixtures/ToggleGroupScene.vue';
+import { ResizeObservers } from '../support/resize-observers';
 import { createSelection, type Selection, type SelectionValue } from '../support/selection';
 import { TopLayerStubs } from '../support/top-layer';
-import { ComponentDriver } from './component';
+import { placeBox, type TrackBox } from '../support/track-scroll';
+import { EdgeScrollDriver } from './edge-scroll';
 
 export interface ToggleGroupMountOptions {
   readonly props?: Omit<NuiToggleGroupProps<unknown>, 'items'>;
   readonly items?: readonly NuiToggleItem<unknown>[];
   readonly modelValue?: SelectionValue;
   readonly dir?: 'ltr' | 'rtl';
+  readonly observed?: boolean;
 }
 
 const THEME_ITEMS: readonly NuiToggleItem[] = [
@@ -20,19 +23,29 @@ const THEME_ITEMS: readonly NuiToggleItem[] = [
   { value: 'auto', label: 'Auto' },
 ];
 
-export class ToggleGroupDriver extends ComponentDriver {
+export class ToggleGroupDriver extends EdgeScrollDriver {
   protected readonly block = 'nui-toggle-group';
+
+  protected readonly trackBlock = 'nui-toggle-group';
 
   private constructor(
     wrapper: VueWrapper,
     private readonly selection: Selection,
     private readonly stubs: TopLayerStubs,
+    private readonly observers: ResizeObservers | undefined,
   ) {
     super(wrapper);
   }
 
-  static mount({ props = {}, items = THEME_ITEMS, modelValue, dir }: ToggleGroupMountOptions = {}) {
+  static mount({
+    props = {},
+    items = THEME_ITEMS,
+    modelValue,
+    dir,
+    observed = false,
+  }: ToggleGroupMountOptions = {}) {
     const stubs = new TopLayerStubs();
+    const observers = observed ? new ResizeObservers() : undefined;
     const selection = createSelection(modelValue, props.multiple === true);
 
     return new ToggleGroupDriver(
@@ -42,6 +55,7 @@ export class ToggleGroupDriver extends ComponentDriver {
       }),
       selection,
       stubs,
+      observers,
     );
   }
 
@@ -59,6 +73,10 @@ export class ToggleGroupDriver extends ComponentDriver {
 
   override attribute(name: string): string | undefined {
     return this.root.attributes(name);
+  }
+
+  get edgeButtons(): DOMWrapper<HTMLElement>[] {
+    return this.wrapper.findAll<HTMLElement>('.nui-toggle-group__edge');
   }
 
   get items(): DOMWrapper<HTMLButtonElement>[] {
@@ -154,6 +172,18 @@ export class ToggleGroupDriver extends ComponentDriver {
     await nextTick();
   }
 
+  placeItem(label: string, box: TrackBox): void {
+    placeBox(this.item(label).element, box);
+  }
+
+  async resizeItem(label: string, box: TrackBox): Promise<void> {
+    const { element } = this.item(label);
+
+    placeBox(element, box);
+    this.observers?.resize(element);
+    await nextTick();
+  }
+
   async focusOutside(): Promise<void> {
     this.wrapper.find<HTMLButtonElement>('.outside').element.focus();
     await nextTick();
@@ -162,5 +192,6 @@ export class ToggleGroupDriver extends ComponentDriver {
   override unmount(): void {
     this.stubs.restore();
     super.unmount();
+    this.observers?.restore();
   }
 }

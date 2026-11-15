@@ -29,7 +29,11 @@ const GUIDE: readonly NavGroup[] = [
   },
   {
     title: { ru: 'О проекте', en: 'About' },
-    pages: [{ link: '/guide/browsers', title: { ru: 'Браузеры', en: 'Browser support' } }],
+    pages: [
+      { link: '/guide/why', title: { ru: 'Почему Numior', en: 'Why Numior' } },
+      { link: '/guide/faq', title: { ru: 'Вопросы и ответы', en: 'FAQ' } },
+      { link: '/guide/browsers', title: { ru: 'Браузеры', en: 'Browser support' } },
+    ],
   },
 ];
 
@@ -177,8 +181,6 @@ const COMPONENTS: readonly NavGroup[] = [
       { link: '/components/list', title: 'List' },
       { link: '/components/empty', title: 'Empty' },
       { link: '/components/tree', title: 'Tree' },
-      { link: '/components/table', title: 'Table' },
-      { link: '/components/spreadsheet', title: 'Spreadsheet' },
     ],
   },
   {
@@ -188,6 +190,19 @@ const COMPONENTS: readonly NavGroup[] = [
       { link: '/components/calendar', title: 'Calendar' },
       { link: '/components/date-picker', title: 'Date picker' },
       { link: '/components/date-range-picker', title: 'Date range picker' },
+    ],
+  },
+];
+
+const TABLE: readonly NavGroup[] = [
+  {
+    title: { ru: 'Таблица', en: 'Table' },
+    pages: [
+      { link: '/table/', title: { ru: 'Таблица', en: 'Table' } },
+      { link: '/table/data', title: { ru: 'Данные', en: 'Data' } },
+      { link: '/table/cells', title: { ru: 'Ячейки', en: 'Cells' } },
+      { link: '/table/editing', title: { ru: 'Правка', en: 'Editing' } },
+      { link: '/table/columns', title: { ru: 'Колонки и строки', en: 'Columns and rows' } },
     ],
   },
 ];
@@ -231,6 +246,17 @@ export const NAVIGATION: readonly NavSection[] = [
     title: { ru: 'Компоненты', en: 'Components' },
     prefixes: ['/components/'],
     groups: COMPONENTS,
+  },
+  {
+    title: { ru: 'Таблица', en: 'Table' },
+    prefixes: ['/table/'],
+    groups: TABLE,
+  },
+  {
+    title: { ru: 'Книга', en: 'Spreadsheet' },
+    link: '/spreadsheet/',
+    prefixes: ['/spreadsheet/'],
+    groups: [],
   },
   {
     title: { ru: 'Редактор', en: 'Editor' },
@@ -310,12 +336,23 @@ export const navigationTexts = (
     ]),
   ]);
 
+const sectionPage = (section: NavSection, locale: ExampleLocale): NavEntry[] => {
+  if (section.link === undefined) {
+    return [];
+  }
+
+  const title = textOf(section.title, locale);
+
+  return [{ link: localized(section.link, locale), title, group: title, section: title }];
+};
+
 export const navigationPages = (
   locale: ExampleLocale,
   sections: readonly NavSection[] = NAVIGATION,
 ): NavEntry[] =>
-  sections.flatMap((section) =>
-    section.groups.flatMap((group) =>
+  sections.flatMap((section) => [
+    ...sectionPage(section, locale),
+    ...section.groups.flatMap((group) =>
       group.pages.map((page) => ({
         link: localized(page.link, locale),
         title: textOf(page.title, locale),
@@ -323,7 +360,7 @@ export const navigationPages = (
         section: textOf(section.title, locale),
       })),
     ),
-  );
+  ]);
 
 export const navigationLinks = (sections: readonly NavSection[] = NAVIGATION): string[] =>
   sections.flatMap((section) =>

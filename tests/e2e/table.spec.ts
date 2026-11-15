@@ -90,7 +90,6 @@ test.describe('table', () => {
   test('resizes a column from its handle and the keyboard and resets it from the menu', async ({
     playground,
     table,
-    page,
     isMobile,
   }) => {
     await playground.open();
@@ -104,11 +103,11 @@ test.describe('table', () => {
     expect((await table.cellBox(0, 1)).x).toBeCloseTo(before.x + before.width + 60, 0);
 
     await table.cell(0, 0).click();
-    await page.keyboard.press('ArrowUp');
-    await page.keyboard.press('Alt+ArrowRight');
+    await table.moveActive('up');
+    await table.widenFocusedColumn();
     await expect(table.output).toContainText(`"widths":{"id":${width + 70}}`);
 
-    await page.keyboard.press('Alt+ArrowLeft');
+    await table.narrowFocusedColumn();
     await expect(table.output).toContainText(`"widths":{"id":${width + 60}}`);
     expect(await table.focusedCell()).toEqual({ row: -1, col: 0 });
 
@@ -126,14 +125,13 @@ test.describe('table', () => {
     await expect(table.output).toContainText('"widths":{"email":280}');
     expect((await boxOf(table.bandCell('Покупатель'))).width).toBeCloseTo(band.width + 40, 0);
 
-    await playground.page.getByTestId('table-reset-columns').click();
+    await table.resetColumns.click();
     await expect(table.output).toContainText('"widths":{}');
   });
 
   test('moves a column by its grip and from the keyboard and resets the order', async ({
     playground,
     table,
-    page,
     isMobile,
   }) => {
     await playground.open();
@@ -148,14 +146,14 @@ test.describe('table', () => {
       await expect(table.output).toContainText('"sort":[]');
 
       await table.cell(0, 2).click();
-      await page.keyboard.press('ArrowUp');
-      await page.keyboard.press('Alt+Shift+ArrowLeft');
+      await table.moveActive('up');
+      await table.reorderFocused('left');
       await expect(table.output).toContainText('"columnOrder":["id","customer","email"');
       expect(await table.focusedCell()).toEqual({ row: -1, col: 1 });
     } else {
       await table.cell(0, 1).click();
-      await page.keyboard.press('ArrowUp');
-      await page.keyboard.press('Alt+Shift+ArrowRight');
+      await table.moveActive('up');
+      await table.reorderFocused('right');
       await expect(table.output).toContainText('"columnOrder":["id","email","customer"');
       expect(await table.focusedCell()).toEqual({ row: -1, col: 2 });
     }
@@ -163,6 +161,46 @@ test.describe('table', () => {
     await table.resetColumns.click();
     await expect(table.output).toContainText('"columnOrder":[]');
     await expect(table.header(1)).toHaveText('Клиент');
+  });
+
+  test('a column header keeps its grip, sort mark and menu one gap apart and from its edges and lifts a ghost that repeats it', async ({
+    playground,
+    table,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'mouse scenario');
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+
+    const header = await table.headerHandles(1);
+    const spacing = await table.headerSpacing(1);
+
+    expect([spacing.edge, spacing.toResize]).toEqual([spacing.gap, spacing.gap]);
+    expect(await table.sortMenuGap(0)).toBe(spacing.gap);
+
+    await table.liftHeader(1);
+
+    expect(await table.ghostHandles()).toEqual(header);
+
+    await table.release();
+  });
+
+  test('a lifted tree row keeps its grip where it was picked up', async ({
+    playground,
+    table,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'mouse scenario');
+    await playground.open();
+    await table.tree.scrollIntoViewIfNeeded();
+
+    const grip = await table.liftTreeRow(1);
+    const lifted = await boxOf(table.treeGhostGrip);
+
+    expect(Math.round(lifted.x)).toBe(Math.round(grip.x));
+    expect(Math.round(lifted.width)).toBe(Math.round(grip.width));
+
+    await table.release();
   });
 
   test('the drop line of a carried column stays on a column edge while the table scrolls under a still pointer', async ({
@@ -203,7 +241,6 @@ test.describe('table', () => {
   test('drags a tree row among its siblings and moves it from the keyboard', async ({
     playground,
     table,
-    page,
   }) => {
     await playground.open();
     await table.tree.scrollIntoViewIfNeeded();
@@ -216,7 +253,7 @@ test.describe('table', () => {
     await expect(table.treeRow(1)).toContainText('Продажи');
 
     await table.treeCell(0, 0).click();
-    await page.keyboard.press('Alt+Shift+ArrowDown');
+    await table.reorderFocused('down');
     await expect(table.output).toContainText('"lastReorder":"rnd:0>1:root>root"');
     await expect(table.treeRow(1)).toContainText('Разработка');
     expect(await table.focusedCell(TREE_HEAD_ROWS)).toEqual({ row: 1, col: 0 });
@@ -226,7 +263,7 @@ test.describe('table', () => {
     await expect(table.treeRow(3)).toContainText('Разработка');
     await expect(table.treeRow(3)).toHaveAttribute('aria-level', '2');
 
-    await page.keyboard.press('Alt+Shift+ArrowLeft');
+    await table.reorderFocused('left');
     await expect(table.output).toContainText('"lastReorder":"rnd:2>1:sales>root"');
     await expect(table.treeRow(3)).toContainText('Разработка');
     await expect(table.treeRow(3)).toHaveAttribute('aria-level', '1');
@@ -235,7 +272,6 @@ test.describe('table', () => {
   test('a double-clicked cell lets the mouse select its text and a drag from another cell picks cells again', async ({
     playground,
     table,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'pointer ranges on desktop');
@@ -262,7 +298,7 @@ test.describe('table', () => {
 
     await expect(table.cell(2, 0)).toHaveCSS('cursor', 'text');
 
-    await page.keyboard.press('Escape');
+    await table.pressEscape();
     await table.dragRange({ row: 2, col: 0 }, { row: 4, col: 0 });
 
     await expect(table.selectedCells()).toHaveCount(3);
@@ -272,7 +308,6 @@ test.describe('table', () => {
   test('selects cell ranges with the mouse and the keyboard, copies them and opens the cell menu', async ({
     playground,
     table,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'pointer ranges on desktop');
@@ -300,7 +335,7 @@ test.describe('table', () => {
     await expect(table.cell(3, 1)).not.toHaveAttribute('aria-selected');
     await expect(table.cell(4, 1)).toHaveAttribute('aria-selected', 'true');
 
-    await page.keyboard.press('Escape');
+    await table.pressEscape();
     await table.dragRange({ row: 1, col: 1 }, { row: 3, col: 2 });
 
     await expect(table.output).toContainText(
@@ -318,7 +353,7 @@ test.describe('table', () => {
     await expect(table.cell(4, 3)).toBeFocused();
     expect(await table.textSelection()).toBe('');
 
-    await page.keyboard.press('ControlOrMeta+A');
+    await table.selectAll();
 
     await expect(table.output).toContainText(
       '"ranges":[{"from":{"row":0,"col":0},"to":{"row":9999,"col":10}}]',
@@ -332,7 +367,7 @@ test.describe('table', () => {
     await expect(table.cell(2, 2)).toHaveAttribute('aria-selected', 'true');
     await expect(table.cell(2, 3)).toBeFocused();
 
-    await page.keyboard.press('Escape');
+    await table.pressEscape();
     await expect(table.output).toContainText('"ranges":[]');
 
     await table.output.click();
@@ -346,16 +381,16 @@ test.describe('table', () => {
     expect(await table.textSelection()).toBe('');
 
     await table.header(2).focus();
-    await page.keyboard.press('ControlOrMeta+A');
+    await table.selectAll();
 
     await expect(table.output).toContainText(
       '"ranges":[{"from":{"row":0,"col":0},"to":{"row":9999,"col":10}}]',
     );
 
-    await page.keyboard.press('Escape');
+    await table.pressEscape();
 
     await table.dragRange({ row: 1, col: 1 }, { row: 2, col: 2 });
-    await page.keyboard.press('ControlOrMeta+C');
+    await table.copySelection();
 
     const block = await table.cellTexts([
       { row: 1, col: 1 },
@@ -374,7 +409,7 @@ test.describe('table', () => {
       '"ranges":[{"from":{"row":1,"col":1},"to":{"row":2,"col":1}},{"from":{"row":4,"col":2},"to":{"row":1,"col":2}}]',
     );
 
-    await page.keyboard.press('Escape');
+    await table.pressEscape();
 
     await table.cell(2, 1).click({ button: 'right' });
     await expect(table.cellMenu).toBeVisible();
@@ -385,10 +420,10 @@ test.describe('table', () => {
     await expect(table.cellMenu).toBeHidden();
     await expect(table.cell(2, 1)).toBeFocused();
 
-    await page.keyboard.press('Shift+F10');
+    await table.openCellMenuFromKeyboard();
     await expect(table.cellMenuItem('Вырезать')).toBeFocused();
 
-    await page.keyboard.press('Escape');
+    await table.pressEscape();
     await expect(table.cellMenu).toBeHidden();
     await expect(table.cell(2, 1)).toBeFocused();
   });
@@ -396,7 +431,6 @@ test.describe('table', () => {
   test('clears cells with Delete, cuts them and brings them back with undo and redo', async ({
     playground,
     table,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard edits on desktop');
@@ -414,15 +448,15 @@ test.describe('table', () => {
     const before = await table.cellTexts(block);
 
     await table.dragRange({ row: 1, col: 3 }, { row: 2, col: 4 });
-    await page.keyboard.press('Delete');
+    await table.clearSelection();
     await expect(table.output).toContainText('"lastEdit":"clear:4"');
     expect(await table.cellTexts(block)).toEqual(['', '', '', '']);
 
-    await page.keyboard.press('ControlOrMeta+Z');
+    await table.undo();
     await expect(table.output).toContainText('"lastEdit":"undo:4"');
     expect(await table.cellTexts(block)).toEqual(before);
 
-    await page.keyboard.press('ControlOrMeta+Shift+Z');
+    await table.redo();
     await expect(table.output).toContainText('"lastEdit":"redo:4"');
     expect(await table.cellTexts(block)).toEqual(['', '', '', '']);
 
@@ -430,20 +464,19 @@ test.describe('table', () => {
 
     const cut = await table.cellTexts([{ row: 3, col: 3 }]);
 
-    await page.keyboard.press('ControlOrMeta+X');
+    await table.cutSelection();
     await expect.poll(() => table.copiedTexts()).toEqual(cut);
     await expect(table.output).toContainText('"lastEdit":"cut:1"');
 
     await table.cell(3, 0).click({ button: 'right' });
     await expect(table.cellMenuItem('Очистить')).toBeDisabled();
 
-    await page.keyboard.press('Escape');
+    await table.pressEscape();
   });
 
   test('pastes a block copied elsewhere into the cells and undoes it', async ({
     playground,
     table,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard paste on desktop');
@@ -461,7 +494,7 @@ test.describe('table', () => {
 
     await table.putInClipboard('Самара\tЛатвия\r\nТула\tЛитва');
     await table.cell(1, 3).click();
-    await page.keyboard.press('ControlOrMeta+V');
+    await table.pasteClipboard();
     await expect(table.output).toContainText('"lastEdit":"paste:4"');
     await expect.poll(() => table.cellTexts(block)).toEqual(['Самара', 'Латвия', 'Тула', 'Литва']);
 
@@ -469,14 +502,13 @@ test.describe('table', () => {
       '"ranges":[{"from":{"row":1,"col":3},"to":{"row":2,"col":4}}]',
     );
 
-    await page.keyboard.press('ControlOrMeta+Z');
+    await table.undo();
     await expect.poll(() => table.cellTexts(block)).toEqual(before);
   });
 
   test('edits cells in place, checks the column rules and undoes an edit', async ({
     playground,
     table,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard editing on desktop');
@@ -484,53 +516,53 @@ test.describe('table', () => {
     await table.root.scrollIntoViewIfNeeded();
 
     await table.cell(1, 3).click();
-    await page.keyboard.press('Enter');
+    await table.pressEnter();
     await expect(table.editorField()).toBeFocused();
 
     await table.editorField().fill('Самара');
-    await page.keyboard.press('Enter');
+    await table.pressEnter();
     await expect(table.output).toContainText('"lastEdit":"edit:1"');
     await expect(table.cell(1, 3)).toHaveText('Самара');
     expect(await table.focusedCell()).toEqual({ row: 2, col: 3 });
 
-    await page.keyboard.type('Tula');
+    await table.typeText('Tula');
     await expect(table.editorField()).toHaveValue('Tula');
 
-    await page.keyboard.press('Tab');
+    await table.pressTab();
     await expect(table.cell(2, 3)).toHaveText('Tula');
     expect(await table.focusedCell()).toEqual({ row: 2, col: 4 });
 
-    await page.keyboard.press('ArrowRight');
-    await page.keyboard.press('F2');
+    await table.moveActive('right');
+    await table.editActiveCell();
     await table.editorField().fill('-5');
-    await page.keyboard.press('Enter');
+    await table.pressEnter();
     await expect(table.editorError()).toHaveText('Введите число не меньше 0');
     await expect(table.editorField()).toHaveAttribute('aria-invalid', 'true');
 
     await table.editorField().fill('250');
-    await page.keyboard.press('Enter');
+    await table.pressEnter();
     await expect(table.editorError()).toHaveCount(0);
     await expect(table.cell(2, 5)).toHaveText('250');
 
-    await page.keyboard.press('ArrowRight');
-    await page.keyboard.press('F2');
+    await table.moveActive('right');
+    await table.editActiveCell();
     await table.editorField().fill('15.03.2026');
-    await page.keyboard.press('Enter');
+    await table.pressEnter();
     await expect(table.cell(3, 6)).toHaveText('15 мар. 2026 г.');
 
-    await page.keyboard.press('ArrowRight');
+    await table.moveActive('right');
 
     const [vip = ''] = await table.cellTexts([{ row: 4, col: 7 }]);
 
-    await page.keyboard.press('Enter');
+    await table.pressEnter();
     await expect(table.cell(4, 7)).not.toHaveText(vip);
 
-    await page.keyboard.press('ControlOrMeta+Z');
+    await table.undo();
     await expect(table.cell(4, 7)).toHaveText(vip);
 
     await table.cell(6, 1).dblclick();
     await table.editorField().fill('');
-    await page.keyboard.press('Escape');
+    await table.pressEscape();
     await expect(table.editorField()).toHaveCount(0);
     expect(await table.focusedCell()).toEqual({ row: 6, col: 1 });
   });
@@ -538,7 +570,6 @@ test.describe('table', () => {
   test('edits cells in list editors from a typed helper and the control registry', async ({
     playground,
     table,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard editing on desktop');
@@ -546,7 +577,7 @@ test.describe('table', () => {
     await table.root.scrollIntoViewIfNeeded();
 
     await table.cell(1, 4).click();
-    await page.keyboard.press('Enter');
+    await table.pressEnter();
     await expect(table.editorOption('Грузия')).toBeVisible();
 
     await table.editorOption('Грузия').click();
@@ -555,26 +586,26 @@ test.describe('table', () => {
     await expect(table.output).toContainText('"lastEdit":"edit:1"');
     expect(await table.focusedCell()).toEqual({ row: 1, col: 4 });
 
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('F2');
+    await table.moveActive('down');
+    await table.editActiveCell();
     await expect(table.editorOption('Россия')).toBeVisible();
 
-    await page.keyboard.press('Home');
-    await page.keyboard.press('Enter');
+    await table.focusFirstOption();
+    await table.pressEnter();
     await expect(table.cell(2, 4)).toHaveText('Россия');
     expect(await table.focusedCell()).toEqual({ row: 2, col: 4 });
 
-    await page.keyboard.press('ArrowDown');
+    await table.moveActive('down');
 
-    for (const step of ['ArrowRight', 'ArrowRight', 'ArrowRight', 'ArrowRight']) {
-      await page.keyboard.press(step);
+    for (const direction of ['right', 'right', 'right', 'right'] as const) {
+      await table.moveActive(direction);
     }
 
-    await page.keyboard.press('F2');
+    await table.editActiveCell();
     await table.editorOption('Нина Белова').click();
     await expect(table.cell(3, 8)).toHaveText('Нина Белова');
 
-    await page.keyboard.press('ControlOrMeta+Z');
+    await table.undo();
     await expect(table.cell(3, 8)).not.toHaveText('Нина Белова');
   });
 
@@ -629,6 +660,44 @@ test.describe('table', () => {
     await table.remoteGroupLabel(0).click();
     await expect(table.remoteGrid).toHaveAttribute('aria-rowcount', '9');
     await expect(table.remoteGroupLabel(1)).toHaveText(/^Белград/);
+  });
+
+  test('starts a server group label at the row start, runs it over empty cells and opens it from there', async ({
+    playground,
+    table,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await table.remoteToggle.click();
+    await table.remote.scrollIntoViewIfNeeded();
+    await table.remoteGroupBy('По городу и клиенту');
+
+    await expect(table.remoteGroupLabel(0)).toHaveText(/^Алматы/);
+    await expect(table.remoteGroupCopy(0, 1)).toHaveText(/^Алматы/);
+    await expect(table.remoteCell(0, 2)).toHaveText('');
+    await expect(table.remoteCell(0, 3)).not.toHaveText('');
+    expect(await table.remoteGroupLabelColumn(0)).toBe(0);
+
+    await table.toggleRemoteGroupAt(0, 1);
+
+    await expect(table.remoteRow(0)).toHaveAttribute('aria-expanded', 'true');
+    await expect(table.remoteRow(1)).toHaveAttribute('aria-level', '2');
+    expect(await table.remoteGroupLabelColumn(1)).toBe(0);
+
+    const start = await table.remoteGroupInset(0);
+    const nested = await table.remoteGroupInset(1);
+
+    expect(nested).toBeGreaterThan(start);
+    expect(await playground.wcagViolations(table.scope)).toEqual([]);
+
+    await playground.setDirection('rtl');
+
+    expect((await boxOf(table.remoteCell(0, 0))).x).toBeGreaterThan(
+      (await boxOf(table.remoteCell(0, 1))).x,
+    );
+
+    expect(await table.remoteGroupInset(0)).toBe(start);
+    expect(await table.remoteGroupInset(1)).toBe(nested);
   });
 
   test('loads the children of a server tree row when it opens', async ({ playground, table }) => {
@@ -713,7 +782,6 @@ test.describe('table', () => {
   test('walks the cells with the keyboard and keeps the active one in view', async ({
     playground,
     table,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard walk on desktop');
@@ -723,18 +791,18 @@ test.describe('table', () => {
     expect(await table.focusedCell()).toEqual({ row: 0, col: 1 });
 
     for (let step = 0; step < 3; step += 1) {
-      await page.keyboard.press('ArrowDown');
+      await table.moveActive('down');
     }
 
     expect(await table.focusedCell()).toEqual({ row: 3, col: 1 });
 
-    await page.keyboard.press('End');
+    await table.jumpToRowEnd();
     expect(await table.focusedCell()).toEqual({ row: 3, col: 10 });
 
-    await page.keyboard.press('Control+End');
+    await table.jumpToLastCell();
     expect(await table.focusedCell()).toEqual({ row: 10_000, col: 10 });
 
-    await page.keyboard.press('ArrowUp');
+    await table.moveActive('up');
     expect(await table.focusedCell()).toEqual({ row: 9999, col: 10 });
 
     const last = await table.cellBox(9999, 10);
@@ -742,18 +810,18 @@ test.describe('table', () => {
     expect(last.y).toBeGreaterThanOrEqual((await table.headerBottom()) - 1);
     expect(last.y + last.height).toBeLessThanOrEqual(footer.y + 1);
 
-    await page.keyboard.press('Control+Home');
+    await table.jumpToFirstCell();
     expect(await table.focusedCell()).toEqual({ row: 0, col: 0 });
     expect(await table.scrollTop()).toBe(0);
 
-    await page.keyboard.press('ArrowUp');
+    await table.moveActive('up');
     expect(await table.focusedCell()).toEqual({ row: -1, col: 0 });
 
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('ArrowRight');
+    await table.moveActive('down');
+    await table.moveActive('right');
 
     for (let step = 0; step < 8; step += 1) {
-      await page.keyboard.press('ArrowRight');
+      await table.moveActive('right');
     }
 
     expect(await table.focusedCell()).toEqual({ row: 0, col: 9 });
@@ -765,7 +833,6 @@ test.describe('table', () => {
   test('sorts from the header by click, Shift+click and the keyboard', async ({
     playground,
     table,
-    page,
     isMobile,
   }) => {
     await playground.open();
@@ -791,8 +858,8 @@ test.describe('table', () => {
     }
 
     await table.cell(0, 2).click();
-    await page.keyboard.press('ArrowUp');
-    await page.keyboard.press('Enter');
+    await table.moveActive('up');
+    await table.pressEnter();
     await expect(table.header(2)).toHaveAttribute('aria-sort', 'ascending');
     await expect(table.header(0)).not.toHaveAttribute('aria-sort');
     await expect(table.sortOrder(1)).toHaveCount(0);
@@ -802,7 +869,6 @@ test.describe('table', () => {
   test('mirrors the pinned panes and the arrow keys in RTL', async ({
     playground,
     table,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'direction switch on desktop');
@@ -815,7 +881,7 @@ test.describe('table', () => {
     expect(end.x).toBeCloseTo(await table.clientLeft(), 0);
 
     await table.cell(0, 1).click();
-    await page.keyboard.press('ArrowLeft');
+    await table.moveActive('left');
     expect(await table.focusedCell()).toEqual({ row: 0, col: 2 });
 
     await table.openFilter(3);
@@ -826,13 +892,13 @@ test.describe('table', () => {
     expect(popover.x + popover.width).toBeCloseTo(header.x + header.width, 0);
     expect(popover.y).toBeGreaterThan(header.y + header.height);
 
-    await page.keyboard.press('Escape');
+    await table.pressEscape();
     await table.openMenu(3);
     await expect(table.menu).toBeVisible();
 
     await expect.poll(() => menuEndGap(table, 3)).toBeLessThanOrEqual(1);
 
-    await page.keyboard.press('Escape');
+    await table.pressEscape();
     await expect(table.menu).toBeHidden();
 
     await playground.setDirection('ltr');
@@ -1006,36 +1072,35 @@ test.describe('table', () => {
   test('opens the column menu and a filter from the header with the keyboard', async ({
     playground,
     table,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard entry on desktop');
     await playground.open();
     await table.root.scrollIntoViewIfNeeded();
     await table.cell(0, 1).click();
-    await page.keyboard.press('ArrowUp');
-    await page.keyboard.press('Alt+ArrowDown');
+    await table.moveActive('up');
+    await table.openFocusedHeaderMenu();
     await expect(table.menu).toBeVisible();
     await expect(table.menu).toHaveAccessibleName('Меню колонки «Клиент»');
     await expect(table.menuItem('Сортировать по возрастанию')).toBeFocused();
 
-    await page.keyboard.press('Escape');
+    await table.pressEscape();
     await expect(table.menu).toBeHidden();
     expect(await table.focusedCell()).toEqual({ row: -1, col: 1 });
 
-    await page.keyboard.press('Alt+ArrowDown');
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('ArrowDown');
+    await table.openFocusedHeaderMenu();
+    await table.moveActive('down');
+    await table.moveActive('down');
     await expect(table.menuItem('Фильтр…')).toBeFocused();
 
-    await page.keyboard.press('Enter');
+    await table.pressEnter();
     await expect(table.menu).toBeHidden();
     await expect(table.filter).toBeVisible();
     await expect(table.filter).toHaveAccessibleName('Фильтр: Клиент');
     await expect(table.filter.locator(':focus')).toHaveCount(1);
 
     await table.filterField('Значение').fill('Анна');
-    await page.keyboard.press('Enter');
+    await table.pressEnter();
     await expect(table.grid).toHaveAttribute('aria-rowcount', '1253');
     await expect(table.filter).toBeHidden();
     expect(await table.focusedCell()).toEqual({ row: -1, col: 1 });
@@ -1044,11 +1109,11 @@ test.describe('table', () => {
     await table.openFilter(3);
     await expect(table.filter).toBeVisible();
 
-    await page.keyboard.press('Escape');
+    await table.pressEscape();
     await expect(table.filter).toBeHidden();
     await expect.poll(() => table.focusedCell()).toEqual({ row: -1, col: 3 });
 
-    await page.keyboard.press('ArrowLeft');
+    await table.moveActive('left');
     expect(await table.focusedCell()).toEqual({ row: -1, col: 2 });
   });
 
@@ -1105,7 +1170,6 @@ test.describe('table', () => {
   test('groups rows from the toolbar, expands a group and keeps totals in the footer', async ({
     playground,
     table,
-    page,
     isMobile,
   }) => {
     await playground.open();
@@ -1124,6 +1188,12 @@ test.describe('table', () => {
     await expect(table.groupLabel(0)).toHaveText(/^Возврат/);
     await expect(table.row(0)).toHaveAttribute('aria-expanded', 'false');
     await expect(table.footerCell(5)).toHaveText(total);
+    await expect(table.cell(0, 10)).toHaveText('');
+    expect(await table.groupLabelColumn(0)).toBe(0);
+
+    await table.scrollTo({ left: 600 });
+
+    expect(await table.groupLabelInView(0)).toBe(true);
 
     await table.groupLabel(0).click();
 
@@ -1136,11 +1206,13 @@ test.describe('table', () => {
       return;
     }
 
-    await table.cell(0, 0).click();
-    await page.keyboard.press('Enter');
+    await table.cell(0, 10).click();
+    await expect(table.row(0)).toHaveAttribute('aria-expanded', 'true');
+
+    await table.pressEnter();
     await expect(table.row(0)).toHaveAttribute('aria-expanded', 'false');
 
-    await page.keyboard.press('Control+End');
+    await table.jumpToLastCell();
     expect(await table.focusedCell()).toEqual({ row: 4, col: 10 });
     await expect(table.footerCell(10)).toBeFocused();
   });
@@ -1224,7 +1296,6 @@ test.describe('table', () => {
   test('pages the rows from the footer and keeps filters and the page size in step', async ({
     playground,
     table,
-    page,
   }) => {
     await playground.open();
     await table.root.scrollIntoViewIfNeeded();
@@ -1250,7 +1321,7 @@ test.describe('table', () => {
     await expect(table.grid).toHaveAttribute('aria-rowcount', '28');
 
     await table.pageSizeTrigger.click();
-    await page.locator('.nui-select__listbox').getByRole('option', { name: '50' }).click();
+    await table.pageSizeOption('50').click();
 
     await expect(table.grid).toHaveAttribute('aria-rowcount', '53');
     await expect(table.output).toContainText('"pageSize":50');
@@ -1263,7 +1334,6 @@ test.describe('table', () => {
   test('selects tree rows with checkboxes, Space and the header, reports clicks and shows skeletons', async ({
     playground,
     table,
-    page,
     isMobile,
   }) => {
     await playground.open();
@@ -1295,7 +1365,7 @@ test.describe('table', () => {
     await expect(table.output).toContainText('"selected":["sales","rnd","ops"]');
 
     if (!isMobile) {
-      await page.keyboard.press(' ');
+      await table.toggleFocusedSelection();
       await expect(table.output).toContainText('"selected":["sales","rnd","ops","sales-ru"]');
       await expect(table.treeRow(1)).toHaveAttribute('aria-selected', 'true');
     }
@@ -1328,7 +1398,6 @@ test.describe('table', () => {
   test('column menu has no automatically detectable WCAG AA violations', async ({
     playground,
     table,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -1341,8 +1410,8 @@ test.describe('table', () => {
       await expect(table.menuItem('Почта')).toBeVisible();
       expect(await playground.wcagViolations(table.scope)).toEqual([]);
 
-      await page.keyboard.press('Escape');
-      await page.keyboard.press('Escape');
+      await table.pressEscape();
+      await table.pressEscape();
       await expect(table.menu).toBeHidden();
     }
   });

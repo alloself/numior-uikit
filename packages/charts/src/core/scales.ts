@@ -24,7 +24,14 @@ export interface BandOptions {
   readonly outer?: number | undefined;
 }
 
+interface Bounds {
+  readonly min: number;
+  readonly max: number;
+}
+
 const STEPS = [1, 2, 2.5, 5, 10];
+
+const LOOSE_SHARE = 0.25;
 
 const ZERO_RATIO = 5 / 6;
 
@@ -70,6 +77,37 @@ const withZero = (min: number, max: number, zero: boolean): readonly [number, nu
   return [min, max];
 };
 
+const boundsOf = (lower: number, upper: number, step: number, options: DomainOptions): Bounds => {
+  const min = options.min ?? rounded(Math.floor(lower / step + 1e-9) * step, step);
+  const max = options.max ?? rounded(Math.ceil(upper / step - 1e-9) * step, step);
+
+  return { min, max: max > min ? max : rounded(min + step, step) };
+};
+
+const spanOf = (bounds: Bounds): number => bounds.max - bounds.min;
+
+const coarserSteps = (step: number): number[] => {
+  const magnitude = 10 ** Math.floor(Math.log10(step) + 1e-9);
+
+  return STEPS.flatMap((value) => [value * magnitude, value * magnitude * 10]).filter(
+    (value) => value > step * (1 + 1e-9),
+  );
+};
+
+const tightStep = (lower: number, upper: number, step: number, options: DomainOptions): number => {
+  const base = spanOf(boundsOf(lower, upper, step, options));
+  const loose = base - (upper - lower) > LOOSE_SHARE * base;
+
+  if (!loose) {
+    return step;
+  }
+  return coarserSteps(step).reduce((best, candidate) => {
+    const span = spanOf(boundsOf(lower, upper, candidate, options));
+
+    return span < spanOf(boundsOf(lower, upper, best, options)) - step * 1e-9 ? candidate : best;
+  }, step);
+};
+
 export const niceDomain = (low: number, high: number, options: DomainOptions = {}): NiceDomain => {
   const count = options.count ?? 5;
 
@@ -87,12 +125,10 @@ export const niceDomain = (low: number, high: number, options: DomainOptions = {
 
   const span = degenerate ? Math.abs(lower) || 1 : (options.max ?? to) - lower;
   const upper = options.max ?? (degenerate ? lower + span : to);
-  const step = niceStep(span, count);
-  const min = options.min ?? rounded(Math.floor(lower / step + 1e-9) * step, step);
-  const max = options.max ?? rounded(Math.ceil(upper / step - 1e-9) * step, step);
-  const top = max > min ? max : rounded(min + step, step);
+  const step = tightStep(lower, upper, niceStep(span, count), options);
+  const { min, max } = boundsOf(lower, upper, step, options);
 
-  return { min, max: top, step, ticks: ticksWithin(min, top, step) };
+  return { min, max, step, ticks: ticksWithin(min, max, step) };
 };
 
 const isPositive = (value: number): boolean => Number.isFinite(value) && value > 0;

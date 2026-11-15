@@ -17,10 +17,9 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiToaster } from '@numior/vue';
 import { useToast } from '@numior/primitives';
-import '@numior/vue/styles/toast.css';
 ```
 
 ## Примеры

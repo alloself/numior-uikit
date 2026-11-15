@@ -1,23 +1,20 @@
 <template>
-  <NuiCard href="#anatomy" class="max-w-sm">
+  <NuiCard href="#order-20411" class="w-full max-w-sm">
     <NuiCardHeader>
-      <NuiCardTitle>Анатомия карточки</NuiCardTitle>
-      <NuiCardDescription
-        >Вся карточка ведёт к разделу, кнопка в шапке живёт отдельно.</NuiCardDescription
-      >
-      <template #actions>
-        <NuiButton variant="ghost" tone="neutral" size="sm" aria-label="Ещё" icon="ellipsis" />
-      </template>
+      <NuiCardTitle>Заказ 20411</NuiCardTitle>
+      <NuiCardDescription>Нина Зайцева ждёт счёт на 37 800 ₽</NuiCardDescription>
     </NuiCardHeader>
     <NuiCardFooter>
-      <NuiBadge tone="success">Доступно</NuiBadge>
+      <NuiButton size="sm" variant="outline" tone="neutral" :disabled="sent" @click="sent = true">
+        {{ sent ? 'Счёт отправлен' : 'Отправить счёт' }}
+      </NuiButton>
     </NuiCardFooter>
   </NuiCard>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import {
-  NuiBadge,
   NuiButton,
   NuiCard,
   NuiCardDescription,
@@ -25,4 +22,6 @@ import {
   NuiCardHeader,
   NuiCardTitle,
 } from '@numior/vue';
+
+const sent = ref(false);
 </script>

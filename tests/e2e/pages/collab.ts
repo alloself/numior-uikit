@@ -10,6 +10,7 @@ import {
 } from '@playwright/test';
 import { boxOf } from '../helpers/geometry';
 import { BookSection } from './book';
+import { ARROWS, type ArrowDirection } from '../helpers/keyboard';
 
 export interface TextEdges {
   readonly left: number;
@@ -29,6 +30,8 @@ const LAG_FRAMES = 12;
 const DRIFT_FRAMES = 30;
 
 const LINE_START = 4;
+
+const ALONE_MS = 300;
 
 const isCollabServer = (url: URL): boolean => url.port === COLLAB_PORT;
 
@@ -335,8 +338,40 @@ export class CollabClient {
 
   async selectLine(index: number): Promise<void> {
     await this.paragraph(index).click();
+    await this.selectCurrentLine();
+  }
+
+  async selectCurrentLine(): Promise<void> {
     await this.page.keyboard.press('Home');
     await this.page.keyboard.press('Shift+End');
+  }
+
+  async typeText(text: string): Promise<void> {
+    await this.page.keyboard.type(text);
+  }
+
+  async moveCaret(direction: ArrowDirection): Promise<void> {
+    await this.page.keyboard.press(ARROWS[direction]);
+  }
+
+  async pressEnter(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async pressEscape(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+  }
+
+  async indentItem(): Promise<void> {
+    await this.page.keyboard.press('Tab');
+  }
+
+  async pauseBeforeOthersJoin(): Promise<void> {
+    await this.page.waitForTimeout(ALONE_MS);
+  }
+
+  hasFinePointer(): Promise<boolean> {
+    return this.page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
   }
 
   async writeLines(count: number): Promise<void> {

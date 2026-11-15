@@ -82,13 +82,14 @@
   caret-color: transparent;
 }
 .nui-editor__chunk > *,
-.nui-editor__content li {
+.nui-editor__slots > * {
   transition:
     background-color var(--transition-duration-fast) var(--ease-nui),
     margin-inline-start var(--transition-duration-fast) var(--ease-nui),
     opacity var(--transition-duration-fast) var(--ease-nui);
 }
-.nui-editor__chunk > [contenteditable='false'] {
+.nui-editor__chunk > [contenteditable='false'],
+.nui-editor__slots > [contenteditable='false'] {
   transition-property: background-color, opacity;
 }
 .nui-editor__body > * {

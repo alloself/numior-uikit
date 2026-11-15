@@ -23,33 +23,7 @@
 import { ref } from 'vue';
 import { NuiInput } from '@numior/vue';
 import { NuiTable, type NuiTableColumn, type NuiTableFilters } from '@numior/table';
-
-interface Order {
-  readonly id: number;
-  readonly customer: string;
-  readonly city: string;
-  readonly status: 'paid' | 'pending' | 'cancelled';
-  readonly total: number;
-}
-
-const orders: Order[] = [
-  { id: 20401, customer: 'Anna Titova', city: 'Berlin', status: 'paid', total: 12400 },
-  { id: 20402, customer: 'Igor Belov', city: 'Prague', status: 'pending', total: 3150 },
-  { id: 20403, customer: 'Maria Kim', city: 'Berlin', status: 'paid', total: 48900 },
-  { id: 20404, customer: 'Oleg Smirnov', city: 'Vienna', status: 'cancelled', total: 990 },
-  { id: 20405, customer: 'Dina Akhmetova', city: 'Prague', status: 'paid', total: 7600 },
-  { id: 20406, customer: 'Peter Volkov', city: 'Vienna', status: 'paid', total: 15300 },
-  { id: 20407, customer: 'Lena Orlova', city: 'Berlin', status: 'pending', total: 2200 },
-  { id: 20408, customer: 'Timur Saidov', city: 'Prague', status: 'paid', total: 31800 },
-  { id: 20409, customer: 'Vera Lapina', city: 'Vienna', status: 'cancelled', total: 1450 },
-  { id: 20410, customer: 'Gleb Nosov', city: 'Berlin', status: 'paid', total: 9900 },
-];
-
-const STATUSES: Record<Order['status'], string> = {
-  paid: 'Paid',
-  pending: 'Awaiting payment',
-  cancelled: 'Cancelled',
-};
+import { ORDER_STATUSES, orders, type Order } from '#demo/orders';
 
 const money = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -89,7 +63,7 @@ const columns: NuiTableColumn<Order>[] = [
     type: 'text',
     width: 140,
     filter: 'set',
-    value: (row) => STATUSES[row.status],
+    value: (row) => ORDER_STATUSES[row.status],
   },
   {
     key: 'total',

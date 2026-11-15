@@ -124,7 +124,7 @@ export const en: DocsTexts = {
   },
   language: 'Language',
   onThisPage: 'On this page',
-  pager: 'Neighbouring pages',
+  pager: 'Neighboring pages',
   previous: 'Previous',
   next: 'Next',
   skip: 'Skip to content',

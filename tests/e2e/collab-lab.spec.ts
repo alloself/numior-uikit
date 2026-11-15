@@ -15,6 +15,16 @@ test.describe('collaboration lab', () => {
     await expect(collabLab.right.carets.filter({ hasText: 'Анна' })).toHaveCount(1);
   });
 
+  test('takes the first press below the text while the page around the panes holds the focus', async ({
+    collabLab,
+  }) => {
+    await collabLab.focusPageAround();
+
+    await collabLab.left.write('first press');
+
+    await expect(collabLab.left.editor).toContainText('first press');
+  });
+
   test('merges edits made while the link was cut', async ({ collabLab }) => {
     await collabLab.left.write('first');
     await expect(collabLab.right.editor).toContainText('first');

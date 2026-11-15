@@ -39,8 +39,8 @@ test.describe('editor media', () => {
     await expect(editor.publishedImage(UPLOADED)).toBeVisible();
   });
 
-  test('cancels an upload and retries one the server refused', async ({ editor, page }) => {
-    const failing = page.getByTestId('editor-upload-fail');
+  test('cancels an upload and retries one the server refused', async ({ editor }) => {
+    const failing = editor.uploadFailSwitch;
 
     await editor.placeAtEnd();
     await editor.pasteFiles([{ name: 'draft.txt', type: 'text/plain' }]);
@@ -64,13 +64,29 @@ test.describe('editor media', () => {
     await expect(editor.file('broken.txt')).toBeVisible();
   });
 
-  test('picks an image from the slash menu and inserts files by link', async ({ editor, page }) => {
+  test('keeps the picture and says why in a toast when the replacement does not fit', async ({
+    editor,
+    feedback,
+  }) => {
+    const image = editor.image(SAMPLE);
+
+    await image.scrollIntoViewIfNeeded();
+    await editor.replaceImage(image, { name: 'scan.pdf', type: 'application/pdf' });
+
+    await expect(feedback.toastByText('scan.pdf: такой тип файла не принимается')).toBeVisible();
+    await expect(feedback.toaster).toHaveAttribute('aria-live', 'polite');
+    await expect(editor.announcement()).toHaveText('');
+    await expect(image).toBeVisible();
+    await expect(image.locator('.nui-editor-image__busy')).toHaveCount(0);
+  });
+
+  test('picks an image from the slash menu and inserts files by link', async ({ editor }) => {
     const hint = editor.content.locator('p', { hasText: 'Наберите' });
 
     await editor.caretAtEndOf(hint);
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('/ima');
-    await page.keyboard.press('Enter');
+    await editor.pressEnter();
+    await editor.typeText('/ima');
+    await editor.pressEnter();
     await expect(editor.mediaPanel()).toBeVisible();
     await expect(editor.mediaPanel().getByRole('tab')).toHaveText(['Загрузить', 'По ссылке']);
 
@@ -91,12 +107,12 @@ test.describe('editor media', () => {
     await expect(editor.uploadCards()).toHaveCount(0, { timeout: 10_000 });
     await expect(editor.image(UPLOADED)).toBeVisible();
 
-    await page.getByTestId('editor-uploads').click();
+    await editor.uploadsSwitch.click();
     await editor.caretAtEndOf(hint);
     await editor.showCaret();
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('/fil');
-    await page.keyboard.press('Enter');
+    await editor.pressEnter();
+    await editor.typeText('/fil');
+    await editor.pressEnter();
     await expect(editor.mediaPanel().getByRole('tab')).toHaveCount(0);
 
     await editor.mediaPanel().getByRole('textbox').fill('https://numior.test/Price%20list.pdf');
@@ -106,7 +122,6 @@ test.describe('editor media', () => {
 
   test('resizes, aligns and captions an image and opens it full screen when published', async ({
     editor,
-    page,
   }) => {
     const image = editor.image(SAMPLE);
 
@@ -120,7 +135,7 @@ test.describe('editor media', () => {
     const grip = image.locator('[role="slider"]').first();
 
     await grip.focus();
-    await page.keyboard.press('ArrowRight');
+    await editor.moveCaret('right');
     await expect.poll(() => widthOf(image)).toBeCloseTo(dragged + 5, 0);
 
     const keyed = await widthOf(image);
@@ -145,7 +160,7 @@ test.describe('editor media', () => {
 
     await caption.fill('Рассвет над морем');
     await caption.press('Enter');
-    await page.keyboard.type('Дальше текст');
+    await editor.typeText('Дальше текст');
 
     await expect(editor.publishedImage(SAMPLE).locator('.nui-content__caption')).toHaveText(
       'Рассвет над морем',
@@ -158,7 +173,7 @@ test.describe('editor media', () => {
     await zoom.click();
     await expect(editor.imageViewer()).toBeVisible();
 
-    await page.keyboard.press('Escape');
+    await editor.pressEscape();
     await expect(editor.imageViewer()).toBeHidden();
     await expect(zoom).toBeFocused();
   });
@@ -166,7 +181,6 @@ test.describe('editor media', () => {
   test('passes axe with the media panel, the image bar and the image viewer open', async ({
     playground,
     editor,
-    page,
   }) => {
     const section = 'section[aria-labelledby="editor-title"]';
 
@@ -175,13 +189,13 @@ test.describe('editor media', () => {
     expect(await playground.wcagViolations(section)).toEqual([]);
 
     await editor.placeAtEnd();
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('/ima');
-    await page.keyboard.press('Enter');
+    await editor.pressEnter();
+    await editor.typeText('/ima');
+    await editor.pressEnter();
     await expect(editor.mediaPanel()).toBeVisible();
     expect(await playground.wcagViolations('.nui-editor-media')).toEqual([]);
 
-    await page.keyboard.press('Escape');
+    await editor.pressEscape();
 
     await editor.publishedImage(SAMPLE).getByRole('button').click();
     await expect(editor.imageViewer()).toBeVisible();

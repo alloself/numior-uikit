@@ -30,6 +30,13 @@ describe('chart scales', () => {
     expect(niceDomain(3, 97, { min: 10, max: 50 })).toMatchObject({ min: 10, max: 50, step: 10 });
   });
 
+  it('takes a coarser whole step when a short axis would leave a third of the plot empty', () => {
+    expect(niceDomain(1200, 24_500, { count: 2 })).toMatchObject({ min: 0, max: 25_000 });
+    expect(niceDomain(1200, 24_500, { count: 2 }).ticks).toEqual([0, 25_000]);
+    expect(niceDomain(0, 6_900_000, { count: 2 })).toMatchObject({ max: 10_000_000 });
+    expect(niceDomain(90, 97, { count: 2 })).toMatchObject({ min: 90, max: 100, step: 5 });
+  });
+
   it('puts ticks on whole steps inside bounds set by hand', () => {
     expect(niceDomain(5, 10, { min: 3, max: 17 })).toMatchObject({ min: 3, max: 17 });
     expect(niceDomain(5, 10, { min: 3, max: 17 }).ticks).toEqual([5, 10, 15]);

@@ -14,7 +14,7 @@ export class TableBenchPage extends BenchPage {
     this.table = page.getByTestId('bench-table');
     this.viewport = this.table.locator('.nui-table__viewport');
     this.quick = page.getByTestId('bench-quick');
-    this.filter = page.locator('.nui-table-filter');
+    this.filter = page.getByRole('dialog').filter({ has: page.locator('form.nui-table-filter') });
   }
 
   async focusCell(row: number, col: number): Promise<void> {

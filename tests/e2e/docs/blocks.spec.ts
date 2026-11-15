@@ -32,6 +32,22 @@ test('a block screen grows with its content instead of scrolling', async ({ docs
   await expect.poll(() => block.hiddenWidth()).toBe(0);
 });
 
+test('the shop brand stands on the content line and stays put when the sidebar opens', async ({
+  docs,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'phones show the sidebar as a drawer without a rail');
+  await docs.open('/blocks/');
+  const block = docs.block('AppShell');
+  await block.screen.scrollIntoViewIfNeeded();
+  const open = await block.brandStart();
+
+  await block.toggleSidebar();
+
+  await expect.poll(() => block.headingStart()).toBe(open);
+  await expect.poll(() => block.brandStart()).toBe(open);
+});
+
 test('a block page has no site chrome and follows the theme of the site', async ({
   docs,
   page,
@@ -44,67 +60,60 @@ test('a block page has no site chrome and follows the theme of the site', async 
   await expect(block.content.locator('.nui-app-bar')).toHaveCount(0);
 
   await page.goto('/blocks/view/SignIn');
-  await page.getByLabel('Пароль').fill('correct horse');
-  await page.getByRole('button', { name: 'Войти' }).click();
+  await docs.signIn('correct horse');
 
   await expect(docs.toasts).toHaveText([/Анна Титова, вы вошли/]);
 });
 
-test('a slash on an empty line of the product description inserts a callout', async ({ page }) => {
+test('a slash on an empty line of the product description inserts a callout', async ({
+  docs,
+  page,
+}) => {
   await page.goto('/blocks/view/ProductDescription');
-  const editor = page.getByRole('textbox', { name: 'Описание товара' });
-  const blocks = page.getByRole('listbox', { name: 'Блоки' });
+  await docs.productDescription.getByText('Выдерживает до 120 кг').click();
+  await docs.openSlashMenuOnNewLine();
+  await docs.blockOptions.getByRole('option', { name: 'Выноска' }).click();
 
-  await editor.getByText('Выдерживает до 120 кг').click();
-  await page.keyboard.press('End');
-  await page.keyboard.press('Enter');
-  await page.keyboard.press('Enter');
-  await page.keyboard.type('/');
-  await blocks.getByRole('option', { name: 'Выноска' }).click();
-
-  await expect(editor.getByRole('note')).toHaveCount(2);
+  await expect(docs.productDescription.getByRole('note')).toHaveCount(2);
 });
 
 test('the focused editor of the product description keeps its frame without an outer ring', async ({
   docs,
-  page,
   isMobile,
 }) => {
   test.skip(isMobile, 'focus rings follow the keyboard');
   await docs.open('/blocks/view/ProductDescription');
 
-  await page.getByRole('textbox', { name: 'Описание товара' }).focus();
+  await docs.productDescription.focus();
 
   await expect(docs.editorFrame).toHaveCSS('outline-width', '0px');
 });
 
 test('the name box and the formula bar of the price sheet keep their frame without an outer ring', async ({
   docs,
-  page,
   isMobile,
 }) => {
   test.skip(isMobile, 'focus rings follow the keyboard');
   await docs.open('/blocks/view/PriceSheet');
 
-  await page.getByRole('textbox', { name: 'Поле имени' }).focus();
+  await docs.sheetNameField.focus();
 
   await expect(docs.sheetNameBox).toHaveCSS('outline-width', '0px');
 
-  await page.getByRole('textbox', { name: 'Строка формул' }).focus();
+  await docs.formulaField.focus();
 
   await expect(docs.sheetEntry).toHaveCSS('outline-width', '0px');
 });
 
 test('the revenue chart of the sales block walks the days from the keyboard', async ({
+  docs,
   page,
   isMobile,
 }) => {
   test.skip(isMobile, 'keyboard only');
   await page.goto('/blocks/view/SalesDashboard');
-  const revenue = page.getByRole('figure', { name: 'Выручка по дням' });
+  await docs.revenueChart.focus();
+  await docs.stepFocusedChartForward();
 
-  await revenue.focus();
-  await page.keyboard.press('ArrowRight');
-
-  await expect(revenue).toContainText('22 700');
+  await expect(docs.revenueChart).toContainText('22 700');
 });

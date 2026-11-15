@@ -288,7 +288,7 @@ const room = createRoom(workbookAuthority(bookSteps(book, calculator)));
 ```
 
 `bookSteps` returns the steps that build the saved book from an empty one. The client side of a
-book is on the [Spreadsheet](/en/components/spreadsheet) page.
+book is on the [Spreadsheet](/en/spreadsheet/) page.
 
 ## Check access
 

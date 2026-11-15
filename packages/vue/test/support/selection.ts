@@ -6,6 +6,7 @@ export type SelectionValue = string | null | string[];
 export interface Selection {
   props(): Record<string, unknown>;
   value(): SelectionValue;
+  setValues(values: readonly string[]): void;
 }
 
 const isStrings = listOf(isString);
@@ -37,5 +38,8 @@ export const createSelection = (
       },
     }),
     value: () => (multiple ? many.value : single.value),
+    setValues: (values) => {
+      many.value = [...values];
+    },
   };
 };

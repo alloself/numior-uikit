@@ -1,17 +1,17 @@
 <template>
-  <NuiTabs v-model="page" :links="pages" label="Разделы проекта" />
+  <NuiTabs v-model="page" :links="pages" label="Разделы кабинета" class="w-full max-w-md" />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { NuiTabs, type NuiTabLinkDescriptor } from '@numior/vue';
 
-const page = ref('#tabs-summary');
+const page = ref('#tabs-orders');
 
 const pages: NuiTabLinkDescriptor[] = [
-  { to: '#tabs-summary', label: 'Сводка' },
-  { to: '#tabs-tasks', label: 'Задачи' },
-  { to: '#tabs-files', label: 'Файлы' },
-  { to: '#tabs-access', label: 'Доступ', disabled: true },
+  { to: '#tabs-orders', label: 'Заказы' },
+  { to: '#tabs-customers', label: 'Покупатели' },
+  { to: '#tabs-products', label: 'Товары' },
+  { to: '#tabs-reports', label: 'Отчёты', disabled: true },
 ];
 </script>

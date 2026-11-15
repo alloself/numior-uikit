@@ -4,6 +4,8 @@ import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { unlikePixels } from '../helpers/color';
 import { boxOf, dragAcross, renderedWidth, type Box } from '../helpers/geometry';
 import { sectionScope } from '../helpers/axe';
+import { ARROWS, type ArrowDirection } from '../helpers/keyboard';
+import { GridKeys } from './grid-keys';
 
 export interface TableCell {
   readonly row: number;
@@ -25,6 +27,25 @@ export interface DropLineDrift {
   readonly farthest: number;
 }
 
+export interface HandleLayout {
+  readonly grip: number;
+  readonly gripSize: number;
+  readonly icon: number;
+  readonly label: number;
+  readonly font: string;
+}
+
+export interface HeaderSpacing {
+  readonly gap: number;
+  readonly edge: number;
+  readonly toResize: number;
+}
+
+interface HandleParts {
+  readonly grip: string;
+  readonly label: string;
+}
+
 interface TableLayer {
   readonly scrollRects?: readonly {
     readonly type: string;
@@ -42,6 +63,74 @@ const HEADER_EDGE = 3;
 const FOOTER_TOP = 2;
 const FOOTER_EDGE = 4;
 const FRAME_CORNER = 12;
+const GROUP_LABEL = '.nui-table__group-room:not([aria-hidden="true"]) > .nui-table__group';
+const GROUP_COPY = '.nui-table__group-room[aria-hidden="true"] > .nui-table__group';
+
+const HEADER_PARTS: HandleParts = { grip: '.nui-table__grip', label: '.nui-table__text' };
+
+const GHOST_PARTS: HandleParts = {
+  grip: '.nui-table__ghost-grip',
+  label: '.nui-table__ghost-label',
+};
+
+const columnOfLabel = (label: Locator): Promise<number> =>
+  label.evaluate(
+    (element) => Number(element.closest('[aria-colindex]')?.getAttribute('aria-colindex')) - 1,
+  );
+
+const handleLayoutOf = (frame: Element, parts: HandleParts): HandleLayout => {
+  const edge = frame.getBoundingClientRect().left;
+  const grip = frame.querySelector(parts.grip);
+  const label = frame.querySelector(parts.label);
+
+  if (grip === null || label === null) {
+    throw new Error('The frame has no grip or label');
+  }
+  const gripBox = grip.getBoundingClientRect();
+  const icon = grip.querySelector('svg')?.getBoundingClientRect().width ?? 0;
+  const style = getComputedStyle(label);
+
+  return {
+    grip: Math.round(gripBox.left - edge),
+    gripSize: Math.round(gripBox.width),
+    icon: Math.round(icon),
+    label: Math.round(label.getBoundingClientRect().left - edge),
+    font: `${style.fontSize} ${style.fontWeight} ${style.color}`,
+  };
+};
+
+const headerSpacingOf = (cell: Element): HeaderSpacing => {
+  const content = cell.querySelector('.nui-table__content');
+  const grip = cell.querySelector('.nui-table__grip');
+  const menu = cell.querySelector('.nui-table__menu');
+  const resizer = cell.querySelector(':scope > .nui-table__resizer');
+
+  if (content === null || grip === null || menu === null || resizer === null) {
+    throw new Error('The header has no grip, menu or resizer');
+  }
+  const line = getComputedStyle(resizer, '::after');
+
+  const lineStart =
+    resizer.getBoundingClientRect().right -
+    (Number.parseFloat(line.insetInlineEnd) || 0) -
+    (Number.parseFloat(line.inlineSize) || 0);
+
+  return {
+    gap: Math.round(Number.parseFloat(getComputedStyle(content).columnGap) || 0),
+    edge: Math.round(grip.getBoundingClientRect().left - cell.getBoundingClientRect().left),
+    toResize: Math.round(lineStart - menu.getBoundingClientRect().right),
+  };
+};
+
+const sortMenuGapOf = (cell: Element): number => {
+  const sort = cell.querySelector('.nui-table__sort-button');
+  const menu = cell.querySelector('.nui-table__menu');
+
+  if (sort === null || menu === null) {
+    throw new Error('The header has no sort mark or menu');
+  }
+  return Math.round(menu.getBoundingClientRect().left - sort.getBoundingClientRect().right);
+};
 
 const BODY_PAINT = `
   [data-testid='table'] .nui-table__body .nui-table__cell {
@@ -57,7 +146,7 @@ const BODY_HIDE = `
   }
 `;
 
-export class TableSection {
+export class TableSection extends GridKeys {
   readonly scope = sectionScope('table');
 
   readonly root: Locator;
@@ -91,7 +180,8 @@ export class TableSection {
   readonly treeSelectAll: Locator;
   readonly treeSkeletons: Locator;
 
-  constructor(private readonly page: Page) {
+  constructor(page: Page) {
+    super(page);
     this.root = page.getByTestId('table');
     this.viewport = this.root.locator('.nui-table__viewport');
     this.grid = this.root.locator('.nui-table__grid');
@@ -100,7 +190,7 @@ export class TableSection {
     this.quick = page.getByTestId('table-quick');
     this.clearFilters = page.getByTestId('table-clear-filters');
     this.output = page.getByTestId('table-output');
-    this.filter = page.locator('.nui-table-filter');
+    this.filter = page.getByRole('dialog').filter({ has: page.locator('form.nui-table-filter') });
     this.menu = this.root.locator(':scope > .nui-menu:not(.nui-table__cell-menu)');
     this.cellMenu = this.root.locator(':scope > .nui-table__cell-menu');
     this.resetColumns = page.getByTestId('table-reset-columns');
@@ -122,6 +212,86 @@ export class TableSection {
     this.remoteQuick = page.getByTestId('table-remote-quick');
     this.remoteOutput = page.getByTestId('table-remote-output');
     this.remoteToggle = page.getByTestId('table-remote-toggle');
+  }
+
+  async widenFocusedColumn(): Promise<void> {
+    await this.page.keyboard.press('Alt+ArrowRight');
+  }
+
+  async narrowFocusedColumn(): Promise<void> {
+    await this.page.keyboard.press('Alt+ArrowLeft');
+  }
+
+  async reorderFocused(direction: ArrowDirection): Promise<void> {
+    await this.page.keyboard.press(`Alt+Shift+${ARROWS[direction]}`);
+  }
+
+  async openFocusedHeaderMenu(): Promise<void> {
+    await this.page.keyboard.press('Alt+ArrowDown');
+  }
+
+  async openCellMenuFromKeyboard(): Promise<void> {
+    await this.page.keyboard.press('Shift+F10');
+  }
+
+  async pressEnter(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async pressEscape(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+  }
+
+  async pressTab(): Promise<void> {
+    await this.page.keyboard.press('Tab');
+  }
+
+  async typeText(text: string): Promise<void> {
+    await this.page.keyboard.type(text);
+  }
+
+  async focusFirstOption(): Promise<void> {
+    await this.page.keyboard.press('Home');
+  }
+
+  async jumpToRowEnd(): Promise<void> {
+    await this.page.keyboard.press('End');
+  }
+
+  async toggleFocusedSelection(): Promise<void> {
+    await this.page.keyboard.press(' ');
+  }
+
+  async selectAll(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+A');
+  }
+
+  async clearSelection(): Promise<void> {
+    await this.page.keyboard.press('Delete');
+  }
+
+  async copySelection(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+C');
+  }
+
+  async cutSelection(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+X');
+  }
+
+  async pasteClipboard(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+V');
+  }
+
+  async undo(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+Z');
+  }
+
+  async redo(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+Shift+Z');
+  }
+
+  pageSizeOption(size: string): Locator {
+    return this.page.locator('.nui-select__listbox').getByRole('option', { name: size });
   }
 
   remoteRow(position: number): Locator {
@@ -146,7 +316,41 @@ export class TableSection {
   }
 
   remoteGroupLabel(position: number): Locator {
-    return this.remoteRow(position).locator('.nui-table__group');
+    return this.remoteRow(position).locator(GROUP_LABEL);
+  }
+
+  remoteGroupCopy(position: number, col: number): Locator {
+    return this.remoteCell(position, col).locator(GROUP_COPY);
+  }
+
+  remoteGroupLabelColumn(position: number): Promise<number> {
+    return columnOfLabel(this.remoteGroupLabel(position));
+  }
+
+  remoteGroupInset(position: number): Promise<number> {
+    return this.remoteGroupLabel(position).evaluate((label) => {
+      const cell = label.closest('[aria-colindex]');
+
+      if (cell === null) {
+        throw new Error('The group label stands outside a cell');
+      }
+
+      const own = label.getBoundingClientRect();
+      const edge = cell.getBoundingClientRect();
+
+      return Math.round(
+        getComputedStyle(cell).direction === 'rtl' ? edge.right - own.right : own.left - edge.left,
+      );
+    });
+  }
+
+  async toggleRemoteGroupAt(position: number, col: number): Promise<void> {
+    const cell = this.remoteCell(position, col);
+    const [own, copy] = await Promise.all([boxOf(cell), boxOf(cell.locator(GROUP_COPY))]);
+    const start = Math.max(own.x, copy.x);
+    const end = Math.min(own.x + own.width, copy.x + copy.width);
+
+    await cell.click({ position: { x: (start + end) / 2 - own.x, y: own.height / 2 } });
   }
 
   async remoteGroupBy(label: string): Promise<void> {
@@ -299,7 +503,20 @@ export class TableSection {
   }
 
   groupLabel(position: number): Locator {
-    return this.row(position).locator('.nui-table__group');
+    return this.row(position).locator(GROUP_LABEL);
+  }
+
+  groupLabelColumn(position: number): Promise<number> {
+    return columnOfLabel(this.groupLabel(position));
+  }
+
+  async groupLabelInView(position: number): Promise<boolean> {
+    const [label, frame] = await Promise.all([
+      boxOf(this.groupLabel(position)),
+      boxOf(this.viewport),
+    ]);
+
+    return label.x >= frame.x && label.x + label.width <= frame.x + frame.width;
   }
 
   async groupBy(label: string): Promise<void> {
@@ -342,6 +559,78 @@ export class TableSection {
     await this.page.mouse.down();
     await this.page.mouse.move(x + 8, y);
     await this.page.mouse.move(destination.x + destination.width * 0.75, y, { steps: 6 });
+    await this.page.mouse.up();
+  }
+
+  async headerHandles(col: number): Promise<HandleLayout> {
+    await this.header(col).hover();
+
+    await expect.poll(() => this.headerSettled(col)).toBe(true);
+
+    return this.header(col).evaluate(handleLayoutOf, HEADER_PARTS);
+  }
+
+  async headerSpacing(col: number): Promise<HeaderSpacing> {
+    await this.header(col).hover();
+
+    await expect.poll(() => this.headerSettled(col)).toBe(true);
+
+    return this.header(col).evaluate(headerSpacingOf);
+  }
+
+  async sortMenuGap(col: number): Promise<number> {
+    await this.header(col).hover();
+
+    await expect.poll(() => this.headerSettled(col)).toBe(true);
+
+    return this.header(col).evaluate(sortMenuGapOf);
+  }
+
+  async liftHeader(col: number): Promise<void> {
+    await this.header(col).hover();
+
+    await expect.poll(() => renderedWidth(this.grip(col))).toBeGreaterThan(8);
+
+    const grip = await boxOf(this.grip(col));
+    const x = grip.x + grip.width / 2;
+    const y = grip.y + grip.height / 2;
+
+    await this.page.mouse.move(x, y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(x + 24, y, { steps: 4 });
+    await expect(this.columnGhost).toBeVisible();
+  }
+
+  get columnGhost(): Locator {
+    return this.root.locator('.nui-table__ghost--x .nui-table__ghost-body');
+  }
+
+  ghostHandles(): Promise<HandleLayout> {
+    return this.columnGhost.evaluate(handleLayoutOf, GHOST_PARTS);
+  }
+
+  async liftTreeRow(position: number): Promise<Box> {
+    await this.treeRow(position).hover();
+
+    await expect.poll(() => renderedWidth(this.treeGrip(position))).toBeGreaterThan(20);
+
+    const grip = await boxOf(this.treeGrip(position));
+    const x = grip.x + grip.width / 2;
+    const y = grip.y + grip.height / 2;
+
+    await this.page.mouse.move(x, y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(x, y + 24, { steps: 4 });
+    await expect(this.treeGhostGrip).toBeVisible();
+
+    return grip;
+  }
+
+  get treeGhostGrip(): Locator {
+    return this.tree.locator('.nui-table__ghost--y .nui-table__ghost-grip');
+  }
+
+  async release(): Promise<void> {
     await this.page.mouse.up();
   }
 

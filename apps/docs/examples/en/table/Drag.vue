@@ -1,17 +1,14 @@
 <template>
-  <div class="flex flex-col gap-3">
-    <NuiTable
-      v-model:expanded="expanded"
-      :columns="columns"
-      :rows="units"
-      :get-key="keyOf"
-      :get-children="childrenOf"
-      row-drag
-      caption="Departments by priority"
-      @reorder="onReorder"
-    />
-    <p class="text-sm text-muted-foreground">Last move: {{ last }}</p>
-  </div>
+  <NuiTable
+    v-model:expanded="expanded"
+    :columns="columns"
+    :rows="units"
+    :get-key="keyOf"
+    :get-children="childrenOf"
+    row-drag
+    caption="Departments by priority"
+    @reorder="onReorder"
+  />
 </template>
 
 <script setup lang="ts">
@@ -53,7 +50,6 @@ const keyOf = (unit: Unit): string => unit.id;
 const childrenOf = (unit: Unit): readonly Unit[] | undefined => unit.children;
 const units = ref<readonly Unit[]>(START);
 const expanded = ref<TableNodeId[]>(['dev']);
-const last = ref('—');
 
 const inserted = (list: readonly Unit[], unit: Unit, index: number): Unit[] => [
   ...list.slice(0, index),
@@ -91,14 +87,10 @@ const placed = (
 const withParent = (ids: readonly TableNodeId[], id: string | undefined): TableNodeId[] =>
   id === undefined || ids.includes(id) ? [...ids] : [...ids, id];
 
-const parentNote = (parent: Unit | undefined): string =>
-  parent === undefined ? '' : ` (${parent.name})`;
-
 const onReorder = (event: NuiTableReorderEvent<Unit>): void => {
   const target = event.toParent === undefined ? undefined : event.toParent.id;
 
   units.value = placed(without(units.value, event.row.id), target, event.row, event.to);
   expanded.value = withParent(expanded.value, target);
-  last.value = `${event.row.name}: ${event.from + 1} → ${event.to + 1}${parentNote(event.toParent)}`;
 };
 </script>

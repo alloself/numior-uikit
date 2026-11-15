@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { CELL_TEXT, boxOf } from '../helpers/geometry';
+import { SheetKeys } from './grid-keys';
 import {
   isNumber,
   listOf,
@@ -24,7 +25,7 @@ const isCellsOutput = shapeOf({
 const HEAD_ROWS = 1;
 const ROW_HEADERS = 1;
 
-export class TableCellsSection {
+export class TableCellsSection extends SheetKeys {
   readonly scope: string;
   readonly toggle: Locator;
   readonly root: Locator;
@@ -33,10 +34,8 @@ export class TableCellsSection {
   readonly output: Locator;
   readonly recalc: Locator;
 
-  constructor(
-    protected readonly page: Page,
-    id = 'table-cells',
-  ) {
+  constructor(page: Page, id = 'table-cells') {
+    super(page);
     this.scope = `[data-testid="${id}"]`;
     this.toggle = page.getByTestId(`${id}-toggle`);
     this.root = page.getByTestId(id);
@@ -62,6 +61,17 @@ export class TableCellsSection {
     return this.row(position).locator(`:scope > [aria-colindex="${col + ROW_HEADERS + 1}"]`);
   }
 
+  async cellTop(position: number, col: number): Promise<number> {
+    return (await boxOf(this.cell(position, col))).y;
+  }
+
+  async wheelBy(delta: number): Promise<void> {
+    const frame = await boxOf(this.viewport);
+
+    await this.page.mouse.move(frame.x + frame.width / 2, frame.y + frame.height / 2);
+    await this.page.mouse.wheel(0, delta);
+  }
+
   async dragAcross(from: Locator, to: Locator): Promise<void> {
     const [start, end] = await Promise.all([boxOf(from), boxOf(to)]);
 
@@ -69,6 +79,27 @@ export class TableCellsSection {
     await this.page.mouse.down();
     await this.page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, { steps: 5 });
     await this.page.mouse.up();
+  }
+
+  async typeIntoActiveCell(text: string): Promise<void> {
+    await this.page.keyboard.type(text);
+  }
+
+  async cancelEdit(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+  }
+
+  async fillSelection(): Promise<void> {
+    await this.page.keyboard.press('Control+Enter');
+  }
+
+  async typeAndCommit(text: string): Promise<void> {
+    await this.page.keyboard.type(text);
+    await this.page.keyboard.press('Enter');
+  }
+
+  async clearActiveCell(): Promise<void> {
+    await this.page.keyboard.press('Delete');
   }
 
   async paste(text: string): Promise<void> {

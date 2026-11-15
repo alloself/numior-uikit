@@ -248,6 +248,8 @@ const LAYOUT_HEIGHT = 300;
 const HEAD_HEIGHT = 40;
 const GRAB_NUDGE = 10;
 
+const GRIP_CELL_START = 48;
+
 const dragHandle = async (handle: HTMLElement | null, name: string, dx: number): Promise<void> => {
   if (handle === null) {
     throw new Error(`${name} has no resize handle`);
@@ -318,6 +320,7 @@ const PAINT_PROPERTIES = [
   ['start', '--_edge-start'],
   ['spill', '--_spill'],
   ['line', '--_spill-line'],
+  ['room', '--_group-room'],
   ['bar', '--_bar'],
   ['barColor', '--_bar-color'],
 ] as const;
@@ -915,8 +918,20 @@ export class TableDriver<T> {
     return this.row(position)?.getAttribute('aria-expanded') ?? undefined;
   }
 
+  private groupRooms(position: number): HTMLElement[] {
+    return [...(this.row(position)?.querySelectorAll<HTMLElement>('.nui-table__group-room') ?? [])];
+  }
+
+  private groupOrigin(position: number): HTMLElement | undefined {
+    return this.groupRooms(position).find((room) => room.getAttribute('aria-hidden') !== 'true');
+  }
+
+  private columnOf(element: Element | undefined): number | undefined {
+    return cellPositionOf(this.element, element?.closest('.nui-table__cell') ?? null)?.col;
+  }
+
   groupLabel(position: number): string | undefined {
-    const group = this.row(position)?.querySelector('.nui-table__group');
+    const group = this.groupOrigin(position)?.querySelector('.nui-table__group');
 
     if (group === null || group === undefined) {
       return undefined;
@@ -926,12 +941,31 @@ export class TableDriver<T> {
       .join(' ');
   }
 
-  private get popover(): HTMLElement | null {
-    return document.querySelector<HTMLElement>('.nui-table-filter');
+  groupLabelColumn(position: number): number | undefined {
+    return this.columnOf(this.groupOrigin(position));
+  }
+
+  groupCopies(position: number): number[] {
+    return this.groupRooms(position).reduce<number[]>((cols, room) => {
+      const col = room.getAttribute('aria-hidden') === 'true' ? this.columnOf(room) : undefined;
+
+      if (col !== undefined) {
+        cols.push(col);
+      }
+      return cols;
+    }, []);
+  }
+
+  groupLevel(position: number): string | undefined {
+    return this.groupOrigin(position)?.style.getPropertyValue('--_level');
+  }
+
+  private get filterForm(): HTMLFormElement | null {
+    return document.querySelector<HTMLFormElement>('form.nui-table-filter');
   }
 
   get filterLoading(): boolean {
-    return this.popover?.classList.contains('nui-table-filter--loading') ?? false;
+    return this.filterForm?.classList.contains('nui-table-filter--loading') ?? false;
   }
 
   private async filterValuesLoaded(): Promise<void> {
@@ -948,15 +982,15 @@ export class TableDriver<T> {
   }
 
   get filterTitle(): string | undefined {
-    return this.popover?.querySelector('.nui-table-filter__title')?.textContent?.trim();
+    return this.filterForm?.querySelector('.nui-table-filter__title')?.textContent?.trim();
   }
 
   get filterFocused(): boolean {
-    return this.popover?.contains(document.activeElement) ?? false;
+    return this.filterForm?.contains(document.activeElement) ?? false;
   }
 
   get filterValueLabels(): string[] {
-    return [...(this.popover?.querySelectorAll('.nui-table-filter__values label') ?? [])].map(
+    return [...(this.filterForm?.querySelectorAll('.nui-table-filter__values label') ?? [])].map(
       (label) => label.textContent?.trim() ?? '',
     );
   }
@@ -1096,12 +1130,12 @@ export class TableDriver<T> {
   }
 
   get filterNote(): string | undefined {
-    return this.popover?.querySelector('.nui-table-filter__note')?.textContent?.trim();
+    return this.filterForm?.querySelector('.nui-table-filter__note')?.textContent?.trim();
   }
 
   get filterChosenLabels(): string[] {
     return [
-      ...(this.popover?.querySelectorAll<HTMLElement>('.nui-table-filter__values label') ?? []),
+      ...(this.filterForm?.querySelectorAll<HTMLElement>('.nui-table-filter__values label') ?? []),
     ].flatMap((entry) =>
       entry.querySelector<HTMLInputElement>('input')?.checked === true
         ? [entry.textContent?.trim() ?? '']
@@ -1122,7 +1156,7 @@ export class TableDriver<T> {
   }
 
   private get allValuesInput(): HTMLInputElement | null | undefined {
-    return [...(this.popover?.querySelectorAll<HTMLElement>('label') ?? [])]
+    return [...(this.filterForm?.querySelectorAll<HTMLElement>('label') ?? [])]
       .find((entry) => entry.textContent?.trim() === 'Выбрать все')
       ?.querySelector<HTMLInputElement>('input');
   }
@@ -1132,7 +1166,7 @@ export class TableDriver<T> {
   }
 
   private filterInput(label: string): HTMLInputElement | undefined {
-    const inputs = this.popover?.querySelectorAll<HTMLInputElement>('input') ?? [];
+    const inputs = this.filterForm?.querySelectorAll<HTMLInputElement>('input') ?? [];
 
     return [...inputs].find((input) =>
       [...(input.labels ?? [])].some((entry) => entry.textContent?.trim() === label),
@@ -1533,6 +1567,12 @@ export class TableDriver<T> {
     return ghost.exists() ? ghost.element.style.getPropertyValue('--_size') : undefined;
   }
 
+  get ghostAcross(): string | undefined {
+    const ghost = this.wrapper.find<HTMLElement>('.nui-table__ghost--y');
+
+    return ghost.exists() ? ghost.element.style.getPropertyValue('--_ghost-across') : undefined;
+  }
+
   get ghostText(): string | undefined {
     const ghost = this.wrapper.find('.nui-table__ghost--y');
     return ghost.exists() ? ghost.text() : undefined;
@@ -1561,11 +1601,20 @@ export class TableDriver<T> {
 
       defineRect(row, new DOMRect(0, top, LAYOUT_WIDTH, HEAD_HEIGHT));
 
-      if (!row.firstElementChild) {
+      if (row.firstElementChild) {
+        defineRect(row.firstElementChild, new DOMRect(0, top, LAYOUT_WIDTH, HEAD_HEIGHT));
+      }
+
+      const gripCell = row.querySelector('.nui-table__row-grip')?.closest('.nui-table__cell');
+
+      if (!gripCell) {
         continue;
       }
 
-      defineRect(row.firstElementChild, new DOMRect(0, top, LAYOUT_WIDTH, HEAD_HEIGHT));
+      defineRect(
+        gripCell,
+        new DOMRect(GRIP_CELL_START, top, LAYOUT_WIDTH - GRIP_CELL_START, HEAD_HEIGHT),
+      );
     }
   }
 
@@ -2332,7 +2381,7 @@ export class TableDriver<T> {
   }
 
   async dismissFilter(): Promise<void> {
-    const popover = this.popover;
+    const popover = this.filterForm?.closest<HTMLElement>('[popover]') ?? null;
 
     if (popover !== null) {
       dismissPopoverNatively(popover);
@@ -2353,7 +2402,7 @@ export class TableDriver<T> {
 
   async chooseValue(label: string): Promise<void> {
     const option = [
-      ...(this.popover?.querySelectorAll<HTMLElement>('.nui-table-filter__values label') ?? []),
+      ...(this.filterForm?.querySelectorAll<HTMLElement>('.nui-table-filter__values label') ?? []),
     ].find((entry) => entry.textContent?.trim() === label);
 
     option?.querySelector<HTMLInputElement>('input')?.click();
@@ -2378,9 +2427,7 @@ export class TableDriver<T> {
   async applyFilter(): Promise<void> {
     const settled = this.nextSettle();
 
-    this.popover
-      ?.querySelector('form')
-      ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    this.filterForm?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
     await settled;
     await nextTick();
@@ -2389,7 +2436,7 @@ export class TableDriver<T> {
   async resetFilter(): Promise<void> {
     const settled = this.nextSettle();
 
-    const buttons = this.popover?.querySelectorAll<HTMLButtonElement>(
+    const buttons = this.filterForm?.querySelectorAll<HTMLButtonElement>(
       '.nui-table-filter__actions button',
     );
 
@@ -2416,7 +2463,12 @@ export class TableDriver<T> {
   }
 
   async toggleGroup(position: number): Promise<void> {
-    this.row(position)?.querySelector<HTMLElement>('.nui-table__group')?.click();
+    this.groupOrigin(position)?.querySelector<HTMLElement>('.nui-table__group')?.click();
+    await nextTick();
+  }
+
+  async toggleGroupAt(position: number, col: number): Promise<void> {
+    this.cell(position, col)?.querySelector<HTMLElement>('.nui-table__group')?.click();
     await nextTick();
   }
 

@@ -1,10 +1,12 @@
 <template>
-  <NuiAccordion v-model:values="sections" multiple variant="card">
-    <NuiAccordionItem value="address" label="Адрес доставки">Москва, Тверская, 7</NuiAccordionItem>
-    <NuiAccordionItem value="payment" label="Оплата">Карта •••• 4242</NuiAccordionItem>
-    <NuiAccordionItem value="promo" label="Промокод" disabled
-      >Недоступно для этого заказа</NuiAccordionItem
-    >
+  <NuiAccordion v-model:values="sections" multiple variant="card" class="w-full max-w-md">
+    <NuiAccordionItem value="delivery" label="Доставка">
+      Курьер привезёт заказ 20411 в Екатеринбург 28 сентября, с 10 до 18.
+    </NuiAccordionItem>
+    <NuiAccordionItem value="payment" label="Оплата">
+      Переводом по счёту, счёт ушёл на zaitseva@example.com.
+    </NuiAccordionItem>
+    <NuiAccordionItem value="promo" label="Промокод не действует на товары со скидкой" disabled />
   </NuiAccordion>
 </template>
 
@@ -12,5 +14,5 @@
 import { ref } from 'vue';
 import { NuiAccordion, NuiAccordionItem } from '@numior/vue';
 
-const sections = ref(['address', 'payment']);
+const sections = ref(['delivery', 'payment']);
 </script>

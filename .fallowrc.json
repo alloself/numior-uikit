@@ -48,6 +48,9 @@
     "packages/nuxt/test/fixture/app/assets/theme.css",
     "packages/nuxt/test/fixture/app/**/*.vue",
     "packages/nuxt/test/**/*.test.ts",
+    "packages/mcp/src/index.ts",
+    "packages/mcp/src/main.ts",
+    "packages/mcp/scripts/build-data.ts",
     "packages/table/bench/engine.bench.ts",
     "packages/editor-core/bench/core.bench.ts",
     "packages/spreadsheet/bench/core.bench.ts",
@@ -180,6 +183,14 @@
         "patterns": ["packages/nuxt/**"]
       },
       {
+        "name": "mcp-scripts",
+        "patterns": ["packages/mcp/scripts/**"]
+      },
+      {
+        "name": "mcp",
+        "patterns": ["packages/mcp/**"]
+      },
+      {
         "name": "apps",
         "patterns": ["apps/**"]
       },
@@ -299,6 +310,14 @@
       {
         "from": "nuxt",
         "allow": ["tokens", "tailwind", "primitives", "vue", "forms", "table", "nuxt"]
+      },
+      {
+        "from": "mcp-scripts",
+        "allow": ["apps", "mcp", "mcp-scripts"]
+      },
+      {
+        "from": "mcp",
+        "allow": ["mcp"]
       },
       {
         "from": "apps",

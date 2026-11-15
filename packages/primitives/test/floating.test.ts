@@ -24,7 +24,7 @@ vi.mock('@floating-ui/dom', () => ({
   },
   offset: (value: number) => ({ name: 'offset', value }),
   flip: () => ({ name: 'flip' }),
-  shift: () => ({ name: 'shift' }),
+  shift: (options: { crossAxis?: boolean }) => ({ name: 'shift', crossAxis: options.crossAxis }),
   arrow: () => ({ name: 'arrow' }),
   size: (options: { apply: (args: SizeApplyArgs) => void }) => {
     sizeHooks.push(options.apply);
@@ -135,6 +135,42 @@ describe('useFloating', () => {
 
     plain.unmount();
   });
+
+  it.each([
+    ['right-start', true],
+    ['left', true],
+    ['bottom-start', false],
+    ['top', false],
+  ] as const)(
+    'lets a layer placed at %s cross over its anchor to stay on screen: %s',
+    async (placement, crosses) => {
+      computePosition.mockClear();
+
+      computePosition.mockResolvedValue({
+        x: 0,
+        y: 0,
+        placement,
+        strategy: 'fixed',
+        middlewareData: {},
+      });
+
+      const capture = captureWithElements((reference, floating) =>
+        useFloating(reference, floating, { placement }),
+      );
+
+      await flushPromises();
+
+      expect(computePosition).toHaveBeenCalledWith(
+        capture.first,
+        capture.second,
+        expect.objectContaining({
+          middleware: expect.arrayContaining([{ name: 'shift', crossAxis: crosses }]),
+        }),
+      );
+
+      capture.unmount();
+    },
+  );
 
   it('announces the requested side before measuring and stays idle while disabled', () => {
     computePosition.mockClear();

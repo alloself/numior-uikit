@@ -58,6 +58,10 @@ export class LinkDriver extends ComponentDriver {
     return this.attribute('aria-disabled');
   }
 
+  get role(): string | undefined {
+    return this.attribute('role');
+  }
+
   get tabindex(): string | undefined {
     return this.attribute('tabindex');
   }

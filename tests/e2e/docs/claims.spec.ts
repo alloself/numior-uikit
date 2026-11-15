@@ -1,4 +1,5 @@
 import { expect, test } from '../fixtures';
+import { boxOf } from '../helpers/geometry';
 
 test('a click on the calendar month or year opens the list of months or years', async ({
   docs,
@@ -24,25 +25,24 @@ test('the code area takes keyboard focus and scrolls with the arrow keys', async
   await expect(docs.codeScroller).toBeFocused();
   expect(await docs.scrollLeftOf(docs.codeScroller)).toBe(0);
 
-  await page.keyboard.press('ArrowRight');
-  await page.keyboard.press('ArrowRight');
+  await docs.scrollFocusedRight();
+  await docs.scrollFocusedRight();
   await expect.poll(() => docs.scrollLeftOf(docs.codeScroller)).toBeGreaterThan(0);
 });
 
 test('the command dialog example opens on Ctrl+J and Ctrl+K opens the docs search', async ({
   docs,
-  page,
 }) => {
   const palette = docs.article.getByRole('dialog');
 
   await docs.open('/components/command');
-  await page.keyboard.press('Control+j');
-  await expect(palette.getByRole('option', { name: 'Темизация' })).toBeVisible();
+  await docs.openExamplePalette();
+  await expect(palette.getByRole('option', { name: 'Новый заказ' })).toBeVisible();
 
-  await page.keyboard.press('Escape');
+  await docs.pressEscape();
   await expect(palette).toBeHidden();
 
-  await page.keyboard.press('Control+k');
+  await docs.openSearchWithShortcut();
   await expect(docs.commandInput).toBeFocused();
   await expect(palette).toBeHidden();
 });
@@ -56,22 +56,58 @@ test('an empty date field shows the date pattern of the page language', async ({
   );
 });
 
-test('a menu opened with ArrowUp focuses its last item', async ({ docs, page }) => {
+test('a menu opened with ArrowUp focuses its last item', async ({ docs }) => {
   await docs.open('/components/menu');
-  await docs.article.getByRole('button', { name: 'Файл' }).first().focus();
-  await page.keyboard.press('ArrowUp');
-  await expect(docs.article.getByRole('menuitem', { name: 'Удалить' }).first()).toBeFocused();
+  await docs.article.getByRole('button', { name: 'Действия' }).first().focus();
+  await docs.openMenuFromItsEnd();
+
+  await expect(
+    docs.article.getByRole('menuitem', { name: 'Отменить заказ' }).first(),
+  ).toBeFocused();
 });
 
-test('the action of a toast replaces its text in place', async ({ docs, page }) => {
+test('a submenu with no room on either side stays on a phone screen', async ({ docs, page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await docs.open('/components/menu');
+  await docs.article.getByRole('button', { name: 'Действия' }).first().click();
+  await docs.article.getByRole('menuitem', { name: 'Отправить покупателю' }).first().click();
+
+  const submenu = docs.article.getByRole('menu', { name: 'Отправить покупателю' }).first();
+
+  await expect.poll(async () => (await boxOf(submenu)).x).toBeGreaterThanOrEqual(0);
+
+  await expect
+    .poll(async () => {
+      const box = await boxOf(submenu);
+
+      return box.x + box.width;
+    })
+    .toBeLessThanOrEqual(390);
+});
+
+test('a props table fits a phone screen with the type under the name', async ({ docs, page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await docs.open('/components/button');
+
+  const props = docs.apiTable('Свойства');
+
+  await props.scrollIntoViewIfNeeded();
+  await expect.poll(() => docs.sidewaysOverflow(props)).toBe(0);
+
+  await expect(props.getByRole('row').filter({ hasText: 'variant' }).first()).toContainText(
+    'NuiButtonVariant',
+  );
+});
+
+test('the action of a toast replaces its text in place', async ({ docs }) => {
   await docs.open('/components/toast');
   await docs.article.getByRole('button', { name: 'Ошибка с действием' }).click();
   await expect(docs.toasts).toHaveText([/Не удалось сохранить/]);
 
-  await page.getByRole('button', { name: 'Повторить' }).click();
+  await docs.toastAction('Повторить').click();
   await expect(docs.toasts).toHaveText([/Сохранено/]);
 
-  await page.mouse.move(0, 0);
+  await docs.movePointerAway();
   await expect(docs.toasts).toHaveCount(0, { timeout: 8000 });
 });
 

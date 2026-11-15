@@ -1,43 +1,54 @@
 <template>
-  <NuiTabs v-model="tab" class="w-full max-w-md">
-    <NuiTabList label="Open documents">
+  <NuiTabs v-if="opened.length > 0" v-model="tab" class="w-full max-w-md">
+    <NuiTabList label="Open orders">
       <NuiTab
-        v-for="file in files"
-        :key="file.value"
-        :value="file.value"
+        v-for="order in opened"
+        :key="order.id"
+        :value="String(order.id)"
         closable
-        @close="close(file.value)"
+        @close="close(order.id)"
       >
-        {{ file.label }}
+        Order {{ order.id }}
       </NuiTab>
     </NuiTabList>
-    <NuiTabPanel v-for="file in files" :key="file.value" :value="file.value">
-      {{ file.text }}
+    <NuiTabPanel v-for="order in opened" :key="order.id" :value="String(order.id)">
+      {{ order.customer }}, {{ order.city }}, {{ money.format(order.total) }}.
     </NuiTabPanel>
   </NuiTabs>
+  <NuiButton v-else variant="outline" tone="neutral" @click="reopen">Reopen the orders</NuiButton>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/vue';
+import { NuiButton, NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/vue';
+import { orders } from '#demo/orders';
 
-const files = ref([
-  { value: 'contract', label: 'Contract', text: 'Supply contract No. 18 of 2 September.' },
-  { value: 'invoice', label: 'Invoice', text: 'Invoice for $1,240, due on Friday.' },
-  { value: 'act', label: 'Statement', text: 'Account statement for September, no differences.' },
-]);
+const money = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+});
 
-const tab = ref('contract');
+const shipped = orders.filter((order) => order.status === 'shipped');
+const first = String(shipped[0]?.id ?? '');
 
-const close = (value: string): void => {
-  const index = files.value.findIndex((file) => file.value === value);
+const opened = ref([...shipped]);
+const tab = ref(first);
 
-  files.value = files.value.filter((file) => file.value !== value);
+const close = (id: number): void => {
+  const index = opened.value.findIndex((order) => order.id === id);
 
-  if (tab.value !== value) {
+  opened.value = opened.value.filter((order) => order.id !== id);
+
+  if (tab.value !== String(id)) {
     return;
   }
 
-  tab.value = files.value.at(Math.min(index, files.value.length - 1))?.value ?? '';
+  tab.value = String(opened.value.at(Math.min(index, opened.value.length - 1))?.id ?? '');
+};
+
+const reopen = (): void => {
+  opened.value = [...shipped];
+  tab.value = first;
 };
 </script>

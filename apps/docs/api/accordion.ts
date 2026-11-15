@@ -22,9 +22,12 @@ const docs: DocsMap = {
       },
       headingLevel: {
         ru: 'Оборачивает заголовки секций в `h2`–`h6`. Без него заголовок — `div`.',
-        en: 'Wraps the section headings in `h2`–`h6`. Without it the heading is a `div`.',
+        en: 'Wraps the section headings in `h2`–`h6`, so the sections appear in the page outline. Without it the heading is a `div`.',
       },
-      disabled: { ru: 'Отключает все секции.', en: 'Disables every section.' },
+      disabled: {
+        ru: 'Отключает заголовки всех секций: их нельзя открыть или закрыть.',
+        en: 'Turns off every section heading: no section opens or closes.',
+      },
     },
     models: {
       'v-model': {
@@ -83,7 +86,10 @@ const docs: DocsMap = {
         en: 'Value that goes into the accordion model while the section is open.',
       },
       label: { ru: 'Текст заголовка.', en: 'Heading text.' },
-      disabled: { ru: 'Отключает секцию.', en: 'Disables the section.' },
+      disabled: {
+        ru: 'Отключает заголовок секции: её нельзя открыть или закрыть, а открытая остаётся открытой.',
+        en: 'Turns off the section heading: the section does not open or close, and an open one stays open.',
+      },
     },
     slots: {
       trigger: {

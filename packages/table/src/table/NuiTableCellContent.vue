@@ -3,6 +3,7 @@
   <NuiTableGroupCell
     v-else-if="view.kind === TableCellViewKind.Group"
     :cell="view.cell"
+    :copy="view.copy"
     @toggle="emit('toggle')"
   />
   <template v-else>

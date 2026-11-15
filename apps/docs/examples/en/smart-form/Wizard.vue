@@ -1,72 +1,106 @@
 <template>
-  <NuiSmartForm
-    v-model:step="step"
-    :form="form"
-    :steps="steps"
-    submit-label="Create team"
-    class="max-w-lg"
-  />
+  <div class="flex w-full max-w-2xl flex-col gap-3">
+    <NuiSmartForm v-model:step="step" :form="form" :steps="steps" submit-label="Place order" />
+    <p v-if="placed" class="m-0 text-sm text-muted-foreground">
+      Order placed, the confirmation went to {{ placed }}
+    </p>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiCheckbox, NuiInput, NuiNumberField } from '@numior/vue';
-import { NuiSmartForm, email, formConfig, min, required, useForm } from '@numior/forms';
+import { NuiInput, NuiRadioGroup, NuiTextarea } from '@numior/vue';
+import { NuiSmartForm, email, formConfig, required, useForm } from '@numior/forms';
+import { DELIVERIES, PAYMENTS, type Delivery, type Payment } from '#demo/orders';
 
-interface Team {
+interface Checkout {
+  name: string;
   email: string;
-  password: string;
-  team: string;
-  size: number | null;
-  agreed: boolean;
+  phone: string;
+  delivery: Delivery;
+  city: string;
+  address: string;
+  payment: Payment;
+  comment: string;
 }
 
-const { field } = formConfig<Team>();
+const { field } = formConfig<Checkout>();
+
+const deliveries = Object.entries(DELIVERIES).map(([value, label]) => ({ value, label }));
+const payments = Object.entries(PAYMENTS).map(([value, label]) => ({ value, label }));
+const needsAddress = (values: Checkout): boolean => values.delivery !== 'pickup';
 
 const steps = [
   {
-    value: 'account',
-    label: 'Account',
-    description: 'Email and password',
+    value: 'buyer',
+    label: 'Buyer',
+    layout: '"name name" "email phone"',
     fields: [
+      field(NuiInput, (v) => v.name, { label: 'Name', required: true, rules: [required()] }),
       field(NuiInput, (v) => v.email, {
         label: 'Email',
         required: true,
         rules: [required(), email()],
         props: { type: 'email' },
       }),
-      field(NuiInput, (v) => v.password, {
-        label: 'Password',
-        required: true,
-        rules: [required(), min(8)],
-        props: { type: 'password' },
+      field(NuiInput, (v) => v.phone, {
+        label: 'Phone',
+        props: { type: 'tel', mask: '(###) ###-####' },
       }),
     ],
   },
   {
-    value: 'team',
-    label: 'Team',
-    layout: '"team size"',
+    value: 'delivery',
+    label: 'Delivery',
+    layout: '"delivery delivery" "city address"',
     fields: [
-      field(NuiInput, (v) => v.team, { label: 'Name', required: true, rules: [required()] }),
-      field(NuiNumberField, (v) => v.size, { label: 'How many people', props: { min: 1 } }),
+      field(NuiRadioGroup, (v) => v.delivery, {
+        label: 'Method',
+        group: true,
+        props: { options: deliveries, orientation: 'horizontal' },
+      }),
+      field(NuiInput, (v) => v.city, { label: 'City', required: true, rules: [required()] }),
+      field(NuiInput, (v) => v.address, {
+        label: 'Address',
+        required: true,
+        when: needsAddress,
+        rules: [required()],
+      }),
     ],
   },
   {
     value: 'confirm',
     label: 'Confirmation',
     fields: [
-      field(NuiCheckbox, (v) => v.agreed, {
-        rules: [required({ message: 'Confirm your consent' })],
+      field(NuiRadioGroup, (v) => v.payment, {
+        label: 'Payment',
+        group: true,
+        props: { options: payments },
+      }),
+      field(NuiTextarea, (v) => v.comment, {
+        label: 'Note for the courier',
+        props: { rows: 3 },
       }),
     ],
   },
 ];
 
 const step = ref<string>();
+const placed = ref('');
 
-const form = useForm<Team>({
-  initialValues: { email: '', password: '', team: '', size: 5, agreed: false },
-  onSubmit: () => undefined,
+const form = useForm<Checkout>({
+  initialValues: {
+    name: '',
+    email: '',
+    phone: '',
+    delivery: 'courier',
+    city: 'Boston',
+    address: '',
+    payment: 'card',
+    comment: '',
+  },
+  onSubmit: (values) => {
+    placed.value = values.email ?? '';
+  },
 });
 </script>

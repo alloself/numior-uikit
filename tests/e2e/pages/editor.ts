@@ -1,5 +1,7 @@
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { boxOf } from '../helpers/geometry';
+import { ARROWS, type ArrowDirection } from '../helpers/keyboard';
+import { motionOf, slowMotion } from '../helpers/motion';
 import {
   isNumber,
   isString,
@@ -26,6 +28,8 @@ export interface PastedFile {
   readonly type: string;
 }
 
+const CELL_GRAB = { x: 20, y: 10 };
+
 const isEditorOutput = shapeOf({ blocks: isNumber, changes: isNumber, paste: nullable(isString) });
 
 export class EditorSection {
@@ -34,6 +38,8 @@ export class EditorSection {
   readonly frame: Locator;
   readonly preview: Locator;
   readonly readonlySwitch: Locator;
+  readonly uploadsSwitch: Locator;
+  readonly uploadFailSwitch: Locator;
   readonly output: Locator;
 
   constructor(private readonly page: Page) {
@@ -42,7 +48,148 @@ export class EditorSection {
     this.frame = this.root.locator('.nui-editor');
     this.preview = page.getByTestId('editor-preview');
     this.readonlySwitch = page.getByTestId('editor-readonly');
+    this.uploadsSwitch = page.getByTestId('editor-uploads');
+    this.uploadFailSwitch = page.getByTestId('editor-upload-fail');
     this.output = page.getByTestId('editor-output');
+  }
+
+  async typeText(text: string): Promise<void> {
+    await this.page.keyboard.type(text);
+  }
+
+  async pressEnter(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async pressEscape(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+  }
+
+  async deleteBackward(): Promise<void> {
+    await this.page.keyboard.press('Backspace');
+  }
+
+  async deleteForward(): Promise<void> {
+    await this.page.keyboard.press('Delete');
+  }
+
+  async moveCaret(direction: ArrowDirection): Promise<void> {
+    await this.page.keyboard.press(ARROWS[direction]);
+  }
+
+  async extendSelection(direction: 'left' | 'right'): Promise<void> {
+    await this.page.keyboard.press(`Shift+${ARROWS[direction]}`);
+  }
+
+  async caretToLineStart(): Promise<void> {
+    await this.page.keyboard.press('Home');
+  }
+
+  async selectToLineStart(): Promise<void> {
+    await this.page.keyboard.press('Shift+Home');
+  }
+
+  async undo(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+z');
+  }
+
+  async selectAll(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+a');
+  }
+
+  async toggleBold(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+b');
+  }
+
+  async openLinkField(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+k');
+  }
+
+  async leaveCodeBlock(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+Enter');
+  }
+
+  async moveBlockUp(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+Shift+ArrowUp');
+  }
+
+  async indent(): Promise<void> {
+    await this.page.keyboard.press('Tab');
+  }
+
+  async outdent(): Promise<void> {
+    await this.page.keyboard.press('Shift+Tab');
+  }
+
+  async focusToolbar(): Promise<void> {
+    await this.page.keyboard.press('Alt+F10');
+  }
+
+  async tapShift(): Promise<void> {
+    await this.page.keyboard.press('Shift');
+  }
+
+  async replaceSelectionWith(character: string): Promise<void> {
+    await this.page.keyboard.press(character);
+  }
+
+  async startLineAtEnd(): Promise<void> {
+    await this.placeAtEnd();
+    await this.showCaret();
+    await this.pressEnter();
+  }
+
+  async movePointerAway(): Promise<void> {
+    await this.page.mouse.move(0, 0);
+  }
+
+  async drawCellRange(from: Locator, to: Locator): Promise<void> {
+    const [start, end] = await Promise.all([boxOf(from), boxOf(to)]);
+
+    await this.page.mouse.move(start.x + CELL_GRAB.x, start.y + CELL_GRAB.y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(end.x + CELL_GRAB.x, end.y + CELL_GRAB.y, { steps: 8 });
+    await this.page.mouse.up();
+  }
+
+  async rightClickCell(cell: Locator): Promise<void> {
+    const box = await boxOf(cell);
+
+    await this.page.mouse.click(box.x + CELL_GRAB.x, box.y + CELL_GRAB.y, { button: 'right' });
+  }
+
+  hasFinePointer(): Promise<boolean> {
+    return this.page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
+  }
+
+  hasCoarsePointer(): Promise<boolean> {
+    return this.page.evaluate(() => matchMedia('(pointer: coarse)').matches);
+  }
+
+  menuItem(name: string | RegExp, options: { readonly exact?: boolean } = {}): Locator {
+    return this.page.getByRole('menuitem', { name, ...options });
+  }
+
+  menuItemRadio(name?: string | RegExp): Locator {
+    return name === undefined
+      ? this.page.getByRole('menuitemradio')
+      : this.page.getByRole('menuitemradio', { name });
+  }
+
+  option(name: string): Locator {
+    return this.page.getByRole('option', { name });
+  }
+
+  disabledInsertOptions(): Locator {
+    return this.insertOptions().and(this.page.locator('[aria-disabled="true"]'));
+  }
+
+  lastLinkBar(): Locator {
+    return this.page.locator('.nui-editor-link-bar').last();
+  }
+
+  linkBarForm(): Locator {
+    return this.page.locator('.nui-editor-link-bar__edit');
   }
 
   async readOutput(): Promise<EditorOutput> {
@@ -286,6 +433,29 @@ export class EditorSection {
 
   toggle(): Locator {
     return this.content.locator('.nui-content__toggle');
+  }
+
+  toggleLine(text: string): Locator {
+    return this.toggle().locator('p', { hasText: text });
+  }
+
+  async openToggle(): Promise<void> {
+    await this.toggleButton().click();
+    await expect(this.toggle()).toHaveClass(/nui-content__toggle--open/);
+  }
+
+  followsMouse(): Promise<boolean> {
+    return this.page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
+  }
+
+  async slidesAsideOnHover(block: Locator): Promise<boolean> {
+    await slowMotion(this.root);
+    await this.hoverStart(block);
+    await expect(block).toHaveClass(/nui-editor__pushed/);
+
+    const motions = [await motionOf(block, 'margin-left'), await motionOf(block, 'margin-right')];
+
+    return motions.some((motion) => motion !== null);
   }
 
   calloutTone(): Locator {
@@ -626,6 +796,23 @@ export class EditorSection {
 
   file(name: string): Locator {
     return this.content.locator('.nui-content__file', { hasText: name });
+  }
+
+  announcement(): Locator {
+    return this.root.locator('.nui-editor__live');
+  }
+
+  async replaceImage(
+    image: Locator,
+    file: { readonly name: string; readonly type: string },
+  ): Promise<void> {
+    await image.locator('img').click();
+
+    await image.locator('.nui-editor-image__picker').setInputFiles({
+      name: file.name,
+      mimeType: file.type,
+      buffer: Buffer.from('x'.repeat(256)),
+    });
   }
 
   publishedImage(source: string): Locator {

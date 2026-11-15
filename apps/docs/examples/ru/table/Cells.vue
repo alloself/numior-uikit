@@ -3,49 +3,34 @@
     <NuiTable
       v-model:selected="selected"
       :columns="columns"
-      :rows="orders"
+      :rows="latest"
       :get-key="keyOf"
       selectable="multiple"
-      caption="Заказы к отправке"
+      caption="Новые заказы"
     >
       <template #cell-status="{ row }">
         <NuiBadge :tone="toneOf(row)" size="sm">{{ statusOf(row) }}</NuiBadge>
       </template>
     </NuiTable>
-    <p class="text-sm text-muted-foreground">Выбрано: {{ selected.length }}</p>
+    <p class="m-0 text-sm text-muted-foreground">{{ summary }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { plural } from '@numior/primitives';
 import { NuiBadge, type NuiTone } from '@numior/vue';
 import { NuiTable, type NuiTableColumn } from '@numior/table';
+import { ORDER_STATUSES, orders, type Order, type OrderStatus } from '#demo/orders';
 
-interface Order {
-  readonly id: number;
-  readonly customer: string;
-  readonly status: 'paid' | 'pending' | 'cancelled';
-  readonly total: number;
-}
+const latest = orders.slice(-5);
 
-const orders: Order[] = [
-  { id: 20419, customer: 'Анна Титова', status: 'paid', total: 12400 },
-  { id: 20420, customer: 'Игорь Белов', status: 'pending', total: 3150 },
-  { id: 20421, customer: 'Мария Ким', status: 'paid', total: 48900 },
-  { id: 20422, customer: 'Олег Смирнов', status: 'cancelled', total: 990 },
-  { id: 20423, customer: 'Дина Ахметова', status: 'paid', total: 7600 },
-];
-
-const TONES: Record<Order['status'], NuiTone> = {
-  paid: 'success',
+const TONES: Record<OrderStatus, NuiTone> = {
   pending: 'warning',
+  paid: 'info',
+  shipped: 'primary',
+  delivered: 'success',
   cancelled: 'neutral',
-};
-
-const STATUSES: Record<Order['status'], string> = {
-  paid: 'Оплачен',
-  pending: 'Ждёт оплаты',
-  cancelled: 'Отменён',
 };
 
 const money = new Intl.NumberFormat('ru-RU', {
@@ -76,7 +61,7 @@ const columns: NuiTableColumn<Order>[] = [
     label: 'Статус',
     type: 'text',
     width: 160,
-    value: (row) => STATUSES[row.status],
+    value: (row) => ORDER_STATUSES[row.status],
   },
   {
     key: 'total',
@@ -90,6 +75,18 @@ const columns: NuiTableColumn<Order>[] = [
 
 const keyOf = (order: Order): number => order.id;
 const toneOf = (order: Order): NuiTone => TONES[order.status];
-const statusOf = (order: Order): string => STATUSES[order.status];
+const statusOf = (order: Order): string => ORDER_STATUSES[order.status];
 const selected = ref<Order[]>([]);
+
+const summary = computed(() => {
+  const count = selected.value.length;
+
+  if (count === 0) {
+    return 'Заказы к отправке не выбраны.';
+  }
+
+  const sum = selected.value.reduce((total, order) => total + order.total, 0);
+
+  return `К отправке ${count} ${plural('ru', count, { one: 'заказ', few: 'заказа', many: 'заказов', other: 'заказа' })} на ${money.format(sum)}.`;
+});
 </script>

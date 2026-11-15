@@ -1,11 +1,11 @@
 <template>
-  <div class="grid gap-3 sm:grid-cols-2">
-    <NuiTree :items="[]" loading variant="outline" label="Projects" class="w-full" />
+  <div class="grid w-full gap-3 sm:grid-cols-2">
+    <NuiTree :items="[]" loading variant="outline" label="Categories" class="w-full" />
     <NuiTree
       :items="[]"
       variant="outline"
-      label="Archive"
-      empty-label="Archive is empty"
+      label="Returns"
+      empty-label="No returns yet"
       class="w-full"
     />
   </div>

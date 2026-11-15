@@ -1,6 +1,6 @@
 <template>
-  <NuiCard title="Notifications" description="A project digest once a day." class="max-w-sm">
-    <NuiCardContent>The email arrives at 9:00 in the team's time zone.</NuiCardContent>
+  <NuiCard title="September" description="12 orders for $3,977" class="w-full max-w-sm">
+    <NuiCardContent>Two orders await payment, three are on their way to customers.</NuiCardContent>
   </NuiCard>
 </template>
 

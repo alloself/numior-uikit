@@ -276,6 +276,16 @@
       "source": "tailwind-first.adr.md",
       "target": "nuxt-module.adr.md",
       "type": "related"
+    },
+    {
+      "source": "mcp.adr.md",
+      "target": "docs-site.adr.md",
+      "type": "depends_on"
+    },
+    {
+      "source": "mcp.adr.md",
+      "target": "nuxt-module.adr.md",
+      "type": "related"
     }
   ]
 }

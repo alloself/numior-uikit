@@ -1,6 +1,6 @@
 import { sortBy } from 'lodash-es';
 import type { TokenReference } from '../reference/reference.types';
-import { TokenSample, TokenSection, type TokenRow } from './theme.types';
+import { TokenSample, TokenSection, type TokenRow } from './theme.types.ts';
 
 interface SectionRule {
   readonly section: TokenSection;

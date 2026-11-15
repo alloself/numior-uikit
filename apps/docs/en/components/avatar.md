@@ -1,51 +1,53 @@
 # Avatar
 
-`NuiAvatar` shows a user's photo, and without one their initials or an icon. A status can sit
-next to the avatar: online, busy, away.
+A person's photo, initials or icon.
 
 <Example name="avatar/Basic" />
 
+Pass the photo in `src` and the name in `name`: without a photo the avatar shows the initials.
+
 ## Installation
 
-```ts
+```ts install
 import { NuiAvatar, NuiAvatarGroup } from '@numior/vue';
-import '@numior/vue/styles/avatar.css';
 ```
 
 ## Usage
+
+Change the size, the shape and the status.
 
 <Configurator name="NuiAvatar" />
 
 ## Examples
 
-### A group
+### Show a team
 
-`NuiAvatarGroup` renders the members from `items`, overlapping each other. The `max` prop limits
-how many avatars are shown, and the rest collapse into "+N". Set the size and the shape once on
-the group with `size` and `shape`.
+Pass the people in `items` and cap how many show with `max`.
 
 <Example name="avatar/Group" />
 
-### A badge in the corner
+### Show a status
 
-Put a [Badge](/en/components/badge) into the `badge` slot to show a counter or a dot in the
-corner.
+Set `status` to tell whether the person is online, busy or away.
+
+<Example name="avatar/Status" />
+
+### Add a counter to the corner
+
+Put a [Badge](/en/components/badge) into the `badge` slot.
 
 <Example name="avatar/Badge" />
 
-## Behaviour
+## Behavior
 
-The photo comes from `src`. When there is none or it fails to load, the avatar shows the initials
-from `name`, the first letters of its first and last words. Without `name` an icon is shown.
-
-The `status` prop accepts `online`, `offline`, `busy` and `away` and draws a dot of the matching
-colour. `size` accepts `sm`, `md`, `lg` and `xl`, and `shape` accepts `circle` or `square`.
+A photo that fails to load gives way to the initials from the first and last words of `name`.
+Without a name, an icon shows.
 
 ## Accessibility
 
-A screen reader names the avatar by `alt` or `name` and skips an avatar without a name. The
-status dot has its own label, such as "Online" or "Busy", which `statusLabel` replaces. Label
-the group with `label`.
+A screen reader names the avatar by `alt` or `name` and skips an avatar without either. The
+status dot has its own label, such as "Online" or "Busy", and `statusLabel` replaces it. Name a
+group with `label`.
 
 ## API
 

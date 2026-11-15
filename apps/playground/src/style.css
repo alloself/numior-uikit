@@ -197,7 +197,7 @@ label:has(> input[type='checkbox']) {
 .layout-page {
   box-sizing: border-box;
   block-size: 100%;
-  padding: --spacing(4);
+  padding: --spacing(4) var(--spacing-layout-gutter);
   overflow: auto;
 }
 .layout-brand {

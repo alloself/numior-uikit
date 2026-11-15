@@ -3,6 +3,8 @@ import { channelSumOf, rgbDelta } from './helpers/color';
 import { boxOf } from './helpers/geometry';
 import { motionOf, SLOW_MOTION, slowMotion } from './helpers/motion';
 
+const GUTTER = 24;
+
 test.describe('layout', () => {
   test('a full header spans the frame, an end column docks beside the content and groups collapse', async ({
     playground,
@@ -44,10 +46,41 @@ test.describe('layout', () => {
     await expect(layout.heading).toHaveText('Отчёт: команда');
   });
 
+  test('the top bar stands on the content gutter and puts its trigger in the rail column over an icon rail', async ({
+    playground,
+    layout,
+    isMobile,
+  }) => {
+    await playground.open();
+    await layout.root.scrollIntoViewIfNeeded();
+    expect(await layout.appBarPadding()).toBe(GUTTER);
+    expect(await layout.triggerStart()).toBeCloseTo(await layout.textStart(), 0);
+
+    await layout.header.selectOption('full');
+
+    await expect.poll(() => layout.appBarPadding()).toBe(GUTTER);
+
+    if (isMobile) {
+      expect(await layout.triggerStart()).toBeCloseTo(await layout.textStart(), 0);
+      return;
+    }
+
+    const trigger = await layout.triggerStart();
+    const heading = await layout.headingStart();
+
+    await layout.trigger.click();
+
+    await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
+    await expect.poll(() => layout.triggerOffset()).toBeLessThan(1);
+    expect(await layout.headingStart()).toBeCloseTo(await layout.textStart(), 0);
+    expect(await layout.headingStart()).toBeCloseTo((await layout.sidebarWidth()) + GUTTER, 0);
+    expect(await layout.headingStart()).toBeCloseTo(heading, 0);
+    expect(await layout.triggerStart()).toBeCloseTo(trigger, 0);
+  });
+
   test('sidebar collapses to a rail with tooltips, toggles with Ctrl+B and hides offcanvas', async ({
     playground,
     layout,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'desktop sidebar');
@@ -74,7 +107,7 @@ test.describe('layout', () => {
     await expect(layout.heading).toHaveText('Календарь');
     await expect(layout.item('calendar')).toHaveAttribute('aria-current', 'page');
 
-    await page.keyboard.press('Control+b');
+    await layout.toggleSidebarWithShortcut();
     await expect.poll(() => layout.sidebarWidth()).toBeGreaterThan(200);
     await expect.poll(async () => (await layout.readOutput()).open).toBe(true);
 
@@ -83,7 +116,7 @@ test.describe('layout', () => {
     await expect(layout.sidebar).toBeHidden();
     await expect.poll(() => layout.sidebarWidth()).toBeLessThan(1);
 
-    await page.keyboard.press('Control+b');
+    await layout.toggleSidebarWithShortcut();
     await expect(layout.sidebar).toBeVisible();
   });
 
@@ -151,7 +184,6 @@ test.describe('layout', () => {
   test('the icon rail opens sub lists as flyouts by hover, click and keyboard', async ({
     playground,
     layout,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'desktop rail');
@@ -177,14 +209,14 @@ test.describe('layout', () => {
     expect(await layout.sidebarWidth()).toBeLessThan(80);
 
     await layout.subToggle.focus();
-    await page.keyboard.press('ArrowRight');
+    await layout.expandFocusedGroup();
     await expect(layout.flyout).toBeVisible();
     await expect(layout.item('report-sales')).toBeFocused();
 
-    await page.keyboard.press('ArrowDown');
+    await layout.focusNextItem();
     await expect(layout.item('report-team')).toBeFocused();
 
-    await page.keyboard.press('Escape');
+    await layout.closeFlyout();
     await expect(layout.flyout).toBeHidden();
     await expect(layout.subToggle).toBeFocused();
 
@@ -199,7 +231,7 @@ test.describe('layout', () => {
 
     expect(rtlFlyout.x + rtlFlyout.width).toBeLessThanOrEqual(rtlToggle.x + 1);
 
-    await page.keyboard.press('Escape');
+    await layout.closeFlyout();
     await playground.setDirection('ltr');
     await layout.trigger.click();
     await expect.poll(() => layout.sidebarWidth()).toBeGreaterThan(200);
@@ -232,7 +264,6 @@ test.describe('layout', () => {
   test('a flyout opens again after the sidebar was expanded and collapsed over it', async ({
     playground,
     layout,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'desktop rail');
@@ -242,17 +273,17 @@ test.describe('layout', () => {
     await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
 
     await layout.subToggle.focus();
-    await page.keyboard.press('Enter');
+    await layout.activateFocused();
     await expect(layout.flyout).toBeVisible();
 
-    await page.keyboard.press('Control+b');
+    await layout.toggleSidebarWithShortcut();
     await expect.poll(() => layout.sidebarWidth()).toBeGreaterThan(200);
 
-    await page.keyboard.press('Control+b');
+    await layout.toggleSidebarWithShortcut();
     await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
 
     await layout.subToggle.focus();
-    await page.keyboard.press('Enter');
+    await layout.activateFocused();
     await expect(layout.flyout).toBeVisible();
     await expect(layout.item('report-sales')).toBeFocused();
   });

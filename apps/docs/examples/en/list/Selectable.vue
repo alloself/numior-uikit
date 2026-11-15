@@ -1,27 +1,24 @@
 <template>
-  <div class="flex flex-col gap-3 w-full max-w-sm">
-    <NuiList
-      v-model:values="picked"
-      :items="languages"
-      selectable="multiple"
-      variant="outline"
-      label="Interface languages"
-      class="w-full max-w-sm"
-    />
-    <p class="text-sm text-muted-foreground">Selected: {{ picked.join(', ') || '—' }}</p>
-  </div>
+  <NuiList
+    v-model="delivery"
+    :items="methods"
+    selectable="single"
+    variant="outline"
+    label="Delivery method"
+    class="w-full max-w-sm"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { NuiList, type NuiOption } from '@numior/vue';
+import { DELIVERIES, type Delivery } from '#demo/orders';
 
-const picked = ref(['en']);
-
-const languages: NuiOption<string>[] = [
-  { value: 'en', label: 'English' },
-  { value: 'ru', label: 'Русский' },
-  { value: 'de', label: 'Deutsch' },
-  { value: 'kk', label: 'Қазақша', disabled: true },
+const methods: NuiOption<Delivery>[] = [
+  { value: 'courier', label: DELIVERIES.courier, description: 'Arrives tomorrow, 10 am to 6 pm' },
+  { value: 'pickup', label: DELIVERIES.pickup, description: 'Ready for pickup today' },
+  { value: 'post', label: DELIVERIES.post, description: 'Does not take furniture', disabled: true },
 ];
+
+const delivery = ref<Delivery | null>('courier');
 </script>

@@ -129,7 +129,7 @@ describe('NuiFieldArray', () => {
     await list.press(0, 'ArrowDown');
     await list.press(0, 'Escape');
     expect(list.names).toEqual(['Ann', 'Bob']);
-    expect(list.live).toBe('Row 1, move cancelled.');
+    expect(list.live).toBe('Row 1, move canceled.');
     expect(list.reordering).toBe(false);
   });
 
@@ -141,7 +141,7 @@ describe('NuiFieldArray', () => {
     await list.leaveGrip(0);
 
     expect(list.names).toEqual(['Ann', 'Bob']);
-    expect(list.live).toBe('Row 1, move cancelled.');
+    expect(list.live).toBe('Row 1, move canceled.');
     expect(list.reordering).toBe(false);
   });
 

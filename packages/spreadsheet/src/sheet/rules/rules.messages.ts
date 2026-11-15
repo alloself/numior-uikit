@@ -139,7 +139,7 @@ export const spreadsheetRulesMessages: NuiMessageCatalog<NuiSpreadsheetRulesMess
     sample: 'AaBbCc',
     grabbed: ({ position, count }) =>
       `Rule grabbed at position ${String(position)} of ${String(count)}`,
-    cancelled: 'Move cancelled',
+    cancelled: 'Move canceled',
     editRule: ({ rule }) => `Edit: ${rule}`,
     deleteRule: ({ rule }) => `Delete: ${rule}`,
     moveRule: ({ rule }) => `Move: ${rule}`,

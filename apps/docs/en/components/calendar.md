@@ -1,15 +1,15 @@
 # Calendar
 
-`NuiCalendar` is an inline calendar for picking one date, several dates or a range. For a field
-with a calendar in a pop-up use a [Date picker](/en/components/date-picker).
+A calendar for one date, several dates or a period.
 
 <Example name="calendar/Basic" />
 
+For a field that opens a calendar in a popover, use a [Date picker](/en/components/date-picker).
+
 ## Installation
 
-```ts
+```ts install
 import { NuiCalendar } from '@numior/vue';
-import '@numior/vue/styles/calendar.css';
 ```
 
 ## Usage
@@ -20,47 +20,38 @@ Show several months side by side, turn on week numbers and change the cell size.
 
 ## Examples
 
-### Several dates
+### Pick several dates
 
-With `mode="multiple"` every click adds a day to the selection or removes it. `v-model` holds an
-array of dates. The `sm` size suits narrow panels.
+Set `mode="multiple"`.
 
 <Example name="calendar/Multiple" />
 
-### A range with presets
+### Pick a period
 
-With `mode="range"` the first click sets the start of the range and the second the end. A range
-can also be dragged with the mouse. `v-model` holds a `{ start, end }` object.
+Set `mode="range"` and add ready-made periods in `presets`.
 
 <Example name="calendar/Range" />
 
-The `presets` prop adds buttons with ready-made ranges such as "Last 7 days" on the side. The
-button of the currently selected range is highlighted. The `months` prop shows several months
-side by side.
+Drag across the days to pick a period in one move, and set `months` to show several months side
+by side.
 
-## Behaviour
+## Behavior
 
-Dates are passed as `YYYY-MM-DD` strings, such as `2026-09-27`. Month and weekday names and the
-first day of the week come from the app language; `locale` and `weekStart` override them.
-
-The calendar runs from 1 January 100 to 31 December 9999. Neither the arrow keys nor the month
-buttons lead past these ends, and the day cells beyond them stay empty.
+Dates are `YYYY-MM-DD` strings, such as `2026-09-27`. Month and weekday names and the first day
+of the week follow the app language; `locale` and `weekStart` change them.
 
 Dates before `min`, after `max` and those for which `isDateDisabled` returns `true` cannot be
-picked. A click on the month name or the year opens a list of months or years.
+picked. A click on the month or the year opens a list of months or years.
 
-The calendar takes today's date from the browser clock. With server rendering pass it in
-`today`, otherwise today is highlighted only after the page loads.
-
-Without `today` and a selected date both server and browser draw the month of the UTC date. The
-markup then matches in every time zone, and after loading the calendar moves to the local date.
-When a page is served from a cache for longer than a day, pass `today` or `month`.
+The calendar takes today's date from the browser clock once the page loads. With server
+rendering, pass `today` to highlight it from the first frame. Without `today` or a selected date
+the server draws the UTC month, so a page cached for over a day needs `today` or `month`.
 
 ## Accessibility
 
-Days of the month are buttons, and a screen reader announces the full date: "Sunday, September
-27, 2026". It also tells which days are selected and which one is today. Arrow keys move between
-days.
+Days of the month are buttons, and a screen reader announces the full date, such as "Sunday,
+September 27, 2026". It also says which days are selected and which one is today. The arrow keys
+move between the days.
 
 <KeyboardReference name="NuiCalendar" />
 

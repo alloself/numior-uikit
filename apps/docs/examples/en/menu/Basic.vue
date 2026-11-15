@@ -1,32 +1,50 @@
 <template>
-  <NuiMenu>
-    <template #trigger="{ attrs }">
-      <NuiButton v-bind="attrs" variant="outline">File</NuiButton>
-    </template>
-    <NuiMenuItem icon="file" shortcut="mod+n" @select="last = 'New'">New document</NuiMenuItem>
-    <NuiMenuItem icon="copy" shortcut="mod+d" @select="last = 'Duplicate'">Duplicate</NuiMenuItem>
-    <NuiMenuSeparator />
-    <NuiMenuLabel>View</NuiMenuLabel>
-    <NuiMenuCheckboxItem v-model:checked="grid">Grid</NuiMenuCheckboxItem>
-    <NuiMenuRadioGroup v-model="sort">
-      <NuiMenuRadioItem value="name">By name</NuiMenuRadioItem>
-      <NuiMenuRadioItem value="date">By date</NuiMenuRadioItem>
-    </NuiMenuRadioGroup>
-    <NuiMenuSeparator />
-    <NuiMenuSub label="Export" icon="upload">
-      <NuiMenuItem @select="last = 'PDF'">PDF</NuiMenuItem>
-      <NuiMenuItem @select="last = 'CSV'">CSV</NuiMenuItem>
-    </NuiMenuSub>
-    <NuiMenuItem icon="trash" tone="error" @select="last = 'Delete'">Delete</NuiMenuItem>
-  </NuiMenu>
-  <p class="text-sm text-muted-foreground">
-    Shown as a {{ grid ? 'grid' : 'list' }}, sorted by {{ sort === 'name' ? 'name' : 'date' }}.
-    <template v-if="last">Last action: {{ last }}.</template>
-  </p>
+  <div class="flex flex-col items-start gap-3">
+    <NuiMenu>
+      <template #trigger="{ attrs }">
+        <NuiButton v-bind="attrs" variant="outline" tone="neutral" icon-end="chevron-down">
+          Actions
+        </NuiButton>
+      </template>
+      <NuiMenuItem icon="copy" shortcut="mod+d" @select="done = 'A copy of order 20408 is ready.'">
+        Duplicate
+      </NuiMenuItem>
+      <NuiMenuItem
+        :icon="Printer"
+        shortcut="mod+p"
+        @select="done = 'The packing slip is printing.'"
+      >
+        Print packing slip
+      </NuiMenuItem>
+      <NuiMenuSub label="Send to customer" icon="inbox">
+        <NuiMenuItem @select="done = 'The invoice went to the customer by email.'"
+          >Invoice</NuiMenuItem
+        >
+        <NuiMenuItem @select="done = 'The payment link went out by text.'"
+          >Payment link</NuiMenuItem
+        >
+      </NuiMenuSub>
+      <NuiMenuSeparator />
+      <NuiMenuLabel>Delivery</NuiMenuLabel>
+      <NuiMenuRadioGroup v-model="delivery">
+        <NuiMenuRadioItem v-for="method in methods" :key="method.value" :value="method.value">
+          {{ method.label }}
+        </NuiMenuRadioItem>
+      </NuiMenuRadioGroup>
+      <NuiMenuSeparator />
+      <NuiMenuCheckboxItem v-model:checked="letters">Status emails</NuiMenuCheckboxItem>
+      <NuiMenuSeparator />
+      <NuiMenuItem icon="trash" tone="error" @select="done = 'Order 20408 is canceled.'">
+        Cancel order
+      </NuiMenuItem>
+    </NuiMenu>
+    <p class="m-0 text-sm text-muted-foreground">{{ summary }}</p>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { Printer } from '@lucide/vue';
 import {
   NuiButton,
   NuiMenu,
@@ -38,8 +56,18 @@ import {
   NuiMenuSeparator,
   NuiMenuSub,
 } from '@numior/vue';
+import { DELIVERIES } from '#demo/orders';
 
-const last = ref('');
-const grid = ref(true);
-const sort = ref('name');
+const delivery = ref('courier');
+const letters = ref(true);
+const done = ref('');
+
+const methods = Object.entries(DELIVERIES).map(([value, label]) => ({ value, label }));
+
+const summary = computed(() => {
+  const method = methods.find((entry) => entry.value === delivery.value)?.label ?? '';
+  const status = letters.value ? 'with status emails' : 'no status emails';
+
+  return `${method}, ${status}. ${done.value}`.trim();
+});
 </script>

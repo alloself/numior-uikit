@@ -7,14 +7,17 @@ const docs: DocsMap = {
         ru: 'Тег или компонент, которым рисуется ссылка. Без него ссылку с `to` рисует роутер.',
         en: 'Tag or component to render the link with. Without it, a link with `to` uses the router.',
       },
-      href: { ru: 'Адрес ссылки.', en: 'Link address.' },
+      href: {
+        ru: 'Адрес ссылки.',
+        en: 'Address the link leads to, such as a page path or an external URL.',
+      },
       to: {
         ru: 'Маршрут для `RouterLink`, `NuxtLink` или ссылки из конфигурации. Без роутера строка становится `href`. Тип маршрута задаёт `NuiRouteRegister`.',
         en: 'Route for `RouterLink`, `NuxtLink` or the configured link. Without a router, a string becomes `href`. `NuiRouteRegister` sets the route type.',
       },
       tone: {
         ru: 'Цвет ссылки по смыслу: `primary`, `success`, `error` и другие.',
-        en: 'Colour of the link by meaning: `primary`, `success`, `error` and others.',
+        en: 'Color of the link by meaning: `primary`, `success`, `error` and others.',
       },
       underline: {
         ru: 'Когда показывать подчёркивание: всегда, при наведении или никогда.',

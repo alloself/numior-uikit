@@ -8,38 +8,13 @@
 
 ## Установка
 
-Установите пакеты:
-
-::: code-group
-
-```sh [pnpm]
-pnpm add @numior/editor-vue @numior/content @numior/table
+```ts install:packages
+import { NuiEditor } from '@numior/editor-vue';
+import type { DocJSON } from '@numior/editor-core';
 ```
 
-```sh [npm]
-npm install @numior/editor-vue @numior/content @numior/table
-```
-
-```sh [yarn]
-yarn add @numior/editor-vue @numior/content @numior/table
-```
-
-```sh [bun]
-bun add @numior/editor-vue @numior/content @numior/table
-```
-
-:::
-
-Подключите стили в точке входа приложения:
-
-```ts
-import '@numior/table/styles.css';
-import '@numior/content/styles.css';
-import '@numior/editor-vue/styles.css';
-```
-
-Текст документа оформляют стили `@numior/content`, а таблицу внутри документа — стили
-`@numior/table`.
+`@numior/editor-core` хранит модель документа: тип `DocJSON` и функции вроде `fromHTML`. Текст
+документа оформляют стили `@numior/content`, а таблицу внутри документа — стили `@numior/table`.
 
 ## Сохранить документ
 

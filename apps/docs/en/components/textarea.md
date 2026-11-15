@@ -8,10 +8,8 @@ Set the height in lines with `rows`.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiTextarea } from '@numior/vue';
-import '@numior/vue/styles/field.css';
-import '@numior/vue/styles/textarea.css';
 ```
 
 ## Usage

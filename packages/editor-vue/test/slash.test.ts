@@ -171,7 +171,7 @@ describe('NuiEditor slash menu', () => {
     await editor.chooseInsert('Bulleted list');
 
     expect(editor.markup).toContain(
-      '<h2 class="nui-content__heading nui-content__heading--level-2">Title</h2><ul class="nui-content__list nui-content__list--bullet">',
+      '<h2 class="nui-content__heading nui-content__heading--level-2">Title</h2><ul class="nui-content__list nui-content__list--bullet nui-editor__slots">',
     );
 
     expect(editor.insertShown).toBe(false);

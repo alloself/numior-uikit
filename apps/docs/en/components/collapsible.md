@@ -1,46 +1,41 @@
 # Collapsible
 
-`NuiCollapsible` is a section that expands when its heading is clicked: delivery terms, order
-details, advanced settings. Several such sections in a row make up an
-[Accordion](/en/components/accordion).
+A section that opens when you click its heading.
 
 <Example name="collapsible/Basic" />
 
+To stack several sections, use an [Accordion](/en/components/accordion).
+
 ## Installation
 
-```ts
+```ts install
 import { NuiCollapsible } from '@numior/vue';
-import '@numior/vue/styles/collapsible.css';
 ```
 
 ## Usage
 
-Pass the heading text in `label` and the content in the slot. The `variant="card"` prop draws the
-section as a card with a border.
+Change the look and the heading, or turn the section off.
 
 <Configurator name="NuiCollapsible" />
 
 ## Examples
 
-### A custom heading
+### Change the heading label
 
-The `trigger` slot replaces the heading text and receives `open`, so the label can change:
-"Show details" and "Hide details". With `v-model:open` the section opens and closes from code.
+Describe the heading in the `trigger` slot.
 
 <Example name="collapsible/Trigger" />
 
-## Behaviour
+Bind `v-model:open` to open and close the section from code.
 
-The content expands and collapses smoothly. Collapsed text stays on the page: when the browser's
-Ctrl+F search finds it, the section expands by itself.
+## Behavior
 
-The `headingLevel` prop wraps the heading in an `<h2>`–`<h6>`, so the section appears in the page
-outline.
+When the browser's Ctrl+F search finds text in a closed section, the section opens by itself.
 
 ## Accessibility
 
-The heading is a button, and a screen reader announces whether the section is expanded or
-collapsed. With `disabled` the button is turned off and the section cannot be toggled.
+The heading is a button, and a screen reader says whether the section is open. A section with
+`disabled` cannot be opened or closed.
 
 <KeyboardReference name="NuiCollapsible" />
 

@@ -1,8 +1,8 @@
 <template>
-  <NuiBadge>Черновик</NuiBadge>
-  <NuiBadge tone="primary" icon="check">Готово</NuiBadge>
-  <NuiBadge tone="success" variant="outline">Оплачен</NuiBadge>
-  <NuiBadge tone="warning" variant="solid" size="sm">Beta</NuiBadge>
+  <NuiBadge tone="warning">Ждёт оплаты</NuiBadge>
+  <NuiBadge tone="success">Оплачен</NuiBadge>
+  <NuiBadge tone="info">В доставке</NuiBadge>
+  <NuiBadge tone="error">Отменён</NuiBadge>
 </template>
 
 <script setup lang="ts">

@@ -9,32 +9,9 @@ server it renders finished HTML, so the text is on the page before any script ru
 
 ## Installation
 
-Install the package:
-
-::: code-group
-
-```sh [pnpm]
-pnpm add @numior/content
-```
-
-```sh [npm]
-npm install @numior/content
-```
-
-```sh [yarn]
-yarn add @numior/content
-```
-
-```sh [bun]
-bun add @numior/content
-```
-
-:::
-
-Load the styles after the [base styles](/en/guide/getting-started):
-
-```ts
-import '@numior/content/styles.css';
+```ts install:packages
+import { NuiContent } from '@numior/content';
+import { fromHTML } from '@numior/editor-core';
 ```
 
 ## Show tables, code and media

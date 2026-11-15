@@ -6,9 +6,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiButton } from '@numior/vue';
-import '@numior/vue/styles/button.css';
 ```
 
 ## Использование

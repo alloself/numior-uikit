@@ -1,18 +1,18 @@
 <template>
-  <div class="flex flex-col gap-3">
+  <div class="flex w-full max-w-sm flex-col gap-3">
     <NuiTree
-      variant="outline"
       v-model:expanded="expanded"
-      :items="folders"
-      label="Хранилище"
-      class="w-full max-w-sm"
+      :items="groups"
+      variant="outline"
+      label="Товары по категориям"
+      class="w-full"
       @load="load"
     />
     <NuiAlert
       v-if="error"
       tone="error"
       variant="soft"
-      title="Не удалось загрузить папку"
+      title="Не удалось загрузить товары"
       :description="error"
       closable
       @close="error = undefined"
@@ -22,46 +22,51 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { promiseTimeout } from '@vueuse/core';
 import { NuiAlert, NuiTree, type NuiTreeItem } from '@numior/vue';
+import { categories, products } from '#demo/products';
 
-const folders = ref<NuiTreeItem<string>[]>([
-  { value: 'photos', label: 'Фотографии', lazy: true },
-  { value: 'reports', label: 'Отчёты', lazy: true },
-]);
+const groups = ref<NuiTreeItem<string>[]>(
+  categories.map(({ value, label }) => ({ value, label, lazy: true })),
+);
 
 const expanded = ref<string[]>([]);
 const error = ref<string>();
-const attempts = ref<Record<string, number>>({});
+const failed = new Set<string>();
 
-const fetchChildren = (item: NuiTreeItem<string>): Promise<NuiTreeItem<string>[]> =>
-  new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const attempt = (attempts.value[item.value] ?? 0) + 1;
-      attempts.value = { ...attempts.value, [item.value]: attempt };
+const productsOf = (value: string): NuiTreeItem<string>[] => {
+  const kinds = categories.find((category) => category.value === value)?.children ?? [];
 
-      if (item.value === 'reports' && attempt === 1) {
-        reject(new Error('timeout'));
-        return;
-      }
+  return products.reduce<NuiTreeItem<string>[]>((found, product) => {
+    if (kinds.some((kind) => kind.value === product.category)) {
+      found.push({ value: product.sku, label: product.name });
+    }
+    return found;
+  }, []);
+};
 
-      resolve([
-        { value: `${item.value}-2025`, label: `${item.label} 2025` },
-        { value: `${item.value}-2026`, label: `${item.label} 2026` },
-      ]);
-    }, 600);
-  });
+const fetchProducts = async (value: string): Promise<NuiTreeItem<string>[]> => {
+  await promiseTimeout(600);
+
+  if (value === 'lighting' && !failed.has(value)) {
+    failed.add(value);
+    throw new Error('timeout');
+  }
+  return productsOf(value);
+};
 
 const load = async (item: NuiTreeItem<string>): Promise<void> => {
   error.value = undefined;
-  try {
-    const children = await fetchChildren(item);
 
-    folders.value = folders.value.map((folder) =>
-      folder.value === item.value ? { ...folder, children } : folder,
+  try {
+    const children = await fetchProducts(item.value);
+
+    groups.value = groups.value.map((group) =>
+      group.value === item.value ? { ...group, children } : group,
     );
   } catch {
     expanded.value = expanded.value.filter((value) => value !== item.value);
-    error.value = `«${item.label}»: сервер не ответил. Раскройте папку ещё раз.`;
+    error.value = `«${item.label}»: сервер не ответил. Раскройте категорию ещё раз.`;
   }
 };
 </script>

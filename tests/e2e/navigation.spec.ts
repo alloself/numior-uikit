@@ -5,7 +5,6 @@ test.describe('navigation', () => {
   test('menu opens by click and keyboard, walks items with arrows and typeahead, and restores focus on Escape', async ({
     playground,
     navigation,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard scenario');
@@ -15,25 +14,25 @@ test.describe('navigation', () => {
     await expect(navigation.menu).toBeVisible();
     await expect(navigation.menu).toHaveAttribute('role', 'menu');
 
-    await page.keyboard.press('Escape');
+    await navigation.closeMenu();
     await expect(navigation.menu).toBeHidden();
     await expect(navigation.menuTrigger).toBeFocused();
 
-    await page.keyboard.press('ArrowDown');
+    await navigation.focusNextItem();
     await expect(navigation.item('Переименовать')).toBeFocused();
 
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('ArrowDown');
+    await navigation.focusNextItem();
+    await navigation.focusNextItem();
+    await navigation.focusNextItem();
     await expect(navigation.item('Сетка')).toBeFocused();
 
-    await page.keyboard.press('End');
+    await navigation.focusLastItem();
     await expect(navigation.item('Удалить')).toBeFocused();
 
     await navigation.typeInMenu('п');
     await expect(navigation.item('Переименовать')).toBeFocused();
 
-    await page.keyboard.press('Escape');
+    await navigation.closeMenu();
     await expect(navigation.menu).toBeHidden();
     await expect(navigation.menuTrigger).toBeFocused();
   });
@@ -41,7 +40,6 @@ test.describe('navigation', () => {
   test('menu opened with Enter, Space or a click takes the keyboard and rings only the item reached by keys', async ({
     playground,
     navigation,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard scenario');
@@ -53,11 +51,11 @@ test.describe('navigation', () => {
     await expect(navigation.item('Дублировать')).toBeFocused();
     await expect.poll(() => navigation.itemRinged('Дублировать')).toBe(false);
 
-    await page.keyboard.press('Escape');
+    await navigation.closeMenu();
     await navigation.menuTrigger.click();
     await expect(navigation.menu).toBeFocused();
 
-    await page.keyboard.press('ArrowDown');
+    await navigation.focusNextItem();
     await expect(navigation.item('Переименовать')).toBeFocused();
     await expect.poll(() => navigation.itemRinged('Переименовать')).toBe(true);
 
@@ -65,14 +63,14 @@ test.describe('navigation', () => {
     await expect(navigation.item('Документация')).toBeFocused();
     await expect.poll(() => navigation.itemRinged('Документация')).toBe(false);
 
-    for (const key of ['Enter', 'Space']) {
-      await page.keyboard.press('Escape');
+    for (const key of ['Enter', 'Space'] as const) {
+      await navigation.closeMenu();
       await expect(navigation.menuTrigger).toBeFocused();
 
-      await page.keyboard.press(key);
+      await navigation.openFocusedTriggerWith(key);
       await expect(navigation.item('Переименовать')).toBeFocused();
 
-      await page.keyboard.press('ArrowDown');
+      await navigation.focusNextItem();
       await expect(navigation.item('Дублировать')).toBeFocused();
       await expect.poll(() => navigation.itemRinged('Дублировать')).toBe(true);
     }
@@ -81,7 +79,6 @@ test.describe('navigation', () => {
   test('submenu opens on hover or ArrowRight, steps back with ArrowLeft, and light dismiss closes the chain', async ({
     playground,
     navigation,
-    page,
     isMobile,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
@@ -105,25 +102,25 @@ test.describe('navigation', () => {
     await expect.poll(async () => (await navigation.readOutput()).lastAction).toBe('email');
     await expect(navigation.menu).toBeHidden();
 
-    await page.mouse.move(0, 0);
+    await navigation.movePointerAway();
     await navigation.menuTrigger.focus();
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('ArrowUp');
-    await page.keyboard.press('ArrowUp');
+    await navigation.focusNextItem();
+    await navigation.focusPreviousItem();
+    await navigation.focusPreviousItem();
     await expect(navigation.subTrigger).toBeFocused();
 
-    await page.keyboard.press('ArrowRight');
+    await navigation.openSubmenu();
     await expect(navigation.subMenu).toBeVisible();
     await expect(navigation.subItem('Почта')).toBeFocused();
 
-    await page.keyboard.press('ArrowLeft');
+    await navigation.closeSubmenu();
     await expect(navigation.subMenu).toBeHidden();
     await expect(navigation.subTrigger).toBeFocused();
 
-    await page.keyboard.press('ArrowRight');
+    await navigation.openSubmenu();
     await expect(navigation.subMenu).toBeVisible();
 
-    await page.mouse.click(4, 4);
+    await navigation.clickOutside();
     await expect(navigation.subMenu).toBeHidden();
     await expect(navigation.menu).toBeHidden();
   });
@@ -154,7 +151,6 @@ test.describe('navigation', () => {
   test('tabs activate on arrows, mirror in RTL, slide the indicator and honour manual activation', async ({
     playground,
     navigation,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard scenario');
@@ -166,7 +162,7 @@ test.describe('navigation', () => {
     await expect(navigation.activePanel).toHaveText('Панель команды');
 
     const teamIndicator = await navigation.indicatorBox(navigation.tabs);
-    await page.keyboard.press('ArrowRight');
+    await navigation.moveTabFocus('right');
     await expect(navigation.tab('Настройки')).toBeFocused();
     await expect(navigation.activePanel).toHaveText('Панель настроек');
     await expect.poll(async () => (await navigation.readOutput()).tab).toBe('settings');
@@ -181,16 +177,16 @@ test.describe('navigation', () => {
       .toBeCloseTo((await boxOf(navigation.tab('Настройки'))).x, 0);
 
     await navigation.tab('Команда').click();
-    await page.keyboard.press('ArrowLeft');
+    await navigation.moveTabFocus('left');
     await expect(navigation.tab('Настройки')).toBeFocused();
 
     await playground.setDirection('ltr');
     await navigation.manualTab('День').click();
-    await page.keyboard.press('ArrowRight');
+    await navigation.moveTabFocus('right');
     await expect(navigation.manualTab('Неделя')).toBeFocused();
     await expect(navigation.manualPanel).toHaveText('Период: День');
 
-    await page.keyboard.press('Enter');
+    await navigation.activateFocused();
     await expect(navigation.manualPanel).toHaveText('Период: Неделя');
     await expect.poll(async () => (await navigation.readOutput()).manualTab).toBe('week');
   });
@@ -198,7 +194,6 @@ test.describe('navigation', () => {
   test('overflowing tabs scroll with the wheel and the edge buttons and keep the selected tab in view', async ({
     playground,
     navigation,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'wheel and pointer scenario');
@@ -210,14 +205,14 @@ test.describe('navigation', () => {
     await expect(navigation.tabEdge('end')).toBeVisible();
     await expect(navigation.monthTab('Декабрь')).not.toBeInViewport();
 
-    const pageScroll = await page.evaluate(() => window.scrollY);
+    const pageScroll = await navigation.pageScrollY();
 
     await navigation.monthTrack.hover();
-    await page.mouse.wheel(0, 120);
+    await navigation.turnWheel(120);
 
     await expect.poll(() => navigation.monthScroll()).toBe(120);
     await expect(navigation.tabEdge('start')).toBeVisible();
-    expect(await page.evaluate(() => window.scrollY)).toBe(pageScroll);
+    expect(await navigation.pageScrollY()).toBe(pageScroll);
 
     await navigation.tabEdge('start').click();
 
@@ -228,24 +223,23 @@ test.describe('navigation', () => {
 
     await expect.poll(() => navigation.monthScroll()).toBe(358);
 
-    await page.mouse.wheel(0, 5000);
+    await navigation.turnWheel(5000);
 
     await expect(navigation.tabEdge('end')).toBeHidden();
     await expect(navigation.monthTab('Декабрь')).toBeInViewport({ ratio: 1 });
 
     await navigation.monthTab('Декабрь').click();
-    await page.keyboard.press('Home');
+    await navigation.focusFirstTab();
 
     await expect(navigation.monthTab('Январь')).toBeFocused();
     await expect(navigation.monthTab('Январь')).toBeInViewport({ ratio: 1 });
     await expect.poll(() => navigation.monthScroll()).toBe(0);
-    expect(await page.evaluate(() => window.scrollY)).toBe(pageScroll);
+    expect(await navigation.pageScrollY()).toBe(pageScroll);
   });
 
   test('closable tabs close from the cross, Delete and the middle button while the indicator stays under the selected tab', async ({
     playground,
     navigation,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'pointer and keyboard scenario');
@@ -273,7 +267,7 @@ test.describe('navigation', () => {
 
     await expect(navigation.documentTab('Акт')).toBeFocused();
 
-    await page.keyboard.press('Delete');
+    await navigation.closeFocusedTab();
     await expect(navigation.openDocuments).toHaveText(['Договор', 'Смета', 'Архив']);
     await expect(navigation.documentTab('Смета')).toBeFocused();
     await expect(navigation.documentPanel).toHaveText('Документ: Смета');
@@ -313,12 +307,12 @@ test.describe('navigation', () => {
     test.skip(isMobile, 'keyboard scenario');
 
     await navigation.pageLink('Заказы').focus();
-    await page.keyboard.press('Tab');
+    await navigation.tabForward();
 
     await expect(navigation.pageLink('Клиенты')).toBeFocused();
     await expect(navigation.currentPage).toHaveText('Заказы');
 
-    await page.keyboard.press('Enter');
+    await navigation.activateFocused();
 
     await expect(page).toHaveURL(/#nav-page-clients$/);
     await expect(navigation.currentPage).toHaveText('Клиенты');
@@ -363,7 +357,6 @@ test.describe('navigation', () => {
   test('steppers advance with the actions, go back through completed steps and pick any step when not linear', async ({
     playground,
     navigation,
-    page,
     isMobile,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
@@ -387,7 +380,7 @@ test.describe('navigation', () => {
       await expect(navigation.stepperSummary(navigation.stepper)).toBeHidden();
 
       await navigation.step(navigation.stepper, 'Аккаунт').focus();
-      await page.keyboard.press('Enter');
+      await navigation.activateFocused();
     }
 
     await expect.poll(async () => (await navigation.readOutput()).signupStep).toBe('account');
@@ -406,7 +399,6 @@ test.describe('navigation', () => {
   test('navigation has no automatically detectable WCAG AA violations', async ({
     playground,
     navigation,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -417,7 +409,7 @@ test.describe('navigation', () => {
       await expect(navigation.menu).toBeVisible();
       expect(await playground.wcagViolations(navigation.scope)).toEqual([]);
 
-      await page.keyboard.press('Escape');
+      await navigation.closeMenu();
       await expect(navigation.menu).toBeHidden();
     }
   });

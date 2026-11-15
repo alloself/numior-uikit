@@ -1,60 +1,72 @@
 # Command
 
-`NuiCommand` is a command palette: a search field with a list of commands under it that narrows
-as you type. `NuiCommandDialog` opens the palette in a dialog on a key combination; this is how
-the search of these docs works.
+A command palette with search.
 
 <Example name="command/Basic" />
 
 ## Installation
 
-```ts
+```ts install
 import { NuiCommand, NuiCommandDialog } from '@numior/vue';
-import '@numior/vue/styles/list.css';
-import '@numior/vue/styles/dialog.css';
-import '@numior/vue/styles/command.css';
 ```
 
 ## Usage
 
-Pass the commands in `items`: each has a `value`, a `label` and optionally an `icon` and a
-`description`. To split commands into groups, pass `{ label, items }` objects. The chosen command
-arrives in the `select` event.
+Describe the commands in `items`:
 
-The `shortcut` field shows a key combination next to a command, such as `mod+1`. Your app decides
-what pressing that combination does.
+| Field         | What it holds                                                  |
+| ------------- | -------------------------------------------------------------- |
+| `value`       | A unique value of the command                                  |
+| `label`       | The name in the list                                           |
+| `description` | A second line under the name                                   |
+| `icon`        | An icon before the name, by its name or as a component         |
+| `shortcut`    | A key combination at the end of the row, such as `mod+shift+o` |
+| `keywords`    | More words the search finds the command by                     |
 
-Type a query in the palette and change its frame, the input hint and the loading state.
+Group the commands with `{ label, items }` objects. The chosen command arrives in the `select`
+event. A `shortcut` only shows the keys, and your app decides what they do.
+
+Type a query and change the frame, the input hint and the loading state of the palette.
 
 <Configurator name="NuiCommand" />
 
 ## Examples
 
-### In a dialog
+### Open the palette in a dialog
 
-`NuiCommandDialog` opens through `v-model:open` or with the key combination from `hotkey`, which
-is Ctrl+K by default and ⌘K on macOS. The example opens with Ctrl+J, because Ctrl+K opens the
-search of these docs.
+Use `NuiCommandDialog` and set the key combination in `hotkey`.
 
 <Example name="command/Dialog" />
 
-Choosing a command closes the dialog, and `:close-on-select="false"` keeps it open.
+Without `hotkey` the dialog opens on Ctrl+K, or ⌘K on macOS. The dialog above opens on Ctrl+J,
+because Ctrl+K opens the search of these docs. Choosing a command closes the dialog, and
+`:close-on-select="false"` keeps it open.
 
-## Behaviour
+## Behavior
 
-The palette looks for the typed text in the label, the description and the `keywords` list. This
-way the "Button" command is also found by "btn".
+The palette matches the query against:
 
-The search ignores case, Latin accents and the difference between the Russian «е» and «ё», so
-"resume" finds "Résumé". The dialog opens with an empty query unless the app set one of its own.
+- the `label` of a command;
+- its `description`;
+- the words in `keywords`, so "Find a customer" also turns up for "client".
 
-For server-side search pass `:filter="false"` and listen to the `search` event, which arrives with
-the query text. Pass the found commands to `items`, and turn on `loading` while they load.
+The search ignores case and accents, so "resume" finds "Résumé". The dialog opens with an empty
+query unless your app has set a new one while the dialog was closed.
+
+### Search commands on the server
+
+Pass `:filter="false"` and listen to the `search` event, which receives the query text.
+
+```vue
+<NuiCommand :items="found" :filter="false" :loading="loading" @search="search" />
+```
+
+Put the found commands into `items` and turn on `loading` while they load.
 
 ## Accessibility
 
-Focus stays in the search field, and the arrow keys move through the commands. The dialog closes
-on Escape and returns focus to the element that opened it.
+The focus stays in the search field, and the arrow keys move through the commands. The dialog
+closes on Escape and returns the focus to the element that had it before.
 
 <KeyboardReference name="NuiCommandDialog" />
 

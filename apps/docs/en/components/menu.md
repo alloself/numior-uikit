@@ -1,62 +1,70 @@
 # Menu
 
-`NuiMenu` is a dropdown menu of actions that opens from a button: "New document", "Duplicate",
-"Delete". Put the button into the `trigger` slot and the items inside the menu.
+A dropdown menu of actions behind a button.
 
 <Example name="menu/Basic" />
 
-A regular item is `NuiMenuItem`, an item with a checkbox is `NuiMenuCheckboxItem`, and a choice of
-one option is `NuiMenuRadioGroup` with `NuiMenuRadioItem`. `NuiMenuSub` adds a nested menu,
-`NuiMenuLabel` a group heading and `NuiMenuSeparator` a line between groups.
+Put the button into the `trigger` slot and bind the slot's `attrs` to it. Build the menu from these
+parts:
+
+- `NuiMenuItem` runs an action or opens a link.
+- `NuiMenuCheckboxItem` turns an option on and off.
+- `NuiMenuRadioGroup` with `NuiMenuRadioItem` picks one option of several.
+- `NuiMenuSub` opens a nested menu.
+- `NuiMenuLabel` names a group of items.
+- `NuiMenuSeparator` draws a line between groups.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiMenu, NuiMenuItem } from '@numior/vue';
-import '@numior/vue/styles/list.css';
-import '@numior/vue/styles/menu.css';
 ```
 
 ## Usage
 
-Open the menu and change its side, the gap from the button and closing after a choice.
+Open the menu and change its side, its distance from the button and closing after a choice.
 
 <Configurator name="NuiMenu" />
 
 ## Examples
 
-### Menu from an array
+### Describe a menu with an array
 
-The same menu can be described with the `items` array. A regular item is a
-`{ label, icon, shortcut, tone, onSelect }` entry, the others are entries with a `type` field:
-`checkbox`, `radio-group`, `separator`, `label` or `sub`.
+Pass the items in `items`.
 
 <Example name="menu/Items" />
 
-## Behaviour
+Each entry is an object, and its `type` field sets the kind of the entry:
 
-A click on the button opens the menu. When it is opened from the keyboard, the focus goes straight
-to the first item, or to the last one when opened with ArrowUp.
+| `type`         | Entry                  | Fields                                                        |
+| -------------- | ---------------------- | ------------------------------------------------------------- |
+| none or `item` | An action or a link    | `label`, `icon`, `shortcut`, `tone`, `href`, `to`, `onSelect` |
+| `checkbox`     | An option with a check | `label`, `icon`, `checked`, `onCheckedChange`                 |
+| `radio-group`  | A choice of one option | `value`, `items`, `onChange`                                  |
+| `sub`          | A nested menu          | `label`, `icon`, `items`                                      |
+| `label`        | A group heading        | `label`                                                       |
+| `separator`    | A line between groups  | none                                                          |
 
-After a click the focus rests on the menu itself: ArrowDown leads to the first item and ArrowUp to
-the last one. Hovering an item with the mouse moves the focus to it.
+## Behavior
 
-An item reached from the keyboard is outlined with the focus ring. Under the mouse an item is only
-highlighted, and the ring comes back with the first key press.
-
-Choosing an item closes the menu, and `:close-on-select="false"` keeps it open. A checkbox item
-keeps the menu open by default, so several options can be checked.
-
-A nested menu opens on hover after a short delay, or with Enter or ArrowRight from the keyboard.
-A click outside closes all levels at once, and the focus returns to the button.
+- A click on the button opens the menu with no item highlighted. ArrowDown then goes to the first
+  item and ArrowUp to the last one.
+- Enter, Space or ArrowDown on the button open the menu at the first item, and ArrowUp at the
+  last one.
+- The pointer highlights the item under it without the focus ring, which comes back with the
+  first key press.
+- Choosing an item closes the menu, and `:close-on-select="false"` keeps it open. A checkbox item
+  keeps the menu open by default, so the user can check several options.
+- A nested menu opens on hover after a short delay, or with Enter or ArrowRight. A click outside
+  closes every level at once.
 
 ## Accessibility
 
-Screen readers announce that the button opens a menu and whether it is open. Checkbox and radio
-items are announced as checked or not checked.
+A screen reader announces that the button opens a menu and whether the menu is open. Checkbox
+and radio items are announced as checked or not checked.
 
-An item with `href` or `to` works as a link. A disabled item stays in the menu and takes the focus
-so it can be read, but it cannot be chosen.
+When the menu closes from the keyboard, the focus returns to the button. Arrow keys skip disabled
+items, and an item with `href` or `to` is a link.
 
 <KeyboardReference name="NuiMenu" />
 

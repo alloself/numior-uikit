@@ -179,7 +179,7 @@ describe('NuiSpreadsheet pivot tables', () => {
 
     expect(sheet.pivot.ghost).toBeUndefined();
     expect(sheet.pivot.open).toBe(true);
-    expect(sheet.pivot.announcement).toBe('Move cancelled');
+    expect(sheet.pivot.announcement).toBe('Move canceled');
 
     await sheet.pivot.dragChip('Σ Values', 'Filters');
 

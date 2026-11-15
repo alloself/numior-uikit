@@ -9,9 +9,8 @@ on Mac and Ctrl K on Windows and Linux.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiKbd } from '@numior/vue';
-import '@numior/vue/styles/kbd.css';
 ```
 
 ## Usage

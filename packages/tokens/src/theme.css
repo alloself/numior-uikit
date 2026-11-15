@@ -71,6 +71,8 @@
   --caption-close: '';
   --prose-marker: disc;
   --container-prose: 65ch;
+  --spacing-layout-rail: 3.5rem;
+  --spacing-layout-gutter: calc(var(--spacing) * 6);
   --color-surface-code: light-dark(oklch(0.967 0.001 286.38), oklch(0.17 0.006 285.89));
   --color-syntax-keyword: light-dark(oklch(0.48 0.19 300), oklch(0.8 0.1 300));
   --color-syntax-string: light-dark(oklch(0.5 0.12 150), oklch(0.82 0.13 150));

@@ -8,35 +8,11 @@
 
 ## Установка
 
-Установите пакет:
-
-::: code-group
-
-```sh [pnpm]
-pnpm add @numior/collaboration
+```ts install:packages
+import { NuiCollabPresence } from '@numior/collaboration/vue';
 ```
 
-```sh [npm]
-npm install @numior/collaboration
-```
-
-```sh [yarn]
-yarn add @numior/collaboration
-```
-
-```sh [bun]
-bun add @numior/collaboration
-```
-
-:::
-
-Подключите стили в точке входа приложения:
-
-```ts
-import '@numior/collaboration/styles.css';
-```
-
-В них курсоры соавторов, отметки комментариев и панель версий.
+Стили `@numior/collaboration` рисуют курсоры соавторов, отметки комментариев и панель версий.
 
 ## Подключение
 
@@ -179,7 +155,7 @@ const state = computed(() => STATES[status.value.kind]);
   клиент получает обратно, догоняет журнал и отправляет снова.
 
 Книгу правят вместе так же, её подключение описано на странице
-[Spreadsheet](/components/spreadsheet#совместная-работа).
+«[Книга](/spreadsheet/#совместная-работа)».
 
 ## API
 

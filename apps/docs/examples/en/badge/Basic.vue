@@ -1,8 +1,8 @@
 <template>
-  <NuiBadge>Draft</NuiBadge>
-  <NuiBadge tone="primary" icon="check">Done</NuiBadge>
-  <NuiBadge tone="success" variant="outline">Paid</NuiBadge>
-  <NuiBadge tone="warning" variant="solid" size="sm">Beta</NuiBadge>
+  <NuiBadge tone="warning">Awaiting payment</NuiBadge>
+  <NuiBadge tone="success">Paid</NuiBadge>
+  <NuiBadge tone="info">Shipped</NuiBadge>
+  <NuiBadge tone="error">Canceled</NuiBadge>
 </template>
 
 <script setup lang="ts">

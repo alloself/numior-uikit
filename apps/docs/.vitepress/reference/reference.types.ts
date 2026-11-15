@@ -66,6 +66,7 @@ export interface ComponentReference {
   readonly family: string;
   readonly file: string;
   readonly styles: ReferenceStyles | undefined;
+  readonly stylesheets: readonly string[];
   readonly messages: string | undefined;
   readonly props: readonly ReferenceProp[];
   readonly models: readonly ReferenceModel[];
@@ -113,6 +114,7 @@ export interface ReferenceBundle {
   readonly declarations: readonly DeclarationReference[];
   readonly tokens: readonly TokenReference[];
   readonly icons: readonly IconReference[];
+  readonly stylesheets: readonly string[];
 }
 
 export type DescriptionMap = Readonly<Record<string, LocalizedText>>;

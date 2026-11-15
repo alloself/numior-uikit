@@ -61,7 +61,7 @@ const docs: DocsMap = {
       },
       peers: {
         ru: 'Кто ещё открыл книгу: результат `workbookPeers` из `onPresence` клиента. Выделение людей с текущего листа рисуется цветными рамками с именем.',
-        en: 'Who else has the book open: the result of `workbookPeers` from the client `onPresence`. Selections of people on the shown sheet are drawn as coloured frames with a name.',
+        en: 'Who else has the book open: the result of `workbookPeers` from the client `onPresence`. Selections of people on the shown sheet are drawn as colored frames with a name.',
       },
       collaboration: {
         ru: 'Документ совместной работы из `createWorkbookDocument`. Правки других людей появляются без события `change`.',

@@ -21,6 +21,7 @@ import {
   UploadStatus,
   useLocale,
   useMessages,
+  useToast,
   useUploadQueue,
   validateFiles,
   type FileRejection,
@@ -117,6 +118,7 @@ const replaceSource =
 export const useEditorUploads = (options: EditorUploadOptions): EditorUploads => {
   const texts = useMessages(editorMessages);
   const locale = useLocale();
+  const toast = useToast();
   const items = ref<NuiEditorUploadItem[]>([]);
   const announcement = ref('');
   const targets = new Map<string, UploadTarget>();
@@ -246,6 +248,20 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
     }
   };
 
+  const refuse = (rejected: readonly FileRejection[], replacing: boolean): void => {
+    if (rejected.length === 0) {
+      return;
+    }
+
+    const text = rejected.map(refusal).join(' ');
+
+    if (replacing) {
+      toast.error(text);
+      return;
+    }
+    announce(text);
+  };
+
   const elementFor = (id: string): HTMLElement | undefined => {
     const element = options.document()?.createElement('div');
 
@@ -282,9 +298,7 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
       ]),
     );
 
-    if (checked.rejected.length > 0) {
-      announce(checked.rejected.map(refusal).join(' '));
-    }
+    refuse(checked.rejected, replacing);
 
     return files.reduce<UploadEntry[]>((entries, file) => {
       const error = reasons.get(file);

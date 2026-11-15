@@ -174,6 +174,19 @@ const classesOfTag = (attributes) => [
   ),
 ];
 
+const CLASS_ATTRIBUTE = /(?:^|\s):?class="([^"]*)"/gu;
+const BLOCK_TOKEN = /(?<![\w-])nui-[a-z0-9]+(?:-[a-z0-9]+)*(?:__[a-z0-9]+(?:-[a-z0-9]+)*)?/gu;
+
+const templateOf = (path, source) => (path.endsWith('.vue') ? source.split('<script')[0] : '');
+
+const classTokensOf = (template) =>
+  [...template.matchAll(CLASS_ATTRIBUTE)].flatMap((attribute) =>
+    [...attribute[1].matchAll(BLOCK_TOKEN)].map((token) => ({
+      name: token[0],
+      index: (attribute.index ?? 0) + attribute[0].indexOf(attribute[1]) + (token.index ?? 0),
+    })),
+  );
+
 const files = (
   await Promise.all(
     SOURCES.map(async (source) =>
@@ -240,7 +253,17 @@ const findings = sources.flatMap((file) => {
               );
         });
 
-  return [...selectors, ...tags];
+  const borrowed = file.consumer
+    ? []
+    : classTokensOf(templateOf(file.path, file.source)).flatMap((token) =>
+        owns(blocks, token.name, pack)
+          ? []
+          : [
+              `${where}:${lineOf(file.source, token.index)}: the template borrows .${token.name} of @numior/${ownerOf(blocks, token.name)?.owner}`,
+            ],
+      );
+
+  return [...selectors, ...tags, ...borrowed];
 });
 
 const PAUSABLE = /animation-play-state:\s*var\(--nui-animation-play-state\b/u;

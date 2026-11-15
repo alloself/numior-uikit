@@ -12,8 +12,8 @@ const docs: DocsMap = {
         en: 'Hides the line from screen readers when it is purely decorative.',
       },
       label: {
-        ru: 'Текст посередине горизонтальной линии.',
-        en: 'Text in the middle of a horizontal line.',
+        ru: 'Текст посередине горизонтальной линии, он же имя разделителя для диктора.',
+        en: 'Text in the middle of a horizontal line, also the name of the separator for screen readers.',
       },
     },
     slots: {

@@ -10,7 +10,6 @@ const sizedByKit = (part: string): boolean => !FLUID_DEMO_PARTS.test(part);
 test('standalone button activates by keyboard and loading blocks activation', async ({
   playground,
   buttons: { primary, loading, loadingToggle, link },
-  page,
   isMobile,
 }) => {
   await playground.open();
@@ -21,7 +20,7 @@ test('standalone button activates by keyboard and loading blocks activation', as
     await primary.focus();
     await expect(primary).toBeFocused();
 
-    await page.keyboard.press('Enter');
+    await playground.activateFocusedControl();
     await expect(primary).toHaveCSS('outline-style', 'solid');
   }
 
@@ -39,7 +38,7 @@ test('standalone button activates by keyboard and loading blocks activation', as
     await loading.tap();
   } else {
     await loading.focus();
-    await page.keyboard.press('Enter');
+    await playground.activateFocusedControl();
     await expect(loading).toBeFocused();
   }
 

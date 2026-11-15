@@ -1,6 +1,7 @@
 import { flushPromises, type VueWrapper } from '@vue/test-utils';
 import { promiseTimeout } from '@vueuse/core';
 import { nextTick } from 'vue';
+import type { ToastStore } from '@numior/primitives';
 import type { EditorDriver } from './editor';
 
 const FRAME = 20;
@@ -8,10 +9,17 @@ const FRAME = 20;
 const settleFrames = (): Promise<void> => promiseTimeout(FRAME);
 
 export class EditorUploadDriver {
-  constructor(private readonly wrapper: VueWrapper) {}
+  constructor(
+    private readonly wrapper: VueWrapper,
+    private readonly toastStore?: ToastStore,
+  ) {}
 
   static of(editor: EditorDriver): EditorUploadDriver {
-    return new EditorUploadDriver(editor.vueWrapper);
+    return new EditorUploadDriver(editor.vueWrapper, editor.toastStore);
+  }
+
+  get toasts(): readonly string[] {
+    return (this.toastStore?.toasts.value ?? []).map((toast) => `${toast.tone}|${toast.title}`);
   }
 
   private get document(): Document {

@@ -12,16 +12,16 @@ const docs: DocsMap = {
         en: 'Places the panes side by side or one above the other.',
       },
       min: {
-        ru: 'Наименьшая доля первой панели, от 0 до 1.',
-        en: 'Smallest share of the first pane, from 0 to 1.',
+        ru: 'Наименьшая доля первой панели, от 0 до 1. По умолчанию `0.1`.',
+        en: 'Smallest share of the first pane, from 0 to 1. Defaults to `0.1`.',
       },
       max: {
-        ru: 'Наибольшая доля первой панели, от 0 до 1.',
-        en: 'Largest share of the first pane, from 0 to 1.',
+        ru: 'Наибольшая доля первой панели, от 0 до 1. По умолчанию `0.9`.',
+        en: 'Largest share of the first pane, from 0 to 1. Defaults to `0.9`.',
       },
       step: {
-        ru: 'На какую долю меняет размер одно нажатие стрелки, например `0.05`.',
-        en: 'Share one arrow key press changes the size by, such as `0.05`.',
+        ru: 'На какую долю сдвигает границу одно нажатие стрелки. По умолчанию `0.05`.',
+        en: 'Share by which one arrow key press moves the boundary. Defaults to `0.05`.',
       },
       disabled: { ru: 'Запрещает менять размер панелей.', en: 'Prevents resizing the panes.' },
       label: {
@@ -31,8 +31,8 @@ const docs: DocsMap = {
     },
     models: {
       'v-model:ratio': {
-        ru: 'Доля первой панели от 0 до 1. Значение вне `min` и `max` показывается на ближайшей границе.',
-        en: 'Share of the first pane from 0 to 1. A value outside `min` and `max` is shown at the nearest bound.',
+        ru: 'Доля первой панели от 0 до 1, по умолчанию `0.5`. Значение вне `min` и `max` показывается на ближайшей границе и не меняется, пока границу не сдвинут.',
+        en: 'Share of the first pane from 0 to 1, `0.5` by default. A value outside `min` and `max` is shown at the nearest bound and stays as it is until the boundary moves.',
       },
     },
     slots: {

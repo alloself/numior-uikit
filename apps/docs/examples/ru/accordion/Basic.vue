@@ -1,13 +1,14 @@
 <template>
-  <NuiAccordion v-model="question" :heading-level="3">
-    <NuiAccordionItem value="ssr" label="Работает ли SSR?">
-      Да: разметка детерминирована, id совпадают на сервере и клиенте.
+  <NuiAccordion v-model="question" :heading-level="3" class="w-full max-w-md">
+    <NuiAccordionItem value="delivery" label="Сколько стоит доставка?">
+      Курьер по городу стоит 500 ₽, а заказ от 30 000 ₽ привезём бесплатно. Самовывоз бесплатный
+      всегда.
     </NuiAccordionItem>
-    <NuiAccordionItem value="tailwind" label="Нужен ли Tailwind?">
-      Нет, компоненты работают на автономном CSS; интеграция с Tailwind опциональна.
+    <NuiAccordionItem value="return" label="Как вернуть товар?">
+      Оформите возврат в течение 14 дней после доставки, и курьер заберёт товар сам.
     </NuiAccordionItem>
-    <NuiAccordionItem value="rtl" label="Поддерживается ли RTL?">
-      Да, через логические свойства и useDirection.
+    <NuiAccordionItem value="installments" label="Можно оплатить частями?">
+      Да, заказ от 10 000 ₽ можно разбить на четыре платежа без переплаты.
     </NuiAccordionItem>
   </NuiAccordion>
 </template>
@@ -16,5 +17,5 @@
 import { ref } from 'vue';
 import { NuiAccordion, NuiAccordionItem } from '@numior/vue';
 
-const question = ref<string | null>('ssr');
+const question = ref<string | null>('delivery');
 </script>

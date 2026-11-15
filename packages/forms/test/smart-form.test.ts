@@ -306,14 +306,17 @@ describe('NuiSmartForm', () => {
     expect(form.error('contacts.0.phone')).toBe('Phone please');
   });
 
-  it('marks inline and growing forms', () => {
+  it.each([
+    [true, [true, false]],
+    ['grow', [true, true]],
+  ] as const)('marks a form put in one row with %s', (inline, modifiers) => {
     const form = SmartFormDriver.mount({
       initialValues: blank,
-      inline: 'grow',
+      inline,
       fields: [field(NuiInput, (values) => values.name, { label: 'Name' })],
     });
 
-    expect([form.hasModifier('inline'), form.hasModifier('grow')]).toEqual([true, true]);
+    expect([form.hasModifier('inline'), form.hasModifier('grow')]).toEqual(modifiers);
   });
 
   it('hands pending and dirty to a custom actions slot', async () => {

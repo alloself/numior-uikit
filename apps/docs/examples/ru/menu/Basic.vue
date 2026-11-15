@@ -1,33 +1,42 @@
 <template>
-  <NuiMenu>
-    <template #trigger="{ attrs }">
-      <NuiButton v-bind="attrs" variant="outline">Файл</NuiButton>
-    </template>
-    <NuiMenuItem icon="file" shortcut="mod+n" @select="last = 'Новый'">Новый документ</NuiMenuItem>
-    <NuiMenuItem icon="copy" shortcut="mod+d" @select="last = 'Дубликат'">Дублировать</NuiMenuItem>
-    <NuiMenuSeparator />
-    <NuiMenuLabel>Вид</NuiMenuLabel>
-    <NuiMenuCheckboxItem v-model:checked="grid">Сетка</NuiMenuCheckboxItem>
-    <NuiMenuRadioGroup v-model="sort">
-      <NuiMenuRadioItem value="name">По имени</NuiMenuRadioItem>
-      <NuiMenuRadioItem value="date">По дате</NuiMenuRadioItem>
-    </NuiMenuRadioGroup>
-    <NuiMenuSeparator />
-    <NuiMenuSub label="Экспорт" icon="upload">
-      <NuiMenuItem @select="last = 'PDF'">PDF</NuiMenuItem>
-      <NuiMenuItem @select="last = 'CSV'">CSV</NuiMenuItem>
-    </NuiMenuSub>
-    <NuiMenuItem icon="trash" tone="error" @select="last = 'Удалить'">Удалить</NuiMenuItem>
-  </NuiMenu>
-  <p class="text-sm text-muted-foreground">
-    Показываем {{ grid ? 'сеткой' : 'списком' }}, сортировка
-    {{ sort === 'name' ? 'по имени' : 'по дате' }}.
-    <template v-if="last">Последнее действие: {{ last }}.</template>
-  </p>
+  <div class="flex flex-col items-start gap-3">
+    <NuiMenu>
+      <template #trigger="{ attrs }">
+        <NuiButton v-bind="attrs" variant="outline" tone="neutral" icon-end="chevron-down">
+          Действия
+        </NuiButton>
+      </template>
+      <NuiMenuItem icon="copy" shortcut="mod+d" @select="done = 'Копия заказа 20408 создана.'">
+        Дублировать
+      </NuiMenuItem>
+      <NuiMenuItem :icon="Printer" shortcut="mod+p" @select="done = 'Накладная ушла на печать.'">
+        Распечатать накладную
+      </NuiMenuItem>
+      <NuiMenuSub label="Отправить покупателю" icon="inbox">
+        <NuiMenuItem @select="done = 'Счёт ушёл покупателю на почту.'">Счёт</NuiMenuItem>
+        <NuiMenuItem @select="done = 'Ссылка на оплату ушла в SMS.'">Ссылку на оплату</NuiMenuItem>
+      </NuiMenuSub>
+      <NuiMenuSeparator />
+      <NuiMenuLabel>Доставка</NuiMenuLabel>
+      <NuiMenuRadioGroup v-model="delivery">
+        <NuiMenuRadioItem v-for="method in methods" :key="method.value" :value="method.value">
+          {{ method.label }}
+        </NuiMenuRadioItem>
+      </NuiMenuRadioGroup>
+      <NuiMenuSeparator />
+      <NuiMenuCheckboxItem v-model:checked="letters">Письма о статусе</NuiMenuCheckboxItem>
+      <NuiMenuSeparator />
+      <NuiMenuItem icon="trash" tone="error" @select="done = 'Заказ 20408 отменён.'">
+        Отменить заказ
+      </NuiMenuItem>
+    </NuiMenu>
+    <p class="m-0 text-sm text-muted-foreground">{{ summary }}</p>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { Printer } from '@lucide/vue';
 import {
   NuiButton,
   NuiMenu,
@@ -39,8 +48,18 @@ import {
   NuiMenuSeparator,
   NuiMenuSub,
 } from '@numior/vue';
+import { DELIVERIES } from '#demo/orders';
 
-const last = ref('');
-const grid = ref(true);
-const sort = ref('name');
+const delivery = ref('courier');
+const letters = ref(true);
+const done = ref('');
+
+const methods = Object.entries(DELIVERIES).map(([value, label]) => ({ value, label }));
+
+const summary = computed(() => {
+  const method = methods.find((entry) => entry.value === delivery.value)?.label ?? '';
+  const status = letters.value ? 'с письмами о статусе' : 'без писем о статусе';
+
+  return `${method}, ${status}. ${done.value}`.trim();
+});
 </script>

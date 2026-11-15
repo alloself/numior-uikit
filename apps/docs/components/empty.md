@@ -1,33 +1,34 @@
 # Empty
 
-`NuiEmpty` — заглушка на месте пустого списка, таблицы или результатов поиска. Она объясняет,
-почему здесь ничего нет, и подсказывает, что сделать дальше.
+Заглушка на месте пустого списка.
 
 <Example name="empty/Basic" />
 
-Заголовок передайте в `title`, пояснение — в `description`, а кнопки положите в слот `actions`.
-Своя иллюстрация вместо иконки ставится в слот `media`.
+Опишите причину в `title` и `description`, а следующий шаг — в слоте `actions`.
 
 ## Установка
 
-```ts
+```ts install
 import { NuiEmpty } from '@numior/vue';
-import '@numior/vue/styles/empty.css';
 ```
 
 ## Использование
+
+Поменяйте размер и текст, уберите иконку.
 
 <Configurator name="NuiEmpty" />
 
 ## Примеры
 
-### Компактный
+### Показать в узком месте
 
-`size="sm"` уменьшает иконку и отступы для пустого списка или выпадающего меню, а `hideIcon`
-убирает иконку совсем. Такую же заглушку сами показывают [List](/components/list), `NuiSelect` и
-`NuiCombobox`, когда вариантов нет.
+Задайте `size="sm"`.
 
 <Example name="empty/Compact" />
+
+Такую же заглушку сами показывают [List](/components/list), [Tree](/components/tree),
+[Select](/components/select), [Combobox](/components/combobox) и [Command](/components/command),
+когда показывать нечего.
 
 ## Доступность
 

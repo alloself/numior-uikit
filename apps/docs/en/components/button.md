@@ -6,9 +6,8 @@ A button for actions on the page.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiButton } from '@numior/vue';
-import '@numior/vue/styles/button.css';
 ```
 
 ## Usage

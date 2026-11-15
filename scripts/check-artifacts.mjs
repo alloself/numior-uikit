@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
-import { readFile, readdir } from 'node:fs/promises';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
+import { glob, readFile, readdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { build } from 'vite';
+import { compileScript, parse as parseSfc } from 'vue/compiler-sfc';
 
 const artifactPaths = async (root, target) => {
   if (!target.includes('*')) {
@@ -556,6 +557,54 @@ assert.match(
 
 assert.doesNotMatch(nuxtPlugin, /\.css['"]/, 'the nuxt plugin must not import css');
 
+const mcpModule = await import(pathToFileURL(resolve('packages/mcp/dist/index.js')).href);
+
+for (const key of ['createNumiorServer', 'checkUsage', 'parseData']) {
+  assert.equal(typeof mcpModule[key], 'function', `mcp must export ${key}`);
+}
+
+const mcpMain = await readFile('packages/mcp/dist/main.js', 'utf8');
+
+assert.match(mcpMain, /^#!\/usr\/bin\/env node\n/, 'the mcp binary must start with a node shebang');
+
+const mcpData = mcpModule.parseData(await readFile('packages/mcp/dist/data.json', 'utf8'));
+
+assert.ok(
+  Object.keys(mcpData.components).length > 50,
+  'the mcp data must hold the component reference',
+);
+
+assert.equal(
+  mcpData.pages.en.length,
+  mcpData.pages.ru.length,
+  'the mcp data must hold both page copies',
+);
+
+assert.ok(
+  Object.keys(mcpData.examples.en).length > 100,
+  'the mcp data must hold the example sources',
+);
+
+const mcpChunks = [];
+
+for await (const file of glob('packages/mcp/dist/*.js')) {
+  mcpChunks.push(await readFile(file, 'utf8'));
+}
+
+for (const external of [
+  '@modelcontextprotocol/sdk/server/mcp.js',
+  '@vue/compiler-sfc',
+  'postcss',
+  'postcss-selector-parser',
+  'minisearch',
+  'zod',
+]) {
+  assert.ok(
+    mcpChunks.some((chunk) => chunk.includes(`from "${external}"`)),
+    `the mcp build must keep ${external} external`,
+  );
+}
+
 const PROBE = '\0nui-probe';
 
 const bundleOf = async (source) => {
@@ -624,4 +673,45 @@ assert.doesNotMatch(
   'NuiDialog pulled other catalogs',
 );
 
-console.log('Package exports, CSS artifacts, DOM-free ESM imports and text tree-shaking verified.');
+const withoutUndefined = (text) =>
+  text
+    .replace(/\s*(?<!\|)\|\s*undefined\b(?!\s*\|)/g, '')
+    .replace(/\bundefined\s*\|(?!\|)\s*/g, '');
+
+const typeSources = {
+  fileExists: (file) => existsSync(file),
+  readFile: (file) => (existsSync(file) ? withoutUndefined(readFileSync(file, 'utf8')) : undefined),
+  realpath: (file) => realpathSync(file),
+};
+
+const NARROWED_PROP = /(\w+): \{ type: ([^}]*?), (?:required: \w+, )?skipCheck: true/g;
+
+const narrowedProps = async () => {
+  const found = [];
+
+  for await (const file of glob('packages/*/src/**/*.vue')) {
+    const source = withoutUndefined(await readFile(file, 'utf8'));
+    const { descriptor } = parseSfc(source, { filename: resolve(file) });
+
+    if (!descriptor.scriptSetup) {
+      continue;
+    }
+
+    const { content } = compileScript(descriptor, { id: file, isProd: false, fs: typeSources });
+
+    for (const [, prop, type] of content.matchAll(NARROWED_PROP)) {
+      found.push(`${file} ${prop}: ${type}`);
+    }
+  }
+  return found;
+};
+
+assert.deepEqual(
+  await narrowedProps(),
+  [],
+  'A prop that mixes a boolean or a function with a type the SFC compiler cannot resolve keeps only Boolean or Function in the build, so a development runtime warns on its valid values',
+);
+
+console.log(
+  'Package exports, CSS artifacts, DOM-free ESM imports, text tree-shaking and prop runtime types verified.',
+);

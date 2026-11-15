@@ -1,24 +1,20 @@
 <template>
-  <NuiCard href="#anatomy" class="max-w-sm">
+  <NuiCard href="#order-20411" class="w-full max-w-sm">
     <NuiCardHeader>
-      <NuiCardTitle>Card anatomy</NuiCardTitle>
-      <NuiCardDescription
-        >The whole card leads to the section, the header button lives on its
-        own.</NuiCardDescription
-      >
-      <template #actions>
-        <NuiButton variant="ghost" tone="neutral" size="sm" aria-label="More" icon="ellipsis" />
-      </template>
+      <NuiCardTitle>Order 20411</NuiCardTitle>
+      <NuiCardDescription>Nina Hart is waiting for a $498 invoice</NuiCardDescription>
     </NuiCardHeader>
     <NuiCardFooter>
-      <NuiBadge tone="success">Available</NuiBadge>
+      <NuiButton size="sm" variant="outline" tone="neutral" :disabled="sent" @click="sent = true">
+        {{ sent ? 'Invoice sent' : 'Send invoice' }}
+      </NuiButton>
     </NuiCardFooter>
   </NuiCard>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import {
-  NuiBadge,
   NuiButton,
   NuiCard,
   NuiCardDescription,
@@ -26,4 +22,6 @@ import {
   NuiCardHeader,
   NuiCardTitle,
 } from '@numior/vue';
+
+const sent = ref(false);
 </script>

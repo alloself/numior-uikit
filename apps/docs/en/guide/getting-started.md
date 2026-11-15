@@ -52,8 +52,8 @@ If your app builds its styles from a CSS file, load them there:
 page background, font and text color. `styles.css` contains the styles of every component.
 
 To load less, use the files of the components you need instead of `styles.css`, for example
-`@numior/vue/styles/button.css`. Each component page shows the path to its file. Composite
-components also need the files of their parts: `NuiSelect` uses `NuiButton` and `NuiList`.
+`@numior/vue/styles/button.css`. Composite components also need the files of their parts, so the
+Installation section of each component page lists all of them.
 
 ## First component
 

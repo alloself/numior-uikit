@@ -31,6 +31,7 @@ export interface LayoutMountOptions {
   readonly marker?: NuiSidebarMarker;
   readonly skipLink?: boolean;
   readonly skipLabel?: string;
+  readonly railWidth?: string;
 }
 
 type MediaListener = (event: { readonly matches: boolean }) => void;
@@ -73,6 +74,7 @@ export class LayoutDriver extends ComponentDriver {
     marker,
     skipLink,
     skipLabel,
+    railWidth,
   }: LayoutMountOptions = {}): LayoutDriver {
     const stubs = new TopLayerStubs();
     const media = fakeMedia(mobile);
@@ -94,6 +96,7 @@ export class LayoutDriver extends ComponentDriver {
         marker,
         skipLink,
         skipLabel,
+        railWidth,
       },
       attachTo: document.body,
       global: { plugins: configPlugins(config) },
@@ -198,6 +201,16 @@ export class LayoutDriver extends ComponentDriver {
 
   get heading(): string {
     return this.wrapper.find('.nui-app-bar__body').text();
+  }
+
+  get railSize(): string {
+    const root = this.root.element;
+
+    return root instanceof HTMLElement ? root.style.getPropertyValue('--_rail-size') : '';
+  }
+
+  drawerSidebarModifier(modifier: string): boolean {
+    return this.drawer.find('.nui-sidebar').classes().includes(`nui-sidebar--${modifier}`);
   }
 
   sidebarModifier(modifier: string): boolean {

@@ -14,9 +14,9 @@
         @toggle="context.selectAt(position)"
       />
     </template>
-    <template #default="{ column, merge, position, icon }">
+    <template #default="{ column, merge, position, icon, copy }">
       <NuiTableCellContent
-        :view="context.cellViewAt(view.item, column, merge)"
+        :view="context.cellViewAt(view.item, column, merge, copy)"
         :editor="context.editor()"
         :icon="icon"
         @toggle="context.expandAt(position)"
@@ -36,9 +36,9 @@
         @toggle="context.selectAt(position)"
       />
     </template>
-    <template #default="{ column, merge, position, icon }">
+    <template #default="{ column, merge, position, icon, copy }">
       <NuiTableCellContent
-        :view="context.cellViewAt(view.item, column, merge)"
+        :view="context.cellViewAt(view.item, column, merge, copy)"
         :editor="context.editor()"
         :icon="icon"
         @toggle="context.expandAt(position)"

@@ -27,6 +27,8 @@ const isOverlaysOutput = shapeOf({
 const parseOverlaysOutput = (text: string): OverlaysOutput =>
   parseAs(text, isOverlaysOutput, 'overlays output');
 
+const TOOLTIP_DELAY_MS = 500;
+
 export class OverlaysSection {
   readonly scope = sectionScope('overlays');
 
@@ -125,6 +127,23 @@ export class OverlaysSection {
     await this.page.keyboard.press('Escape');
   }
 
+  async openPopoverFromKeyboard(): Promise<void> {
+    await this.popoverTrigger.focus();
+    await this.page.keyboard.press('Enter');
+  }
+
+  async tabForward(): Promise<void> {
+    await this.page.keyboard.press('Tab');
+  }
+
+  async outwaitTooltipDelay(): Promise<void> {
+    await this.page.waitForTimeout(TOOLTIP_DELAY_MS);
+  }
+
+  async movePointerAway(): Promise<void> {
+    await this.page.mouse.move(0, 0);
+  }
+
   focusIsInside(surface: Locator): Promise<boolean> {
     return surface.evaluate((element) => element.contains(document.activeElement));
   }
@@ -192,6 +211,19 @@ export class OverlaysSection {
   async edges(surface: Locator): Promise<{ readonly right: number; readonly top: number }> {
     const box = await boxOf(surface);
     return { right: Math.round(box.x + box.width), top: Math.round(box.y) };
+  }
+
+  footerLift(surface: Locator): Promise<number> {
+    return surface.evaluate((element) => {
+      const footer = element.querySelector('.nui-dialog__footer');
+
+      if (footer === null) {
+        return Number.NaN;
+      }
+      const inner = element.getBoundingClientRect().top + element.clientTop + element.clientHeight;
+
+      return Math.round(inner - footer.getBoundingClientRect().bottom);
+    });
   }
 
   scrollers(dialog: Locator): Promise<{ readonly frame: boolean; readonly body: boolean }> {

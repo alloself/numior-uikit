@@ -198,7 +198,7 @@ export const spreadsheetPivotMessages: NuiMessageCatalog<NuiSpreadsheetPivotMess
     valueApplied: ({ name }) => `${name}: settings applied`,
     fieldPlaced: ({ field, area }) => `${field} moved to ${area}`,
     fieldRemoved: ({ field }) => `${field} removed`,
-    dragCancelled: 'Move cancelled',
+    dragCancelled: 'Move canceled',
     noSource: 'Select a table with a header row to build a pivot table',
     sourceLost: 'The source of this pivot table is gone',
     refused: 'The pivot table did not change: it would cover other data',

@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="root"
     class="nui-card"
     :class="[
       `nui-card--variant-${variant}`,
@@ -10,6 +11,7 @@
       },
     ]"
     :aria-busy="loading || undefined"
+    @click="onClick"
   >
     <NuiCardHeader v-if="title || description">
       <NuiCardTitle v-if="title">{{ title }}</NuiCardTitle>
@@ -20,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, useTemplateRef } from 'vue';
 import NuiCardDescription from './NuiCardDescription.vue';
 import NuiCardHeader from './NuiCardHeader.vue';
 import NuiCardTitle from './NuiCardTitle.vue';
@@ -39,6 +41,12 @@ const {
   loading = false,
 } = defineProps<NuiCardProps>();
 
+const emit = defineEmits<{
+  click: [event: MouseEvent];
+}>();
+
+const root = useTemplateRef<HTMLElement>('root');
+
 const action = computed<CardAction | undefined>(() => {
   if (loading) {
     return undefined;
@@ -49,6 +57,20 @@ const action = computed<CardAction | undefined>(() => {
   }
   return interactive ? { kind: CardActionKind.Button } : undefined;
 });
+
+const ownActionOf = (target: EventTarget | null): Element | null => {
+  const found = target instanceof Element ? target.closest('.nui-card__action') : null;
+
+  return found?.closest('.nui-card') === root.value ? found : null;
+};
+
+const onClick = (event: MouseEvent): void => {
+  if (ownActionOf(event.target) === null) {
+    return;
+  }
+
+  emit('click', event);
+};
 
 provideCard({ action, loading: computed(() => loading) });
 </script>

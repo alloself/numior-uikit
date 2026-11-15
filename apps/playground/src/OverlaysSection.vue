@@ -96,6 +96,10 @@
       <NuiField label="Поиск">
         <NuiInput placeholder="Название" data-testid="drawer-input" />
       </NuiField>
+      <template #footer>
+        <NuiButton variant="ghost" tone="neutral" @click="drawerOpen = false">Сбросить</NuiButton>
+        <NuiButton @click="drawerOpen = false">Применить</NuiButton>
+      </template>
     </NuiDrawer>
     <div class="flex flex-wrap items-center gap-2 tones">
       <NuiPopover

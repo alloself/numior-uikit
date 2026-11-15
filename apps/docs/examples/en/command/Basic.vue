@@ -8,35 +8,48 @@
         </span>
       </template>
     </NuiCommand>
-    <p class="m-0 text-sm text-muted-foreground">Last command: {{ last || '—' }}</p>
+    <p v-if="last" class="m-0 text-sm text-muted-foreground">“{{ last }}” is done.</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { Download, Settings } from '@lucide/vue';
 import { NuiCommand, NuiKbd, type NuiCommandSource } from '@numior/vue';
 
 const last = ref('');
 
 const commands: NuiCommandSource = [
   {
-    label: 'Sections',
+    label: 'Orders',
     items: [
-      { value: 'guide', label: 'Getting started', icon: 'file', shortcut: 'mod+1' },
+      { value: 'order', label: 'New order', icon: 'plus', shortcut: 'mod+shift+o' },
       {
-        value: 'theming',
-        label: 'Theming',
-        icon: 'sun',
-        description: 'Colours, density, accents',
+        value: 'export',
+        label: 'Export orders',
+        icon: Download,
+        description: 'Excel file for the chosen period',
       },
-      { value: 'button', label: 'Button', icon: 'command', keywords: ['btn'] },
     ],
   },
   {
-    label: 'Actions',
+    label: 'Customers',
     items: [
-      { value: 'theme', label: 'Toggle theme', icon: 'moon', shortcut: 'mod+shift+t' },
-      { value: 'locked', label: 'Unavailable action', disabled: true },
+      { value: 'customer', label: 'Find a customer', icon: 'search', keywords: ['client'] },
+      {
+        value: 'import',
+        label: 'Import customers',
+        icon: 'upload',
+        description: 'Needs admin rights',
+        disabled: true,
+      },
+    ],
+  },
+  {
+    label: 'Store',
+    items: [
+      { value: 'settings', label: 'Settings', icon: Settings, shortcut: 'mod+shift+s' },
+      { value: 'theme', label: 'Dark theme', icon: 'moon', shortcut: 'mod+shift+t' },
     ],
   },
 ];

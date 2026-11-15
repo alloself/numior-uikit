@@ -61,6 +61,15 @@
           >{{ scheme }} · {{ panels.join(', ') }}</span
         >
       </div>
+      <div class="max-w-xs">
+        <NuiToggleGroup
+          v-model="period"
+          :items="periods"
+          required
+          label="Период"
+          data-testid="toggle-overflow"
+        />
+      </div>
       <NuiSeparator data-testid="separator-horizontal" />
       <NuiSeparator label="или" data-testid="separator-labelled" />
       <p class="text-sm text-muted-foreground">
@@ -214,6 +223,7 @@ const commands: NuiCommandSource = [
 const scheme = ref('light');
 const faq = ref<string | null>('ssr');
 const panels = ref(['preview']);
+const period = ref('quarter');
 
 const schemes: readonly NuiToggleItem[] = [
   { value: 'light', label: 'Светлая', icon: 'sun' },
@@ -225,6 +235,16 @@ const panelItems: readonly NuiToggleItem[] = [
   { value: 'preview', label: 'Превью', icon: 'eye' },
   { value: 'code', label: 'Код', icon: 'code' },
   { value: 'terminal', label: 'Терминал', icon: 'terminal', disabled: true },
+];
+
+const periods: readonly NuiToggleItem[] = [
+  { value: 'day', label: 'День' },
+  { value: 'week', label: 'Неделя' },
+  { value: 'month', label: 'Месяц' },
+  { value: 'quarter', label: 'Квартал' },
+  { value: 'half', label: 'Полугодие' },
+  { value: 'year', label: 'Год' },
+  { value: 'all', label: 'Всё время' },
 ];
 
 const sample = [

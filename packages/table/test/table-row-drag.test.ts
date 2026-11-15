@@ -73,6 +73,7 @@ describe('NuiTable row drag', () => {
     expect(grid.rowDragging(1)).toBe(true);
     expect(grid.ghostText).toBe('Сотрудник 1');
     expect(grid.ghostSize).toBe('40px');
+    expect(grid.ghostAcross).toBe('48px');
 
     await grid.moveRowTo(4, 'after');
     expect(grid.dropMark).toEqual({ kind: 'line', start: '240px', inset: '0px' });

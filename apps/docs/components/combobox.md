@@ -9,12 +9,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiCombobox } from '@numior/vue';
-import '@numior/vue/styles/field.css';
-import '@numior/vue/styles/list.css';
-import '@numior/vue/styles/chip.css';
-import '@numior/vue/styles/combobox.css';
 ```
 
 ## Использование

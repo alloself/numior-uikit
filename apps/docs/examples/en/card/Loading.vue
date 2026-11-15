@@ -1,13 +1,18 @@
 <template>
-  <NuiSwitch v-model="loading" class="mb-4">Loading</NuiSwitch>
-  <NuiCard class="w-full max-w-sm" :loading="loading">
-    <NuiCardMedia :src="cover" alt="" aspect="3 / 1" />
-    <NuiCardHeader>
-      <NuiCardTitle>Catalogue 2026</NuiCardTitle>
-      <NuiCardDescription>Updated yesterday, 14 items</NuiCardDescription>
-    </NuiCardHeader>
-    <NuiCardContent :lines="2">The spring collection is ready to publish.</NuiCardContent>
-  </NuiCard>
+  <div class="flex w-full max-w-sm flex-col gap-4">
+    <NuiSwitch v-model="loading">Loading</NuiSwitch>
+    <NuiCard :loading="loading">
+      <NuiCardMedia :src="cover" alt="" aspect="3 / 1" />
+      <NuiCardHeader>
+        <NuiCardTitle>Oslo armchair</NuiCardTitle>
+        <NuiCardDescription>$249, 12 in stock</NuiCardDescription>
+      </NuiCardHeader>
+      <NuiCardContent :lines="2"
+        >A soft armchair on a solid oak frame. The cover comes off and washes at 30
+        °C.</NuiCardContent
+      >
+    </NuiCard>
+  </div>
 </template>
 
 <script setup lang="ts">

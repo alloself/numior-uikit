@@ -13,7 +13,8 @@ import {
 import type { NavSection } from '../.vitepress/theme/theme.types';
 
 const DOCS = fileURLToPath(new URL('..', import.meta.url));
-const SECTION_DIRS = ['guide', 'components', 'composables', 'theme', 'editor'];
+const SECTION_DIRS = ['guide', 'components', 'composables', 'theme', 'table', 'editor'];
+const PAGE_SECTIONS = ['/spreadsheet/', '/charts/', '/blocks/'];
 const INDEX_PAGE = 'index';
 
 const SHOP: readonly NavSection[] = [
@@ -42,6 +43,13 @@ const pagesOf = (dir: string): string[] =>
   }, []);
 
 const fileOf = (link: string): string => (link.endsWith('/') ? `${link}${INDEX_PAGE}` : link);
+
+const missingIn = (links: readonly string[]): string[] =>
+  links.filter(
+    (link) =>
+      !existsSync(`${DOCS}${fileOf(link).slice(1)}.md`) ||
+      !existsSync(`${DOCS}en${fileOf(link)}.md`),
+  );
 
 describe('docs navigation', () => {
   it('builds the header items and the sidebar of each locale from one record', () => {
@@ -101,17 +109,30 @@ describe('docs navigation', () => {
 
     expect(links.toSorted()).toEqual(SECTION_DIRS.flatMap(pagesOf).toSorted());
     expect(new Set(links).size).toBe(links.length);
-
-    expect(
-      links.filter(
-        (link) =>
-          !existsSync(`${DOCS}${fileOf(link).slice(1)}.md`) ||
-          !existsSync(`${DOCS}en${fileOf(link)}.md`),
-      ),
-    ).toEqual([]);
+    expect(missingIn(links)).toEqual([]);
 
     expect(navOf('ru').map((item) => item.text)).toEqual(
       NAVIGATION.map((section) => navigationTexts('ru', [section])[0]),
     );
+  });
+
+  it('leads a section of one page without a sidebar to a page of both locales', () => {
+    const pageSections = NAVIGATION.filter((section) => section.groups.length === 0);
+
+    expect(pageSections.map((section) => section.link)).toEqual(PAGE_SECTIONS);
+    expect(missingIn(PAGE_SECTIONS)).toEqual([]);
+  });
+
+  it('puts the module sections between the components and the themes in the header', () => {
+    expect(navOf('en').map((item) => item.text)).toEqual([
+      'Docs',
+      'Components',
+      'Table',
+      'Spreadsheet',
+      'Editor',
+      'Charts',
+      'Blocks',
+      'Themes',
+    ]);
   });
 });

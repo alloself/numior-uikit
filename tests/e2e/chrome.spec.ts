@@ -2,6 +2,8 @@ import { expect, test } from './fixtures';
 import { rgbOf } from './helpers/color';
 import { boxOf } from './helpers/geometry';
 
+const SCROLL_RANGE_STEP = 1;
+
 test('separators carry semantics, stretch across their axis and take a label', async ({
   playground,
   chrome,
@@ -17,7 +19,9 @@ test('separators carry semantics, stretch across their axis and take a label', a
   await expect(chrome.verticalSeparator).toHaveAttribute('aria-orientation', 'vertical');
   await expect(chrome.decorativeSeparator).toHaveAttribute('role', 'none');
   await expect(chrome.labelledSeparator).toHaveText('или');
+  await expect(chrome.labelledSeparator).toHaveAccessibleName('или');
   expect(await chrome.labelLineWidth()).toBeGreaterThan(40);
+  expect(await playground.wcagViolations(chrome.scope)).toEqual([]);
 });
 
 test('kbd renders combos per platform, boxed or plain', async ({ playground, chrome }) => {
@@ -75,7 +79,6 @@ test('code blocks number and highlight lines, copy their source and expand', asy
 test('toggle groups pick one scheme or several panels and rove focus', async ({
   playground,
   chrome,
-  page,
   isMobile,
 }) => {
   await playground.open();
@@ -103,18 +106,54 @@ test('toggle groups pick one scheme or several panels and rove focus', async ({
   }
 
   await dark.focus();
-  await page.keyboard.press('ArrowRight');
+  await chrome.focusNextToggleItem();
   await expect(chrome.toggleItem(chrome.schemeToggle, 'Системная')).toBeFocused();
   await expect(dark).toHaveAttribute('aria-checked', 'true');
 
-  await page.keyboard.press('Space');
+  await chrome.pressFocusedToggleItem();
   await expect(chrome.toggleOutput).toHaveText('system · preview, code');
+});
+
+test('an overflowing toggle group shows the chosen item and scrolls with its edge buttons and the wheel', async ({
+  playground,
+  chrome,
+  isMobile,
+}) => {
+  await playground.emulate({ reducedMotion: 'reduce' });
+  await playground.open();
+  await chrome.periodToggle.scrollIntoViewIfNeeded();
+
+  await expect(chrome.toggleItem(chrome.periodToggle, 'Квартал')).toBeInViewport({ ratio: 1 });
+  await expect(chrome.periodEdge('end')).toBeVisible();
+
+  await chrome.pagePeriodTo('end');
+
+  await expect(chrome.periodEdge('end')).toBeHidden();
+  await expect(chrome.periodEdge('start')).toBeVisible();
+  await expect.poll(() => chrome.periodItemHiddenPart('Всё время')).toBeLessThan(SCROLL_RANGE_STEP);
+
+  await chrome.pagePeriodTo('start');
+
+  await expect(chrome.periodEdge('start')).toBeHidden();
+  await expect.poll(() => chrome.periodScroll()).toBe(0);
+  await expect(chrome.toggleItem(chrome.periodToggle, 'День')).toBeInViewport({ ratio: 1 });
+
+  if (isMobile) {
+    return;
+  }
+
+  const pageScroll = await chrome.pageScrollY();
+
+  await chrome.wheelOverPeriod(120);
+
+  await expect.poll(() => chrome.periodScroll()).toBe(120);
+  await expect(chrome.periodEdge('start')).toBeVisible();
+  expect(await chrome.pageScrollY()).toBe(pageScroll);
 });
 
 test('collapsible and accordion reveal content with motion and hide it until found', async ({
   playground,
   chrome,
-  page,
   isMobile,
 }) => {
   await playground.open();
@@ -146,10 +185,10 @@ test('collapsible and accordion reveal content with motion and hide it until fou
   }
 
   await ssr.focus();
-  await page.keyboard.press('ArrowDown');
+  await chrome.focusNextTrigger();
   await expect(tailwind).toBeFocused();
 
-  await page.keyboard.press('Home');
+  await chrome.focusFirstTrigger();
   await expect(ssr).toBeFocused();
 });
 
@@ -176,10 +215,10 @@ test('the command palette opens on top, filters as you type and picks with the k
   await expect(chrome.commandOptions()).toHaveCount(2);
   await expect(chrome.activeCommand()).toHaveText('Темизация');
 
-  await page.keyboard.press('ArrowDown');
+  await chrome.highlightNextCommand();
   await expect(chrome.activeCommand()).toHaveText('Переключить тему');
 
-  await page.keyboard.press('Enter');
+  await chrome.runHighlightedCommand();
   await expect(chrome.commandDialog).toBeHidden();
   await expect(chrome.commandOutput).toHaveText('theme');
 
@@ -190,25 +229,24 @@ test('the command palette opens on top, filters as you type and picks with the k
   await chrome.commandInput.fill('темизация');
   await expect(chrome.commandOptions()).toHaveCount(1);
 
-  await page.keyboard.press('Escape');
+  await chrome.closeCommandPalette();
   await expect(chrome.commandDialog).toBeHidden();
 
   if (isMobile) {
     return;
   }
 
-  await page.keyboard.press('Control+k');
+  await chrome.openCommandPaletteWithShortcut();
   await expect(chrome.commandDialog).toBeVisible();
   await expect(chrome.commandInput).toHaveValue('');
 
-  await page.keyboard.press('Escape');
+  await chrome.closeCommandPalette();
   await expect(chrome.commandDialog).toBeHidden();
 });
 
 test('the table of contents follows the section in view and links to headings', async ({
   playground,
   chrome,
-  page,
 }) => {
   await playground.open();
   await expect(chrome.toc).toHaveRole('navigation');
@@ -228,7 +266,7 @@ test('the table of contents follows the section in view and links to headings', 
   await chrome.tocLinks().nth(2).click();
   await expect(chrome.currentTocLink()).toHaveText('Базовый пример');
 
-  await page.waitForTimeout(300);
+  await chrome.outwaitTocScroll();
   await expect(chrome.currentTocLink()).toHaveText('Базовый пример');
 });
 
@@ -251,26 +289,23 @@ test('the table of contents marks the current section with a square on request',
 
 test('the skip link appears on focus and moves focus to its target', async ({
   playground,
-  page,
   isMobile,
 }) => {
   test.skip(isMobile, 'keyboard navigation');
   await playground.open();
-  const skip = page.getByTestId('skip-link');
-  await expect(skip).toHaveCSS('opacity', '0');
+  await expect(playground.skipLink).toHaveCSS('opacity', '0');
 
-  await page.keyboard.press('Tab');
-  await expect(skip).toBeFocused();
-  await expect(skip).toHaveCSS('opacity', '1');
+  await playground.tabForward();
+  await expect(playground.skipLink).toBeFocused();
+  await expect(playground.skipLink).toHaveCSS('opacity', '1');
 
-  await page.keyboard.press('Enter');
-  await expect(page.locator('#forms-title')).toBeFocused();
+  await playground.activateFocusedControl();
+  await expect(playground.formsTitle).toBeFocused();
 });
 
 test('the splitter resizes its first pane by pointer and keyboard within its bounds', async ({
   playground,
   chrome,
-  page,
   isMobile,
 }) => {
   await playground.open();
@@ -290,12 +325,12 @@ test('the splitter resizes its first pane by pointer and keyboard within its bou
   }
 
   await chrome.splitterDivider.focus();
-  await page.keyboard.press('Home');
+  await chrome.moveSplitterToMin();
   await expect.poll(() => chrome.splitterValue()).toBe(20);
 
-  await page.keyboard.press('ArrowRight');
+  await chrome.nudgeSplitterForward();
   await expect.poll(() => chrome.splitterValue()).toBe(25);
 
-  await page.keyboard.press('End');
+  await chrome.moveSplitterToMax();
   await expect.poll(() => chrome.splitterValue()).toBe(80);
 });

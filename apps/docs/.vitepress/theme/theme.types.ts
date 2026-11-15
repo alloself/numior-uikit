@@ -358,6 +358,8 @@ export interface ApiTableProps<T extends ApiRow> {
   rows: readonly T[];
   locale: ExampleLocale;
   requiredLabel?: string | undefined;
+  stacked?: boolean | undefined;
+  defaultLabel?: string | undefined;
 }
 
 export interface ApiKeyboardProps {

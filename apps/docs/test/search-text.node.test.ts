@@ -11,6 +11,7 @@ const bundle: ReferenceBundle = {
       family: 'button',
       file: '',
       styles: undefined,
+      stylesheets: [],
       messages: undefined,
       props: [
         {
@@ -35,6 +36,7 @@ const bundle: ReferenceBundle = {
   declarations: [],
   tokens: [],
   icons: [],
+  stylesheets: [],
 };
 
 describe('search text', () => {

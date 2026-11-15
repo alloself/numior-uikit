@@ -149,7 +149,7 @@ describe('NuiSpreadsheet conditional formatting panel', () => {
     await sheet.openRules(1, 0);
     await sheet.takeRuleAndLeave(0);
 
-    expect(sheet.rulesAnnouncement).toBe('Move cancelled');
+    expect(sheet.rulesAnnouncement).toBe('Move canceled');
     expect(sheet.ruleTexts).toEqual(['Value is greater than 10', 'Blank cells']);
     expect(sheet.changes).toHaveLength(0);
   });

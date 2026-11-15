@@ -375,6 +375,26 @@ describe('NuiTree', () => {
     only.unmount();
   });
 
+  it('checks a parent whose children all come checked in the model and completes the model', async () => {
+    const tree = TreeDriver.mount({
+      props: { checkable: true },
+      modelValue: ['button', 'index'],
+      expanded: ['src', 'components'],
+    });
+
+    expect(tree.attr('src', 'aria-checked')).toBe('true');
+    expect(tree.attr('components', 'aria-checked')).toBe('true');
+    expect(tree.hasPart('src', 'checkbox--indeterminate')).toBe(false);
+    expect(tree.value).toEqual(['src', 'components', 'button', 'index']);
+
+    await tree.setValues(['src']);
+
+    expect(tree.attr('index.ts', 'aria-checked')).toBe('true');
+    expect(tree.value).toEqual(['src', 'components', 'button', 'index']);
+
+    tree.unmount();
+  });
+
   it('checks lazily loaded children of a checked node and drops the spinner when the node collapses', async () => {
     const tree = TreeDriver.mount({ props: { checkable: true } });
     await tree.clickCheckbox('docs');

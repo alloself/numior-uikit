@@ -174,11 +174,11 @@ const pointerModality = ref(false);
 const rowScale = ref(1);
 const framePadding = ref(0);
 
-const mode = computed(() => {
+const mode = computed((): NuiTreeSelectable | false => {
   if (checkable) {
-    return 'multiple';
+    return NuiTreeSelectable.Multiple;
   }
-  return selectable === undefined ? 'single' : selectable;
+  return selectable ?? NuiTreeSelectable.Single;
 });
 
 const loadingText = computed(() => loadingLabel ?? messages.value.loading);
@@ -196,8 +196,12 @@ const { keyOf, selectedKeys, choose } = useOptionSelection<T>({
 
 const expandedKeys = computed(() => new Set(expanded.value.map(keyOf)));
 
+const checkedKeys = computed(() =>
+  checkable ? completeChecked(items, selectedKeys.value, keyOf) : selectedKeys.value,
+);
+
 const checkStates = computed(() =>
-  checkable ? checkStatesOf(items, selectedKeys.value, keyOf) : new Map<string, NuiCheckState>(),
+  checkable ? checkStatesOf(items, checkedKeys.value, keyOf) : new Map<string, NuiCheckState>(),
 );
 
 const pending = shallowReactive(new Set<string>());
@@ -249,7 +253,7 @@ const folderFor = (node: TreeNode<T>): boolean =>
   icons && node.item.icon === undefined && node.hasChildren;
 
 const iconFor = (node: TreeNode<T>): IconSource | undefined => {
-  if (!icons || node.item.icon === false) {
+  if (!icons) {
     return undefined;
   }
   if (node.item.icon) {
@@ -357,7 +361,7 @@ const completeCascade = (): void => {
   if (!checkable) {
     return;
   }
-  const next = completeChecked(items, selectedKeys.value, keyOf);
+  const next = checkedKeys.value;
 
   if (sameKeys(next, selectedKeys.value)) {
     return;
@@ -367,7 +371,7 @@ const completeCascade = (): void => {
 };
 
 watch([() => items, expandedKeys], settlePending);
-watch(() => items, completeCascade);
+watch(checkedKeys, completeCascade, { immediate: true });
 
 const expandItems = (targets: readonly TreeNode<T>[]): void => {
   const fresh = targets.filter((node) => node.hasChildren && !node.expanded);

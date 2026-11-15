@@ -5,7 +5,6 @@ test.describe('pickers', () => {
   test('select opens a listbox as wide as its trigger, picks by keyboard and clears', async ({
     playground,
     pickers,
-    page,
     isMobile,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
@@ -28,13 +27,13 @@ test.describe('pickers', () => {
 
     if (!isMobile) {
       await trigger.focus();
-      await page.keyboard.press('ArrowDown');
+      await pickers.focusNextOption();
       await expect(pickers.option('Германия')).toBeFocused();
 
-      await page.keyboard.press('ArrowDown');
+      await pickers.focusNextOption();
       await expect(pickers.option('Вьетнам')).toBeFocused();
 
-      await page.keyboard.press('Enter');
+      await pickers.chooseFocusedOption();
       await expect(pickers.listbox).toBeHidden();
       await expect(trigger).toBeFocused();
       await expect.poll(async () => (await pickers.readOutput()).country).toBe('vn');
@@ -48,7 +47,6 @@ test.describe('pickers', () => {
   test('select opened with a click, Enter or Space takes the keyboard into its list', async ({
     playground,
     pickers,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard scenario');
@@ -58,21 +56,21 @@ test.describe('pickers', () => {
     await pickers.countryTrigger.click();
     await expect(pickers.option('Австрия')).toBeFocused();
 
-    await page.keyboard.press('ArrowDown');
+    await pickers.focusNextOption();
     await expect(pickers.option('Бельгия')).toBeFocused();
 
-    for (const key of ['Enter', 'Space']) {
-      await page.keyboard.press('Escape');
+    for (const key of ['Enter', 'Space'] as const) {
+      await pickers.closeList();
       await expect(pickers.countryTrigger).toBeFocused();
 
-      await page.keyboard.press(key);
+      await pickers.openFocusedTriggerWith(key);
       await expect(pickers.option('Австрия')).toBeFocused();
 
-      await page.keyboard.press('ArrowDown');
+      await pickers.focusNextOption();
       await expect(pickers.option('Бельгия')).toBeFocused();
     }
 
-    await page.keyboard.press('Escape');
+    await pickers.closeList();
     await pickers.treeTrigger.click();
     await expect(pickers.tree).toBeFocused();
   });
@@ -91,7 +89,6 @@ test.describe('pickers', () => {
   test('multiple select toggles options without closing and shows how many are picked', async ({
     playground,
     pickers,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -109,14 +106,13 @@ test.describe('pickers', () => {
     await expect(trigger).toHaveText('Дизайн');
     await expect.poll(async () => (await pickers.readOutput()).tags).toEqual(['design']);
 
-    await page.keyboard.press('Escape');
+    await pickers.closeList();
     await expect(pickers.listbox).toBeHidden();
   });
 
   test('select shows a tree for nested options, reveals the selected node and picks by keyboard', async ({
     playground,
     pickers,
-    page,
     isMobile,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
@@ -138,16 +134,16 @@ test.describe('pickers', () => {
     await expect(pickers.treeItem('Ноутбуки')).toHaveAttribute('aria-selected', 'true');
     expect(await playground.wcagViolations(pickers.scope)).toEqual([]);
 
-    await page.keyboard.press('Escape');
+    await pickers.closeList();
     await expect(pickers.tree).toBeHidden();
 
     if (!isMobile) {
       await trigger.focus();
-      await page.keyboard.press('ArrowDown');
+      await pickers.focusNextOption();
       await expect(pickers.tree).toBeFocused();
 
-      await page.keyboard.press('ArrowUp');
-      await page.keyboard.press('Enter');
+      await pickers.focusPreviousOption();
+      await pickers.chooseFocusedOption();
       await expect(pickers.tree).toBeHidden();
       await expect(trigger).toBeFocused();
       await expect.poll(async () => (await pickers.readOutput()).category).toBe('phones');
@@ -161,7 +157,6 @@ test.describe('pickers', () => {
   test('combobox searches asynchronously, tracks the active option and keeps chips in multiple mode', async ({
     playground,
     pickers,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -173,8 +168,8 @@ test.describe('pickers', () => {
     await expect(pickers.option('Москва')).toBeHidden();
     await expect(city).toHaveAttribute('aria-activedescendant', /option-0$/);
 
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
+    await pickers.focusNextOption();
+    await pickers.chooseFocusedOption();
     await expect(city).toHaveValue('Калуга');
     await expect(pickers.listbox).toBeHidden();
     await expect.poll(async () => (await pickers.readOutput()).city).toBe('kaluga');
@@ -182,14 +177,14 @@ test.describe('pickers', () => {
     const keywords = pickers.keywordsInput;
     await keywords.click();
     await keywords.pressSequentially('Vi');
-    await page.keyboard.press('Enter');
+    await pickers.addTypedKeyword();
     await expect(pickers.chips(keywords)).toHaveText(['Vite']);
 
     await keywords.pressSequentially('Nuxt');
-    await page.keyboard.press('Enter');
+    await pickers.addTypedKeyword();
     await expect(pickers.chips(keywords)).toHaveText(['Vite', 'Nuxt']);
 
-    await page.keyboard.press('Backspace');
+    await pickers.removeLastChip();
     await expect(pickers.chips(keywords)).toHaveText(['Vite']);
     await expect.poll(async () => (await pickers.readOutput()).keywords).toEqual(['vite']);
   });
@@ -270,7 +265,6 @@ test.describe('pickers', () => {
   test('pickers have no automatically detectable WCAG AA violations', async ({
     playground,
     pickers,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -281,7 +275,7 @@ test.describe('pickers', () => {
       await expect(pickers.listbox).toBeVisible();
       expect(await playground.wcagViolations(pickers.scope)).toEqual([]);
 
-      await page.keyboard.press('Escape');
+      await pickers.closeList();
       await expect(pickers.listbox).toBeHidden();
     }
   });

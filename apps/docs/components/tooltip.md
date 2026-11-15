@@ -8,9 +8,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiTooltip } from '@numior/vue';
-import '@numior/vue/styles/tooltip.css';
 ```
 
 ## Использование

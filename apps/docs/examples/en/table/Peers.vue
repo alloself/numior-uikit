@@ -41,7 +41,7 @@ interface Person {
 
 const tasks: Task[] = [
   { id: 't1', title: 'Sign-in screen', owner: 'Olga', hours: 6 },
-  { id: 't2', title: 'Catalogue search', owner: 'Igor', hours: 12 },
+  { id: 't2', title: 'Catalog search', owner: 'Igor', hours: 12 },
   { id: 't3', title: 'Card payment', owner: 'Anna', hours: 8 },
   { id: 't4', title: 'Monthly report', owner: 'Boris', hours: 4 },
 ];

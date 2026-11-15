@@ -6,9 +6,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiSkeleton } from '@numior/vue';
-import '@numior/vue/styles/skeleton.css';
 ```
 
 ## Использование

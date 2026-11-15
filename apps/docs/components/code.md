@@ -6,10 +6,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiCode } from '@numior/vue';
-import '@numior/vue/styles/button.css';
-import '@numior/vue/styles/code.css';
 ```
 
 ## Использование

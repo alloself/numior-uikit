@@ -6,15 +6,16 @@
     :aria-orientation="
       decorative || orientation === NuiSeparatorOrientation.Horizontal ? undefined : orientation
     "
+    :aria-labelledby="named ? labelId : undefined"
   >
-    <span v-if="labelled" class="nui-separator__label"
+    <span v-if="labelled" :id="labelId" class="nui-separator__label"
       ><slot>{{ label }}</slot></span
     >
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, useSlots } from 'vue';
+import { computed, useId, useSlots } from 'vue';
 import { NuiSeparatorOrientation, type NuiSeparatorProps } from './separator.types';
 
 const {
@@ -26,5 +27,8 @@ const {
 defineSlots<{ default?(): unknown }>();
 
 const slots = useSlots();
+const labelId = useId();
+
 const labelled = computed(() => slots.default !== undefined || label !== undefined);
+const named = computed(() => labelled.value && !decorative);
 </script>

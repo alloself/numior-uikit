@@ -129,6 +129,39 @@ export class LayoutSection {
     return bar.x - frame.x;
   }
 
+  async triggerStart(): Promise<number> {
+    const [frame, trigger] = await Promise.all([boxOf(this.root), boxOf(this.trigger)]);
+
+    return trigger.x - frame.x;
+  }
+
+  async triggerOffset(): Promise<number> {
+    const [rail, trigger] = await Promise.all([boxOf(this.sidebar), boxOf(this.trigger)]);
+
+    return Math.abs(trigger.x + trigger.width / 2 - (rail.x + rail.width / 2));
+  }
+
+  async textStart(): Promise<number> {
+    const [frame, text] = await Promise.all([
+      boxOf(this.root),
+      boxOf(this.root.locator('.layout-page p')),
+    ]);
+
+    return text.x - frame.x;
+  }
+
+  async headingStart(): Promise<number> {
+    const [frame, heading] = await Promise.all([boxOf(this.root), boxOf(this.heading)]);
+
+    return heading.x - frame.x;
+  }
+
+  appBarPadding(): Promise<number> {
+    return this.appBar.evaluate((element) =>
+      Number.parseFloat(getComputedStyle(element).paddingInlineEnd),
+    );
+  }
+
   async appBarWidthGap(): Promise<number> {
     const [frame, bar] = await Promise.all([boxOf(this.root), boxOf(this.appBar)]);
 
@@ -177,6 +210,26 @@ export class LayoutSection {
         radius: Number.parseFloat(card.borderTopLeftRadius) || 0,
       };
     });
+  }
+
+  async toggleSidebarWithShortcut(): Promise<void> {
+    await this.page.keyboard.press('Control+b');
+  }
+
+  async expandFocusedGroup(): Promise<void> {
+    await this.page.keyboard.press('ArrowRight');
+  }
+
+  async activateFocused(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async focusNextItem(): Promise<void> {
+    await this.page.keyboard.press('ArrowDown');
+  }
+
+  async closeFlyout(): Promise<void> {
+    await this.page.keyboard.press('Escape');
   }
 
   async readOutput(): Promise<LayoutOutput> {

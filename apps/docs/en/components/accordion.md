@@ -1,48 +1,40 @@
 # Accordion
 
-`NuiAccordion` is a list of sections that expand on click, such as questions and answers. One
-section is open at a time by default; with the `multiple` prop any number can be open.
+Sections stacked under each other, with one or several open at a time.
 
 <Example name="accordion/Basic" />
 
 ## Installation
 
-```ts
+```ts install
 import { NuiAccordion, NuiAccordionItem } from '@numior/vue';
-import '@numior/vue/styles/collapsible.css';
-import '@numior/vue/styles/accordion.css';
 ```
 
 ## Usage
 
-Change the look and see how the sections open one at a time or several at once.
+Change the look and open one section at a time or several at once.
 
 <Configurator name="NuiAccordion" />
 
 ## Examples
 
-### Several sections
+### Open several sections
 
-Add `multiple`, and `v-model:values` holds the list of open sections. The `variant="card"` prop
-draws every section as a separate card, and `disabled` on a `NuiAccordionItem` turns the section
-off.
+Add `multiple` and keep the open sections in `v-model:values`.
 
 <Example name="accordion/Multiple" />
 
-## Behaviour
+## Behavior
 
 Without `multiple`, `v-model` holds the `value` of the open section, or `null` when all are
-collapsed. With `:collapsible="false"` the open section cannot be collapsed by a second click: it
-closes only when another one opens.
-
-The `headingLevel` prop wraps every section heading in an `<h2>`–`<h6>`, so the sections appear in
-the page outline. A section works the same way as a [Collapsible](/en/components/collapsible).
+closed. With `:collapsible="false"`, a second click leaves the open section open: it closes only
+when another one opens.
 
 ## Accessibility
 
-Section headings are buttons with `aria-expanded`. The up and down arrows move between them and
-wrap around; Home and End jump to the first and the last section. The keys work only while the
-focus is on a heading: in fields inside a section they move the caret as usual.
+Section headings are buttons, and a screen reader says whether a section is open. The up and
+down arrows move between headings and wrap around; Home and End jump to the first and the last.
+The keys work only on a heading: in a field inside a section they move the caret as usual.
 
 <KeyboardReference name="NuiAccordion" />
 

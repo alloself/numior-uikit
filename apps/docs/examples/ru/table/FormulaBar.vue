@@ -41,6 +41,7 @@ import {
   type NuiTableExposed,
   type NuiTableCellPosition,
 } from '@numior/table';
+import { customers } from '#demo/customers';
 
 interface Contact {
   readonly id: number;
@@ -53,8 +54,8 @@ type Field = (typeof FIELDS)[number];
 
 const FIELDS = ['name', 'city', 'phone'] as const;
 
-const BAR_LABEL = 'Содержимое ячейки';
-const CAPTION = 'Контакты';
+const BAR_LABEL = 'Строка формул';
+const CAPTION = 'Клиенты';
 const LABELS: Readonly<Record<Field, string>> = { name: 'Имя', city: 'Город', phone: 'Телефон' };
 
 const KEYS: Readonly<Record<string, (table: NuiTableExposed) => void>> = {
@@ -66,12 +67,9 @@ const KEYS: Readonly<Record<string, (table: NuiTableExposed) => void>> = {
   },
 };
 
-const contacts = ref<Contact[]>([
-  { id: 1, name: 'Анна Титова', city: 'Москва', phone: '+7 495 120-44-10' },
-  { id: 2, name: 'Игорь Белов', city: 'Казань', phone: '+7 843 210-31-50' },
-  { id: 3, name: 'Мария Ким', city: 'Тверь', phone: '+7 482 230-12-90' },
-  { id: 4, name: 'Олег Смирнов', city: 'Самара', phone: '+7 846 240-77-05' },
-]);
+const contacts = ref<Contact[]>(
+  customers.slice(0, 4).map(({ id, name, city, phone }) => ({ id, name, city, phone })),
+);
 
 const columns: NuiTableColumn<Contact>[] = FIELDS.map((key) => ({
   key,

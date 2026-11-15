@@ -8,13 +8,6 @@ export interface GuardProblem {
   readonly text: string;
 }
 
-export type GuardBaseline = Readonly<Partial<Record<GuardRule, readonly string[]>>>;
-
-export interface GuardVerdict {
-  readonly fresh: readonly GuardProblem[];
-  readonly stale: readonly string[];
-}
-
 export interface CatalogEntry {
   readonly file: string;
   readonly path: string;
@@ -49,4 +42,5 @@ export const GuardRule = {
   Dump: 'label-dump',
   Names: 'demo-names',
   Imports: 'imports',
+  Install: 'install-styles',
 } as const;

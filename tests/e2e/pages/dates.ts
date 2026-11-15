@@ -9,6 +9,7 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 import { sectionScope } from '../helpers/axe';
+import { ARROWS, type ArrowDirection } from '../helpers/keyboard';
 
 export type DateRangeOutput = Guarded<typeof isRange>;
 
@@ -87,6 +88,19 @@ export class DatesSection {
     return scope.locator('.nui-date-picker__open');
   }
 
+  hiddenPresets(scope: Locator): Promise<number> {
+    return scope.evaluate((calendar) => {
+      const frame = calendar.getBoundingClientRect();
+
+      return [...calendar.querySelectorAll('.nui-calendar__preset')].reduce((hidden, preset) => {
+        const box = preset.getBoundingClientRect();
+        const outside = box.left < frame.left - 0.5 || box.right > frame.right + 0.5;
+
+        return outside ? hidden + 1 : hidden;
+      }, 0);
+    });
+  }
+
   preset(scope: Locator, label: string): Locator {
     return scope.getByRole('button', { name: label, exact: true });
   }
@@ -113,6 +127,50 @@ export class DatesSection {
     });
 
     await session.detach();
+  }
+
+  async moveFocus(direction: ArrowDirection): Promise<void> {
+    await this.page.keyboard.press(ARROWS[direction]);
+  }
+
+  async focusEndOfWeek(): Promise<void> {
+    await this.page.keyboard.press('End');
+  }
+
+  async nextMonth(): Promise<void> {
+    await this.page.keyboard.press('PageDown');
+  }
+
+  async nextYear(): Promise<void> {
+    await this.page.keyboard.press('Shift+PageDown');
+  }
+
+  async chooseFocusedDay(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async openPickerFromKeyboard(): Promise<void> {
+    await this.page.keyboard.press('ArrowDown');
+  }
+
+  async closePicker(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+  }
+
+  async typeDate(text: string): Promise<void> {
+    await this.page.keyboard.type(text);
+  }
+
+  async caretToStart(): Promise<void> {
+    await this.page.keyboard.press('Home');
+  }
+
+  async selectFieldText(): Promise<void> {
+    await this.page.keyboard.press('ControlOrMeta+a');
+  }
+
+  async leaveFieldWithTab(): Promise<void> {
+    await this.page.keyboard.press('Tab');
   }
 
   async readOutput(): Promise<DatesOutput> {

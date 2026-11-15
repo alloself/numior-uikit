@@ -137,7 +137,6 @@ test.describe('collaboration on a workbook', () => {
     await expect(boris.sheet.ruleTitles).toHaveCount(1);
 
     await anna.client.reconnect();
-    await anna.sheet.openRules('5', 3);
 
     await expect(anna.sheet.ruleTitles).toHaveCount(2);
     await expect(boris.sheet.ruleTitles).toHaveCount(2);
@@ -187,7 +186,7 @@ test.describe('collaboration on a workbook', () => {
     await expect(anna.sheet.editorIn('4', 0)).toBeFocused();
 
     await anna.sheet.typeAtCaret('X');
-    await anna.client.page.keyboard.press('Enter');
+    await anna.sheet.commitEdit();
 
     await expect(boris.sheet.cell('4', 0)).toHaveText('draXft');
     await expect(anna.sheet.cell('4', 0)).toHaveText('draXft');
@@ -196,7 +195,9 @@ test.describe('collaboration on a workbook', () => {
 
   test('keeps a word being composed in a cell when someone else inserts a row above', async ({
     collab,
+    browserName,
   }) => {
+    test.skip(browserName !== 'chromium', 'The IME protocol exists only in Chromium');
     const anna = await collab.joinBook(ANNA);
     const boris = await collab.joinBook(BORIS);
 
@@ -214,7 +215,7 @@ test.describe('collaboration on a workbook', () => {
     await expect(anna.sheet.editorIn('4', 0)).toHaveValue('A日本');
     expect(await anna.client.compositionsStarted()).toBe(1);
 
-    await anna.client.page.keyboard.press('Enter');
+    await anna.sheet.commitEdit();
 
     await expect(boris.sheet.cell('4', 0)).toHaveText('A日本');
     await expect(anna.sheet.cell('3', 0)).toHaveText('');
@@ -237,7 +238,7 @@ test.describe('collaboration on a workbook', () => {
     await expect(anna.sheet.editorIn('1', 1)).toHaveValue('=A10*10');
 
     await anna.sheet.typeAtCaret('2');
-    await anna.client.page.keyboard.press('Enter');
+    await anna.sheet.commitEdit();
 
     await expect(boris.sheet.cell('1', 1)).toHaveText('1050');
     await expect(anna.sheet.cell('1', 1)).toHaveText('1050');

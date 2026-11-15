@@ -1,13 +1,15 @@
 <template>
   <NuiTabs v-model="tab" class="w-full max-w-md">
-    <NuiTabList label="Разделы заказа">
+    <NuiTabList label="Заказ 20408">
       <NuiTab value="items">Состав</NuiTab>
       <NuiTab value="delivery">Доставка</NuiTab>
-      <NuiTab value="history" disabled>История</NuiTab>
+      <NuiTab value="history">История</NuiTab>
     </NuiTabList>
-    <NuiTabPanel value="items">Три позиции на 12 400 ₽.</NuiTabPanel>
-    <NuiTabPanel value="delivery">Курьером завтра, 12:00–16:00.</NuiTabPanel>
-    <NuiTabPanel value="history">История пока пуста.</NuiTabPanel>
+    <NuiTabPanel value="items">Комод «Фьорд» и лампа «Нурд» на 26&nbsp;800&nbsp;₽.</NuiTabPanel>
+    <NuiTabPanel value="delivery">Курьером по Москве 25 сентября, с 12:00 до 16:00.</NuiTabPanel>
+    <NuiTabPanel value="history"
+      >Оформлен 23 сентября, оплачен картой, передан курьеру.</NuiTabPanel
+    >
   </NuiTabs>
 </template>
 

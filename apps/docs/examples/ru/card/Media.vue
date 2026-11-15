@@ -1,9 +1,9 @@
 <template>
-  <NuiCard class="max-w-sm">
-    <NuiCardMedia :src="cover" alt="" aspect="3 / 1" />
+  <NuiCard class="w-full max-w-sm">
+    <NuiCardMedia :src="cover" alt="" aspect="2 / 1" />
     <NuiCardHeader>
-      <NuiCardTitle>Обложка</NuiCardTitle>
-      <NuiCardDescription>Картинка обрезается по краю карточки.</NuiCardDescription>
+      <NuiCardTitle>Кресло «Осло»</NuiCardTitle>
+      <NuiCardDescription>18 900 ₽, на складе 12 шт.</NuiCardDescription>
     </NuiCardHeader>
   </NuiCard>
 </template>

@@ -525,6 +525,14 @@ describe('server rendering', () => {
     expect(html).toContain('value="a"');
   });
 
+  it('names a labelled separator by its label on the server', async () => {
+    const html = await renderToString(NuiSeparator, { props: { label: 'or' } });
+    const labelledBy = /aria-labelledby="([^"]+)"/.exec(html)?.[1];
+
+    expect(labelledBy).toBeTruthy();
+    expect(html).toContain(`id="${labelledBy}"`);
+  });
+
   it('renders the room kept for an error as a hidden line on the server', async () => {
     const html = await renderToString(FieldScene, { props: { scene: 'reserved-error' } });
 
@@ -657,6 +665,28 @@ describe('server rendering', () => {
     expect(html.match(/<button[^>]*nui-tab__close/g)).toHaveLength(1);
     expect(html.match(/<span[^>]*nui-tab-list__edge[^>]*aria-hidden="true"/g)).toHaveLength(2);
     expect(html).not.toContain('nui-tab-list__edge--shown');
+  });
+
+  it('renders a toggle group with its items on a track between two hidden edge buttons', async () => {
+    const html = await renderToString(NuiToggleGroup, {
+      props: {
+        modelValue: 'week',
+        label: 'Period',
+        items: [
+          { value: 'day', label: 'Day' },
+          { value: 'week', label: 'Week' },
+        ],
+      },
+    });
+
+    const track = html.indexOf('nui-toggle-group__track');
+
+    expect(html).toMatch(/^<div[^>]*role="radiogroup"[^>]*aria-label="Period"/);
+    expect(html.match(/<span[^>]*nui-toggle-group__edge[^>]*aria-hidden="true"/g)).toHaveLength(2);
+    expect(html).not.toContain('nui-toggle-group__edge--shown');
+    expect(html).not.toContain('nui-toggle-group__track--clipped');
+    expect(track).toBeGreaterThan(0);
+    expect(track).toBeLessThan(html.indexOf('role="radio"'));
   });
 
   it('renders link tabs as a labelled nav of links with the current page marked', async () => {
@@ -1067,6 +1097,21 @@ describe('server rendering', () => {
     expect(windowed).toContain('--_window-lead:0px');
     expect(windowed).toContain('--_window-rest:17280px');
     expect(windowed).toContain('--_window-clamp-start:-720px');
+  });
+
+  it('renders a checkable parent checked on the server when the model holds all its children', async () => {
+    const html = await renderToString(NuiTree, {
+      props: {
+        id: 'files',
+        items: FILES,
+        checkable: true,
+        expanded: ['src', 'components'],
+        values: ['button', 'index'],
+      },
+    });
+
+    expect(html).toMatch(/<li id="files-node-src"[^>]*aria-checked="true"/);
+    expect(html).not.toContain('aria-checked="mixed"');
   });
 
   it('renders a splitter ratio outside its bounds clamped on the server', async () => {

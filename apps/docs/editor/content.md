@@ -9,32 +9,9 @@
 
 ## Установка
 
-Установите пакет:
-
-::: code-group
-
-```sh [pnpm]
-pnpm add @numior/content
-```
-
-```sh [npm]
-npm install @numior/content
-```
-
-```sh [yarn]
-yarn add @numior/content
-```
-
-```sh [bun]
-bun add @numior/content
-```
-
-:::
-
-Подключите стили в точке входа приложения:
-
-```ts
-import '@numior/content/styles.css';
+```ts install:packages
+import { NuiContent } from '@numior/content';
+import { fromHTML } from '@numior/editor-core';
 ```
 
 Документ принимается в том виде, в каком его хранит редактор с `format="json"`. Перед выводом JSON

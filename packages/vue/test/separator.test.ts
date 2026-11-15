@@ -24,6 +24,17 @@ describe('NuiSeparator', () => {
     expect(decorative.orientation).toBeUndefined();
   });
 
+  it('takes its accessible name from the label unless it is decorative', () => {
+    expect(SeparatorDriver.mount().accessibleName).toBeUndefined();
+    expect(SeparatorDriver.mount({ props: { label: 'or' } }).accessibleName).toBe('or');
+    expect(SeparatorDriver.mount({ slot: 'either' }).accessibleName).toBe('either');
+
+    const decorative = SeparatorDriver.mount({ props: { label: 'or', decorative: true } });
+
+    expect(decorative.accessibleName).toBeUndefined();
+    expect(decorative.labelText).toBe('or');
+  });
+
   it('shows a label from the prop or the slot between the lines', () => {
     expect(SeparatorDriver.mount({ props: { label: 'or' } }).labelText).toBe('or');
 

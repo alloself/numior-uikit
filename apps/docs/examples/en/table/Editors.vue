@@ -1,15 +1,12 @@
 <template>
-  <div class="flex flex-col gap-3">
-    <NuiTable
-      :columns="columns"
-      :rows="tasks"
-      :get-key="keyOf"
-      :controls="kitControls"
-      caption="Sprint tasks"
-      @edit="onEdit"
-    />
-    <p class="text-sm text-muted-foreground">Last edit: {{ last }}</p>
-  </div>
+  <NuiTable
+    :columns="columns"
+    :rows="tasks"
+    :get-key="keyOf"
+    :controls="kitControls"
+    caption="Sprint tasks"
+    @edit="onEdit"
+  />
 </template>
 
 <script setup lang="ts">
@@ -24,6 +21,7 @@ import {
   type NuiTableColumn,
   type NuiTableEditEvent,
 } from '@numior/table';
+import { team } from '#demo/team';
 
 interface Task {
   readonly id: number;
@@ -36,12 +34,13 @@ interface Task {
 const optionOf = (value: string): NuiOption<string> => ({ value, label: value });
 
 const STATUSES = ['New', 'In progress', 'Done'].map(optionOf);
-const OWNERS = ['Anna Titova', 'Igor Belov', 'Maria Kim'].map(optionOf);
+const [anna, igor, maria] = team;
+const OWNERS = [anna, igor, maria].map((person) => optionOf(person.name));
 
 const tasks = ref<Task[]>([
-  { id: 1, title: 'Sign-in form', status: 'In progress', owner: 'Anna Titova', hours: 6 },
-  { id: 2, title: 'Report export', status: 'New', owner: 'Igor Belov', hours: 4 },
-  { id: 3, title: 'Order search', status: 'Done', owner: 'Maria Kim', hours: 10 },
+  { id: 1, title: 'Sign-in form', status: 'In progress', owner: anna.name, hours: 6 },
+  { id: 2, title: 'Report export', status: 'New', owner: igor.name, hours: 4 },
+  { id: 3, title: 'Order search', status: 'Done', owner: maria.name, hours: 10 },
 ]);
 
 const columns: NuiTableColumn<Task>[] = [
@@ -83,7 +82,6 @@ const columns: NuiTableColumn<Task>[] = [
 ];
 
 const keyOf = (task: Task): number => task.id;
-const last = ref('—');
 
 const textOf = (value: NuiTableCellValue): string | null =>
   typeof value === 'string' ? value : null;
@@ -104,6 +102,5 @@ const onEdit = (event: NuiTableEditEvent<Task>): void => {
   for (const { row, key, value } of event.changes) {
     setters[key]?.(row, value);
   }
-  last.value = `${event.kind}, ${event.changes.length}`;
 };
 </script>

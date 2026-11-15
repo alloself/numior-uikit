@@ -58,14 +58,14 @@ const ru: HomeContent = {
       title: 'Формулы считаются в браузере',
       text: 'Книга пересчитывает зависимые ячейки при вводе, открывает и сохраняет файлы XLSX.',
       block: 'PriceSheet',
-      more: { text: 'Открыть книгу', link: '/components/spreadsheet' },
+      more: { text: 'Открыть книгу', link: '/spreadsheet/' },
     },
     {
       label: 'Таблица',
       title: 'Разметка остаётся таблицей',
       text: 'Строки и ячейки — элементы таблицы HTML. По ячейкам ходят стрелками, а при прокрутке рисуются только видимые строки.',
       block: 'OrdersTable',
-      more: { text: 'Открыть таблицу', link: '/components/table' },
+      more: { text: 'Открыть таблицу', link: '/table/' },
     },
     {
       label: 'Графики',
@@ -121,14 +121,14 @@ const en: HomeContent = {
       title: 'Formulas run in the browser',
       text: 'The spreadsheet recalculates dependent cells as you type, and it opens and saves XLSX files.',
       block: 'PriceSheet',
-      more: { text: 'Open the spreadsheet', link: '/en/components/spreadsheet' },
+      more: { text: 'Open the spreadsheet', link: '/en/spreadsheet/' },
     },
     {
       label: 'Table',
       title: 'The markup stays a table',
       text: 'Rows and cells are HTML table elements. Arrow keys move across the cells, and scrolling draws only the rows in view.',
       block: 'OrdersTable',
-      more: { text: 'Open the table', link: '/en/components/table' },
+      more: { text: 'Open the table', link: '/en/table/' },
     },
     {
       label: 'Charts',

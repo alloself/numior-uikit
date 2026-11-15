@@ -49,7 +49,7 @@ test.describe('book drawings', () => {
     expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThan(1);
   });
 
-  test('redraws the bars after an edit and after undo', async ({ playground, book, page }) => {
+  test('redraws the bars after an edit and after undo', async ({ playground, book }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await book.sheet.scrollIntoViewIfNeeded();
@@ -70,7 +70,7 @@ test.describe('book drawings', () => {
       })
       .toBe(true);
 
-    await page.keyboard.press('Control+z');
+    await book.undo();
 
     await expect.poll(async () => (await book.barHeights(1))[0]).toBeCloseTo(january, 1);
   });
@@ -78,7 +78,6 @@ test.describe('book drawings', () => {
   test('moves the chart with rows inserted above it and back on undo', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -92,7 +91,7 @@ test.describe('book drawings', () => {
       .poll(async () => (await boxOf(book.charts)).y)
       .toBeCloseTo(before.y + row.height, 0);
 
-    await page.keyboard.press('Control+z');
+    await book.undo();
 
     await expect.poll(async () => (await boxOf(book.charts)).y).toBeCloseTo(before.y, 0);
   });
@@ -129,7 +128,6 @@ test.describe('book drawings', () => {
   test('drags the picture, keeps the sheet where it was and returns it on undo', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -150,7 +148,7 @@ test.describe('book drawings', () => {
 
     expect([near(moved.x, before.x + 40), near(moved.y, before.y + 24)]).toEqual([true, true]);
 
-    await page.keyboard.press('Control+z');
+    await book.undo();
 
     await expect.poll(async () => (await boxOf(picture)).x).toBeCloseTo(before.x, 0);
   });
@@ -158,7 +156,6 @@ test.describe('book drawings', () => {
   test('resizes the picture by a corner and keeps its ratio with Shift', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -183,9 +180,7 @@ test.describe('book drawings', () => {
 
     expect(near(resized.height, before.height - 20)).toBe(true);
 
-    await page.keyboard.down('Shift');
-    await book.dragBy(book.handle('bottom-end'), 20, 0);
-    await page.keyboard.up('Shift');
+    await book.dragByKeepingRatio(book.handle('bottom-end'), 20, 0);
 
     await expect
       .poll(async () => {
@@ -196,11 +191,7 @@ test.describe('book drawings', () => {
       .toBeCloseTo(resized.width / resized.height, 1);
   });
 
-  test('nudges, deletes and restores a drawing from the keyboard', async ({
-    playground,
-    book,
-    page,
-  }) => {
+  test('nudges, deletes and restores a drawing from the keyboard', async ({ playground, book }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await book.sheet.scrollIntoViewIfNeeded();
@@ -213,19 +204,19 @@ test.describe('book drawings', () => {
     const before = await boxOf(picture);
 
     await book.cell('1', 0).click();
-    await page.keyboard.press('Alt+F10');
+    await book.selectDrawingsFromKeyboard();
 
     await expect(book.selectionFrame).toBeVisible();
 
-    await page.keyboard.press('ArrowRight');
+    await book.nudgeSelectedDrawing('right');
 
     await expect.poll(async () => (await boxOf(picture)).x).toBeCloseTo(before.x + 1, 0);
 
-    await page.keyboard.press('Delete');
+    await book.deleteSelectedDrawing();
 
     await expect(picture).toHaveCount(0);
 
-    await page.keyboard.press('Control+z');
+    await book.undo();
 
     await expect(picture).toBeVisible();
   });
@@ -233,7 +224,6 @@ test.describe('book drawings', () => {
   test('inserts a chart from the region of a cell, selected, and takes it back on undo', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -248,7 +238,7 @@ test.describe('book drawings', () => {
 
     expect(await book.frameClearsRowHeaders()).toBe(true);
 
-    await page.keyboard.press('Control+z');
+    await book.undo();
 
     await expect(book.charts).toHaveCount(1);
   });
@@ -256,7 +246,6 @@ test.describe('book drawings', () => {
   test('leaves the keys of the chart menu to the menu and the focus in the sheet', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -266,19 +255,19 @@ test.describe('book drawings', () => {
 
     const placed = await boxOf(book.selectedDrawing);
 
-    await page.keyboard.press('Shift+F10');
-    await page.keyboard.press('ArrowDown');
+    await book.openContextMenuFromKeyboard();
+    await book.focusNextMenuItem();
     await expect(book.drawingMenu.getByRole('menuitem', { name: 'Удалить' })).toBeFocused();
 
-    await page.keyboard.press('Escape');
+    await book.pressEscape();
     await expect(book.drawingMenu).toBeHidden();
     await expect(book.selectedDrawing).toHaveCount(1);
     await expect(book.focusedCell).toHaveCount(1);
 
     expect(await boxOf(book.selectedDrawing)).toEqual(placed);
 
-    await page.keyboard.press('F2');
-    await page.keyboard.press('Backspace');
+    await book.editActiveCell();
+    await book.deleteBackward();
     await expect(book.charts).toHaveCount(2);
     await expect(book.selectedDrawing).toHaveCount(0);
   });
@@ -286,7 +275,6 @@ test.describe('book drawings', () => {
   test('inserts a picture from a file and from the clipboard, undo takes them back', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -307,8 +295,8 @@ test.describe('book drawings', () => {
 
     await expect(book.pictures).toHaveCount(before + 2);
 
-    await page.keyboard.press('Control+z');
-    await page.keyboard.press('Control+z');
+    await book.undo();
+    await book.undo();
 
     await expect(book.pictures).toHaveCount(before);
   });
@@ -316,7 +304,6 @@ test.describe('book drawings', () => {
   test('changes a chart through its settings and undo brings it back', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -339,13 +326,13 @@ test.describe('book drawings', () => {
     await expect(book.charts.first().locator('.nui-chart__bar')).toHaveCount(0);
     await expect(book.chartKind).toBeFocused();
 
-    await page.keyboard.press('Escape');
+    await book.pressEscape();
 
     await expect(book.chartSettings).toBeHidden();
 
-    await page.keyboard.press('Control+z');
-    await page.keyboard.press('Control+z');
-    await page.keyboard.press('Control+z');
+    await book.undo();
+    await book.undo();
+    await book.undo();
 
     await expect(book.chartLegend.first()).toBeVisible();
     await expect(book.chartTitle).not.toHaveText('Итоги квартала');
@@ -354,7 +341,6 @@ test.describe('book drawings', () => {
   test('removes a chart from its own menu at the pointer and undo brings it back', async ({
     playground,
     book,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'a right click');
@@ -381,7 +367,7 @@ test.describe('book drawings', () => {
     await expect(book.charts).toHaveCount(0);
     await expect(book.focusedCell).toBeFocused();
 
-    await page.keyboard.press('Control+z');
+    await book.undo();
 
     await expect(book.charts).toHaveCount(1);
   });
@@ -389,19 +375,18 @@ test.describe('book drawings', () => {
   test('opens the menu of a selected chart from the keyboard and its settings from the menu', async ({
     playground,
     book,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await book.sheet.scrollIntoViewIfNeeded();
     await book.scrollBody(160);
     await book.charts.click();
-    await page.keyboard.press('Shift+F10');
+    await book.openContextMenuFromKeyboard();
 
     await expect(book.drawingMenu.getByRole('menuitem').first()).toBeFocused();
     await expect(book.shownMenus).toHaveCount(1);
 
-    await page.keyboard.press('Enter');
+    await book.chooseFocusedMenuItem();
 
     await expect(book.chartSettings).toBeVisible();
   });

@@ -1,41 +1,31 @@
 # Toc
 
-`NuiToc` is the outline of an article: a list of links to its headings that highlights the
-section being read. The outline on the right of this site is built with `NuiToc`.
+An article outline that highlights the section being read.
 
 <Example name="toc/Basic" />
 
-Items are set in `items`: each has the heading `id` and a `label`. Nested `children` add the
-second and third levels.
+Pass the headings in `items`: each has the `id` of a heading and a `label`, and `children` adds
+nested levels.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiToc } from '@numior/vue';
-import '@numior/vue/styles/toc.css';
 ```
 
-## Examples
+## Behavior
 
-### Mark the section with a square
+The highlighted item is the last heading that has scrolled above the reading line. The `line`
+prop sets it as a share of the height, `0.2` by default, one fifth from the top. When the article
+scrolls inside its own block, pass that block to `root`.
 
-Set `marker="square"`: a square marks the current section and the rule on the left goes away.
-
-<Example name="toc/SquareMarker" />
-
-## Behaviour
-
-The highlighted item is the last heading that has scrolled above the `line`. The line is a share
-of the window height, `0.2` by default, which is one fifth from the top. When the article scrolls
-inside its own block, pass that block to `root`.
-
-After a click on a link the highlight moves to it at once and does not jump to a neighbour until
-the scroll ends. The `select` event fires with the `id` of the chosen heading.
+After a click on a link the highlight moves to it at once and stays there until the scroll ends.
+The `select` event receives the `id` of the chosen heading.
 
 ## Accessibility
 
-The outline is a `nav` element named for screen readers by `label`, or by the "On this page"
-title without it. The links are plain `<a href="#id">`, and the current one has
+The outline is a `nav` element that a screen reader announces by `label`, "On this page" by
+default. The links are plain `<a href="#id">` elements, and the current one has
 `aria-current="location"`.
 
 ## API

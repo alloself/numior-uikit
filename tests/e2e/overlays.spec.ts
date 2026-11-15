@@ -151,13 +151,17 @@ test.describe('layers', () => {
     await expect(overlays.longDialog).toBeHidden();
   });
 
-  test('drawer docks to the end edge and shows its content', async ({ playground, overlays }) => {
+  test('drawer docks to the end edge, shows its content and keeps the footer at the bottom', async ({
+    playground,
+    overlays,
+  }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await overlays.drawerOpen.click();
     await expect(overlays.drawer).toBeVisible();
     expect((await overlays.edges(overlays.drawer)).right).toBe(await overlays.fixedViewportWidth());
     await expect(overlays.drawerInput).toBeVisible();
+    expect(await overlays.footerLift(overlays.drawer)).toBe(0);
 
     await overlays.pressEscape();
     await expect(overlays.drawer).toBeHidden();
@@ -247,17 +251,15 @@ test.describe('layers', () => {
   test('popover content follows the trigger in the tab order', async ({
     playground,
     overlays,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard navigation is a desktop scenario');
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    await overlays.popoverTrigger.focus();
-    await page.keyboard.press('Enter');
+    await overlays.openPopoverFromKeyboard();
     await expect(overlays.popover).toBeVisible();
 
-    await page.keyboard.press('Tab');
+    await overlays.tabForward();
     await expect(overlays.popoverInput).toBeFocused();
   });
 
@@ -291,7 +293,6 @@ test.describe('layers', () => {
   test('tooltip appears on hover and focus, hides on leave and Escape, ignores touch', async ({
     playground,
     overlays,
-    page,
     isMobile,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
@@ -299,7 +300,7 @@ test.describe('layers', () => {
 
     if (isMobile) {
       await overlays.tooltipTrigger.tap();
-      await page.waitForTimeout(500);
+      await overlays.outwaitTooltipDelay();
       await expect(overlays.tooltip).toBeHidden();
       return;
     }
@@ -312,13 +313,13 @@ test.describe('layers', () => {
       'Сохраняет документ и историю',
     );
 
-    await page.mouse.move(0, 0);
+    await overlays.movePointerAway();
     await expect(overlays.tooltip).toBeHidden();
 
     await overlays.tooltipTrigger.focus();
     await expect(overlays.tooltip).toBeVisible();
 
-    await page.keyboard.press('Escape');
+    await overlays.pressEscape();
     await expect(overlays.tooltip).toBeHidden();
     await expect(overlays.tooltipTrigger).toBeFocused();
   });

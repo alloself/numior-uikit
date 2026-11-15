@@ -6,10 +6,8 @@ A code block with a copy button, line numbers and syntax highlighting.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiCode } from '@numior/vue';
-import '@numior/vue/styles/button.css';
-import '@numior/vue/styles/code.css';
 ```
 
 ## Usage

@@ -1,22 +1,40 @@
 <template>
-  <NuiSplitter
-    v-model:ratio="ratio"
-    orientation="vertical"
-    :step="0.1"
-    class="w-full h-80 border rounded-md bg-surface"
-  >
-    <template #start>
-      <div class="p-4 text-center text-muted-foreground">Редактор</div>
-    </template>
-    <template #end>
-      <div class="p-4 text-center text-muted-foreground">Терминал</div>
-    </template>
-  </NuiSplitter>
+  <div class="w-full h-80 overflow-hidden rounded-md border bg-surface">
+    <NuiSplitter v-model:ratio="ratio" orientation="vertical" class="h-full">
+      <template #start>
+        <div v-if="order" class="flex flex-col gap-1 p-4">
+          <h3 class="m-0 text-base font-semibold">Заказ {{ order.id }}</h3>
+          <p class="m-0 text-sm text-muted-foreground">
+            {{ order.customer }}, {{ order.city }}. {{ DELIVERIES[order.delivery] }},
+            {{ ORDER_STATUSES[order.status].toLowerCase() }}.
+          </p>
+        </div>
+      </template>
+      <template #end>
+        <NuiList :items="lines" label="Состав заказа" />
+      </template>
+    </NuiSplitter>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiSplitter } from '@numior/vue';
+import { NuiList, NuiSplitter, type NuiListEntry } from '@numior/vue';
+import { DELIVERIES, ORDER_STATUSES, orders } from '#demo/orders';
 
-const ratio = ref(0.7);
+const money = new Intl.NumberFormat('ru-RU', {
+  style: 'currency',
+  currency: 'RUB',
+  maximumFractionDigits: 0,
+});
+
+const order = orders.find((entry) => entry.id === 20408);
+
+const lines: NuiListEntry[] = (order?.lines ?? []).map((line) => ({
+  key: line.sku,
+  label: line.name,
+  description: `${line.quantity} × ${money.format(line.price)}`,
+}));
+
+const ratio = ref(0.4);
 </script>

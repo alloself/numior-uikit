@@ -24,6 +24,15 @@ export class SeparatorDriver extends ComponentDriver {
     return this.attribute('aria-orientation');
   }
 
+  get accessibleName(): string | undefined {
+    const id = this.attribute('aria-labelledby');
+
+    if (id === undefined) {
+      return undefined;
+    }
+    return this.wrapper.find(`[id="${id}"]`).text();
+  }
+
   get labelText(): string | undefined {
     const label = this.wrapper.find('.nui-separator__label');
 

@@ -11,7 +11,6 @@ test.beforeEach(async ({ playground, editor }) => {
 test.describe('editor right to left', () => {
   test('wraps text around a picture from the right and writes beside blocks on the reading side', async ({
     editor,
-    page,
   }) => {
     const image = editor.image('="/media/sunrise.svg"');
     const line = image.locator('xpath=..');
@@ -27,22 +26,19 @@ test.describe('editor right to left', () => {
     await editor.clickBeside(bookmark, 'end');
     await expect(bookmark).toHaveClass(/nui-editor__gap/u);
 
-    await page.keyboard.type('before');
+    await editor.typeText('before');
     await expect(bookmark.locator('xpath=preceding-sibling::*[1]')).toHaveText('before');
 
     await file.click();
     await expect(file).toHaveClass(/nui-editor__selected/u);
 
-    await page.keyboard.press('ArrowLeft');
-    await page.keyboard.type(' ok');
+    await editor.moveCaret('left');
+    await editor.typeText(' ok');
     await expect(file.locator('xpath=..')).toContainText(' ok — прочитайте');
   });
 
-  test('puts the block handle on the right of the block it moves', async ({ editor, page }) => {
-    test.skip(
-      !(await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches)),
-      'the handle follows a mouse',
-    );
+  test('puts the block handle on the right of the block it moves', async ({ editor }) => {
+    test.skip(!(await editor.hasFinePointer()), 'the handle follows a mouse');
 
     await editor.hoverStart(editor.block(0));
     await expect(editor.grip()).toBeVisible();

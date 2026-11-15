@@ -8,10 +8,8 @@ Set the number of characters in `length` and the size of the groups in `groupSiz
 
 ## Installation
 
-```ts
+```ts install
 import { NuiOtpField } from '@numior/vue';
-import '@numior/vue/styles/field.css';
-import '@numior/vue/styles/otp-field.css';
 ```
 
 ## Usage

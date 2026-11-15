@@ -1,10 +1,14 @@
+import { flushPromises } from '@vue/test-utils';
 import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { installClipboard, type ClipboardStub } from '../../primitives/test/support/clipboard';
 import type { NuiTableColumn } from '../src';
 import BoldTotal from './fixtures/BoldTotal.vue';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { people, PEOPLE_COLUMNS, type Person } from './support/people';
 
 const mounted: Array<{ unmount(): void }> = [];
+
+let clipboard: ClipboardStub | undefined;
 
 const TOTALS_COLUMNS: readonly NuiTableColumn<Person>[] = PEOPLE_COLUMNS.map((column) => {
   if (column.type !== 'number') {
@@ -19,6 +23,10 @@ const TOTALS_COLUMNS: readonly NuiTableColumn<Person>[] = PEOPLE_COLUMNS.map((co
       return column;
   }
 });
+
+const SUM_COLUMNS: readonly NuiTableColumn<Person>[] = PEOPLE_COLUMNS.map((column) =>
+  column.key === 'm1' && column.type === 'number' ? { ...column, aggregate: 'sum' } : column,
+);
 
 const mountPeople = (options: Partial<TableMountOptions<Person>> = {}): TableDriver<Person> => {
   const grid = TableDriver.mount<Person>({
@@ -37,6 +45,9 @@ afterEach(() => {
   for (const grid of mounted.splice(0)) {
     grid.unmount();
   }
+
+  clipboard?.restore();
+  clipboard = undefined;
 });
 
 describe('NuiTable groups and totals', () => {
@@ -53,10 +64,103 @@ describe('NuiTable groups and totals', () => {
     expect(grid.rowExpanded(0)).toBe('false');
     expect(grid.cellText(0, 0)).toBe('333');
     expect(grid.cellText(0, 7)).toBe('1\u00a0661\u00a0670');
-    expect(grid.cellText(0, 1)).toBe('');
+    expect(grid.cellText(0, 17)).toBe('');
     expect(grid.cellText(3, 0)).toBe('1\u00a0000');
     expect(grid.cellText(3, 1)).toBe('Итого1\u00a0000 строк');
     expect(grid.cellText(3, 7)).toBe('4\u00a0995\u00a0000');
+  });
+
+  it('starts the label in the first column without a total and carries it over the empty cells up to the next total', async () => {
+    const grid = mountPeople({ groupBy: ['team'] });
+    await grid.settle();
+
+    expect(grid.groupLabelColumn(0)).toBe(1);
+    expect(grid.groupCopies(0)).toEqual([2, 3, 4, 5, 6]);
+    expect(grid.cellPaint(0, 1)).toEqual({ spill: '0px', room: '860px', align: 'start' });
+    expect(grid.cellMarks(0, 1)).toEqual(['spill', 'seamless']);
+    expect(grid.cellPaint(0, 4)).toEqual({ spill: '-420px', room: '860px', align: 'start' });
+    expect(grid.cellMarks(0, 6)).toEqual(['spill']);
+    expect(grid.cellMarks(0, 7)).toEqual([]);
+    expect(grid.groupLevel(0)).toBe('0');
+
+    await grid.dragResizer(2, 40);
+    expect(grid.cellPaint(0, 1)).toEqual({ spill: '0px', room: '900px', align: 'start' });
+    expect(grid.cellPaint(0, 4)).toEqual({ spill: '-460px', room: '900px', align: 'start' });
+
+    await grid.focusCell(-1, 6);
+    await grid.press('ArrowRight', { alt: true, shift: true });
+    expect(grid.columnOrder.slice(5, 8)).toEqual(['remote', 'm1', 'note']);
+    expect(grid.groupCopies(0)).toEqual([2, 3, 4, 5]);
+    expect(grid.cellMarks(0, 7)).toEqual([]);
+
+    await grid.toggleGroupAt(0, 4);
+    expect(grid.expanded).toEqual(['["Данные"]']);
+    expect(grid.announcement).toBe('Группа «Данные» развёрнута');
+  });
+
+  it('keeps the label inside a pinned first column, follows hidden columns and row headers', async () => {
+    const pinned = mountPeople({ columns: SUM_COLUMNS, groupBy: ['team'] });
+    await pinned.settle();
+
+    expect(pinned.groupLabelColumn(0)).toBe(0);
+    expect(pinned.groupCopies(0)).toEqual([]);
+    expect(pinned.cellPaint(0, 0)).toEqual({ align: 'start' });
+    expect(pinned.cellText(0, 1)).toBe('');
+
+    const hidden = mountPeople({ groupBy: ['team'], hidden: ['name'] });
+    await hidden.settle();
+
+    expect(hidden.groupLabelColumn(0)).toBe(1);
+    expect(hidden.groupCopies(0)).toEqual([2, 3, 4, 5]);
+
+    const headed = mountPeople({
+      columns: SUM_COLUMNS,
+      groupBy: ['team'],
+      pins: { id: null },
+      props: { rowHeaders: true },
+    });
+
+    await headed.settle();
+
+    expect(headed.cellText(0, 0)).toBe('');
+    expect(headed.groupLabelColumn(0)).toBe(1);
+    expect(headed.groupCopies(0)).toEqual([2, 3, 4, 5, 6, 7]);
+  });
+
+  it('indents nested labels by level and puts the label at the start of a right to left row', async () => {
+    const grid = mountPeople({
+      groupBy: ['team', 'city'],
+      expanded: ['["Данные"]'],
+      dir: 'rtl',
+    });
+
+    await grid.settle();
+
+    expect(grid.groupLabel(1)).toBe('Ереван (83)');
+    expect(grid.groupLevel(0)).toBe('0');
+    expect(grid.groupLevel(1)).toBe('1');
+    expect(grid.groupLabelColumn(1)).toBe(1);
+    expect(grid.groupCopies(1)).toEqual([2, 3, 4, 5, 6]);
+    expect(grid.cellPaint(1, 3)).toEqual({ spill: '-300px', room: '860px', align: 'start' });
+  });
+
+  it('copies only the data rows of a range that crosses a group row', async () => {
+    clipboard = installClipboard({ api: 'granted' });
+
+    const grid = mountPeople({
+      groupBy: ['team'],
+      expanded: ['["Данные"]'],
+      props: { cellSelection: true },
+    });
+
+    await grid.settle();
+    await grid.dragRange({ row: 2, col: 2 }, { row: 0, col: 1 });
+    expect(grid.ranges).toEqual([{ from: { row: 2, col: 2 }, to: { row: 0, col: 1 } }]);
+
+    await grid.press('c', { ctrl: true });
+    await flushPromises();
+
+    expect(clipboard.copies).toEqual(['Сотрудник 1\tКазань\nСотрудник 4\tМосква']);
   });
 
   it('expands groups by click and keys, keeps their ids in the model and announces them', async () => {

@@ -168,6 +168,26 @@ export class OtpSection {
     await this.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   }
 
+  async typeCode(text: string): Promise<void> {
+    await this.page.keyboard.type(text);
+  }
+
+  async eraseBackward(): Promise<void> {
+    await this.page.keyboard.press('Backspace');
+  }
+
+  async stepBack(): Promise<void> {
+    await this.page.keyboard.press('ArrowLeft');
+  }
+
+  async jumpToLastSlot(): Promise<void> {
+    await this.page.keyboard.press('End');
+  }
+
+  async leaveWithTab(): Promise<void> {
+    await this.page.keyboard.press('Tab');
+  }
+
   async paste(control: Locator, text: string): Promise<void> {
     await control.evaluate((element, pasted) => {
       const data = new DataTransfer();

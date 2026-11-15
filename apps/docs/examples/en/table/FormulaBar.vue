@@ -41,6 +41,7 @@ import {
   type NuiTableExposed,
   type NuiTableCellPosition,
 } from '@numior/table';
+import { customers } from '#demo/customers';
 
 interface Contact {
   readonly id: number;
@@ -53,8 +54,8 @@ type Field = (typeof FIELDS)[number];
 
 const FIELDS = ['name', 'city', 'phone'] as const;
 
-const BAR_LABEL = 'Cell content';
-const CAPTION = 'Contacts';
+const BAR_LABEL = 'Formula bar';
+const CAPTION = 'Customers';
 const LABELS: Readonly<Record<Field, string>> = { name: 'Name', city: 'City', phone: 'Phone' };
 
 const KEYS: Readonly<Record<string, (table: NuiTableExposed) => void>> = {
@@ -66,12 +67,9 @@ const KEYS: Readonly<Record<string, (table: NuiTableExposed) => void>> = {
   },
 };
 
-const contacts = ref<Contact[]>([
-  { id: 1, name: 'Anna Tate', city: 'London', phone: '+44 20 7946 0410' },
-  { id: 2, name: 'Igor Bell', city: 'Leeds', phone: '+44 113 496 0150' },
-  { id: 3, name: 'Mary Kim', city: 'York', phone: '+44 1904 496 090' },
-  { id: 4, name: 'Oliver Smith', city: 'Bath', phone: '+44 1225 496 005' },
-]);
+const contacts = ref<Contact[]>(
+  customers.slice(0, 4).map(({ id, name, city, phone }) => ({ id, name, city, phone })),
+);
 
 const columns: NuiTableColumn<Contact>[] = FIELDS.map((key) => ({
   key,

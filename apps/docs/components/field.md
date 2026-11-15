@@ -9,9 +9,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiField } from '@numior/vue';
-import '@numior/vue/styles/field.css';
 ```
 
 ## Использование

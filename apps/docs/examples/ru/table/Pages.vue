@@ -12,20 +12,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { NuiTable, type NuiTableColumn } from '@numior/table';
+import { ordersOf } from '#demo/many-orders';
+import type { Order } from '#demo/orders';
 
-interface Order {
-  readonly id: number;
-  readonly customer: string;
-  readonly total: number;
-}
-
-const names = ['Анна Титова', 'Игорь Белов', 'Мария Ким', 'Олег Смирнов', 'Дина Ахметова'];
-
-const orders: Order[] = Array.from({ length: 42 }, (_, index) => ({
-  id: 20400 + index,
-  customer: names[index % names.length] ?? '',
-  total: 900 + index * 350,
-}));
+const orders = ordersOf(42);
 
 const money = new Intl.NumberFormat('ru-RU', {
   style: 'currency',

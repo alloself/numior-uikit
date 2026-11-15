@@ -1,91 +1,80 @@
 # Card
 
-`NuiCard` is a card with a title, text and actions: a plan, a project, an article. The whole
-card can lead to a link or act as a button.
+A frame around one thing on the screen, such as an order or a product.
 
 <Example name="card/Basic" />
 
 ## Installation
 
-```ts
+```ts install
 import { NuiCard, NuiCardContent, NuiCardHeader, NuiCardTitle } from '@numior/vue';
-import '@numior/vue/styles/card.css';
 ```
 
 ## Usage
+
+Change the look and the padding.
 
 <Configurator name="NuiCard" />
 
 ## Anatomy
 
-| Part                 | What it holds                                                 |
-| -------------------- | ------------------------------------------------------------- |
-| `NuiCard`            | The card frame, inner padding, a link or a button             |
-| `NuiCardHeader`      | The title with a description, the `actions` slot on the right |
-| `NuiCardTitle`       | The card title, an `<h3>` by default                          |
-| `NuiCardDescription` | A line under the title in a muted colour                      |
-| `NuiCardContent`     | The main text of the card                                     |
-| `NuiCardFooter`      | Buttons at the bottom of the card                             |
-| `NuiCardMedia`       | An image from edge to edge with a given aspect ratio          |
+| Part                 | What it holds                                         |
+| -------------------- | ----------------------------------------------------- |
+| `NuiCard`            | The frame, the padding, the link or the button        |
+| `NuiCardHeader`      | The title and the description, `actions` on the right |
+| `NuiCardTitle`       | The title, an `<h3>` by default                       |
+| `NuiCardDescription` | A muted line under the title                          |
+| `NuiCardContent`     | The main text                                         |
+| `NuiCardFooter`      | Buttons at the bottom                                 |
+| `NuiCardMedia`       | An edge-to-edge image with a set aspect ratio         |
 
 ## Examples
 
-### Image
+### Add an image
 
-`NuiCardMedia` shows the image from `src` across the full width of the card. The `aspect` prop
-sets the aspect ratio, such as `3 / 1`, and crops the rest.
+Put `NuiCardMedia` first and set its `aspect`.
 
 <Example name="card/Media" />
 
-### Link card
+### Make the card a link
 
-Pass `href` or `to` to make the card clickable anywhere and follow the link. Buttons in the
-`actions` slot and in the footer are pressed separately and do not open the link.
+Pass `href` or `to`.
 
 <Example name="card/Link" />
 
-### Interactive card
+Buttons inside a link card press on their own and do not follow the link.
 
-With `interactive` the card acts as a button: a click anywhere on it emits the `click` event.
+### Make the card a button
+
+Add `interactive` and listen to `click`.
 
 <Example name="card/Interactive" />
 
-### Loading
+The card emits `click` only for a click on the card itself: buttons and links inside it press on
+their own.
 
-While the data is on its way, `loading` shows placeholders where the title, the description,
-the text and the image will be. A placeholder line takes the space of a text line, and the card
-header keeps its height when the data arrives. `lines` sets the number of lines in
-`NuiCardContent`.
+### Show a loading state
 
-The card link or button is off for that time, the footer stays as it is. The placeholders need
-the `@numior/vue/styles/skeleton.css` file.
+Add `loading`.
 
 <Example name="card/Loading" />
 
-### Variants and padding
+Each placeholder takes the height of a text line, so the header keeps its height when the data
+arrives. The placeholders need `@numior/vue/styles/skeleton.css`.
 
-The `variant` prop sets the look: `outline` with a border, `elevated` with a shadow or `soft`
-with a fill. `padding` sets the space inside the card: `xs`, `sm`, `md` (the default) or `lg`.
+### Fill the header from props
 
-<Example name="card/Variants" />
-
-The `xs` padding suits a dense grid of many cards.
-
-### Header without parts
-
-The `title` and `description` props render the card header when you do not need your own header
-markup.
+Pass `title` and `description`.
 
 <Example name="card/Props" />
 
 ## Accessibility
 
-A link card and an interactive card need a title: a `NuiCardTitle` or the `title` prop. A screen
-reader names the link or the button by this title rather than by the whole card text. The focus
-ring goes around the entire card.
+A link card and a button card need a title, a `NuiCardTitle` or the `title` prop. A screen
+reader names the link or the button by this title, not by the whole card text. The focus ring
+goes around the whole card.
 
-A card with `loading` carries `aria-busy`: a screen reader learns that its content is still
-loading.
+A card with `loading` tells a screen reader that its content is still loading.
 
 <KeyboardReference name="NuiCard" />
 

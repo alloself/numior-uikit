@@ -141,6 +141,22 @@ export class DocsBlock {
     return (await boxOf(this.screen)).height;
   }
 
+  async toggleSidebar(): Promise<void> {
+    await this.content.getByRole('button', { name: 'Переключить боковую панель' }).click();
+  }
+
+  async brandStart(): Promise<number> {
+    const brand = this.content
+      .locator('.nui-app-bar')
+      .getByText('Кабинет магазина', { exact: true });
+
+    return Math.round((await boxOf(brand.locator('..'))).x);
+  }
+
+  async headingStart(): Promise<number> {
+    return Math.round((await boxOf(this.content.getByRole('heading', { level: 1 }))).x);
+  }
+
   async hiddenHeight(): Promise<number> {
     const content = await this.content.locator('html').evaluate((root) => root.scrollHeight);
 
@@ -313,6 +329,86 @@ export class DocsSite {
     return this.page.locator('.nui-spreadsheet__entry').first();
   }
 
+  get skipLink(): Locator {
+    return this.page.getByRole('link', { name: 'К содержимому' });
+  }
+
+  get productDescription(): Locator {
+    return this.page.getByRole('textbox', { name: 'Описание товара' });
+  }
+
+  get blockOptions(): Locator {
+    return this.page.getByRole('listbox', { name: 'Блоки' });
+  }
+
+  get sheetNameField(): Locator {
+    return this.page.getByRole('textbox', { name: 'Поле имени' });
+  }
+
+  get formulaField(): Locator {
+    return this.page.getByRole('textbox', { name: 'Строка формул' });
+  }
+
+  get revenueChart(): Locator {
+    return this.page.getByRole('figure', { name: 'Выручка по дням' });
+  }
+
+  printedText(text: string): Locator {
+    return this.page.getByText(text);
+  }
+
+  toastAction(name: string): Locator {
+    return this.page.getByRole('button', { name });
+  }
+
+  async signIn(password: string): Promise<void> {
+    await this.page.getByLabel('Пароль').fill(password);
+    await this.page.getByRole('button', { name: 'Войти' }).click();
+  }
+
+  async openSlashMenuOnNewLine(): Promise<void> {
+    await this.page.keyboard.press('End');
+    await this.page.keyboard.press('Enter');
+    await this.page.keyboard.press('Enter');
+    await this.page.keyboard.type('/');
+  }
+
+  async tabForward(): Promise<void> {
+    await this.page.keyboard.press('Tab');
+  }
+
+  async followFocusedLink(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async pressEscape(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+  }
+
+  async scrollFocusedRight(): Promise<void> {
+    await this.page.keyboard.press('ArrowRight');
+  }
+
+  async stepFocusedChartForward(): Promise<void> {
+    await this.page.keyboard.press('ArrowRight');
+  }
+
+  async openMenuFromItsEnd(): Promise<void> {
+    await this.page.keyboard.press('ArrowUp');
+  }
+
+  async openExamplePalette(): Promise<void> {
+    await this.page.keyboard.press('Control+j');
+  }
+
+  async openSearchWithShortcut(): Promise<void> {
+    await this.page.keyboard.press('Control+k');
+  }
+
+  async movePointerAway(): Promise<void> {
+    await this.page.mouse.move(0, 0);
+  }
+
   similarPage(name: string): Locator {
     return this.article
       .getByRole('navigation', { name: 'Похожие страницы' })
@@ -401,6 +497,18 @@ export class DocsSite {
 
   scrollLeftOf(target: Locator): Promise<number> {
     return target.evaluate((element) => element.scrollLeft);
+  }
+
+  apiTable(title: string): Locator {
+    return this.article.getByRole('grid', { name: title, exact: true }).first();
+  }
+
+  sidewaysOverflow(table: Locator): Promise<number> {
+    return table.evaluate((element) => {
+      const viewport = element.closest('.nui-table__viewport') ?? element;
+
+      return viewport.scrollWidth - viewport.clientWidth;
+    });
   }
 
   get iconSearch(): Locator {

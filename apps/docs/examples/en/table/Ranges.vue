@@ -4,19 +4,18 @@
       cell-selection
       v-model:ranges="ranges"
       :columns="columns"
-      :rows="orders"
+      :rows="latest"
       :get-key="keyOf"
       :context-menu="menuOf"
       caption="Orders this week"
     />
-    <p class="text-sm text-muted-foreground">
-      Cells selected: {{ cells }}. Opened order: {{ opened }}
-    </p>
+    <p class="m-0 text-sm text-muted-foreground">{{ summary }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { plural } from '@numior/primitives';
 import type { NuiMenuEntry } from '@numior/vue';
 import {
   NuiTable,
@@ -24,21 +23,9 @@ import {
   type NuiTableContextScope,
   type NuiTableRanges,
 } from '@numior/table';
+import { orders, type Order } from '#demo/orders';
 
-interface Order {
-  readonly id: number;
-  readonly customer: string;
-  readonly city: string;
-  readonly total: number;
-}
-
-const orders: Order[] = [
-  { id: 20419, customer: 'Anna Titova', city: 'Moscow', total: 12400 },
-  { id: 20420, customer: 'Igor Belov', city: 'Kazan', total: 3150 },
-  { id: 20421, customer: 'Maria Kim', city: 'Moscow', total: 48900 },
-  { id: 20422, customer: 'Oleg Smirnov', city: 'Tver', total: 990 },
-  { id: 20423, customer: 'Dina Akhmetova', city: 'Kazan', total: 7600 },
-];
+const latest = orders.slice(0, 5);
 
 const money = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -76,7 +63,7 @@ const columns: NuiTableColumn<Order>[] = [
 
 const keyOf = (order: Order): number => order.id;
 const ranges = ref<NuiTableRanges>([]);
-const opened = ref('—');
+const opened = ref<number>();
 
 const cells = computed(() =>
   ranges.value.reduce(
@@ -87,12 +74,21 @@ const cells = computed(() =>
   ),
 );
 
+const summary = computed(() => {
+  const selection =
+    cells.value === 0
+      ? 'No cells selected.'
+      : `${cells.value} ${plural('en', cells.value, { one: 'cell', other: 'cells' })} selected.`;
+
+  return opened.value === undefined ? selection : `${selection} Order ${opened.value} is open.`;
+});
+
 const menuOf = (scope: NuiTableContextScope<Order>): NuiMenuEntry[] => [
   {
     label: `Open order ${scope.row.id}`,
     icon: 'external-link',
     onSelect: () => {
-      opened.value = String(scope.row.id);
+      opened.value = scope.row.id;
     },
   },
 ];

@@ -1,43 +1,36 @@
 # Date range picker
 
-`NuiDateRangePicker` is a field for a period: the start and end dates sit side by side in one
-frame. The calendar shows two months at once. The model is a `{ start, end }`
-object where each date is a `YYYY-MM-DD` string or `null`.
+One field for the start and end dates of a period.
 
 <Example name="date-range-picker/Basic" />
 
+The model holds the period as a `{ start, end }` object, with each date a `YYYY-MM-DD` string or
+`null`.
+
 ## Installation
 
-```ts
+```ts install
 import { NuiDateRangePicker } from '@numior/vue';
-import '@numior/vue/styles/field.css';
-import '@numior/vue/styles/calendar.css';
-import '@numior/vue/styles/date-picker.css';
 ```
 
 ## Usage
 
-Pick a period and change the number of months in the calendar, the size and the field states.
+Pick a period and change the number of months, the size and the states of the field.
 
 <Configurator name="NuiDateRangePicker" />
 
-## Behaviour
+## Behavior
 
-Both dates are typed the same way as in [Date picker](/en/components/date-picker). When the end
-comes before the start, the field swaps them once focus leaves the date or Enter is pressed. With `openOnClick`, a click on either date opens the
-calendar.
-
-In the calendar the first click picks the start, the second picks the end and closes the
-calendar. A ready-made range from `presets`, such as "Last 7 days", takes one click. A date before
-`min` or after `max` does not reach the model.
-
-The clear button from `clearable` resets both dates. Set `startName` and `endName` to submit the
-start and the end as separate form fields.
+- Both dates are typed the same way as in a [Date picker](/en/components/date-picker).
+- When the end comes before the start, the field swaps them once the focus leaves the date.
+- In the calendar the first click picks the start, and the second picks the end and closes the
+  calendar.
+- The clear button from `clearable` resets both dates.
 
 ## Accessibility
 
-The `label` text names the start date. Screen readers announce the end field as "End date", and
-the `endLabel` prop changes that text. The description and the error are read out for both dates.
+The `label` text names the start date, and a screen reader announces the end date as "End date".
+Change that text in `endLabel`. The hint and the error are read out for both dates.
 
 <KeyboardReference name="NuiDateRangePicker" />
 

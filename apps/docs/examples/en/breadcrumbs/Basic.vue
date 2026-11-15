@@ -6,7 +6,7 @@
 import { NuiBreadcrumbs, type NuiBreadcrumbItem } from '@numior/vue';
 
 const path: NuiBreadcrumbItem[] = [
-  { label: 'Catalogue', href: '#', icon: 'folder' },
+  { label: 'Catalog', href: '#', icon: 'folder' },
   { label: 'Furniture', href: '#' },
   { label: 'Chairs' },
 ];

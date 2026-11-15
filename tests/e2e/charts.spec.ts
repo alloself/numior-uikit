@@ -123,24 +123,22 @@ test.describe('charts', () => {
   test('walks quarters from the keyboard and announces their values', async ({
     playground,
     charts,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard scenario');
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    await charts.columns.focus();
-    await page.keyboard.press('ArrowRight');
+    await charts.focusNextPoint(charts.columns);
 
     await expect(charts.announcement(charts.columns)).toHaveText(
       'I кв.: Онлайн 42, Магазины 65, Партнёры 18',
     );
 
-    await page.keyboard.press('End');
-    await page.keyboard.press('Enter');
+    await charts.stepToLastPoint();
+    await charts.toggleFocusedPoint();
     await expect(charts.selectedNote).toHaveText('Выбран квартал: IV кв.');
 
-    await page.keyboard.press('Enter');
+    await charts.toggleFocusedPoint();
     await expect(charts.selectedNote).toHaveText('Щёлкните по кварталу, чтобы выбрать его');
   });
 
@@ -222,13 +220,11 @@ test.describe('charts', () => {
   test('charts have no automatically detectable WCAG AA violations', async ({
     playground,
     charts,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await charts.showTable();
-    await charts.columns.focus();
-    await page.keyboard.press('ArrowRight');
+    await charts.focusNextPoint(charts.columns);
 
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);

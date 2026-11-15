@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vite-plus/test';
 import {
@@ -16,21 +15,14 @@ import {
   vocabularyOf,
 } from '../.vitepress/content/example-guards';
 import { GuardRule, type GuardProblem } from '../.vitepress/content/guard.types';
-import {
-  baselineOf,
-  collectGuardProblems,
-  parseBaseline,
-  settle,
-} from '../.vitepress/content/guards';
+import { collectGuardProblems } from '../.vitepress/content/guards';
+import { installGuards } from '../.vitepress/content/install-guards';
+import { kitCatalogGuards } from '../.vitepress/content/kit-catalog-guards';
 import { openingGuards, pageGuards } from '../.vitepress/content/page-guards';
 import type { DocsMap } from '../.vitepress/reference/reference.types';
 
 const DOCS = fileURLToPath(new URL('..', import.meta.url));
 const REPO = fileURLToPath(new URL('../../..', import.meta.url));
-
-const BASELINE = fileURLToPath(
-  new URL('../.vitepress/content/guard-baseline.json', import.meta.url),
-);
 
 const page = (lead: string, body: readonly string[] = []): string =>
   ['---', 'title: Select', '---', '', '# Select', '', lead, '', ...body].join('\n');
@@ -65,6 +57,9 @@ const SELECT_DOCS: DocsMap = {
     ],
   },
 };
+
+const fence = (info: string, lines: readonly string[]): string =>
+  [`\`\`\`${info}`, ...lines, '```'].join('\n');
 
 const SHOP = ["{ name: 'Пётр Волков', city: 'Москва' }", "{ name: 'Анна Титова' }"];
 
@@ -237,6 +232,69 @@ describe('guards of the component pages', () => {
   });
 });
 
+describe('guards of the install blocks', () => {
+  const IMPORT = "import { NuiSelect } from '@numior/vue';";
+  const STYLE = "import '@numior/vue/styles/select.css';";
+  const STYLED: ReadonlySet<string> = new Set(['@numior/vue', '@numior/table', '@numior/charts']);
+
+  it('accept a printed install block and a block of package styles alone', () => {
+    const source = page('Выбор из списка.', [
+      '## Установка',
+      '',
+      fence('ts install', [IMPORT]),
+      '',
+      '## Стили',
+      '',
+      fence('ts', ["import '@numior/vue/styles.css';"]),
+    ]);
+
+    expect(installGuards('components/select.md', source, STYLED)).toEqual([]);
+  });
+
+  it('report stylesheets listed by hand and an install block that the build does not print', () => {
+    const source = page('Выбор из списка.', [
+      '## Установка',
+      '',
+      fence('ts install', [IMPORT, STYLE]),
+      '',
+      fence('ts', [IMPORT]),
+      '',
+      '## Примеры',
+      '',
+      fence('ts', [IMPORT, STYLE]),
+      '',
+      fence('ts', [IMPORT]),
+    ]);
+
+    expect(
+      textsOf(installGuards('components/select.md', source, STYLED), GuardRule.Install),
+    ).toEqual([
+      'an install block lists stylesheets by hand; the build prints them',
+      'an install block imports kit components without `ts install`',
+      'stylesheets of kit components are listed by hand; mark the block `ts install`',
+    ]);
+  });
+
+  it('report an install command and stylesheets of a module written by hand', () => {
+    const source = page('Таблица.', [
+      '## Установка',
+      '',
+      fence('sh', ['pnpm add @numior/vue @numior/tokens']),
+      '',
+      fence('sh', ['pnpm add @numior/table']),
+      '',
+      fence('ts', ["import '@numior/vue/styles.css';", "import '@numior/charts/styles.css';"]),
+      '',
+      fence('sh', ['npm install @numior/primitives']),
+    ]);
+
+    expect(textsOf(installGuards('table/index.md', source, STYLED), GuardRule.Install)).toEqual([
+      'an install command of a kit module is written by hand; the `ts install:packages` block prints it',
+      'stylesheets of a kit module are listed by hand; mark the block `ts install:packages`',
+    ]);
+  });
+});
+
 describe('guards of the text catalogs', () => {
   it('report API descriptions that only repeat the name of the member', () => {
     const entries = apiEntriesOf('api/select.ts', SELECT_DOCS);
@@ -398,47 +456,60 @@ describe('guards of the examples', () => {
       ),
     ).toEqual(['John Smith is not in the shop data']);
   });
+
+  it('report British spellings in the visible text of an English example, not in its keys', () => {
+    const source = [
+      '<template>',
+      '  <NuiTable caption="Programme of the day" />',
+      '  <p>Moves to the neighbouring column.</p>',
+      '</template>',
+      '',
+      '<script setup lang="ts">',
+      "const status = 'cancelled';",
+      '</script>',
+    ].join('\n');
+
+    const problems = exampleGuards('examples/en/table/Merges.vue', 'en', source, {
+      vocabulary: new Set(),
+      misplaced: new Set(),
+    });
+
+    expect(textsOf(problems, GuardRule.Glossary)).toEqual([
+      '«Programme» → US spelling',
+      '«neighbouring» → US spelling',
+    ]);
+  });
 });
 
-describe('guard baseline', () => {
-  const problems: GuardProblem[] = [
-    { rule: GuardRule.Lead, file: 'components/select.md', text: '2 sentences' },
-    { rule: GuardRule.Lead, file: 'components/input.md', text: '2 sentences' },
-    { rule: GuardRule.Caption, file: 'components/select.md', text: '2 sentences: …' },
-  ];
+describe('guards of the kit catalogs', () => {
+  it('report British spellings in the texts of a catalog, not in its keys and values', () => {
+    const source = [
+      "import type { Messages } from './list.types';",
+      '',
+      'export const listMessages = {',
+      "  namespace: 'list',",
+      '  en: {',
+      '    cancelled: ({ index }) => `Row ${index}, move cancelled.`,',
+      "    status: 'cancelled',",
+      "    empty: 'No rows yet',",
+      '  },',
+      '  ru: { cancelled: ({ index }) => `Строка ${index}: перемещение отменено.` },',
+      '};',
+    ].join('\n');
 
-  it('excuses the listed files and asks to drop an entry once its file is clean', () => {
-    const baseline = parseBaseline(
-      JSON.stringify({ lead: ['components/select.md', 'components/tabs.md'] }),
-    );
-
-    expect(settle(problems, baseline)).toEqual({
-      fresh: [problems[1], problems[2]],
-      stale: ['lead: components/tabs.md'],
-    });
-
-    expect(settle(problems, baselineOf(problems))).toEqual({ fresh: [], stale: [] });
-
-    expect(baselineOf(problems)).toEqual({
-      lead: ['components/input.md', 'components/select.md'],
-      caption: ['components/select.md'],
-    });
+    expect(
+      textsOf(
+        kitCatalogGuards('packages/vue/src/list/list.messages.ts', source),
+        GuardRule.Glossary,
+      ),
+    ).toEqual(['«cancelled» → US spelling']);
   });
+});
 
-  it('covers every finding of the docs and holds no entry that is already clean', async () => {
+describe('guards on the docs', () => {
+  it('find nothing in the pages, examples, catalogs and kit texts', async () => {
     const findings = await collectGuardProblems(DOCS, REPO);
 
-    expect(settle(findings, parseBaseline(readFileSync(BASELINE, 'utf8')))).toEqual({
-      fresh: [],
-      stale: [],
-    });
-
-    expect(findings.filter((finding) => finding.file.includes('node_modules'))).toEqual([]);
-  });
-
-  it('refuses a baseline with an unknown rule or a malformed list', () => {
-    expect(() => parseBaseline('[]')).toThrow('must be an object');
-    expect(() => parseBaseline('{"typo": []}')).toThrow('Unknown guard rule');
-    expect(() => parseBaseline('{"lead": [1]}')).toThrow('malformed file list: lead');
+    expect(findings).toEqual([]);
   });
 });

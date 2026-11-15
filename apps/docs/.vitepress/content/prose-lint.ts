@@ -53,7 +53,7 @@ const BANNED: Readonly<Record<ExampleLocale, readonly string[]>> = {
   ],
 };
 
-const WORD_CHAR = String.raw`[\p{L}\p{N}]`;
+const WORD_CHAR = String.raw`[\p{L}\p{N}-]`;
 
 const phrasePattern = (phrase: string): RegExp =>
   new RegExp(`(?<!${WORD_CHAR})${phrase.replaceAll(' ', String.raw`\s+`)}(?!${WORD_CHAR})`, 'u');

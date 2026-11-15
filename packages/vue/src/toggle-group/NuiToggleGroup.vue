@@ -17,39 +17,73 @@
     @focusin="navigation.onFocusin"
     @focusout="onFocusout"
   >
-    <NuiTooltip
-      v-for="item in items"
-      :key="keyOf(item.value)"
-      :disabled="!iconOnly"
-      :placement="tooltipPlacement"
+    <span
+      ref="startEdge"
+      class="nui-toggle-group__edge nui-toggle-group__edge--start"
+      aria-hidden="true"
+      @mousedown.prevent
     >
-      <template #trigger="{ attrs }">
-        <button
-          type="button"
-          class="nui-toggle-group__item"
-          :class="{ 'nui-toggle-group__item--selected': isSelected(item.value) }"
-          v-bind="{
-            ...itemAttrs(item),
-            ...attrs,
-            'aria-describedby': undefined,
-            ref: buttons.ref(keyOf(item.value), attrs.ref),
-          }"
-          @click="toggle(item.value)"
-        >
-          <slot name="item" :item="item" :selected="isSelected(item.value)">
-            <NuiIcon v-if="item.icon" :icon="item.icon" class="nui-toggle-group__icon" />
-            <span v-if="!iconOnly" class="nui-toggle-group__label">{{ item.label }}</span>
-          </slot>
-        </button>
-      </template>
-      {{ item.label }}
-    </NuiTooltip>
+      <NuiButton
+        variant="ghost"
+        tone="neutral"
+        size="sm"
+        icon="chevron-left"
+        class="nui-toggle-group__scroll"
+        tabindex="-1"
+        @click="page(-1)"
+      />
+    </span>
+    <div ref="track" class="nui-toggle-group__track">
+      <NuiTooltip
+        v-for="item in items"
+        :key="keyOf(item.value)"
+        :disabled="!iconOnly"
+        :placement="tooltipPlacement"
+      >
+        <template #trigger="{ attrs }">
+          <button
+            type="button"
+            class="nui-toggle-group__item"
+            :class="{ 'nui-toggle-group__item--selected': isSelected(item.value) }"
+            v-bind="{
+              ...itemAttrs(item),
+              ...attrs,
+              'aria-describedby': undefined,
+              ref: buttons.ref(keyOf(item.value), attrs.ref),
+            }"
+            @click="toggle(item.value)"
+          >
+            <slot name="item" :item="item" :selected="isSelected(item.value)">
+              <NuiIcon v-if="item.icon" :icon="item.icon" class="nui-toggle-group__icon" />
+              <span v-if="!iconOnly" class="nui-toggle-group__label">{{ item.label }}</span>
+            </slot>
+          </button>
+        </template>
+        {{ item.label }}
+      </NuiTooltip>
+    </div>
+    <span
+      ref="endEdge"
+      class="nui-toggle-group__edge nui-toggle-group__edge--end"
+      aria-hidden="true"
+      @mousedown.prevent
+    >
+      <NuiButton
+        variant="ghost"
+        tone="neutral"
+        size="sm"
+        icon="chevron-right"
+        class="nui-toggle-group__scroll"
+        tabindex="-1"
+        @click="page(1)"
+      />
+    </span>
   </div>
 </template>
 
 <script setup lang="ts" generic="T">
-import { useMounted } from '@vueuse/core';
-import { computed, onMounted, useTemplateRef } from 'vue';
+import { useMounted, useResizeObserver } from '@vueuse/core';
+import { computed, onMounted, onUpdated, shallowRef, useTemplateRef, watch } from 'vue';
 import {
   createCollection,
   FloatingPlacement,
@@ -57,8 +91,10 @@ import {
   useListNavigation,
   type AttrRecord,
 } from '@numior/primitives';
+import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiTooltip from '../tooltip/NuiTooltip.vue';
+import { useEdgeScroll } from '../shared/use-edge-scroll';
 import { useOptionSelection } from '../shared/use-option-selection';
 import {
   NuiToggleGroupOrientation,
@@ -88,6 +124,9 @@ const values = defineModel<T[]>('values', { default: () => [] });
 defineSlots<{ item?(props: NuiToggleItemSlot<T>): unknown }>();
 
 const root = useTemplateRef<HTMLElement>('root');
+const track = useTemplateRef<HTMLElement>('track');
+const startEdge = useTemplateRef<HTMLElement>('startEdge');
+const endEdge = useTemplateRef<HTMLElement>('endEdge');
 const direction = useDirection(root);
 const mounted = useMounted();
 
@@ -100,6 +139,8 @@ const { keyOf, selectedKeys, choose, clear } = useOptionSelection<T>({
 });
 
 const buttons = createCollection<string>();
+const itemElements = shallowRef<HTMLElement[]>([]);
+let seenItems: readonly HTMLElement[] = [];
 
 const isSelected = (value: T): boolean => selectedKeys.value.has(keyOf(value));
 
@@ -126,12 +167,25 @@ const tooltipPlacement = computed(() => {
   return mounted.value && direction.isRtl() ? FloatingPlacement.Left : FloatingPlacement.Right;
 });
 
+const restingButton = (): HTMLElement | undefined =>
+  restingKey.value === undefined ? undefined : buttons.get(restingKey.value);
+
+const { markOverflow, page, follow, keepFollowed, glide } = useEdgeScroll({
+  block: 'nui-toggle-group',
+  root,
+  track,
+  startEdge,
+  endEdge,
+  direction,
+  enabled: () => orientation !== NuiToggleGroupOrientation.Vertical,
+});
+
 const navigation = useListNavigation(root, {
   items: buttons.elements,
   orientation: () => orientation,
   loop: true,
   typeahead: false,
-  resting: () => (restingKey.value === undefined ? undefined : buttons.get(restingKey.value)),
+  resting: restingButton,
 });
 
 const itemAttrs = (item: NuiToggleItem<T>): AttrRecord => {
@@ -158,6 +212,22 @@ const toggle = (value: T): void => {
   }
 };
 
+const refit = (): void => {
+  markOverflow();
+  keepFollowed();
+};
+
+const collect = (): void => {
+  const found = buttons.elements();
+
+  if (found === seenItems) {
+    return;
+  }
+
+  seenItems = found;
+  itemElements.value = [...found];
+};
+
 const onFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
 
@@ -168,5 +238,19 @@ const onFocusout = (event: FocusEvent): void => {
   navigation.reset();
 };
 
-onMounted(() => navigation.reset());
+onMounted(() => {
+  navigation.reset();
+  collect();
+  follow(restingButton, 'instant');
+  markOverflow();
+
+  watch(model, () => follow(restingButton, glide()), { flush: 'post' });
+
+  watch(() => orientation, markOverflow, { flush: 'post' });
+
+  useResizeObserver(track, refit);
+  useResizeObserver(itemElements, refit);
+});
+
+onUpdated(collect);
 </script>

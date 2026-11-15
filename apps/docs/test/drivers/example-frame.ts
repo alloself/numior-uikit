@@ -54,7 +54,7 @@ export class ExampleFrameDriver {
 
   get previewOptions(): string[] {
     return this.wrapper
-      .findAll('.nui-toggle-group button')
+      .findAll('.nui-toggle-group__item')
       .map((button) => button.attributes('aria-label') ?? button.text());
   }
 

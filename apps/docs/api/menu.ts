@@ -161,7 +161,7 @@ const docs: DocsMap = {
       disabled,
       tone: {
         ru: 'Цвет пункта: `neutral` или красный `error` для опасных действий вроде удаления.',
-        en: 'Colour of the item: `neutral`, or a red `error` for destructive actions such as deleting.',
+        en: 'Color of the item: `neutral`, or a red `error` for destructive actions such as deleting.',
       },
       closeOnSelect: {
         ru: 'Закрывает меню после выбора. Перекрывает `closeOnSelect` меню.',

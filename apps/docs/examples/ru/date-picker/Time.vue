@@ -1,8 +1,8 @@
 <template>
   <NuiDatePicker
-    v-model="meeting"
-    label="Встреча"
-    description="Дата и время"
+    v-model="courier"
+    label="Приезд курьера"
+    description="Курьер позвонит за час до приезда"
     time
     :time-step="30"
     today="2026-09-27"
@@ -13,5 +13,5 @@
 import { ref } from 'vue';
 import { NuiDatePicker } from '@numior/vue';
 
-const meeting = ref<string | null>('2026-09-29T10:30');
+const courier = ref<string | null>('2026-09-29T14:30');
 </script>

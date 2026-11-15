@@ -1,43 +1,42 @@
 <template>
   <div class="w-full grid-auto gap-6">
     <div ref="article" class="h-80 overflow-auto border rounded-md p-4" tabindex="0">
-      <h2 id="toc-demo-install" class="mt-0 text-lg font-semibold">Установка</h2>
-      <p>Пакет ставится из workspace, стили подключаются по файлам.</p>
-      <p>Токены темы приходят из base.css.</p>
-      <h2 id="toc-demo-usage" class="text-lg font-semibold">Использование</h2>
-      <p>Компонент принимает элементы списка и корень прокрутки.</p>
-      <h3 id="toc-demo-basic" class="font-semibold">Базовый пример</h3>
-      <p>Достаточно передать заголовки с id.</p>
-      <p>Вложенные children дают второй уровень.</p>
-      <h3 id="toc-demo-advanced" class="font-semibold">Расширенный пример</h3>
-      <p>Активный пункт следует за прокруткой.</p>
-      <p>Корень можно поменять на лету.</p>
-      <h2 id="toc-demo-api" class="text-lg font-semibold">API</h2>
-      <p>Линия задаёт долю высоты, где меняется активный пункт.</p>
-      <p>Пропсы, события и слоты описаны в таблицах.</p>
-      <p>Событие select приходит по клику.</p>
+      <h2 id="toc-returns-terms" class="mt-0 text-lg font-semibold">Условия возврата</h2>
+      <p>Покупатель возвращает товар в течение 14 дней после получения заказа.</p>
+      <p>Упаковка и ярлыки должны остаться на месте.</p>
+      <h2 id="toc-returns-request" class="text-lg font-semibold">Как оформить</h2>
+      <p>Заявка создаётся в карточке заказа кнопкой «Оформить возврат».</p>
+      <h3 id="toc-returns-courier" class="font-semibold">Курьером</h3>
+      <p>Курьер забирает посылку по адресу доставки заказа.</p>
+      <p>Время приезда покупатель выбирает в письме с подтверждением.</p>
+      <h3 id="toc-returns-pickup" class="font-semibold">Через пункт выдачи</h3>
+      <p>Покупатель приносит посылку в любой пункт выдачи и называет номер заявки.</p>
+      <p>Пункт передаёт её на склад в течение двух дней.</p>
+      <h2 id="toc-returns-refund" class="text-lg font-semibold">Возврат денег</h2>
+      <p>Деньги уходят на карту, которой оплачен заказ.</p>
+      <p>Банк зачисляет их за три–пять рабочих дней.</p>
+      <p>Статус возврата виден в разделе «Оплаты».</p>
     </div>
-    <NuiToc :items="items" :root="article" @select="last = $event" />
+    <NuiToc :items="items" :root="article" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, useTemplateRef } from 'vue';
+import { useTemplateRef } from 'vue';
 import { NuiToc, type NuiTocItem } from '@numior/vue';
 
 const article = useTemplateRef<HTMLElement>('article');
-const last = ref('');
 
 const items: readonly NuiTocItem[] = [
-  { id: 'toc-demo-install', label: 'Установка' },
+  { id: 'toc-returns-terms', label: 'Условия возврата' },
   {
-    id: 'toc-demo-usage',
-    label: 'Использование',
+    id: 'toc-returns-request',
+    label: 'Как оформить',
     children: [
-      { id: 'toc-demo-basic', label: 'Базовый пример' },
-      { id: 'toc-demo-advanced', label: 'Расширенный пример' },
+      { id: 'toc-returns-courier', label: 'Курьером' },
+      { id: 'toc-returns-pickup', label: 'Через пункт выдачи' },
     ],
   },
-  { id: 'toc-demo-api', label: 'API' },
+  { id: 'toc-returns-refund', label: 'Возврат денег' },
 ];
 </script>

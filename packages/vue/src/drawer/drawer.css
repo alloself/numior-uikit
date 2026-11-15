@@ -10,6 +10,9 @@
     max-block-size: none;
     translate: var(--_shift);
   }
+  .nui-drawer > .nui-dialog__body {
+    @apply grow;
+  }
   .nui-drawer--size-sm {
     --_size: 16rem;
   }

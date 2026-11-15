@@ -10,7 +10,7 @@
     v-if="ghost"
     class="nui-table__ghost"
     :class="`nui-table__ghost--${axis}`"
-    :style="{ '--_ghost': `${ghost.start}px`, '--_size': `${ghost.size}px` }"
+    :style="ghostStyle"
     aria-hidden="true"
   >
     <div class="nui-table__ghost-body">
@@ -29,6 +29,16 @@ const { axis = 'x', drop, ghost } = defineProps<NuiTableDragLayerProps>();
 
 const dropClass = computed(() =>
   drop?.kind === TableDropMarkKind.Box ? 'nui-table__drop--box' : `nui-table__drop--${axis}`,
+);
+
+const ghostStyle = computed(() =>
+  ghost === undefined
+    ? undefined
+    : {
+        '--_ghost': `${ghost.start}px`,
+        '--_size': `${ghost.size}px`,
+        '--_ghost-across': ghost.across === undefined ? undefined : `${ghost.across}px`,
+      },
 );
 
 const dropStyle = computed(() => {

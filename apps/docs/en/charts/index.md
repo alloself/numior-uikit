@@ -12,32 +12,8 @@ Hover a column or walk the columns with the arrow keys to see the value in a too
 
 ## Installation
 
-Install the package:
-
-::: code-group
-
-```sh [pnpm]
-pnpm add @numior/charts
-```
-
-```sh [npm]
-npm install @numior/charts
-```
-
-```sh [yarn]
-yarn add @numior/charts
-```
-
-```sh [bun]
-bun add @numior/charts
-```
-
-:::
-
-Load the styles in the entry point of your app:
-
-```ts
-import '@numior/charts/styles.css';
+```ts install:packages
+import { NuiChart } from '@numior/charts';
 ```
 
 Series colors come from the theme tokens `--color-chart-1`…`--color-chart-8`, so they follow the light and dark theme.

@@ -31,25 +31,24 @@ test.describe('editor', () => {
   test('types, splits and joins blocks and keeps the published view in step', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
     await editor.clear();
     await expect.poll(() => editor.blockTexts()).toEqual(['']);
 
-    await page.keyboard.type('Hello world');
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('Second');
+    await editor.typeText('Hello world');
+    await editor.pressEnter();
+    await editor.typeText('Second');
     await expect.poll(() => editor.blockTexts()).toEqual(['Hello world', 'Second']);
     await expect.poll(() => editor.previewTexts()).toEqual(['Hello world', 'Second']);
 
-    await page.keyboard.press('Home');
-    await page.keyboard.press('Backspace');
+    await editor.caretToLineStart();
+    await editor.deleteBackward();
     await expect.poll(() => editor.blockTexts()).toEqual(['Hello worldSecond']);
     await expect.poll(() => editor.previewTexts()).toEqual(['Hello worldSecond']);
 
-    await page.keyboard.press('ControlOrMeta+z');
+    await editor.undo();
     await expect.poll(() => editor.blockTexts()).toEqual(['Hello world', 'Second']);
     await expect.poll(() => editor.previewTexts()).toEqual(['Hello world', 'Second']);
     await expect.poll(async () => (await editor.readOutput()).changes).toBeGreaterThanOrEqual(3);
@@ -58,25 +57,22 @@ test.describe('editor', () => {
   test('drags selected text to another line, copies it with Ctrl and undoes each in one step', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
-    const fine = await page.evaluate(
-      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
-    );
+    const fine = await editor.hasFinePointer();
 
     test.skip(!fine, 'selected text is dragged with a mouse');
 
     await editor.clear();
-    await page.keyboard.type('alpha beta');
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('gamma');
+    await editor.typeText('alpha beta');
+    await editor.pressEnter();
+    await editor.typeText('gamma');
 
     await editor.dragText('beta', 'mma');
     await expect.poll(() => editor.blockTexts()).toEqual(['alpha ', 'gabetamma']);
 
-    await page.keyboard.press('ControlOrMeta+z');
+    await editor.undo();
     await expect.poll(() => editor.blockTexts()).toEqual(['alpha beta', 'gamma']);
 
     await editor.dragText('alpha', 'mma', 'Control');
@@ -86,50 +82,48 @@ test.describe('editor', () => {
   test('turns markdown shortcuts into blocks and nests list items with Tab', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
     await editor.clear();
-    await page.keyboard.type('# Title');
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('- one');
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('two');
+    await editor.typeText('# Title');
+    await editor.pressEnter();
+    await editor.typeText('- one');
+    await editor.pressEnter();
+    await editor.typeText('two');
     await expect.poll(() => editor.blockTags()).toEqual(['h1', 'ul']);
 
-    await page.keyboard.press('Tab');
+    await editor.indent();
     await expect(editor.content.locator('ul ul')).toHaveCount(1);
     await expect(editor.content).toBeFocused();
 
-    await page.keyboard.press('Shift+Tab');
+    await editor.outdent();
     await expect(editor.content.locator('ul ul')).toHaveCount(0);
 
-    await page.keyboard.press('ControlOrMeta+z');
+    await editor.undo();
     await expect(editor.content.locator('ul ul')).toHaveCount(1);
   });
 
   test('writes highlighted code after a fence, indents with Tab and leaves with Mod+Enter', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
     await editor.clear();
-    await page.keyboard.type('```ts ');
+    await editor.typeText('```ts ');
     await expect(editor.codeLanguage()).toHaveText('TypeScript');
 
-    await page.keyboard.type('const answer = 42;');
+    await editor.typeText('const answer = 42;');
     await expect(editor.codeToken('keyword')).toHaveText('const');
 
-    await page.keyboard.press('Enter');
-    await page.keyboard.press('Tab');
-    await page.keyboard.type('done();');
+    await editor.pressEnter();
+    await editor.indent();
+    await editor.typeText('done();');
     await expect.poll(() => editor.codeText()).toBe('const answer = 42;\n  done();');
 
-    await page.keyboard.press('ControlOrMeta+Enter');
-    await page.keyboard.type('after');
+    await editor.leaveCodeBlock();
+    await editor.typeText('after');
     await expect.poll(() => editor.blockTags()).toEqual(['pre', 'p']);
 
     await expect(editor.preview.locator('.nui-code__token--scope-keyword').first()).toHaveText(
@@ -137,8 +131,8 @@ test.describe('editor', () => {
     );
 
     await editor.codeLanguage().click();
-    await page.keyboard.type('py');
-    await page.keyboard.press('Enter');
+    await editor.typeText('py');
+    await editor.pressEnter();
     await expect(editor.codeLanguage()).toHaveText('Python');
     await expect(editor.preview.locator('.nui-code__title').first()).toHaveText('Python');
 
@@ -150,34 +144,32 @@ test.describe('editor', () => {
   test('formats a selection with the keyboard and selects the mention as one piece', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
     await editor.placeInText('Черновик', 0);
 
     for (let step = 0; step < 'Черновик'.length; step += 1) {
-      await page.keyboard.press('Shift+ArrowRight');
+      await editor.extendSelection('right');
     }
 
-    await page.keyboard.press('ControlOrMeta+b');
+    await editor.toggleBold();
     await expect(editor.content.locator('strong', { hasText: 'Черновик' })).toHaveCount(1);
     await expect(editor.preview.locator('strong', { hasText: 'Черновик' })).toHaveCount(1);
 
     await editor.mention().click();
     await expect(editor.selectedAtoms()).toHaveCount(1);
 
-    await page.keyboard.press('ArrowRight');
+    await editor.moveCaret('right');
     await expect(editor.selectedAtoms()).toHaveCount(0);
 
-    await page.keyboard.type('!');
+    await editor.typeText('!');
     await expect(editor.content.locator('p').nth(0)).toContainText('@Анна!');
   });
 
   test('pastes plain text as paragraphs and stays still in read mode', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
@@ -194,14 +186,13 @@ test.describe('editor', () => {
     await expect(editor.content).toHaveAttribute('aria-readonly', 'true');
 
     await editor.content.click();
-    await page.keyboard.type('x');
+    await editor.typeText('x');
     expect((await editor.readOutput()).changes).toBe(before);
   });
 
   test('pastes markup from other pages as blocks and copies the selection as markup', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
@@ -216,7 +207,7 @@ test.describe('editor', () => {
     await expect(editor.content.locator('ul strong')).toHaveText('one');
     await expect(editor.preview.locator('ul strong')).toHaveText('one');
 
-    await page.keyboard.press('ControlOrMeta+a');
+    await editor.selectAll();
 
     const copied = await editor.copy();
 
@@ -264,27 +255,26 @@ test.describe('editor', () => {
   test('finds a block in the plus menu and puts it below the list the caret is in', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
     await editor.clear();
-    await page.keyboard.type('- one');
+    await editor.typeText('- one');
     await expect.poll(() => editor.blockTags()).toEqual(['ul']);
 
     await editor.tool('Вставить').click();
     await expect(editor.insertSearch()).toBeFocused();
-    await expect(editor.insertOptions().and(page.locator('[aria-disabled="true"]'))).toHaveCount(0);
+    await expect(editor.disabledInsertOptions()).toHaveCount(0);
 
-    await page.keyboard.type('загол');
+    await editor.typeText('загол');
     await expect(editor.insertOptions()).toHaveCount(6);
 
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
+    await editor.moveCaret('down');
+    await editor.pressEnter();
     await expect.poll(() => editor.blockTags()).toEqual(['ul', 'h2']);
     await expect(editor.content).toBeFocused();
 
-    await page.keyboard.type('Next');
+    await editor.typeText('Next');
     await expect(editor.content.locator('h2')).toHaveText('Next');
     await expect(editor.content.locator('li')).toHaveText('one');
 
@@ -296,15 +286,14 @@ test.describe('editor', () => {
   test('formats from the toolbar without losing the selection and changes blocks from its menu', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
     await editor.clear();
-    await page.keyboard.type('Hello world');
+    await editor.typeText('Hello world');
 
     for (let step = 0; step < 'world'.length; step += 1) {
-      await page.keyboard.press('Shift+ArrowLeft');
+      await editor.extendSelection('left');
     }
 
     await editor.tool('Жирный').click();
@@ -312,72 +301,66 @@ test.describe('editor', () => {
     await expect(editor.tool('Жирный')).toHaveAttribute('aria-pressed', 'true');
     await expect(editor.content).toBeFocused();
 
-    const fine = await page.evaluate(
-      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
-    );
+    const fine = await editor.hasFinePointer();
 
     await expect(editor.headerBlockMenu()).toHaveCount(fine ? 0 : 1);
 
     await editor.blockMenu().click();
-    await expect(page.getByRole('menuitemradio', { name: 'Заголовок 6' })).toBeVisible();
+    await expect(editor.menuItemRadio('Заголовок 6')).toBeVisible();
 
-    await page.getByRole('menuitemradio', { name: 'Заголовок 1' }).click();
+    await editor.menuItemRadio('Заголовок 1').click();
     await expect.poll(() => editor.blockTags()).toEqual(['h1']);
     await expect(editor.content).toBeFocused();
 
-    await page.keyboard.press('Alt+F10');
+    await editor.focusToolbar();
     await expect(editor.tool('Вставить')).toBeFocused();
 
-    await page.keyboard.press('ArrowRight');
+    await editor.moveCaret('right');
     await expect(editor.tool('Отменить')).toBeFocused();
 
-    await page.keyboard.press('Escape');
+    await editor.pressEscape();
     await expect(editor.content).toBeFocused();
   });
 
   test('keeps the toolbar reachable from the keyboard when the control under focus turns off', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
-    const coarse = await page.evaluate(() => matchMedia('(pointer: coarse)').matches);
+    const coarse = await editor.hasCoarsePointer();
 
     test.skip(coarse, 'the docked toolbar of a touch screen leaves with the focus of the text');
 
     await editor.clear();
-    await page.keyboard.type('Hello');
+    await editor.typeText('Hello');
     await editor.undoAllWith('Space');
 
     await expect(editor.tool('Повторить')).toBeFocused();
 
-    await page.keyboard.press('Escape');
-    await page.keyboard.press('Alt+F10');
+    await editor.pressEscape();
+    await editor.focusToolbar();
     await expect(editor.tool('Повторить')).toBeFocused();
 
-    await page.keyboard.press('ArrowRight');
+    await editor.moveCaret('right');
     await expect(editor.tool('Жирный')).toBeFocused();
   });
 
   test('centres the bubble over a wrapped paragraph picked with a triple click', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
-    const fine = await page.evaluate(
-      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
-    );
+    const fine = await editor.hasFinePointer();
 
     test.skip(!fine, 'the bubble follows a mouse');
 
     const line = editor.content.locator('p').first();
 
     await editor.clear();
-    await page.keyboard.type(WRAPPED_LINE);
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('Next');
+    await editor.typeText(WRAPPED_LINE);
+    await editor.pressEnter();
+    await editor.typeText('Next');
     await line.click({ clickCount: 3 });
     await expect(editor.bubble()).toBeVisible();
 
@@ -391,39 +374,36 @@ test.describe('editor', () => {
   test('links with Ctrl+K and colours a selection from the bubble over it', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
-    const fine = await page.evaluate(
-      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
-    );
+    const fine = await editor.hasFinePointer();
 
     const colours = fine
       ? editor.bubble()
       : editor.root.getByRole('toolbar', { name: 'Форматирование' });
 
     await editor.clear();
-    await page.keyboard.type('Hello world');
+    await editor.typeText('Hello world');
 
     for (let step = 0; step < 'world'.length; step += 1) {
-      await page.keyboard.press('Shift+ArrowLeft');
+      await editor.extendSelection('left');
     }
 
     await expect(editor.bubble()).toBeVisible({ visible: fine });
 
-    await page.keyboard.press('ControlOrMeta+k');
+    await editor.openLinkField();
     await expect(editor.linkField()).toBeFocused();
 
-    await page.keyboard.type('https://numior.test');
-    await page.keyboard.press('Enter');
+    await editor.typeText('https://numior.test');
+    await editor.pressEnter();
     await expect(editor.content.locator('a')).toHaveText('world');
     await expect(editor.content).toBeFocused();
 
     await colours.getByRole('button', { name: 'Цвет' }).click();
 
-    await page
-      .getByRole('menuitemradio', { name: /Красный/ })
+    await editor
+      .menuItemRadio(/Красный/)
       .first()
       .click();
 
@@ -434,24 +414,23 @@ test.describe('editor', () => {
   test('turns blocks from the slash menu by keyboard and pointer', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
     await editor.clear();
-    await page.keyboard.type('/');
+    await editor.typeText('/');
     await expect(editor.slashMenu()).toBeVisible();
 
-    await page.keyboard.type('h2');
+    await editor.typeText('h2');
     await expect(editor.slashMenu().getByRole('option')).toHaveText(['Заголовок 2']);
 
-    await page.keyboard.press('Enter');
+    await editor.pressEnter();
     await expect.poll(() => editor.blockTags()).toEqual(['h2']);
     await expect(editor.slashMenu()).toBeHidden();
 
-    await page.keyboard.type('Plan');
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('/цит');
+    await editor.typeText('Plan');
+    await editor.pressEnter();
+    await editor.typeText('/цит');
     await expect(editor.slashMenu().getByRole('option')).toHaveText(['Цитата']);
 
     await editor.slashMenu().getByRole('option', { name: 'Цитата' }).click();
@@ -462,13 +441,12 @@ test.describe('editor', () => {
   test('keeps the slash menu inside a short window and reaches its last blocks', async ({
     playground,
     editor,
-    page,
   }) => {
     await playground.resize({ width: 1280, height: SHORT_WINDOW });
     await openEditor(playground);
 
     await editor.clear();
-    await page.keyboard.type('/');
+    await editor.typeText('/');
     await expect(editor.slashMenu()).toBeVisible();
 
     await expect
@@ -486,21 +464,18 @@ test.describe('editor', () => {
   test('moves blocks by keyboard and handle and duplicates one from its menu', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
-    const fine = await page.evaluate(
-      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
-    );
+    const fine = await editor.hasFinePointer();
 
     await editor.clear();
-    await page.keyboard.type('One');
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('Two');
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('Three');
-    await page.keyboard.press('ControlOrMeta+Shift+ArrowUp');
+    await editor.typeText('One');
+    await editor.pressEnter();
+    await editor.typeText('Two');
+    await editor.pressEnter();
+    await editor.typeText('Three');
+    await editor.moveBlockUp();
     await expect.poll(() => editor.blockTexts()).toEqual(['One', 'Three', 'Two']);
 
     if (fine) {
@@ -511,32 +486,30 @@ test.describe('editor', () => {
     }
 
     await editor.grip().click();
-    await page.getByRole('menuitem', { name: 'Дублировать' }).click();
+    await editor.menuItem('Дублировать').click();
     await expect.poll(async () => (await editor.blockTexts()).length).toBe(4);
   });
 
-  test('reorders list items by their handle', async ({ playground, editor, page }) => {
+  test('reorders list items by their handle', async ({ playground, editor }) => {
     await openEditor(playground);
 
-    const fine = await page.evaluate(
-      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
-    );
+    const fine = await editor.hasFinePointer();
 
     test.skip(!fine, 'dragging by the handle needs a mouse');
     await editor.clear();
-    await page.keyboard.type('- one');
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('two');
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('three');
+    await editor.typeText('- one');
+    await editor.pressEnter();
+    await editor.typeText('two');
+    await editor.pressEnter();
+    await editor.typeText('three');
     await editor.drag(editor.item('one'), editor.item('three'));
     await expect(editor.content.locator('li')).toHaveText(['two', 'three', 'one']);
 
     await editor.hoverStart(editor.item('three'));
     await editor.grip().click();
-    await page.getByRole('menuitem', { name: 'Весь список' }).click();
+    await editor.menuItem('Весь список').click();
     await editor.grip().click();
-    await page.getByRole('menuitem', { name: 'Дублировать' }).click();
+    await editor.menuItem('Дублировать').click();
 
     await expect(editor.content.locator('li')).toHaveText([
       'two',
@@ -551,7 +524,6 @@ test.describe('editor', () => {
   test('checks to-dos, folds toggles for the reader and sets callout tones', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
@@ -559,7 +531,7 @@ test.describe('editor', () => {
     await expect(editor.preview.locator('li.nui-content__todo--checked')).toHaveCount(2);
 
     await editor.content.locator('p').first().click();
-    await page.keyboard.press('ControlOrMeta+z');
+    await editor.undo();
     await expect(editor.preview.locator('li.nui-content__todo--checked')).toHaveCount(1);
 
     const { changes } = await editor.readOutput();
@@ -579,7 +551,7 @@ test.describe('editor', () => {
     await expect(published.getByText('Ветка release/2.4')).toBeVisible();
 
     await editor.calloutTone().click();
-    await page.getByRole('menuitemradio', { name: 'Предупреждение' }).click();
+    await editor.menuItemRadio('Предупреждение').click();
     await expect(editor.callout()).toHaveClass(/nui-content__callout--tone-warning/);
 
     await expect(editor.preview.locator('.nui-content__callout')).toHaveClass(
@@ -590,7 +562,6 @@ test.describe('editor', () => {
   test('edits a custom block through its own control and undoes the change', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
@@ -602,11 +573,11 @@ test.describe('editor', () => {
     await expect(editor.publishedStatus()).toHaveText('Статус задачи: В работе');
 
     await editor.taskStatus().click();
-    await page.getByRole('option', { name: 'Готово' }).click();
+    await editor.option('Готово').click();
     await expect(editor.publishedStatus()).toHaveText('Статус задачи: Готово');
 
     await editor.content.locator('p').first().click();
-    await page.keyboard.press('ControlOrMeta+z');
+    await editor.undo();
     await expect(editor.publishedStatus()).toHaveText('Статус задачи: В работе');
     await expect(editor.taskStatus()).toContainText('В работе');
   });
@@ -614,13 +585,10 @@ test.describe('editor', () => {
   test('drags blocks into a callout and lifts list items out of their list', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
-    const fine = await page.evaluate(
-      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
-    );
+    const fine = await editor.hasFinePointer();
 
     test.skip(!fine, 'dragging by the handle needs a mouse');
 
@@ -645,13 +613,10 @@ test.describe('editor', () => {
   test('keeps a dragged code block whole and highlighted where a list cannot hold it', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
-    const fine = await page.evaluate(
-      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
-    );
+    const fine = await editor.hasFinePointer();
 
     test.skip(!fine, 'dragging by the handle needs a mouse');
 
@@ -670,18 +635,15 @@ test.describe('editor', () => {
   test('lays blocks out in columns from the slash menu, the keyboard and a side drop', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
-    const fine = await page.evaluate(
-      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
-    );
+    const fine = await editor.hasFinePointer();
 
     await editor.clear();
-    await page.keyboard.type('/columns');
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('Left');
+    await editor.typeText('/columns');
+    await editor.pressEnter();
+    await editor.typeText('Left');
     await expect(editor.columns()).toHaveCount(2);
     await expect(editor.columns().first()).toHaveText('Left');
 
@@ -700,13 +662,13 @@ test.describe('editor', () => {
     const separator = editor.content.getByRole('separator', { name: 'Ширина колонки 1' });
 
     await separator.focus();
-    await page.keyboard.press('ArrowRight');
+    await editor.moveCaret('right');
     await expect(separator).toHaveAttribute('aria-valuenow', '55');
 
     await editor.content.locator('p').last().click();
-    await page.keyboard.type('Beside me');
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('Moved');
+    await editor.typeText('Beside me');
+    await editor.pressEnter();
+    await editor.typeText('Moved');
 
     await editor.dragBeside(
       editor.content.locator('p', { hasText: 'Moved' }),
@@ -723,21 +685,20 @@ test.describe('editor', () => {
   test('edits a data table in place, undoes from inside it and publishes its sort', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
     const published = editor.publishedTable();
 
     await editor.showTable();
     await editor.tableCell(0, 0).click();
-    await page.keyboard.type('Site');
-    await page.keyboard.press('Enter');
+    await editor.typeText('Site');
+    await editor.pressEnter();
 
     await expect
       .poll(() => editor.tableColumn(published, 0))
       .toEqual(['Site', 'Рассылка', 'Вебинар']);
 
-    await page.keyboard.press('ControlOrMeta+z');
+    await editor.undo();
 
     await expect
       .poll(() => editor.tableColumn(published, 0))
@@ -747,16 +708,16 @@ test.describe('editor', () => {
     await expect(published.locator('tbody tr')).toHaveCount(4);
 
     await editor.openColumnMenu(2);
-    await page.getByRole('menuitem', { name: 'Переименовать' }).click();
+    await editor.menuItem('Переименовать').click();
     await expect(editor.renameField()).toBeFocused();
 
-    await page.keyboard.press('ControlOrMeta+a');
-    await page.keyboard.type('Budget');
-    await page.keyboard.press('Enter');
+    await editor.selectAll();
+    await editor.typeText('Budget');
+    await editor.pressEnter();
     await expect.poll(() => editor.tableHeads(published)).toContain('Budget');
 
     await editor.tableCell(1, 0).click({ button: 'right' });
-    await page.getByRole('menuitem', { name: 'Удалить строку' }).click();
+    await editor.menuItem('Удалить строку').click();
     await expect.poll(() => editor.tableColumn(published, 0)).toEqual(['Лендинг', 'Вебинар', '']);
 
     await editor.table().locator('thead th').first().click();
@@ -775,29 +736,20 @@ test.describe('editor', () => {
   test('selects cell ranges inside the editor and keeps the clicked cell marked under the menu', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
-    const fine = await page.evaluate(
-      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
-    );
+    const fine = await editor.hasFinePointer();
 
     test.skip(!fine, 'ranges are drawn with a mouse');
 
     await editor.showTable();
 
-    const from = await boxOf(editor.tableCell(0, 1));
-    const to = await boxOf(editor.tableCell(1, 2));
-
-    await page.mouse.move(from.x + 20, from.y + 10);
-    await page.mouse.down();
-    await page.mouse.move(to.x + 20, to.y + 10, { steps: 8 });
-    await page.mouse.up();
+    await editor.drawCellRange(editor.tableCell(0, 1), editor.tableCell(1, 2));
     await expect(editor.table().locator('td.nui-table__cell--ranged')).toHaveCount(4);
 
-    await page.mouse.click(to.x + 20, to.y + 10, { button: 'right' });
-    await expect(page.getByRole('menuitem', { name: 'Копировать', exact: true })).toBeVisible();
+    await editor.rightClickCell(editor.tableCell(1, 2));
+    await expect(editor.menuItem('Копировать', { exact: true })).toBeVisible();
     await expect(editor.table().locator('td.nui-table__cell--ranged')).toHaveCount(4);
     await expect(editor.table()).toHaveClass(/nui-table--cell-menu/u);
   });
@@ -805,34 +757,28 @@ test.describe('editor', () => {
   test('gives the table block a handle without turning it into text', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
-    const fine = await page.evaluate(
-      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
-    );
+    const fine = await editor.hasFinePointer();
 
     test.skip(!fine, 'the handle follows a mouse');
 
     await editor.showTable();
     await editor.hoverStart(editor.content.locator('.nui-editor__chunk > .nui-content__table'));
     await editor.grip().click();
-    await expect(page.getByRole('menuitem', { name: 'Дублировать' })).toBeVisible();
-    await expect(page.getByRole('menuitem', { name: 'Превратить в' })).toHaveCount(0);
+    await expect(editor.menuItem('Дублировать')).toBeVisible();
+    await expect(editor.menuItem('Превратить в')).toHaveCount(0);
   });
 
   test('keeps the handle inside the editor beside a table that slides aside with motion on', async ({
     playground,
     editor,
-    page,
   }) => {
     await playground.open();
     await editor.root.scrollIntoViewIfNeeded();
 
-    const fine = await page.evaluate(
-      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
-    );
+    const fine = await editor.hasFinePointer();
 
     test.skip(!fine, 'the handle follows a mouse');
 
@@ -840,30 +786,39 @@ test.describe('editor', () => {
 
     await editor.showTable();
     await editor.hoverStart(table);
-    await page.waitForTimeout(400);
+    await expect(editor.grip()).toBeVisible();
+    await expect.poll(() => editor.gripBeside(table)).toBe(true);
+  });
 
-    expect(await editor.gripBeside(table)).toBe(true);
+  test('slides a line inside an open toggle aside for its grip like a top-level line', async ({
+    playground,
+    editor,
+  }) => {
+    await playground.open();
+    await editor.root.scrollIntoViewIfNeeded();
+    test.skip(!(await editor.followsMouse()), 'the handle follows a mouse');
+    await editor.openToggle();
+
+    expect(await editor.slidesAsideOnHover(editor.block(0))).toBe(true);
+    expect(await editor.slidesAsideOnHover(editor.toggleLine('Ветка release/2.4'))).toBe(true);
   });
 
   test('keeps the menu over a selection on its text while the grip pushes the line and lets it go', async ({
     playground,
     editor,
-    page,
   }) => {
     await playground.open();
     await editor.root.scrollIntoViewIfNeeded();
 
-    const fine = await page.evaluate(
-      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
-    );
+    const fine = await editor.hasFinePointer();
 
     test.skip(!fine, 'the handle follows a mouse');
 
     const line = editor.content.locator('p').first();
 
     await editor.clear();
-    await page.keyboard.type('Hello world');
-    await page.keyboard.press('Shift+Home');
+    await editor.typeText('Hello world');
+    await editor.selectToLineStart();
     await expect(editor.bubble()).toBeVisible();
 
     await editor.hoverStart(line);
@@ -873,7 +828,7 @@ test.describe('editor', () => {
 
     expect(await editor.selectionGap()).toBeLessThanOrEqual(SELECTION_TOLERANCE);
 
-    await page.mouse.move(0, 0);
+    await editor.movePointerAway();
     await expect(editor.pushed()).toHaveCount(0);
 
     await editor.settled(line);
@@ -884,17 +839,16 @@ test.describe('editor', () => {
   test('joins lines across lists, a callout and a closed toggle with Delete and Backspace', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
     await editor.placeInText('Обновить тарифы', 15);
-    await page.keyboard.press('Delete');
+    await editor.deleteForward();
     await expect(editor.item('Обновить тарифы')).toHaveText('Обновить тарифыСогласовать дату');
     await expect(editor.content.locator('.nui-content__todo')).toHaveCount(1);
 
     await editor.placeInText('pnpm', 0);
-    await page.keyboard.press('Backspace');
+    await editor.deleteBackward();
 
     await expect(editor.toggle().locator('p').first()).toHaveText(
       'Детали релизаpnpm release:check',
@@ -902,14 +856,14 @@ test.describe('editor', () => {
 
     await expect(editor.toggle().getByText('Ветка release/2.4')).toBeHidden();
 
-    await page.keyboard.type('!');
+    await editor.typeText('!');
 
     await expect(editor.toggle().locator('p').first()).toHaveText(
       'Детали релиза!pnpm release:check',
     );
 
     await editor.placeInText('Релиз во вторник', 25);
-    await page.keyboard.press('Delete');
+    await editor.deleteForward();
 
     await expect(editor.content.locator('.nui-content__callout p')).toHaveText(
       'Релиз во вторник в 10:00.Детали релиза!pnpm release:check',
@@ -921,20 +875,19 @@ test.describe('editor', () => {
   test('writes after the last blocks and leaves a toggle from its empty last line', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
     const bookmark = editor.bookmark('numior.test');
 
     await bookmark.scrollIntoViewIfNeeded();
     await bookmark.click();
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('после закладки');
+    await editor.pressEnter();
+    await editor.typeText('после закладки');
     await expect(bookmark.locator('xpath=following-sibling::*[1]')).toHaveText('после закладки');
 
     await editor.clickBeside(bookmark);
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('рядом с закладкой');
+    await editor.pressEnter();
+    await editor.typeText('рядом с закладкой');
     await expect(bookmark.locator('xpath=following-sibling::*[1]')).toHaveText('рядом с закладкой');
 
     await expect(editor.content.locator(':scope > .nui-editor__chunk > *').first()).toHaveText(
@@ -942,7 +895,7 @@ test.describe('editor', () => {
     );
 
     await editor.clickBelowContent();
-    await page.keyboard.type('at the end');
+    await editor.typeText('at the end');
     await expect.poll(async () => (await editor.blockTexts()).at(-1)).toBe('at the end');
 
     await editor.toggleButton().first().click();
@@ -950,9 +903,9 @@ test.describe('editor', () => {
     const body = editor.toggle().first().locator('p').nth(1);
 
     await editor.caretAtEndOf(body);
-    await page.keyboard.press('Enter');
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('после блока');
+    await editor.pressEnter();
+    await editor.pressEnter();
+    await editor.typeText('после блока');
 
     await expect(editor.toggle().first().locator('xpath=following-sibling::*[1]')).toHaveText(
       'после блока',
@@ -962,7 +915,6 @@ test.describe('editor', () => {
   test('puts the caret beside blocks without text and writes beside pictures and files in the line', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
     const file = editor.file('Заметки к релизу');
@@ -972,55 +924,54 @@ test.describe('editor', () => {
     await editor.clickBeside(bookmark);
     await expect(bookmark).toHaveClass(/nui-editor__gap/u);
 
-    await page.keyboard.press('Enter');
-    await page.keyboard.press('Backspace');
+    await editor.pressEnter();
+    await editor.deleteBackward();
     await expect(bookmark).toHaveClass(/nui-editor__gap/u);
     await expect(bookmark.locator('xpath=following-sibling::*[1]')).toContainText('Заметки лежат');
 
-    await page.keyboard.press('Backspace');
+    await editor.deleteBackward();
     await expect(bookmark).toHaveClass(/nui-editor__selected/u);
 
-    await page.keyboard.press('Backspace');
+    await editor.deleteBackward();
     await expect(bookmark).toHaveCount(0);
 
     await file.click();
     await expect(file).toHaveClass(/nui-editor__selected/u);
 
-    await page.keyboard.press('ArrowRight');
-    await page.keyboard.type(' ok');
+    await editor.moveCaret('right');
+    await editor.typeText(' ok');
     await expect(file.locator('xpath=..')).toContainText(' ok — прочитайте');
 
     await editor.clickBeside(image, 'start');
-    await page.keyboard.type('before ');
+    await editor.typeText('before ');
     await expect(image.locator('xpath=..')).toHaveText(/^before /u);
 
     await editor.placeInText('Наберите', 0);
-    await page.keyboard.press('Backspace');
+    await editor.deleteBackward();
     await expect(editor.selectedAtoms()).toHaveClass(/nui-content__divider/u);
     await expect(editor.content.locator('p', { hasText: 'Наберите' })).toHaveCount(1);
 
     await editor.showTable();
     await editor.tableCell(1, 0).click();
-    await page.keyboard.press('Escape');
-    await page.keyboard.press('Escape');
+    await editor.pressEscape();
+    await editor.pressEscape();
     await expect(editor.tableBlock()).toHaveClass(/nui-editor__selected/u);
 
-    await page.keyboard.press('Enter');
-    await page.keyboard.type('под таблицей');
+    await editor.pressEnter();
+    await editor.typeText('под таблицей');
     await expect.poll(async () => (await editor.blockTexts()).at(-1)).toBe('под таблицей');
   });
 
   test('marks a commented range that follows the text typed inside it', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
     await editor.placeInText('Наберите', 0);
 
     for (let step = 0; step < 8; step += 1) {
-      await page.keyboard.press('Shift+ArrowRight');
+      await editor.extendSelection('right');
     }
 
     await editor.markSelection();
@@ -1038,7 +989,7 @@ test.describe('editor', () => {
     ).toEqual([{ tag: 'MARK', position: 'static', inherits: true }]);
 
     await editor.placeInText('Наберите', 3);
-    await page.keyboard.type('xy');
+    await editor.typeText('xy');
     await expect(editor.anchors()).toHaveText(['Набxyерите']);
     await expect(editor.output).toContainText('"anchors":1');
   });
@@ -1046,7 +997,6 @@ test.describe('editor', () => {
   test('takes back empty lines after a to-do list and reaches the task status with arrows', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
     const list = editor.content.locator('.nui-content__list--todo');
@@ -1055,17 +1005,20 @@ test.describe('editor', () => {
     await item.scrollIntoViewIfNeeded();
     await editor.caretAtEndOf(item);
 
-    for (const key of ['Enter', 'Enter', 'Enter', 'Backspace', 'Backspace', 'Backspace']) {
-      await page.keyboard.press(key);
-    }
+    await editor.pressEnter();
+    await editor.pressEnter();
+    await editor.pressEnter();
+    await editor.deleteBackward();
+    await editor.deleteBackward();
+    await editor.deleteBackward();
 
     await expect(list.locator('xpath=following-sibling::*[1]')).toHaveClass(/task-status/u);
     await expect(item).toHaveText('Подготовить письм');
 
-    await page.keyboard.press('ArrowDown');
+    await editor.moveCaret('down');
     await expect(list.locator('xpath=following-sibling::*[1]')).toHaveClass(/nui-editor__gap/u);
 
-    await page.keyboard.press('Shift+ArrowLeft');
+    await editor.extendSelection('left');
     await expect(editor.selectedAtoms()).toHaveCount(1);
     await expect(editor.selectedAtoms()).toHaveClass(/task-status/u);
   });
@@ -1076,7 +1029,7 @@ test.describe('editor', () => {
     page,
   }) => {
     await openEditor(playground);
-    const coarse = await page.evaluate(() => matchMedia('(pointer: coarse)').matches);
+    const coarse = await editor.hasCoarsePointer();
 
     test.skip(!coarse, 'the docked toolbar belongs to touch screens');
     await expect(editor.frame.locator('.nui-editor-toolbar')).toHaveCount(0);
@@ -1132,7 +1085,6 @@ test.describe('editor', () => {
   test('passes axe in light and dark, fits phones and types in RTL', async ({
     playground,
     editor,
-    page,
   }) => {
     await openEditor(playground);
 
@@ -1148,7 +1100,7 @@ test.describe('editor', () => {
 
     await playground.setDirection('rtl');
     await editor.placeAtEnd();
-    await page.keyboard.type(' abc');
+    await editor.typeText(' abc');
     await expect.poll(async () => (await editor.blockTexts()).at(-2)).toMatch(/ abc$/);
     expect(await editor.content.evaluate((root) => getComputedStyle(root).direction)).toBe('rtl');
   });

@@ -1,9 +1,26 @@
 import type { Locator, Page } from '@playwright/test';
+import { sectionScope } from '../helpers/axe';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { paintedRgbAt, rgbDelta } from '../helpers/color';
 import { beforeBoxOf, boxOf, type PseudoBox } from '../helpers/geometry';
 
+type EdgeSide = 'start' | 'end';
+
+const TOC_SCROLL_MS = 300;
+const PERIOD_PAGES = 6;
+
+const afterFrames = (): Promise<void> =>
+  new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        resolve();
+      });
+    });
+  });
+
 export class ChromeSection {
+  readonly scope = sectionScope('chrome');
+
   readonly root: Locator;
   readonly toolbar: Locator;
   readonly verticalSeparator: Locator;
@@ -18,6 +35,8 @@ export class ChromeSection {
   readonly schemeToggle: Locator;
   readonly panelsToggle: Locator;
   readonly toggleOutput: Locator;
+  readonly periodToggle: Locator;
+  readonly periodTrack: Locator;
   readonly collapsible: Locator;
   readonly accordion: Locator;
   readonly commandOpen: Locator;
@@ -46,6 +65,8 @@ export class ChromeSection {
     this.schemeToggle = page.getByTestId('toggle-scheme');
     this.panelsToggle = page.getByTestId('toggle-panels');
     this.toggleOutput = page.getByTestId('toggle-output');
+    this.periodToggle = page.getByTestId('toggle-overflow');
+    this.periodTrack = this.periodToggle.locator('.nui-toggle-group__track');
     this.collapsible = page.getByTestId('collapsible');
     this.accordion = page.getByTestId('accordion');
     this.commandOpen = page.getByTestId('command-open');
@@ -71,6 +92,54 @@ export class ChromeSection {
     await this.page.mouse.move(x + offset / 2, y);
     await this.page.mouse.move(x + offset, y);
     await this.page.mouse.up();
+  }
+
+  async moveSplitterToMin(): Promise<void> {
+    await this.page.keyboard.press('Home');
+  }
+
+  async moveSplitterToMax(): Promise<void> {
+    await this.page.keyboard.press('End');
+  }
+
+  async nudgeSplitterForward(): Promise<void> {
+    await this.page.keyboard.press('ArrowRight');
+  }
+
+  async focusNextToggleItem(): Promise<void> {
+    await this.page.keyboard.press('ArrowRight');
+  }
+
+  async pressFocusedToggleItem(): Promise<void> {
+    await this.page.keyboard.press('Space');
+  }
+
+  async focusNextTrigger(): Promise<void> {
+    await this.page.keyboard.press('ArrowDown');
+  }
+
+  async focusFirstTrigger(): Promise<void> {
+    await this.page.keyboard.press('Home');
+  }
+
+  async highlightNextCommand(): Promise<void> {
+    await this.page.keyboard.press('ArrowDown');
+  }
+
+  async runHighlightedCommand(): Promise<void> {
+    await this.page.keyboard.press('Enter');
+  }
+
+  async closeCommandPalette(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+  }
+
+  async openCommandPaletteWithShortcut(): Promise<void> {
+    await this.page.keyboard.press('Control+k');
+  }
+
+  async outwaitTocScroll(): Promise<void> {
+    await this.page.waitForTimeout(TOC_SCROLL_MS);
   }
 
   splitterValue(): Promise<number> {
@@ -134,6 +203,45 @@ export class ChromeSection {
     return group
       .locator('.nui-toggle-group__item', { hasText: label })
       .or(group.locator(`.nui-toggle-group__item[aria-label="${label}"]`));
+  }
+
+  periodEdge(side: EdgeSide): Locator {
+    return this.periodToggle.locator(`.nui-toggle-group__edge--${side} button`);
+  }
+
+  periodScroll(): Promise<number> {
+    return this.periodTrack.evaluate((track) => Math.round(Math.abs(track.scrollLeft)));
+  }
+
+  async periodItemHiddenPart(label: string): Promise<number> {
+    const [track, item] = await Promise.all([
+      boxOf(this.periodTrack),
+      boxOf(this.toggleItem(this.periodToggle, label)),
+    ]);
+
+    return Math.max(0, track.x - item.x, item.x + item.width - (track.x + track.width));
+  }
+
+  async pagePeriodTo(side: EdgeSide): Promise<void> {
+    const edge = this.periodEdge(side);
+
+    for (let step = 0; step < PERIOD_PAGES; step += 1) {
+      if (!(await edge.isVisible())) {
+        return;
+      }
+
+      await edge.click();
+      await this.periodTrack.evaluate(afterFrames);
+    }
+  }
+
+  async wheelOverPeriod(deltaY: number): Promise<void> {
+    await this.periodTrack.hover();
+    await this.page.mouse.wheel(0, deltaY);
+  }
+
+  pageScrollY(): Promise<number> {
+    return this.page.evaluate(() => window.scrollY);
   }
 
   stubClipboard(): Promise<void> {

@@ -6,7 +6,7 @@
 `useField` подключает к форме одно поле, а `useFieldArray` — список повторяющихся групп полей,
 оба без `NuiFormField`. `useFormContext` возвращает форму, переданную через `provideForm`.
 
-<Example name="form/Guests" />
+<Example name="form/Lines" />
 
 ## Сигнатура
 

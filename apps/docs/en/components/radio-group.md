@@ -9,10 +9,8 @@ one.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiRadio, NuiRadioGroup } from '@numior/vue';
-import '@numior/vue/styles/field.css';
-import '@numior/vue/styles/radio.css';
 ```
 
 ## Usage

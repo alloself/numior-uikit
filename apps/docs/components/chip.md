@@ -8,9 +8,8 @@
 
 ## Установка
 
-```ts
+```ts install
 import { NuiChip } from '@numior/vue';
-import '@numior/vue/styles/chip.css';
 ```
 
 ## Использование

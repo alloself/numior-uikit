@@ -100,38 +100,28 @@ test.describe('upload', () => {
   test('opens the file dialog from the button with the keyboard and from the zone with a click', async ({
     playground,
     upload,
-    page,
     isMobile,
   }) => {
     await playground.open();
     await upload.documents.scrollIntoViewIfNeeded();
-    const fromZone = page.waitForEvent('filechooser');
-    await upload.zone(upload.documents).click({ position: { x: 10, y: 10 } });
-    expect((await fromZone).isMultiple()).toBe(true);
+    expect((await upload.chooserFromZoneClick(upload.documents)).isMultiple()).toBe(true);
 
     if (isMobile) {
       return;
     }
 
-    await upload.browse(upload.documents).focus();
-    const fromKeyboard = page.waitForEvent('filechooser');
-    await page.keyboard.press('Enter');
-    await fromKeyboard;
+    await upload.chooserFromKeyboard(upload.documents);
   });
 
   test('the button variant has no drop zone and lists the chosen file', async ({
     playground,
     upload,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await upload.report.scrollIntoViewIfNeeded();
     await expect(upload.zone(upload.report)).toHaveCount(0);
-
-    const chooser = page.waitForEvent('filechooser');
-    await upload.browse(upload.report).click();
-    expect((await chooser).isMultiple()).toBe(false);
+    expect((await upload.chooserFromBrowseClick(upload.report)).isMultiple()).toBe(false);
 
     await upload.choose(upload.report, { name: 'sales.csv', mimeType: 'text/csv' });
     await expect(upload.row(upload.report, 'sales.csv')).toBeVisible();

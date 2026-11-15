@@ -9,6 +9,7 @@ import {
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
+import { GridKeys } from './grid-keys';
 
 export type TableSheetOutput = Guarded<typeof isSheetOutput>;
 
@@ -91,7 +92,7 @@ const showsBody = ([red, green, blue]: Rgb): boolean => blue - Math.max(red, gre
 const LINE_ROWS = [-6, -2, -1, 0];
 const BLACK: Rgb = [0, 0, 0];
 
-export class TableSheetSection {
+export class TableSheetSection extends GridKeys {
   readonly scope = '[data-testid="table-sheet"]';
   readonly toggle: Locator;
   readonly root: Locator;
@@ -108,7 +109,8 @@ export class TableSheetSection {
   readonly corner: Locator;
   readonly output: Locator;
 
-  constructor(private readonly page: Page) {
+  constructor(page: Page) {
+    super(page);
     this.toggle = page.getByTestId('table-sheet-toggle');
     this.root = page.getByTestId('table-sheet');
     this.viewport = this.root.locator(':scope > .nui-table__frame > .nui-table__viewport');
@@ -124,6 +126,40 @@ export class TableSheetSection {
     this.journalNote = this.grid.locator('.nui-table__cell--tall', { hasText: 'Операции сверены' });
     this.corner = this.grid.locator(':scope > .nui-table__header [aria-colindex="1"]');
     this.output = page.getByTestId('table-sheet-output');
+  }
+
+  async selectRowsByDrag(from: number, to: number): Promise<void> {
+    await this.rowHeader(from).hover();
+    await this.page.mouse.down();
+    await this.rowHeader(to).hover();
+    await this.page.mouse.up();
+  }
+
+  async dragRowEdge(position: number, distance: number): Promise<void> {
+    const handle = await boxOf(this.rowResizer(position));
+    const x = handle.x + handle.width / 2;
+    const y = handle.y + handle.height / 2;
+
+    await this.page.mouse.move(x, y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(x, y + distance);
+    await this.page.mouse.up();
+  }
+
+  async focusRowHeader(): Promise<void> {
+    await this.page.keyboard.press('Home');
+  }
+
+  async selectFocusedRow(): Promise<void> {
+    await this.page.keyboard.press('Space');
+  }
+
+  async growFocusedRow(): Promise<void> {
+    await this.page.keyboard.press('Alt+ArrowDown');
+  }
+
+  async collapseSelection(): Promise<void> {
+    await this.page.keyboard.press('Escape');
   }
 
   async show(): Promise<void> {

@@ -44,11 +44,14 @@ const relay =
     }
   };
 
-const install = (): void => {
+const install = (): boolean => {
   const host = defaultWindow;
 
-  if (host === undefined || hosts.has(host)) {
-    return;
+  if (host === undefined) {
+    return false;
+  }
+  if (hosts.has(host)) {
+    return true;
   }
 
   hosts.add(host);
@@ -60,6 +63,7 @@ const install = (): void => {
   host.addEventListener('pointermove', relay(bubbling, moveOf));
   host.addEventListener('pointerup', relay(bubbling, upOf));
   host.addEventListener('pointercancel', relay(bubbling, cancelOf));
+  return true;
 };
 
 export const usePointerSession = (options: PointerSessionOptions = {}): PointerSession => {
@@ -72,7 +76,10 @@ export const usePointerSession = (options: PointerSessionOptions = {}): PointerS
   };
 
   const begin = (handlers: PointerSessionHandlers): void => {
-    install();
+    if (!install()) {
+      return;
+    }
+
     route.handlers = handlers;
     routes.add(route);
   };

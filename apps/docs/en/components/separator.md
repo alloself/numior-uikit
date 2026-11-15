@@ -6,9 +6,8 @@ A line between blocks of a page or between buttons of a toolbar.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiSeparator } from '@numior/vue';
-import '@numior/vue/styles/separator.css';
 ```
 
 ## Usage
@@ -29,6 +28,9 @@ Set `orientation="vertical"`, and the line takes the height of the row.
 
 A screen reader announces the line as a separator between parts of the page. When the line is
 only decoration, pass `decorative`, and the screen reader skips it.
+
+The text from `label` or the slot becomes the name of the separator, and the screen reader reads
+it along with the role.
 
 ## API
 

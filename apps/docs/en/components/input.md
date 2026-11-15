@@ -8,10 +8,8 @@ The label, the hint and the error work as described on the [Field](/en/component
 
 ## Installation
 
-```ts
+```ts install
 import { NuiInput } from '@numior/vue';
-import '@numior/vue/styles/field.css';
-import '@numior/vue/styles/input.css';
 ```
 
 ## Usage

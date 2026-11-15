@@ -230,7 +230,7 @@
     }
 
     .nui-calendar__presets {
-      @apply grid-flow-col auto-cols-max pe-0 pbe-2 border-be border-be-border overflow-x-auto;
+      @apply flex flex-wrap pe-0 pbe-2 border-be border-be-border;
       border-inline-end: 0;
     }
   }

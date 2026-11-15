@@ -10,8 +10,8 @@ const docs: DocsMap = {
         en: 'Style: `outline` border, shadow (`elevated`) or `soft` fill.',
       },
       padding: {
-        ru: 'Внутренние отступы карточки: `xs`, `sm`, `md` или `lg`.',
-        en: 'Inner padding of the card: `xs`, `sm`, `md` or `lg`.',
+        ru: 'Внутренние отступы карточки: `xs`, `sm`, `md` или `lg`. Отступ `xs` подходит для плотной сетки из многих карточек.',
+        en: 'Inner padding of the card: `xs`, `sm`, `md` or `lg`. The `xs` padding suits a dense grid of many cards.',
       },
       href: {
         ru: 'Адрес ссылки. Вся карточка открывает его по клику.',
@@ -42,6 +42,12 @@ const docs: DocsMap = {
         en: 'Shows placeholders in the card parts, sets `aria-busy` and turns the card link or button off.',
       },
     },
+    events: {
+      click: {
+        ru: 'Клик по карточке-кнопке или карточке-ссылке. Клики по кнопкам и ссылкам внутри карточки сюда не приходят.',
+        en: 'A click on a button card or a link card. Clicks on buttons and links inside the card do not reach it.',
+      },
+    },
     slots: {
       default: {
         ru: 'Блоки карточки: `NuiCardHeader`, `NuiCardContent`, `NuiCardFooter` и другие.',
@@ -63,7 +69,10 @@ const docs: DocsMap = {
     ],
     configurator: {
       props: ['variant', 'padding', 'interactive', 'loading', 'title', 'description'],
-      content: { ru: 'Содержимое карточки', en: 'Card content' },
+      content: {
+        ru: 'Комод «Фьорд» и лампа «Нурд» на 26 800 ₽.',
+        en: 'Fjord dresser and Nord table lamp, $368.',
+      },
     },
   },
   NuiCardHeader: {

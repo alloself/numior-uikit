@@ -1,40 +1,53 @@
 # Badge
 
-`NuiBadge` is a small label with a status, a counter or a coloured dot: "Draft", "Paid", "3". A
-label the user can remove is a [Chip](/en/components/chip).
+A short label for a status or a count.
 
 <Example name="badge/Basic" />
 
+For a label the user can remove, use a [Chip](/en/components/chip).
+
 ## Installation
 
-```ts
+```ts install
 import { NuiBadge } from '@numior/vue';
-import '@numior/vue/styles/badge.css';
 ```
 
 ## Usage
 
-The `tone` prop sets the colour, and `variant` the fill: `soft`, `outline` or `solid`. `size`
-accepts `sm` and `md`.
+Change the color, the fill and the size.
 
 <Configurator name="NuiBadge" />
 
 ## Examples
 
-### Counter, dot and corner
+### Show a number
 
-The `count` prop shows a number. When it exceeds `max`, the badge shows `max` with a plus, which
-is "99+" with the default `max`. `dot` reduces the badge to a single dot.
+Pass a number in `count`.
 
 <Example name="badge/Count" />
 
-With `floating` the badge sits in the top corner of its parent, such as a button. It goes on the
-right, or on the left in right-to-left text. The parent needs `position: relative`.
+A number above `max` shows as the limit with a plus, "99+" by default.
+
+### Mark with a dot
+
+Add `dot` and name the dot in `label`.
+
+<Example name="badge/Dot" />
+
+### Pin to a button
+
+Add `floating` to place the badge in the top corner of its parent.
+
+<Example name="badge/Floating" />
+
+A [Button](/en/components/button) needs nothing extra. Give a block of your own the `relative`
+class, or the badge lands in the corner of the nearest positioned ancestor. In right-to-left text
+the badge sits in the left corner.
 
 ## Accessibility
 
-A screen reader reads the badge text or number together with the surrounding text. It names a
-dot by its `label` and skips a dot without one.
+A screen reader reads the badge text or number together with the text around it. It names a dot
+by its `label` and skips a dot without one.
 
 ## API
 

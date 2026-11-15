@@ -1,38 +1,38 @@
 # Empty
 
-`NuiEmpty` fills the place of an empty list, table or search result. It explains why there is
-nothing here and suggests what to do next.
+A message in place of an empty list.
 
 <Example name="empty/Basic" />
 
-Pass the heading in `title`, the explanation in `description`, and put buttons into the `actions`
-slot. A custom illustration in place of the icon goes into the `media` slot.
+Put the reason in `title` and `description`, and the next step in the `actions` slot.
 
 ## Installation
 
-```ts
+```ts install
 import { NuiEmpty } from '@numior/vue';
-import '@numior/vue/styles/empty.css';
 ```
 
 ## Usage
+
+Change the size or hide the icon.
 
 <Configurator name="NuiEmpty" />
 
 ## Examples
 
-### Compact
+### Fit into a narrow space
 
-`size="sm"` shrinks the icon and the spacing for an empty list or dropdown, and `hideIcon` removes
-the icon. [List](/en/components/list), `NuiSelect` and `NuiCombobox` show the same compact state
-when there are no options.
+Set `size="sm"`.
 
 <Example name="empty/Compact" />
 
+[List](/en/components/list), [Tree](/en/components/tree), `NuiSelect` and `NuiCombobox` show such
+a placeholder on their own when they are empty.
+
 ## Accessibility
 
-The heading is rendered as a plain paragraph, so it does not break the heading order of the page.
-Screen readers skip the icon, so put the meaning into `title` or `description`.
+The title is a plain paragraph, so it does not break the heading order of the page. Screen
+readers skip the icon: put the meaning into `title` or `description`.
 
 ## API
 

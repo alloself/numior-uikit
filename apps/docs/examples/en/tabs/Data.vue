@@ -1,14 +1,11 @@
 <template>
-  <NuiTabs
-    v-model="period"
-    :tabs="periods"
-    variant="soft"
-    size="sm"
-    activation="manual"
-    label="Period"
-  >
+  <NuiTabs v-model="category" :tabs="sections" label="Catalog sections" class="w-full max-w-md">
     <template #panel="{ tab }">
-      <p class="text-sm">Sales for the “{{ tab.label }}” period.</p>
+      <ul class="flex flex-col gap-1 text-sm">
+        <li v-for="product in productsOf(tab.value)" :key="product.sku">
+          {{ product.name }}, {{ product.stock }} in stock
+        </li>
+      </ul>
     </template>
   </NuiTabs>
 </template>
@@ -16,12 +13,15 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { NuiTabs, type NuiTabDescriptor } from '@numior/vue';
+import { categories, products, type Product } from '#demo/products';
 
-const period = ref('week');
+const category = ref('lighting');
 
-const periods: NuiTabDescriptor[] = [
-  { value: 'day', label: 'Day' },
-  { value: 'week', label: 'Week' },
-  { value: 'month', label: 'Month' },
-];
+const sections: NuiTabDescriptor[] = categories.map(({ value, label }) => ({ value, label }));
+
+const productsOf = (value: string): Product[] => {
+  const kinds = categories.find((entry) => entry.value === value)?.children ?? [];
+
+  return products.filter((product) => kinds.some((kind) => kind.value === product.category));
+};
 </script>

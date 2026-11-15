@@ -84,7 +84,6 @@ test.describe('table detail rows', () => {
   test('walks into the detail and its nested table from the keyboard and back', async ({
     tableDetail: detail,
     playground,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard scenario');
@@ -93,26 +92,26 @@ test.describe('table detail rows', () => {
     await detail.root.scrollIntoViewIfNeeded();
 
     await detail.cell(1, 0).focus();
-    await page.keyboard.press('Enter');
+    await detail.expandFocusedRow();
     await expect(detail.panel(2)).toBeVisible();
 
-    await page.keyboard.press('ArrowRight');
-    await page.keyboard.press('ArrowDown');
+    await detail.moveFocus('right');
+    await detail.moveFocus('down');
     await expect(detail.cell(2, 0)).toBeFocused();
 
-    await page.keyboard.press('Tab');
+    await detail.tabIntoDetail();
 
     await expect(detail.nestedCell(2, 0, 0)).toBeFocused();
 
-    await page.keyboard.press('ArrowDown');
+    await detail.moveFocus('down');
     await expect(detail.nestedCell(2, 1, 0)).toBeFocused();
     await expect(detail.cell(2, 0)).toHaveAttribute('tabindex', '0');
 
-    await page.keyboard.press('Shift+Tab');
+    await detail.tabOutOfDetail();
 
     await expect(detail.cell(2, 0)).toBeFocused();
 
-    await page.keyboard.press('ArrowDown');
+    await detail.moveFocus('down');
     await expect(detail.cell(3, 1)).toBeFocused();
   });
 
@@ -182,7 +181,6 @@ test.describe('table detail rows', () => {
   test('sizes the rows of a window by their content and keeps the row under the header in place', async ({
     tableDetail: detail,
     playground,
-    page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -206,7 +204,7 @@ test.describe('table detail rows', () => {
 
     const settled = await detail.topRow();
 
-    await page.waitForTimeout(200);
+    await detail.waitForLateLayout();
     expect(await detail.topRow()).toEqual(settled);
     expect(await detail.largestRowGap()).toBeLessThanOrEqual(0.5);
 
@@ -259,7 +257,6 @@ test.describe('table detail rows', () => {
   test('keeps the focused cell in view while the arrows walk rows of different heights', async ({
     tableDetail: detail,
     playground,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard scenario');
@@ -270,7 +267,7 @@ test.describe('table detail rows', () => {
     await detail.cell(0, 1).click();
 
     for (let step = 1; step <= 14; step += 1) {
-      await page.keyboard.press('ArrowDown');
+      await detail.moveFocus('down');
       await expect(detail.cell(step, 1)).toBeFocused();
 
       const edges = await detail.bodyEdges();

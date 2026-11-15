@@ -1,16 +1,26 @@
 <template>
-  <NuiBreadcrumbs v-slot="{ item, current }" :items="path" label="Path">
-    <strong v-if="current">{{ item.label }}</strong>
-    <NuiLink v-else :href="item.href" tone="neutral" underline="hover">{{ item.label }}</NuiLink>
+  <NuiBreadcrumbs :items="path" label="Order path">
+    <template #item="{ item, current }">
+      <span
+        v-if="current"
+        class="flex items-center gap-2 font-medium text-foreground"
+        aria-current="page"
+      >
+        {{ item.label }}
+        <NuiBadge tone="info" size="sm">{{ ORDER_STATUSES.shipped }}</NuiBadge>
+      </span>
+      <NuiLink v-else :href="item.href" tone="neutral" underline="hover">{{ item.label }}</NuiLink>
+    </template>
   </NuiBreadcrumbs>
 </template>
 
 <script setup lang="ts">
-import { NuiBreadcrumbs, NuiLink, type NuiBreadcrumbItem } from '@numior/vue';
+import { NuiBadge, NuiBreadcrumbs, NuiLink, type NuiBreadcrumbItem } from '@numior/vue';
+import { ORDER_STATUSES } from '#demo/orders';
 
 const path: NuiBreadcrumbItem[] = [
-  { label: 'Projects', href: '#' },
-  { label: 'Catalogue 2026', href: '#' },
-  { label: 'Tasks' },
+  { label: 'Customers', href: '#' },
+  { label: 'Paul Hawkins', href: '#' },
+  { label: 'Order 20408' },
 ];
 </script>

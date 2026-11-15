@@ -8,39 +8,14 @@ Type `/` at the start of a line to turn it into another block, or press + in the
 
 ## Installation
 
-Install the editor and the document packages:
-
-::: code-group
-
-```sh [pnpm]
-pnpm add @numior/editor-vue @numior/editor-core @numior/content @numior/table
+```ts install:packages
+import { NuiEditor } from '@numior/editor-vue';
+import type { DocJSON } from '@numior/editor-core';
 ```
-
-```sh [npm]
-npm install @numior/editor-vue @numior/editor-core @numior/content @numior/table
-```
-
-```sh [yarn]
-yarn add @numior/editor-vue @numior/editor-core @numior/content @numior/table
-```
-
-```sh [bun]
-bun add @numior/editor-vue @numior/editor-core @numior/content @numior/table
-```
-
-:::
 
 `@numior/editor-core` holds the document model: the `DocJSON` type and functions such as `fromHTML`.
 `@numior/content` describes the blocks and renders a finished document, and `@numior/table` draws
 the tables inside it.
-
-Load the styles after the [base styles](/en/guide/getting-started):
-
-```ts
-import '@numior/content/styles.css';
-import '@numior/table/styles.css';
-import '@numior/editor-vue/styles.css';
-```
 
 ## Save the document
 

@@ -136,7 +136,6 @@ test.describe('table text flow', () => {
 
   test('selects only the cells under the pointer and the keyboard', async ({
     tableFlow: flow,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'pointer drag and keyboard scenario');
@@ -145,7 +144,7 @@ test.describe('table text flow', () => {
     expect(await flow.rangedCount()).toBe(6);
 
     await flow.cell(BLOCKS, 2).click();
-    await page.keyboard.press('Shift+ArrowRight');
+    await flow.extendSelection('right');
 
     expect(await flow.rangedCount()).toBe(2);
     await expectOneText(flow, BLOCKS, 1, await flow.reachOf(BLOCKS, 1));
@@ -153,20 +152,18 @@ test.describe('table text flow', () => {
 
   test('shrinks the flow when a value lands in a covered cell and restores it when it is cleared', async ({
     tableFlow: flow,
-    page,
     isMobile,
   }) => {
     test.skip(isMobile, 'keyboard scenario');
     await flow.cell(STOPPED, 3).click();
-    await page.keyboard.type('Z');
-    await page.keyboard.press('Enter');
+    await flow.typeAndCommit('Z');
 
     await expect(flow.text(STOPPED, 3)).toHaveText('Z');
     await expectOneText(flow, STOPPED, 1, 2);
     expect(await flow.lineAfter(STOPPED, 2)).toBe('1px');
 
     await flow.cell(STOPPED, 3).click();
-    await page.keyboard.press('Delete');
+    await flow.clearActiveCell();
 
     await expectOneText(flow, STOPPED, 1, 4);
   });
