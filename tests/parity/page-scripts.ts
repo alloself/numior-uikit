@@ -319,14 +319,15 @@ export const watchFrameReports = ({ store, type }: FrameWatch): void => {
 
   Object.defineProperty(window, store, { value: reports });
 
-  window.addEventListener('message', (event: MessageEvent<unknown>) => {
-    const { data, source } = event;
-    const report = typeof data === 'object' && data !== null && 'type' in data && 'height' in data;
+  window.addEventListener('message', ({ data, source }: MessageEvent<unknown>) => {
+    const own = typeof data === 'object' && data !== null && Reflect.get(data, 'type') === type;
+    const height: unknown = own ? Reflect.get(data, 'height') : undefined;
 
-    if (!report || data.type !== type || typeof data.height !== 'number' || source === null) {
+    if (typeof height !== 'number' || source === null) {
       return;
     }
-    reports.set(source, { count: (reports.get(source)?.count ?? 0) + 1, height: data.height });
+
+    reports.set(source, { count: (reports.get(source)?.count ?? 0) + 1, height });
   });
 };
 
@@ -344,16 +345,12 @@ export const frameReports = (store: string): FrameReports => {
 
       const report: unknown = reports instanceof WeakMap ? reports.get(view) : undefined;
       const size = Number.parseFloat(getComputedStyle(frame).blockSize);
-
-      const height: unknown =
-        typeof report === 'object' && report !== null && 'height' in report
-          ? report.height
-          : undefined;
-
+      const known = typeof report === 'object' && report !== null;
+      const height: unknown = known ? Reflect.get(report, 'height') : undefined;
       const applied = typeof height === 'number' && size >= height;
 
       return {
-        waiting: applied ? frames.waiting : frames.waiting + 1,
+        waiting: frames.waiting + Number(!applied),
         signature: `${frames.signature} ${JSON.stringify(report ?? null)}:${size}`,
       };
     },
