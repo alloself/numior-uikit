@@ -41,6 +41,12 @@ const positioned = (offset: string, padding: string): StoredScene =>
     nodes: [[-1, 'button.nui-button:0', '0 0 96 32', [0, 1]]],
   });
 
+const laidOut = (display: string, alignment: string, columns: string): StoredScene =>
+  encodeScene('pg-light-1440/fields', ['display', 'align-content', 'grid-template-columns'], {
+    values: [display, alignment, columns],
+    nodes: [[-1, 'div.nui-field:0', '0 0 320 64', [0, 1, 2]]],
+  });
+
 const withButton = (segment: string, color: number): StoredScene =>
   scene('red', [
     [0, segment, '0 60 96 32', [5, 3, 4]],
@@ -197,6 +203,20 @@ describe('scene comparison', () => {
     const other = encodeScene('pg-light-1440/buttons', ['color'], { values: ['red'], nodes: [] });
 
     expect(() => diffScenes(scene('red'), other)).toThrow('retake the baseline');
+  });
+
+  it('takes flex-start for start on a grid and a track repeated once for the track', () => {
+    const single = 'minmax(0px, 1fr)';
+    const repeated = `repeat(1, ${single})`;
+
+    const findings = [
+      ...diffScenes(laidOut('grid', 'start', single), laidOut('grid', 'flex-start', repeated)),
+      ...diffScenes(laidOut('flex', 'start', single), laidOut('flex', 'flex-start', single)),
+    ];
+
+    expect(findings.map(({ property, after }) => `${property} ${after}`)).toEqual([
+      'align-content flex-start',
+    ]);
   });
 
   it('takes a zero background offset in pixels and in percent for the same position', () => {

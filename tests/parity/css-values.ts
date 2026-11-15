@@ -47,7 +47,53 @@ const FLEX = new Map([
   ['0 auto', '0 1 auto'],
 ]);
 
+const REPEAT_OPEN = 'repeat(';
+const GRID_DISPLAYS = new Set(['grid', 'inline-grid']);
+
+const GRID_ALIGNMENTS = new Set([
+  'align-content',
+  'justify-content',
+  'align-items',
+  'justify-items',
+]);
+
 export const RESET = 'initial';
+
+const closingOf = (value: string, open: number): number => {
+  let depth = 0;
+
+  for (let at = open; at < value.length; at += 1) {
+    depth += Number(value[at] === '(') - Number(value[at] === ')');
+
+    if (depth === 0) {
+      return at;
+    }
+  }
+
+  return value.length - 1;
+};
+
+export const withoutSingleRepeats = (value: string): string => {
+  const start = value.indexOf(REPEAT_OPEN);
+
+  if (start < 0) {
+    return value;
+  }
+
+  const close = closingOf(value, start + REPEAT_OPEN.length - 1);
+  const inner = value.slice(start + REPEAT_OPEN.length, close);
+  const comma = inner.indexOf(',');
+  const single = comma > 0 && inner.slice(0, comma).trim() === '1';
+  const own = single ? inner.slice(comma + 1).trim() : value.slice(start, close + 1);
+
+  return `${value.slice(0, start)}${own}${withoutSingleRepeats(value.slice(close + 1))}`;
+};
+
+export const isGridDisplay = (display: string | undefined): boolean =>
+  GRID_DISPLAYS.has(display ?? '');
+
+export const gridAlignment = (property: string, value: string): string =>
+  GRID_ALIGNMENTS.has(property) ? value.replace(/(^|\s)flex-start(?=$|\s)/g, '$1start') : value;
 
 const number = (value: number): string => String(Number(value.toFixed(6)) || 0);
 
@@ -146,8 +192,9 @@ export const canonical = (value: string, aliases: Aliases): string => {
 
 export const normalized = (value: string, environment: CssEnvironment): string => {
   const resolved = replaceKeys(canonical(value, environment.aliases), KEY, environment.fixed);
+  const plain = canonical(evaluate(resolved), environment.aliases).replace(ZERO_LENGTH, '$10');
 
-  return canonical(evaluate(resolved), environment.aliases).replace(ZERO_LENGTH, '$10');
+  return withoutSingleRepeats(plain);
 };
 
 const split = (value: string, separator: string): string[] => {

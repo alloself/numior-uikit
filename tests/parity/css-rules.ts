@@ -1,10 +1,20 @@
-import { compareSpecificity, listSpecificity } from './css-specificity.ts';
-import { RESET, helperReads, longhands, normalized, substituteHelpers } from './css-values.ts';
+import { compareSpecificity, listSpecificity, splitSelectors } from './css-specificity.ts';
+import {
+  RESET,
+  gridAlignment,
+  helperReads,
+  isGridDisplay,
+  longhands,
+  normalized,
+  splitTokens,
+  substituteHelpers,
+} from './css-values.ts';
 import type {
   CssBlock,
   CssDeclaration,
   CssEnvironment,
   CssRule,
+  Displays,
   DroppedReset,
   FoldedRules,
   LonghandOwner,
@@ -280,10 +290,49 @@ export const effective = (rule: CssRule, environment: CssEnvironment): Map<strin
   }, new Map<string, string>());
 };
 
+const subjectBlock = (selector: string): string => {
+  const name = /^\.([\w-]+)/.exec(splitTokens(selector).at(-1) ?? '')?.[1];
+
+  return name === undefined ? '' : `.${name.replace(/--.*$/, '')}`;
+};
+
+const displaysOf = (rules: readonly CssRule[], environment: CssEnvironment): Displays =>
+  rules.reduce((displays, rule) => {
+    const display = effective(rule, environment).get('display');
+
+    if (display === undefined || !/^\.[\w-]+$/.test(rule.selector)) {
+      return displays;
+    }
+
+    displays.set(rule.selector, display);
+
+    return displays;
+  }, new Map<string, string>());
+
+const onGrid = (rule: CssRule, displays: Displays, environment: CssEnvironment): boolean => {
+  const own = effective(rule, environment).get('display');
+
+  if (own !== undefined) {
+    return isGridDisplay(own);
+  }
+
+  return splitSelectors(rule.selector).every((selector) => {
+    return isGridDisplay(displays.get(subjectBlock(selector)));
+  });
+};
+
+const sameLonghand = (property: string, values: readonly string[], grid: boolean): boolean => {
+  const [left = '', right = ''] = values;
+
+  return (
+    left === right || (grid && gridAlignment(property, left) === gridAlignment(property, right))
+  );
+};
+
 const declarationIssues = (
-  base: CssRule,
-  next: CssRule,
+  [base, next]: readonly [CssRule, CssRule],
   index: number,
+  grid: boolean,
   environment: CssEnvironment,
 ): RuleComparison => {
   const [before, after] = [effective(base, environment), effective(next, environment)];
@@ -293,7 +342,7 @@ const declarationIssues = (
   for (const [property, value] of before) {
     const pair = after.get(property);
 
-    if (pair === value) {
+    if (pair !== undefined && sameLonghand(property, [value, pair], grid)) {
       continue;
     }
 
@@ -306,7 +355,9 @@ const declarationIssues = (
   }
 
   for (const [property, value] of after) {
-    if (before.get(property) === value) {
+    const known = before.get(property);
+
+    if (known !== undefined && sameLonghand(property, [known, value], grid)) {
       continue;
     }
 
@@ -413,6 +464,7 @@ export const compareRules = (
 ): RuleComparison => {
   const issues: string[] = [];
   const resets: DroppedReset[] = [];
+  const displays = [displaysOf(base, environment), displaysOf(next, environment)];
 
   for (const [at, rule] of base.entries()) {
     const pair = next[at];
@@ -425,7 +477,11 @@ export const compareRules = (
       continue;
     }
 
-    const result = declarationIssues(rule, pair, at, environment);
+    const [baseDisplays = new Map(), nextDisplays = new Map()] = displays;
+
+    const grid = onGrid(rule, baseDisplays, environment) && onGrid(pair, nextDisplays, environment);
+
+    const result = declarationIssues([rule, pair], at, grid, environment);
 
     for (const issue of result.issues) {
       issues.push(issue);

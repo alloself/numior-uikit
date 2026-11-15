@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { canonical, evaluate, longhands, normalized, splitTokens } from './css-values';
+import {
+  canonical,
+  evaluate,
+  gridAlignment,
+  isGridDisplay,
+  longhands,
+  normalized,
+  splitTokens,
+} from './css-values';
 import type { CssEnvironment } from './css-rules.types';
 
 const ENVIRONMENT: CssEnvironment = {
@@ -30,6 +38,24 @@ describe('values of a compiled declaration', () => {
 
     expect(normalized('calc(var(--spacing) * 0) 0rem -0px', ENVIRONMENT)).toBe('0 0 0');
     expect(margin).toBe('min(15dvh, 2rem)');
+  });
+
+  it('writes a track repeated once as the track itself', () => {
+    expect(normalized('repeat(1, minmax(0, 1fr))', ENVIRONMENT)).toBe('minmax(0, 1fr)');
+
+    expect(normalized('repeat(1, 2rem) repeat(2, 1fr) repeat(1,auto)', ENVIRONMENT)).toBe(
+      '2rem repeat(2, 1fr) auto',
+    );
+  });
+
+  it('takes flex-start for start only in the alignment of a grid', () => {
+    expect(gridAlignment('align-content', 'flex-start')).toBe('start');
+    expect(gridAlignment('align-items', 'safe flex-start')).toBe('safe start');
+    expect(gridAlignment('align-self', 'flex-start')).toBe('flex-start');
+
+    expect([isGridDisplay('inline-grid'), isGridDisplay('flex'), isGridDisplay(undefined)]).toEqual(
+      [true, false, false],
+    );
   });
 
   it('splits a value at the spaces outside functions', () => {

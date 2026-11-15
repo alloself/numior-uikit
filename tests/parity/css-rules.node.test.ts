@@ -179,6 +179,27 @@ describe('rule comparison of a rewritten stylesheet', () => {
     expect(compare(old, next).issues).toEqual([]);
   });
 
+  it('takes flex-start for start on a grid the rule or the block of its subject sets', () => {
+    const old = `.a { display: grid; align-content: start; }
+      .b { display: flex; }
+      .a--x { align-items: start; }
+      .b--x { align-items: start; }
+      .a--x .c { justify-content: start; }`;
+
+    const next = `.a { display: grid; align-content: flex-start; }
+      .b { display: flex; }
+      .a--x { align-items: flex-start; }
+      .b--x { align-items: flex-start; }
+      .a--x .c { justify-content: flex-start; }`;
+
+    expect(compare(old, next).issues).toEqual([
+      '| .b--x: lost align-items: start',
+      '| .b--x: gained align-items: flex-start',
+      '| .a--x .c: lost justify-content: start',
+      '| .a--x .c: gained justify-content: flex-start',
+    ]);
+  });
+
   it('refuses a helper variable that another rule sets', () => {
     const old = '.a { line-height: 1; } .b { line-height: 1.5; }';
     const setter = '.a { --tw-leading: 1; line-height: 1; }';

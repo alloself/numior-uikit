@@ -1,3 +1,4 @@
+import { gridAlignment, isGridDisplay, withoutSingleRepeats } from './css-values.ts';
 import { describePixelDiff, decodePng } from './png.ts';
 import { styleOf } from './store.ts';
 import type {
@@ -31,8 +32,23 @@ const zeroed = (value: string): string =>
     .map((offset) => (ZERO_OFFSET.test(offset) ? '0' : offset))
     .join(LAYER_SEPARATOR);
 
-const sameValue = (property: string, was: string, now: string): boolean =>
-  was === now || (ORIGIN_OFFSETS.has(property) && zeroed(was) === zeroed(now));
+const TRACK_LISTS = new Set(['grid-template-columns', 'grid-template-rows']);
+
+const canonicalValue = (property: string, value: string, grid: boolean): string => {
+  if (ORIGIN_OFFSETS.has(property)) {
+    return zeroed(value);
+  }
+
+  if (TRACK_LISTS.has(property)) {
+    return withoutSingleRepeats(value);
+  }
+
+  return grid ? gridAlignment(property, value) : value;
+};
+
+const sameValue = (property: string, [was, now]: readonly string[], grid: boolean): boolean =>
+  was === now ||
+  canonicalValue(property, was ?? '', grid) === canonicalValue(property, now ?? '', grid);
 
 const withoutDropped = (segment: string, ignored: readonly IgnoredClasses[]): string => {
   const cut = segment.lastIndexOf(':');
@@ -107,10 +123,13 @@ const nodeFindings = (
     });
   }
 
+  const display = base.properties.indexOf('display');
+  const grid = isGridDisplay(beforeStyle[display]) && isGridDisplay(afterStyle[display]);
+
   base.properties.forEach((property, index) => {
     const [was = '', now = ''] = [beforeStyle[index], afterStyle[index]];
 
-    if (sameValue(property, was, now)) {
+    if (sameValue(property, [was, now], grid)) {
       return;
     }
 
