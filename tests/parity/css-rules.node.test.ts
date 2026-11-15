@@ -200,6 +200,25 @@ describe('rule comparison of a rewritten stylesheet', () => {
     ]);
   });
 
+  it('keeps start apart from flex-start where another rule makes the same element a flexbox', () => {
+    const old = `.a { display: grid; align-content: start; }
+      .b { display: grid; align-items: start; }
+      .c { display: grid; justify-items: start; }
+      @media (width < 40rem) { .a, .b { display: flex; flex-wrap: wrap; } }`;
+
+    const next = `.a { display: grid; align-content: flex-start; }
+      .b { display: grid; align-items: flex-start; }
+      .c { display: grid; justify-items: flex-start; }
+      @media (width < 40rem) { .a, .b { display: flex; flex-wrap: wrap; } }`;
+
+    expect(compare(old, next).issues).toEqual([
+      '| .a: lost align-content: start',
+      '| .a: gained align-content: flex-start',
+      '| .b: lost align-items: start',
+      '| .b: gained align-items: flex-start',
+    ]);
+  });
+
   it('refuses a helper variable that another rule sets', () => {
     const old = '.a { line-height: 1; } .b { line-height: 1.5; }';
     const setter = '.a { --tw-leading: 1; line-height: 1; }';

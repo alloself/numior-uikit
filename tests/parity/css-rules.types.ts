@@ -16,7 +16,7 @@ export interface CssBlock {
 
 export type Aliases = ReadonlyMap<string, string>;
 
-export type Displays = ReadonlyMap<string, string>;
+export type Displays = ReadonlyMap<string, readonly string[]>;
 
 export interface FoldedRules {
   readonly rules: CssRule[];

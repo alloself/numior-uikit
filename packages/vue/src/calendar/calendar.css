@@ -192,8 +192,9 @@
     background: oklab(from var(--_selected-bg) calc(l - var(--state-hover)) a b);
   }
   .nui-calendar__presets {
-    @apply box-border grid gap-1 content-start pe-4 border-e border-e-border;
+    @apply box-border grid gap-1 pe-4 border-e border-e-border;
     grid-area: presets;
+    align-content: start;
   }
   .nui-calendar__preset {
     @apply justify-start;

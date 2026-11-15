@@ -296,28 +296,39 @@ const subjectBlock = (selector: string): string => {
   return name === undefined ? '' : `.${name.replace(/--.*$/, '')}`;
 };
 
+const CLASS_SELECTOR = /^\.[\w-]+$/;
+
 const displaysOf = (rules: readonly CssRule[], environment: CssEnvironment): Displays =>
   rules.reduce((displays, rule) => {
     const display = effective(rule, environment).get('display');
 
-    if (display === undefined || !/^\.[\w-]+$/.test(rule.selector)) {
+    if (display === undefined) {
       return displays;
     }
 
-    displays.set(rule.selector, display);
+    for (const selector of splitSelectors(rule.selector)) {
+      if (!CLASS_SELECTOR.test(selector)) {
+        continue;
+      }
+
+      displays.set(selector, [...(displays.get(selector) ?? []), display]);
+    }
 
     return displays;
-  }, new Map<string, string>());
+  }, new Map<string, readonly string[]>());
+
+const alwaysGrid = (displays: readonly string[] | undefined): boolean =>
+  displays !== undefined && displays.every(isGridDisplay);
 
 const onGrid = (rule: CssRule, displays: Displays, environment: CssEnvironment): boolean => {
   const own = effective(rule, environment).get('display');
 
   if (own !== undefined) {
-    return isGridDisplay(own);
+    return isGridDisplay(own) && alwaysGrid(displays.get(rule.selector) ?? [own]);
   }
 
   return splitSelectors(rule.selector).every((selector) => {
-    return isGridDisplay(displays.get(subjectBlock(selector)));
+    return alwaysGrid(displays.get(subjectBlock(selector)));
   });
 };
 
