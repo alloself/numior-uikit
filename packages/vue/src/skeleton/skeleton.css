@@ -7,30 +7,22 @@
     --_shine: color-mix(in oklab, var(--color-foreground) 13%, transparent);
     --_sweep: 48rem;
 
-    box-sizing: border-box;
-    display: block;
-    inline-size: var(--_inline-size);
+    @apply box-border block inline-(--_inline-size);
   }
   .nui-skeleton--shape-text {
-    display: grid;
+    @apply grid;
     gap: 0.5em;
   }
   .nui-skeleton__line,
   .nui-skeleton--shape-rect,
   .nui-skeleton--shape-circle {
-    position: relative;
-    display: block;
-    block-size: var(--_block-size);
-    border-radius: var(--_radius);
-    overflow: hidden;
+    @apply relative block block-(--_block-size) rounded-(--_radius) overflow-hidden;
   }
   .nui-skeleton__line::after,
   .nui-skeleton--shape-rect::after,
   .nui-skeleton--shape-circle::after {
+    @apply absolute inset-y-0 left-0;
     content: '';
-    position: absolute;
-    inset-block: 0;
-    left: 0;
     inline-size: calc(100% + var(--_sweep));
     background: linear-gradient(90deg, var(--_tint) 40%, var(--_shine) 50%, var(--_tint) 60%) 0 0 /
       var(--_sweep) 100% repeat-x;

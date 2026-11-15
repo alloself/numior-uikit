@@ -2,15 +2,11 @@
   .nui-link {
     --_tone: var(--color-primary);
 
-    box-sizing: border-box;
-    border-radius: --theme(--radius-sm inline);
-    color: var(--_tone);
+    @apply box-border rounded-sm text-(--_tone) underline cursor-pointer;
     font: inherit;
-    text-decoration: underline;
     text-decoration-color: color-mix(in oklab, var(--_tone) 40%, transparent);
     text-decoration-thickness: 1px;
     text-underline-offset: 0.2em;
-    cursor: pointer;
     transition:
       color var(--transition-duration-fast) var(--ease-nui),
       text-decoration-color var(--transition-duration-fast) var(--ease-nui);
@@ -34,30 +30,27 @@
     --_tone: var(--color-foreground);
   }
   .nui-link:hover {
+    @apply decoration-current;
     color: color-mix(in oklab, var(--_tone), var(--color-foreground) 15%);
-    text-decoration-color: currentColor;
   }
   .nui-link--underline-hover {
-    text-decoration-color: transparent;
+    @apply decoration-transparent;
   }
   .nui-link--underline-hover:hover,
   .nui-link--underline-hover:focus-visible {
-    text-decoration-color: currentColor;
+    @apply decoration-current;
   }
   .nui-link--underline-none,
   .nui-link--underline-none:hover {
     text-decoration: none;
   }
   .nui-link:focus-visible {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-link--disabled,
   .nui-link--disabled:hover {
-    color: var(--color-muted-foreground);
-    opacity: var(--opacity-disabled);
+    @apply text-muted-foreground opacity-disabled cursor-not-allowed;
     text-decoration: none;
-    cursor: not-allowed;
   }
   .nui-link__icon {
     inline-size: round(0.9em, 2px);

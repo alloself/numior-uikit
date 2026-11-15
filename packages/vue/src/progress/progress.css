@@ -4,16 +4,9 @@
     --_tone: var(--color-primary);
     --_track: var(--color-surface-muted);
 
-    box-sizing: border-box;
-    display: block;
-    inline-size: 100%;
-    block-size: var(--_height);
+    @apply box-border block inline-full block-(--_height) rounded-full bg-(--_track) text-(--_tone);
+    @apply appearance-none overflow-hidden;
     border: 0;
-    border-radius: var(--radius-full);
-    background: var(--_track);
-    color: var(--_tone);
-    appearance: none;
-    overflow: hidden;
   }
   .nui-progress--size-sm {
     --_height: 0.25rem;
@@ -40,31 +33,31 @@
     --_tone: var(--color-neutral);
   }
   .nui-progress::-webkit-progress-bar {
+    @apply bg-(--_track);
     border-radius: inherit;
-    background: var(--_track);
   }
   .nui-progress::-webkit-progress-value {
+    @apply bg-(--_tone);
     border-radius: inherit;
-    background: var(--_tone);
     transition: inline-size var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-progress::-moz-progress-bar {
+    @apply bg-(--_tone);
     border-radius: inherit;
-    background: var(--_tone);
     transition: inline-size var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-progress:indeterminate {
     direction: ltr;
   }
   .nui-progress:indeterminate::-webkit-progress-value {
+    @apply rounded-none;
     min-inline-size: 40%;
-    border-radius: 0;
     animation: nui-progress-slide 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
     animation-play-state: var(--nui-animation-play-state, running);
   }
   .nui-progress:indeterminate::-moz-progress-bar {
+    @apply rounded-none;
     inline-size: 40%;
-    border-radius: 0;
     animation: nui-progress-slide 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
     animation-play-state: var(--nui-animation-play-state, running);
   }

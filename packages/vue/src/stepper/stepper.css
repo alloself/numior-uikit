@@ -3,22 +3,15 @@
     --_indicator: var(--spacing-control-sm);
     --_pad: var(--spacing);
 
-    box-sizing: border-box;
-    color: var(--color-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--text-sm);
+    @apply box-border text-foreground font-sans text-(length:--text-sm);
     line-height: --theme(--leading-label inline);
   }
   .nui-stepper--orientation-horizontal {
-    inline-size: 100%;
+    @apply inline-full;
     container-type: inline-size;
   }
   .nui-stepper__list {
-    display: flex;
-    gap: --spacing(3);
-    margin: 0;
-    padding: 0;
-    list-style: none;
+    @apply flex gap-3 m-0 p-0 list-none;
   }
   .nui-stepper__item {
     --_ring: var(--color-border-strong);
@@ -29,15 +22,11 @@
     --_connector-fill: 0;
     --_row-weight: 400;
 
-    box-sizing: border-box;
-    display: flex;
+    @apply box-border flex items-start gap-3 min-inline-0;
     flex: 1 1 0;
-    align-items: flex-start;
-    gap: --spacing(3);
-    min-inline-size: 0;
   }
   .nui-stepper__item:last-child {
-    flex: 0 1 auto;
+    @apply flex-initial;
   }
   .nui-stepper__item--complete {
     --_ring: --theme(--color-primary-soft inline);
@@ -64,52 +53,33 @@
     --_halo: --theme(--color-error-soft inline);
   }
   .nui-stepper__item--disabled {
-    opacity: var(--opacity-disabled);
+    @apply opacity-disabled;
   }
   .nui-stepper__step {
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    gap: --spacing(2);
-    min-inline-size: 0;
+    @apply box-border flex items-center gap-2 min-inline-0 p-(--_pad) rounded bg-transparent;
+    @apply text-(--_label) text-start;
     margin: calc(-1 * var(--_pad));
-    padding: var(--_pad);
     border: 0;
-    border-radius: --theme(--radius inline);
-    background: transparent;
-    color: var(--_label);
     font: inherit;
-    text-align: start;
     transition:
       background-color var(--transition-duration-fast) var(--ease-nui),
       color var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-stepper__item--clickable .nui-stepper__step {
-    cursor: pointer;
+    @apply cursor-pointer;
   }
   .nui-stepper__item--clickable .nui-stepper__step:hover {
-    background: --theme(--color-hover inline);
+    @apply bg-hover;
   }
   .nui-stepper__step:focus-visible {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: calc(-1 * var(--focus-ring-width));
+    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-width);
   }
   .nui-stepper__indicator {
-    box-sizing: border-box;
-    display: inline-grid;
-    flex: none;
-    place-items: center;
-    inline-size: var(--_indicator);
-    block-size: var(--_indicator);
-    border: 1px solid var(--_ring);
-    border-radius: var(--radius-full);
-    background: var(--_fill);
+    @apply box-border inline-grid flex-none place-items-center inline-(--_indicator);
+    @apply block-(--_indicator) border border-(--_ring) rounded-full bg-(--_fill) text-(--_ink);
+    @apply text-(length:--text-xs) tabular-nums leading-control;
     box-shadow: 0 0 0 3px var(--_halo);
-    color: var(--_ink);
-    font-size: var(--text-xs);
     font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    line-height: var(--leading-control);
     transition:
       background-color var(--transition-duration-normal) var(--ease-nui),
       border-color var(--transition-duration-normal) var(--ease-nui),
@@ -122,28 +92,17 @@
     animation: nui-stepper-mark var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-stepper__status {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
+    @apply absolute inline-px block-px overflow-hidden whitespace-nowrap;
     clip-path: inset(50%);
-    white-space: nowrap;
   }
   .nui-stepper__connector {
-    position: relative;
-    flex: 1 1 auto;
-    min-inline-size: --spacing(4);
+    @apply relative flex-auto min-inline-4 rounded-full bg-border overflow-hidden;
     block-size: 2px;
     margin-block-start: calc(var(--_indicator) / 2 - 1px);
-    border-radius: var(--radius-full);
-    background: var(--color-border);
-    overflow: hidden;
   }
   .nui-stepper__connector::after {
+    @apply absolute inset-0 bg-primary;
     content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--color-primary);
     transform-origin: left;
     scale: var(--_connector-fill) 1;
     transition: scale var(--transition-duration-slow) var(--ease-nui);
@@ -152,49 +111,34 @@
     transform-origin: right;
   }
   .nui-stepper__summary {
-    display: none;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: --spacing(3);
-    margin: --spacing(3) 0 0;
+    @apply hidden items-baseline justify-between gap-3 mbs-3 mbe-0 mx-0;
   }
   .nui-stepper__summary-label {
     font-weight: 500;
   }
   .nui-stepper__summary-count {
-    color: var(--color-muted-foreground);
-    font-size: var(--text-xs);
-    line-height: var(--leading-control);
-    font-variant-numeric: tabular-nums;
+    @apply text-muted-foreground text-(length:--text-xs) leading-control tabular-nums;
   }
   .nui-stepper--orientation-vertical .nui-stepper__list {
-    flex-direction: column;
-    gap: 0;
+    @apply flex-col gap-0;
   }
   .nui-stepper--orientation-vertical .nui-stepper__item {
-    position: relative;
-    flex: none;
-    flex-direction: column;
-    gap: 0;
-    padding-block-end: --spacing(5);
+    @apply relative flex-none flex-col gap-0 pbe-5;
   }
   .nui-stepper--orientation-vertical .nui-stepper__item:last-child {
-    padding-block-end: 0;
+    @apply pbe-0;
   }
   .nui-stepper--orientation-vertical .nui-stepper__step {
-    align-items: flex-start;
+    @apply items-start;
   }
   .nui-stepper--orientation-vertical .nui-row__body {
     padding-block-start: calc((var(--_indicator) - 1lh) / 2);
   }
   .nui-stepper--orientation-vertical .nui-stepper__connector {
-    position: absolute;
+    @apply absolute min-inline-0 block-auto m-0;
     inset-block: calc(var(--_indicator) + var(--spacing)) var(--spacing);
     inset-inline-start: calc(var(--_indicator) / 2 - 1px);
     inline-size: 2px;
-    min-inline-size: 0;
-    block-size: auto;
-    margin: 0;
   }
   .nui-stepper--orientation-vertical .nui-stepper__connector::after {
     transform-origin: top;
@@ -202,15 +146,11 @@
   }
   @container (max-width: 32rem) {
     .nui-stepper--orientation-horizontal .nui-row__body {
-      position: absolute;
-      inline-size: 1px;
-      block-size: 1px;
-      overflow: hidden;
+      @apply absolute inline-px block-px overflow-hidden whitespace-nowrap;
       clip-path: inset(50%);
-      white-space: nowrap;
     }
     .nui-stepper--orientation-horizontal .nui-stepper__summary {
-      display: flex;
+      @apply flex;
     }
   }
   @keyframes nui-stepper-mark {

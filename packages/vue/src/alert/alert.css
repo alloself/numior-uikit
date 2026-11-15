@@ -6,18 +6,9 @@
     --_tone-soft-foreground: --theme(--color-info-soft-foreground inline);
     --_line: round(down, calc(var(--text-sm) * var(--leading-normal)), 0.25rem);
 
-    box-sizing: border-box;
-    display: flex;
-    align-items: flex-start;
-    gap: --spacing(3);
-    padding: --spacing(3) --spacing(4);
-    border: 1px solid transparent;
-    border-radius: --theme(--radius inline);
-    background: var(--_tone-soft);
-    color: var(--_tone-soft-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--text-sm);
-    line-height: var(--_line);
+    @apply box-border flex items-start gap-3 py-3 px-4 border border-transparent rounded;
+    @apply bg-(--_tone-soft) text-(--_tone-soft-foreground) font-sans text-(length:--text-sm);
+    @apply leading-(--_line);
     transition:
       opacity var(--transition-duration-normal) var(--ease-nui),
       translate var(--transition-duration-normal) var(--ease-nui),
@@ -60,53 +51,40 @@
     --_tone-soft-foreground: --theme(--color-neutral-soft-foreground inline);
   }
   .nui-alert--variant-outline {
+    @apply bg-transparent text-foreground;
     border-color: color-mix(in oklab, var(--_tone) 50%, var(--color-border));
-    background: transparent;
-    color: var(--color-foreground);
   }
   .nui-alert--variant-solid {
-    background: var(--_tone);
-    color: var(--_tone-foreground);
+    @apply bg-(--_tone) text-(--_tone-foreground);
   }
   .nui-alert--closed {
-    display: none;
-    opacity: 0;
-    translate: 0 calc(-1 * var(--spacing));
+    @apply hidden opacity-0 -translate-y-1;
   }
   .nui-alert__icon {
-    flex: none;
+    @apply flex-none text-(--_tone);
     margin-block-start: calc((var(--_line) - var(--spacing-icon)) / 2);
-    color: var(--_tone);
   }
   .nui-alert--variant-solid .nui-alert__icon {
-    color: inherit;
+    @apply text-inherit;
   }
   .nui-alert__body {
-    display: grid;
-    flex: 1 1 auto;
-    gap: var(--spacing);
-    min-inline-size: 0;
+    @apply grid flex-auto gap-1 min-inline-0;
   }
   .nui-alert__title {
-    margin: 0;
+    @apply m-0;
     font-weight: 600;
   }
   .nui-alert__description > :first-child {
-    margin-block-start: 0;
+    @apply mbs-0;
   }
   .nui-alert__description > :last-child {
-    margin-block-end: 0;
+    @apply mbe-0;
   }
   .nui-alert__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: --spacing(2);
-    margin-block-start: var(--spacing);
+    @apply flex flex-wrap gap-2 mbs-1;
   }
   .nui-alert__close {
-    flex: none;
+    @apply flex-none -me-2 text-inherit;
     margin-block-start: calc((var(--_line) - var(--_height)) / 2);
-    margin-inline-end: calc(-1 * --spacing(2));
-    color: inherit;
   }
 }

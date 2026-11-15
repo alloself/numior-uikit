@@ -4,17 +4,10 @@
     --_padding: var(--spacing-control-pad-md);
     --_font-size: var(--text-control-md);
 
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: --spacing(3);
-    font-family: var(--font-sans);
-    color: var(--color-foreground);
-    isolation: isolate;
+    @apply box-border flex flex-col gap-3 font-sans text-foreground isolate;
   }
   .nui-tabs--orientation-vertical {
-    flex-direction: row;
-    align-items: flex-start;
+    @apply flex-row items-start;
   }
   .nui-tabs--size-sm {
     --_height: var(--spacing-control-sm);
@@ -41,14 +34,11 @@
   .nui-tab-list {
     --_edge: 3rem;
 
-    box-sizing: border-box;
-    position: relative;
-    display: flex;
-    max-inline-size: 100%;
+    @apply box-border relative flex max-inline-full;
     box-shadow: inset 0 -1px var(--color-border);
   }
   .nui-tab-list--orientation-vertical {
-    border-inline-end: 1px solid var(--color-border);
+    @apply border-e border-e-border;
     box-shadow: none;
   }
   .nui-tab-list__track {
@@ -58,16 +48,9 @@
     --_fade-left: var(--_tab-fade-start);
     --_fade-right: var(--_tab-fade-end);
 
-    box-sizing: border-box;
-    position: relative;
-    display: flex;
-    flex: 1 1 auto;
-    gap: var(--spacing);
-    min-inline-size: 0;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
+    @apply box-border relative flex flex-auto gap-1 min-inline-0 overflow-x-auto;
+    @apply overscroll-x-contain scrollbar-none;
     scroll-padding-inline: var(--_edge);
-    scrollbar-width: none;
     mask-image: linear-gradient(
       to right,
       transparent calc(var(--_fade-left) * 0.4),
@@ -90,130 +73,95 @@
     --_tab-fade-end: var(--_edge);
   }
   .nui-tab-list--orientation-vertical .nui-tab-list__track {
-    flex-direction: column;
-    overflow-x: visible;
+    @apply flex-col overflow-x-visible;
     mask-image: none;
   }
   .nui-tab-list__edge {
-    position: absolute;
-    inset-block: 0;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    opacity: 0;
-    visibility: hidden;
+    @apply absolute inset-y-0 z-1 flex items-center opacity-0 invisible;
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),
       visibility var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-tab-list__edge--start {
-    inset-inline-start: 0;
+    @apply inset-s-0;
   }
   .nui-tab-list__edge--end {
-    inset-inline-end: 0;
+    @apply inset-e-0;
   }
   .nui-tab-list__edge--shown {
-    opacity: 1;
-    visibility: visible;
+    @apply opacity-100 visible;
   }
   .nui-tab-list__scroll:dir(rtl) {
     scale: -1 1;
   }
   .nui-tabs--variant-soft .nui-tab-list {
-    padding: var(--spacing);
+    @apply p-1 rounded bg-surface-muted;
     border: 0;
-    border-radius: --theme(--radius inline);
-    background: var(--color-surface-muted);
     box-shadow: none;
   }
   .nui-tabs--variant-soft .nui-tab-list__edge--start {
-    inset-inline-start: var(--spacing);
+    @apply inset-s-1;
   }
   .nui-tabs--variant-soft .nui-tab-list__edge--end {
-    inset-inline-end: var(--spacing);
+    @apply inset-e-1;
   }
 
   .nui-tab-item {
     --_close-size: round(calc(round(var(--_font-size) * 0.875, 1px) * 1.75), 2px);
     --_close-gap: calc(var(--_padding) / 2);
 
-    display: inline-grid;
-    flex: none;
-    font-size: var(--_font-size);
+    @apply inline-grid flex-none text-(length:--_font-size);
   }
   .nui-tab-list--orientation-vertical .nui-tab-item {
-    display: grid;
+    @apply grid;
   }
   .nui-tab-item > * {
     grid-area: 1 / 1;
   }
   .nui-tab {
-    box-sizing: border-box;
-    position: relative;
-    z-index: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: --spacing(2);
-    min-block-size: var(--_height);
-    padding: 0 var(--_padding);
+    @apply box-border relative z-1 inline-flex items-center justify-center gap-2;
+    @apply min-block-(--_height) py-0 px-(--_padding) rounded-sm bg-transparent;
+    @apply text-muted-foreground no-underline whitespace-nowrap cursor-pointer;
     border: 0;
-    border-radius: --theme(--radius-sm inline);
-    background: transparent;
-    color: var(--color-muted-foreground);
     font: inherit;
     font-size: var(--_font-size);
     font-weight: 500;
     line-height: var(--leading-control);
-    text-decoration: none;
-    white-space: nowrap;
-    cursor: pointer;
     transition:
       color var(--transition-duration-fast) var(--ease-nui),
       background-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-tab-list--orientation-vertical .nui-tab {
-    justify-content: flex-start;
+    @apply justify-start;
   }
   .nui-tab:hover,
   .nui-tab-item:hover > .nui-tab {
-    color: var(--color-foreground);
+    @apply text-foreground;
   }
   .nui-tab--selected {
-    color: var(--color-foreground);
+    @apply text-foreground;
   }
   .nui-tab--disabled,
   .nui-tab--disabled:hover {
-    color: var(--color-muted-foreground);
-    opacity: var(--opacity-disabled);
-    cursor: not-allowed;
+    @apply text-muted-foreground opacity-disabled cursor-not-allowed;
   }
   .nui-tab:focus-visible {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: calc(-1 * var(--focus-ring-width));
+    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-width);
   }
   .nui-tab__icon {
-    color: inherit;
+    @apply text-inherit;
   }
   .nui-tab--closable {
     padding-inline-end: calc(var(--_close-gap) + var(--_close-size) + var(--spacing));
   }
   .nui-tab-item > .nui-tab__close {
-    z-index: 2;
-    align-self: center;
+    @apply z-2 self-center me-(--_close-gap);
     justify-self: end;
-    margin-inline-end: var(--_close-gap);
   }
 
   .nui-tab-list__indicator {
-    position: absolute;
-    inset-block-end: 0;
-    inset-inline-start: var(--_indicator-start);
-    inline-size: var(--_indicator-size);
-    block-size: var(--_indicator-thickness);
-    border-radius: var(--radius-full);
-    background: var(--color-primary);
-    pointer-events: none;
+    @apply absolute inset-be-0 inset-s-(--_indicator-start) inline-(--_indicator-size);
+    @apply block-(--_indicator-thickness) rounded-full bg-primary pointer-events-none;
     transition:
       inset-inline-start var(--transition-duration-slow) var(--ease-nui),
       top var(--transition-duration-slow) var(--ease-nui),
@@ -221,37 +169,22 @@
       block-size var(--transition-duration-slow) var(--ease-nui);
   }
   .nui-tab-list--orientation-vertical .nui-tab-list__indicator {
-    inset-block-end: auto;
-    inset-inline-end: 0;
-    top: var(--_indicator-start);
-    inset-inline-start: auto;
-    inline-size: var(--_indicator-thickness);
-    block-size: var(--_indicator-size);
+    @apply inset-be-auto inset-e-0 top-(--_indicator-start) inset-s-auto;
+    @apply inline-(--_indicator-thickness) block-(--_indicator-size);
   }
   .nui-tabs--variant-soft .nui-tab-list__indicator {
-    inset-block: 0;
-    block-size: auto;
-    border-radius: --theme(--radius-sm inline);
-    background: var(--color-surface);
+    @apply inset-y-0 block-auto rounded-sm bg-surface;
     box-shadow: var(--shadow-sm);
   }
   .nui-tabs--variant-soft .nui-tab-list--orientation-vertical .nui-tab-list__indicator {
-    inset-block: auto;
-    inset-inline: 0;
-    top: var(--_indicator-start);
-    inline-size: auto;
-    block-size: var(--_indicator-size);
+    @apply inset-y-auto inset-x-0 top-(--_indicator-start) inline-auto block-(--_indicator-size);
   }
 
   .nui-tab-panel {
-    box-sizing: border-box;
-    min-inline-size: 0;
-    flex: 1 1 auto;
-    border-radius: --theme(--radius-sm inline);
+    @apply box-border min-inline-0 flex-auto rounded-sm;
     outline: none;
   }
   .nui-tab-panel:focus-visible {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
   }
 }

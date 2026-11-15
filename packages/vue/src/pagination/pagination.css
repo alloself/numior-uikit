@@ -3,17 +3,9 @@
     --_height: var(--spacing-control-md);
     --_font-size: var(--text-control-md);
 
-    box-sizing: border-box;
-    inline-size: 100%;
+    @apply box-border inline-full flex flex-wrap items-center gap-3 text-foreground font-sans;
+    @apply text-(length:--text-sm) leading-control;
     container-type: inline-size;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: --spacing(3);
-    color: var(--color-foreground);
-    font-family: var(--font-sans);
-    font-size: var(--text-sm);
-    line-height: var(--leading-control);
   }
   .nui-pagination--size-sm {
     --_height: var(--spacing-control-sm);
@@ -24,58 +16,39 @@
     --_font-size: var(--text-control-lg);
   }
   .nui-pagination__range {
-    color: var(--color-muted-foreground);
+    @apply text-muted-foreground;
     unicode-bidi: plaintext;
   }
   .nui-pagination__page-size {
-    display: inline-flex;
-    align-items: center;
-    gap: --spacing(2);
+    @apply inline-flex items-center gap-2;
   }
   .nui-pagination__page-size-label {
-    color: var(--color-muted-foreground);
+    @apply text-muted-foreground;
   }
   .nui-pagination__select {
-    inline-size: auto;
+    @apply inline-auto;
     min-inline-size: 5rem;
   }
   .nui-pagination__list {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing);
-    margin: 0;
-    margin-inline-start: auto;
-    padding: 0;
-    list-style: none;
+    @apply flex items-center gap-1 m-0 ms-auto p-0 list-none;
   }
   .nui-pagination__control {
     --_tone: var(--color-foreground);
     --_hover: --theme(--color-hover inline);
 
-    box-sizing: border-box;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-inline-size: var(--_height);
-    min-block-size: var(--_height);
-    padding: 0 --spacing(2);
-    border: 1px solid transparent;
-    border-radius: --theme(--radius inline);
-    background: transparent;
-    color: var(--_tone);
+    @apply box-border inline-flex items-center justify-center min-inline-(--_height);
+    @apply min-block-(--_height) py-0 px-2 border border-transparent rounded bg-transparent;
+    @apply text-(--_tone) no-underline cursor-pointer;
     font: inherit;
     font-size: var(--_font-size);
     font-weight: 500;
     line-height: var(--leading-control);
-    text-decoration: none;
-    cursor: pointer;
     transition:
       background-color var(--transition-duration-fast) var(--ease-nui),
       color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-pagination__control:hover:not(:disabled, .nui-link--disabled) {
-    background: var(--_hover);
-    color: var(--_tone);
+    @apply bg-(--_hover) text-(--_tone);
   }
   .nui-pagination__control--current {
     --_tone: --theme(--color-primary-soft-foreground inline);
@@ -84,47 +57,38 @@
       oklab(from --theme(--color-primary-soft inline) calc(l + var(--state-hover-subtle)) a b)
     );
 
-    background: --theme(--color-primary-soft inline);
+    @apply bg-primary-soft;
   }
   .nui-pagination__control:focus-visible {
-    outline: var(--focus-ring-width) solid --theme(--color-ring inline);
-    outline-offset: var(--focus-ring-offset);
+    @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-pagination__control:disabled,
   .nui-pagination__control.nui-link--disabled {
-    color: var(--color-muted-foreground);
-    opacity: var(--opacity-disabled);
-    cursor: not-allowed;
+    @apply text-muted-foreground opacity-disabled cursor-not-allowed;
   }
   .nui-pagination__arrow:dir(rtl) {
-    rotate: 180deg;
+    @apply rotate-180;
   }
   .nui-pagination__ellipsis {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-inline-size: var(--_height);
-    min-block-size: var(--_height);
-    color: var(--color-muted-foreground);
+    @apply inline-flex items-center justify-center min-inline-(--_height) min-block-(--_height);
+    @apply text-muted-foreground;
   }
   .nui-pagination__item--status {
-    display: none;
-    align-items: center;
+    @apply hidden items-center;
   }
   .nui-pagination__status {
+    @apply text-center tabular-nums;
     min-inline-size: 3rem;
-    text-align: center;
-    font-variant-numeric: tabular-nums;
     unicode-bidi: plaintext;
   }
   @container (max-width: 28rem) {
     .nui-pagination__item--page,
     .nui-pagination__item--ellipsis,
     .nui-pagination__item--edge {
-      display: none;
+      @apply hidden;
     }
     .nui-pagination__item--status {
-      display: flex;
+      @apply flex;
     }
   }
 }
