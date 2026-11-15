@@ -78,9 +78,10 @@
 }
 .nui-pagination__control--current {
   --_tone: var(--nui-primary-soft-foreground);
-  --_hover: light-dark(
-    oklab(from var(--nui-primary-soft) calc(l - var(--nui-state-hover-subtle)) a b),
-    oklab(from var(--nui-primary-soft) calc(l + var(--nui-state-hover-subtle)) a b)
+  --_hover: color-mix(
+    in oklab,
+    var(--nui-primary-soft),
+    var(--nui-primary-soft-foreground) var(--nui-state-hover)
   );
 
   background: var(--nui-primary-soft);

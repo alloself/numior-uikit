@@ -322,6 +322,14 @@ export class PlaygroundPage {
     await this.page.keyboard.press('Enter');
   }
 
+  async holdPointer(): Promise<void> {
+    await this.page.mouse.down();
+  }
+
+  async releasePointer(): Promise<void> {
+    await this.page.mouse.up();
+  }
+
   textSelectionCollapsed(): Promise<boolean> {
     return this.page.evaluate(() => document.getSelection()?.isCollapsed ?? true);
   }

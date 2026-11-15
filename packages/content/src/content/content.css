@@ -438,11 +438,7 @@
 }
 .nui-content__file:hover {
   border-color: var(--nui-border-strong);
-  background: color-mix(
-    in oklab,
-    var(--nui-text) var(--nui-state-hover-overlay),
-    var(--nui-surface)
-  );
+  background: color-mix(in oklab, var(--nui-text) var(--nui-state-hover), var(--nui-surface));
 }
 .nui-content__file:focus-visible {
   outline: var(--nui-focus-ring-width) solid var(--nui-focus);
@@ -690,11 +686,7 @@
 }
 .nui-content__bookmark-link:hover {
   border-color: var(--nui-border-strong);
-  background: color-mix(
-    in oklab,
-    var(--nui-text) var(--nui-state-hover-overlay),
-    var(--nui-surface)
-  );
+  background: color-mix(in oklab, var(--nui-text) var(--nui-state-hover), var(--nui-surface));
 }
 .nui-content__bookmark-link:focus-visible {
   outline: var(--nui-focus-ring-width) solid var(--nui-focus);

@@ -41,17 +41,11 @@
   --nui-focus-ring-offset: 2px;
   --nui-field-ring-width: var(--nui-focus-ring-width);
   --nui-disabled-opacity: 0.5;
-  --nui-state-hover: 0.06;
-  --nui-state-pressed: 0.12;
-  --nui-state-hover-subtle: 0.035;
-  --nui-state-pressed-subtle: 0.07;
-  --nui-state-hover-overlay: 5%;
-  --nui-state-pressed-overlay: 10%;
-  --nui-state-hover-tint: 6%;
-  --nui-state-pressed-tint: 12%;
+  --nui-state-hover: 8%;
+  --nui-state-pressed: 16%;
   --nui-soft-min-lightness: 0.26;
-  --nui-hover: color-mix(in oklab, var(--nui-text) var(--nui-state-hover-overlay), transparent);
-  --nui-pressed: color-mix(in oklab, var(--nui-text) var(--nui-state-pressed-overlay), transparent);
+  --nui-hover: color-mix(in oklab, var(--nui-text) var(--nui-state-hover), transparent);
+  --nui-pressed: color-mix(in oklab, var(--nui-text) var(--nui-state-pressed), transparent);
 
   --nui-radius-base: 0.5rem;
   --nui-radius-sm: calc(var(--nui-radius-base) / 2);
