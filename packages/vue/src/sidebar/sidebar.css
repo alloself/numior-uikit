@@ -41,7 +41,8 @@
     --_row-icon: var(--color-primary);
     --_row-weight: 500;
 
-    @apply bg-transparent text-(--_current);
+    @apply text-(--_current);
+    background: transparent;
   }
   .nui-sidebar--variant-plain.nui-sidebar--marker-square:not(.nui-sidebar--rail)
     .nui-list-item:not(.nui-sidebar-sub)::before {
