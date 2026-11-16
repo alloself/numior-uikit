@@ -26,12 +26,25 @@ const money = new Intl.NumberFormat('en-US', {
 
 const columns: NuiTableColumnDef<Order>[] = [
   {
-    key: 'id',
-    label: '#',
-    type: 'number',
-    width: 96,
-    value: (row) => row.id,
-    format: (value) => String(value),
+    key: 'order',
+    label: 'Order',
+    children: [
+      {
+        key: 'id',
+        label: '#',
+        type: 'number',
+        width: 96,
+        value: (row) => row.id,
+        format: (value) => String(value),
+      },
+      {
+        key: 'status',
+        label: 'Status',
+        type: 'text',
+        width: 200,
+        value: (row) => ORDER_STATUSES[row.status],
+      },
+    ],
   },
   {
     key: 'buyer',
@@ -45,37 +58,22 @@ const columns: NuiTableColumnDef<Order>[] = [
         flex: 1,
         value: (row) => row.customer,
       },
-      { key: 'city', label: 'City', type: 'text', width: 120, value: (row) => row.city },
     ],
   },
   {
-    key: 'order',
-    label: 'Order',
-    children: [
-      {
-        key: 'status',
-        label: 'Status',
-        type: 'text',
-        width: 140,
-        value: (row) => ORDER_STATUSES[row.status],
-      },
-      {
-        key: 'total',
-        label: 'Total',
-        type: 'number',
-        width: 130,
-        aggregate: 'sum',
-        value: (row) => row.total,
-        format: (value) => money.format(value),
-      },
-    ],
+    key: 'total',
+    label: 'Total',
+    type: 'number',
+    width: 130,
+    aggregate: 'sum',
+    value: (row) => row.total,
+    format: (value) => money.format(value),
   },
 ];
 
 const groupings: NuiOptionSource<string> = [
   { value: 'none', label: 'No grouping' },
   { value: 'status', label: 'By status' },
-  { value: 'city', label: 'By city' },
 ];
 
 const keyOf = (order: Order): number => order.id;

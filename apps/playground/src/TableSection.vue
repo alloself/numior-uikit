@@ -495,6 +495,14 @@ const columns: NuiTableColumnDef<Order>[] = [
     format: (value) => String(value),
   },
   {
+    key: 'status',
+    label: 'Статус',
+    type: 'text',
+    width: 132,
+    filter: 'set',
+    value: (row) => STATUS_LABELS[row.status],
+  },
+  {
     key: 'buyer',
     label: 'Покупатель',
     children: [
@@ -567,14 +575,6 @@ const columns: NuiTableColumnDef<Order>[] = [
         value: (row) => row.created,
       },
       {
-        key: 'vip',
-        label: 'VIP',
-        type: 'boolean',
-        width: 100,
-        editable: true,
-        value: (row) => row.vip,
-      },
-      {
         key: 'manager',
         label: 'Менеджер',
         type: 'text',
@@ -595,13 +595,13 @@ const columns: NuiTableColumnDef<Order>[] = [
     ],
   },
   {
-    key: 'status',
-    label: 'Статус',
-    type: 'text',
+    key: 'vip',
+    label: 'VIP',
+    type: 'boolean',
     pin: 'end',
-    width: 132,
-    filter: 'set',
-    value: (row) => STATUS_LABELS[row.status],
+    width: 64,
+    editable: true,
+    value: (row) => row.vip,
   },
 ];
 

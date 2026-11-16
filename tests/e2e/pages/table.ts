@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { unlikePixels } from '../helpers/color';
-import { boxOf, dragAcross, renderedWidth, type Box } from '../helpers/geometry';
+import { boxOf, dragAcross, renderedWidth, type Box, type Point } from '../helpers/geometry';
 import { sectionScope } from '../helpers/axe';
 import { ARROWS, type ArrowDirection } from '../helpers/keyboard';
 import { GridKeys } from './grid-keys';
@@ -39,6 +39,11 @@ export interface HeaderSpacing {
   readonly gap: number;
   readonly edge: number;
   readonly toResize: number;
+}
+
+interface Span {
+  readonly start: number;
+  readonly end: number;
 }
 
 interface HandleParts {
@@ -148,6 +153,18 @@ const BODY_HIDE = `
     visibility: hidden !important;
   }
 `;
+
+const roomOf = (frame: Box, pinned: Box | undefined, rtl: boolean): Span => {
+  if (pinned === undefined) {
+    return { start: frame.x, end: frame.x + frame.width };
+  }
+  return rtl
+    ? { start: pinned.x + pinned.width, end: frame.x + frame.width }
+    : { start: frame.x, end: pinned.x };
+};
+
+const outside = (own: Box, room: Span): boolean =>
+  own.x < room.start - 0.5 || own.x + own.width > room.end + 0.5;
 
 export class TableSection extends GridKeys {
   readonly scope = sectionScope('table');
@@ -483,13 +500,61 @@ export class TableSection extends GridKeys {
     return labelColumnsOf(this.row(position));
   }
 
-  async groupLabelInView(position: number): Promise<boolean> {
-    const [label, frame] = await Promise.all([
-      boxOf(this.groupLabel(position)),
+  async coveredGroupLabels(): Promise<string[]> {
+    const [frame, rtl, rows] = await Promise.all([
       boxOf(this.viewport),
+      this.viewport.evaluate((element) => getComputedStyle(element).direction === 'rtl'),
+      this.viewport.locator('.nui-table__body > .nui-table__row--group').all(),
     ]);
 
-    return label.x >= frame.x && label.x + label.width <= frame.x + frame.width;
+    const covered: string[] = [];
+
+    for (const row of rows) {
+      const text = row.locator('.nui-table__group .nui-table__text');
+      const pinned = row.locator('.nui-table__cell--pin-end');
+      const edge = (await pinned.count()) === 0 ? undefined : await boxOf(pinned);
+
+      if (!outside(await boxOf(text), roomOf(frame, edge, rtl))) {
+        continue;
+      }
+
+      covered.push(await text.innerText());
+    }
+    return covered;
+  }
+
+  shownGroupLabel(position: number): Promise<string> {
+    return this.groupLabel(position).evaluate((label) => {
+      const frame = label.getBoundingClientRect();
+
+      const shown = (part: Element | null): boolean => {
+        const box = part?.getBoundingClientRect();
+
+        return (
+          box !== undefined &&
+          box.width > 0 &&
+          box.top >= frame.top - 0.5 &&
+          box.bottom <= frame.bottom + 0.5
+        );
+      };
+
+      const text = label.querySelector('.nui-table__text');
+      const count = label.querySelector('.nui-table__count');
+      const cut = text !== null && text.scrollWidth > text.clientWidth ? '…' : '';
+      const head = shown(text) ? `${text?.textContent ?? ''}${cut}` : '';
+
+      return [head, shown(count) ? (count?.textContent ?? '') : '']
+        .filter((part) => part !== '')
+        .join(' ');
+    });
+  }
+
+  async revealGroupCount(position: number): Promise<void> {
+    await this.groupLabel(position)
+      .locator('.nui-table__count')
+      .evaluate((count) => {
+        count.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      });
   }
 
   async groupBy(label: string): Promise<void> {
@@ -764,17 +829,7 @@ export class TableSection extends GridKeys {
 
     await cell.scrollIntoViewIfNeeded();
 
-    const point = await cell.evaluate((element) => {
-      const rect = element.getBoundingClientRect();
-      const y = rect.top + rect.height / 2;
-
-      for (let x = rect.left + 4; x < rect.right; x += 8) {
-        if (element.contains(document.elementFromPoint(x, y))) {
-          return { x, y };
-        }
-      }
-      return { x: rect.left + rect.width / 2, y };
-    });
+    const point = await this.visiblePoint(cell);
 
     for (let tap = 0; tap < times; tap += 1) {
       await this.page.touchscreen.tap(point.x, point.y);
@@ -850,17 +905,31 @@ export class TableSection extends GridKeys {
     return this.root.locator('.nui-table__cell[aria-selected="true"]');
   }
 
+  private visiblePoint(cell: Locator): Promise<Point> {
+    return cell.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const y = rect.top + rect.height / 2;
+
+      for (let x = rect.left + 4; x < rect.right; x += 8) {
+        if (element.contains(document.elementFromPoint(x, y))) {
+          return { x, y };
+        }
+      }
+      return { x: rect.left + rect.width / 2, y };
+    });
+  }
+
   async dragRange(from: TableCell, to: TableCell, modifier?: 'ControlOrMeta'): Promise<void> {
-    const start = await boxOf(this.cell(from.row, from.col));
-    const end = await boxOf(this.cell(to.row, to.col));
+    const start = await this.visiblePoint(this.cell(from.row, from.col));
+    const end = await this.visiblePoint(this.cell(to.row, to.col));
 
     if (modifier !== undefined) {
       await this.page.keyboard.down(modifier);
     }
-    await this.page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+    await this.page.mouse.move(start.x, start.y);
     await this.page.mouse.down();
 
-    await this.page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, {
+    await this.page.mouse.move(end.x, end.y, {
       steps: 6,
     });
 
