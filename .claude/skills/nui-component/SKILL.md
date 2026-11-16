@@ -1,6 +1,6 @@
 ---
 name: nui-component
-description: Author or change a Numior UI component in packages/vue the way this repo requires. Use for any new Nui* component, prop or styling change; covers props destructure, defineModel, BEM with private CSS variables, motion tokens, lazy icons, docs RU/EN, playground and wiring.
+description: Author or change a Numior UI component in packages/vue the way this repo requires. Use for any new Nui* component, prop or styling change; covers props destructure, defineModel, BEM with private CSS variables and Tailwind @apply, motion tokens, lazy icons, docs RU/EN, playground and wiring.
 ---
 
 # Numior component authoring
@@ -10,7 +10,8 @@ first. Then follow this checklist; every item is required before `pnpm check`.
 
 ## Files
 
-`packages/vue/src/<name>/Nui<Name>.vue`, `<name>.types.ts`, `<name>.css`.
+`packages/vue/src/<name>/Nui<Name>.vue`, `<name>.types.ts`, `<name>.css` with its rules inside
+`@layer components { … }`.
 Add `@import './<name>/<name>.css';` to `packages/vue/src/styles.css`, export the component
 and its types from `packages/vue/src/index.ts`, add the export name to
 `scripts/check-artifacts.mjs`.
@@ -112,6 +113,19 @@ const {
   for states. No `data-*` attributes for variants or states.
 - Modifiers set private variables (`--_height`, `--_tone`); base rules read them. Native
   state comes from pseudo-classes (`:checked`, `:disabled`, `:focus-visible`).
+- Inside a rule: private variables first, then `@apply` with the Tailwind utilities of the
+  declarations whose computed look stays the same (in declaration order, lines up to 100
+  characters), then the declarations left as they are. `pnpm parity:css <ref> <file>` compares
+  the file with its version at `<ref>` by computed longhands and names every declaration to
+  return. Templates carry no Tailwind classes.
+- No variants in `@apply`: `hover:` turns into `@media (hover: hover)`, so a state is an own
+  selector of the file. Selectors, specificity and order stay as written: no merged rules, no
+  `:where`/`:is` and no nesting.
+- Values come from theme keys. Base keys are read through `var()` or utilities; derived keys
+  (soft colours, `--color-ring`, `--color-hover`, radii) only through utilities or
+  `--theme(--x inline)`, never `var()`. A scale step inside an expression is `--spacing(N)`.
+- `@keyframes`, `@property`, `animation` and the geometry of the virtual windows in the table,
+  book and editor (spacers, the sticky window, `overflow-anchor`, `contain`) stay declarations.
 - The block root and every part with padding or a border declare `box-sizing: border-box`;
   never rely on a page reset. The playground has none, so a missing declaration shows up in
   e2e sizes and screenshots.
