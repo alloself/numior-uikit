@@ -865,7 +865,7 @@ const handles = useBlockHandle({
   state: () => current.value,
   enabled: () => handlesShown.value && overlaid.value,
   focused: () => overlays.focused.value && writing.value,
-  layerOpen: () => caretLayerOpen() || overlays.linkOpen.value,
+  layerOpen: () => caretLayerOpen() || overlays.linkOpen.value || overlays.bubbleOpen.value,
   run: (command) => run(command),
   placement: (node) => handlePlacement(blocks, node),
 });

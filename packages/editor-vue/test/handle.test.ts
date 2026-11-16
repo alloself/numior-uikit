@@ -130,6 +130,25 @@ describe('NuiEditor block handles', () => {
     expect(editor.pushedTexts).toEqual([]);
   });
 
+  it('keeps the handle at its block while the menu over a selection is open and follows the pointer once the selection is gone', async () => {
+    const editor = mounted({ document: three(), toolbar: 'bubble' });
+
+    editor.focus();
+    await editor.hoverBlock(0);
+    await editor.select(7, 8);
+
+    expect(editor.bubbleShown).toBe(true);
+
+    await editor.hoverBlock(1);
+
+    expect(editor.pushedTexts).toEqual(['p:a']);
+
+    await editor.select(7);
+
+    expect(editor.bubbleShown).toBe(false);
+    expect(editor.pushedTexts).toEqual(['h2:b']);
+  });
+
   it('puts the handle on list items and moves them among their siblings', async () => {
     const editor = mounted({
       document: toJSON(

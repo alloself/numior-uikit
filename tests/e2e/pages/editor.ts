@@ -139,10 +139,6 @@ export class EditorSection {
     await this.pressEnter();
   }
 
-  async movePointerAway(): Promise<void> {
-    await this.page.mouse.move(0, 0);
-  }
-
   async drawCellRange(from: Locator, to: Locator): Promise<void> {
     const [start, end] = await Promise.all([boxOf(from), boxOf(to)]);
 
