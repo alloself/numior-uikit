@@ -37,59 +37,43 @@
   }
 
   .nui-collab-carets {
+    @apply overflow-clip pointer-events-none;
     position: absolute;
     inset: 0;
     direction: ltr;
-    overflow: clip;
-    pointer-events: none;
   }
 
   .nui-collab-carets__caret {
+    @apply box-border bg-(--_colour) opacity-0;
     position: absolute;
     inset-block-start: 0;
     inset-inline-start: 0;
-    box-sizing: border-box;
     inline-size: 2px;
     block-size: var(--_height, 1em);
-    background: var(--_colour);
     border-radius: 1px;
-    opacity: 0;
     transition: opacity var(--transition-duration-fast) var(--ease-nui);
   }
 
   .nui-collab-carets__flag {
+    @apply box-border py-0 px-1 overflow-hidden text-foreground text-(length:--text-xs);
+    @apply leading-control text-ellipsis whitespace-nowrap rounded-sm;
     position: absolute;
     inset-block-end: 100%;
     inset-inline-start: 0;
-    box-sizing: border-box;
     max-inline-size: 12rem;
-    padding: 0 var(--spacing);
-    overflow: hidden;
-    color: var(--color-foreground);
-    font-size: var(--text-xs);
-    line-height: var(--leading-control);
-    text-overflow: ellipsis;
-    white-space: nowrap;
     background: color-mix(in oklab, var(--_colour) 24%, var(--color-surface));
-    border-radius: --theme(--radius-sm inline);
     transform: translate(var(--_flag-x, 0), var(--_flag-shift, 0));
     transition: transform var(--transition-duration-fast) var(--ease-nui);
   }
 
   .nui-collab-comments {
-    display: flex;
-    flex-direction: column;
-    gap: --spacing(3);
-    box-sizing: border-box;
-    min-inline-size: 0;
-    color: var(--color-foreground);
-    font-size: var(--text-sm);
+    @apply flex flex-col gap-3 box-border min-inline-0 text-foreground text-(length:--text-sm);
   }
 
   .nui-collab-comment-layer {
+    @apply pointer-events-none;
     position: absolute;
     inset: 0;
-    pointer-events: none;
   }
 
   .nui-collab-comment-layer__range {
@@ -97,9 +81,9 @@
   }
 
   .nui-collab-comment-layer__anchor {
+    @apply block;
     position: sticky;
     inset-block-start: --spacing(4);
-    display: block;
     block-size: 100%;
     max-block-size: 50dvh;
   }
@@ -109,227 +93,154 @@
   }
 
   .nui-collab-comments__title {
-    margin: 0;
-    font-size: var(--text-base);
+    @apply m-0 text-(length:--text-base);
     font-weight: 600;
   }
 
   .nui-collab-comments__form {
-    display: flex;
-    flex-direction: column;
-    gap: --spacing(2);
+    @apply flex flex-col gap-2;
   }
 
   .nui-collab-comments__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing);
+    @apply flex flex-wrap gap-1;
   }
 
   .nui-collab-comments__tools {
-    display: flex;
-    gap: var(--spacing);
-    margin-inline-start: auto;
+    @apply flex gap-1 ms-auto;
   }
 
   .nui-collab-comments__list,
   .nui-collab-comments__replies {
-    display: flex;
-    flex-direction: column;
-    margin: 0;
-    padding: 0;
-    list-style: none;
+    @apply flex flex-col m-0 p-0 list-none;
   }
 
   .nui-collab-comments__list {
-    gap: --spacing(2);
+    @apply gap-2;
   }
 
   .nui-collab-comments__replies {
-    gap: --spacing(2);
-    padding-inline-start: --spacing(3);
+    @apply gap-2 ps-3;
     border-inline-start: 2px solid var(--color-border);
   }
 
   .nui-collab-comments__thread {
-    display: flex;
-    flex-direction: column;
-    gap: --spacing(2);
-    box-sizing: border-box;
-    padding: --spacing(3);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: --theme(--radius inline);
+    @apply flex flex-col gap-2 box-border p-3 bg-surface border border-border rounded;
     transition:
       border-color var(--transition-duration-fast) var(--ease-nui),
       opacity var(--transition-duration-fast) var(--ease-nui);
   }
 
   .nui-collab-comments__thread--active {
-    border-color: var(--color-primary);
+    @apply border-primary;
   }
 
   .nui-collab-comments__thread--inline {
-    padding: 0;
-    background: transparent;
-    border-color: transparent;
+    @apply p-0 bg-transparent border-transparent;
   }
 
   .nui-collab-comments__thread--resolved {
-    opacity: 0.7;
+    @apply opacity-70;
   }
 
   .nui-collab-comments__entry {
-    display: flex;
-    gap: --spacing(2);
-    align-items: center;
-    min-inline-size: 0;
+    @apply flex gap-2 items-center min-inline-0;
   }
 
   .nui-collab-comments__author {
-    overflow: hidden;
+    @apply overflow-hidden text-ellipsis whitespace-nowrap;
     font-weight: 500;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .nui-collab-comments__time {
-    flex: none;
-    margin-inline-start: auto;
-    color: var(--color-muted-foreground);
-    font-size: var(--text-xs);
+    @apply flex-none ms-auto text-muted-foreground text-(length:--text-xs);
   }
 
   .nui-collab-comments__marks {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing);
+    @apply flex flex-wrap gap-1;
   }
 
   .nui-collab-comments__body {
-    margin: 0;
-    overflow-wrap: anywhere;
-    white-space: pre-wrap;
+    @apply m-0 wrap-anywhere whitespace-pre-wrap;
   }
 
   .nui-collab-history {
-    display: flex;
-    flex-direction: column;
-    gap: --spacing(3);
-    box-sizing: border-box;
-    min-inline-size: 0;
+    @apply flex flex-col gap-3 box-border min-inline-0;
   }
 
   .nui-collab-history__header {
-    display: flex;
-    flex-wrap: wrap;
-    gap: --spacing(2);
-    align-items: center;
-    justify-content: space-between;
+    @apply flex flex-wrap gap-2 items-center justify-between;
   }
 
   .nui-collab-history__title {
-    margin: 0;
-    font-size: var(--text-base);
+    @apply m-0 text-(length:--text-base);
     font-weight: 600;
   }
 
   .nui-collab-history__preview {
-    display: flex;
-    flex-direction: column;
-    gap: --spacing(3);
-    box-sizing: border-box;
-    padding: --spacing(3);
-    border: 1px solid var(--color-border);
-    border-radius: --theme(--radius-md inline);
+    @apply flex flex-col gap-3 box-border p-3 border border-border rounded-md;
   }
 
   .nui-collab-history__note {
-    margin: 0;
-    color: var(--color-muted-foreground);
-    font-size: var(--text-sm);
+    @apply m-0 text-muted-foreground text-(length:--text-sm);
   }
 
   .nui-collab-history__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing);
+    @apply flex flex-wrap gap-1;
   }
 
   .nui-diff {
-    border-radius: --theme(--radius-sm inline);
+    @apply rounded-sm underline-offset-2;
     text-decoration-thickness: 1px;
-    text-underline-offset: 2px;
   }
 
   .nui-diff--added {
-    background: --theme(--color-success-soft inline);
-    color: var(--color-foreground);
-    text-decoration-line: underline;
+    @apply bg-success-soft text-foreground underline;
   }
 
   .nui-diff--removed {
-    background: --theme(--color-error-soft inline);
-    color: var(--color-muted-foreground);
+    @apply bg-error-soft text-muted-foreground;
     text-decoration-line: line-through;
   }
 
   .nui-collab-history__alternatives,
   .nui-collab-history__alternative-list {
-    display: flex;
-    flex-direction: column;
-    gap: --spacing(2);
+    @apply flex flex-col gap-2;
   }
 
   .nui-collab-history__alternative-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
+    @apply m-0 p-0 list-none;
   }
 
   .nui-collab-history__subtitle {
-    margin: 0;
-    font-size: var(--text-sm);
+    @apply m-0 text-(length:--text-sm);
     font-weight: 600;
   }
 
   .nui-collab-history__alternative {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing);
-    box-sizing: border-box;
-    padding: --spacing(3);
-    border: 1px solid var(--color-border);
-    border-radius: --theme(--radius inline);
+    @apply flex flex-col gap-1 box-border p-3 border border-border rounded;
   }
 
   .nui-collab-history__value {
-    overflow-wrap: anywhere;
+    @apply wrap-anywhere;
   }
 
   .nui-collab-history__source {
-    font-size: var(--text-sm);
-    color: var(--color-muted-foreground);
+    @apply text-(length:--text-sm) text-muted-foreground;
   }
 
   .nui-collab-history__alternative-actions {
-    display: flex;
-    gap: --spacing(2);
-    align-items: center;
-    justify-content: space-between;
+    @apply flex gap-2 items-center justify-between;
   }
 
   .nui-collab-history__alternative-tools {
-    display: flex;
-    gap: var(--spacing);
+    @apply flex gap-1;
   }
 
   .nui-collab-failure__line {
-    margin: 0;
+    @apply m-0;
   }
 
   .nui-collab-report {
-    margin: 0;
-    padding-inline-start: --spacing(4);
+    @apply m-0 ps-4;
   }
 }
