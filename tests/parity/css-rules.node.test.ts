@@ -81,6 +81,16 @@ describe('rule comparison of a rewritten stylesheet', () => {
     ]);
   });
 
+  it('reads a selector the formatter broke inside its parentheses as one line', () => {
+    const wrapped = parseRules(
+      '@media (pointer: coarse) { .a:is(\n  .b,\n  .c\n) { color: red; } }',
+    );
+
+    expect(wrapped.map((rule) => [rule.context, rule.selector])).toEqual([
+      ['@media (pointer: coarse)', '.a:is(.b, .c)'],
+    ]);
+  });
+
   it('accepts renamed tokens, reordered unrelated declarations and equal zero lengths', () => {
     expect(compare(OLD, NEW)).toEqual({ issues: [], resets: [] });
   });

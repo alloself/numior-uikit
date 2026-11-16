@@ -59,10 +59,16 @@ const blockOf = (part: string): CssBlock | null => {
 
   return open < 0 || !part.endsWith('}')
     ? null
-    : { prelude: squash(part.slice(0, open)), body: part.slice(open + 1, -1) };
+    : { prelude: preludeOf(part.slice(0, open)), body: part.slice(open + 1, -1) };
 };
 
 const squash = (text: string): string => text.replace(/\s+/g, ' ').trim();
+
+const OPEN_PADDING = /\(\s+/g;
+const CLOSE_PADDING = /\s+\)/g;
+
+const preludeOf = (text: string): string =>
+  squash(text).replace(OPEN_PADDING, '(').replace(CLOSE_PADDING, ')');
 
 const declarationOf = (part: string): CssDeclaration => {
   const colon = part.indexOf(':');
