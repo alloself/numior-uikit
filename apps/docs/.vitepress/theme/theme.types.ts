@@ -122,7 +122,6 @@ export interface DocsTexts {
   readonly homeScreen: string;
   readonly screenOptions: string;
   readonly copyCode: string;
-  readonly copyPage: string;
   readonly blockViewport: string;
   readonly viewportDesktop: string;
   readonly viewportTablet: string;
@@ -230,11 +229,6 @@ export interface ScreenState {
 export interface HomeScreenProps {
   src: string;
   height: number;
-  texts: DocsTexts;
-}
-
-export interface CopyPageProps {
-  path: string;
   texts: DocsTexts;
 }
 

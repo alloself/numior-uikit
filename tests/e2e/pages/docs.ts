@@ -210,13 +210,11 @@ export class DocsSite {
   readonly languageButton: Locator;
   readonly commandDialog: Locator;
   readonly commandInput: Locator;
-  readonly copyPage: Locator;
   readonly network: MainFrameNetwork;
 
   constructor(readonly page: Page) {
     this.network = new MainFrameNetwork(page);
     this.header = page.locator('.nui-app-bar');
-    this.copyPage = page.getByRole('button', { name: 'Скопировать страницу' });
     this.sidebar = page.locator('aside.nui-sidebar');
     this.drawer = page.locator('dialog.nui-sidebar-drawer');
     this.trigger = page.locator('.nui-sidebar-trigger');
