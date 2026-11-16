@@ -58,9 +58,17 @@
         <template #end>
           <NuiMenu placement="bottom-end">
             <template #trigger="{ attrs }">
-              <NuiButton v-bind="attrs" variant="ghost" tone="neutral" :aria-label="manager.name">
+              <NuiButton
+                v-bind="attrs"
+                variant="ghost"
+                tone="neutral"
+                :size="phone ? 'sm' : undefined"
+                :icon-only="phone"
+                :round="phone"
+                :aria-label="manager.name"
+              >
                 <NuiAvatar :name="manager.name" size="sm" />
-                <span class="hidden sm:inline">{{ manager.name }}</span>
+                <span v-if="!phone" class="hidden sm:inline">{{ manager.name }}</span>
               </NuiButton>
             </template>
             <NuiMenuLabel>{{ manager.role }}</NuiMenuLabel>
@@ -95,7 +103,7 @@
 <script setup lang="ts">
 import { computed, ref, type Component } from 'vue';
 import { LogOut, Package, Settings, ShoppingCart, Store, UserCog, Users } from '@lucide/vue';
-import { useToast } from '@numior/primitives';
+import { useMediaQuery, useToast } from '@numior/primitives';
 import {
   NuiAppBar,
   NuiAvatar,
@@ -196,6 +204,7 @@ const sections: readonly Section[] = [
 const fallback: Section = { key: '', label: '', summary: '', icon: Settings, rows: [] };
 const [manager] = team;
 const toast = useToast();
+const phone = useMediaQuery('(max-width: 39.99rem)');
 
 const open = ref(true);
 const active = ref('orders');

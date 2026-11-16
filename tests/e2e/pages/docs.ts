@@ -227,7 +227,7 @@ export class DocsSite {
       this.hydration.push(message.text());
     });
 
-    this.header = page.locator('.nui-app-bar');
+    this.header = page.locator('.nui-app-bar:not(#docs-content *)');
     this.sidebar = page.locator('aside.nui-sidebar');
     this.drawer = page.locator('dialog.nui-sidebar-drawer');
     this.trigger = page.locator('.nui-sidebar-trigger');
@@ -261,6 +261,10 @@ export class DocsSite {
 
   hydrationMessages(): readonly string[] {
     return [...this.hydration];
+  }
+
+  async homeLinkStart(): Promise<number> {
+    return Math.round((await boxOf(this.header.getByRole('link').first())).x);
   }
 
   async follow(link: string): Promise<void> {

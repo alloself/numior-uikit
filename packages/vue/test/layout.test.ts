@@ -256,6 +256,26 @@ describe('NuiLayout with NuiSidebar', () => {
     narrow.unmount();
   });
 
+  it('marks a start icon rail of a panel or plain sidebar as the rail column of the layout', () => {
+    const cases = [
+      {},
+      { variant: 'plain' },
+      { variant: 'floating' },
+      { side: 'end' },
+      { collapsible: 'offcanvas' },
+    ] as const;
+
+    const marked = cases.map((options) => {
+      const layout = LayoutDriver.mount(options);
+      const holds = layout.sidebarHoldsRailColumn;
+
+      layout.unmount();
+      return holds;
+    });
+
+    expect(marked).toEqual([true, true, false, false, false]);
+  });
+
   it('places a full header above the sidebar, offers an end column and sticks both columns', async () => {
     const layout = LayoutDriver.mount({ header: 'full', end: true, sticky: true });
     expect(layout.hasModifier('pending')).toBe(true);

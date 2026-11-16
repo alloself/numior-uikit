@@ -217,6 +217,10 @@ export class LayoutDriver extends ComponentDriver {
     return this.sidebar.classes().includes(`nui-sidebar--${modifier}`);
   }
 
+  get sidebarHoldsRailColumn(): boolean {
+    return this.sidebar.classes().includes('nui-layout__rail');
+  }
+
   get showModalCalls(): number {
     return this.stubs.showModalCalls.count;
   }
