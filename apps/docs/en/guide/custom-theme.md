@@ -118,11 +118,16 @@ The soft background, focus and hover inside the block follow its colors on their
 derived key such as `--color-primary-soft` has no effect on a class: its value is computed
 where it is used. To make the block dark on a light page, add the `nui-theme--dark` class.
 
+A block sets its own soft accent text and code line highlight with
+`--color-theme-soft-foreground` and `--color-theme-syntax-highlight`. The derived keys take their
+values, and an accent class `nui-theme--accent-<name>` inside the block resets them.
+
 ## The theme file of this site
 
 This is the theme you are reading the docs in:
 
 <<< @/guide/snippets/numior-theme.css
 
-On the site these values sit on the `docs-theme--numior` class of `<html>`. Picking a built-in
-accent in the header removes that class.
+On the site these values sit on the `docs-theme--numior` class of `<html>`. There the soft text
+and the code line highlight come from `--color-theme-soft-foreground` and
+`--color-theme-syntax-highlight`. Picking a built-in accent in the header removes that class.

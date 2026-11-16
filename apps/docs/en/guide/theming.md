@@ -12,16 +12,18 @@ which one applies.
 
 ## Setup
 
-Import the theme files in the app entry point:
+The theme comes with the `@numior/tailwind` preset; the [Tailwind](/en/guide/tailwind#installation)
+guide shows how to add it. Import the accent classes in the same CSS file after the preset, into
+the `theme` layer:
 
-```ts
-import '@numior/tokens/theme.css';
-import '@numior/tokens/base.css';
-import '@numior/tokens/accents.css';
+```css
+@import 'tailwindcss';
+@import '@numior/tailwind/theme.css';
+@import '@numior/tokens/accents.css' layer(theme);
 ```
 
-What `theme.css` and `base.css` do is covered in [Getting started](/en/guide/getting-started#styles).
-You need `accents.css` only if you change the accent color with a `nui-theme--accent-<name>` class.
+You need `accents.css` only if you change the accent color with a `nui-theme--accent-<name>`
+class. In the `theme` layer an accent class overrides the theme keys by import order.
 
 ## Theme switcher
 

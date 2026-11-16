@@ -11,16 +11,18 @@
 
 ## Подключение
 
-Подключите файлы темы в точке входа приложения:
+Тема входит в пресет `@numior/tailwind`, как его подключить, описано в руководстве
+[Tailwind](/guide/tailwind#установка). Классы акцентов подключите в том же CSS-файле после
+пресета, в слой `theme`:
 
-```ts
-import '@numior/tokens/theme.css';
-import '@numior/tokens/base.css';
-import '@numior/tokens/accents.css';
+```css
+@import 'tailwindcss';
+@import '@numior/tailwind/theme.css';
+@import '@numior/tokens/accents.css' layer(theme);
 ```
 
-Что делают `theme.css` и `base.css`, описано в [Начале работы](/guide/getting-started#стили).
-`accents.css` нужен, только если вы меняете акцентный цвет классом `nui-theme--accent-<имя>`.
+`accents.css` нужен, только если вы меняете акцентный цвет классом `nui-theme--accent-<имя>`. В
+слое `theme` класс акцента перекрывает ключи темы порядком подключения.
 
 ## Переключатель темы
 
