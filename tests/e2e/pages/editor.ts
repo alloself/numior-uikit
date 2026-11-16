@@ -482,6 +482,10 @@ export class EditorSection {
     return this.content.locator('.nui-editor__chunk > *').nth(index);
   }
 
+  lastBlock(): Locator {
+    return this.content.locator(':scope > .nui-editor__chunk > *').last();
+  }
+
   item(text: string): Locator {
     return this.content.locator('li', { hasText: text }).last();
   }
