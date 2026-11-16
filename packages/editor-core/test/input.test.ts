@@ -604,4 +604,71 @@ describe('editor view input', () => {
     expect(view.modelTexts).toEqual(['y']);
     expect(view.copy('copy')).toBeUndefined();
   });
+
+  it.each([
+    ['Home', {}, 1],
+    ['PageUp', {}, 1],
+    ['ArrowLeft', {}, 1],
+    ['ArrowUp', {}, 1],
+    ['Home', { ctrl: true }, 1],
+    ['Home', { meta: true }, 1],
+    ['ArrowLeft', { ctrl: true }, 1],
+    ['ArrowLeft', { meta: true }, 1],
+    ['ArrowUp', { meta: true }, 1],
+    ['End', {}, 7],
+    ['PageDown', {}, 7],
+    ['ArrowRight', {}, 7],
+    ['ArrowDown', {}, 7],
+    ['End', { ctrl: true }, 7],
+    ['End', { meta: true }, 7],
+    ['ArrowRight', { ctrl: true }, 7],
+    ['ArrowRight', { meta: true }, 7],
+    ['ArrowDown', { meta: true }, 7],
+  ] as const)(
+    'leaves a whole-document selection with %s %o for the caret at %i',
+    (key, options, caret) => {
+      const view = mounted(twoParagraphs());
+
+      view.focus();
+      view.selectAll();
+
+      expect(view.press(key, options)).toBe(true);
+      expect(view.selection).toEqual(textSelection(caret));
+      expect(view.selectsAll).toBe(false);
+    },
+  );
+
+  it('leaves a whole-document selection with Alt and an arrow and lets the browser act on the key', () => {
+    const view = mounted(twoParagraphs());
+
+    view.focus();
+    view.selectAll();
+
+    expect(view.press('ArrowLeft', { alt: true })).toBe(false);
+    expect(view.selection).toEqual(textSelection(1));
+
+    view.selectAll();
+
+    expect(view.press('ArrowRight', { alt: true })).toBe(false);
+    expect(view.selection).toEqual(textSelection(7));
+  });
+
+  it('leaves a whole-document selection on a plain press of the main button only', () => {
+    const view = mounted(twoParagraphs());
+
+    view.focus();
+    view.selectAll();
+    view.pressBlock(0, { button: 2 });
+
+    expect(view.selectsAll).toBe(true);
+
+    view.pressBlock(0, { shift: true });
+
+    expect(view.selectsAll).toBe(true);
+
+    view.pressBlock(0);
+
+    expect(view.selection).toEqual(textSelection(1));
+    expect(view.selectsAll).toBe(false);
+  });
 });

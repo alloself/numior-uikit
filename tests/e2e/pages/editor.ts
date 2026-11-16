@@ -85,6 +85,16 @@ export class EditorSection {
     await this.page.keyboard.press('Home');
   }
 
+  async caretToLineEnd(): Promise<void> {
+    await this.page.keyboard.press('End');
+  }
+
+  async clickLineStart(block: Locator): Promise<void> {
+    const box = await boxOf(block);
+
+    await this.page.mouse.click(box.x + 1, box.y + box.height / 2);
+  }
+
   async selectToLineStart(): Promise<void> {
     await this.page.keyboard.press('Shift+Home');
   }
