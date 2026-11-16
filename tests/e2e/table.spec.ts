@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { boxOf } from './helpers/geometry';
+import { boxOf, settledBoxOf } from './helpers/geometry';
 import type { TableSection } from './pages/table';
 
 const TREE_HEAD_ROWS = 1;
@@ -890,7 +890,7 @@ test.describe('table', () => {
     await expect(table.filter).toBeVisible();
 
     const header = await boxOf(table.header(4));
-    const popover = await boxOf(table.filter);
+    const popover = await settledBoxOf(table.filter);
     expect(popover.x + popover.width).toBeCloseTo(header.x + header.width, 0);
     expect(popover.y).toBeGreaterThan(header.y + header.height);
 
@@ -1325,6 +1325,25 @@ test.describe('table', () => {
     await expect(table.empty).toContainText('Нет строк для показа');
 
     await expect.poll(() => table.footerGap()).toBeCloseTo(0, 0);
+  });
+
+  test('keeps numbers at the column end in right-to-left like the totals under them', async ({
+    playground,
+    table,
+  }) => {
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+    await table.scrollTo({ left: 900 });
+
+    await expect.poll(() => table.textGaps(table.cell(0, 6))).toMatchObject({ right: 0 });
+    expect(await table.textGaps(table.footerCell(6))).toMatchObject({ right: 0 });
+
+    await playground.setDirection('rtl');
+    await table.scrollTo({ left: -900 });
+
+    await expect.poll(() => table.textGaps(table.cell(0, 6))).toMatchObject({ left: 0 });
+    expect(await table.textGaps(table.cell(0, 0))).toMatchObject({ left: 0 });
+    expect(await table.textGaps(table.footerCell(6))).toMatchObject({ left: 0 });
   });
 
   test('expands tree rows and loads a lazy branch when it opens', async ({ playground, table }) => {

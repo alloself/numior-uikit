@@ -48,6 +48,11 @@ export interface HeaderSpacing {
   readonly toResize: number;
 }
 
+export interface TextGaps {
+  readonly left: number;
+  readonly right: number;
+}
+
 interface Span {
   readonly start: number;
   readonly end: number;
@@ -557,6 +562,23 @@ export class TableSection extends GridKeys {
       const end = element.getBoundingClientRect().top + element.clientTop + element.clientHeight;
 
       return end - (footer?.getBoundingClientRect().bottom ?? Number.NaN);
+    });
+  }
+
+  textGaps(cell: Locator): Promise<TextGaps> {
+    return cell.locator(':scope > .nui-table__content').evaluate((content) => {
+      const range = document.createRange();
+
+      range.selectNodeContents(content);
+
+      const text = range.getBoundingClientRect();
+      const frame = content.getBoundingClientRect();
+      const style = getComputedStyle(content);
+
+      return {
+        left: Math.round(text.left - frame.left - Number.parseFloat(style.paddingLeft)),
+        right: Math.round(frame.right - Number.parseFloat(style.paddingRight) - text.right),
+      };
     });
   }
 

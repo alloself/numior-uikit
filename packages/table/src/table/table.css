@@ -536,6 +536,12 @@
   text-overflow: ellipsis;
   unicode-bidi: plaintext;
 }
+.nui-table__cell--align-end > .nui-table__content.nui-table__content--text {
+  text-align: right;
+}
+.nui-table__cell--align-end:dir(rtl) > .nui-table__content.nui-table__content--text {
+  text-align: left;
+}
 .nui-table__cell--clip > .nui-table__content.nui-table__content--text {
   text-overflow: clip;
 }
