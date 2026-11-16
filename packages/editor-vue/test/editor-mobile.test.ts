@@ -54,6 +54,7 @@ describe('NuiEditor on a touch screen', () => {
     const editor = EditorDriver.mount({ document: list() });
 
     driver = editor;
+    await editor.afterMount();
 
     expect(editor.hasToolbar).toBe(false);
 

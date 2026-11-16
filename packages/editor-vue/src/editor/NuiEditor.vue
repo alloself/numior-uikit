@@ -215,6 +215,7 @@ import {
   provideHighlighter,
   useFieldControl,
   useHighlighter,
+  useMediaQuery,
   useMessages,
   type IconSource,
   type NuiHighlighter,
@@ -241,7 +242,6 @@ import {
   useTemplateRef,
   watch,
 } from 'vue';
-import { useMediaQuery } from '@vueuse/core';
 import { blockContext } from '../blocks/block-context';
 import { NO_PEERS, spotsInBlocks } from '../blocks/block-spots';
 import type {
