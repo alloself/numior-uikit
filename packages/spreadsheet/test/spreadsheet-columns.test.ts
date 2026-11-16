@@ -1,7 +1,25 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { MAX_COLS, MAX_ROWS, createWorkbook, textValue, type Workbook } from '../src/core';
-import { charsToPixels } from '../src';
+import {
+  MAX_COLS,
+  MAX_ROWS,
+  createWorkbook,
+  lineLayoutsOf,
+  textValue,
+  type LineLayout,
+  type Workbook,
+} from '../src/core';
+import { charsToPixels, pixelsToChars } from '../src';
 import { SpreadsheetDriver } from './drivers/spreadsheet';
+
+const NARROW_IN_FILE: LineLayout = {
+  size: pixelsToChars(20),
+  custom: true,
+  hidden: false,
+  level: 0,
+  collapsed: false,
+  style: undefined,
+  extra: [],
+};
 
 const mounted: SpreadsheetDriver[] = [];
 
@@ -165,5 +183,42 @@ describe('NuiSpreadsheet column widths', () => {
     expect(charsToPixels(layout?.defaults.colWidth ?? 0)).toBe(100);
     expect(layout?.cols.get(1)?.size).toBeUndefined();
     expect([driver.columnWidth('B'), driver.columnWidth('D')]).toEqual(['100px', '100px']);
+  });
+});
+
+describe('NuiSpreadsheet least column width', () => {
+  it('stops a column dragged or stepped narrower at 48 px and writes 48 px into the book', async () => {
+    const book = twoSheets();
+    const driver = open(book);
+
+    await driver.settle();
+    await driver.dragColumnEdge('B', -60);
+
+    const dragged = [driver.columnWidth('B'), widthInBook(book, 'Sales', 1)];
+
+    await driver.focusColumnHeader('C');
+    await driver.press('ArrowLeft', { alt: true });
+    await driver.press('ArrowLeft', { alt: true });
+    await driver.press('ArrowLeft', { alt: true });
+
+    expect(dragged).toEqual(['48px', 48]);
+    expect([driver.columnWidth('C'), widthInBook(book, 'Sales', 2)]).toEqual(['48px', 48]);
+  });
+
+  it('shows a column narrower in the file at 48 px', async () => {
+    const book = twoSheets();
+    const sales = book.sheet('Sales');
+
+    if (sales === undefined) {
+      throw new Error('Sales is missing');
+    }
+
+    sales.layout = { ...sales.layout, cols: lineLayoutsOf([[1, NARROW_IN_FILE]]) };
+
+    const driver = open(book);
+
+    await driver.settle();
+
+    expect([widthInBook(book, 'Sales', 1), driver.columnWidth('B')]).toEqual([20, '48px']);
   });
 });
