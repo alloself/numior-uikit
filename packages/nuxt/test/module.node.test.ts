@@ -71,7 +71,7 @@ describe('@numior/nuxt', () => {
       "@import '@numior/tokens/base.css' layer(components);",
       "@import '@numior/vue/styles.css';",
       "@import '@numior/forms/styles.css';",
-      "@import '@numior/table/styles.css' layer(components);",
+      "@import '@numior/table/styles.css';",
     ]);
   });
 });
