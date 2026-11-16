@@ -8,6 +8,7 @@
       :model-value="scheme"
       :items="schemes"
       variant="segmented"
+      icon-only
       required
       label="Area scheme"
       @update:model-value="pick"

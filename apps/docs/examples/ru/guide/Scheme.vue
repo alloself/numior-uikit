@@ -8,6 +8,7 @@
       :model-value="scheme"
       :items="schemes"
       variant="segmented"
+      icon-only
       required
       label="Схема области"
       @update:model-value="pick"

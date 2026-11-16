@@ -4,7 +4,7 @@
       ref="toolbar"
       role="toolbar"
       aria-label="Formatting"
-      class="flex gap-1"
+      class="flex flex-wrap gap-1"
       @keydown="navigation.onKeydown"
       @focusin="navigation.onFocusin"
     >

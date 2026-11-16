@@ -6,6 +6,10 @@ import { MainFrameNetwork } from '../helpers/network';
 
 export type DocsScheme = 'light' | 'dark' | 'system';
 
+const PREVIEW_FRAMES = '[role="group"][aria-label="Превью"], [role="group"][aria-label="Preview"]';
+
+const PHONE_HEIGHT = 844;
+
 export class DocsExample {
   readonly root: Locator;
   readonly previewToggle: Locator;
@@ -548,6 +552,83 @@ export class DocsSite {
     reducedMotion?: 'reduce' | 'no-preference';
   }): Promise<void> {
     await this.page.emulateMedia(options);
+  }
+
+  async resize(width: number): Promise<void> {
+    await this.page.setViewportSize({ width, height: PHONE_HEIGHT });
+  }
+
+  misfits(): Promise<string[]> {
+    return this.page.evaluate((frames) => {
+      const found: string[] = [];
+      const root = document.documentElement;
+      const sideways = root.scrollWidth - root.clientWidth;
+      const clipping = new Map<Element, boolean>();
+
+      const scrolledInside = (element: Element, stop: Element): boolean => {
+        let node = element.parentElement;
+
+        while (node !== null && node !== stop) {
+          const clips = clipping.get(node) ?? getComputedStyle(node).overflowX !== 'visible';
+
+          clipping.set(node, clips);
+          if (clips) {
+            return true;
+          }
+          node = node.parentElement;
+        }
+        return false;
+      };
+
+      if (sideways > 0) {
+        found.push(`the page scrolls sideways by ${String(sideways)} px`);
+      }
+
+      for (const [index, frame] of [...document.querySelectorAll(frames)].entries()) {
+        const box = frame.getBoundingClientRect();
+
+        const worst = [...frame.querySelectorAll('*')].reduce((most, element) => {
+          const rect = element.getBoundingClientRect();
+
+          const counted =
+            rect.width > 0 &&
+            rect.height > 0 &&
+            element.closest('[popover], dialog') === null &&
+            !scrolledInside(element, frame);
+
+          return counted ? Math.max(most, box.left - rect.left, rect.right - box.right) : most;
+        }, 0);
+
+        const over = Math.round(worst);
+
+        if (over <= 1) {
+          continue;
+        }
+        found.push(`example ${String(index + 1)} sticks out of its frame by ${String(over)} px`);
+      }
+
+      for (const [index, table] of [
+        ...document.querySelectorAll('.nui-prose table:not([class])'),
+      ].entries()) {
+        const column = table.closest('.nui-prose');
+        const edge = table.getBoundingClientRect();
+        const text = column?.getBoundingClientRect() ?? edge;
+        const over = Math.round(Math.max(text.left - edge.left, edge.right - text.right));
+
+        const wider =
+          column !== null &&
+          table.closest('.nui-not-prose') === null &&
+          !scrolledInside(table, column) &&
+          over > 1;
+
+        if (!wider) {
+          continue;
+        }
+        found.push(`table ${String(index + 1)} is ${String(over)} px wider than the text`);
+      }
+
+      return found;
+    }, PREVIEW_FRAMES);
   }
 
   wcagViolations(): Promise<AxeViolations> {
