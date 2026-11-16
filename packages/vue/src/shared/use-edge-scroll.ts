@@ -1,6 +1,6 @@
-import { useEventListener, useMediaQuery } from '@vueuse/core';
+import { useEventListener } from '@vueuse/core';
 import type { ShallowRef } from 'vue';
-import type { DirectionControl } from '@numior/primitives';
+import { useMediaQuery, type DirectionControl } from '@numior/primitives';
 
 export interface EdgeScrollOptions {
   readonly block: string;

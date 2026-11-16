@@ -215,9 +215,18 @@ export class DocsSite {
   readonly commandDialog: Locator;
   readonly commandInput: Locator;
   readonly network: MainFrameNetwork;
+  private readonly hydration: string[] = [];
 
   constructor(readonly page: Page) {
     this.network = new MainFrameNetwork(page);
+
+    page.on('console', (message) => {
+      if (!message.text().startsWith('Hydration')) {
+        return;
+      }
+      this.hydration.push(message.text());
+    });
+
     this.header = page.locator('.nui-app-bar');
     this.sidebar = page.locator('aside.nui-sidebar');
     this.drawer = page.locator('dialog.nui-sidebar-drawer');
@@ -236,6 +245,7 @@ export class DocsSite {
     if (scheme !== undefined) {
       await this.page.addInitScript((value) => localStorage.setItem('nui-theme', value), scheme);
     }
+    this.hydration.splice(0);
     await this.page.goto(path, { waitUntil: 'load' });
     await this.network.quiet();
 
@@ -247,6 +257,10 @@ export class DocsSite {
 
   get heading(): Locator {
     return this.article.getByRole('heading', { level: 1 });
+  }
+
+  hydrationMessages(): readonly string[] {
+    return [...this.hydration];
   }
 
   async follow(link: string): Promise<void> {
