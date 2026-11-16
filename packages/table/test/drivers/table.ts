@@ -1072,6 +1072,10 @@ export class TableDriver<T> {
     return entry?.getAttribute('aria-checked') ?? entry?.getAttribute('aria-disabled') ?? undefined;
   }
 
+  menuItemDisabled(label: string): boolean {
+    return this.menuEntry(label)?.getAttribute('aria-disabled') === 'true';
+  }
+
   menuExpanded(col: number): boolean {
     return (
       this.header(col)?.querySelector('.nui-table__menu')?.getAttribute('aria-expanded') === 'true'

@@ -45,6 +45,7 @@ interface GroupContext {
   readonly revision: number;
   readonly offset: number;
   readonly keys: readonly string[];
+  readonly spare: string | undefined;
   readonly locale: string;
   readonly texts: NuiTableMessages;
   readonly rows: Map<number, TableGroupRow | null>;
@@ -60,14 +61,19 @@ const plainToggle = (event: KeyboardEvent): boolean =>
 export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableExpansion => {
   const loading = shallowRef<ReadonlySet<TableNodeId>>(new Set());
 
-  const context = computed<GroupContext>(() => ({
-    revision: options.revision.value,
-    offset: options.offset(),
-    keys: options.keys(),
-    locale: options.locale(),
-    texts: options.messages.value,
-    rows: new Map(),
-  }));
+  const context = computed<GroupContext>(() => {
+    const keys = options.keys();
+
+    return {
+      revision: options.revision.value,
+      offset: options.offset(),
+      keys,
+      spare: keys.find((key) => options.columnAt(key).aggregate === undefined) ?? keys[0],
+      locale: options.locale(),
+      texts: options.messages.value,
+      rows: new Map(),
+    };
+  });
 
   const groupLabel = (node: TableGroupNode, current: GroupContext): string => {
     const text = valueTextOf(
@@ -91,9 +97,10 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
   const cellOf = (
     node: TableGroupNode,
     key: string,
+    label: string | undefined,
     current: GroupContext,
   ): TableGroupCell | undefined => {
-    if (key === node.key) {
+    if (key === label) {
       return {
         kind: 'toggle',
         node: node.id,
@@ -112,9 +119,10 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
 
   const build = (node: TableGroupNode, current: GroupContext): TableGroupRow => {
     const cells: Record<string, TableGroupCell> = {};
+    const label = current.keys.includes(node.key) ? node.key : current.spare;
 
     for (const key of current.keys) {
-      const cell = cellOf(node, key, current);
+      const cell = cellOf(node, key, label, current);
 
       if (cell === undefined) {
         continue;

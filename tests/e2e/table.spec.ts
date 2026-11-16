@@ -1221,6 +1221,32 @@ test.describe('table', () => {
     await expect(table.footerCell(10)).toBeFocused();
   });
 
+  test('keeps the column of a grouping from being hidden from its menu', async ({
+    playground,
+    table,
+  }) => {
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+    await table.groupBy('По статусу');
+    await table.openMenu(1);
+
+    await expect(table.menuItem('Скрыть колонку')).toBeDisabled();
+
+    await table.menuItem('Колонки').click();
+
+    await expect(table.menuItem('Статус')).toBeDisabled();
+    await expect(table.menuItem('Почта')).toBeEnabled();
+
+    await table.pressEscape();
+    await table.pressEscape();
+    await expect(table.menu).toBeHidden();
+
+    await table.groupBy('Без группировки');
+    await table.openMenu(1);
+
+    await expect(table.menuItem('Скрыть колонку')).toBeEnabled();
+  });
+
   test('shows the count of a group only while it fits the label cell and always names it', async ({
     playground,
     table,

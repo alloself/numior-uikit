@@ -121,6 +121,29 @@ describe('NuiTable groups and totals', () => {
     expect(grid.announcement).toBe('Группа «Данные» развёрнута');
   });
 
+  it('puts the label of a group by a hidden column into the first visible column without a total', async () => {
+    const grid = mountPeople({ groupBy: ['team'], hidden: ['team'] });
+    await grid.settle();
+
+    expect(grid.groupLabel(0)).toBe('Данные (333)');
+    expect(grid.groupLabelColumns(0)).toEqual([1]);
+    expect(grid.cellText(0, 0)).toBe('333');
+
+    await grid.toggleGroup(0);
+    expect(grid.expanded).toEqual(['["Данные"]']);
+
+    const totalled = mountPeople({
+      columns: TOTALS_COLUMNS.filter((column) => ['id', 'm1', 'team'].includes(column.key)),
+      groupBy: ['team'],
+      hidden: ['team'],
+    });
+
+    await totalled.settle();
+
+    expect(totalled.groupLabelColumns(0)).toEqual([0]);
+    expect(totalled.cellText(0, 1)).toBe('1\u00a0661\u00a0670');
+  });
+
   it('puts every nested level into its own column in both directions', async () => {
     const grid = mountPeople({
       groupBy: ['team', 'city'],

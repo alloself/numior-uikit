@@ -93,7 +93,8 @@ height and the visible columns.
 
 A column with `pin: 'start'` or `pin: 'end'` stays in place on horizontal scroll, and rows from
 `pinnedRows` stay under the header. A column can also be pinned or hidden from its menu, and
-`hideable: false` keeps it from being hidden.
+`hideable: false` keeps it from being hidden. The column the rows are grouped by cannot be hidden
+until the grouping is removed.
 
 <Example name="table/Windowed" />
 
