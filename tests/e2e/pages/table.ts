@@ -1,7 +1,14 @@
 import { readFile } from 'node:fs/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
-import { unlikePixels } from '../helpers/color';
+import {
+  paintedColumn,
+  paintedViewColumn,
+  rgbDelta,
+  unlikePixels,
+  type PaintedColumn,
+  type Rgb,
+} from '../helpers/color';
 import { boxOf, dragAcross, renderedWidth, type Box, type Point } from '../helpers/geometry';
 import { sectionScope } from '../helpers/axe';
 import { ARROWS, type ArrowDirection } from '../helpers/keyboard';
@@ -69,6 +76,10 @@ const FOOTER_TOP = 2;
 const FOOTER_EDGE = 4;
 const FRAME_CORNER = 12;
 const GROUP_LABEL = '.nui-table__group';
+const SEAM_INSET = 4;
+const SEAM_REACH = 4;
+const SEAM_CONTRAST = 6;
+const NO_PIXEL: Rgb = [0, 0, 0];
 
 const HEADER_PARTS: HandleParts = { grip: '.nui-table__grip', label: '.nui-table__text' };
 
@@ -165,6 +176,24 @@ const roomOf = (frame: Box, pinned: Box | undefined, rtl: boolean): Span => {
 
 const outside = (own: Box, room: Span): boolean =>
   own.x < room.start - 0.5 || own.x + own.width > room.end + 0.5;
+
+const lineCover = (column: PaintedColumn): number => {
+  const before = column.pixels[0] ?? NO_PIXEL;
+  const after = column.pixels.at(-1) ?? NO_PIXEL;
+
+  const contrastOf = (pixel: Rgb): number =>
+    Math.min(rgbDelta(pixel, before), rgbDelta(pixel, after));
+
+  const ink = column.pixels.reduce((strongest, pixel) => Math.max(strongest, contrastOf(pixel)), 0);
+
+  if (ink <= SEAM_CONTRAST) {
+    return 0;
+  }
+
+  const cover = column.pixels.reduce((sum, pixel) => sum + Math.min(contrastOf(pixel) / ink, 1), 0);
+
+  return cover / column.ratio;
+};
 
 export class TableSection extends GridKeys {
   readonly scope = sectionScope('table');
@@ -490,6 +519,77 @@ export class TableSection extends GridKeys {
 
   footerCell(col: number): Locator {
     return this.root.locator(`.nui-table__footer [aria-colindex="${col + 1}"]`);
+  }
+
+  footerSeam(col: number): Promise<number> {
+    return this.lineAcross(this.root, this.footerCell(col), 0);
+  }
+
+  headerLine(col: number): Promise<number> {
+    return this.lineAcross(this.root, this.header(col), 1);
+  }
+
+  treeBottomSeam(): Promise<number> {
+    return this.lineInView(this.tree, this.tree, 1);
+  }
+
+  treeRowLine(position: number): Promise<number> {
+    return this.lineInView(this.tree, this.treeRow(position), 1);
+  }
+
+  remoteTreeBottomSeam(): Promise<number> {
+    return this.lineInView(this.remoteTree, this.remoteTree, 1);
+  }
+
+  remoteTreeRowLine(position: number): Promise<number> {
+    return this.lineInView(this.remoteTree, this.remoteTreeRow(position), 1);
+  }
+
+  async scrollRemoteTreeToBottom(): Promise<void> {
+    await this.remoteTree.locator('.nui-table__viewport').evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
+  }
+
+  footerGap(): Promise<number> {
+    return this.viewport.evaluate((element) => {
+      const footer = element.querySelector('.nui-table__footer .nui-table__cell');
+      const end = element.getBoundingClientRect().top + element.clientTop + element.clientHeight;
+
+      return end - (footer?.getBoundingClientRect().bottom ?? Number.NaN);
+    });
+  }
+
+  private async lineAcross(host: Locator, target: Locator, edge: 0 | 1): Promise<number> {
+    await this.page.mouse.move(0, 0);
+
+    const [frame, box] = await Promise.all([boxOf(host), boxOf(target)]);
+    const y = box.y + box.height * edge - frame.y;
+
+    const column = await paintedColumn(
+      host,
+      box.x + SEAM_INSET - frame.x,
+      y - SEAM_REACH,
+      y + SEAM_REACH,
+    );
+
+    return lineCover(column);
+  }
+
+  private async lineInView(frame: Locator, target: Locator, edge: 0 | 1): Promise<number> {
+    await this.page.mouse.move(0, 0);
+
+    const [outer, box] = await Promise.all([boxOf(frame), boxOf(target)]);
+    const y = box.y + box.height * edge;
+
+    const column = await paintedViewColumn(
+      this.page,
+      outer.x + outer.width / 2,
+      y - SEAM_REACH,
+      y + SEAM_REACH,
+    );
+
+    return lineCover(column);
   }
 
   groupLabel(position: number): Locator {

@@ -56,7 +56,7 @@
   --_body-min: var(--_content-min);
   --_foot-overlap: 1px;
   --_foot-size: calc(var(--_row) - 2px);
-  --_empty-min: calc(var(--_height) - var(--_head-size) - var(--_foot) - 2px);
+  --_empty-min: calc(var(--_height) - var(--_head-size) - var(--_foot));
 
   box-sizing: border-box;
   position: relative;
@@ -239,6 +239,9 @@
 .nui-table__row > .nui-table__cell:last-child,
 .nui-table__cell--gap {
   --_grid-x: 0px;
+}
+.nui-table__body > .nui-table__row:last-child > .nui-table__cell {
+  border-block-end-color: transparent;
 }
 .nui-table__cell--tail {
   --_grid-x: calc(var(--_grid) * var(--_slack));

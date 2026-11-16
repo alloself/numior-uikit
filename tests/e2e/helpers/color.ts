@@ -183,6 +183,16 @@ export const paintedColumn = async (
   return locator.page().evaluate(readColumn, { base64: png.toString('base64'), x, from, to });
 };
 
+export const paintedViewColumn = async (
+  page: Page,
+  x: number,
+  from: number,
+  to: number,
+): Promise<PaintedColumn> => {
+  const png = await page.screenshot({ animations: 'disabled' });
+  return page.evaluate(readColumn, { base64: png.toString('base64'), x, from, to });
+};
+
 const INK_DELTA = 24;
 
 const countInk = async ({

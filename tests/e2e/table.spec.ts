@@ -1257,6 +1257,76 @@ test.describe('table', () => {
     expect(label.x + label.width).toBeLessThanOrEqual(cell.x + cell.width);
   });
 
+  test('draws one line between the last row and the footer and under the last row of a table without one', async ({
+    playground,
+    table,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+
+    const single = await table.headerLine(0);
+
+    await expect.poll(() => table.footerSeam(0)).toBeCloseTo(single, 0);
+
+    await table.scrollToBottom();
+
+    await expect.poll(() => table.footerSeam(0)).toBeCloseTo(single, 0);
+
+    await table.scrollTo({ top: 0 });
+    await table.groupBy('По статусу');
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '7');
+
+    await expect.poll(() => table.footerSeam(0)).toBeCloseTo(single, 0);
+
+    await table.groupLabel(3).click();
+    await expect(table.row(3)).toHaveAttribute('aria-expanded', 'true');
+
+    await table.scrollToBottom();
+
+    await expect.poll(() => table.footerSeam(0)).toBeCloseTo(single, 0);
+
+    await table.tree.scrollIntoViewIfNeeded();
+
+    const row = await table.treeRowLine(0);
+
+    await expect.poll(() => table.treeBottomSeam()).toBeCloseTo(row, 0);
+  });
+
+  test('draws one line under the last row of a fixed-height table without a footer at the end of its scroll', async ({
+    playground,
+    table,
+  }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await table.remoteToggle.click();
+    await table.remoteTree.scrollIntoViewIfNeeded();
+    await expect(table.remoteTreeRow(0)).toContainText('Продажи');
+
+    await table.toggleRemoteTreeRow(0);
+    await expect(table.remoteTreeRow(1)).toContainText('Россия');
+
+    await table.toggleRemoteTreeRow(1);
+    await expect(table.remoteTreeRow(2)).toContainText('Москва');
+
+    const single = await table.remoteTreeRowLine(0);
+
+    await table.scrollRemoteTreeToBottom();
+    await expect(table.remoteTreeRow(6)).toBeInViewport();
+
+    await expect.poll(() => table.remoteTreeBottomSeam()).toBeCloseTo(single, 0);
+  });
+
+  test('fills an empty table down to its footer', async ({ playground, table }) => {
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+    await table.emptyToggle.click();
+    await expect(table.empty).toContainText('Нет строк для показа');
+
+    await expect.poll(() => table.footerGap()).toBeCloseTo(0, 0);
+  });
+
   test('expands tree rows and loads a lazy branch when it opens', async ({ playground, table }) => {
     await playground.open();
     await table.tree.scrollIntoViewIfNeeded();
