@@ -151,13 +151,18 @@ export class EditorDriver {
     return withoutComments(await renderToString(NuiEditor, { props: shown }));
   }
 
-  static async hydrate(props: EditorMountProps): Promise<readonly string[]> {
+  static async hydrate(
+    props: EditorMountProps,
+    device?: () => () => void,
+  ): Promise<readonly string[]> {
     const shown = { ...withoutModel(props), ...modelOf(props) };
     const host = document.createElement('div');
     const warnings: string[] = [];
 
     host.innerHTML = await renderAppToString(createSSRApp(NuiEditor, shown));
     document.body.append(host);
+
+    const leave = device?.();
 
     const app = createSSRApp(NuiEditor, shown);
 
@@ -174,6 +179,7 @@ export class EditorDriver {
 
     app.unmount();
     host.remove();
+    leave?.();
     return warnings;
   }
 
@@ -636,6 +642,10 @@ export class EditorDriver {
   }
 
   async showBlocks(): Promise<void> {
+    await nextTick();
+  }
+
+  async afterMount(): Promise<void> {
     await nextTick();
   }
 
