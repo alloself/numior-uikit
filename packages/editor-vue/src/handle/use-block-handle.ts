@@ -11,7 +11,6 @@ import {
   type ElementNode,
 } from '@numior/editor-core';
 import type { EditorView } from '@numior/editor-core/view';
-import { useMediaQuery } from '@vueuse/core';
 import { computed, onScopeDispose, ref, shallowRef, watch, type ComputedRef, type Ref } from 'vue';
 import {
   BLOCK,
@@ -25,7 +24,7 @@ import {
 } from './block-geometry';
 import { NuiEditorHandlePlacement } from '../blocks/block.types';
 import { useBlockDrag } from './use-block-drag';
-import { AriaValue, Direction, PointerType } from '@numior/primitives';
+import { AriaValue, Direction, PointerType, useMediaQuery } from '@numior/primitives';
 
 export interface BlockHandleOptions {
   readonly frame: Readonly<Ref<HTMLElement | null>>;
