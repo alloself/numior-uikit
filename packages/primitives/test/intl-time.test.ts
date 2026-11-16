@@ -22,7 +22,7 @@ const at = (hour: number, minute: number, second = 0) => ({ hour, minute, second
 
 const types = (locale: string, seconds = false, hourCycle?: 'h12' | 'h23') =>
   timeLayout(locale, { seconds, hourCycle }).segments.map((segment) =>
-    segment.type === 'literal' ? segment.text.replace(/\s/u, ' ') : segment.type,
+    segment.type === 'literal' ? segment.text : segment.type,
   );
 
 describe('time model', () => {
@@ -77,6 +77,7 @@ describe('time segments', () => {
     expect(types('ko-KR')[0]).toBe('dayPeriod');
     expect(types('en-US', true)).toEqual(['hour', ':', 'minute', ':', 'second', ' ', 'dayPeriod']);
     expect(timeLayout('en-US', { seconds: false }).periods).toEqual(['AM', 'PM']);
+    expect(types('fr-CA', false, 'h12')).not.toContain('\u202F');
 
     const arabic = timeLayout('ar-EG', { seconds: false });
     expect(arabic.digits[0]).toBe('٠');
