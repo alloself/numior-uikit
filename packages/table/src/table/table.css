@@ -10,7 +10,7 @@
   --_font-size: var(--nui-font-size-sm);
   --_row-bg: var(--nui-surface);
   --_head-bg: var(--nui-surface-muted);
-  --_hover: color-mix(in oklab, var(--nui-text) var(--nui-state-hover-overlay), var(--nui-surface));
+  --_hover: color-mix(in oklab, var(--nui-text) var(--nui-state-hover), var(--nui-surface));
   --_stripe: color-mix(in oklab, var(--nui-surface), var(--_head-bg) 55%);
   --_line: var(--nui-border);
   --_foot: 0px;
@@ -791,10 +791,7 @@
 .nui-table
   .nui-table__body
   > .nui-table__row--selected:where(:not(:has(> .nui-table__cell--tall:hover))):hover {
-  --_row-bg: light-dark(
-    oklab(from var(--nui-primary-soft) calc(l - var(--nui-state-hover-subtle)) a b),
-    oklab(from var(--nui-primary-soft) calc(l + var(--nui-state-hover-subtle)) a b)
-  );
+  --_row-bg: color-mix(in oklab, var(--nui-primary-soft), var(--nui-text) var(--nui-state-hover));
 }
 .nui-table--loading .nui-table__body {
   pointer-events: none;

@@ -46,11 +46,7 @@
 }
 .nui-upload__zone:hover {
   border-color: var(--nui-primary);
-  background: color-mix(
-    in oklab,
-    var(--nui-text) var(--nui-state-hover-overlay),
-    var(--nui-surface)
-  );
+  background: color-mix(in oklab, var(--nui-text) var(--nui-state-hover), var(--nui-surface));
 }
 .nui-upload--readonly .nui-upload__zone,
 .nui-upload--readonly .nui-upload__browse,

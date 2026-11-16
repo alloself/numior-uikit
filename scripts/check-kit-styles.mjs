@@ -279,6 +279,17 @@ const polar = sources.flatMap((file) =>
   ),
 );
 
+const LIGHTNESS_STEP = /\bfrom\b[^;{}]*\bcalc\(\s*l\s*[-+]/gu;
+
+const steps = sources.flatMap((file) =>
+  stylesOf(file.path, file.source).flatMap((style) =>
+    [...style.text.matchAll(LIGHTNESS_STEP)].map(
+      (match) =>
+        `${relative(ROOT, file.path)}:${lineOf(file.source, style.offset + (match.index ?? 0))}`,
+    ),
+  ),
+);
+
 const COMPOSITED = new Set(['transform', 'translate', 'rotate', 'scale', 'opacity']);
 const STEPPED = /\bstep-(?:start|end)\b|\bsteps\(/u;
 
@@ -360,6 +371,16 @@ if (polar.length > 0) {
   process.exitCode = 1;
 } else {
   console.log('kit styles: relative colours keep their hue');
+}
+
+if (steps.length > 0) {
+  console.error(
+    `Hover and pressed fills mix the fill with its label colour, color-mix(in oklab, fill, label var(--nui-state-hover)): a lightness step leaves sRGB on saturated tones and shifts the hue:\n${steps.join('\n')}`,
+  );
+
+  process.exitCode = 1;
+} else {
+  console.log('kit styles: states mix the fill with its label');
 }
 
 if (offCompositor.length > 0) {
