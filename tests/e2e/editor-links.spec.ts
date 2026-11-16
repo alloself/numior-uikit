@@ -63,6 +63,23 @@ test.describe('editor links', () => {
     await expect(editor.mediaPanel()).toContainText('Эту ссылку нельзя встроить');
   });
 
+  test('keeps the block handle at its block while the pointer goes to the embed panel', async ({
+    editor,
+  }) => {
+    test.skip(!(await editor.followsMouse()), 'the handle follows the caret without a mouse');
+
+    await editor.startLineAtEnd();
+    await editor.hoverStart(editor.lastBlock());
+    await expect(editor.pushed()).toHaveCount(1);
+
+    await editor.typeText('/emb');
+    await editor.pressEnter();
+    await editor.mediaPanel().getByRole('button', { name: 'Вставить' }).hover();
+
+    await expect(editor.grip()).toBeVisible();
+    await expect(editor.pushed()).toHaveCount(1);
+  });
+
   test('changes the address of a bookmark from its bar and asks for the new metadata', async ({
     editor,
   }) => {

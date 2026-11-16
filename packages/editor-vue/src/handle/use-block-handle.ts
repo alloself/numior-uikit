@@ -37,6 +37,7 @@ export interface BlockHandleOptions {
   readonly state: () => EditorState;
   readonly enabled: () => boolean;
   readonly focused: () => boolean;
+  readonly layerOpen: () => boolean;
   readonly run: (command: Command) => boolean;
   readonly placement: (node: ElementNode) => NuiEditorHandlePlacement;
 }
@@ -104,6 +105,7 @@ const hoverPoint = (target: Element): Element | undefined => {
 
 export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
   const hovered = shallowRef<ChildSlot | undefined>();
+  const kept = shallowRef<{ readonly slot: ChildSlot | undefined }>();
   const menuOpen = ref(false);
   const coarse = useMediaQuery('(pointer: coarse)');
   let pushed: Element | undefined;
@@ -202,10 +204,7 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
 
   const dragging = drag.dragging;
 
-  const slot = computed(() => {
-    if (!options.enabled()) {
-      return undefined;
-    }
+  const free = computed(() => {
     const state = options.state();
 
     const caret =
@@ -213,8 +212,29 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
         ? selectionSlot(state)
         : undefined;
 
-    return drag.source.value ?? hovered.value ?? caret;
+    return hovered.value ?? caret;
   });
+
+  const slot = computed(() => {
+    if (!options.enabled()) {
+      return undefined;
+    }
+    if (drag.source.value !== undefined || kept.value === undefined) {
+      return drag.source.value ?? free.value;
+    }
+    const still = kept.value.slot;
+
+    return still !== undefined && childNode(options.state().doc, still) !== undefined
+      ? still
+      : undefined;
+  });
+
+  watch(
+    () => options.layerOpen(),
+    (open) => {
+      kept.value = open ? { slot: free.value } : undefined;
+    },
+  );
 
   watch(
     () => options.state(),
