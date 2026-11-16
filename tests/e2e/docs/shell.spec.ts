@@ -220,6 +220,7 @@ test('the sidebar lives in a drawer on phones and closes after navigation', asyn
 
   await docs.trigger.tap();
   await expect(docs.drawer).toBeVisible();
+  await expect(docs.currentDrawerLinks).toHaveText(['Button']);
 
   await docs.drawerLink('Select').tap();
   await expect(page).toHaveURL(/\/components\/select$/);

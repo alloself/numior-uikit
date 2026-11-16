@@ -1,7 +1,7 @@
 <template>
   <NuiSidebar :label="texts.navigation" collapsible="offcanvas">
     <NuiSidebarContent>
-      <NuiSidebarGroup v-if="layout.mobile.value" :label="texts.sections" :items="sectionEntries" />
+      <NuiSidebarGroup v-if="layout.mobile.value" :items="sectionEntries" />
       <NuiSidebarGroup
         v-for="group in sidebar"
         :key="group.text"
@@ -28,7 +28,7 @@ import { useDocs } from '../composables/use-docs';
 import type { DocsSidebarGroup, DocsThemeConfig } from '../theme.types';
 
 const { theme } = useData<DocsThemeConfig>();
-const { texts, sidebar, isCurrent, startsCurrent } = useDocs();
+const { texts, sidebar, isCurrent } = useDocs();
 const layout = useLayout();
 const route = useRoute();
 const root = useCurrentElement<HTMLElement>();
@@ -46,7 +46,6 @@ const sectionEntries = computed<NuiListEntry<unknown>[]>(() =>
     key: item.link,
     label: item.text,
     href: withBase(item.link),
-    current: item.sections.some(startsCurrent),
   })),
 );
 

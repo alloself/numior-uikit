@@ -419,6 +419,10 @@ export class DocsSite {
     return this.drawer.getByRole('link', { name: text, exact: true });
   }
 
+  get currentDrawerLinks(): Locator {
+    return this.drawer.locator('[aria-current="page"]');
+  }
+
   get currentSidebarLink(): Locator {
     return this.sidebar.locator('[aria-current="page"]');
   }
