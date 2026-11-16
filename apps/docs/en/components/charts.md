@@ -1,7 +1,3 @@
----
-layout: wide
----
-
 # Charts
 
 Every chart is built from one object that holds the categories and the series of values.

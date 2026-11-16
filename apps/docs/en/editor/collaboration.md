@@ -164,7 +164,7 @@ server again. There is no button for `schema`: only a page reload helps there.
 - After a failure the client does not reconnect until `rejoin` is called.
 
 A spreadsheet book is edited together through `useCollabWorkbook`, described on the
-[Spreadsheet](/en/spreadsheet/) page.
+[Spreadsheet](/en/components/spreadsheet) page.
 
 ## API
 

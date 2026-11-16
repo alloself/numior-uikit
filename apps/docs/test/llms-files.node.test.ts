@@ -80,8 +80,10 @@ describe('Markdown copies of the docs pages', () => {
     expect(readFileSync(join(dist, 'en/components/button.md'), 'utf8')).toMatch(/^# Button\n/);
     expect(readFileSync(join(dist, 'llms-ru.txt'), 'utf8')).toContain('](/editor/index.md)');
     expect(readFileSync(join(dist, 'editor/index.md'), 'utf8')).toMatch(/^# Редактор\n/);
-    expect(readFileSync(join(dist, 'llms-ru.txt'), 'utf8')).toContain('](/table/index.md)');
-    expect(readFileSync(join(dist, 'en/table/index.md'), 'utf8')).toMatch(/^# Table\n/);
+    expect(readFileSync(join(dist, 'llms-ru.txt'), 'utf8')).toContain(
+      '](/components/table/index.md)',
+    );
+    expect(readFileSync(join(dist, 'en/components/table/index.md'), 'utf8')).toMatch(/^# Table\n/);
 
     rmSync(dist, { recursive: true });
   });

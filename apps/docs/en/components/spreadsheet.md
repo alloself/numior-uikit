@@ -1,7 +1,3 @@
----
-layout: wide
----
-
 # Spreadsheet
 
 A spreadsheet that computes formulas on the page and opens and saves XLSX files.
@@ -27,19 +23,23 @@ including on a server.
 
 ### Read only
 
-The `readonly` prop turns editing off, while values can still be selected and copied. The
-`formulaBar` and `sheetTabs` props remove the formula bar and the tabs.
+Turn editing off with `readonly`.
 
 <Example name="spreadsheet/ReadOnly" />
 
+Values can still be selected and copied. The `formulaBar` and `sheetTabs` props remove the formula
+bar and the tabs.
+
 ### Opening and saving XLSX
 
-The `fileBar` prop shows a bar with the file name and Open and Save buttons. Once a file is read, the
-`open` event hands over the new book: put it in `book`.
-
-Without `saveFile` the browser downloads the file. Pass `saveFile` to send it to a server.
+Show the file bar with `fileBar`.
 
 <Example name="spreadsheet/File" />
+
+The bar holds the file name and Open and Save buttons. Once a file is read, the `open` event hands
+over the new book: put it in `book`.
+
+Without `saveFile` the browser downloads the file. Pass `saveFile` to send it to a server.
 
 Parts of the file the component does not understand are saved unchanged. If an edit could affect
 them, the component asks whether to save with losses.
@@ -49,9 +49,11 @@ component asks about the loss and cuts such a text in the file only.
 
 ### Your own menu items
 
-The `contextMenu` function receives the sheet and the selection and returns items for the cell menu.
+Return the items of the cell menu from `contextMenu`.
 
 <Example name="spreadsheet/Menu" />
+
+The function receives the sheet and the selection.
 
 ### Editing together
 

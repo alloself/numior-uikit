@@ -19,7 +19,7 @@ uses `document.execCommand('copy')`.
 
 `copyRich({ text, html })` puts both text and HTML on the clipboard. A document or spreadsheet
 editor pastes the markup, a plain input pastes the text. This is how
-[Table](/en/table/editing) copies selected cells.
+[Table](/en/components/table/editing) copies selected cells.
 
 `copy` also takes a promise of the text. The request for the text runs after the click, and Safari
 still allows the clipboard write.

@@ -41,7 +41,7 @@ step. `stop()` stops the scrolling.
 `follow` only records the point, and one step is made per frame. So the speed does not depend on
 how often the pointer moves.
 
-This is how [Table](/en/table/editing) scrolls when a cell selection is dragged past the
+This is how [Table](/en/components/table/editing) scrolls when a cell selection is dragged past the
 edge.
 
 <SignatureReference :names="['useEdgeScroll', 'EdgeScrollOptions', 'EdgeScroll', 'EdgePoint']" />
@@ -60,7 +60,7 @@ listener. Put `onPointerdown` on the container and register the parts with
 `usePressTarget(targets, element, press)` or the ref function `pressRefOf(targets, press)`.
 
 A press travels from the element under the pointer up to the container, and `stopPropagation()`
-stops it. The column and row grips of [Table](/en/table/columns) work this way.
+stops it. The column and row grips of [Table](/en/components/table/columns) work this way.
 
 ```ts
 import { createPressTargets, usePointerSession, usePressTarget } from '@numior/primitives';

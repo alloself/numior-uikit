@@ -2,12 +2,12 @@ import { expect, test } from '../fixtures';
 
 const PAGES = [
   {
-    path: '/table/data',
+    path: '/components/table/data',
     first: 'В доставке',
     labels: ['В доставке (3)', 'Доставлен (4)', 'Ждёт оплаты (2)', 'Оплачен (2)', 'Отменён (1)'],
   },
   {
-    path: '/en/table/data',
+    path: '/en/components/table/data',
     first: 'Awaiting payment',
     labels: ['Awaiting payment (2)', 'Canceled (1)', 'Delivered (4)', 'Paid (2)', 'Shipped (3)'],
   },
