@@ -1,15 +1,4 @@
-const LAYERED = new Set([
-  '@numior/vue',
-  '@numior/forms',
-  '@numior/table',
-  '@numior/spreadsheet',
-  '@numior/charts',
-  '@numior/content',
-  '@numior/editor-vue',
-]);
-
-const importOf = (id: string): string =>
-  LAYERED.has(id) ? `@import '${id}/styles.css';` : `@import '${id}/styles.css' layer(components);`;
+const importOf = (id: string): string => `@import '${id}/styles.css';`;
 
 export const kitEntry = (packages: readonly string[]): string =>
   [

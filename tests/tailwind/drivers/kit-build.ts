@@ -24,12 +24,7 @@ const PACKAGES = [
   'collaboration',
 ];
 
-const LAYERED = new Set(['forms', 'table', 'spreadsheet', 'charts', 'content', 'editor-vue']);
-
-const importOf = (name: string): string =>
-  LAYERED.has(name)
-    ? `@import '@numior/${name}/styles.css';`
-    : `@import '@numior/${name}/styles.css' layer(components);`;
+const importOf = (name: string): string => `@import '@numior/${name}/styles.css';`;
 
 const ENTRY = [
   "@import 'tailwindcss';",

@@ -6,5 +6,5 @@
 @import '@numior/content/styles.css';
 @import '@numior/editor-vue/styles.css';
 @import '@numior/spreadsheet/styles.css';
-@import '@numior/collaboration/styles.css' layer(components);
+@import '@numior/collaboration/styles.css';
 @import './collab.css' layer(components);
