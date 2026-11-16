@@ -1,175 +1,177 @@
-.nui-editor__range {
-  position: absolute;
-  pointer-events: none;
-}
-.nui-editor__anchor {
-  position: sticky;
-  inset-block-start: calc(var(--_bar, 0px) + var(--spacing-control-sm) + --spacing(6));
-  display: block;
-  block-size: 100%;
-  max-block-size: 50dvh;
-}
-.nui-editor-bubble__bar {
-  display: flex;
-  gap: 2px;
-  align-items: center;
-}
-.nui-editor-bubble .nui-editor-toolbar__group {
-  padding: 0;
-}
-.nui-editor-bubble .nui-editor-toolbar__group::before {
-  content: none;
-}
-.nui-editor-link__form {
-  display: grid;
-  gap: --spacing(3);
-}
-.nui-editor-link__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: --spacing(2);
-}
-.nui-editor-colours__mark {
-  display: inline-flex;
-  color: var(--_text, currentColor);
-}
-.nui-editor-colours__option {
-  display: flex;
-  align-items: center;
-  gap: --spacing(2);
-}
-.nui-editor-colours__swatch {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  inline-size: 1.25rem;
-  block-size: 1.25rem;
-  border: 1px solid var(--color-border);
-  border-radius: --theme(--radius-sm inline);
-  background: var(--_fill, transparent);
-  color: var(--_text, var(--color-foreground));
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-semibold);
-}
-.nui-editor-colours__swatch--text::before {
-  content: 'A';
-}
-.nui-editor-colours--text-gray {
-  --_text: var(--nui-content-colour-gray);
-}
-.nui-editor-colours--text-brown {
-  --_text: var(--nui-content-colour-brown);
-}
-.nui-editor-colours--text-orange {
-  --_text: var(--nui-content-colour-orange);
-}
-.nui-editor-colours--text-yellow {
-  --_text: var(--nui-content-colour-yellow);
-}
-.nui-editor-colours--text-green {
-  --_text: var(--nui-content-colour-green);
-}
-.nui-editor-colours--text-blue {
-  --_text: var(--nui-content-colour-blue);
-}
-.nui-editor-colours--text-purple {
-  --_text: var(--nui-content-colour-purple);
-}
-.nui-editor-colours--text-pink {
-  --_text: var(--nui-content-colour-pink);
-}
-.nui-editor-colours--text-red {
-  --_text: var(--nui-content-colour-red);
-}
-.nui-editor-colours--fill-gray {
-  --_fill: var(--nui-content-highlight-gray);
-}
-.nui-editor-colours--fill-brown {
-  --_fill: var(--nui-content-highlight-brown);
-}
-.nui-editor-colours--fill-orange {
-  --_fill: var(--nui-content-highlight-orange);
-}
-.nui-editor-colours--fill-yellow {
-  --_fill: var(--nui-content-highlight-yellow);
-}
-.nui-editor-colours--fill-green {
-  --_fill: var(--nui-content-highlight-green);
-}
-.nui-editor-colours--fill-blue {
-  --_fill: var(--nui-content-highlight-blue);
-}
-.nui-editor-colours--fill-purple {
-  --_fill: var(--nui-content-highlight-purple);
-}
-.nui-editor-colours--fill-pink {
-  --_fill: var(--nui-content-highlight-pink);
-}
-.nui-editor-colours--fill-red {
-  --_fill: var(--nui-content-highlight-red);
-}
-.nui-editor-handle {
-  position: absolute;
-  inline-size: var(--_grip);
-  z-index: 1;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--transition-duration-fast) var(--ease-nui);
-}
-.nui-editor-handle--shown {
-  opacity: 1;
-  pointer-events: auto;
-}
-.nui-editor__drop {
-  position: absolute;
-  z-index: 3;
-  inset-inline-start: var(--_padding);
-  inline-size: calc(100% - var(--_padding) * 2);
-  block-size: 2px;
-  border-radius: 1px;
-  background: var(--color-primary);
-  translate: 0 -1px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--transition-duration-fast) var(--ease-nui);
-}
-.nui-editor__drop--shown {
-  opacity: 1;
-}
-.nui-editor__drop--side {
-  inline-size: 2px;
-  translate: -1px 0;
-}
-.nui-editor .nui-editor__ghost {
-  --_size: var(--_text);
-  --_inset: --spacing(2);
+@layer components {
+  .nui-editor__range {
+    position: absolute;
+    pointer-events: none;
+  }
+  .nui-editor__anchor {
+    position: sticky;
+    inset-block-start: calc(var(--_bar, 0px) + var(--spacing-control-sm) + --spacing(6));
+    display: block;
+    block-size: 100%;
+    max-block-size: 50dvh;
+  }
+  .nui-editor-bubble__bar {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+  }
+  .nui-editor-bubble .nui-editor-toolbar__group {
+    padding: 0;
+  }
+  .nui-editor-bubble .nui-editor-toolbar__group::before {
+    content: none;
+  }
+  .nui-editor-link__form {
+    display: grid;
+    gap: --spacing(3);
+  }
+  .nui-editor-link__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: --spacing(2);
+  }
+  .nui-editor-colours__mark {
+    display: inline-flex;
+    color: var(--_text, currentColor);
+  }
+  .nui-editor-colours__option {
+    display: flex;
+    align-items: center;
+    gap: --spacing(2);
+  }
+  .nui-editor-colours__swatch {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: --theme(--radius-sm inline);
+    background: var(--_fill, transparent);
+    color: var(--_text, var(--color-foreground));
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-semibold);
+  }
+  .nui-editor-colours__swatch--text::before {
+    content: 'A';
+  }
+  .nui-editor-colours--text-gray {
+    --_text: var(--nui-content-colour-gray);
+  }
+  .nui-editor-colours--text-brown {
+    --_text: var(--nui-content-colour-brown);
+  }
+  .nui-editor-colours--text-orange {
+    --_text: var(--nui-content-colour-orange);
+  }
+  .nui-editor-colours--text-yellow {
+    --_text: var(--nui-content-colour-yellow);
+  }
+  .nui-editor-colours--text-green {
+    --_text: var(--nui-content-colour-green);
+  }
+  .nui-editor-colours--text-blue {
+    --_text: var(--nui-content-colour-blue);
+  }
+  .nui-editor-colours--text-purple {
+    --_text: var(--nui-content-colour-purple);
+  }
+  .nui-editor-colours--text-pink {
+    --_text: var(--nui-content-colour-pink);
+  }
+  .nui-editor-colours--text-red {
+    --_text: var(--nui-content-colour-red);
+  }
+  .nui-editor-colours--fill-gray {
+    --_fill: var(--nui-content-highlight-gray);
+  }
+  .nui-editor-colours--fill-brown {
+    --_fill: var(--nui-content-highlight-brown);
+  }
+  .nui-editor-colours--fill-orange {
+    --_fill: var(--nui-content-highlight-orange);
+  }
+  .nui-editor-colours--fill-yellow {
+    --_fill: var(--nui-content-highlight-yellow);
+  }
+  .nui-editor-colours--fill-green {
+    --_fill: var(--nui-content-highlight-green);
+  }
+  .nui-editor-colours--fill-blue {
+    --_fill: var(--nui-content-highlight-blue);
+  }
+  .nui-editor-colours--fill-purple {
+    --_fill: var(--nui-content-highlight-purple);
+  }
+  .nui-editor-colours--fill-pink {
+    --_fill: var(--nui-content-highlight-pink);
+  }
+  .nui-editor-colours--fill-red {
+    --_fill: var(--nui-content-highlight-red);
+  }
+  .nui-editor-handle {
+    position: absolute;
+    inline-size: var(--_grip);
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-duration-fast) var(--ease-nui);
+  }
+  .nui-editor-handle--shown {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .nui-editor__drop {
+    position: absolute;
+    z-index: 3;
+    inset-inline-start: var(--_padding);
+    inline-size: calc(100% - var(--_padding) * 2);
+    block-size: 2px;
+    border-radius: 1px;
+    background: var(--color-primary);
+    translate: 0 -1px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-duration-fast) var(--ease-nui);
+  }
+  .nui-editor__drop--shown {
+    opacity: 1;
+  }
+  .nui-editor__drop--side {
+    inline-size: 2px;
+    translate: -1px 0;
+  }
+  .nui-editor .nui-editor__ghost {
+    --_size: var(--_text);
+    --_inset: --spacing(2);
 
-  position: absolute;
-  inset-block-start: calc(var(--_ghost-top, 0px) - var(--spacing) - 1px);
-  inset-inline-start: calc(var(--_ghost-start, 0px) - var(--_inset) - 1px);
-  z-index: 2;
-  box-sizing: border-box;
-  inline-size: calc(var(--_ghost-width, 0px) + var(--_inset) * 2 + 2px);
-  max-block-size: 12rem;
-  padding: var(--spacing) var(--_inset);
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: --theme(--radius-sm inline);
-  background: var(--color-surface-elevated);
-  box-shadow: var(--shadow-md);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--transition-duration-fast) var(--ease-nui);
-}
-.nui-editor .nui-editor__ghost--shown {
-  opacity: 1;
-}
-.nui-editor-insert {
-  display: flex;
-  flex-direction: column;
-  inline-size: 16rem;
-  max-block-size: 22rem;
-  border-radius: inherit;
+    position: absolute;
+    inset-block-start: calc(var(--_ghost-top, 0px) - var(--spacing) - 1px);
+    inset-inline-start: calc(var(--_ghost-start, 0px) - var(--_inset) - 1px);
+    z-index: 2;
+    box-sizing: border-box;
+    inline-size: calc(var(--_ghost-width, 0px) + var(--_inset) * 2 + 2px);
+    max-block-size: 12rem;
+    padding: var(--spacing) var(--_inset);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: --theme(--radius-sm inline);
+    background: var(--color-surface-elevated);
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-duration-fast) var(--ease-nui);
+  }
+  .nui-editor .nui-editor__ghost--shown {
+    opacity: 1;
+  }
+  .nui-editor-insert {
+    display: flex;
+    flex-direction: column;
+    inline-size: 16rem;
+    max-block-size: 22rem;
+    border-radius: inherit;
+  }
 }

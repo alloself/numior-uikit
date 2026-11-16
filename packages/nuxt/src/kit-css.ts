@@ -5,6 +5,7 @@ const LAYERED = new Set([
   '@numior/spreadsheet',
   '@numior/charts',
   '@numior/content',
+  '@numior/editor-vue',
 ]);
 
 const importOf = (id: string): string =>

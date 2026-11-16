@@ -24,7 +24,7 @@ const PACKAGES = [
   'collaboration',
 ];
 
-const LAYERED = new Set(['forms', 'table', 'spreadsheet', 'charts', 'content']);
+const LAYERED = new Set(['forms', 'table', 'spreadsheet', 'charts', 'content', 'editor-vue']);
 
 const importOf = (name: string): string =>
   LAYERED.has(name)

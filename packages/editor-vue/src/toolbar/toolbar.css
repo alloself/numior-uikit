@@ -1,61 +1,63 @@
-.nui-editor-toolbar {
-  --_separator: calc(--spacing(2) * 2 + 1px);
+@layer components {
+  .nui-editor-toolbar {
+    --_separator: calc(--spacing(2) * 2 + 1px);
 
-  position: sticky;
-  inset-block-start: 0;
-  z-index: 1;
-  overflow: clip;
-  box-sizing: border-box;
-  padding: var(--spacing);
-  border-block-end: 1px solid var(--color-border);
-  border-start-start-radius: inherit;
-  border-start-end-radius: inherit;
-  background: var(--color-surface);
-}
-.nui-editor-toolbar__groups {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-inline-start: calc(var(--_separator) * -1);
-}
-.nui-editor-toolbar__group {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding-inline-start: var(--_separator);
-}
-.nui-editor-toolbar__group::before {
-  content: '';
-  position: absolute;
-  inset-block: 0;
-  inset-inline-start: --spacing(2);
-  inline-size: 1px;
-  margin-block: auto;
-  block-size: 1.25rem;
-  background: var(--color-border);
-}
-.nui-editor-toolbar--docked {
-  position: fixed;
-  inset-block: auto var(--_keyboard, 0px);
-  inset-inline: 0;
-  z-index: 10;
-  overflow: visible;
-  padding-block-end: max(var(--spacing), env(safe-area-inset-bottom));
-  border-block-start: 1px solid var(--color-border);
-  border-block-end: 0;
-  border-radius: 0;
-  box-shadow: var(--shadow-md);
-  translate: 0 0;
-  transition: translate var(--transition-duration-normal) var(--ease-nui);
-}
-@starting-style {
-  .nui-editor-toolbar--docked {
-    translate: 0 100%;
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 1;
+    overflow: clip;
+    box-sizing: border-box;
+    padding: var(--spacing);
+    border-block-end: 1px solid var(--color-border);
+    border-start-start-radius: inherit;
+    border-start-end-radius: inherit;
+    background: var(--color-surface);
   }
-}
-.nui-editor-toolbar--docked .nui-editor-toolbar__groups {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  scrollbar-width: none;
+  .nui-editor-toolbar__groups {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-inline-start: calc(var(--_separator) * -1);
+  }
+  .nui-editor-toolbar__group {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding-inline-start: var(--_separator);
+  }
+  .nui-editor-toolbar__group::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: --spacing(2);
+    inline-size: 1px;
+    margin-block: auto;
+    block-size: 1.25rem;
+    background: var(--color-border);
+  }
+  .nui-editor-toolbar--docked {
+    position: fixed;
+    inset-block: auto var(--_keyboard, 0px);
+    inset-inline: 0;
+    z-index: 10;
+    overflow: visible;
+    padding-block-end: max(var(--spacing), env(safe-area-inset-bottom));
+    border-block-start: 1px solid var(--color-border);
+    border-block-end: 0;
+    border-radius: 0;
+    box-shadow: var(--shadow-md);
+    translate: 0 0;
+    transition: translate var(--transition-duration-normal) var(--ease-nui);
+  }
+  @starting-style {
+    .nui-editor-toolbar--docked {
+      translate: 0 100%;
+    }
+  }
+  .nui-editor-toolbar--docked .nui-editor-toolbar__groups {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
 }
