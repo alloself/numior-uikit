@@ -15,6 +15,7 @@ export interface TableResizeOptions<T> {
   readonly layout: () => TableLayout;
   readonly room: () => number;
   readonly columnAt: (key: string) => NuiTableColumn<T>;
+  readonly leastOf: (key: string) => number;
   readonly isRtl: () => boolean;
   readonly messages: ComputedRef<NuiTableMessages>;
   readonly announce: (text: string) => void;
@@ -79,7 +80,11 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
   const resizable = (key: string): boolean => options.columnAt(key).resizable !== false;
 
   const currentWidth = (key: string): number =>
-    placedOf(options.layout(), key)?.width ?? widthOf(options.columnAt(key), options.widths.value);
+    placedOf(options.layout(), key)?.width ??
+    widthOf(options.columnAt(key), options.widths.value, options.leastOf(key));
+
+  const clampOf = (key: string, px: number): number =>
+    clampWidth(options.columnAt(key), px, options.leastOf(key));
 
   const write = (patch: NuiTableWidths): void => {
     const current = options.widths.value;
@@ -98,16 +103,18 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
   };
 
   const apply = (current: ResizeSession, delta: number): void => {
-    const column = options.columnAt(current.key);
-    const wanted = clampWidth(column, current.width + delta);
+    const wanted = clampOf(current.key, current.width + delta);
 
     if (current.partner === undefined) {
       latest.width = wanted;
       write({ [current.key]: wanted });
       return;
     }
-    const partnerColumn = options.columnAt(current.partner.key);
-    const partnerNext = clampWidth(partnerColumn, current.partner.width - (wanted - current.width));
+
+    const partnerNext = clampOf(
+      current.partner.key,
+      current.partner.width - (wanted - current.width),
+    );
 
     latest.width = current.width + (current.partner.width - partnerNext);
     latest.partner = partnerNext;
@@ -182,7 +189,7 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
     }
     const grow = (event.key === Key.ArrowRight) !== options.isRtl();
     const before = currentWidth(key);
-    const next = clampWidth(options.columnAt(key), before + (grow ? STEP : -STEP));
+    const next = clampOf(key, before + (grow ? STEP : -STEP));
 
     write({ [key]: next });
     announceWidth(key, next);

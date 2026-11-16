@@ -334,7 +334,6 @@ import {
   rowCellsOf,
   rowHeadWidth,
   SELECT_KEY,
-  SMALLEST_WIDTH,
   sizedRowStyle,
   mergeIndices,
   sameIndices,
@@ -361,7 +360,8 @@ import { boxOf, clampPosition, columnSpansOf, type RangeBox } from './table-rang
 import { useTableRanges } from './use-table-ranges';
 import { pageRowsOf, pageStepOf } from './table-keys';
 import { useTableExpansion } from './use-table-expansion';
-import { useTableHeader, type TableHeader } from './use-table-header';
+import { useTableHeader, type TableFilterTarget, type TableHeader } from './use-table-header';
+import { headFrameOf, headToolsOf, leastWidthOf } from './table-head-tools';
 import { useTableMenu, type TableMenu } from './use-table-menu';
 import { useTableColumnOrder } from './use-table-column-order';
 import { useTableQuery } from './use-table-query';
@@ -564,6 +564,30 @@ const groupByNow = computed<NuiTableGroupBy>((previous) => keepEqual(groupBy.val
 const expandedNow = computed<NuiTableExpanded>((previous) => keepEqual(expanded.value, previous));
 const tree = computed(() => columnTreeOf(columns));
 const orderedLeaves = computed(() => orderLeaves(tree.value.leaves, columnOrder.value));
+const filterTarget = shallowRef<TableFilterTarget | null>(null);
+const filterOpen = ref(false);
+
+const leastWidths = computed<Readonly<Record<string, number>>>((previous) => {
+  const headFrame = headFrameOf(size, gridlines);
+
+  const facts = {
+    sort: sortNow.value,
+    filters: filtersNow.value,
+    pins: pins.value,
+    menu: columnMenu !== false,
+    opened: filterOpen.value ? filterTarget.value?.key : undefined,
+  };
+
+  const next = Object.fromEntries(
+    orderedLeaves.value.map((column) => [
+      column.key,
+      leastWidthOf(headToolsOf(column, facts), headFrame),
+    ]),
+  );
+
+  return keepEqual(next, previous);
+});
+
 const gridId = useControlId(() => id);
 const resolvedLocale = useLocale(() => locale);
 const messages = useMessages(tableMessages, resolvedLocale);
@@ -778,6 +802,7 @@ const layoutOptions = computed(() => ({
   pins: pins.value,
   hidden: hidden.value,
   widths: widths.value,
+  least: leastWidths.value,
   select: selectOn.value,
   room: flexing.value ? room.value : 0,
   wrap: height === undefined || rowHeight === NuiTableRowHeight.Auto,
@@ -1131,6 +1156,7 @@ const resize = useTableResize<T>({
   layout: () => layout.value,
   room: () => room.value,
   columnAt,
+  leastOf: (key) => leastWidths.value[key] ?? 0,
   isRtl: direction.isRtl,
   messages,
   announce: (text) => {
@@ -1164,6 +1190,8 @@ const header: TableHeader<T> = useTableHeader({
   columnAt,
   sort,
   filters,
+  target: filterTarget,
+  open: filterOpen,
   messages,
   announce: (text) => {
     announcement.value = text;
@@ -3132,10 +3160,6 @@ defineExpose<NuiTableExposed>({
   focusCell: focusCellAt,
   moveActive: moveActiveCell,
   invalidate,
-  fitWidth: (text, style) => {
-    const need = textMeasure.widthOf(text, style?.style, style?.icon !== undefined);
-
-    return need === undefined ? undefined : Math.max(SMALLEST_WIDTH, need);
-  },
+  fitWidth: (text, style) => textMeasure.widthOf(text, style?.style, style?.icon !== undefined),
 });
 </script>

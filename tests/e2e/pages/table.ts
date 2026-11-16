@@ -84,6 +84,7 @@ const GROUP_LABEL = '.nui-table__group';
 const SEAM_INSET = 4;
 const SEAM_REACH = 4;
 const SEAM_CONTRAST = 6;
+const WIDTH_STEP = 10;
 const NO_PIXEL: Rgb = [0, 0, 0];
 
 const HEADER_PARTS: HandleParts = { grip: '.nui-table__grip', label: '.nui-table__text' };
@@ -470,6 +471,39 @@ export class TableSection extends GridKeys {
 
   menuButton(col: number): Locator {
     return this.header(col).locator('.nui-table__menu');
+  }
+
+  async narrowToLeast(col: number): Promise<void> {
+    const header = this.header(col);
+
+    await header.scrollIntoViewIfNeeded();
+    await header.focus();
+
+    const steps = Math.ceil((await renderedWidth(header)) / WIDTH_STEP);
+
+    for (let step = 0; step < steps; step += 1) {
+      await this.narrowFocusedColumn();
+    }
+  }
+
+  async toolsOutside(col: number): Promise<string[]> {
+    const header = this.header(col);
+
+    await header.scrollIntoViewIfNeeded();
+    await header.hover();
+    await expect.poll(() => renderedWidth(this.menuButton(col))).toBeGreaterThan(20);
+
+    return header.evaluate((cell) => {
+      const own = cell.getBoundingClientRect();
+      const tools = cell.querySelectorAll('.nui-table__grip, .nui-table__sort, .nui-table__menu');
+
+      return [...tools].flatMap((tool) => {
+        const box = tool.getBoundingClientRect();
+        const inside = box.left >= own.left - 0.5 && box.right <= own.right + 0.5;
+
+        return inside ? [] : [tool.classList.item(0) ?? ''];
+      });
+    });
   }
 
   async openMenu(col: number): Promise<void> {

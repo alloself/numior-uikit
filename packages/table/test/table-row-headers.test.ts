@@ -216,17 +216,17 @@ describe('NuiTable row headers', () => {
     await grid.press('ArrowRight', { shift: true });
 
     expect(grid.ranges).toEqual([{ from: { row: 0, col: 2 }, to: { row: 99, col: 3 } }]);
-    expect(grid.scrollLeft).toBe(144);
+    expect(grid.scrollLeft).toBe(161);
     expect(grid.scrollTop).toBe(0);
 
     await grid.press('ArrowRight', { shift: true });
-    expect(grid.scrollLeft).toBe(244);
+    expect(grid.scrollLeft).toBe(261);
 
     await grid.press('ArrowLeft', { shift: true });
     await grid.press('ArrowLeft', { shift: true });
 
     expect(grid.ranges).toEqual([{ from: { row: 0, col: 2 }, to: { row: 99, col: 2 } }]);
-    expect(grid.scrollLeft).toBe(240);
+    expect(grid.scrollLeft).toBe(257);
   });
 
   it('keeps headers out of the selection without row headers', async () => {

@@ -36,7 +36,7 @@ afterEach(() => {
 
 describe('NuiTable', () => {
   it('renders the header, a window of rows and columns, pinned panes and formatted cells', async () => {
-    const grid = mountPeople();
+    const grid = mountPeople({ width: 518 });
     await grid.settle();
 
     expect(grid.label).toBe('Таблица данных');
@@ -180,7 +180,7 @@ describe('NuiTable', () => {
     }
 
     expect(grid.focusedCell).toEqual({ row: 0, col: 7 });
-    expect(grid.scrollLeft).toBe(660);
+    expect(grid.scrollLeft).toBe(678);
 
     grid.unmount();
 
@@ -192,7 +192,7 @@ describe('NuiTable', () => {
     }
 
     expect(mirrored.focusedCell).toEqual({ row: 0, col: 7 });
-    expect(mirrored.scrollLeft).toBe(-660);
+    expect(mirrored.scrollLeft).toBe(-678);
 
     await mirrored.press('ArrowRight');
     expect(mirrored.focusedCell).toEqual({ row: 0, col: 6 });

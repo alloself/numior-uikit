@@ -1,5 +1,5 @@
 import { isEqual } from 'lodash-es';
-import { computed, ref, shallowRef, type ComputedRef, type Ref, type ShallowRef } from 'vue';
+import { computed, type ComputedRef, type Ref, type ShallowRef } from 'vue';
 import { filterKindOf, filterOf, withFilter } from './table-filter';
 import { headStateOf, nextSort, type HeadStateInput } from './table-sort';
 import type { NuiTableMessages } from './table.messages';
@@ -27,6 +27,8 @@ export interface TableHeaderOptions<T> {
   readonly columnAt: (key: string) => NuiTableColumn<T>;
   readonly sort: Ref<NuiTableSort>;
   readonly filters: Ref<NuiTableFilters>;
+  readonly target: ShallowRef<TableFilterTarget | null>;
+  readonly open: Ref<boolean>;
   readonly messages: ComputedRef<NuiTableMessages>;
   readonly announce: (text: string) => void;
   readonly filtered: (changed: boolean) => void;
@@ -76,8 +78,7 @@ const isSortKey = (event: KeyboardEvent): boolean =>
 const isSideArrow = (key: string): boolean => key === Key.ArrowLeft || key === Key.ArrowRight;
 
 export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T> => {
-  const target = shallowRef<TableFilterTarget | null>(null);
-  const open = ref(false);
+  const { target, open } = options;
 
   const known = computed(() => new Set(options.keys()));
 

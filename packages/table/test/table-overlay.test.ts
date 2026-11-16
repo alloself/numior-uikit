@@ -73,15 +73,15 @@ describe('NuiTable overlay', () => {
     await grid.settle();
 
     expect(grid.overlayMarks).toEqual([
-      { top: '80px', start: '80px', width: '300px', height: '80px' },
-      { top: '240px', start: '0px', width: '600px', height: '40px' },
+      { top: '80px', start: '97px', width: '300px', height: '80px' },
+      { top: '240px', start: '0px', width: '617px', height: '40px' },
     ]);
 
     await grid.scroll({ top: 4000 });
 
     expect(grid.overlayMarks[0]).toEqual({
       top: '80px',
-      start: '80px',
+      start: '97px',
       width: '300px',
       height: '80px',
     });
@@ -91,7 +91,7 @@ describe('NuiTable overlay', () => {
 
     expect(grid.rectOf(range(999, 4, 999, 4))).toEqual({
       top: 40_000,
-      start: 500,
+      start: 517,
       width: 100,
       height: 40,
     });
@@ -107,15 +107,15 @@ describe('NuiTable overlay', () => {
     await grid.settle();
 
     expect(grid.paneMarks).toEqual([
-      'body 80px 80px',
+      'body 80px 98px',
       'body 240px 0px',
       'start 240px 0px',
-      'top 80px 80px',
+      'top 80px 98px',
     ]);
 
     await grid.receive({ frozenRows: 0 });
 
-    expect(grid.paneMarks).toEqual(['body 80px 80px', 'body 240px 0px', 'start 240px 0px']);
+    expect(grid.paneMarks).toEqual(['body 80px 98px', 'body 240px 0px', 'start 240px 0px']);
   });
 
   it('follows the row heights model', async () => {
@@ -124,7 +124,7 @@ describe('NuiTable overlay', () => {
 
     expect(grid.overlayMarks[0]).toEqual({
       top: '100px',
-      start: '80px',
+      start: '97px',
       width: '300px',
       height: '80px',
     });
@@ -133,7 +133,7 @@ describe('NuiTable overlay', () => {
 
     expect(grid.overlayMarks[0]).toEqual({
       top: '100px',
-      start: '80px',
+      start: '97px',
       width: '300px',
       height: '140px',
     });
@@ -151,7 +151,7 @@ describe('NuiTable overlay', () => {
 
     expect(grid.overlayMarks[0]).toEqual({
       top: '100px',
-      start: '80px',
+      start: '97px',
       width: '300px',
       height: '80px',
     });
@@ -165,7 +165,7 @@ describe('NuiTable overlay', () => {
 
     expect(grid.overlayMarks[0]).toEqual({
       top: '104px',
-      start: '80px',
+      start: '97px',
       width: '300px',
       height: '92px',
     });

@@ -76,7 +76,7 @@ describe('NuiTable handles', () => {
     await grid.dragRowResizer(2, 24);
 
     expect(grid.ranges).toEqual([{ from: { row: 1, col: 0 }, to: { row: 3, col: 1 } }]);
-    expect(grid.widths).toEqual({ id: 120 });
+    expect(grid.widths).toEqual({ id: 137 });
     expect(grid.rowHeights).toEqual({ 2: 64 });
     expect(adds.types()).toEqual([]);
   });

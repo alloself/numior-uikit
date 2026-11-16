@@ -481,7 +481,7 @@ describe('NuiTable on the server', () => {
     expect(html).toContain('class="nui-table__overlay"');
 
     expect(html).toContain(
-      'data-rect="{&quot;top&quot;:120,&quot;start&quot;:80,&quot;width&quot;:300,&quot;height&quot;:80}"',
+      'data-rect="{&quot;top&quot;:120,&quot;start&quot;:98,&quot;width&quot;:300,&quot;height&quot;:80}"',
     );
   });
 

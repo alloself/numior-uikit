@@ -12,8 +12,6 @@ const ROOT_FONT = 16;
 
 const ICON_ROOM = 22;
 
-const SMALLEST = 48;
-
 const LONG = 'Quarterly revenue';
 
 const mounted: TableDriver<Person>[] = [];
@@ -53,7 +51,7 @@ describe('NuiTable fit width', () => {
     expect([plain, bold]).toEqual([LONG.length * CHAR_WIDTH, LONG.length * BOLD_CHAR_WIDTH]);
   });
 
-  it('adds the room of a leading icon and never goes below the narrowest column', async () => {
+  it('adds the room of a leading icon and answers a short text with its own width', async () => {
     const grid = mountPeople();
 
     await grid.settle();
@@ -61,7 +59,7 @@ describe('NuiTable fit width', () => {
     const marked = grid.fitWidth(LONG, { icon: { icon: 'arrow-up', color: 'currentColor' } });
     const short = grid.fitWidth('Up');
 
-    expect([marked, short]).toEqual([LONG.length * CHAR_WIDTH + ICON_ROOM, SMALLEST]);
+    expect([marked, short]).toEqual([LONG.length * CHAR_WIDTH + ICON_ROOM, 2 * CHAR_WIDTH]);
   });
 
   it('has no answer where text cannot be measured', async () => {

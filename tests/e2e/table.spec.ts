@@ -1221,6 +1221,29 @@ test.describe('table', () => {
     await expect(table.footerCell(10)).toBeFocused();
   });
 
+  test('opens the menu of a narrow column with the mouse and keeps its tools in the header', async ({
+    playground,
+    table,
+  }) => {
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+
+    expect(await table.toolsOutside(10)).toEqual([]);
+
+    await table.openMenu(10);
+    await expect(table.menu).toBeVisible();
+
+    await table.pressEscape();
+    await expect(table.menu).toBeHidden();
+
+    await table.scrollTo({ left: 0 });
+    await table.narrowToLeast(1);
+    expect(await table.toolsOutside(1)).toEqual([]);
+
+    await table.openMenu(1);
+    await expect(table.menu).toBeVisible();
+  });
+
   test('keeps the column of a grouping from being hidden from its menu', async ({
     playground,
     table,
