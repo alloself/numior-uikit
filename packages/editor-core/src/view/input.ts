@@ -2,7 +2,7 @@ import { caretAtEnd } from '../commands/blocks';
 import { caretNear, isAtom } from '../commands/atoms';
 import { intentCommand, selectAtom } from '../commands/input';
 import { clipboardHTML } from '../html/clipboard';
-import { nearestCursor, selectionRange } from '../state/selection';
+import { nearestCursor, selectionRange, textPosition, textSelection } from '../state/selection';
 import type { Selection, SelectionRange } from '../state/selection.types';
 import {
   InputSource,
@@ -252,13 +252,28 @@ const EDGE_KEYS: Readonly<Record<string, boolean>> = {
   PageDown: true,
 };
 
-const leaveAllByKey = (host: ViewHost, event: KeyboardEvent): boolean => {
+const spanAll = (host: ViewHost): boolean => {
+  const state = host.state();
+  const anchor = textPosition(state.doc, 0, 1);
+  const head = textPosition(state.doc, state.doc.size, -1);
+
+  if (anchor === undefined || head === undefined) {
+    return false;
+  }
+
+  host.dispatch(state.tr.setSelection(textSelection(anchor, head)), InputSource.Key);
+  return true;
+};
+
+const moveFromAll = (host: ViewHost, event: KeyboardEvent): boolean => {
   const arrow = ARROWS[event.key];
   const forward = arrow === undefined ? EDGE_KEYS[event.key] : isForward(host, arrow);
-  const leaves = host.state().selection.kind === SelectionKind.All && !event.shiftKey;
 
-  if (forward === undefined || !leaves) {
+  if (forward === undefined || host.state().selection.kind !== SelectionKind.All) {
     return false;
+  }
+  if (event.shiftKey) {
+    return forward || !spanAll(host);
   }
 
   leaveAll(host, forward, InputSource.Key);
@@ -423,7 +438,7 @@ const handleKey = (host: ViewHost, event: KeyboardEvent): boolean => {
     state.plugins.some((plugin) => plugin.props.handleKey?.(key, state, dispatch) === true) ||
     moveInGap(host, event) ||
     jumpPastEdgeBlock(host, event) ||
-    leaveAllByKey(host, event) ||
+    moveFromAll(host, event) ||
     moveByArrow(host, event) ||
     deleteAll(host, event) ||
     editNode(host, event) ||

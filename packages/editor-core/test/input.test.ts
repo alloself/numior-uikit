@@ -653,6 +653,46 @@ describe('editor view input', () => {
     expect(view.selection).toEqual(textSelection(7));
   });
 
+  it.each([
+    ['ArrowRight', {}],
+    ['ArrowDown', {}],
+    ['End', {}],
+    ['PageDown', {}],
+    ['End', { ctrl: true }],
+    ['ArrowRight', { ctrl: true }],
+  ] as const)('keeps a whole-document selection as it is on Shift with %s %o', (key, options) => {
+    const view = mounted(twoParagraphs());
+
+    view.focus();
+    view.selectAll();
+
+    expect(view.press(key, { ...options, shift: true })).toBe(true);
+    expect(view.selection).toEqual({ kind: 'all' });
+    expect(view.selectsAll).toBe(true);
+  });
+
+  it.each([
+    ['ArrowLeft', {}],
+    ['ArrowUp', {}],
+    ['Home', {}],
+    ['PageUp', {}],
+    ['Home', { ctrl: true }],
+    ['ArrowLeft', { ctrl: true }],
+  ] as const)(
+    'spans a whole-document selection from the start to the end for the browser to move its end on Shift with %s %o',
+    (key, options) => {
+      const view = mounted(twoParagraphs());
+
+      view.focus();
+      view.selectAll();
+
+      expect(view.press(key, { ...options, shift: true })).toBe(false);
+      expect(view.selection).toEqual(textSelection(1, 7));
+      expect(view.domSpan).toEqual({ anchor: 1, head: 7 });
+      expect(view.selectsAll).toBe(false);
+    },
+  );
+
   it('leaves a whole-document selection on a plain press of the main button only', () => {
     const view = mounted(twoParagraphs());
 
