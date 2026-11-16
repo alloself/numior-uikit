@@ -494,6 +494,9 @@
   block-size: var(--_body-size);
   min-block-size: var(--_body-min);
 }
+.nui-table__cell--spill > .nui-table__content {
+  overflow: clip;
+}
 .nui-table__body > .nui-table__row > .nui-table__cell--merged > .nui-table__content {
   position: absolute;
   inset-block-start: var(--_span-y, 0px);

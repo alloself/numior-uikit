@@ -51,6 +51,12 @@ export class TableFlowSection extends TableCellsSection {
     return { cell, piece: box, ...facts };
   }
 
+  async revealPiece(position: number, col: number): Promise<void> {
+    await this.piece(position, col).evaluate((piece) => {
+      piece.scrollIntoView({ block: 'nearest', inline: 'end' });
+    });
+  }
+
   async piecesOf(position: number, from: number, to: number): Promise<TableFlowPiece[]> {
     return Promise.all(
       Array.from({ length: to - from + 1 }, (_, index) => this.pieceOf(position, from + index)),
