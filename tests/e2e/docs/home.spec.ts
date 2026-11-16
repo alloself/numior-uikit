@@ -48,7 +48,7 @@ test('a section of the home page shows a live block and leads to its page', asyn
 
   await table.getByRole('link', { name: 'Открыть таблицу' }).click();
 
-  await expect(page).toHaveURL(/\/table\/$/);
+  await expect(page).toHaveURL(/\/components\/table\/$/);
 });
 
 test('the skip link moves focus to the home content', async ({ docs, isMobile }) => {

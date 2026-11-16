@@ -46,22 +46,22 @@ test.describe('layout', () => {
     await expect(layout.heading).toHaveText('Отчёт: команда');
   });
 
-  test('the top bar stands on the content gutter and puts its trigger in the rail column over an icon rail', async ({
+  test('the top bar keeps the content gutter, puts the trigger icon on the text line and its trigger in the rail column over an icon rail', async ({
     playground,
     layout,
     isMobile,
   }) => {
     await playground.open();
     await layout.root.scrollIntoViewIfNeeded();
-    expect(await layout.appBarPadding()).toBe(GUTTER);
-    expect(await layout.triggerStart()).toBeCloseTo(await layout.textStart(), 0);
+    expect(await layout.appBarEndGap()).toBe(GUTTER);
+    expect(await layout.triggerIconStart()).toBeCloseTo(await layout.textStart(), 0);
 
     await layout.header.selectOption('full');
 
-    await expect.poll(() => layout.appBarPadding()).toBe(GUTTER);
+    await expect.poll(() => layout.appBarEndGap()).toBe(GUTTER);
 
     if (isMobile) {
-      expect(await layout.triggerStart()).toBeCloseTo(await layout.textStart(), 0);
+      expect(await layout.triggerIconStart()).toBeCloseTo(await layout.textStart(), 0);
       return;
     }
 

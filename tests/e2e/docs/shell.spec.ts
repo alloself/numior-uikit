@@ -106,6 +106,17 @@ test('the footer closes a page with the license and the sections of the site', a
   await expect(docs.footer).toBeAttached();
 });
 
+test('the site header keeps its place on a page whose example has an icon rail', async ({
+  docs,
+}) => {
+  await docs.open('/components/card');
+  const start = await docs.homeLinkStart();
+
+  await docs.open('/components/layout');
+
+  expect(await docs.homeLinkStart()).toBe(start);
+});
+
 test('the contents stay in place when the footer scrolls into view', async ({ docs, isMobile }) => {
   test.skip(isMobile, 'phones have no contents column');
   await docs.open('/blocks/');
@@ -204,6 +215,7 @@ test('the sidebar lives in a drawer on phones and closes after navigation', asyn
 
   await docs.trigger.tap();
   await expect(docs.drawer).toBeVisible();
+  await expect(docs.currentDrawerLinks).toHaveText(['Button']);
 
   await docs.drawerLink('Select').tap();
   await expect(page).toHaveURL(/\/components\/select$/);

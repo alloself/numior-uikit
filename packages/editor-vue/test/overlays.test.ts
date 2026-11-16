@@ -287,6 +287,8 @@ describe('NuiEditor links, colours and bubble', () => {
 
     const editor = mounted({ document: page('Hello world'), toolbar: 'both' });
 
+    await editor.afterMount();
+
     expect(editor.headerTools.slice(0, 4)).toEqual(['Insert', 'Undo', 'Redo', 'Bold']);
 
     editor.focus();
@@ -299,6 +301,8 @@ describe('NuiEditor links, colours and bubble', () => {
     restoreMedia = installMouse();
 
     const editor = mounted({ document: page('Hello world') });
+
+    await editor.afterMount();
 
     expect(editor.headerTools.slice(0, 4)).toEqual(['Insert', 'Undo', 'Redo', 'Bold']);
 

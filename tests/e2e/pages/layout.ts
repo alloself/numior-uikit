@@ -156,10 +156,19 @@ export class LayoutSection {
     return heading.x - frame.x;
   }
 
-  appBarPadding(): Promise<number> {
-    return this.appBar.evaluate((element) =>
-      Number.parseFloat(getComputedStyle(element).paddingInlineEnd),
-    );
+  async appBarEndGap(): Promise<number> {
+    const [bar, end] = await Promise.all([
+      boxOf(this.appBar),
+      boxOf(this.appBar.locator('.nui-app-bar__end')),
+    ]);
+
+    return Math.round(bar.x + bar.width - (end.x + end.width));
+  }
+
+  async triggerIconStart(): Promise<number> {
+    const [frame, icon] = await Promise.all([boxOf(this.root), boxOf(this.trigger.locator('svg'))]);
+
+    return icon.x - frame.x;
   }
 
   async appBarWidthGap(): Promise<number> {

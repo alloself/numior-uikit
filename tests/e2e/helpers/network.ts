@@ -22,15 +22,26 @@ export class MainFrameNetwork {
 
   async quiet(): Promise<void> {
     await expect
-      .poll(() => this.inflight.size === 0 && Date.now() - this.changedAt >= QUIET_MS, {
+      .poll(() => this.unsettled(), {
         intervals: [100],
         timeout: 30_000,
       })
-      .toBe(true);
+      .toEqual([]);
+  }
+
+  private unsettled(): string[] {
+    const pending = [...this.inflight].map((request) => `${request.method()} ${request.url()}`);
+
+    if (pending.length > 0 || Date.now() - this.changedAt >= QUIET_MS) {
+      return pending;
+    }
+    return ['settling'];
   }
 
   private started(request: Request): void {
-    if (request.frame() !== this.page.mainFrame()) {
+    const speculative = request.headers()['sec-purpose']?.includes('prefetch') === true;
+
+    if (request.frame() !== this.page.mainFrame() || speculative) {
       return;
     }
     this.inflight.add(request);

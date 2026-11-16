@@ -3,6 +3,7 @@ import { createDoc, toHTML, toJSON, type Doc, type ElementNode } from '@numior/e
 import { generateDoc } from '@numior/editor-core/fixtures';
 import { describe, expect, it } from 'vite-plus/test';
 import { EditorDriver } from './drivers/editor';
+import { installMouse, installTouch } from './support/media';
 
 const element = (
   type: string,
@@ -92,5 +93,17 @@ describe('NuiEditor on the server', () => {
 
     expect(html).toContain('nui-editor-toolbar');
     expect(await EditorDriver.hydrate({ document, toolbar: 'both' })).toEqual([]);
+  });
+
+  it('hydrates the toolbar without warnings on a device with a mouse', async () => {
+    const document = toJSON(everything());
+
+    expect(await EditorDriver.hydrate({ document, toolbar: 'both' }, installMouse)).toEqual([]);
+  });
+
+  it('hydrates the toolbar without warnings on a touch screen', async () => {
+    const document = toJSON(everything());
+
+    expect(await EditorDriver.hydrate({ document, toolbar: 'both' }, installTouch)).toEqual([]);
   });
 });

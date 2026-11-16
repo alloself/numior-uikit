@@ -56,34 +56,33 @@ const TEMPLATE_GLYPHS = [
   '…',
 ];
 
-const RENDER_FUNCTIONS = {
-  'no-restricted-imports': [
-    'error',
-    {
-      paths: [
-        {
-          name: 'vue',
-          importNames: [
-            'h',
-            'defineComponent',
-            'createVNode',
-            'createElementVNode',
-            'createTextVNode',
-            'cloneVNode',
-            'renderSlot',
-            'renderList',
-            'resolveComponent',
-            'resolveDynamicComponent',
-            'withCtx',
-            'FunctionalComponent',
-          ],
-          message:
-            'Components are SFCs; .archcore/component-authoring.rule.md lists the only exception.',
-        },
-      ],
-    },
+const RENDER_FUNCTION_IMPORTS = {
+  name: 'vue',
+  importNames: [
+    'h',
+    'defineComponent',
+    'createVNode',
+    'createElementVNode',
+    'createTextVNode',
+    'cloneVNode',
+    'renderSlot',
+    'renderList',
+    'resolveComponent',
+    'resolveDynamicComponent',
+    'withCtx',
+    'FunctionalComponent',
   ],
+  message: 'Components are SFCs; .archcore/component-authoring.rule.md lists the only exception.',
 };
+
+const MEDIA_QUERY_IMPORT = {
+  name: '@vueuse/core',
+  importNames: ['useMediaQuery'],
+  message:
+    'Take useMediaQuery from @numior/primitives: it stays false until mounted, so the page hydrates what the server rendered.',
+};
+
+const restrictedImports = (...paths) => ({ 'no-restricted-imports': ['error', { paths }] });
 
 const CODE_SHAPE = [
   {
@@ -233,8 +232,15 @@ export default [
   },
   {
     files: ['**/*.ts', '**/*.mts', '**/*.js', '**/*.mjs', '**/*.vue'],
-    ignores: ['packages/content/src/content/content-nodes.ts'],
-    rules: RENDER_FUNCTIONS,
+    rules: restrictedImports(RENDER_FUNCTION_IMPORTS, MEDIA_QUERY_IMPORT),
+  },
+  {
+    files: ['packages/content/src/content/content-nodes.ts'],
+    rules: restrictedImports(MEDIA_QUERY_IMPORT),
+  },
+  {
+    files: ['packages/primitives/src/media/useMediaQuery.ts'],
+    rules: restrictedImports(RENDER_FUNCTION_IMPORTS),
   },
   {
     files: ['**/*.ts', '**/*.mts', '**/*.js', '**/*.mjs', '**/*.vue'],

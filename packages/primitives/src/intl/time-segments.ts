@@ -53,6 +53,8 @@ const FALLBACK_LABELS: Record<TimeSegmentType, string> = {
 
 const SAMPLE = new Date(Date.UTC(2000, 0, 1, 13, 5, 9));
 
+const SPACES = /\p{Zs}/gu;
+
 const SEGMENT_TYPES: ReadonlySet<string> = new Set(Object.values(TimeSegmentType));
 
 const TWELVE_HOUR_CYCLES: ReadonlySet<string> = new Set(['h11', HourCycle.H12]);
@@ -88,7 +90,7 @@ export const timeLayout = (locale: string, options: TimeLayoutOptions): TimeLayo
       return [{ type: part.type }];
     }
     return part.type === DateTimePart.Literal
-      ? [{ type: DateTimePart.Literal, text: part.value }]
+      ? [{ type: DateTimePart.Literal, text: part.value.replace(SPACES, ' ') }]
       : [];
   });
 

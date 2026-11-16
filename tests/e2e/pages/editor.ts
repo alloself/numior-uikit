@@ -85,6 +85,16 @@ export class EditorSection {
     await this.page.keyboard.press('Home');
   }
 
+  async caretToLineEnd(): Promise<void> {
+    await this.page.keyboard.press('End');
+  }
+
+  async clickLineStart(block: Locator): Promise<void> {
+    const box = await boxOf(block);
+
+    await this.page.mouse.click(box.x + 1, box.y + box.height / 2);
+  }
+
   async selectToLineStart(): Promise<void> {
     await this.page.keyboard.press('Shift+Home');
   }
@@ -137,10 +147,6 @@ export class EditorSection {
     await this.placeAtEnd();
     await this.showCaret();
     await this.pressEnter();
-  }
-
-  async movePointerAway(): Promise<void> {
-    await this.page.mouse.move(0, 0);
   }
 
   async drawCellRange(from: Locator, to: Locator): Promise<void> {
@@ -480,6 +486,10 @@ export class EditorSection {
 
   block(index: number): Locator {
     return this.content.locator('.nui-editor__chunk > *').nth(index);
+  }
+
+  lastBlock(): Locator {
+    return this.content.locator(':scope > .nui-editor__chunk > *').last();
   }
 
   item(text: string): Locator {

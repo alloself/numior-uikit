@@ -30,6 +30,13 @@ export interface DomSpan {
 export interface KeyOptions {
   readonly shift?: boolean;
   readonly ctrl?: boolean;
+  readonly alt?: boolean;
+  readonly meta?: boolean;
+}
+
+export interface MouseOptions {
+  readonly button?: number;
+  readonly shift?: boolean;
 }
 
 export type CaretApi = 'position' | 'range' | 'none';
@@ -225,6 +232,17 @@ export class EditorViewDriver {
     );
   }
 
+  pressBlock(index: number, options: MouseOptions = {}): void {
+    this.blocks[index]?.dispatchEvent(
+      new MouseEvent('mousedown', {
+        bubbles: true,
+        cancelable: true,
+        button: options.button ?? 0,
+        shiftKey: options.shift ?? false,
+      }),
+    );
+  }
+
   clickBelow(): boolean {
     return !this.host.dispatchEvent(
       new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0, clientY: 900 }),
@@ -355,6 +373,8 @@ export class EditorViewDriver {
         key,
         shiftKey: options.shift ?? false,
         ctrlKey: options.ctrl ?? false,
+        altKey: options.alt ?? false,
+        metaKey: options.meta ?? false,
         bubbles: true,
         cancelable: true,
       }),

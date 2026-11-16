@@ -13,8 +13,8 @@ import {
 import type { NavSection } from '../.vitepress/theme/theme.types';
 
 const DOCS = fileURLToPath(new URL('..', import.meta.url));
-const SECTION_DIRS = ['guide', 'components', 'composables', 'theme', 'table', 'editor'];
-const PAGE_SECTIONS = ['/spreadsheet/', '/charts/', '/blocks/'];
+const SECTION_DIRS = ['guide', 'components', 'components/table', 'composables', 'theme', 'editor'];
+const PAGE_SECTIONS = ['/blocks/'];
 const INDEX_PAGE = 'index';
 
 const SHOP: readonly NavSection[] = [
@@ -123,16 +123,25 @@ describe('docs navigation', () => {
     expect(missingIn(PAGE_SECTIONS)).toEqual([]);
   });
 
-  it('puts the module sections between the components and the themes in the header', () => {
+  it('keeps the editor in the header and the table, spreadsheet and charts among the components', () => {
     expect(navOf('en').map((item) => item.text)).toEqual([
       'Docs',
       'Components',
-      'Table',
-      'Spreadsheet',
       'Editor',
-      'Charts',
       'Blocks',
       'Themes',
+    ]);
+
+    const components = sidebarOf('en')['/en/components/'];
+
+    expect(components?.at(-1)?.items.map((item) => item.link)).toEqual([
+      '/en/components/table/',
+      '/en/components/table/data',
+      '/en/components/table/cells',
+      '/en/components/table/editing',
+      '/en/components/table/columns',
+      '/en/components/spreadsheet',
+      '/en/components/charts',
     ]);
   });
 });

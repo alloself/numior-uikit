@@ -1,8 +1,7 @@
 import { RefreshCw, Sheet as SheetIcon, TableProperties, Trash2 } from '@lucide/vue';
-import { FloatingPlacement, useLocale, useMessages } from '@numior/primitives';
+import { FloatingPlacement, useLocale, useMediaQuery, useMessages } from '@numior/primitives';
 import type { NuiTableOverlaySlot, NuiTableRect } from '@numior/table';
 import { NuiMenuItemTone, type NuiMenuEntry } from '@numior/vue';
-import { useMediaQuery } from '@vueuse/core';
 import { computed, markRaw, shallowRef, watch } from 'vue';
 import {
   CellValueKind,

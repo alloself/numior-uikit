@@ -74,6 +74,10 @@ Kit писался с нуля: `engineering-quality.rule.md` требовал �
   (`installClipboard`), e2e-стаб перехватывает `navigator.clipboard.write` и `execCommand`.
 - `useMediaQuery` вызывает `matchMedia` в setup (значение по-прежнему `false` до монтирования);
   фейковые `MediaQueryList` в тестах передают `{ matches }` слушателю.
+- 2026-11-16: `useMediaQuery` из `@vueuse/core` запрещён правилом ESLint `no-restricted-imports` везде,
+  кроме самой обёртки. Причина — расхождения гидратации на собранной доке: поле времени, панель
+  редактора и блок CustomersSplit рисовали на клиенте другое, чем сервер; e2e
+  `tests/e2e/docs/hydration.spec.ts` обходит все страницы на компьютере и телефоне.
 - Скролл-спай создаёт наблюдатель после монтирования в post-flush: тесты ждут `nextTick`.
 - `engineering-quality.rule.md` и `numior-ui.plan.md` ссылаются на этот документ; новая
   зависимость в базовом UI по-прежнему требует записи здесь.

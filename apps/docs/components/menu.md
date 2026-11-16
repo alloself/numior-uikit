@@ -35,14 +35,14 @@ import { NuiMenu, NuiMenuItem } from '@numior/vue';
 
 Вид пункта задаёт поле `type`:
 
-| `type`              | Пункт                 | Поля                                                             |
-| ------------------- | --------------------- | ---------------------------------------------------------------- |
-| `item` или без поля | Пункт с действием     | `label`, `icon`, `shortcut`, `tone`, `href` или `to`, `onSelect` |
-| `checkbox`          | Пункт с флажком       | `label`, `checked`, `onCheckedChange`                            |
-| `radio-group`       | Выбор одного варианта | `items`, `value`, `onChange`                                     |
-| `sub`               | Вложенное меню        | `label`, `icon`, `items`                                         |
-| `label`             | Заголовок группы      | `label`                                                          |
-| `separator`         | Линия между группами  | —                                                                |
+| `type`              | Пункт и его поля                                                                    |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| `item` или без поля | Пункт с действием: `label`, `icon`, `shortcut`, `tone`, `href` или `to`, `onSelect` |
+| `checkbox`          | Пункт с флажком: `label`, `icon`, `checked`, `onCheckedChange`                      |
+| `radio-group`       | Выбор одного варианта: `items`, `value`, `onChange`                                 |
+| `sub`               | Вложенное меню: `label`, `icon`, `items`                                            |
+| `label`             | Заголовок группы: `label`                                                           |
+| `separator`         | Линия между группами, без полей                                                     |
 
 ## Поведение
 

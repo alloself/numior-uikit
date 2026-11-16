@@ -192,17 +192,19 @@ const COMPONENTS: readonly NavGroup[] = [
       { link: '/components/date-range-picker', title: 'Date range picker' },
     ],
   },
-];
-
-const TABLE: readonly NavGroup[] = [
   {
-    title: { ru: 'Таблица', en: 'Table' },
+    title: { ru: 'Таблицы и графики', en: 'Tables and charts' },
     pages: [
-      { link: '/table/', title: { ru: 'Таблица', en: 'Table' } },
-      { link: '/table/data', title: { ru: 'Данные', en: 'Data' } },
-      { link: '/table/cells', title: { ru: 'Ячейки', en: 'Cells' } },
-      { link: '/table/editing', title: { ru: 'Правка', en: 'Editing' } },
-      { link: '/table/columns', title: { ru: 'Колонки и строки', en: 'Columns and rows' } },
+      { link: '/components/table/', title: { ru: 'Таблица', en: 'Table' } },
+      { link: '/components/table/data', title: { ru: 'Данные', en: 'Data' } },
+      { link: '/components/table/cells', title: { ru: 'Ячейки', en: 'Cells' } },
+      { link: '/components/table/editing', title: { ru: 'Правка', en: 'Editing' } },
+      {
+        link: '/components/table/columns',
+        title: { ru: 'Колонки и строки', en: 'Columns and rows' },
+      },
+      { link: '/components/spreadsheet', title: { ru: 'Книга', en: 'Spreadsheet' } },
+      { link: '/components/charts', title: { ru: 'Графики', en: 'Charts' } },
     ],
   },
 ];
@@ -248,26 +250,9 @@ export const NAVIGATION: readonly NavSection[] = [
     groups: COMPONENTS,
   },
   {
-    title: { ru: 'Таблица', en: 'Table' },
-    prefixes: ['/table/'],
-    groups: TABLE,
-  },
-  {
-    title: { ru: 'Книга', en: 'Spreadsheet' },
-    link: '/spreadsheet/',
-    prefixes: ['/spreadsheet/'],
-    groups: [],
-  },
-  {
     title: { ru: 'Редактор', en: 'Editor' },
     prefixes: ['/editor/'],
     groups: EDITOR,
-  },
-  {
-    title: { ru: 'Графики', en: 'Charts' },
-    link: '/charts/',
-    prefixes: ['/charts/'],
-    groups: [],
   },
   {
     title: { ru: 'Блоки', en: 'Blocks' },

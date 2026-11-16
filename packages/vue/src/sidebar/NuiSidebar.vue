@@ -32,7 +32,11 @@
       `nui-sidebar--variant-${variant}`,
       `nui-sidebar--marker-${marker}`,
       `nui-sidebar--collapsible-${collapsible}`,
-      { 'nui-sidebar--collapsed': collapsed, 'nui-sidebar--rail': rail },
+      {
+        'nui-sidebar--collapsed': collapsed,
+        'nui-sidebar--rail': rail,
+        'nui-layout__rail': railColumn,
+      },
     ]"
     :aria-label="labelText"
     :inert="hidden || undefined"
@@ -77,6 +81,13 @@ const labelText = computed(() => label ?? messages.value.label);
 const collapsed = computed(() => !layout.open.value && collapsible !== NuiSidebarCollapsible.None);
 const rail = computed(() => collapsed.value && collapsible === NuiSidebarCollapsible.Icon);
 const hidden = computed(() => collapsed.value && collapsible === NuiSidebarCollapsible.Offcanvas);
+
+const railColumn = computed(
+  () =>
+    collapsible === NuiSidebarCollapsible.Icon &&
+    side === NuiSidebarSide.Start &&
+    (variant === NuiSidebarVariant.Panel || variant === NuiSidebarVariant.Plain),
+);
 
 provideSidebar({
   rail,

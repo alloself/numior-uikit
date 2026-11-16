@@ -2,7 +2,7 @@ import { caretAtEnd } from '../commands/blocks';
 import { caretNear, isAtom } from '../commands/atoms';
 import { intentCommand, selectAtom } from '../commands/input';
 import { clipboardHTML } from '../html/clipboard';
-import { nearestCursor, selectionRange } from '../state/selection';
+import { nearestCursor, selectionRange, textPosition, textSelection } from '../state/selection';
 import type { Selection, SelectionRange } from '../state/selection.types';
 import {
   InputSource,
@@ -235,13 +235,53 @@ const hasModifier = (event: KeyboardEvent): boolean =>
 const isRtl = (host: ViewHost): boolean =>
   host.root.ownerDocument.defaultView?.getComputedStyle(host.root).direction === Direction.Rtl;
 
-const leaveAll = (host: ViewHost, forward: boolean): boolean => {
+const leaveAll = (host: ViewHost, forward: boolean, source: InputSource): void => {
   const state = host.state();
   const edge = forward ? state.doc.size : 0;
 
-  host.dispatch(state.tr.setSelection(nearestCursor(state.doc, edge, forward ? -1 : 1)), 'key');
+  host.dispatch(state.tr.setSelection(nearestCursor(state.doc, edge, forward ? -1 : 1)), source);
+};
+
+const isForward = (host: ViewHost, arrow: Arrow): boolean =>
+  arrow.vertical ? arrow.forward : arrow.forward !== isRtl(host);
+
+const EDGE_KEYS: Readonly<Record<string, boolean>> = {
+  Home: false,
+  PageUp: false,
+  End: true,
+  PageDown: true,
+};
+
+const spanAll = (host: ViewHost): boolean => {
+  const state = host.state();
+  const anchor = textPosition(state.doc, 0, 1);
+  const head = textPosition(state.doc, state.doc.size, -1);
+
+  if (anchor === undefined || head === undefined) {
+    return false;
+  }
+
+  host.dispatch(state.tr.setSelection(textSelection(anchor, head)), InputSource.Key);
   return true;
 };
+
+const moveFromAll = (host: ViewHost, event: KeyboardEvent): boolean => {
+  const arrow = ARROWS[event.key];
+  const forward = arrow === undefined ? EDGE_KEYS[event.key] : isForward(host, arrow);
+
+  if (forward === undefined || host.state().selection.kind !== SelectionKind.All) {
+    return false;
+  }
+  if (event.shiftKey) {
+    return forward || !spanAll(host);
+  }
+
+  leaveAll(host, forward, InputSource.Key);
+  return !event.altKey;
+};
+
+const collapsesAll = (host: ViewHost, event: MouseEvent): boolean =>
+  event.button === 0 && !event.shiftKey && host.state().selection.kind === SelectionKind.All;
 
 const moveByArrow = (host: ViewHost, event: KeyboardEvent): boolean => {
   const arrow = ARROWS[event.key];
@@ -249,12 +289,8 @@ const moveByArrow = (host: ViewHost, event: KeyboardEvent): boolean => {
   if (arrow === undefined || hasModifier(event)) {
     return false;
   }
-  const forward = arrow.vertical ? arrow.forward : arrow.forward !== isRtl(host);
+  const forward = isForward(host, arrow);
   const state = host.state();
-
-  if (state.selection.kind === SelectionKind.All) {
-    return leaveAll(host, forward);
-  }
 
   const across = arrow.vertical ? verticalTarget(host, forward) : undefined;
 
@@ -402,6 +438,7 @@ const handleKey = (host: ViewHost, event: KeyboardEvent): boolean => {
     state.plugins.some((plugin) => plugin.props.handleKey?.(key, state, dispatch) === true) ||
     moveInGap(host, event) ||
     jumpPastEdgeBlock(host, event) ||
+    moveFromAll(host, event) ||
     moveByArrow(host, event) ||
     deleteAll(host, event) ||
     editNode(host, event) ||
@@ -696,6 +733,8 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
       caretAtEnd(host.state(), (tr) => {
         host.dispatch(tr, 'pointer');
       });
+    } else if (collapsesAll(host, event)) {
+      leaveAll(host, false, InputSource.Pointer);
     }
   };
 

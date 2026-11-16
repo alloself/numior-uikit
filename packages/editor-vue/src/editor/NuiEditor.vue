@@ -215,6 +215,7 @@ import {
   provideHighlighter,
   useFieldControl,
   useHighlighter,
+  useMediaQuery,
   useMessages,
   type IconSource,
   type NuiHighlighter,
@@ -241,7 +242,6 @@ import {
   useTemplateRef,
   watch,
 } from 'vue';
-import { useMediaQuery } from '@vueuse/core';
 import { blockContext } from '../blocks/block-context';
 import { NO_PEERS, spotsInBlocks } from '../blocks/block-spots';
 import type {
@@ -801,6 +801,9 @@ const stuckBar = (): number => {
 
 const layout = useLayoutWatch(frameElement, contentElement);
 
+const caretLayerOpen = (): boolean =>
+  slash.open.value || mention.open.value || mediaOpen.value || links.pasted.value !== undefined;
+
 const overlays = useEditorOverlays({
   frame: frameElement,
   content: contentElement,
@@ -812,8 +815,7 @@ const overlays = useEditorOverlays({
   run: (command) => run(command),
   focus: () => view?.focus(),
   bubble: () => bubbleToolbar.value,
-  caret: () =>
-    slash.open.value || mention.open.value || mediaOpen.value || links.pasted.value !== undefined,
+  caret: caretLayerOpen,
   active: () => editable.value || actionsOnly.value,
 });
 
@@ -863,6 +865,7 @@ const handles = useBlockHandle({
   state: () => current.value,
   enabled: () => handlesShown.value && overlaid.value,
   focused: () => overlays.focused.value && writing.value,
+  layerOpen: () => caretLayerOpen() || overlays.linkOpen.value || overlays.bubbleOpen.value,
   run: (command) => run(command),
   placement: (node) => handlePlacement(blocks, node),
 });

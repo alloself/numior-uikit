@@ -84,6 +84,71 @@ describe('NuiEditor block handles', () => {
     expect(editor.focused).toBe(true);
   });
 
+  it('keeps the handle at its block while the slash menu is open and follows the pointer once it closes', async () => {
+    const editor = mounted({ document: three() });
+
+    editor.focus();
+    await editor.select(7);
+    await editor.hoverBlock(0);
+    await editor.type('/');
+
+    expect(editor.slashShown).toBe(true);
+
+    await editor.hoverToolbar();
+
+    expect(editor.handleShown).toBe(true);
+    expect(editor.pushedTexts).toEqual(['p:a']);
+
+    await editor.hoverBlock(1);
+
+    expect(editor.pushedTexts).toEqual(['p:a']);
+
+    await editor.press('Escape');
+
+    expect(editor.slashShown).toBe(false);
+    expect(editor.pushedTexts).toEqual(['h2:b']);
+  });
+
+  it('keeps the handle at its block while the link panel is open and lets it go once the pointer has left', async () => {
+    const editor = mounted({ document: three() });
+
+    editor.focus();
+    await editor.select(7, 8);
+    await editor.hoverBlock(0);
+    await editor.press('k', { ctrl: true });
+
+    expect(editor.linkShown).toBe(true);
+
+    await editor.leave();
+
+    expect(editor.pushedTexts).toEqual(['p:a']);
+
+    await editor.submitLink('https://numior.test');
+
+    expect(editor.linkShown).toBe(false);
+    expect(editor.handleShown).toBe(false);
+    expect(editor.pushedTexts).toEqual([]);
+  });
+
+  it('keeps the handle at its block while the menu over a selection is open and follows the pointer once the selection is gone', async () => {
+    const editor = mounted({ document: three(), toolbar: 'bubble' });
+
+    editor.focus();
+    await editor.hoverBlock(0);
+    await editor.select(7, 8);
+
+    expect(editor.bubbleShown).toBe(true);
+
+    await editor.hoverBlock(1);
+
+    expect(editor.pushedTexts).toEqual(['p:a']);
+
+    await editor.select(7);
+
+    expect(editor.bubbleShown).toBe(false);
+    expect(editor.pushedTexts).toEqual(['h2:b']);
+  });
+
   it('puts the handle on list items and moves them among their siblings', async () => {
     const editor = mounted({
       document: toJSON(
