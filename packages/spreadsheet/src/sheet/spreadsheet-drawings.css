@@ -1,211 +1,213 @@
-.nui-spreadsheet__drawing {
-  position: absolute;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  pointer-events: auto;
-  transition:
-    inset var(--transition-duration-fast) var(--ease-nui),
-    inline-size var(--transition-duration-fast) var(--ease-nui),
-    block-size var(--transition-duration-fast) var(--ease-nui);
-}
-
-.nui-spreadsheet__drawing--kind-chart {
-  gap: var(--spacing);
-  padding: --spacing(2) --spacing(3);
-  border: 1px solid var(--color-border);
-  background-color: var(--color-surface);
-  color: var(--color-foreground);
-}
-
-.nui-spreadsheet__drawing--kind-foreign {
-  align-items: center;
-  justify-content: center;
-  padding: --spacing(2);
-  border: 1px dashed var(--color-border-strong);
-  background-color: var(--color-surface-muted);
-}
-
-.nui-spreadsheet__picture {
-  display: block;
-  inline-size: 100%;
-  block-size: 100%;
-  object-fit: fill;
-  user-select: none;
-}
-
-.nui-spreadsheet__chart-title {
-  flex: none;
-  margin: 0;
-  overflow: hidden;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  line-height: var(--leading-control);
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.nui-spreadsheet__chart {
-  display: block;
-  flex: 1 1 0;
-  min-block-size: 0;
-}
-
-.nui-spreadsheet__foreign {
-  margin: 0;
-  color: var(--color-muted-foreground);
-  font-size: var(--text-xs);
-  line-height: var(--leading-normal);
-  text-align: center;
-}
-
-.nui-spreadsheet__drawing--editable {
-  cursor: move;
-}
-
-.nui-spreadsheet__drawing--selected {
-  touch-action: none;
-}
-
-.nui-spreadsheet--dragging .nui-spreadsheet__drawing,
-.nui-spreadsheet--dragging .nui-spreadsheet__drawing-frame {
-  transition: none;
-}
-
-.nui-spreadsheet__drawing-frame {
-  position: absolute;
-  box-sizing: border-box;
-  border: 1px solid var(--color-primary);
-  visibility: hidden;
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    inset var(--transition-duration-fast) var(--ease-nui),
-    inline-size var(--transition-duration-fast) var(--ease-nui),
-    block-size var(--transition-duration-fast) var(--ease-nui),
-    opacity var(--transition-duration-fast) var(--ease-nui),
-    visibility 0s linear var(--transition-duration-fast);
-}
-
-.nui-spreadsheet__drawing-frame--selected {
-  visibility: visible;
-  opacity: 1;
-  transition-delay: 0s;
-}
-
-.nui-spreadsheet__handle {
-  --_size: 9px;
-  --_block: calc(50% - var(--_size) / 2);
-  --_inline: calc(50% - var(--_size) / 2);
-
-  position: absolute;
-  box-sizing: border-box;
-  inline-size: var(--_size);
-  block-size: var(--_size);
-  border: 1px solid var(--color-primary);
-  border-radius: 2px;
-  background-color: var(--color-surface);
-  pointer-events: auto;
-  touch-action: none;
-}
-
-.nui-spreadsheet__handle::before {
-  position: absolute;
-  inset: -4px;
-  content: '';
-}
-
-@media (pointer: coarse) {
-  .nui-spreadsheet__handle::before {
-    inset: -9px;
+@layer components {
+  .nui-spreadsheet__drawing {
+    position: absolute;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    pointer-events: auto;
+    transition:
+      inset var(--transition-duration-fast) var(--ease-nui),
+      inline-size var(--transition-duration-fast) var(--ease-nui),
+      block-size var(--transition-duration-fast) var(--ease-nui);
   }
-}
 
-.nui-spreadsheet__handle--top,
-.nui-spreadsheet__handle--top-start,
-.nui-spreadsheet__handle--top-end {
-  inset-block-start: calc(var(--_size) / -2);
-}
+  .nui-spreadsheet__drawing--kind-chart {
+    gap: var(--spacing);
+    padding: --spacing(2) --spacing(3);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    color: var(--color-foreground);
+  }
 
-.nui-spreadsheet__handle--bottom,
-.nui-spreadsheet__handle--bottom-start,
-.nui-spreadsheet__handle--bottom-end {
-  inset-block-end: calc(var(--_size) / -2);
-}
+  .nui-spreadsheet__drawing--kind-foreign {
+    align-items: center;
+    justify-content: center;
+    padding: --spacing(2);
+    border: 1px dashed var(--color-border-strong);
+    background-color: var(--color-surface-muted);
+  }
 
-.nui-spreadsheet__handle--start,
-.nui-spreadsheet__handle--top-start,
-.nui-spreadsheet__handle--bottom-start {
-  inset-inline-start: calc(var(--_size) / -2);
-}
+  .nui-spreadsheet__picture {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: fill;
+    user-select: none;
+  }
 
-.nui-spreadsheet__handle--end,
-.nui-spreadsheet__handle--top-end,
-.nui-spreadsheet__handle--bottom-end {
-  inset-inline-end: calc(var(--_size) / -2);
-}
+  .nui-spreadsheet__chart-title {
+    flex: none;
+    margin: 0;
+    overflow: hidden;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: var(--leading-control);
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
-.nui-spreadsheet__handle--top,
-.nui-spreadsheet__handle--bottom {
-  inset-inline-start: var(--_inline);
-  cursor: ns-resize;
-}
+  .nui-spreadsheet__chart {
+    display: block;
+    flex: 1 1 0;
+    min-block-size: 0;
+  }
 
-.nui-spreadsheet__handle--start,
-.nui-spreadsheet__handle--end {
-  inset-block-start: var(--_block);
-  cursor: ew-resize;
-}
+  .nui-spreadsheet__foreign {
+    margin: 0;
+    color: var(--color-muted-foreground);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+    text-align: center;
+  }
 
-.nui-spreadsheet__handle--top-start,
-.nui-spreadsheet__handle--bottom-end {
-  cursor: nwse-resize;
-}
+  .nui-spreadsheet__drawing--editable {
+    cursor: move;
+  }
 
-.nui-spreadsheet__handle--top-end,
-.nui-spreadsheet__handle--bottom-start {
-  cursor: nesw-resize;
-}
+  .nui-spreadsheet__drawing--selected {
+    touch-action: none;
+  }
 
-.nui-spreadsheet__handle--top-start:dir(rtl),
-.nui-spreadsheet__handle--bottom-end:dir(rtl) {
-  cursor: nesw-resize;
-}
+  .nui-spreadsheet--dragging .nui-spreadsheet__drawing,
+  .nui-spreadsheet--dragging .nui-spreadsheet__drawing-frame {
+    transition: none;
+  }
 
-.nui-spreadsheet__handle--top-end:dir(rtl),
-.nui-spreadsheet__handle--bottom-start:dir(rtl) {
-  cursor: nwse-resize;
-}
+  .nui-spreadsheet__drawing-frame {
+    position: absolute;
+    box-sizing: border-box;
+    border: 1px solid var(--color-primary);
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      inset var(--transition-duration-fast) var(--ease-nui),
+      inline-size var(--transition-duration-fast) var(--ease-nui),
+      block-size var(--transition-duration-fast) var(--ease-nui),
+      opacity var(--transition-duration-fast) var(--ease-nui),
+      visibility 0s linear var(--transition-duration-fast);
+  }
 
-.nui-spreadsheet__drawing-tools {
-  position: absolute;
-  inset-block-start: var(--spacing);
-  inset-inline-end: var(--spacing);
-  pointer-events: auto;
-}
+  .nui-spreadsheet__drawing-frame--selected {
+    visibility: visible;
+    opacity: 1;
+    transition-delay: 0s;
+  }
 
-.nui-spreadsheet-chart-settings {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: --spacing(3);
-  inline-size: min(18rem, calc(100vw - --spacing(6)));
-  padding: --spacing(3);
-  color: var(--color-foreground);
-  font-size: var(--text-sm);
-}
+  .nui-spreadsheet__handle {
+    --_size: 9px;
+    --_block: calc(50% - var(--_size) / 2);
+    --_inline: calc(50% - var(--_size) / 2);
 
-.nui-spreadsheet-chart-settings__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: --spacing(2);
-}
+    position: absolute;
+    box-sizing: border-box;
+    inline-size: var(--_size);
+    block-size: var(--_size);
+    border: 1px solid var(--color-primary);
+    border-radius: 2px;
+    background-color: var(--color-surface);
+    pointer-events: auto;
+    touch-action: none;
+  }
 
-.nui-spreadsheet-chart-settings__title {
-  margin: 0;
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-semibold);
+  .nui-spreadsheet__handle::before {
+    position: absolute;
+    inset: -4px;
+    content: '';
+  }
+
+  @media (pointer: coarse) {
+    .nui-spreadsheet__handle::before {
+      inset: -9px;
+    }
+  }
+
+  .nui-spreadsheet__handle--top,
+  .nui-spreadsheet__handle--top-start,
+  .nui-spreadsheet__handle--top-end {
+    inset-block-start: calc(var(--_size) / -2);
+  }
+
+  .nui-spreadsheet__handle--bottom,
+  .nui-spreadsheet__handle--bottom-start,
+  .nui-spreadsheet__handle--bottom-end {
+    inset-block-end: calc(var(--_size) / -2);
+  }
+
+  .nui-spreadsheet__handle--start,
+  .nui-spreadsheet__handle--top-start,
+  .nui-spreadsheet__handle--bottom-start {
+    inset-inline-start: calc(var(--_size) / -2);
+  }
+
+  .nui-spreadsheet__handle--end,
+  .nui-spreadsheet__handle--top-end,
+  .nui-spreadsheet__handle--bottom-end {
+    inset-inline-end: calc(var(--_size) / -2);
+  }
+
+  .nui-spreadsheet__handle--top,
+  .nui-spreadsheet__handle--bottom {
+    inset-inline-start: var(--_inline);
+    cursor: ns-resize;
+  }
+
+  .nui-spreadsheet__handle--start,
+  .nui-spreadsheet__handle--end {
+    inset-block-start: var(--_block);
+    cursor: ew-resize;
+  }
+
+  .nui-spreadsheet__handle--top-start,
+  .nui-spreadsheet__handle--bottom-end {
+    cursor: nwse-resize;
+  }
+
+  .nui-spreadsheet__handle--top-end,
+  .nui-spreadsheet__handle--bottom-start {
+    cursor: nesw-resize;
+  }
+
+  .nui-spreadsheet__handle--top-start:dir(rtl),
+  .nui-spreadsheet__handle--bottom-end:dir(rtl) {
+    cursor: nesw-resize;
+  }
+
+  .nui-spreadsheet__handle--top-end:dir(rtl),
+  .nui-spreadsheet__handle--bottom-start:dir(rtl) {
+    cursor: nwse-resize;
+  }
+
+  .nui-spreadsheet__drawing-tools {
+    position: absolute;
+    inset-block-start: var(--spacing);
+    inset-inline-end: var(--spacing);
+    pointer-events: auto;
+  }
+
+  .nui-spreadsheet-chart-settings {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: --spacing(3);
+    inline-size: min(18rem, calc(100vw - --spacing(6)));
+    padding: --spacing(3);
+    color: var(--color-foreground);
+    font-size: var(--text-sm);
+  }
+
+  .nui-spreadsheet-chart-settings__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: --spacing(2);
+  }
+
+  .nui-spreadsheet-chart-settings__title {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-semibold);
+  }
 }

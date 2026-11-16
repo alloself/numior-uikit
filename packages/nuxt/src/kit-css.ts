@@ -2,6 +2,7 @@ const LAYERED = new Set([
   '@numior/vue',
   '@numior/forms',
   '@numior/table',
+  '@numior/spreadsheet',
   '@numior/charts',
   '@numior/content',
 ]);

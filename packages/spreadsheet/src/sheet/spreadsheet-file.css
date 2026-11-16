@@ -1,57 +1,59 @@
-.nui-spreadsheet__file {
-  box-sizing: border-box;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--spacing);
-  min-inline-size: 0;
-}
-.nui-spreadsheet__file-name {
-  display: flex;
-  flex: 1 1 8rem;
-  align-items: baseline;
-  gap: --spacing(2);
-  min-inline-size: 0;
-  margin: 0;
-  font-size: var(--text-sm);
-  line-height: var(--leading-control);
-}
-.nui-spreadsheet__file-text {
-  overflow: hidden;
-  font-weight: var(--font-weight-medium);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.nui-spreadsheet__file-edited {
-  flex: none;
-  color: var(--color-muted-foreground);
-  font-size: var(--text-xs);
-  line-height: var(--leading-control);
-}
-.nui-spreadsheet__file-progress {
-  display: flex;
-  flex: 0 1 12rem;
-  align-items: center;
-  gap: --spacing(2);
-  min-inline-size: 0;
-  animation: nui-spreadsheet-file-in var(--transition-duration-normal) var(--ease-nui)
-    var(--transition-duration-slow) both;
-}
-.nui-spreadsheet__file-actions {
-  display: flex;
-  flex: none;
-  gap: var(--spacing);
-}
-.nui-spreadsheet__file-input {
-  display: none;
-}
-.nui-spreadsheet__file-losses {
-  margin: 0;
-  padding-inline-start: 1.25em;
-}
-@keyframes nui-spreadsheet-file-in {
-  from {
-    opacity: 0;
+@layer components {
+  .nui-spreadsheet__file {
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--spacing);
+    min-inline-size: 0;
+  }
+  .nui-spreadsheet__file-name {
+    display: flex;
+    flex: 1 1 8rem;
+    align-items: baseline;
+    gap: --spacing(2);
+    min-inline-size: 0;
+    margin: 0;
+    font-size: var(--text-sm);
+    line-height: var(--leading-control);
+  }
+  .nui-spreadsheet__file-text {
+    overflow: hidden;
+    font-weight: var(--font-weight-medium);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .nui-spreadsheet__file-edited {
+    flex: none;
+    color: var(--color-muted-foreground);
+    font-size: var(--text-xs);
+    line-height: var(--leading-control);
+  }
+  .nui-spreadsheet__file-progress {
+    display: flex;
+    flex: 0 1 12rem;
+    align-items: center;
+    gap: --spacing(2);
+    min-inline-size: 0;
+    animation: nui-spreadsheet-file-in var(--transition-duration-normal) var(--ease-nui)
+      var(--transition-duration-slow) both;
+  }
+  .nui-spreadsheet__file-actions {
+    display: flex;
+    flex: none;
+    gap: var(--spacing);
+  }
+  .nui-spreadsheet__file-input {
+    display: none;
+  }
+  .nui-spreadsheet__file-losses {
+    margin: 0;
+    padding-inline-start: 1.25em;
+  }
+  @keyframes nui-spreadsheet-file-in {
+    from {
+      opacity: 0;
+    }
   }
 }
