@@ -604,4 +604,111 @@ describe('editor view input', () => {
     expect(view.modelTexts).toEqual(['y']);
     expect(view.copy('copy')).toBeUndefined();
   });
+
+  it.each([
+    ['Home', {}, 1],
+    ['PageUp', {}, 1],
+    ['ArrowLeft', {}, 1],
+    ['ArrowUp', {}, 1],
+    ['Home', { ctrl: true }, 1],
+    ['Home', { meta: true }, 1],
+    ['ArrowLeft', { ctrl: true }, 1],
+    ['ArrowLeft', { meta: true }, 1],
+    ['ArrowUp', { meta: true }, 1],
+    ['End', {}, 7],
+    ['PageDown', {}, 7],
+    ['ArrowRight', {}, 7],
+    ['ArrowDown', {}, 7],
+    ['End', { ctrl: true }, 7],
+    ['End', { meta: true }, 7],
+    ['ArrowRight', { ctrl: true }, 7],
+    ['ArrowRight', { meta: true }, 7],
+    ['ArrowDown', { meta: true }, 7],
+  ] as const)(
+    'leaves a whole-document selection with %s %o for the caret at %i',
+    (key, options, caret) => {
+      const view = mounted(twoParagraphs());
+
+      view.focus();
+      view.selectAll();
+
+      expect(view.press(key, options)).toBe(true);
+      expect(view.selection).toEqual(textSelection(caret));
+      expect(view.selectsAll).toBe(false);
+    },
+  );
+
+  it('leaves a whole-document selection with Alt and an arrow and lets the browser act on the key', () => {
+    const view = mounted(twoParagraphs());
+
+    view.focus();
+    view.selectAll();
+
+    expect(view.press('ArrowLeft', { alt: true })).toBe(false);
+    expect(view.selection).toEqual(textSelection(1));
+
+    view.selectAll();
+
+    expect(view.press('ArrowRight', { alt: true })).toBe(false);
+    expect(view.selection).toEqual(textSelection(7));
+  });
+
+  it.each([
+    ['ArrowRight', {}],
+    ['ArrowDown', {}],
+    ['End', {}],
+    ['PageDown', {}],
+    ['End', { ctrl: true }],
+    ['ArrowRight', { ctrl: true }],
+  ] as const)('keeps a whole-document selection as it is on Shift with %s %o', (key, options) => {
+    const view = mounted(twoParagraphs());
+
+    view.focus();
+    view.selectAll();
+
+    expect(view.press(key, { ...options, shift: true })).toBe(true);
+    expect(view.selection).toEqual({ kind: 'all' });
+    expect(view.selectsAll).toBe(true);
+  });
+
+  it.each([
+    ['ArrowLeft', {}],
+    ['ArrowUp', {}],
+    ['Home', {}],
+    ['PageUp', {}],
+    ['Home', { ctrl: true }],
+    ['ArrowLeft', { ctrl: true }],
+  ] as const)(
+    'spans a whole-document selection from the start to the end for the browser to move its end on Shift with %s %o',
+    (key, options) => {
+      const view = mounted(twoParagraphs());
+
+      view.focus();
+      view.selectAll();
+
+      expect(view.press(key, { ...options, shift: true })).toBe(false);
+      expect(view.selection).toEqual(textSelection(1, 7));
+      expect(view.domSpan).toEqual({ anchor: 1, head: 7 });
+      expect(view.selectsAll).toBe(false);
+    },
+  );
+
+  it('leaves a whole-document selection on a plain press of the main button only', () => {
+    const view = mounted(twoParagraphs());
+
+    view.focus();
+    view.selectAll();
+    view.pressBlock(0, { button: 2 });
+
+    expect(view.selectsAll).toBe(true);
+
+    view.pressBlock(0, { shift: true });
+
+    expect(view.selectsAll).toBe(true);
+
+    view.pressBlock(0);
+
+    expect(view.selection).toEqual(textSelection(1));
+    expect(view.selectsAll).toBe(false);
+  });
 });

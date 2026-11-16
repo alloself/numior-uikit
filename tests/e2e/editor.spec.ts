@@ -837,6 +837,57 @@ test.describe('editor', () => {
     await expect(editor.pushed()).toHaveCount(1);
   });
 
+  test('leaves a selection of the whole document with Home, End and a click at its start without losing the text', async ({
+    playground,
+    editor,
+  }) => {
+    await playground.open();
+    await editor.root.scrollIntoViewIfNeeded();
+    await editor.clear();
+    await editor.typeText('One');
+    await editor.pressEnter();
+    await editor.typeText('Two');
+
+    await editor.selectAll();
+    await editor.caretToLineStart();
+    await editor.typeText('a');
+    await expect.poll(() => editor.blockTexts()).toEqual(['aOne', 'Two']);
+
+    await editor.selectAll();
+    await editor.caretToLineEnd();
+    await editor.typeText('b');
+    await expect.poll(() => editor.blockTexts()).toEqual(['aOne', 'Twob']);
+
+    await editor.selectAll();
+    await editor.clickLineStart(editor.block(0));
+    await editor.typeText('c');
+    await expect.poll(() => editor.blockTexts()).toEqual(['caOne', 'Twob']);
+  });
+
+  test('moves the end of a selection of the whole document with Shift and arrows as a text field does', async ({
+    playground,
+    editor,
+  }) => {
+    await playground.open();
+    await editor.root.scrollIntoViewIfNeeded();
+    await editor.clear();
+    await editor.typeText('One');
+    await editor.pressEnter();
+    await editor.typeText('Two');
+
+    await editor.selectAll();
+    await editor.extendSelection('left');
+    await editor.typeText('a');
+    await expect.poll(() => editor.blockTexts()).toEqual(['ao']);
+
+    await editor.pressEnter();
+    await editor.typeText('Two');
+    await editor.selectAll();
+    await editor.extendSelection('right');
+    await editor.typeText('b');
+    await expect.poll(() => editor.blockTexts()).toEqual(['b']);
+  });
+
   test('joins lines across lists, a callout and a closed toggle with Delete and Backspace', async ({
     playground,
     editor,
