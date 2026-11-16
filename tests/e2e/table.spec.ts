@@ -662,7 +662,7 @@ test.describe('table', () => {
     await expect(table.remoteGroupLabel(1)).toHaveText(/^Белград/);
   });
 
-  test('starts a server group label at the row start, runs it over empty cells and opens it from there', async ({
+  test('puts every level of a server grouping into its own column and opens it from the label', async ({
     playground,
     table,
   }) => {
@@ -673,21 +673,17 @@ test.describe('table', () => {
     await table.remoteGroupBy('По городу и клиенту');
 
     await expect(table.remoteGroupLabel(0)).toHaveText(/^Алматы/);
-    await expect(table.remoteGroupCopy(0, 1)).toHaveText(/^Алматы/);
-    await expect(table.remoteCell(0, 2)).toHaveText('');
+    expect(await table.remoteGroupLabelColumns(0)).toEqual([2]);
+    await expect(table.remoteCell(0, 0)).toHaveText('');
+    await expect(table.remoteCell(0, 1)).toHaveText('');
     await expect(table.remoteCell(0, 3)).not.toHaveText('');
-    expect(await table.remoteGroupLabelColumn(0)).toBe(0);
 
-    await table.toggleRemoteGroupAt(0, 1);
+    await table.remoteGroupLabel(0).click();
 
     await expect(table.remoteRow(0)).toHaveAttribute('aria-expanded', 'true');
     await expect(table.remoteRow(1)).toHaveAttribute('aria-level', '2');
-    expect(await table.remoteGroupLabelColumn(1)).toBe(0);
-
-    const start = await table.remoteGroupInset(0);
-    const nested = await table.remoteGroupInset(1);
-
-    expect(nested).toBeGreaterThan(start);
+    expect(await table.remoteGroupLabelColumns(1)).toEqual([1]);
+    await expect(table.remoteCell(1, 2)).toHaveText('');
     expect(await playground.wcagViolations(table.scope)).toEqual([]);
 
     await playground.setDirection('rtl');
@@ -696,8 +692,8 @@ test.describe('table', () => {
       (await boxOf(table.remoteCell(0, 1))).x,
     );
 
-    expect(await table.remoteGroupInset(0)).toBe(start);
-    expect(await table.remoteGroupInset(1)).toBe(nested);
+    expect(await table.remoteGroupLabelColumns(0)).toEqual([2]);
+    expect(await table.remoteGroupLabelColumns(1)).toEqual([1]);
   });
 
   test('loads the children of a server tree row when it opens', async ({ playground, table }) => {
@@ -1188,8 +1184,8 @@ test.describe('table', () => {
     await expect(table.groupLabel(0)).toHaveText(/^Возврат/);
     await expect(table.row(0)).toHaveAttribute('aria-expanded', 'false');
     await expect(table.footerCell(5)).toHaveText(total);
-    await expect(table.cell(0, 10)).toHaveText('');
-    expect(await table.groupLabelColumn(0)).toBe(0);
+    await expect(table.cell(0, 0)).toHaveText('');
+    expect(await table.groupLabelColumns(0)).toEqual([10]);
 
     await table.scrollTo({ left: 600 });
 
@@ -1206,7 +1202,7 @@ test.describe('table', () => {
       return;
     }
 
-    await table.cell(0, 10).click();
+    await table.cell(0, 0).click();
     await expect(table.row(0)).toHaveAttribute('aria-expanded', 'true');
 
     await table.pressEnter();

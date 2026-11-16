@@ -56,7 +56,6 @@
             :revision="ownRevision"
             :position="position"
             :icon="paints?.get(cell.key)?.icon"
-            :copy="paints?.get(cell.key)?.copy === true"
           />
         </div>
         <NuiTableResizer
@@ -133,7 +132,6 @@ defineSlots<{
     revision: number;
     position: number | undefined;
     icon: NuiTableCellIcon | undefined;
-    copy: boolean;
   }): unknown;
   utility(props: { column: string; position: number | undefined }): unknown;
 }>();

@@ -8,12 +8,11 @@ interface TextMetrics {
   readonly family: string;
   readonly padding: number;
   readonly frame: number;
-  readonly rem: number;
+  readonly gap: number;
 }
 
 export interface TextMeasure {
   needOf(text: string, style?: TextStyle): number;
-  groupNeedOf(text: string, count: string, level: number): number;
   widthOf(text: string, style?: TextStyle, icon?: boolean): number | undefined;
 }
 
@@ -33,23 +32,14 @@ const ICON_STEP = 2;
 
 const GAP_REMS = 0.25;
 
-const GROUP_REMS = 1.5;
-
-const INDENT_REMS = 1.25;
-
-const GROUP_TEXT: TextStyle = { 'font-weight': '500' };
-
-const GROUP_COUNT: TextStyle = { 'font-weight': '400' };
-
 const iconRoom = (metrics: TextMetrics, size: string | undefined): number =>
-  Math.round((sizeOf(metrics, size) * ICON_EMS) / ICON_STEP) * ICON_STEP + metrics.rem * GAP_REMS;
+  Math.round((sizeOf(metrics, size) * ICON_EMS) / ICON_STEP) * ICON_STEP + metrics.gap;
 
 const BODY = '.nui-table__body';
 
 const SAMPLE = [
   '.nui-table__body .nui-table__cell--data > .nui-table__content--text',
   '.nui-table__body .nui-table__cell--data > .nui-table__content > .nui-table__text',
-  '.nui-table__body .nui-table__cell--data > .nui-table__content > .nui-table__group-room',
 ].join(', ');
 
 const fontsOf = (): FontFaceSet | undefined =>
@@ -73,9 +63,10 @@ const frameOf = (cell: Element | null): number => {
 
 const metricsOf = (root: HTMLElement): TextMetrics | undefined => {
   const body = root.querySelector(BODY);
-  const content = root.querySelector(SAMPLE)?.closest('.nui-table__content');
+  const text = root.querySelector(SAMPLE);
+  const content = text?.classList.contains('nui-table__content--text') ? text : text?.parentElement;
 
-  if (body === null || content === null || content === undefined) {
+  if (body === null || text === null || content === null || content === undefined) {
     return undefined;
   }
   const style = getComputedStyle(body);
@@ -87,7 +78,7 @@ const metricsOf = (root: HTMLElement): TextMetrics | undefined => {
     family: style.fontFamily,
     padding: Number.parseFloat(getComputedStyle(content).paddingInlineStart) || 0,
     frame: frameOf(content.closest('.nui-table__cell')),
-    rem: Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 0,
+    gap: (Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 0) * GAP_REMS,
   };
 };
 
@@ -178,19 +169,6 @@ export const useTextMeasure = (
       return found === undefined
         ? Number.POSITIVE_INFINITY
         : Math.ceil(textWidth(fontOf(found, style), text) + 2 * found.padding);
-    },
-    groupNeedOf: (text, count, level) => {
-      const found = metricsNow();
-
-      return found === undefined
-        ? Number.POSITIVE_INFINITY
-        : Math.ceil(
-            textWidth(fontOf(found, GROUP_TEXT), text) +
-              textWidth(fontOf(found, GROUP_COUNT), count) +
-              found.rem * (GROUP_REMS + level * INDENT_REMS) +
-              2 * found.padding +
-              found.frame,
-          );
     },
     widthOf: (text, style, icon = false) => {
       const found = metricsNow();

@@ -274,7 +274,6 @@ export interface TableCellPaint {
   readonly overflow: boolean;
   readonly spill?: string | undefined;
   readonly flows?: boolean | undefined;
-  readonly copy?: boolean | undefined;
   readonly icon?: NuiTableCellIcon | undefined;
 }
 
@@ -626,11 +625,7 @@ export type TableCellLead =
 
 export type TableCellView<T> =
   | { readonly kind: typeof TableCellViewKind.Skeleton }
-  | {
-      readonly kind: typeof TableCellViewKind.Group;
-      readonly cell: TableGroupCell | undefined;
-      readonly copy: boolean;
-    }
+  | { readonly kind: typeof TableCellViewKind.Group; readonly cell: TableGroupCell | undefined }
   | {
       readonly kind: typeof TableCellViewKind.Data;
       readonly leads: readonly TableCellLead[];
@@ -650,7 +645,6 @@ export interface TableBodyRowContext<T> {
     item: TableBodyRow | undefined,
     column: string,
     merge: TableLeadSpan | undefined,
-    copy: boolean,
   ) => TableCellView<T>;
   readonly editor: () => NuiTableCellEditorProps | undefined;
   readonly selectAt: (position: number | undefined) => void;
@@ -1006,22 +1000,17 @@ export interface NuiTableUtilityCellProps {
   text?: string | undefined;
 }
 
-export interface TableGroupLabel {
-  readonly kind: typeof TableGroupCellKind.Toggle;
-  readonly node: TableNodeId;
-  readonly text: string;
-  readonly count: string;
-  readonly level: number;
-}
-
 export type TableGroupCell =
-  | TableGroupLabel
+  | {
+      readonly kind: typeof TableGroupCellKind.Toggle;
+      readonly node: TableNodeId;
+      readonly text: string;
+      readonly count: string;
+    }
   | { readonly kind: typeof TableGroupCellKind.Value; readonly text: string };
 
 export interface TableGroupRow {
   readonly id: string;
-  readonly label: TableGroupLabel;
-  readonly origin: number | undefined;
   readonly cells: Readonly<Record<string, TableGroupCell>>;
 }
 
@@ -1072,7 +1061,6 @@ export interface NuiTableTreeToggleProps {
 
 export interface NuiTableGroupCellProps {
   cell: TableGroupCell | undefined;
-  copy?: boolean | undefined;
 }
 
 export interface NuiTableResizerProps {

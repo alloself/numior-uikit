@@ -320,7 +320,6 @@ const PAINT_PROPERTIES = [
   ['start', '--_edge-start'],
   ['spill', '--_spill'],
   ['line', '--_spill-line'],
-  ['room', '--_group-room'],
   ['bar', '--_bar'],
   ['barColor', '--_bar-color'],
 ] as const;
@@ -918,22 +917,14 @@ export class TableDriver<T> {
     return this.row(position)?.getAttribute('aria-expanded') ?? undefined;
   }
 
-  private groupRooms(position: number): HTMLElement[] {
-    return [...(this.row(position)?.querySelectorAll<HTMLElement>('.nui-table__group-room') ?? [])];
-  }
-
-  private groupOrigin(position: number): HTMLElement | undefined {
-    return this.groupRooms(position).find((room) => room.getAttribute('aria-hidden') !== 'true');
-  }
-
-  private columnOf(element: Element | undefined): number | undefined {
-    return cellPositionOf(this.element, element?.closest('.nui-table__cell') ?? null)?.col;
+  private groups(position: number): HTMLElement[] {
+    return [...(this.row(position)?.querySelectorAll<HTMLElement>('.nui-table__group') ?? [])];
   }
 
   groupLabel(position: number): string | undefined {
-    const group = this.groupOrigin(position)?.querySelector('.nui-table__group');
+    const group = this.groups(position)[0];
 
-    if (group === null || group === undefined) {
+    if (group === undefined) {
       return undefined;
     }
     return [...group.querySelectorAll('.nui-table__text, .nui-table__count')]
@@ -941,23 +932,15 @@ export class TableDriver<T> {
       .join(' ');
   }
 
-  groupLabelColumn(position: number): number | undefined {
-    return this.columnOf(this.groupOrigin(position));
-  }
-
-  groupCopies(position: number): number[] {
-    return this.groupRooms(position).reduce<number[]>((cols, room) => {
-      const col = room.getAttribute('aria-hidden') === 'true' ? this.columnOf(room) : undefined;
+  groupLabelColumns(position: number): number[] {
+    return this.groups(position).reduce<number[]>((cols, group) => {
+      const col = cellPositionOf(this.element, group.closest('.nui-table__cell'))?.col;
 
       if (col !== undefined) {
         cols.push(col);
       }
       return cols;
     }, []);
-  }
-
-  groupLevel(position: number): string | undefined {
-    return this.groupOrigin(position)?.style.getPropertyValue('--_level');
   }
 
   private get filterForm(): HTMLFormElement | null {
@@ -2463,12 +2446,7 @@ export class TableDriver<T> {
   }
 
   async toggleGroup(position: number): Promise<void> {
-    this.groupOrigin(position)?.querySelector<HTMLElement>('.nui-table__group')?.click();
-    await nextTick();
-  }
-
-  async toggleGroupAt(position: number, col: number): Promise<void> {
-    this.cell(position, col)?.querySelector<HTMLElement>('.nui-table__group')?.click();
+    this.groups(position)[0]?.click();
     await nextTick();
   }
 

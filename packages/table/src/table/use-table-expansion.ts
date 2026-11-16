@@ -15,7 +15,6 @@ import {
   type NuiTableColumn,
   type NuiTableCellPosition,
   type TableGroupCell,
-  type TableGroupLabel,
   type TableGroupRow,
 } from './table.types';
 
@@ -46,7 +45,6 @@ interface GroupContext {
   readonly revision: number;
   readonly offset: number;
   readonly keys: readonly string[];
-  readonly origin: number | undefined;
   readonly locale: string;
   readonly texts: NuiTableMessages;
   readonly rows: Map<number, TableGroupRow | null>;
@@ -62,28 +60,14 @@ const plainToggle = (event: KeyboardEvent): boolean =>
 export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableExpansion => {
   const loading = shallowRef<ReadonlySet<TableNodeId>>(new Set());
 
-  const originOf = (keys: readonly string[]): number | undefined => {
-    const free = keys.findIndex((key) => options.columnAt(key).aggregate === undefined);
-
-    if (free >= 0) {
-      return free;
-    }
-    return keys.length > 0 ? 0 : undefined;
-  };
-
-  const context = computed<GroupContext>(() => {
-    const keys = options.keys();
-
-    return {
-      revision: options.revision.value,
-      offset: options.offset(),
-      keys,
-      origin: originOf(keys),
-      locale: options.locale(),
-      texts: options.messages.value,
-      rows: new Map(),
-    };
-  });
+  const context = computed<GroupContext>(() => ({
+    revision: options.revision.value,
+    offset: options.offset(),
+    keys: options.keys(),
+    locale: options.locale(),
+    texts: options.messages.value,
+    rows: new Map(),
+  }));
 
   const groupLabel = (node: TableGroupNode, current: GroupContext): string => {
     const text = valueTextOf(
@@ -104,19 +88,19 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
       : cellTextOf(options.columnAt(key), node.row, current.locale, current.texts);
   };
 
-  const labelOf = (node: TableGroupNode, current: GroupContext): TableGroupLabel => ({
-    kind: 'toggle',
-    node: node.id,
-    text: groupLabel(node, current),
-    count: `(${formatNumber(node.count, current.locale)})`,
-    level: node.level,
-  });
-
-  const valueOf = (
+  const cellOf = (
     node: TableGroupNode,
     key: string,
     current: GroupContext,
   ): TableGroupCell | undefined => {
+    if (key === node.key) {
+      return {
+        kind: 'toggle',
+        node: node.id,
+        text: groupLabel(node, current),
+        count: `(${formatNumber(node.count, current.locale)})`,
+      };
+    }
     const column = options.columnAt(key);
 
     if (column.aggregate === undefined) {
@@ -128,10 +112,9 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
 
   const build = (node: TableGroupNode, current: GroupContext): TableGroupRow => {
     const cells: Record<string, TableGroupCell> = {};
-    const label = labelOf(node, current);
 
-    for (const [col, key] of current.keys.entries()) {
-      const cell = col === current.origin ? label : valueOf(node, key, current);
+    for (const key of current.keys) {
+      const cell = cellOf(node, key, current);
 
       if (cell === undefined) {
         continue;
@@ -139,7 +122,7 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
 
       cells[key] = cell;
     }
-    return { id: node.id, label, origin: current.origin, cells };
+    return { id: node.id, cells };
   };
 
   const rowAt = (position: number): TableGroupRow | undefined => {

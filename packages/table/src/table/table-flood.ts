@@ -1,4 +1,3 @@
-import { sumBy } from 'lodash-es';
 import {
   NuiTableAlign,
   NuiTablePin,
@@ -33,20 +32,6 @@ export interface TableFloodRun {
   readonly pane: TablePaneName;
   readonly first: number;
   readonly last: number;
-}
-
-export interface TableGroupFloodColumn {
-  readonly key: string;
-  readonly pane: TablePaneName;
-  readonly width: number;
-}
-
-export interface TableGroupFlood {
-  readonly columns: readonly TableGroupFloodColumn[];
-  readonly origin: number;
-  readonly text: string;
-  readonly need: number;
-  readonly blocked: (key: string) => boolean;
 }
 
 interface Flood {
@@ -263,30 +248,3 @@ export const spillsOf = (
   }
   return spills;
 };
-
-export const groupLineOf = (flood: TableGroupFlood): TableFloodLine => {
-  const { columns, origin } = flood;
-
-  const textAt = (col: number): string | undefined => {
-    const column = columns[col];
-
-    if (col === origin) {
-      return flood.text;
-    }
-    return column === undefined || flood.blocked(column.key) ? undefined : '';
-  };
-
-  return {
-    count: columns.length,
-    paneAt: (col) => columns[col]?.pane,
-    widthAt: (col) => columns[col]?.width ?? 0,
-    textAt,
-    alignAt: (col) => (col === origin ? NuiTableAlign.Start : undefined),
-    needAt: () => flood.need,
-  };
-};
-
-export const floodWidthOf = (
-  line: TableFloodLine,
-  spills: ReadonlyMap<number, TableSpill>,
-): number => sumBy([...spills.keys()], line.widthAt);

@@ -856,18 +856,6 @@
 .nui-table__row--group > .nui-table__cell > .nui-table__content {
   overflow: clip;
 }
-.nui-table__group-room {
-  box-sizing: border-box;
-  display: flex;
-  flex: none;
-  align-items: center;
-  inline-size: 100%;
-  padding-inline-start: calc(var(--_level, 0) * var(--_indent));
-}
-.nui-table__cell--spill > .nui-table__content > .nui-table__group-room {
-  inline-size: calc(var(--_group-room) - 2 * var(--_pad-x));
-  margin-inline-start: var(--_spill);
-}
 .nui-table__group {
   display: flex;
   flex-wrap: wrap;
@@ -876,7 +864,7 @@
   column-gap: var(--nui-space-1);
   min-inline-size: 0;
   max-block-size: 1lh;
-  overflow: hidden;
+  overflow: clip;
   cursor: pointer;
   user-select: none;
 }

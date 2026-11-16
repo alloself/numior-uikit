@@ -259,15 +259,13 @@ describe('NuiTable on the server', () => {
     expect(html).toContain('(333)');
     expect(html).toContain('>Total<');
 
-    expect(html).toContain(
-      'aria-colindex="2" tabindex="-1" style="--_spill:0px;--_group-room:1860px;"',
+    expect(html.match(/class="nui-table__group"/g)).toHaveLength(1);
+
+    expect(html).toMatch(
+      /aria-colindex="18"[^>]*><div class="nui-table__content"><!--\[--><span class="nui-table__group">/,
     );
 
-    expect(html).toContain('<span class="nui-table__group-room" style="--_level:0;"><span');
-
-    expect(html).toContain(
-      '<span class="nui-table__group-room" style="--_level:0;" aria-hidden="true">',
-    );
+    expect(html).not.toContain('--_spill');
   });
 
   it('renders column group bands above the headers and offsets the rows', async () => {

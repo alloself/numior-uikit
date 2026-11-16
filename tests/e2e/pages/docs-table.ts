@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { boxOf } from '../helpers/geometry';
 
-const GROUP_LABEL = '.nui-table__group-room:not([aria-hidden="true"]) > .nui-table__group';
+const GROUP_LABEL = '.nui-table__group';
 
 export class DocsGroupsTable {
   readonly root: Locator;
