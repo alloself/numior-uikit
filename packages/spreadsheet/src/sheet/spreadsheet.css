@@ -1,167 +1,110 @@
 @layer components {
   .nui-spreadsheet {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: --spacing(2);
-    min-inline-size: 0;
-    font-variant-numeric: tabular-nums;
+    @apply box-border flex flex-col gap-2 min-inline-0 tabular-nums;
   }
   .nui-spreadsheet__bar {
     --_lines: 1;
     --_line-height: 1.25rem;
     --_pad-y: calc((var(--spacing-control-sm) - var(--_line-height) - 2px) / 2);
 
-    box-sizing: border-box;
-    display: flex;
-    align-items: flex-start;
-    gap: --spacing(2);
-    min-inline-size: 0;
-    color: var(--color-foreground);
-    font-size: var(--text-sm);
+    @apply box-border flex items-start gap-2 min-inline-0 text-foreground text-(length:--text-sm);
   }
   .nui-spreadsheet__bar--expanded {
     --_lines: 4;
   }
   .nui-spreadsheet__name,
   .nui-spreadsheet__entry {
-    box-sizing: border-box;
+    @apply box-border rounded bg-surface outline-(length:--field-ring-width) outline-transparent;
+    @apply outline-offset-(--focus-ring-offset);
     border: 1px solid var(--color-border);
-    border-radius: --theme(--radius inline);
-    background-color: var(--color-surface);
-    outline: var(--field-ring-width) solid transparent;
-    outline-offset: var(--focus-ring-offset);
     transition:
       border-color var(--transition-duration-fast) var(--ease-nui),
       outline-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-spreadsheet__name:hover:not(:focus-within, .nui-spreadsheet__name--invalid),
   .nui-spreadsheet__entry:hover:not(:focus-within) {
-    border-color: var(--color-border-strong);
+    @apply border-border-strong;
   }
   .nui-spreadsheet__name:focus-within,
   .nui-spreadsheet__entry:focus-within {
-    border-color: --theme(--color-ring inline);
-    outline-color: --theme(--color-ring inline);
+    @apply border-ring outline-ring;
   }
   .nui-spreadsheet__name {
-    flex: none;
+    @apply flex-none block-control-sm m-0 px-2 text-inherit;
     inline-size: 7rem;
-    block-size: var(--spacing-control-sm);
-    margin: 0;
-    padding-inline: --spacing(2);
-    color: inherit;
     font: inherit;
     line-height: var(--_line-height);
     font-variant-numeric: tabular-nums;
   }
   .nui-spreadsheet__name--invalid,
   .nui-spreadsheet__name--invalid:focus-within {
-    border-color: var(--color-error);
+    @apply border-error;
   }
   .nui-spreadsheet__name--invalid:focus-within {
-    outline-color: var(--color-error);
+    @apply outline-error;
   }
   .nui-spreadsheet__entry {
-    display: flex;
-    flex: 1 1 auto;
-    align-items: flex-start;
-    min-inline-size: 0;
+    @apply flex flex-auto items-start min-inline-0;
   }
   .nui-spreadsheet__formula {
-    box-sizing: border-box;
-    margin: 0;
+    @apply box-border m-0 bg-transparent text-inherit;
     border: 0;
-    background: transparent;
-    color: inherit;
     font: inherit;
     line-height: var(--_line-height);
     outline: none;
     transition: block-size var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-spreadsheet__fx {
-    flex: none;
-    align-self: stretch;
-    display: flex;
-    align-items: flex-start;
-    box-sizing: border-box;
-    padding-block: var(--_pad-y);
-    padding-inline: --spacing(2) var(--spacing);
-    line-height: var(--_line-height);
-    color: var(--color-muted-foreground);
-    font-style: italic;
+    @apply flex-none self-stretch flex items-start box-border py-(--_pad-y) ps-2 pe-1;
+    @apply leading-(--_line-height) text-muted-foreground italic select-none;
     font-weight: 600;
-    user-select: none;
   }
   .nui-spreadsheet__fx::before {
     content: 'fx';
   }
   .nui-spreadsheet__field {
-    position: relative;
-    display: flex;
-    flex: 1 1 auto;
-    min-inline-size: 0;
+    @apply relative flex flex-auto min-inline-0;
   }
   .nui-spreadsheet__mirror {
-    position: absolute;
-    inset: 0;
-    box-sizing: border-box;
-    display: none;
-    padding-block: var(--_pad-y);
-    padding-inline: var(--spacing) --spacing(2);
-    overflow: hidden;
-    line-height: var(--_line-height);
-    white-space: pre;
+    @apply absolute inset-0 box-border hidden py-(--_pad-y) ps-1 pe-2 overflow-hidden;
+    @apply leading-(--_line-height) whitespace-pre pointer-events-none;
     clip-path: inset(var(--_pad-y) 0);
-    pointer-events: none;
   }
   .nui-spreadsheet__mirror--shown {
-    display: block;
+    @apply block;
   }
   .nui-spreadsheet__token {
     color: color-mix(in oklab, var(--_tone), currentColor 40%);
   }
   .nui-spreadsheet__formula--painted {
-    color: transparent;
-    caret-color: var(--color-foreground);
+    @apply text-transparent caret-foreground;
   }
   .nui-spreadsheet__formula {
-    position: relative;
-    flex: 1 1 auto;
-    min-inline-size: 0;
+    @apply relative flex-auto min-inline-0 py-(--_pad-y) ps-1 pe-2 resize-none whitespace-pre;
     block-size: calc(var(--_lines) * var(--_line-height) + 2 * var(--_pad-y));
-    padding-block: var(--_pad-y);
-    padding-inline: var(--spacing) --spacing(2);
     overflow: hidden;
-    resize: none;
-    white-space: pre;
   }
   .nui-spreadsheet__bar--expanded .nui-spreadsheet__formula,
   .nui-spreadsheet__bar--expanded .nui-spreadsheet__mirror {
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
+    @apply whitespace-pre-wrap wrap-anywhere;
     scrollbar-gutter: stable;
   }
   .nui-spreadsheet__bar--expanded .nui-spreadsheet__formula {
-    overflow-y: auto;
+    @apply overflow-y-auto;
   }
   .nui-spreadsheet__formula:read-only {
-    cursor: default;
+    @apply cursor-default;
   }
   .nui-spreadsheet__expand {
-    flex: none;
-    display: flex;
-    align-items: center;
+    @apply flex-none flex items-center px-1;
     block-size: calc(var(--spacing-control-sm) - 2px);
-    padding-inline: var(--spacing);
   }
   .nui-spreadsheet__ref {
+    @apply box-border pointer-events-none;
     position: absolute;
-    box-sizing: border-box;
     border: 2px solid var(--_tone);
     border-radius: 2px;
     background-color: color-mix(in oklab, var(--_tone) 12%, transparent);
-    pointer-events: none;
     transition:
       inset var(--transition-duration-fast) var(--ease-nui),
       inline-size var(--transition-duration-fast) var(--ease-nui),
@@ -174,21 +117,15 @@
     --_grip: 8px;
     --_corner: 12px;
 
-    position: absolute;
-    box-sizing: border-box;
-    cursor: move;
-    pointer-events: auto;
-    touch-action: none;
+    @apply absolute box-border cursor-move pointer-events-auto touch-none;
   }
   .nui-spreadsheet__grip--top,
   .nui-spreadsheet__grip--bottom {
-    inset-inline: 0;
-    block-size: var(--_grip);
+    @apply inset-x-0 block-(--_grip);
   }
   .nui-spreadsheet__grip--start,
   .nui-spreadsheet__grip--end {
-    inset-block: 0;
-    inline-size: var(--_grip);
+    @apply inset-y-0 inline-(--_grip);
   }
   .nui-spreadsheet__grip--top {
     inset-block-start: calc(-1px - var(--_grip) / 2);
@@ -208,8 +145,7 @@
   .nui-spreadsheet__grip--bottom-end {
     --_resize: nwse-resize;
 
-    inline-size: var(--_corner);
-    block-size: var(--_corner);
+    @apply inline-(--_corner) block-(--_corner);
     cursor: var(--_resize);
   }
   .nui-spreadsheet__grip--top-end,
@@ -244,11 +180,10 @@
   .nui-spreadsheet__grip--top-end::before,
   .nui-spreadsheet__grip--bottom-start::before,
   .nui-spreadsheet__grip--bottom-end::before {
+    @apply absolute bg-(--_tone);
     content: '';
-    position: absolute;
     inset: calc((var(--_corner) - 6px) / 2);
     border-radius: 1px;
-    background-color: var(--_tone);
     box-shadow: 0 0 0 1px var(--color-surface);
   }
   .nui-spreadsheet__ref--first-row
@@ -257,7 +192,7 @@
       .nui-spreadsheet__grip--top-start,
       .nui-spreadsheet__grip--top-end
     ) {
-    inset-block-start: 0;
+    @apply inset-bs-0;
   }
   .nui-spreadsheet__ref--first-col
     > :is(
@@ -265,15 +200,18 @@
       .nui-spreadsheet__grip--top-start,
       .nui-spreadsheet__grip--bottom-start
     ) {
-    inset-inline-start: 0;
+    @apply inset-s-0;
   }
   @media (pointer: coarse) {
     .nui-spreadsheet__grip {
       --_grip: 16px;
       --_corner: 24px;
     }
-    .nui-spreadsheet__grip:is(.nui-spreadsheet__grip--top-end, .nui-spreadsheet__grip--bottom-start) {
-      display: none;
+    .nui-spreadsheet__grip:is(
+      .nui-spreadsheet__grip--top-end,
+      .nui-spreadsheet__grip--bottom-start
+    ) {
+      @apply hidden;
     }
   }
   .nui-spreadsheet__ref--tone-1,
@@ -309,56 +247,41 @@
     --_tone: var(--color-chart-8);
   }
   .nui-spreadsheet__hidden {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
+    @apply absolute inline-px block-px overflow-hidden whitespace-nowrap;
     clip-path: inset(50%);
-    white-space: nowrap;
   }
   .nui-spreadsheet__hint-part--name {
     font-weight: 600;
   }
   .nui-spreadsheet__hint-part--mark,
   .nui-spreadsheet__hint-part--argument {
-    color: var(--color-muted-foreground);
+    @apply text-muted-foreground;
   }
   .nui-spreadsheet__hint-part--current {
-    color: var(--color-foreground);
+    @apply text-foreground underline underline-offset-2;
     font-weight: 600;
-    text-decoration: underline;
-    text-underline-offset: 2px;
   }
   .nui-spreadsheet__match {
     font-weight: 700;
   }
   .nui-spreadsheet__tabs {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing);
-    min-inline-size: 0;
-    overflow-x: auto;
-    scrollbar-width: thin;
+    @apply flex items-center gap-1 min-inline-0 overflow-x-auto scrollbar-thin;
   }
   .nui-spreadsheet__rename {
-    box-sizing: border-box;
+    @apply box-border m-0;
     inline-size: 14rem;
-    margin: 0;
   }
   .nui-spreadsheet__clip {
     --_dash: var(--color-primary);
     --_step: 8px;
 
-    position: absolute;
-    box-sizing: border-box;
-    overflow: hidden;
-    pointer-events: none;
+    @apply absolute box-border overflow-hidden pointer-events-none;
   }
   .nui-spreadsheet__clip-edge {
     --_run-x: 0px;
     --_run-y: 0px;
 
-    position: absolute;
+    @apply absolute;
     animation: nui-spreadsheet-ants 0.8s linear infinite;
     animation-play-state: var(--nui-animation-play-state, running);
   }
@@ -377,30 +300,26 @@
   .nui-spreadsheet__clip-edge--top {
     --_run-x: var(--_step);
 
-    top: 0;
-    right: 0;
+    @apply top-0 right-0;
     left: calc(-1 * var(--_step));
   }
   .nui-spreadsheet__clip-edge--bottom {
     --_run-x: calc(-1 * var(--_step));
 
+    @apply bottom-0 left-0;
     right: calc(-1 * var(--_step));
-    bottom: 0;
-    left: 0;
   }
   .nui-spreadsheet__clip-edge--left {
     --_run-y: calc(-1 * var(--_step));
 
-    top: 0;
+    @apply top-0 left-0;
     bottom: calc(-1 * var(--_step));
-    left: 0;
   }
   .nui-spreadsheet__clip-edge--right {
     --_run-y: var(--_step);
 
+    @apply right-0 bottom-0;
     top: calc(-1 * var(--_step));
-    right: 0;
-    bottom: 0;
   }
   @keyframes nui-spreadsheet-ants {
     from {
@@ -417,32 +336,28 @@
   }
   .nui-spreadsheet__fill,
   .nui-spreadsheet__fill-preview {
+    @apply box-border pointer-events-none;
     position: absolute;
-    box-sizing: border-box;
-    pointer-events: none;
   }
   .nui-spreadsheet__fill {
-    opacity: 0;
-    visibility: hidden;
+    @apply opacity-0 invisible;
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),
       visibility 0s linear var(--transition-duration-fast);
   }
   .nui-spreadsheet--focused .nui-spreadsheet__fill {
-    opacity: 1;
-    visibility: visible;
+    @apply opacity-100 visible;
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),
       visibility 0s linear 0s;
   }
   .nui-spreadsheet__fill-preview {
-    border: 1px dashed var(--color-muted-foreground);
+    @apply border border-dashed border-muted-foreground;
   }
   .nui-spreadsheet__fill-clear {
+    @apply box-border pointer-events-none;
     position: absolute;
-    box-sizing: border-box;
     background-color: color-mix(in oklab, var(--color-foreground) 14%, transparent);
-    pointer-events: none;
   }
   .nui-spreadsheet__fill-grip {
     --_size: 7px;
@@ -450,14 +365,8 @@
     --_lap-block: calc(var(--_hit) / -2);
     --_lap-inline: calc(var(--_hit) / -2);
 
-    position: absolute;
-    inset-block-end: var(--_lap-block);
-    inset-inline-end: var(--_lap-inline);
-    inline-size: var(--_hit);
-    block-size: var(--_hit);
-    cursor: crosshair;
-    pointer-events: auto;
-    touch-action: none;
+    @apply absolute inset-be-(--_lap-block) inset-e-(--_lap-inline) inline-(--_hit) block-(--_hit);
+    @apply cursor-crosshair pointer-events-auto touch-none;
   }
   .nui-spreadsheet__fill--frozen-row > .nui-spreadsheet__fill-grip {
     --_lap-block: calc((var(--_size) - var(--_hit)) / 2);
@@ -466,10 +375,9 @@
     --_lap-inline: calc((var(--_size) - var(--_hit)) / 2);
   }
   .nui-spreadsheet__fill-grip::before {
+    @apply absolute bg-primary;
     content: '';
-    position: absolute;
     inset: calc((var(--_hit) - var(--_size)) / 2);
-    background-color: var(--color-primary);
     box-shadow: 0 0 0 1px var(--color-surface);
     transition: transform var(--transition-duration-fast) var(--ease-nui);
   }
@@ -483,87 +391,51 @@
     }
   }
   .nui-spreadsheet__editor {
+    @apply box-border flex items-center min-block-control-sm text-inherit font-sans;
+    @apply text-(length:--text-control-sm) leading-tight;
     position: relative;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
     inline-size: 100%;
     block-size: 100%;
-    min-block-size: var(--spacing-control-sm);
     padding-inline: calc(var(--spacing-field-pad-sm) + 1px);
-    color: inherit;
-    font-family: var(--font-sans);
-    font-size: var(--text-control-sm);
-    line-height: var(--leading-tight);
     text-align: inherit;
   }
   .nui-spreadsheet__editor-mirror {
-    position: absolute;
-    inset: 0;
-    box-sizing: border-box;
-    display: grid;
-    align-content: center;
+    @apply absolute inset-0 box-border grid content-center overflow-hidden whitespace-pre;
+    @apply pointer-events-none;
     padding-inline: calc(var(--spacing-field-pad-sm) + 1px);
-    overflow: hidden;
-    white-space: pre;
     text-align: inherit;
-    pointer-events: none;
   }
   .nui-spreadsheet__editor-control {
-    position: relative;
-    flex: 1 1 auto;
-    box-sizing: border-box;
-    min-inline-size: 0;
-    inline-size: 100%;
+    @apply relative flex-auto box-border min-inline-0 inline-full m-0 p-0 text-inherit;
+    @apply appearance-none;
     min-block-size: calc(var(--spacing-control-sm) - 2px);
-    margin: 0;
-    padding: 0;
     border: 0;
     background: transparent;
-    color: inherit;
     font: inherit;
     text-align: inherit;
-    appearance: none;
     outline: none;
   }
   .nui-spreadsheet__editor--painted > .nui-spreadsheet__editor-control {
     -webkit-text-fill-color: transparent;
   }
   .nui-spreadsheet__body {
-    box-sizing: border-box;
-    position: relative;
-    min-inline-size: 0;
+    @apply box-border relative min-inline-0;
   }
   .nui-spreadsheet__status {
-    box-sizing: border-box;
-    position: absolute;
-    inset-block-end: --spacing(3);
-    inset-inline-end: --spacing(3);
-    z-index: 1;
-    display: flex;
+    @apply box-border absolute inset-be-3 inset-e-3 z-1 flex items-center gap-2 py-1 ps-3 pe-1;
+    @apply rounded text-muted-foreground text-(length:--text-xs) opacity-0 invisible;
     max-inline-size: calc(100% - 2 * --spacing(3));
-    align-items: center;
-    gap: --spacing(2);
-    padding-block: var(--spacing);
-    padding-inline: --spacing(3) var(--spacing);
     border: 1px solid var(--color-border);
-    border-radius: --theme(--radius inline);
     background: var(--color-surface-elevated);
     box-shadow: var(--shadow-md);
-    color: var(--color-muted-foreground);
-    font-size: var(--text-xs);
-    opacity: 0;
     translate: 0 --spacing(2);
-    visibility: hidden;
     transition:
       opacity var(--transition-duration-normal) var(--ease-nui),
       translate var(--transition-duration-normal) var(--ease-nui),
       visibility 0s linear var(--transition-duration-normal);
   }
   .nui-spreadsheet__status--shown {
-    opacity: 1;
-    translate: 0 0;
-    visibility: visible;
+    @apply opacity-100 translate-0 visible;
     transition:
       opacity var(--transition-duration-normal) var(--ease-nui),
       translate var(--transition-duration-normal) var(--ease-nui),
@@ -572,35 +444,22 @@
   .nui-spreadsheet__note {
     --_lift: 0px;
 
-    box-sizing: border-box;
-    position: absolute;
+    @apply box-border absolute inset-s-3 z-1 flex items-start gap-2 py-2 px-3 rounded;
+    @apply text-foreground text-(length:--text-sm) opacity-0 invisible;
     inset-block-end: calc(--spacing(3) + var(--_lift));
-    inset-inline-start: --spacing(3);
-    z-index: 1;
-    display: flex;
     max-inline-size: min(32rem, calc(100% - 2 * --spacing(3)));
-    align-items: flex-start;
-    gap: --spacing(2);
-    padding: --spacing(2) --spacing(3);
     border: 1px solid var(--color-border);
-    border-radius: --theme(--radius inline);
     background: var(--color-surface-elevated);
     box-shadow: var(--shadow-md);
-    color: var(--color-foreground);
-    font-size: var(--text-sm);
     line-height: --theme(--leading-label inline);
-    opacity: 0;
     translate: 0 --spacing(2);
-    visibility: hidden;
     transition:
       opacity var(--transition-duration-normal) var(--ease-nui),
       translate var(--transition-duration-normal) var(--ease-nui),
       visibility 0s linear var(--transition-duration-normal);
   }
   .nui-spreadsheet__note--shown {
-    opacity: 1;
-    translate: 0 0;
-    visibility: visible;
+    @apply opacity-100 translate-0 visible;
     transition:
       opacity var(--transition-duration-normal) var(--ease-nui),
       translate var(--transition-duration-normal) var(--ease-nui),
@@ -610,31 +469,24 @@
     --_lift: calc(var(--spacing-control-xs) + 2 * var(--spacing) + --spacing(2) + 2px);
   }
   .nui-spreadsheet__note-icon {
-    display: flex;
-    flex: none;
+    @apply flex flex-none items-center text-warning;
     block-size: 1lh;
-    align-items: center;
-    color: var(--color-warning);
   }
   .nui-spreadsheet__note-text {
-    min-inline-size: 0;
-    overflow-wrap: anywhere;
+    @apply min-inline-0 wrap-anywhere;
   }
   .nui-spreadsheet__status-text {
-    min-inline-size: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    @apply min-inline-0 overflow-hidden text-ellipsis whitespace-nowrap;
   }
   .nui-spreadsheet__status-progress {
-    flex: none;
+    @apply flex-none;
     inline-size: 6rem;
   }
   .nui-spreadsheet__report-stale {
-    margin: 0;
+    @apply m-0;
   }
   .nui-spreadsheet__report-list {
-    margin: 0;
+    @apply m-0;
     padding-inline-start: 1.25em;
   }
 }

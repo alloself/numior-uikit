@@ -1,54 +1,31 @@
 @layer components {
   .nui-spreadsheet__file {
-    box-sizing: border-box;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-end;
-    gap: var(--spacing);
-    min-inline-size: 0;
+    @apply box-border flex flex-wrap items-center justify-end gap-1 min-inline-0;
   }
   .nui-spreadsheet__file-name {
-    display: flex;
+    @apply flex items-baseline gap-2 min-inline-0 m-0 text-(length:--text-sm) leading-control;
     flex: 1 1 8rem;
-    align-items: baseline;
-    gap: --spacing(2);
-    min-inline-size: 0;
-    margin: 0;
-    font-size: var(--text-sm);
-    line-height: var(--leading-control);
   }
   .nui-spreadsheet__file-text {
-    overflow: hidden;
-    font-weight: var(--font-weight-medium);
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    @apply overflow-hidden font-medium text-ellipsis whitespace-nowrap;
   }
   .nui-spreadsheet__file-edited {
-    flex: none;
-    color: var(--color-muted-foreground);
-    font-size: var(--text-xs);
-    line-height: var(--leading-control);
+    @apply flex-none text-muted-foreground text-(length:--text-xs) leading-control;
   }
   .nui-spreadsheet__file-progress {
-    display: flex;
+    @apply flex items-center gap-2 min-inline-0;
     flex: 0 1 12rem;
-    align-items: center;
-    gap: --spacing(2);
-    min-inline-size: 0;
     animation: nui-spreadsheet-file-in var(--transition-duration-normal) var(--ease-nui)
       var(--transition-duration-slow) both;
   }
   .nui-spreadsheet__file-actions {
-    display: flex;
-    flex: none;
-    gap: var(--spacing);
+    @apply flex flex-none gap-1;
   }
   .nui-spreadsheet__file-input {
-    display: none;
+    @apply hidden;
   }
   .nui-spreadsheet__file-losses {
-    margin: 0;
+    @apply m-0;
     padding-inline-start: 1.25em;
   }
   @keyframes nui-spreadsheet-file-in {
