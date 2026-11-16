@@ -122,7 +122,6 @@ export interface DocsTexts {
   readonly homeScreen: string;
   readonly screenOptions: string;
   readonly copyCode: string;
-  readonly copyPage: string;
   readonly blockViewport: string;
   readonly baseTheme: string;
   readonly siteTheme: string;
@@ -251,11 +250,6 @@ export interface FrameTheme {
 export interface HomeScreenProps {
   src: string;
   height: number;
-  texts: DocsTexts;
-}
-
-export interface CopyPageProps {
-  path: string;
   texts: DocsTexts;
 }
 

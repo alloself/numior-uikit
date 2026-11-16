@@ -63,7 +63,7 @@
   }
   .nui-menu-item--tone-error:hover,
   .nui-menu-item--tone-error:focus {
-    background: color-mix(in oklab, var(--color-error) var(--state-hover-tint), transparent);
+    background: color-mix(in oklab, var(--color-error) var(--state-hover), transparent);
   }
   .nui-menu-item--disabled,
   .nui-menu-item--disabled:hover,

@@ -270,6 +270,7 @@ import { Direction, Key, isComposing, useLocale, useMessages } from '@numior/pri
 import {
   NuiTable,
   NuiTablePeers,
+  NuiTablePin,
   tableCells,
   tableRectStyle,
   type NuiTableColumn,
@@ -310,7 +311,7 @@ import {
   type LineChange,
   type WorkbookStep,
 } from '../core';
-import { defaultRowHeight, sheetCells } from './sheet-cells';
+import { LEAST_COLUMN_WIDTH, defaultRowHeight, sheetCells } from './sheet-cells';
 import { liveSource, sameColumns, type ColumnShape } from './sheet-table';
 import { useSheetLineSizes } from './use-sheet-line-sizes';
 import NuiSpreadsheetAssist from './NuiSpreadsheetAssist.vue';
@@ -582,7 +583,11 @@ const lineSizes = useSheetLineSizes({
   editing,
   messages,
   refuse,
-  measure: (text, style) => grid.value?.fitWidth(text, style),
+  measure: (text, style) => {
+    const need = grid.value?.fitWidth(text, style);
+
+    return need === undefined ? undefined : Math.max(LEAST_COLUMN_WIDTH, need);
+  },
   notify,
   announce,
 });
@@ -953,11 +958,15 @@ const followScroll = (): void => {
   mirror.value.scrollLeft = field.scrollLeft;
 };
 
-const pinned = (
+const sheetColumns = (
   columns: readonly NuiTableColumn<number>[],
-  count: number,
+  frozen: number,
 ): NuiTableColumn<number>[] =>
-  columns.map((column, index) => (index < count ? { ...column, pin: 'start' } : column));
+  columns.map((column, index) => {
+    const held = { ...column, minWidth: LEAST_COLUMN_WIDTH };
+
+    return index < frozen ? { ...held, pin: NuiTablePin.Start } : held;
+  });
 
 const columnShape = computed<ColumnShape | undefined>((previous) => {
   const shown = shownSheet.value;
@@ -989,7 +998,7 @@ const tableParts = computed(() => {
 
   return {
     built,
-    columns: editing.editableColumns(pinned(built.columns, shape.frozen)),
+    columns: editing.editableColumns(sheetColumns(built.columns, shape.frozen)),
   };
 });
 

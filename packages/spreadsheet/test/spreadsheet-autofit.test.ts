@@ -111,6 +111,19 @@ describe('NuiSpreadsheet column width by content', () => {
     expect(driver.columnWidth('B')).toBe('64px');
   });
 
+  it('fits a column with a short text to 48 px', async () => {
+    const book = salesBook();
+
+    salesOf(book).cells.set(0, 2, textValue('Sum'));
+
+    const driver = open(book);
+
+    await driver.settle();
+    await driver.resetColumnEdge('C');
+
+    expect([widthInBook(book, 2), driver.columnWidth('C')]).toEqual([48, '48px']);
+  });
+
   it('measures a bold cell in its own font', async () => {
     const book = salesBook();
 

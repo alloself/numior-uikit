@@ -193,9 +193,10 @@
   .nui-list-item--current {
     --_row-icon: --theme(--color-primary-soft-foreground inline);
     --_row-weight: 500;
-    --_hover: light-dark(
-      oklab(from --theme(--color-primary-soft inline) calc(l - var(--state-hover-subtle)) a b),
-      oklab(from --theme(--color-primary-soft inline) calc(l + var(--state-hover-subtle)) a b)
+    --_hover: color-mix(
+      in oklab,
+      --theme(--color-primary-soft inline),
+      --theme(--color-primary-soft-foreground inline) var(--state-hover)
     );
 
     @apply bg-primary-soft text-primary-soft-foreground;
@@ -213,9 +214,10 @@
   .nui-list-item--selected:hover,
   .nui-list-item--selected:focus-visible,
   .nui-list-item--selected.nui-list-item--active {
-    background-color: light-dark(
-      oklab(from --theme(--color-primary-soft inline) calc(l - var(--state-hover-subtle)) a b),
-      oklab(from --theme(--color-primary-soft inline) calc(l + var(--state-hover-subtle)) a b)
+    background-color: color-mix(
+      in oklab,
+      --theme(--color-primary-soft inline),
+      --theme(--color-primary-soft-foreground inline) var(--state-hover)
     );
   }
   .nui-list--variant-floating .nui-list-item--selected {

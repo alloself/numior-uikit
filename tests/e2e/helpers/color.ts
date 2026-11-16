@@ -184,6 +184,16 @@ export const paintedColumn = async (
   return locator.page().evaluate(readColumn, { base64: png.toString('base64'), x, from, to });
 };
 
+export const paintedViewColumn = async (
+  page: Page,
+  x: number,
+  from: number,
+  to: number,
+): Promise<PaintedColumn> => {
+  const png = await page.screenshot({ animations: 'disabled' });
+  return page.evaluate(readColumn, { base64: png.toString('base64'), x, from, to });
+};
+
 const INK_DELTA = 24;
 
 const countInk = async ({
@@ -300,3 +310,11 @@ export const rgbDelta = (a: Rgb, b: Rgb): number =>
   a.reduce((max, channel, i) => Math.max(max, Math.abs(channel - (b[i] ?? 0))), 0);
 
 export const channelSumOf = (rgb: Rgb): number => rgb.reduce((sum, channel) => sum + channel, 0);
+
+export const liesBetween = (value: Rgb, from: Rgb, to: Rgb, tolerance = 1): boolean =>
+  value.every((channel, i) => {
+    const low = Math.min(from[i] ?? 0, to[i] ?? 0);
+    const high = Math.max(from[i] ?? 0, to[i] ?? 0);
+
+    return channel >= low - tolerance && channel <= high + tolerance;
+  });

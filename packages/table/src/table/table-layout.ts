@@ -55,6 +55,7 @@ export interface LayoutOptions {
   readonly pins: NuiTablePins;
   readonly hidden: NuiTableHidden;
   readonly widths: NuiTableWidths;
+  readonly least: Readonly<Record<string, number>>;
   readonly sticky: boolean;
   readonly select: boolean;
   readonly room: number;
@@ -65,7 +66,7 @@ export interface LayoutOptions {
 
 const DEFAULT_WIDTH = 160;
 
-export const SMALLEST_WIDTH = 48;
+const CENTRE_ROOM = 48;
 const UTILITY_WIDTH = 40;
 
 const ROW_HEAD_DIGIT = 8;
@@ -97,10 +98,8 @@ export const rowHeadWidth = (count: number, width: number | undefined): number =
   width ??
   Math.max(UTILITY_WIDTH, String(Math.max(1, count)).length * ROW_HEAD_DIGIT + ROW_HEAD_PADDING);
 
-const minWidthOf = <T>(column: NuiTableColumn<T>): number => column.minWidth ?? SMALLEST_WIDTH;
-
-export const clampWidth = <T>(column: NuiTableColumn<T>, px: number): number => {
-  const min = minWidthOf(column);
+export const clampWidth = <T>(column: NuiTableColumn<T>, px: number, least: number): number => {
+  const min = Math.max(least, column.minWidth ?? 0);
 
   const max =
     column.maxWidth === undefined ? Number.POSITIVE_INFINITY : Math.max(min, column.maxWidth);
@@ -108,8 +107,11 @@ export const clampWidth = <T>(column: NuiTableColumn<T>, px: number): number => 
   return Math.round(Math.min(max, Math.max(min, px)));
 };
 
-export const widthOf = <T>(column: NuiTableColumn<T>, widths: NuiTableWidths): number =>
-  clampWidth(column, widths[column.key] ?? column.width ?? DEFAULT_WIDTH);
+export const widthOf = <T>(
+  column: NuiTableColumn<T>,
+  widths: NuiTableWidths,
+  least: number,
+): number => clampWidth(column, widths[column.key] ?? column.width ?? DEFAULT_WIDTH, least);
 
 const alignOf = <T>(column: NuiTableColumn<T>): NuiTableAlign =>
   column.align ?? (column.type === NuiTableColumnType.Number ? 'end' : 'start');
@@ -117,7 +119,7 @@ const alignOf = <T>(column: NuiTableColumn<T>): NuiTableAlign =>
 const inputOf = <T>(column: NuiTableColumn<T>, options: LayoutOptions): PlaceInput => ({
   key: column.key,
   kind: 'data',
-  width: widthOf(column, options.widths),
+  width: widthOf(column, options.widths, options.least[column.key] ?? 0),
   flex: column.key in options.widths ? 0 : Math.max(0, column.flex ?? 0),
   align: alignOf(column),
   wrap: options.wrap && column.wrap === true,
@@ -230,6 +232,7 @@ const DEFAULT_OPTIONS: LayoutOptions = {
   pins: {},
   hidden: [],
   widths: {},
+  least: {},
   sticky: true,
   select: false,
   room: 0,
@@ -317,7 +320,7 @@ export const dataKeyAt = (layout: TableLayout, visual: number): string | undefin
 };
 
 export const pinsFit = (layout: TableLayout, room: number): boolean =>
-  room === 0 || layout.startWidth + layout.endWidth <= room - SMALLEST_WIDTH;
+  room === 0 || layout.startWidth + layout.endWidth <= room - CENTRE_ROOM;
 
 export const centreIndexOf = (layout: TableLayout, visual: number): number | undefined =>
   layout.visual[visual]?.pane === TablePaneName.Centre ? visual - layout.start.length : undefined;

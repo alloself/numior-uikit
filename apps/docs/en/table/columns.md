@@ -11,6 +11,13 @@ column key. The edge of a group header changes the width of the last column in t
 with `flex` split the free space by their shares until their width is changed by hand.
 `resizable: false` removes the width handle and keys of a column.
 
+A column is never narrower than the buttons in its header: the move grip, sorting, the filter and
+the menu. A smaller `width` or `minWidth` grows to that width. Buttons a column does not have, for
+example with `reorderable: false` or `sortable: false`, take no room.
+
+The filter button takes room while a filter is set or open, and always in a table without the
+column menu. The number of a sort key takes room while the table sorts by several columns.
+
 While the table fits its width, a column grows at the expense of its neighbor. Once a horizontal
 scroll appears, only the column itself grows.
 

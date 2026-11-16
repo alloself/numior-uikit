@@ -309,8 +309,6 @@ import {
 import {
   alignOfCell,
   closingLineOf,
-  floodWidthOf,
-  groupLineOf,
   spillClasses,
   spillStyleOf,
   spillsOf,
@@ -336,7 +334,6 @@ import {
   rowCellsOf,
   rowHeadWidth,
   SELECT_KEY,
-  SMALLEST_WIDTH,
   sizedRowStyle,
   mergeIndices,
   sameIndices,
@@ -363,7 +360,8 @@ import { boxOf, clampPosition, columnSpansOf, type RangeBox } from './table-rang
 import { useTableRanges } from './use-table-ranges';
 import { pageRowsOf, pageStepOf } from './table-keys';
 import { useTableExpansion } from './use-table-expansion';
-import { useTableHeader, type TableHeader } from './use-table-header';
+import { useTableHeader, type TableFilterTarget, type TableHeader } from './use-table-header';
+import { headFrameOf, headToolsOf, leastWidthOf } from './table-head-tools';
 import { useTableMenu, type TableMenu } from './use-table-menu';
 import { useTableColumnOrder } from './use-table-column-order';
 import { useTableQuery } from './use-table-query';
@@ -378,7 +376,6 @@ import { useTableRowSizes } from './use-table-row-sizes';
 import { useTableTotals } from './use-table-totals';
 import { useTableSelection, type TableSelectionKey } from './use-table-selection';
 import {
-  NuiTableAlign,
   NuiTableColumnType,
   NuiTableEditRefusalReason,
   NuiTableRowHeight,
@@ -428,7 +425,6 @@ import {
   type TableCellSpan,
   type TableCellView,
   type TableDetailSpot,
-  type TableGroupRow,
   type TableLeadSpan,
   type TableMergeLayout,
   type TableMergeSlot,
@@ -464,14 +460,6 @@ const NO_HEIGHTS: NuiTableRowHeights = {};
 const NO_MERGE_INDEX = createMergeIndex([], { rows: 0, cols: 0 });
 const NO_UTILITY: NuiTableUtilityCellProps = { control: 'none' };
 const SKELETON_UTILITY: NuiTableUtilityCellProps = { control: 'skeleton' };
-
-const GROUP_ORIGIN_PAINT: TableCellPaint = {
-  class: [],
-  style: {},
-  align: NuiTableAlign.Start,
-  overflow: false,
-};
-
 const TEXT_SKELETON: NuiSkeletonProps = { shape: 'text', width: '100%' };
 
 const CLICK_GUARD =
@@ -576,6 +564,30 @@ const groupByNow = computed<NuiTableGroupBy>((previous) => keepEqual(groupBy.val
 const expandedNow = computed<NuiTableExpanded>((previous) => keepEqual(expanded.value, previous));
 const tree = computed(() => columnTreeOf(columns));
 const orderedLeaves = computed(() => orderLeaves(tree.value.leaves, columnOrder.value));
+const filterTarget = shallowRef<TableFilterTarget | null>(null);
+const filterOpen = ref(false);
+
+const leastWidths = computed<Readonly<Record<string, number>>>((previous) => {
+  const headFrame = headFrameOf(size, gridlines);
+
+  const facts = {
+    sort: sortNow.value,
+    filters: filtersNow.value,
+    pins: pins.value,
+    menu: columnMenu !== false,
+    opened: filterOpen.value ? filterTarget.value?.key : undefined,
+  };
+
+  const next = Object.fromEntries(
+    orderedLeaves.value.map((column) => [
+      column.key,
+      leastWidthOf(headToolsOf(column, facts), headFrame),
+    ]),
+  );
+
+  return keepEqual(next, previous);
+});
+
 const gridId = useControlId(() => id);
 const resolvedLocale = useLocale(() => locale);
 const messages = useMessages(tableMessages, resolvedLocale);
@@ -790,6 +802,7 @@ const layoutOptions = computed(() => ({
   pins: pins.value,
   hidden: hidden.value,
   widths: widths.value,
+  least: leastWidths.value,
   select: selectOn.value,
   room: flexing.value ? room.value : 0,
   wrap: height === undefined || rowHeight === NuiTableRowHeight.Auto,
@@ -1143,6 +1156,7 @@ const resize = useTableResize<T>({
   layout: () => layout.value,
   room: () => room.value,
   columnAt,
+  leastOf: (key) => leastWidths.value[key] ?? 0,
   isRtl: direction.isRtl,
   messages,
   announce: (text) => {
@@ -1176,6 +1190,8 @@ const header: TableHeader<T> = useTableHeader({
   columnAt,
   sort,
   filters,
+  target: filterTarget,
+  open: filterOpen,
   messages,
   announce: (text) => {
     announcement.value = text;
@@ -2037,69 +2053,11 @@ const paintRow = (
   return pinned ? painted : floodPaints(row, position, painted, pinned);
 };
 
-const groupLineFor = (group: TableGroupRow, origin: number): TableFloodLine =>
-  groupLineOf({
-    columns: dataColumns.value,
-    origin,
-    text: group.label.text,
-    need: textMeasure.groupNeedOf(group.label.text, group.label.count, group.label.level),
-    blocked: (key) => columnAt(key).aggregate !== undefined,
-  });
-
-const groupSpillPaint = (spill: TableSpill, reach: number, copy: boolean): TableCellPaint => ({
-  class: spillClasses(spill),
-  style: { '--_spill': `${spill.shift}px`, '--_group-room': `${reach}px` },
-  align: NuiTableAlign.Start,
-  overflow: false,
-  copy,
-});
-
-const paintGroup = (group: TableGroupRow): TableRowPaint => {
-  const painted = new Map<string, TableCellPaint>();
-  const origin = group.origin;
-
-  if (origin === undefined) {
-    return painted;
-  }
-  const cells = rowCells.value.cells;
-  const line = groupLineFor(group, origin);
-  const spills = spillsOf(line, runsOf(cells));
-  const reach = floodWidthOf(line, spills);
-
-  for (const cell of cells) {
-    const col = cell.kind === TablePlacementKind.Data ? cell.colIndex - 1 - dataOffset.value : -1;
-    const spill = spills.get(col);
-
-    if (spill !== undefined) {
-      painted.set(cell.key, groupSpillPaint(spill, reach, col !== origin));
-      continue;
-    }
-    if (col !== origin) {
-      continue;
-    }
-
-    painted.set(cell.key, GROUP_ORIGIN_PAINT);
-  }
-  return painted;
-};
-
-const paintBody: TableRowPainter = (position, spans) => {
-  const group = expansion.rowAt(position);
-
-  if (group !== undefined) {
-    return paintGroup(group);
-  }
-  return cellStyle === undefined
-    ? undefined
-    : paintRow(rowAtPosition(position), position, false, spans);
-};
+const paintBody: TableRowPainter = (position, spans) =>
+  paintRow(rowAtPosition(position), position, false, spans);
 
 const paintPinned: TableRowPainter = (position) => paintRow(pinnedRows[position], position, true);
-
-const bodyPaint = computed(() =>
-  cellStyle === undefined && grouping.value.length === 0 ? undefined : paintBody,
-);
-
+const bodyPaint = computed(() => (cellStyle === undefined ? undefined : paintBody));
 const pinnedPaint = computed(() => (cellStyle === undefined ? undefined : paintPinned));
 
 const clipboard = useTableClipboard<T>({
@@ -2662,13 +2620,12 @@ const cellViewOf = (
   item: TableBodyRow,
   column: string,
   merge: TableLeadSpan | undefined,
-  copy: boolean,
 ): TableCellView<T> => {
   if (merge === undefined && item.pending) {
     return { kind: 'skeleton' };
   }
   if (merge === undefined && item.group !== undefined) {
-    return { kind: 'group', cell: copy ? item.group.label : item.group.cells[column], copy };
+    return { kind: 'group', cell: item.group.cells[column] };
   }
   const cell = contentOf(item, column, merge);
 
@@ -2684,9 +2641,8 @@ const cellViewAt = (
   item: TableBodyRow | undefined,
   column: string,
   merge: TableLeadSpan | undefined,
-  copy: boolean,
 ): TableCellView<T> =>
-  item === undefined ? { kind: 'skeleton' } : cellViewOf(item, column, merge, copy);
+  item === undefined ? { kind: 'skeleton' } : cellViewOf(item, column, merge);
 
 const utilityAt = (item: TableBodyRow | undefined, column: string): NuiTableUtilityCellProps =>
   item === undefined ? NO_UTILITY : rowUtility(item, column);
@@ -3204,10 +3160,6 @@ defineExpose<NuiTableExposed>({
   focusCell: focusCellAt,
   moveActive: moveActiveCell,
   invalidate,
-  fitWidth: (text, style) => {
-    const need = textMeasure.widthOf(text, style?.style, style?.icon !== undefined);
-
-    return need === undefined ? undefined : Math.max(SMALLEST_WIDTH, need);
-  },
+  fitWidth: (text, style) => textMeasure.widthOf(text, style?.style, style?.icon !== undefined),
 });
 </script>

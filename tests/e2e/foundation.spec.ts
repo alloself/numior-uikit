@@ -1,9 +1,11 @@
 import { expect, test } from './fixtures';
-import { expectRgb, rgbOf, tokenRgbIn } from './helpers/color';
+import { expectRgb, liesBetween, paintedRgb, rgbDelta, rgbOf, tokenRgbIn } from './helpers/color';
 import { boxOf } from './helpers/geometry';
 import type { Theme } from './pages/playground';
 
 const FLUID_DEMO_PARTS = /^nui-card(__media)? > |^nui-splitter__pane text/;
+
+const STATE_THEMES: readonly Theme[] = ['light', 'dark'];
 
 const sizedByKit = (part: string): boolean => !FLUID_DEMO_PARTS.test(part);
 
@@ -140,6 +142,34 @@ test('soft fills inside an overlay mix with the overlay surface, not the page', 
   expect(inMenu[0]).toBeGreaterThan(onPage[0]);
   expect(inMenu[0]).toBeGreaterThan(menuSurface[0] + 8);
 });
+
+for (const theme of STATE_THEMES) {
+  test(`a solid button moves its fill towards its label under the pointer and further when pressed in the ${theme} theme`, async ({
+    playground,
+    buttons: { primary },
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'a touch screen has no hover');
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await playground.setTheme(theme);
+
+    const label = await rgbOf(primary, 'color');
+    const rest = await paintedRgb(primary);
+
+    await primary.hover();
+    const hovered = await paintedRgb(primary);
+
+    await playground.holdPointer();
+    const pressed = await paintedRgb(primary);
+    await playground.releasePointer();
+
+    expect(rgbDelta(hovered, rest)).toBeGreaterThan(3);
+    expect(liesBetween(hovered, rest, label)).toBe(true);
+    expect(rgbDelta(pressed, hovered)).toBeGreaterThan(3);
+    expect(liesBetween(pressed, hovered, label)).toBe(true);
+  });
+}
 
 test('Tailwind utilities consume the same runtime tokens as native CSS', async ({
   playground,

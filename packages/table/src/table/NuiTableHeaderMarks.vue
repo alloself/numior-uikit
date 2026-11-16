@@ -48,6 +48,7 @@
 import { computed } from 'vue';
 import { NuiIcon } from '@numior/vue';
 import NuiTableGrip from './NuiTableGrip.vue';
+import { filterShown } from './table-head-tools';
 import type { NuiTableHeaderMarksProps } from './table.types';
 import { AriaValue } from '@numior/primitives';
 import { TableSortDirection } from '../engine';
@@ -61,9 +62,12 @@ const emit = defineEmits<{
   grab: [event: PointerEvent];
 }>();
 
-const showFilter = computed(
-  () =>
-    state?.filterable === true &&
-    (menuLabel === undefined || state.filtered || expanded === AriaValue.True),
+const showFilter = computed(() =>
+  filterShown({
+    filterable: state?.filterable === true,
+    filtered: state?.filtered === true,
+    menu: menuLabel !== undefined,
+    open: expanded === AriaValue.True,
+  }),
 );
 </script>

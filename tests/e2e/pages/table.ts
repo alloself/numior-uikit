@@ -1,8 +1,15 @@
 import { readFile } from 'node:fs/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
-import { unlikePixels } from '../helpers/color';
-import { boxOf, dragAcross, renderedWidth, type Box } from '../helpers/geometry';
+import {
+  paintedColumn,
+  paintedViewColumn,
+  rgbDelta,
+  unlikePixels,
+  type PaintedColumn,
+  type Rgb,
+} from '../helpers/color';
+import { boxOf, dragAcross, renderedWidth, type Box, type Point } from '../helpers/geometry';
 import { sectionScope } from '../helpers/axe';
 import { ARROWS, type ArrowDirection } from '../helpers/keyboard';
 import { GridKeys } from './grid-keys';
@@ -41,6 +48,16 @@ export interface HeaderSpacing {
   readonly toResize: number;
 }
 
+export interface TextGaps {
+  readonly left: number;
+  readonly right: number;
+}
+
+interface Span {
+  readonly start: number;
+  readonly end: number;
+}
+
 interface HandleParts {
   readonly grip: string;
   readonly label: string;
@@ -63,8 +80,12 @@ const HEADER_EDGE = 3;
 const FOOTER_TOP = 2;
 const FOOTER_EDGE = 4;
 const FRAME_CORNER = 12;
-const GROUP_LABEL = '.nui-table__group-room:not([aria-hidden="true"]) > .nui-table__group';
-const GROUP_COPY = '.nui-table__group-room[aria-hidden="true"] > .nui-table__group';
+const GROUP_LABEL = '.nui-table__group';
+const SEAM_INSET = 4;
+const SEAM_REACH = 4;
+const SEAM_CONTRAST = 6;
+const WIDTH_STEP = 10;
+const NO_PIXEL: Rgb = [0, 0, 0];
 
 const HEADER_PARTS: HandleParts = { grip: '.nui-table__grip', label: '.nui-table__text' };
 
@@ -73,10 +94,14 @@ const GHOST_PARTS: HandleParts = {
   label: '.nui-table__ghost-label',
 };
 
-const columnOfLabel = (label: Locator): Promise<number> =>
-  label.evaluate(
-    (element) => Number(element.closest('[aria-colindex]')?.getAttribute('aria-colindex')) - 1,
-  );
+const labelColumnsOf = (row: Locator): Promise<number[]> =>
+  row
+    .locator(GROUP_LABEL)
+    .evaluateAll((labels) =>
+      labels.map(
+        (label) => Number(label.closest('[aria-colindex]')?.getAttribute('aria-colindex')) - 1,
+      ),
+    );
 
 const handleLayoutOf = (frame: Element, parts: HandleParts): HandleLayout => {
   const edge = frame.getBoundingClientRect().left;
@@ -145,6 +170,36 @@ const BODY_HIDE = `
     visibility: hidden !important;
   }
 `;
+
+const roomOf = (frame: Box, pinned: Box | undefined, rtl: boolean): Span => {
+  if (pinned === undefined) {
+    return { start: frame.x, end: frame.x + frame.width };
+  }
+  return rtl
+    ? { start: pinned.x + pinned.width, end: frame.x + frame.width }
+    : { start: frame.x, end: pinned.x };
+};
+
+const outside = (own: Box, room: Span): boolean =>
+  own.x < room.start - 0.5 || own.x + own.width > room.end + 0.5;
+
+const lineCover = (column: PaintedColumn): number => {
+  const before = column.pixels[0] ?? NO_PIXEL;
+  const after = column.pixels.at(-1) ?? NO_PIXEL;
+
+  const contrastOf = (pixel: Rgb): number =>
+    Math.min(rgbDelta(pixel, before), rgbDelta(pixel, after));
+
+  const ink = column.pixels.reduce((strongest, pixel) => Math.max(strongest, contrastOf(pixel)), 0);
+
+  if (ink <= SEAM_CONTRAST) {
+    return 0;
+  }
+
+  const cover = column.pixels.reduce((sum, pixel) => sum + Math.min(contrastOf(pixel) / ink, 1), 0);
+
+  return cover / column.ratio;
+};
 
 export class TableSection extends GridKeys {
   readonly scope = sectionScope('table');
@@ -319,38 +374,8 @@ export class TableSection extends GridKeys {
     return this.remoteRow(position).locator(GROUP_LABEL);
   }
 
-  remoteGroupCopy(position: number, col: number): Locator {
-    return this.remoteCell(position, col).locator(GROUP_COPY);
-  }
-
-  remoteGroupLabelColumn(position: number): Promise<number> {
-    return columnOfLabel(this.remoteGroupLabel(position));
-  }
-
-  remoteGroupInset(position: number): Promise<number> {
-    return this.remoteGroupLabel(position).evaluate((label) => {
-      const cell = label.closest('[aria-colindex]');
-
-      if (cell === null) {
-        throw new Error('The group label stands outside a cell');
-      }
-
-      const own = label.getBoundingClientRect();
-      const edge = cell.getBoundingClientRect();
-
-      return Math.round(
-        getComputedStyle(cell).direction === 'rtl' ? edge.right - own.right : own.left - edge.left,
-      );
-    });
-  }
-
-  async toggleRemoteGroupAt(position: number, col: number): Promise<void> {
-    const cell = this.remoteCell(position, col);
-    const [own, copy] = await Promise.all([boxOf(cell), boxOf(cell.locator(GROUP_COPY))]);
-    const start = Math.max(own.x, copy.x);
-    const end = Math.min(own.x + own.width, copy.x + copy.width);
-
-    await cell.click({ position: { x: (start + end) / 2 - own.x, y: own.height / 2 } });
+  remoteGroupLabelColumns(position: number): Promise<number[]> {
+    return labelColumnsOf(this.remoteRow(position));
   }
 
   async remoteGroupBy(label: string): Promise<void> {
@@ -448,6 +473,39 @@ export class TableSection extends GridKeys {
     return this.header(col).locator('.nui-table__menu');
   }
 
+  async narrowToLeast(col: number): Promise<void> {
+    const header = this.header(col);
+
+    await header.scrollIntoViewIfNeeded();
+    await header.focus();
+
+    const steps = Math.ceil((await renderedWidth(header)) / WIDTH_STEP);
+
+    for (let step = 0; step < steps; step += 1) {
+      await this.narrowFocusedColumn();
+    }
+  }
+
+  async toolsOutside(col: number): Promise<string[]> {
+    const header = this.header(col);
+
+    await header.scrollIntoViewIfNeeded();
+    await header.hover();
+    await expect.poll(() => renderedWidth(this.menuButton(col))).toBeGreaterThan(20);
+
+    return header.evaluate((cell) => {
+      const own = cell.getBoundingClientRect();
+      const tools = cell.querySelectorAll('.nui-table__grip, .nui-table__sort, .nui-table__menu');
+
+      return [...tools].flatMap((tool) => {
+        const box = tool.getBoundingClientRect();
+        const inside = box.left >= own.left - 0.5 && box.right <= own.right + 0.5;
+
+        return inside ? [] : [tool.classList.item(0) ?? ''];
+      });
+    });
+  }
+
   async openMenu(col: number): Promise<void> {
     await this.header(col).scrollIntoViewIfNeeded();
     await this.clickRevealed(this.header(col), this.menuButton(col));
@@ -502,21 +560,157 @@ export class TableSection extends GridKeys {
     return this.root.locator(`.nui-table__footer [aria-colindex="${col + 1}"]`);
   }
 
+  footerSeam(col: number): Promise<number> {
+    return this.lineAcross(this.root, this.footerCell(col), 0);
+  }
+
+  headerLine(col: number): Promise<number> {
+    return this.lineAcross(this.root, this.header(col), 1);
+  }
+
+  treeBottomSeam(): Promise<number> {
+    return this.lineInView(this.tree, this.tree, 1);
+  }
+
+  treeRowLine(position: number): Promise<number> {
+    return this.lineInView(this.tree, this.treeRow(position), 1);
+  }
+
+  remoteTreeBottomSeam(): Promise<number> {
+    return this.lineInView(this.remoteTree, this.remoteTree, 1);
+  }
+
+  remoteTreeRowLine(position: number): Promise<number> {
+    return this.lineInView(this.remoteTree, this.remoteTreeRow(position), 1);
+  }
+
+  async scrollRemoteTreeToBottom(): Promise<void> {
+    await this.remoteTree.locator('.nui-table__viewport').evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
+  }
+
+  footerGap(): Promise<number> {
+    return this.viewport.evaluate((element) => {
+      const footer = element.querySelector('.nui-table__footer .nui-table__cell');
+      const end = element.getBoundingClientRect().top + element.clientTop + element.clientHeight;
+
+      return end - (footer?.getBoundingClientRect().bottom ?? Number.NaN);
+    });
+  }
+
+  textGaps(cell: Locator): Promise<TextGaps> {
+    return cell.locator(':scope > .nui-table__content').evaluate((content) => {
+      const range = document.createRange();
+
+      range.selectNodeContents(content);
+
+      const text = range.getBoundingClientRect();
+      const frame = content.getBoundingClientRect();
+      const style = getComputedStyle(content);
+
+      return {
+        left: Math.round(text.left - frame.left - Number.parseFloat(style.paddingLeft)),
+        right: Math.round(frame.right - Number.parseFloat(style.paddingRight) - text.right),
+      };
+    });
+  }
+
+  private async lineAcross(host: Locator, target: Locator, edge: 0 | 1): Promise<number> {
+    await this.page.mouse.move(0, 0);
+
+    const [frame, box] = await Promise.all([boxOf(host), boxOf(target)]);
+    const y = box.y + box.height * edge - frame.y;
+
+    const column = await paintedColumn(
+      host,
+      box.x + SEAM_INSET - frame.x,
+      y - SEAM_REACH,
+      y + SEAM_REACH,
+    );
+
+    return lineCover(column);
+  }
+
+  private async lineInView(frame: Locator, target: Locator, edge: 0 | 1): Promise<number> {
+    await this.page.mouse.move(0, 0);
+
+    const [outer, box] = await Promise.all([boxOf(frame), boxOf(target)]);
+    const y = box.y + box.height * edge;
+
+    const column = await paintedViewColumn(
+      this.page,
+      outer.x + outer.width / 2,
+      y - SEAM_REACH,
+      y + SEAM_REACH,
+    );
+
+    return lineCover(column);
+  }
+
   groupLabel(position: number): Locator {
     return this.row(position).locator(GROUP_LABEL);
   }
 
-  groupLabelColumn(position: number): Promise<number> {
-    return columnOfLabel(this.groupLabel(position));
+  groupLabelColumns(position: number): Promise<number[]> {
+    return labelColumnsOf(this.row(position));
   }
 
-  async groupLabelInView(position: number): Promise<boolean> {
-    const [label, frame] = await Promise.all([
-      boxOf(this.groupLabel(position)),
+  async coveredGroupLabels(): Promise<string[]> {
+    const [frame, rtl, rows] = await Promise.all([
       boxOf(this.viewport),
+      this.viewport.evaluate((element) => getComputedStyle(element).direction === 'rtl'),
+      this.viewport.locator('.nui-table__body > .nui-table__row--group').all(),
     ]);
 
-    return label.x >= frame.x && label.x + label.width <= frame.x + frame.width;
+    const covered: string[] = [];
+
+    for (const row of rows) {
+      const text = row.locator('.nui-table__group .nui-table__text');
+      const pinned = row.locator('.nui-table__cell--pin-end');
+      const edge = (await pinned.count()) === 0 ? undefined : await boxOf(pinned);
+
+      if (!outside(await boxOf(text), roomOf(frame, edge, rtl))) {
+        continue;
+      }
+
+      covered.push(await text.innerText());
+    }
+    return covered;
+  }
+
+  shownGroupLabel(position: number): Promise<string> {
+    return this.groupLabel(position).evaluate((label) => {
+      const frame = label.getBoundingClientRect();
+
+      const shown = (part: Element | null): boolean => {
+        const box = part?.getBoundingClientRect();
+
+        return (
+          box !== undefined &&
+          box.width > 0 &&
+          box.top >= frame.top - 0.5 &&
+          box.bottom <= frame.bottom + 0.5
+        );
+      };
+
+      const text = label.querySelector('.nui-table__text');
+      const count = label.querySelector('.nui-table__count');
+      const cut = text !== null && text.scrollWidth > text.clientWidth ? '…' : '';
+      const head = shown(text) ? `${text?.textContent ?? ''}${cut}` : '';
+
+      return [head, shown(count) ? (count?.textContent ?? '') : '']
+        .filter((part) => part !== '')
+        .join(' ');
+    });
+  }
+
+  async revealGroupCount(position: number): Promise<void> {
+    await this.groupLabel(position)
+      .locator('.nui-table__count')
+      .evaluate((count) => {
+        count.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      });
   }
 
   async groupBy(label: string): Promise<void> {
@@ -791,17 +985,7 @@ export class TableSection extends GridKeys {
 
     await cell.scrollIntoViewIfNeeded();
 
-    const point = await cell.evaluate((element) => {
-      const rect = element.getBoundingClientRect();
-      const y = rect.top + rect.height / 2;
-
-      for (let x = rect.left + 4; x < rect.right; x += 8) {
-        if (element.contains(document.elementFromPoint(x, y))) {
-          return { x, y };
-        }
-      }
-      return { x: rect.left + rect.width / 2, y };
-    });
+    const point = await this.visiblePoint(cell);
 
     for (let tap = 0; tap < times; tap += 1) {
       await this.page.touchscreen.tap(point.x, point.y);
@@ -877,17 +1061,31 @@ export class TableSection extends GridKeys {
     return this.root.locator('.nui-table__cell[aria-selected="true"]');
   }
 
+  private visiblePoint(cell: Locator): Promise<Point> {
+    return cell.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const y = rect.top + rect.height / 2;
+
+      for (let x = rect.left + 4; x < rect.right; x += 8) {
+        if (element.contains(document.elementFromPoint(x, y))) {
+          return { x, y };
+        }
+      }
+      return { x: rect.left + rect.width / 2, y };
+    });
+  }
+
   async dragRange(from: TableCell, to: TableCell, modifier?: 'ControlOrMeta'): Promise<void> {
-    const start = await boxOf(this.cell(from.row, from.col));
-    const end = await boxOf(this.cell(to.row, to.col));
+    const start = await this.visiblePoint(this.cell(from.row, from.col));
+    const end = await this.visiblePoint(this.cell(to.row, to.col));
 
     if (modifier !== undefined) {
       await this.page.keyboard.down(modifier);
     }
-    await this.page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+    await this.page.mouse.move(start.x, start.y);
     await this.page.mouse.down();
 
-    await this.page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, {
+    await this.page.mouse.move(end.x, end.y, {
       steps: 6,
     });
 

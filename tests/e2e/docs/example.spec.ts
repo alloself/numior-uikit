@@ -31,6 +31,19 @@ test('the inverted theme and the reading direction apply to the preview frame', 
   await expect(example.preview).not.toHaveClass(/(?:^|\s)nui-theme--/u);
 });
 
+test('the reading direction of the preview mirrors the arrows in the built site', async ({
+  docs,
+}) => {
+  await docs.open('/components/pagination');
+  const example = docs.example();
+  await expect.poll(() => example.pageArrowRotation()).toBe('0deg');
+
+  await example.rtl.click();
+
+  await expect(example.preview).toHaveAttribute('dir', 'rtl');
+  await expect.poll(() => example.pageArrowRotation()).toBe('180deg');
+});
+
 test('copying puts the example source on the clipboard', async ({ docs }) => {
   await docs.stubClipboard();
   await docs.open('/components/button');

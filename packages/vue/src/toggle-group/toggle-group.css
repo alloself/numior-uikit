@@ -91,14 +91,9 @@
   }
   .nui-toggle-group__item {
     --_rest: var(--color-surface);
-    --_hover: light-dark(
-      oklab(from var(--_rest) calc(l - var(--state-hover-subtle)) a b),
-      oklab(from var(--_rest) calc(l + var(--state-hover-subtle)) a b)
-    );
-    --_pressed: light-dark(
-      oklab(from var(--_rest) calc(l - var(--state-pressed-subtle)) a b),
-      oklab(from var(--_rest) calc(l + var(--state-pressed-subtle)) a b)
-    );
+    --_label: var(--color-foreground);
+    --_hover: color-mix(in oklab, var(--_rest), var(--_label) var(--state-hover));
+    --_pressed: color-mix(in oklab, var(--_rest), var(--_label) var(--state-pressed));
 
     @apply box-border relative inline-flex flex-auto items-center justify-center gap-2;
     @apply min-block-(--_height) px-(--_padding) border border-border rounded-none bg-(--_rest);
@@ -133,15 +128,13 @@
   }
   .nui-toggle-group__item--selected {
     --_rest: --theme(--color-primary-soft inline);
+    --_label: --theme(--color-primary-soft-foreground inline);
 
-    @apply z-1 text-primary-soft-foreground;
+    @apply z-1 text-(--_label);
     border-color: color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
   }
   .nui-toggle-group__item:hover:not(:disabled) {
-    @apply bg-(--_hover) text-foreground;
-  }
-  .nui-toggle-group__item--selected:hover:not(:disabled) {
-    @apply text-primary-soft-foreground;
+    @apply bg-(--_hover) text-(--_label);
   }
   .nui-toggle-group__item:active:not(:disabled) {
     @apply bg-(--_pressed) duration-instant;
@@ -170,11 +163,9 @@
   }
   .nui-toggle-group--variant-segmented .nui-toggle-group__item--selected {
     --_rest: var(--color-surface-elevated);
+    --_label: var(--color-foreground);
 
-    @apply border-transparent bg-(--_rest) text-foreground;
+    @apply border-transparent bg-(--_rest);
     box-shadow: var(--shadow-sm);
-  }
-  .nui-toggle-group--variant-segmented .nui-toggle-group__item--selected:hover:not(:disabled) {
-    @apply text-foreground;
   }
 }

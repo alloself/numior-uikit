@@ -54,6 +54,8 @@ const WIDTH_STEPS = 256;
 
 const DEFAULT_COLUMN = 64;
 
+export const LEAST_COLUMN_WIDTH = 48;
+
 const DEFAULT_ROW_POINTS = 15;
 
 const POINT = 96 / 72;

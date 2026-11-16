@@ -44,9 +44,8 @@ A number column computes `sum`, `count`, `avg`, `min` and `max`, a date column `
 The `v-model:groupBy` model groups rows by column values, and totals are computed for each group.
 Columns can share a common header when you describe a column group as `{ key, label, children }`.
 
-A group row starts with its label: the arrow, the value and the row count in parentheses. The
-label spreads over the empty cells up to the first total and stays in view while scrolling when
-the first column is pinned.
+A group label sits in the column the rows are grouped by, and each nested level sits in its own
+column. Place that column near the start so the label stays in view on a phone.
 
 <Example name="table/Groups" />
 
@@ -94,7 +93,8 @@ height and the visible columns.
 
 A column with `pin: 'start'` or `pin: 'end'` stays in place on horizontal scroll, and rows from
 `pinnedRows` stay under the header. A column can also be pinned or hidden from its menu, and
-`hideable: false` keeps it from being hidden.
+`hideable: false` keeps it from being hidden. The column the rows are grouped by cannot be hidden
+until the grouping is removed.
 
 <Example name="table/Windowed" />
 

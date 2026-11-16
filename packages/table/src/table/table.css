@@ -10,11 +10,7 @@
   --_font-size: var(--text-sm);
   --_row-bg: var(--color-surface);
   --_head-bg: var(--color-surface-muted);
-  --_hover: color-mix(
-    in oklab,
-    var(--color-foreground) var(--state-hover-overlay),
-    var(--color-surface)
-  );
+  --_hover: color-mix(in oklab, var(--color-foreground) var(--state-hover), var(--color-surface));
   --_stripe: color-mix(in oklab, var(--color-surface), var(--_head-bg) 55%);
   --_line: var(--color-border);
   --_foot: 0px;
@@ -60,7 +56,7 @@
   --_body-min: var(--_content-min);
   --_foot-overlap: 1px;
   --_foot-size: calc(var(--_row) - 2px);
-  --_empty-min: calc(var(--_height) - var(--_head-size) - var(--_foot) - 2px);
+  --_empty-min: calc(var(--_height) - var(--_head-size) - var(--_foot));
 
   box-sizing: border-box;
   position: relative;
@@ -243,6 +239,9 @@
 .nui-table__row > .nui-table__cell:last-child,
 .nui-table__cell--gap {
   --_grid-x: 0px;
+}
+.nui-table__body > .nui-table__row:last-child > .nui-table__cell {
+  border-block-end-color: transparent;
 }
 .nui-table__cell--tail {
   --_grid-x: calc(var(--_grid) * var(--_slack));
@@ -495,6 +494,9 @@
   block-size: var(--_body-size);
   min-block-size: var(--_body-min);
 }
+.nui-table__cell--spill > .nui-table__content {
+  overflow: clip;
+}
 .nui-table__body > .nui-table__row > .nui-table__cell--merged > .nui-table__content {
   position: absolute;
   inset-block-start: var(--_span-y, 0px);
@@ -536,6 +538,12 @@
   text-align: match-parent;
   text-overflow: ellipsis;
   unicode-bidi: plaintext;
+}
+.nui-table__cell--align-end > .nui-table__content.nui-table__content--text {
+  text-align: right;
+}
+.nui-table__cell--align-end:dir(rtl) > .nui-table__content.nui-table__content--text {
+  text-align: left;
 }
 .nui-table__cell--clip > .nui-table__content.nui-table__content--text {
   text-overflow: clip;
@@ -783,9 +791,10 @@
 .nui-table
   .nui-table__body
   > .nui-table__row--selected:where(:not(:has(> .nui-table__cell--tall:hover))):hover {
-  --_row-bg: light-dark(
-    oklab(from --theme(--color-primary-soft inline) calc(l - var(--state-hover-subtle)) a b),
-    oklab(from --theme(--color-primary-soft inline) calc(l + var(--state-hover-subtle)) a b)
+  --_row-bg: color-mix(
+    in oklab,
+    --theme(--color-primary-soft inline),
+    var(--color-foreground) var(--state-hover)
   );
 }
 .nui-table--loading .nui-table__body {
@@ -860,18 +869,6 @@
 .nui-table__row--group > .nui-table__cell > .nui-table__content {
   overflow: clip;
 }
-.nui-table__group-room {
-  box-sizing: border-box;
-  display: flex;
-  flex: none;
-  align-items: center;
-  inline-size: 100%;
-  padding-inline-start: calc(var(--_level, 0) * var(--_indent));
-}
-.nui-table__cell--spill > .nui-table__content > .nui-table__group-room {
-  inline-size: calc(var(--_group-room) - 2 * var(--_pad-x));
-  margin-inline-start: var(--_spill);
-}
 .nui-table__group {
   display: flex;
   flex-wrap: wrap;
@@ -880,7 +877,7 @@
   column-gap: var(--spacing);
   min-inline-size: 0;
   max-block-size: 1lh;
-  overflow: hidden;
+  overflow: clip;
   cursor: pointer;
   user-select: none;
 }

@@ -52,9 +52,10 @@
   }
   .nui-pagination__control--current {
     --_tone: --theme(--color-primary-soft-foreground inline);
-    --_hover: light-dark(
-      oklab(from --theme(--color-primary-soft inline) calc(l - var(--state-hover-subtle)) a b),
-      oklab(from --theme(--color-primary-soft inline) calc(l + var(--state-hover-subtle)) a b)
+    --_hover: color-mix(
+      in oklab,
+      --theme(--color-primary-soft inline),
+      --theme(--color-primary-soft-foreground inline) var(--state-hover)
     );
 
     @apply bg-primary-soft;

@@ -15,7 +15,6 @@ import {
   type NuiTableColumn,
   type NuiTableCellPosition,
   type TableGroupCell,
-  type TableGroupLabel,
   type TableGroupRow,
 } from './table.types';
 
@@ -46,7 +45,7 @@ interface GroupContext {
   readonly revision: number;
   readonly offset: number;
   readonly keys: readonly string[];
-  readonly origin: number | undefined;
+  readonly spare: string | undefined;
   readonly locale: string;
   readonly texts: NuiTableMessages;
   readonly rows: Map<number, TableGroupRow | null>;
@@ -62,15 +61,6 @@ const plainToggle = (event: KeyboardEvent): boolean =>
 export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableExpansion => {
   const loading = shallowRef<ReadonlySet<TableNodeId>>(new Set());
 
-  const originOf = (keys: readonly string[]): number | undefined => {
-    const free = keys.findIndex((key) => options.columnAt(key).aggregate === undefined);
-
-    if (free >= 0) {
-      return free;
-    }
-    return keys.length > 0 ? 0 : undefined;
-  };
-
   const context = computed<GroupContext>(() => {
     const keys = options.keys();
 
@@ -78,7 +68,7 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
       revision: options.revision.value,
       offset: options.offset(),
       keys,
-      origin: originOf(keys),
+      spare: keys.find((key) => options.columnAt(key).aggregate === undefined) ?? keys[0],
       locale: options.locale(),
       texts: options.messages.value,
       rows: new Map(),
@@ -104,19 +94,20 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
       : cellTextOf(options.columnAt(key), node.row, current.locale, current.texts);
   };
 
-  const labelOf = (node: TableGroupNode, current: GroupContext): TableGroupLabel => ({
-    kind: 'toggle',
-    node: node.id,
-    text: groupLabel(node, current),
-    count: `(${formatNumber(node.count, current.locale)})`,
-    level: node.level,
-  });
-
-  const valueOf = (
+  const cellOf = (
     node: TableGroupNode,
     key: string,
+    label: string | undefined,
     current: GroupContext,
   ): TableGroupCell | undefined => {
+    if (key === label) {
+      return {
+        kind: 'toggle',
+        node: node.id,
+        text: groupLabel(node, current),
+        count: `(${formatNumber(node.count, current.locale)})`,
+      };
+    }
     const column = options.columnAt(key);
 
     if (column.aggregate === undefined) {
@@ -128,10 +119,10 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
 
   const build = (node: TableGroupNode, current: GroupContext): TableGroupRow => {
     const cells: Record<string, TableGroupCell> = {};
-    const label = labelOf(node, current);
+    const label = current.keys.includes(node.key) ? node.key : current.spare;
 
-    for (const [col, key] of current.keys.entries()) {
-      const cell = col === current.origin ? label : valueOf(node, key, current);
+    for (const key of current.keys) {
+      const cell = cellOf(node, key, label, current);
 
       if (cell === undefined) {
         continue;
@@ -139,7 +130,7 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
 
       cells[key] = cell;
     }
-    return { id: node.id, label, origin: current.origin, cells };
+    return { id: node.id, cells };
   };
 
   const rowAt = (position: number): TableGroupRow | undefined => {

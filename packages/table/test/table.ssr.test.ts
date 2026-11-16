@@ -25,6 +25,7 @@ interface Query {
   readonly filters?: NuiTableFilters;
   readonly quick?: string;
   readonly groupBy?: readonly string[];
+  readonly hidden?: readonly string[];
   readonly expanded?: readonly TableNodeId[];
   readonly auto?: boolean;
   readonly selectable?: 'single' | 'multiple';
@@ -45,6 +46,7 @@ const RENDER_DEFAULTS: Required<Omit<Query, 'auto' | 'selectable' | 'caption' | 
   filters: [],
   quick: '',
   groupBy: [],
+  hidden: [],
   expanded: [],
   striped: false,
   loading: false,
@@ -259,14 +261,28 @@ describe('NuiTable on the server', () => {
     expect(html).toContain('(333)');
     expect(html).toContain('>Total<');
 
-    expect(html).toContain(
-      'aria-colindex="2" tabindex="-1" style="--_spill:0px;--_group-room:1860px;"',
+    expect(html.match(/class="nui-table__group"/g)).toHaveLength(1);
+
+    expect(html).toMatch(
+      /aria-colindex="18"[^>]*><div class="nui-table__content"><!--\[--><span class="nui-table__group">/,
     );
 
-    expect(html).toContain('<span class="nui-table__group-room" style="--_level:0;"><span');
+    expect(html).not.toContain('--_spill');
+  });
 
-    expect(html).toContain(
-      '<span class="nui-table__group-room" style="--_level:0;" aria-hidden="true">',
+  it('renders the label of a group by a hidden column in the first visible column without a total', async () => {
+    const html = await render(1000, {
+      columns: PEOPLE_COLUMNS.map((column) =>
+        column.key === 'id' ? { ...column, aggregate: 'count' as const } : column,
+      ),
+      groupBy: ['team'],
+      hidden: ['team'],
+    });
+
+    expect(html.match(/class="nui-table__group"/g)).toHaveLength(3);
+
+    expect(html).toMatch(
+      /aria-colindex="2"[^>]*><div class="nui-table__content"><!--\[--><span class="nui-table__group">/,
     );
   });
 
@@ -465,7 +481,7 @@ describe('NuiTable on the server', () => {
     expect(html).toContain('class="nui-table__overlay"');
 
     expect(html).toContain(
-      'data-rect="{&quot;top&quot;:120,&quot;start&quot;:80,&quot;width&quot;:300,&quot;height&quot;:80}"',
+      'data-rect="{&quot;top&quot;:120,&quot;start&quot;:98,&quot;width&quot;:300,&quot;height&quot;:80}"',
     );
   });
 

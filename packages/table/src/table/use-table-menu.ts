@@ -79,6 +79,14 @@ const sortText = (
   }
 };
 
+const lockedChoice = <T>(
+  leaf: NuiTableColumn<T>,
+  visible: boolean,
+  shown: readonly string[],
+  groupBy: NuiTableGroupBy,
+): boolean =>
+  leaf.hideable === false || (visible && (shown.length === 1 || groupBy.includes(leaf.key)));
+
 export const useTableMenu = <T>(options: TableMenuOptions<T>): TableMenu => {
   const target = shallowRef<TableMenuTarget | null>(null);
   const open = ref(false);
@@ -89,15 +97,16 @@ export const useTableMenu = <T>(options: TableMenuOptions<T>): TableMenu => {
     const column = options.columnAt(key);
     const head = options.head(key);
     const shown = shownKeys();
+    const groupBy = options.groupBy.value;
 
     return {
       direction: head?.direction,
       sortable: head?.sortable === true,
       filterable: head?.filterable === true,
       groupable: !options.treeMode(),
-      grouped: options.groupBy.value.includes(key),
+      grouped: groupBy.includes(key),
       pin: pinOf(column, options.pins.value),
-      hideable: column.hideable !== false && shown.length > 1,
+      hideable: !lockedChoice(column, true, shown, groupBy),
       resized: key in options.widths.value,
       columns: options.leaves().map((leaf) => {
         const visible = shown.includes(leaf.key);
@@ -106,7 +115,7 @@ export const useTableMenu = <T>(options: TableMenuOptions<T>): TableMenu => {
           key: leaf.key,
           label: leaf.label,
           shown: visible,
-          locked: leaf.hideable === false || (visible && shown.length === 1),
+          locked: lockedChoice(leaf, visible, shown, groupBy),
         };
       }),
     };

@@ -74,7 +74,7 @@ test('the custom theme guide shows the base theme next to Numior and prints the 
   expect(await compare.fontOf('Базовая тема', 'Подтвердить заказ')).not.toContain('Manrope');
 
   await expect(
-    docs.printedText('--color-primary: light-dark(#b04010, #e0561a);').last(),
+    docs.printedText('--color-primary: light-dark(#ae3f10, #e0561a);').last(),
   ).toBeAttached();
 });
 

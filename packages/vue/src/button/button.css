@@ -4,18 +4,28 @@
     --_tone-foreground: var(--color-primary-foreground);
     --_tone-soft: --theme(--color-primary-soft inline);
     --_tone-soft-foreground: --theme(--color-primary-soft-foreground inline);
-    --_hover: oklab(from var(--_tone) calc(l - var(--state-hover)) a b);
-    --_pressed: oklab(from var(--_tone) calc(l - var(--state-pressed)) a b);
-    --_soft-hover: light-dark(
-      oklab(from var(--_tone-soft) calc(l - var(--state-hover-subtle)) a b),
-      oklab(from var(--_tone-soft) calc(l + var(--state-hover-subtle)) a b)
+    --_hover: color-mix(in oklab, var(--_tone), var(--_tone-foreground) var(--state-hover));
+    --_pressed: color-mix(in oklab, var(--_tone), var(--_tone-foreground) var(--state-pressed));
+    --_soft-hover: color-mix(
+      in oklab,
+      var(--_tone-soft),
+      var(--_tone-soft-foreground) var(--state-hover)
     );
-    --_soft-pressed: light-dark(
-      oklab(from var(--_tone-soft) calc(l - var(--state-pressed-subtle)) a b),
-      oklab(from var(--_tone-soft) calc(l + var(--state-pressed-subtle)) a b)
+    --_soft-pressed: color-mix(
+      in oklab,
+      var(--_tone-soft),
+      var(--_tone-soft-foreground) var(--state-pressed)
     );
-    --_tint-hover: color-mix(in oklab, var(--_tone) var(--state-hover-tint), transparent);
-    --_tint-pressed: color-mix(in oklab, var(--_tone) var(--state-pressed-tint), transparent);
+    --_tint-hover: color-mix(
+      in oklab,
+      var(--_tone-soft-foreground) var(--state-hover),
+      transparent
+    );
+    --_tint-pressed: color-mix(
+      in oklab,
+      var(--_tone-soft-foreground) var(--state-pressed),
+      transparent
+    );
     --_height: var(--spacing-control-md);
     --_padding: var(--spacing-control-pad-md);
     --_font-size: var(--text-control-md);

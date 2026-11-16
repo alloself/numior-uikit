@@ -17,7 +17,7 @@ block goes after the Numior UI theme:
 @import '@numior/tailwind/theme.css';
 
 @theme {
-  --color-primary: light-dark(#b04010, #e0561a);
+  --color-primary: light-dark(#ae3f10, #e0561a);
   --color-primary-foreground: light-dark(#f3f2ef, #030304);
 }
 ```

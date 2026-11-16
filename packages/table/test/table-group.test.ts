@@ -28,6 +28,10 @@ const SUM_COLUMNS: readonly NuiTableColumn<Person>[] = PEOPLE_COLUMNS.map((colum
   column.key === 'm1' && column.type === 'number' ? { ...column, aggregate: 'sum' } : column,
 );
 
+const COUNTED_TEAM_COLUMNS: readonly NuiTableColumn<Person>[] = SUM_COLUMNS.map((column) =>
+  column.key === 'team' && column.type === 'text' ? { ...column, aggregate: 'count' } : column,
+);
+
 const mountPeople = (options: Partial<TableMountOptions<Person>> = {}): TableDriver<Person> => {
   const grid = TableDriver.mount<Person>({
     columns: TOTALS_COLUMNS,
@@ -64,70 +68,83 @@ describe('NuiTable groups and totals', () => {
     expect(grid.rowExpanded(0)).toBe('false');
     expect(grid.cellText(0, 0)).toBe('333');
     expect(grid.cellText(0, 7)).toBe('1\u00a0661\u00a0670');
-    expect(grid.cellText(0, 17)).toBe('');
+    expect(grid.cellText(0, 1)).toBe('');
     expect(grid.cellText(3, 0)).toBe('1\u00a0000');
     expect(grid.cellText(3, 1)).toBe('Итого1\u00a0000 строк');
     expect(grid.cellText(3, 7)).toBe('4\u00a0995\u00a0000');
   });
 
-  it('starts the label in the first column without a total and carries it over the empty cells up to the next total', async () => {
+  it('puts the label in the grouped column and keeps it there when columns move or hide', async () => {
     const grid = mountPeople({ groupBy: ['team'] });
     await grid.settle();
 
-    expect(grid.groupLabelColumn(0)).toBe(1);
-    expect(grid.groupCopies(0)).toEqual([2, 3, 4, 5, 6]);
-    expect(grid.cellPaint(0, 1)).toEqual({ spill: '0px', room: '860px', align: 'start' });
-    expect(grid.cellMarks(0, 1)).toEqual(['spill', 'seamless']);
-    expect(grid.cellPaint(0, 4)).toEqual({ spill: '-420px', room: '860px', align: 'start' });
-    expect(grid.cellMarks(0, 6)).toEqual(['spill']);
-    expect(grid.cellMarks(0, 7)).toEqual([]);
-    expect(grid.groupLevel(0)).toBe('0');
-
-    await grid.dragResizer(2, 40);
-    expect(grid.cellPaint(0, 1)).toEqual({ spill: '0px', room: '900px', align: 'start' });
-    expect(grid.cellPaint(0, 4)).toEqual({ spill: '-460px', room: '900px', align: 'start' });
+    expect(grid.groupLabelColumns(0)).toEqual([17]);
+    expect(grid.cellText(0, 1)).toBe('');
+    expect(grid.cellText(0, 6)).toBe('');
+    expect(grid.cellMarks(0, 1)).toEqual([]);
 
     await grid.focusCell(-1, 6);
     await grid.press('ArrowRight', { alt: true, shift: true });
     expect(grid.columnOrder.slice(5, 8)).toEqual(['remote', 'm1', 'note']);
-    expect(grid.groupCopies(0)).toEqual([2, 3, 4, 5]);
-    expect(grid.cellMarks(0, 7)).toEqual([]);
-
-    await grid.toggleGroupAt(0, 4);
-    expect(grid.expanded).toEqual(['["Данные"]']);
-    expect(grid.announcement).toBe('Группа «Данные» развёрнута');
-  });
-
-  it('keeps the label inside a pinned first column, follows hidden columns and row headers', async () => {
-    const pinned = mountPeople({ columns: SUM_COLUMNS, groupBy: ['team'] });
-    await pinned.settle();
-
-    expect(pinned.groupLabelColumn(0)).toBe(0);
-    expect(pinned.groupCopies(0)).toEqual([]);
-    expect(pinned.cellPaint(0, 0)).toEqual({ align: 'start' });
-    expect(pinned.cellText(0, 1)).toBe('');
+    expect(grid.groupLabelColumns(0)).toEqual([17]);
 
     const hidden = mountPeople({ groupBy: ['team'], hidden: ['name'] });
     await hidden.settle();
 
-    expect(hidden.groupLabelColumn(0)).toBe(1);
-    expect(hidden.groupCopies(0)).toEqual([2, 3, 4, 5]);
+    expect(hidden.groupLabelColumns(0)).toEqual([16]);
+    expect(hidden.cellText(0, 1)).toBe('');
 
     const headed = mountPeople({
       columns: SUM_COLUMNS,
       groupBy: ['team'],
-      pins: { id: null },
+      pins: { id: null, team: null },
       props: { rowHeaders: true },
     });
 
     await headed.settle();
 
-    expect(headed.cellText(0, 0)).toBe('');
-    expect(headed.groupLabelColumn(0)).toBe(1);
-    expect(headed.groupCopies(0)).toEqual([2, 3, 4, 5, 6, 7]);
+    expect(headed.groupLabelColumns(0)).toEqual([18]);
+    expect(headed.cellText(0, 1)).toBe('');
   });
 
-  it('indents nested labels by level and puts the label at the start of a right to left row', async () => {
+  it('puts the label of a column with a total in place of the total', async () => {
+    const grid = mountPeople({ columns: COUNTED_TEAM_COLUMNS, groupBy: ['team'] });
+    await grid.settle();
+
+    expect(grid.groupLabelColumns(0)).toEqual([17]);
+    expect(grid.groupLabel(0)).toBe('Данные (333)');
+    expect(grid.cellText(0, 0)).toBe('');
+    expect(grid.cellText(0, 7)).toBe('1\u00a0661\u00a0670');
+
+    await grid.toggleGroup(0);
+    expect(grid.expanded).toEqual(['["Данные"]']);
+    expect(grid.announcement).toBe('Группа «Данные» развёрнута');
+  });
+
+  it('puts the label of a group by a hidden column into the first visible column without a total', async () => {
+    const grid = mountPeople({ groupBy: ['team'], hidden: ['team'] });
+    await grid.settle();
+
+    expect(grid.groupLabel(0)).toBe('Данные (333)');
+    expect(grid.groupLabelColumns(0)).toEqual([1]);
+    expect(grid.cellText(0, 0)).toBe('333');
+
+    await grid.toggleGroup(0);
+    expect(grid.expanded).toEqual(['["Данные"]']);
+
+    const totalled = mountPeople({
+      columns: TOTALS_COLUMNS.filter((column) => ['id', 'm1', 'team'].includes(column.key)),
+      groupBy: ['team'],
+      hidden: ['team'],
+    });
+
+    await totalled.settle();
+
+    expect(totalled.groupLabelColumns(0)).toEqual([0]);
+    expect(totalled.cellText(0, 1)).toBe('1\u00a0661\u00a0670');
+  });
+
+  it('puts every nested level into its own column in both directions', async () => {
     const grid = mountPeople({
       groupBy: ['team', 'city'],
       expanded: ['["Данные"]'],
@@ -136,12 +153,12 @@ describe('NuiTable groups and totals', () => {
 
     await grid.settle();
 
+    expect(grid.groupLabel(0)).toBe('Данные (333)');
+    expect(grid.groupLabelColumns(0)).toEqual([17]);
     expect(grid.groupLabel(1)).toBe('Ереван (83)');
-    expect(grid.groupLevel(0)).toBe('0');
-    expect(grid.groupLevel(1)).toBe('1');
-    expect(grid.groupLabelColumn(1)).toBe(1);
-    expect(grid.groupCopies(1)).toEqual([2, 3, 4, 5, 6]);
-    expect(grid.cellPaint(1, 3)).toEqual({ spill: '-300px', room: '860px', align: 'start' });
+    expect(grid.groupLabelColumns(1)).toEqual([2]);
+    expect(grid.cellText(1, 1)).toBe('');
+    expect(grid.cellText(1, 17)).toBe('');
   });
 
   it('copies only the data rows of a range that crosses a group row', async () => {

@@ -190,7 +190,7 @@ describe('NuiTable merged cells', () => {
     expect(grid.cellSpan(1, 0)).toEqual([2, 1, 1]);
     expect(grid.cellSpan(1, 1)).toEqual([2, 1, 1]);
     expect(grid.cellText(1, 1)).toBe('1');
-    expect(grid.cellSpread(1, 1)).toEqual(['-80px', '', '240px', '']);
+    expect(grid.cellSpread(1, 1)).toEqual(['-98px', '', '258px', '']);
     expect(grid.mergeMarks(1, 0)).toEqual(['tall', 'cut-end']);
     expect(grid.mergeMarks(1, 1)).toEqual(['tall', 'cut-start']);
 

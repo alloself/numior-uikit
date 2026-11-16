@@ -367,7 +367,7 @@
     @apply border-border-strong;
     background: color-mix(
       in oklab,
-      var(--color-foreground) var(--state-hover-overlay),
+      var(--color-foreground) var(--state-hover),
       var(--color-surface)
     );
   }
@@ -579,7 +579,7 @@
     @apply border-border-strong;
     background: color-mix(
       in oklab,
-      var(--color-foreground) var(--state-hover-overlay),
+      var(--color-foreground) var(--state-hover),
       var(--color-surface)
     );
   }

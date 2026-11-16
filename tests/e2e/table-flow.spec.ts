@@ -119,6 +119,21 @@ test.describe('table text flow', () => {
     expect(merged.overflows).toBe(true);
   });
 
+  test('keeps the flowing text in place when the browser brings a covered cell into view', async ({
+    tableFlow: flow,
+  }) => {
+    await expectOneText(flow, STOPPED, 1, 4);
+
+    const before = await flow.pieceOf(STOPPED, 2);
+
+    await flow.revealPiece(STOPPED, 2);
+
+    const after = await flow.pieceOf(STOPPED, 2);
+
+    expect(after.piece.x - after.cell.x).toBeCloseTo(before.piece.x - before.cell.x, 0);
+    await expectOneText(flow, STOPPED, 1, 4);
+  });
+
   test('keeps the active ring and the cell borders above the flowing text in both themes', async ({
     tableFlow: flow,
     playground,

@@ -32,6 +32,14 @@ export const boxOf = async (target: Locator): Promise<Box> => {
   return box;
 };
 
+export const settledBoxOf = async (target: Locator): Promise<Box> => {
+  await target.evaluate((element) =>
+    Promise.allSettled(element.getAnimations().map((animation) => animation.finished)),
+  );
+
+  return boxOf(target);
+};
+
 export const gapBetween = async (trigger: Locator, surface: Locator): Promise<number> => {
   const [from, to] = await Promise.all([boxOf(trigger), boxOf(surface)]);
 

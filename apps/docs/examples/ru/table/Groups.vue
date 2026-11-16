@@ -26,12 +26,26 @@ const money = new Intl.NumberFormat('ru-RU', {
 
 const columns: NuiTableColumnDef<Order>[] = [
   {
-    key: 'id',
-    label: '№',
-    type: 'number',
-    width: 96,
-    value: (row) => row.id,
-    format: (value) => String(value),
+    key: 'order',
+    label: 'Заказ',
+    children: [
+      {
+        key: 'id',
+        label: '№',
+        type: 'number',
+        width: 100,
+        reorderable: false,
+        value: (row) => row.id,
+        format: (value) => String(value),
+      },
+      {
+        key: 'status',
+        label: 'Статус',
+        type: 'text',
+        width: 200,
+        value: (row) => ORDER_STATUSES[row.status],
+      },
+    ],
   },
   {
     key: 'buyer',
@@ -45,37 +59,22 @@ const columns: NuiTableColumnDef<Order>[] = [
         flex: 1,
         value: (row) => row.customer,
       },
-      { key: 'city', label: 'Город', type: 'text', width: 120, value: (row) => row.city },
     ],
   },
   {
-    key: 'order',
-    label: 'Заказ',
-    children: [
-      {
-        key: 'status',
-        label: 'Статус',
-        type: 'text',
-        width: 140,
-        value: (row) => ORDER_STATUSES[row.status],
-      },
-      {
-        key: 'total',
-        label: 'Сумма',
-        type: 'number',
-        width: 130,
-        aggregate: 'sum',
-        value: (row) => row.total,
-        format: (value) => money.format(value),
-      },
-    ],
+    key: 'total',
+    label: 'Сумма',
+    type: 'number',
+    width: 130,
+    aggregate: 'sum',
+    value: (row) => row.total,
+    format: (value) => money.format(value),
   },
 ];
 
 const groupings: NuiOptionSource<string> = [
   { value: 'none', label: 'Без группировки' },
   { value: 'status', label: 'По статусу' },
-  { value: 'city', label: 'По городу' },
 ];
 
 const keyOf = (order: Order): number => order.id;

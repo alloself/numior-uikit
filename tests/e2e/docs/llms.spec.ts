@@ -1,16 +1,5 @@
 import { expect, test } from '../fixtures';
 
-test('a page is copied as Markdown with the code of its examples', async ({ docs }) => {
-  await docs.stubClipboard();
-  await docs.open('/components/button');
-
-  await docs.copyPage.click();
-
-  await expect.poll(async () => (await docs.copiedTexts()).at(-1) ?? '').toMatch(/^# Button\n/);
-  expect((await docs.copiedTexts()).at(-1)).toContain('<NuiButton>Сохранить заказ</NuiButton>');
-  expect((await docs.copiedTexts()).at(-1)).toContain('| `variant` | `NuiButtonVariant` |');
-});
-
 test('the catalog for language models links to the Markdown copy of every page', async ({
   docs,
 }) => {

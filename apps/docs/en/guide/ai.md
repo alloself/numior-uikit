@@ -11,9 +11,6 @@ the API reference as tables.
 /en/components/button.md
 ```
 
-The "Copy page" button next to the title puts this copy on the clipboard. Paste it into a chat
-with your assistant along with your question.
-
 ## The llms.txt catalog
 
 `/llms.txt` lists every page with a link to its Markdown copy. The format is described at

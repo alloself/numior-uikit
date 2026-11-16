@@ -28,6 +28,10 @@ const RUNNING_TEXT = '.nui-content, .nui-code, .nui-prose, .nui-chart, [contente
 
 const SETTLE_MS = 1200;
 
+const OPEN_FRAMES = 3;
+
+const CLOSE_FRAMES = 2;
+
 const TOLERANCE = 0.02;
 
 const offGrid = (value: number): boolean => Math.abs(value - Math.round(value)) > TOLERANCE;
@@ -228,8 +232,29 @@ export const motionSettled = (page: Page): Promise<void> =>
     ]);
   }, SETTLE_MS);
 
-export const showLayer = (layer: Locator): Promise<boolean> =>
-  layer.evaluate(async (element, settle) => {
+const finishedHeightOf = (layer: Locator, frames: number): Promise<number> =>
+  layer.evaluate(async (element, count) => {
+    for (let frame = 0; frame < count; frame += 1) {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+          resolve();
+        });
+      });
+
+      for (const item of element.getAnimations({ subtree: true })) {
+        if (!Number.isFinite(item.effect?.getComputedTiming().endTime)) {
+          continue;
+        }
+
+        item.finish();
+      }
+    }
+
+    return element.getBoundingClientRect().height;
+  }, frames);
+
+export const showLayer = async (layer: Locator): Promise<boolean> => {
+  const opened = await layer.evaluate((element) => {
     try {
       if (element instanceof HTMLDialogElement) {
         element.showModal();
@@ -240,27 +265,24 @@ export const showLayer = (layer: Locator): Promise<boolean> =>
       return false;
     }
 
-    await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => {
-        resolve();
-      });
-    });
+    return true;
+  });
 
-    await Promise.race([
-      Promise.allSettled(element.getAnimations({ subtree: true }).map((item) => item.finished)),
-      new Promise<void>((resolve) => {
-        setTimeout(resolve, settle);
-      }),
-    ]);
+  if (!opened) {
+    return false;
+  }
 
-    return element.getBoundingClientRect().height > 0;
-  }, SETTLE_MS);
+  return (await finishedHeightOf(layer, OPEN_FRAMES)) > 0;
+};
 
-export const hideLayer = (layer: Locator): Promise<void> =>
-  layer.evaluate((element) => {
+export const hideLayer = async (layer: Locator): Promise<void> => {
+  await layer.evaluate((element) => {
     if (element instanceof HTMLDialogElement) {
       element.close();
     } else if (element instanceof HTMLElement) {
       element.hidePopover();
     }
   });
+
+  await finishedHeightOf(layer, CLOSE_FRAMES);
+};

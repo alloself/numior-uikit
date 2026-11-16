@@ -38,6 +38,15 @@ export const nextSort = (
     : sort.map((entry) => (entry.key === key ? next : entry));
 };
 
+const orderAt = (position: number, count: number): number | undefined =>
+  position >= 0 && count > 1 ? position + 1 : undefined;
+
+export const sortOrderOf = (sort: readonly TableSort[], key: string): number | undefined =>
+  orderAt(
+    sort.findIndex((entry) => entry.key === key),
+    sort.length,
+  );
+
 export const headStateOf = (input: HeadStateInput, key: string): TableHeadState => {
   const sort = input.sorting();
   const position = sort.findIndex((entry) => entry.key === key);
@@ -45,7 +54,7 @@ export const headStateOf = (input: HeadStateInput, key: string): TableHeadState 
   return {
     sortable: input.sortable(key),
     direction: sort[position]?.direction,
-    order: position >= 0 && sort.length > 1 ? position + 1 : undefined,
+    order: orderAt(position, sort.length),
     primary: position === 0,
     filterable: input.filterable(key),
     filtered: input.filtered(key),

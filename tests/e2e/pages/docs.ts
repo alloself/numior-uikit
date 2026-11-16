@@ -37,6 +37,13 @@ export class DocsExample {
   surface(): Promise<string> {
     return this.preview.evaluate((element) => getComputedStyle(element).backgroundColor);
   }
+
+  pageArrowRotation(): Promise<string> {
+    return this.preview
+      .locator('.nui-pagination__arrow')
+      .first()
+      .evaluate((element) => getComputedStyle(element).rotate);
+  }
 }
 
 export class DocsThemeCompare {
@@ -244,7 +251,6 @@ export class DocsSite {
   readonly languageButton: Locator;
   readonly commandDialog: Locator;
   readonly commandInput: Locator;
-  readonly copyPage: Locator;
   readonly tooltip: Locator;
   readonly network: MainFrameNetwork;
 
@@ -252,7 +258,6 @@ export class DocsSite {
     this.network = new MainFrameNetwork(page);
     this.tooltip = page.getByRole('tooltip');
     this.header = page.locator('.nui-app-bar');
-    this.copyPage = page.getByRole('button', { name: 'Скопировать страницу' });
     this.sidebar = page.locator('aside.nui-sidebar');
     this.drawer = page.locator('dialog.nui-sidebar-drawer');
     this.trigger = page.locator('.nui-sidebar-trigger');

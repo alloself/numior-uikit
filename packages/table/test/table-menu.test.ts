@@ -116,6 +116,32 @@ describe('NuiTable column menu', () => {
     expect(grid.cellText(0, 2)).toBe('Казань');
   });
 
+  it('keeps a grouped column from being hidden until the grouping is removed', async () => {
+    const grid = mountPeople({ groupBy: ['city'] });
+    await grid.settle();
+    await grid.openColumnMenu(2);
+
+    expect(grid.menuItemDisabled('Скрыть колонку')).toBe(true);
+
+    await grid.chooseMenu('Скрыть колонку');
+    expect(grid.hidden).toEqual([]);
+
+    await grid.chooseMenu('Колонки');
+
+    expect(grid.menuItemDisabled('Город')).toBe(true);
+    expect(grid.menuItemDisabled('Имя')).toBe(false);
+
+    await grid.chooseMenu('Город');
+
+    expect(grid.hidden).toEqual([]);
+    expect(grid.headerTexts.slice(0, 3)).toEqual(['ID', 'Имя', 'Город']);
+
+    await grid.setGroupBy([]);
+    await grid.openColumnMenu(2);
+
+    expect(grid.menuItemDisabled('Скрыть колонку')).toBe(false);
+  });
+
   it('groups by a column from the menu and removes the grouping again', async () => {
     const grid = mountPeople();
     await grid.openColumnMenu(17);

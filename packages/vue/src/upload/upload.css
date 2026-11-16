@@ -35,7 +35,7 @@
     @apply border-primary;
     background: color-mix(
       in oklab,
-      var(--color-foreground) var(--state-hover-overlay),
+      var(--color-foreground) var(--state-hover),
       var(--color-surface)
     );
   }

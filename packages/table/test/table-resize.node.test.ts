@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { computed, ref } from 'vue';
 import { describe, expect, it } from 'vite-plus/test';
+import { headFrameOf, headToolsOf, leastWidthOf } from '../src/table/table-head-tools';
 import { tableLayout } from '../src/table/table-layout';
 import { tableMessages } from '../src/table/table.messages';
 import { useTableResize } from '../src/table/use-table-resize';
@@ -29,11 +30,21 @@ const harness = (room: number, rtl = false): Harness => {
     return column;
   };
 
+  const facts = { sort: [], filters: [], pins: {}, menu: true, opened: undefined };
+
+  const least = Object.fromEntries(
+    PEOPLE_COLUMNS.map((column) => [
+      column.key,
+      leastWidthOf(headToolsOf(column, facts), headFrameOf('md', false)),
+    ]),
+  );
+
   const layout = computed(() =>
     tableLayout(PEOPLE_COLUMNS, {
       pins: {},
       hidden: [],
       widths: widths.value,
+      least,
       sticky: true,
       select: false,
       room,
@@ -46,6 +57,7 @@ const harness = (room: number, rtl = false): Harness => {
     layout: () => layout.value,
     room: () => room,
     columnAt,
+    leastOf: (key) => least[key] ?? 0,
     isRtl: () => rtl,
     messages: computed(() => tableMessages.ru),
     announce: (text) => {
@@ -84,7 +96,7 @@ describe('useTableResize', () => {
     expect(table.widths()).toEqual({ name: 200, city: 100 });
 
     table.drag('name', 200);
-    expect(table.widths()).toEqual({ name: 252, city: 48 });
+    expect(table.widths()).toEqual({ name: 203, city: 97 });
   });
 
   it('reports both columns once a drag that traded the width ends and nothing for a drag that came back', () => {
