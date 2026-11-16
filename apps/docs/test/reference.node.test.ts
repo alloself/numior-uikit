@@ -328,7 +328,7 @@ describe('docs reference', () => {
         [{ text: code, scope: 'string' }],
       ]),
     ).toContain(
-      '"importTokens":[[{"text":"import \'@numior/vue/styles/button.css\';","scope":"string"}]]',
+      '"importTokens":[[{"text":"@import \'@numior/vue/styles/button.css\';","scope":"string"}]]',
     );
 
     expect(loadReferenceModule(current, '\0virtual:nui-reference/component/nope')).toBe(

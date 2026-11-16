@@ -285,11 +285,14 @@ describe('guards of the install blocks', () => {
       '',
       fence('ts', ["import '@numior/vue/styles.css';", "import '@numior/charts/styles.css';"]),
       '',
+      fence('css', ["@import '@numior/table/styles.css';"]),
+      '',
       fence('sh', ['npm install @numior/primitives']),
     ]);
 
     expect(textsOf(installGuards('table/index.md', source, STYLED), GuardRule.Install)).toEqual([
       'an install command of a kit module is written by hand; the `ts install:packages` block prints it',
+      'stylesheets of a kit module are listed by hand; mark the block `ts install:packages`',
       'stylesheets of a kit module are listed by hand; mark the block `ts install:packages`',
     ]);
   });

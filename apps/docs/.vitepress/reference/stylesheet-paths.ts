@@ -7,6 +7,8 @@ const isBundle = (path: string): boolean => path.endsWith(`/${BUNDLE_FILE}`);
 
 export const bundleOf = (path: string): string => path.replace(SHEET_RE, `/${BUNDLE_FILE}`);
 
+export const styleImportOf = (path: string): string => `@import '${path}';`;
+
 export const orderedStylesheets = (
   paths: readonly string[],
   order: readonly string[],

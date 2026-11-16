@@ -39,7 +39,7 @@ describe('ApiComponent', () => {
 
     expect(api.sectionTitles).toContain('Тексты');
     expect(api.rows('Тексты')).toEqual([['empty', 'Пусто', 'Empty']]);
-    expect(api.styleImport).toBe("import '@numior/vue/styles/sample.css';");
+    expect(api.styleImport).toBe("@import '@numior/vue/styles/sample.css';");
     expect(api.requiredMarks).toEqual(['обязательно']);
     expect(api.nativeTitles).toEqual([]);
     expect(api.text).not.toContain('nui-sample');

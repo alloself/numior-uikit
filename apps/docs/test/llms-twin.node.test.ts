@@ -150,8 +150,11 @@ describe('markdown twin of a page', () => {
         '',
         '```ts',
         "import { NuiButton } from '@numior/vue';",
-        "import '@numior/vue/styles/icon.css';",
-        "import '@numior/vue/button.css';",
+        '```',
+        '',
+        '```css',
+        "@import '@numior/vue/styles/icon.css';",
+        "@import '@numior/vue/button.css';",
         '```',
         '',
       ].join('\n'),
@@ -183,8 +186,11 @@ describe('markdown twin of a page', () => {
         '',
         '```ts',
         "import { NuiButton } from '@numior/forms';",
-        "import '@numior/vue/styles/icon.css';",
-        "import '@numior/vue/button.css';",
+        '```',
+        '',
+        '```css',
+        "@import '@numior/vue/styles/icon.css';",
+        "@import '@numior/vue/button.css';",
         '```',
         '',
       ].join('\n'),
@@ -210,7 +216,7 @@ describe('markdown twin of a page', () => {
     expect(twin).toContain('### NuiButton');
 
     expect(twin).toContain(
-      "import { NuiButton } from '@numior/vue';\nimport '@numior/vue/button.css';",
+      "import { NuiButton } from '@numior/vue';\n```\n\n```css\n@import '@numior/vue/button.css';",
     );
 
     expect(twin).toContain('#### Props\n\n| Name | Type | Default | Description |');

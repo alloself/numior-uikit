@@ -18,6 +18,7 @@ export interface InstallComponent {
 
 export interface InstallPlan {
   readonly code: string;
+  readonly styles: string;
   readonly packages: readonly string[];
 }
 

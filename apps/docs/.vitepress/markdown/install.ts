@@ -1,6 +1,6 @@
 import { uniq } from 'lodash-es';
 import type { MarkdownRenderer } from 'vitepress';
-import { bundleOf, orderedStylesheets } from '../reference/stylesheet-paths.ts';
+import { bundleOf, orderedStylesheets, styleImportOf } from '../reference/stylesheet-paths.ts';
 import { GROUP_CLOSE, GROUP_OPEN } from './code-group.ts';
 import {
   InstallForm,
@@ -11,6 +11,7 @@ import {
 } from './markdown.types.ts';
 
 const INSTALL_RULE = 'install_styles';
+const STYLES_LANGUAGE = 'css';
 const INSTALL_RE = /(?:^|\s)install(?::(packages))?(?=\s|$)/;
 const KIT_IMPORT_RE = /import\s*\{([^}]*)\}\s*from\s*'@numior\/[^']+';/g;
 const KIT_SOURCE_RE = /from\s*'(@numior\/[^']+)'/g;
@@ -75,10 +76,10 @@ const installPlan = (
   }
   const paths = form === InstallForm.Packages ? sheets.map(bundleOf) : sheets;
   const ordered = orderedStylesheets(paths, source.stylesheets);
-  const lines = ordered.map((path) => `import '${path}';`);
 
   return {
-    code: `${[code.trimEnd(), ...lines].join('\n')}\n`,
+    code: `${code.trimEnd()}\n`,
+    styles: `${ordered.map(styleImportOf).join('\n')}\n`,
     packages: installedPackages(code, ordered),
   };
 };
@@ -96,6 +97,17 @@ const commandGroup = (packages: readonly string[]): string => {
   );
 
   return `::: code-group\n\n${fences.join('\n\n')}\n\n:::\n\n`;
+};
+
+const stylesToken = (state: CoreState, styles: string, map: CoreToken['map']): CoreToken => {
+  const fence = new state.Token('fence', 'code', 0);
+
+  fence.info = STYLES_LANGUAGE;
+  fence.content = styles;
+  fence.markup = '```';
+  fence.block = true;
+  fence.map = map;
+  return fence;
 };
 
 const commandTokens = (
@@ -134,7 +146,10 @@ export const expandInstallFences = (markdown: string, source: InstallSource | un
     }
     const plan = installPlan(code, form, source);
 
-    return `${commandGroup(plan.packages)}${fence}${withoutInstall(info)}\n${plan.code}${fence}`;
+    return [
+      `${commandGroup(plan.packages)}${fence}${withoutInstall(info)}\n${plan.code}${fence}`,
+      `${fence}${STYLES_LANGUAGE}\n${plan.styles}${fence}`,
+    ].join('\n\n');
   });
 
 export const installBlocks = (md: MarkdownRenderer, source: InstallSource | undefined): void => {
@@ -149,7 +164,11 @@ export const installBlocks = (md: MarkdownRenderer, source: InstallSource | unde
 
       token.content = plan.code;
       token.info = withoutInstall(token.info);
-      return [...commandTokens(state, plan.packages, token.map), token];
+      return [
+        ...commandTokens(state, plan.packages, token.map),
+        token,
+        stylesToken(state, plan.styles, token.map),
+      ];
     });
   });
 };
