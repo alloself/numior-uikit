@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import {
   canonical,
   canonicalLonghand,
+  discreteBehavior,
   evaluate,
   gridAlignment,
   isGridDisplay,
@@ -257,6 +258,24 @@ describe('longhands of a declaration', () => {
       ['transition-delay', '2s'],
       ['transition-behavior', 'initial'],
     ]);
+  });
+
+  it('reads allow-discrete on an interpolated property as normal', () => {
+    const properties = 'opacity, translate, display, overlay';
+
+    expect(discreteBehavior(properties, 'allow-discrete')).toBe(
+      'normal, normal, allow-discrete, allow-discrete',
+    );
+
+    expect(discreteBehavior(properties, 'normal, normal, allow-discrete, allow-discrete')).toBe(
+      'normal, normal, allow-discrete, allow-discrete',
+    );
+
+    expect(discreteBehavior('opacity, translate', 'allow-discrete')).toBe('normal');
+
+    expect(discreteBehavior('display', 'normal')).toBe('normal');
+
+    expect(discreteBehavior('display', 'initial')).toBe('initial');
   });
 
   it('writes keyword and percent forms like the computed value', () => {

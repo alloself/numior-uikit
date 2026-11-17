@@ -374,6 +374,41 @@ export const unpainted = (property: string, values: ReadonlyMap<string, string>)
   return style !== null && HIDDEN_STYLES.has(values.get(style) ?? '');
 };
 
+const INTERPOLATED = new Set([
+  'opacity',
+  'translate',
+  'scale',
+  'rotate',
+  'transform',
+  'color',
+  'background-color',
+  'border-color',
+  'outline-color',
+  'box-shadow',
+  'filter',
+  'inline-size',
+  'block-size',
+  'width',
+  'height',
+]);
+
+export const discreteBehavior = (properties: string, behavior: string): string => {
+  if (behavior === RESET) {
+    return RESET;
+  }
+
+  const names = split(properties, ',');
+  const flags = split(behavior, ',');
+
+  const items = names.map((name, at) =>
+    INTERPOLATED.has(name) ? 'normal' : (flags[at % Math.max(flags.length, 1)] ?? 'normal'),
+  );
+
+  const [first = 'normal'] = items;
+
+  return items.every((item) => item === first) ? first : items.join(', ');
+};
+
 export const canonicalLonghand = (property: string, value: string): string => {
   if (TIMING_LISTS.has(property)) {
     return uniform(value);

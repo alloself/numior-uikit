@@ -2,6 +2,7 @@ import { compareSpecificity, listSpecificity, splitSelectors } from './css-speci
 import {
   RESET,
   canonicalLonghand,
+  discreteBehavior,
   gridAlignment,
   helperReads,
   isGridDisplay,
@@ -291,10 +292,25 @@ const helperValues = (rule: CssRule): Map<string, string> => {
   }, new Map<string, string>());
 };
 
+const withBehavior = (values: Map<string, string>): Map<string, string> => {
+  const behavior = values.get('transition-behavior');
+
+  if (behavior === undefined) {
+    return values;
+  }
+
+  values.set(
+    'transition-behavior',
+    discreteBehavior(values.get('transition-property') ?? 'all', behavior),
+  );
+
+  return values;
+};
+
 export const effective = (rule: CssRule, environment: CssEnvironment): Map<string, string> => {
   const local = helperValues(rule);
 
-  return rule.declarations.reduce((values, { property, value }) => {
+  const longhandValues = rule.declarations.reduce((values, { property, value }) => {
     if (isHelper(property)) {
       return values;
     }
@@ -308,6 +324,8 @@ export const effective = (rule: CssRule, environment: CssEnvironment): Map<strin
 
     return values;
   }, new Map<string, string>());
+
+  return withBehavior(longhandValues);
 };
 
 const subjectBlock = (selector: string): string => {

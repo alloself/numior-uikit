@@ -1,5 +1,6 @@
 import {
   canonicalLonghand,
+  discreteBehavior,
   gridAlignment,
   isGridDisplay,
   unpainted,
@@ -55,6 +56,17 @@ const canonicalValue = (property: string, value: string, grid: boolean): string 
 const sameValue = (property: string, [was, now]: readonly string[], grid: boolean): boolean =>
   was === now ||
   canonicalValue(property, was ?? '', grid) === canonicalValue(property, now ?? '', grid);
+
+const behaviors = (
+  property: string,
+  values: readonly (string | undefined)[],
+  styles: readonly ReadonlyMap<string, string>[],
+): string[] =>
+  values.map((value = '', at) =>
+    property === 'transition-behavior'
+      ? discreteBehavior(styles[at]?.get('transition-property') ?? 'all', value)
+      : value,
+  );
 
 const withoutDropped = (segment: string, ignored: readonly IgnoredClasses[]): string => {
   const cut = segment.lastIndexOf(':');
@@ -137,7 +149,12 @@ const nodeFindings = (
   const painted = [styleMap(base.properties, beforeStyle), styleMap(base.properties, afterStyle)];
 
   base.properties.forEach((property, index) => {
-    const [was = '', now = ''] = [beforeStyle[index], afterStyle[index]];
+    const [was = '', now = ''] = behaviors(
+      property,
+      [beforeStyle[index], afterStyle[index]],
+      painted,
+    );
+
     const inert = painted.every((values) => unpainted(property, values));
 
     if (sameValue(property, [was, now], grid) || inert) {
