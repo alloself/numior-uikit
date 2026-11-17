@@ -8,11 +8,8 @@
     @apply border border-border rounded-lg bg-surface-overlay text-foreground font-sans opacity-0;
     @apply translate-y-2 inline-[min(var(--_width),calc(100%_-_--spacing(8)))];
     @apply max-block-[calc(100dvh_-_--spacing(8))] shadow-lg;
-    transition:
-      opacity var(--transition-duration-normal) var(--ease-nui),
-      translate var(--transition-duration-normal) var(--ease-nui),
-      display var(--transition-duration-normal) allow-discrete,
-      overlay var(--transition-duration-normal) allow-discrete;
+    @apply transition-[opacity,translate,display,overlay] duration-normal;
+    @apply ease-[var(--ease-nui),var(--ease-nui),ease,ease] transition-discrete;
   }
   .nui-dialog--size-sm {
     --_width: 24rem;
@@ -46,11 +43,8 @@
   }
   .nui-dialog::backdrop {
     @apply bg-backdrop opacity-0;
-    transition:
-      opacity var(--transition-duration-normal) var(--ease-nui),
-      background-color var(--transition-duration-normal) var(--ease-nui),
-      display var(--transition-duration-normal) allow-discrete,
-      overlay var(--transition-duration-normal) allow-discrete;
+    @apply transition-[opacity,background-color,display,overlay] duration-normal;
+    @apply ease-[var(--ease-nui),var(--ease-nui),ease,ease] transition-discrete;
   }
   .nui-dialog[open]::backdrop {
     @apply opacity-100;

@@ -28,9 +28,7 @@
     @apply box-border flex flex-auto items-stretch gap-(--_gap) min-inline-0 p-(--_inset);
     @apply overflow-x-auto overscroll-x-contain scrollbar-none rounded-[inherit];
     @apply scroll-px-(--_edge);
-    transition:
-      --_toggle-fade-start var(--transition-duration-fast) var(--ease-nui),
-      --_toggle-fade-end var(--transition-duration-fast) var(--ease-nui);
+    @apply transition-[--\_toggle-fade-start,--\_toggle-fade-end] duration-fast ease-nui;
   }
   .nui-toggle-group__track:dir(rtl) {
     --_fade-left: var(--_toggle-fade-end);

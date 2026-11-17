@@ -49,9 +49,7 @@
     @apply box-border relative flex flex-auto gap-1 min-inline-0 overflow-x-auto;
     @apply overscroll-x-contain scrollbar-none scroll-px-(--_edge);
     @apply mask-[linear-gradient(_to_right,transparent_calc(var(--_fade-left)_*_0.4),#000_var(--_fade-left),#000_calc(100%_-_var(--_fade-right)),transparent_calc(100%_-_var(--_fade-right)_*_0.4)_)];
-    transition:
-      --_tab-fade-start var(--transition-duration-fast) var(--ease-nui),
-      --_tab-fade-end var(--transition-duration-fast) var(--ease-nui);
+    @apply transition-[--\_tab-fade-start,--\_tab-fade-end] duration-fast ease-nui;
   }
   .nui-tab-list__track:dir(rtl) {
     --_fade-left: var(--_tab-fade-end);

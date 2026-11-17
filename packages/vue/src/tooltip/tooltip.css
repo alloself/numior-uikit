@@ -9,11 +9,8 @@
     @apply font-sans text-(length:--text-xs) leading-normal overflow-visible opacity-0;
     @apply max-inline-[min(18rem,calc(100vw_-_--spacing(4)))] border-0 border-none shadow-sm;
     translate: var(--_shift);
-    transition:
-      opacity var(--transition-duration-fast) var(--ease-nui),
-      translate var(--transition-duration-fast) var(--ease-nui),
-      display var(--transition-duration-fast) allow-discrete,
-      overlay var(--transition-duration-fast) allow-discrete;
+    @apply transition-[opacity,translate,display,overlay] duration-fast;
+    @apply ease-[var(--ease-nui),var(--ease-nui),ease,ease] transition-discrete;
   }
   .nui-tooltip:popover-open {
     @apply opacity-100 translate-0;

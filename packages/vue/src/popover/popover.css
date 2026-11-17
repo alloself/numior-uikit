@@ -11,11 +11,9 @@
     @apply p-3 border border-border rounded bg-surface-overlay text-foreground font-sans;
     @apply text-(length:--text-sm) leading-normal overflow-visible opacity-0 shadow-md;
     translate: var(--_shift);
-    transition:
-      opacity var(--transition-duration-fast) var(--ease-nui),
-      translate var(--transition-duration-normal) var(--ease-nui),
-      display var(--transition-duration-fast) allow-discrete,
-      overlay var(--transition-duration-fast) allow-discrete;
+    @apply transition-[opacity,translate,display,overlay];
+    @apply duration-[var(--transition-duration-fast),var(--transition-duration-normal),var(--transition-duration-fast),var(--transition-duration-fast)];
+    @apply ease-[var(--ease-nui),var(--ease-nui),ease,ease] transition-discrete;
   }
   .nui-popover--size-auto {
     --_min-inline: 0;

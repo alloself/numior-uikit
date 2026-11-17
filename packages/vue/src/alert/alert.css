@@ -9,10 +9,8 @@
     @apply box-border flex items-start gap-3 py-3 px-4 border border-transparent rounded;
     @apply bg-(--_tone-soft) text-(--_tone-soft-foreground) font-sans text-(length:--text-sm);
     @apply leading-(--_line);
-    transition:
-      opacity var(--transition-duration-normal) var(--ease-nui),
-      translate var(--transition-duration-normal) var(--ease-nui),
-      display var(--transition-duration-normal) allow-discrete;
+    @apply transition-[opacity,translate,display] duration-normal;
+    @apply ease-[var(--ease-nui),var(--ease-nui),ease] transition-discrete;
   }
   .nui-alert--tone-primary {
     --_tone: var(--color-primary);

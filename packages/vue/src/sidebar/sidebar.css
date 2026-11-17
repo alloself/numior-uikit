@@ -188,11 +188,9 @@
     @apply min-inline-[12rem] max-inline-[min(20rem,calc(100vw_-_--spacing(4)))] leading-label;
     @apply shadow-md;
     translate: var(--_shift);
-    transition:
-      opacity var(--transition-duration-fast) var(--ease-nui),
-      translate var(--transition-duration-normal) var(--ease-nui),
-      display var(--transition-duration-fast) allow-discrete,
-      overlay var(--transition-duration-fast) allow-discrete;
+    @apply transition-[opacity,translate,display,overlay];
+    @apply duration-[var(--transition-duration-fast),var(--transition-duration-normal),var(--transition-duration-fast),var(--transition-duration-fast)];
+    @apply ease-[var(--ease-nui),var(--ease-nui),ease,ease] transition-discrete delay-0;
   }
   .nui-sidebar-sub__flyout:popover-open {
     @apply opacity-100 translate-0;
