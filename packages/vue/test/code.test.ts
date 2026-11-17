@@ -133,6 +133,19 @@ describe('NuiCode', () => {
     expect(calls).toEqual(['typescript:38']);
   });
 
+  it('colours code that ends with a line break when the highlighter answers its empty last line', async () => {
+    const config = {
+      highlighter: { ...highlighterOf([]), tokens: () => [...TOKENS, []] },
+    };
+
+    const coloured = CodeDriver.mount({ props: { code: SAMPLE, language: 'ts' }, config });
+
+    await coloured.settle();
+
+    expect(coloured.lineTexts).toEqual(['const answer = 42;', "console.log('hi');"]);
+    expect(coloured.scopesOf(2)).toEqual(['punctuation', 'function', 'punctuation']);
+  });
+
   it('shows plain code until a lazy highlighter answers and reuses its answer', async () => {
     const calls: string[] = [];
     const config = { highlighter: highlighterOf(calls, true) };
