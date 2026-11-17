@@ -129,41 +129,47 @@ const quoteStep = (quote, char) => {
   return char === '"' || char === "'" ? char : '';
 };
 
+const BOUNDARIES = new Set(['{', '}', ';']);
+
+const STACK_STEPS = new Map([
+  ['{', (stack, statement) => stack.push(squash(statement))],
+  ['}', (stack) => stack.pop()],
+]);
+
+const boundary = (scan, char) => {
+  const quoted = scan.quote !== '' || char === '"' || char === "'";
+
+  scan.quote = quoteStep(scan.quote, char);
+  scan.depth += quoted ? 0 : (PAREN_STEP.get(char) ?? 0);
+
+  return !quoted && scan.depth === 0 && BOUNDARIES.has(char);
+};
+
+const closeStatement = (scan, text, at, char) => {
+  const statement = text.slice(scan.start, at);
+  const declaration = char === '{' ? undefined : declarationOf(statement, scan.start, scan.stack);
+
+  if (declaration !== undefined) {
+    scan.found.push(declaration);
+  }
+
+  STACK_STEPS.get(char)?.(scan.stack, statement);
+  scan.start = at + 1;
+};
+
 export const declarationsOf = (source) => {
   const text = source.replace(COMMENT, blank);
-  const stack = [];
-  const found = [];
-  let [start, depth, quote] = [0, 0, ''];
+  const scan = { stack: [], found: [], start: 0, depth: 0, quote: '' };
 
   for (const [at, char] of [...text].entries()) {
-    const quoted = quote !== '' || char === '"' || char === "'";
-
-    quote = quoteStep(quote, char);
-    depth += quoted ? 0 : (PAREN_STEP.get(char) ?? 0);
-
-    if (quoted || depth > 0 || !['{', '}', ';'].includes(char)) {
+    if (!boundary(scan, char)) {
       continue;
     }
 
-    const statement = text.slice(start, at);
-    const declaration = char === '{' ? undefined : declarationOf(statement, start, stack);
-
-    if (declaration !== undefined) {
-      found.push(declaration);
-    }
-
-    if (char === '{') {
-      stack.push(squash(statement));
-    }
-
-    if (char === '}') {
-      stack.pop();
-    }
-
-    start = at + 1;
+    closeStatement(scan, text, at, char);
   }
 
-  return found;
+  return scan.found;
 };
 
 const topLevelParts = (value, separator) => {
