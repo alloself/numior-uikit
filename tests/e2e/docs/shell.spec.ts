@@ -240,14 +240,14 @@ test('the skip link moves focus to the content', async ({ docs, isMobile }) => {
 test('code tabs switch the package manager and keep the pick after a reload', async ({ docs }) => {
   await docs.open('/guide/getting-started');
   await expect(docs.codeVariant('pnpm')).toHaveAttribute('aria-selected', 'true');
-  await expect(docs.shownVariant).toHaveText('pnpm add @numior/vue @numior/tokens');
+  await expect(docs.shownVariant).toHaveText('pnpm add @numior/kit');
 
   await docs.codeVariant('npm').click();
-  await expect(docs.shownVariant).toHaveText('npm install @numior/vue @numior/tokens');
+  await expect(docs.shownVariant).toHaveText('npm install @numior/kit');
 
   await docs.open('/guide/getting-started');
   await expect(docs.codeVariant('npm')).toHaveAttribute('aria-selected', 'true');
-  await expect(docs.shownVariant).toHaveText('npm install @numior/vue @numior/tokens');
+  await expect(docs.shownVariant).toHaveText('npm install @numior/kit');
 });
 
 test('the tokens page shows a colour of the base theme in both schemes whatever the site theme', async ({
