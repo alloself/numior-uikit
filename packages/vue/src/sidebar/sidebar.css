@@ -5,15 +5,12 @@
     --_padding: --spacing(2);
     --_row-icon: var(--color-muted-foreground);
 
-    @apply box-border flex flex-none flex-col inline-(--_size) min-block-full;
-    @apply border-e border-e-border bg-surface-muted text-foreground font-sans;
-    @apply text-(length:--text-sm) overflow-hidden;
-    line-height: --theme(--leading-label inline);
-    transition:
-      inline-size var(--transition-duration-normal) var(--ease-nui),
-      border-inline-width var(--transition-duration-normal) var(--ease-nui),
-      padding-inline var(--transition-duration-normal) var(--ease-nui),
-      visibility 0s var(--ease-nui);
+    @apply box-border flex flex-none flex-col inline-(--_size) min-block-full border-e;
+    @apply border-e-border bg-surface-muted text-foreground font-sans text-(length:--text-sm);
+    @apply overflow-hidden leading-label;
+    @apply transition-[inline-size,border-inline-width,padding-inline,visibility];
+    @apply duration-[var(--transition-duration-normal),var(--transition-duration-normal),var(--transition-duration-normal),0s];
+    @apply ease-nui;
   }
   .nui-sidebar--side-end {
     @apply order-1 border-s border-s-border;
@@ -41,59 +38,49 @@
     --_row-icon: var(--color-primary);
     --_row-weight: 500;
 
-    @apply text-(--_current);
-    background: transparent;
+    @apply text-(--_current) bg-transparent;
   }
   .nui-sidebar--variant-plain.nui-sidebar--marker-square:not(.nui-sidebar--rail)
     .nui-list-item:not(.nui-sidebar-sub)::before {
     @apply absolute inline-(--_marker-size) block-(--_marker-size) bg-primary opacity-0;
-    content: '';
-    inset-block-start: calc(50% - var(--_marker-size) / 2);
-    inset-inline-start: calc(-1 * var(--_marker-gutter));
-    scale: 0.5;
-    transition:
-      opacity var(--transition-duration-fast) var(--ease-nui),
-      scale var(--transition-duration-fast) var(--ease-nui);
+    @apply content-[''] inset-bs-[calc(50%_-_var(--_marker-size)_/_2)];
+    @apply inset-s-[calc(-1_*_var(--_marker-gutter))] scale-50 transition-[opacity,scale];
+    @apply duration-fast ease-nui delay-0 transition-normal;
   }
   .nui-sidebar--variant-plain.nui-sidebar--marker-square:not(.nui-sidebar--rail)
     .nui-list-item--current:not(.nui-sidebar-sub)::before {
-    @apply opacity-100;
-    scale: 1;
+    @apply opacity-100 scale-100;
   }
   .nui-sidebar--variant-inset:not(.nui-sidebar--mobile),
   .nui-sidebar--variant-floating:not(.nui-sidebar--mobile) {
     --_gap: var(--_inset-gap, --spacing(2));
     --_frame: 0px;
 
-    @apply relative isolate bg-transparent;
-    padding: calc(var(--_gap) + var(--_frame));
+    @apply relative isolate bg-transparent p-[calc(var(--_gap)_+_var(--_frame))];
     border: 0;
   }
   .nui-sidebar--variant-floating:not(.nui-sidebar--mobile) {
     --_frame: 1px;
   }
   .nui-sidebar--variant-floating:not(.nui-sidebar--mobile)::before {
-    @apply absolute inset-(--_gap) -z-1 bg-surface-muted;
-    content: '';
+    @apply absolute inset-(--_gap) -z-1 bg-surface-muted content-[''] shadow-sm;
     border: var(--_frame) solid var(--color-border);
-    border-radius: var(--_inset-radius, --theme(--radius-lg inline));
-    box-shadow: var(--shadow-sm);
+    @apply rounded-[var(--_inset-radius,--theme(--radius-lg_inline))];
   }
   .nui-sidebar--rail {
     @apply inline-(--_rail);
   }
   .nui-sidebar--rail.nui-sidebar--variant-inset:not(.nui-sidebar--mobile),
   .nui-sidebar--rail.nui-sidebar--variant-floating:not(.nui-sidebar--mobile) {
-    inline-size: calc(var(--_rail) + 2 * (var(--_gap) + var(--_frame)));
+    @apply inline-[calc(var(--_rail)_+_2_*_(var(--_gap)_+_var(--_frame)))];
   }
   .nui-sidebar--collapsed.nui-sidebar--collapsible-offcanvas.nui-sidebar--variant-inset,
   .nui-sidebar--collapsed.nui-sidebar--collapsible-offcanvas.nui-sidebar--variant-floating {
     @apply px-0;
   }
   .nui-sidebar--collapsed.nui-sidebar--collapsible-offcanvas {
-    @apply inline-0 invisible;
+    @apply inline-0 invisible delay-[0s,0s,0s,var(--transition-duration-normal)];
     border-inline-width: 0;
-    transition-delay: 0s, 0s, 0s, var(--transition-duration-normal);
   }
   .nui-sidebar--mobile {
     @apply inline-full block-full bg-transparent;
@@ -120,26 +107,23 @@
   }
   .nui-sidebar-group__text::before,
   .nui-sidebar-sub__title::before {
-    content: var(--caption-open) / '';
+    @apply content-[var(--caption-open)_/_''];
   }
   .nui-sidebar-group__text::after,
   .nui-sidebar-sub__title::after {
-    content: var(--caption-close) / '';
+    @apply content-[var(--caption-close)_/_''];
   }
   .nui-sidebar--rail .nui-sidebar-group__label {
     @apply hidden;
   }
   .nui-sidebar-group__toggle {
     @apply flex items-center justify-between gap-2 inline-full rounded-sm bg-transparent;
-    @apply tracking-caption text-start cursor-pointer;
+    @apply tracking-caption text-start cursor-pointer transition-[color,background-color];
+    @apply duration-fast ease-nui delay-0 transition-normal;
     border: 0;
     font: inherit;
-    font-size: var(--text-xs);
-    font-weight: var(--font-weight-caption);
+    @apply text-(length:--text-xs) font-caption;
     text-transform: var(--caption-transform);
-    transition:
-      color var(--transition-duration-fast) var(--ease-nui),
-      background-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-sidebar-group__toggle:hover {
     @apply text-foreground;
@@ -148,27 +132,25 @@
     @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-offset);
   }
   .nui-sidebar-group__chevron {
-    @apply inline-icon-sm block-icon-sm;
-    transition: rotate var(--transition-duration-normal) var(--ease-nui);
+    @apply inline-icon-sm block-icon-sm transition-[rotate] duration-normal ease-nui delay-0;
+    @apply transition-normal;
   }
   .nui-sidebar-group--closed .nui-sidebar-group__chevron {
     @apply -rotate-90;
   }
   .nui-sidebar-group__panel {
-    @apply grid;
-    grid-template-rows: 1fr;
-    transition: grid-template-rows var(--transition-duration-normal) var(--ease-nui);
+    @apply grid grid-rows-[1fr] transition-[grid-template-rows] duration-normal ease-nui delay-0;
+    @apply transition-normal;
   }
   .nui-sidebar-group--closed .nui-sidebar-group__panel {
-    grid-template-rows: 0fr;
+    @apply grid-rows-[0fr];
   }
   .nui-sidebar-group__list {
-    @apply min-block-0 overflow-hidden;
-    transition: visibility 0s var(--ease-nui) 0s;
+    @apply min-block-0 overflow-hidden transition-[visibility] duration-0 ease-nui delay-0;
+    @apply transition-normal;
   }
   .nui-sidebar-group--closed .nui-sidebar-group__list {
-    @apply invisible;
-    transition-delay: var(--transition-duration-normal);
+    @apply invisible delay-(--transition-duration-normal);
   }
   .nui-sidebar--rail .nui-sidebar-group + .nui-sidebar-group {
     @apply pbs-3 border-bs border-bs-border;
@@ -185,9 +167,7 @@
     @apply ms-auto;
   }
   .nui-sidebar-sub > .nui-list-item__inner {
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      color var(--transition-duration-fast) var(--ease-nui);
+    @apply transition-[background-color,color] duration-fast ease-nui delay-0 transition-normal;
   }
   .nui-sidebar-sub--active > .nui-list-item__inner {
     --_row-icon: --theme(--color-primary-soft-foreground inline);
@@ -203,12 +183,10 @@
     --_side-y: 0;
     --_shift: calc(-1 * var(--_side-x) * var(--spacing)) calc(-1 * var(--_side-y) * var(--spacing));
 
-    @apply box-border fixed inset-auto m-0 p-1 border border-border rounded bg-surface-overlay;
-    @apply text-foreground font-sans text-(length:--text-sm) opacity-0;
-    min-inline-size: 12rem;
-    max-inline-size: min(20rem, calc(100vw - --spacing(4)));
-    line-height: --theme(--leading-label inline);
-    box-shadow: var(--shadow-md);
+    @apply box-border fixed inset-auto m-0 p-1 border border-border border-solid rounded;
+    @apply bg-surface-overlay text-foreground font-sans text-(length:--text-sm) opacity-0;
+    @apply min-inline-[12rem] max-inline-[min(20rem,calc(100vw_-_--spacing(4)))] leading-label;
+    @apply shadow-md;
     translate: var(--_shift);
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),
@@ -234,8 +212,8 @@
     --_min-size: 2rem;
   }
   .nui-sidebar-sub__chevron {
-    @apply text-muted-foreground;
-    transition: rotate var(--transition-duration-fast) var(--ease-nui);
+    @apply text-muted-foreground transition-[rotate] duration-fast ease-nui delay-0;
+    @apply transition-normal;
   }
   .nui-sidebar-sub--open > .nui-list-item__inner .nui-sidebar-sub__chevron {
     @apply rotate-180;
@@ -244,20 +222,19 @@
     @apply hidden;
   }
   .nui-sidebar-sub__panel {
-    @apply grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows var(--transition-duration-normal) var(--ease-nui);
+    @apply grid grid-rows-[0fr] transition-[grid-template-rows] duration-normal ease-nui delay-0;
+    @apply transition-normal;
   }
   .nui-sidebar-sub--open > .nui-sidebar-sub__panel {
-    grid-template-rows: 1fr;
+    @apply grid-rows-[1fr];
   }
   .nui-sidebar-sub__list {
     @apply box-border min-block-0 ms-4 ps-2 border-s border-s-border overflow-hidden invisible;
-    transition: visibility 0s var(--ease-nui) var(--transition-duration-normal);
+    @apply transition-[visibility] duration-0 ease-nui delay-(--transition-duration-normal);
+    @apply transition-normal;
   }
   .nui-sidebar-sub--open > .nui-sidebar-sub__panel > .nui-sidebar-sub__list {
-    @apply visible;
-    transition-delay: 0s;
+    @apply visible delay-[0s];
   }
   .nui-sidebar-sub__list:has(.nui-row__leading) {
     @apply ps-1;
@@ -266,7 +243,7 @@
     @apply ps-1;
   }
   .nui-sidebar-sub__list > .nui-list__items {
-    padding-block-start: 2px;
+    @apply pbs-[2px];
   }
   .nui-sidebar-sub .nui-sidebar-sub__list .nui-list-item {
     --_min-size: 2rem;

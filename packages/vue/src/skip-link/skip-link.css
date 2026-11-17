@@ -2,12 +2,8 @@
   .nui-skip-link {
     @apply box-border fixed inset-bs-2 inset-s-2 z-(--z-index-toast) py-2 px-4 rounded bg-primary;
     @apply text-primary-foreground font-sans text-(length:--text-sm) font-medium leading-control;
-    @apply no-underline opacity-0;
-    box-shadow: var(--shadow-md);
-    translate: 0 calc(-100% - --spacing(4));
-    transition:
-      translate var(--transition-duration-normal) var(--ease-nui),
-      opacity var(--transition-duration-normal) var(--ease-nui);
+    @apply no-underline opacity-0 shadow-md translate-x-0 translate-y-[calc(-100%_-_--spacing(4))];
+    @apply transition-[translate,opacity] duration-normal ease-nui;
   }
   .nui-skip-link:focus-visible {
     @apply translate-0 opacity-100 outline-(length:--focus-ring-width) outline-ring;

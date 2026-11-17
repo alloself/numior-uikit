@@ -13,12 +13,8 @@
     @apply box-border inline-flex items-center justify-center gap-1 min-inline-(--_height);
     @apply block-(--_height) px-(--_padding) border border-transparent rounded-sm bg-(--_tone-soft);
     @apply text-(--_tone-soft-foreground) font-sans text-(length:--_font-size) leading-control;
-    @apply whitespace-nowrap align-middle;
-    font-weight: 600;
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      color var(--transition-duration-fast) var(--ease-nui);
+    @apply whitespace-nowrap align-middle font-semibold;
+    @apply transition-[background-color,border-color,color] duration-fast ease-nui;
   }
   .nui-badge--size-sm {
     --_height: 1rem;
@@ -76,12 +72,11 @@
   }
   .nui-badge--dot {
     @apply inline-(--_dot-size) min-inline-0 block-(--_dot-size) p-0 border-transparent;
-    @apply bg-(--_tone);
-    border-radius: 50%;
+    @apply bg-(--_tone) rounded-[50%];
   }
   .nui-badge--floating {
     @apply absolute inset-bs-0 inset-e-0 z-1 translate-x-(--_float-x) -translate-y-1/2;
-    box-shadow: 0 0 0 2px var(--color-surface);
+    @apply shadow-[0_0_0_2px_var(--color-surface)];
   }
   .nui-badge--floating:dir(rtl) {
     --_float-x: -50%;

@@ -7,8 +7,8 @@
   .nui-collapsible--variant-card {
     --_padding: --spacing(4);
 
-    @apply border border-border rounded-lg bg-surface;
-    transition: border-color var(--transition-duration-fast) var(--ease-nui);
+    @apply border border-border border-solid rounded-lg bg-surface transition-[border-color];
+    @apply duration-fast ease-nui;
   }
   .nui-collapsible__heading {
     @apply m-0;
@@ -16,17 +16,13 @@
   }
   .nui-collapsible__trigger {
     @apply box-border flex items-center justify-between gap-3 inline-full min-block-control-md py-2;
-    @apply px-(--_padding) rounded bg-transparent text-inherit text-start cursor-pointer;
-    border: 0;
+    @apply px-(--_padding) rounded bg-transparent text-inherit text-start cursor-pointer border-0;
+    @apply border-none transition-[color,background-color] duration-fast ease-nui;
     font: inherit;
-    font-weight: var(--font-weight-medium);
-    line-height: --theme(--leading-label inline);
-    transition:
-      color var(--transition-duration-fast) var(--ease-nui),
-      background-color var(--transition-duration-fast) var(--ease-nui);
+    @apply font-medium leading-label;
   }
   .nui-collapsible--variant-card .nui-collapsible__trigger {
-    border-radius: calc(--theme(--radius-lg inline) - 1px);
+    @apply rounded-[calc(--theme(--radius-lg_inline)_-_1px)];
   }
   .nui-collapsible__trigger:hover:not(:disabled) {
     @apply text-primary;
@@ -41,19 +37,17 @@
     @apply flex-auto;
   }
   .nui-collapsible__chevron {
-    @apply shrink-0 inline-icon-sm block-icon-sm text-muted-foreground;
-    transition: rotate var(--transition-duration-normal) var(--ease-nui);
+    @apply shrink-0 inline-icon-sm block-icon-sm text-muted-foreground transition-[rotate];
+    @apply duration-normal ease-nui;
   }
   .nui-collapsible--open .nui-collapsible__chevron {
     @apply rotate-180;
   }
   .nui-collapsible__panel {
-    @apply grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows var(--transition-duration-normal) var(--ease-nui);
+    @apply grid grid-rows-[0fr] transition-[grid-template-rows] duration-normal ease-nui;
   }
   .nui-collapsible--open .nui-collapsible__panel {
-    grid-template-rows: 1fr;
+    @apply grid-rows-[1fr];
   }
   .nui-collapsible__content {
     @apply min-block-0 overflow-hidden;

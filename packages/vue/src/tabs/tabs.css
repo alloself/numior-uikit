@@ -34,12 +34,10 @@
   .nui-tab-list {
     --_edge: 3rem;
 
-    @apply box-border relative flex max-inline-full;
-    box-shadow: inset 0 -1px var(--color-border);
+    @apply box-border relative flex max-inline-full shadow-[inset_0_-1px_var(--color-border)];
   }
   .nui-tab-list--orientation-vertical {
-    @apply border-e border-e-border;
-    box-shadow: none;
+    @apply border-e border-e-border shadow-none;
   }
   .nui-tab-list__track {
     --_indicator-start: 0px;
@@ -49,15 +47,8 @@
     --_fade-right: var(--_tab-fade-end);
 
     @apply box-border relative flex flex-auto gap-1 min-inline-0 overflow-x-auto;
-    @apply overscroll-x-contain scrollbar-none;
-    scroll-padding-inline: var(--_edge);
-    mask-image: linear-gradient(
-      to right,
-      transparent calc(var(--_fade-left) * 0.4),
-      #000 var(--_fade-left),
-      #000 calc(100% - var(--_fade-right)),
-      transparent calc(100% - var(--_fade-right) * 0.4)
-    );
+    @apply overscroll-x-contain scrollbar-none scroll-px-(--_edge);
+    @apply mask-[linear-gradient(_to_right,transparent_calc(var(--_fade-left)_*_0.4),#000_var(--_fade-left),#000_calc(100%_-_var(--_fade-right)),transparent_calc(100%_-_var(--_fade-right)_*_0.4)_)];
     transition:
       --_tab-fade-start var(--transition-duration-fast) var(--ease-nui),
       --_tab-fade-end var(--transition-duration-fast) var(--ease-nui);
@@ -73,14 +64,11 @@
     --_tab-fade-end: var(--_edge);
   }
   .nui-tab-list--orientation-vertical .nui-tab-list__track {
-    @apply flex-col overflow-x-visible;
-    mask-image: none;
+    @apply flex-col overflow-x-visible mask-[none];
   }
   .nui-tab-list__edge {
     @apply absolute inset-y-0 z-1 flex items-center opacity-0 invisible;
-    transition:
-      opacity var(--transition-duration-fast) var(--ease-nui),
-      visibility var(--transition-duration-fast) var(--ease-nui);
+    @apply transition-[opacity,visibility] duration-fast ease-nui;
   }
   .nui-tab-list__edge--start {
     @apply inset-s-0;
@@ -92,12 +80,11 @@
     @apply opacity-100 visible;
   }
   .nui-tab-list__scroll:dir(rtl) {
-    scale: -1 1;
+    @apply -scale-x-100 scale-y-100;
   }
   .nui-tabs--variant-soft .nui-tab-list {
-    @apply p-1 rounded bg-surface-muted;
+    @apply p-1 rounded bg-surface-muted shadow-none;
     border: 0;
-    box-shadow: none;
   }
   .nui-tabs--variant-soft .nui-tab-list__edge--start {
     @apply inset-s-1;
@@ -122,14 +109,10 @@
     @apply box-border relative z-1 inline-flex items-center justify-center gap-2;
     @apply min-block-(--_height) py-0 px-(--_padding) rounded-sm bg-transparent;
     @apply text-muted-foreground no-underline whitespace-nowrap cursor-pointer;
+    @apply transition-[color,background-color] duration-fast ease-nui;
     border: 0;
     font: inherit;
-    font-size: var(--_font-size);
-    font-weight: 500;
-    line-height: var(--leading-control);
-    transition:
-      color var(--transition-duration-fast) var(--ease-nui),
-      background-color var(--transition-duration-fast) var(--ease-nui);
+    @apply text-(length:--_font-size) font-medium leading-control;
   }
   .nui-tab-list--orientation-vertical .nui-tab {
     @apply justify-start;
@@ -146,13 +129,14 @@
     @apply text-muted-foreground opacity-disabled cursor-not-allowed;
   }
   .nui-tab:focus-visible {
-    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-width);
+    @apply outline-(length:--focus-ring-width) outline-ring outline-solid;
+    @apply -outline-offset-(--focus-ring-width);
   }
   .nui-tab__icon {
     @apply text-inherit;
   }
   .nui-tab--closable {
-    padding-inline-end: calc(var(--_close-gap) + var(--_close-size) + var(--spacing));
+    @apply pe-[calc(var(--_close-gap)_+_var(--_close-size)_+_var(--spacing))];
   }
   .nui-tab-item > .nui-tab__close {
     @apply z-2 self-center me-(--_close-gap);
@@ -162,29 +146,24 @@
   .nui-tab-list__indicator {
     @apply absolute inset-be-0 inset-s-(--_indicator-start) inline-(--_indicator-size);
     @apply block-(--_indicator-thickness) rounded-full bg-primary pointer-events-none;
-    transition:
-      inset-inline-start var(--transition-duration-slow) var(--ease-nui),
-      top var(--transition-duration-slow) var(--ease-nui),
-      inline-size var(--transition-duration-slow) var(--ease-nui),
-      block-size var(--transition-duration-slow) var(--ease-nui);
+    @apply transition-[inset-inline-start,top,inline-size,block-size] duration-slow ease-nui;
   }
   .nui-tab-list--orientation-vertical .nui-tab-list__indicator {
     @apply inset-be-auto inset-e-0 top-(--_indicator-start) inset-s-auto;
     @apply inline-(--_indicator-thickness) block-(--_indicator-size);
   }
   .nui-tabs--variant-soft .nui-tab-list__indicator {
-    @apply inset-y-0 block-auto rounded-sm bg-surface;
-    box-shadow: var(--shadow-sm);
+    @apply inset-y-0 block-auto rounded-sm bg-surface shadow-sm;
   }
   .nui-tabs--variant-soft .nui-tab-list--orientation-vertical .nui-tab-list__indicator {
     @apply inset-y-auto inset-x-0 top-(--_indicator-start) inline-auto block-(--_indicator-size);
   }
 
   .nui-tab-panel {
-    @apply box-border min-inline-0 flex-auto rounded-sm;
-    outline: none;
+    @apply box-border min-inline-0 flex-auto rounded-sm outline-none;
   }
   .nui-tab-panel:focus-visible {
     @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
+    @apply outline-solid;
   }
 }

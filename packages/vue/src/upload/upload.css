@@ -24,12 +24,9 @@
     @apply text-(length:--text-base);
   }
   .nui-upload__zone {
-    @apply box-border relative grid justify-items-center gap-2 p-(--_zone-padding);
-    @apply border border-dashed border-border-strong rounded bg-surface text-center cursor-pointer;
-    transition:
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      color var(--transition-duration-fast) var(--ease-nui);
+    @apply box-border relative grid justify-items-center gap-2 p-(--_zone-padding) border;
+    @apply border-dashed border-border-strong rounded bg-surface text-center cursor-pointer;
+    @apply transition-[border-color,background-color,color] duration-fast ease-nui;
   }
   .nui-upload__zone:hover {
     @apply border-primary;
@@ -51,8 +48,7 @@
     @apply justify-self-stretch;
   }
   .nui-upload--dragging .nui-upload__zone {
-    @apply border-primary border-solid text-primary-soft-foreground;
-    background: --theme(--color-primary-soft inline);
+    @apply border-primary border-solid text-primary-soft-foreground bg-primary-soft bg-none;
   }
   .nui-upload--invalid .nui-upload__zone {
     @apply border-error;
@@ -64,14 +60,14 @@
     @apply absolute inline-px block-px -m-px opacity-0 pointer-events-none;
   }
   .nui-upload__icon {
-    @apply inline-(--_icon) block-(--_icon) text-subtle-foreground;
-    transition: color var(--transition-duration-fast) var(--ease-nui);
+    @apply inline-(--_icon) block-(--_icon) text-subtle-foreground transition-[color] duration-fast;
+    @apply ease-nui;
   }
   .nui-upload--dragging .nui-upload__icon {
     @apply text-primary;
   }
   .nui-upload__text {
-    font-weight: 500;
+    @apply font-medium;
   }
   .nui-upload__items {
     @apply grid gap-2 m-0 p-0 list-none;
@@ -84,20 +80,16 @@
     --_row-weight: 500;
 
     @apply box-border relative grid gap-x-(--_gap) items-center py-2 px-3 rounded bg-surface;
+    @apply grid-cols-[auto_minmax(0,1fr)_auto] border border-solid border-(color:--color-border);
+    @apply transition-[border-color,opacity] duration-fast ease-nui;
+    @apply animate-[nui-upload-appear_var(--transition-duration-normal)_var(--ease-nui)];
     grid-template-areas:
       'leading body trailing'
       'progress progress progress';
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    border: 1px solid var(--color-border);
-    transition:
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      opacity var(--transition-duration-fast) var(--ease-nui);
-    animation: nui-upload-appear var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-upload-item .nui-row__leading {
-    @apply inline-(--_thumb) block-(--_thumb) rounded-sm overflow-hidden;
+    @apply inline-(--_thumb) block-(--_thumb) rounded-sm overflow-hidden bg-surface-muted bg-none;
     grid-area: leading;
-    background: var(--color-surface-muted);
   }
   .nui-upload-item .nui-row__body {
     grid-area: body;
@@ -109,8 +101,7 @@
     @apply block inline-full block-full object-cover;
   }
   .nui-upload-item__icon {
-    inline-size: 1.25rem;
-    block-size: 1.25rem;
+    @apply inline-[1.25rem] block-[1.25rem];
   }
   .nui-upload-item__actions {
     @apply inline-flex gap-1;
@@ -129,8 +120,7 @@
     border-color: color-mix(in oklab, var(--color-error) 40%, var(--color-border));
   }
   .nui-upload--layout-grid .nui-upload__items {
-    @apply gap-(--_gap);
-    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+    @apply gap-(--_gap) grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))];
   }
   .nui-upload--layout-grid .nui-upload-item {
     @apply grid-cols-1 gap-y-2 items-start p-2;
@@ -146,11 +136,8 @@
     @apply inline-(--_icon) block-(--_icon);
   }
   .nui-upload--layout-grid .nui-upload-item .nui-row__trailing {
-    @apply absolute inset-bs-3 inset-e-3 rounded-sm opacity-0;
-    padding: 2px;
-    background: var(--color-surface-overlay);
-    box-shadow: var(--shadow-sm);
-    transition: opacity var(--transition-duration-fast) var(--ease-nui);
+    @apply absolute inset-bs-3 inset-e-3 rounded-sm opacity-0 p-[2px] bg-surface-overlay bg-none;
+    @apply shadow-sm transition-opacity duration-fast ease-nui;
   }
   .nui-upload--layout-grid .nui-upload-item:hover .nui-row__trailing,
   .nui-upload--layout-grid .nui-upload-item:focus-within .nui-row__trailing,
@@ -203,11 +190,8 @@
     --_radius: var(--radius-full);
 
     @apply relative inline-grid flex-none m-0 p-0 rounded-(--_radius) text-inherit cursor-pointer;
-    border: 0;
-    background: none;
-    transition:
-      opacity var(--transition-duration-fast) var(--ease-nui),
-      outline-color var(--transition-duration-fast) var(--ease-nui);
+    @apply border-0 border-none bg-transparent bg-none transition-[opacity,outline-color];
+    @apply duration-fast ease-nui;
   }
   .nui-avatar-upload--shape-square .nui-avatar-upload__trigger {
     --_radius: --theme(--radius-md inline);
@@ -217,24 +201,21 @@
   }
   .nui-avatar-upload__trigger:focus-visible {
     @apply outline-(length:--focus-ring-width) outline-ring;
-    outline-offset: calc(var(--focus-ring-offset) + var(--_ring) + var(--_ring-gap));
+    @apply outline-offset-[calc(var(--focus-ring-offset)_+_var(--_ring)_+_var(--_ring-gap))];
   }
   .nui-avatar-upload__avatar {
-    transition: opacity var(--transition-duration-fast) var(--ease-nui);
+    @apply transition-opacity duration-fast ease-nui;
   }
   .nui-avatar-upload__ring {
     @apply absolute p-(--_ring) pointer-events-none;
-    inset: calc(-1 * (var(--_ring) + var(--_ring-gap)));
-    border-radius: calc(var(--_radius) + var(--_ring) + var(--_ring-gap));
-    background: conic-gradient(
-      var(--color-primary) calc(var(--_progress, 0) * 1turn),
-      var(--color-border) 0
-    );
+    @apply inset-[calc(-1_*_(var(--_ring)_+_var(--_ring-gap)))];
+    @apply rounded-[calc(var(--_radius)_+_var(--_ring)_+_var(--_ring-gap))] bg-transparent;
+    @apply bg-[conic-gradient(_var(--color-primary)_calc(var(--_progress,0)_*_1turn),var(--color-border)_0_)];
+    @apply animate-[nui-avatar-upload-ring_var(--transition-duration-normal)_var(--ease-nui)];
     mask:
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
-    mask-composite: exclude;
-    animation: nui-avatar-upload-ring var(--transition-duration-normal) var(--ease-nui);
+    @apply mask-exclude;
   }
   @keyframes nui-avatar-upload-ring {
     from {
@@ -245,30 +226,24 @@
   .nui-avatar-upload__badge {
     @apply box-border absolute inset-be-(--_badge-offset) inset-e-(--_badge-offset) grid;
     @apply place-items-center inline-(--_badge) block-(--_badge) rounded-full;
-    @apply text-primary-foreground;
-    background: var(--color-primary);
-    box-shadow: 0 0 0 2px var(--color-surface-ring);
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      color var(--transition-duration-fast) var(--ease-nui),
-      opacity var(--transition-duration-fast) var(--ease-nui);
+    @apply text-primary-foreground bg-primary bg-none shadow-[0_0_0_2px_var(--color-surface-ring)];
+    @apply transition-[background-color,color,opacity] duration-fast ease-nui;
   }
   .nui-avatar-upload__badge > .nui-icon {
     @apply inline-(--_glyph) block-(--_glyph);
   }
   .nui-avatar-upload__badge .nui-icon__glyph {
-    stroke-width: 2.5;
+    @apply stroke-[length:2.5];
   }
   .nui-avatar-upload--busy .nui-avatar-upload__badge {
     @apply opacity-0;
   }
   .nui-avatar-upload--dragging .nui-avatar-upload__trigger {
     @apply outline-(length:--focus-ring-width) outline-primary;
-    outline-offset: calc(var(--focus-ring-offset) + var(--_ring) + var(--_ring-gap));
+    @apply outline-offset-[calc(var(--focus-ring-offset)_+_var(--_ring)_+_var(--_ring-gap))];
   }
   .nui-avatar-upload--invalid .nui-avatar-upload__badge {
-    @apply text-error-foreground;
-    background: var(--color-error);
+    @apply text-error-foreground bg-error bg-none;
   }
   .nui-avatar-upload--disabled .nui-avatar-upload__trigger {
     @apply opacity-disabled cursor-not-allowed;

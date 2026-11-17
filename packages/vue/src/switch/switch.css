@@ -7,8 +7,7 @@
     --_font-size: var(--text-sm);
 
     @apply box-border relative inline-flex items-start gap-2 text-foreground font-sans;
-    @apply text-(length:--_font-size) cursor-pointer select-none select-none isolate;
-    line-height: --theme(--leading-label inline);
+    @apply text-(length:--_font-size) cursor-pointer select-none select-none isolate leading-label;
   }
   .nui-switch--size-sm {
     --_track-inline: 2rem;
@@ -24,27 +23,21 @@
   }
   .nui-switch__control {
     @apply absolute z-1 inset-s-0 inline-(--_track-inline) block-(--_track-block) m-0 opacity-0;
-    @apply appearance-none;
-    inset-block-start: calc((1lh - var(--_track-block)) / 2);
-    cursor: inherit;
+    @apply appearance-none inset-bs-[calc((1lh_-_var(--_track-block))_/_2)] cursor-[inherit];
   }
   .nui-switch__track {
     @apply pointer-events-none relative flex-none inline-(--_track-inline) block-(--_track-block);
-    @apply rounded-full bg-border-strong;
-    margin-block-start: calc((1lh - var(--_track-block)) / 2);
-    transition: background-color var(--transition-duration-normal) var(--ease-nui);
+    @apply rounded-full bg-border-strong mbs-[calc((1lh_-_var(--_track-block))_/_2)];
+    @apply transition-[background-color] duration-normal ease-nui;
   }
   .nui-switch__thumb {
     --_travel: calc(var(--_track-inline) - var(--_thumb) - 2 * var(--_inset));
     --_shift: 0px;
 
     @apply absolute inset-s-(--_inset) inline-(--_thumb) block-(--_thumb) rounded-full bg-surface;
-    @apply translate-x-(--_shift);
-    inset-block-start: calc((var(--_track-block) - var(--_thumb)) / 2);
-    box-shadow: var(--shadow-sm);
-    transition:
-      translate var(--transition-duration-normal) var(--ease-nui),
-      scale var(--transition-duration-fast) var(--ease-nui);
+    @apply translate-x-(--_shift) inset-bs-[calc((var(--_track-block)_-_var(--_thumb))_/_2)];
+    @apply shadow-sm transition-[translate,scale];
+    @apply duration-[var(--transition-duration-normal),var(--transition-duration-fast)] ease-nui;
   }
   .nui-switch__control:checked + .nui-switch__track {
     @apply bg-primary;
@@ -56,7 +49,7 @@
     --_shift: calc(-1 * var(--_travel));
   }
   .nui-switch__control:active:not(:disabled) + .nui-switch__track .nui-switch__thumb {
-    scale: 1.15 0.9;
+    @apply scale-x-115 scale-y-90;
   }
   .nui-switch__control:focus-visible + .nui-switch__track {
     @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);

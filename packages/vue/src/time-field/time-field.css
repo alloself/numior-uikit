@@ -8,21 +8,17 @@
     --_segment-padding: 0.125rem;
 
     @apply inline-flex flex-initial items-center min-inline-0 tabular-nums;
-    margin-inline: calc(var(--_segment-padding) * -1);
-    min-block-size: calc(var(--_height) - 2px);
+    @apply mx-[calc(var(--_segment-padding)_*_-1)] min-block-[calc(var(--_height)_-_2px)];
     direction: ltr;
     unicode-bidi: isolate;
   }
   .nui-time-field__segment {
     @apply box-content p-(--_segment-padding) rounded-(--_segment-radius) bg-transparent;
-    @apply text-inherit text-center caret-transparent appearance-none;
-    inline-size: 2ch;
+    @apply text-inherit text-center caret-transparent appearance-none inline-[2ch];
+    @apply transition-[background-color,color] duration-fast ease-nui;
     border: 0;
     font: inherit;
     outline: none;
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-time-field__segment::placeholder {
     @apply text-muted-foreground opacity-100;
@@ -34,8 +30,7 @@
     @apply bg-primary-soft text-primary-soft-foreground;
   }
   .nui-time-field__segment--type-dayPeriod {
-    @apply inline-auto field-sizing-content;
-    min-inline-size: 2.5ch;
+    @apply inline-auto field-sizing-content min-inline-[2.5ch];
   }
   .nui-time-field__literal {
     @apply text-muted-foreground;
@@ -62,9 +57,8 @@
     --_row: 2.25rem;
     --_rows: 5;
 
-    @apply box-border fixed inset-auto m-0 p-2 border border-border rounded bg-surface-overlay;
-    @apply text-foreground font-sans opacity-0;
-    box-shadow: var(--shadow-md);
+    @apply box-border fixed inset-auto m-0 p-2 border border-border border-solid rounded;
+    @apply bg-surface-overlay text-foreground font-sans opacity-0 shadow-md;
     translate: var(--_shift);
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),
@@ -87,21 +81,17 @@
   }
   .nui-time-field__wheels::before {
     @apply absolute inset-x-0 inset-bs-1/2 block-(--_row) pointer-events-none;
-    border-radius: calc(--theme(--radius inline) - 2px);
+    @apply rounded-[calc(--theme(--radius_inline)_-_2px)] translate-x-0 translate-y-[-50%];
+    @apply content-[''];
     background: color-mix(in oklab, var(--color-foreground) 8%, transparent);
-    translate: 0 -50%;
-    content: '';
   }
   .nui-time-field__wheel {
     @apply box-border relative overflow-y-auto overscroll-contain scroll-smooth scrollbar-none;
-    @apply touch-pan-y cursor-grab;
-    block-size: calc(var(--_row) * var(--_rows));
-    min-inline-size: 3.25rem;
-    padding-block: calc(var(--_row) * (var(--_rows) - 1) / 2);
+    @apply touch-pan-y cursor-grab block-[calc(var(--_row)_*_var(--_rows))] min-inline-[3.25rem];
+    @apply py-[calc(var(--_row)_*_(var(--_rows)_-_1)_/_2)] snap-y snap-mandatory;
+    @apply mask-[linear-gradient(to_bottom,transparent,#000_38%,#000_62%,transparent)];
     overflow-anchor: none;
-    scroll-snap-type: y mandatory;
     outline: none;
-    mask-image: linear-gradient(to bottom, transparent, #000 38%, #000 62%, transparent);
   }
   .nui-time-field__wheel::-webkit-scrollbar {
     @apply hidden;
@@ -109,24 +99,21 @@
   .nui-time-field__wheel-item {
     @apply box-border flex items-center justify-center block-(--_row) px-3 text-muted-foreground;
     @apply whitespace-nowrap snap-center cursor-pointer select-none;
-    border-radius: calc(--theme(--radius inline) - 2px);
-    transition:
-      color var(--transition-duration-fast) var(--ease-nui),
-      outline-color var(--transition-duration-fast) var(--ease-nui);
+    @apply rounded-[calc(--theme(--radius_inline)_-_2px)] transition-[color,outline-color];
+    @apply duration-fast ease-nui delay-0 transition-normal;
   }
   .nui-time-field__wheel-item--selected {
-    @apply text-foreground;
-    font-weight: 500;
+    @apply text-foreground font-medium;
   }
   .nui-time-field__wheel:focus-visible .nui-time-field__wheel-item--selected {
-    @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-width);
+    @apply outline-(length:--focus-ring-width) outline-ring outline-solid;
+    @apply -outline-offset-(--focus-ring-width);
   }
   .nui-time-field__wheel-item--disabled {
     @apply opacity-disabled cursor-not-allowed;
   }
   .nui-time-field__wheel-separator {
-    @apply relative text-foreground;
-    font-weight: 500;
+    @apply relative text-foreground font-medium;
   }
   .nui-time-field__empty {
     @apply m-0 py-2 px-3 text-muted-foreground text-(length:--text-sm);

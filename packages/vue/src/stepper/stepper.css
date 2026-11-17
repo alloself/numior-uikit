@@ -3,12 +3,10 @@
     --_indicator: var(--spacing-control-sm);
     --_pad: var(--spacing);
 
-    @apply box-border text-foreground font-sans text-(length:--text-sm);
-    line-height: --theme(--leading-label inline);
+    @apply box-border text-foreground font-sans text-(length:--text-sm) leading-label;
   }
   .nui-stepper--orientation-horizontal {
-    @apply inline-full;
-    container-type: inline-size;
+    @apply inline-full @container;
   }
   .nui-stepper__list {
     @apply flex gap-3 m-0 p-0 list-none;
@@ -22,8 +20,7 @@
     --_connector-fill: 0;
     --_row-weight: 400;
 
-    @apply box-border flex items-start gap-3 min-inline-0;
-    flex: 1 1 0;
+    @apply box-border flex items-start gap-3 min-inline-0 flex-[1_1_0];
   }
   .nui-stepper__item:last-child {
     @apply flex-initial;
@@ -57,13 +54,10 @@
   }
   .nui-stepper__step {
     @apply box-border flex items-center gap-2 min-inline-0 p-(--_pad) rounded bg-transparent;
-    @apply text-(--_label) text-start;
-    margin: calc(-1 * var(--_pad));
-    border: 0;
+    @apply text-(--_label) text-start m-[calc(-1_*_var(--_pad))] border-0 border-none;
+    @apply transition-[background-color,color];
+    @apply duration-[var(--transition-duration-fast),var(--transition-duration-normal)] ease-nui;
     font: inherit;
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      color var(--transition-duration-normal) var(--ease-nui);
   }
   .nui-stepper__item--clickable .nui-stepper__step {
     @apply cursor-pointer;
@@ -76,45 +70,35 @@
   }
   .nui-stepper__indicator {
     @apply box-border inline-grid flex-none place-items-center inline-(--_indicator);
-    @apply block-(--_indicator) border border-(--_ring) rounded-full bg-(--_fill) text-(--_ink);
-    @apply text-(length:--text-xs) tabular-nums leading-control;
-    box-shadow: 0 0 0 3px var(--_halo);
-    font-weight: 600;
-    transition:
-      background-color var(--transition-duration-normal) var(--ease-nui),
-      border-color var(--transition-duration-normal) var(--ease-nui),
-      box-shadow var(--transition-duration-normal) var(--ease-nui),
-      color var(--transition-duration-normal) var(--ease-nui);
+    @apply block-(--_indicator) border border-(--_ring) border-solid rounded-full bg-(--_fill);
+    @apply text-(--_ink) text-(length:--text-xs) tabular-nums leading-control;
+    @apply shadow-[0_0_0_3px_var(--_halo)] font-semibold;
+    @apply transition-[background-color,border-color,box-shadow,color] duration-normal ease-nui;
   }
   .nui-stepper__mark {
-    inline-size: 1rem;
-    block-size: 1rem;
-    animation: nui-stepper-mark var(--transition-duration-normal) var(--ease-nui);
+    @apply inline-[1rem] block-[1rem];
+    @apply animate-[nui-stepper-mark_var(--transition-duration-normal)_var(--ease-nui)];
   }
   .nui-stepper__status {
     @apply absolute inline-px block-px overflow-hidden whitespace-nowrap;
     clip-path: inset(50%);
   }
   .nui-stepper__connector {
-    @apply relative flex-auto min-inline-4 rounded-full bg-border overflow-hidden;
-    block-size: 2px;
-    margin-block-start: calc(var(--_indicator) / 2 - 1px);
+    @apply relative flex-auto min-inline-4 rounded-full bg-border overflow-hidden block-[2px];
+    @apply mbs-[calc(var(--_indicator)_/_2_-_1px)];
   }
   .nui-stepper__connector::after {
-    @apply absolute inset-0 bg-primary;
-    content: '';
-    transform-origin: left;
-    scale: var(--_connector-fill) 1;
-    transition: scale var(--transition-duration-slow) var(--ease-nui);
+    @apply absolute inset-0 bg-primary content-[''] origin-[left] scale-x-[var(--_connector-fill)];
+    @apply scale-y-100 transition-[scale] duration-slow ease-nui;
   }
   .nui-stepper__connector:dir(rtl)::after {
-    transform-origin: right;
+    @apply origin-[right];
   }
   .nui-stepper__summary {
     @apply hidden items-baseline justify-between gap-3 mbs-3 mbe-0 mx-0;
   }
   .nui-stepper__summary-label {
-    font-weight: 500;
+    @apply font-medium;
   }
   .nui-stepper__summary-count {
     @apply text-muted-foreground text-(length:--text-xs) leading-control tabular-nums;
@@ -132,17 +116,14 @@
     @apply items-start;
   }
   .nui-stepper--orientation-vertical .nui-row__body {
-    padding-block-start: calc((var(--_indicator) - 1lh) / 2);
+    @apply pbs-[calc((var(--_indicator)_-_1lh)_/_2)];
   }
   .nui-stepper--orientation-vertical .nui-stepper__connector {
-    @apply absolute min-inline-0 block-auto m-0;
-    inset-block: calc(var(--_indicator) + var(--spacing)) var(--spacing);
-    inset-inline-start: calc(var(--_indicator) / 2 - 1px);
-    inline-size: 2px;
+    @apply absolute min-inline-0 block-auto m-0 inset-bs-[calc(var(--_indicator)_+_var(--spacing))];
+    @apply inset-be-(--spacing) inset-s-[calc(var(--_indicator)_/_2_-_1px)] inline-[2px];
   }
   .nui-stepper--orientation-vertical .nui-stepper__connector::after {
-    transform-origin: top;
-    scale: 1 var(--_connector-fill);
+    @apply origin-[top] scale-x-100 scale-y-[var(--_connector-fill)];
   }
   @container (max-width: 32rem) {
     .nui-stepper--orientation-horizontal .nui-row__body {

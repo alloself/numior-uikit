@@ -29,9 +29,8 @@
   .nui-layout:not(.nui-layout--mobile)
     > .nui-layout__row:has(> .nui-sidebar--variant-inset)
     > .nui-layout__body {
-    @apply m-(--_inset-gap) rounded-(--_inset-radius) bg-surface;
-    box-shadow: var(--shadow-sm);
-    transition: margin var(--transition-duration-normal) var(--ease-nui);
+    @apply m-(--_inset-gap) rounded-(--_inset-radius) bg-surface shadow-sm transition-[margin];
+    @apply duration-normal ease-nui;
   }
   .nui-layout:not(.nui-layout--mobile)
     > .nui-layout__row:has(
@@ -66,11 +65,10 @@
   .nui-layout--sticky > .nui-layout__row > .nui-sidebar,
   .nui-layout--sticky .nui-layout__end {
     @apply sticky inset-bs-(--_sticky-top) self-start min-block-0;
-    block-size: calc(100dvh - var(--_sticky-top));
+    @apply block-[calc(100dvh_-_var(--_sticky-top))];
   }
   .nui-layout--sticky .nui-layout__end {
-    @apply block-auto overflow-y-auto scrollbar-thin;
-    max-block-size: calc(100dvh - var(--_sticky-top));
+    @apply block-auto overflow-y-auto scrollbar-thin max-block-[calc(100dvh_-_var(--_sticky-top))];
   }
   @media (max-width: 48rem) {
     .nui-layout--pending > .nui-layout__row > .nui-sidebar {
@@ -88,8 +86,7 @@
 
     @apply box-border flex flex-none items-center gap-(--_start-gap) pbs-px px-(--_bar-padding);
     @apply border-be border-be-border bg-surface text-foreground font-sans text-(length:--text-sm);
-    min-block-size: var(--_bar-size, 3.5rem);
-    line-height: --theme(--leading-label inline);
+    @apply min-block-[var(--_bar-size,3.5rem)] leading-label;
   }
   .nui-app-bar--sticky {
     @apply sticky inset-bs-0 z-1;
@@ -112,14 +109,13 @@
     @apply flex-auto min-inline-0 px-(--_content-padding);
   }
   .nui-app-bar__body {
-    @apply flex-auto min-inline-0;
-    font-weight: 600;
+    @apply flex-auto min-inline-0 font-semibold;
   }
   .nui-app-bar__start > .nui-button--variant-ghost.nui-button--icon-only:first-child {
-    margin-inline-start: calc(var(--_start-hang) * (var(--spacing-icon) - var(--_height)) / 2);
+    @apply ms-[calc(var(--_start-hang)_*_(var(--spacing-icon)_-_var(--_height))_/_2)];
   }
   .nui-app-bar__end > .nui-button--variant-ghost.nui-button--icon-only:last-of-type {
-    margin-inline-end: calc((var(--spacing-icon) - var(--_height)) / 2);
+    @apply me-[calc((var(--spacing-icon)_-_var(--_height))_/_2)];
   }
   .nui-layout > .nui-app-bar,
   .nui-layout__body > .nui-app-bar {

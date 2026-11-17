@@ -11,16 +11,13 @@
   .nui-breadcrumbs__link {
     --_tone: var(--color-muted-foreground);
 
-    @apply box-border inline-flex items-center gap-1 px-1 -mx-1;
-    min-block-size: 1.5rem;
+    @apply box-border inline-flex items-center gap-1 px-1 -mx-1 min-block-[1.5rem];
   }
   .nui-breadcrumbs__link:hover {
     @apply text-foreground;
   }
   .nui-breadcrumbs__current {
-    @apply inline-flex items-center gap-1 text-foreground;
-    min-block-size: 1.5rem;
-    font-weight: 500;
+    @apply inline-flex items-center gap-1 text-foreground min-block-[1.5rem] font-medium;
   }
   .nui-breadcrumbs__icon {
     @apply inline-icon-sm block-icon-sm;

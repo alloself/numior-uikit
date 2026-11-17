@@ -4,8 +4,7 @@
     --_font-size: var(--text-control-md);
 
     @apply box-border inline-full flex flex-wrap items-center gap-3 text-foreground font-sans;
-    @apply text-(length:--text-sm) leading-control;
-    container-type: inline-size;
+    @apply text-(length:--text-sm) leading-control @container;
   }
   .nui-pagination--size-sm {
     --_height: var(--spacing-control-sm);
@@ -26,8 +25,7 @@
     @apply text-muted-foreground;
   }
   .nui-pagination__select {
-    @apply inline-auto;
-    min-inline-size: 5rem;
+    @apply inline-auto min-inline-[5rem];
   }
   .nui-pagination__list {
     @apply flex items-center gap-1 m-0 ms-auto p-0 list-none;
@@ -38,14 +36,10 @@
 
     @apply box-border inline-flex items-center justify-center min-inline-(--_height);
     @apply min-block-(--_height) py-0 px-2 border border-transparent rounded bg-transparent;
-    @apply text-(--_tone) no-underline cursor-pointer;
+    @apply text-(--_tone) no-underline cursor-pointer transition-[background-color,color];
+    @apply duration-fast ease-nui;
     font: inherit;
-    font-size: var(--_font-size);
-    font-weight: 500;
-    line-height: var(--leading-control);
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      color var(--transition-duration-fast) var(--ease-nui);
+    @apply text-(length:--_font-size) font-medium leading-control;
   }
   .nui-pagination__control:hover:not(:disabled, .nui-link--disabled) {
     @apply bg-(--_hover) text-(--_tone);
@@ -78,8 +72,7 @@
     @apply hidden items-center;
   }
   .nui-pagination__status {
-    @apply text-center tabular-nums;
-    min-inline-size: 3rem;
+    @apply text-center tabular-nums min-inline-[3rem];
     unicode-bidi: plaintext;
   }
   @container (max-width: 28rem) {

@@ -1,8 +1,7 @@
 @layer components {
   .nui-field {
     @apply box-border grid grid-cols-1 content-start gap-1 min-inline-0 m-0 p-0 text-foreground;
-    @apply font-sans;
-    border: 0;
+    @apply font-sans border-0 border-none;
   }
   .nui-field--inline {
     @apply inline-grid justify-items-start;
@@ -14,8 +13,7 @@
     @apply p-0 mbe-1;
   }
   .nui-field__required {
-    @apply text-error;
-    margin-inline-start: 0.2em;
+    @apply text-error ms-[0.2em];
   }
   .nui-field__description,
   .nui-field__error {
@@ -25,12 +23,10 @@
     @apply text-muted-foreground;
   }
   .nui-field__reserve {
-    @apply block;
-    min-block-size: calc(var(--text-sm) * var(--leading-normal));
+    @apply block min-block-[calc(var(--text-sm)_*_var(--leading-normal))];
   }
   .nui-field__error {
-    @apply text-error;
-    animation: nui-field-reveal var(--transition-duration-normal) var(--ease-nui);
+    @apply text-error animate-[nui-field-reveal_var(--transition-duration-normal)_var(--ease-nui)];
   }
   .nui-field--disabled {
     @apply caret-transparent;

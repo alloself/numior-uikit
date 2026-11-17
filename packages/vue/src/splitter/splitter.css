@@ -12,38 +12,31 @@
     @apply box-border min-inline-0 min-block-0 overflow-auto;
   }
   .nui-splitter__pane--start {
-    flex: 0 0 round(down, calc(var(--_ratio) * 100% - var(--_divider) / 2), 1px);
+    @apply flex-[0_0_round(down,calc(var(--_ratio)_*_100%_-_var(--_divider)_/_2),1px)];
   }
   .nui-splitter__pane--end {
-    flex: 1 1 0;
+    @apply flex-[1_1_0];
   }
   .nui-splitter__divider {
     @apply box-border relative grid place-items-center cursor-col-resize touch-none select-none;
-    @apply -outline-offset-2;
-    flex: 0 0 var(--_divider);
+    @apply -outline-offset-2 flex-[0_0_var(--_divider)];
   }
   .nui-splitter--orientation-vertical .nui-splitter__divider {
     @apply cursor-row-resize;
   }
   .nui-splitter__divider::before {
-    @apply absolute inline-px justify-self-center bg-border;
-    content: '';
-    inset: 0 auto;
-    transition: background-color var(--transition-duration-fast) var(--ease-nui);
+    @apply absolute inline-px justify-self-center bg-border content-[''] inset-y-0 inset-x-auto;
+    @apply transition-[background-color] duration-fast ease-nui;
   }
   .nui-splitter--orientation-vertical .nui-splitter__divider::before {
-    @apply inline-auto block-px self-center justify-self-stretch;
-    inset: auto 0;
+    @apply inline-auto block-px self-center justify-self-stretch inset-y-auto inset-x-0;
   }
   .nui-splitter__grip {
-    @apply relative z-1 rounded-full bg-border-strong;
-    inline-size: 5px;
-    block-size: 2rem;
-    transition: background-color var(--transition-duration-fast) var(--ease-nui);
+    @apply relative z-1 rounded-full bg-border-strong inline-[5px] block-[2rem];
+    @apply transition-[background-color] duration-fast ease-nui;
   }
   .nui-splitter--orientation-vertical .nui-splitter__grip {
-    inline-size: 2rem;
-    block-size: 5px;
+    @apply inline-[2rem] block-[5px];
   }
   .nui-splitter__divider:hover .nui-splitter__grip,
   .nui-splitter--dragging .nui-splitter__grip {

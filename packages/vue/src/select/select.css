@@ -19,18 +19,15 @@
     --_font-size: var(--text-control-lg);
   }
   .nui-select__trigger {
-    @apply box-border inline-flex items-center gap-2 inline-full min-inline-0;
-    @apply min-block-(--_height) py-0 border border-border rounded bg-surface;
-    @apply text-foreground text-start cursor-pointer;
-    padding-inline: var(--_padding) calc(var(--_padding) + var(--_chevron) + --spacing(2));
+    @apply box-border inline-flex items-center gap-2 inline-full min-inline-0 min-block-(--_height);
+    @apply py-0 border border-border rounded bg-surface text-foreground text-start cursor-pointer;
+    @apply ps-(--_padding) pe-[calc(var(--_padding)_+_var(--_chevron)_+_--spacing(2))];
+    @apply transition-[border-color,outline-color] duration-fast ease-nui;
     font: inherit;
     @apply text-(length:--_font-size) leading-control;
-    transition:
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      outline-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-select--clearable .nui-select__value {
-    padding-inline-end: calc(var(--spacing-control-xs) + --spacing(2));
+    @apply pe-[calc(var(--spacing-control-xs)_+_--spacing(2))];
   }
   .nui-select:not(.nui-select--invalid) .nui-select__trigger:hover:not(:disabled, :focus-visible) {
     @apply border-border-strong;
@@ -60,15 +57,14 @@
     @apply text-muted-foreground;
   }
   .nui-select__chevron {
-    @apply flex-none text-muted-foreground;
-    transition: rotate var(--transition-duration-fast) var(--ease-nui);
+    @apply flex-none text-muted-foreground transition-[rotate] duration-fast ease-nui;
   }
   .nui-select--open .nui-select__chevron {
     @apply rotate-180;
   }
   .nui-select__toggle {
     @apply absolute inset-bs-1/2 -translate-y-1/2;
-    inset-inline-end: calc(var(--_padding) - (var(--spacing-control-xs) - var(--_chevron)) / 2);
+    @apply inset-e-[calc(var(--_padding)_-_(var(--spacing-control-xs)_-_var(--_chevron))_/_2)];
   }
   .nui-select__clear {
     @apply absolute inset-bs-1/2 end-(--_clear-inset) -translate-y-1/2;

@@ -11,8 +11,7 @@
     --_font-size: var(--text-sm);
 
     @apply box-border relative inline-flex items-start gap-2 text-foreground font-sans;
-    @apply text-(length:--_font-size) cursor-pointer select-none select-none isolate;
-    line-height: --theme(--leading-label inline);
+    @apply text-(length:--_font-size) cursor-pointer select-none select-none isolate leading-label;
   }
   .nui-checkbox--size-sm {
     --_size: 1rem;
@@ -24,27 +23,18 @@
   }
   .nui-checkbox__control {
     @apply absolute z-1 inset-s-0 inline-(--_size) block-(--_size) m-0 opacity-0 appearance-none;
-    inset-block-start: calc((1lh - var(--_size)) / 2);
-    cursor: inherit;
+    @apply inset-bs-[calc((1lh_-_var(--_size))_/_2)] cursor-[inherit];
   }
   .nui-checkbox__box {
     @apply box-border pointer-events-none inline-grid flex-none place-items-center inline-(--_size);
     @apply block-(--_size) border border-border-strong rounded-sm bg-surface;
-    @apply text-primary-foreground;
-    margin-block-start: calc((1lh - var(--_size)) / 2);
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      scale var(--transition-duration-fast) var(--ease-nui);
+    @apply text-primary-foreground mbs-[calc((1lh_-_var(--_size))_/_2)];
+    @apply transition-[background-color,border-color,scale] duration-fast ease-nui;
   }
   .nui-checkbox__mark {
-    @apply opacity-0;
-    inline-size: round(75%, 2px);
-    block-size: round(75%, 2px);
-    scale: 0.5;
-    transition:
-      opacity var(--transition-duration-fast) var(--ease-nui),
-      scale var(--transition-duration-normal) var(--ease-nui);
+    @apply opacity-0 inline-[round(75%,2px)] block-[round(75%,2px)] scale-50;
+    @apply transition-[opacity,scale];
+    @apply duration-[var(--transition-duration-fast),var(--transition-duration-normal)] ease-nui;
   }
   .nui-checkbox__control:checked + .nui-checkbox__box,
   .nui-checkbox__control:indeterminate + .nui-checkbox__box {
@@ -52,11 +42,10 @@
   }
   .nui-checkbox__control:checked + .nui-checkbox__box .nui-checkbox__mark,
   .nui-checkbox__control:indeterminate + .nui-checkbox__box .nui-checkbox__mark {
-    @apply opacity-100;
-    scale: 1;
+    @apply opacity-100 scale-100;
   }
   .nui-checkbox__control:active:not(:disabled) + .nui-checkbox__box {
-    scale: 0.92;
+    @apply scale-92;
   }
   .nui-checkbox:hover:not(.nui-checkbox--disabled, .nui-checkbox--readonly, .nui-checkbox--invalid)
     .nui-checkbox__box {

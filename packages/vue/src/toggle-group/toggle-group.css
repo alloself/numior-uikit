@@ -26,9 +26,8 @@
     --_fade-right: var(--_toggle-fade-end);
 
     @apply box-border flex flex-auto items-stretch gap-(--_gap) min-inline-0 p-(--_inset);
-    @apply overflow-x-auto overscroll-x-contain scrollbar-none;
-    border-radius: inherit;
-    scroll-padding-inline: var(--_edge);
+    @apply overflow-x-auto overscroll-x-contain scrollbar-none rounded-[inherit];
+    @apply scroll-px-(--_edge);
     transition:
       --_toggle-fade-start var(--transition-duration-fast) var(--ease-nui),
       --_toggle-fade-end var(--transition-duration-fast) var(--ease-nui);
@@ -41,13 +40,7 @@
     .nui-toggle-group__track--clipped-start,
     .nui-toggle-group__track--clipped-end
   ) {
-    mask-image: linear-gradient(
-      to right,
-      transparent calc(var(--_fade-left) * 0.4),
-      #000 var(--_fade-left),
-      #000 calc(100% - var(--_fade-right)),
-      transparent calc(100% - var(--_fade-right) * 0.4)
-    );
+    @apply mask-[linear-gradient(_to_right,transparent_calc(var(--_fade-left)_*_0.4),#000_var(--_fade-left),#000_calc(100%_-_var(--_fade-right)),transparent_calc(100%_-_var(--_fade-right)_*_0.4)_)];
   }
   .nui-toggle-group__track--clipped-start {
     --_toggle-fade-start: var(--_edge);
@@ -60,9 +53,7 @@
   }
   .nui-toggle-group__edge {
     @apply absolute inset-y-0 z-1 flex items-center opacity-0 invisible;
-    transition:
-      opacity var(--transition-duration-fast) var(--ease-nui),
-      visibility var(--transition-duration-fast) var(--ease-nui);
+    @apply transition-[opacity,visibility] duration-fast ease-nui;
   }
   .nui-toggle-group__edge--start {
     @apply inset-s-(--_inset);
@@ -74,7 +65,7 @@
     @apply opacity-100 visible;
   }
   .nui-toggle-group__scroll:dir(rtl) {
-    scale: -1 1;
+    @apply -scale-x-100 scale-y-100;
   }
   .nui-toggle-group--size-sm {
     --_height: var(--spacing-control-sm);
@@ -98,15 +89,9 @@
     @apply box-border relative inline-flex flex-auto items-center justify-center gap-2;
     @apply min-block-(--_height) px-(--_padding) border border-border rounded-none bg-(--_rest);
     @apply text-muted-foreground whitespace-nowrap cursor-pointer;
+    @apply transition-[background-color,border-color,color,box-shadow] duration-fast ease-nui;
     font: inherit;
-    font-size: var(--_font-size);
-    font-weight: var(--font-weight-medium);
-    line-height: var(--leading-control);
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      color var(--transition-duration-fast) var(--ease-nui),
-      box-shadow var(--transition-duration-fast) var(--ease-nui);
+    @apply text-(length:--_font-size) font-medium leading-control;
   }
   .nui-toggle-group--orientation-horizontal .nui-toggle-group__item ~ .nui-toggle-group__item {
     @apply -ms-px;
@@ -158,14 +143,12 @@
   .nui-toggle-group--variant-segmented .nui-toggle-group__item {
     --_rest: var(--color-surface-muted);
 
-    @apply m-0 border-transparent rounded-sm bg-transparent;
-    min-block-size: calc(var(--_height) - 4px);
+    @apply m-0 border-transparent rounded-sm bg-transparent min-block-[calc(var(--_height)_-_4px)];
   }
   .nui-toggle-group--variant-segmented .nui-toggle-group__item--selected {
     --_rest: var(--color-surface-elevated);
     --_label: var(--color-foreground);
 
-    @apply border-transparent bg-(--_rest);
-    box-shadow: var(--shadow-sm);
+    @apply border-transparent bg-(--_rest) shadow-sm;
   }
 }

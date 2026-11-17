@@ -11,13 +11,10 @@
     --_hover-shadow: var(--_shadow);
 
     @apply box-border relative flex flex-col gap-(--_gap) p-(--_padding) border border-(--_border);
-    @apply rounded-(--_radius) bg-(--_surface) text-foreground font-sans text-(length:--text-sm);
-    @apply leading-normal isolate;
+    @apply border-solid rounded-(--_radius) bg-(--_surface) text-foreground font-sans;
+    @apply text-(length:--text-sm) leading-normal isolate;
+    @apply transition-[border-color,box-shadow,background-color] duration-fast ease-nui;
     box-shadow: var(--_shadow);
-    transition:
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      box-shadow var(--transition-duration-fast) var(--ease-nui),
-      background-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-card--padding-xs {
     --_padding: --spacing(3);
@@ -67,25 +64,22 @@
     @apply flex flex-none items-center gap-1;
   }
   .nui-card__title {
-    @apply m-0 text-(length:--text-base) leading-control;
-    font-weight: 600;
+    @apply m-0 text-(length:--text-base) leading-control font-semibold;
   }
   .nui-card__action {
-    @apply p-0 rounded-none text-inherit text-start cursor-pointer;
-    border: 0;
-    background: none;
+    @apply p-0 rounded-none text-inherit text-start cursor-pointer border-0 border-none;
+    @apply bg-transparent bg-none;
     font: inherit;
   }
   .nui-card__action::after {
-    @apply absolute inset-0 rounded-(--_radius);
-    content: '';
+    @apply absolute inset-0 rounded-(--_radius) content-[''];
   }
   .nui-card .nui-card__action:focus-visible {
-    outline: none;
+    @apply outline-none;
   }
   .nui-card .nui-card__action:focus-visible::after {
     @apply outline-(length:--focus-ring-width) outline-ring;
-    outline-offset: calc(var(--focus-ring-offset) + 1px);
+    @apply outline-offset-[calc(var(--focus-ring-offset)_+_1px)] outline-solid;
   }
   .nui-card .nui-card__action:hover {
     @apply text-inherit;
@@ -101,7 +95,7 @@
   .nui-card__content--loading {
     --_lead: round(down, calc((1lh - 1em) / 2), 1px);
 
-    padding-block: var(--_lead) calc(1lh - 1em - var(--_lead));
+    @apply pbs-(--_lead) pbe-[calc(1lh_-_1em_-_var(--_lead))];
   }
   .nui-card__footer {
     @apply flex flex-wrap items-center gap-2;
@@ -110,20 +104,18 @@
     --_aspect: 16 / 9;
 
     @apply grid place-items-center overflow-hidden text-subtle-foreground;
-    margin-inline: calc(-1 * var(--_padding));
-    aspect-ratio: var(--_aspect);
-    background: var(--color-surface-muted);
+    @apply mx-[calc(-1_*_var(--_padding))] aspect-(--_aspect) bg-surface-muted bg-none;
   }
   .nui-card__media:first-child {
     @apply rounded-ss-(--_inner-radius) rounded-se-(--_inner-radius);
-    margin-block-start: calc(-1 * var(--_padding));
+    @apply mbs-[calc(-1_*_var(--_padding))];
   }
   .nui-card__media:last-child {
     @apply rounded-es-(--_inner-radius) rounded-ee-(--_inner-radius);
-    margin-block-end: calc(-1 * var(--_padding));
+    @apply mbe-[calc(-1_*_var(--_padding))];
   }
   .nui-card__media--loading {
-    background: none;
+    @apply bg-transparent bg-none;
   }
   .nui-card__media > .nui-card__skeleton {
     @apply rounded-none;
@@ -132,7 +124,6 @@
     @apply block inline-full block-full object-cover;
   }
   .nui-card__placeholder {
-    inline-size: 2rem;
-    block-size: 2rem;
+    @apply inline-[2rem] block-[2rem];
   }
 }

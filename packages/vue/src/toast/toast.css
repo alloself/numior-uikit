@@ -8,11 +8,10 @@
 
     @apply box-border fixed inset-auto inset-bs-(--_inset) inset-e-(--_inset) block-0 m-0 p-0;
     @apply bg-transparent text-inherit overflow-visible pointer-events-none;
-    inline-size: min(var(--_width), calc(100vw - 2 * var(--_inset)));
-    border: 0;
+    @apply inline-[min(var(--_width),calc(100vw_-_2_*_var(--_inset)))] border-0 border-none;
   }
   .nui-toaster--placement-top-start {
-    inset-inline: var(--_inset) auto;
+    @apply inset-s-(--_inset) inset-e-auto;
   }
   .nui-toaster--placement-top {
     @apply inset-x-0 mx-auto;
@@ -22,10 +21,10 @@
   .nui-toaster--placement-bottom-end {
     --_direction: -1;
 
-    inset-block: auto var(--_inset);
+    @apply inset-bs-auto inset-be-(--_inset);
   }
   .nui-toaster--placement-bottom-start {
-    inset-inline: var(--_inset) auto;
+    @apply inset-s-(--_inset) inset-e-auto;
   }
   .nui-toaster--placement-bottom {
     @apply inset-x-0 mx-auto;
@@ -45,36 +44,26 @@
     --_exit: 0px;
 
     @apply absolute inset-x-0 inset-bs-0 grid items-start box-border block-(--_size) rounded;
-    @apply bg-transparent opacity-100 pointer-events-auto;
-    z-index: calc(100 - var(--_index));
-    outline: 1px solid transparent;
-    outline-offset: -1px;
-    box-shadow: none;
-    translate: 0 calc(var(--_direction) * var(--_position) + var(--_exit));
-    scale: var(--_scale);
-    transition:
-      translate var(--transition-duration-slow) var(--ease-nui),
-      scale var(--transition-duration-slow) var(--ease-nui),
-      block-size var(--transition-duration-slow) var(--ease-nui),
-      opacity var(--transition-duration-normal) var(--ease-nui),
-      outline-color var(--transition-duration-normal) var(--ease-nui),
-      background-color var(--transition-duration-normal) var(--ease-nui),
-      box-shadow var(--transition-duration-normal) var(--ease-nui);
+    @apply bg-transparent opacity-100 pointer-events-auto z-[calc(100_-_var(--_index))] outline;
+    @apply outline-solid outline-transparent -outline-offset-1 shadow-none translate-x-0;
+    @apply translate-y-[calc(var(--_direction)_*_var(--_position)_+_var(--_exit))];
+    @apply scale-[var(--_scale)];
+    @apply transition-[translate,scale,block-size,opacity,outline-color,background-color,box-shadow];
+    @apply duration-[var(--transition-duration-slow),var(--transition-duration-slow),var(--transition-duration-slow),var(--transition-duration-normal),var(--transition-duration-normal),var(--transition-duration-normal),var(--transition-duration-normal)];
+    @apply ease-nui;
   }
   .nui-toaster__item::after {
-    @apply absolute inset-x-0 inset-bs-full;
-    content: '';
-    block-size: calc(var(--_gap) + 1px);
+    @apply absolute inset-x-0 inset-bs-full content-[''] block-[calc(var(--_gap)_+_1px)];
   }
   .nui-toaster--placement-bottom-start .nui-toaster__item,
   .nui-toaster--placement-bottom .nui-toaster__item,
   .nui-toaster--placement-bottom-end .nui-toaster__item {
-    inset-block: auto 0;
+    @apply inset-bs-auto inset-be-0;
   }
   .nui-toaster--placement-bottom-start .nui-toaster__item::after,
   .nui-toaster--placement-bottom .nui-toaster__item::after,
   .nui-toaster--placement-bottom-end .nui-toaster__item::after {
-    inset-block: auto 100%;
+    @apply inset-bs-auto inset-be-full;
   }
   @starting-style {
     .nui-toaster__item {
@@ -93,10 +82,8 @@
     --_position: calc(min(var(--_index), 2) * var(--_peek));
     --_scale: calc(1 - min(var(--_index), 2) * 0.05);
 
-    @apply outline-border bg-surface-overlay;
-    block-size: var(--_front-size, var(--_size));
-    box-shadow: var(--shadow-md);
-    opacity: clamp(0, 3 - var(--_index), 1);
+    @apply outline-border bg-surface-overlay block-[var(--_front-size,var(--_size))] shadow-md;
+    @apply opacity-[clamp(0,3_-_var(--_index),1)];
   }
   .nui-toaster:not(.nui-toaster--hovered, :focus-within, .nui-toaster--expanded)
     .nui-toaster__item--behind
@@ -108,14 +95,10 @@
     --_tone: var(--color-neutral);
     --_line: round(down, calc(var(--text-sm) * var(--leading-normal)), 0.25rem);
 
-    @apply box-border flex items-start gap-3 p-3 ps-4 border border-border rounded;
+    @apply box-border flex items-start gap-3 p-3 ps-4 border border-border border-solid rounded;
     @apply bg-surface-overlay text-foreground font-sans text-(length:--text-sm) leading-(--_line);
-    @apply opacity-100;
-    border-inline-start: 3px solid var(--_tone);
-    box-shadow: var(--shadow-md);
-    transition:
-      opacity var(--transition-duration-normal) var(--ease-nui),
-      visibility var(--transition-duration-normal);
+    @apply opacity-100 shadow-md transition-[opacity,visibility] duration-normal;
+    @apply ease-[var(--ease-nui),ease] border-s-3 border-s-(color:--_tone);
   }
   .nui-toast--leaving {
     @apply invisible pointer-events-none;
@@ -136,15 +119,13 @@
     @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-toast__icon {
-    @apply text-(--_tone);
-    margin-block-start: calc((var(--_line) - var(--spacing-icon)) / 2);
+    @apply text-(--_tone) mbs-[calc((var(--_line)_-_var(--spacing-icon))_/_2)];
   }
   .nui-toast__body {
     @apply grid flex-auto gap-1 min-inline-0;
   }
   .nui-toast__title {
-    @apply m-0;
-    font-weight: 600;
+    @apply m-0 font-semibold;
   }
   .nui-toast__description {
     @apply m-0 text-muted-foreground;
@@ -157,7 +138,6 @@
     @apply flex-none self-center py-0 rounded-sm;
   }
   .nui-toast__close {
-    @apply flex-none -me-1;
-    margin-block-start: calc((var(--_line) - var(--_height)) / 2);
+    @apply flex-none -me-1 mbs-[calc((var(--_line)_-_var(--_height))_/_2)];
   }
 }

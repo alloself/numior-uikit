@@ -37,12 +37,9 @@
   }
   .nui-otp-field__slot {
     @apply box-border relative grid place-items-center flex-initial inline-(--_height) min-inline-0;
-    @apply block-(--_height) border border-(--_border) bg-surface;
-    @apply outline-(length:--focus-ring-width) outline-transparent outline-offset-0 tabular-nums;
-    font-weight: 500;
-    transition:
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      outline-color var(--transition-duration-fast) var(--ease-nui);
+    @apply block-(--_height) border border-(--_border) border-solid bg-surface;
+    @apply outline-(length:--focus-ring-width) outline-transparent outline-offset-0 outline-solid;
+    @apply tabular-nums font-medium transition-[border-color,outline-color] duration-fast ease-nui;
   }
   .nui-otp-field__slot:not(:first-child) {
     @apply -ms-px;
@@ -65,33 +62,24 @@
   }
   .nui-otp-field__char,
   .nui-otp-field__dot {
-    animation: nui-otp-field-enter var(--transition-duration-fast) var(--ease-nui);
+    @apply animate-[nui-otp-field-enter_var(--transition-duration-fast)_var(--ease-nui)];
   }
   .nui-otp-field__dot {
-    @apply bg-current;
-    inline-size: 0.5em;
-    block-size: 0.5em;
-    border-radius: 50%;
-    transition: scale var(--transition-duration-normal) var(--ease-nui);
+    @apply bg-current inline-[0.5em] block-[0.5em] rounded-[50%] transition-[scale] duration-normal;
+    @apply ease-nui;
   }
   .nui-otp-field--secret .nui-otp-field__char {
-    @apply opacity-0;
-    scale: 0;
-    transition:
-      scale var(--transition-duration-normal) var(--ease-nui),
-      opacity var(--transition-duration-normal) var(--ease-nui);
+    @apply opacity-0 scale-0 transition-[scale,opacity] duration-normal ease-nui;
   }
   .nui-otp-field--secret .nui-otp-field__slot--revealed .nui-otp-field__char {
-    @apply opacity-100;
-    scale: 1;
+    @apply opacity-100 scale-100;
   }
   .nui-otp-field__slot--revealed .nui-otp-field__dot {
-    scale: 0;
+    @apply scale-0;
   }
   .nui-otp-field__caret {
-    @apply inline-px bg-current;
-    block-size: round(1.25em, 2px);
-    animation: nui-otp-field-blink 1.2s var(--ease-nui) infinite;
+    @apply inline-px bg-current block-[round(1.25em,2px)];
+    @apply animate-[nui-otp-field-blink_1.2s_var(--ease-nui)_infinite];
     animation-play-state: var(--nui-animation-play-state, running);
   }
   .nui-otp-field__placeholder {
@@ -106,17 +94,15 @@
   .nui-otp-field__control {
     @apply box-border absolute inset-y-0 inset-s-0 block-full m-0 p-0 bg-transparent;
     @apply text-transparent caret-transparent appearance-none cursor-text;
-    inline-size: calc(100% + 3rem);
-    border: 0;
+    @apply inline-[calc(100%_+_3rem)] border-0 border-none;
+    @apply text-[length:max(16px,var(--_font-size))] outline-none;
     -webkit-text-fill-color: transparent;
-    font-size: max(16px, var(--_font-size));
-    outline: none;
   }
   .nui-otp-field__control::selection {
     @apply bg-transparent;
   }
   .nui-otp-field__control:autofill {
-    transition: background-color 0s 86400s;
+    @apply transition-[background-color] duration-0 ease-[ease] delay-[86400s];
   }
   .nui-otp-field--readonly .nui-otp-field__control {
     @apply cursor-default;

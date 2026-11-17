@@ -4,12 +4,11 @@
   }
   .nui-row__leading {
     @apply inline-flex flex-none items-center justify-center;
-    color: var(--_row-icon, var(--color-muted-foreground));
-    transition: color var(--transition-duration-fast) var(--ease-nui);
+    @apply text-[color:var(--_row-icon,var(--color-muted-foreground))] transition-[color];
+    @apply duration-fast ease-nui;
   }
   .nui-row:not(.nui-row--inline):has(.nui-row__description) .nui-row__leading {
-    @apply self-start;
-    margin-block-start: 0.125rem;
+    @apply self-start mbs-[0.125rem];
   }
   .nui-row__body {
     @apply grid flex-auto gap-1 min-inline-0;
@@ -18,8 +17,7 @@
     @apply flex items-baseline gap-2;
   }
   .nui-row__title {
-    @apply overflow-hidden leading-control text-ellipsis;
-    font-weight: var(--_row-weight, 400);
+    @apply overflow-hidden leading-control text-ellipsis font-[weight:var(--_row-weight,400)];
   }
   .nui-row--nowrap .nui-row__title,
   .nui-row--nowrap .nui-row__description {
@@ -29,20 +27,17 @@
     @apply overflow-hidden text-ellipsis;
   }
   .nui-row__description {
-    @apply leading-control;
-    color: var(--_row-muted, var(--color-muted-foreground));
-    font-size: var(--_row-description-size, var(--text-xs));
-    transition: color var(--transition-duration-fast) var(--ease-nui);
+    @apply leading-control text-[color:var(--_row-muted,var(--color-muted-foreground))];
+    @apply text-[length:var(--_row-description-size,var(--text-xs))] transition-[color];
+    @apply duration-fast ease-nui;
   }
   .nui-row__trailing {
     @apply inline-flex flex-none items-center gap-2;
-    color: var(--_row-icon, var(--color-muted-foreground));
-    transition: color var(--transition-duration-fast) var(--ease-nui);
+    @apply text-[color:var(--_row-icon,var(--color-muted-foreground))] transition-[color];
+    @apply duration-fast ease-nui;
   }
   .nui-row__check {
-    @apply inline-flex flex-none items-center justify-center ms-auto;
-    inline-size: 1.25rem;
-    block-size: 1.25rem;
-    color: var(--_row-check, var(--color-primary));
+    @apply inline-flex flex-none items-center justify-center ms-auto inline-[1.25rem];
+    @apply block-[1.25rem] text-[color:var(--_row-check,var(--color-primary))];
   }
 }

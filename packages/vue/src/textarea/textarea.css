@@ -5,10 +5,7 @@
 
     @apply box-border block inline-full py-2 px-(--_padding) border border-border rounded;
     @apply bg-surface text-foreground font-sans text-(length:--_font-size) leading-normal resize-y;
-    @apply appearance-none;
-    transition:
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      outline-color var(--transition-duration-fast) var(--ease-nui);
+    @apply appearance-none transition-[border-color,outline-color] duration-fast ease-nui;
   }
   .nui-textarea--size-sm {
     --_padding: var(--spacing-field-pad-sm);

@@ -5,13 +5,10 @@
     --_shift: calc(-1 * var(--_side-x) * var(--spacing)) calc(-1 * var(--_side-y) * var(--spacing));
     --_ring: var(--focus-ring-width);
 
-    @apply box-border fixed inset-auto m-0 p-1 border border-border rounded bg-surface-overlay;
-    @apply text-foreground font-sans text-(length:--text-sm) overflow-y-auto opacity-0;
-    min-inline-size: 10rem;
-    max-inline-size: min(20rem, calc(100vw - --spacing(4)));
-    line-height: --theme(--leading-label inline);
-    box-shadow: var(--shadow-md);
-    outline: none;
+    @apply box-border fixed inset-auto m-0 p-1 border border-border border-solid rounded;
+    @apply bg-surface-overlay text-foreground font-sans text-(length:--text-sm) overflow-y-auto;
+    @apply opacity-0 min-inline-[10rem] max-inline-[min(20rem,calc(100vw_-_--spacing(4)))];
+    @apply leading-label shadow-md outline-none;
     translate: var(--_shift);
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),
@@ -36,15 +33,11 @@
     --_tone: var(--color-foreground);
     --_indicator: var(--spacing-icon);
 
-    @apply box-border relative flex items-center gap-2 inline-full min-block-control-sm m-0;
-    @apply py-1 px-2 rounded-sm bg-transparent text-(--_tone) text-start no-underline;
-    @apply cursor-pointer select-none;
-    border: 0;
+    @apply box-border relative flex items-center gap-2 inline-full min-block-control-sm m-0 py-1;
+    @apply px-2 rounded-sm bg-transparent text-(--_tone) text-start no-underline cursor-pointer;
+    @apply select-none border-0 border-none outline-none transition-[background-color,color];
+    @apply duration-fast ease-nui delay-0 transition-normal;
     font: inherit;
-    outline: none;
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-menu-item--tone-error {
     --_tone: var(--color-error);
@@ -58,8 +51,8 @@
     --_ring: 0px;
   }
   .nui-menu-item:focus-visible {
-    @apply outline-(length:--_ring) outline-ring;
-    outline-offset: calc(-1 * var(--_ring));
+    @apply outline-(length:--_ring) outline-ring outline-offset-[calc(-1_*_var(--_ring))];
+    @apply outline-solid;
   }
   .nui-menu-item--tone-error:hover,
   .nui-menu-item--tone-error:focus {
@@ -96,7 +89,6 @@
     @apply box-border block-px my-1 -mx-1 bg-border;
   }
   .nui-menu-label {
-    @apply box-border py-1 px-2 text-muted-foreground text-(length:--text-xs);
-    font-weight: 600;
+    @apply box-border py-1 px-2 text-muted-foreground text-(length:--text-xs) font-semibold;
   }
 }

@@ -9,8 +9,7 @@
 
     @apply box-border fixed inset-auto min-inline-(--_min-inline) max-inline-(--_max-inline) m-0;
     @apply p-3 border border-border rounded bg-surface-overlay text-foreground font-sans;
-    @apply text-(length:--text-sm) leading-normal overflow-visible opacity-0;
-    box-shadow: var(--shadow-md);
+    @apply text-(length:--text-sm) leading-normal overflow-visible opacity-0 shadow-md;
     translate: var(--_shift);
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),
@@ -42,8 +41,7 @@
   }
   .nui-popover__arrow {
     @apply box-border absolute inline-(--_arrow) block-(--_arrow) border border-border;
-    @apply border-b-transparent bg-inherit;
-    border-right-color: transparent;
-    rotate: calc(45deg - atan2(var(--_side-x), var(--_side-y)));
+    @apply border-b-transparent bg-inherit border-r-transparent;
+    @apply rotate-[calc(45deg_-_atan2(var(--_side-x),var(--_side-y)))];
   }
 }

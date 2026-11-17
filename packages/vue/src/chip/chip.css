@@ -12,12 +12,8 @@
     @apply box-border inline-flex items-center gap-1 max-inline-full block-(--_height);
     @apply px-(--_padding) border border-transparent rounded-full bg-(--_tone-soft);
     @apply text-(--_tone-soft-foreground) font-sans text-(length:--_font-size) leading-control;
-    @apply whitespace-nowrap;
-    font-weight: 500;
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      color var(--transition-duration-fast) var(--ease-nui);
+    @apply whitespace-nowrap font-medium transition-[background-color,border-color,color];
+    @apply duration-fast ease-nui;
   }
   .nui-chip--size-sm {
     --_height: 1.5rem;
@@ -68,7 +64,7 @@
     @apply bg-(--_tone) text-(--_tone-foreground);
   }
   .nui-chip--removable {
-    padding-inline-end: calc((var(--_height) - var(--_remove)) / 2 - 1px);
+    @apply pe-[calc((var(--_height)_-_var(--_remove))_/_2_-_1px)];
   }
   .nui-chip--disabled {
     @apply opacity-disabled;

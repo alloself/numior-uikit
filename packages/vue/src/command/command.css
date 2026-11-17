@@ -2,35 +2,31 @@
   .nui-command {
     --_padding: --spacing(3);
 
-    @apply box-border flex flex-col min-inline-0 border border-border rounded-lg bg-surface-overlay;
-    @apply text-foreground font-sans overflow-hidden;
-    max-block-size: inherit;
+    @apply box-border flex flex-col min-inline-0 border border-border border-solid rounded-lg;
+    @apply bg-surface-overlay text-foreground font-sans overflow-hidden max-block-[inherit];
   }
   .nui-command--embedded {
     border: 0;
-    border-radius: inherit;
+    @apply rounded-[inherit];
   }
   .nui-command__field {
     @apply box-border flex items-center gap-2 px-(--_padding) border-be border-be-border;
   }
   .nui-command__icon {
-    @apply shrink-0 text-muted-foreground;
-    inline-size: 1.125rem;
-    block-size: 1.125rem;
+    @apply shrink-0 text-muted-foreground inline-[1.125rem] block-[1.125rem];
   }
   .nui-command__input {
     @apply box-border flex-auto min-inline-0 min-block-control-lg p-0 bg-transparent text-inherit;
+    @apply outline-none;
     border: 0;
     font: inherit;
-    font-size: var(--text-base);
-    outline: none;
+    @apply text-(length:--text-base);
   }
   .nui-command__input::placeholder {
     @apply text-subtle-foreground;
   }
   .nui-command__list {
-    @apply relative flex-auto min-block-0 p-1 overflow-y-auto scrollbar-thin;
-    max-block-size: 20rem;
+    @apply relative flex-auto min-block-0 p-1 overflow-y-auto scrollbar-thin max-block-[20rem];
   }
   .nui-command .nui-command__list {
     --_indent: 0px;
@@ -46,7 +42,7 @@
     @apply text-muted-foreground text-(length:--text-xs);
   }
   .nui-command--loading .nui-command__icon {
-    animation: nui-command-pulse 1.2s var(--ease-nui) infinite;
+    @apply animate-[nui-command-pulse_1.2s_var(--ease-nui)_infinite];
     animation-play-state: var(--nui-animation-play-state, running);
   }
   @keyframes nui-command-pulse {

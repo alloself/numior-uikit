@@ -10,10 +10,10 @@
   }
   .nui-date-picker__input {
     @apply flex-auto min-inline-0 inline-full p-0 bg-transparent text-inherit;
-    min-block-size: calc(var(--_height) - 2px);
+    @apply min-block-[calc(var(--_height)_-_2px)];
     border: 0;
     font: inherit;
-    font-variant-numeric: tabular-nums;
+    @apply tabular-nums;
     outline: none;
   }
   .nui-date-picker__input::placeholder {
@@ -33,9 +33,8 @@
     @apply cursor-not-allowed;
   }
   .nui-date-picker__panel {
-    @apply box-border fixed inset-auto m-0 p-0 border border-border rounded bg-surface-overlay;
-    @apply text-foreground overflow-auto overscroll-contain opacity-0;
-    box-shadow: var(--shadow-md);
+    @apply box-border fixed inset-auto m-0 p-0 border border-border border-solid rounded;
+    @apply bg-surface-overlay text-foreground overflow-auto overscroll-contain opacity-0 shadow-md;
     translate: var(--_shift);
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),

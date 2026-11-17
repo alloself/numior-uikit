@@ -7,10 +7,8 @@
 
     @apply box-border inline-flex items-center gap-1 inline-full min-block-(--_height);
     @apply ps-(--_padding) pe-1 border border-border rounded bg-surface text-foreground font-sans;
-    @apply text-(length:--_font-size) leading-control;
-    transition:
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      outline-color var(--transition-duration-fast) var(--ease-nui);
+    @apply text-(length:--_font-size) leading-control transition-[border-color,outline-color];
+    @apply duration-fast ease-nui;
   }
   .nui-date-picker--size-sm,
   .nui-time-field--size-sm {

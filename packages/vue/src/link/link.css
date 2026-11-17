@@ -2,14 +2,10 @@
   .nui-link {
     --_tone: var(--color-primary);
 
-    @apply box-border rounded-sm text-(--_tone) underline cursor-pointer;
+    @apply box-border rounded-sm text-(--_tone) underline cursor-pointer decoration-1;
+    @apply underline-offset-[0.2em] transition-[color,text-decoration-color] duration-fast ease-nui;
     font: inherit;
     text-decoration-color: color-mix(in oklab, var(--_tone) 40%, transparent);
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.2em;
-    transition:
-      color var(--transition-duration-fast) var(--ease-nui),
-      text-decoration-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-link--tone-secondary {
     --_tone: var(--color-secondary);
@@ -42,20 +38,16 @@
   }
   .nui-link--underline-none,
   .nui-link--underline-none:hover {
-    text-decoration: none;
+    @apply no-underline;
   }
   .nui-link:focus-visible {
     @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-link--disabled,
   .nui-link--disabled:hover {
-    @apply text-muted-foreground opacity-disabled cursor-not-allowed;
-    text-decoration: none;
+    @apply text-muted-foreground opacity-disabled cursor-not-allowed no-underline;
   }
   .nui-link__icon {
-    inline-size: round(0.9em, 2px);
-    block-size: round(0.9em, 2px);
-    margin-inline-start: 0.25em;
-    vertical-align: round(-0.1em, 1px);
+    @apply inline-[round(0.9em,2px)] block-[round(0.9em,2px)] ms-[0.25em] align-[round(-0.1em,1px)];
   }
 }

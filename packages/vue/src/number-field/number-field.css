@@ -6,11 +6,9 @@
     --_stepper: 2rem;
 
     @apply box-border inline-flex items-center gap-2 inline-full min-block-(--_height);
-    @apply px-(--_padding) overflow-clip border border-border rounded bg-surface text-foreground;
-    @apply font-sans text-(length:--_font-size) leading-control;
-    transition:
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      outline-color var(--transition-duration-fast) var(--ease-nui);
+    @apply px-(--_padding) overflow-clip border border-border border-solid rounded bg-surface;
+    @apply text-foreground font-sans text-(length:--_font-size) leading-control;
+    @apply transition-[border-color,outline-color] duration-fast ease-nui;
   }
   .nui-number-field--size-sm {
     --_height: var(--spacing-control-sm);
@@ -29,11 +27,10 @@
   }
   .nui-number-field__control {
     @apply flex-auto min-inline-0 inline-full p-0 bg-transparent text-inherit appearance-none;
-    min-block-size: calc(var(--_height) - 2px);
+    @apply min-block-[calc(var(--_height)_-_2px)] outline-none;
     border: 0;
     font: inherit;
-    font-variant-numeric: tabular-nums;
-    outline: none;
+    @apply tabular-nums;
   }
   .nui-number-field__control::placeholder {
     @apply text-muted-foreground opacity-100;
@@ -60,7 +57,7 @@
   }
   .nui-number-field:focus-within {
     @apply border-ring outline-(length:--field-ring-width) outline-ring;
-    @apply outline-offset-(--focus-ring-offset);
+    @apply outline-offset-(--focus-ring-offset) outline-solid;
   }
   .nui-number-field--invalid {
     @apply border-error;

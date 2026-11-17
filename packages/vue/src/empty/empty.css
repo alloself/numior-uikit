@@ -7,7 +7,7 @@
 
     @apply box-border grid justify-items-center gap-(--_gap) p-(--_padding) text-foreground;
     @apply font-sans text-(length:--text-sm) leading-normal text-center;
-    animation: nui-empty-appear var(--transition-duration-normal) var(--ease-nui);
+    @apply animate-[nui-empty-appear_var(--transition-duration-normal)_var(--ease-nui)];
   }
   .nui-empty--size-sm {
     --_padding: --spacing(3);
@@ -23,12 +23,10 @@
     @apply inline-full block-full;
   }
   .nui-empty__title {
-    @apply m-0 text-(length:--_title-size) leading-control;
-    font-weight: 600;
+    @apply m-0 text-(length:--_title-size) leading-control font-semibold;
   }
   .nui-empty__description {
-    @apply text-muted-foreground;
-    max-inline-size: 36ch;
+    @apply text-muted-foreground max-inline-[36ch];
   }
   .nui-empty__actions {
     @apply flex flex-wrap justify-center gap-2 mbs-1;

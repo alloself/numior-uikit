@@ -7,9 +7,7 @@
 
     @apply box-border fixed inset-auto m-0 py-1 px-2 rounded-sm bg-neutral text-neutral-foreground;
     @apply font-sans text-(length:--text-xs) leading-normal overflow-visible opacity-0;
-    max-inline-size: min(18rem, calc(100vw - --spacing(4)));
-    border: 0;
-    box-shadow: var(--shadow-sm);
+    @apply max-inline-[min(18rem,calc(100vw_-_--spacing(4)))] border-0 border-none shadow-sm;
     translate: var(--_shift);
     transition:
       opacity var(--transition-duration-fast) var(--ease-nui),

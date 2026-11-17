@@ -15,28 +15,22 @@
   }
   .nui-kbd__key {
     @apply box-border inline-flex items-center justify-center min-inline-(--_height);
-    @apply block-(--_height) pbe-px px-(--_padding) border border-border rounded-sm bg-surface;
-    @apply text-muted-foreground;
+    @apply block-(--_height) pbe-px px-(--_padding) border border-border border-solid rounded-sm;
+    @apply bg-surface text-muted-foreground transition-[background-color,border-color,color];
+    @apply duration-fast ease-nui;
     border-block-end-width: 2px;
     font: inherit;
-    font-weight: var(--font-weight-medium);
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      color var(--transition-duration-fast) var(--ease-nui);
+    @apply font-medium;
   }
   .nui-kbd--variant-plain {
     --_gap: 0.125rem;
   }
   .nui-kbd--variant-plain .nui-kbd__key {
-    @apply min-inline-0 block-auto p-0 text-inherit;
-    border: 0;
-    background: none;
-    letter-spacing: 0.05em;
+    @apply min-inline-0 block-auto p-0 text-inherit border-0 border-none bg-transparent bg-none;
+    @apply tracking-[0.05em];
   }
   .nui-kbd--variant-soft .nui-kbd__key {
-    @apply pbe-0 text-inherit;
-    border: 0;
+    @apply pbe-0 text-inherit border-0 border-none;
     background: color-mix(in oklab, currentColor 16%, transparent);
   }
 }

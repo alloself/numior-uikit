@@ -5,20 +5,15 @@
     @apply box-border block shrink-0 inline-full block-px bg-(--_line);
   }
   .nui-separator--orientation-vertical {
-    @apply inline-block self-stretch inline-px block-auto align-middle;
-    min-block-size: 1em;
+    @apply inline-block self-stretch inline-px block-auto align-middle min-block-[1em];
   }
   .nui-separator--labelled {
     @apply flex items-center gap-3 block-auto text-muted-foreground font-sans;
-    @apply text-(length:--text-sm) leading-normal;
-    background: none;
+    @apply text-(length:--text-sm) leading-normal bg-transparent bg-none;
   }
   .nui-separator--labelled::before,
   .nui-separator--labelled::after {
-    @apply block-px;
-    content: '';
-    flex: 1 1 0;
-    background: var(--_line);
+    @apply block-px content-[''] flex-[1_1_0] bg-(--_line) bg-none;
   }
   .nui-separator--labelled.nui-separator--orientation-vertical {
     @apply flex-col inline-auto;

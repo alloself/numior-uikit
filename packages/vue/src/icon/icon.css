@@ -1,11 +1,7 @@
 @layer components {
   .nui-icon {
-    @apply box-border inline-flex flex-none inline-icon block-icon;
-    rotate: var(--_rotate, 0deg);
-    scale: var(--_scale, 1);
-    transition:
-      rotate var(--transition-duration-fast) var(--ease-nui),
-      scale var(--transition-duration-fast) var(--ease-nui);
+    @apply box-border inline-flex flex-none inline-icon block-icon rotate-[var(--_rotate,0deg)];
+    @apply scale-[var(--_scale,1)] transition-[rotate,scale] duration-fast ease-nui;
   }
   .nui-icon__glyph {
     @apply inline-full block-full;
@@ -14,7 +10,7 @@
     @apply fill-current;
   }
   .nui-icon--appearing .nui-icon__glyph {
-    animation: nui-icon-appear var(--transition-duration-fast) var(--ease-nui);
+    @apply animate-[nui-icon-appear_var(--transition-duration-fast)_var(--ease-nui)];
   }
   @keyframes nui-icon-appear {
     from {

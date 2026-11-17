@@ -17,19 +17,17 @@
     --_font-size: var(--text-control-lg);
   }
   .nui-combobox__field {
-    @apply box-border flex flex-wrap items-center gap-1 min-block-(--_height) py-1;
-    @apply ps-(--_padding) pe-1 border border-border rounded bg-surface text-foreground;
+    @apply box-border flex flex-wrap items-center gap-1 min-block-(--_height) py-1 ps-(--_padding);
+    @apply pe-1 border border-border border-solid rounded bg-surface text-foreground;
     @apply text-(length:--_font-size) leading-control cursor-text;
-    transition:
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      outline-color var(--transition-duration-fast) var(--ease-nui);
+    @apply transition-[border-color,outline-color] duration-fast ease-nui;
   }
   .nui-combobox:not(.nui-combobox--invalid) .nui-combobox__field:hover:not(:focus-within) {
     @apply border-border-strong;
   }
   .nui-combobox__field:focus-within {
     @apply border-ring outline-(length:--field-ring-width) outline-ring;
-    @apply outline-offset-(--focus-ring-offset);
+    @apply outline-offset-(--focus-ring-offset) outline-solid;
   }
   .nui-combobox--invalid .nui-combobox__field {
     @apply border-error;
@@ -48,13 +46,10 @@
     @apply opacity-disabled cursor-not-allowed;
   }
   .nui-combobox__input {
-    @apply text-ellipsis p-0 bg-transparent text-inherit appearance-none;
-    flex: 1 1 4rem;
-    min-inline-size: 4rem;
-    min-block-size: calc(var(--_height) - --spacing(2) - 2px);
-    border: 0;
+    @apply text-ellipsis p-0 bg-transparent text-inherit appearance-none flex-[1_1_4rem];
+    @apply min-inline-[4rem] min-block-[calc(var(--_height)_-_--spacing(2)_-_2px)] border-0;
+    @apply border-none outline-none;
     font: inherit;
-    outline: none;
   }
   .nui-combobox__input::placeholder {
     @apply text-muted-foreground opacity-100;
@@ -76,7 +71,7 @@
     @apply ms-0;
   }
   .nui-combobox__chevron {
-    transition: rotate var(--transition-duration-fast) var(--ease-nui);
+    @apply transition-[rotate] duration-fast ease-nui;
   }
   .nui-combobox--open .nui-combobox__chevron {
     @apply rotate-180;

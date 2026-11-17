@@ -16,11 +16,10 @@
       'footer';
   }
   .nui-calendar--presets {
-    @apply gap-x-4;
+    @apply gap-x-4 grid-cols-[max-content_1fr];
     grid-template-areas:
       'presets months'
       'presets footer';
-    grid-template-columns: max-content 1fr;
   }
   .nui-calendar--size-sm {
     --_cell: 1.75rem;
@@ -47,17 +46,16 @@
     @apply invisible;
   }
   .nui-calendar__arrow:dir(rtl) {
-    scale: -1 1;
+    @apply -scale-x-100 scale-y-100;
   }
   .nui-calendar__title {
-    @apply flex gap-1;
-    font-weight: 500;
+    @apply flex gap-1 font-medium;
   }
   .nui-calendar__title-button {
     @apply box-border py-1 px-2 rounded-(--_radius) bg-transparent text-inherit cursor-pointer;
+    @apply transition-[background-color] duration-fast ease-nui;
     border: 0;
     font: inherit;
-    transition: background-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-calendar__title-button:hover,
   .nui-calendar__title-button[aria-expanded='true'] {
@@ -69,12 +67,11 @@
     @apply outline-(length:--focus-ring-width) outline-ring -outline-offset-(--focus-ring-width);
   }
   .nui-calendar__grid {
-    @apply border-separate table-fixed;
-    border-spacing: 0;
+    @apply border-separate table-fixed border-spacing-0;
   }
   .nui-calendar__grid--slide-next,
   .nui-calendar__grid--slide-prev {
-    animation: nui-calendar-slide var(--transition-duration-normal) var(--ease-nui);
+    @apply animate-[nui-calendar-slide_var(--transition-duration-normal)_var(--ease-nui)];
   }
   .nui-calendar__grid--slide-prev {
     --_slide: -0.75rem;
@@ -89,8 +86,7 @@
   .nui-calendar__week-head,
   .nui-calendar__week {
     @apply box-border inline-(--_cell) pbs-0 pbe-1 px-0 text-muted-foreground;
-    @apply text-(length:--text-xs) text-center;
-    font-weight: 400;
+    @apply text-(length:--text-xs) text-center font-normal;
   }
   .nui-calendar__week {
     @apply p-0 tabular-nums;
@@ -100,49 +96,44 @@
     clip-path: inset(50%);
   }
   .nui-calendar__cell {
-    @apply box-border py-px px-0 text-center;
-    block-size: calc(var(--_cell) + 2px);
+    @apply box-border py-px px-0 text-center block-[calc(var(--_cell)_+_2px)];
   }
   .nui-calendar__cell--range-middle {
     @apply bg-(--_range-bg);
   }
   .nui-calendar__cell--range-start {
-    background: linear-gradient(to right, transparent 50%, var(--_range-bg) 50%);
+    @apply bg-transparent bg-[linear-gradient(to_right,transparent_50%,var(--_range-bg)_50%)];
   }
   .nui-calendar__cell--range-end {
-    background: linear-gradient(to right, var(--_range-bg) 50%, transparent 50%);
+    @apply bg-transparent bg-[linear-gradient(to_right,var(--_range-bg)_50%,transparent_50%)];
   }
   .nui-calendar__cell--range-start:dir(rtl) {
-    background: linear-gradient(to left, transparent 50%, var(--_range-bg) 50%);
+    @apply bg-transparent bg-[linear-gradient(to_left,transparent_50%,var(--_range-bg)_50%)];
   }
   .nui-calendar__cell--range-end:dir(rtl) {
-    background: linear-gradient(to left, var(--_range-bg) 50%, transparent 50%);
+    @apply bg-transparent bg-[linear-gradient(to_left,var(--_range-bg)_50%,transparent_50%)];
   }
   .nui-calendar__cell--range-start.nui-calendar__cell--range-end {
-    background: none;
+    @apply bg-transparent bg-none;
   }
   .nui-calendar__cell--preview {
     --_range-bg: color-mix(in oklab, --theme(--color-primary-soft inline) 60%, transparent);
   }
   .nui-calendar__day {
     @apply inline-(--_cell) block-(--_cell) p-0 rounded-(--_radius) text-inherit cursor-pointer;
+    @apply bg-transparent bg-none transition-[background-color,color] duration-fast ease-nui;
     border: 0;
-    background: transparent;
     font: inherit;
-    line-height: var(--leading-control);
-    font-variant-numeric: tabular-nums;
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      color var(--transition-duration-fast) var(--ease-nui);
+    @apply leading-control tabular-nums;
   }
   .nui-calendar__day:hover {
-    background: --theme(--color-hover inline);
+    @apply bg-hover bg-none;
   }
   .nui-calendar__day--outside {
     @apply text-muted-foreground;
   }
   .nui-calendar__day--today {
-    box-shadow: inset 0 0 0 1px var(--color-primary);
+    @apply shadow-[inset_0_0_0_1px_var(--color-primary)];
   }
   .nui-calendar__cell--range-middle .nui-calendar__day {
     @apply text-(--_range-fg);
@@ -151,39 +142,31 @@
     background: color-mix(in oklab, var(--_range-bg), var(--_range-fg) var(--state-hover));
   }
   .nui-calendar__day--selected {
-    @apply text-(--_selected-fg);
-    background: var(--_selected-bg);
-    box-shadow: none;
+    @apply text-(--_selected-fg) bg-(--_selected-bg) bg-none shadow-none;
   }
   .nui-calendar__day--selected:hover {
     background: color-mix(in oklab, var(--_selected-bg), var(--_selected-fg) var(--state-hover));
   }
   .nui-calendar__day--disabled,
   .nui-calendar__day--disabled:hover {
-    @apply text-muted-foreground opacity-disabled cursor-not-allowed;
-    background: transparent;
+    @apply text-muted-foreground opacity-disabled cursor-not-allowed bg-transparent bg-none;
   }
   .nui-calendar__picker {
-    @apply grid gap-1 content-center;
-    grid-template-columns: repeat(3, 1fr);
-    min-block-size: calc(7 * (var(--_cell) + 2px));
+    @apply grid gap-1 content-center grid-cols-[repeat(3,1fr)];
+    @apply min-block-[calc(7_*_(var(--_cell)_+_2px))];
   }
   .nui-calendar__option {
     @apply box-border min-block-(--_cell) py-0 px-2 rounded-(--_radius) text-inherit cursor-pointer;
+    @apply bg-transparent bg-none transition-[background-color,color] duration-fast ease-nui;
     border: 0;
-    background: transparent;
     font: inherit;
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-calendar__option:hover,
   .nui-calendar__option--active {
-    background: --theme(--color-hover inline);
+    @apply bg-hover bg-none;
   }
   .nui-calendar__option--selected {
-    @apply text-(--_selected-fg);
-    background: var(--_selected-bg);
+    @apply text-(--_selected-fg) bg-(--_selected-bg) bg-none;
   }
   .nui-calendar__option--selected:is(:hover, .nui-calendar__option--active) {
     background: color-mix(in oklab, var(--_selected-bg), var(--_selected-fg) var(--state-hover));
@@ -197,8 +180,7 @@
     @apply justify-start;
   }
   .nui-calendar__preset[aria-pressed='true'] {
-    @apply text-primary-soft-foreground;
-    background: --theme(--color-primary-soft inline);
+    @apply text-primary-soft-foreground bg-primary-soft bg-none;
   }
   .nui-calendar__footer {
     @apply flex items-center justify-between gap-2;
@@ -235,7 +217,7 @@
   @media (prefers-reduced-motion: reduce) {
     .nui-calendar__grid--slide-next,
     .nui-calendar__grid--slide-prev {
-      animation: none;
+      @apply animate-none;
     }
   }
 }

@@ -4,12 +4,10 @@
     --_padding: --spacing(6);
     --_seam: --spacing(3);
 
-    @apply box-border fixed inset-0 flex-col block-fit max-inline-none m-auto p-0;
-    @apply overflow-hidden border border-border rounded-lg bg-surface-overlay;
-    @apply text-foreground font-sans opacity-0 translate-y-2;
-    inline-size: min(var(--_width), calc(100% - --spacing(8)));
-    max-block-size: calc(100dvh - --spacing(8));
-    box-shadow: var(--shadow-lg);
+    @apply box-border fixed inset-0 flex-col block-fit max-inline-none m-auto p-0 overflow-hidden;
+    @apply border border-border rounded-lg bg-surface-overlay text-foreground font-sans opacity-0;
+    @apply translate-y-2 inline-[min(var(--_width),calc(100%_-_--spacing(8)))];
+    @apply max-block-[calc(100dvh_-_--spacing(8))] shadow-lg;
     transition:
       opacity var(--transition-duration-normal) var(--ease-nui),
       translate var(--transition-duration-normal) var(--ease-nui),
@@ -23,12 +21,10 @@
     --_width: 48rem;
   }
   .nui-dialog--size-auto {
-    @apply inline-fit;
-    max-inline-size: calc(100% - --spacing(8));
+    @apply inline-fit max-inline-[calc(100%_-_--spacing(8))];
   }
   .nui-dialog--placement-top {
-    @apply -translate-y-2;
-    margin-block-start: min(15dvh, --spacing(8) * 4);
+    @apply -translate-y-2 mbs-[min(15dvh,--spacing(8)_*_4)];
   }
   .nui-dialog--bare .nui-dialog__header {
     @apply absolute inline-px block-px -m-px p-0 overflow-hidden whitespace-nowrap;
@@ -68,8 +64,8 @@
     }
   }
   .nui-dialog__header {
-    @apply box-border flex-none grid gap-1;
-    padding: var(--_padding) calc(var(--_padding) + --spacing(8)) var(--_seam) var(--_padding);
+    @apply box-border flex-none grid gap-1 pbs-(--_padding) pbe-(--_seam) pl-(--_padding);
+    @apply pr-[calc(var(--_padding)_+_--spacing(8))];
   }
   .nui-dialog__title {
     @apply m-0 text-lg/control font-semibold;
@@ -79,7 +75,7 @@
   }
   .nui-dialog__body {
     @apply box-border flex-initial min-block-0 overflow-y-auto overscroll-contain text-sm/normal;
-    padding: calc(var(--_padding) - var(--_seam)) var(--_padding);
+    @apply py-[calc(var(--_padding)_-_var(--_seam))] px-(--_padding);
   }
   .nui-dialog__body > :first-child {
     @apply mbs-0;

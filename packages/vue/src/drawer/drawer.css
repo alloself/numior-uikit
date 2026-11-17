@@ -4,10 +4,7 @@
     --_shift: 100% 0;
 
     @apply box-border inset-auto inset-y-0 inset-e-0 m-0 rounded-none rounded-ss-lg rounded-es-lg;
-    inline-size: min(var(--_size), 100%);
-    max-inline-size: none;
-    block-size: 100dvh;
-    max-block-size: none;
+    @apply inline-[min(var(--_size),100%)] max-inline-[none] block-[100dvh] max-block-[none];
     translate: var(--_shift);
   }
   .nui-drawer > .nui-dialog__body {
@@ -25,25 +22,23 @@
   .nui-drawer--side-start {
     --_shift: -100% 0;
 
-    @apply rounded-none rounded-se-lg rounded-ee-lg;
-    inset-inline: 0 auto;
+    @apply rounded-none rounded-se-lg rounded-ee-lg inset-s-0 inset-e-auto;
   }
   .nui-drawer--side-top,
   .nui-drawer--side-bottom {
-    @apply inset-x-0 inline-full block-auto;
-    max-block-size: min(var(--_size), 100dvh);
+    @apply inset-x-0 inline-full block-auto max-block-[min(var(--_size),100dvh)];
   }
   .nui-drawer--side-top {
     --_shift: 0 -100%;
 
-    inset-block: 0 auto;
-    border-radius: 0 0 --theme(--radius-lg inline) --theme(--radius-lg inline);
+    @apply inset-bs-0 inset-be-auto;
+    @apply rounded-[0_0_--theme(--radius-lg_inline)_--theme(--radius-lg_inline)];
   }
   .nui-drawer--side-bottom {
     --_shift: 0 100%;
 
-    inset-block: auto 0;
-    border-radius: --theme(--radius-lg inline) --theme(--radius-lg inline) 0 0;
+    @apply inset-bs-auto inset-be-0;
+    @apply rounded-[--theme(--radius-lg_inline)_--theme(--radius-lg_inline)_0_0];
   }
   .nui-drawer--side-start:dir(rtl) {
     --_shift: 100% 0;

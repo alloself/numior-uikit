@@ -5,11 +5,9 @@
     --_font-size: var(--text-control-md);
 
     @apply box-border inline-flex items-center gap-2 inline-full min-block-(--_height);
-    @apply px-(--_padding) border border-border rounded bg-surface text-foreground;
+    @apply px-(--_padding) border border-border border-solid rounded bg-surface text-foreground;
     @apply font-sans text-(length:--_font-size) leading-control;
-    transition:
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      outline-color var(--transition-duration-fast) var(--ease-nui);
+    @apply transition-[border-color,outline-color] duration-fast ease-nui;
   }
   .nui-input--size-sm {
     --_height: var(--spacing-control-sm);
@@ -23,10 +21,8 @@
   }
   .nui-input__control {
     @apply flex-auto min-inline-0 inline-full p-0 bg-transparent text-inherit appearance-none;
-    min-block-size: calc(var(--_height) - 2px);
-    border: 0;
+    @apply min-block-[calc(var(--_height)_-_2px)] border-0 border-none outline-none;
     font: inherit;
-    outline: none;
   }
   .nui-input__control::placeholder {
     @apply text-muted-foreground opacity-100;
@@ -49,7 +45,7 @@
   }
   .nui-input:focus-within {
     @apply border-ring outline-(length:--field-ring-width) outline-ring;
-    @apply outline-offset-(--focus-ring-offset);
+    @apply outline-offset-(--focus-ring-offset) outline-solid;
   }
   .nui-input--invalid {
     @apply border-error;

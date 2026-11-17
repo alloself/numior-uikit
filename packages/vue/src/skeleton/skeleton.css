@@ -10,8 +10,7 @@
     @apply box-border block inline-(--_inline-size);
   }
   .nui-skeleton--shape-text {
-    @apply grid;
-    gap: 0.5em;
+    @apply grid gap-[0.5em];
   }
   .nui-skeleton__line,
   .nui-skeleton--shape-rect,
@@ -21,16 +20,14 @@
   .nui-skeleton__line::after,
   .nui-skeleton--shape-rect::after,
   .nui-skeleton--shape-circle::after {
-    @apply absolute inset-y-0 left-0;
-    content: '';
-    inline-size: calc(100% + var(--_sweep));
+    @apply absolute inset-y-0 left-0 content-[''] inline-[calc(100%_+_var(--_sweep))];
+    @apply animate-[nui-skeleton-shimmer_2s_linear_infinite];
     background: linear-gradient(90deg, var(--_tint) 40%, var(--_shine) 50%, var(--_tint) 60%) 0 0 /
       var(--_sweep) 100% repeat-x;
-    animation: nui-skeleton-shimmer 2s linear infinite;
     animation-play-state: var(--nui-animation-play-state, running);
   }
   .nui-skeleton__line:last-child:not(:only-child) {
-    inline-size: 60%;
+    @apply inline-[60%];
   }
   .nui-skeleton--shape-rect {
     --_block-size: 6rem;
@@ -44,7 +41,7 @@
   .nui-skeleton--static .nui-skeleton__line::after,
   .nui-skeleton--static.nui-skeleton--shape-rect::after,
   .nui-skeleton--static.nui-skeleton--shape-circle::after {
-    animation: none;
+    @apply animate-none;
   }
   @keyframes nui-skeleton-shimmer {
     from {
@@ -58,7 +55,7 @@
     .nui-skeleton__line::after,
     .nui-skeleton--shape-rect::after,
     .nui-skeleton--shape-circle::after {
-      animation: none;
+      @apply animate-none;
     }
   }
 }

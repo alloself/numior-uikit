@@ -27,14 +27,10 @@
   }
   .nui-toc__link {
     @apply box-border relative block -ms-px py-1 pe-2 text-inherit no-underline wrap-anywhere;
-    @apply cursor-pointer;
-    padding-inline-start: calc(var(--_indent) + --spacing(3) * var(--_depth, 0));
-    border-inline-start: 2px solid transparent;
-    border-radius: 0 --theme(--radius-sm inline) --theme(--radius-sm inline) 0;
-    transition:
-      color var(--transition-duration-fast) var(--ease-nui),
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      background-color var(--transition-duration-fast) var(--ease-nui);
+    @apply cursor-pointer ps-[calc(var(--_indent)_+_--spacing(3)_*_var(--_depth,0))] border-s-2;
+    @apply border-s-transparent;
+    @apply rounded-[0_--theme(--radius-sm_inline)_--theme(--radius-sm_inline)_0];
+    @apply transition-[color,border-color,background-color] duration-fast ease-nui;
   }
   .nui-toc__list--depth-1 .nui-toc__link {
     --_depth: 1;
@@ -56,19 +52,13 @@
   }
   .nui-toc--marker-square .nui-toc__link::before {
     @apply absolute inline-(--_marker-size) block-(--_marker-size) bg-primary opacity-0;
-    content: '';
-    inset-block-start: calc(var(--spacing) + (1lh - var(--_marker-size)) / 2);
-    inset-inline-start: -2px;
-    scale: 0.5;
-    transition:
-      opacity var(--transition-duration-fast) var(--ease-nui),
-      scale var(--transition-duration-fast) var(--ease-nui);
+    @apply content-[''] inset-bs-[calc(var(--spacing)_+_(1lh_-_var(--_marker-size))_/_2)];
+    @apply inset-s-[-2px] scale-50 transition-[opacity,scale] duration-fast ease-nui;
   }
   .nui-toc--marker-square .nui-toc__item--current > .nui-toc__link::before {
-    @apply opacity-100;
-    scale: 1;
+    @apply opacity-100 scale-100;
   }
   .nui-toc__list:dir(rtl) .nui-toc__link {
-    border-radius: --theme(--radius-sm inline) 0 0 --theme(--radius-sm inline);
+    @apply rounded-[--theme(--radius-sm_inline)_0_0_--theme(--radius-sm_inline)];
   }
 }
