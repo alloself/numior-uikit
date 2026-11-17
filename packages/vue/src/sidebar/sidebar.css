@@ -1,7 +1,14 @@
+@property --_sidebar-icon-inset {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
 .nui-sidebar {
   --_size: var(--_sidebar-size, 16rem);
   --_rail: var(--_rail-size, 3.5rem);
   --_padding: var(--nui-space-2);
+  --_sidebar-icon-inset: calc(var(--_rail) / 2 - var(--_padding) - var(--nui-icon-size) / 2);
   --_row-icon: var(--nui-text-muted);
 
   box-sizing: border-box;
@@ -226,7 +233,18 @@
   padding-block-start: var(--nui-space-3);
   border-block-start: 1px solid var(--nui-border);
 }
-.nui-sidebar--rail .nui-list-item__inner:not(.nui-sidebar-sub__flyout *) {
+.nui-sidebar--collapsible-icon:not(.nui-sidebar--mobile, .nui-sidebar--variant-plain)
+  .nui-list-item__inner:not(.nui-sidebar-sub__flyout *, .nui-sidebar-sub__list *),
+.nui-sidebar--collapsible-icon:not(.nui-sidebar--mobile, .nui-sidebar--variant-plain)
+  .nui-sidebar-group__label {
+  padding-inline-start: var(--_sidebar-icon-inset);
+}
+.nui-sidebar--collapsible-icon:not(.nui-sidebar--mobile, .nui-sidebar--variant-plain)
+  .nui-sidebar-sub__list {
+  margin-inline-start: calc(var(--_sidebar-icon-inset) + var(--nui-icon-size) / 2);
+}
+.nui-sidebar--rail.nui-sidebar--variant-plain
+  .nui-list-item__inner:not(.nui-sidebar-sub__flyout *) {
   justify-content: center;
   padding-inline: 0;
 }
