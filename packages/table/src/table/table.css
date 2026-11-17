@@ -1076,8 +1076,7 @@
   }
   .nui-table__pane {
     @apply relative z-10 inline-0 block-0 row-1 col-1;
-    align-self: start;
-    justify-self: start;
+    @apply place-self-start;
   }
   .nui-table__pane--frozen,
   .nui-table__pane--cols-start,
