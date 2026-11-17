@@ -46,11 +46,10 @@
   }
   .nui-content__heading {
     @apply text-foreground leading-tight tracking-heading;
-    font-family: --theme(--font-heading inline);
-    font-weight: var(--font-weight-heading);
+    @apply font-[family-name:--theme(--font-heading_inline)] font-(weight:--font-weight-heading);
   }
   .nui-content > .nui-content__heading {
-    margin-block-start: 1.4em;
+    @apply mbs-[1.4em];
   }
   .nui-content > :first-child,
   .nui-content__quote > :first-child,
@@ -81,85 +80,70 @@
     @apply text-muted-foreground text-(length:--text-sm);
   }
   .nui-content__quote {
-    @apply text-muted-foreground;
-    padding-inline-start: 1em;
+    @apply text-muted-foreground ps-[1em];
     border-inline-start: 3px solid var(--color-border-strong);
   }
   .nui-content__list {
-    padding-inline-start: 1.5em;
+    @apply ps-[1.5em];
   }
   .nui-content__list--bullet {
-    list-style: disc;
+    @apply list-disc;
   }
   .nui-content__list--ordered {
-    list-style: decimal;
+    @apply list-decimal;
   }
   .nui-content__list--todo {
     @apply ps-0 list-none;
   }
   .nui-content__list > * {
-    margin-block-start: 0.375em;
+    @apply mbs-[0.375em];
   }
   .nui-content__item > .nui-content__list,
   .nui-content__todo-body > .nui-content__list {
-    margin-block-start: 0.375em;
+    @apply mbs-[0.375em];
   }
   .nui-content__list > :first-child {
     @apply mbs-0;
   }
   .nui-content__item {
-    padding-inline-start: 0.25em;
+    @apply ps-[0.25em];
   }
   .nui-content__item::marker {
     @apply text-muted-foreground;
   }
   .nui-content__todo {
-    @apply flex items-start;
-    gap: 0.5em;
+    @apply flex items-start gap-[0.5em];
   }
   .nui-content__check {
     --_box: 1rem;
 
     @apply relative flex-none box-border inline-(--_box) block-(--_box) rounded-sm bg-surface;
-    margin-block-start: calc((var(--leading-relaxed) * 1em - var(--_box)) / 2);
-    border: 1px solid var(--color-border-strong);
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      border-color var(--transition-duration-fast) var(--ease-nui);
+    @apply mbs-[calc((var(--leading-relaxed)_*_1em_-_var(--_box))_/_2)] border border-solid;
+    @apply border-(color:--color-border-strong) transition-[background-color,border-color];
+    @apply duration-fast ease-nui;
   }
   .nui-content__check-mark {
     --spacing-icon: 75%;
 
-    @apply absolute inset-0 opacity-0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-primary-foreground);
-    scale: 0.5;
-    transition:
-      opacity var(--transition-duration-fast) var(--ease-nui),
-      scale var(--transition-duration-normal) var(--ease-nui);
+    @apply absolute inset-0 opacity-0 flex items-center justify-center text-primary-foreground;
+    @apply scale-50 transition-[opacity,scale];
+    @apply duration-[var(--transition-duration-fast),var(--transition-duration-normal)] ease-nui;
   }
   .nui-content__todo--checked > .nui-content__check {
-    @apply border-primary;
-    background: var(--color-primary);
+    @apply border-primary bg-primary bg-none bg-clip-border;
   }
   .nui-content__todo--checked > .nui-content__check > .nui-content__check-mark {
-    @apply opacity-100;
-    scale: 1;
+    @apply opacity-100 scale-100;
   }
   .nui-content__todo-body {
-    @apply flex-1 min-inline-0;
-    transition: color var(--transition-duration-fast) var(--ease-nui);
+    @apply flex-1 min-inline-0 transition-[color] duration-fast ease-nui;
   }
   .nui-content__todo--checked > .nui-content__todo-body {
-    @apply text-muted-foreground;
-    text-decoration: line-through;
+    @apply text-muted-foreground line-through decoration-auto;
   }
   .nui-content__code {
     @apply box-border p-4 rounded-lg bg-surface-code text-foreground font-mono;
-    @apply text-(length:--text-sm) leading-normal whitespace-pre text-start overflow-x-auto;
-    tab-size: 2;
+    @apply text-(length:--text-sm) leading-normal whitespace-pre text-start overflow-x-auto tab-[2];
     direction: ltr;
     unicode-bidi: isolate;
   }
@@ -200,10 +184,7 @@
     @apply text-syntax-variable;
   }
   .nui-content__divider {
-    @apply box-content block-px bg-border;
-    border: 0;
-    background-clip: content-box;
-    padding-block: 0.75em;
+    @apply box-content block-px bg-border border-0 border-none bg-clip-content py-[0.75em];
   }
   .nui-content__callout {
     --_tone: var(--color-info);
@@ -211,28 +192,19 @@
     --_mark: --theme(--color-info-soft-foreground inline);
 
     @apply box-border grid items-start rounded-lg;
-    grid-template-columns: var(--spacing-control-sm) minmax(0, 1fr);
-    column-gap: 0.5em;
-    padding: 0.75em 1em;
+    @apply grid-cols-[var(--spacing-control-sm)_minmax(0,1fr)] gap-x-[0.5em] py-[0.75em] px-[1em];
+    @apply bg-(--_soft) bg-clip-border bg-none transition-[background-color,border-color];
+    @apply duration-fast ease-nui;
     border: 1px solid color-mix(in oklab, var(--_tone) 35%, transparent);
-    background: var(--_soft);
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      border-color var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-content__callout > * {
-    grid-column: 2;
+    @apply col-2;
   }
   .nui-content__callout > .nui-content__callout-mark {
     --spacing-icon: round(calc(var(--text-control-sm) * 1.15), 2px);
 
-    display: flex;
-    grid-column: 1;
-    grid-row: 1;
-    align-items: center;
-    justify-content: center;
-    block-size: calc(var(--leading-relaxed) * 1em);
-    color: var(--_mark);
+    @apply flex col-1 row-1 items-center justify-center block-[calc(var(--leading-relaxed)_*_1em)];
+    @apply text-(--_mark);
   }
   .nui-content__callout--tone-success {
     --_tone: var(--color-success);
@@ -253,8 +225,7 @@
     --_turn: 0deg;
     --_mark: var(--spacing-control-sm);
 
-    @apply relative;
-    padding-inline-start: calc(var(--_mark) + 0.5em);
+    @apply relative ps-[calc(var(--_mark)_+_0.5em)];
   }
   .nui-content__toggle--open {
     --_turn: 90deg;
@@ -266,21 +237,16 @@
   }
   .nui-content__toggle-button {
     @apply absolute inset-s-0 box-border inline-(--_mark) block-(--_mark) p-0 rounded text-inherit;
-    @apply cursor-pointer;
-    inset-block-start: calc((var(--leading-relaxed) * 1em - var(--_mark)) / 2);
-    border: 0;
-    background: transparent;
+    @apply cursor-pointer inset-bs-[calc((var(--leading-relaxed)_*_1em_-_var(--_mark))_/_2)];
+    @apply border-0 border-none bg-transparent bg-clip-border bg-none;
+    @apply transition-[background-color,scale] duration-fast ease-nui;
     font: inherit;
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      scale var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-content__toggle-button:hover {
-    background: --theme(--color-hover inline);
+    @apply bg-hover bg-none bg-clip-border;
   }
   .nui-content__toggle-button:active {
-    background: --theme(--color-pressed inline);
-    scale: 0.97;
+    @apply bg-pressed bg-none bg-clip-border scale-97;
   }
   .nui-content__toggle-button:focus-visible {
     @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
@@ -288,17 +254,11 @@
   .nui-content__toggle-mark {
     --spacing-icon: round(calc(var(--text-control-sm) * 1.15), 2px);
 
-    @apply absolute inset-0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: --theme(--color-neutral-soft-foreground inline);
-    rotate: var(--_turn);
-    transition: rotate var(--transition-duration-fast) var(--ease-nui);
+    @apply absolute inset-0 flex items-center justify-center text-neutral-soft-foreground;
+    @apply rotate-(--_turn) transition-[rotate] duration-fast ease-nui;
   }
   .nui-content__toggle-button:dir(rtl) > .nui-content__toggle-mark {
-    rotate: calc(var(--_turn) * -1);
-    scale: -1 1;
+    @apply rotate-[calc(var(--_turn)_*_-1)] -scale-x-100 scale-y-100;
   }
   .nui-content__image {
     --_inline-start: auto;
@@ -329,16 +289,12 @@
     @apply block inline-full max-inline-full block-auto rounded;
   }
   .nui-content__caption {
-    @apply block text-muted-foreground leading-normal text-center;
-    contain: inline-size;
-    margin-block-start: 0.5em;
-    font-size: 0.875em;
+    @apply block text-muted-foreground leading-normal text-center contain-[inline-size] mbs-[0.5em];
+    @apply text-[length:0.875em];
   }
   .nui-content__zoom {
-    @apply block box-border inline-full p-0 rounded cursor-zoom-in;
-    border: 0;
-    background: none;
-    transition: opacity var(--transition-duration-fast) var(--ease-nui);
+    @apply block box-border inline-full p-0 rounded cursor-zoom-in border-0 border-none;
+    @apply bg-transparent bg-none bg-clip-border transition-opacity duration-fast ease-nui;
   }
   .nui-content__zoom:hover {
     @apply opacity-92;
@@ -347,23 +303,17 @@
     @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-content__lightbox {
-    @apply block object-contain;
-    max-inline-size: calc(100vw - --spacing(8));
-    max-block-size: calc(100dvh - --spacing(8));
+    @apply block object-contain max-inline-[calc(100vw_-_--spacing(8))];
+    @apply max-block-[calc(100dvh_-_--spacing(8))];
   }
   .nui-content__viewer-close {
     @apply absolute flex inset-bs-2 inset-e-2;
   }
   .nui-content__file {
     @apply inline-flex box-border items-center gap-1 max-inline-full py-0 px-2 rounded-sm;
-    @apply text-foreground leading-normal no-underline;
-    margin-inline: 0.125em;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    font-size: 0.875em;
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      border-color var(--transition-duration-fast) var(--ease-nui);
+    @apply text-foreground leading-normal no-underline mx-[0.125em] border border-solid;
+    @apply border-(color:--color-border) bg-surface bg-none bg-clip-border text-[length:0.875em];
+    @apply transition-[background-color,border-color] duration-fast ease-nui;
   }
   .nui-content__file:hover {
     @apply border-border-strong;
@@ -379,8 +329,7 @@
   .nui-content__file-icon {
     --spacing-icon: var(--spacing-icon-sm);
 
-    @apply inline-flex flex-none inline-icon-sm block-icon-sm;
-    color: var(--color-muted-foreground);
+    @apply inline-flex flex-none inline-icon-sm block-icon-sm text-muted-foreground;
   }
   .nui-content__file-name {
     @apply overflow-hidden min-inline-0 font-medium text-ellipsis whitespace-nowrap;
@@ -389,15 +338,13 @@
     @apply flex-none text-muted-foreground tabular-nums;
   }
   .nui-content__columns {
-    container-type: inline-size;
+    @apply @container;
   }
   .nui-content__columns-track {
-    @apply flex;
-    gap: 1.5em;
+    @apply flex gap-[1.5em];
   }
   .nui-content__column {
-    flex: 1 1 0;
-    min-inline-size: min(100%, 6rem);
+    @apply flex-[1_1_0] min-inline-[min(100%,6rem)];
   }
   @container (inline-size < 24rem) {
     .nui-content__columns-track {
@@ -409,39 +356,30 @@
   }
   .nui-content__grid {
     @apply block overflow-x-auto max-inline-full m-0 border-collapse leading-normal;
-    font-size: 0.9em;
+    @apply text-[length:0.9em];
   }
   .nui-content__table-column,
   .nui-content__table-cell {
-    @apply box-border text-start align-top;
-    min-inline-size: 6em;
-    padding: 0.5em 0.75em;
-    border: 1px solid var(--color-border);
+    @apply box-border text-start align-top min-inline-[6em] py-[0.5em] px-[0.75em] border;
+    @apply border-solid border-(color:--color-border);
   }
   .nui-content__table-column {
-    @apply font-semibold;
-    background: var(--color-surface-muted);
+    @apply font-semibold bg-surface-muted bg-none bg-clip-border;
   }
   .nui-content__table-column--type-number,
   .nui-content__table-cell--number {
     @apply tabular-nums text-end;
   }
   .nui-content__mention {
-    @apply rounded-sm text-primary-soft-foreground font-medium whitespace-nowrap;
-    -webkit-box-decoration-break: clone;
-    box-decoration-break: clone;
-    margin-inline-end: 0.15em;
-    padding: 0.05em 0.35em;
-    background: --theme(--color-primary-soft inline);
+    @apply rounded-sm text-primary-soft-foreground font-medium whitespace-nowrap me-[0.15em];
+    @apply py-[0.05em] px-[0.35em] bg-primary-soft bg-none bg-clip-border box-decoration-clone;
   }
   .nui-content__link {
-    @apply rounded-sm text-primary underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.2em;
-    transition: text-decoration-thickness var(--transition-duration-fast) var(--ease-nui);
+    @apply rounded-sm text-primary underline decoration-1 underline-offset-[0.2em];
+    @apply transition-[text-decoration-thickness] duration-fast ease-nui;
   }
   .nui-content__link:hover {
-    text-decoration-thickness: 2px;
+    @apply decoration-2;
   }
   .nui-content__link:focus-visible {
     @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
@@ -450,22 +388,14 @@
     @apply font-semibold;
   }
   .nui-content__code-inline {
-    @apply rounded-sm text-code-inline font-mono;
-    -webkit-box-decoration-break: clone;
-    box-decoration-break: clone;
-    padding: 0.15em 0.4em;
-    background: var(--color-surface-muted);
-    font-size: 0.875em;
+    @apply rounded-sm text-code-inline font-mono py-[0.15em] px-[0.4em] bg-surface-muted bg-none;
+    @apply bg-clip-border text-[length:0.875em] box-decoration-clone;
   }
   .nui-content__colour {
     @apply text-(--_colour);
   }
   .nui-content__highlight {
-    @apply rounded-sm text-inherit;
-    padding-block: 0.1em;
-    background: var(--_highlight);
-    -webkit-box-decoration-break: clone;
-    box-decoration-break: clone;
+    @apply rounded-sm text-inherit py-[0.1em] bg-(--_highlight) bg-none bg-clip-border box-decoration-clone;
   }
   .nui-content__colour--gray {
     --_colour: var(--nui-content-colour-gray);
@@ -531,28 +461,20 @@
   }
   .nui-content__embed-link {
     @apply flex box-border items-center justify-center border border-dashed border-border-strong;
-    @apply rounded text-muted-foreground;
-    aspect-ratio: 16 / 9;
-    background: var(--color-surface-muted);
-    font-size: 0.875em;
-    text-decoration: none;
+    @apply rounded text-muted-foreground aspect-[16_/_9] bg-surface-muted bg-none bg-clip-border;
+    @apply text-[length:0.875em] no-underline;
   }
   .nui-content__embed-frame {
-    @apply block box-border inline-full block-auto rounded;
-    border: 0;
-    background: var(--color-surface-muted);
+    @apply block box-border inline-full block-auto rounded border-0 border-none bg-surface-muted;
+    @apply bg-none bg-clip-border;
   }
   .nui-content__bookmark {
     @apply relative;
   }
   .nui-content__bookmark-link {
-    @apply flex box-border items-stretch overflow-hidden rounded text-foreground;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    text-decoration: none;
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      border-color var(--transition-duration-fast) var(--ease-nui);
+    @apply flex box-border items-stretch overflow-hidden rounded text-foreground border;
+    @apply border-solid border-(color:--color-border) bg-surface bg-none bg-clip-border;
+    @apply no-underline transition-[background-color,border-color] duration-fast ease-nui;
   }
   .nui-content__bookmark-link:hover {
     @apply border-border-strong;
@@ -566,28 +488,22 @@
     @apply outline-(length:--focus-ring-width) outline-ring outline-offset-(--focus-ring-offset);
   }
   .nui-content__bookmark-body {
-    @apply flex flex-1 flex-col gap-1 min-inline-0 p-3 leading-normal;
-    font-size: 0.875em;
+    @apply flex flex-1 flex-col gap-1 min-inline-0 p-3 leading-normal text-[length:0.875em];
   }
   .nui-content__bookmark-title {
     @apply overflow-hidden font-medium text-ellipsis whitespace-nowrap;
   }
   .nui-content__bookmark-description {
-    @apply overflow-hidden text-muted-foreground;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    @apply text-muted-foreground line-clamp-2;
   }
   .nui-content__bookmark-site {
     @apply flex items-center gap-2 overflow-hidden text-muted-foreground whitespace-nowrap;
-    font-size: 0.875em;
+    @apply text-[length:0.875em];
   }
   .nui-content__bookmark-icon {
     @apply flex-none inline-icon-sm block-icon-sm;
   }
   .nui-content__bookmark-image {
-    @apply flex-none object-cover;
-    inline-size: 30%;
-    max-inline-size: 12rem;
+    @apply flex-none object-cover inline-[30%] max-inline-[12rem];
   }
 }
