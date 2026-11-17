@@ -3,34 +3,27 @@
     --_separator: calc(--spacing(2) * 2 + 1px);
 
     @apply sticky inset-bs-0 z-1 overflow-clip box-border p-1 border-be border-be-border bg-surface;
-    border-start-start-radius: inherit;
-    border-start-end-radius: inherit;
+    @apply rounded-ss-[inherit] rounded-se-[inherit];
   }
   .nui-editor-toolbar__groups {
-    @apply flex flex-wrap items-center;
-    margin-inline-start: calc(var(--_separator) * -1);
+    @apply flex flex-wrap items-center ms-[calc(var(--_separator)_*_-1)];
   }
   .nui-editor-toolbar__group {
-    @apply relative flex items-center ps-(--_separator);
-    gap: 2px;
+    @apply relative flex items-center ps-(--_separator) gap-[2px];
   }
   .nui-editor-toolbar__group::before {
-    @apply absolute inset-y-0 inset-s-2 inline-px my-auto bg-border;
-    content: '';
-    block-size: 1.25rem;
+    @apply absolute inset-y-0 inset-s-2 inline-px my-auto bg-border content-[''] block-[1.25rem];
   }
   .nui-editor-toolbar--docked {
     @apply fixed inset-x-0 z-10 overflow-visible border-bs border-bs-border rounded-none;
-    @apply translate-0;
-    inset-block: auto var(--_keyboard, 0px);
-    padding-block-end: max(var(--spacing), env(safe-area-inset-bottom));
+    @apply translate-0 inset-bs-auto inset-be-[var(--_keyboard,0px)];
+    @apply pbe-[max(var(--spacing),env(safe-area-inset-bottom))] shadow-md transition-[translate];
+    @apply duration-normal ease-nui;
     border-block-end: 0;
-    box-shadow: var(--shadow-md);
-    transition: translate var(--transition-duration-normal) var(--ease-nui);
   }
   @starting-style {
     .nui-editor-toolbar--docked {
-      translate: 0 100%;
+      @apply translate-x-0 translate-y-full;
     }
   }
   .nui-editor-toolbar--docked .nui-editor-toolbar__groups {

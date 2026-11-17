@@ -7,9 +7,7 @@
     --_halo: 4px;
 
     @apply relative box-border inline-full border border-border rounded bg-surface text-foreground;
-    transition:
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      outline-color var(--transition-duration-fast) var(--ease-nui);
+    @apply transition-[border-color,outline-color] duration-fast ease-nui;
   }
   .nui-editor--size-sm {
     --_padding: var(--spacing-field-pad-sm);
@@ -31,7 +29,7 @@
   }
   .nui-editor:focus-within {
     @apply border-ring outline-(length:--field-ring-width) outline-ring;
-    @apply outline-offset-(--focus-ring-offset);
+    @apply outline-offset-(--focus-ring-offset) outline-solid;
   }
   .nui-editor--invalid,
   .nui-editor--invalid:focus-within {
@@ -50,17 +48,16 @@
     --_size: var(--_text);
 
     @apply relative box-border min-block-(--_min) pbs-3 pbe-8 px-(--_padding) caret-foreground;
-    outline: none;
+    @apply outline-none;
   }
   .nui-editor__content > .nui-editor__chunk {
-    @apply p-(--_halo);
-    margin: calc(-1 * var(--_halo));
+    @apply p-(--_halo) m-[calc(-1_*_var(--_halo))];
   }
   .nui-editor__chunk > * {
     @apply mbs-(--_flow);
   }
   .nui-editor__chunk > .nui-content__heading {
-    margin-block-start: 1.4em;
+    @apply mbs-[1.4em];
   }
   .nui-editor__chunk:first-child > :first-child {
     @apply mbs-0;
@@ -70,10 +67,7 @@
   }
   .nui-editor__chunk > *,
   .nui-editor__slots > * {
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      margin-inline-start var(--transition-duration-fast) var(--ease-nui),
-      opacity var(--transition-duration-fast) var(--ease-nui);
+    @apply transition-[background-color,margin-inline-start,opacity] duration-fast ease-nui;
   }
   .nui-editor__chunk > [contenteditable='false'],
   .nui-editor__slots > [contenteditable='false'] {
@@ -90,7 +84,7 @@
     @apply opacity-40;
   }
   .nui-editor__content .nui-editor__pushed {
-    margin-inline-start: calc(var(--_grip) + --spacing(2));
+    @apply ms-[calc(var(--_grip)_+_--spacing(2))];
   }
   .nui-editor__all > .nui-editor__chunk > * {
     background-color: color-mix(in oklab, var(--color-primary) 16%, transparent);
@@ -106,13 +100,11 @@
   }
   .nui-editor--empty .nui-editor__content::before {
     @apply absolute inset-bs-3 inset-x-(--_padding) text-muted-foreground pointer-events-none;
-    content: attr(aria-placeholder);
+    @apply content-[attr(aria-placeholder)];
   }
   .nui-editor__selected {
-    @apply rounded-sm;
-    outline: 2px solid --theme(--color-ring inline);
-    outline-offset: 2px;
-    transition: outline-color var(--transition-duration-fast) var(--ease-nui);
+    @apply rounded-sm outline-2 outline-solid outline-ring outline-offset-2;
+    @apply transition-[outline-color] duration-fast ease-nui;
   }
   .nui-editor__content .nui-content__code {
     @apply whitespace-pre-wrap wrap-anywhere overflow-x-visible;
@@ -129,8 +121,7 @@
   }
   .nui-editor__selected :is(input, textarea):focus::selection,
   .nui-editor__gap :is(input, textarea):focus::selection {
-    background: Highlight;
-    color: HighlightText;
+    @apply bg-[color:Highlight] text-[color:HighlightText];
   }
   .nui-editor__content span.nui-editor__selected {
     @apply outline-offset-0;
@@ -139,33 +130,27 @@
     @apply inline-flex;
   }
   .nui-editor__content .nui-editor__comment {
-    @apply text-inherit;
+    @apply text-inherit transition-[background-color,box-shadow] duration-fast ease-nui;
     background: color-mix(in oklab, var(--color-warning) 18%, transparent);
     box-shadow: inset 0 -2px 0 color-mix(in oklab, var(--color-warning) 55%, transparent);
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      box-shadow var(--transition-duration-fast) var(--ease-nui);
   }
   .nui-editor__content .nui-editor__comment--active {
+    @apply shadow-[inset_0_-2px_0_var(--color-warning)];
     background: color-mix(in oklab, var(--color-warning) 36%, transparent);
-    box-shadow: inset 0 -2px 0 var(--color-warning);
   }
   .nui-editor__content .nui-editor__gap {
     position: relative;
   }
   .nui-editor__content .nui-editor__gap::after {
-    @apply bg-foreground opacity-0 pointer-events-none;
-    content: '';
+    @apply bg-foreground opacity-0 pointer-events-none content-[''] rounded-[1px];
     position: absolute;
     inset-block-start: var(--_gap-top);
     inset-inline-start: var(--_gap-start);
     inline-size: 2px;
     block-size: var(--_gap-size);
-    border-radius: 1px;
   }
   .nui-editor__content:focus .nui-editor__gap::after {
-    @apply opacity-100;
-    animation: nui-editor-caret 1.06s step-end infinite;
+    @apply opacity-100 animate-[nui-editor-caret_1.06s_step-end_infinite];
     animation-play-state: var(--nui-animation-play-state, running);
   }
   @keyframes nui-editor-caret {
@@ -175,7 +160,7 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .nui-editor__content:focus .nui-editor__gap::after {
-      animation: none;
+      @apply animate-none;
     }
   }
 }

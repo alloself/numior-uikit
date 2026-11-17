@@ -8,10 +8,7 @@
   }
   .nui-editor-upload {
     @apply flex box-border items-center gap-3 py-2 px-3 border border-border rounded;
-    @apply bg-surface-muted;
-    transition:
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      background-color var(--transition-duration-fast) var(--ease-nui);
+    @apply bg-surface-muted transition-[border-color,background-color] duration-fast ease-nui;
   }
   .nui-editor-upload--status-error {
     @apply bg-error-soft;
@@ -19,16 +16,13 @@
   }
   .nui-editor-upload__preview,
   .nui-editor-upload__icon {
-    @apply flex-none box-border rounded-sm;
-    inline-size: 3rem;
-    block-size: 3rem;
+    @apply flex-none box-border rounded-sm inline-[3rem] block-[3rem];
   }
   .nui-editor-upload__preview {
     @apply object-cover opacity-70;
   }
   .nui-editor-upload__icon {
-    @apply grid place-items-center bg-surface text-muted-foreground;
-    font-size: 1.25rem;
+    @apply grid place-items-center bg-surface text-muted-foreground text-[length:1.25rem];
   }
   .nui-editor-upload__body {
     @apply flex flex-1 flex-col gap-1 min-inline-0;
@@ -47,7 +41,7 @@
     @apply flex flex-none gap-1;
   }
   .nui-editor-media {
-    inline-size: calc(min(20rem, calc(100vw - --spacing(8))) - 2 * --spacing(3) - 2px);
+    @apply inline-[calc(min(20rem,calc(100vw_-_--spacing(8)))_-_2_*_--spacing(3)_-_2px)];
   }
   .nui-editor-media__upload {
     @apply flex flex-col items-start gap-2 pbs-3;
