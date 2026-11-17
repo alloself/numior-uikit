@@ -82,8 +82,7 @@
   }
   .nui-code__line {
     @apply block px-(--_padding) min-block-[1lh] ps-[calc(var(--_padding)_+_var(--_gutter))];
-    @apply transition-[background-color] duration-fast ease-nui;
-    border-inline-start: 2px solid transparent;
+    @apply transition-[background-color] duration-fast ease-nui border-s-2 border-s-transparent;
     counter-increment: line;
   }
   .nui-code--line-numbers .nui-code__line::before {

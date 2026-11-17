@@ -64,7 +64,7 @@
   }
   .nui-sidebar--variant-floating:not(.nui-sidebar--mobile)::before {
     @apply absolute inset-(--_gap) -z-1 bg-surface-muted content-[''] shadow-sm;
-    border: var(--_frame) solid var(--color-border);
+    @apply border-(length:--_frame) border-solid border-border;
     @apply rounded-[var(--_inset-radius,--theme(--radius-lg_inline))];
   }
   .nui-sidebar--rail {

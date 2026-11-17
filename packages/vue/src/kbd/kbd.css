@@ -17,8 +17,7 @@
     @apply box-border inline-flex items-center justify-center min-inline-(--_height);
     @apply block-(--_height) pbe-px px-(--_padding) border border-border border-solid rounded-sm;
     @apply bg-surface text-muted-foreground transition-[background-color,border-color,color];
-    @apply duration-fast ease-nui;
-    border-block-end-width: 2px;
+    @apply duration-fast ease-nui border-be-2;
     font: inherit;
     @apply font-medium;
   }
