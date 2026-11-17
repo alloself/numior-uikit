@@ -433,6 +433,12 @@ assert.match(
   'content must keep @numior/editor-core external',
 );
 
+assert.match(
+  contentCode,
+  /import\(['"]vue\/server-renderer['"]\)/,
+  'content must load vue/server-renderer from the app on demand',
+);
+
 for (const file of await localImports(resolve('packages/content/dist/index.js'))) {
   const bundle = await readFile(file, 'utf8');
 
@@ -452,7 +458,7 @@ for (const file of await localImports(resolve('packages/content/dist/index.js'))
 for (const file of await localImports(resolve('packages/content/dist/index.js'))) {
   assert.doesNotMatch(
     await readFile(file, 'utf8'),
-    /from ['"]@numior\/(?:table|vue)['"]/,
+    /from ['"]@numior\/table['"]/,
     `content must leave the table view to its table entry: ${file}`,
   );
 }

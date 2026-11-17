@@ -1,8 +1,14 @@
 import { flushPromises, mount, renderToString, type VueWrapper } from '@vue/test-utils';
 import type { Doc, DocJSON, DocJSONIssue } from '@numior/editor-core';
+import { vi } from 'vite-plus/test';
 import { createSSRApp, nextTick, type Plugin } from 'vue';
 import { renderToString as renderAppToString } from 'vue/server-renderer';
-import { NuiContent, type NuiContentProps } from '../../src';
+import {
+  NuiContent,
+  renderContent,
+  type NuiContentProps,
+  type RenderContentOptions,
+} from '../../src';
 
 const withoutComments = (html: string): string => html.replaceAll(/<!--[\s\S]*?-->/g, '');
 
@@ -21,11 +27,15 @@ export class ContentDriver {
     return withoutComments(await renderToString(NuiContent, { props }));
   }
 
-  static async hydrate(props: NuiContentProps): Promise<readonly string[]> {
+  static async published(doc: Doc, options?: RenderContentOptions): Promise<string> {
+    return withoutComments(await renderContent(doc, options));
+  }
+
+  static async hydrate(props: NuiContentProps, html?: string): Promise<readonly string[]> {
     const host = document.createElement('div');
     const warnings: string[] = [];
 
-    host.innerHTML = await renderAppToString(createSSRApp(NuiContent, { ...props }));
+    host.innerHTML = html ?? (await renderAppToString(createSSRApp(NuiContent, { ...props })));
     document.body.append(host);
 
     const app = createSSRApp(NuiContent, { ...props });
@@ -35,6 +45,8 @@ export class ContentDriver {
     };
 
     app.mount(host);
+    await vi.dynamicImportSettled();
+    await flushPromises();
     app.unmount();
     host.remove();
     return warnings;
@@ -56,6 +68,18 @@ export class ContentDriver {
 
   async settle(): Promise<void> {
     await flushPromises();
+  }
+
+  async iconsLoaded(): Promise<void> {
+    await vi.waitFor(() => {
+      const pending = this.wrapper
+        .findAll('.nui-icon')
+        .filter((icon) => !icon.find('svg').exists());
+
+      if (pending.length > 0) {
+        throw new Error(`${pending.length} icons are still loading`);
+      }
+    });
   }
 
   get markup(): string {

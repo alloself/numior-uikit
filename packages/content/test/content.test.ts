@@ -20,24 +20,29 @@ const toggle = (open: boolean) =>
   docOf(node('toggle', [node('paragraph', ['Head']), node('paragraph', ['Body'])], { open }));
 
 describe('NuiContent', () => {
-  it('renders a document like renderContent on the server and hydrates it without mismatches', async () => {
+  it('hydrates the HTML of renderContent without mismatches', async () => {
     const doc = everyBlock();
 
-    expect(await ContentDriver.ssr({ document: doc })).toBe(renderContent(doc));
+    expect(await ContentDriver.hydrate({ document: doc }, await renderContent(doc))).toEqual([]);
 
-    expect(await ContentDriver.ssr({ document: doc, size: 'sm' })).toBe(
-      renderContent(doc, { size: 'sm' }),
-    );
-
-    expect(await ContentDriver.hydrate({ document: doc })).toEqual([]);
+    expect(
+      await ContentDriver.hydrate(
+        { document: doc, size: 'sm' },
+        await renderContent(doc, { size: 'sm' }),
+      ),
+    ).toEqual([]);
   });
 
-  it('renders the same blocks in the browser and keeps the todo state on the checkbox', () => {
+  it('renders the same blocks in the browser and keeps the todo state on the checkbox', async () => {
     const doc = everyBlock();
     const view = mounted({ document: doc });
 
+    await view.iconsLoaded();
+
     expect(view.markup).toBe(
-      renderContent(doc).replaceAll(/ (checked|disabled|alt)(?= )/gu, ' $1=""'),
+      (await ContentDriver.published(doc))
+        .replaceAll(/ (checked|disabled|alt)(?= )/gu, ' $1=""')
+        .replaceAll(' style=""', ''),
     );
 
     expect(view.checks).toEqual([true]);
@@ -71,7 +76,7 @@ describe('NuiContent', () => {
     const doc = docOf(node('paragraph', ['Hello']));
     const view = mounted({ document: toJSON(doc) });
 
-    expect(view.markup).toBe(renderContent(doc));
+    expect(view.markup).toBe(await ContentDriver.published(doc));
 
     await view.show({ ...toJSON(doc), schema: { name: 'other', version: 1 } });
 

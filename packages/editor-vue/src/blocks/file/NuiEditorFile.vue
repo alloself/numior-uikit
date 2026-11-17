@@ -1,5 +1,5 @@
 <template>
-  <span class="nui-content__file-icon" aria-hidden="true" />
+  <span class="nui-content__file-icon" aria-hidden="true"><NuiIcon :icon="icon" /></span>
   <span class="nui-content__file-name">{{ name }}</span>
   <span v-if="size !== undefined" class="nui-content__file-size">{{ size }}</span>
   <NuiEditorLinkBar
@@ -14,7 +14,9 @@
 
 <script setup lang="ts">
 import { Download } from '@lucide/vue';
+import { CONTENT_FILE_ICONS, fileKindOf } from '@numior/content';
 import { formatFileSize, useLocale, useMessages } from '@numior/primitives';
+import { NuiIcon } from '@numior/vue';
 import { useEventListener } from '@vueuse/core';
 import { computed, ref, watch } from 'vue';
 import { editorMessages } from '../../editor/editor.messages';
@@ -32,6 +34,8 @@ const tooled = ref(selected);
 
 const name = computed(() => (typeof node.attrs.name === 'string' ? node.attrs.name : ''));
 const url = computed(() => (typeof node.attrs.url === 'string' ? node.attrs.url : ''));
+const type = computed(() => (typeof node.attrs.type === 'string' ? node.attrs.type : ''));
+const icon = computed(() => CONTENT_FILE_ICONS[fileKindOf(type.value, name.value)]);
 
 const size = computed(() =>
   typeof node.attrs.size === 'number' ? formatFileSize(node.attrs.size, locale.value) : undefined,

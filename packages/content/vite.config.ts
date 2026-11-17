@@ -21,7 +21,7 @@ export default defineConfig({
     },
     sourcemap: true,
     rolldownOptions: {
-      external: [/^vue$/, /^@numior\/(editor-core|primitives|table|vue)$/],
+      external: [/^vue(?:\/server-renderer)?$/, /^@numior\/(editor-core|primitives|table|vue)$/],
     },
   },
 });

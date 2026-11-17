@@ -60,13 +60,7 @@
     "vue": "^3.5.0"
   },
   "peerDependenciesMeta": {
-    "@numior/primitives": {
-      "optional": true
-    },
     "@numior/table": {
-      "optional": true
-    },
-    "@numior/vue": {
       "optional": true
     }
   }

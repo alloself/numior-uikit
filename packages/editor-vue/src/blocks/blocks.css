@@ -10,9 +10,6 @@
   inset-inline-start: 0;
   display: flex;
 }
-.nui-editor__content .nui-content__callout::before {
-  content: none;
-}
 .nui-editor__content .nui-content__callout > .nui-editor__widget {
   grid-column: 1;
   grid-row: 1;

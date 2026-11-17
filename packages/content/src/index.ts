@@ -42,6 +42,7 @@ export {
   columnLetter,
   parseCellText,
 } from './content/table-values';
+export { CONTENT_FILE_ICONS } from './content/file-icons';
 export { renderContent } from './content/render-content';
 export type { RenderContentOptions } from './content/render-content';
 export type {
