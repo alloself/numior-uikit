@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vite-plus/test';
 import { DocsAccent } from '../.vitepress/theme/theme.types';
-import { contrastOf, mixColors, parseColor, type Oklab } from './support/color';
+import { contrastOf, mixColors, overlayColor, parseColor, type Oklab } from './support/color';
 
 type Scheme = 'light' | 'dark';
 type Tokens = ReadonlyMap<string, string>;
@@ -14,6 +14,10 @@ interface Pair {
 }
 
 const AA = 4.5;
+const NON_TEXT = 3;
+const NEUTRAL_FILL = 'neutral-muted';
+const ROW_STATES = ['state-hover', 'state-pressed'];
+const ROW_SURFACES = ['surface', 'surface-muted', 'surface-elevated', 'surface-overlay'];
 const SCHEMES: readonly Scheme[] = ['light', 'dark'];
 const ROLES = ['primary', 'secondary', 'success', 'warning', 'error', 'info', 'neutral'];
 const TEXTS = ['text', 'text-muted', 'text-subtle', 'primary', 'code-inline'];
@@ -34,7 +38,8 @@ const VAR_RE = /^var\(--nui-([a-z0-9-]+)\)$/u;
 const SOFT_RE =
   /^oklab\(\s*from color-mix\(in oklab, var\(--nui-([a-z]+)\) (\d+)%, var\(--nui-layer-surface\)\)\s+max\(l, var\(--nui-soft-min-lightness\)\) a b\s*\)$/u;
 
-const MIX_RE = /^color-mix\(in oklab, var\(--nui-([a-z-]+)\) (\d+)%, var\(--nui-([a-z-]+)\)\)$/u;
+const MIX_RE =
+  /^color-mix\(\s*in oklab,\s*var\(--nui-([a-z-]+)\) (?:(\d+)%|var\(--nui-([a-z-]+)\)),\s*var\(--nui-([a-z-]+)\)\s*\)$/u;
 
 const BLOCK_RE = /([^{}]+)\{([^{}]*)\}/gu;
 const LAYER_RE = /--nui-layer-surface:\s*([^;]+);/gu;
@@ -87,13 +92,15 @@ const colorOf = (tokens: Tokens, name: string): Oklab => {
     return colorOf(tokens, reference);
   }
 
-  const [, color, share, base] = MIX_RE.exec(value) ?? [];
+  const [, color, share, shareToken, base] = MIX_RE.exec(value) ?? [];
 
   if (color === undefined || base === undefined) {
     return parseColor(value);
   }
 
-  return mixColors(colorOf(tokens, color), colorOf(tokens, base), Number(share) / 100);
+  const percent = share ?? tokens.get(shareToken ?? '') ?? '';
+
+  return mixColors(colorOf(tokens, color), colorOf(tokens, base), Number.parseFloat(percent) / 100);
 };
 
 const softOf = (tokens: Tokens, role: string, layer: string): Oklab => {
@@ -117,12 +124,35 @@ const layersOf = (scheme: Scheme): string[] =>
     ([, value = '']) => VAR_RE.exec(schemeValue(value, scheme))?.[1] ?? value,
   );
 
+const fillPairs = (tokens: Tokens, fills: readonly string[]): Pair[] =>
+  fills.map((fill) => ({
+    text: `${fill}-foreground`,
+    surface: fill,
+    ratio: contrastOf(colorOf(tokens, `${fill}-foreground`), colorOf(tokens, fill)),
+  }));
+
+const shareOf = (tokens: Tokens, name: string): number =>
+  Number.parseFloat(tokens.get(name) ?? '') / 100;
+
+const rowPairs = (tokens: Tokens): Pair[] =>
+  ROW_SURFACES.flatMap((layer) => {
+    const fill = colorOf(tokens, NEUTRAL_FILL);
+    const surface = colorOf(tokens, layer);
+
+    const states = ROW_STATES.map((state) => ({
+      text: NEUTRAL_FILL,
+      surface: `${state} on ${layer}`,
+      ratio: contrastOf(
+        fill,
+        overlayColor(colorOf(tokens, 'text'), surface, shareOf(tokens, state)),
+      ),
+    }));
+
+    return [{ text: NEUTRAL_FILL, surface: layer, ratio: contrastOf(fill, surface) }, ...states];
+  });
+
 const rolePairs = (tokens: Tokens, roles: readonly string[], scheme: Scheme): Pair[] => [
-  ...roles.map((role) => ({
-    text: `${role}-foreground`,
-    surface: role,
-    ratio: contrastOf(colorOf(tokens, `${role}-foreground`), colorOf(tokens, role)),
-  })),
+  ...fillPairs(tokens, roles),
   ...roles.flatMap((role) =>
     layersOf(scheme).map((layer) => ({
       text: `${role}-soft-foreground`,
@@ -158,9 +188,9 @@ const syntaxPairs = (tokens: Tokens): Pair[] =>
     return pairs;
   }, []);
 
-const failing = (pairs: readonly Pair[]): string[] =>
+const failing = (pairs: readonly Pair[], least = AA): string[] =>
   pairs.reduce<string[]>((lines, pair) => {
-    if (pair.ratio < AA) {
+    if (pair.ratio < least) {
       lines.push(`${pair.text} on ${pair.surface}: ${pair.ratio.toFixed(2)}`);
     }
     return lines;
@@ -197,8 +227,38 @@ describe('Numior theme of the docs site', () => {
       return failing([
         ...textPairs(tokens, TEXTS),
         ...rolePairs(tokens, ROLES, scheme),
+        ...fillPairs(tokens, [NEUTRAL_FILL]),
         ...syntaxPairs(tokens),
       ]).map((line) => `${scheme}: ${line}`);
+    });
+
+    expect(failures).toEqual([]);
+  });
+
+  it('keeps every neutral fill above the band of the row states', () => {
+    const kit = tokensOf(kitTheme, 'light');
+
+    const steps = [
+      shareOf(kit, 'state-hover'),
+      shareOf(kit, 'state-pressed'),
+      Number(SOFT_RE.exec(kit.get('neutral-soft') ?? '')?.[2]) / 100,
+      shareOf(kit, 'neutral-muted-mix'),
+    ];
+
+    expect(steps).toEqual(steps.toSorted((first, second) => first - second));
+    expect(new Set(steps).size).toBe(steps.length);
+  });
+
+  it('keeps the neutral fill apart from a row at rest, on hover and when pressed', () => {
+    const failures = SCHEMES.flatMap((scheme) => {
+      const kit = tokensOf(kitTheme, scheme);
+      const site = tokensOf(numior, scheme, new Map(kit));
+
+      return [
+        ...failing(fillPairs(kit, [NEUTRAL_FILL])).map((line) => `kit ${scheme}: ${line}`),
+        ...failing(rowPairs(kit), NON_TEXT).map((line) => `kit ${scheme}: ${line}`),
+        ...failing(rowPairs(site), NON_TEXT).map((line) => `numior ${scheme}: ${line}`),
+      ];
     });
 
     expect(failures).toEqual([]);

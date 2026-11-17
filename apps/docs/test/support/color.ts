@@ -8,6 +8,9 @@ const OKLCH_RE = /^oklch\(([\d.]+) ([\d.]+) ([\d.]+)\)$/u;
 const decode = (channel: number): number =>
   channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
 
+const encode = (channel: number): number =>
+  channel <= 0.0031308 ? channel * 12.92 : 1.055 * channel ** (1 / 2.4) - 0.055;
+
 const clamp = (value: number): number => Math.min(1, Math.max(0, value));
 
 const labOfLinear = ([red, green, blue]: Triple): Oklab => {
@@ -62,6 +65,16 @@ export const mixColors = (color: Oklab, base: Oklab, share: number): Oklab => [
   color[1] * share + base[1] * (1 - share),
   color[2] * share + base[2] * (1 - share),
 ];
+
+export const overlayColor = (color: Oklab, base: Oklab, alpha: number): Oklab => {
+  const below = linearOfLab(base);
+
+  const [red = 0, green = 0, blue = 0] = linearOfLab(color).map((channel, index) =>
+    decode(encode(channel) * alpha + encode(below[index] ?? 0) * (1 - alpha)),
+  );
+
+  return labOfLinear([red, green, blue]);
+};
 
 const luminanceOf = (color: Oklab): number => {
   const [red, green, blue] = linearOfLab(color);

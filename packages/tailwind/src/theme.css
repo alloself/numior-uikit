@@ -35,6 +35,8 @@
   --color-info-soft-foreground: var(--nui-info-soft-foreground);
   --color-neutral: var(--nui-neutral);
   --color-neutral-foreground: var(--nui-neutral-foreground);
+  --color-neutral-muted: var(--nui-neutral-muted);
+  --color-neutral-muted-foreground: var(--nui-neutral-muted-foreground);
   --color-neutral-soft: var(--nui-neutral-soft);
   --color-neutral-soft-foreground: var(--nui-neutral-soft-foreground);
   --color-ring: var(--nui-focus);

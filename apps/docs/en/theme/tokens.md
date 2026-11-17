@@ -16,7 +16,7 @@ Page and panel backgrounds, three levels of text, and borders. `light-dark()` ho
 
 ## Tones
 
-Each tone has four tokens: a fill, the text on it, a soft fill and the text on the soft fill. The soft fill is derived from the main one, so you rarely set it yourself.
+Each tone has four tokens: a fill, the text on it, a soft fill and the text on the soft fill. The soft fill is derived from the main one, so you rarely set it yourself. The neutral tone also has a middle step, `--nui-neutral-muted`, for counts in rows: the share `--nui-neutral-muted-mix` of the neutral over the surface.
 
 <TokenReference section="tones" />
 

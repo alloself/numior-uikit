@@ -34,6 +34,12 @@
   --nui-info-soft-foreground: var(--nui-info);
   --nui-neutral: light-dark(oklch(0.21 0.006 285.89), oklch(0.967 0.001 286.38));
   --nui-neutral-foreground: light-dark(oklch(0.985 0 0), oklch(0.21 0.006 285.89));
+  --nui-neutral-muted: color-mix(
+    in oklab,
+    var(--nui-neutral) var(--nui-neutral-muted-mix),
+    var(--nui-surface)
+  );
+  --nui-neutral-muted-foreground: var(--nui-surface);
   --nui-neutral-soft-foreground: var(--nui-text);
 
   --nui-focus: var(--nui-primary);
@@ -43,6 +49,7 @@
   --nui-disabled-opacity: 0.5;
   --nui-state-hover: 8%;
   --nui-state-pressed: 16%;
+  --nui-neutral-muted-mix: 65%;
   --nui-soft-min-lightness: 0.26;
   --nui-hover: color-mix(in oklab, var(--nui-text) var(--nui-state-hover), transparent);
   --nui-pressed: color-mix(in oklab, var(--nui-text) var(--nui-state-pressed), transparent);
@@ -184,7 +191,7 @@
       max(l, var(--nui-soft-min-lightness)) a b
   );
   --nui-neutral-soft: oklab(
-    from color-mix(in oklab, var(--nui-neutral) 10%, var(--nui-layer-surface))
+    from color-mix(in oklab, var(--nui-neutral) 28%, var(--nui-layer-surface))
       max(l, var(--nui-soft-min-lightness)) a b
   );
 }
