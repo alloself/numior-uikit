@@ -32,8 +32,8 @@
   }
 
   .nui-collab-selection {
+    @apply rounded-[2px];
     background: color-mix(in oklab, var(--_colour) 24%, transparent);
-    border-radius: 2px;
   }
 
   .nui-collab-carets {
@@ -44,26 +44,24 @@
   }
 
   .nui-collab-carets__caret {
-    @apply box-border bg-(--_colour) opacity-0;
+    @apply box-border bg-(--_colour) opacity-0 rounded-[1px] transition-opacity duration-fast;
+    @apply ease-nui;
     position: absolute;
     inset-block-start: 0;
     inset-inline-start: 0;
     inline-size: 2px;
     block-size: var(--_height, 1em);
-    border-radius: 1px;
-    transition: opacity var(--transition-duration-fast) var(--ease-nui);
   }
 
   .nui-collab-carets__flag {
     @apply box-border py-0 px-1 overflow-hidden text-foreground text-(length:--text-xs);
-    @apply leading-control text-ellipsis whitespace-nowrap rounded-sm;
+    @apply leading-control text-ellipsis whitespace-nowrap rounded-sm max-inline-[12rem];
+    @apply transition-[transform] duration-fast ease-nui;
     position: absolute;
     inset-block-end: 100%;
     inset-inline-start: 0;
-    max-inline-size: 12rem;
     background: color-mix(in oklab, var(--_colour) 24%, var(--color-surface));
     transform: translate(var(--_flag-x, 0), var(--_flag-shift, 0));
-    transition: transform var(--transition-duration-fast) var(--ease-nui);
   }
 
   .nui-collab-comments {
@@ -81,20 +79,18 @@
   }
 
   .nui-collab-comment-layer__anchor {
-    @apply block;
+    @apply block max-block-[50dvh];
     position: sticky;
     inset-block-start: --spacing(4);
     block-size: 100%;
-    max-block-size: 50dvh;
   }
 
   .nui-collab-comment-popover {
-    inline-size: min(22rem, calc(100vw - 2 * --spacing(4)));
+    @apply inline-[min(22rem,calc(100vw_-_2_*_--spacing(4)))];
   }
 
   .nui-collab-comments__title {
-    @apply m-0 text-(length:--text-base);
-    font-weight: 600;
+    @apply m-0 text-(length:--text-base) font-semibold;
   }
 
   .nui-collab-comments__form {
@@ -119,15 +115,12 @@
   }
 
   .nui-collab-comments__replies {
-    @apply gap-2 ps-3;
-    border-inline-start: 2px solid var(--color-border);
+    @apply gap-2 ps-3 border-s-2 border-s-(color:--color-border);
   }
 
   .nui-collab-comments__thread {
     @apply flex flex-col gap-2 box-border p-3 bg-surface border border-border rounded;
-    transition:
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      opacity var(--transition-duration-fast) var(--ease-nui);
+    @apply transition-[border-color,opacity] duration-fast ease-nui;
   }
 
   .nui-collab-comments__thread--active {
@@ -147,8 +140,7 @@
   }
 
   .nui-collab-comments__author {
-    @apply overflow-hidden text-ellipsis whitespace-nowrap;
-    font-weight: 500;
+    @apply overflow-hidden text-ellipsis whitespace-nowrap font-medium;
   }
 
   .nui-collab-comments__time {
@@ -172,8 +164,7 @@
   }
 
   .nui-collab-history__title {
-    @apply m-0 text-(length:--text-base);
-    font-weight: 600;
+    @apply m-0 text-(length:--text-base) font-semibold;
   }
 
   .nui-collab-history__preview {
@@ -189,8 +180,7 @@
   }
 
   .nui-diff {
-    @apply rounded-sm underline-offset-2;
-    text-decoration-thickness: 1px;
+    @apply rounded-sm underline-offset-2 decoration-1;
   }
 
   .nui-diff--added {
@@ -198,8 +188,7 @@
   }
 
   .nui-diff--removed {
-    @apply bg-error-soft text-muted-foreground;
-    text-decoration-line: line-through;
+    @apply bg-error-soft text-muted-foreground line-through;
   }
 
   .nui-collab-history__alternatives,
@@ -212,8 +201,7 @@
   }
 
   .nui-collab-history__subtitle {
-    @apply m-0 text-(length:--text-sm);
-    font-weight: 600;
+    @apply m-0 text-(length:--text-sm) font-semibold;
   }
 
   .nui-collab-history__alternative {
