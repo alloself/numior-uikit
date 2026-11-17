@@ -54,6 +54,7 @@
 </template>
 
 <script setup lang="ts">
+import { useMounted } from '@vueuse/core';
 import { computed, useTemplateRef } from 'vue';
 import { useControlId } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
@@ -70,6 +71,7 @@ const open = defineModel<boolean>('open', { default: false });
 defineSlots<{ default(): unknown }>();
 
 const sidebar = useSidebar();
+const mounted = useMounted();
 const item = useTemplateRef<InstanceType<typeof NuiListItem>>('item');
 const flyoutElement = useTemplateRef<HTMLElement>('flyout-node');
 const action = computed(() => item.value?.action ?? null);
@@ -98,6 +100,12 @@ provideSidebar({ ...sidebar, rail: computed(() => false) });
 
 provideSidebarSub({
   reveal: () => {
+    open.value = true;
+  },
+  revealAtStart: () => {
+    if (mounted.value) {
+      return;
+    }
     open.value = true;
   },
   dismiss: () => flyout.dismiss(),

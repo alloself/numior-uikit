@@ -53,11 +53,15 @@ const action = computed(() => item.value?.action ?? null);
 
 watch(
   () => current,
-  (isCurrent) => {
+  (isCurrent, wasCurrent) => {
     if (!isCurrent) {
       return;
     }
 
+    if (wasCurrent === undefined) {
+      sub?.revealAtStart();
+      return;
+    }
     sub?.reveal();
   },
   { immediate: true },

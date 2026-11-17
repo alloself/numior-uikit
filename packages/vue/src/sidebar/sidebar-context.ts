@@ -11,6 +11,7 @@ export interface SidebarContext {
 
 export interface SidebarSubContext {
   reveal(): void;
+  revealAtStart(): void;
   dismiss(): void;
 }
 

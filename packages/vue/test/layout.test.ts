@@ -339,6 +339,24 @@ describe('NuiLayout with NuiSidebar', () => {
     layout.unmount();
   });
 
+  it('keeps a sub list closed by hand closed after the sidebar goes to the rail and back', async () => {
+    const layout = LayoutDriver.mount({ collapsible: 'icon' });
+    await layout.activate('team');
+    await layout.clickSub();
+    expect(layout.subOpen).toBe(false);
+
+    await layout.clickTrigger();
+
+    expect(layout.sidebarModifier('rail')).toBe(true);
+
+    await layout.clickTrigger();
+
+    expect(layout.sidebarModifier('rail')).toBe(false);
+    expect(layout.subOpen).toBe(false);
+
+    layout.unmount();
+  });
+
   it('renders the plain, inset and floating looks as modifiers of the panel', () => {
     for (const variant of ['plain', 'inset', 'floating'] as const) {
       const layout = LayoutDriver.mount({ variant });
