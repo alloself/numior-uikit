@@ -3,7 +3,6 @@ const SKIPPED_BLOCK = /^@(?:keyframes|property|font-face|theme|utility|custom-va
 const WHOLE_VARIABLE = /^var\(\s*--[\w-]+\s*(?:,[\s\S]*)?\)$/u;
 const PRIVATE_VARIABLE = /^var\(\s*--_[\w-]+\s*(?:,[\s\S]*)?\)$/u;
 const MIXED_COLOUR = /\bcolor-mix\(|\(\s*from\s/u;
-const AREA_NAME = /^(?!auto$|span$)[a-z_][\w-]*$/iu;
 const FLEX_ALIGNED = /^(?:align-items|align-content|align-self|justify-content|justify-self)$/u;
 const START_OR_END = /^(?:start|end)$/u;
 const SIDE = '(?:(?:block|inline)(?:-(?:start|end))?|top|right|bottom|left)';
@@ -27,7 +26,6 @@ export const UtilityException = Object.freeze({
   KeywordOnly: 'keyword-only',
   WholeVariable: 'whole-variable',
   ShadowVariable: 'shadow-variable',
-  NamedArea: 'named-area',
   LayeredImage: 'layered-image',
   FlexAlignment: 'flex-alignment',
   WidthSetsStyle: 'width-sets-style',
@@ -209,11 +207,9 @@ const shapeException = ({ property, value }) => {
     return UtilityException.WholeVariable;
   }
 
-  if (property === 'box-shadow' && PRIVATE_VARIABLE.test(value)) {
-    return UtilityException.ShadowVariable;
-  }
-
-  return property === 'grid-area' && AREA_NAME.test(value) ? UtilityException.NamedArea : undefined;
+  return property === 'box-shadow' && PRIVATE_VARIABLE.test(value)
+    ? UtilityException.ShadowVariable
+    : undefined;
 };
 
 const listException = ({ property, value }) =>

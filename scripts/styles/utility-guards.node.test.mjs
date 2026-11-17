@@ -109,7 +109,7 @@ describe('utility guards of check:styles', () => {
 
     expect(categoryOf('box-shadow', 'var(--_lift, none)')).toBe(UtilityException.ShadowVariable);
 
-    expect(categoryOf('grid-area', 'leading')).toBe(UtilityException.NamedArea);
+    expect(categoryOf('grid-area', 'leading')).toBeUndefined();
 
     expect(categoryOf('grid-area', 'auto')).toBeUndefined();
   });
