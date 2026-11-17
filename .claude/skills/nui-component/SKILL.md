@@ -113,19 +113,23 @@ const {
   for states. No `data-*` attributes for variants or states.
 - Modifiers set private variables (`--_height`, `--_tone`); base rules read them. Native
   state comes from pseudo-classes (`:checked`, `:disabled`, `:focus-visible`).
-- Inside a rule: private variables first, then `@apply` with the Tailwind utilities of the
-  declarations whose computed look stays the same (in declaration order, lines up to 100
-  characters), then the declarations left as they are. `pnpm parity:css <ref> <file>` compares
-  the file with its version at `<ref>` by computed longhands and names every declaration to
-  return. Templates carry no Tailwind classes.
+- Inside a rule: private variables first, then `@apply` with the Tailwind utilities of every
+  declaration a utility writes, arbitrary values included (`inline-[40%]`, `py-[0.75em]`,
+  `transition-[opacity,translate]`), in declaration order, lines up to 100 characters. What
+  stays a declaration belongs to a category of `scripts/styles/utility-guards.mjs`;
+  `pnpm check:styles` refuses the rest. `pnpm parity:css <ref> <file>` compares the file with
+  its version at `<ref>` by computed longhands and names every declaration to return.
+  Templates carry no Tailwind classes.
 - No variants in `@apply`: `hover:` turns into `@media (hover: hover)`, so a state is an own
   selector of the file. Selectors, specificity and order stay as written: no merged rules, no
   `:where`/`:is` and no nesting.
 - Values come from theme keys. Base keys are read through `var()` or utilities; derived keys
   (soft colours, `--color-ring`, `--color-hover`, radii) only through utilities or
   `--theme(--x inline)`, never `var()`. A scale step inside an expression is `--spacing(N)`.
-- `@keyframes`, `@property`, `animation` and the geometry of the virtual windows in the table,
-  book and editor (spacers, the sticky window, `overflow-anchor`, `contain`) stay declarations.
+- `@keyframes` and `@property` stay as written. An animation is
+  `animate-[name_duration_easing_infinite]` with `animation-play-state` as a declaration. The
+  geometry of the virtual windows in the table, book and editor (spacers, the sticky window,
+  `overflow-anchor`) and of the engine overlays stays declarations.
 - The block root and every part with padding or a border declare `box-sizing: border-box`;
   never rely on a page reset. The playground has none, so a missing declaration shows up in
   e2e sizes and screenshots.
@@ -150,9 +154,8 @@ const {
 - A button takes its glyph from the `icon` prop (`<NuiButton icon="x" />`), not from a
   hand-placed `NuiIcon` in the slot. A button with `icon` and no text, or with a slot of only
   `NuiIcon`, squares itself (`nui-button--icon-only`, no horizontal padding); `:icon-only`
-  forces or disables it. It always needs `aria-label`.
-  Every button, icon-only included, shares the press feedback (`scale: 0.97`). Close buttons
-  in cards align their glyph with the first text line
+  forces or disables it. It always needs `aria-label`. Close buttons in cards align their
+  glyph with the first text line
   (`margin-block-start: calc((font-size * line-height - var(--_height)) / 2)`) and with the
   padding edge (negative `margin-inline-end`).
 - Everything that reacts to a click shows `cursor: pointer` (buttons, links, options, menu and

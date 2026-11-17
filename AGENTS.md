@@ -29,8 +29,11 @@ that its features are implemented. Component and test conventions live in the sk
 - No `as` or `!` type assertions anywhere (tests and configs included); `as const` only.
 - CSS is BEM (`nui-block`, `nui-block__part`, `nui-block--key-value`, `nui-block--state`)
   inside `@layer components`, with modifiers setting private custom properties; templates carry
-  no Tailwind classes. A declaration is written as a Tailwind utility through `@apply` when the
-  computed look stays the same, otherwise it stays a declaration (`pnpm parity:css`). No
+  no Tailwind classes. Every declaration a Tailwind utility writes, standard or arbitrary
+  (`inline-[40%]`, `gap-x-[0.5em]`), goes into `@apply` with the same computed look
+  (`pnpm parity:css`); only the categories `pnpm check:styles` lists stay declarations (custom
+  properties, `color-mix` and relative colours, properties and values without a utility, engine
+  geometry, border and outline resets). No
   `data-*` attributes and no `[data-…]` selectors anywhere: variants, states, theme, color
   scheme, accent and density are classes.
   Scopes never re-declare theme keys: a nested scheme sets only `color-scheme`, derived keys
