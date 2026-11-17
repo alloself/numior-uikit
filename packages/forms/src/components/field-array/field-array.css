@@ -3,13 +3,12 @@
     --_gap: --spacing(2);
     --_control-offset: 0px;
 
-    @apply box-border grid gap-2 min-inline-0 m-0 p-0 text-foreground font-sans isolate;
-    border: 0;
+    @apply box-border grid gap-2 min-inline-0 m-0 p-0 text-foreground font-sans isolate border-0;
+    @apply border-none;
   }
 
   .nui-field-array__label {
-    @apply p-0 text-(length:--text-sm) leading-normal;
-    font-weight: 500;
+    @apply p-0 text-(length:--text-sm) leading-normal font-medium;
   }
 
   .nui-field-array__description,
@@ -27,7 +26,7 @@
   .nui-field-array__error,
   .nui-field-array__row-error {
     @apply text-error;
-    animation: nui-field-array-reveal var(--transition-duration-normal) var(--ease-nui);
+    @apply animate-[nui-field-array-reveal_var(--transition-duration-normal)_var(--ease-nui)];
   }
 
   .nui-field-array__list {
@@ -39,12 +38,10 @@
   }
 
   .nui-field-array__row {
-    @apply box-border flex items-start gap-2 p-3 rounded bg-surface;
-    border: 1px solid var(--color-border);
-    transition:
-      opacity var(--transition-duration-normal) var(--ease-nui),
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      translate var(--transition-duration-normal) var(--ease-nui);
+    @apply box-border flex items-start gap-2 p-3 rounded bg-surface border border-solid;
+    @apply border-(color:--color-border) transition-[opacity,border-color,translate];
+    @apply duration-[var(--transition-duration-normal),var(--transition-duration-fast),var(--transition-duration-normal)];
+    @apply ease-nui;
   }
 
   .nui-field-array__row:has(.nui-field__label) {
@@ -68,7 +65,7 @@
   }
 
   .nui-field-array__row--moving {
-    transition: transform var(--transition-duration-slow) var(--ease-nui);
+    @apply transition-[transform] duration-slow ease-nui;
   }
 
   .nui-field-array__content {
@@ -81,11 +78,8 @@
   }
 
   .nui-field-array__grip {
-    @apply opacity-0 pointer-events-none;
-    margin-inline-end: calc(-1 * (var(--spacing-control-md) + --spacing(2)));
-    transition:
-      margin var(--transition-duration-fast) var(--ease-nui),
-      opacity var(--transition-duration-fast) var(--ease-nui);
+    @apply opacity-0 pointer-events-none me-[calc(-1_*_(var(--spacing-control-md)_+_--spacing(2)))];
+    @apply transition-[margin,opacity] duration-fast ease-nui;
   }
 
   .nui-field-array:not(.nui-field-array--reordering)
@@ -108,12 +102,8 @@
 
   .nui-field-array__indicator {
     @apply absolute inset-x-0 rounded-full bg-primary opacity-0 -translate-y-1/2;
-    @apply pointer-events-none;
-    inset-block-start: var(--_indicator, 0);
-    block-size: 2px;
-    transition:
-      opacity var(--transition-duration-fast) var(--ease-nui),
-      inset-block-start var(--transition-duration-fast) var(--ease-nui);
+    @apply pointer-events-none inset-bs-[var(--_indicator,0)] block-[2px];
+    @apply transition-[opacity,inset-block-start] duration-fast ease-nui;
   }
 
   .nui-field-array--reordering .nui-field-array__indicator {
@@ -126,14 +116,8 @@
     @apply box-border absolute z-1 inset-s-0 flex items-center gap-2 inline-max max-inline-full;
     @apply block-(--_ghost-size) ps-3 pe-4 rounded bg-surface-elevated text-(length:--text-sm);
     @apply whitespace-nowrap -translate-y-1/2 pointer-events-none;
-    inset-block-start: clamp(
-      calc(var(--_ghost-size) / 2),
-      var(--_ghost, 0px),
-      calc(100% - var(--_ghost-size) / 2)
-    );
-    border: 1px solid var(--color-border-strong);
-    box-shadow: var(--shadow-lg);
-    font-weight: 500;
+    @apply inset-bs-[clamp(_calc(var(--_ghost-size)_/_2),var(--_ghost,0px),calc(100%_-_var(--_ghost-size)_/_2)_)];
+    @apply border border-solid border-(color:--color-border-strong) shadow-lg font-medium;
   }
 
   .nui-field-array__ghost-grip {

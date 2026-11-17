@@ -1,15 +1,13 @@
 @layer components {
   .nui-smart-form {
-    @apply box-border inline-full;
-    container-type: inline-size;
+    @apply box-border inline-full @container;
   }
 
   .nui-smart-form__grid {
     --_columns: 1;
 
-    @apply relative grid min-inline-0;
-    grid-template-columns: repeat(var(--_columns), minmax(0, 1fr));
-    gap: calc(--theme(--spacing-control inline) / 2) --spacing(4);
+    @apply relative grid min-inline-0 grid-cols-[repeat(var(--_columns),minmax(0,1fr))];
+    @apply gap-y-[calc(--theme(--spacing-control_inline)_/_2)] gap-x-4;
     align-content: start;
     align-items: start;
   }
@@ -26,9 +24,7 @@
   }
 
   .nui-smart-form__cell--entering {
-    transition:
-      opacity var(--transition-duration-normal) var(--ease-nui),
-      translate var(--transition-duration-normal) var(--ease-nui);
+    @apply transition-[opacity,translate] duration-normal ease-nui;
   }
 
   .nui-smart-form__cell--appearing {
@@ -36,11 +32,8 @@
   }
 
   .nui-smart-form__cell--leaving {
-    @apply absolute m-0;
+    @apply absolute m-0 transition-[opacity,translate] duration-normal ease-nui;
     grid-area: auto;
-    transition:
-      opacity var(--transition-duration-normal) var(--ease-nui),
-      translate var(--transition-duration-normal) var(--ease-nui);
   }
 
   .nui-smart-form__grid:has(> .nui-smart-form__cell--leaving) {
@@ -48,7 +41,7 @@
   }
 
   .nui-smart-form__cell--moving {
-    transition: transform var(--transition-duration-normal) var(--ease-nui);
+    @apply transition-[transform] duration-normal ease-nui;
   }
 
   .nui-smart-form__section {
@@ -57,13 +50,12 @@
   }
 
   .nui-smart-form__section:has(+ .nui-smart-form__section) {
-    @apply border-be border-be-border;
-    padding-block-end: calc(--theme(--spacing-control inline) / 2);
+    @apply border-be border-be-border pbe-[calc(--theme(--spacing-control_inline)_/_2)];
   }
 
   .nui-smart-form__legend {
     @apply box-border pbs-0 pbe-3 px-0 text-foreground text-(length:--text-base) leading-control;
-    font-weight: 600;
+    @apply font-semibold;
   }
 
   .nui-smart-form__section-description {
@@ -79,20 +71,19 @@
   }
 
   .nui-smart-form--inline .nui-smart-form__cell {
-    @apply flex-initial;
-    min-inline-size: min(100%, 12rem);
+    @apply flex-initial min-inline-[min(100%,12rem)];
   }
 
   .nui-smart-form--grow .nui-smart-form__cell {
-    flex: 1 1 12rem;
+    @apply flex-[1_1_12rem];
   }
 
   .nui-smart-form--inline .nui-form__errors {
-    flex: 1 0 100%;
+    @apply flex-[1_0_100%];
   }
 
   .nui-smart-form--inline:has(.nui-field__label) .nui-form__actions {
-    padding-block-start: calc(var(--text-sm) * var(--leading-normal) + var(--spacing));
+    @apply pbs-[calc(var(--text-sm)_*_var(--leading-normal)_+_var(--spacing))];
   }
 
   .nui-smart-form__stepper {
@@ -116,7 +107,7 @@
   }
 
   .nui-smart-form--navigated .nui-smart-form__step {
-    animation: nui-smart-form-step var(--transition-duration-normal) var(--ease-nui);
+    @apply animate-[nui-smart-form-step_var(--transition-duration-normal)_var(--ease-nui)];
   }
 
   .nui-smart-form__back,
@@ -161,7 +152,7 @@
 
     .nui-smart-form--steps .nui-smart-form__back,
     .nui-smart-form--steps .nui-smart-form__next {
-      flex: 1 1 0;
+      @apply flex-[1_1_0];
     }
   }
 }

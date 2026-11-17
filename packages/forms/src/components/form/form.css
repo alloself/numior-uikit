@@ -10,8 +10,7 @@
   }
 
   .nui-form__errors {
-    @apply rounded;
-    animation: nui-form-reveal var(--transition-duration-normal) var(--ease-nui);
+    @apply rounded animate-[nui-form-reveal_var(--transition-duration-normal)_var(--ease-nui)];
   }
 
   .nui-form__errors:focus-visible {
