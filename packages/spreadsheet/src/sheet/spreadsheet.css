@@ -376,8 +376,7 @@
   .nui-spreadsheet__editor-control {
     @apply relative flex-auto box-border min-inline-0 inline-full m-0 p-0 text-inherit;
     @apply appearance-none min-block-[calc(var(--spacing-control-sm)_-_2px)] border-0 border-none;
-    @apply outline-none;
-    background: transparent;
+    @apply outline-none bg-transparent bg-none bg-auto;
     font: inherit;
     text-align: inherit;
   }
@@ -395,8 +394,8 @@
     @apply transition-[opacity,translate,visibility];
     @apply duration-[var(--transition-duration-normal),var(--transition-duration-normal),0s];
     @apply ease-[var(--ease-nui),var(--ease-nui),linear];
-    @apply delay-[0s,0s,var(--transition-duration-normal)] transition-normal;
-    background: var(--color-surface-elevated);
+    @apply delay-[0s,0s,var(--transition-duration-normal)] transition-normal bg-surface-elevated;
+    @apply bg-none bg-auto;
   }
   .nui-spreadsheet__status--shown {
     @apply opacity-100 translate-0 visible transition-[opacity,translate,visibility];
@@ -414,8 +413,8 @@
     @apply transition-[opacity,translate,visibility];
     @apply duration-[var(--transition-duration-normal),var(--transition-duration-normal),0s];
     @apply ease-[var(--ease-nui),var(--ease-nui),linear];
-    @apply delay-[0s,0s,var(--transition-duration-normal)] transition-normal;
-    background: var(--color-surface-elevated);
+    @apply delay-[0s,0s,var(--transition-duration-normal)] transition-normal bg-surface-elevated;
+    @apply bg-none bg-auto;
   }
   .nui-spreadsheet__note--shown {
     @apply opacity-100 translate-0 visible transition-[opacity,translate,visibility];

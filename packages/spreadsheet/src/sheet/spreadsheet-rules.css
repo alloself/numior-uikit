@@ -87,10 +87,7 @@
     @apply flex flex-auto flex-col min-inline-0;
   }
   .nui-spreadsheet-rules__description {
-    @apply overflow-hidden wrap-break-word;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    @apply wrap-break-word line-clamp-2;
   }
   .nui-spreadsheet-rules__area {
     @apply overflow-hidden text-ellipsis whitespace-nowrap;

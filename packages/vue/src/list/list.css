@@ -157,14 +157,13 @@
     @apply px-(--_padding-inline);
   }
   .nui-list-item__action {
-    @apply rounded-none text-inherit text-start cursor-pointer;
+    @apply rounded-none text-inherit text-start cursor-pointer bg-transparent bg-none;
+    @apply bg-clip-border;
     border: 0;
-    background: none;
     font: inherit;
   }
   .nui-list .nui-list-item__action:hover {
-    @apply text-inherit;
-    background: var(--_hover);
+    @apply text-inherit bg-(--_hover) bg-none bg-clip-border;
   }
   .nui-list .nui-list-item__action:focus-visible {
     @apply outline-(length:--focus-ring-width) outline-ring outline-solid;
