@@ -47,6 +47,12 @@ const laidOut = (display: string, alignment: string, columns: string): StoredSce
     nodes: [[-1, 'div.nui-field:0', '0 0 320 64', [0, 1, 2]]],
   });
 
+const outlined = (style: string, color: string, duration: string): StoredScene =>
+  encodeScene('pg-light-1440/buttons', ['outline-style', 'outline-color', 'transition-duration'], {
+    values: [style, color, duration],
+    nodes: [[-1, 'button.nui-button:0', '0 0 96 32', [0, 1, 2]]],
+  });
+
 const withButton = (segment: string, color: number): StoredScene =>
   scene('red', [
     [0, segment, '0 60 96 32', [5, 3, 4]],
@@ -230,6 +236,21 @@ describe('scene comparison', () => {
     expect(findings.map(({ property, after }) => `${property} ${after}`)).toEqual([
       'background-position-x 0%, 10%',
       'padding-left 0%',
+    ]);
+  });
+
+  it('passes the colour of an outline that paints nothing and a repeated timing list', () => {
+    const before = outlined('none', 'rgb(16, 16, 16)', '0.12s, 0.12s');
+
+    const findings = [
+      ...diffScenes(before, outlined('none', 'rgb(0, 0, 0)', '0.12s')),
+      ...diffScenes(before, outlined('solid', 'rgb(0, 0, 0)', '0.12s, 0.2s')),
+    ];
+
+    expect(findings.map(({ property, after }) => `${property} ${after}`)).toEqual([
+      'outline-style solid',
+      'outline-color rgb(0, 0, 0)',
+      'transition-duration 0.12s, 0.2s',
     ]);
   });
 

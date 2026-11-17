@@ -1,13 +1,16 @@
 import { compareSpecificity, listSpecificity, splitSelectors } from './css-specificity.ts';
 import {
   RESET,
+  canonicalLonghand,
   gridAlignment,
   helperReads,
   isGridDisplay,
   longhands,
   normalized,
+  sameAsReset,
   splitTokens,
   substituteHelpers,
+  unpainted,
 } from './css-values.ts';
 import type {
   CssBlock,
@@ -289,7 +292,7 @@ export const effective = (rule: CssRule, environment: CssEnvironment): Map<strin
 
     for (const [name, part] of longhands(property, plain)) {
       values.delete(name);
-      values.set(name, part);
+      values.set(name, canonicalLonghand(name, part));
     }
 
     return values;
@@ -357,7 +360,9 @@ const sameLonghand = (property: string, values: readonly string[], grid: boolean
   const [left = '', right = ''] = values;
 
   return (
-    left === right || (grid && gridAlignment(property, left) === gridAlignment(property, right))
+    left === right ||
+    sameAsReset(property, values) ||
+    (grid && gridAlignment(property, left) === gridAlignment(property, right))
   );
 };
 
@@ -375,6 +380,10 @@ const declarationIssues = (
     const pair = after.get(property);
 
     if (pair !== undefined && sameLonghand(property, [value, pair], grid)) {
+      continue;
+    }
+
+    if (pair === undefined && unpainted(property, after)) {
       continue;
     }
 
@@ -457,9 +466,13 @@ const resetIssues = (
   );
 };
 
-const helperSetters = (rules: readonly CssRule[]): Set<string> => {
+const helperSetters = (rules: readonly CssRule[], environment: CssEnvironment): Set<string> => {
   return rules.reduce((names, rule) => {
-    for (const name of helperValues(rule).keys()) {
+    for (const [name, value] of helperValues(rule)) {
+      if (environment.helpers.get(name) === value) {
+        continue;
+      }
+
       names.add(name);
     }
 
@@ -483,8 +496,8 @@ const foreignReads = (rule: CssRule, setters: ReadonlySet<string>): string[] => 
   }, []);
 };
 
-export const helperIssues = (rules: readonly CssRule[]): string[] => {
-  const setters = helperSetters(rules);
+export const helperIssues = (rules: readonly CssRule[], environment: CssEnvironment): string[] => {
+  const setters = helperSetters(rules, environment);
 
   return rules.flatMap((rule) => foreignReads(rule, setters));
 };
@@ -528,7 +541,10 @@ export const compareRules = (
     issues.push(`extra rule ${keyOf(rule)}`);
   }
 
-  for (const issue of [...helperIssues(next), ...resetIssues(resets, next, environment)]) {
+  for (const issue of [
+    ...helperIssues(next, environment),
+    ...resetIssues(resets, next, environment),
+  ]) {
     issues.push(issue);
   }
 

@@ -59,6 +59,59 @@ const GRID_ALIGNMENTS = new Set([
 
 export const RESET = 'initial';
 
+const TIMING_LISTS = new Set([
+  'transition-duration',
+  'transition-timing-function',
+  'transition-delay',
+  'transition-behavior',
+  'animation-duration',
+  'animation-timing-function',
+  'animation-delay',
+  'animation-iteration-count',
+  'animation-direction',
+  'animation-fill-mode',
+  'animation-play-state',
+  'animation-composition',
+]);
+
+const ZERO = /^-?0(?:\.0+)?(?:px|%)?$/;
+
+const INITIAL_VALUES: readonly (readonly [RegExp, string])[] = [
+  [/^border-[a-z-]+-width$/, 'medium'],
+  [/^border-[a-z-]+-style$/, 'none'],
+  [/^border-[a-z-]+-color$/, 'currentcolor'],
+  [/^outline-width$/, 'medium'],
+  [/^outline-style$/, 'none'],
+  [/^outline-color$/, 'currentcolor'],
+  [/^background-color$/, 'transparent'],
+  [/^background-image$/, 'none'],
+  [/^background-size$/, 'auto'],
+  [/^background-repeat$/, 'repeat'],
+  [/^background-origin$/, 'padding-box'],
+  [/^background-clip$/, 'border-box'],
+  [/^background-attachment$/, 'scroll'],
+  [/^background-position-[xy]$/, '0%'],
+  [/^text-decoration-style$/, 'solid'],
+  [/^text-decoration-color$/, 'currentcolor'],
+  [/^text-decoration-thickness$/, 'auto'],
+  [/^list-style-position$/, 'outside'],
+  [/^list-style-image$/, 'none'],
+  [/^transition-delay$/, '0s'],
+  [/^transition-behavior$/, 'normal'],
+];
+
+const initialOf = (property: string): string | undefined =>
+  INITIAL_VALUES.find(([pattern]) => pattern.test(property))?.[1];
+
+export const sameAsReset = (property: string, values: readonly string[]): boolean => {
+  const [left = '', right = ''] = values;
+  const other = left === RESET ? right : left;
+
+  return (left === RESET || right === RESET) && other !== RESET && initialOf(property) === other;
+};
+
+const PERCENT = /^(-?[\d.]+)%$/;
+
 const CURRENT_COLOR = /\bcurrentcolor\b/gi;
 const RATIO_NUMBER = /^[\d.]+$/;
 
@@ -224,6 +277,122 @@ const split = (value: string, separator: string): string[] => {
 
 export const splitTokens = (value: string): string[] => split(value, ' ');
 
+const MILLISECONDS = /^(-?[\d.]+)ms$/;
+
+const seconds = (item: string): string => {
+  const amount = MILLISECONDS.exec(item)?.[1];
+
+  return amount === undefined ? item : `${number(Number(amount) / 1000)}s`;
+};
+
+const uniform = (value: string): string => {
+  const items = split(value, ',').map(seconds);
+  const [first = value] = items;
+
+  return items.every((item) => item === first) ? first : items.join(', ');
+};
+
+const scaleFactor = (token: string): string => {
+  const percent = PERCENT.exec(token)?.[1];
+
+  return percent === undefined ? token : number(Number(percent) / 100);
+};
+
+const translation = (value: string): string => {
+  const [x = '', y, ...rest] = splitTokens(value);
+
+  return y !== undefined && rest.length === 0 && ZERO.test(y) ? x : value;
+};
+
+const scaling = (value: string): string => {
+  const [x = '', y, ...rest] = splitTokens(value).map(scaleFactor);
+
+  return y !== undefined && rest.length === 0 && x === y
+    ? x
+    : [x, y, ...rest].filter(Boolean).join(' ');
+};
+
+const CLEAR_COLORS = new Set([
+  '#0000',
+  '#00000000',
+  'transparent',
+  'rgba(0, 0, 0, 0)',
+  'rgb(0 0 0 / 0)',
+]);
+
+const inertShadow = (layer: string): boolean =>
+  splitTokens(layer).every(
+    (token) => token === 'inset' || ZERO.test(token) || CLEAR_COLORS.has(token),
+  );
+
+const shadows = (value: string): string => {
+  const layers = split(value, ',').filter((layer) => !inertShadow(layer));
+
+  return layers.length === 0 ? 'none' : layers.join(', ');
+};
+
+const BORDER_PAINT =
+  /^(border-(?:(?:block|inline)-(?:start|end)|top|right|bottom|left))-(?:color|width)$/;
+
+const DECORATION_PARTS = new Set([
+  'text-decoration-color',
+  'text-decoration-style',
+  'text-decoration-thickness',
+]);
+
+const HIDDEN_STYLES = new Set(['none', 'hidden']);
+
+const TRANSITION_PARTS = new Set([
+  'transition-duration',
+  'transition-timing-function',
+  'transition-delay',
+  'transition-behavior',
+]);
+
+const paintStyleOf = (property: string): string | null => {
+  const side = BORDER_PAINT.exec(property)?.[1];
+
+  if (side !== undefined) {
+    return `${side}-style`;
+  }
+
+  if (property === 'outline-color' || property === 'outline-width') {
+    return 'outline-style';
+  }
+
+  if (TRANSITION_PARTS.has(property)) {
+    return 'transition-property';
+  }
+
+  return DECORATION_PARTS.has(property) ? 'text-decoration-line' : null;
+};
+
+export const unpainted = (property: string, values: ReadonlyMap<string, string>): boolean => {
+  const style = paintStyleOf(property);
+
+  return style !== null && HIDDEN_STYLES.has(values.get(style) ?? '');
+};
+
+export const canonicalLonghand = (property: string, value: string): string => {
+  if (TIMING_LISTS.has(property)) {
+    return uniform(value);
+  }
+
+  if (property === 'translate') {
+    return translation(value);
+  }
+
+  if (property === 'box-shadow') {
+    return shadows(value);
+  }
+
+  if (property === 'border-spacing') {
+    return scaling(value);
+  }
+
+  return property === 'scale' ? scaling(value) : value;
+};
+
 const sideNames = (family: string, suffix: string): SideNames => {
   if (family === 'inset') {
     return {
@@ -274,9 +443,9 @@ const borderParts = (tokens: readonly string[]): [string, string, string] => {
   const after = at < 0 ? [] : tokens.slice(at + 1);
 
   return [
-    before.length > 0 ? before.join(' ') : 'medium',
-    tokens[at] ?? 'none',
-    after.length > 0 ? after.join(' ') : 'currentcolor',
+    before.length > 0 ? before.join(' ') : RESET,
+    tokens[at] ?? RESET,
+    after.length > 0 ? after.join(' ') : RESET,
   ];
 };
 
@@ -366,9 +535,18 @@ const outline = (value: string): Longhand[] => {
   ];
 };
 
+const IMAGE =
+  /^(?:(?:repeating-)?(?:linear|radial|conic)-gradient|url|image-set|image|cross-fade)\(/;
+
 const background = (value: string): Longhand[] | null => {
   if (splitTokens(value).length !== 1) {
     return null;
+  }
+
+  const resets = BACKGROUND_RESETS.map((name): Longhand => [name, RESET]);
+
+  if (IMAGE.test(value)) {
+    return [['background-color', RESET], ['background-image', value], ...resets];
   }
 
   const none = value === 'none';
@@ -376,7 +554,7 @@ const background = (value: string): Longhand[] | null => {
   return [
     ['background-color', none ? 'transparent' : value],
     ['background-image', none ? 'none' : RESET],
-    ...BACKGROUND_RESETS.map((name): Longhand => [name, RESET]),
+    ...resets,
   ];
 };
 
@@ -419,13 +597,15 @@ const transition = (value: string): Longhand[] => {
   ];
 };
 
+const LIST_TYPES = new Set(['none', 'disc', 'circle', 'square', 'decimal']);
+
 const listStyle = (value: string): Longhand[] | null => {
-  if (value !== 'none') {
+  if (!LIST_TYPES.has(value)) {
     return null;
   }
 
   return [
-    ['list-style-type', 'none'],
+    ['list-style-type', value],
     ['list-style-position', RESET],
     ['list-style-image', RESET],
   ];
@@ -437,6 +617,19 @@ const overflow = (value: string): Longhand[] => {
   return [
     ['overflow-x', x],
     ['overflow-y', y],
+  ];
+};
+
+const gap = (value: string): Longhand[] | null => {
+  const [row = '', column = row, ...rest] = splitTokens(value);
+
+  if (rest.length > 0) {
+    return null;
+  }
+
+  return [
+    ['row-gap', row],
+    ['column-gap', column],
   ];
 };
 
@@ -465,6 +658,7 @@ const SHORTHANDS = new Map<string, (value: string) => Longhand[] | null>([
   ['transition', transition],
   ['list-style', listStyle],
   ['overflow', overflow],
+  ['gap', gap],
 ]);
 
 export const longhands = (property: string, value: string): Longhand[] => {

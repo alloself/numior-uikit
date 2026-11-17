@@ -1,4 +1,10 @@
-import { gridAlignment, isGridDisplay, withoutSingleRepeats } from './css-values.ts';
+import {
+  canonicalLonghand,
+  gridAlignment,
+  isGridDisplay,
+  unpainted,
+  withoutSingleRepeats,
+} from './css-values.ts';
 import { describePixelDiff, decodePng } from './png.ts';
 import { styleOf } from './store.ts';
 import type {
@@ -43,7 +49,7 @@ const canonicalValue = (property: string, value: string, grid: boolean): string 
     return withoutSingleRepeats(value);
   }
 
-  return grid ? gridAlignment(property, value) : value;
+  return grid ? gridAlignment(property, value) : canonicalLonghand(property, value);
 };
 
 const sameValue = (property: string, [was, now]: readonly string[], grid: boolean): boolean =>
@@ -103,6 +109,9 @@ const orphans = (
   }, []);
 };
 
+const styleMap = (properties: readonly string[], values: readonly string[]): Map<string, string> =>
+  new Map(properties.map((property, at) => [property, values[at] ?? '']));
+
 const nodeFindings = (
   base: StoredScene,
   next: StoredScene,
@@ -125,11 +134,13 @@ const nodeFindings = (
 
   const display = base.properties.indexOf('display');
   const grid = isGridDisplay(beforeStyle[display]) && isGridDisplay(afterStyle[display]);
+  const painted = [styleMap(base.properties, beforeStyle), styleMap(base.properties, afterStyle)];
 
   base.properties.forEach((property, index) => {
     const [was = '', now = ''] = [beforeStyle[index], afterStyle[index]];
+    const inert = painted.every((values) => unpainted(property, values));
 
-    if (sameValue(property, [was, now], grid)) {
+    if (sameValue(property, [was, now], grid) || inert) {
       return;
     }
 

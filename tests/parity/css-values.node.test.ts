@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
   canonical,
+  canonicalLonghand,
   evaluate,
   gridAlignment,
   isGridDisplay,
@@ -25,6 +26,30 @@ describe('values of a compiled declaration', () => {
     expect(canonical('currentColor CurrentColor currentcolor', ENVIRONMENT.aliases)).toBe(
       'currentcolor currentcolor currentcolor',
     );
+  });
+
+  it('reads lists, translations and scales the way the browser repeats and serialises them', () => {
+    expect(canonicalLonghand('transition-duration', '0.12s, 0.12s, 0.12s')).toBe('0.12s');
+    expect(canonicalLonghand('transition-duration', '0.12s, 0.2s')).toBe('0.12s, 0.2s');
+    expect(canonicalLonghand('transition-delay', '0ms')).toBe('0s');
+
+    expect(canonicalLonghand('box-shadow', '0 0 #0000, 0 0 #0000, 0 1px 2px red')).toBe(
+      '0 1px 2px red',
+    );
+
+    expect(
+      canonicalLonghand(
+        'box-shadow',
+        'rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px',
+      ),
+    ).toBe('none');
+
+    expect(canonicalLonghand('transition-duration', '120ms, 0.12s')).toBe('0.12s');
+    expect(canonicalLonghand('transition-property', 'opacity, opacity')).toBe('opacity, opacity');
+    expect(canonicalLonghand('translate', '-50% 0')).toBe('-50%');
+    expect(canonicalLonghand('translate', '0 -50%')).toBe('0 -50%');
+    expect(canonicalLonghand('scale', '50% 50%')).toBe('0.5');
+    expect(canonicalLonghand('scale', '-100% 100%')).toBe('-1 1');
   });
 
   it('works out the arithmetic of the spacing scale and leaves the rest alone', () => {
@@ -90,17 +115,17 @@ describe('longhands of a declaration', () => {
 
     expect(longhands('border-top', '0')).toEqual([
       ['border-block-start-width', '0'],
-      ['border-block-start-style', 'none'],
-      ['border-block-start-color', 'currentcolor'],
+      ['border-block-start-style', 'initial'],
+      ['border-block-start-color', 'initial'],
     ]);
 
     expect(longhands('border-inline', 'thin dashed')).toEqual([
       ['border-inline-start-width', 'thin'],
       ['border-inline-start-style', 'dashed'],
-      ['border-inline-start-color', 'currentcolor'],
+      ['border-inline-start-color', 'initial'],
       ['border-inline-end-width', 'thin'],
       ['border-inline-end-style', 'dashed'],
-      ['border-inline-end-color', 'currentcolor'],
+      ['border-inline-end-color', 'initial'],
     ]);
   });
 
@@ -152,6 +177,17 @@ describe('longhands of a declaration', () => {
     ]);
 
     expect(longhands('background', 'url(x) red')).toEqual([['background', 'url(x) red']]);
+
+    expect(longhands('gap', '1px 2px')).toEqual([
+      ['row-gap', '1px'],
+      ['column-gap', '2px'],
+    ]);
+
+    expect(longhands('background', 'linear-gradient(red, blue)').slice(0, 2)).toEqual([
+      ['background-color', 'initial'],
+      ['background-image', 'linear-gradient(red, blue)'],
+    ]);
+
     expect(longhands('text-decoration', 'none')[0]).toEqual(['text-decoration-line', 'none']);
 
     expect(longhands('text-decoration', 'underline 2px')).toEqual([
@@ -167,9 +203,9 @@ describe('longhands of a declaration', () => {
     expect(longhands('list-style', 'disc inside')).toEqual([['list-style', 'disc inside']]);
 
     expect(longhands('outline', 'none')).toEqual([
-      ['outline-width', 'medium'],
+      ['outline-width', 'initial'],
       ['outline-style', 'none'],
-      ['outline-color', 'currentcolor'],
+      ['outline-color', 'initial'],
     ]);
   });
 

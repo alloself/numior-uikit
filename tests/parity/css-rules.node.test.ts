@@ -99,8 +99,10 @@ describe('rule comparison of a rewritten stylesheet', () => {
     const changed = NEW.replace('gap: calc(var(--spacing) * 2);', 'gap: 8px; cursor: pointer;');
 
     expect(compare(OLD, changed).issues).toEqual([
-      '| .nui-button: lost gap: 0.5rem',
-      '| .nui-button: gained gap: 8px',
+      '| .nui-button: lost row-gap: 0.5rem',
+      '| .nui-button: lost column-gap: 0.5rem',
+      '| .nui-button: gained row-gap: 8px',
+      '| .nui-button: gained column-gap: 8px',
       '| .nui-button: gained cursor: pointer',
     ]);
   });
@@ -182,6 +184,23 @@ describe('rule comparison of a rewritten stylesheet', () => {
     ]);
   });
 
+  it('passes a dropped colour reset under a border style that paints nothing', () => {
+    const old =
+      '.a { border-color: red; outline: 2px solid red; } .b { border: 0; outline: none; }';
+
+    const next =
+      '.a { border-color: red; outline: 2px solid red; } .b { border-width: 0; border-style: none; outline-style: none; }';
+
+    expect(compare(old, next).issues).toEqual([]);
+  });
+
+  it('passes the timing resets of a transition that runs on no property', () => {
+    const old = '.a { transition-duration: 1s; } .b { transition: none; }';
+    const next = '.a { transition-duration: 1s; } .b { transition-property: none; }';
+
+    expect(compare(old, next).issues).toEqual([]);
+  });
+
   it('accepts a dropped reset that a later rule of equal weight overrides', () => {
     const old = '.a { text-decoration: none; } .a:hover { text-decoration-thickness: 2px; }';
     const next = '.a { text-decoration-line: none; } .a:hover { text-decoration-thickness: 2px; }';
@@ -256,6 +275,14 @@ describe('rule comparison of a rewritten stylesheet', () => {
     expect(compare(old, next).issues).toEqual([
       '| .b: reads --tw-leading, which another rule sets',
     ]);
+  });
+
+  it('passes a helper variable that the other rule sets to its registered initial value', () => {
+    const old = '.a { border-style: solid; } .b { border-top: 1px solid; }';
+    const setter = '.a { --tw-border-style: solid; border-style: solid; }';
+    const next = `${setter} .b { border-top-width: 1px; border-top-style: var(--tw-border-style); }`;
+
+    expect(compare(old, next).issues).toEqual([]);
   });
 
   it('resolves only theme keys that no scope sets again', () => {
