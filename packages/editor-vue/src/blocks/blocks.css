@@ -85,9 +85,9 @@
     @apply duration-fast;
   }
   .nui-editor-image__grip::before {
-    @apply box-border content-[''] inline-[12px] block-[12px];
-    border: 3px solid color-mix(in oklab, var(--color-foreground) 75%, transparent);
-    filter: drop-shadow(0 0 1px var(--color-surface)) drop-shadow(0 0 1px var(--color-surface));
+    @apply box-border content-[''] inline-[12px] block-[12px] border-3 border-solid;
+    @apply filter-[drop-shadow(0_0_1px_var(--color-surface))_drop-shadow(0_0_1px_var(--color-surface))];
+    border-color: color-mix(in oklab, var(--color-foreground) 75%, transparent);
   }
   .nui-editor-image__grip:focus-visible {
     --_grip-opacity: 1;
