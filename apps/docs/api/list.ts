@@ -196,8 +196,8 @@ const docs: DocsMap = {
         en: 'Marks the navigation item as the current page.',
       },
       badge: {
-        ru: 'Счётчик или метка в конце строки, например `12`.',
-        en: 'Counter or tag at the end of the row, such as `12`.',
+        ru: 'Счётчик или метка в конце строки, например `12`: серая плашка, у текущей страницы — в цвете акцента. Другой цвет — слотом `trailing`.',
+        en: 'Counter or tag at the end of the row, such as `12`: a gray pill, in the accent color on the current page. For another color, use the `trailing` slot.',
       },
       shortcut: {
         ru: 'Сочетание клавиш в конце строки, например `Ctrl+S`.',

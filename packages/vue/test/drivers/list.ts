@@ -205,6 +205,10 @@ export class ListDriver extends ComponentDriver {
     return badge.exists() ? badge.text() : '';
   }
 
+  badgeModifierOf(title: string, modifier: string): boolean {
+    return this.item(title).find('.nui-badge').classes().includes(`nui-badge--${modifier}`);
+  }
+
   nestedOf(title: string): string {
     const nested = this.item(title).find('.nested');
     return nested.exists() ? nested.text() : '';

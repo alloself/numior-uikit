@@ -104,6 +104,23 @@ describe('NuiList', () => {
     plain.unmount();
   });
 
+  it('paints a count in the solid neutral fill and the count of the current page in the accent', () => {
+    const list = ListDriver.mount({
+      props: { variant: 'nav' },
+      parts: [
+        { label: 'Orders', href: '/orders', current: true, badge: 12 },
+        { label: 'Products', href: '/products', badge: 12 },
+      ],
+    });
+
+    expect(list.badgeModifierOf('Products', 'tone-neutral')).toBe(true);
+    expect(list.badgeModifierOf('Products', 'variant-solid')).toBe(true);
+    expect(list.badgeModifierOf('Orders', 'tone-primary')).toBe(true);
+    expect(list.badgeModifierOf('Orders', 'variant-solid')).toBe(true);
+
+    list.unmount();
+  });
+
   it('marks the current page, carries badges and nests content inside a navigation list', () => {
     const list = ListDriver.mount({
       props: { variant: 'nav' },

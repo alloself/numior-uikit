@@ -1,6 +1,6 @@
 .nui-badge {
-  --_tone: var(--nui-neutral);
-  --_tone-foreground: var(--nui-neutral-foreground);
+  --_tone: var(--nui-neutral-muted);
+  --_tone-foreground: var(--nui-neutral-muted-foreground);
   --_tone-soft: var(--nui-neutral-soft);
   --_tone-soft-foreground: var(--nui-neutral-soft-foreground);
   --_height: 1.25rem;

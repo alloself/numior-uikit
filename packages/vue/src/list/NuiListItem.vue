@@ -44,9 +44,11 @@
 import { computed, onUpdated, useAttrs, useTemplateRef, type ComponentPublicInstance } from 'vue';
 import { useSplitAttrs, type AttrRecord } from '@numior/primitives';
 import NuiBadge from '../badge/NuiBadge.vue';
+import { NuiBadgeVariant } from '../badge/badge.types';
 import NuiKbd from '../kbd/NuiKbd.vue';
 import NuiLink from '../link/NuiLink.vue';
 import NuiRow from '../row/NuiRow.vue';
+import { NuiTone } from '../shared/scale.types';
 import { useTriggerElement } from '../shared/trigger-ref';
 import { useList, type ListItemKey } from './list-context';
 import { ListContextKind, ListItemMode, NuiListVariant, type NuiListItemProps } from './list.types';
@@ -173,9 +175,10 @@ const showsCheck = (): boolean =>
     list?.variant.value === NuiListVariant.Floating &&
     treeNode.value?.checked === undefined);
 
-const badgeLook = computed(() =>
-  current ? { tone: 'primary' as const, variant: 'solid' as const } : {},
-);
+const badgeLook = computed(() => ({
+  tone: current ? NuiTone.Primary : NuiTone.Neutral,
+  variant: NuiBadgeVariant.Solid,
+}));
 
 const classes = () => [
   `nui-list-item--size-${size.value}`,
