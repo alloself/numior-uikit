@@ -194,8 +194,8 @@
     --_grid-x: var(--_grid);
 
     @apply box-border p-0 border-be border-be-(--_line) bg-inherit text-inherit text-start;
-    @apply align-middle font-[weight:inherit] outline-none;
-    border-inline-end: var(--_grid-x) solid var(--_line);
+    @apply align-middle font-[weight:inherit] outline-none border-e-(length:--_grid-x);
+    @apply border-e-(--_line);
   }
   .nui-table__row > .nui-table__cell:last-child,
   .nui-table__cell--gap {
@@ -604,9 +604,8 @@
     @apply absolute -z-10 pointer-events-none content-[''] inset-bs-0;
     @apply inset-be-[calc(-1px_-_var(--_seam-drop))] inset-s-[calc(-1_*_var(--_seam-start))];
     @apply inset-e-[calc(-1_*_(var(--_grid-x)_+_var(--_seam-end)))];
-    border: 0 solid transparent;
-    border-inline-width: var(--_seam-start) var(--_seam-end);
-    border-block-end-width: var(--_seam-drop);
+    @apply border-0 border-transparent border-s-(length:--_seam-start);
+    @apply border-e-(length:--_seam-end) border-be-(length:--_seam-drop);
     background:
       linear-gradient(var(--_line), var(--_line)) padding-box var(--_seam-x) 0 / var(--_grid-x) 100%
         no-repeat,
