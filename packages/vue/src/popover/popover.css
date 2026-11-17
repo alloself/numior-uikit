@@ -2,7 +2,8 @@
   .nui-popover {
     --_side-x: 0;
     --_side-y: 1;
-    --_shift: calc(-1 * var(--_side-x) * var(--spacing)) calc(-1 * var(--_side-y) * var(--spacing));
+    --_shift-x: calc(-1 * var(--_side-x) * var(--spacing));
+    --_shift-y: calc(-1 * var(--_side-y) * var(--spacing));
     --_arrow: 0.625rem;
     --_min-inline: 8rem;
     --_max-inline: min(20rem, calc(100vw - --spacing(4)));
@@ -10,7 +11,7 @@
     @apply box-border fixed inset-auto min-inline-(--_min-inline) max-inline-(--_max-inline) m-0;
     @apply p-3 border border-border rounded bg-surface-overlay text-foreground font-sans;
     @apply text-(length:--text-sm) leading-normal overflow-visible opacity-0 shadow-md;
-    translate: var(--_shift);
+    @apply translate-x-(--_shift-x) translate-y-(--_shift-y);
     @apply transition-[opacity,translate,display,overlay];
     @apply duration-[var(--transition-duration-fast),var(--transition-duration-normal),var(--transition-duration-fast),var(--transition-duration-fast)];
     @apply ease-[var(--ease-nui),var(--ease-nui),ease,ease] transition-discrete;
@@ -34,7 +35,7 @@
   @starting-style {
     .nui-popover:popover-open {
       @apply opacity-0;
-      translate: var(--_shift);
+      @apply translate-x-(--_shift-x) translate-y-(--_shift-y);
     }
   }
   .nui-popover__arrow {

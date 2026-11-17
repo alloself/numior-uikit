@@ -1,11 +1,12 @@
 @layer components {
   .nui-drawer {
     --_size: 20rem;
-    --_shift: 100% 0;
+    --_shift-x: 100%;
+    --_shift-y: 0;
 
     @apply box-border inset-auto inset-y-0 inset-e-0 m-0 rounded-none rounded-ss-lg rounded-es-lg;
     @apply inline-[min(var(--_size),100%)] max-inline-[none] block-[100dvh] max-block-[none];
-    translate: var(--_shift);
+    @apply translate-x-(--_shift-x) translate-y-(--_shift-y);
   }
   .nui-drawer > .nui-dialog__body {
     @apply grow;
@@ -20,7 +21,8 @@
     --_size: 40rem;
   }
   .nui-drawer--side-start {
-    --_shift: -100% 0;
+    --_shift-x: -100%;
+    --_shift-y: 0;
 
     @apply rounded-none rounded-se-lg rounded-ee-lg inset-s-0 inset-e-auto;
   }
@@ -29,29 +31,33 @@
     @apply inset-x-0 inline-full block-auto max-block-[min(var(--_size),100dvh)];
   }
   .nui-drawer--side-top {
-    --_shift: 0 -100%;
+    --_shift-x: 0;
+    --_shift-y: -100%;
 
     @apply inset-bs-0 inset-be-auto;
     @apply rounded-[0_0_--theme(--radius-lg_inline)_--theme(--radius-lg_inline)];
   }
   .nui-drawer--side-bottom {
-    --_shift: 0 100%;
+    --_shift-x: 0;
+    --_shift-y: 100%;
 
     @apply inset-bs-auto inset-be-0;
     @apply rounded-[--theme(--radius-lg_inline)_--theme(--radius-lg_inline)_0_0];
   }
   .nui-drawer--side-start:dir(rtl) {
-    --_shift: 100% 0;
+    --_shift-x: 100%;
+    --_shift-y: 0;
   }
   .nui-drawer--side-end:dir(rtl) {
-    --_shift: -100% 0;
+    --_shift-x: -100%;
+    --_shift-y: 0;
   }
   .nui-drawer[open] {
     @apply translate-0;
   }
   @starting-style {
     .nui-drawer[open] {
-      translate: var(--_shift);
+      @apply translate-x-(--_shift-x) translate-y-(--_shift-y);
     }
   }
 }

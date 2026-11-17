@@ -26,7 +26,8 @@
   .nui-list--variant-floating {
     --_side-x: 0;
     --_side-y: 1;
-    --_shift: calc(-1 * var(--_side-x) * var(--spacing)) calc(-1 * var(--_side-y) * var(--spacing));
+    --_shift-x: calc(-1 * var(--_side-x) * var(--spacing));
+    --_shift-y: calc(-1 * var(--_side-y) * var(--spacing));
     --_padding-inline: --spacing(2);
     --_padding-block: var(--spacing);
     --_row-padding: var(--spacing);
@@ -35,7 +36,7 @@
 
     @apply fixed inset-auto flex-col m-0 p-0 overflow-hidden border border-border border-solid;
     @apply rounded bg-surface-overlay opacity-0 shadow-md;
-    translate: var(--_shift);
+    @apply translate-x-(--_shift-x) translate-y-(--_shift-y);
     @apply transition-[opacity,translate,display,overlay];
     @apply duration-[var(--transition-duration-fast),var(--transition-duration-normal),var(--transition-duration-fast),var(--transition-duration-fast)];
     @apply ease-[var(--ease-nui),var(--ease-nui),ease,ease] transition-discrete;
@@ -46,7 +47,7 @@
   @starting-style {
     .nui-list--variant-floating:popover-open {
       @apply opacity-0;
-      translate: var(--_shift);
+      @apply translate-x-(--_shift-x) translate-y-(--_shift-y);
     }
   }
   .nui-list--variant-nav {

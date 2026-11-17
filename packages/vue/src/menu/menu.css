@@ -2,14 +2,15 @@
   .nui-menu {
     --_side-x: 0;
     --_side-y: 1;
-    --_shift: calc(-1 * var(--_side-x) * var(--spacing)) calc(-1 * var(--_side-y) * var(--spacing));
+    --_shift-x: calc(-1 * var(--_side-x) * var(--spacing));
+    --_shift-y: calc(-1 * var(--_side-y) * var(--spacing));
     --_ring: var(--focus-ring-width);
 
     @apply box-border fixed inset-auto m-0 p-1 border border-border border-solid rounded;
     @apply bg-surface-overlay text-foreground font-sans text-(length:--text-sm) overflow-y-auto;
     @apply opacity-0 min-inline-[10rem] max-inline-[min(20rem,calc(100vw_-_--spacing(4)))];
     @apply leading-label shadow-md outline-none;
-    translate: var(--_shift);
+    @apply translate-x-(--_shift-x) translate-y-(--_shift-y);
     @apply transition-[opacity,translate,display,overlay];
     @apply duration-[var(--transition-duration-fast),var(--transition-duration-normal),var(--transition-duration-fast),var(--transition-duration-fast)];
     @apply ease-[var(--ease-nui),var(--ease-nui),ease,ease] transition-discrete;
@@ -23,7 +24,7 @@
   @starting-style {
     .nui-menu:popover-open {
       @apply opacity-0;
-      translate: var(--_shift);
+      @apply translate-x-(--_shift-x) translate-y-(--_shift-y);
     }
   }
 
