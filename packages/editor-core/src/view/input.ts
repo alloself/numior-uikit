@@ -242,6 +242,13 @@ const leaveAll = (host: ViewHost, forward: boolean, source: InputSource): void =
   host.dispatch(state.tr.setSelection(nearestCursor(state.doc, edge, forward ? -1 : 1)), source);
 };
 
+const leaveAllAt = (host: ViewHost, event: MouseEvent): void => {
+  const state = host.state();
+  const pos = posAtCoords(host, event.clientX, event.clientY) ?? 0;
+
+  host.dispatch(state.tr.setSelection(nearestCursor(state.doc, pos)), InputSource.Pointer);
+};
+
 const isForward = (host: ViewHost, arrow: Arrow): boolean =>
   arrow.vertical ? arrow.forward : arrow.forward !== isRtl(host);
 
@@ -734,7 +741,8 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
         host.dispatch(tr, 'pointer');
       });
     } else if (collapsesAll(host, event)) {
-      leaveAll(host, false, InputSource.Pointer);
+      focusFromPress(root);
+      leaveAllAt(host, event);
     }
   };
 

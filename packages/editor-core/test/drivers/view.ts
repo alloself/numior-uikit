@@ -313,6 +313,17 @@ export class EditorViewDriver {
     return () => focusWindow.mock.calls.length;
   }
 
+  focusOutside(): void {
+    const outside = document.createElement('button');
+
+    document.body.append(outside);
+    outside.focus();
+
+    this.restores.push(() => {
+      outside.remove();
+    });
+  }
+
   get editorFocused(): boolean {
     return this.view.hasFocus();
   }

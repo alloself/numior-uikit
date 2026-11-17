@@ -711,4 +711,16 @@ describe('editor view input', () => {
     expect(view.selection).toEqual(textSelection(1));
     expect(view.selectsAll).toBe(false);
   });
+
+  it('leaves a whole-document selection at the pressed point and takes the focus before the text redraws', () => {
+    const view = mounted(twoParagraphs());
+
+    view.selectAll();
+    view.focusOutside();
+    view.caretFrom('position', 'cd', 1);
+    view.pressBlock(1);
+
+    expect(view.selection).toEqual(textSelection(view.positionInText('cd', 1)));
+    expect(view.editorFocused).toBe(true);
+  });
 });
