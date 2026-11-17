@@ -11,9 +11,10 @@ import { sectionScope } from '../helpers/axe';
 import { paintedRgb, type Rgb } from '../helpers/color';
 
 export interface BadgeOnIcon {
-  readonly fromIconEnd: number;
-  readonly fromIconStart: number;
-  readonly fromIconTop: number;
+  readonly startFromIconEnd: number;
+  readonly endFromIconStart: number;
+  readonly centreFromIconTop: number;
+  readonly cover: number;
   readonly width: number;
   readonly height: number;
   readonly insideBar: boolean;
@@ -113,12 +114,17 @@ export class LayoutSection {
       boxOf(this.sidebar),
     ]);
 
-    const centre = { x: badge.x + badge.width / 2, y: badge.y + badge.height / 2 };
+    const overlapX =
+      Math.min(icon.x + icon.width, badge.x + badge.width) - Math.max(icon.x, badge.x);
+
+    const overlapY =
+      Math.min(icon.y + icon.height, badge.y + badge.height) - Math.max(icon.y, badge.y);
 
     return {
-      fromIconEnd: centre.x - (icon.x + icon.width),
-      fromIconStart: centre.x - icon.x,
-      fromIconTop: centre.y - icon.y,
+      startFromIconEnd: badge.x - (icon.x + icon.width),
+      endFromIconStart: badge.x + badge.width - icon.x,
+      centreFromIconTop: badge.y + badge.height / 2 - icon.y,
+      cover: (Math.max(0, overlapX) * Math.max(0, overlapY)) / (icon.width * icon.height),
       width: badge.width,
       height: badge.height,
       insideBar: badge.x >= bar.x && badge.x + badge.width <= bar.x + bar.width,

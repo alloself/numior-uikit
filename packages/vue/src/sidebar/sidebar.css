@@ -271,12 +271,17 @@
 .nui-sidebar--rail
   .nui-list-item
   .nui-row__trailing:not(.nui-sidebar-sub__flyout *):has(> .nui-badge) {
+  --_badge-start: calc(var(--_sidebar-icon-inset) + var(--nui-icon-size) - var(--nui-space-1));
+
   position: absolute;
   inset-block-start: calc(50% - var(--nui-icon-size) / 2);
-  inset-inline-start: calc(50% + var(--nui-icon-size) / 2);
+  inset-inline-start: var(--_badge-start);
   inline-size: 0;
   block-size: 0;
-  justify-content: center;
+  justify-content: flex-start;
+}
+.nui-sidebar--rail.nui-sidebar--variant-plain .nui-list-item .nui-row__trailing:has(> .nui-badge) {
+  --_badge-start: calc(50% + var(--nui-icon-size) / 2 - var(--nui-space-1));
 }
 .nui-sidebar--rail .nui-list-item .nui-row__trailing:not(.nui-sidebar-sub__flyout *) > .nui-badge {
   flex: none;

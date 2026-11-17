@@ -120,7 +120,7 @@ test.describe('layout', () => {
     await expect(layout.sidebar).toBeVisible();
   });
 
-  test('the icon rail keeps a count on the top end corner of the icon and turns a text tag into a dot', async ({
+  test('the icon rail keeps a count at the top end corner of the icon, off most of it, and turns a text tag into a dot', async ({
     playground,
     layout,
     isMobile,
@@ -135,22 +135,23 @@ test.describe('layout', () => {
     await expect(layout.itemBadge('overview')).toHaveText('12');
 
     const count = await layout.badgeOnIcon('overview');
-    expect(Math.abs(count.fromIconEnd)).toBeLessThan(1);
-    expect(Math.abs(count.fromIconTop)).toBeLessThan(1);
+    expect(count.startFromIconEnd).toBeCloseTo(-4, 0);
+    expect(Math.abs(count.centreFromIconTop)).toBeLessThan(1);
+    expect(count.cover).toBeLessThan(0.2);
     expect(count.insideBar).toBe(true);
     expect(await layout.badgeClipped('overview')).toBe(false);
 
     const dot = await layout.badgeOnIcon('files');
     expect(dot.width).toBeCloseTo(dot.height, 1);
     expect(dot.width).toBeLessThan(12);
-    expect(Math.abs(dot.fromIconEnd)).toBeLessThan(1);
+    expect(dot.startFromIconEnd).toBeCloseTo(-4, 0);
     await expect(layout.item('files')).toHaveAccessibleName(/Файлы.*Новое/);
 
     await playground.setDirection('rtl');
 
     await expect
-      .poll(async () => Math.abs((await layout.badgeOnIcon('overview')).fromIconStart))
-      .toBeLessThan(1);
+      .poll(async () => (await layout.badgeOnIcon('overview')).endFromIconStart)
+      .toBeCloseTo(4, 0);
 
     await playground.setDirection('ltr');
     await layout.trigger.click();
