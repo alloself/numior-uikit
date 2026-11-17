@@ -505,7 +505,11 @@ const borderLonghand = (property: string, value: string): Longhand[] | null => {
 
 const box = (property: string, value: string): Longhand[] | null => {
   const family = /^(padding|margin|inset)$/.exec(property)?.[1];
-  const axis = /^(padding|margin|inset)-(block|inline)$/.exec(property);
+
+  const axis = /^(padding|margin|inset|scroll-padding|scroll-margin)-(block|inline)$/.exec(
+    property,
+  );
+
   const side = /^(padding|margin)-(top|bottom)$/.exec(property);
   const inset = LOGICAL.get(property);
 

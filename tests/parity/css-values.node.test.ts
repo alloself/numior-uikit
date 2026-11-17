@@ -203,6 +203,11 @@ describe('longhands of a declaration', () => {
       ['grid-row-end', 'leading'],
     ]);
 
+    expect(longhands('scroll-padding-block', '1px 2px')).toEqual([
+      ['scroll-padding-block-start', '1px'],
+      ['scroll-padding-block-end', '2px'],
+    ]);
+
     expect(longhands('gap', '1px 2px')).toEqual([
       ['row-gap', '1px'],
       ['column-gap', '2px'],
