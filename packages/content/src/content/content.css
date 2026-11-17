@@ -194,8 +194,8 @@
     @apply box-border grid items-start rounded-lg;
     @apply grid-cols-[var(--spacing-control-sm)_minmax(0,1fr)] gap-x-[0.5em] py-[0.75em] px-[1em];
     @apply bg-(--_soft) bg-clip-border bg-none transition-[background-color,border-color];
-    @apply duration-fast ease-nui;
-    border: 1px solid color-mix(in oklab, var(--_tone) 35%, transparent);
+    @apply duration-fast ease-nui border border-solid;
+    border-color: color-mix(in oklab, var(--_tone) 35%, transparent);
   }
   .nui-content__callout > * {
     @apply col-2;
