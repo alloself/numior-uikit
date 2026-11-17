@@ -1,6 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import { themeFindings } from './styles/theme-guards.mjs';
+import { utilityFindings } from './styles/utility-guards.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 
@@ -323,6 +324,20 @@ const inlineIcons = sources.flatMap((file) =>
       ),
 );
 
+const UTILITY_SKIPPED = /\/packages\/(?:tokens|tailwind)\//u;
+
+const declared = utilityFindings(
+  sources.reduce((sheets, file) => {
+    if (file.consumer || !file.path.endsWith('.css') || UTILITY_SKIPPED.test(file.path)) {
+      return sheets;
+    }
+
+    sheets.push({ path: relative(ROOT, file.path), source: file.source });
+
+    return sheets;
+  }, []),
+);
+
 const COMPOSITED = new Set(['transform', 'translate', 'rotate', 'scale', 'opacity']);
 const STEPPED = /\bstep-(?:start|end)\b|\bsteps\(/u;
 
@@ -435,6 +450,16 @@ if (inlineIcons.length > 0) {
   process.exitCode = 1;
 } else {
   console.log('kit styles: icons come from the registry');
+}
+
+if (declared.length > 0) {
+  console.error(
+    `Declarations that a Tailwind utility writes, arbitrary values included, go into @apply; scripts/styles/utility-guards.mjs lists the categories that stay declarations:\n${declared.join('\n')}`,
+  );
+
+  process.exitCode = 1;
+} else {
+  console.log('kit styles: declarations a utility writes go through @apply');
 }
 
 if (offCompositor.length > 0) {
