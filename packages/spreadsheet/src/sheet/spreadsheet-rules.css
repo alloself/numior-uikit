@@ -4,15 +4,13 @@
     position: absolute;
   }
   .nui-spreadsheet__lit {
+    @apply box-border border-2 border-solid border-primary pointer-events-none;
+    @apply transition-opacity duration-fast ease-nui;
     position: absolute;
-    box-sizing: border-box;
-    border: 2px solid var(--color-primary);
     background: color-mix(in oklab, var(--color-primary) 12%, transparent);
-    pointer-events: none;
-    transition: opacity var(--transition-duration-fast) var(--ease-nui);
 
     @starting-style {
-      opacity: 0;
+      @apply opacity-0;
     }
   }
   .nui-spreadsheet-rules {
