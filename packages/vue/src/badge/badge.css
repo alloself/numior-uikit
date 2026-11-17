@@ -86,7 +86,6 @@
   --_padding: var(--nui-space-1);
 
   border-radius: var(--nui-radius-full);
-  font-variant-numeric: tabular-nums;
 }
 .nui-badge--dot {
   inline-size: var(--_dot-size);

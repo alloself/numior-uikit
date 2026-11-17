@@ -107,7 +107,6 @@
   color: var(--_ink);
   font-size: var(--nui-font-size-xs);
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
   line-height: var(--nui-line-height-control);
   transition:
     background-color var(--nui-duration-normal) var(--nui-easing),
