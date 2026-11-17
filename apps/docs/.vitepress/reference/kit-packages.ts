@@ -14,6 +14,8 @@ export const STYLES_KEY = './styles.css';
 
 const SCOPE = '@numior/';
 
+const KIT_FACADE = '@numior/kit';
+
 const readJson = (file: string): unknown => JSON.parse(readFileSync(file, 'utf8'));
 
 export const recordOf = (value: unknown): Readonly<Record<string, unknown>> =>
@@ -38,7 +40,7 @@ const kitPackage = (dir: string): KitPackage[] => {
   const manifest = recordOf(readJson(file));
   const name = typeof manifest.name === 'string' ? manifest.name : '';
 
-  return name.startsWith(SCOPE)
+  return name.startsWith(SCOPE) && name !== KIT_FACADE
     ? [
         {
           name,

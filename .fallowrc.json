@@ -29,6 +29,7 @@
     "packages/offline/src/index.ts",
     "apps/playground/src/tailwind.css",
     "scripts/vite-package-assets.ts",
+    "scripts/vite-kit-styles.ts",
     "scripts/build-css.ts",
     "scripts/vue-declarations.ts",
     "apps/docs/scripts/check-examples.ts",

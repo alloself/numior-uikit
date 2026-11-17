@@ -430,6 +430,63 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
 
+  packages/kit:
+    dependencies:
+      '@numior/charts':
+        specifier: workspace:*
+        version: link:../charts
+      '@numior/collaboration':
+        specifier: workspace:*
+        version: link:../collaboration
+      '@numior/content':
+        specifier: workspace:*
+        version: link:../content
+      '@numior/editor-core':
+        specifier: workspace:*
+        version: link:../editor-core
+      '@numior/editor-vue':
+        specifier: workspace:*
+        version: link:../editor-vue
+      '@numior/forms':
+        specifier: workspace:*
+        version: link:../forms
+      '@numior/offline':
+        specifier: workspace:*
+        version: link:../offline
+      '@numior/primitives':
+        specifier: workspace:*
+        version: link:../primitives
+      '@numior/spreadsheet':
+        specifier: workspace:*
+        version: link:../spreadsheet
+      '@numior/table':
+        specifier: workspace:*
+        version: link:../table
+      '@numior/tailwind':
+        specifier: workspace:*
+        version: link:../tailwind
+      '@numior/tokens':
+        specifier: workspace:*
+        version: link:../tokens
+      '@numior/vue':
+        specifier: workspace:*
+        version: link:../vue
+      '@vueuse/core':
+        specifier: 15.0.0
+        version: 15.0.0(vue@3.5.43(typescript@5.9.3))
+      shiki:
+        specifier: 4.4.3
+        version: 4.4.3
+      tailwindcss:
+        specifier: ^4.0.0
+        version: 4.3.3
+      vue:
+        specifier: ^3.5.0
+        version: 3.5.43(typescript@5.9.3)
+      yjs:
+        specifier: ^13.6.0
+        version: 13.6.33
+
   packages/mcp:
     dependencies:
       '@modelcontextprotocol/sdk':
@@ -8919,7 +8976,7 @@ snapshots:
       '@testing-library/dom': 10.4.2
       '@testing-library/user-event': 14.6.8(@testing-library/dom@10.4.2)
       '@vitest/browser': 5.0.5(@voidzero-dev/vite-plus-core@1.3.0(@types/node@24.13.6)(@volar/typescript@2.4.28)(@vue/language-core@3.3.11)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(typescript@5.9.3)(vue-tsc@3.3.11(typescript@5.9.3)))(vitest@5.0.5)
-      vitest: 5.0.5(@types/node@24.13.6)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.3.0(@types/node@24.13.6)(@volar/typescript@2.4.28)(@vue/language-core@3.3.11)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(typescript@5.9.3)(vue-tsc@3.3.11(typescript@5.9.3)))(jsdom@30.1.1)
+      vitest: 5.0.5(@types/node@24.13.6)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(jsdom@30.1.1)(vite@8.3.4(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -8949,7 +9006,7 @@ snapshots:
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@24.13.6)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.3.0(@types/node@24.13.6)(@volar/typescript@2.4.28)(@vue/language-core@3.3.11)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(typescript@5.9.3)(vue-tsc@3.3.11(typescript@5.9.3)))(jsdom@30.1.1)
+      vitest: 5.0.5(@types/node@24.13.6)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(jsdom@30.1.1)(vite@8.3.4(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))
       ws: 8.22.2
     transitivePeerDependencies:
       - bufferutil
@@ -8986,9 +9043,9 @@ snapshots:
       obug: 3.0.0
       std-env: 4.3.0
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@24.13.6)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.3.0(@types/node@24.13.6)(@volar/typescript@2.4.28)(@vue/language-core@3.3.11)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(typescript@5.9.3)(vue-tsc@3.3.11(typescript@5.9.3)))(jsdom@30.1.1)
+      vitest: 5.0.5(@types/node@24.13.6)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(jsdom@30.1.1)(vite@8.3.4(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))
     optionalDependencies:
-      '@vitest/browser': 5.0.5(@voidzero-dev/vite-plus-core@1.3.0(@types/node@24.13.6)(@volar/typescript@2.4.28)(@vue/language-core@3.3.11)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(typescript@5.9.3)(vue-tsc@3.3.11(typescript@5.9.3)))(vitest@5.0.5)
+      '@vitest/browser': 5.0.5(vite@8.3.4(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))(vitest@5.0.5)
 
   '@vitest/istanbul-lib-coverage@1.0.2': {}
 
@@ -9035,7 +9092,7 @@ snapshots:
       pathe: 2.0.3
       sirv: 3.0.2
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@24.13.6)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.3.0(@types/node@24.13.6)(@volar/typescript@2.4.28)(@vue/language-core@3.3.11)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(typescript@5.9.3)(vue-tsc@3.3.11(typescript@5.9.3)))(jsdom@30.1.1)
+      vitest: 5.0.5(@types/node@24.13.6)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(jsdom@30.1.1)(vite@8.3.4(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))
 
   '@vitest/utils@5.0.5':
     dependencies:

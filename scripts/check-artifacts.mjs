@@ -718,6 +718,80 @@ assert.deepEqual(
   'A prop that mixes a boolean or a function with a type the SFC compiler cannot resolve keeps only Boolean or Function in the build, so a development runtime warns on its valid values',
 );
 
+const KIT = resolve('packages/kit');
+
+const packageTarget = (specifier, condition) => {
+  const [, name = '', rest = ''] = /^@numior\/([a-z-]+)(\/.*)?$/u.exec(specifier) ?? [];
+  const root = resolve('packages', name);
+  const { exports } = JSON.parse(readFileSync(`${root}/package.json`, 'utf8'));
+  const subpath = `.${rest}`;
+
+  const [key, entry] =
+    Object.entries(exports).find(([pattern]) => {
+      const [prefix, suffix = ''] = pattern.split('*');
+
+      return pattern.includes('*')
+        ? subpath.startsWith(prefix) && subpath.endsWith(suffix)
+        : pattern === subpath;
+    }) ?? [];
+
+  assert.ok(entry, `${specifier} is not exported by @numior/${name}`);
+
+  const [prefix, suffix = ''] = key.split('*');
+
+  const star = key.includes('*')
+    ? subpath.slice(prefix.length, subpath.length - suffix.length)
+    : '';
+
+  return resolve(root, entry[condition].replace('*', star));
+};
+
+const forwardedSpecifiers = (file) =>
+  [...readFileSync(file, 'utf8').matchAll(/(?:from|@import) '([^']+)'/gu)].map((match) => match[1]);
+
+const kitManifest = JSON.parse(readFileSync(`${KIT}/package.json`, 'utf8'));
+
+for (const [key, entry] of Object.entries(kitManifest.exports)) {
+  if (entry.import === undefined) {
+    continue;
+  }
+
+  const kitModule = await import(pathToFileURL(resolve(KIT, entry.import)).href);
+
+  const sources = await Promise.all(
+    forwardedSpecifiers(resolve(KIT, entry['@numior/source'])).map(
+      (specifier) => import(pathToFileURL(packageTarget(specifier, 'import')).href),
+    ),
+  );
+
+  const expected = Object.assign({}, ...sources);
+
+  assert.deepEqual(
+    Object.keys(kitModule).toSorted(),
+    Object.keys(expected).toSorted(),
+    `@numior/kit${key.slice(1)} must export what its packages export`,
+  );
+
+  for (const name of Object.keys(expected)) {
+    assert.equal(kitModule[name], expected[name], `@numior/kit${key.slice(1)} must share ${name}`);
+  }
+}
+
+for (const entry of Object.values(kitManifest.exports)) {
+  if (entry.default === undefined) {
+    continue;
+  }
+
+  for (const path of await artifactPaths(KIT, entry.default)) {
+    for (const specifier of forwardedSpecifiers(resolve(KIT, path))) {
+      assert.ok(
+        existsSync(packageTarget(specifier, 'default')),
+        `@numior/kit/${path.replace(/^\.\/dist\//u, '')} forwards to a missing ${specifier}`,
+      );
+    }
+  }
+}
+
 console.log(
-  'Package exports, CSS artifacts, DOM-free ESM imports, text tree-shaking and prop runtime types verified.',
+  'Package exports, CSS artifacts, DOM-free ESM imports, text tree-shaking, prop runtime types and the kit entries verified.',
 );

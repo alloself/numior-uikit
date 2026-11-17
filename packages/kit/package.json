@@ -1,0 +1,258 @@
+{
+  "name": "@numior/kit",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": {
+      "@numior/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./controls": {
+      "@numior/source": "./src/controls.ts",
+      "types": "./dist/controls.d.ts",
+      "import": "./dist/controls.js"
+    },
+    "./shiki": {
+      "@numior/source": "./src/shiki.ts",
+      "types": "./dist/shiki.d.ts",
+      "import": "./dist/shiki.js"
+    },
+    "./address": {
+      "@numior/source": "./src/address.ts",
+      "types": "./dist/address.d.ts",
+      "import": "./dist/address.js"
+    },
+    "./guards": {
+      "@numior/source": "./src/guards.ts",
+      "types": "./dist/guards.d.ts",
+      "import": "./dist/guards.js"
+    },
+    "./forms": {
+      "@numior/source": "./src/forms.ts",
+      "types": "./dist/forms.d.ts",
+      "import": "./dist/forms.js"
+    },
+    "./table": {
+      "@numior/source": "./src/table/index.ts",
+      "types": "./dist/table/index.d.ts",
+      "import": "./dist/table/index.js"
+    },
+    "./table/engine": {
+      "@numior/source": "./src/table/engine.ts",
+      "types": "./dist/table/engine.d.ts",
+      "import": "./dist/table/engine.js"
+    },
+    "./spreadsheet": {
+      "@numior/source": "./src/spreadsheet/index.ts",
+      "types": "./dist/spreadsheet/index.d.ts",
+      "import": "./dist/spreadsheet/index.js"
+    },
+    "./spreadsheet/core": {
+      "@numior/source": "./src/spreadsheet/core.ts",
+      "types": "./dist/spreadsheet/core.d.ts",
+      "import": "./dist/spreadsheet/core.js"
+    },
+    "./spreadsheet/xlsx": {
+      "@numior/source": "./src/spreadsheet/xlsx.ts",
+      "types": "./dist/spreadsheet/xlsx.d.ts",
+      "import": "./dist/spreadsheet/xlsx.js"
+    },
+    "./charts": {
+      "@numior/source": "./src/charts/index.ts",
+      "types": "./dist/charts/index.d.ts",
+      "import": "./dist/charts/index.js"
+    },
+    "./charts/core": {
+      "@numior/source": "./src/charts/core.ts",
+      "types": "./dist/charts/core.d.ts",
+      "import": "./dist/charts/core.js"
+    },
+    "./editor": {
+      "@numior/source": "./src/editor.ts",
+      "types": "./dist/editor.d.ts",
+      "import": "./dist/editor.js"
+    },
+    "./editor-core": {
+      "@numior/source": "./src/editor-core/index.ts",
+      "types": "./dist/editor-core/index.d.ts",
+      "import": "./dist/editor-core/index.js"
+    },
+    "./editor-core/view": {
+      "@numior/source": "./src/editor-core/view.ts",
+      "types": "./dist/editor-core/view.d.ts",
+      "import": "./dist/editor-core/view.js"
+    },
+    "./content": {
+      "@numior/source": "./src/content/index.ts",
+      "types": "./dist/content/index.d.ts",
+      "import": "./dist/content/index.js"
+    },
+    "./content/table": {
+      "@numior/source": "./src/content/table.ts",
+      "types": "./dist/content/table.d.ts",
+      "import": "./dist/content/table.js"
+    },
+    "./content/code": {
+      "@numior/source": "./src/content/code.ts",
+      "types": "./dist/content/code.d.ts",
+      "import": "./dist/content/code.js"
+    },
+    "./content/media": {
+      "@numior/source": "./src/content/media.ts",
+      "types": "./dist/content/media.d.ts",
+      "import": "./dist/content/media.js"
+    },
+    "./collaboration": {
+      "@numior/source": "./src/collaboration/index.ts",
+      "types": "./dist/collaboration/index.d.ts",
+      "import": "./dist/collaboration/index.js"
+    },
+    "./collaboration/vue": {
+      "@numior/source": "./src/collaboration/vue.ts",
+      "types": "./dist/collaboration/vue.d.ts",
+      "import": "./dist/collaboration/vue.js"
+    },
+    "./collaboration/spreadsheet": {
+      "@numior/source": "./src/collaboration/spreadsheet.ts",
+      "types": "./dist/collaboration/spreadsheet.d.ts",
+      "import": "./dist/collaboration/spreadsheet.js"
+    },
+    "./collaboration/yjs": {
+      "@numior/source": "./src/collaboration/yjs.ts",
+      "types": "./dist/collaboration/yjs.d.ts",
+      "import": "./dist/collaboration/yjs.js"
+    },
+    "./collaboration/room": {
+      "@numior/source": "./src/collaboration/room.ts",
+      "types": "./dist/collaboration/room.d.ts",
+      "import": "./dist/collaboration/room.js"
+    },
+    "./offline": {
+      "@numior/source": "./src/offline.ts",
+      "types": "./dist/offline.d.ts",
+      "import": "./dist/offline.js"
+    },
+    "./styles.css": {
+      "@numior/source": "./src/styles.css",
+      "default": "./dist/styles.css"
+    },
+    "./styles/*.css": {
+      "@numior/source": "./dist/styles/*.css",
+      "default": "./dist/styles/*.css"
+    },
+    "./theme.css": {
+      "@numior/source": "./src/theme.css",
+      "default": "./dist/theme.css"
+    },
+    "./accents.css": {
+      "@numior/source": "./src/accents.css",
+      "default": "./dist/accents.css"
+    },
+    "./base.css": {
+      "@numior/source": "./src/base.css",
+      "default": "./dist/base.css"
+    },
+    "./prose.css": {
+      "@numior/source": "./src/prose.css",
+      "default": "./dist/prose.css"
+    },
+    "./tailwind/theme.css": {
+      "@numior/source": "./src/tailwind/theme.css",
+      "default": "./dist/tailwind/theme.css"
+    },
+    "./forms/styles.css": {
+      "@numior/source": "./src/forms/styles.css",
+      "default": "./dist/forms/styles.css"
+    },
+    "./forms/styles/*.css": {
+      "@numior/source": "./dist/forms/styles/*.css",
+      "default": "./dist/forms/styles/*.css"
+    },
+    "./table/styles.css": {
+      "@numior/source": "./src/table/styles.css",
+      "default": "./dist/table/styles.css"
+    },
+    "./table/styles/*.css": {
+      "@numior/source": "./dist/table/styles/*.css",
+      "default": "./dist/table/styles/*.css"
+    },
+    "./spreadsheet/styles.css": {
+      "@numior/source": "./src/spreadsheet/styles.css",
+      "default": "./dist/spreadsheet/styles.css"
+    },
+    "./spreadsheet/styles/*.css": {
+      "@numior/source": "./dist/spreadsheet/styles/*.css",
+      "default": "./dist/spreadsheet/styles/*.css"
+    },
+    "./charts/styles.css": {
+      "@numior/source": "./src/charts/styles.css",
+      "default": "./dist/charts/styles.css"
+    },
+    "./charts/styles/*.css": {
+      "@numior/source": "./dist/charts/styles/*.css",
+      "default": "./dist/charts/styles/*.css"
+    },
+    "./editor/styles.css": {
+      "@numior/source": "./src/editor/styles.css",
+      "default": "./dist/editor/styles.css"
+    },
+    "./editor/styles/*.css": {
+      "@numior/source": "./dist/editor/styles/*.css",
+      "default": "./dist/editor/styles/*.css"
+    },
+    "./content/styles.css": {
+      "@numior/source": "./src/content/styles.css",
+      "default": "./dist/content/styles.css"
+    },
+    "./content/styles/*.css": {
+      "@numior/source": "./dist/content/styles/*.css",
+      "default": "./dist/content/styles/*.css"
+    },
+    "./collaboration/styles.css": {
+      "@numior/source": "./src/collaboration/styles.css",
+      "default": "./dist/collaboration/styles.css"
+    }
+  },
+  "scripts": {
+    "build": "vp build && vue-tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@numior/charts": "workspace:*",
+    "@numior/collaboration": "workspace:*",
+    "@numior/content": "workspace:*",
+    "@numior/editor-core": "workspace:*",
+    "@numior/editor-vue": "workspace:*",
+    "@numior/forms": "workspace:*",
+    "@numior/offline": "workspace:*",
+    "@numior/primitives": "workspace:*",
+    "@numior/spreadsheet": "workspace:*",
+    "@numior/table": "workspace:*",
+    "@numior/tailwind": "workspace:*",
+    "@numior/tokens": "workspace:*",
+    "@numior/vue": "workspace:*",
+    "@vueuse/core": "15.0.0",
+    "shiki": "4.4.3"
+  },
+  "peerDependencies": {
+    "tailwindcss": "^4.0.0",
+    "vue": "^3.5.0",
+    "yjs": "^13.6.0"
+  },
+  "peerDependenciesMeta": {
+    "tailwindcss": {
+      "optional": true
+    },
+    "yjs": {
+      "optional": true
+    }
+  }
+}
