@@ -124,6 +124,8 @@ describe('docs navigation', () => {
   });
 
   it('keeps the editor in the header and the table, spreadsheet and charts among the components', () => {
+    const lastComponentGroup = sidebarOf('en')['/en/components/']?.at(-1);
+
     expect(navOf('en').map((item) => item.text)).toEqual([
       'Docs',
       'Components',
@@ -131,11 +133,8 @@ describe('docs navigation', () => {
       'Blocks',
       'Themes',
     ]);
-    expect(
-      sidebarOf('en')
-        ['/en/components/']?.at(-1)
-        ?.items.map((item) => item.link),
-    ).toEqual([
+
+    expect(lastComponentGroup?.items.map((item) => item.link)).toEqual([
       '/en/components/table/',
       '/en/components/table/data',
       '/en/components/table/cells',
