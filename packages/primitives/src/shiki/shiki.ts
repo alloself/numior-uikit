@@ -1,4 +1,4 @@
-import type { NuiCodeLine, NuiCodeToken, NuiHighlighter } from '@numior/primitives';
+import type { NuiCodeLine, NuiCodeToken, NuiHighlighter } from '../highlight/highlight.types';
 import type { BundledLanguage, BundledTheme, Highlighter, ThemedToken } from 'shiki';
 import { SHIKI_LANGUAGES } from './languages';
 import { scopeOf } from './scopes';

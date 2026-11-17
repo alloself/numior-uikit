@@ -1,4 +1,4 @@
-import type { NuiSyntaxScope } from '@numior/primitives';
+import type { NuiSyntaxScope } from '../highlight/highlight.types';
 
 const SCOPE_RULES: ReadonlyArray<readonly [RegExp, NuiSyntaxScope]> = [
   [/^comment/, 'comment'],

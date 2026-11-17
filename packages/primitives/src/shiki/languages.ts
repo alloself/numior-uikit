@@ -1,4 +1,4 @@
-import type { NuiCodeLanguage } from '@numior/primitives';
+import type { NuiCodeLanguage } from '../highlight/highlight.types';
 
 export const SHIKI_LANGUAGES: readonly NuiCodeLanguage[] = [
   { id: 'typescript', label: 'TypeScript', aliases: ['ts'] },

@@ -1,1 +1,1 @@
-export * from '@numior/vue/shiki';
+export * from '@numior/primitives/shiki';

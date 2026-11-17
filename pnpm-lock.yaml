@@ -577,6 +577,9 @@ importers:
       '@vue/test-utils':
         specifier: 2.5.1
         version: 2.5.1(@vue/compiler-dom@3.5.43)(@vue/server-renderer@3.5.43)(vue@3.5.43(typescript@5.9.3))
+      shiki:
+        specifier: 4.4.3
+        version: 4.4.3
 
   packages/spreadsheet:
     dependencies:
@@ -681,9 +684,6 @@ importers:
       '@vue/test-utils':
         specifier: 2.5.1
         version: 2.5.1(@vue/compiler-dom@3.5.43)(@vue/server-renderer@3.5.43)(vue@3.5.43(typescript@5.9.3))
-      shiki:
-        specifier: 4.4.3
-        version: 4.4.3
 
 packages:
 

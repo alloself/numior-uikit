@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { installClipboard, type ClipboardStub } from '../../primitives/test/support/clipboard';
 import type { NuiCodeLine, NuiHighlighter } from '../src';
 import { CodeDriver } from './drivers/code';
@@ -133,6 +133,43 @@ describe('NuiCode', () => {
     expect(calls).toEqual(['typescript:38']);
   });
 
+  it('colours code with the built-in Shiki when nothing is configured, unless the config turns it off', async () => {
+    const coloured = CodeDriver.mount({ props: { code: SAMPLE, language: 'ts' } });
+
+    await vi.waitFor(
+      () => {
+        expect(coloured.scopesOf(1)).toEqual([
+          'keyword',
+          'variable',
+          'punctuation',
+          'number',
+          'punctuation',
+        ]);
+      },
+      { timeout: 10_000 },
+    );
+
+    const again = CodeDriver.mount({ props: { code: SAMPLE, language: 'typescript' } });
+
+    const off = CodeDriver.mount({
+      props: { code: SAMPLE, language: 'ts' },
+      config: { highlighter: false },
+    });
+
+    await again.settle();
+    await off.settle();
+
+    expect(again.scopesOf(1)).toEqual([
+      'keyword',
+      'variable',
+      'punctuation',
+      'number',
+      'punctuation',
+    ]);
+
+    expect(off.scopesOf(1)).toEqual([]);
+  }, 30_000);
+
   it('colours code that ends with a line break when the highlighter answers its empty last line', async () => {
     const config = {
       highlighter: { ...highlighterOf([]), tokens: () => [...TOKENS, []] },
@@ -144,6 +181,20 @@ describe('NuiCode', () => {
 
     expect(coloured.lineTexts).toEqual(['const answer = 42;', "console.log('hi');"]);
     expect(coloured.scopesOf(2)).toEqual(['punctuation', 'function', 'punctuation']);
+  });
+
+  it('takes the given tokens without asking the highlighter', async () => {
+    const calls: string[] = [];
+
+    const given = CodeDriver.mount({
+      props: { code: SAMPLE, language: 'ts', tokens: TOKENS },
+      config: { highlighter: highlighterOf(calls) },
+    });
+
+    await given.settle();
+
+    expect(given.scopesOf(1)).toEqual(['keyword', 'number', 'punctuation']);
+    expect(calls).toEqual([]);
   });
 
   it('shows plain code until a lazy highlighter answers and reuses its answer', async () => {

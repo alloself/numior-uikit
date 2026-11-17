@@ -1,6 +1,6 @@
 import type { Highlighter } from 'shiki';
 import type { NuiCodeLine } from '@numior/vue';
-import { shikiTokens } from '@numior/vue/shiki';
+import { shikiTokens } from '@numior/primitives/shiki';
 import { isCodeLanguage, type CodeLanguage } from './languages.ts';
 
 const SFC_BLOCK_RE = /^\s*<(?:template|script|style)\b/m;

@@ -70,8 +70,8 @@ const docs: DocsMap = {
         en: 'The source of ids for new nodes. Each client has its own in collaboration.',
       },
       highlighter: {
-        ru: 'Подсветка блоков кода вместо заданной в `createNuiConfig`. `false` выводит код одним цветом.',
-        en: 'Highlighter for code blocks instead of the one set in `createNuiConfig`. `false` renders code in one color.',
+        ru: 'Подсветка блоков кода вместо заданной в `createNuiConfig` или встроенного Shiki. `false` выводит код одним цветом.',
+        en: 'Highlighter for code blocks instead of the one set in `createNuiConfig` or the built-in Shiki. `false` renders code in one color.',
       },
       blocks: {
         ru: 'Свои блоки из `defineBlock`: компонент, клавиши, пункты меню «/» и меню блока; читаются один раз при монтировании. Контекст блока сообщает место внутри него через `setSpot(part)` и `leaveSpot()`, а `peers()` отдаёт места участников. Так таблица документа показывает ячейки соавторов.',

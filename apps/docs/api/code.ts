@@ -18,16 +18,16 @@ const docs: DocsMap = {
         en: 'Code text. Every newline starts a new line.',
       },
       tokens: {
-        ru: 'Готовая подсветка: токены по строкам. Без них код раскрашивает `highlighter` или подсветка из `createNuiConfig`.',
-        en: 'Ready highlighting as tokens per line. Without them `highlighter` or the `createNuiConfig` highlighter colors the code.',
+        ru: 'Готовая подсветка: токены по строкам. С ними подсветчик не вызывается.',
+        en: 'Ready highlighting as tokens per line. With them no highlighter runs.',
       },
       language: {
         ru: 'Язык кода, например `ts` или `vue`. Показывается в шапке и задаёт подсветку.',
         en: 'Code language, such as `ts` or `vue`. Shown in the header and used for highlighting.',
       },
       highlighter: {
-        ru: 'Подсветка вместо заданной в `createNuiConfig`. `false` выводит код одним цветом.',
-        en: 'Highlighter to use instead of the one set in `createNuiConfig`. `false` renders the code in one color.',
+        ru: 'Подсветка вместо заданной в `createNuiConfig` или встроенного Shiki. `false` выводит код одним цветом.',
+        en: 'Highlighter to use instead of the one set in `createNuiConfig` or the built-in Shiki. `false` renders the code in one color.',
       },
       title: {
         ru: 'Имя файла в шапке вместо языка.',

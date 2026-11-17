@@ -38,23 +38,22 @@ Pass the file name to `title`.
 
 <Example name="code/Title" />
 
-## Connect highlighting
+## Highlighting
 
-Pass the Shiki highlighter to the plugin:
+A block with a `language` colors its syntax on its own. Shiki loads on the first highlight, and
+the grammar of a language loads when that language first appears on the page. Until then, and
+during server rendering, the code shows in one color.
+
+Pass `highlighter` to give one block its own highlighter, or `:highlighter="false"` to turn
+highlighting off. The plugin does the same for the whole app:
 
 ```ts
 import { createNuiConfig } from '@numior/kit';
-import { createShikiHighlighter } from '@numior/kit/shiki';
 
-app.use(createNuiConfig({ highlighter: createShikiHighlighter() }));
+app.use(createNuiConfig({ highlighter: false }));
 ```
 
-A block whose `language` the highlighter knows now colors its syntax. Shiki loads on the first
-highlight, and the grammar of a language loads when that language first appears on the page.
-Until then, and during server rendering, the code shows in one color.
-
-Pass `highlighter` to give one block its own highlighter, or `:highlighter="false"` to turn
-highlighting off. Your own highlighter is an object of the `NuiHighlighter` type.
+Your own highlighter is an object of the `NuiHighlighter` type.
 
 <SignatureReference :names="['useHighlighter', 'highlightCode', 'languageOf', 'NuiHighlighter']" />
 

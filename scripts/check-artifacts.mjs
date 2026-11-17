@@ -624,7 +624,13 @@ const bundleOf = async (source) => {
         input: 'nui-probe',
         preserveEntrySignatures: 'strict',
         treeshake: { moduleSideEffects: 'no-external' },
-        external: [/^vue$/, /^@numior\/primitives$/, /^@lucide\/vue$/, /^@vueuse\/core$/],
+        external: [
+          /^vue$/,
+          /^@numior\/primitives$/,
+          /^@lucide\/vue$/,
+          /^@vueuse\/core$/,
+          /^shiki$/,
+        ],
       },
     },
     plugins: [
@@ -647,15 +653,30 @@ const vueControls = await import(pathToFileURL(resolve('packages/vue/dist/contro
 
 assert.equal(typeof vueControls.kitControls, 'object', 'vue/controls must export the kit controls');
 
-const vueShiki = await readFile('packages/vue/dist/shiki.js', 'utf8');
+const LAZY_SHIKI = /import\(['"]shiki['"]\)/;
 
-assert.match(vueShiki, /import\(['"]shiki['"]\)/, 'vue/shiki must load shiki lazily');
+const shikiFiles = [];
 
-assert.doesNotMatch(
-  vueShiki,
-  /^import[^;]*['"]shiki['"]/m,
-  'vue/shiki must not import shiki eagerly',
+for (const name of await readdir('packages/primitives/dist')) {
+  if (!name.startsWith('shiki') || !name.endsWith('.js')) {
+    continue;
+  }
+
+  shikiFiles.push(await readFile(`packages/primitives/dist/${name}`, 'utf8'));
+}
+
+assert.ok(
+  shikiFiles.some((chunk) => LAZY_SHIKI.test(chunk)),
+  'primitives/shiki must load shiki lazily',
 );
+
+for (const chunk of shikiFiles) {
+  assert.doesNotMatch(
+    chunk,
+    /^import[^;]*['"]shiki['"]/m,
+    'primitives/shiki must not import shiki eagerly',
+  );
+}
 
 const vueEntry = JSON.stringify(resolve('packages/vue/dist/index.js'));
 const buttonOnly = await bundleOf(`export { NuiButton } from ${vueEntry};`);
@@ -670,6 +691,20 @@ assert.doesNotMatch(
 assert.doesNotMatch(buttonOnly, /@vueuse\/core/, 'NuiButton pulled @vueuse/core');
 
 assert.doesNotMatch(buttonOnly, /NuiTimeField|NuiDatePicker/, 'NuiButton pulled the kit controls');
+
+const primitivesEntry = JSON.stringify(resolve('packages/primitives/dist/index.js'));
+
+assert.doesNotMatch(
+  await bundleOf(`export { useClipboard } from ${primitivesEntry};`),
+  LAZY_SHIKI,
+  'useClipboard pulled the built-in highlighter',
+);
+
+assert.match(
+  await bundleOf(`export { useHighlighter } from ${primitivesEntry};`),
+  LAZY_SHIKI,
+  'useHighlighter lost the built-in highlighter',
+);
 
 assert.match(dialogOnly, /Закрыть/, 'NuiDialog lost its dictionary texts');
 

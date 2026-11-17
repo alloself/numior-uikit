@@ -86,7 +86,12 @@ const texts = computed(() => ({
   collapse: collapseLabel ?? messages.value.collapse,
 }));
 
-const highlighted = useCodeTokens(() => ({ code, language, highlighter }));
+const highlighted = useCodeTokens(() => ({
+  code,
+  language,
+  highlighter: tokens === undefined ? highlighter : false,
+}));
+
 const lines = computed(() => codeLines(code, tokens ?? highlighted.value));
 const marked = computed(() => new Set(highlight ?? []));
 const hasHeader = computed(() => title !== undefined || language !== undefined);

@@ -1,4 +1,4 @@
-import type { NuiCodeLanguage } from '@numior/primitives';
+import type { NuiCodeLanguage } from '../highlight/highlight.types';
 import type { BundledTheme } from 'shiki';
 
 export interface ShikiHighlighterOptions {

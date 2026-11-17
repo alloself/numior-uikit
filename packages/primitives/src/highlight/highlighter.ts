@@ -1,13 +1,25 @@
 import { inject, provide, type InjectionKey } from 'vue';
+import { createShikiHighlighter } from '../shiki/shiki';
 import type { NuiCodeLanguage, NuiCodeTokens, NuiHighlighter } from './highlight.types';
 
-export const HIGHLIGHTER_KEY: InjectionKey<NuiHighlighter> = Symbol('nui:highlighter');
+export const HIGHLIGHTER_KEY: InjectionKey<NuiHighlighter | false> = Symbol('nui:highlighter');
 
-export const provideHighlighter = (highlighter: NuiHighlighter): void => {
+let builtIn: NuiHighlighter | undefined;
+
+const builtInHighlighter = (): NuiHighlighter => {
+  builtIn ??= createShikiHighlighter();
+  return builtIn;
+};
+
+export const provideHighlighter = (highlighter: NuiHighlighter | false): void => {
   provide(HIGHLIGHTER_KEY, highlighter);
 };
 
-export const useHighlighter = (): NuiHighlighter | null => inject(HIGHLIGHTER_KEY, null);
+export const useHighlighter = (): NuiHighlighter | null => {
+  const configured = inject(HIGHLIGHTER_KEY, builtInHighlighter, true);
+
+  return configured === false ? null : configured;
+};
 
 export const languageOf = (
   highlighter: NuiHighlighter,

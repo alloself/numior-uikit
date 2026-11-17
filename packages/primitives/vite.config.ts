@@ -10,11 +10,12 @@ export default defineConfig({
         index: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
         address: fileURLToPath(new URL('./src/address/address.ts', import.meta.url)),
         guards: fileURLToPath(new URL('./src/guards/guards.ts', import.meta.url)),
+        shiki: fileURLToPath(new URL('./src/shiki/index.ts', import.meta.url)),
       },
       formats: ['es'],
       fileName: (_format, name) => `${name}.js`,
     },
     sourcemap: true,
-    rolldownOptions: { external: ['vue', '@floating-ui/dom', '@vueuse/core'] },
+    rolldownOptions: { external: ['vue', '@floating-ui/dom', '@vueuse/core', /^shiki(\/|$)/] },
   },
 });

@@ -38,22 +38,20 @@ import { NuiCode } from '@numior/kit';
 
 <Example name="code/Title" />
 
-## Подключите подсветку
+## Подсветка
 
-Передайте подсветчик на Shiki в плагин, и блоки с `language` раскрасятся:
+Блоки с `language` раскрашиваются сами. Shiki загружается при первой подсветке, а грамматика
+языка — когда он впервые встретится на странице. Пока подсветка не готова и при серверном
+рендеринге код выводится одним цветом, высота блока не меняется.
+
+Одному блоку свой подсветчик задаёт `highlighter`, а `:highlighter="false"` выводит код одним
+цветом. Для всего приложения то же задаёт плагин:
 
 ```ts
 import { createNuiConfig } from '@numior/kit';
-import { createShikiHighlighter } from '@numior/kit/shiki';
 
-app.use(createNuiConfig({ highlighter: createShikiHighlighter() }));
+app.use(createNuiConfig({ highlighter: false }));
 ```
-
-Shiki загружается при первой подсветке, а грамматика языка — когда он впервые встретится на
-странице. Пока подсветка не готова и при серверном рендеринге код выводится одним цветом, высота
-блока не меняется.
-
-Одному блоку подсветчик задаёт `highlighter`, а `:highlighter="false"` выводит код одним цветом.
 
 Свой подсветчик напишите по сигнатуре `NuiHighlighter`.
 

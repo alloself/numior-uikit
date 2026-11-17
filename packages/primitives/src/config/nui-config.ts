@@ -34,7 +34,7 @@ export interface NuiConfigOptions {
   readonly colorScheme?: ColorSchemeOptions | undefined;
   readonly link?: NuiLinkComponent | undefined;
   readonly controls?: NuiControlRegistry | undefined;
-  readonly highlighter?: NuiHighlighter | undefined;
+  readonly highlighter?: NuiHighlighter | false | undefined;
 }
 
 const hasMessages = (options: NuiConfigOptions): boolean =>
