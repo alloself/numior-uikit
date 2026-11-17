@@ -30,15 +30,11 @@
     --_padding: var(--spacing-control-pad-md);
     --_font-size: var(--text-control-md);
 
-    @apply box-border relative inline-flex items-center justify-center min-block-(--_height);
-    @apply py-1 px-(--_padding) border border-transparent rounded bg-(--_tone);
-    @apply font-sans text-(length:--_font-size) leading-control font-medium no-underline;
+    @apply box-border relative inline-flex items-center justify-center min-block-(--_height) py-1;
+    @apply px-(--_padding) border border-transparent rounded bg-(--_tone) font-sans;
+    @apply text-(length:--_font-size) leading-control font-medium no-underline;
     @apply text-(--_tone-foreground) cursor-pointer;
-    transition:
-      background-color var(--transition-duration-fast) var(--ease-nui),
-      border-color var(--transition-duration-fast) var(--ease-nui),
-      color var(--transition-duration-fast) var(--ease-nui),
-      opacity var(--transition-duration-fast) var(--ease-nui);
+    @apply transition-[background-color,border-color,color,opacity] duration-fast ease-nui;
   }
 
   .nui-button--tone-secondary {
@@ -183,7 +179,7 @@
   }
 
   .nui-button__content {
-    @apply inline-flex items-center gap-2 transition-opacity duration-fast;
+    @apply inline-flex items-center gap-2 transition-opacity duration-fast ease-nui;
   }
 
   .nui-button__icon-end {
