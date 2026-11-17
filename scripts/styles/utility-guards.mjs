@@ -28,7 +28,6 @@ export const UtilityException = Object.freeze({
   WholeVariable: 'whole-variable',
   ShadowVariable: 'shadow-variable',
   NamedArea: 'named-area',
-  TransitionList: 'transition-list',
   LayeredImage: 'layered-image',
   FlexAlignment: 'flex-alignment',
   WidthSetsStyle: 'width-sets-style',
@@ -190,14 +189,6 @@ const topLevelParts = (value, separator) => {
   );
 };
 
-const transitionList = (value) => {
-  const items = topLevelParts(value, ',');
-  const custom = items.some((item) => item.trim().startsWith('--'));
-  const discrete = items.some((item) => item.includes('allow-discrete'));
-
-  return custom || (discrete && items.some((item) => !item.includes('allow-discrete')));
-};
-
 const layeredImage = (value) =>
   topLevelParts(value, ',').length > 1 || topLevelParts(value.trim(), ' ').length > 1;
 
@@ -225,13 +216,8 @@ const shapeException = ({ property, value }) => {
   return property === 'grid-area' && AREA_NAME.test(value) ? UtilityException.NamedArea : undefined;
 };
 
-const listException = ({ property, value }) => {
-  if (property === 'transition' && transitionList(value)) {
-    return UtilityException.TransitionList;
-  }
-
-  return LAYERED.has(property) && layeredImage(value) ? UtilityException.LayeredImage : undefined;
-};
+const listException = ({ property, value }) =>
+  LAYERED.has(property) && layeredImage(value) ? UtilityException.LayeredImage : undefined;
 
 const writeException = ({ property, value }) => {
   if (FLEX_ALIGNED.test(property) && START_OR_END.test(value)) {

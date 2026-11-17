@@ -114,16 +114,10 @@ describe('utility guards of check:styles', () => {
     expect(categoryOf('grid-area', 'auto')).toBeUndefined();
   });
 
-  it('keeps transition lists of custom properties or discrete items and layered images', () => {
-    expect(categoryOf('transition', '--_fade-start 1s ease, --_fade-end 1s ease')).toBe(
-      UtilityException.TransitionList,
-    );
+  it('reports transition lists, which escaped names and transition-discrete express, and keeps layered images', () => {
+    expect(categoryOf('transition', '--_fade-start 1s ease, --_fade-end 1s ease')).toBeUndefined();
 
-    expect(categoryOf('transition', 'opacity 1s ease, display 1s allow-discrete')).toBe(
-      UtilityException.TransitionList,
-    );
-
-    expect(categoryOf('transition', 'opacity 1s ease, translate 1s ease')).toBeUndefined();
+    expect(categoryOf('transition', 'opacity 1s ease, display 1s allow-discrete')).toBeUndefined();
 
     expect(categoryOf('background', 'linear-gradient(red, red) top / 100% 1px no-repeat')).toBe(
       UtilityException.LayeredImage,
