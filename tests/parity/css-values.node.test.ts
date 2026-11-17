@@ -178,6 +178,31 @@ describe('longhands of a declaration', () => {
 
     expect(longhands('background', 'url(x) red')).toEqual([['background', 'url(x) red']]);
 
+    expect(longhands('grid-template', '100% / 1fr auto')).toEqual([
+      ['grid-template-rows', '100%'],
+      ['grid-template-columns', '1fr auto'],
+      ['grid-template-areas', 'initial'],
+    ]);
+
+    expect(longhands('grid-area', '1 / 1')).toEqual([
+      ['grid-row-start', '1'],
+      ['grid-column-start', '1'],
+      ['grid-row-end', 'auto'],
+      ['grid-column-end', 'auto'],
+    ]);
+
+    expect(longhands('grid-area', 'leading').map(([, line]) => line)).toEqual([
+      'leading',
+      'leading',
+      'leading',
+      'leading',
+    ]);
+
+    expect(longhands('grid-row', 'leading')).toEqual([
+      ['grid-row-start', 'leading'],
+      ['grid-row-end', 'leading'],
+    ]);
+
     expect(longhands('gap', '1px 2px')).toEqual([
       ['row-gap', '1px'],
       ['column-gap', '2px'],

@@ -239,6 +239,17 @@ const EXTRA_LONGHANDS = new Map([
   ['font', ['line-height']],
   ['inset', ['top', 'right', 'bottom', 'left']],
   ['gap', ['row-gap', 'column-gap']],
+  [
+    'grid-area',
+    [
+      'grid-row',
+      'grid-column',
+      'grid-row-start',
+      'grid-column-start',
+      'grid-row-end',
+      'grid-column-end',
+    ],
+  ],
 ]);
 
 const covers = (shorthand: string, longhand: string): boolean =>

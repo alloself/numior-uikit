@@ -98,6 +98,7 @@ const INITIAL_VALUES: readonly (readonly [RegExp, string])[] = [
   [/^list-style-image$/, 'none'],
   [/^transition-delay$/, '0s'],
   [/^transition-behavior$/, 'normal'],
+  [/^grid-template-areas$/, 'none'],
 ];
 
 const initialOf = (property: string): string | undefined =>
@@ -633,6 +634,58 @@ const gap = (value: string): Longhand[] | null => {
   ];
 };
 
+const gridTemplate = (value: string): Longhand[] | null => {
+  const parts = split(value, '/');
+
+  if (parts.length !== 2 || value.includes('"') || value.includes("'")) {
+    return null;
+  }
+
+  const [rows = '', columns = ''] = parts;
+
+  return [
+    ['grid-template-rows', rows],
+    ['grid-template-columns', columns],
+    ['grid-template-areas', RESET],
+  ];
+};
+
+const AREA_NAME = /^(?!auto$|span$)[a-z_][\w-]*$/i;
+
+const lineEnd = (start: string): string => (AREA_NAME.test(start) ? start : 'auto');
+
+const gridLines =
+  (axis: 'row' | 'column') =>
+  (value: string): Longhand[] | null => {
+    const [start = '', end = lineEnd(start), ...rest] = split(value, '/');
+
+    return rest.length > 0 || value.includes('var(')
+      ? null
+      : [
+          [`grid-${axis}-start`, start],
+          [`grid-${axis}-end`, end],
+        ];
+  };
+
+const gridArea = (value: string): Longhand[] | null => {
+  const [
+    rowStart = '',
+    columnStart = lineEnd(rowStart),
+    rowEnd = lineEnd(rowStart),
+    columnEnd = lineEnd(columnStart),
+    ...extra
+  ] = split(value, '/');
+
+  return extra.length > 0 || value.includes('var(')
+    ? null
+    : [
+        ['grid-row-start', rowStart],
+        ['grid-column-start', columnStart],
+        ['grid-row-end', rowEnd],
+        ['grid-column-end', columnEnd],
+      ];
+};
+
 const single = (property: string, value: string): Longhand[] => {
   const percent = /^(-?[\d.]+)%$/.exec(value)?.[1];
 
@@ -659,6 +712,10 @@ const SHORTHANDS = new Map<string, (value: string) => Longhand[] | null>([
   ['list-style', listStyle],
   ['overflow', overflow],
   ['gap', gap],
+  ['grid-template', gridTemplate],
+  ['grid-area', gridArea],
+  ['grid-row', gridLines('row')],
+  ['grid-column', gridLines('column')],
 ]);
 
 export const longhands = (property: string, value: string): Longhand[] => {
